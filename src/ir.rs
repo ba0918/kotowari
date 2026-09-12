@@ -66,7 +66,7 @@ pub enum Item {
         verification: Option<String>,
         definitions: Vec<String>,
         statements: Vec<(usize, String)>,
-        fields_seen: Vec<(usize, String)>,
+        fields_seen: Vec<(usize, String, String)>,
     },
     DecisionTable {
         id: String,
@@ -74,7 +74,7 @@ pub enum Item {
         line: usize,
         sources: Vec<String>,
         has_table: bool,
-        fields_seen: Vec<(usize, String)>,
+        fields_seen: Vec<(usize, String, String)>,
     },
     Property {
         id: String,
@@ -83,7 +83,7 @@ pub enum Item {
         sources: Vec<String>,
         definitions: Vec<String>,
         statements: Vec<(usize, String)>,
-        fields_seen: Vec<(usize, String)>,
+        fields_seen: Vec<(usize, String, String)>,
     },
     Scenario {
         id: Option<String>,
@@ -101,7 +101,7 @@ pub enum Item {
         relations: Vec<String>,
         sources: Vec<String>,
         body: Vec<(usize, String)>,
-        fields_seen: Vec<(usize, String)>,
+        fields_seen: Vec<(usize, String, String)>,
     },
     GlossaryTerm {
         term: String,
@@ -448,15 +448,16 @@ impl ItemBuilder {
     }
 
     /// field_lines から fields_seen を構築する。
-    /// name が空の場合は "- {value}" を入れる（行の文字として）。
-    fn build_fields_seen(&self) -> Vec<(usize, String)> {
+    /// (行番号, フィールド名, 行の文字) の三つ組を返す。
+    /// name が空の場合（コロンのない行）は名前を空のまま、行の文字を "- {value}" にする。
+    fn build_fields_seen(&self) -> Vec<(usize, String, String)> {
         self.field_lines
             .iter()
             .map(|(ln, name, value)| {
                 if name.is_empty() {
-                    (*ln, format!("- {}", value))
+                    (*ln, String::new(), format!("- {}", value))
                 } else {
-                    (*ln, name.clone())
+                    (*ln, name.clone(), format!("- {}: {}", name, value))
                 }
             })
             .collect()
@@ -874,7 +875,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
             // REQ-098: 必須の行
-            if kind.is_none() && !fields_seen.iter().any(|(_, n)| n == "種類") {
+            if kind.is_none() && !fields_seen.iter().any(|(_, n, _)| n == "種類") {
                 findings.push(Finding {
                     kind: "missing_field".to_string(),
                     severity: "error".to_string(),
@@ -884,7 +885,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                 });
             }
             if sources.is_empty() {
-                if fields_seen.iter().any(|(_, n)| n == "出典") {
+                if fields_seen.iter().any(|(_, n, _)| n == "出典") {
                     // REQ-059: 出典の行があるが値が空
                     findings.push(Finding {
                         kind: "missing_source".to_string(),
@@ -906,7 +907,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             }
 
             // REQ-048: 検証の行が無い
-            if verification.is_none() && !fields_seen.iter().any(|(_, n)| n == "検証") {
+            if verification.is_none() && !fields_seen.iter().any(|(_, n, _)| n == "検証") {
                 findings.push(Finding {
                     kind: "verification_missing".to_string(),
                     severity: "error".to_string(),
@@ -994,7 +995,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
 
             // REQ-098/REQ-059: 出典が必須
             if sources.is_empty() {
-                if fields_seen.iter().any(|(_, n)| n == "出典") {
+                if fields_seen.iter().any(|(_, n, _)| n == "出典") {
                     findings.push(Finding {
                         kind: "missing_source".to_string(),
                         severity: "error".to_string(),
@@ -1042,7 +1043,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
 
             // REQ-098/REQ-059: 出典が必須
             if sources.is_empty() {
-                if fields_seen.iter().any(|(_, n)| n == "出典") {
+                if fields_seen.iter().any(|(_, n, _)| n == "出典") {
                     findings.push(Finding {
                         kind: "missing_source".to_string(),
                         severity: "error".to_string(),
@@ -1142,7 +1143,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
             // REQ-098: 必須の行
-            if kind.is_none() && !fields_seen.iter().any(|(_, n)| n == "種類") {
+            if kind.is_none() && !fields_seen.iter().any(|(_, n, _)| n == "種類") {
                 findings.push(Finding {
                     kind: "missing_field".to_string(),
                     severity: "error".to_string(),
@@ -1151,7 +1152,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                     detail: "種類".to_string(),
                 });
             }
-            if relations.is_empty() && !fields_seen.iter().any(|(_, n)| n == "関係") {
+            if relations.is_empty() && !fields_seen.iter().any(|(_, n, _)| n == "関係") {
                 findings.push(Finding {
                     kind: "missing_field".to_string(),
                     severity: "error".to_string(),
@@ -1161,7 +1162,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                 });
             }
             if sources.is_empty() {
-                if fields_seen.iter().any(|(_, n)| n == "出典") {
+                if fields_seen.iter().any(|(_, n, _)| n == "出典") {
                     findings.push(Finding {
                         kind: "missing_source".to_string(),
                         severity: "error".to_string(),
@@ -1222,7 +1223,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
 
 /// フィールドの検査（unknown_field, duplicate_field）
 fn check_fields(
-    fields_seen: &[(usize, String)],
+    fields_seen: &[(usize, String, String)],
     known_fields: &[&str],
     path: &str,
     _item_line: usize,
@@ -1230,30 +1231,31 @@ fn check_fields(
 ) {
     let mut seen_names: HashMap<String, usize> = HashMap::new();
 
-    for (ln, name) in fields_seen {
-        if name.starts_with("- ") {
+    for (ln, name, raw) in fields_seen {
+        if name.is_empty() {
             // "xxx:" の形でない "- " 行: detail は行の文字
             findings.push(Finding {
                 kind: "unknown_field".to_string(),
                 severity: "error".to_string(),
                 path: path.to_string(),
                 line: Some(*ln),
-                detail: name.clone(),
+                detail: raw.clone(),
             });
             continue;
         }
 
         if !known_fields.contains(&name.as_str()) {
+            // TBL-008: unknown_field の detail は行の文字
             findings.push(Finding {
                 kind: "unknown_field".to_string(),
                 severity: "error".to_string(),
                 path: path.to_string(),
                 line: Some(*ln),
-                detail: name.clone(),
+                detail: raw.clone(),
             });
         }
 
-        // REQ-045: 同じ行の重複
+        // REQ-045: 同じ行の重複（TBL-008: duplicate_field の detail は行の名前）
         if let Some(_prev_line) = seen_names.get(name) {
             findings.push(Finding {
                 kind: "duplicate_field".to_string(),

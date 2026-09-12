@@ -337,7 +337,7 @@ fn req_044_unknown_field() {
     let findings = check(&[doc], &default_config());
     let uf = find_by_kind(&findings, "unknown_field");
     assert_eq!(uf.len(), 1);
-    assert_eq!(uf[0].detail, "優先度");
+    assert_eq!(uf[0].detail, "- 優先度: 高");
 }
 
 // @kotowari[REQ-044, TBL-008]
