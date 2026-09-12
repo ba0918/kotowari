@@ -12,7 +12,6 @@ name = "kotowari"
 path = "src/lib.rs"
 
 [dependencies]
-clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde-saphyr = "1"
 globset = "0.4"
