@@ -59,11 +59,10 @@ fn main() -> ExitCode {
     }
 
     // format の解析
-    let format = match format_str.as_deref().unwrap_or("json") {
-        "json" => kotowari::Format::Json,
-        "text" => kotowari::Format::Text,
-        other => {
-            stop(&format!("unknown format value: {other}"));
+    let format = match kotowari::Format::parse(format_str.as_deref().unwrap_or("json")) {
+        Ok(f) => f,
+        Err(e) => {
+            stop(&e);
             return ExitCode::from(2);
         }
     };
