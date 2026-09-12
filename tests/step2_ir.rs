@@ -312,6 +312,21 @@ fn req_043_unknown_heading_detail_is_full_heading_text() {
     );
 }
 
+// @kotowari[REQ-043, TBL-008]
+#[test]
+fn req_043_unknown_heading_invalid_id_detail_is_full_heading_text() {
+    // 認識できる prefix だが ID 形式が不正（3桁でない） → detail は見出しの全文
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-1: Invalid\n\nSome text.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert_eq!(uh.len(), 1);
+    assert_eq!(
+        uh[0].detail, "REQ-1: Invalid",
+        "detail should be the full heading text, not just the ID"
+    );
+}
+
 // --- REQ-044: 知らない行 ---
 
 // @kotowari[REQ-044]

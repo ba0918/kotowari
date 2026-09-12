@@ -792,17 +792,22 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
         // 見出しの形の検査
         for item in &doc.items {
             match item {
-                Item::Requirement { id, line, .. }
-                | Item::DecisionTable { id, line, .. }
-                | Item::Property { id, line, .. }
-                | Item::FlagEntry { id, line, .. } => {
+                Item::Requirement { id, name, line, .. }
+                | Item::DecisionTable { id, name, line, .. }
+                | Item::Property { id, name, line, .. }
+                | Item::FlagEntry { id, name, line, .. } => {
                     if !is_valid_id(id) {
+                        let heading_text = if name.is_empty() {
+                            id.clone()
+                        } else {
+                            format!("{}: {}", id, name)
+                        };
                         findings.push(Finding {
                             kind: "unknown_heading".to_string(),
                             severity: "error".to_string(),
                             path: path.clone(),
                             line: Some(*line),
-                            detail: format!("{}", id),
+                            detail: heading_text,
                         });
                     }
                 }
