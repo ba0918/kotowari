@@ -187,12 +187,19 @@ fn req_082_macro_body_functions_are_counted_by_last_segment() {
 fn req_083_unparsable_file_is_skipped() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    fs::create_dir_all(tmp.path().join("src")).unwrap();
-    fs::write(tmp.path().join("src/broken.rs"), "this is not valid rust {{{{").unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(tmp.path().join("tests/broken.rs"), "this is not valid rust {{{{").unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     // unparsable_file は停止しない（終了コード 2 にならない）
     assert_ne!(output.status.code(), Some(2), "should not stop");
+    // unparsable_file の指摘が出る
+    let uf = findings_by_kind(&v, "unparsable_file");
+    assert!(
+        uf.iter().any(|f| f["detail"].as_str().unwrap().contains("broken.rs")),
+        "should report unparsable_file for syntax error: {:?}",
+        uf
+    );
 }
 
 // --- REQ-071: 印の構文 ---

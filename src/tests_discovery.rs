@@ -129,6 +129,10 @@ pub fn discover_rust_tests(
         .parse(content, None)
         .ok_or_else(|| format!("failed to parse {file_rel}"))?;
 
+    if tree.root_node().has_error() {
+        return Err(format!("syntax error in {file_rel}"));
+    }
+
     let lines: Vec<&str> = content.lines().collect();
     let mut tests = Vec::new();
 
