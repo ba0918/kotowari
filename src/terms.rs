@@ -32,7 +32,7 @@ pub fn check_unknown_terms(
     text: &str,
     line: usize,
     glossary: &Option<BTreeSet<String>>,
-    known_ids: &BTreeSet<String>,
+    _known_ids: &BTreeSet<String>,
     path: &str,
     findings: &mut Vec<Finding>,
 ) {

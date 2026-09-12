@@ -406,18 +406,16 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
 struct ItemBuilder {
     heading: String,
     line: usize,
-    doc_kind: DocKind,
     field_lines: Vec<(usize, String, String)>, // (line, name, value)
     statement_lines: Vec<(usize, String)>,
     has_table: bool,
 }
 
 impl ItemBuilder {
-    fn new(heading: String, line: usize, doc_kind: DocKind) -> Self {
+    fn new(heading: String, line: usize, _doc_kind: DocKind) -> Self {
         ItemBuilder {
             heading,
             line,
-            doc_kind,
             field_lines: Vec::new(),
             statement_lines: Vec::new(),
             has_table: false,
@@ -849,7 +847,7 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
 }
 
 /// 項目の検査
-fn check_item(item: &Item, path: &str, doc_kind: DocKind, findings: &mut Vec<Finding>) {
+fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Finding>) {
     match item {
         Item::Requirement {
             id,
@@ -1074,7 +1072,6 @@ fn check_item(item: &Item, path: &str, doc_kind: DocKind, findings: &mut Vec<Fin
             id,
             line,
             tags,
-            about,
             sources,
             ..
         } => {
@@ -1276,7 +1273,6 @@ fn check_references(
     for item in items {
         match item {
             Item::Requirement {
-                id,
                 line,
                 definitions,
                 statements,
