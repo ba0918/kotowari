@@ -505,6 +505,25 @@ fn req_100_scenario_outside_gherkin_is_ignored() {
     assert!(!has_scenario, "Scenario outside gherkin should be ignored");
 }
 
+// --- REQ-042, REQ-053: タグなし連続シナリオ ---
+
+// @kotowari[REQ-042, REQ-053]
+#[test]
+fn req_053_consecutive_scenarios_without_tags_each_get_missing_tag() {
+    // タグ行なしで Scenario: が2つ連続 → 各シナリオに missing_tag が出る
+    let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\nScenario: First\n  Given step1\nScenario: Second\n  Given step2\n```\n";
+    let doc = ir::parse_document("a.md", content);
+    let scenarios: Vec<_> = doc.items.iter().filter(|i| matches!(i, Item::Scenario { .. })).collect();
+    assert_eq!(scenarios.len(), 2, "should parse 2 scenarios: {:?}", scenarios);
+    let findings = check(&[doc], &default_config());
+    let mt = find_by_kind(&findings, "missing_tag");
+    // 各シナリオに @id と @about の missing_tag が出る → 4件
+    let id_missing: Vec<_> = mt.iter().filter(|f| f.detail == "@id").collect();
+    assert_eq!(id_missing.len(), 2, "@id missing should be 2: {:?}", mt);
+    let about_missing: Vec<_> = mt.iter().filter(|f| f.detail == "@about").collect();
+    assert_eq!(about_missing.len(), 2, "@about missing should be 2: {:?}", mt);
+}
+
 // --- REQ-052: 知らないタグ ---
 
 // @kotowari[REQ-052]

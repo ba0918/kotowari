@@ -283,6 +283,13 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                     }
                 }
             } else if trimmed.starts_with("Scenario:") {
+                // 前のシナリオがあればフラッシュ
+                if let Some(scenario_line) = gherkin_scenario_line.take() {
+                    let scenario = build_scenario(&gherkin_tags, scenario_line, &gherkin_steps);
+                    items.push(scenario);
+                    gherkin_steps.clear();
+                    gherkin_tags.clear();
+                }
                 gherkin_scenario_line = Some(line_num);
             } else if trimmed.starts_with("Given ")
                 || trimmed.starts_with("When ")
