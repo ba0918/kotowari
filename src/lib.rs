@@ -1,4 +1,5 @@
 pub mod config;
+pub mod ir;
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -13,7 +14,7 @@ pub struct CheckResult {
 }
 
 /// 指摘
-#[derive(serde::Serialize, Clone)]
+#[derive(Debug, serde::Serialize, Clone)]
 pub struct Finding {
     pub kind: String,
     pub severity: String,
@@ -137,12 +138,23 @@ pub fn run_check(
         )));
     }
 
-    // Step 1: 空の結果を返す
+    // IR の文書を読んで検査する
+    let (docs, mut findings) = ir::load_and_check(&base, &cfg)?;
+
+    let files = docs.len();
+    let lines: usize = docs.iter().map(|d| d.line_count).sum();
+
+    // counts を作る（PROP-002: 0件は含まない）
+    let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+    for f in &findings {
+        *counts.entry(f.kind.clone()).or_insert(0) += 1;
+    }
+
     let result = CheckResult {
-        files: 0,
-        lines: 0,
-        findings: vec![],
-        counts: BTreeMap::new(),
+        files,
+        lines,
+        findings,
+        counts,
     };
 
     Ok((result, format))
