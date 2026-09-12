@@ -7,7 +7,7 @@ kotowari のコマンド、受ける引数、停止と終了コードを扱う�
 ### REQ-001: コマンドは1つ
 
 - 種類: ubiquitous
-- 出典: brainstorm/records.md#A19
+- 出典: experiments/003-cli/brainstorm/records.md#A19
 - 検証: unit
 
 kotowari は常に、"kotowari check" の1つのコマンドで、`IR`の検査と`テスト`との対応の検査を両方行う。
@@ -15,7 +15,7 @@ kotowari は常に、"kotowari check" の1つのコマンドで、`IR`の検査�
 ### REQ-002: 受けるオプション
 
 - 種類: ubiquitous
-- 出典: brainstorm/records.md#A19
+- 出典: experiments/003-cli/brainstorm/records.md#A19
 - 検証: unit
 
 kotowari は常に、オプションとして "--format" と "--config" だけを受ける。
@@ -23,7 +23,7 @@ kotowari は常に、オプションとして "--format" と "--config" だけ�
 ### REQ-003: 設定のパスの基準
 
 - 種類: ubiquitous
-- 出典: brainstorm/records.md#A60
+- 出典: experiments/003-cli/brainstorm/records.md#A60
 - 検証: unit
 
 kotowari は常に、"--config" に与えたパスをカレントディレクトリからの相対パスとして読む。
@@ -31,7 +31,7 @@ kotowari は常に、"--config" に与えたパスをカレントディレクト
 ### REQ-004: 引数の誤り
 
 - 種類: event_driven
-- 出典: brainstorm/records.md#A60
+- 出典: experiments/003-cli/brainstorm/records.md#A60
 - 検証: unit
 
 知らないオプション、位置引数、"--format" の知らない値のいずれかを受けたとき、または "--config" の指すファイルが無いとき、kotowari は`停止`する。
@@ -39,7 +39,7 @@ kotowari は常に、"--config" に与えたパスをカレントディレクト
 ### REQ-005: 停止の出力
 
 - 種類: event_driven
-- 出典: brainstorm/records.md#A40
+- 出典: experiments/003-cli/brainstorm/records.md#A40
 - 検証: unit
 
 `停止`するとき、kotowari は標準出力に何も出さず、停止の理由を標準エラーに出す。
@@ -47,21 +47,21 @@ kotowari は常に、"--config" に与えたパスをカレントディレクト
 ### REQ-006: 停止の理由
 
 - 種類: algorithm
-- 出典: brainstorm/records.md#A44, brainstorm/records.md#A48, brainstorm/records.md#A60
+- 出典: experiments/003-cli/brainstorm/records.md#A44, experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/brainstorm/records.md#A60
 - 定義: TBL-001
 - 検証: unit
 
 ### REQ-007: 終了コード
 
 - 種類: algorithm
-- 出典: brainstorm/records.md#A20, brainstorm/records.md#A29
+- 出典: experiments/003-cli/brainstorm/records.md#A20, experiments/003-cli/brainstorm/records.md#A29
 - 定義: TBL-002
 - 検証: unit
 
 ### REQ-008: 作らないコマンド
 
 - 種類: prohibition
-- 出典: brainstorm/records.md#P1
+- 出典: experiments/003-cli/brainstorm/records.md#P1
 - 検証: review
 
 kotowari は、人間向けの文書の生成（"render"）、影響範囲の追跡（"trace"）、plan と cycle への受け渡し（"query"）を作ってはならない。
@@ -70,7 +70,7 @@ kotowari は、人間向けの文書の生成（"render"）、影響範囲の追
 
 ### TBL-001: 停止の理由
 
-- 出典: brainstorm/records.md#A20, brainstorm/records.md#A44, brainstorm/records.md#A48, brainstorm/records.md#A60, brainstorm/records.md#A12, brainstorm/records.md#A41, brainstorm/records.md#A66
+- 出典: experiments/003-cli/brainstorm/records.md#A20, experiments/003-cli/brainstorm/records.md#A44, experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/brainstorm/records.md#A60, experiments/003-cli/brainstorm/records.md#A12, experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A66
 
 | 理由 | 場面 |
 |---|---|
@@ -81,7 +81,7 @@ kotowari は、人間向けの文書の生成（"render"）、影響範囲の追
 
 ### TBL-002: 終了コード
 
-- 出典: brainstorm/records.md#A20, brainstorm/records.md#A29
+- 出典: experiments/003-cli/brainstorm/records.md#A20, experiments/003-cli/brainstorm/records.md#A29
 
 | 終了コード | 場面 |
 |---|---|
@@ -92,7 +92,7 @@ kotowari は、人間向けの文書の生成（"render"）、影響範囲の追
 ## 具体例
 
 ```gherkin
-@id=EX-001 @about=REQ-004,REQ-005 @source=brainstorm/records.md#A60,brainstorm/records.md#A40
+@id=EX-001 @about=REQ-004,REQ-005 @source=experiments/003-cli/brainstorm/records.md#A60,experiments/003-cli/brainstorm/records.md#A40
 Scenario: 知らないオプションで停止する
   Given 検査できる IR がある
   When "kotowari check --verbose" を実行する

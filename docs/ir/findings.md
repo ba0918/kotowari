@@ -7,21 +7,21 @@
 ### REQ-029: 誤りの種類
 
 - 種類: algorithm
-- 出典: brainstorm/records.md#A21, brainstorm/records.md#A29, brainstorm/ir-form.md#検査の種類
+- 出典: experiments/003-cli/brainstorm/records.md#A21, experiments/003-cli/brainstorm/records.md#A29, experiments/003-cli/brainstorm/ir-form.md#検査の種類
 - 定義: TBL-008
 - 検証: unit
 
 ### REQ-030: 警告の種類
 
 - 種類: algorithm
-- 出典: brainstorm/records.md#A29, brainstorm/ir-form.md#検査の種類
+- 出典: experiments/003-cli/brainstorm/records.md#A29, experiments/003-cli/brainstorm/ir-form.md#検査の種類
 - 定義: TBL-009
 - 検証: unit
 
 ### REQ-031: 警告は2つだけ
 
 - 種類: invariant
-- 出典: brainstorm/records.md#A29, brainstorm/ir-form.md#検査の種類
+- 出典: experiments/003-cli/brainstorm/records.md#A29, experiments/003-cli/brainstorm/ir-form.md#検査の種類
 - 検証: unit
 
 種類が too_many_lines か too_many_requirements の`指摘`だけが`警告`で、ほかの種類の`指摘`はすべて`誤り`である関係が常に成り立つ。
@@ -29,7 +29,7 @@
 ### REQ-032: ID の重複
 
 - 種類: event_driven
-- 出典: brainstorm/records.md#A47, brainstorm/records.md#A61, brainstorm/records.md#A72
+- 出典: experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A61, experiments/003-cli/brainstorm/records.md#A72
 - 検証: unit
 
 同じ`ID`が2か所以上にあるとき、kotowari は2つ目以降の場所ごとに、その見出しの行（`シナリオ`は "Scenario:" の行）を "line" にして duplicate_id の`誤り`を出す。
@@ -38,7 +38,7 @@
 
 ### TBL-008: 誤りの種類と detail
 
-- 出典: brainstorm/ir-form.md#検査の種類, brainstorm/records.md#A68
+- 出典: experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A68
 
 | 種類 | detail | 条件を定める要求 |
 |---|---|---|
@@ -71,7 +71,7 @@
 
 ### TBL-009: 警告の種類と detail
 
-- 出典: brainstorm/ir-form.md#検査の種類
+- 出典: experiments/003-cli/brainstorm/ir-form.md#検査の種類
 
 | 種類 | detail | 条件を定める要求 |
 |---|---|---|
@@ -81,7 +81,7 @@
 ## 具体例
 
 ```gherkin
-@id=EX-005 @about=REQ-032 @source=brainstorm/records.md#A61,brainstorm/records.md#A47
+@id=EX-005 @about=REQ-032 @source=experiments/003-cli/brainstorm/records.md#A61,experiments/003-cli/brainstorm/records.md#A47
 Scenario: 3か所にある ID は2件の重複になる
   Given "REQ-001" の見出しが3か所にある
   When "kotowari check" を実行する

@@ -7,7 +7,7 @@
 ### REQ-011: 設定ファイルの場所
 
 - 種類: event_driven
-- 出典: brainstorm/records.md#A2, brainstorm/records.md#A37
+- 出典: experiments/003-cli/brainstorm/records.md#A2, experiments/003-cli/brainstorm/records.md#A37
 - 検証: unit
 
 "--config" を受けないとき、kotowari は`基準のディレクトリ`の ".kotowari/config.yaml" を`設定ファイル`として読む。
@@ -15,7 +15,7 @@
 ### REQ-012: 設定ファイルが無いとき
 
 - 種類: event_driven
-- 出典: brainstorm/records.md#A12, brainstorm/records.md#A60
+- 出典: experiments/003-cli/brainstorm/records.md#A12, experiments/003-cli/brainstorm/records.md#A60
 - 検証: unit
 
 "--config" を受けずに`設定ファイル`が無いとき、kotowari は既定の値で検査を行う。
@@ -23,14 +23,14 @@
 ### REQ-013: キーと既定の値
 
 - 種類: algorithm
-- 出典: brainstorm/records.md#A12, brainstorm/records.md#A23, brainstorm/records.md#A36, brainstorm/records.md#A41, brainstorm/records.md#A47, brainstorm/records.md#A48, brainstorm/records.md#A49
+- 出典: experiments/003-cli/brainstorm/records.md#A12, experiments/003-cli/brainstorm/records.md#A23, experiments/003-cli/brainstorm/records.md#A36, experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/brainstorm/records.md#A49
 - 定義: TBL-004
 - 検証: unit
 
 ### REQ-014: 設定の誤り
 
 - 種類: event_driven
-- 出典: brainstorm/records.md#A12, brainstorm/records.md#A41, brainstorm/records.md#A20, brainstorm/records.md#A44
+- 出典: experiments/003-cli/brainstorm/records.md#A12, experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A20, experiments/003-cli/brainstorm/records.md#A44
 - 検証: unit
 
 `設定ファイル`に知らないキー、型の違う値、負の数、0 のいずれかがあるとき、kotowari は設定の誤りを理由に`停止`する。
@@ -38,7 +38,7 @@
 ### REQ-015: 一覧は既定を置き換える
 
 - 種類: ubiquitous
-- 出典: brainstorm/records.md#A41
+- 出典: experiments/003-cli/brainstorm/records.md#A41
 - 検証: unit
 
 kotowari は常に、一覧のキーに一覧だけを受け、書かれた一覧で既定の一覧を置き換える。
@@ -46,7 +46,7 @@ kotowari は常に、一覧のキーに一覧だけを受け、書かれた一�
 ### REQ-016: 空の一覧
 
 - 種類: event_driven
-- 出典: brainstorm/records.md#A59
+- 出典: experiments/003-cli/brainstorm/records.md#A59
 - 検証: unit
 
 一覧のキーに空の一覧が書かれているとき、kotowari はそのキーを要素の無い一覧として扱う。
@@ -54,7 +54,7 @@ kotowari は常に、一覧のキーに一覧だけを受け、書かれた一�
 ### REQ-017: 入れ子のキー
 
 - 種類: ubiquitous
-- 出典: brainstorm/records.md#A59
+- 出典: experiments/003-cli/brainstorm/records.md#A59
 - 検証: unit
 
 kotowari は常に、`設定ファイル`のキーを入れ子の形（"decisions:" の下の "records:"）で読む。
@@ -62,7 +62,7 @@ kotowari は常に、`設定ファイル`のキーを入れ子の形（"decision
 ### REQ-018: 置き場が無いとき
 
 - 種類: event_driven
-- 出典: brainstorm/records.md#A41, brainstorm/records.md#A47, brainstorm/records.md#A66
+- 出典: experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A66
 - 検証: unit
 
 "ir"、"decisions.records"、"decisions.adr" の指すディレクトリが無いとき、kotowari は読めないファイルを理由に`停止`する。
@@ -70,7 +70,7 @@ kotowari は常に、`設定ファイル`のキーを入れ子の形（"decision
 ### REQ-019: glob の読み方
 
 - 種類: ubiquitous
-- 出典: brainstorm/records.md#A59
+- 出典: experiments/003-cli/brainstorm/records.md#A59
 - 検証: unit
 
 kotowari は常に、glob の "**" を再帰として読み、隠しディレクトリを含めない。
@@ -78,7 +78,7 @@ kotowari は常に、glob の "**" を再帰として読み、隠しディレク
 ### REQ-020: 直下の kotowari.toml を読まない
 
 - 種類: prohibition
-- 出典: brainstorm/records.md#R6
+- 出典: experiments/003-cli/brainstorm/records.md#R6
 - 検証: review
 
 kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`として読んではならない。
@@ -87,7 +87,7 @@ kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`�
 
 ### TBL-004: キーと既定の値
 
-- 出典: brainstorm/records.md#A12, brainstorm/records.md#A23, brainstorm/records.md#A36, brainstorm/records.md#A41, brainstorm/records.md#A47, brainstorm/records.md#A48, brainstorm/records.md#A49, brainstorm/records.md#A62, brainstorm/records.md#A69
+- 出典: experiments/003-cli/brainstorm/records.md#A12, experiments/003-cli/brainstorm/records.md#A23, experiments/003-cli/brainstorm/records.md#A36, experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/brainstorm/records.md#A49, experiments/003-cli/brainstorm/records.md#A62, experiments/003-cli/brainstorm/records.md#A69
 
 | キー | 値 | 既定 |
 |---|---|---|
@@ -104,7 +104,7 @@ kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`�
 ## 具体例
 
 ```gherkin
-@id=EX-003 @about=REQ-014 @source=brainstorm/records.md#A12,brainstorm/records.md#A20,brainstorm/records.md#A41
+@id=EX-003 @about=REQ-014 @source=experiments/003-cli/brainstorm/records.md#A12,experiments/003-cli/brainstorm/records.md#A20,experiments/003-cli/brainstorm/records.md#A41
 Scenario: 知らないキーで停止する
   Given 設定ファイルに "limit:" という知らないキーがある
   When "kotowari check" を実行する
