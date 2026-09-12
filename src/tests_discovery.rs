@@ -583,11 +583,33 @@ pub fn discover_and_check(
                 }
             }
         } else {
-            // 問い合わせの無い言語: 印だけ拾う（REQ-076, REQ-087）
+            // 問い合わせの無い言語: 印を拾い、検査もする（REQ-076, REQ-087, REQ-072, REQ-054）
             for (idx, line) in content.lines().enumerate() {
-                for marker in parse_markers_in_line(line, idx + 1) {
-                    for id in &marker.ids {
-                        all_marker_ids.insert(id.clone());
+                let line_num = idx + 1;
+                for marker in parse_markers_in_line(line, line_num) {
+                    if marker.ids.is_empty() {
+                        // REQ-072: 空の印、または閉じ括弧のない印
+                        findings.push(Finding {
+                            kind: "invalid_marker".to_string(),
+                            severity: "error".to_string(),
+                            path: rel_path.clone(),
+                            line: Some(line_num),
+                            detail: line.to_string(),
+                        });
+                    } else {
+                        for id in &marker.ids {
+                            all_marker_ids.insert(id.clone());
+                            // REQ-054: 存在しない ID への参照
+                            if is_valid_id(id) && !known_ids.contains(id) {
+                                findings.push(Finding {
+                                    kind: "unresolved_reference".to_string(),
+                                    severity: "error".to_string(),
+                                    path: rel_path.clone(),
+                                    line: Some(line_num),
+                                    detail: id.clone(),
+                                });
+                            }
+                        }
                     }
                 }
             }

@@ -569,6 +569,62 @@ fn req_087_unknown_language_only_feeds_coverage() {
     assert!(twi.is_empty(), "unknown lang should not produce test_without_id: {:?}", twi);
 }
 
+// --- REQ-072, REQ-054: 問い合わせの無い言語の印の検査 ---
+
+// @kotowari[REQ-072, REQ-054]
+#[test]
+fn req_072_non_query_language_checks_invalid_marker() {
+    // .py ファイルの空の印 → invalid_marker が出る
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+    )
+    .unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.py"),
+        "# @kotowari[]\ndef test_a():\n    pass\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let im = findings_by_kind(&v, "invalid_marker");
+    assert!(
+        !im.is_empty(),
+        "invalid_marker should fire for non-query language: {:?}",
+        im
+    );
+}
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_non_query_language_checks_unresolved_reference() {
+    // .py ファイルの存在しない ID の印 → unresolved_reference が出る
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+    )
+    .unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.py"),
+        "# @kotowari[REQ-999]\ndef test_a():\n    pass\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ur = findings_by_kind(&v, "unresolved_reference");
+    assert!(
+        ur.iter().any(|f| f["detail"] == "REQ-999"),
+        "unresolved_reference should fire for non-query language: {:?}",
+        ur
+    );
+}
+
 // --- REQ-088: IR に文書が無いとき ---
 
 // @kotowari[REQ-088]
