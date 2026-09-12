@@ -757,3 +757,41 @@ fn tbl_001_non_utf8_test_file_stops() {
     // 標準出力は空
     assert!(output.stdout.is_empty(), "stdout should be empty on stop");
 }
+
+// --- REQ-019: glob は再帰し、隠しディレクトリを含めない ---
+
+// @kotowari[REQ-019]
+#[test]
+fn req_019_hidden_directory_is_excluded_and_subdirectory_is_included() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    // 再帰が効くことの確認: tests/sub/deep.rs に印の無いテストを置く
+    fs::create_dir_all(tmp.path().join("tests/sub")).unwrap();
+    fs::write(
+        tmp.path().join("tests/sub/deep.rs"),
+        "#[test]\nfn deep_test() {}\n",
+    )
+    .unwrap();
+    // 隠しディレクトリの除外の確認: tests/.hidden/hidden.rs にテストを置く
+    fs::create_dir_all(tmp.path().join("tests/.hidden")).unwrap();
+    fs::write(
+        tmp.path().join("tests/.hidden/hidden.rs"),
+        "#[test]\nfn hidden_test() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    // tests/sub/deep.rs のテストは再帰で発見される
+    assert!(
+        twi.iter().any(|f| f["detail"] == "deep_test"),
+        "subdirectory test should be found via recursive glob: {:?}",
+        twi
+    );
+    // tests/.hidden/ のテストは除外される
+    assert!(
+        !twi.iter().any(|f| f["detail"] == "hidden_test"),
+        "hidden directory test should be excluded: {:?}",
+        twi
+    );
+}
