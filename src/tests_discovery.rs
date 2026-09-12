@@ -435,7 +435,8 @@ fn collect_markers_from_siblings(
     (ids, invalid)
 }
 
-/// 指定行（0-indexed）の前のコメント塊から印を集める（空行で切れる）
+/// 指定行（0-indexed）の前のコメント塊から印を集める
+/// コメント（// か /*）と属性（#[）の行だけ遡り、空行またはそれ以外の行で切れる
 fn collect_markers_before_line(lines: &[&str], target_line: usize) -> BTreeSet<String> {
     let mut ids = BTreeSet::new();
     if target_line == 0 {
@@ -449,6 +450,11 @@ fn collect_markers_before_line(lines: &[&str], target_line: usize) -> BTreeSet<S
         }
         let line = lines[line_idx].trim();
         if line.is_empty() {
+            break;
+        }
+
+        // コメントと属性の行だけ遡る。それ以外（関数定義など）で停止する
+        if !line.starts_with("//") && !line.starts_with("/*") && !line.starts_with("#[") {
             break;
         }
 

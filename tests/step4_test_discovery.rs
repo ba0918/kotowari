@@ -619,6 +619,41 @@ fn tbl_016_blank_line_between_marker_and_test_breaks_binding() {
     );
 }
 
+// @kotowari[REQ-075, TBL-016]
+#[test]
+fn tbl_016_macro_function_boundary_breaks_marker_binding() {
+    // マクロ内で @kotowari[REQ-001] → fn a() → fn b()（空行なし）
+    // b には印が無いので test_without_id が出る
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - my_macro\n",
+    )
+    .unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "my_macro! {\n    // @kotowari[REQ-001]\n    fn a() {}\n    fn b() {}\n}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(
+        twi.iter().any(|f| f["detail"] == "b"),
+        "fn b should be test_without_id because marker belongs to fn a: {:?}",
+        twi
+    );
+    // fn a は印を持つので test_without_id にはならない
+    assert!(
+        !twi.iter().any(|f| f["detail"] == "a"),
+        "fn a should NOT be test_without_id: {:?}",
+        twi
+    );
+}
+
 // --- TBL-001: UTF-8 でないテストファイルで停止 ---
 
 // @kotowari[REQ-006, TBL-001]
