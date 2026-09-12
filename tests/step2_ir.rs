@@ -611,3 +611,21 @@ fn req_032_duplicate_id_on_each_later_place_with_its_line() {
     // 各指摘に行番号がある
     assert!(di.iter().all(|f| f.line.is_some()));
 }
+
+// --- REQ-044, TBL-011: 性質の知らない行 ---
+
+// @kotowari[REQ-044, TBL-011]
+#[test]
+fn req_044_property_definition_field_is_unknown() {
+    // TBL-011 によると性質が持つ行は「- 出典:」だけ。
+    // 「- 定義:」は知らない行として unknown_field になる。
+    let content = "# Title\n\nScope.\n\n## 性質\n\n### PROP-001: P\n\n- 出典: brainstorm/records.md#A1\n- 定義: TBL-001\n\nProperty statement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uf = find_by_kind(&findings, "unknown_field");
+    assert!(
+        uf.iter().any(|f| f.detail == "- 定義: TBL-001"),
+        "PROP の「- 定義:」は unknown_field になるはず: {:?}",
+        uf
+    );
+}

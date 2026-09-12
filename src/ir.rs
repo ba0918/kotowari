@@ -1051,7 +1051,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                 return;
             }
 
-            let known_fields = ["出典", "定義"];
+            let known_fields = ["出典"];
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
             // REQ-098/REQ-059: 出典が必須
