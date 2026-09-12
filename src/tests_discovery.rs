@@ -401,7 +401,7 @@ fn collect_markers_from_siblings(
                 let line_num = p.start_position().row + 1;
                 for marker in parse_markers_in_line(text, line_num) {
                     if marker.ids.is_empty() {
-                        invalid.push((line_num, marker.raw.clone()));
+                        invalid.push((line_num, text.to_string()));
                     } else {
                         for id in &marker.ids {
                             ids.insert(id.clone());
@@ -492,7 +492,7 @@ fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> (BTreeSe
                 let line_num = child.start_position().row + 1;
                 for marker in parse_markers_in_line(text, line_num) {
                     if marker.ids.is_empty() {
-                        invalid.push((line_num, marker.raw.clone()));
+                        invalid.push((line_num, text.to_string()));
                     } else {
                         for id in &marker.ids {
                             ids.insert(id.clone());

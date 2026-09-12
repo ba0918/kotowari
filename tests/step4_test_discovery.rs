@@ -235,6 +235,29 @@ fn req_072_invalid_marker() {
     assert!(!im.is_empty(), "should find invalid marker: {:?}", im);
 }
 
+// @kotowari[REQ-072, TBL-008]
+#[test]
+fn req_072_invalid_marker_detail_is_line_text() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    // 空の印 → detail は印の部分文字列ではなく行の文字
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[]\n#[test]\nfn empty_marker_test() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let im = findings_by_kind(&v, "invalid_marker");
+    assert!(!im.is_empty(), "should find invalid marker");
+    assert_eq!(
+        im[0]["detail"].as_str().unwrap(),
+        "// @kotowari[]",
+        "detail should be the full line text, not just the marker substring"
+    );
+}
+
 // @kotowari[REQ-072, TBL-016]
 #[test]
 fn req_072_invalid_marker_outside_test_is_ignored() {
