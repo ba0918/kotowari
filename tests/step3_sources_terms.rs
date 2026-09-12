@@ -132,6 +132,27 @@ fn req_059_missing_source_for_item_scenario_and_term() {
     );
 }
 
+// @kotowari[REQ-059]
+#[test]
+fn req_059_empty_source_value_produces_missing_source() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 出典の行はあるが値が空
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典:\n- 検証: unit\n\nStatement.\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ms = findings_by_kind(&v, "missing_source");
+    assert!(
+        ms.iter().any(|f| f["detail"] == "REQ-001"),
+        "empty source value should produce missing_source: {:?}",
+        ms
+    );
+}
+
 // --- REQ-060: 用語集とシナリオの出典 ---
 
 // @kotowari[REQ-060]
