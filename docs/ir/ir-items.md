@@ -14,18 +14,18 @@
 ### REQ-043: 形に合わない見出し
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A52
+- 出典: experiments/003-cli/brainstorm/records.md#A52, experiments/003-cli/brainstorm/records.md#A82
 - 検証: unit
 
-"### " の見出しが "### ID: 名前" の形でないとき、kotowari は unknown_heading の`誤り`を出す。
+"### " の見出しが、REQ、TBL、PROP、FLAG のいずれかの`ID`に名前を続けた "### ID: 名前" の形でないとき、kotowari は unknown_heading の`誤り`を出す。EX の`ID`を見出しに使ったときも同じである。
 
 ### REQ-044: 知らない行
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A42, experiments/003-cli/brainstorm/records.md#A52
+- 出典: experiments/003-cli/brainstorm/records.md#A42, experiments/003-cli/brainstorm/records.md#A52, experiments/003-cli/brainstorm/records.md#A81
 - 検証: unit
 
-見出しの下に知らない "- xxx:" の行、または "xxx:" の形でない "- " の行があるとき、kotowari は unknown_field の`誤り`を出す。
+見出しの下に知らない "- xxx:" の行、または "xxx:" の形でない "- " の行があるとき、kotowari は unknown_field の`誤り`を出す。知っている行は`項目`の種類ごとに TBL-011 の「持つ行」の列にあるものだけで、`性質`なら "- 出典:" だけである。
 
 ### REQ-045: 同じ行の重複
 
