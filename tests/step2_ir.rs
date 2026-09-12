@@ -518,6 +518,21 @@ fn req_052_unknown_tag() {
     assert_eq!(ut[0].detail, "@requirement");
 }
 
+// @kotowari[REQ-052]
+#[test]
+fn req_052_bare_tag_without_equals_is_unknown() {
+    // @wip のように = を持たない裸のタグも unknown_tag になる
+    let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1 @wip\nScenario: Test\n  Given something\n```\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ut = find_by_kind(&findings, "unknown_tag");
+    assert!(
+        ut.iter().any(|f| f.detail == "@wip"),
+        "bare tag @wip should be unknown_tag: {:?}",
+        ut
+    );
+}
+
 // --- REQ-053: 無いタグ ---
 
 // @kotowari[REQ-053]

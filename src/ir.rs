@@ -277,6 +277,9 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                         let tag_name = &part[..eq_pos];
                         let tag_value = &part[eq_pos + 1..];
                         gherkin_tags.push((tag_name.to_string(), tag_value.to_string()));
+                    } else if part.starts_with('@') {
+                        // = のない裸のタグ（@wip 等）
+                        gherkin_tags.push((part.to_string(), String::new()));
                     }
                 }
             } else if trimmed.starts_with("Scenario:") {
