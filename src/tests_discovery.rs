@@ -409,7 +409,7 @@ fn collect_markers_from_siblings(
             let gap_end = p.start_position().row;
             if gap_end > gap_start + 1 {
                 // 空行がある → ここまで
-                // ただし最後のコメントの印は既に収集済み
+                break;
             }
         }
 

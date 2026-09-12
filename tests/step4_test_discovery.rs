@@ -519,3 +519,28 @@ fn req_088_empty_ir_still_checks_tests() {
     // 終了コード 1（誤りあり）
     assert_eq!(output.status.code(), Some(1));
 }
+
+// --- TBL-016: 空行を挟んだ印は結び付かない ---
+
+// @kotowari[REQ-075, TBL-016]
+#[test]
+fn tbl_016_blank_line_between_marker_and_test_breaks_binding() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    // 印と #[test] の間に空行がある → 結び付かない
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-001]\n\n#[test]\nfn test_a() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(
+        twi.iter().any(|f| f["detail"] == "test_a"),
+        "blank line should break marker binding: {:?}",
+        twi
+    );
+}
