@@ -1,5 +1,5 @@
 use kotowari::config::Config;
-use kotowari::ir::{self, DocKind, IrDocument, Item};
+use kotowari::ir::{self, IrDocument, Item};
 use kotowari::Finding;
 
 fn default_config() -> Config {
