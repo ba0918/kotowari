@@ -1,5 +1,7 @@
 pub mod config;
 pub mod ir;
+pub mod sources;
+pub mod terms;
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -140,6 +142,26 @@ pub fn run_check(
 
     // IR の文書を読んで検査する
     let (docs, mut findings) = ir::load_and_check(&base, &cfg)?;
+
+    // 出典の検査
+    let source_ctx = sources::build_context(&base, &cfg)?;
+    sources::check_sources(&docs, &source_ctx, &cfg.ir, &mut findings);
+
+    // 用語と曖昧語の検査
+    let glossary = terms::collect_glossary_terms(&docs);
+    let known_ids: std::collections::BTreeSet<String> = docs
+        .iter()
+        .flat_map(|d| d.items.iter())
+        .filter_map(|item| item.id().map(|s| s.to_string()))
+        .collect();
+    terms::check_terms_and_vague_words(
+        &docs, &glossary, &known_ids, &cfg.vague_words, &cfg.ir, &mut findings,
+    );
+
+    // 文書名の参照の検査
+    let ir_filenames: std::collections::BTreeSet<String> =
+        docs.iter().map(|d| d.filename.clone()).collect();
+    terms::check_document_references(&docs, &cfg.ir, &ir_filenames, &mut findings);
 
     let files = docs.len();
     let lines: usize = docs.iter().map(|d| d.line_count).sum();

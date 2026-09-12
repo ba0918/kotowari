@@ -1,0 +1,278 @@
+//! 用語、曖昧語、文書名の参照の検査（REQ-063〜REQ-070, REQ-104）
+
+use crate::ir::{is_valid_id, IrDocument, Item};
+use crate::Finding;
+use std::collections::BTreeSet;
+
+/// 用語集から用語の集合を作る
+pub fn collect_glossary_terms(docs: &[IrDocument]) -> Option<BTreeSet<String>> {
+    let mut has_glossary = false;
+    let mut terms = BTreeSet::new();
+
+    for doc in docs {
+        if doc.filename == "CONTEXT.md" {
+            has_glossary = true;
+            for item in &doc.items {
+                if let Item::GlossaryTerm { term, .. } = item {
+                    terms.insert(term.clone());
+                }
+            }
+        }
+    }
+
+    if has_glossary {
+        Some(terms)
+    } else {
+        None
+    }
+}
+
+/// 対象の行からバッククォートで囲んだ語を検査する（REQ-064, REQ-065）
+pub fn check_unknown_terms(
+    text: &str,
+    line: usize,
+    glossary: &Option<BTreeSet<String>>,
+    known_ids: &BTreeSet<String>,
+    path: &str,
+    findings: &mut Vec<Finding>,
+) {
+    let mut start = 0;
+    while let Some(open) = text[start..].find('`') {
+        let open_abs = start + open + 1;
+        if open_abs >= text.len() {
+            break;
+        }
+        if let Some(close) = text[open_abs..].find('`') {
+            let content = &text[open_abs..open_abs + close];
+            if !content.is_empty() {
+                // ID なら参照チェック（ir モジュールで済み）、用語チェックはしない
+                if is_valid_id(content) {
+                    // ID は通す（参照チェックは ir モジュールで行う）
+                } else {
+                    // 用語集にあるか
+                    let is_known = match glossary {
+                        Some(terms) => terms.contains(content),
+                        None => false, // 用語集がない → すべて unknown
+                    };
+                    if !is_known {
+                        findings.push(Finding {
+                            kind: "unknown_term".to_string(),
+                            severity: "error".to_string(),
+                            path: path.to_string(),
+                            line: Some(line),
+                            detail: content.to_string(),
+                        });
+                    }
+                }
+            }
+            start = open_abs + close + 1;
+        } else {
+            break;
+        }
+    }
+}
+
+/// 曖昧語の検査（REQ-066, REQ-067）
+pub fn check_vague_words(
+    text: &str,
+    line: usize,
+    vague_words: &[String],
+    path: &str,
+    findings: &mut Vec<Finding>,
+) {
+    for word in vague_words {
+        // 部分一致で出現回数を数える（REQ-067: 出現ごとに1件）
+        let mut search_start = 0;
+        while let Some(pos) = text[search_start..].find(word.as_str()) {
+            findings.push(Finding {
+                kind: "vague_word".to_string(),
+                severity: "error".to_string(),
+                path: path.to_string(),
+                line: Some(line),
+                detail: word.clone(),
+            });
+            search_start += pos + word.len();
+        }
+    }
+}
+
+/// 文書名の参照の検査（REQ-069, REQ-070, TBL-014）
+pub fn check_document_references(
+    docs: &[IrDocument],
+    ir_path: &str,
+    ir_filenames: &BTreeSet<String>,
+    findings: &mut Vec<Finding>,
+) {
+    // 句読点の集合
+    let punctuation: &[char] = &[
+        ',', '.', ':', ';', '(', ')', '"', '\'',
+        '、', '。', '，', '．', '（', '）', '「', '」', '『', '』', '\u{201C}', '\u{201D}',
+    ];
+
+    for doc in docs {
+        let path = format!("{}/{}", ir_path, doc.filename);
+        let lines = crate::ir::split_lines_for_doc_ref(&doc.filename, &doc.raw_content);
+
+        let mut in_code_block = false;
+        for (idx, line) in lines.iter().enumerate() {
+            let line_num = idx + 1;
+
+            if line.starts_with("```") {
+                in_code_block = !in_code_block;
+                continue;
+            }
+            if in_code_block {
+                continue;
+            }
+
+            // 二重引用符の中を除外するため、引用符の外の部分だけ検査
+            let parts = split_outside_quotes(line);
+            for part in &parts {
+                find_doc_refs(part, line_num, &path, ir_filenames, punctuation, findings);
+            }
+        }
+    }
+}
+
+/// 二重引用符の外の部分を返す
+fn split_outside_quotes(line: &str) -> Vec<&str> {
+    let mut parts = Vec::new();
+    let mut start = 0;
+    let mut in_quote = false;
+
+    for (i, c) in line.char_indices() {
+        if c == '"' {
+            if !in_quote {
+                parts.push(&line[start..i]);
+                in_quote = true;
+            } else {
+                in_quote = false;
+                start = i + 1;
+            }
+        }
+    }
+    if !in_quote && start < line.len() {
+        parts.push(&line[start..]);
+    }
+    parts
+}
+
+/// 文書名の参照を見つける
+fn find_doc_refs(
+    text: &str,
+    line: usize,
+    path: &str,
+    ir_filenames: &BTreeSet<String>,
+    punctuation: &[char],
+    findings: &mut Vec<Finding>,
+) {
+    // 英小文字と数字とハイフンの並びに ".md" が続くものを探す
+    let bytes = text.as_bytes();
+    let len = text.len();
+    let mut i = 0;
+
+    while i < len {
+        // ".md" を探す
+        if let Some(md_pos) = text[i..].find(".md") {
+            let md_abs = i + md_pos;
+
+            // ".md" の後が英小文字や数字でないこと（ファイル名の一部でない）
+            let after_md = md_abs + 3;
+            if after_md < len {
+                let next_byte = bytes[after_md];
+                if next_byte.is_ascii_lowercase() || next_byte.is_ascii_digit() || next_byte == b'-' {
+                    i = md_abs + 1;
+                    continue;
+                }
+            }
+
+            // ".md" の前の英小文字と数字とハイフンの並びを逆に辿る
+            let mut name_start = md_abs;
+            while name_start > 0 {
+                let prev = bytes[name_start - 1];
+                if prev.is_ascii_lowercase() || prev.is_ascii_digit() || prev == b'-' {
+                    name_start -= 1;
+                } else {
+                    break;
+                }
+            }
+
+            if name_start < md_abs {
+                let doc_name = &text[name_start..md_abs + 3];
+
+                // 直前が行頭、空白、句読点のいずれか
+                let boundary_ok = if name_start == 0 {
+                    true
+                } else {
+                    let prev_char = text[..name_start].chars().next_back().unwrap();
+                    prev_char.is_whitespace()
+                        || punctuation.contains(&prev_char)
+                };
+
+                // "/"、"_"、英字の続きは当たらない
+                if boundary_ok && name_start > 0 {
+                    let prev_byte = bytes[name_start - 1];
+                    if prev_byte == b'/' || prev_byte == b'_' || prev_byte.is_ascii_alphabetic() {
+                        i = md_abs + 3;
+                        continue;
+                    }
+                }
+
+                if boundary_ok {
+                    // IR の置き場にその文書があるか
+                    if !ir_filenames.contains(doc_name) {
+                        findings.push(Finding {
+                            kind: "missing_document".to_string(),
+                            severity: "error".to_string(),
+                            path: path.to_string(),
+                            line: Some(line),
+                            detail: doc_name.to_string(),
+                        });
+                    }
+                }
+            }
+
+            i = md_abs + 3;
+        } else {
+            break;
+        }
+    }
+}
+
+/// IR 文書の対象の行（TBL-013）で用語と曖昧語を検査する
+pub fn check_terms_and_vague_words(
+    docs: &[IrDocument],
+    glossary: &Option<BTreeSet<String>>,
+    known_ids: &BTreeSet<String>,
+    vague_words: &[String],
+    ir_path: &str,
+    findings: &mut Vec<Finding>,
+) {
+    for doc in docs {
+        let path = format!("{}/{}", ir_path, doc.filename);
+        for item in &doc.items {
+            match item {
+                Item::Requirement { statements, .. } => {
+                    for (line, text) in statements {
+                        check_unknown_terms(text, *line, glossary, known_ids, &path, findings);
+                        check_vague_words(text, *line, vague_words, &path, findings);
+                    }
+                }
+                Item::Property { statements, .. } => {
+                    for (line, text) in statements {
+                        check_unknown_terms(text, *line, glossary, known_ids, &path, findings);
+                        check_vague_words(text, *line, vague_words, &path, findings);
+                    }
+                }
+                Item::Scenario { steps, .. } => {
+                    for (line, text) in steps {
+                        check_unknown_terms(text, *line, glossary, known_ids, &path, findings);
+                        check_vague_words(text, *line, vague_words, &path, findings);
+                    }
+                }
+                // 用語集の意味の列、問題の記録の本文は対象外
+                _ => {}
+            }
+        }
+    }
+}

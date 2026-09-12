@@ -146,6 +146,12 @@ pub struct IrDocument {
     pub line_count: usize,
     pub items: Vec<Item>,
     pub sections: Vec<(usize, String)>,
+    pub raw_content: String,
+}
+
+/// 文書名の参照の検査用に行を分割する
+pub fn split_lines_for_doc_ref<'a>(_filename: &str, content: &'a str) -> Vec<&'a str> {
+    split_lines(content)
 }
 
 /// 行を \n で分割し、\r\n は1行として数える（TBL-010）
@@ -387,6 +393,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
         line_count,
         items,
         sections,
+        raw_content: content.to_string(),
     }
 }
 
