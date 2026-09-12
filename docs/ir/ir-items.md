@@ -22,7 +22,7 @@
 ### REQ-044: 知らない行
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A42, experiments/003-cli/brainstorm/records.md#A52, experiments/003-cli/brainstorm/records.md#A81
+- 出典: experiments/003-cli/brainstorm/records.md#A42, experiments/003-cli/brainstorm/records.md#A52, experiments/003-cli/brainstorm/records.md#A81, experiments/003-cli/brainstorm/ir-form.md#項目
 - 検証: unit
 
 見出しの下に知らない "- xxx:" の行、または "xxx:" の形でない "- " の行があるとき、kotowari は unknown_field の`誤り`を出す。知っている行は`項目`の種類ごとに TBL-011 の「持つ行」の列にあるものだけで、`性質`なら "- 出典:" だけである。

@@ -7,10 +7,10 @@
 ### REQ-057: 出典の書式
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A3, experiments/003-cli/brainstorm/records.md#A13, experiments/003-cli/brainstorm/records.md#A38
+- 出典: experiments/003-cli/brainstorm/records.md#A3, experiments/003-cli/brainstorm/records.md#A13, experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/records.md#A84
 - 検証: unit
 
-kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の "#" でパスと印に分ける。パスに "#" は書けない。
+kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の "#" でパスと印に分ける。パスに "#" は書けない。パスは`基準のディレクトリ`（".kotowari" があるリポジトリ直下）からの相対で、置き場からの全体を書く（"experiments/003-cli/brainstorm/records.md#A26" の形）。
 
 ### REQ-058: 出典の判定
 
