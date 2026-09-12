@@ -658,6 +658,33 @@ fn tbl_016_macro_function_boundary_breaks_marker_binding() {
 
 // @kotowari[REQ-006, TBL-001]
 #[test]
+#[cfg(unix)]
+fn tbl_001_unreadable_test_file_stops() {
+    use std::os::unix::fs::PermissionsExt;
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    let test_path = tmp.path().join("tests/unreadable.rs");
+    fs::write(&test_path, b"#[test]\nfn t() {}\n").unwrap();
+    fs::set_permissions(&test_path, std::fs::Permissions::from_mode(0o000)).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    // root ではパーミッションが効かないのでスキップ
+    if std::process::Command::new("id").arg("-u").output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim() == "0")
+        .unwrap_or(false)
+    {
+        return;
+    }
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "unreadable test file should stop with exit code 2"
+    );
+    assert!(output.stdout.is_empty(), "stdout should be empty on stop");
+}
+
+// @kotowari[REQ-006, TBL-001]
+#[test]
 fn tbl_001_non_utf8_test_file_stops() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());

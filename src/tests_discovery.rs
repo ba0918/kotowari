@@ -531,7 +531,11 @@ pub fn discover_and_check(
     for (rel_path, abs_path) in &test_files {
         let bytes = match std::fs::read(abs_path) {
             Ok(b) => b,
-            Err(_) => continue,
+            Err(e) => {
+                return Err(crate::StopReason::UnreadableFile(
+                    format!("{abs_path}: {e}"),
+                ));
+            }
         };
         let content = match String::from_utf8(bytes) {
             Ok(s) => s,
