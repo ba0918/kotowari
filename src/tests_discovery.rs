@@ -517,7 +517,7 @@ pub fn discover_and_check(
     known_ids: &BTreeSet<String>,
     ir_path: &str,
     findings: &mut Vec<Finding>,
-) {
+) -> Result<(), crate::StopReason> {
     let test_files = collect_test_files(base, config);
     let mut all_tests: Vec<DiscoveredTest> = Vec::new();
     let mut all_marker_ids: BTreeSet<String> = BTreeSet::new();
@@ -530,14 +530,7 @@ pub fn discover_and_check(
         let content = match String::from_utf8(bytes) {
             Ok(s) => s,
             Err(_) => {
-                findings.push(Finding {
-                    kind: "unparsable_file".to_string(),
-                    severity: "error".to_string(),
-                    path: rel_path.clone(),
-                    line: None,
-                    detail: rel_path.clone(),
-                });
-                continue;
+                return Err(crate::StopReason::NonUtf8File(rel_path.clone()));
             }
         };
 
@@ -626,6 +619,8 @@ pub fn discover_and_check(
             });
         }
     }
+
+    Ok(())
 }
 
 /// テストの印を検証する

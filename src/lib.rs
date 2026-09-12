@@ -167,7 +167,7 @@ pub fn run_check(
     // テストの発見と印の検査
     tests_discovery::discover_and_check(
         &base, &cfg, &docs, &known_ids, &cfg.ir, &mut findings,
-    );
+    )?;
 
     let files = docs.len();
     let lines: usize = docs.iter().map(|d| d.line_count).sum();

@@ -595,3 +595,24 @@ fn tbl_016_blank_line_between_marker_and_test_breaks_binding() {
         twi
     );
 }
+
+// --- TBL-001: UTF-8 でないテストファイルで停止 ---
+
+// @kotowari[REQ-006, TBL-001]
+#[test]
+fn tbl_001_non_utf8_test_file_stops() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    // 非 UTF-8 バイト列
+    fs::write(tmp.path().join("tests/bad.rs"), b"\xff\xfe").unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    // 終了コード 2（停止）
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "non-UTF-8 test file should stop with exit code 2"
+    );
+    // 標準出力は空
+    assert!(output.stdout.is_empty(), "stdout should be empty on stop");
+}
