@@ -173,6 +173,20 @@ pub fn run_check(
     let files = docs.len();
     let lines: usize = docs.iter().map(|d| d.line_count).sum();
 
+    // REQ-024: 指摘を並べる（TBL-007: path → line → kind → detail）
+    findings.sort_by(|a, b| {
+        a.path
+            .cmp(&b.path)
+            .then_with(|| match (a.line, b.line) {
+                (None, None) => std::cmp::Ordering::Equal,
+                (None, Some(_)) => std::cmp::Ordering::Less,
+                (Some(_), None) => std::cmp::Ordering::Greater,
+                (Some(al), Some(bl)) => al.cmp(&bl),
+            })
+            .then_with(|| a.kind.cmp(&b.kind))
+            .then_with(|| a.detail.cmp(&b.detail))
+    });
+
     // counts を作る（PROP-002: 0件は含まない）
     let mut counts: BTreeMap<String, usize> = BTreeMap::new();
     for f in &findings {
