@@ -193,39 +193,60 @@ fn req_024_sorted_by_path_line_kind_detail() {
 fn prop_003_findings_are_sorted() {
     use proptest::prelude::*;
 
-    // proptest の中で CLI を走らせるのは重いので、
-    // ライブラリ関数で直接テスト
-    proptest!(|(
-        n_docs in 1..5usize,
-        n_items in 0..3usize,
+    // run_check を通して、ライブラリが返す findings が
+    // TBL-007（path → line → kind → detail）で並んでいることを検証する。
+    //
+    // IR 検査の指摘（後のファイル名の文書）とテスト発見の指摘（前のファイル
+    // 名のテストファイル）が交互に追加されるため、ソートしないと壊れる。
+    let config = proptest::test_runner::Config {
+        cases: 32,
+        ..Default::default()
+    };
+    proptest!(config, |(
+        n_docs in 2..5usize,
+        n_items in 1..3usize,
     )| {
-        let config = kotowari::config::Config::default();
-        let mut docs = Vec::new();
+        let tmp = tempfile::TempDir::new().unwrap();
+        fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+        fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
+        fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+        fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
+        fs::create_dir_all(tmp.path().join("tests")).unwrap();
+        fs::write(
+            tmp.path().join(".kotowari/config.yaml"),
+            "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        ).unwrap();
+        fs::write(
+            tmp.path().join("docs/decision/brainstorm/records.md"),
+            "# Records\n\n## Agreements\n\n- A1 Agreement\n",
+        ).unwrap();
         for i in 0..n_docs {
             let filename = format!("doc{i}.md");
             let mut content = format!("# Title {i}\n\nScope {i}.\n\n## 要求\n\n");
             for j in 0..n_items {
                 let id_num = i * 10 + j + 1;
+                // 解決できない出典を使い source_invalid を出す。
+                // requirement_without_test（テスト発見モジュール）と交互に
+                // 追加されるため、ソートしないと順序が壊れる。
                 content.push_str(&format!(
-                    "### REQ-{:03}: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n\n",
-                    id_num
+                    "### REQ-{:03}: R\n\n- 種類: ubiquitous\n- 出典: nonexistent/path#X{}\n- 検証: unit\n\nStatement.\n\n",
+                    id_num, id_num
                 ));
             }
-            docs.push(kotowari::ir::parse_document(&filename, &content));
+            fs::write(tmp.path().join(format!("docs/ir/{filename}")), &content).unwrap();
         }
-        let mut findings = kotowari::ir::check_documents(&docs, &config);
-        findings.sort_by(|a, b| {
-            a.path.cmp(&b.path)
-                .then_with(|| match (a.line, b.line) {
-                    (None, None) => std::cmp::Ordering::Equal,
-                    (None, Some(_)) => std::cmp::Ordering::Less,
-                    (Some(_), None) => std::cmp::Ordering::Greater,
-                    (Some(al), Some(bl)) => al.cmp(&bl),
-                })
-                .then_with(|| a.kind.cmp(&b.kind))
-                .then_with(|| a.detail.cmp(&b.detail))
-        });
-        // 並びの検証
+        // 印の無いテストファイルを置く（test_without_id が tests/ パスで出る）
+        fs::write(
+            tmp.path().join("tests/check.rs"),
+            "#[test]\nfn unmarked() {}\n",
+        ).unwrap();
+        let (result, _) = kotowari::run_check(
+            tmp.path(),
+            kotowari::Format::Json,
+            None,
+        ).expect("run_check should succeed");
+        // findings が TBL-007 の順で並んでいることを検証する
+        let findings = &result.findings;
         for i in 1..findings.len() {
             let a = &findings[i-1];
             let b = &findings[i];
@@ -238,7 +259,9 @@ fn prop_003_findings_are_sorted() {
                 })
                 .then_with(|| a.kind.cmp(&b.kind))
                 .then_with(|| a.detail.cmp(&b.detail));
-            prop_assert!(cmp != std::cmp::Ordering::Greater);
+            prop_assert!(cmp != std::cmp::Ordering::Greater,
+                "findings not sorted at index {}: prev=({},{:?},{},{}) curr=({},{:?},{},{})",
+                i, a.path, a.line, a.kind, a.detail, b.path, b.line, b.kind, b.detail);
         }
     });
 }
