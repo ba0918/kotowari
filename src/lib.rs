@@ -2,6 +2,7 @@ pub mod config;
 pub mod ir;
 pub mod sources;
 pub mod terms;
+pub mod tests_discovery;
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -162,6 +163,12 @@ pub fn run_check(
     let ir_filenames: std::collections::BTreeSet<String> =
         docs.iter().map(|d| d.filename.clone()).collect();
     terms::check_document_references(&docs, &cfg.ir, &ir_filenames, &mut findings);
+
+    // テストの発見と印の検査
+    tests_discovery::discover_and_check(
+        &base, &cfg, &docs, &known_ids, &cfg.ir, &mut findings,
+    );
+    tests_discovery::check_invalid_markers(&base, &cfg, &mut findings);
 
     let files = docs.len();
     let lines: usize = docs.iter().map(|d| d.line_count).sum();

@@ -1,0 +1,521 @@
+use assert_cmd::Command;
+use std::fs;
+use tempfile::TempDir;
+
+fn cmd() -> Command {
+    Command::cargo_bin("kotowari").unwrap()
+}
+
+fn make_project(tmp: &std::path::Path) {
+    fs::create_dir_all(tmp.join(".kotowari")).unwrap();
+    fs::create_dir_all(tmp.join("docs/ir")).unwrap();
+    fs::create_dir_all(tmp.join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.join("docs/decision/adr")).unwrap();
+    fs::write(
+        tmp.join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.join("docs/decision/brainstorm/records.md"),
+        "# Records\n\n## Agreements\n\n- A1 Agreement\n",
+    )
+    .unwrap();
+}
+
+fn make_ir_with_req(tmp: &std::path::Path, req_id: &str, verification: &str) {
+    fs::write(
+        tmp.join("docs/ir/a.md"),
+        format!(
+            "# Title\n\nScope.\n\n## 要求\n\n### {req_id}: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: {verification}\n\nStatement.\n"
+        ),
+    )
+    .unwrap();
+}
+
+fn parse_json(output: &std::process::Output) -> serde_json::Value {
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    serde_json::from_str(&stdout).expect("valid JSON")
+}
+
+fn findings_by_kind(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value> {
+    v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["kind"] == kind)
+        .cloned()
+        .collect()
+}
+
+// --- REQ-079: テストのファイル ---
+
+// @kotowari[REQ-079]
+#[test]
+fn req_079_reads_files_matching_the_globs() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-001]\n#[test]\nfn test_a() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    assert!(rwt.is_empty(), "REQ-001 should have test coverage: {:?}", rwt);
+}
+
+// --- REQ-080: tree-sitter で読む ---
+
+// @kotowari[REQ-080]
+#[test]
+fn req_080_uses_tree_sitter_with_bundled_rust_query() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "#[test]\nfn my_test() { assert!(true); }\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(twi.iter().any(|f| f["detail"] == "my_test"), "should find test via tree-sitter: {:?}", twi);
+}
+
+// --- REQ-081: .rs だけが問い合わせのある言語 ---
+
+// @kotowari[REQ-081]
+#[test]
+fn req_081_only_rs_maps_to_rust() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    // .py ファイルにテストっぽいものを書いても test_without_id は出ない
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.py"),
+        "def test_something():\n    pass\n",
+    )
+    .unwrap();
+    // ただし .py ファイルは glob に当たらないので tests.files に追加
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n    - \"tests/**/*.rs\"\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    // .py ファイルからは test_without_id は出ない
+    assert!(!twi.iter().any(|f| f["detail"] == "test_something"), ".py should not detect tests: {:?}", twi);
+}
+
+// --- REQ-082: Rust のテスト ---
+
+// @kotowari[REQ-082, TBL-017]
+#[test]
+fn req_082_test_attribute_is_always_counted() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "#[test]\nfn counted_test() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(twi.iter().any(|f| f["detail"] == "counted_test"), "should count #[test]: {:?}", twi);
+}
+
+// @kotowari[REQ-082, TBL-017]
+#[test]
+fn req_082_configured_attribute_matches_path_with_arguments() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  rust:\n    attributes:\n      - kani::proof\n",
+    )
+    .unwrap();
+    fs::create_dir_all(tmp.path().join("src")).unwrap();
+    fs::write(
+        tmp.path().join("src/lib.rs"),
+        "// @kotowari[REQ-001]\n#[kani::proof(unwind = 3)]\nfn my_proof() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    assert!(rwt.is_empty(), "kani::proof should count as test: {:?}", rwt);
+}
+
+// @kotowari[REQ-082, TBL-017]
+#[test]
+fn req_082_macro_body_functions_are_counted_by_last_segment() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - proptest\n",
+    )
+    .unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "proptest::proptest! {\n    // @kotowari[REQ-001]\n    #[test]\n    fn my_prop_test(x in 0..100u32) {\n        assert!(x < 101);\n    }\n}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    // proptest マクロ内の関数がテストとして数えられ、REQ-001 に結び付く
+    assert!(rwt.is_empty(), "proptest function should cover REQ-001: {:?}", rwt);
+}
+
+// --- REQ-083: 読めないファイル ---
+
+// @kotowari[REQ-083]
+#[test]
+fn req_083_unparsable_file_is_skipped() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("src")).unwrap();
+    fs::write(tmp.path().join("src/broken.rs"), "this is not valid rust {{{{").unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    // unparsable_file は停止しない（終了コード 2 にならない）
+    assert_ne!(output.status.code(), Some(2), "should not stop");
+}
+
+// --- REQ-071: 印の構文 ---
+
+// @kotowari[REQ-071, TBL-015]
+#[test]
+fn req_071_marker_syntax_allows_spaces_around_commas() {
+    let markers = kotowari::tests_discovery::parse_markers_in_line(
+        "// @kotowari[REQ-001 , TBL-002]",
+        1,
+    );
+    assert_eq!(markers.len(), 1);
+    assert_eq!(markers[0].ids, vec!["REQ-001", "TBL-002"]);
+}
+
+// --- REQ-072: 形の誤った印 ---
+
+// @kotowari[REQ-072]
+#[test]
+fn req_072_invalid_marker() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    // 空の印
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[]\n#[test]\nfn empty_marker_test() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let im = findings_by_kind(&v, "invalid_marker");
+    assert!(!im.is_empty(), "should find invalid marker: {:?}", im);
+}
+
+// --- REQ-073: 1行に複数の印 ---
+
+// @kotowari[REQ-073]
+#[test]
+fn req_073_several_markers_on_one_line() {
+    let markers = kotowari::tests_discovery::parse_markers_in_line(
+        "// @kotowari[REQ-001] @kotowari[TBL-002]",
+        1,
+    );
+    assert_eq!(markers.len(), 2);
+}
+
+// --- REQ-074: コメント記号を見ない ---
+
+// @kotowari[REQ-074]
+#[test]
+fn req_074_marker_anywhere_in_the_line_regardless_of_comment_syntax() {
+    let markers = kotowari::tests_discovery::parse_markers_in_line(
+        "/* @kotowari[REQ-001] */",
+        1,
+    );
+    assert_eq!(markers.len(), 1);
+    assert_eq!(markers[0].ids, vec!["REQ-001"]);
+}
+
+// --- REQ-075: 印の結び付け ---
+
+// @kotowari[REQ-075, TBL-016]
+#[test]
+fn req_075_marker_before_attributes_binds() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-001]\n#[test]\nfn before_attr_test() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(rwt.is_empty(), "marker before attr should bind: {:?}", rwt);
+    assert!(twi.is_empty(), "test should have marker: {:?}", twi);
+}
+
+// @kotowari[REQ-075, TBL-016]
+#[test]
+fn req_075_marker_at_body_start_binds() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "#[test]\nfn body_start_test() {\n    // @kotowari[REQ-001]\n    assert!(true);\n}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(rwt.is_empty(), "marker at body start should bind: {:?}", rwt);
+    assert!(twi.is_empty(), "test should have marker: {:?}", twi);
+}
+
+// @kotowari[REQ-075, TBL-016]
+#[test]
+fn req_075_both_places_merge_ids() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    // 2つの要求
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: A\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nStmt.\n\n### REQ-002: B\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nStmt.\n",
+    )
+    .unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-001]\n#[test]\nfn merged_test() {\n    // @kotowari[REQ-002]\n    assert!(true);\n}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    assert!(rwt.is_empty(), "both markers should merge: {:?}", rwt);
+}
+
+// @kotowari[REQ-075, TBL-016]
+#[test]
+fn req_075_marker_in_body_middle_is_ignored() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "#[test]\nfn mid_body_test() {\n    let x = 1;\n    // @kotowari[REQ-001]\n    assert!(x == 1);\n}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    // 本体の途中の印は無視される
+    assert!(twi.iter().any(|f| f["detail"] == "mid_body_test"), "marker in body middle should be ignored: {:?}", twi);
+}
+
+// --- REQ-076: 問い合わせの無い言語の印 ---
+
+// @kotowari[REQ-076]
+#[test]
+fn req_076_unknown_language_scans_raw_text() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+    )
+    .unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.py"),
+        "# @kotowari[REQ-001]\ndef test_something():\n    pass\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    // .py の印は requirement_without_test を消す
+    assert!(rwt.is_empty(), "unknown lang markers should count for coverage: {:?}", rwt);
+}
+
+// --- REQ-077: 存在しない ID だけを指す印 ---
+
+// @kotowari[REQ-077]
+#[test]
+fn req_077_unresolved_only_marker_still_counts() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-999]\n#[test]\nfn unresolved_test() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    // 印があるので test_without_id にはならない
+    assert!(!twi.iter().any(|f| f["detail"] == "unresolved_test"), "unresolved marker should still count: {:?}", twi);
+}
+
+// --- REQ-078: review の要求を指す印 ---
+
+// @kotowari[REQ-078]
+#[test]
+fn req_078_marker_to_review_requirement_is_not_an_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "review");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    // review の要求にテストがなくても requirement_without_test にならない
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    assert!(rwt.is_empty(), "review requirements don't need tests: {:?}", rwt);
+}
+
+// --- REQ-054: 印から存在しない ID ---
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_marker_to_unknown_id_is_unresolved() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-999]\n#[test]\nfn unresolved_marker_test() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ur = findings_by_kind(&v, "unresolved_reference");
+    assert!(ur.iter().any(|f| f["detail"] == "REQ-999"), "should report unresolved marker: {:?}", ur);
+}
+
+// --- REQ-085: テストのない要求 ---
+
+// @kotowari[REQ-085]
+#[test]
+fn req_085_fixture_has_no_uncovered_requirement() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-001]\n#[test]\nfn covered_test() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    assert!(rwt.is_empty(), "all requirements covered: {:?}", rwt);
+}
+
+// --- REQ-086: 印の無いテスト ---
+
+// @kotowari[REQ-086]
+#[test]
+fn req_086_fixture_has_no_unmarked_test_and_one_after_removal() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    // 印のあるテスト
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-001]\n#[test]\nfn marked_test() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(twi.is_empty(), "marked test should not be test_without_id: {:?}", twi);
+
+    // 印を外す
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "#[test]\nfn marked_test() {}\n",
+    )
+    .unwrap();
+    let output2 = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v2 = parse_json(&output2);
+    let twi2 = findings_by_kind(&v2, "test_without_id");
+    assert_eq!(twi2.len(), 1, "should have one test_without_id: {:?}", twi2);
+}
+
+// --- REQ-087: 問い合わせの無い言語 ---
+
+// @kotowari[REQ-087]
+#[test]
+fn req_087_unknown_language_only_feeds_coverage() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+    )
+    .unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.py"),
+        "# @kotowari[REQ-001]\ndef test_a():\n    pass\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    // 問い合わせの無い言語からは test_without_id は出ない
+    assert!(twi.is_empty(), "unknown lang should not produce test_without_id: {:?}", twi);
+}
+
+// --- REQ-088: IR に文書が無いとき ---
+
+// @kotowari[REQ-088]
+#[test]
+fn req_088_empty_ir_still_checks_tests() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    // IR 文書なし
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "#[test]\nfn unmarked_test() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(twi.iter().any(|f| f["detail"] == "unmarked_test"), "should check tests even with empty IR: {:?}", twi);
+    // requirement_without_test は出ない（IR に要求がない）
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    assert!(rwt.is_empty());
+    // 終了コード 1（誤りあり）
+    assert_eq!(output.status.code(), Some(1));
+}
