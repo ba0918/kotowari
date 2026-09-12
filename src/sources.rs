@@ -326,6 +326,7 @@ pub fn check_sources(
                 | crate::ir::Item::FlagEntry { sources, .. } => sources.clone(),
                 crate::ir::Item::Scenario { sources, .. } => sources.clone(),
                 crate::ir::Item::GlossaryTerm { sources, .. } => sources.clone(),
+                crate::ir::Item::UnknownHeading { .. } => continue,
             };
 
             for source in &sources {

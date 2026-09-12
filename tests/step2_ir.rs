@@ -164,6 +164,29 @@ fn req_039_too_many_requirements_skips_glossary_and_flags() {
     assert!(tr2.is_empty());
 }
 
+// @kotowari[REQ-039]
+#[test]
+fn req_039_unknown_heading_does_not_inflate_requirement_count() {
+    // 10個の正しい要求 + 1個の認識できない見出し → too_many_requirements にならない
+    let mut content = String::from("# Title\n\nScope.\n\n## 要求\n\n");
+    for i in 1..=10 {
+        content.push_str(&format!(
+            "### REQ-{:03}: Req{i}\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n\n",
+            i
+        ));
+    }
+    // EX- 接頭辞の見出し（要求ではない）
+    content.push_str("### EX-001: Example\n\nSome text.\n");
+    let doc = ir::parse_document("a.md", &content);
+    let findings = check(&[doc], &default_config());
+    let tr = find_by_kind(&findings, "too_many_requirements");
+    assert!(
+        tr.is_empty(),
+        "unknown heading should not inflate requirement count: {:?}",
+        tr
+    );
+}
+
 // --- REQ-040: コードブロックの中はスキップ ---
 
 // @kotowari[REQ-040]
@@ -272,6 +295,21 @@ fn req_043_unknown_heading() {
     let uh = find_by_kind(&findings, "unknown_heading");
     assert_eq!(uh.len(), 1);
     assert_eq!(uh[0].detail, "Bad Heading");
+}
+
+// @kotowari[REQ-043, TBL-008]
+#[test]
+fn req_043_unknown_heading_detail_is_full_heading_text() {
+    // コロン付きの認識できない見出し → detail は見出しの全文
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### EX-001: Example\n\nSome text.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert_eq!(uh.len(), 1);
+    assert_eq!(
+        uh[0].detail, "EX-001: Example",
+        "detail should be the full heading text"
+    );
 }
 
 // --- REQ-044: 知らない行 ---

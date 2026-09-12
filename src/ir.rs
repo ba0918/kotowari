@@ -109,6 +109,10 @@ pub enum Item {
         sources: Vec<String>,
         line: usize,
     },
+    UnknownHeading {
+        heading: String,
+        line: usize,
+    },
 }
 
 impl Item {
@@ -119,7 +123,7 @@ impl Item {
             | Item::Property { id, .. }
             | Item::FlagEntry { id, .. } => Some(id),
             Item::Scenario { id, .. } => id.as_deref(),
-            Item::GlossaryTerm { .. } => None,
+            Item::GlossaryTerm { .. } | Item::UnknownHeading { .. } => None,
         }
     }
 
@@ -130,7 +134,8 @@ impl Item {
             | Item::Property { line, .. }
             | Item::Scenario { line, .. }
             | Item::FlagEntry { line, .. }
-            | Item::GlossaryTerm { line, .. } => *line,
+            | Item::GlossaryTerm { line, .. }
+            | Item::UnknownHeading { line, .. } => *line,
         }
     }
 }
@@ -592,19 +597,14 @@ impl ItemBuilder {
             }
             _ => {
                 // 認識できない見出し → 後で unknown_heading として報告
-                Item::Requirement {
-                    id,
-                    name,
+                let heading_text = if name.is_empty() {
+                    id
+                } else {
+                    format!("{}: {}", id, name)
+                };
+                Item::UnknownHeading {
+                    heading: heading_text,
                     line: self.line,
-                    kind: None,
-                    sources: Vec::new(),
-                    verification: None,
-                    definitions: Vec::new(),
-                    statements: self.statement_lines,
-                    fields_seen: self.field_lines
-                        .iter()
-                        .map(|(ln, name, _)| (*ln, name.clone()))
-                        .collect(),
                 }
             }
         }
@@ -799,6 +799,15 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
                             detail: format!("{}", id),
                         });
                     }
+                }
+                Item::UnknownHeading { heading, line } => {
+                    findings.push(Finding {
+                        kind: "unknown_heading".to_string(),
+                        severity: "error".to_string(),
+                        path: path.clone(),
+                        line: Some(*line),
+                        detail: heading.clone(),
+                    });
                 }
                 _ => {}
             }
@@ -1193,6 +1202,10 @@ fn check_item(item: &Item, path: &str, doc_kind: DocKind, findings: &mut Vec<Fin
                     detail: term.clone(),
                 });
             }
+        }
+
+        Item::UnknownHeading { .. } => {
+            // unknown_heading は check_documents で報告済み
         }
     }
 }
