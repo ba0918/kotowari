@@ -10,5 +10,6 @@ exclude_globs = ["src/main.rs"]
 # - sources.rs の多くの見逃しは出典検査のパス判定の分岐で、
 #   テストは CLI 経由で結合テストしており、個別の分岐を直接テストする
 #   には内部関数の公開が必要だが仕様上不要
-[[exclude_re]]
-function = "^<impl std::fmt::Display for StopReason>::fmt$"
+exclude_re = [
+    "<impl std::fmt::Display for StopReason>::fmt",
+]
