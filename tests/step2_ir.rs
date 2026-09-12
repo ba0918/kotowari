@@ -325,6 +325,21 @@ fn req_044_unknown_field() {
     assert_eq!(uf[0].detail, "優先度");
 }
 
+// @kotowari[REQ-044, TBL-008]
+#[test]
+fn req_044_unknown_field_without_colon_has_line_text_as_detail() {
+    // コロンのない "- テキスト" 行 → detail は行の文字
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- ただのテキスト\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uf = find_by_kind(&findings, "unknown_field");
+    assert!(
+        uf.iter().any(|f| f.detail == "- ただのテキスト"),
+        "detail of unknown_field without colon should be the line text: {:?}",
+        uf
+    );
+}
+
 // --- REQ-045: 同じ行の重複 ---
 
 // @kotowari[REQ-045]

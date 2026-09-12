@@ -449,9 +449,25 @@ impl ItemBuilder {
         }
     }
 
+    /// field_lines から fields_seen を構築する。
+    /// name が空の場合は "- {value}" を入れる（行の文字として）。
+    fn build_fields_seen(&self) -> Vec<(usize, String)> {
+        self.field_lines
+            .iter()
+            .map(|(ln, name, value)| {
+                if name.is_empty() {
+                    (*ln, format!("- {}", value))
+                } else {
+                    (*ln, name.clone())
+                }
+            })
+            .collect()
+    }
+
     fn build(self) -> Item {
         // 見出しの形: "ID: 名前"
         let (id, name) = parse_heading(&self.heading);
+        let fields_seen = self.build_fields_seen();
 
         match id_prefix(&id) {
             Some(IdPrefix::Req) => {
@@ -459,10 +475,8 @@ impl ItemBuilder {
                 let mut sources = Vec::new();
                 let mut verification = None;
                 let mut definitions = Vec::new();
-                let mut fields_seen = Vec::new();
 
-                for (ln, field_name, value) in &self.field_lines {
-                    fields_seen.push((*ln, field_name.clone()));
+                for (_, field_name, value) in &self.field_lines {
                     match field_name.as_str() {
                         "種類" => kind = Some(value.clone()),
                         "出典" => {
@@ -498,10 +512,8 @@ impl ItemBuilder {
             }
             Some(IdPrefix::Tbl) => {
                 let mut sources = Vec::new();
-                let mut fields_seen = Vec::new();
 
-                for (ln, field_name, value) in &self.field_lines {
-                    fields_seen.push((*ln, field_name.clone()));
+                for (_, field_name, value) in &self.field_lines {
                     if field_name == "出典" {
                         sources = value
                             .split(',')
@@ -523,10 +535,8 @@ impl ItemBuilder {
             Some(IdPrefix::Prop) => {
                 let mut sources = Vec::new();
                 let mut definitions = Vec::new();
-                let mut fields_seen = Vec::new();
 
-                for (ln, field_name, value) in &self.field_lines {
-                    fields_seen.push((*ln, field_name.clone()));
+                for (_, field_name, value) in &self.field_lines {
                     match field_name.as_str() {
                         "出典" => {
                             sources = value
@@ -560,10 +570,8 @@ impl ItemBuilder {
                 let mut kind = None;
                 let mut relations = Vec::new();
                 let mut sources = Vec::new();
-                let mut fields_seen = Vec::new();
 
-                for (ln, field_name, value) in &self.field_lines {
-                    fields_seen.push((*ln, field_name.clone()));
+                for (_, field_name, value) in &self.field_lines {
                     match field_name.as_str() {
                         "種類" => kind = Some(value.clone()),
                         "関係" => {
@@ -1221,14 +1229,14 @@ fn check_fields(
     let mut seen_names: HashMap<String, usize> = HashMap::new();
 
     for (ln, name) in fields_seen {
-        if name.is_empty() {
-            // "xxx:" の形でない "- " 行
+        if name.starts_with("- ") {
+            // "xxx:" の形でない "- " 行: detail は行の文字
             findings.push(Finding {
                 kind: "unknown_field".to_string(),
                 severity: "error".to_string(),
                 path: path.to_string(),
                 line: Some(*ln),
-                detail: format!("- {}", name),
+                detail: name.clone(),
             });
             continue;
         }
