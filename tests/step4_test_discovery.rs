@@ -235,6 +235,50 @@ fn req_072_invalid_marker() {
     assert!(!im.is_empty(), "should find invalid marker: {:?}", im);
 }
 
+// @kotowari[REQ-072, TBL-016]
+#[test]
+fn req_072_invalid_marker_outside_test_is_ignored() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    // テスト関数の外にある空の印 → invalid_marker は出ない
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[]\n\nfn not_a_test() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let im = findings_by_kind(&v, "invalid_marker");
+    assert!(
+        im.is_empty(),
+        "invalid_marker should not fire for markers outside tests: {:?}",
+        im
+    );
+}
+
+// @kotowari[REQ-072, REQ-073]
+#[test]
+fn req_072_invalid_marker_second_on_line_is_detected() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    // 1行に正常な印と空の印 → 2つ目も invalid_marker として検出される
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-001] @kotowari[]\n#[test]\nfn two_markers_test() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let im = findings_by_kind(&v, "invalid_marker");
+    assert!(
+        !im.is_empty(),
+        "should detect invalid marker as second on line: {:?}",
+        im
+    );
+}
+
 // --- REQ-073: 1行に複数の印 ---
 
 // @kotowari[REQ-073]

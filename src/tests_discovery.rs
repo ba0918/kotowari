@@ -4,7 +4,7 @@ use crate::config::Config;
 use crate::ir::{is_valid_id, IrDocument, Item};
 use crate::Finding;
 use globset::{Glob, GlobSetBuilder};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::path::Path;
 use walkdir::WalkDir;
 
@@ -15,6 +15,8 @@ pub struct DiscoveredTest {
     pub file_path: String,
     pub line: usize,
     pub marker_ids: BTreeSet<String>,
+    /// テストに結び付く位置にある、中身が空または閉じ括弧のない印
+    pub invalid_markers: Vec<(usize, String)>,
 }
 
 /// 印の解析結果
@@ -262,6 +264,7 @@ fn discover_macro_functions(
                     file_path: file_rel.to_string(),
                     line: actual_line,
                     marker_ids: all_ids,
+                    invalid_markers: Vec::new(),
                 });
             }
         } else {
@@ -306,17 +309,19 @@ fn check_function(
     let actual_line = func_line + 1;
 
     // 前の兄弟ノード（コメント、属性）から印を集める
-    let mut all_ids = collect_markers_from_siblings(node, source, lines);
+    let (mut all_ids, mut all_invalid) = collect_markers_from_siblings(node, source, lines);
 
     // 関数本体の先頭のコメントの印を集める
-    let body_marker_ids = collect_body_start_markers(node, source);
-    all_ids.extend(body_marker_ids);
+    let (body_ids, body_invalid) = collect_body_start_markers(node, source);
+    all_ids.extend(body_ids);
+    all_invalid.extend(body_invalid);
 
     tests.push(DiscoveredTest {
         name,
         file_path: file_rel.to_string(),
         line: actual_line,
         marker_ids: all_ids,
+        invalid_markers: all_invalid,
     });
 }
 
@@ -379,21 +384,28 @@ fn has_configured_attribute(node: tree_sitter::Node, source: &str, attr_path: &s
 }
 
 /// 関数の前の兄弟ノード（属性、コメント）から印を集める
+/// 返り値: (正常な印の ID 集合, 空・不正な印の (行, 行の文字) のリスト)
 fn collect_markers_from_siblings(
     node: tree_sitter::Node,
     source: &str,
-    lines: &[&str],
-) -> BTreeSet<String> {
+    _lines: &[&str],
+) -> (BTreeSet<String>, Vec<(usize, String)>) {
     let mut ids = BTreeSet::new();
+    let mut invalid = Vec::new();
     let mut prev = node.prev_sibling();
 
     while let Some(p) = prev {
         match p.kind() {
             "line_comment" | "block_comment" => {
                 let text = &source[p.byte_range()];
-                for marker in parse_markers_in_line(text, p.start_position().row + 1) {
-                    for id in &marker.ids {
-                        ids.insert(id.clone());
+                let line_num = p.start_position().row + 1;
+                for marker in parse_markers_in_line(text, line_num) {
+                    if marker.ids.is_empty() {
+                        invalid.push((line_num, marker.raw.clone()));
+                    } else {
+                        for id in &marker.ids {
+                            ids.insert(id.clone());
+                        }
                     }
                 }
             }
@@ -420,7 +432,7 @@ fn collect_markers_from_siblings(
         prev = p.prev_sibling();
     }
 
-    ids
+    (ids, invalid)
 }
 
 /// 指定行（0-indexed）の前のコメント塊から印を集める（空行で切れる）
@@ -456,8 +468,10 @@ fn collect_markers_before_line(lines: &[&str], target_line: usize) -> BTreeSet<S
 }
 
 /// 関数本体の先頭のコメントから印を集める
-fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> BTreeSet<String> {
+/// 返り値: (正常な印の ID 集合, 空・不正な印の (行, 行の文字) のリスト)
+fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> (BTreeSet<String>, Vec<(usize, String)>) {
     let mut ids = BTreeSet::new();
+    let mut invalid = Vec::new();
 
     if let Some(body) = node.child_by_field_name("body") {
         let mut cursor = body.walk();
@@ -475,9 +489,14 @@ fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> BTreeSet
             }
             if child.kind() == "line_comment" || child.kind() == "block_comment" {
                 let text = &source[child.byte_range()];
-                for marker in parse_markers_in_line(text, child.start_position().row + 1) {
-                    for id in &marker.ids {
-                        ids.insert(id.clone());
+                let line_num = child.start_position().row + 1;
+                for marker in parse_markers_in_line(text, line_num) {
+                    if marker.ids.is_empty() {
+                        invalid.push((line_num, marker.raw.clone()));
+                    } else {
+                        for id in &marker.ids {
+                            ids.insert(id.clone());
+                        }
                     }
                 }
             } else {
@@ -487,7 +506,7 @@ fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> BTreeSet
         }
     }
 
-    ids
+    (ids, invalid)
 }
 
 /// テストの発見と印のチェックの全体
@@ -536,6 +555,16 @@ pub fn discover_and_check(
                         check_test_markers(test, rel_path, known_ids, findings);
                         for id in &test.marker_ids {
                             all_marker_ids.insert(id.clone());
+                        }
+                        // REQ-072: テストに結び付く空・不正な印
+                        for (line_num, raw) in &test.invalid_markers {
+                            findings.push(Finding {
+                                kind: "invalid_marker".to_string(),
+                                severity: "error".to_string(),
+                                path: rel_path.clone(),
+                                line: Some(*line_num),
+                                detail: raw.clone(),
+                            });
                         }
                     }
                     all_tests.extend(tests);
@@ -622,66 +651,3 @@ fn check_test_markers(
     }
 }
 
-/// テストファイル内の invalid_marker をチェック（テストに結び付く印のみ）
-pub fn check_invalid_markers(
-    base: &Path,
-    config: &Config,
-    findings: &mut Vec<Finding>,
-) {
-    let test_files = collect_test_files(base, config);
-
-    for (rel_path, abs_path) in &test_files {
-        let bytes = match std::fs::read(abs_path) {
-            Ok(b) => b,
-            Err(_) => continue,
-        };
-        let content = match String::from_utf8(bytes) {
-            Ok(s) => s,
-            Err(_) => continue,
-        };
-
-        let ext = std::path::Path::new(rel_path)
-            .extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("");
-
-        // 問い合わせのある言語で、テストに結び付く印を検証
-        // REQ-072: テストに結び付く印が空か閉じ括弧がない → invalid_marker
-        if ext == "rs" {
-            for (idx, line) in content.lines().enumerate() {
-                let line_num = idx + 1;
-                if let Some(start) = line.find("@kotowari[") {
-                    let after = &line[start + "@kotowari[".len()..];
-                    if !after.contains(']') {
-                        // 閉じ括弧がない
-                        findings.push(Finding {
-                            kind: "invalid_marker".to_string(),
-                            severity: "error".to_string(),
-                            path: rel_path.clone(),
-                            line: Some(line_num),
-                            detail: line.trim().to_string(),
-                        });
-                    } else {
-                        let close = after.find(']').unwrap();
-                        let content_inner = &after[..close];
-                        let ids: Vec<&str> = content_inner
-                            .split(',')
-                            .map(|s| s.trim())
-                            .filter(|s| !s.is_empty())
-                            .collect();
-                        if ids.is_empty() {
-                            // 空の印
-                            findings.push(Finding {
-                                kind: "invalid_marker".to_string(),
-                                severity: "error".to_string(),
-                                path: rel_path.clone(),
-                                line: Some(line_num),
-                                detail: line.trim().to_string(),
-                            });
-                        }
-                    }
-                }
-            }
-        }
-    }
-}

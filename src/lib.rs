@@ -168,7 +168,6 @@ pub fn run_check(
     tests_discovery::discover_and_check(
         &base, &cfg, &docs, &known_ids, &cfg.ir, &mut findings,
     );
-    tests_discovery::check_invalid_markers(&base, &cfg, &mut findings);
 
     let files = docs.len();
     let lines: usize = docs.iter().map(|d| d.line_count).sum();
