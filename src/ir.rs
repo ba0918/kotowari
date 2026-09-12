@@ -974,9 +974,12 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                 }
             }
 
-            // REQ-051: algorithm に定義がない
+            // REQ-051: algorithm に決定表か性質を指す定義がない
             if let Some(k) = kind {
-                if k == "algorithm" && definitions.is_empty() {
+                let has_tbl_or_prop_def = definitions.iter().any(|d| {
+                    matches!(id_prefix(d), Some(IdPrefix::Tbl) | Some(IdPrefix::Prop))
+                });
+                if k == "algorithm" && !has_tbl_or_prop_def {
                     findings.push(Finding {
                         kind: "algorithm_without_definition".to_string(),
                         severity: "error".to_string(),

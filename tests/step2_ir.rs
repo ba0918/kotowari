@@ -468,6 +468,23 @@ fn req_051_algorithm_without_definition() {
     assert_eq!(awd[0].detail, "REQ-001");
 }
 
+// @kotowari[REQ-051]
+#[test]
+fn req_051_algorithm_definition_must_point_to_tbl_or_prop() {
+    // 定義が REQ-001 を指す（TBL/PROP ではない） → algorithm_without_definition が出る
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Algo\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: REQ-002\n\n### REQ-002: Other\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let awd = find_by_kind(&findings, "algorithm_without_definition");
+    assert_eq!(
+        awd.len(),
+        1,
+        "definition pointing to REQ should still trigger algorithm_without_definition: {:?}",
+        awd
+    );
+    assert_eq!(awd[0].detail, "REQ-001");
+}
+
 // --- REQ-098: 必須の行が無い ---
 
 // @kotowari[REQ-098]
