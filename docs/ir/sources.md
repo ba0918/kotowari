@@ -7,7 +7,7 @@
 ### REQ-057: 出典の書式
 
 - 種類: ubiquitous
-- 出典: brainstorm/records.md#A3, brainstorm/records.md#A13, brainstorm/records.md#A38
+- 出典: experiments/003-cli/brainstorm/records.md#A3, experiments/003-cli/brainstorm/records.md#A13, experiments/003-cli/brainstorm/records.md#A38
 - 検証: unit
 
 kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の "#" でパスと印に分ける。パスに "#" は書けない。
@@ -15,14 +15,14 @@ kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の 
 ### REQ-058: 出典の判定
 
 - 種類: algorithm
-- 出典: brainstorm/records.md#A38, brainstorm/records.md#A48, brainstorm/records.md#A69
+- 出典: experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/brainstorm/records.md#A69
 - 定義: TBL-012
 - 検証: unit
 
 ### REQ-059: 出典が無い
 
 - 種類: event_driven
-- 出典: brainstorm/records.md#A38, brainstorm/ir-form.md#検査の種類
+- 出典: experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/ir-form.md#検査の種類
 - 検証: unit
 
 `要求`、`決定表`、`性質`、`問題の記録`の`項目`に出典の行が無いか空のとき、`シナリオ`に "@source" のタグが無いとき、または`用語`の出典の列が空のとき、kotowari は missing_source の`誤り`を出す。
@@ -30,7 +30,7 @@ kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の 
 ### REQ-060: 用語集とシナリオの出典
 
 - 種類: ubiquitous
-- 出典: brainstorm/records.md#A52, brainstorm/ir-form.md#出典
+- 出典: experiments/003-cli/brainstorm/records.md#A52, experiments/003-cli/brainstorm/ir-form.md#出典
 - 検証: unit
 
 kotowari は常に、`用語集`の出典の列と`シナリオ`の "@source" のタグを、出典の行と同じ規則で検査する。
@@ -38,7 +38,7 @@ kotowari は常に、`用語集`の出典の列と`シナリオ`の "@source" �
 ### REQ-061: 決定の番号はファイルごと
 
 - 種類: ubiquitous
-- 出典: brainstorm/records.md#A48
+- 出典: experiments/003-cli/brainstorm/records.md#A48
 - 検証: unit
 
 kotowari は常に、`決定の番号`を`出典`のパスの指す`判断の記録`のファイルの中だけで探す。
@@ -46,7 +46,7 @@ kotowari は常に、`決定の番号`を`出典`のパスの指す`判断の記
 ### REQ-062: 内容の照合をしない
 
 - 種類: prohibition
-- 出典: brainstorm/records.md#A4
+- 出典: experiments/003-cli/brainstorm/records.md#A4
 - 検証: review
 
 kotowari は、`出典`がその`項目`の内容を本当に述べているかを判定してはならない。
@@ -54,7 +54,7 @@ kotowari は、`出典`がその`項目`の内容を本当に述べているか�
 ### REQ-106: 形の契約を出典に指せる
 
 - 種類: ubiquitous
-- 出典: brainstorm/records.md#A52, brainstorm/records.md#A69
+- 出典: experiments/003-cli/brainstorm/records.md#A52, experiments/003-cli/brainstorm/records.md#A69
 - 検証: unit
 
 kotowari は常に、形の契約の "brainstorm/ir-form.md" を、"## " の見出しで指す`出典`の先として受ける。
@@ -63,7 +63,7 @@ kotowari は常に、形の契約の "brainstorm/ir-form.md" を、"## " の見�
 
 ### TBL-012: 出典の判定
 
-- 出典: brainstorm/records.md#A38, brainstorm/records.md#A48, brainstorm/records.md#A69
+- 出典: experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/brainstorm/records.md#A69
 
 | 順 | 条件 | 結果 |
 |---|---|---|
@@ -77,15 +77,15 @@ kotowari は常に、形の契約の "brainstorm/ir-form.md" を、"## " の見�
 ## 具体例
 
 ```gherkin
-@id=EX-011 @about=REQ-058 @source=brainstorm/records.md#A38
+@id=EX-011 @about=REQ-058 @source=experiments/003-cli/brainstorm/records.md#A38
 Scenario: 決定の節にある番号は正しい出典である
   Given "decisions.records" が "brainstorm" で、"brainstorm/records.md" の Agreements の節に "- A26 " で始まる行がある
-  When 出典 "brainstorm/records.md#A26" を検査する
+  When 出典 "experiments/003-cli/brainstorm/records.md#A26" を検査する
   Then source_invalid の誤りは出ない
 
-@id=EX-012 @about=REQ-058 @source=brainstorm/records.md#A38,brainstorm/ir-form.md#検査の種類
+@id=EX-012 @about=REQ-058 @source=experiments/003-cli/brainstorm/records.md#A38,experiments/003-cli/brainstorm/ir-form.md#検査の種類
 Scenario: 無い番号は誤りになる
   Given "brainstorm/records.md" に "- A99 " で始まる行が無い
-  When 出典 "brainstorm/records.md#A99" を検査する
-  Then detail が "brainstorm/records.md#A99" の source_invalid の誤りが出る
+  When 出典 "experiments/003-cli/brainstorm/records.md#A99" を検査する
+  Then detail が "experiments/003-cli/brainstorm/records.md#A99" の source_invalid の誤りが出る
 ```
