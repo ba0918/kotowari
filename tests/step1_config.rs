@@ -413,18 +413,26 @@ fn req_018_missing_ir_dir_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-005, REQ-018]
+// @kotowari[REQ-005, REQ-018, TBL-018, TBL-020]
 #[test]
 fn req_005_stderr_carries_the_stop_reason_text() {
+    // A137 で改めた: TBL-020 の形（相対パスと OS の誤りの文）
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::remove_dir_all(tmp.path().join("docs/ir")).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(output.status.code(), Some(2));
     let stderr = String::from_utf8_lossy(&output.stderr);
+    let first_line = stderr.lines().next().unwrap_or("");
+    // TBL-018: 「unreadable file」の文言で始まる
     assert!(
-        stderr.contains("unreadable file: ir directory not found"),
-        "stderr should carry the reason text, got: {stderr:?}"
+        first_line.starts_with("unreadable file: "),
+        "stderr should start with TBL-018 wording, got: {first_line:?}"
+    );
+    // TBL-020: 相対パスを含む（設定の ir の値）
+    assert!(
+        first_line.contains("docs/ir"),
+        "stderr should contain the relative path, got: {first_line:?}"
     );
 }
 

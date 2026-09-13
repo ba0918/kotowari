@@ -179,23 +179,35 @@ impl std::fmt::Display for StopReason {
 
 /// 引数の解析結果
 #[derive(Debug)]
-pub struct Cli {
-    pub command: CliCommand,
-    pub format: Format,
-    pub config_path: Option<PathBuf>,
+pub enum Cli {
+    /// 検査を行う
+    Check {
+        format: Format,
+        config_path: Option<PathBuf>,
+    },
+    /// 使い方を表示する
+    Help,
+    /// 版を表示する
+    Version,
 }
 
-/// コマンドの種類
-#[derive(Debug)]
-pub enum CliCommand {
-    Check,
-}
-
-/// 引数を解析する
+/// 引数を解析する（REQ-002, REQ-004, REQ-107）
 pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
+    // REQ-107: --help か --version があればほかの引数を見ない
+    for arg in args {
+        if arg == "--help" {
+            return Ok(Cli::Help);
+        }
+        if arg == "--version" {
+            return Ok(Cli::Version);
+        }
+    }
+
     let mut format_str: Option<String> = None;
     let mut config_path: Option<PathBuf> = None;
     let mut saw_check = false;
+    let mut saw_format = false;
+    let mut saw_config = false;
     let mut i = 0;
 
     while i < args.len() {
@@ -203,6 +215,12 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         if arg.starts_with("--") {
             match arg.as_str() {
                 "--format" => {
+                    if saw_format {
+                        return Err(StopReason::ArgumentError(
+                            "repeated option: --format".to_string(),
+                        ));
+                    }
+                    saw_format = true;
                     i += 1;
                     if i >= args.len() {
                         return Err(StopReason::ArgumentError(
@@ -212,6 +230,12 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                     format_str = Some(args[i].clone());
                 }
                 "--config" => {
+                    if saw_config {
+                        return Err(StopReason::ArgumentError(
+                            "repeated option: --config".to_string(),
+                        ));
+                    }
+                    saw_config = true;
                     i += 1;
                     if i >= args.len() {
                         return Err(StopReason::ArgumentError(
@@ -225,6 +249,11 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                 }
             }
         } else if arg == "check" {
+            if saw_check {
+                return Err(StopReason::ArgumentError(
+                    "unexpected argument: check".to_string(),
+                ));
+            }
             saw_check = true;
         } else if !saw_check {
             return Err(StopReason::ArgumentError(format!("unknown command: {arg}")));
@@ -242,13 +271,22 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         ));
     }
 
+    // REQ-004: --config がディレクトリを指すとき
+    if let Some(ref cp) = config_path {
+        if cp.is_dir() {
+            return Err(StopReason::ArgumentError(format!(
+                "--config is a directory: {}",
+                cp.display()
+            )));
+        }
+    }
+
     let format = match Format::parse(format_str.as_deref().unwrap_or("json")) {
         Ok(f) => f,
         Err(e) => return Err(StopReason::ArgumentError(e)),
     };
 
-    Ok(Cli {
-        command: CliCommand::Check,
+    Ok(Cli::Check {
         format,
         config_path,
     })
@@ -344,22 +382,25 @@ pub fn run_check(
     let records_dir = base.join(&cfg.decisions.records);
     let adr_dir = base.join(&cfg.decisions.adr);
 
-    // REQ-018: 置き場が無い、または読めないとき停止
+    // REQ-018: 置き場が無い、または読めないとき停止（TBL-020: 相対パスと OS の誤りの文）
     if !ir_dir.is_dir() {
-        return Err(StopReason::UnreadableFile(format!(
-            "ir directory not found: {}",
-            cfg.ir
-        )));
+        let err = std::fs::read_dir(&ir_dir).err().map(|e| e.to_string())
+            .unwrap_or_else(|| "not a directory".to_string());
+        return Err(StopReason::UnreadableFile(format!("{}: {err}", cfg.ir)));
     }
     if !records_dir.is_dir() {
+        let err = std::fs::read_dir(&records_dir).err().map(|e| e.to_string())
+            .unwrap_or_else(|| "not a directory".to_string());
         return Err(StopReason::UnreadableFile(format!(
-            "decisions.records directory not found: {}",
+            "{}: {err}",
             cfg.decisions.records
         )));
     }
     if !adr_dir.is_dir() {
+        let err = std::fs::read_dir(&adr_dir).err().map(|e| e.to_string())
+            .unwrap_or_else(|| "not a directory".to_string());
         return Err(StopReason::UnreadableFile(format!(
-            "decisions.adr directory not found: {}",
+            "{}: {err}",
             cfg.decisions.adr
         )));
     }
