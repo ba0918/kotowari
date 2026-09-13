@@ -209,15 +209,6 @@ fn find_doc_refs(
                         || punctuation.contains(&prev_char)
                 };
 
-                // "/"、"_"、英字の続きは当たらない
-                if boundary_ok && name_start > 0 {
-                    let prev_byte = bytes[name_start - 1];
-                    if prev_byte == b'/' || prev_byte == b'_' || prev_byte.is_ascii_alphabetic() {
-                        i = md_abs + 3;
-                        continue;
-                    }
-                }
-
                 if boundary_ok {
                     // IR の置き場にその文書があるか
                     if !ir_filenames.contains(doc_name) {
