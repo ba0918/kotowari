@@ -1,6 +1,6 @@
 //! 出典の検査（REQ-057〜REQ-061, REQ-106, TBL-012）
 
-use crate::Finding;
+use crate::{Finding, FindingKind};
 use std::path::Path;
 
 /// 判断の記録のファイルの内容
@@ -335,13 +335,7 @@ pub fn check_sources(
 
             for source in &sources {
                 if let Err(bad) = ctx.check_source(source) {
-                    findings.push(Finding {
-                        kind: "source_invalid".to_string(),
-                        severity: "error".to_string(),
-                        path: path.clone(),
-                        line: Some(item.item_line()),
-                        detail: bad,
-                    });
+                    findings.push(Finding::new(FindingKind::SourceInvalid, path.clone(), Some(item.item_line()), bad));
                 }
             }
         }

@@ -1,7 +1,7 @@
 //! 用語、曖昧語、文書名の参照の検査（REQ-063〜REQ-070, REQ-104）
 
 use crate::ir::{is_valid_id, IrDocument, Item};
-use crate::Finding;
+use crate::{Finding, FindingKind};
 use std::collections::BTreeSet;
 
 /// 用語集から用語の集合を作る
@@ -55,13 +55,7 @@ pub fn check_unknown_terms(
                         None => false, // 用語集がない → すべて unknown
                     };
                     if !is_known {
-                        findings.push(Finding {
-                            kind: "unknown_term".to_string(),
-                            severity: "error".to_string(),
-                            path: path.to_string(),
-                            line: Some(line),
-                            detail: content.to_string(),
-                        });
+                        findings.push(Finding::new(FindingKind::UnknownTerm, path.to_string(), Some(line), content.to_string()));
                     }
                 }
             }
@@ -87,13 +81,7 @@ pub fn check_vague_words(
         // 部分一致で出現回数を数える（REQ-067: 出現ごとに1件）
         let mut search_start = 0;
         while let Some(pos) = text[search_start..].find(word.as_str()) {
-            findings.push(Finding {
-                kind: "vague_word".to_string(),
-                severity: "error".to_string(),
-                path: path.to_string(),
-                line: Some(line),
-                detail: word.clone(),
-            });
+            findings.push(Finding::new(FindingKind::VagueWord, path.to_string(), Some(line), word.clone()));
             search_start += pos + word.len();
         }
     }
@@ -215,13 +203,7 @@ fn find_doc_refs(
                 if boundary_ok {
                     // IR の置き場にその文書があるか
                     if !ir_filenames.contains(doc_name) {
-                        findings.push(Finding {
-                            kind: "missing_document".to_string(),
-                            severity: "error".to_string(),
-                            path: path.to_string(),
-                            line: Some(line),
-                            detail: doc_name.to_string(),
-                        });
+                        findings.push(Finding::new(FindingKind::MissingDocument, path.to_string(), Some(line), doc_name.to_string()));
                     }
                 }
             }

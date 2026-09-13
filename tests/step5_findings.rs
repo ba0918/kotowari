@@ -281,7 +281,7 @@ fn prop_003_findings_are_sorted() {
                     (Some(_), None) => std::cmp::Ordering::Greater,
                     (Some(al), Some(bl)) => al.cmp(&bl),
                 })
-                .then_with(|| a.kind.cmp(&b.kind))
+                .then_with(|| a.kind.as_str().cmp(b.kind.as_str()))
                 .then_with(|| a.detail.cmp(&b.detail));
             prop_assert!(cmp != std::cmp::Ordering::Greater,
                 "findings not sorted at index {}: prev=({},{:?},{},{}) curr=({},{:?},{},{})",

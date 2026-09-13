@@ -1,7 +1,7 @@
 //! IR 文書の読み込みと形の検査
 
 use crate::config::Config;
-use crate::Finding;
+use crate::{Finding, FindingKind};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::Path;
 
@@ -718,47 +718,23 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
 
         // REQ-034: 題名が無い
         if doc.title.is_none() {
-            findings.push(Finding {
-                kind: "missing_title".to_string(),
-                severity: "error".to_string(),
-                path: path.clone(),
-                line: None,
-                detail: doc.filename.clone(),
-            });
+            findings.push(Finding::new(FindingKind::MissingTitle, path.clone(), None, doc.filename.clone()));
         }
 
         // REQ-035: 題名が複数
         for (_, title_text) in &doc.extra_titles {
-            findings.push(Finding {
-                kind: "multiple_titles".to_string(),
-                severity: "error".to_string(),
-                path: path.clone(),
-                line: None,
-                detail: title_text.clone(),
-            });
+            findings.push(Finding::new(FindingKind::MultipleTitles, path.clone(), None, title_text.clone()));
         }
 
         // REQ-036: 範囲の行が無い（話題ごとの文書のみ）
         if doc.kind == DocKind::Topic && doc.scope_lines.is_empty() {
-            findings.push(Finding {
-                kind: "missing_scope".to_string(),
-                severity: "error".to_string(),
-                path: path.clone(),
-                line: None,
-                detail: doc.filename.clone(),
-            });
+            findings.push(Finding::new(FindingKind::MissingScope, path.clone(), None, doc.filename.clone()));
         }
 
         // REQ-038: 行数の上限
         let limit_lines = config.limits.lines.get() as usize;
         if doc.line_count > limit_lines {
-            findings.push(Finding {
-                kind: "too_many_lines".to_string(),
-                severity: "warning".to_string(),
-                path: path.clone(),
-                line: None,
-                detail: doc.line_count.to_string(),
-            });
+            findings.push(Finding::new(FindingKind::TooManyLines, path.clone(), None, doc.line_count.to_string()));
         }
 
         // REQ-039: 要求の数の上限（用語集と問題の記録を除く）
@@ -770,13 +746,7 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
                 .count();
             let limit_reqs = config.limits.requirements.get() as usize;
             if req_count > limit_reqs {
-                findings.push(Finding {
-                    kind: "too_many_requirements".to_string(),
-                    severity: "warning".to_string(),
-                    path: path.clone(),
-                    line: None,
-                    detail: req_count.to_string(),
-                });
+                findings.push(Finding::new(FindingKind::TooManyRequirements, path.clone(), None, req_count.to_string()));
             }
         }
 
@@ -806,23 +776,11 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
                         } else {
                             format!("{}: {}", id, name)
                         };
-                        findings.push(Finding {
-                            kind: "unknown_heading".to_string(),
-                            severity: "error".to_string(),
-                            path: path.clone(),
-                            line: Some(*line),
-                            detail: heading_text,
-                        });
+                        findings.push(Finding::new(FindingKind::UnknownHeading, path.clone(), Some(*line), heading_text));
                     }
                 }
                 Item::UnknownHeading { heading, line } => {
-                    findings.push(Finding {
-                        kind: "unknown_heading".to_string(),
-                        severity: "error".to_string(),
-                        path: path.clone(),
-                        line: Some(*line),
-                        detail: heading.clone(),
-                    });
+                    findings.push(Finding::new(FindingKind::UnknownHeading, path.clone(), Some(*line), heading.clone()));
                 }
                 _ => {}
             }
@@ -834,13 +792,7 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
         if locations.len() > 1 {
             // 2つ目以降の場所に指摘
             for (path, line) in &locations[1..] {
-                findings.push(Finding {
-                    kind: "duplicate_id".to_string(),
-                    severity: "error".to_string(),
-                    path: path.clone(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::DuplicateId, path.clone(), Some(*line), id.clone()));
             }
         }
     }
@@ -879,45 +831,21 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
 
             // REQ-098: 必須の行
             if kind.is_none() && !fields_seen.iter().any(|(_, n, _)| n == "種類") {
-                findings.push(Finding {
-                    kind: "missing_field".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: "種類".to_string(),
-                });
+                findings.push(Finding::new(FindingKind::MissingField, path.to_string(), Some(*line), "種類".to_string()));
             }
             if sources.is_empty() {
-                findings.push(Finding {
-                    kind: "missing_source".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.clone()));
             }
 
             // REQ-048: 検証の行が無い
             if verification.is_none() && !fields_seen.iter().any(|(_, n, _)| n == "検証") {
-                findings.push(Finding {
-                    kind: "verification_missing".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::VerificationMissing, path.to_string(), Some(*line), id.clone()));
             }
 
             // REQ-049: 検証の値の誤り
             if let Some(v) = verification {
                 if !["unit", "property", "proof", "review"].contains(&v.as_str()) {
-                    findings.push(Finding {
-                        kind: "verification_invalid".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: v.clone(),
-                    });
+                    findings.push(Finding::new(FindingKind::VerificationInvalid, path.to_string(), Some(*line), v.clone()));
                 }
             }
 
@@ -932,26 +860,14 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                     "algorithm",
                 ];
                 if !valid_kinds.contains(&k.as_str()) {
-                    findings.push(Finding {
-                        kind: "unknown_kind".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: k.clone(),
-                    });
+                    findings.push(Finding::new(FindingKind::UnknownKind, path.to_string(), Some(*line), k.clone()));
                 }
             }
 
             // REQ-047: 文が無い（algorithm 以外）
             if let Some(k) = kind {
                 if k != "algorithm" && statements.is_empty() {
-                    findings.push(Finding {
-                        kind: "missing_statement".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: id.clone(),
-                    });
+                    findings.push(Finding::new(FindingKind::MissingStatement, path.to_string(), Some(*line), id.clone()));
                 }
             }
 
@@ -961,13 +877,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                     matches!(id_prefix(d), Some(IdPrefix::Tbl) | Some(IdPrefix::Prop))
                 });
                 if k == "algorithm" && !has_tbl_or_prop_def {
-                    findings.push(Finding {
-                        kind: "algorithm_without_definition".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: id.clone(),
-                    });
+                    findings.push(Finding::new(FindingKind::AlgorithmWithoutDefinition, path.to_string(), Some(*line), id.clone()));
                 }
             }
         }
@@ -989,24 +899,12 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
 
             // REQ-098/REQ-059: 出典が必須
             if sources.is_empty() {
-                findings.push(Finding {
-                    kind: "missing_source".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.clone()));
             }
 
             // REQ-099: 表が無い
             if !has_table {
-                findings.push(Finding {
-                    kind: "missing_table".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::MissingTable, path.to_string(), Some(*line), id.clone()));
             }
         }
 
@@ -1027,24 +925,12 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
 
             // REQ-098/REQ-059: 出典が必須
             if sources.is_empty() {
-                findings.push(Finding {
-                    kind: "missing_source".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.clone()));
             }
 
             // REQ-047: 性質には文が必要
             if statements.is_empty() {
-                findings.push(Finding {
-                    kind: "missing_statement".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::MissingStatement, path.to_string(), Some(*line), id.clone()));
             }
         }
 
@@ -1059,45 +945,21 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             // REQ-052: 知らないタグ
             for (tag_name, _) in tags {
                 if !["@id", "@about", "@source"].contains(&tag_name.as_str()) {
-                    findings.push(Finding {
-                        kind: "unknown_tag".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: tag_name.clone(),
-                    });
+                    findings.push(Finding::new(FindingKind::UnknownTag, path.to_string(), Some(*line), tag_name.clone()));
                 }
             }
 
             // REQ-053: 無いタグ
             if !tags.iter().any(|(n, v)| n == "@id" && !v.is_empty()) {
-                findings.push(Finding {
-                    kind: "missing_tag".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: "@id".to_string(),
-                });
+                findings.push(Finding::new(FindingKind::MissingTag, path.to_string(), Some(*line), "@id".to_string()));
             }
             if !tags.iter().any(|(n, v)| n == "@about" && !v.is_empty()) {
-                findings.push(Finding {
-                    kind: "missing_tag".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: "@about".to_string(),
-                });
+                findings.push(Finding::new(FindingKind::MissingTag, path.to_string(), Some(*line), "@about".to_string()));
             }
 
             // REQ-059: シナリオの出典
             if sources.is_empty() && !tags.iter().any(|(n, v)| n == "@source" && !v.is_empty()) {
-                findings.push(Finding {
-                    kind: "missing_source".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.as_deref().unwrap_or(scenario_text).to_string(),
-                });
+                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.as_deref().unwrap_or(scenario_text).to_string()));
             }
         }
 
@@ -1119,43 +981,19 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
 
             // REQ-098: 必須の行
             if kind.is_none() && !fields_seen.iter().any(|(_, n, _)| n == "種類") {
-                findings.push(Finding {
-                    kind: "missing_field".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: "種類".to_string(),
-                });
+                findings.push(Finding::new(FindingKind::MissingField, path.to_string(), Some(*line), "種類".to_string()));
             }
             if relations.is_empty() && !fields_seen.iter().any(|(_, n, _)| n == "関係") {
-                findings.push(Finding {
-                    kind: "missing_field".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: "関係".to_string(),
-                });
+                findings.push(Finding::new(FindingKind::MissingField, path.to_string(), Some(*line), "関係".to_string()));
             }
             if sources.is_empty() {
-                findings.push(Finding {
-                    kind: "missing_source".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.clone()));
             }
 
             // REQ-050: 種類の値の誤り
             if let Some(k) = kind {
                 if !["contradiction", "gap", "ambiguity"].contains(&k.as_str()) {
-                    findings.push(Finding {
-                        kind: "unknown_kind".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: k.clone(),
-                    });
+                    findings.push(Finding::new(FindingKind::UnknownKind, path.to_string(), Some(*line), k.clone()));
                 }
             }
         }
@@ -1168,13 +1006,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
         } => {
             // REQ-059/REQ-060: 用語の出典が空
             if sources.is_empty() {
-                findings.push(Finding {
-                    kind: "missing_source".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: term.clone(),
-                });
+                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), term.clone()));
             }
         }
 
@@ -1197,36 +1029,18 @@ fn check_fields(
     for (ln, name, raw) in fields_seen {
         if name.is_empty() {
             // "xxx:" の形でない "- " 行: detail は行の文字
-            findings.push(Finding {
-                kind: "unknown_field".to_string(),
-                severity: "error".to_string(),
-                path: path.to_string(),
-                line: Some(*ln),
-                detail: raw.clone(),
-            });
+            findings.push(Finding::new(FindingKind::UnknownField, path.to_string(), Some(*ln), raw.clone()));
             continue;
         }
 
         if !known_fields.contains(&name.as_str()) {
             // TBL-008: unknown_field の detail は行の文字
-            findings.push(Finding {
-                kind: "unknown_field".to_string(),
-                severity: "error".to_string(),
-                path: path.to_string(),
-                line: Some(*ln),
-                detail: raw.clone(),
-            });
+            findings.push(Finding::new(FindingKind::UnknownField, path.to_string(), Some(*ln), raw.clone()));
         }
 
         // REQ-045: 同じ行の重複（TBL-008: duplicate_field の detail は行の名前）
         if let Some(_prev_line) = seen_names.get(name) {
-            findings.push(Finding {
-                kind: "duplicate_field".to_string(),
-                severity: "error".to_string(),
-                path: path.to_string(),
-                line: Some(*ln),
-                detail: name.clone(),
-            });
+            findings.push(Finding::new(FindingKind::DuplicateField, path.to_string(), Some(*ln), name.clone()));
         } else {
             seen_names.insert(name.clone(), *ln);
         }
@@ -1251,13 +1065,7 @@ fn check_references(
                 // 定義の参照チェック
                 for def_id in definitions {
                     if !known_ids.contains(def_id) {
-                        findings.push(Finding {
-                            kind: "unresolved_reference".to_string(),
-                            severity: "error".to_string(),
-                            path: path.to_string(),
-                            line: Some(*line),
-                            detail: def_id.clone(),
-                        });
+                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(*line), def_id.clone()));
                     }
                 }
                 // 文の中のバッククォートで囲んだ ID の参照チェック
@@ -1275,13 +1083,7 @@ fn check_references(
             } => {
                 for about_id in about {
                     if !known_ids.contains(about_id) {
-                        findings.push(Finding {
-                            kind: "unresolved_reference".to_string(),
-                            severity: "error".to_string(),
-                            path: path.to_string(),
-                            line: Some(*line),
-                            detail: about_id.clone(),
-                        });
+                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(*line), about_id.clone()));
                     }
                 }
             }
@@ -1290,13 +1092,7 @@ fn check_references(
             } => {
                 for rel_id in relations {
                     if !known_ids.contains(rel_id) {
-                        findings.push(Finding {
-                            kind: "unresolved_reference".to_string(),
-                            severity: "error".to_string(),
-                            path: path.to_string(),
-                            line: Some(*line),
-                            detail: rel_id.clone(),
-                        });
+                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(*line), rel_id.clone()));
                     }
                 }
             }
@@ -1323,13 +1119,7 @@ fn check_backtick_ids(
             let content = &text[open_abs..open_abs + close];
             // ID の形なら参照チェック
             if is_valid_id(content) && !known_ids.contains(content) {
-                findings.push(Finding {
-                    kind: "unresolved_reference".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(line),
-                    detail: content.to_string(),
-                });
+                findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(line), content.to_string()));
             }
             start = open_abs + close + 1;
         } else {

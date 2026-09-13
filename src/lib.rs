@@ -16,14 +16,128 @@ pub struct CheckResult {
     pub counts: BTreeMap<String, usize>,
 }
 
+/// 指摘の種類
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum FindingKind {
+    AlgorithmWithoutDefinition,
+    DuplicateField,
+    DuplicateId,
+    InvalidMarker,
+    MissingDocument,
+    MissingField,
+    MissingScope,
+    MissingSource,
+    MissingStatement,
+    MissingTable,
+    MissingTag,
+    MissingTitle,
+    MultipleTitles,
+    RequirementWithoutTest,
+    SourceInvalid,
+    TestWithoutId,
+    TooManyLines,
+    TooManyRequirements,
+    UnknownField,
+    UnknownHeading,
+    UnknownKind,
+    UnknownTag,
+    UnknownTerm,
+    UnparsableFile,
+    UnresolvedReference,
+    VagueWord,
+    VerificationInvalid,
+    VerificationMissing,
+}
+
+impl FindingKind {
+    /// 種類を文字列に変換する（JSON 出力・整列・counts のキーに使う）
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            FindingKind::AlgorithmWithoutDefinition => "algorithm_without_definition",
+            FindingKind::DuplicateField => "duplicate_field",
+            FindingKind::DuplicateId => "duplicate_id",
+            FindingKind::InvalidMarker => "invalid_marker",
+            FindingKind::MissingDocument => "missing_document",
+            FindingKind::MissingField => "missing_field",
+            FindingKind::MissingScope => "missing_scope",
+            FindingKind::MissingSource => "missing_source",
+            FindingKind::MissingStatement => "missing_statement",
+            FindingKind::MissingTable => "missing_table",
+            FindingKind::MissingTag => "missing_tag",
+            FindingKind::MissingTitle => "missing_title",
+            FindingKind::MultipleTitles => "multiple_titles",
+            FindingKind::RequirementWithoutTest => "requirement_without_test",
+            FindingKind::SourceInvalid => "source_invalid",
+            FindingKind::TestWithoutId => "test_without_id",
+            FindingKind::TooManyLines => "too_many_lines",
+            FindingKind::TooManyRequirements => "too_many_requirements",
+            FindingKind::UnknownField => "unknown_field",
+            FindingKind::UnknownHeading => "unknown_heading",
+            FindingKind::UnknownKind => "unknown_kind",
+            FindingKind::UnknownTag => "unknown_tag",
+            FindingKind::UnknownTerm => "unknown_term",
+            FindingKind::UnparsableFile => "unparsable_file",
+            FindingKind::UnresolvedReference => "unresolved_reference",
+            FindingKind::VagueWord => "vague_word",
+            FindingKind::VerificationInvalid => "verification_invalid",
+            FindingKind::VerificationMissing => "verification_missing",
+        }
+    }
+
+    /// 重大度を返す（1か所で管理する）
+    pub fn severity(&self) -> &'static str {
+        match self {
+            FindingKind::TooManyLines | FindingKind::TooManyRequirements => "warning",
+            _ => "error",
+        }
+    }
+}
+
+impl std::fmt::Display for FindingKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl PartialEq<&str> for FindingKind {
+    fn eq(&self, other: &&str) -> bool {
+        self.as_str() == *other
+    }
+}
+
+impl PartialEq<str> for FindingKind {
+    fn eq(&self, other: &str) -> bool {
+        self.as_str() == other
+    }
+}
+
+impl serde::Serialize for FindingKind {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
 /// 指摘
 #[derive(Debug, serde::Serialize, Clone)]
 pub struct Finding {
-    pub kind: String,
+    pub kind: FindingKind,
     pub severity: String,
     pub path: String,
     pub line: Option<usize>,
     pub detail: String,
+}
+
+impl Finding {
+    /// 指摘を作る。severity は kind から自動で決まる。
+    pub fn new(kind: FindingKind, path: String, line: Option<usize>, detail: String) -> Self {
+        Finding {
+            severity: kind.severity().to_string(),
+            kind,
+            path,
+            line,
+            detail,
+        }
+    }
 }
 
 /// 出力の形式
@@ -182,14 +296,14 @@ pub fn run_check(
                 (Some(_), None) => std::cmp::Ordering::Greater,
                 (Some(al), Some(bl)) => al.cmp(&bl),
             })
-            .then_with(|| a.kind.cmp(&b.kind))
+            .then_with(|| a.kind.as_str().cmp(b.kind.as_str()))
             .then_with(|| a.detail.cmp(&b.detail))
     });
 
     // counts を作る（PROP-002: 0件は含まない）
     let mut counts: BTreeMap<String, usize> = BTreeMap::new();
     for f in &findings {
-        *counts.entry(f.kind.clone()).or_insert(0) += 1;
+        *counts.entry(f.kind.as_str().to_string()).or_insert(0) += 1;
     }
 
     let result = CheckResult {

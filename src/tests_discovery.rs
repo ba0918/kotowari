@@ -2,7 +2,7 @@
 
 use crate::config::Config;
 use crate::ir::{is_valid_id, IrDocument, Item};
-use crate::Finding;
+use crate::{Finding, FindingKind};
 use globset::{Glob, GlobSetBuilder};
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -553,25 +553,13 @@ pub fn discover_and_check(
                         }
                         // REQ-072: テストに結び付く空・不正な印
                         for (line_num, raw) in &test.invalid_markers {
-                            findings.push(Finding {
-                                kind: "invalid_marker".to_string(),
-                                severity: "error".to_string(),
-                                path: rel_path.clone(),
-                                line: Some(*line_num),
-                                detail: raw.clone(),
-                            });
+                            findings.push(Finding::new(FindingKind::InvalidMarker, rel_path.clone(), Some(*line_num), raw.clone()));
                         }
                     }
                     all_tests.extend(tests);
                 }
                 Err(_) => {
-                    findings.push(Finding {
-                        kind: "unparsable_file".to_string(),
-                        severity: "error".to_string(),
-                        path: rel_path.clone(),
-                        line: None,
-                        detail: rel_path.clone(),
-                    });
+                    findings.push(Finding::new(FindingKind::UnparsableFile, rel_path.clone(), None, rel_path.clone()));
                 }
             }
         } else {
@@ -581,25 +569,13 @@ pub fn discover_and_check(
                 for marker in parse_markers_in_line(line, line_num) {
                     if marker.ids.is_empty() {
                         // REQ-072: 空の印、または閉じ括弧のない印
-                        findings.push(Finding {
-                            kind: "invalid_marker".to_string(),
-                            severity: "error".to_string(),
-                            path: rel_path.clone(),
-                            line: Some(line_num),
-                            detail: line.to_string(),
-                        });
+                        findings.push(Finding::new(FindingKind::InvalidMarker, rel_path.clone(), Some(line_num), line.to_string()));
                     } else {
                         for id in &marker.ids {
                             all_marker_ids.insert(id.clone());
                             // REQ-054: 存在しない ID への参照
                             if !known_ids.contains(id) {
-                                findings.push(Finding {
-                                    kind: "unresolved_reference".to_string(),
-                                    severity: "error".to_string(),
-                                    path: rel_path.clone(),
-                                    line: Some(line_num),
-                                    detail: id.clone(),
-                                });
+                                findings.push(Finding::new(FindingKind::UnresolvedReference, rel_path.clone(), Some(line_num), id.clone()));
                             }
                         }
                     }
@@ -618,13 +594,7 @@ pub fn discover_and_check(
                 if let Some(v) = verification {
                     if v != "review" && is_valid_id(id) && !all_marker_ids.contains(id) {
                         let path = format!("{}/{}", ir_path, doc.filename);
-                        findings.push(Finding {
-                            kind: "requirement_without_test".to_string(),
-                            severity: "error".to_string(),
-                            path,
-                            line: Some(item.item_line()),
-                            detail: id.clone(),
-                        });
+                        findings.push(Finding::new(FindingKind::RequirementWithoutTest, path, Some(item.item_line()), id.clone()));
                     }
                 }
             }
@@ -634,13 +604,7 @@ pub fn discover_and_check(
     // REQ-086: 印の無いテスト
     for test in &all_tests {
         if test.marker_ids.is_empty() {
-            findings.push(Finding {
-                kind: "test_without_id".to_string(),
-                severity: "error".to_string(),
-                path: test.file_path.clone(),
-                line: Some(test.line),
-                detail: test.name.clone(),
-            });
+            findings.push(Finding::new(FindingKind::TestWithoutId, test.file_path.clone(), Some(test.line), test.name.clone()));
         }
     }
 
@@ -659,13 +623,7 @@ fn check_test_markers(
     // REQ-054 の unresolved_reference は印からも出る
     for id in &test.marker_ids {
         if !id.is_empty() && !known_ids.contains(id) {
-            findings.push(Finding {
-                kind: "unresolved_reference".to_string(),
-                severity: "error".to_string(),
-                path: file_path.to_string(),
-                line: Some(test.line),
-                detail: id.clone(),
-            });
+            findings.push(Finding::new(FindingKind::UnresolvedReference, file_path.to_string(), Some(test.line), id.clone()));
         }
     }
 }
