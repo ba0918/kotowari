@@ -377,6 +377,23 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
             continue;
         }
 
+        // REQ-043: #### より深い見出しは unknown_heading
+        if line.starts_with("#### ") {
+            // 現在の項目を完了させる
+            if let Some(builder) = current_item.take() {
+                items.push(builder.build());
+            }
+            let heading_text = line.trim_start_matches('#').trim().to_string();
+            items.push(Item::UnknownHeading {
+                heading: heading_text,
+                line: line_num,
+            });
+            // この見出しの下の行は項目として読まない
+            current_item = None;
+            found_first_section = true;
+            continue;
+        }
+
         // ### 見出し（項目）
         if line.starts_with("### ") {
             // 現在の項目を完了させる
@@ -455,6 +472,21 @@ impl ItemBuilder {
         if trimmed.is_empty() {
             return;
         }
+
+        // REQ-044: "* ", "+ ", 数字+". ", "-" だけの行は unknown_field
+        if trimmed.starts_with("* ") || trimmed.starts_with("+ ") || trimmed == "-" {
+            // detail は読んだ行そのまま（字下げを含む）
+            self.field_lines.push((line_num, String::new(), line.to_string()));
+            return;
+        }
+        // 数字 + ". " で始まる行（例: "1. xxx"）
+        if let Some(dot_pos) = trimmed.find(". ") {
+            if dot_pos > 0 && trimmed[..dot_pos].chars().all(|c| c.is_ascii_digit()) {
+                self.field_lines.push((line_num, String::new(), line.to_string()));
+                return;
+            }
+        }
+
         if trimmed.starts_with("- ") {
             // フィールド行
             let field_content = &trimmed[2..];
@@ -463,9 +495,9 @@ impl ItemBuilder {
                 let value = field_content[colon_pos + 1..].trim().to_string();
                 self.field_lines.push((line_num, name, value));
             } else {
-                // "xxx:" の形でない "- " 行
+                // "xxx:" の形でない "- " 行: detail は読んだ行そのまま
                 self.field_lines
-                    .push((line_num, String::new(), field_content.to_string()));
+                    .push((line_num, String::new(), line.to_string()));
             }
         } else if trimmed.starts_with('|') {
             self.has_table = true;
@@ -477,13 +509,14 @@ impl ItemBuilder {
 
     /// field_lines から fields_seen を構築する。
     /// (行番号, フィールド名, 行の文字) の三つ組を返す。
-    /// name が空の場合（コロンのない行）は名前を空のまま、行の文字を "- {value}" にする。
+    /// name が空の場合は value が生の行（字下げ含む）をそのまま持つ。
     fn build_fields_seen(&self) -> Vec<(usize, String, String)> {
         self.field_lines
             .iter()
             .map(|(ln, name, value)| {
                 if name.is_empty() {
-                    (*ln, String::new(), format!("- {}", value))
+                    // value にはもう生の行が入っている
+                    (*ln, String::new(), value.clone())
                 } else {
                     (*ln, name.clone(), format!("- {}: {}", name, value))
                 }
@@ -879,11 +912,10 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                 }
             }
 
-            // REQ-047: 文が無い（algorithm 以外）
-            if let Some(k) = kind {
-                if k != "algorithm" && statements.is_empty() {
-                    findings.push(Finding::new(FindingKind::MissingStatement, path.to_string(), Some(*line), id.clone()));
-                }
+            // REQ-047: 文が無い（algorithm 以外。種類の行が無い要求を含む）
+            let is_algorithm = kind.as_deref() == Some("algorithm");
+            if !is_algorithm && statements.is_empty() {
+                findings.push(Finding::new(FindingKind::MissingStatement, path.to_string(), Some(*line), id.clone()));
             }
 
             // REQ-051: algorithm に決定表か性質を指す定義がない
@@ -1050,10 +1082,12 @@ fn check_fields(
 
         if !known_fields.contains(&name.as_str()) {
             // TBL-008: unknown_field の detail は行の文字
+            // REQ-045: 知らない行の重複は unknown_field だけ
             findings.push(Finding::new(FindingKind::UnknownField, path.to_string(), Some(*ln), raw.clone()));
+            continue;
         }
 
-        // REQ-045: 同じ行の重複（TBL-008: duplicate_field の detail は行の名前）
+        // REQ-045: 同じ知っている行の重複（TBL-008: duplicate_field の detail は行の名前）
         if let Some(_prev_line) = seen_names.get(name) {
             findings.push(Finding::new(FindingKind::DuplicateField, path.to_string(), Some(*ln), name.clone()));
         } else {

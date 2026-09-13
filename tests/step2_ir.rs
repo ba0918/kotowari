@@ -1312,3 +1312,96 @@ fn tbl_010_empty_document_has_zero_lines_and_missing_title() {
     let mt = find_by_kind(&findings, "missing_title");
     assert!(!mt.is_empty(), "empty document should produce missing_title");
 }
+
+// --- Step 4a: 項目の行の形 ---
+
+// @kotowari[REQ-044]
+#[test]
+fn req_044_star_plus_numbered_and_bare_dash_lines_are_unknown_fields() {
+    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n* star line\n+ plus line\n1. numbered line\n-\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uf = find_by_kind(&findings, "unknown_field");
+    assert!(uf.len() >= 4, "should produce at least 4 unknown_field findings, got {}", uf.len());
+}
+
+// @kotowari[REQ-044]
+#[test]
+fn req_044_detail_is_the_raw_line() {
+    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n  * indented star\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uf = find_by_kind(&findings, "unknown_field");
+    // detail は字下げを含む読んだ行そのまま
+    assert!(uf.iter().any(|f| f.detail.contains("  * indented star")),
+        "detail should contain raw indented line, got: {:?}", uf);
+}
+
+// @kotowari[REQ-043]
+#[test]
+fn req_043_deeper_heading_is_unknown_heading() {
+    let content = "# Title\n\nScope.\n\n## Section\n\n#### DEEP-001: Deep\n\nSome text.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(uh.iter().any(|f| f.detail.contains("DEEP-001")),
+        "#### heading should produce unknown_heading");
+}
+
+// @kotowari[REQ-043]
+#[test]
+fn req_043_lines_under_unknown_heading_are_not_an_item() {
+    let content = "# Title\n\nScope.\n\n## Section\n\n### BADID: X\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    // unknown_heading は出るが、missing_field などは出ない
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(!uh.is_empty(), "should produce unknown_heading for BADID");
+    let mf = find_by_kind(&findings, "missing_field");
+    assert!(mf.is_empty(), "lines under unknown heading should not be checked as item fields");
+}
+
+// @kotowari[REQ-045]
+#[test]
+fn req_045_third_known_line_gives_two_duplicates() {
+    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 種類: event_driven\n- 種類: state_driven\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let df = find_by_kind(&findings, "duplicate_field");
+    assert_eq!(df.len(), 2, "3 occurrences of same field should give 2 duplicate_field, got {}", df.len());
+}
+
+// @kotowari[REQ-045]
+#[test]
+fn req_045_unknown_line_repeated_gives_only_unknown_field() {
+    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 優先度: 高\n- 優先度: 低\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uf = find_by_kind(&findings, "unknown_field");
+    let df = find_by_kind(&findings, "duplicate_field");
+    assert_eq!(uf.len(), 2, "2 unknown lines should give 2 unknown_field");
+    assert_eq!(df.len(), 0, "unknown lines should not give duplicate_field");
+}
+
+// @kotowari[REQ-047]
+#[test]
+fn req_047_requirement_without_kind_line_needs_statement() {
+    // 種類の行が無い要求に文が無ければ missing_statement
+    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ms = find_by_kind(&findings, "missing_statement");
+    assert!(!ms.is_empty(), "requirement without kind and without statement should produce missing_statement");
+}
+
+// @kotowari[REQ-032]
+#[test]
+fn req_032_first_occurrence_is_bytewise_first_path() {
+    // duplicate_id の1つ目はパスのバイト順で先の文書
+    let doc_a = ir::parse_document("a.md", "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n");
+    let doc_b = ir::parse_document("b.md", "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n");
+    let findings = check(&[doc_a, doc_b], &default_config());
+    let di = find_by_kind(&findings, "duplicate_id");
+    assert_eq!(di.len(), 1, "should produce exactly 1 duplicate_id");
+    assert!(di[0].path.contains("b.md"), "duplicate_id should be on the second (b.md) path, got {:?}", di[0].path);
+}
