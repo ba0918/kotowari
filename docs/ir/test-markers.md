@@ -14,7 +14,7 @@
 ### REQ-072: 形の誤った印
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A57, experiments/003-cli/brainstorm/records.md#A67, experiments/003-cli/brainstorm/records.md#A39, experiments/003-cli/brainstorm/records.md#A121
+- 出典: experiments/003-cli/brainstorm/records.md#A57, experiments/003-cli/brainstorm/records.md#A67, experiments/003-cli/brainstorm/records.md#A39, experiments/003-cli/brainstorm/records.md#A121, experiments/003-cli/brainstorm/records.md#A111
 - 検証: unit
 
 `問い合わせのある言語`で`テスト`の外にあるものを除く`印`について、その中が空か区切りだけのとき、またはその`印`に同じ行の閉じ括弧が無いとき、kotowari は行の文字を detail にして invalid_marker の`誤り`を出す。

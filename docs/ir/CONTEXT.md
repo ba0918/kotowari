@@ -36,5 +36,5 @@
 | 曖昧語 | 設定の "vague_words" に並べた語 | experiments/003-cli/brainstorm/records.md#A21, experiments/003-cli/brainstorm/records.md#A41 |
 | 対象の行 | 用語と曖昧語の検査を受ける行。TBL-013 で決める | experiments/003-cli/brainstorm/records.md#A53 |
 | 文書名の参照 | コードブロックの外にある文書名の並び。TBL-014 で決める | experiments/003-cli/brainstorm/records.md#A54, experiments/003-cli/brainstorm/records.md#A47 |
-| 除外 | 仕様が列挙した、kotowari が読まないもの。隠しディレクトリ、ディレクトリのシンボリックリンク、IR の置き場のサブディレクトリ、".md" 以外のファイル、形に合わない見出しの下の行。列挙に無い読み飛ばしは作らない | experiments/003-cli/brainstorm/records.md#A100, experiments/003-cli/brainstorm/records.md#A102 |
+| 除外 | 仕様が列挙した、kotowari が読まないもの。隠しディレクトリ、ディレクトリのシンボリックリンク、IR の置き場のサブディレクトリ、".md" 以外のファイル、形に合わない見出しの下の行。列挙に無い読み飛ばしは作らない | experiments/003-cli/brainstorm/records.md#A100, experiments/003-cli/brainstorm/records.md#A102, experiments/003-cli/brainstorm/records.md#A110 |
 | コードブロック | 行頭の3つ以上の "`" か "~" で始まる行から、同じ文字で同じ数以上の行までの部分 | experiments/003-cli/brainstorm/records.md#A108 |
