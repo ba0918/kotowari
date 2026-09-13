@@ -152,6 +152,8 @@ pub struct IrDocument {
     pub items: Vec<Item>,
     pub sections: Vec<(usize, String)>,
     pub raw_content: String,
+    /// 解析中に見つかった指摘（この段では常に空）
+    pub parse_findings: Vec<crate::Finding>,
 }
 
 /// 文書名の参照の検査用に行を分割する
@@ -229,7 +231,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
         let line_num = idx + 1; // 1-indexed
 
         // コードブロックの開始/終了
-        if line.starts_with("```") {
+        if is_code_fence(line) {
             if in_code_block || in_gherkin_block {
                 // ブロックの終了
                 if in_gherkin_block {
@@ -412,6 +414,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
         items,
         sections,
         raw_content: content.to_string(),
+        parse_findings: Vec::new(),
     }
 }
 
@@ -1099,6 +1102,12 @@ fn check_references(
             _ => {}
         }
     }
+}
+
+/// 行がコードブロックの境界（``` で始まる行）かどうかを判定する。
+/// 境界であれば true を返す。
+pub fn is_code_fence(line: &str) -> bool {
+    line.starts_with("```")
 }
 
 /// バッククォートで囲まれた内容を抽出する。

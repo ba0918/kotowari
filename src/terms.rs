@@ -94,7 +94,7 @@ pub fn check_document_references(
         for (idx, line) in lines.iter().enumerate() {
             let line_num = idx + 1;
 
-            if line.starts_with("```") {
+            if crate::ir::is_code_fence(line) {
                 in_code_block = !in_code_block;
                 continue;
             }

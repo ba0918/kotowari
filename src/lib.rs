@@ -177,6 +177,83 @@ impl std::fmt::Display for StopReason {
     }
 }
 
+/// 引数の解析結果
+#[derive(Debug)]
+pub struct Cli {
+    pub command: CliCommand,
+    pub format: Format,
+    pub config_path: Option<PathBuf>,
+}
+
+/// コマンドの種類
+#[derive(Debug)]
+pub enum CliCommand {
+    Check,
+}
+
+/// 引数を解析する
+pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
+    let mut format_str: Option<String> = None;
+    let mut config_path: Option<PathBuf> = None;
+    let mut saw_check = false;
+    let mut i = 0;
+
+    while i < args.len() {
+        let arg = &args[i];
+        if arg.starts_with("--") {
+            match arg.as_str() {
+                "--format" => {
+                    i += 1;
+                    if i >= args.len() {
+                        return Err(StopReason::ArgumentError(
+                            "--format requires a value".to_string(),
+                        ));
+                    }
+                    format_str = Some(args[i].clone());
+                }
+                "--config" => {
+                    i += 1;
+                    if i >= args.len() {
+                        return Err(StopReason::ArgumentError(
+                            "--config requires a value".to_string(),
+                        ));
+                    }
+                    config_path = Some(PathBuf::from(&args[i]));
+                }
+                _ => {
+                    return Err(StopReason::ArgumentError(format!("unknown option: {arg}")));
+                }
+            }
+        } else if arg == "check" {
+            saw_check = true;
+        } else if !saw_check {
+            return Err(StopReason::ArgumentError(format!("unknown command: {arg}")));
+        } else {
+            return Err(StopReason::ArgumentError(format!(
+                "unexpected argument: {arg}"
+            )));
+        }
+        i += 1;
+    }
+
+    if !saw_check {
+        return Err(StopReason::ArgumentError(
+            "expected command: check".to_string(),
+        ));
+    }
+
+    let format = match Format::parse(format_str.as_deref().unwrap_or("json")) {
+        Ok(f) => f,
+        Err(e) => return Err(StopReason::ArgumentError(e)),
+    };
+
+    Ok(Cli {
+        command: CliCommand::Check,
+        format,
+        config_path,
+    })
+}
+
 /// UTF-8 のテキストファイルを読む。読めないか UTF-8 でなければ StopReason を返す。
 /// `display_path` は誤りの詳細に使う表示用のパス。
 pub fn read_utf8_file(path: &Path, display_path: &str) -> Result<String, StopReason> {
