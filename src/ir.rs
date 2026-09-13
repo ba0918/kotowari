@@ -92,6 +92,7 @@ pub enum Item {
         about: Vec<String>,
         sources: Vec<String>,
         steps: Vec<(usize, String)>,
+        scenario_text: String,
     },
     FlagEntry {
         id: String,
@@ -218,6 +219,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
     // gherkin ブロック内の状態
     let mut gherkin_tags: Vec<(String, String)> = Vec::new();
     let mut gherkin_scenario_line: Option<usize> = None;
+    let mut gherkin_scenario_text: String = String::new();
     let mut gherkin_steps: Vec<(usize, String)> = Vec::new();
 
     // 用語集の解析
@@ -234,7 +236,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                 if in_gherkin_block {
                     // gherkin ブロック終了: 未完了のシナリオがあれば追加
                     if let Some(scenario_line) = gherkin_scenario_line.take() {
-                        let scenario = build_scenario(&gherkin_tags, scenario_line, &gherkin_steps);
+                        let scenario = build_scenario(&gherkin_tags, scenario_line, &gherkin_steps, &gherkin_scenario_text);
                         items.push(scenario);
                         gherkin_tags.clear();
                         gherkin_steps.clear();
@@ -266,7 +268,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
             if trimmed.starts_with('@') {
                 // タグ行: 前のシナリオがあれば追加
                 if let Some(scenario_line) = gherkin_scenario_line.take() {
-                    let scenario = build_scenario(&gherkin_tags, scenario_line, &gherkin_steps);
+                    let scenario = build_scenario(&gherkin_tags, scenario_line, &gherkin_steps, &gherkin_scenario_text);
                     items.push(scenario);
                     gherkin_steps.clear();
                 }
@@ -285,12 +287,13 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
             } else if trimmed.starts_with("Scenario:") {
                 // 前のシナリオがあればフラッシュ
                 if let Some(scenario_line) = gherkin_scenario_line.take() {
-                    let scenario = build_scenario(&gherkin_tags, scenario_line, &gherkin_steps);
+                    let scenario = build_scenario(&gherkin_tags, scenario_line, &gherkin_steps, &gherkin_scenario_text);
                     items.push(scenario);
                     gherkin_steps.clear();
                     gherkin_tags.clear();
                 }
                 gherkin_scenario_line = Some(line_num);
+                gherkin_scenario_text = trimmed.to_string();
             } else if trimmed.starts_with("Given ")
                 || trimmed.starts_with("When ")
                 || trimmed.starts_with("Then ")
@@ -667,6 +670,7 @@ fn build_scenario(
     tags: &[(String, String)],
     scenario_line: usize,
     steps: &[(usize, String)],
+    scenario_text: &str,
 ) -> Item {
     let mut id = None;
     let mut about = Vec::new();
@@ -700,6 +704,7 @@ fn build_scenario(
         about,
         sources,
         steps: steps.to_vec(),
+        scenario_text: scenario_text.to_string(),
     }
 }
 
@@ -1082,6 +1087,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             line,
             tags,
             sources,
+            scenario_text,
             ..
         } => {
             // REQ-052: 知らないタグ
@@ -1124,7 +1130,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                     severity: "error".to_string(),
                     path: path.to_string(),
                     line: Some(*line),
-                    detail: id.as_deref().unwrap_or("(no id)").to_string(),
+                    detail: id.as_deref().unwrap_or(scenario_text).to_string(),
                 });
             }
         }

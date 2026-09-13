@@ -642,6 +642,20 @@ fn req_044_property_definition_field_is_unknown() {
     );
 }
 
+// @kotowari[REQ-059]
+#[test]
+fn req_059_scenario_without_id_missing_source_detail_is_scenario_text() {
+    let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@about=REQ-001\nScenario: No id scenario\n  Given something\n```\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ms = find_by_kind(&findings, "missing_source");
+    assert!(
+        ms.iter().any(|f| f.detail == "Scenario: No id scenario"),
+        "@id の無いシナリオの missing_source の detail は Scenario: の行の文字のはず: {:?}",
+        ms
+    );
+}
+
 // @kotowari[REQ-044]
 #[test]
 fn req_044_prop_unknown_field_does_not_produce_unresolved_reference() {
