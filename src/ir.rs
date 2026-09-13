@@ -678,7 +678,7 @@ fn build_scenario(
 
     for (tag_name, tag_value) in tags {
         match tag_name.as_str() {
-            "@id" => id = Some(tag_value.clone()),
+            "@id" if !tag_value.is_empty() => id = Some(tag_value.clone()),
             "@about" => {
                 about = tag_value
                     .split(',')
@@ -1072,7 +1072,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             }
 
             // REQ-053: 無いタグ
-            if !tags.iter().any(|(n, _)| n == "@id") {
+            if !tags.iter().any(|(n, v)| n == "@id" && !v.is_empty()) {
                 findings.push(Finding {
                     kind: "missing_tag".to_string(),
                     severity: "error".to_string(),
@@ -1081,7 +1081,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                     detail: "@id".to_string(),
                 });
             }
-            if !tags.iter().any(|(n, _)| n == "@about") {
+            if !tags.iter().any(|(n, v)| n == "@about" && !v.is_empty()) {
                 findings.push(Finding {
                     kind: "missing_tag".to_string(),
                     severity: "error".to_string(),
@@ -1092,7 +1092,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             }
 
             // REQ-059: シナリオの出典
-            if sources.is_empty() && !tags.iter().any(|(n, _)| n == "@source") {
+            if sources.is_empty() && !tags.iter().any(|(n, v)| n == "@source" && !v.is_empty()) {
                 findings.push(Finding {
                     kind: "missing_source".to_string(),
                     severity: "error".to_string(),

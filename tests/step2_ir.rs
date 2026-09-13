@@ -596,6 +596,23 @@ fn req_053_missing_tag() {
     assert!(mt.iter().any(|f| f.detail == "@about"));
 }
 
+// @kotowari[REQ-053, REQ-059]
+#[test]
+fn req_053_tag_with_empty_value_is_treated_as_missing() {
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n\n## 具体例\n\n```gherkin\n@id= @about=REQ-001 @source=\nScenario: Empty tag values\n  Given something\n```\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let mt = find_by_kind(&findings, "missing_tag");
+    assert!(mt.iter().any(|f| f.detail == "@id"), "empty @id= should count as missing: {:?}", mt);
+    assert!(!mt.iter().any(|f| f.detail == "@about"), "@about has a value: {:?}", mt);
+    let ms = find_by_kind(&findings, "missing_source");
+    assert!(
+        ms.iter().any(|f| f.detail == "Scenario: Empty tag values"),
+        "empty @source= should be missing_source with the Scenario line as detail: {:?}",
+        ms
+    );
+}
+
 // --- REQ-054: 参照切れ ---
 
 // @kotowari[REQ-054]
