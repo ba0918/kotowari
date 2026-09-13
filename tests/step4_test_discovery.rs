@@ -882,3 +882,90 @@ fn req_019_hidden_directory_is_excluded_and_subdirectory_is_included() {
         twi
     );
 }
+
+// --- has_attribute: #[test] の前にコメント行がある関数 ---
+
+// @kotowari[REQ-082, TBL-017]
+#[test]
+fn req_082_test_attribute_after_comment_is_recognized() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-001]\n#[test]\n// intermediate comment\nfn after_comment_test() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(
+        !twi.iter().any(|f| f["detail"] == "after_comment_test"),
+        "function with comment between #[test] and fn should be recognized as test: {:?}",
+        twi
+    );
+}
+
+// --- has_configured_attribute: カスタム属性を持たない関数はテストにならない ---
+
+// @kotowari[REQ-082, TBL-017]
+#[test]
+fn req_082_function_without_configured_attribute_not_counted() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  rust:\n    attributes:\n      - kani::proof\n",
+    )
+    .unwrap();
+    fs::create_dir_all(tmp.path().join("src")).unwrap();
+    fs::write(
+        tmp.path().join("src/lib.rs"),
+        "fn helper_function() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(
+        !twi.iter().any(|f| f["detail"] == "helper_function"),
+        "function without configured attribute should not be counted as test: {:?}",
+        twi
+    );
+}
+
+// --- collect_markers の行番号 ---
+
+// @kotowari[REQ-071, TBL-015]
+#[test]
+fn req_071_marker_line_number_is_reported() {
+    let markers = kotowari::tests_discovery::parse_markers_in_line(
+        "// @kotowari[REQ-001]",
+        42,
+    );
+    assert_eq!(markers.len(), 1);
+    assert_eq!(markers[0].line, 42, "marker line should match the given line number");
+}
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_marker_unresolved_reference_reports_fn_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "\n// @kotowari[REQ-999]\n#[test]\nfn marker_line_test() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ur = findings_by_kind(&v, "unresolved_reference");
+    let req999 = ur.iter().find(|f| f["detail"] == "REQ-999");
+    assert!(req999.is_some(), "should find unresolved REQ-999: {:?}", ur);
+    assert_eq!(
+        req999.unwrap()["line"], 4,
+        "unresolved_reference line should be the fn line (4)"
+    );
+}
