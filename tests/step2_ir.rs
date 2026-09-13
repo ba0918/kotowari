@@ -335,11 +335,8 @@ fn req_043_heading_without_colon_is_unknown() {
     let doc = ir::parse_document("a.md", content);
     let findings = check(&[doc], &default_config());
     let uh = find_by_kind(&findings, "unknown_heading");
-    assert!(
-        uh.iter().any(|f| f.detail == "REQ-001"),
-        "heading without colon should be unknown_heading: {:?}",
-        uh
-    );
+    assert_eq!(uh.len(), 1, "should produce exactly one unknown_heading");
+    assert_eq!(uh[0].detail, "REQ-001");
 }
 
 // --- REQ-044: 知らない行 ---

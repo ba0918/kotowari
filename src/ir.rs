@@ -476,14 +476,12 @@ impl ItemBuilder {
 
     fn build(self) -> Item {
         // 見出しの形: "ID: 名前"（コロン必須）
-        if !self.heading.contains(':') {
+        let Some((id, name)) = parse_heading(&self.heading) else {
             return Item::UnknownHeading {
                 heading: self.heading,
                 line: self.line,
             };
-        }
-
-        let (id, name) = parse_heading(&self.heading);
+        };
         let fields_seen = self.build_fields_seen();
 
         match id_prefix(&id) {
@@ -636,15 +634,10 @@ impl ItemBuilder {
     }
 }
 
-/// 見出し "ID: 名前" を分解する
-fn parse_heading(heading: &str) -> (String, String) {
-    if let Some(colon_pos) = heading.find(':') {
-        let id = heading[..colon_pos].trim().to_string();
-        let name = heading[colon_pos + 1..].trim().to_string();
-        (id, name)
-    } else {
-        (heading.to_string(), String::new())
-    }
+/// 見出し "ID: 名前" を分解する。コロンがなければ None。
+fn parse_heading(heading: &str) -> Option<(String, String)> {
+    let (id, name) = heading.split_once(':')?;
+    Some((id.trim().to_string(), name.trim().to_string()))
 }
 
 /// ID の接頭辞を判定する
