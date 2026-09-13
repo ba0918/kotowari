@@ -905,6 +905,13 @@ fn req_082_test_attribute_after_comment_is_recognized() {
         "function with comment between #[test] and fn should be recognized as test: {:?}",
         twi
     );
+    // 認識されていれば REQ-001 は印で結び付いているので requirement_without_test は出ない
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    assert!(
+        !rwt.iter().any(|f| f["detail"] == "REQ-001"),
+        "the test after the comment should bind REQ-001: {:?}",
+        rwt
+    );
 }
 
 // --- has_configured_attribute: カスタム属性を持たない関数はテストにならない ---
