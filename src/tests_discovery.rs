@@ -213,8 +213,6 @@ fn discover_tests_in_node(
                                     config,
                                     &mut inner_tests,
                                     line_offset,
-                                    source,
-                                    lines,
                                 );
                                 tests.extend(inner_tests);
                             }
@@ -238,8 +236,6 @@ fn discover_macro_functions(
     config: &Config,
     tests: &mut Vec<DiscoveredTest>,
     line_offset: usize,
-    outer_source: &str,
-    outer_lines: &[&str],
 ) {
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
@@ -250,14 +246,8 @@ fn discover_macro_functions(
                 let inner_line = child.start_position().row;
                 let actual_line = line_offset + inner_line + 1;
 
-                // 印を探す: outer_source でマクロの前と内部の関数の前のコメントを見る
-                let marker_ids = collect_markers_before_line(outer_lines, actual_line);
-
-                // inner の関数前のコメントの印も集める
-                let inner_marker_ids = collect_markers_before_line(inner_lines, inner_line);
-
-                let mut all_ids = marker_ids;
-                all_ids.extend(inner_marker_ids);
+                // inner の関数前のコメントの印を集める
+                let all_ids = collect_markers_before_line(inner_lines, inner_line);
 
                 tests.push(DiscoveredTest {
                     name: name.to_string(),
@@ -276,8 +266,6 @@ fn discover_macro_functions(
                 config,
                 tests,
                 line_offset,
-                outer_source,
-                outer_lines,
             );
         }
     }
