@@ -527,3 +527,34 @@ fn req_063_property_statements_and_scenario_steps_are_term_checked() {
         ut
     );
 }
+
+// --- REQ-040: gherkin コードブロック内の文書名参照は対象外 ---
+
+// @kotowari[REQ-040]
+#[test]
+fn req_040_gherkin_code_block_doc_ref_is_not_checked() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        concat!(
+            "# Title\n\nScope.\n\n## 要求\n\n",
+            "### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n\n",
+            "## 具体例\n\n",
+            "```gherkin\n",
+            "@id=EX-001 @about=REQ-001 @source=docs/decision/brainstorm/records.md#A1\n",
+            "Scenario: Test with doc ref\n",
+            "  Given some-file.md exists\n",
+            "```\n",
+        ),
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let md = findings_by_kind(&v, "missing_document");
+    assert!(
+        !md.iter().any(|f| f["detail"] == "some-file.md"),
+        "gherkin コードブロック内の文書名参照は検査対象外のはず: {:?}",
+        md
+    );
+}
