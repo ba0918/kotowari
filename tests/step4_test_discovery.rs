@@ -807,6 +807,44 @@ fn tbl_001_non_utf8_test_file_stops() {
     assert!(output.stdout.is_empty(), "stdout should be empty on stop");
 }
 
+// --- REQ-079: シンボリックリンクを辿らない ---
+
+// @kotowari[REQ-079]
+#[test]
+#[cfg(unix)]
+fn req_079_symlink_is_not_followed() {
+    use std::os::unix::fs::symlink;
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::create_dir_all(tmp.path().join("elsewhere")).unwrap();
+    fs::write(
+        tmp.path().join("elsewhere/linked_test.rs"),
+        "// @kotowari[REQ-001]\n#[test]\nfn linked_test() {}\n",
+    )
+    .unwrap();
+    symlink(
+        tmp.path().join("elsewhere/linked_test.rs"),
+        tmp.path().join("tests/linked_test.rs"),
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(
+        !twi.iter().any(|f| f["detail"] == "linked_test"),
+        "シンボリックリンク先のテストは走査されないはず: {:?}",
+        twi
+    );
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    assert!(
+        rwt.iter().any(|f| f["detail"] == "REQ-001"),
+        "シンボリックリンクが辿られないので REQ-001 はテスト無しのはず: {:?}",
+        rwt
+    );
+}
+
 // --- REQ-019: glob は再帰し、隠しディレクトリを含めない ---
 
 // @kotowari[REQ-019]
