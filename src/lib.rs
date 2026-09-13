@@ -128,33 +128,15 @@ pub fn run_check(
             cfg.ir
         )));
     }
-    if std::fs::read_dir(&ir_dir).is_err() {
-        return Err(StopReason::UnreadableFile(format!(
-            "ir directory not readable: {}",
-            cfg.ir
-        )));
-    }
     if !records_dir.is_dir() {
         return Err(StopReason::UnreadableFile(format!(
             "decisions.records directory not found: {}",
             cfg.decisions.records
         )));
     }
-    if std::fs::read_dir(&records_dir).is_err() {
-        return Err(StopReason::UnreadableFile(format!(
-            "decisions.records directory not readable: {}",
-            cfg.decisions.records
-        )));
-    }
     if !adr_dir.is_dir() {
         return Err(StopReason::UnreadableFile(format!(
             "decisions.adr directory not found: {}",
-            cfg.decisions.adr
-        )));
-    }
-    if std::fs::read_dir(&adr_dir).is_err() {
-        return Err(StopReason::UnreadableFile(format!(
-            "decisions.adr directory not readable: {}",
             cfg.decisions.adr
         )));
     }
