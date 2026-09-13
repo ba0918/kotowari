@@ -110,25 +110,57 @@ fn req_058_source_outside_places_is_invalid() {
 
 // --- REQ-059: 出典が無い ---
 
-// @kotowari[REQ-059]
+// @kotowari[REQ-059, REQ-098]
 #[test]
 fn req_059_missing_source_for_item_scenario_and_term() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
-    // 出典の行がない要求
+    // 出典の行がない要求 → REQ-098 により missing_field detail="出典"
+    // 出典の値が空のシナリオ → REQ-059 により missing_source
+    // 用語の出典が空 → REQ-059 により missing_source
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 検証: unit\n\nStatement.\n",
+        concat!(
+            "# Title\n\nScope.\n\n## 要求\n\n",
+            "### REQ-001: Test\n\n- 種類: ubiquitous\n- 検証: unit\n\nStatement.\n\n",
+            "## 具体例\n\n",
+            "```gherkin\n",
+            "@id=EX-001 @about=REQ-001\n",
+            "Scenario: No source\n",
+            "  Given something\n",
+            "```\n",
+        ),
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| テスト | 意味 |  |\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
-    let ms = findings_by_kind(&v, "missing_source");
-    // missing_field で出典の欠如が報告される（missing_source ではなく）
+
+    // 要求: 出典の行が無い → missing_field detail="出典"（REQ-098）
     let mf = findings_by_kind(&v, "missing_field");
     assert!(
-        ms.len() >= 1 || mf.iter().any(|f| f["detail"] == "出典"),
-        "should report missing source"
+        mf.iter().any(|f| f["detail"] == "出典" && f["path"].as_str().unwrap().contains("a.md")),
+        "absent source line should produce missing_field with detail '出典': {:?}",
+        mf
+    );
+
+    // シナリオ: @source タグが無い → missing_source
+    let ms = findings_by_kind(&v, "missing_source");
+    assert!(
+        ms.iter().any(|f| f["detail"] == "EX-001"),
+        "scenario without @source should produce missing_source with detail 'EX-001': {:?}",
+        ms
+    );
+
+    // 用語: 出典の列が空 → missing_source
+    assert!(
+        ms.iter().any(|f| f["detail"] == "テスト"),
+        "glossary term with empty source should produce missing_source with detail 'テスト': {:?}",
+        ms
     );
 }
 

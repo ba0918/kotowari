@@ -81,7 +81,7 @@ fn req_030_warning_kinds_have_the_detail_of_the_table() {
 fn req_031_only_two_kinds_are_warnings() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    // 行数超過と要求数超過を出す
+    // 行数超過（>120行）と要求数超過（>10件）を出す
     let mut content = String::from("# Title\n\nScope.\n\n## 要求\n\n");
     for i in 1..=12 {
         content.push_str(&format!(
@@ -96,12 +96,29 @@ fn req_031_only_two_kinds_are_warnings() {
     let v = parse_json(&output);
     let findings = v["findings"].as_array().unwrap();
     let warnings: Vec<_> = findings.iter().filter(|f| f["severity"] == "warning").collect();
+    // 警告が実際に存在すること
+    assert!(
+        !warnings.is_empty(),
+        "test should produce at least one warning"
+    );
+    // 警告は2種類だけ
     for w in &warnings {
         let kind = w["kind"].as_str().unwrap();
         assert!(
             kind == "too_many_lines" || kind == "too_many_requirements",
             "unexpected warning kind: {kind}"
         );
+    }
+    // 警告でない指摘はすべて error
+    for f in findings {
+        let sev = f["severity"].as_str().unwrap();
+        if sev != "warning" {
+            assert_eq!(
+                sev, "error",
+                "non-warning finding should be error, got {sev}: {:?}",
+                f
+            );
+        }
     }
 }
 
@@ -126,7 +143,14 @@ fn req_027_document_wide_findings_have_null_line() {
 fn req_028_lines_start_at_one() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    // 1行目から始まる見出しで unknown_heading を出す
+    // 7行目の見出しで unknown_heading を出す
+    // line 1: # Title
+    // line 2: (空)
+    // line 3: Scope.
+    // line 4: (空)
+    // line 5: ## 要求
+    // line 6: (空)
+    // line 7: ### Bad Heading
     fs::write(
         tmp.path().join("docs/ir/a.md"),
         "# Title\n\nScope.\n\n## 要求\n\n### Bad Heading\n",
@@ -137,7 +161,7 @@ fn req_028_lines_start_at_one() {
     let uh = findings_by_kind(&v, "unknown_heading");
     assert!(!uh.is_empty());
     let line = uh[0]["line"].as_u64().unwrap();
-    assert!(line >= 1, "line should be 1-indexed, got {line}");
+    assert_eq!(line, 7, "### Bad Heading is on line 7 (1-indexed)");
 }
 
 // --- REQ-024: 指摘の並び ---
