@@ -127,7 +127,9 @@ pub struct SourceContext {
 impl SourceContext {
     /// 出典1つを検査する
     pub fn check_source(&self, source: &str) -> Result<(), String> {
-        let (path, anchor) = split_source(source).ok_or_else(|| source.to_string())?;
+        let (raw_path, anchor) = split_source(source).ok_or_else(|| source.to_string())?;
+        let path_normalized = crate::normalize_path(raw_path);
+        let path = path_normalized.as_str();
 
         // パスが records の中か adr の中かを判定
         let in_records = path.starts_with(&self.records_path)

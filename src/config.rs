@@ -65,10 +65,12 @@ impl Default for Config {
 }
 
 /// serde 用の YAML の形（deny_unknown_fields 付き）
+/// Option<Option<T>> で、キー不在（None）と null（Some(None)）を区別する
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RawConfig {
-    ir: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    ir: Option<Option<String>>,
     decisions: Option<RawDecisions>,
     tests: Option<RawTests>,
     limits: Option<RawLimits>,
@@ -78,8 +80,10 @@ struct RawConfig {
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RawDecisions {
-    records: Option<String>,
-    adr: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    records: Option<Option<String>>,
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    adr: Option<Option<String>>,
 }
 
 #[derive(serde::Deserialize)]
@@ -99,23 +103,79 @@ struct RawRustTests {
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RawLimits {
-    lines: Option<NonZeroU64>,
-    requirements: Option<NonZeroU64>,
+    #[serde(default, deserialize_with = "deserialize_nullable_nonzero")]
+    lines: Option<Option<NonZeroU64>>,
+    #[serde(default, deserialize_with = "deserialize_nullable_nonzero")]
+    requirements: Option<Option<NonZeroU64>>,
+}
+
+/// null を Some(None)、値を Some(Some(v))、不在を None にデシリアライズ
+fn deserialize_nullable<'de, D, T>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: serde::Deserialize<'de>,
+{
+    let opt = Option::<T>::deserialize(deserializer)?;
+    Ok(Some(opt))
+}
+
+fn deserialize_nullable_nonzero<'de, D>(deserializer: D) -> Result<Option<Option<NonZeroU64>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let opt = Option::<NonZeroU64>::deserialize(deserializer)?;
+    Ok(Some(opt))
+}
+
+use serde::Deserialize;
+
+/// null チェック付きで Option<Option<T>> から値を取り出す
+fn unwrap_or_null<T>(field: Option<Option<T>>, key: &str, default: T) -> Result<T, StopReason> {
+    match field {
+        None => Ok(default),           // キー不在 → 既定値
+        Some(None) => Err(StopReason::ConfigError(format!("null value for key: {key}"))),
+        Some(Some(v)) => Ok(v),
+    }
+}
+
+/// パスが絶対パスでないことを検証する
+fn check_not_absolute(path: &str, key: &str) -> Result<(), StopReason> {
+    if path.starts_with('/') || (path.len() >= 2 && path.as_bytes()[1] == b':') {
+        return Err(StopReason::ConfigError(format!(
+            "absolute path not allowed for {key}: {path}"
+        )));
+    }
+    Ok(())
 }
 
 impl Config {
     /// YAML 文字列から設定を読む
     pub fn parse(yaml: &str) -> Result<Self, StopReason> {
+        // REQ-012: 空の設定ファイルは既定値
+        let trimmed = yaml.trim();
+        if trimmed.is_empty() || trimmed.lines().all(|l| l.trim_start().starts_with('#')) {
+            return Ok(Config::default());
+        }
+
         let raw: RawConfig = serde_saphyr::from_str(yaml)
             .map_err(|e| StopReason::ConfigError(format!("{e}")))?;
 
         let defaults = Config::default();
 
+        // REQ-014: null 値の検出と絶対パスの検出
+        // REQ-110: パスの正規化
+        let ir = unwrap_or_null(raw.ir, "ir", defaults.ir)?;
+        check_not_absolute(&ir, "ir")?;
+        let ir = crate::normalize_path(&ir);
+
         let decisions = if let Some(d) = raw.decisions {
-            DecisionsConfig {
-                records: d.records.unwrap_or(defaults.decisions.records),
-                adr: d.adr.unwrap_or(defaults.decisions.adr),
-            }
+            let records = unwrap_or_null(d.records, "decisions.records", defaults.decisions.records)?;
+            check_not_absolute(&records, "decisions.records")?;
+            let records = crate::normalize_path(&records);
+            let adr = unwrap_or_null(d.adr, "decisions.adr", defaults.decisions.adr)?;
+            check_not_absolute(&adr, "decisions.adr")?;
+            let adr = crate::normalize_path(&adr);
+            DecisionsConfig { records, adr }
         } else {
             defaults.decisions
         };
@@ -129,9 +189,18 @@ impl Config {
             } else {
                 defaults.tests.rust
             };
+            let files = t.files.unwrap_or(defaults.tests.files);
+            // REQ-014: glob として読めない要素
+            for pattern in &files {
+                if globset::Glob::new(pattern).is_err() {
+                    return Err(StopReason::ConfigError(format!(
+                        "invalid glob pattern: {pattern}"
+                    )));
+                }
+            }
             TestsConfig {
                 // REQ-015: 一覧は既定を置き換える
-                files: t.files.unwrap_or(defaults.tests.files),
+                files,
                 rust,
             }
         } else {
@@ -139,10 +208,9 @@ impl Config {
         };
 
         let limits = if let Some(l) = raw.limits {
-            LimitsConfig {
-                lines: l.lines.unwrap_or(defaults.limits.lines),
-                requirements: l.requirements.unwrap_or(defaults.limits.requirements),
-            }
+            let lines = unwrap_or_null(l.lines, "limits.lines", defaults.limits.lines)?;
+            let requirements = unwrap_or_null(l.requirements, "limits.requirements", defaults.limits.requirements)?;
+            LimitsConfig { lines, requirements }
         } else {
             defaults.limits
         };
@@ -153,9 +221,20 @@ impl Config {
                 "vague_words contains an empty string".to_string(),
             ));
         }
+        // REQ-014: 重複語の検出
+        {
+            let mut seen = std::collections::HashSet::new();
+            for word in &vague_words {
+                if !seen.insert(word) {
+                    return Err(StopReason::ConfigError(format!(
+                        "duplicate vague_word: {word}"
+                    )));
+                }
+            }
+        }
 
         Ok(Config {
-            ir: raw.ir.unwrap_or(defaults.ir),
+            ir,
             decisions,
             tests,
             limits,

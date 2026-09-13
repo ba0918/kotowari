@@ -489,3 +489,127 @@ fn req_019_glob_is_recursive_and_skips_hidden_dirs() {
     let cfg = kotowari::config::Config::parse(yaml).unwrap();
     assert_eq!(cfg.tests.files, vec!["src/**/*.rs"]);
 }
+
+// --- Step 2: 設定の誤りの拡張、パスの正規化 ---
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_unparsable_yaml_stops() {
+    let yaml = "ir: [invalid yaml\n";
+    let result = kotowari::config::Config::parse(yaml);
+    assert!(result.is_err(), "unparsable YAML should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_duplicate_key_stops() {
+    let yaml = "ir: docs/ir\nir: other\n";
+    let result = kotowari::config::Config::parse(yaml);
+    assert!(result.is_err(), "duplicate key should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_value_stops() {
+    // "ir:" だけの行は null
+    let yaml = "ir:\n";
+    let result = kotowari::config::Config::parse(yaml);
+    assert!(result.is_err(), "null value should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_absolute_path_stops() {
+    let yaml = "ir: /absolute/path\n";
+    let result = kotowari::config::Config::parse(yaml);
+    assert!(result.is_err(), "absolute path should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_duplicate_vague_word_stops() {
+    let yaml = "vague_words:\n  - \"foo\"\n  - \"foo\"\n";
+    let result = kotowari::config::Config::parse(yaml);
+    assert!(result.is_err(), "duplicate vague word should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_invalid_glob_stops() {
+    let yaml = "tests:\n  files:\n    - \"[invalid\"\n";
+    let result = kotowari::config::Config::parse(yaml);
+    assert!(result.is_err(), "invalid glob should stop");
+}
+
+// @kotowari[REQ-012]
+#[test]
+fn req_012_empty_config_uses_defaults() {
+    let yaml = "";
+    let cfg = kotowari::config::Config::parse(yaml).unwrap();
+    assert_eq!(cfg.ir, "docs/ir");
+}
+
+// @kotowari[REQ-012]
+#[test]
+fn req_012_comment_only_config_uses_defaults() {
+    let yaml = "# comment only\n";
+    let cfg = kotowari::config::Config::parse(yaml).unwrap();
+    assert_eq!(cfg.ir, "docs/ir");
+}
+
+// @kotowari[REQ-110]
+#[test]
+fn req_110_trailing_slash_in_config_is_normalized_in_path() {
+    assert_eq!(kotowari::normalize_path("docs/ir/"), "docs/ir");
+    assert_eq!(kotowari::normalize_path("./docs/ir/"), "docs/ir");
+}
+
+// @kotowari[REQ-110]
+#[test]
+fn req_110_dot_segments_are_folded() {
+    assert_eq!(kotowari::normalize_path("./docs/./ir"), "docs/ir");
+    assert_eq!(kotowari::normalize_path("docs//ir"), "docs/ir");
+    assert_eq!(kotowari::normalize_path("docs\\ir"), "docs/ir");
+}
+
+// @kotowari[REQ-018]
+#[test]
+fn req_018_place_that_is_a_file_stops() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    // ir をファイルに替える
+    fs::remove_dir_all(tmp.path().join("docs/ir")).unwrap();
+    fs::write(tmp.path().join("docs/ir"), "not a directory").unwrap();
+    cmd()
+        .arg("check")
+        .current_dir(tmp.path())
+        .assert()
+        .code(2)
+        .stdout("");
+}
+
+// @kotowari[TBL-003]
+#[test]
+fn tbl_003_kotowari_file_is_ignored_in_search() {
+    let tmp = TempDir::new().unwrap();
+    // .kotowari をファイルとして作成し、親ディレクトリに .kotowari/ を作る
+    let child = tmp.path().join("child");
+    fs::create_dir_all(&child).unwrap();
+    fs::write(child.join(".kotowari"), "this is a file, not a dir").unwrap();
+    // 親に .kotowari/ ディレクトリを作る
+    fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+    ).unwrap();
+    // child から走らせると、child/.kotowari はファイルなので無視して
+    // 親の .kotowari/ を見つけるべき
+    cmd()
+        .arg("check")
+        .current_dir(&child)
+        .assert()
+        .code(0);
+}
