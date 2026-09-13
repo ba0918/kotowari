@@ -147,13 +147,20 @@ impl Config {
             defaults.limits
         };
 
+        let vague_words = raw.vague_words.unwrap_or(defaults.vague_words);
+        if vague_words.iter().any(|w| w.is_empty()) {
+            return Err(StopReason::ConfigError(
+                "vague_words contains an empty string".to_string(),
+            ));
+        }
+
         Ok(Config {
             ir: raw.ir.unwrap_or(defaults.ir),
             decisions,
             tests,
             limits,
             // REQ-015: 一覧は既定を置き換える
-            vague_words: raw.vague_words.unwrap_or(defaults.vague_words),
+            vague_words,
         })
     }
 }

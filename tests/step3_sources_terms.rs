@@ -367,12 +367,11 @@ fn req_066_vague_word_substring() {
     assert!(vw.iter().any(|f| f["detail"] == "適切に"), "should find vague word: {:?}", vw);
 }
 
-// @kotowari[REQ-066]
+// @kotowari[REQ-014]
 #[test]
-fn req_066_empty_vague_word_does_not_hang() {
+fn req_014_empty_vague_word_stops_with_config_error() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
-    // vague_words に空文字列を含む設定
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
         "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\nvague_words:\n  - \"\"\n  - 適切に\n",
@@ -389,20 +388,12 @@ fn req_066_empty_vague_word_does_not_hang() {
         .timeout(std::time::Duration::from_secs(5))
         .output()
         .unwrap();
-    let v = parse_json(&output);
-    let vw = findings_by_kind(&v, "vague_word");
-    // 空文字列の曖昧語は指摘にならない
-    assert!(
-        !vw.iter().any(|f| f["detail"].as_str() == Some("")),
-        "empty vague word should not produce a finding: {:?}",
-        vw
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "empty vague word should stop with exit code 2"
     );
-    // 通常の曖昧語は検出される
-    assert!(
-        vw.iter().any(|f| f["detail"] == "適切に"),
-        "normal vague word should still be found: {:?}",
-        vw
-    );
+    assert!(output.stdout.is_empty(), "stdout should be empty on stop");
 }
 
 // --- REQ-067: 出現ごとに1件 ---

@@ -266,6 +266,24 @@ fn req_014_zero_limit_stops() {
         .stdout("");
 }
 
+// @kotowari[REQ-014]
+#[test]
+fn req_014_empty_vague_word_stops() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\nvague_words:\n  - \"\"\n  - 適切に\n",
+    )
+    .unwrap();
+    cmd()
+        .arg("check")
+        .current_dir(tmp.path())
+        .assert()
+        .code(2)
+        .stdout("");
+}
+
 // --- REQ-015: 一覧は既定を置き換える ---
 
 // @kotowari[REQ-015]
