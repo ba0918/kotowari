@@ -7,10 +7,10 @@
 ### REQ-057: 出典の書式
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A3, experiments/003-cli/brainstorm/records.md#A13, experiments/003-cli/brainstorm/records.md#A38
+- 出典: experiments/003-cli/brainstorm/records.md#A3, experiments/003-cli/brainstorm/records.md#A13, experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/records.md#A84
 - 検証: unit
 
-kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の "#" でパスと印に分ける。パスに "#" は書けない。
+kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の "#" でパスと印に分ける。パスに "#" は書けない。パスは`基準のディレクトリ`（".kotowari" があるリポジトリ直下）からの相対で、置き場からの全体を書く（"experiments/003-cli/brainstorm/records.md#A26" の形）。
 
 ### REQ-058: 出典の判定
 
@@ -79,13 +79,13 @@ kotowari は常に、形の契約の "brainstorm/ir-form.md" を、"## " の見�
 ```gherkin
 @id=EX-011 @about=REQ-058 @source=experiments/003-cli/brainstorm/records.md#A38
 Scenario: 決定の節にある番号は正しい出典である
-  Given "decisions.records" が "brainstorm" で、"brainstorm/records.md" の Agreements の節に "- A26 " で始まる行がある
+  Given "decisions.records" が "experiments/003-cli/brainstorm" で、"experiments/003-cli/brainstorm/records.md" の Agreements の節に "- A26 " で始まる行がある
   When 出典 "experiments/003-cli/brainstorm/records.md#A26" を検査する
   Then source_invalid の誤りは出ない
 
 @id=EX-012 @about=REQ-058 @source=experiments/003-cli/brainstorm/records.md#A38,experiments/003-cli/brainstorm/ir-form.md#検査の種類
 Scenario: 無い番号は誤りになる
-  Given "brainstorm/records.md" に "- A99 " で始まる行が無い
+  Given "decisions.records" が "experiments/003-cli/brainstorm" で、"experiments/003-cli/brainstorm/records.md" に "- A99 " で始まる行が無い
   When 出典 "experiments/003-cli/brainstorm/records.md#A99" を検査する
   Then detail が "experiments/003-cli/brainstorm/records.md#A99" の source_invalid の誤りが出る
 ```

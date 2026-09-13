@@ -44,6 +44,6 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 
 ### PROP-003: findings は並んでいる
 
-- 出典: experiments/003-cli/brainstorm/records.md#A61
+- 出典: experiments/003-cli/brainstorm/records.md#A61, experiments/003-cli/brainstorm/records.md#A70, experiments/003-cli/brainstorm/ir-form.md#出力
 
 "findings" の中で隣り合うどの2つの`指摘`も、TBL-007 の順で比べて後ろのものが前のものより先に来ない。
