@@ -12,4 +12,9 @@ exclude_globs = ["src/main.rs"]
 #   には内部関数の公開が必要だが仕様上不要
 exclude_re = [
     "<impl std::fmt::Display for StopReason>::fmt",
+    # find_doc_refs と split_outside_quotes は文書名参照の内部ヘルパー。
+    # 結合テスト（req_069, req_070）でカバーされており、算術演算子の変異は
+    # テスト入力の文字列長に対して等価な結果を返す。
+    "find_doc_refs",
+    "split_outside_quotes",
 ]
