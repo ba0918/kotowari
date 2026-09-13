@@ -27,7 +27,23 @@ pub fn collect_glossary_terms(docs: &[IrDocument]) -> Option<BTreeSet<String>> {
     }
 }
 
-/// 対象の行からバッククォートで囲んだ語を検査する（REQ-064, REQ-065）
+/// 行のバッククォートの数が奇数かどうかを判定する
+fn has_odd_backticks(text: &str) -> bool {
+    text.chars().filter(|&c| c == '`').count() % 2 != 0
+}
+
+/// 二重引用符の外の部分だけを取り出してバッククォートを抽出する
+/// REQ-104: 具体的な値は二重引用符で書く
+fn extract_backtick_contents_outside_quotes(text: &str) -> Vec<&str> {
+    let parts = split_outside_quotes(text);
+    let mut result = Vec::new();
+    for part in parts {
+        result.extend(crate::ir::extract_backtick_contents(part));
+    }
+    result
+}
+
+/// 対象の行からバッククォートで囲んだ語を検査する（REQ-064, REQ-065, REQ-116）
 pub fn check_unknown_terms(
     text: &str,
     line: usize,
@@ -36,23 +52,39 @@ pub fn check_unknown_terms(
     path: &str,
     findings: &mut Vec<Finding>,
 ) {
-    for content in crate::ir::extract_backtick_contents(text) {
+    // REQ-116: バッククォートが奇数の行は unclosed_backtick
+    // 二重引用符の外のバッククォートだけを数える
+    let outside_parts = split_outside_quotes(text);
+    let outside_text: String = outside_parts.join("");
+    if has_odd_backticks(&outside_text) {
+        findings.push(Finding::new(FindingKind::UnclosedBacktick, path.to_string(), Some(line), text.to_string()));
+        return;
+    }
+    for content in extract_backtick_contents_outside_quotes(text) {
+        // REQ-064: 前後の空白を除く
+        let trimmed = content.trim();
+        // REQ-064: 中身が空の囲み
+        if trimmed.is_empty() {
+            findings.push(Finding::new(FindingKind::UnknownTerm, path.to_string(), Some(line), "``".to_string()));
+            continue;
+        }
         // ID なら参照チェック（ir モジュールで済み）、用語チェックはしない
-        if is_valid_id(content) {
+        if is_valid_id(trimmed) {
             continue;
         }
         // 用語集にあるか
         let is_known = match glossary {
-            Some(terms) => terms.contains(content),
+            Some(terms) => terms.contains(trimmed),
             None => false, // 用語集がない → すべて unknown
         };
         if !is_known {
-            findings.push(Finding::new(FindingKind::UnknownTerm, path.to_string(), Some(line), content.to_string()));
+            findings.push(Finding::new(FindingKind::UnknownTerm, path.to_string(), Some(line), trimmed.to_string()));
         }
     }
 }
 
 /// 曖昧語の検査（REQ-066, REQ-067）
+/// 行の左から最長一致で重ならない形で数える（A142）
 pub fn check_vague_words(
     text: &str,
     line: usize,
@@ -60,15 +92,33 @@ pub fn check_vague_words(
     path: &str,
     findings: &mut Vec<Finding>,
 ) {
-    for word in vague_words {
-        if word.is_empty() {
-            continue;
+    if vague_words.is_empty() {
+        return;
+    }
+    let chars: Vec<char> = text.chars().collect();
+    let mut pos = 0;
+    while pos < chars.len() {
+        // 現在位置から始まる最長の曖昧語を探す
+        let mut best_word: Option<&String> = None;
+        let mut best_len: usize = 0;
+        let remaining: String = chars[pos..].iter().collect();
+        for word in vague_words {
+            if word.is_empty() {
+                continue;
+            }
+            if remaining.starts_with(word.as_str()) {
+                let wlen = word.chars().count();
+                if wlen > best_len {
+                    best_word = Some(word);
+                    best_len = wlen;
+                }
+            }
         }
-        // 部分一致で出現回数を数える（REQ-067: 出現ごとに1件）
-        let mut search_start = 0;
-        while let Some(pos) = text[search_start..].find(word.as_str()) {
+        if let Some(word) = best_word {
             findings.push(Finding::new(FindingKind::VagueWord, path.to_string(), Some(line), word.clone()));
-            search_start += pos + word.len();
+            pos += best_len;
+        } else {
+            pos += 1;
         }
     }
 }
@@ -115,13 +165,33 @@ pub fn check_document_references(
 }
 
 /// 二重引用符の外の部分を返す
+/// TBL-014: 引用符が奇数のときは最後の引用符から行末を引用の中とみなす
 fn split_outside_quotes(line: &str) -> Vec<&str> {
+    // まず引用符の数を数える
+    let quote_count = line.chars().filter(|&c| c == '"').count();
+    let odd_quotes = quote_count % 2 != 0;
+
     let mut parts = Vec::new();
     let mut start = 0;
     let mut in_quote = false;
+    let mut last_quote_pos = 0;
+
+    // 奇数の場合、最後の引用符の位置を見つける
+    if odd_quotes {
+        last_quote_pos = line.char_indices()
+            .filter(|&(_, c)| c == '"')
+            .last()
+            .map(|(i, _)| i)
+            .unwrap_or(0);
+    }
 
     for (i, c) in line.char_indices() {
         if c == '"' {
+            if odd_quotes && i == last_quote_pos {
+                // 最後の奇数引用符 → ここから行末まで引用の中
+                parts.push(&line[start..i]);
+                return parts;
+            }
             if !in_quote {
                 parts.push(&line[start..i]);
                 in_quote = true;
@@ -156,11 +226,11 @@ fn find_doc_refs(
         if let Some(md_pos) = text[i..].find(".md") {
             let md_abs = i + md_pos;
 
-            // ".md" の後が英小文字や数字でないこと（ファイル名の一部でない）
+            // TBL-014: ".md" の後が英数字、"_"、"-" でないこと
             let after_md = md_abs + 3;
             if after_md < len {
                 let next_byte = bytes[after_md];
-                if next_byte.is_ascii_lowercase() || next_byte.is_ascii_digit() || next_byte == b'-' {
+                if next_byte.is_ascii_alphanumeric() || next_byte == b'_' || next_byte == b'-' {
                     i = md_abs + 1;
                     continue;
                 }

@@ -232,6 +232,8 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
     // 用語集の解析
     let mut in_glossary_table = false;
     let mut glossary_header_seen = false;
+    let mut glossary_table_done = false; // REQ-117: 2つ目の表は用語にしない
+    let mut glossary_separator_seen = false;
 
     for (idx, line) in lines.iter().enumerate() {
         let line_num = idx + 1; // 1-indexed
@@ -350,17 +352,35 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
         // 用語集の表の解析
         if kind == DocKind::Glossary {
             if line.starts_with('|') {
+                // REQ-117: 表が完了していたら2つ目以降の表は無視
+                if glossary_table_done {
+                    continue;
+                }
                 if !glossary_header_seen {
-                    // ヘッダー行をチェック
-                    if line.contains("用語") && line.contains("意味") && line.contains("出典") {
+                    // ヘッダー行をチェック（各セルの前後の空白を除いて完全一致）
+                    let cols: Vec<&str> = line.split('|').collect();
+                    let trimmed_cols: Vec<&str> = cols.iter()
+                        .map(|c| c.trim())
+                        .filter(|c| !c.is_empty())
+                        .collect();
+                    if trimmed_cols == ["用語", "意味", "出典"] {
                         glossary_header_seen = true;
                     }
                     continue;
                 }
-                // 区切り行（|---|---|---|）をスキップ
-                let trimmed = line.trim().trim_matches('|').trim();
-                if trimmed.chars().all(|c| c == '-' || c == '|' || c == ' ') {
-                    in_glossary_table = true;
+                if !glossary_separator_seen {
+                    // 区切り行: 各セルが3つ以上の "-"（前後に ":" があってもよい）
+                    let cols: Vec<&str> = line.split('|').collect();
+                    let is_separator = cols.iter()
+                        .filter(|c| !c.trim().is_empty())
+                        .all(|c| {
+                            let t = c.trim().trim_matches(':');
+                            t.len() >= 3 && t.chars().all(|ch| ch == '-')
+                        });
+                    if is_separator {
+                        glossary_separator_seen = true;
+                        in_glossary_table = true;
+                    }
                     continue;
                 }
                 if in_glossary_table {
@@ -390,6 +410,10 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                     }
                 }
                 continue;
+            } else if in_glossary_table {
+                // 空行か表でない行で表が終わる
+                in_glossary_table = false;
+                glossary_table_done = true;
             }
         }
 
@@ -850,6 +874,14 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
         // REQ-036: 範囲の行が無い（話題ごとの文書のみ）
         if doc.kind == DocKind::Topic && doc.scope_lines.is_empty() {
             findings.push(Finding::new(FindingKind::MissingScope, path.clone(), None, doc.filename.clone()));
+        }
+
+        // REQ-117: 用語集にこの形の表がない → glossary_invalid
+        if doc.kind == DocKind::Glossary {
+            let has_glossary_term = doc.items.iter().any(|i| matches!(i, Item::GlossaryTerm { .. }));
+            if !has_glossary_term {
+                findings.push(Finding::new(FindingKind::GlossaryInvalid, path.clone(), None, doc.filename.clone()));
+            }
         }
 
         // REQ-038: 行数の上限
@@ -1331,7 +1363,7 @@ pub fn is_code_fence(line: &str) -> bool {
 }
 
 /// バッククォートで囲まれた内容を抽出する。
-/// 返すのは (内容, 残りの開始位置) の列。
+/// 空の内容（``）も返す。
 pub fn extract_backtick_contents(text: &str) -> Vec<&str> {
     let mut result = Vec::new();
     let mut start = 0;
@@ -1342,9 +1374,7 @@ pub fn extract_backtick_contents(text: &str) -> Vec<&str> {
         }
         if let Some(close) = text[open_abs..].find('`') {
             let content = &text[open_abs..open_abs + close];
-            if !content.is_empty() {
-                result.push(content);
-            }
+            result.push(content);
             start = open_abs + close + 1;
         } else {
             break;
@@ -1361,9 +1391,14 @@ fn check_backtick_ids(
     path: &str,
     findings: &mut Vec<Finding>,
 ) {
+    // REQ-116: 奇数バッククォートの行では検査しない
+    if text.chars().filter(|&c| c == '`').count() % 2 != 0 {
+        return;
+    }
     for content in extract_backtick_contents(text) {
-        if is_valid_id(content) && !known_ids.contains(content) {
-            findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(line), content.to_string()));
+        let trimmed = content.trim();
+        if !trimmed.is_empty() && is_valid_id(trimmed) && !known_ids.contains(trimmed) {
+            findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(line), trimmed.to_string()));
         }
     }
 }

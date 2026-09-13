@@ -23,16 +23,22 @@ pub struct OtherFile {
     pub headings: Vec<String>,
 }
 
-/// 決定の番号の形（A26, P1, D1, R6 など）
+/// 決定の番号の形（英大文字1文字に1桁以上の数字。A26, P1, D1, R6 など）
 pub fn is_decision_number(s: &str) -> bool {
     if s.len() < 2 {
         return false;
     }
-    let first = s.as_bytes()[0];
-    if !first.is_ascii_alphabetic() || !first.is_ascii_uppercase() {
+    let bytes = s.as_bytes();
+    let first = bytes[0];
+    if !first.is_ascii_uppercase() {
         return false;
     }
-    s[1..].chars().all(|c| c.is_ascii_digit())
+    // 2文字目以降がすべて数字であること（英字が2文字以上続くのは不可）
+    let rest = &s[1..];
+    if rest.is_empty() {
+        return false;
+    }
+    rest.chars().all(|c| c.is_ascii_digit())
 }
 
 /// 判断の記録のファイルを解析する
@@ -333,19 +339,50 @@ pub fn check_sources(
     for doc in docs {
         let path = format!("{}/{}", ir_path, doc.filename);
         for item in &doc.items {
-            let sources = match item {
-                crate::ir::Item::Requirement { sources, .. }
-                | crate::ir::Item::DecisionTable { sources, .. }
-                | crate::ir::Item::Property { sources, .. }
-                | crate::ir::Item::FlagEntry { sources, .. } => sources.clone(),
-                crate::ir::Item::Scenario { sources, .. } => sources.clone(),
-                crate::ir::Item::GlossaryTerm { sources, .. } => sources.clone(),
+            let (sources, source_line) = match item {
+                crate::ir::Item::Requirement { sources, fields_seen, line, .. } => {
+                    // REQ-115: 出典の行を探す
+                    let sl = fields_seen.iter()
+                        .find(|(_, n, _)| n == "出典")
+                        .map(|(ln, _, _)| *ln)
+                        .unwrap_or(*line);
+                    (sources.clone(), sl)
+                }
+                crate::ir::Item::DecisionTable { sources, fields_seen, line, .. } => {
+                    let sl = fields_seen.iter()
+                        .find(|(_, n, _)| n == "出典")
+                        .map(|(ln, _, _)| *ln)
+                        .unwrap_or(*line);
+                    (sources.clone(), sl)
+                }
+                crate::ir::Item::Property { sources, fields_seen, line, .. } => {
+                    let sl = fields_seen.iter()
+                        .find(|(_, n, _)| n == "出典")
+                        .map(|(ln, _, _)| *ln)
+                        .unwrap_or(*line);
+                    (sources.clone(), sl)
+                }
+                crate::ir::Item::FlagEntry { sources, fields_seen, line, .. } => {
+                    let sl = fields_seen.iter()
+                        .find(|(_, n, _)| n == "出典")
+                        .map(|(ln, _, _)| *ln)
+                        .unwrap_or(*line);
+                    (sources.clone(), sl)
+                }
+                crate::ir::Item::Scenario { sources, tag_line, line, .. } => {
+                    // シナリオはタグの行
+                    (sources.clone(), tag_line.unwrap_or(*line))
+                }
+                crate::ir::Item::GlossaryTerm { sources, line, .. } => {
+                    // 用語は表の行
+                    (sources.clone(), *line)
+                }
                 crate::ir::Item::UnknownHeading { .. } => continue,
             };
 
             for source in &sources {
                 if let Err(bad) = ctx.check_source(source) {
-                    findings.push(Finding::new(FindingKind::SourceInvalid, path.clone(), Some(item.item_line()), bad));
+                    findings.push(Finding::new(FindingKind::SourceInvalid, path.clone(), Some(source_line), bad));
                 }
             }
         }

@@ -795,3 +795,263 @@ fn req_069_mdx_extension_not_matched_but_md_after_it_is() {
         md
     );
 }
+
+// --- Step 5: 出典と用語 ---
+
+// @kotowari[TBL-012]
+#[test]
+fn tbl_012_file_with_decision_sections_is_a_records_file() {
+    // 決定の節の見出しを持つファイルは判断の記録
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 決定の節の見出しを持つが番号の無いファイル
+    fs::write(
+        tmp.path().join("docs/decision/brainstorm/no-numbers.md"),
+        "# No numbers\n\n## Agreements\n\nJust text, no decisions.\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/no-numbers.md#A1\n- 検証: unit\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    // 判断の記録として扱われるので番号 A1 で照合 → 見つからないので source_invalid
+    assert!(si.iter().any(|f| f["detail"].as_str().unwrap().contains("no-numbers.md#A1")),
+        "file with decision sections should be treated as records: {:?}", si);
+}
+
+// @kotowari[TBL-012]
+#[test]
+fn tbl_012_file_without_decision_sections_matches_headings() {
+    // 決定の節の見出しが無いファイルは見出しで照合
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 決定の節の見出しを持たないファイル
+    fs::write(
+        tmp.path().join("docs/decision/brainstorm/notes.md"),
+        "# Notes\n\n## Overview\n\nSome notes.\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/notes.md#Overview\n- 検証: unit\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    // 見出しで照合 → Overview が見つかるので通る
+    assert!(si.is_empty(), "file without decision sections should match by headings: {:?}", si);
+}
+
+// @kotowari[TBL-012]
+#[test]
+fn tbl_012_two_letter_prefix_is_not_a_decision_number() {
+    // "AB1" は決定の番号でない（英大文字1文字に1桁以上の数字）
+    assert!(!kotowari::sources::is_decision_number("AB1"),
+        "AB1 should not be a decision number (two letters)");
+    assert!(kotowari::sources::is_decision_number("A1"),
+        "A1 should be a decision number");
+}
+
+// @kotowari[REQ-061]
+#[test]
+fn req_061_subheading_does_not_end_a_section() {
+    // "### " の小見出しは節を終えない
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // records.md に ### の小見出しの後に決定の番号を置く
+    fs::write(
+        tmp.path().join("docs/decision/brainstorm/records.md"),
+        "# Records\n\n## Agreements\n\n- A1 First agreement\n\n### Subsection\n\n- A2 Second agreement\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A2\n- 検証: unit\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    // ### は節を終えないので A2 は見つかる
+    assert!(si.is_empty(), "### subheading should not end a section: {:?}", si);
+}
+
+// @kotowari[REQ-115]
+#[test]
+fn req_115_source_invalid_line_is_the_source_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 項目の出典が無効な場合、line は "- 出典:" の行
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: somewhere/bad.md#X\n- 検証: unit\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(!si.is_empty(), "should have source_invalid");
+    // line は出典の行（10行目: "- 出典: somewhere/bad.md#X"）
+    assert_eq!(si[0]["line"], 10, "source_invalid line should be the source line (10), got {:?}", si[0]);
+}
+
+// @kotowari[REQ-064]
+#[test]
+fn req_064_backtick_content_is_trimmed() {
+    // "` IR `" は "IR" として照合される
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| IR | 仕様 | docs/decision/brainstorm/records.md#A1 |\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\n` IR `は用語集にある。\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ut = findings_by_kind(&v, "unknown_term");
+    assert!(!ut.iter().any(|f| f["detail"] == "IR" || f["detail"] == " IR "),
+        "trimmed backtick content should match glossary term: {:?}", ut);
+}
+
+// @kotowari[REQ-064]
+#[test]
+fn req_064_empty_backticks_are_unknown_term() {
+    // "``" は detail "``" の unknown_term
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| IR | 仕様 | docs/decision/brainstorm/records.md#A1 |\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nSee `` here.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ut = findings_by_kind(&v, "unknown_term");
+    assert!(ut.iter().any(|f| f["detail"] == "``"),
+        "empty backticks should produce unknown_term with detail '``': {:?}", ut);
+}
+
+// @kotowari[REQ-116]
+#[test]
+fn req_116_odd_backticks_skip_terms_but_check_vague_words() {
+    // 奇数バッククォートの行は unclosed_backtick、用語と ID の検査を飛ばし曖昧語は検査する
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| IR | 仕様 | docs/decision/brainstorm/records.md#A1 |\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\n`奇数のバッククォート 適切に処理する。\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ub = findings_by_kind(&v, "unclosed_backtick");
+    assert!(!ub.is_empty(), "odd backticks should produce unclosed_backtick: {:?}", ub);
+    let vw = findings_by_kind(&v, "vague_word");
+    assert!(vw.iter().any(|f| f["detail"] == "適切に"), "vague words should still be checked: {:?}", vw);
+    let ut = findings_by_kind(&v, "unknown_term");
+    assert!(ut.is_empty(), "unknown_term should not be checked on odd backtick line: {:?}", ut);
+}
+
+// @kotowari[REQ-067]
+#[test]
+fn req_067_overlapping_vague_words_longest_match_once() {
+    // "など" と "などの" が両方あるとき、"などの" で1件
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\nvague_words:\n  - など\n  - などの\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nなどの操作をする。\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let vw = findings_by_kind(&v, "vague_word");
+    // "などの" で1件だけ
+    assert_eq!(vw.len(), 1, "overlapping vague words should match longest once: {:?}", vw);
+    assert_eq!(vw[0]["detail"], "などの", "should match 'などの' not 'など': {:?}", vw);
+}
+
+// @kotowari[TBL-014]
+#[test]
+fn tbl_014_md_followed_by_letter_is_not_a_reference() {
+    // "a.mdX" は参照でない
+    use std::collections::BTreeSet;
+    let content = "# Title\n\nScope with a.mdX text.\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(md.is_empty(), "a.mdX should not be a reference: {:?}", md);
+}
+
+// @kotowari[TBL-014]
+#[test]
+fn tbl_014_unclosed_quote_hides_the_rest_of_the_line() {
+    // 奇数の二重引用符の後は参照を拾わない
+    use std::collections::BTreeSet;
+    let content = "# Title\n\nScope.\n\nSee \"unclosed quote nonexistent.md here.\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(md.is_empty(), "unclosed quote should hide the rest of the line: {:?}", md);
+}
+
+// @kotowari[REQ-117]
+#[test]
+fn req_117_second_table_is_not_glossary() {
+    // 用語集の2つ目の表は用語にならない
+    let content = "\
+# 用語集
+
+| 用語 | 意味 | 出典 |
+|---|---|---|
+| テスト | 意味 | brainstorm/records.md#A1 |
+
+Some text.
+
+| 用語 | 意味 | 出典 |
+|---|---|---|
+| 二番目 | 意味2 | brainstorm/records.md#A1 |
+";
+    let doc = kotowari::ir::parse_document("CONTEXT.md", content);
+    let terms: Vec<_> = doc.items.iter()
+        .filter(|i| matches!(i, kotowari::ir::Item::GlossaryTerm { .. }))
+        .collect();
+    assert_eq!(terms.len(), 1, "second table should not be parsed as glossary: {:?}", terms);
+    if let kotowari::ir::Item::GlossaryTerm { term, .. } = &terms[0] {
+        assert_eq!(term, "テスト", "only first table terms should be parsed");
+    }
+}
+
+// @kotowari[REQ-117]
+#[test]
+fn req_117_glossary_without_proper_table_is_invalid() {
+    // 用語集にヘッダの列名が違う表しかない → glossary_invalid
+    let content = "\
+# 用語集
+
+| Name | Meaning | Source |
+|---|---|---|
+| test | meaning | brainstorm/records.md#A1 |
+";
+    let doc = kotowari::ir::parse_document("CONTEXT.md", content);
+    let config = kotowari::config::Config::default();
+    let findings = kotowari::ir::check_documents(&[doc], &config);
+    let gi: Vec<_> = findings.iter().filter(|f| f.kind == "glossary_invalid").collect();
+    assert!(!gi.is_empty(), "glossary without proper table should produce glossary_invalid: {:?}", gi);
+    assert!(gi[0].line.is_none(), "glossary_invalid line should be null");
+    assert_eq!(gi[0].detail, "CONTEXT.md", "glossary_invalid detail should be filename");
+}
