@@ -22,7 +22,7 @@
 ### REQ-065: 用語集が無いとき
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A56, experiments/003-cli/brainstorm/records.md#A63
+- 出典: experiments/003-cli/brainstorm/records.md#A56, experiments/003-cli/brainstorm/records.md#A63, experiments/003-cli/brainstorm/records.md#A53
 - 検証: unit
 
 `用語集`が無いとき、kotowari は`対象の行`でバッククォートで囲んだもののうち、`ID`でないものをすべて unknown_term の`誤り`にする。
