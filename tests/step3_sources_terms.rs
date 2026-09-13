@@ -528,6 +528,40 @@ fn req_063_property_statements_and_scenario_steps_are_term_checked() {
     );
 }
 
+// --- TBL-012: 判断の記録の決定の行の末尾空白 ---
+
+// @kotowari[REQ-058, TBL-012]
+#[test]
+fn tbl_012_decision_line_with_and_without_trailing_text() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/decision/brainstorm/records2.md"),
+        "# 記録2\n\n## Agreements\n\n- A26 agreed\n- A27\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        concat!(
+            "# Title\n\nScope.\n\n## 要求\n\n",
+            "### REQ-001: Test1\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records2.md#A26\n- 検証: unit\n\nStatement.\n\n",
+            "### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records2.md#A27\n- 検証: unit\n\nStatement2.\n",
+        ),
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(
+        !si.iter().any(|f| {
+            let d = f["detail"].as_str().unwrap_or("");
+            d.contains("A26") || d.contains("A27")
+        }),
+        "末尾空白ありの A26 と末尾空白なしの A27 の両方で出典が正しいはず: {:?}",
+        si
+    );
+}
+
 // --- REQ-040: gherkin コードブロック内の文書名参照は対象外 ---
 
 // @kotowari[REQ-040]
