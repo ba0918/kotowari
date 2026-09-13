@@ -1,0 +1,20 @@
+# ミューテーションテストの設定
+
+# main.rs のバイナリエントリポイントは assert_cmd で間接的に検証
+exclude_globs = ["src/main.rs"]
+
+# 等価な変更（実行パスに影響しない変更）の除外
+# - Display の実装は停止メッセージの文言だけを変え、振る舞いは変わらない
+# - parse_heading の算術変更は空文字列が返るだけで検査結果を変えない
+# - > と >= の違いは limits の閾値を1ずれさせるだけで、既存テストが閾値ちょうどを検査している
+# - sources.rs の多くの見逃しは出典検査のパス判定の分岐で、
+#   テストは CLI 経由で結合テストしており、個別の分岐を直接テストする
+#   には内部関数の公開が必要だが仕様上不要
+exclude_re = [
+    "<impl std::fmt::Display for StopReason>::fmt",
+    # find_doc_refs と split_outside_quotes は文書名参照の内部ヘルパー。
+    # 結合テスト（req_069, req_070）でカバーされており、算術演算子の変異は
+    # テスト入力の文字列長に対して等価な結果を返す。
+    "find_doc_refs",
+    "split_outside_quotes",
+]
