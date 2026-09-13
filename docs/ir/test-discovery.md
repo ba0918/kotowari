@@ -7,10 +7,10 @@
 ### REQ-079: テストのファイル
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A36, experiments/003-cli/brainstorm/records.md#A47
+- 出典: experiments/003-cli/brainstorm/records.md#A36, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A94
 - 検証: unit
 
-kotowari は常に、"tests.files" の glob に当たるファイルを`テストのファイル`として読む。
+kotowari は常に、"tests.files" の glob に当たるファイルを`テストのファイル`として読む。走査ではシンボリックリンクを辿らない。
 
 ### REQ-080: tree-sitter で読む
 

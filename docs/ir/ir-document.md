@@ -62,10 +62,10 @@ kotowari は常に、`IR`の置き場の直下の "*.md" だけを読み、サ�
 ### REQ-040: コードブロックの中
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A52
+- 出典: experiments/003-cli/brainstorm/records.md#A52, experiments/003-cli/brainstorm/records.md#A88
 - 検証: unit
 
-kotowari は常に、コードブロックの中を、gherkin のブロックを除いて検査の対象から外す。
+kotowari は常に、コードブロックの中を検査の対象から外す。gherkin のブロックの中の行は、`用語`と曖昧語の検査だけ対象にし、文書名の参照の検査では対象にしない。
 
 ### REQ-041: 範囲の中身と責務の分離を見ない
 
