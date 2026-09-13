@@ -634,7 +634,7 @@ fn req_044_property_definition_field_is_unknown() {
 
 // @kotowari[REQ-047, REQ-048, REQ-049, REQ-050, REQ-051, REQ-098]
 #[test]
-fn check_item_field_presence_and_absence_combinations() {
+fn req_098_required_lines_are_told_apart_from_empty_values() {
     // (1) すべてのフィールドが揃って値も正しい要求 → 関連する指摘が出ない
     let valid = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Valid\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
     let doc = ir::parse_document("a.md", valid);
