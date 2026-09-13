@@ -361,7 +361,7 @@ pub fn run_check(
 ) -> Result<(CheckResult, Format), StopReason> {
     let base = find_base(cwd);
 
-    // 設定ファイルを読む
+    // 設定ファイルを読む（TBL-020: 詳細のパスは基準からの相対）
     let cfg = if let Some(cp) = config_path {
         // --config は CWD からの相対パス（REQ-003）
         let abs = cwd.join(cp);
@@ -371,14 +371,22 @@ pub fn run_check(
                 cp.display()
             )));
         }
-        let text = read_utf8_file(&abs, &abs.display().to_string())?;
-        config::Config::parse(&text)?
+        let display = cp.display().to_string();
+        let text = read_utf8_file(&abs, &display)?;
+        config::Config::parse(&text).map_err(|e| match e {
+            StopReason::ConfigError(msg) => StopReason::ConfigError(format!("{display}: {msg}")),
+            other => other,
+        })?
     } else {
         // 既定: base/.kotowari/config.yaml
         let default_path = base.join(".kotowari/config.yaml");
         if default_path.exists() {
-            let text = read_utf8_file(&default_path, &default_path.display().to_string())?;
-            config::Config::parse(&text)?
+            let display = ".kotowari/config.yaml";
+            let text = read_utf8_file(&default_path, display)?;
+            config::Config::parse(&text).map_err(|e| match e {
+                StopReason::ConfigError(msg) => StopReason::ConfigError(format!("{display}: {msg}")),
+                other => other,
+            })?
         } else {
             // REQ-012: 設定ファイルが無いときは既定の値
             config::Config::default()

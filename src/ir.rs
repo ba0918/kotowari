@@ -1215,23 +1215,35 @@ pub fn load_and_check(
     let ir_dir = base.join(&config.ir);
 
     let mut docs = Vec::new();
-    let mut entries: Vec<_> = std::fs::read_dir(&ir_dir)
-        .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", ir_dir.display())))?
-        .filter_map(|e| e.ok())
-        .filter(|e| {
-            // REQ-033: .md（小文字）のファイルだけ読む。シンボリックリンクも辿る
-            e.path().extension().is_some_and(|ext| ext == "md")
-                && e.path().is_file()
-        })
-        .collect();
+    let mut raw_entries = Vec::new();
+    for entry in std::fs::read_dir(&ir_dir)
+        .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", config.ir)))?
+    {
+        let entry = entry.map_err(|e| {
+            crate::StopReason::UnreadableFile(format!("{}: {e}", config.ir))
+        })?;
+        let p = entry.path();
+        // REQ-033: .md（小文字）のファイルだけ読む。シンボリックリンクも辿る
+        // 種類が取れないときは停止する（REQ-033）
+        let is_file = std::fs::metadata(&p)
+            .map(|m| m.is_file())
+            .map_err(|e| {
+                let rel = format!("{}/{}", config.ir, entry.file_name().to_string_lossy());
+                crate::StopReason::UnreadableFile(format!("{rel}: {e}"))
+            })?;
+        if p.extension().is_some_and(|ext| ext == "md") && is_file {
+            raw_entries.push(entry);
+        }
+    }
 
     // ファイル名でソート（安定な順序）
-    entries.sort_by_key(|e| e.file_name());
+    raw_entries.sort_by_key(|e| e.file_name());
 
-    for entry in entries {
+    for entry in raw_entries {
         let path = entry.path();
         let filename = entry.file_name().to_string_lossy().to_string();
-        let content = crate::read_utf8_file(&path, &path.display().to_string())?;
+        let display = format!("{}/{}", config.ir, filename);
+        let content = crate::read_utf8_file(&path, &display)?;
         let doc = parse_document(&filename, &content);
         docs.push(doc);
     }

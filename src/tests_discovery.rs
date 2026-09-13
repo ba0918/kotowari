@@ -72,14 +72,15 @@ pub fn collect_test_files(
 ) -> Result<Vec<(String, String)>, crate::StopReason> {
     let mut builder = GlobSetBuilder::new();
     for pattern in &config.tests.files {
-        if let Ok(g) = Glob::new(pattern) {
-            builder.add(g);
-        }
+        // glob の構文は Config::parse で検証済み
+        let g = Glob::new(pattern).map_err(|e| {
+            crate::StopReason::ConfigError(format!("invalid glob: {pattern}: {e}"))
+        })?;
+        builder.add(g);
     }
-    let globset = match builder.build() {
-        Ok(g) => g,
-        Err(_) => return Ok(vec![]),
-    };
+    let globset = builder.build().map_err(|e| {
+        crate::StopReason::ConfigError(format!("glob build error: {e}"))
+    })?;
 
     let mut files = Vec::new();
 

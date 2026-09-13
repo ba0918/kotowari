@@ -212,12 +212,12 @@ pub fn build_context(
 
     // records ディレクトリを読む
     if records_dir.is_dir() {
-        load_all_md(&records_dir, "", &mut records_files, &mut records_other_files)?;
+        load_all_md(&records_dir, "", &config.decisions.records, &mut records_files, &mut records_other_files)?;
     }
 
     // adr ディレクトリを読む
     if adr_dir.is_dir() {
-        load_all_md_as_other(&adr_dir, "", &mut adr_files)?;
+        load_all_md_as_other(&adr_dir, "", &config.decisions.adr, &mut adr_files)?;
     }
 
     Ok(SourceContext {
@@ -232,13 +232,19 @@ pub fn build_context(
 fn load_all_md(
     dir: &Path,
     prefix: &str,
+    config_key: &str,
     records: &mut Vec<RecordsFile>,
     others: &mut Vec<OtherFile>,
 ) -> Result<(), crate::StopReason> {
     let entries = std::fs::read_dir(dir)
-        .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", dir.display())))?;
+        .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", config_key)))?;
 
-    let mut sorted: Vec<_> = entries.filter_map(|e| e.ok()).collect();
+    let mut sorted = Vec::new();
+    for entry in entries {
+        sorted.push(entry.map_err(|e| {
+            crate::StopReason::UnreadableFile(format!("{}: {e}", config_key))
+        })?);
+    }
     sorted.sort_by_key(|e| e.file_name());
 
     for entry in sorted {
@@ -250,14 +256,15 @@ fn load_all_md(
             format!("{prefix}/{name}")
         };
 
-        let ft = match entry.file_type() {
-            Ok(ft) => ft,
-            Err(_) => continue,
-        };
+        let ft = entry.file_type().map_err(|e| {
+            let display = format!("{config_key}/{rel}");
+            crate::StopReason::UnreadableFile(format!("{display}: {e}"))
+        })?;
         if ft.is_dir() {
-            load_all_md(&path, &rel, records, others)?;
+            load_all_md(&path, &rel, config_key, records, others)?;
         } else if ft.is_file() && path.extension().is_some_and(|ext| ext == "md") {
-            let content = crate::read_utf8_file(&path, &path.display().to_string())?;
+            let display = format!("{config_key}/{rel}");
+            let content = crate::read_utf8_file(&path, &display)?;
 
             let rf = parse_records_file(&rel, &content);
             if rf.is_records {
@@ -276,12 +283,18 @@ fn load_all_md(
 fn load_all_md_as_other(
     dir: &Path,
     prefix: &str,
+    config_key: &str,
     files: &mut Vec<OtherFile>,
 ) -> Result<(), crate::StopReason> {
     let entries = std::fs::read_dir(dir)
-        .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", dir.display())))?;
+        .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", config_key)))?;
 
-    let mut sorted: Vec<_> = entries.filter_map(|e| e.ok()).collect();
+    let mut sorted = Vec::new();
+    for entry in entries {
+        sorted.push(entry.map_err(|e| {
+            crate::StopReason::UnreadableFile(format!("{}: {e}", config_key))
+        })?);
+    }
     sorted.sort_by_key(|e| e.file_name());
 
     for entry in sorted {
@@ -293,14 +306,15 @@ fn load_all_md_as_other(
             format!("{prefix}/{name}")
         };
 
-        let ft = match entry.file_type() {
-            Ok(ft) => ft,
-            Err(_) => continue,
-        };
+        let ft = entry.file_type().map_err(|e| {
+            let display = format!("{config_key}/{rel}");
+            crate::StopReason::UnreadableFile(format!("{display}: {e}"))
+        })?;
         if ft.is_dir() {
-            load_all_md_as_other(&path, &rel, files)?;
+            load_all_md_as_other(&path, &rel, config_key, files)?;
         } else if ft.is_file() && path.extension().is_some_and(|ext| ext == "md") {
-            let content = crate::read_utf8_file(&path, &path.display().to_string())?;
+            let display = format!("{config_key}/{rel}");
+            let content = crate::read_utf8_file(&path, &display)?;
 
             let of = parse_other_file(&rel, &content);
             files.push(of);
