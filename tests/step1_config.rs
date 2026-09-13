@@ -413,6 +413,21 @@ fn req_018_missing_ir_dir_stops() {
         .stdout("");
 }
 
+// @kotowari[REQ-005, REQ-018]
+#[test]
+fn req_005_stderr_carries_the_stop_reason_text() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::remove_dir_all(tmp.path().join("docs/ir")).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("unreadable file: ir directory not found"),
+        "stderr should carry the reason text, got: {stderr:?}"
+    );
+}
+
 // @kotowari[REQ-018, TBL-001]
 #[test]
 fn req_018_missing_records_dir_stops() {
