@@ -457,6 +457,24 @@ fn req_077_unresolved_only_marker_still_counts() {
     assert!(!twi.iter().any(|f| f["detail"] == "unresolved_test"), "unresolved marker should still count: {:?}", twi);
 }
 
+// @kotowari[REQ-054, REQ-077]
+#[test]
+fn req_054_marker_to_known_id_is_not_unresolved() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-001]\n#[test]\nfn test_a() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ur = findings_by_kind(&v, "unresolved_reference");
+    assert!(ur.is_empty(), "a marker to an existing ID must not be unresolved: {:?}", ur);
+}
+
 // --- REQ-078: review の要求を指す印 ---
 
 // @kotowari[REQ-078]
