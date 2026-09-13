@@ -90,15 +90,18 @@ pub fn check_document_references(
         let path = format!("{}/{}", ir_path, doc.filename);
         let lines = crate::ir::split_lines_for_doc_ref(&doc.filename, &doc.raw_content);
 
-        let mut in_code_block = false;
+        let mut current_fence: Option<crate::ir::CodeFence> = None;
         for (idx, line) in lines.iter().enumerate() {
             let line_num = idx + 1;
 
-            if crate::ir::is_code_fence(line) {
-                in_code_block = !in_code_block;
+            if let Some(ref fence) = current_fence {
+                if crate::ir::is_closing_fence(line, fence) {
+                    current_fence = None;
+                }
                 continue;
             }
-            if in_code_block {
+            if let Some(fence) = crate::ir::parse_opening_fence(line) {
+                current_fence = Some(fence);
                 continue;
             }
 

@@ -1179,3 +1179,136 @@ Scope.
         ms
     );
 }
+
+// --- Step 3: 文書の読み込み ---
+
+// @kotowari[REQ-033]
+#[test]
+fn req_033_uppercase_md_is_not_read() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
+    std::fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+    ).unwrap();
+    // .MD ファイルは読まない
+    std::fs::write(tmp.path().join("docs/ir/README.MD"), "# Title\n\nScope.\n").unwrap();
+    let output = assert_cmd::Command::cargo_bin("kotowari").unwrap()
+        .arg("check")
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let v: serde_json::Value = serde_json::from_str(&stdout).expect("valid JSON");
+    assert_eq!(v["files"], 0, ".MD file should not be read");
+}
+
+// @kotowari[REQ-033]
+#[test]
+fn req_033_file_symlink_is_read() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
+    std::fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+    ).unwrap();
+    // 実体を別の場所に作り、シンボリックリンクを ir/ に置く
+    let target = tmp.path().join("target.md");
+    std::fs::write(&target, "# Title\n\nScope.\n").unwrap();
+    std::os::unix::fs::symlink(&target, tmp.path().join("docs/ir/link.md")).unwrap();
+    let output = assert_cmd::Command::cargo_bin("kotowari").unwrap()
+        .arg("check")
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let v: serde_json::Value = serde_json::from_str(&stdout).expect("valid JSON");
+    assert_eq!(v["files"], 1, "symlinked file should be read");
+}
+
+// @kotowari[REQ-111]
+#[test]
+fn req_111_bom_is_skipped_in_ir_config_records_adr_and_tests() {
+    // BOM 付きの文書が正常に読まれることを確認
+    let bom = "\u{FEFF}";
+    let content = format!("{bom}# Title\n\nScope.\n");
+    let doc = ir::parse_document("a.md", &content);
+    assert!(doc.title.is_some(), "BOM should not prevent title parsing");
+    assert_eq!(doc.title.as_ref().unwrap().1, "Title");
+}
+
+// @kotowari[REQ-040]
+#[test]
+fn req_040_tilde_fence_is_a_code_block() {
+    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n~~~\nSome code\n~~~\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    // ~~~ で囲んだブロックの中は検査されない
+    let req = doc.items.iter().find(|i| i.id() == Some("REQ-001")).unwrap();
+    if let Item::Requirement { statements, .. } = req {
+        // "Some code" は文として拾われない
+        assert!(!statements.iter().any(|(_, s)| s.contains("Some code")),
+            "content inside ~~~ block should not be parsed as statement");
+    }
+}
+
+// @kotowari[REQ-040]
+#[test]
+fn req_040_longer_fence_needs_same_or_longer_close() {
+    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n````\n```\nstill inside\n````\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let req = doc.items.iter().find(|i| i.id() == Some("REQ-001")).unwrap();
+    if let Item::Requirement { statements, .. } = req {
+        // ``` は ```` を閉じない
+        assert!(!statements.iter().any(|(_, s)| s.contains("still inside")),
+            "``` should not close ```` block");
+        assert!(statements.iter().any(|(_, s)| s.contains("Statement")),
+            "Statement after closing ```` should be parsed");
+    }
+}
+
+// @kotowari[REQ-112]
+#[test]
+fn req_112_unclosed_code_block_is_an_error() {
+    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n```\nunclosed content\n";
+    let doc = ir::parse_document("a.md", content);
+    let uc = doc.parse_findings.iter()
+        .find(|f| f.kind == "unclosed_code_block");
+    assert!(uc.is_some(), "should produce unclosed_code_block finding");
+    let uc = uc.unwrap();
+    assert_eq!(uc.line, Some(13), "line should be the opening line");
+    assert_eq!(uc.detail, "```", "detail should be the raw opening line");
+}
+
+// @kotowari[REQ-112]
+#[test]
+fn req_112_unclosed_gherkin_block_is_not_checked() {
+    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1\nScenario: test\n  Given something\n";
+    let doc = ir::parse_document("a.md", content);
+    // gherkin ブロックが閉じないときも unclosed_code_block が出る
+    let uc = doc.parse_findings.iter()
+        .find(|f| f.kind == "unclosed_code_block");
+    assert!(uc.is_some(), "unclosed gherkin block should produce unclosed_code_block");
+    // 閉じないブロック内のシナリオはアイテムにならない
+    assert!(doc.items.iter().all(|i| !matches!(i, Item::Scenario { .. })),
+        "scenario inside unclosed block should not be parsed");
+}
+
+// @kotowari[TBL-010]
+#[test]
+fn tbl_010_empty_document_has_zero_lines_and_missing_title() {
+    let doc = ir::parse_document("a.md", "");
+    assert_eq!(doc.line_count, 0, "empty document should have 0 lines");
+    assert!(doc.title.is_none(), "empty document should have no title");
+    let config = default_config();
+    let findings = check(&[doc], &config);
+    let mt = find_by_kind(&findings, "missing_title");
+    assert!(!mt.is_empty(), "empty document should produce missing_title");
+}

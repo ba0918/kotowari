@@ -195,6 +195,8 @@ pub fn split_lines(content: &str) -> Vec<&str> {
 
 /// Markdown 文書を解析する
 pub fn parse_document(filename: &str, content: &str) -> IrDocument {
+    // BOM の読み飛ばし（read_utf8_file でも除去するが、直接呼ばれた場合にも対応）
+    let content = content.strip_prefix('\u{FEFF}').unwrap_or(content);
     let kind = match filename {
         "CONTEXT.md" => DocKind::Glossary,
         "FLAGS.md" => DocKind::Flags,
@@ -210,9 +212,10 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
     let mut items: Vec<Item> = Vec::new();
     let mut sections: Vec<(usize, String)> = Vec::new();
 
-    let mut in_code_block = false;
+    let mut current_fence: Option<(CodeFence, usize, String)> = None; // (fence, opening_line, raw_line)
     let mut in_gherkin_block = false;
     let mut found_first_section = false;
+    let mut parse_findings: Vec<crate::Finding> = Vec::new();
 
     // 現在の項目の解析状態
     let mut current_item: Option<ItemBuilder> = None;
@@ -231,8 +234,8 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
         let line_num = idx + 1; // 1-indexed
 
         // コードブロックの開始/終了
-        if is_code_fence(line) {
-            if in_code_block || in_gherkin_block {
+        if let Some((ref fence, _, _)) = current_fence {
+            if is_closing_fence(line, fence) {
                 // ブロックの終了
                 if in_gherkin_block {
                     if let Some(scenario_line) = gherkin_scenario_line.take() {
@@ -243,23 +246,22 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                     gherkin_steps.clear();
                     gherkin_scenario_text.clear();
                 }
-                in_code_block = false;
+                current_fence = None;
                 in_gherkin_block = false;
                 continue;
-            } else {
-                // ブロックの開始
-                let lang = line.trim_start_matches('`').trim();
-                if lang == "gherkin" {
-                    in_gherkin_block = true;
-                } else {
-                    in_code_block = true;
-                }
-                continue;
             }
+        } else if let Some(fence) = parse_opening_fence(line) {
+            // ブロックの開始
+            let is_gherkin = fence.lang == "gherkin";
+            current_fence = Some((fence, line_num, line.to_string()));
+            if is_gherkin {
+                in_gherkin_block = true;
+            }
+            continue;
         }
 
         // コードブロック内（gherkin 以外）はスキップ
-        if in_code_block {
+        if current_fence.is_some() && !in_gherkin_block {
             continue;
         }
 
@@ -404,6 +406,16 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
         items.push(builder.build());
     }
 
+    // REQ-112: 閉じないコードブロック
+    if let Some((_fence, opening_line, raw_line)) = current_fence {
+        parse_findings.push(crate::Finding::new(
+            crate::FindingKind::UnclosedCodeBlock,
+            String::new(), // path は呼び出し元が設定する
+            Some(opening_line),
+            raw_line,
+        ));
+    }
+
     IrDocument {
         filename: filename.to_string(),
         kind,
@@ -414,7 +426,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
         items,
         sections,
         raw_content: content.to_string(),
-        parse_findings: Vec::new(),
+        parse_findings,
     }
 }
 
@@ -1104,10 +1116,57 @@ fn check_references(
     }
 }
 
-/// 行がコードブロックの境界（``` で始まる行）かどうかを判定する。
-/// 境界であれば true を返す。
+/// コードブロックの囲みの情報
+#[derive(Debug, Clone)]
+pub struct CodeFence {
+    /// 囲みの文字（'`' or '~'）
+    pub fence_char: char,
+    /// 囲みの長さ（3以上）
+    pub fence_len: usize,
+    /// 言語（あれば）
+    pub lang: String,
+}
+
+/// 行がコードブロックの開始の囲みかどうかを判定する。
+/// 3つ以上の ` か ~ で始まる行が該当する。
+pub fn parse_opening_fence(line: &str) -> Option<CodeFence> {
+    let bytes = line.as_bytes();
+    if bytes.len() < 3 {
+        return None;
+    }
+    let fence_char = bytes[0] as char;
+    if fence_char != '`' && fence_char != '~' {
+        return None;
+    }
+    let fence_len = bytes.iter().take_while(|&&b| b == bytes[0]).count();
+    if fence_len < 3 {
+        return None;
+    }
+    let lang = line[fence_len..].trim().to_string();
+    Some(CodeFence {
+        fence_char,
+        fence_len,
+        lang,
+    })
+}
+
+/// 行が開いている囲みを閉じるかどうかを判定する。
+pub fn is_closing_fence(line: &str, opening: &CodeFence) -> bool {
+    let bytes = line.as_bytes();
+    if bytes.is_empty() || bytes[0] as char != opening.fence_char {
+        return false;
+    }
+    let fence_len = bytes.iter().take_while(|&&b| b == bytes[0]).count();
+    if fence_len < opening.fence_len {
+        return false;
+    }
+    // 閉じる囲みの後は空白だけ
+    line[fence_len..].trim().is_empty()
+}
+
+/// 行がコードブロックの境界かどうかを判定する（後方互換の簡易版）。
 pub fn is_code_fence(line: &str) -> bool {
-    line.starts_with("```")
+    parse_opening_fence(line).is_some()
 }
 
 /// バッククォートで囲まれた内容を抽出する。
@@ -1160,8 +1219,9 @@ pub fn load_and_check(
         .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", ir_dir.display())))?
         .filter_map(|e| e.ok())
         .filter(|e| {
+            // REQ-033: .md（小文字）のファイルだけ読む。シンボリックリンクも辿る
             e.path().extension().is_some_and(|ext| ext == "md")
-                && e.file_type().is_ok_and(|ft| ft.is_file())
+                && e.path().is_file()
         })
         .collect();
 
@@ -1176,6 +1236,16 @@ pub fn load_and_check(
         docs.push(doc);
     }
 
-    let findings = check_documents(&docs, config);
+    let mut findings = check_documents(&docs, config);
+
+    // parse_findings を取り出して、path を設定して findings に追加
+    for doc in &mut docs {
+        let doc_path = format!("{}/{}", config.ir, doc.filename);
+        for mut pf in doc.parse_findings.drain(..) {
+            pf.path = doc_path.clone();
+            findings.push(pf);
+        }
+    }
+
     Ok((docs, findings))
 }

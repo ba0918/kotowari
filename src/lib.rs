@@ -37,6 +37,7 @@ pub enum FindingKind {
     TestWithoutId,
     TooManyLines,
     TooManyRequirements,
+    UnclosedCodeBlock,
     UnknownField,
     UnknownHeading,
     UnknownKind,
@@ -71,6 +72,7 @@ impl FindingKind {
             FindingKind::TestWithoutId => "test_without_id",
             FindingKind::TooManyLines => "too_many_lines",
             FindingKind::TooManyRequirements => "too_many_requirements",
+            FindingKind::UnclosedCodeBlock => "unclosed_code_block",
             FindingKind::UnknownField => "unknown_field",
             FindingKind::UnknownHeading => "unknown_heading",
             FindingKind::UnknownKind => "unknown_kind",
@@ -294,11 +296,17 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
 
 /// UTF-8 のテキストファイルを読む。読めないか UTF-8 でなければ StopReason を返す。
 /// `display_path` は誤りの詳細に使う表示用のパス。
+/// 先頭の UTF-8 BOM (U+FEFF) があれば読み飛ばす（REQ-111）。
 pub fn read_utf8_file(path: &Path, display_path: &str) -> Result<String, StopReason> {
     let bytes = std::fs::read(path)
         .map_err(|e| StopReason::UnreadableFile(format!("{display_path}: {e}")))?;
-    String::from_utf8(bytes)
-        .map_err(|_| StopReason::NonUtf8File(display_path.to_string()))
+    let mut text = String::from_utf8(bytes)
+        .map_err(|_| StopReason::NonUtf8File(display_path.to_string()))?;
+    // REQ-111: BOM の読み飛ばし
+    if text.starts_with('\u{FEFF}') {
+        text = text[3..].to_string();
+    }
+    Ok(text)
 }
 
 /// パスを正規化する純粋な関数。
