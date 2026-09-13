@@ -334,6 +334,31 @@ fn req_018_unreadable_records_dir_stops() {
     assert!(output.stdout.is_empty(), "stdout should be empty on stop");
 }
 
+// @kotowari[REQ-018]
+#[test]
+#[cfg(unix)]
+fn req_018_unreadable_adr_dir_stops() {
+    use std::os::unix::fs::PermissionsExt;
+    if std::process::Command::new("id").arg("-u").output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim() == "0")
+        .unwrap_or(false)
+    {
+        return;
+    }
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    let adr_dir = tmp.path().join("docs/decision/adr");
+    fs::set_permissions(&adr_dir, std::fs::Permissions::from_mode(0o000)).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    fs::set_permissions(&adr_dir, std::fs::Permissions::from_mode(0o755)).unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "unreadable adr directory should stop with exit code 2"
+    );
+    assert!(output.stdout.is_empty(), "stdout should be empty on stop");
+}
+
 // --- REQ-015: 一覧は既定を置き換える ---
 
 // @kotowari[REQ-015]
