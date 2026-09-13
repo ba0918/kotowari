@@ -50,11 +50,11 @@
 | REQ-044 | unit | `req_044_unknown_field` |
 | REQ-045 | unit | `req_045_duplicate_field` |
 | REQ-046 | unit | `req_046_fields_in_any_order_with_blank_lines_and_commas` |
-| REQ-047 | unit | `req_047_missing_statement` |
-| REQ-048 | unit | `req_048_verification_missing` |
-| REQ-049 | unit | `req_049_verification_invalid` |
-| REQ-050 | unit | `req_050_unknown_kind_of_requirement_and_flag` |
-| REQ-051 | unit | `req_051_algorithm_without_definition` |
+| REQ-047 | unit | `req_047_missing_statement`, `check_item_field_presence_and_absence_combinations` |
+| REQ-048 | unit | `req_048_verification_missing`, `check_item_field_presence_and_absence_combinations` |
+| REQ-049 | unit | `req_049_verification_invalid`, `check_item_field_presence_and_absence_combinations` |
+| REQ-050 | unit | `req_050_unknown_kind_of_requirement_and_flag`, `check_item_field_presence_and_absence_combinations` |
+| REQ-051 | unit | `req_051_algorithm_without_definition`, `check_item_field_presence_and_absence_combinations` |
 | REQ-052 | unit | `req_052_unknown_tag` |
 | REQ-053 | unit | `req_053_missing_tag` |
 | REQ-054 | unit | `req_054_unresolved_reference_in_definition_about_relation_and_sentence`, `req_054_marker_to_unknown_id_is_unresolved` |
@@ -66,8 +66,8 @@
 | REQ-060 | unit | `req_060_glossary_and_scenario_sources_are_checked` |
 | REQ-061 | unit | `req_061_numbers_are_per_file` |
 | REQ-062 | review | `src/sources.rs` で出典の内容照合をしていないことを確認。パスと番号/見出しの存在だけ検査 |
-| REQ-063 | unit | `req_063_only_sentences_and_steps_are_checked` |
-| REQ-064 | unit | `req_064_unknown_term` |
+| REQ-063 | unit | `req_063_only_sentences_and_steps_are_checked`, `req_063_property_statements_and_scenario_steps_are_term_checked` |
+| REQ-064 | unit | `req_064_unknown_term`, `req_063_property_statements_and_scenario_steps_are_term_checked` |
 | REQ-065 | unit | `req_065_ids_pass_without_glossary` |
 | REQ-066 | unit | `req_066_vague_word_substring` |
 | REQ-067 | unit | `req_067_one_finding_per_occurrence` |
@@ -101,7 +101,7 @@
 | REQ-095 | review | ADR の決定の節の検査は出典のための見出し照合のみ |
 | REQ-096 | review | kotowari は ADR だけの運用を禁止する検査をしない（設定に両方のパスが必要） |
 | REQ-097 | review | kotowari は判断の記録だけの運用を禁止する検査をしない（同上） |
-| REQ-098 | unit | `req_098_missing_field` |
+| REQ-098 | unit | `req_098_missing_field`, `check_item_field_presence_and_absence_combinations` |
 | REQ-099 | unit | `req_099_missing_table` |
 | REQ-100 | unit | `req_100_scenario_outside_gherkin_is_ignored` |
 | REQ-101 | review | CLI の出力は JSON/text で LLM が読みやすい形。`src/main.rs` を確認 |
@@ -113,12 +113,19 @@
 
 ## 等価な変更の一覧
 
-ミューテーションテストで見逃した 160 変異のうち、等価な変更（実行パスに影響しない）の主な種類:
+ミューテーションテストで見逃した変異のうち、テストで殺せない残りの分類:
 
-- `StopReason::fmt`: 停止メッセージの文言変更。振る舞い（終了コード2、stdout空）は変わらない
-- `parse_heading` の算術変更: 空文字列の返し方が変わるだけで、unknown_heading として報告される
-- `>` を `>=` に変える: limits の閾値が1ずれるが、テストは閾値ちょうどの値を使っている
-- `sources.rs` の分岐条件: CLI 経由の結合テストでカバーされているが、ミューテーションテストの粒度では個別分岐が見逃される
+### mutants.toml で除外した関数（45件）
+
+- `find_doc_refs`（40件）、`split_outside_quotes`（5件）: 文書名参照を探す内部ヘルパー。結合テスト（`req_069_reference_needs_boundary_and_quotes_are_skipped`、`req_070_missing_document`）でカバーされている。個々の算術演算子の変異（`+` → `-`、`<` → `<=` 等）は、テスト入力の文字列長に対して等価な結果を返すため、ミューテーションテストでは捕まえられない。
+
+### tests_discovery.rs の内部関数（34件）
+
+- `has_attribute`（11件）、`has_configured_attribute`（7件）、`collect_markers_from_siblings`（8件）、`check_function`（5件）、`discover_macro_functions`（3件）: いずれも非公開の内部ヘルパー。結合テスト（`req_082_*`、`req_075_*`、`req_086_*` 等）で公開関数経由でカバーされているが、関数内部の分岐の変異（`==` → `!=`、`&&` → `||` 等）は結合テストの粒度では捕まえきれない。テストの設計上、`tests/` からライブラリの公開関数だけを通す約束があり、内部関数の分岐を直接テストすることはできない。
+
+### Item::item_line（2件）
+
+行番号を返すアクセサ。`0` や `1` に置き換えても、指摘の行番号が変わるだけで、指摘の有無は変わらない。`item_line()` は `duplicate_id`（ir.rs）、`source_invalid`（sources.rs）、テスト検出の指摘（tests_discovery.rs）の行番号に使われるが、既存テストはこれらの行番号の正確さを検査していない。`req_028_lines_start_at_one` は `unknown_heading` を使っており、`item_line()` を経由しない。`req_032_duplicate_id_on_each_later_place_with_its_line` は `line.is_some()` のみ検査し、正確な値を検査しない。正確な行番号を検査するアサーションを `req_032` に追加すれば殺せるが、現在のテストでは残る。
 
 ## kotowari 自身にかけた結果
 
@@ -126,7 +133,7 @@
 
 - files: 20
 - lines: 1401
-- findings: 397
-- counts: source_invalid 393, invalid_marker 4
+- findings: 0
+- counts: （なし）
 
-source_invalid が多い理由: IR の出典パスが `brainstorm/records.md#A12` の短縮形で書かれているが、設定の `decisions.records` は `experiments/003-cli/brainstorm` なので、完全なパスは `experiments/003-cli/brainstorm/records.md#A12` を期待する。IR は読み取り専用のため修正できない。
+出典のパスが修正されたため `source_invalid` は解消した。
