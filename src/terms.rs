@@ -81,6 +81,9 @@ pub fn check_vague_words(
     findings: &mut Vec<Finding>,
 ) {
     for word in vague_words {
+        if word.is_empty() {
+            continue;
+        }
         // 部分一致で出現回数を数える（REQ-067: 出現ごとに1件）
         let mut search_start = 0;
         while let Some(pos) = text[search_start..].find(word.as_str()) {
