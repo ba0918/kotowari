@@ -588,7 +588,7 @@ pub fn discover_and_check(
                         for id in &marker.ids {
                             all_marker_ids.insert(id.clone());
                             // REQ-054: 存在しない ID への参照
-                            if is_valid_id(id) && !known_ids.contains(id) {
+                            if !known_ids.contains(id) {
                                 findings.push(Finding {
                                     kind: "unresolved_reference".to_string(),
                                     severity: "error".to_string(),
@@ -654,7 +654,7 @@ fn check_test_markers(
     // ここではテストに結び付いた印のチェックを行う
     // REQ-054 の unresolved_reference は印からも出る
     for id in &test.marker_ids {
-        if !id.is_empty() && is_valid_id(id) && !known_ids.contains(id) {
+        if !id.is_empty() && !known_ids.contains(id) {
             findings.push(Finding {
                 kind: "unresolved_reference".to_string(),
                 severity: "error".to_string(),

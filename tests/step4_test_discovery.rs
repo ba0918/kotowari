@@ -625,6 +625,55 @@ fn req_054_non_query_language_checks_unresolved_reference() {
     );
 }
 
+// --- REQ-077: 印の中の ID の形でない要素 ---
+
+// @kotowari[REQ-077]
+#[test]
+fn req_077_malformed_id_in_marker_is_unresolved_reference_rs() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ001]\n#[test]\nfn malformed_id_test() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ur = findings_by_kind(&v, "unresolved_reference");
+    assert!(
+        ur.iter().any(|f| f["detail"] == "REQ001"),
+        "ID の形でない要素 REQ001 に unresolved_reference が出るはず: {:?}",
+        ur
+    );
+}
+
+// @kotowari[REQ-077]
+#[test]
+fn req_077_malformed_id_in_marker_is_unresolved_reference_non_rs() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+    )
+    .unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.py"),
+        "# @kotowari[REQ001]\ndef test_a():\n    pass\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ur = findings_by_kind(&v, "unresolved_reference");
+    assert!(
+        ur.iter().any(|f| f["detail"] == "REQ001"),
+        "問い合わせの無い言語でも ID の形でない要素 REQ001 に unresolved_reference が出るはず: {:?}",
+        ur
+    );
+}
+
 // --- REQ-088: IR に文書が無いとき ---
 
 // @kotowari[REQ-088]
