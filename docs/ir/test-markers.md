@@ -53,10 +53,10 @@ kotowari は常に、`印`を行のどの位置からも拾い、コメント記
 ### REQ-077: 存在しない ID だけを指す印
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A57
+- 出典: experiments/003-cli/brainstorm/records.md#A57, experiments/003-cli/brainstorm/records.md#A89
 - 検証: unit
 
-`印`が存在しない`ID`だけを指すとき、kotowari はその`印`の結び付いた`テスト`を`印`のあるものと数える。
+`印`が存在しない`ID`だけを指すとき、kotowari はその`印`の結び付いた`テスト`を`印`のあるものと数える。`印`の角括弧の中の`ID`の形でない要素（"REQ001" のように区切りの無いもの）は、存在しない`ID`を指したものとして unresolved_reference の`誤り`を出す。
 
 ### REQ-078: review の要求を指す印
 

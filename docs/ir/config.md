@@ -30,10 +30,10 @@
 ### REQ-014: 設定の誤り
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A12, experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A20, experiments/003-cli/brainstorm/records.md#A44
+- 出典: experiments/003-cli/brainstorm/records.md#A12, experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A20, experiments/003-cli/brainstorm/records.md#A44, experiments/003-cli/brainstorm/records.md#A93
 - 検証: unit
 
-`設定ファイル`に知らないキー、型の違う値、負の数、0 のいずれかがあるとき、kotowari は設定の誤りを理由に`停止`する。
+`設定ファイル`に知らないキー、型の違う値、負の数、0、"vague_words" の空の文字列の要素のいずれかがあるとき、kotowari は設定の誤りを理由に`停止`する。
 
 ### REQ-015: 一覧は既定を置き換える
 
@@ -62,10 +62,10 @@ kotowari は常に、`設定ファイル`のキーを入れ子の形（"decision
 ### REQ-018: 置き場が無いとき
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A66
+- 出典: experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A66, experiments/003-cli/brainstorm/records.md#A95
 - 検証: unit
 
-"ir"、"decisions.records"、"decisions.adr" の指すディレクトリが無いとき、kotowari は読めないファイルを理由に`停止`する。
+"ir"、"decisions.records"、"decisions.adr" の指すディレクトリが無いとき、または読めないとき、kotowari は読めないファイルを理由に`停止`する。
 
 ### REQ-019: glob の読み方
 
