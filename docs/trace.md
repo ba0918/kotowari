@@ -46,7 +46,7 @@
 | REQ-040 | unit | `req_040_code_blocks_are_skipped_except_gherkin` |
 | REQ-041 | review | `src/ir.rs` で scope_lines の中身を検査せず存在だけ確認。`check_documents` に範囲の内容検査がないことを確認 |
 | REQ-042 | unit | `req_042_reads_every_item_kind_in_the_table` |
-| REQ-043 | unit | `req_043_unknown_heading` |
+| REQ-043 | unit | `req_043_unknown_heading`, `req_043_unknown_heading_detail_is_full_heading_text`, `req_043_unknown_heading_invalid_id_detail_is_full_heading_text`, `req_043_heading_without_colon_is_unknown` |
 | REQ-044 | unit | `req_044_unknown_field` |
 | REQ-045 | unit | `req_045_duplicate_field` |
 | REQ-046 | unit | `req_046_fields_in_any_order_with_blank_lines_and_commas` |
@@ -60,16 +60,16 @@
 | REQ-054 | unit | `req_054_unresolved_reference_in_definition_about_relation_and_sentence`, `req_054_marker_to_unknown_id_is_unresolved` |
 | REQ-055 | review | `src/ir.rs` に EARS の型検査がないことを確認。`grep -c "EARS" src/ir.rs` が 0 |
 | REQ-056 | review | `src/ir.rs` に矛盾の読みの数の検査がないことを確認 |
-| REQ-057 | unit | `req_057_source_splits_at_first_hash_and_allows_commas` |
+| REQ-057 | unit | `req_057_source_splits_at_first_hash_and_allows_commas`, `req_060_glossary_trailing_comma_does_not_create_empty_source` |
 | REQ-058 | unit | `req_058_number_anchor_looks_for_decision_line_and_other_anchor_for_heading`, `req_058_source_outside_places_is_invalid` |
-| REQ-059 | unit | `req_059_missing_source_for_item_scenario_and_term` |
-| REQ-060 | unit | `req_060_glossary_and_scenario_sources_are_checked` |
+| REQ-059 | unit | `req_059_missing_source_for_item_scenario_and_term`, `req_059_empty_source_value_produces_missing_source` |
+| REQ-060 | unit | `req_060_glossary_and_scenario_sources_are_checked`, `req_060_glossary_trailing_comma_does_not_create_empty_source` |
 | REQ-061 | unit | `req_061_numbers_are_per_file` |
 | REQ-062 | review | `src/sources.rs` で出典の内容照合をしていないことを確認。パスと番号/見出しの存在だけ検査 |
 | REQ-063 | unit | `req_063_only_sentences_and_steps_are_checked`, `req_063_property_statements_and_scenario_steps_are_term_checked` |
 | REQ-064 | unit | `req_064_unknown_term`, `req_063_property_statements_and_scenario_steps_are_term_checked` |
 | REQ-065 | unit | `req_065_ids_pass_without_glossary` |
-| REQ-066 | unit | `req_066_vague_word_substring` |
+| REQ-066 | unit | `req_066_vague_word_substring`, `req_066_empty_vague_word_does_not_hang` |
 | REQ-067 | unit | `req_067_one_finding_per_occurrence` |
 | REQ-068 | review | `src/terms.rs` に囲み忘れの検出がないことを確認 |
 | REQ-069 | unit | `req_069_reference_needs_boundary_and_quotes_are_skipped` |
@@ -101,7 +101,7 @@
 | REQ-095 | review | ADR の決定の節の検査は出典のための見出し照合のみ |
 | REQ-096 | review | kotowari は ADR だけの運用を禁止する検査をしない（設定に両方のパスが必要） |
 | REQ-097 | review | kotowari は判断の記録だけの運用を禁止する検査をしない（同上） |
-| REQ-098 | unit | `req_098_missing_field`, `req_098_required_lines_are_told_apart_from_empty_values` |
+| REQ-098 | unit | `req_098_missing_field`, `req_098_required_lines_are_told_apart_from_empty_values`, `req_059_missing_source_for_item_scenario_and_term` |
 | REQ-099 | unit | `req_099_missing_table` |
 | REQ-100 | unit | `req_100_scenario_outside_gherkin_is_ignored` |
 | REQ-101 | review | CLI の出力は JSON/text で LLM が読みやすい形。`src/main.rs` を確認 |
