@@ -250,9 +250,13 @@ fn load_all_md(
             format!("{prefix}/{name}")
         };
 
-        if path.is_dir() {
+        let ft = match entry.file_type() {
+            Ok(ft) => ft,
+            Err(_) => continue,
+        };
+        if ft.is_dir() {
             load_all_md(&path, &rel, records, others)?;
-        } else if path.extension().is_some_and(|ext| ext == "md") {
+        } else if ft.is_file() && path.extension().is_some_and(|ext| ext == "md") {
             let bytes = std::fs::read(&path)
                 .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", path.display())))?;
             let content = String::from_utf8(bytes)
@@ -294,9 +298,13 @@ fn load_all_md_as_other(
             format!("{prefix}/{name}")
         };
 
-        if path.is_dir() {
+        let ft = match entry.file_type() {
+            Ok(ft) => ft,
+            Err(_) => continue,
+        };
+        if ft.is_dir() {
             load_all_md_as_other(&path, &rel, files)?;
-        } else if path.extension().is_some_and(|ext| ext == "md") {
+        } else if ft.is_file() && path.extension().is_some_and(|ext| ext == "md") {
             let bytes = std::fs::read(&path)
                 .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", path.display())))?;
             let content = String::from_utf8(bytes)
