@@ -772,3 +772,393 @@ Scenario: bare scenario
         mt
     );
 }
+
+// --- split_lines: CRLF と空入力 ---
+
+// @kotowari[REQ-037, TBL-010]
+#[test]
+fn req_037_crlf_title_and_requirement_line_numbers() {
+    let content = "# Title\r\n\r\nScope.\r\n\r\n## 要求\r\n\r\n### REQ-001: Test\r\n\r\n- 種類: ubiquitous\r\n- 出典: brainstorm/records.md#A1\r\n- 検証: unit\r\n\r\nStatement.\r\n";
+    let doc = ir::parse_document("a.md", content);
+    assert_eq!(doc.title, Some((1, "Title".to_string())));
+    let req = doc.items.iter().find(|i| matches!(i, Item::Requirement { id, .. } if id == "REQ-001"));
+    assert!(req.is_some(), "should parse REQ-001");
+    assert_eq!(req.unwrap().item_line(), 7, "REQ-001 should be on line 7");
+    let scope_text: Vec<&str> = doc.scope_lines.iter().map(|(_, s)| s.as_str()).collect();
+    assert!(scope_text.contains(&"Scope."), "scope should contain 'Scope.'");
+    assert!(
+        !scope_text.iter().any(|s| s.contains('\r')),
+        "scope text should not contain \\r"
+    );
+}
+
+// @kotowari[REQ-037, TBL-010]
+#[test]
+fn req_037_empty_content_has_zero_lines() {
+    let doc = ir::parse_document("a.md", "");
+    assert_eq!(doc.line_count, 0, "empty content should have 0 lines");
+}
+
+// --- gherkin ステップ認識 ---
+
+// @kotowari[REQ-042, TBL-011]
+#[test]
+fn req_042_gherkin_all_step_keywords_recognized() {
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1
+Scenario: All keywords
+  Given a precondition
+  When an action occurs
+  Then the result is verified
+  And an additional condition
+  But not this condition
+```
+";
+    let doc = ir::parse_document("a.md", content);
+    let scenario = doc.items.iter().find(|i| matches!(i, Item::Scenario { id: Some(id), .. } if id == "EX-001"));
+    assert!(scenario.is_some(), "should parse EX-001 scenario");
+    if let Item::Scenario { steps, .. } = scenario.unwrap() {
+        assert_eq!(steps.len(), 5, "should have 5 steps (Given, When, Then, And, But): {:?}", steps);
+    }
+}
+
+// --- 用語集テーブルの解析 ---
+
+// @kotowari[REQ-042, TBL-011]
+#[test]
+fn req_042_glossary_table_parses_terms() {
+    let content = "\
+# 用語集
+
+| 用語 | 意味 | 出典 |
+|---|---|---|
+| テスト | テストの意味 | brainstorm/records.md#A1 |
+| 検証 | 検証の意味 | brainstorm/records.md#A2 |
+";
+    let doc = ir::parse_document("CONTEXT.md", content);
+    let terms: Vec<_> = doc.items.iter().filter(|i| matches!(i, Item::GlossaryTerm { .. })).collect();
+    assert_eq!(terms.len(), 2, "should parse 2 glossary terms: {:?}", terms);
+    if let Item::GlossaryTerm { term, line, .. } = &terms[0] {
+        assert_eq!(term, "テスト");
+        assert_eq!(*line, 5, "first term should be on line 5");
+    }
+    if let Item::GlossaryTerm { term, line, .. } = &terms[1] {
+        assert_eq!(term, "検証");
+        assert_eq!(*line, 6, "second term should be on line 6");
+    }
+}
+
+// --- FLAG の関係と出典のフィールド読み取り ---
+
+// @kotowari[REQ-042, TBL-011]
+#[test]
+fn req_042_flag_relation_and_source_fields_read() {
+    let content = "\
+# 問題の記録
+
+### FLAG-001: Issue
+
+- 種類: gap
+- 関係: REQ-999
+- 出典: brainstorm/records.md#A1
+
+Body text.
+";
+    let doc = ir::parse_document("FLAGS.md", content);
+    let flag = doc.items.iter().find(|i| matches!(i, Item::FlagEntry { id, .. } if id == "FLAG-001"));
+    assert!(flag.is_some(), "should parse FLAG-001");
+    if let Item::FlagEntry { relations, sources, .. } = flag.unwrap() {
+        assert_eq!(relations, &["REQ-999"], "relations should contain REQ-999");
+        assert_eq!(sources, &["brainstorm/records.md#A1"], "sources should be read");
+    }
+}
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_flag_relation_to_unknown_id_produces_unresolved_reference() {
+    let content = "\
+# 問題の記録
+
+### FLAG-001: Issue
+
+- 種類: gap
+- 関係: REQ-999
+- 出典: brainstorm/records.md#A1
+
+Body text.
+";
+    let doc = ir::parse_document("FLAGS.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    assert!(
+        ur.iter().any(|f| f.detail == "REQ-999"),
+        "FLAG relation to unknown ID should produce unresolved_reference: {:?}",
+        ur
+    );
+}
+
+// @kotowari[REQ-098]
+#[test]
+fn req_098_flag_without_relation_line_produces_missing_field() {
+    let content = "\
+# 問題の記録
+
+### FLAG-001: Issue
+
+- 種類: gap
+- 出典: brainstorm/records.md#A1
+
+Body text.
+";
+    let doc = ir::parse_document("FLAGS.md", content);
+    let findings = check(&[doc], &default_config());
+    let mf = find_by_kind(&findings, "missing_field");
+    assert!(
+        mf.iter().any(|f| f.detail == "関係"),
+        "FLAG without relation line should produce missing_field 関係: {:?}",
+        mf
+    );
+}
+
+// --- build_scenario の @source ---
+
+// @kotowari[REQ-042, TBL-011]
+#[test]
+fn req_042_scenario_source_tag_parsed_into_sources() {
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1
+Scenario: With source
+  Given something
+```
+";
+    let doc = ir::parse_document("a.md", content);
+    let scenario = doc.items.iter().find(|i| matches!(i, Item::Scenario { id: Some(id), .. } if id == "EX-001"));
+    assert!(scenario.is_some(), "should parse EX-001");
+    if let Item::Scenario { sources, .. } = scenario.unwrap() {
+        assert_eq!(
+            sources,
+            &["brainstorm/records.md#A1"],
+            "@source value should be in sources"
+        );
+    }
+}
+
+// --- check_documents の行数境界値 ---
+
+// @kotowari[REQ-038]
+#[test]
+fn req_038_exactly_at_limit_no_warning_one_over_warns() {
+    let cfg = default_config();
+    let limit = cfg.limits.lines.get() as usize;
+
+    let filler_lines = limit - 3;
+    let content = format!("# Title\n\nScope.\n{}", "x\n".repeat(filler_lines));
+    let doc = ir::parse_document("a.md", &content);
+    assert_eq!(doc.line_count, limit, "should be exactly at limit");
+    let findings = check(&[doc], &cfg);
+    let tl = find_by_kind(&findings, "too_many_lines");
+    assert!(tl.is_empty(), "exactly at limit should not produce too_many_lines: {:?}", tl);
+
+    let over_content = format!("# Title\n\nScope.\n{}", "x\n".repeat(filler_lines + 1));
+    let over_doc = ir::parse_document("b.md", &over_content);
+    assert_eq!(over_doc.line_count, limit + 1, "should be one over limit");
+    let over_findings = check(&[over_doc], &cfg);
+    let over_tl = find_by_kind(&over_findings, "too_many_lines");
+    assert_eq!(over_tl.len(), 1, "one over limit should produce too_many_lines");
+}
+
+// --- check_backtick_ids ---
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_backtick_id_known_no_finding_unknown_produces_unresolved() {
+    let content = "\
+# Title
+
+Scope.
+
+## 要求
+
+### REQ-001: Test
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+The `REQ-001` is known but `TBL-999` is not.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    assert!(
+        ur.iter().any(|f| f.detail == "TBL-999"),
+        "unknown backtick ID should produce unresolved_reference: {:?}",
+        ur
+    );
+    assert!(
+        !ur.iter().any(|f| f.detail == "REQ-001"),
+        "known backtick ID should not produce unresolved_reference: {:?}",
+        ur
+    );
+}
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_backtick_id_at_line_start_detected() {
+    let content = "\
+# Title
+
+Scope.
+
+## 要求
+
+### REQ-001: Test
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+`TBL-999` at the start of the line.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    assert!(
+        ur.iter().any(|f| f.detail == "TBL-999"),
+        "backtick ID at line start should be detected: {:?}",
+        ur
+    );
+}
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_two_backtick_ids_on_one_line_both_reported() {
+    let content = "\
+# Title
+
+Scope.
+
+## 要求
+
+### REQ-001: Test
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+See `TBL-998` and `TBL-999` here.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    assert!(
+        ur.iter().any(|f| f.detail == "TBL-998"),
+        "first backtick ID should be reported: {:?}",
+        ur
+    );
+    assert!(
+        ur.iter().any(|f| f.detail == "TBL-999"),
+        "second backtick ID should be reported: {:?}",
+        ur
+    );
+}
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_backtick_non_id_not_reported_as_unresolved() {
+    let content = "\
+# Title
+
+Scope.
+
+## 要求
+
+### REQ-001: Test
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+The `foo` word is not an ID.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    assert!(
+        !ur.iter().any(|f| f.detail == "foo"),
+        "non-ID backtick content should not produce unresolved_reference: {:?}",
+        ur
+    );
+}
+
+// --- check_references: Property の文中のバッククォート ID ---
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_property_statement_backtick_id_produces_unresolved() {
+    let content = "\
+# Title
+
+Scope.
+
+## 性質
+
+### PROP-001: P
+
+- 出典: brainstorm/records.md#A1
+
+This property references `TBL-999` which does not exist.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    assert!(
+        ur.iter().any(|f| f.detail == "TBL-999"),
+        "Property statement backtick ID should produce unresolved_reference: {:?}",
+        ur
+    );
+}
+
+// --- TBL 出典が正しく読まれて missing_source にならない ---
+
+// @kotowari[REQ-098]
+#[test]
+fn req_098_tbl_with_valid_source_no_missing_source() {
+    let content = "\
+# Title
+
+Scope.
+
+## 決定表
+
+### TBL-001: T
+
+- 出典: brainstorm/records.md#A1
+
+| A | B |
+|---|---|
+| 1 | 2 |
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ms = find_by_kind(&findings, "missing_source");
+    assert!(
+        !ms.iter().any(|f| f.detail == "TBL-001"),
+        "TBL with valid source should not produce missing_source: {:?}",
+        ms
+    );
+}

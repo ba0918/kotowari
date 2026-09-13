@@ -589,3 +589,150 @@ fn req_040_gherkin_code_block_doc_ref_is_not_checked() {
         md
     );
 }
+
+// --- is_decision_number ---
+
+// @kotowari[REQ-058, TBL-012]
+#[test]
+fn tbl_012_is_decision_number_rejects_invalid_forms() {
+    assert!(
+        !kotowari::sources::is_decision_number("a1"),
+        "lowercase letter should not be a decision number"
+    );
+    assert!(
+        !kotowari::sources::is_decision_number("1"),
+        "single digit should not be a decision number"
+    );
+    assert!(
+        !kotowari::sources::is_decision_number("11"),
+        "digits only should not be a decision number"
+    );
+    assert!(
+        !kotowari::sources::is_decision_number("A"),
+        "single uppercase letter should not be a decision number"
+    );
+    assert!(
+        kotowari::sources::is_decision_number("A1"),
+        "A1 should be a valid decision number"
+    );
+    assert!(
+        kotowari::sources::is_decision_number("P26"),
+        "P26 should be a valid decision number"
+    );
+}
+
+// @kotowari[REQ-058, TBL-012]
+#[test]
+fn tbl_012_check_source_outside_records_and_adr_returns_err() {
+    let ctx = kotowari::sources::SourceContext {
+        records_path: "docs/decision/brainstorm".to_string(),
+        adr_path: "docs/decision/adr".to_string(),
+        records_files: vec![],
+        adr_files: vec![],
+        records_other_files: vec![],
+    };
+    let result = ctx.check_source("somewhere/else.md#heading");
+    assert!(result.is_err(), "source outside records/adr should return Err");
+
+    let result2 = ctx.check_source("docs/decision/brainstorm#A1");
+    assert!(result2.is_err(), "path equal to records_path (no subpath) should return Err");
+}
+
+// --- check_document_references の行番号 ---
+
+// @kotowari[REQ-069, TBL-014]
+#[test]
+fn req_069_doc_ref_line_number_is_correct() {
+    use std::collections::BTreeSet;
+    let content = "# Title\n\nScope.\n\nSee nonexistent.md here.\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(
+        &[doc],
+        "docs/ir",
+        &ir_filenames,
+        &mut findings,
+    );
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(
+        md.iter().any(|f| f.detail == "nonexistent.md" && f.line == Some(5)),
+        "missing_document on line 5: {:?}",
+        md
+    );
+}
+
+// --- find_doc_refs の境界 ---
+
+// @kotowari[REQ-069, TBL-014]
+#[test]
+fn req_069_doc_ref_at_line_end() {
+    use std::collections::BTreeSet;
+    let content = "# Title\n\nScope with nonexistent.md\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(
+        md.iter().any(|f| f.detail == "nonexistent.md" && f.line == Some(3)),
+        "doc ref at end of line should be detected on line 3: {:?}",
+        md
+    );
+}
+
+// @kotowari[REQ-069, TBL-014]
+#[test]
+fn req_069_doc_ref_at_line_start() {
+    use std::collections::BTreeSet;
+    let content = "# Title\n\nnot-found.md is referenced.\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(
+        md.iter().any(|f| f.detail == "not-found.md" && f.line == Some(3)),
+        "doc ref at line start should be detected on line 3: {:?}",
+        md
+    );
+}
+
+// @kotowari[REQ-069, TBL-014]
+#[test]
+fn req_069_doc_ref_after_punctuation() {
+    use std::collections::BTreeSet;
+    let content = "# Title\n\nScope.\n\nSee,not-found.md for details.\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(
+        md.iter().any(|f| f.detail == "not-found.md" && f.line == Some(5)),
+        "doc ref after punctuation should be detected on line 5: {:?}",
+        md
+    );
+}
+
+// @kotowari[REQ-069, TBL-014]
+#[test]
+fn req_069_mdx_extension_not_matched_but_md_after_it_is() {
+    use std::collections::BTreeSet;
+    let content = "# Title\n\nfoo.mdx bar.md text.\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(
+        !md.iter().any(|f| f.detail.contains("foo")),
+        "foo.mdx should not be matched: {:?}",
+        md
+    );
+    assert!(
+        md.iter().any(|f| f.detail == "bar.md"),
+        "bar.md should be matched: {:?}",
+        md
+    );
+}
