@@ -327,6 +327,21 @@ fn req_043_unknown_heading_invalid_id_detail_is_full_heading_text() {
     );
 }
 
+// @kotowari[REQ-043, TBL-008]
+#[test]
+fn req_043_heading_without_colon_is_unknown() {
+    // "### REQ-001" はコロンがないので "### ID: 名前" の形ではなく、unknown_heading になる
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(
+        uh.iter().any(|f| f.detail == "REQ-001"),
+        "heading without colon should be unknown_heading: {:?}",
+        uh
+    );
+}
+
 // --- REQ-044: 知らない行 ---
 
 // @kotowari[REQ-044]

@@ -474,7 +474,14 @@ impl ItemBuilder {
     }
 
     fn build(self) -> Item {
-        // 見出しの形: "ID: 名前"
+        // 見出しの形: "ID: 名前"（コロン必須）
+        if !self.heading.contains(':') {
+            return Item::UnknownHeading {
+                heading: self.heading,
+                line: self.line,
+            };
+        }
+
         let (id, name) = parse_heading(&self.heading);
         let fields_seen = self.build_fields_seen();
 
