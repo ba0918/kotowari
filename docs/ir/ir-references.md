@@ -15,10 +15,10 @@
 ### REQ-053: 無いタグ
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A42, experiments/003-cli/brainstorm/ir-form.md#検査の種類
+- 出典: experiments/003-cli/brainstorm/records.md#A42, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A97
 - 検証: unit
 
-`シナリオ`に "@id" か "@about" のタグが無いとき、kotowari は無いタグの名前を detail にして missing_tag の`誤り`を出す。
+`シナリオ`に "@id" か "@about" のタグが無いとき、kotowari は無いタグの名前を detail にして missing_tag の`誤り`を出す。値が空のタグ（"=" の後に何も無い）は、無いタグとして扱う。
 
 ### REQ-054: 参照切れ
 

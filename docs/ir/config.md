@@ -62,10 +62,10 @@ kotowari は常に、`設定ファイル`のキーを入れ子の形（"decision
 ### REQ-018: 置き場が無いとき
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A66, experiments/003-cli/brainstorm/records.md#A95
+- 出典: experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A66, experiments/003-cli/brainstorm/records.md#A95, experiments/003-cli/brainstorm/records.md#A96
 - 検証: unit
 
-"ir"、"decisions.records"、"decisions.adr" の指すディレクトリが無いとき、または読めないとき、kotowari は読めないファイルを理由に`停止`する。
+"ir"、"decisions.records"、"decisions.adr" の指すディレクトリが無いとき、または読めないとき、kotowari は読めないファイルを理由に`停止`する。"decisions.records" と "decisions.adr" の下のディレクトリが読めないとき、および "tests.files" の走査でディレクトリが読めないときも同じ理由で`停止`する。
 
 ### REQ-019: glob の読み方
 
