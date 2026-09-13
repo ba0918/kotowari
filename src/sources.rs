@@ -233,10 +233,8 @@ fn load_all_md(
     records: &mut Vec<RecordsFile>,
     others: &mut Vec<OtherFile>,
 ) -> Result<(), crate::StopReason> {
-    let entries = match std::fs::read_dir(dir) {
-        Ok(e) => e,
-        Err(_) => return Ok(()),
-    };
+    let entries = std::fs::read_dir(dir)
+        .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", dir.display())))?;
 
     let mut sorted: Vec<_> = entries.filter_map(|e| e.ok()).collect();
     sorted.sort_by_key(|e| e.file_name());
@@ -281,10 +279,8 @@ fn load_all_md_as_other(
     prefix: &str,
     files: &mut Vec<OtherFile>,
 ) -> Result<(), crate::StopReason> {
-    let entries = match std::fs::read_dir(dir) {
-        Ok(e) => e,
-        Err(_) => return Ok(()),
-    };
+    let entries = std::fs::read_dir(dir)
+        .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", dir.display())))?;
 
     let mut sorted: Vec<_> = entries.filter_map(|e| e.ok()).collect();
     sorted.sort_by_key(|e| e.file_name());

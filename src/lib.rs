@@ -121,10 +121,16 @@ pub fn run_check(
     let records_dir = base.join(&cfg.decisions.records);
     let adr_dir = base.join(&cfg.decisions.adr);
 
-    // REQ-018: 置き場が無いとき停止
+    // REQ-018: 置き場が無い、または読めないとき停止
     if !ir_dir.is_dir() {
         return Err(StopReason::UnreadableFile(format!(
             "ir directory not found: {}",
+            cfg.ir
+        )));
+    }
+    if std::fs::read_dir(&ir_dir).is_err() {
+        return Err(StopReason::UnreadableFile(format!(
+            "ir directory not readable: {}",
             cfg.ir
         )));
     }
@@ -134,9 +140,21 @@ pub fn run_check(
             cfg.decisions.records
         )));
     }
+    if std::fs::read_dir(&records_dir).is_err() {
+        return Err(StopReason::UnreadableFile(format!(
+            "decisions.records directory not readable: {}",
+            cfg.decisions.records
+        )));
+    }
     if !adr_dir.is_dir() {
         return Err(StopReason::UnreadableFile(format!(
             "decisions.adr directory not found: {}",
+            cfg.decisions.adr
+        )));
+    }
+    if std::fs::read_dir(&adr_dir).is_err() {
+        return Err(StopReason::UnreadableFile(format!(
+            "decisions.adr directory not readable: {}",
             cfg.decisions.adr
         )));
     }

@@ -284,6 +284,56 @@ fn req_014_empty_vague_word_stops() {
         .stdout("");
 }
 
+// @kotowari[REQ-018]
+#[test]
+#[cfg(unix)]
+fn req_018_unreadable_dir_stops() {
+    use std::os::unix::fs::PermissionsExt;
+    if std::process::Command::new("id").arg("-u").output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim() == "0")
+        .unwrap_or(false)
+    {
+        return;
+    }
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    let ir_dir = tmp.path().join("docs/ir");
+    fs::set_permissions(&ir_dir, std::fs::Permissions::from_mode(0o000)).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    fs::set_permissions(&ir_dir, std::fs::Permissions::from_mode(0o755)).unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "unreadable directory should stop with exit code 2"
+    );
+    assert!(output.stdout.is_empty(), "stdout should be empty on stop");
+}
+
+// @kotowari[REQ-018]
+#[test]
+#[cfg(unix)]
+fn req_018_unreadable_records_dir_stops() {
+    use std::os::unix::fs::PermissionsExt;
+    if std::process::Command::new("id").arg("-u").output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim() == "0")
+        .unwrap_or(false)
+    {
+        return;
+    }
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    let records_dir = tmp.path().join("docs/decision/brainstorm");
+    fs::set_permissions(&records_dir, std::fs::Permissions::from_mode(0o000)).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    fs::set_permissions(&records_dir, std::fs::Permissions::from_mode(0o755)).unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "unreadable records directory should stop with exit code 2"
+    );
+    assert!(output.stdout.is_empty(), "stdout should be empty on stop");
+}
+
 // --- REQ-015: 一覧は既定を置き換える ---
 
 // @kotowari[REQ-015]
