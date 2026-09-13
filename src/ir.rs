@@ -234,13 +234,13 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
             if in_code_block || in_gherkin_block {
                 // ブロックの終了
                 if in_gherkin_block {
-                    // gherkin ブロック終了: 未完了のシナリオがあれば追加
                     if let Some(scenario_line) = gherkin_scenario_line.take() {
                         let scenario = build_scenario(&gherkin_tags, scenario_line, &gherkin_steps, &gherkin_scenario_text);
                         items.push(scenario);
-                        gherkin_tags.clear();
-                        gherkin_steps.clear();
                     }
+                    gherkin_tags.clear();
+                    gherkin_steps.clear();
+                    gherkin_scenario_text.clear();
                 }
                 in_code_block = false;
                 in_gherkin_block = false;

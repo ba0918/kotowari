@@ -738,3 +738,37 @@ fn req_098_required_lines_are_told_apart_from_empty_values() {
     let mf6 = find_by_kind(&f6, "missing_field");
     assert!(!mf6.iter().any(|x| x.detail == "出典"), "PROP missing_field 出典 should not appear: {:?}", mf6);
 }
+
+// @kotowari[REQ-053]
+#[test]
+fn gherkin_tags_cleared_after_block_without_scenario() {
+    let content = "\
+# Title
+
+Scope.
+
+## Examples
+
+```gherkin
+@id=EX-001 @about=REQ-001
+```
+
+```gherkin
+Scenario: bare scenario
+  Given something
+```
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let mt = find_by_kind(&findings, "missing_tag");
+    assert!(
+        mt.iter().any(|f| f.detail == "@id"),
+        "second scenario should have missing_tag @id: {:?}",
+        mt
+    );
+    assert!(
+        mt.iter().any(|f| f.detail == "@about"),
+        "second scenario should have missing_tag @about: {:?}",
+        mt
+    );
+}
