@@ -50,11 +50,11 @@
 | REQ-044 | unit | `req_044_unknown_field` |
 | REQ-045 | unit | `req_045_duplicate_field` |
 | REQ-046 | unit | `req_046_fields_in_any_order_with_blank_lines_and_commas` |
-| REQ-047 | unit | `req_047_missing_statement`, `check_item_field_presence_and_absence_combinations` |
-| REQ-048 | unit | `req_048_verification_missing`, `check_item_field_presence_and_absence_combinations` |
-| REQ-049 | unit | `req_049_verification_invalid`, `check_item_field_presence_and_absence_combinations` |
-| REQ-050 | unit | `req_050_unknown_kind_of_requirement_and_flag`, `check_item_field_presence_and_absence_combinations` |
-| REQ-051 | unit | `req_051_algorithm_without_definition`, `check_item_field_presence_and_absence_combinations` |
+| REQ-047 | unit | `req_047_missing_statement`, `req_098_required_lines_are_told_apart_from_empty_values` |
+| REQ-048 | unit | `req_048_verification_missing`, `req_098_required_lines_are_told_apart_from_empty_values` |
+| REQ-049 | unit | `req_049_verification_invalid`, `req_098_required_lines_are_told_apart_from_empty_values` |
+| REQ-050 | unit | `req_050_unknown_kind_of_requirement_and_flag`, `req_098_required_lines_are_told_apart_from_empty_values` |
+| REQ-051 | unit | `req_051_algorithm_without_definition`, `req_098_required_lines_are_told_apart_from_empty_values` |
 | REQ-052 | unit | `req_052_unknown_tag` |
 | REQ-053 | unit | `req_053_missing_tag` |
 | REQ-054 | unit | `req_054_unresolved_reference_in_definition_about_relation_and_sentence`, `req_054_marker_to_unknown_id_is_unresolved` |
@@ -101,7 +101,7 @@
 | REQ-095 | review | ADR の決定の節の検査は出典のための見出し照合のみ |
 | REQ-096 | review | kotowari は ADR だけの運用を禁止する検査をしない（設定に両方のパスが必要） |
 | REQ-097 | review | kotowari は判断の記録だけの運用を禁止する検査をしない（同上） |
-| REQ-098 | unit | `req_098_missing_field`, `check_item_field_presence_and_absence_combinations` |
+| REQ-098 | unit | `req_098_missing_field`, `req_098_required_lines_are_told_apart_from_empty_values` |
 | REQ-099 | unit | `req_099_missing_table` |
 | REQ-100 | unit | `req_100_scenario_outside_gherkin_is_ignored` |
 | REQ-101 | review | CLI の出力は JSON/text で LLM が読みやすい形。`src/main.rs` を確認 |
@@ -126,6 +126,12 @@
 ### Item::item_line（2件）
 
 行番号を返すアクセサ。`0` や `1` に置き換えても、指摘の行番号が変わるだけで、指摘の有無は変わらない。`item_line()` は `duplicate_id`（ir.rs）、`source_invalid`（sources.rs）、テスト検出の指摘（tests_discovery.rs）の行番号に使われるが、既存テストはこれらの行番号の正確さを検査していない。`req_028_lines_start_at_one` は `unknown_heading` を使っており、`item_line()` を経由しない。`req_032_duplicate_id_on_each_later_place_with_its_line` は `line.is_some()` のみ検査し、正確な値を検査しない。正確な行番号を検査するアサーションを `req_032` に追加すれば殺せるが、現在のテストでは残る。
+
+### 基準の信頼性についての注意
+
+上記の件数（45 + 34 + 2 = 81 件）は `mutants.out/missed.txt`（100 件）を基準にした分類である。`--file` 指定で再実行した結果、基準にはなかった見逃しが追加で確認された: ir.rs の `parse_document`（31件）、`split_lines`（5件）、`build`（26件）、terms.rs の `check_unknown_terms`（1件）、`check_document_references`（2件）。特に `check_document_references` の `in_code_block = !in_code_block` の `!` 削除（121行目）はコードブロック内の文書名参照を無視する機能（REQ-040 に隣接）を壊す実際の欠陥であり、等価な変異ではない。
+
+基準の `mutants.out/missed.txt` は全体実行からの出力だが、一部の変異で結果が異なっている（基準では caught だったものが再実行で missed になっている）。全体の再実行でこれらの追加見逃しを分類する必要がある。
 
 ## kotowari 自身にかけた結果
 
