@@ -890,25 +890,13 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                 });
             }
             if sources.is_empty() {
-                if fields_seen.iter().any(|(_, n, _)| n == "出典") {
-                    // REQ-059: 出典の行があるが値が空
-                    findings.push(Finding {
-                        kind: "missing_source".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: id.clone(),
-                    });
-                } else {
-                    // REQ-098: 出典の行がない
-                    findings.push(Finding {
-                        kind: "missing_field".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: "出典".to_string(),
-                    });
-                }
+                findings.push(Finding {
+                    kind: "missing_source".to_string(),
+                    severity: "error".to_string(),
+                    path: path.to_string(),
+                    line: Some(*line),
+                    detail: id.clone(),
+                });
             }
 
             // REQ-048: 検証の行が無い
@@ -1003,23 +991,13 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
 
             // REQ-098/REQ-059: 出典が必須
             if sources.is_empty() {
-                if fields_seen.iter().any(|(_, n, _)| n == "出典") {
-                    findings.push(Finding {
-                        kind: "missing_source".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: id.clone(),
-                    });
-                } else {
-                    findings.push(Finding {
-                        kind: "missing_field".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: "出典".to_string(),
-                    });
-                }
+                findings.push(Finding {
+                    kind: "missing_source".to_string(),
+                    severity: "error".to_string(),
+                    path: path.to_string(),
+                    line: Some(*line),
+                    detail: id.clone(),
+                });
             }
 
             // REQ-099: 表が無い
@@ -1051,23 +1029,13 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
 
             // REQ-098/REQ-059: 出典が必須
             if sources.is_empty() {
-                if fields_seen.iter().any(|(_, n, _)| n == "出典") {
-                    findings.push(Finding {
-                        kind: "missing_source".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: id.clone(),
-                    });
-                } else {
-                    findings.push(Finding {
-                        kind: "missing_field".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: "出典".to_string(),
-                    });
-                }
+                findings.push(Finding {
+                    kind: "missing_source".to_string(),
+                    severity: "error".to_string(),
+                    path: path.to_string(),
+                    line: Some(*line),
+                    detail: id.clone(),
+                });
             }
 
             // REQ-047: 性質には文が必要
@@ -1171,23 +1139,13 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                 });
             }
             if sources.is_empty() {
-                if fields_seen.iter().any(|(_, n, _)| n == "出典") {
-                    findings.push(Finding {
-                        kind: "missing_source".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: id.clone(),
-                    });
-                } else {
-                    findings.push(Finding {
-                        kind: "missing_field".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: "出典".to_string(),
-                    });
-                }
+                findings.push(Finding {
+                    kind: "missing_source".to_string(),
+                    severity: "error".to_string(),
+                    path: path.to_string(),
+                    line: Some(*line),
+                    detail: id.clone(),
+                });
             }
 
             // REQ-050: 種類の値の誤り

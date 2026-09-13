@@ -140,11 +140,17 @@ fn req_059_missing_source_for_item_scenario_and_term() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
 
-    // 要求: 出典の行が無い → missing_field detail="出典"（REQ-098）
+    // 要求: 出典の行が無い → missing_source detail = ID
+    let ms = findings_by_kind(&v, "missing_source");
+    assert!(
+        ms.iter().any(|f| f["detail"] == "REQ-001" && f["path"].as_str().unwrap().contains("a.md")),
+        "absent source line should produce missing_source with detail 'REQ-001': {:?}",
+        ms
+    );
     let mf = findings_by_kind(&v, "missing_field");
     assert!(
-        mf.iter().any(|f| f["detail"] == "出典" && f["path"].as_str().unwrap().contains("a.md")),
-        "absent source line should produce missing_field with detail '出典': {:?}",
+        !mf.iter().any(|f| f["detail"] == "出典" && f["path"].as_str().unwrap().contains("a.md")),
+        "missing_field 出典 should not appear when source line is absent: {:?}",
         mf
     );
 

@@ -502,12 +502,14 @@ fn req_051_algorithm_definition_must_point_to_tbl_or_prop() {
 // @kotowari[REQ-098]
 #[test]
 fn req_098_missing_field() {
-    // 決定表に出典がない
+    // 決定表に出典がない → missing_source with detail = ID
     let content = "# Title\n\nScope.\n\n## 決定表\n\n### TBL-001: T\n\n| A |\n|---|\n| 1 |\n";
     let doc = ir::parse_document("a.md", content);
     let findings = check(&[doc], &default_config());
+    let ms = find_by_kind(&findings, "missing_source");
+    assert!(ms.iter().any(|f| f.detail == "TBL-001"), "missing source for TBL-001");
     let mf = find_by_kind(&findings, "missing_field");
-    assert!(mf.iter().any(|f| f.detail == "出典"), "missing source field");
+    assert!(!mf.iter().any(|f| f.detail == "出典"), "missing_field 出典 should not appear");
 }
 
 // --- REQ-099: 決定表に表がない ---
@@ -700,14 +702,14 @@ fn req_098_required_lines_are_told_apart_from_empty_values() {
     let mf2 = find_by_kind(&f2, "missing_field");
     assert!(mf2.iter().any(|x| x.detail == "種類"), "should report missing_field 種類: {:?}", mf2);
 
-    // (3) 出典の行がない → missing_field "出典" が出て、missing_source は出ない
+    // (3) 出典の行がない → missing_source with detail = ID、missing_field "出典" は出ない
     let no_source = "# Title\n\nScope.\n\n## 要求\n\n### REQ-003: NoSource\n\n- 種類: ubiquitous\n- 検証: unit\n\nStatement.\n";
     let doc3 = ir::parse_document("a.md", no_source);
     let f3 = check(&[doc3], &default_config());
-    let mf3 = find_by_kind(&f3, "missing_field");
-    assert!(mf3.iter().any(|x| x.detail == "出典"), "should report missing_field 出典: {:?}", mf3);
     let ms3 = find_by_kind(&f3, "missing_source");
-    assert!(ms3.is_empty(), "missing_source should not appear when 出典 line is absent: {:?}", ms3);
+    assert!(ms3.iter().any(|x| x.detail == "REQ-003"), "should report missing_source with ID: {:?}", ms3);
+    let mf3 = find_by_kind(&f3, "missing_field");
+    assert!(!mf3.iter().any(|x| x.detail == "出典"), "missing_field 出典 should not appear when 出典 line is absent: {:?}", mf3);
 
     // (4) 出典の行はあるが値が空 → missing_source が出て、missing_field "出典" は出ない
     let empty_source = "# Title\n\nScope.\n\n## 要求\n\n### REQ-004: EmptySource\n\n- 種類: ubiquitous\n- 出典:\n- 検証: unit\n\nStatement.\n";
