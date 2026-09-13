@@ -642,6 +642,26 @@ fn req_044_property_definition_field_is_unknown() {
     );
 }
 
+// @kotowari[REQ-044]
+#[test]
+fn req_044_prop_unknown_field_does_not_produce_unresolved_reference() {
+    let content = "# Title\n\nScope.\n\n## 性質\n\n### PROP-001: P\n\n- 出典: brainstorm/records.md#A1\n- 定義: TBL-999\n\nProperty statement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uf = find_by_kind(&findings, "unknown_field");
+    assert!(
+        uf.iter().any(|f| f.detail == "- 定義: TBL-999"),
+        "PROP の「- 定義: TBL-999」は unknown_field になるはず: {:?}",
+        uf
+    );
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    assert!(
+        ur.is_empty(),
+        "PROP の知らない行の中身を参照として読んではいけない: {:?}",
+        ur
+    );
+}
+
 // --- REQ-047, REQ-048, REQ-049, REQ-050, REQ-051, REQ-098: フィールド検査の組み合わせ ---
 
 // @kotowari[REQ-047, REQ-048, REQ-049, REQ-050, REQ-051, REQ-098]

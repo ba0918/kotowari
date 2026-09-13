@@ -549,25 +549,14 @@ impl ItemBuilder {
             }
             Some(IdPrefix::Prop) => {
                 let mut sources = Vec::new();
-                let mut definitions = Vec::new();
 
                 for (_, field_name, value) in &self.field_lines {
-                    match field_name.as_str() {
-                        "出典" => {
-                            sources = value
-                                .split(',')
-                                .map(|s| s.trim().to_string())
-                                .filter(|s| !s.is_empty())
-                                .collect();
-                        }
-                        "定義" => {
-                            definitions = value
-                                .split(',')
-                                .map(|s| s.trim().to_string())
-                                .filter(|s| !s.is_empty())
-                                .collect();
-                        }
-                        _ => {}
+                    if field_name == "出典" {
+                        sources = value
+                            .split(',')
+                            .map(|s| s.trim().to_string())
+                            .filter(|s| !s.is_empty())
+                            .collect();
                     }
                 }
 
@@ -576,7 +565,7 @@ impl ItemBuilder {
                     name,
                     line: self.line,
                     sources,
-                    definitions,
+                    definitions: Vec::new(),
                     statements: self.statement_lines,
                     fields_seen,
                 }
