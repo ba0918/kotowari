@@ -629,3 +629,64 @@ fn req_044_property_definition_field_is_unknown() {
         uf
     );
 }
+
+// --- REQ-047, REQ-048, REQ-049, REQ-050, REQ-051, REQ-098: フィールド検査の組み合わせ ---
+
+// @kotowari[REQ-047, REQ-048, REQ-049, REQ-050, REQ-051, REQ-098]
+#[test]
+fn check_item_field_presence_and_absence_combinations() {
+    // (1) すべてのフィールドが揃って値も正しい要求 → 関連する指摘が出ない
+    let valid = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Valid\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", valid);
+    let f = check(&[doc], &default_config());
+    assert!(find_by_kind(&f, "missing_field").is_empty(), "valid req should have no missing_field: {:?}", f);
+    assert!(find_by_kind(&f, "missing_source").is_empty(), "valid req should have no missing_source: {:?}", f);
+    assert!(find_by_kind(&f, "verification_missing").is_empty(), "valid req should have no verification_missing: {:?}", f);
+    assert!(find_by_kind(&f, "verification_invalid").is_empty(), "valid req should have no verification_invalid: {:?}", f);
+    assert!(find_by_kind(&f, "unknown_kind").is_empty(), "valid req should have no unknown_kind: {:?}", f);
+    assert!(find_by_kind(&f, "missing_statement").is_empty(), "valid req should have no missing_statement: {:?}", f);
+    assert!(find_by_kind(&f, "algorithm_without_definition").is_empty(), "valid req should have no algorithm_without_definition: {:?}", f);
+
+    // (2) 種類の行がない → missing_field "種類"
+    let no_kind = "# Title\n\nScope.\n\n## 要求\n\n### REQ-002: NoKind\n\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
+    let doc2 = ir::parse_document("a.md", no_kind);
+    let f2 = check(&[doc2], &default_config());
+    let mf2 = find_by_kind(&f2, "missing_field");
+    assert!(mf2.iter().any(|x| x.detail == "種類"), "should report missing_field 種類: {:?}", mf2);
+
+    // (3) 出典の行がない → missing_field "出典" が出て、missing_source は出ない
+    let no_source = "# Title\n\nScope.\n\n## 要求\n\n### REQ-003: NoSource\n\n- 種類: ubiquitous\n- 検証: unit\n\nStatement.\n";
+    let doc3 = ir::parse_document("a.md", no_source);
+    let f3 = check(&[doc3], &default_config());
+    let mf3 = find_by_kind(&f3, "missing_field");
+    assert!(mf3.iter().any(|x| x.detail == "出典"), "should report missing_field 出典: {:?}", mf3);
+    let ms3 = find_by_kind(&f3, "missing_source");
+    assert!(ms3.is_empty(), "missing_source should not appear when 出典 line is absent: {:?}", ms3);
+
+    // (4) 出典の行はあるが値が空 → missing_source が出て、missing_field "出典" は出ない
+    let empty_source = "# Title\n\nScope.\n\n## 要求\n\n### REQ-004: EmptySource\n\n- 種類: ubiquitous\n- 出典:\n- 検証: unit\n\nStatement.\n";
+    let doc4 = ir::parse_document("a.md", empty_source);
+    let f4 = check(&[doc4], &default_config());
+    let ms4 = find_by_kind(&f4, "missing_source");
+    assert!(ms4.iter().any(|x| x.detail == "REQ-004"), "should report missing_source: {:?}", ms4);
+    let mf4 = find_by_kind(&f4, "missing_field");
+    assert!(!mf4.iter().any(|x| x.detail == "出典"), "missing_field 出典 should not appear when line exists: {:?}", mf4);
+
+    // (5) 決定表の出典の行はあるが値が空 → missing_source
+    let tbl_empty_source = "# Title\n\nScope.\n\n## 決定表\n\n### TBL-001: T\n\n- 出典:\n\n| A |\n|---|\n| 1 |\n";
+    let doc5 = ir::parse_document("a.md", tbl_empty_source);
+    let f5 = check(&[doc5], &default_config());
+    let ms5 = find_by_kind(&f5, "missing_source");
+    assert!(ms5.iter().any(|x| x.detail == "TBL-001"), "TBL should report missing_source on empty value: {:?}", ms5);
+    let mf5 = find_by_kind(&f5, "missing_field");
+    assert!(!mf5.iter().any(|x| x.detail == "出典"), "TBL missing_field 出典 should not appear: {:?}", mf5);
+
+    // (6) 性質の出典の行はあるが値が空 → missing_source
+    let prop_empty_source = "# Title\n\nScope.\n\n## 性質\n\n### PROP-001: P\n\n- 出典:\n\nProp statement.\n";
+    let doc6 = ir::parse_document("a.md", prop_empty_source);
+    let f6 = check(&[doc6], &default_config());
+    let ms6 = find_by_kind(&f6, "missing_source");
+    assert!(ms6.iter().any(|x| x.detail == "PROP-001"), "PROP should report missing_source on empty value: {:?}", ms6);
+    let mf6 = find_by_kind(&f6, "missing_field");
+    assert!(!mf6.iter().any(|x| x.detail == "出典"), "PROP missing_field 出典 should not appear: {:?}", mf6);
+}
