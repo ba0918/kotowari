@@ -459,6 +459,47 @@ fn req_069_reference_needs_boundary_and_quotes_are_skipped() {
     assert!(!md.iter().any(|f| f["detail"] == "0001-test-marker.md"), "slash prefix should be skipped: {:?}", md);
 }
 
+// @kotowari[REQ-069, TBL-014]
+#[test]
+fn req_069_quoted_text_ending_in_a_multibyte_character_is_split_at_the_quote() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 閉じ引用符の直前が全角文字でも、引用の外の参照は拾う
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nこの値は\"実験\"で決まる。See nonexistent.md for details.\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(1), "should finish with errors, not crash: {:?}", output);
+    let v = parse_json(&output);
+    let md = findings_by_kind(&v, "missing_document");
+    assert!(md.iter().any(|f| f["detail"] == "nonexistent.md"), "{:?}", md);
+}
+
+// @kotowari[REQ-069, TBL-014]
+#[test]
+fn req_069_dot_md_at_the_start_of_a_line_is_skipped_and_scanning_continues() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 行頭の ".md" は名前を持たないので参照ではない。その先の参照は拾う
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\n.md で終わる名前の文書を読む。See nonexistent.md for details.\n",
+    )
+    .unwrap();
+    let output = cmd()
+        .arg("check")
+        .current_dir(tmp.path())
+        .timeout(std::time::Duration::from_secs(10))
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1), "should finish, not hang: {:?}", output);
+    let v = parse_json(&output);
+    let md = findings_by_kind(&v, "missing_document");
+    assert!(md.iter().any(|f| f["detail"] == "nonexistent.md"), "{:?}", md);
+}
+
 // --- REQ-070: 参照された文書が無い ---
 
 // @kotowari[REQ-070]
