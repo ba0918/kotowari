@@ -521,20 +521,10 @@ pub fn discover_and_check(
     let mut all_marker_ids: BTreeSet<String> = BTreeSet::new();
 
     for (rel_path, abs_path) in &test_files {
-        let bytes = match std::fs::read(abs_path) {
-            Ok(b) => b,
-            Err(e) => {
-                return Err(crate::StopReason::UnreadableFile(
-                    format!("{abs_path}: {e}"),
-                ));
-            }
-        };
-        let content = match String::from_utf8(bytes) {
-            Ok(s) => s,
-            Err(_) => {
-                return Err(crate::StopReason::NonUtf8File(rel_path.clone()));
-            }
-        };
+        let content = crate::read_utf8_file(
+            std::path::Path::new(abs_path),
+            abs_path,
+        )?;
 
         let ext = std::path::Path::new(rel_path)
             .extension()

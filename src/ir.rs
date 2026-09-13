@@ -798,7 +798,7 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
     }
 
     // 参照の解決チェック（REQ-054）
-    let known_ids: BTreeSet<String> = all_ids.keys().cloned().collect();
+    let known_ids = crate::collect_known_ids(docs);
     for doc in docs {
         let path = format!("{}/{}", config.ir, doc.filename);
         check_references(&doc.items, &known_ids, &path, &mut findings);
@@ -1101,14 +1101,10 @@ fn check_references(
     }
 }
 
-/// 文の中のバッククォートで囲んだ ID の参照をチェック
-fn check_backtick_ids(
-    text: &str,
-    line: usize,
-    known_ids: &BTreeSet<String>,
-    path: &str,
-    findings: &mut Vec<Finding>,
-) {
+/// バッククォートで囲まれた内容を抽出する。
+/// 返すのは (内容, 残りの開始位置) の列。
+pub fn extract_backtick_contents(text: &str) -> Vec<&str> {
+    let mut result = Vec::new();
     let mut start = 0;
     while let Some(open) = text[start..].find('`') {
         let open_abs = start + open + 1;
@@ -1117,13 +1113,28 @@ fn check_backtick_ids(
         }
         if let Some(close) = text[open_abs..].find('`') {
             let content = &text[open_abs..open_abs + close];
-            // ID の形なら参照チェック
-            if is_valid_id(content) && !known_ids.contains(content) {
-                findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(line), content.to_string()));
+            if !content.is_empty() {
+                result.push(content);
             }
             start = open_abs + close + 1;
         } else {
             break;
+        }
+    }
+    result
+}
+
+/// 文の中のバッククォートで囲んだ ID の参照をチェック
+fn check_backtick_ids(
+    text: &str,
+    line: usize,
+    known_ids: &BTreeSet<String>,
+    path: &str,
+    findings: &mut Vec<Finding>,
+) {
+    for content in extract_backtick_contents(text) {
+        if is_valid_id(content) && !known_ids.contains(content) {
+            findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(line), content.to_string()));
         }
     }
 }
@@ -1151,10 +1162,7 @@ pub fn load_and_check(
     for entry in entries {
         let path = entry.path();
         let filename = entry.file_name().to_string_lossy().to_string();
-        let bytes = std::fs::read(&path)
-            .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", path.display())))?;
-        let content = String::from_utf8(bytes)
-            .map_err(|_| crate::StopReason::NonUtf8File(format!("{}", path.display())))?;
+        let content = crate::read_utf8_file(&path, &path.display().to_string())?;
         let doc = parse_document(&filename, &content);
         docs.push(doc);
     }

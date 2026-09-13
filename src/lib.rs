@@ -177,6 +177,44 @@ impl std::fmt::Display for StopReason {
     }
 }
 
+/// UTF-8 のテキストファイルを読む。読めないか UTF-8 でなければ StopReason を返す。
+/// `display_path` は誤りの詳細に使う表示用のパス。
+pub fn read_utf8_file(path: &Path, display_path: &str) -> Result<String, StopReason> {
+    let bytes = std::fs::read(path)
+        .map_err(|e| StopReason::UnreadableFile(format!("{display_path}: {e}")))?;
+    String::from_utf8(bytes)
+        .map_err(|_| StopReason::NonUtf8File(display_path.to_string()))
+}
+
+/// パスを正規化する純粋な関数。
+/// 末尾の "/"、先頭の "./"、途中の "/./" と連続する "/"、"\" を正規化する。
+pub fn normalize_path(path: &str) -> String {
+    let s = path.replace('\\', "/");
+    let mut parts: Vec<&str> = Vec::new();
+    for part in s.split('/') {
+        if part == "." || part.is_empty() {
+            // 先頭の空（= 先頭の "/"）は保持しない（相対パスの前提）
+            // 途中の空（= 連続する "/"）は飛ばす
+            // "." は飛ばす
+            continue;
+        }
+        parts.push(part);
+    }
+    if parts.is_empty() {
+        ".".to_string()
+    } else {
+        parts.join("/")
+    }
+}
+
+/// 文書の全項目から ID の集合を作る
+pub fn collect_known_ids(docs: &[ir::IrDocument]) -> std::collections::BTreeSet<String> {
+    docs.iter()
+        .flat_map(|d| d.items.iter())
+        .filter_map(|item| item.id().map(|s| s.to_string()))
+        .collect()
+}
+
 /// 基準のディレクトリを探す（TBL-003）
 /// カレントディレクトリから上に向かって .kotowari/ があるディレクトリを探す。
 /// 見つからなければカレントディレクトリを返す。
@@ -210,19 +248,13 @@ pub fn run_check(
                 cp.display()
             )));
         }
-        let bytes = std::fs::read(&abs)
-            .map_err(|e| StopReason::UnreadableFile(format!("{}: {e}", abs.display())))?;
-        let text = String::from_utf8(bytes)
-            .map_err(|_| StopReason::NonUtf8File(format!("{}", abs.display())))?;
+        let text = read_utf8_file(&abs, &abs.display().to_string())?;
         config::Config::parse(&text)?
     } else {
         // 既定: base/.kotowari/config.yaml
         let default_path = base.join(".kotowari/config.yaml");
         if default_path.exists() {
-            let bytes = std::fs::read(&default_path)
-                .map_err(|e| StopReason::UnreadableFile(format!("{}: {e}", default_path.display())))?;
-            let text = String::from_utf8(bytes)
-                .map_err(|_| StopReason::NonUtf8File(format!("{}", default_path.display())))?;
+            let text = read_utf8_file(&default_path, &default_path.display().to_string())?;
             config::Config::parse(&text)?
         } else {
             // REQ-012: 設定ファイルが無いときは既定の値
@@ -264,11 +296,7 @@ pub fn run_check(
 
     // 用語と曖昧語の検査
     let glossary = terms::collect_glossary_terms(&docs);
-    let known_ids: std::collections::BTreeSet<String> = docs
-        .iter()
-        .flat_map(|d| d.items.iter())
-        .filter_map(|item| item.id().map(|s| s.to_string()))
-        .collect();
+    let known_ids = collect_known_ids(&docs);
     terms::check_terms_and_vague_words(
         &docs, &glossary, &known_ids, &cfg.vague_words, &cfg.ir, &mut findings,
     );

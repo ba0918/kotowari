@@ -255,10 +255,7 @@ fn load_all_md(
         if ft.is_dir() {
             load_all_md(&path, &rel, records, others)?;
         } else if ft.is_file() && path.extension().is_some_and(|ext| ext == "md") {
-            let bytes = std::fs::read(&path)
-                .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", path.display())))?;
-            let content = String::from_utf8(bytes)
-                .map_err(|_| crate::StopReason::NonUtf8File(format!("{}", path.display())))?;
+            let content = crate::read_utf8_file(&path, &path.display().to_string())?;
 
             let rf = parse_records_file(&rel, &content);
             if rf.is_records {
@@ -301,10 +298,7 @@ fn load_all_md_as_other(
         if ft.is_dir() {
             load_all_md_as_other(&path, &rel, files)?;
         } else if ft.is_file() && path.extension().is_some_and(|ext| ext == "md") {
-            let bytes = std::fs::read(&path)
-                .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", path.display())))?;
-            let content = String::from_utf8(bytes)
-                .map_err(|_| crate::StopReason::NonUtf8File(format!("{}", path.display())))?;
+            let content = crate::read_utf8_file(&path, &path.display().to_string())?;
 
             let of = parse_other_file(&rel, &content);
             files.push(of);

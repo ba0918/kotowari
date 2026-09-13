@@ -36,32 +36,18 @@ pub fn check_unknown_terms(
     path: &str,
     findings: &mut Vec<Finding>,
 ) {
-    let mut start = 0;
-    while let Some(open) = text[start..].find('`') {
-        let open_abs = start + open + 1;
-        if open_abs >= text.len() {
-            break;
+    for content in crate::ir::extract_backtick_contents(text) {
+        // ID なら参照チェック（ir モジュールで済み）、用語チェックはしない
+        if is_valid_id(content) {
+            continue;
         }
-        if let Some(close) = text[open_abs..].find('`') {
-            let content = &text[open_abs..open_abs + close];
-            if !content.is_empty() {
-                // ID なら参照チェック（ir モジュールで済み）、用語チェックはしない
-                if is_valid_id(content) {
-                    // ID は通す（参照チェックは ir モジュールで行う）
-                } else {
-                    // 用語集にあるか
-                    let is_known = match glossary {
-                        Some(terms) => terms.contains(content),
-                        None => false, // 用語集がない → すべて unknown
-                    };
-                    if !is_known {
-                        findings.push(Finding::new(FindingKind::UnknownTerm, path.to_string(), Some(line), content.to_string()));
-                    }
-                }
-            }
-            start = open_abs + close + 1;
-        } else {
-            break;
+        // 用語集にあるか
+        let is_known = match glossary {
+            Some(terms) => terms.contains(content),
+            None => false, // 用語集がない → すべて unknown
+        };
+        if !is_known {
+            findings.push(Finding::new(FindingKind::UnknownTerm, path.to_string(), Some(line), content.to_string()));
         }
     }
 }
