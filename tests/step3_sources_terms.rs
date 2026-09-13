@@ -153,6 +153,30 @@ fn req_059_empty_source_value_produces_missing_source() {
     );
 }
 
+// @kotowari[REQ-057, REQ-060]
+#[test]
+fn req_060_glossary_trailing_comma_does_not_create_empty_source() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 用語集の出典に末尾コンマ → 空要素ができないこと
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| テスト | テストの意味 | docs/decision/brainstorm/records.md#A1, |\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    // 空文字列の出典が source_invalid として出てはいけない
+    assert!(
+        !si.iter().any(|f| f["detail"].as_str() == Some("")),
+        "trailing comma should not produce empty source_invalid: {:?}",
+        si
+    );
+    // 正常な出典は通る
+    assert!(si.is_empty(), "valid source with trailing comma should pass: {:?}", si);
+}
+
 // --- REQ-060: 用語集とシナリオの出典 ---
 
 // @kotowari[REQ-060]

@@ -331,6 +331,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                             sources_str
                                 .split(',')
                                 .map(|s| s.trim().to_string())
+                                .filter(|s| !s.is_empty())
                                 .collect()
                         };
                         if !term.is_empty() {
@@ -1222,9 +1223,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             ..
         } => {
             // REQ-059/REQ-060: 用語の出典が空
-            if sources.is_empty()
-                || (sources.len() == 1 && sources[0].is_empty())
-            {
+            if sources.is_empty() {
                 findings.push(Finding {
                     kind: "missing_source".to_string(),
                     severity: "error".to_string(),
