@@ -10,7 +10,7 @@
 - 出典: experiments/003-cli/brainstorm/records.md#A3, experiments/003-cli/brainstorm/records.md#A13, experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/records.md#A84, experiments/003-cli/brainstorm/records.md#A106
 - 検証: unit
 
-kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の "#" でパスと印に分ける。パスに "#" は書けない。パスは`基準のディレクトリ`（".kotowari" があるリポジトリ直下）からの相対で、置き場からの全体を書く（"experiments/003-cli/brainstorm/records.md#A26" の形）。パスは REQ-110 の正規化の後で置き場と比べる。
+kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の "#" でパスと印に分ける。パスに "#" は書けない。パスは`基準のディレクトリ`からの相対で、置き場からの全体を書く（"experiments/003-cli/brainstorm/records.md#A26" の形）。パスは REQ-110 の正規化の後で置き場と比べる。
 
 ### REQ-058: 出典の判定
 
@@ -71,13 +71,13 @@ kotowari は常に、source_invalid の "line" を`出典`が書かれた行（`
 
 ### TBL-012: 出典の判定
 
-- 出典: experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/brainstorm/records.md#A69, experiments/003-cli/brainstorm/records.md#A91, experiments/003-cli/brainstorm/records.md#A115
+- 出典: experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/brainstorm/records.md#A69, experiments/003-cli/brainstorm/records.md#A91, experiments/003-cli/brainstorm/records.md#A115, experiments/003-cli/brainstorm/records.md#A134
 
 | 順 | 条件 | 結果 |
 |---|---|---|
 | 1 | "パス#印" の書式でない | source_invalid |
-| 2 | パスが decisions.records の中の、決定の番号を持つファイル（判断の記録）で、印が決定の番号の形（英大文字1文字に1桁以上の数字）で、そのファイルの決定の節に "- 印 " で始まる行か "- 印" だけの行がある | 正しい |
-| 3 | パスが decisions.records の中の、決定の番号を持つファイル（判断の記録）で、2 に当たらない | source_invalid |
+| 2 | パスが decisions.records の中の`判断の記録`（`決定の節`の見出しを1つ以上持つファイル）で、印が決定の番号の形（英大文字1文字に1桁以上の数字）で、そのファイルの決定の節に "- 印 " で始まる行か "- 印" だけの行がある | 正しい |
+| 3 | パスが decisions.records の中の`判断の記録`で、2 に当たらない | source_invalid |
 | 4 | パスが decisions.records か decisions.adr の中の、判断の記録でない Markdown のファイル（ADR、形の契約、補足の文書）で、そのファイルがあり、印が "## " の見出しの文字と前後の空白を除いて完全一致する | 正しい |
 | 5 | パスが decisions.records か decisions.adr の中で、2 から 4 のどれにも当たらない | source_invalid |
 | 6 | パスが decisions.records と decisions.adr のどちらの中でもない | source_invalid |
@@ -93,7 +93,7 @@ Scenario: 決定の節にある番号は正しい出典である
 
 @id=EX-012 @about=REQ-058 @source=experiments/003-cli/brainstorm/records.md#A38,experiments/003-cli/brainstorm/ir-form.md#検査の種類
 Scenario: 無い番号は誤りになる
-  Given "decisions.records" が "experiments/003-cli/brainstorm" で、"experiments/003-cli/brainstorm/records.md" に "- A99 " で始まる行が無い
-  When 出典 "experiments/003-cli/brainstorm/records.md#A99" を検査する
-  Then detail が "experiments/003-cli/brainstorm/records.md#A99" の source_invalid の誤りが出る
+  Given "decisions.records" が "experiments/003-cli/brainstorm" で、"experiments/003-cli/brainstorm/records.md" に "- A999 " で始まる行が無い
+  When 出典 "experiments/003-cli/brainstorm/records.md#A999" を検査する
+  Then detail が "experiments/003-cli/brainstorm/records.md#A999" の source_invalid の誤りが出る
 ```

@@ -31,24 +31,24 @@ kotowari は常に、"--config" に与えたパスをカレントディレクト
 ### REQ-004: 引数の誤り
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A60, experiments/003-cli/brainstorm/records.md#A103
+- 出典: experiments/003-cli/brainstorm/records.md#A60, experiments/003-cli/brainstorm/records.md#A103, experiments/003-cli/brainstorm/records.md#A136
 - 検証: unit
 
-知らないオプション、位置引数、"--format" の知らない値、値の無いオプション、同じオプションの2回目のいずれかを受けたとき、引数が1つも無いとき、または "--config" の指す先が無いかディレクトリのとき、kotowari は引数の誤りを理由に`停止`する。
+"--help" も "--version" も無いときに、知らないオプション、"check" 以外の位置引数、"--format" の知らない値、値の無いオプション、同じオプションの2回目のいずれかを受けたとき、引数が1つも無いとき、または "--config" の指す先が無いかディレクトリのとき、kotowari は引数の誤りを理由に`停止`する。
 
 ### REQ-005: 停止の出力
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/records.md#A104
+- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/records.md#A104, experiments/003-cli/brainstorm/records.md#A137
 - 検証: unit
 
-`停止`するとき、kotowari は標準出力に何も出さず、停止の理由を標準エラーに出す。標準エラーの1行目は TBL-018 の文言に ": " と詳細を続けた形で、詳細にパスを含めるときは`基準のディレクトリ`からの相対パスにする。
+`停止`するとき、kotowari は標準出力に何も出さず、停止の理由を標準エラーに出す。標準エラーの1行目は TBL-018 の文言に ": " と詳細を続けた形で、詳細は TBL-020 のとおりで、パスを含めるときは`基準のディレクトリ`からの相対パスにし、文言は英語で書く。
 
 ### REQ-006: 停止の理由
 
 - 種類: algorithm
 - 出典: experiments/003-cli/brainstorm/records.md#A44, experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/brainstorm/records.md#A60, experiments/003-cli/brainstorm/records.md#A104
-- 定義: TBL-001, TBL-018
+- 定義: TBL-001, TBL-018, TBL-020
 - 検証: unit
 
 ### REQ-007: 終了コード
@@ -61,7 +61,7 @@ kotowari は常に、"--config" に与えたパスをカレントディレクト
 ### REQ-008: 作らないコマンド
 
 - 種類: prohibition
-- 出典: experiments/003-cli/brainstorm/records.md#P1
+- 出典: experiments/003-cli/brainstorm/records.md#P1, experiments/003-cli/brainstorm/records.md#A99
 - 検証: review
 
 kotowari は、人間向けの文書の生成（"render"）、影響範囲の追跡（"trace"）、plan と cycle への受け渡し（"query"）を作ってはならない。

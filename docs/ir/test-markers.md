@@ -72,7 +72,7 @@ kotowari は常に、`印`を行のどの位置からも拾い、コメント記
 - 出典: experiments/003-cli/brainstorm/records.md#A121
 - 検証: unit
 
-kotowari は常に、`印`から出す unresolved_reference と invalid_marker の "line" を`印`のある行にする。
+kotowari は常に、`印`から出す unresolved_reference と invalid_marker の "line" を`印`のある行（行をまたぐ`印`なら "@kotowari[" のある行）にする。
 
 ## 決定表
 

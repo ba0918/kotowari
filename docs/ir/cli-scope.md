@@ -7,10 +7,10 @@ kotowari を使う者、書き出す先、コードの置き場を扱う。
 ### REQ-101: 使い手
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A1
+- 出典: experiments/003-cli/brainstorm/records.md#A1, experiments/003-cli/brainstorm/records.md#A98
 - 検証: review
 
-kotowari は常に、第一に LLM が使う CLI であり、人間が確認のために実行することもある。
+kotowari は常に、第一に LLM が使う CLI であり、人間が確認のために実行することもある。使う場は、仕様駆動の流れ（brainstorm、`判断の記録`、`IR`、実装）を回す開発者のリポジトリである。
 
 ### REQ-102: 状態を保存しない
 

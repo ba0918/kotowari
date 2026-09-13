@@ -25,7 +25,7 @@
 - 出典: experiments/003-cli/brainstorm/records.md#A42, experiments/003-cli/brainstorm/records.md#A52, experiments/003-cli/brainstorm/records.md#A81, experiments/003-cli/brainstorm/ir-form.md#項目, experiments/003-cli/brainstorm/records.md#A87, experiments/003-cli/brainstorm/records.md#A111
 - 検証: unit
 
-見出しの下に知らない "- xxx:" の行、または "xxx:" の形でない一覧の行（"- "、"* "、"+ "、数字と "." で始まる行）があるとき、kotowari は読んだ行の文字をそのまま detail にして unknown_field の`誤り`を出す。知らない行の中身は読まない（`ID` が書かれていても参照にしない）。知っている行は`項目`の種類ごとに TBL-011 の「持つ行」の列にあるものだけで、`性質`なら "- 出典:" だけである。
+見出しの下に知らない "- xxx:" の行、または "xxx:" の形でない一覧の行（"- "、"* "、"+ "、数字と "." で始まる行、および "-" だけの行）があるとき、kotowari は読んだ行の文字をそのまま detail にして unknown_field の`誤り`を出す。知らない行の中身は読まない（`ID` が書かれていても参照にしない）。知っている行は`項目`の種類ごとに TBL-011 の「持つ行」の列にあるものだけで、`性質`なら "- 出典:" だけである。
 
 ### REQ-045: 同じ行の重複
 
@@ -46,10 +46,10 @@ kotowari は常に、見出しの下の "- " の行を順不同で読み、行�
 ### REQ-047: 文が無い
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A42, experiments/003-cli/brainstorm/ir-form.md#検査の種類
+- 出典: experiments/003-cli/brainstorm/records.md#A42, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A131
 - 検証: unit
 
-種類が "algorithm" 以外の`要求`、または`性質`に`文`が無いとき、kotowari は missing_statement の`誤り`を出す。
+種類が "algorithm" 以外の`要求`（"- 種類:" の行が無い`要求`を含む）、または`性質`に`文`が無いとき、kotowari は missing_statement の`誤り`を出す。
 
 ### REQ-048: 検証の行が無い
 

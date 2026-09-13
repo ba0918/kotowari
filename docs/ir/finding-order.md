@@ -14,10 +14,10 @@
 ### REQ-027: 文書全体への指摘
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/records.md#A83, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A112
+- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/records.md#A83, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A112, experiments/003-cli/brainstorm/records.md#A144
 - 検証: unit
 
-kotowari は常に、種類が missing_title、multiple_titles、missing_scope、too_many_lines、too_many_requirements、unparsable_file、glossary_invalid の`指摘`の "line" を null にする。
+kotowari は常に、種類が missing_title、multiple_titles、missing_scope、too_many_lines、too_many_requirements、unparsable_file、glossary_invalid の`指摘`の "line" を null にし、ほかの種類の "line" を TBL-019 のとおりにする。
 
 ### REQ-028: 行は1始まり
 
@@ -39,6 +39,23 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 | 2 | line | null が先、その後は小さい順 |
 | 3 | kind | バイト順 |
 | 4 | detail | バイト順 |
+
+### TBL-019: 指摘の行
+
+- 出典: experiments/003-cli/brainstorm/records.md#A144, experiments/003-cli/brainstorm/records.md#A114, experiments/003-cli/brainstorm/records.md#A121, experiments/003-cli/brainstorm/records.md#A139
+
+| 種類 | line |
+|---|---|
+| missing_source | 項目の見出しの行。シナリオはタグの行（無ければ "Scenario:" の行）。用語は表の行 |
+| source_invalid | 出典が書かれた行（REQ-115） |
+| missing_tag、unknown_tag、invalid_id | タグの行（無ければ "Scenario:" の行） |
+| unknown_term、vague_word、unclosed_backtick、missing_document | その行 |
+| unknown_field、duplicate_field、unknown_heading、invalid_gherkin_line | その行 |
+| unclosed_code_block | 開始の行 |
+| duplicate_id | 2つ目以降の見出しの行（REQ-032） |
+| unresolved_reference、invalid_marker | 印なら印のある行（REQ-118）。定義・関係・文の中なら その行。"@about" ならタグの行 |
+| missing_field、missing_statement、missing_table、verification_missing、verification_invalid、unknown_kind、algorithm_without_definition、requirement_without_test | 項目の見出しの行 |
+| test_without_id | 関数の宣言の行 |
 
 ## 性質
 

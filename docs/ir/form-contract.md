@@ -7,7 +7,7 @@ IR の形をどこで決めるかと、採らない形の決め方を扱う。
 ### REQ-089: 形はコードに固定する
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A25, experiments/003-cli/brainstorm/records.md#A52
+- 出典: experiments/003-cli/brainstorm/records.md#A25, experiments/003-cli/brainstorm/records.md#A52, experiments/003-cli/brainstorm/records.md#A98
 - 検証: review
 
 kotowari は常に、コードに固定した1つの形で`IR`を読む。

@@ -38,10 +38,10 @@
 ### REQ-067: 出現ごとに1件
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A53, experiments/003-cli/brainstorm/records.md#A56, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A117
+- 出典: experiments/003-cli/brainstorm/records.md#A53, experiments/003-cli/brainstorm/records.md#A56, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A117, experiments/003-cli/brainstorm/records.md#A142
 - 検証: unit
 
-kotowari は常に、unknown_term と vague_word の`指摘`を出現ごとに1件出し、`曖昧語`の出現は重ならない形で数える。
+kotowari は常に、unknown_term と vague_word の`指摘`を出現ごとに1件出し、`曖昧語`の出現は行の左から最長一致で重ならない形で数える。
 
 ### REQ-068: 囲み忘れを検出しない
 
@@ -70,14 +70,14 @@ kotowari は、`用語`をバッククォートで囲み忘れたことを検出
 
 ### TBL-013: 用語と曖昧語の検査の対象
 
-- 出典: experiments/003-cli/brainstorm/records.md#A42, experiments/003-cli/brainstorm/records.md#A53, experiments/003-cli/brainstorm/records.md#A56
+- 出典: experiments/003-cli/brainstorm/records.md#A42, experiments/003-cli/brainstorm/records.md#A53, experiments/003-cli/brainstorm/records.md#A56, experiments/003-cli/brainstorm/records.md#A133
 
 | 行 | 検査 |
 |---|---|
 | 要求の文 | 対象 |
 | 性質の文 | 対象 |
 | Gherkin の Given、When、Then、And、But の行 | 対象 |
-| Gherkin の Scenario、Feature の行 | 対象外 |
+| Gherkin の Scenario の行 | 対象外 |
 | "- " の行 | 対象外 |
 | タグの行 | 対象外 |
 | 用語集の意味の列 | 対象外 |

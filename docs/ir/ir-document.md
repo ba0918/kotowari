@@ -10,7 +10,7 @@ IR の文書の選び方、題名と範囲の行、行の数え方、行数と�
 - 出典: experiments/003-cli/brainstorm/records.md#A32, experiments/003-cli/brainstorm/records.md#A102
 - 検証: unit
 
-kotowari は常に、`IR`の置き場の直下の、拡張子が小文字の ".md" のファイルだけを読み、サブディレクトリの文書と ".MD" の文書を読まない（`除外`）。ファイルのシンボリックリンクは読む。
+kotowari は常に、`IR`の置き場の直下の、拡張子が小文字の ".md" のファイルだけを読み、サブディレクトリの文書と ".MD" の文書を読まない（`除外`）。ファイルのシンボリックリンクは読む。種類を取れない要素があるときは読めないファイルを理由に`停止`する。
 
 ### REQ-034: 題名が無い
 
@@ -62,10 +62,10 @@ kotowari は常に、`IR`の置き場の直下の、拡張子が小文字の ".m
 ### REQ-040: コードブロックの中
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A52, experiments/003-cli/brainstorm/records.md#A88, experiments/003-cli/brainstorm/records.md#A108
+- 出典: experiments/003-cli/brainstorm/records.md#A52, experiments/003-cli/brainstorm/records.md#A88, experiments/003-cli/brainstorm/records.md#A108, experiments/003-cli/brainstorm/records.md#A140
 - 検証: unit
 
-kotowari は常に、`コードブロック`の中を検査の対象から外す。gherkin のブロックの中の行は、`シナリオ`のタグと`用語`と曖昧語の検査の対象にし、文書名の参照の検査では対象にしない。
+kotowari は常に、`コードブロック`の中を検査の対象から外す（`除外`）。閉じていない`コードブロック`は gherkin でも対象から外す。閉じた gherkin のブロックの中の行は、`シナリオ`のタグと`用語`と曖昧語の検査の対象にし、文書名の参照の検査では対象にしない。
 
 ### REQ-041: 範囲の中身と責務の分離を見ない
 
@@ -79,13 +79,14 @@ kotowari は、`文書が扱う範囲`の中身と行数を検査すること、
 
 ### TBL-010: 行の数え方
 
-- 出典: experiments/003-cli/brainstorm/records.md#A33
+- 出典: experiments/003-cli/brainstorm/records.md#A33, experiments/003-cli/brainstorm/records.md#A129
 
 | 場面 | 数え方 |
 |---|---|
 | "\n" | 1つの行の終わり |
 | "\r\n" | 1つの行の終わり（1行に数える） |
 | 最後の行に改行が無い | その行も1行に数える |
+| 中身が空の文書 | 0行に数える（題名が無いので missing_title を出す） |
 
 ## 具体例
 

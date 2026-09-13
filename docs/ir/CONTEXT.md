@@ -5,11 +5,11 @@
 | IR | 正規化した仕様の Markdown の文書の集まり。設定の "ir" の置き場の直下に置く | experiments/003-cli/brainstorm/records.md#A12, experiments/003-cli/brainstorm/records.md#A32, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A25, experiments/003-cli/brainstorm/records.md#A52 |
 | 基準のディレクトリ | カレントディレクトリから上に向かって探し、最初に見つかった ".kotowari/" のあるディレクトリ。無ければカレントディレクトリ | experiments/003-cli/brainstorm/records.md#A37 |
 | 設定ファイル | 読む場所と検査の値を書く YAML のファイル。既定は ".kotowari/config.yaml" | experiments/003-cli/brainstorm/records.md#A2, experiments/003-cli/brainstorm/records.md#A12 |
-| 判断の記録 | brainstorm で決めたことを1行1決定で並べたファイル。設定の "decisions.records" の置き場の下に置く | experiments/003-cli/brainstorm/records.md#A22, experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/adr/0003-records-and-adr.md#状況 |
+| 判断の記録 | brainstorm で決めたことを1行1決定で並べたファイル。設定の "decisions.records" の置き場の下に置き、決定の節の見出し（"## Agreements"、"## Prohibitions"、"## Delegated"、"## Rejected"）を1つ以上持つことで見分ける | experiments/003-cli/brainstorm/records.md#A22, experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/adr/0003-records-and-adr.md#状況, experiments/003-cli/brainstorm/records.md#A134 |
 | ADR | 4つの基準に当たる判断を、状況、決定、理由、却下した案、結果の節とともに残すファイル。設定の "decisions.adr" の置き場の下に置く | experiments/003-cli/brainstorm/records.md#A22, experiments/003-cli/brainstorm/records.md#A43, experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/records.md#A47 |
 | 出典 | 項目の元になった決定か ADR の節を指す "パス#印" の文字列 | experiments/003-cli/brainstorm/records.md#A3, experiments/003-cli/brainstorm/records.md#A38 |
 | 決定の番号 | 判断の記録の決定の行の先頭にある番号。英大文字1文字に1桁以上の数字（"A26"、"P1" の形） | experiments/003-cli/brainstorm/records.md#A13, experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/records.md#A115 |
-| 決定の節 | 判断の記録の Agreements、Prohibitions、Delegated、Rejected の節。"## " の見出しで始まり次の "## " の見出しで終わる | experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/records.md#A115 |
+| 決定の節 | 判断の記録の Agreements、Prohibitions、Delegated、Rejected の節。"## " の見出しで始まり次の "## " の見出しで終わる | experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/records.md#A115, experiments/003-cli/brainstorm/records.md#A134 |
 | 話題ごとの文書 | IR の文書のうち、用語集と問題の記録を除いたもの | experiments/003-cli/brainstorm/ir-form.md#文書 |
 | 用語集 | IR の置き場の直下の "CONTEXT.md" | experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A56 |
 | 用語 | 用語集の表の用語の列にある語。IR の文の中ではバッククォートで囲む | experiments/003-cli/brainstorm/records.md#A31, experiments/003-cli/brainstorm/records.md#A42 |
@@ -36,5 +36,5 @@
 | 曖昧語 | 設定の "vague_words" に並べた語 | experiments/003-cli/brainstorm/records.md#A21, experiments/003-cli/brainstorm/records.md#A41 |
 | 対象の行 | 用語と曖昧語の検査を受ける行。TBL-013 で決める | experiments/003-cli/brainstorm/records.md#A53 |
 | 文書名の参照 | コードブロックの外にある文書名の並び。TBL-014 で決める | experiments/003-cli/brainstorm/records.md#A54, experiments/003-cli/brainstorm/records.md#A47 |
-| 除外 | 仕様が列挙した、kotowari が読まないもの。隠しディレクトリ、ディレクトリのシンボリックリンク、IR の置き場のサブディレクトリ、".md" 以外のファイル、形に合わない見出しの下の行。列挙に無い読み飛ばしは作らない | experiments/003-cli/brainstorm/records.md#A100, experiments/003-cli/brainstorm/records.md#A102, experiments/003-cli/brainstorm/records.md#A110 |
+| 除外 | 仕様が列挙した、kotowari が指摘を出さずに読まないか見ないもの。隠しディレクトリ、ディレクトリのシンボリックリンク、IR の置き場のサブディレクトリ、".md" 以外のファイル、".kotowari" という名前のファイル、形に合わない見出しの下の行、コードブロックの中（gherkin を除く）、gherkin のブロックの外の "Scenario:" の行、"## " の見出しの直下で最初の "### " より前の空でない行、テストの外と関数の本体の途中にある印、行の中の二重引用符が奇数のときの最後の引用符から行末まで、TBL-013 で対象外の行。列挙に無い読み飛ばしは作らない | experiments/003-cli/brainstorm/records.md#A100, experiments/003-cli/brainstorm/records.md#A102, experiments/003-cli/brainstorm/records.md#A110 |
 | コードブロック | 行頭の3つ以上の "`" か "~" で始まる行から、同じ文字で同じ数以上の行までの部分 | experiments/003-cli/brainstorm/records.md#A108 |
