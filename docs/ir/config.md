@@ -15,10 +15,10 @@
 ### REQ-012: 設定ファイルが無いとき
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A12, experiments/003-cli/brainstorm/records.md#A60
+- 出典: experiments/003-cli/brainstorm/records.md#A12, experiments/003-cli/brainstorm/records.md#A60, experiments/003-cli/brainstorm/records.md#A105
 - 検証: unit
 
-"--config" を受けずに`設定ファイル`が無いとき、kotowari は既定の値で検査を行う。
+"--config" を受けずに`設定ファイル`が無いとき、または`設定ファイル`が空（0バイトか注釈だけ）のとき、kotowari は既定の値で検査を行う。
 
 ### REQ-013: キーと既定の値
 
@@ -30,10 +30,10 @@
 ### REQ-014: 設定の誤り
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A12, experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A20, experiments/003-cli/brainstorm/records.md#A44, experiments/003-cli/brainstorm/records.md#A93
+- 出典: experiments/003-cli/brainstorm/records.md#A12, experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A20, experiments/003-cli/brainstorm/records.md#A44, experiments/003-cli/brainstorm/records.md#A93, experiments/003-cli/brainstorm/records.md#A105
 - 検証: unit
 
-`設定ファイル`に知らないキー、型の違う値、負の数、0、"vague_words" の空の文字列の要素のいずれかがあるとき、kotowari は設定の誤りを理由に`停止`する。
+`設定ファイル`が YAML として読めないとき、または`設定ファイル`に知らないキー、同じキーの2回目、値が空のキー、型の違う値、負の数、0、絶対パスの値、"vague_words" の空の文字列の要素か同じ語の2回目、"tests.files" の glob として読めない要素のいずれかがあるとき、kotowari は設定の誤りを理由に`停止`する。
 
 ### REQ-015: 一覧は既定を置き換える
 
@@ -70,10 +70,10 @@ kotowari は常に、`設定ファイル`のキーを入れ子の形（"decision
 ### REQ-019: glob の読み方
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A59
+- 出典: experiments/003-cli/brainstorm/records.md#A59, experiments/003-cli/brainstorm/records.md#A102
 - 検証: unit
 
-kotowari は常に、glob の "**" を再帰として読み、隠しディレクトリを含めない。
+kotowari は常に、glob の "**" を再帰として読み、隠しディレクトリを glob が名指ししても含めず、ディレクトリのシンボリックリンクを辿らない。
 
 ### REQ-020: 直下の kotowari.toml を読まない
 

@@ -29,16 +29,16 @@
 ### REQ-032: ID の重複
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A61, experiments/003-cli/brainstorm/records.md#A72
+- 出典: experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A61, experiments/003-cli/brainstorm/records.md#A72, experiments/003-cli/brainstorm/records.md#A113
 - 検証: unit
 
-同じ`ID`が2か所以上にあるとき、kotowari は2つ目以降の場所ごとに、その見出しの行（`シナリオ`は "Scenario:" の行）を "line" にして duplicate_id の`誤り`を出す。
+同じ`ID`が2か所以上にあるとき、kotowari は2つ目以降の場所ごとに、その見出しの行（`シナリオ`は "Scenario:" の行）を "line" にして duplicate_id の`誤り`を出す。1つ目はパスのバイト順で先の文書、同じ文書の中では行の小さいものである。
 
 ## 決定表
 
 ### TBL-008: 誤りの種類と detail
 
-- 出典: experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A68
+- 出典: experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A68, experiments/003-cli/brainstorm/records.md#A108, experiments/003-cli/brainstorm/records.md#A109, experiments/003-cli/brainstorm/records.md#A110, experiments/003-cli/brainstorm/records.md#A112, experiments/003-cli/brainstorm/records.md#A116
 
 | 種類 | detail | 条件を定める要求 |
 |---|---|---|
@@ -68,6 +68,11 @@
 | test_without_id | 関数の名前 | REQ-086 |
 | invalid_marker | 行の文字 | REQ-072 |
 | unparsable_file | ファイルのパス | REQ-083 |
+| unclosed_code_block | 開始の行の文字 | REQ-112 |
+| invalid_gherkin_line | 行の文字 | REQ-113 |
+| invalid_id | 値 | REQ-114 |
+| glossary_invalid | 文書名 | REQ-117 |
+| unclosed_backtick | 行の文字 | REQ-116 |
 
 ### TBL-009: 警告の種類と detail
 

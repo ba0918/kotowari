@@ -7,10 +7,10 @@
 ### REQ-079: テストのファイル
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A36, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A94
+- 出典: experiments/003-cli/brainstorm/records.md#A36, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A94, experiments/003-cli/brainstorm/records.md#A102
 - 検証: unit
 
-kotowari は常に、"tests.files" の glob に当たるファイルを`テストのファイル`として読む。走査ではシンボリックリンクを辿らない。
+kotowari は常に、"tests.files" の glob に当たるファイルを`テストのファイル`として読む。走査ではディレクトリのシンボリックリンクを辿らず、ファイルのシンボリックリンクは読む。
 
 ### REQ-080: tree-sitter で読む
 
@@ -23,10 +23,10 @@ kotowari は常に、`問い合わせのある言語`の`テストのファイ�
 ### REQ-081: 拡張子と言語の対応
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A39, experiments/003-cli/brainstorm/records.md#A58, experiments/003-cli/brainstorm/records.md#A24
+- 出典: experiments/003-cli/brainstorm/records.md#A39, experiments/003-cli/brainstorm/records.md#A58, experiments/003-cli/brainstorm/records.md#A24, experiments/003-cli/brainstorm/records.md#A123, experiments/003-cli/brainstorm/records.md#A128
 - 検証: unit
 
-kotowari は常に、`テストのファイル`の言語を同梱の対応で拡張子から決め、003 では ".rs" だけを`問い合わせのある言語`にする。Rust 以外の言語の`問い合わせ`は、利用者の設定ではなく、kotowari に`問い合わせ`のファイルを足すことで後から足せる。
+kotowari は常に、`テストのファイル`の言語を同梱の対応で拡張子から大文字小文字を区別して決め、第1版では ".rs" だけを`問い合わせのある言語`にする。Rust 以外の言語の`問い合わせ`は、利用者の設定ではなく、kotowari に`問い合わせ`のファイルを足すことで後から足せる。
 
 ### REQ-082: Rust のテスト
 
@@ -38,10 +38,10 @@ kotowari は常に、`テストのファイル`の言語を同梱の対応で拡
 ### REQ-083: 読めないテストのファイル
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A58
+- 出典: experiments/003-cli/brainstorm/records.md#A58, experiments/003-cli/brainstorm/records.md#A120
 - 検証: unit
 
-tree-sitter で読めない`テストのファイル`があるとき、kotowari は unparsable_file の`誤り`を出してそのファイルを飛ばし、`停止`しない。
+tree-sitter で読めない`テストのファイル`（構文の誤りが1つでもあるファイル）があるとき、kotowari は unparsable_file の`誤り`を出してそのファイルを飛ばし、`停止`しない。
 
 ### REQ-084: 正規表現でテストを見つけない
 
@@ -55,13 +55,13 @@ kotowari は、`設定ファイル`に書く正規表現でテストの定義の
 
 ### TBL-017: Rust でテストと数えるもの
 
-- 出典: experiments/003-cli/brainstorm/records.md#A26, experiments/003-cli/brainstorm/records.md#A39, experiments/003-cli/brainstorm/records.md#A49, experiments/003-cli/brainstorm/records.md#A47
+- 出典: experiments/003-cli/brainstorm/records.md#A26, experiments/003-cli/brainstorm/records.md#A39, experiments/003-cli/brainstorm/records.md#A49, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A121, experiments/003-cli/brainstorm/records.md#A122
 
 | 対象 | 数え方 |
 |---|---|
-| #[test] の付いた関数 | 同梱の問い合わせに固定し、常に数える |
+| 属性のパスの末尾の要素が "test" の関数（"#[test]"、"#[tokio::test]"） | 同梱の問い合わせに固定し、常に数える |
 | tests.rust.attributes の属性の付いた関数 | 属性から "#["、"]"、引数を除いたパスが完全一致すれば数える |
-| tests.rust.macros のマクロ | 設定には "!" を除いた名前で書く。マクロの名前の末尾の要素が一致すれば、中身を Rust の項目として読み直し、関数ごとに数える |
+| tests.rust.macros のマクロ | 設定には "!" を除いた名前で書く。マクロの名前の末尾の要素が一致すれば、中身を Rust の項目として読み直し、最上位の関数ごとに数える。印の結び付けと invalid_marker は通常の関数と同じ |
 
 ## 具体例
 

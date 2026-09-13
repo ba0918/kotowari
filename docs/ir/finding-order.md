@@ -14,10 +14,10 @@
 ### REQ-027: 文書全体への指摘
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/records.md#A83, experiments/003-cli/brainstorm/ir-form.md#検査の種類
+- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/records.md#A83, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A112
 - 検証: unit
 
-kotowari は常に、種類が missing_title、multiple_titles、missing_scope、too_many_lines、too_many_requirements、unparsable_file の`指摘`の "line" を null にする。
+kotowari は常に、種類が missing_title、multiple_titles、missing_scope、too_many_lines、too_many_requirements、unparsable_file、glossary_invalid の`指摘`の "line" を null にする。
 
 ### REQ-028: 行は1始まり
 

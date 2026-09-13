@@ -14,10 +14,10 @@
 ### REQ-064: 用語集に無い語
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A31, experiments/003-cli/brainstorm/records.md#A42, experiments/003-cli/brainstorm/records.md#A56, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A63
+- 出典: experiments/003-cli/brainstorm/records.md#A31, experiments/003-cli/brainstorm/records.md#A42, experiments/003-cli/brainstorm/records.md#A56, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A63, experiments/003-cli/brainstorm/records.md#A116
 - 検証: unit
 
-`対象の行`でバッククォートで囲んだものが`用語`でも`ID`でもないとき、kotowari は、それがパスかコード片であっても unknown_term の`誤り`を出す。
+`対象の行`でバッククォートで囲んだもの（前後の空白を除いた文字）が`用語`でも`ID`でもないとき、kotowari は、それがパスかコード片であっても、除いた後の文字を detail にして unknown_term の`誤り`を出す。中身が空の囲みは detail を "``" にする。
 
 ### REQ-065: 用語集が無いとき
 
@@ -38,10 +38,10 @@
 ### REQ-067: 出現ごとに1件
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A53, experiments/003-cli/brainstorm/records.md#A56, experiments/003-cli/brainstorm/ir-form.md#検査の種類
+- 出典: experiments/003-cli/brainstorm/records.md#A53, experiments/003-cli/brainstorm/records.md#A56, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A117
 - 検証: unit
 
-kotowari は常に、unknown_term と vague_word の`指摘`を出現ごとに1件出す。
+kotowari は常に、unknown_term と vague_word の`指摘`を出現ごとに1件出し、`曖昧語`の出現は重ならない形で数える。
 
 ### REQ-068: 囲み忘れを検出しない
 
@@ -66,14 +66,6 @@ kotowari は、`用語`をバッククォートで囲み忘れたことを検出
 
 `文書名の参照`の名前の文書が`IR`の置き場の直下に無いとき、kotowari は missing_document の`誤り`を出す。
 
-### REQ-104: 具体的な値は二重引用符で書く
-
-- 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A31
-- 検証: unit
-
-`IR`の`文`は常に、具体的な値を二重引用符で書き、バッククォートでは`用語`と`ID`だけを囲む。
-
 ## 決定表
 
 ### TBL-013: 用語と曖昧語の検査の対象
@@ -93,14 +85,14 @@ kotowari は、`用語`をバッククォートで囲み忘れたことを検出
 
 ### TBL-014: 文書名の参照の条件
 
-- 出典: experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A54, experiments/003-cli/brainstorm/ir-form.md#文書名の参照, experiments/003-cli/brainstorm/records.md#A64, experiments/003-cli/brainstorm/records.md#A65, experiments/003-cli/brainstorm/records.md#A73
+- 出典: experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A54, experiments/003-cli/brainstorm/ir-form.md#文書名の参照, experiments/003-cli/brainstorm/records.md#A64, experiments/003-cli/brainstorm/records.md#A65, experiments/003-cli/brainstorm/records.md#A73, experiments/003-cli/brainstorm/records.md#A118
 
 | 順 | 条件 |
 |---|---|
 | 1 | コードブロックの外にある |
 | 2 | 直前が行頭、空白、句読点のいずれか（"/"、"_"、英字の続きは当たらない）。句読点は、半角の ","、"."、":"、";"、"("、")"、二重引用符、一重引用符と、全角の "、"、"。"、"，"、"．"、"（"、"）"、"「"、"」"、"『"、"』"、"“"、"”" |
-| 3 | 英小文字と数字とハイフンの並びに ".md" が続く |
-| 4 | 二重引用符の中にない |
+| 3 | 英小文字と数字とハイフンの並びに ".md" が続き、".md" の直後が英数字、"_"、"-" のいずれでもない |
+| 4 | 二重引用符の中にない。行の中の二重引用符が奇数のときは、最後の引用符から行末までを引用符の中と見なす |
 
 ## 具体例
 

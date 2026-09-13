@@ -7,10 +7,10 @@ IR の文書の選び方、題名と範囲の行、行の数え方、行数と�
 ### REQ-033: 読む文書
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A32
+- 出典: experiments/003-cli/brainstorm/records.md#A32, experiments/003-cli/brainstorm/records.md#A102
 - 検証: unit
 
-kotowari は常に、`IR`の置き場の直下の "*.md" だけを読み、サブディレクトリの文書を読まない。
+kotowari は常に、`IR`の置き場の直下の、拡張子が小文字の ".md" のファイルだけを読み、サブディレクトリの文書と ".MD" の文書を読まない（`除外`）。ファイルのシンボリックリンクは読む。
 
 ### REQ-034: 題名が無い
 
@@ -62,10 +62,10 @@ kotowari は常に、`IR`の置き場の直下の "*.md" だけを読み、サ�
 ### REQ-040: コードブロックの中
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A52, experiments/003-cli/brainstorm/records.md#A88
+- 出典: experiments/003-cli/brainstorm/records.md#A52, experiments/003-cli/brainstorm/records.md#A88, experiments/003-cli/brainstorm/records.md#A108
 - 検証: unit
 
-kotowari は常に、コードブロックの中を検査の対象から外す。gherkin のブロックの中の行は、`シナリオ`のタグと`用語`と曖昧語の検査の対象にし、文書名の参照の検査では対象にしない。
+kotowari は常に、`コードブロック`の中を検査の対象から外す。gherkin のブロックの中の行は、`シナリオ`のタグと`用語`と曖昧語の検査の対象にし、文書名の参照の検査では対象にしない。
 
 ### REQ-041: 範囲の中身と責務の分離を見ない
 

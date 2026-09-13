@@ -7,10 +7,10 @@
 ### REQ-052: 知らないタグ
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A27, experiments/003-cli/brainstorm/ir-form.md#検査の種類
+- 出典: experiments/003-cli/brainstorm/records.md#A27, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A109
 - 検証: unit
 
-`シナリオ`に "@id"、"@about"、"@source" 以外のタグがあるとき、kotowari は unknown_tag の`誤り`を出す。
+`シナリオ`に "@id"、"@about"、"@source" 以外のタグがあるとき、またはタグの行に "@" で始まらない語があるとき、kotowari はその名前か語を detail にして unknown_tag の`誤り`を出す。
 
 ### REQ-053: 無いタグ
 
@@ -23,10 +23,10 @@
 ### REQ-054: 参照切れ
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A21, experiments/003-cli/brainstorm/records.md#A39, experiments/003-cli/brainstorm/records.md#A52, experiments/003-cli/brainstorm/records.md#A28, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A67
+- 出典: experiments/003-cli/brainstorm/records.md#A21, experiments/003-cli/brainstorm/records.md#A39, experiments/003-cli/brainstorm/records.md#A52, experiments/003-cli/brainstorm/records.md#A28, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A67, experiments/003-cli/brainstorm/records.md#A119
 - 検証: unit
 
-"- 定義:" の行、"@about" のタグ、`問題の記録`の "- 関係:" の行、`要求`と`性質`の`文`の中でバッククォートで囲んだ`ID`、`印`（`問い合わせのある言語`で`テスト`の外にあるものを除く）のいずれかが存在しない`ID`を指すとき、kotowari は unresolved_reference の`誤り`を出す。
+"- 定義:" の行、"@about" のタグ、`問題の記録`の "- 関係:" の行、`要求`と`性質`の`文`と gherkin のステップの行の中でバッククォートで囲んだ`ID`、`印`（`問い合わせのある言語`で`テスト`の外にあるものを除く）のいずれかが存在しない`ID`を指すとき、kotowari は unresolved_reference の`誤り`を出す。
 
 ### REQ-055: EARS の型を見ない
 
@@ -43,6 +43,22 @@ kotowari は、`要求`の`文`が EARS の型に沿うかを検査してはな�
 - 検証: review
 
 kotowari は、`問題の記録`の矛盾の読みが2つ以上あるかを検査してはならない。
+
+### REQ-113: gherkin のブロックの中の行
+
+- 種類: event_driven
+- 出典: experiments/003-cli/brainstorm/records.md#A109
+- 検証: unit
+
+gherkin の`コードブロック`の中に、タグの行、"Scenario:" の行、ステップの行（"Given"、"When"、"Then"、"And"、"But" に半角空白1つ以上が続く行）、"#" で始まる注釈、空行のいずれでもない行があるとき、kotowari は行の文字を detail にして invalid_gherkin_line の`誤り`を出す。タグの行は "Scenario:" の直前の行だけを結び付け、間にほかの行があれば結び付けない。
+
+### REQ-114: ID の定義と形に合わない @id
+
+- 種類: event_driven
+- 出典: experiments/003-cli/brainstorm/records.md#A110
+- 検証: unit
+
+"@id" の値が EX の`ID`の形でないとき、kotowari は値を detail にして invalid_id の`誤り`を出す。存在する`ID`の集合には、形に合う見出しの`ID`と形に合う "@id" の値だけを数える。
 
 ## 具体例
 

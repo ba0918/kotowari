@@ -15,10 +15,10 @@ kotowari は常に、"kotowari check" の1つのコマンドで、`IR`の検査�
 ### REQ-002: 受けるオプション
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A19
+- 出典: experiments/003-cli/brainstorm/records.md#A19, experiments/003-cli/brainstorm/records.md#A103
 - 検証: unit
 
-kotowari は常に、オプションとして "--format" と "--config" だけを受ける。
+kotowari は常に、オプションとして "--format"、"--config"、"--help"、"--version" だけを受け、オプションを "check" の前後どちらに書いても受ける。
 
 ### REQ-003: 設定のパスの基準
 
@@ -31,24 +31,24 @@ kotowari は常に、"--config" に与えたパスをカレントディレクト
 ### REQ-004: 引数の誤り
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A60
+- 出典: experiments/003-cli/brainstorm/records.md#A60, experiments/003-cli/brainstorm/records.md#A103
 - 検証: unit
 
-知らないオプション、位置引数、"--format" の知らない値のいずれかを受けたとき、または "--config" の指すファイルが無いとき、kotowari は`停止`する。
+知らないオプション、位置引数、"--format" の知らない値、値の無いオプション、同じオプションの2回目のいずれかを受けたとき、引数が1つも無いとき、または "--config" の指す先が無いかディレクトリのとき、kotowari は引数の誤りを理由に`停止`する。
 
 ### REQ-005: 停止の出力
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A40
+- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/records.md#A104
 - 検証: unit
 
-`停止`するとき、kotowari は標準出力に何も出さず、停止の理由を標準エラーに出す。
+`停止`するとき、kotowari は標準出力に何も出さず、停止の理由を標準エラーに出す。標準エラーの1行目は TBL-018 の文言に ": " と詳細を続けた形で、詳細にパスを含めるときは`基準のディレクトリ`からの相対パスにする。
 
 ### REQ-006: 停止の理由
 
 - 種類: algorithm
-- 出典: experiments/003-cli/brainstorm/records.md#A44, experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/brainstorm/records.md#A60
-- 定義: TBL-001
+- 出典: experiments/003-cli/brainstorm/records.md#A44, experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/brainstorm/records.md#A60, experiments/003-cli/brainstorm/records.md#A104
+- 定義: TBL-001, TBL-018
 - 検証: unit
 
 ### REQ-007: 終了コード
@@ -81,11 +81,11 @@ kotowari は、人間向けの文書の生成（"render"）、影響範囲の追
 
 ### TBL-002: 終了コード
 
-- 出典: experiments/003-cli/brainstorm/records.md#A20, experiments/003-cli/brainstorm/records.md#A29
+- 出典: experiments/003-cli/brainstorm/records.md#A20, experiments/003-cli/brainstorm/records.md#A29, experiments/003-cli/brainstorm/records.md#A103
 
 | 終了コード | 場面 |
 |---|---|
-| 0 | 誤りが無い（警告だけのときを含む） |
+| 0 | 誤りが無い（警告だけのときを含む）、または "--help" か "--version" で終わった |
 | 1 | 誤りが1件以上ある |
 | 2 | 停止した |
 

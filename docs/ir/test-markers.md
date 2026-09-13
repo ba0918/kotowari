@@ -14,10 +14,10 @@
 ### REQ-072: 形の誤った印
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A57, experiments/003-cli/brainstorm/records.md#A67, experiments/003-cli/brainstorm/records.md#A39
+- 出典: experiments/003-cli/brainstorm/records.md#A57, experiments/003-cli/brainstorm/records.md#A67, experiments/003-cli/brainstorm/records.md#A39, experiments/003-cli/brainstorm/records.md#A121
 - 検証: unit
 
-`問い合わせのある言語`で`テスト`の外にあるものを除く`印`について、その中が空のとき、またはその`印`に閉じ括弧が無いとき、kotowari は invalid_marker の`誤り`を出す。
+`問い合わせのある言語`で`テスト`の外にあるものを除く`印`について、その中が空か区切りだけのとき、またはその`印`に同じ行の閉じ括弧が無いとき、kotowari は行の文字を detail にして invalid_marker の`誤り`を出す。
 
 ### REQ-073: 1行に複数の印
 
@@ -66,6 +66,14 @@ kotowari は常に、`印`を行のどの位置からも拾い、コメント記
 
 `印`が検証の値 "review" の`要求`を指すとき、kotowari はそれを`誤り`にしない。
 
+### REQ-118: 印の指摘の行
+
+- 種類: ubiquitous
+- 出典: experiments/003-cli/brainstorm/records.md#A121
+- 検証: unit
+
+kotowari は常に、`印`から出す unresolved_reference と invalid_marker の "line" を`印`のある行にする。
+
 ## 決定表
 
 ### TBL-015: 印の構文
@@ -80,7 +88,7 @@ kotowari は常に、`印`を行のどの位置からも拾い、コメント記
 
 ### TBL-016: 印の結び付け（問い合わせのある言語）
 
-- 出典: experiments/003-cli/brainstorm/records.md#A26, experiments/003-cli/brainstorm/records.md#A34, experiments/003-cli/brainstorm/records.md#A39, experiments/003-cli/brainstorm/records.md#A57, experiments/003-cli/brainstorm/records.md#A67
+- 出典: experiments/003-cli/brainstorm/records.md#A26, experiments/003-cli/brainstorm/records.md#A34, experiments/003-cli/brainstorm/records.md#A39, experiments/003-cli/brainstorm/records.md#A57, experiments/003-cli/brainstorm/records.md#A67, experiments/003-cli/brainstorm/records.md#A121
 
 | 印の位置 | 扱い |
 |---|---|
@@ -89,6 +97,7 @@ kotowari は常に、`印`を行のどの位置からも拾い、コメント記
 | 上の2つの両方 | 両方の ID を合わせて結び付ける |
 | 関数の本体の途中 | 無視する |
 | テストの外 | 無視し、invalid_marker も unresolved_reference も出さない |
+| マクロの中の関数 | 上と同じ規則を適用する |
 
 ## 具体例
 

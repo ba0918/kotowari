@@ -7,10 +7,10 @@
 ### REQ-057: 出典の書式
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A3, experiments/003-cli/brainstorm/records.md#A13, experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/records.md#A84
+- 出典: experiments/003-cli/brainstorm/records.md#A3, experiments/003-cli/brainstorm/records.md#A13, experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/records.md#A84, experiments/003-cli/brainstorm/records.md#A106
 - 検証: unit
 
-kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の "#" でパスと印に分ける。パスに "#" は書けない。パスは`基準のディレクトリ`（".kotowari" があるリポジトリ直下）からの相対で、置き場からの全体を書く（"experiments/003-cli/brainstorm/records.md#A26" の形）。
+kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の "#" でパスと印に分ける。パスに "#" は書けない。パスは`基準のディレクトリ`（".kotowari" があるリポジトリ直下）からの相対で、置き場からの全体を書く（"experiments/003-cli/brainstorm/records.md#A26" の形）。パスは REQ-110 の正規化の後で置き場と比べる。
 
 ### REQ-058: 出典の判定
 
@@ -38,10 +38,10 @@ kotowari は常に、`用語集`の出典の列と`シナリオ`の "@source" �
 ### REQ-061: 決定の番号はファイルごと
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A48
+- 出典: experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/brainstorm/records.md#A115
 - 検証: unit
 
-kotowari は常に、`決定の番号`を`出典`のパスの指す`判断の記録`のファイルの中だけで探す。
+kotowari は常に、`決定の番号`を`出典`のパスの指す`判断の記録`のファイルの中だけで探す。`決定の節`は "## " の見出しで始まり次の "## " の見出しで終わり、"### " の見出しは節を終えない。
 
 ### REQ-062: 内容の照合をしない
 
@@ -59,16 +59,24 @@ kotowari は、`出典`がその`項目`の内容を本当に述べているか�
 
 kotowari は常に、形の契約の "brainstorm/ir-form.md" を、"## " の見出しで指す`出典`の先として受ける。
 
+### REQ-115: 出典の指摘の行
+
+- 種類: ubiquitous
+- 出典: experiments/003-cli/brainstorm/records.md#A114
+- 検証: unit
+
+kotowari は常に、source_invalid の "line" を`出典`が書かれた行（`項目`なら "- 出典:" の行、`シナリオ`ならタグの行、`用語`なら表の行）にする。
+
 ## 決定表
 
 ### TBL-012: 出典の判定
 
-- 出典: experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/brainstorm/records.md#A69, experiments/003-cli/brainstorm/records.md#A91
+- 出典: experiments/003-cli/brainstorm/records.md#A38, experiments/003-cli/brainstorm/records.md#A48, experiments/003-cli/brainstorm/records.md#A69, experiments/003-cli/brainstorm/records.md#A91, experiments/003-cli/brainstorm/records.md#A115
 
 | 順 | 条件 | 結果 |
 |---|---|---|
 | 1 | "パス#印" の書式でない | source_invalid |
-| 2 | パスが decisions.records の中の、決定の番号を持つファイル（判断の記録）で、印が決定の番号の形で、そのファイルの決定の節に "- 印 " で始まる行か "- 印" だけの行がある | 正しい |
+| 2 | パスが decisions.records の中の、決定の番号を持つファイル（判断の記録）で、印が決定の番号の形（英大文字1文字に1桁以上の数字）で、そのファイルの決定の節に "- 印 " で始まる行か "- 印" だけの行がある | 正しい |
 | 3 | パスが decisions.records の中の、決定の番号を持つファイル（判断の記録）で、2 に当たらない | source_invalid |
 | 4 | パスが decisions.records か decisions.adr の中の、判断の記録でない Markdown のファイル（ADR、形の契約、補足の文書）で、そのファイルがあり、印が "## " の見出しの文字と前後の空白を除いて完全一致する | 正しい |
 | 5 | パスが decisions.records か decisions.adr の中で、2 から 4 のどれにも当たらない | source_invalid |

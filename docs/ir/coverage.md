@@ -7,10 +7,10 @@
 ### REQ-085: テストのない要求
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A21, experiments/003-cli/brainstorm/records.md#A39, experiments/003-cli/brainstorm/ir-form.md#検査の種類
+- 出典: experiments/003-cli/brainstorm/records.md#A21, experiments/003-cli/brainstorm/records.md#A39, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A120
 - 検証: unit
 
-検証が "review" 以外の`要求`で、その`ID`を含む`印`が1つも無いとき、kotowari は requirement_without_test の`誤り`を出す。
+検証が "review" 以外の`要求`で、その`ID`を含む`印`が1つも無いとき、kotowari は requirement_without_test の`誤り`を出す。"- 検証:" の行が無い`要求`には verification_missing だけを出し、requirement_without_test は出さない。
 
 ### REQ-086: 印の無いテスト
 

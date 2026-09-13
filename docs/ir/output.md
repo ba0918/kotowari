@@ -58,13 +58,13 @@ kotowari は常に、"--format" の値として "json" と "text" の2つを受�
 
 ### TBL-006: 指摘の鍵
 
-- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/records.md#A61
+- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/records.md#A61, experiments/003-cli/brainstorm/records.md#A106
 
 | 鍵 | 中身 |
 |---|---|
 | kind | 指摘の種類（TBL-008、TBL-009） |
 | severity | error か warning |
-| path | 基準のディレクトリからの相対パス |
+| path | 基準のディレクトリからの相対パス。正規化した置き場と文書名を "/" でつなぐ（REQ-110） |
 | line | 行（1始まり）。文書全体への指摘は null |
 | detail | 種類ごとに TBL-008、TBL-009 で決めた文字列 |
 
