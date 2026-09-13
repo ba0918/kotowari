@@ -38,7 +38,7 @@
 
 ### TBL-008: 誤りの種類と detail
 
-- 出典: experiments/003-cli/brainstorm/records.md#A142, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A68, experiments/003-cli/brainstorm/records.md#A108, experiments/003-cli/brainstorm/records.md#A109, experiments/003-cli/brainstorm/records.md#A110, experiments/003-cli/brainstorm/records.md#A112, experiments/003-cli/brainstorm/records.md#A116
+- 出典: experiments/003-cli/brainstorm/records.md#A142, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A68, experiments/003-cli/brainstorm/records.md#A108, experiments/003-cli/brainstorm/records.md#A109, experiments/003-cli/brainstorm/records.md#A110, experiments/003-cli/brainstorm/records.md#A112, experiments/003-cli/brainstorm/records.md#A116, experiments/003-cli/brainstorm/records.md#A111
 
 detail が「行の文字」の種類では、読んだ行の文字そのまま（字下げと末尾の空白を含む）を入れる。
 

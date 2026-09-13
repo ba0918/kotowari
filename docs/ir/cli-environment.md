@@ -23,7 +23,7 @@ kotowari は常に、Linux と macOS を対象にする。Windows ではパス�
 ### REQ-109: 停止と指摘の振り分け
 
 - 種類: invariant
-- 出典: experiments/003-cli/brainstorm/records.md#A100, experiments/003-cli/brainstorm/records.md#A101
+- 出典: experiments/003-cli/brainstorm/records.md#A100, experiments/003-cli/brainstorm/records.md#A101, experiments/003-cli/brainstorm/records.md#P2, experiments/003-cli/brainstorm/records.md#A102
 - 検証: review
 
 読めない入力、壊れている入力、契約の形に合わない入力に対して、kotowari は`停止`か`誤り`の`指摘`のどちらかを必ず行い、黙って飛ばさない関係が常に成り立つ。ファイルや設定を全体として読む前提が崩れる入力（読めない、UTF-8 でない、設定の構文と型と値の誤り、引数の誤り、glob の構文の誤り）では`停止`し、読めたが局所的に形から外れる入力ではその場所への`誤り`の`指摘`を出す。読まないものは`除外`だけである。

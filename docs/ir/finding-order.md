@@ -42,7 +42,7 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 
 ### TBL-019: 指摘の行
 
-- 出典: experiments/003-cli/brainstorm/records.md#A144, experiments/003-cli/brainstorm/records.md#A114, experiments/003-cli/brainstorm/records.md#A121, experiments/003-cli/brainstorm/records.md#A139
+- 出典: experiments/003-cli/brainstorm/records.md#A144, experiments/003-cli/brainstorm/records.md#A114, experiments/003-cli/brainstorm/records.md#A121, experiments/003-cli/brainstorm/records.md#A139, experiments/003-cli/brainstorm/records.md#A108, experiments/003-cli/brainstorm/records.md#A61, experiments/003-cli/brainstorm/records.md#A72
 
 | 種類 | line |
 |---|---|
