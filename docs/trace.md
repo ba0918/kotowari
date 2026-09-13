@@ -22,7 +22,7 @@
 | REQ-016 | unit | `req_016_empty_list_means_none` |
 | REQ-017 | unit | `req_017_nested_keys` |
 | REQ-018 | unit | `req_018_missing_ir_dir_stops`, `req_018_missing_records_dir_stops`, `req_018_missing_adr_dir_stops` |
-| REQ-019 | unit | `req_019_glob_is_recursive_and_skips_hidden_dirs` |
+| REQ-019 | unit | `req_019_glob_is_recursive_and_skips_hidden_dirs`, `req_019_hidden_directory_is_excluded_and_subdirectory_is_included` |
 | REQ-020 | review | `src/lib.rs` で `.kotowari/config.yaml` だけを読み、`kotowari.toml` を読まないことを確認。`grep -c "kotowari.toml" src/lib.rs` が 0 |
 | REQ-021 | unit | `req_021_default_format_is_json`, `req_021_format_values_are_json_and_text` |
 | REQ-022 | unit | `req_022_json_is_one_document` |
