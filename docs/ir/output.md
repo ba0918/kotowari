@@ -72,7 +72,7 @@ kotowari は常に、"--format" の値として "json" と "text" の2つを受�
 
 ### PROP-002: counts と findings の一致
 
-- 出典: experiments/003-cli/brainstorm/records.md#A40
+- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/ir-form.md#出力
 
 "counts" の各種類の値は "findings" の中のその種類の`指摘`の数に等しく、"findings" に1件も無い種類は "counts" に無い。
 
