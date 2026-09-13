@@ -108,6 +108,24 @@ fn req_058_source_outside_places_is_invalid() {
     assert_eq!(si.len(), 1);
 }
 
+// @kotowari[REQ-058, TBL-012]
+#[test]
+fn req_058_source_path_equal_to_a_place_itself_is_invalid_without_crashing() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // パスが置き場そのもの（末尾に "/..." が無い）は、置き場の中ではない
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/adr#状況\n- 検証: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm#A1\n- 検証: unit\n\nStatement2.\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(1), "should finish with errors, not crash: {:?}", output);
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert_eq!(si.len(), 2, "{:?}", si);
+}
+
 // --- REQ-059: 出典が無い ---
 
 // @kotowari[REQ-059, REQ-098]
