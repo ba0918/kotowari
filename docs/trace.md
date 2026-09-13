@@ -23,7 +23,7 @@
 | REQ-015 | unit | `req_015_list_replaces_default` |
 | REQ-016 | unit | `req_016_empty_list_means_none` |
 | REQ-017 | unit | `req_017_nested_keys` |
-| REQ-018 | unit | `req_018_unreadable_dir_stops`, `req_018_unreadable_records_dir_stops`, `req_018_unreadable_adr_dir_stops`, `req_018_missing_ir_dir_stops`, `req_005_stderr_carries_the_stop_reason_text`, `req_018_missing_records_dir_stops`, `req_018_missing_adr_dir_stops` |
+| REQ-018 | unit | `req_018_unreadable_dir_stops`, `req_018_unreadable_records_dir_stops`, `req_018_unreadable_adr_dir_stops`, `req_018_missing_ir_dir_stops`, `req_005_stderr_carries_the_stop_reason_text`, `req_018_missing_records_dir_stops`, `req_018_missing_adr_dir_stops`, `req_018_unreadable_directory_under_tests_stops` |
 | REQ-019 | unit | `req_019_glob_is_recursive_and_skips_hidden_dirs`, `req_019_hidden_directory_is_excluded_and_subdirectory_is_included` |
 | REQ-020 | review | `src/lib.rs` で `.kotowari/config.yaml` だけを読み、`kotowari.toml` を読まないことを確認。`grep -c "kotowari.toml" src/lib.rs` が 0 |
 | REQ-021 | unit | `req_021_default_format_is_json`, `req_021_format_values_are_json_and_text` |
@@ -58,13 +58,13 @@
 | REQ-050 | unit | `req_050_unknown_kind_of_requirement_and_flag`, `req_098_required_lines_are_told_apart_from_empty_values` |
 | REQ-051 | unit | `req_051_algorithm_without_definition`, `req_051_algorithm_definition_must_point_to_tbl_or_prop`, `req_098_required_lines_are_told_apart_from_empty_values` |
 | REQ-052 | unit | `req_052_unknown_tag`, `req_052_bare_tag_without_equals_is_unknown` |
-| REQ-053 | unit | `req_053_consecutive_scenarios_without_tags_each_get_missing_tag`, `req_053_missing_tag`, `gherkin_tags_cleared_after_block_without_scenario` |
+| REQ-053 | unit | `req_053_consecutive_scenarios_without_tags_each_get_missing_tag`, `req_053_missing_tag`, `req_053_tag_with_empty_value_is_treated_as_missing`, `gherkin_tags_cleared_after_block_without_scenario` |
 | REQ-054 | unit | `req_054_unresolved_reference_in_definition_about_relation_and_sentence`, `req_054_flag_relation_to_unknown_id_produces_unresolved_reference`, `req_054_backtick_id_known_no_finding_unknown_produces_unresolved`, `req_054_backtick_id_at_line_start_detected`, `req_054_two_backtick_ids_on_one_line_both_reported`, `req_054_backtick_non_id_not_reported_as_unresolved`, `req_054_property_statement_backtick_id_produces_unresolved`, `req_054_marker_to_known_id_is_not_unresolved`, `req_054_marker_to_unknown_id_is_unresolved`, `req_072_non_query_language_checks_invalid_marker`, `req_054_non_query_language_checks_unresolved_reference`, `req_054_marker_unresolved_reference_reports_fn_line` |
 | REQ-055 | review | `src/ir.rs` に EARS の型検査がないことを確認。`grep -c "EARS" src/ir.rs` が 0 |
 | REQ-056 | review | `src/ir.rs` に矛盾の読みの数の検査がないことを確認 |
 | REQ-057 | unit | `req_057_source_splits_at_first_hash_and_allows_commas`, `req_060_glossary_trailing_comma_does_not_create_empty_source` |
 | REQ-058 | unit | `req_058_number_anchor_looks_for_decision_line_and_other_anchor_for_heading`, `req_058_source_outside_places_is_invalid`, `req_058_source_path_equal_to_a_place_itself_is_invalid_without_crashing`, `tbl_012_decision_line_with_and_without_trailing_text`, `tbl_012_is_decision_number_rejects_invalid_forms`, `tbl_012_check_source_outside_records_and_adr_returns_err` |
-| REQ-059 | unit | `req_059_scenario_without_id_missing_source_detail_is_scenario_text`, `req_059_missing_source_for_item_scenario_and_term`, `req_059_empty_source_value_produces_missing_source` |
+| REQ-059 | unit | `req_053_tag_with_empty_value_is_treated_as_missing`, `req_059_scenario_without_id_missing_source_detail_is_scenario_text`, `req_059_missing_source_for_item_scenario_and_term`, `req_059_empty_source_value_produces_missing_source` |
 | REQ-060 | unit | `req_060_glossary_trailing_comma_does_not_create_empty_source`, `req_060_glossary_and_scenario_sources_are_checked` |
 | REQ-061 | unit | `req_061_numbers_are_per_file` |
 | REQ-062 | review | `src/sources.rs` で出典の内容照合をしていないことを確認。パスと番号/見出しの存在だけ検査 |
@@ -122,21 +122,22 @@
 | 8周目の後（`5ea4cca`、基準） | 503 | 365 | 113 | 16 | 9 |
 | 9周目のテスト追加（1回目）の後（`0914705`） | 495 | 400 | 67 | 16 | 12 |
 | レビューの指摘の修正の後（`140dee7`） | 495 | 403 | 65 | 16 | 11 |
-| テスト追加（2回目、5件）の後（`07e4102`、最終） | 495 | 407 | 60 | 16 | 12 |
+| テスト追加（2回目、5件）の後（`07e4102`） | 495 | 407 | 60 | 16 | 12 |
+| A96〜A97 の実装と到達不能コードの除去の後（`46adc55`、最終） | 502 | 413 | 59 | 16 | 14 |
 
 打ち切りは、変異で無限ループになったものをテストの打ち切り（20秒）で止めた数。殺した側に数える。打ち切りになる変異は実行ごとに1〜2件ぶれる（メモリの上限に当たって先に殺されると caught に入る）。
 
 `0914705` の見逃し67件は、1件ずつ差分を読んで次の3つに分けた（分類の記録は `experiments/003-cli/mutation/missed_classification.json`、差分は同じ場所の `missed_bundle.md`）。元のコードの方が仕様と食い違う疑い（defect_candidate）は0件だった。
 
-| 分類 | `0914705` の時点 | 最終（`07e4102`）で残るもの |
+| 分類 | `0914705` の時点 | 最終（`46adc55`）で残るもの |
 |---|---|---|
-| 等価（どんな入力でも振る舞いが変わらない） | 25 | 25 |
+| 等価（どんな入力でも振る舞いが変わらない） | 25 | 24 |
 | 未検査（振る舞いが変わる入力があるが、テストに無い） | 42 | 35 |
 | 元のコードの欠陥の疑い | 0 | 0 |
 
-最終までに殺した7件: M01, M26, M33, M41, M55, M56, M67。うち5件（M01、M26、M33、M41、M67）は、変異後の振る舞いが目立って壊れるのに通ってしまうテストの穴として、2回目のテスト追加で塞いだ。残る2件（M55, M56）はレビューの指摘の修正（弱いテストの正の断言、ADR の置き場が読めないときのテスト）で副次的に殺せた（`mutants-final2` の見逃しに無いので、`140dee7` のテスト変更、おそらく属性と fn の間のコメントのテストに足した正の断言が殺した）。
+`0914705` から最終までに消えた見逃し8件: M01, M21, M26, M33, M41, M55, M56, M67。うち5件（M01、M26、M33、M41、M67）は、変異後の振る舞いが目立って壊れるのに通ってしまうテストの穴として、2回目のテスト追加で塞いだ。M21（性質の定義から参照を解く分岐）は到達不能コードとして除いたので変異そのものが無くなった。残る2件（M55, M56）はレビューの指摘の修正（弱いテストの正の断言、ADR の置き場が読めないときのテスト）で副次的に殺れた。
 
-### 等価な変更（25件）
+### 等価な変更（24件。M21 は到達不能コードの除去で変異が無くなった）
 
 - **split_lines（ir.rs）**（6件: M02, M03, M04, M05, M06, M07）: 行末の `\r` を落とす処理の境界の変異。行を受け取る側はすべて `trim()` してから使うか、先頭の文字だけを見る（` ``` `、`|`、`.md` の探索）ので、`\r` が残っても結果は変わらない。
   - `ir.rs:173` replace > with ==
@@ -182,7 +183,7 @@
 |---|---|---|---|
 | `parse_document` | 4 | medium 4 | M08 `ir.rs:311` delete !; M09 `ir.rs:313` replace && with ||; M10 `ir.rs:313` replace && with ||; M11 `ir.rs:320` replace == with != |
 | `ItemBuilder::build` | 1 | low 1 | M12 `ir.rs:557` replace == with != |
-| `check_item` | 4 | medium 4 | M16 `ir.rs:1095` replace && with ||; M18 `ir.rs:1123` delete !; M19 `ir.rs:1123` replace == with !=; M20 `ir.rs:1132` replace && with || |
+| `check_item` | 4 | medium 4 | M18 `ir.rs:1123` delete !; M19 `ir.rs:1123` replace == with !=; M20 `ir.rs:1132` replace && with ||; M16 `ir.rs:1095` replace && with || |
 | `check_backtick_ids` | 1 | medium 1 | M22 `ir.rs:1352` replace + with * |
 | `split_source` | 1 | medium 1 | M23 `sources.rs:104` replace || with && |
 | `SourceContext::check_source` | 4 | medium 4 | M24 `sources.rs:134` replace && with ||; M25 `sources.rs:137` replace && with ||; M28 `sources.rs:172` replace == with !=; M29 `sources.rs:187` replace == with != |
@@ -201,7 +202,7 @@
 
 ## kotowari 自身にかけた結果
 
-リポジトリ直下（`docs/ir` とこのリポジトリの `tests/`）で `cargo run -- check` を実行した結果（`07e4102`）:
+リポジトリ直下（`docs/ir` とこのリポジトリの `tests/`）で `cargo run -- check` を実行した結果（`f4a0340`）:
 
 - files: 20
 - lines: 1401
