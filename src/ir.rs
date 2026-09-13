@@ -87,6 +87,7 @@ pub enum Item {
     Scenario {
         id: Option<String>,
         line: usize,
+        tag_line: Option<usize>,
         tags: Vec<(String, String)>,
         about: Vec<String>,
         sources: Vec<String>,
@@ -222,9 +223,11 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
 
     // gherkin ブロック内の状態
     let mut gherkin_tags: Vec<(String, String)> = Vec::new();
+    let mut gherkin_tag_line: Option<usize> = None;
     let mut gherkin_scenario_line: Option<usize> = None;
     let mut gherkin_scenario_text: String = String::new();
     let mut gherkin_steps: Vec<(usize, String)> = Vec::new();
+    let mut gherkin_prev_was_tag: bool = false;
 
     // 用語集の解析
     let mut in_glossary_table = false;
@@ -239,12 +242,19 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                 // ブロックの終了
                 if in_gherkin_block {
                     if let Some(scenario_line) = gherkin_scenario_line.take() {
-                        let scenario = build_scenario(&gherkin_tags, scenario_line, &gherkin_steps, &gherkin_scenario_text);
+                        let scenario = build_scenario(&gherkin_tags, gherkin_tag_line, scenario_line, &gherkin_steps, &gherkin_scenario_text);
                         items.push(scenario);
+                    } else if !gherkin_tags.is_empty() {
+                        // シナリオに結び付かなかったタグの検査
+                        check_gherkin_tags_findings(
+                            &gherkin_tags, gherkin_tag_line, &mut parse_findings,
+                        );
                     }
                     gherkin_tags.clear();
+                    gherkin_tag_line = None;
                     gherkin_steps.clear();
                     gherkin_scenario_text.clear();
+                    gherkin_prev_was_tag = false;
                 }
                 current_fence = None;
                 in_gherkin_block = false;
@@ -271,11 +281,12 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
             if trimmed.starts_with('@') {
                 // タグ行: 前のシナリオがあれば追加
                 if let Some(scenario_line) = gherkin_scenario_line.take() {
-                    let scenario = build_scenario(&gherkin_tags, scenario_line, &gherkin_steps, &gherkin_scenario_text);
+                    let scenario = build_scenario(&gherkin_tags, gherkin_tag_line, scenario_line, &gherkin_steps, &gherkin_scenario_text);
                     items.push(scenario);
                     gherkin_steps.clear();
                 }
                 gherkin_tags.clear();
+                gherkin_tag_line = Some(line_num);
                 // タグを解析
                 for part in trimmed.split_whitespace() {
                     if let Some(eq_pos) = part.find('=') {
@@ -285,18 +296,33 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                     } else if part.starts_with('@') {
                         // = のない裸のタグ（@wip 等）
                         gherkin_tags.push((part.to_string(), String::new()));
+                    } else {
+                        // REQ-052: "@" で始まらない語は unknown_tag
+                        gherkin_tags.push((String::new(), part.to_string()));
                     }
                 }
+                gherkin_prev_was_tag = true;
             } else if trimmed.starts_with("Scenario:") {
                 // 前のシナリオがあればフラッシュ
                 if let Some(scenario_line) = gherkin_scenario_line.take() {
-                    let scenario = build_scenario(&gherkin_tags, scenario_line, &gherkin_steps, &gherkin_scenario_text);
+                    let scenario = build_scenario(&gherkin_tags, gherkin_tag_line, scenario_line, &gherkin_steps, &gherkin_scenario_text);
                     items.push(scenario);
                     gherkin_steps.clear();
+                }
+                // REQ-113: タグは直前の行だけ結び付ける
+                if !gherkin_prev_was_tag {
+                    // 結び付かなかったタグの行の検査（REQ-052: 結び付くかを問わない）
+                    if !gherkin_tags.is_empty() {
+                        check_gherkin_tags_findings(
+                            &gherkin_tags, gherkin_tag_line, &mut parse_findings,
+                        );
+                    }
                     gherkin_tags.clear();
+                    gherkin_tag_line = None;
                 }
                 gherkin_scenario_line = Some(line_num);
                 gherkin_scenario_text = trimmed.to_string();
+                gherkin_prev_was_tag = false;
             } else if trimmed.starts_with("Given ")
                 || trimmed.starts_with("When ")
                 || trimmed.starts_with("Then ")
@@ -304,6 +330,19 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                 || trimmed.starts_with("But ")
             {
                 gherkin_steps.push((line_num, trimmed.to_string()));
+                gherkin_prev_was_tag = false;
+            } else if trimmed.starts_with('#') || trimmed.is_empty() {
+                // REQ-113: 注釈と空行は有効
+                gherkin_prev_was_tag = false;
+            } else {
+                // REQ-113: それ以外は invalid_gherkin_line
+                parse_findings.push(crate::Finding::new(
+                    crate::FindingKind::InvalidGherkinLine,
+                    String::new(),
+                    Some(line_num),
+                    trimmed.to_string(),
+                ));
+                gherkin_prev_was_tag = false;
             }
             continue;
         }
@@ -711,9 +750,37 @@ pub fn is_valid_id(s: &str) -> bool {
     }
 }
 
+/// 結び付かなかったタグの行を検査する（REQ-052: 結び付くかを問わない）
+fn check_gherkin_tags_findings(
+    tags: &[(String, String)],
+    tag_line: Option<usize>,
+    findings: &mut Vec<crate::Finding>,
+) {
+    let line = tag_line.unwrap_or(0);
+    for (tag_name, tag_value) in tags {
+        if tag_name.is_empty() {
+            // "@" で始まらない語
+            findings.push(crate::Finding::new(
+                crate::FindingKind::UnknownTag,
+                String::new(),
+                if line > 0 { Some(line) } else { None },
+                tag_value.clone(),
+            ));
+        } else if !["@id", "@about", "@source"].contains(&tag_name.as_str()) {
+            findings.push(crate::Finding::new(
+                crate::FindingKind::UnknownTag,
+                String::new(),
+                if line > 0 { Some(line) } else { None },
+                tag_name.clone(),
+            ));
+        }
+    }
+}
+
 /// gherkin のシナリオを組み立てる
 fn build_scenario(
     tags: &[(String, String)],
+    tag_line: Option<usize>,
     scenario_line: usize,
     steps: &[(usize, String)],
     scenario_text: &str,
@@ -721,10 +788,15 @@ fn build_scenario(
     let mut id = None;
     let mut about = Vec::new();
     let mut sources = Vec::new();
-
     for (tag_name, tag_value) in tags {
         match tag_name.as_str() {
-            "@id" if !tag_value.is_empty() => id = Some(tag_value.clone()),
+            "@id" if !tag_value.is_empty() => {
+                // REQ-114: @id の値が EX の ID の形でないときは定義に数えない
+                if is_valid_id(tag_value) && id_prefix(tag_value) == Some(IdPrefix::Ex) {
+                    id = Some(tag_value.clone());
+                }
+                // 形に合わない値は check_item で invalid_id として報告
+            }
             "@about" => {
                 about = tag_value
                     .split(',')
@@ -746,6 +818,7 @@ fn build_scenario(
     Item::Scenario {
         id,
         line: scenario_line,
+        tag_line,
         tags: tags.to_vec(),
         about,
         sources,
@@ -802,12 +875,14 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
         for item in &doc.items {
             check_item(item, &path, doc.kind, &mut findings);
 
-            // ID を収集
+            // ID を収集（形に合う ID だけ。REQ-114）
             if let Some(id) = item.id() {
-                all_ids
-                    .entry(id.to_string())
-                    .or_default()
-                    .push((path.clone(), item.item_line()));
+                if is_valid_id(id) {
+                    all_ids
+                        .entry(id.to_string())
+                        .or_default()
+                        .push((path.clone(), item.item_line()));
+                }
             }
         }
 
@@ -850,6 +925,18 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
     for doc in docs {
         let path = format!("{}/{}", config.ir, doc.filename);
         check_references(&doc.items, &known_ids, &path, &mut findings);
+    }
+
+    // parse_findings を統合（check() ヘルパーからも見えるようにする）
+    for doc in docs {
+        let doc_path = format!("{}/{}", config.ir, doc.filename);
+        for pf in &doc.parse_findings {
+            let mut f = pf.clone();
+            if f.path.is_empty() {
+                f.path = doc_path.clone();
+            }
+            findings.push(f);
+        }
     }
 
     findings
@@ -984,29 +1071,55 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
         Item::Scenario {
             id,
             line,
+            tag_line,
             tags,
             sources,
             scenario_text,
             ..
         } => {
-            // REQ-052: 知らないタグ
-            for (tag_name, _) in tags {
-                if !["@id", "@about", "@source"].contains(&tag_name.as_str()) {
-                    findings.push(Finding::new(FindingKind::UnknownTag, path.to_string(), Some(*line), tag_name.clone()));
+            // TBL-019: タグの行（無ければ Scenario: の行）
+            let tag_or_scenario_line = tag_line.unwrap_or(*line);
+
+            // REQ-052: 知らないタグ（結び付くかを問わない）
+            for (tag_name, tag_value) in tags {
+                if tag_name.is_empty() {
+                    // "@" で始まらない語
+                    findings.push(Finding::new(FindingKind::UnknownTag, path.to_string(), Some(tag_or_scenario_line), tag_value.clone()));
+                } else if !["@id", "@about", "@source"].contains(&tag_name.as_str()) {
+                    findings.push(Finding::new(FindingKind::UnknownTag, path.to_string(), Some(tag_or_scenario_line), tag_name.clone()));
                 }
             }
 
-            // REQ-053: 無いタグ
-            if !tags.iter().any(|(n, v)| n == "@id" && !v.is_empty()) {
-                findings.push(Finding::new(FindingKind::MissingTag, path.to_string(), Some(*line), "@id".to_string()));
+            // REQ-114: @id の値が EX の ID の形でないとき
+            let has_malformed_id = tags.iter().any(|(n, v)| {
+                n == "@id" && !v.is_empty() && !(is_valid_id(v) && id_prefix(v) == Some(IdPrefix::Ex))
+            });
+            if has_malformed_id {
+                let malformed_value = tags.iter()
+                    .find(|(n, v)| n == "@id" && !v.is_empty() && !(is_valid_id(v) && id_prefix(v) == Some(IdPrefix::Ex)))
+                    .map(|(_, v)| v.clone())
+                    .unwrap();
+                findings.push(Finding::new(FindingKind::InvalidId, path.to_string(), Some(tag_or_scenario_line), malformed_value));
+                // missing_tag は出さない、missing_source の detail は Scenario: の行の文字
+            } else {
+                // REQ-053: 無いタグ
+                if !tags.iter().any(|(n, v)| n == "@id" && !v.is_empty()) {
+                    findings.push(Finding::new(FindingKind::MissingTag, path.to_string(), Some(tag_or_scenario_line), "@id".to_string()));
+                }
             }
             if !tags.iter().any(|(n, v)| n == "@about" && !v.is_empty()) {
-                findings.push(Finding::new(FindingKind::MissingTag, path.to_string(), Some(*line), "@about".to_string()));
+                findings.push(Finding::new(FindingKind::MissingTag, path.to_string(), Some(tag_or_scenario_line), "@about".to_string()));
             }
 
             // REQ-059: シナリオの出典
             if sources.is_empty() && !tags.iter().any(|(n, v)| n == "@source" && !v.is_empty()) {
-                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.as_deref().unwrap_or(scenario_text).to_string()));
+                // REQ-114: @id が形に合わないときは Scenario: の行の文字を使う
+                let detail = if has_malformed_id {
+                    scenario_text.clone()
+                } else {
+                    id.as_deref().unwrap_or(scenario_text).to_string()
+                };
+                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(tag_or_scenario_line), detail));
             }
         }
 
@@ -1109,11 +1222,20 @@ fn check_references(
                 line,
                 definitions,
                 statements,
+                fields_seen,
                 ..
             } => {
                 // 定義の参照チェック
                 for def_id in definitions {
-                    if !known_ids.contains(def_id) {
+                    if !is_valid_id(def_id) {
+                        // REQ-054: ID の形でない値は unresolved_reference
+                        // 定義の行を探す
+                        let def_line = fields_seen.iter()
+                            .find(|(_, n, _)| n == "定義")
+                            .map(|(ln, _, _)| *ln)
+                            .unwrap_or(*line);
+                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(def_line), def_id.clone()));
+                    } else if !known_ids.contains(def_id) {
                         findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(*line), def_id.clone()));
                     }
                 }
@@ -1128,12 +1250,17 @@ fn check_references(
                 }
             }
             Item::Scenario {
-                line, about, ..
+                line, tag_line, about, steps, ..
             } => {
+                let about_line = tag_line.unwrap_or(*line);
                 for about_id in about {
                     if !known_ids.contains(about_id) {
-                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(*line), about_id.clone()));
+                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(about_line), about_id.clone()));
                     }
+                }
+                // REQ-054: ステップの行のバッククォートで囲んだ ID の参照チェック
+                for (step_line, step_text) in steps {
+                    check_backtick_ids(step_text, *step_line, known_ids, path, findings);
                 }
             }
             Item::FlagEntry {
@@ -1282,16 +1409,7 @@ pub fn load_and_check(
         docs.push(doc);
     }
 
-    let mut findings = check_documents(&docs, config);
-
-    // parse_findings を取り出して、path を設定して findings に追加
-    for doc in &mut docs {
-        let doc_path = format!("{}/{}", config.ir, doc.filename);
-        for mut pf in doc.parse_findings.drain(..) {
-            pf.path = doc_path.clone();
-            findings.push(pf);
-        }
-    }
+    let findings = check_documents(&docs, config);
 
     Ok((docs, findings))
 }

@@ -37,6 +37,7 @@ pub enum FindingKind {
     TestWithoutId,
     TooManyLines,
     TooManyRequirements,
+    UnclosedBacktick,
     UnclosedCodeBlock,
     UnknownField,
     UnknownHeading,
@@ -44,6 +45,9 @@ pub enum FindingKind {
     UnknownTag,
     UnknownTerm,
     UnparsableFile,
+    InvalidGherkinLine,
+    InvalidId,
+    GlossaryInvalid,
     UnresolvedReference,
     VagueWord,
     VerificationInvalid,
@@ -72,6 +76,7 @@ impl FindingKind {
             FindingKind::TestWithoutId => "test_without_id",
             FindingKind::TooManyLines => "too_many_lines",
             FindingKind::TooManyRequirements => "too_many_requirements",
+            FindingKind::UnclosedBacktick => "unclosed_backtick",
             FindingKind::UnclosedCodeBlock => "unclosed_code_block",
             FindingKind::UnknownField => "unknown_field",
             FindingKind::UnknownHeading => "unknown_heading",
@@ -79,6 +84,9 @@ impl FindingKind {
             FindingKind::UnknownTag => "unknown_tag",
             FindingKind::UnknownTerm => "unknown_term",
             FindingKind::UnparsableFile => "unparsable_file",
+            FindingKind::InvalidGherkinLine => "invalid_gherkin_line",
+            FindingKind::InvalidId => "invalid_id",
+            FindingKind::GlossaryInvalid => "glossary_invalid",
             FindingKind::UnresolvedReference => "unresolved_reference",
             FindingKind::VagueWord => "vague_word",
             FindingKind::VerificationInvalid => "verification_invalid",
@@ -330,11 +338,12 @@ pub fn normalize_path(path: &str) -> String {
     }
 }
 
-/// 文書の全項目から ID の集合を作る
+/// 文書の全項目から ID の集合を作る（形に合う ID だけ）
 pub fn collect_known_ids(docs: &[ir::IrDocument]) -> std::collections::BTreeSet<String> {
     docs.iter()
         .flat_map(|d| d.items.iter())
         .filter_map(|item| item.id().map(|s| s.to_string()))
+        .filter(|id| ir::is_valid_id(id))
         .collect()
 }
 

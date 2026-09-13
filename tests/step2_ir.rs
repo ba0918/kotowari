@@ -1405,3 +1405,355 @@ fn req_032_first_occurrence_is_bytewise_first_path() {
     assert_eq!(di.len(), 1, "should produce exactly 1 duplicate_id");
     assert!(di[0].path.contains("b.md"), "duplicate_id should be on the second (b.md) path, got {:?}", di[0].path);
 }
+
+// --- Step 4b: gherkin の行の形と ID の定義 ---
+
+// @kotowari[REQ-113]
+#[test]
+fn req_113_indented_steps_are_recognized() {
+    // 2字下げのステップが正しく読まれる
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1
+Scenario: Indented steps
+  Given a precondition
+  When an action
+  Then a result
+```
+
+## 要求
+
+### REQ-001: R
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+Statement.
+";
+    let doc = ir::parse_document("a.md", content);
+    let scenario = doc.items.iter().find(|i| matches!(i, Item::Scenario { id: Some(id), .. } if id == "EX-001"));
+    assert!(scenario.is_some(), "should parse EX-001");
+    if let Item::Scenario { steps, .. } = scenario.unwrap() {
+        assert_eq!(steps.len(), 3, "should have 3 steps: {:?}", steps);
+    }
+}
+
+// @kotowari[REQ-113]
+#[test]
+fn req_113_feature_and_examples_lines_are_invalid() {
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1
+Scenario: Test
+  Given something
+Feature: Bad line
+Background: Also bad
+Scenario Outline: Bad
+Examples: Bad
+| data | table |
+```
+
+## 要求
+
+### REQ-001: R
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+Statement.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ig = find_by_kind(&findings, "invalid_gherkin_line");
+    assert!(ig.len() >= 5, "should have at least 5 invalid_gherkin_line findings, got {}: {:?}", ig.len(), ig);
+    assert!(ig.iter().any(|f| f.detail.contains("Feature:")), "Feature: should be invalid: {:?}", ig);
+    assert!(ig.iter().any(|f| f.detail.contains("Background:")), "Background: should be invalid: {:?}", ig);
+    assert!(ig.iter().any(|f| f.detail.contains("Scenario Outline:")), "Scenario Outline: should be invalid: {:?}", ig);
+    assert!(ig.iter().any(|f| f.detail.contains("Examples:")), "Examples: should be invalid: {:?}", ig);
+}
+
+// @kotowari[REQ-113]
+#[test]
+fn req_113_tag_line_binds_only_when_immediately_before_scenario() {
+    // タグの行と Scenario: の間に行があると結び付かない
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1
+# a comment
+Scenario: With gap
+  Given something
+```
+
+## 要求
+
+### REQ-001: R
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+Statement.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let mt = find_by_kind(&findings, "missing_tag");
+    // タグが結び付かないので missing_tag が出る
+    assert!(mt.iter().any(|f| f.detail == "@id"), "tag should not bind through comment: {:?}", mt);
+}
+
+// @kotowari[REQ-052]
+#[test]
+fn req_052_unbound_tag_line_is_still_checked() {
+    // 結び付かないタグの行でも unknown_tag は出る
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1 @wip
+# comment breaks binding
+Scenario: Test
+  Given something
+```
+
+## 要求
+
+### REQ-001: R
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+Statement.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    // タグ行は結び付いていないが、unknown_tag は出る
+    // 注意: タグが結び付かないとき、そのシナリオのタグは空になる
+    // 実際の unknown_tag は結び付かないタグ行にも出るべき
+    // ここでの意図は、タグ行からの unknown_tag が出ること
+    // parse_document でタグ行をフラッシュする前にタグの検査を行う必要がある
+    // 現在の実装では、結び付かないタグは前のシナリオに含まれるか、
+    // フラッシュされて新しいシナリオに含まれるか。
+    // テストの意図: 結び付かないタグの行の@wip が unknown_tag になること
+    let ut = find_by_kind(&findings, "unknown_tag");
+    assert!(ut.iter().any(|f| f.detail == "@wip"), "unbound tag line should still produce unknown_tag for @wip: {:?}", ut);
+}
+
+// @kotowari[REQ-052]
+#[test]
+fn req_052_word_without_at_in_tag_line_is_unknown_tag() {
+    // タグの行の "@" で始まらない語も unknown_tag
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1 badword
+Scenario: Test
+  Given something
+```
+
+## 要求
+
+### REQ-001: R
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+Statement.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ut = find_by_kind(&findings, "unknown_tag");
+    assert!(ut.iter().any(|f| f.detail == "badword"), "word without @ in tag line should be unknown_tag: {:?}", ut);
+}
+
+// @kotowari[REQ-114]
+#[test]
+fn req_114_malformed_id_tag_is_invalid_id_and_not_defined() {
+    // @id=EX1 は invalid_id、定義に数えない
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@id=EX1 @about=REQ-001 @source=brainstorm/records.md#A1
+Scenario: Bad id
+  Given something
+```
+
+## 要求
+
+### REQ-001: R
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+Statement.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ii = find_by_kind(&findings, "invalid_id");
+    assert!(ii.iter().any(|f| f.detail == "EX1"), "should produce invalid_id for EX1: {:?}", ii);
+    let mt = find_by_kind(&findings, "missing_tag");
+    assert!(!mt.iter().any(|f| f.detail == "@id"), "should not produce missing_tag @id when invalid_id: {:?}", mt);
+}
+
+// @kotowari[REQ-114]
+#[test]
+fn req_114_malformed_id_scenario_missing_source_detail_is_scenario_line() {
+    // @id が形に合わない → missing_source の detail は Scenario: の行の文字
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@id=EX1 @about=REQ-001
+Scenario: Malformed id test
+  Given something
+```
+
+## 要求
+
+### REQ-001: R
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+Statement.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ms = find_by_kind(&findings, "missing_source");
+    assert!(ms.iter().any(|f| f.detail == "Scenario: Malformed id test"),
+        "missing_source detail should be the Scenario: line text: {:?}", ms);
+}
+
+// @kotowari[REQ-114]
+#[test]
+fn req_114_malformed_heading_is_not_defined() {
+    // ### REQ-1: x は形に合わないので定義に数えない
+    let content = "\
+# Title
+
+Scope.
+
+## 要求
+
+### REQ-1: Bad
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+Statement.
+
+### REQ-001: R
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+`REQ-1` is referenced.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    // REQ-1 は定義されていないので unresolved_reference
+    // ただし REQ-1 は is_valid_id を通らないので check_backtick_ids では拾われない
+    // unknown_heading で報告される
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(uh.iter().any(|f| f.detail.contains("REQ-1")), "REQ-1 should be unknown_heading: {:?}", uh);
+}
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_non_id_definition_value_is_unresolved() {
+    // "- 定義: foo" は ID の形でないので unresolved_reference
+    let content = "\
+# Title
+
+Scope.
+
+## 要求
+
+### REQ-001: R
+
+- 種類: algorithm
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+- 定義: foo
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    assert!(ur.iter().any(|f| f.detail == "foo"), "non-ID definition value should produce unresolved_reference: {:?}", ur);
+}
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_backtick_id_in_step_is_checked() {
+    // ステップの行のバッククォートで囲んだ ID も存在を検査する
+    let content = "\
+# Title
+
+Scope.
+
+## 要求
+
+### REQ-001: R
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+Statement.
+
+## 具体例
+
+```gherkin
+@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1
+Scenario: Backtick in step
+  Given `TBL-999` does not exist
+```
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    assert!(ur.iter().any(|f| f.detail == "TBL-999"), "backtick ID in step should produce unresolved_reference: {:?}", ur);
+}
