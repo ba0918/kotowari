@@ -391,3 +391,45 @@ fn req_104_quoted_values_are_not_terms() {
     // 二重引用符の中は用語チェックの対象外
     assert!(!ut.iter().any(|f| f["detail"] == "kotowari check"), "quoted values should not be checked: {:?}", ut);
 }
+
+// --- REQ-063, REQ-064: 性質の文とシナリオの手順でも用語を検査する ---
+
+// @kotowari[REQ-063, REQ-064]
+#[test]
+fn req_063_property_statements_and_scenario_steps_are_term_checked() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 用語集を作る（既知の語は「テスト」だけ）
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| テスト | 意味 | docs/decision/brainstorm/records.md#A1 |\n",
+    )
+    .unwrap();
+    // 性質の文に未知の用語、シナリオの手順に別の未知の用語を使う
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\n`テスト`を使う文。\n\n## 性質\n\n### PROP-001: P\n\n- 出典: docs/decision/brainstorm/records.md#A1\n\n`性質側の未知語`を検査する。\n\n## 具体例\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/brainstorm/records.md#A1\nScenario: Test\n  Given `手順側の未知語`を使う\n```\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ut = findings_by_kind(&v, "unknown_term");
+    // 性質の文に含まれる未知語が検出される
+    assert!(
+        ut.iter().any(|f| f["detail"] == "性質側の未知語"),
+        "should find unknown term in property statement: {:?}",
+        ut
+    );
+    // シナリオの手順に含まれる未知語が検出される
+    assert!(
+        ut.iter().any(|f| f["detail"] == "手順側の未知語"),
+        "should find unknown term in scenario step: {:?}",
+        ut
+    );
+    // 用語集にある「テスト」は検出されない
+    assert!(
+        !ut.iter().any(|f| f["detail"] == "テスト"),
+        "known term should not be reported: {:?}",
+        ut
+    );
+}
