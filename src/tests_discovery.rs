@@ -69,7 +69,7 @@ pub fn parse_markers_in_line(line: &str, line_num: usize) -> Vec<Marker> {
 pub fn collect_test_files(
     base: &Path,
     config: &Config,
-) -> Vec<(String, String)> {
+) -> Result<Vec<(String, String)>, crate::StopReason> {
     let mut builder = GlobSetBuilder::new();
     for pattern in &config.tests.files {
         if let Ok(g) = Glob::new(pattern) {
@@ -78,7 +78,7 @@ pub fn collect_test_files(
     }
     let globset = match builder.build() {
         Ok(g) => g,
-        Err(_) => return vec![],
+        Err(_) => return Ok(vec![]),
     };
 
     let mut files = Vec::new();
@@ -94,8 +94,12 @@ pub fn collect_test_files(
                 true
             }
         })
-        .filter_map(|e| e.ok())
     {
+        // REQ-018（A96）: 走査でディレクトリが読めなければ停止する
+        let entry = entry.map_err(|e| {
+            let where_ = e.path().map(|p| p.display().to_string()).unwrap_or_default();
+            crate::StopReason::UnreadableFile(format!("{where_}: {e}"))
+        })?;
         if entry.file_type().is_file() {
             let rel = entry
                 .path()
@@ -112,7 +116,7 @@ pub fn collect_test_files(
     }
 
     files.sort();
-    files
+    Ok(files)
 }
 
 /// Rust ファイルのテストを tree-sitter で発見する
@@ -512,7 +516,7 @@ pub fn discover_and_check(
     ir_path: &str,
     findings: &mut Vec<Finding>,
 ) -> Result<(), crate::StopReason> {
-    let test_files = collect_test_files(base, config);
+    let test_files = collect_test_files(base, config)?;
     let mut all_tests: Vec<DiscoveredTest> = Vec::new();
     let mut all_marker_ids: BTreeSet<String> = BTreeSet::new();
 

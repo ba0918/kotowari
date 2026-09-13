@@ -863,6 +863,35 @@ fn req_079_symlink_is_not_followed() {
     );
 }
 
+// @kotowari[REQ-018, TBL-001]
+#[test]
+#[cfg(unix)]
+fn req_018_unreadable_directory_under_tests_stops() {
+    use std::os::unix::fs::PermissionsExt;
+    if std::process::Command::new("id").arg("-u").output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim() == "0")
+        .unwrap_or(false)
+    {
+        return;
+    }
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    let sub = tmp.path().join("tests/sub");
+    fs::create_dir_all(&sub).unwrap();
+    fs::write(sub.join("hidden_test.rs"), "// @kotowari[REQ-001]\n#[test]\nfn hidden_test() {}\n").unwrap();
+    fs::set_permissions(&sub, std::fs::Permissions::from_mode(0o000)).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    fs::set_permissions(&sub, std::fs::Permissions::from_mode(0o755)).unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "an unreadable directory in the test walk should stop: {:?}",
+        output
+    );
+    assert!(output.stdout.is_empty(), "stdout should be empty on stop");
+}
+
 // --- REQ-019: glob は再帰し、隠しディレクトリを含めない ---
 
 // @kotowari[REQ-019]
