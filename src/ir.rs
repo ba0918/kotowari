@@ -81,7 +81,6 @@ pub enum Item {
         name: String,
         line: usize,
         sources: Vec<String>,
-        definitions: Vec<String>,
         statements: Vec<(usize, String)>,
         fields_seen: Vec<(usize, String, String)>,
     },
@@ -568,7 +567,6 @@ impl ItemBuilder {
                     name,
                     line: self.line,
                     sources,
-                    definitions: Vec::new(),
                     statements: self.statement_lines,
                     fields_seen,
                 }
@@ -1267,23 +1265,7 @@ fn check_references(
                     check_backtick_ids(stmt, *stmt_line, known_ids, path, findings);
                 }
             }
-            Item::Property {
-                line,
-                definitions,
-                statements,
-                ..
-            } => {
-                for def_id in definitions {
-                    if !known_ids.contains(def_id) {
-                        findings.push(Finding {
-                            kind: "unresolved_reference".to_string(),
-                            severity: "error".to_string(),
-                            path: path.to_string(),
-                            line: Some(*line),
-                            detail: def_id.clone(),
-                        });
-                    }
-                }
+            Item::Property { statements, .. } => {
                 for (stmt_line, stmt) in statements {
                     check_backtick_ids(stmt, *stmt_line, known_ids, path, findings);
                 }
