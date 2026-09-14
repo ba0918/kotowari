@@ -2224,3 +2224,41 @@ fn req_113_tag_line_right_before_closing_fence_is_invalid() {
     let ut = find_by_kind(&findings, "unknown_tag");
     assert!(ut.iter().any(|f| f.line == Some(10)), "unknown_tag for @nope should still be reported: {:?}", ut);
 }
+
+// @kotowari[REQ-122]
+#[test]
+fn req_122_two_cell_row_with_trailing_pipe_is_invalid() {
+    // A163: 判定はセルの数。"| a | b |" はセルが2つなので崩れた行
+    let content = "\
+# 用語集
+
+| 用語 | 意味 | 出典 |
+|---|---|---|
+| テスト | 検証の意味 |
+";
+    let doc = ir::parse_document("CONTEXT.md", content);
+    let terms: Vec<_> = doc.items.iter().filter(|i| matches!(i, Item::GlossaryTerm { .. })).collect();
+    assert!(terms.is_empty(), "a 2-cell row must not become a term: {:?}", terms);
+    let findings = check(&[doc], &default_config());
+    let igr = find_by_kind(&findings, "invalid_glossary_row");
+    assert_eq!(igr.len(), 1, "{:?}", findings);
+    assert_eq!(igr[0].detail, "| テスト | 検証の意味 |");
+}
+
+// @kotowari[REQ-122]
+#[test]
+fn req_122_three_cells_without_trailing_pipe_is_a_term() {
+    // A163: 末尾の "|" が無くてもセルが3つあれば用語
+    let content = "\
+# 用語集
+
+| 用語 | 意味 | 出典 |
+|---|---|---|
+| テスト | 検証の意味 | brainstorm/records.md#A1
+";
+    let doc = ir::parse_document("CONTEXT.md", content);
+    let terms: Vec<_> = doc.items.iter().filter(|i| matches!(i, Item::GlossaryTerm { .. })).collect();
+    assert_eq!(terms.len(), 1, "{:?}", doc.items);
+    let findings = check(&[doc], &default_config());
+    assert!(find_by_kind(&findings, "invalid_glossary_row").is_empty(), "{:?}", findings);
+}

@@ -442,11 +442,15 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                 }
                 if in_glossary_table {
                     // 用語行を解析
-                    let cols: Vec<&str> = line.split('|').collect();
-                    if cols.len() >= 4 {
-                        let term = cols[1].trim().to_string();
-                        let meaning = cols[2].trim().to_string();
-                        let sources_str = cols[3].trim();
+                    // REQ-122/A163: 先頭と末尾の "|" を除いて "|" で分けたセルの数で判定する
+                    let row = line.trim();
+                    let inner = row.strip_prefix('|').unwrap_or(row);
+                    let inner = inner.strip_suffix('|').unwrap_or(inner);
+                    let cells: Vec<&str> = inner.split('|').collect();
+                    if cells.len() >= 3 {
+                        let term = cells[0].trim().to_string();
+                        let meaning = cells[1].trim().to_string();
+                        let sources_str = cells[2].trim();
                         let sources: Vec<String> = if sources_str.is_empty() {
                             vec![]
                         } else {
@@ -473,7 +477,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                             ));
                         }
                     } else {
-                        // REQ-122: 列が4つ未満の行は invalid_glossary_row（用語にしない）
+                        // REQ-122/A163: セルが3つ未満の行は invalid_glossary_row（用語にしない）
                         parse_findings.push(crate::Finding::new(
                             crate::FindingKind::InvalidGlossaryRow,
                             String::new(),
