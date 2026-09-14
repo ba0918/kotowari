@@ -1103,3 +1103,89 @@ fn tbl_001_non_utf8_records_or_adr_stops() {
     );
     assert!(output2.stdout.is_empty(), "stdout should be empty on stop");
 }
+
+// @kotowari[TBL-012]
+#[test]
+fn tbl_012_records_file_headings_are_not_sources() {
+    // 決定の節の見出しを持つファイルは判断の記録なので、"## " の見出しでは照合しない（A134）
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/decision/brainstorm/notes.md"),
+        "# Notes\n\n## Agreements\n\nJust text, no decisions.\n\n## Background\n\nSome background.\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/notes.md#Background\n- 検証: unit\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(si.iter().any(|f| f["detail"].as_str().unwrap().contains("notes.md#Background")),
+        "a records file (has a decision section) must be matched by decision numbers, not headings: {:?}", si);
+}
+
+// @kotowari[REQ-018, TBL-001]
+#[test]
+#[cfg(unix)]
+fn req_018_broken_symlink_in_records_dir_stops() {
+    use std::os::unix::fs::symlink;
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    symlink(tmp.path().join("nowhere.md"), tmp.path().join("docs/decision/brainstorm/broken.md")).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(2), "a broken symlink must stop: {:?}", output);
+    assert!(output.stdout.is_empty());
+}
+
+// @kotowari[REQ-033, REQ-018]
+#[test]
+#[cfg(unix)]
+fn req_033_file_symlink_in_records_dir_is_read() {
+    use std::os::unix::fs::symlink;
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::create_dir_all(tmp.path().join("elsewhere")).unwrap();
+    fs::write(tmp.path().join("elsewhere/more.md"), "# More\n\n## Agreements\n\n- A7 linked decision\n").unwrap();
+    symlink(tmp.path().join("elsewhere/more.md"), tmp.path().join("docs/decision/brainstorm/more.md")).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/more.md#A7\n- 検証: unit\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(si.is_empty(), "a file symlink in the records dir must be read: {:?}", si);
+}
+
+// @kotowari[REQ-117]
+#[test]
+fn req_117_glossary_header_without_rows_is_valid() {
+    // ヘッダと区切りの行があれば表は「ある」（A148）
+    let content = "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n";
+    let doc = kotowari::ir::parse_document("CONTEXT.md", content);
+    let config = kotowari::config::Config::default();
+    let findings = kotowari::ir::check_documents(&[doc], &config);
+    assert!(!findings.iter().any(|f| f.kind == "glossary_invalid"), "header + separator with no rows must not be glossary_invalid: {:?}", findings);
+}
+
+// @kotowari[REQ-111]
+#[test]
+fn req_111_bom_in_config_records_adr_and_tests_is_skipped_end_to_end() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    let bom = "\u{feff}";
+    fs::write(tmp.path().join(".kotowari/config.yaml"), format!("{bom}ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n")).unwrap();
+    fs::write(tmp.path().join("docs/decision/brainstorm/records.md"), format!("{bom}# Records\n\n## Agreements\n\n- A1 first\n")).unwrap();
+    fs::write(tmp.path().join("docs/decision/adr/0001-test.md"), format!("{bom}# ADR 0001\n\n## 状況\n\nx\n")).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        format!("{bom}# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1, docs/decision/adr/0001-test.md#状況\n- 検証: unit\n\nStatement.\n"),
+    ).unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(tmp.path().join("tests/t.rs"), format!("{bom}// @kotowari[REQ-001]\n#[test]\nfn t() {{}}\n")).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(0), "BOM in every file kind must be skipped: {:?}", output);
+    let v = parse_json(&output);
+    assert!(v["findings"].as_array().unwrap().is_empty(), "{:?}", v);
+}
