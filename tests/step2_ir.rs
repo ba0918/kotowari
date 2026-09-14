@@ -2603,3 +2603,146 @@ fn req_052_dangling_bare_word_in_unbound_tag_line_keeps_its_line_number() {
     );
 }
 
+// --- REQ-114: シナリオの id に使う @id の値の形 ---
+
+// @kotowari[REQ-114]
+#[test]
+fn req_114_well_formed_non_ex_id_is_not_used_as_scenario_id() {
+    // @id の値が REQ- の形など、EX- 以外なら「有効な形」でも id として使わない
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@id=REQ-001 @about=REQ-001 @source=brainstorm/records.md#A1
+Scenario: uses a wrong-prefix but well-formed id
+  Given something
+```
+";
+    let doc = ir::parse_document("a.md", content);
+    let scenario = doc.items.iter().find(|i| matches!(i, Item::Scenario { .. }));
+    assert!(scenario.is_some(), "should parse the scenario: {:?}", doc.items);
+    if let Item::Scenario { id, .. } = scenario.unwrap() {
+        assert!(
+            id.is_none(),
+            "a well-formed but non-EX id must not become the scenario's id: {:?}",
+            id
+        );
+    }
+}
+
+// @kotowari[REQ-114]
+#[test]
+fn req_114_malformed_id_value_is_the_actual_malformed_tag_not_a_bare_at_id() {
+    // 2つの "@id" 名のタグがあるとき、報告する値は実際に形が合わない方でなければならない
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@id @id=BAD1 @about=REQ-001 @source=brainstorm/records.md#A1
+Scenario: two id-named tags, only the second is malformed
+  Given something
+```
+
+## 要求
+
+### REQ-001: R
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+Statement.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ii = find_by_kind(&findings, "invalid_id");
+    assert!(
+        ii.iter().any(|f| f.detail == "BAD1"),
+        "the reported malformed @id value should be the actually malformed one (BAD1), not an empty bare @id: {:?}",
+        ii
+    );
+}
+
+// @kotowari[REQ-114]
+#[test]
+fn req_114_malformed_id_value_is_not_stolen_from_an_unrelated_about_tag() {
+    // "@about" の値がたまたま ID の形でなくても、malformed_value は "@id" 自身の値でなければならない
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@about=not-an-id-like-value @id=BAD-1 @source=brainstorm/records.md#A1
+Scenario: about appears before the malformed id tag
+  Given something
+```
+
+## 要求
+
+### REQ-001: R
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+Statement.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ii = find_by_kind(&findings, "invalid_id");
+    assert!(
+        ii.iter().any(|f| f.detail == "BAD-1"),
+        "the reported malformed @id value must come from the @id tag itself, not an unrelated @about value: {:?}",
+        ii
+    );
+}
+
+// --- REQ-059: @source タグが在るが値が使い物にならないとき ---
+
+// @kotowari[REQ-059]
+#[test]
+fn req_059_source_tag_present_but_only_commas_does_not_report_missing_source() {
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@id=EX-001 @about=REQ-001 @source=,
+Scenario: source tag exists but has no usable value
+  Given something
+```
+
+## 要求
+
+### REQ-001: R
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+Statement.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ms = find_by_kind(&findings, "missing_source");
+    assert!(
+        ms.is_empty(),
+        "a scenario with a @source tag (even an unusable comma-only value) must not produce missing_source: {:?}",
+        ms
+    );
+}
+
