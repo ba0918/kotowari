@@ -31,7 +31,7 @@
 | テスト | 問い合わせでテストと数える関数 | experiments/003-cli/brainstorm/records.md#A24, experiments/003-cli/brainstorm/records.md#A26 |
 | テストのファイル | 設定の "tests.files" の glob に当たるファイル | experiments/003-cli/brainstorm/records.md#A36, experiments/003-cli/brainstorm/records.md#A47 |
 | 問い合わせ | tree-sitter でテストを見つける、言語ごとの問い合わせ。kotowari が同梱する | experiments/003-cli/brainstorm/records.md#A24, experiments/003-cli/brainstorm/records.md#A58 |
-| 問い合わせのある言語 | 拡張子から決まる言語のうち、同梱の問い合わせがあるもの。第1版では Rust（".rs"）だけ | experiments/003-cli/brainstorm/records.md#A39, experiments/003-cli/brainstorm/records.md#A58 |
+| 問い合わせのある言語 | 拡張子から決まる言語のうち、同梱の問い合わせがあるもの。第1版では Rust（".rs"）だけ | experiments/003-cli/brainstorm/records.md#A39, experiments/003-cli/brainstorm/records.md#A58, experiments/003-cli/brainstorm/records.md#A128 |
 | 問い合わせの無い言語 | 拡張子から決まる言語のうち、同梱の問い合わせが無いもの | experiments/003-cli/brainstorm/records.md#A39 |
 | 曖昧語 | 設定の "vague_words" に並べた語 | experiments/003-cli/brainstorm/records.md#A21, experiments/003-cli/brainstorm/records.md#A41 |
 | 対象の行 | 用語と曖昧語の検査を受ける行。TBL-013 で決める | experiments/003-cli/brainstorm/records.md#A53 |
