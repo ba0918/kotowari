@@ -2262,3 +2262,26 @@ fn req_122_three_cells_without_trailing_pipe_is_a_term() {
     let findings = check(&[doc], &default_config());
     assert!(find_by_kind(&findings, "invalid_glossary_row").is_empty(), "{:?}", findings);
 }
+
+// @kotowari[REQ-123]
+#[test]
+fn req_123_duplicate_row_is_not_a_term() {
+    // A162: 2つ目以降の行は duplicate_term だけを出し、用語にしない（出典が空でも missing_source は出ない）
+    let content = "\
+# 用語集
+
+| 用語 | 意味 | 出典 |
+|---|---|---|
+| IR | 最初の意味 | brainstorm/records.md#A1 |
+| IR | 2つ目の意味 | |
+";
+    let doc = ir::parse_document("CONTEXT.md", content);
+    let terms: Vec<_> = doc.items.iter().filter(|i| matches!(i, Item::GlossaryTerm { .. })).collect();
+    assert_eq!(terms.len(), 1, "the duplicate row must not become a term: {:?}", terms);
+    let findings = check(&[doc], &default_config());
+    let dt = find_by_kind(&findings, "duplicate_term");
+    assert_eq!(dt.len(), 1);
+    assert_eq!(dt[0].line, Some(6));
+    let ms = find_by_kind(&findings, "missing_source");
+    assert!(!ms.iter().any(|f| f.line == Some(6)), "no other check on the duplicate row: {:?}", ms);
+}

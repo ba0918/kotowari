@@ -239,6 +239,8 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
     let mut glossary_header_seen = false;
     let mut glossary_table_done = false; // REQ-117: 2つ目の表は用語にしない
     let mut glossary_separator_seen = false;
+    // REQ-123/A162: 既に読んだ用語。2つ目以降の行は duplicate_term にして用語にしない
+    let mut glossary_seen_terms: BTreeSet<String> = BTreeSet::new();
 
     for (idx, line) in lines.iter().enumerate() {
         let line_num = idx + 1; // 1-indexed
@@ -460,14 +462,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                                 .filter(|s| !s.is_empty())
                                 .collect()
                         };
-                        if !term.is_empty() {
-                            items.push(Item::GlossaryTerm {
-                                term,
-                                meaning,
-                                sources,
-                                line: line_num,
-                            });
-                        } else {
+                        if term.is_empty() {
                             // REQ-122: 用語のセルが空の行は invalid_glossary_row（用語にしない）
                             parse_findings.push(crate::Finding::new(
                                 crate::FindingKind::InvalidGlossaryRow,
@@ -475,6 +470,21 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                                 Some(line_num),
                                 line.to_string(),
                             ));
+                        } else if !glossary_seen_terms.insert(term.clone()) {
+                            // REQ-123/A162: 同じ用語の2つ目以降の行は duplicate_term だけを出し、用語にしない
+                            parse_findings.push(crate::Finding::new(
+                                crate::FindingKind::DuplicateTerm,
+                                String::new(),
+                                Some(line_num),
+                                term,
+                            ));
+                        } else {
+                            items.push(Item::GlossaryTerm {
+                                term,
+                                meaning,
+                                sources,
+                                line: line_num,
+                            });
                         }
                     } else {
                         // REQ-122/A163: セルが3つ未満の行は invalid_glossary_row（用語にしない）
@@ -976,20 +986,6 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
         // REQ-117: 用語集にヘッダと区切りの行の形の表がない → glossary_invalid（A148: 行が0でも表はある）
         if doc.kind == DocKind::Glossary && !doc.glossary_table_seen {
             findings.push(Finding::new(FindingKind::GlossaryInvalid, path.clone(), None, doc.filename.clone()));
-        }
-
-        // REQ-123/A154: 用語集の同じ用語の2つ目以降は duplicate_term（照合は1つ目を使う）
-        if doc.kind == DocKind::Glossary {
-            let mut seen_terms: HashMap<&str, usize> = HashMap::new();
-            for item in &doc.items {
-                if let Item::GlossaryTerm { term, line, .. } = item {
-                    if seen_terms.contains_key(term.as_str()) {
-                        findings.push(Finding::new(FindingKind::DuplicateTerm, path.clone(), Some(*line), term.clone()));
-                    } else {
-                        seen_terms.insert(term.as_str(), *line);
-                    }
-                }
-            }
         }
 
         // REQ-038: 行数の上限
