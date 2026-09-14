@@ -158,7 +158,8 @@ fn unwrap_or_null_option<T>(field: Option<Option<T>>, key: &str) -> Result<Optio
 
 /// パスが絶対パスでないことを検証する
 fn check_not_absolute(path: &str, key: &str) -> Result<(), StopReason> {
-    if path.starts_with('/') || (path.len() >= 2 && path.as_bytes()[1] == b':') {
+    // A161: 絶対パスかどうかは先頭の "/" だけで判定する（Windows のドライブ文字は見ない）
+    if path.starts_with('/') {
         return Err(StopReason::ConfigError(format!(
             "absolute path not allowed for {key}: {path}"
         )));

@@ -575,6 +575,19 @@ fn req_014_null_limits_stops() {
 
 // @kotowari[REQ-014]
 #[test]
+fn req_014_windows_drive_letter_like_path_is_not_absolute() {
+    // A161: 絶対パスの判定は先頭の "/" だけ。"a:b" をドライブ文字として拒まない
+    let yaml = "ir: a:b\n";
+    let result = kotowari::config::Config::parse(yaml);
+    assert!(
+        result.is_ok(),
+        "a value like 'a:b' must not be rejected as an absolute path: {:?}",
+        result.err()
+    );
+}
+
+// @kotowari[REQ-014]
+#[test]
 fn req_014_absolute_path_stops() {
     let yaml = "ir: /absolute/path\n";
     let result = kotowari::config::Config::parse(yaml);
