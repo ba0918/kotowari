@@ -31,15 +31,15 @@
 ### REQ-122: 用語集の表の崩れた行
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A153
+- 出典: experiments/003-cli/brainstorm/records.md#A153, experiments/003-cli/brainstorm/records.md#A163
 - 検証: unit
 
-`用語集`の表の中に、列が4つ未満の行か`用語`のセルが空の行があるとき、kotowari は行の文字を detail にして invalid_glossary_row の`誤り`を出し、その行を`用語`にしない。
+`用語集`の表の中に、セル（行の先頭と末尾の "|" を除いて "|" で分けたもの）が3つ未満の行か`用語`のセルが空の行があるとき、kotowari は行の文字を detail にして invalid_glossary_row の`誤り`を出し、その行を`用語`にしない。
 
 ### REQ-123: 用語の重複
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A154
+- 出典: experiments/003-cli/brainstorm/records.md#A154, experiments/003-cli/brainstorm/records.md#A162
 - 検証: unit
 
-`用語集`に同じ`用語`の行が2つ以上あるとき、kotowari は2つ目以降の行ごとに`用語`を detail にして duplicate_term の`誤り`を出し、照合には1つ目を使う。
+`用語集`に同じ`用語`の行が2つ以上あるとき、kotowari は2つ目以降の行ごとに`用語`を detail にして duplicate_term の`誤り`を出し、照合には1つ目を使う。2つ目以降の行は`用語`にしない。
