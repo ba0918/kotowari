@@ -2380,3 +2380,50 @@ fn req_043_bare_four_hashes_is_not_unknown_heading() {
     );
 }
 
+// --- REQ-112: 閉じないコードブロックの前の指摘・項目は残る ---
+
+// @kotowari[REQ-112]
+#[test]
+fn req_112_findings_and_items_before_the_unclosed_fence_are_retained() {
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+Then orphan step
+```
+
+## 要求
+
+### REQ-001: R
+
+```
+unclosed content
+";
+    let doc = ir::parse_document("a.md", content);
+    // フェンスが開く行より前の invalid_gherkin_line は残らなければならない
+    let ig = doc
+        .parse_findings
+        .iter()
+        .find(|f| f.kind == "invalid_gherkin_line" && f.detail == "Then orphan step");
+    assert!(
+        ig.is_some(),
+        "a parse_finding before the unclosed fence must be retained: {:?}",
+        doc.parse_findings
+    );
+    // unclosed_code_block 自体は出る
+    assert!(
+        doc.parse_findings.iter().any(|f| f.kind == "unclosed_code_block"),
+        "should still produce unclosed_code_block"
+    );
+    // フェンスより前で組み立て済みの項目も残らなければならない
+    assert!(
+        doc.items.iter().any(|i| matches!(i, Item::Requirement { id, .. } if id == "REQ-001")),
+        "an item completed before the unclosed fence must be retained: {:?}",
+        doc.items
+    );
+}
+
