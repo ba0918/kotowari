@@ -125,6 +125,106 @@ fn req_082_has_configured_attribute_skips_block_comment() {
     );
 }
 
+// --- REQ-072: 関数の前の複数行コメントの中の印の行番号 ---
+
+// @kotowari[REQ-072]
+#[test]
+fn req_072_invalid_marker_on_second_line_of_multiline_comment_before_test() {
+    // 複数行にまたがるブロックコメントの2行目にある印の行番号は、
+    // コメントの開始行 + オフセット + 1 になる（コメントの1行目ではない）
+    let content = "// leading\n/* note\n@kotowari[] */\n#[test]\nfn t() {}\n";
+    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+        .expect("valid rust");
+    assert_eq!(tests.len(), 1);
+    assert_eq!(
+        tests[0].invalid_markers,
+        vec![(3, "@kotowari[] */".to_string())],
+        "invalid marker line and text should come from the comment's own 2nd line: {:?}",
+        tests
+    );
+}
+
+// @kotowari[REQ-072]
+#[test]
+fn req_072_indented_invalid_marker_before_test_keeps_indentation() {
+    // 不正な印の detail は生の行の文字（インデントを含む）であり、
+    // コメント自身の文字列（インデントを含まない）ではない
+    let content = "    // @kotowari[]\n    #[test]\n    fn t() {}\n";
+    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+        .expect("valid rust");
+    assert_eq!(tests.len(), 1);
+    assert_eq!(
+        tests[0].invalid_markers,
+        vec![(1, "    // @kotowari[]".to_string())],
+        "invalid marker detail should be the raw indented line: {:?}",
+        tests
+    );
+}
+
+// @kotowari[REQ-072]
+#[test]
+fn req_072_invalid_marker_line_index_stays_additive_at_boundary() {
+    // コメントの最後の行に他のコードが続くとき、生の行の文字はその続きも含む
+    // （境界での掛け算のような誤り方をすると、この続きが失われる）
+    let content = "// leading 1\n// leading 2\n// leading 3\n/* line2\nline3\nline4\n@kotowari[] */ #[test] fn t() {}";
+    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+        .expect("valid rust");
+    assert_eq!(tests.len(), 1);
+    assert_eq!(
+        tests[0].invalid_markers,
+        vec![(7, "@kotowari[] */ #[test] fn t() {}".to_string())],
+        "invalid marker detail should be the full raw line, continuation included: {:?}",
+        tests
+    );
+}
+
+// --- REQ-075, REQ-072: 関数本体の先頭の複数行コメントの中の印の行番号 ---
+
+// @kotowari[REQ-075, REQ-072]
+#[test]
+fn req_072_body_start_multiline_comment_marker_uses_additive_offset() {
+    let content = "#[test]\nfn t() {\n    /* note\n    @kotowari[] */\n}\n";
+    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+        .expect("valid rust");
+    assert_eq!(tests.len(), 1);
+    assert_eq!(
+        tests[0].invalid_markers,
+        vec![(4, "    @kotowari[] */".to_string())],
+        "body-start invalid marker line and text should come from the comment's own 2nd line: {:?}",
+        tests
+    );
+}
+
+// @kotowari[REQ-072]
+#[test]
+fn req_072_indented_body_start_invalid_marker_keeps_indentation() {
+    let content = "#[test]\nfn t() {\n    // @kotowari[]\n}\n";
+    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+        .expect("valid rust");
+    assert_eq!(tests.len(), 1);
+    assert_eq!(
+        tests[0].invalid_markers,
+        vec![(3, "    // @kotowari[]".to_string())],
+        "body-start invalid marker detail should be the raw indented line: {:?}",
+        tests
+    );
+}
+
+// @kotowari[REQ-072]
+#[test]
+fn req_072_body_start_invalid_marker_line_index_stays_additive_at_boundary() {
+    let content = "#[test]\nfn t() {\n/* line2\nline3\nline4\n@kotowari[] */}\n";
+    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+        .expect("valid rust");
+    assert_eq!(tests.len(), 1);
+    assert_eq!(
+        tests[0].invalid_markers,
+        vec![(6, "@kotowari[] */}".to_string())],
+        "body-start invalid marker detail should be the full raw line, continuation included: {:?}",
+        tests
+    );
+}
+
 fn cmd() -> Command {
     Command::cargo_bin("kotowari").unwrap()
 }
