@@ -231,6 +231,8 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
     let mut gherkin_scenario_text: String = String::new();
     let mut gherkin_steps: Vec<(usize, String)> = Vec::new();
     let mut gherkin_prev_was_tag: bool = false;
+    // 直前の行がステップだったか（Scenario: の無いブロックで続くステップを誤りにしないため）
+    let mut gherkin_prev_was_step: bool = false;
 
     // 用語集の解析
     let mut in_glossary_table = false;
@@ -272,6 +274,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                     gherkin_steps.clear();
                     gherkin_scenario_text.clear();
                     gherkin_prev_was_tag = false;
+                    gherkin_prev_was_step = false;
                 }
                 current_fence = None;
                 in_gherkin_block = false;
@@ -344,6 +347,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                     }
                 }
                 gherkin_prev_was_tag = true;
+                gherkin_prev_was_step = false;
             } else if is_scenario_line {
                 // 前のシナリオがあればフラッシュ
                 if let Some(scenario_line) = gherkin_scenario_line.take() {
@@ -362,27 +366,31 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                 // A150: detail の元になる Scenario: の行は生の行（字下げを含む）を持つ
                 gherkin_scenario_text = line.to_string();
                 gherkin_prev_was_tag = false;
+                gherkin_prev_was_step = false;
             } else if trimmed.starts_with("Given ")
                 || trimmed.starts_with("When ")
                 || trimmed.starts_with("Then ")
                 || trimmed.starts_with("And ")
                 || trimmed.starts_with("But ")
             {
-                if gherkin_scenario_line.is_none() {
-                    // REQ-113/A155: 直前に Scenario: もステップも無いステップの行は invalid_gherkin_line
+                if gherkin_scenario_line.is_some() {
+                    gherkin_steps.push((line_num, line.to_string()));
+                } else if !gherkin_prev_was_step {
+                    // REQ-113/A155: 直前に Scenario: もステップも無いステップの行は invalid_gherkin_line。
+                    // 続く2つ目以降のステップは最初のステップの誤りに含め、別の誤りにしない
                     parse_findings.push(crate::Finding::new(
                         crate::FindingKind::InvalidGherkinLine,
                         String::new(),
                         Some(line_num),
                         line.to_string(),
                     ));
-                } else {
-                    gherkin_steps.push((line_num, line.to_string()));
                 }
                 gherkin_prev_was_tag = false;
+                gherkin_prev_was_step = true;
             } else if trimmed.starts_with('#') || trimmed.is_empty() {
                 // REQ-113: 注釈と空行は有効
                 gherkin_prev_was_tag = false;
+                gherkin_prev_was_step = false;
             } else {
                 // REQ-113: それ以外は invalid_gherkin_line
                 // TBL-008: detail は行の文字そのまま（字下げと末尾の空白を含む）
@@ -393,6 +401,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                     line.to_string(),
                 ));
                 gherkin_prev_was_tag = false;
+                gherkin_prev_was_step = false;
             }
             continue;
         }

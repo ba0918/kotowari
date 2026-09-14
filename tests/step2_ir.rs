@@ -2170,3 +2170,57 @@ Statement.
         di
     );
 }
+
+// @kotowari[REQ-113]
+#[test]
+fn req_113_consecutive_steps_without_scenario_report_only_the_first() {
+    // A155: Scenario: の無いブロックで続く2つ目以降のステップは、最初のステップの誤りに含める
+    let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\nGiven first orphan\nWhen second orphan\nThen third orphan\n```\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ig = find_by_kind(&findings, "invalid_gherkin_line");
+    assert_eq!(ig.len(), 1, "only the first orphan step should be reported: {:?}", ig);
+    assert_eq!(ig[0].detail, "Given first orphan");
+    assert_eq!(ig[0].line, Some(8));
+}
+
+// @kotowari[REQ-113]
+#[test]
+fn req_113_orphan_step_after_a_blank_line_is_reported_again() {
+    // REQ-113 の「直前」は直前の行。空行を挟んだステップは直前にステップが無いので、改めて誤り
+    let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\nGiven first orphan\n\nThen after blank\n```\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ig = find_by_kind(&findings, "invalid_gherkin_line");
+    let details: Vec<&str> = ig.iter().map(|f| f.detail.as_str()).collect();
+    assert_eq!(details, vec!["Given first orphan", "Then after blank"], "{:?}", ig);
+}
+
+// @kotowari[REQ-113]
+#[test]
+fn req_113_step_right_after_tag_line_reports_both_lines() {
+    // A155: タグの行の直後がステップなら、タグの行（直後が Scenario: でない）とそのステップ（直前に Scenario: が無い）の両方
+    let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@id=EX-001\nGiven no scenario line\n```\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ig = find_by_kind(&findings, "invalid_gherkin_line");
+    let details: Vec<&str> = ig.iter().map(|f| f.detail.as_str()).collect();
+    assert_eq!(details, vec!["@id=EX-001", "Given no scenario line"], "{:?}", ig);
+    let ut = find_by_kind(&findings, "unknown_tag");
+    assert!(ut.is_empty(), "@id is a known tag, so no unknown_tag: {:?}", ut);
+}
+
+// @kotowari[REQ-113]
+#[test]
+fn req_113_tag_line_right_before_closing_fence_is_invalid() {
+    let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\nScenario: ok\n  Given something\n@about=REQ-001 @nope=x\n```\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ig = find_by_kind(&findings, "invalid_gherkin_line");
+    assert_eq!(ig.len(), 1, "{:?}", ig);
+    assert_eq!(ig[0].detail, "@about=REQ-001 @nope=x");
+    assert_eq!(ig[0].line, Some(10));
+    // A155: 結び付かないタグの行でも unknown_tag の検査はそのまま行う
+    let ut = find_by_kind(&findings, "unknown_tag");
+    assert!(ut.iter().any(|f| f.line == Some(10)), "unknown_tag for @nope should still be reported: {:?}", ut);
+}
