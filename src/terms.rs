@@ -35,7 +35,7 @@ fn has_odd_backticks(text: &str) -> bool {
 /// 二重引用符の外の部分だけを取り出してバッククォートを抽出する
 /// REQ-104: 具体的な値は二重引用符で書く
 fn extract_backtick_contents_outside_quotes(text: &str) -> Vec<&str> {
-    let parts = split_outside_quotes(text);
+    let parts = crate::split_outside_quotes(text);
     let mut result = Vec::new();
     for part in parts {
         result.extend(crate::ir::extract_backtick_contents(part));
@@ -54,7 +54,7 @@ pub fn check_unknown_terms(
 ) {
     // REQ-116: バッククォートが奇数の行は unclosed_backtick
     // 二重引用符の外のバッククォートだけを数える
-    let outside_parts = split_outside_quotes(text);
+    let outside_parts = crate::split_outside_quotes(text);
     let outside_text: String = outside_parts.join("");
     if has_odd_backticks(&outside_text) {
         findings.push(Finding::new(FindingKind::UnclosedBacktick, path.to_string(), Some(line), text.to_string()));
@@ -156,55 +156,12 @@ pub fn check_document_references(
             }
 
             // 二重引用符の中を除外するため、引用符の外の部分だけ検査
-            let parts = split_outside_quotes(line);
+            let parts = crate::split_outside_quotes(line);
             for part in &parts {
                 find_doc_refs(part, line_num, &path, ir_filenames, punctuation, findings);
             }
         }
     }
-}
-
-/// 二重引用符の外の部分を返す
-/// TBL-014: 引用符が奇数のときは最後の引用符から行末を引用の中とみなす
-fn split_outside_quotes(line: &str) -> Vec<&str> {
-    // まず引用符の数を数える
-    let quote_count = line.chars().filter(|&c| c == '"').count();
-    let odd_quotes = quote_count % 2 != 0;
-
-    let mut parts = Vec::new();
-    let mut start = 0;
-    let mut in_quote = false;
-    let mut last_quote_pos = 0;
-
-    // 奇数の場合、最後の引用符の位置を見つける
-    if odd_quotes {
-        last_quote_pos = line.char_indices()
-            .filter(|&(_, c)| c == '"')
-            .last()
-            .map(|(i, _)| i)
-            .unwrap_or(0);
-    }
-
-    for (i, c) in line.char_indices() {
-        if c == '"' {
-            if odd_quotes && i == last_quote_pos {
-                // 最後の奇数引用符 → ここから行末まで引用の中
-                parts.push(&line[start..i]);
-                return parts;
-            }
-            if !in_quote {
-                parts.push(&line[start..i]);
-                in_quote = true;
-            } else {
-                in_quote = false;
-                start = i + 1;
-            }
-        }
-    }
-    if !in_quote && start < line.len() {
-        parts.push(&line[start..]);
-    }
-    parts
 }
 
 /// 文書名の参照を見つける

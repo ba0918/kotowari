@@ -1383,14 +1383,18 @@ fn check_backtick_ids(
     path: &str,
     findings: &mut Vec<Finding>,
 ) {
-    // REQ-116: 奇数バッククォートの行では検査しない
-    if text.chars().filter(|&c| c == '`').count() % 2 != 0 {
+    // REQ-054/REQ-116: 二重引用符の外だけを見る
+    let outside_parts = crate::split_outside_quotes(text);
+    let outside_text: String = outside_parts.join("");
+    if outside_text.chars().filter(|&c| c == '`').count() % 2 != 0 {
         return;
     }
-    for content in extract_backtick_contents(text) {
-        let trimmed = content.trim();
-        if !trimmed.is_empty() && is_valid_id(trimmed) && !known_ids.contains(trimmed) {
-            findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(line), trimmed.to_string()));
+    for part in &outside_parts {
+        for content in extract_backtick_contents(part) {
+            let trimmed = content.trim();
+            if !trimmed.is_empty() && is_valid_id(trimmed) && !known_ids.contains(trimmed) {
+                findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(line), trimmed.to_string()));
+            }
         }
     }
 }

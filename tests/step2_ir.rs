@@ -1833,3 +1833,35 @@ fn req_033_broken_symlink_in_ir_dir_stops() {
     let output = assert_cmd::Command::cargo_bin("kotowari").unwrap().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(output.status.code(), Some(2), "a broken symlink in the IR dir must stop: {:?}", output);
 }
+
+// --- 汎用化の実装レビューで見つかった食い違いの回帰テスト ---
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_backtick_id_inside_double_quotes_is_not_checked() {
+    // REQ-054/REQ-104: 二重引用符の中のバッククォートの ID は参照の検査を受けない
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nSee \"`REQ-999`\" for details.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    assert!(
+        ur.is_empty(),
+        "a backtick ID inside double quotes should not be checked as a reference: {:?}",
+        ur
+    );
+}
+
+// @kotowari[REQ-054, REQ-116]
+#[test]
+fn req_054_backtick_oddness_counted_outside_quotes_only() {
+    // 引用符の中の "`" を数に入れない: 引用符の外だけを見れば偶数なので検査が行われる
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n`REQ-999` and \"quoted ` mark\" here.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    assert!(
+        ur.iter().any(|f| f.detail == "REQ-999"),
+        "backtick oddness should be counted outside double quotes only, so the reference check should still run: {:?}",
+        ur
+    );
+}
