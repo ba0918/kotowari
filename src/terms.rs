@@ -27,22 +27,6 @@ pub fn collect_glossary_terms(docs: &[IrDocument]) -> Option<BTreeSet<String>> {
     }
 }
 
-/// 行のバッククォートの数が奇数かどうかを判定する
-fn has_odd_backticks(text: &str) -> bool {
-    text.chars().filter(|&c| c == '`').count() % 2 != 0
-}
-
-/// 二重引用符の外の部分だけを取り出してバッククォートを抽出する
-/// REQ-104: 具体的な値は二重引用符で書く
-fn extract_backtick_contents_outside_quotes(text: &str) -> Vec<&str> {
-    let parts = crate::split_outside_quotes(text);
-    let mut result = Vec::new();
-    for part in parts {
-        result.extend(crate::ir::extract_backtick_contents(part));
-    }
-    result
-}
-
 /// 対象の行からバッククォートで囲んだ語を検査する（REQ-064, REQ-065, REQ-116）
 pub fn check_unknown_terms(
     text: &str,
@@ -54,13 +38,11 @@ pub fn check_unknown_terms(
 ) {
     // REQ-116: バッククォートが奇数の行は unclosed_backtick
     // 二重引用符の外のバッククォートだけを数える
-    let outside_parts = crate::split_outside_quotes(text);
-    let outside_text: String = outside_parts.join("");
-    if has_odd_backticks(&outside_text) {
+    if crate::has_odd_backticks_outside_quotes(text) {
         findings.push(Finding::new(FindingKind::UnclosedBacktick, path.to_string(), Some(line), text.to_string()));
         return;
     }
-    for content in extract_backtick_contents_outside_quotes(text) {
+    for content in crate::extract_backtick_contents_outside_quotes(text) {
         // REQ-064: 前後の空白を除く
         let trimmed = content.trim();
         // REQ-064: 中身が空の囲み

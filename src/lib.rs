@@ -353,6 +353,21 @@ pub fn join_display_path(dir: &str, name: &str) -> String {
 }
 
 /// 二重引用符の外の部分を返す。
+/// 二重引用符の外のバッククォートの数が奇数か（REQ-116。二重引用符の中は A145 で対象外）。
+/// ir モジュールと terms モジュールの両方から使う
+pub fn has_odd_backticks_outside_quotes(text: &str) -> bool {
+    split_outside_quotes(text).join("").chars().filter(|&c| c == '`').count() % 2 != 0
+}
+
+/// 二重引用符の外の部分からバッククォートで囲んだ語を集める（REQ-054, REQ-064, REQ-104）。
+/// ir モジュールと terms モジュールの両方から使う
+pub fn extract_backtick_contents_outside_quotes(text: &str) -> Vec<&str> {
+    split_outside_quotes(text)
+        .into_iter()
+        .flat_map(ir::extract_backtick_contents)
+        .collect()
+}
+
 /// TBL-014: 引用符が奇数のときは最後の引用符から行末を引用の中とみなす。
 /// ir モジュールと terms モジュールの両方から使う（REQ-054, REQ-064, REQ-104）。
 pub fn split_outside_quotes(line: &str) -> Vec<&str> {
