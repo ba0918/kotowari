@@ -2746,3 +2746,52 @@ Statement.
     );
 }
 
+// --- REQ-098: 問題の記録の必須の行 ---
+
+// @kotowari[REQ-098]
+#[test]
+fn req_098_flag_entirely_missing_kind_line_produces_missing_field() {
+    let content = "\
+# 問題の記録
+
+### FLAG-001: Issue
+
+- 関係: REQ-999
+- 出典: brainstorm/records.md#A1
+
+Body text.
+";
+    let doc = ir::parse_document("FLAGS.md", content);
+    let findings = check(&[doc], &default_config());
+    let mf = find_by_kind(&findings, "missing_field");
+    assert!(
+        mf.iter().any(|f| f.detail == "種類"),
+        "a FLAG entry with no 種類 line at all should produce missing_field 種類: {:?}",
+        mf
+    );
+}
+
+// @kotowari[REQ-098]
+#[test]
+fn req_098_flag_relation_line_with_only_commas_does_not_report_missing_field() {
+    let content = "\
+# 問題の記録
+
+### FLAG-001: Issue
+
+- 種類: gap
+- 関係: ,
+- 出典: brainstorm/records.md#A1
+
+Body text.
+";
+    let doc = ir::parse_document("FLAGS.md", content);
+    let findings = check(&[doc], &default_config());
+    let mf = find_by_kind(&findings, "missing_field");
+    assert!(
+        mf.iter().all(|f| f.detail != "関係"),
+        "a 関係 line that exists (even if unusable) must not produce missing_field 関係: {:?}",
+        mf
+    );
+}
+
