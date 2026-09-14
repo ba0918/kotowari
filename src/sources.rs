@@ -134,6 +134,10 @@ impl SourceContext {
     /// 出典1つを検査する
     pub fn check_source(&self, source: &str) -> Result<(), String> {
         let (raw_path, anchor) = split_source(source).ok_or_else(|| source.to_string())?;
+        // 絶対パスは出典として不正
+        if raw_path.starts_with('/') || raw_path.starts_with('\\') {
+            return Err(source.to_string());
+        }
         let path_normalized = crate::normalize_path(raw_path);
         let path = path_normalized.as_str();
 
