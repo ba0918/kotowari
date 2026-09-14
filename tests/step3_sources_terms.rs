@@ -1296,6 +1296,60 @@ fn tbl_014_text_between_the_second_and_third_quote_is_still_scanned() {
     );
 }
 
+// @kotowari[TBL-014]
+#[test]
+fn tbl_014_long_digit_run_before_mdx_does_not_produce_a_spurious_reference() {
+    // ".mdx" の直前が長い数字の並びでも、".mdx" は参照として拾わない
+    use std::collections::BTreeSet;
+    let content = "# Title\n\n01234567890123456789012.mdx\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(
+        !md.iter().any(|f| f.detail.contains("01234567890123456789012")),
+        "a long digit run before .mdx must not be treated as a .md reference: {:?}",
+        md
+    );
+}
+
+// @kotowari[TBL-014]
+#[test]
+fn tbl_014_md_followed_by_hyphen_is_not_a_reference() {
+    // ".md" の直後が "-" のときは参照でない
+    use std::collections::BTreeSet;
+    let content = "# Title\n\na.md-suffix\n";
+    let doc = kotowari::ir::parse_document("x.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(
+        !md.iter().any(|f| f.detail == "a.md"),
+        "'a.md-suffix' must not be treated as a reference to 'a.md': {:?}",
+        md
+    );
+}
+
+// @kotowari[TBL-014]
+#[test]
+fn tbl_014_bare_dot_md_with_nothing_before_it_is_not_a_reference() {
+    // 直前に文字が無い（空白の直後の）裸の ".md" は参照でない
+    use std::collections::BTreeSet;
+    let content = "# Title\n\nthe .md file\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(
+        !md.iter().any(|f| f.detail == ".md"),
+        "a bare '.md' with no name before it must not be treated as a document reference: {:?}",
+        md
+    );
+}
+
 // @kotowari[REQ-117]
 #[test]
 fn req_117_second_table_is_not_glossary() {
