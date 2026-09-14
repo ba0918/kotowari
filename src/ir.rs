@@ -440,8 +440,12 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
             continue;
         }
 
-        // REQ-043: #### より深い見出しは unknown_heading
-        if line.starts_with("#### ") {
+        // REQ-043: #### より深い見出し（####+ で直後が空白）は unknown_heading
+        if line.starts_with("#### ") || (line.starts_with("####") && line.len() > 4 && {
+            // # が4つ以上続き、その直後が空白の行
+            let hashes = line.bytes().take_while(|&b| b == b'#').count();
+            hashes >= 4 && line.as_bytes().get(hashes) == Some(&b' ')
+        }) {
             // 現在の項目を完了させる
             if let Some(builder) = current_item.take() {
                 items.push(builder.build());
