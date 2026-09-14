@@ -281,11 +281,122 @@ fn prop_003_findings_are_sorted() {
                     (Some(_), None) => std::cmp::Ordering::Greater,
                     (Some(al), Some(bl)) => al.cmp(&bl),
                 })
-                .then_with(|| a.kind.cmp(&b.kind))
+                .then_with(|| a.kind.as_str().cmp(b.kind.as_str()))
                 .then_with(|| a.detail.cmp(&b.detail));
             prop_assert!(cmp != std::cmp::Ordering::Greater,
                 "findings not sorted at index {}: prev=({},{:?},{},{}) curr=({},{:?},{},{})",
                 i, a.path, a.line, a.kind, a.detail, b.path, b.line, b.kind, b.detail);
         }
     });
+}
+
+// --- Step 7: 指摘の種類と行の表 ---
+
+// @kotowari[REQ-027]
+#[test]
+fn req_027_glossary_invalid_has_null_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    // 用語集にヘッダの列名が違う表しかない → glossary_invalid
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| Name | Meaning | Source |\n|---|---|---|\n| test | meaning | docs/decision/brainstorm/records.md#A1 |\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let gi = findings_by_kind(&v, "glossary_invalid");
+    assert!(!gi.is_empty(), "should produce glossary_invalid: {:?}", gi);
+    assert!(gi[0]["line"].is_null(), "glossary_invalid line should be null");
+}
+
+// @kotowari[TBL-019]
+#[test]
+fn tbl_019_unclosed_code_block_line_is_the_opening_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\n```\nunclosed\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let uc = findings_by_kind(&v, "unclosed_code_block");
+    assert!(!uc.is_empty(), "should produce unclosed_code_block");
+    assert_eq!(uc[0]["line"], 13, "line should be the opening line (13)");
+}
+
+// @kotowari[TBL-019]
+#[test]
+fn tbl_019_invalid_gherkin_line_and_invalid_id_lines() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n\n## 具体例\n\n```gherkin\n@id=BADID @about=REQ-001 @source=docs/decision/brainstorm/records.md#A1\nScenario: Test\n  Given something\nFeature: bad\n```\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ig = findings_by_kind(&v, "invalid_gherkin_line");
+    assert!(!ig.is_empty(), "should have invalid_gherkin_line");
+    // invalid_gherkin_line の line はその行
+    assert_eq!(ig[0]["line"], 21, "invalid_gherkin_line should be on its own line (21)");
+    let ii = findings_by_kind(&v, "invalid_id");
+    assert!(!ii.is_empty(), "should have invalid_id");
+    // invalid_id の line はタグの行
+    assert_eq!(ii[0]["line"], 18, "invalid_id line should be the tag line (18)");
+}
+
+// @kotowari[TBL-019]
+#[test]
+fn tbl_019_unclosed_backtick_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| IR | 仕様 | docs/decision/brainstorm/records.md#A1 |\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\n`奇数のバッククォート。\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ub = findings_by_kind(&v, "unclosed_backtick");
+    assert!(!ub.is_empty(), "should produce unclosed_backtick");
+    assert_eq!(ub[0]["line"], 13, "unclosed_backtick should be on its own line (13)");
+}
+
+// @kotowari[TBL-019]
+#[test]
+fn tbl_019_marker_findings_line_is_the_marker_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    // invalid_marker の line は印の行
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[]\n#[test]\nfn test_a() {}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let im = findings_by_kind(&v, "invalid_marker");
+    assert!(!im.is_empty(), "should have invalid_marker");
+    assert_eq!(im[0]["line"], 1, "invalid_marker line should be the marker line (1)");
+}
+
+// @kotowari[TBL-019]
+#[test]
+fn tbl_019_source_invalid_line_is_the_source_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: somewhere/bad.md#X\n- 検証: unit\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(!si.is_empty(), "should have source_invalid");
+    // line は出典の行（10行目）
+    assert_eq!(si[0]["line"], 10, "source_invalid line should be the source line (10)");
 }

@@ -122,6 +122,191 @@ fn req_007_exit_codes_zero_two() {
         .code(2);
 }
 
+// --- REQ-107: --help と --version ---
+
+// @kotowari[REQ-107, REQ-002, TBL-002]
+#[test]
+fn req_107_help_and_version_exit_zero_without_check() {
+    // --help は check 無しでも終了コード0
+    let out = cmd()
+        .arg("--help")
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(0);
+    let stdout = String::from_utf8_lossy(&out.get_output().stdout);
+    assert!(!stdout.is_empty(), "help should produce output");
+
+    // --version も同様
+    let out = cmd()
+        .arg("--version")
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(0);
+    let stdout = String::from_utf8_lossy(&out.get_output().stdout);
+    assert!(!stdout.is_empty(), "version should produce output");
+}
+
+// @kotowari[REQ-107, REQ-004]
+#[test]
+fn req_107_help_wins_over_argument_errors() {
+    // --help が他の引数の誤りに優先する
+    cmd()
+        .args(["--help", "--unknown"])
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(0);
+    // --version も同様
+    cmd()
+        .args(["--version", "--unknown"])
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(0);
+}
+
+// --- REQ-004: 引数の誤り（追加） ---
+
+// @kotowari[REQ-004, REQ-005]
+#[test]
+fn req_004_no_arguments_stops() {
+    cmd()
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(2)
+        .stdout("");
+}
+
+// @kotowari[REQ-004, REQ-005]
+#[test]
+fn req_004_option_without_value_stops() {
+    cmd()
+        .args(["check", "--format"])
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(2)
+        .stdout("");
+}
+
+// @kotowari[REQ-004, REQ-005]
+#[test]
+fn req_004_repeated_option_stops() {
+    cmd()
+        .args(["check", "--format", "json", "--format", "text"])
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(2)
+        .stdout("");
+}
+
+// @kotowari[REQ-004, REQ-005]
+#[test]
+fn req_004_config_pointing_to_directory_stops() {
+    cmd()
+        .args(["check", "--config", "."])
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(2)
+        .stdout("");
+}
+
+// @kotowari[REQ-002]
+#[test]
+fn req_002_options_before_or_after_check() {
+    // オプションが check の前でも後でも受ける
+    cmd()
+        .args(["--format", "json", "check"])
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(0);
+    cmd()
+        .args(["check", "--format", "json"])
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(0);
+}
+
+// --- REQ-005: 停止の出力の形 ---
+
+// @kotowari[REQ-005, TBL-018, TBL-020]
+#[test]
+fn req_005_stderr_first_line_has_the_reason_wording() {
+    // 4つの文言を検査する
+    // 引数の誤り
+    let out = cmd()
+        .args(["check", "--bad"])
+        .current_dir(valid_project_dir())
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    let first_line = stderr.lines().next().unwrap_or("");
+    assert!(
+        first_line.starts_with("argument error: "),
+        "expected 'argument error: ...', got: {first_line:?}"
+    );
+}
+
+// @kotowari[REQ-005, TBL-020]
+#[test]
+fn req_005_config_error_detail_path_is_relative_to_base_not_to_cwd() {
+    use std::fs;
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+    )
+    .unwrap();
+    // 基準のディレクトリの直下に、知らないキーを持つ壊れた設定を置く
+    fs::write(tmp.path().join("bad.yaml"), "unknown_key: 1\n").unwrap();
+    let sub = tmp.path().join("sub");
+    fs::create_dir_all(&sub).unwrap();
+    // sub/ から "--config ../bad.yaml" を指す（CWD からの相対、REQ-003）
+    let out = cmd()
+        .args(["check", "--config", "../bad.yaml"])
+        .current_dir(&sub)
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    let first_line = stderr.lines().next().unwrap_or("");
+    assert!(
+        first_line.starts_with("config error: bad.yaml:"),
+        "the --config detail path should be relative to the base directory (bad.yaml), not to the CWD (../bad.yaml): {first_line:?}"
+    );
+}
+
+// @kotowari[REQ-005, TBL-020]
+#[test]
+fn req_005_stderr_detail_path_is_relative() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    std::fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+    )
+    .unwrap();
+    // docs/ir を作らない → 読めないファイル
+    let out = cmd()
+        .arg("check")
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    let first_line = stderr.lines().next().unwrap_or("");
+    assert!(
+        first_line.starts_with("unreadable file: "),
+        "expected 'unreadable file: ...', got: {first_line:?}"
+    );
+    // 絶対パスが含まれないことを確認
+    assert!(
+        !first_line.contains(tmp.path().to_str().unwrap()),
+        "detail should not contain absolute path, got: {first_line:?}"
+    );
+}
+
 // --- REQ-021: 既定は json ---
 
 // @kotowari[REQ-021]
@@ -137,3 +322,38 @@ fn req_021_default_format_is_json() {
     assert_eq!(v["files"], 0);
     assert!(v["findings"].as_array().unwrap().is_empty());
 }
+
+// @kotowari[REQ-005, TBL-020]
+#[test]
+fn req_005_config_outside_the_base_is_shown_relative_with_parent_segments() {
+    // A164: 基準の外にある設定ファイルの詳細は "../" を含む基準からの相対パス
+    use std::fs;
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    let base = tmp.path().join("proj");
+    fs::create_dir_all(base.join(".kotowari")).unwrap();
+    fs::create_dir_all(base.join("docs/ir")).unwrap();
+    fs::create_dir_all(base.join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(base.join("docs/decision/adr")).unwrap();
+    fs::write(
+        base.join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+    )
+    .unwrap();
+    // 基準の1つ上に壊れた設定を置き、基準の下の sub/ から指す
+    fs::write(tmp.path().join("bad.yaml"), "unknown_key: 1\n").unwrap();
+    let sub = base.join("sub");
+    fs::create_dir_all(&sub).unwrap();
+    let out = cmd()
+        .args(["check", "--config", "../../bad.yaml"])
+        .current_dir(&sub)
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    let first_line = stderr.lines().next().unwrap_or("");
+    assert!(
+        first_line.starts_with("config error: ../bad.yaml:"),
+        "the detail should be relative to the base (../bad.yaml), not to the CWD: {first_line:?}"
+    );
+}
+

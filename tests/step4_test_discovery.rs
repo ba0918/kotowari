@@ -823,14 +823,21 @@ fn tbl_001_non_utf8_test_file_stops() {
     );
     // 標準出力は空
     assert!(output.stdout.is_empty(), "stdout should be empty on stop");
+    // 停止の詳細に絶対パスが含まれない
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !stderr.contains(tmp.path().to_str().unwrap()),
+        "stderr should not contain absolute path, got: {stderr:?}"
+    );
 }
 
-// --- REQ-079: シンボリックリンクを辿らない ---
+// --- REQ-079: ファイルのシンボリックリンクは読む ---
 
 // @kotowari[REQ-079]
 #[test]
 #[cfg(unix)]
-fn req_079_symlink_is_not_followed() {
+fn req_079_file_symlink_is_read() {
+    // A102 で改めた: ファイルのシンボリックリンクは読む（ディレクトリのリンクは辿らない）
     use std::os::unix::fs::symlink;
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -842,6 +849,7 @@ fn req_079_symlink_is_not_followed() {
         "// @kotowari[REQ-001]\n#[test]\nfn linked_test() {}\n",
     )
     .unwrap();
+    // ファイルへのシンボリックリンク → 読まれる
     symlink(
         tmp.path().join("elsewhere/linked_test.rs"),
         tmp.path().join("tests/linked_test.rs"),
@@ -849,17 +857,29 @@ fn req_079_symlink_is_not_followed() {
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
-    let twi = findings_by_kind(&v, "test_without_id");
-    assert!(
-        !twi.iter().any(|f| f["detail"] == "linked_test"),
-        "シンボリックリンク先のテストは走査されないはず: {:?}",
-        twi
-    );
     let rwt = findings_by_kind(&v, "requirement_without_test");
     assert!(
-        rwt.iter().any(|f| f["detail"] == "REQ-001"),
-        "シンボリックリンクが辿られないので REQ-001 はテスト無しのはず: {:?}",
+        rwt.is_empty(),
+        "ファイルのシンボリックリンクのテストは読まれるので REQ-001 はカバーされるはず: {:?}",
         rwt
+    );
+    // ディレクトリのシンボリックリンクは辿らない
+    fs::create_dir_all(tmp.path().join("linked_dir_target")).unwrap();
+    fs::write(
+        tmp.path().join("linked_dir_target/another_test.rs"),
+        "#[test]\nfn another_test() {}\n",
+    ).unwrap();
+    std::os::unix::fs::symlink(
+        tmp.path().join("linked_dir_target"),
+        tmp.path().join("tests/linked_dir"),
+    ).unwrap();
+    let output2 = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v2 = parse_json(&output2);
+    let twi = findings_by_kind(&v2, "test_without_id");
+    assert!(
+        !twi.iter().any(|f| f["detail"] == "another_test"),
+        "ディレクトリのシンボリックリンクの先のテストは走査されないはず: {:?}",
+        twi
     );
 }
 
@@ -1002,9 +1022,10 @@ fn req_071_marker_line_number_is_reported() {
     assert_eq!(markers[0].line, 42, "marker line should match the given line number");
 }
 
-// @kotowari[REQ-054]
+// @kotowari[REQ-118]
 #[test]
-fn req_054_marker_unresolved_reference_reports_fn_line() {
+fn req_118_unresolved_reference_line_is_the_marker_line() {
+    // A121 で改めた: unresolved_reference の line は印のある行
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -1019,7 +1040,264 @@ fn req_054_marker_unresolved_reference_reports_fn_line() {
     let req999 = ur.iter().find(|f| f["detail"] == "REQ-999");
     assert!(req999.is_some(), "should find unresolved REQ-999: {:?}", ur);
     assert_eq!(
-        req999.unwrap()["line"], 4,
-        "unresolved_reference line should be the fn line (4)"
+        req999.unwrap()["line"], 2,
+        "unresolved_reference line should be the marker line (2), not the fn line"
     );
+}
+
+// --- Step 6: テストの数え方と印 ---
+
+// @kotowari[TBL-017]
+#[test]
+fn tbl_017_attribute_path_ending_in_test_is_counted() {
+    // "#[ test ]" や "#[core::prelude::v1::test]" も数える
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "#[  test  ]\nfn spaced_test() {}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(twi.iter().any(|f| f["detail"] == "spaced_test"),
+        "spaced #[ test ] should be counted: {:?}", twi);
+}
+
+// @kotowari[TBL-017]
+#[test]
+fn tbl_017_nested_function_in_macro_is_not_counted() {
+    // マクロの中の入れ子の関数は数えない（最上位だけ）
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - my_macro\n",
+    ).unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "my_macro! {\n    fn outer() {\n        fn inner() {}\n    }\n}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(twi.iter().any(|f| f["detail"] == "outer"),
+        "outer function should be counted: {:?}", twi);
+    assert!(!twi.iter().any(|f| f["detail"] == "inner"),
+        "inner function should not be counted: {:?}", twi);
+}
+
+// @kotowari[TBL-017]
+#[test]
+fn tbl_017_macro_function_body_marker_binds() {
+    // マクロの中の関数の本体の先頭のコメントの印が結び付く
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - my_macro\n",
+    ).unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "my_macro! {\n    fn body_marker() {\n        // @kotowari[REQ-001]\n        assert!(true);\n    }\n}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    assert!(rwt.is_empty(), "body marker in macro function should bind: {:?}", rwt);
+}
+
+// @kotowari[TBL-016]
+#[test]
+fn tbl_016_macro_function_block_comment_marker_binds() {
+    // マクロの中の関数でも、通常の関数と同じ規則で複数行のブロックコメントの印が結び付く
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - my_macro\n",
+    ).unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "my_macro! {\n    /* @kotowari[REQ-001]\n    */\n    fn block_comment_marker() {}\n}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    assert!(
+        rwt.is_empty(),
+        "a multi-line block comment marker right before a macro function should bind, just like a normal function: {:?}",
+        rwt
+    );
+    // 対: 同じ形で印を外すと requirement_without_test が出る（印が結び付いたから空だった、の裏付け）
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "my_macro! {\n    /* no marker here\n    */\n    fn block_comment_marker() {}\n}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    assert_eq!(rwt.len(), 1, "without the marker REQ-001 must be reported: {:?}", rwt);
+}
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_duplicate_marker_id_in_same_test_reports_per_occurrence() {
+    // A152: 同じテストに同じ ID を指す印が複数あるとき、unresolved_reference は出現ごとに1件
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-999]\n// @kotowari[REQ-999]\n#[test]\nfn duplicate_marker_test() {}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ur = findings_by_kind(&v, "unresolved_reference");
+    let matching: Vec<_> = ur.iter().filter(|f| f["detail"] == "REQ-999").collect();
+    assert_eq!(
+        matching.len(), 2,
+        "each occurrence of the same unresolved ID pointing at one test should produce its own finding: {:?}",
+        ur
+    );
+    let mut lines: Vec<u64> = matching.iter().map(|f| f["line"].as_u64().unwrap()).collect();
+    lines.sort();
+    assert_eq!(lines, vec![1, 2]);
+}
+
+// @kotowari[REQ-072]
+#[test]
+fn req_072_marker_spanning_lines_is_invalid() {
+    // 行をまたぐ印は invalid_marker
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-001\n// ]\n#[test]\nfn spanning_test() {}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let im = findings_by_kind(&v, "invalid_marker");
+    assert!(!im.is_empty(), "spanning marker should produce invalid_marker: {:?}", im);
+}
+
+// @kotowari[REQ-072]
+#[test]
+fn req_072_detail_is_the_raw_line() {
+    // invalid_marker の detail は生の行
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-001\n#[test]\nfn spanning_detail_test() {}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let im = findings_by_kind(&v, "invalid_marker");
+    assert!(!im.is_empty(), "should have invalid_marker");
+    assert_eq!(im[0]["detail"], "// @kotowari[REQ-001",
+        "detail should be the raw line text");
+}
+
+// @kotowari[REQ-085]
+#[test]
+fn req_085_requirement_without_verification_line_gets_no_coverage_finding() {
+    // "- 検証:" の行が無い要求には requirement_without_test は出ない
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    assert!(rwt.is_empty(), "requirement without verification line should not get requirement_without_test: {:?}", rwt);
+    let vm = findings_by_kind(&v, "verification_missing");
+    assert!(!vm.is_empty(), "should get verification_missing instead");
+}
+
+// @kotowari[REQ-081]
+#[test]
+fn req_081_uppercase_extension_has_no_query() {
+    // ".RS" は問い合わせの無い言語（大文字小文字を区別）
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.RS\"\n    - \"tests/**/*.rs\"\n",
+    ).unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.RS"),
+        "#[test]\nfn uppercase_test() {}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    // .RS ファイルは問い合わせの無い言語なので test_without_id は出ない
+    assert!(!twi.iter().any(|f| f["detail"] == "uppercase_test"),
+        ".RS should not produce test_without_id: {:?}", twi);
+}
+
+// @kotowari[REQ-019]
+#[test]
+fn req_019_hidden_file_matched_by_glob_is_read() {
+    // ".foo.rs" は glob が当てれば読まれる
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/.hidden_test.rs"),
+        "#[test]\nfn hidden_file_test() {}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(twi.iter().any(|f| f["detail"] == "hidden_file_test"),
+        "hidden file matched by glob should be read: {:?}", twi);
+}
+
+// @kotowari[REQ-079, REQ-018]
+#[test]
+#[cfg(unix)]
+fn req_079_broken_symlink_in_tests_stops() {
+    use std::os::unix::fs::symlink;
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    symlink(tmp.path().join("nowhere.rs"), tmp.path().join("tests/broken.rs")).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(2), "a broken symlink in the test walk must stop: {:?}", output);
+    assert!(output.stdout.is_empty());
+}
+
+// @kotowari[REQ-079, REQ-018]
+#[test]
+#[cfg(unix)]
+fn req_079_broken_symlink_outside_glob_stops() {
+    // A159: 走査は基準のディレクトリ全体（隠しディレクトリを除く）を歩いてから glob で選ぶので、
+    // glob に当たらない場所（既定は src/**/*.rs, tests/**/*.rs）の先の無いシンボリックリンクでも停止する
+    use std::os::unix::fs::symlink;
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    symlink(tmp.path().join("nowhere.txt"), tmp.path().join("notes.txt")).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "a broken symlink outside every configured glob must still stop the walk: {:?}",
+        output
+    );
+    assert!(output.stdout.is_empty());
 }

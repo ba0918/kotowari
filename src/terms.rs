@@ -1,7 +1,7 @@
 //! 用語、曖昧語、文書名の参照の検査（REQ-063〜REQ-070, REQ-104）
 
 use crate::ir::{is_valid_id, IrDocument, Item};
-use crate::Finding;
+use crate::{Finding, FindingKind};
 use std::collections::BTreeSet;
 
 /// 用語集から用語の集合を作る
@@ -27,7 +27,7 @@ pub fn collect_glossary_terms(docs: &[IrDocument]) -> Option<BTreeSet<String>> {
     }
 }
 
-/// 対象の行からバッククォートで囲んだ語を検査する（REQ-064, REQ-065）
+/// 対象の行からバッククォートで囲んだ語を検査する（REQ-064, REQ-065, REQ-116）
 pub fn check_unknown_terms(
     text: &str,
     line: usize,
@@ -36,43 +36,37 @@ pub fn check_unknown_terms(
     path: &str,
     findings: &mut Vec<Finding>,
 ) {
-    let mut start = 0;
-    while let Some(open) = text[start..].find('`') {
-        let open_abs = start + open + 1;
-        if open_abs >= text.len() {
-            break;
+    // REQ-116: バッククォートが奇数の行は unclosed_backtick
+    // 二重引用符の外のバッククォートだけを数える
+    if crate::has_odd_backticks_outside_quotes(text) {
+        findings.push(Finding::new(FindingKind::UnclosedBacktick, path.to_string(), Some(line), text.to_string()));
+        return;
+    }
+    for content in crate::extract_backtick_contents_outside_quotes(text) {
+        // REQ-064: 前後の空白を除く
+        let trimmed = content.trim();
+        // REQ-064: 中身が空の囲み
+        if trimmed.is_empty() {
+            findings.push(Finding::new(FindingKind::UnknownTerm, path.to_string(), Some(line), "``".to_string()));
+            continue;
         }
-        if let Some(close) = text[open_abs..].find('`') {
-            let content = &text[open_abs..open_abs + close];
-            if !content.is_empty() {
-                // ID なら参照チェック（ir モジュールで済み）、用語チェックはしない
-                if is_valid_id(content) {
-                    // ID は通す（参照チェックは ir モジュールで行う）
-                } else {
-                    // 用語集にあるか
-                    let is_known = match glossary {
-                        Some(terms) => terms.contains(content),
-                        None => false, // 用語集がない → すべて unknown
-                    };
-                    if !is_known {
-                        findings.push(Finding {
-                            kind: "unknown_term".to_string(),
-                            severity: "error".to_string(),
-                            path: path.to_string(),
-                            line: Some(line),
-                            detail: content.to_string(),
-                        });
-                    }
-                }
-            }
-            start = open_abs + close + 1;
-        } else {
-            break;
+        // ID なら参照チェック（ir モジュールで済み）、用語チェックはしない
+        if is_valid_id(trimmed) {
+            continue;
+        }
+        // 用語集にあるか
+        let is_known = match glossary {
+            Some(terms) => terms.contains(trimmed),
+            None => false, // 用語集がない → すべて unknown
+        };
+        if !is_known {
+            findings.push(Finding::new(FindingKind::UnknownTerm, path.to_string(), Some(line), trimmed.to_string()));
         }
     }
 }
 
 /// 曖昧語の検査（REQ-066, REQ-067）
+/// 行の左から最長一致で重ならない形で数える（A142）
 pub fn check_vague_words(
     text: &str,
     line: usize,
@@ -80,21 +74,33 @@ pub fn check_vague_words(
     path: &str,
     findings: &mut Vec<Finding>,
 ) {
-    for word in vague_words {
-        if word.is_empty() {
-            continue;
+    if vague_words.is_empty() {
+        return;
+    }
+    let chars: Vec<char> = text.chars().collect();
+    let mut pos = 0;
+    while pos < chars.len() {
+        // 現在位置から始まる最長の曖昧語を探す
+        let mut best_word: Option<&String> = None;
+        let mut best_len: usize = 0;
+        let remaining: String = chars[pos..].iter().collect();
+        for word in vague_words {
+            if word.is_empty() {
+                continue;
+            }
+            if remaining.starts_with(word.as_str()) {
+                let wlen = word.chars().count();
+                if wlen > best_len {
+                    best_word = Some(word);
+                    best_len = wlen;
+                }
+            }
         }
-        // 部分一致で出現回数を数える（REQ-067: 出現ごとに1件）
-        let mut search_start = 0;
-        while let Some(pos) = text[search_start..].find(word.as_str()) {
-            findings.push(Finding {
-                kind: "vague_word".to_string(),
-                severity: "error".to_string(),
-                path: path.to_string(),
-                line: Some(line),
-                detail: word.clone(),
-            });
-            search_start += pos + word.len();
+        if let Some(word) = best_word {
+            findings.push(Finding::new(FindingKind::VagueWord, path.to_string(), Some(line), word.clone()));
+            pos += best_len;
+        } else {
+            pos += 1;
         }
     }
 }
@@ -113,51 +119,31 @@ pub fn check_document_references(
     ];
 
     for doc in docs {
-        let path = format!("{}/{}", ir_path, doc.filename);
+        let path = crate::join_display_path(ir_path, &doc.filename);
         let lines = crate::ir::split_lines_for_doc_ref(&doc.filename, &doc.raw_content);
 
-        let mut in_code_block = false;
+        let mut current_fence: Option<crate::ir::CodeFence> = None;
         for (idx, line) in lines.iter().enumerate() {
             let line_num = idx + 1;
 
-            if line.starts_with("```") {
-                in_code_block = !in_code_block;
+            if let Some(ref fence) = current_fence {
+                if crate::ir::is_closing_fence(line, fence) {
+                    current_fence = None;
+                }
                 continue;
             }
-            if in_code_block {
+            if let Some(fence) = crate::ir::parse_opening_fence(line) {
+                current_fence = Some(fence);
                 continue;
             }
 
             // 二重引用符の中を除外するため、引用符の外の部分だけ検査
-            let parts = split_outside_quotes(line);
+            let parts = crate::split_outside_quotes(line);
             for part in &parts {
                 find_doc_refs(part, line_num, &path, ir_filenames, punctuation, findings);
             }
         }
     }
-}
-
-/// 二重引用符の外の部分を返す
-fn split_outside_quotes(line: &str) -> Vec<&str> {
-    let mut parts = Vec::new();
-    let mut start = 0;
-    let mut in_quote = false;
-
-    for (i, c) in line.char_indices() {
-        if c == '"' {
-            if !in_quote {
-                parts.push(&line[start..i]);
-                in_quote = true;
-            } else {
-                in_quote = false;
-                start = i + 1;
-            }
-        }
-    }
-    if !in_quote && start < line.len() {
-        parts.push(&line[start..]);
-    }
-    parts
 }
 
 /// 文書名の参照を見つける
@@ -179,11 +165,11 @@ fn find_doc_refs(
         if let Some(md_pos) = text[i..].find(".md") {
             let md_abs = i + md_pos;
 
-            // ".md" の後が英小文字や数字でないこと（ファイル名の一部でない）
+            // TBL-014: ".md" の後が英数字、"_"、"-" でないこと
             let after_md = md_abs + 3;
             if after_md < len {
                 let next_byte = bytes[after_md];
-                if next_byte.is_ascii_lowercase() || next_byte.is_ascii_digit() || next_byte == b'-' {
+                if next_byte.is_ascii_alphanumeric() || next_byte == b'_' || next_byte == b'-' {
                     i = md_abs + 1;
                     continue;
                 }
@@ -215,13 +201,7 @@ fn find_doc_refs(
                 if boundary_ok {
                     // IR の置き場にその文書があるか
                     if !ir_filenames.contains(doc_name) {
-                        findings.push(Finding {
-                            kind: "missing_document".to_string(),
-                            severity: "error".to_string(),
-                            path: path.to_string(),
-                            line: Some(line),
-                            detail: doc_name.to_string(),
-                        });
+                        findings.push(Finding::new(FindingKind::MissingDocument, path.to_string(), Some(line), doc_name.to_string()));
                     }
                 }
             }
@@ -243,7 +223,7 @@ pub fn check_terms_and_vague_words(
     findings: &mut Vec<Finding>,
 ) {
     for doc in docs {
-        let path = format!("{}/{}", ir_path, doc.filename);
+        let path = crate::join_display_path(ir_path, &doc.filename);
         for item in &doc.items {
             match item {
                 Item::Requirement { statements, .. } => {

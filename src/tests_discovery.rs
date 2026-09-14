@@ -2,7 +2,7 @@
 
 use crate::config::Config;
 use crate::ir::{is_valid_id, IrDocument, Item};
-use crate::Finding;
+use crate::{Finding, FindingKind};
 use globset::{Glob, GlobSetBuilder};
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -14,7 +14,8 @@ pub struct DiscoveredTest {
     pub name: String,
     pub file_path: String,
     pub line: usize,
-    pub marker_ids: BTreeSet<String>,
+    /// 印の出現ごとの (ID, 印のある行)。A152: 同じ ID の印が複数あっても出現ごとに数える
+    pub marker_ids: Vec<(String, usize)>,
     /// テストに結び付く位置にある、中身が空または閉じ括弧のない印
     pub invalid_markers: Vec<(usize, String)>,
 }
@@ -24,7 +25,6 @@ pub struct DiscoveredTest {
 pub struct Marker {
     pub ids: Vec<String>,
     pub line: usize,
-    pub raw: String,
 }
 
 /// @kotowari[...] 印を1行から抽出する
@@ -43,21 +43,11 @@ pub fn parse_markers_in_line(line: &str, line_num: usize) -> Vec<Marker> {
                 .map(|s| s.trim().to_string())
                 .filter(|s| !s.is_empty())
                 .collect();
-            let raw = line[abs_start..content_start + close + 1].to_string();
-            markers.push(Marker {
-                ids,
-                line: line_num,
-                raw,
-            });
+            markers.push(Marker { ids, line: line_num });
             search_start = content_start + close + 1;
         } else {
             // 閉じ括弧がない
-            let raw = line[abs_start..].to_string();
-            markers.push(Marker {
-                ids: vec![],
-                line: line_num,
-                raw,
-            });
+            markers.push(Marker { ids: vec![], line: line_num });
             break;
         }
     }
@@ -72,35 +62,68 @@ pub fn collect_test_files(
 ) -> Result<Vec<(String, String)>, crate::StopReason> {
     let mut builder = GlobSetBuilder::new();
     for pattern in &config.tests.files {
-        if let Ok(g) = Glob::new(pattern) {
-            builder.add(g);
-        }
+        // glob の構文は Config::parse で検証済み
+        let g = Glob::new(pattern).map_err(|e| {
+            crate::StopReason::ConfigError(format!("invalid glob: {pattern}: {e}"))
+        })?;
+        builder.add(g);
     }
-    let globset = match builder.build() {
-        Ok(g) => g,
-        Err(_) => return Ok(vec![]),
-    };
+    let globset = builder.build().map_err(|e| {
+        crate::StopReason::ConfigError(format!("glob build error: {e}"))
+    })?;
 
     let mut files = Vec::new();
 
     for entry in WalkDir::new(base)
+        .follow_links(false)
         .into_iter()
         .filter_entry(|e| {
             // 隠しディレクトリを除外（REQ-019）。ルートは除外しない
-            if e.file_type().is_dir() && e.depth() > 0 {
-                let name = e.file_name().to_string_lossy();
-                !name.starts_with('.')
-            } else {
-                true
+            // ディレクトリのシンボリックリンクは辿らない（REQ-079, A102）
+            if e.depth() > 0 {
+                let ft = e.file_type();
+                if ft.is_symlink() {
+                    // シンボリックリンク: ファイルなら含める、ディレクトリなら除外
+                    // filter_entry ではディレクトリかどうかで判定
+                    // WalkDir は follow_links(false) なのでシンボリックリンクは展開されない
+                    // ここで辿って判定する
+                    if let Ok(meta) = std::fs::metadata(e.path()) {
+                        if meta.is_dir() {
+                            return false; // ディレクトリリンクは辿らない
+                        }
+                    }
+                    return true; // ファイルリンクは含める
+                }
+                if ft.is_dir() {
+                    let name = e.file_name().to_string_lossy();
+                    return !name.starts_with('.');
+                }
             }
+            true
         })
     {
         // REQ-018（A96）: 走査でディレクトリが読めなければ停止する
         let entry = entry.map_err(|e| {
-            let where_ = e.path().map(|p| p.display().to_string()).unwrap_or_default();
+            let where_ = e.path()
+                .map(|p| p.strip_prefix(base).unwrap_or(p))
+                .map(|p| p.to_string_lossy().replace('\\', "/"))
+                .unwrap_or_default();
             crate::StopReason::UnreadableFile(format!("{where_}: {e}"))
         })?;
-        if entry.file_type().is_file() {
+        // ファイルまたはファイルのシンボリックリンク
+        let is_file = if entry.file_type().is_symlink() {
+            // A146: 先の無いシンボリックリンクは読めないファイルとして停止する
+            std::fs::metadata(entry.path())
+                .map(|m| m.is_file())
+                .map_err(|e| {
+                    let rel = entry.path().strip_prefix(base).unwrap_or(entry.path())
+                        .to_string_lossy().replace('\\', "/");
+                    crate::StopReason::UnreadableFile(format!("{rel}: {e}"))
+                })?
+        } else {
+            entry.file_type().is_file()
+        };
+        if is_file {
             let rel = entry
                 .path()
                 .strip_prefix(base)
@@ -244,23 +267,38 @@ fn discover_macro_functions(
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
         if child.kind() == "function_item" {
-            // マクロ内の関数はすべてテストと数える
+            // マクロ内の最上位の関数はすべてテストと数える（入れ子の関数は数えない）
             if let Some(name_node) = child.child_by_field_name("name") {
                 let name = &inner_source[name_node.byte_range()];
                 let inner_line = child.start_position().row;
                 let actual_line = line_offset + inner_line + 1;
 
-                // inner の関数前のコメントの印を集める
-                let all_ids = collect_markers_before_line(inner_lines, inner_line);
+                // A121: マクロの中の関数も通常の関数と同じ規則で印を集める（木の節で遡る）
+                let (all_ids_raw, before_invalid) = collect_markers_from_siblings(child, inner_source, inner_lines);
+                // line_offset を足す
+                let all_ids: Vec<(String, usize)> = all_ids_raw.into_iter()
+                    .map(|(id, ln)| (id, line_offset + ln))
+                    .collect();
+
+                // 関数本体の先頭のコメントの印も集める（A121: 通常の関数と同じ規則）
+                let (body_ids, body_invalid) = collect_body_start_markers(child, inner_source);
+                let mut merged_ids = all_ids;
+                merged_ids.extend(body_ids.into_iter().map(|(id, ln)| (id, line_offset + ln)));
+                let mut invalid_markers: Vec<(usize, String)> = before_invalid.into_iter()
+                    .map(|(ln, raw)| (line_offset + ln, raw))
+                    .collect();
+                invalid_markers.extend(body_invalid.into_iter()
+                    .map(|(ln, raw)| (line_offset + ln, raw)));
 
                 tests.push(DiscoveredTest {
                     name: name.to_string(),
                     file_path: file_rel.to_string(),
                     line: actual_line,
-                    marker_ids: all_ids,
-                    invalid_markers: Vec::new(),
+                    marker_ids: merged_ids,
+                    invalid_markers,
                 });
             }
+            // 入れ子の関数は数えない（再帰しない）
         } else {
             discover_macro_functions(
                 child,
@@ -317,13 +355,33 @@ fn check_function(
     });
 }
 
+/// 属性のパスの末尾の要素が "test" かを判定する（A122）
+/// "#[test]"、"#[ test ]"、"#[core::prelude::v1::test]"、"#[tokio::test]" を含む
+fn attr_path_ends_with_test(attr_text: &str) -> bool {
+    let inner = attr_text.trim()
+        .strip_prefix("#[")
+        .and_then(|s| s.strip_suffix(']'));
+    if let Some(inner) = inner {
+        let path = if let Some(paren) = inner.find('(') {
+            &inner[..paren]
+        } else {
+            inner
+        };
+        let path = path.trim();
+        let last_segment = path.rsplit("::").next().unwrap_or(path).trim();
+        last_segment == "test"
+    } else {
+        false
+    }
+}
+
 /// 関数が #[test] 属性を持つか
-fn has_attribute(node: tree_sitter::Node, source: &str, attr_text: &str) -> bool {
+fn has_attribute(node: tree_sitter::Node, source: &str, _attr_text: &str) -> bool {
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
         if child.kind() == "attribute_item" || child.kind() == "attribute" {
             let text = &source[child.byte_range()];
-            if text.trim() == attr_text {
+            if attr_path_ends_with_test(text) {
                 return true;
             }
         }
@@ -334,7 +392,7 @@ fn has_attribute(node: tree_sitter::Node, source: &str, attr_text: &str) -> bool
     while let Some(p) = prev {
         if p.kind() == "attribute_item" {
             let text = &source[p.byte_range()];
-            if text.trim() == attr_text {
+            if attr_path_ends_with_test(text) {
                 return true;
             }
         } else if p.kind() != "line_comment" && p.kind() != "block_comment" {
@@ -376,13 +434,13 @@ fn has_configured_attribute(node: tree_sitter::Node, source: &str, attr_path: &s
 }
 
 /// 関数の前の兄弟ノード（属性、コメント）から印を集める
-/// 返り値: (正常な印の ID 集合, 空・不正な印の (行, 行の文字) のリスト)
+/// 返り値: (出現ごとの (ID, 印の行), 空・不正な印の (行, 行の文字) のリスト)
 fn collect_markers_from_siblings(
     node: tree_sitter::Node,
     source: &str,
-    _lines: &[&str],
-) -> (BTreeSet<String>, Vec<(usize, String)>) {
-    let mut ids = BTreeSet::new();
+    lines: &[&str],
+) -> (Vec<(String, usize)>, Vec<(usize, String)>) {
+    let mut ids: Vec<(String, usize)> = Vec::new();
     let mut invalid = Vec::new();
     let mut prev = node.prev_sibling();
 
@@ -390,13 +448,25 @@ fn collect_markers_from_siblings(
         match p.kind() {
             "line_comment" | "block_comment" => {
                 let text = &source[p.byte_range()];
-                let line_num = p.start_position().row + 1;
-                for marker in parse_markers_in_line(text, line_num) {
-                    if marker.ids.is_empty() {
-                        invalid.push((line_num, text.to_string()));
+                let comment_start_row = p.start_position().row;
+                // コメントが複数行にまたがる場合は行ごとに処理
+                let comment_lines: Vec<&str> = text.lines().collect();
+                for (offset, cline) in comment_lines.iter().enumerate() {
+                    let line_num = comment_start_row + offset + 1;
+                    let raw_line = if comment_start_row + offset < lines.len() {
+                        lines[comment_start_row + offset]
                     } else {
-                        for id in &marker.ids {
-                            ids.insert(id.clone());
+                        cline
+                    };
+                    for marker in parse_markers_in_line(cline, line_num) {
+                        if marker.ids.is_empty() {
+                            // REQ-072: 空の印や閉じ括弧のない印
+                            invalid.push((line_num, raw_line.to_string()));
+                        } else {
+                            // A152: 同じ ID の印が複数あっても出現ごとに1件数える
+                            for id in &marker.ids {
+                                ids.push((id.clone(), line_num));
+                            }
                         }
                     }
                 }
@@ -427,49 +497,12 @@ fn collect_markers_from_siblings(
     (ids, invalid)
 }
 
-/// 指定行（0-indexed）の前のコメント塊から印を集める
-/// コメント（// か /*）と属性（#[）の行だけ遡り、空行またはそれ以外の行で切れる
-fn collect_markers_before_line(lines: &[&str], target_line: usize) -> BTreeSet<String> {
-    let mut ids = BTreeSet::new();
-    if target_line == 0 {
-        return ids;
-    }
-
-    let mut line_idx = target_line.saturating_sub(1);
-    loop {
-        if line_idx >= lines.len() {
-            break;
-        }
-        let line = lines[line_idx].trim();
-        if line.is_empty() {
-            break;
-        }
-
-        // コメントと属性の行だけ遡る。それ以外（関数定義など）で停止する
-        if !line.starts_with("//") && !line.starts_with("/*") && !line.starts_with("#[") {
-            break;
-        }
-
-        for marker in parse_markers_in_line(line, line_idx + 1) {
-            for id in &marker.ids {
-                ids.insert(id.clone());
-            }
-        }
-
-        if line_idx == 0 {
-            break;
-        }
-        line_idx -= 1;
-    }
-
-    ids
-}
-
 /// 関数本体の先頭のコメントから印を集める
-/// 返り値: (正常な印の ID 集合, 空・不正な印の (行, 行の文字) のリスト)
-fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> (BTreeSet<String>, Vec<(usize, String)>) {
-    let mut ids = BTreeSet::new();
+/// 返り値: (正常な印の ID → 印の行 のマップ, 空・不正な印の (行, 行の文字) のリスト)
+fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> (Vec<(String, usize)>, Vec<(usize, String)>) {
+    let mut ids: Vec<(String, usize)> = Vec::new();
     let mut invalid = Vec::new();
+    let lines: Vec<&str> = source.lines().collect();
 
     if let Some(body) = node.child_by_field_name("body") {
         let mut cursor = body.walk();
@@ -487,13 +520,23 @@ fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> (BTreeSe
             }
             if child.kind() == "line_comment" || child.kind() == "block_comment" {
                 let text = &source[child.byte_range()];
-                let line_num = child.start_position().row + 1;
-                for marker in parse_markers_in_line(text, line_num) {
-                    if marker.ids.is_empty() {
-                        invalid.push((line_num, text.to_string()));
+                let comment_start_row = child.start_position().row;
+                let comment_lines_iter: Vec<&str> = text.lines().collect();
+                for (offset, cline) in comment_lines_iter.iter().enumerate() {
+                    let line_num = comment_start_row + offset + 1;
+                    let raw_line = if comment_start_row + offset < lines.len() {
+                        lines[comment_start_row + offset]
                     } else {
-                        for id in &marker.ids {
-                            ids.insert(id.clone());
+                        cline
+                    };
+                    for marker in parse_markers_in_line(cline, line_num) {
+                        if marker.ids.is_empty() {
+                            invalid.push((line_num, raw_line.to_string()));
+                        } else {
+                            // A152: 同じ ID の印が複数あっても出現ごとに1件数える
+                            for id in &marker.ids {
+                                ids.push((id.clone(), line_num));
+                            }
                         }
                     }
                 }
@@ -521,20 +564,10 @@ pub fn discover_and_check(
     let mut all_marker_ids: BTreeSet<String> = BTreeSet::new();
 
     for (rel_path, abs_path) in &test_files {
-        let bytes = match std::fs::read(abs_path) {
-            Ok(b) => b,
-            Err(e) => {
-                return Err(crate::StopReason::UnreadableFile(
-                    format!("{abs_path}: {e}"),
-                ));
-            }
-        };
-        let content = match String::from_utf8(bytes) {
-            Ok(s) => s,
-            Err(_) => {
-                return Err(crate::StopReason::NonUtf8File(rel_path.clone()));
-            }
-        };
+        let content = crate::read_utf8_file(
+            std::path::Path::new(abs_path),
+            rel_path,
+        )?;
 
         let ext = std::path::Path::new(rel_path)
             .extension()
@@ -548,30 +581,18 @@ pub fn discover_and_check(
                     for test in &tests {
                         // 印の検証
                         check_test_markers(test, rel_path, known_ids, findings);
-                        for id in &test.marker_ids {
+                        for (id, _) in &test.marker_ids {
                             all_marker_ids.insert(id.clone());
                         }
                         // REQ-072: テストに結び付く空・不正な印
                         for (line_num, raw) in &test.invalid_markers {
-                            findings.push(Finding {
-                                kind: "invalid_marker".to_string(),
-                                severity: "error".to_string(),
-                                path: rel_path.clone(),
-                                line: Some(*line_num),
-                                detail: raw.clone(),
-                            });
+                            findings.push(Finding::new(FindingKind::InvalidMarker, rel_path.clone(), Some(*line_num), raw.clone()));
                         }
                     }
                     all_tests.extend(tests);
                 }
                 Err(_) => {
-                    findings.push(Finding {
-                        kind: "unparsable_file".to_string(),
-                        severity: "error".to_string(),
-                        path: rel_path.clone(),
-                        line: None,
-                        detail: rel_path.clone(),
-                    });
+                    findings.push(Finding::new(FindingKind::UnparsableFile, rel_path.clone(), None, rel_path.clone()));
                 }
             }
         } else {
@@ -581,25 +602,13 @@ pub fn discover_and_check(
                 for marker in parse_markers_in_line(line, line_num) {
                     if marker.ids.is_empty() {
                         // REQ-072: 空の印、または閉じ括弧のない印
-                        findings.push(Finding {
-                            kind: "invalid_marker".to_string(),
-                            severity: "error".to_string(),
-                            path: rel_path.clone(),
-                            line: Some(line_num),
-                            detail: line.to_string(),
-                        });
+                        findings.push(Finding::new(FindingKind::InvalidMarker, rel_path.clone(), Some(line_num), line.to_string()));
                     } else {
                         for id in &marker.ids {
                             all_marker_ids.insert(id.clone());
                             // REQ-054: 存在しない ID への参照
                             if !known_ids.contains(id) {
-                                findings.push(Finding {
-                                    kind: "unresolved_reference".to_string(),
-                                    severity: "error".to_string(),
-                                    path: rel_path.clone(),
-                                    line: Some(line_num),
-                                    detail: id.clone(),
-                                });
+                                findings.push(Finding::new(FindingKind::UnresolvedReference, rel_path.clone(), Some(line_num), id.clone()));
                             }
                         }
                     }
@@ -617,14 +626,8 @@ pub fn discover_and_check(
             {
                 if let Some(v) = verification {
                     if v != "review" && is_valid_id(id) && !all_marker_ids.contains(id) {
-                        let path = format!("{}/{}", ir_path, doc.filename);
-                        findings.push(Finding {
-                            kind: "requirement_without_test".to_string(),
-                            severity: "error".to_string(),
-                            path,
-                            line: Some(item.item_line()),
-                            detail: id.clone(),
-                        });
+                        let path = crate::join_display_path(ir_path, &doc.filename);
+                        findings.push(Finding::new(FindingKind::RequirementWithoutTest, path, Some(item.item_line()), id.clone()));
                     }
                 }
             }
@@ -634,13 +637,7 @@ pub fn discover_and_check(
     // REQ-086: 印の無いテスト
     for test in &all_tests {
         if test.marker_ids.is_empty() {
-            findings.push(Finding {
-                kind: "test_without_id".to_string(),
-                severity: "error".to_string(),
-                path: test.file_path.clone(),
-                line: Some(test.line),
-                detail: test.name.clone(),
-            });
+            findings.push(Finding::new(FindingKind::TestWithoutId, test.file_path.clone(), Some(test.line), test.name.clone()));
         }
     }
 
@@ -654,18 +651,10 @@ fn check_test_markers(
     known_ids: &BTreeSet<String>,
     findings: &mut Vec<Finding>,
 ) {
-    // invalid_marker のチェックは行単位で行うべきだが、
-    // ここではテストに結び付いた印のチェックを行う
-    // REQ-054 の unresolved_reference は印からも出る
-    for id in &test.marker_ids {
+    // REQ-054, REQ-118: unresolved_reference の line は印のある行
+    for (id, marker_line) in &test.marker_ids {
         if !id.is_empty() && !known_ids.contains(id) {
-            findings.push(Finding {
-                kind: "unresolved_reference".to_string(),
-                severity: "error".to_string(),
-                path: file_path.to_string(),
-                line: Some(test.line),
-                detail: id.clone(),
-            });
+            findings.push(Finding::new(FindingKind::UnresolvedReference, file_path.to_string(), Some(*marker_line), id.clone()));
         }
     }
 }

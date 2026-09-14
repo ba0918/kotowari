@@ -413,18 +413,26 @@ fn req_018_missing_ir_dir_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-005, REQ-018]
+// @kotowari[REQ-005, REQ-018, TBL-018, TBL-020]
 #[test]
 fn req_005_stderr_carries_the_stop_reason_text() {
+    // A137 で改めた: TBL-020 の形（相対パスと OS の誤りの文）
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::remove_dir_all(tmp.path().join("docs/ir")).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(output.status.code(), Some(2));
     let stderr = String::from_utf8_lossy(&output.stderr);
+    let first_line = stderr.lines().next().unwrap_or("");
+    // TBL-018: 「unreadable file」の文言で始まる
     assert!(
-        stderr.contains("unreadable file: ir directory not found"),
-        "stderr should carry the reason text, got: {stderr:?}"
+        first_line.starts_with("unreadable file: "),
+        "stderr should start with TBL-018 wording, got: {first_line:?}"
+    );
+    // TBL-020: 相対パスを含む（設定の ir の値）
+    assert!(
+        first_line.contains("docs/ir"),
+        "stderr should contain the relative path, got: {first_line:?}"
     );
 }
 
@@ -480,4 +488,232 @@ fn req_019_glob_is_recursive_and_skips_hidden_dirs() {
     let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"src/**/*.rs\"\n";
     let cfg = kotowari::config::Config::parse(yaml).unwrap();
     assert_eq!(cfg.tests.files, vec!["src/**/*.rs"]);
+}
+
+// --- Step 2: 設定の誤りの拡張、パスの正規化 ---
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_unparsable_yaml_stops() {
+    let yaml = "ir: [invalid yaml\n";
+    let result = kotowari::config::Config::parse(yaml);
+    assert!(result.is_err(), "unparsable YAML should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_duplicate_key_stops() {
+    let yaml = "ir: docs/ir\nir: other\n";
+    let result = kotowari::config::Config::parse(yaml);
+    assert!(result.is_err(), "duplicate key should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_value_stops() {
+    // "ir:" だけの行は null
+    let yaml = "ir:\n";
+    let result = kotowari::config::Config::parse(yaml);
+    assert!(result.is_err(), "null value should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_tests_files_stops() {
+    let yaml = "tests:\n  files:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.files should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_tests_rust_attributes_stops() {
+    let yaml = "tests:\n  rust:\n    attributes:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.rust.attributes should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_tests_rust_macros_stops() {
+    let yaml = "tests:\n  rust:\n    macros:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.rust.macros should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_vague_words_key_stops() {
+    let yaml = "vague_words:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null vague_words should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_decisions_stops() {
+    let yaml = "decisions:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null decisions should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_tests_stops() {
+    let yaml = "tests:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_tests_rust_stops() {
+    let yaml = "tests:\n  rust:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.rust should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_limits_stops() {
+    let yaml = "limits:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null limits should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_windows_drive_letter_like_path_is_not_absolute() {
+    // A161: 絶対パスの判定は先頭の "/" だけ。"a:b" をドライブ文字として拒まない
+    let yaml = "ir: a:b\n";
+    let result = kotowari::config::Config::parse(yaml);
+    assert!(
+        result.is_ok(),
+        "a value like 'a:b' must not be rejected as an absolute path: {:?}",
+        result.err()
+    );
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_absolute_path_stops() {
+    let yaml = "ir: /absolute/path\n";
+    let result = kotowari::config::Config::parse(yaml);
+    assert!(result.is_err(), "absolute path should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_duplicate_vague_word_stops() {
+    let yaml = "vague_words:\n  - \"foo\"\n  - \"foo\"\n";
+    let result = kotowari::config::Config::parse(yaml);
+    assert!(result.is_err(), "duplicate vague word should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_invalid_glob_stops() {
+    let yaml = "tests:\n  files:\n    - \"[invalid\"\n";
+    let result = kotowari::config::Config::parse(yaml);
+    assert!(result.is_err(), "invalid glob should stop");
+}
+
+// @kotowari[REQ-012]
+#[test]
+fn req_012_empty_config_uses_defaults() {
+    let yaml = "";
+    let cfg = kotowari::config::Config::parse(yaml).unwrap();
+    assert_eq!(cfg.ir, "docs/ir");
+}
+
+// @kotowari[REQ-012]
+#[test]
+fn req_012_comment_only_config_uses_defaults() {
+    let yaml = "# comment only\n";
+    let cfg = kotowari::config::Config::parse(yaml).unwrap();
+    assert_eq!(cfg.ir, "docs/ir");
+}
+
+// @kotowari[REQ-110]
+#[test]
+fn req_110_trailing_slash_in_config_is_normalized_in_path() {
+    assert_eq!(kotowari::normalize_path("docs/ir/"), "docs/ir");
+    assert_eq!(kotowari::normalize_path("./docs/ir/"), "docs/ir");
+}
+
+// @kotowari[REQ-110]
+#[test]
+fn req_110_dot_segments_are_folded() {
+    assert_eq!(kotowari::normalize_path("./docs/./ir"), "docs/ir");
+    assert_eq!(kotowari::normalize_path("docs//ir"), "docs/ir");
+    assert_eq!(kotowari::normalize_path("docs\\ir"), "docs/ir");
+}
+
+// @kotowari[REQ-110]
+#[test]
+fn req_110_dot_alone_normalizes_to_empty_place() {
+    // "." や "./" だけの置き場は空になる（呼び出し元が文書名だけの path を作る）
+    assert_eq!(kotowari::normalize_path("."), "");
+    assert_eq!(kotowari::normalize_path("./"), "");
+}
+
+// @kotowari[REQ-110]
+#[test]
+fn req_110_ir_dot_produces_bare_filename_path() {
+    let tmp = TempDir::new().unwrap();
+    fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: .\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+    )
+    .unwrap();
+    fs::write(tmp.path().join("a.md"), "No title\n").unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let v: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    let findings = v["findings"].as_array().unwrap();
+    let mt = findings
+        .iter()
+        .find(|f| f["kind"] == "missing_title")
+        .expect("missing_title should be reported");
+    assert_eq!(
+        mt["path"], "a.md",
+        "ir: '.' should produce a bare filename path, not './a.md'"
+    );
+}
+
+// @kotowari[REQ-018]
+#[test]
+fn req_018_place_that_is_a_file_stops() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    // ir をファイルに替える
+    fs::remove_dir_all(tmp.path().join("docs/ir")).unwrap();
+    fs::write(tmp.path().join("docs/ir"), "not a directory").unwrap();
+    cmd()
+        .arg("check")
+        .current_dir(tmp.path())
+        .assert()
+        .code(2)
+        .stdout("");
+}
+
+// @kotowari[TBL-003]
+#[test]
+fn tbl_003_kotowari_file_is_ignored_in_search() {
+    let tmp = TempDir::new().unwrap();
+    // .kotowari をファイルとして作成し、親ディレクトリに .kotowari/ を作る
+    let child = tmp.path().join("child");
+    fs::create_dir_all(&child).unwrap();
+    fs::write(child.join(".kotowari"), "this is a file, not a dir").unwrap();
+    // 親に .kotowari/ ディレクトリを作る
+    fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+    ).unwrap();
+    // child から走らせると、child/.kotowari はファイルなので無視して
+    // 親の .kotowari/ を見つけるべき
+    cmd()
+        .arg("check")
+        .current_dir(&child)
+        .assert()
+        .code(0);
 }

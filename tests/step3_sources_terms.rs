@@ -618,6 +618,64 @@ fn tbl_012_decision_line_with_and_without_trailing_text() {
     );
 }
 
+// @kotowari[REQ-058, TBL-012]
+#[test]
+fn tbl_012_indented_decision_line_counts() {
+    // A158: 決定の行は行頭の空白を除いてから判定する（字下げした行も決定）
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/decision/brainstorm/records2.md"),
+        "# 記録2\n\n## Agreements\n\n  - A26 indented agreement\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records2.md#A26\n- 検証: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records2.md#A27\n- 検証: unit\n\nStatement.\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    let details: Vec<&str> = si.iter().map(|f| f["detail"].as_str().unwrap_or("")).collect();
+    // A26（字下げした決定）は解決し、無い番号 A27 だけが source_invalid になる（検査が走ったことの対）
+    assert_eq!(
+        details,
+        vec!["docs/decision/brainstorm/records2.md#A27"],
+        "an indented decision line ('  - A26 ...') should still count as decision A26: {:?}",
+        si
+    );
+}
+
+// --- 除外: 隠しディレクトリは辿らない ---
+
+// @kotowari[REQ-058]
+#[test]
+fn req_058_hidden_directory_under_records_is_not_a_source_target() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // .old/ の下に判断の記録らしきファイルを置く
+    fs::create_dir_all(tmp.path().join("docs/decision/brainstorm/.old")).unwrap();
+    fs::write(
+        tmp.path().join("docs/decision/brainstorm/.old/records.md"),
+        "# 昔の記録\n\n## Agreements\n\n- A1 old agreement\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/.old/records.md#A1\n- 検証: unit\n\nStatement.\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(
+        si.iter().any(|f| f["detail"] == "docs/decision/brainstorm/.old/records.md#A1"),
+        "a source pointing under a hidden directory must not resolve: {:?}",
+        si
+    );
+}
+
 // --- REQ-040: gherkin コードブロック内の文書名参照は対象外 ---
 
 // @kotowari[REQ-040]
@@ -794,4 +852,454 @@ fn req_069_mdx_extension_not_matched_but_md_after_it_is() {
         "bar.md should be matched: {:?}",
         md
     );
+}
+
+// --- Step 5: 出典と用語 ---
+
+// @kotowari[TBL-012]
+#[test]
+fn tbl_012_file_with_decision_sections_is_a_records_file() {
+    // 決定の節の見出しを持つファイルは判断の記録
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 決定の節の見出しを持つが番号の無いファイル
+    fs::write(
+        tmp.path().join("docs/decision/brainstorm/no-numbers.md"),
+        "# No numbers\n\n## Agreements\n\nJust text, no decisions.\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/no-numbers.md#A1\n- 検証: unit\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    // 判断の記録として扱われるので番号 A1 で照合 → 見つからないので source_invalid
+    assert!(si.iter().any(|f| f["detail"].as_str().unwrap().contains("no-numbers.md#A1")),
+        "file with decision sections should be treated as records: {:?}", si);
+}
+
+// @kotowari[TBL-012]
+#[test]
+fn tbl_012_file_without_decision_sections_matches_headings() {
+    // 決定の節の見出しが無いファイルは見出しで照合
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 決定の節の見出しを持たないファイル
+    fs::write(
+        tmp.path().join("docs/decision/brainstorm/notes.md"),
+        "# Notes\n\n## Overview\n\nSome notes.\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/notes.md#Overview\n- 検証: unit\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    // 見出しで照合 → Overview が見つかるので通る
+    assert!(si.is_empty(), "file without decision sections should match by headings: {:?}", si);
+}
+
+// @kotowari[TBL-012]
+#[test]
+fn tbl_012_two_letter_prefix_is_not_a_decision_number() {
+    // "AB1" は決定の番号でない（英大文字1文字に1桁以上の数字）
+    assert!(!kotowari::sources::is_decision_number("AB1"),
+        "AB1 should not be a decision number (two letters)");
+    assert!(kotowari::sources::is_decision_number("A1"),
+        "A1 should be a decision number");
+}
+
+// @kotowari[REQ-061]
+#[test]
+fn req_061_subheading_does_not_end_a_section() {
+    // "### " の小見出しは節を終えない
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // records.md に ### の小見出しの後に決定の番号を置く
+    fs::write(
+        tmp.path().join("docs/decision/brainstorm/records.md"),
+        "# Records\n\n## Agreements\n\n- A1 First agreement\n\n### Subsection\n\n- A2 Second agreement\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A2\n- 検証: unit\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    // ### は節を終えないので A2 は見つかる
+    assert!(si.is_empty(), "### subheading should not end a section: {:?}", si);
+}
+
+// @kotowari[REQ-115]
+#[test]
+fn req_115_source_invalid_line_is_the_source_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 項目の出典が無効な場合、line は "- 出典:" の行
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: somewhere/bad.md#X\n- 検証: unit\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(!si.is_empty(), "should have source_invalid");
+    // line は出典の行（10行目: "- 出典: somewhere/bad.md#X"）
+    assert_eq!(si[0]["line"], 10, "source_invalid line should be the source line (10), got {:?}", si[0]);
+}
+
+// @kotowari[REQ-064]
+#[test]
+fn req_064_backtick_content_is_trimmed() {
+    // "` IR `" は "IR" として照合される
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| IR | 仕様 | docs/decision/brainstorm/records.md#A1 |\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\n` IR `は用語集にある。\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ut = findings_by_kind(&v, "unknown_term");
+    assert!(!ut.iter().any(|f| f["detail"] == "IR" || f["detail"] == " IR "),
+        "trimmed backtick content should match glossary term: {:?}", ut);
+}
+
+// @kotowari[REQ-064]
+#[test]
+fn req_064_empty_backticks_are_unknown_term() {
+    // "``" は detail "``" の unknown_term
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| IR | 仕様 | docs/decision/brainstorm/records.md#A1 |\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nSee `` here.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ut = findings_by_kind(&v, "unknown_term");
+    assert!(ut.iter().any(|f| f["detail"] == "``"),
+        "empty backticks should produce unknown_term with detail '``': {:?}", ut);
+}
+
+// @kotowari[REQ-116]
+#[test]
+fn req_116_odd_backticks_skip_terms_but_check_vague_words() {
+    // 奇数バッククォートの行は unclosed_backtick、用語と ID の検査を飛ばし曖昧語は検査する
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| IR | 仕様 | docs/decision/brainstorm/records.md#A1 |\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\n`奇数のバッククォート 適切に処理する。\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ub = findings_by_kind(&v, "unclosed_backtick");
+    assert!(!ub.is_empty(), "odd backticks should produce unclosed_backtick: {:?}", ub);
+    let vw = findings_by_kind(&v, "vague_word");
+    assert!(vw.iter().any(|f| f["detail"] == "適切に"), "vague words should still be checked: {:?}", vw);
+    let ut = findings_by_kind(&v, "unknown_term");
+    assert!(ut.is_empty(), "unknown_term should not be checked on odd backtick line: {:?}", ut);
+}
+
+// @kotowari[REQ-116, TBL-008]
+#[test]
+fn tbl_008_unclosed_backtick_detail_keeps_leading_indentation() {
+    // A150: unclosed_backtick の detail は読んだ行そのまま（字下げを含む）
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\n  `不完全な引用\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ub = findings_by_kind(&v, "unclosed_backtick");
+    assert!(
+        ub.iter().any(|f| f["detail"] == "  `不完全な引用"),
+        "unclosed_backtick detail should preserve the statement's leading indentation: {:?}",
+        ub
+    );
+}
+
+// @kotowari[REQ-067]
+#[test]
+fn req_067_overlapping_vague_words_longest_match_once() {
+    // "など" と "などの" が両方あるとき、"などの" で1件
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\nvague_words:\n  - など\n  - などの\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nなどの操作をする。\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let vw = findings_by_kind(&v, "vague_word");
+    // "などの" で1件だけ
+    assert_eq!(vw.len(), 1, "overlapping vague words should match longest once: {:?}", vw);
+    assert_eq!(vw[0]["detail"], "などの", "should match 'などの' not 'など': {:?}", vw);
+}
+
+// @kotowari[TBL-014]
+#[test]
+fn tbl_014_md_followed_by_letter_is_not_a_reference() {
+    // "a.mdX" は参照でない
+    use std::collections::BTreeSet;
+    let content = "# Title\n\nScope with a.mdX text.\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(md.is_empty(), "a.mdX should not be a reference: {:?}", md);
+}
+
+// @kotowari[TBL-014]
+#[test]
+fn tbl_014_unclosed_quote_hides_the_rest_of_the_line() {
+    // 奇数の二重引用符の後は参照を拾わない
+    use std::collections::BTreeSet;
+    let content = "# Title\n\nScope.\n\nSee \"unclosed quote nonexistent.md here.\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(md.is_empty(), "unclosed quote should hide the rest of the line: {:?}", md);
+}
+
+// @kotowari[REQ-117]
+#[test]
+fn req_117_second_table_is_not_glossary() {
+    // 用語集の2つ目の表は用語にならない
+    let content = "\
+# 用語集
+
+| 用語 | 意味 | 出典 |
+|---|---|---|
+| テスト | 意味 | brainstorm/records.md#A1 |
+
+Some text.
+
+| 用語 | 意味 | 出典 |
+|---|---|---|
+| 二番目 | 意味2 | brainstorm/records.md#A1 |
+";
+    let doc = kotowari::ir::parse_document("CONTEXT.md", content);
+    let terms: Vec<_> = doc.items.iter()
+        .filter(|i| matches!(i, kotowari::ir::Item::GlossaryTerm { .. }))
+        .collect();
+    assert_eq!(terms.len(), 1, "second table should not be parsed as glossary: {:?}", terms);
+    if let kotowari::ir::Item::GlossaryTerm { term, .. } = &terms[0] {
+        assert_eq!(term, "テスト", "only first table terms should be parsed");
+    }
+}
+
+// @kotowari[REQ-117]
+#[test]
+fn req_117_glossary_without_proper_table_is_invalid() {
+    // 用語集にヘッダの列名が違う表しかない → glossary_invalid
+    let content = "\
+# 用語集
+
+| Name | Meaning | Source |
+|---|---|---|
+| test | meaning | brainstorm/records.md#A1 |
+";
+    let doc = kotowari::ir::parse_document("CONTEXT.md", content);
+    let config = kotowari::config::Config::default();
+    let findings = kotowari::ir::check_documents(&[doc], &config);
+    let gi: Vec<_> = findings.iter().filter(|f| f.kind == "glossary_invalid").collect();
+    assert!(!gi.is_empty(), "glossary without proper table should produce glossary_invalid: {:?}", gi);
+    assert!(gi[0].line.is_none(), "glossary_invalid line should be null");
+    assert_eq!(gi[0].detail, "CONTEXT.md", "glossary_invalid detail should be filename");
+}
+
+// --- TBL-001: 非 UTF-8 の判断の記録または ADR で停止 ---
+
+// @kotowari[REQ-006, TBL-001]
+#[test]
+fn tbl_001_non_utf8_records_or_adr_stops() {
+    // 判断の記録に非 UTF-8 ファイルを置くと停止する
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/decision/brainstorm/bad.md"),
+        b"\xff\xfe",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "non-UTF-8 records file should stop with exit code 2"
+    );
+    assert!(output.stdout.is_empty(), "stdout should be empty on stop");
+
+    // ADR に非 UTF-8 ファイルを置くと停止する
+    let tmp2 = TempDir::new().unwrap();
+    make_project_with_records(tmp2.path());
+    fs::write(
+        tmp2.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp2.path().join("docs/decision/adr/bad.md"),
+        b"\xff\xfe",
+    )
+    .unwrap();
+    let output2 = cmd().arg("check").current_dir(tmp2.path()).output().unwrap();
+    assert_eq!(
+        output2.status.code(),
+        Some(2),
+        "non-UTF-8 ADR file should stop with exit code 2"
+    );
+    assert!(output2.stdout.is_empty(), "stdout should be empty on stop");
+}
+
+// @kotowari[TBL-012]
+#[test]
+fn tbl_012_records_file_headings_are_not_sources() {
+    // 決定の節の見出しを持つファイルは判断の記録なので、"## " の見出しでは照合しない（A134）
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/decision/brainstorm/notes.md"),
+        "# Notes\n\n## Agreements\n\nJust text, no decisions.\n\n## Background\n\nSome background.\n",
+    ).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/notes.md#Background\n- 検証: unit\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(si.iter().any(|f| f["detail"].as_str().unwrap().contains("notes.md#Background")),
+        "a records file (has a decision section) must be matched by decision numbers, not headings: {:?}", si);
+}
+
+// @kotowari[REQ-018, TBL-001]
+#[test]
+#[cfg(unix)]
+fn req_018_broken_symlink_in_records_dir_stops() {
+    use std::os::unix::fs::symlink;
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    symlink(tmp.path().join("nowhere.md"), tmp.path().join("docs/decision/brainstorm/broken.md")).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(2), "a broken symlink must stop: {:?}", output);
+    assert!(output.stdout.is_empty());
+}
+
+// @kotowari[REQ-033, REQ-018]
+#[test]
+#[cfg(unix)]
+fn req_033_file_symlink_in_records_dir_is_read() {
+    use std::os::unix::fs::symlink;
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::create_dir_all(tmp.path().join("elsewhere")).unwrap();
+    fs::write(tmp.path().join("elsewhere/more.md"), "# More\n\n## Agreements\n\n- A7 linked decision\n").unwrap();
+    symlink(tmp.path().join("elsewhere/more.md"), tmp.path().join("docs/decision/brainstorm/more.md")).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/more.md#A7\n- 検証: unit\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(si.is_empty(), "a file symlink in the records dir must be read: {:?}", si);
+}
+
+// @kotowari[REQ-117]
+#[test]
+fn req_117_glossary_header_without_rows_is_valid() {
+    // ヘッダと区切りの行があれば表は「ある」（A148）
+    let content = "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n";
+    let doc = kotowari::ir::parse_document("CONTEXT.md", content);
+    let config = kotowari::config::Config::default();
+    let findings = kotowari::ir::check_documents(&[doc], &config);
+    assert!(!findings.iter().any(|f| f.kind == "glossary_invalid"), "header + separator with no rows must not be glossary_invalid: {:?}", findings);
+}
+
+// @kotowari[REQ-111]
+#[test]
+fn req_111_bom_in_config_records_adr_and_tests_is_skipped_end_to_end() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    let bom = "\u{feff}";
+    fs::write(tmp.path().join(".kotowari/config.yaml"), format!("{bom}ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n")).unwrap();
+    fs::write(tmp.path().join("docs/decision/brainstorm/records.md"), format!("{bom}# Records\n\n## Agreements\n\n- A1 first\n")).unwrap();
+    fs::write(tmp.path().join("docs/decision/adr/0001-test.md"), format!("{bom}# ADR 0001\n\n## 状況\n\nx\n")).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        format!("{bom}# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1, docs/decision/adr/0001-test.md#状況\n- 検証: unit\n\nStatement.\n"),
+    ).unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(tmp.path().join("tests/t.rs"), format!("{bom}// @kotowari[REQ-001]\n#[test]\nfn t() {{}}\n")).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(0), "BOM in every file kind must be skipped: {:?}", output);
+    let v = parse_json(&output);
+    assert!(v["findings"].as_array().unwrap().is_empty(), "{:?}", v);
+}
+
+// @kotowari[REQ-058, REQ-110]
+#[test]
+fn req_058_records_place_dot_resolves_a_source_at_the_base_root() {
+    // 置き場 "." は空に正規化される（REQ-110）。そのとき基準の直下の判断の記録の出典が解決しなければならない
+    let tmp = TempDir::new().unwrap();
+    fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
+    fs::create_dir_all(tmp.path().join("adr")).unwrap();
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: .\n  adr: adr\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("records.md"),
+        "# 判断の記録\n\n## Agreements\n\n- A1 最初の合意\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: records.md#A1\n- 検証: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: records.md#A99\n- 検証: unit\n\nStatement.\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    let details: Vec<&str> = si.iter().map(|f| f["detail"].as_str().unwrap_or("")).collect();
+    assert_eq!(details, vec!["records.md#A99"], "A1 must resolve and only A99 must be invalid: {:?}", si);
 }

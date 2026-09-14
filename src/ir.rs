@@ -1,7 +1,7 @@
 //! IR 文書の読み込みと形の検査
 
 use crate::config::Config;
-use crate::Finding;
+use crate::{Finding, FindingKind};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::Path;
 
@@ -87,6 +87,7 @@ pub enum Item {
     Scenario {
         id: Option<String>,
         line: usize,
+        tag_line: Option<usize>,
         tags: Vec<(String, String)>,
         about: Vec<String>,
         sources: Vec<String>,
@@ -152,6 +153,10 @@ pub struct IrDocument {
     pub items: Vec<Item>,
     pub sections: Vec<(usize, String)>,
     pub raw_content: String,
+    /// 解析中に見つかった指摘
+    pub parse_findings: Vec<crate::Finding>,
+    /// 用語集の表（ヘッダと区切りの行）を見たか（REQ-117）
+    pub glossary_table_seen: bool,
 }
 
 /// 文書名の参照の検査用に行を分割する
@@ -193,6 +198,8 @@ pub fn split_lines(content: &str) -> Vec<&str> {
 
 /// Markdown 文書を解析する
 pub fn parse_document(filename: &str, content: &str) -> IrDocument {
+    // BOM の読み飛ばし（read_utf8_file でも除去するが、直接呼ばれた場合にも対応）
+    let content = content.strip_prefix('\u{FEFF}').unwrap_or(content);
     let kind = match filename {
         "CONTEXT.md" => DocKind::Glossary,
         "FLAGS.md" => DocKind::Flags,
@@ -208,98 +215,195 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
     let mut items: Vec<Item> = Vec::new();
     let mut sections: Vec<(usize, String)> = Vec::new();
 
-    let mut in_code_block = false;
+    let mut current_fence: Option<(CodeFence, usize, String)> = None; // (fence, opening_line, raw_line)
     let mut in_gherkin_block = false;
     let mut found_first_section = false;
+    let mut parse_findings: Vec<crate::Finding> = Vec::new();
 
     // 現在の項目の解析状態
     let mut current_item: Option<ItemBuilder> = None;
 
     // gherkin ブロック内の状態
     let mut gherkin_tags: Vec<(String, String)> = Vec::new();
+    let mut gherkin_tag_line: Option<usize> = None;
+    let mut gherkin_tag_raw: Option<String> = None;
     let mut gherkin_scenario_line: Option<usize> = None;
     let mut gherkin_scenario_text: String = String::new();
     let mut gherkin_steps: Vec<(usize, String)> = Vec::new();
+    let mut gherkin_prev_was_tag: bool = false;
+    // 直前の行がステップだったか（Scenario: の無いブロックで続くステップを誤りにしないため）
+    let mut gherkin_prev_was_step: bool = false;
 
     // 用語集の解析
     let mut in_glossary_table = false;
     let mut glossary_header_seen = false;
+    let mut glossary_table_done = false; // REQ-117: 2つ目の表は用語にしない
+    let mut glossary_separator_seen = false;
+    // REQ-123/A162: 既に読んだ用語。2つ目以降の行は duplicate_term にして用語にしない
+    let mut glossary_seen_terms: BTreeSet<String> = BTreeSet::new();
 
     for (idx, line) in lines.iter().enumerate() {
         let line_num = idx + 1; // 1-indexed
 
         // コードブロックの開始/終了
-        if line.starts_with("```") {
-            if in_code_block || in_gherkin_block {
+        if let Some((ref fence, _, _)) = current_fence {
+            if is_closing_fence(line, fence) {
                 // ブロックの終了
                 if in_gherkin_block {
+                    // REQ-113/A155: ブロックの終わりが Scenario: でなければ、直前のタグの行は invalid_gherkin_line
+                    if gherkin_prev_was_tag {
+                        if let Some(tl) = gherkin_tag_line {
+                            parse_findings.push(crate::Finding::new(
+                                crate::FindingKind::InvalidGherkinLine,
+                                String::new(),
+                                Some(tl),
+                                gherkin_tag_raw.clone().unwrap_or_default(),
+                            ));
+                        }
+                    }
                     if let Some(scenario_line) = gherkin_scenario_line.take() {
-                        let scenario = build_scenario(&gherkin_tags, scenario_line, &gherkin_steps, &gherkin_scenario_text);
+                        let scenario = build_scenario(&gherkin_tags, gherkin_tag_line, scenario_line, &gherkin_steps, &gherkin_scenario_text);
                         items.push(scenario);
+                    } else if !gherkin_tags.is_empty() {
+                        // シナリオに結び付かなかったタグの検査
+                        check_gherkin_tags_findings(
+                            &gherkin_tags, gherkin_tag_line, &mut parse_findings,
+                        );
                     }
                     gherkin_tags.clear();
+                    gherkin_tag_line = None;
+                    gherkin_tag_raw = None;
                     gherkin_steps.clear();
                     gherkin_scenario_text.clear();
+                    gherkin_prev_was_tag = false;
+                    gherkin_prev_was_step = false;
                 }
-                in_code_block = false;
+                current_fence = None;
                 in_gherkin_block = false;
                 continue;
-            } else {
-                // ブロックの開始
-                let lang = line.trim_start_matches('`').trim();
-                if lang == "gherkin" {
-                    in_gherkin_block = true;
-                } else {
-                    in_code_block = true;
-                }
-                continue;
             }
+        } else if let Some(fence) = parse_opening_fence(line) {
+            // ブロックの開始
+            let is_gherkin = fence.lang == "gherkin";
+            current_fence = Some((fence, line_num, line.to_string()));
+            if is_gherkin {
+                in_gherkin_block = true;
+            }
+            continue;
         }
 
         // コードブロック内（gherkin 以外）はスキップ
-        if in_code_block {
+        if current_fence.is_some() && !in_gherkin_block {
             continue;
         }
 
         // gherkin ブロック内の処理
         if in_gherkin_block {
             let trimmed = line.trim();
+            let is_scenario_line = trimmed.starts_with("Scenario:");
+
+            // REQ-113/A155: タグの行の直後が Scenario: でなければ、そのタグの行自体が invalid_gherkin_line
+            if gherkin_prev_was_tag && !is_scenario_line {
+                if let Some(tl) = gherkin_tag_line {
+                    parse_findings.push(crate::Finding::new(
+                        crate::FindingKind::InvalidGherkinLine,
+                        String::new(),
+                        Some(tl),
+                        gherkin_tag_raw.clone().unwrap_or_default(),
+                    ));
+                }
+                // 結び付かないタグの検査（REQ-052: 結び付くかを問わない）をしてから捨てる
+                if !gherkin_tags.is_empty() {
+                    check_gherkin_tags_findings(&gherkin_tags, gherkin_tag_line, &mut parse_findings);
+                }
+                gherkin_tags.clear();
+                gherkin_tag_line = None;
+                gherkin_tag_raw = None;
+                // gherkin_prev_was_tag はこの後どの分岐でも必ず書き直す
+            }
+
             if trimmed.starts_with('@') {
                 // タグ行: 前のシナリオがあれば追加
                 if let Some(scenario_line) = gherkin_scenario_line.take() {
-                    let scenario = build_scenario(&gherkin_tags, scenario_line, &gherkin_steps, &gherkin_scenario_text);
+                    let scenario = build_scenario(&gherkin_tags, gherkin_tag_line, scenario_line, &gherkin_steps, &gherkin_scenario_text);
                     items.push(scenario);
                     gherkin_steps.clear();
                 }
                 gherkin_tags.clear();
-                // タグを解析
+                gherkin_tag_line = Some(line_num);
+                gherkin_tag_raw = Some(line.to_string());
+                // タグを解析（REQ-052: "@" で始まる語だけを name=value に分ける）
                 for part in trimmed.split_whitespace() {
-                    if let Some(eq_pos) = part.find('=') {
-                        let tag_name = &part[..eq_pos];
-                        let tag_value = &part[eq_pos + 1..];
-                        gherkin_tags.push((tag_name.to_string(), tag_value.to_string()));
-                    } else if part.starts_with('@') {
-                        // = のない裸のタグ（@wip 等）
-                        gherkin_tags.push((part.to_string(), String::new()));
+                    if part.starts_with('@') {
+                        if let Some(eq_pos) = part.find('=') {
+                            let tag_name = &part[..eq_pos];
+                            let tag_value = &part[eq_pos + 1..];
+                            gherkin_tags.push((tag_name.to_string(), tag_value.to_string()));
+                        } else {
+                            // "=" のない裸のタグ（@wip 等）
+                            gherkin_tags.push((part.to_string(), String::new()));
+                        }
+                    } else {
+                        // REQ-052: "@" で始まらない語はその語自体を detail にする
+                        gherkin_tags.push((String::new(), part.to_string()));
                     }
                 }
-            } else if trimmed.starts_with("Scenario:") {
+                gherkin_prev_was_tag = true;
+                gherkin_prev_was_step = false;
+            } else if is_scenario_line {
                 // 前のシナリオがあればフラッシュ
                 if let Some(scenario_line) = gherkin_scenario_line.take() {
-                    let scenario = build_scenario(&gherkin_tags, scenario_line, &gherkin_steps, &gherkin_scenario_text);
+                    let scenario = build_scenario(&gherkin_tags, gherkin_tag_line, scenario_line, &gherkin_steps, &gherkin_scenario_text);
                     items.push(scenario);
                     gherkin_steps.clear();
+                }
+                // REQ-113: このタグは直前の行にあるときだけ、いま始まるシナリオに結び付く。
+                // 結び付かない（直前がタグの行でない）ときは、前のシナリオで使い終えたタグを持ち越さない。
+                if !gherkin_prev_was_tag {
                     gherkin_tags.clear();
+                    gherkin_tag_line = None;
+                    gherkin_tag_raw = None;
                 }
                 gherkin_scenario_line = Some(line_num);
-                gherkin_scenario_text = trimmed.to_string();
+                // A150: detail の元になる Scenario: の行は生の行（字下げを含む）を持つ
+                gherkin_scenario_text = line.to_string();
+                gherkin_prev_was_tag = false;
+                gherkin_prev_was_step = false;
             } else if trimmed.starts_with("Given ")
                 || trimmed.starts_with("When ")
                 || trimmed.starts_with("Then ")
                 || trimmed.starts_with("And ")
                 || trimmed.starts_with("But ")
             {
-                gherkin_steps.push((line_num, trimmed.to_string()));
+                if gherkin_scenario_line.is_some() {
+                    gherkin_steps.push((line_num, line.to_string()));
+                } else if !gherkin_prev_was_step {
+                    // REQ-113/A155: 直前に Scenario: もステップも無いステップの行は invalid_gherkin_line。
+                    // 続く2つ目以降のステップは最初のステップの誤りに含め、別の誤りにしない
+                    parse_findings.push(crate::Finding::new(
+                        crate::FindingKind::InvalidGherkinLine,
+                        String::new(),
+                        Some(line_num),
+                        line.to_string(),
+                    ));
+                }
+                gherkin_prev_was_tag = false;
+                gherkin_prev_was_step = true;
+            } else if trimmed.starts_with('#') || trimmed.is_empty() {
+                // REQ-113: 注釈と空行は有効
+                gherkin_prev_was_tag = false;
+                gherkin_prev_was_step = false;
+            } else {
+                // REQ-113: それ以外は invalid_gherkin_line
+                // TBL-008: detail は行の文字そのまま（字下げと末尾の空白を含む）
+                parse_findings.push(crate::Finding::new(
+                    crate::FindingKind::InvalidGherkinLine,
+                    String::new(),
+                    Some(line_num),
+                    line.to_string(),
+                ));
+                gherkin_prev_was_tag = false;
+                gherkin_prev_was_step = false;
             }
             continue;
         }
@@ -307,26 +411,48 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
         // 用語集の表の解析
         if kind == DocKind::Glossary {
             if line.starts_with('|') {
+                // REQ-117: 表が完了していたら2つ目以降の表は無視
+                if glossary_table_done {
+                    continue;
+                }
                 if !glossary_header_seen {
-                    // ヘッダー行をチェック
-                    if line.contains("用語") && line.contains("意味") && line.contains("出典") {
+                    // ヘッダー行をチェック（各セルの前後の空白を除いて完全一致）
+                    let cols: Vec<&str> = line.split('|').collect();
+                    let trimmed_cols: Vec<&str> = cols.iter()
+                        .map(|c| c.trim())
+                        .filter(|c| !c.is_empty())
+                        .collect();
+                    if trimmed_cols == ["用語", "意味", "出典"] {
                         glossary_header_seen = true;
                     }
                     continue;
                 }
-                // 区切り行（|---|---|---|）をスキップ
-                let trimmed = line.trim().trim_matches('|').trim();
-                if trimmed.chars().all(|c| c == '-' || c == '|' || c == ' ') {
-                    in_glossary_table = true;
+                if !glossary_separator_seen {
+                    // 区切り行: 各セルが3つ以上の "-"（前後に ":" があってもよい）
+                    let cols: Vec<&str> = line.split('|').collect();
+                    let is_separator = cols.iter()
+                        .filter(|c| !c.trim().is_empty())
+                        .all(|c| {
+                            let t = c.trim().trim_matches(':');
+                            t.len() >= 3 && t.chars().all(|ch| ch == '-')
+                        });
+                    if is_separator {
+                        glossary_separator_seen = true;
+                        in_glossary_table = true;
+                    }
                     continue;
                 }
                 if in_glossary_table {
                     // 用語行を解析
-                    let cols: Vec<&str> = line.split('|').collect();
-                    if cols.len() >= 4 {
-                        let term = cols[1].trim().to_string();
-                        let meaning = cols[2].trim().to_string();
-                        let sources_str = cols[3].trim();
+                    // REQ-122/A163: 先頭と末尾の "|" を除いて "|" で分けたセルの数で判定する
+                    let row = line.trim();
+                    let inner = row.strip_prefix('|').unwrap_or(row);
+                    let inner = inner.strip_suffix('|').unwrap_or(inner);
+                    let cells: Vec<&str> = inner.split('|').collect();
+                    if cells.len() >= 3 {
+                        let term = cells[0].trim().to_string();
+                        let meaning = cells[1].trim().to_string();
+                        let sources_str = cells[2].trim();
                         let sources: Vec<String> = if sources_str.is_empty() {
                             vec![]
                         } else {
@@ -336,7 +462,23 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                                 .filter(|s| !s.is_empty())
                                 .collect()
                         };
-                        if !term.is_empty() {
+                        if term.is_empty() {
+                            // REQ-122: 用語のセルが空の行は invalid_glossary_row（用語にしない）
+                            parse_findings.push(crate::Finding::new(
+                                crate::FindingKind::InvalidGlossaryRow,
+                                String::new(),
+                                Some(line_num),
+                                line.to_string(),
+                            ));
+                        } else if !glossary_seen_terms.insert(term.clone()) {
+                            // REQ-123/A162: 同じ用語の2つ目以降の行は duplicate_term だけを出し、用語にしない
+                            parse_findings.push(crate::Finding::new(
+                                crate::FindingKind::DuplicateTerm,
+                                String::new(),
+                                Some(line_num),
+                                term,
+                            ));
+                        } else {
                             items.push(Item::GlossaryTerm {
                                 term,
                                 meaning,
@@ -344,9 +486,21 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                                 line: line_num,
                             });
                         }
+                    } else {
+                        // REQ-122/A163: セルが3つ未満の行は invalid_glossary_row（用語にしない）
+                        parse_findings.push(crate::Finding::new(
+                            crate::FindingKind::InvalidGlossaryRow,
+                            String::new(),
+                            Some(line_num),
+                            line.to_string(),
+                        ));
                     }
                 }
                 continue;
+            } else if in_glossary_table {
+                // 空行か表でない行で表が終わる
+                in_glossary_table = false;
+                glossary_table_done = true;
             }
         }
 
@@ -373,6 +527,27 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
             continue;
         }
 
+        // REQ-043: #### より深い見出し（####+ で直後が空白）は unknown_heading
+        if line.starts_with("#### ") || (line.starts_with("####") && line.len() > 4 && {
+            // # が4つ以上続き、その直後が空白の行
+            let hashes = line.bytes().take_while(|&b| b == b'#').count();
+            hashes >= 4 && line.as_bytes().get(hashes) == Some(&b' ')
+        }) {
+            // 現在の項目を完了させる
+            if let Some(builder) = current_item.take() {
+                items.push(builder.build());
+            }
+            // A150/TBL-008: detail は読んだ行の文字そのまま（"#### " 等の接頭辞を含む）
+            items.push(Item::UnknownHeading {
+                heading: line.to_string(),
+                line: line_num,
+            });
+            // この見出しの下の行は項目として読まない
+            current_item = None;
+            found_first_section = true;
+            continue;
+        }
+
         // ### 見出し（項目）
         if line.starts_with("### ") {
             // 現在の項目を完了させる
@@ -380,7 +555,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                 items.push(builder.build());
             }
             let heading_text = line[4..].trim().to_string();
-            current_item = Some(ItemBuilder::new(heading_text, line_num, kind));
+            current_item = Some(ItemBuilder::new(heading_text, line.to_string(), line_num, kind));
             found_first_section = true;
             continue;
         }
@@ -402,6 +577,23 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
         items.push(builder.build());
     }
 
+    // REQ-112: 閉じないコードブロック
+    if let Some((_fence, opening_line, raw_line)) = current_fence {
+        // REQ-112: 開始から文書の終わりまでを検査の対象から外す
+        // 閉じないブロック内で追加された指摘を除去する（unclosed_code_block 自体は残す）
+        parse_findings.retain(|f| {
+            f.line.map_or(true, |l| l < opening_line)
+        });
+        // 閉じないブロック内で flush された項目を除去する
+        items.retain(|item| item.item_line() < opening_line);
+        parse_findings.push(crate::Finding::new(
+            crate::FindingKind::UnclosedCodeBlock,
+            String::new(), // path は呼び出し元が設定する
+            Some(opening_line),
+            raw_line,
+        ));
+    }
+
     IrDocument {
         filename: filename.to_string(),
         kind,
@@ -412,22 +604,32 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
         items,
         sections,
         raw_content: content.to_string(),
+        parse_findings,
+        glossary_table_seen: glossary_separator_seen,
     }
+}
+
+/// 見出しの下の "- 種類:"、"- 検証:"、"- 定義:"、"- 関係:" のうち、
+/// 値が空なら「行が無いもの」として扱う（REQ-098, A157）
+fn is_blankable_field(name: &str) -> bool {
+    matches!(name, "種類" | "検証" | "定義" | "関係")
 }
 
 /// 項目の組み立て
 struct ItemBuilder {
     heading: String,
+    raw_heading_line: String,
     line: usize,
-    field_lines: Vec<(usize, String, String)>, // (line, name, value)
+    field_lines: Vec<(usize, String, String, String)>, // (line, name, value, raw)
     statement_lines: Vec<(usize, String)>,
     has_table: bool,
 }
 
 impl ItemBuilder {
-    fn new(heading: String, line: usize, _doc_kind: DocKind) -> Self {
+    fn new(heading: String, raw_heading_line: String, line: usize, _doc_kind: DocKind) -> Self {
         ItemBuilder {
             heading,
+            raw_heading_line,
             line,
             field_lines: Vec::new(),
             statement_lines: Vec::new(),
@@ -440,60 +642,81 @@ impl ItemBuilder {
         if trimmed.is_empty() {
             return;
         }
+
+        // REQ-100/除外: gherkin ブロックの外の "Scenario:" の行は無視する
+        if trimmed.starts_with("Scenario:") {
+            return;
+        }
+
+        // REQ-044: "* ", "+ ", 数字+". ", "-" だけの行は unknown_field
+        if trimmed.starts_with("* ") || trimmed.starts_with("+ ") || trimmed == "-" {
+            // detail は読んだ行そのまま（字下げを含む）
+            self.field_lines
+                .push((line_num, String::new(), String::new(), line.to_string()));
+            return;
+        }
+        // 数字 + ". " で始まる行（例: "1. xxx"）
+        if let Some(dot_pos) = trimmed.find(". ") {
+            if dot_pos > 0 && trimmed[..dot_pos].chars().all(|c| c.is_ascii_digit()) {
+                self.field_lines
+                    .push((line_num, String::new(), String::new(), line.to_string()));
+                return;
+            }
+        }
+
         if trimmed.starts_with("- ") {
             // フィールド行
             let field_content = &trimmed[2..];
             if let Some(colon_pos) = field_content.find(':') {
                 let name = field_content[..colon_pos].trim().to_string();
                 let value = field_content[colon_pos + 1..].trim().to_string();
-                self.field_lines.push((line_num, name, value));
+                // REQ-098/A157: 値が空の 種類・検証・定義・関係 の行は無いものとして扱う
+                if value.is_empty() && is_blankable_field(&name) {
+                    return;
+                }
+                self.field_lines.push((line_num, name, value, line.to_string()));
             } else {
-                // "xxx:" の形でない "- " 行
+                // "xxx:" の形でない "- " 行: detail は読んだ行そのまま
                 self.field_lines
-                    .push((line_num, String::new(), field_content.to_string()));
+                    .push((line_num, String::new(), String::new(), line.to_string()));
             }
         } else if trimmed.starts_with('|') {
             self.has_table = true;
         } else {
-            // 文（statement）
-            self.statement_lines.push((line_num, trimmed.to_string()));
+            // 文（statement）。A150: detail の元になるので生の行（字下げを含む）を持つ
+            self.statement_lines.push((line_num, line.to_string()));
         }
     }
 
     /// field_lines から fields_seen を構築する。
-    /// (行番号, フィールド名, 行の文字) の三つ組を返す。
-    /// name が空の場合（コロンのない行）は名前を空のまま、行の文字を "- {value}" にする。
+    /// (行番号, フィールド名, 行の文字そのまま) の三つ組を返す（TBL-008, A150）。
     fn build_fields_seen(&self) -> Vec<(usize, String, String)> {
         self.field_lines
             .iter()
-            .map(|(ln, name, value)| {
-                if name.is_empty() {
-                    (*ln, String::new(), format!("- {}", value))
-                } else {
-                    (*ln, name.clone(), format!("- {}: {}", name, value))
-                }
-            })
+            .map(|(ln, name, _value, raw)| (*ln, name.clone(), raw.clone()))
             .collect()
     }
 
     fn build(self) -> Item {
+        // A150/TBL-008: unknown_heading の detail は読んだ見出しの行そのまま
+        let raw_heading_line = self.raw_heading_line.clone();
         // 見出しの形: "ID: 名前"（コロン必須）
         let Some((id, name)) = parse_heading(&self.heading) else {
             return Item::UnknownHeading {
-                heading: self.heading,
+                heading: raw_heading_line,
                 line: self.line,
             };
         };
         let fields_seen = self.build_fields_seen();
 
         match id_prefix(&id) {
-            Some(IdPrefix::Req) => {
+            Some(IdPrefix::Req) if is_valid_id(&id) => {
                 let mut kind = None;
                 let mut sources = Vec::new();
                 let mut verification = None;
                 let mut definitions = Vec::new();
 
-                for (_, field_name, value) in &self.field_lines {
+                for (_, field_name, value, _raw) in &self.field_lines {
                     match field_name.as_str() {
                         "種類" => kind = Some(value.clone()),
                         "出典" => {
@@ -527,10 +750,10 @@ impl ItemBuilder {
                     fields_seen,
                 }
             }
-            Some(IdPrefix::Tbl) => {
+            Some(IdPrefix::Tbl) if is_valid_id(&id) => {
                 let mut sources = Vec::new();
 
-                for (_, field_name, value) in &self.field_lines {
+                for (_, field_name, value, _raw) in &self.field_lines {
                     if field_name == "出典" {
                         sources = value
                             .split(',')
@@ -549,10 +772,10 @@ impl ItemBuilder {
                     fields_seen,
                 }
             }
-            Some(IdPrefix::Prop) => {
+            Some(IdPrefix::Prop) if is_valid_id(&id) => {
                 let mut sources = Vec::new();
 
-                for (_, field_name, value) in &self.field_lines {
+                for (_, field_name, value, _raw) in &self.field_lines {
                     if field_name == "出典" {
                         sources = value
                             .split(',')
@@ -571,12 +794,12 @@ impl ItemBuilder {
                     fields_seen,
                 }
             }
-            Some(IdPrefix::Flag) => {
+            Some(IdPrefix::Flag) if is_valid_id(&id) => {
                 let mut kind = None;
                 let mut relations = Vec::new();
                 let mut sources = Vec::new();
 
-                for (_, field_name, value) in &self.field_lines {
+                for (_, field_name, value, _raw) in &self.field_lines {
                     match field_name.as_str() {
                         "種類" => kind = Some(value.clone()),
                         "関係" => {
@@ -610,13 +833,8 @@ impl ItemBuilder {
             }
             _ => {
                 // 認識できない見出し → 後で unknown_heading として報告
-                let heading_text = if name.is_empty() {
-                    id
-                } else {
-                    format!("{}: {}", id, name)
-                };
                 Item::UnknownHeading {
-                    heading: heading_text,
+                    heading: raw_heading_line,
                     line: self.line,
                 }
             }
@@ -663,9 +881,37 @@ pub fn is_valid_id(s: &str) -> bool {
     }
 }
 
+/// 結び付かなかったタグの行を検査する（REQ-052: 結び付くかを問わない）
+fn check_gherkin_tags_findings(
+    tags: &[(String, String)],
+    tag_line: Option<usize>,
+    findings: &mut Vec<crate::Finding>,
+) {
+    let line = tag_line.unwrap_or(0);
+    for (tag_name, tag_value) in tags {
+        if tag_name.is_empty() {
+            // "@" で始まらない語
+            findings.push(crate::Finding::new(
+                crate::FindingKind::UnknownTag,
+                String::new(),
+                if line > 0 { Some(line) } else { None },
+                tag_value.clone(),
+            ));
+        } else if !["@id", "@about", "@source"].contains(&tag_name.as_str()) {
+            findings.push(crate::Finding::new(
+                crate::FindingKind::UnknownTag,
+                String::new(),
+                if line > 0 { Some(line) } else { None },
+                tag_name.clone(),
+            ));
+        }
+    }
+}
+
 /// gherkin のシナリオを組み立てる
 fn build_scenario(
     tags: &[(String, String)],
+    tag_line: Option<usize>,
     scenario_line: usize,
     steps: &[(usize, String)],
     scenario_text: &str,
@@ -673,10 +919,15 @@ fn build_scenario(
     let mut id = None;
     let mut about = Vec::new();
     let mut sources = Vec::new();
-
     for (tag_name, tag_value) in tags {
         match tag_name.as_str() {
-            "@id" if !tag_value.is_empty() => id = Some(tag_value.clone()),
+            "@id" if !tag_value.is_empty() => {
+                // REQ-114: @id の値が EX の ID の形でないときは定義に数えない
+                if is_valid_id(tag_value) && id_prefix(tag_value) == Some(IdPrefix::Ex) {
+                    id = Some(tag_value.clone());
+                }
+                // 形に合わない値は check_item で invalid_id として報告
+            }
             "@about" => {
                 about = tag_value
                     .split(',')
@@ -698,6 +949,7 @@ fn build_scenario(
     Item::Scenario {
         id,
         line: scenario_line,
+        tag_line,
         tags: tags.to_vec(),
         about,
         sources,
@@ -714,51 +966,32 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
     let mut all_ids: BTreeMap<String, Vec<(String, usize)>> = BTreeMap::new(); // id -> [(path, line)]
 
     for doc in docs {
-        let path = format!("{}/{}", config.ir, doc.filename);
+        let path = crate::join_display_path(&config.ir, &doc.filename);
 
         // REQ-034: 題名が無い
         if doc.title.is_none() {
-            findings.push(Finding {
-                kind: "missing_title".to_string(),
-                severity: "error".to_string(),
-                path: path.clone(),
-                line: None,
-                detail: doc.filename.clone(),
-            });
+            findings.push(Finding::new(FindingKind::MissingTitle, path.clone(), None, doc.filename.clone()));
         }
 
         // REQ-035: 題名が複数
         for (_, title_text) in &doc.extra_titles {
-            findings.push(Finding {
-                kind: "multiple_titles".to_string(),
-                severity: "error".to_string(),
-                path: path.clone(),
-                line: None,
-                detail: title_text.clone(),
-            });
+            findings.push(Finding::new(FindingKind::MultipleTitles, path.clone(), None, title_text.clone()));
         }
 
         // REQ-036: 範囲の行が無い（話題ごとの文書のみ）
         if doc.kind == DocKind::Topic && doc.scope_lines.is_empty() {
-            findings.push(Finding {
-                kind: "missing_scope".to_string(),
-                severity: "error".to_string(),
-                path: path.clone(),
-                line: None,
-                detail: doc.filename.clone(),
-            });
+            findings.push(Finding::new(FindingKind::MissingScope, path.clone(), None, doc.filename.clone()));
+        }
+
+        // REQ-117: 用語集にヘッダと区切りの行の形の表がない → glossary_invalid（A148: 行が0でも表はある）
+        if doc.kind == DocKind::Glossary && !doc.glossary_table_seen {
+            findings.push(Finding::new(FindingKind::GlossaryInvalid, path.clone(), None, doc.filename.clone()));
         }
 
         // REQ-038: 行数の上限
         let limit_lines = config.limits.lines.get() as usize;
         if doc.line_count > limit_lines {
-            findings.push(Finding {
-                kind: "too_many_lines".to_string(),
-                severity: "warning".to_string(),
-                path: path.clone(),
-                line: None,
-                detail: doc.line_count.to_string(),
-            });
+            findings.push(Finding::new(FindingKind::TooManyLines, path.clone(), None, doc.line_count.to_string()));
         }
 
         // REQ-039: 要求の数の上限（用語集と問題の記録を除く）
@@ -770,13 +1003,7 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
                 .count();
             let limit_reqs = config.limits.requirements.get() as usize;
             if req_count > limit_reqs {
-                findings.push(Finding {
-                    kind: "too_many_requirements".to_string(),
-                    severity: "warning".to_string(),
-                    path: path.clone(),
-                    line: None,
-                    detail: req_count.to_string(),
-                });
+                findings.push(Finding::new(FindingKind::TooManyRequirements, path.clone(), None, req_count.to_string()));
             }
         }
 
@@ -784,47 +1011,22 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
         for item in &doc.items {
             check_item(item, &path, doc.kind, &mut findings);
 
-            // ID を収集
+            // ID を収集（形に合う ID だけ。REQ-114）
             if let Some(id) = item.id() {
-                all_ids
-                    .entry(id.to_string())
-                    .or_default()
-                    .push((path.clone(), item.item_line()));
+                if is_valid_id(id) {
+                    all_ids
+                        .entry(id.to_string())
+                        .or_default()
+                        .push((path.clone(), item.item_line()));
+                }
             }
         }
 
         // 見出しの形の検査
+        // build() で is_valid_id が false の見出しは UnknownHeading として構築済み
         for item in &doc.items {
-            match item {
-                Item::Requirement { id, name, line, .. }
-                | Item::DecisionTable { id, name, line, .. }
-                | Item::Property { id, name, line, .. }
-                | Item::FlagEntry { id, name, line, .. } => {
-                    if !is_valid_id(id) {
-                        let heading_text = if name.is_empty() {
-                            id.clone()
-                        } else {
-                            format!("{}: {}", id, name)
-                        };
-                        findings.push(Finding {
-                            kind: "unknown_heading".to_string(),
-                            severity: "error".to_string(),
-                            path: path.clone(),
-                            line: Some(*line),
-                            detail: heading_text,
-                        });
-                    }
-                }
-                Item::UnknownHeading { heading, line } => {
-                    findings.push(Finding {
-                        kind: "unknown_heading".to_string(),
-                        severity: "error".to_string(),
-                        path: path.clone(),
-                        line: Some(*line),
-                        detail: heading.clone(),
-                    });
-                }
-                _ => {}
+            if let Item::UnknownHeading { heading, line } = item {
+                findings.push(Finding::new(FindingKind::UnknownHeading, path.clone(), Some(*line), heading.clone()));
             }
         }
     }
@@ -834,22 +1036,28 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
         if locations.len() > 1 {
             // 2つ目以降の場所に指摘
             for (path, line) in &locations[1..] {
-                findings.push(Finding {
-                    kind: "duplicate_id".to_string(),
-                    severity: "error".to_string(),
-                    path: path.clone(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::DuplicateId, path.clone(), Some(*line), id.clone()));
             }
         }
     }
 
     // 参照の解決チェック（REQ-054）
-    let known_ids: BTreeSet<String> = all_ids.keys().cloned().collect();
+    let known_ids = crate::collect_known_ids(docs);
     for doc in docs {
-        let path = format!("{}/{}", config.ir, doc.filename);
+        let path = crate::join_display_path(&config.ir, &doc.filename);
         check_references(&doc.items, &known_ids, &path, &mut findings);
+    }
+
+    // parse_findings を統合（check() ヘルパーからも見えるようにする）
+    for doc in docs {
+        let doc_path = crate::join_display_path(&config.ir, &doc.filename);
+        for pf in &doc.parse_findings {
+            let mut f = pf.clone();
+            if f.path.is_empty() {
+                f.path = doc_path.clone();
+            }
+            findings.push(f);
+        }
     }
 
     findings
@@ -869,55 +1077,27 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             fields_seen,
             ..
         } => {
-            if !is_valid_id(id) {
-                return; // unknown_heading で報告済み
-            }
-
             // 既知のフィールド
             let known_fields = ["種類", "出典", "検証", "定義"];
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
             // REQ-098: 必須の行
             if kind.is_none() && !fields_seen.iter().any(|(_, n, _)| n == "種類") {
-                findings.push(Finding {
-                    kind: "missing_field".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: "種類".to_string(),
-                });
+                findings.push(Finding::new(FindingKind::MissingField, path.to_string(), Some(*line), "種類".to_string()));
             }
             if sources.is_empty() {
-                findings.push(Finding {
-                    kind: "missing_source".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.clone()));
             }
 
             // REQ-048: 検証の行が無い
             if verification.is_none() && !fields_seen.iter().any(|(_, n, _)| n == "検証") {
-                findings.push(Finding {
-                    kind: "verification_missing".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::VerificationMissing, path.to_string(), Some(*line), id.clone()));
             }
 
             // REQ-049: 検証の値の誤り
             if let Some(v) = verification {
                 if !["unit", "property", "proof", "review"].contains(&v.as_str()) {
-                    findings.push(Finding {
-                        kind: "verification_invalid".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: v.clone(),
-                    });
+                    findings.push(Finding::new(FindingKind::VerificationInvalid, path.to_string(), Some(*line), v.clone()));
                 }
             }
 
@@ -932,27 +1112,14 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                     "algorithm",
                 ];
                 if !valid_kinds.contains(&k.as_str()) {
-                    findings.push(Finding {
-                        kind: "unknown_kind".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: k.clone(),
-                    });
+                    findings.push(Finding::new(FindingKind::UnknownKind, path.to_string(), Some(*line), k.clone()));
                 }
             }
 
-            // REQ-047: 文が無い（algorithm 以外）
-            if let Some(k) = kind {
-                if k != "algorithm" && statements.is_empty() {
-                    findings.push(Finding {
-                        kind: "missing_statement".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: id.clone(),
-                    });
-                }
+            // REQ-047: 文が無い（algorithm 以外。種類の行が無い要求を含む）
+            let is_algorithm = kind.as_deref() == Some("algorithm");
+            if !is_algorithm && statements.is_empty() {
+                findings.push(Finding::new(FindingKind::MissingStatement, path.to_string(), Some(*line), id.clone()));
             }
 
             // REQ-051: algorithm に決定表か性質を指す定義がない
@@ -961,13 +1128,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                     matches!(id_prefix(d), Some(IdPrefix::Tbl) | Some(IdPrefix::Prop))
                 });
                 if k == "algorithm" && !has_tbl_or_prop_def {
-                    findings.push(Finding {
-                        kind: "algorithm_without_definition".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: id.clone(),
-                    });
+                    findings.push(Finding::new(FindingKind::AlgorithmWithoutDefinition, path.to_string(), Some(*line), id.clone()));
                 }
             }
         }
@@ -980,33 +1141,17 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             fields_seen,
             ..
         } => {
-            if !is_valid_id(id) {
-                return;
-            }
-
             let known_fields = ["出典"];
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
             // REQ-098/REQ-059: 出典が必須
             if sources.is_empty() {
-                findings.push(Finding {
-                    kind: "missing_source".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.clone()));
             }
 
             // REQ-099: 表が無い
             if !has_table {
-                findings.push(Finding {
-                    kind: "missing_table".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::MissingTable, path.to_string(), Some(*line), id.clone()));
             }
         }
 
@@ -1018,86 +1163,72 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             fields_seen,
             ..
         } => {
-            if !is_valid_id(id) {
-                return;
-            }
-
             let known_fields = ["出典"];
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
             // REQ-098/REQ-059: 出典が必須
             if sources.is_empty() {
-                findings.push(Finding {
-                    kind: "missing_source".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.clone()));
             }
 
             // REQ-047: 性質には文が必要
             if statements.is_empty() {
-                findings.push(Finding {
-                    kind: "missing_statement".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::MissingStatement, path.to_string(), Some(*line), id.clone()));
             }
         }
 
         Item::Scenario {
             id,
             line,
+            tag_line,
             tags,
             sources,
             scenario_text,
             ..
         } => {
-            // REQ-052: 知らないタグ
-            for (tag_name, _) in tags {
-                if !["@id", "@about", "@source"].contains(&tag_name.as_str()) {
-                    findings.push(Finding {
-                        kind: "unknown_tag".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: tag_name.clone(),
-                    });
+            // TBL-019: タグの行（無ければ Scenario: の行）
+            let tag_or_scenario_line = tag_line.unwrap_or(*line);
+
+            // REQ-052: 知らないタグ（結び付くかを問わない）
+            for (tag_name, tag_value) in tags {
+                if tag_name.is_empty() {
+                    // "@" で始まらない語
+                    findings.push(Finding::new(FindingKind::UnknownTag, path.to_string(), Some(tag_or_scenario_line), tag_value.clone()));
+                } else if !["@id", "@about", "@source"].contains(&tag_name.as_str()) {
+                    findings.push(Finding::new(FindingKind::UnknownTag, path.to_string(), Some(tag_or_scenario_line), tag_name.clone()));
                 }
             }
 
-            // REQ-053: 無いタグ
-            if !tags.iter().any(|(n, v)| n == "@id" && !v.is_empty()) {
-                findings.push(Finding {
-                    kind: "missing_tag".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: "@id".to_string(),
-                });
+            // REQ-114: @id の値が EX の ID の形でないとき
+            let has_malformed_id = tags.iter().any(|(n, v)| {
+                n == "@id" && !v.is_empty() && !(is_valid_id(v) && id_prefix(v) == Some(IdPrefix::Ex))
+            });
+            if has_malformed_id {
+                let malformed_value = tags.iter()
+                    .find(|(n, v)| n == "@id" && !v.is_empty() && !(is_valid_id(v) && id_prefix(v) == Some(IdPrefix::Ex)))
+                    .map(|(_, v)| v.clone())
+                    .unwrap();
+                findings.push(Finding::new(FindingKind::InvalidId, path.to_string(), Some(tag_or_scenario_line), malformed_value));
+                // missing_tag は出さない、missing_source の detail は Scenario: の行の文字
+            } else {
+                // REQ-053: 無いタグ
+                if !tags.iter().any(|(n, v)| n == "@id" && !v.is_empty()) {
+                    findings.push(Finding::new(FindingKind::MissingTag, path.to_string(), Some(tag_or_scenario_line), "@id".to_string()));
+                }
             }
             if !tags.iter().any(|(n, v)| n == "@about" && !v.is_empty()) {
-                findings.push(Finding {
-                    kind: "missing_tag".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: "@about".to_string(),
-                });
+                findings.push(Finding::new(FindingKind::MissingTag, path.to_string(), Some(tag_or_scenario_line), "@about".to_string()));
             }
 
             // REQ-059: シナリオの出典
             if sources.is_empty() && !tags.iter().any(|(n, v)| n == "@source" && !v.is_empty()) {
-                findings.push(Finding {
-                    kind: "missing_source".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.as_deref().unwrap_or(scenario_text).to_string(),
-                });
+                // REQ-114: @id が形に合わないときは Scenario: の行の文字を使う
+                let detail = if has_malformed_id {
+                    scenario_text.clone()
+                } else {
+                    id.as_deref().unwrap_or(scenario_text).to_string()
+                };
+                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(tag_or_scenario_line), detail));
             }
         }
 
@@ -1110,52 +1241,25 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             fields_seen,
             ..
         } => {
-            if !is_valid_id(id) {
-                return;
-            }
 
             let known_fields = ["種類", "関係", "出典"];
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
             // REQ-098: 必須の行
             if kind.is_none() && !fields_seen.iter().any(|(_, n, _)| n == "種類") {
-                findings.push(Finding {
-                    kind: "missing_field".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: "種類".to_string(),
-                });
+                findings.push(Finding::new(FindingKind::MissingField, path.to_string(), Some(*line), "種類".to_string()));
             }
             if relations.is_empty() && !fields_seen.iter().any(|(_, n, _)| n == "関係") {
-                findings.push(Finding {
-                    kind: "missing_field".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: "関係".to_string(),
-                });
+                findings.push(Finding::new(FindingKind::MissingField, path.to_string(), Some(*line), "関係".to_string()));
             }
             if sources.is_empty() {
-                findings.push(Finding {
-                    kind: "missing_source".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: id.clone(),
-                });
+                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.clone()));
             }
 
             // REQ-050: 種類の値の誤り
             if let Some(k) = kind {
                 if !["contradiction", "gap", "ambiguity"].contains(&k.as_str()) {
-                    findings.push(Finding {
-                        kind: "unknown_kind".to_string(),
-                        severity: "error".to_string(),
-                        path: path.to_string(),
-                        line: Some(*line),
-                        detail: k.clone(),
-                    });
+                    findings.push(Finding::new(FindingKind::UnknownKind, path.to_string(), Some(*line), k.clone()));
                 }
             }
         }
@@ -1168,13 +1272,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
         } => {
             // REQ-059/REQ-060: 用語の出典が空
             if sources.is_empty() {
-                findings.push(Finding {
-                    kind: "missing_source".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(*line),
-                    detail: term.clone(),
-                });
+                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), term.clone()));
             }
         }
 
@@ -1197,36 +1295,20 @@ fn check_fields(
     for (ln, name, raw) in fields_seen {
         if name.is_empty() {
             // "xxx:" の形でない "- " 行: detail は行の文字
-            findings.push(Finding {
-                kind: "unknown_field".to_string(),
-                severity: "error".to_string(),
-                path: path.to_string(),
-                line: Some(*ln),
-                detail: raw.clone(),
-            });
+            findings.push(Finding::new(FindingKind::UnknownField, path.to_string(), Some(*ln), raw.clone()));
             continue;
         }
 
         if !known_fields.contains(&name.as_str()) {
             // TBL-008: unknown_field の detail は行の文字
-            findings.push(Finding {
-                kind: "unknown_field".to_string(),
-                severity: "error".to_string(),
-                path: path.to_string(),
-                line: Some(*ln),
-                detail: raw.clone(),
-            });
+            // REQ-045: 知らない行の重複は unknown_field だけ
+            findings.push(Finding::new(FindingKind::UnknownField, path.to_string(), Some(*ln), raw.clone()));
+            continue;
         }
 
-        // REQ-045: 同じ行の重複（TBL-008: duplicate_field の detail は行の名前）
+        // REQ-045: 同じ知っている行の重複（TBL-008: duplicate_field の detail は行の名前）
         if let Some(_prev_line) = seen_names.get(name) {
-            findings.push(Finding {
-                kind: "duplicate_field".to_string(),
-                severity: "error".to_string(),
-                path: path.to_string(),
-                line: Some(*ln),
-                detail: name.clone(),
-            });
+            findings.push(Finding::new(FindingKind::DuplicateField, path.to_string(), Some(*ln), name.clone()));
         } else {
             seen_names.insert(name.clone(), *ln);
         }
@@ -1246,18 +1328,21 @@ fn check_references(
                 line,
                 definitions,
                 statements,
+                fields_seen,
                 ..
             } => {
                 // 定義の参照チェック
+                // TBL-019: 定義の中なら その行
+                let def_field_line = fields_seen.iter()
+                    .find(|(_, n, _)| n == "定義")
+                    .map(|(ln, _, _)| *ln)
+                    .unwrap_or(*line);
                 for def_id in definitions {
-                    if !known_ids.contains(def_id) {
-                        findings.push(Finding {
-                            kind: "unresolved_reference".to_string(),
-                            severity: "error".to_string(),
-                            path: path.to_string(),
-                            line: Some(*line),
-                            detail: def_id.clone(),
-                        });
+                    if !is_valid_id(def_id) {
+                        // REQ-054: ID の形でない値は unresolved_reference
+                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(def_field_line), def_id.clone()));
+                    } else if !known_ids.contains(def_id) {
+                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(def_field_line), def_id.clone()));
                     }
                 }
                 // 文の中のバッククォートで囲んだ ID の参照チェック
@@ -1271,38 +1356,105 @@ fn check_references(
                 }
             }
             Item::Scenario {
-                line, about, ..
+                line, tag_line, about, steps, ..
             } => {
+                let about_line = tag_line.unwrap_or(*line);
                 for about_id in about {
                     if !known_ids.contains(about_id) {
-                        findings.push(Finding {
-                            kind: "unresolved_reference".to_string(),
-                            severity: "error".to_string(),
-                            path: path.to_string(),
-                            line: Some(*line),
-                            detail: about_id.clone(),
-                        });
+                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(about_line), about_id.clone()));
                     }
+                }
+                // REQ-054: ステップの行のバッククォートで囲んだ ID の参照チェック
+                for (step_line, step_text) in steps {
+                    check_backtick_ids(step_text, *step_line, known_ids, path, findings);
                 }
             }
             Item::FlagEntry {
-                line, relations, ..
+                line, relations, fields_seen, ..
             } => {
+                // TBL-019: 関係の中なら その行
+                let rel_field_line = fields_seen.iter()
+                    .find(|(_, n, _)| n == "関係")
+                    .map(|(ln, _, _)| *ln)
+                    .unwrap_or(*line);
                 for rel_id in relations {
                     if !known_ids.contains(rel_id) {
-                        findings.push(Finding {
-                            kind: "unresolved_reference".to_string(),
-                            severity: "error".to_string(),
-                            path: path.to_string(),
-                            line: Some(*line),
-                            detail: rel_id.clone(),
-                        });
+                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(rel_field_line), rel_id.clone()));
                     }
                 }
             }
             _ => {}
         }
     }
+}
+
+/// コードブロックの囲みの情報
+#[derive(Debug, Clone)]
+pub struct CodeFence {
+    /// 囲みの文字（'`' or '~'）
+    pub fence_char: char,
+    /// 囲みの長さ（3以上）
+    pub fence_len: usize,
+    /// 言語（あれば）
+    pub lang: String,
+}
+
+/// 行がコードブロックの開始の囲みかどうかを判定する。
+/// 3つ以上の ` か ~ で始まる行が該当する。
+pub fn parse_opening_fence(line: &str) -> Option<CodeFence> {
+    let bytes = line.as_bytes();
+    if bytes.len() < 3 {
+        return None;
+    }
+    let fence_char = bytes[0] as char;
+    if fence_char != '`' && fence_char != '~' {
+        return None;
+    }
+    let fence_len = bytes.iter().take_while(|&&b| b == bytes[0]).count();
+    if fence_len < 3 {
+        return None;
+    }
+    let lang = line[fence_len..].trim().to_string();
+    Some(CodeFence {
+        fence_char,
+        fence_len,
+        lang,
+    })
+}
+
+/// 行が開いている囲みを閉じるかどうかを判定する。
+pub fn is_closing_fence(line: &str, opening: &CodeFence) -> bool {
+    let bytes = line.as_bytes();
+    if bytes.is_empty() || bytes[0] as char != opening.fence_char {
+        return false;
+    }
+    let fence_len = bytes.iter().take_while(|&&b| b == bytes[0]).count();
+    if fence_len < opening.fence_len {
+        return false;
+    }
+    // 閉じる囲みの後は空白だけ
+    line[fence_len..].trim().is_empty()
+}
+
+/// バッククォートで囲まれた内容を抽出する。
+/// 空の内容（``）も返す。
+pub fn extract_backtick_contents(text: &str) -> Vec<&str> {
+    let mut result = Vec::new();
+    let mut start = 0;
+    while let Some(open) = text[start..].find('`') {
+        let open_abs = start + open + 1;
+        if open_abs >= text.len() {
+            break;
+        }
+        if let Some(close) = text[open_abs..].find('`') {
+            let content = &text[open_abs..open_abs + close];
+            result.push(content);
+            start = open_abs + close + 1;
+        } else {
+            break;
+        }
+    }
+    result
 }
 
 /// 文の中のバッククォートで囲んだ ID の参照をチェック
@@ -1313,27 +1465,14 @@ fn check_backtick_ids(
     path: &str,
     findings: &mut Vec<Finding>,
 ) {
-    let mut start = 0;
-    while let Some(open) = text[start..].find('`') {
-        let open_abs = start + open + 1;
-        if open_abs >= text.len() {
-            break;
-        }
-        if let Some(close) = text[open_abs..].find('`') {
-            let content = &text[open_abs..open_abs + close];
-            // ID の形なら参照チェック
-            if is_valid_id(content) && !known_ids.contains(content) {
-                findings.push(Finding {
-                    kind: "unresolved_reference".to_string(),
-                    severity: "error".to_string(),
-                    path: path.to_string(),
-                    line: Some(line),
-                    detail: content.to_string(),
-                });
-            }
-            start = open_abs + close + 1;
-        } else {
-            break;
+    // REQ-054/REQ-116: 二重引用符の外だけを見る
+    if crate::has_odd_backticks_outside_quotes(text) {
+        return;
+    }
+    for content in crate::extract_backtick_contents_outside_quotes(text) {
+        let trimmed = content.trim();
+        if !trimmed.is_empty() && is_valid_id(trimmed) && !known_ids.contains(trimmed) {
+            findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(line), trimmed.to_string()));
         }
     }
 }
@@ -1346,29 +1485,40 @@ pub fn load_and_check(
     let ir_dir = base.join(&config.ir);
 
     let mut docs = Vec::new();
-    let mut entries: Vec<_> = std::fs::read_dir(&ir_dir)
-        .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", ir_dir.display())))?
-        .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.path().extension().is_some_and(|ext| ext == "md")
-                && e.file_type().is_ok_and(|ft| ft.is_file())
-        })
-        .collect();
+    let mut raw_entries = Vec::new();
+    for entry in std::fs::read_dir(&ir_dir)
+        .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", config.ir)))?
+    {
+        let entry = entry.map_err(|e| {
+            crate::StopReason::UnreadableFile(format!("{}: {e}", config.ir))
+        })?;
+        let p = entry.path();
+        // REQ-033: .md（小文字）のファイルだけ読む。シンボリックリンクも辿る
+        // 種類が取れないときは停止する（REQ-033）
+        let is_file = std::fs::metadata(&p)
+            .map(|m| m.is_file())
+            .map_err(|e| {
+                let rel = crate::join_display_path(&config.ir, &entry.file_name().to_string_lossy());
+                crate::StopReason::UnreadableFile(format!("{rel}: {e}"))
+            })?;
+        if p.extension().is_some_and(|ext| ext == "md") && is_file {
+            raw_entries.push(entry);
+        }
+    }
 
     // ファイル名でソート（安定な順序）
-    entries.sort_by_key(|e| e.file_name());
+    raw_entries.sort_by_key(|e| e.file_name());
 
-    for entry in entries {
+    for entry in raw_entries {
         let path = entry.path();
         let filename = entry.file_name().to_string_lossy().to_string();
-        let bytes = std::fs::read(&path)
-            .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", path.display())))?;
-        let content = String::from_utf8(bytes)
-            .map_err(|_| crate::StopReason::NonUtf8File(format!("{}", path.display())))?;
+        let display = crate::join_display_path(&config.ir, &filename);
+        let content = crate::read_utf8_file(&path, &display)?;
         let doc = parse_document(&filename, &content);
         docs.push(doc);
     }
 
     let findings = check_documents(&docs, config);
+
     Ok((docs, findings))
 }
