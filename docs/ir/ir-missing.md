@@ -7,10 +7,10 @@
 ### REQ-098: 必須の行が無い
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A68, experiments/003-cli/brainstorm/ir-form.md#項目, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A92
+- 出典: experiments/003-cli/brainstorm/records.md#A68, experiments/003-cli/brainstorm/ir-form.md#項目, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A92, experiments/003-cli/brainstorm/records.md#A157
 - 検証: unit
 
-`要求`に "- 種類:" の行が無いとき、または`問題の記録`の`項目`に "- 種類:" か "- 関係:" の行が無いとき、kotowari は無い行の名前を detail にして missing_field の`誤り`を出す。"- 検証:" の行が無いときは verification_missing だけ、"- 出典:" の行が無いときは missing_source だけを出し、missing_field は出さない。
+`要求`に "- 種類:" の行が無いとき、または`問題の記録`の`項目`に "- 種類:" か "- 関係:" の行が無いとき、kotowari は無い行の名前を detail にして missing_field の`誤り`を出す。"- 検証:" の行が無いときは verification_missing だけ、"- 出典:" の行が無いときは missing_source だけを出し、missing_field は出さない。"- 種類:"、"- 検証:"、"- 定義:"、"- 関係:" の値が空の行は、行が無いものとして扱う。
 
 ### REQ-099: 決定表に表が無い
 

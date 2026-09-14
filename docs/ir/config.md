@@ -30,10 +30,10 @@
 ### REQ-014: 設定の誤り
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A12, experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A20, experiments/003-cli/brainstorm/records.md#A44, experiments/003-cli/brainstorm/records.md#A93, experiments/003-cli/brainstorm/records.md#A105, experiments/003-cli/brainstorm/records.md#A135
+- 出典: experiments/003-cli/brainstorm/records.md#A12, experiments/003-cli/brainstorm/records.md#A41, experiments/003-cli/brainstorm/records.md#A20, experiments/003-cli/brainstorm/records.md#A44, experiments/003-cli/brainstorm/records.md#A93, experiments/003-cli/brainstorm/records.md#A105, experiments/003-cli/brainstorm/records.md#A135, experiments/003-cli/brainstorm/records.md#A161
 - 検証: unit
 
-`設定ファイル`が YAML として読めないとき、または`設定ファイル`に知らないキー、同じキーの2回目、値が null のキー（"ir:" だけの行。空の一覧は REQ-016 のとおり受ける）、型の違う値、負の数、0、絶対パスの値、"vague_words" の空の文字列の要素か同じ語の2回目、"tests.files" の glob として読めない要素のいずれかがあるとき、kotowari は設定の誤りを理由に`停止`する。
+`設定ファイル`が YAML として読めないとき、または`設定ファイル`に知らないキー、同じキーの2回目、値が null のキー（"ir:" だけの行。空の一覧は REQ-016 のとおり受ける）、型の違う値、負の数、0、絶対パスの値（先頭が "/" のもの）、"vague_words" の空の文字列の要素か同じ語の2回目、"tests.files" の glob として読めない要素のいずれかがあるとき、kotowari は設定の誤りを理由に`停止`する。
 
 ### REQ-015: 一覧は既定を置き換える
 

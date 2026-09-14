@@ -38,9 +38,9 @@
 
 ### TBL-008: 誤りの種類と detail
 
-- 出典: experiments/003-cli/brainstorm/records.md#A142, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A68, experiments/003-cli/brainstorm/records.md#A108, experiments/003-cli/brainstorm/records.md#A109, experiments/003-cli/brainstorm/records.md#A110, experiments/003-cli/brainstorm/records.md#A112, experiments/003-cli/brainstorm/records.md#A116, experiments/003-cli/brainstorm/records.md#A111
+- 出典: experiments/003-cli/brainstorm/records.md#A142, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A68, experiments/003-cli/brainstorm/records.md#A108, experiments/003-cli/brainstorm/records.md#A109, experiments/003-cli/brainstorm/records.md#A110, experiments/003-cli/brainstorm/records.md#A112, experiments/003-cli/brainstorm/records.md#A116, experiments/003-cli/brainstorm/records.md#A111, experiments/003-cli/brainstorm/records.md#A150, experiments/003-cli/brainstorm/records.md#A153, experiments/003-cli/brainstorm/records.md#A154
 
-detail が「行の文字」の種類では、読んだ行の文字そのまま（字下げと末尾の空白を含む）を入れる。
+detail が「行の文字」「見出しの文字」「Scenario: の行の文字」の種類では、読んだ行の文字そのまま（字下げと末尾の空白を含み、再構成しない）を入れる。
 
 | 種類 | detail | 条件を定める要求 |
 |---|---|---|
@@ -75,6 +75,8 @@ detail が「行の文字」の種類では、読んだ行の文字そのまま�
 | invalid_id | 値 | REQ-114 |
 | glossary_invalid | 文書名 | REQ-117 |
 | unclosed_backtick | 行の文字 | REQ-116 |
+| invalid_glossary_row | 行の文字 | REQ-122 |
+| duplicate_term | 用語 | REQ-123 |
 
 ### TBL-009: 警告の種類と detail
 

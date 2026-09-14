@@ -7,10 +7,10 @@
 ### REQ-079: テストのファイル
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A36, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A94, experiments/003-cli/brainstorm/records.md#A102, experiments/003-cli/brainstorm/records.md#A146
+- 出典: experiments/003-cli/brainstorm/records.md#A36, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A94, experiments/003-cli/brainstorm/records.md#A102, experiments/003-cli/brainstorm/records.md#A146, experiments/003-cli/brainstorm/records.md#A159
 - 検証: unit
 
-kotowari は常に、"tests.files" の glob に当たるファイルを`テストのファイル`として読む。走査ではディレクトリのシンボリックリンクを辿らず、ファイルのシンボリックリンクは読み、先の無いシンボリックリンクでは読めないファイルを理由に`停止`する。
+kotowari は常に、"tests.files" の glob に当たるファイルを`テストのファイル`として読む。走査は`基準のディレクトリ`の全体（隠しディレクトリを除く）を歩いてから glob で選ぶので、glob に当たらない場所でも読めないディレクトリと先の無いシンボリックリンクで`停止`する。走査ではディレクトリのシンボリックリンクを辿らず、ファイルのシンボリックリンクは読み、先の無いシンボリックリンクでは読めないファイルを理由に`停止`する。
 
 ### REQ-080: tree-sitter で読む
 

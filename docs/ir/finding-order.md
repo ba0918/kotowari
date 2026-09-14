@@ -42,7 +42,7 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 
 ### TBL-019: 指摘の行
 
-- 出典: experiments/003-cli/brainstorm/records.md#A144, experiments/003-cli/brainstorm/records.md#A114, experiments/003-cli/brainstorm/records.md#A121, experiments/003-cli/brainstorm/records.md#A139, experiments/003-cli/brainstorm/records.md#A108, experiments/003-cli/brainstorm/records.md#A61, experiments/003-cli/brainstorm/records.md#A72
+- 出典: experiments/003-cli/brainstorm/records.md#A144, experiments/003-cli/brainstorm/records.md#A114, experiments/003-cli/brainstorm/records.md#A121, experiments/003-cli/brainstorm/records.md#A139, experiments/003-cli/brainstorm/records.md#A108, experiments/003-cli/brainstorm/records.md#A61, experiments/003-cli/brainstorm/records.md#A72, experiments/003-cli/brainstorm/records.md#A153, experiments/003-cli/brainstorm/records.md#A154
 
 | 種類 | line |
 |---|---|
@@ -52,6 +52,8 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 | unknown_term、vague_word、unclosed_backtick、missing_document | その行 |
 | unknown_field、duplicate_field、unknown_heading、invalid_gherkin_line | その行 |
 | unclosed_code_block | 開始の行 |
+| invalid_glossary_row | その行 |
+| duplicate_term | 2つ目以降の用語の行 |
 | duplicate_id | 2つ目以降の見出しの行（REQ-032） |
 | unresolved_reference、invalid_marker | 印なら印のある行（REQ-118）。定義・関係・文の中なら その行。"@about" ならタグの行 |
 | missing_field、missing_statement、missing_table、verification_missing、verification_invalid、unknown_kind、algorithm_without_definition、requirement_without_test | 項目の見出しの行 |
