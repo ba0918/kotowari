@@ -676,6 +676,44 @@ fn req_058_hidden_directory_under_records_is_not_a_source_target() {
     );
 }
 
+// --- 除外: ディレクトリでも通常のファイルでもない要素は静かに読み飛ばす ---
+
+// @kotowari[REQ-058]
+#[test]
+#[cfg(unix)]
+fn req_058_non_regular_entry_named_md_under_records_is_silently_skipped() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // ディレクトリでもファイルでもない要素（ここでは Unix ドメインソケット）を
+    // records の下に ".md" の名前で置く
+    let sock_path = tmp.path().join("docs/decision/brainstorm/weird.md");
+    let _listener = std::os::unix::net::UnixListener::bind(&sock_path).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "a non-regular filesystem entry named *.md under records must be silently skipped, not read: {:?}",
+        output
+    );
+}
+
+// @kotowari[REQ-058]
+#[test]
+#[cfg(unix)]
+fn req_058_non_regular_entry_named_md_under_adr_is_silently_skipped() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    let sock_path = tmp.path().join("docs/decision/adr/weird.md");
+    let _listener = std::os::unix::net::UnixListener::bind(&sock_path).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "a non-regular filesystem entry named *.md under adr must be silently skipped, not read: {:?}",
+        output
+    );
+}
+
 // --- REQ-040: gherkin コードブロック内の文書名参照は対象外 ---
 
 // @kotowari[REQ-040]
@@ -753,6 +791,100 @@ fn tbl_012_check_source_outside_records_and_adr_returns_err() {
 
     let result2 = ctx.check_source("docs/decision/brainstorm#A1");
     assert!(result2.is_err(), "path equal to records_path (no subpath) should return Err");
+}
+
+// @kotowari[REQ-057]
+#[test]
+fn req_057_split_source_rejects_an_empty_path_or_empty_anchor() {
+    assert_eq!(
+        kotowari::sources::split_source("#anchor"),
+        None,
+        "an empty path before '#' must be rejected"
+    );
+    assert_eq!(
+        kotowari::sources::split_source("docs/x.md#"),
+        None,
+        "an empty anchor after '#' must be rejected"
+    );
+    assert_eq!(
+        kotowari::sources::split_source("docs/x.md#a"),
+        Some(("docs/x.md", "a")),
+        "a source with both a path and an anchor is accepted"
+    );
+}
+
+// @kotowari[REQ-058]
+#[test]
+fn req_058_absolute_path_source_is_rejected_even_if_it_would_otherwise_resolve() {
+    let ctx = kotowari::sources::SourceContext {
+        records_path: "docs/decision/brainstorm".to_string(),
+        adr_path: "docs/decision/adr".to_string(),
+        records_files: vec![kotowari::sources::RecordsFile {
+            rel_path: "records.md".to_string(),
+            decision_numbers: vec!["A1".to_string()],
+            headings: vec![],
+            is_records: true,
+        }],
+        adr_files: vec![],
+        records_other_files: vec![],
+    };
+    // 相対パスなら正しい出典
+    assert!(
+        ctx.check_source("docs/decision/brainstorm/records.md#A1").is_ok(),
+        "the relative form should resolve"
+    );
+    // 先頭に "/" を付けると、正規化後に同じ場所を指しても出典として不正
+    assert!(
+        ctx.check_source("/docs/decision/brainstorm/records.md#A1").is_err(),
+        "a source starting with '/' must be rejected even if it would resolve after normalization"
+    );
+}
+
+// @kotowari[REQ-058]
+#[test]
+fn req_058_tie_break_prefers_the_longer_place_when_a_path_matches_both() {
+    let ctx = kotowari::sources::SourceContext {
+        records_path: "docs".to_string(),
+        adr_path: "docs/decision".to_string(),
+        records_files: vec![],
+        adr_files: vec![kotowari::sources::OtherFile {
+            rel_path: "adr/0001.md".to_string(),
+            headings: vec!["Status".to_string()],
+        }],
+        records_other_files: vec![],
+    };
+    // "docs/decision/adr/0001.md" は records ("docs") にも adr ("docs/decision") にも
+    // 境界を満たして当たる。長い方の置き場（adr）を採るはずなので、adr 側の
+    // ファイルの見出しで解決できる。
+    let result = ctx.check_source("docs/decision/adr/0001.md#Status");
+    assert!(
+        result.is_ok(),
+        "when a path matches both places, the longer place should win the tie: {:?}",
+        result
+    );
+}
+
+// @kotowari[REQ-058]
+#[test]
+fn req_058_boundary_violating_prefix_does_not_count_as_under_a_place() {
+    let ctx = kotowari::sources::SourceContext {
+        // records_path はたまたま adr の実ファイル名の接頭辞になっているが、
+        // 続く文字が "/" でないので "under" ではない（境界を守る）
+        records_path: "docs/decision/adr/0001".to_string(),
+        adr_path: "docs/decision/adr".to_string(),
+        records_files: vec![],
+        adr_files: vec![kotowari::sources::OtherFile {
+            rel_path: "0001-notes.md".to_string(),
+            headings: vec!["Status".to_string()],
+        }],
+        records_other_files: vec![],
+    };
+    let result = ctx.check_source("docs/decision/adr/0001-notes.md#Status");
+    assert!(
+        result.is_ok(),
+        "a place string that is merely a byte-prefix without a '/' boundary must not count as 'under' it: {:?}",
+        result
+    );
 }
 
 // --- check_document_references の行番号 ---
@@ -951,6 +1083,58 @@ fn req_115_source_invalid_line_is_the_source_line() {
     assert_eq!(si[0]["line"], 10, "source_invalid line should be the source line (10), got {:?}", si[0]);
 }
 
+// @kotowari[REQ-115]
+#[test]
+fn req_115_decision_table_source_invalid_line_is_the_source_line_not_another_field() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 決定表の項目に、出典より前に別の行（種類）を持たせる
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 決定表\n\n### TBL-001: T\n\n- 種類: foo\n- 出典: somewhere/bad.md#X\n\n| a | b |\n|---|---|\n| 1 | 2 |\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(!si.is_empty(), "should have source_invalid: {:?}", v);
+    // line は出典の行（10行目）であって、それより前の種類の行（9行目）ではない
+    assert_eq!(si[0]["line"], 10, "source_invalid line should be the 出典 line (10), not an earlier field line: {:?}", si[0]);
+}
+
+// @kotowari[REQ-115]
+#[test]
+fn req_115_property_source_invalid_line_is_the_source_line_not_another_field() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 性質の項目に、出典より前に別の行（種類）を持たせる
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 性質\n\n### PROP-001: P\n\n- 種類: foo\n- 出典: somewhere/bad.md#X\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(!si.is_empty(), "should have source_invalid: {:?}", v);
+    assert_eq!(si[0]["line"], 10, "source_invalid line should be the 出典 line (10), not an earlier field line: {:?}", si[0]);
+}
+
+// @kotowari[REQ-115]
+#[test]
+fn req_115_flag_entry_source_invalid_line_is_the_source_line_not_another_field() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 問題の記録の項目に、出典より前に別の行（種類）を持たせる
+    fs::write(
+        tmp.path().join("docs/ir/FLAGS.md"),
+        "# 問題の記録\n\n### FLAG-001: Issue\n\n- 種類: gap\n- 出典: somewhere/bad.md#X\n- 関係: REQ-001\n\nBody.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(!si.is_empty(), "should have source_invalid: {:?}", v);
+    assert_eq!(si[0]["line"], 6, "source_invalid line should be the 出典 line (6), not an earlier field line: {:?}", si[0]);
+}
+
 // @kotowari[REQ-064]
 #[test]
 fn req_064_backtick_content_is_trimmed() {
@@ -1091,6 +1275,79 @@ fn tbl_014_unclosed_quote_hides_the_rest_of_the_line() {
     kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
     let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
     assert!(md.is_empty(), "unclosed quote should hide the rest of the line: {:?}", md);
+}
+
+// @kotowari[TBL-014]
+#[test]
+fn tbl_014_text_between_the_second_and_third_quote_is_still_scanned() {
+    // 二重引用符が奇数（3つ）のとき、行末を隠すのは「最後の」引用符から先だけ。
+    // 最初の引用符で打ち切ってはいけない（2つ目と3つ目の間は引用符の外）。
+    use std::collections::BTreeSet;
+    let content = "# Title\n\nScope.\n\nSee \"note\" and outside.md here \"trail\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(
+        md.iter().any(|f| f.detail == "outside.md"),
+        "text between the 2nd and 3rd quote is outside quotes and should still be scanned: {:?}",
+        md
+    );
+}
+
+// @kotowari[TBL-014]
+#[test]
+fn tbl_014_long_digit_run_before_mdx_does_not_produce_a_spurious_reference() {
+    // ".mdx" の直前が長い数字の並びでも、".mdx" は参照として拾わない
+    use std::collections::BTreeSet;
+    let content = "# Title\n\n01234567890123456789012.mdx\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(
+        !md.iter().any(|f| f.detail.contains("01234567890123456789012")),
+        "a long digit run before .mdx must not be treated as a .md reference: {:?}",
+        md
+    );
+}
+
+// @kotowari[TBL-014]
+#[test]
+fn tbl_014_md_followed_by_hyphen_is_not_a_reference() {
+    // ".md" の直後が "-" のときは参照でない
+    use std::collections::BTreeSet;
+    let content = "# Title\n\na.md-suffix\n";
+    let doc = kotowari::ir::parse_document("x.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(
+        !md.iter().any(|f| f.detail == "a.md"),
+        "'a.md-suffix' must not be treated as a reference to 'a.md': {:?}",
+        md
+    );
+}
+
+// @kotowari[TBL-014]
+#[test]
+fn tbl_014_bare_dot_md_with_nothing_before_it_is_not_a_reference() {
+    // 直前に文字が無い（空白の直後の）裸の ".md" は参照でない
+    use std::collections::BTreeSet;
+    let content = "# Title\n\nthe .md file\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(
+        !md.iter().any(|f| f.detail == ".md"),
+        "a bare '.md' with no name before it must not be treated as a document reference: {:?}",
+        md
+    );
 }
 
 // @kotowari[REQ-117]
