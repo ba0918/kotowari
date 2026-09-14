@@ -2285,3 +2285,23 @@ fn req_123_duplicate_row_is_not_a_term() {
     let ms = find_by_kind(&findings, "missing_source");
     assert!(!ms.iter().any(|f| f.line == Some(6)), "no other check on the duplicate row: {:?}", ms);
 }
+
+// --- TBL-010: split_lines の \r\n 処理 ---
+
+// @kotowari[TBL-010]
+#[test]
+fn tbl_010_split_lines_strips_cr_and_does_not_panic_on_bare_lf() {
+    // \r\n は CR を取り除いた1行になる
+    assert_eq!(
+        ir::split_lines("a\r\nb"),
+        vec!["a", "b"],
+        "a CRLF line should have its trailing CR stripped from the content"
+    );
+    // 先頭がいきなり \n （CR無し）でも panic しない
+    assert_eq!(
+        ir::split_lines("\na"),
+        vec!["", "a"],
+        "a bare leading \\n must not panic and must produce an empty first line"
+    );
+}
+
