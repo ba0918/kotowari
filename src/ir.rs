@@ -343,11 +343,12 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                 gherkin_prev_was_tag = false;
             } else {
                 // REQ-113: それ以外は invalid_gherkin_line
+                // TBL-008: detail は行の文字そのまま（字下げと末尾の空白を含む）
                 parse_findings.push(crate::Finding::new(
                     crate::FindingKind::InvalidGherkinLine,
                     String::new(),
                     Some(line_num),
-                    trimmed.to_string(),
+                    line.to_string(),
                 ));
                 gherkin_prev_was_tag = false;
             }
