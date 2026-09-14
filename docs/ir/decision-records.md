@@ -55,7 +55,7 @@
 ### REQ-103: ADR のファイル名
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A3
+- 出典: experiments/003-cli/brainstorm/records.md#A3, experiments/003-cli/brainstorm/records.md#A23
 - 検証: review
 
 `ADR`のファイル名は常に、"0001-<slug>.md" の形である。
