@@ -56,6 +56,75 @@ fn req_082_macro_function_and_marker_lines_use_additive_offset() {
     );
 }
 
+// --- REQ-082: 通常の関数の行番号 ---
+
+// @kotowari[REQ-082]
+#[test]
+fn req_082_plain_test_function_line_is_one_indexed() {
+    let content = "// leading 1\n// leading 2\n#[test]\nfn t() {}\n";
+    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+        .expect("valid rust");
+    assert_eq!(tests.len(), 1);
+    assert_eq!(tests[0].line, 4, "function line should be the 1-indexed source line: {:?}", tests);
+}
+
+// --- REQ-082: 属性の末尾要素の判定 ---
+
+// @kotowari[REQ-082]
+#[test]
+fn req_082_function_with_unrelated_attribute_is_not_counted() {
+    // #[test] でも設定された属性でもない属性しか持たない関数はテストとして数えない
+    let content = "#[allow(dead_code)]\nfn not_a_test() {}\n";
+    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+        .expect("valid rust");
+    assert!(tests.is_empty(), "function with only an unrelated attribute must not count as a test: {:?}", tests);
+}
+
+// --- REQ-082: has_attribute はブロックコメントも飛ばして #[test] を探す ---
+
+// @kotowari[REQ-082]
+#[test]
+fn req_082_has_attribute_skips_block_comment_to_find_test_attribute() {
+    let content = "#[test]\n/* intermediate comment */\nfn t() {}\n";
+    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+        .expect("valid rust");
+    assert!(
+        tests.iter().any(|t| t.name == "t"),
+        "block comment between #[test] and fn must not hide the test: {:?}",
+        tests
+    );
+}
+
+// --- REQ-082: has_configured_attribute はコメントを飛ばして設定された属性を探す ---
+
+// @kotowari[REQ-082]
+#[test]
+fn req_082_has_configured_attribute_skips_line_comment() {
+    let mut config = kotowari::config::Config::default();
+    config.tests.rust.attributes = vec!["kani::proof".to_string()];
+    let content = "#[kani::proof(unwind = 3)]\n// intermediate comment\nfn my_proof() {}\n";
+    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &config).expect("valid rust");
+    assert!(
+        tests.iter().any(|t| t.name == "my_proof"),
+        "a line comment between a configured attribute and fn must not hide the test: {:?}",
+        tests
+    );
+}
+
+// @kotowari[REQ-082]
+#[test]
+fn req_082_has_configured_attribute_skips_block_comment() {
+    let mut config = kotowari::config::Config::default();
+    config.tests.rust.attributes = vec!["kani::proof".to_string()];
+    let content = "#[kani::proof]\n/* note */\nfn my_proof() {}\n";
+    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &config).expect("valid rust");
+    assert!(
+        tests.iter().any(|t| t.name == "my_proof"),
+        "a block comment between a configured attribute and fn must not hide the test: {:?}",
+        tests
+    );
+}
+
 fn cmd() -> Command {
     Command::cargo_bin("kotowari").unwrap()
 }
