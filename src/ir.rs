@@ -1306,11 +1306,16 @@ fn check_references(
                 }
             }
             Item::FlagEntry {
-                line, relations, ..
+                line, relations, fields_seen, ..
             } => {
+                // TBL-019: 関係の中なら その行
+                let rel_field_line = fields_seen.iter()
+                    .find(|(_, n, _)| n == "関係")
+                    .map(|(ln, _, _)| *ln)
+                    .unwrap_or(*line);
                 for rel_id in relations {
                     if !known_ids.contains(rel_id) {
-                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(*line), rel_id.clone()));
+                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(rel_field_line), rel_id.clone()));
                     }
                 }
             }
