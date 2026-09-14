@@ -2427,3 +2427,52 @@ unclosed content
     );
 }
 
+// --- REQ-098: 値が空でも「知らない行」は無いものとして扱わない ---
+
+// @kotowari[REQ-098]
+#[test]
+fn req_098_empty_value_of_unknown_field_still_reports_unknown_field() {
+    // A157 の「値が空なら行が無いもの」は 種類・検証・定義・関係 だけに限る
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- foo: \n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uf = find_by_kind(&findings, "unknown_field");
+    assert!(
+        uf.iter().any(|f| f.detail.contains("foo")),
+        "an empty-valued unknown field name must still be reported as unknown_field: {:?}",
+        uf
+    );
+}
+
+// --- REQ-044: ". " を含む行の数字接頭辞の判定 ---
+
+// @kotowari[REQ-044]
+#[test]
+fn req_044_dot_space_not_preceded_by_digits_is_a_normal_statement() {
+    // "Foo. Bar baz." のように ". " の前が数字でなければ、通常の文として扱う
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nFoo. Bar baz.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ms = find_by_kind(&findings, "missing_statement");
+    assert!(
+        ms.is_empty(),
+        "a statement containing '. ' with a non-digit prefix should remain a normal statement: {:?}",
+        ms
+    );
+}
+
+// @kotowari[REQ-044]
+#[test]
+fn req_044_line_starting_with_dot_space_is_a_normal_statement() {
+    // ". leading dot text" は数字の接頭辞が無い（空の接頭辞）ので通常の文として扱う
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n. leading dot text\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ms = find_by_kind(&findings, "missing_statement");
+    assert!(
+        ms.is_empty(),
+        "a line starting with '. ' (no digit prefix before it) should be a normal statement, not a list marker: {:?}",
+        ms
+    );
+}
+
