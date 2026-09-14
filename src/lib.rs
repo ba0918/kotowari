@@ -410,6 +410,24 @@ fn lexically_normalize(path: &Path) -> PathBuf {
     result
 }
 
+/// 基準のディレクトリから見た相対パスを "/" 区切りで作る。外にあれば ".." を並べる（両方とも正規化済みの絶対パス）
+fn relative_display(base: &Path, target: &Path) -> String {
+    let base_parts: Vec<_> = base.components().collect();
+    let target_parts: Vec<_> = target.components().collect();
+    let common = base_parts
+        .iter()
+        .zip(target_parts.iter())
+        .take_while(|(a, b)| a == b)
+        .count();
+    let mut parts: Vec<String> = vec!["..".to_string(); base_parts.len() - common];
+    parts.extend(
+        target_parts[common..]
+            .iter()
+            .map(|c| c.as_os_str().to_string_lossy().replace('\\', "/")),
+    );
+    parts.join("/")
+}
+
 /// 文書の全項目から ID の集合を作る（形に合う ID だけ）
 pub fn collect_known_ids(docs: &[ir::IrDocument]) -> std::collections::BTreeSet<String> {
     docs.iter()
@@ -452,11 +470,8 @@ pub fn run_check(
                 cp.display()
             )));
         }
-        // TBL-020: 詳細のパスは基準のディレクトリからの相対（ファイルシステムには触れない）
-        let display = lexically_normalize(&abs)
-            .strip_prefix(&base)
-            .map(|p| p.to_string_lossy().replace('\\', "/"))
-            .unwrap_or_else(|_| cp.display().to_string());
+        // TBL-020/A164: 詳細のパスは基準のディレクトリからの相対（外にあれば "../" を含む。ファイルシステムには触れない）
+        let display = relative_display(&lexically_normalize(&base), &lexically_normalize(&abs));
         let text = read_utf8_file(&abs, &display)?;
         config::Config::parse(&text).map_err(|e| match e {
             StopReason::ConfigError(msg) => StopReason::ConfigError(format!("{display}: {msg}")),

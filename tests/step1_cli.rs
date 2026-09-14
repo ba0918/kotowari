@@ -322,3 +322,38 @@ fn req_021_default_format_is_json() {
     assert_eq!(v["files"], 0);
     assert!(v["findings"].as_array().unwrap().is_empty());
 }
+
+// @kotowari[REQ-005, TBL-020]
+#[test]
+fn req_005_config_outside_the_base_is_shown_relative_with_parent_segments() {
+    // A164: 基準の外にある設定ファイルの詳細は "../" を含む基準からの相対パス
+    use std::fs;
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    let base = tmp.path().join("proj");
+    fs::create_dir_all(base.join(".kotowari")).unwrap();
+    fs::create_dir_all(base.join("docs/ir")).unwrap();
+    fs::create_dir_all(base.join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(base.join("docs/decision/adr")).unwrap();
+    fs::write(
+        base.join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+    )
+    .unwrap();
+    // 基準の1つ上に壊れた設定を置き、基準の下の sub/ から指す
+    fs::write(tmp.path().join("bad.yaml"), "unknown_key: 1\n").unwrap();
+    let sub = base.join("sub");
+    fs::create_dir_all(&sub).unwrap();
+    let out = cmd()
+        .args(["check", "--config", "../../bad.yaml"])
+        .current_dir(&sub)
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    let first_line = stderr.lines().next().unwrap_or("");
+    assert!(
+        first_line.starts_with("config error: ../bad.yaml:"),
+        "the detail should be relative to the base (../bad.yaml), not to the CWD: {first_line:?}"
+    );
+}
+
