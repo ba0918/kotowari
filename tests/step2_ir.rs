@@ -2305,3 +2305,31 @@ fn tbl_010_split_lines_strips_cr_and_does_not_panic_on_bare_lf() {
     );
 }
 
+// --- REQ-117: 用語集の区切り行の判定 ---
+
+// @kotowari[REQ-117]
+#[test]
+fn req_117_non_dash_row_after_header_is_not_a_valid_separator() {
+    // ヘッダの直後の行が "-" だけのセルでなければ、区切り行として認めてはいけない
+    let content = "\
+# 用語集
+
+| 用語 | 意味 | 出典 |
+| foo | bar | baz |
+| IR | 仕様 | src |
+";
+    let doc = ir::parse_document("CONTEXT.md", content);
+    assert!(
+        doc.items.iter().all(|i| !matches!(i, Item::GlossaryTerm { .. })),
+        "without a real '---' separator row, no glossary term should be collected: {:?}",
+        doc.items
+    );
+    let findings = check(&[doc], &default_config());
+    let gi = find_by_kind(&findings, "glossary_invalid");
+    assert!(
+        !gi.is_empty(),
+        "a glossary without a valid separator row should be glossary_invalid: {:?}",
+        findings
+    );
+}
+
