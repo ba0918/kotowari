@@ -2285,3 +2285,573 @@ fn req_123_duplicate_row_is_not_a_term() {
     let ms = find_by_kind(&findings, "missing_source");
     assert!(!ms.iter().any(|f| f.line == Some(6)), "no other check on the duplicate row: {:?}", ms);
 }
+
+// --- TBL-010: split_lines の \r\n 処理 ---
+
+// @kotowari[TBL-010]
+#[test]
+fn tbl_010_split_lines_strips_cr_and_does_not_panic_on_bare_lf() {
+    // \r\n は CR を取り除いた1行になる
+    assert_eq!(
+        ir::split_lines("a\r\nb"),
+        vec!["a", "b"],
+        "a CRLF line should have its trailing CR stripped from the content"
+    );
+    // 先頭がいきなり \n （CR無し）でも panic しない
+    assert_eq!(
+        ir::split_lines("\na"),
+        vec!["", "a"],
+        "a bare leading \\n must not panic and must produce an empty first line"
+    );
+}
+
+// --- REQ-117: 用語集の区切り行の判定 ---
+
+// @kotowari[REQ-117]
+#[test]
+fn req_117_non_dash_row_after_header_is_not_a_valid_separator() {
+    // ヘッダの直後の行が "-" だけのセルでなければ、区切り行として認めてはいけない
+    let content = "\
+# 用語集
+
+| 用語 | 意味 | 出典 |
+| foo | bar | baz |
+| IR | 仕様 | src |
+";
+    let doc = ir::parse_document("CONTEXT.md", content);
+    assert!(
+        doc.items.iter().all(|i| !matches!(i, Item::GlossaryTerm { .. })),
+        "without a real '---' separator row, no glossary term should be collected: {:?}",
+        doc.items
+    );
+    let findings = check(&[doc], &default_config());
+    let gi = find_by_kind(&findings, "glossary_invalid");
+    assert!(
+        !gi.is_empty(),
+        "a glossary without a valid separator row should be glossary_invalid: {:?}",
+        findings
+    );
+}
+
+// --- REQ-043: "####" 系見出しの検査 ---
+
+// @kotowari[REQ-043]
+#[test]
+fn req_043_five_hashes_with_space_is_unknown_heading() {
+    // #### より深い見出し（5個以上の#）も直後が空白なら unknown_heading
+    let content = "# Title\n\nScope.\n\n## Section\n\n##### x\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(
+        uh.iter().any(|f| f.detail.contains("##### x")),
+        "a 5-hash heading followed by a space should be unknown_heading: {:?}",
+        uh
+    );
+}
+
+// @kotowari[REQ-043]
+#[test]
+fn req_043_four_hashes_without_trailing_space_is_not_unknown_heading() {
+    // "#" が4つ以上続いても、直後が空白でなければ unknown_heading にしない
+    let content = "# Title\n\nScope.\n\n## Section\n\n####x\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(
+        uh.iter().all(|f| !f.detail.contains("####x")),
+        "a '####' run not followed by a space must not be unknown_heading: {:?}",
+        uh
+    );
+}
+
+// @kotowari[REQ-043]
+#[test]
+fn req_043_bare_four_hashes_is_not_unknown_heading() {
+    // "####" だけの行（直後に何も無い）は unknown_heading にしない
+    let content = "# Title\n\nScope.\n\n## Section\n\n####\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(
+        uh.is_empty(),
+        "a bare '####' line with nothing after it must not be unknown_heading: {:?}",
+        uh
+    );
+}
+
+// --- REQ-112: 閉じないコードブロックの前の指摘・項目は残る ---
+
+// @kotowari[REQ-112]
+#[test]
+fn req_112_findings_and_items_before_the_unclosed_fence_are_retained() {
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+Then orphan step
+```
+
+## 要求
+
+### REQ-001: R
+
+```
+unclosed content
+";
+    let doc = ir::parse_document("a.md", content);
+    // フェンスが開く行より前の invalid_gherkin_line は残らなければならない
+    let ig = doc
+        .parse_findings
+        .iter()
+        .find(|f| f.kind == "invalid_gherkin_line" && f.detail == "Then orphan step");
+    assert!(
+        ig.is_some(),
+        "a parse_finding before the unclosed fence must be retained: {:?}",
+        doc.parse_findings
+    );
+    // unclosed_code_block 自体は出る
+    assert!(
+        doc.parse_findings.iter().any(|f| f.kind == "unclosed_code_block"),
+        "should still produce unclosed_code_block"
+    );
+    // フェンスより前で組み立て済みの項目も残らなければならない
+    assert!(
+        doc.items.iter().any(|i| matches!(i, Item::Requirement { id, .. } if id == "REQ-001")),
+        "an item completed before the unclosed fence must be retained: {:?}",
+        doc.items
+    );
+}
+
+// --- REQ-098: 値が空でも「知らない行」は無いものとして扱わない ---
+
+// @kotowari[REQ-098]
+#[test]
+fn req_098_empty_value_of_unknown_field_still_reports_unknown_field() {
+    // A157 の「値が空なら行が無いもの」は 種類・検証・定義・関係 だけに限る
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- foo: \n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uf = find_by_kind(&findings, "unknown_field");
+    assert!(
+        uf.iter().any(|f| f.detail.contains("foo")),
+        "an empty-valued unknown field name must still be reported as unknown_field: {:?}",
+        uf
+    );
+}
+
+// --- REQ-044: ". " を含む行の数字接頭辞の判定 ---
+
+// @kotowari[REQ-044]
+#[test]
+fn req_044_dot_space_not_preceded_by_digits_is_a_normal_statement() {
+    // "Foo. Bar baz." のように ". " の前が数字でなければ、通常の文として扱う
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nFoo. Bar baz.\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ms = find_by_kind(&findings, "missing_statement");
+    assert!(
+        ms.is_empty(),
+        "a statement containing '. ' with a non-digit prefix should remain a normal statement: {:?}",
+        ms
+    );
+}
+
+// @kotowari[REQ-044]
+#[test]
+fn req_044_line_starting_with_dot_space_is_a_normal_statement() {
+    // ". leading dot text" は数字の接頭辞が無い（空の接頭辞）ので通常の文として扱う
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n. leading dot text\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ms = find_by_kind(&findings, "missing_statement");
+    assert!(
+        ms.is_empty(),
+        "a line starting with '. ' (no digit prefix before it) should be a normal statement, not a list marker: {:?}",
+        ms
+    );
+}
+
+// --- REQ-043: 形に合わない TBL-/PROP-/FLAG- の ID ---
+
+// @kotowari[REQ-043]
+#[test]
+fn req_043_malformed_tbl_id_is_not_an_item() {
+    let content = "# Title\n\nScope.\n\n## 決定表\n\n### TBL-1: X\n\n- 出典: brainstorm/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
+    let doc = ir::parse_document("a.md", content);
+    assert!(
+        !doc.items.iter().any(|i| matches!(i, Item::DecisionTable { .. })),
+        "malformed TBL- id must not produce Item::DecisionTable: {:?}",
+        doc.items
+    );
+    assert!(
+        doc.items.iter().any(|i| matches!(i, Item::UnknownHeading { .. })),
+        "malformed TBL- id must fall back to Item::UnknownHeading: {:?}",
+        doc.items
+    );
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(
+        uh.iter().any(|f| f.detail.contains("TBL-1")),
+        "should report unknown_heading for a malformed TBL-1: {:?}",
+        uh
+    );
+}
+
+// @kotowari[REQ-043]
+#[test]
+fn req_043_malformed_prop_id_is_not_an_item() {
+    let content = "# Title\n\nScope.\n\n## 性質\n\n### PROP-1: X\n\n- 出典: brainstorm/records.md#A1\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    assert!(
+        !doc.items.iter().any(|i| matches!(i, Item::Property { .. })),
+        "malformed PROP- id must not produce Item::Property: {:?}",
+        doc.items
+    );
+    assert!(
+        doc.items.iter().any(|i| matches!(i, Item::UnknownHeading { .. })),
+        "malformed PROP- id must fall back to Item::UnknownHeading: {:?}",
+        doc.items
+    );
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(
+        uh.iter().any(|f| f.detail.contains("PROP-1")),
+        "should report unknown_heading for a malformed PROP-1: {:?}",
+        uh
+    );
+}
+
+// @kotowari[REQ-043]
+#[test]
+fn req_043_malformed_flag_id_is_not_an_item() {
+    let content = "# 問題の記録\n\n### FLAG-1: Issue\n\n- 種類: gap\n- 関係: REQ-999\n- 出典: brainstorm/records.md#A1\n";
+    let doc = ir::parse_document("FLAGS.md", content);
+    assert!(
+        !doc.items.iter().any(|i| matches!(i, Item::FlagEntry { .. })),
+        "malformed FLAG- id must not produce Item::FlagEntry: {:?}",
+        doc.items
+    );
+    assert!(
+        doc.items.iter().any(|i| matches!(i, Item::UnknownHeading { .. })),
+        "malformed FLAG- id must fall back to Item::UnknownHeading: {:?}",
+        doc.items
+    );
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(
+        uh.iter().any(|f| f.detail.contains("FLAG-1")),
+        "should report unknown_heading for a malformed FLAG-1: {:?}",
+        uh
+    );
+}
+
+// --- TBL-011: 性質の "- 出典:" 行の読み方 ---
+
+// @kotowari[TBL-011]
+#[test]
+fn tbl_011_property_source_field_populates_sources() {
+    let content = "# Title\n\nScope.\n\n## 性質\n\n### PROP-001: P\n\n- 出典: brainstorm/records.md#A1\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let prop = doc
+        .items
+        .iter()
+        .find(|i| matches!(i, Item::Property { id, .. } if id == "PROP-001"));
+    assert!(prop.is_some(), "should parse PROP-001: {:?}", doc.items);
+    if let Item::Property { sources, .. } = prop.unwrap() {
+        assert_eq!(
+            sources,
+            &["brainstorm/records.md#A1".to_string()],
+            "a PROP's own 出典 field should be collected into sources: {:?}",
+            sources
+        );
+    }
+    let findings = check(&[doc], &default_config());
+    let ms = find_by_kind(&findings, "missing_source");
+    assert!(
+        ms.is_empty(),
+        "a PROP with a 出典 field must not produce missing_source: {:?}",
+        ms
+    );
+}
+
+// --- REQ-052: 結び付かないタグの行の行番号 ---
+
+// @kotowari[REQ-052]
+#[test]
+fn req_052_dangling_bare_word_in_unbound_tag_line_keeps_its_line_number() {
+    // "@" で始まらない語のタグ行が結び付かなくても、unknown_tag の line はタグ行自身の行にする
+    let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@id=EX-001 badword\n```\n";
+    let doc = ir::parse_document("a.md", content);
+    let ut = doc
+        .parse_findings
+        .iter()
+        .find(|f| f.kind == "unknown_tag" && f.detail == "badword");
+    assert!(
+        ut.is_some(),
+        "a dangling bare word in an unbound tag line should produce unknown_tag: {:?}",
+        doc.parse_findings
+    );
+    assert_eq!(
+        ut.unwrap().line,
+        Some(8),
+        "the finding's line should be the tag line's own line number, not None"
+    );
+}
+
+// --- REQ-114: シナリオの id に使う @id の値の形 ---
+
+// @kotowari[REQ-114]
+#[test]
+fn req_114_well_formed_non_ex_id_is_not_used_as_scenario_id() {
+    // @id の値が REQ- の形など、EX- 以外なら「有効な形」でも id として使わない
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@id=REQ-001 @about=REQ-001 @source=brainstorm/records.md#A1
+Scenario: uses a wrong-prefix but well-formed id
+  Given something
+```
+";
+    let doc = ir::parse_document("a.md", content);
+    let scenario = doc.items.iter().find(|i| matches!(i, Item::Scenario { .. }));
+    assert!(scenario.is_some(), "should parse the scenario: {:?}", doc.items);
+    if let Item::Scenario { id, .. } = scenario.unwrap() {
+        assert!(
+            id.is_none(),
+            "a well-formed but non-EX id must not become the scenario's id: {:?}",
+            id
+        );
+    }
+}
+
+// @kotowari[REQ-114]
+#[test]
+fn req_114_malformed_id_value_is_the_actual_malformed_tag_not_a_bare_at_id() {
+    // 2つの "@id" 名のタグがあるとき、報告する値は実際に形が合わない方でなければならない
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@id @id=BAD1 @about=REQ-001 @source=brainstorm/records.md#A1
+Scenario: two id-named tags, only the second is malformed
+  Given something
+```
+
+## 要求
+
+### REQ-001: R
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+Statement.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ii = find_by_kind(&findings, "invalid_id");
+    assert!(
+        ii.iter().any(|f| f.detail == "BAD1"),
+        "the reported malformed @id value should be the actually malformed one (BAD1), not an empty bare @id: {:?}",
+        ii
+    );
+}
+
+// @kotowari[REQ-114]
+#[test]
+fn req_114_malformed_id_value_is_not_stolen_from_an_unrelated_about_tag() {
+    // "@about" の値がたまたま ID の形でなくても、malformed_value は "@id" 自身の値でなければならない
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@about=not-an-id-like-value @id=BAD-1 @source=brainstorm/records.md#A1
+Scenario: about appears before the malformed id tag
+  Given something
+```
+
+## 要求
+
+### REQ-001: R
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+Statement.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ii = find_by_kind(&findings, "invalid_id");
+    assert!(
+        ii.iter().any(|f| f.detail == "BAD-1"),
+        "the reported malformed @id value must come from the @id tag itself, not an unrelated @about value: {:?}",
+        ii
+    );
+}
+
+// --- REQ-059: @source タグが在るが値が使い物にならないとき ---
+
+// @kotowari[REQ-059]
+#[test]
+fn req_059_source_tag_present_but_only_commas_does_not_report_missing_source() {
+    let content = "\
+# Title
+
+Scope.
+
+## 具体例
+
+```gherkin
+@id=EX-001 @about=REQ-001 @source=,
+Scenario: source tag exists but has no usable value
+  Given something
+```
+
+## 要求
+
+### REQ-001: R
+
+- 種類: ubiquitous
+- 出典: brainstorm/records.md#A1
+- 検証: unit
+
+Statement.
+";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ms = find_by_kind(&findings, "missing_source");
+    assert!(
+        ms.is_empty(),
+        "a scenario with a @source tag (even an unusable comma-only value) must not produce missing_source: {:?}",
+        ms
+    );
+}
+
+// --- REQ-098: 問題の記録の必須の行 ---
+
+// @kotowari[REQ-098]
+#[test]
+fn req_098_flag_entirely_missing_kind_line_produces_missing_field() {
+    let content = "\
+# 問題の記録
+
+### FLAG-001: Issue
+
+- 関係: REQ-999
+- 出典: brainstorm/records.md#A1
+
+Body text.
+";
+    let doc = ir::parse_document("FLAGS.md", content);
+    let findings = check(&[doc], &default_config());
+    let mf = find_by_kind(&findings, "missing_field");
+    assert!(
+        mf.iter().any(|f| f.detail == "種類"),
+        "a FLAG entry with no 種類 line at all should produce missing_field 種類: {:?}",
+        mf
+    );
+}
+
+// @kotowari[REQ-098]
+#[test]
+fn req_098_flag_relation_line_with_only_commas_does_not_report_missing_field() {
+    let content = "\
+# 問題の記録
+
+### FLAG-001: Issue
+
+- 種類: gap
+- 関係: ,
+- 出典: brainstorm/records.md#A1
+
+Body text.
+";
+    let doc = ir::parse_document("FLAGS.md", content);
+    let findings = check(&[doc], &default_config());
+    let mf = find_by_kind(&findings, "missing_field");
+    assert!(
+        mf.iter().all(|f| f.detail != "関係"),
+        "a 関係 line that exists (even if unusable) must not produce missing_field 関係: {:?}",
+        mf
+    );
+}
+
+// --- TBL-019: 複数の行を持つ項目での参照切れの行番号 ---
+
+// @kotowari[TBL-019]
+#[test]
+fn tbl_019_unresolved_definition_reference_line_is_the_definition_fields_own_line() {
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: TBL-999\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    let f = ur.iter().find(|f| f.detail == "TBL-999");
+    assert!(f.is_some(), "should produce unresolved_reference for TBL-999: {:?}", ur);
+    assert_eq!(
+        f.unwrap().line,
+        Some(12),
+        "the finding's line should be the 定義 field's own line, not an earlier field's line"
+    );
+}
+
+// @kotowari[TBL-019]
+#[test]
+fn tbl_019_unresolved_relation_reference_line_is_the_relation_fields_own_line() {
+    let content = "# 問題の記録\n\n### FLAG-001: Issue\n\n- 種類: gap\n- 関係: EX-999\n- 出典: brainstorm/records.md#A1\n";
+    let doc = ir::parse_document("FLAGS.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    let f = ur.iter().find(|f| f.detail == "EX-999");
+    assert!(f.is_some(), "should produce unresolved_reference for EX-999: {:?}", ur);
+    assert_eq!(
+        f.unwrap().line,
+        Some(6),
+        "the finding's line should be the 関係 field's own line, not an earlier field's line"
+    );
+}
+
+// --- REQ-054: 参照の解決 ---
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_valid_and_known_definition_id_produces_no_unresolved_reference() {
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: TBL-001\n\n## 決定表\n\n### TBL-001: T\n\n- 出典: brainstorm/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    assert!(
+        ur.iter().all(|f| f.detail != "TBL-001"),
+        "a well-formed, known definition id must not produce unresolved_reference: {:?}",
+        ur
+    );
+}
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_extract_backtick_contents_two_pairs_on_one_line() {
+    let result = ir::extract_backtick_contents("`REQ-001` and `TBL-999`");
+    assert_eq!(
+        result,
+        vec!["REQ-001", "TBL-999"],
+        "two separate backtick-delimited ids on one line should each be extracted whole, not fused together"
+    );
+}
