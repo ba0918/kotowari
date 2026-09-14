@@ -11,7 +11,7 @@
 | REQ-003 | unit | `req_003_config_path_is_relative_to_cwd` |
 | REQ-004 | unit | `req_004_unknown_option_stops`, `req_004_positional_argument_stops`, `req_004_unknown_format_value_stops`, `req_004_missing_config_file_stops`, `req_004_no_arguments_stops`, `req_004_option_without_value_stops`, `req_004_repeated_option_stops`, `req_004_config_pointing_to_directory_stops` |
 | REQ-005 | unit | `req_004_unknown_option_stops`, `req_004_positional_argument_stops`, `req_005_stop_writes_nothing_to_stdout_and_reason_to_stderr`, `req_005_stderr_first_line_has_the_reason_wording`, `req_005_stderr_detail_path_is_relative`, `req_004_no_arguments_stops`, `req_004_option_without_value_stops`, `req_004_repeated_option_stops`, `req_004_config_pointing_to_directory_stops` |
-| REQ-006 | unit | `req_006_non_utf8_config_stops`, `tbl_001_unreadable_test_file_stops`, `tbl_001_non_utf8_test_file_stops` |
+| REQ-006 | unit | `req_006_non_utf8_config_stops`, `tbl_001_unreadable_test_file_stops`, `tbl_001_non_utf8_test_file_stops`, `tbl_001_non_utf8_records_or_adr_stops` |
 | REQ-007 | unit | `req_004_unknown_option_stops`, `req_007_exit_codes_zero_two`, `req_007_exit_code_one_on_error_and_zero_on_warning_only` |
 | REQ-008 | review | `src/main.rs` に render, trace, query のサブコマンドがないことを確認。`grep -c "render\|trace\|query" src/main.rs` が 0 |
 | REQ-009 | unit | `req_009_base_is_the_dir_holding_dot_kotowari`, `req_009_falls_back_to_cwd` |
@@ -113,7 +113,7 @@
 | REQ-105 | review | `src/` にライブラリとバイナリの2ターゲット。モジュールは config, ir, sources, terms, tests_discovery |
 | REQ-106 | unit | `req_106_form_contract_headings_are_valid_sources` |
 | REQ-107 | unit | `req_107_help_and_version_exit_zero_without_check`, `req_107_help_wins_over_argument_errors` |
-| REQ-108 | review | `src/lib.rs` の `StopReason::fmt` で TBL-018 の文言を使っていることを確認。`src/main.rs` の `format_stop` で標準エラーの1行目の形を組んでいることを確認 |
+| REQ-108 | review | `src/lib.rs` の `StopReason::fmt` で TBL-018 の文言を使っていることを確認。`src/main.rs` の `stop` で標準エラーの1行目の形を組んでいることを確認 |
 | REQ-109 | review | `src/lib.rs` の `run_check` で置き場の存在を検査し、`StopReason` で停止していることを確認。黙って飛ばす経路が無いことを `rg 'filter_map\|if let Ok' src/` で確認 |
 | REQ-110 | unit | `req_110_trailing_slash_in_config_is_normalized_in_path`, `req_110_dot_segments_are_folded` |
 | REQ-111 | unit | `req_111_bom_is_skipped_in_ir_config_records_adr_and_tests`, `tbl_001_non_utf8_records_or_adr_stops` |
@@ -125,7 +125,7 @@
 | REQ-117 | unit | `req_117_second_table_is_not_glossary`, `req_117_glossary_without_proper_table_is_invalid` |
 | REQ-118 | unit | `req_118_unresolved_reference_line_is_the_marker_line`, `tbl_019_marker_findings_line_is_the_marker_line` |
 | REQ-120 | review | `src/ir.rs` と `src/lib.rs` で、仕様に列挙されていない振る舞いを黙って決めていないことを確認。`parse_document` の gherkin 解析で有効な行の種類以外を invalid_gherkin_line にし、`read_utf8_file` で読めないファイルを停止にし、`check_documents` で形に合わない見出しの下を読まないことを確認 |
-| REQ-121 | review | `src/tests_discovery.rs` の `has_attribute` / `has_configured_attribute` のみがテスト判定に使われ、文字列の正規表現マッチを使っていないことを確認。`grep -c "Regex" src/tests_discovery.rs` が 0 |
+| REQ-121 | review | `src/config.rs` と `src/tests_discovery.rs` で、設定ファイルから問い合わせ（tree-sitter の文法）を足す経路が無いことを確認。`grep -c "grammar\|Language::new" src/config.rs` が 0 |
 
 ## ミューテーションテスト
 
@@ -216,9 +216,9 @@
 
 ## kotowari 自身にかけた結果
 
-リポジトリ直下（`docs/ir` とこのリポジトリの `tests/`）で `cargo run -- check` を実行した結果（`f4a0340`）:
+リポジトリ直下（`docs/ir` とこのリポジトリの `tests/`）で `cargo run -- check` を実行した結果（`7b35a94`）:
 
-- files: 20
-- lines: 1401
+- files: 23
+- lines: 1580
 - findings: 0
 - 終了コード: 0
