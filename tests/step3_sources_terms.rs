@@ -676,6 +676,44 @@ fn req_058_hidden_directory_under_records_is_not_a_source_target() {
     );
 }
 
+// --- 除外: ディレクトリでも通常のファイルでもない要素は静かに読み飛ばす ---
+
+// @kotowari[REQ-058]
+#[test]
+#[cfg(unix)]
+fn req_058_non_regular_entry_named_md_under_records_is_silently_skipped() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // ディレクトリでもファイルでもない要素（ここでは Unix ドメインソケット）を
+    // records の下に ".md" の名前で置く
+    let sock_path = tmp.path().join("docs/decision/brainstorm/weird.md");
+    let _listener = std::os::unix::net::UnixListener::bind(&sock_path).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "a non-regular filesystem entry named *.md under records must be silently skipped, not read: {:?}",
+        output
+    );
+}
+
+// @kotowari[REQ-058]
+#[test]
+#[cfg(unix)]
+fn req_058_non_regular_entry_named_md_under_adr_is_silently_skipped() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    let sock_path = tmp.path().join("docs/decision/adr/weird.md");
+    let _listener = std::os::unix::net::UnixListener::bind(&sock_path).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "a non-regular filesystem entry named *.md under adr must be silently skipped, not read: {:?}",
+        output
+    );
+}
+
 // --- REQ-040: gherkin コードブロック内の文書名参照は対象外 ---
 
 // @kotowari[REQ-040]
