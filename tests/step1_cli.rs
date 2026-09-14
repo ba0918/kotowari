@@ -88,6 +88,24 @@ fn req_004_missing_config_file_stops() {
         .stdout("");
 }
 
+// @kotowari[REQ-004]
+#[test]
+fn req_004_unknown_command_before_check_has_the_unknown_command_wording() {
+    // "check" より前の未知の位置引数は "unknown command: ..."（"unexpected argument: ..." ではない）
+    let output = cmd()
+        .args(["foo"])
+        .current_dir(valid_project_dir())
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let first_line = stderr.lines().next().unwrap_or("");
+    assert_eq!(
+        first_line, "argument error: unknown command: foo",
+        "got: {first_line:?}"
+    );
+}
+
 // --- REQ-005: 停止の出力（別のテストで既にカバー） ---
 
 // @kotowari[REQ-005]

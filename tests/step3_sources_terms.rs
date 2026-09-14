@@ -1093,6 +1093,25 @@ fn tbl_014_unclosed_quote_hides_the_rest_of_the_line() {
     assert!(md.is_empty(), "unclosed quote should hide the rest of the line: {:?}", md);
 }
 
+// @kotowari[TBL-014]
+#[test]
+fn tbl_014_text_between_the_second_and_third_quote_is_still_scanned() {
+    // 二重引用符が奇数（3つ）のとき、行末を隠すのは「最後の」引用符から先だけ。
+    // 最初の引用符で打ち切ってはいけない（2つ目と3つ目の間は引用符の外）。
+    use std::collections::BTreeSet;
+    let content = "# Title\n\nScope.\n\nSee \"note\" and outside.md here \"trail\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    assert!(
+        md.iter().any(|f| f.detail == "outside.md"),
+        "text between the 2nd and 3rd quote is outside quotes and should still be scanned: {:?}",
+        md
+    );
+}
+
 // @kotowari[REQ-117]
 #[test]
 fn req_117_second_table_is_not_glossary() {

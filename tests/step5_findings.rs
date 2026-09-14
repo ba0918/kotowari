@@ -38,6 +38,42 @@ fn findings_by_kind(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value>
         .collect()
 }
 
+// --- REQ-025: 文字の出力に使う種類の語 ---
+
+// @kotowari[REQ-025]
+#[test]
+fn req_025_finding_kind_displays_as_its_own_kind_word() {
+    // --format text の出力は "{kind}" を通して種類の語を書く（main.rs）。
+    // その Display の実装が種類ごとの語を書くことを直接確かめる。
+    assert_eq!(
+        kotowari::FindingKind::MissingTitle.to_string(),
+        "missing_title",
+        "Display should write the kind word, not an empty string"
+    );
+    assert_eq!(
+        kotowari::FindingKind::SourceInvalid.to_string(),
+        "source_invalid"
+    );
+}
+
+// --- REQ-024: FindingKind と str の等価 ---
+
+// @kotowari[REQ-024]
+#[test]
+fn req_024_finding_kind_partial_eq_str_matches_only_its_own_kind_name() {
+    // `==` に書いた文字列リテラルは `PartialEq<&str>` を通る（既存のテストで検査済み）。
+    // ここでは `PartialEq<str>` 側の実装を `.eq()` で直接呼び、
+    // 自分の種類の名前だけに真を返すことを確かめる。
+    assert!(
+        kotowari::FindingKind::MissingDocument.eq("missing_document"),
+        "should equal its own kind name"
+    );
+    assert!(
+        !kotowari::FindingKind::MissingDocument.eq("missing_title"),
+        "should not equal a different kind name"
+    );
+}
+
 // --- REQ-029: 誤りの種類の detail ---
 
 // @kotowari[REQ-029, TBL-008]
