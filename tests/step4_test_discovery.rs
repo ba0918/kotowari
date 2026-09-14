@@ -2,6 +2,60 @@ use assert_cmd::Command;
 use std::fs;
 use tempfile::TempDir;
 
+// --- REQ-082: マクロの中身の再パースでの行番号（token_tree の開始位置） ---
+
+// @kotowari[REQ-082]
+#[test]
+fn req_082_macro_reparse_byte_offset_reflects_delimiter_position() {
+    // マクロの呼び出しと開き波括弧が別の行にあるとき、行番号はその波括弧の行を基準にする
+    let mut config = kotowari::config::Config::default();
+    config.tests.rust.macros = vec!["my_macro".to_string()];
+
+    let brace_on_own_line = "my_macro!\n{\n    // @kotowari[REQ-999]\n    fn t() {}\n}\n";
+    let tests = kotowari::tests_discovery::discover_rust_tests(brace_on_own_line, "test_a.rs", &config)
+        .expect("valid rust");
+    assert_eq!(tests.len(), 1);
+    assert_eq!(tests[0].line, 4, "fn line should reflect '{{' on its own line: {:?}", tests);
+    assert_eq!(tests[0].marker_ids, vec![("REQ-999".to_string(), 3)], "marker line should reflect '{{' on its own line: {:?}", tests);
+
+    // 波括弧以外の区切り記号（丸括弧）でも、中に波括弧のブロックがあれば同じ規則で行番号が付く
+    let paren_wrapped_block = "// leading\n// leading\nmy_macro!(\n    {\n        // @kotowari[REQ-999]\n        fn t() {}\n    }\n);\n";
+    let tests2 = kotowari::tests_discovery::discover_rust_tests(paren_wrapped_block, "test_b.rs", &config)
+        .expect("valid rust");
+    assert_eq!(tests2.len(), 1);
+    assert_eq!(tests2[0].line, 6, "fn line should reflect the real position after leading lines: {:?}", tests2);
+    assert_eq!(tests2[0].marker_ids, vec![("REQ-999".to_string(), 5)], "marker line should reflect the real position after leading lines: {:?}", tests2);
+}
+
+// --- REQ-082, REQ-118, REQ-072: マクロの中の関数・印・不正な印の行番号 ---
+
+// @kotowari[REQ-082, REQ-118, REQ-072]
+#[test]
+fn req_082_macro_function_and_marker_lines_use_additive_offset() {
+    // マクロの前に複数行あるとき（line_offset > 0）、関数・印・不正な印の行番号は
+    // すべて「マクロの中の行番号 + line_offset」で計算される
+    let mut config = kotowari::config::Config::default();
+    config.tests.rust.macros = vec!["my_macro".to_string()];
+
+    let content = "// leading 1\n// leading 2\n// leading 3\nmy_macro! {\n    // @kotowari[REQ-999]\n    // @kotowari[]\n    fn t() {\n        // @kotowari[REQ-888]\n        // @kotowari[]\n        assert!(true);\n    }\n}\n";
+    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test_e.rs", &config)
+        .expect("valid rust");
+    assert_eq!(tests.len(), 1);
+    assert_eq!(tests[0].line, 7, "function line: {:?}", tests);
+    assert_eq!(
+        tests[0].marker_ids,
+        vec![("REQ-999".to_string(), 5), ("REQ-888".to_string(), 8)],
+        "marker lines (before the function and at body start): {:?}",
+        tests
+    );
+    assert_eq!(
+        tests[0].invalid_markers,
+        vec![(6, "    // @kotowari[]".to_string()), (9, "        // @kotowari[]".to_string())],
+        "invalid marker lines (before the function and at body start): {:?}",
+        tests
+    );
+}
+
 fn cmd() -> Command {
     Command::cargo_bin("kotowari").unwrap()
 }
