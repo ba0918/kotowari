@@ -2333,3 +2333,50 @@ fn req_117_non_dash_row_after_header_is_not_a_valid_separator() {
     );
 }
 
+// --- REQ-043: "####" 系見出しの検査 ---
+
+// @kotowari[REQ-043]
+#[test]
+fn req_043_five_hashes_with_space_is_unknown_heading() {
+    // #### より深い見出し（5個以上の#）も直後が空白なら unknown_heading
+    let content = "# Title\n\nScope.\n\n## Section\n\n##### x\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(
+        uh.iter().any(|f| f.detail.contains("##### x")),
+        "a 5-hash heading followed by a space should be unknown_heading: {:?}",
+        uh
+    );
+}
+
+// @kotowari[REQ-043]
+#[test]
+fn req_043_four_hashes_without_trailing_space_is_not_unknown_heading() {
+    // "#" が4つ以上続いても、直後が空白でなければ unknown_heading にしない
+    let content = "# Title\n\nScope.\n\n## Section\n\n####x\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(
+        uh.iter().all(|f| !f.detail.contains("####x")),
+        "a '####' run not followed by a space must not be unknown_heading: {:?}",
+        uh
+    );
+}
+
+// @kotowari[REQ-043]
+#[test]
+fn req_043_bare_four_hashes_is_not_unknown_heading() {
+    // "####" だけの行（直後に何も無い）は unknown_heading にしない
+    let content = "# Title\n\nScope.\n\n## Section\n\n####\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(
+        uh.is_empty(),
+        "a bare '####' line with nothing after it must not be unknown_heading: {:?}",
+        uh
+    );
+}
+
