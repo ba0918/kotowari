@@ -7,10 +7,10 @@
 ### REQ-079: テストのファイル
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A36, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A94, experiments/003-cli/brainstorm/records.md#A102
+- 出典: experiments/003-cli/brainstorm/records.md#A36, experiments/003-cli/brainstorm/records.md#A47, experiments/003-cli/brainstorm/records.md#A94, experiments/003-cli/brainstorm/records.md#A102, experiments/003-cli/brainstorm/records.md#A146
 - 検証: unit
 
-kotowari は常に、"tests.files" の glob に当たるファイルを`テストのファイル`として読む。走査ではディレクトリのシンボリックリンクを辿らず、ファイルのシンボリックリンクは読む。
+kotowari は常に、"tests.files" の glob に当たるファイルを`テストのファイル`として読む。走査ではディレクトリのシンボリックリンクを辿らず、ファイルのシンボリックリンクは読み、先の無いシンボリックリンクでは読めないファイルを理由に`停止`する。
 
 ### REQ-080: tree-sitter で読む
 
@@ -38,10 +38,10 @@ kotowari は常に、`テストのファイル`の言語を同梱の対応で拡
 ### REQ-083: 読めないテストのファイル
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A58, experiments/003-cli/brainstorm/records.md#A120
+- 出典: experiments/003-cli/brainstorm/records.md#A58, experiments/003-cli/brainstorm/records.md#A120, experiments/003-cli/brainstorm/records.md#A149
 - 検証: unit
 
-tree-sitter で読めない`テストのファイル`（構文の誤りが1つでもあるファイル）があるとき、kotowari は unparsable_file の`誤り`を出してそのファイルを飛ばし、`停止`しない。
+tree-sitter で読めない`テストのファイル`（構文の誤りが1つでもあるファイル）があるとき、kotowari は unparsable_file の`誤り`を出してそのファイルを飛ばし、`停止`しない。"tests.rust.macros" のマクロの中身を読み直したときの構文の誤りはこれに含めず、読めた最上位の関数だけを数える。
 
 ### REQ-084: 正規表現でテストを見つけない
 
