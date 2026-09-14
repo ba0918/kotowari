@@ -660,6 +660,35 @@ fn req_076_unknown_language_scans_raw_text() {
     assert!(rwt.is_empty(), "unknown lang markers should count for coverage: {:?}", rwt);
 }
 
+// @kotowari[REQ-076]
+#[test]
+fn req_076_unknown_language_marker_line_is_one_indexed_from_its_own_line() {
+    // 問い合わせの無い言語では、印の行は印のある行そのもの（先頭からの行番号）であり、0 ではない
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+    )
+    .unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.py"),
+        "# leading\n# @kotowari[REQ-999]\ndef test_something():\n    pass\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ur = findings_by_kind(&v, "unresolved_reference");
+    let req999 = ur.iter().find(|f| f["detail"] == "REQ-999");
+    assert!(req999.is_some(), "should find unresolved REQ-999: {:?}", ur);
+    assert_eq!(
+        req999.unwrap()["line"], 2,
+        "the marker line should be its own physical line (2), not the index into the file: {:?}",
+        ur
+    );
+}
+
 // --- REQ-077: 存在しない ID だけを指す印 ---
 
 // @kotowari[REQ-077]
