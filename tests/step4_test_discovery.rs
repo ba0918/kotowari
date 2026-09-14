@@ -823,6 +823,12 @@ fn tbl_001_non_utf8_test_file_stops() {
     );
     // 標準出力は空
     assert!(output.stdout.is_empty(), "stdout should be empty on stop");
+    // 停止の詳細に絶対パスが含まれない
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !stderr.contains(tmp.path().to_str().unwrap()),
+        "stderr should not contain absolute path, got: {stderr:?}"
+    );
 }
 
 // --- REQ-079: ファイルのシンボリックリンクは読む ---

@@ -115,7 +115,10 @@ pub fn collect_test_files(
     {
         // REQ-018（A96）: 走査でディレクトリが読めなければ停止する
         let entry = entry.map_err(|e| {
-            let where_ = e.path().map(|p| p.display().to_string()).unwrap_or_default();
+            let where_ = e.path()
+                .map(|p| p.strip_prefix(base).unwrap_or(p))
+                .map(|p| p.to_string_lossy().replace('\\', "/"))
+                .unwrap_or_default();
             crate::StopReason::UnreadableFile(format!("{where_}: {e}"))
         })?;
         // ファイルまたはファイルのシンボリックリンク
@@ -606,7 +609,7 @@ pub fn discover_and_check(
     for (rel_path, abs_path) in &test_files {
         let content = crate::read_utf8_file(
             std::path::Path::new(abs_path),
-            abs_path,
+            rel_path,
         )?;
 
         let ext = std::path::Path::new(rel_path)
