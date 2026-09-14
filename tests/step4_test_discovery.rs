@@ -1111,6 +1111,57 @@ fn tbl_017_macro_function_body_marker_binds() {
     assert!(rwt.is_empty(), "body marker in macro function should bind: {:?}", rwt);
 }
 
+// @kotowari[TBL-016]
+#[test]
+fn tbl_016_macro_function_block_comment_marker_binds() {
+    // マクロの中の関数でも、通常の関数と同じ規則で複数行のブロックコメントの印が結び付く
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - my_macro\n",
+    ).unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "my_macro! {\n    /* @kotowari[REQ-001]\n    */\n    fn block_comment_marker() {}\n}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    assert!(
+        rwt.is_empty(),
+        "a multi-line block comment marker right before a macro function should bind, just like a normal function: {:?}",
+        rwt
+    );
+}
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_duplicate_marker_id_in_same_test_reports_per_occurrence() {
+    // A152: 同じテストに同じ ID を指す印が複数あるとき、unresolved_reference は出現ごとに1件
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-999]\n// @kotowari[REQ-999]\n#[test]\nfn duplicate_marker_test() {}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ur = findings_by_kind(&v, "unresolved_reference");
+    let matching: Vec<_> = ur.iter().filter(|f| f["detail"] == "REQ-999").collect();
+    assert_eq!(
+        matching.len(), 2,
+        "each occurrence of the same unresolved ID pointing at one test should produce its own finding: {:?}",
+        ur
+    );
+    let mut lines: Vec<u64> = matching.iter().map(|f| f["line"].as_u64().unwrap()).collect();
+    lines.sort();
+    assert_eq!(lines, vec![1, 2]);
+}
+
 // @kotowari[REQ-072]
 #[test]
 fn req_072_marker_spanning_lines_is_invalid() {

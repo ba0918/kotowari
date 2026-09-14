@@ -14,8 +14,8 @@ pub struct DiscoveredTest {
     pub name: String,
     pub file_path: String,
     pub line: usize,
-    /// ID → 印のある行
-    pub marker_ids: std::collections::BTreeMap<String, usize>,
+    /// 印の出現ごとの (ID, 印のある行)。A152: 同じ ID の印が複数あっても出現ごとに数える
+    pub marker_ids: Vec<(String, usize)>,
     /// テストに結び付く位置にある、中身が空または閉じ括弧のない印
     pub invalid_markers: Vec<(usize, String)>,
 }
@@ -284,19 +284,17 @@ fn discover_macro_functions(
                 let inner_line = child.start_position().row;
                 let actual_line = line_offset + inner_line + 1;
 
-                // inner の関数前のコメントの印を集める
-                let (all_ids_raw, before_invalid) = collect_markers_before_line(inner_lines, inner_line);
+                // A121: マクロの中の関数も通常の関数と同じ規則で印を集める（木の節で遡る）
+                let (all_ids_raw, before_invalid) = collect_markers_from_siblings(child, inner_source, inner_lines);
                 // line_offset を足す
-                let all_ids: std::collections::BTreeMap<String, usize> = all_ids_raw.into_iter()
+                let all_ids: Vec<(String, usize)> = all_ids_raw.into_iter()
                     .map(|(id, ln)| (id, line_offset + ln))
                     .collect();
 
                 // 関数本体の先頭のコメントの印も集める（A121: 通常の関数と同じ規則）
                 let (body_ids, body_invalid) = collect_body_start_markers(child, inner_source);
                 let mut merged_ids = all_ids;
-                for (id, ln) in body_ids {
-                    merged_ids.entry(id).or_insert(line_offset + ln);
-                }
+                merged_ids.extend(body_ids.into_iter().map(|(id, ln)| (id, line_offset + ln)));
                 let mut invalid_markers: Vec<(usize, String)> = before_invalid.into_iter()
                     .map(|(ln, raw)| (line_offset + ln, raw))
                     .collect();
@@ -447,13 +445,13 @@ fn has_configured_attribute(node: tree_sitter::Node, source: &str, attr_path: &s
 }
 
 /// 関数の前の兄弟ノード（属性、コメント）から印を集める
-/// 返り値: (正常な印の ID → 印の行 のマップ, 空・不正な印の (行, 行の文字) のリスト)
+/// 返り値: (出現ごとの (ID, 印の行), 空・不正な印の (行, 行の文字) のリスト)
 fn collect_markers_from_siblings(
     node: tree_sitter::Node,
     source: &str,
     lines: &[&str],
-) -> (std::collections::BTreeMap<String, usize>, Vec<(usize, String)>) {
-    let mut ids = std::collections::BTreeMap::new();
+) -> (Vec<(String, usize)>, Vec<(usize, String)>) {
+    let mut ids: Vec<(String, usize)> = Vec::new();
     let mut invalid = Vec::new();
     let mut prev = node.prev_sibling();
 
@@ -476,8 +474,9 @@ fn collect_markers_from_siblings(
                             // REQ-072: 空の印や閉じ括弧のない印
                             invalid.push((line_num, raw_line.to_string()));
                         } else {
+                            // A152: 同じ ID の印が複数あっても出現ごとに1件数える
                             for id in &marker.ids {
-                                ids.entry(id.clone()).or_insert(line_num);
+                                ids.push((id.clone(), line_num));
                             }
                         }
                     }
@@ -509,57 +508,10 @@ fn collect_markers_from_siblings(
     (ids, invalid)
 }
 
-/// 指定行（0-indexed）の前のコメント塊から印を集める
-/// コメント（// か /*）と属性（#[）の行だけ遡り、空行またはそれ以外の行で切れる
-/// 返り値: (正常な印の ID → 印の行 のマップ, 空・不正な印の (行, 行の文字) のリスト)
-fn collect_markers_before_line(lines: &[&str], target_line: usize) -> (std::collections::BTreeMap<String, usize>, Vec<(usize, String)>) {
-    let mut ids = std::collections::BTreeMap::new();
-    let mut invalid = Vec::new();
-    if target_line == 0 {
-        return (ids, invalid);
-    }
-
-    let mut line_idx = target_line.saturating_sub(1);
-    loop {
-        if line_idx >= lines.len() {
-            break;
-        }
-        let line = lines[line_idx].trim();
-        if line.is_empty() {
-            break;
-        }
-
-        // コメントと属性の行だけ遡る。それ以外（関数定義など）で停止する
-        if !line.starts_with("//") && !line.starts_with("/*") && !line.starts_with("#[") {
-            break;
-        }
-
-        let line_num = line_idx + 1;
-        let raw_line = lines[line_idx];
-        for marker in parse_markers_in_line(line, line_num) {
-            if marker.ids.is_empty() {
-                // REQ-072: 空の印や閉じ括弧のない印
-                invalid.push((line_num, raw_line.to_string()));
-            } else {
-                for id in &marker.ids {
-                    ids.entry(id.clone()).or_insert(line_num);
-                }
-            }
-        }
-
-        if line_idx == 0 {
-            break;
-        }
-        line_idx -= 1;
-    }
-
-    (ids, invalid)
-}
-
 /// 関数本体の先頭のコメントから印を集める
 /// 返り値: (正常な印の ID → 印の行 のマップ, 空・不正な印の (行, 行の文字) のリスト)
-fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> (std::collections::BTreeMap<String, usize>, Vec<(usize, String)>) {
-    let mut ids = std::collections::BTreeMap::new();
+fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> (Vec<(String, usize)>, Vec<(usize, String)>) {
+    let mut ids: Vec<(String, usize)> = Vec::new();
     let mut invalid = Vec::new();
     let lines: Vec<&str> = source.lines().collect();
 
@@ -592,8 +544,9 @@ fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> (std::co
                         if marker.ids.is_empty() {
                             invalid.push((line_num, raw_line.to_string()));
                         } else {
+                            // A152: 同じ ID の印が複数あっても出現ごとに1件数える
                             for id in &marker.ids {
-                                ids.entry(id.clone()).or_insert(line_num);
+                                ids.push((id.clone(), line_num));
                             }
                         }
                     }
@@ -639,7 +592,7 @@ pub fn discover_and_check(
                     for test in &tests {
                         // 印の検証
                         check_test_markers(test, rel_path, known_ids, findings);
-                        for id in test.marker_ids.keys() {
+                        for (id, _) in &test.marker_ids {
                             all_marker_ids.insert(id.clone());
                         }
                         // REQ-072: テストに結び付く空・不正な印
