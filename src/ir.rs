@@ -1268,17 +1268,17 @@ fn check_references(
                 ..
             } => {
                 // 定義の参照チェック
+                // TBL-019: 定義の中なら その行
+                let def_field_line = fields_seen.iter()
+                    .find(|(_, n, _)| n == "定義")
+                    .map(|(ln, _, _)| *ln)
+                    .unwrap_or(*line);
                 for def_id in definitions {
                     if !is_valid_id(def_id) {
                         // REQ-054: ID の形でない値は unresolved_reference
-                        // 定義の行を探す
-                        let def_line = fields_seen.iter()
-                            .find(|(_, n, _)| n == "定義")
-                            .map(|(ln, _, _)| *ln)
-                            .unwrap_or(*line);
-                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(def_line), def_id.clone()));
+                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(def_field_line), def_id.clone()));
                     } else if !known_ids.contains(def_id) {
-                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(*line), def_id.clone()));
+                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(def_field_line), def_id.clone()));
                     }
                 }
                 // 文の中のバッククォートで囲んだ ID の参照チェック
