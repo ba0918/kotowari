@@ -114,7 +114,7 @@
 | REQ-106 | unit | `req_106_form_contract_headings_are_valid_sources` |
 | REQ-107 | unit | `req_107_help_and_version_exit_zero_without_check`, `req_107_help_wins_over_argument_errors` |
 | REQ-108 | review | `src/lib.rs` の `StopReason::fmt` で TBL-018 の文言を使っていることを確認。`src/main.rs` の `stop` で標準エラーの1行目の形を組んでいることを確認 |
-| REQ-109 | review | `src/lib.rs` の `run_check` で置き場の存在を検査し、`StopReason` で停止していることを確認。黙って飛ばす経路が無いことを `rg 'filter_map\|if let Ok' src/` で確認 |
+| REQ-109 | review | `src/lib.rs` の `run_check` で置き場の存在を検査し、`StopReason` で停止していることを確認。黙って飛ばす経路が無いことを `rg 'filter_map|if let Ok' src/` で確認 |
 | REQ-110 | unit | `req_110_trailing_slash_in_config_is_normalized_in_path`, `req_110_dot_segments_are_folded` |
 | REQ-111 | unit | `req_111_bom_is_skipped_in_ir_config_records_adr_and_tests`, `tbl_001_non_utf8_records_or_adr_stops` |
 | REQ-112 | unit | `req_112_unclosed_code_block_is_an_error`, `req_112_unclosed_gherkin_block_is_not_checked` |
