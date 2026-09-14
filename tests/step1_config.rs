@@ -519,6 +519,62 @@ fn req_014_null_value_stops() {
 
 // @kotowari[REQ-014]
 #[test]
+fn req_014_null_tests_files_stops() {
+    let yaml = "tests:\n  files:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.files should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_tests_rust_attributes_stops() {
+    let yaml = "tests:\n  rust:\n    attributes:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.rust.attributes should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_tests_rust_macros_stops() {
+    let yaml = "tests:\n  rust:\n    macros:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.rust.macros should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_vague_words_key_stops() {
+    let yaml = "vague_words:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null vague_words should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_decisions_stops() {
+    let yaml = "decisions:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null decisions should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_tests_stops() {
+    let yaml = "tests:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_tests_rust_stops() {
+    let yaml = "tests:\n  rust:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.rust should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_null_limits_stops() {
+    let yaml = "limits:\n";
+    assert!(kotowari::config::Config::parse(yaml).is_err(), "null limits should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
 fn req_014_absolute_path_stops() {
     let yaml = "ir: /absolute/path\n";
     let result = kotowari::config::Config::parse(yaml);
