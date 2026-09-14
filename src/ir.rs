@@ -1436,11 +1436,6 @@ pub fn is_closing_fence(line: &str, opening: &CodeFence) -> bool {
     line[fence_len..].trim().is_empty()
 }
 
-/// 行がコードブロックの境界かどうかを判定する（後方互換の簡易版）。
-pub fn is_code_fence(line: &str) -> bool {
-    parse_opening_fence(line).is_some()
-}
-
 /// バッククォートで囲まれた内容を抽出する。
 /// 空の内容（``）も返す。
 pub fn extract_backtick_contents(text: &str) -> Vec<&str> {

@@ -25,7 +25,6 @@ pub struct DiscoveredTest {
 pub struct Marker {
     pub ids: Vec<String>,
     pub line: usize,
-    pub raw: String,
 }
 
 /// @kotowari[...] 印を1行から抽出する
@@ -44,21 +43,11 @@ pub fn parse_markers_in_line(line: &str, line_num: usize) -> Vec<Marker> {
                 .map(|s| s.trim().to_string())
                 .filter(|s| !s.is_empty())
                 .collect();
-            let raw = line[abs_start..content_start + close + 1].to_string();
-            markers.push(Marker {
-                ids,
-                line: line_num,
-                raw,
-            });
+            markers.push(Marker { ids, line: line_num });
             search_start = content_start + close + 1;
         } else {
             // 閉じ括弧がない
-            let raw = line[abs_start..].to_string();
-            markers.push(Marker {
-                ids: vec![],
-                line: line_num,
-                raw,
-            });
+            markers.push(Marker { ids: vec![], line: line_num });
             break;
         }
     }
