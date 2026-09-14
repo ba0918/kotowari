@@ -572,6 +572,41 @@ fn req_110_dot_segments_are_folded() {
     assert_eq!(kotowari::normalize_path("docs\\ir"), "docs/ir");
 }
 
+// @kotowari[REQ-110]
+#[test]
+fn req_110_dot_alone_normalizes_to_empty_place() {
+    // "." や "./" だけの置き場は空になる（呼び出し元が文書名だけの path を作る）
+    assert_eq!(kotowari::normalize_path("."), "");
+    assert_eq!(kotowari::normalize_path("./"), "");
+}
+
+// @kotowari[REQ-110]
+#[test]
+fn req_110_ir_dot_produces_bare_filename_path() {
+    let tmp = TempDir::new().unwrap();
+    fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: .\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+    )
+    .unwrap();
+    fs::write(tmp.path().join("a.md"), "No title\n").unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let v: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    let findings = v["findings"].as_array().unwrap();
+    let mt = findings
+        .iter()
+        .find(|f| f["kind"] == "missing_title")
+        .expect("missing_title should be reported");
+    assert_eq!(
+        mt["path"], "a.md",
+        "ir: '.' should produce a bare filename path, not './a.md'"
+    );
+}
+
 // @kotowari[REQ-018]
 #[test]
 fn req_018_place_that_is_a_file_stops() {

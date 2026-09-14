@@ -246,6 +246,39 @@ fn req_005_stderr_first_line_has_the_reason_wording() {
 
 // @kotowari[REQ-005, TBL-020]
 #[test]
+fn req_005_config_error_detail_path_is_relative_to_base_not_to_cwd() {
+    use std::fs;
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+    )
+    .unwrap();
+    // 基準のディレクトリの直下に、知らないキーを持つ壊れた設定を置く
+    fs::write(tmp.path().join("bad.yaml"), "unknown_key: 1\n").unwrap();
+    let sub = tmp.path().join("sub");
+    fs::create_dir_all(&sub).unwrap();
+    // sub/ から "--config ../bad.yaml" を指す（CWD からの相対、REQ-003）
+    let out = cmd()
+        .args(["check", "--config", "../bad.yaml"])
+        .current_dir(&sub)
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    let first_line = stderr.lines().next().unwrap_or("");
+    assert!(
+        first_line.starts_with("config error: bad.yaml:"),
+        "the --config detail path should be relative to the base directory (bad.yaml), not to the CWD (../bad.yaml): {first_line:?}"
+    );
+}
+
+// @kotowari[REQ-005, TBL-020]
+#[test]
 fn req_005_stderr_detail_path_is_relative() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();

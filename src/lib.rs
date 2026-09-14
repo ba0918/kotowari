@@ -332,10 +332,78 @@ pub fn normalize_path(path: &str) -> String {
         parts.push(part);
     }
     if parts.is_empty() {
-        ".".to_string()
+        // REQ-110: "." や "./" は空の置き場になる（呼び出し元が文書名だけの path を作る）
+        String::new()
     } else {
         parts.join("/")
     }
+}
+
+/// 置き場と文書名を "/" でつなぐ。置き場が空なら文書名だけにする（REQ-110）。
+pub fn join_display_path(dir: &str, name: &str) -> String {
+    if dir.is_empty() {
+        name.to_string()
+    } else {
+        format!("{dir}/{name}")
+    }
+}
+
+/// 二重引用符の外の部分を返す。
+/// TBL-014: 引用符が奇数のときは最後の引用符から行末を引用の中とみなす。
+/// ir モジュールと terms モジュールの両方から使う（REQ-054, REQ-064, REQ-104）。
+pub fn split_outside_quotes(line: &str) -> Vec<&str> {
+    let quote_count = line.chars().filter(|&c| c == '"').count();
+    let odd_quotes = quote_count % 2 != 0;
+
+    let mut parts = Vec::new();
+    let mut start = 0;
+    let mut in_quote = false;
+    let mut last_quote_pos = 0;
+
+    if odd_quotes {
+        last_quote_pos = line
+            .char_indices()
+            .filter(|&(_, c)| c == '"')
+            .last()
+            .map(|(i, _)| i)
+            .unwrap_or(0);
+    }
+
+    for (i, c) in line.char_indices() {
+        if c == '"' {
+            if odd_quotes && i == last_quote_pos {
+                parts.push(&line[start..i]);
+                return parts;
+            }
+            if !in_quote {
+                parts.push(&line[start..i]);
+                in_quote = true;
+            } else {
+                in_quote = false;
+                start = i + 1;
+            }
+        }
+    }
+    if !in_quote && start < line.len() {
+        parts.push(&line[start..]);
+    }
+    parts
+}
+
+/// パスの "." と ".." をファイルシステムに触れずに畳む（`--config` の相対パス表示用）。
+fn lexically_normalize(path: &Path) -> PathBuf {
+    use std::path::Component;
+    let mut result = PathBuf::new();
+    for component in path.components() {
+        match component {
+            Component::ParentDir => {
+                result.pop();
+            }
+            Component::CurDir => {}
+            other => result.push(other.as_os_str()),
+        }
+    }
+    result
 }
 
 /// 文書の全項目から ID の集合を作る（形に合う ID だけ）
@@ -380,7 +448,11 @@ pub fn run_check(
                 cp.display()
             )));
         }
-        let display = cp.display().to_string();
+        // TBL-020: 詳細のパスは基準のディレクトリからの相対（ファイルシステムには触れない）
+        let display = lexically_normalize(&abs)
+            .strip_prefix(&base)
+            .map(|p| p.to_string_lossy().replace('\\', "/"))
+            .unwrap_or_else(|_| cp.display().to_string());
         let text = read_utf8_file(&abs, &display)?;
         config::Config::parse(&text).map_err(|e| match e {
             StopReason::ConfigError(msg) => StopReason::ConfigError(format!("{display}: {msg}")),

@@ -879,7 +879,7 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
     let mut all_ids: BTreeMap<String, Vec<(String, usize)>> = BTreeMap::new(); // id -> [(path, line)]
 
     for doc in docs {
-        let path = format!("{}/{}", config.ir, doc.filename);
+        let path = crate::join_display_path(&config.ir, &doc.filename);
 
         // REQ-034: 題名が無い
         if doc.title.is_none() {
@@ -1416,7 +1416,7 @@ pub fn load_and_check(
         let is_file = std::fs::metadata(&p)
             .map(|m| m.is_file())
             .map_err(|e| {
-                let rel = format!("{}/{}", config.ir, entry.file_name().to_string_lossy());
+                let rel = crate::join_display_path(&config.ir, &entry.file_name().to_string_lossy());
                 crate::StopReason::UnreadableFile(format!("{rel}: {e}"))
             })?;
         if p.extension().is_some_and(|ext| ext == "md") && is_file {
@@ -1430,7 +1430,7 @@ pub fn load_and_check(
     for entry in raw_entries {
         let path = entry.path();
         let filename = entry.file_name().to_string_lossy().to_string();
-        let display = format!("{}/{}", config.ir, filename);
+        let display = crate::join_display_path(&config.ir, &filename);
         let content = crate::read_utf8_file(&path, &display)?;
         let doc = parse_document(&filename, &content);
         docs.push(doc);

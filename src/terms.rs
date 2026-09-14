@@ -137,7 +137,7 @@ pub fn check_document_references(
     ];
 
     for doc in docs {
-        let path = format!("{}/{}", ir_path, doc.filename);
+        let path = crate::join_display_path(ir_path, &doc.filename);
         let lines = crate::ir::split_lines_for_doc_ref(&doc.filename, &doc.raw_content);
 
         let mut current_fence: Option<crate::ir::CodeFence> = None;
@@ -284,7 +284,7 @@ pub fn check_terms_and_vague_words(
     findings: &mut Vec<Finding>,
 ) {
     for doc in docs {
-        let path = format!("{}/{}", ir_path, doc.filename);
+        let path = crate::join_display_path(ir_path, &doc.filename);
         for item in &doc.items {
             match item {
                 Item::Requirement { statements, .. } => {
