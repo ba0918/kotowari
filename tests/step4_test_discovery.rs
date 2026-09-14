@@ -1205,3 +1205,18 @@ fn req_019_hidden_file_matched_by_glob_is_read() {
     assert!(twi.iter().any(|f| f["detail"] == "hidden_file_test"),
         "hidden file matched by glob should be read: {:?}", twi);
 }
+
+// @kotowari[REQ-079, REQ-018]
+#[test]
+#[cfg(unix)]
+fn req_079_broken_symlink_in_tests_stops() {
+    use std::os::unix::fs::symlink;
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    symlink(tmp.path().join("nowhere.rs"), tmp.path().join("tests/broken.rs")).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(2), "a broken symlink in the test walk must stop: {:?}", output);
+    assert!(output.stdout.is_empty());
+}

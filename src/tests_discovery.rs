@@ -123,9 +123,14 @@ pub fn collect_test_files(
         })?;
         // ファイルまたはファイルのシンボリックリンク
         let is_file = if entry.file_type().is_symlink() {
+            // A146: 先の無いシンボリックリンクは読めないファイルとして停止する
             std::fs::metadata(entry.path())
                 .map(|m| m.is_file())
-                .unwrap_or(false)
+                .map_err(|e| {
+                    let rel = entry.path().strip_prefix(base).unwrap_or(entry.path())
+                        .to_string_lossy().replace('\\', "/");
+                    crate::StopReason::UnreadableFile(format!("{rel}: {e}"))
+                })?
         } else {
             entry.file_type().is_file()
         };
