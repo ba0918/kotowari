@@ -1083,6 +1083,58 @@ fn req_115_source_invalid_line_is_the_source_line() {
     assert_eq!(si[0]["line"], 10, "source_invalid line should be the source line (10), got {:?}", si[0]);
 }
 
+// @kotowari[REQ-115]
+#[test]
+fn req_115_decision_table_source_invalid_line_is_the_source_line_not_another_field() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 決定表の項目に、出典より前に別の行（種類）を持たせる
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 決定表\n\n### TBL-001: T\n\n- 種類: foo\n- 出典: somewhere/bad.md#X\n\n| a | b |\n|---|---|\n| 1 | 2 |\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(!si.is_empty(), "should have source_invalid: {:?}", v);
+    // line は出典の行（10行目）であって、それより前の種類の行（9行目）ではない
+    assert_eq!(si[0]["line"], 10, "source_invalid line should be the 出典 line (10), not an earlier field line: {:?}", si[0]);
+}
+
+// @kotowari[REQ-115]
+#[test]
+fn req_115_property_source_invalid_line_is_the_source_line_not_another_field() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 性質の項目に、出典より前に別の行（種類）を持たせる
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 性質\n\n### PROP-001: P\n\n- 種類: foo\n- 出典: somewhere/bad.md#X\n\nStatement.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(!si.is_empty(), "should have source_invalid: {:?}", v);
+    assert_eq!(si[0]["line"], 10, "source_invalid line should be the 出典 line (10), not an earlier field line: {:?}", si[0]);
+}
+
+// @kotowari[REQ-115]
+#[test]
+fn req_115_flag_entry_source_invalid_line_is_the_source_line_not_another_field() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 問題の記録の項目に、出典より前に別の行（種類）を持たせる
+    fs::write(
+        tmp.path().join("docs/ir/FLAGS.md"),
+        "# 問題の記録\n\n### FLAG-001: Issue\n\n- 種類: gap\n- 出典: somewhere/bad.md#X\n- 関係: REQ-001\n\nBody.\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(!si.is_empty(), "should have source_invalid: {:?}", v);
+    assert_eq!(si[0]["line"], 6, "source_invalid line should be the 出典 line (6), not an earlier field line: {:?}", si[0]);
+}
+
 // @kotowari[REQ-064]
 #[test]
 fn req_064_backtick_content_is_trimmed() {
