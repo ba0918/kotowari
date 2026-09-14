@@ -2795,3 +2795,63 @@ Body text.
     );
 }
 
+// --- TBL-019: 複数の行を持つ項目での参照切れの行番号 ---
+
+// @kotowari[TBL-019]
+#[test]
+fn tbl_019_unresolved_definition_reference_line_is_the_definition_fields_own_line() {
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: TBL-999\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    let f = ur.iter().find(|f| f.detail == "TBL-999");
+    assert!(f.is_some(), "should produce unresolved_reference for TBL-999: {:?}", ur);
+    assert_eq!(
+        f.unwrap().line,
+        Some(12),
+        "the finding's line should be the 定義 field's own line, not an earlier field's line"
+    );
+}
+
+// @kotowari[TBL-019]
+#[test]
+fn tbl_019_unresolved_relation_reference_line_is_the_relation_fields_own_line() {
+    let content = "# 問題の記録\n\n### FLAG-001: Issue\n\n- 種類: gap\n- 関係: EX-999\n- 出典: brainstorm/records.md#A1\n";
+    let doc = ir::parse_document("FLAGS.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    let f = ur.iter().find(|f| f.detail == "EX-999");
+    assert!(f.is_some(), "should produce unresolved_reference for EX-999: {:?}", ur);
+    assert_eq!(
+        f.unwrap().line,
+        Some(6),
+        "the finding's line should be the 関係 field's own line, not an earlier field's line"
+    );
+}
+
+// --- REQ-054: 参照の解決 ---
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_valid_and_known_definition_id_produces_no_unresolved_reference() {
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: TBL-001\n\n## 決定表\n\n### TBL-001: T\n\n- 出典: brainstorm/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    assert!(
+        ur.iter().all(|f| f.detail != "TBL-001"),
+        "a well-formed, known definition id must not produce unresolved_reference: {:?}",
+        ur
+    );
+}
+
+// @kotowari[REQ-054]
+#[test]
+fn req_054_extract_backtick_contents_two_pairs_on_one_line() {
+    let result = ir::extract_backtick_contents("`REQ-001` and `TBL-999`");
+    assert_eq!(
+        result,
+        vec!["REQ-001", "TBL-999"],
+        "two separate backtick-delimited ids on one line should each be extracted whole, not fused together"
+    );
+}
