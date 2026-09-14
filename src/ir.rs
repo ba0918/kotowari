@@ -226,6 +226,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
     // gherkin ブロック内の状態
     let mut gherkin_tags: Vec<(String, String)> = Vec::new();
     let mut gherkin_tag_line: Option<usize> = None;
+    let mut gherkin_tag_raw: Option<String> = None;
     let mut gherkin_scenario_line: Option<usize> = None;
     let mut gherkin_scenario_text: String = String::new();
     let mut gherkin_steps: Vec<(usize, String)> = Vec::new();
@@ -245,6 +246,17 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
             if is_closing_fence(line, fence) {
                 // ブロックの終了
                 if in_gherkin_block {
+                    // REQ-113/A155: ブロックの終わりが Scenario: でなければ、直前のタグの行は invalid_gherkin_line
+                    if gherkin_prev_was_tag {
+                        if let Some(tl) = gherkin_tag_line {
+                            parse_findings.push(crate::Finding::new(
+                                crate::FindingKind::InvalidGherkinLine,
+                                String::new(),
+                                Some(tl),
+                                gherkin_tag_raw.clone().unwrap_or_default(),
+                            ));
+                        }
+                    }
                     if let Some(scenario_line) = gherkin_scenario_line.take() {
                         let scenario = build_scenario(&gherkin_tags, gherkin_tag_line, scenario_line, &gherkin_steps, &gherkin_scenario_text);
                         items.push(scenario);
@@ -256,6 +268,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                     }
                     gherkin_tags.clear();
                     gherkin_tag_line = None;
+                    gherkin_tag_raw = None;
                     gherkin_steps.clear();
                     gherkin_scenario_text.clear();
                     gherkin_prev_was_tag = false;
@@ -282,55 +295,72 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
         // gherkin ブロック内の処理
         if in_gherkin_block {
             let trimmed = line.trim();
+            let is_scenario_line = trimmed.starts_with("Scenario:");
+
+            // REQ-113/A155: タグの行の直後が Scenario: でなければ、そのタグの行自体が invalid_gherkin_line
+            if gherkin_prev_was_tag && !is_scenario_line {
+                if let Some(tl) = gherkin_tag_line {
+                    parse_findings.push(crate::Finding::new(
+                        crate::FindingKind::InvalidGherkinLine,
+                        String::new(),
+                        Some(tl),
+                        gherkin_tag_raw.clone().unwrap_or_default(),
+                    ));
+                }
+                // 結び付かないタグの検査（REQ-052: 結び付くかを問わない）をしてから捨てる
+                if !gherkin_tags.is_empty() {
+                    check_gherkin_tags_findings(&gherkin_tags, gherkin_tag_line, &mut parse_findings);
+                }
+                gherkin_tags.clear();
+                gherkin_tag_line = None;
+                gherkin_tag_raw = None;
+                // gherkin_prev_was_tag はこの後どの分岐でも必ず書き直す
+            }
+
             if trimmed.starts_with('@') {
                 // タグ行: 前のシナリオがあれば追加
                 if let Some(scenario_line) = gherkin_scenario_line.take() {
                     let scenario = build_scenario(&gherkin_tags, gherkin_tag_line, scenario_line, &gherkin_steps, &gherkin_scenario_text);
                     items.push(scenario);
                     gherkin_steps.clear();
-                } else if !gherkin_tags.is_empty() {
-                    // シナリオに結び付かなかったタグの検査
-                    check_gherkin_tags_findings(
-                        &gherkin_tags, gherkin_tag_line, &mut parse_findings,
-                    );
                 }
                 gherkin_tags.clear();
                 gherkin_tag_line = Some(line_num);
-                // タグを解析
+                gherkin_tag_raw = Some(line.to_string());
+                // タグを解析（REQ-052: "@" で始まる語だけを name=value に分ける）
                 for part in trimmed.split_whitespace() {
-                    if let Some(eq_pos) = part.find('=') {
-                        let tag_name = &part[..eq_pos];
-                        let tag_value = &part[eq_pos + 1..];
-                        gherkin_tags.push((tag_name.to_string(), tag_value.to_string()));
-                    } else if part.starts_with('@') {
-                        // = のない裸のタグ（@wip 等）
-                        gherkin_tags.push((part.to_string(), String::new()));
+                    if part.starts_with('@') {
+                        if let Some(eq_pos) = part.find('=') {
+                            let tag_name = &part[..eq_pos];
+                            let tag_value = &part[eq_pos + 1..];
+                            gherkin_tags.push((tag_name.to_string(), tag_value.to_string()));
+                        } else {
+                            // "=" のない裸のタグ（@wip 等）
+                            gherkin_tags.push((part.to_string(), String::new()));
+                        }
                     } else {
-                        // REQ-052: "@" で始まらない語は unknown_tag
+                        // REQ-052: "@" で始まらない語はその語自体を detail にする
                         gherkin_tags.push((String::new(), part.to_string()));
                     }
                 }
                 gherkin_prev_was_tag = true;
-            } else if trimmed.starts_with("Scenario:") {
+            } else if is_scenario_line {
                 // 前のシナリオがあればフラッシュ
                 if let Some(scenario_line) = gherkin_scenario_line.take() {
                     let scenario = build_scenario(&gherkin_tags, gherkin_tag_line, scenario_line, &gherkin_steps, &gherkin_scenario_text);
                     items.push(scenario);
                     gherkin_steps.clear();
                 }
-                // REQ-113: タグは直前の行だけ結び付ける
+                // REQ-113: このタグは直前の行にあるときだけ、いま始まるシナリオに結び付く。
+                // 結び付かない（直前がタグの行でない）ときは、前のシナリオで使い終えたタグを持ち越さない。
                 if !gherkin_prev_was_tag {
-                    // 結び付かなかったタグの行の検査（REQ-052: 結び付くかを問わない）
-                    if !gherkin_tags.is_empty() {
-                        check_gherkin_tags_findings(
-                            &gherkin_tags, gherkin_tag_line, &mut parse_findings,
-                        );
-                    }
                     gherkin_tags.clear();
                     gherkin_tag_line = None;
+                    gherkin_tag_raw = None;
                 }
                 gherkin_scenario_line = Some(line_num);
-                gherkin_scenario_text = trimmed.to_string();
+                // A150: detail の元になる Scenario: の行は生の行（字下げを含む）を持つ
+                gherkin_scenario_text = line.to_string();
                 gherkin_prev_was_tag = false;
             } else if trimmed.starts_with("Given ")
                 || trimmed.starts_with("When ")
@@ -338,7 +368,17 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                 || trimmed.starts_with("And ")
                 || trimmed.starts_with("But ")
             {
-                gherkin_steps.push((line_num, trimmed.to_string()));
+                if gherkin_scenario_line.is_none() {
+                    // REQ-113/A155: 直前に Scenario: もステップも無いステップの行は invalid_gherkin_line
+                    parse_findings.push(crate::Finding::new(
+                        crate::FindingKind::InvalidGherkinLine,
+                        String::new(),
+                        Some(line_num),
+                        line.to_string(),
+                    ));
+                } else {
+                    gherkin_steps.push((line_num, line.to_string()));
+                }
                 gherkin_prev_was_tag = false;
             } else if trimmed.starts_with('#') || trimmed.is_empty() {
                 // REQ-113: 注釈と空行は有効
@@ -414,7 +454,23 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                                 sources,
                                 line: line_num,
                             });
+                        } else {
+                            // REQ-122: 用語のセルが空の行は invalid_glossary_row（用語にしない）
+                            parse_findings.push(crate::Finding::new(
+                                crate::FindingKind::InvalidGlossaryRow,
+                                String::new(),
+                                Some(line_num),
+                                line.to_string(),
+                            ));
                         }
+                    } else {
+                        // REQ-122: 列が4つ未満の行は invalid_glossary_row（用語にしない）
+                        parse_findings.push(crate::Finding::new(
+                            crate::FindingKind::InvalidGlossaryRow,
+                            String::new(),
+                            Some(line_num),
+                            line.to_string(),
+                        ));
                     }
                 }
                 continue;
@@ -458,9 +514,9 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
             if let Some(builder) = current_item.take() {
                 items.push(builder.build());
             }
-            let heading_text = line.trim_start_matches('#').trim().to_string();
+            // A150/TBL-008: detail は読んだ行の文字そのまま（"#### " 等の接頭辞を含む）
             items.push(Item::UnknownHeading {
-                heading: heading_text,
+                heading: line.to_string(),
                 line: line_num,
             });
             // この見出しの下の行は項目として読まない
@@ -476,7 +532,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                 items.push(builder.build());
             }
             let heading_text = line[4..].trim().to_string();
-            current_item = Some(ItemBuilder::new(heading_text, line_num, kind));
+            current_item = Some(ItemBuilder::new(heading_text, line.to_string(), line_num, kind));
             found_first_section = true;
             continue;
         }
@@ -530,19 +586,27 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
     }
 }
 
+/// 見出しの下の "- 種類:"、"- 検証:"、"- 定義:"、"- 関係:" のうち、
+/// 値が空なら「行が無いもの」として扱う（REQ-098, A157）
+fn is_blankable_field(name: &str) -> bool {
+    matches!(name, "種類" | "検証" | "定義" | "関係")
+}
+
 /// 項目の組み立て
 struct ItemBuilder {
     heading: String,
+    raw_heading_line: String,
     line: usize,
-    field_lines: Vec<(usize, String, String)>, // (line, name, value)
+    field_lines: Vec<(usize, String, String, String)>, // (line, name, value, raw)
     statement_lines: Vec<(usize, String)>,
     has_table: bool,
 }
 
 impl ItemBuilder {
-    fn new(heading: String, line: usize, _doc_kind: DocKind) -> Self {
+    fn new(heading: String, raw_heading_line: String, line: usize, _doc_kind: DocKind) -> Self {
         ItemBuilder {
             heading,
+            raw_heading_line,
             line,
             field_lines: Vec::new(),
             statement_lines: Vec::new(),
@@ -556,16 +620,23 @@ impl ItemBuilder {
             return;
         }
 
+        // REQ-100/除外: gherkin ブロックの外の "Scenario:" の行は無視する
+        if trimmed.starts_with("Scenario:") {
+            return;
+        }
+
         // REQ-044: "* ", "+ ", 数字+". ", "-" だけの行は unknown_field
         if trimmed.starts_with("* ") || trimmed.starts_with("+ ") || trimmed == "-" {
             // detail は読んだ行そのまま（字下げを含む）
-            self.field_lines.push((line_num, String::new(), line.to_string()));
+            self.field_lines
+                .push((line_num, String::new(), String::new(), line.to_string()));
             return;
         }
         // 数字 + ". " で始まる行（例: "1. xxx"）
         if let Some(dot_pos) = trimmed.find(". ") {
             if dot_pos > 0 && trimmed[..dot_pos].chars().all(|c| c.is_ascii_digit()) {
-                self.field_lines.push((line_num, String::new(), line.to_string()));
+                self.field_lines
+                    .push((line_num, String::new(), String::new(), line.to_string()));
                 return;
             }
         }
@@ -576,42 +647,40 @@ impl ItemBuilder {
             if let Some(colon_pos) = field_content.find(':') {
                 let name = field_content[..colon_pos].trim().to_string();
                 let value = field_content[colon_pos + 1..].trim().to_string();
-                self.field_lines.push((line_num, name, value));
+                // REQ-098/A157: 値が空の 種類・検証・定義・関係 の行は無いものとして扱う
+                if value.is_empty() && is_blankable_field(&name) {
+                    return;
+                }
+                self.field_lines.push((line_num, name, value, line.to_string()));
             } else {
                 // "xxx:" の形でない "- " 行: detail は読んだ行そのまま
                 self.field_lines
-                    .push((line_num, String::new(), line.to_string()));
+                    .push((line_num, String::new(), String::new(), line.to_string()));
             }
         } else if trimmed.starts_with('|') {
             self.has_table = true;
         } else {
-            // 文（statement）
-            self.statement_lines.push((line_num, trimmed.to_string()));
+            // 文（statement）。A150: detail の元になるので生の行（字下げを含む）を持つ
+            self.statement_lines.push((line_num, line.to_string()));
         }
     }
 
     /// field_lines から fields_seen を構築する。
-    /// (行番号, フィールド名, 行の文字) の三つ組を返す。
-    /// name が空の場合は value が生の行（字下げ含む）をそのまま持つ。
+    /// (行番号, フィールド名, 行の文字そのまま) の三つ組を返す（TBL-008, A150）。
     fn build_fields_seen(&self) -> Vec<(usize, String, String)> {
         self.field_lines
             .iter()
-            .map(|(ln, name, value)| {
-                if name.is_empty() {
-                    // value にはもう生の行が入っている
-                    (*ln, String::new(), value.clone())
-                } else {
-                    (*ln, name.clone(), format!("- {}: {}", name, value))
-                }
-            })
+            .map(|(ln, name, _value, raw)| (*ln, name.clone(), raw.clone()))
             .collect()
     }
 
     fn build(self) -> Item {
+        // A150/TBL-008: unknown_heading の detail は読んだ見出しの行そのまま
+        let raw_heading_line = self.raw_heading_line.clone();
         // 見出しの形: "ID: 名前"（コロン必須）
         let Some((id, name)) = parse_heading(&self.heading) else {
             return Item::UnknownHeading {
-                heading: self.heading,
+                heading: raw_heading_line,
                 line: self.line,
             };
         };
@@ -624,7 +693,7 @@ impl ItemBuilder {
                 let mut verification = None;
                 let mut definitions = Vec::new();
 
-                for (_, field_name, value) in &self.field_lines {
+                for (_, field_name, value, _raw) in &self.field_lines {
                     match field_name.as_str() {
                         "種類" => kind = Some(value.clone()),
                         "出典" => {
@@ -661,7 +730,7 @@ impl ItemBuilder {
             Some(IdPrefix::Tbl) if is_valid_id(&id) => {
                 let mut sources = Vec::new();
 
-                for (_, field_name, value) in &self.field_lines {
+                for (_, field_name, value, _raw) in &self.field_lines {
                     if field_name == "出典" {
                         sources = value
                             .split(',')
@@ -683,7 +752,7 @@ impl ItemBuilder {
             Some(IdPrefix::Prop) if is_valid_id(&id) => {
                 let mut sources = Vec::new();
 
-                for (_, field_name, value) in &self.field_lines {
+                for (_, field_name, value, _raw) in &self.field_lines {
                     if field_name == "出典" {
                         sources = value
                             .split(',')
@@ -707,7 +776,7 @@ impl ItemBuilder {
                 let mut relations = Vec::new();
                 let mut sources = Vec::new();
 
-                for (_, field_name, value) in &self.field_lines {
+                for (_, field_name, value, _raw) in &self.field_lines {
                     match field_name.as_str() {
                         "種類" => kind = Some(value.clone()),
                         "関係" => {
@@ -741,13 +810,8 @@ impl ItemBuilder {
             }
             _ => {
                 // 認識できない見出し → 後で unknown_heading として報告
-                let heading_text = if name.is_empty() {
-                    id
-                } else {
-                    format!("{}: {}", id, name)
-                };
                 Item::UnknownHeading {
-                    heading: heading_text,
+                    heading: raw_heading_line,
                     line: self.line,
                 }
             }
@@ -901,6 +965,20 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
             findings.push(Finding::new(FindingKind::GlossaryInvalid, path.clone(), None, doc.filename.clone()));
         }
 
+        // REQ-123/A154: 用語集の同じ用語の2つ目以降は duplicate_term（照合は1つ目を使う）
+        if doc.kind == DocKind::Glossary {
+            let mut seen_terms: HashMap<&str, usize> = HashMap::new();
+            for item in &doc.items {
+                if let Item::GlossaryTerm { term, line, .. } = item {
+                    if seen_terms.contains_key(term.as_str()) {
+                        findings.push(Finding::new(FindingKind::DuplicateTerm, path.clone(), Some(*line), term.clone()));
+                    } else {
+                        seen_terms.insert(term.as_str(), *line);
+                    }
+                }
+            }
+        }
+
         // REQ-038: 行数の上限
         let limit_lines = config.limits.lines.get() as usize;
         if doc.line_count > limit_lines {
@@ -957,13 +1035,13 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
     // 参照の解決チェック（REQ-054）
     let known_ids = crate::collect_known_ids(docs);
     for doc in docs {
-        let path = format!("{}/{}", config.ir, doc.filename);
+        let path = crate::join_display_path(&config.ir, &doc.filename);
         check_references(&doc.items, &known_ids, &path, &mut findings);
     }
 
     // parse_findings を統合（check() ヘルパーからも見えるようにする）
     for doc in docs {
-        let doc_path = format!("{}/{}", config.ir, doc.filename);
+        let doc_path = crate::join_display_path(&config.ir, &doc.filename);
         for pf in &doc.parse_findings {
             let mut f = pf.clone();
             if f.path.is_empty() {

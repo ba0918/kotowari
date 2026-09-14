@@ -988,6 +988,32 @@ fn req_116_odd_backticks_skip_terms_but_check_vague_words() {
     assert!(ut.is_empty(), "unknown_term should not be checked on odd backtick line: {:?}", ut);
 }
 
+// @kotowari[REQ-116, TBL-008]
+#[test]
+fn tbl_008_unclosed_backtick_detail_keeps_leading_indentation() {
+    // A150: unclosed_backtick の detail は読んだ行そのまま（字下げを含む）
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\n  `不完全な引用\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let ub = findings_by_kind(&v, "unclosed_backtick");
+    assert!(
+        ub.iter().any(|f| f["detail"] == "  `不完全な引用"),
+        "unclosed_backtick detail should preserve the statement's leading indentation: {:?}",
+        ub
+    );
+}
+
 // @kotowari[REQ-067]
 #[test]
 fn req_067_overlapping_vague_words_longest_match_once() {
