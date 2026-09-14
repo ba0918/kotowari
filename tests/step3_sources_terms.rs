@@ -1055,3 +1055,51 @@ fn req_117_glossary_without_proper_table_is_invalid() {
     assert!(gi[0].line.is_none(), "glossary_invalid line should be null");
     assert_eq!(gi[0].detail, "CONTEXT.md", "glossary_invalid detail should be filename");
 }
+
+// --- TBL-001: 非 UTF-8 の判断の記録または ADR で停止 ---
+
+// @kotowari[REQ-006, TBL-001]
+#[test]
+fn tbl_001_non_utf8_records_or_adr_stops() {
+    // 判断の記録に非 UTF-8 ファイルを置くと停止する
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/decision/brainstorm/bad.md"),
+        b"\xff\xfe",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "non-UTF-8 records file should stop with exit code 2"
+    );
+    assert!(output.stdout.is_empty(), "stdout should be empty on stop");
+
+    // ADR に非 UTF-8 ファイルを置くと停止する
+    let tmp2 = TempDir::new().unwrap();
+    make_project_with_records(tmp2.path());
+    fs::write(
+        tmp2.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp2.path().join("docs/decision/adr/bad.md"),
+        b"\xff\xfe",
+    )
+    .unwrap();
+    let output2 = cmd().arg("check").current_dir(tmp2.path()).output().unwrap();
+    assert_eq!(
+        output2.status.code(),
+        Some(2),
+        "non-UTF-8 ADR file should stop with exit code 2"
+    );
+    assert!(output2.stdout.is_empty(), "stdout should be empty on stop");
+}
