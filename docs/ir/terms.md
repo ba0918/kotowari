@@ -14,10 +14,10 @@
 ### REQ-064: 用語集に無い語
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A31, experiments/003-cli/brainstorm/records.md#A42, experiments/003-cli/brainstorm/records.md#A56, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A63, experiments/003-cli/brainstorm/records.md#A116
+- 出典: experiments/003-cli/brainstorm/records.md#A31, experiments/003-cli/brainstorm/records.md#A42, experiments/003-cli/brainstorm/records.md#A56, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A63, experiments/003-cli/brainstorm/records.md#A116, experiments/003-cli/brainstorm/records.md#A145
 - 検証: unit
 
-`対象の行`でバッククォートで囲んだもの（前後の空白を除いた文字）が`用語`でも`ID`でもないとき、kotowari は、それがパスかコード片であっても、除いた後の文字を detail にして unknown_term の`誤り`を出す。中身が空の囲みは detail を "``" にする。
+`対象の行`の二重引用符の外でバッククォートで囲んだもの（前後の空白を除いた文字）が`用語`でも`ID`でもないとき、kotowari は、それがパスかコード片であっても、除いた後の文字を detail にして unknown_term の`誤り`を出す。中身が空の囲みは detail を "``" にする。
 
 ### REQ-065: 用語集が無いとき
 

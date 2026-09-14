@@ -59,11 +59,11 @@ kotowari は、`設定ファイル`で`問い合わせ`を足すことをして�
 
 ### TBL-020: 停止の詳細
 
-- 出典: experiments/003-cli/brainstorm/records.md#A137
+- 出典: experiments/003-cli/brainstorm/records.md#A137, experiments/003-cli/brainstorm/records.md#A147
 
 | 理由 | 詳細（英語） |
 |---|---|
 | 設定の誤り | 設定ファイルの相対パスと、誤りの説明 |
-| 引数の誤り | 問題の引数の文字 |
+| 引数の誤り | 説明の文と、問題の引数の文字。引数が1つも無いときは "expected command: check" |
 | 読めないファイル | 相対パスと、OS の誤りの文 |
 | UTF-8 でないファイル | 相対パス |
