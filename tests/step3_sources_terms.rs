@@ -1270,3 +1270,33 @@ fn req_111_bom_in_config_records_adr_and_tests_is_skipped_end_to_end() {
     let v = parse_json(&output);
     assert!(v["findings"].as_array().unwrap().is_empty(), "{:?}", v);
 }
+
+// @kotowari[REQ-058, REQ-110]
+#[test]
+fn req_058_records_place_dot_resolves_a_source_at_the_base_root() {
+    // 置き場 "." は空に正規化される（REQ-110）。そのとき基準の直下の判断の記録の出典が解決しなければならない
+    let tmp = TempDir::new().unwrap();
+    fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
+    fs::create_dir_all(tmp.path().join("adr")).unwrap();
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: .\n  adr: adr\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("records.md"),
+        "# 判断の記録\n\n## Agreements\n\n- A1 最初の合意\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: records.md#A1\n- 検証: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: records.md#A99\n- 検証: unit\n\nStatement.\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    let details: Vec<&str> = si.iter().map(|f| f["detail"].as_str().unwrap_or("")).collect();
+    assert_eq!(details, vec!["records.md#A99"], "A1 must resolve and only A99 must be invalid: {:?}", si);
+}
