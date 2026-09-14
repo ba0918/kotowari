@@ -192,6 +192,15 @@ fn req_013_defaults_match_the_table() {
     );
 }
 
+// @kotowari[REQ-013, REQ-014]
+#[test]
+fn req_013_explicit_limits_values_are_used_as_given() {
+    let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\nlimits:\n  lines: 5\n  requirements: 7\n";
+    let cfg = kotowari::config::Config::parse(yaml).expect("explicit limits should parse");
+    assert_eq!(cfg.limits.lines.get(), 5, "lines should be the given value, not the default or a hardcoded one");
+    assert_eq!(cfg.limits.requirements.get(), 7, "requirements should be the given value, not the default or a hardcoded one");
+}
+
 // --- REQ-014: 設定の誤り ---
 
 // @kotowari[REQ-014]
