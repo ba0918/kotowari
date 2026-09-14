@@ -285,6 +285,10 @@ fn load_all_md(
             (ft.is_dir(), ft.is_file())
         };
         if is_dir {
+            // 除外: 隠しディレクトリは辿らない（CONTEXT.md の除外）
+            if name.starts_with('.') {
+                continue;
+            }
             load_all_md(&path, &rel, config_key, records, others)?;
         } else if is_file && path.extension().is_some_and(|ext| ext == "md") {
             let display = format!("{config_key}/{rel}");
@@ -346,6 +350,10 @@ fn load_all_md_as_other(
             (ft.is_dir(), ft.is_file())
         };
         if is_dir {
+            // 除外: 隠しディレクトリは辿らない（CONTEXT.md の除外）
+            if name.starts_with('.') {
+                continue;
+            }
             load_all_md_as_other(&path, &rel, config_key, files)?;
         } else if is_file && path.extension().is_some_and(|ext| ext == "md") {
             let display = format!("{config_key}/{rel}");
@@ -366,7 +374,7 @@ pub fn check_sources(
     findings: &mut Vec<Finding>,
 ) {
     for doc in docs {
-        let path = format!("{}/{}", ir_path, doc.filename);
+        let path = crate::join_display_path(ir_path, &doc.filename);
         for item in &doc.items {
             let (sources, source_line) = match item {
                 crate::ir::Item::Requirement { sources, fields_seen, line, .. } => {

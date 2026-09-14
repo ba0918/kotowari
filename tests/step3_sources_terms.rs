@@ -618,6 +618,35 @@ fn tbl_012_decision_line_with_and_without_trailing_text() {
     );
 }
 
+// --- 除外: 隠しディレクトリは辿らない ---
+
+// @kotowari[REQ-058]
+#[test]
+fn req_058_hidden_directory_under_records_is_not_a_source_target() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // .old/ の下に判断の記録らしきファイルを置く
+    fs::create_dir_all(tmp.path().join("docs/decision/brainstorm/.old")).unwrap();
+    fs::write(
+        tmp.path().join("docs/decision/brainstorm/.old/records.md"),
+        "# 昔の記録\n\n## Agreements\n\n- A1 old agreement\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/.old/records.md#A1\n- 検証: unit\n\nStatement.\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(
+        si.iter().any(|f| f["detail"] == "docs/decision/brainstorm/.old/records.md#A1"),
+        "a source pointing under a hidden directory must not resolve: {:?}",
+        si
+    );
+}
+
 // --- REQ-040: gherkin コードブロック内の文書名参照は対象外 ---
 
 // @kotowari[REQ-040]
