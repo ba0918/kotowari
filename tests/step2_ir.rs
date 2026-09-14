@@ -2579,3 +2579,27 @@ fn tbl_011_property_source_field_populates_sources() {
     );
 }
 
+// --- REQ-052: 結び付かないタグの行の行番号 ---
+
+// @kotowari[REQ-052]
+#[test]
+fn req_052_dangling_bare_word_in_unbound_tag_line_keeps_its_line_number() {
+    // "@" で始まらない語のタグ行が結び付かなくても、unknown_tag の line はタグ行自身の行にする
+    let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@id=EX-001 badword\n```\n";
+    let doc = ir::parse_document("a.md", content);
+    let ut = doc
+        .parse_findings
+        .iter()
+        .find(|f| f.kind == "unknown_tag" && f.detail == "badword");
+    assert!(
+        ut.is_some(),
+        "a dangling bare word in an unbound tag line should produce unknown_tag: {:?}",
+        doc.parse_findings
+    );
+    assert_eq!(
+        ut.unwrap().line,
+        Some(8),
+        "the finding's line should be the tag line's own line number, not None"
+    );
+}
+
