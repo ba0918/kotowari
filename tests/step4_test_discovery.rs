@@ -1271,3 +1271,24 @@ fn req_079_broken_symlink_in_tests_stops() {
     assert_eq!(output.status.code(), Some(2), "a broken symlink in the test walk must stop: {:?}", output);
     assert!(output.stdout.is_empty());
 }
+
+// @kotowari[REQ-079, REQ-018]
+#[test]
+#[cfg(unix)]
+fn req_079_broken_symlink_outside_glob_stops() {
+    // A159: 走査は基準のディレクトリ全体（隠しディレクトリを除く）を歩いてから glob で選ぶので、
+    // glob に当たらない場所（既定は src/**/*.rs, tests/**/*.rs）の先の無いシンボリックリンクでも停止する
+    use std::os::unix::fs::symlink;
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    symlink(tmp.path().join("nowhere.txt"), tmp.path().join("notes.txt")).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "a broken symlink outside every configured glob must still stop the walk: {:?}",
+        output
+    );
+    assert!(output.stdout.is_empty());
+}

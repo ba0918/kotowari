@@ -618,6 +618,32 @@ fn tbl_012_decision_line_with_and_without_trailing_text() {
     );
 }
 
+// @kotowari[REQ-058, TBL-012]
+#[test]
+fn tbl_012_indented_decision_line_counts() {
+    // A158: 決定の行は行頭の空白を除いてから判定する（字下げした行も決定）
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/decision/brainstorm/records2.md"),
+        "# 記録2\n\n## Agreements\n\n  - A26 indented agreement\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records2.md#A26\n- 検証: unit\n\nStatement.\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(
+        !si.iter().any(|f| f["detail"].as_str().unwrap_or("").contains("A26")),
+        "an indented decision line ('  - A26 ...') should still count as decision A26: {:?}",
+        si
+    );
+}
+
 // --- 除外: 隠しディレクトリは辿らない ---
 
 // @kotowari[REQ-058]
