@@ -1,3 +1,4 @@
 /target/
 mutants.out/
 /.agents/HANDOFF.md
+.claude/worktrees/
