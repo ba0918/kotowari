@@ -498,6 +498,11 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
 
     // REQ-112: 閉じないコードブロック
     if let Some((_fence, opening_line, raw_line)) = current_fence {
+        // REQ-112: 開始から文書の終わりまでを検査の対象から外す
+        // 閉じないブロック内で追加された指摘を除去する（unclosed_code_block 自体は残す）
+        parse_findings.retain(|f| {
+            f.line.map_or(true, |l| l < opening_line)
+        });
         parse_findings.push(crate::Finding::new(
             crate::FindingKind::UnclosedCodeBlock,
             String::new(), // path は呼び出し元が設定する
