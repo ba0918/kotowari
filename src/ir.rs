@@ -615,7 +615,7 @@ impl ItemBuilder {
         let fields_seen = self.build_fields_seen();
 
         match id_prefix(&id) {
-            Some(IdPrefix::Req) => {
+            Some(IdPrefix::Req) if is_valid_id(&id) => {
                 let mut kind = None;
                 let mut sources = Vec::new();
                 let mut verification = None;
@@ -655,7 +655,7 @@ impl ItemBuilder {
                     fields_seen,
                 }
             }
-            Some(IdPrefix::Tbl) => {
+            Some(IdPrefix::Tbl) if is_valid_id(&id) => {
                 let mut sources = Vec::new();
 
                 for (_, field_name, value) in &self.field_lines {
@@ -677,7 +677,7 @@ impl ItemBuilder {
                     fields_seen,
                 }
             }
-            Some(IdPrefix::Prop) => {
+            Some(IdPrefix::Prop) if is_valid_id(&id) => {
                 let mut sources = Vec::new();
 
                 for (_, field_name, value) in &self.field_lines {
@@ -699,7 +699,7 @@ impl ItemBuilder {
                     fields_seen,
                 }
             }
-            Some(IdPrefix::Flag) => {
+            Some(IdPrefix::Flag) if is_valid_id(&id) => {
                 let mut kind = None;
                 let mut relations = Vec::new();
                 let mut sources = Vec::new();
@@ -936,25 +936,10 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
         }
 
         // 見出しの形の検査
+        // build() で is_valid_id が false の見出しは UnknownHeading として構築済み
         for item in &doc.items {
-            match item {
-                Item::Requirement { id, name, line, .. }
-                | Item::DecisionTable { id, name, line, .. }
-                | Item::Property { id, name, line, .. }
-                | Item::FlagEntry { id, name, line, .. } => {
-                    if !is_valid_id(id) {
-                        let heading_text = if name.is_empty() {
-                            id.clone()
-                        } else {
-                            format!("{}: {}", id, name)
-                        };
-                        findings.push(Finding::new(FindingKind::UnknownHeading, path.clone(), Some(*line), heading_text));
-                    }
-                }
-                Item::UnknownHeading { heading, line } => {
-                    findings.push(Finding::new(FindingKind::UnknownHeading, path.clone(), Some(*line), heading.clone()));
-                }
-                _ => {}
+            if let Item::UnknownHeading { heading, line } = item {
+                findings.push(Finding::new(FindingKind::UnknownHeading, path.clone(), Some(*line), heading.clone()));
             }
         }
     }
@@ -1005,10 +990,6 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             fields_seen,
             ..
         } => {
-            if !is_valid_id(id) {
-                return; // unknown_heading で報告済み
-            }
-
             // 既知のフィールド
             let known_fields = ["種類", "出典", "検証", "定義"];
             check_fields(fields_seen, &known_fields, path, *line, findings);
@@ -1073,10 +1054,6 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             fields_seen,
             ..
         } => {
-            if !is_valid_id(id) {
-                return;
-            }
-
             let known_fields = ["出典"];
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
@@ -1099,10 +1076,6 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             fields_seen,
             ..
         } => {
-            if !is_valid_id(id) {
-                return;
-            }
-
             let known_fields = ["出典"];
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
@@ -1181,9 +1154,6 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             fields_seen,
             ..
         } => {
-            if !is_valid_id(id) {
-                return;
-            }
 
             let known_fields = ["種類", "関係", "出典"];
             check_fields(fields_seen, &known_fields, path, *line, findings);

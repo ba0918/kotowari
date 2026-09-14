@@ -1397,6 +1397,30 @@ fn req_043_lines_under_unknown_heading_are_not_an_item() {
     assert!(mf.is_empty(), "lines under unknown heading should not be checked as item fields");
 }
 
+// @kotowari[REQ-043]
+#[test]
+fn req_043_valid_prefix_invalid_digits_is_not_an_item() {
+    // 有効な接頭辞 REQ- に3桁でない数字 → 項目として構築されない
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-1: Bad\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: TBL-999\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    // parse 段で Item::Requirement ではなく Item::UnknownHeading になること
+    assert!(
+        !doc.items.iter().any(|i| matches!(i, Item::Requirement { .. })),
+        "valid prefix + invalid digits must not produce Item::Requirement"
+    );
+    assert!(
+        doc.items.iter().any(|i| matches!(i, Item::UnknownHeading { .. })),
+        "valid prefix + invalid digits must produce Item::UnknownHeading"
+    );
+    // check_documents で項目として検査されないこと（unresolved_reference が出ない）
+    let findings = check(&[doc], &default_config());
+    let ur = find_by_kind(&findings, "unresolved_reference");
+    assert!(ur.is_empty(), "lines under invalid-digit heading should not produce unresolved_reference, got {:?}", ur);
+    // unknown_heading は出る
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(!uh.is_empty(), "should produce unknown_heading for REQ-1");
+}
+
 // @kotowari[REQ-045]
 #[test]
 fn req_045_third_known_line_gives_two_duplicates() {
