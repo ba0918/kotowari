@@ -280,7 +280,7 @@ fn discover_macro_functions(
                 let actual_line = line_offset + inner_line + 1;
 
                 // inner の関数前のコメントの印を集める
-                let all_ids_raw = collect_markers_before_line(inner_lines, inner_line);
+                let (all_ids_raw, before_invalid) = collect_markers_before_line(inner_lines, inner_line);
                 // line_offset を足す
                 let all_ids: std::collections::BTreeMap<String, usize> = all_ids_raw.into_iter()
                     .map(|(id, ln)| (id, line_offset + ln))
@@ -292,9 +292,11 @@ fn discover_macro_functions(
                 for (id, ln) in body_ids {
                     merged_ids.entry(id).or_insert(line_offset + ln);
                 }
-                let invalid_markers: Vec<(usize, String)> = body_invalid.into_iter()
+                let mut invalid_markers: Vec<(usize, String)> = before_invalid.into_iter()
                     .map(|(ln, raw)| (line_offset + ln, raw))
                     .collect();
+                invalid_markers.extend(body_invalid.into_iter()
+                    .map(|(ln, raw)| (line_offset + ln, raw)));
 
                 tests.push(DiscoveredTest {
                     name: name.to_string(),
@@ -504,10 +506,12 @@ fn collect_markers_from_siblings(
 
 /// 指定行（0-indexed）の前のコメント塊から印を集める
 /// コメント（// か /*）と属性（#[）の行だけ遡り、空行またはそれ以外の行で切れる
-fn collect_markers_before_line(lines: &[&str], target_line: usize) -> std::collections::BTreeMap<String, usize> {
+/// 返り値: (正常な印の ID → 印の行 のマップ, 空・不正な印の (行, 行の文字) のリスト)
+fn collect_markers_before_line(lines: &[&str], target_line: usize) -> (std::collections::BTreeMap<String, usize>, Vec<(usize, String)>) {
     let mut ids = std::collections::BTreeMap::new();
+    let mut invalid = Vec::new();
     if target_line == 0 {
-        return ids;
+        return (ids, invalid);
     }
 
     let mut line_idx = target_line.saturating_sub(1);
@@ -526,9 +530,15 @@ fn collect_markers_before_line(lines: &[&str], target_line: usize) -> std::colle
         }
 
         let line_num = line_idx + 1;
+        let raw_line = lines[line_idx];
         for marker in parse_markers_in_line(line, line_num) {
-            for id in &marker.ids {
-                ids.entry(id.clone()).or_insert(line_num);
+            if marker.ids.is_empty() {
+                // REQ-072: 空の印や閉じ括弧のない印
+                invalid.push((line_num, raw_line.to_string()));
+            } else {
+                for id in &marker.ids {
+                    ids.entry(id.clone()).or_insert(line_num);
+                }
             }
         }
 
@@ -538,7 +548,7 @@ fn collect_markers_before_line(lines: &[&str], target_line: usize) -> std::colle
         line_idx -= 1;
     }
 
-    ids
+    (ids, invalid)
 }
 
 /// 関数本体の先頭のコメントから印を集める
