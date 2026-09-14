@@ -1817,3 +1817,19 @@ Scenario: Backtick in step
     let ur = find_by_kind(&findings, "unresolved_reference");
     assert!(ur.iter().any(|f| f.detail == "TBL-999"), "backtick ID in step should produce unresolved_reference: {:?}", ur);
 }
+
+// @kotowari[REQ-033]
+#[test]
+#[cfg(unix)]
+fn req_033_broken_symlink_in_ir_dir_stops() {
+    use std::os::unix::fs::symlink;
+    let tmp = tempfile::TempDir::new().unwrap();
+    std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
+    std::fs::write(tmp.path().join(".kotowari/config.yaml"), "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n").unwrap();
+    symlink(tmp.path().join("nowhere.md"), tmp.path().join("docs/ir/broken.md")).unwrap();
+    let output = assert_cmd::Command::cargo_bin("kotowari").unwrap().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(2), "a broken symlink in the IR dir must stop: {:?}", output);
+}

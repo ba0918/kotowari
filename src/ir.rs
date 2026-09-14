@@ -153,8 +153,10 @@ pub struct IrDocument {
     pub items: Vec<Item>,
     pub sections: Vec<(usize, String)>,
     pub raw_content: String,
-    /// 解析中に見つかった指摘（この段では常に空）
+    /// 解析中に見つかった指摘
     pub parse_findings: Vec<crate::Finding>,
+    /// 用語集の表（ヘッダと区切りの行）を見たか（REQ-117）
+    pub glossary_table_seen: bool,
 }
 
 /// 文書名の参照の検査用に行を分割する
@@ -524,6 +526,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
         sections,
         raw_content: content.to_string(),
         parse_findings,
+        glossary_table_seen: glossary_separator_seen,
     }
 }
 
@@ -893,12 +896,9 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
             findings.push(Finding::new(FindingKind::MissingScope, path.clone(), None, doc.filename.clone()));
         }
 
-        // REQ-117: 用語集にこの形の表がない → glossary_invalid
-        if doc.kind == DocKind::Glossary {
-            let has_glossary_term = doc.items.iter().any(|i| matches!(i, Item::GlossaryTerm { .. }));
-            if !has_glossary_term {
-                findings.push(Finding::new(FindingKind::GlossaryInvalid, path.clone(), None, doc.filename.clone()));
-            }
+        // REQ-117: 用語集にヘッダと区切りの行の形の表がない → glossary_invalid（A148: 行が0でも表はある）
+        if doc.kind == DocKind::Glossary && !doc.glossary_table_seen {
+            findings.push(Finding::new(FindingKind::GlossaryInvalid, path.clone(), None, doc.filename.clone()));
         }
 
         // REQ-038: 行数の上限
