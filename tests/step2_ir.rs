@@ -1301,6 +1301,42 @@ fn req_112_unclosed_gherkin_block_is_not_checked() {
         "scenario inside unclosed block should not be parsed");
 }
 
+// @kotowari[REQ-112, REQ-040]
+#[test]
+fn req_112_unclosed_gherkin_block_with_multiple_scenarios_excludes_items() {
+    // 複数シナリオがある閉じない gherkin ブロック。
+    // 2番目のタグ行で1番目のシナリオが flush されるが、
+    // ブロックが閉じないので items からも除去されなければならない。
+    let content = "\
+# Title
+
+Scope.
+
+## Section
+
+```gherkin
+@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1
+Scenario: first
+  Given something
+
+@id=EX-002 @about=REQ-001 @source=brainstorm/records.md#A1
+Scenario: second
+  Given another
+";
+    let doc = ir::parse_document("a.md", content);
+    // unclosed_code_block は出る
+    let uc = doc.parse_findings.iter()
+        .find(|f| f.kind == "unclosed_code_block");
+    assert!(uc.is_some(), "should produce unclosed_code_block");
+    // 閉じないブロック内のシナリオは items に残らない
+    let scenarios: Vec<_> = doc.items.iter()
+        .filter(|i| matches!(i, Item::Scenario { .. }))
+        .collect();
+    assert!(scenarios.is_empty(),
+        "scenarios inside unclosed gherkin block should be excluded from items, but found {}",
+        scenarios.len());
+}
+
 // @kotowari[TBL-010]
 #[test]
 fn tbl_010_empty_document_has_zero_lines_and_missing_title() {

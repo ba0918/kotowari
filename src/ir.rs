@@ -503,6 +503,8 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
         parse_findings.retain(|f| {
             f.line.map_or(true, |l| l < opening_line)
         });
+        // 閉じないブロック内で flush された項目を除去する
+        items.retain(|item| item.item_line() < opening_line);
         parse_findings.push(crate::Finding::new(
             crate::FindingKind::UnclosedCodeBlock,
             String::new(), // path は呼び出し元が設定する
