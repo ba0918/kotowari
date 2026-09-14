@@ -286,6 +286,11 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                     let scenario = build_scenario(&gherkin_tags, gherkin_tag_line, scenario_line, &gherkin_steps, &gherkin_scenario_text);
                     items.push(scenario);
                     gherkin_steps.clear();
+                } else if !gherkin_tags.is_empty() {
+                    // シナリオに結び付かなかったタグの検査
+                    check_gherkin_tags_findings(
+                        &gherkin_tags, gherkin_tag_line, &mut parse_findings,
+                    );
                 }
                 gherkin_tags.clear();
                 gherkin_tag_line = Some(line_num);
