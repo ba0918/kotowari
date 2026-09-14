@@ -755,6 +755,100 @@ fn tbl_012_check_source_outside_records_and_adr_returns_err() {
     assert!(result2.is_err(), "path equal to records_path (no subpath) should return Err");
 }
 
+// @kotowari[REQ-057]
+#[test]
+fn req_057_split_source_rejects_an_empty_path_or_empty_anchor() {
+    assert_eq!(
+        kotowari::sources::split_source("#anchor"),
+        None,
+        "an empty path before '#' must be rejected"
+    );
+    assert_eq!(
+        kotowari::sources::split_source("docs/x.md#"),
+        None,
+        "an empty anchor after '#' must be rejected"
+    );
+    assert_eq!(
+        kotowari::sources::split_source("docs/x.md#a"),
+        Some(("docs/x.md", "a")),
+        "a source with both a path and an anchor is accepted"
+    );
+}
+
+// @kotowari[REQ-058]
+#[test]
+fn req_058_absolute_path_source_is_rejected_even_if_it_would_otherwise_resolve() {
+    let ctx = kotowari::sources::SourceContext {
+        records_path: "docs/decision/brainstorm".to_string(),
+        adr_path: "docs/decision/adr".to_string(),
+        records_files: vec![kotowari::sources::RecordsFile {
+            rel_path: "records.md".to_string(),
+            decision_numbers: vec!["A1".to_string()],
+            headings: vec![],
+            is_records: true,
+        }],
+        adr_files: vec![],
+        records_other_files: vec![],
+    };
+    // 相対パスなら正しい出典
+    assert!(
+        ctx.check_source("docs/decision/brainstorm/records.md#A1").is_ok(),
+        "the relative form should resolve"
+    );
+    // 先頭に "/" を付けると、正規化後に同じ場所を指しても出典として不正
+    assert!(
+        ctx.check_source("/docs/decision/brainstorm/records.md#A1").is_err(),
+        "a source starting with '/' must be rejected even if it would resolve after normalization"
+    );
+}
+
+// @kotowari[REQ-058]
+#[test]
+fn req_058_tie_break_prefers_the_longer_place_when_a_path_matches_both() {
+    let ctx = kotowari::sources::SourceContext {
+        records_path: "docs".to_string(),
+        adr_path: "docs/decision".to_string(),
+        records_files: vec![],
+        adr_files: vec![kotowari::sources::OtherFile {
+            rel_path: "adr/0001.md".to_string(),
+            headings: vec!["Status".to_string()],
+        }],
+        records_other_files: vec![],
+    };
+    // "docs/decision/adr/0001.md" は records ("docs") にも adr ("docs/decision") にも
+    // 境界を満たして当たる。長い方の置き場（adr）を採るはずなので、adr 側の
+    // ファイルの見出しで解決できる。
+    let result = ctx.check_source("docs/decision/adr/0001.md#Status");
+    assert!(
+        result.is_ok(),
+        "when a path matches both places, the longer place should win the tie: {:?}",
+        result
+    );
+}
+
+// @kotowari[REQ-058]
+#[test]
+fn req_058_boundary_violating_prefix_does_not_count_as_under_a_place() {
+    let ctx = kotowari::sources::SourceContext {
+        // records_path はたまたま adr の実ファイル名の接頭辞になっているが、
+        // 続く文字が "/" でないので "under" ではない（境界を守る）
+        records_path: "docs/decision/adr/0001".to_string(),
+        adr_path: "docs/decision/adr".to_string(),
+        records_files: vec![],
+        adr_files: vec![kotowari::sources::OtherFile {
+            rel_path: "0001-notes.md".to_string(),
+            headings: vec!["Status".to_string()],
+        }],
+        records_other_files: vec![],
+    };
+    let result = ctx.check_source("docs/decision/adr/0001-notes.md#Status");
+    assert!(
+        result.is_ok(),
+        "a place string that is merely a byte-prefix without a '/' boundary must not count as 'under' it: {:?}",
+        result
+    );
+}
+
 // --- check_document_references の行番号 ---
 
 // @kotowari[REQ-069, TBL-014]
