@@ -46,6 +46,7 @@ pub fn parse_records_file(rel_path: &str, content: &str) -> RecordsFile {
     let mut decision_numbers = Vec::new();
     let mut headings = Vec::new();
     let mut in_decision_section = false;
+    let mut has_decision_section = false;
     let decision_sections = ["Agreements", "Prohibitions", "Delegated", "Rejected"];
 
     for line in content.lines() {
@@ -55,6 +56,7 @@ pub fn parse_records_file(rel_path: &str, content: &str) -> RecordsFile {
             let heading = trimmed[3..].trim().to_string();
             if decision_sections.contains(&heading.as_str()) {
                 in_decision_section = true;
+                has_decision_section = true;
             } else {
                 in_decision_section = false;
             }
@@ -76,7 +78,8 @@ pub fn parse_records_file(rel_path: &str, content: &str) -> RecordsFile {
         }
     }
 
-    let is_records = !decision_numbers.is_empty();
+    // A134: 決定の節の見出しを1つ以上持つファイルが判断の記録（番号の有無では決めない）
+    let is_records = has_decision_section;
 
     RecordsFile {
         rel_path: rel_path.to_string(),
@@ -270,9 +273,20 @@ fn load_all_md(
             let display = format!("{config_key}/{rel}");
             crate::StopReason::UnreadableFile(format!("{display}: {e}"))
         })?;
-        if ft.is_dir() {
+        // A102: ファイルのシンボリックリンクは読む。ディレクトリのリンクは辿らない。
+        // A146: 先の無いリンクは読めないファイルとして停止する
+        let (is_dir, is_file) = if ft.is_symlink() {
+            let meta = std::fs::metadata(&path).map_err(|e| {
+                let display = format!("{config_key}/{rel}");
+                crate::StopReason::UnreadableFile(format!("{display}: {e}"))
+            })?;
+            (false, meta.is_file())
+        } else {
+            (ft.is_dir(), ft.is_file())
+        };
+        if is_dir {
             load_all_md(&path, &rel, config_key, records, others)?;
-        } else if ft.is_file() && path.extension().is_some_and(|ext| ext == "md") {
+        } else if is_file && path.extension().is_some_and(|ext| ext == "md") {
             let display = format!("{config_key}/{rel}");
             let content = crate::read_utf8_file(&path, &display)?;
 
@@ -320,9 +334,20 @@ fn load_all_md_as_other(
             let display = format!("{config_key}/{rel}");
             crate::StopReason::UnreadableFile(format!("{display}: {e}"))
         })?;
-        if ft.is_dir() {
+        // A102: ファイルのシンボリックリンクは読む。ディレクトリのリンクは辿らない。
+        // A146: 先の無いリンクは読めないファイルとして停止する
+        let (is_dir, is_file) = if ft.is_symlink() {
+            let meta = std::fs::metadata(&path).map_err(|e| {
+                let display = format!("{config_key}/{rel}");
+                crate::StopReason::UnreadableFile(format!("{display}: {e}"))
+            })?;
+            (false, meta.is_file())
+        } else {
+            (ft.is_dir(), ft.is_file())
+        };
+        if is_dir {
             load_all_md_as_other(&path, &rel, config_key, files)?;
-        } else if ft.is_file() && path.extension().is_some_and(|ext| ext == "md") {
+        } else if is_file && path.extension().is_some_and(|ext| ext == "md") {
             let display = format!("{config_key}/{rel}");
             let content = crate::read_utf8_file(&path, &display)?;
 
