@@ -631,14 +631,17 @@ fn tbl_012_indented_decision_line_counts() {
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records2.md#A26\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records2.md#A26\n- 検証: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records2.md#A27\n- 検証: unit\n\nStatement.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
-    assert!(
-        !si.iter().any(|f| f["detail"].as_str().unwrap_or("").contains("A26")),
+    let details: Vec<&str> = si.iter().map(|f| f["detail"].as_str().unwrap_or("")).collect();
+    // A26（字下げした決定）は解決し、無い番号 A27 だけが source_invalid になる（検査が走ったことの対）
+    assert_eq!(
+        details,
+        vec!["docs/decision/brainstorm/records2.md#A27"],
         "an indented decision line ('  - A26 ...') should still count as decision A26: {:?}",
         si
     );

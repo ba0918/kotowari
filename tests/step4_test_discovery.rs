@@ -1135,6 +1135,15 @@ fn tbl_016_macro_function_block_comment_marker_binds() {
         "a multi-line block comment marker right before a macro function should bind, just like a normal function: {:?}",
         rwt
     );
+    // 対: 同じ形で印を外すと requirement_without_test が出る（印が結び付いたから空だった、の裏付け）
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "my_macro! {\n    /* no marker here\n    */\n    fn block_comment_marker() {}\n}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    assert_eq!(rwt.len(), 1, "without the marker REQ-001 must be reported: {:?}", rwt);
 }
 
 // @kotowari[REQ-054]
