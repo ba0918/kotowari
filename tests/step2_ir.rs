@@ -2476,3 +2476,106 @@ fn req_044_line_starting_with_dot_space_is_a_normal_statement() {
     );
 }
 
+// --- REQ-043: 形に合わない TBL-/PROP-/FLAG- の ID ---
+
+// @kotowari[REQ-043]
+#[test]
+fn req_043_malformed_tbl_id_is_not_an_item() {
+    let content = "# Title\n\nScope.\n\n## 決定表\n\n### TBL-1: X\n\n- 出典: brainstorm/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
+    let doc = ir::parse_document("a.md", content);
+    assert!(
+        !doc.items.iter().any(|i| matches!(i, Item::DecisionTable { .. })),
+        "malformed TBL- id must not produce Item::DecisionTable: {:?}",
+        doc.items
+    );
+    assert!(
+        doc.items.iter().any(|i| matches!(i, Item::UnknownHeading { .. })),
+        "malformed TBL- id must fall back to Item::UnknownHeading: {:?}",
+        doc.items
+    );
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(
+        uh.iter().any(|f| f.detail.contains("TBL-1")),
+        "should report unknown_heading for a malformed TBL-1: {:?}",
+        uh
+    );
+}
+
+// @kotowari[REQ-043]
+#[test]
+fn req_043_malformed_prop_id_is_not_an_item() {
+    let content = "# Title\n\nScope.\n\n## 性質\n\n### PROP-1: X\n\n- 出典: brainstorm/records.md#A1\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    assert!(
+        !doc.items.iter().any(|i| matches!(i, Item::Property { .. })),
+        "malformed PROP- id must not produce Item::Property: {:?}",
+        doc.items
+    );
+    assert!(
+        doc.items.iter().any(|i| matches!(i, Item::UnknownHeading { .. })),
+        "malformed PROP- id must fall back to Item::UnknownHeading: {:?}",
+        doc.items
+    );
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(
+        uh.iter().any(|f| f.detail.contains("PROP-1")),
+        "should report unknown_heading for a malformed PROP-1: {:?}",
+        uh
+    );
+}
+
+// @kotowari[REQ-043]
+#[test]
+fn req_043_malformed_flag_id_is_not_an_item() {
+    let content = "# 問題の記録\n\n### FLAG-1: Issue\n\n- 種類: gap\n- 関係: REQ-999\n- 出典: brainstorm/records.md#A1\n";
+    let doc = ir::parse_document("FLAGS.md", content);
+    assert!(
+        !doc.items.iter().any(|i| matches!(i, Item::FlagEntry { .. })),
+        "malformed FLAG- id must not produce Item::FlagEntry: {:?}",
+        doc.items
+    );
+    assert!(
+        doc.items.iter().any(|i| matches!(i, Item::UnknownHeading { .. })),
+        "malformed FLAG- id must fall back to Item::UnknownHeading: {:?}",
+        doc.items
+    );
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert!(
+        uh.iter().any(|f| f.detail.contains("FLAG-1")),
+        "should report unknown_heading for a malformed FLAG-1: {:?}",
+        uh
+    );
+}
+
+// --- TBL-011: 性質の "- 出典:" 行の読み方 ---
+
+// @kotowari[TBL-011]
+#[test]
+fn tbl_011_property_source_field_populates_sources() {
+    let content = "# Title\n\nScope.\n\n## 性質\n\n### PROP-001: P\n\n- 出典: brainstorm/records.md#A1\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content);
+    let prop = doc
+        .items
+        .iter()
+        .find(|i| matches!(i, Item::Property { id, .. } if id == "PROP-001"));
+    assert!(prop.is_some(), "should parse PROP-001: {:?}", doc.items);
+    if let Item::Property { sources, .. } = prop.unwrap() {
+        assert_eq!(
+            sources,
+            &["brainstorm/records.md#A1".to_string()],
+            "a PROP's own 出典 field should be collected into sources: {:?}",
+            sources
+        );
+    }
+    let findings = check(&[doc], &default_config());
+    let ms = find_by_kind(&findings, "missing_source");
+    assert!(
+        ms.is_empty(),
+        "a PROP with a 出典 field must not produce missing_source: {:?}",
+        ms
+    );
+}
+
