@@ -24,7 +24,10 @@ fn main() -> ExitCode {
             let cwd = match std::env::current_dir() {
                 Ok(d) => d,
                 Err(e) => {
-                    stop(&format!("cannot get current directory: {e}"));
+                    // A160/TBL-001/TBL-020: 読めないファイルを理由に停止し、
+                    // 詳細は "current directory: " に OS の誤りの文を続ける
+                    let reason = kotowari::StopReason::UnreadableFile(format!("current directory: {e}"));
+                    stop(&reason.to_string());
                     return ExitCode::from(2);
                 }
             };
