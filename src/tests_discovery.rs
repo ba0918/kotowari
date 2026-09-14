@@ -14,7 +14,8 @@ pub struct DiscoveredTest {
     pub name: String,
     pub file_path: String,
     pub line: usize,
-    pub marker_ids: BTreeSet<String>,
+    /// ID → 印のある行
+    pub marker_ids: std::collections::BTreeMap<String, usize>,
     /// テストに結び付く位置にある、中身が空または閉じ括弧のない印
     pub invalid_markers: Vec<(usize, String)>,
 }
@@ -85,15 +86,31 @@ pub fn collect_test_files(
     let mut files = Vec::new();
 
     for entry in WalkDir::new(base)
+        .follow_links(false)
         .into_iter()
         .filter_entry(|e| {
             // 隠しディレクトリを除外（REQ-019）。ルートは除外しない
-            if e.file_type().is_dir() && e.depth() > 0 {
-                let name = e.file_name().to_string_lossy();
-                !name.starts_with('.')
-            } else {
-                true
+            // ディレクトリのシンボリックリンクは辿らない（REQ-079, A102）
+            if e.depth() > 0 {
+                let ft = e.file_type();
+                if ft.is_symlink() {
+                    // シンボリックリンク: ファイルなら含める、ディレクトリなら除外
+                    // filter_entry ではディレクトリかどうかで判定
+                    // WalkDir は follow_links(false) なのでシンボリックリンクは展開されない
+                    // ここで辿って判定する
+                    if let Ok(meta) = std::fs::metadata(e.path()) {
+                        if meta.is_dir() {
+                            return false; // ディレクトリリンクは辿らない
+                        }
+                    }
+                    return true; // ファイルリンクは含める
+                }
+                if ft.is_dir() {
+                    let name = e.file_name().to_string_lossy();
+                    return !name.starts_with('.');
+                }
             }
+            true
         })
     {
         // REQ-018（A96）: 走査でディレクトリが読めなければ停止する
@@ -101,7 +118,15 @@ pub fn collect_test_files(
             let where_ = e.path().map(|p| p.display().to_string()).unwrap_or_default();
             crate::StopReason::UnreadableFile(format!("{where_}: {e}"))
         })?;
-        if entry.file_type().is_file() {
+        // ファイルまたはファイルのシンボリックリンク
+        let is_file = if entry.file_type().is_symlink() {
+            std::fs::metadata(entry.path())
+                .map(|m| m.is_file())
+                .unwrap_or(false)
+        } else {
+            entry.file_type().is_file()
+        };
+        if is_file {
             let rel = entry
                 .path()
                 .strip_prefix(base)
@@ -245,23 +270,38 @@ fn discover_macro_functions(
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
         if child.kind() == "function_item" {
-            // マクロ内の関数はすべてテストと数える
+            // マクロ内の最上位の関数はすべてテストと数える（入れ子の関数は数えない）
             if let Some(name_node) = child.child_by_field_name("name") {
                 let name = &inner_source[name_node.byte_range()];
                 let inner_line = child.start_position().row;
                 let actual_line = line_offset + inner_line + 1;
 
                 // inner の関数前のコメントの印を集める
-                let all_ids = collect_markers_before_line(inner_lines, inner_line);
+                let all_ids_raw = collect_markers_before_line(inner_lines, inner_line);
+                // line_offset を足す
+                let all_ids: std::collections::BTreeMap<String, usize> = all_ids_raw.into_iter()
+                    .map(|(id, ln)| (id, line_offset + ln))
+                    .collect();
+
+                // 関数本体の先頭のコメントの印も集める（A121: 通常の関数と同じ規則）
+                let (body_ids, body_invalid) = collect_body_start_markers(child, inner_source);
+                let mut merged_ids = all_ids;
+                for (id, ln) in body_ids {
+                    merged_ids.entry(id).or_insert(line_offset + ln);
+                }
+                let invalid_markers: Vec<(usize, String)> = body_invalid.into_iter()
+                    .map(|(ln, raw)| (line_offset + ln, raw))
+                    .collect();
 
                 tests.push(DiscoveredTest {
                     name: name.to_string(),
                     file_path: file_rel.to_string(),
                     line: actual_line,
-                    marker_ids: all_ids,
-                    invalid_markers: Vec::new(),
+                    marker_ids: merged_ids,
+                    invalid_markers,
                 });
             }
+            // 入れ子の関数は数えない（再帰しない）
         } else {
             discover_macro_functions(
                 child,
@@ -318,13 +358,33 @@ fn check_function(
     });
 }
 
+/// 属性のパスの末尾の要素が "test" かを判定する（A122）
+/// "#[test]"、"#[ test ]"、"#[core::prelude::v1::test]"、"#[tokio::test]" を含む
+fn attr_path_ends_with_test(attr_text: &str) -> bool {
+    let inner = attr_text.trim()
+        .strip_prefix("#[")
+        .and_then(|s| s.strip_suffix(']'));
+    if let Some(inner) = inner {
+        let path = if let Some(paren) = inner.find('(') {
+            &inner[..paren]
+        } else {
+            inner
+        };
+        let path = path.trim();
+        let last_segment = path.rsplit("::").next().unwrap_or(path).trim();
+        last_segment == "test"
+    } else {
+        false
+    }
+}
+
 /// 関数が #[test] 属性を持つか
-fn has_attribute(node: tree_sitter::Node, source: &str, attr_text: &str) -> bool {
+fn has_attribute(node: tree_sitter::Node, source: &str, _attr_text: &str) -> bool {
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
         if child.kind() == "attribute_item" || child.kind() == "attribute" {
             let text = &source[child.byte_range()];
-            if text.trim() == attr_text {
+            if attr_path_ends_with_test(text) {
                 return true;
             }
         }
@@ -335,7 +395,7 @@ fn has_attribute(node: tree_sitter::Node, source: &str, attr_text: &str) -> bool
     while let Some(p) = prev {
         if p.kind() == "attribute_item" {
             let text = &source[p.byte_range()];
-            if text.trim() == attr_text {
+            if attr_path_ends_with_test(text) {
                 return true;
             }
         } else if p.kind() != "line_comment" && p.kind() != "block_comment" {
@@ -377,13 +437,13 @@ fn has_configured_attribute(node: tree_sitter::Node, source: &str, attr_path: &s
 }
 
 /// 関数の前の兄弟ノード（属性、コメント）から印を集める
-/// 返り値: (正常な印の ID 集合, 空・不正な印の (行, 行の文字) のリスト)
+/// 返り値: (正常な印の ID → 印の行 のマップ, 空・不正な印の (行, 行の文字) のリスト)
 fn collect_markers_from_siblings(
     node: tree_sitter::Node,
     source: &str,
-    _lines: &[&str],
-) -> (BTreeSet<String>, Vec<(usize, String)>) {
-    let mut ids = BTreeSet::new();
+    lines: &[&str],
+) -> (std::collections::BTreeMap<String, usize>, Vec<(usize, String)>) {
+    let mut ids = std::collections::BTreeMap::new();
     let mut invalid = Vec::new();
     let mut prev = node.prev_sibling();
 
@@ -391,13 +451,24 @@ fn collect_markers_from_siblings(
         match p.kind() {
             "line_comment" | "block_comment" => {
                 let text = &source[p.byte_range()];
-                let line_num = p.start_position().row + 1;
-                for marker in parse_markers_in_line(text, line_num) {
-                    if marker.ids.is_empty() {
-                        invalid.push((line_num, text.to_string()));
+                let comment_start_row = p.start_position().row;
+                // コメントが複数行にまたがる場合は行ごとに処理
+                let comment_lines: Vec<&str> = text.lines().collect();
+                for (offset, cline) in comment_lines.iter().enumerate() {
+                    let line_num = comment_start_row + offset + 1;
+                    let raw_line = if comment_start_row + offset < lines.len() {
+                        lines[comment_start_row + offset]
                     } else {
-                        for id in &marker.ids {
-                            ids.insert(id.clone());
+                        cline
+                    };
+                    for marker in parse_markers_in_line(cline, line_num) {
+                        if marker.ids.is_empty() {
+                            // REQ-072: 空の印や閉じ括弧のない印
+                            invalid.push((line_num, raw_line.to_string()));
+                        } else {
+                            for id in &marker.ids {
+                                ids.entry(id.clone()).or_insert(line_num);
+                            }
                         }
                     }
                 }
@@ -430,8 +501,8 @@ fn collect_markers_from_siblings(
 
 /// 指定行（0-indexed）の前のコメント塊から印を集める
 /// コメント（// か /*）と属性（#[）の行だけ遡り、空行またはそれ以外の行で切れる
-fn collect_markers_before_line(lines: &[&str], target_line: usize) -> BTreeSet<String> {
-    let mut ids = BTreeSet::new();
+fn collect_markers_before_line(lines: &[&str], target_line: usize) -> std::collections::BTreeMap<String, usize> {
+    let mut ids = std::collections::BTreeMap::new();
     if target_line == 0 {
         return ids;
     }
@@ -451,9 +522,10 @@ fn collect_markers_before_line(lines: &[&str], target_line: usize) -> BTreeSet<S
             break;
         }
 
-        for marker in parse_markers_in_line(line, line_idx + 1) {
+        let line_num = line_idx + 1;
+        for marker in parse_markers_in_line(line, line_num) {
             for id in &marker.ids {
-                ids.insert(id.clone());
+                ids.entry(id.clone()).or_insert(line_num);
             }
         }
 
@@ -467,10 +539,11 @@ fn collect_markers_before_line(lines: &[&str], target_line: usize) -> BTreeSet<S
 }
 
 /// 関数本体の先頭のコメントから印を集める
-/// 返り値: (正常な印の ID 集合, 空・不正な印の (行, 行の文字) のリスト)
-fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> (BTreeSet<String>, Vec<(usize, String)>) {
-    let mut ids = BTreeSet::new();
+/// 返り値: (正常な印の ID → 印の行 のマップ, 空・不正な印の (行, 行の文字) のリスト)
+fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> (std::collections::BTreeMap<String, usize>, Vec<(usize, String)>) {
+    let mut ids = std::collections::BTreeMap::new();
     let mut invalid = Vec::new();
+    let lines: Vec<&str> = source.lines().collect();
 
     if let Some(body) = node.child_by_field_name("body") {
         let mut cursor = body.walk();
@@ -488,13 +561,22 @@ fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> (BTreeSe
             }
             if child.kind() == "line_comment" || child.kind() == "block_comment" {
                 let text = &source[child.byte_range()];
-                let line_num = child.start_position().row + 1;
-                for marker in parse_markers_in_line(text, line_num) {
-                    if marker.ids.is_empty() {
-                        invalid.push((line_num, text.to_string()));
+                let comment_start_row = child.start_position().row;
+                let comment_lines_iter: Vec<&str> = text.lines().collect();
+                for (offset, cline) in comment_lines_iter.iter().enumerate() {
+                    let line_num = comment_start_row + offset + 1;
+                    let raw_line = if comment_start_row + offset < lines.len() {
+                        lines[comment_start_row + offset]
                     } else {
-                        for id in &marker.ids {
-                            ids.insert(id.clone());
+                        cline
+                    };
+                    for marker in parse_markers_in_line(cline, line_num) {
+                        if marker.ids.is_empty() {
+                            invalid.push((line_num, raw_line.to_string()));
+                        } else {
+                            for id in &marker.ids {
+                                ids.entry(id.clone()).or_insert(line_num);
+                            }
                         }
                     }
                 }
@@ -539,7 +621,7 @@ pub fn discover_and_check(
                     for test in &tests {
                         // 印の検証
                         check_test_markers(test, rel_path, known_ids, findings);
-                        for id in &test.marker_ids {
+                        for id in test.marker_ids.keys() {
                             all_marker_ids.insert(id.clone());
                         }
                         // REQ-072: テストに結び付く空・不正な印
@@ -609,12 +691,10 @@ fn check_test_markers(
     known_ids: &BTreeSet<String>,
     findings: &mut Vec<Finding>,
 ) {
-    // invalid_marker のチェックは行単位で行うべきだが、
-    // ここではテストに結び付いた印のチェックを行う
-    // REQ-054 の unresolved_reference は印からも出る
-    for id in &test.marker_ids {
+    // REQ-054, REQ-118: unresolved_reference の line は印のある行
+    for (id, marker_line) in &test.marker_ids {
         if !id.is_empty() && !known_ids.contains(id) {
-            findings.push(Finding::new(FindingKind::UnresolvedReference, file_path.to_string(), Some(test.line), id.clone()));
+            findings.push(Finding::new(FindingKind::UnresolvedReference, file_path.to_string(), Some(*marker_line), id.clone()));
         }
     }
 }
