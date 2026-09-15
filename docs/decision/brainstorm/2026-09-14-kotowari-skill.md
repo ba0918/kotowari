@@ -34,12 +34,16 @@
 - A30 場面を5つにして workflow を足す。plan・cycle・implement の席は workflow として workflow.md の自分の節を読む。brainstorm の席は write のまま（計画のレビューで導線の欠落が見つかった。推奨を採用）
 - A31 setup の手順（作るもの、AGENTS.md の節の雛形、既にあるものの扱い）は config.md に置く（推奨を採用）
 - A32 references を書くとき docs/ir と実験の契約が食い違えば docs/ir が正。実測で確かめられるなら確かめ、決まらなければ止まって人に言う。references の中では kotowari 自身の ID（TBL-016 の類）と docs/ir のパスを引かない（配布先で解決できない。R10 の帰結。推奨を採用）
+- A33 承認の関門は「IR の置き場のファイルへの誤りが0」。requirement_without_test を含むテスト側の指摘は cycle の終端で0にする（既にテストがあるプロジェクトで印の無いテストが承認を止めないため。cycle の human_judgment。推奨を採用）
+- A34 用語集に too_many_lines が出たときの対処は、設定の limits.lines を上げてその判断を記録に書く（用語集は1ファイルで分割できない。警告なので承認は止めない。推奨を採用）
+- A35 照合レビューで IR か記録を変えたら承認の手順1（check）に戻る。3回の上限は照合の回数のまま（推奨を採用）
 - A10 このスキル自身の仕様は IR にせず、自由な Markdown（`docs/spec/kotowari-skill.md`）で書く。ただの文書に kotowari の規則を課すのは過剰（利用者）
 
 ## Prohibitions
 - P1 このスキルのために kotowari 本体の振る舞いを変えない（A23 で追認）
 
 ## Undecided
+- U3 段階的な導入の仕組み（PHPStan の level のように、設定で検査の厳しさや有効な検査を段階で選べるようにする。今は0か100しかない。利用者の着想。決める: kotowari 本体の次の壁打ち）
 - U2 kakoi-net での試用の結果で setup の既定（置き場の名前）を変えるか（決める: 試用の後、利用者）
 - U1 人間が IR を読める形にする方法（A3 の懸念。決める: 別の壁打ち。実験003では render を作らない P1 があった）
 
@@ -57,6 +61,7 @@
 - A27 は A16 の「既存スキルに1行足す」を「AGENTS.md に書く」に改める（A11 の「既存の brainstorm スキル本体は変えない」はそのまま）
 - A29 は A8 の references を6つ（ir-form、findings、config、collate、mark、workflow）に改める
 - A30 は A6・A17 の場面4つを5つに改める
+- A33 は A25 の「requirement_without_test 以外の誤り0」を「IR の置き場のファイルへの誤り0」に改める
 - A25 は A13 の brainstorm 側の関門「指摘0」を「requirement_without_test 以外の誤りが0」に改める（A18 の「誤り0」も同じ）
 
 ## 敵対的レビュー（2026-09-14、下書き1版に対して）
