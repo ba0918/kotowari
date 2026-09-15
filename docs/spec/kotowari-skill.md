@@ -63,13 +63,13 @@ SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotow
 
 - `.kotowari/` と `.kotowari/config.yaml`。`.kotowari/` があることで基準のディレクトリがリポジトリ直下に固定される（サブディレクトリから `check` を走らせても同じ基準になる）。設定ファイルは既定と同じ値でも必ず書く（A20。既定を目に見える形にするため）。値を既定から変えるのは、テストの glob（既定 `src/**/*.rs` と `tests/**/*.rs`）か置き場を変えるときだけ
 - `docs/ir/`、`docs/decision/brainstorm/`、`docs/decision/adr/`
-- `docs/ir/CONTEXT.md`（題名の行 `# 用語集`、表のヘッダ `| 用語 | 意味 | 出典 |`、区切り行 `|---|---|---|` の3行）
-- `AGENTS.md` の節（A27）: 「このプロジェクトの仕様は IR（`docs/ir/`）で、brainstorm・plan・cycle・implement では `kotowari` スキルを読む」という趣旨のルーティングの規則。`AGENTS.md` が無ければ作り、あれば節を末尾に足す。同じ趣旨の節が既にあれば足さない
+- `docs/ir/CONTEXT.md`（題名の行 `# 用語集`、空行、表のヘッダ `| 用語 | 意味 | 出典 |`、区切り行 `|---|---|---|` の4行）
+- `AGENTS.md` の節（A27）: 「このプロジェクトの仕様は IR（`docs/ir/`）で、brainstorm・plan・cycle・implement では `kotowari` スキルを読む」という趣旨のルーティングの規則。節の見出しは `## kotowari`。`AGENTS.md` が無ければ作り、あれば節を末尾に足す。`## kotowari` の見出しが既にあれば足さない
 
 既にあるファイルやディレクトリは上書きせず、あることを人に言う（`AGENTS.md` への節の追加だけは、上書きでなく追記なので行う）。
 
 - 成功の条件: 空のリポジトリで `setup` の後に `kotowari check` を走らせると、終了コード0で `findings` が空（実測済み: `files` 1、`lines` 4）。サブディレクトリから走らせても同じ。既に `docs/ir/CONTEXT.md` があるリポジトリで実行しても、そのファイルの中身が変わらない。`AGENTS.md` に kotowari の節が1つだけある
-- 反例: 既にある `CONTEXT.md` を3行の表で置き換える。`setup` を2回呼ぶと `AGENTS.md` に同じ節が2つできる
+- 反例: 既にある `CONTEXT.md` を4行の表で置き換える。`setup` を2回呼ぶと `AGENTS.md` に同じ節が2つできる
 - 確かめ方: 人が空のリポジトリと既存のリポジトリで `setup` を呼び、`kotowari check` の出力と `git status` と `AGENTS.md` を見る
 
 ### R4: `write` は IR の形の規則を丸ごと読ませ、brainstorm の出力と記録の扱いを置き換える
@@ -141,17 +141,17 @@ reference `workflow.md`（A29）は、brainstorm の節（R4）に加えて、�
 
 ### R9: references は現在の kotowari の仕様を、実験の記録を参照せずに書く
 
-references 6つ（`ir-form.md`、`findings.md`、`config.md`、`collate.md`、`mark.md`、`workflow.md`）は、kotowari の IR（`docs/ir/`）と形の契約から作るが、kotowari リポジトリの実験の記録（`experiments/` の下）への参照を含めない（A1。配布先で元本は読めない）。決定の番号や出典の例は架空のパス（`docs/decision/brainstorm/2026-01-01-example.md#A1`）で書く。kotowari 自身の IR の ID（`TBL-016` の類）と `docs/ir/` のパスも引かない（配布先で解決できない。A32）。元にする `docs/ir/` と形の契約が食い違えば `docs/ir/` が正で、実測で確かめられるなら確かめ、決まらなければ止まって人に言う（A32）。kotowari の仕様が変わったら references を更新し、SKILL.md の版を上げる。
+references 6つ（`ir-form.md`、`findings.md`、`config.md`、`collate.md`、`mark.md`、`workflow.md`）は、kotowari の IR（`docs/ir/`）と形の契約から作るが、kotowari リポジトリの実験の記録（`experiments/` の下）への参照を含めない（A1。配布先で元本は読めない）。決定の番号や出典の例は架空のパス（`docs/decision/brainstorm/2026-01-01-example.md#A1`）で書く。kotowari 自身の IR の ID（`TBL-016` の類）を根拠として引かず、`docs/ir/` の文書名も引かない（配布先で解決できない。A32。例に使う ID は形の説明なので可）。元にする `docs/ir/` と形の契約が食い違えば `docs/ir/` が正で、実測で確かめられるなら確かめ、決まらなければ止まって人に言う（A32）。kotowari の仕様が変わったら references を更新し、SKILL.md の版を上げる。
 
-- 成功の条件: `rg -n 'experiments/|TBL-[0-9]|REQ-[0-9]|docs/ir/[a-z-]+\.md' skills/kotowari/` が0件（置き場の名前 `docs/ir` と、利用者側に作る `docs/ir/CONTEXT.md`・`docs/ir/FLAGS.md` は書いてよい。kotowari 自身の IR の文書名を引かない）。`config.md` に設定ファイルの全キー（`ir`、`decisions.records`、`decisions.adr`、`tests.files`、`tests.rust.attributes`、`tests.rust.macros`、`vague_words`、`limits.lines`、`limits.requirements`）と既定値がある。`collate.md` に、渡す入力（項目と出典の対）、判定の基準（出典の決定が項目の内容を裏付けるか）、返す形（裏付けの無い項目の一覧）、回数の上限（3回）がある
-- 反例: `ir-form.md` に `experiments/003-cli/brainstorm/records.md#A145` が残っている
+- 成功の条件: `rg -n 'experiments/|docs/ir/[a-z-]+\.md' skills/kotowari/` が0件（置き場の名前 `docs/ir` と、利用者側に作る `docs/ir/CONTEXT.md`・`docs/ir/FLAGS.md` は書いてよい）。人が読んで、kotowari 自身の IR の ID を「〜のとおり」のように根拠として引いている箇所が無い。`config.md` に設定ファイルの全キー（`ir`、`decisions.records`、`decisions.adr`、`tests.files`、`tests.rust.attributes`、`tests.rust.macros`、`vague_words`、`limits.lines`、`limits.requirements`）と既定値がある。`collate.md` に、渡す入力（項目と出典の対）、判定の基準（出典の決定が項目の内容を裏付けるか）、返す形（裏付けの無い項目の一覧）、回数の上限（3回）がある
+- 反例: `ir-form.md` に `experiments/003-cli/brainstorm/records.md#A145` が残っている。`mark.md` に「TBL-016 のとおり」と書いてある
 - 確かめ方: 上の `rg`。人が `config.md` のキーを `docs/ir/config.md` の TBL-004 と突き合わせ、`collate.md` の4つの要素を見る
 
 ### R10: 元本の置き場と入れ方
 
 元本は kotowari リポジトリの `skills/kotowari/`（`SKILL.md` と `references/` の6つ）。手元へは `~/.claude/skills/kotowari/` にコピーで入れる（A5、A23）。
 
-- 成功の条件: kotowari リポジトリ以外のプロジェクトで、`~/.claude/skills/kotowari/` にコピーした状態でスキルを呼んだとき、kotowari リポジトリのファイルを1つも読まずに4つの場面が動く
+- 成功の条件: kotowari リポジトリ以外のプロジェクトで、`~/.claude/skills/kotowari/` にコピーした状態でスキルを呼んだとき、kotowari リポジトリのファイルを1つも読まずに5つの場面が動く
 - 反例: SKILL.md が `../../docs/ir/...` を読ませる
 - 確かめ方: 人が別のプロジェクトでスキルを呼び、読んだファイルの一覧を見る
 
