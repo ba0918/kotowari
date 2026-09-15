@@ -88,7 +88,7 @@ SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotow
 - 用語集: brainstorm の「リポジトリの `CONTEXT.md`」は IR の置き場の `CONTEXT.md` のこと。用語は1つのファイルにだけ置く
 - 終わりの敵対的レビュー: 「記録への適合」のレビューは R5 の照合レビューが置き換える。「仕様の品質」のレビュー1本は IR に対して残す（A28）
 - 承認時に stage するもの: IR の文書、用語集、問題の記録、判断の記録
-- 成功の条件: `ir-form.md` を読んだ LLM が、新しい要求1件、決定表か性質1件、シナリオ1件、用語1語、問題の記録1件を書き、それらが `ir-form.md` の項目の形（見出し、持つ行、タグ）に一致して、`kotowari check` の誤りが `requirement_without_test` だけになる。判断の記録が `docs/decision/brainstorm/` にあり、出典がその決定の番号を指している。`ir-form.md` の節の一覧が上の列挙と一致し、各節の内容が `docs/ir/` の対応する文書（ir-document、ir-items、ir-references、terms-form、terms、sources、CONTEXT の除外）と食い違わない
+- 成功の条件: `ir-form.md` を読んだ LLM が、新しい要求1件、決定表か性質1件、シナリオ1件、用語1語、問題の記録1件を書き、それらが `ir-form.md` の項目の形（見出し、持つ行、タグ）に一致して、`kotowari check` の誤りがテスト側の指摘だけになる。判断の記録が `docs/decision/brainstorm/` にあり、出典がその決定の番号を指している。`ir-form.md` の節の一覧が上の列挙と一致し、各節の内容が `docs/ir/` の対応する文書（ir-document、ir-items、ir-references、terms-form、terms、sources、CONTEXT の除外）と食い違わない
 - 反例: 出典が `.agents/tmp/` の進捗ファイルを指している（`decisions.records` の外を指す出典は、ファイルがあっても `source_invalid` になる）。`U3` を出典に使う。要求の見出しの下に `- 反例:` の行を置く
 - 確かめ方: 人が kotowari を知らない別セッションの LLM に `write` を読ませて上の5つを書かせ、`check` の出力と、書き上がったものの形を見る。人が `ir-form.md` の節を `docs/ir/` の文書と突き合わせる
 
@@ -133,7 +133,7 @@ SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotow
 
 reference `workflow.md`（A29）は、brainstorm の節（R4）に加えて、次の3つの節を持つ。plan・cycle・implement の席は、プロジェクトの `AGENTS.md` の規則（R3）で kotowari スキルを読み、場面 `workflow` として自分の席の節を読む（A30）。既存のスキルは変えない（A27）。
 
-- plan: 入力の「仕様のパス」は、IR の置き場のパスと、この計画が対象にする要求の ID の一覧。承認済みの判定は「IR の文書、用語集、問題の記録、判断の記録がすべてコミット済みで、`check` の誤りが `requirement_without_test` だけ」。計画は要求を `文書のパス#REQ-nnn` の形で参照する（kotowari の出典と同じ書式だが、計画から IR への参照であって出典ではない）。参照先の実在は、その文書に `### REQ-nnn:` で始まる見出しがあることで確かめる。最後のステップの確認コマンドに `kotowari check`（終了コード0）を列挙する。plan 自身は `check` を走らせない（A13）
+- plan: 入力の「仕様のパス」は、IR の置き場のパスと、この計画が対象にする要求の ID の一覧。承認済みの判定は「IR の文書、用語集、問題の記録、判断の記録がすべてコミット済みで、`check` の誤りがテスト側の指摘だけ」。計画は要求を `文書のパス#REQ-nnn` の形で参照する（kotowari の出典と同じ書式だが、計画から IR への参照であって出典ではない）。参照先の実在は、その文書に `### REQ-nnn:` で始まる見出しがあることで確かめる。最後のステップの確認コマンドに `kotowari check`（終了コード0）を列挙する。plan 自身は `check` を走らせない（A13）
 - cycle: review に渡す仕様のパスは IR の置き場のパス（レビュー役は置き場の文書すべてを読む）。implementer と fixer のプロンプトに `mark.md` の内容を貼る（委譲先はスキルを読まない）。終端報告の直前に `kotowari check` を走らせ、出力を終端報告に載せる。終了コード1のうちテスト側の指摘（`requirement_without_test`、`test_without_id`、`invalid_marker`、`unparsable_file`、印からの `unresolved_reference`）は fixer への指摘として扱い、直らなければ既存の「進捗なし」の終わり方にする。IR 側の指摘は cycle では直さず、人の判断として終端報告に載せて brainstorm に戻す
 - implement: plan が列挙した `kotowari check` を本体の規則どおり確認コマンドとして走らせる。終了コード1のとき、テスト側の指摘は自分で直し、IR 側の指摘は仕様の問題として差し戻す
 - 成功の条件: `workflow.md` に brainstorm・plan・cycle・implement の4つの節があり、上の各項目がある。既存の4つのスキルのファイルに差分が無い
