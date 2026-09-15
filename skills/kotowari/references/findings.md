@@ -38,7 +38,7 @@ kotowari 0.1.0 の仕様に基づく
 | unclosed_backtick | バッククォートが奇数 | バッククォートを閉じる | brainstorm |
 | invalid_glossary_row | 用語集の表の行の形が崩れている | セルを3つにし用語を空にしない | brainstorm |
 | duplicate_term | 用語が重複 | 重複した用語を1つにする | brainstorm |
-| too_many_lines | 文書の行数が上限を超えた（警告） | 文書を分割する | brainstorm |
+| too_many_lines | 文書の行数が上限を超えた（警告） | 文書を分割する。用語集（CONTEXT.md）は分割できないので、設定の limits.lines を上げてその判断を記録に書く | brainstorm |
 | too_many_requirements | 文書の要求の数が上限を超えた（警告） | 文書を分割する | brainstorm |
 
 除外の追加や規則の緩めは仕様の変更になるため、スキルの中で決めず brainstorm に戻す。
