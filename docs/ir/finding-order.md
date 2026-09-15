@@ -7,14 +7,14 @@
 ### REQ-024: 指摘の並べ方
 
 - 種類: algorithm
-- 出典: experiments/003-cli/brainstorm/records.md#A61, experiments/003-cli/brainstorm/records.md#A70
+- 出典: docs/decision/brainstorm/records.md#A61, docs/decision/brainstorm/records.md#A70
 - 定義: TBL-007, PROP-003
 - 検証: property
 
 ### REQ-027: 文書全体への指摘
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/records.md#A83, experiments/003-cli/brainstorm/ir-form.md#検査の種類, experiments/003-cli/brainstorm/records.md#A112, experiments/003-cli/brainstorm/records.md#A144
+- 出典: docs/decision/brainstorm/records.md#A40, docs/decision/brainstorm/records.md#A83, docs/decision/brainstorm/ir-form.md#検査の種類, docs/decision/brainstorm/records.md#A112, docs/decision/brainstorm/records.md#A144
 - 検証: unit
 
 kotowari は常に、種類が missing_title、multiple_titles、missing_scope、too_many_lines、too_many_requirements、unparsable_file、glossary_invalid の`指摘`の "line" を null にし、ほかの種類の "line" を TBL-019 のとおりにする。
@@ -22,7 +22,7 @@ kotowari は常に、種類が missing_title、multiple_titles、missing_scope�
 ### REQ-028: 行は1始まり
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A61
+- 出典: docs/decision/brainstorm/records.md#A61
 - 検証: unit
 
 kotowari は常に、`指摘`の "line" を1始まりで数える。
@@ -31,7 +31,7 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 
 ### TBL-007: findings の並べ方
 
-- 出典: experiments/003-cli/brainstorm/records.md#A61, experiments/003-cli/brainstorm/records.md#A70
+- 出典: docs/decision/brainstorm/records.md#A61, docs/decision/brainstorm/records.md#A70
 
 | 順 | 鍵 | 並べ方 |
 |---|---|---|
@@ -42,7 +42,7 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 
 ### TBL-019: 指摘の行
 
-- 出典: experiments/003-cli/brainstorm/records.md#A144, experiments/003-cli/brainstorm/records.md#A114, experiments/003-cli/brainstorm/records.md#A121, experiments/003-cli/brainstorm/records.md#A139, experiments/003-cli/brainstorm/records.md#A108, experiments/003-cli/brainstorm/records.md#A61, experiments/003-cli/brainstorm/records.md#A72, experiments/003-cli/brainstorm/records.md#A153, experiments/003-cli/brainstorm/records.md#A154
+- 出典: docs/decision/brainstorm/records.md#A144, docs/decision/brainstorm/records.md#A114, docs/decision/brainstorm/records.md#A121, docs/decision/brainstorm/records.md#A139, docs/decision/brainstorm/records.md#A108, docs/decision/brainstorm/records.md#A61, docs/decision/brainstorm/records.md#A72, docs/decision/brainstorm/records.md#A153, docs/decision/brainstorm/records.md#A154
 
 | 種類 | line |
 |---|---|
@@ -63,6 +63,6 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 
 ### PROP-003: findings は並んでいる
 
-- 出典: experiments/003-cli/brainstorm/records.md#A61, experiments/003-cli/brainstorm/records.md#A70, experiments/003-cli/brainstorm/ir-form.md#出力
+- 出典: docs/decision/brainstorm/records.md#A61, docs/decision/brainstorm/records.md#A70, docs/decision/brainstorm/ir-form.md#出力
 
 "findings" の中で隣り合うどの2つの`指摘`も、TBL-007 の順で比べて後ろのものが前のものより先に来ない。

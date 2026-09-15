@@ -7,14 +7,14 @@
 ### REQ-009: 基準のディレクトリの決め方
 
 - 種類: algorithm
-- 出典: experiments/003-cli/brainstorm/records.md#A37
+- 出典: docs/decision/brainstorm/records.md#A37
 - 定義: TBL-003, PROP-001
 - 検証: unit
 
 ### REQ-010: 基準からの相対パス
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A13, experiments/003-cli/brainstorm/records.md#A37
+- 出典: docs/decision/brainstorm/records.md#A13, docs/decision/brainstorm/records.md#A37
 - 検証: unit
 
 kotowari は常に、`設定ファイル`の値のパス、`出典`のパス、出力の "path" を`基準のディレクトリ`からの相対パスとして扱う。
@@ -22,7 +22,7 @@ kotowari は常に、`設定ファイル`の値のパス、`出典`のパス、�
 ### REQ-110: パスの正規化
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A106
+- 出典: docs/decision/brainstorm/records.md#A106
 - 検証: unit
 
 kotowari は常に、`設定ファイル`の値のパスと`出典`のパスを、比べる前と出力の前に、末尾の "/" と先頭の "./" を除き、途中の "/./" と連続する "/" を1つの "/" に畳み、"\\" を "/" に直して正規化し、出力の "path" を正規化した置き場と文書名を "/" でつないで作る。
@@ -31,7 +31,7 @@ kotowari は常に、`設定ファイル`の値のパスと`出典`のパスを�
 
 ### TBL-003: 基準のディレクトリを探す順
 
-- 出典: experiments/003-cli/brainstorm/records.md#A37, experiments/003-cli/brainstorm/records.md#A124
+- 出典: docs/decision/brainstorm/records.md#A37, docs/decision/brainstorm/records.md#A124
 
 | 順 | 条件 | 基準のディレクトリ |
 |---|---|---|
@@ -42,14 +42,14 @@ kotowari は常に、`設定ファイル`の値のパスと`出典`のパスを�
 
 ### PROP-001: 設定のパスは基準を変えない
 
-- 出典: experiments/003-cli/brainstorm/records.md#A37
+- 出典: docs/decision/brainstorm/records.md#A37
 
 `基準のディレクトリ`は、"--config" に与えるパスによって変わらない。
 
 ## 具体例
 
 ```gherkin
-@id=EX-002 @about=REQ-009 @source=experiments/003-cli/brainstorm/records.md#A37
+@id=EX-002 @about=REQ-009 @source=docs/decision/brainstorm/records.md#A37
 Scenario: 上のディレクトリの .kotowari を基準にする
   Given "/repo/.kotowari/" があり、"/repo/src/" に ".kotowari/" は無い
   When "/repo/src/" で "kotowari check" を実行する

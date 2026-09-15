@@ -7,7 +7,7 @@
 ### REQ-021: 出力の形の値
 
 - 種類: ubiquitous
-- 出典: experiments/003-cli/brainstorm/records.md#A7, experiments/003-cli/brainstorm/records.md#A18
+- 出典: docs/decision/brainstorm/records.md#A7, docs/decision/brainstorm/records.md#A18
 - 検証: unit
 
 kotowari は常に、"--format" の値として "json" と "text" の2つを受け、既定を "json" にする。
@@ -15,7 +15,7 @@ kotowari は常に、"--format" の値として "json" と "text" の2つを受�
 ### REQ-022: JSON を1つ出す
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/ir-form.md#出力
+- 出典: docs/decision/brainstorm/records.md#A40, docs/decision/brainstorm/ir-form.md#出力
 - 検証: unit
 
 "--format" が "json" のとき、kotowari は標準出力に1つの JSON を出す。
@@ -23,14 +23,14 @@ kotowari は常に、"--format" の値として "json" と "text" の2つを受�
 ### REQ-023: JSON の中身
 
 - 種類: algorithm
-- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/records.md#A56
+- 出典: docs/decision/brainstorm/records.md#A40, docs/decision/brainstorm/records.md#A56
 - 定義: TBL-005, TBL-006, PROP-002
 - 検証: unit
 
 ### REQ-025: 文字の出力
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/records.md#A50, experiments/003-cli/brainstorm/records.md#A18, experiments/003-cli/brainstorm/ir-form.md#出力
+- 出典: docs/decision/brainstorm/records.md#A40, docs/decision/brainstorm/records.md#A50, docs/decision/brainstorm/records.md#A18, docs/decision/brainstorm/ir-form.md#出力
 - 検証: unit
 
 "--format" が "text" のとき、kotowari は1つの`指摘`を1行で "パス:行 [error] 種類 詳細" か "パス:行 [warning] 種類 詳細" の形で出し、角括弧も出す。
@@ -38,7 +38,7 @@ kotowari は常に、"--format" の値として "json" と "text" の2つを受�
 ### REQ-026: 行の無い指摘の文字の出力
 
 - 種類: event_driven
-- 出典: experiments/003-cli/brainstorm/records.md#A47
+- 出典: docs/decision/brainstorm/records.md#A47
 - 検証: unit
 
 "--format" が "text" で`指摘`の "line" が null のとき、kotowari は行を "-" と書く。
@@ -47,7 +47,7 @@ kotowari は常に、"--format" の値として "json" と "text" の2つを受�
 
 ### TBL-005: JSON の最上位
 
-- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/records.md#A56, experiments/003-cli/brainstorm/ir-form.md#出力
+- 出典: docs/decision/brainstorm/records.md#A40, docs/decision/brainstorm/records.md#A56, docs/decision/brainstorm/ir-form.md#出力
 
 | 鍵 | 中身 |
 |---|---|
@@ -58,7 +58,7 @@ kotowari は常に、"--format" の値として "json" と "text" の2つを受�
 
 ### TBL-006: 指摘の鍵
 
-- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/records.md#A61, experiments/003-cli/brainstorm/records.md#A106
+- 出典: docs/decision/brainstorm/records.md#A40, docs/decision/brainstorm/records.md#A61, docs/decision/brainstorm/records.md#A106
 
 | 鍵 | 中身 |
 |---|---|
@@ -72,14 +72,14 @@ kotowari は常に、"--format" の値として "json" と "text" の2つを受�
 
 ### PROP-002: counts と findings の一致
 
-- 出典: experiments/003-cli/brainstorm/records.md#A40, experiments/003-cli/brainstorm/ir-form.md#出力
+- 出典: docs/decision/brainstorm/records.md#A40, docs/decision/brainstorm/ir-form.md#出力
 
 "counts" の各種類の値は "findings" の中のその種類の`指摘`の数に等しく、"findings" に1件も無い種類は "counts" に無い。
 
 ## 具体例
 
 ```gherkin
-@id=EX-004 @about=REQ-025,REQ-026 @source=experiments/003-cli/brainstorm/records.md#A47,experiments/003-cli/brainstorm/records.md#A40,experiments/003-cli/brainstorm/records.md#A50,experiments/003-cli/brainstorm/ir-form.md#検査の種類
+@id=EX-004 @about=REQ-025,REQ-026 @source=docs/decision/brainstorm/records.md#A47,docs/decision/brainstorm/records.md#A40,docs/decision/brainstorm/records.md#A50,docs/decision/brainstorm/ir-form.md#検査の種類
 Scenario: 題名の無い文書を文字で出す
   Given "docs/ir/a.md" に題名が無い
   When "kotowari check --format text" を実行する
