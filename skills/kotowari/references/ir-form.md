@@ -69,6 +69,7 @@ gherkin のコードブロックの中に `Scenario:` の行で書く。
 直前の行にタグを置く。タグは `@id=EX-nnn`、`@about=ID,...`、`@source=出典,...` の3つだけ。値が空のタグは無いものとして扱う。タグの行は `Scenario:` の直前の行だけを結び付け、間にほかの行があれば結び付かない。`@` で始まらない語は unknown_tag の誤り。
 
 - `@id` か `@about` が無い → missing_tag
+- `@source` が無い → missing_source
 - `@id` の値が `EX-nnn` の形でない → invalid_id（missing_tag は出さない）
 - 3つ以外のタグ → unknown_tag
 
