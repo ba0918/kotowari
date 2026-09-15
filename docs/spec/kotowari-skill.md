@@ -143,7 +143,7 @@ reference `workflow.md`（A29）は、brainstorm の節（R4）に加えて、�
 
 references 6つ（`ir-form.md`、`findings.md`、`config.md`、`collate.md`、`mark.md`、`workflow.md`）は、kotowari の IR（`docs/ir/`）と形の契約から作るが、kotowari リポジトリの実験の記録（`experiments/` の下）への参照を含めない（A1。配布先で元本は読めない）。決定の番号や出典の例は架空のパス（`docs/decision/brainstorm/2026-01-01-example.md#A1`）で書く。kotowari 自身の IR の ID（`TBL-016` の類）と `docs/ir/` のパスも引かない（配布先で解決できない。A32）。元にする `docs/ir/` と形の契約が食い違えば `docs/ir/` が正で、実測で確かめられるなら確かめ、決まらなければ止まって人に言う（A32）。kotowari の仕様が変わったら references を更新し、SKILL.md の版を上げる。
 
-- 成功の条件: `rg -n 'experiments/|TBL-[0-9]|REQ-[0-9]|docs/ir/' skills/kotowari/` が0件。`config.md` に設定ファイルの全キー（`ir`、`decisions.records`、`decisions.adr`、`tests.files`、`tests.rust.attributes`、`tests.rust.macros`、`vague_words`、`limits.lines`、`limits.requirements`）と既定値がある。`collate.md` に、渡す入力（項目と出典の対）、判定の基準（出典の決定が項目の内容を裏付けるか）、返す形（裏付けの無い項目の一覧）、回数の上限（3回）がある
+- 成功の条件: `rg -n 'experiments/|TBL-[0-9]|REQ-[0-9]|docs/ir/[a-z-]+\.md' skills/kotowari/` が0件（置き場の名前 `docs/ir` と、利用者側に作る `docs/ir/CONTEXT.md`・`docs/ir/FLAGS.md` は書いてよい。kotowari 自身の IR の文書名を引かない）。`config.md` に設定ファイルの全キー（`ir`、`decisions.records`、`decisions.adr`、`tests.files`、`tests.rust.attributes`、`tests.rust.macros`、`vague_words`、`limits.lines`、`limits.requirements`）と既定値がある。`collate.md` に、渡す入力（項目と出典の対）、判定の基準（出典の決定が項目の内容を裏付けるか）、返す形（裏付けの無い項目の一覧）、回数の上限（3回）がある
 - 反例: `ir-form.md` に `experiments/003-cli/brainstorm/records.md#A145` が残っている
 - 確かめ方: 上の `rg`。人が `config.md` のキーを `docs/ir/config.md` の TBL-004 と突き合わせ、`collate.md` の4つの要素を見る
 
