@@ -60,6 +60,14 @@ gherkin の`コードブロック`の中の行を行頭の空白を除いて見�
 
 "@id" の値が EX の`ID`の形でないとき、kotowari は値を detail、タグの行を "line" にして invalid_id の`誤り`を出し、"@id" の missing_tag は出さず（"@about" が無いときの missing_tag は出す）、その`シナリオ`の missing_source の detail は "Scenario:" の行の文字にする。存在する`ID`の集合には、形に合う見出しの`ID`と形に合う "@id" の値だけを数える。
 
+### REQ-124: ID の形
+
+- 種類: ubiquitous
+- 出典: docs/decision/brainstorm/records.md#A52, docs/decision/brainstorm/2026-09-16-ir-tree.md#A6, docs/decision/brainstorm/2026-09-16-ir-tree.md#A11, docs/decision/brainstorm/ir-form.md#ID
+- 検証: unit
+
+`ID`は常に、"REQ-"、"TBL-"、"PROP-"、"EX-"、"FLAG-" のいずれかに3桁以上の数字を続けた形で、4桁以上のときは先頭が "0" でない。`項目`の見出しやタグの形に書く "nnn" はこの数字を表す。この形に合わない見出しは REQ-043、合わない "@id" は REQ-114 のとおりに扱い、`印`の中の合わない`ID`は`印`の検査のとおりに扱う。
+
 ## 具体例
 
 ```gherkin
@@ -74,4 +82,16 @@ Scenario: 無い要求を指す about は参照切れになる
   Given `シナリオ`の "@about" が "REQ-999" を指し、"REQ-999" はどこにも無い
   When "kotowari check" を実行する
   Then detail が "REQ-999" の unresolved_reference の誤りが出る
+
+@id=EX-028 @about=REQ-124 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A6,docs/decision/brainstorm/2026-09-16-ir-tree.md#A11
+Scenario: 4桁の ID は通り、先頭が 0 の4桁と2桁以下は通らない
+  Given 見出しが "### REQ-1000: 名前"、"### REQ-0001: 名前"、"### REQ-1: 名前" の3つある
+  When "kotowari check" を実行する
+  Then "REQ-1000" は`要求`として読まれ、"REQ-0001" と "REQ-1" の見出しに unknown_heading の誤りが出る
+
+@id=EX-029 @about=REQ-124 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A6,docs/decision/brainstorm/2026-09-16-ir-tree.md#A11
+Scenario: タグと印の中の ID も同じ形で見る
+  Given "@id=EX-1000" のタグと "@id=EX-0001" のタグがあり、テストに "@kotowari[REQ-1000]" の`印`がある
+  When "kotowari check" を実行する
+  Then "EX-1000" は`シナリオ`の`ID`になり、"EX-0001" のタグに invalid_id の誤りが出て、`印`の "REQ-1000" は`要求`の`ID`として照合される
 ```

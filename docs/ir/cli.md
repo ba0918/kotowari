@@ -70,13 +70,13 @@ kotowari は、人間向けの文書の生成（"render"）、影響範囲の追
 
 ### TBL-001: 停止の理由
 
-- 出典: docs/decision/brainstorm/records.md#A20, docs/decision/brainstorm/records.md#A44, docs/decision/brainstorm/records.md#A48, docs/decision/brainstorm/records.md#A60, docs/decision/brainstorm/records.md#A12, docs/decision/brainstorm/records.md#A41, docs/decision/brainstorm/records.md#A66, docs/decision/brainstorm/records.md#A95, docs/decision/brainstorm/records.md#A96, docs/decision/brainstorm/records.md#A93, docs/decision/brainstorm/records.md#A103, docs/decision/brainstorm/records.md#A105, docs/decision/brainstorm/records.md#A135, docs/decision/brainstorm/records.md#A136, docs/decision/brainstorm/records.md#A146, docs/decision/brainstorm/records.md#A160
+- 出典: docs/decision/brainstorm/records.md#A20, docs/decision/brainstorm/records.md#A44, docs/decision/brainstorm/records.md#A48, docs/decision/brainstorm/records.md#A60, docs/decision/brainstorm/records.md#A12, docs/decision/brainstorm/records.md#A41, docs/decision/brainstorm/records.md#A66, docs/decision/brainstorm/records.md#A95, docs/decision/brainstorm/records.md#A96, docs/decision/brainstorm/records.md#A93, docs/decision/brainstorm/records.md#A103, docs/decision/brainstorm/records.md#A105, docs/decision/brainstorm/records.md#A135, docs/decision/brainstorm/records.md#A136, docs/decision/brainstorm/records.md#A146, docs/decision/brainstorm/records.md#A160, docs/decision/brainstorm/2026-09-16-ir-tree.md#A16
 
 | 理由 | 場面 |
 |---|---|
 | 設定の誤り | REQ-014 の場面 |
 | 引数の誤り | REQ-004 の場面 |
-| 読めないファイル | 読むファイルを読めない、"ir"、"decisions.records"、"decisions.adr" の指すディレクトリが無いか読めない、"decisions.records" と "decisions.adr" の下のディレクトリが読めない、または "tests.files" の走査でディレクトリが読めない、または走査で先の無いシンボリックリンクに出会った、またはカレントディレクトリを取得できない |
+| 読めないファイル | 読むファイルを読めない、"ir"、"decisions.records"、"decisions.adr" の指すディレクトリが無いか読めない、"ir"、"decisions.records"、"decisions.adr" の下のディレクトリが読めない、または "tests.files" の走査でディレクトリが読めない、または走査で先の無いシンボリックリンクに出会った、またはカレントディレクトリを取得できない |
 | UTF-8 でないファイル | IR の文書、テストのファイル、設定ファイル、判断の記録、ADR のいずれかが UTF-8 でない |
 
 ### TBL-002: 終了コード

@@ -7,10 +7,10 @@ IR の文書の選び方、題名と範囲の行、行の数え方、行数と�
 ### REQ-033: 読む文書
 
 - 種類: ubiquitous
-- 出典: docs/decision/brainstorm/records.md#A32, docs/decision/brainstorm/records.md#A102, docs/decision/brainstorm/records.md#A165
+- 出典: docs/decision/brainstorm/records.md#A32, docs/decision/brainstorm/records.md#A102, docs/decision/brainstorm/records.md#A165, docs/decision/brainstorm/2026-09-16-ir-tree.md#A1, docs/decision/brainstorm/2026-09-16-ir-tree.md#A8, docs/decision/brainstorm/2026-09-16-ir-tree.md#A13
 - 検証: unit
 
-kotowari は常に、`IR`の置き場の直下の、拡張子が小文字の ".md" のファイルだけを読み、サブディレクトリの文書と ".MD" の文書、ディレクトリでも通常のファイルでもないもの（ソケット、名前付きパイプ、デバイス）を読まない（`除外`）。ファイルのシンボリックリンクは読む。種類を取れない要素があるときは読めないファイルを理由に`停止`する。
+kotowari は常に、`IR`の置き場の下のディレクトリを深さに制限なく辿り、拡張子が小文字の ".md" のファイルだけを読み、".MD" の文書、ディレクトリでも通常のファイルでもないもの（ソケット、名前付きパイプ、デバイス）を読まない（`除外`）。隠しディレクトリとディレクトリのシンボリックリンクはどの深さでも辿らず（`除外`）、空のディレクトリには`指摘`を出さない。どのディレクトリでも "CONTEXT.md" は`用語集`、"FLAGS.md" は`問題の記録`である。ファイルのシンボリックリンクは読む。種類を取れない要素があるときは読めないファイルを理由に`停止`する。
 
 ### REQ-034: 題名が無い
 
@@ -102,4 +102,22 @@ Scenario: 改行の違いで行数は変わらない
   Given "a\r\nb" と書いた文書がある
   When その文書の行数を数える
   Then 行数は 2 である
+
+@id=EX-020 @about=REQ-033 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A1,docs/decision/brainstorm/2026-09-16-ir-tree.md#A13,docs/decision/brainstorm/records.md#A21
+Scenario: 深いディレクトリの文書も読む
+  Given "docs/ir/network/dns/timeout.md" に検証が "unit" で`印`の無い`要求`が1つあり、"docs/ir/network/empty/" は空のディレクトリである
+  When "kotowari check" を実行する
+  Then path が "docs/ir/network/dns/timeout.md" の requirement_without_test の誤りが出て、空のディレクトリに`指摘`は出ない
+
+@id=EX-030 @about=REQ-033 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A13
+Scenario: 深いディレクトリの中でも隠しディレクトリとディレクトリのシンボリックリンクは辿らない
+  Given "docs/ir/network/.draft/a.md" と、"docs/ir/network/link" が "docs/ir/" を指すディレクトリのシンボリックリンクである
+  When "kotowari check" を実行する
+  Then "docs/ir/network/.draft/a.md" と "docs/ir/network/link/" の下の文書は読まれず、`指摘`も`停止`も出ない
+
+@id=EX-021 @about=REQ-033 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A8,docs/decision/brainstorm/records.md#A41,docs/decision/brainstorm/records.md#A56
+Scenario: サブディレクトリの CONTEXT.md と FLAGS.md も用語集と問題の記録になる
+  Given "docs/ir/network/CONTEXT.md" と "docs/ir/network/FLAGS.md" がある
+  When "kotowari check" を実行する
+  Then どちらにも missing_scope の誤りは出ない
 ```

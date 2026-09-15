@@ -22,10 +22,10 @@
 ### REQ-065: 用語集が無いとき
 
 - 種類: event_driven
-- 出典: docs/decision/brainstorm/records.md#A56, docs/decision/brainstorm/records.md#A63, docs/decision/brainstorm/records.md#A53
+- 出典: docs/decision/brainstorm/records.md#A56, docs/decision/brainstorm/records.md#A63, docs/decision/brainstorm/records.md#A53, docs/decision/brainstorm/2026-09-16-ir-tree.md#A3
 - 検証: unit
 
-`用語集`が無いとき、kotowari は`対象の行`でバッククォートで囲んだもののうち、`ID`でないものをすべて unknown_term の`誤り`にする。
+文書の`連鎖`に`用語集`が1つも無いとき、kotowari は`対象の行`でバッククォートで囲んだもののうち、`ID`でないものをすべて unknown_term の`誤り`にする。
 
 ### REQ-066: 曖昧語
 
@@ -61,10 +61,10 @@ kotowari は、`用語`をバッククォートで囲み忘れたことを検出
 ### REQ-070: 参照された文書が無い
 
 - 種類: event_driven
-- 出典: docs/decision/brainstorm/records.md#A54
+- 出典: docs/decision/brainstorm/records.md#A54, docs/decision/brainstorm/2026-09-16-ir-tree.md#A5, docs/decision/brainstorm/2026-09-16-ir-tree.md#A17, docs/decision/brainstorm/2026-09-16-ir-tree.md#A18
 - 検証: unit
 
-`文書名の参照`の名前の文書が`IR`の置き場の直下に無いとき、kotowari は missing_document の`誤り`を出す。
+`文書名の参照`が "/" を含まないときにその名前の文書が参照を書いた文書と同じディレクトリに無いとき、"/" を含むときにその`IR`の置き場からの相対パスの文書が無いとき、または並びに "." か ".." の要素を含むとき、kotowari は参照の文字列を detail にして missing_document の`誤り`を出す。文書の有無は読んだ`IR`の文書の中に有るかで見る（ディレクトリのシンボリックリンクの下にあって読まない文書は無いものとする）。同じディレクトリに無い文書を上のディレクトリへ辿って探さない。
 
 ## 決定表
 
@@ -85,13 +85,13 @@ kotowari は、`用語`をバッククォートで囲み忘れたことを検出
 
 ### TBL-014: 文書名の参照の条件
 
-- 出典: docs/decision/brainstorm/records.md#A47, docs/decision/brainstorm/records.md#A54, docs/decision/brainstorm/ir-form.md#文書名の参照, docs/decision/brainstorm/records.md#A64, docs/decision/brainstorm/records.md#A65, docs/decision/brainstorm/records.md#A73, docs/decision/brainstorm/records.md#A118
+- 出典: docs/decision/brainstorm/records.md#A47, docs/decision/brainstorm/records.md#A54, docs/decision/brainstorm/ir-form.md#文書名の参照, docs/decision/brainstorm/records.md#A64, docs/decision/brainstorm/records.md#A65, docs/decision/brainstorm/records.md#A73, docs/decision/brainstorm/records.md#A118, docs/decision/brainstorm/2026-09-16-ir-tree.md#A5, docs/decision/brainstorm/2026-09-16-ir-tree.md#A12, docs/decision/brainstorm/2026-09-16-ir-tree.md#A14, docs/decision/brainstorm/2026-09-16-ir-tree.md#A17
 
 | 順 | 条件 |
 |---|---|
 | 1 | コードブロックの外にある |
-| 2 | 直前が行頭、空白、句読点のいずれか（"/"、"_"、英字の続きは当たらない）。句読点は、半角の ","、"."、":"、";"、"("、")"、二重引用符、一重引用符と、全角の "、"、"。"、"，"、"．"、"（"、"）"、"「"、"」"、"『"、"』"、"“"、"”" |
-| 3 | 英小文字と数字とハイフンの並びに ".md" が続き、".md" の直後が英数字、"_"、"-" のいずれでもない |
+| 2 | 並びの先頭の直前が行頭、空白、句読点のいずれか（"/"、"_"、英字の続きは当たらない。"/" の後の部分だけを参照にしない）。句読点は、半角の ","、"."、":"、";"、"("、")"、二重引用符、一重引用符と、全角の "、"、"。"、"，"、"．"、"（"、"）"、"「"、"」"、"『"、"』"、"“"、"”" |
+| 3 | 要素（英小文字と数字とハイフンの並び、"."、".." のいずれか）を "/" で区切って1つ以上並べ、最後の要素が英小文字と数字とハイフンの並びで ".md" が続き、".md" の直後が英数字、"_"、"-"、"#"、"/" のいずれでもない |
 | 4 | 二重引用符の中にない。行の中の二重引用符が奇数のときは、最後の引用符から行末までを引用符の中と見なす |
 
 ## 具体例
@@ -103,9 +103,51 @@ Scenario: 囲んだパスは誤りになる
   When "kotowari check" を実行する
   Then detail が "src/main.rs" の unknown_term の誤りが出る
 
-@id=EX-014 @about=REQ-069 @source=docs/decision/brainstorm/records.md#A54
-Scenario: スラッシュの後の文書名は拾わない
-  Given 文書に "docs/decision/adr/0001-test-marker.md" と書いている
+@id=EX-014 @about=REQ-069,REQ-070 @source=docs/decision/brainstorm/records.md#A54,docs/decision/brainstorm/2026-09-16-ir-tree.md#A5,docs/decision/brainstorm/2026-09-16-ir-tree.md#A15
+Scenario: 置き場の外のパスは引用符で囲む
+  Given 文書に "docs/decision/adr/0001-test-marker.md" と引用符なしで書いている
   When "kotowari check" を実行する
-  Then "0001-test-marker.md" に missing_document の誤りは出ない
+  Then "0001-test-marker.md" だけを指す参照にはならず、"docs/decision/adr/0001-test-marker.md" の missing_document の誤りが出る
+
+@id=EX-022 @about=REQ-069 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A14
+Scenario: 出典の形は参照にならない
+  Given 文書の範囲の行に "docs/decision/brainstorm/records.md#A12" と引用符なしで書いている
+  When "kotowari check" を実行する
+  Then missing_document の誤りは出ない
+
+@id=EX-023 @about=REQ-070 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A5
+Scenario: 素の名前は同じディレクトリだけを見る
+  Given "docs/ir/network/dns/a.md" に "b.md" と書き、"docs/ir/network/b.md" はあるが "docs/ir/network/dns/b.md" は無い
+  When "kotowari check" を実行する
+  Then "b.md" の missing_document の誤りが出る
+
+@id=EX-024 @about=REQ-070 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A5
+Scenario: スラッシュを含む名前は置き場からの相対で探す
+  Given "docs/ir/network/dns/a.md" に "network/publish/c.md" と書き、"docs/ir/network/publish/c.md" がある
+  When "kotowari check" を実行する
+  Then missing_document の誤りは出ない
+
+@id=EX-025 @about=REQ-070 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A17
+Scenario: "." と ".." の要素を含む並びは解決しない
+  Given "docs/ir/network/dns/a.md" に "../b.md" と "./c.md" と書き、"docs/ir/network/b.md" と "docs/ir/network/dns/c.md" がある
+  When "kotowari check" を実行する
+  Then "../b.md" と "./c.md" の missing_document の誤りが1件ずつ出る
+
+@id=EX-031 @about=REQ-069 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A17
+Scenario: ".md" の後に "/" が続く並びは参照にならない
+  Given 文書に "a.md/b.md" と引用符なしで書き、"a.md" も "b.md" も無い
+  When "kotowari check" を実行する
+  Then missing_document の誤りは出ない
+
+@id=EX-032 @about=REQ-070 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A18
+Scenario: 読まない場所の文書への参照は無いものとして扱う
+  Given "docs/ir/link" が置き場の外のディレクトリを指すシンボリックリンクで、その下に "d.md" があり、"docs/ir/a.md" に "link/d.md" と書いている
+  When "kotowari check" を実行する
+  Then "link/d.md" の missing_document の誤りが出る
+
+@id=EX-026 @about=REQ-065 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A3
+Scenario: 連鎖に用語集が無い文書は囲んだ語がすべて誤りになる
+  Given "docs/ir/CONTEXT.md" は無く "docs/ir/network/CONTEXT.md" に`用語`があり、"docs/ir/a.md" の`文`にその`用語`を囲んで書いている
+  When "kotowari check" を実行する
+  Then "docs/ir/a.md" に unknown_term の誤りが出て、"docs/ir/network/" の文書には出ない
 ```

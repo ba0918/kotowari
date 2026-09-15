@@ -42,7 +42,7 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 
 ### TBL-019: 指摘の行
 
-- 出典: docs/decision/brainstorm/records.md#A144, docs/decision/brainstorm/records.md#A114, docs/decision/brainstorm/records.md#A121, docs/decision/brainstorm/records.md#A139, docs/decision/brainstorm/records.md#A108, docs/decision/brainstorm/records.md#A61, docs/decision/brainstorm/records.md#A72, docs/decision/brainstorm/records.md#A153, docs/decision/brainstorm/records.md#A154
+- 出典: docs/decision/brainstorm/records.md#A144, docs/decision/brainstorm/records.md#A114, docs/decision/brainstorm/records.md#A121, docs/decision/brainstorm/records.md#A139, docs/decision/brainstorm/records.md#A108, docs/decision/brainstorm/records.md#A61, docs/decision/brainstorm/records.md#A72, docs/decision/brainstorm/records.md#A153, docs/decision/brainstorm/records.md#A154, docs/decision/brainstorm/2026-09-16-ir-tree.md#A4
 
 | 種類 | line |
 |---|---|
@@ -53,7 +53,7 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 | unknown_field、duplicate_field、unknown_heading、invalid_gherkin_line | その行 |
 | unclosed_code_block | 開始の行 |
 | invalid_glossary_row | その行 |
-| duplicate_term | 2つ目以降の用語の行 |
+| duplicate_term | 重複した側の用語の行（同じ用語集なら2つ目以降、連鎖では根から遠い側） |
 | duplicate_id | 2つ目以降の見出しの行（REQ-032） |
 | unresolved_reference、invalid_marker | 印なら印のある行（REQ-118）。定義・関係・文の中なら その行。"@about" ならタグの行 |
 | missing_field、missing_statement、missing_table、verification_missing、verification_invalid、unknown_kind、algorithm_without_definition、requirement_without_test | 項目の見出しの行 |

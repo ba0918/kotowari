@@ -54,10 +54,10 @@ kotowari は、`出典`がその`項目`の内容を本当に述べているか�
 ### REQ-106: 形の契約を出典に指せる
 
 - 種類: ubiquitous
-- 出典: docs/decision/brainstorm/records.md#A52, docs/decision/brainstorm/records.md#A69
+- 出典: docs/decision/brainstorm/records.md#A52, docs/decision/brainstorm/records.md#A69, docs/decision/brainstorm/2026-09-16-ir-tree.md#A2
 - 検証: unit
 
-kotowari は常に、形の契約の "brainstorm/ir-form.md" を、"## " の見出しで指す`出典`の先として受ける。
+kotowari は常に、形の契約の "docs/decision/brainstorm/ir-form.md" を、"## " の見出しで指す`出典`の先として受ける。
 
 ### REQ-115: 出典の指摘の行
 

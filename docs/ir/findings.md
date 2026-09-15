@@ -38,15 +38,15 @@
 
 ### TBL-008: 誤りの種類と detail
 
-- 出典: docs/decision/brainstorm/records.md#A142, docs/decision/brainstorm/ir-form.md#検査の種類, docs/decision/brainstorm/records.md#A68, docs/decision/brainstorm/records.md#A108, docs/decision/brainstorm/records.md#A109, docs/decision/brainstorm/records.md#A110, docs/decision/brainstorm/records.md#A112, docs/decision/brainstorm/records.md#A116, docs/decision/brainstorm/records.md#A111, docs/decision/brainstorm/records.md#A150, docs/decision/brainstorm/records.md#A153, docs/decision/brainstorm/records.md#A154
+- 出典: docs/decision/brainstorm/records.md#A142, docs/decision/brainstorm/ir-form.md#検査の種類, docs/decision/brainstorm/records.md#A68, docs/decision/brainstorm/records.md#A108, docs/decision/brainstorm/records.md#A109, docs/decision/brainstorm/records.md#A110, docs/decision/brainstorm/records.md#A112, docs/decision/brainstorm/records.md#A116, docs/decision/brainstorm/records.md#A111, docs/decision/brainstorm/records.md#A150, docs/decision/brainstorm/records.md#A153, docs/decision/brainstorm/records.md#A154, docs/decision/brainstorm/2026-09-16-ir-tree.md#A5, docs/decision/brainstorm/2026-09-16-ir-tree.md#A19
 
 detail が「行の文字」「見出しの文字」「Scenario: の行の文字」の種類では、読んだ行の文字そのまま（字下げと末尾の空白を含み、再構成しない）を入れる。
 
 | 種類 | detail | 条件を定める要求 |
 |---|---|---|
-| missing_title | 文書名 | REQ-034 |
+| missing_title | 文書名（ディレクトリを除いたファイル名） | REQ-034 |
 | multiple_titles | 2つ目の題名 | REQ-035 |
-| missing_scope | 文書名 | REQ-036 |
+| missing_scope | 文書名（ディレクトリを除いたファイル名） | REQ-036 |
 | unknown_heading | 見出しの文字 | REQ-043 |
 | unknown_field | 行の文字 | REQ-044 |
 | missing_field | 行の名前 | REQ-098 |
@@ -55,7 +55,7 @@ detail が「行の文字」「見出しの文字」「Scenario: の行の文字
 | missing_source | 項目の ID か用語 | REQ-059 |
 | source_invalid | 出典の文字列 | REQ-058 |
 | unknown_term | 囲んだ文字列 | REQ-064、REQ-065 |
-| missing_document | 文書名 | REQ-070 |
+| missing_document | 文書名の参照の文字列 | REQ-070 |
 | missing_statement | 項目の ID | REQ-047 |
 | verification_missing | 要求の ID | REQ-048 |
 | verification_invalid | 値 | REQ-049 |
@@ -73,7 +73,7 @@ detail が「行の文字」「見出しの文字」「Scenario: の行の文字
 | unclosed_code_block | 開始の行の文字 | REQ-112 |
 | invalid_gherkin_line | 行の文字 | REQ-113 |
 | invalid_id | 値 | REQ-114 |
-| glossary_invalid | 文書名 | REQ-117 |
+| glossary_invalid | 文書名（ディレクトリを除いたファイル名） | REQ-117 |
 | unclosed_backtick | 行の文字 | REQ-116 |
 | invalid_glossary_row | 行の文字 | REQ-122 |
 | duplicate_term | 用語 | REQ-123 |

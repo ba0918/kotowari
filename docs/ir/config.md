@@ -62,10 +62,10 @@ kotowari は常に、`設定ファイル`のキーを入れ子の形（"decision
 ### REQ-018: 置き場が無いとき
 
 - 種類: event_driven
-- 出典: docs/decision/brainstorm/records.md#A41, docs/decision/brainstorm/records.md#A47, docs/decision/brainstorm/records.md#A66, docs/decision/brainstorm/records.md#A95, docs/decision/brainstorm/records.md#A96, docs/decision/brainstorm/records.md#A124, docs/decision/brainstorm/records.md#A146
+- 出典: docs/decision/brainstorm/records.md#A41, docs/decision/brainstorm/records.md#A47, docs/decision/brainstorm/records.md#A66, docs/decision/brainstorm/records.md#A95, docs/decision/brainstorm/records.md#A96, docs/decision/brainstorm/records.md#A124, docs/decision/brainstorm/records.md#A146, docs/decision/brainstorm/2026-09-16-ir-tree.md#A16
 - 検証: unit
 
-"ir"、"decisions.records"、"decisions.adr" の指す先が無いとき、ディレクトリでないとき、または読めないとき、kotowari は読めないファイルを理由に`停止`する。"decisions.records" と "decisions.adr" の下のディレクトリが読めないとき、"tests.files" の走査でディレクトリが読めないとき、および走査で先の無いシンボリックリンクに出会ったときも同じ理由で`停止`する。
+"ir"、"decisions.records"、"decisions.adr" の指す先が無いとき、ディレクトリでないとき、または読めないとき、kotowari は読めないファイルを理由に`停止`する。"ir"、"decisions.records"、"decisions.adr" の下のディレクトリが読めないとき、"tests.files" の走査でディレクトリが読めないとき、および走査で先の無いシンボリックリンクに出会ったときも同じ理由で`停止`する。
 
 ### REQ-019: glob の読み方
 

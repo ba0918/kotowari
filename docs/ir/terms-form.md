@@ -23,10 +23,10 @@
 ### REQ-117: 用語集の表の範囲
 
 - 種類: event_driven
-- 出典: docs/decision/brainstorm/records.md#A112, docs/decision/brainstorm/records.md#A141, docs/decision/brainstorm/records.md#A148
+- 出典: docs/decision/brainstorm/records.md#A112, docs/decision/brainstorm/records.md#A141, docs/decision/brainstorm/records.md#A148, docs/decision/brainstorm/2026-09-16-ir-tree.md#A3
 - 検証: unit
 
-`用語集`の表は、各セルの前後の空白を除いて "用語"、"意味"、"出典" の3列と一致するヘッダの行と、各セルが3つ以上の "-"（前後に ":" があってもよい）の区切りの行から始まり、空行か表でない行で終わる。表の外の "|" で始まる行は`用語`にしない。`用語集`の文書があるのにこの形のヘッダと区切りの行が無いとき、kotowari は文書名を detail にして glossary_invalid の`誤り`を出し、`用語`を0語として検査を続ける。ヘッダと区切りの行があれば、`用語`の行が0でも表はあるものとして扱う。
+`用語集`の表は、各セルの前後の空白を除いて "用語"、"意味"、"出典" の3列と一致するヘッダの行と、各セルが3つ以上の "-"（前後に ":" があってもよい）の区切りの行から始まり、空行か表でない行で終わる。表の外の "|" で始まる行は`用語`にしない。`用語集`の文書があるのにこの形のヘッダと区切りの行が無いとき、kotowari は文書名を detail にして glossary_invalid の`誤り`を出し、その`用語集`の`用語`を0語として扱い、`連鎖`のほかの`用語集`の`用語`は見えたままで検査を続ける。ヘッダと区切りの行があれば、`用語`の行が0でも表はあるものとして扱う。
 
 ### REQ-122: 用語集の表の崩れた行
 
@@ -39,7 +39,17 @@
 ### REQ-123: 用語の重複
 
 - 種類: event_driven
-- 出典: docs/decision/brainstorm/records.md#A154, docs/decision/brainstorm/records.md#A162
+- 出典: docs/decision/brainstorm/records.md#A154, docs/decision/brainstorm/records.md#A162, docs/decision/brainstorm/2026-09-16-ir-tree.md#A4
 - 検証: unit
 
-`用語集`に同じ`用語`の行が2つ以上あるとき、kotowari は2つ目以降の行ごとに`用語`を detail にして duplicate_term の`誤り`を出し、照合には1つ目を使う。2つ目以降の行は`用語`にしない。
+`用語集`の表の行の`用語`が、同じ`用語集`の前の行か、その`用語集`の`連鎖`の根に近い側の`用語集`にあるとき、kotowari はその行ごとに`用語`を detail にして duplicate_term の`誤り`を出し、重複した行は`用語`の定義に数えない。その語は根に近い側の1つ目の定義によって`用語`として見えたままで、新しい種類の`指摘`は作らない。
+
+## 具体例
+
+```gherkin
+@id=EX-027 @about=REQ-123 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A4
+Scenario: 連鎖の上と下で同じ用語を定義したら下の行に出る
+  Given "docs/ir/CONTEXT.md" と "docs/ir/network/CONTEXT.md" の両方に "宛先" の行がある
+  When "kotowari check" を実行する
+  Then "docs/ir/network/CONTEXT.md" の行に duplicate_term の誤りが1件出て、"docs/ir/CONTEXT.md" には出ず、"docs/ir/network/" の文書で "宛先" を囲んでも unknown_term は出ない
+```
