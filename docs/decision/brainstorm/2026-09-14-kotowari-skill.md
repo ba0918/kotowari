@@ -31,6 +31,9 @@
 - A27 既存の ba0918 のスキルには何も書かない。agentic-rules は kotowari に依存しない。結び付けは、kotowari を使うプロジェクトの AGENTS.md にルーティングとワークフローの規則を書くことで行い、まずはそれで様子を見る（利用者）
 - A28 照合レビューが brainstorm の終わりの「記録への適合」のレビューを置き換える。「仕様の品質」のレビュー1本は残す（推奨を採用）
 - A29 references を6つにする。mark.md（印の規則。cycle が implementer と fixer のプロンプトに貼る）と workflow.md（brainstorm・plan・cycle・implement の手順の置き換え）を足す（推奨を採用）
+- A30 場面を5つにして workflow を足す。plan・cycle・implement の席は workflow として workflow.md の自分の節を読む。brainstorm の席は write のまま（計画のレビューで導線の欠落が見つかった。推奨を採用）
+- A31 setup の手順（作るもの、AGENTS.md の節の雛形、既にあるものの扱い）は config.md に置く（推奨を採用）
+- A32 references を書くとき docs/ir と実験の契約が食い違えば docs/ir が正。実測で確かめられるなら確かめ、決まらなければ止まって人に言う。references の中では kotowari 自身の ID（TBL-016 の類）と docs/ir のパスを引かない（配布先で解決できない。R10 の帰結。推奨を採用）
 - A10 このスキル自身の仕様は IR にせず、自由な Markdown（`docs/spec/kotowari-skill.md`）で書く。ただの文書に kotowari の規則を課すのは過剰（利用者）
 
 ## Prohibitions
@@ -53,6 +56,7 @@
 - A24 は A8 の references 3つに、照合レビューの指示 `collate.md` を4つ目として足す
 - A27 は A16 の「既存スキルに1行足す」を「AGENTS.md に書く」に改める（A11 の「既存の brainstorm スキル本体は変えない」はそのまま）
 - A29 は A8 の references を6つ（ir-form、findings、config、collate、mark、workflow）に改める
+- A30 は A6・A17 の場面4つを5つに改める
 - A25 は A13 の brainstorm 側の関門「指摘0」を「requirement_without_test 以外の誤りが0」に改める（A18 の「誤り0」も同じ）
 
 ## 敵対的レビュー（2026-09-14、下書き1版に対して）
