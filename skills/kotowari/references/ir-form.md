@@ -60,6 +60,8 @@ ID は文書をまたいで一意。同じ ID が2か所以上にあれば dupli
 
 `- 種類:`、`- 検証:`、`- 定義:`、`- 関係:` の値が空の行は、行が無いものとして扱う。決定表に表が無ければ missing_table の誤り。
 
+`- 種類:` の値が項目の種類ごとに定めた値でないとき unknown_kind の誤り。`- 検証:` の値が unit、property、proof、review でないとき verification_invalid の誤り。種類が algorithm の要求に `- 定義:` が無いとき algorithm_without_definition の誤り。
+
 文は見出しの下の、一覧でも表でもない空でない行。algorithm 以外の要求と性質に文が無ければ missing_statement の誤り。EARS の型に沿うかは検査しない。
 
 ## シナリオ
@@ -118,6 +120,8 @@ gherkin のブロックの外にある `Scenario:` の行はシナリオと見�
 - 上のどちらにも当たらない → source_invalid
 
 用語集の出典の列とシナリオの `@source` も同じ規則で検査する。kotowari は出典がその項目の内容を本当に述べているかは判定しない。
+
+定義、@about、関係、文中の ID が存在しない ID を指すとき unresolved_reference の誤り。
 
 ## 用語と曖昧語
 
