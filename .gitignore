@@ -3,3 +3,5 @@
 mutants.out/
 /.agents/HANDOFF.md
 .claude/worktrees/
+experiments/
+.claude/settings.local.json
