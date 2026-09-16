@@ -39,7 +39,7 @@ kotowari は、`除外`に列挙していない入力を、`停止`も`指摘`�
 ### REQ-121: 設定で問い合わせを足せない
 
 - 種類: prohibition
-- 出典: docs/decision/brainstorm/records.md#A128, docs/decision/brainstorm/records.md#A39, docs/decision/brainstorm/records.md#A58, docs/decision/brainstorm/records.md#A24, docs/decision/adr/0002-tree-sitter.md#理由, docs/decision/brainstorm/2026-09-17-check-reach.md#A3, docs/decision/brainstorm/2026-09-17-check-reach.md#A4
+- 出典: docs/decision/brainstorm/records.md#A128, docs/decision/brainstorm/records.md#A39, docs/decision/brainstorm/records.md#A58, docs/decision/brainstorm/records.md#A24, docs/decision/adr/0002-tree-sitter.md#理由, docs/decision/brainstorm/2026-09-17-check-reach.md#A3, docs/decision/brainstorm/2026-09-17-check-reach.md#A4, docs/decision/brainstorm/2026-09-17-check-reach.md#A22
 - 検証: unit
 
 kotowari は、`設定ファイル`で`問い合わせ`を足すことをしてはならない。Rust 以外の言語の`問い合わせ`は kotowari に`問い合わせ`のファイルを足すことで後から足す。

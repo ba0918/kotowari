@@ -61,7 +61,7 @@ kotowari は常に、"--config" に与えたパスをカレントディレクト
 ### REQ-008: 作らないコマンド
 
 - 種類: prohibition
-- 出典: docs/decision/brainstorm/records.md#P1, docs/decision/brainstorm/records.md#A99, docs/decision/brainstorm/2026-09-17-check-reach.md#A3, docs/decision/brainstorm/2026-09-17-check-reach.md#A4
+- 出典: docs/decision/brainstorm/records.md#P1, docs/decision/brainstorm/records.md#A99, docs/decision/brainstorm/2026-09-17-check-reach.md#A3, docs/decision/brainstorm/2026-09-17-check-reach.md#A4, docs/decision/brainstorm/2026-09-17-check-reach.md#A23
 - 検証: unit
 
 kotowari は、人間向けの文書の生成（"render"）、影響範囲の追跡（"trace"）、plan と cycle への受け渡し（"query"）を作ってはならない。
