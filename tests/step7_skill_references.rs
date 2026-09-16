@@ -97,6 +97,27 @@ fn req_125_findings_reference_kinds_match_the_code() {
 #[test]
 fn req_126_config_reference_setup_yaml_parses_to_the_defaults() {
     let yaml = only_yaml_block(&read_reference("config.md"));
+    // 不在の鍵は既定で埋まるので、9個の鍵の経路が YAML に書かれていることを先に見る（TBL-004）
+    let tree: serde_json::Value = serde_saphyr::from_str(&yaml)
+        .unwrap_or_else(|e| panic!("the setup YAML should be readable as a tree: {e}"));
+    for path in [
+        "ir",
+        "decisions.records",
+        "decisions.adr",
+        "tests.files",
+        "tests.rust.attributes",
+        "tests.rust.macros",
+        "limits.lines",
+        "limits.requirements",
+        "vague_words",
+    ] {
+        let mut node = &tree;
+        for key in path.split('.') {
+            node = node
+                .get(key)
+                .unwrap_or_else(|| panic!("the setup YAML should write the key {path}"));
+        }
+    }
     let parsed = kotowari::config::Config::parse(&yaml)
         .unwrap_or_else(|e| panic!("the setup YAML should parse as a configuration file: {e}"));
     assert_eq!(

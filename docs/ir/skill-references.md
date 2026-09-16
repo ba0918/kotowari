@@ -15,10 +15,10 @@
 ### REQ-126: 既定の一致
 
 - 種類: ubiquitous
-- 出典: docs/decision/brainstorm/2026-09-17-check-reach.md#A6, docs/decision/brainstorm/2026-09-17-check-reach.md#A7, docs/decision/brainstorm/2026-09-17-check-reach.md#A11
+- 出典: docs/decision/brainstorm/2026-09-17-check-reach.md#A6, docs/decision/brainstorm/2026-09-17-check-reach.md#A7, docs/decision/brainstorm/2026-09-17-check-reach.md#A11, docs/decision/brainstorm/2026-09-17-check-reach.md#A27
 - 検証: unit
 
-このリポジトリのテストは常に、"skills/kotowari/references/config.md" の setup の手順1にある YAML のコードブロックを`設定ファイル`として本体のコードで読んだ結果が、本体のコードが持つ設定の既定の値と等しいことを確かめる。
+このリポジトリのテストは常に、"skills/kotowari/references/config.md" の setup の手順1にある YAML のコードブロックに `TBL-004` の鍵がすべて書かれていて、そのブロックを`設定ファイル`として本体のコードで読んだ結果が本体のコードが持つ設定の既定の値と等しいことを確かめる。
 
 ### REQ-127: 停止の文言の一致
 
@@ -40,6 +40,12 @@ Scenario: references の表から種類が1つ欠けるとテストが落ちる
 @id=EX-037 @about=REQ-126 @source=docs/decision/brainstorm/2026-09-17-check-reach.md#A11,docs/decision/brainstorm/2026-09-16-notice.md#A5
 Scenario: setup の YAML の既定が本体とずれるとテストが落ちる
   Given "skills/kotowari/references/config.md" の手順1の YAML のコードブロックの "limits.lines" が 120 で、本体の既定が 200
+  When このリポジトリのテストを実行する
+  Then 既定の一致のテストが失敗する
+
+@id=EX-043 @about=REQ-126 @source=docs/decision/brainstorm/2026-09-17-check-reach.md#A27
+Scenario: setup の YAML から鍵が落ちるとテストが落ちる
+  Given "skills/kotowari/references/config.md" の手順1の YAML のコードブロックに "limits.requirements" の鍵が無く、本体の既定は 10
   When このリポジトリのテストを実行する
   Then 既定の一致のテストが失敗する
 

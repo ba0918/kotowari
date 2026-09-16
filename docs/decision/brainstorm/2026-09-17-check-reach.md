@@ -2,7 +2,7 @@
 
 目的: DeepSeek Harness の設計記録（kakoi 側のメモ `2026-09-16-deepseek-harness-harvest.md`）と kotowari を突き合わせて見つかった4つの穴を埋める。(1) trace.md を作る仕組みが無く鮮度が守られていない、(2) `検証: review` の要求のうち機械で確かめられるものが review のまま、(3) スキルの references と本体の仕様のずれを人手で直している（c2e3389、23667b7）、(4) 問い合わせの無い言語のテストのファイルが生テキスト走査だけで済んでいることが出力から読めない。あわせて、文書の置き場ごとに「置いてよいもの／置いてはならないもの」を表にする案（メモの C4）を構想メモの未決着の節へ足す。
 
-Position: 承認・実装・マージ済み（2026-09-17、main の e70dbe5 まで）。残る判断は U1 と、cycle のレビューで人の判断待ちになった2件（REQ-126 のテストは setup の YAML から鍵が落ちても通る。REQ-090 のテストが固定するパスが IR 本文に無く A4 にだけある。REQ-091 の PATH と REQ-102 の HOME / TMPDIR も同じ）。指摘の一覧は .agents/artifacts/reviews/check-reach.json
+Position: 承認・実装・マージ済み（2026-09-17、main の e70dbe5 まで）。第4ラウンド（同日）で cycle のレビューが人の判断に回した2件を A27〜A29 で決め、主セッションが直す。残る判断は U1。指摘の一覧は .agents/artifacts/reviews/check-reach.json
 
 Glossary updates pending: なし
 
@@ -35,6 +35,9 @@ Glossary updates pending: なし
 - A24 trace.md の REQ-108 の行（内容が対象 OS でなく停止の文言の確認になっていた既存の誤り）を、「Linux と macOS で cargo test が通ることを確認。Windows は約束しない」に書き替える。主セッションの独断の変更として差分で分けて示す（推奨を採用）
 - A25 A4 の「入力→期待」は IR のシナリオ（EX）にしない。記録にあれば plan が参照でき、形の契約は具体例を必須にしていない（推奨を採用）
 - A26 "tests" に数えるのは読んだテストのファイルだけ。glob に当たっても読まないもの（除外。records.md の A165）は数えない（照合レビュー2回目の指摘で、TBL-021 に書いていた条件に決定を与えた。2026-09-17）
+- A27 REQ-126 は「setup の手順1の YAML のコードブロックに TBL-004 の鍵がすべて書かれていて、それを設定ファイルとして読んだ結果が既定と等しい」に改める。テストは YAML を汎用の値として読み、9個の鍵の経路（ir、decisions.records、decisions.adr、tests.files、tests.rust.attributes、tests.rust.macros、limits.lines、limits.requirements、vague_words）が全部あることを先に確かめてから既定と比べる。理由: 不在の鍵は既定で埋まるので、鍵の存在を別に見ないと欠落を検知できない。鍵の名前は TBL-004 が契約として持つ（第4ラウンド、推奨を採用）
+- A28 REQ-090、REQ-091、REQ-102 のテストが固定する名前（".kotowari/schema.yaml"、PATH、HOME と TMPDIR）は、要求の文を変えずに各文書の具体例のシナリオとして IR に置く（form-contract.md に EX-040 と EX-041、cli-scope.md に EX-042）。A25 はこの3件に限って改める。理由: 禁止の文を1事例に狭めずに、テストの fixture を仕様の契約にできる。REQ-020 は本文に "kotowari.toml" があるので対象外（第4ラウンド、推奨を採用）
+- A29 A27 と A28 の変更は cycle を回さず、主セッションが直接 IR とテストを直し、差分の適合レビューを1体だけ受ける。理由: レビューが名指しした穴を埋めるだけで判断のある変更ではなく、cycle 1周に見合わない（第4ラウンド、推奨を採用）
 
 ## Prohibitions
 
@@ -55,3 +58,4 @@ Glossary updates pending: なし
 - A4 の REQ-020、REQ-055、REQ-056、REQ-068 の入力と期待を、仕様の品質レビュー（2026-09-17）の指摘で改めた: REQ-056 の対象は問題の記録であって要求ではない。期待は「指摘0件」だと入力の要求自身が requirement_without_test を呼ぶので「その行を指す指摘が無い」にする。REQ-020 は読まれれば結果が変わる値にする
 - A16 に形の契約（ir-form.md）の改訂を足した: TBL-005 の出典が ir-form.md#出力 を指したまま鍵が増えるため
 - A23 の「既存の REQ-002 のテスト」は前提が誤り: `req_002_only_format_and_config_options` は `--format json` が通ることしか見ていない。知らないオプションが argument error になることは `req_004_unknown_option_stops` が固定しているので、REQ-008 の印はそちらに付ける（計画のレビューで判明。2026-09-17）
+- A28 は A25（A4 の入力→期待を EX にしない）を REQ-090、REQ-091、REQ-102 の3件に限って改める: cycle のレビューで、テストが固定する名前に IR の中の家が無いと分かったため
