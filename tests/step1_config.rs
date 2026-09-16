@@ -783,6 +783,21 @@ fn req_020_kotowari_toml_beside_the_base_is_not_read() {
         after.stdout, before.stdout,
         "the result should not change when kotowari.toml is present"
     );
+
+    // 設定ファイルが無く既定に落ちる配置でも、kotowari.toml は既定の代わりに読まれない
+    fs::remove_file(tmp.path().join(".kotowari/config.yaml")).unwrap();
+    fs::remove_file(tmp.path().join("kotowari.toml")).unwrap();
+    let default_before = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(default_before.status.code(), Some(0), "defaults should check cleanly");
+    fs::write(tmp.path().join("kotowari.toml"), "ir = \"elsewhere\"\n").unwrap();
+    let default_after = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(
+        default_after.status.code(),
+        Some(0),
+        "kotowari.toml should not replace the defaults either: {}",
+        String::from_utf8_lossy(&default_after.stderr)
+    );
+    assert_eq!(default_after.stdout, default_before.stdout);
 }
 
 // --- REQ-090: スキーマのファイルを読まない ---
