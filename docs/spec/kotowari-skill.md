@@ -1,6 +1,6 @@
 # kotowari スキル
 
-kotowari を知らない LLM が、既存の ba0918 のワークフロー（brainstorm → 仕様 → plan → cycle）の中で、仕様を IR の形で書き、`kotowari check` を回し、指摘に対処できるようにする Claude Code のスキル。判断の記録は `docs/decision/brainstorm/2026-09-14-kotowari-skill.md`（A1〜A32、P1、U1〜U2、R1〜R2、Revisions）。この仕様自身は IR ではなく kotowari の検査を受けないが、記録は参照できるように残す。承認は 2026-09-15 に会話の中で得た。計画のレビューで見つかった穴3つ（A30〜A32）は承認の後に足した。2026-09-16 の記録（`docs/decision/brainstorm/2026-09-16-skill-follow.md`）で、版の固定をやめ、置き場の再帰・注意・責務で分ける指針に追従した。
+kotowari を知らない LLM が、既存の ba0918 のワークフロー（brainstorm → 仕様 → plan → cycle）の中で、仕様を IR の形で書き、`kotowari check` を回し、指摘に対処できるようにする Claude Code のスキル。判断の記録は `docs/decision/brainstorm/2026-09-14-kotowari-skill.md`（A1〜A35、P1、U1〜U2、R1〜R2、Revisions）。この仕様自身は IR ではなく kotowari の検査を受けないが、記録は参照できるように残す。承認は 2026-09-15 に会話の中で得た。計画のレビューで見つかった穴3つ（A30〜A32）は承認の後に足した。2026-09-16 の記録（`docs/decision/brainstorm/2026-09-16-skill-follow.md`）で、版の固定をやめ、置き場の再帰・注意・責務で分ける指針に追従した。
 
 ## 結果を一文で
 
@@ -43,7 +43,7 @@ kotowari の用語集（`docs/ir/CONTEXT.md`）の意味をそのまま使う。
 
 ### R1: SKILL.md は薄く、場面の振り分けだけを持つ
 
-SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotowari、IR、`docs/ir`、`@kotowari`、印）、目的、対象の kotowari の版、版の確認の手順、場面の選び方（人が名指ししたらそれ。なければ文脈から: 置き場が無い → `setup`、brainstorm の途中 → `write`、`check` の結果を読むとき → `check`、テストを書くとき → `mark`、plan・cycle・implement の途中 → `workflow`）、場面ごとに読む reference の表（`setup` → `config.md`、`write` → `ir-form.md` と `workflow.md` の brainstorm の節、`check` → `findings.md`、`mark` → `mark.md`、`workflow` → `workflow.md` の自分の席の節。`collate.md` は `write` の承認前）、この5つの場面がワークフローのどこに当たるか、だけを持つ。IR の形の規則、指摘の対処、設定のキー、印の規則、手順の置き換えは本文に書かず、references に置く。
+SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotowari、IR、`docs/ir`、`@kotowari`、印）、目的、道具の有無の確認の手順、場面の選び方（人が名指ししたらそれ。なければ文脈から: 置き場が無い → `setup`、brainstorm の途中 → `write`、`check` の結果を読むとき → `check`、テストを書くとき → `mark`、plan・cycle・implement の途中 → `workflow`）、場面ごとに読む reference の表（`setup` → `config.md`、`write` → `ir-form.md` と `workflow.md` の brainstorm の節、`check` → `findings.md`、`mark` → `mark.md`、`workflow` → `workflow.md` の自分の席の節。`collate.md` は `write` の承認前）、この5つの場面がワークフローのどこに当たるか、だけを持つ。IR の形の規則、指摘の対処、設定のキー、印の規則、手順の置き換えは本文に書かず、references に置く。
 
 - 成功の条件: SKILL.md が100行以内。本文に `### REQ-` の形の規則、指摘の種類の名前（`docs/ir/findings.md` の TBL-008 と TBL-009 の値）、設定のキー（`docs/ir/config.md` の TBL-004 の値）が、reference の表の中以外に現れない。frontmatter に上の発火語がある
 - 反例: SKILL.md に「要求は `### REQ-nnn: 名前` の見出しの下に…」の規則が書いてある
@@ -76,7 +76,7 @@ SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotow
 
 `write` は brainstorm の席が使う。reference `ir-form.md` と `workflow.md` の brainstorm の節を読ませる。
 
-`ir-form.md` は、現在の kotowari の仕様どおりに、次の節を持つ: 文書（置き場の再帰、題名、範囲の行、節、行の数え方、コードブロック、BOM、README を置かない）、ID、項目（4種類と持つ行）、シナリオ（タグ、許されるステップの行）、用語集の表の形と連鎖、問題の記録、出典（`パス#印`、判断の記録の決定の番号、ADR の `## ` の見出し）、用語と曖昧語（バッククォートで囲んでよいのは用語と ID だけ、二重引用符の中は見ない）、文書名の参照（同じディレクトリを指す素の形と、置き場からの `/` の形）、除外の一覧、上限と分ける単位（数字を持たず、too_many_lines と too_many_requirements の読み方と、責務で分ける指針。2026-09-16 の記録 A2、A3）。
+`ir-form.md` は、現在の kotowari の仕様どおりに、次の節を持つ: 文書（置き場の再帰、題名、範囲の行、節、行の数え方、コードブロック、BOM、README を置かない、ディレクトリ名の文字、path と detail の作り方）、ID、項目（4種類と持つ行）、シナリオ（タグ、許されるステップの行）、用語集の表の形と連鎖、問題の記録、出典（`パス#印`、判断の記録の決定の番号、ADR の `## ` の見出し）、用語と曖昧語（バッククォートで囲んでよいのは用語と ID だけ、二重引用符の中は見ない）、文書名の参照（同じディレクトリを指す素の形と、置き場からの `/` の形）、除外の一覧、上限と分ける単位（数字を持たず、too_many_lines と too_many_requirements の読み方と、責務で分ける指針。2026-09-16 の記録 A2、A3）。
 
 `workflow.md` の brainstorm の節は、既存の brainstorm の手順のうち次を置き換える（A16、A27。既存スキルは変えず、AGENTS.md の規則でこの節を読ませる）。
 

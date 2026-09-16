@@ -37,9 +37,9 @@ kotowari の仕様に基づく（改訂 2026-09-16。本体の版は固定しな
 | glossary_invalid | 用語集に正しい表が無い | `| 用語 | 意味 | 出典 |` のヘッダと区切り行を足す | brainstorm |
 | unclosed_backtick | バッククォートが奇数 | バッククォートを閉じる | brainstorm |
 | invalid_glossary_row | 用語集の表の行の形が崩れている | セルを3つにし用語を空にしない | brainstorm |
-| duplicate_term | 用語が重複 | 重複した用語を1つにする | brainstorm |
+| duplicate_term | 同じ用語集の中か、連鎖の根に近い用語集との重複（根から遠い側の行に出る） | 根から遠い側の行を消すか、別の語に言い換える | brainstorm |
 | too_many_lines | 文書の行数が上限を超えた（注意。終了コードは変えない） | 分割の指示ではない。責務の混在を疑って読み直し、範囲の行の外の要求が混じっていれば範囲で説明できる単位に分け、混じっていなければ理由を判断の記録に書いて残す。行数を理由に切らない。用語集はディレクトリごとのまとまりに分けられるならその `CONTEXT.md` に分け、分けられないなら設定の limits.lines を上げてその判断を記録に書く | brainstorm |
-| too_many_requirements | 文書の要求の数が上限を超えた（注意。終了コードは変えない） | too_many_lines と同じ。件数を理由に切らない | brainstorm |
+| too_many_requirements | 話題ごとの文書の要求の数が上限を超えた（注意。終了コードは変えない） | too_many_lines と同じ。件数を理由に切らない | brainstorm |
 
 除外の追加や規則の緩めは仕様の変更になるため、スキルの中で決めず brainstorm に戻す。
 
