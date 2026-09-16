@@ -2,7 +2,7 @@
 
 目的: DeepSeek Harness の設計記録（kakoi 側のメモ `2026-09-16-deepseek-harness-harvest.md`）と kotowari を突き合わせて見つかった4つの穴を埋める。(1) trace.md を作る仕組みが無く鮮度が守られていない、(2) `検証: review` の要求のうち機械で確かめられるものが review のまま、(3) スキルの references と本体の仕様のずれを人手で直している（c2e3389、23667b7）、(4) 問い合わせの無い言語のテストのファイルが生テキスト走査だけで済んでいることが出力から読めない。あわせて、文書の置き場ごとに「置いてよいもの／置いてはならないもの」を表にする案（メモの C4）を構想メモの未決着の節へ足す。
 
-Position: 第1〜第3ラウンド終了（2026-09-17）。レビュー2本（仕様の品質、照合）の指摘を反映済み。承認待ち
+Position: 承認・実装・マージ済み（2026-09-17、main の e70dbe5 まで）。残る判断は U1 と、cycle のレビューで人の判断待ちになった2件（REQ-126 のテストは setup の YAML から鍵が落ちても通る。REQ-090 のテストが固定するパスが IR 本文に無く A4 にだけある。REQ-091 の PATH と REQ-102 の HOME / TMPDIR も同じ）。指摘の一覧は .agents/artifacts/reviews/check-reach.json
 
 Glossary updates pending: なし
 
