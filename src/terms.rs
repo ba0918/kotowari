@@ -113,7 +113,7 @@ pub fn check_vague_words(
 pub fn check_document_references(
     docs: &[IrDocument],
     ir_path: &str,
-    ir_filenames: &BTreeSet<String>,
+    ir_paths: &BTreeSet<String>,
     findings: &mut Vec<Finding>,
 ) {
     for doc in docs {
@@ -138,7 +138,7 @@ pub fn check_document_references(
             // 二重引用符の中を除外するため、引用符の外の部分だけ検査
             let parts = crate::split_outside_quotes(line);
             for part in &parts {
-                find_doc_refs(part, line_num, &path, ir_filenames, findings);
+                find_doc_refs(part, line_num, &path, &doc.directory, ir_paths, findings);
             }
         }
     }
@@ -149,7 +149,8 @@ fn find_doc_refs(
     text: &str,
     line: usize,
     path: &str,
-    ir_filenames: &BTreeSet<String>,
+    directory: &str,
+    ir_paths: &BTreeSet<String>,
     findings: &mut Vec<Finding>,
 ) {
     let bytes = text.as_bytes();
@@ -200,8 +201,12 @@ fn find_doc_refs(
                 });
 
                 if boundary_ok && name_ok && directories_ok {
-                    // IR の置き場にその文書があるか
-                    if !ir_filenames.contains(doc_name) {
+                    let target = if doc_name.contains('/') {
+                        doc_name.to_string()
+                    } else {
+                        crate::join_display_path(directory, doc_name)
+                    };
+                    if !ir_paths.contains(&target) {
                         findings.push(Finding::new(FindingKind::MissingDocument, path.to_string(), Some(line), doc_name.to_string()));
                     }
                 }

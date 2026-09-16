@@ -550,9 +550,9 @@ pub fn run_check(
     );
 
     // 文書名の参照の検査
-    let ir_filenames: std::collections::BTreeSet<String> =
-        docs.iter().map(|d| d.filename.clone()).collect();
-    terms::check_document_references(&docs, &cfg.ir, &ir_filenames, &mut findings);
+    let ir_paths: std::collections::BTreeSet<String> =
+        docs.iter().map(|d| d.relative_path.clone()).collect();
+    terms::check_document_references(&docs, &cfg.ir, &ir_paths, &mut findings);
 
     // テストの発見と印の検査
     tests_discovery::discover_and_check(

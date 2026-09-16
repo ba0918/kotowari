@@ -1665,3 +1665,22 @@ fn tbl_014_slash_separated_path_is_a_reference() {
     assert_eq!(findings.len(), 1, "{:?}", findings);
     assert_eq!(findings[0].detail, "network/dns/b.md");
 }
+
+// @kotowari[REQ-070, TBL-014]
+#[test]
+fn req_070_bare_name_resolves_in_the_same_directory_only() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::create_dir_all(tmp.path().join("docs/ir/network/dns")).unwrap();
+    fs::write(tmp.path().join("docs/ir/network/dns/a.md"), "# Title\n\nSee b.md.\n").unwrap();
+    fs::write(tmp.path().join("docs/ir/network/b.md"), "# Title\n\nScope.\n").unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let missing = findings_by_kind(&parse_json(&output), "missing_document");
+    assert_eq!(missing.len(), 1, "{:?}", missing);
+    assert_eq!(missing[0]["path"], "docs/ir/network/dns/a.md");
+    assert_eq!(missing[0]["detail"], "b.md");
+
+    fs::write(tmp.path().join("docs/ir/network/dns/b.md"), "# Title\n\nScope.\n").unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert!(findings_by_kind(&parse_json(&output), "missing_document").is_empty());
+}
