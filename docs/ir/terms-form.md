@@ -42,7 +42,7 @@
 - 出典: docs/decision/brainstorm/records.md#A154, docs/decision/brainstorm/records.md#A162, docs/decision/brainstorm/2026-09-16-ir-tree.md#A4
 - 検証: unit
 
-`用語集`の表の行の`用語`が、同じ`用語集`の前の行か、その`用語集`の`連鎖`の根に近い側の`用語集`にあるとき、kotowari はその行ごとに`用語`を detail にして duplicate_term の`誤り`を出し、重複した行は`用語`の定義に数えない。その語は根に近い側の1つ目の定義によって`用語`として見えたままで、新しい種類の`指摘`は作らない。
+`用語集`の表の行の`用語`が、同じ`用語集`の前の行か、その`用語集`の`連鎖`の根に近い側の`用語集`にあるとき、kotowari はその行ごとに`用語`を detail にして duplicate_term の`誤り`を出し、重複した行は`用語`の定義に数えない。その語は根に近い側の1つ目の定義によって`用語`として見えたままで、新しい種類の`指摘`は作らない。重複した行は`項目`として扱わず、`出典`の検査（missing_source、source_invalid）も受けない。
 
 ## 具体例
 
