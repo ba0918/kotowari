@@ -227,6 +227,15 @@ fn req_007_exit_code_one_on_error_and_zero_on_notice_only() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(output.status.code(), Some(0), "no errors should exit 0");
 
+    // 注意だけ（121行で too_many_lines）→ 終了コード 0 のまま
+    let long = format!("# Title\n\nScope.\n{}", "\n".repeat(118));
+    fs::write(tmp.path().join("docs/ir/a.md"), long).unwrap();
+    let output_notice = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let stdout = String::from_utf8_lossy(&output_notice.stdout);
+    assert!(stdout.contains("too_many_lines"), "notice should be present: {stdout}");
+    assert!(stdout.contains("\"notice\""), "severity should be notice: {stdout}");
+    assert_eq!(output_notice.status.code(), Some(0), "notice only should exit 0");
+
     // 誤りあり → 終了コード 1
     fs::write(tmp.path().join("docs/ir/a.md"), "no title\n").unwrap();
     let output2 = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
