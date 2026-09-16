@@ -51,7 +51,7 @@ impl Default for Config {
                 },
             },
             limits: LimitsConfig {
-                lines: NonZeroU64::new(120).unwrap(),
+                lines: NonZeroU64::new(200).unwrap(),
                 requirements: NonZeroU64::new(10).unwrap(),
             },
             vague_words: vec![

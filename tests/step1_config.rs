@@ -184,7 +184,7 @@ fn req_013_defaults_match_the_table() {
     assert_eq!(cfg.tests.files, vec!["src/**/*.rs", "tests/**/*.rs"]);
     assert!(cfg.tests.rust.attributes.is_empty());
     assert!(cfg.tests.rust.macros.is_empty());
-    assert_eq!(cfg.limits.lines.get(), 120);
+    assert_eq!(cfg.limits.lines.get(), 200);
     assert_eq!(cfg.limits.requirements.get(), 10);
     assert_eq!(
         cfg.vague_words,

@@ -97,8 +97,8 @@ fn req_029_every_error_kind_has_the_detail_of_the_table() {
 fn req_030_notice_kinds_have_the_detail_of_the_table() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    // 既定の limits.lines=120 を超える文書
-    let content = format!("# Title\n\nScope.\n\n{}", "x\n".repeat(120));
+    // 既定の limits.lines=200 を超える文書
+    let content = format!("# Title\n\nScope.\n\n{}", "x\n".repeat(200));
     fs::write(tmp.path().join("docs/ir/a.md"), &content).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -107,7 +107,7 @@ fn req_030_notice_kinds_have_the_detail_of_the_table() {
     assert_eq!(tl[0]["severity"], "notice");
     // detail は行数
     let line_count: usize = tl[0]["detail"].as_str().unwrap().parse().unwrap();
-    assert!(line_count > 120);
+    assert!(line_count > 200);
 }
 
 // --- REQ-031: 警告は2種類だけ ---
@@ -117,7 +117,7 @@ fn req_030_notice_kinds_have_the_detail_of_the_table() {
 fn req_031_only_two_kinds_are_notices() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    // 行数超過（>120行）と要求数超過（>10件）を出す
+    // 行数超過（>200行）と要求数超過（>10件）を出す
     let mut content = String::from("# Title\n\nScope.\n\n## 要求\n\n");
     for i in 1..=12 {
         content.push_str(&format!(
@@ -126,7 +126,7 @@ fn req_031_only_two_kinds_are_notices() {
         ));
     }
     // 行数を増やす
-    content.push_str(&"x\n".repeat(100));
+    content.push_str(&"x\n".repeat(200));
     fs::write(tmp.path().join("docs/ir/a.md"), &content).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);

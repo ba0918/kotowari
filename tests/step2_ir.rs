@@ -100,10 +100,10 @@ fn req_037_crlf_counts_as_one_line() {
 // @kotowari[REQ-038]
 #[test]
 fn req_038_too_many_lines_is_a_notice() {
-    // 既定の limits.lines は 120
-    let content = format!("# Title\n\nScope.\n\n{}", "line\n".repeat(120));
+    // 既定の limits.lines は 200
+    let content = format!("# Title\n\nScope.\n\n{}", "line\n".repeat(200));
     let doc = ir::parse_document("a.md", &content);
-    assert!(doc.line_count > 120);
+    assert!(doc.line_count > 200);
     let findings = check(&[doc], &default_config());
     let tl = find_by_kind(&findings, "too_many_lines");
     assert_eq!(tl.len(), 1);
