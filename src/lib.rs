@@ -544,10 +544,9 @@ pub fn run_check(
     sources::check_sources(&docs, &source_ctx, &cfg.ir, &mut findings);
 
     // 用語と曖昧語の検査
-    let glossary = terms::collect_glossary_terms(&docs);
     let known_ids = collect_known_ids(&docs);
     terms::check_terms_and_vague_words(
-        &docs, &glossary, &known_ids, &cfg.vague_words, &cfg.ir, &mut findings,
+        &docs, &known_ids, &cfg.vague_words, &cfg.ir, &mut findings,
     );
 
     // 文書名の参照の検査

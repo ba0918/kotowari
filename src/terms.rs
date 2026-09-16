@@ -5,12 +5,12 @@ use crate::{Finding, FindingKind};
 use std::collections::BTreeSet;
 
 /// 用語集から用語の集合を作る
-pub fn collect_glossary_terms(docs: &[IrDocument]) -> Option<BTreeSet<String>> {
+pub fn collect_glossary_terms(docs: &[IrDocument], directory: &str) -> Option<BTreeSet<String>> {
     let mut has_glossary = false;
     let mut terms = BTreeSet::new();
 
     for doc in docs {
-        if doc.filename == "CONTEXT.md" {
+        if doc.kind == crate::ir::DocKind::Glossary && is_in_chain(&doc.directory, directory) {
             has_glossary = true;
             for item in &doc.items {
                 if let Item::GlossaryTerm { term, .. } = item {
@@ -25,6 +25,11 @@ pub fn collect_glossary_terms(docs: &[IrDocument]) -> Option<BTreeSet<String>> {
     } else {
         None
     }
+}
+
+pub(crate) fn is_in_chain(ancestor: &str, directory: &str) -> bool {
+    ancestor.is_empty() || ancestor == directory
+        || directory.strip_prefix(ancestor).is_some_and(|rest| rest.starts_with('/'))
 }
 
 /// 対象の行からバッククォートで囲んだ語を検査する（REQ-064, REQ-065, REQ-116）
@@ -216,31 +221,31 @@ fn find_doc_refs(
 /// IR 文書の対象の行（TBL-013）で用語と曖昧語を検査する
 pub fn check_terms_and_vague_words(
     docs: &[IrDocument],
-    glossary: &Option<BTreeSet<String>>,
     known_ids: &BTreeSet<String>,
     vague_words: &[String],
     ir_path: &str,
     findings: &mut Vec<Finding>,
 ) {
     for doc in docs {
+        let glossary = collect_glossary_terms(docs, &doc.directory);
         let path = crate::join_display_path(ir_path, &doc.relative_path);
         for item in &doc.items {
             match item {
                 Item::Requirement { statements, .. } => {
                     for (line, text) in statements {
-                        check_unknown_terms(text, *line, glossary, known_ids, &path, findings);
+                        check_unknown_terms(text, *line, &glossary, known_ids, &path, findings);
                         check_vague_words(text, *line, vague_words, &path, findings);
                     }
                 }
                 Item::Property { statements, .. } => {
                     for (line, text) in statements {
-                        check_unknown_terms(text, *line, glossary, known_ids, &path, findings);
+                        check_unknown_terms(text, *line, &glossary, known_ids, &path, findings);
                         check_vague_words(text, *line, vague_words, &path, findings);
                     }
                 }
                 Item::Scenario { steps, .. } => {
                     for (line, text) in steps {
-                        check_unknown_terms(text, *line, glossary, known_ids, &path, findings);
+                        check_unknown_terms(text, *line, &glossary, known_ids, &path, findings);
                         check_vague_words(text, *line, vague_words, &path, findings);
                     }
                 }

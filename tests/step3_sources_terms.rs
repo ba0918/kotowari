@@ -1560,3 +1560,61 @@ fn req_058_records_place_dot_resolves_a_source_at_the_base_root() {
     let details: Vec<&str> = si.iter().map(|f| f["detail"].as_str().unwrap_or("")).collect();
     assert_eq!(details, vec!["records.md#A99"], "A1 must resolve and only A99 must be invalid: {:?}", si);
 }
+
+fn write_ir(tmp: &std::path::Path, relative: &str, content: &str) {
+    let path = tmp.join("docs/ir").join(relative);
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(path, content).unwrap();
+}
+
+fn glossary(term: &str) -> String {
+    format!("# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| {term} | 意味 | docs/decision/brainstorm/records.md#A1 |\n")
+}
+
+fn term_statement(id: &str, statement: &str) -> String {
+    format!("# Title\n\nScope.\n\n### {id}: Name\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: review\n\n{statement}\n")
+}
+
+// @kotowari[REQ-064]
+#[test]
+fn req_064_term_from_a_sibling_glossary_is_unknown() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "network/publish/CONTEXT.md", &glossary("公開"));
+    write_ir(tmp.path(), "network/dns/a.md", &term_statement("REQ-001", "`公開`"));
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let unknown = findings_by_kind(&result, "unknown_term");
+    assert_eq!(unknown.len(), 1);
+    assert_eq!(unknown[0]["path"], "docs/ir/network/dns/a.md");
+    assert_eq!(unknown[0]["detail"], "公開");
+}
+
+// @kotowari[REQ-064]
+#[test]
+fn req_064_term_from_a_parent_glossary_is_visible() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "CONTEXT.md", &glossary("根"));
+    write_ir(tmp.path(), "network/CONTEXT.md", &glossary("網"));
+    write_ir(tmp.path(), "network/dns/a.md", &term_statement("REQ-001", "`根` `網`"));
+    write_ir(tmp.path(), "a.md", &term_statement("REQ-002", "`根` `網`"));
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let unknown = findings_by_kind(&result, "unknown_term");
+    assert_eq!(unknown.len(), 1);
+    assert_eq!(unknown[0]["path"], "docs/ir/a.md");
+    assert_eq!(unknown[0]["detail"], "網");
+}
+
+// @kotowari[REQ-065]
+#[test]
+fn req_065_document_with_no_glossary_in_its_chain_flags_every_backtick() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "network/CONTEXT.md", &glossary("網"));
+    write_ir(tmp.path(), "a.md", &term_statement("REQ-001", "`網` `未定義` `REQ-001`"));
+    write_ir(tmp.path(), "network/a.md", &term_statement("REQ-002", "`網`"));
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let unknown = findings_by_kind(&result, "unknown_term");
+    assert_eq!(unknown.iter().map(|f| f["detail"].as_str().unwrap()).collect::<Vec<_>>(), ["未定義", "網"]);
+    assert!(unknown.iter().all(|f| f["path"] == "docs/ir/a.md"));
+}
