@@ -1,6 +1,6 @@
 # kotowari スキル
 
-kotowari を知らない LLM が、既存の ba0918 のワークフロー（brainstorm → 仕様 → plan → cycle）の中で、仕様を IR の形で書き、`kotowari check` を回し、指摘に対処できるようにする Claude Code のスキル。判断の記録は `docs/decision/brainstorm/2026-09-14-kotowari-skill.md`（A1〜A35、P1、U1〜U2、R1〜R2、Revisions）。この仕様自身は IR ではなく kotowari の検査を受けないが、記録は参照できるように残す。承認は 2026-09-15 に会話の中で得た。計画のレビューで見つかった穴3つ（A30〜A32）は承認の後に足した。2026-09-16 の記録（`docs/decision/brainstorm/2026-09-16-skill-follow.md`）で、版の固定をやめ、置き場の再帰・注意・責務で分ける指針に追従した。
+kotowari を知らない LLM が、既存の ba0918 のワークフロー（brainstorm → 仕様 → plan → cycle）の中で、仕様を IR の形で書き、`kotowari check` を回し、指摘に対処できるようにする Claude Code のスキル。判断の記録は `docs/decision/brainstorm/2026-09-14-kotowari-skill.md`（A1〜A35、P1、U1〜U2、R1〜R2、Revisions）。この仕様自身は IR ではなく kotowari の検査を受けないが、記録は参照できるように残す。承認は 2026-09-15 に会話の中で得た。計画のレビューで見つかった穴3つ（A30〜A32）は承認の後に足した。2026-09-16 の記録（`docs/decision/brainstorm/2026-09-16-skill-follow.md`）で、版の固定をやめ、置き場の再帰・注意・責務で分ける指針に追従した。2026-09-17 の記録（[decision-log](../decision/brainstorm/2026-09-17-decision-log.md)）で、判断の記録に理由を必須にし、ADR の新規作成をやめた。
 
 ## 結果を一文で
 
@@ -35,7 +35,7 @@ kotowari の用語集（`docs/ir/CONTEXT.md`）の意味をそのまま使う。
 - 人間が IR を読むための描画（U1）
 - Rust 以外の言語の印の規則（A12。kotowari 本体に問い合わせが足されてから）
 - 配布の仕組み（crates.io、CI、ライセンス。実験003の記録の U38）
-- ADR の書き方（A21。置き場は作り、あれば出典に使えると書くだけ）
+- ADR の書き方（A21。置き場は作り、あれば出典に使えると書くだけ。2026-09-17 の記録 [A5](../decision/brainstorm/2026-09-17-decision-log.md#A5) で、新しい ADR を書く義務そのものをやめた）
 - 盲検の判定（記録を隠して IR から決定を復元させる検査。A24）
 - kotowari 本体の振る舞いの変更（P1）
 
@@ -81,7 +81,7 @@ SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotow
 `workflow.md` の brainstorm の節は、既存の brainstorm の手順のうち次を置き換える（A16、A27。既存スキルは変えず、AGENTS.md の規則でこの節を読ませる）。
 
 - 出力: `docs/spec/<name>.md` ではなく、IR の置き場の話題ごとの文書（新規か既存への追記）と、用語集 `CONTEXT.md`、問題の記録があるときは `FLAGS.md`
-- 判断の記録: 進捗ファイルを `.agents/tmp/` に置かず、最初から `docs/decision/brainstorm/YYYY-MM-DD-<name>.md` に書く（A11、A22）。ファイル名は最初に決めて改名しない（出典のパスが壊れるため）。決定の節の見出し4種の下に `- A1 本文` の形で並べ、番号は使い回さない。意味が変わったら `Revisions` に改訂を書く。承認後も消さない。`Undecided` と `Revisions` の番号は出典に使えない（決定の節ではない）
+- 判断の記録: 進捗ファイルを `.agents/tmp/` に置かず、最初から `docs/decision/brainstorm/YYYY-MM-DD-<name>.md` に書く（A11、A22）。ファイル名は最初に決めて改名しない（出典のパスが壊れるため）。決定の節の見出し4種の下に `- A1 本文` の形で並べ、番号は使い回さない。意味が変わったら `Revisions` に改訂を書く。承認後も消さない。`Undecided` と `Revisions` の番号は出典に使えない（決定の節ではない）。2026-09-17 の記録（[decision-log](../decision/brainstorm/2026-09-17-decision-log.md) の A1〜A6、A10、A11）で、冒頭の `## 背景と目的`、決定ごとの字下げの `- 理由:`（必須）`- 却下:` `- 決めた人:` `- 改めた:`、資料をまたぐ参照と IR の ID へのリンクの規則を足した。詳細は `workflow.md` の判断の記録の段落
 - 再開: `.agents/tmp/brainstorm-*.md` ではなく、`docs/decision/brainstorm/` の未コミットの記録から再開する
 - 成功の条件と反例の置き場: brainstorm が各要求に求める観測できる成功の条件と反例は、IR では `## 具体例` のシナリオ（成功の条件は通る場面、反例は指摘か停止が出る場面）として書く。要求の見出しの下には持てる行しか置けない
 - 禁止・却下・未決・委譲の置き場: IR の話題ごとの文書には要求・決定表・性質・具体例しか置けないので、これらは判断の記録の節に置く。矛盾・欠落・曖昧は `FLAGS.md` の `### FLAG-nnn: 名前` に `- 種類:`（`contradiction`、`gap`、`ambiguity`）、`- 関係:`（関係する ID）、`- 出典:` を付けて書く（A21）
