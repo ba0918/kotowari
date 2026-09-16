@@ -54,3 +54,4 @@ Glossary updates pending: なし
 ## Revisions
 - A4 の REQ-020、REQ-055、REQ-056、REQ-068 の入力と期待を、仕様の品質レビュー（2026-09-17）の指摘で改めた: REQ-056 の対象は問題の記録であって要求ではない。期待は「指摘0件」だと入力の要求自身が requirement_without_test を呼ぶので「その行を指す指摘が無い」にする。REQ-020 は読まれれば結果が変わる値にする
 - A16 に形の契約（ir-form.md）の改訂を足した: TBL-005 の出典が ir-form.md#出力 を指したまま鍵が増えるため
+- A23 の「既存の REQ-002 のテスト」は前提が誤り: `req_002_only_format_and_config_options` は `--format json` が通ることしか見ていない。知らないオプションが argument error になることは `req_004_unknown_option_stops` が固定しているので、REQ-008 の印はそちらに付ける（計画のレビューで判明。2026-09-17）
