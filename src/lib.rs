@@ -67,6 +67,45 @@ pub enum FindingKind {
 }
 
 impl FindingKind {
+    /// 出しうる種類のすべて。変種を足したらここにも足す
+    pub const ALL: [FindingKind; 35] = [
+        FindingKind::AlgorithmWithoutDefinition,
+        FindingKind::DuplicateField,
+        FindingKind::DuplicateId,
+        FindingKind::DuplicateTerm,
+        FindingKind::InvalidGlossaryRow,
+        FindingKind::InvalidMarker,
+        FindingKind::MissingDocument,
+        FindingKind::MissingField,
+        FindingKind::MissingScope,
+        FindingKind::MissingSource,
+        FindingKind::MissingStatement,
+        FindingKind::MissingTable,
+        FindingKind::MissingTag,
+        FindingKind::MissingTitle,
+        FindingKind::MultipleTitles,
+        FindingKind::RequirementWithoutTest,
+        FindingKind::SourceInvalid,
+        FindingKind::TestWithoutId,
+        FindingKind::TooManyLines,
+        FindingKind::TooManyRequirements,
+        FindingKind::UnclosedBacktick,
+        FindingKind::UnclosedCodeBlock,
+        FindingKind::UnknownField,
+        FindingKind::UnknownHeading,
+        FindingKind::UnknownKind,
+        FindingKind::UnknownTag,
+        FindingKind::UnknownTerm,
+        FindingKind::UnparsableFile,
+        FindingKind::InvalidGherkinLine,
+        FindingKind::InvalidId,
+        FindingKind::GlossaryInvalid,
+        FindingKind::UnresolvedReference,
+        FindingKind::VagueWord,
+        FindingKind::VerificationInvalid,
+        FindingKind::VerificationMissing,
+    ];
+
     /// 種類を文字列に変換する（JSON 出力・整列・counts のキーに使う）
     pub fn as_str(&self) -> &'static str {
         match self {

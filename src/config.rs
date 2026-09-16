@@ -2,7 +2,7 @@ use crate::StopReason;
 use std::num::NonZeroU64;
 
 /// 設定ファイルの構造（TBL-004）
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Config {
     pub ir: String,
     pub decisions: DecisionsConfig,
@@ -11,25 +11,25 @@ pub struct Config {
     pub vague_words: Vec<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DecisionsConfig {
     pub records: String,
     pub adr: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TestsConfig {
     pub files: Vec<String>,
     pub rust: RustTestsConfig,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RustTestsConfig {
     pub attributes: Vec<String>,
     pub macros: Vec<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LimitsConfig {
     pub lines: NonZeroU64,
     pub requirements: NonZeroU64,
