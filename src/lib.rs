@@ -544,16 +544,15 @@ pub fn run_check(
     sources::check_sources(&docs, &source_ctx, &cfg.ir, &mut findings);
 
     // 用語と曖昧語の検査
-    let glossary = terms::collect_glossary_terms(&docs);
     let known_ids = collect_known_ids(&docs);
     terms::check_terms_and_vague_words(
-        &docs, &glossary, &known_ids, &cfg.vague_words, &cfg.ir, &mut findings,
+        &docs, &known_ids, &cfg.vague_words, &cfg.ir, &mut findings,
     );
 
     // 文書名の参照の検査
-    let ir_filenames: std::collections::BTreeSet<String> =
-        docs.iter().map(|d| d.filename.clone()).collect();
-    terms::check_document_references(&docs, &cfg.ir, &ir_filenames, &mut findings);
+    let ir_paths: std::collections::BTreeSet<String> =
+        docs.iter().map(|d| d.relative_path.clone()).collect();
+    terms::check_document_references(&docs, &cfg.ir, &ir_paths, &mut findings);
 
     // テストの発見と印の検査
     tests_discovery::discover_and_check(

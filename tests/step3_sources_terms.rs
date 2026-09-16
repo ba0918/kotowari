@@ -441,11 +441,10 @@ fn req_069_reference_needs_boundary_and_quotes_are_skipped() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     // a.md は存在する、nonexistent.md は存在しない
-    // スラッシュの後の文書名は拾わない
     // 二重引用符の中は拾わない
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope with a.md reference.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nSee nonexistent.md for details. But \"quoted.md\" is skipped. And adr/0001-test-marker.md is not a reference.\n",
+        "# Title\n\nScope with a.md reference.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nSee nonexistent.md for details. But \"quoted.md\" is skipped. And adr/0001-test-marker.md is a reference.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -455,8 +454,8 @@ fn req_069_reference_needs_boundary_and_quotes_are_skipped() {
     assert!(md.iter().any(|f| f["detail"] == "nonexistent.md"), "should find missing document: {:?}", md);
     // quoted.md → 引用符の中なので拾わない
     assert!(!md.iter().any(|f| f["detail"] == "quoted.md"), "quoted should be skipped: {:?}", md);
-    // 0001-test-marker.md → スラッシュの後なので拾わない
-    assert!(!md.iter().any(|f| f["detail"] == "0001-test-marker.md"), "slash prefix should be skipped: {:?}", md);
+    assert_eq!(md.iter().filter(|f| f["detail"] == "adr/0001-test-marker.md").count(), 1, "{:?}", md);
+    assert_eq!(md.len(), 2, "{:?}", md);
 }
 
 // @kotowari[REQ-069, TBL-014]
@@ -1559,4 +1558,231 @@ fn req_058_records_place_dot_resolves_a_source_at_the_base_root() {
     let si = findings_by_kind(&v, "source_invalid");
     let details: Vec<&str> = si.iter().map(|f| f["detail"].as_str().unwrap_or("")).collect();
     assert_eq!(details, vec!["records.md#A99"], "A1 must resolve and only A99 must be invalid: {:?}", si);
+}
+
+fn write_ir(tmp: &std::path::Path, relative: &str, content: &str) {
+    let path = tmp.join("docs/ir").join(relative);
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(path, content).unwrap();
+}
+
+fn glossary(term: &str) -> String {
+    format!("# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| {term} | 意味 | docs/decision/brainstorm/records.md#A1 |\n")
+}
+
+fn term_statement(id: &str, statement: &str) -> String {
+    format!("# Title\n\nScope.\n\n### {id}: Name\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: review\n\n{statement}\n")
+}
+
+// @kotowari[REQ-064]
+#[test]
+fn req_064_term_from_a_sibling_glossary_is_unknown() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "network/publish/CONTEXT.md", &glossary("公開"));
+    write_ir(tmp.path(), "network/dns/a.md", &term_statement("REQ-001", "`公開`"));
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let unknown = findings_by_kind(&result, "unknown_term");
+    assert_eq!(unknown.len(), 1);
+    assert_eq!(unknown[0]["path"], "docs/ir/network/dns/a.md");
+    assert_eq!(unknown[0]["detail"], "公開");
+}
+
+// @kotowari[REQ-064]
+#[test]
+fn req_064_term_from_a_parent_glossary_is_visible() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "CONTEXT.md", &glossary("根"));
+    write_ir(tmp.path(), "network/CONTEXT.md", &glossary("網"));
+    write_ir(tmp.path(), "network/dns/a.md", &term_statement("REQ-001", "`根` `網`"));
+    write_ir(tmp.path(), "a.md", &term_statement("REQ-002", "`根` `網`"));
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let unknown = findings_by_kind(&result, "unknown_term");
+    assert_eq!(unknown.len(), 1);
+    assert_eq!(unknown[0]["path"], "docs/ir/a.md");
+    assert_eq!(unknown[0]["detail"], "網");
+}
+
+// @kotowari[REQ-065]
+#[test]
+fn req_065_document_with_no_glossary_in_its_chain_flags_every_backtick() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "network/CONTEXT.md", &glossary("網"));
+    write_ir(tmp.path(), "a.md", &term_statement("REQ-001", "`網` `未定義` `REQ-001`"));
+    write_ir(tmp.path(), "network/a.md", &term_statement("REQ-002", "`網`"));
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let unknown = findings_by_kind(&result, "unknown_term");
+    assert_eq!(unknown.iter().map(|f| f["detail"].as_str().unwrap()).collect::<Vec<_>>(), ["未定義", "網"]);
+    assert!(unknown.iter().all(|f| f["path"] == "docs/ir/a.md"));
+}
+
+// @kotowari[REQ-123, TBL-019]
+#[test]
+fn req_123_duplicate_across_the_chain_is_reported_on_the_deeper_row() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "CONTEXT.md", &glossary("宛先"));
+    write_ir(tmp.path(), "network/CONTEXT.md", "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| 宛先 | 意味 | |\n| 宛先 | 意味 | invalid |\n");
+    write_ir(tmp.path(), "network/dns/CONTEXT.md", &glossary("宛先").replace("docs/decision/brainstorm/records.md#A1", "invalid"));
+    write_ir(tmp.path(), "network/dns/a.md", &term_statement("REQ-001", "`宛先`"));
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let duplicates = findings_by_kind(&result, "duplicate_term");
+    assert_eq!(duplicates.len(), 3);
+    assert_eq!(duplicates.iter().map(|f| (f["path"].as_str().unwrap(), f["line"].as_u64().unwrap())).collect::<Vec<_>>(),
+        [("docs/ir/network/CONTEXT.md", 5), ("docs/ir/network/CONTEXT.md", 6), ("docs/ir/network/dns/CONTEXT.md", 5)]);
+    assert!(duplicates.iter().all(|f| f["detail"] == "宛先"));
+    assert!(findings_by_kind(&result, "unknown_term").is_empty());
+    assert!(findings_by_kind(&result, "missing_source").is_empty());
+    assert!(findings_by_kind(&result, "source_invalid").is_empty());
+}
+
+// @kotowari[REQ-069, TBL-014]
+#[test]
+fn tbl_014_md_followed_by_hash_or_slash_is_not_a_reference() {
+    let doc = kotowari::ir::parse_document(
+        "x.md",
+        "# Title\n\na.md#A12 docs/decision/brainstorm/records.md#A12 a.md/b.md a//b.md\n",
+    );
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(
+        &[doc], "docs/ir", &Default::default(), &mut findings,
+    );
+    assert!(findings.is_empty(), "{:?}", findings);
+}
+
+// @kotowari[REQ-069, REQ-070, TBL-014]
+#[test]
+fn tbl_014_slash_separated_path_is_a_reference() {
+    let doc = kotowari::ir::parse_document(
+        "a.md", "# Title\n\nSee network/dns/b.md.\n",
+    );
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(
+        &[doc], "docs/ir", &Default::default(), &mut findings,
+    );
+    assert_eq!(findings.len(), 1, "{:?}", findings);
+    assert_eq!(findings[0].detail, "network/dns/b.md");
+}
+
+// @kotowari[REQ-070, TBL-014]
+#[test]
+fn req_070_bare_name_resolves_in_the_same_directory_only() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::create_dir_all(tmp.path().join("docs/ir/network/dns")).unwrap();
+    fs::write(tmp.path().join("docs/ir/network/dns/a.md"), "# Title\n\nSee b.md.\n").unwrap();
+    fs::write(tmp.path().join("docs/ir/network/b.md"), "# Title\n\nScope.\n").unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let missing = findings_by_kind(&parse_json(&output), "missing_document");
+    assert_eq!(missing.len(), 1, "{:?}", missing);
+    assert_eq!(missing[0]["path"], "docs/ir/network/dns/a.md");
+    assert_eq!(missing[0]["detail"], "b.md");
+
+    fs::write(tmp.path().join("docs/ir/network/dns/b.md"), "# Title\n\nScope.\n").unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert!(findings_by_kind(&parse_json(&output), "missing_document").is_empty());
+}
+
+// @kotowari[REQ-070, TBL-014]
+#[test]
+fn req_070_slash_path_resolves_from_the_ir_root() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "network/dns/a.md", "# Title\n\nSee network/publish/c.md.\n");
+    write_ir(tmp.path(), "network/publish/c.md", "# Title\n\nScope.\n");
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    assert!(findings_by_kind(&result, "missing_document").is_empty(), "{:?}", result);
+    assert_eq!(result["files"], 2);
+}
+
+// @kotowari[REQ-070, TBL-014]
+#[test]
+fn req_070_dot_and_dotdot_elements_never_resolve() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "network/dns/a.md", "# Title\n\n../b.md ./c.md\n");
+    write_ir(tmp.path(), "network/b.md", "# Title\n\nScope.\n");
+    write_ir(tmp.path(), "network/dns/c.md", "# Title\n\nScope.\n");
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let missing = findings_by_kind(&result, "missing_document");
+    assert_eq!(missing.len(), 2, "{:?}", missing);
+    for reference in ["../b.md", "./c.md"] {
+        assert_eq!(missing.iter().filter(|f| f["detail"] == reference).count(), 1);
+    }
+    assert!(missing.iter().all(|f| f["path"] == "docs/ir/network/dns/a.md"));
+}
+
+// @kotowari[REQ-069, REQ-070, TBL-014, TBL-008]
+#[test]
+fn req_070_detail_is_the_whole_reference() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "a.md", "# Title\n\ndocs/decision/adr/0001-test-marker.md\n");
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let missing = findings_by_kind(&result, "missing_document");
+    assert_eq!(missing.len(), 1, "{:?}", missing);
+    assert_eq!(missing[0]["detail"], "docs/decision/adr/0001-test-marker.md");
+}
+
+// @kotowari[REQ-033, REQ-070, TBL-014]
+#[cfg(unix)]
+#[test]
+fn req_070_document_under_a_directory_symlink_is_missing() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::create_dir_all(tmp.path().join("outside")).unwrap();
+    fs::write(tmp.path().join("outside/d.md"), "# Title\n\nScope.\n").unwrap();
+    std::os::unix::fs::symlink("../../outside", tmp.path().join("docs/ir/link")).unwrap();
+    assert!(tmp.path().join("docs/ir/link/d.md").is_file());
+    write_ir(tmp.path(), "a.md", "# Title\n\nlink/d.md\n");
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let missing = findings_by_kind(&result, "missing_document");
+    assert_eq!(missing.len(), 1, "{:?}", missing);
+    assert_eq!(missing[0]["detail"], "link/d.md");
+}
+
+// @kotowari[REQ-069, TBL-014]
+#[test]
+fn tbl_014_reference_after_a_japanese_character_is_recognized() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "a.md", "# Title\n\n設定の形はtimeout-config.mdで定める\n");
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let missing = findings_by_kind(&result, "missing_document");
+    assert_eq!(missing.len(), 1, "{:?}", missing);
+    assert_eq!(missing[0]["detail"], "timeout-config.md");
+}
+
+// @kotowari[REQ-064, REQ-069, TBL-014]
+#[test]
+fn tbl_014_backticked_path_is_a_term_not_a_reference() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "x.md", &term_statement("REQ-001", "`a.md`"));
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let unknown = findings_by_kind(&result, "unknown_term");
+    assert_eq!(unknown.len(), 1, "{:?}", unknown);
+    assert_eq!(unknown[0]["detail"], "a.md");
+    assert!(findings_by_kind(&result, "missing_document").is_empty(), "{:?}", result);
+}
+
+// @kotowari[REQ-117, REQ-064]
+#[test]
+fn req_117_invalid_glossary_hides_only_its_own_terms() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "CONTEXT.md", &glossary("根"));
+    write_ir(tmp.path(), "network/CONTEXT.md", &glossary("網").replace("| 用語 | 意味 | 出典 |", "| Name | Meaning | Source |"));
+    write_ir(tmp.path(), "network/a.md", &term_statement("REQ-001", "`根` `網`"));
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let invalid = findings_by_kind(&result, "glossary_invalid");
+    assert_eq!(invalid.len(), 1, "{:?}", invalid);
+    assert_eq!(invalid[0]["path"], "docs/ir/network/CONTEXT.md");
+    assert_eq!(invalid[0]["detail"], "CONTEXT.md");
+    let unknown = findings_by_kind(&result, "unknown_term");
+    assert_eq!(unknown.len(), 1, "{:?}", unknown);
+    assert_eq!(unknown[0]["detail"], "網");
+    assert_eq!(unknown[0]["path"], "docs/ir/network/a.md");
 }

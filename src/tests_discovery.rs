@@ -626,7 +626,7 @@ pub fn discover_and_check(
             {
                 if let Some(v) = verification {
                     if v != "review" && is_valid_id(id) && !all_marker_ids.contains(id) {
-                        let path = crate::join_display_path(ir_path, &doc.filename);
+                        let path = crate::join_display_path(ir_path, &doc.relative_path);
                         findings.push(Finding::new(FindingKind::RequirementWithoutTest, path, Some(item.item_line()), id.clone()));
                     }
                 }

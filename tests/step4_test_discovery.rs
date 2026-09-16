@@ -1553,3 +1553,66 @@ fn req_079_broken_symlink_outside_glob_stops() {
     );
     assert!(output.stdout.is_empty());
 }
+
+// @kotowari[REQ-124, REQ-114, REQ-043]
+#[test]
+fn req_124_four_digit_id_is_valid_in_heading_tag_and_marker() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-1000: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\n`EX-1000` を満たす。\n\n## 具体例\n\n```gherkin\n@id=EX-1000 @about=REQ-1000 @source=docs/decision/brainstorm/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ids = kotowari::collect_known_ids(&[doc]);
+    assert!(ids.contains("REQ-1000"), "{:?}", ids);
+    assert!(ids.contains("EX-1000"), "{:?}", ids);
+
+    fs::write(tmp.path().join("docs/ir/a.md"), content).unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/a.rs"),
+        "// @kotowari[REQ-1000]\n#[test]\nfn example() {}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let result = parse_json(&output);
+    assert_eq!(output.status.code(), Some(0), "{:?}", result);
+    assert!(result["findings"].as_array().unwrap().is_empty(), "{:?}", result);
+}
+
+// @kotowari[REQ-124, REQ-043, REQ-114]
+#[test]
+fn req_124_leading_zero_and_short_ids_are_rejected() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "review");
+    let path = tmp.path().join("docs/ir/a.md");
+    let content = fs::read_to_string(&path).unwrap()
+        + "\n### REQ-0001: 名前\n\n### REQ-1: 名前\n\n## 具体例\n\n```gherkin\n@id=EX-0001 @about=REQ-001 @source=docs/decision/brainstorm/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
+    let doc = kotowari::ir::parse_document("a.md", &content);
+    let ids = kotowari::collect_known_ids(&[doc]);
+    assert!(ids.contains("REQ-001"), "{:?}", ids);
+    fs::write(path, content).unwrap();
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let headings = findings_by_kind(&result, "unknown_heading");
+    assert_eq!(headings.len(), 2, "{:?}", headings);
+    for heading in ["### REQ-0001: 名前", "### REQ-1: 名前"] {
+        assert_eq!(headings.iter().filter(|f| f["detail"] == heading).count(), 1);
+    }
+    let invalid = findings_by_kind(&result, "invalid_id");
+    assert_eq!(invalid.len(), 1, "{:?}", invalid);
+    assert_eq!(invalid[0]["detail"], "EX-0001");
+    assert!(findings_by_kind(&result, "unresolved_reference").is_empty(), "{:?}", result);
+}
+
+// @kotowari[REQ-033, REQ-085, REQ-110, TBL-006]
+#[test]
+fn req_033_requirement_without_test_path_carries_the_subdirectory() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("docs/ir/network/dns")).unwrap();
+    fs::rename(tmp.path().join("docs/ir/a.md"), tmp.path().join("docs/ir/network/dns/timeout.md")).unwrap();
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let missing = findings_by_kind(&result, "requirement_without_test");
+    assert_eq!(missing.len(), 1, "{:?}", missing);
+    assert_eq!(missing[0]["path"], "docs/ir/network/dns/timeout.md");
+    assert_eq!(missing[0]["detail"], "REQ-001");
+}

@@ -5,14 +5,18 @@ use crate::{Finding, FindingKind};
 use std::collections::BTreeSet;
 
 /// 用語集から用語の集合を作る
-pub fn collect_glossary_terms(docs: &[IrDocument]) -> Option<BTreeSet<String>> {
+pub fn collect_glossary_terms(docs: &[IrDocument], directory: &str) -> Option<BTreeSet<String>> {
     let mut has_glossary = false;
     let mut terms = BTreeSet::new();
 
     for doc in docs {
-        if doc.filename == "CONTEXT.md" {
+        if doc.is_glossary_in_chain(directory) {
             has_glossary = true;
+            let duplicate_rows = doc.duplicate_glossary_rows(docs);
             for item in &doc.items {
+                if duplicate_rows.contains(&item.item_line()) {
+                    continue;
+                }
                 if let Item::GlossaryTerm { term, .. } = item {
                     terms.insert(term.clone());
                 }
@@ -109,17 +113,11 @@ pub fn check_vague_words(
 pub fn check_document_references(
     docs: &[IrDocument],
     ir_path: &str,
-    ir_filenames: &BTreeSet<String>,
+    ir_paths: &BTreeSet<String>,
     findings: &mut Vec<Finding>,
 ) {
-    // 句読点の集合
-    let punctuation: &[char] = &[
-        ',', '.', ':', ';', '(', ')', '"', '\'',
-        '、', '。', '，', '．', '（', '）', '「', '」', '『', '』', '\u{201C}', '\u{201D}',
-    ];
-
     for doc in docs {
-        let path = crate::join_display_path(ir_path, &doc.filename);
+        let path = crate::join_display_path(ir_path, &doc.relative_path);
         let lines = crate::ir::split_lines_for_doc_ref(&doc.filename, &doc.raw_content);
 
         let mut current_fence: Option<crate::ir::CodeFence> = None;
@@ -140,7 +138,7 @@ pub fn check_document_references(
             // 二重引用符の中を除外するため、引用符の外の部分だけ検査
             let parts = crate::split_outside_quotes(line);
             for part in &parts {
-                find_doc_refs(part, line_num, &path, ir_filenames, punctuation, findings);
+                find_doc_refs(part, line_num, &path, &doc.directory, ir_paths, findings);
             }
         }
     }
@@ -151,11 +149,10 @@ fn find_doc_refs(
     text: &str,
     line: usize,
     path: &str,
-    ir_filenames: &BTreeSet<String>,
-    punctuation: &[char],
+    directory: &str,
+    ir_paths: &BTreeSet<String>,
     findings: &mut Vec<Finding>,
 ) {
-    // 英小文字と数字とハイフンの並びに ".md" が続くものを探す
     let bytes = text.as_bytes();
     let len = text.len();
     let mut i = 0;
@@ -165,21 +162,21 @@ fn find_doc_refs(
         if let Some(md_pos) = text[i..].find(".md") {
             let md_abs = i + md_pos;
 
-            // TBL-014: ".md" の後が英数字、"_"、"-" でないこと
+            // TBL-014: 出典の印やパスの途中は参照にならない
             let after_md = md_abs + 3;
             if after_md < len {
                 let next_byte = bytes[after_md];
-                if next_byte.is_ascii_alphanumeric() || next_byte == b'_' || next_byte == b'-' {
+                if next_byte.is_ascii_alphanumeric() || next_byte == b'_' || next_byte == b'-' || next_byte == b'#' || next_byte == b'/' {
                     i = md_abs + 1;
                     continue;
                 }
             }
 
-            // ".md" の前の英小文字と数字とハイフンの並びを逆に辿る
+            // 語の途中から拾い直さないため、要素内のドットも含めて辿る
             let mut name_start = md_abs;
             while name_start > 0 {
                 let prev = bytes[name_start - 1];
-                if prev.is_ascii_lowercase() || prev.is_ascii_digit() || prev == b'-' {
+                if prev.is_ascii_lowercase() || prev.is_ascii_digit() || prev == b'-' || prev == b'/' || prev == b'.' {
                     name_start -= 1;
                 } else {
                     break;
@@ -189,18 +186,27 @@ fn find_doc_refs(
             if name_start < md_abs {
                 let doc_name = &text[name_start..md_abs + 3];
 
-                // 直前が行頭、空白、句読点のいずれか
                 let boundary_ok = if name_start == 0 {
                     true
                 } else {
                     let prev_char = text[..name_start].chars().next_back().unwrap();
-                    prev_char.is_whitespace()
-                        || punctuation.contains(&prev_char)
+                    !prev_char.is_ascii_alphanumeric()
+                        && !matches!(prev_char, '_' | '-' | '/' | '.' | '`')
                 };
 
-                if boundary_ok {
-                    // IR の置き場にその文書があるか
-                    if !ir_filenames.contains(doc_name) {
+                let mut elements = text[name_start..md_abs].rsplit('/');
+                let name_ok = elements.next().is_some_and(is_reference_name);
+                let directories_ok = elements.all(|element| {
+                    element == "." || element == ".." || is_reference_name(element)
+                });
+
+                if boundary_ok && name_ok && directories_ok {
+                    let target = if doc_name.contains('/') {
+                        doc_name.to_string()
+                    } else {
+                        crate::join_display_path(directory, doc_name)
+                    };
+                    if !ir_paths.contains(&target) {
                         findings.push(Finding::new(FindingKind::MissingDocument, path.to_string(), Some(line), doc_name.to_string()));
                     }
                 }
@@ -213,34 +219,39 @@ fn find_doc_refs(
     }
 }
 
+fn is_reference_name(element: &str) -> bool {
+    !element.is_empty()
+        && element.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+}
+
 /// IR 文書の対象の行（TBL-013）で用語と曖昧語を検査する
 pub fn check_terms_and_vague_words(
     docs: &[IrDocument],
-    glossary: &Option<BTreeSet<String>>,
     known_ids: &BTreeSet<String>,
     vague_words: &[String],
     ir_path: &str,
     findings: &mut Vec<Finding>,
 ) {
     for doc in docs {
-        let path = crate::join_display_path(ir_path, &doc.filename);
+        let glossary = collect_glossary_terms(docs, &doc.directory);
+        let path = crate::join_display_path(ir_path, &doc.relative_path);
         for item in &doc.items {
             match item {
                 Item::Requirement { statements, .. } => {
                     for (line, text) in statements {
-                        check_unknown_terms(text, *line, glossary, known_ids, &path, findings);
+                        check_unknown_terms(text, *line, &glossary, known_ids, &path, findings);
                         check_vague_words(text, *line, vague_words, &path, findings);
                     }
                 }
                 Item::Property { statements, .. } => {
                     for (line, text) in statements {
-                        check_unknown_terms(text, *line, glossary, known_ids, &path, findings);
+                        check_unknown_terms(text, *line, &glossary, known_ids, &path, findings);
                         check_vague_words(text, *line, vague_words, &path, findings);
                     }
                 }
                 Item::Scenario { steps, .. } => {
                     for (line, text) in steps {
-                        check_unknown_terms(text, *line, glossary, known_ids, &path, findings);
+                        check_unknown_terms(text, *line, &glossary, known_ids, &path, findings);
                         check_vague_words(text, *line, vague_words, &path, findings);
                     }
                 }

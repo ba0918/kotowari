@@ -145,6 +145,8 @@ impl Item {
 #[derive(Debug)]
 pub struct IrDocument {
     pub filename: String,
+    pub relative_path: String,
+    pub directory: String,
     pub kind: DocKind,
     pub title: Option<(usize, String)>,
     pub extra_titles: Vec<(usize, String)>,
@@ -157,6 +159,29 @@ pub struct IrDocument {
     pub parse_findings: Vec<crate::Finding>,
     /// 用語集の表（ヘッダと区切りの行）を見たか（REQ-117）
     pub glossary_table_seen: bool,
+}
+
+impl IrDocument {
+    pub(crate) fn is_glossary_in_chain(&self, directory: &str) -> bool {
+        self.kind == DocKind::Glossary && (self.directory.is_empty()
+            || self.directory == directory
+            || directory.strip_prefix(&self.directory).is_some_and(|rest| rest.starts_with('/')))
+    }
+
+    pub(crate) fn duplicate_glossary_rows(&self, docs: &[IrDocument]) -> BTreeSet<usize> {
+        let ancestors: BTreeSet<&str> = docs.iter()
+            .filter(|doc| doc.directory != self.directory && doc.is_glossary_in_chain(&self.directory))
+            .flat_map(|doc| &doc.items)
+            .filter_map(|item| match item {
+                Item::GlossaryTerm { term, .. } => Some(term.as_str()),
+                _ => None,
+            })
+            .collect();
+        self.items.iter().filter_map(|item| match item {
+            Item::GlossaryTerm { term, line, .. } if ancestors.contains(term.as_str()) => Some(*line),
+            _ => None,
+        }).collect()
+    }
 }
 
 /// 文書名の参照の検査用に行を分割する
@@ -596,6 +621,8 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
 
     IrDocument {
         filename: filename.to_string(),
+        relative_path: filename.to_string(),
+        directory: String::new(),
         kind,
         title,
         extra_titles,
@@ -865,7 +892,7 @@ fn id_prefix(id: &str) -> Option<IdPrefix> {
     }
 }
 
-/// ID の形式を検証する（接頭辞 + 3桁の数字）
+/// ID の形式を検証する（数字は3桁以上、4桁以上では先頭の0を認めない）
 pub fn is_valid_id(s: &str) -> bool {
     if let Some(prefix) = id_prefix(s) {
         let suffix = match prefix {
@@ -875,7 +902,9 @@ pub fn is_valid_id(s: &str) -> bool {
             IdPrefix::Ex => &s[3..],
             IdPrefix::Flag => &s[5..],
         };
-        suffix.len() == 3 && suffix.chars().all(|c| c.is_ascii_digit())
+        suffix.len() >= 3
+            && (suffix.len() == 3 || !suffix.starts_with('0'))
+            && suffix.chars().all(|c| c.is_ascii_digit())
     } else {
         false
     }
@@ -966,7 +995,7 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
     let mut all_ids: BTreeMap<String, Vec<(String, usize)>> = BTreeMap::new(); // id -> [(path, line)]
 
     for doc in docs {
-        let path = crate::join_display_path(&config.ir, &doc.filename);
+        let path = crate::join_display_path(&config.ir, &doc.relative_path);
 
         // REQ-034: 題名が無い
         if doc.title.is_none() {
@@ -1008,7 +1037,14 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
         }
 
         // 項目の検査
+        let duplicate_rows = doc.duplicate_glossary_rows(docs);
         for item in &doc.items {
+            if duplicate_rows.contains(&item.item_line()) {
+                if let Item::GlossaryTerm { term, line, .. } = item {
+                    findings.push(Finding::new(FindingKind::DuplicateTerm, path.clone(), Some(*line), term.clone()));
+                }
+                continue;
+            }
             check_item(item, &path, doc.kind, &mut findings);
 
             // ID を収集（形に合う ID だけ。REQ-114）
@@ -1044,13 +1080,13 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
     // 参照の解決チェック（REQ-054）
     let known_ids = crate::collect_known_ids(docs);
     for doc in docs {
-        let path = crate::join_display_path(&config.ir, &doc.filename);
+        let path = crate::join_display_path(&config.ir, &doc.relative_path);
         check_references(&doc.items, &known_ids, &path, &mut findings);
     }
 
     // parse_findings を統合（check() ヘルパーからも見えるようにする）
     for doc in docs {
-        let doc_path = crate::join_display_path(&config.ir, &doc.filename);
+        let doc_path = crate::join_display_path(&config.ir, &doc.relative_path);
         for pf in &doc.parse_findings {
             let mut f = pf.clone();
             if f.path.is_empty() {
@@ -1483,42 +1519,52 @@ pub fn load_and_check(
     config: &Config,
 ) -> Result<(Vec<IrDocument>, Vec<Finding>), crate::StopReason> {
     let ir_dir = base.join(&config.ir);
+    let mut entries = Vec::new();
+    collect_ir_paths(&ir_dir, "", &config.ir, &mut entries)?;
+    entries.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
 
     let mut docs = Vec::new();
-    let mut raw_entries = Vec::new();
-    for entry in std::fs::read_dir(&ir_dir)
-        .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", config.ir)))?
-    {
-        let entry = entry.map_err(|e| {
-            crate::StopReason::UnreadableFile(format!("{}: {e}", config.ir))
-        })?;
-        let p = entry.path();
-        // REQ-033: .md（小文字）のファイルだけ読む。シンボリックリンクも辿る
-        // 種類が取れないときは停止する（REQ-033）
-        let is_file = std::fs::metadata(&p)
-            .map(|m| m.is_file())
-            .map_err(|e| {
-                let rel = crate::join_display_path(&config.ir, &entry.file_name().to_string_lossy());
-                crate::StopReason::UnreadableFile(format!("{rel}: {e}"))
-            })?;
-        if p.extension().is_some_and(|ext| ext == "md") && is_file {
-            raw_entries.push(entry);
-        }
-    }
-
-    // ファイル名でソート（安定な順序）
-    raw_entries.sort_by_key(|e| e.file_name());
-
-    for entry in raw_entries {
-        let path = entry.path();
-        let filename = entry.file_name().to_string_lossy().to_string();
-        let display = crate::join_display_path(&config.ir, &filename);
+    for (relative_path, path) in entries {
+        let (directory, filename) = relative_path.rsplit_once('/').unwrap_or(("", &relative_path));
+        let display = crate::join_display_path(&config.ir, &relative_path);
         let content = crate::read_utf8_file(&path, &display)?;
-        let doc = parse_document(&filename, &content);
+        let mut doc = parse_document(filename, &content);
+        doc.directory = directory.to_string();
+        doc.relative_path = relative_path;
         docs.push(doc);
     }
-
     let findings = check_documents(&docs, config);
-
     Ok((docs, findings))
+}
+
+fn collect_ir_paths(
+    dir: &Path,
+    prefix: &str,
+    ir_path: &str,
+    paths: &mut Vec<(String, std::path::PathBuf)>,
+) -> Result<(), crate::StopReason> {
+    let display = crate::join_display_path(ir_path, prefix);
+    let display = if prefix.is_empty() { ir_path } else { &display };
+    let unreadable = |e| crate::StopReason::UnreadableFile(format!("{display}: {e}"));
+    for entry in std::fs::read_dir(dir).map_err(unreadable)? {
+        let entry = entry.map_err(unreadable)?;
+        let path = entry.path();
+        let name = entry.file_name().to_string_lossy().to_string();
+        let relative_path = crate::join_display_path(prefix, &name);
+        let entry_display = crate::join_display_path(ir_path, &relative_path);
+        let entry_error = |e| crate::StopReason::UnreadableFile(format!("{entry_display}: {e}"));
+        let file_type = entry.file_type().map_err(entry_error)?;
+        let (is_dir, is_file) = if file_type.is_symlink() {
+            let metadata = std::fs::metadata(&path).map_err(entry_error)?;
+            (false, metadata.is_file())
+        } else {
+            (file_type.is_dir(), file_type.is_file())
+        };
+        if is_dir && !name.starts_with('.') {
+            collect_ir_paths(&path, &relative_path, ir_path, paths)?;
+        } else if is_file && path.extension().is_some_and(|ext| ext == "md") {
+            paths.push((relative_path, path));
+        }
+    }
+    Ok(())
 }
