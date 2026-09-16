@@ -1,3 +1,4 @@
+.agents/
 /target/
 mutants.out/
 /.agents/HANDOFF.md
