@@ -383,7 +383,11 @@ pub fn check_sources(
 ) {
     for doc in docs {
         let path = crate::join_display_path(ir_path, &doc.relative_path);
+        let duplicate_rows = doc.duplicate_glossary_rows(docs);
         for item in &doc.items {
+            if duplicate_rows.contains(&item.item_line()) {
+                continue;
+            }
             let (sources, source_line) = match item {
                 crate::ir::Item::Requirement { sources, fields_seen, line, .. } => {
                     // REQ-115: 出典の行を探す

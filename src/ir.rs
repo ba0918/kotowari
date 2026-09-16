@@ -161,6 +161,29 @@ pub struct IrDocument {
     pub glossary_table_seen: bool,
 }
 
+impl IrDocument {
+    pub(crate) fn is_glossary_in_chain(&self, directory: &str) -> bool {
+        self.kind == DocKind::Glossary && (self.directory.is_empty()
+            || self.directory == directory
+            || directory.strip_prefix(&self.directory).is_some_and(|rest| rest.starts_with('/')))
+    }
+
+    pub(crate) fn duplicate_glossary_rows(&self, docs: &[IrDocument]) -> BTreeSet<usize> {
+        let ancestors: BTreeSet<&str> = docs.iter()
+            .filter(|doc| doc.directory != self.directory && doc.is_glossary_in_chain(&self.directory))
+            .flat_map(|doc| &doc.items)
+            .filter_map(|item| match item {
+                Item::GlossaryTerm { term, .. } => Some(term.as_str()),
+                _ => None,
+            })
+            .collect();
+        self.items.iter().filter_map(|item| match item {
+            Item::GlossaryTerm { term, line, .. } if ancestors.contains(term.as_str()) => Some(*line),
+            _ => None,
+        }).collect()
+    }
+}
+
 /// 文書名の参照の検査用に行を分割する
 pub fn split_lines_for_doc_ref<'a>(_filename: &str, content: &'a str) -> Vec<&'a str> {
     split_lines(content)
@@ -1012,7 +1035,14 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
         }
 
         // 項目の検査
+        let duplicate_rows = doc.duplicate_glossary_rows(docs);
         for item in &doc.items {
+            if duplicate_rows.contains(&item.item_line()) {
+                if let Item::GlossaryTerm { term, line, .. } = item {
+                    findings.push(Finding::new(FindingKind::DuplicateTerm, path.clone(), Some(*line), term.clone()));
+                }
+                continue;
+            }
             check_item(item, &path, doc.kind, &mut findings);
 
             // ID を収集（形に合う ID だけ。REQ-114）

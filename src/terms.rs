@@ -10,9 +10,13 @@ pub fn collect_glossary_terms(docs: &[IrDocument], directory: &str) -> Option<BT
     let mut terms = BTreeSet::new();
 
     for doc in docs {
-        if doc.kind == crate::ir::DocKind::Glossary && is_in_chain(&doc.directory, directory) {
+        if doc.is_glossary_in_chain(directory) {
             has_glossary = true;
+            let duplicate_rows = doc.duplicate_glossary_rows(docs);
             for item in &doc.items {
+                if duplicate_rows.contains(&item.item_line()) {
+                    continue;
+                }
                 if let Item::GlossaryTerm { term, .. } = item {
                     terms.insert(term.clone());
                 }
@@ -25,11 +29,6 @@ pub fn collect_glossary_terms(docs: &[IrDocument], directory: &str) -> Option<BT
     } else {
         None
     }
-}
-
-pub(crate) fn is_in_chain(ancestor: &str, directory: &str) -> bool {
-    ancestor.is_empty() || ancestor == directory
-        || directory.strip_prefix(ancestor).is_some_and(|rest| rest.starts_with('/'))
 }
 
 /// 対象の行からバッククォートで囲んだ語を検査する（REQ-064, REQ-065, REQ-116）

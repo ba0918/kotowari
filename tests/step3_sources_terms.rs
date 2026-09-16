@@ -1618,3 +1618,23 @@ fn req_065_document_with_no_glossary_in_its_chain_flags_every_backtick() {
     assert_eq!(unknown.iter().map(|f| f["detail"].as_str().unwrap()).collect::<Vec<_>>(), ["未定義", "網"]);
     assert!(unknown.iter().all(|f| f["path"] == "docs/ir/a.md"));
 }
+
+// @kotowari[REQ-123, TBL-019]
+#[test]
+fn req_123_duplicate_across_the_chain_is_reported_on_the_deeper_row() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "CONTEXT.md", &glossary("宛先"));
+    write_ir(tmp.path(), "network/CONTEXT.md", "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| 宛先 | 意味 | |\n| 宛先 | 意味 | invalid |\n");
+    write_ir(tmp.path(), "network/dns/CONTEXT.md", &glossary("宛先").replace("docs/decision/brainstorm/records.md#A1", "invalid"));
+    write_ir(tmp.path(), "network/dns/a.md", &term_statement("REQ-001", "`宛先`"));
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let duplicates = findings_by_kind(&result, "duplicate_term");
+    assert_eq!(duplicates.len(), 3);
+    assert_eq!(duplicates.iter().map(|f| (f["path"].as_str().unwrap(), f["line"].as_u64().unwrap())).collect::<Vec<_>>(),
+        [("docs/ir/network/CONTEXT.md", 5), ("docs/ir/network/CONTEXT.md", 6), ("docs/ir/network/dns/CONTEXT.md", 5)]);
+    assert!(duplicates.iter().all(|f| f["detail"] == "宛先"));
+    assert!(findings_by_kind(&result, "unknown_term").is_empty());
+    assert!(findings_by_kind(&result, "missing_source").is_empty());
+    assert!(findings_by_kind(&result, "source_invalid").is_empty());
+}
