@@ -1576,3 +1576,28 @@ fn req_124_four_digit_id_is_valid_in_heading_tag_and_marker() {
     assert_eq!(output.status.code(), Some(0), "{:?}", result);
     assert!(result["findings"].as_array().unwrap().is_empty(), "{:?}", result);
 }
+
+// @kotowari[REQ-124, REQ-043, REQ-114]
+#[test]
+fn req_124_leading_zero_and_short_ids_are_rejected() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "review");
+    let path = tmp.path().join("docs/ir/a.md");
+    let content = fs::read_to_string(&path).unwrap()
+        + "\n### REQ-0001: 名前\n\n### REQ-1: 名前\n\n## 具体例\n\n```gherkin\n@id=EX-0001 @about=REQ-001 @source=docs/decision/brainstorm/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
+    let doc = kotowari::ir::parse_document("a.md", &content);
+    let ids = kotowari::collect_known_ids(&[doc]);
+    assert!(ids.contains("REQ-001"), "{:?}", ids);
+    fs::write(path, content).unwrap();
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let headings = findings_by_kind(&result, "unknown_heading");
+    assert_eq!(headings.len(), 2, "{:?}", headings);
+    for heading in ["### REQ-0001: 名前", "### REQ-1: 名前"] {
+        assert_eq!(headings.iter().filter(|f| f["detail"] == heading).count(), 1);
+    }
+    let invalid = findings_by_kind(&result, "invalid_id");
+    assert_eq!(invalid.len(), 1, "{:?}", invalid);
+    assert_eq!(invalid[0]["detail"], "EX-0001");
+    assert!(findings_by_kind(&result, "unresolved_reference").is_empty(), "{:?}", result);
+}
