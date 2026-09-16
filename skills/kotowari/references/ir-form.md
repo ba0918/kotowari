@@ -181,4 +181,4 @@ kotowari が指摘を出さずに読まないか見ないもの:
 
 ## 上限
 
-1文書の行数が `limits.lines`（既定 120）を超えると too_many_lines の警告。1文書の要求の数が `limits.requirements`（既定 10）を超えると too_many_requirements の警告。`CONTEXT.md` と `FLAGS.md` は too_many_requirements を数えない。
+1文書の行数が `limits.lines`（既定 200）を超えると too_many_lines の警告。1文書の要求の数が `limits.requirements`（既定 10）を超えると too_many_requirements の警告。`CONTEXT.md` と `FLAGS.md` は too_many_requirements を数えない。

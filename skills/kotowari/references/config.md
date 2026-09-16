@@ -10,7 +10,7 @@ kotowari 0.1.0 の仕様に基づく
 | tests.files | glob の一覧 | src/\*\*/\*.rs、tests/\*\*/\*.rs |
 | tests.rust.attributes | "#[test]" に足す属性のパスの一覧 | 空の一覧 |
 | tests.rust.macros | マクロの名前の一覧 | 空の一覧 |
-| limits.lines | 数（負の数と0は不可） | 120 |
+| limits.lines | 数（負の数と0は不可） | 200 |
 | limits.requirements | 数（負の数と0は不可） | 10 |
 | vague_words | 語の一覧 | 「適切に」「必要に応じて」「通常は」「など」の4語 |
 
@@ -35,7 +35,7 @@ tests:
     attributes: []
     macros: []
 limits:
-  lines: 120
+  lines: 200
   requirements: 10
 vague_words:
   - "適切に"
