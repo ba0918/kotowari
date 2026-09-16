@@ -14,47 +14,20 @@ fn find_by_kind<'a>(findings: &'a [Finding], kind: &str) -> Vec<&'a Finding> {
     findings.iter().filter(|f| f.kind == kind).collect()
 }
 
-// --- REQ-033: 直下の *.md だけ読む ---
-
-// @kotowari[REQ-033]
+// @kotowari[REQ-033, REQ-037, TBL-005]
 #[test]
-fn req_033_only_direct_children() {
-    use assert_cmd::Command;
-    use tempfile::TempDir;
-
-    let tmp = TempDir::new().unwrap();
-    std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/ir/sub")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
-    std::fs::write(
-        tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
-    )
-    .unwrap();
-    // 直下に valid な文書
-    std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope line.\n",
-    )
-    .unwrap();
-    // サブディレクトリに文書（読まれない）
-    std::fs::write(
-        tmp.path().join("docs/ir/sub/b.md"),
-        "no title here\n",
-    )
-    .unwrap();
-
-    let output = Command::cargo_bin("kotowari")
-        .unwrap()
-        .arg("check")
-        .current_dir(tmp.path())
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let v: serde_json::Value = serde_json::from_str(&stdout).unwrap();
-    // 直下の1文書だけ読む
-    assert_eq!(v["files"], 1);
+fn req_033_subdirectories_are_read_at_any_depth() {
+    let tmp = tempfile::tempdir().unwrap();
+    for dir in ["docs/ir/sub/deep", "docs/ir/empty"] {
+        std::fs::create_dir_all(tmp.path().join(dir)).unwrap();
+    }
+    for file in ["a.md", "sub/b.md", "sub/deep/c.md"] {
+        std::fs::write(tmp.path().join("docs/ir").join(file), "# Title\n\nScope.\n").unwrap();
+    }
+    let (docs, findings) = ir::load_and_check(tmp.path(), &default_config()).unwrap();
+    assert_eq!(docs.len(), 3);
+    assert_eq!(docs.iter().map(|doc| doc.line_count).sum::<usize>(), 9);
+    assert!(findings.is_empty(), "{findings:?}");
 }
 
 // --- REQ-034: 題名が無い ---
@@ -2854,4 +2827,84 @@ fn req_054_extract_backtick_contents_two_pairs_on_one_line() {
         vec!["REQ-001", "TBL-999"],
         "two separate backtick-delimited ids on one line should each be extracted whole, not fused together"
     );
+}
+
+// @kotowari[REQ-033]
+#[test]
+#[cfg(unix)]
+fn req_033_hidden_dir_and_dir_symlink_are_not_followed_at_any_depth() {
+    use std::os::unix::{fs::symlink, net::UnixListener};
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::create_dir_all(tmp.path().join("outside")).unwrap();
+    std::fs::write(tmp.path().join("outside/a.md"), "bad").unwrap();
+    for prefix in ["docs/ir", "docs/ir/sub/deep"] {
+        let dir = tmp.path().join(prefix);
+        std::fs::create_dir_all(dir.join(".hidden")).unwrap();
+        symlink("missing", dir.join(".hidden/broken")).unwrap();
+        symlink(tmp.path().join("outside"), dir.join("linked")).unwrap();
+        std::fs::write(dir.join("a.MD"), "bad").unwrap();
+        let _socket = UnixListener::bind(dir.join("socket.md")).unwrap();
+        std::fs::write(dir.join("visible.md"), "# Title\n\nScope.\n").unwrap();
+        symlink("visible.md", dir.join("file.md")).unwrap();
+    }
+    let (docs, findings) = ir::load_and_check(tmp.path(), &default_config()).unwrap();
+    assert_eq!(docs.len(), 4);
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+// @kotowari[REQ-033, REQ-018, TBL-020]
+#[test]
+#[cfg(unix)]
+fn req_033_broken_symlink_in_a_subdirectory_stops() {
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/ir/sub")).unwrap();
+    std::os::unix::fs::symlink("missing", tmp.path().join("docs/ir/sub/broken.md")).unwrap();
+    let err = ir::load_and_check(tmp.path(), &default_config()).unwrap_err();
+    assert!(matches!(err, kotowari::StopReason::UnreadableFile(ref detail)
+        if detail.starts_with("docs/ir/sub/broken.md: ")));
+}
+
+// @kotowari[REQ-033, REQ-036, REQ-117]
+#[test]
+fn req_033_context_and_flags_in_a_subdirectory_are_glossary_and_flags() {
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/ir/sub")).unwrap();
+    for file in ["CONTEXT.md", "FLAGS.md"] {
+        std::fs::write(tmp.path().join("docs/ir/sub").join(file), "# Title\n").unwrap();
+    }
+    let (docs, findings) = ir::load_and_check(tmp.path(), &default_config()).unwrap();
+    assert_eq!(docs.iter().map(|d| d.kind).collect::<Vec<_>>(),
+        [ir::DocKind::Glossary, ir::DocKind::Flags]);
+    assert!(find_by_kind(&findings, "missing_scope").is_empty());
+    assert_eq!(find_by_kind(&findings, "glossary_invalid").len(), 1);
+}
+
+// @kotowari[TBL-008, REQ-034, REQ-036, REQ-117]
+#[test]
+fn tbl_008_whole_document_detail_is_the_bare_filename_in_a_subdirectory() {
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/ir/sub")).unwrap();
+    for file in ["CONTEXT.md", "a.md"] {
+        std::fs::write(tmp.path().join("docs/ir/sub").join(file), "").unwrap();
+    }
+    let (_, findings) = ir::load_and_check(tmp.path(), &default_config()).unwrap();
+    for (kind, expected) in [("missing_title", vec!["CONTEXT.md", "a.md"]),
+        ("missing_scope", vec!["a.md"]), ("glossary_invalid", vec!["CONTEXT.md"])] {
+        assert_eq!(find_by_kind(&findings, kind).iter().map(|f| f.detail.as_str()).collect::<Vec<_>>(), expected);
+    }
+}
+
+// @kotowari[REQ-032]
+#[test]
+fn req_032_first_occurrence_is_bytewise_first_relative_path() {
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/ir/a")).unwrap();
+    for file in ["a.md", "a/b.md"] {
+        std::fs::write(tmp.path().join("docs/ir").join(file), "# Title\n\nScope.\n\n### REQ-001: Name\n").unwrap();
+    }
+    let (_, findings) = ir::load_and_check(tmp.path(), &default_config()).unwrap();
+    let duplicates = find_by_kind(&findings, "duplicate_id");
+    assert_eq!(duplicates.len(), 1);
+    assert_eq!(duplicates[0].path, "docs/ir/a/b.md");
+    assert_eq!(duplicates[0].line, Some(5));
 }

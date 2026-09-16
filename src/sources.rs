@@ -382,7 +382,7 @@ pub fn check_sources(
     findings: &mut Vec<Finding>,
 ) {
     for doc in docs {
-        let path = crate::join_display_path(ir_path, &doc.filename);
+        let path = crate::join_display_path(ir_path, &doc.relative_path);
         for item in &doc.items {
             let (sources, source_line) = match item {
                 crate::ir::Item::Requirement { sources, fields_seen, line, .. } => {

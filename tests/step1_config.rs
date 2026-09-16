@@ -726,3 +726,35 @@ fn tbl_003_kotowari_file_is_ignored_in_search() {
         .assert()
         .code(0);
 }
+
+// @kotowari[REQ-018, TBL-001, TBL-020]
+#[test]
+#[cfg(unix)]
+fn req_018_unreadable_ir_subdirectory_stops() {
+    use std::os::unix::fs::PermissionsExt;
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    let dir = tmp.path().join("docs/ir/sub/deep");
+    fs::create_dir_all(&dir).unwrap();
+    fs::set_permissions(&dir, fs::Permissions::from_mode(0o000)).unwrap();
+    let os_error = fs::read_dir(&dir).unwrap_err().to_string();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    fs::set_permissions(&dir, fs::Permissions::from_mode(0o755)).unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    assert!(output.stdout.is_empty());
+    assert!(String::from_utf8_lossy(&output.stderr).contains(&format!("unreadable file: docs/ir/sub/deep: {os_error}")));
+}
+
+// @kotowari[REQ-110, TBL-006]
+#[test]
+fn req_110_path_carries_the_subdirectory() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(tmp.path().join(".kotowari/config.yaml"), "ir: ./docs//ir/./\n").unwrap();
+    fs::create_dir_all(tmp.path().join("docs/ir/sub/deep")).unwrap();
+    fs::write(tmp.path().join("docs/ir/sub/deep/a.md"), "").unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let result: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(result["files"], 1);
+    assert_eq!(result["findings"][0]["path"], "docs/ir/sub/deep/a.md");
+}
