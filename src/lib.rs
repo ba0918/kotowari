@@ -26,127 +26,69 @@ pub struct TestFileTally {
     pub query: bool,
 }
 
-/// 指摘の種類
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum FindingKind {
-    AlgorithmWithoutDefinition,
-    DuplicateField,
-    DuplicateId,
-    DuplicateTerm,
-    InvalidGlossaryRow,
-    InvalidMarker,
-    MissingDocument,
-    MissingField,
-    MissingScope,
-    MissingSource,
-    MissingStatement,
-    MissingTable,
-    MissingTag,
-    MissingTitle,
-    MultipleTitles,
-    RequirementWithoutTest,
-    SourceInvalid,
-    TestWithoutId,
-    TooManyLines,
-    TooManyRequirements,
-    UnclosedBacktick,
-    UnclosedCodeBlock,
-    UnknownField,
-    UnknownHeading,
-    UnknownKind,
-    UnknownTag,
-    UnknownTerm,
-    UnparsableFile,
-    InvalidGherkinLine,
-    InvalidId,
-    GlossaryInvalid,
-    UnresolvedReference,
-    VagueWord,
-    VerificationInvalid,
-    VerificationMissing,
+/// 指摘の種類と、その JSON での文字列。
+/// この呼び出しの一覧が変種の唯一の在り処で、列挙体・`ALL`・`as_str` はここから作る。
+macro_rules! finding_kinds {
+    ($($variant:ident => $text:literal,)+) => {
+        /// 指摘の種類
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        pub enum FindingKind {
+            $($variant,)+
+        }
+
+        impl FindingKind {
+            /// 出しうる種類のすべて
+            pub const ALL: &'static [FindingKind] = &[$(FindingKind::$variant),+];
+
+            /// 種類を文字列に変換する（JSON 出力・整列・counts のキーに使う）
+            pub fn as_str(&self) -> &'static str {
+                match self {
+                    $(FindingKind::$variant => $text),+
+                }
+            }
+        }
+    };
+}
+
+finding_kinds! {
+    AlgorithmWithoutDefinition => "algorithm_without_definition",
+    DuplicateField => "duplicate_field",
+    DuplicateId => "duplicate_id",
+    DuplicateTerm => "duplicate_term",
+    InvalidGlossaryRow => "invalid_glossary_row",
+    InvalidMarker => "invalid_marker",
+    MissingDocument => "missing_document",
+    MissingField => "missing_field",
+    MissingScope => "missing_scope",
+    MissingSource => "missing_source",
+    MissingStatement => "missing_statement",
+    MissingTable => "missing_table",
+    MissingTag => "missing_tag",
+    MissingTitle => "missing_title",
+    MultipleTitles => "multiple_titles",
+    RequirementWithoutTest => "requirement_without_test",
+    SourceInvalid => "source_invalid",
+    TestWithoutId => "test_without_id",
+    TooManyLines => "too_many_lines",
+    TooManyRequirements => "too_many_requirements",
+    UnclosedBacktick => "unclosed_backtick",
+    UnclosedCodeBlock => "unclosed_code_block",
+    UnknownField => "unknown_field",
+    UnknownHeading => "unknown_heading",
+    UnknownKind => "unknown_kind",
+    UnknownTag => "unknown_tag",
+    UnknownTerm => "unknown_term",
+    UnparsableFile => "unparsable_file",
+    InvalidGherkinLine => "invalid_gherkin_line",
+    InvalidId => "invalid_id",
+    GlossaryInvalid => "glossary_invalid",
+    UnresolvedReference => "unresolved_reference",
+    VagueWord => "vague_word",
+    VerificationInvalid => "verification_invalid",
+    VerificationMissing => "verification_missing",
 }
 
 impl FindingKind {
-    /// 出しうる種類のすべて。変種を足したらここにも足す
-    pub const ALL: [FindingKind; 35] = [
-        FindingKind::AlgorithmWithoutDefinition,
-        FindingKind::DuplicateField,
-        FindingKind::DuplicateId,
-        FindingKind::DuplicateTerm,
-        FindingKind::InvalidGlossaryRow,
-        FindingKind::InvalidMarker,
-        FindingKind::MissingDocument,
-        FindingKind::MissingField,
-        FindingKind::MissingScope,
-        FindingKind::MissingSource,
-        FindingKind::MissingStatement,
-        FindingKind::MissingTable,
-        FindingKind::MissingTag,
-        FindingKind::MissingTitle,
-        FindingKind::MultipleTitles,
-        FindingKind::RequirementWithoutTest,
-        FindingKind::SourceInvalid,
-        FindingKind::TestWithoutId,
-        FindingKind::TooManyLines,
-        FindingKind::TooManyRequirements,
-        FindingKind::UnclosedBacktick,
-        FindingKind::UnclosedCodeBlock,
-        FindingKind::UnknownField,
-        FindingKind::UnknownHeading,
-        FindingKind::UnknownKind,
-        FindingKind::UnknownTag,
-        FindingKind::UnknownTerm,
-        FindingKind::UnparsableFile,
-        FindingKind::InvalidGherkinLine,
-        FindingKind::InvalidId,
-        FindingKind::GlossaryInvalid,
-        FindingKind::UnresolvedReference,
-        FindingKind::VagueWord,
-        FindingKind::VerificationInvalid,
-        FindingKind::VerificationMissing,
-    ];
-
-    /// 種類を文字列に変換する（JSON 出力・整列・counts のキーに使う）
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            FindingKind::AlgorithmWithoutDefinition => "algorithm_without_definition",
-            FindingKind::DuplicateField => "duplicate_field",
-            FindingKind::DuplicateId => "duplicate_id",
-            FindingKind::DuplicateTerm => "duplicate_term",
-            FindingKind::InvalidGlossaryRow => "invalid_glossary_row",
-            FindingKind::InvalidMarker => "invalid_marker",
-            FindingKind::MissingDocument => "missing_document",
-            FindingKind::MissingField => "missing_field",
-            FindingKind::MissingScope => "missing_scope",
-            FindingKind::MissingSource => "missing_source",
-            FindingKind::MissingStatement => "missing_statement",
-            FindingKind::MissingTable => "missing_table",
-            FindingKind::MissingTag => "missing_tag",
-            FindingKind::MissingTitle => "missing_title",
-            FindingKind::MultipleTitles => "multiple_titles",
-            FindingKind::RequirementWithoutTest => "requirement_without_test",
-            FindingKind::SourceInvalid => "source_invalid",
-            FindingKind::TestWithoutId => "test_without_id",
-            FindingKind::TooManyLines => "too_many_lines",
-            FindingKind::TooManyRequirements => "too_many_requirements",
-            FindingKind::UnclosedBacktick => "unclosed_backtick",
-            FindingKind::UnclosedCodeBlock => "unclosed_code_block",
-            FindingKind::UnknownField => "unknown_field",
-            FindingKind::UnknownHeading => "unknown_heading",
-            FindingKind::UnknownKind => "unknown_kind",
-            FindingKind::UnknownTag => "unknown_tag",
-            FindingKind::UnknownTerm => "unknown_term",
-            FindingKind::UnparsableFile => "unparsable_file",
-            FindingKind::InvalidGherkinLine => "invalid_gherkin_line",
-            FindingKind::InvalidId => "invalid_id",
-            FindingKind::GlossaryInvalid => "glossary_invalid",
-            FindingKind::UnresolvedReference => "unresolved_reference",
-            FindingKind::VagueWord => "vague_word",
-            FindingKind::VerificationInvalid => "verification_invalid",
-            FindingKind::VerificationMissing => "verification_missing",
-        }
-    }
-
     /// 重大度を返す（1か所で管理する）
     pub fn severity(&self) -> &'static str {
         match self {
@@ -220,24 +162,42 @@ impl Format {
     }
 }
 
-/// 停止の理由
-#[derive(Debug)]
-pub enum StopReason {
-    ArgumentError(String),
-    ConfigError(String),
-    UnreadableFile(String),
-    NonUtf8File(String),
+/// 停止の理由と、標準エラーの1行目で詳細の前に出る文言（TBL-018）。
+/// この呼び出しの一覧が変種の唯一の在り処で、列挙体・`WORDINGS`・`Display` はここから作る。
+macro_rules! stop_reasons {
+    ($($variant:ident => $wording:literal,)+) => {
+        /// 停止の理由
+        #[derive(Debug)]
+        pub enum StopReason {
+            $($variant(String)),+
+        }
+
+        impl StopReason {
+            /// 標準エラーの1行目に出しうる文言のすべて
+            pub const WORDINGS: &'static [&'static str] = &[$($wording),+];
+
+            /// この理由の文言と詳細
+            fn wording_and_detail(&self) -> (&'static str, &str) {
+                match self {
+                    $(StopReason::$variant(detail) => ($wording, detail)),+
+                }
+            }
+        }
+
+        impl std::fmt::Display for StopReason {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                let (wording, detail) = self.wording_and_detail();
+                write!(f, "{wording}: {detail}")
+            }
+        }
+    };
 }
 
-impl std::fmt::Display for StopReason {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            StopReason::ArgumentError(s) => write!(f, "argument error: {s}"),
-            StopReason::ConfigError(s) => write!(f, "config error: {s}"),
-            StopReason::UnreadableFile(s) => write!(f, "unreadable file: {s}"),
-            StopReason::NonUtf8File(s) => write!(f, "non-UTF-8 file: {s}"),
-        }
-    }
+stop_reasons! {
+    ArgumentError => "argument error",
+    ConfigError => "config error",
+    UnreadableFile => "unreadable file",
+    NonUtf8File => "non-UTF-8 file",
 }
 
 /// 引数の解析結果

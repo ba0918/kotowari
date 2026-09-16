@@ -112,23 +112,11 @@ fn req_126_config_reference_setup_yaml_parses_to_the_defaults() {
 #[test]
 fn req_127_findings_reference_stop_wordings_match_the_code() {
     let in_reference = first_column_of_table(&read_reference("findings.md"), "文言");
-    // 標準エラーの1行目は StopReason の Display で、詳細の前が文言になる
-    let in_code: BTreeSet<String> = [
-        kotowari::StopReason::ConfigError(String::new()),
-        kotowari::StopReason::ArgumentError(String::new()),
-        kotowari::StopReason::UnreadableFile(String::new()),
-        kotowari::StopReason::NonUtf8File(String::new()),
-    ]
-    .iter()
-    .map(|reason| {
-        reason
-            .to_string()
-            .split(": ")
-            .next()
-            .expect("a wording before the detail")
-            .to_string()
-    })
-    .collect();
+    // 標準エラーの1行目は StopReason の Display で、詳細の前がこの文言になる
+    let in_code: BTreeSet<String> = kotowari::StopReason::WORDINGS
+        .iter()
+        .map(|wording| wording.to_string())
+        .collect();
     assert_eq!(
         in_reference, in_code,
         "the stop wordings in references/findings.md should be exactly the wordings the code prints"
