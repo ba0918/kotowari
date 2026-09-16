@@ -1684,3 +1684,86 @@ fn req_070_bare_name_resolves_in_the_same_directory_only() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert!(findings_by_kind(&parse_json(&output), "missing_document").is_empty());
 }
+
+// @kotowari[REQ-070, TBL-014]
+#[test]
+fn req_070_slash_path_resolves_from_the_ir_root() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "network/dns/a.md", "# Title\n\nSee network/publish/c.md.\n");
+    write_ir(tmp.path(), "network/publish/c.md", "# Title\n\nScope.\n");
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    assert!(findings_by_kind(&result, "missing_document").is_empty(), "{:?}", result);
+    assert_eq!(result["files"], 2);
+}
+
+// @kotowari[REQ-070, TBL-014]
+#[test]
+fn req_070_dot_and_dotdot_elements_never_resolve() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "network/dns/a.md", "# Title\n\n../b.md ./c.md\n");
+    write_ir(tmp.path(), "network/b.md", "# Title\n\nScope.\n");
+    write_ir(tmp.path(), "network/dns/c.md", "# Title\n\nScope.\n");
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let missing = findings_by_kind(&result, "missing_document");
+    assert_eq!(missing.len(), 2, "{:?}", missing);
+    for reference in ["../b.md", "./c.md"] {
+        assert_eq!(missing.iter().filter(|f| f["detail"] == reference).count(), 1);
+    }
+    assert!(missing.iter().all(|f| f["path"] == "docs/ir/network/dns/a.md"));
+}
+
+// @kotowari[REQ-069, REQ-070, TBL-014, TBL-008]
+#[test]
+fn req_070_detail_is_the_whole_reference() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "a.md", "# Title\n\ndocs/decision/adr/0001-test-marker.md\n");
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let missing = findings_by_kind(&result, "missing_document");
+    assert_eq!(missing.len(), 1, "{:?}", missing);
+    assert_eq!(missing[0]["detail"], "docs/decision/adr/0001-test-marker.md");
+}
+
+// @kotowari[REQ-033, REQ-070, TBL-014]
+#[cfg(unix)]
+#[test]
+fn req_070_document_under_a_directory_symlink_is_missing() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::create_dir_all(tmp.path().join("outside")).unwrap();
+    fs::write(tmp.path().join("outside/d.md"), "# Title\n\nScope.\n").unwrap();
+    std::os::unix::fs::symlink("../../outside", tmp.path().join("docs/ir/link")).unwrap();
+    assert!(tmp.path().join("docs/ir/link/d.md").is_file());
+    write_ir(tmp.path(), "a.md", "# Title\n\nlink/d.md\n");
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let missing = findings_by_kind(&result, "missing_document");
+    assert_eq!(missing.len(), 1, "{:?}", missing);
+    assert_eq!(missing[0]["detail"], "link/d.md");
+}
+
+// @kotowari[REQ-069, TBL-014]
+#[test]
+fn tbl_014_reference_after_a_japanese_character_is_recognized() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "a.md", "# Title\n\n設定の形はtimeout-config.mdで定める\n");
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let missing = findings_by_kind(&result, "missing_document");
+    assert_eq!(missing.len(), 1, "{:?}", missing);
+    assert_eq!(missing[0]["detail"], "timeout-config.md");
+}
+
+// @kotowari[REQ-064, REQ-069, TBL-014]
+#[test]
+fn tbl_014_backticked_path_is_a_term_not_a_reference() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "x.md", &term_statement("REQ-001", "`a.md`"));
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let unknown = findings_by_kind(&result, "unknown_term");
+    assert_eq!(unknown.len(), 1, "{:?}", unknown);
+    assert_eq!(unknown[0]["detail"], "a.md");
+    assert!(findings_by_kind(&result, "missing_document").is_empty(), "{:?}", result);
+}
