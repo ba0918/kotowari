@@ -169,11 +169,11 @@ fn find_doc_refs(
         if let Some(md_pos) = text[i..].find(".md") {
             let md_abs = i + md_pos;
 
-            // TBL-014: ".md" の後が英数字、"_"、"-" でないこと
+            // TBL-014: 出典の印やパスの途中は参照にならない
             let after_md = md_abs + 3;
             if after_md < len {
                 let next_byte = bytes[after_md];
-                if next_byte.is_ascii_alphanumeric() || next_byte == b'_' || next_byte == b'-' {
+                if next_byte.is_ascii_alphanumeric() || next_byte == b'_' || next_byte == b'-' || next_byte == b'#' || next_byte == b'/' {
                     i = md_abs + 1;
                     continue;
                 }

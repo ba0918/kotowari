@@ -1638,3 +1638,17 @@ fn req_123_duplicate_across_the_chain_is_reported_on_the_deeper_row() {
     assert!(findings_by_kind(&result, "missing_source").is_empty());
     assert!(findings_by_kind(&result, "source_invalid").is_empty());
 }
+
+// @kotowari[REQ-069, TBL-014]
+#[test]
+fn tbl_014_md_followed_by_hash_or_slash_is_not_a_reference() {
+    let doc = kotowari::ir::parse_document(
+        "x.md",
+        "# Title\n\na.md#A12 docs/decision/brainstorm/records.md#A12 a.md/b.md a//b.md\n",
+    );
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(
+        &[doc], "docs/ir", &Default::default(), &mut findings,
+    );
+    assert!(findings.is_empty(), "{:?}", findings);
+}
