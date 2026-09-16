@@ -1601,3 +1601,18 @@ fn req_124_leading_zero_and_short_ids_are_rejected() {
     assert_eq!(invalid[0]["detail"], "EX-0001");
     assert!(findings_by_kind(&result, "unresolved_reference").is_empty(), "{:?}", result);
 }
+
+// @kotowari[REQ-033, REQ-085, REQ-110, TBL-006]
+#[test]
+fn req_033_requirement_without_test_path_carries_the_subdirectory() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("docs/ir/network/dns")).unwrap();
+    fs::rename(tmp.path().join("docs/ir/a.md"), tmp.path().join("docs/ir/network/dns/timeout.md")).unwrap();
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let missing = findings_by_kind(&result, "requirement_without_test");
+    assert_eq!(missing.len(), 1, "{:?}", missing);
+    assert_eq!(missing[0]["path"], "docs/ir/network/dns/timeout.md");
+    assert_eq!(missing[0]["detail"], "REQ-001");
+}

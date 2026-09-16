@@ -1767,3 +1767,22 @@ fn tbl_014_backticked_path_is_a_term_not_a_reference() {
     assert_eq!(unknown[0]["detail"], "a.md");
     assert!(findings_by_kind(&result, "missing_document").is_empty(), "{:?}", result);
 }
+
+// @kotowari[REQ-117, REQ-064]
+#[test]
+fn req_117_invalid_glossary_hides_only_its_own_terms() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "CONTEXT.md", &glossary("根"));
+    write_ir(tmp.path(), "network/CONTEXT.md", &glossary("網").replace("| 用語 | 意味 | 出典 |", "| Name | Meaning | Source |"));
+    write_ir(tmp.path(), "network/a.md", &term_statement("REQ-001", "`根` `網`"));
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let invalid = findings_by_kind(&result, "glossary_invalid");
+    assert_eq!(invalid.len(), 1, "{:?}", invalid);
+    assert_eq!(invalid[0]["path"], "docs/ir/network/CONTEXT.md");
+    assert_eq!(invalid[0]["detail"], "CONTEXT.md");
+    let unknown = findings_by_kind(&result, "unknown_term");
+    assert_eq!(unknown.len(), 1, "{:?}", unknown);
+    assert_eq!(unknown[0]["detail"], "網");
+    assert_eq!(unknown[0]["path"], "docs/ir/network/a.md");
+}
