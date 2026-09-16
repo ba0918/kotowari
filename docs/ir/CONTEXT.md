@@ -26,7 +26,7 @@
 | ID | "REQ-"、"TBL-"、"PROP-"、"EX-"、"FLAG-" のいずれかに3桁以上の数字（4桁以上のときは先頭が "0" でない）を続けた、項目の識別子 | docs/decision/brainstorm/records.md#A52, docs/decision/brainstorm/2026-09-16-ir-tree.md#A6, docs/decision/brainstorm/2026-09-16-ir-tree.md#A11 |
 | 指摘 | 検査で見つけた1件。kind、severity、path、line、detail を持つ | docs/decision/brainstorm/records.md#A40 |
 | 誤り | 終了コードを1にする指摘 | docs/decision/brainstorm/records.md#A29 |
-| 警告 | 終了コードを変えない指摘 | docs/decision/brainstorm/records.md#A17, docs/decision/brainstorm/records.md#A29 |
+| 注意 | 終了コードを変えない指摘。severity は "notice" | docs/decision/brainstorm/records.md#A17, docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/2026-09-16-notice.md#A1, docs/decision/brainstorm/2026-09-16-notice.md#A2 |
 | 停止 | 検査を行えずに終了コード2で終わること | docs/decision/brainstorm/records.md#A20, docs/decision/brainstorm/records.md#A40 |
 | 印 | テストに書く "@kotowari[ID, ...]" の並び | docs/decision/brainstorm/records.md#A14, docs/decision/brainstorm/records.md#A57 |
 | テスト | 問い合わせでテストと数える関数 | docs/decision/brainstorm/records.md#A24, docs/decision/brainstorm/records.md#A26 |

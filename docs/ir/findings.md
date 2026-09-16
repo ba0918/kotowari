@@ -11,20 +11,20 @@
 - 定義: TBL-008
 - 検証: unit
 
-### REQ-030: 警告の種類
+### REQ-030: 注意の種類
 
 - 種類: algorithm
-- 出典: docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/ir-form.md#検査の種類
+- 出典: docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/ir-form.md#検査の種類, docs/decision/brainstorm/2026-09-16-notice.md#A2
 - 定義: TBL-009
 - 検証: unit
 
-### REQ-031: 警告は2つだけ
+### REQ-031: 注意は2つだけ
 
 - 種類: invariant
-- 出典: docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/ir-form.md#検査の種類
+- 出典: docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/ir-form.md#検査の種類, docs/decision/brainstorm/2026-09-16-notice.md#A2
 - 検証: unit
 
-種類が too_many_lines か too_many_requirements の`指摘`だけが`警告`で、ほかの種類の`指摘`はすべて`誤り`である関係が常に成り立つ。
+種類が too_many_lines か too_many_requirements の`指摘`だけが`注意`で、ほかの種類の`指摘`はすべて`誤り`である関係が常に成り立つ。
 
 ### REQ-032: ID の重複
 
@@ -78,9 +78,9 @@ detail が「行の文字」「見出しの文字」「Scenario: の行の文字
 | invalid_glossary_row | 行の文字 | REQ-122 |
 | duplicate_term | 用語 | REQ-123 |
 
-### TBL-009: 警告の種類と detail
+### TBL-009: 注意の種類と detail
 
-- 出典: docs/decision/brainstorm/ir-form.md#検査の種類
+- 出典: docs/decision/brainstorm/ir-form.md#検査の種類, docs/decision/brainstorm/2026-09-16-notice.md#A2
 
 | 種類 | detail | 条件を定める要求 |
 |---|---|---|

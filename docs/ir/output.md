@@ -30,10 +30,10 @@ kotowari は常に、"--format" の値として "json" と "text" の2つを受�
 ### REQ-025: 文字の出力
 
 - 種類: event_driven
-- 出典: docs/decision/brainstorm/records.md#A40, docs/decision/brainstorm/records.md#A50, docs/decision/brainstorm/records.md#A18, docs/decision/brainstorm/ir-form.md#出力
+- 出典: docs/decision/brainstorm/records.md#A40, docs/decision/brainstorm/records.md#A50, docs/decision/brainstorm/records.md#A18, docs/decision/brainstorm/ir-form.md#出力, docs/decision/brainstorm/2026-09-16-notice.md#A1
 - 検証: unit
 
-"--format" が "text" のとき、kotowari は1つの`指摘`を1行で "パス:行 [error] 種類 詳細" か "パス:行 [warning] 種類 詳細" の形で出し、角括弧も出す。
+"--format" が "text" のとき、kotowari は1つの`指摘`を1行で "パス:行 [error] 種類 詳細" か "パス:行 [notice] 種類 詳細" の形で出し、角括弧も出す。
 
 ### REQ-026: 行の無い指摘の文字の出力
 
@@ -58,12 +58,12 @@ kotowari は常に、"--format" の値として "json" と "text" の2つを受�
 
 ### TBL-006: 指摘の鍵
 
-- 出典: docs/decision/brainstorm/records.md#A40, docs/decision/brainstorm/records.md#A61, docs/decision/brainstorm/records.md#A106, docs/decision/brainstorm/2026-09-16-ir-tree.md#A13
+- 出典: docs/decision/brainstorm/records.md#A40, docs/decision/brainstorm/records.md#A61, docs/decision/brainstorm/records.md#A106, docs/decision/brainstorm/2026-09-16-ir-tree.md#A13, docs/decision/brainstorm/2026-09-16-notice.md#A1
 
 | 鍵 | 中身 |
 |---|---|
 | kind | 指摘の種類（TBL-008、TBL-009） |
-| severity | error か warning |
+| severity | error か notice |
 | path | 基準のディレクトリからの相対パス。正規化した置き場と、置き場からの文書の相対パスを "/" でつなぐ（REQ-110） |
 | line | 行（1始まり）。文書全体への指摘は null |
 | detail | 種類ごとに TBL-008、TBL-009 で決めた文字列 |

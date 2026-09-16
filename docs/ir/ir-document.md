@@ -1,6 +1,6 @@
 # 文書の読み方と文書全体の検査
 
-IR の文書の選び方、題名と範囲の行、行の数え方、行数と要求の数の警告を扱う。
+IR の文書の選び方、題名と範囲の行、行の数え方、行数と要求の数の注意を扱う。
 
 ## 要求
 
@@ -49,7 +49,7 @@ kotowari は常に、`IR`の置き場の下のディレクトリを深さに制�
 - 出典: docs/decision/brainstorm/records.md#A17, docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/records.md#A41, docs/decision/brainstorm/records.md#A56, docs/decision/brainstorm/records.md#A47, docs/decision/brainstorm/ir-form.md#検査の種類
 - 検証: unit
 
-`IR`の文書の行数が "limits.lines" を超えるとき、kotowari は too_many_lines の`警告`を出す。
+`IR`の文書の行数が "limits.lines" を超えるとき、kotowari は too_many_lines の`注意`を出す。
 
 ### REQ-039: 要求の数の上限
 
@@ -57,7 +57,7 @@ kotowari は常に、`IR`の置き場の下のディレクトリを深さに制�
 - 出典: docs/decision/brainstorm/records.md#A17, docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/records.md#A41, docs/decision/brainstorm/records.md#A47, docs/decision/brainstorm/ir-form.md#検査の種類
 - 検証: unit
 
-`話題ごとの文書`の`要求`の数が "limits.requirements" を超えるとき、kotowari は too_many_requirements の`警告`を出す。
+`話題ごとの文書`の`要求`の数が "limits.requirements" を超えるとき、kotowari は too_many_requirements の`注意`を出す。
 
 ### REQ-040: コードブロックの中
 
