@@ -104,7 +104,7 @@
 
 ## 出力
 
-- `--format json`（既定）は、標準出力に1つの JSON を出す。最上位は `files`（読んだ IR の文書の数。用語集と問題の記録を含む）、`lines`（IR の行数の合計）、`findings`（指摘の一覧）、`counts`（種類ごとの数。0件の種類は含まない）。各指摘は `kind`、`severity`（`error` か `notice`。notice A1）、`path`（基準からの相対。置き場と、置き場からの文書の相対パスをつなぐ。ir-tree A13）、`line`（文書全体への指摘は null。1始まり）、`detail`
+- `--format json`（既定）は、標準出力に1つの JSON を出す。最上位は `files`（読んだ IR の文書の数。用語集と問題の記録を含む）、`lines`（IR の行数の合計）、`findings`（指摘の一覧）、`counts`（種類ごとの数。0件の種類は含まない）、`tests`（読んだテストのファイルの拡張子ごとの数と、その拡張子が問い合わせのある言語か。check-reach A8）。各指摘は `kind`、`severity`（`error` か `notice`。notice A1）、`path`（基準からの相対。置き場と、置き場からの文書の相対パスをつなぐ。ir-tree A13）、`line`（文書全体への指摘は null。1始まり）、`detail`
 - `findings` は `path` のバイト順、`line`（null が先、その後は小さい順）、`kind` のバイト順、`detail` のバイト順に並べる
 - `--format text` は1指摘1行で `パス:行 [error|notice] 種類 詳細`（warning は notice に改めた。notice A1）。`[error]` と `[notice]` は角括弧ごと出す。`line` が null なら行を `-` と書く
 - 終了コードは、0 が誤りなし（注意だけを含む。`--help` と `--version` も0）、1 が誤りあり、2 が停止。オプションは `check` の前後どちらでもよい（A103）

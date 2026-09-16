@@ -15,15 +15,15 @@ kotowari は常に、コードに固定した1つの形で`IR`を読む。
 ### REQ-090: スキーマのファイルを読まない
 
 - 種類: prohibition
-- 出典: docs/decision/brainstorm/records.md#R4
-- 検証: review
+- 出典: docs/decision/brainstorm/records.md#R4, docs/decision/brainstorm/2026-09-17-check-reach.md#A3, docs/decision/brainstorm/2026-09-17-check-reach.md#A4
+- 検証: unit
 
 kotowari は、`IR`の形を宣言したスキーマのファイルを読んではならない。
 
 ### REQ-091: 外部の mdschema を使わない
 
 - 種類: prohibition
-- 出典: docs/decision/brainstorm/records.md#R5
-- 検証: review
+- 出典: docs/decision/brainstorm/records.md#R5, docs/decision/brainstorm/2026-09-17-check-reach.md#A3, docs/decision/brainstorm/2026-09-17-check-reach.md#A4
+- 検証: unit
 
 kotowari は、外部の mdschema を検査の前段に使ってはならない。

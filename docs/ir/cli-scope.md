@@ -15,8 +15,8 @@ kotowari は常に、第一に LLM が使う CLI であり、人間が確認の�
 ### REQ-102: 状態を保存しない
 
 - 種類: prohibition
-- 出典: docs/decision/brainstorm/records.md#A75
-- 検証: review
+- 出典: docs/decision/brainstorm/records.md#A75, docs/decision/brainstorm/2026-09-17-check-reach.md#A3, docs/decision/brainstorm/2026-09-17-check-reach.md#A4
+- 検証: unit
 
 kotowari は、状態を保存すること、標準出力と標準エラーのほかに書き出すことをしてはならない。
 

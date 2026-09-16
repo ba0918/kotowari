@@ -46,8 +46,8 @@ kotowari は常に、`決定の番号`を`出典`のパスの指す`判断の記
 ### REQ-062: 内容の照合をしない
 
 - 種類: prohibition
-- 出典: docs/decision/brainstorm/records.md#A4
-- 検証: review
+- 出典: docs/decision/brainstorm/records.md#A4, docs/decision/brainstorm/2026-09-17-check-reach.md#A3, docs/decision/brainstorm/2026-09-17-check-reach.md#A4
+- 検証: unit
 
 kotowari は、`出典`がその`項目`の内容を本当に述べているかを判定してはならない。
 

@@ -46,8 +46,8 @@ kotowari は常に、unknown_term と vague_word の`指摘`を出現ごとに1�
 ### REQ-068: 囲み忘れを検出しない
 
 - 種類: prohibition
-- 出典: docs/decision/brainstorm/records.md#A31
-- 検証: review
+- 出典: docs/decision/brainstorm/records.md#A31, docs/decision/brainstorm/2026-09-17-check-reach.md#A3, docs/decision/brainstorm/2026-09-17-check-reach.md#A4
+- 検証: unit
 
 kotowari は、`用語`をバッククォートで囲み忘れたことを検出してはならない。
 

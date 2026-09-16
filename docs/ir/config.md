@@ -78,8 +78,8 @@ kotowari は常に、glob の "**" を再帰として読み、隠しディレク
 ### REQ-020: 直下の kotowari.toml を読まない
 
 - 種類: prohibition
-- 出典: docs/decision/brainstorm/records.md#R6
-- 検証: review
+- 出典: docs/decision/brainstorm/records.md#R6, docs/decision/brainstorm/2026-09-17-check-reach.md#A3, docs/decision/brainstorm/2026-09-17-check-reach.md#A4
+- 検証: unit
 
 kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`として読んではならない。
 

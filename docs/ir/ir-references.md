@@ -31,16 +31,16 @@ gherkin のブロックの中のタグの行（`シナリオ`に結び付くか�
 ### REQ-055: EARS の型を見ない
 
 - 種類: prohibition
-- 出典: docs/decision/brainstorm/records.md#A42
-- 検証: review
+- 出典: docs/decision/brainstorm/records.md#A42, docs/decision/brainstorm/2026-09-17-check-reach.md#A3, docs/decision/brainstorm/2026-09-17-check-reach.md#A4
+- 検証: unit
 
 kotowari は、`要求`の`文`が EARS の型に沿うかを検査してはならない。
 
 ### REQ-056: 矛盾の読みの数を見ない
 
 - 種類: prohibition
-- 出典: docs/decision/brainstorm/records.md#A28
-- 検証: review
+- 出典: docs/decision/brainstorm/records.md#A28, docs/decision/brainstorm/2026-09-17-check-reach.md#A3, docs/decision/brainstorm/2026-09-17-check-reach.md#A4
+- 検証: unit
 
 kotowari は、`問題の記録`の矛盾の読みが2つ以上あるかを検査してはならない。
 
