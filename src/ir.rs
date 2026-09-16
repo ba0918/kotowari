@@ -892,7 +892,7 @@ fn id_prefix(id: &str) -> Option<IdPrefix> {
     }
 }
 
-/// ID の形式を検証する（接頭辞 + 3桁の数字）
+/// ID の形式を検証する（数字は3桁以上、4桁以上では先頭の0を認めない）
 pub fn is_valid_id(s: &str) -> bool {
     if let Some(prefix) = id_prefix(s) {
         let suffix = match prefix {
@@ -902,7 +902,9 @@ pub fn is_valid_id(s: &str) -> bool {
             IdPrefix::Ex => &s[3..],
             IdPrefix::Flag => &s[5..],
         };
-        suffix.len() == 3 && suffix.chars().all(|c| c.is_ascii_digit())
+        suffix.len() >= 3
+            && (suffix.len() == 3 || !suffix.starts_with('0'))
+            && suffix.chars().all(|c| c.is_ascii_digit())
     } else {
         false
     }

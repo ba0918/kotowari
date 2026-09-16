@@ -1553,3 +1553,26 @@ fn req_079_broken_symlink_outside_glob_stops() {
     );
     assert!(output.stdout.is_empty());
 }
+
+// @kotowari[REQ-124, REQ-114, REQ-043]
+#[test]
+fn req_124_four_digit_id_is_valid_in_heading_tag_and_marker() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-1000: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\n`EX-1000` を満たす。\n\n## 具体例\n\n```gherkin\n@id=EX-1000 @about=REQ-1000 @source=docs/decision/brainstorm/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
+    let doc = kotowari::ir::parse_document("a.md", content);
+    let ids = kotowari::collect_known_ids(&[doc]);
+    assert!(ids.contains("REQ-1000"), "{:?}", ids);
+    assert!(ids.contains("EX-1000"), "{:?}", ids);
+
+    fs::write(tmp.path().join("docs/ir/a.md"), content).unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/a.rs"),
+        "// @kotowari[REQ-1000]\n#[test]\nfn example() {}\n",
+    ).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let result = parse_json(&output);
+    assert_eq!(output.status.code(), Some(0), "{:?}", result);
+    assert!(result["findings"].as_array().unwrap().is_empty(), "{:?}", result);
+}
