@@ -94,7 +94,7 @@ fn req_029_every_error_kind_has_the_detail_of_the_table() {
 
 // @kotowari[REQ-030, TBL-009]
 #[test]
-fn req_030_warning_kinds_have_the_detail_of_the_table() {
+fn req_030_notice_kinds_have_the_detail_of_the_table() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 既定の limits.lines=120 を超える文書
@@ -104,7 +104,7 @@ fn req_030_warning_kinds_have_the_detail_of_the_table() {
     let v = parse_json(&output);
     let tl = findings_by_kind(&v, "too_many_lines");
     assert_eq!(tl.len(), 1);
-    assert_eq!(tl[0]["severity"], "warning");
+    assert_eq!(tl[0]["severity"], "notice");
     // detail は行数
     let line_count: usize = tl[0]["detail"].as_str().unwrap().parse().unwrap();
     assert!(line_count > 120);
@@ -114,7 +114,7 @@ fn req_030_warning_kinds_have_the_detail_of_the_table() {
 
 // @kotowari[REQ-031]
 #[test]
-fn req_031_only_two_kinds_are_warnings() {
+fn req_031_only_two_kinds_are_notices() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 行数超過（>120行）と要求数超過（>10件）を出す
@@ -131,27 +131,27 @@ fn req_031_only_two_kinds_are_warnings() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let findings = v["findings"].as_array().unwrap();
-    let warnings: Vec<_> = findings.iter().filter(|f| f["severity"] == "warning").collect();
+    let notices: Vec<_> = findings.iter().filter(|f| f["severity"] == "notice").collect();
     // 警告が実際に存在すること
     assert!(
-        !warnings.is_empty(),
-        "test should produce at least one warning"
+        !notices.is_empty(),
+        "test should produce at least one notice"
     );
     // 警告は2種類だけ
-    for w in &warnings {
+    for w in &notices {
         let kind = w["kind"].as_str().unwrap();
         assert!(
             kind == "too_many_lines" || kind == "too_many_requirements",
-            "unexpected warning kind: {kind}"
+            "unexpected notice kind: {kind}"
         );
     }
     // 警告でない指摘はすべて error
     for f in findings {
         let sev = f["severity"].as_str().unwrap();
-        if sev != "warning" {
+        if sev != "notice" {
             assert_eq!(
                 sev, "error",
-                "non-warning finding should be error, got {sev}: {:?}",
+                "non-notice finding should be error, got {sev}: {:?}",
                 f
             );
         }

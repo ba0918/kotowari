@@ -180,9 +180,9 @@ fn req_025_text_has_one_line_per_finding_with_bracketed_severity() {
     let lines: Vec<&str> = stdout.lines().collect();
     assert!(!lines.is_empty(), "should have text output");
     for line in &lines {
-        // [error] か [warning] を含む
+        // [error] か [notice] を含む
         assert!(
-            line.contains("[error]") || line.contains("[warning]"),
+            line.contains("[error]") || line.contains("[notice]"),
             "line should have bracketed severity: {line}"
         );
     }
@@ -205,7 +205,7 @@ fn req_026_null_line_prints_dash() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     // "パス:- [error] missing_title ..." の形
     assert!(
-        stdout.contains(":- [error]") || stdout.contains(":- [warning]"),
+        stdout.contains(":- [error]") || stdout.contains(":- [notice]"),
         "null line should print as '-': {stdout}"
     );
 }
@@ -214,7 +214,7 @@ fn req_026_null_line_prints_dash() {
 
 // @kotowari[REQ-007, TBL-002]
 #[test]
-fn req_007_exit_code_one_on_error_and_zero_on_warning_only() {
+fn req_007_exit_code_one_on_error_and_zero_on_notice_only() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
 

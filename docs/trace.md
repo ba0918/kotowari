@@ -12,7 +12,7 @@
 | REQ-004 | unit | `req_004_unknown_option_stops`, `req_004_positional_argument_stops`, `req_004_unknown_format_value_stops`, `req_004_missing_config_file_stops`, `req_004_unknown_command_before_check_has_the_unknown_command_wording`, `req_107_help_wins_over_argument_errors`, `req_004_no_arguments_stops`, `req_004_option_without_value_stops`, `req_004_repeated_option_stops`, `req_004_config_pointing_to_directory_stops` |
 | REQ-005 | unit | `req_004_unknown_option_stops`, `req_004_positional_argument_stops`, `req_005_stop_writes_nothing_to_stdout_and_reason_to_stderr`, `req_004_no_arguments_stops`, `req_004_option_without_value_stops`, `req_004_repeated_option_stops`, `req_004_config_pointing_to_directory_stops`, `req_005_stderr_first_line_has_the_reason_wording`, `req_005_config_error_detail_path_is_relative_to_base_not_to_cwd`, `req_005_stderr_detail_path_is_relative`, `req_005_config_outside_the_base_is_shown_relative_with_parent_segments`, `req_005_stderr_carries_the_stop_reason_text` |
 | REQ-006 | unit | `req_006_non_utf8_config_stops`, `tbl_001_non_utf8_records_or_adr_stops`, `tbl_001_unreadable_test_file_stops`, `tbl_001_non_utf8_test_file_stops` |
-| REQ-007 | unit | `req_004_unknown_option_stops`, `req_007_exit_codes_zero_two`, `req_007_exit_code_one_on_error_and_zero_on_warning_only` |
+| REQ-007 | unit | `req_004_unknown_option_stops`, `req_007_exit_codes_zero_two`, `req_007_exit_code_one_on_error_and_zero_on_notice_only` |
 | REQ-008 | review | `src/main.rs` に render, trace, query のサブコマンドがないことを確認。`grep -c "render\|trace\|query" src/main.rs` が 0 |
 | REQ-009 | unit | `req_009_base_is_the_dir_holding_dot_kotowari`, `req_009_falls_back_to_cwd` |
 | REQ-010 | unit | `req_010_config_values_are_relative_to_base` |
@@ -35,15 +35,15 @@
 | REQ-027 | unit | `req_027_document_wide_findings_have_null_line`, `req_027_glossary_invalid_has_null_line` |
 | REQ-028 | unit | `req_028_lines_start_at_one` |
 | REQ-029 | unit | `req_029_every_error_kind_has_the_detail_of_the_table` |
-| REQ-030 | unit | `req_030_warning_kinds_have_the_detail_of_the_table` |
-| REQ-031 | unit | `req_031_only_two_kinds_are_warnings` |
+| REQ-030 | unit | `req_030_notice_kinds_have_the_detail_of_the_table` |
+| REQ-031 | unit | `req_031_only_two_kinds_are_notices` |
 | REQ-032 | unit | `req_032_duplicate_id_on_each_later_place_with_its_line`, `req_032_first_occurrence_is_bytewise_first_path`, `req_032_first_occurrence_is_bytewise_first_relative_path` |
 | REQ-033 | unit | `req_033_subdirectories_are_read_at_any_depth`, `req_033_uppercase_md_is_not_read`, `req_033_file_symlink_is_read`, `req_033_broken_symlink_in_ir_dir_stops`, `req_033_file_symlink_in_records_dir_is_read`, `req_033_hidden_dir_and_dir_symlink_are_not_followed_at_any_depth`, `req_033_broken_symlink_in_a_subdirectory_stops`, `req_033_context_and_flags_in_a_subdirectory_are_glossary_and_flags`, `req_070_document_under_a_directory_symlink_is_missing`, `req_033_requirement_without_test_path_carries_the_subdirectory` |
 | REQ-034 | unit | `req_034_missing_title`, `req_034_lines_before_title_are_ignored`, `tbl_008_whole_document_detail_is_the_bare_filename_in_a_subdirectory` |
 | REQ-035 | unit | `req_035_multiple_titles` |
 | REQ-036 | unit | `req_036_missing_scope`, `req_036_glossary_and_flags_need_no_scope`, `req_033_context_and_flags_in_a_subdirectory_are_glossary_and_flags`, `tbl_008_whole_document_detail_is_the_bare_filename_in_a_subdirectory` |
 | REQ-037 | unit | `req_037_crlf_counts_as_one_line`, `req_037_crlf_title_and_requirement_line_numbers`, `req_037_empty_content_has_zero_lines`, `req_033_subdirectories_are_read_at_any_depth` |
-| REQ-038 | unit | `req_038_too_many_lines_is_a_warning`, `req_038_exactly_at_limit_no_warning_one_over_warns` |
+| REQ-038 | unit | `req_038_too_many_lines_is_a_notice`, `req_038_exactly_at_limit_no_notice_one_over_notices` |
 | REQ-039 | unit | `req_039_too_many_requirements_skips_glossary_and_flags`, `req_039_unknown_heading_does_not_inflate_requirement_count` |
 | REQ-040 | unit | `req_040_code_blocks_are_skipped_except_gherkin`, `req_040_tilde_fence_is_a_code_block`, `req_040_longer_fence_needs_same_or_longer_close`, `req_112_unclosed_gherkin_block_with_multiple_scenarios_excludes_items`, `req_040_gherkin_code_block_doc_ref_is_not_checked` |
 | REQ-041 | review | `src/ir.rs` で scope_lines の中身を検査せず存在だけ確認。`check_documents` に範囲の内容検査がないことを確認 |

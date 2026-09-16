@@ -99,7 +99,7 @@ fn req_037_crlf_counts_as_one_line() {
 
 // @kotowari[REQ-038]
 #[test]
-fn req_038_too_many_lines_is_a_warning() {
+fn req_038_too_many_lines_is_a_notice() {
     // 既定の limits.lines は 120
     let content = format!("# Title\n\nScope.\n\n{}", "line\n".repeat(120));
     let doc = ir::parse_document("a.md", &content);
@@ -107,7 +107,7 @@ fn req_038_too_many_lines_is_a_warning() {
     let findings = check(&[doc], &default_config());
     let tl = find_by_kind(&findings, "too_many_lines");
     assert_eq!(tl.len(), 1);
-    assert_eq!(tl[0].severity, "warning");
+    assert_eq!(tl[0].severity, "notice");
     assert!(tl[0].line.is_none());
 }
 
@@ -128,7 +128,7 @@ fn req_039_too_many_requirements_skips_glossary_and_flags() {
     let findings = check(&[doc], &default_config());
     let tr = find_by_kind(&findings, "too_many_requirements");
     assert_eq!(tr.len(), 1);
-    assert_eq!(tr[0].severity, "warning");
+    assert_eq!(tr[0].severity, "notice");
 
     // 用語集は数えない
     let glossary = ir::parse_document("CONTEXT.md", "# 用語集\n");
@@ -953,7 +953,7 @@ Scenario: With source
 
 // @kotowari[REQ-038]
 #[test]
-fn req_038_exactly_at_limit_no_warning_one_over_warns() {
+fn req_038_exactly_at_limit_no_notice_one_over_notices() {
     let cfg = default_config();
     let limit = cfg.limits.lines.get() as usize;
 

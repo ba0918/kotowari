@@ -101,7 +101,7 @@ impl FindingKind {
     /// 重大度を返す（1か所で管理する）
     pub fn severity(&self) -> &'static str {
         match self {
-            FindingKind::TooManyLines | FindingKind::TooManyRequirements => "warning",
+            FindingKind::TooManyLines | FindingKind::TooManyRequirements => "notice",
             _ => "error",
         }
     }
