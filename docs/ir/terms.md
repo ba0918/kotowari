@@ -85,12 +85,12 @@ kotowari は、`用語`をバッククォートで囲み忘れたことを検出
 
 ### TBL-014: 文書名の参照の条件
 
-- 出典: docs/decision/brainstorm/records.md#A47, docs/decision/brainstorm/records.md#A54, docs/decision/brainstorm/ir-form.md#文書名の参照, docs/decision/brainstorm/records.md#A64, docs/decision/brainstorm/records.md#A65, docs/decision/brainstorm/records.md#A73, docs/decision/brainstorm/records.md#A118, docs/decision/brainstorm/2026-09-16-ir-tree.md#A5, docs/decision/brainstorm/2026-09-16-ir-tree.md#A12, docs/decision/brainstorm/2026-09-16-ir-tree.md#A14, docs/decision/brainstorm/2026-09-16-ir-tree.md#A17
+- 出典: docs/decision/brainstorm/records.md#A47, docs/decision/brainstorm/records.md#A54, docs/decision/brainstorm/ir-form.md#文書名の参照, docs/decision/brainstorm/records.md#A64, docs/decision/brainstorm/records.md#A65, docs/decision/brainstorm/records.md#A73, docs/decision/brainstorm/records.md#A118, docs/decision/brainstorm/2026-09-16-ir-tree.md#A5, docs/decision/brainstorm/2026-09-16-ir-tree.md#A12, docs/decision/brainstorm/2026-09-16-ir-tree.md#A14, docs/decision/brainstorm/2026-09-16-ir-tree.md#A17, docs/decision/brainstorm/2026-09-16-ir-tree.md#A21
 
 | 順 | 条件 |
 |---|---|
 | 1 | コードブロックの外にある |
-| 2 | 並びの先頭の直前が行頭、空白、句読点のいずれか（"/"、"_"、英字の続きは当たらない。"/" の後の部分だけを参照にしない）。句読点は、半角の ","、"."、":"、";"、"("、")"、二重引用符、一重引用符と、全角の "、"、"。"、"，"、"．"、"（"、"）"、"「"、"」"、"『"、"』"、"“"、"”" |
+| 2 | 並びの先頭の直前が、英数字、"_"、"-"、"/"、"."、バッククォートのいずれでもない（行頭を含む。空白、句読点、日本語の文字は境界になる）。並びの中に出る文字（英小文字、数字、ハイフン、"."、"/"）が直前にあるときは境界にならないので、並びの途中から参照を拾うことはない |
 | 3 | 要素（英小文字と数字とハイフンの並び、"."、".." のいずれか）を "/" で区切って1つ以上並べ、最後の要素が英小文字と数字とハイフンの並びで ".md" が続き、".md" の直後が英数字、"_"、"-"、"#"、"/" のいずれでもない |
 | 4 | 二重引用符の中にない。行の中の二重引用符が奇数のときは、最後の引用符から行末までを引用符の中と見なす |
 
@@ -133,11 +133,23 @@ Scenario: "." と ".." の要素を含む並びは解決しない
   When "kotowari check" を実行する
   Then "../b.md" と "./c.md" の missing_document の誤りが1件ずつ出る
 
-@id=EX-031 @about=REQ-069 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A17
+@id=EX-031 @about=REQ-069 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A17,docs/decision/brainstorm/2026-09-16-ir-tree.md#A21
 Scenario: ".md" の後に "/" が続く並びは参照にならない
-  Given 文書に "a.md/b.md" と引用符なしで書き、"a.md" も "b.md" も無い
+  Given 文書に "a.md/b.md" と引用符なしで書き、"a.md" も "b.md" も "md/b.md" も無い
   When "kotowari check" を実行する
   Then missing_document の誤りは出ない
+
+@id=EX-033 @about=REQ-069 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A21
+Scenario: 日本語の文字に直接つなげた参照も拾う
+  Given 文書の範囲の行に "設定の形はtimeout-config.mdで定める" と書き、"timeout-config.md" が同じディレクトリに無い
+  When "kotowari check" を実行する
+  Then "timeout-config.md" の missing_document の誤りが出る
+
+@id=EX-034 @about=REQ-069 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A21
+Scenario: バッククォートで囲んだパスは参照にならない
+  Given 文書の`文`に "`a.md`" と書き、"a.md" は無く、`用語集`にも無い
+  When "kotowari check" を実行する
+  Then "a.md" の unknown_term の誤りが出て、missing_document の誤りは出ない
 
 @id=EX-032 @about=REQ-070 @source=docs/decision/brainstorm/2026-09-16-ir-tree.md#A18
 Scenario: 読まない場所の文書への参照は無いものとして扱う
