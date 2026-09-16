@@ -23,7 +23,7 @@
 ### REQ-013: キーと既定の値
 
 - 種類: algorithm
-- 出典: docs/decision/brainstorm/records.md#A12, docs/decision/brainstorm/records.md#A23, docs/decision/brainstorm/records.md#A36, docs/decision/brainstorm/records.md#A41, docs/decision/brainstorm/records.md#A47, docs/decision/brainstorm/records.md#A48, docs/decision/brainstorm/records.md#A49
+- 出典: docs/decision/brainstorm/records.md#A12, docs/decision/brainstorm/records.md#A23, docs/decision/brainstorm/records.md#A36, docs/decision/brainstorm/records.md#A41, docs/decision/brainstorm/records.md#A47, docs/decision/brainstorm/records.md#A48, docs/decision/brainstorm/records.md#A49, docs/decision/brainstorm/2026-09-16-notice.md#A5
 - 定義: TBL-004
 - 検証: unit
 
