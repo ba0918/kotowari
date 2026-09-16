@@ -249,3 +249,238 @@ fn req_007_exit_code_one_on_error_and_zero_on_notice_only() {
         .unwrap();
     assert_eq!(output3.status.code(), Some(2), "stop should exit 2");
 }
+
+// --- REQ-128, TBL-021, PROP-004: 読んだテストのファイルの申告 ---
+
+/// "tests.files" の glob を指定したプロジェクトを作る
+fn make_project_with_test_globs(tmp: &std::path::Path, globs: &[&str]) {
+    make_project(tmp);
+    let list: String = globs.iter().map(|g| format!("    - \"{g}\"\n")).collect();
+    fs::write(
+        tmp.join(".kotowari/config.yaml"),
+        format!(
+            "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n{list}"
+        ),
+    )
+    .unwrap();
+}
+
+/// glob に当たる場所へファイルを書く
+fn write_test_file(tmp: &std::path::Path, rel: &str, content: &str) {
+    let path = tmp.join(rel);
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(path, content).unwrap();
+}
+
+// @kotowari[REQ-128, TBL-021]
+#[test]
+fn req_128_tests_key_lists_files_per_extension_with_query_flag() {
+    // EX-035: ".rs" が2つと ".py" が1つ
+    let tmp = TempDir::new().unwrap();
+    make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
+    write_test_file(tmp.path(), "lib/a.rs", "pub fn a() {}\n");
+    write_test_file(tmp.path(), "lib/b.rs", "pub fn b() {}\n");
+    write_test_file(tmp.path(), "lib/c.py", "print(1)\n");
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    assert_eq!(v["tests"]["rs"]["files"], 2, "two .rs files: {v}");
+    assert_eq!(v["tests"]["rs"]["query"], true, "rs has a query: {v}");
+    assert_eq!(v["tests"]["py"]["files"], 1, "one .py file: {v}");
+    assert_eq!(v["tests"]["py"]["query"], false, "py has no query: {v}");
+    assert_eq!(
+        v["tests"].as_object().unwrap().len(),
+        2,
+        "only the extensions that were read: {v}"
+    );
+}
+
+// @kotowari[REQ-128, TBL-021]
+#[test]
+fn req_128_tests_is_an_empty_object_without_test_files() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_test_globs(tmp.path(), &["nothing/**/*.rs"]);
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    assert!(
+        v["tests"].is_object(),
+        "tests should be an object even with no test files: {v}"
+    );
+    assert!(
+        v["tests"].as_object().unwrap().is_empty(),
+        "tests should be empty with no test files: {v}"
+    );
+}
+
+// @kotowari[REQ-128]
+#[test]
+fn req_128_text_format_does_not_print_tests() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
+    fs::write(tmp.path().join("docs/ir/a.md"), "# Title\n\nScope.\n").unwrap();
+    write_test_file(tmp.path(), "lib/a.py", "print(1)\n");
+
+    // JSON には出る
+    let json_output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&json_output);
+    assert_eq!(v["tests"]["py"]["files"], 1, "json should report the file: {v}");
+
+    // text は指摘の行だけなので、指摘が無ければ何も出ない
+    let text_output = cmd()
+        .args(["check", "--format", "text"])
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8_lossy(&text_output.stdout);
+    assert_eq!(stdout, "", "text format should print findings only: {stdout}");
+}
+
+// @kotowari[TBL-021]
+#[test]
+fn tbl_021_extension_is_after_the_last_dot_and_dotless_names_share_the_empty_key() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
+    write_test_file(tmp.path(), "lib/a.test.rs", "pub fn a() {}\n");
+    write_test_file(tmp.path(), "lib/.rs", "x\n");
+    write_test_file(tmp.path(), "lib/run", "x\n");
+    write_test_file(tmp.path(), "lib/foo.", "x\n");
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    assert_eq!(v["tests"]["rs"]["files"], 1, "a.test.rs has the rs key: {v}");
+    assert_eq!(
+        v["tests"][""]["files"], 3,
+        ".rs, run and foo. share the empty key: {v}"
+    );
+    assert_eq!(v["tests"][""]["query"], false, "the empty key has no query: {v}");
+    assert_eq!(v["tests"].as_object().unwrap().len(), 2, "two keys: {v}");
+}
+
+// @kotowari[TBL-021]
+#[test]
+fn tbl_021_uppercase_extension_is_a_separate_key_without_query() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
+    write_test_file(tmp.path(), "lib/a.RS", "x\n");
+    write_test_file(tmp.path(), "lib/b.rs", "pub fn b() {}\n");
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    assert_eq!(v["tests"]["RS"]["files"], 1, "RS is its own key: {v}");
+    assert_eq!(v["tests"]["RS"]["query"], false, "RS has no query: {v}");
+    assert_eq!(v["tests"]["rs"]["files"], 1, "rs is separate: {v}");
+    assert_eq!(v["tests"]["rs"]["query"], true, "rs has a query: {v}");
+}
+
+// @kotowari[TBL-021]
+#[test]
+fn tbl_021_unparsable_file_is_counted() {
+    // EX-038: tree-sitter で読めないファイルも "files" に数える
+    let tmp = TempDir::new().unwrap();
+    make_project_with_test_globs(tmp.path(), &["lib/**/*.rs"]);
+    write_test_file(tmp.path(), "lib/ok.rs", "pub fn ok() {}\n");
+    write_test_file(tmp.path(), "lib/broken.rs", "pub fn broken( {\n");
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let unparsable: Vec<_> = v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["kind"] == "unparsable_file")
+        .collect();
+    assert_eq!(unparsable.len(), 1, "one unparsable file: {v}");
+    assert_eq!(v["tests"]["rs"]["files"], 2, "the unparsable file is counted: {v}");
+}
+
+// @kotowari[TBL-021]
+#[test]
+#[cfg(unix)]
+fn tbl_021_same_path_counts_once_and_symlink_counts_apart() {
+    use std::os::unix::fs::symlink;
+    let tmp = TempDir::new().unwrap();
+    // 同じファイルが2つの glob に当たる
+    make_project_with_test_globs(tmp.path(), &["lib/**/*.rs", "lib/*.rs"]);
+    write_test_file(tmp.path(), "lib/a.rs", "pub fn a() {}\n");
+    // 実体とリンクは別のパス
+    symlink(tmp.path().join("lib/a.rs"), tmp.path().join("lib/link.rs")).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    assert_eq!(
+        v["tests"]["rs"]["files"], 2,
+        "one path counts once even with two globs, and the symlink counts apart: {v}"
+    );
+}
+
+// @kotowari[TBL-021]
+#[test]
+fn tbl_021_keys_are_in_byte_order() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
+    write_test_file(tmp.path(), "lib/a.rs", "pub fn a() {}\n");
+    write_test_file(tmp.path(), "lib/a.py", "print(1)\n");
+    write_test_file(tmp.path(), "lib/a.RS", "x\n");
+    write_test_file(tmp.path(), "lib/run", "x\n");
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let tests_part = &stdout[stdout.find("\"tests\":").expect("tests key")..];
+    let mut positions = Vec::new();
+    for key in ["\"\":", "\"RS\":", "\"py\":", "\"rs\":"] {
+        positions.push(tests_part.find(key).unwrap_or_else(|| panic!("{key} in {tests_part}")));
+    }
+    let mut sorted = positions.clone();
+    sorted.sort_unstable();
+    assert_eq!(
+        positions, sorted,
+        "keys should appear in byte order (\"\", \"RS\", \"py\", \"rs\"): {tests_part}"
+    );
+}
+
+// @kotowari[TBL-021]
+#[test]
+#[cfg(unix)]
+fn tbl_021_excluded_entries_are_not_counted() {
+    use std::os::unix::net::UnixListener;
+    let tmp = TempDir::new().unwrap();
+    make_project_with_test_globs(tmp.path(), &["lib/**/*.rs"]);
+    write_test_file(tmp.path(), "lib/a.rs", "pub fn a() {}\n");
+    // glob に当たるがディレクトリでも通常のファイルでもないものは読まない（除外）
+    let _socket = UnixListener::bind(tmp.path().join("lib/socket.rs")).unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    assert_eq!(
+        v["tests"]["rs"]["files"], 1,
+        "the socket is excluded and not counted: {v}"
+    );
+}
+
+// @kotowari[PROP-004]
+#[test]
+fn prop_004_files_sum_equals_the_number_of_read_test_files() {
+    use proptest::prelude::*;
+
+    // 1件ごとに CLI を起動するので試行回数を絞る
+    let config = proptest::test_runner::Config {
+        cases: 8,
+        ..Default::default()
+    };
+    proptest!(config, |(exts in proptest::collection::vec(0..4usize, 1..8usize))| {
+        let names = ["rs", "py", "txt", ""];
+        let tmp = TempDir::new().unwrap();
+        make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
+        for (i, e) in exts.iter().enumerate() {
+            let ext = names[*e];
+            let rel = if ext.is_empty() {
+                format!("lib/f{i}")
+            } else {
+                format!("lib/f{i}.{ext}")
+            };
+            write_test_file(tmp.path(), &rel, "pub fn f() {}\n");
+        }
+        let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+        let v = parse_json(&output);
+        let sum: u64 = v["tests"]
+            .as_object()
+            .expect("tests object")
+            .values()
+            .map(|e| e["files"].as_u64().expect("files number"))
+            .sum();
+        prop_assert_eq!(sum, exts.len() as u64, "sum of files should equal the number of test files: {}", v);
+    });
+}

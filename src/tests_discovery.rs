@@ -4,7 +4,7 @@ use crate::config::Config;
 use crate::ir::{is_valid_id, IrDocument, Item};
 use crate::{Finding, FindingKind};
 use globset::{Glob, GlobSetBuilder};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use walkdir::WalkDir;
 
@@ -558,10 +558,12 @@ pub fn discover_and_check(
     known_ids: &BTreeSet<String>,
     ir_path: &str,
     findings: &mut Vec<Finding>,
-) -> Result<(), crate::StopReason> {
+) -> Result<BTreeMap<String, crate::TestFileTally>, crate::StopReason> {
     let test_files = collect_test_files(base, config)?;
     let mut all_tests: Vec<DiscoveredTest> = Vec::new();
     let mut all_marker_ids: BTreeSet<String> = BTreeSet::new();
+    // TBL-021: 読んだテストのファイルを拡張子ごとに数える
+    let mut tally: BTreeMap<String, crate::TestFileTally> = BTreeMap::new();
 
     for (rel_path, abs_path) in &test_files {
         let content = crate::read_utf8_file(
@@ -573,8 +575,15 @@ pub fn discover_and_check(
             .extension()
             .and_then(|e| e.to_str())
             .unwrap_or("");
+        // REQ-081: 問い合わせのある言語は ".rs" だけ
+        let query = ext == "rs";
 
-        if ext == "rs" {
+        tally
+            .entry(ext.to_string())
+            .or_insert(crate::TestFileTally { files: 0, query })
+            .files += 1;
+
+        if query {
             // 問い合わせのある言語（Rust）
             match discover_rust_tests(&content, rel_path, config) {
                 Ok(tests) => {
@@ -641,7 +650,7 @@ pub fn discover_and_check(
         }
     }
 
-    Ok(())
+    Ok(tally)
 }
 
 /// テストの印を検証する

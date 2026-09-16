@@ -14,6 +14,16 @@ pub struct CheckResult {
     pub lines: usize,
     pub findings: Vec<Finding>,
     pub counts: BTreeMap<String, usize>,
+    pub tests: BTreeMap<String, TestFileTally>,
+}
+
+/// 読んだテストのファイルの、1つの拡張子の数と問い合わせの有無（TBL-021）
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct TestFileTally {
+    /// その拡張子の読んだテストのファイルの数
+    pub files: usize,
+    /// その拡張子が問い合わせのある言語か
+    pub query: bool,
 }
 
 /// 指摘の種類
@@ -555,7 +565,7 @@ pub fn run_check(
     terms::check_document_references(&docs, &cfg.ir, &ir_paths, &mut findings);
 
     // テストの発見と印の検査
-    tests_discovery::discover_and_check(
+    let tests = tests_discovery::discover_and_check(
         &base, &cfg, &docs, &known_ids, &cfg.ir, &mut findings,
     )?;
 
@@ -587,6 +597,7 @@ pub fn run_check(
         lines,
         findings,
         counts,
+        tests,
     };
 
     Ok((result, format))
