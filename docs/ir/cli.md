@@ -81,7 +81,7 @@ kotowari は、人間向けの文書の生成（"render"）、影響範囲の追
 
 ### TBL-002: 終了コード
 
-- 出典: docs/decision/brainstorm/records.md#A20, docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/records.md#A103
+- 出典: docs/decision/brainstorm/records.md#A20, docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/records.md#A103, docs/decision/brainstorm/2026-09-16-notice.md#A2
 
 | 終了コード | 場面 |
 |---|---|

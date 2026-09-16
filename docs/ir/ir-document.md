@@ -46,7 +46,7 @@ kotowari は常に、`IR`の置き場の下のディレクトリを深さに制�
 ### REQ-038: 行数の上限
 
 - 種類: event_driven
-- 出典: docs/decision/brainstorm/records.md#A17, docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/records.md#A41, docs/decision/brainstorm/records.md#A56, docs/decision/brainstorm/records.md#A47, docs/decision/brainstorm/ir-form.md#検査の種類
+- 出典: docs/decision/brainstorm/records.md#A17, docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/records.md#A41, docs/decision/brainstorm/records.md#A56, docs/decision/brainstorm/records.md#A47, docs/decision/brainstorm/ir-form.md#検査の種類, docs/decision/brainstorm/2026-09-16-notice.md#A2
 - 検証: unit
 
 `IR`の文書の行数が "limits.lines" を超えるとき、kotowari は too_many_lines の`注意`を出す。
@@ -54,7 +54,7 @@ kotowari は常に、`IR`の置き場の下のディレクトリを深さに制�
 ### REQ-039: 要求の数の上限
 
 - 種類: event_driven
-- 出典: docs/decision/brainstorm/records.md#A17, docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/records.md#A41, docs/decision/brainstorm/records.md#A47, docs/decision/brainstorm/ir-form.md#検査の種類
+- 出典: docs/decision/brainstorm/records.md#A17, docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/records.md#A41, docs/decision/brainstorm/records.md#A47, docs/decision/brainstorm/ir-form.md#検査の種類, docs/decision/brainstorm/2026-09-16-notice.md#A2
 - 検証: unit
 
 `話題ごとの文書`の`要求`の数が "limits.requirements" を超えるとき、kotowari は too_many_requirements の`注意`を出す。
