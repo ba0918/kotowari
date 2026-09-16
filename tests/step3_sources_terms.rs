@@ -1786,3 +1786,72 @@ fn req_117_invalid_glossary_hides_only_its_own_terms() {
     assert_eq!(unknown[0]["detail"], "網");
     assert_eq!(unknown[0]["path"], "docs/ir/network/a.md");
 }
+
+// --- REQ-062, REQ-068: 見ないもの ---
+
+// @kotowari[REQ-062]
+#[test]
+fn req_062_source_content_is_not_matched_against_the_item() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // REQ-001 の出典 A1 は項目の内容とまったく関係が無い。
+    // REQ-002 の出典は存在しない決定を指すので、出典の検査が動いていることが分かる。
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: 出力の形\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: review\n\nこの道具は JSON を出す。\n\n### REQ-002: 別の要求\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A9\n- 検証: review\n\nこの道具は文書を読む。\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let invalid = findings_by_kind(&v, "source_invalid");
+    assert_eq!(
+        invalid.len(),
+        1,
+        "only the source pointing at a missing decision should be reported: {invalid:?}"
+    );
+    assert_eq!(
+        invalid[0]["line"], 18,
+        "the reported source should be the missing one, not the unrelated one: {invalid:?}"
+    );
+}
+
+// @kotowari[REQ-068]
+#[test]
+fn req_068_unquoted_term_gets_no_finding_on_its_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| 指摘 | 検査で見つけた1件 | docs/decision/brainstorm/records.md#A1 |\n",
+    )
+    .unwrap();
+    // 13行目の文は、用語集にある「指摘」をバッククォートで囲まずに書いている
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nこの道具は指摘を出す。\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let on_statement: Vec<_> = v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["path"] == "docs/ir/a.md" && f["line"] == 13)
+        .collect();
+    assert!(
+        on_statement.is_empty(),
+        "the statement line should get no finding: {on_statement:?}"
+    );
+    // 検査そのものは動いている（要求の見出しの行にはテストのない要求の誤りが出る）
+    let on_heading: Vec<_> = v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["path"] == "docs/ir/a.md" && f["line"] == 7)
+        .collect();
+    assert!(
+        !on_heading.is_empty(),
+        "the requirement heading should still be checked: {v}"
+    );
+}

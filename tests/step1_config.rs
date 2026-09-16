@@ -758,3 +758,214 @@ fn req_110_path_carries_the_subdirectory() {
     assert_eq!(result["files"], 1);
     assert_eq!(result["findings"][0]["path"], "docs/ir/sub/deep/a.md");
 }
+
+// --- REQ-020: 直下の kotowari.toml を読まない ---
+
+// @kotowari[REQ-020]
+#[test]
+fn req_020_kotowari_toml_beside_the_base_is_not_read() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(tmp.path().join("docs/ir/a.md"), "# Title\n\nScope.\n").unwrap();
+    let before = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(before.status.code(), Some(0), "the base project should check cleanly");
+
+    // 読まれれば置き場が "elsewhere" になり、置き場が無いことを理由に停止する値
+    fs::write(tmp.path().join("kotowari.toml"), "ir = \"elsewhere\"\n").unwrap();
+    let after = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(
+        after.status.code(),
+        Some(0),
+        "kotowari.toml should not be read as a configuration file: {}",
+        String::from_utf8_lossy(&after.stderr)
+    );
+    assert_eq!(
+        after.stdout, before.stdout,
+        "the result should not change when kotowari.toml is present"
+    );
+}
+
+// --- REQ-090: スキーマのファイルを読まない ---
+
+// @kotowari[REQ-090]
+#[test]
+fn req_090_schema_file_is_not_read() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(tmp.path().join("docs/ir/a.md"), "# Title\n\nScope.\n").unwrap();
+    let before = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(before.status.code(), Some(0), "the base project should check cleanly");
+
+    // 読まれれば YAML として読めないことで停止する中身にする
+    fs::write(
+        tmp.path().join(".kotowari/schema.yaml"),
+        "document: [unclosed\n  - : :\n",
+    )
+    .unwrap();
+    let after = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(
+        after.status.code(),
+        Some(0),
+        "a schema file should not be read: {}",
+        String::from_utf8_lossy(&after.stderr)
+    );
+    assert_eq!(
+        after.stdout, before.stdout,
+        "the result should not change when a schema file is present"
+    );
+}
+
+// --- REQ-091: 外部の mdschema を使わない ---
+
+// @kotowari[REQ-091]
+#[test]
+fn req_091_check_runs_the_same_with_an_empty_path() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(tmp.path().join("docs/ir/a.md"), "# Title\n\nScope.\n").unwrap();
+    let normal = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+
+    // PATH を空のディレクトリだけに向ける。前段で外部のプロセスを起動していれば結果が変わる
+    let empty = TempDir::new().unwrap();
+    let restricted = cmd()
+        .arg("check")
+        .env("PATH", empty.path())
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    assert_eq!(
+        restricted.status.code(),
+        normal.status.code(),
+        "exit code should not depend on PATH: {}",
+        String::from_utf8_lossy(&restricted.stderr)
+    );
+    assert_eq!(restricted.stdout, normal.stdout, "stdout should not depend on PATH");
+    assert_eq!(restricted.stderr, normal.stderr, "stderr should not depend on PATH");
+}
+
+// --- REQ-102: 状態を保存しない ---
+
+/// ディレクトリの全エントリを、相対パスと（ファイルなら）中身のバイト列で写し取る
+fn snapshot(root: &Path) -> Vec<(String, Option<Vec<u8>>)> {
+    fn walk(root: &Path, dir: &Path, out: &mut Vec<(String, Option<Vec<u8>>)>) {
+        let mut paths: Vec<std::path::PathBuf> = fs::read_dir(dir)
+            .unwrap()
+            .map(|e| e.unwrap().path())
+            .collect();
+        paths.sort();
+        for path in paths {
+            let rel = path
+                .strip_prefix(root)
+                .unwrap()
+                .to_string_lossy()
+                .to_string();
+            if path.is_dir() {
+                out.push((rel, None));
+                walk(root, &path, out);
+            } else {
+                out.push((rel, Some(fs::read(&path).unwrap())));
+            }
+        }
+    }
+    let mut out = Vec::new();
+    walk(root, root, &mut out);
+    out
+}
+
+// @kotowari[REQ-102]
+#[test]
+fn req_102_check_writes_nothing_under_home_tmpdir_or_base() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(tmp.path().join("docs/ir/a.md"), "# Title\n\nScope.\n").unwrap();
+    let home = TempDir::new().unwrap();
+
+    let home_before = snapshot(home.path());
+    let base_before = snapshot(tmp.path());
+
+    let output = cmd()
+        .arg("check")
+        .env("HOME", home.path())
+        .env("TMPDIR", home.path())
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "check should run: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    assert_eq!(
+        snapshot(home.path()),
+        home_before,
+        "nothing should be written under HOME or TMPDIR"
+    );
+    assert_eq!(
+        snapshot(tmp.path()),
+        base_before,
+        "nothing should be written under the base directory"
+    );
+}
+
+// --- REQ-121: 設定で問い合わせを足せない ---
+
+/// TBL-004 の9個のキーをすべて書いた設定
+const ALL_NINE_KEYS: &str = "ir: docs/ir
+decisions:
+  records: docs/decision/brainstorm
+  adr: docs/decision/adr
+tests:
+  files:
+    - \"tests/**/*.rs\"
+  rust:
+    attributes: []
+    macros: []
+limits:
+  lines: 200
+  requirements: 10
+vague_words:
+  - \"適切に\"
+";
+
+// @kotowari[REQ-121, REQ-014]
+#[test]
+fn req_121_only_the_nine_config_keys_are_accepted() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+
+    // TBL-004 の9個をすべて書いた設定は通る
+    fs::write(tmp.path().join(".kotowari/config.yaml"), ALL_NINE_KEYS).unwrap();
+    let accepted = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(
+        accepted.status.code(),
+        Some(0),
+        "the nine keys of TBL-004 should be accepted: {}",
+        String::from_utf8_lossy(&accepted.stderr)
+    );
+
+    // 問い合わせを足す鍵は、どの階層に書いても設定の誤りで停止する
+    let variants = [
+        ("top level", ALL_NINE_KEYS.replace("ir: docs/ir\n", "ir: docs/ir\nqueries:\n  python: python.scm\n")),
+        ("decisions", ALL_NINE_KEYS.replace("  adr: docs/decision/adr\n", "  adr: docs/decision/adr\n  queries: python.scm\n")),
+        ("tests", ALL_NINE_KEYS.replace("  rust:\n", "  queries:\n    python: python.scm\n  rust:\n")),
+        ("tests.rust", ALL_NINE_KEYS.replace("    macros: []\n", "    macros: []\n    queries: python.scm\n")),
+        ("limits", ALL_NINE_KEYS.replace("  requirements: 10\n", "  requirements: 10\n  queries: 3\n")),
+    ];
+    for (level, yaml) in variants {
+        fs::write(tmp.path().join(".kotowari/config.yaml"), &yaml).unwrap();
+        let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "an unknown key at {level} should stop: {yaml}"
+        );
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let first = stderr.lines().next().unwrap_or("");
+        assert!(
+            first.starts_with("config error"),
+            "an unknown key at {level} should stop as a config error, got: {first}"
+        );
+    }
+}

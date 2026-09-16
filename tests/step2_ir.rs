@@ -2908,3 +2908,104 @@ fn req_032_first_occurrence_is_bytewise_first_relative_path() {
     assert_eq!(duplicates[0].path, "docs/ir/a/b.md");
     assert_eq!(duplicates[0].line, Some(5));
 }
+
+// --- REQ-055, REQ-056: 見ないもの ---
+
+/// CLI を通して検査するプロジェクトを一時ディレクトリに作る
+fn make_cli_project(tmp: &std::path::Path) {
+    for dir in [".kotowari", "docs/ir", "docs/decision/brainstorm", "docs/decision/adr"] {
+        std::fs::create_dir_all(tmp.join(dir)).unwrap();
+    }
+    std::fs::write(
+        tmp.join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+    )
+    .unwrap();
+    std::fs::write(
+        tmp.join("docs/decision/brainstorm/records.md"),
+        "# Records\n\n## Agreements\n\n- A1 Agreement\n",
+    )
+    .unwrap();
+}
+
+/// CLI を走らせて JSON を返す
+fn run_cli(tmp: &std::path::Path) -> serde_json::Value {
+    let output = assert_cmd::Command::cargo_bin("kotowari")
+        .unwrap()
+        .arg("check")
+        .current_dir(tmp)
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    serde_json::from_str(&stdout).expect("valid JSON")
+}
+
+/// 指定した文書の指定した行を指す指摘を集める
+fn findings_on_line(v: &serde_json::Value, path: &str, line: u64) -> Vec<serde_json::Value> {
+    v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["path"] == path && f["line"] == line)
+        .cloned()
+        .collect()
+}
+
+// @kotowari[REQ-055]
+#[test]
+fn req_055_non_ears_statement_gets_no_finding_on_its_line() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    // 13行目の文は「常に」も「とき」も持たない平叙文
+    std::fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nこの道具は文書を読む。\n",
+    )
+    .unwrap();
+    let v = run_cli(tmp.path());
+    assert!(
+        findings_on_line(&v, "docs/ir/a.md", 13).is_empty(),
+        "the statement line should get no finding: {v}"
+    );
+    // 検査そのものは動いている（要求の見出しの行にはテストのない要求の誤りが出る）
+    assert!(
+        !findings_on_line(&v, "docs/ir/a.md", 7).is_empty(),
+        "the requirement heading should still be checked: {v}"
+    );
+}
+
+// @kotowari[REQ-056]
+#[test]
+fn req_056_contradiction_flag_with_one_reading_gets_no_finding() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    std::fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nこの道具は文書を読む。\n",
+    )
+    .unwrap();
+    // 種類 contradiction の問題の記録に、読みを1つだけ書く
+    std::fs::write(
+        tmp.path().join("docs/ir/FLAGS.md"),
+        "# 問題の記録\n\n### FLAG-001: 読みが割れる\n\n- 種類: contradiction\n- 関係: REQ-001\n- 出典: docs/decision/brainstorm/records.md#A1\n\n読みは1つだけ書いてある。\n",
+    )
+    .unwrap();
+    let v = run_cli(tmp.path());
+    let on_flags: Vec<_> = v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["path"] == "docs/ir/FLAGS.md")
+        .collect();
+    assert!(
+        on_flags.is_empty(),
+        "the contradiction entry should get no finding: {on_flags:?}"
+    );
+    // 検査そのものは動いている
+    assert!(
+        !findings_on_line(&v, "docs/ir/a.md", 7).is_empty(),
+        "the requirement heading should still be checked: {v}"
+    );
+}

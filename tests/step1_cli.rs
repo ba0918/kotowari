@@ -39,7 +39,8 @@ fn req_002_only_format_and_config_options() {
 
 // --- REQ-004: 引数の誤り ---
 
-// @kotowari[REQ-004, REQ-005, REQ-007]
+// REQ-008: 受けるオプションの集合を固定するのはこのテスト（否定側）
+// @kotowari[REQ-004, REQ-005, REQ-007, REQ-008]
 #[test]
 fn req_004_unknown_option_stops() {
     let output = cmd()
@@ -375,3 +376,31 @@ fn req_005_config_outside_the_base_is_shown_relative_with_parent_segments() {
     );
 }
 
+
+// --- REQ-008: 作らないコマンド ---
+
+// @kotowari[REQ-008]
+#[test]
+fn req_008_render_trace_query_are_argument_errors() {
+    // "render"、"trace"、"query" は、単独でも "check" の後ろでも引数の誤りになる
+    for word in ["render", "trace", "query"] {
+        for args in [vec![word], vec!["check", word]] {
+            let output = cmd()
+                .args(&args)
+                .current_dir(valid_project_dir())
+                .output()
+                .unwrap();
+            assert_eq!(
+                output.status.code(),
+                Some(2),
+                "{args:?} should stop with exit code 2"
+            );
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let first = stderr.lines().next().unwrap_or("");
+            assert!(
+                first.starts_with("argument error"),
+                "{args:?} should stop as an argument error, got: {first}"
+            );
+        }
+    }
+}
