@@ -7,10 +7,10 @@
 ### REQ-092: 両方を残す
 
 - 種類: invariant
-- 出典: docs/decision/brainstorm/records.md#A22
+- 出典: docs/decision/brainstorm/records.md#A22, docs/decision/brainstorm/2026-09-17-decision-log.md#A5
 - 検証: review
 
-`判断の記録`と`ADR`の両方が残る関係が常に成り立つ。
+`判断の記録`と、書かれた`ADR`が残る関係が常に成り立つ。`ADR`が1本も無いリポジトリでも成り立つ。
 
 ### REQ-093: 判断の記録は brainstorm ごと
 
@@ -44,13 +44,13 @@
 
 記録の運用は、`ADR`だけにして判断1件ごとに`ADR`を切ることをしてはならない。
 
-### REQ-097: 判断の記録だけにしない
+### REQ-097: 既存の ADR を消さない
 
 - 種類: prohibition
-- 出典: docs/decision/brainstorm/records.md#R2
+- 出典: docs/decision/brainstorm/2026-09-17-decision-log.md#A5
 - 検証: review
 
-記録の運用は、`判断の記録`だけにして`ADR`をやめることをしてはならない。
+記録の運用は、既存の`ADR`を消すことをしてはならない。
 
 ### REQ-103: ADR のファイル名
 

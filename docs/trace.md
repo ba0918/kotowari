@@ -14,7 +14,7 @@
 | REQ-094 | review | ADR の節の検査は出典のための見出し照合のみ。5節の構造検査はしない |
 | REQ-095 | review | ADR の決定の節の検査は出典のための見出し照合のみ |
 | REQ-096 | review | kotowari は ADR だけの運用を禁止する検査をしない（設定に両方のパスが必要） |
-| REQ-097 | review | kotowari は判断の記録だけの運用を禁止する検査をしない（同上） |
+| REQ-097 | review | `- 出典:` の行、`@source=` のタグ、用語集の出典の列に現れる `docs/decision/adr/` のファイルを列挙し（`rg -o 'docs/decision/adr/[^ ,|]+' docs/ir` の出典の行だけ）、そのファイルがすべて存在することを確認。2026-09-17 時点で 0002 と 0003 |
 | REQ-101 | review | CLI の出力は JSON/text で LLM が読みやすい形。`src/main.rs` を確認 |
 | REQ-103 | review | ADR のファイル名形式は出典の検査時に見るが、形式自体は検査しない |
 | REQ-105 | review | `src/` にライブラリとバイナリの2ターゲット。モジュールは config, ir, sources, terms, tests_discovery |
