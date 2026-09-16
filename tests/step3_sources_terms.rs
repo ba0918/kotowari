@@ -441,11 +441,10 @@ fn req_069_reference_needs_boundary_and_quotes_are_skipped() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     // a.md は存在する、nonexistent.md は存在しない
-    // スラッシュの後の文書名は拾わない
     // 二重引用符の中は拾わない
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope with a.md reference.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nSee nonexistent.md for details. But \"quoted.md\" is skipped. And adr/0001-test-marker.md is not a reference.\n",
+        "# Title\n\nScope with a.md reference.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nSee nonexistent.md for details. But \"quoted.md\" is skipped. And adr/0001-test-marker.md is a reference.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -455,8 +454,8 @@ fn req_069_reference_needs_boundary_and_quotes_are_skipped() {
     assert!(md.iter().any(|f| f["detail"] == "nonexistent.md"), "should find missing document: {:?}", md);
     // quoted.md → 引用符の中なので拾わない
     assert!(!md.iter().any(|f| f["detail"] == "quoted.md"), "quoted should be skipped: {:?}", md);
-    // 0001-test-marker.md → スラッシュの後なので拾わない
-    assert!(!md.iter().any(|f| f["detail"] == "0001-test-marker.md"), "slash prefix should be skipped: {:?}", md);
+    assert_eq!(md.iter().filter(|f| f["detail"] == "adr/0001-test-marker.md").count(), 1, "{:?}", md);
+    assert_eq!(md.len(), 2, "{:?}", md);
 }
 
 // @kotowari[REQ-069, TBL-014]
@@ -1651,4 +1650,18 @@ fn tbl_014_md_followed_by_hash_or_slash_is_not_a_reference() {
         &[doc], "docs/ir", &Default::default(), &mut findings,
     );
     assert!(findings.is_empty(), "{:?}", findings);
+}
+
+// @kotowari[REQ-069, REQ-070, TBL-014]
+#[test]
+fn tbl_014_slash_separated_path_is_a_reference() {
+    let doc = kotowari::ir::parse_document(
+        "a.md", "# Title\n\nSee network/dns/b.md.\n",
+    );
+    let mut findings = Vec::new();
+    kotowari::terms::check_document_references(
+        &[doc], "docs/ir", &Default::default(), &mut findings,
+    );
+    assert_eq!(findings.len(), 1, "{:?}", findings);
+    assert_eq!(findings[0].detail, "network/dns/b.md");
 }

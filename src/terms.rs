@@ -116,12 +116,6 @@ pub fn check_document_references(
     ir_filenames: &BTreeSet<String>,
     findings: &mut Vec<Finding>,
 ) {
-    // 句読点の集合
-    let punctuation: &[char] = &[
-        ',', '.', ':', ';', '(', ')', '"', '\'',
-        '、', '。', '，', '．', '（', '）', '「', '」', '『', '』', '\u{201C}', '\u{201D}',
-    ];
-
     for doc in docs {
         let path = crate::join_display_path(ir_path, &doc.relative_path);
         let lines = crate::ir::split_lines_for_doc_ref(&doc.filename, &doc.raw_content);
@@ -144,7 +138,7 @@ pub fn check_document_references(
             // 二重引用符の中を除外するため、引用符の外の部分だけ検査
             let parts = crate::split_outside_quotes(line);
             for part in &parts {
-                find_doc_refs(part, line_num, &path, ir_filenames, punctuation, findings);
+                find_doc_refs(part, line_num, &path, ir_filenames, findings);
             }
         }
     }
@@ -156,10 +150,8 @@ fn find_doc_refs(
     line: usize,
     path: &str,
     ir_filenames: &BTreeSet<String>,
-    punctuation: &[char],
     findings: &mut Vec<Finding>,
 ) {
-    // 英小文字と数字とハイフンの並びに ".md" が続くものを探す
     let bytes = text.as_bytes();
     let len = text.len();
     let mut i = 0;
@@ -179,11 +171,11 @@ fn find_doc_refs(
                 }
             }
 
-            // ".md" の前の英小文字と数字とハイフンの並びを逆に辿る
+            // 語の途中から拾い直さないため、要素内のドットも含めて辿る
             let mut name_start = md_abs;
             while name_start > 0 {
                 let prev = bytes[name_start - 1];
-                if prev.is_ascii_lowercase() || prev.is_ascii_digit() || prev == b'-' {
+                if prev.is_ascii_lowercase() || prev.is_ascii_digit() || prev == b'-' || prev == b'/' || prev == b'.' {
                     name_start -= 1;
                 } else {
                     break;
@@ -193,16 +185,21 @@ fn find_doc_refs(
             if name_start < md_abs {
                 let doc_name = &text[name_start..md_abs + 3];
 
-                // 直前が行頭、空白、句読点のいずれか
                 let boundary_ok = if name_start == 0 {
                     true
                 } else {
                     let prev_char = text[..name_start].chars().next_back().unwrap();
-                    prev_char.is_whitespace()
-                        || punctuation.contains(&prev_char)
+                    !prev_char.is_ascii_alphanumeric()
+                        && !matches!(prev_char, '_' | '-' | '/' | '.' | '`')
                 };
 
-                if boundary_ok {
+                let mut elements = text[name_start..md_abs].rsplit('/');
+                let name_ok = elements.next().is_some_and(is_reference_name);
+                let directories_ok = elements.all(|element| {
+                    element == "." || element == ".." || is_reference_name(element)
+                });
+
+                if boundary_ok && name_ok && directories_ok {
                     // IR の置き場にその文書があるか
                     if !ir_filenames.contains(doc_name) {
                         findings.push(Finding::new(FindingKind::MissingDocument, path.to_string(), Some(line), doc_name.to_string()));
@@ -215,6 +212,11 @@ fn find_doc_refs(
             break;
         }
     }
+}
+
+fn is_reference_name(element: &str) -> bool {
+    !element.is_empty()
+        && element.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
 }
 
 /// IR 文書の対象の行（TBL-013）で用語と曖昧語を検査する
