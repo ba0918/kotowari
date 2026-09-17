@@ -69,6 +69,8 @@ implementer と fixer のプロンプト: mark.md の内容を貼る（委譲先
 
 IR 側の指摘: cycle では直さない。人の判断として終端報告に載せ、brainstorm に戻す。
 
+変異の見逃し: push の前のフックが差分の変異を走らせる。見逃しはテスト側の指摘と同じく fixer か実装者が直す。調べ方は mutants.md。
+
 ## implement
 
 既存の implement スキルの手順のうち、次を置き換える。
@@ -79,3 +81,5 @@ plan が列挙した `kotowari check` を確認コマンドとして走らせる
 
 - テスト側の指摘（requirement_without_test、scenario_without_test、test_without_id、invalid_marker、unparsable_file、印からの unresolved_reference）は自分で直す
 - IR 側の指摘は仕様の問題として差し戻す
+
+変異の見逃し: push の前のフックが差分の変異を走らせる。見逃しはテスト側の指摘と同じく fixer か実装者が直す。調べ方は mutants.md。

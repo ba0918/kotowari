@@ -4,6 +4,8 @@ kotowari の仕様に基づく（改訂 2026-09-17。本体の版は固定しな
 
 `tests` は、読んだテストのファイルを拡張子ごとにまとめ、その拡張子のファイルの数（`files`）と、その拡張子が問い合わせのある言語か（`query`）を持つ。`query` が true の拡張子（第1版では `rs` だけ）は、tree-sitter でテストの関数を見つけているので、印の無いテストが test_without_id で出る。`query` が false の拡張子は問い合わせの無い言語で、ファイルの文字の中の印をすべて拾い、requirement_without_test と scenario_without_test を消す側に数えるだけで、テストの数は見ない。その言語のテストに印が無くても指摘は出ないので、`query` が false の拡張子の分は検査が届いていない。
 
+`kotowari mutants` の JSON の最上位は `findings`、`counts`、`mutants` の3つだけで、`files`、`lines`、`tests` は出ない。指摘の形と終了コードの決まりは check と同じで、下の表で引く。`mutants` の集計の読み方と、mutant_survived を調べる手順は mutants.md。
+
 | 種類 | 意味 | 対処 | 担当 |
 |---|---|---|---|
 | missing_title | 題名が無い | `# ` の題名を足す | brainstorm |
