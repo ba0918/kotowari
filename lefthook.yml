@@ -3,7 +3,7 @@
 # pre-commit: 秘密情報の検査（lefthook の導入前から入っていたグローバルのフック。
 #   lefthook install が .git/hooks/pre-commit.old に退避したものをそのまま走らせる）と、
 #   kotowari 自身の IR の検査。check はリポジトリの今のコードで走らせる。
-#   テスト側の指摘（requirement_without_test、test_without_id、invalid_marker、
+#   テスト側の指摘（requirement_without_test、scenario_without_test、test_without_id、invalid_marker、
 #   unparsable_file、テストのファイルの unresolved_reference）はコミットでは止めない。
 #   仕様の承認のコミットは実装より先で、そのときテストはまだ無いため（A19）。
 #   停止（終了コード2）は止める。
@@ -20,7 +20,7 @@ pre-commit:
         rest=$(printf '%s' "$out" | jq -r '
           [ .findings[]
             | select(.severity == "error")
-            | select((.kind | IN("requirement_without_test", "test_without_id", "invalid_marker", "unparsable_file")) | not)
+            | select((.kind | IN("requirement_without_test", "scenario_without_test", "test_without_id", "invalid_marker", "unparsable_file")) | not)
             | select((.kind == "unresolved_reference" and ((.path | startswith("docs/ir/")) | not)) | not)
           ] | .[] | "\(.path):\(.line // "-") [\(.severity)] \(.kind) \(.detail)"')
         if [ -n "$rest" ]; then printf '%s\n' "$rest"; exit 1; fi

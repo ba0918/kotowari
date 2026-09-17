@@ -35,7 +35,7 @@ ADR: 新しく書く義務は無い。既存の ADR は出典の先として残�
 
 承認の手順:
 
-1. `kotowari check --format json` を走らせる。終了コード2なら停止として findings.md のとおり扱う。`findings` のうち `path` が IR の置き場か判断の記録の置き場のファイルである誤りが0になるまで直す。テスト側の指摘（requirement_without_test と、テストのファイルへの指摘）は承認の時点では残ってよく、cycle の終端で0にする。注意（too_many_lines、too_many_requirements）は残してよい。残すときは ir-form.md の「上限と分ける単位」のとおりに読み直し、残す理由を判断の記録に書く。
+1. `kotowari check --format json` を走らせる。終了コード2なら停止として findings.md のとおり扱う。`findings` のうち `path` が IR の置き場か判断の記録の置き場のファイルである誤りが0になるまで直す。テスト側の指摘（requirement_without_test、scenario_without_test と、テストのファイルへの指摘）は承認の時点では残ってよく、cycle の終端で0にする。注意（too_many_lines、too_many_requirements）は残してよい。残すときは ir-form.md の「上限と分ける単位」のとおりに読み直し、残す理由を判断の記録に書く。
 
 2. 照合レビュー: collate.md の指示で別セッションの LLM に IR の各項目とその出典を渡し、出典の決定が項目の内容を裏付けていないものを挙げさせる。返る JSON の `unsupported` の中に挙がったものは、出典を足すか、記録に決定を足すか、項目を直す。IR か記録を変えたら手順1（check）に戻ってから再び照合する。3回目の照合でも残るものは問題の記録（FLAG）にして人に返す。
 
@@ -47,7 +47,7 @@ ADR: 新しく書く義務は無い。既存の ADR は出典の先として残�
 
 入力: IR の置き場のパスと、この計画が対象にする要求の ID の一覧。
 
-承認済みの判定: IR の文書、用語集、問題の記録、判断の記録がすべてコミット済みで、`kotowari check` の誤りがテスト側の指摘（requirement_without_test と、テストのファイルへの指摘）だけ。
+承認済みの判定: IR の文書、用語集、問題の記録、判断の記録がすべてコミット済みで、`kotowari check` の誤りがテスト側の指摘（requirement_without_test、scenario_without_test と、テストのファイルへの指摘）だけ。
 
 要求の参照: 計画の中で要求を `文書のパス#REQ-nnn` の形で参照する。参照先の実在は、その文書に `### REQ-nnn:` で始まる見出しがあることで確かめる。
 
@@ -65,7 +65,7 @@ implementer と fixer のプロンプト: mark.md の内容を貼る（委譲先
 
 終端報告の直前: `kotowari check` を走らせ、出力を終端報告に載せる。
 
-テスト側の指摘（requirement_without_test、test_without_id、invalid_marker、unparsable_file、印からの unresolved_reference）: fixer への指摘として扱う。直らなければ既存の「進捗なし」の終わり方にする。
+テスト側の指摘（requirement_without_test、scenario_without_test、test_without_id、invalid_marker、unparsable_file、印からの unresolved_reference）: fixer への指摘として扱う。直らなければ既存の「進捗なし」の終わり方にする。
 
 IR 側の指摘: cycle では直さない。人の判断として終端報告に載せ、brainstorm に戻す。
 
@@ -77,5 +77,5 @@ plan が列挙した `kotowari check` を確認コマンドとして走らせる
 
 終了コード1のとき:
 
-- テスト側の指摘（requirement_without_test、test_without_id、invalid_marker、unparsable_file、印からの unresolved_reference）は自分で直す
+- テスト側の指摘（requirement_without_test、scenario_without_test、test_without_id、invalid_marker、unparsable_file、印からの unresolved_reference）は自分で直す
 - IR 側の指摘は仕様の問題として差し戻す
