@@ -17,17 +17,14 @@ pub fn read_outcomes(text: &str) -> Result<Vec<MutantOutcome>, String> {
     let entries = root
         .get("outcomes")
         .and_then(Value::as_array)
-        .ok_or_else(|| missing("outcomes", "an array"))?;
+        .ok_or_else(|| "\"outcomes\" is missing or not an array".to_string())?;
 
     let mut outcomes = Vec::new();
     for entry in entries {
-        let summary = entry
-            .get("summary")
-            .and_then(Value::as_str)
-            .ok_or_else(|| missing("summary", "a string"))?;
+        let summary = string_at(entry, "summary", "summary")?;
         let scenario = entry
             .get("scenario")
-            .ok_or_else(|| missing("scenario", "a string or an object"))?;
+            .ok_or_else(|| "\"scenario\" is missing".to_string())?;
 
         // TBL-024: 基準の実行は変異の結果にしない。成功でなければ結果の誤り
         if scenario.as_str() == Some(BASELINE) {
@@ -39,7 +36,7 @@ pub fn read_outcomes(text: &str) -> Result<Vec<MutantOutcome>, String> {
 
         let mutant = scenario
             .get("Mutant")
-            .ok_or_else(|| missing("scenario.Mutant", "an object"))?;
+            .ok_or_else(|| "\"scenario.Mutant\" is missing".to_string())?;
         outcomes.push(read_mutant(mutant, summary)?);
     }
     Ok(outcomes)
@@ -47,16 +44,10 @@ pub fn read_outcomes(text: &str) -> Result<Vec<MutantOutcome>, String> {
 
 /// 変異の1件を写す（TBL-024）
 fn read_mutant(mutant: &Value, summary: &str) -> Result<MutantOutcome, String> {
-    let file = mutant
-        .get("file")
-        .and_then(Value::as_str)
-        .ok_or_else(|| missing("scenario.Mutant.file", "a string"))?;
+    let file = string_at(mutant, "file", "scenario.Mutant.file")?;
     let line = number(mutant, "line")?;
     let column = number(mutant, "column")?;
-    let name = mutant
-        .get("name")
-        .and_then(Value::as_str)
-        .ok_or_else(|| missing("scenario.Mutant.name", "a string"))?;
+    let name = string_at(mutant, "name", "scenario.Mutant.name")?;
 
     if line < 1 {
         return Err(format!("the line is not 1 or greater: {line}"));
@@ -77,12 +68,22 @@ fn read_mutant(mutant: &Value, summary: &str) -> Result<MutantOutcome, String> {
     })
 }
 
+/// 文字列の鍵を引く。無いか文字列でなければ誤りの説明を返す（TBL-020: 詳細は誤りの説明）
+fn string_at<'a>(value: &'a Value, key: &str, shown: &str) -> Result<&'a str, String> {
+    value
+        .get(key)
+        .and_then(Value::as_str)
+        .ok_or_else(|| format!("{shown:?} is missing or not a string"))
+}
+
 /// "span.start" の下の数の鍵を読む
 fn number(mutant: &Value, key: &str) -> Result<u64, String> {
     mutant
         .pointer(&format!("/span/start/{key}"))
         .and_then(Value::as_u64)
-        .ok_or_else(|| missing(&format!("scenario.Mutant.span.start.{key}"), "a number"))
+        .ok_or_else(|| {
+            format!("\"scenario.Mutant.span.start.{key}\" is missing or not a number")
+        })
 }
 
 /// TBL-024: "summary" の4つの値を結果に写す。ほかの値は結果の誤り
@@ -94,8 +95,4 @@ fn read_result(summary: &str) -> Result<MutantResult, String> {
         "Unviable" => Ok(MutantResult::Unviable),
         other => Err(format!("unknown outcome: {other}")),
     }
-}
-
-fn missing(key: &str, expected: &str) -> String {
-    format!("{key:?} is missing or not {expected}")
 }
