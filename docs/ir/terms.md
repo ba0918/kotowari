@@ -54,14 +54,14 @@ kotowari は、`用語`をバッククォートで囲み忘れたことを検出
 ### REQ-069: 文書名の参照の見つけ方
 
 - 種類: algorithm
-- 出典: docs/decision/records/records.md#A42, docs/decision/records/records.md#A47, docs/decision/records/records.md#A54
+- 出典: docs/decision/records/records.md#A42, docs/decision/records/records.md#A47, docs/decision/records/2026-09-16-ir-tree.md#A21
 - 定義: TBL-014
 - 検証: unit
 
 ### REQ-070: 参照された文書が無い
 
 - 種類: event_driven
-- 出典: docs/decision/records/records.md#A54, docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A17, docs/decision/records/2026-09-16-ir-tree.md#A18
+- 出典: docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A17, docs/decision/records/2026-09-16-ir-tree.md#A18, docs/decision/records/ir-form.md#検査の種類
 - 検証: unit
 
 `文書名の参照`が "/" を含まないときにその名前の文書が参照を書いた文書と同じディレクトリに無いとき、"/" を含むときにその`IR`の置き場からの相対パスの文書が無いとき、または並びに "." か ".." の要素を含むとき、kotowari は参照の文字列を detail にして missing_document の`誤り`を出す。文書の有無は読んだ`IR`の文書の中に有るかで見る（ディレクトリのシンボリックリンクの下にあって読まない文書は無いものとする）。同じディレクトリに無い文書を上のディレクトリへ辿って探さない。
@@ -85,7 +85,7 @@ kotowari は、`用語`をバッククォートで囲み忘れたことを検出
 
 ### TBL-014: 文書名の参照の条件
 
-- 出典: docs/decision/records/records.md#A47, docs/decision/records/records.md#A54, docs/decision/records/ir-form.md#文書名の参照, docs/decision/records/records.md#A64, docs/decision/records/records.md#A65, docs/decision/records/records.md#A73, docs/decision/records/records.md#A118, docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A12, docs/decision/records/2026-09-16-ir-tree.md#A14, docs/decision/records/2026-09-16-ir-tree.md#A17, docs/decision/records/2026-09-16-ir-tree.md#A21
+- 出典: docs/decision/records/records.md#A47, docs/decision/records/ir-form.md#文書名の参照, docs/decision/records/records.md#A73, docs/decision/records/records.md#A118, docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A12, docs/decision/records/2026-09-16-ir-tree.md#A14, docs/decision/records/2026-09-16-ir-tree.md#A17, docs/decision/records/2026-09-16-ir-tree.md#A21
 
 | 順 | 条件 |
 |---|---|
@@ -103,7 +103,7 @@ Scenario: 囲んだパスは誤りになる
   When "kotowari check" を実行する
   Then detail が "src/main.rs" の unknown_term の誤りが出る
 
-@id=EX-014 @about=REQ-069,REQ-070 @source=docs/decision/records/records.md#A54,docs/decision/records/2026-09-16-ir-tree.md#A5,docs/decision/records/2026-09-16-ir-tree.md#A15
+@id=EX-014 @about=REQ-069,REQ-070 @source=docs/decision/records/2026-09-16-ir-tree.md#A5,docs/decision/records/2026-09-16-ir-tree.md#A15,docs/decision/records/2026-09-16-ir-tree.md#A21
 Scenario: 置き場の外のパスは引用符で囲む
   Given 文書に "docs/decision/adr/0001-test-marker.md" と引用符なしで書いている
   When "kotowari check" を実行する

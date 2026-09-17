@@ -36,6 +36,6 @@
 | 問い合わせの無い言語 | 拡張子から決まる言語のうち、同梱の問い合わせが無いもの | docs/decision/records/records.md#A39 |
 | 曖昧語 | 設定の "vague_words" に並べた語 | docs/decision/records/records.md#A21, docs/decision/records/records.md#A41 |
 | 対象の行 | 用語と曖昧語の検査を受ける行。TBL-013 で決める | docs/decision/records/records.md#A53 |
-| 文書名の参照 | コードブロックの外にある文書名の並び。TBL-014 で決める | docs/decision/records/records.md#A54, docs/decision/records/records.md#A47 |
+| 文書名の参照 | コードブロックの外にある文書名の並び。TBL-014 で決める | docs/decision/records/records.md#A47, docs/decision/records/2026-09-16-ir-tree.md#A21 |
 | 除外 | 仕様が列挙した、kotowari が指摘を出さずに読まないか見ないもの。隠しディレクトリ、ディレクトリのシンボリックリンク、ディレクトリでも通常のファイルでもないもの（ソケット、名前付きパイプ、デバイス）、".md" 以外のファイル、".kotowari" という名前のファイル、形に合わない見出しの下の行、コードブロックの中（gherkin を除く）、gherkin のブロックの外の "Scenario:" の行、"## " の見出しの直下で最初の "### " より前の空でない行、題名より前の空でない行、テストの外と関数の本体の途中にある印、行の中の二重引用符の中、二重引用符が奇数のときの最後の引用符から行末まで、TBL-013 で対象外の行。列挙に無い読み飛ばしは作らない。IR の置き場のサブディレクトリは除外でなく読む | docs/decision/records/2026-09-16-ir-tree.md#A1, docs/decision/records/records.md#A100, docs/decision/records/records.md#A102, docs/decision/records/records.md#A110, docs/decision/records/records.md#A145, docs/decision/records/records.md#A156, docs/decision/records/records.md#A165 |
 | コードブロック | 行頭の3つ以上の "`" か "~" で始まる行から、同じ文字で同じ数以上の行までの部分 | docs/decision/records/records.md#A108 |
