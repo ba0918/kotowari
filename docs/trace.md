@@ -21,3 +21,4 @@
 | REQ-108 | review | Linux と macOS で `cargo test` が通ることを確認。Windows は動作を約束しない（パスの区切りの正規化 REQ-110 だけ） |
 | REQ-109 | review | `src/lib.rs` の `run_check` で置き場の存在を検査し、`StopReason` で停止していることを確認。黙って飛ばす経路が無いことを `rg 'filter_map|if let Ok' src/` で確認 |
 | REQ-120 | review | `src/ir.rs` と `src/lib.rs` で、仕様に列挙されていない振る舞いを黙って決めていないことを確認。`parse_document` の gherkin 解析で有効な行の種類以外を invalid_gherkin_line にし、`read_utf8_file` で読めないファイルを停止にし、`check_documents` で形に合わない見出しの下を読まないことを確認 |
+| REQ-136 | review | 判断の記録を読む関数が1つで（`src/sources.rs` の parse_records_file、または記録の読み取りのモジュール）、形の検査と出典の判定がその返す構造だけを読むことを確認。`rg "lines\(\)" src/sources.rs` で、記録のファイルの行を直接読む箇所が読み取り関数の外に無いことを確認 |

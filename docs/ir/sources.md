@@ -71,12 +71,12 @@ kotowari は常に、source_invalid の "line" を`出典`が書かれた行（`
 
 ### TBL-012: 出典の判定
 
-- 出典: docs/decision/records/records.md#A38, docs/decision/records/records.md#A48, docs/decision/records/records.md#A69, docs/decision/records/records.md#A91, docs/decision/records/records.md#A115, docs/decision/records/records.md#A134, docs/decision/records/records.md#A158, docs/decision/records/records.md#A165
+- 出典: docs/decision/records/records.md#A38, docs/decision/records/records.md#A48, docs/decision/records/records.md#A69, docs/decision/records/records.md#A91, docs/decision/records/records.md#A115, docs/decision/records/records.md#A134, docs/decision/records/records.md#A158, docs/decision/records/records.md#A165, docs/decision/records/2026-09-17-record-form.md#A33, docs/decision/records/2026-09-17-record-form.md#A34
 
 | 順 | 条件 | 結果 |
 |---|---|---|
 | 1 | "パス#印" の書式でない | source_invalid |
-| 2 | パスが decisions.records の中の`判断の記録`（`決定の節`の見出しを1つ以上持つファイル）で、印が決定の番号の形（英大文字1文字に1桁以上の数字）で、そのファイルの決定の節に、行頭の空白を除いて "- 印 " で始まる行か "- 印" だけの行がある | 正しい |
+| 2 | パスが decisions.records の中の`判断の記録`（`決定の節`の見出しを1つ以上持つファイル）で、印が決定の番号の形（英大文字1文字に1桁以上の数字）で、そのファイルの決定の節に、印の番号の`番号の行`がある（`コードブロック`の中は除外） | 正しい |
 | 3 | パスが decisions.records の中の`判断の記録`で、2 に当たらない | source_invalid |
 | 4 | パスが decisions.records か decisions.adr の中の、判断の記録でない Markdown のファイル（ADR、形の契約、補足の文書。ディレクトリでも通常のファイルでもないものは`除外`で、ファイルに数えない）で、そのファイルがあり、印が "## " の見出しの文字と前後の空白を除いて完全一致する | 正しい |
 | 5 | パスが decisions.records か decisions.adr の中で、2 から 4 のどれにも当たらない | source_invalid |

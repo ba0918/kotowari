@@ -42,7 +42,7 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 
 ### TBL-019: 指摘の行
 
-- 出典: docs/decision/records/records.md#A144, docs/decision/records/records.md#A114, docs/decision/records/records.md#A121, docs/decision/records/records.md#A139, docs/decision/records/records.md#A108, docs/decision/records/records.md#A61, docs/decision/records/records.md#A72, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A4
+- 出典: docs/decision/records/records.md#A144, docs/decision/records/records.md#A114, docs/decision/records/records.md#A121, docs/decision/records/records.md#A139, docs/decision/records/records.md#A108, docs/decision/records/records.md#A61, docs/decision/records/records.md#A72, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A4, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A25
 
 | 種類 | line |
 |---|---|
@@ -58,6 +58,8 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 | unresolved_reference、invalid_marker | 印なら印のある行（REQ-118）。定義・関係・文の中なら その行。"@about" ならタグの行 |
 | missing_field、missing_statement、missing_table、verification_missing、verification_invalid、unknown_kind、algorithm_without_definition、requirement_without_test | 項目の見出しの行 |
 | test_without_id | 関数の宣言の行 |
+| record_field_missing | 番号の行 |
+| record_field_unknown、revision_link_invalid | その行 |
 
 ## 性質
 
