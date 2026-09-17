@@ -1,0 +1,16 @@
+# commit と push のゲート（判断の記録 docs/decision/records/2026-09-17-decision-log.md の A15）
+#
+# pre-commit: 秘密情報の検査（lefthook の導入前から入っていたグローバルのフック。
+#   lefthook install が .git/hooks/pre-commit.old に退避したものをそのまま走らせる）と、
+#   kotowari 自身の IR の検査。check はリポジトリの今のコードで走らせる。
+# pre-push: テスト全件。時間がかかるので push 側に置く。
+pre-commit:
+  commands:
+    secretlint:
+      run: .git/hooks/pre-commit.old
+    kotowari-check:
+      run: CARGO_BUILD_JOBS=4 cargo run -q -- check --format text
+pre-push:
+  commands:
+    cargo-test:
+      run: CARGO_BUILD_JOBS=4 cargo test
