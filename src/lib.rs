@@ -205,6 +205,21 @@ stop_reasons! {
     NonUtf8File => "non-UTF-8 file",
 }
 
+/// 結果のファイルを作った変異テストの道具（REQ-149）
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Tool {
+    CargoMutants,
+}
+
+impl Tool {
+    fn parse(s: &str) -> Result<Self, String> {
+        match s {
+            "cargo-mutants" => Ok(Tool::CargoMutants),
+            _ => Err(format!("unknown tool: {s}")),
+        }
+    }
+}
+
 /// 引数の解析結果
 #[derive(Debug)]
 pub enum Cli {
@@ -217,8 +232,8 @@ pub enum Cli {
     Mutants {
         format: Format,
         config_path: Option<PathBuf>,
-        tool: Option<String>,
-        results: Vec<PathBuf>,
+        tool: Tool,
+        results: PathBuf,
     },
     /// 使い方を表示する
     Help,
@@ -311,6 +326,12 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     };
 
     if command == "check" {
+        // REQ-004: "check" に付けた "--tool" と、"check" の後の位置引数
+        if tool.is_some() {
+            return Err(StopReason::ArgumentError(
+                "unexpected option for check: --tool".to_string(),
+            ));
+        }
         if let Some(extra) = positionals.first() {
             return Err(StopReason::ArgumentError(format!(
                 "unexpected argument: {extra}"
@@ -322,11 +343,27 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         });
     }
 
+    // REQ-149: "--tool" は必須で、値は知っている道具の名前だけ
+    let Some(tool) = tool else {
+        return Err(StopReason::ArgumentError(
+            "mutants requires the option: --tool".to_string(),
+        ));
+    };
+    let tool = Tool::parse(&tool).map_err(StopReason::ArgumentError)?;
+
+    // REQ-149: "mutants" の後の位置引数は結果のファイルのパスがちょうど1つ
+    let [results] = positionals.as_slice() else {
+        return Err(StopReason::ArgumentError(format!(
+            "mutants expects exactly one result file path, got {}",
+            positionals.len()
+        )));
+    };
+
     Ok(Cli::Mutants {
         format,
         config_path,
         tool,
-        results: positionals.iter().map(PathBuf::from).collect(),
+        results: PathBuf::from(results),
     })
 }
 
@@ -546,6 +583,7 @@ pub fn run(args: &[String]) -> u8 {
         }
         Cli::Mutants {
             config_path,
+            tool,
             results,
             ..
         } => {
@@ -553,7 +591,7 @@ pub fn run(args: &[String]) -> u8 {
                 Ok(cwd) => cwd,
                 Err(reason) => return stop(&reason),
             };
-            match run_mutants(&cwd, config_path.as_deref(), &results) {
+            match run_mutants(&cwd, config_path.as_deref(), tool, &results) {
                 Ok(()) => 0,
                 Err(reason) => stop(&reason),
             }
@@ -605,15 +643,14 @@ fn print_help() {
 pub fn run_mutants(
     cwd: &Path,
     _config_path: Option<&Path>,
-    results: &[PathBuf],
+    _tool: Tool,
+    results: &Path,
 ) -> Result<(), StopReason> {
     let base = find_base(cwd);
-    if let Some(path) = results.first() {
-        // 結果のファイルのパスはカレントディレクトリからの相対（REQ-149）、
-        // 停止の詳細は基準のディレクトリからの相対（TBL-020）
-        let display = display_from_base(&base, cwd, path);
-        read_utf8_file(&cwd.join(path), &display)?;
-    }
+    // 結果のファイルのパスはカレントディレクトリからの相対（REQ-149）、
+    // 停止の詳細は基準のディレクトリからの相対（TBL-020）
+    let display = display_from_base(&base, cwd, results);
+    read_utf8_file(&cwd.join(results), &display)?;
     Ok(())
 }
 

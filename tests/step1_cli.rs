@@ -9,19 +9,30 @@ fn valid_project_dir() -> &'static Path {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-project").leak()
 }
 
-// --- REQ-001: コマンドは1つ ---
+// --- REQ-001: コマンドは2つ ---
 
 // @kotowari[REQ-001]
 #[test]
-fn req_001_only_check_subcommand() {
-    // "kotowari" だけ（サブコマンドなし）は停止する
-    cmd().current_dir(valid_project_dir()).assert().code(2);
+fn req_001_check_and_mutants_are_the_only_commands() {
     // "kotowari check" は通る
     cmd()
         .arg("check")
         .current_dir(valid_project_dir())
         .assert()
         .code(0);
+    // "kotowari mutants" も2つ目のコマンドとして通る
+    let tmp = dir_with_results(&["outcomes.json"]);
+    cmd()
+        .args(["mutants", "--tool", "cargo-mutants", "outcomes.json"])
+        .current_dir(tmp.path())
+        .assert()
+        .code(0);
+    // ほかの語はコマンドにならない
+    cmd()
+        .arg("mutate")
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(2);
 }
 
 // --- REQ-002: 受けるオプション ---
@@ -455,6 +466,69 @@ fn req_144_missing_result_file_is_an_unreadable_file() {
     assert!(
         first_line.starts_with("unreadable file: "),
         "expected 'unreadable file: ...', got: {first_line:?}"
+    );
+}
+
+// --- REQ-149: mutants の引数 ---
+
+/// 読める結果のファイルを置いた一時ディレクトリを作る
+fn dir_with_results(names: &[&str]) -> tempfile::TempDir {
+    let tmp = tempfile::TempDir::new().unwrap();
+    for name in names {
+        std::fs::write(tmp.path().join(name), ONE_CAUGHT_RESULT).unwrap();
+    }
+    tmp
+}
+
+/// 引数の誤りで停止することを見る
+fn assert_argument_error(args: &[&str], dir: &Path) {
+    let output = cmd().args(args).current_dir(dir).output().unwrap();
+    assert_eq!(output.status.code(), Some(2), "{args:?} should stop");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let first_line = stderr.lines().next().unwrap_or("");
+    assert!(
+        first_line.starts_with("argument error: "),
+        "{args:?} should stop as an argument error, got: {first_line:?}"
+    );
+}
+
+// @kotowari[REQ-149, EX-218]
+#[test]
+fn req_149_mutants_without_tool_is_an_argument_error() {
+    let tmp = dir_with_results(&["outcomes.json"]);
+    assert_argument_error(&["mutants", "outcomes.json"], tmp.path());
+}
+
+// @kotowari[REQ-149, EX-240]
+#[test]
+fn req_149_unknown_tool_is_an_argument_error() {
+    let tmp = dir_with_results(&["a.json"]);
+    assert_argument_error(&["mutants", "--tool", "stryker", "a.json"], tmp.path());
+}
+
+// @kotowari[REQ-149, EX-242]
+#[test]
+fn req_149_two_result_paths_is_an_argument_error() {
+    let tmp = dir_with_results(&["a.json", "b.json"]);
+    assert_argument_error(
+        &["mutants", "--tool", "cargo-mutants", "a.json", "b.json"],
+        tmp.path(),
+    );
+}
+
+// @kotowari[REQ-149]
+#[test]
+fn req_149_mutants_without_a_result_path_is_an_argument_error() {
+    let tmp = dir_with_results(&[]);
+    assert_argument_error(&["mutants", "--tool", "cargo-mutants"], tmp.path());
+}
+
+// @kotowari[REQ-004]
+#[test]
+fn req_004_tool_on_check_is_an_argument_error() {
+    assert_argument_error(
+        &["check", "--tool", "cargo-mutants"],
+        valid_project_dir(),
     );
 }
 
