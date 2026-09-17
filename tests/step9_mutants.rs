@@ -229,6 +229,8 @@ fn req_140_timeout_is_a_notice_even_when_listed() {
     assert_eq!(findings[0]["severity"], "notice");
     assert_eq!(findings[0]["path"], "src/a.rs");
     assert_eq!(findings[0]["line"], 3);
+    // PROP-005: "timeout" は mutant_timeout の指摘の数に等しい
+    assert_eq!(v["mutants"]["timeout"], 1);
     assert_eq!(output.status.code(), Some(0));
 }
 
@@ -565,6 +567,12 @@ fn req_141_listed_survivor_is_counted_as_equivalent() {
     );
     assert_eq!(v["mutants"]["survived"], 0);
     assert_eq!(v["mutants"]["equivalent"], 1);
+    // 文面が今のソースにある1件は古くない（REQ-142）
+    assert!(
+        findings_of(&v, "equivalent_stale").is_empty(),
+        "{:?}",
+        v["findings"]
+    );
     assert_eq!(output.status.code(), Some(0));
 }
 
@@ -651,13 +659,20 @@ fn req_141_one_entry_matches_every_line_with_the_same_text() {
 // @kotowari[REQ-141, EX-233]
 #[test]
 fn req_141_entry_for_another_file_does_not_match() {
-    let v = run_with_list(&entry(&[
-        ("file", "src/b.rs"),
-        ("change", CHANGE),
-        ("text", "if a == b {"),
-        ("class", "equivalent"),
-        ("why", "another file"),
-    ]));
+    // "src/b.rs" にも同じ文面の行が同じ行番号であるが、"file" が違うので一致しない
+    let tmp = project_with_list(
+        &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "MissedMutant")]),
+        &entry(&[
+            ("file", "src/b.rs"),
+            ("change", CHANGE),
+            ("text", "if a == b {"),
+            ("class", "equivalent"),
+            ("why", "another file"),
+        ]),
+    );
+    write(tmp.path(), "src/a.rs", SRC_A);
+    write(tmp.path(), "src/b.rs", SRC_A);
+    let v = json_of(&run_in(tmp.path(), &[]));
     let survived = findings_of(&v, "mutant_survived");
     assert_eq!(survived.len(), 1, "{:?}", v["findings"]);
     assert_eq!(survived[0]["path"], "src/a.rs");
@@ -722,4 +737,59 @@ fn req_142_stale_entry_detail_keeps_the_written_path() {
     let stale = findings_of(&v, "equivalent_stale");
     assert_eq!(stale.len(), 1, "{:?}", v["findings"]);
     assert_eq!(stale[0]["detail"], "./src/a.rs: replace f with ()");
+}
+
+// @kotowari[REQ-144, REQ-139]
+#[test]
+fn req_144_line_one_is_read() {
+    // 1行目の変異は「行が1未満」ではないので停止しない
+    let tmp = project(&outcomes(&[mutant_at(
+        "src/a.rs",
+        1,
+        "replace f with ()",
+        "MissedMutant",
+    )]));
+    let output = run_in(tmp.path(), &[]);
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "stderr: {}",
+        first_stderr_line(&output)
+    );
+    let v = json_of(&output);
+    let survived = findings_of(&v, "mutant_survived");
+    assert_eq!(survived.len(), 1, "{:?}", v["findings"]);
+    assert_eq!(survived[0]["line"], 1);
+}
+
+// @kotowari[REQ-148]
+#[test]
+fn req_148_list_of_comments_only_is_zero_entries() {
+    let tmp = project_with_list(
+        &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "CaughtMutant")]),
+        "# 今は1件も無い\n# あとで足す\n",
+    );
+    let output = run_in(tmp.path(), &[]);
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "stderr: {}",
+        first_stderr_line(&output)
+    );
+}
+
+// @kotowari[REQ-143]
+#[test]
+fn req_143_entry_with_a_key_outside_the_five_is_invalid() {
+    // 鍵は5つだが "why" が無く、代わりに知らない鍵 "note" がある
+    let v = run_with_list(&entry(&[
+        ("file", "src/a.rs"),
+        ("change", CHANGE),
+        ("text", "if a == b {"),
+        ("class", "equivalent"),
+        ("note", "the reason belongs in why"),
+    ]));
+    assert_eq!(findings_of(&v, "equivalent_invalid").len(), 1);
+    // 形の誤った1件は見逃しを外さない
+    assert_eq!(findings_of(&v, "mutant_survived").len(), 1);
 }
