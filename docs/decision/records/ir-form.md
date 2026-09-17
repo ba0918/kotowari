@@ -83,7 +83,7 @@
 | `unknown_tag` | シナリオのタグが3つ以外 | タグの名前 |
 | `vague_word` | 対象の行に `vague_words` の語が含まれる | 語 |
 | `requirement_without_test` | 検証が `review` 以外の要求で、その ID を含む印も、`@about` にその ID を持つシナリオの ID を含む印も1つもない（scenario-tests A4） | 要求の ID |
-| `scenario_without_test` | `@about` に検証が `review` 以外の要求を持つシナリオで、その ID を含む印が1つもない。要求の無いシナリオ、review だけのシナリオ、検証の行が無いか値が形に合わない要求だけのシナリオ、`@id` の無いシナリオと invalid_id のシナリオには出さない。同じ ID のシナリオが複数なら1つ目の `@about`（scenario-tests A2、A3、A8、A14、A15） | シナリオの ID |
+| `scenario_without_test` | `@about` に検証が `review` 以外の要求を持つシナリオで、その ID を含む印が1つもない。要求の無いシナリオ、review だけのシナリオ、検証の行が無いか値が形に合わない要求だけのシナリオ、`@id` の無いシナリオと invalid_id のシナリオには出さない。同じ ID のシナリオが複数なら1つ目の `@about` で、指摘は1つ目のタグの行に1件（scenario-tests A2、A3、A8、A14、A15、A16） | シナリオの ID |
 | `test_without_id` | テストなのに印がない | 関数の名前 |
 | `invalid_marker` | テストに結び付く印が空か区切りだけ、または同じ行に閉じ括弧がない。テストの外の印は見ない（A121） | 読んだ行の文字そのまま |
 | `unparsable_file` | テストのファイルを tree-sitter で読めない（構文の誤りが1つでもある）。そのファイルは飛ばす | ファイルのパス |
