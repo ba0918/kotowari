@@ -16,9 +16,9 @@ kotowari の仕様に基づく（改訂 2026-09-17。本体の版は固定しな
 | duplicate_field | 同じ行が2つ以上 | 重複した行を1つにする | brainstorm |
 | missing_source | 出典が無いか空 | `- 出典:` を足す | brainstorm |
 | source_invalid | 出典の先が正しくない | 出典の書式を直すか判断の記録の決定を確かめる | brainstorm |
-| record_field_missing | `## Context` の見出しを持つ判断の記録で、番号の行に必須の補足の行が無いか値が空（決定の節は `why`、Undecided は `decides`、Superseded は `superseded_by`） | detail の名前の補足の行をその行の下に足す。理由が残っていなければ値を `not recorded` にする | brainstorm |
+| record_field_missing | `## Context` の見出しを持つ判断の記録で、番号の行に必須の補足の行が無いか値が空（決定の節は `why`、Undecided は `decides`、Superseded は `superseded_by`） | detail の名前の補足の行をその行の下に足す。`why` で理由が残っていなければ値を `not recorded` にする。`superseded_by` は改めた先の決定へのリンクが要る | brainstorm |
 | record_field_unknown | `## Context` の見出しを持つ判断の記録で、補足の行の名前が `why`、`rejected`、`decided_by`、`superseded_by`、`decides`、`related` の6つ以外 | 名前を6つのどれかに直すか、その行を補足の行でない形にする | brainstorm |
-| revision_link_invalid | すべての判断の記録で、`superseded_by` の行に `[文字](href)` のリンクが無い、href が `#` と決定の番号を持たない、パスが置き場の外、先が判断の記録でない、先の決定の節と Superseded の節に番号の行が無い | detail の href を、置き場の中の記録の決定の番号を指す相対リンクに直す | brainstorm |
+| revision_link_invalid | すべての判断の記録で、`superseded_by` の行に `[文字](href)` のリンクが無い、href が `#` と決定の番号を持たない、パスが置き場の外、先が判断の記録でない、先の決定の節と Superseded の節に番号の行が無い | detail の href（リンクが無いときは行の値）を、置き場の中の記録の決定の番号を指す `[文字](href)` の相対リンクに直す | brainstorm |
 | unknown_term | バッククォートで囲んだ語が用語集にも ID にもない | 用語集に足すか、値なら二重引用符に変える | brainstorm |
 | missing_document | 文書名の参照先が無い | 文書を作るか参照を直す | brainstorm |
 | missing_statement | 要求か性質に文が無い | 文を足す | brainstorm |
