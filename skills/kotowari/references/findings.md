@@ -2,7 +2,7 @@ kotowari の仕様に基づく（改訂 2026-09-17。本体の版は固定しな
 
 終了コードを見る。2 なら停止。標準出力は空なので読まない。標準エラーの 1 行目の文言で下の停止の表を引く。0 か 1 なら標準出力の JSON を読み、`findings` の各件を下の表で引く。`severity` が `notice` の件（注意）は終了コードを変えない。
 
-`tests` は、読んだテストのファイルを拡張子ごとにまとめ、その拡張子のファイルの数（`files`）と、その拡張子が問い合わせのある言語か（`query`）を持つ。`query` が true の拡張子（第1版では `rs` だけ）は、tree-sitter でテストの関数を見つけているので、印の無いテストが test_without_id で出る。`query` が false の拡張子は問い合わせの無い言語で、ファイルの文字の中の印をすべて拾い、requirement_without_test を消す側に数えるだけで、テストの数は見ない。その言語のテストに印が無くても指摘は出ないので、`query` が false の拡張子の分は検査が届いていない。
+`tests` は、読んだテストのファイルを拡張子ごとにまとめ、その拡張子のファイルの数（`files`）と、その拡張子が問い合わせのある言語か（`query`）を持つ。`query` が true の拡張子（第1版では `rs` だけ）は、tree-sitter でテストの関数を見つけているので、印の無いテストが test_without_id で出る。`query` が false の拡張子は問い合わせの無い言語で、ファイルの文字の中の印をすべて拾い、requirement_without_test と scenario_without_test を消す側に数えるだけで、テストの数は見ない。その言語のテストに印が無くても指摘は出ないので、`query` が false の拡張子の分は検査が届いていない。
 
 | 種類 | 意味 | 対処 | 担当 |
 |---|---|---|---|
@@ -33,7 +33,7 @@ kotowari の仕様に基づく（改訂 2026-09-17。本体の版は固定しな
 | unknown_tag | 知らないタグ | `@id`、`@about`、`@source` のいずれかに直す | brainstorm |
 | vague_word | 曖昧語が含まれる | 具体的な語に言い換える | brainstorm |
 | requirement_without_test | review 以外の要求にテストが無い | テストを書いて印を付ける | implementer（path は IR だが直すのは implementer） |
-| scenario_without_test | 要求を挙げる具体例にテストが無い | その場面を確かめるテストを書いて印を付ける | implementer（path は IR だが直すのは implementer） |
+| scenario_without_test | @about に検証が review 以外の要求を持つ具体例に、その ID を含む印が1つも無い（review だけの具体例と要求を挙げない具体例には出ない） | その場面を確かめるテストを書いて印を付ける | implementer（path は IR だが直すのは implementer） |
 | test_without_id | テストに印が無い | `@kotowari[ID]` の印を付ける | implementer |
 | invalid_marker | 印の形が正しくない | `@kotowari[ID, ...]` の形に直す | implementer |
 | unparsable_file | テストファイルを読めない | テストの構文誤りを直す | implementer |
