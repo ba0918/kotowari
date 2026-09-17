@@ -62,10 +62,10 @@ kotowari は常に、`設定ファイル`のキーを入れ子の形（"decision
 ### REQ-018: 置き場が無いとき
 
 - 種類: event_driven
-- 出典: docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A66, docs/decision/records/records.md#A95, docs/decision/records/records.md#A96, docs/decision/records/records.md#A124, docs/decision/records/records.md#A146, docs/decision/records/2026-09-16-ir-tree.md#A16
+- 出典: docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A66, docs/decision/records/records.md#A95, docs/decision/records/records.md#A96, docs/decision/records/records.md#A124, docs/decision/records/records.md#A146, docs/decision/records/2026-09-16-ir-tree.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A55
 - 検証: unit
 
-"ir"、"decisions.records"、"decisions.adr" の指す先が無いとき、ディレクトリでないとき、または読めないとき、kotowari は読めないファイルを理由に`停止`する。"ir"、"decisions.records"、"decisions.adr" の下のディレクトリが読めないとき、"tests.files" の走査でディレクトリが読めないとき、および走査で先の無いシンボリックリンクに出会ったときも同じ理由で`停止`する。
+"kotowari check" で、"ir"、"decisions.records"、"decisions.adr" の指す先が無いとき、ディレクトリでないとき、または読めないとき、kotowari は読めないファイルを理由に`停止`する。"ir"、"decisions.records"、"decisions.adr" の下のディレクトリが読めないとき、"tests.files" の走査でディレクトリが読めないとき、および走査で先の無いシンボリックリンクに出会ったときも同じ理由で`停止`する。
 
 ### REQ-019: glob の読み方
 
@@ -87,7 +87,7 @@ kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`�
 
 ### TBL-004: キーと既定の値
 
-- 出典: docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/records.md#A62, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-notice.md#A5
+- 出典: docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/records.md#A62, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-notice.md#A5, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A16
 
 | キー | 値 | 既定 |
 |---|---|---|
@@ -97,6 +97,7 @@ kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`�
 | tests.files | glob の一覧 | src/\*\*/\*.rs、tests/\*\*/\*.rs |
 | tests.rust.attributes | "#[test]" に足す属性のパスの一覧 | 空の一覧 |
 | tests.rust.macros | マクロの名前の一覧 | 空の一覧 |
+| mutants.equivalents | ファイルのパス（1つの文字列）。等価の一覧を指す | 無し（鍵が無ければ等価の一覧は0件） |
 | limits.lines | 数（負の数と0は不可） | 200 |
 | limits.requirements | 数（負の数と0は不可） | 10 |
 | vague_words | 語の一覧 | 「適切に」「必要に応じて」「通常は」「など」の4語 |

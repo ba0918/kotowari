@@ -18,13 +18,13 @@
 - 定義: TBL-009
 - 検証: unit
 
-### REQ-031: 注意は2つだけ
+### REQ-031: 注意は4つだけ
 
 - 種類: invariant
-- 出典: docs/decision/records/records.md#A29, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2
+- 出典: docs/decision/records/records.md#A29, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2, docs/decision/records/2026-09-17-mutation-tests.md#A11, docs/decision/records/2026-09-17-mutation-tests.md#A20, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A43
 - 検証: unit
 
-種類が too_many_lines か too_many_requirements の`指摘`だけが`注意`で、ほかの種類の`指摘`はすべて`誤り`である関係が常に成り立つ。
+種類が too_many_lines、too_many_requirements、mutant_timeout、equivalent_stale の`指摘`だけが`注意`で、ほかの種類の`指摘`はすべて`誤り`である関係が常に成り立つ。
 
 ### REQ-032: ID の重複
 
@@ -38,7 +38,7 @@
 
 ### TBL-008: 誤りの種類と detail
 
-- 出典: docs/decision/records/records.md#A142, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A68, docs/decision/records/records.md#A108, docs/decision/records/records.md#A109, docs/decision/records/records.md#A110, docs/decision/records/records.md#A112, docs/decision/records/records.md#A116, docs/decision/records/records.md#A111, docs/decision/records/records.md#A150, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A19, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-scenario-tests.md#A6
+- 出典: docs/decision/records/records.md#A142, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A68, docs/decision/records/records.md#A108, docs/decision/records/records.md#A109, docs/decision/records/records.md#A110, docs/decision/records/records.md#A112, docs/decision/records/records.md#A116, docs/decision/records/records.md#A111, docs/decision/records/records.md#A150, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A19, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-scenario-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A57
 
 detail が「行の文字」「見出しの文字」「Scenario: の行の文字」の種類では、読んだ行の文字そのまま（字下げと末尾の空白を含み、再構成しない）を入れる。
 
@@ -81,15 +81,19 @@ detail が「行の文字」「見出しの文字」「Scenario: の行の文字
 | record_field_missing | 無い補足の行の名前 | REQ-130 |
 | record_field_unknown | 補足の行の名前 | REQ-131 |
 | revision_link_invalid | リンクの href。リンクが無ければ superseded_by の行の値 | REQ-132 |
+| mutant_survived | 変更の説明 | REQ-139 |
+| equivalent_invalid | 等価の一覧の1件に書かれたままの "file" と "change" を ": " でつないだ文字列 | REQ-143 |
 
 ### TBL-009: 注意の種類と detail
 
-- 出典: docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2
+- 出典: docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A57
 
 | 種類 | detail | 条件を定める要求 |
 |---|---|---|
 | too_many_lines | 行数 | REQ-038 |
 | too_many_requirements | 要求の数 | REQ-039 |
+| mutant_timeout | 変更の説明 | REQ-140 |
+| equivalent_stale | 等価の一覧の1件に書かれたままの "file" と "change" を ": " でつないだ文字列 | REQ-142 |
 
 ## 具体例
 

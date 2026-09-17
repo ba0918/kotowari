@@ -4,21 +4,21 @@ kotowari のコマンド、受ける引数、停止と終了コードを扱う�
 
 ## 要求
 
-### REQ-001: コマンドは1つ
+### REQ-001: コマンドは2つ
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A19
+- 出典: docs/decision/records/records.md#A19, docs/decision/records/2026-09-17-mutation-tests.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43
 - 検証: unit
 
-kotowari は常に、"kotowari check" の1つのコマンドで、`IR`の検査と`テスト`との対応の検査を両方行う。
+kotowari は常に、"kotowari check" と "kotowari mutants" の2つのコマンドだけを持ち、"kotowari check" の1つのコマンドで`IR`の検査と`テスト`との対応の検査を両方行う。
 
 ### REQ-002: 受けるオプション
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A19, docs/decision/records/records.md#A103
+- 出典: docs/decision/records/records.md#A19, docs/decision/records/records.md#A103, docs/decision/records/2026-09-17-mutation-tests.md#A14, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A58
 - 検証: unit
 
-kotowari は常に、オプションとして "--format"、"--config"、"--help"、"--version" だけを受け、オプションを "check" の前後どちらに書いても受ける。
+kotowari は常に、"check" ではオプションとして "--format"、"--config"、"--help"、"--version" だけを受け、"mutants" ではそれに加えて "--tool" を受け、どちらのコマンドでも、オプションをコマンドの前後どちらに書いても受け、"mutants" では位置引数とオプションの順を問わない。
 
 ### REQ-003: 設定のパスの基準
 
@@ -31,10 +31,18 @@ kotowari は常に、"--config" に与えたパスをカレントディレクト
 ### REQ-004: 引数の誤り
 
 - 種類: event_driven
-- 出典: docs/decision/records/records.md#A60, docs/decision/records/records.md#A103, docs/decision/records/records.md#A136
+- 出典: docs/decision/records/records.md#A60, docs/decision/records/records.md#A103, docs/decision/records/records.md#A136, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A55
 - 検証: unit
 
-"--help" も "--version" も無いときに、知らないオプション、"check" 以外の位置引数、"--format" の知らない値、値の無いオプション、同じオプションの2回目のいずれかを受けたとき、引数が1つも無いとき、または "--config" の指す先が無いかディレクトリのとき、kotowari は引数の誤りを理由に`停止`する。
+"--help" も "--version" も無いときに、知らないオプション、"check" に付けた "--tool"、"check" でも "mutants" でもない1つ目の位置引数、"check" の後の位置引数、"--format" の知らない値、値の無いオプション、同じオプションの2回目のいずれかを受けたとき、引数が1つも無いとき、オプションだけがあって1つ目の位置引数が無いとき、または "--config" の指す先が無いかディレクトリのとき、kotowari は引数の誤りを理由に`停止`する。
+
+### REQ-149: mutants の引数
+
+- 種類: event_driven
+- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A14, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A41
+- 検証: unit
+
+"--help" も "--version" も無い "kotowari mutants" で、"--tool" が無いとき、"--tool" の値が "cargo-mutants" でないとき、または "mutants" の後の位置引数がちょうど1つでないとき、kotowari は引数の誤りを理由に`停止`する。位置引数は結果のファイルのパスで、カレントディレクトリからの相対パスとして読む。
 
 ### REQ-005: 停止の出力
 
@@ -70,14 +78,15 @@ kotowari は、人間向けの文書の生成（"render"）、影響範囲の追
 
 ### TBL-001: 停止の理由
 
-- 出典: docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A48, docs/decision/records/records.md#A60, docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A66, docs/decision/records/records.md#A95, docs/decision/records/records.md#A96, docs/decision/records/records.md#A93, docs/decision/records/records.md#A103, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A136, docs/decision/records/records.md#A146, docs/decision/records/records.md#A160, docs/decision/records/2026-09-16-ir-tree.md#A16
+- 出典: docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A48, docs/decision/records/records.md#A60, docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A66, docs/decision/records/records.md#A95, docs/decision/records/records.md#A96, docs/decision/records/records.md#A93, docs/decision/records/records.md#A103, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A136, docs/decision/records/records.md#A146, docs/decision/records/records.md#A160, docs/decision/records/2026-09-16-ir-tree.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A32, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A48
 
 | 理由 | 場面 |
 |---|---|
-| 設定の誤り | REQ-014 の場面 |
-| 引数の誤り | REQ-004 の場面 |
-| 読めないファイル | 読むファイルを読めない、"ir"、"decisions.records"、"decisions.adr" の指すディレクトリが無いか読めない、"ir"、"decisions.records"、"decisions.adr" の下のディレクトリが読めない、または "tests.files" の走査でディレクトリが読めない、または走査で先の無いシンボリックリンクに出会った、またはカレントディレクトリを取得できない |
-| UTF-8 でないファイル | IR の文書、テストのファイル、設定ファイル、判断の記録、ADR のいずれかが UTF-8 でない |
+| 設定の誤り | REQ-014 の場面と、REQ-148 の等価の一覧が YAML として読めないか最上位が並びでない場面 |
+| 引数の誤り | REQ-004 と REQ-149 の場面 |
+| 読めないファイル | 読むファイルを読めない（"kotowari mutants" で変異の結果か等価の一覧の1件が指すファイルは除く。REQ-141、REQ-142）、結果のファイルが無いか読めない、"mutants.equivalents" の指す先が無いか読めない、"kotowari check" で"ir"、"decisions.records"、"decisions.adr" の指すディレクトリが無いか読めない、"ir"、"decisions.records"、"decisions.adr" の下のディレクトリが読めない、または "tests.files" の走査でディレクトリが読めない、または走査で先の無いシンボリックリンクに出会った、またはカレントディレクトリを取得できない |
+| UTF-8 でないファイル | IR の文書、テストのファイル、設定ファイル、判断の記録、ADR、結果のファイル、等価の一覧のいずれかが UTF-8 でない |
+| 結果の誤り | REQ-144 の場面 |
 
 ### TBL-002: 終了コード
 
@@ -99,4 +108,41 @@ Scenario: 知らないオプションで停止する
   Then 終了コードは 2 である
   And 標準出力には何も出ない
   And 標準エラーに停止の理由が出る
+
+@id=EX-218 @about=REQ-149 @source=docs/decision/records/2026-09-17-mutation-tests.md#A14,docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A41
+Scenario: 道具の指定が無い mutants は停止する
+  Given 読める結果のファイル "outcomes.json" がある
+  When "kotowari mutants outcomes.json" を実行する
+  Then 終了コードは 2 である
+  And 標準エラーの1行目は "argument error: " で始まる
+
+@id=EX-219 @about=REQ-004,TBL-020 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39
+Scenario: 引数が無いときは2つのコマンドを挙げる
+  When "kotowari" を引数なしで実行する
+  Then 終了コードは 2 である
+  And 標準エラーの1行目は "argument error: expected command: check or mutants" である
+
+@id=EX-240 @about=REQ-149 @source=docs/decision/records/2026-09-17-mutation-tests.md#A14,docs/decision/records/2026-09-17-mutation-tests.md#A39
+Scenario: 知らない道具の名前は停止する
+  Given 読める結果のファイル "a.json" がある
+  When "kotowari mutants --tool stryker a.json" を実行する
+  Then 終了コードは 2 で、標準エラーの1行目は "argument error: " で始まる
+
+@id=EX-242 @about=REQ-149 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A41
+Scenario: 結果のファイルを2つ渡すと停止する
+  Given 読める結果のファイル "a.json" と "b.json" がある
+  When "kotowari mutants --tool cargo-mutants a.json b.json" を実行する
+  Then 終了コードは 2 で、標準エラーの1行目は "argument error: " で始まる
+
+@id=EX-241 @about=REQ-004,TBL-020 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A55
+Scenario: オプションだけの実行は2つのコマンドを挙げて停止する
+  When "kotowari --format text" を実行する
+  Then 終了コードは 2 である
+  And 標準エラーの1行目は "argument error: expected command: check or mutants" である
+
+@id=EX-244 @about=REQ-002 @source=docs/decision/records/2026-09-17-mutation-tests.md#A41,docs/decision/records/2026-09-17-mutation-tests.md#A58
+Scenario: mutants のオプションはコマンドの前にも結果のパスの後にも書ける
+  Given 結果のファイル "outcomes.json" に "summary" が "CaughtMutant" の1件がある
+  When "kotowari --tool cargo-mutants mutants outcomes.json --format text" を実行する
+  Then 終了コードは 0 である
 ```

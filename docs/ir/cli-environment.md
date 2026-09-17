@@ -23,10 +23,10 @@ kotowari は常に、Linux と macOS を対象にする。Windows ではパス�
 ### REQ-109: 停止と指摘の振り分け
 
 - 種類: invariant
-- 出典: docs/decision/records/records.md#A100, docs/decision/records/records.md#A101, docs/decision/records/records.md#P2, docs/decision/records/records.md#A102
+- 出典: docs/decision/records/records.md#A100, docs/decision/records/records.md#A101, docs/decision/records/records.md#P2, docs/decision/records/records.md#A102, docs/decision/records/2026-09-17-mutation-tests.md#A48, docs/decision/records/2026-09-17-mutation-tests.md#A55
 - 検証: review
 
-読めない入力、壊れている入力、契約の形に合わない入力に対して、kotowari は`停止`か`誤り`の`指摘`のどちらかを必ず行い、黙って飛ばさない関係が常に成り立つ。ファイルや設定を全体として読む前提が崩れる入力（読めない、UTF-8 でない、設定の構文と型と値の誤り、引数の誤り、glob の構文の誤り）では`停止`し、読めたが局所的に形から外れる入力ではその場所への`誤り`の`指摘`を出す。読まないものは`除外`だけである。
+読めない入力、壊れている入力、契約の形に合わない入力に対して、kotowari は`停止`か`誤り`の`指摘`のどちらかを必ず行い、黙って飛ばさない関係が常に成り立つ。ファイルや設定を全体として読む前提が崩れる入力（読めない、UTF-8 でない、設定の構文と型と値の誤り、引数の誤り、glob の構文の誤り、結果のファイルの誤り、`等価の一覧`の構文の誤り）では`停止`し、読めたが局所的に形から外れる入力ではその場所への`誤り`の`指摘`を出す。読まないものは`除外`だけである。`変異の結果`か`等価の一覧`の1件が指すファイルが無い、読めない、UTF-8 でないときは、REQ-141 と REQ-142 のとおり`停止`せず、`誤り`か`注意`の`指摘`に倒す。
 
 ### REQ-120: 黙って読み飛ばさない
 
@@ -48,7 +48,7 @@ kotowari は、`設定ファイル`で`問い合わせ`を足すことをして�
 
 ### TBL-018: 停止の理由の文言
 
-- 出典: docs/decision/records/records.md#A104
+- 出典: docs/decision/records/records.md#A104, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A43
 
 | 理由 | 標準エラーの1行目の文言 |
 |---|---|
@@ -56,14 +56,16 @@ kotowari は、`設定ファイル`で`問い合わせ`を足すことをして�
 | 引数の誤り | argument error |
 | 読めないファイル | unreadable file |
 | UTF-8 でないファイル | non-UTF-8 file |
+| 結果の誤り | results error |
 
 ### TBL-020: 停止の詳細
 
-- 出典: docs/decision/records/records.md#A137, docs/decision/records/records.md#A147, docs/decision/records/records.md#A160, docs/decision/records/records.md#A164
+- 出典: docs/decision/records/records.md#A137, docs/decision/records/records.md#A147, docs/decision/records/records.md#A160, docs/decision/records/records.md#A164, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55
 
 | 理由 | 詳細（英語） |
 |---|---|
-| 設定の誤り | 設定ファイルの基準のディレクトリからの相対パス（基準の外にあれば "../" を含む）と、誤りの説明 |
-| 引数の誤り | 説明の文と、問題の引数の文字。引数が1つも無いときは "expected command: check" |
+| 設定の誤り | 設定ファイルの基準のディレクトリからの相対パス（基準の外にあれば "../" を含む）と、誤りの説明。等価の一覧の誤り（REQ-148）では等価の一覧のファイルの相対パスと、誤りの説明 |
+| 引数の誤り | 説明の文と、問題の引数の文字。引数が1つも無いときと、1つ目の位置引数が無いときは "expected command: check or mutants" |
 | 読めないファイル | 相対パスと、OS の誤りの文。カレントディレクトリを取得できないときは "current directory: " と OS の誤りの文 |
 | UTF-8 でないファイル | 相対パス |
+| 結果の誤り | 結果のファイルの相対パスと、誤りの説明 |

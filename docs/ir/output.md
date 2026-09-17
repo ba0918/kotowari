@@ -46,16 +46,18 @@ kotowari は常に、"--format" の値として "json" と "text" の2つを受�
 ### REQ-128: テストのファイルの申告
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-check-reach.md#A14, docs/decision/records/2026-09-17-check-reach.md#A15
+- 出典: docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-check-reach.md#A14, docs/decision/records/2026-09-17-check-reach.md#A15, docs/decision/records/2026-09-17-mutation-tests.md#A55
 - 検証: unit
 
-kotowari は常に、JSON の最上位の "tests" に、読んだ`テストのファイル`を拡張子ごとにまとめ、`TBL-021` の鍵で数と`問い合わせ`の有無を出す。"--format" が "text" のときは出さない。
+kotowari は常に、"kotowari check" の JSON の最上位の "tests" に、読んだ`テストのファイル`を拡張子ごとにまとめ、`TBL-021` の鍵で数と`問い合わせ`の有無を出す。"--format" が "text" のときは出さない。
 
 ## 決定表
 
-### TBL-005: JSON の最上位
+### TBL-005: check の JSON の最上位
 
-- 出典: docs/decision/records/records.md#A40, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#出力, docs/decision/records/2026-09-17-check-reach.md#A8
+- 出典: docs/decision/records/records.md#A40, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#出力, docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A55
+
+"kotowari check" の JSON の最上位。"kotowari mutants" の JSON の最上位は TBL-025。
 
 | 鍵 | 中身 |
 |---|---|
@@ -67,13 +69,13 @@ kotowari は常に、JSON の最上位の "tests" に、読んだ`テストの�
 
 ### TBL-006: 指摘の鍵
 
-- 出典: docs/decision/records/records.md#A40, docs/decision/records/records.md#A61, docs/decision/records/records.md#A106, docs/decision/records/2026-09-16-ir-tree.md#A13, docs/decision/records/2026-09-16-notice.md#A1
+- 出典: docs/decision/records/records.md#A40, docs/decision/records/records.md#A61, docs/decision/records/records.md#A106, docs/decision/records/2026-09-16-ir-tree.md#A13, docs/decision/records/2026-09-16-notice.md#A1, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43
 
 | 鍵 | 中身 |
 |---|---|
 | kind | 指摘の種類（TBL-008、TBL-009） |
 | severity | error か notice |
-| path | 基準のディレクトリからの相対パス。正規化した置き場と、置き場からの文書の相対パスを "/" でつなぐ（REQ-110） |
+| path | 基準のディレクトリからの相対パス。正規化した置き場と、置き場からの文書の相対パスを "/" でつなぐ（REQ-110）。"kotowari mutants" の指摘では変異の結果のファイルか等価の一覧のファイル（REQ-139、REQ-140、REQ-142、REQ-143） |
 | line | 行（1始まり）。文書全体への指摘は null |
 | detail | 種類ごとに TBL-008、TBL-009 で決めた文字列 |
 
