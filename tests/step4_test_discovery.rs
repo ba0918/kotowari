@@ -537,6 +537,37 @@ fn req_073_several_markers_on_one_line() {
     assert_eq!(markers.len(), 2);
 }
 
+// @kotowari[REQ-073, EX-015]
+#[test]
+fn req_073_both_markers_on_one_line_bind_to_the_test() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    write_test_file(
+        tmp.path(),
+        "test_a.rs",
+        "// @kotowari[REQ-001] @kotowari[TBL-002]\n#[test]\nfn req_001_two_markers() {}\n",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    // REQ-001 に結び付いた: テストのない要求として挙がらない
+    assert!(
+        findings_by_kind(&result, "requirement_without_test").is_empty(),
+        "the first marker binds REQ-001 to the test: {:?}",
+        result
+    );
+    // TBL-002 にも結び付いた: IR に無い ID として印の行から挙がる
+    let unresolved = findings_by_kind(&result, "unresolved_reference");
+    assert_eq!(unresolved.len(), 1, "the second marker binds TBL-002 to the test: {:?}", result);
+    assert_eq!(unresolved[0]["detail"], "TBL-002");
+    assert_eq!(unresolved[0]["path"], "tests/test_a.rs");
+    assert_eq!(unresolved[0]["line"], 1);
+    assert!(
+        findings_by_kind(&result, "test_without_id").is_empty(),
+        "the test is marked: {:?}",
+        result
+    );
+}
+
 // --- REQ-074: コメント記号を見ない ---
 
 // @kotowari[REQ-074]
@@ -971,7 +1002,7 @@ fn req_088_empty_ir_still_checks_tests() {
 
 // --- TBL-016: 空行を挟んだ印は結び付かない ---
 
-// @kotowari[REQ-075, TBL-016]
+// @kotowari[REQ-075, TBL-016, EX-016]
 #[test]
 fn tbl_016_blank_line_between_marker_and_test_breaks_binding() {
     let tmp = TempDir::new().unwrap();
