@@ -203,11 +203,16 @@ fn req_135_lines_outside_the_table_sections_and_orphans_are_not_read() {
         ),
     );
     let v = check(tmp.path());
+    let for_file: Vec<&serde_json::Value> = v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["path"] == "docs/decision/records/v.md")
+        .collect();
     assert!(
-        findings_by_kind(&v, "record_field_missing").is_empty()
-            && findings_by_kind(&v, "record_field_unknown").is_empty(),
+        for_file.is_empty(),
         "lines outside the table's sections, orphan field lines and other shapes are not read: {:?}",
-        v["findings"]
+        for_file
     );
 }
 

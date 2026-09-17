@@ -1,4 +1,4 @@
-//! 出典の検査（REQ-057〜REQ-061, REQ-106, TBL-012）
+//! 判断の記録の読み取り（節・番号の行・補足の行・リンクの構造。REQ-133、REQ-135、REQ-136、TBL-022、TBL-023 の定数と走査）と、出典の検査（REQ-057〜REQ-061, REQ-106, TBL-012）
 
 use crate::{Finding, FindingKind};
 use std::path::Path;
