@@ -15,10 +15,10 @@
 ### REQ-126: 既定の一致
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-17-check-reach.md#A6, docs/decision/records/2026-09-17-check-reach.md#A7, docs/decision/records/2026-09-17-check-reach.md#A11, docs/decision/records/2026-09-17-check-reach.md#A27
+- 出典: docs/decision/records/2026-09-17-check-reach.md#A6, docs/decision/records/2026-09-17-check-reach.md#A7, docs/decision/records/2026-09-17-check-reach.md#A11, docs/decision/records/2026-09-17-check-reach.md#A27, docs/decision/records/2026-09-17-mutation-tests.md#A59
 - 検証: unit
 
-このリポジトリのテストは常に、"skills/kotowari/references/config.md" の setup の手順1にある YAML のコードブロックに `TBL-004` の鍵がすべて書かれていて、そのブロックを`設定ファイル`として本体のコードで読んだ結果が本体のコードが持つ設定の既定の値と等しいことを確かめる。
+このリポジトリのテストは常に、"skills/kotowari/references/config.md" の setup の手順1にある YAML のコードブロックに `TBL-004` の既定のある鍵がすべて書かれていて、そのブロックを`設定ファイル`として本体のコードで読んだ結果が本体のコードが持つ設定の既定の値と等しいことを確かめる。
 
 ### REQ-127: 停止の文言の一致
 
