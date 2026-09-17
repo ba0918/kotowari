@@ -100,6 +100,14 @@ impl RecordsFile {
             .any(|s| s.numbered_lines.iter().any(|n| n.number == number))
     }
 
+    /// 決定の節か Superseded の節にその番号の `番号の行` があるか（TBL-023 の順5）
+    pub fn has_revision_target(&self, number: &str) -> bool {
+        self.sections
+            .iter()
+            .filter(|s| DECISION_SECTIONS.contains(&s.name.as_str()) || s.name == "Superseded")
+            .any(|s| s.numbered_lines.iter().any(|n| n.number == number))
+    }
+
 }
 
 /// 決定の番号の形（英大文字1文字に1桁以上の数字。A26, P1, D1, R6 など）
@@ -139,6 +147,41 @@ fn field_of_line(trimmed_rest: &str) -> Option<(&str, &str)> {
         return None;
     }
     Some((name, trimmed_rest[colon + 1..].trim()))
+}
+
+/// 値から "[文字](href)" の形のリンクを順に取り出す（TBL-023、A43、A44）
+fn parse_links(value: &str) -> Vec<RecordLink> {
+    let mut links = Vec::new();
+    let bytes = value.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] != b'[' {
+            i += 1;
+            continue;
+        }
+        // "]" が無ければ、これ以降の "[" も同じなので走査を終える
+        let Some(offset) = value[i + 1..].find(']') else {
+            break;
+        };
+        let text_end = i + 1 + offset;
+        let after = text_end + 1;
+        // "]" の直後が "(" でなければリンクでない。"[" の次から走査を続ける
+        if bytes.get(after) != Some(&b'(') {
+            i += 1;
+            continue;
+        }
+        let Some(offset) = value[after + 1..].find(')') else {
+            i += 1;
+            continue;
+        };
+        let href_end = after + 1 + offset;
+        links.push(RecordLink {
+            text: value[i + 1..text_end].to_string(),
+            href: value[after + 1..href_end].to_string(),
+        });
+        i = href_end + 1;
+    }
+    links
 }
 
 /// 判断の記録のファイルを読んで構造にする（REQ-136。記録の行を読むのはこの関数だけ）
@@ -216,7 +259,7 @@ pub fn parse_records_file(rel_path: &str, content: &str) -> RecordsFile {
             name: name.to_string(),
             value: value.to_string(),
             line: line_number,
-            links: Vec::new(),
+            links: parse_links(value),
         });
     }
 
@@ -368,7 +411,7 @@ impl SourceContext {
 
 /// ソースコンテキストを構築する
 /// パスが置き場の下にあるか。置き場が空（"." を正規化したもの）なら基準の直下なので常に真
-fn is_under_place(path: &str, place: &str) -> bool {
+pub fn is_under_place(path: &str, place: &str) -> bool {
     place.is_empty()
         || (path.starts_with(place) && path.len() > place.len() && path.as_bytes()[place.len()] == b'/')
 }

@@ -70,6 +70,7 @@ finding_kinds! {
     RecordFieldMissing => "record_field_missing",
     RecordFieldUnknown => "record_field_unknown",
     RequirementWithoutTest => "requirement_without_test",
+    RevisionLinkInvalid => "revision_link_invalid",
     SourceInvalid => "source_invalid",
     TestWithoutId => "test_without_id",
     TooManyLines => "too_many_lines",

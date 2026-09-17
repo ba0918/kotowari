@@ -330,3 +330,181 @@ fn req_129_file_without_decision_sections_is_not_a_record() {
         v["findings"]
     );
 }
+
+// --- REQ-132 / TBL-023: superseded_by のリンク ---
+
+/// revision_link_invalid の (line, detail) を並べる
+fn link_findings(v: &serde_json::Value) -> Vec<(i64, String)> {
+    findings_by_kind(v, "revision_link_invalid")
+        .iter()
+        .map(|f| {
+            (
+                f["line"].as_i64().unwrap(),
+                f["detail"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect()
+}
+
+// @kotowari[REQ-132, TBL-023]
+#[test]
+fn req_132_superseded_by_without_link_is_invalid() {
+    // EX-107: 順1（値にリンクが1つも無い）。detail は行の値
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "sb.md",
+        "# 記録 sb\n\n## Agreements\n\n- A1 ある合意\n- superseded_by: A24\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(link_findings(&v), vec![(6, "A24".to_string())]);
+}
+
+// @kotowari[REQ-132, TBL-023]
+#[test]
+fn req_132_href_outside_the_records_place_is_invalid() {
+    // EX-108: 順3（解決した結果が置き場の外）
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "out.md",
+        "# 記録 out\n\n## Agreements\n\n- A1 ある合意\n- superseded_by: [A1](../../ir/example.md#A1)\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(
+        link_findings(&v),
+        vec![(6, "../../ir/example.md#A1".to_string())]
+    );
+}
+
+// @kotowari[REQ-132, TBL-023]
+#[test]
+fn req_132_number_only_in_undecided_is_invalid() {
+    // EX-109: 順5（先の決定の節と Superseded の節に番号の行が無い。Undecided は数えない）
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "a.md",
+        "# 記録 a\n\n## Agreements\n\n- A1 ある合意\n- superseded_by: [U1](./b.md#U1)\n",
+    );
+    write_record(
+        tmp.path(),
+        "b.md",
+        "# 記録 b\n\n## Agreements\n\n- B1 何か\n\n## Undecided\n\n- U1 未決\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(link_findings(&v), vec![(6, "./b.md#U1".to_string())]);
+}
+
+// @kotowari[REQ-132, TBL-023]
+#[test]
+fn req_132_heading_anchor_is_invalid() {
+    // EX-112: 順2（"#" の後が決定の番号の形でない）
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "ir-form.md",
+        "# IR の形の契約\n\n## 出典\n\n出典の形。\n",
+    );
+    write_record(
+        tmp.path(),
+        "a2.md",
+        "# 記録 a2\n\n## Agreements\n\n- A1 ある合意\n- superseded_by: [出典](./ir-form.md#出典)\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(link_findings(&v), vec![(6, "./ir-form.md#出典".to_string())]);
+}
+
+// @kotowari[REQ-132, TBL-023]
+#[test]
+fn req_132_empty_path_means_the_same_record() {
+    // EX-117: "#" より前が空なら同じ記録
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "a3.md",
+        "# 記録 a3\n\n## Agreements\n\n- A1 ある合意\n- superseded_by: [A2](#A2)\n- superseded_by: [A9](#A9)\n- A2 二番目の合意\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(link_findings(&v), vec![(7, "#A9".to_string())]);
+}
+
+// @kotowari[REQ-132, TBL-023]
+#[test]
+fn req_132_target_that_is_not_a_record_is_invalid() {
+    // EX-119: 順4（先が読んだ判断の記録でない）
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "a4.md",
+        "# 記録 a4\n\n## Agreements\n\n- A1 ある合意\n- superseded_by: [A1](./ir-form.md#A1)\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(link_findings(&v), vec![(6, "./ir-form.md#A1".to_string())]);
+}
+
+// @kotowari[REQ-132, TBL-023]
+#[test]
+fn tbl_023_same_href_twice_on_one_line_yields_two_findings() {
+    // 同じ行に同じ href が2つあれば出現ごとに1件
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "tw.md",
+        "# 記録 tw\n\n## Agreements\n\n- A1 ある合意\n- superseded_by: [A9](#A9) と [A9](#A9)\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(
+        link_findings(&v),
+        vec![(6, "#A9".to_string()), (6, "#A9".to_string())]
+    );
+}
+
+// @kotowari[REQ-132, TBL-023]
+#[test]
+fn tbl_023_unclosed_link_is_skipped_and_falls_to_no_link() {
+    // A44: ")" が無い形と "]" の直後が "(" でない形はリンクでなく、順1になる
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "ul.md",
+        "# 記録 ul\n\n## Agreements\n\n- A1 ある合意\n- superseded_by: [A1](#A1\n- A2 二番目の合意\n- superseded_by: [A2] を見よ\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(
+        link_findings(&v),
+        vec![
+            (6, "[A1](#A1".to_string()),
+            (8, "[A2] を見よ".to_string())
+        ]
+    );
+}
+
+// @kotowari[REQ-132, TBL-023]
+#[test]
+fn tbl_023_absolute_href_is_outside_the_place() {
+    // 順3: "/" か "\" で始まる href は、つなぐ前に置き場の外と決まる
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "ab.md",
+        "# 記録 ab\n\n## Agreements\n\n- A1 ある合意\n- superseded_by: [A1](/records.md#A1)\n- A2 二番目の合意\n- superseded_by: [A1](\\records.md#A1)\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(
+        link_findings(&v),
+        vec![
+            (6, "/records.md#A1".to_string()),
+            (8, "\\records.md#A1".to_string())
+        ]
+    );
+}
