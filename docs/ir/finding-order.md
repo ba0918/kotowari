@@ -42,13 +42,13 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 
 ### TBL-019: 指摘の行
 
-- 出典: docs/decision/records/records.md#A144, docs/decision/records/records.md#A114, docs/decision/records/records.md#A121, docs/decision/records/records.md#A139, docs/decision/records/records.md#A108, docs/decision/records/records.md#A61, docs/decision/records/records.md#A72, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A4, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A25
+- 出典: docs/decision/records/records.md#A144, docs/decision/records/records.md#A114, docs/decision/records/records.md#A121, docs/decision/records/records.md#A139, docs/decision/records/records.md#A108, docs/decision/records/records.md#A61, docs/decision/records/records.md#A72, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A4, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-scenario-tests.md#A6
 
 | 種類 | line |
 |---|---|
 | missing_source | 項目の見出しの行。シナリオはタグの行（無ければ "Scenario:" の行）。用語は表の行 |
 | source_invalid | 出典が書かれた行（REQ-115） |
-| missing_tag、unknown_tag、invalid_id | タグの行（無ければ "Scenario:" の行） |
+| missing_tag、unknown_tag、invalid_id、scenario_without_test | タグの行（無ければ "Scenario:" の行） |
 | unknown_term、vague_word、unclosed_backtick、missing_document | その行 |
 | unknown_field、duplicate_field、unknown_heading、invalid_gherkin_line | その行 |
 | unclosed_code_block | 開始の行 |
