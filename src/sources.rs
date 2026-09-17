@@ -52,7 +52,7 @@ pub struct RecordsFile {
     pub rel_path: String,
     /// TBL-022 の表にある節（判断の記録でないファイルでは空）
     pub sections: Vec<RecordSection>,
-    /// ## 見出し（前後の空白を除いた文字列）
+    /// コードブロックの外の ## 見出し（前後の空白を除いた文字列。A47）
     pub headings: Vec<String>,
     /// 判断の記録かどうか（決定の節の見出しをコードブロックの外に持つか）
     pub is_records: bool,
