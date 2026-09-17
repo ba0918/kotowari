@@ -198,12 +198,8 @@ pub fn parse_records_file(rel_path: &str, content: &str) -> RecordsFile {
         let trimmed = line.trim();
         let heading = trimmed.strip_prefix("## ").map(str::trim);
 
-        // 判断の記録でないファイルの見出しの集め方は変えない（TBL-012 の順4）
-        if let Some(text) = heading {
-            headings.push(text.to_string());
-        }
-
-        // コードブロックの中は読まない。閉じずに文書が終わればそこまでが中（A34、A45）
+        // コードブロックの中は読まない。閉じずに文書が終わればそこまでが中（A34、A45）。
+        // 判断の記録でないファイルの見出しも、コードブロックの外だけを数える（A47）
         if let Some(open) = &fence {
             if crate::ir::is_closing_fence(line, open) {
                 fence = None;
@@ -216,6 +212,7 @@ pub fn parse_records_file(rel_path: &str, content: &str) -> RecordsFile {
         }
 
         if let Some(text) = heading {
+            headings.push(text.to_string());
             if DECISION_SECTIONS.contains(&text) {
                 has_decision_section = true;
             }
@@ -288,7 +285,19 @@ pub struct OtherFile {
 /// ADR やその他の Markdown ファイルを解析する
 pub fn parse_other_file(rel_path: &str, content: &str) -> OtherFile {
     let mut headings = Vec::new();
+    let mut fence: Option<crate::ir::CodeFence> = None;
     for line in content.lines() {
+        // コードブロックの中の見出しは数えない。閉じなければ文書の終わりまで（A47）
+        if let Some(open) = &fence {
+            if crate::ir::is_closing_fence(line, open) {
+                fence = None;
+            }
+            continue;
+        }
+        if let Some(open) = crate::ir::parse_opening_fence(line) {
+            fence = Some(open);
+            continue;
+        }
         let trimmed = line.trim();
         if trimmed.starts_with("## ") {
             headings.push(trimmed[3..].trim().to_string());

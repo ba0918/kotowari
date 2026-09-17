@@ -709,6 +709,34 @@ fn tbl_012_decision_heading_only_inside_code_block_makes_the_file_not_a_record()
     );
 }
 
+// @kotowari[REQ-058, TBL-012]
+#[test]
+fn tbl_012_heading_inside_code_block_of_a_non_record_file_is_not_a_source_target() {
+    // EX-120
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/decision/records/g.md"),
+        "# 補足の文書\n\n## 補足\n\n本文。\n\n```markdown\n## 例\n```\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/g.md#補足\n- 検証: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/g.md#例\n- 検証: unit\n\nStatement2.\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    let details: Vec<&str> = si.iter().map(|f| f["detail"].as_str().unwrap_or("")).collect();
+    assert_eq!(
+        details,
+        vec!["docs/decision/records/g.md#例"],
+        "a heading inside a code block of a non-record file must not resolve as a source: {:?}",
+        si
+    );
+}
+
 // --- 除外: 隠しディレクトリは辿らない ---
 
 // @kotowari[REQ-058]
