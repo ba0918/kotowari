@@ -143,3 +143,67 @@ fn req_127_findings_reference_stop_wordings_match_the_code() {
         "the stop wordings in references/findings.md should be exactly the wordings the code prints"
     );
 }
+
+// --- skill-references.md の具体例: 写しがずれると一致のテストが落ちる ---
+
+// @kotowari[REQ-125, EX-036]
+#[test]
+fn req_125_a_missing_kind_row_breaks_the_match() {
+    let reference = read_reference("findings.md");
+    let row = reference
+        .lines()
+        .find(|l| l.starts_with("| duplicate_term |"))
+        .expect("the reference should have the duplicate_term row");
+    let without_the_row = reference.replace(&format!("{row}\n"), "");
+    let in_reference = first_column_of_table(&without_the_row, "種類");
+    let in_code: BTreeSet<String> = kotowari::FindingKind::ALL
+        .iter()
+        .map(|k| k.as_str().to_string())
+        .collect();
+    assert_ne!(
+        in_reference, in_code,
+        "a kind missing from the reference table must break the match the kinds test makes"
+    );
+}
+
+// @kotowari[REQ-126, EX-037]
+#[test]
+fn req_126_a_changed_default_in_the_setup_yaml_breaks_the_match() {
+    let yaml = only_yaml_block(&read_reference("config.md")).replace("lines: 200", "lines: 120");
+    let parsed = kotowari::config::Config::parse(&yaml).expect("still a readable configuration");
+    assert_ne!(
+        parsed,
+        kotowari::config::Config::default(),
+        "a default that drifts from the code must break the match the defaults test makes"
+    );
+}
+
+// @kotowari[REQ-126, EX-043]
+#[test]
+fn req_126_a_key_dropped_from_the_setup_yaml_breaks_the_match() {
+    let yaml = only_yaml_block(&read_reference("config.md")).replace("  requirements: 10\n", "");
+    let tree: serde_json::Value =
+        serde_saphyr::from_str(&yaml).expect("still a readable tree");
+    assert!(
+        tree.get("limits").and_then(|l| l.get("requirements")).is_none(),
+        "the key is gone from the YAML"
+    );
+    // 鍵が書かれていることを見る確かめが落ちる。本体の既定は 10 のまま
+    assert_eq!(kotowari::config::Config::default().limits.requirements.get(), 10);
+}
+
+// @kotowari[REQ-127, EX-039]
+#[test]
+fn req_127_a_changed_stop_wording_breaks_the_match() {
+    let reference = read_reference("findings.md")
+        .replace("| config error |", "| configuration error |");
+    let in_reference = first_column_of_table(&reference, "文言");
+    let in_code: BTreeSet<String> = kotowari::StopReason::WORDINGS
+        .iter()
+        .map(|wording| wording.to_string())
+        .collect();
+    assert_ne!(
+        in_reference, in_code,
+        "a wording that drifts from the code must break the match the wordings test makes"
+    );
+}
