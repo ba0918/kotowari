@@ -46,10 +46,10 @@ kotowari は、同じ名前の`補足の行`が1つの`番号の行`の下に2�
 ### REQ-135: 判断の記録で読まない行
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-17-record-form.md#A14, docs/decision/records/2026-09-17-record-form.md#A24, docs/decision/records/2026-09-17-record-form.md#A27, docs/decision/records/2026-09-17-record-form.md#A34, docs/decision/records/2026-09-17-record-form.md#A35, docs/decision/records/records.md#A115
+- 出典: docs/decision/records/2026-09-17-record-form.md#A14, docs/decision/records/2026-09-17-record-form.md#A24, docs/decision/records/2026-09-17-record-form.md#A27, docs/decision/records/2026-09-17-record-form.md#A34, docs/decision/records/2026-09-17-record-form.md#A35, docs/decision/records/records.md#A115, docs/decision/records/2026-09-17-record-form.md#A45
 - 検証: unit
 
-kotowari は常に、`判断の記録`の TBL-022 の表に無い節（Revisions と "## Context" を含む）にある`番号の行`の形の行と`補足の行`の形の行、節の最初の`番号の行`より前にある`補足の行`の形の行、`番号の行`でも`補足の行`でも見出しでもない行（箇条でない本文の行と、最初の "## " の見出しより前の行を含む）、`コードブロック`の中（gherkin を含む。中の "## " の見出しも数えない）を、`除外`として読まない。見出しは節の切り分けと "## Context" の判定のために読み、`指摘`の対象にしない。節の一覧は TBL-022 の表の「節」の列で、REQ-130 の適用範囲とは別にすべての`判断の記録`で使う。
+kotowari は常に、`判断の記録`の TBL-022 の表に無い節（Revisions と "## Context" を含む）にある`番号の行`の形の行と`補足の行`の形の行、節の最初の`番号の行`より前にある`補足の行`の形の行、`番号の行`でも`補足の行`でも見出しでもない行（箇条でない本文の行と、最初の "## " の見出しより前の行を含む）、`コードブロック`の中（gherkin を含む。中の "## " の見出しも数えない。閉じられずに文書が終わるときは文書の終わりまでが中で、`指摘`は出さない）を、`除外`として読まない。見出しは節の切り分けと "## Context" の判定のために読み、`指摘`の対象にしない。節の一覧は TBL-022 の表の「節」の列で、REQ-130 の適用範囲とは別にすべての`判断の記録`で使う。
 
 ### REQ-136: 記録の読み取りは1つの関数
 
