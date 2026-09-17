@@ -63,7 +63,7 @@ fn check(tmp: &std::path::Path) -> serde_json::Value {
 
 // --- REQ-130 / TBL-022: 必須の補足の行 ---
 
-// @kotowari[REQ-130, TBL-022]
+// @kotowari[REQ-130, TBL-022, EX-101]
 #[test]
 fn req_130_context_record_without_why_is_record_field_missing() {
     // EX-101
@@ -83,7 +83,7 @@ fn req_130_context_record_without_why_is_record_field_missing() {
     assert_eq!(found[0]["severity"], "error");
 }
 
-// @kotowari[REQ-133, TBL-022]
+// @kotowari[REQ-133, TBL-022, EX-103]
 #[test]
 fn req_133_not_recorded_passes_and_blank_value_is_missing() {
     // EX-103
@@ -106,7 +106,7 @@ fn req_133_not_recorded_passes_and_blank_value_is_missing() {
     assert_eq!(found[0]["detail"], "why");
 }
 
-// @kotowari[REQ-130, TBL-022]
+// @kotowari[REQ-130, TBL-022, EX-105]
 #[test]
 fn req_130_superseded_line_without_superseded_by_is_missing() {
     // EX-105
@@ -126,7 +126,7 @@ fn req_130_superseded_line_without_superseded_by_is_missing() {
 
 // --- REQ-131 / TBL-022: 知らない名前の補足の行 ---
 
-// @kotowari[REQ-131, TBL-022]
+// @kotowari[REQ-131, TBL-022, EX-104]
 #[test]
 fn req_131_unknown_field_name_is_record_field_unknown() {
     // EX-104
@@ -167,7 +167,7 @@ fn req_131_unknown_name_on_two_lines_yields_two_findings() {
 
 // --- REQ-129 / REQ-134 / REQ-135: 読まない行と、検査を受けない記録 ---
 
-// @kotowari[REQ-129]
+// @kotowari[REQ-129, EX-102]
 #[test]
 fn req_129_record_without_context_is_not_checked() {
     // EX-102
@@ -187,7 +187,7 @@ fn req_129_record_without_context_is_not_checked() {
     );
 }
 
-// @kotowari[REQ-135]
+// @kotowari[REQ-135, EX-110]
 #[test]
 fn req_135_lines_outside_the_table_sections_and_orphans_are_not_read() {
     // EX-110
@@ -216,7 +216,7 @@ fn req_135_lines_outside_the_table_sections_and_orphans_are_not_read() {
     );
 }
 
-// @kotowari[REQ-134]
+// @kotowari[REQ-134, EX-111]
 #[test]
 fn req_134_duplicate_field_names_pass() {
     // EX-111
@@ -236,7 +236,7 @@ fn req_134_duplicate_field_names_pass() {
     );
 }
 
-// @kotowari[REQ-135]
+// @kotowari[REQ-135, EX-113]
 #[test]
 fn req_135_numbered_line_inside_code_block_is_not_read() {
     // EX-113
@@ -277,7 +277,7 @@ fn req_135_unclosed_code_block_runs_to_the_end_of_the_file() {
     assert!(for_file.is_empty(), "no finding for an unclosed code block: {:?}", for_file);
 }
 
-// @kotowari[REQ-130]
+// @kotowari[REQ-130, EX-114]
 #[test]
 fn req_130_unindented_field_line_belongs_to_the_decision() {
     // EX-114: 字下げ無しの補足の行も直前の番号の行に付く。空行を挟んでもよい
@@ -296,7 +296,7 @@ fn req_130_unindented_field_line_belongs_to_the_decision() {
     );
 }
 
-// @kotowari[REQ-130, REQ-133]
+// @kotowari[REQ-130, REQ-133, EX-115]
 #[test]
 fn req_130_decision_line_with_colon_is_not_a_field() {
     // EX-115: 本文にコロンを含む決定の行は番号の行で、補足の行と見ない

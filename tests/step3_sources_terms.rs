@@ -646,7 +646,7 @@ fn tbl_012_indented_decision_line_counts() {
     );
 }
 
-// @kotowari[REQ-058, TBL-012]
+// @kotowari[REQ-058, TBL-012, EX-118]
 #[test]
 fn tbl_012_number_inside_code_block_is_not_a_source_target() {
     // EX-118: コードブロックの中の番号の行は読まないので、出典の先にならない
