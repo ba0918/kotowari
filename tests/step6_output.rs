@@ -387,7 +387,7 @@ fn tbl_021_uppercase_extension_is_a_separate_key_without_query() {
     assert_eq!(v["tests"]["rs"]["query"], true, "rs has a query: {v}");
 }
 
-// @kotowari[TBL-021, REQ-128, EX-038]
+// @kotowari[TBL-021, EX-038]
 #[test]
 fn tbl_021_unparsable_file_is_counted() {
     // EX-038: tree-sitter で読めないファイルも "files" に数える
