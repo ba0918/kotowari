@@ -2082,3 +2082,57 @@ fn req_085_duplicate_scenario_marker_uses_the_first_about() {
     assert_eq!(rwt.len(), 1, "only the requirement of the second scenario stays uncovered: {:?}", result);
     assert_eq!(rwt[0]["detail"], "REQ-003", "the first scenario's @about is the one that counts");
 }
+
+// --- ir-references.md の具体例 ---
+
+// @kotowari[REQ-124, EX-028]
+#[test]
+fn req_124_four_digit_heading_is_read_and_the_other_two_are_unknown_headings() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-1000: 名前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n### REQ-0001: 名前\n\n### REQ-1: 名前\n",
+    )
+    .unwrap();
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    // REQ-1000 は要求として読まれた: テストのない要求として挙がる
+    let missing = findings_by_kind(&result, "requirement_without_test");
+    assert_eq!(missing.len(), 1, "{:?}", result);
+    assert_eq!(missing[0]["detail"], "REQ-1000");
+    let headings = findings_by_kind(&result, "unknown_heading");
+    let details: Vec<&str> = headings.iter().map(|f| f["detail"].as_str().unwrap()).collect();
+    assert_eq!(details, vec!["### REQ-0001: 名前", "### REQ-1: 名前"], "{:?}", result);
+}
+
+// @kotowari[REQ-124, EX-029]
+#[test]
+fn req_124_four_digit_id_in_a_tag_and_a_marker_is_read_the_same_way() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-1000: 名前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n## 具体例\n\n```gherkin\n@id=EX-1000 @about=REQ-1000 @source=docs/decision/records/records.md#A1\nScenario: One\n  Given a\n  When b\n  Then c\n\n@id=EX-0001 @about=REQ-1000 @source=docs/decision/records/records.md#A1\nScenario: Two\n  Given d\n  When e\n  Then f\n```\n",
+    )
+    .unwrap();
+    write_test_file(
+        tmp.path(),
+        "test_a.rs",
+        "// @kotowari[REQ-1000]\n#[test]\nfn req_1000_covered() {}\n",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    // EX-1000 はシナリオの ID になった: 印の無い具体例として挙がる
+    let swt = findings_by_kind(&result, "scenario_without_test");
+    assert_eq!(swt.len(), 1, "{:?}", result);
+    assert_eq!(swt[0]["detail"], "EX-1000");
+    // EX-0001 は ID の形に合わない
+    let invalid = findings_by_kind(&result, "invalid_id");
+    assert_eq!(invalid.len(), 1, "{:?}", result);
+    assert_eq!(invalid[0]["detail"], "EX-0001");
+    // 印の REQ-1000 は要求の ID として照合された
+    assert!(
+        findings_by_kind(&result, "requirement_without_test").is_empty(),
+        "{:?}",
+        result
+    );
+}

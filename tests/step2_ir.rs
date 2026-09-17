@@ -3124,3 +3124,39 @@ fn find_kind_in_json(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value
         .cloned()
         .collect()
 }
+
+// --- ir-references.md の具体例 ---
+
+// @kotowari[REQ-052, EX-009]
+#[test]
+fn req_052_retired_tag_on_a_scenario_is_unknown_tag() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    std::fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n\nStatement.\n\n## 具体例\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1 @requirement=REQ-001\nScenario: Test\n  Given a\n  When b\n  Then c\n```\n",
+    )
+    .unwrap();
+    let v = run_cli(tmp.path());
+    let unknown = find_kind_in_json(&v, "unknown_tag");
+    assert_eq!(unknown.len(), 1, "the retired @requirement tag is unknown: {v}");
+    assert_eq!(unknown[0]["detail"], "@requirement");
+}
+
+// @kotowari[REQ-054, EX-010]
+#[test]
+fn req_054_scenario_about_an_unknown_requirement_is_unresolved() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    std::fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@id=EX-001 @about=REQ-999 @source=docs/decision/records/records.md#A1\nScenario: Test\n  Given a\n  When b\n  Then c\n```\n",
+    )
+    .unwrap();
+    let v = run_cli(tmp.path());
+    let unresolved = find_kind_in_json(&v, "unresolved_reference");
+    assert_eq!(unresolved.len(), 1, "@about points nowhere: {v}");
+    assert_eq!(unresolved[0]["detail"], "REQ-999");
+}
