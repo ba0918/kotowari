@@ -356,7 +356,7 @@ fn req_082_test_attribute_is_always_counted() {
     assert!(twi.iter().any(|f| f["detail"] == "counted_test"), "should count #[test]: {:?}", twi);
 }
 
-// @kotowari[REQ-082, TBL-017]
+// @kotowari[REQ-082, TBL-017, EX-017]
 #[test]
 fn req_082_configured_attribute_matches_path_with_arguments() {
     let tmp = TempDir::new().unwrap();
@@ -401,6 +401,29 @@ fn req_082_macro_body_functions_are_counted_by_last_segment() {
     let rwt = findings_by_kind(&v, "requirement_without_test");
     // proptest マクロ内の関数がテストとして数えられ、REQ-001 に結び付く
     assert!(rwt.is_empty(), "proptest function should cover REQ-001: {:?}", rwt);
+}
+
+// @kotowari[REQ-082, EX-018]
+#[test]
+fn req_082_two_functions_in_a_path_macro_are_both_counted() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - proptest\n",
+    )
+    .unwrap();
+    write_test_file(
+        tmp.path(),
+        "test_a.rs",
+        "proptest::proptest! {\n    #[test]\n    fn first_prop(x in 0..100u32) {\n        assert!(x < 101);\n    }\n\n    #[test]\n    fn second_prop(y in 0..100u32) {\n        assert!(y < 101);\n    }\n}\n",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    // 印が無いので、数えられたテストの数だけ test_without_id が出る
+    let twi = findings_by_kind(&result, "test_without_id");
+    assert_eq!(twi.len(), 2, "both functions in the path-qualified macro count as tests: {:?}", result);
+    let names: Vec<&str> = twi.iter().map(|f| f["detail"].as_str().unwrap()).collect();
+    assert_eq!(names, vec!["first_prop", "second_prop"]);
 }
 
 // --- REQ-083: 読めないファイル ---
