@@ -3,24 +3,93 @@
 use crate::{Finding, FindingKind};
 use std::path::Path;
 
+/// `判断の記録` の `補足の行` の値にあるリンク（"[文字](href)"。TBL-023）
+#[derive(Debug, Clone)]
+pub struct RecordLink {
+    /// "[" と "]" の間の文字
+    pub text: String,
+    /// "(" と ")" の間の href
+    pub href: String,
+}
+
+/// `番号の行` に付く `補足の行`
+#[derive(Debug, Clone)]
+pub struct FieldLine {
+    /// "- " の直後から最初の ":" までの名前
+    pub name: String,
+    /// ":" の後の前後の空白を除いた値
+    pub value: String,
+    /// 1始まりの行番号
+    pub line: usize,
+    /// 値の中のリンク
+    pub links: Vec<RecordLink>,
+}
+
+/// 節の中の `番号の行`
+#[derive(Debug, Clone)]
+pub struct NumberedLine {
+    /// 決定の番号（"A26" など）
+    pub number: String,
+    /// 1始まりの行番号
+    pub line: usize,
+    /// この行に付く `補足の行`
+    pub fields: Vec<FieldLine>,
+}
+
+/// TBL-022 の表にある節
+#[derive(Debug, Clone)]
+pub struct RecordSection {
+    /// "## " の後の見出し
+    pub name: String,
+    /// 節の中の `番号の行`
+    pub numbered_lines: Vec<NumberedLine>,
+}
+
 /// 判断の記録のファイルの内容
 #[derive(Debug)]
 pub struct RecordsFile {
     /// ファイルのパス（decisions.records からの相対）
     pub rel_path: String,
-    /// 決定の行（"- A26 ..." なら "A26" がキー）
-    pub decision_numbers: Vec<String>,
+    /// TBL-022 の表にある節（判断の記録でないファイルでは空）
+    pub sections: Vec<RecordSection>,
     /// ## 見出し（前後の空白を除いた文字列）
     pub headings: Vec<String>,
-    /// 判断の記録かどうか（決定の番号を持つ行があるか）
+    /// 判断の記録かどうか（決定の節の見出しをコードブロックの外に持つか）
     pub is_records: bool,
+    /// "## Context" の見出しをコードブロックの外に持つか（REQ-129）
+    pub has_context: bool,
 }
 
-/// ADR やその他の Markdown ファイルの内容
-#[derive(Debug)]
-pub struct OtherFile {
-    pub rel_path: String,
-    pub headings: Vec<String>,
+/// 決定の節の名前（用語集の `決定の節`）
+pub const DECISION_SECTIONS: [&str; 4] = ["Agreements", "Prohibitions", "Delegated", "Rejected"];
+
+/// TBL-022: 節と、その節の `番号の行` に必須の `補足の行` の名前
+pub const REQUIRED_FIELDS: [(&str, &str); 6] = [
+    ("Agreements", "why"),
+    ("Prohibitions", "why"),
+    ("Delegated", "why"),
+    ("Rejected", "why"),
+    ("Undecided", "decides"),
+    ("Superseded", "superseded_by"),
+];
+
+/// TBL-022 の表にある節か（節の一覧はすべての判断の記録で使う。REQ-135）
+fn required_field_of(heading: &str) -> Option<&'static str> {
+    REQUIRED_FIELDS
+        .iter()
+        .find(|(name, _)| *name == heading)
+        .map(|(_, field)| *field)
+}
+
+impl RecordsFile {
+    /// 決定の節にその番号の `番号の行` があるか（TBL-012 の順2）
+    pub fn has_decision_number(&self, number: &str) -> bool {
+        self.sections
+            .iter()
+            .filter(|s| DECISION_SECTIONS.contains(&s.name.as_str()))
+            .any(|s| s.numbered_lines.iter().any(|n| n.number == number))
+    }
+
 }
 
 /// 決定の番号の形（英大文字1文字に1桁以上の数字。A26, P1, D1, R6 など）
@@ -41,52 +110,101 @@ pub fn is_decision_number(s: &str) -> bool {
     rest.chars().all(|c| c.is_ascii_digit())
 }
 
-/// 判断の記録のファイルを解析する
+/// `番号の行` の番号を取り出す（用語集の `番号の行`。行頭の空白は除いてある前提）
+fn number_of_line(trimmed_rest: &str) -> Option<&str> {
+    match trimmed_rest.find(' ') {
+        Some(pos) => {
+            let num = &trimmed_rest[..pos];
+            is_decision_number(num).then_some(num)
+        }
+        None => is_decision_number(trimmed_rest).then_some(trimmed_rest),
+    }
+}
+
+/// 判断の記録のファイルを読んで構造にする（REQ-136。記録の行を読むのはこの関数だけ）
 pub fn parse_records_file(rel_path: &str, content: &str) -> RecordsFile {
-    let mut decision_numbers = Vec::new();
     let mut headings = Vec::new();
-    let mut in_decision_section = false;
+    let mut sections: Vec<RecordSection> = Vec::new();
+    let mut current: Option<usize> = None;
     let mut has_decision_section = false;
-    let decision_sections = ["Agreements", "Prohibitions", "Delegated", "Rejected"];
+    let mut has_context = false;
+    let mut fence: Option<crate::ir::CodeFence> = None;
 
-    for line in content.lines() {
+    for (index, line) in content.lines().enumerate() {
+        let line_number = index + 1;
         let trimmed = line.trim();
+        let heading = trimmed.strip_prefix("## ").map(str::trim);
 
-        if trimmed.starts_with("## ") {
-            let heading = trimmed[3..].trim().to_string();
-            if decision_sections.contains(&heading.as_str()) {
-                in_decision_section = true;
-                has_decision_section = true;
-            } else {
-                in_decision_section = false;
+        // 判断の記録でないファイルの見出しの集め方は変えない（TBL-012 の順4）
+        if let Some(text) = heading {
+            headings.push(text.to_string());
+        }
+
+        // コードブロックの中は読まない。閉じずに文書が終わればそこまでが中（A34、A45）
+        if let Some(open) = &fence {
+            if crate::ir::is_closing_fence(line, open) {
+                fence = None;
             }
-            headings.push(heading);
+            continue;
+        }
+        if let Some(open) = crate::ir::parse_opening_fence(line) {
+            fence = Some(open);
             continue;
         }
 
-        if in_decision_section && trimmed.starts_with("- ") {
-            let rest = &trimmed[2..];
-            // "A26 ..." の形
-            if let Some(space_pos) = rest.find(' ') {
-                let num = &rest[..space_pos];
-                if is_decision_number(num) {
-                    decision_numbers.push(num.to_string());
-                }
-            } else if is_decision_number(rest) {
-                decision_numbers.push(rest.to_string());
+        if let Some(text) = heading {
+            if DECISION_SECTIONS.contains(&text) {
+                has_decision_section = true;
             }
+            if text == "Context" {
+                has_context = true;
+            }
+            current = required_field_of(text).map(|_| {
+                sections.push(RecordSection {
+                    name: text.to_string(),
+                    numbered_lines: Vec::new(),
+                });
+                sections.len() - 1
+            });
+            continue;
+        }
+
+        // TBL-022 の表に無い節と、最初の "## " の見出しより前の行は読まない（REQ-135）
+        let Some(section) = current else { continue };
+        let Some(rest) = trimmed.strip_prefix("- ") else {
+            continue;
+        };
+
+        // 番号の行の判定を補足の行より先に行う（A33）
+        if let Some(number) = number_of_line(rest) {
+            sections[section].numbered_lines.push(NumberedLine {
+                number: number.to_string(),
+                line: line_number,
+                fields: Vec::new(),
+            });
         }
     }
 
-    // A134: 決定の節の見出しを1つ以上持つファイルが判断の記録（番号の有無では決めない）
-    let is_records = has_decision_section;
+    // A134、A46: 決定の節の見出しをコードブロックの外に1つ以上持つファイルが判断の記録
+    if !has_decision_section {
+        sections.clear();
+        has_context = false;
+    }
 
     RecordsFile {
         rel_path: rel_path.to_string(),
-        decision_numbers,
+        sections,
         headings,
-        is_records,
+        is_records: has_decision_section,
+        has_context,
     }
+}
+
+/// ADR やその他の Markdown ファイルの内容
+#[derive(Debug)]
+pub struct OtherFile {
+    pub rel_path: String,
+    pub headings: Vec<String>,
 }
 
 /// ADR やその他の Markdown ファイルを解析する
@@ -167,7 +285,7 @@ impl SourceContext {
                 if rf.is_records {
                     // 判断の記録: 印は決定の番号
                     if is_decision_number(anchor) {
-                        if rf.decision_numbers.iter().any(|n| n == anchor) {
+                        if rf.has_decision_number(anchor) {
                             return Ok(());
                         }
                     }

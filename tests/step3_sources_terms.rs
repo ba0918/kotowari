@@ -646,6 +646,37 @@ fn tbl_012_indented_decision_line_counts() {
     );
 }
 
+// @kotowari[REQ-058, TBL-012]
+#[test]
+fn tbl_012_number_inside_code_block_is_not_a_source_target() {
+    // EX-118: コードブロックの中の番号の行は読まないので、出典の先にならない
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/decision/records/x.md"),
+        concat!(
+            "# 記録 x\n\n## Agreements\n\n- A1 ある合意\n\n",
+            "```text\n- A9 コードブロックの中の番号\n```\n",
+        ),
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/x.md#A9\n- 検証: unit\n\nStatement.\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    let details: Vec<&str> = si.iter().map(|f| f["detail"].as_str().unwrap_or("")).collect();
+    assert_eq!(
+        details,
+        vec!["docs/decision/records/x.md#A9"],
+        "a number that appears only inside a code block must not resolve as a source: {:?}",
+        si
+    );
+}
+
 // --- 除外: 隠しディレクトリは辿らない ---
 
 // @kotowari[REQ-058]
@@ -818,12 +849,10 @@ fn req_058_absolute_path_source_is_rejected_even_if_it_would_otherwise_resolve()
     let ctx = kotowari::sources::SourceContext {
         records_path: "docs/decision/records".to_string(),
         adr_path: "docs/decision/adr".to_string(),
-        records_files: vec![kotowari::sources::RecordsFile {
-            rel_path: "records.md".to_string(),
-            decision_numbers: vec!["A1".to_string()],
-            headings: vec![],
-            is_records: true,
-        }],
+        records_files: vec![kotowari::sources::parse_records_file(
+            "records.md",
+            "# 記録\n\n## Agreements\n\n- A1 ある合意\n",
+        )],
         adr_files: vec![],
         records_other_files: vec![],
     };
