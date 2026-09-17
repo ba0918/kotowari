@@ -25,6 +25,9 @@ readonly WATCH_INTERVAL=10
 watchdog_pid=""
 kill_count_file=""
 diff_file=""
+# この実行が作るサービスの名前（この実行だけのもの）と、その終わりを待っている systemd-run
+run_unit=""
+run_pid=""
 
 die() {
     printf 'mutants.sh: %s\n' "$1" >&2
@@ -71,7 +74,21 @@ stop_watchdog() {
     fi
 }
 
+# この実行が作ったサービスを止める。中断されたとき、これをしないと cargo-mutants は
+# 見張りの無いまま走り続ける。既に終わっているサービスへの stop は失敗にしない
+stop_service() {
+    if [ -n "$run_unit" ]; then
+        systemctl --user stop "${run_unit}.service" >/dev/null 2>&1 || true
+        run_unit=""
+    fi
+    if [ -n "$run_pid" ]; then
+        kill "$run_pid" 2>/dev/null || true
+        run_pid=""
+    fi
+}
+
 cleanup() {
+    stop_service
     stop_watchdog
     if [ -n "$kill_count_file" ] && [ -f "$kill_count_file" ]; then
         printf 'mutants.sh: killed %s leftover mutated processes\n' \
@@ -105,14 +122,23 @@ run_mutants() {
 
     start_watchdog
     local status=0
-    systemd-run --user --wait --collect --pipe \
+    # この実行だけの名前を付ける。中断されたとき cleanup がこの名前でサービスを止める
+    run_unit="kotowari-mutants-$$"
+    # 背景に置いて wait で待つ。前面の子を待っている間、bash は trap を後回しにするので、
+    # 前面のままだと INT と TERM を受けてもその場で cleanup が走らない。
+    # 標準入力は渡さない（cargo-mutants は読まない。背景の実行が端末から読むのを避ける）
+    systemd-run --user --wait --collect --pipe --unit="$run_unit" \
         -p MemoryMax=12G -p MemorySwapMax=0 -p OOMPolicy=continue \
         --setenv=PATH="$PATH" \
         --setenv=HOME="$HOME" \
         --setenv=CARGO_UNSTABLE_CHECKSUM_FRESHNESS=true \
         --setenv=CARGO_BUILD_JOBS=4 \
         --working-directory="$PWD" \
-        -- cargo +nightly mutants -j 1 --no-config -o . "$@" || status=$?
+        -- cargo +nightly mutants -j 1 --no-config -o . "$@" </dev/null &
+    run_pid=$!
+    wait "$run_pid" || status=$?
+    run_pid=""
+    run_unit=""
     stop_watchdog
 
     # 走り切ったことを示す終了コードだけを通す。cargo-mutants 27.1.0 の src/exit_code.rs より、
