@@ -73,7 +73,7 @@ fn req_057_source_splits_at_first_hash_and_allows_commas() {
 
 // --- REQ-058: 出典の判定 ---
 
-// @kotowari[REQ-058, TBL-012]
+// @kotowari[REQ-058, TBL-012, EX-011, EX-012]
 #[test]
 fn req_058_number_anchor_looks_for_decision_line_and_other_anchor_for_heading() {
     let tmp = TempDir::new().unwrap();
@@ -709,7 +709,7 @@ fn tbl_012_decision_heading_only_inside_code_block_makes_the_file_not_a_record()
     );
 }
 
-// @kotowari[REQ-058, TBL-012]
+// @kotowari[REQ-058, TBL-012, EX-120]
 #[test]
 fn tbl_012_heading_inside_code_block_of_a_non_record_file_is_not_a_source_target() {
     // EX-120

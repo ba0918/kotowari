@@ -188,6 +188,24 @@ fn req_025_text_has_one_line_per_finding_with_bracketed_severity() {
     }
 }
 
+// @kotowari[REQ-025, REQ-026, EX-004]
+#[test]
+fn req_025_text_line_for_a_document_without_a_title() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(tmp.path().join("docs/ir/a.md"), "no title\n").unwrap();
+    let output = cmd()
+        .args(["check", "--format", "text"])
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.lines().any(|l| l == "docs/ir/a.md:- [error] missing_title a.md"),
+        "the finding without a line prints the path, a dash, the severity, the kind and the detail: {stdout}"
+    );
+}
+
 // --- REQ-026: 行の無い指摘の文字の出力 ---
 
 // @kotowari[REQ-026]
@@ -272,7 +290,7 @@ fn write_test_file(tmp: &std::path::Path, rel: &str, content: &str) {
     fs::write(path, content).unwrap();
 }
 
-// @kotowari[REQ-128, TBL-021]
+// @kotowari[REQ-128, TBL-021, EX-035]
 #[test]
 fn req_128_tests_key_lists_files_per_extension_with_query_flag() {
     // EX-035: ".rs" が2つと ".py" が1つ
@@ -369,7 +387,7 @@ fn tbl_021_uppercase_extension_is_a_separate_key_without_query() {
     assert_eq!(v["tests"]["rs"]["query"], true, "rs has a query: {v}");
 }
 
-// @kotowari[TBL-021]
+// @kotowari[TBL-021, REQ-128, EX-038]
 #[test]
 fn tbl_021_unparsable_file_is_counted() {
     // EX-038: tree-sitter で読めないファイルも "files" に数える
