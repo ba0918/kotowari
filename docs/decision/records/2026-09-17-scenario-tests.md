@@ -72,7 +72,7 @@ Position: 承認済み（2026-09-17）。計画 docs/plans/scenario-tests.md の
 
 - A16 同じ ID のシナリオが2か所以上にあって印が無いとき、scenario_without_test は REQ-032 の1つ目のシナリオのタグの行に1件だけ出す。REQ-085 の判定でも同じ1つ目の "@about" を使う
   - why: 計画のレビュー（2026-09-17）で、件数と line が REQ-137 と TBL-019 から決まらないと分かった。duplicate_id が2つ目以降に出るので、対応の指摘は1つ目に寄せると読み手が一か所で済む。REQ-085 の側は A15 が名指ししていたが IR の文に無かった
-  - decided_by: 主セッションの提案。計画の承認で確定
+  - decided_by: 利用者（主セッションの提案を計画と同時に kemi の承認で確定。2026-09-17）
 
 ## Prohibitions
 
