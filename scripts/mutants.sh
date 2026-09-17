@@ -115,15 +115,24 @@ run_mutants() {
         -- cargo +nightly mutants -j 1 --no-config -o . "$@" || status=$?
     stop_watchdog
 
+    # 走り切ったことを示す終了コードだけを通す。cargo-mutants 27.1.0 の src/exit_code.rs より、
+    # 0 は成功、2 は見逃しあり、3 は時間切れあり。この3つは全部の変異を測り終えている。
+    # 残り（1 引数の誤り、4 基準の実行が落ちた、5 と 6 差分が読めない、70 内部の誤り、
+    # および途中で殺されたとき）は測り終えていないので、途中までの結果のファイルが残っていても失敗にする
+    case "$status" in
+    0 | 2 | 3) ;;
+    *) die "the mutation testing tool did not run to completion (exit $status)" ;;
+    esac
+
     if [ ! -f "$RESULTS" ]; then
         # 差分に Rust のソースが無いとき、cargo-mutants は結果のファイルを作らずに0で終わる
         if [ "$status" -eq 0 ]; then
             return 0
         fi
-        die "the mutation testing tool failed (exit $status) and wrote no result file"
+        die "the mutation testing tool wrote no result file (exit $status)"
     fi
 
-    # cargo-mutants 自身の終了コードは見逃しや時間切れで0以外になるので使わない
+    # 見逃しや時間切れで止めるかどうかは kotowari の側で決める（上の 2 と 3 では止めない）
     CARGO_BUILD_JOBS=4 cargo run -q -- mutants --tool cargo-mutants --format text "$RESULTS"
 }
 
