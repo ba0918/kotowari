@@ -107,6 +107,36 @@ fn req_004_unknown_command_before_check_has_the_unknown_command_wording() {
     );
 }
 
+// @kotowari[REQ-004, TBL-020, EX-219]
+#[test]
+fn req_004_no_arguments_names_both_commands() {
+    let output = cmd().current_dir(valid_project_dir()).output().unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let first_line = stderr.lines().next().unwrap_or("");
+    assert_eq!(
+        first_line, "argument error: expected command: check or mutants",
+        "got: {first_line:?}"
+    );
+}
+
+// @kotowari[REQ-004, TBL-020, EX-241]
+#[test]
+fn req_004_options_without_a_command_names_both_commands() {
+    let output = cmd()
+        .args(["--format", "text"])
+        .current_dir(valid_project_dir())
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let first_line = stderr.lines().next().unwrap_or("");
+    assert_eq!(
+        first_line, "argument error: expected command: check or mutants",
+        "got: {first_line:?}"
+    );
+}
+
 // --- REQ-005: 停止の出力（別のテストで既にカバー） ---
 
 // @kotowari[REQ-005]

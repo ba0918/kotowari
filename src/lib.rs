@@ -295,7 +295,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
 
     if !saw_check {
         return Err(StopReason::ArgumentError(
-            "expected command: check".to_string(),
+            "expected command: check or mutants".to_string(),
         ));
     }
 
