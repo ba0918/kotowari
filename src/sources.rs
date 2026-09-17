@@ -74,7 +74,7 @@ pub const REQUIRED_FIELDS: [(&str, &str); 6] = [
 ];
 
 /// TBL-022 の表にある節か（節の一覧はすべての判断の記録で使う。REQ-135）
-fn required_field_of(heading: &str) -> Option<&'static str> {
+pub fn required_field_of(heading: &str) -> Option<&'static str> {
     REQUIRED_FIELDS
         .iter()
         .find(|(name, _)| *name == heading)
@@ -119,6 +119,16 @@ fn number_of_line(trimmed_rest: &str) -> Option<&str> {
         }
         None => is_decision_number(trimmed_rest).then_some(trimmed_rest),
     }
+}
+
+/// `補足の行` の名前と値を取り出す（REQ-133。行頭の空白は除いてある前提）
+fn field_of_line(trimmed_rest: &str) -> Option<(&str, &str)> {
+    let colon = trimmed_rest.find(':')?;
+    let name = &trimmed_rest[..colon];
+    if name.is_empty() || name.chars().any(char::is_whitespace) {
+        return None;
+    }
+    Some((name, trimmed_rest[colon + 1..].trim()))
 }
 
 /// 判断の記録のファイルを読んで構造にする（REQ-136。記録の行を読むのはこの関数だけ）
@@ -182,7 +192,22 @@ pub fn parse_records_file(rel_path: &str, content: &str) -> RecordsFile {
                 line: line_number,
                 fields: Vec::new(),
             });
+            continue;
         }
+
+        // 節の最初の番号の行より前の補足の行の形の行は読まない（REQ-135）
+        let Some(numbered) = sections[section].numbered_lines.last_mut() else {
+            continue;
+        };
+        let Some((name, value)) = field_of_line(rest) else {
+            continue;
+        };
+        numbered.fields.push(FieldLine {
+            name: name.to_string(),
+            value: value.to_string(),
+            line: line_number,
+            links: Vec::new(),
+        });
     }
 
     // A134、A46: 決定の節の見出しをコードブロックの外に1つ以上持つファイルが判断の記録

@@ -1,5 +1,6 @@
 pub mod config;
 pub mod ir;
+pub mod record_form;
 pub mod sources;
 pub mod terms;
 pub mod tests_discovery;
@@ -66,6 +67,7 @@ finding_kinds! {
     MissingTag => "missing_tag",
     MissingTitle => "missing_title",
     MultipleTitles => "multiple_titles",
+    RecordFieldMissing => "record_field_missing",
     RequirementWithoutTest => "requirement_without_test",
     SourceInvalid => "source_invalid",
     TestWithoutId => "test_without_id",
@@ -551,6 +553,9 @@ pub fn run_check(
     // 出典の検査
     let source_ctx = sources::build_context(&base, &cfg)?;
     sources::check_sources(&docs, &source_ctx, &cfg.ir, &mut findings);
+
+    // 判断の記録の形の検査
+    record_form::check_record_forms(&source_ctx, &mut findings);
 
     // 用語と曖昧語の検査
     let known_ids = collect_known_ids(&docs);
