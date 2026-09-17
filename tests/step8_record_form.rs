@@ -508,3 +508,117 @@ fn tbl_023_absolute_href_is_outside_the_place() {
         ]
     );
 }
+
+// @kotowari[REQ-132, TBL-023]
+#[test]
+fn req_132_record_without_context_resolves_two_links_in_superseded() {
+    // EX-106: "## Context" を持たない記録の Superseded の行のリンク2つがどちらも解決される
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "ir-tree.md",
+        "# 記録 ir-tree\n\n## Agreements\n\n- A21 ある合意\n- A5 別の合意\n",
+    );
+    write_record(
+        tmp.path(),
+        "old.md",
+        "# 記録 old\n\n## Agreements\n\n- A1 ある合意\n\n## Superseded\n\n- A54 置き換えられた決定\n- superseded_by: [ir-tree の A21](./ir-tree.md#A21)、[ir-tree の A5](./ir-tree.md#A5)\n",
+    );
+    let v = check(tmp.path());
+    assert!(
+        link_findings(&v).is_empty(),
+        "both links resolve: {:?}",
+        link_findings(&v)
+    );
+}
+
+// @kotowari[REQ-132, TBL-023, REQ-110]
+#[test]
+fn req_132_parent_directory_href_to_superseded_number_passes() {
+    // EX-116: 下位ディレクトリの記録から ".." で上の記録の Superseded の番号を指すリンク
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "records.md",
+        "# 判断の記録\n\n## Agreements\n\n- A1 最初の合意\n\n## Superseded\n\n- A15 置き換えられた決定\n",
+    );
+    fs::create_dir_all(tmp.path().join("docs/decision/records/sub")).unwrap();
+    write_record(
+        tmp.path(),
+        "sub/a.md",
+        "# 記録 sub/a\n\n## Agreements\n\n- A1 ある合意\n- superseded_by: [A15](../records.md#A15)\n",
+    );
+    let v = check(tmp.path());
+    assert!(
+        link_findings(&v).is_empty(),
+        "\"../records.md#A15\" resolves inside the place: {:?}",
+        link_findings(&v)
+    );
+}
+
+// @kotowari[REQ-133, REQ-132]
+#[test]
+fn req_133_empty_superseded_by_is_not_a_link_finding() {
+    // 値が空の superseded_by はリンクの判定を受けない。Context を持つ記録では欠けだけが出る
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "ctx.md",
+        "# 記録 ctx\n\n## Context\n\n背景。\n\n## Agreements\n\n- A1 ある合意\n- why: x\n\n## Superseded\n\n- A3 置き換えられた決定\n- superseded_by:\n",
+    );
+    write_record(
+        tmp.path(),
+        "noctx.md",
+        "# 記録 noctx\n\n## Agreements\n\n- A1 ある合意\n\n## Superseded\n\n- A4 置き換えられた決定\n- superseded_by:\n",
+    );
+    let v = check(tmp.path());
+    assert!(link_findings(&v).is_empty(), "a blank value is not a link: {:?}", link_findings(&v));
+    let missing = findings_by_kind(&v, "record_field_missing");
+    assert_eq!(missing.len(), 1, "only the record with \"## Context\": {:?}", missing);
+    assert_eq!(missing[0]["path"], "docs/decision/records/ctx.md");
+    assert_eq!(missing[0]["line"], 14);
+    assert_eq!(missing[0]["detail"], "superseded_by");
+}
+
+// @kotowari[REQ-135, REQ-132]
+#[test]
+fn req_135_superseded_by_in_revisions_is_not_read() {
+    // Revisions は TBL-022 の表に無い節なので、その中の superseded_by は読まない
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "rev.md",
+        "# 記録 rev\n\n## Agreements\n\n- A1 ある合意\n\n## Revisions\n\n- A5 は A9 を置き換える\n- superseded_by: [A9](#A9)\n",
+    );
+    let v = check(tmp.path());
+    assert!(
+        link_findings(&v).is_empty(),
+        "a superseded_by in Revisions is not read: {:?}",
+        link_findings(&v)
+    );
+}
+
+// @kotowari[REQ-129, REQ-132]
+#[test]
+fn req_129_broken_link_in_a_file_without_decision_sections_is_not_checked() {
+    // A41: 決定の節の見出しを持たないファイルは判断の記録でなく、どの検査も受けない
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "plain.md",
+        "# 記録でない文書\n\n## Context\n\n背景。\n\n## Superseded\n\n- A3 置き換えられた決定\n- superseded_by: [A9](#A9)\n",
+    );
+    let v = check(tmp.path());
+    let for_file: Vec<_> = v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["path"] == "docs/decision/records/plain.md")
+        .collect();
+    assert!(for_file.is_empty(), "no finding for a file that is not a record: {:?}", for_file);
+}
