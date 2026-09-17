@@ -816,6 +816,23 @@ fn req_148_list_of_comments_only_is_zero_entries() {
     );
 }
 
+// @kotowari[REQ-148]
+#[test]
+fn req_148_blank_lines_between_comments_are_still_empty() {
+    // REQ-148 の「空（0バイトか注釈だけ）」は空行を内容に数えない
+    let tmp = project_with_list(
+        &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "CaughtMutant")]),
+        "# 今は1件も無い\n\n# あとで足す\n",
+    );
+    let output = run_in(tmp.path(), &[]);
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "stderr: {}",
+        first_stderr_line(&output)
+    );
+}
+
 // @kotowari[REQ-143]
 #[test]
 fn req_143_entry_with_a_key_outside_the_five_is_invalid() {

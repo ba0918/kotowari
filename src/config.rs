@@ -185,10 +185,14 @@ fn check_not_absolute(path: &str, key: &str) -> Result<(), StopReason> {
     Ok(())
 }
 
-/// 中身が空（0バイトか注釈だけ）の YAML か（REQ-012 の設定ファイル、REQ-148 の等価の一覧）
+/// 中身が空（0バイトか注釈だけ）の YAML か（REQ-012 の設定ファイル、REQ-148 の等価の一覧）。
+/// 空行は内容に数えないので、空行と注釈の行だけのファイルは空である。
+/// 1行も無いファイル（0バイト）では `all` が真になる。
 pub fn is_blank_yaml(text: &str) -> bool {
-    let trimmed = text.trim();
-    trimmed.is_empty() || trimmed.lines().all(|l| l.trim_start().starts_with('#'))
+    text.lines().all(|line| {
+        let trimmed = line.trim();
+        trimmed.is_empty() || trimmed.starts_with('#')
+    })
 }
 
 impl Config {
