@@ -213,13 +213,20 @@ pub enum Cli {
         format: Format,
         config_path: Option<PathBuf>,
     },
+    /// 変異の結果を検査する
+    Mutants {
+        format: Format,
+        config_path: Option<PathBuf>,
+        tool: Option<String>,
+        results: Vec<PathBuf>,
+    },
     /// 使い方を表示する
     Help,
     /// 版を表示する
     Version,
 }
 
-/// 引数を解析する（REQ-002, REQ-004, REQ-107）
+/// 引数を解析する（REQ-002, REQ-004, REQ-107, REQ-149）
 pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     // REQ-107: --help か --version があればほかの引数を見ない
     for arg in args {
@@ -233,71 +240,60 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
 
     let mut format_str: Option<String> = None;
     let mut config_path: Option<PathBuf> = None;
-    let mut saw_check = false;
+    let mut tool: Option<String> = None;
+    let mut command: Option<String> = None;
+    let mut positionals: Vec<String> = Vec::new();
     let mut saw_format = false;
     let mut saw_config = false;
+    let mut saw_tool = false;
     let mut i = 0;
 
     while i < args.len() {
         let arg = &args[i];
         if arg.starts_with("--") {
-            match arg.as_str() {
-                "--format" => {
-                    if saw_format {
-                        return Err(StopReason::ArgumentError(
-                            "repeated option: --format".to_string(),
-                        ));
-                    }
-                    saw_format = true;
-                    i += 1;
-                    if i >= args.len() {
-                        return Err(StopReason::ArgumentError(
-                            "--format requires a value".to_string(),
-                        ));
-                    }
-                    format_str = Some(args[i].clone());
-                }
-                "--config" => {
-                    if saw_config {
-                        return Err(StopReason::ArgumentError(
-                            "repeated option: --config".to_string(),
-                        ));
-                    }
-                    saw_config = true;
-                    i += 1;
-                    if i >= args.len() {
-                        return Err(StopReason::ArgumentError(
-                            "--config requires a value".to_string(),
-                        ));
-                    }
-                    config_path = Some(PathBuf::from(&args[i]));
-                }
+            let slot = match arg.as_str() {
+                "--format" => &mut saw_format,
+                "--config" => &mut saw_config,
+                "--tool" => &mut saw_tool,
                 _ => {
                     return Err(StopReason::ArgumentError(format!("unknown option: {arg}")));
                 }
+            };
+            if *slot {
+                return Err(StopReason::ArgumentError(format!(
+                    "repeated option: {arg}"
+                )));
             }
-        } else if arg == "check" {
-            if saw_check {
-                return Err(StopReason::ArgumentError(
-                    "unexpected argument: check".to_string(),
-                ));
+            *slot = true;
+            i += 1;
+            if i >= args.len() {
+                return Err(StopReason::ArgumentError(format!(
+                    "{arg} requires a value"
+                )));
             }
-            saw_check = true;
-        } else if !saw_check {
-            return Err(StopReason::ArgumentError(format!("unknown command: {arg}")));
+            match arg.as_str() {
+                "--format" => format_str = Some(args[i].clone()),
+                "--config" => config_path = Some(PathBuf::from(&args[i])),
+                _ => tool = Some(args[i].clone()),
+            }
+        } else if command.is_none() {
+            // REQ-001: 1つ目の位置引数は check か mutants のどちらか
+            if arg == "check" || arg == "mutants" {
+                command = Some(arg.clone());
+            } else {
+                return Err(StopReason::ArgumentError(format!("unknown command: {arg}")));
+            }
         } else {
-            return Err(StopReason::ArgumentError(format!(
-                "unexpected argument: {arg}"
-            )));
+            positionals.push(arg.clone());
         }
         i += 1;
     }
 
-    if !saw_check {
+    let Some(command) = command else {
         return Err(StopReason::ArgumentError(
             "expected command: check or mutants".to_string(),
         ));
-    }
+    };
 
     // REQ-004: --config がディレクトリを指すとき
     if let Some(ref cp) = config_path {
@@ -314,9 +310,23 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         Err(e) => return Err(StopReason::ArgumentError(e)),
     };
 
-    Ok(Cli::Check {
+    if command == "check" {
+        if let Some(extra) = positionals.first() {
+            return Err(StopReason::ArgumentError(format!(
+                "unexpected argument: {extra}"
+            )));
+        }
+        return Ok(Cli::Check {
+            format,
+            config_path,
+        });
+    }
+
+    Ok(Cli::Mutants {
         format,
         config_path,
+        tool,
+        results: positionals.iter().map(PathBuf::from).collect(),
     })
 }
 
@@ -479,6 +489,132 @@ pub fn find_base(cwd: &Path) -> PathBuf {
             return cwd.to_path_buf();
         }
     }
+}
+
+/// カレントディレクトリからの相対パスを、`基準のディレクトリ`からの相対の表示に直す（TBL-020）
+fn display_from_base(base: &Path, cwd: &Path, path: &Path) -> String {
+    relative_display(
+        &lexically_normalize(base),
+        &lexically_normalize(&cwd.join(path)),
+    )
+}
+
+/// カレントディレクトリを取得する（A160/TBL-001/TBL-020）
+fn current_dir() -> Result<PathBuf, StopReason> {
+    std::env::current_dir()
+        .map_err(|e| StopReason::UnreadableFile(format!("current directory: {e}")))
+}
+
+/// 停止する（REQ-005: 標準出力に何も出さず、理由を標準エラーに出し、終了コードは2）
+fn stop(reason: &StopReason) -> u8 {
+    eprintln!("{reason}");
+    2
+}
+
+/// コマンドを実行し、終了コードを返す（TBL-002）
+pub fn run(args: &[String]) -> u8 {
+    let cli = match parse_args(args) {
+        Ok(cli) => cli,
+        Err(reason) => return stop(&reason),
+    };
+
+    match cli {
+        // REQ-107: 検査を行わず、使い方か版を出して終了コード0
+        Cli::Help => {
+            print_help();
+            0
+        }
+        Cli::Version => {
+            println!("kotowari {}", env!("CARGO_PKG_VERSION"));
+            0
+        }
+        Cli::Check {
+            format,
+            config_path,
+        } => {
+            let cwd = match current_dir() {
+                Ok(cwd) => cwd,
+                Err(reason) => return stop(&reason),
+            };
+            match run_check(&cwd, format, config_path.as_deref()) {
+                Ok((result, format)) => {
+                    print_check(&result, format);
+                    exit_code_for(&result.findings)
+                }
+                Err(reason) => stop(&reason),
+            }
+        }
+        Cli::Mutants {
+            config_path,
+            results,
+            ..
+        } => {
+            let cwd = match current_dir() {
+                Ok(cwd) => cwd,
+                Err(reason) => return stop(&reason),
+            };
+            match run_mutants(&cwd, config_path.as_deref(), &results) {
+                Ok(()) => 0,
+                Err(reason) => stop(&reason),
+            }
+        }
+    }
+}
+
+/// TBL-002: 誤りが1件以上あれば1、無ければ0
+fn exit_code_for(findings: &[Finding]) -> u8 {
+    if findings.iter().any(|f| f.severity == "error") {
+        1
+    } else {
+        0
+    }
+}
+
+/// "kotowari check" の結果を出す（TBL-005, REQ-025, REQ-026）
+fn print_check(result: &CheckResult, format: Format) {
+    match format {
+        Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
+        Format::Text => print_findings_as_text(&result.findings),
+    }
+}
+
+/// REQ-025, REQ-026: 1つの指摘を1行で出し、"line" が null なら "-" と書く
+fn print_findings_as_text(findings: &[Finding]) {
+    for f in findings {
+        let line = f.line.map_or("-".to_string(), |l| l.to_string());
+        println!("{}:{} [{}] {} {}", f.path, line, f.severity, f.kind, f.detail);
+    }
+}
+
+fn print_help() {
+    println!("Usage: kotowari [OPTIONS] <COMMAND> [RESULTS]");
+    println!();
+    println!("Commands:");
+    println!("  check      Check IR documents and test markers");
+    println!("  mutants    Read a mutation testing result file and report survivors");
+    println!();
+    println!("Options:");
+    println!("  --format <FORMAT>  Output format: json (default) or text");
+    println!("  --config <PATH>    Path to configuration file");
+    println!("  --tool <TOOL>      Mutation testing tool of the result file: cargo-mutants");
+    println!("  --help             Show this help message");
+    println!("  --version          Show version");
+}
+
+/// 変異の結果の検査のエントリポイント
+pub fn run_mutants(
+    cwd: &Path,
+    _config_path: Option<&Path>,
+    results: &[PathBuf],
+) -> Result<(), StopReason> {
+    let base = find_base(cwd);
+    if let Some(path) = results.first() {
+        // 結果のファイルのパスはカレントディレクトリからの相対（REQ-149）、
+        // 停止の詳細は基準のディレクトリからの相対（TBL-020）
+        let display = display_from_base(&base, cwd, path);
+        read_utf8_file(&cwd.join(path), &display)?;
+    }
+    Ok(())
 }
 
 /// 検査のエントリポイント

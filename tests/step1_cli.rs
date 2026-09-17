@@ -407,6 +407,57 @@ fn req_005_config_outside_the_base_is_shown_relative_with_parent_segments() {
 }
 
 
+// --- REQ-002、REQ-144: "kotowari mutants" の引数が結果のファイルに届く ---
+
+/// 捕まえた変異が1件だけの結果のファイル
+const ONE_CAUGHT_RESULT: &str = r#"{"outcomes":[
+  {"scenario":{"Mutant":{"file":"src/a.rs","name":"src/a.rs:3:5: replace f with ()",
+   "span":{"start":{"line":3,"column":5}}}},"summary":"CaughtMutant"}
+]}"#;
+
+// @kotowari[REQ-002, EX-244]
+#[test]
+fn req_002_mutants_options_can_come_before_the_command_and_after_the_path() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    std::fs::write(tmp.path().join("outcomes.json"), ONE_CAUGHT_RESULT).unwrap();
+    let output = cmd()
+        .args([
+            "--tool",
+            "cargo-mutants",
+            "mutants",
+            "outcomes.json",
+            "--format",
+            "text",
+        ])
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_ne!(
+        output.status.code(),
+        Some(2),
+        "the options may sit before the command and after the path: {stderr}"
+    );
+}
+
+// @kotowari[REQ-144]
+#[test]
+fn req_144_missing_result_file_is_an_unreadable_file() {
+    let output = cmd()
+        .args(["mutants", "--tool", "cargo-mutants", "no-such-file.json"])
+        .current_dir(valid_project_dir())
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let first_line = stderr.lines().next().unwrap_or("");
+    assert!(
+        first_line.starts_with("unreadable file: "),
+        "expected 'unreadable file: ...', got: {first_line:?}"
+    );
+}
+
 // --- REQ-008: 作らないコマンド ---
 
 // @kotowari[REQ-008]
