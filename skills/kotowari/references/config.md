@@ -5,7 +5,7 @@ kotowari の仕様に基づく（改訂 2026-09-16。本体の版は固定しな
 | キー | 値 | 既定 |
 |---|---|---|
 | ir | ディレクトリのパス（1つの文字列） | docs/ir |
-| decisions.records | ディレクトリのパス（1つの文字列）。その下のファイルの決定を出典に指せる。判断の記録でない Markdown（形の契約、補足の文書）も置ける | docs/decision/brainstorm |
+| decisions.records | ディレクトリのパス（1つの文字列）。その下のファイルの決定を出典に指せる。判断の記録でない Markdown（形の契約、補足の文書）も置ける | docs/decision/records |
 | decisions.adr | ディレクトリのパス（1つの文字列） | docs/decision/adr |
 | tests.files | glob の一覧 | src/\*\*/\*.rs、tests/\*\*/\*.rs |
 | tests.rust.attributes | "#[test]" に足す属性のパスの一覧 | 空の一覧 |
@@ -27,7 +27,7 @@ setup の手順: 以下を順に行う。既にあるファイルやディレク
 ```yaml
 ir: docs/ir
 decisions:
-  records: docs/decision/brainstorm
+  records: docs/decision/records
   adr: docs/decision/adr
 tests:
   files:
@@ -46,7 +46,7 @@ vague_words:
   - "など"
 ```
 
-2. 置き場のディレクトリを作る: `docs/ir/`、`docs/decision/brainstorm/`、`docs/decision/adr/`
+2. 置き場のディレクトリを作る: `docs/ir/`、`docs/decision/records/`、`docs/decision/adr/`
 
 3. `docs/ir/CONTEXT.md` を4行で作る:
 

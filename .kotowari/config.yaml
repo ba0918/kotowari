@@ -1,7 +1,7 @@
 # kotowari check の設定（実験003。仕様書の「設定ファイル」の節と判断の記録 A23、A26、A47、A48）
 ir: docs/ir
 decisions:
-  records: docs/decision/brainstorm
+  records: docs/decision/records
   adr: docs/decision/adr
 tests:
   rust:

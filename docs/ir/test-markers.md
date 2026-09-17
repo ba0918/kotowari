@@ -7,14 +7,14 @@
 ### REQ-071: 印の構文
 
 - 種類: algorithm
-- 出典: docs/decision/brainstorm/records.md#A14, docs/decision/brainstorm/records.md#A57
+- 出典: docs/decision/records/records.md#A14, docs/decision/records/records.md#A57
 - 定義: TBL-015
 - 検証: unit
 
 ### REQ-072: 形の誤った印
 
 - 種類: event_driven
-- 出典: docs/decision/brainstorm/records.md#A57, docs/decision/brainstorm/records.md#A67, docs/decision/brainstorm/records.md#A39, docs/decision/brainstorm/records.md#A121, docs/decision/brainstorm/records.md#A111
+- 出典: docs/decision/records/records.md#A57, docs/decision/records/records.md#A67, docs/decision/records/records.md#A39, docs/decision/records/records.md#A121, docs/decision/records/records.md#A111
 - 検証: unit
 
 `問い合わせのある言語`で`テスト`の外にあるものを除く`印`について、その中が空か区切りだけのとき、またはその`印`に同じ行の閉じ括弧が無いとき、kotowari は行の文字を detail にして invalid_marker の`誤り`を出す。
@@ -22,7 +22,7 @@
 ### REQ-073: 1行に複数の印
 
 - 種類: ubiquitous
-- 出典: docs/decision/brainstorm/records.md#A57
+- 出典: docs/decision/records/records.md#A57
 - 検証: unit
 
 kotowari は常に、1行の中の`印`をすべて拾う。
@@ -30,7 +30,7 @@ kotowari は常に、1行の中の`印`をすべて拾う。
 ### REQ-074: コメント記号を見ない
 
 - 種類: ubiquitous
-- 出典: docs/decision/brainstorm/records.md#A14
+- 出典: docs/decision/records/records.md#A14
 - 検証: unit
 
 kotowari は常に、`印`を行のどの位置からも拾い、コメント記号を見ない。
@@ -38,14 +38,14 @@ kotowari は常に、`印`を行のどの位置からも拾い、コメント記
 ### REQ-075: 印の結び付け
 
 - 種類: algorithm
-- 出典: docs/decision/brainstorm/records.md#A26, docs/decision/brainstorm/records.md#A34, docs/decision/brainstorm/records.md#A39, docs/decision/brainstorm/records.md#A57
+- 出典: docs/decision/records/records.md#A26, docs/decision/records/records.md#A34, docs/decision/records/records.md#A39, docs/decision/records/records.md#A57
 - 定義: TBL-016
 - 検証: unit
 
 ### REQ-076: 問い合わせの無い言語の印
 
 - 種類: event_driven
-- 出典: docs/decision/brainstorm/records.md#A39, docs/decision/brainstorm/records.md#A57
+- 出典: docs/decision/records/records.md#A39, docs/decision/records/records.md#A57
 - 検証: unit
 
 `問い合わせの無い言語`の`テストのファイル`を読むとき、kotowari はコメントかどうかを問わず、ファイルの文字の中の`印`をすべて拾う。
@@ -53,7 +53,7 @@ kotowari は常に、`印`を行のどの位置からも拾い、コメント記
 ### REQ-077: 存在しない ID だけを指す印
 
 - 種類: event_driven
-- 出典: docs/decision/brainstorm/records.md#A57, docs/decision/brainstorm/records.md#A89
+- 出典: docs/decision/records/records.md#A57, docs/decision/records/records.md#A89
 - 検証: unit
 
 `印`が存在しない`ID`だけを指すとき、kotowari はその`印`の結び付いた`テスト`を`印`のあるものと数える。`印`の角括弧の中の`ID`の形でない要素（"REQ001" のように区切りの無いもの）は、存在しない`ID`を指したものとして unresolved_reference の`誤り`を出す。
@@ -61,7 +61,7 @@ kotowari は常に、`印`を行のどの位置からも拾い、コメント記
 ### REQ-078: review の要求を指す印
 
 - 種類: event_driven
-- 出典: docs/decision/brainstorm/records.md#A39
+- 出典: docs/decision/records/records.md#A39
 - 検証: unit
 
 `印`が検証の値 "review" の`要求`を指すとき、kotowari はそれを`誤り`にしない。
@@ -69,7 +69,7 @@ kotowari は常に、`印`を行のどの位置からも拾い、コメント記
 ### REQ-118: 印の指摘の行
 
 - 種類: ubiquitous
-- 出典: docs/decision/brainstorm/records.md#A121
+- 出典: docs/decision/records/records.md#A121
 - 検証: unit
 
 kotowari は常に、`印`から出す unresolved_reference と invalid_marker の "line" を`印`のある行（行をまたぐ`印`なら "@kotowari[" のある行）にする。
@@ -78,7 +78,7 @@ kotowari は常に、`印`から出す unresolved_reference と invalid_marker �
 
 ### TBL-015: 印の構文
 
-- 出典: docs/decision/brainstorm/records.md#A14, docs/decision/brainstorm/records.md#A57
+- 出典: docs/decision/records/records.md#A14, docs/decision/records/records.md#A57
 
 | 部分 | 形 |
 |---|---|
@@ -88,7 +88,7 @@ kotowari は常に、`印`から出す unresolved_reference と invalid_marker �
 
 ### TBL-016: 印の結び付け（問い合わせのある言語）
 
-- 出典: docs/decision/brainstorm/records.md#A26, docs/decision/brainstorm/records.md#A34, docs/decision/brainstorm/records.md#A39, docs/decision/brainstorm/records.md#A57, docs/decision/brainstorm/records.md#A67, docs/decision/brainstorm/records.md#A121
+- 出典: docs/decision/records/records.md#A26, docs/decision/records/records.md#A34, docs/decision/records/records.md#A39, docs/decision/records/records.md#A57, docs/decision/records/records.md#A67, docs/decision/records/records.md#A121
 
 | 印の位置 | 扱い |
 |---|---|
@@ -102,13 +102,13 @@ kotowari は常に、`印`から出す unresolved_reference と invalid_marker �
 ## 具体例
 
 ```gherkin
-@id=EX-015 @about=REQ-073 @source=docs/decision/brainstorm/records.md#A57,docs/decision/brainstorm/records.md#A26,docs/decision/brainstorm/records.md#A39
+@id=EX-015 @about=REQ-073 @source=docs/decision/records/records.md#A57,docs/decision/records/records.md#A26,docs/decision/records/records.md#A39
 Scenario: 1行の2つの印を両方拾う
   Given `テスト`の直前のコメントに "@kotowari[REQ-001] @kotowari[TBL-002]" がある
   When "kotowari check" を実行する
   Then その`テスト`は "REQ-001" と "TBL-002" に結び付く
 
-@id=EX-016 @about=REQ-075 @source=docs/decision/brainstorm/records.md#A39,docs/decision/brainstorm/records.md#A47,docs/decision/brainstorm/ir-form.md#検査の種類,docs/decision/brainstorm/records.md#A26,docs/decision/brainstorm/records.md#A49
+@id=EX-016 @about=REQ-075 @source=docs/decision/records/records.md#A39,docs/decision/records/records.md#A47,docs/decision/records/ir-form.md#検査の種類,docs/decision/records/records.md#A26,docs/decision/records/records.md#A49
 Scenario: 空行を挟んだコメントの印は結び付かない
   Given "@kotowari[REQ-001]" のコメントと "#[test]" の関数の間に空行がある
   When "kotowari check" を実行する

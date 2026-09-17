@@ -40,7 +40,7 @@ impl Default for Config {
         Config {
             ir: "docs/ir".to_string(),
             decisions: DecisionsConfig {
-                records: "docs/decision/brainstorm".to_string(),
+                records: "docs/decision/records".to_string(),
                 adr: "docs/decision/adr".to_string(),
             },
             tests: TestsConfig {

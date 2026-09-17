@@ -2,7 +2,7 @@
 
 - 状態: 承認済み（2026-09-13）
 - 日付: 2026-09-13
-- 判断の記録: `brainstorm/records.md` の A6、A17、A25、A42、A43、R4、R5、U24
+- 判断の記録: `records/records.md` の A6、A17、A25、A42、A43、R4、R5、U24
 
 ## 状況
 

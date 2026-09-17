@@ -15,7 +15,7 @@ Glossary updates pending: なし
 - A6 スキルの references と本体の一致検査の契約は、IR に新しい話題の文書を1つ足して要求として置く（検証: unit）。理由: tests/ のテストには印が要り、印の先は IR の ID しか指せない。スキルの仕様（docs/spec/kotowari-skill.md）は IR ではない（推奨を採用）
 - A7 突き合わせる相手はコード（実行されるもの）。対象は3つ: references/findings.md の種類の表の1列目の集合と指摘の種類の集合、references/config.md の既定と設定の既定、references/findings.md の停止の文言の表の1列目と停止の文言。IR とは既存のテストが合わせているので、references ↔ コードで推移的に合う（推奨を採用）
 - A8 問い合わせの無い言語の申告は、JSON の最上位に鍵 "tests" を足し、拡張子ごとに読んだファイル数（"files"）と問い合わせで解析したか（"query"）を出す。"files" と "lines" が IR の文書だけを数える A40 は変えない。text 形式には出さない（A18 の1指摘1行を崩さない）。拡張子の無いファイルの鍵は空文字列。指摘として1ファイル1件出す案は採らない（R1）（推奨を採用）
-- A9 構想メモ（docs/spec/concept.md）の未決着「運用時の成果物をどう置くか」に、置き場ごとの「担当」と「置いてはならないもの」の表を足す。行は docs/decision/brainstorm、docs/decision/adr、docs/ir、docs/spec、docs/trace.md、skills/kotowari/references の6つ。この壁打ちの承認の差分に含める（推奨を採用）
+- A9 構想メモ（docs/spec/concept.md）の未決着「運用時の成果物をどう置くか」に、置き場ごとの「担当」と「置いてはならないもの」の表を足す。行は docs/decision/records、docs/decision/adr、docs/ir、docs/spec、docs/trace.md、skills/kotowari/references の6つ。この壁打ちの承認の差分に含める（推奨を採用）
 - A10 スキルの references の改訂（findings.md の JSON の読み方、workflow.md の cycle の終端報告）を範囲に入れる（推奨を採用）
 
 - A11 references/config.md の既定は、表ではなく setup の手順1の YAML ブロックを読み、設定ファイルとして本体の読み込みに通した結果が既定と等しいことで確かめる。表は人向けのままで機械では読まない（推奨を採用）

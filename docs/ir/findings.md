@@ -7,21 +7,21 @@
 ### REQ-029: 誤りの種類
 
 - 種類: algorithm
-- 出典: docs/decision/brainstorm/records.md#A21, docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/ir-form.md#検査の種類
+- 出典: docs/decision/records/records.md#A21, docs/decision/records/records.md#A29, docs/decision/records/ir-form.md#検査の種類
 - 定義: TBL-008
 - 検証: unit
 
 ### REQ-030: 注意の種類
 
 - 種類: algorithm
-- 出典: docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/ir-form.md#検査の種類, docs/decision/brainstorm/2026-09-16-notice.md#A2
+- 出典: docs/decision/records/records.md#A29, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2
 - 定義: TBL-009
 - 検証: unit
 
 ### REQ-031: 注意は2つだけ
 
 - 種類: invariant
-- 出典: docs/decision/brainstorm/records.md#A29, docs/decision/brainstorm/ir-form.md#検査の種類, docs/decision/brainstorm/2026-09-16-notice.md#A2
+- 出典: docs/decision/records/records.md#A29, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2
 - 検証: unit
 
 種類が too_many_lines か too_many_requirements の`指摘`だけが`注意`で、ほかの種類の`指摘`はすべて`誤り`である関係が常に成り立つ。
@@ -29,7 +29,7 @@
 ### REQ-032: ID の重複
 
 - 種類: event_driven
-- 出典: docs/decision/brainstorm/records.md#A47, docs/decision/brainstorm/records.md#A61, docs/decision/brainstorm/records.md#A72, docs/decision/brainstorm/records.md#A113
+- 出典: docs/decision/records/records.md#A47, docs/decision/records/records.md#A61, docs/decision/records/records.md#A72, docs/decision/records/records.md#A113
 - 検証: unit
 
 同じ`ID`が2か所以上にあるとき、kotowari は2つ目以降の場所ごとに、その見出しの行（`シナリオ`は "Scenario:" の行）を "line" にして duplicate_id の`誤り`を出す。1つ目はパスのバイト順で先の文書、同じ文書の中では行の小さいものである。
@@ -38,7 +38,7 @@
 
 ### TBL-008: 誤りの種類と detail
 
-- 出典: docs/decision/brainstorm/records.md#A142, docs/decision/brainstorm/ir-form.md#検査の種類, docs/decision/brainstorm/records.md#A68, docs/decision/brainstorm/records.md#A108, docs/decision/brainstorm/records.md#A109, docs/decision/brainstorm/records.md#A110, docs/decision/brainstorm/records.md#A112, docs/decision/brainstorm/records.md#A116, docs/decision/brainstorm/records.md#A111, docs/decision/brainstorm/records.md#A150, docs/decision/brainstorm/records.md#A153, docs/decision/brainstorm/records.md#A154, docs/decision/brainstorm/2026-09-16-ir-tree.md#A5, docs/decision/brainstorm/2026-09-16-ir-tree.md#A19
+- 出典: docs/decision/records/records.md#A142, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A68, docs/decision/records/records.md#A108, docs/decision/records/records.md#A109, docs/decision/records/records.md#A110, docs/decision/records/records.md#A112, docs/decision/records/records.md#A116, docs/decision/records/records.md#A111, docs/decision/records/records.md#A150, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A19
 
 detail が「行の文字」「見出しの文字」「Scenario: の行の文字」の種類では、読んだ行の文字そのまま（字下げと末尾の空白を含み、再構成しない）を入れる。
 
@@ -80,7 +80,7 @@ detail が「行の文字」「見出しの文字」「Scenario: の行の文字
 
 ### TBL-009: 注意の種類と detail
 
-- 出典: docs/decision/brainstorm/ir-form.md#検査の種類, docs/decision/brainstorm/2026-09-16-notice.md#A2
+- 出典: docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2
 
 | 種類 | detail | 条件を定める要求 |
 |---|---|---|
@@ -90,7 +90,7 @@ detail が「行の文字」「見出しの文字」「Scenario: の行の文字
 ## 具体例
 
 ```gherkin
-@id=EX-005 @about=REQ-032 @source=docs/decision/brainstorm/records.md#A61,docs/decision/brainstorm/records.md#A47
+@id=EX-005 @about=REQ-032 @source=docs/decision/records/records.md#A61,docs/decision/records/records.md#A47
 Scenario: 3か所にある ID は2件の重複になる
   Given "REQ-001" の見出しが3か所にある
   When "kotowari check" を実行する

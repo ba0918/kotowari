@@ -1,4 +1,4 @@
 ir: docs/ir
 decisions:
-  records: docs/decision/brainstorm
+  records: docs/decision/records
   adr: docs/decision/adr

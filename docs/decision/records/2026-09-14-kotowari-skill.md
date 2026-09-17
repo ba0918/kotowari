@@ -12,18 +12,18 @@
 - A7 指摘の種類ごとに「対処」と「担当」の表を持つ。IR 側は brainstorm の席、テスト側は implementer、停止は人。除外の追加は仕様の変更なので brainstorm に戻す（推奨を採用）
 - A8 references は `ir-form.md`（形の規則）、`findings.md`（種類ごとの意味と対処）、`config.md`（設定）の3つ。sub-command ごとに読むものを SKILL.md に書く（推奨を採用）
 - A9 references の先頭に対象の kotowari の版を書き、SKILL.md の最初で `kotowari --version` を確かめ、違えば人に言う（推奨を採用）
-- A11 判断の記録は `docs/decision/brainstorm/<name>.md` に永続化する。kotowari を使うときは brainstorm の「承認後に進捗ファイルを消す」約束を適用せず、kotowari スキル側にそう書く。既存の brainstorm スキル本体は変えない（推奨を採用）
+- A11 判断の記録は `docs/decision/records/<name>.md` に永続化する。kotowari を使うときは brainstorm の「承認後に進捗ファイルを消す」約束を適用せず、kotowari スキル側にそう書く。既存の brainstorm スキル本体は変えない（推奨を採用）
 - A12 対応言語は今は Rust だけと明記。`mark` は Rust の印だけ。他の言語では IR 側の検査だけ使い、テスト側は人が確かめる。言語の追加は kotowari 本体の壁打ち（U37）の後（推奨を採用）
 - A13 check の関門は2か所。brainstorm の承認を求める直前（指摘0を承認の証拠に含める）と、cycle の終端報告の直前（requirement_without_test と unresolved_reference が0）。plan では走らせない（推奨を採用）
 - A14 `setup` は置き場3つと空の用語集（ヘッダと区切りだけ）を作る。設定ファイルは既定と違うときだけ。既にあるものは上書きしない（推奨を採用）
 - A15 LLM が読む出力は `--format json` を既定にする（text は指摘0のとき何も出さない。json は件数と種類が構造で取れる）（推奨を採用）
-- A16 既存スキルには「仕様が IR の形なら kotowari スキルが次の手順を置き換える」の1行を足し、置き換える手順の中身は kotowari スキル側に書く。brainstorm: 出力は IR の文書群、判断の記録は最初から docs/decision/brainstorm に書いて消さない、用語集は IR の置き場の CONTEXT.md、承認時に記録も stage。plan: 入力は IR の置き場と対象の要求 ID の一覧、最後のステップの確認コマンドに kotowari check を列挙（plan 自身は走らせない）。cycle: implementer と fixer のプロンプトに印の規則を貼り、終端報告に check の結果を載せる。implement: plan が列挙した check を走らせる（推奨を採用）
+- A16 既存スキルには「仕様が IR の形なら kotowari スキルが次の手順を置き換える」の1行を足し、置き換える手順の中身は kotowari スキル側に書く。brainstorm: 出力は IR の文書群、判断の記録は最初から docs/decision/records に書いて消さない、用語集は IR の置き場の CONTEXT.md、承認時に記録も stage。plan: 入力は IR の置き場と対象の要求 ID の一覧、最後のステップの確認コマンドに kotowari check を列挙（plan 自身は走らせない）。cycle: implementer と fixer のプロンプトに印の規則を貼り、終端報告に check の結果を載せる。implement: plan が列挙した check を走らせる（推奨を採用）
 - A17 分岐は「場面」と呼び、SKILL.md が文脈から選ぶ（人が名指ししてもよい）。frontmatter の description に発火語（kotowari、IR、docs/ir、@kotowari、印）を入れる（推奨を採用）
 - A18 承認の関門は誤り0（終了コード0）。警告は承認の証拠に載せて人に見せる（推奨を採用）
 - A19 テスト名は ID を小文字にしてハイフンを "_" に変えて先頭に付ける慣習。検査はしない（推奨を採用）
 - A20 setup は .kotowari/config.yaml を必ず作る（既定と同じ中身でもよい）。基準のディレクトリを固定するため（推奨を採用）
 - A21 問題の記録（FLAGS.md）は write の範囲。ADR は範囲外（置き場だけ作り、あれば出典に使えると書く）（推奨を採用）
-- A22 判断の記録のファイル名は docs/decision/brainstorm/YYYY-MM-DD-<name>.md（REQ-093 にそろえる）（推奨を採用）
+- A22 判断の記録のファイル名は docs/decision/records/YYYY-MM-DD-<name>.md（REQ-093 にそろえる）（推奨を採用）
 - A23 追認: SKILL.md は100行以内、版は完全一致、入れ先は ~/.claude/skills/kotowari/、kotowari コマンドが無いときは導入を求めて止まる（推奨を採用）
 - A24 承認の前に照合レビューを入れる。write の承認前の手順は「check で誤り0 → 照合レビュー（別セッションの LLM が IR の各項目を判断の記録と突き合わせ、裏付けの無いものを挙げる）で0 → 人には判断の記録の差分と check の結果と照合の結果を見せる」。IR の差分は承認の対象のバイト列として添えるが読むことは求めない。盲検の判定は入れない（推奨を採用）
 - A25 承認の関門は「requirement_without_test 以外の誤りが0」。requirement_without_test は cycle の終端で0にする。kotowari 本体には手を入れない（推奨を採用）

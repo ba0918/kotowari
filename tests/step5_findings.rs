@@ -9,15 +9,15 @@ fn cmd() -> Command {
 fn make_project(tmp: &std::path::Path) {
     fs::create_dir_all(tmp.join(".kotowari")).unwrap();
     fs::create_dir_all(tmp.join("docs/ir")).unwrap();
-    fs::create_dir_all(tmp.join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.join("docs/decision/records")).unwrap();
     fs::create_dir_all(tmp.join("docs/decision/adr")).unwrap();
     fs::write(
         tmp.join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     )
     .unwrap();
     fs::write(
-        tmp.join("docs/decision/brainstorm/records.md"),
+        tmp.join("docs/decision/records/records.md"),
         "# Records\n\n## Agreements\n\n- A1 Agreement\n",
     )
     .unwrap();
@@ -121,7 +121,7 @@ fn req_031_only_two_kinds_are_notices() {
     let mut content = String::from("# Title\n\nScope.\n\n## 要求\n\n");
     for i in 1..=12 {
         content.push_str(&format!(
-            "### REQ-{:03}: R{i}\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nStmt.\n\n",
+            "### REQ-{:03}: R{i}\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStmt.\n\n",
             i
         ));
     }
@@ -269,15 +269,15 @@ fn prop_003_findings_are_sorted() {
         let tmp = tempfile::TempDir::new().unwrap();
         fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
         fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
-        fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+        fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
         fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
         fs::create_dir_all(tmp.path().join("tests")).unwrap();
         fs::write(
             tmp.path().join(".kotowari/config.yaml"),
-            "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+            "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
         ).unwrap();
         fs::write(
-            tmp.path().join("docs/decision/brainstorm/records.md"),
+            tmp.path().join("docs/decision/records/records.md"),
             "# Records\n\n## Agreements\n\n- A1 Agreement\n",
         ).unwrap();
         for i in 0..n_docs {
@@ -336,7 +336,7 @@ fn req_027_glossary_invalid_has_null_line() {
     // 用語集にヘッダの列名が違う表しかない → glossary_invalid
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| Name | Meaning | Source |\n|---|---|---|\n| test | meaning | docs/decision/brainstorm/records.md#A1 |\n",
+        "# 用語集\n\n| Name | Meaning | Source |\n|---|---|---|\n| test | meaning | docs/decision/records/records.md#A1 |\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -352,7 +352,7 @@ fn tbl_019_unclosed_code_block_line_is_the_opening_line() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\n```\nunclosed\n",
+        "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n```\nunclosed\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -368,7 +368,7 @@ fn tbl_019_invalid_gherkin_line_and_invalid_id_lines() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n\n## 具体例\n\n```gherkin\n@id=BADID @about=REQ-001 @source=docs/decision/brainstorm/records.md#A1\nScenario: Test\n  Given something\nFeature: bad\n```\n",
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n## 具体例\n\n```gherkin\n@id=BADID @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: Test\n  Given something\nFeature: bad\n```\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -389,11 +389,11 @@ fn tbl_019_unclosed_backtick_line() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| IR | 仕様 | docs/decision/brainstorm/records.md#A1 |\n",
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| IR | 仕様 | docs/decision/records/records.md#A1 |\n",
     ).unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\n`奇数のバッククォート。\n",
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n`奇数のバッククォート。\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);

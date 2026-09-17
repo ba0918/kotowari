@@ -9,15 +9,15 @@ fn cmd() -> Command {
 fn make_project(tmp: &std::path::Path) {
     fs::create_dir_all(tmp.join(".kotowari")).unwrap();
     fs::create_dir_all(tmp.join("docs/ir")).unwrap();
-    fs::create_dir_all(tmp.join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.join("docs/decision/records")).unwrap();
     fs::create_dir_all(tmp.join("docs/decision/adr")).unwrap();
     fs::write(
         tmp.join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     )
     .unwrap();
     fs::write(
-        tmp.join("docs/decision/brainstorm/records.md"),
+        tmp.join("docs/decision/records/records.md"),
         "# Records\n\n## Agreements\n\n- A1 Agreement\n",
     )
     .unwrap();
@@ -81,7 +81,7 @@ fn req_023_files_counts_all_docs_and_lines_sums_them() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# A\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nStmt.\n",
+        "# A\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStmt.\n",
     )
     .unwrap();
     fs::write(
@@ -259,7 +259,7 @@ fn make_project_with_test_globs(tmp: &std::path::Path, globs: &[&str]) {
     fs::write(
         tmp.join(".kotowari/config.yaml"),
         format!(
-            "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n{list}"
+            "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n{list}"
         ),
     )
     .unwrap();

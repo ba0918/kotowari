@@ -1164,11 +1164,11 @@ fn req_033_uppercase_md_is_not_read() {
     let tmp = TempDir::new().unwrap();
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
     std::fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     ).unwrap();
     // .MD ファイルは読まない
     std::fs::write(tmp.path().join("docs/ir/README.MD"), "# Title\n\nScope.\n").unwrap();
@@ -1189,11 +1189,11 @@ fn req_033_file_symlink_is_read() {
     let tmp = TempDir::new().unwrap();
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
     std::fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     ).unwrap();
     // 実体を別の場所に作り、シンボリックリンクを ir/ に置く
     let target = tmp.path().join("target.md");
@@ -1801,9 +1801,9 @@ fn req_033_broken_symlink_in_ir_dir_stops() {
     let tmp = tempfile::TempDir::new().unwrap();
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
-    std::fs::write(tmp.path().join(".kotowari/config.yaml"), "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n").unwrap();
+    std::fs::write(tmp.path().join(".kotowari/config.yaml"), "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n").unwrap();
     symlink(tmp.path().join("nowhere.md"), tmp.path().join("docs/ir/broken.md")).unwrap();
     let output = assert_cmd::Command::cargo_bin("kotowari").unwrap().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(output.status.code(), Some(2), "a broken symlink in the IR dir must stop: {:?}", output);
@@ -2913,16 +2913,16 @@ fn req_032_first_occurrence_is_bytewise_first_relative_path() {
 
 /// CLI を通して検査するプロジェクトを一時ディレクトリに作る
 fn make_cli_project(tmp: &std::path::Path) {
-    for dir in [".kotowari", "docs/ir", "docs/decision/brainstorm", "docs/decision/adr"] {
+    for dir in [".kotowari", "docs/ir", "docs/decision/records", "docs/decision/adr"] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     std::fs::write(
         tmp.join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     )
     .unwrap();
     std::fs::write(
-        tmp.join("docs/decision/brainstorm/records.md"),
+        tmp.join("docs/decision/records/records.md"),
         "# Records\n\n## Agreements\n\n- A1 Agreement\n",
     )
     .unwrap();
@@ -2960,7 +2960,7 @@ fn req_055_non_ears_statement_gets_no_finding_on_its_line() {
     // 13行目の文は「常に」も「とき」も持たない平叙文
     std::fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nこの道具は文書を読む。\n",
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nこの道具は文書を読む。\n",
     )
     .unwrap();
     let v = run_cli(tmp.path());
@@ -2983,13 +2983,13 @@ fn req_056_contradiction_flag_with_one_reading_gets_no_finding() {
     make_cli_project(tmp.path());
     std::fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nこの道具は文書を読む。\n",
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nこの道具は文書を読む。\n",
     )
     .unwrap();
     // 種類 contradiction の問題の記録に、読みを1つだけ書く
     std::fs::write(
         tmp.path().join("docs/ir/FLAGS.md"),
-        "# 問題の記録\n\n### FLAG-001: 読みが割れる\n\n- 種類: contradiction\n- 関係: REQ-001\n- 出典: docs/decision/brainstorm/records.md#A1\n\n読みは1つだけ書いてある。\n",
+        "# 問題の記録\n\n### FLAG-001: 読みが割れる\n\n- 種類: contradiction\n- 関係: REQ-001\n- 出典: docs/decision/records/records.md#A1\n\n読みは1つだけ書いてある。\n",
     )
     .unwrap();
     let v = run_cli(tmp.path());

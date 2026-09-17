@@ -232,15 +232,15 @@ fn cmd() -> Command {
 fn make_project(tmp: &std::path::Path) {
     fs::create_dir_all(tmp.join(".kotowari")).unwrap();
     fs::create_dir_all(tmp.join("docs/ir")).unwrap();
-    fs::create_dir_all(tmp.join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.join("docs/decision/records")).unwrap();
     fs::create_dir_all(tmp.join("docs/decision/adr")).unwrap();
     fs::write(
         tmp.join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     )
     .unwrap();
     fs::write(
-        tmp.join("docs/decision/brainstorm/records.md"),
+        tmp.join("docs/decision/records/records.md"),
         "# Records\n\n## Agreements\n\n- A1 Agreement\n",
     )
     .unwrap();
@@ -250,7 +250,7 @@ fn make_ir_with_req(tmp: &std::path::Path, req_id: &str, verification: &str) {
     fs::write(
         tmp.join("docs/ir/a.md"),
         format!(
-            "# Title\n\nScope.\n\n## 要求\n\n### {req_id}: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: {verification}\n\nStatement.\n"
+            "# Title\n\nScope.\n\n## 要求\n\n### {req_id}: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: {verification}\n\nStatement.\n"
         ),
     )
     .unwrap();
@@ -327,7 +327,7 @@ fn req_081_only_rs_maps_to_rust() {
     // ただし .py ファイルは glob に当たらないので tests.files に追加
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n    - \"tests/**/*.rs\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n    - \"tests/**/*.rs\"\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -364,7 +364,7 @@ fn req_082_configured_attribute_matches_path_with_arguments() {
     make_ir_with_req(tmp.path(), "REQ-001", "unit");
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  rust:\n    attributes:\n      - kani::proof\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  rust:\n    attributes:\n      - kani::proof\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("src")).unwrap();
@@ -387,7 +387,7 @@ fn req_082_macro_body_functions_are_counted_by_last_segment() {
     make_ir_with_req(tmp.path(), "REQ-001", "unit");
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - proptest\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - proptest\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -600,7 +600,7 @@ fn req_075_both_places_merge_ids() {
     // 2つの要求
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: A\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nStmt.\n\n### REQ-002: B\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\nStmt.\n",
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: A\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStmt.\n\n### REQ-002: B\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStmt.\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -644,7 +644,7 @@ fn req_076_unknown_language_scans_raw_text() {
     make_ir_with_req(tmp.path(), "REQ-001", "unit");
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -668,7 +668,7 @@ fn req_076_unknown_language_marker_line_is_one_indexed_from_its_own_line() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -823,7 +823,7 @@ fn req_087_unknown_language_only_feeds_coverage() {
     make_ir_with_req(tmp.path(), "REQ-001", "unit");
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -849,7 +849,7 @@ fn req_072_non_query_language_checks_invalid_marker() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -876,7 +876,7 @@ fn req_054_non_query_language_checks_unresolved_reference() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -925,7 +925,7 @@ fn req_077_malformed_id_in_marker_is_unresolved_reference_non_rs() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -1004,7 +1004,7 @@ fn tbl_016_macro_function_boundary_breaks_marker_binding() {
     make_ir_with_req(tmp.path(), "REQ-001", "unit");
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - my_macro\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - my_macro\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -1242,7 +1242,7 @@ fn req_082_function_without_configured_attribute_not_counted() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  rust:\n    attributes:\n      - kani::proof\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  rust:\n    attributes:\n      - kani::proof\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("src")).unwrap();
@@ -1325,7 +1325,7 @@ fn tbl_017_nested_function_in_macro_is_not_counted() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - my_macro\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - my_macro\n",
     ).unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
@@ -1350,7 +1350,7 @@ fn tbl_017_macro_function_body_marker_binds() {
     make_ir_with_req(tmp.path(), "REQ-001", "unit");
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - my_macro\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - my_macro\n",
     ).unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
@@ -1372,7 +1372,7 @@ fn tbl_016_macro_function_block_comment_marker_binds() {
     make_ir_with_req(tmp.path(), "REQ-001", "unit");
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - my_macro\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  rust:\n    macros:\n      - my_macro\n",
     ).unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
@@ -1467,7 +1467,7 @@ fn req_085_requirement_without_verification_line_gets_no_coverage_finding() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n\nStatement.\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -1485,7 +1485,7 @@ fn req_081_uppercase_extension_has_no_query() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.RS\"\n    - \"tests/**/*.rs\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.RS\"\n    - \"tests/**/*.rs\"\n",
     ).unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
@@ -1559,7 +1559,7 @@ fn req_079_broken_symlink_outside_glob_stops() {
 fn req_124_four_digit_id_is_valid_in_heading_tag_and_marker() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-1000: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/brainstorm/records.md#A1\n- 検証: unit\n\n`EX-1000` を満たす。\n\n## 具体例\n\n```gherkin\n@id=EX-1000 @about=REQ-1000 @source=docs/decision/brainstorm/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-1000: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n`EX-1000` を満たす。\n\n## 具体例\n\n```gherkin\n@id=EX-1000 @about=REQ-1000 @source=docs/decision/records/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
     let doc = kotowari::ir::parse_document("a.md", content);
     let ids = kotowari::collect_known_ids(&[doc]);
     assert!(ids.contains("REQ-1000"), "{:?}", ids);
@@ -1585,7 +1585,7 @@ fn req_124_leading_zero_and_short_ids_are_rejected() {
     make_ir_with_req(tmp.path(), "REQ-001", "review");
     let path = tmp.path().join("docs/ir/a.md");
     let content = fs::read_to_string(&path).unwrap()
-        + "\n### REQ-0001: 名前\n\n### REQ-1: 名前\n\n## 具体例\n\n```gherkin\n@id=EX-0001 @about=REQ-001 @source=docs/decision/brainstorm/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
+        + "\n### REQ-0001: 名前\n\n### REQ-1: 名前\n\n## 具体例\n\n```gherkin\n@id=EX-0001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
     let doc = kotowari::ir::parse_document("a.md", &content);
     let ids = kotowari::collect_known_ids(&[doc]);
     assert!(ids.contains("REQ-001"), "{:?}", ids);

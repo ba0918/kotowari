@@ -271,11 +271,11 @@ fn req_005_config_error_detail_path_is_relative_to_base_not_to_cwd() {
     let tmp = TempDir::new().unwrap();
     fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
     fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
-    fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
     fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     )
     .unwrap();
     // 基準のディレクトリの直下に、知らないキーを持つ壊れた設定を置く
@@ -304,7 +304,7 @@ fn req_005_stderr_detail_path_is_relative() {
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
     std::fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     )
     .unwrap();
     // docs/ir を作らない → 読めないファイル
@@ -352,11 +352,11 @@ fn req_005_config_outside_the_base_is_shown_relative_with_parent_segments() {
     let base = tmp.path().join("proj");
     fs::create_dir_all(base.join(".kotowari")).unwrap();
     fs::create_dir_all(base.join("docs/ir")).unwrap();
-    fs::create_dir_all(base.join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(base.join("docs/decision/records")).unwrap();
     fs::create_dir_all(base.join("docs/decision/adr")).unwrap();
     fs::write(
         base.join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     )
     .unwrap();
     // 基準の1つ上に壊れた設定を置き、基準の下の sub/ から指す

@@ -15,11 +15,11 @@ fn valid_project_dir() -> &'static Path {
 fn make_project(tmp: &Path) {
     fs::create_dir_all(tmp.join(".kotowari")).unwrap();
     fs::create_dir_all(tmp.join("docs/ir")).unwrap();
-    fs::create_dir_all(tmp.join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.join("docs/decision/records")).unwrap();
     fs::create_dir_all(tmp.join("docs/decision/adr")).unwrap();
     fs::write(
         tmp.join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     )
     .unwrap();
 }
@@ -67,7 +67,7 @@ fn req_009_falls_back_to_cwd() {
     // CWD に docs/ir 等を直接作る
     let tmp = TempDir::new().unwrap();
     fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
-    fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
     fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
     // .kotowari/ なし → CWD が基準 → 既定の設定ファイルも無い → REQ-012 で既定値
     cmd()
@@ -115,7 +115,7 @@ fn prop_001_config_path_does_not_move_the_base() {
     fs::create_dir_all(&other_dir).unwrap();
     fs::write(
         other_dir.join("my-config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     )
     .unwrap();
     // --config で別の場所の設定を指しても、基準は .kotowari/ のある場所
@@ -163,7 +163,7 @@ fn req_012_missing_config_uses_defaults() {
     // .kotowari/ ディレクトリはあるが config.yaml はない
     fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
     fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
-    fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
     fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
     cmd()
         .arg("check")
@@ -179,7 +179,7 @@ fn req_012_missing_config_uses_defaults() {
 fn req_013_defaults_match_the_table() {
     let cfg = kotowari::config::Config::default();
     assert_eq!(cfg.ir, "docs/ir");
-    assert_eq!(cfg.decisions.records, "docs/decision/brainstorm");
+    assert_eq!(cfg.decisions.records, "docs/decision/records");
     assert_eq!(cfg.decisions.adr, "docs/decision/adr");
     assert_eq!(cfg.tests.files, vec!["src/**/*.rs", "tests/**/*.rs"]);
     assert!(cfg.tests.rust.attributes.is_empty());
@@ -195,7 +195,7 @@ fn req_013_defaults_match_the_table() {
 // @kotowari[REQ-013, REQ-014]
 #[test]
 fn req_013_explicit_limits_values_are_used_as_given() {
-    let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\nlimits:\n  lines: 5\n  requirements: 7\n";
+    let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\nlimits:\n  lines: 5\n  requirements: 7\n";
     let cfg = kotowari::config::Config::parse(yaml).expect("explicit limits should parse");
     assert_eq!(cfg.limits.lines.get(), 5, "lines should be the given value, not the default or a hardcoded one");
     assert_eq!(cfg.limits.requirements.get(), 7, "requirements should be the given value, not the default or a hardcoded one");
@@ -210,7 +210,7 @@ fn req_014_unknown_key_stops() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\nlimit: 50\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\nlimit: 50\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     )
     .unwrap();
     cmd()
@@ -228,7 +228,7 @@ fn req_014_wrong_type_stops() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: 42\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: 42\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     )
     .unwrap();
     cmd()
@@ -246,7 +246,7 @@ fn req_014_negative_limit_stops() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\nlimits:\n  lines: -5\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\nlimits:\n  lines: -5\n",
     )
     .unwrap();
     cmd()
@@ -264,7 +264,7 @@ fn req_014_zero_limit_stops() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\nlimits:\n  lines: 0\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\nlimits:\n  lines: 0\n",
     )
     .unwrap();
     cmd()
@@ -282,7 +282,7 @@ fn req_014_empty_vague_word_stops() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\nvague_words:\n  - \"\"\n  - 適切に\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\nvague_words:\n  - \"\"\n  - 適切に\n",
     )
     .unwrap();
     cmd()
@@ -331,7 +331,7 @@ fn req_018_unreadable_records_dir_stops() {
     }
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    let records_dir = tmp.path().join("docs/decision/brainstorm");
+    let records_dir = tmp.path().join("docs/decision/records");
     fs::set_permissions(&records_dir, std::fs::Permissions::from_mode(0o000)).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     fs::set_permissions(&records_dir, std::fs::Permissions::from_mode(0o755)).unwrap();
@@ -373,7 +373,7 @@ fn req_018_unreadable_adr_dir_stops() {
 // @kotowari[REQ-015]
 #[test]
 fn req_015_list_replaces_default() {
-    let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"my/**/*.rs\"\n";
+    let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"my/**/*.rs\"\n";
     let cfg = kotowari::config::Config::parse(yaml).unwrap();
     assert_eq!(cfg.tests.files, vec!["my/**/*.rs"]);
 }
@@ -383,7 +383,7 @@ fn req_015_list_replaces_default() {
 // @kotowari[REQ-016]
 #[test]
 fn req_016_empty_list_means_none() {
-    let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\nvague_words: []\n";
+    let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\nvague_words: []\n";
     let cfg = kotowari::config::Config::parse(yaml).unwrap();
     assert!(cfg.vague_words.is_empty());
 }
@@ -406,12 +406,12 @@ fn req_017_nested_keys() {
 fn req_018_missing_ir_dir_stops() {
     let tmp = TempDir::new().unwrap();
     fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
-    fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
     fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
     // docs/ir を作らない
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     )
     .unwrap();
     cmd()
@@ -452,10 +452,10 @@ fn req_018_missing_records_dir_stops() {
     fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
     fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
     fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
-    // docs/decision/brainstorm を作らない
+    // docs/decision/records を作らない
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     )
     .unwrap();
     cmd()
@@ -472,11 +472,11 @@ fn req_018_missing_adr_dir_stops() {
     let tmp = TempDir::new().unwrap();
     fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
     fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
-    fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
     // docs/decision/adr を作らない
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     )
     .unwrap();
     cmd()
@@ -494,7 +494,7 @@ fn req_018_missing_adr_dir_stops() {
 fn req_019_glob_is_recursive_and_skips_hidden_dirs() {
     // この機能はテストの発見（Step 4）で完全に検査するので、
     // ここでは設定の glob が受理されることだけ確かめる
-    let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"src/**/*.rs\"\n";
+    let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"src/**/*.rs\"\n";
     let cfg = kotowari::config::Config::parse(yaml).unwrap();
     assert_eq!(cfg.tests.files, vec!["src/**/*.rs"]);
 }
@@ -663,11 +663,11 @@ fn req_110_dot_alone_normalizes_to_empty_place() {
 fn req_110_ir_dot_produces_bare_filename_path() {
     let tmp = TempDir::new().unwrap();
     fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
-    fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
     fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: .\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: .\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     )
     .unwrap();
     fs::write(tmp.path().join("a.md"), "No title\n").unwrap();
@@ -712,11 +712,11 @@ fn tbl_003_kotowari_file_is_ignored_in_search() {
     // 親に .kotowari/ ディレクトリを作る
     fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
     fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
-    fs::create_dir_all(tmp.path().join("docs/decision/brainstorm")).unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
     fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/brainstorm\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
     ).unwrap();
     // child から走らせると、child/.kotowari はファイルなので無視して
     // 親の .kotowari/ を見つけるべき
@@ -929,7 +929,7 @@ fn req_102_check_writes_nothing_under_home_tmpdir_or_base() {
 /// TBL-004 の9個のキーをすべて書いた設定
 const ALL_NINE_KEYS: &str = "ir: docs/ir
 decisions:
-  records: docs/decision/brainstorm
+  records: docs/decision/records
   adr: docs/decision/adr
 tests:
   files:
