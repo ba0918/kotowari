@@ -720,6 +720,46 @@ fn count_findings(findings: &[Finding]) -> BTreeMap<String, usize> {
     counts
 }
 
+/// `設定ファイル`を読む（REQ-003, REQ-011, REQ-012。TBL-020: 詳細のパスは基準からの相対）
+fn load_config(
+    cwd: &Path,
+    base: &Path,
+    config_path: Option<&Path>,
+) -> Result<config::Config, StopReason> {
+    let (path, display) = match config_path {
+        // --config は CWD からの相対パス（REQ-003）
+        Some(cp) => {
+            let abs = cwd.join(cp);
+            if !abs.exists() {
+                return Err(StopReason::ArgumentError(format!(
+                    "config file not found: {}",
+                    cp.display()
+                )));
+            }
+            // TBL-020/A164: 詳細のパスは基準のディレクトリからの相対
+            // （外にあれば "../" を含む。ファイルシステムには触れない）
+            let display =
+                relative_display(&lexically_normalize(base), &lexically_normalize(&abs));
+            (abs, display)
+        }
+        // 既定: base/.kotowari/config.yaml
+        None => {
+            let default_path = base.join(".kotowari/config.yaml");
+            if !default_path.exists() {
+                // REQ-012: 設定ファイルが無いときは既定の値
+                return Ok(config::Config::default());
+            }
+            (default_path, ".kotowari/config.yaml".to_string())
+        }
+    };
+
+    let text = read_utf8_file(&path, &display)?;
+    config::Config::parse(&text).map_err(|e| match e {
+        StopReason::ConfigError(msg) => StopReason::ConfigError(format!("{display}: {msg}")),
+        other => other,
+    })
+}
+
 /// 検査のエントリポイント
 pub fn run_check(
     cwd: &Path,
@@ -727,39 +767,7 @@ pub fn run_check(
     config_path: Option<&Path>,
 ) -> Result<(CheckResult, Format), StopReason> {
     let base = find_base(cwd);
-
-    // 設定ファイルを読む（TBL-020: 詳細のパスは基準からの相対）
-    let cfg = if let Some(cp) = config_path {
-        // --config は CWD からの相対パス（REQ-003）
-        let abs = cwd.join(cp);
-        if !abs.exists() {
-            return Err(StopReason::ArgumentError(format!(
-                "config file not found: {}",
-                cp.display()
-            )));
-        }
-        // TBL-020/A164: 詳細のパスは基準のディレクトリからの相対（外にあれば "../" を含む。ファイルシステムには触れない）
-        let display = relative_display(&lexically_normalize(&base), &lexically_normalize(&abs));
-        let text = read_utf8_file(&abs, &display)?;
-        config::Config::parse(&text).map_err(|e| match e {
-            StopReason::ConfigError(msg) => StopReason::ConfigError(format!("{display}: {msg}")),
-            other => other,
-        })?
-    } else {
-        // 既定: base/.kotowari/config.yaml
-        let default_path = base.join(".kotowari/config.yaml");
-        if default_path.exists() {
-            let display = ".kotowari/config.yaml";
-            let text = read_utf8_file(&default_path, display)?;
-            config::Config::parse(&text).map_err(|e| match e {
-                StopReason::ConfigError(msg) => StopReason::ConfigError(format!("{display}: {msg}")),
-                other => other,
-            })?
-        } else {
-            // REQ-012: 設定ファイルが無いときは既定の値
-            config::Config::default()
-        }
-    };
+    let cfg = load_config(cwd, &base, config_path)?;
 
     // 設定のパスは基準のディレクトリからの相対（REQ-010）
     let ir_dir = base.join(&cfg.ir);

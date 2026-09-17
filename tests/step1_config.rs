@@ -1020,3 +1020,33 @@ fn req_121_only_the_nine_config_keys_are_accepted() {
         );
     }
 }
+
+// --- TBL-004: 等価の一覧を指す鍵 ---
+
+// @kotowari[TBL-004, REQ-013]
+#[test]
+fn tbl_004_mutants_equivalents_is_read_and_has_no_default() {
+    let cfg = kotowari::config::Config::parse("mutants:\n  equivalents: ./docs/equivalents.yaml\n")
+        .expect("the key should be read");
+    // REQ-110: 設定の値のパスは正規化する
+    assert_eq!(
+        cfg.mutants.equivalents.as_deref(),
+        Some("docs/equivalents.yaml")
+    );
+    // 既定は無い（鍵が無ければ等価の一覧は0件）
+    assert_eq!(kotowari::config::Config::default().mutants.equivalents, None);
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_absolute_mutants_equivalents_stops() {
+    let result = kotowari::config::Config::parse("mutants:\n  equivalents: /abs/equivalents.yaml\n");
+    assert!(result.is_err(), "an absolute path should stop");
+}
+
+// @kotowari[REQ-014]
+#[test]
+fn req_014_mutants_equivalents_that_is_not_a_string_stops() {
+    let result = kotowari::config::Config::parse("mutants:\n  equivalents:\n    - a\n");
+    assert!(result.is_err(), "a value that is not a string should stop");
+}

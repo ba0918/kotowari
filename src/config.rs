@@ -7,8 +7,16 @@ pub struct Config {
     pub ir: String,
     pub decisions: DecisionsConfig,
     pub tests: TestsConfig,
+    pub mutants: MutantsConfig,
     pub limits: LimitsConfig,
     pub vague_words: Vec<String>,
+}
+
+/// 変異テストに関わる設定（TBL-004）
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MutantsConfig {
+    /// `等価の一覧`のファイルのパス。既定は無く、無ければ一覧は0件（REQ-148）
+    pub equivalents: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -50,6 +58,7 @@ impl Default for Config {
                     macros: vec![],
                 },
             },
+            mutants: MutantsConfig { equivalents: None },
             limits: LimitsConfig {
                 lines: NonZeroU64::new(200).unwrap(),
                 requirements: NonZeroU64::new(10).unwrap(),
@@ -75,6 +84,8 @@ struct RawConfig {
     decisions: Option<Option<RawDecisions>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     tests: Option<Option<RawTests>>,
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    mutants: Option<Option<RawMutants>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     limits: Option<Option<RawLimits>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
@@ -106,6 +117,13 @@ struct RawRustTests {
     attributes: Option<Option<Vec<String>>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     macros: Option<Option<Vec<String>>>,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawMutants {
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    equivalents: Option<Option<String>>,
 }
 
 #[derive(serde::Deserialize)]
@@ -238,6 +256,22 @@ impl Config {
             None => defaults.tests,
         };
 
+        // REQ-014: "mutants:" 自体と "mutants.equivalents" が null のときも停止する
+        let mutants = match unwrap_or_null_option(raw.mutants, "mutants")? {
+            Some(m) => {
+                let equivalents = match unwrap_or_null_option(m.equivalents, "mutants.equivalents")?
+                {
+                    Some(path) => {
+                        check_not_absolute(&path, "mutants.equivalents")?;
+                        Some(crate::normalize_path(&path))
+                    }
+                    None => None,
+                };
+                MutantsConfig { equivalents }
+            }
+            None => defaults.mutants,
+        };
+
         // REQ-014: "limits:" 自体が null のときも停止する
         let limits = match unwrap_or_null_option(raw.limits, "limits")? {
             Some(l) => {
@@ -271,6 +305,7 @@ impl Config {
             ir,
             decisions,
             tests,
+            mutants,
             limits,
             // REQ-015: 一覧は既定を置き換える
             vague_words,
