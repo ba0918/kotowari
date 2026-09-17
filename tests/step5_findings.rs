@@ -110,11 +110,37 @@ fn req_030_notice_kinds_have_the_detail_of_the_table() {
     assert!(line_count > 200);
 }
 
-// --- REQ-031: 警告は2種類だけ ---
+// --- REQ-031: 注意は4種類だけ ---
 
 // @kotowari[REQ-031]
 #[test]
-fn req_031_only_two_kinds_are_notices() {
+fn req_031_only_four_kinds_are_notices() {
+    // 本体が注意にする種類（"kotowari mutants" の2種類は check の出力には現れない）
+    let notices: std::collections::BTreeSet<&str> = kotowari::FindingKind::ALL
+        .iter()
+        .filter(|kind| kind.severity() == "notice")
+        .map(|kind| kind.as_str())
+        .collect();
+    assert_eq!(
+        notices,
+        std::collections::BTreeSet::from([
+            "equivalent_stale",
+            "mutant_timeout",
+            "too_many_lines",
+            "too_many_requirements",
+        ])
+    );
+    // ほかの種類はすべて誤り
+    for kind in kotowari::FindingKind::ALL {
+        if !notices.contains(kind.as_str()) {
+            assert_eq!(kind.severity(), "error", "{kind} should be an error");
+        }
+    }
+}
+
+// @kotowari[REQ-031]
+#[test]
+fn req_031_check_reports_no_notice_outside_the_four_kinds() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 行数超過（>200行）と要求数超過（>10件）を出す
@@ -137,11 +163,14 @@ fn req_031_only_two_kinds_are_notices() {
         !notices.is_empty(),
         "test should produce at least one notice"
     );
-    // 警告は2種類だけ
+    // 注意は4種類のどれかだけ
     for w in &notices {
         let kind = w["kind"].as_str().unwrap();
         assert!(
-            kind == "too_many_lines" || kind == "too_many_requirements",
+            matches!(
+                kind,
+                "too_many_lines" | "too_many_requirements" | "mutant_timeout" | "equivalent_stale"
+            ),
             "unexpected notice kind: {kind}"
         );
     }

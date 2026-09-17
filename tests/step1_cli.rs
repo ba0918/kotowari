@@ -445,9 +445,9 @@ fn req_002_mutants_options_can_come_before_the_command_and_after_the_path() {
         .output()
         .unwrap();
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert_ne!(
+    assert_eq!(
         output.status.code(),
-        Some(2),
+        Some(0),
         "the options may sit before the command and after the path: {stderr}"
     );
 }

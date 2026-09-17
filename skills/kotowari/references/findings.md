@@ -46,6 +46,10 @@ kotowari の仕様に基づく（改訂 2026-09-17。本体の版は固定しな
 | duplicate_term | 同じ用語集の中か、連鎖の根に近い用語集との重複（根から遠い側の行に出る） | 根から遠い側の行を消すか、別の語に言い換える | brainstorm |
 | too_many_lines | 文書の行数が上限を超えた（注意。終了コードは変えない） | 分割の指示ではない。責務の混在を疑って読み直し、範囲の行の外の要求が混じっていれば範囲で説明できる単位に分け、混じっていなければ理由を判断の記録に書いて残す。行数を理由に切らない。用語集はディレクトリごとのまとまりに分けられるならその `CONTEXT.md` に分け、分けられないなら設定の limits.lines を上げてその判断を記録に書く | brainstorm |
 | too_many_requirements | 話題ごとの文書の要求の数が上限を超えた（注意。終了コードは変えない） | too_many_lines と同じ。件数を理由に切らない | brainstorm |
+| mutant_survived | `kotowari mutants` で、変異を入れてもテストが全部通った（見逃し。detail は変更の説明） | mutants.md の3分類で調べる | implementer |
+| mutant_timeout | `kotowari mutants` で、変異を入れるとテストが時間内に終わらなかった（注意。終了コードは変えない。detail は変更の説明） | 無限ループになる変異で出る。テストが捕まえたとは言い切れないが、壊れていることは観測できている | implementer |
+| equivalent_stale | 等価の一覧の1件の `text` の文面が、その `file` のどこにも無い（注意。終了コードは変えない。detail は一覧に書かれたままの `file` と `change`） | その1件の判断をし直す。今のコードで変異がまだ出るなら `text` を今の行の文面に直し、出ないなら1件を消す | implementer |
+| equivalent_invalid | 等価の一覧の1件の形が正しくない（detail は一覧に書かれたままの `file` と `change`） | mutants.md の一覧の形に直す。この1件は何も外していない | implementer |
 
 除外の追加や規則の緩めは仕様の変更になるため、スキルの中で決めず brainstorm に戻す。
 

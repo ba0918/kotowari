@@ -28,11 +28,29 @@ fn outcomes(entries: &[String]) -> String {
 /// 成功した基準の実行の1件
 const BASELINE_SUCCESS: &str = r#"{"scenario":"Baseline","summary":"Success"}"#;
 
+/// 一時ディレクトリにファイルを書く（親のディレクトリも作る）
+fn write(dir: &Path, name: &str, body: &str) {
+    let path = dir.join(name);
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+    std::fs::write(path, body).unwrap();
+}
+
 /// 結果のファイルを "outcomes.json" に置いた一時ディレクトリ
 fn project(results: &str) -> TempDir {
     let tmp = TempDir::new().unwrap();
-    std::fs::write(tmp.path().join("outcomes.json"), results).unwrap();
+    write(tmp.path(), "outcomes.json", results);
     tmp
+}
+
+/// 標準出力の JSON
+fn json_of(output: &std::process::Output) -> serde_json::Value {
+    serde_json::from_slice(&output.stdout).unwrap_or_else(|e| {
+        panic!(
+            "stdout should be one JSON: {e}\nstdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        )
+    })
 }
 
 /// その置き場で "kotowari mutants" を走らせる
@@ -151,4 +169,161 @@ fn req_144_results_without_baseline_and_with_unknown_keys_are_read() {
         "stderr: {}",
         first_stderr_line(&output)
     );
+}
+
+// --- REQ-139、REQ-140: 見逃しと時間切れの指摘 ---
+
+// @kotowari[REQ-138, REQ-139, TBL-024, EX-204]
+#[test]
+fn req_139_survived_mutant_is_an_error() {
+    // 等価の一覧の鍵は設定に無い
+    let tmp = project(&outcomes(&[
+        BASELINE_SUCCESS.to_string(),
+        mutant_at("src/a.rs", 3, "replace f with ()", "MissedMutant"),
+    ]));
+    let output = run_in(tmp.path(), &[]);
+    let v = json_of(&output);
+    let findings = v["findings"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0]["kind"], "mutant_survived");
+    assert_eq!(findings[0]["severity"], "error");
+    assert_eq!(findings[0]["path"], "src/a.rs");
+    assert_eq!(findings[0]["line"], 3);
+    assert_eq!(findings[0]["detail"], "replace f with ()");
+    assert_eq!(output.status.code(), Some(1));
+}
+
+// @kotowari[REQ-139, REQ-145, EX-205]
+#[test]
+fn req_139_caught_and_unviable_mutants_yield_nothing() {
+    let tmp = project(&outcomes(&[
+        mutant_at("src/a.rs", 3, "replace f with ()", "CaughtMutant"),
+        mutant_at("src/a.rs", 4, "replace g with ()", "Unviable"),
+    ]));
+    let output = run_in(tmp.path(), &[]);
+    let v = json_of(&output);
+    assert!(
+        v["findings"].as_array().unwrap().is_empty(),
+        "{:?}",
+        v["findings"]
+    );
+    assert_eq!(v["mutants"]["caught"], 1);
+    assert_eq!(v["mutants"]["unviable"], 1);
+    assert_eq!(output.status.code(), Some(0));
+}
+
+// @kotowari[REQ-140, EX-206]
+#[test]
+fn req_140_timeout_is_a_notice_even_when_listed() {
+    let tmp = project(&outcomes(&[mutant_at(
+        "src/a.rs",
+        3,
+        "replace f with ()",
+        "Timeout",
+    )]));
+    let output = run_in(tmp.path(), &[]);
+    let v = json_of(&output);
+    let findings = v["findings"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0]["kind"], "mutant_timeout");
+    assert_eq!(findings[0]["severity"], "notice");
+    assert_eq!(findings[0]["path"], "src/a.rs");
+    assert_eq!(findings[0]["line"], 3);
+    assert_eq!(output.status.code(), Some(0));
+}
+
+// @kotowari[REQ-139, PROP-005, EX-229]
+#[test]
+fn req_139_duplicate_mutants_yield_one_finding_each() {
+    let one = mutant_at("src/a.rs", 3, "replace f with ()", "MissedMutant");
+    let tmp = project(&outcomes(&[one.clone(), one]));
+    let output = run_in(tmp.path(), &[]);
+    let v = json_of(&output);
+    assert_eq!(v["findings"].as_array().unwrap().len(), 2);
+    assert_eq!(v["counts"]["mutant_survived"], 2);
+    assert_eq!(v["mutants"]["survived"], 2);
+}
+
+// --- REQ-145、REQ-146: 集計 ---
+
+// @kotowari[REQ-145, REQ-146, PROP-005, EX-209]
+#[test]
+fn req_145_no_mutants_exits_zero_with_all_zero_counts() {
+    let tmp = project(&outcomes(&[BASELINE_SUCCESS.to_string()]));
+    let output = run_in(tmp.path(), &["--format", "text"]);
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        "mutants: caught=0 survived=0 timeout=0 unviable=0 equivalent=0\n"
+    );
+    assert_eq!(output.status.code(), Some(0));
+}
+
+// @kotowari[REQ-146, EX-230]
+#[test]
+fn req_146_summary_is_the_last_line_after_findings() {
+    let tmp = project(&outcomes(&[mutant_at(
+        "src/a.rs",
+        3,
+        "replace f with ()",
+        "MissedMutant",
+    )]));
+    let output = run_in(tmp.path(), &["--format", "text"]);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert_eq!(
+        lines.first().copied(),
+        Some("src/a.rs:3 [error] mutant_survived replace f with ()")
+    );
+    assert_eq!(
+        lines.last().copied(),
+        Some("mutants: caught=0 survived=1 timeout=0 unviable=0 equivalent=0")
+    );
+}
+
+// --- REQ-147: 読む範囲 ---
+
+// @kotowari[REQ-147, EX-210]
+#[test]
+fn req_147_missing_ir_directory_does_not_stop_mutants() {
+    let tmp = project(&outcomes(&[mutant_at(
+        "src/a.rs",
+        3,
+        "replace f with ()",
+        "CaughtMutant",
+    )]));
+    // 設定の "ir" の指す先が無い
+    write(
+        tmp.path(),
+        ".kotowari/config.yaml",
+        "ir: docs/no-such-place\n",
+    );
+    let output = run_in(tmp.path(), &[]);
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "stderr: {}",
+        first_stderr_line(&output)
+    );
+}
+
+// @kotowari[REQ-147, TBL-025, EX-231]
+#[test]
+fn req_147_unmarked_test_is_not_reported_and_json_has_three_keys() {
+    let tmp = project(&outcomes(&[mutant_at(
+        "src/a.rs",
+        3,
+        "replace f with ()",
+        "CaughtMutant",
+    )]));
+    // 印の無いテストの関数
+    write(tmp.path(), "tests/x.rs", "#[test]\nfn t() {}\n");
+    let output = run_in(tmp.path(), &[]);
+    let v = json_of(&output);
+    assert!(
+        v["findings"].as_array().unwrap().is_empty(),
+        "{:?}",
+        v["findings"]
+    );
+    let keys: Vec<&str> = v.as_object().unwrap().keys().map(|k| k.as_str()).collect();
+    assert_eq!(keys, ["counts", "findings", "mutants"]);
 }

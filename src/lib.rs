@@ -58,6 +58,8 @@ finding_kinds! {
     DuplicateField => "duplicate_field",
     DuplicateId => "duplicate_id",
     DuplicateTerm => "duplicate_term",
+    EquivalentInvalid => "equivalent_invalid",
+    EquivalentStale => "equivalent_stale",
     InvalidGlossaryRow => "invalid_glossary_row",
     InvalidMarker => "invalid_marker",
     MissingDocument => "missing_document",
@@ -69,6 +71,8 @@ finding_kinds! {
     MissingTag => "missing_tag",
     MissingTitle => "missing_title",
     MultipleTitles => "multiple_titles",
+    MutantSurvived => "mutant_survived",
+    MutantTimeout => "mutant_timeout",
     RecordFieldMissing => "record_field_missing",
     RecordFieldUnknown => "record_field_unknown",
     RequirementWithoutTest => "requirement_without_test",
@@ -99,7 +103,10 @@ impl FindingKind {
     /// 重大度を返す（1か所で管理する）
     pub fn severity(&self) -> &'static str {
         match self {
-            FindingKind::TooManyLines | FindingKind::TooManyRequirements => "notice",
+            FindingKind::TooManyLines
+            | FindingKind::TooManyRequirements
+            | FindingKind::MutantTimeout
+            | FindingKind::EquivalentStale => "notice",
             _ => "error",
         }
     }
@@ -585,17 +592,20 @@ pub fn run(args: &[String]) -> u8 {
             }
         }
         Cli::Mutants {
+            format,
             config_path,
             tool,
             results,
-            ..
         } => {
             let cwd = match current_dir() {
                 Ok(cwd) => cwd,
                 Err(reason) => return stop(&reason),
             };
             match run_mutants(&cwd, config_path.as_deref(), tool, &results) {
-                Ok(()) => 0,
+                Ok(result) => {
+                    print_mutants(&result, format);
+                    exit_code_for(&result.findings)
+                }
                 Err(reason) => stop(&reason),
             }
         }
@@ -616,6 +626,18 @@ fn print_check(result: &CheckResult, format: Format) {
     match format {
         Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
         Format::Text => print_findings_as_text(&result.findings),
+    }
+}
+
+/// "kotowari mutants" の結果を出す（TBL-025, REQ-146）
+fn print_mutants(result: &mutants::MutantsResult, format: Format) {
+    match format {
+        Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
+        Format::Text => {
+            print_findings_as_text(&result.findings);
+            // REQ-146: 指摘の行の後の最後の1行。指摘が0件でも出す
+            println!("{}", result.mutants.summary_line());
+        }
     }
 }
 
@@ -648,7 +670,7 @@ pub fn run_mutants(
     _config_path: Option<&Path>,
     tool: Tool,
     results: &Path,
-) -> Result<(), StopReason> {
+) -> Result<mutants::MutantsResult, StopReason> {
     let base = find_base(cwd);
     // 結果のファイルのパスはカレントディレクトリからの相対（REQ-149）、
     // 停止の詳細は基準のディレクトリからの相対（TBL-020）
@@ -656,12 +678,46 @@ pub fn run_mutants(
     let text = read_utf8_file(&cwd.join(results), &display)?;
 
     // 道具の結果を変異の結果に写すのはここだけ（REQ-138、A12）
-    let _outcomes = match tool {
+    let outcomes = match tool {
         Tool::CargoMutants => cargo_mutants::read_outcomes(&text),
     }
     .map_err(|e| StopReason::ResultsError(format!("{display}: {e}")))?;
 
-    Ok(())
+    let (mut findings, counts) = mutants::check_outcomes(&outcomes);
+    sort_findings(&mut findings);
+    let kinds = count_findings(&findings);
+
+    Ok(mutants::MutantsResult {
+        findings,
+        counts: kinds,
+        mutants: counts,
+    })
+}
+
+/// REQ-024: 指摘を TBL-007 の順（path → line → kind → detail）に並べる
+fn sort_findings(findings: &mut [Finding]) {
+    findings.sort_by(|a, b| {
+        a.path
+            .cmp(&b.path)
+            .then_with(|| match (a.line, b.line) {
+                // TBL-007: line は null が先、その後は小さい順
+                (None, None) => std::cmp::Ordering::Equal,
+                (None, Some(_)) => std::cmp::Ordering::Less,
+                (Some(_), None) => std::cmp::Ordering::Greater,
+                (Some(al), Some(bl)) => al.cmp(&bl),
+            })
+            .then_with(|| a.kind.as_str().cmp(b.kind.as_str()))
+            .then_with(|| a.detail.cmp(&b.detail))
+    });
+}
+
+/// PROP-002: 種類ごとの指摘の数。1件も無い種類は持たない
+fn count_findings(findings: &[Finding]) -> BTreeMap<String, usize> {
+    let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+    for f in findings {
+        *counts.entry(f.kind.as_str().to_string()).or_insert(0) += 1;
+    }
+    counts
 }
 
 /// 検査のエントリポイント
@@ -762,25 +818,8 @@ pub fn run_check(
     let files = docs.len();
     let lines: usize = docs.iter().map(|d| d.line_count).sum();
 
-    // REQ-024: 指摘を並べる（TBL-007: path → line → kind → detail）
-    findings.sort_by(|a, b| {
-        a.path
-            .cmp(&b.path)
-            .then_with(|| match (a.line, b.line) {
-                (None, None) => std::cmp::Ordering::Equal,
-                (None, Some(_)) => std::cmp::Ordering::Less,
-                (Some(_), None) => std::cmp::Ordering::Greater,
-                (Some(al), Some(bl)) => al.cmp(&bl),
-            })
-            .then_with(|| a.kind.as_str().cmp(b.kind.as_str()))
-            .then_with(|| a.detail.cmp(&b.detail))
-    });
-
-    // counts を作る（PROP-002: 0件は含まない）
-    let mut counts: BTreeMap<String, usize> = BTreeMap::new();
-    for f in &findings {
-        *counts.entry(f.kind.as_str().to_string()).or_insert(0) += 1;
-    }
+    sort_findings(&mut findings);
+    let counts = count_findings(&findings);
 
     let result = CheckResult {
         files,
