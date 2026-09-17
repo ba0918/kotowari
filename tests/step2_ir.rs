@@ -3009,3 +3009,118 @@ fn req_056_contradiction_flag_with_one_reading_gets_no_finding() {
         "the requirement heading should still be checked: {v}"
     );
 }
+
+// --- ir-document.md の具体例 ---
+
+// @kotowari[REQ-037, EX-007]
+#[test]
+fn req_037_two_lines_separated_by_crlf_count_as_two() {
+    let doc = ir::parse_document("a.md", "a\r\nb");
+    assert_eq!(doc.line_count, 2, "CRLF is one line break, not two");
+}
+
+// @kotowari[REQ-036, EX-006]
+#[test]
+fn req_036_glossary_with_only_a_title_and_a_table_has_no_missing_scope() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    std::fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n",
+    )
+    .unwrap();
+    let v = run_cli(tmp.path());
+    assert!(
+        find_kind_in_json(&v, "missing_scope").is_empty(),
+        "a glossary needs no scope line: {v}"
+    );
+}
+
+// @kotowari[REQ-033, EX-021]
+#[test]
+fn req_033_context_and_flags_under_a_subdirectory_have_no_missing_scope() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    std::fs::create_dir_all(tmp.path().join("docs/ir/network")).unwrap();
+    std::fs::write(
+        tmp.path().join("docs/ir/network/CONTEXT.md"),
+        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n",
+    )
+    .unwrap();
+    std::fs::write(tmp.path().join("docs/ir/network/FLAGS.md"), "# 問題の記録\n").unwrap();
+    let v = run_cli(tmp.path());
+    assert!(
+        find_kind_in_json(&v, "missing_scope").is_empty(),
+        "CONTEXT.md and FLAGS.md under a subdirectory are a glossary and a flags document: {v}"
+    );
+}
+
+// @kotowari[REQ-033, EX-020]
+#[test]
+fn req_033_a_document_deep_in_the_tree_is_read_and_an_empty_directory_is_silent() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    std::fs::create_dir_all(tmp.path().join("docs/ir/network/dns")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/ir/network/empty")).unwrap();
+    std::fs::write(
+        tmp.path().join("docs/ir/network/dns/timeout.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n",
+    )
+    .unwrap();
+    let v = run_cli(tmp.path());
+    let missing = find_kind_in_json(&v, "requirement_without_test");
+    assert_eq!(missing.len(), 1, "the deep document is read: {v}");
+    assert_eq!(missing[0]["path"], "docs/ir/network/dns/timeout.md");
+    assert!(
+        v["findings"].as_array().unwrap().iter().all(|f| {
+            !f["path"].as_str().unwrap().starts_with("docs/ir/network/empty")
+        }),
+        "an empty directory gets no finding: {v}"
+    );
+}
+
+// @kotowari[REQ-033, EX-030]
+#[test]
+#[cfg(unix)]
+fn req_033_hidden_directory_and_directory_symlink_deep_in_the_tree_are_not_read() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    std::fs::create_dir_all(tmp.path().join("docs/ir/network/.draft")).unwrap();
+    // 読まれれば題名も範囲も無い文書として指摘が出る中身
+    std::fs::write(tmp.path().join("docs/ir/network/.draft/a.md"), "bad").unwrap();
+    std::os::unix::fs::symlink(
+        tmp.path().join("docs/ir"),
+        tmp.path().join("docs/ir/network/link"),
+    )
+    .unwrap();
+    let output = assert_cmd::Command::cargo_bin("kotowari")
+        .unwrap()
+        .arg("check")
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "neither a finding nor a stop: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let v: serde_json::Value = serde_json::from_slice(&output.stdout).expect("valid JSON");
+    assert_eq!(v["files"], 0, "no document under either place is read: {v}");
+    assert!(v["findings"].as_array().unwrap().is_empty(), "{v}");
+}
+
+/// JSON の findings から種類で絞る
+fn find_kind_in_json(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value> {
+    v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["kind"] == kind)
+        .cloned()
+        .collect()
+}
