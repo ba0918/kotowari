@@ -1569,7 +1569,7 @@ fn req_124_four_digit_id_is_valid_in_heading_tag_and_marker() {
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/a.rs"),
-        "// @kotowari[REQ-1000]\n#[test]\nfn example() {}\n",
+        "// @kotowari[REQ-1000, EX-1000]\n#[test]\nfn example() {}\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let result = parse_json(&output);
@@ -1615,4 +1615,358 @@ fn req_033_requirement_without_test_path_carries_the_subdirectory() {
     assert_eq!(missing.len(), 1, "{:?}", missing);
     assert_eq!(missing[0]["path"], "docs/ir/network/dns/timeout.md");
     assert_eq!(missing[0]["detail"], "REQ-001");
+}
+
+// --- REQ-137: テストのない具体例 ---
+
+/// 要求と具体例を1つずつ持つ IR の文書を書く。
+/// タグの行は 18 行目、"Scenario:" の行は 19 行目になる。
+fn make_ir_with_scenario(
+    tmp: &std::path::Path,
+    name: &str,
+    req_id: &str,
+    verification_line: &str,
+    tags: &str,
+) {
+    fs::write(
+        tmp.join("docs/ir").join(name),
+        format!(
+            "# Title\n\nScope.\n\n## 要求\n\n### {req_id}: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n{verification_line}\nStatement.\n\n## 具体例\n\n```gherkin\n{tags}\nScenario: S\n  Given a\n  When b\n  Then c\n```\n"
+        ),
+    )
+    .unwrap();
+}
+
+fn write_test_file(tmp: &std::path::Path, name: &str, content: &str) {
+    fs::create_dir_all(tmp.join("tests")).unwrap();
+    fs::write(tmp.join("tests").join(name), content).unwrap();
+}
+
+// @kotowari[REQ-137, EX-121]
+#[test]
+fn req_137_scenario_without_marker_is_an_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_scenario(
+        tmp.path(),
+        "a.md",
+        "REQ-001",
+        "- 検証: unit\n",
+        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
+    );
+    write_test_file(
+        tmp.path(),
+        "test_a.rs",
+        "// @kotowari[REQ-001]\n#[test]\nfn req_001_covered() {}\n",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let swt = findings_by_kind(&result, "scenario_without_test");
+    assert_eq!(swt.len(), 1, "the scenario has no marker of its own: {:?}", result);
+    assert_eq!(swt[0]["detail"], "EX-201");
+    assert_eq!(swt[0]["line"], 18, "the line is the tag line (TBL-019)");
+    assert_eq!(swt[0]["path"], "docs/ir/a.md");
+    assert_eq!(swt[0]["severity"], "error");
+}
+
+// @kotowari[REQ-137, EX-123]
+#[test]
+fn req_137_review_only_scenario_is_not_required() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_scenario(
+        tmp.path(),
+        "a.md",
+        "REQ-002",
+        "- 検証: review\n",
+        "@id=EX-202 @about=REQ-002 @source=docs/decision/records/records.md#A1",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let swt = findings_by_kind(&result, "scenario_without_test");
+    assert!(swt.is_empty(), "a scenario about a review requirement needs no test: {:?}", result);
+}
+
+// @kotowari[REQ-137, EX-125]
+#[test]
+fn req_137_scenario_about_a_table_only_is_not_required() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 決定表\n\n### TBL-001: Table\n\n- 出典: docs/decision/records/records.md#A1\n\n| 入力 | 出力 |\n|---|---|\n| a | b |\n\n## 具体例\n\n```gherkin\n@id=EX-203 @about=TBL-001 @source=docs/decision/records/records.md#A1\nScenario: S\n  Given a\n  When b\n  Then c\n```\n",
+    )
+    .unwrap();
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let swt = findings_by_kind(&result, "scenario_without_test");
+    assert!(swt.is_empty(), "a scenario that names no requirement needs no test: {:?}", result);
+}
+
+// @kotowari[REQ-137, REQ-048]
+#[test]
+fn req_137_requirement_without_verification_line_does_not_count() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_scenario(
+        tmp.path(),
+        "a.md",
+        "REQ-001",
+        "",
+        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let kinds: Vec<&str> = result["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|f| f["kind"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        kinds,
+        vec!["verification_missing"],
+        "a requirement without the 検証 line is not counted for its scenario: {:?}",
+        result
+    );
+}
+
+// @kotowari[REQ-137, REQ-049]
+#[test]
+fn req_137_requirement_with_invalid_verification_value_does_not_count() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_scenario(
+        tmp.path(),
+        "a.md",
+        "REQ-001",
+        "- 検証: e2e\n",
+        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
+    );
+    write_test_file(
+        tmp.path(),
+        "test_a.rs",
+        "// @kotowari[REQ-001]\n#[test]\nfn req_001_covered() {}\n",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let kinds: Vec<&str> = result["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|f| f["kind"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        kinds,
+        vec!["verification_invalid"],
+        "a requirement whose 検証 is none of the four values is not counted for its scenario: {:?}",
+        result
+    );
+}
+
+// @kotowari[REQ-137, REQ-032]
+#[test]
+fn req_137_duplicate_scenario_uses_the_first_about() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    // パスのバイト順で1つ目の a.md の "@about" は review の REQ-002、2つ目の b.md は unit の REQ-001
+    make_ir_with_scenario(
+        tmp.path(),
+        "a.md",
+        "REQ-002",
+        "- 検証: review\n",
+        "@id=EX-201 @about=REQ-002 @source=docs/decision/records/records.md#A1",
+    );
+    make_ir_with_scenario(
+        tmp.path(),
+        "b.md",
+        "REQ-001",
+        "- 検証: unit\n",
+        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let dup = findings_by_kind(&result, "duplicate_id");
+    assert_eq!(dup.len(), 1, "the second scenario is the duplicate: {:?}", result);
+    let swt = findings_by_kind(&result, "scenario_without_test");
+    assert!(
+        swt.is_empty(),
+        "the first scenario's @about decides, and it names a review requirement: {:?}",
+        result
+    );
+}
+
+// @kotowari[REQ-137, REQ-032]
+#[test]
+fn req_137_duplicate_scenario_reports_once_on_the_first() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_scenario(
+        tmp.path(),
+        "a.md",
+        "REQ-001",
+        "- 検証: unit\n",
+        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
+    );
+    make_ir_with_scenario(
+        tmp.path(),
+        "b.md",
+        "REQ-003",
+        "- 検証: unit\n",
+        "@id=EX-201 @about=REQ-003 @source=docs/decision/records/records.md#A1",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let swt = findings_by_kind(&result, "scenario_without_test");
+    assert_eq!(swt.len(), 1, "one finding for the duplicated scenario id: {:?}", result);
+    assert_eq!(swt[0]["path"], "docs/ir/a.md", "on the first scenario");
+    assert_eq!(swt[0]["line"], 18, "on the first scenario's tag line");
+    assert_eq!(swt[0]["detail"], "EX-201");
+}
+
+// @kotowari[REQ-137, REQ-053]
+#[test]
+fn req_137_scenario_without_id_is_not_reported() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_scenario(
+        tmp.path(),
+        "a.md",
+        "REQ-001",
+        "- 検証: unit\n",
+        "@about=REQ-001 @source=docs/decision/records/records.md#A1",
+    );
+    write_test_file(
+        tmp.path(),
+        "test_a.rs",
+        "// @kotowari[REQ-001]\n#[test]\nfn req_001_covered() {}\n",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let kinds: Vec<&str> = result["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|f| f["kind"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        kinds,
+        vec!["missing_tag"],
+        "a scenario without @id gets missing_tag only: {:?}",
+        result
+    );
+}
+
+// @kotowari[REQ-137, REQ-114]
+#[test]
+fn req_137_scenario_with_invalid_id_is_not_reported() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_scenario(
+        tmp.path(),
+        "a.md",
+        "REQ-001",
+        "- 検証: unit\n",
+        "@id=BADID @about=REQ-001 @source=docs/decision/records/records.md#A1",
+    );
+    write_test_file(
+        tmp.path(),
+        "test_a.rs",
+        "// @kotowari[REQ-001]\n#[test]\nfn req_001_covered() {}\n",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let kinds: Vec<&str> = result["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|f| f["kind"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        kinds,
+        vec!["invalid_id"],
+        "a scenario whose @id is malformed gets invalid_id only: {:?}",
+        result
+    );
+}
+
+// @kotowari[REQ-137, REQ-054]
+#[test]
+fn req_137_scenario_about_an_unknown_id_is_not_required() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_scenario(
+        tmp.path(),
+        "a.md",
+        "REQ-001",
+        "- 検証: unit\n",
+        "@id=EX-201 @about=REQ-999 @source=docs/decision/records/records.md#A1",
+    );
+    write_test_file(
+        tmp.path(),
+        "test_a.rs",
+        "// @kotowari[REQ-001]\n#[test]\nfn req_001_covered() {}\n",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let kinds: Vec<&str> = result["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|f| f["kind"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        kinds,
+        vec!["unresolved_reference"],
+        "a scenario whose @about resolves to nothing gets unresolved_reference only: {:?}",
+        result
+    );
+}
+
+// @kotowari[REQ-137, REQ-071]
+#[test]
+fn req_137_one_marker_may_name_several_scenarios() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n## 具体例\n\n```gherkin\n@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: One\n  Given a\n  When b\n  Then c\n\n@id=EX-202 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: Two\n  Given d\n  When e\n  Then f\n```\n",
+    )
+    .unwrap();
+    // 1つの印が2つの ID を挙げ、もう1本が同じ EX-201 をもう一度挙げる
+    write_test_file(
+        tmp.path(),
+        "test_a.rs",
+        "// @kotowari[EX-201, EX-202]\n#[test]\nfn req_001_both() {}\n\n// @kotowari[EX-201]\n#[test]\nfn req_001_again() {}\n",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let swt = findings_by_kind(&result, "scenario_without_test");
+    assert!(
+        swt.is_empty(),
+        "one marker may name several scenarios, and the count of markers is not read: {:?}",
+        result
+    );
+}
+
+// @kotowari[REQ-087, EX-124]
+#[test]
+fn req_087_marker_in_a_file_without_query_feeds_scenario_coverage() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_scenario(
+        tmp.path(),
+        "a.md",
+        "REQ-001",
+        "- 検証: unit\n",
+        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
+    );
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+    )
+    .unwrap();
+    write_test_file(tmp.path(), "test_a.py", "# @kotowari[EX-201]\ndef test_a():\n    pass\n");
+    // Rust のテストには EX-201 を含む印が無い
+    write_test_file(
+        tmp.path(),
+        "test_a.rs",
+        "// @kotowari[REQ-001]\n#[test]\nfn req_001_covered() {}\n",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let swt = findings_by_kind(&result, "scenario_without_test");
+    assert!(
+        swt.is_empty(),
+        "the marker in the file of a language without a query counts for the scenario: {:?}",
+        result
+    );
 }

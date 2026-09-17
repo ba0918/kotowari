@@ -71,6 +71,7 @@ finding_kinds! {
     RecordFieldUnknown => "record_field_unknown",
     RequirementWithoutTest => "requirement_without_test",
     RevisionLinkInvalid => "revision_link_invalid",
+    ScenarioWithoutTest => "scenario_without_test",
     SourceInvalid => "source_invalid",
     TestWithoutId => "test_without_id",
     TooManyLines => "too_many_lines",

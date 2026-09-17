@@ -643,6 +643,14 @@ pub fn discover_and_check(
         }
     }
 
+    // REQ-137: テストのない具体例
+    let scenarios = collect_scenarios(docs, ir_path);
+    for (id, scenario) in &scenarios {
+        if scenario.needs_test && !all_marker_ids.contains(id) {
+            findings.push(Finding::new(FindingKind::ScenarioWithoutTest, scenario.path.clone(), Some(scenario.line), id.clone()));
+        }
+    }
+
     // REQ-086: 印の無いテスト
     for test in &all_tests {
         if test.marker_ids.is_empty() {
@@ -668,3 +676,52 @@ fn check_test_markers(
     }
 }
 
+
+/// 具体例の ID から引く、その`シナリオ`の "@about" と場所（REQ-137、REQ-085）
+#[derive(Debug, Clone)]
+pub struct ScenarioCoverage {
+    /// "@about" に挙がった ID
+    pub about: Vec<String>,
+    /// 指摘のパス（IR の置き場からの相対）
+    pub path: String,
+    /// TBL-019: タグの行（無ければ "Scenario:" の行）
+    pub line: usize,
+    /// REQ-137 の適用条件を満たすか（"@about" に、検証が "unit"・"property"・"proof" の要求がある）
+    pub needs_test: bool,
+}
+
+/// 具体例の ID から "@about" と場所を引く表を作る。
+/// 同じ ID の`シナリオ`が2か所以上にあるときは REQ-032 の1つ目（文書はパスのバイト順、
+/// 同じ文書では行の小さい方）を使う。docs も items もその順に並んでいる。
+pub fn collect_scenarios(docs: &[IrDocument], ir_path: &str) -> BTreeMap<String, ScenarioCoverage> {
+    // 要求の ID から "- 検証:" の値を引く（行が無ければ None）
+    let mut verifications: BTreeMap<&str, Option<&str>> = BTreeMap::new();
+    for doc in docs {
+        for item in &doc.items {
+            if let Item::Requirement { id, verification, .. } = item {
+                verifications.entry(id).or_insert_with(|| verification.as_deref());
+            }
+        }
+    }
+
+    let mut scenarios: BTreeMap<String, ScenarioCoverage> = BTreeMap::new();
+    for doc in docs {
+        for item in &doc.items {
+            if let Item::Scenario { id: Some(id), line, tag_line, about, .. } = item {
+                // 要求として解決できない "@about"、"- 検証:" の行の無い要求、
+                // 検証の値が4つ以外の要求、検証が "review" の要求は数えない
+                let needs_test = about.iter().any(|a| {
+                    matches!(verifications.get(a.as_str()), Some(Some(v))
+                        if crate::ir::VERIFICATION_VALUES.contains(v) && *v != "review")
+                });
+                scenarios.entry(id.clone()).or_insert_with(|| ScenarioCoverage {
+                    about: about.clone(),
+                    path: crate::join_display_path(ir_path, &doc.relative_path),
+                    line: tag_line.unwrap_or(*line),
+                    needs_test,
+                });
+            }
+        }
+    }
+    scenarios
+}

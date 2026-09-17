@@ -33,6 +33,7 @@ kotowari の仕様に基づく（改訂 2026-09-17。本体の版は固定しな
 | unknown_tag | 知らないタグ | `@id`、`@about`、`@source` のいずれかに直す | brainstorm |
 | vague_word | 曖昧語が含まれる | 具体的な語に言い換える | brainstorm |
 | requirement_without_test | review 以外の要求にテストが無い | テストを書いて印を付ける | implementer（path は IR だが直すのは implementer） |
+| scenario_without_test | 要求を挙げる具体例にテストが無い | その場面を確かめるテストを書いて印を付ける | implementer（path は IR だが直すのは implementer） |
 | test_without_id | テストに印が無い | `@kotowari[ID]` の印を付ける | implementer |
 | invalid_marker | 印の形が正しくない | `@kotowari[ID, ...]` の形に直す | implementer |
 | unparsable_file | テストファイルを読めない | テストの構文誤りを直す | implementer |

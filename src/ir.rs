@@ -116,6 +116,9 @@ pub enum Item {
     },
 }
 
+/// REQ-049: "- 検証:" に書ける4つの値
+pub const VERIFICATION_VALUES: [&str; 4] = ["unit", "property", "proof", "review"];
+
 impl Item {
     pub fn id(&self) -> Option<&str> {
         match self {
@@ -1132,7 +1135,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
 
             // REQ-049: 検証の値の誤り
             if let Some(v) = verification {
-                if !["unit", "property", "proof", "review"].contains(&v.as_str()) {
+                if !VERIFICATION_VALUES.contains(&v.as_str()) {
                     findings.push(Finding::new(FindingKind::VerificationInvalid, path.to_string(), Some(*line), v.clone()));
                 }
             }
