@@ -7,8 +7,12 @@
 #   unparsable_file、テストのファイルの unresolved_reference）はコミットでは止めない。
 #   仕様の承認のコミットは実装より先で、そのときテストはまだ無いため（A19）。
 #   停止（終了コード2）は止める。
-# pre-push: テスト全件と、テスト側の指摘も含めた check の終了コード0。
-#   時間がかかるので push 側に置く。テストの無い要求は push で止まる。
+# pre-push: テスト全件と、テスト側の指摘も含めた check の終了コード0、
+#   そして差分に入る変異の見逃し0件（判断の記録 docs/decision/records/2026-09-17-mutation-tests.md
+#   の A25、A26、A27）。時間がかかるので push 側に置く。テストの無い要求は push で止まる。
+#   mutants は cargo-test と kotowari-check の後に直列で走る（名前の順）。
+#   push される参照にタグがあれば全体、無ければ origin/main との差分だけを走らせる。
+#   その判定にフックの標準入力の行が要るので use_stdin を立てる。
 pre-commit:
   commands:
     secretlint:
@@ -30,3 +34,6 @@ pre-push:
       run: CARGO_BUILD_JOBS=4 cargo test
     kotowari-check:
       run: CARGO_BUILD_JOBS=4 cargo run -q -- check --format text
+    mutants:
+      run: scripts/mutants.sh hook
+      use_stdin: true
