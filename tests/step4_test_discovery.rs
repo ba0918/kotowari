@@ -1015,7 +1015,8 @@ fn req_088_empty_ir_still_checks_tests() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let twi = findings_by_kind(&v, "test_without_id");
-    assert!(twi.iter().any(|f| f["detail"] == "unmarked_test"), "should check tests even with empty IR: {:?}", twi);
+    assert_eq!(twi.len(), 1, "should check tests even with empty IR: {:?}", twi);
+    assert_eq!(twi[0]["detail"], "unmarked_test");
     // requirement_without_test は出ない（IR に要求がない）
     let rwt = findings_by_kind(&v, "requirement_without_test");
     assert!(rwt.is_empty());
