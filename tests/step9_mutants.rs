@@ -327,3 +327,399 @@ fn req_147_unmarked_test_is_not_reported_and_json_has_three_keys() {
     let keys: Vec<&str> = v.as_object().unwrap().keys().map(|k| k.as_str()).collect();
     assert_eq!(keys, ["counts", "findings", "mutants"]);
 }
+
+// --- REQ-143、REQ-148: 等価の一覧 ---
+
+/// EX-211 の場面のソース。3行目が "    if a == b {"
+const SRC_A: &str = "fn f() {\n    let x = 1;\n    if a == b {\n    }\n}\n";
+/// EX-211 の場面の変更の説明
+const CHANGE: &str = "replace == with != in f";
+
+/// 等価の一覧の1件（値はすべて引用符でくくる）
+fn entry(fields: &[(&str, &str)]) -> String {
+    let mut yaml = String::new();
+    for (i, (key, value)) in fields.iter().enumerate() {
+        yaml.push_str(if i == 0 { "- " } else { "  " });
+        yaml.push_str(&format!("{key}: {value:?}\n"));
+    }
+    yaml
+}
+
+/// EX-211 の形の正しい1件
+fn valid_entry() -> String {
+    entry(&[
+        ("file", "src/a.rs"),
+        ("change", CHANGE),
+        ("text", "if a == b {"),
+        ("class", "equivalent"),
+        ("why", "the branch cannot be reached"),
+    ])
+}
+
+/// 設定で等価の一覧を指した置き場
+fn project_with_list(results: &str, list: &str) -> TempDir {
+    let tmp = project(results);
+    write(
+        tmp.path(),
+        ".kotowari/config.yaml",
+        "mutants:\n  equivalents: docs/equivalents.yaml\n",
+    );
+    write(tmp.path(), "docs/equivalents.yaml", list);
+    tmp
+}
+
+/// その種類の指摘だけを取り出す
+fn findings_of<'a>(v: &'a serde_json::Value, kind: &str) -> Vec<&'a serde_json::Value> {
+    v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["kind"] == kind)
+        .collect()
+}
+
+/// EX-211 の場面（3行目の見逃しが1件、ソースあり）で一覧を読ませる
+fn run_with_list_output(list: &str) -> std::process::Output {
+    let tmp = project_with_list(
+        &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "MissedMutant")]),
+        list,
+    );
+    write(tmp.path(), "src/a.rs", SRC_A);
+    run_in(tmp.path(), &[])
+}
+
+fn run_with_list(list: &str) -> serde_json::Value {
+    json_of(&run_with_list_output(list))
+}
+
+// @kotowari[REQ-143, EX-215]
+#[test]
+fn req_143_blank_why_is_invalid_and_suppresses_nothing() {
+    let v = run_with_list(&entry(&[
+        ("file", "src/a.rs"),
+        ("change", CHANGE),
+        ("text", "if a == b {"),
+        ("class", "equivalent"),
+        ("why", "   "),
+    ]));
+    let invalid = findings_of(&v, "equivalent_invalid");
+    assert_eq!(invalid.len(), 1, "{:?}", v["findings"]);
+    assert_eq!(invalid[0]["severity"], "error");
+    assert_eq!(invalid[0]["path"], "docs/equivalents.yaml");
+    assert!(invalid[0]["line"].is_null());
+    assert_eq!(invalid[0]["detail"], "src/a.rs: replace == with != in f");
+    // 形の誤った1件は見逃しを外さない
+    let survived = findings_of(&v, "mutant_survived");
+    assert_eq!(survived.len(), 1);
+    assert_eq!(survived[0]["line"], 3);
+    // A53: 形の誤った1件に equivalent_stale は出さない
+    assert!(findings_of(&v, "equivalent_stale").is_empty());
+}
+
+// @kotowari[REQ-143, EX-216]
+#[test]
+fn req_143_class_other_than_equivalent_is_invalid() {
+    let v = run_with_list(&entry(&[
+        ("file", "src/a.rs"),
+        ("change", CHANGE),
+        ("text", "if a == b {"),
+        ("class", "untested"),
+        ("why", "not checked yet"),
+    ]));
+    assert_eq!(findings_of(&v, "equivalent_invalid").len(), 1);
+}
+
+// @kotowari[REQ-143, EX-236]
+#[test]
+fn req_143_entry_outside_the_base_is_invalid() {
+    let v = run_with_list(&entry(&[
+        ("file", "../x/src/a.rs"),
+        ("change", CHANGE),
+        ("text", "if a == b {"),
+        ("class", "equivalent"),
+        ("why", "outside"),
+    ]));
+    assert_eq!(findings_of(&v, "equivalent_invalid").len(), 1);
+}
+
+// @kotowari[REQ-143, EX-220]
+#[test]
+fn req_143_entry_without_file_has_an_empty_detail_prefix() {
+    let v = run_with_list(&entry(&[
+        ("change", "replace f with ()"),
+        ("text", "if a == b {"),
+        ("class", "equivalent"),
+        ("why", "no file key"),
+    ]));
+    let invalid = findings_of(&v, "equivalent_invalid");
+    assert_eq!(invalid.len(), 1, "{:?}", v["findings"]);
+    assert_eq!(invalid[0]["detail"], ": replace f with ()");
+}
+
+// @kotowari[REQ-143, EX-237]
+#[test]
+fn req_143_duplicate_invalid_entries_yield_one_finding_each() {
+    let one = entry(&[
+        ("file", "src/a.rs"),
+        ("change", CHANGE),
+        ("text", "if a == b {"),
+        ("class", "equivalent"),
+        ("why", ""),
+    ]);
+    let v = run_with_list(&format!("{one}{one}"));
+    assert_eq!(findings_of(&v, "equivalent_invalid").len(), 2);
+}
+
+// @kotowari[REQ-148, EX-217]
+#[test]
+fn req_148_missing_list_file_stops() {
+    let tmp = project(&outcomes(&[mutant_at(
+        "src/a.rs",
+        3,
+        CHANGE,
+        "CaughtMutant",
+    )]));
+    // 鍵はあるが指す先のファイルは無い
+    write(
+        tmp.path(),
+        ".kotowari/config.yaml",
+        "mutants:\n  equivalents: docs/equivalents.yaml\n",
+    );
+    let output = run_in(tmp.path(), &[]);
+    assert_eq!(output.status.code(), Some(2));
+    let first_line = first_stderr_line(&output);
+    assert!(
+        first_line.starts_with("unreadable file: docs/equivalents.yaml"),
+        "got: {first_line:?}"
+    );
+}
+
+// @kotowari[REQ-148, EX-238]
+#[test]
+fn req_148_empty_list_file_is_zero_entries() {
+    let tmp = project_with_list(
+        &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "CaughtMutant")]),
+        "",
+    );
+    let output = run_in(tmp.path(), &[]);
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "stderr: {}",
+        first_stderr_line(&output)
+    );
+}
+
+// @kotowari[REQ-148, EX-239]
+#[test]
+fn req_148_list_that_is_not_a_sequence_stops_with_the_list_path() {
+    let tmp = project_with_list(
+        &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "CaughtMutant")]),
+        "file: src/a.rs\n",
+    );
+    let output = run_in(tmp.path(), &[]);
+    assert_eq!(output.status.code(), Some(2));
+    let first_line = first_stderr_line(&output);
+    assert!(
+        first_line.starts_with("config error: docs/equivalents.yaml"),
+        "got: {first_line:?}"
+    );
+}
+
+// @kotowari[REQ-148, EX-221]
+#[test]
+fn req_148_check_ignores_a_missing_list_file() {
+    let tmp = TempDir::new().unwrap();
+    for dir in ["docs/ir", "docs/decision/records", "docs/decision/adr"] {
+        std::fs::create_dir_all(tmp.path().join(dir)).unwrap();
+    }
+    write(
+        tmp.path(),
+        ".kotowari/config.yaml",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\nmutants:\n  equivalents: docs/equivalents.yaml\n",
+    );
+    let output = cmd()
+        .arg("check")
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    assert_ne!(
+        output.status.code(),
+        Some(2),
+        "check should not read the list: {}",
+        first_stderr_line(&output)
+    );
+}
+
+// --- REQ-141、REQ-142: 一覧との一致と、文面の無くなった1件 ---
+
+// @kotowari[REQ-139, REQ-141, REQ-145, EX-211]
+#[test]
+fn req_141_listed_survivor_is_counted_as_equivalent() {
+    let output = run_with_list_output(&valid_entry());
+    let v = json_of(&output);
+    assert!(
+        findings_of(&v, "mutant_survived").is_empty(),
+        "{:?}",
+        v["findings"]
+    );
+    assert_eq!(v["mutants"]["survived"], 0);
+    assert_eq!(v["mutants"]["equivalent"], 1);
+    assert_eq!(output.status.code(), Some(0));
+}
+
+// @kotowari[REQ-141, EX-212]
+#[test]
+fn req_141_moved_line_still_matches() {
+    // "    if a == b {" が7行目に動き、見逃しの行も 7
+    let moved = "fn f() {\n    let a = 1;\n    let b = 2;\n    let c = 3;\n    let d = 4;\n    let e = 5;\n    if a == b {\n    }\n}\n";
+    let tmp = project_with_list(
+        &outcomes(&[mutant_at("src/a.rs", 7, CHANGE, "MissedMutant")]),
+        &valid_entry(),
+    );
+    write(tmp.path(), "src/a.rs", moved);
+    let v = json_of(&run_in(tmp.path(), &[]));
+    assert!(
+        findings_of(&v, "mutant_survived").is_empty(),
+        "{:?}",
+        v["findings"]
+    );
+}
+
+// @kotowari[REQ-141, REQ-142, EX-213]
+#[test]
+fn req_141_rewritten_line_no_longer_matches_and_entry_goes_stale() {
+    // 3行目が "    if a == c {" に変わり、"if a == b {" の行はどこにも無い
+    let rewritten = "fn f() {\n    let x = 1;\n    if a == c {\n    }\n}\n";
+    let tmp = project_with_list(
+        &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "MissedMutant")]),
+        &valid_entry(),
+    );
+    write(tmp.path(), "src/a.rs", rewritten);
+    let v = json_of(&run_in(tmp.path(), &[]));
+    let survived = findings_of(&v, "mutant_survived");
+    assert_eq!(survived.len(), 1, "{:?}", v["findings"]);
+    assert_eq!(survived[0]["path"], "src/a.rs");
+    assert_eq!(survived[0]["line"], 3);
+    let stale = findings_of(&v, "equivalent_stale");
+    assert_eq!(stale.len(), 1, "{:?}", v["findings"]);
+    assert_eq!(stale[0]["severity"], "notice");
+    assert_eq!(stale[0]["path"], "docs/equivalents.yaml");
+    assert!(stale[0]["line"].is_null());
+    assert_eq!(stale[0]["detail"], "src/a.rs: replace == with != in f");
+}
+
+// @kotowari[REQ-141, EX-214]
+#[test]
+fn req_141_line_beyond_the_file_does_not_match() {
+    // "src/a.rs" は5行で、見逃しは9行目
+    let tmp = project_with_list(
+        &outcomes(&[mutant_at("src/a.rs", 9, CHANGE, "MissedMutant")]),
+        &valid_entry(),
+    );
+    write(tmp.path(), "src/a.rs", SRC_A);
+    let output = run_in(tmp.path(), &[]);
+    let v = json_of(&output);
+    let survived = findings_of(&v, "mutant_survived");
+    assert_eq!(survived.len(), 1, "{:?}", v["findings"]);
+    assert_eq!(survived[0]["line"], 9);
+    assert_eq!(output.status.code(), Some(1));
+}
+
+// @kotowari[REQ-141, EX-232]
+#[test]
+fn req_141_one_entry_matches_every_line_with_the_same_text() {
+    // 3行目と8行目がどちらも "    if a == b {"
+    let twice = "fn f() {\n    let x = 1;\n    if a == b {\n    }\n    let y = 2;\n    let z = 3;\n    let w = 4;\n    if a == b {\n    }\n}\n";
+    let tmp = project_with_list(
+        &outcomes(&[
+            mutant_at("src/a.rs", 3, CHANGE, "MissedMutant"),
+            mutant_at("src/a.rs", 8, CHANGE, "MissedMutant"),
+        ]),
+        &valid_entry(),
+    );
+    write(tmp.path(), "src/a.rs", twice);
+    let v = json_of(&run_in(tmp.path(), &[]));
+    assert!(
+        findings_of(&v, "mutant_survived").is_empty(),
+        "{:?}",
+        v["findings"]
+    );
+    assert_eq!(v["mutants"]["equivalent"], 2);
+}
+
+// @kotowari[REQ-141, EX-233]
+#[test]
+fn req_141_entry_for_another_file_does_not_match() {
+    let v = run_with_list(&entry(&[
+        ("file", "src/b.rs"),
+        ("change", CHANGE),
+        ("text", "if a == b {"),
+        ("class", "equivalent"),
+        ("why", "another file"),
+    ]));
+    let survived = findings_of(&v, "mutant_survived");
+    assert_eq!(survived.len(), 1, "{:?}", v["findings"]);
+    assert_eq!(survived[0]["path"], "src/a.rs");
+    assert_eq!(survived[0]["line"], 3);
+}
+
+// @kotowari[REQ-141, EX-234]
+#[test]
+fn req_141_path_spelling_tab_indent_and_crlf_still_match() {
+    // 一覧の "file" は "./src/a.rs"、ソースの字下げはタブで行の終わりは "\r\n"
+    let tabbed = "fn f() {\r\n\tlet x = 1;\r\n\tif a == b {\r\n\t}\r\n}\r\n";
+    let tmp = project_with_list(
+        &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "MissedMutant")]),
+        &entry(&[
+            ("file", "./src/a.rs"),
+            ("change", CHANGE),
+            ("text", "if a == b {"),
+            ("class", "equivalent"),
+            ("why", "the branch cannot be reached"),
+        ]),
+    );
+    write(tmp.path(), "src/a.rs", tabbed);
+    let v = json_of(&run_in(tmp.path(), &[]));
+    assert!(
+        findings_of(&v, "mutant_survived").is_empty(),
+        "{:?}",
+        v["findings"]
+    );
+}
+
+// @kotowari[REQ-141, REQ-142, EX-235]
+#[test]
+fn req_141_non_utf8_source_does_not_stop() {
+    let tmp = project_with_list(
+        &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "MissedMutant")]),
+        &valid_entry(),
+    );
+    std::fs::create_dir_all(tmp.path().join("src")).unwrap();
+    std::fs::write(tmp.path().join("src/a.rs"), b"\xff\xfe").unwrap();
+    let output = run_in(tmp.path(), &[]);
+    let v = json_of(&output);
+    assert_eq!(findings_of(&v, "mutant_survived").len(), 1);
+    assert_eq!(findings_of(&v, "equivalent_stale").len(), 1);
+    assert_eq!(output.status.code(), Some(1));
+}
+
+// @kotowari[REQ-142, EX-243]
+#[test]
+fn req_142_stale_entry_detail_keeps_the_written_path() {
+    let tmp = project_with_list(
+        &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "CaughtMutant")]),
+        &entry(&[
+            ("file", "./src/a.rs"),
+            ("change", "replace f with ()"),
+            ("text", "no such line"),
+            ("class", "equivalent"),
+            ("why", "written with a leading dot"),
+        ]),
+    );
+    write(tmp.path(), "src/a.rs", SRC_A);
+    let v = json_of(&run_in(tmp.path(), &[]));
+    let stale = findings_of(&v, "equivalent_stale");
+    assert_eq!(stale.len(), 1, "{:?}", v["findings"]);
+    assert_eq!(stale[0]["detail"], "./src/a.rs: replace f with ()");
+}

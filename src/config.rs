@@ -185,12 +185,17 @@ fn check_not_absolute(path: &str, key: &str) -> Result<(), StopReason> {
     Ok(())
 }
 
+/// 中身が空（0バイトか注釈だけ）の YAML か（REQ-012 の設定ファイル、REQ-148 の等価の一覧）
+pub fn is_blank_yaml(text: &str) -> bool {
+    let trimmed = text.trim();
+    trimmed.is_empty() || trimmed.lines().all(|l| l.trim_start().starts_with('#'))
+}
+
 impl Config {
     /// YAML 文字列から設定を読む
     pub fn parse(yaml: &str) -> Result<Self, StopReason> {
         // REQ-012: 空の設定ファイルは既定値
-        let trimmed = yaml.trim();
-        if trimmed.is_empty() || trimmed.lines().all(|l| l.trim_start().starts_with('#')) {
+        if is_blank_yaml(yaml) {
             return Ok(Config::default());
         }
 

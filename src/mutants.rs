@@ -2,8 +2,14 @@
 //! 変異テストの道具に固有の語は持たない（REQ-150）。
 //! 道具の結果のファイルからの写し取りは道具ごとのモジュール（`crate::cargo_mutants`）が行う。
 
+use crate::equivalents::Equivalent;
 use crate::{Finding, FindingKind};
 use std::collections::BTreeMap;
+
+/// A52: 前後の半角空白とタブだけを除く（全角空白は文面の一部として残す）
+pub fn trim_spaces_and_tabs(s: &str) -> &str {
+    s.trim_matches(|c| c == ' ' || c == '\t')
+}
 
 /// 変異1件の結果
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -73,27 +79,89 @@ impl MutantCounts {
     }
 }
 
-/// `変異の結果`から`指摘`と集計を作る（REQ-139、REQ-140、REQ-145）。
+/// `変異の結果`から`指摘`と集計を作る（REQ-139、REQ-140、REQ-142、REQ-145）。
 /// 同じ内容の`変異の結果`が2件以上あっても畳まない。
-pub fn check_outcomes(outcomes: &[MutantOutcome]) -> (Vec<Finding>, MutantCounts) {
+/// `sources` はファイルごとの行の並びで、読めなかったファイルは持たない（REQ-141、REQ-142）。
+/// `list_path` は`等価の一覧`のファイルの相対パス。
+pub fn check_outcomes(
+    outcomes: &[MutantOutcome],
+    equivalents: &[Equivalent],
+    list_path: &str,
+    sources: &BTreeMap<String, Vec<String>>,
+) -> (Vec<Finding>, MutantCounts) {
     let mut findings = Vec::new();
     let mut counts = MutantCounts::default();
+
     for outcome in outcomes {
         match outcome.result {
-            // 捕まえた変異とビルド不能の変異には指摘を出さない（REQ-139）
+            // 捕まえた変異とビルド不能の変異には指摘を出さず、一覧との一致も見ない（REQ-139）
             MutantResult::Caught => counts.caught += 1,
             MutantResult::Unviable => counts.unviable += 1,
+            // REQ-140: 時間切れは一覧との一致を見ない
             MutantResult::Timeout => {
                 counts.timeout += 1;
                 findings.push(finding(FindingKind::MutantTimeout, outcome));
             }
             MutantResult::Survived => {
-                counts.survived += 1;
-                findings.push(finding(FindingKind::MutantSurvived, outcome));
+                if equivalents
+                    .iter()
+                    .any(|entry| matches(entry, outcome, sources))
+                {
+                    counts.equivalent += 1;
+                } else {
+                    counts.survived += 1;
+                    findings.push(finding(FindingKind::MutantSurvived, outcome));
+                }
             }
         }
     }
+
+    // REQ-142: 文面の無くなった1件（ファイルが無い、読めない、UTF-8 でないときを含む）
+    for entry in equivalents {
+        if !has_line_with_text(sources, &entry.file, &entry.text) {
+            findings.push(Finding::new(
+                FindingKind::EquivalentStale,
+                list_path.to_string(),
+                None,
+                entry.detail.clone(),
+            ));
+        }
+    }
+
     (findings, counts)
+}
+
+/// REQ-141: "file" と "change" が同じ文字列で、"text" が今のソースのその行の文面と、
+/// どちらも前後の半角空白とタブを除いて同じとき一致とする。
+/// 行がファイルの行数を超えるときと、ファイルを読めなかったときは一致しない。
+fn matches(
+    entry: &Equivalent,
+    outcome: &MutantOutcome,
+    sources: &BTreeMap<String, Vec<String>>,
+) -> bool {
+    if entry.file != outcome.file || entry.change != outcome.change {
+        return false;
+    }
+    let Some(line) = sources
+        .get(&entry.file)
+        .and_then(|lines| lines.get(outcome.line - 1))
+    else {
+        return false;
+    };
+    trim_spaces_and_tabs(line) == trim_spaces_and_tabs(&entry.text)
+}
+
+/// その文面の行がファイルに1つでもあるか（REQ-141: 同じ文面の行が複数あればどの行にも効く）
+fn has_line_with_text(
+    sources: &BTreeMap<String, Vec<String>>,
+    file: &str,
+    text: &str,
+) -> bool {
+    sources.get(file).is_some_and(|lines| {
+        lines
+            .iter()
+            .any(|line| trim_spaces_and_tabs(line) == trim_spaces_and_tabs(text))
+    })
 }
 
 /// TBL-006、TBL-019: path はファイル、line は変異の結果の行、detail は変更の説明

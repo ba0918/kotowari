@@ -1,5 +1,6 @@
 pub mod cargo_mutants;
 pub mod config;
+pub mod equivalents;
 pub mod ir;
 pub mod mutants;
 pub mod record_form;
@@ -667,11 +668,15 @@ fn print_help() {
 /// 変異の結果の検査のエントリポイント
 pub fn run_mutants(
     cwd: &Path,
-    _config_path: Option<&Path>,
+    config_path: Option<&Path>,
     tool: Tool,
     results: &Path,
 ) -> Result<mutants::MutantsResult, StopReason> {
     let base = find_base(cwd);
+    // REQ-147: mutants が読むのは設定、結果のファイル、等価の一覧、
+    // 変異の結果と一覧の1件が指すソースだけ。"ir" などの指す先は見ない
+    let cfg = load_config(cwd, &base, config_path)?;
+
     // 結果のファイルのパスはカレントディレクトリからの相対（REQ-149）、
     // 停止の詳細は基準のディレクトリからの相対（TBL-020）
     let display = display_from_base(&base, cwd, results);
@@ -683,7 +688,19 @@ pub fn run_mutants(
     }
     .map_err(|e| StopReason::ResultsError(format!("{display}: {e}")))?;
 
-    let (mut findings, counts) = mutants::check_outcomes(&outcomes);
+    // REQ-148: 鍵が無ければ等価の一覧は0件。指す先が無いか読めなければ停止する
+    let (list, list_path) = match &cfg.mutants.equivalents {
+        None => (equivalents::EquivalentList::default(), String::new()),
+        Some(path) => {
+            let text = read_utf8_file(&base.join(path), path)?;
+            (equivalents::read_list(&text, path)?, path.clone())
+        }
+    };
+
+    let sources = read_sources(&base, &outcomes, &list.entries);
+    let (mut findings, counts) =
+        mutants::check_outcomes(&outcomes, &list.entries, &list_path, &sources);
+    findings.extend(list.findings);
     sort_findings(&mut findings);
     let kinds = count_findings(&findings);
 
@@ -692,6 +709,41 @@ pub fn run_mutants(
         counts: kinds,
         mutants: counts,
     })
+}
+
+/// 一致を見るのに要るソースだけを読む。読めなかったファイルは持たない（REQ-141、REQ-142）
+fn read_sources(
+    base: &Path,
+    outcomes: &[mutants::MutantOutcome],
+    entries: &[equivalents::Equivalent],
+) -> BTreeMap<String, Vec<String>> {
+    let mut sources = BTreeMap::new();
+    if entries.is_empty() {
+        // 一覧が0件なら一致も文面の検査も起きないので、ソースは読まない
+        return sources;
+    }
+    let wanted = outcomes
+        .iter()
+        .filter(|o| o.result == mutants::MutantResult::Survived)
+        .map(|o| o.file.as_str())
+        .chain(entries.iter().map(|e| e.file.as_str()));
+    for file in wanted {
+        if sources.contains_key(file) {
+            continue;
+        }
+        if let Some(lines) = read_source_lines(base, file) {
+            sources.insert(file.to_string(), lines);
+        }
+    }
+    sources
+}
+
+/// ソースを行に分ける。無い、読めない、UTF-8 でないときは None を返して`停止`しない（REQ-141、REQ-142）。
+/// 行の区切りは TBL-010 と同じで、行の終わりの "\r\n" の "\r" は文面に含めない（A52）。
+fn read_source_lines(base: &Path, file: &str) -> Option<Vec<String>> {
+    let bytes = std::fs::read(base.join(file)).ok()?;
+    let text = String::from_utf8(bytes).ok()?;
+    Some(text.lines().map(str::to_string).collect())
 }
 
 /// REQ-024: 指摘を TBL-007 の順（path → line → kind → detail）に並べる
