@@ -697,7 +697,7 @@ pub fn run_mutants(
         }
     };
 
-    let sources = read_sources(&base, &outcomes, &list.entries);
+    let sources = read_sources(&base, &list.entries);
     let (mut findings, counts) =
         mutants::check_outcomes(&outcomes, &list.entries, &list_path, &sources);
     findings.extend(list.findings);
@@ -714,23 +714,14 @@ pub fn run_mutants(
 /// 一致を見るのに要るソースだけを読む。読めなかったファイルは持たない（REQ-141、REQ-142）
 fn read_sources(
     base: &Path,
-    outcomes: &[mutants::MutantOutcome],
     entries: &[equivalents::Equivalent],
 ) -> BTreeMap<String, Vec<String>> {
     let mut sources = BTreeMap::new();
-    if entries.is_empty() {
-        // 一覧が0件なら一致も文面の検査も起きないので、ソースは読まない
-        return sources;
-    }
-    let wanted = outcomes
-        .iter()
-        .filter(|o| o.result == mutants::MutantResult::Survived)
-        .map(|o| o.file.as_str())
-        .chain(entries.iter().map(|e| e.file.as_str()));
-    for file in wanted {
-        if sources.contains_key(file) {
-            continue;
-        }
+    // 一致にも文面の検査にも要るのは一覧の1件が指すファイルだけ。
+    // 一致には "file" が同じであることが要るので、どの1件も指さないファイルは読んでも使われない
+    let files: std::collections::BTreeSet<&str> =
+        entries.iter().map(|e| e.file.as_str()).collect();
+    for file in files {
         if let Some(lines) = read_source_lines(base, file) {
             sources.insert(file.to_string(), lines);
         }
