@@ -12,7 +12,7 @@
 pre-commit:
   commands:
     secretlint:
-      run: .git/hooks/pre-commit.old
+      run: bash "$(git rev-parse --git-common-dir)/hooks/pre-commit.old"
     kotowari-check:
       run: |
         out=$(CARGO_BUILD_JOBS=4 cargo run -q -- check --format json); code=$?
