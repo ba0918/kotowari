@@ -1970,3 +1970,61 @@ fn req_087_marker_in_a_file_without_query_feeds_scenario_coverage() {
         result
     );
 }
+
+// --- REQ-085: 具体例の印は要求の分も満たす ---
+
+// @kotowari[REQ-085, EX-122]
+#[test]
+fn req_085_scenario_marker_covers_its_requirement() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_scenario(
+        tmp.path(),
+        "a.md",
+        "REQ-001",
+        "- 検証: unit\n",
+        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
+    );
+    // 印は EX-201 だけで、REQ-001 を含む印は無い
+    write_test_file(
+        tmp.path(),
+        "test_a.rs",
+        "// @kotowari[EX-201]\n#[test]\nfn req_001_scenario() {}\n",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let rwt = findings_by_kind(&result, "requirement_without_test");
+    assert!(rwt.is_empty(), "the scenario's marker covers its requirement too: {:?}", result);
+    let swt = findings_by_kind(&result, "scenario_without_test");
+    assert!(swt.is_empty(), "the scenario itself is marked: {:?}", result);
+}
+
+// @kotowari[REQ-085, REQ-032]
+#[test]
+fn req_085_duplicate_scenario_marker_uses_the_first_about() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    // パスのバイト順で1つ目の a.md の "@about" は REQ-001、2つ目の b.md は REQ-003
+    make_ir_with_scenario(
+        tmp.path(),
+        "a.md",
+        "REQ-001",
+        "- 検証: unit\n",
+        "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
+    );
+    make_ir_with_scenario(
+        tmp.path(),
+        "b.md",
+        "REQ-003",
+        "- 検証: unit\n",
+        "@id=EX-201 @about=REQ-003 @source=docs/decision/records/records.md#A1",
+    );
+    write_test_file(
+        tmp.path(),
+        "test_a.rs",
+        "// @kotowari[EX-201]\n#[test]\nfn req_001_scenario() {}\n",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let rwt = findings_by_kind(&result, "requirement_without_test");
+    assert_eq!(rwt.len(), 1, "only the requirement of the second scenario stays uncovered: {:?}", result);
+    assert_eq!(rwt[0]["detail"], "REQ-003", "the first scenario's @about is the one that counts");
+}

@@ -626,7 +626,21 @@ pub fn discover_and_check(
         }
     }
 
-    // REQ-085: テストのない要求
+    let scenarios = collect_scenarios(docs, ir_path);
+
+    // REQ-137: テストのない具体例
+    for (id, scenario) in &scenarios {
+        if scenario.needs_test && !all_marker_ids.contains(id) {
+            findings.push(Finding::new(FindingKind::ScenarioWithoutTest, scenario.path.clone(), Some(scenario.line), id.clone()));
+        }
+    }
+
+    // REQ-085: テストのない要求。印にある具体例の "@about" の要求も満たされている
+    let covered_by_scenario: BTreeSet<&str> = all_marker_ids
+        .iter()
+        .filter_map(|id| scenarios.get(id))
+        .flat_map(|scenario| scenario.about.iter().map(|a| a.as_str()))
+        .collect();
     for doc in docs {
         for item in &doc.items {
             if let Item::Requirement {
@@ -634,20 +648,16 @@ pub fn discover_and_check(
             } = item
             {
                 if let Some(v) = verification {
-                    if v != "review" && is_valid_id(id) && !all_marker_ids.contains(id) {
+                    if v != "review"
+                        && is_valid_id(id)
+                        && !all_marker_ids.contains(id)
+                        && !covered_by_scenario.contains(id.as_str())
+                    {
                         let path = crate::join_display_path(ir_path, &doc.relative_path);
                         findings.push(Finding::new(FindingKind::RequirementWithoutTest, path, Some(item.item_line()), id.clone()));
                     }
                 }
             }
-        }
-    }
-
-    // REQ-137: テストのない具体例
-    let scenarios = collect_scenarios(docs, ir_path);
-    for (id, scenario) in &scenarios {
-        if scenario.needs_test && !all_marker_ids.contains(id) {
-            findings.push(Finding::new(FindingKind::ScenarioWithoutTest, scenario.path.clone(), Some(scenario.line), id.clone()));
         }
     }
 
