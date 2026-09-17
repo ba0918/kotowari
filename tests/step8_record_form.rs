@@ -164,3 +164,169 @@ fn req_131_unknown_name_on_two_lines_yields_two_findings() {
     assert_eq!(lines, vec![11, 12], "one finding per line, blank value included: {:?}", unknown);
     assert!(unknown.iter().all(|f| f["detail"] == "reason"));
 }
+
+// --- REQ-129 / REQ-134 / REQ-135: 読まない行と、検査を受けない記録 ---
+
+// @kotowari[REQ-129]
+#[test]
+fn req_129_record_without_context_is_not_checked() {
+    // EX-102
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "c.md",
+        "# 記録 c\n\n## Agreements\n\n- A1 ある合意\n",
+    );
+    let v = check(tmp.path());
+    assert!(
+        findings_by_kind(&v, "record_field_missing").is_empty()
+            && findings_by_kind(&v, "record_field_unknown").is_empty(),
+        "a record without \"## Context\" is not checked: {:?}",
+        v["findings"]
+    );
+}
+
+// @kotowari[REQ-135]
+#[test]
+fn req_135_lines_outside_the_table_sections_and_orphans_are_not_read() {
+    // EX-110
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "v.md",
+        concat!(
+            "# 記録 v\n\n## Context\n\n背景。\n\n",
+            "## Revisions\n\n- A21 は A5 を置き換える\n\n",
+            "## Agreements\n\n- why: x\n- A1 ある合意\n- why: x\n- (i) 入れ子でない箇条\n- why : x\n（なし）\n",
+        ),
+    );
+    let v = check(tmp.path());
+    assert!(
+        findings_by_kind(&v, "record_field_missing").is_empty()
+            && findings_by_kind(&v, "record_field_unknown").is_empty(),
+        "lines outside the table's sections, orphan field lines and other shapes are not read: {:?}",
+        v["findings"]
+    );
+}
+
+// @kotowari[REQ-134]
+#[test]
+fn req_134_duplicate_field_names_pass() {
+    // EX-111
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "w.md",
+        "# 記録 w\n\n## Context\n\n背景。\n\n## Agreements\n\n- A1 ある合意\n- why: x\n- why: x\n",
+    );
+    let v = check(tmp.path());
+    assert!(
+        findings_by_kind(&v, "record_field_missing").is_empty()
+            && findings_by_kind(&v, "record_field_unknown").is_empty(),
+        "the number of field lines with the same name is not checked: {:?}",
+        v["findings"]
+    );
+}
+
+// @kotowari[REQ-135]
+#[test]
+fn req_135_numbered_line_inside_code_block_is_not_read() {
+    // EX-113
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "cb.md",
+        "# 記録 cb\n\n## Context\n\n背景。\n\n## Agreements\n\n- A1 ある合意\n- why: x\n\n```text\n- A9 コードブロックの中\n```\n",
+    );
+    let v = check(tmp.path());
+    assert!(
+        findings_by_kind(&v, "record_field_missing").is_empty()
+            && findings_by_kind(&v, "record_field_unknown").is_empty(),
+        "a numbered line inside a code block is not read: {:?}",
+        v["findings"]
+    );
+}
+
+// @kotowari[REQ-135]
+#[test]
+fn req_135_unclosed_code_block_runs_to_the_end_of_the_file() {
+    // A45: 閉じられずに文書が終わるコードブロックは文書の終わりまでが中で、指摘は出さない
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "uc.md",
+        "# 記録 uc\n\n## Context\n\n背景。\n\n## Agreements\n\n- A1 ある合意\n- why: x\n\n```text\n- A9 x\n- A8 x\n",
+    );
+    let v = check(tmp.path());
+    let for_file: Vec<_> = v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["path"] == "docs/decision/records/uc.md")
+        .collect();
+    assert!(for_file.is_empty(), "no finding for an unclosed code block: {:?}", for_file);
+}
+
+// @kotowari[REQ-130]
+#[test]
+fn req_130_unindented_field_line_belongs_to_the_decision() {
+    // EX-114: 字下げ無しの補足の行も直前の番号の行に付く。空行を挟んでもよい
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "ui.md",
+        "# 記録 ui\n\n## Context\n\n背景。\n\n## Agreements\n\n- A1 ある合意\n\n- why: x\n",
+    );
+    let v = check(tmp.path());
+    assert!(
+        findings_by_kind(&v, "record_field_missing").is_empty(),
+        "an unindented why after a blank line still belongs to A1: {:?}",
+        v["findings"]
+    );
+}
+
+// @kotowari[REQ-130, REQ-133]
+#[test]
+fn req_130_decision_line_with_colon_is_not_a_field() {
+    // EX-115: 本文にコロンを含む決定の行は番号の行で、補足の行と見ない
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "co.md",
+        "# 記録 co\n\n## Context\n\n背景。\n\n## Agreements\n\n- A1 定義を機械的にする: 節にある行\n- why: x\n",
+    );
+    let v = check(tmp.path());
+    assert!(
+        findings_by_kind(&v, "record_field_missing").is_empty()
+            && findings_by_kind(&v, "record_field_unknown").is_empty(),
+        "the decision line is a numbered line, not a field line: {:?}",
+        v["findings"]
+    );
+}
+
+// @kotowari[REQ-129]
+#[test]
+fn req_129_file_without_decision_sections_is_not_a_record() {
+    // A41: 決定の節の見出しを持たないファイルは判断の記録でない
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "notrec.md",
+        "# 記録でない文書\n\n## Context\n\n背景。\n\n## Superseded\n\n- A3 置き換えられた決定\n",
+    );
+    let v = check(tmp.path());
+    assert!(
+        findings_by_kind(&v, "record_field_missing").is_empty()
+            && findings_by_kind(&v, "record_field_unknown").is_empty(),
+        "a file without a decision section is not a record: {:?}",
+        v["findings"]
+    );
+}
