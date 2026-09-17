@@ -351,7 +351,7 @@ fn link_findings(v: &serde_json::Value) -> Vec<(i64, String)> {
         .collect()
 }
 
-// @kotowari[REQ-132, TBL-023]
+// @kotowari[REQ-132, TBL-023, EX-107]
 #[test]
 fn req_132_superseded_by_without_link_is_invalid() {
     // EX-107: 順1（値にリンクが1つも無い）。detail は行の値
@@ -366,7 +366,7 @@ fn req_132_superseded_by_without_link_is_invalid() {
     assert_eq!(link_findings(&v), vec![(6, "A24".to_string())]);
 }
 
-// @kotowari[REQ-132, TBL-023]
+// @kotowari[REQ-132, TBL-023, EX-108]
 #[test]
 fn req_132_href_outside_the_records_place_is_invalid() {
     // EX-108: 順3（解決した結果が置き場の外）
@@ -384,7 +384,7 @@ fn req_132_href_outside_the_records_place_is_invalid() {
     );
 }
 
-// @kotowari[REQ-132, TBL-023]
+// @kotowari[REQ-132, TBL-023, EX-109]
 #[test]
 fn req_132_number_only_in_undecided_is_invalid() {
     // EX-109: 順5（先の決定の節と Superseded の節に番号の行が無い。Undecided は数えない）
@@ -404,7 +404,7 @@ fn req_132_number_only_in_undecided_is_invalid() {
     assert_eq!(link_findings(&v), vec![(6, "./b.md#U1".to_string())]);
 }
 
-// @kotowari[REQ-132, TBL-023]
+// @kotowari[REQ-132, TBL-023, EX-112]
 #[test]
 fn req_132_heading_anchor_is_invalid() {
     // EX-112: 順2（"#" の後が決定の番号の形でない）
@@ -424,7 +424,7 @@ fn req_132_heading_anchor_is_invalid() {
     assert_eq!(link_findings(&v), vec![(6, "./ir-form.md#出典".to_string())]);
 }
 
-// @kotowari[REQ-132, TBL-023]
+// @kotowari[REQ-132, TBL-023, EX-117]
 #[test]
 fn req_132_empty_path_means_the_same_record() {
     // EX-117: "#" より前が空なら同じ記録
@@ -439,7 +439,7 @@ fn req_132_empty_path_means_the_same_record() {
     assert_eq!(link_findings(&v), vec![(7, "#A9".to_string())]);
 }
 
-// @kotowari[REQ-132, TBL-023]
+// @kotowari[REQ-132, TBL-023, EX-119]
 #[test]
 fn req_132_target_that_is_not_a_record_is_invalid() {
     // EX-119: 順4（先が読んだ判断の記録でない）
@@ -514,7 +514,7 @@ fn tbl_023_absolute_href_is_outside_the_place() {
     );
 }
 
-// @kotowari[REQ-132, TBL-023]
+// @kotowari[REQ-132, TBL-023, EX-106]
 #[test]
 fn req_132_record_without_context_resolves_two_links_in_superseded() {
     // EX-106: "## Context" を持たない記録の Superseded の行のリンク2つがどちらも解決される
@@ -538,7 +538,7 @@ fn req_132_record_without_context_resolves_two_links_in_superseded() {
     );
 }
 
-// @kotowari[REQ-132, TBL-023, REQ-110]
+// @kotowari[REQ-132, TBL-023, REQ-110, EX-116]
 #[test]
 fn req_132_parent_directory_href_to_superseded_number_passes() {
     // EX-116: 下位ディレクトリの記録から ".." で上の記録の Superseded の番号を指すリンク
