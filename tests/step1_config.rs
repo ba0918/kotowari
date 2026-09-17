@@ -77,6 +77,42 @@ fn req_009_falls_back_to_cwd() {
         .code(0);
 }
 
+// @kotowari[REQ-009, TBL-003, EX-002]
+#[test]
+fn req_009_base_from_a_subdirectory_is_the_ancestor_with_dot_kotowari() {
+    // 下のディレクトリで起動しても、指摘のパスが上のディレクトリからの相対になる
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/decision/records/records.md"),
+        "# Records\n\n## Agreements\n\n- A1 Agreement\n",
+    )
+    .unwrap();
+    let sub = tmp.path().join("src");
+    fs::create_dir_all(&sub).unwrap();
+
+    let output = cmd().arg("check").current_dir(&sub).output().unwrap();
+    let v: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("valid JSON");
+    let paths: Vec<&str> = v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|f| f["path"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        paths,
+        vec!["docs/ir/a.md"],
+        "the base is the ancestor holding .kotowari, so the path is relative to it: {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+}
+
 // --- REQ-010: 設定の値は基準のディレクトリからの相対 ---
 
 // @kotowari[REQ-010]
@@ -887,7 +923,7 @@ fn snapshot(root: &Path) -> Vec<(String, Option<Vec<u8>>)> {
     out
 }
 
-// @kotowari[REQ-102]
+// @kotowari[REQ-102, EX-042]
 #[test]
 fn req_102_check_writes_nothing_under_home_tmpdir_or_base() {
     let tmp = TempDir::new().unwrap();
