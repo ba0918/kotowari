@@ -1944,3 +1944,23 @@ fn req_068_unquoted_term_gets_no_finding_on_its_line() {
         "the requirement heading should still be checked: {v}"
     );
 }
+
+// @kotowari[REQ-123, EX-027]
+#[test]
+fn req_123_same_term_above_and_below_the_chain_is_reported_on_the_lower_row() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "CONTEXT.md", &glossary("宛先"));
+    write_ir(tmp.path(), "network/CONTEXT.md", &glossary("宛先"));
+    write_ir(tmp.path(), "network/a.md", &term_statement("REQ-001", "`宛先`"));
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let duplicates = findings_by_kind(&result, "duplicate_term");
+    assert_eq!(duplicates.len(), 1, "only the lower row is the duplicate: {:?}", result);
+    assert_eq!(duplicates[0]["path"], "docs/ir/network/CONTEXT.md");
+    assert_eq!(duplicates[0]["detail"], "宛先");
+    assert!(
+        findings_by_kind(&result, "unknown_term").is_empty(),
+        "the term is still known under network/: {:?}",
+        result
+    );
+}

@@ -3160,3 +3160,45 @@ fn req_054_scenario_about_an_unknown_requirement_is_unresolved() {
     assert_eq!(unresolved.len(), 1, "@about points nowhere: {v}");
     assert_eq!(unresolved[0]["detail"], "REQ-999");
 }
+
+// --- findings.md と ir-items.md の具体例 ---
+
+// @kotowari[REQ-032, EX-005]
+#[test]
+fn req_032_three_places_yield_two_duplicates_and_none_on_the_first() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    let requirement = "### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n\nStatement.\n\n";
+    std::fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        format!("# Title\n\nScope.\n\n## 要求\n\n{requirement}{requirement}{requirement}"),
+    )
+    .unwrap();
+    let v = run_cli(tmp.path());
+    let duplicates = find_kind_in_json(&v, "duplicate_id");
+    assert_eq!(duplicates.len(), 2, "three places yield two duplicates: {v}");
+    assert!(duplicates.iter().all(|f| f["detail"] == "REQ-001"));
+    // 1つ目の見出しは 7 行目
+    assert!(
+        duplicates.iter().all(|f| f["line"] != 7),
+        "the first heading gets no duplicate_id: {v}"
+    );
+}
+
+// @kotowari[REQ-044, EX-008]
+#[test]
+fn req_044_priority_line_under_a_requirement_is_an_unknown_field() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    std::fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n- 優先度: 高\n\nStatement.\n",
+    )
+    .unwrap();
+    let v = run_cli(tmp.path());
+    let unknown = find_kind_in_json(&v, "unknown_field");
+    assert_eq!(unknown.len(), 1, "the 優先度 line is not a known field: {v}");
+    assert_eq!(unknown[0]["detail"], "- 優先度: 高");
+}
