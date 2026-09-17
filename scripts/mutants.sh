@@ -21,6 +21,9 @@ readonly RESULTS="mutants.out/outcomes.json"
 readonly ORPHAN_SECONDS=60
 # 見張りが様子を見る間隔
 readonly WATCH_INTERVAL=10
+# 後始末でサービスの停止を確かめる回数と間隔（この積が後始末の待ちの上限）
+readonly STOP_TRIES=20
+readonly STOP_INTERVAL=0.3
 
 watchdog_pid=""
 kill_count_file=""
@@ -77,20 +80,66 @@ stop_watchdog() {
     fi
 }
 
-# この実行が作ったサービスを止める。中断されたとき、これをしないと cargo-mutants は
-# 見張りの無いまま走り続ける。既に終わっているサービスへの stop は失敗にしない
-stop_service() {
-    if [ -n "$run_unit" ]; then
-        systemctl --user stop "${run_unit}.service" >/dev/null 2>&1 || true
-        run_unit=""
-    fi
+# サービスがもう走っていないか。active、activating、reloading、deactivating は「まだ」。
+# 未登録のときの is-active は inactive か unknown を出して0以外で終わるので、それも「止まった」に入る
+service_is_stopped() {
+    local state
+    state="$(systemctl --user is-active "$1" 2>/dev/null || true)"
+    case "$state" in
+    active | activating | reloading | deactivating) return 1 ;;
+    *) return 0 ;;
+    esac
+}
+
+# 背景に置いた systemd-run のクライアントを殺す。これを先にやるのは、生きている限り
+# こいつだけがサービスを登録しうるからで、先に殺しておけば後は「もう登録されているものを
+# 止める」だけになる。実測（2026-09-17）では TERM で数ミリ秒で死に、そのときサービスは
+# active のまま残る。だから殺すだけでは足りず、下の stop_service が続けて止める
+stop_run_client() {
     if [ -n "$run_pid" ]; then
         kill "$run_pid" 2>/dev/null || true
+        wait "$run_pid" 2>/dev/null || true
         run_pid=""
     fi
 }
 
+# この実行が作ったサービスを止める。中断されたとき、これをしないと cargo-mutants は
+# 見張りの無いまま走り続ける。
+# 止まったことを確かめるまで繰り返すのは、スクリプトの起動の直後に中断が来た場合のため。
+# systemd-run を背景に起こしてから "$!" を変数に入れるまでの隙間で中断されるとクライアントを
+# 殺せず、また殺せた場合でも登録の要求がバスの上にいると、1度きりの stop の後でサービスが
+# 現れうる。止まったという観測が2回続くまで数えないのは、この「後から現れる」を見落とさないため。
+# stop は --no-block にする。既定の stop はジョブの完了まで待ち、その上限は TimeoutStopSec
+# （既定90秒）なので、待ちをこちらのループに一本化しないと後始末が長く止まる
+stop_service() {
+    stop_run_client
+    [ -n "$run_unit" ] || return 0
+    local unit="${run_unit}.service"
+    local tries=0 confirmed=0
+    while [ "$tries" -lt "$STOP_TRIES" ]; do
+        tries=$((tries + 1))
+        systemctl --user stop --no-block "$unit" >/dev/null 2>&1 || true
+        if service_is_stopped "$unit"; then
+            confirmed=$((confirmed + 1))
+            if [ "$confirmed" -ge 2 ]; then
+                run_unit=""
+                return 0
+            fi
+        else
+            confirmed=0
+        fi
+        sleep "$STOP_INTERVAL"
+    done
+    printf 'mutants.sh: could not confirm that the service stopped: %s\n' "$unit" >&2
+    run_unit=""
+}
+
 cleanup() {
+    # 後始末の途中に2度目の信号が来ても、ここから先を最後まで走らせる。
+    # INT と TERM の trap は "exit" を呼ぶので、無視に替えないと一時ディレクトリの削除と
+    # 殺した件数の出力が飛ぶ。終了コードは、最初の信号の trap が決めたものがそのまま残る
+    trap '' INT TERM
+    set +e
     stop_service
     stop_watchdog
     if [ -n "$kill_count_file" ] && [ -f "$kill_count_file" ]; then
