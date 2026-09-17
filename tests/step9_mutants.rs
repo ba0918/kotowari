@@ -169,6 +169,7 @@ fn req_144_results_without_baseline_and_with_unknown_keys_are_read() {
         "stderr: {}",
         first_stderr_line(&output)
     );
+    assert_eq!(json_of(&output)["mutants"]["caught"], 1);
 }
 
 // --- REQ-139、REQ-140: 見逃しと時間切れの指摘 ---
