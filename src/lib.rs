@@ -68,6 +68,7 @@ finding_kinds! {
     MissingTitle => "missing_title",
     MultipleTitles => "multiple_titles",
     RecordFieldMissing => "record_field_missing",
+    RecordFieldUnknown => "record_field_unknown",
     RequirementWithoutTest => "requirement_without_test",
     SourceInvalid => "source_invalid",
     TestWithoutId => "test_without_id",

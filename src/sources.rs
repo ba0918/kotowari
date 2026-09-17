@@ -73,6 +73,16 @@ pub const REQUIRED_FIELDS: [(&str, &str); 6] = [
     ("Superseded", "superseded_by"),
 ];
 
+/// TBL-022 が認める `補足の行` の名前
+pub const KNOWN_FIELD_NAMES: [&str; 6] = [
+    "why",
+    "rejected",
+    "decided_by",
+    "superseded_by",
+    "decides",
+    "related",
+];
+
 /// TBL-022 の表にある節か（節の一覧はすべての判断の記録で使う。REQ-135）
 pub fn required_field_of(heading: &str) -> Option<&'static str> {
     REQUIRED_FIELDS

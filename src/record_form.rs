@@ -1,7 +1,7 @@
 //! 判断の記録の形の検査（REQ-129〜REQ-135、TBL-022）。
 //! 読み取りは `sources::parse_records_file` が済ませてあり、ここはその構造だけを読む（REQ-136）。
 
-use crate::sources::{required_field_of, SourceContext};
+use crate::sources::{required_field_of, SourceContext, KNOWN_FIELD_NAMES};
 use crate::{Finding, FindingKind};
 
 /// 読んだ判断の記録の形を検査する
@@ -29,6 +29,18 @@ pub fn check_record_forms(ctx: &SourceContext, findings: &mut Vec<Finding>) {
                         Some(numbered.line),
                         required.to_string(),
                     ));
+                }
+
+                // REQ-131: 6つ以外の名前はその行の誤り（値が空でも受ける）
+                for field in &numbered.fields {
+                    if !KNOWN_FIELD_NAMES.contains(&field.name.as_str()) {
+                        findings.push(Finding::new(
+                            FindingKind::RecordFieldUnknown,
+                            path.clone(),
+                            Some(field.line),
+                            field.name.clone(),
+                        ));
+                    }
                 }
             }
         }

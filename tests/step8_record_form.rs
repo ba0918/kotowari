@@ -123,3 +123,44 @@ fn req_130_superseded_line_without_superseded_by_is_missing() {
     assert_eq!(found[0]["line"], 14);
     assert_eq!(found[0]["detail"], "superseded_by");
 }
+
+// --- REQ-131 / TBL-022: 知らない名前の補足の行 ---
+
+// @kotowari[REQ-131, TBL-022]
+#[test]
+fn req_131_unknown_field_name_is_record_field_unknown() {
+    // EX-104
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "u.md",
+        "# 記録 u\n\n## Context\n\n背景。\n\n## Agreements\n\n- A1 ある合意\n- why: x\n- reason: x\n",
+    );
+    let v = check(tmp.path());
+    let unknown = findings_by_kind(&v, "record_field_unknown");
+    assert_eq!(unknown.len(), 1, "\"reason\" is not one of the six names: {:?}", unknown);
+    assert_eq!(unknown[0]["line"], 11);
+    assert_eq!(unknown[0]["detail"], "reason");
+    assert_eq!(unknown[0]["severity"], "error");
+    let missing = findings_by_kind(&v, "record_field_missing");
+    assert!(missing.is_empty(), "why is present, so nothing is missing: {:?}", missing);
+}
+
+// @kotowari[REQ-131, REQ-133, TBL-019]
+#[test]
+fn req_131_unknown_name_on_two_lines_yields_two_findings() {
+    // 同じ知らない名前が2行あれば2件。値が空の行も名前の検査を受ける（REQ-133）
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "t.md",
+        "# 記録 t\n\n## Context\n\n背景。\n\n## Agreements\n\n- A1 ある合意\n- why: x\n- reason: x\n- reason:\n",
+    );
+    let v = check(tmp.path());
+    let unknown = findings_by_kind(&v, "record_field_unknown");
+    let lines: Vec<i64> = unknown.iter().map(|f| f["line"].as_i64().unwrap()).collect();
+    assert_eq!(lines, vec![11, 12], "one finding per line, blank value included: {:?}", unknown);
+    assert!(unknown.iter().all(|f| f["detail"] == "reason"));
+}
