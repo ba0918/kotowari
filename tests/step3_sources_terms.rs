@@ -1693,7 +1693,7 @@ fn req_064_term_from_a_parent_glossary_is_visible() {
     assert_eq!(unknown[0]["detail"], "網");
 }
 
-// @kotowari[REQ-065]
+// @kotowari[REQ-065, EX-026]
 #[test]
 fn req_065_document_with_no_glossary_in_its_chain_flags_every_backtick() {
     let tmp = TempDir::new().unwrap();
@@ -1755,7 +1755,7 @@ fn tbl_014_slash_separated_path_is_a_reference() {
     assert_eq!(findings[0].detail, "network/dns/b.md");
 }
 
-// @kotowari[REQ-070, TBL-014]
+// @kotowari[REQ-070, TBL-014, EX-023]
 #[test]
 fn req_070_bare_name_resolves_in_the_same_directory_only() {
     let tmp = TempDir::new().unwrap();
@@ -1774,7 +1774,7 @@ fn req_070_bare_name_resolves_in_the_same_directory_only() {
     assert!(findings_by_kind(&parse_json(&output), "missing_document").is_empty());
 }
 
-// @kotowari[REQ-070, TBL-014]
+// @kotowari[REQ-070, TBL-014, EX-024]
 #[test]
 fn req_070_slash_path_resolves_from_the_ir_root() {
     let tmp = TempDir::new().unwrap();
@@ -1786,7 +1786,7 @@ fn req_070_slash_path_resolves_from_the_ir_root() {
     assert_eq!(result["files"], 2);
 }
 
-// @kotowari[REQ-070, TBL-014]
+// @kotowari[REQ-070, TBL-014, EX-025]
 #[test]
 fn req_070_dot_and_dotdot_elements_never_resolve() {
     let tmp = TempDir::new().unwrap();
@@ -1803,7 +1803,7 @@ fn req_070_dot_and_dotdot_elements_never_resolve() {
     assert!(missing.iter().all(|f| f["path"] == "docs/ir/network/dns/a.md"));
 }
 
-// @kotowari[REQ-069, REQ-070, TBL-014, TBL-008]
+// @kotowari[REQ-069, REQ-070, TBL-014, TBL-008, EX-014]
 #[test]
 fn req_070_detail_is_the_whole_reference() {
     let tmp = TempDir::new().unwrap();
@@ -1815,7 +1815,7 @@ fn req_070_detail_is_the_whole_reference() {
     assert_eq!(missing[0]["detail"], "docs/decision/adr/0001-test-marker.md");
 }
 
-// @kotowari[REQ-033, REQ-070, TBL-014]
+// @kotowari[REQ-033, REQ-070, TBL-014, EX-032]
 #[cfg(unix)]
 #[test]
 fn req_070_document_under_a_directory_symlink_is_missing() {
@@ -1832,7 +1832,7 @@ fn req_070_document_under_a_directory_symlink_is_missing() {
     assert_eq!(missing[0]["detail"], "link/d.md");
 }
 
-// @kotowari[REQ-069, TBL-014]
+// @kotowari[REQ-069, TBL-014, EX-033]
 #[test]
 fn tbl_014_reference_after_a_japanese_character_is_recognized() {
     let tmp = TempDir::new().unwrap();
@@ -1844,7 +1844,7 @@ fn tbl_014_reference_after_a_japanese_character_is_recognized() {
     assert_eq!(missing[0]["detail"], "timeout-config.md");
 }
 
-// @kotowari[REQ-064, REQ-069, TBL-014]
+// @kotowari[REQ-064, REQ-069, TBL-014, EX-034]
 #[test]
 fn tbl_014_backticked_path_is_a_term_not_a_reference() {
     let tmp = TempDir::new().unwrap();
@@ -1961,6 +1961,53 @@ fn req_123_same_term_above_and_below_the_chain_is_reported_on_the_lower_row() {
     assert!(
         findings_by_kind(&result, "unknown_term").is_empty(),
         "the term is still known under network/: {:?}",
+        result
+    );
+}
+
+// --- terms.md の具体例 ---
+
+// @kotowari[REQ-064, EX-013]
+#[test]
+fn req_064_a_backticked_path_outside_the_glossary_is_an_unknown_term() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(tmp.path(), "a.md", &term_statement("REQ-001", "`src/main.rs`"));
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let unknown = findings_by_kind(&result, "unknown_term");
+    assert_eq!(unknown.len(), 1, "{:?}", result);
+    assert_eq!(unknown[0]["detail"], "src/main.rs");
+}
+
+// @kotowari[REQ-069, EX-022]
+#[test]
+fn req_069_a_source_shaped_path_in_the_scope_line_is_not_a_reference() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_ir(
+        tmp.path(),
+        "a.md",
+        "# Title\n\n範囲は docs/decision/records/records.md#A12 で決めた。\n",
+    );
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    assert!(
+        findings_by_kind(&result, "missing_document").is_empty(),
+        "a path followed by # is a source, not a document reference: {:?}",
+        result
+    );
+}
+
+// @kotowari[REQ-069, EX-031]
+#[test]
+fn req_069_md_followed_by_a_slash_is_not_a_reference() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    // 文書の名前は x.md にする。"a.md" も "b.md" も "md/b.md" も置き場に無い
+    write_ir(tmp.path(), "x.md", "# Title\n\na.md/b.md\n");
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    assert!(
+        findings_by_kind(&result, "missing_document").is_empty(),
+        "a path followed by / is not a document reference: {:?}",
         result
     );
 }
