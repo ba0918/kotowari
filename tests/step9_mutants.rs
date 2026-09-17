@@ -215,12 +215,13 @@ fn req_139_caught_and_unviable_mutants_yield_nothing() {
 // @kotowari[REQ-140, EX-206]
 #[test]
 fn req_140_timeout_is_a_notice_even_when_listed() {
-    let tmp = project(&outcomes(&[mutant_at(
-        "src/a.rs",
-        3,
-        "replace f with ()",
-        "Timeout",
-    )]));
+    // EX-206 の Given: その変異に合う形の正しい1件と、その文面を持つソースを置く
+    // （SRC_A、CHANGE、valid_entry、project_with_list はこのファイルの後ろで定義している）
+    let tmp = project_with_list(
+        &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "Timeout")]),
+        &valid_entry(),
+    );
+    write(tmp.path(), "src/a.rs", SRC_A);
     let output = run_in(tmp.path(), &[]);
     let v = json_of(&output);
     let findings = v["findings"].as_array().unwrap();
@@ -229,8 +230,12 @@ fn req_140_timeout_is_a_notice_even_when_listed() {
     assert_eq!(findings[0]["severity"], "notice");
     assert_eq!(findings[0]["path"], "src/a.rs");
     assert_eq!(findings[0]["line"], 3);
-    // PROP-005: "timeout" は mutant_timeout の指摘の数に等しい
+    // PROP-005: "timeout" は mutant_timeout の指摘の数に等しい。
+    // 一覧に載っていても "equivalent" には数えない（REQ-140: 一覧との一致を見ない）
     assert_eq!(v["mutants"]["timeout"], 1);
+    assert_eq!(v["mutants"]["equivalent"], 0);
+    // 一覧の1件の文面は今のソースにあるので古くない（REQ-142）
+    assert!(findings_of(&v, "equivalent_stale").is_empty(), "{findings:?}");
     assert_eq!(output.status.code(), Some(0));
 }
 
