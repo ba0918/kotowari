@@ -677,6 +677,38 @@ fn tbl_012_number_inside_code_block_is_not_a_source_target() {
     );
 }
 
+// @kotowari[REQ-058, TBL-012]
+#[test]
+fn tbl_012_decision_heading_only_inside_code_block_makes_the_file_not_a_record() {
+    // A46: 決定の節の見出しがコードブロックの中にしか無いファイルは判断の記録でなく、
+    // 印は "## 見出し" で照合される（TBL-012 順4）。決定の番号の印は先にならない
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/decision/records/f.md"),
+        concat!(
+            "# 補足の文書\n\n## 補足\n\n記録の形の例:\n\n",
+            "```markdown\n## Agreements\n\n- A1 例の合意\n```\n",
+        ),
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/f.md#補足\n- 検証: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/f.md#A1\n- 検証: unit\n\nStatement2.\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    let details: Vec<&str> = si.iter().map(|f| f["detail"].as_str().unwrap_or("")).collect();
+    assert_eq!(
+        details,
+        vec!["docs/decision/records/f.md#A1"],
+        "the heading anchor resolves (not a record) and the number anchor does not: {:?}",
+        si
+    );
+}
+
 // --- 除外: 隠しディレクトリは辿らない ---
 
 // @kotowari[REQ-058]
