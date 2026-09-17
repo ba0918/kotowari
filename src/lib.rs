@@ -378,19 +378,21 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     })
 }
 
+/// REQ-111: 読むファイルの先頭の UTF-8 BOM (U+FEFF) を読み飛ばす。
+/// 読むファイルはどれもここを通す（`read_utf8_file` と `read_source_lines`）。
+pub fn strip_bom(text: &str) -> &str {
+    text.strip_prefix('\u{FEFF}').unwrap_or(text)
+}
+
 /// UTF-8 のテキストファイルを読む。読めないか UTF-8 でなければ StopReason を返す。
 /// `display_path` は誤りの詳細に使う表示用のパス。
 /// 先頭の UTF-8 BOM (U+FEFF) があれば読み飛ばす（REQ-111）。
 pub fn read_utf8_file(path: &Path, display_path: &str) -> Result<String, StopReason> {
     let bytes = std::fs::read(path)
         .map_err(|e| StopReason::UnreadableFile(format!("{display_path}: {e}")))?;
-    let mut text = String::from_utf8(bytes)
+    let text = String::from_utf8(bytes)
         .map_err(|_| StopReason::NonUtf8File(display_path.to_string()))?;
-    // REQ-111: BOM の読み飛ばし
-    if text.starts_with('\u{FEFF}') {
-        text = text[3..].to_string();
-    }
-    Ok(text)
+    Ok(strip_bom(&text).to_string())
 }
 
 /// パスを正規化する純粋な関数。
@@ -731,10 +733,11 @@ fn read_sources(
 
 /// ソースを行に分ける。無い、読めない、UTF-8 でないときは None を返して`停止`しない（REQ-141、REQ-142）。
 /// 行の区切りは TBL-010 と同じで、行の終わりの "\r\n" の "\r" は文面に含めない（A52）。
+/// 先頭の BOM は読み飛ばす（REQ-111）。読み飛ばさないと1行目の文面に BOM が残る。
 fn read_source_lines(base: &Path, file: &str) -> Option<Vec<String>> {
     let bytes = std::fs::read(base.join(file)).ok()?;
     let text = String::from_utf8(bytes).ok()?;
-    Some(text.lines().map(str::to_string).collect())
+    Some(strip_bom(&text).lines().map(str::to_string).collect())
 }
 
 /// REQ-024: 指摘を TBL-007 の順（path → line → kind → detail）に並べる

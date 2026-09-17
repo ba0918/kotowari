@@ -708,6 +708,39 @@ fn req_141_path_spelling_tab_indent_and_crlf_still_match() {
     );
 }
 
+// @kotowari[REQ-111, REQ-141]
+#[test]
+fn req_111_source_with_a_bom_still_matches_on_its_first_line() {
+    // REQ-111: 読むファイルの先頭の BOM は読み飛ばす。REQ-147 はソースを mutants が読むファイルに挙げる。
+    // 読み飛ばさないと1行目の文面に BOM が残り、一覧の1件と一致しない
+    const CHANGE_ON_LINE_ONE: &str = "replace f with ()";
+    let tmp = project_with_list(
+        &outcomes(&[mutant_at("src/a.rs", 1, CHANGE_ON_LINE_ONE, "MissedMutant")]),
+        &entry(&[
+            ("file", "src/a.rs"),
+            ("change", CHANGE_ON_LINE_ONE),
+            ("text", "fn f() {"),
+            ("class", "equivalent"),
+            ("why", "the body has no observable effect"),
+        ]),
+    );
+    write(tmp.path(), "src/a.rs", &format!("\u{FEFF}{SRC_A}"));
+    let output = run_in(tmp.path(), &[]);
+    let v = json_of(&output);
+    assert!(
+        findings_of(&v, "mutant_survived").is_empty(),
+        "{:?}",
+        v["findings"]
+    );
+    assert!(
+        findings_of(&v, "equivalent_stale").is_empty(),
+        "{:?}",
+        v["findings"]
+    );
+    assert_eq!(v["mutants"]["equivalent"], 1);
+    assert_eq!(output.status.code(), Some(0));
+}
+
 // @kotowari[REQ-141, REQ-142, EX-235]
 #[test]
 fn req_141_non_utf8_source_does_not_stop() {
