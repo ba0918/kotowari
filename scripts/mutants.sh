@@ -28,16 +28,19 @@ diff_file=""
 # この実行が作るサービスの名前（この実行だけのもの）と、その終わりを待っている systemd-run
 run_unit=""
 run_pid=""
+# cargo-mutants に作業の写しを作らせる、この実行だけの一時ディレクトリ
+run_tmpdir=""
 
 die() {
     printf 'mutants.sh: %s\n' "$1" >&2
     exit 1
 }
 
-# 60秒以上生きている変異済みの実行ファイル。
-# pgrep のパターンを "^/tmp/cargo-mutants-" で始めて固定する（固定しないと見張り自身の bash に当たる）
+# この実行の一時ディレクトリの下で60秒以上生きている変異済みの実行ファイル。
+# pgrep のパターンをその一時ディレクトリで始めて固定する。先頭を固定しないと見張り自身の bash に
+# 当たり、"cargo-mutants-" だけに広げると同時に走っている別の実行の変異済みプロセスまで殺す
 mutated_processes() {
-    pgrep -f '^/tmp/cargo-mutants-' 2>/dev/null | while read -r pid; do
+    pgrep -f "^${run_tmpdir}/cargo-mutants-" 2>/dev/null | while read -r pid; do
         ps -o pid=,etimes= -p "$pid" 2>/dev/null
     done
 }
@@ -100,6 +103,16 @@ cleanup() {
         rm -f -- "$diff_file"
         diff_file=""
     fi
+    # 消すのは mktemp -d が返したパスだけ。空や "/" を消しに行かないことを先に確かめる
+    case "$run_tmpdir" in
+    '' | /) ;;
+    *)
+        if [ -d "$run_tmpdir" ]; then
+            rm -rf -- "$run_tmpdir"
+        fi
+        run_tmpdir=""
+        ;;
+    esac
 }
 
 trap cleanup EXIT
@@ -120,6 +133,11 @@ run_mutants() {
     # A23: 結果のファイルは毎回その場で作る（古い結果を読ませる余地を無くす）
     rm -rf -- mutants.out
 
+    # cargo-mutants は TMPDIR の下に作業の写しを作る。この実行だけのディレクトリを渡して、
+    # 見張りが見る範囲をこの実行のものだけに絞る（見張りより先に作る。見張りはここで枝分かれする）
+    run_tmpdir="$(mktemp -d)"
+    [ -n "$run_tmpdir" ] || die 'cannot make the temporary directory for this run'
+
     start_watchdog
     local status=0
     # この実行だけの名前を付ける。中断されたとき cleanup がこの名前でサービスを止める
@@ -133,6 +151,7 @@ run_mutants() {
         --setenv=HOME="$HOME" \
         --setenv=CARGO_UNSTABLE_CHECKSUM_FRESHNESS=true \
         --setenv=CARGO_BUILD_JOBS=4 \
+        --setenv=TMPDIR="$run_tmpdir" \
         --working-directory="$PWD" \
         -- cargo +nightly mutants -j 1 --no-config -o . "$@" </dev/null &
     run_pid=$!
