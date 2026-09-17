@@ -7,7 +7,7 @@
 2026-09-17 の実測では、8本の記録の決定 308 行のうち理由の行を持つのは decision-log の 22 行だけで、既存の記録は書き直さない（[A8](./2026-09-17-decision-log.md#A8)）ので、検査の適用範囲を決めないと初日から 286 件の誤りになる。
 そこで、どの検査を kotowari に足すか、どの記録に適用するか、リンクの解決の規則、指摘の種類と重さ、Markdown の構造の取得を mds（利用者が実装中の Markdown スキーマの道具）に任せるかを決める。
 
-Position: 承認済み（2026-09-17）。計画 docs/plans/record-form.md も承認済み（A44〜A46 を同時に確定）。次は cycle。実装役は Opus 5 の subagent（Codex は 9/23 まで使えない）
+Position: 承認・実装・マージ済み（2026-09-17、main の bc712cf まで）。cycle は実装1回・フルレビュー1回で収束し、直す対象の指摘は0件。記録のみの指摘5件（A46 の分岐のテストが無い、references の対処の文言2つ、sources.rs の説明、EX-110 のテストの assert の狭さ）は .agents/artifacts/reviews/record-form.json に残っている
 
 ## Agreements
 
