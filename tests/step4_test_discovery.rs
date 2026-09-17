@@ -1000,7 +1000,7 @@ fn req_077_malformed_id_in_marker_is_unresolved_reference_non_rs() {
 
 // --- REQ-088: IR に文書が無いとき ---
 
-// @kotowari[REQ-088]
+// @kotowari[REQ-088, EX-019]
 #[test]
 fn req_088_empty_ir_still_checks_tests() {
     let tmp = TempDir::new().unwrap();

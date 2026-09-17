@@ -40,7 +40,7 @@ fn req_002_only_format_and_config_options() {
 // --- REQ-004: 引数の誤り ---
 
 // REQ-008: 受けるオプションの集合を固定するのはこのテスト（否定側）
-// @kotowari[REQ-004, REQ-005, REQ-007, REQ-008]
+// @kotowari[REQ-004, REQ-005, REQ-007, REQ-008, EX-001]
 #[test]
 fn req_004_unknown_option_stops() {
     let output = cmd()

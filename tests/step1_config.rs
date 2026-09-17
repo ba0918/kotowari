@@ -239,7 +239,7 @@ fn req_013_explicit_limits_values_are_used_as_given() {
 
 // --- REQ-014: 設定の誤り ---
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-014, EX-003]
 #[test]
 fn req_014_unknown_key_stops() {
     let tmp = TempDir::new().unwrap();
@@ -838,7 +838,7 @@ fn req_020_kotowari_toml_beside_the_base_is_not_read() {
 
 // --- REQ-090: スキーマのファイルを読まない ---
 
-// @kotowari[REQ-090]
+// @kotowari[REQ-090, EX-040]
 #[test]
 fn req_090_schema_file_is_not_read() {
     let tmp = TempDir::new().unwrap();
@@ -868,7 +868,7 @@ fn req_090_schema_file_is_not_read() {
 
 // --- REQ-091: 外部の mdschema を使わない ---
 
-// @kotowari[REQ-091]
+// @kotowari[REQ-091, EX-041]
 #[test]
 fn req_091_check_runs_the_same_with_an_empty_path() {
     let tmp = TempDir::new().unwrap();
