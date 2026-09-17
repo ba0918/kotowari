@@ -17,6 +17,17 @@ kotowari の仕様に基づく（改訂 2026-09-16。本体の版は固定しな
 - `// @kotowari[REQ-001, TBL-002]` — REQ-001 と TBL-002 に結び付く
 - `// @kotowari[REQ-001] @kotowari[TBL-002]` — 1行に2つの印。両方拾う
 
+## 具体例の印
+
+要求の ID だけでなく、具体例（シナリオ）の ID も印に書ける。要求を挙げる具体例に、その ID を含む印が1つも無いと scenario_without_test の誤りになる。
+
+- `// @kotowari[REQ-001, EX-201]` — 要求 REQ-001 と具体例 EX-201 の両方に結び付く
+- `// @kotowari[EX-201, EX-202]` — 1つの印で2つの具体例に結び付く
+
+具体例の印は、その具体例が `@about` に挙げる要求の分も満たす。`@kotowari[EX-201]` だけのテストがあれば、EX-201 の `@about` の要求には requirement_without_test が出ない。逆は無い。要求の ID だけを挙げる印は、その要求の具体例の分を満たさない。
+
+同じ ID の具体例が2か所以上にあるときは、1つ目（文書のパスのバイト順、同じ文書では行の小さい方）の `@about` を使う。
+
 ## 置ける位置
 
 テストに結び付く印の位置:
@@ -73,4 +84,4 @@ Rust でテストと数えるもの:
 
 ## Rust 以外
 
-Rust 以外の言語では、kotowari に同梱の問い合わせが無いため、テストの見分けは行わない。テストのファイル内の印はすべて拾い、requirement_without_test を消す側に数える。test_without_id は出さない。テストの正しさは人が確かめる。
+Rust 以外の言語では、kotowari に同梱の問い合わせが無いため、テストの見分けは行わない。テストのファイル内の印はすべて拾い、requirement_without_test と scenario_without_test を消す側に数える。test_without_id は出さない。テストの正しさは人が確かめる。
