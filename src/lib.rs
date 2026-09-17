@@ -1,5 +1,7 @@
+pub mod cargo_mutants;
 pub mod config;
 pub mod ir;
+pub mod mutants;
 pub mod record_form;
 pub mod sources;
 pub mod terms;
@@ -203,6 +205,7 @@ stop_reasons! {
     ConfigError => "config error",
     UnreadableFile => "unreadable file",
     NonUtf8File => "non-UTF-8 file",
+    ResultsError => "results error",
 }
 
 /// 結果のファイルを作った変異テストの道具（REQ-149）
@@ -643,14 +646,21 @@ fn print_help() {
 pub fn run_mutants(
     cwd: &Path,
     _config_path: Option<&Path>,
-    _tool: Tool,
+    tool: Tool,
     results: &Path,
 ) -> Result<(), StopReason> {
     let base = find_base(cwd);
     // 結果のファイルのパスはカレントディレクトリからの相対（REQ-149）、
     // 停止の詳細は基準のディレクトリからの相対（TBL-020）
     let display = display_from_base(&base, cwd, results);
-    read_utf8_file(&cwd.join(results), &display)?;
+    let text = read_utf8_file(&cwd.join(results), &display)?;
+
+    // 道具の結果を変異の結果に写すのはここだけ（REQ-138、A12）
+    let _outcomes = match tool {
+        Tool::CargoMutants => cargo_mutants::read_outcomes(&text),
+    }
+    .map_err(|e| StopReason::ResultsError(format!("{display}: {e}")))?;
+
     Ok(())
 }
 
