@@ -9,7 +9,7 @@ ADR が持っていた「採用理由の詳細」と「改訂の統合先」は�
 記録の前提だった「1ファイルで上書きされる」は、brainstorm ごとの別ファイルになった時点で消えている（[records.md#A22](./records.md#A22)）。
 そこで、記録の形を人が読める形に寄せ、理由を必須にし、ADR を新しく書く義務をやめる。
 
-Position: 第1ラウンド（A1〜A11）は承認・コミット済み（bfb30cc、1a72beb）。第2ラウンド（2026-09-17、A12〜A18）で Superseded の節、ゲート、既存の記録の移行、ディレクトリの改名を決めた。移行の分類を調査中
+Position: 第1〜第2ラウンドは承認・コミット済み。A19（2026-09-17）でゲートの置き場を改めた
 
 ## Agreements
 
@@ -79,6 +79,7 @@ Position: 第1ラウンド（A1〜A11）は承認・コミット済み（bfb30cc
 - A15 lefthook を入れて、pre-commit で `kotowari check`（終了コード 0）、pre-push で `cargo test` を走らせる。既存の秘密情報の検査のフック（グローバルの pre-commit）はそのまま
   - why: いま commit 時に走るのは秘密情報の検査だけで、出典切れ・テストの無い要求・Superseded を指す出典を止めるものが無い。check は数百ミリ秒で commit 前に置ける。cargo test は時間がかかるので push 側
   - decided_by: 利用者（推奨を採用）
+  - superseded_by: [A19](#A19)（テスト側の指摘は push で止める。補足）
 
 - A16 kotowari 自身に記録の形の検査（Superseded の行が「改めた:」を持つ、「改めた:」のリンク先が実在して決定の行である、Revisions の「置き換え」と Superseded の整合、決定の行に理由がある）を足すかは、別の壁打ちに切る。U1 と U2 に統合して置く
   - why: 新しい指摘の種類とコードとテストが要り、文書だけの今回と混ぜない
@@ -92,6 +93,11 @@ Position: 第1ラウンド（A1〜A11）は承認・コミット済み（bfb30cc
   - why: 記録は brainstorm の産物から「判断の記録」（Superseded を持つ履歴）に性格が変わり、同じディレクトリに形の契約 ir-form.md もあって、brainstorm という名前が中身と合わない。records は用語集の「判断の記録」と設定の鍵 decisions.records に対応し、新しい語を増やさない。logs は「文字どおりの履歴」で、記録という語とずれる（利用者の言葉）
   - rejected: docs/decision/logs（利用者の言葉: 記録は履歴ではなく記録）。records.md の R7（置き場を移さない）は「出典の書き換えが要る」が理由で、今回は Superseded の移行で出典を触るのでその理由が消えた
   - decided_by: 利用者
+
+- A19 pre-commit の `kotowari check` はテスト側の指摘（requirement_without_test、test_without_id、invalid_marker、unparsable_file、テストのファイルの unresolved_reference）では止めず、停止とそれ以外の誤りで止める。テスト側の指摘も含めた終了コード0の check は pre-push に置く
+  - why: 仕様の承認のコミットは実装より先で、新しい unit の要求はその時点で必ず requirement_without_test を持つ。A15 の「テストの無い要求を止める」と承認の手順（テスト側の指摘は cycle の終端で0にする）が衝突し、2026-09-17 の record-form の承認のコミットが7件の requirement_without_test で止まった。止める場所を push に移せば「テストの無い要求を出荷しない」は保てる
+  - rejected: `--no-verify` で飛ばす（ゲートを飛ばす癖がつく）。新しい要求を一旦 review で入れる（IR に嘘を書く）
+  - decided_by: 利用者（推奨を採用）
 
 ## Prohibitions
 
@@ -127,6 +133,7 @@ Position: 第1ラウンド（A1〜A11）は承認・コミット済み（bfb30cc
 
 ## Revisions
 
+- A19 は A15 の pre-commit の check を、テスト側の指摘では止めない形に改める（補足）
 - [record-form の A27](./2026-09-17-record-form.md#A27) が A1 の補足の行の名前、A2 の逃げの値、A6 の見出しを英語に改めた（2026-09-17。補足）
 - A18 は [records.md#R7](./records.md#R7)（判断の記録と IR を docs/decision/ の新しい置き場に移さない）を置き換える。理由だった「出典の書き換えが要る」は、A14 の移行で出典を触るので消えた
 - A5 は [records.md#R2](./records.md#R2) を部分的に改める（新しい ADR は書かず、既存は残す）。A5 は [records.md#A22](./records.md#A22) の「両方残す」も「書かれた ADR は残す」に改める
