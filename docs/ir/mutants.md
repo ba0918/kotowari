@@ -48,6 +48,7 @@ kotowari は常に、"kotowari mutants" で`設定ファイル`、結果のフ�
 - 種類: prohibition
 - 出典: docs/decision/records/2026-09-17-mutation-tests.md#A12, docs/decision/records/2026-09-17-mutation-tests.md#A13, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A54
 - 検証: review
+- 確かめ方: 指摘の種類名（mutant_survived、mutant_timeout、equivalent_stale、equivalent_invalid）と detail を組み立てる src/mutants.rs と src/lib.rs に、道具の結果の値の綴り（CaughtMutant、MissedMutant）が現れないことを rg -n 'CaughtMutant|MissedMutant' src/mutants.rs src/lib.rs が何も出さないことで確認。道具の値を写す src/cargo_mutants.rs は対象外
 
 kotowari は、`指摘`の種類と detail の形に、変異テストの道具に固有の語を使ってはならない。detail の中の変更の説明は道具が出した文のままで、この対象にしない。
 
