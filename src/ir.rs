@@ -65,6 +65,8 @@ pub enum Item {
         sources: Vec<String>,
         verification: Option<String>,
         definitions: Vec<String>,
+        /// TBL-011: "- 確かめ方:" の値。人が確かめる手順の自由文
+        how_to_verify: Option<String>,
         statements: Vec<(usize, String)>,
         fields_seen: Vec<(usize, String, String)>,
     },
@@ -639,10 +641,10 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
     }
 }
 
-/// 見出しの下の "- 種類:"、"- 検証:"、"- 定義:"、"- 関係:" のうち、
+/// 見出しの下の "- 種類:"、"- 検証:"、"- 定義:"、"- 関係:"、"- 確かめ方:" のうち、
 /// 値が空なら「行が無いもの」として扱う（REQ-098, A157）
 fn is_blankable_field(name: &str) -> bool {
-    matches!(name, "種類" | "検証" | "定義" | "関係")
+    matches!(name, "種類" | "検証" | "定義" | "関係" | "確かめ方")
 }
 
 /// 項目の組み立て
@@ -745,6 +747,7 @@ impl ItemBuilder {
                 let mut sources = Vec::new();
                 let mut verification = None;
                 let mut definitions = Vec::new();
+                let mut how_to_verify = None;
 
                 for (_, field_name, value, _raw) in &self.field_lines {
                     match field_name.as_str() {
@@ -764,6 +767,7 @@ impl ItemBuilder {
                                 .filter(|s| !s.is_empty())
                                 .collect();
                         }
+                        "確かめ方" => how_to_verify = Some(value.clone()),
                         _ => {}
                     }
                 }
@@ -776,6 +780,7 @@ impl ItemBuilder {
                     sources,
                     verification,
                     definitions,
+                    how_to_verify,
                     statements: self.statement_lines,
                     fields_seen,
                 }
@@ -1114,7 +1119,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             ..
         } => {
             // 既知のフィールド
-            let known_fields = ["種類", "出典", "検証", "定義"];
+            let known_fields = ["種類", "出典", "検証", "定義", "確かめ方"];
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
             // REQ-098: 必須の行

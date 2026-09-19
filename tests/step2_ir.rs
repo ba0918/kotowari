@@ -3202,3 +3202,49 @@ fn req_044_priority_line_under_a_requirement_is_an_unknown_field() {
     assert_eq!(unknown.len(), 1, "the 優先度 line is not a known field: {v}");
     assert_eq!(unknown[0]["detail"], "- 優先度: 高");
 }
+
+// @kotowari[REQ-044, TBL-011]
+#[test]
+fn req_044_how_to_verify_is_a_known_line_of_a_requirement() {
+    let content = concat!(
+        "# Title\n\nScope.\n\n",
+        "## 要求\n\n### REQ-001: R\n\n",
+        "- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n",
+        "- 確かめ方: 手で動かして見る\n\nStatement.\n\n",
+        "## 決定表\n\n### TBL-001: T\n\n",
+        "- 出典: docs/decision/records/records.md#A1\n",
+        "- 確かめ方: 手で動かして見る\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n",
+        "## 性質\n\n### PROP-001: P\n\n",
+        "- 出典: docs/decision/records/records.md#A1\n",
+        "- 確かめ方: 手で動かして見る\n\nStatement.\n",
+    );
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let unknown = find_by_kind(&findings, "unknown_field");
+    // TBL-011 は "- 確かめ方:" を要求だけに持たせる
+    assert_eq!(
+        unknown.len(),
+        2,
+        "only the table and the property keep the unknown_field: {unknown:?}"
+    );
+    assert!(
+        unknown.iter().all(|f| f.line == Some(21) || f.line == Some(32)),
+        "the requirement's line is a known field, the other two are not: {unknown:?}"
+    );
+}
+
+// @kotowari[REQ-045, TBL-011]
+#[test]
+fn req_045_two_how_to_verify_lines_under_a_requirement_is_a_duplicate_field() {
+    let content = concat!(
+        "# Title\n\nScope.\n\n",
+        "## 要求\n\n### REQ-001: R\n\n",
+        "- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n",
+        "- 確かめ方: 手で動かして見る\n- 確かめ方: もう一度見る\n\nStatement.\n",
+    );
+    let doc = ir::parse_document("a.md", content);
+    let findings = check(&[doc], &default_config());
+    let duplicates = find_by_kind(&findings, "duplicate_field");
+    assert_eq!(duplicates.len(), 1, "the second line is a duplicate: {duplicates:?}");
+    assert_eq!(duplicates[0].detail, "確かめ方");
+}
