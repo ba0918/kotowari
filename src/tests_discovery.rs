@@ -379,17 +379,7 @@ fn attr_path_ends_with_test(attr_text: &str) -> bool {
 
 /// 関数が #[test] 属性を持つか
 fn has_attribute(node: tree_sitter::Node, source: &str, _attr_text: &str) -> bool {
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        if child.kind() == "attribute_item" || child.kind() == "attribute" {
-            let text = &source[child.byte_range()];
-            if attr_path_ends_with_test(text) {
-                return true;
-            }
-        }
-    }
-
-    // 前の兄弟ノードの属性も見る
+    // 属性は function_item の子にならず、前の兄弟ノードとして並ぶ
     let mut prev = node.prev_sibling();
     while let Some(p) = prev {
         if p.kind() == "attribute_item" {
