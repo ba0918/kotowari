@@ -41,7 +41,7 @@ kotowari は常に、"kotowari check" の`誤り`が0件で、かつ`問題の�
 - 出典: docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-20-query-status.md#A13, docs/decision/records/2026-09-20-query-status.md#A14, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-20-query-status.md#A20
 - 検証: unit
 
-kotowari は常に、"kotowari status" の "--format" の値として "json" と "text" の2つだけを受け、既定を "json" にする。"json" では最上位が `TBL-028` の群の鍵だけの JSON を1つ出す。"text" では `TBL-028` の群ごとに "群名 鍵=値 鍵=値" の形の1行を、`TBL-028` の表の順に出す。鍵の語は JSON と同じで、値の間は1つの半角空白で区切り、桁揃えの空白は入れない。"complete" の行は "complete true" か "complete false" である。
+kotowari は常に、"kotowari status" の "--format" の値として "json" と "text" の2つだけを受け、既定を "json" にする。"json" では最上位が `TBL-028` の群の鍵だけの JSON を1つ出し、群の順は `TBL-028` の表の順で "complete" が最後である。"text" では `TBL-028` の群ごとに "群名 鍵=値 鍵=値" の形の1行を、`TBL-028` の表の順に出す。鍵の語は JSON と同じで、値の間は1つの半角空白で区切り、桁揃えの空白は入れない。"complete" の行は "complete true" か "complete false" である。
 
 ## 決定表
 
