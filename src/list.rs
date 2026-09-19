@@ -138,8 +138,23 @@ impl ListItem {
         }
     }
 
-    /// REQ-154: 並べ替えの鍵
-    fn sort_key(&self) -> (&str, usize) {
+    /// TBL-026: 1件の `ID`
+    pub fn id(&self) -> &str {
+        self.text_parts().id
+    }
+
+    /// TBL-026: 1件の "kind"
+    pub fn kind(&self) -> &'static str {
+        match self {
+            ListItem::Requirement(i) => i.kind,
+            ListItem::WithExamples(i) => i.kind,
+            ListItem::Scenario(i) => i.kind,
+            ListItem::Flag(i) => i.kind,
+        }
+    }
+
+    /// TBL-026: 1件の "path" と "line"（REQ-154 の並べ替えの鍵）
+    pub fn location(&self) -> (&str, usize) {
         let parts = self.text_parts();
         (parts.path, parts.line)
     }
@@ -270,7 +285,7 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
         }
     }
 
-    items.sort_by(|a, b| a.sort_key().cmp(&b.sort_key()));
+    items.sort_by(|a, b| a.location().cmp(&b.location()));
     ListResult { items }
 }
 

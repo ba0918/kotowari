@@ -4,6 +4,7 @@ pub mod equivalents;
 pub mod ir;
 pub mod list;
 pub mod mutants;
+pub mod query;
 pub mod record_form;
 pub mod sources;
 pub mod terms;
@@ -662,12 +663,8 @@ pub fn run(args: &[String]) -> u8 {
                 Err(reason) => return stop(&reason),
             };
             match run_query(&cwd, config_path.as_deref(), &id) {
-                Ok(()) => {
-                    // 組み立てはこれから。読み取りが通ったことだけを形で伝える
-                    match format {
-                        Format::Json => println!("{{\"items\":[]}}"),
-                        Format::Text => {}
-                    }
+                Ok(result) => {
+                    print_query(&result, format);
                     0
                 }
                 Err(reason) => stop(&reason),
@@ -737,6 +734,14 @@ fn print_list(result: &list::ListResult, format: Format) {
     match format {
         Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
         Format::Text => list::print_text(result),
+    }
+}
+
+/// "kotowari query" の1件を出す（REQ-161）
+fn print_query(result: &query::QueryResult, format: Format) {
+    match format {
+        Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
+        Format::Text => {}
     }
 }
 
@@ -1013,10 +1018,16 @@ pub fn run_list(cwd: &Path, config_path: Option<&Path>) -> Result<list::ListResu
     Ok(list::build(&loaded.docs, &loaded.cfg.ir, &loaded.markers))
 }
 
-/// 1件の読み取りのエントリポイント（REQ-156）。指摘は計算しても出さない
-pub fn run_query(cwd: &Path, config_path: Option<&Path>, _id: &str) -> Result<(), StopReason> {
-    load_all(cwd, config_path)?;
-    Ok(())
+/// 1件の読み取りのエントリポイント（REQ-156）。指摘は計算しても出さない。
+/// REQ-157: 位置引数と同じ `ID` を持つものが無ければ引数の誤りで停止する
+pub fn run_query(
+    cwd: &Path,
+    config_path: Option<&Path>,
+    id: &str,
+) -> Result<query::QueryResult, StopReason> {
+    let loaded = load_all(cwd, config_path)?;
+    query::build(&loaded.docs, &loaded.cfg.ir, &loaded.markers, id)
+        .ok_or_else(|| StopReason::ArgumentError(format!("unknown id: {id}")))
 }
 
 /// 集計のエントリポイント（REQ-162）。指摘は計算しても出さない
