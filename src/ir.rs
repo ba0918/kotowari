@@ -919,21 +919,20 @@ fn check_gherkin_tags_findings(
     tag_line: Option<usize>,
     findings: &mut Vec<crate::Finding>,
 ) {
-    let line = tag_line.unwrap_or(0);
     for (tag_name, tag_value) in tags {
         if tag_name.is_empty() {
             // "@" で始まらない語
             findings.push(crate::Finding::new(
                 crate::FindingKind::UnknownTag,
                 String::new(),
-                if line > 0 { Some(line) } else { None },
+                tag_line,
                 tag_value.clone(),
             ));
         } else if !["@id", "@about", "@source"].contains(&tag_name.as_str()) {
             findings.push(crate::Finding::new(
                 crate::FindingKind::UnknownTag,
                 String::new(),
-                if line > 0 { Some(line) } else { None },
+                tag_line,
                 tag_name.clone(),
             ));
         }
