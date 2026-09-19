@@ -1,4 +1,4 @@
-kotowari の仕様に基づく（改訂 2026-09-17。本体の版は固定しない）
+kotowari の仕様に基づく（改訂 2026-09-20。本体の版は固定しない）
 
 ## brainstorm
 
@@ -49,21 +49,23 @@ ADR: 新しく書く義務は無い。既存の ADR は出典の先として残�
 
 承認済みの判定: IR の文書、用語集、問題の記録、判断の記録がすべてコミット済みで、`kotowari check` の誤りがテスト側の指摘（requirement_without_test、scenario_without_test と、テストのファイルへの指摘）だけ。
 
-要求の参照: 計画の中で要求を `文書のパス#REQ-nnn` の形で参照する。参照先の実在は、その文書に `### REQ-nnn:` で始まる見出しがあることで確かめる。
+要求の参照: 計画の中で要求を `文書のパス#REQ-nnn` の形で参照する。参照先の実在と本文は `kotowari query REQ-nnn` で読む（文書を開いて探さない）。1件の `path` と `line` が参照先、`body` が本文、`tests` が既にある印のテスト、`referenced_by` の `via` が `about` の件がその要求の具体例。ID が無ければ `argument error: unknown id:` で停止する。
 
-確認コマンド: 最後のステップの確認コマンドに `kotowari check`（終了コード0）を列挙する。
+対象の要求の一覧: `kotowari list` の `items` のうち `tests` が空の要求と具体例が、この計画が cycle で埋める分。Verification map はここから作る。
 
-plan 自身は `kotowari check` を走らせない。
+確認コマンド: 最後のステップの確認コマンドに `kotowari check`（終了コード0）と `kotowari status`（`complete true`、終了コード0）を列挙する。
+
+plan 自身は `kotowari check` と `kotowari status` を走らせない（承認済みの判定に使う check は主セッションが走らせる）。
 
 ## cycle
 
 既存の cycle スキルの手順のうち、次を置き換える。
 
-review に渡す仕様のパス: IR の置き場のパス（レビュー役は置き場の文書すべてを読む）。
+review に渡す仕様のパス: IR の置き場のパス（レビュー役は置き場の文書すべてを読む）。差分が覆うべき要求と具体例の一覧は、呼び出し側が `kotowari list --format text` の出力をファイルに書いて渡す（レビュー役がコマンドを走らせられない前提）。
 
 implementer と fixer のプロンプト: mark.md の内容を貼る（委譲先はスキルを読まない）。
 
-終端報告の直前: `kotowari check` を走らせ、出力を終端報告に載せる。
+終端報告の直前: `kotowari check` と `kotowari status --format text` を走らせ、両方の出力を終端報告に載せる。status の最後の行が `complete false` なら、`findings` の `error` が 0 でなければ check の指摘に、`items` の `flag` が 0 でなければ問題の記録に理由がある。
 
 テスト側の指摘（requirement_without_test、scenario_without_test、test_without_id、invalid_marker、unparsable_file、印からの unresolved_reference）: fixer への指摘として扱う。直らなければ既存の「進捗なし」の終わり方にする。
 
@@ -75,9 +77,11 @@ IR 側の指摘: cycle では直さない。人の判断として終端報告に
 
 既存の implement スキルの手順のうち、次を置き換える。
 
-plan が列挙した `kotowari check` を確認コマンドとして走らせる。
+計画が名指しする要求と具体例は `kotowari query ID` で読む（本文、既にある印のテスト、逆引きが1回で揃う）。
 
-終了コード1のとき:
+plan が列挙した `kotowari check` と `kotowari status` を確認コマンドとして走らせる。
+
+`kotowari check` の終了コード1のとき:
 
 - テスト側の指摘（requirement_without_test、scenario_without_test、test_without_id、invalid_marker、unparsable_file、印からの unresolved_reference）は自分で直す
 - IR 側の指摘は仕様の問題として差し戻す
