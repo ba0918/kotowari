@@ -104,7 +104,7 @@ impl ListItem {
         match self {
             ListItem::Requirement(i) => TextParts {
                 id: &i.id,
-                // "- 検証:" の行の無い要求もここに来る。REQ-155 はその欄を決めていない
+                // REQ-155: "- 検証:" の行の無い要求も "-"
                 verification: i.verification.as_deref().unwrap_or("-"),
                 name: &i.name,
                 path: &i.path,

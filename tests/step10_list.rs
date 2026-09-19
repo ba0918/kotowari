@@ -460,3 +460,20 @@ fn req_155_text_writes_dash_for_the_verification_of_a_non_requirement() {
     // 要求以外の "検証" の欄は "-"。印のあるテストが無ければ tests=0 で続く行は無い
     assert_eq!(run_list_text(tmp.path()), "TBL-001 - 表 docs/ir/a.md:7 tests=0\n");
 }
+
+// @kotowari[REQ-155]
+#[test]
+fn req_155_text_writes_dash_for_a_requirement_without_a_verification_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        concat!(
+            "# 題名\n\n範囲。\n\n",
+            "## 要求\n\n### REQ-001: 例\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n\n文。\n",
+        ),
+    );
+    // "- 検証:" の行の無い要求の "検証" の欄も "-"
+    assert_eq!(run_list_text(tmp.path()), "REQ-001 - 例 docs/ir/a.md:7 tests=0\n");
+}

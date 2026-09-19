@@ -38,16 +38,16 @@ kotowari は常に、"items" の1件を "path" の昇順、同じ "path" の中�
 ### REQ-155: 出力の形
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A8, docs/decision/records/2026-09-19-read-commands.md#A12, docs/decision/records/2026-09-19-read-commands.md#A19
+- 出典: docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A8, docs/decision/records/2026-09-19-read-commands.md#A12, docs/decision/records/2026-09-19-read-commands.md#A19, docs/decision/records/2026-09-19-read-commands.md#A25
 - 検証: unit
 
-kotowari は常に、"kotowari list" の "--format" の値として "json" と "text" の2つだけを受け、既定を "json" にし、絞り込みのオプションを持たない。"json" では最上位が "items" だけの JSON を1つ出し、"items" は`TBL-026` の鍵を持つ1件の並びである。"text" では "items" の1件を1行で "ID 検証 名前 パス:行 tests=数" の形で出し（"検証" は要求以外では "-"）、その直後に "tests" の1件ごとに2つの半角空白で字下げした "パス:行 名前" の行を続ける（"名前" が null のときは "-"）。
+kotowari は常に、"kotowari list" の "--format" の値として "json" と "text" の2つだけを受け、既定を "json" にし、絞り込みのオプションを持たない。"json" では最上位が "items" だけの JSON を1つ出し、"items" は`TBL-026` の鍵を持つ1件の並びである。"text" では "items" の1件を1行で "ID 検証 名前 パス:行 tests=数" の形で出し（"検証" は要求以外と、"- 検証:" の行の無い要求では "-"）、その直後に "tests" の1件ごとに2つの半角空白で字下げした "パス:行 名前" の行を続ける（"名前" が null のときは "-"）。
 
 ## 決定表
 
 ### TBL-026: 項目の鍵
 
-- 出典: docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18, docs/decision/records/2026-09-19-read-commands.md#A22, docs/decision/records/2026-09-19-read-commands.md#A24
+- 出典: docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18, docs/decision/records/2026-09-19-read-commands.md#A22, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-19-read-commands.md#A26
 
 | 鍵 | 持つ種類 | 中身 |
 |---|---|---|
@@ -59,7 +59,7 @@ kotowari は常に、"kotowari list" の "--format" の値として "json" と "
 | type | 要求、問題の記録 | "- 種類:" の値。無ければ null |
 | verification | 要求 | "- 検証:" の値。無ければ null |
 | definition | 要求 | "- 定義:" の `ID` の並び。無ければ空の並び |
-| examples | 要求、決定表、性質 | その `ID` を "@about" に持つ`シナリオ`の `ID` の並び |
+| examples | 要求、決定表、性質 | その `ID` を "@about" に持つ`シナリオ`の `ID` の並び。`ID` の昇順 |
 | how_to_verify | 要求 | "- 確かめ方:" の値。無ければ null |
 | relations | 問題の記録 | "- 関係:" の `ID` の並び |
 | sources | すべて | `出典`の並び |

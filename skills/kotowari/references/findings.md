@@ -8,11 +8,11 @@ kotowari の仕様に基づく（改訂 2026-09-20。本体の版は固定しな
 
 `kotowari list` は check と同じ設定と置き場から IR とテストのファイルを読み、読めた項目とシナリオを標準出力に出す。指摘は出さず、終了コードは読めれば 0 で、2 になるのは停止したときだけ。停止の理由と文言は check と同じで、下の停止の表で引く。IR に誤りがあっても読めた項目は出るので、list は check の代わりにならない。
 
-`kotowari list` の JSON の最上位は `items` だけで、`findings` も `counts` も `tests` の集計も出ない。`items` の1件が持つ鍵は項目の種類で決まる。`kind` は `requirement`、`table`、`property`、`scenario`、`flag` のいずれかで、どの種類も `id`、`kind`、`name`、`path`、`line`、`sources`、`tests` を持つ。要求はさらに `type`、`verification`、`definition`、`examples`、`how_to_verify` を、決定表と性質は `examples` を、問題の記録は `type` と `relations` を持つ。値が無いときは鍵ごと消えず、null か空の並びになる。`how_to_verify` は要求の `- 確かめ方:` の行の値で、検証が review の要求を人がどう確かめるかはここにある。手で保つ対応表は無い。
+`kotowari list` の JSON の最上位は `items` だけで、`findings` も `counts` も `tests` の集計も出ない。`items` の1件が持つ鍵は項目の種類で決まる。`kind` は `requirement`、`table`、`property`、`scenario`、`flag` のいずれかで、どの種類も `id`、`kind`、`name`、`path`、`line`、`sources`、`tests` を持つ。要求はさらに `type`、`verification`、`definition`、`examples`、`how_to_verify` を、決定表と性質は `examples`（ID の昇順）を、問題の記録は `type` と `relations` を持つ。値が無いときは鍵ごと消えず、null か空の並びになる。`how_to_verify` は要求の `- 確かめ方:` の行の値で、検証が review の要求を人がどう確かめるかはここにある。手で保つ対応表は無い。
 
-1件の `tests` は、その ID を印に含むテストの並びで、同じテストに同じ ID の印が複数の行にあれば印の出現ごとに1件。1件は `path`（テストのファイル）、`line`（印のある行。テストの関数の行ではない）、`name`（テストの関数の名前）を持つ。`name` が null の件は問い合わせの無い言語のファイルの印で、そこにテストの関数の名前は無い。
+1件の `tests` は、その ID を印に含むテストの並びで、同じテストに同じ ID の印が複数あれば印の出現ごとに1件。1件は `path`（テストのファイルの基準のディレクトリからの相対パス）、`line`（印のある行。テストの関数の行ではない）、`name`（テストの関数の名前）を持つ。`name` が null の件は問い合わせの無い言語のファイルの印で、そこにテストの関数の名前は無い。
 
-`--format text` では、1つの項目が `ID 検証 名前 パス:行 tests=数` の1行になり（`検証` は要求以外では `-`）、その直後に `tests` の1件ごとに半角空白2つで字下げした `パス:行 名前` の行が続く（`名前` が null のときは `-`）。項目は `path` の昇順、同じ `path` の中は `line` の昇順で、1件の `tests` も同じ順に並ぶ。
+`--format text` では、1つの項目が `ID 検証 名前 パス:行 tests=数` の1行になり（`検証` は要求以外と、`- 検証:` の行の無い要求では `-`）、その直後に `tests` の1件ごとに半角空白2つで字下げした `パス:行 名前` の行が続く（`名前` が null のときは `-`）。項目は `path` の昇順、同じ `path` の中は `line` の昇順で、1件の `tests` も同じ順に並ぶ。
 
 | 種類 | 意味 | 対処 | 担当 |
 |---|---|---|---|
