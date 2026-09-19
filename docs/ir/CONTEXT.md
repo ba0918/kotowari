@@ -45,5 +45,5 @@
 | 変異 | 変異テストの道具が実装に入れる、1か所の小さな変更 | docs/decision/records/2026-09-17-mutation-tests.md#A30 |
 | 変異の結果 | 変異1件について、ファイル、行、変更の説明（道具が出した文のまま）、結果（捕まえた、見逃した、時間切れ、ビルド不能の4値）を持つもの。道具の結果のファイルから写す | docs/decision/records/2026-09-17-mutation-tests.md#A13, docs/decision/records/2026-09-17-mutation-tests.md#A30, docs/decision/records/2026-09-17-mutation-tests.md#A56 |
 | 見逃し | 結果が「見逃した」の変異の結果。その変異を入れてもテストが全部通った。「ミューテーション」「生存」「ミュータント」とは呼ばない | docs/decision/records/2026-09-17-mutation-tests.md#A30 |
-| 等価 | 変異を入れても観測できる振る舞いが変わらない、という人か LLM の判断 | docs/decision/records/2026-09-17-mutation-tests.md#A30 |
+| 等価 | 変異を入れても kotowari の標準出力（JSON と text のすべての鍵と行）、標準エラー（停止の文言と詳細）、終了コードのどれも変わらない、という人か LLM の判断。関数の戻り値や内部の状態の違いは観測に数えない | docs/decision/records/2026-09-17-mutation-tests.md#A30, docs/decision/records/2026-09-19-mutants-followup.md#A1, docs/decision/records/2026-09-19-mutants-followup.md#A13 |
 | 等価の一覧 | 設定の "mutants.equivalents" が指す YAML のファイル。等価と判断した変異と理由を並べる | docs/decision/records/2026-09-17-mutation-tests.md#A9, docs/decision/records/2026-09-17-mutation-tests.md#A30, docs/decision/records/2026-09-17-mutation-tests.md#A36 |

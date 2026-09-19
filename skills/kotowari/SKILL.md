@@ -1,6 +1,6 @@
 ---
 name: kotowari
-description: "kotowari の IR の書き方、check の使い方、印の置き方、ワークフローの手順を場面ごとに読む。発火語: kotowari、IR、docs/ir、@kotowari、印"
+description: "kotowari の IR の書き方、check の使い方、印の置き方、ワークフローの手順を場面ごとに読む。発火語: kotowari、IR、docs/ir、@kotowari、印、mutants、変異テスト"
 ---
 
 kotowari は、正規化した仕様（IR）を Markdown で書き、`kotowari check` で検査するための道具。変異テストの結果を読む `kotowari mutants` も持つ。このスキルは場面ごとに reference を読ませて、IR の書き方、検査の結果の読み方、印の置き方、ワークフローの手順を伝える。

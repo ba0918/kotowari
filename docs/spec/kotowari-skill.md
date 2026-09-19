@@ -19,14 +19,14 @@ kotowari の用語集（`docs/ir/CONTEXT.md`）の意味をそのまま使う。
 - **印**: テストに書く `@kotowari[ID, ...]` の並び。コメント記号は見ない。ID は要求に限らず IR の ID
 - **除外**: 仕様が列挙した、kotowari が指摘を出さずに読まないか見ないもの。列挙に無い読み飛ばしは作らない
 - **指摘**: `check` が出す誤り（終了コード1）と注意（終了コードを変えない。severity は `notice`。行数と要求数の上限超えの2種類）。**停止**は検査に入れないこと（終了コード2。設定の誤り、引数の誤り、読めないファイル、UTF-8 でないファイル）
-- **場面**: このスキルの分岐。`setup`、`write`、`check`、`mark`、`workflow` の5つ（A30）。シェルで実行するコマンドではなく、SKILL.md が文脈から選んで対応する reference を読む
-- **reference**: スキルの `references/` にある文書6つ。SKILL.md から場面に応じて読む
+- **場面**: このスキルの分岐。`setup`、`write`、`check`、`mark`、`mutants`、`workflow` の6つ（A30、[A12（mutants-followup）](../decision/records/2026-09-19-mutants-followup.md#A12)）。シェルで実行するコマンドではなく、SKILL.md が文脈から選んで対応する reference を読む
+- **reference**: スキルの `references/` にある文書7つ。SKILL.md から場面に応じて読む
 
 ## 範囲
 
 作るもの:
 
-- スキル `kotowari`: `SKILL.md` と references 6つ（`ir-form.md`、`findings.md`、`config.md`、`collate.md`、`mark.md`、`workflow.md`）。元本は kotowari リポジトリの `skills/kotowari/`
+- スキル `kotowari`: `SKILL.md` と references 7つ（`ir-form.md`、`findings.md`、`config.md`、`collate.md`、`mark.md`、`mutants.md`、`workflow.md`）。元本は kotowari リポジトリの `skills/kotowari/`
 - kotowari を使うプロジェクトの `AGENTS.md` に足す、ルーティングとワークフローの規則の雛形（`setup` が書く。A27）
 
 作らないもの:
@@ -43,7 +43,7 @@ kotowari の用語集（`docs/ir/CONTEXT.md`）の意味をそのまま使う。
 
 ### R1: SKILL.md は薄く、場面の振り分けだけを持つ
 
-SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotowari、IR、`docs/ir`、`@kotowari`、印）、目的、道具の有無の確認の手順、場面の選び方（人が名指ししたらそれ。なければ文脈から: 置き場が無い → `setup`、brainstorm の途中 → `write`、`check` の結果を読むとき → `check`、テストを書くとき → `mark`、plan・cycle・implement の途中 → `workflow`）、場面ごとに読む reference の表（`setup` → `config.md`、`write` → `ir-form.md` と `workflow.md` の brainstorm の節、`check` → `findings.md`、`mark` → `mark.md`、`workflow` → `workflow.md` の自分の席の節。`collate.md` は `write` の承認前）、この5つの場面がワークフローのどこに当たるか、だけを持つ。IR の形の規則、指摘の対処、設定のキー、印の規則、手順の置き換えは本文に書かず、references に置く。
+SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotowari、IR、`docs/ir`、`@kotowari`、印、mutants、変異テスト）、目的、道具の有無の確認の手順、場面の選び方（人が名指ししたらそれ。なければ文脈から: 置き場が無い → `setup`、brainstorm の途中 → `write`、`check` の結果を読むとき → `check`、テストを書くとき → `mark`、`kotowari mutants` の結果を読むときと見逃しを調べるとき → `mutants`、plan・cycle・implement の途中 → `workflow`）、場面ごとに読む reference の表（`setup` → `config.md`、`write` → `ir-form.md` と `workflow.md` の brainstorm の節、`check` → `findings.md`、`mark` → `mark.md`、`mutants` → `mutants.md`、`workflow` → `workflow.md` の自分の席の節。`collate.md` は `write` の承認前）、この6つの場面がワークフローのどこに当たるか、だけを持つ。IR の形の規則、指摘の対処、設定のキー、印の規則、手順の置き換えは本文に書かず、references に置く。
 
 - 成功の条件: SKILL.md が100行以内。本文に `### REQ-` の形の規則、指摘の種類の名前（`docs/ir/findings.md` の TBL-008 と TBL-009 の値）、設定のキー（`docs/ir/config.md` の TBL-004 の値）が、reference の表の中以外に現れない。frontmatter に上の発火語がある
 - 反例: SKILL.md に「要求は `### REQ-nnn: 名前` の見出しの下に…」の規則が書いてある
@@ -53,7 +53,7 @@ SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotow
 
 どの場面も、最初に `kotowari --version` を走らせる。コマンドが見つからないか、出力から版が読めないときは、作業を始めずに止まり、導入を求める。対象の版は固定しない（2026-09-16 の記録 A1。本体はローカルで育てていて常に最新。タグとして公開したあとの追従の書き方は同 U1）。references の先頭には版の写しでなく改訂日を書く。
 
-- 成功の条件: SKILL.md の最初の手順が道具の確認で、コマンド無し・版が読めない、の2つの分岐が書いてある。SKILL.md に版の固定が無い。references 6つの先頭に改訂日がある
+- 成功の条件: SKILL.md の最初の手順が道具の確認で、コマンド無し・版が読めない、の2つの分岐が書いてある。SKILL.md に版の固定が無い。references 7つの先頭に改訂日がある
 - 反例: 出力から版が読めないのに `write` の手順に進む。SKILL.md に `0.1.0` のような版が書いてある
 - 確かめ方: 人が SKILL.md と references の先頭を読む。PATH から `kotowari` を外してスキルを呼び、止まることを見る
 
@@ -142,7 +142,7 @@ reference `workflow.md`（A29）は、brainstorm の節（R4）に加えて、�
 
 ### R9: references は現在の kotowari の仕様を、実験の記録を参照せずに書く
 
-references 6つ（`ir-form.md`、`findings.md`、`config.md`、`collate.md`、`mark.md`、`workflow.md`）は、kotowari の IR（`docs/ir/`）と形の契約から作るが、kotowari リポジトリの実験の記録（`experiments/` の下）への参照を含めない（A1。配布先で元本は読めない）。決定の番号や出典の例は架空のパス（`docs/decision/records/2026-01-01-example.md#A1`）で書く。kotowari 自身の IR の ID（`TBL-016` の類）を根拠として引かず、`docs/ir/` の文書名も引かない（配布先で解決できない。A32。例に使う ID は形の説明なので可）。元にする `docs/ir/` と形の契約が食い違えば `docs/ir/` が正で、実測で確かめられるなら確かめ、決まらなければ止まって人に言う（A32）。kotowari の仕様が変わったら references を更新し、先頭の改訂日を改める。
+references 7つ（`ir-form.md`、`findings.md`、`config.md`、`collate.md`、`mark.md`、`mutants.md`、`workflow.md`）は、kotowari の IR（`docs/ir/`）と形の契約から作るが、kotowari リポジトリの実験の記録（`experiments/` の下）への参照を含めない（A1。配布先で元本は読めない）。決定の番号や出典の例は架空のパス（`docs/decision/records/2026-01-01-example.md#A1`）で書く。kotowari 自身の IR の ID（`TBL-016` の類）を根拠として引かず、`docs/ir/` の文書名も引かない（配布先で解決できない。A32。例に使う ID は形の説明なので可）。元にする `docs/ir/` と形の契約が食い違えば `docs/ir/` が正で、実測で確かめられるなら確かめ、決まらなければ止まって人に言う（A32）。kotowari の仕様が変わったら references を更新し、先頭の改訂日を改める。
 
 - 成功の条件: `rg -n 'experiments/|docs/ir/[a-z-]+\.md' skills/kotowari/` が0件（置き場の名前 `docs/ir` と、利用者側に作る `docs/ir/CONTEXT.md`・`docs/ir/FLAGS.md` は書いてよい）。人が読んで、kotowari 自身の IR の ID を「〜のとおり」のように根拠として引いている箇所が無い。`config.md` に設定ファイルの全キー（`ir`、`decisions.records`、`decisions.adr`、`tests.files`、`tests.rust.attributes`、`tests.rust.macros`、`vague_words`、`limits.lines`、`limits.requirements`）と既定値がある。`collate.md` に、渡す入力（項目と出典の対）、判定の基準（出典の決定が項目の内容を裏付けるか）、返す形（裏付けの無い項目の一覧）、回数の上限（3回）がある
 - 反例: `ir-form.md` に `experiments/003-cli/brainstorm/records.md#A145` が残っている。`mark.md` に「TBL-016 のとおり」と書いてある
@@ -150,9 +150,9 @@ references 6つ（`ir-form.md`、`findings.md`、`config.md`、`collate.md`、`m
 
 ### R10: 元本の置き場と入れ方
 
-元本は kotowari リポジトリの `skills/kotowari/`（`SKILL.md` と `references/` の6つ）。手元へは `~/.claude/skills/kotowari/` にコピーで入れる（A5、A23）。
+元本は kotowari リポジトリの `skills/kotowari/`（`SKILL.md` と `references/` の7つ）。手元へは `~/.claude/skills/kotowari/` にコピーで入れる（A5、A23）。
 
-- 成功の条件: kotowari リポジトリ以外のプロジェクトで、`~/.claude/skills/kotowari/` にコピーした状態でスキルを呼んだとき、kotowari リポジトリのファイルを1つも読まずに5つの場面が動く
+- 成功の条件: kotowari リポジトリ以外のプロジェクトで、`~/.claude/skills/kotowari/` にコピーした状態でスキルを呼んだとき、kotowari リポジトリのファイルを1つも読まずに6つの場面が動く
 - 反例: SKILL.md が `../../docs/ir/...` を読ませる
 - 確かめ方: 人が別のプロジェクトでスキルを呼び、読んだファイルの一覧を見る
 

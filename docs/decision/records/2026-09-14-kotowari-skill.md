@@ -19,6 +19,7 @@
 - A15 LLM が読む出力は `--format json` を既定にする（text は指摘0のとき何も出さない。json は件数と種類が構造で取れる）（推奨を採用）
 - A16 既存スキルには「仕様が IR の形なら kotowari スキルが次の手順を置き換える」の1行を足し、置き換える手順の中身は kotowari スキル側に書く。brainstorm: 出力は IR の文書群、判断の記録は最初から docs/decision/records に書いて消さない、用語集は IR の置き場の CONTEXT.md、承認時に記録も stage。plan: 入力は IR の置き場と対象の要求 ID の一覧、最後のステップの確認コマンドに kotowari check を列挙（plan 自身は走らせない）。cycle: implementer と fixer のプロンプトに印の規則を貼り、終端報告に check の結果を載せる。implement: plan が列挙した check を走らせる（推奨を採用）
 - A17 分岐は「場面」と呼び、SKILL.md が文脈から選ぶ（人が名指ししてもよい）。frontmatter の description に発火語（kotowari、IR、docs/ir、@kotowari、印）を入れる（推奨を採用）
+  - superseded_by: [A5（mutants-followup）](./2026-09-19-mutants-followup.md#A5)（発火語の列挙に mutants と変異テストを足した）
 - A18 承認の関門は誤り0（終了コード0）。警告は承認の証拠に載せて人に見せる（推奨を採用）
 - A19 テスト名は ID を小文字にしてハイフンを "_" に変えて先頭に付ける慣習。検査はしない（推奨を採用）
 - A20 setup は .kotowari/config.yaml を必ず作る（既定と同じ中身でもよい）。基準のディレクトリを固定するため（推奨を採用）
@@ -32,6 +33,7 @@
 - A28 照合レビューが brainstorm の終わりの「記録への適合」のレビューを置き換える。「仕様の品質」のレビュー1本は残す（推奨を採用）
 - A29 references を6つにする。mark.md（印の規則。cycle が implementer と fixer のプロンプトに貼る）と workflow.md（brainstorm・plan・cycle・implement の手順の置き換え）を足す（推奨を採用）
 - A30 場面を5つにして workflow を足す。plan・cycle・implement の席は workflow として workflow.md の自分の節を読む。brainstorm の席は write のまま（計画のレビューで導線の欠落が見つかった。推奨を採用）
+  - superseded_by: [A12（mutants-followup）](./2026-09-19-mutants-followup.md#A12)（場面を6つ、references を7つに改めた。mutants を足した実体の追認）
 - A31 setup の手順（作るもの、AGENTS.md の節の雛形、既にあるものの扱い）は config.md に置く（推奨を採用）
 - A32 references を書くとき docs/ir と実験の契約が食い違えば docs/ir が正。実測で確かめられるなら確かめ、決まらなければ止まって人に言う。references の中では kotowari 自身の ID（TBL-016 の類）と docs/ir のパスを引かない（配布先で解決できない。R10 の帰結。推奨を採用）
 - A33 承認の関門は「IR の置き場のファイルへの誤りが0」。requirement_without_test を含むテスト側の指摘は cycle の終端で0にする（既にテストがあるプロジェクトで印の無いテストが承認を止めないため。cycle の human_judgment。推奨を採用）
