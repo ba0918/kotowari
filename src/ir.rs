@@ -1369,7 +1369,89 @@ fn check_fields(
     }
 }
 
-/// 参照の解決チェック
+/// 項目が `ID` を指している場所（TBL-027 の "via"）
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Via {
+    /// "- 定義:" の行
+    Definition,
+    /// "- 関係:" の行
+    Relations,
+    /// "@about" のタグ
+    About,
+    /// 要求の文、性質の文、シナリオのステップの中のバッククォートで囲んだ `ID`
+    Text,
+}
+
+impl Via {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Via::Definition => "definition",
+            Via::Relations => "relations",
+            Via::About => "about",
+            Via::Text => "text",
+        }
+    }
+}
+
+/// 項目が指している `ID` の1件
+#[derive(Debug, Clone, Copy)]
+pub struct ItemReference<'a> {
+    /// 指している先の `ID`
+    pub id: &'a str,
+    /// 指している場所
+    pub via: Via,
+    /// TBL-019: 指摘の行（定義・関係・文ならその行、"@about" ならタグの行）
+    pub finding_line: usize,
+}
+
+/// REQ-054: 項目が指している `ID` をすべて拾う。
+/// check の unresolved_reference と query の逆引きはどちらもここを読む。
+/// 文とステップの中は `ID` の形に合うものだけを拾い、地の文の `ID` は拾わない
+pub fn item_references<'a>(item: &'a Item) -> Vec<ItemReference<'a>> {
+    // TBL-019: "- 定義:" か "- 関係:" の行（行が無ければ見出しの行）
+    let field_line = |fields_seen: &[(usize, String, String)], name: &str, line: usize| {
+        fields_seen.iter()
+            .find(|(_, n, _)| n == name)
+            .map_or(line, |(ln, _, _)| *ln)
+    };
+    let from_text = |texts: &'a [(usize, String)]| {
+        texts.iter().flat_map(|(text_line, text)| {
+            backtick_ids(text).into_iter().map(move |id| ItemReference {
+                id,
+                via: Via::Text,
+                finding_line: *text_line,
+            })
+        })
+    };
+
+    match item {
+        Item::Requirement { line, definitions, statements, fields_seen, .. } => {
+            let def_line = field_line(fields_seen, "定義", *line);
+            definitions.iter()
+                .map(|id| ItemReference { id, via: Via::Definition, finding_line: def_line })
+                .chain(from_text(statements))
+                .collect()
+        }
+        Item::Property { statements, .. } => from_text(statements).collect(),
+        Item::Scenario { line, tag_line, about, steps, .. } => {
+            let about_line = tag_line.unwrap_or(*line);
+            about.iter()
+                .map(|id| ItemReference { id, via: Via::About, finding_line: about_line })
+                .chain(from_text(steps))
+                .collect()
+        }
+        Item::FlagEntry { line, relations, fields_seen, .. } => {
+            let rel_line = field_line(fields_seen, "関係", *line);
+            relations.iter()
+                .map(|id| ItemReference { id, via: Via::Relations, finding_line: rel_line })
+                .collect()
+        }
+        _ => Vec::new(),
+    }
+}
+
+/// 参照の解決チェック（REQ-054）。
+/// `ID` の形でない "- 定義:" の値は`ID`の一覧に入らないので、ここで誤りになる
 fn check_references(
     items: &[Item],
     known_ids: &BTreeSet<String>,
@@ -1377,67 +1459,15 @@ fn check_references(
     findings: &mut Vec<Finding>,
 ) {
     for item in items {
-        match item {
-            Item::Requirement {
-                line,
-                definitions,
-                statements,
-                fields_seen,
-                ..
-            } => {
-                // 定義の参照チェック
-                // TBL-019: 定義の中なら その行
-                let def_field_line = fields_seen.iter()
-                    .find(|(_, n, _)| n == "定義")
-                    .map(|(ln, _, _)| *ln)
-                    .unwrap_or(*line);
-                for def_id in definitions {
-                    if !is_valid_id(def_id) {
-                        // REQ-054: ID の形でない値は unresolved_reference
-                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(def_field_line), def_id.clone()));
-                    } else if !known_ids.contains(def_id) {
-                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(def_field_line), def_id.clone()));
-                    }
-                }
-                // 文の中のバッククォートで囲んだ ID の参照チェック
-                for (stmt_line, stmt) in statements {
-                    check_backtick_ids(stmt, *stmt_line, known_ids, path, findings);
-                }
+        for reference in item_references(item) {
+            if !known_ids.contains(reference.id) {
+                findings.push(Finding::new(
+                    FindingKind::UnresolvedReference,
+                    path.to_string(),
+                    Some(reference.finding_line),
+                    reference.id.to_string(),
+                ));
             }
-            Item::Property { statements, .. } => {
-                for (stmt_line, stmt) in statements {
-                    check_backtick_ids(stmt, *stmt_line, known_ids, path, findings);
-                }
-            }
-            Item::Scenario {
-                line, tag_line, about, steps, ..
-            } => {
-                let about_line = tag_line.unwrap_or(*line);
-                for about_id in about {
-                    if !known_ids.contains(about_id) {
-                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(about_line), about_id.clone()));
-                    }
-                }
-                // REQ-054: ステップの行のバッククォートで囲んだ ID の参照チェック
-                for (step_line, step_text) in steps {
-                    check_backtick_ids(step_text, *step_line, known_ids, path, findings);
-                }
-            }
-            Item::FlagEntry {
-                line, relations, fields_seen, ..
-            } => {
-                // TBL-019: 関係の中なら その行
-                let rel_field_line = fields_seen.iter()
-                    .find(|(_, n, _)| n == "関係")
-                    .map(|(ln, _, _)| *ln)
-                    .unwrap_or(*line);
-                for rel_id in relations {
-                    if !known_ids.contains(rel_id) {
-                        findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(rel_field_line), rel_id.clone()));
-                    }
-                }
-            }
-            _ => {}
         }
     }
 }
@@ -1511,24 +1541,17 @@ pub fn extract_backtick_contents(text: &str) -> Vec<&str> {
     result
 }
 
-/// 文の中のバッククォートで囲んだ ID の参照をチェック
-fn check_backtick_ids(
-    text: &str,
-    line: usize,
-    known_ids: &BTreeSet<String>,
-    path: &str,
-    findings: &mut Vec<Finding>,
-) {
+/// 文やステップの中の、バッククォートで囲んだ `ID` を拾う（REQ-054、REQ-116）
+fn backtick_ids(text: &str) -> Vec<&str> {
     // REQ-054/REQ-116: 二重引用符の外だけを見る
     if crate::has_odd_backticks_outside_quotes(text) {
-        return;
+        return Vec::new();
     }
-    for content in crate::extract_backtick_contents_outside_quotes(text) {
-        let trimmed = content.trim();
-        if !trimmed.is_empty() && is_valid_id(trimmed) && !known_ids.contains(trimmed) {
-            findings.push(Finding::new(FindingKind::UnresolvedReference, path.to_string(), Some(line), trimmed.to_string()));
-        }
-    }
+    crate::extract_backtick_contents_outside_quotes(text)
+        .into_iter()
+        .map(str::trim)
+        .filter(|id| !id.is_empty() && is_valid_id(id))
+        .collect()
 }
 
 /// IR のディレクトリからすべての文書を読んで検査する
