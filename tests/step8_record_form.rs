@@ -514,6 +514,21 @@ fn tbl_023_absolute_href_is_outside_the_place() {
     );
 }
 
+// @kotowari[TBL-023]
+#[test]
+fn tbl_023_link_scan_resumes_after_the_closing_paren() {
+    // リンクとして読めたら走査は ")" の次から続き、href の中の "[" から読み始めない
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    write_record(
+        tmp.path(),
+        "lr.md",
+        "# 記録 lr\n\n## Agreements\n\n- A1 ある合意\n- superseded_by: []([)]()\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(link_findings(&v), vec![(6, "[".to_string())]);
+}
+
 // @kotowari[REQ-132, TBL-023, EX-106]
 #[test]
 fn req_132_record_without_context_resolves_two_links_in_superseded() {
