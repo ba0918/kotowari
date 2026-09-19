@@ -14,6 +14,12 @@ kotowari の仕様に基づく（改訂 2026-09-20。本体の版は固定しな
 
 `--format text` では、1つの項目が `ID 検証 名前 パス:行 tests=数` の1行になり（`検証` は要求以外と、`- 検証:` の行の無い要求では `-`）、その直後に `tests` の1件ごとに半角空白2つで字下げした `パス:行 名前` の行が続く（`名前` が null のときは `-`）。項目は `path` の昇順、同じ `path` の中は `line` の昇順で、1件の `tests` も同じ順に並ぶ。
 
+`kotowari query <ID>` は list の1件を詳しくしたもの。読むものと停止の決まりは list と同じで、JSON の最上位も `items` だけ。1件は list の1件の鍵に `body` と `referenced_by` が増えた形で、同じ ID の項目が複数あれば全部出る。`body` は IR の生の行の並びで、項目は見出しの次の行から次の見出しの前まで、シナリオは `@id` のタグの行から最後のステップまで（先頭と末尾の空の行は落とす）。`referenced_by` はその ID を指している項目とシナリオの並びで、1件は `id`、`kind`、`path`、`line`（指している側の見出しの行。シナリオは `Scenario:` の行）と `via` を持ち、`path` の昇順、同じ `path` の中は `line` の昇順に並ぶ。`via` は `definition`（`- 定義:` の行）、`relations`（`- 関係:` の行）、`about`（`@about` のタグ）、`text`（要求や性質の文、シナリオのステップの中でバッククォートで囲んだ ID。地の文の ID は拾わない）のいずれか。位置引数はちょうど1つの ID で、その ID を持つ項目もシナリオも無ければ `argument error: unknown id: ` に続けてその文字を出して停止する。`--format text` では list と同じ1行目とテストの行に続けて、`body` の各行を半角空白2つで字下げし、最後に `referenced_by` の1件ごとに `  <- ID via パス:行` の行を出す。
+
+`kotowari status` は IR が揃っているかを数と真偽で出す。読むものと停止の決まりは check と同じで、指摘は出さず数だけを出す。JSON の最上位は `documents`（文書の数と行数）、`items`（種類ごとの項目の数）、`requirements`（検証の値ごとの数、テストのある要求とない要求の数、review の要求の確かめ方の有無、具体例の無い要求の数）、`scenarios`（テストのある具体例とない具体例の数）、`tests`（印の数と読んだテストのファイル）、`findings`（check の誤りと注意の数）、`complete` の7つ。`complete` が true になるのは check の誤りが 0 件で、かつ問題の記録の項目が 0 件のときだけで、終了コードは complete なら 0、そうでなければ 1、停止は 2。数え方は check と揃えてあるので、`complete` が false のときは `kotowari check` を走らせれば理由が1件ずつ読める。`--format text` では群ごとに `群名 鍵=値 鍵=値` の1行が上の順に出て、最後の行は `complete true` か `complete false`。
+
+検証が review の要求には `- 確かめ方:` の行が要る。テストの無い要求を人か LLM がどう確かめるかはこの行にしか書けないので、行が無いか値が空なら missing_field の誤りが detail `確かめ方` で出る。
+
 | 種類 | 意味 | 対処 | 担当 |
 |---|---|---|---|
 | missing_title | 題名が無い | `# ` の題名を足す | brainstorm |
