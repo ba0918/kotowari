@@ -257,7 +257,7 @@ fn tbl_028_documents_and_test_files_match_check() {
 
 // --- REQ-166: 出力の形 ---
 
-// @kotowari[REQ-166, TBL-028]
+// @kotowari[REQ-164, REQ-166, TBL-028]
 #[test]
 fn req_166_json_top_level_has_only_the_groups() {
     let tmp = TempDir::new().unwrap();
