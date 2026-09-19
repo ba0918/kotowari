@@ -31,10 +31,10 @@ kotowari は常に、"--config" に与えたパスをカレントディレクト
 ### REQ-004: 引数の誤り
 
 - 種類: event_driven
-- 出典: docs/decision/records/records.md#A60, docs/decision/records/records.md#A103, docs/decision/records/records.md#A136, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A55
+- 出典: docs/decision/records/records.md#A60, docs/decision/records/records.md#A103, docs/decision/records/records.md#A136, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20
 - 検証: unit
 
-"--help" も "--version" も無いときに、知らないオプション、"check" に付けた "--tool"、"check" でも "mutants" でもない1つ目の位置引数、"check" の後の位置引数、"--format" の知らない値、値の無いオプション、同じオプションの2回目のいずれかを受けたとき、引数が1つも無いとき、オプションだけがあって1つ目の位置引数が無いとき、または "--config" の指す先が無いかディレクトリのとき、kotowari は引数の誤りを理由に`停止`する。
+"--help" も "--version" も無いときに、知らないオプション、"check" か "list" に付けた "--tool"、"check"、"list"、"mutants" のいずれでもない1つ目の位置引数、"check" か "list" の後の位置引数、"--format" の知らない値、値の無いオプション、同じオプションの2回目のいずれかを受けたとき、引数が1つも無いとき、オプションだけがあって1つ目の位置引数が無いとき、または "--config" の指す先が無いかディレクトリのとき、kotowari は引数の誤りを理由に`停止`する。
 
 ### REQ-149: mutants の引数
 
