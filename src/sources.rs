@@ -364,18 +364,13 @@ impl SourceContext {
                 let full_path = crate::join_display_path(&self.records_path, &rf.rel_path);
                 full_path == path
             }) {
+                // records_files に積むのは判断の記録と読めたファイルだけ（load_all_md）
                 if rf.is_records {
                     // 判断の記録: 印は決定の番号
                     if is_decision_number(anchor) {
                         if rf.has_decision_number(anchor) {
                             return Ok(());
                         }
-                    }
-                    return Err(source.to_string());
-                } else {
-                    // 判断の記録でない Markdown: 印は ## 見出し
-                    if rf.headings.iter().any(|h| h == anchor) {
-                        return Ok(());
                     }
                     return Err(source.to_string());
                 }
