@@ -1,10 +1,18 @@
-kotowari の仕様に基づく（改訂 2026-09-17。本体の版は固定しない）
+kotowari の仕様に基づく（改訂 2026-09-20。本体の版は固定しない）
 
 終了コードを見る。2 なら停止。標準出力は空なので読まない。標準エラーの 1 行目の文言で下の停止の表を引く。0 か 1 なら標準出力の JSON を読み、`findings` の各件を下の表で引く。`severity` が `notice` の件（注意）は終了コードを変えない。
 
 `tests` は、読んだテストのファイルを拡張子ごとにまとめ、その拡張子のファイルの数（`files`）と、その拡張子が問い合わせのある言語か（`query`）を持つ。`query` が true の拡張子（第1版では `rs` だけ）は、tree-sitter でテストの関数を見つけているので、印の無いテストが test_without_id で出る。`query` が false の拡張子は問い合わせの無い言語で、ファイルの文字の中の印をすべて拾い、requirement_without_test と scenario_without_test を消す側に数えるだけで、テストの数は見ない。その言語のテストに印が無くても指摘は出ないので、`query` が false の拡張子の分は検査が届いていない。
 
 `kotowari mutants` の JSON の最上位は `findings`、`counts`、`mutants` の3つだけで、`files`、`lines`、`tests` は出ない。指摘の形と終了コードの決まりは check と同じで、下の表で引く。`mutants` の集計の読み方と、mutant_survived を調べる手順は mutants.md。
+
+`kotowari list` は check と同じ設定と置き場から IR とテストのファイルを読み、読めた項目とシナリオを標準出力に出す。指摘は出さず、終了コードは読めれば 0 で、2 になるのは停止したときだけ。停止の理由と文言は check と同じで、下の停止の表で引く。IR に誤りがあっても読めた項目は出るので、list は check の代わりにならない。
+
+`kotowari list` の JSON の最上位は `items` だけで、`findings` も `counts` も `tests` の集計も出ない。`items` の1件が持つ鍵は項目の種類で決まる。`kind` は `requirement`、`table`、`property`、`scenario`、`flag` のいずれかで、どの種類も `id`、`kind`、`name`、`path`、`line`、`sources`、`tests` を持つ。要求はさらに `type`、`verification`、`definition`、`examples`、`how_to_verify` を、決定表と性質は `examples` を、問題の記録は `type` と `relations` を持つ。値が無いときは鍵ごと消えず、null か空の並びになる。`how_to_verify` は要求の `- 確かめ方:` の行の値で、検証が review の要求を人がどう確かめるかはここにある。手で保つ対応表は無い。
+
+1件の `tests` は、その ID を印に含むテストの並びで、同じテストに同じ ID の印が複数の行にあれば印の出現ごとに1件。1件は `path`（テストのファイル）、`line`（印のある行。テストの関数の行ではない）、`name`（テストの関数の名前）を持つ。`name` が null の件は問い合わせの無い言語のファイルの印で、そこにテストの関数の名前は無い。
+
+`--format text` では、1つの項目が `ID 検証 名前 パス:行 tests=数` の1行になり（`検証` は要求以外では `-`）、その直後に `tests` の1件ごとに半角空白2つで字下げした `パス:行 名前` の行が続く（`名前` が null のときは `-`）。項目は `path` の昇順、同じ `path` の中は `line` の昇順で、1件の `tests` も同じ順に並ぶ。
 
 | 種類 | 意味 | 対処 | 担当 |
 |---|---|---|---|
