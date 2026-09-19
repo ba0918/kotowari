@@ -451,16 +451,7 @@ pub fn split_outside_quotes(line: &str) -> Vec<&str> {
     let mut parts = Vec::new();
     let mut start = 0;
     let mut in_quote = false;
-    let mut last_quote_pos = 0;
-
-    if odd_quotes {
-        last_quote_pos = line
-            .char_indices()
-            .filter(|&(_, c)| c == '"')
-            .last()
-            .map(|(i, _)| i)
-            .unwrap_or(0);
-    }
+    let last_quote_pos = if odd_quotes { line.rfind('"').unwrap_or(0) } else { 0 };
 
     for (i, c) in line.char_indices() {
         if c == '"' {
