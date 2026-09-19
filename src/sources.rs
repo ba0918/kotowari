@@ -6,8 +6,6 @@ use std::path::Path;
 /// `判断の記録` の `補足の行` の値にあるリンク（"[文字](href)"。TBL-023）
 #[derive(Debug, Clone)]
 pub struct RecordLink {
-    /// "[" と "]" の間の文字
-    pub text: String,
     /// "(" と ")" の間の href
     pub href: String,
 }
@@ -175,10 +173,7 @@ fn parse_links(value: &str) -> Vec<RecordLink> {
             continue;
         };
         let href_end = after + 1 + offset;
-        links.push(RecordLink {
-            text: value[i + 1..text_end].to_string(),
-            href: value[after + 1..href_end].to_string(),
-        });
+        links.push(RecordLink { href: value[after + 1..href_end].to_string() });
         i = href_end + 1;
     }
     links
