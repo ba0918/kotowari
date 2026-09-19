@@ -558,7 +558,6 @@ pub fn discover_and_check(
 ) -> Result<(BTreeMap<String, crate::TestFileTally>, Vec<TestMarker>), crate::StopReason> {
     let test_files = collect_test_files(base, config)?;
     let mut all_tests: Vec<DiscoveredTest> = Vec::new();
-    let mut all_marker_ids: BTreeSet<String> = BTreeSet::new();
     // REQ-153: list の "tests" の元。check は使わない
     let mut markers: Vec<TestMarker> = Vec::new();
     // TBL-021: 読んだテストのファイルを拡張子ごとに数える
@@ -590,7 +589,6 @@ pub fn discover_and_check(
                         // 印の検証
                         check_test_markers(test, rel_path, known_ids, findings);
                         for (id, marker_line) in &test.marker_ids {
-                            all_marker_ids.insert(id.clone());
                             markers.push(TestMarker {
                                 id: id.clone(),
                                 path: rel_path.clone(),
@@ -619,7 +617,6 @@ pub fn discover_and_check(
                         findings.push(Finding::new(FindingKind::InvalidMarker, rel_path.clone(), Some(line_num), line.to_string()));
                     } else {
                         for id in &marker.ids {
-                            all_marker_ids.insert(id.clone());
                             markers.push(TestMarker {
                                 id: id.clone(),
                                 path: rel_path.clone(),
@@ -638,20 +635,16 @@ pub fn discover_and_check(
     }
 
     let scenarios = collect_scenarios(docs, ir_path);
+    let coverage = TestCoverage::new(&markers, &scenarios);
 
     // REQ-137: テストのない具体例
     for (id, scenario) in &scenarios {
-        if scenario.needs_test && !all_marker_ids.contains(id) {
+        if scenario.needs_test && !coverage.is_marked(id) {
             findings.push(Finding::new(FindingKind::ScenarioWithoutTest, scenario.path.clone(), Some(scenario.line), id.clone()));
         }
     }
 
-    // REQ-085: テストのない要求。印にある具体例の "@about" の要求も満たされている
-    let covered_by_scenario: BTreeSet<&str> = all_marker_ids
-        .iter()
-        .filter_map(|id| scenarios.get(id))
-        .flat_map(|scenario| scenario.about.iter().map(|a| a.as_str()))
-        .collect();
+    // REQ-085: テストのない要求
     for doc in docs {
         for item in &doc.items {
             if let Item::Requirement {
@@ -659,11 +652,7 @@ pub fn discover_and_check(
             } = item
             {
                 if let Some(v) = verification {
-                    if v != "review"
-                        && is_valid_id(id)
-                        && !all_marker_ids.contains(id)
-                        && !covered_by_scenario.contains(id.as_str())
-                    {
+                    if v != "review" && is_valid_id(id) && !coverage.has_test(id) {
                         let path = crate::join_display_path(ir_path, &doc.relative_path);
                         findings.push(Finding::new(FindingKind::RequirementWithoutTest, path, Some(item.item_line()), id.clone()));
                     }
@@ -697,6 +686,38 @@ fn check_test_markers(
     }
 }
 
+
+/// REQ-085: `ID` に結び付く`テスト`があるかの判定。
+/// check の requirement_without_test と status の with_tests はこの同じ判定を使う
+pub struct TestCoverage {
+    /// `印`に現れた `ID`
+    marked: BTreeSet<String>,
+    /// `印`のある`シナリオ`が "@about" に挙げている `ID`
+    covered_by_scenario: BTreeSet<String>,
+}
+
+impl TestCoverage {
+    pub fn new(markers: &[TestMarker], scenarios: &BTreeMap<String, ScenarioCoverage>) -> Self {
+        let marked: BTreeSet<String> = markers.iter().map(|m| m.id.clone()).collect();
+        let covered_by_scenario = marked
+            .iter()
+            .filter_map(|id| scenarios.get(id))
+            .flat_map(|scenario| scenario.about.iter().cloned())
+            .collect();
+        TestCoverage { marked, covered_by_scenario }
+    }
+
+    /// その `ID` を`印`に含む`テスト`があるか
+    pub fn is_marked(&self, id: &str) -> bool {
+        self.marked.contains(id)
+    }
+
+    /// その `ID` を`印`に含む`テスト`があるか、その `ID` を "@about" に持つ`シナリオ`の
+    /// `ID` を`印`に含む`テスト`があるか
+    pub fn has_test(&self, id: &str) -> bool {
+        self.is_marked(id) || self.covered_by_scenario.contains(id)
+    }
+}
 
 /// 具体例の ID から引く、その`シナリオ`の "@about" と場所（REQ-137、REQ-085）
 #[derive(Debug, Clone)]

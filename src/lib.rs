@@ -7,6 +7,7 @@ pub mod mutants;
 pub mod query;
 pub mod record_form;
 pub mod sources;
+pub mod status;
 pub mod terms;
 pub mod tests_discovery;
 
@@ -680,13 +681,10 @@ pub fn run(args: &[String]) -> u8 {
                 Err(reason) => return stop(&reason),
             };
             match run_status(&cwd, config_path.as_deref()) {
-                Ok(()) => {
-                    // 組み立てはこれから。読み取りが通ったことだけを形で伝える
-                    match format {
-                        Format::Json => println!("{{}}"),
-                        Format::Text => {}
-                    }
-                    0
+                Ok(result) => {
+                    print_status(&result, format);
+                    // REQ-165: complete なら 0、そうでなければ 1
+                    u8::from(!result.complete)
                 }
                 Err(reason) => stop(&reason),
             }
@@ -742,6 +740,14 @@ fn print_query(result: &query::QueryResult, format: Format) {
     match format {
         Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
         Format::Text => query::print_text(result),
+    }
+}
+
+/// "kotowari status" の集計を出す（REQ-166）
+fn print_status(result: &status::StatusResult, format: Format) {
+    match format {
+        Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
+        Format::Text => {}
     }
 }
 
@@ -1030,8 +1036,17 @@ pub fn run_query(
         .ok_or_else(|| StopReason::ArgumentError(format!("unknown id: {id}")))
 }
 
-/// 集計のエントリポイント（REQ-162）。指摘は計算しても出さない
-pub fn run_status(cwd: &Path, config_path: Option<&Path>) -> Result<(), StopReason> {
-    load_all(cwd, config_path)?;
-    Ok(())
+/// 集計のエントリポイント（REQ-162）。指摘は計算しても数だけを出す
+pub fn run_status(
+    cwd: &Path,
+    config_path: Option<&Path>,
+) -> Result<status::StatusResult, StopReason> {
+    let loaded = load_all(cwd, config_path)?;
+    Ok(status::build(
+        &loaded.docs,
+        &loaded.cfg.ir,
+        &loaded.markers,
+        loaded.tally,
+        &loaded.findings,
+    ))
 }
