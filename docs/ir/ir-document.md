@@ -72,6 +72,7 @@ kotowari は常に、`コードブロック`の中を検査の対象から外す
 - 種類: prohibition
 - 出典: docs/decision/records/records.md#A17, docs/decision/records/records.md#A30
 - 検証: review
+- 確かめ方: `src/ir.rs` で scope_lines の中身を検査せず存在だけ確認。`check_documents` に範囲の内容検査がないことを確認
 
 kotowari は、`文書が扱う範囲`の中身と行数を検査すること、文書の責務の分離を判定することをしてはならない。
 

@@ -9,6 +9,7 @@ kotowari を使う者、書き出す先、コードの置き場を扱う。
 - 種類: ubiquitous
 - 出典: docs/decision/records/records.md#A1, docs/decision/records/records.md#A98
 - 検証: review
+- 確かめ方: CLI の出力は JSON/text で LLM が読みやすい形。`src/main.rs` を確認
 
 kotowari は常に、第一に LLM が使う CLI であり、人間が確認のために実行することもある。使う場は、仕様駆動の流れ（brainstorm、`判断の記録`、`IR`、実装）を回す開発者のリポジトリである。
 
@@ -25,6 +26,7 @@ kotowari は、状態を保存すること、標準出力と標準エラーの�
 - 種類: ubiquitous
 - 出典: docs/decision/records/records.md#A8
 - 検証: review
+- 確かめ方: `src/` にライブラリとバイナリの2ターゲット。モジュールは config, ir, sources, terms, tests_discovery
 
 kotowari のコードは常に、層が増えるたびに crate を足し、CLI を直下の "src/" で管理する。
 

@@ -56,6 +56,7 @@ kotowari は常に、`判断の記録`の TBL-022 の表に無い節（Revisions
 - 種類: ubiquitous
 - 出典: docs/decision/records/2026-09-17-record-form.md#A10, docs/decision/records/2026-09-17-record-form.md#A11, docs/decision/records/2026-09-17-record-form.md#A16
 - 検証: review
+- 確かめ方: 判断の記録を読む関数が1つで（`src/sources.rs` の parse_records_file、または記録の読み取りのモジュール）、形の検査と出典の判定がその返す構造だけを読むことを確認。`rg "lines\(\)" src/sources.rs` で、記録のファイルの行を直接読む箇所が読み取り関数の外に無いことを確認
 
 kotowari は常に、`判断の記録`の読み取り（節、`番号の行`、`補足の行`、リンク）を1つの関数で行い、形の検査と`出典`の判定はその関数が返す構造だけを読む。
 
