@@ -87,11 +87,11 @@ kotowari は常に、見出しの下の "- " の行を順不同で読み、行�
 
 ### TBL-011: 項目の形
 
-- 出典: docs/decision/records/records.md#A27, docs/decision/records/records.md#A28, docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#文書
+- 出典: docs/decision/records/records.md#A27, docs/decision/records/records.md#A28, docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#文書, docs/decision/records/2026-09-19-read-commands.md#A5, docs/decision/records/2026-09-19-read-commands.md#A11
 
 | 項目 | 置く場所 | 見出し | 持つ行 | 文 |
 |---|---|---|---|---|
-| 要求 | ## 要求 の下 | ### REQ-nnn: 名前 | - 種類:（event_driven、state_driven、ubiquitous、prohibition、invariant、algorithm）、- 出典:、- 検証:（unit、property、proof、review）、- 定義:（algorithm では持ち、ほかはあってもよい） | algorithm 以外は持つ。algorithm は持たない |
+| 要求 | ## 要求 の下 | ### REQ-nnn: 名前 | - 種類:（event_driven、state_driven、ubiquitous、prohibition、invariant、algorithm）、- 出典:、- 検証:（unit、property、proof、review）、- 定義:（algorithm では持ち、ほかはあってもよい）、- 確かめ方:（あってもよい。人が確かめる手順の自由文） | algorithm 以外は持つ。algorithm は持たない |
 | 決定表 | ## 決定表 の下 | ### TBL-nnn: 名前 | - 出典: と Markdown の表 | なし（表を持つ） |
 | 性質 | ## 性質 の下 | ### PROP-nnn: 名前 | - 出典: | 持つ |
 | シナリオ | ## 具体例 の下の gherkin のコードブロック | Scenario: の行 | 直前の行のタグ @id=EX-nnn、@about=ID,...、@source=出典,... | なし（ステップの行を持つ） |
