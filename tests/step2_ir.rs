@@ -487,6 +487,36 @@ fn req_098_missing_field() {
     assert!(!mf.iter().any(|f| f.detail == "出典"), "missing_field 出典 should not appear");
 }
 
+// @kotowari[REQ-098, TBL-008, EX-259]
+#[test]
+fn req_098_review_requirement_without_how_to_verify_is_a_missing_field() {
+    let requirement = |id: &str, verification: &str, how_to_verify: &str| {
+        format!(
+            "### {id}: 例\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: {verification}\n{how_to_verify}\n文である。\n\n"
+        )
+    };
+    let content = format!(
+        "# Title\n\nScope.\n\n## 要求\n\n{}{}{}{}",
+        // 7 行目: 検証が review で行が無い
+        requirement("REQ-001", "review", ""),
+        // 15 行目: 検証が review で行がある
+        requirement("REQ-002", "review", "- 確かめ方: 手で見る\n"),
+        // 24 行目: 検証が unit で行が無い
+        requirement("REQ-003", "unit", ""),
+        // 32 行目: 検証が review で値が空（REQ-098: 無い行として扱う）
+        requirement("REQ-004", "review", "- 確かめ方:\n"),
+    );
+    let doc = ir::parse_document("a.md", &content);
+    let findings = check(&[doc], &default_config());
+    let lines: Vec<Option<usize>> = find_by_kind(&findings, "missing_field")
+        .iter()
+        .filter(|f| f.detail == "確かめ方")
+        .map(|f| f.line)
+        .collect();
+    // TBL-019: line は項目の見出しの行
+    assert_eq!(lines, vec![Some(7), Some(32)], "{findings:?}");
+}
+
 // --- REQ-099: 決定表に表がない ---
 
 // @kotowari[REQ-099]

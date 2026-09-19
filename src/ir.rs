@@ -133,6 +133,16 @@ impl Item {
         }
     }
 
+    /// REQ-098: 検証が review の`要求`で "- 確かめ方:" の行が無いか。
+    /// 値が空の行は解析の時点で落ちているので、ここでは無い行と同じに見える
+    pub fn is_review_without_how_to_verify(&self) -> bool {
+        matches!(
+            self,
+            Item::Requirement { verification, how_to_verify, .. }
+                if verification.as_deref() == Some("review") && how_to_verify.is_none()
+        )
+    }
+
     pub fn item_line(&self) -> usize {
         match self {
             Item::Requirement { line, .. }
@@ -1125,6 +1135,9 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             // REQ-098: 必須の行
             if kind.is_none() {
                 findings.push(Finding::new(FindingKind::MissingField, path.to_string(), Some(*line), "種類".to_string()));
+            }
+            if item.is_review_without_how_to_verify() {
+                findings.push(Finding::new(FindingKind::MissingField, path.to_string(), Some(*line), "確かめ方".to_string()));
             }
             if sources.is_empty() {
                 findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.clone()));
