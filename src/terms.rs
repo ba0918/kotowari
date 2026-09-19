@@ -85,24 +85,14 @@ pub fn check_vague_words(
     let mut pos = 0;
     while pos < chars.len() {
         // 現在位置から始まる最長の曖昧語を探す
-        let mut best_word: Option<&String> = None;
-        let mut best_len: usize = 0;
         let remaining: String = chars[pos..].iter().collect();
-        for word in vague_words {
-            if word.is_empty() {
-                continue;
-            }
-            if remaining.starts_with(word.as_str()) {
-                let wlen = word.chars().count();
-                if wlen > best_len {
-                    best_word = Some(word);
-                    best_len = wlen;
-                }
-            }
-        }
+        let best_word = vague_words
+            .iter()
+            .filter(|w| !w.is_empty() && remaining.starts_with(w.as_str()))
+            .max_by_key(|w| w.chars().count());
         if let Some(word) = best_word {
             findings.push(Finding::new(FindingKind::VagueWord, path.to_string(), Some(line), word.clone()));
-            pos += best_len;
+            pos += word.chars().count();
         } else {
             pos += 1;
         }
