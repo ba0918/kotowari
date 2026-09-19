@@ -55,6 +55,7 @@ Position: 承認済み（2026-09-20）。3ラウンド（A1〜A16）で木は尽
 - A11 `- 確かめ方:` の行の有無を check では検査しない。置けるのは要求だけ、と形の契約（TBL-011）に書くに留める
   - why: 「review の要求に確かめ方が必須か」は status の「何が揃えば complete か」と同じ問いなので、status の壁打ちで一緒に決める
   - decided_by: 利用者（推奨を採用）
+  - superseded_by: [A10（query-status）](./2026-09-20-query-status.md#A10)
 
 - A12 JSON の最上位は `items` だけ。順は check と同じく path の昇順、同じ path の中は line の昇順。`tests` の中も path → line
   - why: check の出力と同じ順なら読み手が迷わない
