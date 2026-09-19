@@ -53,7 +53,7 @@ ADR: 新しく書く義務は無い。既存の ADR は出典の先として残�
 
 対象の要求の一覧: `kotowari list` の `items` のうち `tests` が空の要求と具体例が、この計画が cycle で埋める分。Verification map はここから作る。
 
-読む量: `kotowari list` の JSON は要求 150 件のリポジトリで 200KB を超え、text も 1,000 行を超える。丸ごと読まず、`jq` で要る鍵だけを取る。例: 印の無い要求と具体例の ID と場所は `kotowari list | jq -r '.items[] | select(.tests == []) | "\(.id) \(.path):\(.line)"'`、1件の本文だけは `kotowari query REQ-001 | jq -r '.items[0].body[]'`、逆引きだけは `kotowari query REQ-001 | jq -c '.items[0].referenced_by'`。`kotowari status` は数百バイトなのでそのまま読んでよい。
+読む量: `kotowari list` の JSON は要求 150 件のリポジトリで 200KB を超え、text も 1,000 行を超える。丸ごと読まず、`jq` で要る鍵だけを取る。例: 印の無い要求と具体例の ID と場所は `kotowari list | jq -r '.items[] | select(.tests == [] and .verification != "review") | "\(.id) \(.path):\(.line)"'`（review の要求はテストを求めないので除く）、1件の本文だけは `kotowari query REQ-001 | jq -r '.items[0].body[]'`、逆引きだけは `kotowari query REQ-001 | jq -c '.items[0].referenced_by'`。`kotowari status` は数百バイトなのでそのまま読んでよい。
 
 確認コマンド: 最後のステップの確認コマンドに `kotowari check`（終了コード0）と `kotowari status`（`complete true`、終了コード0）を列挙する。
 
