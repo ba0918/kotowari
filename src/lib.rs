@@ -2,6 +2,7 @@ pub mod cargo_mutants;
 pub mod config;
 pub mod equivalents;
 pub mod ir;
+pub mod list;
 pub mod mutants;
 pub mod record_form;
 pub mod sources;
@@ -605,9 +606,9 @@ pub fn run(args: &[String]) -> u8 {
                 Ok(cwd) => cwd,
                 Err(reason) => return stop(&reason),
             };
-            match run_check(&cwd, Format::Json, config_path.as_deref()) {
-                Ok(_) => {
-                    println!("{{\"items\":[]}}");
+            match run_list(&cwd, config_path.as_deref()) {
+                Ok(result) => {
+                    println!("{}", serde_json::to_string(&result).unwrap());
                     0
                 }
                 Err(reason) => stop(&reason),
@@ -826,12 +827,20 @@ fn load_config(
     })
 }
 
-/// 検査のエントリポイント
-pub fn run_check(
-    cwd: &Path,
-    format: Format,
-    config_path: Option<&Path>,
-) -> Result<(CheckResult, Format), StopReason> {
+/// check と list が共有する読み取りの結果（REQ-151: list は check と同じ読み取りを使う）
+pub struct Loaded {
+    pub cfg: config::Config,
+    pub docs: Vec<ir::IrDocument>,
+    pub findings: Vec<Finding>,
+    /// TBL-021: 読んだテストのファイルの拡張子ごとの数
+    pub tally: BTreeMap<String, TestFileTally>,
+    /// TBL-026: 印の出現ごとの (ID, テストのファイル, 行, テストの名前)
+    pub markers: Vec<tests_discovery::TestMarker>,
+}
+
+/// 設定と置き場から IR の文書とテストのファイルを読み、検査もする。
+/// check はこの指摘を出し、list は捨てる（REQ-151）
+pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopReason> {
     let base = find_base(cwd);
     let cfg = load_config(cwd, &base, config_path)?;
 
@@ -841,26 +850,16 @@ pub fn run_check(
     let adr_dir = base.join(&cfg.decisions.adr);
 
     // REQ-018: 置き場が無い、または読めないとき停止（TBL-020: 相対パスと OS の誤りの文）
-    if !ir_dir.is_dir() {
-        let err = std::fs::read_dir(&ir_dir).err().map(|e| e.to_string())
-            .unwrap_or_else(|| "not a directory".to_string());
-        return Err(StopReason::UnreadableFile(format!("{}: {err}", cfg.ir)));
-    }
-    if !records_dir.is_dir() {
-        let err = std::fs::read_dir(&records_dir).err().map(|e| e.to_string())
-            .unwrap_or_else(|| "not a directory".to_string());
-        return Err(StopReason::UnreadableFile(format!(
-            "{}: {err}",
-            cfg.decisions.records
-        )));
-    }
-    if !adr_dir.is_dir() {
-        let err = std::fs::read_dir(&adr_dir).err().map(|e| e.to_string())
-            .unwrap_or_else(|| "not a directory".to_string());
-        return Err(StopReason::UnreadableFile(format!(
-            "{}: {err}",
-            cfg.decisions.adr
-        )));
+    for (dir, configured) in [
+        (&ir_dir, &cfg.ir),
+        (&records_dir, &cfg.decisions.records),
+        (&adr_dir, &cfg.decisions.adr),
+    ] {
+        if !dir.is_dir() {
+            let err = std::fs::read_dir(dir).err().map(|e| e.to_string())
+                .unwrap_or_else(|| "not a directory".to_string());
+            return Err(StopReason::UnreadableFile(format!("{configured}: {err}")));
+        }
     }
 
     // IR の文書を読んで検査する
@@ -885,13 +884,25 @@ pub fn run_check(
     terms::check_document_references(&docs, &cfg.ir, &ir_paths, &mut findings);
 
     // テストの発見と印の検査
-    let tests = tests_discovery::discover_and_check(
+    let (tally, markers) = tests_discovery::discover_and_check(
         &base, &cfg, &docs, &known_ids, &cfg.ir, &mut findings,
     )?;
 
-    let files = docs.len();
-    let lines: usize = docs.iter().map(|d| d.line_count).sum();
+    Ok(Loaded { cfg, docs, findings, tally, markers })
+}
 
+/// 検査のエントリポイント
+pub fn run_check(
+    cwd: &Path,
+    format: Format,
+    config_path: Option<&Path>,
+) -> Result<(CheckResult, Format), StopReason> {
+    let loaded = load_all(cwd, config_path)?;
+
+    let files = loaded.docs.len();
+    let lines: usize = loaded.docs.iter().map(|d| d.line_count).sum();
+
+    let mut findings = loaded.findings;
     sort_findings(&mut findings);
     let counts = count_findings(&findings);
 
@@ -900,8 +911,14 @@ pub fn run_check(
         lines,
         findings,
         counts,
-        tests,
+        tests: loaded.tally,
     };
 
     Ok((result, format))
+}
+
+/// 一覧のエントリポイント（REQ-151）。指摘は計算しても出さない
+pub fn run_list(cwd: &Path, config_path: Option<&Path>) -> Result<list::ListResult, StopReason> {
+    let loaded = load_all(cwd, config_path)?;
+    Ok(list::build(&loaded.docs, &loaded.cfg.ir, &loaded.markers))
 }

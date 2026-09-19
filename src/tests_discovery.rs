@@ -20,6 +20,19 @@ pub struct DiscoveredTest {
     pub invalid_markers: Vec<(usize, String)>,
 }
 
+/// `印`の1つの出現。`ID` ごとに1件で、同じ行の同じ `ID` の2つ目も1件（TBL-026 の "tests"）
+#[derive(Debug, Clone)]
+pub struct TestMarker {
+    /// 印に書かれた `ID`
+    pub id: String,
+    /// `テストのファイル`の`基準のディレクトリ`からの相対パス
+    pub path: String,
+    /// 印のある行
+    pub line: usize,
+    /// `テスト`の関数の名前。`問い合わせの無い言語`では無い（REQ-081）
+    pub name: Option<String>,
+}
+
 /// 印の解析結果
 #[derive(Debug, Clone)]
 pub struct Marker {
@@ -542,10 +555,12 @@ pub fn discover_and_check(
     known_ids: &BTreeSet<String>,
     ir_path: &str,
     findings: &mut Vec<Finding>,
-) -> Result<BTreeMap<String, crate::TestFileTally>, crate::StopReason> {
+) -> Result<(BTreeMap<String, crate::TestFileTally>, Vec<TestMarker>), crate::StopReason> {
     let test_files = collect_test_files(base, config)?;
     let mut all_tests: Vec<DiscoveredTest> = Vec::new();
     let mut all_marker_ids: BTreeSet<String> = BTreeSet::new();
+    // REQ-153: list の "tests" の元。check は使わない
+    let mut markers: Vec<TestMarker> = Vec::new();
     // TBL-021: 読んだテストのファイルを拡張子ごとに数える
     let mut tally: BTreeMap<String, crate::TestFileTally> = BTreeMap::new();
 
@@ -574,8 +589,14 @@ pub fn discover_and_check(
                     for test in &tests {
                         // 印の検証
                         check_test_markers(test, rel_path, known_ids, findings);
-                        for (id, _) in &test.marker_ids {
+                        for (id, marker_line) in &test.marker_ids {
                             all_marker_ids.insert(id.clone());
+                            markers.push(TestMarker {
+                                id: id.clone(),
+                                path: rel_path.clone(),
+                                line: *marker_line,
+                                name: Some(test.name.clone()),
+                            });
                         }
                         // REQ-072: テストに結び付く空・不正な印
                         for (line_num, raw) in &test.invalid_markers {
@@ -599,6 +620,12 @@ pub fn discover_and_check(
                     } else {
                         for id in &marker.ids {
                             all_marker_ids.insert(id.clone());
+                            markers.push(TestMarker {
+                                id: id.clone(),
+                                path: rel_path.clone(),
+                                line: line_num,
+                                name: None,
+                            });
                             // REQ-054: 存在しない ID への参照
                             if !known_ids.contains(id) {
                                 findings.push(Finding::new(FindingKind::UnresolvedReference, rel_path.clone(), Some(line_num), id.clone()));
@@ -652,7 +679,7 @@ pub fn discover_and_check(
         }
     }
 
-    Ok(tally)
+    Ok((tally, markers))
 }
 
 /// テストの印を検証する
