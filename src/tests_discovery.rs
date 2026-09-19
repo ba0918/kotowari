@@ -37,14 +37,16 @@ pub fn parse_markers_in_line(line: &str, line_num: usize) -> Vec<Marker> {
         let content_start = abs_start + "@kotowari[".len();
 
         if let Some(close) = line[content_start..].find(']') {
-            let content = &line[content_start..content_start + close];
+            // "]" の位置。"]" から "@kotowari[" は始まらないので、次の探索はここから始める
+            let close_pos = content_start + close;
+            let content = &line[content_start..close_pos];
             let ids: Vec<String> = content
                 .split(',')
                 .map(|s| s.trim().to_string())
                 .filter(|s| !s.is_empty())
                 .collect();
             markers.push(Marker { ids, line: line_num });
-            search_start = content_start + close + 1;
+            search_start = close_pos;
         } else {
             // 閉じ括弧がない
             markers.push(Marker { ids: vec![], line: line_num });
