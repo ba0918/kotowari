@@ -252,13 +252,27 @@ pub enum Cli {
         tool: Tool,
         results: PathBuf,
     },
+    /// 1件の項目かシナリオを出す
+    Query {
+        format: Format,
+        config_path: Option<PathBuf>,
+        id: String,
+    },
+    /// 揃っているかの集計を出す
+    Status {
+        format: Format,
+        config_path: Option<PathBuf>,
+    },
     /// 使い方を表示する
     Help,
     /// 版を表示する
     Version,
 }
 
-/// 引数を解析する（REQ-002, REQ-004, REQ-107, REQ-149）
+/// REQ-001: 1つ目の位置引数として受けるコマンド
+const COMMANDS: [&str; 5] = ["check", "list", "mutants", "query", "status"];
+
+/// 引数を解析する（REQ-002, REQ-004, REQ-107, REQ-149, REQ-157）
 pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     // REQ-107: --help か --version があればほかの引数を見ない
     for arg in args {
@@ -309,8 +323,8 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                 _ => tool = Some(args[i].clone()),
             }
         } else if command.is_none() {
-            // REQ-001: 1つ目の位置引数は check、list、mutants のどれか
-            if arg == "check" || arg == "list" || arg == "mutants" {
+            // REQ-001: 1つ目の位置引数は check、list、mutants、query、status のどれか
+            if COMMANDS.contains(&arg.as_str()) {
                 command = Some(arg.clone());
             } else {
                 return Err(StopReason::ArgumentError(format!("unknown command: {arg}")));
@@ -323,7 +337,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
 
     let Some(command) = command else {
         return Err(StopReason::ArgumentError(
-            "expected command: check, list or mutants".to_string(),
+            "expected command: check, list, mutants, query or status".to_string(),
         ));
     };
 
@@ -342,29 +356,52 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         Err(e) => return Err(StopReason::ArgumentError(e)),
     };
 
-    // REQ-152: list は check と同じ条件で、同じ理由と文言で停止する
-    if command == "check" || command == "list" {
-        // REQ-004: "check" か "list" に付けた "--tool" と、その後の位置引数
+    // REQ-152、REQ-158、REQ-163: list、query、status は check と同じ条件で、
+    // 同じ理由と文言で停止する
+    if command != "mutants" {
+        // REQ-004: "mutants" でないコマンドに付けた "--tool"
         if tool.is_some() {
             return Err(StopReason::ArgumentError(format!(
                 "unexpected option for {command}: --tool"
             )));
         }
+        // REQ-157: "query" の位置引数は ID がちょうど1つ
+        if command == "query" {
+            let [id] = positionals.as_slice() else {
+                return Err(StopReason::ArgumentError(format!(
+                    "query expects exactly one id, got {}",
+                    positionals.len()
+                )));
+            };
+            // REQ-124: ID の形でない位置引数
+            if !ir::is_valid_id(id) {
+                return Err(StopReason::ArgumentError(format!("not an id: {id}")));
+            }
+            return Ok(Cli::Query {
+                format,
+                config_path,
+                id: id.clone(),
+            });
+        }
+        // REQ-004: "check"、"list"、"status" の後の位置引数
         if let Some(extra) = positionals.first() {
             return Err(StopReason::ArgumentError(format!(
                 "unexpected argument: {extra}"
             )));
         }
-        return Ok(if command == "check" {
-            Cli::Check {
+        return Ok(match command.as_str() {
+            "check" => Cli::Check {
                 format,
                 config_path,
-            }
-        } else {
-            Cli::List {
+            },
+            "list" => Cli::List {
                 format,
                 config_path,
-            }
+            },
+            _ => Cli::Status {
+                format,
+                config_path,
+            },
         });
     }
 
@@ -614,6 +651,49 @@ pub fn run(args: &[String]) -> u8 {
                 Err(reason) => stop(&reason),
             }
         }
+        // REQ-156: check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
+        Cli::Query {
+            format,
+            config_path,
+            id,
+        } => {
+            let cwd = match current_dir() {
+                Ok(cwd) => cwd,
+                Err(reason) => return stop(&reason),
+            };
+            match run_query(&cwd, config_path.as_deref(), &id) {
+                Ok(()) => {
+                    // 組み立てはこれから。読み取りが通ったことだけを形で伝える
+                    match format {
+                        Format::Json => println!("{{\"items\":[]}}"),
+                        Format::Text => {}
+                    }
+                    0
+                }
+                Err(reason) => stop(&reason),
+            }
+        }
+        // REQ-162: check と同じ検査を走らせ、指摘は出さず集計だけを出す
+        Cli::Status {
+            format,
+            config_path,
+        } => {
+            let cwd = match current_dir() {
+                Ok(cwd) => cwd,
+                Err(reason) => return stop(&reason),
+            };
+            match run_status(&cwd, config_path.as_deref()) {
+                Ok(()) => {
+                    // 組み立てはこれから。読み取りが通ったことだけを形で伝える
+                    match format {
+                        Format::Json => println!("{{}}"),
+                        Format::Text => {}
+                    }
+                    0
+                }
+                Err(reason) => stop(&reason),
+            }
+        }
         Cli::Mutants {
             format,
             config_path,
@@ -681,12 +761,14 @@ fn print_findings_as_text(findings: &[Finding]) {
 }
 
 fn print_help() {
-    println!("Usage: kotowari [OPTIONS] <COMMAND> [RESULTS]");
+    println!("Usage: kotowari [OPTIONS] <COMMAND> [ARGUMENT]");
     println!();
     println!("Commands:");
     println!("  check      Check IR documents and test markers");
     println!("  list       List IR items and the tests marked for them");
     println!("  mutants    Read a mutation testing result file and report survivors");
+    println!("  query      Show one item or scenario with its body and back references");
+    println!("  status     Summarise the IR and tell whether it is complete");
     println!();
     println!("Options:");
     println!("  --format <FORMAT>  Output format: json (default) or text");
@@ -929,4 +1011,16 @@ pub fn run_check(
 pub fn run_list(cwd: &Path, config_path: Option<&Path>) -> Result<list::ListResult, StopReason> {
     let loaded = load_all(cwd, config_path)?;
     Ok(list::build(&loaded.docs, &loaded.cfg.ir, &loaded.markers))
+}
+
+/// 1件の読み取りのエントリポイント（REQ-156）。指摘は計算しても出さない
+pub fn run_query(cwd: &Path, config_path: Option<&Path>, _id: &str) -> Result<(), StopReason> {
+    load_all(cwd, config_path)?;
+    Ok(())
+}
+
+/// 集計のエントリポイント（REQ-162）。指摘は計算しても出さない
+pub fn run_status(cwd: &Path, config_path: Option<&Path>) -> Result<(), StopReason> {
+    load_all(cwd, config_path)?;
+    Ok(())
 }

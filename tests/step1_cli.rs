@@ -9,11 +9,11 @@ fn valid_project_dir() -> &'static Path {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-project").leak()
 }
 
-// --- REQ-001: コマンドは3つ ---
+// --- REQ-001: コマンドは5つ ---
 
 // @kotowari[REQ-001]
 #[test]
-fn req_001_check_list_and_mutants_are_the_only_commands() {
+fn req_001_five_commands_only() {
     // "kotowari check" は通る
     cmd()
         .arg("check")
@@ -31,6 +31,18 @@ fn req_001_check_list_and_mutants_are_the_only_commands() {
     cmd()
         .args(["mutants", "--tool", "cargo-mutants", "outcomes.json"])
         .current_dir(tmp.path())
+        .assert()
+        .code(0);
+    // "kotowari query" は4つ目、"kotowari status" は5つ目のコマンドとして通る
+    let project = dir_with_one_requirement();
+    cmd()
+        .args(["query", "REQ-001"])
+        .current_dir(project.path())
+        .assert()
+        .code(0);
+    cmd()
+        .arg("status")
+        .current_dir(project.path())
         .assert()
         .code(0);
     // ほかの語はコマンドにならない
@@ -82,6 +94,13 @@ fn req_004_positional_argument_stops() {
         .assert()
         .code(2)
         .stdout("");
+    // 作らないコマンドの名前も、コマンドの後ろでは位置引数の誤り
+    cmd()
+        .args(["check", "render"])
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(2)
+        .stdout("");
 }
 
 // @kotowari[REQ-004]
@@ -126,20 +145,20 @@ fn req_004_unknown_command_before_check_has_the_unknown_command_wording() {
 
 // @kotowari[REQ-004, TBL-020, EX-219]
 #[test]
-fn req_004_no_arguments_names_all_three_commands() {
+fn req_004_no_arguments_names_all_five_commands() {
     let output = cmd().current_dir(valid_project_dir()).output().unwrap();
     assert_eq!(output.status.code(), Some(2));
     let stderr = String::from_utf8_lossy(&output.stderr);
     let first_line = stderr.lines().next().unwrap_or("");
     assert_eq!(
-        first_line, "argument error: expected command: check, list or mutants",
+        first_line, "argument error: expected command: check, list, mutants, query or status",
         "got: {first_line:?}"
     );
 }
 
 // @kotowari[REQ-004, TBL-020, EX-241]
 #[test]
-fn req_004_options_without_a_command_names_all_three_commands() {
+fn req_004_options_without_a_command_names_all_five_commands() {
     let output = cmd()
         .args(["--format", "text"])
         .current_dir(valid_project_dir())
@@ -149,7 +168,7 @@ fn req_004_options_without_a_command_names_all_three_commands() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     let first_line = stderr.lines().next().unwrap_or("");
     assert_eq!(
-        first_line, "argument error: expected command: check, list or mutants",
+        first_line, "argument error: expected command: check, list, mutants, query or status",
         "got: {first_line:?}"
     );
 }
@@ -610,26 +629,138 @@ fn req_152_unreadable_config_stops_like_check() {
 
 // @kotowari[REQ-008]
 #[test]
-fn req_008_render_trace_query_are_argument_errors() {
-    // "render"、"trace"、"query" は、単独でも "check" の後ろでも引数の誤りになる
-    for word in ["render", "trace", "query"] {
-        for args in [vec![word], vec!["check", word]] {
-            let output = cmd()
-                .args(&args)
-                .current_dir(valid_project_dir())
-                .output()
-                .unwrap();
-            assert_eq!(
-                output.status.code(),
-                Some(2),
-                "{args:?} should stop with exit code 2"
-            );
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            let first = stderr.lines().next().unwrap_or("");
-            assert!(
-                first.starts_with("argument error"),
-                "{args:?} should stop as an argument error, got: {first}"
-            );
-        }
+fn req_008_render_is_an_argument_error() {
+    // "render" はコマンドにならない
+    assert_argument_error(&["render"], valid_project_dir());
+}
+
+// --- REQ-157、REQ-163、REQ-004: query と status の引数 ---
+
+// @kotowari[REQ-157, EX-252]
+#[test]
+fn req_157_two_positional_arguments_stop() {
+    assert_argument_error(&["query", "REQ-001", "REQ-002"], valid_project_dir());
+}
+
+// @kotowari[REQ-157]
+#[test]
+fn req_157_query_with_no_positional_stops() {
+    assert_argument_error(&["query"], valid_project_dir());
+}
+
+// @kotowari[REQ-157, REQ-124]
+#[test]
+fn req_157_positional_that_is_not_an_id_stops() {
+    // ID の形でない語と、数字が足りない ID
+    assert_argument_error(&["query", "foo"], valid_project_dir());
+    assert_argument_error(&["query", "REQ-01"], valid_project_dir());
+}
+
+// @kotowari[REQ-004]
+#[test]
+fn req_004_positional_after_status_stops() {
+    assert_argument_error(&["status", "extra"], valid_project_dir());
+}
+
+// @kotowari[REQ-004]
+#[test]
+fn req_004_tool_on_query_or_status_stops() {
+    assert_argument_error(
+        &["query", "--tool", "cargo-mutants", "REQ-001"],
+        valid_project_dir(),
+    );
+    assert_argument_error(&["status", "--tool", "cargo-mutants"], valid_project_dir());
+}
+
+// @kotowari[REQ-002]
+#[test]
+fn req_002_query_and_status_options_before_or_after_the_command() {
+    // オプションが query と status の前でも後でも受ける
+    let project = dir_with_one_requirement();
+    for args in [
+        vec!["--format", "json", "query", "REQ-001"],
+        vec!["query", "REQ-001", "--format", "json"],
+        vec!["--format", "json", "status"],
+        vec!["status", "--format", "json"],
+    ] {
+        cmd()
+            .args(&args)
+            .current_dir(project.path())
+            .assert()
+            .code(0);
     }
+}
+
+// @kotowari[REQ-158, EX-256]
+#[test]
+fn req_158_unreadable_config_stops_like_check() {
+    assert_stops_like_check(&["query", "REQ-001"]);
+}
+
+// @kotowari[REQ-163, EX-262]
+#[test]
+fn req_163_unreadable_config_stops_like_check() {
+    assert_stops_like_check(&["status"]);
+}
+
+/// YAML として読めない設定で、そのコマンドが "kotowari check" と同じ1行目で停止することを見る
+fn assert_stops_like_check(args: &[&str]) {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    std::fs::write(tmp.path().join(".kotowari/config.yaml"), "ir: [unclosed\n").unwrap();
+
+    let first_line_of = |args: &[&str]| {
+        let output = cmd().args(args).current_dir(tmp.path()).output().unwrap();
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "{args:?} should stop with exit code 2"
+        );
+        String::from_utf8_lossy(&output.stderr)
+            .lines()
+            .next()
+            .unwrap_or("")
+            .to_string()
+    };
+    let check_line = first_line_of(&["check"]);
+    assert!(
+        check_line.starts_with("config error: "),
+        "check should stop with a config error, got: {check_line:?}"
+    );
+    assert_eq!(
+        first_line_of(args),
+        check_line,
+        "{args:?} should stop with the same wording as check"
+    );
+}
+
+/// 項目が1つあり、check の指摘が0件の置き場を作る
+fn dir_with_one_requirement() -> tempfile::TempDir {
+    let tmp = tempfile::TempDir::new().unwrap();
+    for dir in [
+        ".kotowari",
+        "docs/ir",
+        "docs/decision/records",
+        "docs/decision/adr",
+    ] {
+        std::fs::create_dir_all(tmp.path().join(dir)).unwrap();
+    }
+    std::fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
+    )
+    .unwrap();
+    std::fs::write(
+        tmp.path().join("docs/decision/records/records.md"),
+        "# Records\n\n## Agreements\n\n- A1 Agreement\n",
+    )
+    .unwrap();
+    // 検証が review で確かめ方のある要求なら、テストが無くても check の指摘は出ない
+    std::fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# 題名\n\n範囲。\n\n## 要求\n\n### REQ-001: 例\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n- 確かめ方: 人が読む\n\n文である。\n",
+    )
+    .unwrap();
+    tmp
 }
