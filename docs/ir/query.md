@@ -60,9 +60,9 @@ kotowari は常に、"kotowari query" の "--format" の値として "json" と 
 | 鍵 | 持つ種類 | 中身 |
 |---|---|---|
 | `TBL-026` のすべての鍵 | `TBL-026` のとおり | `TBL-026` のとおり |
-| body | すべて | 本文の行の並び。`項目`は見出しの次の行から、次の "### " か "## " の見出しの前の行まで。`シナリオ`は "@id" のタグの行から最後のステップの行まで。末尾の空の行は含めない。行の文字はそのまま |
+| body | すべて | 本文の行の並び。`項目`は見出しの次の行から、次の "### " か "## " の見出しの前の行まで。`シナリオ`は "@id" のタグの行から最後のステップの行まで。先頭と末尾の空の行は含めない。行の文字はそのまま |
 | referenced_by | すべて | その `ID` を指している`項目`と`シナリオ`の並び。1件は "id"、"kind"、"path"、"line"（`TBL-026` と同じ意味）と "via" |
-| referenced_by の via | すべて | "definition"（"- 定義:" の行）、"relations"（"- 関係:" の行）、"about"（"@about" のタグ）、"text"（`要求`の文、`性質`の文、`シナリオ`のステップの中の `ID`）のいずれか |
+| referenced_by の via | すべて | "definition"（"- 定義:" の行）、"relations"（"- 関係:" の行）、"about"（"@about" のタグ）、"text"（`要求`の文、`性質`の文、`シナリオ`のステップの中の、二重引用符の外でバッククォートで囲んだ `ID`。REQ-054 と同じ判定）のいずれか |
 
 ## 具体例
 
@@ -112,7 +112,7 @@ Scenario: 設定が読めなければ check と同じく停止する
 
 @id=EX-257 @about=TBL-027 @source=docs/decision/records/2026-09-20-query-status.md#A3
 Scenario: 定義と文の中の ID が逆引きに出る
-  Given IR に決定表 "TBL-001" と、"- 定義: TBL-001" の行を持つ要求 "REQ-001" と、文の中に "TBL-001" を書いた要求 "REQ-002" がある
+  Given IR に決定表 "TBL-001" と、"- 定義: TBL-001" の行を持つ要求 "REQ-001" と、文の中にバッククォートで囲んだ "TBL-001" を書いた要求 "REQ-002" がある
   When "kotowari query TBL-001" を実行する
   Then "items" の1件の "referenced_by" は "id" が "REQ-001" で "via" が "definition" の1件と、"id" が "REQ-002" で "via" が "text" の1件である
 ```
