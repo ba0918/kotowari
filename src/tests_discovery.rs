@@ -445,11 +445,7 @@ fn collect_markers_from_siblings(
                 let comment_lines: Vec<&str> = text.lines().collect();
                 for (offset, cline) in comment_lines.iter().enumerate() {
                     let line_num = comment_start_row + offset + 1;
-                    let raw_line = if comment_start_row + offset < lines.len() {
-                        lines[comment_start_row + offset]
-                    } else {
-                        cline
-                    };
+                    let raw_line = lines.get(comment_start_row + offset).copied().unwrap_or(cline);
                     for marker in parse_markers_in_line(cline, line_num) {
                         if marker.ids.is_empty() {
                             // REQ-072: 空の印や閉じ括弧のない印
@@ -516,11 +512,7 @@ fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> (Vec<(St
                 let comment_lines_iter: Vec<&str> = text.lines().collect();
                 for (offset, cline) in comment_lines_iter.iter().enumerate() {
                     let line_num = comment_start_row + offset + 1;
-                    let raw_line = if comment_start_row + offset < lines.len() {
-                        lines[comment_start_row + offset]
-                    } else {
-                        cline
-                    };
+                    let raw_line = lines.get(comment_start_row + offset).copied().unwrap_or(cline);
                     for marker in parse_markers_in_line(cline, line_num) {
                         if marker.ids.is_empty() {
                             invalid.push((line_num, raw_line.to_string()));
