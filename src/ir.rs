@@ -1118,7 +1118,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
             // REQ-098: 必須の行
-            if kind.is_none() && !fields_seen.iter().any(|(_, n, _)| n == "種類") {
+            if kind.is_none() {
                 findings.push(Finding::new(FindingKind::MissingField, path.to_string(), Some(*line), "種類".to_string()));
             }
             if sources.is_empty() {
@@ -1126,7 +1126,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             }
 
             // REQ-048: 検証の行が無い
-            if verification.is_none() && !fields_seen.iter().any(|(_, n, _)| n == "検証") {
+            if verification.is_none() {
                 findings.push(Finding::new(FindingKind::VerificationMissing, path.to_string(), Some(*line), id.clone()));
             }
 
@@ -1282,7 +1282,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
             // REQ-098: 必須の行
-            if kind.is_none() && !fields_seen.iter().any(|(_, n, _)| n == "種類") {
+            if kind.is_none() {
                 findings.push(Finding::new(FindingKind::MissingField, path.to_string(), Some(*line), "種類".to_string()));
             }
             if relations.is_empty() && !fields_seen.iter().any(|(_, n, _)| n == "関係") {
