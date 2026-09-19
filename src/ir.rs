@@ -1071,11 +1071,9 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
 
     // REQ-032: ID の重複
     for (id, locations) in &all_ids {
-        if locations.len() > 1 {
-            // 2つ目以降の場所に指摘
-            for (path, line) in &locations[1..] {
-                findings.push(Finding::new(FindingKind::DuplicateId, path.clone(), Some(*line), id.clone()));
-            }
+        // 2つ目以降の場所に指摘
+        for (path, line) in locations.iter().skip(1) {
+            findings.push(Finding::new(FindingKind::DuplicateId, path.clone(), Some(*line), id.clone()));
         }
     }
 
