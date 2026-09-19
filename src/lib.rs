@@ -741,7 +741,7 @@ fn print_list(result: &list::ListResult, format: Format) {
 fn print_query(result: &query::QueryResult, format: Format) {
     match format {
         Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
-        Format::Text => {}
+        Format::Text => query::print_text(result),
     }
 }
 

@@ -348,3 +348,30 @@ fn req_161_json_top_level_has_only_items() {
     let names: Vec<&str> = v.as_object().unwrap().keys().map(String::as_str).collect();
     assert_eq!(names, vec!["items"]);
 }
+
+// @kotowari[REQ-161, REQ-155, EX-254]
+#[test]
+fn req_161_text_prints_body_and_referenced_by_lines() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(tmp.path(), "docs/ir/a.md", EX_250_DOCUMENT);
+    // 印を3行目に置く（EX-254 は印の行が 3）
+    write(
+        tmp.path(),
+        "tests/a.rs",
+        "\n\n// @kotowari[REQ-001]\n#[test]\nfn req_001_x() {}\n",
+    );
+    let (code, stdout, stderr) = run_query_raw(tmp.path(), &["--format", "text", "REQ-001"]);
+    assert_eq!(code, Some(0), "query should exit 0: {stderr}");
+    assert_eq!(
+        stdout,
+        "REQ-001 unit 例 docs/ir/a.md:7 tests=1\n\
+         \x20 tests/a.rs:3 req_001_x\n\
+         \x20 - 種類: ubiquitous\n\
+         \x20 - 出典: docs/decision/records/records.md#A1\n\
+         \x20 - 検証: unit\n\
+         \x20 \n\
+         \x20 文。\n\
+         \x20 <- EX-001 about docs/ir/a.md:20\n",
+    );
+}

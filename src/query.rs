@@ -31,6 +31,23 @@ pub struct Reference {
     pub via: &'static str,
 }
 
+/// REQ-161: 1件ごとに "kotowari list" と同じ1行目と "tests" の行を出し、
+/// 続けて本文の各行を2つの半角空白で字下げし、最後に逆引きの1件ごとの行を出す
+pub fn print_text(result: &QueryResult) {
+    for item in &result.items {
+        list::print_item_text(&item.item);
+        for line in &item.body {
+            println!("  {line}");
+        }
+        for reference in &item.referenced_by {
+            println!(
+                "  <- {} {} {}:{}",
+                reference.id, reference.via, reference.path, reference.line
+            );
+        }
+    }
+}
+
 /// 位置引数と同じ `ID` を持つ`項目`と`シナリオ`を組み立てる（REQ-156）。
 /// 1件も無ければ None を返す（REQ-157: 呼び出し元が`停止`する）
 pub fn build(

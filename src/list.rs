@@ -164,24 +164,30 @@ impl ListItem {
 /// 名前と検証の値はエスケープせずそのまま出す
 pub fn print_text(result: &ListResult) {
     for item in &result.items {
-        let p = item.text_parts();
+        print_item_text(item);
+    }
+}
+
+/// REQ-155: 1つの項目の1行と、その "tests" の1件ごとの行。
+/// query の "text" もこの2種類の行から始まる（REQ-161）
+pub fn print_item_text(item: &ListItem) {
+    let p = item.text_parts();
+    println!(
+        "{} {} {} {}:{} tests={}",
+        p.id,
+        p.verification,
+        p.name,
+        p.path,
+        p.line,
+        p.tests.len()
+    );
+    for test in p.tests {
         println!(
-            "{} {} {} {}:{} tests={}",
-            p.id,
-            p.verification,
-            p.name,
-            p.path,
-            p.line,
-            p.tests.len()
+            "  {}:{} {}",
+            test.path,
+            test.line,
+            test.name.as_deref().unwrap_or("-")
         );
-        for test in p.tests {
-            println!(
-                "  {}:{} {}",
-                test.path,
-                test.line,
-                test.name.as_deref().unwrap_or("-")
-            );
-        }
     }
 }
 
