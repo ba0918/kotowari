@@ -225,7 +225,9 @@ fn tbl_028_items_are_counted_by_kind() {
         tmp.path(),
         "docs/ir/a.md",
         &format!(
-            "# 題名\n\n範囲。\n\n## 要求\n\n{}## 決定表\n\n### TBL-001: 表\n\n- 出典: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n\n\
+            "# 題名\n\n範囲。\n\n## 要求\n\n{}## 決定表\n\n\
+### TBL-001: 表\n\n- 出典: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n\n\
+### TBL-002: もう1つの表\n\n- 出典: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n\n\
 ## 性質\n\n### PROP-001: 性\n\n- 出典: docs/decision/records/records.md#A1\n\n文である。\n\n## 具体例\n\n\
 ```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: 例\n  Given 何か\n```\n",
             requirement("REQ-001", "一", "- 検証: review\n- 確かめ方: 人が読む\n")
@@ -237,9 +239,70 @@ fn tbl_028_items_are_counted_by_kind() {
         "# 問題の記録\n\nなし。\n\n### FLAG-001: 抜け\n\n- 種類: gap\n- 関係: REQ-001\n- 出典: docs/decision/records/records.md#A1\n\n本文。\n",
     );
     let (_, v) = run_status(tmp.path());
-    for key in ["requirement", "table", "property", "scenario", "flag"] {
-        assert_eq!(v["items"][key], 1, "{key}: {v}");
+    // 決定表だけ2つにして、種類ごとの数が入れ替わらないことも見る
+    for (key, count) in [
+        ("requirement", 1),
+        ("table", 2),
+        ("property", 1),
+        ("scenario", 1),
+        ("flag", 1),
+    ] {
+        assert_eq!(v["items"][key], count, "{key}: {v}");
     }
+    // 印の無い具体例はテストの無い側に数える
+    assert_eq!(v["scenarios"]["with_tests"], 0, "{v}");
+    assert_eq!(v["scenarios"]["without_tests"], 1, "{v}");
+}
+
+// @kotowari[TBL-028]
+#[test]
+fn tbl_028_requirements_are_counted_by_verification_value() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "# 題名\n\n範囲。\n\n## 要求\n\n{}{}{}{}",
+            requirement("REQ-001", "一", "- 検証: unit\n"),
+            requirement("REQ-002", "二", "- 検証: property\n"),
+            requirement("REQ-003", "三", "- 検証: proof\n"),
+            requirement("REQ-004", "四", "- 検証: review\n- 確かめ方: 人が読む\n"),
+        ),
+    );
+    let (_, v) = run_status(tmp.path());
+    for key in ["unit", "property", "proof", "review"] {
+        assert_eq!(v["requirements"][key], 1, "{key}: {v}");
+    }
+    // review の3件以外は分母に入り、印が無いのでテストの無い側に数える
+    assert_eq!(v["requirements"]["without_tests"], 3, "{v}");
+}
+
+// @kotowari[TBL-028, REQ-165]
+#[test]
+fn tbl_028_notices_are_counted_apart_from_errors() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    // 行数の上限を1にして、注意（too_many_lines）だけが出る置き場にする
+    std::fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\nlimits:\n  lines: 1\n",
+    )
+    .unwrap();
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "# 題名\n\n範囲。\n\n## 要求\n\n{}",
+            requirement("REQ-001", "一", "- 検証: review\n- 確かめ方: 人が読む\n")
+        ),
+    );
+    let (code, v) = run_status(tmp.path());
+    assert_eq!(v["findings"]["error"], 0, "{v}");
+    assert_eq!(v["findings"]["notice"], 1, "{v}");
+    // 注意は complete を妨げない（REQ-165 は誤りと問題の記録だけを見る）
+    assert_eq!(v["complete"], true, "{v}");
+    assert_eq!(code, Some(0), "{v}");
 }
 
 // @kotowari[TBL-028, TBL-021]

@@ -63,16 +63,21 @@ fn only_item(v: &serde_json::Value) -> &serde_json::Value {
     &items[0]
 }
 
-/// "referenced_by" の1件を "ID via パス:行" の形の文字にする
+/// "referenced_by" の1件を "ID 種類 via パス:行" の形の文字にする
 fn references(item: &serde_json::Value) -> Vec<String> {
     item["referenced_by"]
         .as_array()
         .unwrap()
         .iter()
         .map(|r| {
+            let mut names: Vec<&str> = r.as_object().unwrap().keys().map(String::as_str).collect();
+            names.sort_unstable();
+            // TBL-027: 逆引きの1件は id、kind、path、line、via を持つ
+            assert_eq!(names, vec!["id", "kind", "line", "path", "via"], "{r}");
             format!(
-                "{} {} {}:{}",
+                "{} {} {} {}:{}",
                 r["id"].as_str().unwrap(),
+                r["kind"].as_str().unwrap(),
                 r["via"].as_str().unwrap(),
                 r["path"].as_str().unwrap(),
                 r["line"]
@@ -151,7 +156,7 @@ fn req_156_item_has_body_and_referenced_by() {
             "文。",
         ],
     );
-    assert_eq!(references(req), vec!["EX-001 about docs/ir/a.md:20"]);
+    assert_eq!(references(req), vec!["EX-001 scenario about docs/ir/a.md:20"]);
     // TBL-027: list の1件の鍵に "body" と "referenced_by" が増えた形
     let mut names: Vec<&str> = req.as_object().unwrap().keys().map(String::as_str).collect();
     names.sort_unstable();
@@ -280,8 +285,8 @@ fn tbl_027_definition_and_text_references_are_listed() {
     assert_eq!(
         references(only_item(&v)),
         vec![
-            "REQ-001 definition docs/ir/a.md:7",
-            "REQ-002 text docs/ir/a.md:16",
+            "REQ-001 requirement definition docs/ir/a.md:7",
+            "REQ-002 requirement text docs/ir/a.md:16",
         ],
     );
 }
@@ -301,6 +306,24 @@ fn tbl_027_text_reference_is_only_the_backticked_id() {
     );
     let v = run_query(tmp.path(), "TBL-001");
     assert!(references(only_item(&v)).is_empty(), "{v}");
+}
+
+// @kotowari[TBL-027]
+#[test]
+fn tbl_027_body_stops_before_the_next_heading() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    // 次の見出しが直後にある要求と、本文が1行だけの要求
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        "# 題名\n\n範囲。\n\n## 要求\n\n### REQ-001: 本文の無い要求\n### REQ-002: 本文が1行の要求\n- 種類: ubiquitous\n## 具体例\n",
+    );
+    assert!(body(only_item(&run_query(tmp.path(), "REQ-001"))).is_empty());
+    assert_eq!(
+        body(only_item(&run_query(tmp.path(), "REQ-002"))),
+        vec!["- 種類: ubiquitous"],
+    );
 }
 
 // --- REQ-160: 逆引きの並び ---
@@ -329,9 +352,9 @@ fn req_160_referenced_by_is_ordered_by_path_then_line() {
     assert_eq!(
         references(only_item(&v)),
         vec![
-            "REQ-002 definition docs/ir/a.md:7",
-            "REQ-001 definition docs/ir/a.md:16",
-            "REQ-003 definition docs/ir/b.md:7",
+            "REQ-002 requirement definition docs/ir/a.md:7",
+            "REQ-001 requirement definition docs/ir/a.md:16",
+            "REQ-003 requirement definition docs/ir/b.md:7",
         ],
     );
 }
