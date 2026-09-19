@@ -747,7 +747,7 @@ fn print_query(result: &query::QueryResult, format: Format) {
 fn print_status(result: &status::StatusResult, format: Format) {
     match format {
         Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
-        Format::Text => {}
+        Format::Text => status::print_text(result),
     }
 }
 

@@ -316,3 +316,28 @@ fn req_162_status_writes_no_finding() {
         assert!(!stdout.contains(key), "status writes no finding to stdout: {stdout}");
     }
 }
+
+// @kotowari[REQ-166, TBL-028, EX-261]
+#[test]
+fn req_166_text_prints_one_line_per_group() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_258_project(tmp.path());
+    let (code, stdout, stderr) = run(tmp.path(), &["status", "--format", "text"]);
+    assert_eq!(code, Some(0), "{stderr}");
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert_eq!(lines.len(), 7, "one line per group: {stdout}");
+    assert!(
+        lines[0].starts_with("documents files=1 lines="),
+        "got: {:?}",
+        lines[0]
+    );
+    assert_eq!(lines[1], "items requirement=2 table=0 property=0 scenario=1 flag=0");
+    assert_eq!(
+        lines[2],
+        "requirements unit=1 property=0 proof=0 review=1 with_tests=1 without_tests=0 review_with_how_to_verify=1 review_without_how_to_verify=0 without_examples=1"
+    );
+    assert_eq!(lines[3], "scenarios with_tests=1 without_tests=0");
+    assert_eq!(lines[4], "tests marks=2 rs=1");
+    assert_eq!(lines[5], "findings error=0 notice=0");
+    assert_eq!(lines[6], "complete true");
+}

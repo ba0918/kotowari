@@ -74,6 +74,49 @@ pub struct Findings {
     pub notice: usize,
 }
 
+/// REQ-166: TBL-028 の群ごとに "群名 鍵=値 鍵=値" の1行を、表の順に出す。
+/// 鍵の語は JSON と同じで、値の間は半角空白1つ、桁揃えの空白は入れない
+pub fn print_text(result: &StatusResult) {
+    let documents = &result.documents;
+    println!(
+        "documents files={} lines={}",
+        documents.files, documents.lines
+    );
+    let items = &result.items;
+    println!(
+        "items requirement={} table={} property={} scenario={} flag={}",
+        items.requirement, items.table, items.property, items.scenario, items.flag
+    );
+    let requirements = &result.requirements;
+    println!(
+        "requirements unit={} property={} proof={} review={} with_tests={} without_tests={} \
+review_with_how_to_verify={} review_without_how_to_verify={} without_examples={}",
+        requirements.unit,
+        requirements.property,
+        requirements.proof,
+        requirements.review,
+        requirements.with_tests,
+        requirements.without_tests,
+        requirements.review_with_how_to_verify,
+        requirements.review_without_how_to_verify,
+        requirements.without_examples
+    );
+    let scenarios = &result.scenarios;
+    println!(
+        "scenarios with_tests={} without_tests={}",
+        scenarios.with_tests, scenarios.without_tests
+    );
+    // TBL-028: "text" では読んだテストのファイルを拡張子ごとに数える
+    let mut tests = format!("tests marks={}", result.tests.marks);
+    for (extension, tally) in &result.tests.files {
+        tests.push_str(&format!(" {extension}={}", tally.files));
+    }
+    println!("{tests}");
+    let findings = &result.findings;
+    println!("findings error={} notice={}", findings.error, findings.notice);
+    println!("complete {}", result.complete);
+}
+
 /// check と同じ読み取りと検査の結果から TBL-028 の集計を作る（REQ-162、REQ-164）
 pub fn build(
     docs: &[IrDocument],
