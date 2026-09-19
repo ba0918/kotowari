@@ -952,7 +952,7 @@ fn build_scenario(
     let mut sources = Vec::new();
     for (tag_name, tag_value) in tags {
         match tag_name.as_str() {
-            "@id" if !tag_value.is_empty() => {
+            "@id" => {
                 // REQ-114: @id の値が EX の ID の形でないときは定義に数えない
                 if is_valid_id(tag_value) && id_prefix(tag_value) == Some(IdPrefix::Ex) {
                     id = Some(tag_value.clone());
