@@ -468,9 +468,7 @@ pub fn split_outside_quotes(line: &str) -> Vec<&str> {
             }
         }
     }
-    if !in_quote && start < line.len() {
-        parts.push(&line[start..]);
-    }
+    parts.push(&line[start..]);
     parts
 }
 
