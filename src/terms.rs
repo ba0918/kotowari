@@ -173,32 +173,30 @@ fn find_doc_refs(
                 }
             }
 
-            if name_start < md_abs {
-                let doc_name = &text[name_start..md_abs + 3];
+            let doc_name = &text[name_start..md_abs + 3];
 
-                let boundary_ok = if name_start == 0 {
-                    true
+            let boundary_ok = if name_start == 0 {
+                true
+            } else {
+                let prev_char = text[..name_start].chars().next_back().unwrap();
+                !prev_char.is_ascii_alphanumeric()
+                    && !matches!(prev_char, '_' | '-' | '/' | '.' | '`')
+            };
+
+            let mut elements = text[name_start..md_abs].rsplit('/');
+            let name_ok = elements.next().is_some_and(is_reference_name);
+            let directories_ok = elements.all(|element| {
+                element == "." || element == ".." || is_reference_name(element)
+            });
+
+            if boundary_ok && name_ok && directories_ok {
+                let target = if doc_name.contains('/') {
+                    doc_name.to_string()
                 } else {
-                    let prev_char = text[..name_start].chars().next_back().unwrap();
-                    !prev_char.is_ascii_alphanumeric()
-                        && !matches!(prev_char, '_' | '-' | '/' | '.' | '`')
+                    crate::join_display_path(directory, doc_name)
                 };
-
-                let mut elements = text[name_start..md_abs].rsplit('/');
-                let name_ok = elements.next().is_some_and(is_reference_name);
-                let directories_ok = elements.all(|element| {
-                    element == "." || element == ".." || is_reference_name(element)
-                });
-
-                if boundary_ok && name_ok && directories_ok {
-                    let target = if doc_name.contains('/') {
-                        doc_name.to_string()
-                    } else {
-                        crate::join_display_path(directory, doc_name)
-                    };
-                    if !ir_paths.contains(&target) {
-                        findings.push(Finding::new(FindingKind::MissingDocument, path.to_string(), Some(line), doc_name.to_string()));
-                    }
+                if !ir_paths.contains(&target) {
+                    findings.push(Finding::new(FindingKind::MissingDocument, path.to_string(), Some(line), doc_name.to_string()));
                 }
             }
 
