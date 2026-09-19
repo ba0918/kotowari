@@ -101,7 +101,8 @@ fn req_151_requirement_with_a_marked_test_is_listed() {
     write(
         tmp.path(),
         "tests/a.rs",
-        "#[test]\n\n// @kotowari[REQ-001]\n#[test]\nfn req_001_x() {}\n",
+        // 印を3行目に置く（EX-245 と EX-248 は印の行が 3）
+        "\n\n// @kotowari[REQ-001]\n#[test]\nfn req_001_x() {}\n",
     );
     let v = run_list(tmp.path());
     let req = item(&v, "REQ-001");
@@ -417,7 +418,8 @@ fn req_155_text_prints_one_line_per_item_and_indented_test_lines() {
     write(
         tmp.path(),
         "tests/a.rs",
-        "#[test]\n\n// @kotowari[REQ-001]\n#[test]\nfn req_001_x() {}\n",
+        // 印を3行目に置く（EX-245 と EX-248 は印の行が 3）
+        "\n\n// @kotowari[REQ-001]\n#[test]\nfn req_001_x() {}\n",
     );
     assert_eq!(
         run_list_text(tmp.path()),
