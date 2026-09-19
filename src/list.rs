@@ -89,14 +89,83 @@ pub enum ListItem {
     Flag(FlagItem),
 }
 
+/// REQ-155: 1行に出す値。"検証" は要求以外では "-"
+struct TextParts<'a> {
+    id: &'a str,
+    verification: &'a str,
+    name: &'a str,
+    path: &'a str,
+    line: usize,
+    tests: &'a [TestRef],
+}
+
 impl ListItem {
+    fn text_parts(&self) -> TextParts<'_> {
+        match self {
+            ListItem::Requirement(i) => TextParts {
+                id: &i.id,
+                // "- 検証:" の行の無い要求もここに来る。REQ-155 はその欄を決めていない
+                verification: i.verification.as_deref().unwrap_or("-"),
+                name: &i.name,
+                path: &i.path,
+                line: i.line,
+                tests: &i.tests,
+            },
+            ListItem::WithExamples(i) => TextParts {
+                id: &i.id,
+                verification: "-",
+                name: &i.name,
+                path: &i.path,
+                line: i.line,
+                tests: &i.tests,
+            },
+            ListItem::Scenario(i) => TextParts {
+                id: &i.id,
+                verification: "-",
+                name: &i.name,
+                path: &i.path,
+                line: i.line,
+                tests: &i.tests,
+            },
+            ListItem::Flag(i) => TextParts {
+                id: &i.id,
+                verification: "-",
+                name: &i.name,
+                path: &i.path,
+                line: i.line,
+                tests: &i.tests,
+            },
+        }
+    }
+
     /// REQ-154: 並べ替えの鍵
     fn sort_key(&self) -> (&str, usize) {
-        match self {
-            ListItem::Requirement(i) => (&i.path, i.line),
-            ListItem::WithExamples(i) => (&i.path, i.line),
-            ListItem::Scenario(i) => (&i.path, i.line),
-            ListItem::Flag(i) => (&i.path, i.line),
+        let parts = self.text_parts();
+        (parts.path, parts.line)
+    }
+}
+
+/// REQ-155: 1つの項目を1行で出し、その直後に "tests" の1件ごとの行を字下げして続ける。
+/// 名前と検証の値はエスケープせずそのまま出す
+pub fn print_text(result: &ListResult) {
+    for item in &result.items {
+        let p = item.text_parts();
+        println!(
+            "{} {} {} {}:{} tests={}",
+            p.id,
+            p.verification,
+            p.name,
+            p.path,
+            p.line,
+            p.tests.len()
+        );
+        for test in p.tests {
+            println!(
+                "  {}:{} {}",
+                test.path,
+                test.line,
+                test.name.as_deref().unwrap_or("-")
+            );
         }
     }
 }

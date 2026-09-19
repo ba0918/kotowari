@@ -599,7 +599,7 @@ pub fn run(args: &[String]) -> u8 {
         }
         // REQ-151: check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
         Cli::List {
-            format: _,
+            format,
             config_path,
         } => {
             let cwd = match current_dir() {
@@ -608,7 +608,7 @@ pub fn run(args: &[String]) -> u8 {
             };
             match run_list(&cwd, config_path.as_deref()) {
                 Ok(result) => {
-                    println!("{}", serde_json::to_string(&result).unwrap());
+                    print_list(&result, format);
                     0
                 }
                 Err(reason) => stop(&reason),
@@ -649,6 +649,14 @@ fn print_check(result: &CheckResult, format: Format) {
     match format {
         Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
         Format::Text => print_findings_as_text(&result.findings),
+    }
+}
+
+/// "kotowari list" の一覧を出す（REQ-155）
+fn print_list(result: &list::ListResult, format: Format) {
+    match format {
+        Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
+        Format::Text => list::print_text(result),
     }
 }
 

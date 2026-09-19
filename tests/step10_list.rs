@@ -55,6 +55,13 @@ fn run_list(tmp: &Path) -> serde_json::Value {
     serde_json::from_str(&stdout).expect("valid JSON")
 }
 
+/// "kotowari list --format text" を走らせ、終了コード 0 を確かめて標準出力を返す
+fn run_list_text(tmp: &Path) -> String {
+    let (code, stdout, stderr) = run_list_raw(tmp, &["--format", "text"]);
+    assert_eq!(code, Some(0), "list should exit 0: {stderr}");
+    stdout
+}
+
 /// "items" から ID で1件を引く
 fn item<'a>(v: &'a serde_json::Value, id: &str) -> &'a serde_json::Value {
     v["items"]
@@ -395,4 +402,59 @@ fn req_155_json_top_level_has_only_items() {
         vec!["items"],
         "the top level is only \"items\": {v}"
     );
+}
+
+// @kotowari[REQ-155, EX-248]
+#[test]
+fn req_155_text_prints_one_line_per_item_and_indented_test_lines() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!("# 題名\n\n範囲。\n\n## 要求\n\n{}", requirement("REQ-001", "例", "unit")),
+    );
+    write(
+        tmp.path(),
+        "tests/a.rs",
+        "#[test]\n\n// @kotowari[REQ-001]\n#[test]\nfn req_001_x() {}\n",
+    );
+    assert_eq!(
+        run_list_text(tmp.path()),
+        "REQ-001 unit 例 docs/ir/a.md:7 tests=1\n  tests/a.rs:3 req_001_x\n"
+    );
+}
+
+// @kotowari[REQ-155]
+#[test]
+fn req_155_text_writes_dash_for_a_null_test_name() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.py"]);
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!("# 題名\n\n範囲。\n\n## 要求\n\n{}", requirement("REQ-001", "例", "unit")),
+    );
+    write(tmp.path(), "tests/a.py", "def x():\n    # @kotowari[REQ-001]\n    pass\n");
+    assert_eq!(
+        run_list_text(tmp.path()),
+        "REQ-001 unit 例 docs/ir/a.md:7 tests=1\n  tests/a.py:2 -\n"
+    );
+}
+
+// @kotowari[REQ-155]
+#[test]
+fn req_155_text_writes_dash_for_the_verification_of_a_non_requirement() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        concat!(
+            "# 題名\n\n範囲。\n\n",
+            "## 決定表\n\n### TBL-001: 表\n\n- 出典: docs/decision/records/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n",
+        ),
+    );
+    // 要求以外の "検証" の欄は "-"。印のあるテストが無ければ tests=0 で続く行は無い
+    assert_eq!(run_list_text(tmp.path()), "TBL-001 - 表 docs/ir/a.md:7 tests=0\n");
 }
