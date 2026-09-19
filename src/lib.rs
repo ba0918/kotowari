@@ -239,6 +239,11 @@ pub enum Cli {
         format: Format,
         config_path: Option<PathBuf>,
     },
+    /// 項目とテストの一覧を出す
+    List {
+        format: Format,
+        config_path: Option<PathBuf>,
+    },
     /// 変異の結果を検査する
     Mutants {
         format: Format,
@@ -303,8 +308,8 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                 _ => tool = Some(args[i].clone()),
             }
         } else if command.is_none() {
-            // REQ-001: 1つ目の位置引数は check か mutants のどちらか
-            if arg == "check" || arg == "mutants" {
+            // REQ-001: 1つ目の位置引数は check、list、mutants のどれか
+            if arg == "check" || arg == "list" || arg == "mutants" {
                 command = Some(arg.clone());
             } else {
                 return Err(StopReason::ArgumentError(format!("unknown command: {arg}")));
@@ -317,7 +322,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
 
     let Some(command) = command else {
         return Err(StopReason::ArgumentError(
-            "expected command: check or mutants".to_string(),
+            "expected command: check, list or mutants".to_string(),
         ));
     };
 
@@ -336,21 +341,29 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         Err(e) => return Err(StopReason::ArgumentError(e)),
     };
 
-    if command == "check" {
-        // REQ-004: "check" に付けた "--tool" と、"check" の後の位置引数
+    // REQ-152: list は check と同じ条件で、同じ理由と文言で停止する
+    if command == "check" || command == "list" {
+        // REQ-004: "check" か "list" に付けた "--tool" と、その後の位置引数
         if tool.is_some() {
-            return Err(StopReason::ArgumentError(
-                "unexpected option for check: --tool".to_string(),
-            ));
+            return Err(StopReason::ArgumentError(format!(
+                "unexpected option for {command}: --tool"
+            )));
         }
         if let Some(extra) = positionals.first() {
             return Err(StopReason::ArgumentError(format!(
                 "unexpected argument: {extra}"
             )));
         }
-        return Ok(Cli::Check {
-            format,
-            config_path,
+        return Ok(if command == "check" {
+            Cli::Check {
+                format,
+                config_path,
+            }
+        } else {
+            Cli::List {
+                format,
+                config_path,
+            }
         });
     }
 
@@ -583,6 +596,23 @@ pub fn run(args: &[String]) -> u8 {
                 Err(reason) => stop(&reason),
             }
         }
+        // REQ-151: check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
+        Cli::List {
+            format: _,
+            config_path,
+        } => {
+            let cwd = match current_dir() {
+                Ok(cwd) => cwd,
+                Err(reason) => return stop(&reason),
+            };
+            match run_check(&cwd, Format::Json, config_path.as_deref()) {
+                Ok(_) => {
+                    println!("{{\"items\":[]}}");
+                    0
+                }
+                Err(reason) => stop(&reason),
+            }
+        }
         Cli::Mutants {
             format,
             config_path,
@@ -646,6 +676,7 @@ fn print_help() {
     println!();
     println!("Commands:");
     println!("  check      Check IR documents and test markers");
+    println!("  list       List IR items and the tests marked for them");
     println!("  mutants    Read a mutation testing result file and report survivors");
     println!();
     println!("Options:");

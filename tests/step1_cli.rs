@@ -9,18 +9,24 @@ fn valid_project_dir() -> &'static Path {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-project").leak()
 }
 
-// --- REQ-001: コマンドは2つ ---
+// --- REQ-001: コマンドは3つ ---
 
 // @kotowari[REQ-001]
 #[test]
-fn req_001_check_and_mutants_are_the_only_commands() {
+fn req_001_check_list_and_mutants_are_the_only_commands() {
     // "kotowari check" は通る
     cmd()
         .arg("check")
         .current_dir(valid_project_dir())
         .assert()
         .code(0);
-    // "kotowari mutants" も2つ目のコマンドとして通る
+    // "kotowari list" も2つ目のコマンドとして通る
+    cmd()
+        .arg("list")
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(0);
+    // "kotowari mutants" も3つ目のコマンドとして通る
     let tmp = dir_with_results(&["outcomes.json"]);
     cmd()
         .args(["mutants", "--tool", "cargo-mutants", "outcomes.json"])
@@ -120,20 +126,20 @@ fn req_004_unknown_command_before_check_has_the_unknown_command_wording() {
 
 // @kotowari[REQ-004, TBL-020, EX-219]
 #[test]
-fn req_004_no_arguments_names_both_commands() {
+fn req_004_no_arguments_names_all_three_commands() {
     let output = cmd().current_dir(valid_project_dir()).output().unwrap();
     assert_eq!(output.status.code(), Some(2));
     let stderr = String::from_utf8_lossy(&output.stderr);
     let first_line = stderr.lines().next().unwrap_or("");
     assert_eq!(
-        first_line, "argument error: expected command: check or mutants",
+        first_line, "argument error: expected command: check, list or mutants",
         "got: {first_line:?}"
     );
 }
 
 // @kotowari[REQ-004, TBL-020, EX-241]
 #[test]
-fn req_004_options_without_a_command_names_both_commands() {
+fn req_004_options_without_a_command_names_all_three_commands() {
     let output = cmd()
         .args(["--format", "text"])
         .current_dir(valid_project_dir())
@@ -143,7 +149,7 @@ fn req_004_options_without_a_command_names_both_commands() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     let first_line = stderr.lines().next().unwrap_or("");
     assert_eq!(
-        first_line, "argument error: expected command: check or mutants",
+        first_line, "argument error: expected command: check, list or mutants",
         "got: {first_line:?}"
     );
 }
@@ -529,6 +535,74 @@ fn req_004_tool_on_check_is_an_argument_error() {
     assert_argument_error(
         &["check", "--tool", "cargo-mutants"],
         valid_project_dir(),
+    );
+}
+
+// --- REQ-152: list の停止 ---
+
+// @kotowari[REQ-152, REQ-004]
+#[test]
+fn req_152_tool_on_list_is_an_argument_error() {
+    assert_argument_error(&["list", "--tool", "cargo-mutants"], valid_project_dir());
+}
+
+// @kotowari[REQ-152, REQ-004]
+#[test]
+fn req_152_positional_after_list_is_an_argument_error() {
+    assert_argument_error(&["list", "extra"], valid_project_dir());
+}
+
+// @kotowari[REQ-002]
+#[test]
+fn req_002_list_options_can_come_before_or_after_the_command() {
+    // オプションが list の前でも後でも受ける
+    cmd()
+        .args(["--format", "json", "list"])
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(0);
+    cmd()
+        .args(["list", "--format", "json"])
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(0);
+}
+
+// @kotowari[REQ-152, EX-249]
+#[test]
+fn req_152_unreadable_config_stops_like_check() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
+    // YAML として読めない設定
+    std::fs::write(tmp.path().join(".kotowari/config.yaml"), "ir: [unclosed\n").unwrap();
+
+    let first_line_of = |command: &str| {
+        let output = cmd()
+            .arg(command)
+            .current_dir(tmp.path())
+            .output()
+            .unwrap();
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "{command} should stop with exit code 2"
+        );
+        String::from_utf8_lossy(&output.stderr)
+            .lines()
+            .next()
+            .unwrap_or("")
+            .to_string()
+    };
+    let check_line = first_line_of("check");
+    let list_line = first_line_of("list");
+    assert!(
+        check_line.starts_with("config error: "),
+        "check should stop with a config error, got: {check_line:?}"
+    );
+    assert_eq!(
+        list_line, check_line,
+        "list should stop with the same wording as check"
     );
 }
 
