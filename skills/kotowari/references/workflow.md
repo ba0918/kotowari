@@ -53,6 +53,8 @@ ADR: 新しく書く義務は無い。既存の ADR は出典の先として残�
 
 対象の要求の一覧: `kotowari list` の `items` のうち `tests` が空の要求と具体例が、この計画が cycle で埋める分。Verification map はここから作る。
 
+読む量: `kotowari list` の JSON は要求 150 件のリポジトリで 200KB を超え、text も 1,000 行を超える。丸ごと読まず、`jq` で要る鍵だけを取る。例: 印の無い要求と具体例の ID と場所は `kotowari list | jq -r '.items[] | select(.tests == []) | "\(.id) \(.path):\(.line)"'`、1件の本文だけは `kotowari query REQ-001 | jq -r '.items[0].body[]'`、逆引きだけは `kotowari query REQ-001 | jq -c '.items[0].referenced_by'`。`kotowari status` は数百バイトなのでそのまま読んでよい。
+
 確認コマンド: 最後のステップの確認コマンドに `kotowari check`（終了コード0）と `kotowari status`（`complete true`、終了コード0）を列挙する。
 
 plan 自身は `kotowari check` と `kotowari status` を走らせない（承認済みの判定に使う check は主セッションが走らせる）。
@@ -61,7 +63,7 @@ plan 自身は `kotowari check` と `kotowari status` を走らせない（承�
 
 既存の cycle スキルの手順のうち、次を置き換える。
 
-review に渡す仕様のパス: IR の置き場のパス（レビュー役は置き場の文書すべてを読む）。差分が覆うべき要求と具体例の一覧は、呼び出し側が `kotowari list --format text` の出力をファイルに書いて渡す（レビュー役がコマンドを走らせられない前提）。
+review に渡す仕様のパス: IR の置き場のパス（レビュー役は置き場の文書すべてを読む）。差分が覆うべき要求と具体例の一覧は、呼び出し側が `kotowari list` を `jq` で絞った出力（差分の対象の ID だけ。上の「読む量」の例）をファイルに書いて渡す（レビュー役がコマンドを走らせられない前提。全件の出力は渡さない）。
 
 implementer と fixer のプロンプト: mark.md の内容を貼る（委譲先はスキルを読まない）。
 
@@ -77,7 +79,7 @@ IR 側の指摘: cycle では直さない。人の判断として終端報告に
 
 既存の implement スキルの手順のうち、次を置き換える。
 
-計画が名指しする要求と具体例は `kotowari query ID` で読む（本文、既にある印のテスト、逆引きが1回で揃う）。
+計画が名指しする要求と具体例は `kotowari query ID` で読む（本文、既にある印のテスト、逆引きが1回で揃う）。要る鍵だけを `jq` で取る（plan の節の「読む量」）。`kotowari list` を丸ごと読まない。
 
 plan が列挙した `kotowari check` と `kotowari status` を確認コマンドとして走らせる。
 

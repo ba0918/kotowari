@@ -6,7 +6,7 @@ kotowari の仕様に基づく（改訂 2026-09-20。本体の版は固定しな
 
 `kotowari mutants` の JSON の最上位は `findings`、`counts`、`mutants` の3つだけで、`files`、`lines`、`tests` は出ない。指摘の形と終了コードの決まりは check と同じで、下の表で引く。`mutants` の集計の読み方と、mutant_survived を調べる手順は mutants.md。
 
-`kotowari list` は check と同じ設定と置き場から IR とテストのファイルを読み、読めた項目とシナリオを標準出力に出す。指摘は出さず、終了コードは読めれば 0 で、2 になるのは停止したときだけ。停止の理由と文言は check と同じで、下の停止の表で引く。IR に誤りがあっても読めた項目は出るので、list は check の代わりにならない。
+`kotowari list` は check と同じ設定と置き場から IR とテストのファイルを読み、読めた項目とシナリオを標準出力に出す。 出力は項目の数に比例して大きい（要求 150 件で JSON は 200KB を超える）ので、LLM が読むときは `jq` で要る鍵だけを取る（例: `kotowari list | jq -r '.items[] | select(.tests == []) | .id'`）。指摘は出さず、終了コードは読めれば 0 で、2 になるのは停止したときだけ。停止の理由と文言は check と同じで、下の停止の表で引く。IR に誤りがあっても読めた項目は出るので、list は check の代わりにならない。
 
 `kotowari list` の JSON の最上位は `items` だけで、`findings` も `counts` も `tests` の集計も出ない。`items` の1件が持つ鍵は項目の種類で決まる。`kind` は `requirement`、`table`、`property`、`scenario`、`flag` のいずれかで、どの種類も `id`、`kind`、`name`、`path`、`line`、`sources`、`tests` を持つ。要求はさらに `type`、`verification`、`definition`、`examples`、`how_to_verify` を、決定表と性質は `examples`（ID の昇順）を、問題の記録は `type` と `relations` を持つ。値が無いときは鍵ごと消えず、null か空の並びになる。`how_to_verify` は要求の `- 確かめ方:` の行の値で、検証が review の要求を人がどう確かめるかはここにある。手で保つ対応表は無い。
 
