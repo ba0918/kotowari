@@ -1,6 +1,8 @@
 //! スキーマの `extract` に沿って値を組み立てる。
 
-use crate::document::{Block, Document, Item as DocItem, Section as DocSection, join_continuation};
+use crate::document::{
+    Block, Document, Item as DocItem, RawLine, Section as DocSection, join_continuation,
+};
 use crate::schema::{
     Bullets, Children, CodeBlock, Extract, Extracts, Field, OfKind, Schema, Statement, Table,
     is_declared_field, item_internals_declare_extract,
@@ -225,6 +227,20 @@ fn extract_statement(
         .copied()
         .filter(|b| matches!(b, Block::Statement { .. }))
         .collect();
+    if extract.has_of() {
+        // 導かれる値を宣言したときは行ごとのオブジェクトの並びにする。継続の
+        // 段落も同じ並びに入り、出現回数の宣言では入れ子にしない（R2）
+        let lines: Vec<Value> = statements
+            .iter()
+            .flat_map(|b| match b {
+                Block::Statement { raw_lines, .. } => raw_lines.as_slice(),
+                _ => &[],
+            })
+            .map(|raw| statement_line_object(raw, extract))
+            .collect();
+        place_all(root, extract, &Extracted::of_value(Value::Array(lines)));
+        return;
+    }
     let (value, line) = if statement.repeat.is_some() {
         (
             Value::Array(texts.iter().map(|t| Value::String(t.to_string())).collect()),
@@ -237,6 +253,26 @@ fn extract_statement(
         )
     };
     place_all(root, extract, &Extracted::of_value(value).with_line(line));
+}
+
+/// 文の1行のオブジェクト。生の行を "text" に置き、宣言された導かれる値を
+/// そのオブジェクトの中の相対パスへ置く（R2）。生の行の鍵の名前は仕様が
+/// 定めていないので、指摘が持つ生の行と同じ "text" にする。
+fn statement_line_object(raw: &RawLine, extract: &Extracts) -> Value {
+    let mut map = Map::new();
+    map.insert("text".to_string(), Value::String(raw.text.clone()));
+    for rule in extract.iter() {
+        // 項目の外のノードに of: id と of: name は宣言できない（R16）
+        let Extract::Of {
+            path,
+            of: OfKind::Line,
+        } = rule
+        else {
+            continue;
+        };
+        place(&mut map, path, Value::from(raw.line));
+    }
+    Value::Object(map)
 }
 
 fn extract_bullets(
@@ -1329,6 +1365,56 @@ document:
         let doc = "## 用語集\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
         let v = values(schema, doc);
         assert_eq!(v["glossary"], json!([{ "a": "1", "b": "2" }]));
+    }
+
+    // @kotowari[REQ-schema-035, REQ-schema-048]
+    #[test]
+    fn statement_with_a_derived_value_extracts_one_object_per_line() {
+        let schema = r#"
+document:
+  sections:
+    - name: 記録
+      statement:
+        extract:
+          - lines
+          - { path: line, of: line }
+"#;
+        let doc = "## 記録\n\n 文の1行目\n  字下げの2行目\n   3行目\n";
+        let v = values(schema, doc);
+        assert_eq!(
+            v["lines"],
+            json!([
+                { "text": " 文の1行目", "line": 3 },
+                { "text": "  字下げの2行目", "line": 4 },
+                { "text": "   3行目", "line": 5 }
+            ]),
+            "行の数と同じ数のオブジェクトが、生の行と行番号を持つ（R2）"
+        );
+    }
+
+    // @kotowari[REQ-schema-035, REQ-schema-048]
+    #[test]
+    fn statement_with_a_derived_value_lists_paragraphs_separated_by_a_blank_line() {
+        let schema = r#"
+document:
+  sections:
+    - name: 記録
+      statement:
+        repeat: { min: 0 }
+        extract:
+          - lines
+          - { path: line, of: line }
+"#;
+        let doc = "## 記録\n\n1行目\n\n次の段落\n";
+        let v = values(schema, doc);
+        assert_eq!(
+            v["lines"],
+            json!([
+                { "text": "1行目", "line": 3 },
+                { "text": "次の段落", "line": 5 }
+            ]),
+            "空行を挟んで続く段落も同じ並びに入る（R2）"
+        );
     }
 
     // @kotowari[REQ-schema-033, REQ-schema-048]
