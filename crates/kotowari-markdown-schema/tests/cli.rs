@@ -772,3 +772,37 @@ fn no_subcommand_stops_with_a_usage_hint_not_the_about_text() {
     );
     assert!(stderr.contains("--help"), "使い方への案内を出す: {stderr}");
 }
+
+const NODE_SCHEMA: &str = r#"name: t
+document:
+  sections:
+    - name: 要求
+      item:
+        id: "REQ-\\d+"
+        repeat: { min: 0 }
+        fields:
+          - name: 種類
+"#;
+
+// @kotowari[REQ-schema-008]
+#[test]
+fn check_json_finding_carries_the_node_name_and_the_raw_line() {
+    let dir = tempfile::tempdir().unwrap();
+    write_file(dir.path(), "schema.yaml", NODE_SCHEMA);
+    let doc = write_file(
+        dir.path(),
+        "doc.md",
+        "---\n$schema: ./schema.yaml\n---\n## 要求\n\n### REQ-001: `名前`\n",
+    );
+    let output = mds()
+        .args(["check", doc.to_str().unwrap(), "--format", "json"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let finding = &json["files"][0]["findings"][0];
+    assert_eq!(finding["kind"], "missing_required_field");
+    assert_eq!(finding["line"], 6);
+    assert_eq!(finding["node"], "種類");
+    assert_eq!(finding["text"], "### REQ-001: `名前`");
+}

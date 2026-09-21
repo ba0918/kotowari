@@ -18,11 +18,11 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
     } else if !open {
         // title 規則が無い `#` 見出しは閉じた世界で undeclared_heading（R13）
         for heading in &document.titles {
-            findings.push(Finding {
-                kind: FindingKind::UndeclaredHeading,
-                line: Some(heading.line),
-                detail: format!("undeclared title heading \"{}\"", heading.text),
-            });
+            findings.push(Finding::at(
+                FindingKind::UndeclaredHeading,
+                heading.line,
+                format!("undeclared title heading \"{}\"", heading.text),
+            ));
         }
     }
 
@@ -34,11 +34,21 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
         open
     };
     let rules = ContainerRules::for_preamble(doc_rule.preamble.as_ref());
-    validate_container(&rules, &document.preamble, effective_open, &mut findings);
+    // 前置部と文書そのものは開始行を持つノードではないので、欠落の指摘は行を持たない（R3）
+    validate_container(
+        &rules,
+        &document.preamble,
+        effective_open,
+        None,
+        &mut findings,
+    );
 
-    let mut section_counts: HashMap<&str, usize> = HashMap::new();
+    let mut section_lines: HashMap<&str, Vec<usize>> = HashMap::new();
     for section in &document.sections {
-        *section_counts.entry(section.name.as_str()).or_insert(0) += 1;
+        section_lines
+            .entry(section.name.as_str())
+            .or_default()
+            .push(section.line);
     }
 
     for section in &document.sections {
@@ -49,26 +59,32 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
         {
             Some(def) => {
                 let rules = ContainerRules::for_section(def);
-                validate_container(&rules, &section.blocks, false, &mut findings);
-                validate_items(def, &section.items, &mut findings);
+                validate_container(
+                    &rules,
+                    &section.blocks,
+                    false,
+                    Some(section.line),
+                    &mut findings,
+                );
+                validate_items(def, &section.items, Some(section.line), &mut findings);
             }
             None => {
                 // 宣言していない節は、閉じた世界で見出しと内側の行を誤りにする
                 if !open {
-                    findings.push(Finding {
-                        kind: FindingKind::UndeclaredHeading,
-                        line: Some(section.line),
-                        detail: format!("undeclared section heading \"{}\"", section.name),
-                    });
+                    findings.push(Finding::at(
+                        FindingKind::UndeclaredHeading,
+                        section.line,
+                        format!("undeclared section heading \"{}\"", section.name),
+                    ));
                     for block in &section.blocks {
                         push_undeclared_line(&mut findings, block);
                     }
                     for item in &section.items {
-                        findings.push(Finding {
-                            kind: FindingKind::UndeclaredHeading,
-                            line: Some(item.line),
-                            detail: format!("undeclared item heading \"{}\"", item.id),
-                        });
+                        findings.push(Finding::at(
+                            FindingKind::UndeclaredHeading,
+                            item.line,
+                            format!("undeclared item heading \"{}\"", item.id),
+                        ));
                         for block in &item.blocks {
                             push_undeclared_line(&mut findings, block);
                         }
@@ -79,15 +95,18 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
     }
 
     for def in &doc_rule.sections {
-        let count = section_counts.get(def.name.as_str()).copied().unwrap_or(0) as u64;
-        let (min, max) = bounds(def.required, def.repeat.as_ref());
+        let empty: Vec<usize> = Vec::new();
+        let lines = section_lines.get(def.name.as_str()).unwrap_or(&empty);
         check_occurrence(
-            count,
-            min,
-            max,
+            &Occurrence {
+                lines,
+                name: Some(&def.name),
+                what: format!("section \"{}\"", def.name),
+                container_line: None,
+            },
+            bounds(def.required, def.repeat.as_ref()),
             def.repeat.is_some(),
             FindingKind::MissingRequiredSection,
-            &format!("section \"{}\"", def.name),
             &mut findings,
         );
     }
@@ -100,11 +119,11 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
     for stray in &document.stray_preamble_headings {
         let in_declared_preamble = !stray.before_title && doc_rule.preamble.is_some();
         if in_declared_preamble || !open {
-            findings.push(Finding {
-                kind: FindingKind::UndeclaredHeading,
-                line: Some(stray.heading.line),
-                detail: format!("undeclared item heading \"{}\"", stray.heading.text),
-            });
+            findings.push(Finding::at(
+                FindingKind::UndeclaredHeading,
+                stray.heading.line,
+                format!("undeclared item heading \"{}\"", stray.heading.text),
+            ));
             for block in &stray.blocks {
                 push_undeclared_line(&mut findings, block);
             }
@@ -115,49 +134,60 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
         validate_stray_heading(heading, &mut findings);
     }
 
+    // 行を持つ指摘には、その行の生の文字をそのまま添える（R5）
+    for finding in &mut findings {
+        if let Some(line) = finding.line {
+            finding.raw = document.raw_line(line).map(str::to_string);
+        }
+    }
+
     findings
 }
 
 fn validate_title(title: &Title, headings: &[Heading], findings: &mut Vec<Finding>) {
     match headings.len() {
-        0 => findings.push(Finding {
-            kind: FindingKind::MissingTitle,
-            line: None,
-            detail: "the document has no level-1 heading".into(),
-        }),
-        n if n > 1 => findings.push(Finding {
-            kind: FindingKind::MultipleTitles,
-            line: Some(headings[1].line),
-            detail: "the document has more than one level-1 heading".into(),
-        }),
+        0 => findings.push(Finding::new(
+            FindingKind::MissingTitle,
+            "the document has no level-1 heading".into(),
+        )),
+        n if n > 1 => findings.push(Finding::at(
+            FindingKind::MultipleTitles,
+            headings[1].line,
+            "the document has more than one level-1 heading".into(),
+        )),
         _ => {
             let heading = &headings[0];
             if let Some(pattern) = &title.pattern
                 && !pattern.is_match(&heading.text)
             {
-                findings.push(Finding {
-                    kind: FindingKind::TitlePatternMismatch,
-                    line: Some(heading.line),
-                    detail: format!(
+                findings.push(Finding::at(
+                    FindingKind::TitlePatternMismatch,
+                    heading.line,
+                    format!(
                         "title \"{}\" does not match pattern \"{}\"",
                         heading.text,
                         pattern.source()
                     ),
-                });
+                ));
             }
         }
     }
 }
 
-fn validate_items(section: &Section, items: &[Item], findings: &mut Vec<Finding>) {
+fn validate_items(
+    section: &Section,
+    items: &[Item],
+    container_line: Option<usize>,
+    findings: &mut Vec<Finding>,
+) {
     let Some(item_rule) = &section.item else {
         // 宣言済みの節の中に足された未宣言の項目。open でも見出しと内側の行を誤りにする（R13）
         for item in items {
-            findings.push(Finding {
-                kind: FindingKind::UndeclaredHeading,
-                line: Some(item.line),
-                detail: format!("undeclared item heading \"{}\"", item.id),
-            });
+            findings.push(Finding::at(
+                FindingKind::UndeclaredHeading,
+                item.line,
+                format!("undeclared item heading \"{}\"", item.id),
+            ));
             for block in &item.blocks {
                 push_undeclared_line(findings, block);
             }
@@ -167,37 +197,40 @@ fn validate_items(section: &Section, items: &[Item], findings: &mut Vec<Finding>
 
     for item in items {
         if !item.has_id_separator {
-            findings.push(Finding {
-                kind: FindingKind::InvalidId,
-                line: Some(item.line),
-                detail: format!("item heading \"{}\" has no \":\" separator", item.id),
-            });
+            findings.push(Finding::at(
+                FindingKind::InvalidId,
+                item.line,
+                format!("item heading \"{}\" has no \":\" separator", item.id),
+            ));
         } else if let Some(id_pattern) = &item_rule.id
             && !id_pattern.is_match(&item.id)
         {
-            findings.push(Finding {
-                kind: FindingKind::InvalidId,
-                line: Some(item.line),
-                detail: format!(
+            findings.push(Finding::at(
+                FindingKind::InvalidId,
+                item.line,
+                format!(
                     "item id \"{}\" does not match pattern \"{}\"",
                     item.id,
                     id_pattern.source()
                 ),
-            });
+            ));
         }
         let rules = ContainerRules::for_item(item_rule);
-        validate_container(&rules, &item.blocks, false, findings);
+        validate_container(&rules, &item.blocks, false, Some(item.line), findings);
     }
 
-    let count = items.len() as u64;
-    let (min, max) = bounds(item_rule.required, item_rule.repeat.as_ref());
+    // 項目は宣言上の名前を持たないので、指摘にノードの名前を付けない（R4）
+    let lines: Vec<usize> = items.iter().map(|item| item.line).collect();
     check_occurrence(
-        count,
-        min,
-        max,
+        &Occurrence {
+            lines: &lines,
+            name: None,
+            what: "item".to_string(),
+            container_line,
+        },
+        bounds(item_rule.required, item_rule.repeat.as_ref()),
         true,
         FindingKind::MissingRequiredSection,
-        "item",
         findings,
     );
 }
@@ -206,11 +239,11 @@ fn validate_stray_heading(heading: &Heading, findings: &mut Vec<Finding>) {
     // 前置部領域の深さ3の見出しは stray_preamble_headings で扱い、ここには
     // 深さ4以上の見出しだけが来る（R13）。深さ4以上は常に heading_level_mismatch。
     if heading.depth >= 4 {
-        findings.push(Finding {
-            kind: FindingKind::HeadingLevelMismatch,
-            line: Some(heading.line),
-            detail: format!("heading at depth {} is not allowed", heading.depth),
-        });
+        findings.push(Finding::at(
+            FindingKind::HeadingLevelMismatch,
+            heading.line,
+            format!("heading at depth {} is not allowed", heading.depth),
+        ));
     }
 }
 
@@ -287,11 +320,7 @@ fn undeclared_line_for_block(block: &Block) -> Option<Finding> {
         Block::Code { line, .. } => ("undeclared code block".to_string(), *line),
         Block::Other { .. } => return None,
     };
-    Some(Finding {
-        kind: FindingKind::UndeclaredLine,
-        line: Some(line),
-        detail,
-    })
+    Some(Finding::at(FindingKind::UndeclaredLine, line, detail))
 }
 
 fn push_undeclared_line(findings: &mut Vec<Finding>, block: &Block) {
@@ -307,7 +336,7 @@ fn validate_bullet(
     rules: &ContainerRules,
     block: &Block,
     blocks: &[Block],
-    bullet_count: &mut u64,
+    bullet_lines: &mut Vec<usize>,
     open: bool,
     findings: &mut Vec<Finding>,
 ) {
@@ -318,19 +347,19 @@ fn validate_bullet(
     };
     match rules.bullets {
         Some(bullets) => {
-            *bullet_count += 1;
+            bullet_lines.push(line);
             if when_allows(bullets.when.as_ref(), rules.fields, blocks)
                 && let Some(pattern) = &bullets.pattern
                 && !pattern.is_match(text)
             {
-                findings.push(Finding {
-                    kind: FindingKind::BulletPatternMismatch,
-                    line: Some(line),
-                    detail: format!(
+                findings.push(Finding::at(
+                    FindingKind::BulletPatternMismatch,
+                    line,
+                    format!(
                         "bullet \"{text}\" does not match pattern \"{}\"",
                         pattern.source()
                     ),
-                });
+                ));
             }
             // 親の bullets 規則が宣言されたとき、子は親の children の宣言に照合する（R13）。
             // when は required / pattern / enum の制約にだけ効く（R15）。照合は常に実行する。
@@ -360,14 +389,17 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
         return;
     };
 
-    let mut child_field_counts: HashMap<&str, usize> = HashMap::new();
-    let mut child_bullet_count = 0u64;
+    let mut child_field_lines: HashMap<&str, Vec<usize>> = HashMap::new();
+    let mut child_bullet_lines: Vec<usize> = Vec::new();
     for child in child_blocks {
         match child {
             Block::Field {
                 name, value, line, ..
             } if is_declared_field(&children.fields, name) => {
-                *child_field_counts.entry(name.as_str()).or_insert(0) += 1;
+                child_field_lines
+                    .entry(name.as_str())
+                    .or_default()
+                    .push(*line);
                 let field = children
                     .fields
                     .iter()
@@ -386,7 +418,7 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
                     child,
                     children,
                     child_blocks,
-                    &mut child_bullet_count,
+                    &mut child_bullet_lines,
                     findings,
                 );
             }
@@ -401,18 +433,18 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
 
     for field in &children.fields {
         if when_allows(field.when.as_ref(), &children.fields, child_blocks) {
-            let count = child_field_counts
-                .get(field.name.as_str())
-                .copied()
-                .unwrap_or(0) as u64;
-            let (min, max) = bounds(field.required, field.repeat.as_ref());
+            let empty: Vec<usize> = Vec::new();
+            let lines = child_field_lines.get(field.name.as_str()).unwrap_or(&empty);
             check_occurrence(
-                count,
-                min,
-                max,
+                &Occurrence {
+                    lines,
+                    name: Some(&field.name),
+                    what: format!("field \"{}\"", field.name),
+                    container_line: Some(block.line()),
+                },
+                bounds(field.required, field.repeat.as_ref()),
                 field.repeat.is_some(),
                 FindingKind::MissingRequiredField,
-                &format!("field \"{}\"", field.name),
                 findings,
             );
         }
@@ -421,14 +453,16 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
     if let Some(child_bullets) = children.bullets.as_deref()
         && when_allows(child_bullets.when.as_ref(), &children.fields, child_blocks)
     {
-        let (min, max) = bounds(child_bullets.required, child_bullets.repeat.as_ref());
         check_occurrence(
-            child_bullet_count,
-            min,
-            max,
+            &Occurrence {
+                lines: &child_bullet_lines,
+                name: None,
+                what: "bullets".to_string(),
+                container_line: Some(block.line()),
+            },
+            bounds(child_bullets.required, child_bullets.repeat.as_ref()),
             child_bullets.repeat.is_some(),
             FindingKind::MissingBullets,
-            "bullets",
             findings,
         );
     }
@@ -442,7 +476,7 @@ fn validate_child_bullet(
     block: &Block,
     children: &Children,
     sibling_blocks: &[Block],
-    bullet_count: &mut u64,
+    bullet_lines: &mut Vec<usize>,
     findings: &mut Vec<Finding>,
 ) {
     let Some(bullets) = children.bullets.as_deref() else {
@@ -451,24 +485,24 @@ fn validate_child_bullet(
         push_undeclared_children(findings, block);
         return;
     };
-    *bullet_count += 1;
     let (text, line) = match block {
         Block::Bullet { text, line, .. } => (text.as_str(), *line),
         Block::Field { text, line, .. } => (text.as_str(), *line),
         _ => return,
     };
+    bullet_lines.push(line);
     if when_allows(bullets.when.as_ref(), &children.fields, sibling_blocks)
         && let Some(pattern) = &bullets.pattern
         && !pattern.is_match(text)
     {
-        findings.push(Finding {
-            kind: FindingKind::BulletPatternMismatch,
-            line: Some(line),
-            detail: format!(
+        findings.push(Finding::at(
+            FindingKind::BulletPatternMismatch,
+            line,
+            format!(
                 "bullet \"{text}\" does not match pattern \"{}\"",
                 pattern.source()
             ),
-        });
+        ));
     }
     validate_children(block, bullets.children.as_ref(), findings);
 }
@@ -485,13 +519,14 @@ fn validate_container(
     rules: &ContainerRules,
     blocks: &[Block],
     open: bool,
+    container_line: Option<usize>,
     findings: &mut Vec<Finding>,
 ) {
-    let mut field_counts: HashMap<&str, usize> = HashMap::new();
-    let mut statement_count = 0u64;
-    let mut bullet_count = 0u64;
-    let mut table_count = 0u64;
-    let mut code_count = 0u64;
+    let mut field_lines: HashMap<&str, Vec<usize>> = HashMap::new();
+    let mut statement_lines: Vec<usize> = Vec::new();
+    let mut bullet_lines: Vec<usize> = Vec::new();
+    let mut table_lines: Vec<usize> = Vec::new();
+    let mut code_lines: Vec<usize> = Vec::new();
     let mut ordered_seen: Vec<(usize, usize)> = Vec::new();
 
     for block in blocks {
@@ -501,7 +536,7 @@ fn validate_container(
             } => {
                 match rules.fields.iter().position(|f| f.name == *name) {
                     Some(idx) => {
-                        *field_counts.entry(name.as_str()).or_insert(0) += 1;
+                        field_lines.entry(name.as_str()).or_default().push(*line);
                         ordered_seen.push((idx, *line));
                         let field = &rules.fields[idx];
                         if when_allows(field.when.as_ref(), rules.fields, blocks) {
@@ -514,16 +549,16 @@ fn validate_container(
                     None => {
                         // R8: 宣言された名前と一致しない `- 名前: 値` 行は
                         // 箇条書きとして扱う。pattern は元の行に適用する（R10）
-                        validate_bullet(rules, block, blocks, &mut bullet_count, open, findings);
+                        validate_bullet(rules, block, blocks, &mut bullet_lines, open, findings);
                     }
                 }
             }
             Block::Bullet { .. } => {
-                validate_bullet(rules, block, blocks, &mut bullet_count, open, findings)
+                validate_bullet(rules, block, blocks, &mut bullet_lines, open, findings)
             }
             Block::Statement { text, line, .. } => match rules.statement {
                 Some(statement) => {
-                    statement_count += 1;
+                    statement_lines.push(*line);
                     if when_allows(statement.when.as_ref(), rules.fields, blocks) {
                         validate_statement_value(statement, text, *line, findings);
                     }
@@ -534,10 +569,15 @@ fn validate_container(
                     }
                 }
             },
-            Block::Table { header, rows, line, .. } => match rules.table {
+            Block::Table {
+                header,
+                rows,
+                line,
+                row_lines,
+            } => match rules.table {
                 Some(table) => {
-                    table_count += 1;
-                    validate_table_shape(table, header, rows, *line, findings);
+                    table_lines.push(*line);
+                    validate_table_shape(table, header, rows, *line, row_lines, findings);
                 }
                 None => {
                     if !open {
@@ -547,7 +587,7 @@ fn validate_container(
             },
             Block::Code { lang, value, line } => match rules.codeblock {
                 Some(codeblock) => {
-                    code_count += 1;
+                    code_lines.push(*line);
                     validate_codeblock_shape(codeblock, lang.as_deref(), value, *line, findings);
                 }
                 None => {
@@ -569,15 +609,18 @@ fn validate_container(
 
     for field in rules.fields {
         if when_allows(field.when.as_ref(), rules.fields, blocks) {
-            let count = field_counts.get(field.name.as_str()).copied().unwrap_or(0) as u64;
-            let (min, max) = bounds(field.required, field.repeat.as_ref());
+            let empty: Vec<usize> = Vec::new();
+            let lines = field_lines.get(field.name.as_str()).unwrap_or(&empty);
             check_occurrence(
-                count,
-                min,
-                max,
+                &Occurrence {
+                    lines,
+                    name: Some(&field.name),
+                    what: format!("field \"{}\"", field.name),
+                    container_line,
+                },
+                bounds(field.required, field.repeat.as_ref()),
                 field.repeat.is_some(),
                 FindingKind::MissingRequiredField,
-                &format!("field \"{}\"", field.name),
                 findings,
             );
         }
@@ -585,52 +628,60 @@ fn validate_container(
     if let Some(statement) = rules.statement
         && when_allows(statement.when.as_ref(), rules.fields, blocks)
     {
-        let (min, max) = bounds(statement.required, statement.repeat.as_ref());
         check_occurrence(
-            statement_count,
-            min,
-            max,
+            &Occurrence {
+                lines: &statement_lines,
+                name: None,
+                what: "statement".to_string(),
+                container_line,
+            },
+            bounds(statement.required, statement.repeat.as_ref()),
             statement.repeat.is_some(),
             FindingKind::MissingStatement,
-            "statement",
             findings,
         );
     }
     if let Some(bullets) = rules.bullets
         && when_allows(bullets.when.as_ref(), rules.fields, blocks)
     {
-        let (min, max) = bounds(bullets.required, bullets.repeat.as_ref());
         check_occurrence(
-            bullet_count,
-            min,
-            max,
+            &Occurrence {
+                lines: &bullet_lines,
+                name: None,
+                what: "bullets".to_string(),
+                container_line,
+            },
+            bounds(bullets.required, bullets.repeat.as_ref()),
             bullets.repeat.is_some(),
             FindingKind::MissingBullets,
-            "bullets",
             findings,
         );
     }
     if let Some(table) = rules.table {
-        let (min, max) = bounds(table.required, table.repeat.as_ref());
         check_occurrence(
-            table_count,
-            min,
-            max,
+            &Occurrence {
+                lines: &table_lines,
+                name: None,
+                what: "table".to_string(),
+                container_line,
+            },
+            bounds(table.required, table.repeat.as_ref()),
             table.repeat.is_some(),
             FindingKind::MissingTable,
-            "table",
             findings,
         );
     }
     if let Some(codeblock) = rules.codeblock {
-        let (min, max) = bounds(codeblock.required, codeblock.repeat.as_ref());
         check_occurrence(
-            code_count,
-            min,
-            max,
+            &Occurrence {
+                lines: &code_lines,
+                name: None,
+                what: "code block".to_string(),
+                container_line,
+            },
+            bounds(codeblock.required, codeblock.repeat.as_ref()),
             codeblock.repeat.is_some(),
             FindingKind::MissingCodeblock,
-            "code block",
             findings,
         );
     }
@@ -641,11 +692,11 @@ fn validate_container(
             if let Some(prev_idx) = prev
                 && *idx < prev_idx
             {
-                findings.push(Finding {
-                    kind: FindingKind::FieldOrderMismatch,
-                    line: Some(*line),
-                    detail: "fields are not in the declared order".into(),
-                });
+                findings.push(Finding::at(
+                    FindingKind::FieldOrderMismatch,
+                    *line,
+                    "fields are not in the declared order".into(),
+                ));
                 break;
             }
             prev = Some(*idx);
@@ -665,23 +716,23 @@ fn validate_statement_value(
     if let Some(pattern) = &statement.pattern
         && !pattern.is_match(text)
     {
-        findings.push(Finding {
-            kind: FindingKind::StatementPatternMismatch,
-            line: Some(line),
-            detail: format!(
+        findings.push(Finding::at(
+            FindingKind::StatementPatternMismatch,
+            line,
+            format!(
                 "statement \"{text}\" does not match pattern \"{}\"",
                 pattern.source()
             ),
-        });
+        ));
     }
     if let Some(allowed) = &statement.r#enum
         && !allowed.iter().any(|e| e == text)
     {
-        findings.push(Finding {
-            kind: FindingKind::StatementEnumInvalid,
-            line: Some(line),
-            detail: format!("statement \"{text}\" is not one of {allowed:?}"),
-        });
+        findings.push(Finding::at(
+            FindingKind::StatementEnumInvalid,
+            line,
+            format!("statement \"{text}\" is not one of {allowed:?}"),
+        ));
     }
 }
 
@@ -692,29 +743,32 @@ fn validate_table_shape(
     header: &[String],
     rows: &[Vec<String>],
     line: usize,
+    row_lines: &[usize],
     findings: &mut Vec<Finding>,
 ) {
     let Some(expected) = &table.header else {
         return;
     };
     if header != expected.as_slice() {
-        findings.push(Finding {
-            kind: FindingKind::TableHeaderMismatch,
-            line: Some(line),
-            detail: format!("table header {header:?} does not match expected {expected:?}"),
-        });
+        findings.push(Finding::at(
+            FindingKind::TableHeaderMismatch,
+            line,
+            format!("table header {header:?} does not match expected {expected:?}"),
+        ));
     }
-    for row in rows {
+    for (index, row) in rows.iter().enumerate() {
         if row.len() != expected.len() {
-            findings.push(Finding {
-                kind: FindingKind::TableHeaderMismatch,
-                line: Some(line),
-                detail: format!(
+            // 違反したのはその行なので、ヘッダの行ではなくその行を指す（R3）
+            let row_line = row_lines.get(index).copied().unwrap_or(line);
+            findings.push(Finding::at(
+                FindingKind::TableHeaderMismatch,
+                row_line,
+                format!(
                     "row has {} columns but the header has {}",
                     row.len(),
                     expected.len()
                 ),
-            });
+            ));
         }
     }
 }
@@ -731,11 +785,11 @@ fn validate_codeblock_shape(
     if let Some(expected) = &codeblock.lang
         && lang != Some(expected.as_str())
     {
-        findings.push(Finding {
-            kind: FindingKind::CodeblockLangMismatch,
-            line: Some(line),
-            detail: format!("code block language {lang:?} does not match \"{expected}\""),
-        });
+        findings.push(Finding::at(
+            FindingKind::CodeblockLangMismatch,
+            line,
+            format!("code block language {lang:?} does not match \"{expected}\""),
+        ));
     }
     let Some(patterns) = &codeblock.lines else {
         return;
@@ -746,11 +800,11 @@ fn validate_codeblock_shape(
             continue;
         }
         if !patterns.iter().any(|p| p.is_match(code_line)) {
-            findings.push(Finding {
-                kind: FindingKind::CodeblockLineMismatch,
-                line: Some(line),
-                detail: format!("line {} does not match any allowed pattern", i + 1),
-            });
+            findings.push(Finding::at(
+                FindingKind::CodeblockLineMismatch,
+                line,
+                format!("line {} does not match any allowed pattern", i + 1),
+            ));
         }
     }
 }
@@ -767,23 +821,29 @@ fn validate_field_value(field: &Field, value: &str, line: usize, findings: &mut 
         if let Some(pattern) = &field.pattern
             && !pattern.is_match(v)
         {
-            findings.push(Finding {
-                kind: FindingKind::FieldPatternMismatch,
-                line: Some(line),
-                detail: format!(
-                    "value \"{v}\" does not match pattern \"{}\"",
-                    pattern.source()
-                ),
-            });
+            findings.push(
+                Finding::at(
+                    FindingKind::FieldPatternMismatch,
+                    line,
+                    format!(
+                        "value \"{v}\" does not match pattern \"{}\"",
+                        pattern.source()
+                    ),
+                )
+                .of_node(&field.name),
+            );
         }
         if let Some(allowed) = &field.r#enum
             && !allowed.iter().any(|e| e == v)
         {
-            findings.push(Finding {
-                kind: FindingKind::FieldEnumInvalid,
-                line: Some(line),
-                detail: format!("value \"{v}\" is not one of {allowed:?}"),
-            });
+            findings.push(
+                Finding::at(
+                    FindingKind::FieldEnumInvalid,
+                    line,
+                    format!("value \"{v}\" is not one of {allowed:?}"),
+                )
+                .of_node(&field.name),
+            );
         }
     }
 }
@@ -827,38 +887,64 @@ fn bounds(required: Option<bool>, repeat: Option<&Repeat>) -> (u64, Option<u64>)
     }
 }
 
+/// 出現回数を数える対象のノード。
+struct Occurrence<'a> {
+    /// 現れた行（1始まり）。出現回数はこの長さ
+    lines: &'a [usize],
+    /// スキーマが宣言したノードの名前。節とフィールド行だけが持つ（R4）
+    name: Option<&'a str>,
+    /// detail の中でノードを指す言い回し
+    what: String,
+    /// それを含むノードの開始行。欠落の指摘の行に使う（R3）
+    container_line: Option<usize>,
+}
+
 fn check_occurrence(
-    count: u64,
-    min: u64,
-    max: Option<u64>,
+    occurrence: &Occurrence,
+    bounds: (u64, Option<u64>),
     repeat_style: bool,
     missing_kind: FindingKind,
-    what: &str,
     findings: &mut Vec<Finding>,
 ) {
-    if count < min {
+    let count = occurrence.lines.len() as u64;
+    let what = &occurrence.what;
+    let (min, max) = bounds;
+    let finding = if count < min {
+        // 欠落したノードには行が無いので、それを含むノードの開始行を指す（R3）
+        let line = occurrence.container_line;
         if repeat_style {
-            findings.push(Finding {
-                kind: FindingKind::RepeatMinNotMet,
-                line: None,
-                detail: format!("{what} appears {count} time(s), minimum is {min}"),
-            });
+            Finding::maybe_at(
+                FindingKind::RepeatMinNotMet,
+                line,
+                format!("{what} appears {count} time(s), minimum is {min}"),
+            )
         } else {
-            findings.push(Finding {
-                kind: missing_kind,
-                line: None,
-                detail: format!("{what} is required but missing"),
-            });
+            Finding::maybe_at(
+                missing_kind,
+                line,
+                format!("{what} is required but missing"),
+            )
         }
     } else if let Some(max) = max
         && count > max
     {
-        findings.push(Finding {
-            kind: FindingKind::RepeatMaxExceeded,
-            line: None,
-            detail: format!("{what} appears {count} time(s), maximum is {max}"),
-        });
-    }
+        // 上限を超えた最初のノードが違反したノードなので、その行を指す（R3）
+        let line = usize::try_from(max)
+            .ok()
+            .and_then(|index| occurrence.lines.get(index))
+            .copied();
+        Finding::maybe_at(
+            FindingKind::RepeatMaxExceeded,
+            line,
+            format!("{what} appears {count} time(s), maximum is {max}"),
+        )
+    } else {
+        return;
+    };
+    findings.push(match occurrence.name {
+        Some(name) => finding.of_node(name),
+        None => finding,
+    });
 }
 
 #[cfg(test)]
@@ -2452,5 +2538,94 @@ document:
             !kinds(&findings).contains(&FindingKind::UndeclaredLine),
             "前置部に宣言したコードブロックは undeclared_line にしない（R5）"
         );
+    }
+    const ITEM_SCHEMA: &str = r#"
+document:
+  sections:
+    - name: 要求
+      item:
+        id: "REQ-\\d+"
+        repeat: { min: 0 }
+        fields:
+          - name: 種類
+"#;
+
+    fn only(findings: &[Finding], kind: FindingKind) -> &Finding {
+        let found: Vec<&Finding> = findings.iter().filter(|f| f.kind == kind).collect();
+        assert_eq!(found.len(), 1, "{kind:?} が1件だけ出る: {findings:?}");
+        found[0]
+    }
+
+    // @kotowari[REQ-schema-008]
+    #[test]
+    fn missing_required_field_points_at_the_item_heading_with_the_field_name() {
+        let doc = "## 要求\n\n### REQ-001: 名前\n";
+        let findings = validate_src(ITEM_SCHEMA, doc, false);
+        let finding = only(&findings, FindingKind::MissingRequiredField);
+        assert_eq!(finding.line, Some(3), "欠落は含む項目の見出しの行を指す");
+        assert_eq!(finding.node.as_deref(), Some("種類"));
+        assert_eq!(finding.raw.as_deref(), Some("### REQ-001: 名前"));
+    }
+
+    // @kotowari[REQ-schema-008]
+    #[test]
+    fn a_field_line_declared_twice_points_at_the_second_line() {
+        let schema = "document:\n  preamble:\n    fields:\n      - name: 状態\n";
+        let doc = "- 状態: a\n- 状態: b\n";
+        let findings = validate_src(schema, doc, true);
+        let finding = only(&findings, FindingKind::RepeatMaxExceeded);
+        assert_eq!(finding.line, Some(2), "上限を超えた2つ目の行を指す");
+        assert_eq!(finding.node.as_deref(), Some("状態"));
+        assert_eq!(finding.raw.as_deref(), Some("- 状態: b"));
+    }
+
+    // @kotowari[REQ-schema-008, REQ-schema-033]
+    #[test]
+    fn a_table_row_with_the_wrong_column_count_points_at_that_row() {
+        let schema =
+            "document:\n  sections:\n    - name: 用語集\n      table:\n        header: [a, b]\n";
+        let doc = "## 用語集\n\n| a | b |\n|---|---|\n| 1 | 2 |\n| 3 |\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::TableHeaderMismatch);
+        assert_eq!(finding.line, Some(6), "ヘッダの行ではなくその行を指す");
+        assert_eq!(finding.raw.as_deref(), Some("| 3 |"));
+        assert_eq!(finding.node, None, "表は宣言上の名前を持たない");
+    }
+
+    // @kotowari[REQ-schema-008]
+    #[test]
+    fn missing_title_has_neither_a_line_nor_a_node_name() {
+        let doc = "## 状況\n\n背景。\n\n## 決定\n\n判断。\n";
+        let findings = validate_src(SCHEMA, doc, false);
+        let finding = only(&findings, FindingKind::MissingTitle);
+        assert_eq!(finding.line, None, "含むノードに行が無いので省く");
+        assert_eq!(finding.node, None);
+        assert_eq!(finding.raw, None);
+    }
+
+    // @kotowari[REQ-schema-008]
+    #[test]
+    fn invalid_id_carries_the_raw_heading_line() {
+        let doc = "## 要求\n\n### REQ-BAD: `名前`\n\n- 種類: x\n";
+        let findings = validate_src(ITEM_SCHEMA, doc, false);
+        let finding = only(&findings, FindingKind::InvalidId);
+        assert_eq!(finding.line, Some(3));
+        assert_eq!(
+            finding.raw.as_deref(),
+            Some("### REQ-BAD: `名前`"),
+            "生の行は src の行と一文字も違わない"
+        );
+    }
+
+    // @kotowari[REQ-schema-008]
+    #[test]
+    fn missing_required_section_carries_the_section_name() {
+        let schema =
+            "document:\n  sections:\n    - name: 状況\n      statement:\n        required: false\n";
+        let doc = "";
+        let findings = validate_src(schema, doc, true);
+        let finding = only(&findings, FindingKind::MissingRequiredSection);
+        assert_eq!(finding.node.as_deref(), Some("状況"));
+        assert_eq!(finding.line, None, "文書そのものには含むノードの行が無い");
     }
 }

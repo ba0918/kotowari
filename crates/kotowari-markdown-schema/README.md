@@ -127,6 +127,13 @@ item:
 ]
 ```
 
+A table or a statement that declares `of: line` comes back as one object per row or per line,
+carrying that line number — and, for a statement, the raw line with its original indentation:
+
+```json
+"glossary": [ { "Term": "mark", "Meaning": "...", "line": 12 } ]
+```
+
 Extracted values are strings; no type conversion is applied. Line numbers placed with `of: line`
 are the one exception, and are numbers.
 
@@ -144,6 +151,11 @@ mds --version
 | 0 | no findings |
 | 1 | findings were reported |
 | 2 | the check could not run (schema missing or invalid, broken frontmatter, unreadable file, bad argument) |
+
+`check --format json` reports each finding as `{kind, severity, path, line, node, text, detail}`.
+`line` points at the offending node, or at the node that should have contained a missing one;
+`node` is the declared name of that node, for sections and field lines; `text` is the raw line
+`line` points at. Keys that do not apply are left out.
 
 ## Using it as a library
 

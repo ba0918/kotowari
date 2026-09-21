@@ -67,6 +67,40 @@ pub struct Finding {
     pub kind: FindingKind,
     /// 1始まりの行番号。行を持たない指摘は None。
     pub line: Option<usize>,
+    /// スキーマが宣言したノードの名前。宣言上の名前を持たないノードの指摘は None。
+    pub node: Option<String>,
+    /// 行番号が指す行の生の文字。字下げと末尾の空白を含み、組み立て直さない。
+    /// 行を持たない指摘は None。
+    pub raw: Option<String>,
     /// 指摘の詳細（英語）
     pub detail: String,
+}
+
+impl Finding {
+    /// 行を持たない指摘。
+    pub fn new(kind: FindingKind, detail: String) -> Self {
+        Finding::maybe_at(kind, None, detail)
+    }
+
+    /// 行を持つ指摘。
+    pub fn at(kind: FindingKind, line: usize, detail: String) -> Self {
+        Finding::maybe_at(kind, Some(line), detail)
+    }
+
+    /// 行を持つかどうかが呼ぶ側で決まる指摘。
+    pub fn maybe_at(kind: FindingKind, line: Option<usize>, detail: String) -> Self {
+        Finding {
+            kind,
+            line,
+            node: None,
+            raw: None,
+            detail,
+        }
+    }
+
+    /// 宣言上の名前を持つノードの指摘に、その名前を添える。
+    pub fn of_node(mut self, node: &str) -> Self {
+        self.node = Some(node.to_string());
+        self
+    }
 }

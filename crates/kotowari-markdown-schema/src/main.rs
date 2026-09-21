@@ -79,6 +79,12 @@ struct FindingJson<'a> {
     path: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
     line: Option<usize>,
+    /// スキーマが宣言したノードの名前。持たない指摘では鍵ごと出さない（R18）
+    #[serde(skip_serializing_if = "Option::is_none")]
+    node: Option<&'a str>,
+    /// 行番号が指す行の生の文字。行を持たない指摘では鍵ごと出さない（R18）
+    #[serde(skip_serializing_if = "Option::is_none")]
+    text: Option<&'a str>,
     detail: &'a str,
 }
 
@@ -179,7 +185,9 @@ fn check_document(path: &Path, open_flag: bool) -> Result<Vec<Finding>, Stop> {
     let src = read_document(path)?;
     let (schema, document) = load_schema_and_document(path, &src)?;
     let open = open_flag || schema.open;
-    Ok(kotowari_markdown_schema::validate::validate(&schema, &document, open))
+    Ok(kotowari_markdown_schema::validate::validate(
+        &schema, &document, open,
+    ))
 }
 
 /// frontmatter から `$schema` の参照を読む。`$schema` を持たない文書は `None`。
@@ -199,10 +207,11 @@ fn load_schema_and_document_from(
     schema_ref: &SchemaRef,
 ) -> Result<(Schema, Document), Stop> {
     let schema_yaml = load_schema_yaml(path, schema_ref)?;
-    let schema = kotowari_markdown_schema::schema::parse_schema(&schema_yaml).map_err(|e| Stop {
-        kind: "schema_invalid",
-        detail: format!("{}: {}", path.display(), e.0),
-    })?;
+    let schema =
+        kotowari_markdown_schema::schema::parse_schema(&schema_yaml).map_err(|e| Stop {
+            kind: "schema_invalid",
+            detail: format!("{}: {}", path.display(), e.0),
+        })?;
     let document = Document::parse(src).map_err(|e| Stop {
         kind: "unreadable_file",
         detail: format!("{}: {}", path.display(), e),
@@ -361,6 +370,8 @@ fn emit_check(files: &[(PathBuf, Vec<Finding>)], format: &str) -> Result<(), Sto
                             severity: "error",
                             path: &path_str,
                             line: f.line,
+                            node: f.node.as_deref(),
+                            text: f.raw.as_deref(),
                             detail: &f.detail,
                         })
                         .collect();
