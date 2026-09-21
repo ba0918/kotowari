@@ -19,6 +19,18 @@ pub struct Document {
     /// undeclared_heading / undeclared_line の対象になる（R13）。題名より前の
     /// 見出しは open では許す
     pub stray_preamble_headings: Vec<StrayPreambleHeading>,
+    /// 文書の生の行。1始まりの行番号で `raw_line` から引く。指摘が指す行の
+    /// 生の文字は組み立て直さずここから取る（R2・R5）
+    pub lines: Vec<String>,
+}
+
+impl Document {
+    /// 1始まりの行番号の生の行。字下げと末尾の空白を含む。範囲の外は None。
+    pub fn raw_line(&self, line: usize) -> Option<&str> {
+        self.lines
+            .get(line.checked_sub(1)?)
+            .map(std::string::String::as_str)
+    }
 }
 
 /// 前置部領域に出た深さ3の見出しと、その下に続く内側の行。
@@ -36,6 +48,17 @@ pub struct Heading {
     pub text: String,
     pub depth: u8,
     pub line: usize,
+    /// 見出しの生の行。インラインコードのバッククォートとリンクの URL を
+    /// 含み、`text` のように組み立て直さない（R5）
+    pub raw: String,
+}
+
+/// 文の1行。生の行とその行番号（1始まり）。行ごとの抽出と、指摘が指す行の
+/// 生の文字に使う（R2・R5）。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RawLine {
+    pub line: usize,
+    pub text: String,
 }
 
 #[derive(Debug)]
@@ -101,11 +124,15 @@ pub enum Block {
     Statement {
         text: String,
         line: usize,
+        /// 段落が覆う行の生の行と行番号。1行目の字下げを含む（R2）
+        raw_lines: Vec<RawLine>,
     },
     Table {
         header: Vec<String>,
         rows: Vec<Vec<String>>,
         line: usize,
+        /// データ行ごとの行番号。ヘッダの行と区切りの行は数えない（R1）
+        row_lines: Vec<usize>,
     },
     Code {
         lang: Option<String>,
@@ -126,6 +153,7 @@ impl Document {
             return Ok(Document::default());
         };
 
+        let lines = split_lines(src);
         let mut doc = Document::default();
         let mut current_section: Option<usize> = None;
         let mut current_item: Option<usize> = None;
@@ -143,6 +171,7 @@ impl Document {
                                 text,
                                 depth: 1,
                                 line,
+                                raw: raw_line_of(&lines, line),
                             });
                             current_stray = None;
                         }
@@ -178,6 +207,7 @@ impl Document {
                                         text,
                                         depth: 3,
                                         line,
+                                        raw: raw_line_of(&lines, line),
                                     },
                                     blocks: Vec::new(),
                                     before_title: doc.titles.is_empty(),
@@ -185,11 +215,16 @@ impl Document {
                                 current_stray = Some(doc.stray_preamble_headings.len() - 1);
                             }
                         },
-                        depth => doc.stray_headings.push(Heading { text, depth, line }),
+                        depth => doc.stray_headings.push(Heading {
+                            text,
+                            depth,
+                            line,
+                            raw: raw_line_of(&lines, line),
+                        }),
                     }
                 }
                 other => {
-                    let blocks = blocks_from_node(&other, src);
+                    let blocks = blocks_from_node(&other, src, &lines);
                     if let Some(item_idx) = current_item {
                         let section = &mut doc.sections[current_section.unwrap()];
                         section.items[item_idx].blocks.extend(blocks);
@@ -203,11 +238,40 @@ impl Document {
                 }
             }
         }
+        doc.lines = lines;
         Ok(doc)
     }
 }
 
-fn blocks_from_node(node: &Node, src: &str) -> Vec<Block> {
+/// 文書を行に分ける。行末の "\r" は CRLF の行区切りの一部なので落とす。
+fn split_lines(src: &str) -> Vec<String> {
+    src.split('\n')
+        .map(|line| line.strip_suffix('\r').unwrap_or(line).to_string())
+        .collect()
+}
+
+/// 1始まりの行番号の生の行。範囲の外は空文字列。
+fn raw_line_of(lines: &[String], line: usize) -> String {
+    line.checked_sub(1)
+        .and_then(|i| lines.get(i))
+        .cloned()
+        .unwrap_or_default()
+}
+
+/// ノードが覆う行の生の行と行番号（R2・R5）。
+fn raw_lines_of(lines: &[String], node: &Node) -> Vec<RawLine> {
+    let Some(position) = node.position() else {
+        return Vec::new();
+    };
+    (position.start.line..=position.end.line)
+        .map(|line| RawLine {
+            line,
+            text: raw_line_of(lines, line),
+        })
+        .collect()
+}
+
+fn blocks_from_node(node: &Node, src: &str, lines: &[String]) -> Vec<Block> {
     let line = start_line(node);
     match node {
         // 画像だけの行（例: `![alt](img.png)`）は文の対象外（R9）
@@ -216,23 +280,26 @@ fn blocks_from_node(node: &Node, src: &str) -> Vec<Block> {
             vec![Block::Statement {
                 text: raw_slice(src, node),
                 line,
+                raw_lines: raw_lines_of(lines, node),
             }]
         }
         Node::List(list) => {
             let mut out = Vec::new();
             for child in &list.children {
                 if let Node::ListItem(item) = child {
-                    out.extend(blocks_from_list_item(item, src, list.ordered, false));
+                    out.extend(blocks_from_list_item(item, src, lines, list.ordered, false));
                 }
             }
             out
         }
         Node::Table(table) => {
             let mut rows: Vec<Vec<String>> = Vec::new();
+            let mut row_lines: Vec<usize> = Vec::new();
             for row in &table.children {
                 if let Node::TableRow(row) = row {
                     let cells = row.children.iter().map(cell_text).collect();
                     rows.push(cells);
+                    row_lines.push(line_at(row.position.as_ref()));
                 }
             }
             let mut rows = rows.into_iter();
@@ -241,6 +308,9 @@ fn blocks_from_node(node: &Node, src: &str) -> Vec<Block> {
                 header,
                 rows: rows.collect(),
                 line,
+                // ヘッダの行は行番号の並びから外す。区切りの行は表のノードに
+                // 現れないので、残りがデータ行そのものになる（R1）
+                row_lines: row_lines.into_iter().skip(1).collect(),
             }]
         }
         Node::Code(code) => vec![Block::Code {
@@ -264,6 +334,7 @@ fn blocks_from_node(node: &Node, src: &str) -> Vec<Block> {
 fn blocks_from_list_item(
     item: &markdown::mdast::ListItem,
     src: &str,
+    lines: &[String],
     ordered: bool,
     preserve_indent: bool,
 ) -> Vec<Block> {
@@ -323,14 +394,14 @@ fn blocks_from_list_item(
                     // 文として扱う。継続段落は lead に付く場合だけだから、この
                     // 段落はどこにも吸われない（R10）。画像だけの段落は
                     // blocks_from_node が文の対象外にする（R9）。
-                    extra.extend(blocks_from_node(child, src));
+                    extra.extend(blocks_from_node(child, src, lines));
                 }
             }
             Node::List(l) => {
                 let mut nested = Vec::new();
                 for nested_item in &l.children {
                     if let Node::ListItem(ni) = nested_item {
-                        nested.extend(blocks_from_list_item(ni, src, l.ordered, true));
+                        nested.extend(blocks_from_list_item(ni, src, lines, l.ordered, true));
                     }
                 }
                 match &mut lead_block {
@@ -345,7 +416,7 @@ fn blocks_from_list_item(
             // 引用・水平線などは blocks_from_node が Block::Other にして閉じた
             // 世界でも無視される（R13）。
             other => {
-                let blocks = blocks_from_node(other, src);
+                let blocks = blocks_from_node(other, src, lines);
                 match &mut lead_block {
                     Some(Block::Field { children, .. }) | Some(Block::Bullet { children, .. }) => {
                         children.extend(blocks)
@@ -714,6 +785,63 @@ mod tests {
         assert!(
             matches!(blocks[1], Block::Bullet { .. }),
             "順序付きの入れ子は対象外でトップレベルに残る"
+        );
+    }
+    // @kotowari[REQ-schema-008]
+    #[test]
+    fn title_heading_keeps_the_raw_line_including_inline_code() {
+        let src = "# 題名 `インライン` と [リンク](https://example.com/)\n";
+        let doc = Document::parse(src).unwrap();
+        assert_eq!(
+            doc.titles[0].raw,
+            "# 題名 `インライン` と [リンク](https://example.com/)",
+            "見出しの生の行は src の行と一文字も違わない"
+        );
+        assert_ne!(
+            doc.titles[0].raw, doc.titles[0].text,
+            "組み立て直した見出しの文字とは違う"
+        );
+    }
+
+    // @kotowari[REQ-schema-035]
+    #[test]
+    fn statement_keeps_each_raw_line_with_its_line_number() {
+        let src = "## 節\n\n 文の1行目\n  字下げの2行目\n   3行目\n";
+        let doc = Document::parse(src).unwrap();
+        let blocks = section_blocks(&doc);
+        let Block::Statement { raw_lines, .. } = &blocks[0] else {
+            panic!("段落が文になる");
+        };
+        assert_eq!(raw_lines.len(), 3);
+        assert_eq!(raw_lines[0].line, 3);
+        assert_eq!(raw_lines[0].text, " 文の1行目");
+        assert_eq!(raw_lines[1].line, 4);
+        assert_eq!(raw_lines[1].text, "  字下げの2行目");
+        assert_eq!(raw_lines[2].line, 5);
+        assert_eq!(raw_lines[2].text, "   3行目");
+    }
+
+    // @kotowari[REQ-schema-048]
+    #[test]
+    fn table_keeps_the_line_number_of_each_data_row() {
+        let src = "## 節\n\n| a | b |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n| 5 | 6 |\n";
+        let doc = Document::parse(src).unwrap();
+        let blocks = section_blocks(&doc);
+        let Block::Table {
+            rows,
+            row_lines,
+            line,
+            ..
+        } = &blocks[0]
+        else {
+            panic!("表になる");
+        };
+        assert_eq!(*line, 3, "表の開始行はヘッダの行");
+        assert_eq!(rows.len(), 3);
+        assert_eq!(
+            row_lines,
+            &vec![5, 6, 7],
+            "ヘッダの行と区切りの行は数えない"
         );
     }
 }

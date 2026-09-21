@@ -521,7 +521,7 @@ fn validate_container(
             Block::Bullet { .. } => {
                 validate_bullet(rules, block, blocks, &mut bullet_count, open, findings)
             }
-            Block::Statement { text, line } => match rules.statement {
+            Block::Statement { text, line, .. } => match rules.statement {
                 Some(statement) => {
                     statement_count += 1;
                     if when_allows(statement.when.as_ref(), rules.fields, blocks) {
@@ -534,7 +534,7 @@ fn validate_container(
                     }
                 }
             },
-            Block::Table { header, rows, line } => match rules.table {
+            Block::Table { header, rows, line, .. } => match rules.table {
                 Some(table) => {
                     table_count += 1;
                     validate_table_shape(table, header, rows, *line, findings);
