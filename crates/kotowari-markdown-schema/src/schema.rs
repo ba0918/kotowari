@@ -452,6 +452,27 @@ fn validate_table(table: Option<&Table>) -> Result<(), SchemaError> {
         }
         reject_capture_extract(table.extract.as_ref(), "table")?;
         reject_item_only_of(table.extract.as_ref(), "table")?;
+        reject_derived_key_colliding_with_column(table)?;
+    }
+    Ok(())
+}
+
+/// 行ごとのオブジェクトに入れる導かれる値の鍵が、宣言された列の名前と
+/// 衝突したら停止する（R1）。列を宣言しない表は照合する相手が無い（R11）。
+fn reject_derived_key_colliding_with_column(table: &Table) -> Result<(), SchemaError> {
+    let (Some(header), Some(extracts)) = (&table.header, &table.extract) else {
+        return Ok(());
+    };
+    for rule in extracts.iter() {
+        let Extract::Of { path, .. } = rule else {
+            continue;
+        };
+        let key = path.split('.').next().unwrap_or(path);
+        if header.iter().any(|column| column == key) {
+            return Err(SchemaError(format!(
+                "table extract path \"{path}\" collides with the table column \"{key}\""
+            )));
+        }
     }
     Ok(())
 }
@@ -1137,6 +1158,16 @@ document:
         assert!(
             parse_schema(yaml).is_ok(),
             "項目が extract を持てば内部にも宣言できる（R16）"
+        );
+    }
+
+    // @kotowari[REQ-schema-033, REQ-schema-048]
+    #[test]
+    fn table_derived_key_colliding_with_a_column_name_is_a_schema_error() {
+        let yaml = "document:\n  sections:\n    - name: 用語集\n      table:\n        header: [用語, line]\n        extract:\n          - glossary\n          - { path: line, of: line }\n";
+        assert!(
+            parse_schema(yaml).is_err(),
+            "行の鍵が表の列の名前と衝突したら停止する（R1）"
         );
     }
 }

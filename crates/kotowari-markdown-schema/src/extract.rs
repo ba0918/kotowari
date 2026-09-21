@@ -398,32 +398,71 @@ fn extract_table(table: Option<&Table>, blocks: &[&Block], root: &mut Map<String
         // 0件のときはキーを省略する（R16）
         return;
     }
-    // 表は repeat の宣言に関わらず常に配列。複数の表は現れた順に1つの配列へ連結する（R16）
-    let rows: Vec<Value> = tables.iter().flat_map(|b| table_objects(b)).collect();
-    let lines: Vec<Value> = tables.iter().map(|b| Value::from(b.line())).collect();
-    place_all(
-        root,
-        extract,
-        &Extracted::of_value(Value::Array(rows)).with_line(Value::Array(lines)),
-    );
+    if !extract.has_of() {
+        // 表は repeat の宣言に関わらず常に配列。複数の表は現れた順に1つの配列へ連結する（R16）
+        let rows: Vec<Value> = tables.iter().flat_map(|b| table_objects(b, None)).collect();
+        let lines: Vec<Value> = tables.iter().map(|b| Value::from(b.line())).collect();
+        place_all(
+            root,
+            extract,
+            &Extracted::of_value(Value::Array(rows)).with_line(Value::Array(lines)),
+        );
+        return;
+    }
+    // 導かれる値を宣言したときは、その鍵を行ごとのオブジェクトの中に置き、
+    // 表の開始行を最上位に置かない（R1）
+    let per_table: Vec<Vec<Value>> = tables
+        .iter()
+        .map(|b| table_objects(b, Some(extract)))
+        .collect();
+    let value = if table.repeat.is_some() {
+        // 繰り返す表は表ごとの配列の中に行のオブジェクトが並ぶ（R1）
+        Value::Array(per_table.into_iter().map(Value::Array).collect())
+    } else {
+        Value::Array(per_table.into_iter().flatten().collect())
+    };
+    place_all(root, extract, &Extracted::of_value(value));
 }
 
-fn table_objects(block: &Block) -> Vec<Value> {
-    match block {
-        Block::Table { header, rows, .. } => rows
-            .iter()
-            .map(|row| {
-                let mut map = Map::new();
-                for (i, cell) in row.iter().enumerate() {
-                    if let Some(key) = header.get(i) {
-                        map.insert(key.clone(), Value::String(cell.clone()));
+/// 表を行ごとのオブジェクトにする。`derived` を渡したとき、宣言された
+/// 導かれる値をそのオブジェクトの中の相対パスへ置く（R1）。
+fn table_objects(block: &Block, derived: Option<&Extracts>) -> Vec<Value> {
+    let Block::Table {
+        header,
+        rows,
+        row_lines,
+        ..
+    } = block
+    else {
+        return Vec::new();
+    };
+    rows.iter()
+        .enumerate()
+        .map(|(row_index, row)| {
+            let mut map = Map::new();
+            for (i, cell) in row.iter().enumerate() {
+                if let Some(key) = header.get(i) {
+                    map.insert(key.clone(), Value::String(cell.clone()));
+                }
+            }
+            if let Some(derived) = derived {
+                for rule in derived.iter() {
+                    // 表の外のノードに of: id と of: name は宣言できない（R16）
+                    let Extract::Of {
+                        path,
+                        of: OfKind::Line,
+                    } = rule
+                    else {
+                        continue;
+                    };
+                    if let Some(line) = row_lines.get(row_index) {
+                        place(&mut map, path, Value::from(*line));
                     }
                 }
-                Value::Object(map)
-            })
-            .collect(),
-        _ => Vec::new(),
-    }
+            }
+            Value::Object(map)
+        })
+        .collect()
 }
 
 fn extract_codeblock(
@@ -1290,6 +1329,59 @@ document:
         let doc = "## 用語集\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
         let v = values(schema, doc);
         assert_eq!(v["glossary"], json!([{ "a": "1", "b": "2" }]));
+    }
+
+    // @kotowari[REQ-schema-033, REQ-schema-048]
+    #[test]
+    fn table_with_a_derived_value_puts_the_row_line_into_each_row_object() {
+        let schema = r#"
+document:
+  sections:
+    - name: 用語集
+      table:
+        header: [a, b]
+        extract:
+          - glossary
+          - { path: line, of: line }
+"#;
+        let doc = "## 用語集\n\n| a | b |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n| 5 | 6 |\n";
+        let v = values(schema, doc);
+        assert_eq!(
+            v["glossary"],
+            json!([
+                { "a": "1", "b": "2", "line": 5 },
+                { "a": "3", "b": "4", "line": 6 },
+                { "a": "5", "b": "6", "line": 7 }
+            ]),
+            "行ごとのオブジェクトがそのデータ行の行番号を持つ（R1）"
+        );
+    }
+
+    // @kotowari[REQ-schema-033, REQ-schema-048]
+    #[test]
+    fn repeated_table_with_a_derived_value_nests_rows_per_table() {
+        let schema = r#"
+document:
+  sections:
+    - name: 用語集
+      table:
+        repeat: { min: 0 }
+        header: [a, b]
+        extract:
+          - glossary
+          - { path: line, of: line }
+"#;
+        let doc =
+            "## 用語集\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n| a | b |\n|---|---|\n| 3 | 4 |\n";
+        let v = values(schema, doc);
+        assert_eq!(
+            v["glossary"],
+            json!([
+                [{ "a": "1", "b": "2", "line": 5 }],
+                [{ "a": "3", "b": "4", "line": 9 }]
+            ]),
+            "繰り返す表は表ごとの配列の中に行のオブジェクトが並ぶ（R1）"
+        );
     }
 
     // @kotowari[REQ-schema-038]
