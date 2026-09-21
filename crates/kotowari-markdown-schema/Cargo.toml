@@ -1,0 +1,37 @@
+[package]
+name = "mds"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+keywords = ["markdown", "schema", "validation", "cli"]
+categories = ["command-line-utilities", "text-processing"]
+description = "Validate Markdown documents against a YAML schema declared in their frontmatter and extract structured values"
+
+[dependencies]
+mds-core = { path = "crates/mds-core", version = "0.1.0" }
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+ureq = "3"
+walkdir = "2"
+
+[dev-dependencies]
+assert_cmd = "2"
+tempfile = "3"
+
+[workspace]
+members = ["crates/mds-core"]
+default-members = [".", "crates/mds-core"]
+resolver = "3"
+
+# この版がプロジェクトの正となる唯一の宣言。ほかの宣言はここから受け継ぐ。
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.89"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ba0918/mds"
