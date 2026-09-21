@@ -692,11 +692,14 @@ fn validate_container(
             if let Some(prev_idx) = prev
                 && *idx < prev_idx
             {
-                findings.push(Finding::at(
-                    FindingKind::FieldOrderMismatch,
-                    *line,
-                    "fields are not in the declared order".into(),
-                ));
+                findings.push(
+                    Finding::at(
+                        FindingKind::FieldOrderMismatch,
+                        *line,
+                        "fields are not in the declared order".into(),
+                    )
+                    .of_node(&rules.fields[*idx].name),
+                );
                 break;
             }
             prev = Some(*idx);
@@ -2627,5 +2630,17 @@ document:
         let finding = only(&findings, FindingKind::MissingRequiredSection);
         assert_eq!(finding.node.as_deref(), Some("状況"));
         assert_eq!(finding.line, None, "文書そのものには含むノードの行が無い");
+    }
+
+    // @kotowari[REQ-schema-008]
+    #[test]
+    fn field_order_mismatch_carries_the_name_of_the_field_out_of_order() {
+        let schema = "document:\n  sections:\n    - name: 要求\n      ordered: true\n      fields:\n        - name: 種類\n        - name: 定義\n";
+        let doc = "## 要求\n\n- 定義: REQ-001\n- 種類: algorithm\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::FieldOrderMismatch);
+        assert_eq!(finding.line, Some(4), "宣言の順に反した行を指す");
+        assert_eq!(finding.node.as_deref(), Some("種類"));
+        assert_eq!(finding.raw.as_deref(), Some("- 種類: algorithm"));
     }
 }
