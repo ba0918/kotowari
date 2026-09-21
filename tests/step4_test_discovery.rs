@@ -2137,3 +2137,71 @@ fn req_124_four_digit_id_in_a_tag_and_a_marker_is_read_the_same_way() {
         result
     );
 }
+
+// --- REQ-124, REQ-167: ID の名前（2026-09-22-id-namespace.md）---
+
+// @kotowari[REQ-124, EX-043]
+#[test]
+fn req_124_named_and_unnamed_ids_are_both_read() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("docs/ir/core")).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/core/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-core-001: 名前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n### REQ-002: 名前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n### REQ-Core-003: 名前\n",
+    )
+    .unwrap();
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    // 名前のある ID も名前の無い ID も要求として読まれた（行の順）
+    let missing = findings_by_kind(&result, "requirement_without_test");
+    let details: Vec<&str> = missing.iter().map(|f| f["detail"].as_str().unwrap()).collect();
+    assert_eq!(details, vec!["REQ-core-001", "REQ-002"], "{:?}", result);
+    // 大文字を含む名前は ID の形に合わない
+    let headings = findings_by_kind(&result, "unknown_heading");
+    let hd: Vec<&str> = headings.iter().map(|f| f["detail"].as_str().unwrap()).collect();
+    assert_eq!(hd, vec!["### REQ-Core-003: 名前"], "{:?}", result);
+    // 名前が置き場の第1階層と一致するので不一致は出ない
+    assert!(findings_by_kind(&result, "id_domain_mismatch").is_empty(), "{:?}", result);
+}
+
+// @kotowari[REQ-167, EX-044]
+#[test]
+fn req_167_id_name_must_match_the_first_directory_segment() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("docs/ir/core")).unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/core/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-schema-001: 名前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/b.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-core-002: 名前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n",
+    )
+    .unwrap();
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    // 置き場の第1階層と違う名前、および第1階層を持たない文書の名前付き ID（パスのバイト順）
+    let mismatch = findings_by_kind(&result, "id_domain_mismatch");
+    let details: Vec<&str> = mismatch.iter().map(|f| f["detail"].as_str().unwrap()).collect();
+    assert_eq!(details, vec!["REQ-core-002", "REQ-schema-001"], "{:?}", result);
+}
+
+// @kotowari[REQ-167]
+#[test]
+fn req_167_scenario_id_name_is_reported_on_the_tag_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    // IR の置き場の直下なので第1階層が無く、"@id" の名前は一致する相手を持たない
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: 名前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n## 具体例\n\n```gherkin\n@id=EX-core-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: One\n  Given a\n  When b\n  Then c\n```\n",
+    )
+    .unwrap();
+    let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    let mismatch = findings_by_kind(&result, "id_domain_mismatch");
+    assert_eq!(mismatch.len(), 1, "{:?}", result);
+    assert_eq!(mismatch[0]["detail"], "EX-core-001");
+    // TBL-019: "@id" の値なら "line" はタグの行（"Scenario:" の行ではない）
+    assert_eq!(mismatch[0]["line"], 18, "{:?}", result);
+}

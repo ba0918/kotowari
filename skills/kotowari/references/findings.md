@@ -42,6 +42,7 @@ kotowari の仕様に基づく（改訂 2026-09-20。本体の版は固定しな
 | verification_invalid | 検証の値が正しくない | unit、property、proof、review のいずれかにする | brainstorm |
 | unknown_kind | 種類の値が正しくない | 正しい値にする | brainstorm |
 | duplicate_id | 同じ ID が2か所以上 | ID を一意にする | brainstorm |
+| id_domain_mismatch | ID の名前が置き場の第1階層と違う | 名前を置き場に合わせるか、文書を移す | brainstorm |
 | unresolved_reference | IR の文書で存在しない ID を参照（定義、@about、関係、文中の ID） | ID を直すか定義を足す | brainstorm |
 | unresolved_reference | テストの印で存在しない ID を参照（path がテストのファイル） | 印の ID を存在するものに直す | implementer |
 | algorithm_without_definition | algorithm の要求に定義が無い | `- 定義:` で決定表か性質を指す | brainstorm |

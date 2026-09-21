@@ -64,6 +64,7 @@ finding_kinds! {
     DuplicateTerm => "duplicate_term",
     EquivalentInvalid => "equivalent_invalid",
     EquivalentStale => "equivalent_stale",
+    IdDomainMismatch => "id_domain_mismatch",
     InvalidGlossaryRow => "invalid_glossary_row",
     InvalidMarker => "invalid_marker",
     MissingDocument => "missing_document",
