@@ -34,7 +34,7 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
         open
     };
     let rules = ContainerRules::for_preamble(doc_rule.preamble.as_ref());
-    // 前置部と文書そのものは開始行を持つノードではないので、欠落の指摘は行を持たない（R3）
+    // 前置部と文書そのものは開始行を持つノードではないので、欠落の指摘は行を持たない（R18）
     validate_container(
         &rules,
         &document.preamble,
@@ -134,7 +134,7 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
         validate_stray_heading(heading, &mut findings);
     }
 
-    // 行を持つ指摘には、その行の生の文字をそのまま添える（R5）
+    // 行を持つ指摘には、その行の生の文字をそのまま添える（R18）
     for finding in &mut findings {
         if let Some(line) = finding.line {
             finding.raw = document.raw_line(line).map(str::to_string);
@@ -219,7 +219,7 @@ fn validate_items(
         validate_container(&rules, &item.blocks, false, Some(item.line), findings);
     }
 
-    // 項目は宣言上の名前を持たないので、指摘にノードの名前を付けない（R4）
+    // 項目は宣言上の名前を持たないので、指摘にノードの名前を付けない（R18）
     let lines: Vec<usize> = items.iter().map(|item| item.line).collect();
     check_occurrence(
         &Occurrence {
@@ -761,7 +761,7 @@ fn validate_table_shape(
     }
     for (index, row) in rows.iter().enumerate() {
         if row.len() != expected.len() {
-            // 違反したのはその行なので、ヘッダの行ではなくその行を指す（R3）
+            // 違反したのはその行なので、ヘッダの行ではなくその行を指す（R18）
             let row_line = row_lines.get(index).copied().unwrap_or(line);
             findings.push(Finding::at(
                 FindingKind::TableHeaderMismatch,
@@ -894,11 +894,11 @@ fn bounds(required: Option<bool>, repeat: Option<&Repeat>) -> (u64, Option<u64>)
 struct Occurrence<'a> {
     /// 現れた行（1始まり）。出現回数はこの長さ
     lines: &'a [usize],
-    /// スキーマが宣言したノードの名前。節とフィールド行だけが持つ（R4）
+    /// スキーマが宣言したノードの名前。節とフィールド行だけが持つ（R18）
     name: Option<&'a str>,
     /// detail の中でノードを指す言い回し
     what: String,
-    /// それを含むノードの開始行。欠落の指摘の行に使う（R3）
+    /// それを含むノードの開始行。欠落の指摘の行に使う（R18）
     container_line: Option<usize>,
 }
 
@@ -913,7 +913,7 @@ fn check_occurrence(
     let what = &occurrence.what;
     let (min, max) = bounds;
     let finding = if count < min {
-        // 欠落したノードには行が無いので、それを含むノードの開始行を指す（R3）
+        // 欠落したノードには行が無いので、それを含むノードの開始行を指す（R18）
         let line = occurrence.container_line;
         if repeat_style {
             Finding::maybe_at(
@@ -931,7 +931,7 @@ fn check_occurrence(
     } else if let Some(max) = max
         && count > max
     {
-        // 上限を超えた最初のノードが違反したノードなので、その行を指す（R3）
+        // 上限を超えた最初のノードが違反したノードなので、その行を指す（R18）
         let line = usize::try_from(max)
             .ok()
             .and_then(|index| occurrence.lines.get(index))

@@ -20,7 +20,7 @@ pub struct Document {
     /// 見出しは open では許す
     pub stray_preamble_headings: Vec<StrayPreambleHeading>,
     /// 文書の生の行。1始まりの行番号で `raw_line` から引く。指摘が指す行の
-    /// 生の文字は組み立て直さずここから取る（R2・R5）
+    /// 生の文字は組み立て直さずここから取る（R18）
     pub lines: Vec<String>,
 }
 
@@ -49,12 +49,12 @@ pub struct Heading {
     pub depth: u8,
     pub line: usize,
     /// 見出しの生の行。インラインコードのバッククォートとリンクの URL を
-    /// 含み、`text` のように組み立て直さない（R5）
+    /// 含み、`text` のように組み立て直さない（R18）
     pub raw: String,
 }
 
 /// 文の1行。生の行とその行番号（1始まり）。行ごとの抽出と、指摘が指す行の
-/// 生の文字に使う（R2・R5）。
+/// 生の文字に使う（R16・R18）。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RawLine {
     pub line: usize,
@@ -124,14 +124,14 @@ pub enum Block {
     Statement {
         text: String,
         line: usize,
-        /// 段落が覆う行の生の行と行番号。1行目の字下げを含む（R2）
+        /// 段落が覆う行の生の行と行番号。1行目の字下げを含む（R16）
         raw_lines: Vec<RawLine>,
     },
     Table {
         header: Vec<String>,
         rows: Vec<Vec<String>>,
         line: usize,
-        /// データ行ごとの行番号。ヘッダの行と区切りの行は数えない（R1）
+        /// データ行ごとの行番号。ヘッダの行と区切りの行は数えない（R16）
         row_lines: Vec<usize>,
     },
     Code {
@@ -274,7 +274,7 @@ fn raw_line_of(lines: &[String], line: usize) -> String {
         .unwrap_or_default()
 }
 
-/// ノードが覆う行の生の行と行番号（R2・R5）。
+/// ノードが覆う行の生の行と行番号（R16・R18）。
 fn raw_lines_of(lines: &[String], node: &Node) -> Vec<RawLine> {
     let Some(position) = node.position() else {
         return Vec::new();
@@ -325,7 +325,7 @@ fn blocks_from_node(node: &Node, src: &str, lines: &[String]) -> Vec<Block> {
                 rows: rows.collect(),
                 line,
                 // ヘッダの行は行番号の並びから外す。区切りの行は表のノードに
-                // 現れないので、残りがデータ行そのものになる（R1）
+                // 現れないので、残りがデータ行そのものになる（R16）
                 row_lines: row_lines.into_iter().skip(1).collect(),
             }]
         }

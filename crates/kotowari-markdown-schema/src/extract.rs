@@ -228,8 +228,8 @@ fn extract_statement(
         .filter(|b| matches!(b, Block::Statement { .. }))
         .collect();
     if extract.has_of() {
-        // 導かれる値を宣言したときは行ごとのオブジェクトの並びにする。継続の
-        // 段落も同じ並びに入り、出現回数の宣言では入れ子にしない（R2）
+        // 導かれる値を宣言したときは行ごとのオブジェクトの並びにする（R16）。
+        // 継続の段落も同じ並びに入り、出現回数の宣言では入れ子にしない
         let lines: Vec<Value> = statements
             .iter()
             .flat_map(|b| match b {
@@ -256,7 +256,7 @@ fn extract_statement(
 }
 
 /// 文の1行のオブジェクト。生の行を "text" に置き、宣言された導かれる値を
-/// そのオブジェクトの中の相対パスへ置く（R2）。生の行の鍵の名前は仕様が
+/// そのオブジェクトの中の相対パスへ置く（R16）。生の行の鍵の名前は仕様が
 /// 定めていないので、指摘が持つ生の行と同じ "text" にする。
 fn statement_line_object(raw: &RawLine, extract: &Extracts) -> Value {
     let mut map = Map::new();
@@ -446,13 +446,13 @@ fn extract_table(table: Option<&Table>, blocks: &[&Block], root: &mut Map<String
         return;
     }
     // 導かれる値を宣言したときは、その鍵を行ごとのオブジェクトの中に置き、
-    // 表の開始行を最上位に置かない（R1）
+    // 表の開始行を最上位に置かない（R16）
     let per_table: Vec<Vec<Value>> = tables
         .iter()
         .map(|b| table_objects(b, Some(extract)))
         .collect();
     let value = if table.repeat.is_some() {
-        // 繰り返す表は表ごとの配列の中に行のオブジェクトが並ぶ（R1）
+        // 繰り返す表は表ごとの配列の中に行のオブジェクトが並ぶ（R11）
         Value::Array(per_table.into_iter().map(Value::Array).collect())
     } else {
         Value::Array(per_table.into_iter().flatten().collect())
@@ -461,7 +461,7 @@ fn extract_table(table: Option<&Table>, blocks: &[&Block], root: &mut Map<String
 }
 
 /// 表を行ごとのオブジェクトにする。`derived` を渡したとき、宣言された
-/// 導かれる値をそのオブジェクトの中の相対パスへ置く（R1）。
+/// 導かれる値をそのオブジェクトの中の相対パスへ置く（R16）。
 fn table_objects(block: &Block, derived: Option<&Extracts>) -> Vec<Value> {
     let Block::Table {
         header,
@@ -1388,7 +1388,7 @@ document:
                 { "text": "  字下げの2行目", "line": 4 },
                 { "text": "   3行目", "line": 5 }
             ]),
-            "行の数と同じ数のオブジェクトが、生の行と行番号を持つ（R2）"
+            "行の数と同じ数のオブジェクトが、生の行と行番号を持つ"
         );
     }
 
@@ -1413,7 +1413,7 @@ document:
                 { "text": "1行目", "line": 3 },
                 { "text": "次の段落", "line": 5 }
             ]),
-            "空行を挟んで続く段落も同じ並びに入る（R2）"
+            "空行を挟んで続く段落も同じ並びに入る（R16）"
         );
     }
 
@@ -1439,7 +1439,7 @@ document:
                 { "a": "3", "b": "4", "line": 6 },
                 { "a": "5", "b": "6", "line": 7 }
             ]),
-            "行ごとのオブジェクトがそのデータ行の行番号を持つ（R1）"
+            "行ごとのオブジェクトがそのデータ行の行番号を持つ（R16）"
         );
     }
 
@@ -1466,7 +1466,7 @@ document:
                 [{ "a": "1", "b": "2", "line": 5 }],
                 [{ "a": "3", "b": "4", "line": 9 }]
             ]),
-            "繰り返す表は表ごとの配列の中に行のオブジェクトが並ぶ（R1）"
+            "繰り返す表は表ごとの配列の中に行のオブジェクトが並ぶ（R11）"
         );
     }
 

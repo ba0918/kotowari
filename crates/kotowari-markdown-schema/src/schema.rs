@@ -458,7 +458,7 @@ fn validate_table(table: Option<&Table>) -> Result<(), SchemaError> {
 }
 
 /// 行ごとのオブジェクトに入れる導かれる値の鍵が、宣言された列の名前と
-/// 衝突したら停止する（R1）。列を宣言しない表は照合する相手が無い（R11）。
+/// 衝突したら停止する（R16）。列を宣言しない表は照合する相手が無い（R11）。
 fn reject_derived_key_colliding_with_column(table: &Table) -> Result<(), SchemaError> {
     let (Some(header), Some(extracts)) = (&table.header, &table.extract) else {
         return Ok(());
@@ -1167,7 +1167,7 @@ document:
         let yaml = "document:\n  sections:\n    - name: 用語集\n      table:\n        header: [用語, line]\n        extract:\n          - glossary\n          - { path: line, of: line }\n";
         assert!(
             parse_schema(yaml).is_err(),
-            "行の鍵が表の列の名前と衝突したら停止する（R1）"
+            "行の鍵が表の列の名前と衝突したら停止する（R16）"
         );
     }
 }
