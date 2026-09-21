@@ -1,5 +1,5 @@
 ---
-$schema: ../../.mds/schemas/ir.yaml
+$schema: ../../../.mds/schemas/ir.yaml
 ---
 # 抽出と素の構文木
 
@@ -7,14 +7,14 @@ $schema: ../../.mds/schemas/ir.yaml
 
 ## 要求
 
-### REQ-035: 抽出の書式
+### REQ-schema-035: 抽出の書式
 
 - 種類: algorithm
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A4
-- 定義: TBL-008
+- 定義: TBL-schema-008
 - 検証: unit
 
-### REQ-036: 配置パス
+### REQ-schema-036: 配置パス
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A4
@@ -22,7 +22,7 @@ $schema: ../../.mds/schemas/ir.yaml
 
 mds は常に、`抽出`した値を`配置パス`のドット区切りの名前に沿って入れ子にして置く。
 
-### REQ-037: 値の型は文字列
+### REQ-schema-037: 値の型は文字列
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A4
@@ -30,7 +30,7 @@ mds は常に、`抽出`した値を`配置パス`のドット区切りの名前
 
 mds は常に、`文書`から取り出した`抽出`の値を文字列として出し、日付や数値への型変換をしない。エンジンが導く位置情報はこの規則の対象外である。
 
-### REQ-038: 欠けた値はキーを出さない
+### REQ-schema-038: 欠けた値はキーを出さない
 
 - 種類: event_driven
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A4
@@ -38,7 +38,7 @@ mds は常に、`文書`から取り出した`抽出`の値を文字列として
 
 `抽出`の対象の`ノード`が`文書`に無いとき、mds はその`配置パス`のキーを出力に出さない。
 
-### REQ-039: 置き場の無い内側の抽出
+### REQ-schema-039: 置き場の無い内側の抽出
 
 - 種類: event_driven
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A22
@@ -46,7 +46,7 @@ mds は常に、`文書`から取り出した`抽出`の値を文字列として
 
 `項目`の内側の`フィールド行`、`文`、`箇条書き`、`表`、`コードブロック`が`抽出`を宣言し、その`項目`自身が`抽出`を宣言していないとき、mds は`停止`する。
 
-### REQ-047: 項目のオブジェクトの形
+### REQ-schema-047: 項目のオブジェクトの形
 
 - 種類: state_driven
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A22
@@ -54,7 +54,7 @@ mds は常に、`文書`から取り出した`抽出`の値を文字列として
 
 `項目`の内側の`ノード`が`抽出`を宣言している間、または`項目`の`抽出`が導かれる値を1つ以上含む間、mds は`項目`ごとに1つのオブジェクトを組み立て、内側の`配置パス`をそのオブジェクトの中の相対パスとして解決する。どちらでもない間は、見出しと本文をつないだ1つの文字列にする。
 
-### REQ-048: 導かれる値
+### REQ-schema-048: 導かれる値
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A22, docs/decision/records/2026-09-21-mds-spec.md#A23
@@ -62,7 +62,7 @@ mds は常に、`文書`から取り出した`抽出`の値を文字列として
 
 mds は常に、`抽出`の1つの`ノード`に複数の書式を宣言させ、導かれる値として行番号、`項目`の見出しの ID、`項目`の見出しの名前の3つを受ける。行番号は数値で出し、ほかの語は`停止`にする。
 
-### REQ-040: 素の構文木
+### REQ-schema-040: 素の構文木
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A19
@@ -71,7 +71,7 @@ mds は常に、`抽出`の1つの`ノード`に複数の書式を宣言させ�
 
 mds は常に、素の構文木を mdast に沿った JSON で出し、インライン要素まで含め、位置情報は含めない。
 
-### REQ-045: 区切り文字を宣言したフィールド行の抽出
+### REQ-schema-045: 区切り文字を宣言したフィールド行の抽出
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A10
@@ -79,7 +79,7 @@ mds は常に、素の構文木を mdast に沿った JSON で出し、インラ
 
 mds は常に、区切り文字を宣言した`フィールド行`を`出現回数`の宣言に関わらず配列へ`抽出`し、`出現回数`の範囲も宣言したときは配列の配列にする。
 
-### REQ-046: 区切りと継続段落の順序
+### REQ-schema-046: 区切りと継続段落の順序
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A11
@@ -89,7 +89,7 @@ mds は常に、区切り文字による分割を`継続段落`を含めない�
 
 ## 決定表
 
-### TBL-008: 抽出の形
+### TBL-schema-008: 抽出の形
 
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A13
 
@@ -99,14 +99,14 @@ mds は常に、区切り文字による分割を`継続段落`を含めない�
 | `フィールド行` | 値の文字列。区切り文字を宣言すれば文字列の配列 |
 | `文` | 本文の文字列 |
 | `節` | `文`と`箇条書き`だけをつないだ本文の文字列 |
-| `項目` | 見出しと本文をつないだ1つの文字列、または内側の`配置パス`をキーにしたオブジェクト（REQ-047） |
+| `項目` | 見出しと本文をつないだ1つの文字列、または内側の`配置パス`をキーにしたオブジェクト（REQ-schema-047） |
 | `箇条書き` | 元の行を保った文字列の配列 |
 | `表` | 文書のヘッダ行をキーにしたオブジェクトの配列 |
 | `コードブロック` | ブロック全体の文字列 |
 
 ## 性質
 
-### PROP-007: 抽出は閉じた世界の設定に依らない
+### PROP-schema-007: 抽出は閉じた世界の設定に依らない
 
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A4
 
@@ -115,13 +115,13 @@ mds は常に、区切り文字による分割を`継続段落`を含めない�
 ## 具体例
 
 ```gherkin
-@id=EX-013 @about=REQ-036 @source=docs/decision/records/2026-09-21-mds-spec.md#A4
+@id=EX-schema-013 @about=REQ-schema-036 @source=docs/decision/records/2026-09-21-mds-spec.md#A4
 Scenario: 配置パスに沿って入れ子の JSON を出す
   Given ドットを含む`配置パス`を宣言した`スキーマ`がある
   When "mds values --format json" を実行する
   Then 値はドットで区切った名前の入れ子として出る
 
-@id=EX-014 @about=REQ-039 @source=docs/decision/records/2026-09-21-mds-spec.md#A12
+@id=EX-schema-014 @about=REQ-schema-039 @source=docs/decision/records/2026-09-21-mds-spec.md#A12
 Scenario: 項目の内側の抽出は停止する
   Given `項目`の中の`表`に`抽出`を宣言した`スキーマ`がある
   When "mds check" を実行する

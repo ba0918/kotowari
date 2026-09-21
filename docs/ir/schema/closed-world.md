@@ -1,5 +1,5 @@
 ---
-$schema: ../../.mds/schemas/ir.yaml
+$schema: ../../../.mds/schemas/ir.yaml
 ---
 # 閉じた世界と開いた世界
 
@@ -7,7 +7,7 @@ $schema: ../../.mds/schemas/ir.yaml
 
 ## 要求
 
-### REQ-001: 閉じた世界が既定
+### REQ-schema-001: 閉じた世界が既定
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A2
@@ -15,7 +15,7 @@ $schema: ../../.mds/schemas/ir.yaml
 
 mds は常に、`スキーマ`に宣言していない見出しと行を`指摘`にする。
 
-### REQ-002: 開いた世界に緩める
+### REQ-schema-002: 開いた世界に緩める
 
 - 種類: event_driven
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A2
@@ -23,7 +23,7 @@ mds は常に、`スキーマ`に宣言していない見出しと行を`指摘`
 
 `スキーマ`が "open: true" を宣言したとき、または検査に "--open" を付けたとき、mds は宣言していない構造と、その内側のすべての行を許す。
 
-### REQ-003: 宣言済みの構造の中は緩めない
+### REQ-schema-003: 宣言済みの構造の中は緩めない
 
 - 種類: prohibition
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A2
@@ -31,7 +31,7 @@ mds は常に、`スキーマ`に宣言していない見出しと行を`指摘`
 
 mds は、`開いた世界`でも、宣言済みの`前置部`、`節`、`項目`の中に足された未宣言の構造と行を許さない。
 
-### REQ-004: 欠落と形の違反は緩めない
+### REQ-schema-004: 欠落と形の違反は緩めない
 
 - 種類: prohibition
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A2
@@ -41,7 +41,7 @@ mds は、`開いた世界`でも、必須の`ノード`の欠落と、`出現�
 
 ## 性質
 
-### PROP-001: 緩める方向にしか働かない
+### PROP-schema-001: 緩める方向にしか働かない
 
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A2
 
@@ -50,13 +50,13 @@ mds は、`開いた世界`でも、必須の`ノード`の欠落と、`出現�
 ## 具体例
 
 ```gherkin
-@id=EX-001 @about=REQ-002 @source=docs/decision/records/2026-09-21-mds-spec.md#A2
+@id=EX-schema-001 @about=REQ-schema-002 @source=docs/decision/records/2026-09-21-mds-spec.md#A2
 Scenario: 開いた世界では未宣言の節を許す
   Given `スキーマ`に宣言していない`節`を持つ`文書`がある
   When "mds check --open" を実行する
   Then その`節`の`指摘`は出ない
 
-@id=EX-002 @about=REQ-003 @source=docs/decision/records/2026-09-21-mds-spec.md#A2
+@id=EX-schema-002 @about=REQ-schema-003 @source=docs/decision/records/2026-09-21-mds-spec.md#A2
 Scenario: 開いた世界でも宣言済みの節の中の未宣言の行は誤りになる
   Given 宣言済みの`節`の中に、宣言していない行を持つ`文書`がある
   When "mds check --open" を実行する

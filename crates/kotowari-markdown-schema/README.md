@@ -147,24 +147,25 @@ mds --version
 
 ## Using it as a library
 
-`mds-core` holds the schema language, validation and extraction, with no CLI dependencies.
+The library holds the schema language, validation and extraction, with no CLI dependencies.
 Reading files and fetching URLs stays with the caller. The entry points promised to dependent
-crates are listed in `docs/ir/library.md`; anything else that happens to be public is an
+crates are listed in `docs/ir/schema/library.md` at the repository root; anything else that happens to be public is an
 implementation detail.
 
 ```rust
-let schema_ref = mds_core::frontmatter::frontmatter_schema(source)?.unwrap();
-let location = mds_core::frontmatter::resolve_schema(doc_path, &schema_ref);
+let schema_ref = kotowari_markdown_schema::frontmatter::frontmatter_schema(source)?.unwrap();
+let location = kotowari_markdown_schema::frontmatter::resolve_schema(doc_path, &schema_ref);
 // read or fetch `location` yourself, then:
-let schema = mds_core::schema::parse_schema(&schema_yaml)?;
-let document = mds_core::document::Document::parse(source)?;
-let findings = mds_core::validate::validate(&schema, &document, false);
-let values = mds_core::extract::extract_values(&schema, &document);
+let schema = kotowari_markdown_schema::schema::parse_schema(&schema_yaml)?;
+let document = kotowari_markdown_schema::document::Document::parse(source)?;
+let findings = kotowari_markdown_schema::validate::validate(&schema, &document, false);
+let values = kotowari_markdown_schema::extract::extract_values(&schema, &document);
 ```
 
 ## Specification
 
-`docs/spec/mds.md` is the prose specification. `docs/ir/` carries the same specification
+`docs/spec/mds.md` is the prose specification. `docs/ir/schema/` at the repository root
+carries the same specification
 normalised so that it can be checked mechanically, and every requirement there is linked to the
 tests that cover it.
 

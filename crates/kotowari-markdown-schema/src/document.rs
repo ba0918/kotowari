@@ -583,7 +583,7 @@ mod tests {
         &doc.sections[0].blocks
     }
 
-    // @kotowari[REQ-031]
+    // @kotowari[REQ-schema-031]
     #[test]
     fn nested_list_items_become_children_of_the_parent_bullet() {
         let doc = Document::parse("## 理由\n\n- 親\n  - 子\n    - 孫\n").unwrap();
@@ -605,7 +605,7 @@ mod tests {
         assert_eq!(text, "孫");
     }
 
-    // @kotowari[REQ-031]
+    // @kotowari[REQ-schema-031]
     #[test]
     fn nested_list_children_keep_their_indentation() {
         let doc = Document::parse("## 理由\n\n- 親\n  - 子\n    - 孫\n").unwrap();
@@ -634,7 +634,7 @@ mod tests {
         assert_eq!(line_text, "    - 孫");
     }
 
-    // @kotowari[REQ-030]
+    // @kotowari[REQ-schema-030]
     #[test]
     fn continuation_paragraph_attaches_to_the_parent_bullet() {
         let doc = Document::parse("## 理由\n\n- 親\n\n  続きの段落\n  - 子\n").unwrap();
@@ -651,7 +651,7 @@ mod tests {
         assert_eq!(children.len(), 1);
     }
 
-    // @kotowari[REQ-031, REQ-034]
+    // @kotowari[REQ-schema-031, REQ-schema-034]
     #[test]
     fn code_block_child_of_bullet_remains_a_block() {
         let doc = Document::parse("## 理由\n\n- 親\n\n  ```python\n  x = 1\n  ```\n").unwrap();
@@ -662,7 +662,7 @@ mod tests {
         assert!(matches!(children[0], Block::Code { lang: Some(ref l), .. } if l == "python"));
     }
 
-    // @kotowari[REQ-031, REQ-033]
+    // @kotowari[REQ-schema-031, REQ-schema-033]
     #[test]
     fn table_child_of_bullet_remains_a_block() {
         let doc =
@@ -676,7 +676,7 @@ mod tests {
         );
     }
 
-    // @kotowari[REQ-032]
+    // @kotowari[REQ-schema-032]
     #[test]
     fn statement_after_code_block_lead_is_a_statement() {
         let doc =
@@ -686,7 +686,7 @@ mod tests {
         assert!(matches!(blocks[1], Block::Statement { ref text, .. } if text == "後続の段落"));
     }
 
-    // @kotowari[REQ-031]
+    // @kotowari[REQ-schema-031]
     #[test]
     fn field_line_with_children_keeps_children() {
         let doc = Document::parse("## 理由\n\n- 状態: 承認済み\n  - 子\n").unwrap();
@@ -705,7 +705,7 @@ mod tests {
         assert_eq!(children.len(), 1);
     }
 
-    // @kotowari[REQ-028]
+    // @kotowari[REQ-schema-028]
     #[test]
     fn ordered_list_item_children_are_not_attached() {
         let doc = Document::parse("## 理由\n\n1. 順序付き\n   - 箇条書き\n").unwrap();

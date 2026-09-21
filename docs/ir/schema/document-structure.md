@@ -1,5 +1,5 @@
 ---
-$schema: ../../.mds/schemas/ir.yaml
+$schema: ../../../.mds/schemas/ir.yaml
 ---
 # 文書の骨格
 
@@ -7,7 +7,7 @@ $schema: ../../.mds/schemas/ir.yaml
 
 ## 要求
 
-### REQ-022: 題名は1つ
+### REQ-schema-022: 題名は1つ
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
@@ -15,7 +15,7 @@ $schema: ../../.mds/schemas/ir.yaml
 
 mds は常に、`文書`が`題名`をちょうど1つ持つことを求め、無いときと2つ以上あるときを`指摘`にする。
 
-### REQ-023: 前置部の範囲
+### REQ-schema-023: 前置部の範囲
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
@@ -23,7 +23,7 @@ mds は常に、`文書`が`題名`をちょうど1つ持つことを求め、�
 
 mds は常に、`題名`の後から最初の`節`の前までを`前置部`として読み、そこに`フィールド行`、`文`、`箇条書き`を宣言させる。
 
-### REQ-024: 節の名前
+### REQ-schema-024: 節の名前
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
@@ -31,14 +31,14 @@ mds は常に、`題名`の後から最初の`節`の前までを`前置部`と�
 
 mds は常に、`節`を見出しの文字で見分け、`スキーマ`が宣言した名前と一致しない`節`を`指摘`にする。
 
-### REQ-025: 項目の見出しの形
+### REQ-schema-025: 項目の見出しの形
 
 - 種類: algorithm
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
-- 定義: TBL-006
+- 定義: TBL-schema-006
 - 検証: unit
 
-### REQ-026: 深すぎる見出し
+### REQ-schema-026: 深すぎる見出し
 
 - 種類: event_driven
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
@@ -46,7 +46,7 @@ mds は常に、`節`を見出しの文字で見分け、`スキーマ`が宣言
 
 深さ4以上の見出しがあるとき、mds はその見出しを`指摘`にする。
 
-### REQ-027: 宣言していない項目
+### REQ-schema-027: 宣言していない項目
 
 - 種類: event_driven
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A5
@@ -56,7 +56,7 @@ mds は常に、`節`を見出しの文字で見分け、`スキーマ`が宣言
 
 ## 決定表
 
-### TBL-006: 項目の見出しの読み方
+### TBL-schema-006: 項目の見出しの読み方
 
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
 
@@ -68,7 +68,7 @@ mds は常に、`節`を見出しの文字で見分け、`スキーマ`が宣言
 
 ## 性質
 
-### PROP-005: 骨格の深さは3段で閉じている
+### PROP-schema-005: 骨格の深さは3段で閉じている
 
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
 
@@ -77,13 +77,13 @@ mds は常に、`節`を見出しの文字で見分け、`スキーマ`が宣言
 ## 具体例
 
 ```gherkin
-@id=EX-009 @about=REQ-025 @source=docs/decision/records/2026-09-21-mds-spec.md#A5
+@id=EX-schema-009 @about=REQ-schema-025 @source=docs/decision/records/2026-09-21-mds-spec.md#A5
 Scenario: 形に合わない項目の見出しは誤りになる
   Given `項目`の ID の正規表現を宣言した`スキーマ`がある
   When 正規表現に合わない ID を持つ`文書`で "mds check" を実行する
   Then ID の形の`指摘`が出る
 
-@id=EX-010 @about=REQ-022 @source=docs/decision/records/2026-09-21-mds-spec.md#A5
+@id=EX-schema-010 @about=REQ-schema-022 @source=docs/decision/records/2026-09-21-mds-spec.md#A5
 Scenario: 題名が2つある文書は誤りになる
   Given 深さ1の見出しを2つ持つ`文書`がある
   When "mds check" を実行する

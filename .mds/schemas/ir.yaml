@@ -13,7 +13,7 @@ document:
     - name: 要求
       required: false
       item:
-        id: "REQ-\\d{3,}"
+        id: "REQ-([a-z][a-z0-9-]*-)?\\d{3,}"
         repeat: { min: 0 }
         extract:
           - requirements
@@ -47,7 +47,7 @@ document:
     - name: 決定表
       required: false
       item:
-        id: "TBL-\\d{3,}"
+        id: "TBL-([a-z][a-z0-9-]*-)?\\d{3,}"
         repeat: { min: 0 }
         extract:
           - tables
@@ -67,7 +67,7 @@ document:
     - name: 性質
       required: false
       item:
-        id: "PROP-\\d{3,}"
+        id: "PROP-([a-z][a-z0-9-]*-)?\\d{3,}"
         repeat: { min: 0 }
         extract:
           - properties

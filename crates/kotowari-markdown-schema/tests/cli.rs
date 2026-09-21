@@ -24,7 +24,7 @@ fn mds() -> Command {
     Command::cargo_bin("mds").unwrap()
 }
 
-// @kotowari[REQ-005]
+// @kotowari[REQ-schema-005]
 #[test]
 fn version_prints_mds_version_to_stdout_and_exits_zero() {
     let output = mds().arg("--version").output().unwrap();
@@ -33,7 +33,7 @@ fn version_prints_mds_version_to_stdout_and_exits_zero() {
     assert!(stdout.starts_with("mds "), "stdout: {stdout}");
 }
 
-// @kotowari[REQ-005, REQ-040]
+// @kotowari[REQ-schema-005, REQ-schema-040]
 #[test]
 fn ast_outputs_mdast_json_for_the_adr_fixture() {
     let mut cmd = Command::cargo_bin("mds").unwrap();
@@ -54,7 +54,7 @@ fn ast_outputs_mdast_json_for_the_adr_fixture() {
     assert!(json["children"][0].get("position").is_none());
 }
 
-// @kotowari[REQ-009, REQ-042, REQ-043]
+// @kotowari[REQ-schema-009, REQ-schema-042, REQ-schema-043]
 #[test]
 fn ast_with_format_text_stops_with_argument_error() {
     let mut cmd = Command::cargo_bin("mds").unwrap();
@@ -65,7 +65,7 @@ fn ast_with_format_text_stops_with_argument_error() {
     assert!(stderr.contains("mds: argument_error:"), "stderr: {stderr}");
 }
 
-// @kotowari[REQ-009, REQ-042]
+// @kotowari[REQ-schema-009, REQ-schema-042]
 #[test]
 fn unknown_flag_stops_with_argument_error() {
     let output = mds()
@@ -77,7 +77,7 @@ fn unknown_flag_stops_with_argument_error() {
     assert!(stderr.contains("mds: argument_error:"), "stderr: {stderr}");
 }
 
-// @kotowari[REQ-036]
+// @kotowari[REQ-schema-036]
 #[test]
 fn ast_schema_outputs_typed_tree() {
     let output = mds()
@@ -94,7 +94,7 @@ fn ast_schema_outputs_typed_tree() {
     );
 }
 
-// @kotowari[REQ-009, REQ-014, REQ-042]
+// @kotowari[REQ-schema-009, REQ-schema-014, REQ-schema-042]
 #[test]
 fn ast_schema_without_schema_stops() {
     let dir = tempfile::tempdir().unwrap();
@@ -108,7 +108,7 @@ fn ast_schema_without_schema_stops() {
     assert!(stderr.contains("schema_not_found"));
 }
 
-// @kotowari[REQ-006, EX-003]
+// @kotowari[REQ-schema-006, EX-schema-003]
 #[test]
 fn check_clean_document_exits_zero_with_no_output() {
     let output = mds()
@@ -119,7 +119,7 @@ fn check_clean_document_exits_zero_with_no_output() {
     assert!(output.stdout.is_empty());
 }
 
-// @kotowari[REQ-007]
+// @kotowari[REQ-schema-007]
 #[test]
 fn check_json_outputs_empty_files_array_for_clean_file() {
     let output = mds()
@@ -131,7 +131,7 @@ fn check_json_outputs_empty_files_array_for_clean_file() {
     assert_eq!(json, serde_json::json!({ "files": [] }));
 }
 
-// @kotowari[REQ-007, REQ-010]
+// @kotowari[REQ-schema-007, REQ-schema-010]
 #[test]
 fn check_json_outputs_empty_files_array_for_clean_directory() {
     let dir = tempfile::tempdir().unwrap();
@@ -150,7 +150,7 @@ fn check_json_outputs_empty_files_array_for_clean_directory() {
     assert_eq!(json, serde_json::json!({ "files": [] }));
 }
 
-// @kotowari[REQ-006, REQ-007]
+// @kotowari[REQ-schema-006, REQ-schema-007]
 #[test]
 fn check_document_with_findings_exits_one_with_text() {
     let dir = tempfile::tempdir().unwrap();
@@ -169,7 +169,7 @@ fn check_document_with_findings_exits_one_with_text() {
     assert!(stdout.contains(&format!("{}:10: undeclared_heading:", doc.display())));
 }
 
-// @kotowari[REQ-007, REQ-008]
+// @kotowari[REQ-schema-007, REQ-schema-008]
 #[test]
 fn check_json_output_has_files_with_findings() {
     let dir = tempfile::tempdir().unwrap();
@@ -195,7 +195,7 @@ fn check_json_output_has_files_with_findings() {
     assert!(finding.get("detail").is_some());
 }
 
-// @kotowari[REQ-007]
+// @kotowari[REQ-schema-007]
 #[test]
 fn check_format_defaults_to_text() {
     let dir = tempfile::tempdir().unwrap();
@@ -214,7 +214,7 @@ fn check_format_defaults_to_text() {
     assert!(!stdout.trim_start().starts_with('{'));
 }
 
-// @kotowari[REQ-002, EX-001]
+// @kotowari[REQ-schema-002, EX-schema-001]
 #[test]
 fn check_open_relaxes_undeclared_headings() {
     let dir = tempfile::tempdir().unwrap();
@@ -237,7 +237,7 @@ fn check_open_relaxes_undeclared_headings() {
     assert!(opened.stdout.is_empty());
 }
 
-// @kotowari[REQ-003, REQ-031]
+// @kotowari[REQ-schema-003, REQ-schema-031]
 #[test]
 fn check_undeclared_child_under_declared_field_exits_one() {
     let dir = tempfile::tempdir().unwrap();
@@ -263,7 +263,7 @@ fn check_undeclared_child_under_declared_field_exits_one() {
     );
 }
 
-// @kotowari[REQ-021]
+// @kotowari[REQ-schema-021]
 #[test]
 fn check_child_bullet_when_uses_sibling_field_exits_one() {
     let dir = tempfile::tempdir().unwrap();
@@ -289,7 +289,7 @@ fn check_child_bullet_when_uses_sibling_field_exits_one() {
     );
 }
 
-// @kotowari[REQ-039]
+// @kotowari[REQ-schema-039]
 #[test]
 fn check_item_child_field_extract_stops_with_schema_invalid() {
     let dir = tempfile::tempdir().unwrap();
@@ -315,7 +315,7 @@ fn check_item_child_field_extract_stops_with_schema_invalid() {
     );
 }
 
-// @kotowari[REQ-008]
+// @kotowari[REQ-schema-008]
 #[test]
 fn check_skips_bom_and_counts_crlf_lines() {
     let dir = tempfile::tempdir().unwrap();
@@ -334,7 +334,7 @@ fn check_skips_bom_and_counts_crlf_lines() {
     assert!(stdout.contains(&format!("{}:8: undeclared_heading:", doc.display())));
 }
 
-// @kotowari[REQ-008, REQ-022]
+// @kotowari[REQ-schema-008, REQ-schema-022]
 #[test]
 fn check_missing_title_has_no_line_number() {
     let dir = tempfile::tempdir().unwrap();
@@ -354,7 +354,7 @@ fn check_missing_title_has_no_line_number() {
     assert!(!stdout.contains(":1: missing_title:"));
 }
 
-// @kotowari[REQ-009, REQ-011, REQ-042]
+// @kotowari[REQ-schema-009, REQ-schema-011, REQ-schema-042]
 #[test]
 fn check_missing_schema_stops_with_schema_not_found() {
     let dir = tempfile::tempdir().unwrap();
@@ -368,7 +368,7 @@ fn check_missing_schema_stops_with_schema_not_found() {
     assert!(stderr.contains("schema_not_found"));
 }
 
-// @kotowari[REQ-009, REQ-011, REQ-042]
+// @kotowari[REQ-schema-009, REQ-schema-011, REQ-schema-042]
 #[test]
 fn check_unresolvable_schema_stops_with_schema_not_found() {
     let dir = tempfile::tempdir().unwrap();
@@ -386,7 +386,7 @@ fn check_unresolvable_schema_stops_with_schema_not_found() {
     assert!(stderr.contains("schema_not_found"));
 }
 
-// @kotowari[REQ-009, REQ-042]
+// @kotowari[REQ-schema-009, REQ-schema-042]
 #[test]
 fn check_unreadable_file_stops() {
     let dir = tempfile::tempdir().unwrap();
@@ -400,7 +400,7 @@ fn check_unreadable_file_stops() {
     assert!(stderr.contains("unreadable_file"));
 }
 
-// @kotowari[REQ-009, REQ-014, EX-004, REQ-042]
+// @kotowari[REQ-schema-009, REQ-schema-014, EX-schema-004, REQ-schema-042]
 #[test]
 fn check_broken_frontmatter_stops_with_frontmatter_invalid() {
     let dir = tempfile::tempdir().unwrap();
@@ -414,7 +414,7 @@ fn check_broken_frontmatter_stops_with_frontmatter_invalid() {
     assert!(stderr.contains("frontmatter_invalid"));
 }
 
-// @kotowari[REQ-009, REQ-014]
+// @kotowari[REQ-schema-009, REQ-schema-014]
 #[test]
 fn values_with_broken_frontmatter_stops_with_frontmatter_invalid() {
     let dir = tempfile::tempdir().unwrap();
@@ -428,7 +428,7 @@ fn values_with_broken_frontmatter_stops_with_frontmatter_invalid() {
     assert!(stderr.contains("frontmatter_invalid"));
 }
 
-// @kotowari[REQ-009, REQ-014]
+// @kotowari[REQ-schema-009, REQ-schema-014]
 #[test]
 fn ast_schema_with_broken_frontmatter_stops_with_frontmatter_invalid() {
     let dir = tempfile::tempdir().unwrap();
@@ -442,7 +442,7 @@ fn ast_schema_with_broken_frontmatter_stops_with_frontmatter_invalid() {
     assert!(stderr.contains("frontmatter_invalid"));
 }
 
-// @kotowari[REQ-007]
+// @kotowari[REQ-schema-007]
 #[test]
 fn values_text_defaults_to_indented_text() {
     let output = mds()
@@ -457,7 +457,7 @@ fn values_text_defaults_to_indented_text() {
     assert!(stdout.contains("  reasons:\n    1. - 理由その1\n    2. - 理由その2\n"));
 }
 
-// @kotowari[REQ-007]
+// @kotowari[REQ-schema-007]
 #[test]
 fn values_text_indents_multiline_value_two_deeper_than_the_key() {
     let dir = tempfile::tempdir().unwrap();
@@ -483,7 +483,7 @@ fn values_text_indents_multiline_value_two_deeper_than_the_key() {
     );
 }
 
-// @kotowari[REQ-036, EX-013]
+// @kotowari[REQ-schema-036, EX-schema-013]
 #[test]
 fn values_json_is_nested_by_path() {
     let output = mds()
@@ -504,7 +504,7 @@ fn values_json_is_nested_by_path() {
     );
 }
 
-// @kotowari[REQ-009, REQ-014, REQ-042]
+// @kotowari[REQ-schema-009, REQ-schema-014, REQ-schema-042]
 #[test]
 fn values_without_schema_stops_with_schema_not_found() {
     let dir = tempfile::tempdir().unwrap();
@@ -536,7 +536,7 @@ fn bad_doc() -> &'static str {
     "---\n$schema: ./schema.yaml\n---\n# T-1: 例\n\n## 状況\n\n本文。\n\n## 補足\n\n本文。\n"
 }
 
-// @kotowari[REQ-010]
+// @kotowari[REQ-schema-010]
 #[test]
 fn check_directory_reports_all_failing_documents() {
     let dir = tempfile::tempdir().unwrap();
@@ -556,7 +556,7 @@ fn check_directory_reports_all_failing_documents() {
     assert_eq!(files[0]["findings"][0]["kind"], "undeclared_heading");
 }
 
-// @kotowari[REQ-010, REQ-044]
+// @kotowari[REQ-schema-010, REQ-schema-044]
 #[test]
 fn check_directory_skips_hidden_directories() {
     let dir = tempfile::tempdir().unwrap();
@@ -571,7 +571,7 @@ fn check_directory_skips_hidden_directories() {
     assert!(output.stdout.is_empty());
 }
 
-// @kotowari[REQ-010, REQ-044]
+// @kotowari[REQ-schema-010, REQ-schema-044]
 #[test]
 fn check_directory_does_not_follow_symlinks() {
     let outside = tempfile::tempdir().unwrap();
@@ -588,7 +588,7 @@ fn check_directory_does_not_follow_symlinks() {
     assert!(output.stdout.is_empty());
 }
 
-// @kotowari[REQ-043]
+// @kotowari[REQ-schema-043]
 #[test]
 fn stop_does_not_carry_the_referenced_file_contents() {
     // スキーマとして読めないファイルを `$schema` に指定すると、パーサの
@@ -618,7 +618,7 @@ fn stop_does_not_carry_the_referenced_file_contents() {
     );
 }
 
-// @kotowari[REQ-010, REQ-009, REQ-042]
+// @kotowari[REQ-schema-010, REQ-schema-009, REQ-schema-042]
 #[test]
 fn check_directory_stops_on_invalid_schema() {
     let dir = tempfile::tempdir().unwrap();
@@ -633,7 +633,7 @@ fn check_directory_stops_on_invalid_schema() {
     assert!(stderr.contains("schema_invalid"));
 }
 
-// @kotowari[REQ-010, REQ-009, REQ-042, REQ-043]
+// @kotowari[REQ-schema-010, REQ-schema-009, REQ-schema-042, REQ-schema-043]
 #[test]
 fn check_directory_stops_on_frontmatter_invalid_and_outputs_no_findings() {
     let dir = tempfile::tempdir().unwrap();
@@ -654,7 +654,7 @@ fn check_directory_stops_on_frontmatter_invalid_and_outputs_no_findings() {
     assert!(output.stdout.is_empty(), "停止のときは指摘を出力しない");
 }
 
-// @kotowari[REQ-010, REQ-009, REQ-042, REQ-043]
+// @kotowari[REQ-schema-010, REQ-schema-009, REQ-schema-042, REQ-schema-043]
 #[test]
 fn check_directory_stops_on_schema_not_found_and_outputs_no_findings() {
     let dir = tempfile::tempdir().unwrap();
@@ -675,7 +675,7 @@ fn check_directory_stops_on_schema_not_found_and_outputs_no_findings() {
     assert!(output.stdout.is_empty(), "停止のときは指摘を出力しない");
 }
 
-// @kotowari[REQ-010, REQ-009, REQ-042]
+// @kotowari[REQ-schema-010, REQ-schema-009, REQ-schema-042]
 #[test]
 fn check_directory_stops_on_unreadable_file() {
     use std::os::unix::fs::PermissionsExt;
@@ -691,7 +691,7 @@ fn check_directory_stops_on_unreadable_file() {
     assert!(stderr.contains("unreadable_file"));
 }
 
-// @kotowari[REQ-010]
+// @kotowari[REQ-schema-010]
 #[test]
 fn check_fixtures_directory_passes() {
     let output = mds().args(["check", "fixtures"]).output().unwrap();
@@ -699,7 +699,7 @@ fn check_fixtures_directory_passes() {
     assert!(output.stdout.is_empty());
 }
 
-// @kotowari[REQ-010, REQ-035]
+// @kotowari[REQ-schema-010, REQ-schema-035]
 #[test]
 fn ir_fixture_passes_check_and_extracts_values() {
     let checked = mds()
@@ -720,7 +720,7 @@ fn ir_fixture_passes_check_and_extracts_values() {
     assert!(stdout.contains("Scenario: 印を書く"));
 }
 
-// @kotowari[REQ-035, REQ-031]
+// @kotowari[REQ-schema-035, REQ-schema-031]
 #[test]
 fn decision_record_fixture_passes_check_and_extracts_values() {
     // 判断の記録（決定の行 `- 決定1 ...` + 子の `superseded_by`）の書式を、
@@ -760,7 +760,7 @@ fn decision_record_fixture_passes_check_and_extracts_values() {
     );
 }
 
-// @kotowari[REQ-009, REQ-043]
+// @kotowari[REQ-schema-009, REQ-schema-043]
 #[test]
 fn no_subcommand_stops_with_a_usage_hint_not_the_about_text() {
     let output = mds().output().unwrap();

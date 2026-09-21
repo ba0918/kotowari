@@ -1,5 +1,5 @@
 ---
-$schema: ../../.mds/schemas/flags.yaml
+$schema: ../../../.mds/schemas/flags.yaml
 ---
 # 問題の記録
 

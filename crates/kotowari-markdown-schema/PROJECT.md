@@ -12,25 +12,26 @@ application.
 The specification lives in two places, and both are kept up to date:
 
 - `docs/spec/mds.md` — the prose specification, written for people.
-- `docs/ir/` — the same specification normalised into kotowari's IR form, so that it can be
-  checked mechanically. Each IR document declares a schema from `.mds/schemas/` in its
-  `$schema` frontmatter, so it passes both `kotowari check` and `mds check docs/ir`.
+- `docs/ir/schema/` at the repository root — the same specification normalised into kotowari's
+  IR form, so that it can be checked mechanically. Each IR document declares a schema from the
+  repository root's `.mds/schemas/` in its `$schema` frontmatter, so it passes both
+  `kotowari check` and `mds check docs/ir/schema`.
 
-Rules the IR does not yet carry are recorded as gaps in `docs/ir/FLAGS.md`. Decisions the IR
-cites as sources live in `docs/decision/records/`.
+Rules the IR does not yet carry are recorded as gaps in `docs/ir/schema/FLAGS.md`. Decisions
+the IR cites as sources live in the repository root's `docs/decision/records/`.
 
 Read the `kotowari` skill before writing or revising an IR document.
 
 ## Stack and layout
 
-Rust. Cargo workspace (monorepo):
+Rust. One crate inside the `kotowari` Cargo workspace:
 
-- `crates/mds-core/` — the schema language, validation, and extraction. Kept free of CLI
-  dependencies.
-- `crates/mds-*/` — further crates as the tool grows.
-- `src/main.rs` — the CLI entry point.
+- `src/lib.rs` and its modules — the schema language, validation, and extraction. Kept free of
+  CLI dependencies.
+- `src/main.rs` — the CLI entry point, built as the `mds` binary.
 
-The core is kept separate from the CLI so that it can be reused, for example inside `kotowari`.
+The library is kept free of CLI dependencies so that it can be reused, which is what `kotowari`
+does from the same workspace.
 
 ## Commands
 
@@ -56,14 +57,14 @@ one staged change to actually verify the gates.
 
 ## Release
 
-The canonical version is `[workspace.package] version` in the root `Cargo.toml`. Both crates
-inherit it with `version.workspace = true`. One declaration follows it rather than inheriting:
-the `version` requirement on the `mds-core` path dependency, which exists so that the crate stays
-packageable. `scripts/check-version.sh` checks that they agree, and CI runs it on every push.
+The version is declared in this crate's own `Cargo.toml`. Whether the products in the workspace
+share one version or carry a version and a tag each is not decided yet, so `scripts/release.sh`
+and `scripts/check-version.sh` still assume the single-workspace-version layout this crate was
+imported from, and do not run.
 
-Releases are GitHub releases only. The crate names `mds` and `mds-core` are taken on crates.io by
-unrelated projects, so nothing is published to a registry; `cargo install --git` is the install
-path. Publishing to a registry would need different package names first.
+Nothing is published to a registry. The names `mds` and `mds-core` are taken on crates.io by
+unrelated projects, which is why this crate is named `kotowari-markdown-schema`. Whether to
+publish is not decided yet.
 
 To cut a release:
 

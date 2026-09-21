@@ -65,8 +65,8 @@ fn findings_of(
 }
 
 proptest! {
-    /// REQ-028: 一覧のマーカーが "-"、"*"、"+" のどれであっても読み分けは変わらない。
-    // @kotowari[REQ-028]
+    /// REQ-schema-028: 一覧のマーカーが "-"、"*"、"+" のどれであっても読み分けは変わらない。
+    // @kotowari[REQ-schema-028]
     #[test]
     fn markers_do_not_change_how_list_lines_are_read(
         names in line_names(),
@@ -97,8 +97,8 @@ proptest! {
 }
 
 proptest! {
-    /// REQ-028: マーカーを1行ごとに混ぜても、すべて "-" のときと読み分けは変わらない。
-    // @kotowari[REQ-028]
+    /// REQ-schema-028: マーカーを1行ごとに混ぜても、すべて "-" のときと読み分けは変わらない。
+    // @kotowari[REQ-schema-028]
     #[test]
     fn mixed_markers_read_the_same_as_hyphens(
         names in line_names(),
@@ -148,8 +148,8 @@ fn every_leaf_is_a_string(value: &Value) -> bool {
 }
 
 proptest! {
-    /// REQ-037: 数や日付に見える値でも、抽出した値は文字列のままである。
-    // @kotowari[REQ-037]
+    /// REQ-schema-037: 数や日付に見える値でも、抽出した値は文字列のままである。
+    // @kotowari[REQ-schema-037]
     #[test]
     fn extracted_leaves_are_always_strings(
         values in proptest::collection::vec("[0-9A-Za-z.:+-]{1,12}", 1..6),

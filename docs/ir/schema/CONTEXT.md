@@ -1,5 +1,5 @@
 ---
-$schema: ../../.mds/schemas/context.yaml
+$schema: ../../../.mds/schemas/context.yaml
 ---
 # 用語集
 

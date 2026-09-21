@@ -668,7 +668,7 @@ document:
         "# ADR-0001: 印の話\n\n- ID: ADR-0001\n- 状態: 承認済み\n- 日付: 2026-09-16\n\n## 状況\n\n背景。\n\n## 決定\n\n判断。\n\n## 理由\n\n- 理由1\n- 理由2\n"
     }
 
-    // @kotowari[REQ-036]
+    // @kotowari[REQ-schema-036]
     #[test]
     fn adr_values_are_nested_by_path() {
         let v = values(ADR, adr_doc());
@@ -681,7 +681,7 @@ document:
         assert_eq!(v["sections"]["reasons"], json!(["- 理由1", "- 理由2"]));
     }
 
-    // @kotowari[REQ-028, REQ-035]
+    // @kotowari[REQ-schema-028, REQ-schema-035]
     #[test]
     fn undeclared_field_name_line_is_extracted_as_a_bullet() {
         let schema = r#"
@@ -701,7 +701,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-028, REQ-035]
+    // @kotowari[REQ-schema-028, REQ-schema-035]
     #[test]
     fn section_body_includes_undeclared_field_name_line_as_a_bullet() {
         let schema = r#"
@@ -723,7 +723,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-035]
+    // @kotowari[REQ-schema-035]
     #[test]
     fn undeclared_field_name_line_extract_preserves_original_marker() {
         let schema = r#"
@@ -743,7 +743,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-035]
+    // @kotowari[REQ-schema-035]
     #[test]
     fn section_body_includes_undeclared_field_name_line_with_original_marker() {
         let schema = r#"
@@ -764,7 +764,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-035]
+    // @kotowari[REQ-schema-035]
     #[test]
     fn title_named_group_capture_is_extracted() {
         let schema = r#"
@@ -777,7 +777,7 @@ document:
         assert_eq!(v["id"], "0042");
     }
 
-    // @kotowari[REQ-019, REQ-038]
+    // @kotowari[REQ-schema-019, REQ-schema-038]
     #[test]
     fn repeated_node_is_an_array_when_present_and_omits_key_when_absent() {
         let schema = r#"
@@ -794,7 +794,7 @@ document:
         assert!(absent.get("tags").is_none(), "0件のときはキーを省略する");
     }
 
-    // @kotowari[REQ-019, REQ-038]
+    // @kotowari[REQ-schema-019, REQ-schema-038]
     #[test]
     fn non_repeated_node_is_single_and_omits_key_when_missing() {
         let schema = r#"
@@ -810,7 +810,7 @@ document:
         assert!(absent.get("status").is_none());
     }
 
-    // @kotowari[REQ-038]
+    // @kotowari[REQ-schema-038]
     #[test]
     fn non_repeated_bullets_omit_key_when_missing() {
         let schema = r#"
@@ -824,7 +824,7 @@ document:
         assert!(v.get("reasons").is_none());
     }
 
-    // @kotowari[REQ-038]
+    // @kotowari[REQ-schema-038]
     #[test]
     fn repeated_bullets_omit_key_when_missing() {
         let schema = r#"
@@ -842,7 +842,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-029, REQ-035]
+    // @kotowari[REQ-schema-029, REQ-schema-035]
     #[test]
     fn separator_trims_elements_and_keeps_empty_ones() {
         let schema = r#"
@@ -857,7 +857,7 @@ document:
         assert_eq!(v["tags"], json!(["a", "b", "", "c", ""]));
     }
 
-    // @kotowari[REQ-019, REQ-035, REQ-045]
+    // @kotowari[REQ-schema-019, REQ-schema-035, REQ-schema-045]
     #[test]
     fn repeated_field_with_separator_extracts_array_of_arrays() {
         let schema = r#"
@@ -873,7 +873,7 @@ document:
         assert_eq!(v["tags"], json!([["a", "b"], ["c"]]));
     }
 
-    // @kotowari[REQ-030, REQ-035, REQ-046]
+    // @kotowari[REQ-schema-030, REQ-schema-035, REQ-schema-046]
     #[test]
     fn separator_split_excludes_continuation_paragraphs() {
         let schema = r#"
@@ -893,7 +893,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-029, REQ-035]
+    // @kotowari[REQ-schema-029, REQ-schema-035]
     #[test]
     fn wrapped_line_is_part_of_value_and_subject_to_separator_split() {
         let schema = r#"
@@ -913,7 +913,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-029, REQ-037, REQ-045]
+    // @kotowari[REQ-schema-029, REQ-schema-037, REQ-schema-045]
     #[test]
     fn separator_splits_value_into_string_elements() {
         let schema = r#"
@@ -928,7 +928,7 @@ document:
         assert_eq!(v["tags"], json!(["a", "b", "c"]));
     }
 
-    // @kotowari[REQ-032, REQ-035]
+    // @kotowari[REQ-schema-032, REQ-schema-035]
     #[test]
     fn paragraph_after_code_block_lead_is_extracted_as_a_statement() {
         let schema = r#"
@@ -952,7 +952,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-035]
+    // @kotowari[REQ-schema-035]
     #[test]
     fn section_body_includes_statements_and_bullets_only() {
         let schema = r#"
@@ -977,7 +977,7 @@ document:
         assert_eq!(v["sections"]["body"], "背景。\n- 箇条1\n- 箇条2");
     }
 
-    // @kotowari[REQ-030, REQ-035]
+    // @kotowari[REQ-schema-030, REQ-schema-035]
     #[test]
     fn section_body_includes_continuation_paragraphs_and_nested_bullets() {
         let schema = r#"
@@ -996,7 +996,7 @@ document:
         assert_eq!(v["sections"]["body"], "- 理由1\n続きの段落\n  - 入れ子");
     }
 
-    // @kotowari[REQ-028, REQ-035]
+    // @kotowari[REQ-schema-028, REQ-schema-035]
     #[test]
     fn bullet_extract_preserves_original_markers() {
         let schema = r#"
@@ -1016,7 +1016,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-030, REQ-035]
+    // @kotowari[REQ-schema-030, REQ-schema-035]
     #[test]
     fn bullet_extract_preserves_marker_with_continuation() {
         let schema = r#"
@@ -1036,7 +1036,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-035]
+    // @kotowari[REQ-schema-035]
     #[test]
     fn bullet_extract_preserves_whitespace_after_marker() {
         let schema = r#"
@@ -1056,7 +1056,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-030, REQ-035]
+    // @kotowari[REQ-schema-030, REQ-schema-035]
     #[test]
     fn bullet_extract_preserves_whitespace_after_marker_with_continuation() {
         let schema = r#"
@@ -1076,7 +1076,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-035]
+    // @kotowari[REQ-schema-035]
     #[test]
     fn bullet_extract_includes_lead_paragraph_on_a_separate_line_from_the_marker() {
         let schema = r#"
@@ -1096,7 +1096,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-035]
+    // @kotowari[REQ-schema-035]
     #[test]
     fn bullet_extract_keeps_trailing_whitespace_of_the_marker_line() {
         let schema = r#"
@@ -1116,7 +1116,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-035]
+    // @kotowari[REQ-schema-035]
     #[test]
     fn undeclared_field_name_line_extract_preserves_whitespace_after_marker() {
         let schema = r#"
@@ -1136,7 +1136,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-030, REQ-035]
+    // @kotowari[REQ-schema-030, REQ-schema-035]
     #[test]
     fn bullet_extract_includes_marker_and_continuation() {
         let schema = r#"
@@ -1152,7 +1152,7 @@ document:
         assert_eq!(v["reasons"], json!(["- 親\n続きの段落", "- 次"]));
     }
 
-    // @kotowari[REQ-030, REQ-035]
+    // @kotowari[REQ-schema-030, REQ-schema-035]
     #[test]
     fn bullet_with_multiple_continuations_joins_them_with_blank_line() {
         let schema = r#"
@@ -1168,7 +1168,7 @@ document:
         assert_eq!(v["reasons"], json!(["- 親\n続き1\n\n続き2"]));
     }
 
-    // @kotowari[REQ-028, REQ-035]
+    // @kotowari[REQ-schema-028, REQ-schema-035]
     #[test]
     fn ordered_list_is_not_extracted_as_a_bullet() {
         let schema = r#"
@@ -1188,7 +1188,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-030, REQ-035, REQ-046]
+    // @kotowari[REQ-schema-030, REQ-schema-035, REQ-schema-046]
     #[test]
     fn field_extract_includes_continuation_paragraph() {
         let schema = r#"
@@ -1206,7 +1206,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-030, REQ-035]
+    // @kotowari[REQ-schema-030, REQ-schema-035]
     #[test]
     fn item_body_field_line_includes_continuation_paragraph() {
         let schema = r#"
@@ -1230,7 +1230,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-035]
+    // @kotowari[REQ-schema-035]
     #[test]
     fn item_extract_is_heading_plus_body() {
         let schema = r#"
@@ -1254,7 +1254,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-033, REQ-035]
+    // @kotowari[REQ-schema-033, REQ-schema-035]
     #[test]
     fn table_extract_concatenates_multiple_tables_in_document_order() {
         let schema = r#"
@@ -1275,7 +1275,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-033, REQ-035]
+    // @kotowari[REQ-schema-033, REQ-schema-035]
     #[test]
     fn repeated_table_extracts_flat_row_objects_without_nesting() {
         let schema = r#"
@@ -1292,7 +1292,7 @@ document:
         assert_eq!(v["glossary"], json!([{ "a": "1", "b": "2" }]));
     }
 
-    // @kotowari[REQ-038]
+    // @kotowari[REQ-schema-038]
     #[test]
     fn table_omits_key_when_no_tables() {
         let schema = r#"
@@ -1308,7 +1308,7 @@ document:
         assert!(v.get("glossary").is_none(), "表0件のときはキーを省略する");
     }
 
-    // @kotowari[REQ-033, REQ-035]
+    // @kotowari[REQ-schema-033, REQ-schema-035]
     #[test]
     fn table_extract_keys_by_header_and_later_column_overrides() {
         let schema = r#"
@@ -1324,7 +1324,7 @@ document:
         assert_eq!(v["glossary"], json!([{ "a": "3", "b": "2" }]));
     }
 
-    // @kotowari[REQ-019, REQ-035]
+    // @kotowari[REQ-schema-019, REQ-schema-035]
     #[test]
     fn repeated_section_extracts_array_of_bodies() {
         let schema = r#"
@@ -1347,7 +1347,7 @@ document:
         extract_typed(&schema, &document)
     }
 
-    // @kotowari[REQ-036]
+    // @kotowari[REQ-schema-036]
     #[test]
     fn typed_ast_includes_type_when_schema_is_named() {
         let schema = "name: adr\ndocument:\n  title:\n    extract: title\n";
@@ -1356,7 +1356,7 @@ document:
         assert_eq!(v["title"], "題名");
     }
 
-    // @kotowari[REQ-036]
+    // @kotowari[REQ-schema-036]
     #[test]
     fn typed_ast_omits_type_when_schema_is_unnamed() {
         let schema = "document:\n  title:\n    extract: title\n";
@@ -1365,7 +1365,7 @@ document:
         assert_eq!(v["title"], "題名");
     }
 
-    // @kotowari[REQ-031, REQ-035]
+    // @kotowari[REQ-schema-031, REQ-schema-035]
     #[test]
     fn parent_bullet_element_includes_child_bullet_lines_with_indentation() {
         let schema = r#"
@@ -1388,7 +1388,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-031, REQ-035]
+    // @kotowari[REQ-schema-031, REQ-schema-035]
     #[test]
     fn declared_child_field_is_excluded_from_the_parent_element() {
         let schema = r#"
@@ -1411,7 +1411,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-036]
+    // @kotowari[REQ-schema-036]
     #[test]
     fn child_field_with_own_extract_is_placed_at_its_path() {
         let schema = r#"
@@ -1439,7 +1439,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-031]
+    // @kotowari[REQ-schema-031]
     #[test]
     fn child_of_declared_field_does_not_shadow_declared_child_field() {
         // 宣言済みフィールド行の下の子は未宣言の構造（R13）なので、子フィールドの
@@ -1466,7 +1466,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-031, REQ-035]
+    // @kotowari[REQ-schema-031, REQ-schema-035]
     #[test]
     fn recursive_nesting_is_included_in_the_parent_element() {
         let schema = r#"
@@ -1492,7 +1492,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-031, REQ-035]
+    // @kotowari[REQ-schema-031, REQ-schema-035]
     #[test]
     fn section_body_includes_child_bullet_lines() {
         let schema = r#"
@@ -1514,7 +1514,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-031, REQ-035]
+    // @kotowari[REQ-schema-031, REQ-schema-035]
     #[test]
     fn item_body_includes_child_bullet_lines() {
         let schema = r#"
@@ -1536,7 +1536,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-036]
+    // @kotowari[REQ-schema-036]
     #[test]
     fn deep_child_field_extract_is_placed_at_its_path() {
         let schema = r#"
@@ -1567,7 +1567,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-035]
+    // @kotowari[REQ-schema-035]
     #[test]
     fn item_body_excludes_table_and_code_block() {
         let schema = r#"
@@ -1594,7 +1594,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-023, REQ-033]
+    // @kotowari[REQ-schema-023, REQ-schema-033]
     #[test]
     fn preamble_table_is_extracted_as_row_objects() {
         let schema = "document:\n  preamble:\n    table:\n      header: [用語, 意味]\n      extract: glossary\n";
@@ -1607,7 +1607,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-048]
+    // @kotowari[REQ-schema-048]
     #[test]
     fn of_line_places_the_line_number_as_a_number() {
         let schema = "document:\n  sections:\n    - name: 記録\n      fields:\n        - name: 状態\n          extract:\n            - status\n            - { path: status_line, of: line }\n";
@@ -1621,7 +1621,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-047, REQ-048]
+    // @kotowari[REQ-schema-047, REQ-schema-048]
     #[test]
     fn item_extract_becomes_an_object_when_internals_declare_extract() {
         let schema = r#"
@@ -1662,7 +1662,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-047]
+    // @kotowari[REQ-schema-047]
     #[test]
     fn item_extract_stays_a_string_without_internal_extract() {
         let schema = "document:\n  sections:\n    - name: 要求\n      item:\n        id: \"REQ-\\\\d{3,}\"\n        repeat: { min: 0 }\n        extract: requirements\n        fields:\n          - name: 種類\n";
@@ -1675,7 +1675,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-047]
+    // @kotowari[REQ-schema-047]
     #[test]
     fn item_object_keys_come_from_the_schema_not_the_document() {
         // 同じ配置パスを宣言していれば、文書の見出しの語とフィールド行の名前が

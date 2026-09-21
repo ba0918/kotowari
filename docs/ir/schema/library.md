@@ -1,5 +1,5 @@
 ---
-$schema: ../../.mds/schemas/ir.yaml
+$schema: ../../../.mds/schemas/ir.yaml
 ---
 # ライブラリの入口
 
@@ -7,14 +7,14 @@ $schema: ../../.mds/schemas/ir.yaml
 
 ## 要求
 
-### REQ-049: ライブラリの入口
+### REQ-schema-049: ライブラリの入口
 
 - 種類: algorithm
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A18, docs/decision/records/2026-09-21-mds-spec.md#A24
-- 定義: TBL-010
+- 定義: TBL-schema-010
 - 検証: unit
 
-### REQ-050: 読み書きは呼び出し側の責務
+### REQ-schema-050: 読み書きは呼び出し側の責務
 
 - 種類: prohibition
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A18, docs/decision/records/2026-09-21-mds-spec.md#A24
@@ -22,18 +22,18 @@ $schema: ../../.mds/schemas/ir.yaml
 
 ライブラリは、`文書`と`スキーマ`のファイルを読まず、URL の`スキーマ`も取得しない。`スキーマ`の位置を決めるところまでを行い、読み書きは呼び出し側に残す。
 
-### REQ-051: 列挙に無い公開項目
+### REQ-schema-051: 列挙に無い公開項目
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A24
 - 検証: review
-- 確かめ方: TBL-010 に無い公開項目が、依存するクレートから使われていないことを確認する。列挙に無い公開項目は実装の都合であり、契約ではない
+- 確かめ方: TBL-schema-010 に無い公開項目が、依存するクレートから使われていないことを確認する。列挙に無い公開項目は実装の都合であり、契約ではない
 
-mds は常に、TBL-010 が列挙した入口だけを依存するクレートへの契約として約束する。
+mds は常に、TBL-schema-010 が列挙した入口だけを依存するクレートへの契約として約束する。
 
 ## 決定表
 
-### TBL-010: ライブラリの入口
+### TBL-schema-010: ライブラリの入口
 
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A18, docs/decision/records/2026-09-21-mds-spec.md#A24
 
@@ -49,13 +49,13 @@ mds は常に、TBL-010 が列挙した入口だけを依存するクレート�
 ## 具体例
 
 ```gherkin
-@id=EX-015 @about=REQ-049 @source=docs/decision/records/2026-09-21-mds-spec.md#A18
+@id=EX-schema-015 @about=REQ-schema-049 @source=docs/decision/records/2026-09-21-mds-spec.md#A18
 Scenario: 依存するクレートが入口だけで一通りを通せる
   Given `スキーマ`を宣言した`文書`の文字列がある
-  When TBL-010 の入口を順に呼ぶ
+  When TBL-schema-010 の入口を順に呼ぶ
   Then `指摘`の並びと`抽出`の値の両方が得られる
 
-@id=EX-016 @about=REQ-050 @source=docs/decision/records/2026-09-21-mds-spec.md#A24
+@id=EX-schema-016 @about=REQ-schema-050 @source=docs/decision/records/2026-09-21-mds-spec.md#A24
 Scenario: URL のスキーマは位置だけを返す
   Given URL の`スキーマ`を宣言した`文書`の文字列がある
   When resolve_schema を呼ぶ

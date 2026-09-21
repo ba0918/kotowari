@@ -41,7 +41,7 @@ document:
 
 const DOCUMENT: &str = "---\n$schema: ../.mds/schemas/ir.yaml\n---\n# 題名\n\nこの文書が扱う範囲。\n\n## 要求\n\n### REQ-001: 名前\n\n- 種類: ubiquitous\n\n本文。\n";
 
-// @kotowari[REQ-049, EX-015]
+// @kotowari[REQ-schema-049, EX-schema-015]
 #[test]
 fn a_dependent_crate_can_run_the_whole_pipeline() {
     // 1. 文書から "$schema" を読む
@@ -80,7 +80,7 @@ fn a_dependent_crate_can_run_the_whole_pipeline() {
     assert_eq!(values["requirements"][0]["line"], 10);
 }
 
-// @kotowari[REQ-049]
+// @kotowari[REQ-schema-049]
 #[test]
 fn findings_carry_the_kind_line_and_detail() {
     let broken = DOCUMENT.replace("- 種類: ubiquitous", "- 種類: bogus");
@@ -93,7 +93,7 @@ fn findings_carry_the_kind_line_and_detail() {
     assert!(!finding.detail.is_empty());
 }
 
-// @kotowari[REQ-049, REQ-050, EX-016]
+// @kotowari[REQ-schema-049, REQ-schema-050, EX-schema-016]
 #[test]
 fn a_url_schema_resolves_to_a_url_for_the_caller_to_fetch() {
     let source = "---\n$schema: https://example.com/ir.yaml\n---\n# 題名\n\n範囲。\n";

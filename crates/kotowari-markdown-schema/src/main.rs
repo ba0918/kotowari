@@ -514,7 +514,7 @@ mod tests {
         format!("https://{user}:{password}@example.com/ir.yaml")
     }
 
-    // @kotowari[REQ-052]
+    // @kotowari[REQ-schema-052]
     #[test]
     fn userinfo_in_a_url_is_hidden_before_it_reaches_a_message() {
         let url = url_with_userinfo("example-user", "example-password");
@@ -529,7 +529,7 @@ mod tests {
         );
     }
 
-    // @kotowari[REQ-052]
+    // @kotowari[REQ-schema-052]
     #[test]
     fn a_url_without_userinfo_is_left_alone() {
         assert_eq!(
@@ -538,7 +538,7 @@ mod tests {
         );
     }
 
-    // @kotowari[REQ-052]
+    // @kotowari[REQ-schema-052]
     #[test]
     fn an_at_sign_in_the_path_is_not_mistaken_for_userinfo() {
         assert_eq!(

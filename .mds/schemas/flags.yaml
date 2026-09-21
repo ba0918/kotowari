@@ -13,7 +13,7 @@ document:
     - name: 問題の記録
       required: false
       item:
-        id: "FLAG-\\d{3,}"
+        id: "FLAG-([a-z][a-z0-9-]*-)?\\d{3,}"
         repeat: { min: 0 }
         fields:
           - name: 種類
