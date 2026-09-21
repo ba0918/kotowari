@@ -1,4 +1,4 @@
-//! "kotowari status" の集計と出力（REQ-162〜REQ-166、TBL-028）
+//! "kotowari status" の集計と出力（REQ-core-162〜REQ-core-166、TBL-core-028）
 
 use std::path::Path;
 use tempfile::TempDir;
@@ -60,7 +60,7 @@ fn requirement(id: &str, name: &str, fields: &str) -> String {
     format!("### {id}: {name}\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n{fields}\n文である。\n\n")
 }
 
-/// EX-258 と EX-261 が使う文書とテスト。
+/// EX-core-258 と EX-core-261 が使う文書とテスト。
 /// 検証が unit の要求、確かめ方のある review の要求、その具体例、印のあるテストがある
 fn write_ex_258_project(tmp: &Path) {
     make_project(tmp);
@@ -81,9 +81,9 @@ fn write_ex_258_project(tmp: &Path) {
     );
 }
 
-// --- REQ-162、REQ-165: 集計と complete ---
+// --- REQ-core-162、REQ-core-165: 集計と complete ---
 
-// @kotowari[REQ-162, REQ-165, TBL-028, EX-258]
+// @kotowari[REQ-core-162, REQ-core-165, TBL-core-028, EX-core-258]
 #[test]
 fn req_162_complete_project_counts_and_exit_zero() {
     let tmp = TempDir::new().unwrap();
@@ -105,7 +105,7 @@ fn req_162_complete_project_counts_and_exit_zero() {
     assert_eq!(v["complete"], true);
 }
 
-// @kotowari[REQ-165, REQ-098, EX-259]
+// @kotowari[REQ-core-165, REQ-core-098, EX-core-259]
 #[test]
 fn req_165_review_requirement_without_how_to_verify_is_not_complete() {
     let tmp = TempDir::new().unwrap();
@@ -125,7 +125,7 @@ fn req_165_review_requirement_without_how_to_verify_is_not_complete() {
     assert_eq!(v["complete"], false);
 }
 
-// @kotowari[REQ-165, EX-260]
+// @kotowari[REQ-core-165, EX-core-260]
 #[test]
 fn req_165_flag_makes_it_not_complete() {
     let tmp = TempDir::new().unwrap();
@@ -150,9 +150,9 @@ fn req_165_flag_makes_it_not_complete() {
     assert_eq!(code, Some(1), "{v}");
 }
 
-// --- TBL-028: 数え方 ---
+// --- TBL-core-028: 数え方 ---
 
-// @kotowari[TBL-028, REQ-085, EX-263]
+// @kotowari[TBL-core-028, REQ-core-085, EX-core-263]
 #[test]
 fn tbl_028_requirement_covered_through_a_scenario_counts_as_with_tests() {
     let tmp = TempDir::new().unwrap();
@@ -177,7 +177,7 @@ fn tbl_028_requirement_covered_through_a_scenario_counts_as_with_tests() {
     assert_eq!(v["requirements"]["without_tests"], 0, "{v}");
 }
 
-// @kotowari[TBL-028]
+// @kotowari[TBL-core-028]
 #[test]
 fn tbl_028_review_requirements_are_not_in_with_or_without_tests() {
     let tmp = TempDir::new().unwrap();
@@ -196,7 +196,7 @@ fn tbl_028_review_requirements_are_not_in_with_or_without_tests() {
     assert_eq!(v["requirements"]["without_tests"], 0, "{v}");
 }
 
-// @kotowari[TBL-028]
+// @kotowari[TBL-core-028]
 #[test]
 fn tbl_028_requirement_without_a_verification_line_is_counted_by_marks_only() {
     let tmp = TempDir::new().unwrap();
@@ -216,7 +216,7 @@ fn tbl_028_requirement_without_a_verification_line_is_counted_by_marks_only() {
     assert_eq!(v["requirements"]["without_tests"], 1, "{v}");
 }
 
-// @kotowari[TBL-028]
+// @kotowari[TBL-core-028]
 #[test]
 fn tbl_028_items_are_counted_by_kind() {
     let tmp = TempDir::new().unwrap();
@@ -254,7 +254,7 @@ fn tbl_028_items_are_counted_by_kind() {
     assert_eq!(v["scenarios"]["without_tests"], 1, "{v}");
 }
 
-// @kotowari[TBL-028]
+// @kotowari[TBL-core-028]
 #[test]
 fn tbl_028_requirements_are_counted_by_verification_value() {
     let tmp = TempDir::new().unwrap();
@@ -278,7 +278,7 @@ fn tbl_028_requirements_are_counted_by_verification_value() {
     assert_eq!(v["requirements"]["without_tests"], 3, "{v}");
 }
 
-// @kotowari[TBL-028, REQ-165]
+// @kotowari[TBL-core-028, REQ-core-165]
 #[test]
 fn tbl_028_notices_are_counted_apart_from_errors() {
     let tmp = TempDir::new().unwrap();
@@ -300,12 +300,12 @@ fn tbl_028_notices_are_counted_apart_from_errors() {
     let (code, v) = run_status(tmp.path());
     assert_eq!(v["findings"]["error"], 0, "{v}");
     assert_eq!(v["findings"]["notice"], 1, "{v}");
-    // 注意は complete を妨げない（REQ-165 は誤りと問題の記録だけを見る）
+    // 注意は complete を妨げない（REQ-core-165 は誤りと問題の記録だけを見る）
     assert_eq!(v["complete"], true, "{v}");
     assert_eq!(code, Some(0), "{v}");
 }
 
-// @kotowari[TBL-028, TBL-021]
+// @kotowari[TBL-core-028, TBL-core-021]
 #[test]
 fn tbl_028_documents_and_test_files_match_check() {
     let tmp = TempDir::new().unwrap();
@@ -318,9 +318,9 @@ fn tbl_028_documents_and_test_files_match_check() {
     assert_eq!(status["tests"]["files"], check["tests"]);
 }
 
-// --- REQ-166: 出力の形 ---
+// --- REQ-core-166: 出力の形 ---
 
-// @kotowari[REQ-164, REQ-166, TBL-028]
+// @kotowari[REQ-core-164, REQ-core-166, TBL-core-028]
 #[test]
 fn req_166_json_top_level_has_only_the_groups() {
     let tmp = TempDir::new().unwrap();
@@ -341,7 +341,7 @@ fn req_166_json_top_level_has_only_the_groups() {
             "tests",
         ],
     );
-    // 群の順は TBL-028 の表の順で、"complete" が最後
+    // 群の順は TBL-core-028 の表の順で、"complete" が最後
     let order: Vec<usize> = [
         "\"documents\"",
         "\"items\"",
@@ -357,7 +357,7 @@ fn req_166_json_top_level_has_only_the_groups() {
     assert!(order.windows(2).all(|w| w[0] < w[1]), "{stdout}");
 }
 
-// @kotowari[REQ-162]
+// @kotowari[REQ-core-162]
 #[test]
 fn req_162_status_writes_no_finding() {
     let tmp = TempDir::new().unwrap();
@@ -380,7 +380,7 @@ fn req_162_status_writes_no_finding() {
     }
 }
 
-// @kotowari[REQ-166, TBL-028, EX-261]
+// @kotowari[REQ-core-166, TBL-core-028, EX-core-261]
 #[test]
 fn req_166_text_prints_one_line_per_group() {
     let tmp = TempDir::new().unwrap();

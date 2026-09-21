@@ -1,5 +1,5 @@
-//! 判断の記録の形の検査（REQ-129〜REQ-135、TBL-022）と superseded_by のリンクの検査（REQ-132、TBL-023）。
-//! 読み取りは `sources::parse_records_file` が済ませてあり、ここはその構造だけを読む（REQ-136）。
+//! 判断の記録の形の検査（REQ-core-129〜REQ-core-135、TBL-core-022）と superseded_by のリンクの検査（REQ-core-132、TBL-core-023）。
+//! 読み取りは `sources::parse_records_file` が済ませてあり、ここはその構造だけを読む（REQ-core-136）。
 
 use crate::sources::{
     is_decision_number, is_under_place, required_field_of, RecordsFile, SourceContext,
@@ -11,23 +11,23 @@ use crate::{Finding, FindingKind};
 pub fn check_record_forms(ctx: &SourceContext, findings: &mut Vec<Finding>) {
     for record in &ctx.records_files {
         let path = crate::join_display_path(&ctx.records_path, &record.rel_path);
-        // REQ-129: 補足の行の有無と名前の検査は "## Context" を持つ記録だけが受ける
+        // REQ-core-129: 補足の行の有無と名前の検査は "## Context" を持つ記録だけが受ける
         if record.has_context {
             check_fields(record, &path, findings);
         }
-        // REQ-129: リンクの検査は "## Context" の有無を見ず、すべての判断の記録が受ける
+        // REQ-core-129: リンクの検査は "## Context" の有無を見ず、すべての判断の記録が受ける
         check_revision_links(ctx, record, &path, findings);
     }
 }
 
-/// TBL-022: 必須の補足の行の欠けと、知らない名前
+/// TBL-core-022: 必須の補足の行の欠けと、知らない名前
 fn check_fields(record: &RecordsFile, path: &str, findings: &mut Vec<Finding>) {
     for section in &record.sections {
         let Some(required) = required_field_of(&section.name) else {
             continue;
         };
         for numbered in &section.numbered_lines {
-            // REQ-133: 値が空の補足の行は無いものとして数える
+            // REQ-core-133: 値が空の補足の行は無いものとして数える
             let has_required = numbered
                 .fields
                 .iter()
@@ -41,7 +41,7 @@ fn check_fields(record: &RecordsFile, path: &str, findings: &mut Vec<Finding>) {
                 ));
             }
 
-            // REQ-131: 6つ以外の名前はその行の誤り（値が空でも受ける）
+            // REQ-core-131: 6つ以外の名前はその行の誤り（値が空でも受ける）
             for field in &numbered.fields {
                 if !KNOWN_FIELD_NAMES.contains(&field.name.as_str()) {
                     findings.push(Finding::new(
@@ -56,7 +56,7 @@ fn check_fields(record: &RecordsFile, path: &str, findings: &mut Vec<Finding>) {
     }
 }
 
-/// TBL-023: superseded_by の行のリンクを1つずつ判定する
+/// TBL-core-023: superseded_by の行のリンクを1つずつ判定する
 fn check_revision_links(
     ctx: &SourceContext,
     record: &RecordsFile,
@@ -66,7 +66,7 @@ fn check_revision_links(
     for section in &record.sections {
         for numbered in &section.numbered_lines {
             for field in &numbered.fields {
-                // REQ-133: 値が空の superseded_by は判定の対象にしない
+                // REQ-core-133: 値が空の superseded_by は判定の対象にしない
                 if field.name != "superseded_by" || field.value.is_empty() {
                     continue;
                 }
@@ -94,7 +94,7 @@ fn check_revision_links(
     }
 }
 
-/// TBL-023 の順2から順6
+/// TBL-core-023 の順2から順6
 fn is_valid_link(ctx: &SourceContext, record: &RecordsFile, href: &str) -> bool {
     // 順2: "#" が無い、または "#" の後が決定の番号の形でない
     let Some(hash) = href.find('#') else {

@@ -24,9 +24,9 @@ fn make_project(tmp: &Path) {
     .unwrap();
 }
 
-// --- REQ-006: UTF-8 でない設定で停止 ---
+// --- REQ-core-006: UTF-8 でない設定で停止 ---
 
-// @kotowari[REQ-006, TBL-001]
+// @kotowari[REQ-core-006, TBL-core-001]
 #[test]
 fn req_006_non_utf8_config_stops() {
     let tmp = TempDir::new().unwrap();
@@ -41,9 +41,9 @@ fn req_006_non_utf8_config_stops() {
         .stdout("");
 }
 
-// --- REQ-009: 基準のディレクトリの決め方 ---
+// --- REQ-core-009: 基準のディレクトリの決め方 ---
 
-// @kotowari[REQ-009, TBL-003]
+// @kotowari[REQ-core-009, TBL-core-003]
 #[test]
 fn req_009_base_is_the_dir_holding_dot_kotowari() {
     let tmp = TempDir::new().unwrap();
@@ -60,7 +60,7 @@ fn req_009_base_is_the_dir_holding_dot_kotowari() {
         .code(0);
 }
 
-// @kotowari[REQ-009, TBL-003]
+// @kotowari[REQ-core-009, TBL-core-003]
 #[test]
 fn req_009_falls_back_to_cwd() {
     // .kotowari/ が上にもない → CWD が基準になる
@@ -69,7 +69,7 @@ fn req_009_falls_back_to_cwd() {
     fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
     fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
     fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
-    // .kotowari/ なし → CWD が基準 → 既定の設定ファイルも無い → REQ-012 で既定値
+    // .kotowari/ なし → CWD が基準 → 既定の設定ファイルも無い → REQ-core-012 で既定値
     cmd()
         .arg("check")
         .current_dir(tmp.path())
@@ -77,7 +77,7 @@ fn req_009_falls_back_to_cwd() {
         .code(0);
 }
 
-// @kotowari[REQ-009, TBL-003, EX-002]
+// @kotowari[REQ-core-009, TBL-core-003, EX-core-002]
 #[test]
 fn req_009_base_from_a_subdirectory_is_the_ancestor_with_dot_kotowari() {
     // 下のディレクトリで起動しても、指摘のパスが上のディレクトリからの相対になる
@@ -113,9 +113,9 @@ fn req_009_base_from_a_subdirectory_is_the_ancestor_with_dot_kotowari() {
     );
 }
 
-// --- REQ-010: 設定の値は基準のディレクトリからの相対 ---
+// --- REQ-core-010: 設定の値は基準のディレクトリからの相対 ---
 
-// @kotowari[REQ-010]
+// @kotowari[REQ-core-010]
 #[test]
 fn req_010_config_values_are_relative_to_base() {
     let tmp = TempDir::new().unwrap();
@@ -139,9 +139,9 @@ fn req_010_config_values_are_relative_to_base() {
         .code(0);
 }
 
-// --- PROP-001: 設定のパスは基準を変えない ---
+// --- PROP-core-001: 設定のパスは基準を変えない ---
 
-// @kotowari[PROP-001]
+// @kotowari[PROP-core-001]
 #[test]
 fn prop_001_config_path_does_not_move_the_base() {
     let tmp = TempDir::new().unwrap();
@@ -162,9 +162,9 @@ fn prop_001_config_path_does_not_move_the_base() {
         .code(0);
 }
 
-// --- REQ-003: 設定のパスの基準 ---
+// --- REQ-core-003: 設定のパスの基準 ---
 
-// @kotowari[REQ-003]
+// @kotowari[REQ-core-003]
 #[test]
 fn req_003_config_path_is_relative_to_cwd() {
     let tmp = TempDir::new().unwrap();
@@ -177,9 +177,9 @@ fn req_003_config_path_is_relative_to_cwd() {
         .code(0);
 }
 
-// --- REQ-011: 既定の設定ファイルの場所 ---
+// --- REQ-core-011: 既定の設定ファイルの場所 ---
 
-// @kotowari[REQ-011]
+// @kotowari[REQ-core-011]
 #[test]
 fn req_011_reads_dot_kotowari_config_by_default() {
     // 既に valid-project fixture にあるので、そのまま通る
@@ -190,9 +190,9 @@ fn req_011_reads_dot_kotowari_config_by_default() {
         .code(0);
 }
 
-// --- REQ-012: 設定ファイルが無いときは既定の値 ---
+// --- REQ-core-012: 設定ファイルが無いときは既定の値 ---
 
-// @kotowari[REQ-012]
+// @kotowari[REQ-core-012]
 #[test]
 fn req_012_missing_config_uses_defaults() {
     let tmp = TempDir::new().unwrap();
@@ -208,9 +208,9 @@ fn req_012_missing_config_uses_defaults() {
         .code(0);
 }
 
-// --- REQ-013: キーと既定の値 ---
+// --- REQ-core-013: キーと既定の値 ---
 
-// @kotowari[REQ-013, TBL-004]
+// @kotowari[REQ-core-013, TBL-core-004]
 #[test]
 fn req_013_defaults_match_the_table() {
     let cfg = kotowari::config::Config::default();
@@ -228,7 +228,7 @@ fn req_013_defaults_match_the_table() {
     );
 }
 
-// @kotowari[REQ-013, REQ-014]
+// @kotowari[REQ-core-013, REQ-core-014]
 #[test]
 fn req_013_explicit_limits_values_are_used_as_given() {
     let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\nlimits:\n  lines: 5\n  requirements: 7\n";
@@ -237,9 +237,9 @@ fn req_013_explicit_limits_values_are_used_as_given() {
     assert_eq!(cfg.limits.requirements.get(), 7, "requirements should be the given value, not the default or a hardcoded one");
 }
 
-// --- REQ-014: 設定の誤り ---
+// --- REQ-core-014: 設定の誤り ---
 
-// @kotowari[REQ-014, EX-003]
+// @kotowari[REQ-core-014, EX-core-003]
 #[test]
 fn req_014_unknown_key_stops() {
     let tmp = TempDir::new().unwrap();
@@ -257,7 +257,7 @@ fn req_014_unknown_key_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_wrong_type_stops() {
     let tmp = TempDir::new().unwrap();
@@ -275,7 +275,7 @@ fn req_014_wrong_type_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_negative_limit_stops() {
     let tmp = TempDir::new().unwrap();
@@ -293,7 +293,7 @@ fn req_014_negative_limit_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_zero_limit_stops() {
     let tmp = TempDir::new().unwrap();
@@ -311,7 +311,7 @@ fn req_014_zero_limit_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_empty_vague_word_stops() {
     let tmp = TempDir::new().unwrap();
@@ -329,7 +329,7 @@ fn req_014_empty_vague_word_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-018]
+// @kotowari[REQ-core-018]
 #[test]
 #[cfg(unix)]
 fn req_018_unreadable_dir_stops() {
@@ -354,7 +354,7 @@ fn req_018_unreadable_dir_stops() {
     assert!(output.stdout.is_empty(), "stdout should be empty on stop");
 }
 
-// @kotowari[REQ-018]
+// @kotowari[REQ-core-018]
 #[test]
 #[cfg(unix)]
 fn req_018_unreadable_records_dir_stops() {
@@ -379,7 +379,7 @@ fn req_018_unreadable_records_dir_stops() {
     assert!(output.stdout.is_empty(), "stdout should be empty on stop");
 }
 
-// @kotowari[REQ-018]
+// @kotowari[REQ-core-018]
 #[test]
 #[cfg(unix)]
 fn req_018_unreadable_adr_dir_stops() {
@@ -404,9 +404,9 @@ fn req_018_unreadable_adr_dir_stops() {
     assert!(output.stdout.is_empty(), "stdout should be empty on stop");
 }
 
-// --- REQ-015: 一覧は既定を置き換える ---
+// --- REQ-core-015: 一覧は既定を置き換える ---
 
-// @kotowari[REQ-015]
+// @kotowari[REQ-core-015]
 #[test]
 fn req_015_list_replaces_default() {
     let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"my/**/*.rs\"\n";
@@ -414,9 +414,9 @@ fn req_015_list_replaces_default() {
     assert_eq!(cfg.tests.files, vec!["my/**/*.rs"]);
 }
 
-// --- REQ-016: 空の一覧 ---
+// --- REQ-core-016: 空の一覧 ---
 
-// @kotowari[REQ-016]
+// @kotowari[REQ-core-016]
 #[test]
 fn req_016_empty_list_means_none() {
     let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\nvague_words: []\n";
@@ -424,9 +424,9 @@ fn req_016_empty_list_means_none() {
     assert!(cfg.vague_words.is_empty());
 }
 
-// --- REQ-017: 入れ子のキー ---
+// --- REQ-core-017: 入れ子のキー ---
 
-// @kotowari[REQ-017]
+// @kotowari[REQ-core-017]
 #[test]
 fn req_017_nested_keys() {
     let yaml = "ir: docs/ir\ndecisions:\n  records: my-records\n  adr: my-adr\n";
@@ -435,9 +435,9 @@ fn req_017_nested_keys() {
     assert_eq!(cfg.decisions.adr, "my-adr");
 }
 
-// --- REQ-018: 置き場が無いとき停止 ---
+// --- REQ-core-018: 置き場が無いとき停止 ---
 
-// @kotowari[REQ-018, TBL-001]
+// @kotowari[REQ-core-018, TBL-core-001]
 #[test]
 fn req_018_missing_ir_dir_stops() {
     let tmp = TempDir::new().unwrap();
@@ -458,10 +458,10 @@ fn req_018_missing_ir_dir_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-005, REQ-018, TBL-018, TBL-020]
+// @kotowari[REQ-core-005, REQ-core-018, TBL-core-018, TBL-core-020]
 #[test]
 fn req_005_stderr_carries_the_stop_reason_text() {
-    // A137 で改めた: TBL-020 の形（相対パスと OS の誤りの文）
+    // A137 で改めた: TBL-core-020 の形（相対パスと OS の誤りの文）
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::remove_dir_all(tmp.path().join("docs/ir")).unwrap();
@@ -469,19 +469,19 @@ fn req_005_stderr_carries_the_stop_reason_text() {
     assert_eq!(output.status.code(), Some(2));
     let stderr = String::from_utf8_lossy(&output.stderr);
     let first_line = stderr.lines().next().unwrap_or("");
-    // TBL-018: 「unreadable file」の文言で始まる
+    // TBL-core-018: 「unreadable file」の文言で始まる
     assert!(
         first_line.starts_with("unreadable file: "),
         "stderr should start with TBL-018 wording, got: {first_line:?}"
     );
-    // TBL-020: 相対パスを含む（設定の ir の値）
+    // TBL-core-020: 相対パスを含む（設定の ir の値）
     assert!(
         first_line.contains("docs/ir"),
         "stderr should contain the relative path, got: {first_line:?}"
     );
 }
 
-// @kotowari[REQ-018, TBL-001]
+// @kotowari[REQ-core-018, TBL-core-001]
 #[test]
 fn req_018_missing_records_dir_stops() {
     let tmp = TempDir::new().unwrap();
@@ -502,7 +502,7 @@ fn req_018_missing_records_dir_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-018, TBL-001]
+// @kotowari[REQ-core-018, TBL-core-001]
 #[test]
 fn req_018_missing_adr_dir_stops() {
     let tmp = TempDir::new().unwrap();
@@ -523,9 +523,9 @@ fn req_018_missing_adr_dir_stops() {
         .stdout("");
 }
 
-// --- REQ-019: glob の読み方 ---
+// --- REQ-core-019: glob の読み方 ---
 
-// @kotowari[REQ-019]
+// @kotowari[REQ-core-019]
 #[test]
 fn req_019_glob_is_recursive_and_skips_hidden_dirs() {
     // この機能はテストの発見（Step 4）で完全に検査するので、
@@ -537,7 +537,7 @@ fn req_019_glob_is_recursive_and_skips_hidden_dirs() {
 
 // --- Step 2: 設定の誤りの拡張、パスの正規化 ---
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_unparsable_yaml_stops() {
     let yaml = "ir: [invalid yaml\n";
@@ -545,7 +545,7 @@ fn req_014_unparsable_yaml_stops() {
     assert!(result.is_err(), "unparsable YAML should stop");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_duplicate_key_stops() {
     let yaml = "ir: docs/ir\nir: other\n";
@@ -553,7 +553,7 @@ fn req_014_duplicate_key_stops() {
     assert!(result.is_err(), "duplicate key should stop");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_value_stops() {
     // "ir:" だけの行は null
@@ -562,63 +562,63 @@ fn req_014_null_value_stops() {
     assert!(result.is_err(), "null value should stop");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_tests_files_stops() {
     let yaml = "tests:\n  files:\n";
     assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.files should stop");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_tests_rust_attributes_stops() {
     let yaml = "tests:\n  rust:\n    attributes:\n";
     assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.rust.attributes should stop");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_tests_rust_macros_stops() {
     let yaml = "tests:\n  rust:\n    macros:\n";
     assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.rust.macros should stop");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_vague_words_key_stops() {
     let yaml = "vague_words:\n";
     assert!(kotowari::config::Config::parse(yaml).is_err(), "null vague_words should stop");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_decisions_stops() {
     let yaml = "decisions:\n";
     assert!(kotowari::config::Config::parse(yaml).is_err(), "null decisions should stop");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_tests_stops() {
     let yaml = "tests:\n";
     assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests should stop");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_tests_rust_stops() {
     let yaml = "tests:\n  rust:\n";
     assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.rust should stop");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_limits_stops() {
     let yaml = "limits:\n";
     assert!(kotowari::config::Config::parse(yaml).is_err(), "null limits should stop");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_windows_drive_letter_like_path_is_not_absolute() {
     // A161: 絶対パスの判定は先頭の "/" だけ。"a:b" をドライブ文字として拒まない
@@ -631,7 +631,7 @@ fn req_014_windows_drive_letter_like_path_is_not_absolute() {
     );
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_absolute_path_stops() {
     let yaml = "ir: /absolute/path\n";
@@ -639,7 +639,7 @@ fn req_014_absolute_path_stops() {
     assert!(result.is_err(), "absolute path should stop");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_duplicate_vague_word_stops() {
     let yaml = "vague_words:\n  - \"foo\"\n  - \"foo\"\n";
@@ -647,7 +647,7 @@ fn req_014_duplicate_vague_word_stops() {
     assert!(result.is_err(), "duplicate vague word should stop");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_invalid_glob_stops() {
     let yaml = "tests:\n  files:\n    - \"[invalid\"\n";
@@ -655,7 +655,7 @@ fn req_014_invalid_glob_stops() {
     assert!(result.is_err(), "invalid glob should stop");
 }
 
-// @kotowari[REQ-012]
+// @kotowari[REQ-core-012]
 #[test]
 fn req_012_empty_config_uses_defaults() {
     let yaml = "";
@@ -663,7 +663,7 @@ fn req_012_empty_config_uses_defaults() {
     assert_eq!(cfg.ir, "docs/ir");
 }
 
-// @kotowari[REQ-012]
+// @kotowari[REQ-core-012]
 #[test]
 fn req_012_comment_only_config_uses_defaults() {
     let yaml = "# comment only\n";
@@ -671,14 +671,14 @@ fn req_012_comment_only_config_uses_defaults() {
     assert_eq!(cfg.ir, "docs/ir");
 }
 
-// @kotowari[REQ-110]
+// @kotowari[REQ-core-110]
 #[test]
 fn req_110_trailing_slash_in_config_is_normalized_in_path() {
     assert_eq!(kotowari::normalize_path("docs/ir/"), "docs/ir");
     assert_eq!(kotowari::normalize_path("./docs/ir/"), "docs/ir");
 }
 
-// @kotowari[REQ-110]
+// @kotowari[REQ-core-110]
 #[test]
 fn req_110_dot_segments_are_folded() {
     assert_eq!(kotowari::normalize_path("./docs/./ir"), "docs/ir");
@@ -686,7 +686,7 @@ fn req_110_dot_segments_are_folded() {
     assert_eq!(kotowari::normalize_path("docs\\ir"), "docs/ir");
 }
 
-// @kotowari[REQ-110]
+// @kotowari[REQ-core-110]
 #[test]
 fn req_110_dot_alone_normalizes_to_empty_place() {
     // "." や "./" だけの置き場は空になる（呼び出し元が文書名だけの path を作る）
@@ -694,7 +694,7 @@ fn req_110_dot_alone_normalizes_to_empty_place() {
     assert_eq!(kotowari::normalize_path("./"), "");
 }
 
-// @kotowari[REQ-110]
+// @kotowari[REQ-core-110]
 #[test]
 fn req_110_ir_dot_produces_bare_filename_path() {
     let tmp = TempDir::new().unwrap();
@@ -721,7 +721,7 @@ fn req_110_ir_dot_produces_bare_filename_path() {
     );
 }
 
-// @kotowari[REQ-018]
+// @kotowari[REQ-core-018]
 #[test]
 fn req_018_place_that_is_a_file_stops() {
     let tmp = TempDir::new().unwrap();
@@ -737,7 +737,7 @@ fn req_018_place_that_is_a_file_stops() {
         .stdout("");
 }
 
-// @kotowari[TBL-003]
+// @kotowari[TBL-core-003]
 #[test]
 fn tbl_003_kotowari_file_is_ignored_in_search() {
     let tmp = TempDir::new().unwrap();
@@ -763,7 +763,7 @@ fn tbl_003_kotowari_file_is_ignored_in_search() {
         .code(0);
 }
 
-// @kotowari[REQ-018, TBL-001, TBL-020]
+// @kotowari[REQ-core-018, TBL-core-001, TBL-core-020]
 #[test]
 #[cfg(unix)]
 fn req_018_unreadable_ir_subdirectory_stops() {
@@ -781,7 +781,7 @@ fn req_018_unreadable_ir_subdirectory_stops() {
     assert!(String::from_utf8_lossy(&output.stderr).contains(&format!("unreadable file: docs/ir/sub/deep: {os_error}")));
 }
 
-// @kotowari[REQ-110, TBL-006]
+// @kotowari[REQ-core-110, TBL-core-006]
 #[test]
 fn req_110_path_carries_the_subdirectory() {
     let tmp = TempDir::new().unwrap();
@@ -795,9 +795,9 @@ fn req_110_path_carries_the_subdirectory() {
     assert_eq!(result["findings"][0]["path"], "docs/ir/sub/deep/a.md");
 }
 
-// --- REQ-020: 直下の kotowari.toml を読まない ---
+// --- REQ-core-020: 直下の kotowari.toml を読まない ---
 
-// @kotowari[REQ-020]
+// @kotowari[REQ-core-020]
 #[test]
 fn req_020_kotowari_toml_beside_the_base_is_not_read() {
     let tmp = TempDir::new().unwrap();
@@ -836,9 +836,9 @@ fn req_020_kotowari_toml_beside_the_base_is_not_read() {
     assert_eq!(default_after.stdout, default_before.stdout);
 }
 
-// --- REQ-090: スキーマのファイルを読まない ---
+// --- REQ-core-090: スキーマのファイルを読まない ---
 
-// @kotowari[REQ-090, EX-040]
+// @kotowari[REQ-core-090, EX-core-040]
 #[test]
 fn req_090_schema_file_is_not_read() {
     let tmp = TempDir::new().unwrap();
@@ -866,9 +866,9 @@ fn req_090_schema_file_is_not_read() {
     );
 }
 
-// --- REQ-091: 外部の mdschema を使わない ---
+// --- REQ-core-091: 外部の mdschema を使わない ---
 
-// @kotowari[REQ-091, EX-041]
+// @kotowari[REQ-core-091, EX-core-041]
 #[test]
 fn req_091_check_runs_the_same_with_an_empty_path() {
     let tmp = TempDir::new().unwrap();
@@ -894,7 +894,7 @@ fn req_091_check_runs_the_same_with_an_empty_path() {
     assert_eq!(restricted.stderr, normal.stderr, "stderr should not depend on PATH");
 }
 
-// --- REQ-102: 状態を保存しない ---
+// --- REQ-core-102: 状態を保存しない ---
 
 /// ディレクトリの全エントリを、相対パスと（ファイルなら）中身のバイト列で写し取る
 fn snapshot(root: &Path) -> Vec<(String, Option<Vec<u8>>)> {
@@ -923,7 +923,7 @@ fn snapshot(root: &Path) -> Vec<(String, Option<Vec<u8>>)> {
     out
 }
 
-// @kotowari[REQ-102, EX-042]
+// @kotowari[REQ-core-102, EX-core-042]
 #[test]
 fn req_102_check_writes_nothing_under_home_tmpdir_or_base() {
     let tmp = TempDir::new().unwrap();
@@ -960,9 +960,9 @@ fn req_102_check_writes_nothing_under_home_tmpdir_or_base() {
     );
 }
 
-// --- REQ-121: 設定で問い合わせを足せない ---
+// --- REQ-core-121: 設定で問い合わせを足せない ---
 
-/// TBL-004 の9個のキーをすべて書いた設定
+/// TBL-core-004 の9個のキーをすべて書いた設定
 const ALL_NINE_KEYS: &str = "ir: docs/ir
 decisions:
   records: docs/decision/records
@@ -980,13 +980,13 @@ vague_words:
   - \"適切に\"
 ";
 
-// @kotowari[REQ-121, REQ-014]
+// @kotowari[REQ-core-121, REQ-core-014]
 #[test]
 fn req_121_only_the_nine_config_keys_are_accepted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
 
-    // TBL-004 の9個をすべて書いた設定は通る
+    // TBL-core-004 の9個をすべて書いた設定は通る
     fs::write(tmp.path().join(".kotowari/config.yaml"), ALL_NINE_KEYS).unwrap();
     let accepted = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(
@@ -1021,14 +1021,14 @@ fn req_121_only_the_nine_config_keys_are_accepted() {
     }
 }
 
-// --- TBL-004: 等価の一覧を指す鍵 ---
+// --- TBL-core-004: 等価の一覧を指す鍵 ---
 
-// @kotowari[TBL-004, REQ-013]
+// @kotowari[TBL-core-004, REQ-core-013]
 #[test]
 fn tbl_004_mutants_equivalents_is_read_and_has_no_default() {
     let cfg = kotowari::config::Config::parse("mutants:\n  equivalents: ./docs/equivalents.yaml\n")
         .expect("the key should be read");
-    // REQ-110: 設定の値のパスは正規化する
+    // REQ-core-110: 設定の値のパスは正規化する
     assert_eq!(
         cfg.mutants.equivalents.as_deref(),
         Some("docs/equivalents.yaml")
@@ -1037,14 +1037,14 @@ fn tbl_004_mutants_equivalents_is_read_and_has_no_default() {
     assert_eq!(kotowari::config::Config::default().mutants.equivalents, None);
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_absolute_mutants_equivalents_stops() {
     let result = kotowari::config::Config::parse("mutants:\n  equivalents: /abs/equivalents.yaml\n");
     assert!(result.is_err(), "an absolute path should stop");
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_mutants_equivalents_that_is_not_a_string_stops() {
     let result = kotowari::config::Config::parse("mutants:\n  equivalents:\n    - a\n");

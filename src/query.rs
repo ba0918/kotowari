@@ -1,4 +1,4 @@
-//! "kotowari query" の1件の組み立て（REQ-156、REQ-159、REQ-160、TBL-027）
+//! "kotowari query" の1件の組み立て（REQ-core-156、REQ-core-159、REQ-core-160、TBL-core-027）
 
 use crate::ir::{self, IrDocument, Item};
 use crate::list::{self, ListItem};
@@ -6,13 +6,13 @@ use crate::tests_discovery::TestMarker;
 use serde::Serialize;
 use std::collections::BTreeMap;
 
-/// "kotowari query" の出力の最上位。"items" だけを持つ（REQ-161）
+/// "kotowari query" の出力の最上位。"items" だけを持つ（REQ-core-161）
 #[derive(Debug, Serialize)]
 pub struct QueryResult {
     pub items: Vec<QueryItem>,
 }
 
-/// query の1件。"kotowari list" の1件に本文と逆引きを足したもの（TBL-027）
+/// query の1件。"kotowari list" の1件に本文と逆引きを足したもの（TBL-core-027）
 #[derive(Debug, Serialize)]
 pub struct QueryItem {
     #[serde(flatten)]
@@ -21,7 +21,7 @@ pub struct QueryItem {
     pub referenced_by: Vec<Reference>,
 }
 
-/// "referenced_by" の1件（TBL-027）
+/// "referenced_by" の1件（TBL-core-027）
 #[derive(Debug, Clone, Serialize)]
 pub struct Reference {
     pub id: String,
@@ -31,7 +31,7 @@ pub struct Reference {
     pub via: &'static str,
 }
 
-/// REQ-161: 1件ごとに "kotowari list" と同じ1行目と "tests" の行を出し、
+/// REQ-core-161: 1件ごとに "kotowari list" と同じ1行目と "tests" の行を出し、
 /// 続けて本文の各行を2つの半角空白で字下げし、最後に逆引きの1件ごとの行を出す
 pub fn print_text(result: &QueryResult) {
     for item in &result.items {
@@ -48,8 +48,8 @@ pub fn print_text(result: &QueryResult) {
     }
 }
 
-/// 位置引数と同じ `ID` を持つ`項目`と`シナリオ`を組み立てる（REQ-156）。
-/// 1件も無ければ None を返す（REQ-157: 呼び出し元が`停止`する）
+/// 位置引数と同じ `ID` を持つ`項目`と`シナリオ`を組み立てる（REQ-core-156）。
+/// 1件も無ければ None を返す（REQ-core-157: 呼び出し元が`停止`する）
 pub fn build(
     docs: &[IrDocument],
     ir_path: &str,
@@ -82,8 +82,8 @@ pub fn build(
     }
 }
 
-/// その `ID` を指している`項目`と`シナリオ`を集める（TBL-027 の "referenced_by"、REQ-160）。
-/// 指す場所は REQ-054 が `ID` を読む場所と同じで、"line" は指している側の見出しの行
+/// その `ID` を指している`項目`と`シナリオ`を集める（TBL-core-027 の "referenced_by"、REQ-core-160）。
+/// 指す場所は REQ-core-054 が `ID` を読む場所と同じで、"line" は指している側の見出しの行
 fn references_to(
     docs: &[IrDocument],
     ir_path: &str,
@@ -134,7 +134,7 @@ fn bodies_of(docs: &[IrDocument], ir_path: &str, id: &str) -> BTreeMap<(String, 
     bodies
 }
 
-/// TBL-027: 本文の行。`項目`は見出しの次の行から次の "### " か "## " の見出しの前の行まで、
+/// TBL-core-027: 本文の行。`項目`は見出しの次の行から次の "### " か "## " の見出しの前の行まで、
 /// `シナリオ`は "@id" のタグの行から最後のステップの行まで。先頭と末尾の空の行は含めない
 fn body_of(item: &Item, lines: &[&str]) -> Vec<String> {
     // 1始まりの行の範囲（両端を含む）

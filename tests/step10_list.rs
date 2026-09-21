@@ -1,4 +1,4 @@
-//! "kotowari list" の項目の組み立てと出力（REQ-151〜REQ-155、TBL-026）
+//! "kotowari list" の項目の組み立てと出力（REQ-core-151〜REQ-core-155、TBL-core-026）
 
 use std::path::Path;
 use tempfile::TempDir;
@@ -86,9 +86,9 @@ fn requirement(id: &str, name: &str, verification: &str) -> String {
     )
 }
 
-// --- REQ-151: list の読み取り ---
+// --- REQ-core-151: list の読み取り ---
 
-// @kotowari[REQ-151, REQ-153, TBL-026, EX-245]
+// @kotowari[REQ-core-151, REQ-core-153, TBL-core-026, EX-core-245]
 #[test]
 fn req_151_requirement_with_a_marked_test_is_listed() {
     let tmp = TempDir::new().unwrap();
@@ -101,7 +101,7 @@ fn req_151_requirement_with_a_marked_test_is_listed() {
     write(
         tmp.path(),
         "tests/a.rs",
-        // 印を3行目に置く（EX-245 と EX-248 は印の行が 3）
+        // 印を3行目に置く（EX-core-245 と EX-core-248 は印の行が 3）
         "\n\n// @kotowari[REQ-001]\n#[test]\nfn req_001_x() {}\n",
     );
     let v = run_list(tmp.path());
@@ -118,7 +118,7 @@ fn req_151_requirement_with_a_marked_test_is_listed() {
     assert_eq!(tests[0]["name"], "req_001_x");
 }
 
-// @kotowari[REQ-151, EX-246]
+// @kotowari[REQ-core-151, EX-core-246]
 #[test]
 fn req_151_items_are_listed_despite_ir_errors_and_exit_zero() {
     let tmp = TempDir::new().unwrap();
@@ -141,9 +141,9 @@ fn req_151_items_are_listed_despite_ir_errors_and_exit_zero() {
     );
 }
 
-// --- REQ-153: 項目の形 ---
+// --- REQ-core-153: 項目の形 ---
 
-// @kotowari[REQ-153, TBL-026, EX-247]
+// @kotowari[REQ-core-153, TBL-core-026, EX-core-247]
 #[test]
 fn req_153_test_in_a_language_without_a_query_has_a_null_name() {
     let tmp = TempDir::new().unwrap();
@@ -162,7 +162,7 @@ fn req_153_test_in_a_language_without_a_query_has_a_null_name() {
     assert!(tests[0]["name"].is_null(), "no test name without a query: {tests:?}");
 }
 
-// @kotowari[REQ-153, TBL-026]
+// @kotowari[REQ-core-153, TBL-core-026]
 #[test]
 fn req_153_table_property_scenario_and_flag_carry_their_keys() {
     let tmp = TempDir::new().unwrap();
@@ -205,9 +205,9 @@ fn req_153_table_property_scenario_and_flag_carry_their_keys() {
     let scenario = item(&v, "EX-001");
     assert_eq!(scenario["kind"], "scenario");
     assert_eq!(keys(scenario), with(&[]), "a scenario has no examples: {scenario}");
-    // TBL-026: "Scenario:" の後の文字から前後の半角空白とタブを除いたもの
+    // TBL-core-026: "Scenario:" の後の文字から前後の半角空白とタブを除いたもの
     assert_eq!(scenario["name"], "名前に空白がある");
-    // TBL-026: "Scenario:" の行（26 行目のタグの行ではない）
+    // TBL-core-026: "Scenario:" の行（26 行目のタグの行ではない）
     assert_eq!(scenario["line"], 27);
 
     let flag = item(&v, "FLAG-001");
@@ -229,7 +229,7 @@ fn req_153_table_property_scenario_and_flag_carry_their_keys() {
     );
 }
 
-// @kotowari[REQ-153, TBL-026]
+// @kotowari[REQ-core-153, TBL-core-026]
 #[test]
 fn req_153_examples_are_the_scenarios_about_the_item() {
     let tmp = TempDir::new().unwrap();
@@ -261,7 +261,7 @@ fn req_153_examples_are_the_scenarios_about_the_item() {
     assert_eq!(item(&v, "REQ-001")["definition"], serde_json::json!(["TBL-001"]));
 }
 
-// @kotowari[REQ-153, TBL-026, TBL-011]
+// @kotowari[REQ-core-153, TBL-core-026, TBL-core-011]
 #[test]
 fn req_153_how_to_verify_is_the_value_of_the_line_or_null() {
     let tmp = TempDir::new().unwrap();
@@ -279,14 +279,14 @@ fn req_153_how_to_verify_is_the_value_of_the_line_or_null() {
     let v = run_list(tmp.path());
     assert_eq!(item(&v, "REQ-001")["how_to_verify"], "手で動かして見る");
     assert!(item(&v, "REQ-002")["how_to_verify"].is_null());
-    // REQ-098: 値が空の行は無い行として扱う
+    // REQ-core-098: 値が空の行は無い行として扱う
     assert!(
         item(&v, "REQ-003")["how_to_verify"].is_null(),
         "a blank value is a line that is not there: {v}"
     );
 }
 
-// @kotowari[REQ-153, TBL-026]
+// @kotowari[REQ-core-153, TBL-core-026]
 #[test]
 fn req_153_tests_have_one_entry_per_marker_occurrence() {
     let tmp = TempDir::new().unwrap();
@@ -310,9 +310,9 @@ fn req_153_tests_have_one_entry_per_marker_occurrence() {
     assert!(tests.iter().all(|t| t["name"] == "req_001_x"));
 }
 
-// --- REQ-154: 一覧の順 ---
+// --- REQ-core-154: 一覧の順 ---
 
-// @kotowari[REQ-154]
+// @kotowari[REQ-core-154]
 #[test]
 fn req_154_items_and_tests_are_ordered_by_path_then_line() {
     let tmp = TempDir::new().unwrap();
@@ -385,9 +385,9 @@ fn req_154_items_and_tests_are_ordered_by_path_then_line() {
     );
 }
 
-// --- REQ-155: 出力の形 ---
+// --- REQ-core-155: 出力の形 ---
 
-// @kotowari[REQ-155]
+// @kotowari[REQ-core-155]
 #[test]
 fn req_155_json_top_level_has_only_items() {
     let tmp = TempDir::new().unwrap();
@@ -405,7 +405,7 @@ fn req_155_json_top_level_has_only_items() {
     );
 }
 
-// @kotowari[REQ-155, EX-248]
+// @kotowari[REQ-core-155, EX-core-248]
 #[test]
 fn req_155_text_prints_one_line_per_item_and_indented_test_lines() {
     let tmp = TempDir::new().unwrap();
@@ -418,7 +418,7 @@ fn req_155_text_prints_one_line_per_item_and_indented_test_lines() {
     write(
         tmp.path(),
         "tests/a.rs",
-        // 印を3行目に置く（EX-245 と EX-248 は印の行が 3）
+        // 印を3行目に置く（EX-core-245 と EX-core-248 は印の行が 3）
         "\n\n// @kotowari[REQ-001]\n#[test]\nfn req_001_x() {}\n",
     );
     assert_eq!(
@@ -427,7 +427,7 @@ fn req_155_text_prints_one_line_per_item_and_indented_test_lines() {
     );
 }
 
-// @kotowari[REQ-155]
+// @kotowari[REQ-core-155]
 #[test]
 fn req_155_text_writes_dash_for_a_null_test_name() {
     let tmp = TempDir::new().unwrap();
@@ -444,7 +444,7 @@ fn req_155_text_writes_dash_for_a_null_test_name() {
     );
 }
 
-// @kotowari[REQ-155]
+// @kotowari[REQ-core-155]
 #[test]
 fn req_155_text_writes_dash_for_the_verification_of_a_non_requirement() {
     let tmp = TempDir::new().unwrap();
@@ -461,7 +461,7 @@ fn req_155_text_writes_dash_for_the_verification_of_a_non_requirement() {
     assert_eq!(run_list_text(tmp.path()), "TBL-001 - 表 docs/ir/a.md:7 tests=0\n");
 }
 
-// @kotowari[REQ-155]
+// @kotowari[REQ-core-155]
 #[test]
 fn req_155_text_writes_dash_for_a_requirement_without_a_verification_line() {
     let tmp = TempDir::new().unwrap();

@@ -4,14 +4,14 @@
 
 ## 要求
 
-### REQ-009: 基準のディレクトリの決め方
+### REQ-core-009: 基準のディレクトリの決め方
 
 - 種類: algorithm
 - 出典: docs/decision/records/records.md#A37
-- 定義: TBL-003, PROP-001
+- 定義: TBL-core-003, PROP-core-001
 - 検証: unit
 
-### REQ-010: 基準からの相対パス
+### REQ-core-010: 基準からの相対パス
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/records.md#A13, docs/decision/records/records.md#A37
@@ -19,7 +19,7 @@
 
 kotowari は常に、`設定ファイル`の値のパス、`出典`のパス、出力の "path" を`基準のディレクトリ`からの相対パスとして扱う。
 
-### REQ-110: パスの正規化
+### REQ-core-110: パスの正規化
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/records.md#A106, docs/decision/records/2026-09-16-ir-tree.md#A13
@@ -29,7 +29,7 @@ kotowari は常に、`設定ファイル`の値のパスと`出典`のパスを�
 
 ## 決定表
 
-### TBL-003: 基準のディレクトリを探す順
+### TBL-core-003: 基準のディレクトリを探す順
 
 - 出典: docs/decision/records/records.md#A37, docs/decision/records/records.md#A124
 
@@ -40,7 +40,7 @@ kotowari は常に、`設定ファイル`の値のパスと`出典`のパスを�
 
 ## 性質
 
-### PROP-001: 設定のパスは基準を変えない
+### PROP-core-001: 設定のパスは基準を変えない
 
 - 出典: docs/decision/records/records.md#A37
 
@@ -49,7 +49,7 @@ kotowari は常に、`設定ファイル`の値のパスと`出典`のパスを�
 ## 具体例
 
 ```gherkin
-@id=EX-002 @about=REQ-009 @source=docs/decision/records/records.md#A37
+@id=EX-core-002 @about=REQ-core-009 @source=docs/decision/records/records.md#A37
 Scenario: 上のディレクトリの .kotowari を基準にする
   Given "/repo/.kotowari/" があり、"/repo/src/" に ".kotowari/" は無い
   When "/repo/src/" で "kotowari check" を実行する

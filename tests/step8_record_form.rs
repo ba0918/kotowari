@@ -1,4 +1,4 @@
-//! 判断の記録の形の検査（REQ-129〜REQ-135、TBL-022、REQ-132、TBL-023）
+//! 判断の記録の形の検査（REQ-core-129〜REQ-core-135、TBL-core-022、REQ-core-132、TBL-core-023）
 
 use assert_cmd::Command;
 use std::fs;
@@ -61,12 +61,12 @@ fn check(tmp: &std::path::Path) -> serde_json::Value {
     parse_json(&output)
 }
 
-// --- REQ-130 / TBL-022: 必須の補足の行 ---
+// --- REQ-core-130 / TBL-core-022: 必須の補足の行 ---
 
-// @kotowari[REQ-130, TBL-022, EX-101]
+// @kotowari[REQ-core-130, TBL-core-022, EX-core-101]
 #[test]
 fn req_130_context_record_without_why_is_record_field_missing() {
-    // EX-101
+    // EX-core-101
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -83,10 +83,10 @@ fn req_130_context_record_without_why_is_record_field_missing() {
     assert_eq!(found[0]["severity"], "error");
 }
 
-// @kotowari[REQ-133, TBL-022, EX-103]
+// @kotowari[REQ-core-133, TBL-core-022, EX-core-103]
 #[test]
 fn req_133_not_recorded_passes_and_blank_value_is_missing() {
-    // EX-103
+    // EX-core-103
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -106,10 +106,10 @@ fn req_133_not_recorded_passes_and_blank_value_is_missing() {
     assert_eq!(found[0]["detail"], "why");
 }
 
-// @kotowari[REQ-130, TBL-022, EX-105]
+// @kotowari[REQ-core-130, TBL-core-022, EX-core-105]
 #[test]
 fn req_130_superseded_line_without_superseded_by_is_missing() {
-    // EX-105
+    // EX-core-105
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -124,12 +124,12 @@ fn req_130_superseded_line_without_superseded_by_is_missing() {
     assert_eq!(found[0]["detail"], "superseded_by");
 }
 
-// --- REQ-131 / TBL-022: 知らない名前の補足の行 ---
+// --- REQ-core-131 / TBL-core-022: 知らない名前の補足の行 ---
 
-// @kotowari[REQ-131, TBL-022, EX-104]
+// @kotowari[REQ-core-131, TBL-core-022, EX-core-104]
 #[test]
 fn req_131_unknown_field_name_is_record_field_unknown() {
-    // EX-104
+    // EX-core-104
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -147,10 +147,10 @@ fn req_131_unknown_field_name_is_record_field_unknown() {
     assert!(missing.is_empty(), "why is present, so nothing is missing: {:?}", missing);
 }
 
-// @kotowari[REQ-131, REQ-133, TBL-019]
+// @kotowari[REQ-core-131, REQ-core-133, TBL-core-019]
 #[test]
 fn req_131_unknown_name_on_two_lines_yields_two_findings() {
-    // 同じ知らない名前が2行あれば2件。値が空の行も名前の検査を受ける（REQ-133）
+    // 同じ知らない名前が2行あれば2件。値が空の行も名前の検査を受ける（REQ-core-133）
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -165,12 +165,12 @@ fn req_131_unknown_name_on_two_lines_yields_two_findings() {
     assert!(unknown.iter().all(|f| f["detail"] == "reason"));
 }
 
-// --- REQ-129 / REQ-134 / REQ-135: 読まない行と、検査を受けない記録 ---
+// --- REQ-core-129 / REQ-core-134 / REQ-core-135: 読まない行と、検査を受けない記録 ---
 
-// @kotowari[REQ-129, EX-102]
+// @kotowari[REQ-core-129, EX-core-102]
 #[test]
 fn req_129_record_without_context_is_not_checked() {
-    // EX-102
+    // EX-core-102
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -187,10 +187,10 @@ fn req_129_record_without_context_is_not_checked() {
     );
 }
 
-// @kotowari[REQ-135, EX-110]
+// @kotowari[REQ-core-135, EX-core-110]
 #[test]
 fn req_135_lines_outside_the_table_sections_and_orphans_are_not_read() {
-    // EX-110
+    // EX-core-110
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -216,10 +216,10 @@ fn req_135_lines_outside_the_table_sections_and_orphans_are_not_read() {
     );
 }
 
-// @kotowari[REQ-134, EX-111]
+// @kotowari[REQ-core-134, EX-core-111]
 #[test]
 fn req_134_duplicate_field_names_pass() {
-    // EX-111
+    // EX-core-111
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -236,10 +236,10 @@ fn req_134_duplicate_field_names_pass() {
     );
 }
 
-// @kotowari[REQ-135, EX-113]
+// @kotowari[REQ-core-135, EX-core-113]
 #[test]
 fn req_135_numbered_line_inside_code_block_is_not_read() {
-    // EX-113
+    // EX-core-113
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -256,7 +256,7 @@ fn req_135_numbered_line_inside_code_block_is_not_read() {
     );
 }
 
-// @kotowari[REQ-135]
+// @kotowari[REQ-core-135]
 #[test]
 fn req_135_unclosed_code_block_runs_to_the_end_of_the_file() {
     // A45: 閉じられずに文書が終わるコードブロックは文書の終わりまでが中で、指摘は出さない
@@ -277,10 +277,10 @@ fn req_135_unclosed_code_block_runs_to_the_end_of_the_file() {
     assert!(for_file.is_empty(), "no finding for an unclosed code block: {:?}", for_file);
 }
 
-// @kotowari[REQ-130, EX-114]
+// @kotowari[REQ-core-130, EX-core-114]
 #[test]
 fn req_130_unindented_field_line_belongs_to_the_decision() {
-    // EX-114: 字下げ無しの補足の行も直前の番号の行に付く。空行を挟んでもよい
+    // EX-core-114: 字下げ無しの補足の行も直前の番号の行に付く。空行を挟んでもよい
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -296,10 +296,10 @@ fn req_130_unindented_field_line_belongs_to_the_decision() {
     );
 }
 
-// @kotowari[REQ-130, REQ-133, EX-115]
+// @kotowari[REQ-core-130, REQ-core-133, EX-core-115]
 #[test]
 fn req_130_decision_line_with_colon_is_not_a_field() {
-    // EX-115: 本文にコロンを含む決定の行は番号の行で、補足の行と見ない
+    // EX-core-115: 本文にコロンを含む決定の行は番号の行で、補足の行と見ない
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -316,7 +316,7 @@ fn req_130_decision_line_with_colon_is_not_a_field() {
     );
 }
 
-// @kotowari[REQ-129]
+// @kotowari[REQ-core-129]
 #[test]
 fn req_129_file_without_decision_sections_is_not_a_record() {
     // A41: 決定の節の見出しを持たないファイルは判断の記録でない
@@ -336,7 +336,7 @@ fn req_129_file_without_decision_sections_is_not_a_record() {
     );
 }
 
-// --- REQ-132 / TBL-023: superseded_by のリンク ---
+// --- REQ-core-132 / TBL-core-023: superseded_by のリンク ---
 
 /// revision_link_invalid の (line, detail) を並べる
 fn link_findings(v: &serde_json::Value) -> Vec<(i64, String)> {
@@ -351,10 +351,10 @@ fn link_findings(v: &serde_json::Value) -> Vec<(i64, String)> {
         .collect()
 }
 
-// @kotowari[REQ-132, TBL-023, EX-107]
+// @kotowari[REQ-core-132, TBL-core-023, EX-core-107]
 #[test]
 fn req_132_superseded_by_without_link_is_invalid() {
-    // EX-107: 順1（値にリンクが1つも無い）。detail は行の値
+    // EX-core-107: 順1（値にリンクが1つも無い）。detail は行の値
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -366,10 +366,10 @@ fn req_132_superseded_by_without_link_is_invalid() {
     assert_eq!(link_findings(&v), vec![(6, "A24".to_string())]);
 }
 
-// @kotowari[REQ-132, TBL-023, EX-108]
+// @kotowari[REQ-core-132, TBL-core-023, EX-core-108]
 #[test]
 fn req_132_href_outside_the_records_place_is_invalid() {
-    // EX-108: 順3（解決した結果が置き場の外）
+    // EX-core-108: 順3（解決した結果が置き場の外）
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -384,10 +384,10 @@ fn req_132_href_outside_the_records_place_is_invalid() {
     );
 }
 
-// @kotowari[REQ-132, TBL-023, EX-109]
+// @kotowari[REQ-core-132, TBL-core-023, EX-core-109]
 #[test]
 fn req_132_number_only_in_undecided_is_invalid() {
-    // EX-109: 順5（先の決定の節と Superseded の節に番号の行が無い。Undecided は数えない）
+    // EX-core-109: 順5（先の決定の節と Superseded の節に番号の行が無い。Undecided は数えない）
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -404,10 +404,10 @@ fn req_132_number_only_in_undecided_is_invalid() {
     assert_eq!(link_findings(&v), vec![(6, "./b.md#U1".to_string())]);
 }
 
-// @kotowari[REQ-132, TBL-023, EX-112]
+// @kotowari[REQ-core-132, TBL-core-023, EX-core-112]
 #[test]
 fn req_132_heading_anchor_is_invalid() {
-    // EX-112: 順2（"#" の後が決定の番号の形でない）
+    // EX-core-112: 順2（"#" の後が決定の番号の形でない）
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -424,10 +424,10 @@ fn req_132_heading_anchor_is_invalid() {
     assert_eq!(link_findings(&v), vec![(6, "./ir-form.md#出典".to_string())]);
 }
 
-// @kotowari[REQ-132, TBL-023, EX-117]
+// @kotowari[REQ-core-132, TBL-core-023, EX-core-117]
 #[test]
 fn req_132_empty_path_means_the_same_record() {
-    // EX-117: "#" より前が空なら同じ記録
+    // EX-core-117: "#" より前が空なら同じ記録
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -439,10 +439,10 @@ fn req_132_empty_path_means_the_same_record() {
     assert_eq!(link_findings(&v), vec![(7, "#A9".to_string())]);
 }
 
-// @kotowari[REQ-132, TBL-023, EX-119]
+// @kotowari[REQ-core-132, TBL-core-023, EX-core-119]
 #[test]
 fn req_132_target_that_is_not_a_record_is_invalid() {
-    // EX-119: 順4（先が読んだ判断の記録でない）
+    // EX-core-119: 順4（先が読んだ判断の記録でない）
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -454,7 +454,7 @@ fn req_132_target_that_is_not_a_record_is_invalid() {
     assert_eq!(link_findings(&v), vec![(6, "./ir-form.md#A1".to_string())]);
 }
 
-// @kotowari[REQ-132, TBL-023]
+// @kotowari[REQ-core-132, TBL-core-023]
 #[test]
 fn tbl_023_same_href_twice_on_one_line_yields_two_findings() {
     // 同じ行に同じ href が2つあれば出現ごとに1件
@@ -472,7 +472,7 @@ fn tbl_023_same_href_twice_on_one_line_yields_two_findings() {
     );
 }
 
-// @kotowari[REQ-132, TBL-023]
+// @kotowari[REQ-core-132, TBL-core-023]
 #[test]
 fn tbl_023_unclosed_link_is_skipped_and_falls_to_no_link() {
     // A44: ")" が無い形と "]" の直後が "(" でない形はリンクでなく、順1になる
@@ -493,7 +493,7 @@ fn tbl_023_unclosed_link_is_skipped_and_falls_to_no_link() {
     );
 }
 
-// @kotowari[REQ-132, TBL-023]
+// @kotowari[REQ-core-132, TBL-core-023]
 #[test]
 fn tbl_023_absolute_href_is_outside_the_place() {
     // 順3: "/" か "\" で始まる href は、つなぐ前に置き場の外と決まる
@@ -514,7 +514,7 @@ fn tbl_023_absolute_href_is_outside_the_place() {
     );
 }
 
-// @kotowari[TBL-023]
+// @kotowari[TBL-core-023]
 #[test]
 fn tbl_023_link_scan_resumes_after_the_closing_paren() {
     // リンクとして読めたら走査は ")" の次から続き、href の中の "[" から読み始めない
@@ -529,10 +529,10 @@ fn tbl_023_link_scan_resumes_after_the_closing_paren() {
     assert_eq!(link_findings(&v), vec![(6, "[".to_string())]);
 }
 
-// @kotowari[REQ-132, TBL-023, EX-106]
+// @kotowari[REQ-core-132, TBL-core-023, EX-core-106]
 #[test]
 fn req_132_record_without_context_resolves_two_links_in_superseded() {
-    // EX-106: "## Context" を持たない記録の Superseded の行のリンク2つがどちらも解決される
+    // EX-core-106: "## Context" を持たない記録の Superseded の行のリンク2つがどちらも解決される
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -553,10 +553,10 @@ fn req_132_record_without_context_resolves_two_links_in_superseded() {
     );
 }
 
-// @kotowari[REQ-132, TBL-023, REQ-110, EX-116]
+// @kotowari[REQ-core-132, TBL-core-023, REQ-core-110, EX-core-116]
 #[test]
 fn req_132_parent_directory_href_to_superseded_number_passes() {
-    // EX-116: 下位ディレクトリの記録から ".." で上の記録の Superseded の番号を指すリンク
+    // EX-core-116: 下位ディレクトリの記録から ".." で上の記録の Superseded の番号を指すリンク
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -578,7 +578,7 @@ fn req_132_parent_directory_href_to_superseded_number_passes() {
     );
 }
 
-// @kotowari[REQ-133, REQ-132]
+// @kotowari[REQ-core-133, REQ-core-132]
 #[test]
 fn req_133_empty_superseded_by_is_not_a_link_finding() {
     // 値が空の superseded_by はリンクの判定を受けない。Context を持つ記録では欠けだけが出る
@@ -603,10 +603,10 @@ fn req_133_empty_superseded_by_is_not_a_link_finding() {
     assert_eq!(missing[0]["detail"], "superseded_by");
 }
 
-// @kotowari[REQ-135, REQ-132]
+// @kotowari[REQ-core-135, REQ-core-132]
 #[test]
 fn req_135_superseded_by_in_revisions_is_not_read() {
-    // Revisions は TBL-022 の表に無い節なので、その中の superseded_by は読まない
+    // Revisions は TBL-core-022 の表に無い節なので、その中の superseded_by は読まない
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_record(
@@ -622,7 +622,7 @@ fn req_135_superseded_by_in_revisions_is_not_read() {
     );
 }
 
-// @kotowari[REQ-129, REQ-132]
+// @kotowari[REQ-core-129, REQ-core-132]
 #[test]
 fn req_129_broken_link_in_a_file_without_decision_sections_is_not_checked() {
     // A41: 決定の節の見出しを持たないファイルは判断の記録でなく、どの検査も受けない

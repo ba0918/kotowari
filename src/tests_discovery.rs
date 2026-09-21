@@ -1,4 +1,4 @@
-//! テストの発見と印の結び付け（REQ-071〜REQ-088）
+//! テストの発見と印の結び付け（REQ-core-071〜REQ-core-088）
 
 use crate::config::Config;
 use crate::ir::{is_valid_id, IrDocument, Item};
@@ -20,7 +20,7 @@ pub struct DiscoveredTest {
     pub invalid_markers: Vec<(usize, String)>,
 }
 
-/// `印`の1つの出現。`ID` ごとに1件で、同じ行の同じ `ID` の2つ目も1件（TBL-026 の "tests"）
+/// `印`の1つの出現。`ID` ごとに1件で、同じ行の同じ `ID` の2つ目も1件（TBL-core-026 の "tests"）
 #[derive(Debug, Clone)]
 pub struct TestMarker {
     /// 印に書かれた `ID`
@@ -29,7 +29,7 @@ pub struct TestMarker {
     pub path: String,
     /// 印のある行
     pub line: usize,
-    /// `テスト`の関数の名前。`問い合わせの無い言語`では無い（REQ-081）
+    /// `テスト`の関数の名前。`問い合わせの無い言語`では無い（REQ-core-081）
     pub name: Option<String>,
 }
 
@@ -93,8 +93,8 @@ pub fn collect_test_files(
         .follow_links(false)
         .into_iter()
         .filter_entry(|e| {
-            // 隠しディレクトリを除外（REQ-019）。ルートは除外しない
-            // ディレクトリのシンボリックリンクは辿らない（REQ-079, A102）
+            // 隠しディレクトリを除外（REQ-core-019）。ルートは除外しない
+            // ディレクトリのシンボリックリンクは辿らない（REQ-core-079, A102）
             if e.depth() > 0 {
                 let ft = e.file_type();
                 if ft.is_symlink() {
@@ -117,7 +117,7 @@ pub fn collect_test_files(
             true
         })
     {
-        // REQ-018（A96）: 走査でディレクトリが読めなければ停止する
+        // REQ-core-018（A96）: 走査でディレクトリが読めなければ停止する
         let entry = entry.map_err(|e| {
             let where_ = e.path()
                 .map(|p| p.strip_prefix(base).unwrap_or(p))
@@ -461,7 +461,7 @@ fn collect_markers_from_siblings(
                     let raw_line = lines.get(comment_start_row + offset).copied().unwrap_or(cline);
                     for marker in parse_markers_in_line(cline, line_num) {
                         if marker.ids.is_empty() {
-                            // REQ-072: 空の印や閉じ括弧のない印
+                            // REQ-core-072: 空の印や閉じ括弧のない印
                             invalid.push((line_num, raw_line.to_string()));
                         } else {
                             // A152: 同じ ID の印が複数あっても出現ごとに1件数える
@@ -558,9 +558,9 @@ pub fn discover_and_check(
 ) -> Result<(BTreeMap<String, crate::TestFileTally>, Vec<TestMarker>), crate::StopReason> {
     let test_files = collect_test_files(base, config)?;
     let mut all_tests: Vec<DiscoveredTest> = Vec::new();
-    // REQ-153: list の "tests" の元。check は使わない
+    // REQ-core-153: list の "tests" の元。check は使わない
     let mut markers: Vec<TestMarker> = Vec::new();
-    // TBL-021: 読んだテストのファイルを拡張子ごとに数える
+    // TBL-core-021: 読んだテストのファイルを拡張子ごとに数える
     let mut tally: BTreeMap<String, crate::TestFileTally> = BTreeMap::new();
 
     for (rel_path, abs_path) in &test_files {
@@ -573,7 +573,7 @@ pub fn discover_and_check(
             .extension()
             .and_then(|e| e.to_str())
             .unwrap_or("");
-        // REQ-081: 問い合わせのある言語は ".rs" だけ
+        // REQ-core-081: 問い合わせのある言語は ".rs" だけ
         let query = ext == "rs";
 
         tally
@@ -596,7 +596,7 @@ pub fn discover_and_check(
                                 name: Some(test.name.clone()),
                             });
                         }
-                        // REQ-072: テストに結び付く空・不正な印
+                        // REQ-core-072: テストに結び付く空・不正な印
                         for (line_num, raw) in &test.invalid_markers {
                             findings.push(Finding::new(FindingKind::InvalidMarker, rel_path.clone(), Some(*line_num), raw.clone()));
                         }
@@ -608,12 +608,12 @@ pub fn discover_and_check(
                 }
             }
         } else {
-            // 問い合わせの無い言語: 印を拾い、検査もする（REQ-076, REQ-087, REQ-072, REQ-054）
+            // 問い合わせの無い言語: 印を拾い、検査もする（REQ-core-076, REQ-core-087, REQ-core-072, REQ-core-054）
             for (idx, line) in content.lines().enumerate() {
                 let line_num = idx + 1;
                 for marker in parse_markers_in_line(line, line_num) {
                     if marker.ids.is_empty() {
-                        // REQ-072: 空の印、または閉じ括弧のない印
+                        // REQ-core-072: 空の印、または閉じ括弧のない印
                         findings.push(Finding::new(FindingKind::InvalidMarker, rel_path.clone(), Some(line_num), line.to_string()));
                     } else {
                         for id in &marker.ids {
@@ -623,7 +623,7 @@ pub fn discover_and_check(
                                 line: line_num,
                                 name: None,
                             });
-                            // REQ-054: 存在しない ID への参照
+                            // REQ-core-054: 存在しない ID への参照
                             if !known_ids.contains(id) {
                                 findings.push(Finding::new(FindingKind::UnresolvedReference, rel_path.clone(), Some(line_num), id.clone()));
                             }
@@ -637,14 +637,14 @@ pub fn discover_and_check(
     let scenarios = collect_scenarios(docs, ir_path);
     let coverage = TestCoverage::new(&markers, &scenarios);
 
-    // REQ-137: テストのない具体例
+    // REQ-core-137: テストのない具体例
     for (id, scenario) in &scenarios {
         if scenario.needs_test && !coverage.is_marked(id) {
             findings.push(Finding::new(FindingKind::ScenarioWithoutTest, scenario.path.clone(), Some(scenario.line), id.clone()));
         }
     }
 
-    // REQ-085: テストのない要求
+    // REQ-core-085: テストのない要求
     for doc in docs {
         for item in &doc.items {
             if let Item::Requirement {
@@ -661,7 +661,7 @@ pub fn discover_and_check(
         }
     }
 
-    // REQ-086: 印の無いテスト
+    // REQ-core-086: 印の無いテスト
     for test in &all_tests {
         if test.marker_ids.is_empty() {
             findings.push(Finding::new(FindingKind::TestWithoutId, test.file_path.clone(), Some(test.line), test.name.clone()));
@@ -678,7 +678,7 @@ fn check_test_markers(
     known_ids: &BTreeSet<String>,
     findings: &mut Vec<Finding>,
 ) {
-    // REQ-054, REQ-118: unresolved_reference の line は印のある行
+    // REQ-core-054, REQ-core-118: unresolved_reference の line は印のある行
     for (id, marker_line) in &test.marker_ids {
         if !id.is_empty() && !known_ids.contains(id) {
             findings.push(Finding::new(FindingKind::UnresolvedReference, file_path.to_string(), Some(*marker_line), id.clone()));
@@ -687,7 +687,7 @@ fn check_test_markers(
 }
 
 
-/// REQ-085: `ID` に結び付く`テスト`があるかの判定。
+/// REQ-core-085: `ID` に結び付く`テスト`があるかの判定。
 /// check の requirement_without_test と status の with_tests はこの同じ判定を使う
 pub struct TestCoverage {
     /// `印`に現れた `ID`
@@ -719,21 +719,21 @@ impl TestCoverage {
     }
 }
 
-/// 具体例の ID から引く、その`シナリオ`の "@about" と場所（REQ-137、REQ-085）
+/// 具体例の ID から引く、その`シナリオ`の "@about" と場所（REQ-core-137、REQ-core-085）
 #[derive(Debug, Clone)]
 pub struct ScenarioCoverage {
     /// "@about" に挙がった ID
     pub about: Vec<String>,
     /// 指摘のパス（IR の置き場からの相対）
     pub path: String,
-    /// TBL-019: タグの行（無ければ "Scenario:" の行）
+    /// TBL-core-019: タグの行（無ければ "Scenario:" の行）
     pub line: usize,
-    /// REQ-137 の適用条件を満たすか（"@about" に、検証が "unit"・"property"・"proof" の要求がある）
+    /// REQ-core-137 の適用条件を満たすか（"@about" に、検証が "unit"・"property"・"proof" の要求がある）
     pub needs_test: bool,
 }
 
 /// 具体例の ID から "@about" と場所を引く表を作る。
-/// 同じ ID の`シナリオ`が2か所以上にあるときは REQ-032 の1つ目（文書はパスのバイト順、
+/// 同じ ID の`シナリオ`が2か所以上にあるときは REQ-core-032 の1つ目（文書はパスのバイト順、
 /// 同じ文書では行の小さい方）を使う。docs も items もその順に並んでいる。
 pub fn collect_scenarios(docs: &[IrDocument], ir_path: &str) -> BTreeMap<String, ScenarioCoverage> {
     // 要求の ID から "- 検証:" の値を引く（行が無ければ None）

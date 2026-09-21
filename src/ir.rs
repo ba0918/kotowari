@@ -65,7 +65,7 @@ pub enum Item {
         sources: Vec<String>,
         verification: Option<String>,
         definitions: Vec<String>,
-        /// TBL-011: "- 確かめ方:" の値。人が確かめる手順の自由文
+        /// TBL-core-011: "- 確かめ方:" の値。人が確かめる手順の自由文
         how_to_verify: Option<String>,
         statements: Vec<(usize, String)>,
         fields_seen: Vec<(usize, String, String)>,
@@ -118,7 +118,7 @@ pub enum Item {
     },
 }
 
-/// REQ-049: "- 検証:" に書ける4つの値
+/// REQ-core-049: "- 検証:" に書ける4つの値
 pub const VERIFICATION_VALUES: [&str; 4] = ["unit", "property", "proof", "review"];
 
 impl Item {
@@ -133,7 +133,7 @@ impl Item {
         }
     }
 
-    /// REQ-098: 検証が review の`要求`で "- 確かめ方:" の行が無いか。
+    /// REQ-core-098: 検証が review の`要求`で "- 確かめ方:" の行が無いか。
     /// 値が空の行は解析の時点で落ちているので、ここでは無い行と同じに見える
     pub fn is_review_without_how_to_verify(&self) -> bool {
         matches!(
@@ -172,7 +172,7 @@ pub struct IrDocument {
     pub raw_content: String,
     /// 解析中に見つかった指摘
     pub parse_findings: Vec<crate::Finding>,
-    /// 用語集の表（ヘッダと区切りの行）を見たか（REQ-117）
+    /// 用語集の表（ヘッダと区切りの行）を見たか（REQ-core-117）
     pub glossary_table_seen: bool,
 }
 
@@ -204,7 +204,7 @@ pub fn split_lines_for_doc_ref<'a>(_filename: &str, content: &'a str) -> Vec<&'a
     split_lines(content)
 }
 
-/// 行を \n で分割し、\r\n は1行として数える（TBL-010）
+/// 行を \n で分割し、\r\n は1行として数える（TBL-core-010）
 pub fn split_lines(content: &str) -> Vec<&str> {
     let mut lines = Vec::new();
     let mut start = 0;
@@ -277,9 +277,9 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
     // 用語集の解析
     let mut in_glossary_table = false;
     let mut glossary_header_seen = false;
-    let mut glossary_table_done = false; // REQ-117: 2つ目の表は用語にしない
+    let mut glossary_table_done = false; // REQ-core-117: 2つ目の表は用語にしない
     let mut glossary_separator_seen = false;
-    // REQ-123/A162: 既に読んだ用語。2つ目以降の行は duplicate_term にして用語にしない
+    // REQ-core-123/A162: 既に読んだ用語。2つ目以降の行は duplicate_term にして用語にしない
     let mut glossary_seen_terms: BTreeSet<String> = BTreeSet::new();
 
     for (idx, line) in lines.iter().enumerate() {
@@ -290,7 +290,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
             if is_closing_fence(line, fence) {
                 // ブロックの終了
                 if in_gherkin_block {
-                    // REQ-113/A155: ブロックの終わりが Scenario: でなければ、直前のタグの行は invalid_gherkin_line
+                    // REQ-core-113/A155: ブロックの終わりが Scenario: でなければ、直前のタグの行は invalid_gherkin_line
                     if gherkin_prev_was_tag {
                         if let Some(tl) = gherkin_tag_line {
                             parse_findings.push(crate::Finding::new(
@@ -342,7 +342,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
             let trimmed = line.trim();
             let is_scenario_line = trimmed.starts_with("Scenario:");
 
-            // REQ-113/A155: タグの行の直後が Scenario: でなければ、そのタグの行自体が invalid_gherkin_line
+            // REQ-core-113/A155: タグの行の直後が Scenario: でなければ、そのタグの行自体が invalid_gherkin_line
             if gherkin_prev_was_tag && !is_scenario_line {
                 if let Some(tl) = gherkin_tag_line {
                     parse_findings.push(crate::Finding::new(
@@ -352,7 +352,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                         gherkin_tag_raw.clone().unwrap_or_default(),
                     ));
                 }
-                // 結び付かないタグの検査（REQ-052: 結び付くかを問わない）をしてから捨てる
+                // 結び付かないタグの検査（REQ-core-052: 結び付くかを問わない）をしてから捨てる
                 if !gherkin_tags.is_empty() {
                     check_gherkin_tags_findings(&gherkin_tags, gherkin_tag_line, &mut parse_findings);
                 }
@@ -372,7 +372,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                 gherkin_tags.clear();
                 gherkin_tag_line = Some(line_num);
                 gherkin_tag_raw = Some(line.to_string());
-                // タグを解析（REQ-052: "@" で始まる語だけを name=value に分ける）
+                // タグを解析（REQ-core-052: "@" で始まる語だけを name=value に分ける）
                 for part in trimmed.split_whitespace() {
                     if part.starts_with('@') {
                         if let Some(eq_pos) = part.find('=') {
@@ -384,7 +384,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                             gherkin_tags.push((part.to_string(), String::new()));
                         }
                     } else {
-                        // REQ-052: "@" で始まらない語はその語自体を detail にする
+                        // REQ-core-052: "@" で始まらない語はその語自体を detail にする
                         gherkin_tags.push((String::new(), part.to_string()));
                     }
                 }
@@ -397,7 +397,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                     items.push(scenario);
                     gherkin_steps.clear();
                 }
-                // REQ-113: このタグは直前の行にあるときだけ、いま始まるシナリオに結び付く。
+                // REQ-core-113: このタグは直前の行にあるときだけ、いま始まるシナリオに結び付く。
                 // 結び付かない（直前がタグの行でない）ときは、前のシナリオで使い終えたタグを持ち越さない。
                 if !gherkin_prev_was_tag {
                     gherkin_tags.clear();
@@ -418,7 +418,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                 if gherkin_scenario_line.is_some() {
                     gherkin_steps.push((line_num, line.to_string()));
                 } else if !gherkin_prev_was_step {
-                    // REQ-113/A155: 直前に Scenario: もステップも無いステップの行は invalid_gherkin_line。
+                    // REQ-core-113/A155: 直前に Scenario: もステップも無いステップの行は invalid_gherkin_line。
                     // 続く2つ目以降のステップは最初のステップの誤りに含め、別の誤りにしない
                     parse_findings.push(crate::Finding::new(
                         crate::FindingKind::InvalidGherkinLine,
@@ -430,12 +430,12 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                 gherkin_prev_was_tag = false;
                 gherkin_prev_was_step = true;
             } else if trimmed.starts_with('#') || trimmed.is_empty() {
-                // REQ-113: 注釈と空行は有効
+                // REQ-core-113: 注釈と空行は有効
                 gherkin_prev_was_tag = false;
                 gherkin_prev_was_step = false;
             } else {
-                // REQ-113: それ以外は invalid_gherkin_line
-                // TBL-008: detail は行の文字そのまま（字下げと末尾の空白を含む）
+                // REQ-core-113: それ以外は invalid_gherkin_line
+                // TBL-core-008: detail は行の文字そのまま（字下げと末尾の空白を含む）
                 parse_findings.push(crate::Finding::new(
                     crate::FindingKind::InvalidGherkinLine,
                     String::new(),
@@ -451,7 +451,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
         // 用語集の表の解析
         if kind == DocKind::Glossary {
             if line.starts_with('|') {
-                // REQ-117: 表が完了していたら2つ目以降の表は無視
+                // REQ-core-117: 表が完了していたら2つ目以降の表は無視
                 if glossary_table_done {
                     continue;
                 }
@@ -484,7 +484,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                 }
                 if in_glossary_table {
                     // 用語行を解析
-                    // REQ-122/A163: 先頭と末尾の "|" を除いて "|" で分けたセルの数で判定する
+                    // REQ-core-122/A163: 先頭と末尾の "|" を除いて "|" で分けたセルの数で判定する
                     let row = line.trim();
                     let inner = row.strip_prefix('|').unwrap_or(row);
                     let inner = inner.strip_suffix('|').unwrap_or(inner);
@@ -503,7 +503,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                                 .collect()
                         };
                         if term.is_empty() {
-                            // REQ-122: 用語のセルが空の行は invalid_glossary_row（用語にしない）
+                            // REQ-core-122: 用語のセルが空の行は invalid_glossary_row（用語にしない）
                             parse_findings.push(crate::Finding::new(
                                 crate::FindingKind::InvalidGlossaryRow,
                                 String::new(),
@@ -511,7 +511,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                                 line.to_string(),
                             ));
                         } else if !glossary_seen_terms.insert(term.clone()) {
-                            // REQ-123/A162: 同じ用語の2つ目以降の行は duplicate_term だけを出し、用語にしない
+                            // REQ-core-123/A162: 同じ用語の2つ目以降の行は duplicate_term だけを出し、用語にしない
                             parse_findings.push(crate::Finding::new(
                                 crate::FindingKind::DuplicateTerm,
                                 String::new(),
@@ -527,7 +527,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
                             });
                         }
                     } else {
-                        // REQ-122/A163: セルが3つ未満の行は invalid_glossary_row（用語にしない）
+                        // REQ-core-122/A163: セルが3つ未満の行は invalid_glossary_row（用語にしない）
                         parse_findings.push(crate::Finding::new(
                             crate::FindingKind::InvalidGlossaryRow,
                             String::new(),
@@ -567,7 +567,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
             continue;
         }
 
-        // REQ-043: #### より深い見出し（####+ で直後が空白）は unknown_heading
+        // REQ-core-043: #### より深い見出し（####+ で直後が空白）は unknown_heading
         if line.starts_with("#### ") || (line.starts_with("####") && {
             // # が4つ以上続き、その直後が空白の行
             let hashes = line.bytes().take_while(|&b| b == b'#').count();
@@ -577,7 +577,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
             if let Some(builder) = current_item.take() {
                 items.push(builder.build());
             }
-            // A150/TBL-008: detail は読んだ行の文字そのまま（"#### " 等の接頭辞を含む）
+            // A150/TBL-core-008: detail は読んだ行の文字そのまま（"#### " 等の接頭辞を含む）
             items.push(Item::UnknownHeading {
                 heading: line.to_string(),
                 line: line_num,
@@ -617,9 +617,9 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
         items.push(builder.build());
     }
 
-    // REQ-112: 閉じないコードブロック
+    // REQ-core-112: 閉じないコードブロック
     if let Some((_fence, opening_line, raw_line)) = current_fence {
-        // REQ-112: 開始から文書の終わりまでを検査の対象から外す
+        // REQ-core-112: 開始から文書の終わりまでを検査の対象から外す
         // 閉じないブロック内で追加された指摘を除去する（unclosed_code_block 自体は残す）
         parse_findings.retain(|f| {
             f.line.map_or(true, |l| l < opening_line)
@@ -652,7 +652,7 @@ pub fn parse_document(filename: &str, content: &str) -> IrDocument {
 }
 
 /// 見出しの下の "- 種類:"、"- 検証:"、"- 定義:"、"- 関係:"、"- 確かめ方:" のうち、
-/// 値が空なら「行が無いもの」として扱う（REQ-098, A157）
+/// 値が空なら「行が無いもの」として扱う（REQ-core-098, A157）
 fn is_blankable_field(name: &str) -> bool {
     matches!(name, "種類" | "検証" | "定義" | "関係" | "確かめ方")
 }
@@ -685,12 +685,12 @@ impl ItemBuilder {
             return;
         }
 
-        // REQ-100/除外: gherkin ブロックの外の "Scenario:" の行は無視する
+        // REQ-core-100/除外: gherkin ブロックの外の "Scenario:" の行は無視する
         if trimmed.starts_with("Scenario:") {
             return;
         }
 
-        // REQ-044: "* ", "+ ", 数字+". ", "-" だけの行は unknown_field
+        // REQ-core-044: "* ", "+ ", 数字+". ", "-" だけの行は unknown_field
         if trimmed.starts_with("* ") || trimmed.starts_with("+ ") || trimmed == "-" {
             // detail は読んだ行そのまま（字下げを含む）
             self.field_lines
@@ -712,7 +712,7 @@ impl ItemBuilder {
             if let Some(colon_pos) = field_content.find(':') {
                 let name = field_content[..colon_pos].trim().to_string();
                 let value = field_content[colon_pos + 1..].trim().to_string();
-                // REQ-098/A157: 値が空の 種類・検証・定義・関係 の行は無いものとして扱う
+                // REQ-core-098/A157: 値が空の 種類・検証・定義・関係 の行は無いものとして扱う
                 if value.is_empty() && is_blankable_field(&name) {
                     return;
                 }
@@ -731,7 +731,7 @@ impl ItemBuilder {
     }
 
     /// field_lines から fields_seen を構築する。
-    /// (行番号, フィールド名, 行の文字そのまま) の三つ組を返す（TBL-008, A150）。
+    /// (行番号, フィールド名, 行の文字そのまま) の三つ組を返す（TBL-core-008, A150）。
     fn build_fields_seen(&self) -> Vec<(usize, String, String)> {
         self.field_lines
             .iter()
@@ -740,7 +740,7 @@ impl ItemBuilder {
     }
 
     fn build(self) -> Item {
-        // A150/TBL-008: unknown_heading の detail は読んだ見出しの行そのまま
+        // A150/TBL-core-008: unknown_heading の detail は読んだ見出しの行そのまま
         let raw_heading_line = self.raw_heading_line.clone();
         // 見出しの形: "ID: 名前"（コロン必須）
         let Some((id, name)) = parse_heading(&self.heading) else {
@@ -910,7 +910,7 @@ fn id_prefix(id: &str) -> Option<IdPrefix> {
     }
 }
 
-/// ID を接頭辞の後ろの「省いてよい名前」と「数字」に分ける。形に合わなければ None（REQ-124）
+/// ID を接頭辞の後ろの「省いてよい名前」と「数字」に分ける。形に合わなければ None（REQ-core-124）
 fn split_id(s: &str) -> Option<(Option<&str>, &str)> {
     let prefix = id_prefix(s)?;
     let rest = match prefix {
@@ -937,7 +937,7 @@ fn split_id(s: &str) -> Option<(Option<&str>, &str)> {
     Some((name, digits))
 }
 
-/// ID の名前の形（小文字の英字で始まり、2文字目からは小文字の英数字と "-"。REQ-124）
+/// ID の名前の形（小文字の英字で始まり、2文字目からは小文字の英数字と "-"。REQ-core-124）
 fn is_valid_id_name(name: &str) -> bool {
     let mut chars = name.chars();
     match chars.next() {
@@ -952,12 +952,12 @@ pub fn is_valid_id(s: &str) -> bool {
     split_id(s).is_some()
 }
 
-/// ID の名前を返す。名前が無ければ None（REQ-124、REQ-167）
+/// ID の名前を返す。名前が無ければ None（REQ-core-124、REQ-core-167）
 pub fn id_name(s: &str) -> Option<&str> {
     split_id(s).and_then(|(name, _)| name)
 }
 
-/// 結び付かなかったタグの行を検査する（REQ-052: 結び付くかを問わない）
+/// 結び付かなかったタグの行を検査する（REQ-core-052: 結び付くかを問わない）
 fn check_gherkin_tags_findings(
     tags: &[(String, String)],
     tag_line: Option<usize>,
@@ -997,7 +997,7 @@ fn build_scenario(
     for (tag_name, tag_value) in tags {
         match tag_name.as_str() {
             "@id" => {
-                // REQ-114: @id の値が EX の ID の形でないときは定義に数えない
+                // REQ-core-114: @id の値が EX の ID の形でないときは定義に数えない
                 if is_valid_id(tag_value) && id_prefix(tag_value) == Some(IdPrefix::Ex) {
                     id = Some(tag_value.clone());
                 }
@@ -1043,33 +1043,33 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
     for doc in docs {
         let path = crate::join_display_path(&config.ir, &doc.relative_path);
 
-        // REQ-034: 題名が無い
+        // REQ-core-034: 題名が無い
         if doc.title.is_none() {
             findings.push(Finding::new(FindingKind::MissingTitle, path.clone(), None, doc.filename.clone()));
         }
 
-        // REQ-035: 題名が複数
+        // REQ-core-035: 題名が複数
         for (_, title_text) in &doc.extra_titles {
             findings.push(Finding::new(FindingKind::MultipleTitles, path.clone(), None, title_text.clone()));
         }
 
-        // REQ-036: 範囲の行が無い（話題ごとの文書のみ）
+        // REQ-core-036: 範囲の行が無い（話題ごとの文書のみ）
         if doc.kind == DocKind::Topic && doc.scope_lines.is_empty() {
             findings.push(Finding::new(FindingKind::MissingScope, path.clone(), None, doc.filename.clone()));
         }
 
-        // REQ-117: 用語集にヘッダと区切りの行の形の表がない → glossary_invalid（A148: 行が0でも表はある）
+        // REQ-core-117: 用語集にヘッダと区切りの行の形の表がない → glossary_invalid（A148: 行が0でも表はある）
         if doc.kind == DocKind::Glossary && !doc.glossary_table_seen {
             findings.push(Finding::new(FindingKind::GlossaryInvalid, path.clone(), None, doc.filename.clone()));
         }
 
-        // REQ-038: 行数の上限
+        // REQ-core-038: 行数の上限
         let limit_lines = config.limits.lines.get() as usize;
         if doc.line_count > limit_lines {
             findings.push(Finding::new(FindingKind::TooManyLines, path.clone(), None, doc.line_count.to_string()));
         }
 
-        // REQ-039: 要求の数の上限（用語集と問題の記録を除く）
+        // REQ-core-039: 要求の数の上限（用語集と問題の記録を除く）
         if doc.kind == DocKind::Topic {
             let req_count = doc
                 .items
@@ -1093,7 +1093,7 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
             }
             check_item(item, &path, doc.kind, &mut findings);
 
-            // ID を収集（形に合う ID だけ。REQ-114）
+            // ID を収集（形に合う ID だけ。REQ-core-114）
             if let Some(id) = item.id() {
                 if is_valid_id(id) {
                     all_ids
@@ -1101,7 +1101,7 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
                         .or_default()
                         .push((path.clone(), item.item_line()));
 
-                    // REQ-167: ID の名前は文書の置き場の第1階層と一致する。
+                    // REQ-core-167: ID の名前は文書の置き場の第1階層と一致する。
                     // 第1階層を持たない文書（IR の置き場の直下）では指す先が無いので不一致になる
                     if let Some(name) = id_name(id) {
                         let domain = doc.directory.split('/').next().unwrap_or("");
@@ -1131,7 +1131,7 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
         }
     }
 
-    // REQ-032: ID の重複
+    // REQ-core-032: ID の重複
     for (id, locations) in &all_ids {
         // 2つ目以降の場所に指摘
         for (path, line) in locations.iter().skip(1) {
@@ -1139,7 +1139,7 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
         }
     }
 
-    // 参照の解決チェック（REQ-054）
+    // 参照の解決チェック（REQ-core-054）
     let known_ids = crate::collect_known_ids(docs);
     for doc in docs {
         let path = crate::join_display_path(&config.ir, &doc.relative_path);
@@ -1179,7 +1179,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             let known_fields = ["種類", "出典", "検証", "定義", "確かめ方"];
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
-            // REQ-098: 必須の行
+            // REQ-core-098: 必須の行
             if kind.is_none() {
                 findings.push(Finding::new(FindingKind::MissingField, path.to_string(), Some(*line), "種類".to_string()));
             }
@@ -1190,19 +1190,19 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                 findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.clone()));
             }
 
-            // REQ-048: 検証の行が無い
+            // REQ-core-048: 検証の行が無い
             if verification.is_none() {
                 findings.push(Finding::new(FindingKind::VerificationMissing, path.to_string(), Some(*line), id.clone()));
             }
 
-            // REQ-049: 検証の値の誤り
+            // REQ-core-049: 検証の値の誤り
             if let Some(v) = verification {
                 if !VERIFICATION_VALUES.contains(&v.as_str()) {
                     findings.push(Finding::new(FindingKind::VerificationInvalid, path.to_string(), Some(*line), v.clone()));
                 }
             }
 
-            // REQ-050: 種類の値の誤り
+            // REQ-core-050: 種類の値の誤り
             if let Some(k) = kind {
                 let valid_kinds = [
                     "event_driven",
@@ -1217,13 +1217,13 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                 }
             }
 
-            // REQ-047: 文が無い（algorithm 以外。種類の行が無い要求を含む）
+            // REQ-core-047: 文が無い（algorithm 以外。種類の行が無い要求を含む）
             let is_algorithm = kind.as_deref() == Some("algorithm");
             if !is_algorithm && statements.is_empty() {
                 findings.push(Finding::new(FindingKind::MissingStatement, path.to_string(), Some(*line), id.clone()));
             }
 
-            // REQ-051: algorithm に決定表か性質を指す定義がない
+            // REQ-core-051: algorithm に決定表か性質を指す定義がない
             if let Some(k) = kind {
                 let has_tbl_or_prop_def = definitions.iter().any(|d| {
                     matches!(id_prefix(d), Some(IdPrefix::Tbl) | Some(IdPrefix::Prop))
@@ -1245,12 +1245,12 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             let known_fields = ["出典"];
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
-            // REQ-098/REQ-059: 出典が必須
+            // REQ-core-098/REQ-core-059: 出典が必須
             if sources.is_empty() {
                 findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.clone()));
             }
 
-            // REQ-099: 表が無い
+            // REQ-core-099: 表が無い
             if !has_table {
                 findings.push(Finding::new(FindingKind::MissingTable, path.to_string(), Some(*line), id.clone()));
             }
@@ -1267,12 +1267,12 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             let known_fields = ["出典"];
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
-            // REQ-098/REQ-059: 出典が必須
+            // REQ-core-098/REQ-core-059: 出典が必須
             if sources.is_empty() {
                 findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.clone()));
             }
 
-            // REQ-047: 性質には文が必要
+            // REQ-core-047: 性質には文が必要
             if statements.is_empty() {
                 findings.push(Finding::new(FindingKind::MissingStatement, path.to_string(), Some(*line), id.clone()));
             }
@@ -1287,10 +1287,10 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             scenario_text,
             ..
         } => {
-            // TBL-019: タグの行（無ければ Scenario: の行）
+            // TBL-core-019: タグの行（無ければ Scenario: の行）
             let tag_or_scenario_line = tag_line.unwrap_or(*line);
 
-            // REQ-052: 知らないタグ（結び付くかを問わない）
+            // REQ-core-052: 知らないタグ（結び付くかを問わない）
             for (tag_name, tag_value) in tags {
                 if tag_name.is_empty() {
                     // "@" で始まらない語
@@ -1300,7 +1300,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                 }
             }
 
-            // REQ-114: @id の値が EX の ID の形でないとき
+            // REQ-core-114: @id の値が EX の ID の形でないとき
             let has_malformed_id = tags.iter().any(|(n, v)| {
                 n == "@id" && !v.is_empty() && !(is_valid_id(v) && id_prefix(v) == Some(IdPrefix::Ex))
             });
@@ -1312,7 +1312,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                 findings.push(Finding::new(FindingKind::InvalidId, path.to_string(), Some(tag_or_scenario_line), malformed_value));
                 // missing_tag は出さない、missing_source の detail は Scenario: の行の文字
             } else {
-                // REQ-053: 無いタグ
+                // REQ-core-053: 無いタグ
                 if !tags.iter().any(|(n, v)| n == "@id" && !v.is_empty()) {
                     findings.push(Finding::new(FindingKind::MissingTag, path.to_string(), Some(tag_or_scenario_line), "@id".to_string()));
                 }
@@ -1321,9 +1321,9 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                 findings.push(Finding::new(FindingKind::MissingTag, path.to_string(), Some(tag_or_scenario_line), "@about".to_string()));
             }
 
-            // REQ-059: シナリオの出典
+            // REQ-core-059: シナリオの出典
             if sources.is_empty() && !tags.iter().any(|(n, v)| n == "@source" && !v.is_empty()) {
-                // REQ-114: @id が形に合わないときは Scenario: の行の文字を使う
+                // REQ-core-114: @id が形に合わないときは Scenario: の行の文字を使う
                 let detail = if has_malformed_id {
                     scenario_text.clone()
                 } else {
@@ -1346,7 +1346,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             let known_fields = ["種類", "関係", "出典"];
             check_fields(fields_seen, &known_fields, path, *line, findings);
 
-            // REQ-098: 必須の行
+            // REQ-core-098: 必須の行
             if kind.is_none() {
                 findings.push(Finding::new(FindingKind::MissingField, path.to_string(), Some(*line), "種類".to_string()));
             }
@@ -1357,7 +1357,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
                 findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.clone()));
             }
 
-            // REQ-050: 種類の値の誤り
+            // REQ-core-050: 種類の値の誤り
             if let Some(k) = kind {
                 if !["contradiction", "gap", "ambiguity"].contains(&k.as_str()) {
                     findings.push(Finding::new(FindingKind::UnknownKind, path.to_string(), Some(*line), k.clone()));
@@ -1371,7 +1371,7 @@ fn check_item(item: &Item, path: &str, _doc_kind: DocKind, findings: &mut Vec<Fi
             line,
             ..
         } => {
-            // REQ-059/REQ-060: 用語の出典が空
+            // REQ-core-059/REQ-core-060: 用語の出典が空
             if sources.is_empty() {
                 findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), term.clone()));
             }
@@ -1401,13 +1401,13 @@ fn check_fields(
         }
 
         if !known_fields.contains(&name.as_str()) {
-            // TBL-008: unknown_field の detail は行の文字
-            // REQ-045: 知らない行の重複は unknown_field だけ
+            // TBL-core-008: unknown_field の detail は行の文字
+            // REQ-core-045: 知らない行の重複は unknown_field だけ
             findings.push(Finding::new(FindingKind::UnknownField, path.to_string(), Some(*ln), raw.clone()));
             continue;
         }
 
-        // REQ-045: 同じ知っている行の重複（TBL-008: duplicate_field の detail は行の名前）
+        // REQ-core-045: 同じ知っている行の重複（TBL-core-008: duplicate_field の detail は行の名前）
         if let Some(_prev_line) = seen_names.get(name) {
             findings.push(Finding::new(FindingKind::DuplicateField, path.to_string(), Some(*ln), name.clone()));
         } else {
@@ -1416,7 +1416,7 @@ fn check_fields(
     }
 }
 
-/// 項目が `ID` を指している場所（TBL-027 の "via"）
+/// 項目が `ID` を指している場所（TBL-core-027 の "via"）
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Via {
     /// "- 定義:" の行
@@ -1447,15 +1447,15 @@ pub struct ItemReference<'a> {
     pub id: &'a str,
     /// 指している場所
     pub via: Via,
-    /// TBL-019: 指摘の行（定義・関係・文ならその行、"@about" ならタグの行）
+    /// TBL-core-019: 指摘の行（定義・関係・文ならその行、"@about" ならタグの行）
     pub finding_line: usize,
 }
 
-/// REQ-054: 項目が指している `ID` をすべて拾う。
+/// REQ-core-054: 項目が指している `ID` をすべて拾う。
 /// check の unresolved_reference と query の逆引きはどちらもここを読む。
 /// 文とステップの中は `ID` の形に合うものだけを拾い、地の文の `ID` は拾わない
 pub fn item_references<'a>(item: &'a Item) -> Vec<ItemReference<'a>> {
-    // TBL-019: "- 定義:" か "- 関係:" の行（行が無ければ見出しの行）
+    // TBL-core-019: "- 定義:" か "- 関係:" の行（行が無ければ見出しの行）
     let field_line = |fields_seen: &[(usize, String, String)], name: &str, line: usize| {
         fields_seen.iter()
             .find(|(_, n, _)| n == name)
@@ -1497,7 +1497,7 @@ pub fn item_references<'a>(item: &'a Item) -> Vec<ItemReference<'a>> {
     }
 }
 
-/// 参照の解決チェック（REQ-054）。
+/// 参照の解決チェック（REQ-core-054）。
 /// `ID` の形でない "- 定義:" の値は`ID`の一覧に入らないので、ここで誤りになる
 fn check_references(
     items: &[Item],
@@ -1588,9 +1588,9 @@ pub fn extract_backtick_contents(text: &str) -> Vec<&str> {
     result
 }
 
-/// 文やステップの中の、バッククォートで囲んだ `ID` を拾う（REQ-054、REQ-116）
+/// 文やステップの中の、バッククォートで囲んだ `ID` を拾う（REQ-core-054、REQ-core-116）
 fn backtick_ids(text: &str) -> Vec<&str> {
-    // REQ-054/REQ-116: 二重引用符の外だけを見る
+    // REQ-core-054/REQ-core-116: 二重引用符の外だけを見る
     if crate::has_odd_backticks_outside_quotes(text) {
         return Vec::new();
     }

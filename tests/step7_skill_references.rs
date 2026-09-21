@@ -1,5 +1,5 @@
 //! スキル kotowari の references に写した本体の値が、本体のコードと一致することの検査
-//! （REQ-125、REQ-126、REQ-127）。突き合わせる相手は本体のコードが持つ値で、IR の表ではない。
+//! （REQ-core-125、REQ-core-126、REQ-core-127）。突き合わせる相手は本体のコードが持つ値で、IR の表ではない。
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -75,9 +75,9 @@ fn only_yaml_block(markdown: &str) -> String {
     blocks.pop().unwrap()
 }
 
-// --- REQ-125: 指摘の種類の一致 ---
+// --- REQ-core-125: 指摘の種類の一致 ---
 
-// @kotowari[REQ-125]
+// @kotowari[REQ-core-125]
 #[test]
 fn req_125_findings_reference_kinds_match_the_code() {
     let in_reference = first_column_of_table(&read_reference("findings.md"), "種類");
@@ -91,13 +91,13 @@ fn req_125_findings_reference_kinds_match_the_code() {
     );
 }
 
-// --- REQ-126: 既定の一致 ---
+// --- REQ-core-126: 既定の一致 ---
 
-// @kotowari[REQ-126]
+// @kotowari[REQ-core-126]
 #[test]
 fn req_126_config_reference_setup_yaml_parses_to_the_defaults() {
     let yaml = only_yaml_block(&read_reference("config.md"));
-    // 不在の鍵は既定で埋まるので、9個の鍵の経路が YAML に書かれていることを先に見る（TBL-004）
+    // 不在の鍵は既定で埋まるので、9個の鍵の経路が YAML に書かれていることを先に見る（TBL-core-004）
     let tree: serde_json::Value = serde_saphyr::from_str(&yaml)
         .unwrap_or_else(|e| panic!("the setup YAML should be readable as a tree: {e}"));
     for path in [
@@ -127,9 +127,9 @@ fn req_126_config_reference_setup_yaml_parses_to_the_defaults() {
     );
 }
 
-// --- REQ-127: 停止の文言の一致 ---
+// --- REQ-core-127: 停止の文言の一致 ---
 
-// @kotowari[REQ-127]
+// @kotowari[REQ-core-127]
 #[test]
 fn req_127_findings_reference_stop_wordings_match_the_code() {
     let in_reference = first_column_of_table(&read_reference("findings.md"), "文言");

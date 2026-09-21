@@ -1,9 +1,9 @@
-//! 判断の記録の読み取り（節・番号の行・補足の行・リンクの構造。REQ-133、REQ-135、REQ-136、TBL-022、TBL-023 の定数と走査）と、出典の検査（REQ-057〜REQ-061, REQ-106, TBL-012）
+//! 判断の記録の読み取り（節・番号の行・補足の行・リンクの構造。REQ-core-133、REQ-core-135、REQ-core-136、TBL-core-022、TBL-core-023 の定数と走査）と、出典の検査（REQ-core-057〜REQ-core-061, REQ-core-106, TBL-core-012）
 
 use crate::{Finding, FindingKind};
 use std::path::Path;
 
-/// `判断の記録` の `補足の行` の値にあるリンク（"[文字](href)"。TBL-023）
+/// `判断の記録` の `補足の行` の値にあるリンク（"[文字](href)"。TBL-core-023）
 #[derive(Debug, Clone)]
 pub struct RecordLink {
     /// "(" と ")" の間の href
@@ -34,7 +34,7 @@ pub struct NumberedLine {
     pub fields: Vec<FieldLine>,
 }
 
-/// TBL-022 の表にある節
+/// TBL-core-022 の表にある節
 #[derive(Debug, Clone)]
 pub struct RecordSection {
     /// "## " の後の見出し
@@ -48,20 +48,20 @@ pub struct RecordSection {
 pub struct RecordsFile {
     /// ファイルのパス（decisions.records からの相対）
     pub rel_path: String,
-    /// TBL-022 の表にある節（判断の記録でないファイルでは空）
+    /// TBL-core-022 の表にある節（判断の記録でないファイルでは空）
     pub sections: Vec<RecordSection>,
     /// コードブロックの外の ## 見出し（前後の空白を除いた文字列。A47）
     pub headings: Vec<String>,
     /// 判断の記録かどうか（決定の節の見出しをコードブロックの外に持つか）
     pub is_records: bool,
-    /// "## Context" の見出しをコードブロックの外に持つか（REQ-129）
+    /// "## Context" の見出しをコードブロックの外に持つか（REQ-core-129）
     pub has_context: bool,
 }
 
 /// 決定の節の名前（用語集の `決定の節`）
 pub const DECISION_SECTIONS: [&str; 4] = ["Agreements", "Prohibitions", "Delegated", "Rejected"];
 
-/// TBL-022: 節と、その節の `番号の行` に必須の `補足の行` の名前
+/// TBL-core-022: 節と、その節の `番号の行` に必須の `補足の行` の名前
 pub const REQUIRED_FIELDS: [(&str, &str); 6] = [
     ("Agreements", "why"),
     ("Prohibitions", "why"),
@@ -71,7 +71,7 @@ pub const REQUIRED_FIELDS: [(&str, &str); 6] = [
     ("Superseded", "superseded_by"),
 ];
 
-/// TBL-022 が認める `補足の行` の名前
+/// TBL-core-022 が認める `補足の行` の名前
 pub const KNOWN_FIELD_NAMES: [&str; 6] = [
     "why",
     "rejected",
@@ -81,7 +81,7 @@ pub const KNOWN_FIELD_NAMES: [&str; 6] = [
     "related",
 ];
 
-/// TBL-022 の表にある節か（節の一覧はすべての判断の記録で使う。REQ-135）
+/// TBL-core-022 の表にある節か（節の一覧はすべての判断の記録で使う。REQ-core-135）
 pub fn required_field_of(heading: &str) -> Option<&'static str> {
     REQUIRED_FIELDS
         .iter()
@@ -90,7 +90,7 @@ pub fn required_field_of(heading: &str) -> Option<&'static str> {
 }
 
 impl RecordsFile {
-    /// 決定の節にその番号の `番号の行` があるか（TBL-012 の順2）
+    /// 決定の節にその番号の `番号の行` があるか（TBL-core-012 の順2）
     pub fn has_decision_number(&self, number: &str) -> bool {
         self.sections
             .iter()
@@ -98,7 +98,7 @@ impl RecordsFile {
             .any(|s| s.numbered_lines.iter().any(|n| n.number == number))
     }
 
-    /// 決定の節か Superseded の節にその番号の `番号の行` があるか（TBL-023 の順5）
+    /// 決定の節か Superseded の節にその番号の `番号の行` があるか（TBL-core-023 の順5）
     pub fn has_revision_target(&self, number: &str) -> bool {
         self.sections
             .iter()
@@ -137,7 +137,7 @@ fn number_of_line(trimmed_rest: &str) -> Option<&str> {
     }
 }
 
-/// `補足の行` の名前と値を取り出す（REQ-133。行頭の空白は除いてある前提）
+/// `補足の行` の名前と値を取り出す（REQ-core-133。行頭の空白は除いてある前提）
 fn field_of_line(trimmed_rest: &str) -> Option<(&str, &str)> {
     let colon = trimmed_rest.find(':')?;
     let name = &trimmed_rest[..colon];
@@ -147,7 +147,7 @@ fn field_of_line(trimmed_rest: &str) -> Option<(&str, &str)> {
     Some((name, trimmed_rest[colon + 1..].trim()))
 }
 
-/// 値から "[文字](href)" の形のリンクを順に取り出す（TBL-023、A43、A44）
+/// 値から "[文字](href)" の形のリンクを順に取り出す（TBL-core-023、A43、A44）
 fn parse_links(value: &str) -> Vec<RecordLink> {
     let mut links = Vec::new();
     let bytes = value.as_bytes();
@@ -179,7 +179,7 @@ fn parse_links(value: &str) -> Vec<RecordLink> {
     links
 }
 
-/// 判断の記録のファイルを読んで構造にする（REQ-136。記録の行を読むのはこの関数だけ）
+/// 判断の記録のファイルを読んで構造にする（REQ-core-136。記録の行を読むのはこの関数だけ）
 pub fn parse_records_file(rel_path: &str, content: &str) -> RecordsFile {
     let mut headings = Vec::new();
     let mut sections: Vec<RecordSection> = Vec::new();
@@ -224,7 +224,7 @@ pub fn parse_records_file(rel_path: &str, content: &str) -> RecordsFile {
             continue;
         }
 
-        // TBL-022 の表に無い節と、最初の "## " の見出しより前の行は読まない（REQ-135）
+        // TBL-core-022 の表に無い節と、最初の "## " の見出しより前の行は読まない（REQ-core-135）
         let Some(section) = current else { continue };
         let Some(rest) = trimmed.strip_prefix("- ") else {
             continue;
@@ -240,7 +240,7 @@ pub fn parse_records_file(rel_path: &str, content: &str) -> RecordsFile {
             continue;
         }
 
-        // 節の最初の番号の行より前の補足の行の形の行は読まない（REQ-135）
+        // 節の最初の番号の行より前の補足の行の形の行は読まない（REQ-core-135）
         let Some(numbered) = sections[section].numbered_lines.last_mut() else {
             continue;
         };
@@ -344,7 +344,7 @@ impl SourceContext {
         let path_normalized = crate::normalize_path(raw_path);
         let path = path_normalized.as_str();
 
-        // パスが records の中か adr の中かを判定（置き場が空 = 基準の直下なら何でも中。REQ-110）
+        // パスが records の中か adr の中かを判定（置き場が空 = 基準の直下なら何でも中。REQ-core-110）
         // 両方に当たるときは長い置き場を採る（"." の置き場の下に別の置き場があるとき）
         let in_records_raw = is_under_place(path, &self.records_path);
         let in_adr_raw = is_under_place(path, &self.adr_path);
@@ -585,7 +585,7 @@ pub fn check_sources(
             }
             let (sources, source_line) = match item {
                 crate::ir::Item::Requirement { sources, fields_seen, line, .. } => {
-                    // REQ-115: 出典の行を探す
+                    // REQ-core-115: 出典の行を探す
                     let sl = fields_seen.iter()
                         .find(|(_, n, _)| n == "出典")
                         .map(|(ln, _, _)| *ln)

@@ -48,11 +48,11 @@ Position: 承認済み（2026-09-20）。3ラウンド（A1〜A16）で木は尽
   - why: 指摘は check の仕事。list は読み取りで、誤りの有無で出力を止める理由が無い
   - decided_by: 利用者（推奨を採用）
 
-- A10 IR の置き場は新しい話題の文書 `docs/ir/list.md`（コマンドの振る舞い、項目の形、text の形）。`cli.md` の REQ-001「コマンドは2つ」を3つに改訂する。`output.md` の TBL-005 は check の形なので触らない
+- A10 IR の置き場は新しい話題の文書 `docs/ir/list.md`（コマンドの振る舞い、項目の形、text の形）。`cli.md` の REQ-core-001「コマンドは2つ」を3つに改訂する。`output.md` の TBL-core-005 は check の形なので触らない
   - why: list は check と責務が別。cli.md はコマンドの数を列挙で決めているので改訂が要る
   - decided_by: 利用者（推奨を採用）
 
-- A11 `- 確かめ方:` の行の有無を check では検査しない。置けるのは要求だけ、と形の契約（TBL-011）に書くに留める
+- A11 `- 確かめ方:` の行の有無を check では検査しない。置けるのは要求だけ、と形の契約（TBL-core-011）に書くに留める
   - why: 「review の要求に確かめ方が必須か」は status の「何が揃えば complete か」と同じ問いなので、status の壁打ちで一緒に決める
   - decided_by: 利用者（推奨を採用）
   - superseded_by: [A10（query-status）](./2026-09-20-query-status.md#A10)
@@ -78,11 +78,11 @@ Position: 承認済み（2026-09-20）。3ラウンド（A1〜A16）で木は尽
   - decided_by: 利用者（推奨を採用）
   - superseded_by: [A17](#A17)
 
-- A17 A16 を改め、`- 確かめ方:` の行の移し替えと trace.md の削除は、実装の cycle の最後（check がその行を知っている行として読めるようになった後）に行う。承認の差分に入れるのは形の契約（TBL-011 に行を足す）と list.md と cli.md の改訂まで
-  - why: 今の check は TBL-011 に無い行を unknown_field の誤りにする（[REQ-044](../../ir/ir-items.md#REQ-044)）。行を先に足すと承認の時点で IR の誤りが 18 件出て、承認の手順（IR の誤り 0）を満たせない。IR を書く段で分かった順序の制約
+- A17 A16 を改め、`- 確かめ方:` の行の移し替えと trace.md の削除は、実装の cycle の最後（check がその行を知っている行として読めるようになった後）に行う。承認の差分に入れるのは形の契約（TBL-core-011 に行を足す）と list.md と cli.md の改訂まで
+  - why: 今の check は TBL-core-011 に無い行を unknown_field の誤りにする（[REQ-core-044](../../ir/ir-items.md#REQ-core-044)）。行を先に足すと承認の時点で IR の誤りが 18 件出て、承認の手順（IR の誤り 0）を満たせない。IR を書く段で分かった順序の制約
   - decided_by: 主セッション（事実の制約。利用者に報告済み）
 
-- A18 `TBL-026` の鍵の細部: `kind` の値は英語（requirement、table、property、scenario、flag）。`type` は要求と問題の記録が持つ（どちらも "- 種類:" を持つ）。`verification` と `how_to_verify` は無ければ null、`definition` は無ければ空の並び。`examples` は要求・決定表・性質が持つ（"@about" の正引き。A14 の「逆向きの鍵を付けない」は `definition` の逆引きの話）。シナリオの `name` は "Scenario:" の後の文字、`line` はその行。`path` と tests の `path` は基準のディレクトリからの相対
+- A18 `TBL-core-026` の鍵の細部: `kind` の値は英語（requirement、table、property、scenario、flag）。`type` は要求と問題の記録が持つ（どちらも "- 種類:" を持つ）。`verification` と `how_to_verify` は無ければ null、`definition` は無ければ空の並び。`examples` は要求・決定表・性質が持つ（"@about" の正引き。A14 の「逆向きの鍵を付けない」は `definition` の逆引きの話）。シナリオの `name` は "Scenario:" の後の文字、`line` はその行。`path` と tests の `path` は基準のディレクトリからの相対
   - why: A6 の鍵の一覧を IR に書ける精度にする。英語の鍵と値は check の JSON の鍵（findings、counts、tests）と揃える
   - decided_by: 利用者（推奨を採用）
 
@@ -90,19 +90,19 @@ Position: 承認済み（2026-09-20）。3ラウンド（A1〜A16）で木は尽
   - why: A7 の「最低限の形」を IR に書ける精度にする。見やすさの検討は別途
   - decided_by: 利用者（推奨を採用。見づらければ変更要求を出す）
 
-- A20 list は check と同じ4つのオプション（"--format"、"--config"、"--help"、"--version"）だけを受ける。停止は check と同じ理由と文言。コマンド無しの停止の文言は "expected command: check, list or mutants" に改め、TBL-020（cli-environment.md）も同じ文言にする。REQ-002 の「どちらのコマンドでも」は「どのコマンドでも」に直す
+- A20 list は check と同じ4つのオプション（"--format"、"--config"、"--help"、"--version"）だけを受ける。停止は check と同じ理由と文言。コマンド無しの停止の文言は "expected command: check, list or mutants" に改め、TBL-core-020（cli-environment.md）も同じ文言にする。REQ-core-002 の「どちらのコマンドでも」は「どのコマンドでも」に直す
   - why: list は check と同じ読み取りなので、受けるものと止まり方も同じにする。文言はコマンドの列挙なので3つに合わせる
   - decided_by: 利用者（推奨を採用）
 
 - A21 用語集の「項目」はシナリオを含まないままにし、list.md の側を「項目とシナリオ」と書き分ける。JSON の並びの1件を指すときは "items" の1件と書く
-  - why: [sources.md の REQ-115](../../ir/sources.md#REQ-115) など、既存の要求が「項目なら出典の行、シナリオならタグの行」と2語を使い分けている。用語集を広げるとそれらの文の意味が変わる
+  - why: [sources.md の REQ-core-115](../../ir/sources.md#REQ-core-115) など、既存の要求が「項目なら出典の行、シナリオならタグの行」と2語を使い分けている。用語集を広げるとそれらの文の意味が変わる
   - decided_by: 利用者（「適した方に合わせて」。主セッションが影響の少ない側を選んだ）
 
 - A22 シナリオの "name" は "Scenario:" の後の文字から前後の半角空白とタブを除いたもの
   - why: 実装が持つ "Scenario:" の行は字下げを含む生の行で、A18 の「後の文字」だけでは空白の扱いが決まらない。前後の半角空白とタブを除くのは [A52（records）](./records.md#A52) と同じ切り方
   - decided_by: 利用者（推奨を採用）
 
-- A23 値が空の "- 確かめ方:" の行は、行が無いものとして扱う（REQ-098 の列挙に足す）。list の `how_to_verify` は null
+- A23 値が空の "- 確かめ方:" の行は、行が無いものとして扱う（REQ-core-098 の列挙に足す）。list の `how_to_verify` は null
   - why: "- 種類:"、"- 検証:"、"- 定義:"、"- 関係:" と同じ扱い（[A157（records）](./records.md#A157)）。空の文字を確かめ方として出す意味が無い
   - decided_by: 利用者（推奨を採用）
 
@@ -129,6 +129,6 @@ Position: 承認済み（2026-09-20）。3ラウンド（A1〜A16）で木は尽
 
 ## Revisions
 
-- A20 は cli.md の REQ-004 の列挙（"check" でも "mutants" でもない1つ目の位置引数、"check" に付けた "--tool"、"check" の後の位置引数）を直し忘れていた。REQ-004 に "list" を足した（実装計画を書く段で判明。2026-09-20）
+- A20 は cli.md の REQ-core-004 の列挙（"check" でも "mutants" でもない1つ目の位置引数、"check" に付けた "--tool"、"check" の後の位置引数）を直し忘れていた。REQ-core-004 に "list" を足した（実装計画を書く段で判明。2026-09-20）
 - A5、A16、A17 の「18 件」は数え違いで、`docs/trace.md` の表の行は 16。計画は 16 で書く（2026-09-20）
-- A5 の「移す」は文字をそのまま移すことで、移した後に古くなった確かめ方の文（REQ-105 のモジュールの列挙、REQ-109 の関数名）は cycle の終端で今のコードに合わせて直した（2026-09-20）
+- A5 の「移す」は文字をそのまま移すことで、移した後に古くなった確かめ方の文（REQ-core-105 のモジュールの列挙、REQ-core-109 の関数名）は cycle の終端で今のコードに合わせて直した（2026-09-20）

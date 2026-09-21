@@ -1,10 +1,10 @@
-//! `等価の一覧`の読み取り（REQ-143、REQ-148）。一覧のファイルの形を知るのはこのモジュールだけ。
+//! `等価の一覧`の読み取り（REQ-core-143、REQ-core-148）。一覧のファイルの形を知るのはこのモジュールだけ。
 
 use crate::mutants::{normalize_source_path, trim_spaces_and_tabs};
 use crate::{Finding, FindingKind, StopReason};
 use serde_json::Value;
 
-/// 1件が持つ鍵。この5つちょうどでなければ形の誤り（REQ-143）
+/// 1件が持つ鍵。この5つちょうどでなければ形の誤り（REQ-core-143）
 const KEYS: [&str; 5] = ["file", "change", "text", "class", "why"];
 
 /// 一覧に書ける分類（A17: 「等価」だけ）
@@ -13,7 +13,7 @@ const EQUIVALENT: &str = "equivalent";
 /// 形の正しい`等価の一覧`の1件
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Equivalent {
-    /// REQ-110 の正規化を掛けた "file"（比べるときに使う）
+    /// REQ-core-110 の正規化を掛けた "file"（比べるときに使う）
     pub file: String,
     /// 変更の説明
     pub change: String,
@@ -33,9 +33,9 @@ pub struct EquivalentList {
 }
 
 /// 一覧の中身を読む。`display` は一覧のファイルの`基準のディレクトリ`からの相対パス。
-/// YAML として読めないか最上位が並びでないときは設定の誤りで`停止`する（REQ-148）。
+/// YAML として読めないか最上位が並びでないときは設定の誤りで`停止`する（REQ-core-148）。
 pub fn read_list(text: &str, display: &str) -> Result<EquivalentList, StopReason> {
-    // REQ-148: 空（0バイトか注釈だけ）の一覧は0件
+    // REQ-core-148: 空（0バイトか注釈だけ）の一覧は0件
     if crate::config::is_blank_yaml(text) {
         return Ok(EquivalentList {
             entries: Vec::new(),
@@ -54,7 +54,7 @@ pub fn read_list(text: &str, display: &str) -> Result<EquivalentList, StopReason
     for item in items {
         match read_entry(item) {
             Ok(entry) => entries.push(entry),
-            // REQ-143: 形の誤った1件は1件ごとに誤りを出し、どの変異の結果とも一致させない
+            // REQ-core-143: 形の誤った1件は1件ごとに誤りを出し、どの変異の結果とも一致させない
             Err(detail) => findings.push(Finding::new(
                 FindingKind::EquivalentInvalid,
                 display.to_string(),
@@ -66,7 +66,7 @@ pub fn read_list(text: &str, display: &str) -> Result<EquivalentList, StopReason
     Ok(EquivalentList { entries, findings })
 }
 
-/// 1件を読む。形が正しくなければ equivalent_invalid の detail を返す（REQ-143）
+/// 1件を読む。形が正しくなければ equivalent_invalid の detail を返す（REQ-core-143）
 fn read_entry(item: &Value) -> Result<Equivalent, String> {
     let detail = written_detail(item);
 
@@ -110,7 +110,7 @@ fn read_entry(item: &Value) -> Result<Equivalent, String> {
     })
 }
 
-/// A57、REQ-143: 書かれたままの "file" と "change" を ": " でつなぐ。
+/// A57、REQ-core-143: 書かれたままの "file" と "change" を ": " でつなぐ。
 /// 無いか文字列でない方は空の文字列にする
 fn written_detail(item: &Value) -> String {
     let written = |key: &str| item.get(key).and_then(Value::as_str).unwrap_or("");

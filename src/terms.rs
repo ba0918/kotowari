@@ -1,4 +1,4 @@
-//! 用語、曖昧語、文書名の参照の検査（REQ-063〜REQ-070, REQ-104）
+//! 用語、曖昧語、文書名の参照の検査（REQ-core-063〜REQ-core-070, REQ-core-104）
 
 use crate::ir::{is_valid_id, IrDocument, Item};
 use crate::{Finding, FindingKind};
@@ -31,7 +31,7 @@ pub fn collect_glossary_terms(docs: &[IrDocument], directory: &str) -> Option<BT
     }
 }
 
-/// 対象の行からバッククォートで囲んだ語を検査する（REQ-064, REQ-065, REQ-116）
+/// 対象の行からバッククォートで囲んだ語を検査する（REQ-core-064, REQ-core-065, REQ-core-116）
 pub fn check_unknown_terms(
     text: &str,
     line: usize,
@@ -40,16 +40,16 @@ pub fn check_unknown_terms(
     path: &str,
     findings: &mut Vec<Finding>,
 ) {
-    // REQ-116: バッククォートが奇数の行は unclosed_backtick
+    // REQ-core-116: バッククォートが奇数の行は unclosed_backtick
     // 二重引用符の外のバッククォートだけを数える
     if crate::has_odd_backticks_outside_quotes(text) {
         findings.push(Finding::new(FindingKind::UnclosedBacktick, path.to_string(), Some(line), text.to_string()));
         return;
     }
     for content in crate::extract_backtick_contents_outside_quotes(text) {
-        // REQ-064: 前後の空白を除く
+        // REQ-core-064: 前後の空白を除く
         let trimmed = content.trim();
-        // REQ-064: 中身が空の囲み
+        // REQ-core-064: 中身が空の囲み
         if trimmed.is_empty() {
             findings.push(Finding::new(FindingKind::UnknownTerm, path.to_string(), Some(line), "``".to_string()));
             continue;
@@ -69,7 +69,7 @@ pub fn check_unknown_terms(
     }
 }
 
-/// 曖昧語の検査（REQ-066, REQ-067）
+/// 曖昧語の検査（REQ-core-066, REQ-core-067）
 /// 行の左から最長一致で重ならない形で数える（A142）
 pub fn check_vague_words(
     text: &str,
@@ -99,7 +99,7 @@ pub fn check_vague_words(
     }
 }
 
-/// 文書名の参照の検査（REQ-069, REQ-070, TBL-014）
+/// 文書名の参照の検査（REQ-core-069, REQ-core-070, TBL-core-014）
 pub fn check_document_references(
     docs: &[IrDocument],
     ir_path: &str,
@@ -151,7 +151,7 @@ fn find_doc_refs(
     while let Some(md_pos) = text.get(i..).and_then(|s| s.find(".md")) {
         let md_abs = i + md_pos;
 
-        // TBL-014: 出典の印やパスの途中は参照にならない
+        // TBL-core-014: 出典の印やパスの途中は参照にならない
         let after_md = md_abs + 3;
         if after_md < len {
             let next_byte = bytes[after_md];
@@ -208,7 +208,7 @@ fn is_reference_name(element: &str) -> bool {
         && element.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
 }
 
-/// IR 文書の対象の行（TBL-013）で用語と曖昧語を検査する
+/// IR 文書の対象の行（TBL-core-013）で用語と曖昧語を検査する
 pub fn check_terms_and_vague_words(
     docs: &[IrDocument],
     known_ids: &BTreeSet<String>,

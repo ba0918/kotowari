@@ -1,26 +1,26 @@
-//! "kotowari list" の項目の組み立て（REQ-151、REQ-153、REQ-154、TBL-026）
+//! "kotowari list" の項目の組み立て（REQ-core-151、REQ-core-153、REQ-core-154、TBL-core-026）
 
 use crate::ir::{IrDocument, Item};
 use crate::tests_discovery::{collect_scenarios, TestMarker};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
-/// "kotowari list" の出力の最上位。"items" だけを持つ（REQ-155）
+/// "kotowari list" の出力の最上位。"items" だけを持つ（REQ-core-155）
 #[derive(Debug, Serialize)]
 pub struct ListResult {
     pub items: Vec<ListItem>,
 }
 
-/// "tests" の1件（TBL-026）
+/// "tests" の1件（TBL-core-026）
 #[derive(Debug, Clone, Serialize)]
 pub struct TestRef {
     pub path: String,
     pub line: usize,
-    /// `問い合わせの無い言語`では null（REQ-081）
+    /// `問い合わせの無い言語`では null（REQ-core-081）
     pub name: Option<String>,
 }
 
-/// 要求の持つ鍵（TBL-026）
+/// 要求の持つ鍵（TBL-core-026）
 #[derive(Debug, Serialize)]
 pub struct RequirementItem {
     pub id: String,
@@ -38,7 +38,7 @@ pub struct RequirementItem {
     pub tests: Vec<TestRef>,
 }
 
-/// 決定表と性質の持つ鍵（TBL-026。2つは同じ集合で、"kind" の値だけが違う）
+/// 決定表と性質の持つ鍵（TBL-core-026。2つは同じ集合で、"kind" の値だけが違う）
 #[derive(Debug, Serialize)]
 pub struct ExampleItem {
     pub id: String,
@@ -51,7 +51,7 @@ pub struct ExampleItem {
     pub tests: Vec<TestRef>,
 }
 
-/// シナリオの持つ鍵（TBL-026）
+/// シナリオの持つ鍵（TBL-core-026）
 #[derive(Debug, Serialize)]
 pub struct ScenarioItem {
     pub id: String,
@@ -63,7 +63,7 @@ pub struct ScenarioItem {
     pub tests: Vec<TestRef>,
 }
 
-/// 問題の記録の持つ鍵（TBL-026）
+/// 問題の記録の持つ鍵（TBL-core-026）
 #[derive(Debug, Serialize)]
 pub struct FlagItem {
     pub id: String,
@@ -78,7 +78,7 @@ pub struct FlagItem {
     pub tests: Vec<TestRef>,
 }
 
-/// 一覧の1件。鍵の集合は種類で決まるので、種類ごとの構造をそのまま出す（TBL-026）
+/// 一覧の1件。鍵の集合は種類で決まるので、種類ごとの構造をそのまま出す（TBL-core-026）
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
 pub enum ListItem {
@@ -89,7 +89,7 @@ pub enum ListItem {
     Flag(FlagItem),
 }
 
-/// REQ-155: 1行に出す値。"検証" は要求以外では "-"
+/// REQ-core-155: 1行に出す値。"検証" は要求以外では "-"
 struct TextParts<'a> {
     id: &'a str,
     verification: &'a str,
@@ -104,7 +104,7 @@ impl ListItem {
         match self {
             ListItem::Requirement(i) => TextParts {
                 id: &i.id,
-                // REQ-155: "- 検証:" の行の無い要求も "-"
+                // REQ-core-155: "- 検証:" の行の無い要求も "-"
                 verification: i.verification.as_deref().unwrap_or("-"),
                 name: &i.name,
                 path: &i.path,
@@ -138,12 +138,12 @@ impl ListItem {
         }
     }
 
-    /// TBL-026: 1件の `ID`
+    /// TBL-core-026: 1件の `ID`
     pub fn id(&self) -> &str {
         self.text_parts().id
     }
 
-    /// TBL-026: 1件の "kind"
+    /// TBL-core-026: 1件の "kind"
     pub fn kind(&self) -> &'static str {
         match self {
             ListItem::Requirement(i) => i.kind,
@@ -153,14 +153,14 @@ impl ListItem {
         }
     }
 
-    /// TBL-026: 1件の "path" と "line"（REQ-154 の並べ替えの鍵）
+    /// TBL-core-026: 1件の "path" と "line"（REQ-core-154 の並べ替えの鍵）
     pub fn location(&self) -> (&str, usize) {
         let parts = self.text_parts();
         (parts.path, parts.line)
     }
 }
 
-/// REQ-155: 1つの項目を1行で出し、その直後に "tests" の1件ごとの行を字下げして続ける。
+/// REQ-core-155: 1つの項目を1行で出し、その直後に "tests" の1件ごとの行を字下げして続ける。
 /// 名前と検証の値はエスケープせずそのまま出す
 pub fn print_text(result: &ListResult) {
     for item in &result.items {
@@ -168,8 +168,8 @@ pub fn print_text(result: &ListResult) {
     }
 }
 
-/// REQ-155: 1つの項目の1行と、その "tests" の1件ごとの行。
-/// query の "text" もこの2種類の行から始まる（REQ-161）
+/// REQ-core-155: 1つの項目の1行と、その "tests" の1件ごとの行。
+/// query の "text" もこの2種類の行から始まる（REQ-core-161）
 pub fn print_item_text(item: &ListItem) {
     let p = item.text_parts();
     println!(
@@ -191,7 +191,7 @@ pub fn print_item_text(item: &ListItem) {
     }
 }
 
-/// 読めた`項目`と`シナリオ`から "items" を組み立てる（REQ-151、REQ-153、REQ-154）
+/// 読めた`項目`と`シナリオ`から "items" を組み立てる（REQ-core-151、REQ-core-153、REQ-core-154）
 pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> ListResult {
     let tests_by_id = tests_by_id(markers);
     let examples_by_about = examples_by_about(docs, ir_path);
@@ -295,14 +295,14 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
     ListResult { items }
 }
 
-/// TBL-026: `シナリオ`の名前は "Scenario:" の後の文字から前後の半角空白とタブを除いたもの
+/// TBL-core-026: `シナリオ`の名前は "Scenario:" の後の文字から前後の半角空白とタブを除いたもの
 fn scenario_name(scenario_text: &str) -> String {
     let after = scenario_text.trim_start();
     let after = after.strip_prefix("Scenario:").unwrap_or(after);
     after.trim_matches(|c| c == ' ' || c == '\t').to_string()
 }
 
-/// `ID` から、その `ID` を`印`に含む`テスト`の並びを引く（TBL-026 の "tests"、REQ-154）
+/// `ID` から、その `ID` を`印`に含む`テスト`の並びを引く（TBL-core-026 の "tests"、REQ-core-154）
 fn tests_by_id(markers: &[TestMarker]) -> BTreeMap<&str, Vec<TestRef>> {
     let mut by_id: BTreeMap<&str, Vec<TestRef>> = BTreeMap::new();
     for marker in markers {
@@ -318,8 +318,8 @@ fn tests_by_id(markers: &[TestMarker]) -> BTreeMap<&str, Vec<TestRef>> {
     by_id
 }
 
-/// `ID` から、その `ID` を "@about" に持つ`シナリオ`の `ID` の並びを引く（TBL-026 の "examples"）。
-/// 同じ `ID` の`シナリオ`が2か所以上にあるときは REQ-032 の1つ目だけを数える
+/// `ID` から、その `ID` を "@about" に持つ`シナリオ`の `ID` の並びを引く（TBL-core-026 の "examples"）。
+/// 同じ `ID` の`シナリオ`が2か所以上にあるときは REQ-core-032 の1つ目だけを数える
 fn examples_by_about(docs: &[IrDocument], ir_path: &str) -> BTreeMap<String, Vec<String>> {
     let mut by_about: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for (scenario_id, coverage) in collect_scenarios(docs, ir_path) {

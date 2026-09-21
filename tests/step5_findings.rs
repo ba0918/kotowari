@@ -38,9 +38,9 @@ fn findings_by_kind(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value>
         .collect()
 }
 
-// --- REQ-025: 文字の出力に使う種類の語 ---
+// --- REQ-core-025: 文字の出力に使う種類の語 ---
 
-// @kotowari[REQ-025]
+// @kotowari[REQ-core-025]
 #[test]
 fn req_025_finding_kind_displays_as_its_own_kind_word() {
     // --format text の出力は "{kind}" を通して種類の語を書く（main.rs）。
@@ -56,9 +56,9 @@ fn req_025_finding_kind_displays_as_its_own_kind_word() {
     );
 }
 
-// --- REQ-024: FindingKind と str の等価 ---
+// --- REQ-core-024: FindingKind と str の等価 ---
 
-// @kotowari[REQ-024]
+// @kotowari[REQ-core-024]
 #[test]
 fn req_024_finding_kind_partial_eq_str_matches_only_its_own_kind_name() {
     // `==` に書いた文字列リテラルは `PartialEq<&str>` を通る（既存のテストで検査済み）。
@@ -74,9 +74,9 @@ fn req_024_finding_kind_partial_eq_str_matches_only_its_own_kind_name() {
     );
 }
 
-// --- REQ-029: 誤りの種類の detail ---
+// --- REQ-core-029: 誤りの種類の detail ---
 
-// @kotowari[REQ-029, TBL-008]
+// @kotowari[REQ-core-029, TBL-core-008]
 #[test]
 fn req_029_every_error_kind_has_the_detail_of_the_table() {
     let tmp = TempDir::new().unwrap();
@@ -90,9 +90,9 @@ fn req_029_every_error_kind_has_the_detail_of_the_table() {
     assert_eq!(mt[0]["severity"], "error");
 }
 
-// --- REQ-030: 警告の種類の detail ---
+// --- REQ-core-030: 警告の種類の detail ---
 
-// @kotowari[REQ-030, TBL-009]
+// @kotowari[REQ-core-030, TBL-core-009]
 #[test]
 fn req_030_notice_kinds_have_the_detail_of_the_table() {
     let tmp = TempDir::new().unwrap();
@@ -110,9 +110,9 @@ fn req_030_notice_kinds_have_the_detail_of_the_table() {
     assert!(line_count > 200);
 }
 
-// --- REQ-031: 注意は4種類だけ ---
+// --- REQ-core-031: 注意は4種類だけ ---
 
-// @kotowari[REQ-031]
+// @kotowari[REQ-core-031]
 #[test]
 fn req_031_only_four_kinds_are_notices() {
     // 本体が注意にする種類（"kotowari mutants" の2種類は check の出力には現れない）
@@ -138,7 +138,7 @@ fn req_031_only_four_kinds_are_notices() {
     }
 }
 
-// @kotowari[REQ-031]
+// @kotowari[REQ-core-031]
 #[test]
 fn req_031_check_reports_no_notice_outside_the_four_kinds() {
     let tmp = TempDir::new().unwrap();
@@ -187,9 +187,9 @@ fn req_031_check_reports_no_notice_outside_the_four_kinds() {
     }
 }
 
-// --- REQ-027: 文書全体への指摘は null ---
+// --- REQ-core-027: 文書全体への指摘は null ---
 
-// @kotowari[REQ-027]
+// @kotowari[REQ-core-027]
 #[test]
 fn req_027_document_wide_findings_have_null_line() {
     let tmp = TempDir::new().unwrap();
@@ -201,9 +201,9 @@ fn req_027_document_wide_findings_have_null_line() {
     assert!(mt[0]["line"].is_null(), "missing_title should have null line");
 }
 
-// --- REQ-028: 行は1始まり ---
+// --- REQ-core-028: 行は1始まり ---
 
-// @kotowari[REQ-028]
+// @kotowari[REQ-core-028]
 #[test]
 fn req_028_lines_start_at_one() {
     let tmp = TempDir::new().unwrap();
@@ -229,9 +229,9 @@ fn req_028_lines_start_at_one() {
     assert_eq!(line, 7, "### Bad Heading is on line 7 (1-indexed)");
 }
 
-// --- REQ-024: 指摘の並び ---
+// --- REQ-core-024: 指摘の並び ---
 
-// @kotowari[REQ-024, TBL-007]
+// @kotowari[REQ-core-024, TBL-core-007]
 #[test]
 fn req_024_sorted_by_path_line_kind_detail() {
     let tmp = TempDir::new().unwrap();
@@ -275,15 +275,15 @@ fn req_024_sorted_by_path_line_kind_detail() {
     }
 }
 
-// --- PROP-003: findings は並んでいる ---
+// --- PROP-core-003: findings は並んでいる ---
 
-// @kotowari[PROP-003]
+// @kotowari[PROP-core-003]
 #[test]
 fn prop_003_findings_are_sorted() {
     use proptest::prelude::*;
 
     // run_check を通して、ライブラリが返す findings が
-    // TBL-007（path → line → kind → detail）で並んでいることを検証する。
+    // TBL-core-007（path → line → kind → detail）で並んでいることを検証する。
     //
     // IR 検査の指摘（後のファイル名の文書）とテスト発見の指摘（前のファイル
     // 名のテストファイル）が交互に追加されるため、ソートしないと壊れる。
@@ -334,7 +334,7 @@ fn prop_003_findings_are_sorted() {
             kotowari::Format::Json,
             None,
         ).expect("run_check should succeed");
-        // findings が TBL-007 の順で並んでいることを検証する
+        // findings が TBL-core-007 の順で並んでいることを検証する
         let findings = &result.findings;
         for i in 1..findings.len() {
             let a = &findings[i-1];
@@ -357,7 +357,7 @@ fn prop_003_findings_are_sorted() {
 
 // --- Step 7: 指摘の種類と行の表 ---
 
-// @kotowari[REQ-027]
+// @kotowari[REQ-core-027]
 #[test]
 fn req_027_glossary_invalid_has_null_line() {
     let tmp = TempDir::new().unwrap();
@@ -374,7 +374,7 @@ fn req_027_glossary_invalid_has_null_line() {
     assert!(gi[0]["line"].is_null(), "glossary_invalid line should be null");
 }
 
-// @kotowari[TBL-019]
+// @kotowari[TBL-core-019]
 #[test]
 fn tbl_019_unclosed_code_block_line_is_the_opening_line() {
     let tmp = TempDir::new().unwrap();
@@ -390,7 +390,7 @@ fn tbl_019_unclosed_code_block_line_is_the_opening_line() {
     assert_eq!(uc[0]["line"], 13, "line should be the opening line (13)");
 }
 
-// @kotowari[TBL-019]
+// @kotowari[TBL-core-019]
 #[test]
 fn tbl_019_invalid_gherkin_line_and_invalid_id_lines() {
     let tmp = TempDir::new().unwrap();
@@ -411,7 +411,7 @@ fn tbl_019_invalid_gherkin_line_and_invalid_id_lines() {
     assert_eq!(ii[0]["line"], 18, "invalid_id line should be the tag line (18)");
 }
 
-// @kotowari[TBL-019]
+// @kotowari[TBL-core-019]
 #[test]
 fn tbl_019_unclosed_backtick_line() {
     let tmp = TempDir::new().unwrap();
@@ -431,7 +431,7 @@ fn tbl_019_unclosed_backtick_line() {
     assert_eq!(ub[0]["line"], 13, "unclosed_backtick should be on its own line (13)");
 }
 
-// @kotowari[TBL-019]
+// @kotowari[TBL-core-019]
 #[test]
 fn tbl_019_marker_findings_line_is_the_marker_line() {
     let tmp = TempDir::new().unwrap();
@@ -449,7 +449,7 @@ fn tbl_019_marker_findings_line_is_the_marker_line() {
     assert_eq!(im[0]["line"], 1, "invalid_marker line should be the marker line (1)");
 }
 
-// @kotowari[TBL-019]
+// @kotowari[TBL-core-019]
 #[test]
 fn tbl_019_source_invalid_line_is_the_source_line() {
     let tmp = TempDir::new().unwrap();

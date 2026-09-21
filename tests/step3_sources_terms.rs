@@ -52,9 +52,9 @@ fn findings_by_kind(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value>
         .collect()
 }
 
-// --- REQ-057: 出典の書式 ---
+// --- REQ-core-057: 出典の書式 ---
 
-// @kotowari[REQ-057]
+// @kotowari[REQ-core-057]
 #[test]
 fn req_057_source_splits_at_first_hash_and_allows_commas() {
     let tmp = TempDir::new().unwrap();
@@ -71,9 +71,9 @@ fn req_057_source_splits_at_first_hash_and_allows_commas() {
     assert!(si.is_empty(), "valid sources should pass: {:?}", si);
 }
 
-// --- REQ-058: 出典の判定 ---
+// --- REQ-core-058: 出典の判定 ---
 
-// @kotowari[REQ-058, TBL-012, EX-011, EX-012]
+// @kotowari[REQ-core-058, TBL-core-012, EX-core-011, EX-core-012]
 #[test]
 fn req_058_number_anchor_looks_for_decision_line_and_other_anchor_for_heading() {
     let tmp = TempDir::new().unwrap();
@@ -92,7 +92,7 @@ fn req_058_number_anchor_looks_for_decision_line_and_other_anchor_for_heading() 
     assert_eq!(si[0]["detail"], "docs/decision/records/records.md#A99");
 }
 
-// @kotowari[REQ-058, TBL-012]
+// @kotowari[REQ-core-058, TBL-core-012]
 #[test]
 fn req_058_source_outside_places_is_invalid() {
     let tmp = TempDir::new().unwrap();
@@ -108,7 +108,7 @@ fn req_058_source_outside_places_is_invalid() {
     assert_eq!(si.len(), 1);
 }
 
-// @kotowari[REQ-058, TBL-012]
+// @kotowari[REQ-core-058, TBL-core-012]
 #[test]
 fn req_058_source_path_equal_to_a_place_itself_is_invalid_without_crashing() {
     let tmp = TempDir::new().unwrap();
@@ -126,16 +126,16 @@ fn req_058_source_path_equal_to_a_place_itself_is_invalid_without_crashing() {
     assert_eq!(si.len(), 2, "{:?}", si);
 }
 
-// --- REQ-059: 出典が無い ---
+// --- REQ-core-059: 出典が無い ---
 
-// @kotowari[REQ-059, REQ-098]
+// @kotowari[REQ-core-059, REQ-core-098]
 #[test]
 fn req_059_missing_source_for_item_scenario_and_term() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
-    // 出典の行がない要求 → REQ-098 により missing_field detail="出典"
-    // 出典の値が空のシナリオ → REQ-059 により missing_source
-    // 用語の出典が空 → REQ-059 により missing_source
+    // 出典の行がない要求 → REQ-core-098 により missing_field detail="出典"
+    // 出典の値が空のシナリオ → REQ-core-059 により missing_source
+    // 用語の出典が空 → REQ-core-059 により missing_source
     fs::write(
         tmp.path().join("docs/ir/a.md"),
         concat!(
@@ -188,7 +188,7 @@ fn req_059_missing_source_for_item_scenario_and_term() {
     );
 }
 
-// @kotowari[REQ-059]
+// @kotowari[REQ-core-059]
 #[test]
 fn req_059_empty_source_value_produces_missing_source() {
     let tmp = TempDir::new().unwrap();
@@ -209,7 +209,7 @@ fn req_059_empty_source_value_produces_missing_source() {
     );
 }
 
-// @kotowari[REQ-057, REQ-060]
+// @kotowari[REQ-core-057, REQ-core-060]
 #[test]
 fn req_060_glossary_trailing_comma_does_not_create_empty_source() {
     let tmp = TempDir::new().unwrap();
@@ -233,9 +233,9 @@ fn req_060_glossary_trailing_comma_does_not_create_empty_source() {
     assert!(si.is_empty(), "valid source with trailing comma should pass: {:?}", si);
 }
 
-// --- REQ-060: 用語集とシナリオの出典 ---
+// --- REQ-core-060: 用語集とシナリオの出典 ---
 
-// @kotowari[REQ-060]
+// @kotowari[REQ-core-060]
 #[test]
 fn req_060_glossary_and_scenario_sources_are_checked() {
     let tmp = TempDir::new().unwrap();
@@ -252,9 +252,9 @@ fn req_060_glossary_and_scenario_sources_are_checked() {
     assert!(ms.iter().any(|f| f["detail"] == "テスト"), "glossary term without source: {:?}", ms);
 }
 
-// --- REQ-061: 決定の番号はファイルごと ---
+// --- REQ-core-061: 決定の番号はファイルごと ---
 
-// @kotowari[REQ-061]
+// @kotowari[REQ-core-061]
 #[test]
 fn req_061_numbers_are_per_file() {
     let tmp = TempDir::new().unwrap();
@@ -278,9 +278,9 @@ fn req_061_numbers_are_per_file() {
     assert!(si[0]["detail"].as_str().unwrap().contains("records.md#B1"));
 }
 
-// --- REQ-106: 形の契約を出典に指せる ---
+// --- REQ-core-106: 形の契約を出典に指せる ---
 
-// @kotowari[REQ-106]
+// @kotowari[REQ-core-106]
 #[test]
 fn req_106_form_contract_headings_are_valid_sources() {
     let tmp = TempDir::new().unwrap();
@@ -296,9 +296,9 @@ fn req_106_form_contract_headings_are_valid_sources() {
     assert!(si.is_empty(), "ir-form.md headings should be valid: {:?}", si);
 }
 
-// --- REQ-063: 対象の行 ---
+// --- REQ-core-063: 対象の行 ---
 
-// @kotowari[REQ-063, TBL-013]
+// @kotowari[REQ-core-063, TBL-core-013]
 #[test]
 fn req_063_only_sentences_and_steps_are_checked() {
     let tmp = TempDir::new().unwrap();
@@ -322,9 +322,9 @@ fn req_063_only_sentences_and_steps_are_checked() {
     assert!(ut.iter().any(|f| f["detail"] == "未知語"), "should find unknown term in sentence: {:?}", ut);
 }
 
-// --- REQ-064: 用語集に無い語 ---
+// --- REQ-core-064: 用語集に無い語 ---
 
-// @kotowari[REQ-064]
+// @kotowari[REQ-core-064]
 #[test]
 fn req_064_unknown_term() {
     let tmp = TempDir::new().unwrap();
@@ -347,9 +347,9 @@ fn req_064_unknown_term() {
     assert!(!ut.iter().any(|f| f["detail"] == "IR"), "IR should be known: {:?}", ut);
 }
 
-// --- REQ-065: 用語集がないとき ID は通る ---
+// --- REQ-core-065: 用語集がないとき ID は通る ---
 
-// @kotowari[REQ-065]
+// @kotowari[REQ-core-065]
 #[test]
 fn req_065_ids_pass_without_glossary() {
     let tmp = TempDir::new().unwrap();
@@ -367,9 +367,9 @@ fn req_065_ids_pass_without_glossary() {
     assert!(!ut.iter().any(|f| f["detail"] == "REQ-001"), "IDs should pass without glossary: {:?}", ut);
 }
 
-// --- REQ-066: 曖昧語 ---
+// --- REQ-core-066: 曖昧語 ---
 
-// @kotowari[REQ-066]
+// @kotowari[REQ-core-066]
 #[test]
 fn req_066_vague_word_substring() {
     let tmp = TempDir::new().unwrap();
@@ -385,7 +385,7 @@ fn req_066_vague_word_substring() {
     assert!(vw.iter().any(|f| f["detail"] == "適切に"), "should find vague word: {:?}", vw);
 }
 
-// @kotowari[REQ-014]
+// @kotowari[REQ-core-014]
 #[test]
 fn req_014_empty_vague_word_stops_with_config_error() {
     let tmp = TempDir::new().unwrap();
@@ -414,9 +414,9 @@ fn req_014_empty_vague_word_stops_with_config_error() {
     assert!(output.stdout.is_empty(), "stdout should be empty on stop");
 }
 
-// --- REQ-067: 出現ごとに1件 ---
+// --- REQ-core-067: 出現ごとに1件 ---
 
-// @kotowari[REQ-067]
+// @kotowari[REQ-core-067]
 #[test]
 fn req_067_one_finding_per_occurrence() {
     let tmp = TempDir::new().unwrap();
@@ -433,9 +433,9 @@ fn req_067_one_finding_per_occurrence() {
     assert_eq!(count, 2, "should report 2 occurrences of vague word: {:?}", vw);
 }
 
-// --- REQ-069: 文書名の参照の境界と引用符 ---
+// --- REQ-core-069: 文書名の参照の境界と引用符 ---
 
-// @kotowari[REQ-069, TBL-014]
+// @kotowari[REQ-core-069, TBL-core-014]
 #[test]
 fn req_069_reference_needs_boundary_and_quotes_are_skipped() {
     let tmp = TempDir::new().unwrap();
@@ -458,7 +458,7 @@ fn req_069_reference_needs_boundary_and_quotes_are_skipped() {
     assert_eq!(md.len(), 2, "{:?}", md);
 }
 
-// @kotowari[REQ-069, TBL-014]
+// @kotowari[REQ-core-069, TBL-core-014]
 #[test]
 fn req_069_quoted_text_ending_in_a_multibyte_character_is_split_at_the_quote() {
     let tmp = TempDir::new().unwrap();
@@ -476,7 +476,7 @@ fn req_069_quoted_text_ending_in_a_multibyte_character_is_split_at_the_quote() {
     assert!(md.iter().any(|f| f["detail"] == "nonexistent.md"), "{:?}", md);
 }
 
-// @kotowari[REQ-069, TBL-014]
+// @kotowari[REQ-core-069, TBL-core-014]
 #[test]
 fn req_069_dot_md_at_the_start_of_a_line_is_skipped_and_scanning_continues() {
     let tmp = TempDir::new().unwrap();
@@ -499,9 +499,9 @@ fn req_069_dot_md_at_the_start_of_a_line_is_skipped_and_scanning_continues() {
     assert!(md.iter().any(|f| f["detail"] == "nonexistent.md"), "{:?}", md);
 }
 
-// --- REQ-070: 参照された文書が無い ---
+// --- REQ-core-070: 参照された文書が無い ---
 
-// @kotowari[REQ-070]
+// @kotowari[REQ-core-070]
 #[test]
 fn req_070_missing_document() {
     let tmp = TempDir::new().unwrap();
@@ -517,9 +517,9 @@ fn req_070_missing_document() {
     assert!(md.iter().any(|f| f["detail"] == "missing-doc.md"), "should find missing document: {:?}", md);
 }
 
-// --- REQ-104: 具体的な値は二重引用符で書く ---
+// --- REQ-core-104: 具体的な値は二重引用符で書く ---
 
-// @kotowari[REQ-104]
+// @kotowari[REQ-core-104]
 #[test]
 fn req_104_quoted_values_are_not_terms() {
     let tmp = TempDir::new().unwrap();
@@ -541,9 +541,9 @@ fn req_104_quoted_values_are_not_terms() {
     assert!(!ut.iter().any(|f| f["detail"] == "kotowari check"), "quoted values should not be checked: {:?}", ut);
 }
 
-// --- REQ-063, REQ-064: 性質の文とシナリオの手順でも用語を検査する ---
+// --- REQ-core-063, REQ-core-064: 性質の文とシナリオの手順でも用語を検査する ---
 
-// @kotowari[REQ-063, REQ-064]
+// @kotowari[REQ-core-063, REQ-core-064]
 #[test]
 fn req_063_property_statements_and_scenario_steps_are_term_checked() {
     let tmp = TempDir::new().unwrap();
@@ -583,9 +583,9 @@ fn req_063_property_statements_and_scenario_steps_are_term_checked() {
     );
 }
 
-// --- TBL-012: 判断の記録の決定の行の末尾空白 ---
+// --- TBL-core-012: 判断の記録の決定の行の末尾空白 ---
 
-// @kotowari[REQ-058, TBL-012]
+// @kotowari[REQ-core-058, TBL-core-012]
 #[test]
 fn tbl_012_decision_line_with_and_without_trailing_text() {
     let tmp = TempDir::new().unwrap();
@@ -617,7 +617,7 @@ fn tbl_012_decision_line_with_and_without_trailing_text() {
     );
 }
 
-// @kotowari[REQ-058, TBL-012]
+// @kotowari[REQ-core-058, TBL-core-012]
 #[test]
 fn tbl_012_indented_decision_line_counts() {
     // A158: 決定の行は行頭の空白を除いてから判定する（字下げした行も決定）
@@ -646,10 +646,10 @@ fn tbl_012_indented_decision_line_counts() {
     );
 }
 
-// @kotowari[REQ-058, TBL-012, EX-118]
+// @kotowari[REQ-core-058, TBL-core-012, EX-core-118]
 #[test]
 fn tbl_012_number_inside_code_block_is_not_a_source_target() {
-    // EX-118: コードブロックの中の番号の行は読まないので、出典の先にならない
+    // EX-core-118: コードブロックの中の番号の行は読まないので、出典の先にならない
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     fs::write(
@@ -677,11 +677,11 @@ fn tbl_012_number_inside_code_block_is_not_a_source_target() {
     );
 }
 
-// @kotowari[REQ-058, TBL-012]
+// @kotowari[REQ-core-058, TBL-core-012]
 #[test]
 fn tbl_012_decision_heading_only_inside_code_block_makes_the_file_not_a_record() {
     // A46: 決定の節の見出しがコードブロックの中にしか無いファイルは判断の記録でなく、
-    // 印は "## 見出し" で照合される（TBL-012 順4）。決定の番号の印は先にならない
+    // 印は "## 見出し" で照合される（TBL-core-012 順4）。決定の番号の印は先にならない
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     fs::write(
@@ -709,10 +709,10 @@ fn tbl_012_decision_heading_only_inside_code_block_makes_the_file_not_a_record()
     );
 }
 
-// @kotowari[REQ-058, TBL-012, EX-120]
+// @kotowari[REQ-core-058, TBL-core-012, EX-core-120]
 #[test]
 fn tbl_012_heading_inside_code_block_of_a_non_record_file_is_not_a_source_target() {
-    // EX-120
+    // EX-core-120
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     fs::write(
@@ -739,7 +739,7 @@ fn tbl_012_heading_inside_code_block_of_a_non_record_file_is_not_a_source_target
 
 // --- 除外: 隠しディレクトリは辿らない ---
 
-// @kotowari[REQ-058]
+// @kotowari[REQ-core-058]
 #[test]
 fn req_058_hidden_directory_under_records_is_not_a_source_target() {
     let tmp = TempDir::new().unwrap();
@@ -768,7 +768,7 @@ fn req_058_hidden_directory_under_records_is_not_a_source_target() {
 
 // --- 除外: ディレクトリでも通常のファイルでもない要素は静かに読み飛ばす ---
 
-// @kotowari[REQ-058]
+// @kotowari[REQ-core-058]
 #[test]
 #[cfg(unix)]
 fn req_058_non_regular_entry_named_md_under_records_is_silently_skipped() {
@@ -787,7 +787,7 @@ fn req_058_non_regular_entry_named_md_under_records_is_silently_skipped() {
     );
 }
 
-// @kotowari[REQ-058]
+// @kotowari[REQ-core-058]
 #[test]
 #[cfg(unix)]
 fn req_058_non_regular_entry_named_md_under_adr_is_silently_skipped() {
@@ -804,9 +804,9 @@ fn req_058_non_regular_entry_named_md_under_adr_is_silently_skipped() {
     );
 }
 
-// --- REQ-040: gherkin コードブロック内の文書名参照は対象外 ---
+// --- REQ-core-040: gherkin コードブロック内の文書名参照は対象外 ---
 
-// @kotowari[REQ-040]
+// @kotowari[REQ-core-040]
 #[test]
 fn req_040_gherkin_code_block_doc_ref_is_not_checked() {
     let tmp = TempDir::new().unwrap();
@@ -837,7 +837,7 @@ fn req_040_gherkin_code_block_doc_ref_is_not_checked() {
 
 // --- is_decision_number ---
 
-// @kotowari[REQ-058, TBL-012]
+// @kotowari[REQ-core-058, TBL-core-012]
 #[test]
 fn tbl_012_is_decision_number_rejects_invalid_forms() {
     assert!(
@@ -866,7 +866,7 @@ fn tbl_012_is_decision_number_rejects_invalid_forms() {
     );
 }
 
-// @kotowari[REQ-058, TBL-012]
+// @kotowari[REQ-core-058, TBL-core-012]
 #[test]
 fn tbl_012_check_source_outside_records_and_adr_returns_err() {
     let ctx = kotowari::sources::SourceContext {
@@ -883,7 +883,7 @@ fn tbl_012_check_source_outside_records_and_adr_returns_err() {
     assert!(result2.is_err(), "path equal to records_path (no subpath) should return Err");
 }
 
-// @kotowari[REQ-057]
+// @kotowari[REQ-core-057]
 #[test]
 fn req_057_split_source_rejects_an_empty_path_or_empty_anchor() {
     assert_eq!(
@@ -903,7 +903,7 @@ fn req_057_split_source_rejects_an_empty_path_or_empty_anchor() {
     );
 }
 
-// @kotowari[REQ-058]
+// @kotowari[REQ-core-058]
 #[test]
 fn req_058_absolute_path_source_is_rejected_even_if_it_would_otherwise_resolve() {
     let ctx = kotowari::sources::SourceContext {
@@ -928,7 +928,7 @@ fn req_058_absolute_path_source_is_rejected_even_if_it_would_otherwise_resolve()
     );
 }
 
-// @kotowari[REQ-058]
+// @kotowari[REQ-core-058]
 #[test]
 fn req_058_tie_break_prefers_the_longer_place_when_a_path_matches_both() {
     let ctx = kotowari::sources::SourceContext {
@@ -952,7 +952,7 @@ fn req_058_tie_break_prefers_the_longer_place_when_a_path_matches_both() {
     );
 }
 
-// @kotowari[REQ-058]
+// @kotowari[REQ-core-058]
 #[test]
 fn req_058_boundary_violating_prefix_does_not_count_as_under_a_place() {
     let ctx = kotowari::sources::SourceContext {
@@ -977,7 +977,7 @@ fn req_058_boundary_violating_prefix_does_not_count_as_under_a_place() {
 
 // --- check_document_references の行番号 ---
 
-// @kotowari[REQ-069, TBL-014]
+// @kotowari[REQ-core-069, TBL-core-014]
 #[test]
 fn req_069_doc_ref_line_number_is_correct() {
     use std::collections::BTreeSet;
@@ -1001,7 +1001,7 @@ fn req_069_doc_ref_line_number_is_correct() {
 
 // --- find_doc_refs の境界 ---
 
-// @kotowari[REQ-069, TBL-014]
+// @kotowari[REQ-core-069, TBL-core-014]
 #[test]
 fn req_069_doc_ref_at_line_end() {
     use std::collections::BTreeSet;
@@ -1018,7 +1018,7 @@ fn req_069_doc_ref_at_line_end() {
     );
 }
 
-// @kotowari[REQ-069, TBL-014]
+// @kotowari[REQ-core-069, TBL-core-014]
 #[test]
 fn req_069_doc_ref_at_line_start() {
     use std::collections::BTreeSet;
@@ -1035,7 +1035,7 @@ fn req_069_doc_ref_at_line_start() {
     );
 }
 
-// @kotowari[REQ-069, TBL-014]
+// @kotowari[REQ-core-069, TBL-core-014]
 #[test]
 fn req_069_doc_ref_after_punctuation() {
     use std::collections::BTreeSet;
@@ -1052,7 +1052,7 @@ fn req_069_doc_ref_after_punctuation() {
     );
 }
 
-// @kotowari[REQ-069, TBL-014]
+// @kotowari[REQ-core-069, TBL-core-014]
 #[test]
 fn req_069_mdx_extension_not_matched_but_md_after_it_is() {
     use std::collections::BTreeSet;
@@ -1076,7 +1076,7 @@ fn req_069_mdx_extension_not_matched_but_md_after_it_is() {
 
 // --- Step 5: 出典と用語 ---
 
-// @kotowari[TBL-012]
+// @kotowari[TBL-core-012]
 #[test]
 fn tbl_012_file_with_decision_sections_is_a_records_file() {
     // 決定の節の見出しを持つファイルは判断の記録
@@ -1099,7 +1099,7 @@ fn tbl_012_file_with_decision_sections_is_a_records_file() {
         "file with decision sections should be treated as records: {:?}", si);
 }
 
-// @kotowari[TBL-012]
+// @kotowari[TBL-core-012]
 #[test]
 fn tbl_012_file_without_decision_sections_matches_headings() {
     // 決定の節の見出しが無いファイルは見出しで照合
@@ -1121,7 +1121,7 @@ fn tbl_012_file_without_decision_sections_matches_headings() {
     assert!(si.is_empty(), "file without decision sections should match by headings: {:?}", si);
 }
 
-// @kotowari[TBL-012]
+// @kotowari[TBL-core-012]
 #[test]
 fn tbl_012_two_letter_prefix_is_not_a_decision_number() {
     // "AB1" は決定の番号でない（英大文字1文字に1桁以上の数字）
@@ -1131,7 +1131,7 @@ fn tbl_012_two_letter_prefix_is_not_a_decision_number() {
         "A1 should be a decision number");
 }
 
-// @kotowari[REQ-061]
+// @kotowari[REQ-core-061]
 #[test]
 fn req_061_subheading_does_not_end_a_section() {
     // "### " の小見出しは節を終えない
@@ -1153,7 +1153,7 @@ fn req_061_subheading_does_not_end_a_section() {
     assert!(si.is_empty(), "### subheading should not end a section: {:?}", si);
 }
 
-// @kotowari[REQ-115]
+// @kotowari[REQ-core-115]
 #[test]
 fn req_115_source_invalid_line_is_the_source_line() {
     let tmp = TempDir::new().unwrap();
@@ -1171,7 +1171,7 @@ fn req_115_source_invalid_line_is_the_source_line() {
     assert_eq!(si[0]["line"], 10, "source_invalid line should be the source line (10), got {:?}", si[0]);
 }
 
-// @kotowari[REQ-115]
+// @kotowari[REQ-core-115]
 #[test]
 fn req_115_decision_table_source_invalid_line_is_the_source_line_not_another_field() {
     let tmp = TempDir::new().unwrap();
@@ -1189,7 +1189,7 @@ fn req_115_decision_table_source_invalid_line_is_the_source_line_not_another_fie
     assert_eq!(si[0]["line"], 10, "source_invalid line should be the 出典 line (10), not an earlier field line: {:?}", si[0]);
 }
 
-// @kotowari[REQ-115]
+// @kotowari[REQ-core-115]
 #[test]
 fn req_115_property_source_invalid_line_is_the_source_line_not_another_field() {
     let tmp = TempDir::new().unwrap();
@@ -1206,7 +1206,7 @@ fn req_115_property_source_invalid_line_is_the_source_line_not_another_field() {
     assert_eq!(si[0]["line"], 10, "source_invalid line should be the 出典 line (10), not an earlier field line: {:?}", si[0]);
 }
 
-// @kotowari[REQ-115]
+// @kotowari[REQ-core-115]
 #[test]
 fn req_115_flag_entry_source_invalid_line_is_the_source_line_not_another_field() {
     let tmp = TempDir::new().unwrap();
@@ -1223,7 +1223,7 @@ fn req_115_flag_entry_source_invalid_line_is_the_source_line_not_another_field()
     assert_eq!(si[0]["line"], 6, "source_invalid line should be the 出典 line (6), not an earlier field line: {:?}", si[0]);
 }
 
-// @kotowari[REQ-064]
+// @kotowari[REQ-core-064]
 #[test]
 fn req_064_backtick_content_is_trimmed() {
     // "` IR `" は "IR" として照合される
@@ -1244,7 +1244,7 @@ fn req_064_backtick_content_is_trimmed() {
         "trimmed backtick content should match glossary term: {:?}", ut);
 }
 
-// @kotowari[REQ-064]
+// @kotowari[REQ-core-064]
 #[test]
 fn req_064_empty_backticks_are_unknown_term() {
     // "``" は detail "``" の unknown_term
@@ -1265,7 +1265,7 @@ fn req_064_empty_backticks_are_unknown_term() {
         "empty backticks should produce unknown_term with detail '``': {:?}", ut);
 }
 
-// @kotowari[REQ-116]
+// @kotowari[REQ-core-116]
 #[test]
 fn req_116_odd_backticks_skip_terms_but_check_vague_words() {
     // 奇数バッククォートの行は unclosed_backtick、用語と ID の検査を飛ばし曖昧語は検査する
@@ -1289,7 +1289,7 @@ fn req_116_odd_backticks_skip_terms_but_check_vague_words() {
     assert!(ut.is_empty(), "unknown_term should not be checked on odd backtick line: {:?}", ut);
 }
 
-// @kotowari[REQ-116, TBL-008]
+// @kotowari[REQ-core-116, TBL-core-008]
 #[test]
 fn tbl_008_unclosed_backtick_detail_keeps_leading_indentation() {
     // A150: unclosed_backtick の detail は読んだ行そのまま（字下げを含む）
@@ -1315,7 +1315,7 @@ fn tbl_008_unclosed_backtick_detail_keeps_leading_indentation() {
     );
 }
 
-// @kotowari[REQ-067]
+// @kotowari[REQ-core-067]
 #[test]
 fn req_067_overlapping_vague_words_longest_match_once() {
     // "など" と "などの" が両方あるとき、"などの" で1件
@@ -1337,7 +1337,7 @@ fn req_067_overlapping_vague_words_longest_match_once() {
     assert_eq!(vw[0]["detail"], "などの", "should match 'などの' not 'など': {:?}", vw);
 }
 
-// @kotowari[TBL-014]
+// @kotowari[TBL-core-014]
 #[test]
 fn tbl_014_md_followed_by_letter_is_not_a_reference() {
     // "a.mdX" は参照でない
@@ -1351,7 +1351,7 @@ fn tbl_014_md_followed_by_letter_is_not_a_reference() {
     assert!(md.is_empty(), "a.mdX should not be a reference: {:?}", md);
 }
 
-// @kotowari[TBL-014]
+// @kotowari[TBL-core-014]
 #[test]
 fn tbl_014_unclosed_quote_hides_the_rest_of_the_line() {
     // 奇数の二重引用符の後は参照を拾わない
@@ -1365,7 +1365,7 @@ fn tbl_014_unclosed_quote_hides_the_rest_of_the_line() {
     assert!(md.is_empty(), "unclosed quote should hide the rest of the line: {:?}", md);
 }
 
-// @kotowari[TBL-014]
+// @kotowari[TBL-core-014]
 #[test]
 fn tbl_014_text_between_the_second_and_third_quote_is_still_scanned() {
     // 二重引用符が奇数（3つ）のとき、行末を隠すのは「最後の」引用符から先だけ。
@@ -1384,7 +1384,7 @@ fn tbl_014_text_between_the_second_and_third_quote_is_still_scanned() {
     );
 }
 
-// @kotowari[TBL-014]
+// @kotowari[TBL-core-014]
 #[test]
 fn tbl_014_long_digit_run_before_mdx_does_not_produce_a_spurious_reference() {
     // ".mdx" の直前が長い数字の並びでも、".mdx" は参照として拾わない
@@ -1402,7 +1402,7 @@ fn tbl_014_long_digit_run_before_mdx_does_not_produce_a_spurious_reference() {
     );
 }
 
-// @kotowari[TBL-014]
+// @kotowari[TBL-core-014]
 #[test]
 fn tbl_014_md_followed_by_hyphen_is_not_a_reference() {
     // ".md" の直後が "-" のときは参照でない
@@ -1420,7 +1420,7 @@ fn tbl_014_md_followed_by_hyphen_is_not_a_reference() {
     );
 }
 
-// @kotowari[TBL-014]
+// @kotowari[TBL-core-014]
 #[test]
 fn tbl_014_bare_dot_md_with_nothing_before_it_is_not_a_reference() {
     // 直前に文字が無い（空白の直後の）裸の ".md" は参照でない
@@ -1438,7 +1438,7 @@ fn tbl_014_bare_dot_md_with_nothing_before_it_is_not_a_reference() {
     );
 }
 
-// @kotowari[REQ-117]
+// @kotowari[REQ-core-117]
 #[test]
 fn req_117_second_table_is_not_glossary() {
     // 用語集の2つ目の表は用語にならない
@@ -1465,7 +1465,7 @@ Some text.
     }
 }
 
-// @kotowari[REQ-117]
+// @kotowari[REQ-core-117]
 #[test]
 fn req_117_glossary_without_proper_table_is_invalid() {
     // 用語集にヘッダの列名が違う表しかない → glossary_invalid
@@ -1485,9 +1485,9 @@ fn req_117_glossary_without_proper_table_is_invalid() {
     assert_eq!(gi[0].detail, "CONTEXT.md", "glossary_invalid detail should be filename");
 }
 
-// --- TBL-001: 非 UTF-8 の判断の記録または ADR で停止 ---
+// --- TBL-core-001: 非 UTF-8 の判断の記録または ADR で停止 ---
 
-// @kotowari[REQ-006, TBL-001]
+// @kotowari[REQ-core-006, TBL-core-001]
 #[test]
 fn tbl_001_non_utf8_records_or_adr_stops() {
     // 判断の記録に非 UTF-8 ファイルを置くと停止する
@@ -1533,7 +1533,7 @@ fn tbl_001_non_utf8_records_or_adr_stops() {
     assert!(output2.stdout.is_empty(), "stdout should be empty on stop");
 }
 
-// @kotowari[TBL-012]
+// @kotowari[TBL-core-012]
 #[test]
 fn tbl_012_records_file_headings_are_not_sources() {
     // 決定の節の見出しを持つファイルは判断の記録なので、"## " の見出しでは照合しない（A134）
@@ -1554,7 +1554,7 @@ fn tbl_012_records_file_headings_are_not_sources() {
         "a records file (has a decision section) must be matched by decision numbers, not headings: {:?}", si);
 }
 
-// @kotowari[REQ-018, TBL-001]
+// @kotowari[REQ-core-018, TBL-core-001]
 #[test]
 #[cfg(unix)]
 fn req_018_broken_symlink_in_records_dir_stops() {
@@ -1567,7 +1567,7 @@ fn req_018_broken_symlink_in_records_dir_stops() {
     assert!(output.stdout.is_empty());
 }
 
-// @kotowari[REQ-033, REQ-018]
+// @kotowari[REQ-core-033, REQ-core-018]
 #[test]
 #[cfg(unix)]
 fn req_033_file_symlink_in_records_dir_is_read() {
@@ -1587,7 +1587,7 @@ fn req_033_file_symlink_in_records_dir_is_read() {
     assert!(si.is_empty(), "a file symlink in the records dir must be read: {:?}", si);
 }
 
-// @kotowari[REQ-117]
+// @kotowari[REQ-core-117]
 #[test]
 fn req_117_glossary_header_without_rows_is_valid() {
     // ヘッダと区切りの行があれば表は「ある」（A148）
@@ -1598,7 +1598,7 @@ fn req_117_glossary_header_without_rows_is_valid() {
     assert!(!findings.iter().any(|f| f.kind == "glossary_invalid"), "header + separator with no rows must not be glossary_invalid: {:?}", findings);
 }
 
-// @kotowari[REQ-111]
+// @kotowari[REQ-core-111]
 #[test]
 fn req_111_bom_in_config_records_adr_and_tests_is_skipped_end_to_end() {
     let tmp = TempDir::new().unwrap();
@@ -1619,10 +1619,10 @@ fn req_111_bom_in_config_records_adr_and_tests_is_skipped_end_to_end() {
     assert!(v["findings"].as_array().unwrap().is_empty(), "{:?}", v);
 }
 
-// @kotowari[REQ-058, REQ-110]
+// @kotowari[REQ-core-058, REQ-core-110]
 #[test]
 fn req_058_records_place_dot_resolves_a_source_at_the_base_root() {
-    // 置き場 "." は空に正規化される（REQ-110）。そのとき基準の直下の判断の記録の出典が解決しなければならない
+    // 置き場 "." は空に正規化される（REQ-core-110）。そのとき基準の直下の判断の記録の出典が解決しなければならない
     let tmp = TempDir::new().unwrap();
     fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
     fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
@@ -1663,7 +1663,7 @@ fn term_statement(id: &str, statement: &str) -> String {
     format!("# Title\n\nScope.\n\n### {id}: Name\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n\n{statement}\n")
 }
 
-// @kotowari[REQ-064]
+// @kotowari[REQ-core-064]
 #[test]
 fn req_064_term_from_a_sibling_glossary_is_unknown() {
     let tmp = TempDir::new().unwrap();
@@ -1677,7 +1677,7 @@ fn req_064_term_from_a_sibling_glossary_is_unknown() {
     assert_eq!(unknown[0]["detail"], "公開");
 }
 
-// @kotowari[REQ-064]
+// @kotowari[REQ-core-064]
 #[test]
 fn req_064_term_from_a_parent_glossary_is_visible() {
     let tmp = TempDir::new().unwrap();
@@ -1693,7 +1693,7 @@ fn req_064_term_from_a_parent_glossary_is_visible() {
     assert_eq!(unknown[0]["detail"], "網");
 }
 
-// @kotowari[REQ-065, EX-026]
+// @kotowari[REQ-core-065, EX-core-026]
 #[test]
 fn req_065_document_with_no_glossary_in_its_chain_flags_every_backtick() {
     let tmp = TempDir::new().unwrap();
@@ -1707,7 +1707,7 @@ fn req_065_document_with_no_glossary_in_its_chain_flags_every_backtick() {
     assert!(unknown.iter().all(|f| f["path"] == "docs/ir/a.md"));
 }
 
-// @kotowari[REQ-123, TBL-019]
+// @kotowari[REQ-core-123, TBL-core-019]
 #[test]
 fn req_123_duplicate_across_the_chain_is_reported_on_the_deeper_row() {
     let tmp = TempDir::new().unwrap();
@@ -1727,7 +1727,7 @@ fn req_123_duplicate_across_the_chain_is_reported_on_the_deeper_row() {
     assert!(findings_by_kind(&result, "source_invalid").is_empty());
 }
 
-// @kotowari[REQ-069, TBL-014]
+// @kotowari[REQ-core-069, TBL-core-014]
 #[test]
 fn tbl_014_md_followed_by_hash_or_slash_is_not_a_reference() {
     let doc = kotowari::ir::parse_document(
@@ -1741,7 +1741,7 @@ fn tbl_014_md_followed_by_hash_or_slash_is_not_a_reference() {
     assert!(findings.is_empty(), "{:?}", findings);
 }
 
-// @kotowari[REQ-069, REQ-070, TBL-014]
+// @kotowari[REQ-core-069, REQ-core-070, TBL-core-014]
 #[test]
 fn tbl_014_slash_separated_path_is_a_reference() {
     let doc = kotowari::ir::parse_document(
@@ -1755,7 +1755,7 @@ fn tbl_014_slash_separated_path_is_a_reference() {
     assert_eq!(findings[0].detail, "network/dns/b.md");
 }
 
-// @kotowari[REQ-070, TBL-014, EX-023]
+// @kotowari[REQ-core-070, TBL-core-014, EX-core-023]
 #[test]
 fn req_070_bare_name_resolves_in_the_same_directory_only() {
     let tmp = TempDir::new().unwrap();
@@ -1774,7 +1774,7 @@ fn req_070_bare_name_resolves_in_the_same_directory_only() {
     assert!(findings_by_kind(&parse_json(&output), "missing_document").is_empty());
 }
 
-// @kotowari[REQ-070, TBL-014, EX-024]
+// @kotowari[REQ-core-070, TBL-core-014, EX-core-024]
 #[test]
 fn req_070_slash_path_resolves_from_the_ir_root() {
     let tmp = TempDir::new().unwrap();
@@ -1786,7 +1786,7 @@ fn req_070_slash_path_resolves_from_the_ir_root() {
     assert_eq!(result["files"], 2);
 }
 
-// @kotowari[REQ-070, TBL-014, EX-025]
+// @kotowari[REQ-core-070, TBL-core-014, EX-core-025]
 #[test]
 fn req_070_dot_and_dotdot_elements_never_resolve() {
     let tmp = TempDir::new().unwrap();
@@ -1803,7 +1803,7 @@ fn req_070_dot_and_dotdot_elements_never_resolve() {
     assert!(missing.iter().all(|f| f["path"] == "docs/ir/network/dns/a.md"));
 }
 
-// @kotowari[REQ-069, REQ-070, TBL-014, TBL-008, EX-014]
+// @kotowari[REQ-core-069, REQ-core-070, TBL-core-014, TBL-core-008, EX-core-014]
 #[test]
 fn req_070_detail_is_the_whole_reference() {
     let tmp = TempDir::new().unwrap();
@@ -1815,7 +1815,7 @@ fn req_070_detail_is_the_whole_reference() {
     assert_eq!(missing[0]["detail"], "docs/decision/adr/0001-test-marker.md");
 }
 
-// @kotowari[REQ-033, REQ-070, TBL-014, EX-032]
+// @kotowari[REQ-core-033, REQ-core-070, TBL-core-014, EX-core-032]
 #[cfg(unix)]
 #[test]
 fn req_070_document_under_a_directory_symlink_is_missing() {
@@ -1832,7 +1832,7 @@ fn req_070_document_under_a_directory_symlink_is_missing() {
     assert_eq!(missing[0]["detail"], "link/d.md");
 }
 
-// @kotowari[REQ-069, TBL-014, EX-033]
+// @kotowari[REQ-core-069, TBL-core-014, EX-core-033]
 #[test]
 fn tbl_014_reference_after_a_japanese_character_is_recognized() {
     let tmp = TempDir::new().unwrap();
@@ -1844,7 +1844,7 @@ fn tbl_014_reference_after_a_japanese_character_is_recognized() {
     assert_eq!(missing[0]["detail"], "timeout-config.md");
 }
 
-// @kotowari[REQ-064, REQ-069, TBL-014, EX-034]
+// @kotowari[REQ-core-064, REQ-core-069, TBL-core-014, EX-core-034]
 #[test]
 fn tbl_014_backticked_path_is_a_term_not_a_reference() {
     let tmp = TempDir::new().unwrap();
@@ -1857,7 +1857,7 @@ fn tbl_014_backticked_path_is_a_term_not_a_reference() {
     assert!(findings_by_kind(&result, "missing_document").is_empty(), "{:?}", result);
 }
 
-// @kotowari[REQ-117, REQ-064]
+// @kotowari[REQ-core-117, REQ-core-064]
 #[test]
 fn req_117_invalid_glossary_hides_only_its_own_terms() {
     let tmp = TempDir::new().unwrap();
@@ -1876,15 +1876,15 @@ fn req_117_invalid_glossary_hides_only_its_own_terms() {
     assert_eq!(unknown[0]["path"], "docs/ir/network/a.md");
 }
 
-// --- REQ-062, REQ-068: 見ないもの ---
+// --- REQ-core-062, REQ-core-068: 見ないもの ---
 
-// @kotowari[REQ-062]
+// @kotowari[REQ-core-062]
 #[test]
 fn req_062_source_content_is_not_matched_against_the_item() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
-    // REQ-001 の出典 A1 は項目の内容とまったく関係が無い。
-    // REQ-002 の出典は存在しない決定を指すので、出典の検査が動いていることが分かる。
+    // REQ-core-001 の出典 A1 は項目の内容とまったく関係が無い。
+    // REQ-core-002 の出典は存在しない決定を指すので、出典の検査が動いていることが分かる。
     fs::write(
         tmp.path().join("docs/ir/a.md"),
         "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: 出力の形\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n\nこの道具は JSON を出す。\n\n### REQ-002: 別の要求\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A9\n- 検証: review\n\nこの道具は文書を読む。\n",
@@ -1904,7 +1904,7 @@ fn req_062_source_content_is_not_matched_against_the_item() {
     );
 }
 
-// @kotowari[REQ-068]
+// @kotowari[REQ-core-068]
 #[test]
 fn req_068_unquoted_term_gets_no_finding_on_its_line() {
     let tmp = TempDir::new().unwrap();
@@ -1945,7 +1945,7 @@ fn req_068_unquoted_term_gets_no_finding_on_its_line() {
     );
 }
 
-// @kotowari[REQ-123, EX-027]
+// @kotowari[REQ-core-123, EX-core-027]
 #[test]
 fn req_123_same_term_above_and_below_the_chain_is_reported_on_the_lower_row() {
     let tmp = TempDir::new().unwrap();
@@ -1967,7 +1967,7 @@ fn req_123_same_term_above_and_below_the_chain_is_reported_on_the_lower_row() {
 
 // --- terms.md の具体例 ---
 
-// @kotowari[REQ-064, EX-013]
+// @kotowari[REQ-core-064, EX-core-013]
 #[test]
 fn req_064_a_backticked_path_outside_the_glossary_is_an_unknown_term() {
     let tmp = TempDir::new().unwrap();
@@ -1979,7 +1979,7 @@ fn req_064_a_backticked_path_outside_the_glossary_is_an_unknown_term() {
     assert_eq!(unknown[0]["detail"], "src/main.rs");
 }
 
-// @kotowari[REQ-069, EX-022]
+// @kotowari[REQ-core-069, EX-core-022]
 #[test]
 fn req_069_a_source_shaped_path_in_the_scope_line_is_not_a_reference() {
     let tmp = TempDir::new().unwrap();
@@ -1997,7 +1997,7 @@ fn req_069_a_source_shaped_path_in_the_scope_line_is_not_a_reference() {
     );
 }
 
-// @kotowari[REQ-069, EX-031]
+// @kotowari[REQ-core-069, EX-core-031]
 #[test]
 fn req_069_md_followed_by_a_slash_is_not_a_reference() {
     let tmp = TempDir::new().unwrap();

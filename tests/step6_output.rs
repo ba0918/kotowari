@@ -28,9 +28,9 @@ fn parse_json(output: &std::process::Output) -> serde_json::Value {
     serde_json::from_str(&stdout).expect("valid JSON")
 }
 
-// --- REQ-021: 出力の形の値 ---
+// --- REQ-core-021: 出力の形の値 ---
 
-// @kotowari[REQ-021]
+// @kotowari[REQ-core-021]
 #[test]
 fn req_021_format_values_are_json_and_text() {
     let tmp = TempDir::new().unwrap();
@@ -54,9 +54,9 @@ fn req_021_format_values_are_json_and_text() {
     assert_eq!(output2.status.code(), Some(0));
 }
 
-// --- REQ-022: JSON を1つ出す ---
+// --- REQ-core-022: JSON を1つ出す ---
 
-// @kotowari[REQ-022]
+// @kotowari[REQ-core-022]
 #[test]
 fn req_022_json_is_one_document() {
     let tmp = TempDir::new().unwrap();
@@ -72,9 +72,9 @@ fn req_022_json_is_one_document() {
     assert!(v.is_object());
 }
 
-// --- REQ-023: JSON の中身 ---
+// --- REQ-core-023: JSON の中身 ---
 
-// @kotowari[REQ-023, TBL-005, TBL-006]
+// @kotowari[REQ-core-023, TBL-core-005, TBL-core-006]
 #[test]
 fn req_023_files_counts_all_docs_and_lines_sums_them() {
     let tmp = TempDir::new().unwrap();
@@ -101,7 +101,7 @@ fn req_023_files_counts_all_docs_and_lines_sums_them() {
     assert!(v["counts"].is_object());
 }
 
-// @kotowari[REQ-023, TBL-006]
+// @kotowari[REQ-core-023, TBL-core-006]
 #[test]
 fn req_023_finding_keys_match_the_table() {
     let tmp = TempDir::new().unwrap();
@@ -125,9 +125,9 @@ fn req_023_finding_keys_match_the_table() {
     }
 }
 
-// --- PROP-002: counts と findings の一致 ---
+// --- PROP-core-002: counts と findings の一致 ---
 
-// @kotowari[PROP-002]
+// @kotowari[PROP-core-002]
 #[test]
 fn prop_002_counts_match_findings() {
     let tmp = TempDir::new().unwrap();
@@ -163,9 +163,9 @@ fn prop_002_counts_match_findings() {
     }
 }
 
-// --- REQ-025: 文字の出力 ---
+// --- REQ-core-025: 文字の出力 ---
 
-// @kotowari[REQ-025]
+// @kotowari[REQ-core-025]
 #[test]
 fn req_025_text_has_one_line_per_finding_with_bracketed_severity() {
     let tmp = TempDir::new().unwrap();
@@ -188,7 +188,7 @@ fn req_025_text_has_one_line_per_finding_with_bracketed_severity() {
     }
 }
 
-// @kotowari[REQ-025, REQ-026, EX-004]
+// @kotowari[REQ-core-025, REQ-core-026, EX-core-004]
 #[test]
 fn req_025_text_line_for_a_document_without_a_title() {
     let tmp = TempDir::new().unwrap();
@@ -206,9 +206,9 @@ fn req_025_text_line_for_a_document_without_a_title() {
     );
 }
 
-// --- REQ-026: 行の無い指摘の文字の出力 ---
+// --- REQ-core-026: 行の無い指摘の文字の出力 ---
 
-// @kotowari[REQ-026]
+// @kotowari[REQ-core-026]
 #[test]
 fn req_026_null_line_prints_dash() {
     let tmp = TempDir::new().unwrap();
@@ -228,9 +228,9 @@ fn req_026_null_line_prints_dash() {
     );
 }
 
-// --- REQ-007: 終了コード ---
+// --- REQ-core-007: 終了コード ---
 
-// @kotowari[REQ-007, TBL-002]
+// @kotowari[REQ-core-007, TBL-core-002]
 #[test]
 fn req_007_exit_code_one_on_error_and_zero_on_notice_only() {
     let tmp = TempDir::new().unwrap();
@@ -268,7 +268,7 @@ fn req_007_exit_code_one_on_error_and_zero_on_notice_only() {
     assert_eq!(output3.status.code(), Some(2), "stop should exit 2");
 }
 
-// --- REQ-128, TBL-021, PROP-004: 読んだテストのファイルの申告 ---
+// --- REQ-core-128, TBL-core-021, PROP-core-004: 読んだテストのファイルの申告 ---
 
 /// "tests.files" の glob を指定したプロジェクトを作る
 fn make_project_with_test_globs(tmp: &std::path::Path, globs: &[&str]) {
@@ -290,10 +290,10 @@ fn write_test_file(tmp: &std::path::Path, rel: &str, content: &str) {
     fs::write(path, content).unwrap();
 }
 
-// @kotowari[REQ-128, TBL-021, EX-035]
+// @kotowari[REQ-core-128, TBL-core-021, EX-core-035]
 #[test]
 fn req_128_tests_key_lists_files_per_extension_with_query_flag() {
-    // EX-035: ".rs" が2つと ".py" が1つ
+    // EX-core-035: ".rs" が2つと ".py" が1つ
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
     write_test_file(tmp.path(), "lib/a.rs", "pub fn a() {}\n");
@@ -312,7 +312,7 @@ fn req_128_tests_key_lists_files_per_extension_with_query_flag() {
     );
 }
 
-// @kotowari[REQ-128, TBL-021]
+// @kotowari[REQ-core-128, TBL-core-021]
 #[test]
 fn req_128_tests_is_an_empty_object_without_test_files() {
     let tmp = TempDir::new().unwrap();
@@ -329,7 +329,7 @@ fn req_128_tests_is_an_empty_object_without_test_files() {
     );
 }
 
-// @kotowari[REQ-128]
+// @kotowari[REQ-core-128]
 #[test]
 fn req_128_text_format_does_not_print_tests() {
     let tmp = TempDir::new().unwrap();
@@ -352,7 +352,7 @@ fn req_128_text_format_does_not_print_tests() {
     assert_eq!(stdout, "", "text format should print findings only: {stdout}");
 }
 
-// @kotowari[TBL-021]
+// @kotowari[TBL-core-021]
 #[test]
 fn tbl_021_extension_is_after_the_last_dot_and_dotless_names_share_the_empty_key() {
     let tmp = TempDir::new().unwrap();
@@ -372,7 +372,7 @@ fn tbl_021_extension_is_after_the_last_dot_and_dotless_names_share_the_empty_key
     assert_eq!(v["tests"].as_object().unwrap().len(), 2, "two keys: {v}");
 }
 
-// @kotowari[TBL-021]
+// @kotowari[TBL-core-021]
 #[test]
 fn tbl_021_uppercase_extension_is_a_separate_key_without_query() {
     let tmp = TempDir::new().unwrap();
@@ -387,10 +387,10 @@ fn tbl_021_uppercase_extension_is_a_separate_key_without_query() {
     assert_eq!(v["tests"]["rs"]["query"], true, "rs has a query: {v}");
 }
 
-// @kotowari[TBL-021, EX-038]
+// @kotowari[TBL-core-021, EX-core-038]
 #[test]
 fn tbl_021_unparsable_file_is_counted() {
-    // EX-038: tree-sitter で読めないファイルも "files" に数える
+    // EX-core-038: tree-sitter で読めないファイルも "files" に数える
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*.rs"]);
     write_test_file(tmp.path(), "lib/ok.rs", "pub fn ok() {}\n");
@@ -407,7 +407,7 @@ fn tbl_021_unparsable_file_is_counted() {
     assert_eq!(v["tests"]["rs"]["files"], 2, "the unparsable file is counted: {v}");
 }
 
-// @kotowari[TBL-021]
+// @kotowari[TBL-core-021]
 #[test]
 #[cfg(unix)]
 fn tbl_021_same_path_counts_once_and_symlink_counts_apart() {
@@ -426,7 +426,7 @@ fn tbl_021_same_path_counts_once_and_symlink_counts_apart() {
     );
 }
 
-// @kotowari[TBL-021]
+// @kotowari[TBL-core-021]
 #[test]
 fn tbl_021_keys_are_in_byte_order() {
     let tmp = TempDir::new().unwrap();
@@ -450,7 +450,7 @@ fn tbl_021_keys_are_in_byte_order() {
     );
 }
 
-// @kotowari[TBL-021]
+// @kotowari[TBL-core-021]
 #[test]
 #[cfg(unix)]
 fn tbl_021_excluded_entries_are_not_counted() {
@@ -468,7 +468,7 @@ fn tbl_021_excluded_entries_are_not_counted() {
     );
 }
 
-// @kotowari[PROP-004]
+// @kotowari[PROP-core-004]
 #[test]
 fn prop_004_files_sum_equals_the_number_of_read_test_files() {
     use proptest::prelude::*;

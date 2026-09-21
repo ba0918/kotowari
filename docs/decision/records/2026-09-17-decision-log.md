@@ -14,7 +14,7 @@ Position: 第1〜第2ラウンドは承認・コミット済み。A19（2026-09-
 ## Agreements
 
 - A1 Agreements と Prohibitions の1件は、1行目に決定の本文（1つの決定。文の数は問わないが、理由や経緯は混ぜない）だけを書き、その下に字下げの箇条書きで「理由」「却下」「決めた人」「改めた」を持つ。「理由」は必須、「却下」はその決定に固有の却下案があるときだけ、「決めた人」は、これまでの記録で決定の行の末尾に書いていた「（推奨を採用）」「（利用者の言葉）」の括弧書きを置き換える。Rejected と Delegated の1件は「理由」を必ず持ち（brainstorm スキルの記録の種類の規則どおり）、「決めた人」は任意。Undecided の1件は「決める人」を必ず持ち、「関係」は任意
-  - why: 決定と理由が1行に混ざると、人が読むときに決定を拾えない。kotowari の出典の判定（[TBL-012](../../ir/sources.md#TBL-012)）は、行頭の空白を除いて「- 印 」で始まる行を見て、印が決定の番号の形（英大文字1文字に数字）のものだけを決定として読むので、「- 理由:」のような補足の行は決定として読まれない
+  - why: 決定と理由が1行に混ざると、人が読むときに決定を拾えない。kotowari の出典の判定（[TBL-core-012](../../ir/sources.md#TBL-core-012)）は、行頭の空白を除いて「- 印 」で始まる行を見て、印が決定の番号の形（英大文字1文字に数字）のものだけを決定として読むので、「- 理由:」のような補足の行は決定として読まれない
   - decided_by: 利用者（推奨を採用）
   - superseded_by: [record-form の A27](./2026-09-17-record-form.md#A27)（補足の行の名前を英語に。理由 → why、却下 → rejected、決めた人 → decided_by、改めた → superseded_by、決める人 → decides、関係 → related）
 
@@ -28,11 +28,11 @@ Position: 第1〜第2ラウンドは承認・コミット済み。A19（2026-09-
   - decided_by: 利用者（推奨を採用）
 
 - A4 記録の節の見出しは英語のまま（決定の節の4つ Agreements、Prohibitions、Delegated、Rejected と、決定の節ではない Undecided、Revisions）
-  - why: 見出しは出典の検査の契約で、変えるとコードと TBL-012 と用語集が動く。読みやすさは中身の側で取る
+  - why: 見出しは出典の検査の契約で、変えるとコードと TBL-core-012 と用語集が動く。読みやすさは中身の側で取る
   - rejected: 見出しを日本語にする（R1）
   - decided_by: 利用者（推奨を採用）
 
-- A5 ADR を新しく書く義務をやめる。既存の ADR 4本は消さない（0002 と 0003 は IR の出典の先。0001 と 0004 も履歴として残す）。IR の [REQ-097](../../ir/decision-records.md#REQ-097) を「既存の ADR を消さない」に、[REQ-092](../../ir/decision-records.md#REQ-092) を「判断の記録と、書かれた ADR が残る」に改め、[records.md#R2](./records.md#R2)（判断の記録だけにして ADR をやめる、の却下）を部分的に改める（新規作成をやめ、既存は残す）。[ADR-0003](../adr/0003-records-and-adr.md) の冒頭に改訂の注記を足す
+- A5 ADR を新しく書く義務をやめる。既存の ADR 4本は消さない（0002 と 0003 は IR の出典の先。0001 と 0004 も履歴として残す）。IR の [REQ-core-097](../../ir/decision-records.md#REQ-core-097) を「既存の ADR を消さない」に、[REQ-core-092](../../ir/decision-records.md#REQ-core-092) を「判断の記録と、書かれた ADR が残る」に改め、[records.md#R2](./records.md#R2)（判断の記録だけにして ADR をやめる、の却下）を部分的に改める（新規作成をやめ、既存は残す）。[ADR-0003](../adr/0003-records-and-adr.md) の冒頭に改訂の注記を足す
   - why: R2 の理由「1ファイルに全部入り、粒度の考え方と衝突する」は、記録が brainstorm ごとの別ファイルになった時点で無くなった。ADR に残っていた固有の仕事（理由の詳細、改訂の統合先）は A1 と A3 が引き受ける
   - rejected: 4つの基準を壁打ちの手順に組み込んで ADR を書き続ける（R3）
   - decided_by: 利用者
@@ -51,7 +51,7 @@ Position: 第1〜第2ラウンドは承認・コミット済み。A19（2026-09-
   - rejected: 既存の記録を書き直す（R2）
   - decided_by: 利用者（推奨を採用）
 
-- A9 変えるものは、スキルの [references/workflow.md](../../../skills/kotowari/references/workflow.md) の判断の記録の段落、[スキルの仕様](../../spec/kotowari-skill.md)の該当箇所、IR の [REQ-097](../../ir/decision-records.md#REQ-097) と [REQ-092](../../ir/decision-records.md#REQ-092)、[用語集](../../ir/CONTEXT.md)の ADR の意味、[records.md#R2](./records.md#R2) への「改めた」の参照、[ADR-0003](../adr/0003-records-and-adr.md) の注記。記録の最小の形（`- A1 ` の行と4つの見出し）は今のまま [TBL-012](../../ir/sources.md#TBL-012) が持つ。ba0918-brainstorm スキル本体（agentic-rules）は触らない。文書の改訂は主セッションが直接行い、レビューは読み取り専用の調査エージェント1体
+- A9 変えるものは、スキルの [references/workflow.md](../../../skills/kotowari/references/workflow.md) の判断の記録の段落、[スキルの仕様](../../spec/kotowari-skill.md)の該当箇所、IR の [REQ-core-097](../../ir/decision-records.md#REQ-core-097) と [REQ-core-092](../../ir/decision-records.md#REQ-core-092)、[用語集](../../ir/CONTEXT.md)の ADR の意味、[records.md#R2](./records.md#R2) への「改めた」の参照、[ADR-0003](../adr/0003-records-and-adr.md) の注記。記録の最小の形（`- A1 ` の行と4つの見出し）は今のまま [TBL-core-012](../../ir/sources.md#TBL-core-012) が持つ。ba0918-brainstorm スキル本体（agentic-rules）は触らない。文書の改訂は主セッションが直接行い、レビューは読み取り専用の調査エージェント1体
   - why: 変更は文書だけで、cycle に見合わない
   - decided_by: 利用者（推奨を採用）
 
@@ -59,7 +59,7 @@ Position: 第1〜第2ラウンドは承認・コミット済み。A19（2026-09-
   - why: パスの無い番号は人が咄嗟に追えない。DeepSeek Harness が番号だけの引用を禁じたのと同じ理由（利用者の言葉）
   - decided_by: 利用者
 
-- A11 記録とスキルの文書で IR の ID（REQ-090 など）を挙げるときは、その項目を定義する文書へのリンクを必ず付ける（例: `[REQ-090](../../ir/form-contract.md#REQ-090)`）
+- A11 記録とスキルの文書で IR の ID（REQ-core-090 など）を挙げるときは、その項目を定義する文書へのリンクを必ず付ける（例: `[REQ-core-090](../../ir/form-contract.md#REQ-core-090)`）
   - why: ID だけでは内容を判断できない（利用者の言葉）
   - decided_by: 利用者
 
@@ -89,7 +89,7 @@ Position: 第1〜第2ラウンドは承認・コミット済み。A19（2026-09-
   - why: 同じ話題の続き
   - decided_by: 利用者（推奨を採用）
 
-- A18 判断の記録の置き場を `docs/decision/brainstorm` から `docs/decision/records` に改名する。IR の出典、設定、スキルの references の既定値と例、仕様、kotowari 本体の既定（TBL-004 の decisions.records の既定値）をすべて置換し、`kotowari check` が 0 件であることで壊れていないことを確かめる。experiments/ の下（実験の記録）は触らない。既存の記録の本文に現れる旧パスも置換する（履歴の文言は変わるが、解決できる参照を優先する。元の文言は git の履歴が持つ）
+- A18 判断の記録の置き場を `docs/decision/brainstorm` から `docs/decision/records` に改名する。IR の出典、設定、スキルの references の既定値と例、仕様、kotowari 本体の既定（TBL-core-004 の decisions.records の既定値）をすべて置換し、`kotowari check` が 0 件であることで壊れていないことを確かめる。experiments/ の下（実験の記録）は触らない。既存の記録の本文に現れる旧パスも置換する（履歴の文言は変わるが、解決できる参照を優先する。元の文言は git の履歴が持つ）
   - why: 記録は brainstorm の産物から「判断の記録」（Superseded を持つ履歴）に性格が変わり、同じディレクトリに形の契約 ir-form.md もあって、brainstorm という名前が中身と合わない。records は用語集の「判断の記録」と設定の鍵 decisions.records に対応し、新しい語を増やさない。logs は「文字どおりの履歴」で、記録という語とずれる（利用者の言葉）
   - rejected: docs/decision/logs（利用者の言葉: 記録は履歴ではなく記録）。records.md の R7（置き場を移さない）は「出典の書き換えが要る」が理由で、今回は Superseded の移行で出典を触るのでその理由が消えた
   - decided_by: 利用者
@@ -120,7 +120,7 @@ Position: 第1〜第2ラウンドは承認・コミット済み。A19（2026-09-
 ## Rejected
 
 - R1 決定の節の見出しを日本語にする
-  - why: 出典の検査の契約が動き、コードと [TBL-012](../../ir/sources.md#TBL-012) と用語集の変更になる（A4）
+  - why: 出典の検査の契約が動き、コードと [TBL-core-012](../../ir/sources.md#TBL-core-012) と用語集の変更になる（A4）
 
 - R2 既存の記録を新しい形に書き直す
   - why: 番号と行の意味が揺れる。理由の後付けは捏造になりやすい（A8）
@@ -138,4 +138,4 @@ Position: 第1〜第2ラウンドは承認・コミット済み。A19（2026-09-
 - A18 は [records.md#R7](./records.md#R7)（判断の記録と IR を docs/decision/ の新しい置き場に移さない）を置き換える。理由だった「出典の書き換えが要る」は、A14 の移行で出典を触るので消えた
 - A5 は [records.md#R2](./records.md#R2) を部分的に改める（新しい ADR は書かず、既存は残す）。A5 は [records.md#A22](./records.md#A22) の「両方残す」も「書かれた ADR は残す」に改める
 - A10 の href を「出典と同じ基準からのパス」から「その文書からの相対パス」に改めた（承認前。利用者が、基準からのパスでは Markdown のリンクが文書の場所から解決されて全部切れることに気づいたため）
-- A1、A4、A5、A6、A9 の文言と A3 の理由を、承認前のレビュー（2026-09-17）の指摘で直した: A1 の適用範囲と「一文」の意味、A4 の「決定の節」の語、A5 の出典の先の事実（4本中2本）と REQ-092、A6 の Position の位置、A9 のリンク
+- A1、A4、A5、A6、A9 の文言と A3 の理由を、承認前のレビュー（2026-09-17）の指摘で直した: A1 の適用範囲と「一文」の意味、A4 の「決定の節」の語、A5 の出典の先の事実（4本中2本）と REQ-core-092、A6 の Position の位置、A9 のリンク

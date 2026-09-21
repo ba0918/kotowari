@@ -1,4 +1,4 @@
-//! cargo-mutants の結果のファイルを`変異の結果`に写す（REQ-138、TBL-024）。
+//! cargo-mutants の結果のファイルを`変異の結果`に写す（REQ-core-138、TBL-core-024）。
 //! 道具に固有の鍵と値を知るのはこのモジュールだけで、写した先はどの語も知らない。
 
 use crate::mutants::{normalize_source_path, MutantOutcome, MutantResult};
@@ -26,7 +26,7 @@ pub fn read_outcomes(text: &str) -> Result<Vec<MutantOutcome>, String> {
             .get("scenario")
             .ok_or_else(|| "\"scenario\" is missing".to_string())?;
 
-        // TBL-024: 基準の実行は変異の結果にしない。成功でなければ結果の誤り
+        // TBL-core-024: 基準の実行は変異の結果にしない。成功でなければ結果の誤り
         if scenario.as_str() == Some(BASELINE) {
             if summary != BASELINE_SUCCESS {
                 return Err(format!("the baseline run did not succeed: {summary}"));
@@ -42,7 +42,7 @@ pub fn read_outcomes(text: &str) -> Result<Vec<MutantOutcome>, String> {
     Ok(outcomes)
 }
 
-/// 変異の1件を写す（TBL-024）
+/// 変異の1件を写す（TBL-core-024）
 fn read_mutant(mutant: &Value, summary: &str) -> Result<MutantOutcome, String> {
     let file = string_at(mutant, "file", "scenario.Mutant.file")?;
     let line = number(mutant, "line")?;
@@ -53,7 +53,7 @@ fn read_mutant(mutant: &Value, summary: &str) -> Result<MutantOutcome, String> {
         return Err(format!("the line is not 1 or greater: {line}"));
     }
 
-    // TBL-024: 変更の説明は、名前から「ファイル:行:列: 」の前置きを除いた残り
+    // TBL-core-024: 変更の説明は、名前から「ファイル:行:列: 」の前置きを除いた残り
     let prefix = format!("{file}:{line}:{column}: ");
     let change = name.strip_prefix(&prefix).ok_or_else(|| {
         format!("\"scenario.Mutant.name\" does not start with {prefix:?}: {name:?}")
@@ -68,7 +68,7 @@ fn read_mutant(mutant: &Value, summary: &str) -> Result<MutantOutcome, String> {
     })
 }
 
-/// 文字列の鍵を引く。無いか文字列でなければ誤りの説明を返す（TBL-020: 詳細は誤りの説明）
+/// 文字列の鍵を引く。無いか文字列でなければ誤りの説明を返す（TBL-core-020: 詳細は誤りの説明）
 fn string_at<'a>(value: &'a Value, key: &str, shown: &str) -> Result<&'a str, String> {
     value
         .get(key)
@@ -86,7 +86,7 @@ fn number(mutant: &Value, key: &str) -> Result<u64, String> {
         })
 }
 
-/// TBL-024: "summary" の4つの値を結果に写す。ほかの値は結果の誤り
+/// TBL-core-024: "summary" の4つの値を結果に写す。ほかの値は結果の誤り
 fn read_result(summary: &str) -> Result<MutantResult, String> {
     match summary {
         "CaughtMutant" => Ok(MutantResult::Caught),

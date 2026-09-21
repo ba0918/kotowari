@@ -4,7 +4,7 @@
 
 ## 要求
 
-### REQ-111: 先頭の BOM
+### REQ-core-111: 先頭の BOM
 
 - 種類: event_driven
 - 出典: docs/decision/records/records.md#A107
@@ -12,7 +12,7 @@
 
 読むファイルの先頭に UTF-8 の BOM があるとき、kotowari はそれを読み飛ばし、UTF-8 でないファイルとして`停止`しない。
 
-### REQ-112: 閉じないコードブロック
+### REQ-core-112: 閉じないコードブロック
 
 - 種類: event_driven
 - 出典: docs/decision/records/records.md#A108

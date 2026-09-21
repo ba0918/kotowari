@@ -8,7 +8,7 @@ kotowari を知らない LLM が、既存の ba0918 のワークフロー（brai
 
 ## 用語
 
-kotowari の用語集（`docs/ir/CONTEXT.md`）の意味をそのまま使う。この文書で出てくるものだけ、要点を写す。
+kotowari の用語集（`docs/ir/core/CONTEXT.md`）の意味をそのまま使う。この文書で出てくるものだけ、要点を写す。
 
 - **IR**: 正規化した仕様の Markdown の文書の集まり。設定の `ir` の置き場（既定 `docs/ir`）の下に、ディレクトリの深さに制限なく置く。話題ごとの文書、用語集 `CONTEXT.md`、問題の記録 `FLAGS.md` から成る
 - **項目**: 要求（`### REQ-nnn: 名前`）、決定表（`TBL-`）、性質（`PROP-`）、問題の記録（`FLAG-`）。要求は `- 種類:`、`- 出典:`、`- 検証:` を持ち、`algorithm` の要求は `- 定義:` も持つ。問題の記録は `- 種類:`、`- 関係:`、`- 出典:` を持つ
@@ -45,7 +45,7 @@ kotowari の用語集（`docs/ir/CONTEXT.md`）の意味をそのまま使う。
 
 SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotowari、IR、`docs/ir`、`@kotowari`、印、mutants、変異テスト）、目的、道具の有無の確認の手順、場面の選び方（人が名指ししたらそれ。なければ文脈から: 置き場が無い → `setup`、brainstorm の途中 → `write`、`check` の結果を読むとき → `check`、テストを書くとき → `mark`、`kotowari mutants` の結果を読むときと見逃しを調べるとき → `mutants`、plan・cycle・implement の途中 → `workflow`）、場面ごとに読む reference の表（`setup` → `config.md`、`write` → `ir-form.md` と `workflow.md` の brainstorm の節、`check` → `findings.md`、`mark` → `mark.md`、`mutants` → `mutants.md`、`workflow` → `workflow.md` の自分の席の節。`collate.md` は `write` の承認前）、この6つの場面がワークフローのどこに当たるか、だけを持つ。IR の形の規則、指摘の対処、設定のキー、印の規則、手順の置き換えは本文に書かず、references に置く。
 
-- 成功の条件: SKILL.md が100行以内。本文に `### REQ-` の形の規則、指摘の種類の名前（`docs/ir/findings.md` の TBL-008 と TBL-009 の値）、設定のキー（`docs/ir/config.md` の TBL-004 の値）が、reference の表の中以外に現れない。frontmatter に上の発火語がある
+- 成功の条件: SKILL.md が100行以内。本文に `### REQ-` の形の規則、指摘の種類の名前（`docs/ir/core/findings.md` の TBL-core-008 と TBL-core-009 の値）、設定のキー（`docs/ir/core/config.md` の TBL-core-004 の値）が、reference の表の中以外に現れない。frontmatter に上の発火語がある
 - 反例: SKILL.md に「要求は `### REQ-nnn: 名前` の見出しの下に…」の規則が書いてある
 - 確かめ方: 人が行数を数え、`rg -n 'REQ-|missing_|decisions\.' SKILL.md` の当たりが frontmatter と表の中だけであることを見る
 
@@ -88,7 +88,7 @@ SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotow
 - 用語集: brainstorm の「リポジトリの `CONTEXT.md`」は IR の置き場の `CONTEXT.md` のこと。用語は連鎖の中で1つのファイルにだけ置く
 - 終わりの敵対的レビュー: 「記録への適合」のレビューは R5 の照合レビューが置き換える。「仕様の品質」のレビュー1本は IR に対して残す（A28）
 - 承認時に stage するもの: IR の文書、用語集、問題の記録、判断の記録
-- 成功の条件: `ir-form.md` を読んだ LLM が、新しい要求1件、決定表か性質1件、シナリオ1件、用語1語、問題の記録1件を書き、それらが `ir-form.md` の項目の形（見出し、持つ行、タグ）に一致して、`kotowari check` の誤りがテスト側の指摘だけになる。判断の記録が `docs/decision/records/` にあり、出典がその決定の番号を指している。`ir-form.md` の節の一覧が上の列挙と一致し、各節の内容が `docs/ir/` の対応する文書（ir-document、ir-items、ir-references、terms-form、terms、sources、CONTEXT の除外）と食い違わない
+- 成功の条件: `ir-form.md` を読んだ LLM が、新しい要求1件、決定表か性質1件、シナリオ1件、用語1語、問題の記録1件を書き、それらが `ir-form.md` の項目の形（見出し、持つ行、タグ）に一致して、`kotowari check` の誤りがテスト側の指摘だけになる。判断の記録が `docs/decision/records/` にあり、出典がその決定の番号を指している。`ir-form.md` の節の一覧が上の列挙と一致し、各節の内容が `docs/ir/core/` の対応する文書（ir-document、ir-items、ir-references、terms-form、terms、sources、CONTEXT の除外）と食い違わない
 - 反例: 出典が `.agents/tmp/` の進捗ファイルを指している（`decisions.records` の外を指す出典は、ファイルがあっても `source_invalid` になる）。`U3` を出典に使う。要求の見出しの下に `- 反例:` の行を置く
 - 確かめ方: 人が kotowari を知らない別セッションの LLM に `write` を読ませて上の5つを書かせ、`check` の出力と、書き上がったものの形を見る。人が `ir-form.md` の節を `docs/ir/` の文書と突き合わせる
 
@@ -112,17 +112,17 @@ SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotow
 - 除外の追加や規則の緩めは仕様の変更なので、スキルの中で決めず brainstorm に戻す（A7）
 - `too_many_lines` と `too_many_requirements` の対処は分割の指示ではなく、責務の混在を疑う読み直し（2026-09-16 の記録 A3）。用語集はディレクトリごとに分けられなければ設定の `limits.lines` を上げ、その判断を記録に書く（A34）
 - 停止は終了コード2で、理由は標準エラーの1行目の文言（`config error`、`argument error`、`unreadable file`、`non-UTF-8 file`）で判別する。引数の誤りは LLM 自身のコマンドの誤りなので自分で直す。残り3つは人に返す
-- 成功の条件: `findings.md` の行が `docs/ir/findings.md` の TBL-008 と TBL-009 の種類と過不足なく対応し（`unresolved_reference` は2行）、各行に対処と担当がある。停止の4つの文言と対処が別の表にある。手順の最初が終了コードの確認である
+- 成功の条件: `findings.md` の行が `docs/ir/core/findings.md` の TBL-core-008 と TBL-core-009 の種類と過不足なく対応し（`unresolved_reference` は2行）、各行に対処と担当がある。停止の4つの文言と対処が別の表にある。手順の最初が終了コードの確認である
 - 反例: `unknown_term` を「バッククォートを外す」で対処する（用語集に足すか、言い換えるかは仕様の判断で、外すだけでは意味が変わる）。設定の誤りを LLM が設定ファイルを書き換えて黙って直す。停止のときに空の標準出力を JSON として読もうとする
-- 確かめ方: 人が `findings.md` の表と `docs/ir/findings.md` を突き合わせる
+- 確かめ方: 人が `findings.md` の表と `docs/ir/core/findings.md` を突き合わせる
 
 ### R7: `mark` は Rust の印の規則を持ち、その本文は `mark.md` にある
 
 `mark` は implementer と fixer が使う。reference `mark.md`（A29）に次を書く。
 
-- 印の形: `@kotowari[REQ-001, TBL-002]`。カンマ区切りで複数の ID。コメント記号は問わない
-- 印の置ける位置（kotowari の TBL-016 のとおり）: テスト関数とその属性の直前に続くコメントの塊（属性を挟んでよい。空行を挟むと切れる）、または関数の本体の先頭でどの文よりも前にあるコメントの塊。本体の途中と、テストの外の印は結び付かない
-- テストの見分け方（TBL-017 のとおり）: 属性のパスの末尾の要素が `test` の関数（`#[test]`、`#[tokio::test]`）、設定の `tests.rust.attributes` に挙げた属性の関数、`tests.rust.macros` に挙げたマクロの中の関数
+- 印の形: `@kotowari[REQ-core-001, TBL-core-002]`。カンマ区切りで複数の ID。コメント記号は問わない
+- 印の置ける位置（kotowari の TBL-core-016 のとおり）: テスト関数とその属性の直前に続くコメントの塊（属性を挟んでよい。空行を挟むと切れる）、または関数の本体の先頭でどの文よりも前にあるコメントの塊。本体の途中と、テストの外の印は結び付かない
+- テストの見分け方（TBL-core-017 のとおり）: 属性のパスの末尾の要素が `test` の関数（`#[test]`、`#[tokio::test]`）、設定の `tests.rust.attributes` に挙げた属性の関数、`tests.rust.macros` に挙げたマクロの中の関数
 - テスト名の慣習（A19。kotowari は検査しない）: 確かめる ID を小文字にしてハイフンを `_` に変え、先頭に付ける（`req_001_...`）
 - Rust 以外の言語では、IR 側の検査だけを使い、テスト側は人が確かめる（A12）
 - 成功の条件: `mark.md` を読んだ LLM が書いたテストに `check` が `test_without_id` と `invalid_marker` を出さない。`mark.md` の本文に、上の5つの項目がある
@@ -142,11 +142,11 @@ reference `workflow.md`（A29）は、brainstorm の節（R4）に加えて、�
 
 ### R9: references は現在の kotowari の仕様を、実験の記録を参照せずに書く
 
-references 7つ（`ir-form.md`、`findings.md`、`config.md`、`collate.md`、`mark.md`、`mutants.md`、`workflow.md`）は、kotowari の IR（`docs/ir/`）と形の契約から作るが、kotowari リポジトリの実験の記録（`experiments/` の下）への参照を含めない（A1。配布先で元本は読めない）。決定の番号や出典の例は架空のパス（`docs/decision/records/2026-01-01-example.md#A1`）で書く。kotowari 自身の IR の ID（`TBL-016` の類）を根拠として引かず、`docs/ir/` の文書名も引かない（配布先で解決できない。A32。例に使う ID は形の説明なので可）。元にする `docs/ir/` と形の契約が食い違えば `docs/ir/` が正で、実測で確かめられるなら確かめ、決まらなければ止まって人に言う（A32）。kotowari の仕様が変わったら references を更新し、先頭の改訂日を改める。
+references 7つ（`ir-form.md`、`findings.md`、`config.md`、`collate.md`、`mark.md`、`mutants.md`、`workflow.md`）は、kotowari の IR（`docs/ir/`）と形の契約から作るが、kotowari リポジトリの実験の記録（`experiments/` の下）への参照を含めない（A1。配布先で元本は読めない）。決定の番号や出典の例は架空のパス（`docs/decision/records/2026-01-01-example.md#A1`）で書く。kotowari 自身の IR の ID（`TBL-core-016` の類）を根拠として引かず、`docs/ir/` の文書名も引かない（配布先で解決できない。A32。例に使う ID は形の説明なので可）。元にする `docs/ir/` と形の契約が食い違えば `docs/ir/` が正で、実測で確かめられるなら確かめ、決まらなければ止まって人に言う（A32）。kotowari の仕様が変わったら references を更新し、先頭の改訂日を改める。
 
 - 成功の条件: `rg -n 'experiments/|docs/ir/[a-z-]+\.md' skills/kotowari/` が0件（置き場の名前 `docs/ir` と、利用者側に作る `docs/ir/CONTEXT.md`・`docs/ir/FLAGS.md` は書いてよい）。人が読んで、kotowari 自身の IR の ID を「〜のとおり」のように根拠として引いている箇所が無い。`config.md` に設定ファイルの全キー（`ir`、`decisions.records`、`decisions.adr`、`tests.files`、`tests.rust.attributes`、`tests.rust.macros`、`vague_words`、`limits.lines`、`limits.requirements`）と既定値がある。`collate.md` に、渡す入力（項目と出典の対）、判定の基準（出典の決定が項目の内容を裏付けるか）、返す形（裏付けの無い項目の一覧）、回数の上限（3回）がある
-- 反例: `ir-form.md` に `experiments/003-cli/brainstorm/records.md#A145` が残っている。`mark.md` に「TBL-016 のとおり」と書いてある
-- 確かめ方: 上の `rg`。人が `config.md` のキーを `docs/ir/config.md` の TBL-004 と突き合わせ、`collate.md` の4つの要素を見る
+- 反例: `ir-form.md` に `experiments/003-cli/brainstorm/records.md#A145` が残っている。`mark.md` に「TBL-core-016 のとおり」と書いてある
+- 確かめ方: 上の `rg`。人が `config.md` のキーを `docs/ir/core/config.md` の TBL-core-004 と突き合わせ、`collate.md` の4つの要素を見る
 
 ### R10: 元本の置き場と入れ方
 

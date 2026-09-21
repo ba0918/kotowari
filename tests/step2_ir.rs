@@ -14,7 +14,7 @@ fn find_by_kind<'a>(findings: &'a [Finding], kind: &str) -> Vec<&'a Finding> {
     findings.iter().filter(|f| f.kind == kind).collect()
 }
 
-// @kotowari[REQ-033, REQ-037, TBL-005]
+// @kotowari[REQ-core-033, REQ-core-037, TBL-core-005]
 #[test]
 fn req_033_subdirectories_are_read_at_any_depth() {
     let tmp = tempfile::tempdir().unwrap();
@@ -30,9 +30,9 @@ fn req_033_subdirectories_are_read_at_any_depth() {
     assert!(findings.is_empty(), "{findings:?}");
 }
 
-// --- REQ-034: 題名が無い ---
+// --- REQ-core-034: 題名が無い ---
 
-// @kotowari[REQ-034]
+// @kotowari[REQ-core-034]
 #[test]
 fn req_034_missing_title() {
     let doc = ir::parse_document("a.md", "No title here.\n");
@@ -43,9 +43,9 @@ fn req_034_missing_title() {
     assert!(mt[0].line.is_none());
 }
 
-// --- REQ-035: 題名が複数 ---
+// --- REQ-core-035: 題名が複数 ---
 
-// @kotowari[REQ-035]
+// @kotowari[REQ-core-035]
 #[test]
 fn req_035_multiple_titles() {
     let doc = ir::parse_document("a.md", "# First\n\nScope.\n\n# Second\n");
@@ -55,9 +55,9 @@ fn req_035_multiple_titles() {
     assert_eq!(mt[0].detail, "Second");
 }
 
-// --- REQ-036: 範囲の行が無い ---
+// --- REQ-core-036: 範囲の行が無い ---
 
-// @kotowari[REQ-036]
+// @kotowari[REQ-core-036]
 #[test]
 fn req_036_missing_scope() {
     let doc = ir::parse_document("a.md", "# Title\n\n## 要求\n");
@@ -67,7 +67,7 @@ fn req_036_missing_scope() {
     assert_eq!(ms[0].detail, "a.md");
 }
 
-// @kotowari[REQ-036]
+// @kotowari[REQ-core-036]
 #[test]
 fn req_036_glossary_and_flags_need_no_scope() {
     let glossary = ir::parse_document(
@@ -80,9 +80,9 @@ fn req_036_glossary_and_flags_need_no_scope() {
     assert!(ms.is_empty());
 }
 
-// --- REQ-037: 行の数え方 ---
+// --- REQ-core-037: 行の数え方 ---
 
-// @kotowari[REQ-037, TBL-010]
+// @kotowari[REQ-core-037, TBL-core-010]
 #[test]
 fn req_037_crlf_counts_as_one_line() {
     let doc = ir::parse_document("a.md", "# Title\r\n\r\nScope.\r\n");
@@ -95,9 +95,9 @@ fn req_037_crlf_counts_as_one_line() {
     assert_eq!(doc3.line_count, 1);
 }
 
-// --- REQ-038: 行数の上限 ---
+// --- REQ-core-038: 行数の上限 ---
 
-// @kotowari[REQ-038]
+// @kotowari[REQ-core-038]
 #[test]
 fn req_038_too_many_lines_is_a_notice() {
     // 既定の limits.lines は 200
@@ -111,9 +111,9 @@ fn req_038_too_many_lines_is_a_notice() {
     assert!(tl[0].line.is_none());
 }
 
-// --- REQ-039: 要求の数の上限 ---
+// --- REQ-core-039: 要求の数の上限 ---
 
-// @kotowari[REQ-039]
+// @kotowari[REQ-core-039]
 #[test]
 fn req_039_too_many_requirements_skips_glossary_and_flags() {
     // 既定の limits.requirements は 10。11個の要求を持つ文書
@@ -137,7 +137,7 @@ fn req_039_too_many_requirements_skips_glossary_and_flags() {
     assert!(tr2.is_empty());
 }
 
-// @kotowari[REQ-039]
+// @kotowari[REQ-core-039]
 #[test]
 fn req_039_unknown_heading_does_not_inflate_requirement_count() {
     // 10個の正しい要求 + 1個の認識できない見出し → too_many_requirements にならない
@@ -160,9 +160,9 @@ fn req_039_unknown_heading_does_not_inflate_requirement_count() {
     );
 }
 
-// --- REQ-040: コードブロックの中はスキップ ---
+// --- REQ-core-040: コードブロックの中はスキップ ---
 
-// @kotowari[REQ-040]
+// @kotowari[REQ-core-040]
 #[test]
 fn req_040_code_blocks_are_skipped_except_gherkin() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n\n```\n### BAD-001: Should not be parsed\n```\n\n## 具体例\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1\nScenario: Test\n  Given something\n```\n";
@@ -180,9 +180,9 @@ fn req_040_code_blocks_are_skipped_except_gherkin() {
     assert!(has_scenario, "gherkin scenarios should be parsed");
 }
 
-// --- REQ-042: すべての項目の形 ---
+// --- REQ-core-042: すべての項目の形 ---
 
-// @kotowari[REQ-042, TBL-011]
+// @kotowari[REQ-core-042, TBL-core-011]
 #[test]
 fn req_042_reads_every_item_kind_in_the_table() {
     let content = r#"# Title
@@ -257,9 +257,9 @@ Scenario: Test scenario
     assert!(has_scenario, "should parse scenarios");
 }
 
-// --- REQ-043: 形に合わない見出し ---
+// --- REQ-core-043: 形に合わない見出し ---
 
-// @kotowari[REQ-043]
+// @kotowari[REQ-core-043]
 #[test]
 fn req_043_unknown_heading() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### Bad Heading\n\nSome text.\n";
@@ -267,11 +267,11 @@ fn req_043_unknown_heading() {
     let findings = check(&[doc], &default_config());
     let uh = find_by_kind(&findings, "unknown_heading");
     assert_eq!(uh.len(), 1);
-    // A150/TBL-008: detail は読んだ見出しの行そのまま（"### " を含む）
+    // A150/TBL-core-008: detail は読んだ見出しの行そのまま（"### " を含む）
     assert_eq!(uh[0].detail, "### Bad Heading");
 }
 
-// @kotowari[REQ-043, TBL-008]
+// @kotowari[REQ-core-043, TBL-core-008]
 #[test]
 fn req_043_unknown_heading_detail_is_full_heading_text() {
     // コロン付きの認識できない見出し → detail は読んだ見出しの行そのまま（A150）
@@ -286,7 +286,7 @@ fn req_043_unknown_heading_detail_is_full_heading_text() {
     );
 }
 
-// @kotowari[REQ-043, TBL-008]
+// @kotowari[REQ-core-043, TBL-core-008]
 #[test]
 fn req_043_unknown_heading_invalid_id_detail_is_full_heading_text() {
     // 認識できる prefix だが ID 形式が不正（3桁でない） → detail は読んだ見出しの行そのまま（A150）
@@ -301,7 +301,7 @@ fn req_043_unknown_heading_invalid_id_detail_is_full_heading_text() {
     );
 }
 
-// @kotowari[REQ-043, TBL-008]
+// @kotowari[REQ-core-043, TBL-core-008]
 #[test]
 fn req_043_heading_without_colon_is_unknown() {
     // "### REQ-001" はコロンがないので "### ID: 名前" の形ではなく、unknown_heading になる
@@ -310,13 +310,13 @@ fn req_043_heading_without_colon_is_unknown() {
     let findings = check(&[doc], &default_config());
     let uh = find_by_kind(&findings, "unknown_heading");
     assert_eq!(uh.len(), 1, "should produce exactly one unknown_heading");
-    // A150/TBL-008: detail は読んだ見出しの行そのまま（"### " を含む）
+    // A150/TBL-core-008: detail は読んだ見出しの行そのまま（"### " を含む）
     assert_eq!(uh[0].detail, "### REQ-001");
 }
 
-// --- REQ-044: 知らない行 ---
+// --- REQ-core-044: 知らない行 ---
 
-// @kotowari[REQ-044]
+// @kotowari[REQ-core-044]
 #[test]
 fn req_044_unknown_field() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 優先度: 高\n\nStatement.\n";
@@ -327,7 +327,7 @@ fn req_044_unknown_field() {
     assert_eq!(uf[0].detail, "- 優先度: 高");
 }
 
-// @kotowari[REQ-044, TBL-008]
+// @kotowari[REQ-core-044, TBL-core-008]
 #[test]
 fn req_044_unknown_field_without_colon_has_line_text_as_detail() {
     // コロンのない "- テキスト" 行 → detail は行の文字
@@ -342,9 +342,9 @@ fn req_044_unknown_field_without_colon_has_line_text_as_detail() {
     );
 }
 
-// --- REQ-045: 同じ行の重複 ---
+// --- REQ-core-045: 同じ行の重複 ---
 
-// @kotowari[REQ-045]
+// @kotowari[REQ-core-045]
 #[test]
 fn req_045_duplicate_field() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 種類: prohibition\n\nStatement.\n";
@@ -355,9 +355,9 @@ fn req_045_duplicate_field() {
     assert_eq!(df[0].detail, "種類");
 }
 
-// --- REQ-046: 順不同、空行、コンマ ---
+// --- REQ-core-046: 順不同、空行、コンマ ---
 
-// @kotowari[REQ-046]
+// @kotowari[REQ-core-046]
 #[test]
 fn req_046_fields_in_any_order_with_blank_lines_and_commas() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 検証: unit\n\n- 出典: brainstorm/records.md#A1, brainstorm/records.md#A2\n\n- 種類: algorithm\n- 定義: TBL-001, PROP-001\n\n## 決定表\n\n### TBL-001: T\n\n- 出典: brainstorm/records.md#A1\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n## 性質\n\n### PROP-001: P\n\n- 出典: brainstorm/records.md#A1\n\nProp statement.\n";
@@ -370,9 +370,9 @@ fn req_046_fields_in_any_order_with_blank_lines_and_commas() {
     assert!(df.is_empty(), "no duplicate fields: {:?}", df);
 }
 
-// --- REQ-047: 文が無い ---
+// --- REQ-core-047: 文が無い ---
 
-// @kotowari[REQ-047]
+// @kotowari[REQ-core-047]
 #[test]
 fn req_047_missing_statement() {
     // algorithm 以外の要求に文がない
@@ -391,9 +391,9 @@ fn req_047_missing_statement() {
     assert!(ms2.is_empty());
 }
 
-// --- REQ-048: 検証の行が無い ---
+// --- REQ-core-048: 検証の行が無い ---
 
-// @kotowari[REQ-048]
+// @kotowari[REQ-core-048]
 #[test]
 fn req_048_verification_missing() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n\nStatement.\n";
@@ -404,9 +404,9 @@ fn req_048_verification_missing() {
     assert_eq!(vm[0].detail, "REQ-001");
 }
 
-// --- REQ-049: 検証の値の誤り ---
+// --- REQ-core-049: 検証の値の誤り ---
 
-// @kotowari[REQ-049]
+// @kotowari[REQ-core-049]
 #[test]
 fn req_049_verification_invalid() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: manual\n\nStatement.\n";
@@ -417,9 +417,9 @@ fn req_049_verification_invalid() {
     assert_eq!(vi[0].detail, "manual");
 }
 
-// --- REQ-050: 種類の値の誤り ---
+// --- REQ-core-050: 種類の値の誤り ---
 
-// @kotowari[REQ-050]
+// @kotowari[REQ-core-050]
 #[test]
 fn req_050_unknown_kind_of_requirement_and_flag() {
     // 要求の種類
@@ -433,7 +433,7 @@ fn req_050_unknown_kind_of_requirement_and_flag() {
     // 問題の記録の種類
     let flag_content = "# 問題の記録\n\n### FLAG-001: Issue\n\n- 種類: error\n- 関係: REQ-001\n- 出典: brainstorm/records.md#A1\n\nBody.\n";
     let flag_doc = ir::parse_document("FLAGS.md", flag_content);
-    // REQ-001 が定義されている文書も必要
+    // REQ-core-001 が定義されている文書も必要
     let req_content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
     let req_doc = ir::parse_document("a.md", req_content);
     let findings2 = check(&[flag_doc, req_doc], &default_config());
@@ -442,9 +442,9 @@ fn req_050_unknown_kind_of_requirement_and_flag() {
     assert_eq!(uk2[0].detail, "error");
 }
 
-// --- REQ-051: 定義の無い algorithm ---
+// --- REQ-core-051: 定義の無い algorithm ---
 
-// @kotowari[REQ-051]
+// @kotowari[REQ-core-051]
 #[test]
 fn req_051_algorithm_without_definition() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Algo\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n";
@@ -455,10 +455,10 @@ fn req_051_algorithm_without_definition() {
     assert_eq!(awd[0].detail, "REQ-001");
 }
 
-// @kotowari[REQ-051]
+// @kotowari[REQ-core-051]
 #[test]
 fn req_051_algorithm_definition_must_point_to_tbl_or_prop() {
-    // 定義が REQ-001 を指す（TBL/PROP ではない） → algorithm_without_definition が出る
+    // 定義が REQ-core-001 を指す（TBL/PROP ではない） → algorithm_without_definition が出る
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Algo\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: REQ-002\n\n### REQ-002: Other\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
     let doc = ir::parse_document("a.md", content);
     let findings = check(&[doc], &default_config());
@@ -472,9 +472,9 @@ fn req_051_algorithm_definition_must_point_to_tbl_or_prop() {
     assert_eq!(awd[0].detail, "REQ-001");
 }
 
-// --- REQ-098: 必須の行が無い ---
+// --- REQ-core-098: 必須の行が無い ---
 
-// @kotowari[REQ-098]
+// @kotowari[REQ-core-098]
 #[test]
 fn req_098_missing_field() {
     // 決定表に出典がない → missing_source with detail = ID
@@ -487,7 +487,7 @@ fn req_098_missing_field() {
     assert!(!mf.iter().any(|f| f.detail == "出典"), "missing_field 出典 should not appear");
 }
 
-// @kotowari[REQ-098, TBL-008, EX-259]
+// @kotowari[REQ-core-098, TBL-core-008, EX-core-259]
 #[test]
 fn req_098_review_requirement_without_how_to_verify_is_a_missing_field() {
     let requirement = |id: &str, verification: &str, how_to_verify: &str| {
@@ -503,7 +503,7 @@ fn req_098_review_requirement_without_how_to_verify_is_a_missing_field() {
         requirement("REQ-002", "review", "- 確かめ方: 手で見る\n"),
         // 24 行目: 検証が unit で行が無い
         requirement("REQ-003", "unit", ""),
-        // 32 行目: 検証が review で値が空（REQ-098: 無い行として扱う）
+        // 32 行目: 検証が review で値が空（REQ-core-098: 無い行として扱う）
         requirement("REQ-004", "review", "- 確かめ方:\n"),
     );
     let doc = ir::parse_document("a.md", &content);
@@ -513,13 +513,13 @@ fn req_098_review_requirement_without_how_to_verify_is_a_missing_field() {
         .filter(|f| f.detail == "確かめ方")
         .map(|f| f.line)
         .collect();
-    // TBL-019: line は項目の見出しの行
+    // TBL-core-019: line は項目の見出しの行
     assert_eq!(lines, vec![Some(7), Some(32)], "{findings:?}");
 }
 
-// --- REQ-099: 決定表に表がない ---
+// --- REQ-core-099: 決定表に表がない ---
 
-// @kotowari[REQ-099]
+// @kotowari[REQ-core-099]
 #[test]
 fn req_099_missing_table() {
     let content = "# Title\n\nScope.\n\n## 決定表\n\n### TBL-001: T\n\n- 出典: brainstorm/records.md#A1\n";
@@ -530,9 +530,9 @@ fn req_099_missing_table() {
     assert_eq!(mt[0].detail, "TBL-001");
 }
 
-// --- REQ-100: gherkin の外の Scenario は無視 ---
+// --- REQ-core-100: gherkin の外の Scenario は無視 ---
 
-// @kotowari[REQ-100]
+// @kotowari[REQ-core-100]
 #[test]
 fn req_100_scenario_outside_gherkin_is_ignored() {
     let content = "# Title\n\nScope.\n\nScenario: This should be ignored\n";
@@ -541,9 +541,9 @@ fn req_100_scenario_outside_gherkin_is_ignored() {
     assert!(!has_scenario, "Scenario outside gherkin should be ignored");
 }
 
-// --- REQ-042, REQ-053: タグなし連続シナリオ ---
+// --- REQ-core-042, REQ-core-053: タグなし連続シナリオ ---
 
-// @kotowari[REQ-042, REQ-053]
+// @kotowari[REQ-core-042, REQ-core-053]
 #[test]
 fn req_053_consecutive_scenarios_without_tags_each_get_missing_tag() {
     // タグ行なしで Scenario: が2つ連続 → 各シナリオに missing_tag が出る
@@ -560,9 +560,9 @@ fn req_053_consecutive_scenarios_without_tags_each_get_missing_tag() {
     assert_eq!(about_missing.len(), 2, "@about missing should be 2: {:?}", mt);
 }
 
-// --- REQ-052: 知らないタグ ---
+// --- REQ-core-052: 知らないタグ ---
 
-// @kotowari[REQ-052]
+// @kotowari[REQ-core-052]
 #[test]
 fn req_052_unknown_tag() {
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1 @requirement=REQ-001\nScenario: Test\n  Given something\n```\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
@@ -573,7 +573,7 @@ fn req_052_unknown_tag() {
     assert_eq!(ut[0].detail, "@requirement");
 }
 
-// @kotowari[REQ-052]
+// @kotowari[REQ-core-052]
 #[test]
 fn req_052_bare_tag_without_equals_is_unknown() {
     // @wip のように = を持たない裸のタグも unknown_tag になる
@@ -588,9 +588,9 @@ fn req_052_bare_tag_without_equals_is_unknown() {
     );
 }
 
-// --- REQ-053: 無いタグ ---
+// --- REQ-core-053: 無いタグ ---
 
-// @kotowari[REQ-053]
+// @kotowari[REQ-core-053]
 #[test]
 fn req_053_missing_tag() {
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@source=brainstorm/records.md#A1\nScenario: Test without id and about\n  Given something\n```\n";
@@ -601,7 +601,7 @@ fn req_053_missing_tag() {
     assert!(mt.iter().any(|f| f.detail == "@about"));
 }
 
-// @kotowari[REQ-053, REQ-059]
+// @kotowari[REQ-core-053, REQ-core-059]
 #[test]
 fn req_053_tag_with_empty_value_is_treated_as_missing() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n\n## 具体例\n\n```gherkin\n@id= @about=REQ-001 @source=\nScenario: Empty tag values\n  Given something\n```\n";
@@ -618,9 +618,9 @@ fn req_053_tag_with_empty_value_is_treated_as_missing() {
     );
 }
 
-// --- REQ-054: 参照切れ ---
+// --- REQ-core-054: 参照切れ ---
 
-// @kotowari[REQ-054]
+// @kotowari[REQ-core-054]
 #[test]
 fn req_054_unresolved_reference_in_definition_about_relation_and_sentence() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: TBL-999\n\n## 具体例\n\n```gherkin\n@id=EX-001 @about=REQ-999 @source=brainstorm/records.md#A1\nScenario: Ref test\n  Given something\n```\n";
@@ -632,9 +632,9 @@ fn req_054_unresolved_reference_in_definition_about_relation_and_sentence() {
     assert!(details.contains(&"REQ-999"), "should find unresolved about: {:?}", details);
 }
 
-// --- REQ-032: ID の重複 ---
+// --- REQ-core-032: ID の重複 ---
 
-// @kotowari[REQ-032]
+// @kotowari[REQ-core-032]
 #[test]
 fn req_032_duplicate_id_on_each_later_place_with_its_line() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: First\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement 1.\n\n### REQ-001: Second\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement 2.\n\n### REQ-001: Third\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement 3.\n";
@@ -648,12 +648,12 @@ fn req_032_duplicate_id_on_each_later_place_with_its_line() {
     assert!(di.iter().all(|f| f.line.is_some()));
 }
 
-// --- REQ-044, TBL-011: 性質の知らない行 ---
+// --- REQ-core-044, TBL-core-011: 性質の知らない行 ---
 
-// @kotowari[REQ-044, TBL-011]
+// @kotowari[REQ-core-044, TBL-core-011]
 #[test]
 fn req_044_property_definition_field_is_unknown() {
-    // TBL-011 によると性質が持つ行は「- 出典:」だけ。
+    // TBL-core-011 によると性質が持つ行は「- 出典:」だけ。
     // 「- 定義:」は知らない行として unknown_field になる。
     let content = "# Title\n\nScope.\n\n## 性質\n\n### PROP-001: P\n\n- 出典: brainstorm/records.md#A1\n- 定義: TBL-001\n\nProperty statement.\n";
     let doc = ir::parse_document("a.md", content);
@@ -666,7 +666,7 @@ fn req_044_property_definition_field_is_unknown() {
     );
 }
 
-// @kotowari[REQ-059]
+// @kotowari[REQ-core-059]
 #[test]
 fn req_059_scenario_without_id_missing_source_detail_is_scenario_text() {
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@about=REQ-001\nScenario: No id scenario\n  Given something\n```\n";
@@ -680,7 +680,7 @@ fn req_059_scenario_without_id_missing_source_detail_is_scenario_text() {
     );
 }
 
-// @kotowari[REQ-044]
+// @kotowari[REQ-core-044]
 #[test]
 fn req_044_prop_unknown_field_does_not_produce_unresolved_reference() {
     let content = "# Title\n\nScope.\n\n## 性質\n\n### PROP-001: P\n\n- 出典: brainstorm/records.md#A1\n- 定義: TBL-999\n\nProperty statement.\n";
@@ -700,9 +700,9 @@ fn req_044_prop_unknown_field_does_not_produce_unresolved_reference() {
     );
 }
 
-// --- REQ-047, REQ-048, REQ-049, REQ-050, REQ-051, REQ-098: フィールド検査の組み合わせ ---
+// --- REQ-core-047, REQ-core-048, REQ-core-049, REQ-core-050, REQ-core-051, REQ-core-098: フィールド検査の組み合わせ ---
 
-// @kotowari[REQ-047, REQ-048, REQ-049, REQ-050, REQ-051, REQ-098]
+// @kotowari[REQ-core-047, REQ-core-048, REQ-core-049, REQ-core-050, REQ-core-051, REQ-core-098]
 #[test]
 fn req_098_required_lines_are_told_apart_from_empty_values() {
     // (1) すべてのフィールドが揃って値も正しい要求 → 関連する指摘が出ない
@@ -761,7 +761,7 @@ fn req_098_required_lines_are_told_apart_from_empty_values() {
     assert!(!mf6.iter().any(|x| x.detail == "出典"), "PROP missing_field 出典 should not appear: {:?}", mf6);
 }
 
-// @kotowari[REQ-053]
+// @kotowari[REQ-core-053]
 #[test]
 fn gherkin_tags_cleared_after_block_without_scenario() {
     let content = "\
@@ -797,7 +797,7 @@ Scenario: bare scenario
 
 // --- split_lines: CRLF と空入力 ---
 
-// @kotowari[REQ-037, TBL-010]
+// @kotowari[REQ-core-037, TBL-core-010]
 #[test]
 fn req_037_crlf_title_and_requirement_line_numbers() {
     let content = "# Title\r\n\r\nScope.\r\n\r\n## 要求\r\n\r\n### REQ-001: Test\r\n\r\n- 種類: ubiquitous\r\n- 出典: brainstorm/records.md#A1\r\n- 検証: unit\r\n\r\nStatement.\r\n";
@@ -814,7 +814,7 @@ fn req_037_crlf_title_and_requirement_line_numbers() {
     );
 }
 
-// @kotowari[REQ-037, TBL-010]
+// @kotowari[REQ-core-037, TBL-core-010]
 #[test]
 fn req_037_empty_content_has_zero_lines() {
     let doc = ir::parse_document("a.md", "");
@@ -823,7 +823,7 @@ fn req_037_empty_content_has_zero_lines() {
 
 // --- gherkin ステップ認識 ---
 
-// @kotowari[REQ-042, TBL-011]
+// @kotowari[REQ-core-042, TBL-core-011]
 #[test]
 fn req_042_gherkin_all_step_keywords_recognized() {
     let content = "\
@@ -853,7 +853,7 @@ Scenario: All keywords
 
 // --- 用語集テーブルの解析 ---
 
-// @kotowari[REQ-042, TBL-011]
+// @kotowari[REQ-core-042, TBL-core-011]
 #[test]
 fn req_042_glossary_table_parses_terms() {
     let content = "\
@@ -879,7 +879,7 @@ fn req_042_glossary_table_parses_terms() {
 
 // --- FLAG の関係と出典のフィールド読み取り ---
 
-// @kotowari[REQ-042, TBL-011]
+// @kotowari[REQ-core-042, TBL-core-011]
 #[test]
 fn req_042_flag_relation_and_source_fields_read() {
     let content = "\
@@ -902,7 +902,7 @@ Body text.
     }
 }
 
-// @kotowari[REQ-054]
+// @kotowari[REQ-core-054]
 #[test]
 fn req_054_flag_relation_to_unknown_id_produces_unresolved_reference() {
     let content = "\
@@ -926,7 +926,7 @@ Body text.
     );
 }
 
-// @kotowari[REQ-098]
+// @kotowari[REQ-core-098]
 #[test]
 fn req_098_flag_without_relation_line_produces_missing_field() {
     let content = "\
@@ -951,7 +951,7 @@ Body text.
 
 // --- build_scenario の @source ---
 
-// @kotowari[REQ-042, TBL-011]
+// @kotowari[REQ-core-042, TBL-core-011]
 #[test]
 fn req_042_scenario_source_tag_parsed_into_sources() {
     let content = "\
@@ -981,7 +981,7 @@ Scenario: With source
 
 // --- check_documents の行数境界値 ---
 
-// @kotowari[REQ-038]
+// @kotowari[REQ-core-038]
 #[test]
 fn req_038_exactly_at_limit_no_notice_one_over_notices() {
     let cfg = default_config();
@@ -1005,7 +1005,7 @@ fn req_038_exactly_at_limit_no_notice_one_over_notices() {
 
 // --- check_backtick_ids ---
 
-// @kotowari[REQ-054]
+// @kotowari[REQ-core-054]
 #[test]
 fn req_054_backtick_id_known_no_finding_unknown_produces_unresolved() {
     let content = "\
@@ -1038,7 +1038,7 @@ The `REQ-001` is known but `TBL-999` is not.
     );
 }
 
-// @kotowari[REQ-054]
+// @kotowari[REQ-core-054]
 #[test]
 fn req_054_backtick_id_at_line_start_detected() {
     let content = "\
@@ -1066,7 +1066,7 @@ Scope.
     );
 }
 
-// @kotowari[REQ-054]
+// @kotowari[REQ-core-054]
 #[test]
 fn req_054_two_backtick_ids_on_one_line_both_reported() {
     let content = "\
@@ -1099,7 +1099,7 @@ See `TBL-998` and `TBL-999` here.
     );
 }
 
-// @kotowari[REQ-054]
+// @kotowari[REQ-core-054]
 #[test]
 fn req_054_backtick_non_id_not_reported_as_unresolved() {
     let content = "\
@@ -1129,7 +1129,7 @@ The `foo` word is not an ID.
 
 // --- check_references: Property の文中のバッククォート ID ---
 
-// @kotowari[REQ-054]
+// @kotowari[REQ-core-054]
 #[test]
 fn req_054_property_statement_backtick_id_produces_unresolved() {
     let content = "\
@@ -1157,7 +1157,7 @@ This property references `TBL-999` which does not exist.
 
 // --- TBL 出典が正しく読まれて missing_source にならない ---
 
-// @kotowari[REQ-098]
+// @kotowari[REQ-core-098]
 #[test]
 fn req_098_tbl_with_valid_source_no_missing_source() {
     let content = "\
@@ -1187,7 +1187,7 @@ Scope.
 
 // --- Step 3: 文書の読み込み ---
 
-// @kotowari[REQ-033]
+// @kotowari[REQ-core-033]
 #[test]
 fn req_033_uppercase_md_is_not_read() {
     use tempfile::TempDir;
@@ -1212,7 +1212,7 @@ fn req_033_uppercase_md_is_not_read() {
     assert_eq!(v["files"], 0, ".MD file should not be read");
 }
 
-// @kotowari[REQ-033]
+// @kotowari[REQ-core-033]
 #[test]
 fn req_033_file_symlink_is_read() {
     use tempfile::TempDir;
@@ -1239,7 +1239,7 @@ fn req_033_file_symlink_is_read() {
     assert_eq!(v["files"], 1, "symlinked file should be read");
 }
 
-// @kotowari[REQ-111]
+// @kotowari[REQ-core-111]
 #[test]
 fn req_111_bom_is_skipped_in_ir_config_records_adr_and_tests() {
     // BOM 付きの文書が正常に読まれることを確認
@@ -1250,7 +1250,7 @@ fn req_111_bom_is_skipped_in_ir_config_records_adr_and_tests() {
     assert_eq!(doc.title.as_ref().unwrap().1, "Title");
 }
 
-// @kotowari[REQ-040]
+// @kotowari[REQ-core-040]
 #[test]
 fn req_040_tilde_fence_is_a_code_block() {
     let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n~~~\nSome code\n~~~\n\nStatement.\n";
@@ -1264,7 +1264,7 @@ fn req_040_tilde_fence_is_a_code_block() {
     }
 }
 
-// @kotowari[REQ-040]
+// @kotowari[REQ-core-040]
 #[test]
 fn req_040_longer_fence_needs_same_or_longer_close() {
     let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n````\n```\nstill inside\n````\n\nStatement.\n";
@@ -1279,7 +1279,7 @@ fn req_040_longer_fence_needs_same_or_longer_close() {
     }
 }
 
-// @kotowari[REQ-112]
+// @kotowari[REQ-core-112]
 #[test]
 fn req_112_unclosed_code_block_is_an_error() {
     let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n```\nunclosed content\n";
@@ -1292,7 +1292,7 @@ fn req_112_unclosed_code_block_is_an_error() {
     assert_eq!(uc.detail, "```", "detail should be the raw opening line");
 }
 
-// @kotowari[REQ-112]
+// @kotowari[REQ-core-112]
 #[test]
 fn req_112_unclosed_gherkin_block_is_not_checked() {
     let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1\nScenario: test\n  Given something\n";
@@ -1306,7 +1306,7 @@ fn req_112_unclosed_gherkin_block_is_not_checked() {
         "scenario inside unclosed block should not be parsed");
 }
 
-// @kotowari[REQ-112, REQ-040]
+// @kotowari[REQ-core-112, REQ-core-040]
 #[test]
 fn req_112_unclosed_gherkin_block_with_multiple_scenarios_excludes_items() {
     // 複数シナリオがある閉じない gherkin ブロック。
@@ -1342,7 +1342,7 @@ Scenario: second
         scenarios.len());
 }
 
-// @kotowari[TBL-010]
+// @kotowari[TBL-core-010]
 #[test]
 fn tbl_010_empty_document_has_zero_lines_and_missing_title() {
     let doc = ir::parse_document("a.md", "");
@@ -1356,7 +1356,7 @@ fn tbl_010_empty_document_has_zero_lines_and_missing_title() {
 
 // --- Step 4a: 項目の行の形 ---
 
-// @kotowari[REQ-044]
+// @kotowari[REQ-core-044]
 #[test]
 fn req_044_star_plus_numbered_and_bare_dash_lines_are_unknown_fields() {
     let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n* star line\n+ plus line\n1. numbered line\n-\n\nStatement.\n";
@@ -1366,7 +1366,7 @@ fn req_044_star_plus_numbered_and_bare_dash_lines_are_unknown_fields() {
     assert!(uf.len() >= 4, "should produce at least 4 unknown_field findings, got {}", uf.len());
 }
 
-// @kotowari[REQ-044]
+// @kotowari[REQ-core-044]
 #[test]
 fn req_044_detail_is_the_raw_line() {
     let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n  * indented star\n\nStatement.\n";
@@ -1378,7 +1378,7 @@ fn req_044_detail_is_the_raw_line() {
         "detail should contain raw indented line, got: {:?}", uf);
 }
 
-// @kotowari[REQ-043]
+// @kotowari[REQ-core-043]
 #[test]
 fn req_043_deeper_heading_is_unknown_heading() {
     let content = "# Title\n\nScope.\n\n## Section\n\n#### DEEP-001: Deep\n\nSome text.\n";
@@ -1389,7 +1389,7 @@ fn req_043_deeper_heading_is_unknown_heading() {
         "#### heading should produce unknown_heading");
 }
 
-// @kotowari[REQ-043]
+// @kotowari[REQ-core-043]
 #[test]
 fn req_043_lines_under_unknown_heading_are_not_an_item() {
     let content = "# Title\n\nScope.\n\n## Section\n\n### BADID: X\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n\nStatement.\n";
@@ -1402,7 +1402,7 @@ fn req_043_lines_under_unknown_heading_are_not_an_item() {
     assert!(mf.is_empty(), "lines under unknown heading should not be checked as item fields");
 }
 
-// @kotowari[REQ-043]
+// @kotowari[REQ-core-043]
 #[test]
 fn req_043_valid_prefix_invalid_digits_is_not_an_item() {
     // 有効な接頭辞 REQ- に3桁でない数字 → 項目として構築されない
@@ -1426,7 +1426,7 @@ fn req_043_valid_prefix_invalid_digits_is_not_an_item() {
     assert!(!uh.is_empty(), "should produce unknown_heading for REQ-1");
 }
 
-// @kotowari[REQ-045]
+// @kotowari[REQ-core-045]
 #[test]
 fn req_045_third_known_line_gives_two_duplicates() {
     let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 種類: event_driven\n- 種類: state_driven\n\nStatement.\n";
@@ -1436,7 +1436,7 @@ fn req_045_third_known_line_gives_two_duplicates() {
     assert_eq!(df.len(), 2, "3 occurrences of same field should give 2 duplicate_field, got {}", df.len());
 }
 
-// @kotowari[REQ-045]
+// @kotowari[REQ-core-045]
 #[test]
 fn req_045_unknown_line_repeated_gives_only_unknown_field() {
     let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 優先度: 高\n- 優先度: 低\n\nStatement.\n";
@@ -1448,7 +1448,7 @@ fn req_045_unknown_line_repeated_gives_only_unknown_field() {
     assert_eq!(df.len(), 0, "unknown lines should not give duplicate_field");
 }
 
-// @kotowari[REQ-047]
+// @kotowari[REQ-core-047]
 #[test]
 fn req_047_requirement_without_kind_line_needs_statement() {
     // 種類の行が無い要求に文が無ければ missing_statement
@@ -1459,7 +1459,7 @@ fn req_047_requirement_without_kind_line_needs_statement() {
     assert!(!ms.is_empty(), "requirement without kind and without statement should produce missing_statement");
 }
 
-// @kotowari[REQ-032]
+// @kotowari[REQ-core-032]
 #[test]
 fn req_032_first_occurrence_is_bytewise_first_path() {
     // duplicate_id の1つ目はパスのバイト順で先の文書
@@ -1473,7 +1473,7 @@ fn req_032_first_occurrence_is_bytewise_first_path() {
 
 // --- Step 4b: gherkin の行の形と ID の定義 ---
 
-// @kotowari[REQ-113]
+// @kotowari[REQ-core-113]
 #[test]
 fn req_113_indented_steps_are_recognized() {
     // 2字下げのステップが正しく読まれる
@@ -1510,7 +1510,7 @@ Statement.
     }
 }
 
-// @kotowari[REQ-113]
+// @kotowari[REQ-core-113]
 #[test]
 fn req_113_feature_and_examples_lines_are_invalid() {
     let content = "\
@@ -1551,7 +1551,7 @@ Statement.
     assert!(ig.iter().any(|f| f.detail.contains("Examples:")), "Examples: should be invalid: {:?}", ig);
 }
 
-// @kotowari[REQ-113]
+// @kotowari[REQ-core-113]
 #[test]
 fn req_113_tag_line_binds_only_when_immediately_before_scenario() {
     // タグの行と Scenario: の間に行があると結び付かない
@@ -1586,7 +1586,7 @@ Statement.
     assert!(mt.iter().any(|f| f.detail == "@id"), "tag should not bind through comment: {:?}", mt);
 }
 
-// @kotowari[REQ-052]
+// @kotowari[REQ-core-052]
 #[test]
 fn req_052_unbound_tag_line_is_still_checked() {
     // 結び付かないタグの行でも unknown_tag は出る
@@ -1628,7 +1628,7 @@ Statement.
     assert!(ut.iter().any(|f| f.detail == "@wip"), "unbound tag line should still produce unknown_tag for @wip: {:?}", ut);
 }
 
-// @kotowari[REQ-052]
+// @kotowari[REQ-core-052]
 #[test]
 fn req_052_word_without_at_in_tag_line_is_unknown_tag() {
     // タグの行の "@" で始まらない語も unknown_tag
@@ -1661,7 +1661,7 @@ Statement.
     assert!(ut.iter().any(|f| f.detail == "badword"), "word without @ in tag line should be unknown_tag: {:?}", ut);
 }
 
-// @kotowari[REQ-114]
+// @kotowari[REQ-core-114]
 #[test]
 fn req_114_malformed_id_tag_is_invalid_id_and_not_defined() {
     // @id=EX1 は invalid_id、定義に数えない
@@ -1696,7 +1696,7 @@ Statement.
     assert!(!mt.iter().any(|f| f.detail == "@id"), "should not produce missing_tag @id when invalid_id: {:?}", mt);
 }
 
-// @kotowari[REQ-114]
+// @kotowari[REQ-core-114]
 #[test]
 fn req_114_malformed_id_scenario_missing_source_detail_is_scenario_line() {
     // @id が形に合わない → missing_source の detail は Scenario: の行の文字
@@ -1730,7 +1730,7 @@ Statement.
         "missing_source detail should be the Scenario: line text: {:?}", ms);
 }
 
-// @kotowari[REQ-114]
+// @kotowari[REQ-core-114]
 #[test]
 fn req_114_malformed_heading_is_not_defined() {
     // ### REQ-1: x は形に合わないので定義に数えない
@@ -1766,7 +1766,7 @@ Statement.
     assert!(uh.iter().any(|f| f.detail.contains("REQ-1")), "REQ-1 should be unknown_heading: {:?}", uh);
 }
 
-// @kotowari[REQ-054]
+// @kotowari[REQ-core-054]
 #[test]
 fn req_054_non_id_definition_value_is_unresolved() {
     // "- 定義: foo" は ID の形でないので unresolved_reference
@@ -1790,7 +1790,7 @@ Scope.
     assert!(ur.iter().any(|f| f.detail == "foo"), "non-ID definition value should produce unresolved_reference: {:?}", ur);
 }
 
-// @kotowari[REQ-054]
+// @kotowari[REQ-core-054]
 #[test]
 fn req_054_backtick_id_in_step_is_checked() {
     // ステップの行のバッククォートで囲んだ ID も存在を検査する
@@ -1823,7 +1823,7 @@ Scenario: Backtick in step
     assert!(ur.iter().any(|f| f.detail == "TBL-999"), "backtick ID in step should produce unresolved_reference: {:?}", ur);
 }
 
-// @kotowari[REQ-033]
+// @kotowari[REQ-core-033]
 #[test]
 #[cfg(unix)]
 fn req_033_broken_symlink_in_ir_dir_stops() {
@@ -1841,7 +1841,7 @@ fn req_033_broken_symlink_in_ir_dir_stops() {
 
 // --- 汎用化の実装レビューで見つかった食い違いの回帰テスト ---
 
-// @kotowari[REQ-044, TBL-008]
+// @kotowari[REQ-core-044, TBL-core-008]
 #[test]
 fn req_044_unknown_field_detail_is_raw_line_not_reconstructed() {
     // 名前と値の間の空白が崩れている行でも、detail は読んだ行の文字そのまま
@@ -1856,7 +1856,7 @@ fn req_044_unknown_field_detail_is_raw_line_not_reconstructed() {
     );
 }
 
-// @kotowari[REQ-100]
+// @kotowari[REQ-core-100]
 #[test]
 fn req_100_scenario_line_under_heading_is_excluded_from_statement() {
     // 見出しの下に "Scenario: あ" だけを書いても、文として拾わず用語検査も受けない
@@ -1883,7 +1883,7 @@ fn req_100_scenario_line_under_heading_is_excluded_from_statement() {
     );
 }
 
-// @kotowari[REQ-059, TBL-008]
+// @kotowari[REQ-core-059, TBL-core-008]
 #[test]
 fn tbl_008_missing_source_scenario_detail_is_raw_scenario_line() {
     // A150: @id の無いシナリオの missing_source detail は、字下げを含む生の Scenario: の行
@@ -1898,10 +1898,10 @@ fn tbl_008_missing_source_scenario_detail_is_raw_scenario_line() {
     );
 }
 
-// @kotowari[REQ-052]
+// @kotowari[REQ-core-052]
 #[test]
 fn req_052_word_with_equals_not_starting_with_at_keeps_full_word_as_detail() {
-    // REQ-052: "@" で始まらない語は、"=" があっても分けずに全体を detail にする
+    // REQ-core-052: "@" で始まらない語は、"=" があっても分けずに全体を detail にする
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1 foo=bar\nScenario: Test\n  Given something\n```\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
     let doc = ir::parse_document("a.md", content);
     let findings = check(&[doc], &default_config());
@@ -1913,10 +1913,10 @@ fn req_052_word_with_equals_not_starting_with_at_keeps_full_word_as_detail() {
     );
 }
 
-// @kotowari[REQ-054]
+// @kotowari[REQ-core-054]
 #[test]
 fn req_054_backtick_id_inside_double_quotes_is_not_checked() {
-    // REQ-054/REQ-104: 二重引用符の中のバッククォートの ID は参照の検査を受けない
+    // REQ-core-054/REQ-core-104: 二重引用符の中のバッククォートの ID は参照の検査を受けない
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nSee \"`REQ-999`\" for details.\n";
     let doc = ir::parse_document("a.md", content);
     let findings = check(&[doc], &default_config());
@@ -1928,7 +1928,7 @@ fn req_054_backtick_id_inside_double_quotes_is_not_checked() {
     );
 }
 
-// @kotowari[REQ-054, REQ-116]
+// @kotowari[REQ-core-054, REQ-core-116]
 #[test]
 fn req_054_backtick_oddness_counted_outside_quotes_only() {
     // 引用符の中の "`" を数に入れない: 引用符の外だけを見れば偶数なので検査が行われる
@@ -1943,7 +1943,7 @@ fn req_054_backtick_oddness_counted_outside_quotes_only() {
     );
 }
 
-// @kotowari[REQ-122]
+// @kotowari[REQ-core-122]
 #[test]
 fn req_122_glossary_row_with_missing_column_is_invalid() {
     let content = "\
@@ -1971,7 +1971,7 @@ fn req_122_glossary_row_with_missing_column_is_invalid() {
     assert_eq!(igr[0].line, Some(5));
 }
 
-// @kotowari[REQ-122]
+// @kotowari[REQ-core-122]
 #[test]
 fn req_122_glossary_row_with_empty_term_cell_is_invalid() {
     let content = "\
@@ -1998,7 +1998,7 @@ fn req_122_glossary_row_with_empty_term_cell_is_invalid() {
     assert_eq!(igr[0].line, Some(5));
 }
 
-// @kotowari[REQ-123]
+// @kotowari[REQ-core-123]
 #[test]
 fn req_123_duplicate_term_reported_for_second_row_onward() {
     let content = "\
@@ -2019,7 +2019,7 @@ fn req_123_duplicate_term_reported_for_second_row_onward() {
     assert_eq!(dt[1].line, Some(7));
 }
 
-// @kotowari[REQ-113]
+// @kotowari[REQ-core-113]
 #[test]
 fn req_113_step_without_preceding_scenario_is_invalid() {
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\nThen this step has no Scenario\n```\n";
@@ -2033,7 +2033,7 @@ fn req_113_step_without_preceding_scenario_is_invalid() {
     );
 }
 
-// @kotowari[REQ-113]
+// @kotowari[REQ-core-113]
 #[test]
 fn req_113_tag_line_not_immediately_before_scenario_is_invalid() {
     // タグの行の直後が空行で、Scenario: がその次に来る → タグの行自体が invalid_gherkin_line
@@ -2048,7 +2048,7 @@ fn req_113_tag_line_not_immediately_before_scenario_is_invalid() {
     );
 }
 
-// @kotowari[REQ-098]
+// @kotowari[REQ-core-098]
 #[test]
 fn req_098_empty_verification_value_is_missing_not_invalid() {
     // A157: "- 検証: " のように値が空の行は、行が無いものとして扱う
@@ -2061,7 +2061,7 @@ fn req_098_empty_verification_value_is_missing_not_invalid() {
     assert!(vi.is_empty(), "an empty verification value must not be verification_invalid: {:?}", vi);
 }
 
-// @kotowari[REQ-098]
+// @kotowari[REQ-core-098]
 #[test]
 fn req_098_empty_kind_value_is_missing_field() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: \n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
@@ -2075,7 +2075,7 @@ fn req_098_empty_kind_value_is_missing_field() {
     );
 }
 
-// @kotowari[REQ-098]
+// @kotowari[REQ-core-098]
 #[test]
 fn req_098_empty_definition_value_on_algorithm_is_without_definition() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: \n";
@@ -2089,7 +2089,7 @@ fn req_098_empty_definition_value_on_algorithm_is_without_definition() {
     );
 }
 
-// @kotowari[REQ-114]
+// @kotowari[REQ-core-114]
 #[test]
 fn req_114_malformed_id_still_reports_missing_about() {
     // A151: @id が形に合わなくても、@about が無ければ missing_tag @about は出る
@@ -2111,7 +2111,7 @@ fn req_114_malformed_id_still_reports_missing_about() {
     );
 }
 
-// @kotowari[REQ-034]
+// @kotowari[REQ-core-034]
 #[test]
 fn req_034_lines_before_title_are_ignored() {
     // A156: 題名より前にある空でない行は読まない（除外）
@@ -2123,7 +2123,7 @@ fn req_034_lines_before_title_are_ignored() {
     assert!(mt.is_empty(), "a title on a later line should still count as the title: {:?}", mt);
 }
 
-// @kotowari[REQ-113]
+// @kotowari[REQ-core-113]
 #[test]
 fn req_113_tags_do_not_leak_into_the_next_untagged_scenario() {
     // タグの付いた1つ目のシナリオの直後に、タグの無い2つ目のシナリオが続くとき、
@@ -2174,7 +2174,7 @@ Statement.
     );
 }
 
-// @kotowari[REQ-113]
+// @kotowari[REQ-core-113]
 #[test]
 fn req_113_consecutive_steps_without_scenario_report_only_the_first() {
     // A155: Scenario: の無いブロックで続く2つ目以降のステップは、最初のステップの誤りに含める
@@ -2187,10 +2187,10 @@ fn req_113_consecutive_steps_without_scenario_report_only_the_first() {
     assert_eq!(ig[0].line, Some(8));
 }
 
-// @kotowari[REQ-113]
+// @kotowari[REQ-core-113]
 #[test]
 fn req_113_orphan_step_after_a_blank_line_is_reported_again() {
-    // REQ-113 の「直前」は直前の行。空行を挟んだステップは直前にステップが無いので、改めて誤り
+    // REQ-core-113 の「直前」は直前の行。空行を挟んだステップは直前にステップが無いので、改めて誤り
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\nGiven first orphan\n\nThen after blank\n```\n";
     let doc = ir::parse_document("a.md", content);
     let findings = check(&[doc], &default_config());
@@ -2199,7 +2199,7 @@ fn req_113_orphan_step_after_a_blank_line_is_reported_again() {
     assert_eq!(details, vec!["Given first orphan", "Then after blank"], "{:?}", ig);
 }
 
-// @kotowari[REQ-113]
+// @kotowari[REQ-core-113]
 #[test]
 fn req_113_step_right_after_tag_line_reports_both_lines() {
     // A155: タグの行の直後がステップなら、タグの行（直後が Scenario: でない）とそのステップ（直前に Scenario: が無い）の両方
@@ -2213,7 +2213,7 @@ fn req_113_step_right_after_tag_line_reports_both_lines() {
     assert!(ut.is_empty(), "@id is a known tag, so no unknown_tag: {:?}", ut);
 }
 
-// @kotowari[REQ-113]
+// @kotowari[REQ-core-113]
 #[test]
 fn req_113_tag_line_right_before_closing_fence_is_invalid() {
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\nScenario: ok\n  Given something\n@about=REQ-001 @nope=x\n```\n";
@@ -2228,7 +2228,7 @@ fn req_113_tag_line_right_before_closing_fence_is_invalid() {
     assert!(ut.iter().any(|f| f.line == Some(10)), "unknown_tag for @nope should still be reported: {:?}", ut);
 }
 
-// @kotowari[REQ-122]
+// @kotowari[REQ-core-122]
 #[test]
 fn req_122_two_cell_row_with_trailing_pipe_is_invalid() {
     // A163: 判定はセルの数。"| a | b |" はセルが2つなので崩れた行
@@ -2248,7 +2248,7 @@ fn req_122_two_cell_row_with_trailing_pipe_is_invalid() {
     assert_eq!(igr[0].detail, "| テスト | 検証の意味 |");
 }
 
-// @kotowari[REQ-122]
+// @kotowari[REQ-core-122]
 #[test]
 fn req_122_three_cells_without_trailing_pipe_is_a_term() {
     // A163: 末尾の "|" が無くてもセルが3つあれば用語
@@ -2266,7 +2266,7 @@ fn req_122_three_cells_without_trailing_pipe_is_a_term() {
     assert!(find_by_kind(&findings, "invalid_glossary_row").is_empty(), "{:?}", findings);
 }
 
-// @kotowari[REQ-123]
+// @kotowari[REQ-core-123]
 #[test]
 fn req_123_duplicate_row_is_not_a_term() {
     // A162: 2つ目以降の行は duplicate_term だけを出し、用語にしない（出典が空でも missing_source は出ない）
@@ -2289,9 +2289,9 @@ fn req_123_duplicate_row_is_not_a_term() {
     assert!(!ms.iter().any(|f| f.line == Some(6)), "no other check on the duplicate row: {:?}", ms);
 }
 
-// --- TBL-010: split_lines の \r\n 処理 ---
+// --- TBL-core-010: split_lines の \r\n 処理 ---
 
-// @kotowari[TBL-010]
+// @kotowari[TBL-core-010]
 #[test]
 fn tbl_010_split_lines_strips_cr_and_does_not_panic_on_bare_lf() {
     // \r\n は CR を取り除いた1行になる
@@ -2308,9 +2308,9 @@ fn tbl_010_split_lines_strips_cr_and_does_not_panic_on_bare_lf() {
     );
 }
 
-// --- REQ-117: 用語集の区切り行の判定 ---
+// --- REQ-core-117: 用語集の区切り行の判定 ---
 
-// @kotowari[REQ-117]
+// @kotowari[REQ-core-117]
 #[test]
 fn req_117_non_dash_row_after_header_is_not_a_valid_separator() {
     // ヘッダの直後の行が "-" だけのセルでなければ、区切り行として認めてはいけない
@@ -2336,9 +2336,9 @@ fn req_117_non_dash_row_after_header_is_not_a_valid_separator() {
     );
 }
 
-// --- REQ-043: "####" 系見出しの検査 ---
+// --- REQ-core-043: "####" 系見出しの検査 ---
 
-// @kotowari[REQ-043]
+// @kotowari[REQ-core-043]
 #[test]
 fn req_043_five_hashes_with_space_is_unknown_heading() {
     // #### より深い見出し（5個以上の#）も直後が空白なら unknown_heading
@@ -2353,7 +2353,7 @@ fn req_043_five_hashes_with_space_is_unknown_heading() {
     );
 }
 
-// @kotowari[REQ-043]
+// @kotowari[REQ-core-043]
 #[test]
 fn req_043_four_hashes_without_trailing_space_is_not_unknown_heading() {
     // "#" が4つ以上続いても、直後が空白でなければ unknown_heading にしない
@@ -2368,7 +2368,7 @@ fn req_043_four_hashes_without_trailing_space_is_not_unknown_heading() {
     );
 }
 
-// @kotowari[REQ-043]
+// @kotowari[REQ-core-043]
 #[test]
 fn req_043_bare_four_hashes_is_not_unknown_heading() {
     // "####" だけの行（直後に何も無い）は unknown_heading にしない
@@ -2383,9 +2383,9 @@ fn req_043_bare_four_hashes_is_not_unknown_heading() {
     );
 }
 
-// --- REQ-112: 閉じないコードブロックの前の指摘・項目は残る ---
+// --- REQ-core-112: 閉じないコードブロックの前の指摘・項目は残る ---
 
-// @kotowari[REQ-112]
+// @kotowari[REQ-core-112]
 #[test]
 fn req_112_findings_and_items_before_the_unclosed_fence_are_retained() {
     let content = "\
@@ -2430,9 +2430,9 @@ unclosed content
     );
 }
 
-// --- REQ-098: 値が空でも「知らない行」は無いものとして扱わない ---
+// --- REQ-core-098: 値が空でも「知らない行」は無いものとして扱わない ---
 
-// @kotowari[REQ-098]
+// @kotowari[REQ-core-098]
 #[test]
 fn req_098_empty_value_of_unknown_field_still_reports_unknown_field() {
     // A157 の「値が空なら行が無いもの」は 種類・検証・定義・関係 だけに限る
@@ -2447,9 +2447,9 @@ fn req_098_empty_value_of_unknown_field_still_reports_unknown_field() {
     );
 }
 
-// --- REQ-044: ". " を含む行の数字接頭辞の判定 ---
+// --- REQ-core-044: ". " を含む行の数字接頭辞の判定 ---
 
-// @kotowari[REQ-044]
+// @kotowari[REQ-core-044]
 #[test]
 fn req_044_dot_space_not_preceded_by_digits_is_a_normal_statement() {
     // "Foo. Bar baz." のように ". " の前が数字でなければ、通常の文として扱う
@@ -2464,7 +2464,7 @@ fn req_044_dot_space_not_preceded_by_digits_is_a_normal_statement() {
     );
 }
 
-// @kotowari[REQ-044]
+// @kotowari[REQ-core-044]
 #[test]
 fn req_044_line_starting_with_dot_space_is_a_normal_statement() {
     // ". leading dot text" は数字の接頭辞が無い（空の接頭辞）ので通常の文として扱う
@@ -2479,9 +2479,9 @@ fn req_044_line_starting_with_dot_space_is_a_normal_statement() {
     );
 }
 
-// --- REQ-043: 形に合わない TBL-/PROP-/FLAG- の ID ---
+// --- REQ-core-043: 形に合わない TBL-/PROP-/FLAG- の ID ---
 
-// @kotowari[REQ-043]
+// @kotowari[REQ-core-043]
 #[test]
 fn req_043_malformed_tbl_id_is_not_an_item() {
     let content = "# Title\n\nScope.\n\n## 決定表\n\n### TBL-1: X\n\n- 出典: brainstorm/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
@@ -2505,7 +2505,7 @@ fn req_043_malformed_tbl_id_is_not_an_item() {
     );
 }
 
-// @kotowari[REQ-043]
+// @kotowari[REQ-core-043]
 #[test]
 fn req_043_malformed_prop_id_is_not_an_item() {
     let content = "# Title\n\nScope.\n\n## 性質\n\n### PROP-1: X\n\n- 出典: brainstorm/records.md#A1\n\nStatement.\n";
@@ -2529,7 +2529,7 @@ fn req_043_malformed_prop_id_is_not_an_item() {
     );
 }
 
-// @kotowari[REQ-043]
+// @kotowari[REQ-core-043]
 #[test]
 fn req_043_malformed_flag_id_is_not_an_item() {
     let content = "# 問題の記録\n\n### FLAG-1: Issue\n\n- 種類: gap\n- 関係: REQ-999\n- 出典: brainstorm/records.md#A1\n";
@@ -2553,9 +2553,9 @@ fn req_043_malformed_flag_id_is_not_an_item() {
     );
 }
 
-// --- TBL-011: 性質の "- 出典:" 行の読み方 ---
+// --- TBL-core-011: 性質の "- 出典:" 行の読み方 ---
 
-// @kotowari[TBL-011]
+// @kotowari[TBL-core-011]
 #[test]
 fn tbl_011_property_source_field_populates_sources() {
     let content = "# Title\n\nScope.\n\n## 性質\n\n### PROP-001: P\n\n- 出典: brainstorm/records.md#A1\n\nStatement.\n";
@@ -2582,9 +2582,9 @@ fn tbl_011_property_source_field_populates_sources() {
     );
 }
 
-// --- REQ-052: 結び付かないタグの行の行番号 ---
+// --- REQ-core-052: 結び付かないタグの行の行番号 ---
 
-// @kotowari[REQ-052]
+// @kotowari[REQ-core-052]
 #[test]
 fn req_052_dangling_bare_word_in_unbound_tag_line_keeps_its_line_number() {
     // "@" で始まらない語のタグ行が結び付かなくても、unknown_tag の line はタグ行自身の行にする
@@ -2606,9 +2606,9 @@ fn req_052_dangling_bare_word_in_unbound_tag_line_keeps_its_line_number() {
     );
 }
 
-// --- REQ-114: シナリオの id に使う @id の値の形 ---
+// --- REQ-core-114: シナリオの id に使う @id の値の形 ---
 
-// @kotowari[REQ-114]
+// @kotowari[REQ-core-114]
 #[test]
 fn req_114_well_formed_non_ex_id_is_not_used_as_scenario_id() {
     // @id の値が REQ- の形など、EX- 以外なら「有効な形」でも id として使わない
@@ -2637,7 +2637,7 @@ Scenario: uses a wrong-prefix but well-formed id
     }
 }
 
-// @kotowari[REQ-114]
+// @kotowari[REQ-core-114]
 #[test]
 fn req_114_malformed_id_value_is_the_actual_malformed_tag_not_a_bare_at_id() {
     // 2つの "@id" 名のタグがあるとき、報告する値は実際に形が合わない方でなければならない
@@ -2674,7 +2674,7 @@ Statement.
     );
 }
 
-// @kotowari[REQ-114]
+// @kotowari[REQ-core-114]
 #[test]
 fn req_114_malformed_id_value_is_not_stolen_from_an_unrelated_about_tag() {
     // "@about" の値がたまたま ID の形でなくても、malformed_value は "@id" 自身の値でなければならない
@@ -2711,9 +2711,9 @@ Statement.
     );
 }
 
-// --- REQ-059: @source タグが在るが値が使い物にならないとき ---
+// --- REQ-core-059: @source タグが在るが値が使い物にならないとき ---
 
-// @kotowari[REQ-059]
+// @kotowari[REQ-core-059]
 #[test]
 fn req_059_source_tag_present_but_only_commas_does_not_report_missing_source() {
     let content = "\
@@ -2749,9 +2749,9 @@ Statement.
     );
 }
 
-// --- REQ-098: 問題の記録の必須の行 ---
+// --- REQ-core-098: 問題の記録の必須の行 ---
 
-// @kotowari[REQ-098]
+// @kotowari[REQ-core-098]
 #[test]
 fn req_098_flag_entirely_missing_kind_line_produces_missing_field() {
     let content = "\
@@ -2774,7 +2774,7 @@ Body text.
     );
 }
 
-// @kotowari[REQ-098]
+// @kotowari[REQ-core-098]
 #[test]
 fn req_098_flag_relation_line_with_only_commas_does_not_report_missing_field() {
     let content = "\
@@ -2798,9 +2798,9 @@ Body text.
     );
 }
 
-// --- TBL-019: 複数の行を持つ項目での参照切れの行番号 ---
+// --- TBL-core-019: 複数の行を持つ項目での参照切れの行番号 ---
 
-// @kotowari[TBL-019]
+// @kotowari[TBL-core-019]
 #[test]
 fn tbl_019_unresolved_definition_reference_line_is_the_definition_fields_own_line() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: TBL-999\n";
@@ -2816,7 +2816,7 @@ fn tbl_019_unresolved_definition_reference_line_is_the_definition_fields_own_lin
     );
 }
 
-// @kotowari[TBL-019]
+// @kotowari[TBL-core-019]
 #[test]
 fn tbl_019_unresolved_relation_reference_line_is_the_relation_fields_own_line() {
     let content = "# 問題の記録\n\n### FLAG-001: Issue\n\n- 種類: gap\n- 関係: EX-999\n- 出典: brainstorm/records.md#A1\n";
@@ -2832,9 +2832,9 @@ fn tbl_019_unresolved_relation_reference_line_is_the_relation_fields_own_line() 
     );
 }
 
-// --- REQ-054: 参照の解決 ---
+// --- REQ-core-054: 参照の解決 ---
 
-// @kotowari[REQ-054]
+// @kotowari[REQ-core-054]
 #[test]
 fn req_054_valid_and_known_definition_id_produces_no_unresolved_reference() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: TBL-001\n\n## 決定表\n\n### TBL-001: T\n\n- 出典: brainstorm/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
@@ -2848,7 +2848,7 @@ fn req_054_valid_and_known_definition_id_produces_no_unresolved_reference() {
     );
 }
 
-// @kotowari[REQ-054]
+// @kotowari[REQ-core-054]
 #[test]
 fn req_054_extract_backtick_contents_two_pairs_on_one_line() {
     let result = ir::extract_backtick_contents("`REQ-001` and `TBL-999`");
@@ -2859,7 +2859,7 @@ fn req_054_extract_backtick_contents_two_pairs_on_one_line() {
     );
 }
 
-// @kotowari[REQ-033]
+// @kotowari[REQ-core-033]
 #[test]
 #[cfg(unix)]
 fn req_033_hidden_dir_and_dir_symlink_are_not_followed_at_any_depth() {
@@ -2882,7 +2882,7 @@ fn req_033_hidden_dir_and_dir_symlink_are_not_followed_at_any_depth() {
     assert!(findings.is_empty(), "{findings:?}");
 }
 
-// @kotowari[REQ-033, REQ-018, TBL-020]
+// @kotowari[REQ-core-033, REQ-core-018, TBL-core-020]
 #[test]
 #[cfg(unix)]
 fn req_033_broken_symlink_in_a_subdirectory_stops() {
@@ -2894,7 +2894,7 @@ fn req_033_broken_symlink_in_a_subdirectory_stops() {
         if detail.starts_with("docs/ir/sub/broken.md: ")));
 }
 
-// @kotowari[REQ-033, REQ-036, REQ-117]
+// @kotowari[REQ-core-033, REQ-core-036, REQ-core-117]
 #[test]
 fn req_033_context_and_flags_in_a_subdirectory_are_glossary_and_flags() {
     let tmp = tempfile::tempdir().unwrap();
@@ -2909,7 +2909,7 @@ fn req_033_context_and_flags_in_a_subdirectory_are_glossary_and_flags() {
     assert_eq!(find_by_kind(&findings, "glossary_invalid").len(), 1);
 }
 
-// @kotowari[TBL-008, REQ-034, REQ-036, REQ-117]
+// @kotowari[TBL-core-008, REQ-core-034, REQ-core-036, REQ-core-117]
 #[test]
 fn tbl_008_whole_document_detail_is_the_bare_filename_in_a_subdirectory() {
     let tmp = tempfile::tempdir().unwrap();
@@ -2924,7 +2924,7 @@ fn tbl_008_whole_document_detail_is_the_bare_filename_in_a_subdirectory() {
     }
 }
 
-// @kotowari[REQ-032]
+// @kotowari[REQ-core-032]
 #[test]
 fn req_032_first_occurrence_is_bytewise_first_relative_path() {
     let tmp = tempfile::tempdir().unwrap();
@@ -2939,7 +2939,7 @@ fn req_032_first_occurrence_is_bytewise_first_relative_path() {
     assert_eq!(duplicates[0].line, Some(5));
 }
 
-// --- REQ-055, REQ-056: 見ないもの ---
+// --- REQ-core-055, REQ-core-056: 見ないもの ---
 
 /// CLI を通して検査するプロジェクトを一時ディレクトリに作る
 fn make_cli_project(tmp: &std::path::Path) {
@@ -2981,7 +2981,7 @@ fn findings_on_line(v: &serde_json::Value, path: &str, line: u64) -> Vec<serde_j
         .collect()
 }
 
-// @kotowari[REQ-055]
+// @kotowari[REQ-core-055]
 #[test]
 fn req_055_non_ears_statement_gets_no_finding_on_its_line() {
     use tempfile::TempDir;
@@ -3005,7 +3005,7 @@ fn req_055_non_ears_statement_gets_no_finding_on_its_line() {
     );
 }
 
-// @kotowari[REQ-056]
+// @kotowari[REQ-core-056]
 #[test]
 fn req_056_contradiction_flag_with_one_reading_gets_no_finding() {
     use tempfile::TempDir;
@@ -3042,14 +3042,14 @@ fn req_056_contradiction_flag_with_one_reading_gets_no_finding() {
 
 // --- ir-document.md の具体例 ---
 
-// @kotowari[REQ-037, EX-007]
+// @kotowari[REQ-core-037, EX-core-007]
 #[test]
 fn req_037_two_lines_separated_by_crlf_count_as_two() {
     let doc = ir::parse_document("a.md", "a\r\nb");
     assert_eq!(doc.line_count, 2, "CRLF is one line break, not two");
 }
 
-// @kotowari[REQ-036, EX-006]
+// @kotowari[REQ-core-036, EX-core-006]
 #[test]
 fn req_036_glossary_with_only_a_title_and_a_table_has_no_missing_scope() {
     use tempfile::TempDir;
@@ -3067,7 +3067,7 @@ fn req_036_glossary_with_only_a_title_and_a_table_has_no_missing_scope() {
     );
 }
 
-// @kotowari[REQ-033, EX-021]
+// @kotowari[REQ-core-033, EX-core-021]
 #[test]
 fn req_033_context_and_flags_under_a_subdirectory_have_no_missing_scope() {
     use tempfile::TempDir;
@@ -3087,7 +3087,7 @@ fn req_033_context_and_flags_under_a_subdirectory_have_no_missing_scope() {
     );
 }
 
-// @kotowari[REQ-033, EX-020]
+// @kotowari[REQ-core-033, EX-core-020]
 #[test]
 fn req_033_a_document_deep_in_the_tree_is_read_and_an_empty_directory_is_silent() {
     use tempfile::TempDir;
@@ -3112,7 +3112,7 @@ fn req_033_a_document_deep_in_the_tree_is_read_and_an_empty_directory_is_silent(
     );
 }
 
-// @kotowari[REQ-033, EX-030]
+// @kotowari[REQ-core-033, EX-core-030]
 #[test]
 #[cfg(unix)]
 fn req_033_hidden_directory_and_directory_symlink_deep_in_the_tree_are_not_read() {
@@ -3157,7 +3157,7 @@ fn find_kind_in_json(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value
 
 // --- ir-references.md の具体例 ---
 
-// @kotowari[REQ-052, EX-009]
+// @kotowari[REQ-core-052, EX-core-009]
 #[test]
 fn req_052_retired_tag_on_a_scenario_is_unknown_tag() {
     use tempfile::TempDir;
@@ -3174,7 +3174,7 @@ fn req_052_retired_tag_on_a_scenario_is_unknown_tag() {
     assert_eq!(unknown[0]["detail"], "@requirement");
 }
 
-// @kotowari[REQ-054, EX-010]
+// @kotowari[REQ-core-054, EX-core-010]
 #[test]
 fn req_054_scenario_about_an_unknown_requirement_is_unresolved() {
     use tempfile::TempDir;
@@ -3193,7 +3193,7 @@ fn req_054_scenario_about_an_unknown_requirement_is_unresolved() {
 
 // --- findings.md と ir-items.md の具体例 ---
 
-// @kotowari[REQ-032, EX-005]
+// @kotowari[REQ-core-032, EX-core-005]
 #[test]
 fn req_032_three_places_yield_two_duplicates_and_none_on_the_first() {
     use tempfile::TempDir;
@@ -3216,7 +3216,7 @@ fn req_032_three_places_yield_two_duplicates_and_none_on_the_first() {
     );
 }
 
-// @kotowari[REQ-044, EX-008]
+// @kotowari[REQ-core-044, EX-core-008]
 #[test]
 fn req_044_priority_line_under_a_requirement_is_an_unknown_field() {
     use tempfile::TempDir;
@@ -3233,7 +3233,7 @@ fn req_044_priority_line_under_a_requirement_is_an_unknown_field() {
     assert_eq!(unknown[0]["detail"], "- 優先度: 高");
 }
 
-// @kotowari[REQ-044, TBL-011]
+// @kotowari[REQ-core-044, TBL-core-011]
 #[test]
 fn req_044_how_to_verify_is_a_known_line_of_a_requirement() {
     let content = concat!(
@@ -3251,7 +3251,7 @@ fn req_044_how_to_verify_is_a_known_line_of_a_requirement() {
     let doc = ir::parse_document("a.md", content);
     let findings = check(&[doc], &default_config());
     let unknown = find_by_kind(&findings, "unknown_field");
-    // TBL-011 は "- 確かめ方:" を要求だけに持たせる
+    // TBL-core-011 は "- 確かめ方:" を要求だけに持たせる
     assert_eq!(
         unknown.len(),
         2,
@@ -3263,7 +3263,7 @@ fn req_044_how_to_verify_is_a_known_line_of_a_requirement() {
     );
 }
 
-// @kotowari[REQ-045, TBL-011]
+// @kotowari[REQ-core-045, TBL-core-011]
 #[test]
 fn req_045_two_how_to_verify_lines_under_a_requirement_is_a_duplicate_field() {
     let content = concat!(

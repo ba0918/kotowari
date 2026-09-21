@@ -9,9 +9,9 @@ fn valid_project_dir() -> &'static Path {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-project").leak()
 }
 
-// --- REQ-001: コマンドは5つ ---
+// --- REQ-core-001: コマンドは5つ ---
 
-// @kotowari[REQ-001]
+// @kotowari[REQ-core-001]
 #[test]
 fn req_001_five_commands_only() {
     // "kotowari check" は通る
@@ -53,9 +53,9 @@ fn req_001_five_commands_only() {
         .code(2);
 }
 
-// --- REQ-002: 受けるオプション ---
+// --- REQ-core-002: 受けるオプション ---
 
-// @kotowari[REQ-002]
+// @kotowari[REQ-core-002]
 #[test]
 fn req_002_only_format_and_config_options() {
     // --format json は通る
@@ -66,10 +66,10 @@ fn req_002_only_format_and_config_options() {
         .code(0);
 }
 
-// --- REQ-004: 引数の誤り ---
+// --- REQ-core-004: 引数の誤り ---
 
-// REQ-008: 受けるオプションの集合を固定するのはこのテスト（否定側）
-// @kotowari[REQ-004, REQ-005, REQ-007, REQ-008, EX-001]
+// REQ-core-008: 受けるオプションの集合を固定するのはこのテスト（否定側）
+// @kotowari[REQ-core-004, REQ-core-005, REQ-core-007, REQ-core-008, EX-core-001]
 #[test]
 fn req_004_unknown_option_stops() {
     let output = cmd()
@@ -80,12 +80,12 @@ fn req_004_unknown_option_stops() {
         .stdout("")
         .get_output()
         .clone();
-    // REQ-005: stderr に理由がある
+    // REQ-core-005: stderr に理由がある
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(!stderr.is_empty(), "stderr should have a reason");
 }
 
-// @kotowari[REQ-004, REQ-005]
+// @kotowari[REQ-core-004, REQ-core-005]
 #[test]
 fn req_004_positional_argument_stops() {
     cmd()
@@ -103,7 +103,7 @@ fn req_004_positional_argument_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-004]
+// @kotowari[REQ-core-004]
 #[test]
 fn req_004_unknown_format_value_stops() {
     cmd()
@@ -114,7 +114,7 @@ fn req_004_unknown_format_value_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-004]
+// @kotowari[REQ-core-004]
 #[test]
 fn req_004_missing_config_file_stops() {
     cmd()
@@ -125,7 +125,7 @@ fn req_004_missing_config_file_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-004]
+// @kotowari[REQ-core-004]
 #[test]
 fn req_004_unknown_command_before_check_has_the_unknown_command_wording() {
     // "check" より前の未知の位置引数は "unknown command: ..."（"unexpected argument: ..." ではない）
@@ -143,7 +143,7 @@ fn req_004_unknown_command_before_check_has_the_unknown_command_wording() {
     );
 }
 
-// @kotowari[REQ-004, TBL-020, EX-219]
+// @kotowari[REQ-core-004, TBL-core-020, EX-core-219]
 #[test]
 fn req_004_no_arguments_names_all_five_commands() {
     let output = cmd().current_dir(valid_project_dir()).output().unwrap();
@@ -156,7 +156,7 @@ fn req_004_no_arguments_names_all_five_commands() {
     );
 }
 
-// @kotowari[REQ-004, TBL-020, EX-241]
+// @kotowari[REQ-core-004, TBL-core-020, EX-core-241]
 #[test]
 fn req_004_options_without_a_command_names_all_five_commands() {
     let output = cmd()
@@ -173,9 +173,9 @@ fn req_004_options_without_a_command_names_all_five_commands() {
     );
 }
 
-// --- REQ-005: 停止の出力（別のテストで既にカバー） ---
+// --- REQ-core-005: 停止の出力（別のテストで既にカバー） ---
 
-// @kotowari[REQ-005]
+// @kotowari[REQ-core-005]
 #[test]
 fn req_005_stop_writes_nothing_to_stdout_and_reason_to_stderr() {
     let assert = cmd()
@@ -188,9 +188,9 @@ fn req_005_stop_writes_nothing_to_stdout_and_reason_to_stderr() {
     assert!(!stderr.is_empty());
 }
 
-// --- REQ-007: 終了コード ---
+// --- REQ-core-007: 終了コード ---
 
-// @kotowari[REQ-007, TBL-002]
+// @kotowari[REQ-core-007, TBL-core-002]
 #[test]
 fn req_007_exit_codes_zero_two() {
     // 成功: 終了コード 0
@@ -207,9 +207,9 @@ fn req_007_exit_codes_zero_two() {
         .code(2);
 }
 
-// --- REQ-107: --help と --version ---
+// --- REQ-core-107: --help と --version ---
 
-// @kotowari[REQ-107, REQ-002, TBL-002]
+// @kotowari[REQ-core-107, REQ-core-002, TBL-core-002]
 #[test]
 fn req_107_help_and_version_exit_zero_without_check() {
     // --help は check 無しでも終了コード0
@@ -231,7 +231,7 @@ fn req_107_help_and_version_exit_zero_without_check() {
     assert!(!stdout.is_empty(), "version should produce output");
 }
 
-// @kotowari[REQ-107, REQ-004]
+// @kotowari[REQ-core-107, REQ-core-004]
 #[test]
 fn req_107_help_wins_over_argument_errors() {
     // --help が他の引数の誤りに優先する
@@ -248,9 +248,9 @@ fn req_107_help_wins_over_argument_errors() {
         .code(0);
 }
 
-// --- REQ-004: 引数の誤り（追加） ---
+// --- REQ-core-004: 引数の誤り（追加） ---
 
-// @kotowari[REQ-004, REQ-005]
+// @kotowari[REQ-core-004, REQ-core-005]
 #[test]
 fn req_004_no_arguments_stops() {
     cmd()
@@ -260,7 +260,7 @@ fn req_004_no_arguments_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-004, REQ-005]
+// @kotowari[REQ-core-004, REQ-core-005]
 #[test]
 fn req_004_option_without_value_stops() {
     cmd()
@@ -271,7 +271,7 @@ fn req_004_option_without_value_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-004, REQ-005]
+// @kotowari[REQ-core-004, REQ-core-005]
 #[test]
 fn req_004_repeated_option_stops() {
     cmd()
@@ -282,7 +282,7 @@ fn req_004_repeated_option_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-004, REQ-005]
+// @kotowari[REQ-core-004, REQ-core-005]
 #[test]
 fn req_004_config_pointing_to_directory_stops() {
     cmd()
@@ -293,7 +293,7 @@ fn req_004_config_pointing_to_directory_stops() {
         .stdout("");
 }
 
-// @kotowari[REQ-002]
+// @kotowari[REQ-core-002]
 #[test]
 fn req_002_options_before_or_after_check() {
     // オプションが check の前でも後でも受ける
@@ -309,9 +309,9 @@ fn req_002_options_before_or_after_check() {
         .code(0);
 }
 
-// --- REQ-005: 停止の出力の形 ---
+// --- REQ-core-005: 停止の出力の形 ---
 
-// @kotowari[REQ-005, TBL-018, TBL-020]
+// @kotowari[REQ-core-005, TBL-core-018, TBL-core-020]
 #[test]
 fn req_005_stderr_first_line_has_the_reason_wording() {
     // 4つの文言を検査する
@@ -329,7 +329,7 @@ fn req_005_stderr_first_line_has_the_reason_wording() {
     );
 }
 
-// @kotowari[REQ-005, TBL-020]
+// @kotowari[REQ-core-005, TBL-core-020]
 #[test]
 fn req_005_config_error_detail_path_is_relative_to_base_not_to_cwd() {
     use std::fs;
@@ -348,7 +348,7 @@ fn req_005_config_error_detail_path_is_relative_to_base_not_to_cwd() {
     fs::write(tmp.path().join("bad.yaml"), "unknown_key: 1\n").unwrap();
     let sub = tmp.path().join("sub");
     fs::create_dir_all(&sub).unwrap();
-    // sub/ から "--config ../bad.yaml" を指す（CWD からの相対、REQ-003）
+    // sub/ から "--config ../bad.yaml" を指す（CWD からの相対、REQ-core-003）
     let out = cmd()
         .args(["check", "--config", "../bad.yaml"])
         .current_dir(&sub)
@@ -362,7 +362,7 @@ fn req_005_config_error_detail_path_is_relative_to_base_not_to_cwd() {
     );
 }
 
-// @kotowari[REQ-005, TBL-020]
+// @kotowari[REQ-core-005, TBL-core-020]
 #[test]
 fn req_005_stderr_detail_path_is_relative() {
     use tempfile::TempDir;
@@ -392,9 +392,9 @@ fn req_005_stderr_detail_path_is_relative() {
     );
 }
 
-// --- REQ-021: 既定は json ---
+// --- REQ-core-021: 既定は json ---
 
-// @kotowari[REQ-021]
+// @kotowari[REQ-core-021]
 #[test]
 fn req_021_default_format_is_json() {
     let assert = cmd()
@@ -408,7 +408,7 @@ fn req_021_default_format_is_json() {
     assert!(v["findings"].as_array().unwrap().is_empty());
 }
 
-// @kotowari[REQ-005, TBL-020]
+// @kotowari[REQ-core-005, TBL-core-020]
 #[test]
 fn req_005_config_outside_the_base_is_shown_relative_with_parent_segments() {
     // A164: 基準の外にある設定ファイルの詳細は "../" を含む基準からの相対パス
@@ -443,7 +443,7 @@ fn req_005_config_outside_the_base_is_shown_relative_with_parent_segments() {
 }
 
 
-// --- REQ-002、REQ-144: "kotowari mutants" の引数が結果のファイルに届く ---
+// --- REQ-core-002、REQ-core-144: "kotowari mutants" の引数が結果のファイルに届く ---
 
 /// 捕まえた変異が1件だけの結果のファイル
 const ONE_CAUGHT_RESULT: &str = r#"{"outcomes":[
@@ -451,7 +451,7 @@ const ONE_CAUGHT_RESULT: &str = r#"{"outcomes":[
    "span":{"start":{"line":3,"column":5}}}},"summary":"CaughtMutant"}
 ]}"#;
 
-// @kotowari[REQ-002, EX-244]
+// @kotowari[REQ-core-002, EX-core-244]
 #[test]
 fn req_002_mutants_options_can_come_before_the_command_and_after_the_path() {
     use tempfile::TempDir;
@@ -477,7 +477,7 @@ fn req_002_mutants_options_can_come_before_the_command_and_after_the_path() {
     );
 }
 
-// @kotowari[REQ-144]
+// @kotowari[REQ-core-144]
 #[test]
 fn req_144_missing_result_file_is_an_unreadable_file() {
     let output = cmd()
@@ -494,7 +494,7 @@ fn req_144_missing_result_file_is_an_unreadable_file() {
     );
 }
 
-// --- REQ-149: mutants の引数 ---
+// --- REQ-core-149: mutants の引数 ---
 
 /// 読める結果のファイルを置いた一時ディレクトリを作る
 fn dir_with_results(names: &[&str]) -> tempfile::TempDir {
@@ -517,21 +517,21 @@ fn assert_argument_error(args: &[&str], dir: &Path) {
     );
 }
 
-// @kotowari[REQ-149, EX-218]
+// @kotowari[REQ-core-149, EX-core-218]
 #[test]
 fn req_149_mutants_without_tool_is_an_argument_error() {
     let tmp = dir_with_results(&["outcomes.json"]);
     assert_argument_error(&["mutants", "outcomes.json"], tmp.path());
 }
 
-// @kotowari[REQ-149, EX-240]
+// @kotowari[REQ-core-149, EX-core-240]
 #[test]
 fn req_149_unknown_tool_is_an_argument_error() {
     let tmp = dir_with_results(&["a.json"]);
     assert_argument_error(&["mutants", "--tool", "stryker", "a.json"], tmp.path());
 }
 
-// @kotowari[REQ-149, EX-242]
+// @kotowari[REQ-core-149, EX-core-242]
 #[test]
 fn req_149_two_result_paths_is_an_argument_error() {
     let tmp = dir_with_results(&["a.json", "b.json"]);
@@ -541,14 +541,14 @@ fn req_149_two_result_paths_is_an_argument_error() {
     );
 }
 
-// @kotowari[REQ-149]
+// @kotowari[REQ-core-149]
 #[test]
 fn req_149_mutants_without_a_result_path_is_an_argument_error() {
     let tmp = dir_with_results(&[]);
     assert_argument_error(&["mutants", "--tool", "cargo-mutants"], tmp.path());
 }
 
-// @kotowari[REQ-004]
+// @kotowari[REQ-core-004]
 #[test]
 fn req_004_tool_on_check_is_an_argument_error() {
     assert_argument_error(
@@ -557,21 +557,21 @@ fn req_004_tool_on_check_is_an_argument_error() {
     );
 }
 
-// --- REQ-152: list の停止 ---
+// --- REQ-core-152: list の停止 ---
 
-// @kotowari[REQ-152, REQ-004]
+// @kotowari[REQ-core-152, REQ-core-004]
 #[test]
 fn req_152_tool_on_list_is_an_argument_error() {
     assert_argument_error(&["list", "--tool", "cargo-mutants"], valid_project_dir());
 }
 
-// @kotowari[REQ-152, REQ-004]
+// @kotowari[REQ-core-152, REQ-core-004]
 #[test]
 fn req_152_positional_after_list_is_an_argument_error() {
     assert_argument_error(&["list", "extra"], valid_project_dir());
 }
 
-// @kotowari[REQ-002]
+// @kotowari[REQ-core-002]
 #[test]
 fn req_002_list_options_can_come_before_or_after_the_command() {
     // オプションが list の前でも後でも受ける
@@ -587,7 +587,7 @@ fn req_002_list_options_can_come_before_or_after_the_command() {
         .code(0);
 }
 
-// @kotowari[REQ-152, EX-249]
+// @kotowari[REQ-core-152, EX-core-249]
 #[test]
 fn req_152_unreadable_config_stops_like_check() {
     use tempfile::TempDir;
@@ -625,30 +625,30 @@ fn req_152_unreadable_config_stops_like_check() {
     );
 }
 
-// --- REQ-008: 作らないコマンド ---
+// --- REQ-core-008: 作らないコマンド ---
 
-// @kotowari[REQ-008]
+// @kotowari[REQ-core-008]
 #[test]
 fn req_008_render_is_an_argument_error() {
     // "render" はコマンドにならない
     assert_argument_error(&["render"], valid_project_dir());
 }
 
-// --- REQ-157、REQ-163、REQ-004: query と status の引数 ---
+// --- REQ-core-157、REQ-core-163、REQ-core-004: query と status の引数 ---
 
-// @kotowari[REQ-157, EX-252]
+// @kotowari[REQ-core-157, EX-core-252]
 #[test]
 fn req_157_two_positional_arguments_stop() {
     assert_argument_error(&["query", "REQ-001", "REQ-002"], valid_project_dir());
 }
 
-// @kotowari[REQ-157]
+// @kotowari[REQ-core-157]
 #[test]
 fn req_157_query_with_no_positional_stops() {
     assert_argument_error(&["query"], valid_project_dir());
 }
 
-// @kotowari[REQ-157, REQ-124]
+// @kotowari[REQ-core-157, REQ-core-124]
 #[test]
 fn req_157_positional_that_is_not_an_id_stops() {
     // ID の形でない語と、数字が足りない ID
@@ -656,13 +656,13 @@ fn req_157_positional_that_is_not_an_id_stops() {
     assert_argument_error(&["query", "REQ-01"], valid_project_dir());
 }
 
-// @kotowari[REQ-004]
+// @kotowari[REQ-core-004]
 #[test]
 fn req_004_positional_after_status_stops() {
     assert_argument_error(&["status", "extra"], valid_project_dir());
 }
 
-// @kotowari[REQ-004]
+// @kotowari[REQ-core-004]
 #[test]
 fn req_004_tool_on_query_or_status_stops() {
     assert_argument_error(
@@ -672,7 +672,7 @@ fn req_004_tool_on_query_or_status_stops() {
     assert_argument_error(&["status", "--tool", "cargo-mutants"], valid_project_dir());
 }
 
-// @kotowari[REQ-002]
+// @kotowari[REQ-core-002]
 #[test]
 fn req_002_query_and_status_options_before_or_after_the_command() {
     // オプションが query と status の前でも後でも受ける
@@ -691,13 +691,13 @@ fn req_002_query_and_status_options_before_or_after_the_command() {
     }
 }
 
-// @kotowari[REQ-158, EX-256]
+// @kotowari[REQ-core-158, EX-core-256]
 #[test]
 fn req_158_unreadable_config_stops_like_check() {
     assert_stops_like_check(&["query", "REQ-001"]);
 }
 
-// @kotowari[REQ-163, EX-262]
+// @kotowari[REQ-core-163, EX-core-262]
 #[test]
 fn req_163_unreadable_config_stops_like_check() {
     assert_stops_like_check(&["status"]);

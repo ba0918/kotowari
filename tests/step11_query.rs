@@ -1,4 +1,4 @@
-//! "kotowari query" の1件の組み立てと出力（REQ-156〜REQ-161、TBL-027）
+//! "kotowari query" の1件の組み立てと出力（REQ-core-156〜REQ-core-161、TBL-core-027）
 
 use std::path::Path;
 use tempfile::TempDir;
@@ -72,7 +72,7 @@ fn references(item: &serde_json::Value) -> Vec<String> {
         .map(|r| {
             let mut names: Vec<&str> = r.as_object().unwrap().keys().map(String::as_str).collect();
             names.sort_unstable();
-            // TBL-027: 逆引きの1件は id、kind、path、line、via を持つ
+            // TBL-core-027: 逆引きの1件は id、kind、path、line、via を持つ
             assert_eq!(names, vec!["id", "kind", "line", "path", "via"], "{r}");
             format!(
                 "{} {} {} {}:{}",
@@ -103,7 +103,7 @@ fn requirement(id: &str, name: &str, verification: &str) -> String {
     )
 }
 
-/// EX-250、EX-254、EX-255 が使う文書。
+/// EX-core-250、EX-core-254、EX-core-255 が使う文書。
 /// "REQ-001" の見出しが 7 行目、"@id" のタグが 19 行目、"Scenario:" が 20 行目、
 /// ステップが 21 行目から 23 行目にある
 const EX_250_DOCUMENT: &str = "\
@@ -133,9 +133,9 @@ Scenario: 例のシナリオ
 ```
 ";
 
-// --- REQ-156: query の読み取り ---
+// --- REQ-core-156: query の読み取り ---
 
-// @kotowari[REQ-156, REQ-159, TBL-027, EX-250]
+// @kotowari[REQ-core-156, REQ-core-159, TBL-core-027, EX-core-250]
 #[test]
 fn req_156_item_has_body_and_referenced_by() {
     let tmp = TempDir::new().unwrap();
@@ -157,7 +157,7 @@ fn req_156_item_has_body_and_referenced_by() {
         ],
     );
     assert_eq!(references(req), vec!["EX-001 scenario about docs/ir/a.md:20"]);
-    // TBL-027: list の1件の鍵に "body" と "referenced_by" が増えた形
+    // TBL-core-027: list の1件の鍵に "body" と "referenced_by" が増えた形
     let mut names: Vec<&str> = req.as_object().unwrap().keys().map(String::as_str).collect();
     names.sort_unstable();
     assert_eq!(
@@ -181,7 +181,7 @@ fn req_156_item_has_body_and_referenced_by() {
     );
 }
 
-// @kotowari[REQ-156, EX-253]
+// @kotowari[REQ-core-156, EX-core-253]
 #[test]
 fn req_156_duplicate_ids_are_all_listed() {
     let tmp = TempDir::new().unwrap();
@@ -203,7 +203,7 @@ fn req_156_duplicate_ids_are_all_listed() {
     assert_eq!(paths, vec!["docs/ir/a.md", "docs/ir/b.md"]);
 }
 
-// @kotowari[REQ-156]
+// @kotowari[REQ-core-156]
 #[test]
 fn req_156_items_are_listed_despite_ir_errors_and_exit_zero() {
     let tmp = TempDir::new().unwrap();
@@ -222,9 +222,9 @@ fn req_156_items_are_listed_despite_ir_errors_and_exit_zero() {
     assert!(v.get("findings").is_none(), "query writes no finding to stdout: {v}");
 }
 
-// --- REQ-157: 無い ID ---
+// --- REQ-core-157: 無い ID ---
 
-// @kotowari[REQ-157, TBL-020, EX-251]
+// @kotowari[REQ-core-157, TBL-core-020, EX-core-251]
 #[test]
 fn req_157_unknown_id_stops() {
     let tmp = TempDir::new().unwrap();
@@ -243,9 +243,9 @@ fn req_157_unknown_id_stops() {
     );
 }
 
-// --- TBL-027: body と referenced_by ---
+// --- TBL-core-027: body と referenced_by ---
 
-// @kotowari[TBL-027, EX-255]
+// @kotowari[TBL-core-027, EX-core-255]
 #[test]
 fn tbl_027_scenario_body_starts_at_the_tag_line() {
     let tmp = TempDir::new().unwrap();
@@ -268,7 +268,7 @@ fn tbl_027_scenario_body_starts_at_the_tag_line() {
     assert!(references(scenario).is_empty(), "{scenario}");
 }
 
-// @kotowari[TBL-027, REQ-054, EX-257]
+// @kotowari[TBL-core-027, REQ-core-054, EX-core-257]
 #[test]
 fn tbl_027_definition_and_text_references_are_listed() {
     let tmp = TempDir::new().unwrap();
@@ -291,7 +291,7 @@ fn tbl_027_definition_and_text_references_are_listed() {
     );
 }
 
-// @kotowari[TBL-027, REQ-054]
+// @kotowari[TBL-core-027, REQ-core-054]
 #[test]
 fn tbl_027_text_reference_is_only_the_backticked_id() {
     let tmp = TempDir::new().unwrap();
@@ -308,7 +308,7 @@ fn tbl_027_text_reference_is_only_the_backticked_id() {
     assert!(references(only_item(&v)).is_empty(), "{v}");
 }
 
-// @kotowari[TBL-027]
+// @kotowari[TBL-core-027]
 #[test]
 fn tbl_027_body_stops_before_the_next_heading() {
     let tmp = TempDir::new().unwrap();
@@ -326,9 +326,9 @@ fn tbl_027_body_stops_before_the_next_heading() {
     );
 }
 
-// --- REQ-160: 逆引きの並び ---
+// --- REQ-core-160: 逆引きの並び ---
 
-// @kotowari[REQ-160]
+// @kotowari[REQ-core-160]
 #[test]
 fn req_160_referenced_by_is_ordered_by_path_then_line() {
     let tmp = TempDir::new().unwrap();
@@ -359,9 +359,9 @@ fn req_160_referenced_by_is_ordered_by_path_then_line() {
     );
 }
 
-// --- REQ-161: 出力の形 ---
+// --- REQ-core-161: 出力の形 ---
 
-// @kotowari[REQ-161]
+// @kotowari[REQ-core-161]
 #[test]
 fn req_161_json_top_level_has_only_items() {
     let tmp = TempDir::new().unwrap();
@@ -372,13 +372,13 @@ fn req_161_json_top_level_has_only_items() {
     assert_eq!(names, vec!["items"]);
 }
 
-// @kotowari[REQ-161, REQ-155, EX-254]
+// @kotowari[REQ-core-161, REQ-core-155, EX-core-254]
 #[test]
 fn req_161_text_prints_body_and_referenced_by_lines() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     write(tmp.path(), "docs/ir/a.md", EX_250_DOCUMENT);
-    // 印を3行目に置く（EX-254 は印の行が 3）
+    // 印を3行目に置く（EX-core-254 は印の行が 3）
     write(
         tmp.path(),
         "tests/a.rs",

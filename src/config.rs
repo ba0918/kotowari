@@ -1,7 +1,7 @@
 use crate::StopReason;
 use std::num::NonZeroU64;
 
-/// 設定ファイルの構造（TBL-004）
+/// 設定ファイルの構造（TBL-core-004）
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Config {
     pub ir: String,
@@ -12,10 +12,10 @@ pub struct Config {
     pub vague_words: Vec<String>,
 }
 
-/// 変異テストに関わる設定（TBL-004）
+/// 変異テストに関わる設定（TBL-core-004）
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MutantsConfig {
-    /// `等価の一覧`のファイルのパス。既定は無く、無ければ一覧は0件（REQ-148）
+    /// `等価の一覧`のファイルのパス。既定は無く、無ければ一覧は0件（REQ-core-148）
     pub equivalents: Option<String>,
 }
 
@@ -165,7 +165,7 @@ fn unwrap_or_null<T>(field: Option<Option<T>>, key: &str, default: T) -> Result<
 }
 
 /// null チェック付きで、入れ子のキーを (キー不在 → None、値あり → Some(v)) にする。
-/// 値が null なら設定の誤りで停止する（REQ-014）。
+/// 値が null なら設定の誤りで停止する（REQ-core-014）。
 fn unwrap_or_null_option<T>(field: Option<Option<T>>, key: &str) -> Result<Option<T>, StopReason> {
     match field {
         None => Ok(None),
@@ -185,7 +185,7 @@ fn check_not_absolute(path: &str, key: &str) -> Result<(), StopReason> {
     Ok(())
 }
 
-/// 中身が空（0バイトか注釈だけ）の YAML か（REQ-012 の設定ファイル、REQ-148 の等価の一覧）。
+/// 中身が空（0バイトか注釈だけ）の YAML か（REQ-core-012 の設定ファイル、REQ-core-148 の等価の一覧）。
 /// 空行は内容に数えないので、空行と注釈の行だけのファイルは空である。
 /// 1行も無いファイル（0バイト）では `all` が真になる。
 pub fn is_blank_yaml(text: &str) -> bool {
@@ -198,7 +198,7 @@ pub fn is_blank_yaml(text: &str) -> bool {
 impl Config {
     /// YAML 文字列から設定を読む
     pub fn parse(yaml: &str) -> Result<Self, StopReason> {
-        // REQ-012: 空の設定ファイルは既定値
+        // REQ-core-012: 空の設定ファイルは既定値
         if is_blank_yaml(yaml) {
             return Ok(Config::default());
         }
@@ -208,13 +208,13 @@ impl Config {
 
         let defaults = Config::default();
 
-        // REQ-014: null 値の検出と絶対パスの検出
-        // REQ-110: パスの正規化
+        // REQ-core-014: null 値の検出と絶対パスの検出
+        // REQ-core-110: パスの正規化
         let ir = unwrap_or_null(raw.ir, "ir", defaults.ir)?;
         check_not_absolute(&ir, "ir")?;
         let ir = crate::normalize_path(&ir);
 
-        // REQ-014: "decisions:" 自体が null のときも設定の誤りで停止する
+        // REQ-core-014: "decisions:" 自体が null のときも設定の誤りで停止する
         let decisions = match unwrap_or_null_option(raw.decisions, "decisions")? {
             Some(d) => {
                 let records = unwrap_or_null(d.records, "decisions.records", defaults.decisions.records)?;
@@ -228,7 +228,7 @@ impl Config {
             None => defaults.decisions,
         };
 
-        // REQ-014: "tests:" と "tests.rust:" 自体、"tests.files"、
+        // REQ-core-014: "tests:" と "tests.rust:" 自体、"tests.files"、
         // "tests.rust.attributes"、"tests.rust.macros" が null のときも停止する
         let tests = match unwrap_or_null_option(raw.tests, "tests")? {
             Some(t) => {
@@ -248,7 +248,7 @@ impl Config {
                     None => defaults.tests.rust,
                 };
                 let files = unwrap_or_null(t.files, "tests.files", defaults.tests.files)?;
-                // REQ-014: glob として読めない要素
+                // REQ-core-014: glob として読めない要素
                 for pattern in &files {
                     if globset::Glob::new(pattern).is_err() {
                         return Err(StopReason::ConfigError(format!(
@@ -257,7 +257,7 @@ impl Config {
                     }
                 }
                 TestsConfig {
-                    // REQ-015: 一覧は既定を置き換える
+                    // REQ-core-015: 一覧は既定を置き換える
                     files,
                     rust,
                 }
@@ -265,7 +265,7 @@ impl Config {
             None => defaults.tests,
         };
 
-        // REQ-014: "mutants:" 自体と "mutants.equivalents" が null のときも停止する
+        // REQ-core-014: "mutants:" 自体と "mutants.equivalents" が null のときも停止する
         let mutants = match unwrap_or_null_option(raw.mutants, "mutants")? {
             Some(m) => {
                 let equivalents = match unwrap_or_null_option(m.equivalents, "mutants.equivalents")?
@@ -281,7 +281,7 @@ impl Config {
             None => defaults.mutants,
         };
 
-        // REQ-014: "limits:" 自体が null のときも停止する
+        // REQ-core-014: "limits:" 自体が null のときも停止する
         let limits = match unwrap_or_null_option(raw.limits, "limits")? {
             Some(l) => {
                 let lines = unwrap_or_null(l.lines, "limits.lines", defaults.limits.lines)?;
@@ -291,14 +291,14 @@ impl Config {
             None => defaults.limits,
         };
 
-        // REQ-014: "vague_words:" 自体が null のときも停止する
+        // REQ-core-014: "vague_words:" 自体が null のときも停止する
         let vague_words = unwrap_or_null(raw.vague_words, "vague_words", defaults.vague_words)?;
         if vague_words.iter().any(|w| w.is_empty()) {
             return Err(StopReason::ConfigError(
                 "vague_words contains an empty string".to_string(),
             ));
         }
-        // REQ-014: 重複語の検出
+        // REQ-core-014: 重複語の検出
         {
             let mut seen = std::collections::HashSet::new();
             for word in &vague_words {
@@ -316,7 +316,7 @@ impl Config {
             tests,
             mutants,
             limits,
-            // REQ-015: 一覧は既定を置き換える
+            // REQ-core-015: 一覧は既定を置き換える
             vague_words,
         })
     }

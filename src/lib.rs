@@ -24,7 +24,7 @@ pub struct CheckResult {
     pub tests: BTreeMap<String, TestFileTally>,
 }
 
-/// 読んだテストのファイルの、1つの拡張子の数と問い合わせの有無（TBL-021）
+/// 読んだテストのファイルの、1つの拡張子の数と問い合わせの有無（TBL-core-021）
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct TestFileTally {
     /// その拡張子の読んだテストのファイルの数
@@ -181,7 +181,7 @@ impl Format {
     }
 }
 
-/// 停止の理由と、標準エラーの1行目で詳細の前に出る文言（TBL-018）。
+/// 停止の理由と、標準エラーの1行目で詳細の前に出る文言（TBL-core-018）。
 /// この呼び出しの一覧が変種の唯一の在り処で、列挙体・`WORDINGS`・`Display` はここから作る。
 macro_rules! stop_reasons {
     ($($variant:ident => $wording:literal,)+) => {
@@ -220,7 +220,7 @@ stop_reasons! {
     ResultsError => "results error",
 }
 
-/// 結果のファイルを作った変異テストの道具（REQ-149）
+/// 結果のファイルを作った変異テストの道具（REQ-core-149）
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Tool {
     CargoMutants,
@@ -272,12 +272,12 @@ pub enum Cli {
     Version,
 }
 
-/// REQ-001: 1つ目の位置引数として受けるコマンド
+/// REQ-core-001: 1つ目の位置引数として受けるコマンド
 const COMMANDS: [&str; 5] = ["check", "list", "mutants", "query", "status"];
 
-/// 引数を解析する（REQ-002, REQ-004, REQ-107, REQ-149, REQ-157）
+/// 引数を解析する（REQ-core-002, REQ-core-004, REQ-core-107, REQ-core-149, REQ-core-157）
 pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
-    // REQ-107: --help か --version があればほかの引数を見ない
+    // REQ-core-107: --help か --version があればほかの引数を見ない
     for arg in args {
         if arg == "--help" {
             return Ok(Cli::Help);
@@ -326,7 +326,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                 _ => tool = Some(args[i].clone()),
             }
         } else if command.is_none() {
-            // REQ-001: 1つ目の位置引数は check、list、mutants、query、status のどれか
+            // REQ-core-001: 1つ目の位置引数は check、list、mutants、query、status のどれか
             if COMMANDS.contains(&arg.as_str()) {
                 command = Some(arg.clone());
             } else {
@@ -344,7 +344,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         ));
     };
 
-    // REQ-004: --config がディレクトリを指すとき
+    // REQ-core-004: --config がディレクトリを指すとき
     if let Some(ref cp) = config_path {
         if cp.is_dir() {
             return Err(StopReason::ArgumentError(format!(
@@ -359,16 +359,16 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         Err(e) => return Err(StopReason::ArgumentError(e)),
     };
 
-    // REQ-152、REQ-158、REQ-163: list、query、status は check と同じ条件で、
+    // REQ-core-152、REQ-core-158、REQ-core-163: list、query、status は check と同じ条件で、
     // 同じ理由と文言で停止する
     if command != "mutants" {
-        // REQ-004: "mutants" でないコマンドに付けた "--tool"
+        // REQ-core-004: "mutants" でないコマンドに付けた "--tool"
         if tool.is_some() {
             return Err(StopReason::ArgumentError(format!(
                 "unexpected option for {command}: --tool"
             )));
         }
-        // REQ-157: "query" の位置引数は ID がちょうど1つ
+        // REQ-core-157: "query" の位置引数は ID がちょうど1つ
         if command == "query" {
             let [id] = positionals.as_slice() else {
                 return Err(StopReason::ArgumentError(format!(
@@ -376,7 +376,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                     positionals.len()
                 )));
             };
-            // REQ-124: ID の形でない位置引数
+            // REQ-core-124: ID の形でない位置引数
             if !ir::is_valid_id(id) {
                 return Err(StopReason::ArgumentError(format!("not an id: {id}")));
             }
@@ -386,7 +386,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                 id: id.clone(),
             });
         }
-        // REQ-004: "check"、"list"、"status" の後の位置引数
+        // REQ-core-004: "check"、"list"、"status" の後の位置引数
         if let Some(extra) = positionals.first() {
             return Err(StopReason::ArgumentError(format!(
                 "unexpected argument: {extra}"
@@ -408,7 +408,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         });
     }
 
-    // REQ-149: "--tool" は必須で、値は知っている道具の名前だけ
+    // REQ-core-149: "--tool" は必須で、値は知っている道具の名前だけ
     let Some(tool) = tool else {
         return Err(StopReason::ArgumentError(
             "mutants requires the option: --tool".to_string(),
@@ -416,7 +416,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     };
     let tool = Tool::parse(&tool).map_err(StopReason::ArgumentError)?;
 
-    // REQ-149: "mutants" の後の位置引数は結果のファイルのパスがちょうど1つ
+    // REQ-core-149: "mutants" の後の位置引数は結果のファイルのパスがちょうど1つ
     let [results] = positionals.as_slice() else {
         return Err(StopReason::ArgumentError(format!(
             "mutants expects exactly one result file path, got {}",
@@ -432,7 +432,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     })
 }
 
-/// REQ-111: 読むファイルの先頭の UTF-8 BOM (U+FEFF) を読み飛ばす。
+/// REQ-core-111: 読むファイルの先頭の UTF-8 BOM (U+FEFF) を読み飛ばす。
 /// 読むファイルはどれもここを通す（`read_utf8_file` と `read_source_lines`）。
 pub fn strip_bom(text: &str) -> &str {
     text.strip_prefix('\u{FEFF}').unwrap_or(text)
@@ -440,7 +440,7 @@ pub fn strip_bom(text: &str) -> &str {
 
 /// UTF-8 のテキストファイルを読む。読めないか UTF-8 でなければ StopReason を返す。
 /// `display_path` は誤りの詳細に使う表示用のパス。
-/// 先頭の UTF-8 BOM (U+FEFF) があれば読み飛ばす（REQ-111）。
+/// 先頭の UTF-8 BOM (U+FEFF) があれば読み飛ばす（REQ-core-111）。
 pub fn read_utf8_file(path: &Path, display_path: &str) -> Result<String, StopReason> {
     let bytes = std::fs::read(path)
         .map_err(|e| StopReason::UnreadableFile(format!("{display_path}: {e}")))?;
@@ -464,14 +464,14 @@ pub fn normalize_path(path: &str) -> String {
         parts.push(part);
     }
     if parts.is_empty() {
-        // REQ-110: "." や "./" は空の置き場になる（呼び出し元が文書名だけの path を作る）
+        // REQ-core-110: "." や "./" は空の置き場になる（呼び出し元が文書名だけの path を作る）
         String::new()
     } else {
         parts.join("/")
     }
 }
 
-/// 置き場と文書名を "/" でつなぐ。置き場が空なら文書名だけにする（REQ-110）。
+/// 置き場と文書名を "/" でつなぐ。置き場が空なら文書名だけにする（REQ-core-110）。
 pub fn join_display_path(dir: &str, name: &str) -> String {
     if dir.is_empty() {
         name.to_string()
@@ -481,13 +481,13 @@ pub fn join_display_path(dir: &str, name: &str) -> String {
 }
 
 /// 二重引用符の外の部分を返す。
-/// 二重引用符の外のバッククォートの数が奇数か（REQ-116。二重引用符の中は A145 で対象外）。
+/// 二重引用符の外のバッククォートの数が奇数か（REQ-core-116。二重引用符の中は A145 で対象外）。
 /// ir モジュールと terms モジュールの両方から使う
 pub fn has_odd_backticks_outside_quotes(text: &str) -> bool {
     split_outside_quotes(text).join("").chars().filter(|&c| c == '`').count() % 2 != 0
 }
 
-/// 二重引用符の外の部分からバッククォートで囲んだ語を集める（REQ-054, REQ-064, REQ-104）。
+/// 二重引用符の外の部分からバッククォートで囲んだ語を集める（REQ-core-054, REQ-core-064, REQ-core-104）。
 /// ir モジュールと terms モジュールの両方から使う
 pub fn extract_backtick_contents_outside_quotes(text: &str) -> Vec<&str> {
     split_outside_quotes(text)
@@ -496,8 +496,8 @@ pub fn extract_backtick_contents_outside_quotes(text: &str) -> Vec<&str> {
         .collect()
 }
 
-/// TBL-014: 引用符が奇数のときは最後の引用符から行末を引用の中とみなす。
-/// ir モジュールと terms モジュールの両方から使う（REQ-054, REQ-064, REQ-104）。
+/// TBL-core-014: 引用符が奇数のときは最後の引用符から行末を引用の中とみなす。
+/// ir モジュールと terms モジュールの両方から使う（REQ-core-054, REQ-core-064, REQ-core-104）。
 pub fn split_outside_quotes(line: &str) -> Vec<&str> {
     let quote_count = line.chars().filter(|&c| c == '"').count();
     let odd_quotes = quote_count % 2 != 0;
@@ -569,7 +569,7 @@ pub fn collect_known_ids(docs: &[ir::IrDocument]) -> std::collections::BTreeSet<
         .collect()
 }
 
-/// 基準のディレクトリを探す（TBL-003）
+/// 基準のディレクトリを探す（TBL-core-003）
 /// カレントディレクトリから上に向かって .kotowari/ があるディレクトリを探す。
 /// 見つからなければカレントディレクトリを返す。
 pub fn find_base(cwd: &Path) -> PathBuf {
@@ -584,7 +584,7 @@ pub fn find_base(cwd: &Path) -> PathBuf {
     }
 }
 
-/// カレントディレクトリからの相対パスを、`基準のディレクトリ`からの相対の表示に直す（TBL-020）
+/// カレントディレクトリからの相対パスを、`基準のディレクトリ`からの相対の表示に直す（TBL-core-020）
 fn display_from_base(base: &Path, cwd: &Path, path: &Path) -> String {
     relative_display(
         &lexically_normalize(base),
@@ -592,19 +592,19 @@ fn display_from_base(base: &Path, cwd: &Path, path: &Path) -> String {
     )
 }
 
-/// カレントディレクトリを取得する（A160/TBL-001/TBL-020）
+/// カレントディレクトリを取得する（A160/TBL-core-001/TBL-core-020）
 fn current_dir() -> Result<PathBuf, StopReason> {
     std::env::current_dir()
         .map_err(|e| StopReason::UnreadableFile(format!("current directory: {e}")))
 }
 
-/// 停止する（REQ-005: 標準出力に何も出さず、理由を標準エラーに出し、終了コードは2）
+/// 停止する（REQ-core-005: 標準出力に何も出さず、理由を標準エラーに出し、終了コードは2）
 fn stop(reason: &StopReason) -> u8 {
     eprintln!("{reason}");
     2
 }
 
-/// コマンドを実行し、終了コードを返す（TBL-002）
+/// コマンドを実行し、終了コードを返す（TBL-core-002）
 pub fn run(args: &[String]) -> u8 {
     let cli = match parse_args(args) {
         Ok(cli) => cli,
@@ -612,7 +612,7 @@ pub fn run(args: &[String]) -> u8 {
     };
 
     match cli {
-        // REQ-107: 検査を行わず、使い方か版を出して終了コード0
+        // REQ-core-107: 検査を行わず、使い方か版を出して終了コード0
         Cli::Help => {
             print_help();
             0
@@ -637,7 +637,7 @@ pub fn run(args: &[String]) -> u8 {
                 Err(reason) => stop(&reason),
             }
         }
-        // REQ-151: check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
+        // REQ-core-151: check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
         Cli::List {
             format,
             config_path,
@@ -654,7 +654,7 @@ pub fn run(args: &[String]) -> u8 {
                 Err(reason) => stop(&reason),
             }
         }
-        // REQ-156: check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
+        // REQ-core-156: check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
         Cli::Query {
             format,
             config_path,
@@ -672,7 +672,7 @@ pub fn run(args: &[String]) -> u8 {
                 Err(reason) => stop(&reason),
             }
         }
-        // REQ-162: check と同じ検査を走らせ、指摘は出さず集計だけを出す
+        // REQ-core-162: check と同じ検査を走らせ、指摘は出さず集計だけを出す
         Cli::Status {
             format,
             config_path,
@@ -684,7 +684,7 @@ pub fn run(args: &[String]) -> u8 {
             match run_status(&cwd, config_path.as_deref()) {
                 Ok(result) => {
                     print_status(&result, format);
-                    // REQ-165: complete なら 0、そうでなければ 1
+                    // REQ-core-165: complete なら 0、そうでなければ 1
                     u8::from(!result.complete)
                 }
                 Err(reason) => stop(&reason),
@@ -711,7 +711,7 @@ pub fn run(args: &[String]) -> u8 {
     }
 }
 
-/// TBL-002: 誤りが1件以上あれば1、無ければ0
+/// TBL-core-002: 誤りが1件以上あれば1、無ければ0
 fn exit_code_for(findings: &[Finding]) -> u8 {
     if findings.iter().any(|f| f.severity == "error") {
         1
@@ -720,7 +720,7 @@ fn exit_code_for(findings: &[Finding]) -> u8 {
     }
 }
 
-/// "kotowari check" の結果を出す（TBL-005, REQ-025, REQ-026）
+/// "kotowari check" の結果を出す（TBL-core-005, REQ-core-025, REQ-core-026）
 fn print_check(result: &CheckResult, format: Format) {
     match format {
         Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
@@ -728,7 +728,7 @@ fn print_check(result: &CheckResult, format: Format) {
     }
 }
 
-/// "kotowari list" の一覧を出す（REQ-155）
+/// "kotowari list" の一覧を出す（REQ-core-155）
 fn print_list(result: &list::ListResult, format: Format) {
     match format {
         Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
@@ -736,7 +736,7 @@ fn print_list(result: &list::ListResult, format: Format) {
     }
 }
 
-/// "kotowari query" の1件を出す（REQ-161）
+/// "kotowari query" の1件を出す（REQ-core-161）
 fn print_query(result: &query::QueryResult, format: Format) {
     match format {
         Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
@@ -744,7 +744,7 @@ fn print_query(result: &query::QueryResult, format: Format) {
     }
 }
 
-/// "kotowari status" の集計を出す（REQ-166）
+/// "kotowari status" の集計を出す（REQ-core-166）
 fn print_status(result: &status::StatusResult, format: Format) {
     match format {
         Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
@@ -752,19 +752,19 @@ fn print_status(result: &status::StatusResult, format: Format) {
     }
 }
 
-/// "kotowari mutants" の結果を出す（TBL-025, REQ-146）
+/// "kotowari mutants" の結果を出す（TBL-core-025, REQ-core-146）
 fn print_mutants(result: &mutants::MutantsResult, format: Format) {
     match format {
         Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
         Format::Text => {
             print_findings_as_text(&result.findings);
-            // REQ-146: 指摘の行の後の最後の1行。指摘が0件でも出す
+            // REQ-core-146: 指摘の行の後の最後の1行。指摘が0件でも出す
             println!("{}", result.mutants.summary_line());
         }
     }
 }
 
-/// REQ-025, REQ-026: 1つの指摘を1行で出し、"line" が null なら "-" と書く
+/// REQ-core-025, REQ-core-026: 1つの指摘を1行で出し、"line" が null なら "-" と書く
 fn print_findings_as_text(findings: &[Finding]) {
     for f in findings {
         let line = f.line.map_or("-".to_string(), |l| l.to_string());
@@ -798,22 +798,22 @@ pub fn run_mutants(
     results: &Path,
 ) -> Result<mutants::MutantsResult, StopReason> {
     let base = find_base(cwd);
-    // REQ-147: mutants が読むのは設定、結果のファイル、等価の一覧、
+    // REQ-core-147: mutants が読むのは設定、結果のファイル、等価の一覧、
     // 変異の結果と一覧の1件が指すソースだけ。"ir" などの指す先は見ない
     let cfg = load_config(cwd, &base, config_path)?;
 
-    // 結果のファイルのパスはカレントディレクトリからの相対（REQ-149）、
-    // 停止の詳細は基準のディレクトリからの相対（TBL-020）
+    // 結果のファイルのパスはカレントディレクトリからの相対（REQ-core-149）、
+    // 停止の詳細は基準のディレクトリからの相対（TBL-core-020）
     let display = display_from_base(&base, cwd, results);
     let text = read_utf8_file(&cwd.join(results), &display)?;
 
-    // 道具の結果を変異の結果に写すのはここだけ（REQ-138、A12）
+    // 道具の結果を変異の結果に写すのはここだけ（REQ-core-138、A12）
     let outcomes = match tool {
         Tool::CargoMutants => cargo_mutants::read_outcomes(&text),
     }
     .map_err(|e| StopReason::ResultsError(format!("{display}: {e}")))?;
 
-    // REQ-148: 鍵が無ければ等価の一覧は0件。指す先が無いか読めなければ停止する
+    // REQ-core-148: 鍵が無ければ等価の一覧は0件。指す先が無いか読めなければ停止する
     let (list, list_path) = match &cfg.mutants.equivalents {
         None => (equivalents::EquivalentList::default(), String::new()),
         Some(path) => {
@@ -836,7 +836,7 @@ pub fn run_mutants(
     })
 }
 
-/// 一致を見るのに要るソースだけを読む。読めなかったファイルは持たない（REQ-141、REQ-142）
+/// 一致を見るのに要るソースだけを読む。読めなかったファイルは持たない（REQ-core-141、REQ-core-142）
 fn read_sources(
     base: &Path,
     entries: &[equivalents::Equivalent],
@@ -854,22 +854,22 @@ fn read_sources(
     sources
 }
 
-/// ソースを行に分ける。無い、読めない、UTF-8 でないときは None を返して`停止`しない（REQ-141、REQ-142）。
-/// 行の区切りは TBL-010 と同じで、行の終わりの "\r\n" の "\r" は文面に含めない（A52）。
-/// 先頭の BOM は読み飛ばす（REQ-111）。読み飛ばさないと1行目の文面に BOM が残る。
+/// ソースを行に分ける。無い、読めない、UTF-8 でないときは None を返して`停止`しない（REQ-core-141、REQ-core-142）。
+/// 行の区切りは TBL-core-010 と同じで、行の終わりの "\r\n" の "\r" は文面に含めない（A52）。
+/// 先頭の BOM は読み飛ばす（REQ-core-111）。読み飛ばさないと1行目の文面に BOM が残る。
 fn read_source_lines(base: &Path, file: &str) -> Option<Vec<String>> {
     let bytes = std::fs::read(base.join(file)).ok()?;
     let text = String::from_utf8(bytes).ok()?;
     Some(strip_bom(&text).lines().map(str::to_string).collect())
 }
 
-/// REQ-024: 指摘を TBL-007 の順（path → line → kind → detail）に並べる
+/// REQ-core-024: 指摘を TBL-core-007 の順（path → line → kind → detail）に並べる
 fn sort_findings(findings: &mut [Finding]) {
     findings.sort_by(|a, b| {
         a.path
             .cmp(&b.path)
             .then_with(|| match (a.line, b.line) {
-                // TBL-007: line は null が先、その後は小さい順
+                // TBL-core-007: line は null が先、その後は小さい順
                 (None, None) => std::cmp::Ordering::Equal,
                 (None, Some(_)) => std::cmp::Ordering::Less,
                 (Some(_), None) => std::cmp::Ordering::Greater,
@@ -880,7 +880,7 @@ fn sort_findings(findings: &mut [Finding]) {
     });
 }
 
-/// PROP-002: 種類ごとの指摘の数。1件も無い種類は持たない
+/// PROP-core-002: 種類ごとの指摘の数。1件も無い種類は持たない
 fn count_findings(findings: &[Finding]) -> BTreeMap<String, usize> {
     let mut counts: BTreeMap<String, usize> = BTreeMap::new();
     for f in findings {
@@ -889,14 +889,14 @@ fn count_findings(findings: &[Finding]) -> BTreeMap<String, usize> {
     counts
 }
 
-/// `設定ファイル`を読む（REQ-003, REQ-011, REQ-012。TBL-020: 詳細のパスは基準からの相対）
+/// `設定ファイル`を読む（REQ-core-003, REQ-core-011, REQ-core-012。TBL-core-020: 詳細のパスは基準からの相対）
 fn load_config(
     cwd: &Path,
     base: &Path,
     config_path: Option<&Path>,
 ) -> Result<config::Config, StopReason> {
     let (path, display) = match config_path {
-        // --config は CWD からの相対パス（REQ-003）
+        // --config は CWD からの相対パス（REQ-core-003）
         Some(cp) => {
             let abs = cwd.join(cp);
             if !abs.exists() {
@@ -905,7 +905,7 @@ fn load_config(
                     cp.display()
                 )));
             }
-            // TBL-020/A164: 詳細のパスは基準のディレクトリからの相対
+            // TBL-core-020/A164: 詳細のパスは基準のディレクトリからの相対
             // （外にあれば "../" を含む。ファイルシステムには触れない）
             let display =
                 relative_display(&lexically_normalize(base), &lexically_normalize(&abs));
@@ -915,7 +915,7 @@ fn load_config(
         None => {
             let default_path = base.join(".kotowari/config.yaml");
             if !default_path.exists() {
-                // REQ-012: 設定ファイルが無いときは既定の値
+                // REQ-core-012: 設定ファイルが無いときは既定の値
                 return Ok(config::Config::default());
             }
             (default_path, ".kotowari/config.yaml".to_string())
@@ -929,29 +929,29 @@ fn load_config(
     })
 }
 
-/// check と list が共有する読み取りの結果（REQ-151: list は check と同じ読み取りを使う）
+/// check と list が共有する読み取りの結果（REQ-core-151: list は check と同じ読み取りを使う）
 pub struct Loaded {
     pub cfg: config::Config,
     pub docs: Vec<ir::IrDocument>,
     pub findings: Vec<Finding>,
-    /// TBL-021: 読んだテストのファイルの拡張子ごとの数
+    /// TBL-core-021: 読んだテストのファイルの拡張子ごとの数
     pub tally: BTreeMap<String, TestFileTally>,
-    /// TBL-026: 印の出現ごとの (ID, テストのファイル, 行, テストの名前)
+    /// TBL-core-026: 印の出現ごとの (ID, テストのファイル, 行, テストの名前)
     pub markers: Vec<tests_discovery::TestMarker>,
 }
 
 /// 設定と置き場から IR の文書とテストのファイルを読み、検査もする。
-/// check はこの指摘を出し、list は捨てる（REQ-151）
+/// check はこの指摘を出し、list は捨てる（REQ-core-151）
 pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopReason> {
     let base = find_base(cwd);
     let cfg = load_config(cwd, &base, config_path)?;
 
-    // 設定のパスは基準のディレクトリからの相対（REQ-010）
+    // 設定のパスは基準のディレクトリからの相対（REQ-core-010）
     let ir_dir = base.join(&cfg.ir);
     let records_dir = base.join(&cfg.decisions.records);
     let adr_dir = base.join(&cfg.decisions.adr);
 
-    // REQ-018: 置き場が無い、または読めないとき停止（TBL-020: 相対パスと OS の誤りの文）
+    // REQ-core-018: 置き場が無い、または読めないとき停止（TBL-core-020: 相対パスと OS の誤りの文）
     for (dir, configured) in [
         (&ir_dir, &cfg.ir),
         (&records_dir, &cfg.decisions.records),
@@ -1019,14 +1019,14 @@ pub fn run_check(
     Ok((result, format))
 }
 
-/// 一覧のエントリポイント（REQ-151）。指摘は計算しても出さない
+/// 一覧のエントリポイント（REQ-core-151）。指摘は計算しても出さない
 pub fn run_list(cwd: &Path, config_path: Option<&Path>) -> Result<list::ListResult, StopReason> {
     let loaded = load_all(cwd, config_path)?;
     Ok(list::build(&loaded.docs, &loaded.cfg.ir, &loaded.markers))
 }
 
-/// 1件の読み取りのエントリポイント（REQ-156）。指摘は計算しても出さない。
-/// REQ-157: 位置引数と同じ `ID` を持つものが無ければ引数の誤りで停止する
+/// 1件の読み取りのエントリポイント（REQ-core-156）。指摘は計算しても出さない。
+/// REQ-core-157: 位置引数と同じ `ID` を持つものが無ければ引数の誤りで停止する
 pub fn run_query(
     cwd: &Path,
     config_path: Option<&Path>,
@@ -1037,7 +1037,7 @@ pub fn run_query(
         .ok_or_else(|| StopReason::ArgumentError(format!("unknown id: {id}")))
 }
 
-/// 集計のエントリポイント（REQ-162）。指摘は計算しても数だけを出す
+/// 集計のエントリポイント（REQ-core-162）。指摘は計算しても数だけを出す
 pub fn run_status(
     cwd: &Path,
     config_path: Option<&Path>,

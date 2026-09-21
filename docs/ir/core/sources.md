@@ -4,22 +4,22 @@
 
 ## 要求
 
-### REQ-057: 出典の書式
+### REQ-core-057: 出典の書式
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/records.md#A3, docs/decision/records/records.md#A13, docs/decision/records/records.md#A38, docs/decision/records/records.md#A84, docs/decision/records/records.md#A106
 - 検証: unit
 
-kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の "#" でパスと印に分ける。パスに "#" は書けない。パスは`基準のディレクトリ`からの相対で、置き場からの全体を書く（"docs/decision/records/records.md#A26" の形）。パスは REQ-110 の正規化の後で置き場と比べる。
+kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の "#" でパスと印に分ける。パスに "#" は書けない。パスは`基準のディレクトリ`からの相対で、置き場からの全体を書く（"docs/decision/records/records.md#A26" の形）。パスは REQ-core-110 の正規化の後で置き場と比べる。
 
-### REQ-058: 出典の判定
+### REQ-core-058: 出典の判定
 
 - 種類: algorithm
 - 出典: docs/decision/records/records.md#A38, docs/decision/records/records.md#A48, docs/decision/records/records.md#A69
-- 定義: TBL-012
+- 定義: TBL-core-012
 - 検証: unit
 
-### REQ-059: 出典が無い
+### REQ-core-059: 出典が無い
 
 - 種類: event_driven
 - 出典: docs/decision/records/records.md#A38, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A90
@@ -27,7 +27,7 @@ kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の 
 
 `要求`、`決定表`、`性質`、`問題の記録`の`項目`に出典の行が無いか空のとき、`シナリオ`に "@source" のタグが無いとき、または`用語`の出典の列が空のとき、kotowari は missing_source の`誤り`を出す。"@id" の無い`シナリオ`では detail は "Scenario:" の行の文字にする。
 
-### REQ-060: 用語集とシナリオの出典
+### REQ-core-060: 用語集とシナリオの出典
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/records.md#A52, docs/decision/records/ir-form.md#出典
@@ -35,7 +35,7 @@ kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の 
 
 kotowari は常に、`用語集`の出典の列と`シナリオ`の "@source" のタグを、出典の行と同じ規則で検査する。
 
-### REQ-061: 決定の番号はファイルごと
+### REQ-core-061: 決定の番号はファイルごと
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/records.md#A48, docs/decision/records/records.md#A115
@@ -43,7 +43,7 @@ kotowari は常に、`用語集`の出典の列と`シナリオ`の "@source" �
 
 kotowari は常に、`決定の番号`を`出典`のパスの指す`判断の記録`のファイルの中だけで探す。`決定の節`は "## " の見出しで始まり次の "## " の見出しで終わり、"### " の見出しは節を終えない。
 
-### REQ-062: 内容の照合をしない
+### REQ-core-062: 内容の照合をしない
 
 - 種類: prohibition
 - 出典: docs/decision/records/records.md#A4, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4
@@ -51,7 +51,7 @@ kotowari は常に、`決定の番号`を`出典`のパスの指す`判断の記
 
 kotowari は、`出典`がその`項目`の内容を本当に述べているかを判定してはならない。
 
-### REQ-106: 形の契約を出典に指せる
+### REQ-core-106: 形の契約を出典に指せる
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/records.md#A52, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-ir-tree.md#A2
@@ -59,7 +59,7 @@ kotowari は、`出典`がその`項目`の内容を本当に述べているか�
 
 kotowari は常に、形の契約の "docs/decision/records/ir-form.md" を、"## " の見出しで指す`出典`の先として受ける。
 
-### REQ-115: 出典の指摘の行
+### REQ-core-115: 出典の指摘の行
 
 - 種類: ubiquitous
 - 出典: docs/decision/records/records.md#A114
@@ -69,7 +69,7 @@ kotowari は常に、source_invalid の "line" を`出典`が書かれた行（`
 
 ## 決定表
 
-### TBL-012: 出典の判定
+### TBL-core-012: 出典の判定
 
 - 出典: docs/decision/records/records.md#A38, docs/decision/records/records.md#A48, docs/decision/records/records.md#A69, docs/decision/records/records.md#A91, docs/decision/records/records.md#A115, docs/decision/records/records.md#A134, docs/decision/records/records.md#A158, docs/decision/records/records.md#A165, docs/decision/records/2026-09-17-record-form.md#A33, docs/decision/records/2026-09-17-record-form.md#A34, docs/decision/records/2026-09-17-record-form.md#A47
 
@@ -85,19 +85,19 @@ kotowari は常に、source_invalid の "line" を`出典`が書かれた行（`
 ## 具体例
 
 ```gherkin
-@id=EX-011 @about=REQ-058 @source=docs/decision/records/records.md#A38
+@id=EX-core-011 @about=REQ-core-058 @source=docs/decision/records/records.md#A38
 Scenario: 決定の節にある番号は正しい出典である
   Given "decisions.records" が "docs/decision/records" で、"docs/decision/records/records.md" の Agreements の節に "- A26 " で始まる行がある
   When 出典 "docs/decision/records/records.md#A26" を検査する
   Then source_invalid の誤りは出ない
 
-@id=EX-012 @about=REQ-058 @source=docs/decision/records/records.md#A38,docs/decision/records/ir-form.md#検査の種類
+@id=EX-core-012 @about=REQ-core-058 @source=docs/decision/records/records.md#A38,docs/decision/records/ir-form.md#検査の種類
 Scenario: 無い番号は誤りになる
   Given "decisions.records" が "docs/decision/records" で、"docs/decision/records/records.md" に "- A999 " で始まる行が無い
   When 出典 "docs/decision/records/records.md#A999" を検査する
   Then detail が "docs/decision/records/records.md#A999" の source_invalid の誤りが出る
 
-@id=EX-120 @about=REQ-058 @source=docs/decision/records/2026-09-17-record-form.md#A47,docs/decision/records/2026-09-17-record-form.md#A45
+@id=EX-core-120 @about=REQ-core-058 @source=docs/decision/records/2026-09-17-record-form.md#A47,docs/decision/records/2026-09-17-record-form.md#A45
 Scenario: 判断の記録でないファイルのコードブロックの中の見出しは出典の先にならない
   Given "decisions.records" が "docs/decision/records" で、判断の記録でない "docs/decision/records/g.md" が "## 補足" の見出しをコードブロックの外に持ち、"## 例" の見出しをコードブロックの中にだけ持つ
   When 出典 "docs/decision/records/g.md#補足" と "docs/decision/records/g.md#例" を検査する
