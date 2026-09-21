@@ -1,8 +1,8 @@
 use clap::{Parser, Subcommand};
-use mds_core::document::Document;
-use mds_core::finding::Finding;
-use mds_core::frontmatter::{ResolvedSchema, SchemaRef};
-use mds_core::schema::Schema;
+use kotowari_markdown_schema::document::Document;
+use kotowari_markdown_schema::finding::Finding;
+use kotowari_markdown_schema::frontmatter::{ResolvedSchema, SchemaRef};
+use kotowari_markdown_schema::schema::Schema;
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -130,9 +130,9 @@ fn run(cli: Cli) -> Result<u8, Stop> {
             let src = read_document(&file)?;
             let json = if schema {
                 let (schema, document) = load_schema_and_document(&file, &src)?;
-                mds_core::extract::extract_typed(&schema, &document)
+                kotowari_markdown_schema::extract::extract_typed(&schema, &document)
             } else {
-                mds_core::ast::ast_json(&src).map_err(|e| Stop {
+                kotowari_markdown_schema::ast::ast_json(&src).map_err(|e| Stop {
                     kind: "unreadable_file",
                     detail: format!("{}: {}", file.display(), e),
                 })?
@@ -143,7 +143,7 @@ fn run(cli: Cli) -> Result<u8, Stop> {
         Command::Values { file, format } => {
             let src = read_document(&file)?;
             let (schema, document) = load_schema_and_document(&file, &src)?;
-            let values = mds_core::extract::extract_values(&schema, &document);
+            let values = kotowari_markdown_schema::extract::extract_values(&schema, &document);
             match format.as_str() {
                 "json" => println!("{}", serde_json::to_string_pretty(&values).unwrap()),
                 "text" => print!("{}", render_values_text(&values)),
@@ -179,14 +179,14 @@ fn check_document(path: &Path, open_flag: bool) -> Result<Vec<Finding>, Stop> {
     let src = read_document(path)?;
     let (schema, document) = load_schema_and_document(path, &src)?;
     let open = open_flag || schema.open;
-    Ok(mds_core::validate::validate(&schema, &document, open))
+    Ok(kotowari_markdown_schema::validate::validate(&schema, &document, open))
 }
 
 /// frontmatter から `$schema` の参照を読む。`$schema` を持たない文書は `None`。
 /// ファイルを名指しした検査は停止し、ディレクトリ検査は飛ばすので、
 /// 「無い」の扱いは呼び出し側に残す（R2・R20）。
 fn read_schema_ref(path: &Path, src: &str) -> Result<Option<SchemaRef>, Stop> {
-    mds_core::frontmatter::frontmatter_schema(src).map_err(|e| Stop {
+    kotowari_markdown_schema::frontmatter::frontmatter_schema(src).map_err(|e| Stop {
         kind: "frontmatter_invalid",
         detail: format!("{}: {}", path.display(), e.0),
     })
@@ -199,7 +199,7 @@ fn load_schema_and_document_from(
     schema_ref: &SchemaRef,
 ) -> Result<(Schema, Document), Stop> {
     let schema_yaml = load_schema_yaml(path, schema_ref)?;
-    let schema = mds_core::schema::parse_schema(&schema_yaml).map_err(|e| Stop {
+    let schema = kotowari_markdown_schema::schema::parse_schema(&schema_yaml).map_err(|e| Stop {
         kind: "schema_invalid",
         detail: format!("{}: {}", path.display(), e.0),
     })?;
@@ -253,7 +253,7 @@ fn redact_userinfo(url: &str) -> String {
 
 /// `$schema` の参照を解決してスキーマ YAML の文字列を読む。URL はキャッシュを優先する。
 fn load_schema_yaml(doc_path: &Path, schema_ref: &SchemaRef) -> Result<String, Stop> {
-    match mds_core::frontmatter::resolve_schema(doc_path, schema_ref) {
+    match kotowari_markdown_schema::frontmatter::resolve_schema(doc_path, schema_ref) {
         ResolvedSchema::File(path) => std::fs::read_to_string(&path).map_err(|e| Stop {
             kind: "schema_not_found",
             detail: format!("cannot read schema {}: {}", path.display(), e),
@@ -262,7 +262,7 @@ fn load_schema_yaml(doc_path: &Path, schema_ref: &SchemaRef) -> Result<String, S
             let cache = cache_path(&url);
             // キャッシュを読めたら内容を検証し、壊れた・空なら URL から再取得する
             if let Ok(content) = std::fs::read_to_string(&cache)
-                && mds_core::schema::parse_schema(&content).is_ok()
+                && kotowari_markdown_schema::schema::parse_schema(&content).is_ok()
             {
                 return Ok(content);
             }
@@ -409,7 +409,7 @@ fn check_directory(root: &Path, open_flag: bool) -> Result<Vec<(PathBuf, Vec<Fin
         };
         let (schema, document) = load_schema_and_document_from(&path, &src, &schema_ref)?;
         let open = open_flag || schema.open;
-        let findings = mds_core::validate::validate(&schema, &document, open);
+        let findings = kotowari_markdown_schema::validate::validate(&schema, &document, open);
         files.push((path, findings));
     }
     Ok(files)

@@ -1,9 +1,9 @@
 //! 性質テスト。例を並べても網羅にならない要求を、生成した入力で確かめる。
 
-use mds_core::document::Document;
-use mds_core::extract::extract_values;
-use mds_core::schema::parse_schema;
-use mds_core::validate::validate;
+use kotowari_markdown_schema::document::Document;
+use kotowari_markdown_schema::extract::extract_values;
+use kotowari_markdown_schema::schema::parse_schema;
+use kotowari_markdown_schema::validate::validate;
 use proptest::prelude::*;
 use serde_json::Value;
 
@@ -54,7 +54,7 @@ fn document_with(markers: &[usize], names: &[usize], values: &[&str]) -> String 
 }
 
 fn findings_of(
-    schema: &mds_core::schema::Schema,
+    schema: &kotowari_markdown_schema::schema::Schema,
     source: &str,
 ) -> Vec<(String, Option<usize>, String)> {
     let document = Document::parse(source).unwrap();

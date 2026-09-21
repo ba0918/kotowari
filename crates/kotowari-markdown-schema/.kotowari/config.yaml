@@ -7,7 +7,6 @@ tests:
   files:
     - "src/**/*.rs"
     - "tests/**/*.rs"
-    - "crates/**/*.rs"
   rust:
     attributes: []
     macros: [proptest]

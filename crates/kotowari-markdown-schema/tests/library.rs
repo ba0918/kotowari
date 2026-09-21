@@ -3,12 +3,12 @@
 
 use std::path::{Path, PathBuf};
 
-use mds_core::document::Document;
-use mds_core::extract::extract_values;
-use mds_core::finding::FindingKind;
-use mds_core::frontmatter::{ResolvedSchema, SchemaRef, frontmatter_schema, resolve_schema};
-use mds_core::schema::parse_schema;
-use mds_core::validate::validate;
+use kotowari_markdown_schema::document::Document;
+use kotowari_markdown_schema::extract::extract_values;
+use kotowari_markdown_schema::finding::FindingKind;
+use kotowari_markdown_schema::frontmatter::{ResolvedSchema, SchemaRef, frontmatter_schema, resolve_schema};
+use kotowari_markdown_schema::schema::parse_schema;
+use kotowari_markdown_schema::validate::validate;
 
 const SCHEMA: &str = r#"
 name: ir

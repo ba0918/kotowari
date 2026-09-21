@@ -332,7 +332,11 @@ fn req_147_unmarked_test_is_not_reported_and_json_has_three_keys() {
         "{:?}",
         v["findings"]
     );
-    let keys: Vec<&str> = v.as_object().unwrap().keys().map(|k| k.as_str()).collect();
+    // REQ-core-147 が定めるのは鍵の集合（3つだけ）で、鍵の順ではない。
+    // 並べてから比べるのは、JSON の鍵の順が serde_json の preserve_order の
+    // 有無で変わり、同じ workspace の別のクレートの都合で入れ替わるため
+    let mut keys: Vec<&str> = v.as_object().unwrap().keys().map(|k| k.as_str()).collect();
+    keys.sort_unstable();
     assert_eq!(keys, ["counts", "findings", "mutants"]);
 }
 
