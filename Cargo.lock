@@ -230,12 +230,21 @@ name = "kotowari"
 version = "0.1.0"
 dependencies = [
  "assert_cmd",
- "globset",
+ "kotowari-core",
  "proptest",
- "serde",
  "serde-saphyr",
  "serde_json",
  "tempfile",
+]
+
+[[package]]
+name = "kotowari-core"
+version = "0.1.0"
+dependencies = [
+ "globset",
+ "serde",
+ "serde-saphyr",
+ "serde_json",
  "tree-sitter",
  "tree-sitter-rust",
  "walkdir",

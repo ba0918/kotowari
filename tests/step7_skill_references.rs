@@ -81,7 +81,7 @@ fn only_yaml_block(markdown: &str) -> String {
 #[test]
 fn req_125_findings_reference_kinds_match_the_code() {
     let in_reference = first_column_of_table(&read_reference("findings.md"), "種類");
-    let in_code: BTreeSet<String> = kotowari::FindingKind::ALL
+    let in_code: BTreeSet<String> = kotowari_core::FindingKind::ALL
         .iter()
         .map(|k| k.as_str().to_string())
         .collect();
@@ -118,11 +118,11 @@ fn req_126_config_reference_setup_yaml_parses_to_the_defaults() {
                 .unwrap_or_else(|| panic!("the setup YAML should write the key {path}"));
         }
     }
-    let parsed = kotowari::config::Config::parse(&yaml)
+    let parsed = kotowari_core::config::Config::parse(&yaml)
         .unwrap_or_else(|e| panic!("the setup YAML should parse as a configuration file: {e}"));
     assert_eq!(
         parsed,
-        kotowari::config::Config::default(),
+        kotowari_core::config::Config::default(),
         "the setup YAML in references/config.md should parse to the defaults the code holds"
     );
 }
@@ -134,7 +134,7 @@ fn req_126_config_reference_setup_yaml_parses_to_the_defaults() {
 fn req_127_findings_reference_stop_wordings_match_the_code() {
     let in_reference = first_column_of_table(&read_reference("findings.md"), "文言");
     // 標準エラーの1行目は StopReason の Display で、詳細の前がこの文言になる
-    let in_code: BTreeSet<String> = kotowari::StopReason::WORDINGS
+    let in_code: BTreeSet<String> = kotowari_core::StopReason::WORDINGS
         .iter()
         .map(|wording| wording.to_string())
         .collect();

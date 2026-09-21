@@ -213,7 +213,7 @@ fn req_012_missing_config_uses_defaults() {
 // @kotowari[REQ-core-013, TBL-core-004]
 #[test]
 fn req_013_defaults_match_the_table() {
-    let cfg = kotowari::config::Config::default();
+    let cfg = kotowari_core::config::Config::default();
     assert_eq!(cfg.ir, "docs/ir");
     assert_eq!(cfg.decisions.records, "docs/decision/records");
     assert_eq!(cfg.decisions.adr, "docs/decision/adr");
@@ -232,7 +232,7 @@ fn req_013_defaults_match_the_table() {
 #[test]
 fn req_013_explicit_limits_values_are_used_as_given() {
     let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\nlimits:\n  lines: 5\n  requirements: 7\n";
-    let cfg = kotowari::config::Config::parse(yaml).expect("explicit limits should parse");
+    let cfg = kotowari_core::config::Config::parse(yaml).expect("explicit limits should parse");
     assert_eq!(cfg.limits.lines.get(), 5, "lines should be the given value, not the default or a hardcoded one");
     assert_eq!(cfg.limits.requirements.get(), 7, "requirements should be the given value, not the default or a hardcoded one");
 }
@@ -410,7 +410,7 @@ fn req_018_unreadable_adr_dir_stops() {
 #[test]
 fn req_015_list_replaces_default() {
     let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"my/**/*.rs\"\n";
-    let cfg = kotowari::config::Config::parse(yaml).unwrap();
+    let cfg = kotowari_core::config::Config::parse(yaml).unwrap();
     assert_eq!(cfg.tests.files, vec!["my/**/*.rs"]);
 }
 
@@ -420,7 +420,7 @@ fn req_015_list_replaces_default() {
 #[test]
 fn req_016_empty_list_means_none() {
     let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\nvague_words: []\n";
-    let cfg = kotowari::config::Config::parse(yaml).unwrap();
+    let cfg = kotowari_core::config::Config::parse(yaml).unwrap();
     assert!(cfg.vague_words.is_empty());
 }
 
@@ -430,7 +430,7 @@ fn req_016_empty_list_means_none() {
 #[test]
 fn req_017_nested_keys() {
     let yaml = "ir: docs/ir\ndecisions:\n  records: my-records\n  adr: my-adr\n";
-    let cfg = kotowari::config::Config::parse(yaml).unwrap();
+    let cfg = kotowari_core::config::Config::parse(yaml).unwrap();
     assert_eq!(cfg.decisions.records, "my-records");
     assert_eq!(cfg.decisions.adr, "my-adr");
 }
@@ -531,7 +531,7 @@ fn req_019_glob_is_recursive_and_skips_hidden_dirs() {
     // この機能はテストの発見（Step 4）で完全に検査するので、
     // ここでは設定の glob が受理されることだけ確かめる
     let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"src/**/*.rs\"\n";
-    let cfg = kotowari::config::Config::parse(yaml).unwrap();
+    let cfg = kotowari_core::config::Config::parse(yaml).unwrap();
     assert_eq!(cfg.tests.files, vec!["src/**/*.rs"]);
 }
 
@@ -541,7 +541,7 @@ fn req_019_glob_is_recursive_and_skips_hidden_dirs() {
 #[test]
 fn req_014_unparsable_yaml_stops() {
     let yaml = "ir: [invalid yaml\n";
-    let result = kotowari::config::Config::parse(yaml);
+    let result = kotowari_core::config::Config::parse(yaml);
     assert!(result.is_err(), "unparsable YAML should stop");
 }
 
@@ -549,7 +549,7 @@ fn req_014_unparsable_yaml_stops() {
 #[test]
 fn req_014_duplicate_key_stops() {
     let yaml = "ir: docs/ir\nir: other\n";
-    let result = kotowari::config::Config::parse(yaml);
+    let result = kotowari_core::config::Config::parse(yaml);
     assert!(result.is_err(), "duplicate key should stop");
 }
 
@@ -558,7 +558,7 @@ fn req_014_duplicate_key_stops() {
 fn req_014_null_value_stops() {
     // "ir:" だけの行は null
     let yaml = "ir:\n";
-    let result = kotowari::config::Config::parse(yaml);
+    let result = kotowari_core::config::Config::parse(yaml);
     assert!(result.is_err(), "null value should stop");
 }
 
@@ -566,56 +566,56 @@ fn req_014_null_value_stops() {
 #[test]
 fn req_014_null_tests_files_stops() {
     let yaml = "tests:\n  files:\n";
-    assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.files should stop");
+    assert!(kotowari_core::config::Config::parse(yaml).is_err(), "null tests.files should stop");
 }
 
 // @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_tests_rust_attributes_stops() {
     let yaml = "tests:\n  rust:\n    attributes:\n";
-    assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.rust.attributes should stop");
+    assert!(kotowari_core::config::Config::parse(yaml).is_err(), "null tests.rust.attributes should stop");
 }
 
 // @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_tests_rust_macros_stops() {
     let yaml = "tests:\n  rust:\n    macros:\n";
-    assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.rust.macros should stop");
+    assert!(kotowari_core::config::Config::parse(yaml).is_err(), "null tests.rust.macros should stop");
 }
 
 // @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_vague_words_key_stops() {
     let yaml = "vague_words:\n";
-    assert!(kotowari::config::Config::parse(yaml).is_err(), "null vague_words should stop");
+    assert!(kotowari_core::config::Config::parse(yaml).is_err(), "null vague_words should stop");
 }
 
 // @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_decisions_stops() {
     let yaml = "decisions:\n";
-    assert!(kotowari::config::Config::parse(yaml).is_err(), "null decisions should stop");
+    assert!(kotowari_core::config::Config::parse(yaml).is_err(), "null decisions should stop");
 }
 
 // @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_tests_stops() {
     let yaml = "tests:\n";
-    assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests should stop");
+    assert!(kotowari_core::config::Config::parse(yaml).is_err(), "null tests should stop");
 }
 
 // @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_tests_rust_stops() {
     let yaml = "tests:\n  rust:\n";
-    assert!(kotowari::config::Config::parse(yaml).is_err(), "null tests.rust should stop");
+    assert!(kotowari_core::config::Config::parse(yaml).is_err(), "null tests.rust should stop");
 }
 
 // @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_limits_stops() {
     let yaml = "limits:\n";
-    assert!(kotowari::config::Config::parse(yaml).is_err(), "null limits should stop");
+    assert!(kotowari_core::config::Config::parse(yaml).is_err(), "null limits should stop");
 }
 
 // @kotowari[REQ-core-014]
@@ -623,7 +623,7 @@ fn req_014_null_limits_stops() {
 fn req_014_windows_drive_letter_like_path_is_not_absolute() {
     // A161: 絶対パスの判定は先頭の "/" だけ。"a:b" をドライブ文字として拒まない
     let yaml = "ir: a:b\n";
-    let result = kotowari::config::Config::parse(yaml);
+    let result = kotowari_core::config::Config::parse(yaml);
     assert!(
         result.is_ok(),
         "a value like 'a:b' must not be rejected as an absolute path: {:?}",
@@ -635,7 +635,7 @@ fn req_014_windows_drive_letter_like_path_is_not_absolute() {
 #[test]
 fn req_014_absolute_path_stops() {
     let yaml = "ir: /absolute/path\n";
-    let result = kotowari::config::Config::parse(yaml);
+    let result = kotowari_core::config::Config::parse(yaml);
     assert!(result.is_err(), "absolute path should stop");
 }
 
@@ -643,7 +643,7 @@ fn req_014_absolute_path_stops() {
 #[test]
 fn req_014_duplicate_vague_word_stops() {
     let yaml = "vague_words:\n  - \"foo\"\n  - \"foo\"\n";
-    let result = kotowari::config::Config::parse(yaml);
+    let result = kotowari_core::config::Config::parse(yaml);
     assert!(result.is_err(), "duplicate vague word should stop");
 }
 
@@ -651,7 +651,7 @@ fn req_014_duplicate_vague_word_stops() {
 #[test]
 fn req_014_invalid_glob_stops() {
     let yaml = "tests:\n  files:\n    - \"[invalid\"\n";
-    let result = kotowari::config::Config::parse(yaml);
+    let result = kotowari_core::config::Config::parse(yaml);
     assert!(result.is_err(), "invalid glob should stop");
 }
 
@@ -659,7 +659,7 @@ fn req_014_invalid_glob_stops() {
 #[test]
 fn req_012_empty_config_uses_defaults() {
     let yaml = "";
-    let cfg = kotowari::config::Config::parse(yaml).unwrap();
+    let cfg = kotowari_core::config::Config::parse(yaml).unwrap();
     assert_eq!(cfg.ir, "docs/ir");
 }
 
@@ -667,31 +667,31 @@ fn req_012_empty_config_uses_defaults() {
 #[test]
 fn req_012_comment_only_config_uses_defaults() {
     let yaml = "# comment only\n";
-    let cfg = kotowari::config::Config::parse(yaml).unwrap();
+    let cfg = kotowari_core::config::Config::parse(yaml).unwrap();
     assert_eq!(cfg.ir, "docs/ir");
 }
 
 // @kotowari[REQ-core-110]
 #[test]
 fn req_110_trailing_slash_in_config_is_normalized_in_path() {
-    assert_eq!(kotowari::normalize_path("docs/ir/"), "docs/ir");
-    assert_eq!(kotowari::normalize_path("./docs/ir/"), "docs/ir");
+    assert_eq!(kotowari_core::normalize_path("docs/ir/"), "docs/ir");
+    assert_eq!(kotowari_core::normalize_path("./docs/ir/"), "docs/ir");
 }
 
 // @kotowari[REQ-core-110]
 #[test]
 fn req_110_dot_segments_are_folded() {
-    assert_eq!(kotowari::normalize_path("./docs/./ir"), "docs/ir");
-    assert_eq!(kotowari::normalize_path("docs//ir"), "docs/ir");
-    assert_eq!(kotowari::normalize_path("docs\\ir"), "docs/ir");
+    assert_eq!(kotowari_core::normalize_path("./docs/./ir"), "docs/ir");
+    assert_eq!(kotowari_core::normalize_path("docs//ir"), "docs/ir");
+    assert_eq!(kotowari_core::normalize_path("docs\\ir"), "docs/ir");
 }
 
 // @kotowari[REQ-core-110]
 #[test]
 fn req_110_dot_alone_normalizes_to_empty_place() {
     // "." や "./" だけの置き場は空になる（呼び出し元が文書名だけの path を作る）
-    assert_eq!(kotowari::normalize_path("."), "");
-    assert_eq!(kotowari::normalize_path("./"), "");
+    assert_eq!(kotowari_core::normalize_path("."), "");
+    assert_eq!(kotowari_core::normalize_path("./"), "");
 }
 
 // @kotowari[REQ-core-110]
@@ -1026,7 +1026,7 @@ fn req_121_only_the_nine_config_keys_are_accepted() {
 // @kotowari[TBL-core-004, REQ-core-013]
 #[test]
 fn tbl_004_mutants_equivalents_is_read_and_has_no_default() {
-    let cfg = kotowari::config::Config::parse("mutants:\n  equivalents: ./docs/equivalents.yaml\n")
+    let cfg = kotowari_core::config::Config::parse("mutants:\n  equivalents: ./docs/equivalents.yaml\n")
         .expect("the key should be read");
     // REQ-core-110: 設定の値のパスは正規化する
     assert_eq!(
@@ -1034,19 +1034,19 @@ fn tbl_004_mutants_equivalents_is_read_and_has_no_default() {
         Some("docs/equivalents.yaml")
     );
     // 既定は無い（鍵が無ければ等価の一覧は0件）
-    assert_eq!(kotowari::config::Config::default().mutants.equivalents, None);
+    assert_eq!(kotowari_core::config::Config::default().mutants.equivalents, None);
 }
 
 // @kotowari[REQ-core-014]
 #[test]
 fn req_014_absolute_mutants_equivalents_stops() {
-    let result = kotowari::config::Config::parse("mutants:\n  equivalents: /abs/equivalents.yaml\n");
+    let result = kotowari_core::config::Config::parse("mutants:\n  equivalents: /abs/equivalents.yaml\n");
     assert!(result.is_err(), "an absolute path should stop");
 }
 
 // @kotowari[REQ-core-014]
 #[test]
 fn req_014_mutants_equivalents_that_is_not_a_string_stops() {
-    let result = kotowari::config::Config::parse("mutants:\n  equivalents:\n    - a\n");
+    let result = kotowari_core::config::Config::parse("mutants:\n  equivalents:\n    - a\n");
     assert!(result.is_err(), "a value that is not a string should stop");
 }

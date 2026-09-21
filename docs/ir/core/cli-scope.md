@@ -26,7 +26,7 @@ kotowari は、状態を保存すること、標準出力と標準エラーの�
 - 種類: ubiquitous
 - 出典: docs/decision/records/records.md#A8
 - 検証: review
-- 確かめ方: `src/` にライブラリとバイナリの2ターゲット。モジュールは config, ir, sources, terms, tests_discovery, list, query, status, mutants, cargo_mutants, equivalents, record_form
+- 確かめ方: CLI は `src/main.rs` のバイナリ1つ、ライブラリは `crates/kotowari-core/`。モジュールは config, ir, sources, terms, tests_discovery, list, query, status, mutants, cargo_mutants, equivalents, record_form
 
 kotowari のコードは常に、層が増えるたびに crate を足し、CLI を直下の "src/" で管理する。
 

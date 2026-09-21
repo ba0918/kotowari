@@ -48,7 +48,7 @@ tree-sitter で読めない`テストのファイル`（構文の誤りが1つ�
 - 種類: prohibition
 - 出典: docs/decision/records/records.md#R3
 - 検証: review
-- 確かめ方: `src/tests_discovery.rs` に正規表現によるテスト検出がないことを確認。tree-sitter のみ使用
+- 確かめ方: `crates/kotowari-core/src/tests_discovery.rs` に正規表現によるテスト検出がないことを確認。tree-sitter のみ使用
 
 kotowari は、`設定ファイル`に書く正規表現でテストの定義の行を見つけてはならない。
 

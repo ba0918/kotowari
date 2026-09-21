@@ -4,6 +4,12 @@ decisions:
   records: docs/decision/records
   adr: docs/decision/adr
 tests:
+  # 印を探す先。crates/** とまとめず kotowari-core だけを指す。
+  # 同居する別の製品のクレートの印を kotowari 自身の要求の裏付けに数えないため。
+  files:
+    - "src/**/*.rs"
+    - "crates/kotowari-core/**/*.rs"
+    - "tests/**/*.rs"
   rust:
     attributes: [kani::proof]
     macros: [proptest]

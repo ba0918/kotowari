@@ -1,6 +1,6 @@
-use kotowari::config::Config;
-use kotowari::ir::{self, IrDocument, Item};
-use kotowari::Finding;
+use kotowari_core::config::Config;
+use kotowari_core::ir::{self, IrDocument, Item};
+use kotowari_core::Finding;
 
 fn default_config() -> Config {
     Config::default()
@@ -2890,7 +2890,7 @@ fn req_033_broken_symlink_in_a_subdirectory_stops() {
     std::fs::create_dir_all(tmp.path().join("docs/ir/sub")).unwrap();
     std::os::unix::fs::symlink("missing", tmp.path().join("docs/ir/sub/broken.md")).unwrap();
     let err = ir::load_and_check(tmp.path(), &default_config()).unwrap_err();
-    assert!(matches!(err, kotowari::StopReason::UnreadableFile(ref detail)
+    assert!(matches!(err, kotowari_core::StopReason::UnreadableFile(ref detail)
         if detail.starts_with("docs/ir/sub/broken.md: ")));
 }
 

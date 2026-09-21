@@ -9,7 +9,7 @@ IR の形をどこで決めるかと、採らない形の決め方を扱う。
 - 種類: ubiquitous
 - 出典: docs/decision/records/records.md#A25, docs/decision/records/records.md#A52, docs/decision/records/records.md#A98
 - 検証: review
-- 確かめ方: `src/ir.rs` にコードで固定した形で IR を読むことを確認。parse_document 関数
+- 確かめ方: `crates/kotowari-core/src/ir.rs` にコードで固定した形で IR を読むことを確認。parse_document 関数
 
 kotowari は常に、コードに固定した1つの形で`IR`を読む。
 

@@ -8,11 +8,11 @@ use tempfile::TempDir;
 #[test]
 fn req_082_macro_reparse_byte_offset_reflects_delimiter_position() {
     // マクロの呼び出しと開き波括弧が別の行にあるとき、行番号はその波括弧の行を基準にする
-    let mut config = kotowari::config::Config::default();
+    let mut config = kotowari_core::config::Config::default();
     config.tests.rust.macros = vec!["my_macro".to_string()];
 
     let brace_on_own_line = "my_macro!\n{\n    // @kotowari[REQ-999]\n    fn t() {}\n}\n";
-    let tests = kotowari::tests_discovery::discover_rust_tests(brace_on_own_line, "test_a.rs", &config)
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(brace_on_own_line, "test_a.rs", &config)
         .expect("valid rust");
     assert_eq!(tests.len(), 1);
     assert_eq!(tests[0].line, 4, "fn line should reflect '{{' on its own line: {:?}", tests);
@@ -20,7 +20,7 @@ fn req_082_macro_reparse_byte_offset_reflects_delimiter_position() {
 
     // 波括弧以外の区切り記号（丸括弧）でも、中に波括弧のブロックがあれば同じ規則で行番号が付く
     let paren_wrapped_block = "// leading\n// leading\nmy_macro!(\n    {\n        // @kotowari[REQ-999]\n        fn t() {}\n    }\n);\n";
-    let tests2 = kotowari::tests_discovery::discover_rust_tests(paren_wrapped_block, "test_b.rs", &config)
+    let tests2 = kotowari_core::tests_discovery::discover_rust_tests(paren_wrapped_block, "test_b.rs", &config)
         .expect("valid rust");
     assert_eq!(tests2.len(), 1);
     assert_eq!(tests2[0].line, 6, "fn line should reflect the real position after leading lines: {:?}", tests2);
@@ -34,11 +34,11 @@ fn req_082_macro_reparse_byte_offset_reflects_delimiter_position() {
 fn req_082_macro_function_and_marker_lines_use_additive_offset() {
     // マクロの前に複数行あるとき（line_offset > 0）、関数・印・不正な印の行番号は
     // すべて「マクロの中の行番号 + line_offset」で計算される
-    let mut config = kotowari::config::Config::default();
+    let mut config = kotowari_core::config::Config::default();
     config.tests.rust.macros = vec!["my_macro".to_string()];
 
     let content = "// leading 1\n// leading 2\n// leading 3\nmy_macro! {\n    // @kotowari[REQ-999]\n    // @kotowari[]\n    fn t() {\n        // @kotowari[REQ-888]\n        // @kotowari[]\n        assert!(true);\n    }\n}\n";
-    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test_e.rs", &config)
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test_e.rs", &config)
         .expect("valid rust");
     assert_eq!(tests.len(), 1);
     assert_eq!(tests[0].line, 7, "function line: {:?}", tests);
@@ -62,7 +62,7 @@ fn req_082_macro_function_and_marker_lines_use_additive_offset() {
 #[test]
 fn req_082_plain_test_function_line_is_one_indexed() {
     let content = "// leading 1\n// leading 2\n#[test]\nfn t() {}\n";
-    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
         .expect("valid rust");
     assert_eq!(tests.len(), 1);
     assert_eq!(tests[0].line, 4, "function line should be the 1-indexed source line: {:?}", tests);
@@ -75,7 +75,7 @@ fn req_082_plain_test_function_line_is_one_indexed() {
 fn req_082_function_with_unrelated_attribute_is_not_counted() {
     // #[test] でも設定された属性でもない属性しか持たない関数はテストとして数えない
     let content = "#[allow(dead_code)]\nfn not_a_test() {}\n";
-    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
         .expect("valid rust");
     assert!(tests.is_empty(), "function with only an unrelated attribute must not count as a test: {:?}", tests);
 }
@@ -86,7 +86,7 @@ fn req_082_function_with_unrelated_attribute_is_not_counted() {
 #[test]
 fn req_082_has_attribute_skips_block_comment_to_find_test_attribute() {
     let content = "#[test]\n/* intermediate comment */\nfn t() {}\n";
-    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
         .expect("valid rust");
     assert!(
         tests.iter().any(|t| t.name == "t"),
@@ -100,10 +100,10 @@ fn req_082_has_attribute_skips_block_comment_to_find_test_attribute() {
 // @kotowari[REQ-core-082]
 #[test]
 fn req_082_has_configured_attribute_skips_line_comment() {
-    let mut config = kotowari::config::Config::default();
+    let mut config = kotowari_core::config::Config::default();
     config.tests.rust.attributes = vec!["kani::proof".to_string()];
     let content = "#[kani::proof(unwind = 3)]\n// intermediate comment\nfn my_proof() {}\n";
-    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &config).expect("valid rust");
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &config).expect("valid rust");
     assert!(
         tests.iter().any(|t| t.name == "my_proof"),
         "a line comment between a configured attribute and fn must not hide the test: {:?}",
@@ -114,10 +114,10 @@ fn req_082_has_configured_attribute_skips_line_comment() {
 // @kotowari[REQ-core-082]
 #[test]
 fn req_082_has_configured_attribute_skips_block_comment() {
-    let mut config = kotowari::config::Config::default();
+    let mut config = kotowari_core::config::Config::default();
     config.tests.rust.attributes = vec!["kani::proof".to_string()];
     let content = "#[kani::proof]\n/* note */\nfn my_proof() {}\n";
-    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &config).expect("valid rust");
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &config).expect("valid rust");
     assert!(
         tests.iter().any(|t| t.name == "my_proof"),
         "a block comment between a configured attribute and fn must not hide the test: {:?}",
@@ -133,7 +133,7 @@ fn req_072_invalid_marker_on_second_line_of_multiline_comment_before_test() {
     // 複数行にまたがるブロックコメントの2行目にある印の行番号は、
     // コメントの開始行 + オフセット + 1 になる（コメントの1行目ではない）
     let content = "// leading\n/* note\n@kotowari[] */\n#[test]\nfn t() {}\n";
-    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
         .expect("valid rust");
     assert_eq!(tests.len(), 1);
     assert_eq!(
@@ -150,7 +150,7 @@ fn req_072_indented_invalid_marker_before_test_keeps_indentation() {
     // 不正な印の detail は生の行の文字（インデントを含む）であり、
     // コメント自身の文字列（インデントを含まない）ではない
     let content = "    // @kotowari[]\n    #[test]\n    fn t() {}\n";
-    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
         .expect("valid rust");
     assert_eq!(tests.len(), 1);
     assert_eq!(
@@ -167,7 +167,7 @@ fn req_072_invalid_marker_line_index_stays_additive_at_boundary() {
     // コメントの最後の行に他のコードが続くとき、生の行の文字はその続きも含む
     // （境界での掛け算のような誤り方をすると、この続きが失われる）
     let content = "// leading 1\n// leading 2\n// leading 3\n/* line2\nline3\nline4\n@kotowari[] */ #[test] fn t() {}";
-    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
         .expect("valid rust");
     assert_eq!(tests.len(), 1);
     assert_eq!(
@@ -184,7 +184,7 @@ fn req_072_invalid_marker_line_index_stays_additive_at_boundary() {
 #[test]
 fn req_072_body_start_multiline_comment_marker_uses_additive_offset() {
     let content = "#[test]\nfn t() {\n    /* note\n    @kotowari[] */\n}\n";
-    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
         .expect("valid rust");
     assert_eq!(tests.len(), 1);
     assert_eq!(
@@ -199,7 +199,7 @@ fn req_072_body_start_multiline_comment_marker_uses_additive_offset() {
 #[test]
 fn req_072_indented_body_start_invalid_marker_keeps_indentation() {
     let content = "#[test]\nfn t() {\n    // @kotowari[]\n}\n";
-    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
         .expect("valid rust");
     assert_eq!(tests.len(), 1);
     assert_eq!(
@@ -214,7 +214,7 @@ fn req_072_indented_body_start_invalid_marker_keeps_indentation() {
 #[test]
 fn req_072_body_start_invalid_marker_line_index_stays_additive_at_boundary() {
     let content = "#[test]\nfn t() {\n/* line2\nline3\nline4\n@kotowari[] */}\n";
-    let tests = kotowari::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari::config::Config::default())
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
         .expect("valid rust");
     assert_eq!(tests.len(), 1);
     assert_eq!(
@@ -453,7 +453,7 @@ fn req_083_unparsable_file_is_skipped() {
 // @kotowari[REQ-core-071, TBL-core-015]
 #[test]
 fn req_071_marker_syntax_allows_spaces_around_commas() {
-    let markers = kotowari::tests_discovery::parse_markers_in_line(
+    let markers = kotowari_core::tests_discovery::parse_markers_in_line(
         "// @kotowari[REQ-001 , TBL-002]",
         1,
     );
@@ -553,7 +553,7 @@ fn req_072_invalid_marker_second_on_line_is_detected() {
 // @kotowari[REQ-core-073]
 #[test]
 fn req_073_several_markers_on_one_line() {
-    let markers = kotowari::tests_discovery::parse_markers_in_line(
+    let markers = kotowari_core::tests_discovery::parse_markers_in_line(
         "// @kotowari[REQ-001] @kotowari[TBL-002]",
         1,
     );
@@ -596,7 +596,7 @@ fn req_073_both_markers_on_one_line_bind_to_the_test() {
 // @kotowari[REQ-core-074]
 #[test]
 fn req_074_marker_anywhere_in_the_line_regardless_of_comment_syntax() {
-    let markers = kotowari::tests_discovery::parse_markers_in_line(
+    let markers = kotowari_core::tests_discovery::parse_markers_in_line(
         "/* @kotowari[REQ-001] */",
         1,
     );
@@ -1321,7 +1321,7 @@ fn req_082_function_without_configured_attribute_not_counted() {
 // @kotowari[REQ-core-071, TBL-core-015]
 #[test]
 fn req_071_marker_line_number_is_reported() {
-    let markers = kotowari::tests_discovery::parse_markers_in_line(
+    let markers = kotowari_core::tests_discovery::parse_markers_in_line(
         "// @kotowari[REQ-001]",
         42,
     );
@@ -1615,8 +1615,8 @@ fn req_124_four_digit_id_is_valid_in_heading_tag_and_marker() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-1000: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n`EX-1000` を満たす。\n\n## 具体例\n\n```gherkin\n@id=EX-1000 @about=REQ-1000 @source=docs/decision/records/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
-    let doc = kotowari::ir::parse_document("a.md", content);
-    let ids = kotowari::collect_known_ids(&[doc]);
+    let doc = kotowari_core::ir::parse_document("a.md", content);
+    let ids = kotowari_core::collect_known_ids(&[doc]);
     assert!(ids.contains("REQ-1000"), "{:?}", ids);
     assert!(ids.contains("EX-1000"), "{:?}", ids);
 
@@ -1641,8 +1641,8 @@ fn req_124_leading_zero_and_short_ids_are_rejected() {
     let path = tmp.path().join("docs/ir/a.md");
     let content = fs::read_to_string(&path).unwrap()
         + "\n### REQ-0001: 名前\n\n### REQ-1: 名前\n\n## 具体例\n\n```gherkin\n@id=EX-0001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
-    let doc = kotowari::ir::parse_document("a.md", &content);
-    let ids = kotowari::collect_known_ids(&[doc]);
+    let doc = kotowari_core::ir::parse_document("a.md", &content);
+    let ids = kotowari_core::collect_known_ids(&[doc]);
     assert!(ids.contains("REQ-001"), "{:?}", ids);
     fs::write(path, content).unwrap();
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());

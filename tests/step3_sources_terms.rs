@@ -841,27 +841,27 @@ fn req_040_gherkin_code_block_doc_ref_is_not_checked() {
 #[test]
 fn tbl_012_is_decision_number_rejects_invalid_forms() {
     assert!(
-        !kotowari::sources::is_decision_number("a1"),
+        !kotowari_core::sources::is_decision_number("a1"),
         "lowercase letter should not be a decision number"
     );
     assert!(
-        !kotowari::sources::is_decision_number("1"),
+        !kotowari_core::sources::is_decision_number("1"),
         "single digit should not be a decision number"
     );
     assert!(
-        !kotowari::sources::is_decision_number("11"),
+        !kotowari_core::sources::is_decision_number("11"),
         "digits only should not be a decision number"
     );
     assert!(
-        !kotowari::sources::is_decision_number("A"),
+        !kotowari_core::sources::is_decision_number("A"),
         "single uppercase letter should not be a decision number"
     );
     assert!(
-        kotowari::sources::is_decision_number("A1"),
+        kotowari_core::sources::is_decision_number("A1"),
         "A1 should be a valid decision number"
     );
     assert!(
-        kotowari::sources::is_decision_number("P26"),
+        kotowari_core::sources::is_decision_number("P26"),
         "P26 should be a valid decision number"
     );
 }
@@ -869,7 +869,7 @@ fn tbl_012_is_decision_number_rejects_invalid_forms() {
 // @kotowari[REQ-core-058, TBL-core-012]
 #[test]
 fn tbl_012_check_source_outside_records_and_adr_returns_err() {
-    let ctx = kotowari::sources::SourceContext {
+    let ctx = kotowari_core::sources::SourceContext {
         records_path: "docs/decision/records".to_string(),
         adr_path: "docs/decision/adr".to_string(),
         records_files: vec![],
@@ -887,17 +887,17 @@ fn tbl_012_check_source_outside_records_and_adr_returns_err() {
 #[test]
 fn req_057_split_source_rejects_an_empty_path_or_empty_anchor() {
     assert_eq!(
-        kotowari::sources::split_source("#anchor"),
+        kotowari_core::sources::split_source("#anchor"),
         None,
         "an empty path before '#' must be rejected"
     );
     assert_eq!(
-        kotowari::sources::split_source("docs/x.md#"),
+        kotowari_core::sources::split_source("docs/x.md#"),
         None,
         "an empty anchor after '#' must be rejected"
     );
     assert_eq!(
-        kotowari::sources::split_source("docs/x.md#a"),
+        kotowari_core::sources::split_source("docs/x.md#a"),
         Some(("docs/x.md", "a")),
         "a source with both a path and an anchor is accepted"
     );
@@ -906,10 +906,10 @@ fn req_057_split_source_rejects_an_empty_path_or_empty_anchor() {
 // @kotowari[REQ-core-058]
 #[test]
 fn req_058_absolute_path_source_is_rejected_even_if_it_would_otherwise_resolve() {
-    let ctx = kotowari::sources::SourceContext {
+    let ctx = kotowari_core::sources::SourceContext {
         records_path: "docs/decision/records".to_string(),
         adr_path: "docs/decision/adr".to_string(),
-        records_files: vec![kotowari::sources::parse_records_file(
+        records_files: vec![kotowari_core::sources::parse_records_file(
             "records.md",
             "# 記録\n\n## Agreements\n\n- A1 ある合意\n",
         )],
@@ -931,11 +931,11 @@ fn req_058_absolute_path_source_is_rejected_even_if_it_would_otherwise_resolve()
 // @kotowari[REQ-core-058]
 #[test]
 fn req_058_tie_break_prefers_the_longer_place_when_a_path_matches_both() {
-    let ctx = kotowari::sources::SourceContext {
+    let ctx = kotowari_core::sources::SourceContext {
         records_path: "docs".to_string(),
         adr_path: "docs/decision".to_string(),
         records_files: vec![],
-        adr_files: vec![kotowari::sources::OtherFile {
+        adr_files: vec![kotowari_core::sources::OtherFile {
             rel_path: "adr/0001.md".to_string(),
             headings: vec!["Status".to_string()],
         }],
@@ -955,13 +955,13 @@ fn req_058_tie_break_prefers_the_longer_place_when_a_path_matches_both() {
 // @kotowari[REQ-core-058]
 #[test]
 fn req_058_boundary_violating_prefix_does_not_count_as_under_a_place() {
-    let ctx = kotowari::sources::SourceContext {
+    let ctx = kotowari_core::sources::SourceContext {
         // records_path はたまたま adr の実ファイル名の接頭辞になっているが、
         // 続く文字が "/" でないので "under" ではない（境界を守る）
         records_path: "docs/decision/adr/0001".to_string(),
         adr_path: "docs/decision/adr".to_string(),
         records_files: vec![],
-        adr_files: vec![kotowari::sources::OtherFile {
+        adr_files: vec![kotowari_core::sources::OtherFile {
             rel_path: "0001-notes.md".to_string(),
             headings: vec!["Status".to_string()],
         }],
@@ -982,10 +982,10 @@ fn req_058_boundary_violating_prefix_does_not_count_as_under_a_place() {
 fn req_069_doc_ref_line_number_is_correct() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope.\n\nSee nonexistent.md here.\n";
-    let doc = kotowari::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content);
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari::terms::check_document_references(
+    kotowari_core::terms::check_document_references(
         &[doc],
         "docs/ir",
         &ir_filenames,
@@ -1006,10 +1006,10 @@ fn req_069_doc_ref_line_number_is_correct() {
 fn req_069_doc_ref_at_line_end() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope with nonexistent.md\n";
-    let doc = kotowari::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content);
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
     let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
     assert!(
         md.iter().any(|f| f.detail == "nonexistent.md" && f.line == Some(3)),
@@ -1023,10 +1023,10 @@ fn req_069_doc_ref_at_line_end() {
 fn req_069_doc_ref_at_line_start() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nnot-found.md is referenced.\n";
-    let doc = kotowari::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content);
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
     let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
     assert!(
         md.iter().any(|f| f.detail == "not-found.md" && f.line == Some(3)),
@@ -1040,10 +1040,10 @@ fn req_069_doc_ref_at_line_start() {
 fn req_069_doc_ref_after_punctuation() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope.\n\nSee,not-found.md for details.\n";
-    let doc = kotowari::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content);
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
     let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
     assert!(
         md.iter().any(|f| f.detail == "not-found.md" && f.line == Some(5)),
@@ -1057,10 +1057,10 @@ fn req_069_doc_ref_after_punctuation() {
 fn req_069_mdx_extension_not_matched_but_md_after_it_is() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nfoo.mdx bar.md text.\n";
-    let doc = kotowari::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content);
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
     let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
     assert!(
         !md.iter().any(|f| f.detail.contains("foo")),
@@ -1125,9 +1125,9 @@ fn tbl_012_file_without_decision_sections_matches_headings() {
 #[test]
 fn tbl_012_two_letter_prefix_is_not_a_decision_number() {
     // "AB1" は決定の番号でない（英大文字1文字に1桁以上の数字）
-    assert!(!kotowari::sources::is_decision_number("AB1"),
+    assert!(!kotowari_core::sources::is_decision_number("AB1"),
         "AB1 should not be a decision number (two letters)");
-    assert!(kotowari::sources::is_decision_number("A1"),
+    assert!(kotowari_core::sources::is_decision_number("A1"),
         "A1 should be a decision number");
 }
 
@@ -1343,10 +1343,10 @@ fn tbl_014_md_followed_by_letter_is_not_a_reference() {
     // "a.mdX" は参照でない
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope with a.mdX text.\n";
-    let doc = kotowari::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content);
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
     let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
     assert!(md.is_empty(), "a.mdX should not be a reference: {:?}", md);
 }
@@ -1357,10 +1357,10 @@ fn tbl_014_unclosed_quote_hides_the_rest_of_the_line() {
     // 奇数の二重引用符の後は参照を拾わない
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope.\n\nSee \"unclosed quote nonexistent.md here.\n";
-    let doc = kotowari::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content);
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
     let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
     assert!(md.is_empty(), "unclosed quote should hide the rest of the line: {:?}", md);
 }
@@ -1372,10 +1372,10 @@ fn tbl_014_text_between_the_second_and_third_quote_is_still_scanned() {
     // 最初の引用符で打ち切ってはいけない（2つ目と3つ目の間は引用符の外）。
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope.\n\nSee \"note\" and outside.md here \"trail\n";
-    let doc = kotowari::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content);
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
     let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
     assert!(
         md.iter().any(|f| f.detail == "outside.md"),
@@ -1390,10 +1390,10 @@ fn tbl_014_long_digit_run_before_mdx_does_not_produce_a_spurious_reference() {
     // ".mdx" の直前が長い数字の並びでも、".mdx" は参照として拾わない
     use std::collections::BTreeSet;
     let content = "# Title\n\n01234567890123456789012.mdx\n";
-    let doc = kotowari::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content);
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
     let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
     assert!(
         !md.iter().any(|f| f.detail.contains("01234567890123456789012")),
@@ -1408,10 +1408,10 @@ fn tbl_014_md_followed_by_hyphen_is_not_a_reference() {
     // ".md" の直後が "-" のときは参照でない
     use std::collections::BTreeSet;
     let content = "# Title\n\na.md-suffix\n";
-    let doc = kotowari::ir::parse_document("x.md", content);
+    let doc = kotowari_core::ir::parse_document("x.md", content);
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
     let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
     assert!(
         !md.iter().any(|f| f.detail == "a.md"),
@@ -1426,10 +1426,10 @@ fn tbl_014_bare_dot_md_with_nothing_before_it_is_not_a_reference() {
     // 直前に文字が無い（空白の直後の）裸の ".md" は参照でない
     use std::collections::BTreeSet;
     let content = "# Title\n\nthe .md file\n";
-    let doc = kotowari::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content);
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
+    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
     let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
     assert!(
         !md.iter().any(|f| f.detail == ".md"),
@@ -1455,12 +1455,12 @@ Some text.
 |---|---|---|
 | 二番目 | 意味2 | brainstorm/records.md#A1 |
 ";
-    let doc = kotowari::ir::parse_document("CONTEXT.md", content);
+    let doc = kotowari_core::ir::parse_document("CONTEXT.md", content);
     let terms: Vec<_> = doc.items.iter()
-        .filter(|i| matches!(i, kotowari::ir::Item::GlossaryTerm { .. }))
+        .filter(|i| matches!(i, kotowari_core::ir::Item::GlossaryTerm { .. }))
         .collect();
     assert_eq!(terms.len(), 1, "second table should not be parsed as glossary: {:?}", terms);
-    if let kotowari::ir::Item::GlossaryTerm { term, .. } = &terms[0] {
+    if let kotowari_core::ir::Item::GlossaryTerm { term, .. } = &terms[0] {
         assert_eq!(term, "テスト", "only first table terms should be parsed");
     }
 }
@@ -1476,9 +1476,9 @@ fn req_117_glossary_without_proper_table_is_invalid() {
 |---|---|---|
 | test | meaning | brainstorm/records.md#A1 |
 ";
-    let doc = kotowari::ir::parse_document("CONTEXT.md", content);
-    let config = kotowari::config::Config::default();
-    let findings = kotowari::ir::check_documents(&[doc], &config);
+    let doc = kotowari_core::ir::parse_document("CONTEXT.md", content);
+    let config = kotowari_core::config::Config::default();
+    let findings = kotowari_core::ir::check_documents(&[doc], &config);
     let gi: Vec<_> = findings.iter().filter(|f| f.kind == "glossary_invalid").collect();
     assert!(!gi.is_empty(), "glossary without proper table should produce glossary_invalid: {:?}", gi);
     assert!(gi[0].line.is_none(), "glossary_invalid line should be null");
@@ -1592,9 +1592,9 @@ fn req_033_file_symlink_in_records_dir_is_read() {
 fn req_117_glossary_header_without_rows_is_valid() {
     // ヘッダと区切りの行があれば表は「ある」（A148）
     let content = "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n";
-    let doc = kotowari::ir::parse_document("CONTEXT.md", content);
-    let config = kotowari::config::Config::default();
-    let findings = kotowari::ir::check_documents(&[doc], &config);
+    let doc = kotowari_core::ir::parse_document("CONTEXT.md", content);
+    let config = kotowari_core::config::Config::default();
+    let findings = kotowari_core::ir::check_documents(&[doc], &config);
     assert!(!findings.iter().any(|f| f.kind == "glossary_invalid"), "header + separator with no rows must not be glossary_invalid: {:?}", findings);
 }
 
@@ -1730,12 +1730,12 @@ fn req_123_duplicate_across_the_chain_is_reported_on_the_deeper_row() {
 // @kotowari[REQ-core-069, TBL-core-014]
 #[test]
 fn tbl_014_md_followed_by_hash_or_slash_is_not_a_reference() {
-    let doc = kotowari::ir::parse_document(
+    let doc = kotowari_core::ir::parse_document(
         "x.md",
         "# Title\n\na.md#A12 docs/decision/records/records.md#A12 a.md/b.md a//b.md\n",
     );
     let mut findings = Vec::new();
-    kotowari::terms::check_document_references(
+    kotowari_core::terms::check_document_references(
         &[doc], "docs/ir", &Default::default(), &mut findings,
     );
     assert!(findings.is_empty(), "{:?}", findings);
@@ -1744,11 +1744,11 @@ fn tbl_014_md_followed_by_hash_or_slash_is_not_a_reference() {
 // @kotowari[REQ-core-069, REQ-core-070, TBL-core-014]
 #[test]
 fn tbl_014_slash_separated_path_is_a_reference() {
-    let doc = kotowari::ir::parse_document(
+    let doc = kotowari_core::ir::parse_document(
         "a.md", "# Title\n\nSee network/dns/b.md.\n",
     );
     let mut findings = Vec::new();
-    kotowari::terms::check_document_references(
+    kotowari_core::terms::check_document_references(
         &[doc], "docs/ir", &Default::default(), &mut findings,
     );
     assert_eq!(findings.len(), 1, "{:?}", findings);

@@ -2,7 +2,7 @@
 # 載せる前に、別の文脈でその変異を落とすテストを書けないか試している。
 # why には、なぜ観測できないかと、何を試して落とせなかったかを書く。
 
-- file: src/ir.rs
+- file: crates/kotowari-core/src/ir.rs
   change: "replace < with <= in parse_document"
   text: "f.line.map_or(true, |l| l < opening_line)"
   class: equivalent
@@ -17,7 +17,7 @@
     別の指摘が残るものを探したが1件も無かった。指摘を1件その行に差し込むと同じ探索が
     閉じない囲みを持つ242万件すべてを拾ったので、探し方がその違いを見られることは確かめてある。
 
-- file: src/ir.rs
+- file: crates/kotowari-core/src/ir.rs
   change: "replace < with <= in parse_document"
   text: "items.retain(|item| item.item_line() < opening_line);"
   class: equivalent
@@ -29,7 +29,7 @@
     落とすテストの試み: 上と同じ約352万件の文書で、unclosed_code_block と同じ行の項目が残るものを探したが
     1件も無かった。項目を1件その行に差し込むと同じ探索がすべてを拾うことは確かめてある。
 
-- file: src/sources.rs
+- file: crates/kotowari-core/src/sources.rs
   change: "replace + with * in parse_links"
   text: "i = href_end + 1;"
   class: equivalent
@@ -44,7 +44,7 @@
     再開の位置を href_end + 2 にした版では同じ探索が隣り合うリンクの取りこぼしを見つけるので、
     2つ以上のリンクを区別できる探索であることは確かめてある。
 
-- file: src/lib.rs
+- file: crates/kotowari-core/src/lib.rs
   change: "replace + with * in split_outside_quotes"
   text: "start = i + 1;"
   class: equivalent

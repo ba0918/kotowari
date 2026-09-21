@@ -170,9 +170,9 @@ trap 'exit 143' TERM
 
 # A29: 関門の抜け道を塞ぐ。ソースの #[mutants::skip] はその変異を測らせない
 guard_skip_attribute() {
-    if grep -rn 'mutants::skip' src/ >/dev/null 2>&1; then
-        grep -rn 'mutants::skip' src/ >&2 || true
-        die 'found mutants::skip in src/; the judgement belongs in the equivalents list'
+    if grep -rn 'mutants::skip' src/ crates/ >/dev/null 2>&1; then
+        grep -rn 'mutants::skip' src/ crates/ >&2 || true
+        die 'found mutants::skip in the sources; the judgement belongs in the equivalents list'
     fi
 }
 
@@ -202,7 +202,7 @@ run_mutants() {
         --setenv=CARGO_BUILD_JOBS=4 \
         --setenv=TMPDIR="$run_tmpdir" \
         --working-directory="$PWD" \
-        -- cargo +nightly mutants -j 1 --no-config -o . "$@" </dev/null &
+        -- cargo +nightly mutants -j 1 --no-config --workspace -o . "$@" </dev/null &
     run_pid=$!
     wait "$run_pid" || status=$?
     run_pid=""

@@ -46,12 +46,12 @@ fn req_025_finding_kind_displays_as_its_own_kind_word() {
     // --format text の出力は "{kind}" を通して種類の語を書く（main.rs）。
     // その Display の実装が種類ごとの語を書くことを直接確かめる。
     assert_eq!(
-        kotowari::FindingKind::MissingTitle.to_string(),
+        kotowari_core::FindingKind::MissingTitle.to_string(),
         "missing_title",
         "Display should write the kind word, not an empty string"
     );
     assert_eq!(
-        kotowari::FindingKind::SourceInvalid.to_string(),
+        kotowari_core::FindingKind::SourceInvalid.to_string(),
         "source_invalid"
     );
 }
@@ -65,11 +65,11 @@ fn req_024_finding_kind_partial_eq_str_matches_only_its_own_kind_name() {
     // ここでは `PartialEq<str>` 側の実装を `.eq()` で直接呼び、
     // 自分の種類の名前だけに真を返すことを確かめる。
     assert!(
-        kotowari::FindingKind::MissingDocument.eq("missing_document"),
+        kotowari_core::FindingKind::MissingDocument.eq("missing_document"),
         "should equal its own kind name"
     );
     assert!(
-        !kotowari::FindingKind::MissingDocument.eq("missing_title"),
+        !kotowari_core::FindingKind::MissingDocument.eq("missing_title"),
         "should not equal a different kind name"
     );
 }
@@ -116,7 +116,7 @@ fn req_030_notice_kinds_have_the_detail_of_the_table() {
 #[test]
 fn req_031_only_four_kinds_are_notices() {
     // 本体が注意にする種類（"kotowari mutants" の2種類は check の出力には現れない）
-    let notices: std::collections::BTreeSet<&str> = kotowari::FindingKind::ALL
+    let notices: std::collections::BTreeSet<&str> = kotowari_core::FindingKind::ALL
         .iter()
         .filter(|kind| kind.severity() == "notice")
         .map(|kind| kind.as_str())
@@ -131,7 +131,7 @@ fn req_031_only_four_kinds_are_notices() {
         ])
     );
     // ほかの種類はすべて誤り
-    for kind in kotowari::FindingKind::ALL {
+    for kind in kotowari_core::FindingKind::ALL {
         if !notices.contains(kind.as_str()) {
             assert_eq!(kind.severity(), "error", "{kind} should be an error");
         }
@@ -329,9 +329,9 @@ fn prop_003_findings_are_sorted() {
             tmp.path().join("tests/check.rs"),
             "#[test]\nfn unmarked() {}\n",
         ).unwrap();
-        let (result, _) = kotowari::run_check(
+        let (result, _) = kotowari_core::run_check(
             tmp.path(),
-            kotowari::Format::Json,
+            kotowari_core::Format::Json,
             None,
         ).expect("run_check should succeed");
         // findings が TBL-core-007 の順で並んでいることを検証する
