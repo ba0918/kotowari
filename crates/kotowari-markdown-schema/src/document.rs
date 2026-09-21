@@ -243,11 +243,27 @@ impl Document {
     }
 }
 
-/// 文書を行に分ける。行末の "\r" は CRLF の行区切りの一部なので落とす。
+/// 文書を行に分ける。markdown は LF・CRLF・単独の CR のどれでも行を区切って
+/// 行番号を進めるので、行番号の索引になるこの分け方も同じ3つで区切る。
 fn split_lines(src: &str) -> Vec<String> {
-    src.split('\n')
-        .map(|line| line.strip_suffix('\r').unwrap_or(line).to_string())
-        .collect()
+    let mut lines = Vec::new();
+    let mut current = String::new();
+    let mut chars = src.chars().peekable();
+    while let Some(c) = chars.next() {
+        match c {
+            '\n' => lines.push(std::mem::take(&mut current)),
+            '\r' => {
+                // CRLF は1つの行区切り
+                if chars.peek() == Some(&'\n') {
+                    chars.next();
+                }
+                lines.push(std::mem::take(&mut current));
+            }
+            _ => current.push(c),
+        }
+    }
+    lines.push(current);
+    lines
 }
 
 /// 1始まりの行番号の生の行。範囲の外は空文字列。
@@ -842,6 +858,33 @@ mod tests {
             row_lines,
             &vec![5, 6, 7],
             "ヘッダの行と区切りの行は数えない"
+        );
+    }
+
+    // @kotowari[REQ-schema-035]
+    #[test]
+    fn a_lone_cr_breaks_a_line_the_same_way_as_lf_and_crlf() {
+        let statement_lines = |src: &str| {
+            let doc = Document::parse(src).unwrap();
+            let blocks = section_blocks(&doc);
+            let Block::Statement { raw_lines, .. } = &blocks[0] else {
+                panic!("段落が文になる");
+            };
+            raw_lines
+                .iter()
+                .map(|raw| (raw.line, raw.text.clone()))
+                .collect::<Vec<_>>()
+        };
+        let lf = statement_lines("## 節\n\nAAA\nBBB\nCCC\n");
+        assert_eq!(
+            statement_lines("## 節\r\n\r\nAAA\r\nBBB\r\nCCC\r\n"),
+            lf,
+            "CRLF の文書も LF と同じ行に分かれる"
+        );
+        assert_eq!(
+            statement_lines("## 節\r\rAAA\rBBB\rCCC\r"),
+            lf,
+            "単独の CR の文書も LF と同じ行に分かれる"
         );
     }
 }
