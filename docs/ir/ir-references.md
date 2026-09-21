@@ -63,10 +63,18 @@ gherkin の`コードブロック`の中の行を行頭の空白を除いて見�
 ### REQ-124: ID の形
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A52, docs/decision/records/2026-09-16-ir-tree.md#A6, docs/decision/records/2026-09-16-ir-tree.md#A11, docs/decision/records/ir-form.md#ID
+- 出典: docs/decision/records/records.md#A52, docs/decision/records/2026-09-16-ir-tree.md#A6, docs/decision/records/2026-09-16-ir-tree.md#A11, docs/decision/records/ir-form.md#ID, docs/decision/records/2026-09-22-id-namespace.md#A1, docs/decision/records/2026-09-22-id-namespace.md#A2
 - 検証: unit
 
-`ID`は常に、"REQ-"、"TBL-"、"PROP-"、"EX-"、"FLAG-" のいずれかに3桁以上の数字を続けた形で、4桁以上のときは先頭が "0" でない。`項目`の見出しやタグの形に書く "nnn" はこの数字を表す。この形に合わない見出しは REQ-043、合わない "@id" は REQ-114 のとおりに扱い、`印`の中の合わない`ID`は`印`の検査のとおりに扱う。
+`ID`は常に、"REQ-"、"TBL-"、"PROP-"、"EX-"、"FLAG-" のいずれかに、省いてよい名前と "-" を続け、その後に3桁以上の数字を置いた形で、4桁以上のときは先頭が "0" でない。名前は小文字の英字で始まり、2文字目からは小文字の英数字と "-" だけからなる。`項目`の見出しやタグの形に書く "nnn" はこの数字を表す。この形に合わない見出しは REQ-043、合わない "@id" は REQ-114 のとおりに扱い、`印`の中の合わない`ID`は`印`の検査のとおりに扱う。
+
+### REQ-167: ID の名前と置き場の一致
+
+- 種類: event_driven
+- 出典: docs/decision/records/2026-09-22-id-namespace.md#A3, docs/decision/records/2026-09-22-id-namespace.md#A5
+- 検証: unit
+
+見出しの`ID`か "@id" の値に名前があり、その名前が文書の置き場からの相対パスの第1階層と異なるとき、kotowari は`ID`を detail にして id_domain_mismatch の`誤り`を出す。文書が IR の置き場の直下にあって第1階層を持たないときも、名前があれば同じ`誤り`を出す。
 
 ## 具体例
 
@@ -94,4 +102,16 @@ Scenario: タグと印の中の ID も同じ形で見る
   Given "@id=EX-1000" のタグと "@id=EX-0001" のタグがあり、テストに "@kotowari[REQ-1000]" の`印`がある
   When "kotowari check" を実行する
   Then "EX-1000" は`シナリオ`の`ID`になり、"EX-0001" のタグに invalid_id の誤りが出て、`印`の "REQ-1000" は`要求`の`ID`として照合される
+
+@id=EX-043 @about=REQ-124 @source=docs/decision/records/2026-09-22-id-namespace.md#A1,docs/decision/records/2026-09-22-id-namespace.md#A2
+Scenario: 名前のある ID と名前の無い ID は両方とも通る
+  Given "core/a.md" に見出しが "### REQ-core-001: 名前" と "### REQ-002: 名前" と "### REQ-Core-003: 名前" の3つある
+  When "kotowari check" を実行する
+  Then "REQ-core-001" と "REQ-002" は`要求`として読まれ、"REQ-Core-003" の見出しに unknown_heading の誤りが出る
+
+@id=EX-044 @about=REQ-167 @source=docs/decision/records/2026-09-22-id-namespace.md#A3,docs/decision/records/2026-09-22-id-namespace.md#A5
+Scenario: 名前が置き場の第1階層と違えば誤りになる
+  Given "core/a.md" に "### REQ-schema-001: 名前" の見出しがあり、"b.md" に "### REQ-core-002: 名前" の見出しがある
+  When "kotowari check" を実行する
+  Then detail が "REQ-schema-001" と "REQ-core-002" の id_domain_mismatch の誤りが2件出る
 ```

@@ -26,7 +26,7 @@
 | 決定表 | "### TBL-nnn: 名前" の見出しで始まり、Markdown の表を持つ項目 | docs/decision/records/ir-form.md#項目 |
 | 性質 | "### PROP-nnn: 名前" の見出しで始まり、文を持つ項目 | docs/decision/records/ir-form.md#項目 |
 | シナリオ | gherkin のコードブロックの中の "Scenario:" と、その直前の行のタグ | docs/decision/records/records.md#A27, docs/decision/records/ir-form.md#項目 |
-| ID | "REQ-"、"TBL-"、"PROP-"、"EX-"、"FLAG-" のいずれかに3桁以上の数字（4桁以上のときは先頭が "0" でない）を続けた、項目の識別子 | docs/decision/records/records.md#A52, docs/decision/records/2026-09-16-ir-tree.md#A6, docs/decision/records/2026-09-16-ir-tree.md#A11 |
+| ID | "REQ-"、"TBL-"、"PROP-"、"EX-"、"FLAG-" のいずれかに、省いてよい名前と "-" を続け、3桁以上の数字（4桁以上のときは先頭が "0" でない）を置いた、項目の識別子。名前は小文字の英字で始まり、2文字目からは小文字の英数字と "-" だけからなる | docs/decision/records/records.md#A52, docs/decision/records/2026-09-16-ir-tree.md#A6, docs/decision/records/2026-09-16-ir-tree.md#A11, docs/decision/records/2026-09-22-id-namespace.md#A1 |
 | 指摘 | 検査で見つけた1件。kind、severity、path、line、detail を持つ | docs/decision/records/records.md#A40 |
 | 誤り | 終了コードを1にする指摘 | docs/decision/records/records.md#A29 |
 | 注意 | 終了コードを変えない指摘。severity は "notice" | docs/decision/records/records.md#A17, docs/decision/records/records.md#A29, docs/decision/records/2026-09-16-notice.md#A1, docs/decision/records/2026-09-16-notice.md#A2 |
