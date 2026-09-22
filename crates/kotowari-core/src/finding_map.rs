@@ -5,10 +5,14 @@
 //! 同じ理由で`停止`する（REQ-core-175）。
 
 use crate::ir::DocKind;
+use crate::schema::schema_for;
 use crate::{Finding, FindingKind, StopReason};
+use kotowari_markdown_schema::document::Document;
+use kotowari_markdown_schema::extract::extract_values;
 use kotowari_markdown_schema::finding::{
     Finding as EngineFinding, FindingKind as EngineKind, RuleKind,
 };
+use kotowari_markdown_schema::validate::validate;
 use serde_json::Value;
 
 /// 用語集の表の行を`抽出`が置く配置パス（`.mds/schemas/context.yaml`）。
@@ -303,6 +307,28 @@ pub fn map_finding(ctx: &MapContext, engine: &EngineFinding) -> Result<Finding, 
         _ => Err(no_row(engine)),
     }
 }
+
+/// 文書1つをスキーマの側に検証させ、返った`指摘`を kotowari の`指摘`へ写す
+/// （REQ-core-168、REQ-core-171）。
+pub fn document_findings(
+    path: &str,
+    filename: &str,
+    doc_kind: DocKind,
+    content: &str,
+) -> Result<Vec<Finding>, StopReason> {
+    // 取り込んだスキーマは組み立ての時点で決まっている。読めないことは利用者の入力では
+    // 起こらないので、スキーマを読めないことを理由とする停止は持たない（REQ-core-175）
+    let schema = schema_for(doc_kind).map_err(|e| stop(format!("{path}: schema: {}", e.0)))?;
+    let document =
+        Document::parse(content).map_err(|e| stop(format!("{path}: document: {e}")))?;
+    let values = extract_values(&schema, &document);
+    let ctx = MapContext::new(path, filename, doc_kind, &values);
+    validate(&schema, &document, schema.open)
+        .iter()
+        .map(|engine| map_finding(&ctx, engine))
+        .collect()
+}
+
 
 #[cfg(test)]
 mod tests {

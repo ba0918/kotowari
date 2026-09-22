@@ -141,7 +141,7 @@ fn req_165_flag_makes_it_not_complete() {
     write(
         tmp.path(),
         "docs/ir/FLAGS.md",
-        "# 問題の記録\n\nなし。\n\n### FLAG-001: 抜け\n\n- 種類: gap\n- 関係: REQ-001\n- 出典: docs/decision/records/records.md#A1\n\n本文。\n",
+        "# 問題の記録\n\nなし。\n\n## 問題の記録\n\n### FLAG-001: 抜け\n\n- 種類: gap\n- 関係: REQ-001\n- 出典: docs/decision/records/records.md#A1\n\n本文。\n",
     );
     let (code, v) = run_status(tmp.path());
     assert_eq!(v["findings"]["error"], 0, "check reports nothing here: {v}");
@@ -236,7 +236,7 @@ fn tbl_028_items_are_counted_by_kind() {
     write(
         tmp.path(),
         "docs/ir/FLAGS.md",
-        "# 問題の記録\n\nなし。\n\n### FLAG-001: 抜け\n\n- 種類: gap\n- 関係: REQ-001\n- 出典: docs/decision/records/records.md#A1\n\n本文。\n",
+        "# 問題の記録\n\nなし。\n\n## 問題の記録\n\n### FLAG-001: 抜け\n\n- 種類: gap\n- 関係: REQ-001\n- 出典: docs/decision/records/records.md#A1\n\n本文。\n",
     );
     let (_, v) = run_status(tmp.path());
     // 決定表だけ2つにして、種類ごとの数が入れ替わらないことも見る

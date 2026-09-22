@@ -3019,7 +3019,7 @@ fn req_056_contradiction_flag_with_one_reading_gets_no_finding() {
     // 種類 contradiction の問題の記録に、読みを1つだけ書く
     std::fs::write(
         tmp.path().join("docs/ir/FLAGS.md"),
-        "# 問題の記録\n\n### FLAG-001: 読みが割れる\n\n- 種類: contradiction\n- 関係: REQ-001\n- 出典: docs/decision/records/records.md#A1\n\n読みは1つだけ書いてある。\n",
+        "# 問題の記録\n\n## 問題の記録\n\n### FLAG-001: 読みが割れる\n\n- 種類: contradiction\n- 関係: REQ-001\n- 出典: docs/decision/records/records.md#A1\n\n読みは1つだけ書いてある。\n",
     )
     .unwrap();
     let v = run_cli(tmp.path());

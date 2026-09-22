@@ -1621,8 +1621,32 @@ pub fn load_and_check(
         doc.relative_path = relative_path;
         docs.push(doc);
     }
-    let findings = check_documents(&docs, config);
+    let mut findings = check_documents(&docs, config);
+    findings.extend(engine_findings(&docs, config)?);
     Ok((docs, findings))
+}
+
+/// スキーマの側に文書の形を検証させ、写した指摘のうち自前の読み取りがまだ出していない
+/// 種類だけを採る（REQ-core-174）。自前の読み取りを落とすまでは、同じ指摘を二重に出さない
+/// ためにここで絞る。
+fn engine_findings(docs: &[IrDocument], config: &Config) -> Result<Vec<Finding>, crate::StopReason> {
+    const NEW_KINDS: &[FindingKind] = &[
+        FindingKind::UnknownLine,
+        FindingKind::UnknownCodeBlock,
+        FindingKind::GlossaryTitleInvalid,
+    ];
+    let mut findings = Vec::new();
+    for doc in docs {
+        let path = crate::join_display_path(&config.ir, &doc.relative_path);
+        let mapped = crate::finding_map::document_findings(
+            &path,
+            &doc.filename,
+            doc.kind,
+            &doc.raw_content,
+        )?;
+        findings.extend(mapped.into_iter().filter(|f| NEW_KINDS.contains(&f.kind)));
+    }
+    Ok(findings)
 }
 
 fn collect_ir_paths(
