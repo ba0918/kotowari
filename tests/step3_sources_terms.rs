@@ -982,7 +982,7 @@ fn req_058_boundary_violating_prefix_does_not_count_as_under_a_place() {
 fn req_069_doc_ref_line_number_is_correct() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope.\n\nSee nonexistent.md here.\n";
-    let doc = kotowari_core::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
@@ -1006,7 +1006,7 @@ fn req_069_doc_ref_line_number_is_correct() {
 fn req_069_doc_ref_at_line_end() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope with nonexistent.md\n";
-    let doc = kotowari_core::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
@@ -1023,7 +1023,7 @@ fn req_069_doc_ref_at_line_end() {
 fn req_069_doc_ref_at_line_start() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nnot-found.md is referenced.\n";
-    let doc = kotowari_core::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
@@ -1040,7 +1040,7 @@ fn req_069_doc_ref_at_line_start() {
 fn req_069_doc_ref_after_punctuation() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope.\n\nSee,not-found.md for details.\n";
-    let doc = kotowari_core::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
@@ -1057,7 +1057,7 @@ fn req_069_doc_ref_after_punctuation() {
 fn req_069_mdx_extension_not_matched_but_md_after_it_is() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nfoo.mdx bar.md text.\n";
-    let doc = kotowari_core::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
@@ -1214,13 +1214,13 @@ fn req_115_flag_entry_source_invalid_line_is_the_source_line_not_another_field()
     // 問題の記録の項目に、出典より前に別の行（種類）を持たせる
     fs::write(
         tmp.path().join("docs/ir/FLAGS.md"),
-        "# 問題の記録\n\n### FLAG-001: Issue\n\n- 種類: gap\n- 出典: somewhere/bad.md#X\n- 関係: REQ-001\n\nBody.\n",
+        "# 問題の記録\n\n## 問題の記録\n\n### FLAG-001: Issue\n\n- 種類: gap\n- 出典: somewhere/bad.md#X\n- 関係: REQ-001\n\nBody.\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
     assert!(!si.is_empty(), "should have source_invalid: {:?}", v);
-    assert_eq!(si[0]["line"], 6, "source_invalid line should be the 出典 line (6), not an earlier field line: {:?}", si[0]);
+    assert_eq!(si[0]["line"], 8, "source_invalid line should be the 出典 line (8), not an earlier field line: {:?}", si[0]);
 }
 
 // @kotowari[REQ-core-064]
@@ -1302,7 +1302,7 @@ fn tbl_008_unclosed_backtick_detail_keeps_leading_indentation() {
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n  `不完全な引用\n",
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n文。\n\n  `不完全な引用\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -1343,7 +1343,7 @@ fn tbl_014_md_followed_by_letter_is_not_a_reference() {
     // "a.mdX" は参照でない
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope with a.mdX text.\n";
-    let doc = kotowari_core::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
@@ -1357,7 +1357,7 @@ fn tbl_014_unclosed_quote_hides_the_rest_of_the_line() {
     // 奇数の二重引用符の後は参照を拾わない
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope.\n\nSee \"unclosed quote nonexistent.md here.\n";
-    let doc = kotowari_core::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
@@ -1372,7 +1372,7 @@ fn tbl_014_text_between_the_second_and_third_quote_is_still_scanned() {
     // 最初の引用符で打ち切ってはいけない（2つ目と3つ目の間は引用符の外）。
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope.\n\nSee \"note\" and outside.md here \"trail\n";
-    let doc = kotowari_core::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
@@ -1390,7 +1390,7 @@ fn tbl_014_long_digit_run_before_mdx_does_not_produce_a_spurious_reference() {
     // ".mdx" の直前が長い数字の並びでも、".mdx" は参照として拾わない
     use std::collections::BTreeSet;
     let content = "# Title\n\n01234567890123456789012.mdx\n";
-    let doc = kotowari_core::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
@@ -1408,7 +1408,7 @@ fn tbl_014_md_followed_by_hyphen_is_not_a_reference() {
     // ".md" の直後が "-" のときは参照でない
     use std::collections::BTreeSet;
     let content = "# Title\n\na.md-suffix\n";
-    let doc = kotowari_core::ir::parse_document("x.md", content);
+    let doc = kotowari_core::ir::parse_document("x.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
@@ -1426,7 +1426,7 @@ fn tbl_014_bare_dot_md_with_nothing_before_it_is_not_a_reference() {
     // 直前に文字が無い（空白の直後の）裸の ".md" は参照でない
     use std::collections::BTreeSet;
     let content = "# Title\n\nthe .md file\n";
-    let doc = kotowari_core::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
@@ -1455,7 +1455,7 @@ Some text.
 |---|---|---|
 | 二番目 | 意味2 | brainstorm/records.md#A1 |
 ";
-    let doc = kotowari_core::ir::parse_document("CONTEXT.md", content);
+    let doc = kotowari_core::ir::parse_document("CONTEXT.md", content).unwrap();
     let terms: Vec<_> = doc.items.iter()
         .filter(|i| matches!(i, kotowari_core::ir::Item::GlossaryTerm { .. }))
         .collect();
@@ -1476,7 +1476,7 @@ fn req_117_glossary_without_proper_table_is_invalid() {
 |---|---|---|
 | test | meaning | brainstorm/records.md#A1 |
 ";
-    let doc = kotowari_core::ir::parse_document("CONTEXT.md", content);
+    let doc = kotowari_core::ir::parse_document("CONTEXT.md", content).unwrap();
     let config = kotowari_core::config::Config::default();
     let findings = kotowari_core::ir::check_documents(&[doc], &config);
     let gi: Vec<_> = findings.iter().filter(|f| f.kind == "glossary_invalid").collect();
@@ -1592,7 +1592,7 @@ fn req_033_file_symlink_in_records_dir_is_read() {
 fn req_117_glossary_header_without_rows_is_valid() {
     // ヘッダと区切りの行があれば表は「ある」（A148）
     let content = "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n";
-    let doc = kotowari_core::ir::parse_document("CONTEXT.md", content);
+    let doc = kotowari_core::ir::parse_document("CONTEXT.md", content).unwrap();
     let config = kotowari_core::config::Config::default();
     let findings = kotowari_core::ir::check_documents(&[doc], &config);
     assert!(!findings.iter().any(|f| f.kind == "glossary_invalid"), "header + separator with no rows must not be glossary_invalid: {:?}", findings);
@@ -1660,7 +1660,7 @@ fn glossary(term: &str) -> String {
 }
 
 fn term_statement(id: &str, statement: &str) -> String {
-    format!("# Title\n\nScope.\n\n### {id}: Name\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n\n{statement}\n")
+    format!("# Title\n\nScope.\n\n## 要求\n\n### {id}: Name\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n\n{statement}\n")
 }
 
 // @kotowari[REQ-core-064]
@@ -1733,7 +1733,7 @@ fn tbl_014_md_followed_by_hash_or_slash_is_not_a_reference() {
     let doc = kotowari_core::ir::parse_document(
         "x.md",
         "# Title\n\na.md#A12 docs/decision/records/records.md#A12 a.md/b.md a//b.md\n",
-    );
+    ).unwrap();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
         &[doc], "docs/ir", &Default::default(), &mut findings,
@@ -1746,7 +1746,7 @@ fn tbl_014_md_followed_by_hash_or_slash_is_not_a_reference() {
 fn tbl_014_slash_separated_path_is_a_reference() {
     let doc = kotowari_core::ir::parse_document(
         "a.md", "# Title\n\nSee network/dns/b.md.\n",
-    );
+    ).unwrap();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
         &[doc], "docs/ir", &Default::default(), &mut findings,

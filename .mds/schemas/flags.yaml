@@ -26,7 +26,10 @@ document:
             extract: kind
           - name: 関係
             separator: ","
-            extract: relations
+            extract:
+              path: relations
+              value: value
+              of: { line: line }
           - name: 出典
             separator: ","
             extract:

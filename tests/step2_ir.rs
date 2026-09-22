@@ -35,7 +35,7 @@ fn req_033_subdirectories_are_read_at_any_depth() {
 // @kotowari[REQ-core-034]
 #[test]
 fn req_034_missing_title() {
-    let doc = ir::parse_document("a.md", "No title here.\n");
+    let doc = ir::parse_document("a.md", "No title here.\n").unwrap();
     let findings = check(&[doc], &default_config());
     let mt = find_by_kind(&findings, "missing_title");
     assert_eq!(mt.len(), 1);
@@ -48,11 +48,12 @@ fn req_034_missing_title() {
 // @kotowari[REQ-core-035]
 #[test]
 fn req_035_multiple_titles() {
-    let doc = ir::parse_document("a.md", "# First\n\nScope.\n\n# Second\n");
+    let doc = ir::parse_document("a.md", "# First\n\nScope.\n\n# Second\n").unwrap();
     let findings = check(&[doc], &default_config());
     let mt = find_by_kind(&findings, "multiple_titles");
     assert_eq!(mt.len(), 1);
-    assert_eq!(mt[0].detail, "Second");
+    // TBL-core-030: detail は`抽出`の`題名`
+    assert_eq!(mt[0].detail, "First");
 }
 
 // --- REQ-core-036: 範囲の行が無い ---
@@ -60,7 +61,7 @@ fn req_035_multiple_titles() {
 // @kotowari[REQ-core-036]
 #[test]
 fn req_036_missing_scope() {
-    let doc = ir::parse_document("a.md", "# Title\n\n## 要求\n");
+    let doc = ir::parse_document("a.md", "# Title\n\n## 要求\n").unwrap();
     let findings = check(&[doc], &default_config());
     let ms = find_by_kind(&findings, "missing_scope");
     assert_eq!(ms.len(), 1);
@@ -73,8 +74,8 @@ fn req_036_glossary_and_flags_need_no_scope() {
     let glossary = ir::parse_document(
         "CONTEXT.md",
         "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n",
-    );
-    let flags = ir::parse_document("FLAGS.md", "# 問題の記録\n");
+    ).unwrap();
+    let flags = ir::parse_document("FLAGS.md", "# 問題の記録\n").unwrap();
     let findings = check(&[glossary, flags], &default_config());
     let ms = find_by_kind(&findings, "missing_scope");
     assert!(ms.is_empty());
@@ -85,13 +86,13 @@ fn req_036_glossary_and_flags_need_no_scope() {
 // @kotowari[REQ-core-037, TBL-core-010]
 #[test]
 fn req_037_crlf_counts_as_one_line() {
-    let doc = ir::parse_document("a.md", "# Title\r\n\r\nScope.\r\n");
+    let doc = ir::parse_document("a.md", "# Title\r\n\r\nScope.\r\n").unwrap();
     assert_eq!(doc.line_count, 3);
     // \n だけ
-    let doc2 = ir::parse_document("b.md", "# Title\n\nScope.\n");
+    let doc2 = ir::parse_document("b.md", "# Title\n\nScope.\n").unwrap();
     assert_eq!(doc2.line_count, 3);
     // 改行なし
-    let doc3 = ir::parse_document("c.md", "# Title");
+    let doc3 = ir::parse_document("c.md", "# Title").unwrap();
     assert_eq!(doc3.line_count, 1);
 }
 
@@ -102,7 +103,7 @@ fn req_037_crlf_counts_as_one_line() {
 fn req_038_too_many_lines_is_a_notice() {
     // 既定の limits.lines は 200
     let content = format!("# Title\n\nScope.\n\n{}", "line\n".repeat(200));
-    let doc = ir::parse_document("a.md", &content);
+    let doc = ir::parse_document("a.md", &content).unwrap();
     assert!(doc.line_count > 200);
     let findings = check(&[doc], &default_config());
     let tl = find_by_kind(&findings, "too_many_lines");
@@ -124,14 +125,14 @@ fn req_039_too_many_requirements_skips_glossary_and_flags() {
             i
         ));
     }
-    let doc = ir::parse_document("a.md", &content);
+    let doc = ir::parse_document("a.md", &content).unwrap();
     let findings = check(&[doc], &default_config());
     let tr = find_by_kind(&findings, "too_many_requirements");
     assert_eq!(tr.len(), 1);
     assert_eq!(tr[0].severity, "notice");
 
     // 用語集は数えない
-    let glossary = ir::parse_document("CONTEXT.md", "# 用語集\n");
+    let glossary = ir::parse_document("CONTEXT.md", "# 用語集\n").unwrap();
     let findings2 = check(&[glossary], &default_config());
     let tr2 = find_by_kind(&findings2, "too_many_requirements");
     assert!(tr2.is_empty());
@@ -150,7 +151,7 @@ fn req_039_unknown_heading_does_not_inflate_requirement_count() {
     }
     // EX- 接頭辞の見出し（要求ではない）
     content.push_str("### EX-001: Example\n\nSome text.\n");
-    let doc = ir::parse_document("a.md", &content);
+    let doc = ir::parse_document("a.md", &content).unwrap();
     let findings = check(&[doc], &default_config());
     let tr = find_by_kind(&findings, "too_many_requirements");
     assert!(
@@ -166,7 +167,7 @@ fn req_039_unknown_heading_does_not_inflate_requirement_count() {
 #[test]
 fn req_040_code_blocks_are_skipped_except_gherkin() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n\n```\n### BAD-001: Should not be parsed\n```\n\n## 具体例\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1\nScenario: Test\n  Given something\n```\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
 
     // 通常のコードブロック内の ### は項目として読まれない
     let items_with_bad = doc.items.iter().any(|i| match i {
@@ -234,7 +235,7 @@ Scenario: Test scenario
   Then result
 ```
 "#;
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
 
     let mut has_req = false;
     let mut has_tbl = false;
@@ -263,7 +264,7 @@ Scenario: Test scenario
 #[test]
 fn req_043_unknown_heading() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### Bad Heading\n\nSome text.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uh = find_by_kind(&findings, "unknown_heading");
     assert_eq!(uh.len(), 1);
@@ -276,7 +277,7 @@ fn req_043_unknown_heading() {
 fn req_043_unknown_heading_detail_is_full_heading_text() {
     // コロン付きの認識できない見出し → detail は読んだ見出しの行そのまま（A150）
     let content = "# Title\n\nScope.\n\n## 要求\n\n### EX-001: Example\n\nSome text.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uh = find_by_kind(&findings, "unknown_heading");
     assert_eq!(uh.len(), 1);
@@ -291,7 +292,7 @@ fn req_043_unknown_heading_detail_is_full_heading_text() {
 fn req_043_unknown_heading_invalid_id_detail_is_full_heading_text() {
     // 認識できる prefix だが ID 形式が不正（3桁でない） → detail は読んだ見出しの行そのまま（A150）
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-1: Invalid\n\nSome text.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uh = find_by_kind(&findings, "unknown_heading");
     assert_eq!(uh.len(), 1);
@@ -306,7 +307,7 @@ fn req_043_unknown_heading_invalid_id_detail_is_full_heading_text() {
 fn req_043_heading_without_colon_is_unknown() {
     // "### REQ-001" はコロンがないので "### ID: 名前" の形ではなく、unknown_heading になる
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uh = find_by_kind(&findings, "unknown_heading");
     assert_eq!(uh.len(), 1, "should produce exactly one unknown_heading");
@@ -320,7 +321,7 @@ fn req_043_heading_without_colon_is_unknown() {
 #[test]
 fn req_044_unknown_field() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 優先度: 高\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uf = find_by_kind(&findings, "unknown_field");
     assert_eq!(uf.len(), 1);
@@ -332,7 +333,7 @@ fn req_044_unknown_field() {
 fn req_044_unknown_field_without_colon_has_line_text_as_detail() {
     // コロンのない "- テキスト" 行 → detail は行の文字
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- ただのテキスト\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uf = find_by_kind(&findings, "unknown_field");
     assert!(
@@ -348,7 +349,7 @@ fn req_044_unknown_field_without_colon_has_line_text_as_detail() {
 #[test]
 fn req_045_duplicate_field() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 種類: prohibition\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let df = find_by_kind(&findings, "duplicate_field");
     assert_eq!(df.len(), 1);
@@ -361,7 +362,7 @@ fn req_045_duplicate_field() {
 #[test]
 fn req_046_fields_in_any_order_with_blank_lines_and_commas() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 検証: unit\n\n- 出典: brainstorm/records.md#A1, brainstorm/records.md#A2\n\n- 種類: algorithm\n- 定義: TBL-001, PROP-001\n\n## 決定表\n\n### TBL-001: T\n\n- 出典: brainstorm/records.md#A1\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n## 性質\n\n### PROP-001: P\n\n- 出典: brainstorm/records.md#A1\n\nProp statement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     // 既知のフィールドだけなので unknown_field、duplicate_field は出ない
     let uf = find_by_kind(&findings, "unknown_field");
@@ -377,7 +378,7 @@ fn req_046_fields_in_any_order_with_blank_lines_and_commas() {
 fn req_047_missing_statement() {
     // algorithm 以外の要求に文がない
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ms = find_by_kind(&findings, "missing_statement");
     assert_eq!(ms.len(), 1);
@@ -385,10 +386,22 @@ fn req_047_missing_statement() {
 
     // algorithm は文がなくても OK
     let content2 = "# Title\n\nScope.\n\n## 要求\n\n### REQ-002: Algo\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: TBL-001\n\n## 決定表\n\n### TBL-001: T\n\n- 出典: brainstorm/records.md#A1\n\n| A | B |\n|---|---|\n| 1 | 2 |\n";
-    let doc2 = ir::parse_document("a.md", content2);
+    let doc2 = ir::parse_document("a.md", content2).unwrap();
     let findings2 = check(&[doc2], &default_config());
     let ms2 = find_by_kind(&findings2, "missing_statement");
     assert!(ms2.is_empty());
+}
+
+// @kotowari[REQ-core-047]
+#[test]
+fn req_047_flag_entry_without_statement_is_missing_statement() {
+    let content = "# 問題の記録\n\n## 問題の記録\n\n### FLAG-001: Issue\n\n- 種類: gap\n- 関係: REQ-001\n- 出典: brainstorm/records.md#A1\n";
+    let doc = ir::parse_document("FLAGS.md", content).unwrap();
+    let findings = check(&[doc], &default_config());
+    let ms = find_by_kind(&findings, "missing_statement");
+    assert_eq!(ms.len(), 1, "{findings:?}");
+    assert_eq!(ms[0].detail, "FLAG-001");
+    assert_eq!(ms[0].line, Some(5));
 }
 
 // --- REQ-core-048: 検証の行が無い ---
@@ -397,7 +410,7 @@ fn req_047_missing_statement() {
 #[test]
 fn req_048_verification_missing() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let vm = find_by_kind(&findings, "verification_missing");
     assert_eq!(vm.len(), 1);
@@ -410,7 +423,7 @@ fn req_048_verification_missing() {
 #[test]
 fn req_049_verification_invalid() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: manual\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let vi = find_by_kind(&findings, "verification_invalid");
     assert_eq!(vi.len(), 1);
@@ -424,18 +437,18 @@ fn req_049_verification_invalid() {
 fn req_050_unknown_kind_of_requirement_and_flag() {
     // 要求の種類
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: functional\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uk = find_by_kind(&findings, "unknown_kind");
     assert_eq!(uk.len(), 1);
     assert_eq!(uk[0].detail, "functional");
 
     // 問題の記録の種類
-    let flag_content = "# 問題の記録\n\n### FLAG-001: Issue\n\n- 種類: error\n- 関係: REQ-001\n- 出典: brainstorm/records.md#A1\n\nBody.\n";
-    let flag_doc = ir::parse_document("FLAGS.md", flag_content);
+    let flag_content = "# 問題の記録\n\n## 問題の記録\n\n### FLAG-001: Issue\n\n- 種類: error\n- 関係: REQ-001\n- 出典: brainstorm/records.md#A1\n\nBody.\n";
+    let flag_doc = ir::parse_document("FLAGS.md", flag_content).unwrap();
     // REQ-core-001 が定義されている文書も必要
     let req_content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
-    let req_doc = ir::parse_document("a.md", req_content);
+    let req_doc = ir::parse_document("a.md", req_content).unwrap();
     let findings2 = check(&[flag_doc, req_doc], &default_config());
     let uk2 = find_by_kind(&findings2, "unknown_kind");
     assert_eq!(uk2.len(), 1);
@@ -448,7 +461,7 @@ fn req_050_unknown_kind_of_requirement_and_flag() {
 #[test]
 fn req_051_algorithm_without_definition() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Algo\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let awd = find_by_kind(&findings, "algorithm_without_definition");
     assert_eq!(awd.len(), 1);
@@ -460,7 +473,7 @@ fn req_051_algorithm_without_definition() {
 fn req_051_algorithm_definition_must_point_to_tbl_or_prop() {
     // 定義が REQ-core-001 を指す（TBL/PROP ではない） → algorithm_without_definition が出る
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Algo\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: REQ-002\n\n### REQ-002: Other\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let awd = find_by_kind(&findings, "algorithm_without_definition");
     assert_eq!(
@@ -479,7 +492,7 @@ fn req_051_algorithm_definition_must_point_to_tbl_or_prop() {
 fn req_098_missing_field() {
     // 決定表に出典がない → missing_source with detail = ID
     let content = "# Title\n\nScope.\n\n## 決定表\n\n### TBL-001: T\n\n| A |\n|---|\n| 1 |\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ms = find_by_kind(&findings, "missing_source");
     assert!(ms.iter().any(|f| f.detail == "TBL-001"), "missing source for TBL-001");
@@ -492,21 +505,21 @@ fn req_098_missing_field() {
 fn req_098_review_requirement_without_how_to_verify_is_a_missing_field() {
     let requirement = |id: &str, verification: &str, how_to_verify: &str| {
         format!(
-            "### {id}: 例\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: {verification}\n{how_to_verify}\n文である。\n\n"
+            "### {id}: 例\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: {verification}\n{how_to_verify}\n\n文である。\n\n"
         )
     };
     let content = format!(
         "# Title\n\nScope.\n\n## 要求\n\n{}{}{}{}",
         // 7 行目: 検証が review で行が無い
         requirement("REQ-001", "review", ""),
-        // 15 行目: 検証が review で行がある
+        // 16 行目: 検証が review で行がある
         requirement("REQ-002", "review", "- 確かめ方: 手で見る\n"),
-        // 24 行目: 検証が unit で行が無い
+        // 26 行目: 検証が unit で行が無い
         requirement("REQ-003", "unit", ""),
-        // 32 行目: 検証が review で値が空（REQ-core-098: 無い行として扱う）
+        // 35 行目: 検証が review で値が空（REQ-core-098: 行が在るものとして扱う）
         requirement("REQ-004", "review", "- 確かめ方:\n"),
     );
-    let doc = ir::parse_document("a.md", &content);
+    let doc = ir::parse_document("a.md", &content).unwrap();
     let findings = check(&[doc], &default_config());
     let lines: Vec<Option<usize>> = find_by_kind(&findings, "missing_field")
         .iter()
@@ -514,7 +527,7 @@ fn req_098_review_requirement_without_how_to_verify_is_a_missing_field() {
         .map(|f| f.line)
         .collect();
     // TBL-core-019: line は項目の見出しの行
-    assert_eq!(lines, vec![Some(7), Some(32)], "{findings:?}");
+    assert_eq!(lines, vec![Some(7)], "{findings:?}");
 }
 
 // --- REQ-core-099: 決定表に表がない ---
@@ -523,7 +536,7 @@ fn req_098_review_requirement_without_how_to_verify_is_a_missing_field() {
 #[test]
 fn req_099_missing_table() {
     let content = "# Title\n\nScope.\n\n## 決定表\n\n### TBL-001: T\n\n- 出典: brainstorm/records.md#A1\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let mt = find_by_kind(&findings, "missing_table");
     assert_eq!(mt.len(), 1);
@@ -536,7 +549,7 @@ fn req_099_missing_table() {
 #[test]
 fn req_100_scenario_outside_gherkin_is_ignored() {
     let content = "# Title\n\nScope.\n\nScenario: This should be ignored\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let has_scenario = doc.items.iter().any(|i| matches!(i, Item::Scenario { .. }));
     assert!(!has_scenario, "Scenario outside gherkin should be ignored");
 }
@@ -548,7 +561,7 @@ fn req_100_scenario_outside_gherkin_is_ignored() {
 fn req_053_consecutive_scenarios_without_tags_each_get_missing_tag() {
     // タグ行なしで Scenario: が2つ連続 → 各シナリオに missing_tag が出る
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\nScenario: First\n  Given step1\nScenario: Second\n  Given step2\n```\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let scenarios: Vec<_> = doc.items.iter().filter(|i| matches!(i, Item::Scenario { .. })).collect();
     assert_eq!(scenarios.len(), 2, "should parse 2 scenarios: {:?}", scenarios);
     let findings = check(&[doc], &default_config());
@@ -566,7 +579,7 @@ fn req_053_consecutive_scenarios_without_tags_each_get_missing_tag() {
 #[test]
 fn req_052_unknown_tag() {
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1 @requirement=REQ-001\nScenario: Test\n  Given something\n```\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ut = find_by_kind(&findings, "unknown_tag");
     assert_eq!(ut.len(), 1);
@@ -578,7 +591,7 @@ fn req_052_unknown_tag() {
 fn req_052_bare_tag_without_equals_is_unknown() {
     // @wip のように = を持たない裸のタグも unknown_tag になる
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1 @wip\nScenario: Test\n  Given something\n```\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ut = find_by_kind(&findings, "unknown_tag");
     assert!(
@@ -594,7 +607,7 @@ fn req_052_bare_tag_without_equals_is_unknown() {
 #[test]
 fn req_053_missing_tag() {
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@source=brainstorm/records.md#A1\nScenario: Test without id and about\n  Given something\n```\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let mt = find_by_kind(&findings, "missing_tag");
     assert!(mt.iter().any(|f| f.detail == "@id"));
@@ -605,7 +618,7 @@ fn req_053_missing_tag() {
 #[test]
 fn req_053_tag_with_empty_value_is_treated_as_missing() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n\n## 具体例\n\n```gherkin\n@id= @about=REQ-001 @source=\nScenario: Empty tag values\n  Given something\n```\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let mt = find_by_kind(&findings, "missing_tag");
     assert!(mt.iter().any(|f| f.detail == "@id"), "empty @id= should count as missing: {:?}", mt);
@@ -624,7 +637,7 @@ fn req_053_tag_with_empty_value_is_treated_as_missing() {
 #[test]
 fn req_054_unresolved_reference_in_definition_about_relation_and_sentence() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: TBL-999\n\n## 具体例\n\n```gherkin\n@id=EX-001 @about=REQ-999 @source=brainstorm/records.md#A1\nScenario: Ref test\n  Given something\n```\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     let details: Vec<&str> = ur.iter().map(|f| f.detail.as_str()).collect();
@@ -638,7 +651,7 @@ fn req_054_unresolved_reference_in_definition_about_relation_and_sentence() {
 #[test]
 fn req_032_duplicate_id_on_each_later_place_with_its_line() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: First\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement 1.\n\n### REQ-001: Second\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement 2.\n\n### REQ-001: Third\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement 3.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let di = find_by_kind(&findings, "duplicate_id");
     // 3か所にある → 2件（2つ目と3つ目）
@@ -656,7 +669,7 @@ fn req_044_property_definition_field_is_unknown() {
     // TBL-core-011 によると性質が持つ行は「- 出典:」だけ。
     // 「- 定義:」は知らない行として unknown_field になる。
     let content = "# Title\n\nScope.\n\n## 性質\n\n### PROP-001: P\n\n- 出典: brainstorm/records.md#A1\n- 定義: TBL-001\n\nProperty statement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uf = find_by_kind(&findings, "unknown_field");
     assert!(
@@ -670,7 +683,7 @@ fn req_044_property_definition_field_is_unknown() {
 #[test]
 fn req_059_scenario_without_id_missing_source_detail_is_scenario_text() {
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@about=REQ-001\nScenario: No id scenario\n  Given something\n```\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ms = find_by_kind(&findings, "missing_source");
     assert!(
@@ -684,7 +697,7 @@ fn req_059_scenario_without_id_missing_source_detail_is_scenario_text() {
 #[test]
 fn req_044_prop_unknown_field_does_not_produce_unresolved_reference() {
     let content = "# Title\n\nScope.\n\n## 性質\n\n### PROP-001: P\n\n- 出典: brainstorm/records.md#A1\n- 定義: TBL-999\n\nProperty statement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uf = find_by_kind(&findings, "unknown_field");
     assert!(
@@ -707,7 +720,7 @@ fn req_044_prop_unknown_field_does_not_produce_unresolved_reference() {
 fn req_098_required_lines_are_told_apart_from_empty_values() {
     // (1) すべてのフィールドが揃って値も正しい要求 → 関連する指摘が出ない
     let valid = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Valid\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", valid);
+    let doc = ir::parse_document("a.md", valid).unwrap();
     let f = check(&[doc], &default_config());
     assert!(find_by_kind(&f, "missing_field").is_empty(), "valid req should have no missing_field: {:?}", f);
     assert!(find_by_kind(&f, "missing_source").is_empty(), "valid req should have no missing_source: {:?}", f);
@@ -719,14 +732,14 @@ fn req_098_required_lines_are_told_apart_from_empty_values() {
 
     // (2) 種類の行がない → missing_field "種類"
     let no_kind = "# Title\n\nScope.\n\n## 要求\n\n### REQ-002: NoKind\n\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
-    let doc2 = ir::parse_document("a.md", no_kind);
+    let doc2 = ir::parse_document("a.md", no_kind).unwrap();
     let f2 = check(&[doc2], &default_config());
     let mf2 = find_by_kind(&f2, "missing_field");
     assert!(mf2.iter().any(|x| x.detail == "種類"), "should report missing_field 種類: {:?}", mf2);
 
     // (3) 出典の行がない → missing_source with detail = ID、missing_field "出典" は出ない
     let no_source = "# Title\n\nScope.\n\n## 要求\n\n### REQ-003: NoSource\n\n- 種類: ubiquitous\n- 検証: unit\n\nStatement.\n";
-    let doc3 = ir::parse_document("a.md", no_source);
+    let doc3 = ir::parse_document("a.md", no_source).unwrap();
     let f3 = check(&[doc3], &default_config());
     let ms3 = find_by_kind(&f3, "missing_source");
     assert!(ms3.iter().any(|x| x.detail == "REQ-003"), "should report missing_source with ID: {:?}", ms3);
@@ -735,7 +748,7 @@ fn req_098_required_lines_are_told_apart_from_empty_values() {
 
     // (4) 出典の行はあるが値が空 → missing_source が出て、missing_field "出典" は出ない
     let empty_source = "# Title\n\nScope.\n\n## 要求\n\n### REQ-004: EmptySource\n\n- 種類: ubiquitous\n- 出典:\n- 検証: unit\n\nStatement.\n";
-    let doc4 = ir::parse_document("a.md", empty_source);
+    let doc4 = ir::parse_document("a.md", empty_source).unwrap();
     let f4 = check(&[doc4], &default_config());
     let ms4 = find_by_kind(&f4, "missing_source");
     assert!(ms4.iter().any(|x| x.detail == "REQ-004"), "should report missing_source: {:?}", ms4);
@@ -744,7 +757,7 @@ fn req_098_required_lines_are_told_apart_from_empty_values() {
 
     // (5) 決定表の出典の行はあるが値が空 → missing_source
     let tbl_empty_source = "# Title\n\nScope.\n\n## 決定表\n\n### TBL-001: T\n\n- 出典:\n\n| A |\n|---|\n| 1 |\n";
-    let doc5 = ir::parse_document("a.md", tbl_empty_source);
+    let doc5 = ir::parse_document("a.md", tbl_empty_source).unwrap();
     let f5 = check(&[doc5], &default_config());
     let ms5 = find_by_kind(&f5, "missing_source");
     assert!(ms5.iter().any(|x| x.detail == "TBL-001"), "TBL should report missing_source on empty value: {:?}", ms5);
@@ -753,7 +766,7 @@ fn req_098_required_lines_are_told_apart_from_empty_values() {
 
     // (6) 性質の出典の行はあるが値が空 → missing_source
     let prop_empty_source = "# Title\n\nScope.\n\n## 性質\n\n### PROP-001: P\n\n- 出典:\n\nProp statement.\n";
-    let doc6 = ir::parse_document("a.md", prop_empty_source);
+    let doc6 = ir::parse_document("a.md", prop_empty_source).unwrap();
     let f6 = check(&[doc6], &default_config());
     let ms6 = find_by_kind(&f6, "missing_source");
     assert!(ms6.iter().any(|x| x.detail == "PROP-001"), "PROP should report missing_source on empty value: {:?}", ms6);
@@ -769,7 +782,7 @@ fn gherkin_tags_cleared_after_block_without_scenario() {
 
 Scope.
 
-## Examples
+## 具体例
 
 ```gherkin
 @id=EX-001 @about=REQ-001
@@ -780,7 +793,7 @@ Scenario: bare scenario
   Given something
 ```
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let mt = find_by_kind(&findings, "missing_tag");
     assert!(
@@ -801,8 +814,11 @@ Scenario: bare scenario
 #[test]
 fn req_037_crlf_title_and_requirement_line_numbers() {
     let content = "# Title\r\n\r\nScope.\r\n\r\n## 要求\r\n\r\n### REQ-001: Test\r\n\r\n- 種類: ubiquitous\r\n- 出典: brainstorm/records.md#A1\r\n- 検証: unit\r\n\r\nStatement.\r\n";
-    let doc = ir::parse_document("a.md", content);
-    assert_eq!(doc.title, Some((1, "Title".to_string())));
+    let doc = ir::parse_document("a.md", content).unwrap();
+    assert!(
+        find_by_kind(&check(&[ir::parse_document("a.md", content).unwrap()], &default_config()), "missing_title").is_empty(),
+        "the title should be recognized"
+    );
     let req = doc.items.iter().find(|i| matches!(i, Item::Requirement { id, .. } if id == "REQ-001"));
     assert!(req.is_some(), "should parse REQ-001");
     assert_eq!(req.unwrap().item_line(), 7, "REQ-001 should be on line 7");
@@ -817,7 +833,7 @@ fn req_037_crlf_title_and_requirement_line_numbers() {
 // @kotowari[REQ-core-037, TBL-core-010]
 #[test]
 fn req_037_empty_content_has_zero_lines() {
-    let doc = ir::parse_document("a.md", "");
+    let doc = ir::parse_document("a.md", "").unwrap();
     assert_eq!(doc.line_count, 0, "empty content should have 0 lines");
 }
 
@@ -843,7 +859,7 @@ Scenario: All keywords
   But not this condition
 ```
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let scenario = doc.items.iter().find(|i| matches!(i, Item::Scenario { id: Some(id), .. } if id == "EX-001"));
     assert!(scenario.is_some(), "should parse EX-001 scenario");
     if let Item::Scenario { steps, .. } = scenario.unwrap() {
@@ -864,7 +880,7 @@ fn req_042_glossary_table_parses_terms() {
 | テスト | テストの意味 | brainstorm/records.md#A1 |
 | 検証 | 検証の意味 | brainstorm/records.md#A2 |
 ";
-    let doc = ir::parse_document("CONTEXT.md", content);
+    let doc = ir::parse_document("CONTEXT.md", content).unwrap();
     let terms: Vec<_> = doc.items.iter().filter(|i| matches!(i, Item::GlossaryTerm { .. })).collect();
     assert_eq!(terms.len(), 2, "should parse 2 glossary terms: {:?}", terms);
     if let Item::GlossaryTerm { term, line, .. } = &terms[0] {
@@ -885,6 +901,8 @@ fn req_042_flag_relation_and_source_fields_read() {
     let content = "\
 # 問題の記録
 
+## 問題の記録
+
 ### FLAG-001: Issue
 
 - 種類: gap
@@ -893,7 +911,7 @@ fn req_042_flag_relation_and_source_fields_read() {
 
 Body text.
 ";
-    let doc = ir::parse_document("FLAGS.md", content);
+    let doc = ir::parse_document("FLAGS.md", content).unwrap();
     let flag = doc.items.iter().find(|i| matches!(i, Item::FlagEntry { id, .. } if id == "FLAG-001"));
     assert!(flag.is_some(), "should parse FLAG-001");
     if let Item::FlagEntry { relations, sources, .. } = flag.unwrap() {
@@ -908,6 +926,8 @@ fn req_054_flag_relation_to_unknown_id_produces_unresolved_reference() {
     let content = "\
 # 問題の記録
 
+## 問題の記録
+
 ### FLAG-001: Issue
 
 - 種類: gap
@@ -916,7 +936,7 @@ fn req_054_flag_relation_to_unknown_id_produces_unresolved_reference() {
 
 Body text.
 ";
-    let doc = ir::parse_document("FLAGS.md", content);
+    let doc = ir::parse_document("FLAGS.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     assert!(
@@ -932,6 +952,8 @@ fn req_098_flag_without_relation_line_produces_missing_field() {
     let content = "\
 # 問題の記録
 
+## 問題の記録
+
 ### FLAG-001: Issue
 
 - 種類: gap
@@ -939,7 +961,7 @@ fn req_098_flag_without_relation_line_produces_missing_field() {
 
 Body text.
 ";
-    let doc = ir::parse_document("FLAGS.md", content);
+    let doc = ir::parse_document("FLAGS.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let mf = find_by_kind(&findings, "missing_field");
     assert!(
@@ -967,7 +989,7 @@ Scenario: With source
   Given something
 ```
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let scenario = doc.items.iter().find(|i| matches!(i, Item::Scenario { id: Some(id), .. } if id == "EX-001"));
     assert!(scenario.is_some(), "should parse EX-001");
     if let Item::Scenario { sources, .. } = scenario.unwrap() {
@@ -989,14 +1011,14 @@ fn req_038_exactly_at_limit_no_notice_one_over_notices() {
 
     let filler_lines = limit - 3;
     let content = format!("# Title\n\nScope.\n{}", "x\n".repeat(filler_lines));
-    let doc = ir::parse_document("a.md", &content);
+    let doc = ir::parse_document("a.md", &content).unwrap();
     assert_eq!(doc.line_count, limit, "should be exactly at limit");
     let findings = check(&[doc], &cfg);
     let tl = find_by_kind(&findings, "too_many_lines");
     assert!(tl.is_empty(), "exactly at limit should not produce too_many_lines: {:?}", tl);
 
     let over_content = format!("# Title\n\nScope.\n{}", "x\n".repeat(filler_lines + 1));
-    let over_doc = ir::parse_document("b.md", &over_content);
+    let over_doc = ir::parse_document("b.md", &over_content).unwrap();
     assert_eq!(over_doc.line_count, limit + 1, "should be one over limit");
     let over_findings = check(&[over_doc], &cfg);
     let over_tl = find_by_kind(&over_findings, "too_many_lines");
@@ -1023,7 +1045,7 @@ Scope.
 
 The `REQ-001` is known but `TBL-999` is not.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     assert!(
@@ -1056,7 +1078,7 @@ Scope.
 
 `TBL-999` at the start of the line.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     assert!(
@@ -1084,7 +1106,7 @@ Scope.
 
 See `TBL-998` and `TBL-999` here.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     assert!(
@@ -1117,7 +1139,7 @@ Scope.
 
 The `foo` word is not an ID.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     assert!(
@@ -1145,7 +1167,7 @@ Scope.
 
 This property references `TBL-999` which does not exist.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     assert!(
@@ -1175,7 +1197,7 @@ Scope.
 |---|---|
 | 1 | 2 |
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ms = find_by_kind(&findings, "missing_source");
     assert!(
@@ -1245,16 +1267,18 @@ fn req_111_bom_is_skipped_in_ir_config_records_adr_and_tests() {
     // BOM 付きの文書が正常に読まれることを確認
     let bom = "\u{FEFF}";
     let content = format!("{bom}# Title\n\nScope.\n");
-    let doc = ir::parse_document("a.md", &content);
-    assert!(doc.title.is_some(), "BOM should not prevent title parsing");
-    assert_eq!(doc.title.as_ref().unwrap().1, "Title");
+    let doc = ir::parse_document("a.md", &content).unwrap();
+    assert!(
+        find_by_kind(&check(&[doc], &default_config()), "missing_title").is_empty(),
+        "BOM should not prevent title parsing"
+    );
 }
 
 // @kotowari[REQ-core-040]
 #[test]
 fn req_040_tilde_fence_is_a_code_block() {
-    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n~~~\nSome code\n~~~\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n~~~\nSome code\n~~~\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
     // ~~~ で囲んだブロックの中は検査されない
     let req = doc.items.iter().find(|i| i.id() == Some("REQ-001")).unwrap();
     if let Item::Requirement { statements, .. } = req {
@@ -1267,8 +1291,8 @@ fn req_040_tilde_fence_is_a_code_block() {
 // @kotowari[REQ-core-040]
 #[test]
 fn req_040_longer_fence_needs_same_or_longer_close() {
-    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n````\n```\nstill inside\n````\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n````\n```\nstill inside\n````\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
     let req = doc.items.iter().find(|i| i.id() == Some("REQ-001")).unwrap();
     if let Item::Requirement { statements, .. } = req {
         // ``` は ```` を閉じない
@@ -1282,8 +1306,8 @@ fn req_040_longer_fence_needs_same_or_longer_close() {
 // @kotowari[REQ-core-112]
 #[test]
 fn req_112_unclosed_code_block_is_an_error() {
-    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n```\nunclosed content\n";
-    let doc = ir::parse_document("a.md", content);
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n```\nunclosed content\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
     let uc = doc.parse_findings.iter()
         .find(|f| f.kind == "unclosed_code_block");
     assert!(uc.is_some(), "should produce unclosed_code_block finding");
@@ -1295,8 +1319,8 @@ fn req_112_unclosed_code_block_is_an_error() {
 // @kotowari[REQ-core-112]
 #[test]
 fn req_112_unclosed_gherkin_block_is_not_checked() {
-    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1\nScenario: test\n  Given something\n";
-    let doc = ir::parse_document("a.md", content);
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1\nScenario: test\n  Given something\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
     // gherkin ブロックが閉じないときも unclosed_code_block が出る
     let uc = doc.parse_findings.iter()
         .find(|f| f.kind == "unclosed_code_block");
@@ -1328,7 +1352,7 @@ Scenario: first
 Scenario: second
   Given another
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     // unclosed_code_block は出る
     let uc = doc.parse_findings.iter()
         .find(|f| f.kind == "unclosed_code_block");
@@ -1345,9 +1369,8 @@ Scenario: second
 // @kotowari[TBL-core-010]
 #[test]
 fn tbl_010_empty_document_has_zero_lines_and_missing_title() {
-    let doc = ir::parse_document("a.md", "");
+    let doc = ir::parse_document("a.md", "").unwrap();
     assert_eq!(doc.line_count, 0, "empty document should have 0 lines");
-    assert!(doc.title.is_none(), "empty document should have no title");
     let config = default_config();
     let findings = check(&[doc], &config);
     let mt = find_by_kind(&findings, "missing_title");
@@ -1359,8 +1382,8 @@ fn tbl_010_empty_document_has_zero_lines_and_missing_title() {
 // @kotowari[REQ-core-044]
 #[test]
 fn req_044_star_plus_numbered_and_bare_dash_lines_are_unknown_fields() {
-    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n* star line\n+ plus line\n1. numbered line\n-\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n* star line\n+ plus line\n1. numbered line\n-\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uf = find_by_kind(&findings, "unknown_field");
     assert!(uf.len() >= 4, "should produce at least 4 unknown_field findings, got {}", uf.len());
@@ -1369,8 +1392,8 @@ fn req_044_star_plus_numbered_and_bare_dash_lines_are_unknown_fields() {
 // @kotowari[REQ-core-044]
 #[test]
 fn req_044_detail_is_the_raw_line() {
-    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n  * indented star\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n  * indented star\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uf = find_by_kind(&findings, "unknown_field");
     // detail は字下げを含む読んだ行そのまま
@@ -1381,8 +1404,8 @@ fn req_044_detail_is_the_raw_line() {
 // @kotowari[REQ-core-043]
 #[test]
 fn req_043_deeper_heading_is_unknown_heading() {
-    let content = "# Title\n\nScope.\n\n## Section\n\n#### DEEP-001: Deep\n\nSome text.\n";
-    let doc = ir::parse_document("a.md", content);
+    let content = "# Title\n\nScope.\n\n## 要求\n\n#### DEEP-001: Deep\n\nSome text.\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uh = find_by_kind(&findings, "unknown_heading");
     assert!(uh.iter().any(|f| f.detail.contains("DEEP-001")),
@@ -1391,15 +1414,25 @@ fn req_043_deeper_heading_is_unknown_heading() {
 
 // @kotowari[REQ-core-043]
 #[test]
-fn req_043_lines_under_unknown_heading_are_not_an_item() {
-    let content = "# Title\n\nScope.\n\n## Section\n\n### BADID: X\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+fn req_043_lines_under_a_malformed_heading_are_read_by_the_item_rules() {
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### BADID: X\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 優先度: 高\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
+    assert!(
+        !doc.items.iter().any(|i| matches!(i, Item::Requirement { .. })),
+        "a malformed heading is not an item: {:?}",
+        doc.items
+    );
     let findings = check(&[doc], &default_config());
-    // unknown_heading は出るが、missing_field などは出ない
     let uh = find_by_kind(&findings, "unknown_heading");
-    assert!(!uh.is_empty(), "should produce unknown_heading for BADID");
-    let mf = find_by_kind(&findings, "missing_field");
-    assert!(mf.is_empty(), "lines under unknown heading should not be checked as item fields");
+    assert_eq!(uh.len(), 1, "{:?}", uh);
+    assert_eq!(uh[0].detail, "### BADID: X");
+    // 見出しの下の行も`項目`の規則で読み、当てはまる指摘を出す
+    let vm = find_by_kind(&findings, "verification_missing");
+    assert_eq!(vm.len(), 1, "{findings:?}");
+    assert_eq!(vm[0].line, Some(7));
+    let uf = find_by_kind(&findings, "unknown_field");
+    assert_eq!(uf.len(), 1, "{findings:?}");
+    assert_eq!(uf[0].detail, "- 優先度: 高");
 }
 
 // @kotowari[REQ-core-043]
@@ -1407,15 +1440,10 @@ fn req_043_lines_under_unknown_heading_are_not_an_item() {
 fn req_043_valid_prefix_invalid_digits_is_not_an_item() {
     // 有効な接頭辞 REQ- に3桁でない数字 → 項目として構築されない
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-1: Bad\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: TBL-999\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
-    // parse 段で Item::Requirement ではなく Item::UnknownHeading になること
+    let doc = ir::parse_document("a.md", content).unwrap();
     assert!(
         !doc.items.iter().any(|i| matches!(i, Item::Requirement { .. })),
         "valid prefix + invalid digits must not produce Item::Requirement"
-    );
-    assert!(
-        doc.items.iter().any(|i| matches!(i, Item::UnknownHeading { .. })),
-        "valid prefix + invalid digits must produce Item::UnknownHeading"
     );
     // check_documents で項目として検査されないこと（unresolved_reference が出ない）
     let findings = check(&[doc], &default_config());
@@ -1428,19 +1456,22 @@ fn req_043_valid_prefix_invalid_digits_is_not_an_item() {
 
 // @kotowari[REQ-core-045]
 #[test]
-fn req_045_third_known_line_gives_two_duplicates() {
-    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 種類: event_driven\n- 種類: state_driven\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+fn req_045_three_known_lines_give_one_duplicate() {
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 種類: event_driven\n- 種類: state_driven\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let df = find_by_kind(&findings, "duplicate_field");
-    assert_eq!(df.len(), 2, "3 occurrences of same field should give 2 duplicate_field, got {}", df.len());
+    // 3本以上あっても1件（REQ-core-045）。2つ目の行に出る
+    assert_eq!(df.len(), 1, "3 occurrences of same field should give 1 duplicate_field, got {:?}", df);
+    assert_eq!(df[0].line, Some(12));
+    assert_eq!(df[0].detail, "種類");
 }
 
 // @kotowari[REQ-core-045]
 #[test]
 fn req_045_unknown_line_repeated_gives_only_unknown_field() {
-    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 優先度: 高\n- 優先度: 低\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 優先度: 高\n- 優先度: 低\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uf = find_by_kind(&findings, "unknown_field");
     let df = find_by_kind(&findings, "duplicate_field");
@@ -1452,8 +1483,8 @@ fn req_045_unknown_line_repeated_gives_only_unknown_field() {
 #[test]
 fn req_047_requirement_without_kind_line_needs_statement() {
     // 種類の行が無い要求に文が無ければ missing_statement
-    let content = "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n";
-    let doc = ir::parse_document("a.md", content);
+    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ms = find_by_kind(&findings, "missing_statement");
     assert!(!ms.is_empty(), "requirement without kind and without statement should produce missing_statement");
@@ -1463,8 +1494,8 @@ fn req_047_requirement_without_kind_line_needs_statement() {
 #[test]
 fn req_032_first_occurrence_is_bytewise_first_path() {
     // duplicate_id の1つ目はパスのバイト順で先の文書
-    let doc_a = ir::parse_document("a.md", "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n");
-    let doc_b = ir::parse_document("b.md", "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n");
+    let doc_a = ir::parse_document("a.md", "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n").unwrap();
+    let doc_b = ir::parse_document("b.md", "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n").unwrap();
     let findings = check(&[doc_a, doc_b], &default_config());
     let di = find_by_kind(&findings, "duplicate_id");
     assert_eq!(di.len(), 1, "should produce exactly 1 duplicate_id");
@@ -1502,7 +1533,7 @@ Scenario: Indented steps
 
 Statement.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let scenario = doc.items.iter().find(|i| matches!(i, Item::Scenario { id: Some(id), .. } if id == "EX-001"));
     assert!(scenario.is_some(), "should parse EX-001");
     if let Item::Scenario { steps, .. } = scenario.unwrap() {
@@ -1541,7 +1572,7 @@ Examples: Bad
 
 Statement.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ig = find_by_kind(&findings, "invalid_gherkin_line");
     assert!(ig.len() >= 5, "should have at least 5 invalid_gherkin_line findings, got {}: {:?}", ig.len(), ig);
@@ -1579,7 +1610,7 @@ Scenario: With gap
 
 Statement.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let mt = find_by_kind(&findings, "missing_tag");
     // タグが結び付かないので missing_tag が出る
@@ -1614,7 +1645,7 @@ Scenario: Test
 
 Statement.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     // タグ行は結び付いていないが、unknown_tag は出る
     // 注意: タグが結び付かないとき、そのシナリオのタグは空になる
@@ -1655,7 +1686,7 @@ Scenario: Test
 
 Statement.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ut = find_by_kind(&findings, "unknown_tag");
     assert!(ut.iter().any(|f| f.detail == "badword"), "word without @ in tag line should be unknown_tag: {:?}", ut);
@@ -1688,7 +1719,7 @@ Scenario: Bad id
 
 Statement.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ii = find_by_kind(&findings, "invalid_id");
     assert!(ii.iter().any(|f| f.detail == "EX1"), "should produce invalid_id for EX1: {:?}", ii);
@@ -1723,7 +1754,7 @@ Scenario: Malformed id test
 
 Statement.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ms = find_by_kind(&findings, "missing_source");
     assert!(ms.iter().any(|f| f.detail == "Scenario: Malformed id test"),
@@ -1757,7 +1788,7 @@ Statement.
 
 `REQ-1` is referenced.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     // REQ-1 は定義されていないので unresolved_reference
     // ただし REQ-1 は is_valid_id を通らないので check_backtick_ids では拾われない
@@ -1784,7 +1815,7 @@ Scope.
 - 検証: unit
 - 定義: foo
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     assert!(ur.iter().any(|f| f.detail == "foo"), "non-ID definition value should produce unresolved_reference: {:?}", ur);
@@ -1817,7 +1848,7 @@ Scenario: Backtick in step
   Given `TBL-999` does not exist
 ```
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     assert!(ur.iter().any(|f| f.detail == "TBL-999"), "backtick ID in step should produce unresolved_reference: {:?}", ur);
@@ -1846,7 +1877,7 @@ fn req_033_broken_symlink_in_ir_dir_stops() {
 fn req_044_unknown_field_detail_is_raw_line_not_reconstructed() {
     // 名前と値の間の空白が崩れている行でも、detail は読んだ行の文字そのまま
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n  - 優先度:高 \n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uf = find_by_kind(&findings, "unknown_field");
     assert!(
@@ -1861,7 +1892,7 @@ fn req_044_unknown_field_detail_is_raw_line_not_reconstructed() {
 fn req_100_scenario_line_under_heading_is_excluded_from_statement() {
     // 見出しの下に "Scenario: あ" だけを書いても、文として拾わず用語検査も受けない
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nScenario: あ\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let req = doc
         .items
         .iter()
@@ -1888,7 +1919,7 @@ fn req_100_scenario_line_under_heading_is_excluded_from_statement() {
 fn tbl_008_missing_source_scenario_detail_is_raw_scenario_line() {
     // A150: @id の無いシナリオの missing_source detail は、字下げを含む生の Scenario: の行
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@about=REQ-001\n  Scenario: あ\n  Given something\n```\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ms = find_by_kind(&findings, "missing_source");
     assert!(
@@ -1903,7 +1934,7 @@ fn tbl_008_missing_source_scenario_detail_is_raw_scenario_line() {
 fn req_052_word_with_equals_not_starting_with_at_keeps_full_word_as_detail() {
     // REQ-core-052: "@" で始まらない語は、"=" があっても分けずに全体を detail にする
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1 foo=bar\nScenario: Test\n  Given something\n```\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ut = find_by_kind(&findings, "unknown_tag");
     assert!(
@@ -1918,7 +1949,7 @@ fn req_052_word_with_equals_not_starting_with_at_keeps_full_word_as_detail() {
 fn req_054_backtick_id_inside_double_quotes_is_not_checked() {
     // REQ-core-054/REQ-core-104: 二重引用符の中のバッククォートの ID は参照の検査を受けない
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nSee \"`REQ-999`\" for details.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     assert!(
@@ -1933,7 +1964,7 @@ fn req_054_backtick_id_inside_double_quotes_is_not_checked() {
 fn req_054_backtick_oddness_counted_outside_quotes_only() {
     // 引用符の中の "`" を数に入れない: 引用符の外だけを見れば偶数なので検査が行われる
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n`REQ-999` and \"quoted ` mark\" here.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     assert!(
@@ -1953,7 +1984,7 @@ fn req_122_glossary_row_with_missing_column_is_invalid() {
 |---|---|---|
 | テスト | 検証の意味
 ";
-    let doc = ir::parse_document("CONTEXT.md", content);
+    let doc = ir::parse_document("CONTEXT.md", content).unwrap();
     let terms: Vec<_> = doc
         .items
         .iter()
@@ -1981,7 +2012,7 @@ fn req_122_glossary_row_with_empty_term_cell_is_invalid() {
 |---|---|---|
 |  | 意味 | brainstorm/records.md#A1 |
 ";
-    let doc = ir::parse_document("CONTEXT.md", content);
+    let doc = ir::parse_document("CONTEXT.md", content).unwrap();
     let terms: Vec<_> = doc
         .items
         .iter()
@@ -2010,7 +2041,7 @@ fn req_123_duplicate_term_reported_for_second_row_onward() {
 | IR | 2つ目の意味 | brainstorm/records.md#A1 |
 | IR | 3つ目の意味 | brainstorm/records.md#A1 |
 ";
-    let doc = ir::parse_document("CONTEXT.md", content);
+    let doc = ir::parse_document("CONTEXT.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let dt = find_by_kind(&findings, "duplicate_term");
     assert_eq!(dt.len(), 2, "the 2nd and 3rd rows should each produce a duplicate_term: {:?}", dt);
@@ -2023,7 +2054,7 @@ fn req_123_duplicate_term_reported_for_second_row_onward() {
 #[test]
 fn req_113_step_without_preceding_scenario_is_invalid() {
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\nThen this step has no Scenario\n```\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ig = find_by_kind(&findings, "invalid_gherkin_line");
     assert!(
@@ -2038,7 +2069,7 @@ fn req_113_step_without_preceding_scenario_is_invalid() {
 fn req_113_tag_line_not_immediately_before_scenario_is_invalid() {
     // タグの行の直後が空行で、Scenario: がその次に来る → タグの行自体が invalid_gherkin_line
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@id=EX-001\n\nScenario: Test\n  Given something\n```\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ig = find_by_kind(&findings, "invalid_gherkin_line");
     assert!(
@@ -2050,36 +2081,42 @@ fn req_113_tag_line_not_immediately_before_scenario_is_invalid() {
 
 // @kotowari[REQ-core-098]
 #[test]
-fn req_098_empty_verification_value_is_missing_not_invalid() {
-    // A157: "- 検証: " のように値が空の行は、行が無いものとして扱う
+fn req_098_empty_verification_value_is_invalid_not_missing() {
+    // "- 検証: " のように値が空の行は、行が在るものとして扱い、値の誤りにする
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: \n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let vm = find_by_kind(&findings, "verification_missing");
-    assert_eq!(vm.len(), 1, "an empty verification value should be treated as a missing line: {:?}", vm);
+    assert!(vm.is_empty(), "an empty verification value is a line that is there: {:?}", vm);
     let vi = find_by_kind(&findings, "verification_invalid");
-    assert!(vi.is_empty(), "an empty verification value must not be verification_invalid: {:?}", vi);
+    assert_eq!(vi.len(), 1, "an empty verification value is a value outside the allowed list: {:?}", vi);
+    assert_eq!(vi[0].detail, "");
+    assert_eq!(vi[0].line, Some(7));
 }
 
 // @kotowari[REQ-core-098]
 #[test]
-fn req_098_empty_kind_value_is_missing_field() {
+fn req_098_empty_kind_value_is_unknown_kind_not_missing_field() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: \n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let mf = find_by_kind(&findings, "missing_field");
     assert!(
-        mf.iter().any(|f| f.detail == "種類"),
-        "an empty kind value should be treated as a missing '- 種類:' line: {:?}",
+        mf.is_empty(),
+        "an empty kind value is a '- 種類:' line that is there: {:?}",
         mf
     );
+    let uk = find_by_kind(&findings, "unknown_kind");
+    assert_eq!(uk.len(), 1, "an empty kind value is a value outside the allowed list: {:?}", uk);
+    assert_eq!(uk[0].detail, "");
+    assert_eq!(uk[0].line, Some(7));
 }
 
 // @kotowari[REQ-core-098]
 #[test]
 fn req_098_empty_definition_value_on_algorithm_is_without_definition() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: \n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ad = find_by_kind(&findings, "algorithm_without_definition");
     assert!(
@@ -2094,7 +2131,7 @@ fn req_098_empty_definition_value_on_algorithm_is_without_definition() {
 fn req_114_malformed_id_still_reports_missing_about() {
     // A151: @id が形に合わなくても、@about が無ければ missing_tag @about は出る
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@id=REQ-001 @source=brainstorm/records.md#A1\nScenario: Malformed id\n  Given something\n```\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ii = find_by_kind(&findings, "invalid_id");
     assert!(!ii.is_empty(), "a malformed @id should still produce invalid_id: {:?}", ii);
@@ -2116,8 +2153,7 @@ fn req_114_malformed_id_still_reports_missing_about() {
 fn req_034_lines_before_title_are_ignored() {
     // A156: 題名より前にある空でない行は読まない（除外）
     let content = "Not a title yet.\n\n# Title\n\nScope.\n";
-    let doc = ir::parse_document("a.md", content);
-    assert_eq!(doc.title, Some((3, "Title".to_string())), "the title should be recognized on line 3");
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let mt = find_by_kind(&findings, "missing_title");
     assert!(mt.is_empty(), "a title on a later line should still count as the title: {:?}", mt);
@@ -2153,7 +2189,7 @@ Scenario: Second
 
 Statement.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let mt = find_by_kind(&findings, "missing_tag");
     assert!(
@@ -2179,7 +2215,7 @@ Statement.
 fn req_113_consecutive_steps_without_scenario_report_only_the_first() {
     // A155: Scenario: の無いブロックで続く2つ目以降のステップは、最初のステップの誤りに含める
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\nGiven first orphan\nWhen second orphan\nThen third orphan\n```\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ig = find_by_kind(&findings, "invalid_gherkin_line");
     assert_eq!(ig.len(), 1, "only the first orphan step should be reported: {:?}", ig);
@@ -2192,7 +2228,7 @@ fn req_113_consecutive_steps_without_scenario_report_only_the_first() {
 fn req_113_orphan_step_after_a_blank_line_is_reported_again() {
     // REQ-core-113 の「直前」は直前の行。空行を挟んだステップは直前にステップが無いので、改めて誤り
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\nGiven first orphan\n\nThen after blank\n```\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ig = find_by_kind(&findings, "invalid_gherkin_line");
     let details: Vec<&str> = ig.iter().map(|f| f.detail.as_str()).collect();
@@ -2204,7 +2240,7 @@ fn req_113_orphan_step_after_a_blank_line_is_reported_again() {
 fn req_113_step_right_after_tag_line_reports_both_lines() {
     // A155: タグの行の直後がステップなら、タグの行（直後が Scenario: でない）とそのステップ（直前に Scenario: が無い）の両方
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@id=EX-001\nGiven no scenario line\n```\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ig = find_by_kind(&findings, "invalid_gherkin_line");
     let details: Vec<&str> = ig.iter().map(|f| f.detail.as_str()).collect();
@@ -2217,7 +2253,7 @@ fn req_113_step_right_after_tag_line_reports_both_lines() {
 #[test]
 fn req_113_tag_line_right_before_closing_fence_is_invalid() {
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\nScenario: ok\n  Given something\n@about=REQ-001 @nope=x\n```\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ig = find_by_kind(&findings, "invalid_gherkin_line");
     assert_eq!(ig.len(), 1, "{:?}", ig);
@@ -2239,7 +2275,7 @@ fn req_122_two_cell_row_with_trailing_pipe_is_invalid() {
 |---|---|---|
 | テスト | 検証の意味 |
 ";
-    let doc = ir::parse_document("CONTEXT.md", content);
+    let doc = ir::parse_document("CONTEXT.md", content).unwrap();
     let terms: Vec<_> = doc.items.iter().filter(|i| matches!(i, Item::GlossaryTerm { .. })).collect();
     assert!(terms.is_empty(), "a 2-cell row must not become a term: {:?}", terms);
     let findings = check(&[doc], &default_config());
@@ -2259,7 +2295,7 @@ fn req_122_three_cells_without_trailing_pipe_is_a_term() {
 |---|---|---|
 | テスト | 検証の意味 | brainstorm/records.md#A1
 ";
-    let doc = ir::parse_document("CONTEXT.md", content);
+    let doc = ir::parse_document("CONTEXT.md", content).unwrap();
     let terms: Vec<_> = doc.items.iter().filter(|i| matches!(i, Item::GlossaryTerm { .. })).collect();
     assert_eq!(terms.len(), 1, "{:?}", doc.items);
     let findings = check(&[doc], &default_config());
@@ -2278,7 +2314,7 @@ fn req_123_duplicate_row_is_not_a_term() {
 | IR | 最初の意味 | brainstorm/records.md#A1 |
 | IR | 2つ目の意味 | |
 ";
-    let doc = ir::parse_document("CONTEXT.md", content);
+    let doc = ir::parse_document("CONTEXT.md", content).unwrap();
     let terms: Vec<_> = doc.items.iter().filter(|i| matches!(i, Item::GlossaryTerm { .. })).collect();
     assert_eq!(terms.len(), 1, "the duplicate row must not become a term: {:?}", terms);
     let findings = check(&[doc], &default_config());
@@ -2321,7 +2357,7 @@ fn req_117_non_dash_row_after_header_is_not_a_valid_separator() {
 | foo | bar | baz |
 | IR | 仕様 | src |
 ";
-    let doc = ir::parse_document("CONTEXT.md", content);
+    let doc = ir::parse_document("CONTEXT.md", content).unwrap();
     assert!(
         doc.items.iter().all(|i| !matches!(i, Item::GlossaryTerm { .. })),
         "without a real '---' separator row, no glossary term should be collected: {:?}",
@@ -2342,8 +2378,8 @@ fn req_117_non_dash_row_after_header_is_not_a_valid_separator() {
 #[test]
 fn req_043_five_hashes_with_space_is_unknown_heading() {
     // #### より深い見出し（5個以上の#）も直後が空白なら unknown_heading
-    let content = "# Title\n\nScope.\n\n## Section\n\n##### x\n";
-    let doc = ir::parse_document("a.md", content);
+    let content = "# Title\n\nScope.\n\n## 要求\n\n##### x\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uh = find_by_kind(&findings, "unknown_heading");
     assert!(
@@ -2357,8 +2393,8 @@ fn req_043_five_hashes_with_space_is_unknown_heading() {
 #[test]
 fn req_043_four_hashes_without_trailing_space_is_not_unknown_heading() {
     // "#" が4つ以上続いても、直後が空白でなければ unknown_heading にしない
-    let content = "# Title\n\nScope.\n\n## Section\n\n####x\n";
-    let doc = ir::parse_document("a.md", content);
+    let content = "# Title\n\nScope.\n\n## 要求\n\n####x\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uh = find_by_kind(&findings, "unknown_heading");
     assert!(
@@ -2370,17 +2406,15 @@ fn req_043_four_hashes_without_trailing_space_is_not_unknown_heading() {
 
 // @kotowari[REQ-core-043]
 #[test]
-fn req_043_bare_four_hashes_is_not_unknown_heading() {
-    // "####" だけの行（直後に何も無い）は unknown_heading にしない
-    let content = "# Title\n\nScope.\n\n## Section\n\n####\n";
-    let doc = ir::parse_document("a.md", content);
+fn req_043_bare_four_hashes_is_an_empty_deeper_heading() {
+    // "####" だけの行は中身の空の4段目の見出しで、unknown_heading になる
+    let content = "# Title\n\nScope.\n\n## 要求\n\n####\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uh = find_by_kind(&findings, "unknown_heading");
-    assert!(
-        uh.is_empty(),
-        "a bare '####' line with nothing after it must not be unknown_heading: {:?}",
-        uh
-    );
+    assert_eq!(uh.len(), 1, "{:?}", uh);
+    assert_eq!(uh[0].detail, "####");
+    assert_eq!(uh[0].line, Some(7));
 }
 
 // --- REQ-core-112: 閉じないコードブロックの前の指摘・項目は残る ---
@@ -2406,7 +2440,7 @@ Then orphan step
 ```
 unclosed content
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     // フェンスが開く行より前の invalid_gherkin_line は残らなければならない
     let ig = doc
         .parse_findings
@@ -2437,7 +2471,7 @@ unclosed content
 fn req_098_empty_value_of_unknown_field_still_reports_unknown_field() {
     // A157 の「値が空なら行が無いもの」は 種類・検証・定義・関係 だけに限る
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- foo: \n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uf = find_by_kind(&findings, "unknown_field");
     assert!(
@@ -2454,7 +2488,7 @@ fn req_098_empty_value_of_unknown_field_still_reports_unknown_field() {
 fn req_044_dot_space_not_preceded_by_digits_is_a_normal_statement() {
     // "Foo. Bar baz." のように ". " の前が数字でなければ、通常の文として扱う
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\nFoo. Bar baz.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ms = find_by_kind(&findings, "missing_statement");
     assert!(
@@ -2469,7 +2503,7 @@ fn req_044_dot_space_not_preceded_by_digits_is_a_normal_statement() {
 fn req_044_line_starting_with_dot_space_is_a_normal_statement() {
     // ". leading dot text" は数字の接頭辞が無い（空の接頭辞）ので通常の文として扱う
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n\n. leading dot text\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ms = find_by_kind(&findings, "missing_statement");
     assert!(
@@ -2485,15 +2519,10 @@ fn req_044_line_starting_with_dot_space_is_a_normal_statement() {
 #[test]
 fn req_043_malformed_tbl_id_is_not_an_item() {
     let content = "# Title\n\nScope.\n\n## 決定表\n\n### TBL-1: X\n\n- 出典: brainstorm/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     assert!(
         !doc.items.iter().any(|i| matches!(i, Item::DecisionTable { .. })),
         "malformed TBL- id must not produce Item::DecisionTable: {:?}",
-        doc.items
-    );
-    assert!(
-        doc.items.iter().any(|i| matches!(i, Item::UnknownHeading { .. })),
-        "malformed TBL- id must fall back to Item::UnknownHeading: {:?}",
         doc.items
     );
     let findings = check(&[doc], &default_config());
@@ -2509,15 +2538,10 @@ fn req_043_malformed_tbl_id_is_not_an_item() {
 #[test]
 fn req_043_malformed_prop_id_is_not_an_item() {
     let content = "# Title\n\nScope.\n\n## 性質\n\n### PROP-1: X\n\n- 出典: brainstorm/records.md#A1\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     assert!(
         !doc.items.iter().any(|i| matches!(i, Item::Property { .. })),
         "malformed PROP- id must not produce Item::Property: {:?}",
-        doc.items
-    );
-    assert!(
-        doc.items.iter().any(|i| matches!(i, Item::UnknownHeading { .. })),
-        "malformed PROP- id must fall back to Item::UnknownHeading: {:?}",
         doc.items
     );
     let findings = check(&[doc], &default_config());
@@ -2532,16 +2556,11 @@ fn req_043_malformed_prop_id_is_not_an_item() {
 // @kotowari[REQ-core-043]
 #[test]
 fn req_043_malformed_flag_id_is_not_an_item() {
-    let content = "# 問題の記録\n\n### FLAG-1: Issue\n\n- 種類: gap\n- 関係: REQ-999\n- 出典: brainstorm/records.md#A1\n";
-    let doc = ir::parse_document("FLAGS.md", content);
+    let content = "# 問題の記録\n\n## 問題の記録\n\n### FLAG-1: Issue\n\n- 種類: gap\n- 関係: REQ-999\n- 出典: brainstorm/records.md#A1\n";
+    let doc = ir::parse_document("FLAGS.md", content).unwrap();
     assert!(
         !doc.items.iter().any(|i| matches!(i, Item::FlagEntry { .. })),
         "malformed FLAG- id must not produce Item::FlagEntry: {:?}",
-        doc.items
-    );
-    assert!(
-        doc.items.iter().any(|i| matches!(i, Item::UnknownHeading { .. })),
-        "malformed FLAG- id must fall back to Item::UnknownHeading: {:?}",
         doc.items
     );
     let findings = check(&[doc], &default_config());
@@ -2559,7 +2578,7 @@ fn req_043_malformed_flag_id_is_not_an_item() {
 #[test]
 fn tbl_011_property_source_field_populates_sources() {
     let content = "# Title\n\nScope.\n\n## 性質\n\n### PROP-001: P\n\n- 出典: brainstorm/records.md#A1\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let prop = doc
         .items
         .iter()
@@ -2589,7 +2608,7 @@ fn tbl_011_property_source_field_populates_sources() {
 fn req_052_dangling_bare_word_in_unbound_tag_line_keeps_its_line_number() {
     // "@" で始まらない語のタグ行が結び付かなくても、unknown_tag の line はタグ行自身の行にする
     let content = "# Title\n\nScope.\n\n## 具体例\n\n```gherkin\n@id=EX-001 badword\n```\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let ut = doc
         .parse_findings
         .iter()
@@ -2625,7 +2644,7 @@ Scenario: uses a wrong-prefix but well-formed id
   Given something
 ```
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let scenario = doc.items.iter().find(|i| matches!(i, Item::Scenario { .. }));
     assert!(scenario.is_some(), "should parse the scenario: {:?}", doc.items);
     if let Item::Scenario { id, .. } = scenario.unwrap() {
@@ -2664,7 +2683,7 @@ Scenario: two id-named tags, only the second is malformed
 
 Statement.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ii = find_by_kind(&findings, "invalid_id");
     assert!(
@@ -2701,7 +2720,7 @@ Scenario: about appears before the malformed id tag
 
 Statement.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ii = find_by_kind(&findings, "invalid_id");
     assert!(
@@ -2739,7 +2758,7 @@ Scenario: source tag exists but has no usable value
 
 Statement.
 ";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ms = find_by_kind(&findings, "missing_source");
     assert!(
@@ -2757,6 +2776,8 @@ fn req_098_flag_entirely_missing_kind_line_produces_missing_field() {
     let content = "\
 # 問題の記録
 
+## 問題の記録
+
 ### FLAG-001: Issue
 
 - 関係: REQ-999
@@ -2764,7 +2785,7 @@ fn req_098_flag_entirely_missing_kind_line_produces_missing_field() {
 
 Body text.
 ";
-    let doc = ir::parse_document("FLAGS.md", content);
+    let doc = ir::parse_document("FLAGS.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let mf = find_by_kind(&findings, "missing_field");
     assert!(
@@ -2780,6 +2801,8 @@ fn req_098_flag_relation_line_with_only_commas_does_not_report_missing_field() {
     let content = "\
 # 問題の記録
 
+## 問題の記録
+
 ### FLAG-001: Issue
 
 - 種類: gap
@@ -2788,7 +2811,7 @@ fn req_098_flag_relation_line_with_only_commas_does_not_report_missing_field() {
 
 Body text.
 ";
-    let doc = ir::parse_document("FLAGS.md", content);
+    let doc = ir::parse_document("FLAGS.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let mf = find_by_kind(&findings, "missing_field");
     assert!(
@@ -2804,7 +2827,7 @@ Body text.
 #[test]
 fn tbl_019_unresolved_definition_reference_line_is_the_definition_fields_own_line() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: TBL-999\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     let f = ur.iter().find(|f| f.detail == "TBL-999");
@@ -2819,15 +2842,15 @@ fn tbl_019_unresolved_definition_reference_line_is_the_definition_fields_own_lin
 // @kotowari[TBL-core-019]
 #[test]
 fn tbl_019_unresolved_relation_reference_line_is_the_relation_fields_own_line() {
-    let content = "# 問題の記録\n\n### FLAG-001: Issue\n\n- 種類: gap\n- 関係: EX-999\n- 出典: brainstorm/records.md#A1\n";
-    let doc = ir::parse_document("FLAGS.md", content);
+    let content = "# 問題の記録\n\n## 問題の記録\n\n### FLAG-001: Issue\n\n- 種類: gap\n- 関係: EX-999\n- 出典: brainstorm/records.md#A1\n";
+    let doc = ir::parse_document("FLAGS.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     let f = ur.iter().find(|f| f.detail == "EX-999");
     assert!(f.is_some(), "should produce unresolved_reference for EX-999: {:?}", ur);
     assert_eq!(
         f.unwrap().line,
-        Some(6),
+        Some(8),
         "the finding's line should be the 関係 field's own line, not an earlier field's line"
     );
 }
@@ -2838,7 +2861,7 @@ fn tbl_019_unresolved_relation_reference_line_is_the_relation_fields_own_line() 
 #[test]
 fn req_054_valid_and_known_definition_id_produces_no_unresolved_reference() {
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: algorithm\n- 出典: brainstorm/records.md#A1\n- 検証: unit\n- 定義: TBL-001\n\n## 決定表\n\n### TBL-001: T\n\n- 出典: brainstorm/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     assert!(
@@ -2930,7 +2953,7 @@ fn req_032_first_occurrence_is_bytewise_first_relative_path() {
     let tmp = tempfile::tempdir().unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/ir/a")).unwrap();
     for file in ["a.md", "a/b.md"] {
-        std::fs::write(tmp.path().join("docs/ir").join(file), "# Title\n\nScope.\n\n### REQ-001: Name\n").unwrap();
+        std::fs::write(tmp.path().join("docs/ir").join(file), "# Title\n\nScope.\n## 要求\n### REQ-001: Name\n").unwrap();
     }
     let (_, findings) = ir::load_and_check(tmp.path(), &default_config()).unwrap();
     let duplicates = find_by_kind(&findings, "duplicate_id");
@@ -3045,7 +3068,7 @@ fn req_056_contradiction_flag_with_one_reading_gets_no_finding() {
 // @kotowari[REQ-core-037, EX-core-007]
 #[test]
 fn req_037_two_lines_separated_by_crlf_count_as_two() {
-    let doc = ir::parse_document("a.md", "a\r\nb");
+    let doc = ir::parse_document("a.md", "a\r\nb").unwrap();
     assert_eq!(doc.line_count, 2, "CRLF is one line break, not two");
 }
 
@@ -3248,7 +3271,7 @@ fn req_044_how_to_verify_is_a_known_line_of_a_requirement() {
         "- 出典: docs/decision/records/records.md#A1\n",
         "- 確かめ方: 手で動かして見る\n\nStatement.\n",
     );
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let unknown = find_by_kind(&findings, "unknown_field");
     // TBL-core-011 は "- 確かめ方:" を要求だけに持たせる
@@ -3272,7 +3295,7 @@ fn req_045_two_how_to_verify_lines_under_a_requirement_is_a_duplicate_field() {
         "- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n",
         "- 確かめ方: 手で動かして見る\n- 確かめ方: もう一度見る\n\nStatement.\n",
     );
-    let doc = ir::parse_document("a.md", content);
+    let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let duplicates = find_by_kind(&findings, "duplicate_field");
     assert_eq!(duplicates.len(), 1, "the second line is a duplicate: {duplicates:?}");

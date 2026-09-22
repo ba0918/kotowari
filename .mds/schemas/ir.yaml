@@ -37,7 +37,10 @@ document:
             separator: ","
             required: true
             when: { field: 種類, eq: algorithm }
-            extract: definitions
+            extract:
+              path: definitions
+              value: value
+              of: { line: line }
           - name: 確かめ方
             required: true
             when: { field: 検証, eq: review }

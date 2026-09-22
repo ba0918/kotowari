@@ -1615,7 +1615,7 @@ fn req_124_four_digit_id_is_valid_in_heading_tag_and_marker() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-1000: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n`EX-1000` を満たす。\n\n## 具体例\n\n```gherkin\n@id=EX-1000 @about=REQ-1000 @source=docs/decision/records/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
-    let doc = kotowari_core::ir::parse_document("a.md", content);
+    let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ids = kotowari_core::collect_known_ids(&[doc]);
     assert!(ids.contains("REQ-1000"), "{:?}", ids);
     assert!(ids.contains("EX-1000"), "{:?}", ids);
@@ -1641,7 +1641,7 @@ fn req_124_leading_zero_and_short_ids_are_rejected() {
     let path = tmp.path().join("docs/ir/a.md");
     let content = fs::read_to_string(&path).unwrap()
         + "\n### REQ-0001: 名前\n\n### REQ-1: 名前\n\n## 具体例\n\n```gherkin\n@id=EX-0001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
-    let doc = kotowari_core::ir::parse_document("a.md", &content);
+    let doc = kotowari_core::ir::parse_document("a.md", &content).unwrap();
     let ids = kotowari_core::collect_known_ids(&[doc]);
     assert!(ids.contains("REQ-001"), "{:?}", ids);
     fs::write(path, content).unwrap();

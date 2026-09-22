@@ -18,5 +18,5 @@ document:
       extract:
         path: glossary
         value: value
-        of: { line: line }
+        of: { line: line, raw: raw }
   sections: []

@@ -381,7 +381,7 @@ fn tbl_019_unclosed_code_block_line_is_the_opening_line() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## Section\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n```\nunclosed\n",
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n```\nunclosed\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -578,6 +578,33 @@ fn ex_core_266_the_three_places_outside_the_declaration_each_become_an_error() {
         assert_eq!(found[0]["detail"], detail, "{kind} の detail");
         assert_eq!(found[0]["line"], line, "{kind} の \"line\"");
     }
+}
+
+// @kotowari[REQ-core-176, EX-core-269]
+#[test]
+fn ex_core_269_a_document_with_a_form_finding_still_takes_the_cross_document_checks() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    // a.md の要求は "- 検証:" の行を欠き、その ID が b.md の要求と重なる
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        format!("{TOPIC_HEAD}\n## 要求\n\n### REQ-001: 前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n\n文。\n"),
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/b.md"),
+        format!("{TOPIC_HEAD}\n## 要求\n\n### REQ-001: 後\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n- 確かめ方: 見る\n\n文。\n"),
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let missing = findings_by_kind(&v, "verification_missing");
+    assert_eq!(missing.len(), 1, "{:?}", v["findings"]);
+    assert_eq!(missing[0]["path"], "docs/ir/a.md");
+    let duplicates = findings_by_kind(&v, "duplicate_id");
+    assert_eq!(duplicates.len(), 1, "{:?}", v["findings"]);
+    assert_eq!(duplicates[0]["path"], "docs/ir/b.md");
+    assert_eq!(duplicates[0]["detail"], "REQ-001");
 }
 
 // @kotowari[EX-core-267]

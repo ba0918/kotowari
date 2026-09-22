@@ -279,11 +279,8 @@ fn req_153_how_to_verify_is_the_value_of_the_line_or_null() {
     let v = run_list(tmp.path());
     assert_eq!(item(&v, "REQ-001")["how_to_verify"], "手で動かして見る");
     assert!(item(&v, "REQ-002")["how_to_verify"].is_null());
-    // REQ-core-098: 値が空の行は無い行として扱う
-    assert!(
-        item(&v, "REQ-003")["how_to_verify"].is_null(),
-        "a blank value is a line that is not there: {v}"
-    );
+    // REQ-core-098: 値が空の行は行が在るものとして扱う
+    assert_eq!(item(&v, "REQ-003")["how_to_verify"], "", "a blank value is a line that is there: {v}");
 }
 
 // @kotowari[REQ-core-153, TBL-core-026]

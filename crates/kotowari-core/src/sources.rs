@@ -584,34 +584,12 @@ pub fn check_sources(
                 continue;
             }
             let (sources, source_line) = match item {
-                crate::ir::Item::Requirement { sources, fields_seen, line, .. } => {
-                    // REQ-core-115: 出典の行を探す
-                    let sl = fields_seen.iter()
-                        .find(|(_, n, _)| n == "出典")
-                        .map(|(ln, _, _)| *ln)
-                        .unwrap_or(*line);
-                    (sources.clone(), sl)
-                }
-                crate::ir::Item::DecisionTable { sources, fields_seen, line, .. } => {
-                    let sl = fields_seen.iter()
-                        .find(|(_, n, _)| n == "出典")
-                        .map(|(ln, _, _)| *ln)
-                        .unwrap_or(*line);
-                    (sources.clone(), sl)
-                }
-                crate::ir::Item::Property { sources, fields_seen, line, .. } => {
-                    let sl = fields_seen.iter()
-                        .find(|(_, n, _)| n == "出典")
-                        .map(|(ln, _, _)| *ln)
-                        .unwrap_or(*line);
-                    (sources.clone(), sl)
-                }
-                crate::ir::Item::FlagEntry { sources, fields_seen, line, .. } => {
-                    let sl = fields_seen.iter()
-                        .find(|(_, n, _)| n == "出典")
-                        .map(|(ln, _, _)| *ln)
-                        .unwrap_or(*line);
-                    (sources.clone(), sl)
+                // REQ-core-115: 出典の行（行が無ければ見出しの行）
+                crate::ir::Item::Requirement { sources, source_line, line, .. }
+                | crate::ir::Item::DecisionTable { sources, source_line, line, .. }
+                | crate::ir::Item::Property { sources, source_line, line, .. }
+                | crate::ir::Item::FlagEntry { sources, source_line, line, .. } => {
+                    (sources.clone(), source_line.unwrap_or(*line))
                 }
                 crate::ir::Item::Scenario { sources, tag_line, line, .. } => {
                     // シナリオはタグの行
@@ -621,7 +599,6 @@ pub fn check_sources(
                     // 用語は表の行
                     (sources.clone(), *line)
                 }
-                crate::ir::Item::UnknownHeading { .. } => continue,
             };
 
             for source in &sources {
