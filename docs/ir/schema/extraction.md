@@ -72,7 +72,7 @@ mds は常に、`項目`と`節`の`導かれる値`の "end" を、その見出
 - 種類: ubiquitous
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A19
 - 検証: review
-- 確かめ方: `mds ast` の出力を mdast（unist）の仕様と突き合わせ、ノードの "type" の名前、"children" の入れ子、インライン要素の種別が準拠していることを確認する。準拠は外部の仕様との一致なので、自分のテストでは見られない
+- 確かめ方: "kotowari-mds ast" の出力を mdast（unist）の仕様と突き合わせ、ノードの "type" の名前、"children" の入れ子、インライン要素の種別が準拠していることを確認する。準拠は外部の仕様との一致なので、自分のテストでは見られない
 
 mds は常に、素の構文木を mdast に沿った JSON で出し、インライン要素まで含め、位置情報は含めない。
 
@@ -133,19 +133,19 @@ mds は常に、`要素の値`に入る行を`文書`の元の行のまま使い
 @id=EX-schema-013 @about=REQ-schema-036 @source=docs/decision/records/2026-09-21-mds-spec.md#A4
 Scenario: 配置パスに沿って入れ子の JSON を出す
   Given ドットを含む`配置パス`を宣言した`スキーマ`がある
-  When "mds values --format json" を実行する
+  When "kotowari-mds values --format json" を実行する
   Then 値はドットで区切った名前の入れ子として出る
 
 @id=EX-schema-014 @about=REQ-schema-039 @source=docs/decision/records/2026-09-21-mds-spec.md#A12,docs/decision/records/2026-09-21-mds-spec.md#A48
 Scenario: 項目の内側の抽出は停止する
   Given `項目`自身は`抽出`を宣言せず、`項目`の中の`表`にだけ`抽出`を宣言した`スキーマ`がある
-  When "mds check" を実行する
+  When "kotowari-mds check" を実行する
   Then 終了コードは 2 である
 
 @id=EX-schema-018 @about=TBL-schema-008,REQ-schema-035 @source=docs/decision/records/2026-09-22-ir-engine.md#A43,docs/decision/records/2026-09-22-ir-engine.md#A44,docs/decision/records/2026-09-22-ir-engine.md#A48
 Scenario: 表の行の鍵はスキーマの宣言か列の位置から取る
   Given ヘッダのセルが空の`表`と、同じ名前の列が2つある`表`を持つ`文書`がある
-  When "mds values --format json" を実行する
+  When "kotowari-mds values --format json" を実行する
   Then "header" を宣言した`表`の行は、宣言した名前を鍵にしたオブジェクトになる
   And "header" を宣言しない`表`の行は列の位置の配列になる
   And どちらの`表`でも列の値は1つも失われない
@@ -153,14 +153,14 @@ Scenario: 表の行の鍵はスキーマの宣言か列の位置から取る
 @id=EX-schema-019 @about=TBL-schema-008,REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A13,docs/decision/records/2026-09-22-ir-engine.md#A59
 Scenario: 導かれる値を宣言した表の行番号はデータ行を指す
   Given ヘッダとデータ3行を持つ`表`が2つあり、その`表`に`出現回数`と`導かれる値`を宣言した`スキーマ`がある
-  When "mds values --format json" を実行する
+  When "kotowari-mds values --format json" を実行する
   Then 行ごとの行番号はその`表`のデータ行の行番号と一致する
   And `配置パス`の直下は`表`ごとの段になる
 
 @id=EX-schema-020 @about=REQ-schema-048,TBL-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A37,docs/decision/records/2026-09-22-ir-engine.md#A57,docs/decision/records/2026-09-22-ir-engine.md#A66
 Scenario: 導かれる値を宣言した文は行ごとの要素になる
   Given 3行の`文`と空行を挟んで続く段落を持つ`項目`があり、`文`に`導かれる値`を宣言した`スキーマ`がある
-  When "mds values --format json" を実行する
+  When "kotowari-mds values --format json" を実行する
   Then 行の数と同じ数の要素が出る
   And 字下げのある行の`要素の値`は前後の空白を取り除いた文字になる
   And 同じ行の`生の行`は字下げと末尾の空白を含む文字になる
@@ -169,39 +169,39 @@ Scenario: 導かれる値を宣言した文は行ごとの要素になる
 @id=EX-schema-021 @about=TBL-schema-008,REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A55,docs/decision/records/2026-09-22-ir-engine.md#A63
 Scenario: 略記の抽出は要素に分けない
   Given "extract: text" と "extract: rows" の略記だけを宣言した`スキーマ`がある
-  When "mds values --format json" を実行する
+  When "kotowari-mds values --format json" を実行する
   Then `文`の値は1つの文字列になり、`表`の値は行の並びになる
   And 要素ごとのオブジェクトは作らない
 
 @id=EX-schema-022 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A45,docs/decision/records/2026-09-22-ir-engine.md#A52,docs/decision/records/2026-09-21-mds-spec.md#A15,docs/decision/records/2026-09-21-mds-spec.md#P1
 Scenario: 配置パスの無い抽出は停止する
   Given "path" を書かない`抽出`を宣言した`スキーマ`がある
-  When "mds values" を実行する
+  When "kotowari-mds values" を実行する
   Then 終了コードは 2 である
 
 @id=EX-schema-023 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A60,docs/decision/records/2026-09-22-ir-engine.md#A56
 Scenario: value を省くと要素は導かれる値の鍵だけを持つ
   Given "value" を書かず "of" だけを書いた`抽出`を宣言した`スキーマ`がある
-  When "mds values --format json" を実行する
+  When "kotowari-mds values --format json" を実行する
   Then 要素のオブジェクトは`導かれる値`の鍵と、内側の`ノード`が宣言した`配置パス`だけを持つ
 
 @id=EX-schema-024 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A17,docs/decision/records/2026-09-22-ir-engine.md#A49,docs/decision/records/2026-09-21-mds-spec.md#A23,docs/decision/records/2026-09-21-mds-spec.md#A15,docs/decision/records/2026-09-21-mds-spec.md#P1,docs/decision/records/2026-09-23-ir-engine-gaps.md#A18,docs/decision/records/2026-09-23-ir-engine-gaps.md#A24
 Scenario: 受けない語の導かれる値は停止する
   Given `導かれる値`に5つのどれでもない語を宣言した`スキーマ`がある
-  When "mds values" を実行する
+  When "kotowari-mds values" を実行する
   Then 終了コードは 2 である
 
 @id=EX-schema-025 @about=REQ-schema-048,TBL-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A49,docs/decision/records/2026-09-22-ir-engine.md#A50,docs/decision/records/2026-09-22-ir-engine.md#A54
 Scenario: 生の行はどのノードにも宣言できる
   Given `題名`と`表`の行に`生の行`と行番号を宣言した`スキーマ`がある
-  When "mds values --format json" を実行する
+  When "kotowari-mds values --format json" を実行する
   Then `題名`は見出しの行、`表`の行はそのデータ行をそのまま出す
 
 @id=EX-schema-045 @about=REQ-schema-062,REQ-schema-048 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A18,docs/decision/records/2026-09-23-ir-engine-gaps.md#A24
 Scenario: 要素の最後の行は次の同じ深さか浅い見出しの手前になる
   Given `項目`と`節`に行番号と "end" の`導かれる値`を宣言した`スキーマ`がある
   And 1つ目の`節`に2つの`項目`を持ち、2つ目の`項目`の後に空行を挟んで2つ目の`節`が続き、2つ目の`節`が`文書`の最後まで続く`文書`がある
-  When "mds values --format json" を実行する
+  When "kotowari-mds values --format json" を実行する
   Then 1つ目の`項目`の "end" は2つ目の`項目`の見出しの前の行である
   And 2つ目の`項目`と1つ目の`節`の "end" は2つ目の`節`の見出しの前の空行である
   And 2つ目の`節`の "end" は`文書`の最後の行である
@@ -209,27 +209,27 @@ Scenario: 要素の最後の行は次の同じ深さか浅い見出しの手前�
 @id=EX-schema-046 @about=REQ-schema-048 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A24,docs/decision/records/2026-09-21-mds-spec.md#P1
 Scenario: 項目と節の外の要素の最後の行は停止する
   Given `表`の`抽出`に "end" の`導かれる値`を宣言した`スキーマ`がある
-  When "mds values" を実行する
+  When "kotowari-mds values" を実行する
   Then 終了コードは 2 である
 
 @id=EX-schema-054 @about=REQ-schema-063,TBL-schema-008 @source=docs/decision/records/2026-09-23-extract-original-lines.md#A1,docs/decision/records/2026-09-23-extract-original-lines.md#A3,docs/decision/records/2026-09-23-extract-original-lines.md#A4
 Scenario: 箇条書きの値は字下げと空行を元の行のまま持つ
   Given 2行の lead 段落と、空行を挟んだ`継続段落`と、空行を挟んだ子の`箇条書き`を持つ`箇条書き`と、マーカーだけの行の後に lead 段落と`継続段落`を持つ`箇条書き`の`文書`がある
-  When "mds values --format json" を実行する
+  When "kotowari-mds values --format json" を実行する
   Then どちらの`箇条書き`の値も、マーカーの後の行を字下げを含む元の行のまま持つ
   And lead 段落と`継続段落`の間と、`継続段落`と子の`箇条書き`の間に空行が1つずつ入る
 
 @id=EX-schema-055 @about=REQ-schema-063,REQ-schema-046 @source=docs/decision/records/2026-09-23-extract-original-lines.md#A1,docs/decision/records/2026-09-23-extract-original-lines.md#A2,docs/decision/records/2026-09-23-extract-original-lines.md#A3,docs/decision/records/2026-09-23-extract-original-lines.md#A7
 Scenario: フィールド行の値は名前の後から始まり継続段落を空行で付ける
   Given 2行にわたる値と空行を挟んだ`継続段落`を持つ`フィールド行`と、区切り文字を宣言した同じ形の`フィールド行`の`文書`がある
-  When "mds values --format json" を実行する
+  When "kotowari-mds values --format json" を実行する
   Then 値は名前の後の空白の後から始まり、2行目の字下げを残す
   And `継続段落`は空行を挟んで値か区切った末尾の要素に付く
 
 @id=EX-schema-056 @about=REQ-schema-063,TBL-schema-008 @source=docs/decision/records/2026-09-23-extract-original-lines.md#A3,docs/decision/records/2026-09-21-mds-spec.md#A51
 Scenario: 節の本文は含めない部分を抜いて空行を1つにまとめる
   Given `文`、空行、`フィールド行`、空行、`箇条書き`の順に並び、`文`と`箇条書き`の間に空行を挟まない別の並びも持つ`節`の`文書`がある
-  When "mds values --format json" を実行する
+  When "kotowari-mds values --format json" を実行する
   Then `フィールド行`を抜いた跡の空行は1つにまとまる
   And 空行を挟まない`文`と`箇条書き`は改行1つでつながる
 
@@ -237,6 +237,6 @@ Scenario: 節の本文は含めない部分を抜いて空行を1つにまとめ
 Scenario: 行で読んでも文の行の間に空行を足さない
   Given "reading: line" を宣言し、`文`の`抽出`に`導かれる値`を宣言しない`スキーマ`がある
   And 空行を挟まない2行の`文`と、空行を挟んだ3行目の`文`を持つ`文書`がある
-  When "mds values --format json" を実行する
+  When "kotowari-mds values --format json" を実行する
   Then 1行目と2行目は改行1つで、2行目と3行目は空行1つでつながる
 ```

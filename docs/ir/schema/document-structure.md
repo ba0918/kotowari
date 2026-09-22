@@ -101,19 +101,19 @@ mds は常に、`出現回数`の下限と上限の`指摘`に、どの`規則�
 @id=EX-schema-009 @about=REQ-schema-025 @source=docs/decision/records/2026-09-21-mds-spec.md#A5
 Scenario: 形に合わない項目の見出しは誤りになる
   Given `項目`の ID の正規表現を宣言した`スキーマ`がある
-  When 正規表現に合わない ID を持つ`文書`で "mds check" を実行する
+  When 正規表現に合わない ID を持つ`文書`で "kotowari-mds check" を実行する
   Then ID の形の`指摘`が出る
 
 @id=EX-schema-010 @about=REQ-schema-022 @source=docs/decision/records/2026-09-21-mds-spec.md#A5
 Scenario: 題名が2つある文書は誤りになる
   Given 深さ1の見出しを2つ持つ`文書`がある
-  When "mds check" を実行する
+  When "kotowari-mds check" を実行する
   Then `題名`が複数ある`指摘`が出る
 
 @id=EX-schema-042 @about=REQ-schema-022 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A17
 Scenario: 題名が3つある文書は2件の指摘になる
   Given 深さ1の見出しを3つ持つ`文書`がある
-  When "mds check --format json" を実行する
+  When "kotowari-mds check --format json" を実行する
   Then `題名`が複数ある`指摘`が2件出る
   And 2件の行番号と`生の行`は、2つ目と3つ目の`題名`の行とその文字そのままである
 
@@ -121,7 +121,7 @@ Scenario: 題名が3つある文書は2件の指摘になる
 Scenario: 文書の直下の項目を宣言すると節の前の項目を読む
   Given "document.item" と`節`の下の "item" に、同じ形の`項目`を別の`配置パス`の`抽出`とともに宣言した`スキーマ`がある
   And `前置部`の`文`の後に、`節`を挟まない深さ3の見出しの`項目`と、`節`の下の`項目`を持つ`文書`がある
-  When "mds check --format json" と "mds values --format json" を実行する
+  When "kotowari-mds check --format json" と "kotowari-mds values --format json" を実行する
   Then `指摘`は出ず、どちらの`項目`も`抽出`の値に出る
   And `前置部`の`文`の値に文書の直下の`項目`の行は入らない
 
@@ -129,13 +129,13 @@ Scenario: 文書の直下の項目を宣言すると節の前の項目を読む
 Scenario: 文書の直下の項目を宣言しなければ節の前の深さ3の見出しは指摘になる
   Given `節`の下にだけ`項目`を宣言した`スキーマ`がある
   And 最初の`節`より前に深さ3の見出しを持つ`文書`がある
-  When "mds check --format json" を実行する
+  When "kotowari-mds check --format json" を実行する
   Then その見出しに`指摘`が出る
 
 @id=EX-schema-053 @about=REQ-schema-061 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A45
 Scenario: 前置部を宣言しない開いた世界では節の前の深さ3の見出しを許す
   Given "open: true" で、文書の直下の`項目`も`前置部`も宣言しない`スキーマ`がある
   And 最初の`節`より前に "### X-1: a" の見出しとその下の行を持つ`文書`がある
-  When "mds check --format json" を実行する
+  When "kotowari-mds check --format json" を実行する
   Then その見出しにもその下の行にも`指摘`は出ない
 ```

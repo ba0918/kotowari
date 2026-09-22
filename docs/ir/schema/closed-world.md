@@ -58,12 +58,12 @@ mds は常に、宣言していない行の`指摘`に、その行を名前と�
 @id=EX-schema-001 @about=REQ-schema-002 @source=docs/decision/records/2026-09-21-mds-spec.md#A2
 Scenario: 開いた世界では未宣言の節を許す
   Given `スキーマ`に宣言していない`節`を持つ`文書`がある
-  When "mds check --open" を実行する
+  When "kotowari-mds check --open" を実行する
   Then その`節`の`指摘`は出ない
 
 @id=EX-schema-002 @about=REQ-schema-003 @source=docs/decision/records/2026-09-21-mds-spec.md#A2
 Scenario: 開いた世界でも宣言済みの節の中の未宣言の行は誤りになる
   Given 宣言済みの`節`の中に、宣言していない行を持つ`文書`がある
-  When "mds check --open" を実行する
+  When "kotowari-mds check --open" を実行する
   Then その行の`指摘`が出る
 ```
