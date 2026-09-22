@@ -21,7 +21,7 @@ mds は常に、`スキーマ`を YAML のマッピングとして読み、`題�
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A3, docs/decision/records/2026-09-21-mds-spec.md#A5
 - 定義: TBL-schema-004
 - 検証: review
-- 確かめ方: `crates/mds-core/src/schema.rs` の公開する構造体と TBL-schema-004 の行が1対1で対応し、表に無い規則種別が存在しないこと、各構造体が置ける場所が表の「置ける場所」の列と一致することを読んで確認する。表に無い規則種別が足されても検査は通ってしまうため、機械では見られない
+- 確かめ方: `crates/kotowari-markdown-schema/src/schema.rs` の公開する構造体と TBL-schema-004 の行が1対1で対応し、表に無い規則種別が存在しないこと、各構造体が置ける場所が表の「置ける場所」の列と一致することを読んで確認する。表に無い規則種別が足されても検査は通ってしまうため、機械では見られない
 
 ### REQ-schema-018: 知らないキー
 
