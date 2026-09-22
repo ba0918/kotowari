@@ -46,9 +46,9 @@ The specification is the IR under `docs/ir/`, and nowhere else — `docs/ir/core
 and `docs/ir/schema/` for `kotowari-markdown-schema`. `.kotowari/config.yaml` points `check` at
 `docs/ir/`, so one run covers both products.
 
-The documents under `docs/ir/schema/` additionally declare a schema from `.mds/schemas/` in their
-frontmatter, so `mds check docs/ir/schema` reads them as well. Those under `docs/ir/core/` carry
-no such declaration.
+The documents under `docs/ir/schema/` are checked by `kotowari check` alone, the same as those
+under `docs/ir/core/`. Neither carries a `$schema` frontmatter, so `mds check` does not read them:
+given a directory it skips them, and given one of them by name it stops.
 
 `docs/spec/` is **not** the specification. It holds prose — concept notes and the write-ups a
 brainstorm produced — and `check` never reads it, because `.kotowari/config.yaml` points only at
