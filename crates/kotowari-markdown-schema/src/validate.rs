@@ -798,7 +798,8 @@ fn validate_codeblock_shape(
         return;
     };
     for (i, code_line) in value.lines().enumerate() {
-        let code_line = code_line.trim();
+        // REQ-schema-034: 取り除くのは行頭の空白だけ。末尾まで落とすと "...$" の照合が変わる
+        let code_line = code_line.trim_start();
         if code_line.is_empty() {
             continue;
         }
@@ -2111,6 +2112,23 @@ document:
         lines: ["^Scenario:", "^Given "]
 "#;
         let doc = "## 具体例\n\n```gherkin\nScenario: 印を書く\nBad line\n```\n";
+        let findings = validate_src(schema, doc, false);
+        assert!(kinds(&findings).contains(&FindingKind::CodeblockLineMismatch));
+    }
+
+    // @kotowari[REQ-schema-034]
+    #[test]
+    fn codeblock_line_matching_keeps_trailing_whitespace() {
+        let schema = r#"
+document:
+  sections:
+    - name: 具体例
+      codeblock:
+        lang: gherkin
+        lines: ["^Scenario:$"]
+"#;
+        // 末尾の空白まで取り除くと "$" で閉じた正規表現が通ってしまう
+        let doc = "## 具体例\n\n```gherkin\nScenario:  \n```\n";
         let findings = validate_src(schema, doc, false);
         assert!(kinds(&findings).contains(&FindingKind::CodeblockLineMismatch));
     }
