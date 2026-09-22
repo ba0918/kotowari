@@ -2416,6 +2416,11 @@ fn req_043_bare_four_hashes_is_not_unknown_heading() {
         "a bare '####' line with nothing after it must not be unknown_heading: {:?}",
         uh
     );
+    // 見出しでない "####" の行は`文`として読まれ、節の宣言の外の行として検査を受ける
+    let ul = find_by_kind(&findings, "unknown_line");
+    assert_eq!(ul.len(), 1, "{:?}", findings);
+    assert_eq!(ul[0].line, Some(7));
+    assert_eq!(ul[0].detail, "####");
 }
 
 // --- REQ-core-112: 閉じないコードブロックの前の指摘・項目は残る ---
