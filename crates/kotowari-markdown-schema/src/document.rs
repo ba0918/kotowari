@@ -430,6 +430,26 @@ fn blocks_from_list_item(
             }
         }
     }
+    // 中身の無い項目（"-" や "1." だけの行）も1本として残す。捨てると宣言していない行が
+    // 指摘にならずに消える（REQ-schema-001）
+    if item.children.is_empty() {
+        lead_block = Some(if ordered {
+            Block::OrderedList {
+                text: String::new(),
+                continuation: Vec::new(),
+                line: item_line,
+            }
+        } else {
+            Block::Bullet {
+                line_text: original_item_line(item, src, preserve_indent),
+                text: String::new(),
+                lead_on_marker_line: true,
+                continuation: Vec::new(),
+                children: Vec::new(),
+                line: item_line,
+            }
+        });
+    }
     let mut out = Vec::new();
     if let Some(lead) = lead_block {
         out.push(lead);

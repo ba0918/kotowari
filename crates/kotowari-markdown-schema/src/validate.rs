@@ -2735,6 +2735,29 @@ document:
         assert_eq!(finding.rule_kind, Some(RuleKind::Bullets));
     }
 
+    // @kotowari[REQ-schema-001]
+    #[test]
+    fn an_empty_bullet_item_is_an_undeclared_line() {
+        let schema = "document:\n  sections:\n    - name: 理由\n";
+        let doc = "## 理由\n\n-\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::UndeclaredLine);
+        assert_eq!(finding.rule_kind, Some(RuleKind::Bullets));
+        assert_eq!(finding.line, Some(3));
+        assert_eq!(finding.raw.as_deref(), Some("-"));
+    }
+
+    // @kotowari[REQ-schema-001]
+    #[test]
+    fn an_empty_ordered_list_item_is_an_undeclared_line() {
+        let schema = "document:\n  sections:\n    - name: 理由\n";
+        let doc = "## 理由\n\n1.\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::UndeclaredLine);
+        assert_eq!(finding.rule_kind, Some(RuleKind::OrderedList));
+        assert_eq!(finding.line, Some(3));
+    }
+
     // @kotowari[REQ-schema-055]
     #[test]
     fn undeclared_table_carries_the_table_rule_kind() {
