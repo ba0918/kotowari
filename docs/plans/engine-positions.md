@@ -17,7 +17,7 @@
 - `Document` が生の行と行ごとの位置を持つ土台（`60d1b29`）
 - `指摘`が行番号・ノードの名前・生の行を持つ（`77051fa`、`e1a8db2`）。仕様の R3・R4・R5
 - 単独 CR を行区切りとして数える（`6606205`）
-- コメントの `（R<n>）` がこのクレートの `docs/spec/mds.md` の番号を指す規律（`811b6a3`）
+- コメントの仕様への参照（`811b6a3`。その後 `01f6ada` で `mds.md` を畳んだので、参照先は IR の要求・決定表の ID になった）
 
 **この計画が作り直すもの**（仕様が変わって偽になった）:
 
@@ -53,7 +53,7 @@
 変えてよい場所:
 
 - `docs/ir/schema/extraction.md`、`docs/ir/schema/cli.md`（要求と決定表）
-- `crates/kotowari-markdown-schema/docs/spec/mds.md`（R11・R16・R19）
+- ~~`crates/kotowari-markdown-schema/docs/spec/mds.md`~~（`01f6ada` で削除。仕様は `docs/ir/schema/` 1つに集約した）
 - `crates/kotowari-markdown-schema/README.md`（`抽出`の宣言の例が古くなる）
 - `crates/kotowari-markdown-schema/src/schema.rs`、`src/extract.rs`、`src/document.rs`
 - 上の各ファイルの `#[cfg(test)]`、`crates/kotowari-markdown-schema/tests/`
@@ -95,22 +95,15 @@ Shown by: check — 次の順。
 Left to the implementer: 文の言い回し。`抽出`の入れ子の形を `REQ-schema-047` と `REQ-schema-048` のどちらに書くか。具体例（`EX-schema-018` 以降が空き）を足すかどうか。
 Stop and hand back if: 要求を足さずには書けないと分かったとき。`TBL-schema-009` の5つの理由のどれにも当てはめられないと分かったとき（仕様 R18 は `schema_invalid` を使うと定めている）。
 
-## Step 2 — エンジン自身の仕様を改める
+## Step 2 — エンジン自身の仕様を改める（実行後に取り消した）
 
-Purpose: `crates/kotowari-markdown-schema/docs/spec/mds.md` を、このクレート単体の仕様として R1・R2・R16〜R18 に合わせる。Specification: `docs/spec/ir-engine.md#R1`、`#R2`、`#R16`、`#R17`、`#R18`。
-Prerequisites: なし。
-May change: `crates/kotowari-markdown-schema/docs/spec/mds.md`、`crates/kotowari-markdown-schema/README.md`。
-Done when:
-- R11 の「`抽出`は `header` の宣言に関わらず、`文書`のヘッダ行をキーにする」が無くなり、R1 の鍵の出どころに替わっている
-- R16 が`抽出`の入れ子の形（`path`・`value`・`of`・`group`、略記）と、`ノード`ごとの要素の単位（仕様 R17 の表）を述べる
-- R16 の`導かれる値`が4つになり、`raw` の意味と、`ノード`ごとに `raw` が指す行が述べられている
-- R19 の`停止`の理由が**5つのまま**で、`schema_invalid` の説明に要素オブジェクトの鍵の重複が入っている
-- `README.md` の`抽出`の例が新しい形になっている
-- `mds.md` の中で、`用語`の節と各 R の本文が同じことを述べている（`指摘`の形が5要素と7要素で食い違っていた前例がある）
+**このステップは `01f6ada` で取り消された。** 当時は `crates/kotowari-markdown-schema/docs/spec/mds.md` を
+IR と並ぶ散文の仕様として保つ前提だったが、同じ規則を2か所に書くこと自体が誤りだった。検査が当たるのは
+IR だけで、散文の側は書いた人の記憶でしか正しさを保てず、実際にずれていた（この cycle だけで
+4件の指摘がその食い違いだった）。`mds.md` とクレート直下の用語集を畳み、仕様を `docs/ir/schema/` 1つにした。
 
-Shown by: artifact — `crates/kotowari-markdown-schema/docs/spec/mds.md` と `README.md`。形式の検査は無い。`rg -n 'ヘッダ行をキー' crates/kotowari-markdown-schema/docs/spec/mds.md` が0件であること、`rg -n '導かれる値|of:' crates/kotowari-markdown-schema/docs/spec/mds.md` の各箇所が4つの語を述べていることを目で確かめる。
-Left to the implementer: 言い回し。R16 を分割するかどうか。
-Stop and hand back if: `mds.md` の別の R（R8 のフィールド行の値、R9 の文、R10 の箇条書き）も変えないと書けないと分かったとき。
+このステップの成果（`92f80ac`）は `01f6ada` に含まれる削除で消えている。
+IR の側の改訂はステップ1が担っている。
 
 ## Step 3 — 抽出の宣言を入れ子の形にする
 
