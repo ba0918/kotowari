@@ -85,6 +85,10 @@ struct FindingJson<'a> {
     /// 行番号が指す行の生の文字。行を持たない指摘では鍵ごと出さない（REQ-schema-008）
     #[serde(skip_serializing_if = "Option::is_none")]
     text: Option<&'a str>,
+    /// 宣言していない行の種別、または出現回数の指摘が数えたノードの種別。
+    /// 持たない指摘では鍵ごと出さない（REQ-schema-055、REQ-schema-057）
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rule_kind: Option<&'a str>,
     detail: &'a str,
 }
 
@@ -372,6 +376,7 @@ fn emit_check(files: &[(PathBuf, Vec<Finding>)], format: &str) -> Result<(), Sto
                             line: f.line,
                             node: f.node.as_deref(),
                             text: f.raw.as_deref(),
+                            rule_kind: f.rule_kind.map(|k| k.as_str()),
                             detail: &f.detail,
                         })
                         .collect();

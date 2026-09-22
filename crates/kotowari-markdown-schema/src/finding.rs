@@ -61,6 +61,37 @@ impl FindingKind {
     }
 }
 
+/// 規則種別。スキーマが文書の構造を記述するノードの種類（docs/ir/schema/CONTEXT.md）。
+/// 宣言していない行の`指摘`と`出現回数`の`指摘`が、どの種別として読んだか・数えたかを持つ
+/// （REQ-schema-055、REQ-schema-057）。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RuleKind {
+    Section,
+    Item,
+    Field,
+    Bullets,
+    OrderedList,
+    Statement,
+    Table,
+    CodeBlock,
+}
+
+impl RuleKind {
+    /// 規則種別の文字列。スキーマ言語の宣言の名前に合わせる。
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            RuleKind::Section => "section",
+            RuleKind::Item => "item",
+            RuleKind::Field => "field",
+            RuleKind::Bullets => "bullets",
+            RuleKind::OrderedList => "ordered_list",
+            RuleKind::Statement => "statement",
+            RuleKind::Table => "table",
+            RuleKind::CodeBlock => "codeblock",
+        }
+    }
+}
+
 /// 指摘1件。`path` と `severity` は CLI 側が付ける。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Finding {
@@ -72,6 +103,10 @@ pub struct Finding {
     /// 行番号が指す行の生の文字。字下げと末尾の空白を含み、組み立て直さない。
     /// 行を持たない指摘は None。
     pub raw: Option<String>,
+    /// 宣言していない行をどの`規則種別`として読んだか（REQ-schema-055）、
+    /// または`出現回数`の`指摘`がどの`規則種別`のノードを数えたか（REQ-schema-057）。
+    /// そのどちらでもない指摘は None。
+    pub rule_kind: Option<RuleKind>,
     /// 指摘の詳細（英語）
     pub detail: String,
 }
@@ -94,6 +129,7 @@ impl Finding {
             line,
             node: None,
             raw: None,
+            rule_kind: None,
             detail,
         }
     }
@@ -101,6 +137,12 @@ impl Finding {
     /// 宣言上の名前を持つノードの指摘に、その名前を添える。
     pub fn of_node(mut self, node: &str) -> Self {
         self.node = Some(node.to_string());
+        self
+    }
+
+    /// 規則種別を持つ指摘に、その種別を添える。
+    pub fn of_rule(mut self, rule_kind: RuleKind) -> Self {
+        self.rule_kind = Some(rule_kind);
         self
     }
 }

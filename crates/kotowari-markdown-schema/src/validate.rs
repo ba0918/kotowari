@@ -1,7 +1,7 @@
 //! 文書の構造と閉じた世界の検証。
 
 use crate::document::{Block, Document, Heading, Item};
-use crate::finding::{Finding, FindingKind};
+use crate::finding::{Finding, FindingKind, RuleKind};
 use crate::schema::{
     Bullets, Children, CodeBlock, Field, Item as ItemRule, Preamble, Repeat, Schema, Section,
     Statement, Table, Title, When, is_declared_field,
@@ -103,6 +103,7 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
                 name: Some(&def.name),
                 what: format!("section \"{}\"", def.name),
                 container_line: None,
+                rule_kind: RuleKind::Section,
             },
             bounds(def.required, def.repeat.as_ref()),
             def.repeat.is_some(),
@@ -227,6 +228,7 @@ fn validate_items(
             name: None,
             what: "item".to_string(),
             container_line,
+            rule_kind: RuleKind::Item,
         },
         bounds(item_rule.required, item_rule.repeat.as_ref()),
         true,
@@ -309,18 +311,37 @@ impl<'a> ContainerRules<'a> {
 /// 宣言されていない行の指摘をブロックの種別に応じた文言で作る。
 /// 文の対象外の行種別（ブロック引用・水平線・画像など）は None を返す（REQ-schema-032）。
 fn undeclared_line_for_block(block: &Block) -> Option<Finding> {
-    let (detail, line) = match block {
-        Block::Field { name, line, .. } => (format!("undeclared field line \"{name}\""), *line),
-        Block::Bullet { text, line, .. } => (format!("undeclared bullet \"{text}\""), *line),
-        Block::OrderedList { text, line, .. } => {
-            (format!("undeclared ordered list \"{text}\""), *line)
-        }
-        Block::Statement { text, line, .. } => (format!("undeclared statement \"{text}\""), *line),
-        Block::Table { line, .. } => ("undeclared table".to_string(), *line),
-        Block::Code { line, .. } => ("undeclared code block".to_string(), *line),
+    // 呼ぶ側が生の行を読み直して種別を決めずに済むよう、読んだ規則種別を添える（REQ-schema-055）
+    let (detail, line, rule_kind) = match block {
+        Block::Field { name, line, .. } => (
+            format!("undeclared field line \"{name}\""),
+            *line,
+            RuleKind::Field,
+        ),
+        Block::Bullet { text, line, .. } => (
+            format!("undeclared bullet \"{text}\""),
+            *line,
+            RuleKind::Bullets,
+        ),
+        Block::OrderedList { text, line, .. } => (
+            format!("undeclared ordered list \"{text}\""),
+            *line,
+            RuleKind::OrderedList,
+        ),
+        Block::Statement { text, line, .. } => (
+            format!("undeclared statement \"{text}\""),
+            *line,
+            RuleKind::Statement,
+        ),
+        Block::Table { line, .. } => ("undeclared table".to_string(), *line, RuleKind::Table),
+        Block::Code { line, .. } => (
+            "undeclared code block".to_string(),
+            *line,
+            RuleKind::CodeBlock,
+        ),
         Block::Other { .. } => return None,
     };
-    Some(Finding::at(FindingKind::UndeclaredLine, line, detail))
+    Some(Finding::at(FindingKind::UndeclaredLine, line, detail).of_rule(rule_kind))
 }
 
 fn push_undeclared_line(findings: &mut Vec<Finding>, block: &Block) {
@@ -441,6 +462,7 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
                     name: Some(&field.name),
                     what: format!("field \"{}\"", field.name),
                     container_line: Some(block.line()),
+                    rule_kind: RuleKind::Field,
                 },
                 bounds(field.required, field.repeat.as_ref()),
                 field.repeat.is_some(),
@@ -459,6 +481,7 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
                 name: None,
                 what: "bullets".to_string(),
                 container_line: Some(block.line()),
+                rule_kind: RuleKind::Bullets,
             },
             bounds(child_bullets.required, child_bullets.repeat.as_ref()),
             child_bullets.repeat.is_some(),
@@ -617,6 +640,7 @@ fn validate_container(
                     name: Some(&field.name),
                     what: format!("field \"{}\"", field.name),
                     container_line,
+                    rule_kind: RuleKind::Field,
                 },
                 bounds(field.required, field.repeat.as_ref()),
                 field.repeat.is_some(),
@@ -634,6 +658,7 @@ fn validate_container(
                 name: None,
                 what: "statement".to_string(),
                 container_line,
+                rule_kind: RuleKind::Statement,
             },
             bounds(statement.required, statement.repeat.as_ref()),
             statement.repeat.is_some(),
@@ -650,6 +675,7 @@ fn validate_container(
                 name: None,
                 what: "bullets".to_string(),
                 container_line,
+                rule_kind: RuleKind::Bullets,
             },
             bounds(bullets.required, bullets.repeat.as_ref()),
             bullets.repeat.is_some(),
@@ -664,6 +690,7 @@ fn validate_container(
                 name: None,
                 what: "table".to_string(),
                 container_line,
+                rule_kind: RuleKind::Table,
             },
             bounds(table.required, table.repeat.as_ref()),
             table.repeat.is_some(),
@@ -678,6 +705,7 @@ fn validate_container(
                 name: None,
                 what: "code block".to_string(),
                 container_line,
+                rule_kind: RuleKind::CodeBlock,
             },
             bounds(codeblock.required, codeblock.repeat.as_ref()),
             codeblock.repeat.is_some(),
@@ -901,6 +929,8 @@ struct Occurrence<'a> {
     what: String,
     /// それを含むノードの開始行。欠落の指摘の行に使う（REQ-schema-008）
     container_line: Option<usize>,
+    /// 数えたノードの規則種別。出現回数の指摘に添える（REQ-schema-057）
+    rule_kind: RuleKind,
 }
 
 fn check_occurrence(
@@ -917,11 +947,13 @@ fn check_occurrence(
         // 欠落したノードには行が無いので、それを含むノードの開始行を指す（REQ-schema-008）
         let line = occurrence.container_line;
         if repeat_style {
+            // 下限の指摘は数えたノードの規則種別を持つ（REQ-schema-057）
             Finding::maybe_at(
                 FindingKind::RepeatMinNotMet,
                 line,
                 format!("{what} appears {count} time(s), minimum is {min}"),
             )
+            .of_rule(occurrence.rule_kind)
         } else {
             Finding::maybe_at(
                 missing_kind,
@@ -937,11 +969,13 @@ fn check_occurrence(
             .ok()
             .and_then(|index| occurrence.lines.get(index))
             .copied();
+        // 上限の指摘は数えたノードの規則種別を持つ（REQ-schema-057）
         Finding::maybe_at(
             FindingKind::RepeatMaxExceeded,
             line,
             format!("{what} appears {count} time(s), maximum is {max}"),
         )
+        .of_rule(occurrence.rule_kind)
     } else {
         return;
     };
@@ -2679,5 +2713,45 @@ document:
         assert_eq!(finding.line, Some(4), "宣言の順に反した行を指す");
         assert_eq!(finding.node.as_deref(), Some("種類"));
         assert_eq!(finding.raw.as_deref(), Some("- 種類: algorithm"));
+    }
+
+    // @kotowari[REQ-schema-055]
+    #[test]
+    fn undeclared_field_line_carries_the_field_rule_kind() {
+        let schema = "document:\n  sections:\n    - name: 理由\n";
+        let doc = "## 理由\n\n- 種類: ubiquitous\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::UndeclaredLine);
+        assert_eq!(finding.rule_kind, Some(RuleKind::Field));
+    }
+
+    // @kotowari[REQ-schema-055]
+    #[test]
+    fn undeclared_bullet_carries_the_bullets_rule_kind() {
+        let schema = "document:\n  sections:\n    - name: 理由\n";
+        let doc = "## 理由\n\n- ただの箇条書き\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::UndeclaredLine);
+        assert_eq!(finding.rule_kind, Some(RuleKind::Bullets));
+    }
+
+    // @kotowari[REQ-schema-055]
+    #[test]
+    fn undeclared_table_carries_the_table_rule_kind() {
+        let schema = "document:\n  sections:\n    - name: 理由\n";
+        let doc = "## 理由\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::UndeclaredLine);
+        assert_eq!(finding.rule_kind, Some(RuleKind::Table));
+    }
+
+    // @kotowari[REQ-schema-057]
+    #[test]
+    fn repeat_min_not_met_carries_the_counted_rule_kind() {
+        let schema = "document:\n  sections:\n    - name: 理由\n      statement:\n        repeat: { min: 1 }\n";
+        let doc = "## 理由\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::RepeatMinNotMet);
+        assert_eq!(finding.rule_kind, Some(RuleKind::Statement));
     }
 }

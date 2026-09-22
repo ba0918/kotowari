@@ -169,10 +169,14 @@ mds --version
 | 1 | findings were reported |
 | 2 | the check could not run (schema missing or invalid, broken frontmatter, unreadable file, bad argument) |
 
-`check --format json` reports each finding as `{kind, severity, path, line, node, text, detail}`.
+`check --format json` reports each finding as
+`{kind, severity, path, line, node, text, rule_kind, detail}`.
 `line` points at the offending node, or at the node that should have contained a missing one;
 `node` is the declared name of that node, for sections and field lines; `text` is the raw line
-`line` points at. Keys that do not apply are left out.
+`line` points at. `rule_kind` names the kind of rule the node belongs to — one of `section`,
+`item`, `field`, `bullets`, `ordered_list`, `statement`, `table`, `codeblock` — and appears on
+`undeclared_line`, which reports how the line was read, and on `repeat_min_not_met` and
+`repeat_max_exceeded`, which report what was counted. Keys that do not apply are left out.
 
 ## Using it as a library
 

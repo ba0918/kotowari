@@ -806,3 +806,24 @@ fn check_json_finding_carries_the_node_name_and_the_raw_line() {
     assert_eq!(finding["node"], "種類");
     assert_eq!(finding["text"], "### REQ-001: `名前`");
 }
+
+// @kotowari[REQ-schema-055]
+#[test]
+fn check_json_undeclared_line_has_rule_kind() {
+    let dir = tempfile::tempdir().unwrap();
+    write_file(dir.path(), "schema.yaml", T_SCHEMA);
+    let doc = write_file(
+        dir.path(),
+        "doc.md",
+        "---\n$schema: ./schema.yaml\n---\n# T-1: 例\n\n## 状況\n\n- 種類: ubiquitous\n",
+    );
+    let output = mds()
+        .args(["check", doc.to_str().unwrap(), "--format", "json"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let finding = &json["files"][0]["findings"][0];
+    assert_eq!(finding["kind"], "undeclared_line");
+    assert_eq!(finding["rule_kind"], "field");
+}
