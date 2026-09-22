@@ -78,10 +78,10 @@ kotowari は常に、見出しの下の "- " の行を順不同で読み、行�
 ### REQ-core-051: 定義の無い algorithm
 
 - 種類: event_driven
-- 出典: docs/decision/records/records.md#A21, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#検査の種類
+- 出典: docs/decision/records/records.md#A21, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-22-ir-engine.md#A71
 - 検証: unit
 
-種類が "algorithm" の`要求`に、`決定表`か`性質`を指す "- 定義:" の行が無いとき、kotowari は algorithm_without_definition の`誤り`を出す。
+種類が "algorithm" の`要求`に、`決定表`か`性質`を指す "- 定義:" の行が無いとき（行そのものが無いときを含む）、kotowari は algorithm_without_definition の`誤り`を出す。
 
 ## 決定表
 

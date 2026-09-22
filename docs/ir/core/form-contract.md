@@ -49,11 +49,11 @@ kotowari は、`IR`の文書の Markdown の構造を自前で読んではなら
 ### REQ-core-170: 指摘の行のためにスキーマへ宣言するもの
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A6, docs/decision/records/2026-09-22-ir-engine.md#A37, docs/decision/records/2026-09-22-ir-engine.md#A67
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A6, docs/decision/records/2026-09-22-ir-engine.md#A37, docs/decision/records/2026-09-22-ir-engine.md#A67, docs/decision/records/2026-09-22-ir-engine.md#A72
 - 検証: review
-- 確かめ方: 置き換えの前後で、source_invalid、gherkin の中の`指摘`、unclosed_backtick を出す既存のテストが通ることを見る
+- 確かめ方: 置き換えの前後で、source_invalid、gherkin の中の`指摘`、unclosed_backtick、missing_document を出す既存のテストが通ることを見る
 
-kotowari は常に、スキーマに`出典`の "- 出典:" の行の行番号と、`シナリオ`を包む`コードブロック`の開始行と、`文`の行番号と行の文字そのままを取る宣言を置き、source_invalid の "line"、gherkin の中の`指摘`の文書の先頭から数えた "line"、unclosed_backtick の detail をそこから作る。
+kotowari は常に、スキーマに`出典`の "- 出典:" の行の行番号と、`シナリオ`を包む`コードブロック`の開始行と、`文`の行番号と行の文字そのままを取る宣言を置き、source_invalid の "line"、gherkin の中の`指摘`の文書の先頭から数えた "line"、unclosed_backtick の detail をそこから作り、`文書名の参照`の走査もその`文`の行の文字の上で行う。
 
 ### REQ-core-173: kotowari に残す検査
 
@@ -67,11 +67,11 @@ kotowari は常に、文書をまたぐ検査（`ID`の重複、`用語`の重�
 ### REQ-core-177: 読み取りの置き換えで変わる指摘は3種類だけ
 
 - 種類: invariant
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A5, docs/decision/records/2026-09-22-ir-engine.md#A38
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A5, docs/decision/records/2026-09-22-ir-engine.md#A38, docs/decision/records/2026-09-22-ir-engine.md#A72
 - 検証: review
-- 確かめ方: 置き換えの前に `kotowari check --format json` の出力を保存し、後の出力と `diff` を取り、差分が REQ-core-174 の3種類の追加だけであることを見る
+- 確かめ方: 置き換えの前に `kotowari check --format json` の出力を保存し、後の出力と `diff` を取り、差分が REQ-core-174 の3種類の追加と、TBL-core-014 が対象から外した行に書かれていた`文書名の参照`の missing_document の減少だけであることを見る
 
-読み取りをスキーマに置き換える前と後で、"kotowari check --format json" の出力の差分が REQ-core-174 の3種類の`指摘`の追加だけであり、ほかの`指摘`の種類・detail・"line"・出る順に差が無い関係が常に成り立つ。
+読み取りをスキーマに置き換える前と後で、"kotowari check --format json" の出力の差分が、REQ-core-174 の3種類の`指摘`の追加と、TBL-core-014 が対象から外した行に書かれていた`文書名の参照`の missing_document の減少だけであり、ほかの`指摘`の種類・detail・"line"・出る順に差が無い関係が常に成り立つ。
 
 ## 具体例
 
