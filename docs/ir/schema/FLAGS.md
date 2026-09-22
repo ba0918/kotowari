@@ -52,3 +52,36 @@ TBL-schema-008 は`節`の`要素の値`を「`文`と`箇条書き`だけをつ
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A10
 
 `crates/kotowari-markdown-schema/src/schema.rs` の `Children` は `fields` と入れ子の `bullets` を持ち、TBL-schema-004 は`フィールド行`の置ける場所に「`箇条書き`の子」を挙げる。A10 は一覧の行を`フィールド行`と`箇条書き`に読み分けることを定めるだけで、子の一覧に`フィールド行`を宣言できることを定めていない。
+
+### FLAG-schema-007: 複数行にまたがるノードの生の行が指す行に決定が無い
+
+- 種類: gap
+- 関係: TBL-schema-008, EX-schema-025
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A64
+
+`crates/kotowari-markdown-schema/src/extract.rs` は`節`と`項目`で見出しの行を、`コードブロック`でフェンスの開始行を要素の行として渡し、`生の行`をその行から引く。TBL-schema-008 はこの3つの値を「`生の行`が指す行」の列に書く。A64 は`ノード`ごとの要素の単位を並べ、`生の行`が指す行を一表で定めると述べるだけで、複数行にまたがる`ノード`がどの行を指すかの値を決めていない。EX-schema-025 からは裏付けの無い`項目`と`コードブロック`を外した。
+
+### FLAG-schema-008: 項目の略記の値に決定が無い
+
+- 種類: gap
+- 関係: TBL-schema-008, REQ-schema-047
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A63
+
+`crates/kotowari-markdown-schema/src/extract.rs` の `item_value_text` は`項目`の見出しと本文をつないだ1つの文字列を返し、TBL-schema-008 はそれを`項目`の`要素の値`と略記の形に書く。A63 は略記の`抽出`の形を今のままにすると述べて`文`と`表`の値だけを挙げていて、`項目`の値を定めていない。
+
+### FLAG-schema-009: 項目の外に id と name を宣言できないことに決定が無い
+
+- 種類: gap
+- 関係: REQ-schema-048, EX-schema-024
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A23
+
+`crates/kotowari-markdown-schema/src/schema.rs` の `reject_item_only_of` は、`項目`の外の`ノード`に "of" の "id" と "name" を宣言した`スキーマ`を`停止`にする。A23 は`導かれる値`を「行番号、`項目`の見出しの ID と名前」と列挙するだけで、`項目`以外の`ノード`に宣言できないことも、そのときの応答が終了コード 2 であることも定めていない。A54 が宣言できる範囲を定めるのは`生の行`だけである。EX-schema-024 は、決定のある「受けない語は`停止`」の場面に置き換えた。
+
+### FLAG-schema-010: 停止の理由の2つの場面に決定が無い
+
+- 種類: gap
+- 関係: TBL-schema-009, REQ-schema-014
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8
+
+`crates/kotowari-markdown-schema/src/main.rs` は、引数の解析が失敗したとき（知らないフラグを含む）に argument_error の`停止`にする。`crates/kotowari-markdown-schema/src/frontmatter.rs` は "$schema" の値が文字列でないときも`停止`にする。A8 は`frontmatter`が YAML のマッピングでないときと "$schema" の値が空か空白だけのときを定めるだけで、値が文字列でないときを定めておらず、CLI の引数の形を定めた決定も無い。TBL-schema-009 からはこの2つを外した。
+
