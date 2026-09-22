@@ -2699,6 +2699,21 @@ document:
         assert_eq!(finding.node, None, "表は宣言上の名前を持たない");
     }
 
+    // @kotowari[REQ-schema-033]
+    #[test]
+    fn rows_are_counted_against_the_documents_header_not_the_declared_one() {
+        let schema =
+            "document:\n  sections:\n    - name: 用語集\n      table:\n        header: [a, b]\n";
+        let doc = "## 用語集\n\n| a | b | c |\n|---|---|---|\n| 1 | 2 | 3 |\n| 4 | 5 | 6 |\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::TableHeaderMismatch);
+        assert_eq!(
+            finding.line,
+            Some(3),
+            "文書のヘッダ行と合うデータ行は指摘せず、ヘッダの食い違いの1件だけを出す"
+        );
+    }
+
     // @kotowari[REQ-schema-008]
     #[test]
     fn missing_title_has_neither_a_line_nor_a_node_name() {

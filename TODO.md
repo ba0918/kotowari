@@ -10,12 +10,6 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 ## 判断待ち
 
-### 表の列数の照合の基準が変わったこと（mds）
-
-- engine-gaps で、データ行の列数を比べる基準がスキーマの `header` の宣言から`文書`のヘッダ行に変わった。文書のヘッダがスキーマの宣言と違う表では、データ行ごとの列数の`指摘`が出なくなり、ヘッダの食い違いの1件だけになる
-- [REQ-schema-033](docs/ir/schema/block-rules.md#REQ-schema-033) どおりの振る舞いだが、mds の既定の振る舞いを変えてよいとした2件（余ったセル、題名ごとの multiple_titles。[A12](docs/decision/records/2026-09-23-ir-engine-gaps.md#A12)）の外にある3つ目の変化
-- このまま受け入れるか、宣言した `header` も基準にするかを決める
-
 ### CLI のバイナリの名前（mds）
 
 - `mds` は crates.io で他者が公開済み。`kotowari-mds` にするかどうか

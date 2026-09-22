@@ -61,7 +61,7 @@ mds は常に、`文`と`箇条書き`の行に正規表現を課し、`文`に�
 ### REQ-schema-033: 表の検査
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A16
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A16, docs/decision/records/2026-09-23-ir-engine-gaps.md#A46
 - 検証: unit
 
 mds は常に、`表`のヘッダのセル列を宣言したときだけヘッダと列数を照合し、宣言しないときは`表`の有無と`出現回数`だけを見る。列数の照合では、セルが`文書`のヘッダ行より少ないデータ行を`指摘`にする。セルが`文書`のヘッダ行より多いデータ行は、ヘッダのセル列の宣言に依らず、余ったセルを捨てて`指摘`にしない。
