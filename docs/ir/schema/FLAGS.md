@@ -81,9 +81,9 @@ A64 は要素に分けない`ノード`を並べるだけで本文の作り方�
 
 - 種類: gap
 - 関係: TBL-schema-009, REQ-schema-014
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A16
 
-`crates/kotowari-markdown-schema/src/main.rs` は、引数の解析が失敗したとき（知らないフラグを含む）に argument_error の`停止`にする。`crates/kotowari-markdown-schema/src/frontmatter.rs` は "$schema" の値が文字列でないときも`停止`にする。A8 は`frontmatter`が YAML のマッピングでないときと "$schema" の値が空か空白だけのときを定めるだけで、値が文字列でないときを定めておらず、CLI の引数の形を定めた決定も無い。TBL-schema-009 からはこの2つを外した。
+`crates/kotowari-markdown-schema/src/main.rs` は、引数の解析が失敗したとき（知らないフラグを含む）に argument_error の`停止`にする。`crates/kotowari-markdown-schema/src/frontmatter.rs` は "$schema" の値が文字列でないときも`停止`にする。A8 は`frontmatter`が YAML のマッピングでないときと "$schema" の値が空か空白だけのときを定めるだけで、値が文字列でないときを定めていない。CLI の引数については A16 が "--format" の受ける値を text と json の2つに定めるだけで、知らないフラグを受けたときの応答を定めた決定が無い。TBL-schema-009 からはこの2つを外した。
 
 ### FLAG-schema-011: 転記のときの出典が項目を裏付けていない
 
