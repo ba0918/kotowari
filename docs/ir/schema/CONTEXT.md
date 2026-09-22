@@ -31,6 +31,7 @@ mds の仕様 IR で使う用語を置く。意味が一般の用法と違うも
 | 基準のディレクトリ | カレントディレクトリから上に向かって探し、最初に見つかった ".mds/" のあるディレクトリ | docs/decision/records/2026-09-21-mds-spec.md#A14 |
 | 出現回数 | ノードが現れてよい個数の下限と上限 | docs/decision/records/2026-09-21-mds-spec.md#A3 |
 | 条件付き規則 | あるフィールド行の値に応じて、別の規則の適用を切り替える条件節 | docs/decision/records/2026-09-21-mds-spec.md#A3 |
-| 導かれる値 | 抽出の宣言で、文書の文字ではなく位置や識別子から導く値。行番号、項目の見出しの ID、項目の見出しの名前の3つ | docs/decision/records/2026-09-22-ir-engine.md#A11 |
+| 導かれる値 | 抽出の宣言で、文書の文字ではなく位置や識別子から導く値。行番号、項目の見出しの ID、項目の見出しの名前、生の行の4つ | docs/decision/records/2026-09-22-ir-engine.md#A49 |
+| 要素の値 | 抽出で、その要素そのものから取れる値。導かれる値と区別する | docs/decision/records/2026-09-22-ir-engine.md#A52 |
 | ノードの名前 | スキーマが宣言したノードの名前。題名のように宣言上の名前を持たないノードもある | docs/decision/records/2026-09-22-ir-engine.md#A27 |
-| 生の行 | 指摘が指す行の文字そのまま。字下げと末尾の空白を含み、組み立て直さない | docs/decision/records/2026-09-22-ir-engine.md#A29 |
+| 生の行 | 指摘が指す行、または抽出の要素の行の文字そのまま。字下げと末尾の空白を含み、組み立て直さない | docs/decision/records/2026-09-22-ir-engine.md#A49 |
