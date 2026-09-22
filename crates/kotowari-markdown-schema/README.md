@@ -191,10 +191,8 @@ let values = kotowari_markdown_schema::extract::extract_values(&schema, &documen
 
 ## Specification
 
-`docs/spec/mds.md` is the prose specification. `docs/ir/schema/` at the repository root
-carries the same specification
-normalised so that it can be checked mechanically, and every requirement there is linked to the
-tests that cover it.
+`docs/ir/schema/` at the repository root is the specification. It is normalised so that it can
+be checked mechanically, and every requirement there is linked to the tests that cover it.
 
 ## License
 

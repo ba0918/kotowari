@@ -9,16 +9,18 @@ application.
 
 ## Specification
 
-The specification lives in two places, and both are kept up to date:
+The specification is `docs/ir/schema/` at the repository root, and nowhere else. It is written
+in kotowari's IR form so that it can be checked mechanically: each IR document declares a schema
+from the repository root's `.mds/schemas/` in its `$schema` frontmatter, so it passes both
+`kotowari check` and `mds check docs/ir/schema`.
 
-- `docs/spec/mds.md` — the prose specification, written for people.
-- `docs/ir/schema/` at the repository root — the same specification normalised into kotowari's
-  IR form, so that it can be checked mechanically. Each IR document declares a schema from the
-  repository root's `.mds/schemas/` in its `$schema` frontmatter, so it passes both
-  `kotowari check` and `mds check docs/ir/schema`.
+There is no prose specification beside it. One existed (`docs/spec/mds.md`) until the IR
+superseded it; keeping both meant the same rules were written twice, and the prose copy drifted
+because nothing checked it. It stays in git history.
 
 Rules the IR does not yet carry are recorded as gaps in `docs/ir/schema/FLAGS.md`. Decisions
-the IR cites as sources live in the repository root's `docs/decision/records/`.
+the IR cites as sources live in the repository root's `docs/decision/records/`. Terms are
+defined in `docs/ir/schema/CONTEXT.md`.
 
 Read the `kotowari` skill before writing or revising an IR document.
 
