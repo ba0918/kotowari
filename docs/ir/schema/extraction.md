@@ -172,16 +172,15 @@ Scenario: value を省くと要素は導かれる値の鍵だけを持つ
   When "mds values --format json" を実行する
   Then 要素のオブジェクトは`導かれる値`の鍵と、内側の`ノード`が宣言した`配置パス`だけを持つ
 
-@id=EX-schema-024 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A49,docs/decision/records/2026-09-22-ir-engine.md#A54,docs/decision/records/2026-09-21-mds-spec.md#A23,docs/decision/records/2026-09-21-mds-spec.md#A15,docs/decision/records/2026-09-21-mds-spec.md#P1
-Scenario: 項目にだけ宣言できる導かれる値を表に宣言すると停止する
-  Given `表`に見出しの ID を取る`導かれる値`を宣言した`スキーマ`がある
+@id=EX-schema-024 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A17,docs/decision/records/2026-09-22-ir-engine.md#A49,docs/decision/records/2026-09-21-mds-spec.md#A23,docs/decision/records/2026-09-21-mds-spec.md#A15,docs/decision/records/2026-09-21-mds-spec.md#P1
+Scenario: 受けない語の導かれる値は停止する
+  Given `導かれる値`に4つのどれでもない語を宣言した`スキーマ`がある
   When "mds values" を実行する
   Then 終了コードは 2 である
 
-@id=EX-schema-025 @about=REQ-schema-048,TBL-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A49,docs/decision/records/2026-09-22-ir-engine.md#A50,docs/decision/records/2026-09-22-ir-engine.md#A58,docs/decision/records/2026-09-22-ir-engine.md#A64
+@id=EX-schema-025 @about=REQ-schema-048,TBL-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A49,docs/decision/records/2026-09-22-ir-engine.md#A50,docs/decision/records/2026-09-22-ir-engine.md#A54
 Scenario: 生の行はどのノードにも宣言できる
-  Given `題名`と`表`の行と`項目`と`コードブロック`に`生の行`と行番号を宣言した`スキーマ`がある
+  Given `題名`と`表`の行に`生の行`と行番号を宣言した`スキーマ`がある
   When "mds values --format json" を実行する
-  Then `題名`は見出しの行、`表`の行はそのデータ行、`項目`は見出しの行をそのまま出す
-  And `コードブロック`はブロックごとにフェンスの開始行を出す
+  Then `題名`は見出しの行、`表`の行はそのデータ行をそのまま出す
 ```
