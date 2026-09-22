@@ -125,7 +125,7 @@ detail が「行の文字」「見出しの文字」「Scenario: の行の文字
 
 ### TBL-core-029: エンジンの指摘を写す対応表の列
 
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A3, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A24, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A31, docs/decision/records/2026-09-22-ir-engine.md#A40
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A3, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A24, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A29, docs/decision/records/2026-09-22-ir-engine.md#A31, docs/decision/records/2026-09-22-ir-engine.md#A40, docs/decision/records/records.md#A92, docs/decision/records/ir-form.md#検査の種類
 
 スキーマの側が出した`指摘`を kotowari の`指摘`の種類へ写す表は、下の5つの列を持つ。名前が同じで意味が違う種類の行には、その旨を書く。スキーマの側の invalid_id は`項目`の見出しの`ID`の形で、kotowari の invalid_id（"@id" の値）とは別物である。スキーマの側の missing_table は、`用語集`では glossary_invalid、`決定表`では missing_table に分かれる。スキーマの側の missing_required_field は、欠けた`フィールド行`に応じて kotowari の missing_field、missing_source、verification_missing、algorithm_without_definition に分かれる。
 
