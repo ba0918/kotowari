@@ -61,11 +61,11 @@ ID はディレクトリをまたいで文書全体で一意。同じ ID が2か
 - `- 出典:` が無いか空 → missing_source
 - それ以外（`- 種類:`、`- 関係:`）が無い → missing_field
 
-`- 種類:`、`- 検証:`、`- 定義:`、`- 関係:` の値が空の行は、行が無いものとして扱う。決定表に表が無ければ missing_table の誤り。
+`- 種類:`、`- 検証:`、`- 定義:`、`- 関係:`、`- 確かめ方:` の値が空の行は、行が在るものとして扱い、行が無いことによる指摘は出さない。`- 種類:` と `- 検証:` の空の値は、下の unknown_kind と verification_invalid の誤りになる。決定表に表が無ければ missing_table の誤り。
 
 `- 種類:` の値が項目の種類ごとに定めた値でないとき unknown_kind の誤り。`- 検証:` の値が unit、property、proof、review でないとき verification_invalid の誤り。種類が algorithm の要求に、決定表か性質を指す `- 定義:` が無いとき algorithm_without_definition の誤り。
 
-文は見出しの下の、一覧でも表でもない空でない行。algorithm 以外の要求と性質に文が無ければ missing_statement の誤り。EARS の型に沿うかは検査しない。
+文は見出しの下の、一覧でも表でもない空でない行。algorithm 以外の要求（`- 種類:` の行が無い要求を含む）、性質、問題の記録の項目に文が無ければ missing_statement の誤り。EARS の型に沿うかは検査しない。
 
 ## シナリオ
 

@@ -18,7 +18,7 @@ kotowari の仕様に基づく（改訂 2026-09-22。本体の版は固定しな
 
 `kotowari status` は IR が揃っているかを数と真偽で出す。読むものと停止の決まりは check と同じで、指摘は出さず数だけを出す。JSON の最上位は `documents`（文書の数と行数）、`items`（種類ごとの項目の数）、`requirements`（検証の値ごとの数、テストのある要求とない要求の数、review の要求の確かめ方の有無、具体例の無い要求の数）、`scenarios`（テストのある具体例とない具体例の数）、`tests`（印の数と読んだテストのファイル）、`findings`（check の誤りと注意の数）、`complete` の7つ。`complete` が true になるのは check の誤りが 0 件で、かつ問題の記録の項目が 0 件のときだけで、終了コードは complete なら 0、そうでなければ 1、停止は 2。数え方は check と揃えてある。`complete` が false の理由は、`findings` の `error` が 0 でなければ `kotowari check` の指摘に1件ずつあり、`items` の `flag` が 0 でなければ問題の記録（FLAGS.md）にある。`--format text` では群ごとに `群名 鍵=値 鍵=値` の1行が上の順に出て、最後の行は `complete true` か `complete false`。
 
-検証が review の要求には `- 確かめ方:` の行が要る。テストの無い要求を人か LLM がどう確かめるかはこの行にしか書けないので、行が無いか値が空なら missing_field の誤りが detail `確かめ方` で出る。
+検証が review の要求には `- 確かめ方:` の行が要る。テストの無い要求を人か LLM がどう確かめるかはこの行にしか書けないので、行が無ければ missing_field の誤りが detail `確かめ方` で出る。値が空の行は行が在るものとして扱い、この誤りは出ない。
 
 | 種類 | 意味 | 対処 | 担当 |
 |---|---|---|---|
@@ -39,7 +39,7 @@ kotowari の仕様に基づく（改訂 2026-09-22。本体の版は固定しな
 | revision_link_invalid | すべての判断の記録で、`superseded_by` の行に `[文字](href)` のリンクが無い、href が `#` と決定の番号を持たない、パスが置き場の外、先が判断の記録でない、先の決定の節と Superseded の節に番号の行が無い | detail の href（リンクが無いときは行の値）を、置き場の中の記録の決定の番号を指す `[文字](href)` のリンクに直す。href はその記録のファイルからの相対パス（出典の形の、基準のディレクトリからのパスではない） | brainstorm |
 | unknown_term | バッククォートで囲んだ語が用語集にも ID にもない | 用語集に足すか、値なら二重引用符に変える | brainstorm |
 | missing_document | 文書名の参照先が無い | 文書を作るか参照を直す | brainstorm |
-| missing_statement | 要求か性質に文が無い | 文を足す | brainstorm |
+| missing_statement | 要求か性質か問題の記録の項目に文が無い | 文を足す | brainstorm |
 | verification_missing | 要求に検証の行が無い | `- 検証:` を足す | brainstorm |
 | verification_invalid | 検証の値が正しくない | unit、property、proof、review のいずれかにする | brainstorm |
 | unknown_kind | 種類の値が正しくない | 正しい値にする | brainstorm |
