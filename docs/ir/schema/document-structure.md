@@ -15,13 +15,13 @@ $schema: ../../../.mds/schemas/ir.yaml
 
 mds は常に、`文書`が`題名`をちょうど1つ持つことを求め、無いときと2つ以上あるときを`指摘`にする。
 
-### REQ-schema-023: 前置部の範囲
+### REQ-schema-023: 前置部に宣言するもの
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-22-ir-engine.md#A68
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A68
 - 検証: unit
 
-mds は常に、`題名`の後から最初の`節`の前までを`前置部`として読み、そこに内側の`ノード`（TBL-schema-004）を宣言させる。
+mds は常に、`前置部`そのものには`抽出`の鍵を持たせず、`前置部`の内側の`ノード`（TBL-schema-004）に宣言させる。
 
 ### REQ-schema-024: 節の名前
 
