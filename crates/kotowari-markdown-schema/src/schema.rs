@@ -76,7 +76,7 @@ pub struct Document {
 #[serde(deny_unknown_fields)]
 pub struct Title {
     pub pattern: Option<Pattern>,
-    pub extract: Option<Extracts>,
+    pub extract: Option<Extract>,
 }
 
 /// 前置部。R5。
@@ -112,7 +112,7 @@ pub struct Section {
     pub table: Option<Table>,
     pub codeblock: Option<CodeBlock>,
     pub item: Option<Item>,
-    pub extract: Option<Extracts>,
+    pub extract: Option<Extract>,
 }
 
 /// 項目。R7。
@@ -132,7 +132,7 @@ pub struct Item {
     pub codeblock: Option<CodeBlock>,
     pub required: Option<bool>,
     pub repeat: Option<Repeat>,
-    pub extract: Option<Extracts>,
+    pub extract: Option<Extract>,
 }
 
 /// フィールド行。R8。
@@ -149,7 +149,7 @@ pub struct Field {
     /// `csv: true` は `separator: ","` の省略形
     pub csv: Option<bool>,
     pub when: Option<When>,
-    pub extract: Option<Extracts>,
+    pub extract: Option<Extract>,
 }
 
 impl Field {
@@ -178,7 +178,7 @@ pub struct Statement {
     #[serde(rename = "enum")]
     pub r#enum: Option<Vec<String>>,
     pub when: Option<When>,
-    pub extract: Option<Extracts>,
+    pub extract: Option<Extract>,
 }
 
 /// 箇条書きの子の規則。R10。
@@ -199,7 +199,7 @@ pub struct Bullets {
     pub repeat: Option<Repeat>,
     pub pattern: Option<Pattern>,
     pub when: Option<When>,
-    pub extract: Option<Extracts>,
+    pub extract: Option<Extract>,
     /// 子の規則。子のフィールド行と箇条書きを宣言する
     pub children: Option<Children>,
 }
@@ -212,7 +212,7 @@ pub struct Table {
     pub header: Option<Vec<String>>,
     pub required: Option<bool>,
     pub repeat: Option<Repeat>,
-    pub extract: Option<Extracts>,
+    pub extract: Option<Extract>,
 }
 
 /// コードブロック。R12。
@@ -224,7 +224,7 @@ pub struct CodeBlock {
     pub lines: Option<Vec<Pattern>>,
     pub required: Option<bool>,
     pub repeat: Option<Repeat>,
-    pub extract: Option<Extracts>,
+    pub extract: Option<Extract>,
 }
 
 /// 出現回数。R14。
@@ -266,7 +266,7 @@ impl When {
     }
 }
 
-/// `of` が選ぶ、ノードから導かれる値の種類。R16 の書式3。
+/// `of` が選ぶ、ノードから導かれる値の種類。R16。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum OfKind {
@@ -278,58 +278,147 @@ pub enum OfKind {
     Name,
 }
 
-/// 抽出規則の1書式。R16 の書式1（Path）、書式2（Capture）、書式3（Of）。
-#[derive(Debug, Clone, Deserialize)]
-#[serde(untagged)]
-pub enum Extract {
-    Path(String),
-    Capture { path: String, group: String },
-    Of { path: String, of: OfKind },
+/// 1つのノードが宣言した抽出規則。YAML では `配置パス`だけの略記か、
+/// `path`・`value`・`of`・`group` を持つ入れ子の写像を受ける（R16）。
+#[derive(Debug, Clone)]
+pub struct Extract {
+    /// 出力の置き場。必ず1つ
+    path: String,
+    /// 要素の値を置く、要素オブジェクトの中の鍵
+    value: Option<String>,
+    /// 要素ごとの導かれる値。鍵は要素オブジェクトの中の配置パス。
+    /// 宣言された順に持つ（出力の鍵の順がこの順になる）
+    of: Vec<(String, OfKind)>,
+    /// 題名の正規表現の名前付きキャプチャの名前
+    group: Option<String>,
 }
 
 impl Extract {
+    /// 出力の置き場。
     pub fn path(&self) -> &str {
-        match self {
-            Extract::Path(p) => p,
-            Extract::Capture { path, .. } => path,
-            Extract::Of { path, .. } => path,
-        }
-    }
-}
-
-/// 1つのノードが宣言した抽出規則の並び。YAML では1つの書式か、書式の並びを受ける。
-#[derive(Debug, Clone)]
-pub struct Extracts(Vec<Extract>);
-
-#[derive(Deserialize)]
-#[serde(untagged)]
-enum ExtractsRepr {
-    One(Extract),
-    Many(Vec<Extract>),
-}
-
-impl<'de> Deserialize<'de> for Extracts {
-    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        Ok(Extracts(match ExtractsRepr::deserialize(d)? {
-            ExtractsRepr::One(e) => vec![e],
-            ExtractsRepr::Many(v) => v,
-        }))
-    }
-}
-
-impl Extracts {
-    pub fn iter(&self) -> std::slice::Iter<'_, Extract> {
-        self.0.iter()
+        &self.path
     }
 
-    /// 題名の名前付きキャプチャ（書式2）を1つ返す。
-    pub fn capture(&self) -> Option<&Extract> {
-        self.0.iter().find(|e| matches!(e, Extract::Capture { .. }))
+    /// 要素の値を置く、要素オブジェクトの中の鍵。
+    pub fn value(&self) -> Option<&str> {
+        self.value.as_deref()
     }
 
-    /// `of` を添えた書式（書式3）があるか。
+    /// 要素ごとの導かれる値。宣言された順。
+    pub fn of(&self) -> &[(String, OfKind)] {
+        &self.of
+    }
+
+    /// 題名の名前付きキャプチャの名前。
+    pub fn group(&self) -> Option<&str> {
+        self.group.as_deref()
+    }
+
+    /// 導かれる値を1つでも宣言しているか。
     pub fn has_of(&self) -> bool {
-        self.0.iter().any(|e| matches!(e, Extract::Of { .. }))
+        !self.of.is_empty()
+    }
+}
+
+impl<'de> Deserialize<'de> for Extract {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        d.deserialize_any(ExtractVisitor)
+    }
+}
+
+struct ExtractVisitor;
+
+impl<'de> serde::de::Visitor<'de> for ExtractVisitor {
+    type Value = Extract;
+
+    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.write_str("an extract path, or a mapping with \"path\"")
+    }
+
+    fn visit_str<E: serde::de::Error>(self, v: &str) -> Result<Extract, E> {
+        Ok(Extract {
+            path: v.to_string(),
+            value: None,
+            of: Vec::new(),
+            group: None,
+        })
+    }
+
+    fn visit_map<M: serde::de::MapAccess<'de>>(self, mut map: M) -> Result<Extract, M::Error> {
+        let mut path: Option<String> = None;
+        let mut value: Option<String> = None;
+        let mut of: Option<Vec<(String, OfKind)>> = None;
+        let mut group: Option<String> = None;
+        while let Some(key) = map.next_key::<String>()? {
+            let duplicate = |k: &str| M::Error::custom(format!("extract has \"{k}\" twice"));
+            match key.as_str() {
+                "path" => {
+                    if path.is_some() {
+                        return Err(duplicate("path"));
+                    }
+                    path = Some(map.next_value()?);
+                }
+                "value" => {
+                    if value.is_some() {
+                        return Err(duplicate("value"));
+                    }
+                    value = Some(map.next_value()?);
+                }
+                "of" => {
+                    if of.is_some() {
+                        return Err(duplicate("of"));
+                    }
+                    of = Some(map.next_value::<OfEntries>()?.0);
+                }
+                "group" => {
+                    if group.is_some() {
+                        return Err(duplicate("group"));
+                    }
+                    group = Some(map.next_value()?);
+                }
+                other => {
+                    return Err(M::Error::custom(format!("unknown extract key \"{other}\"")));
+                }
+            }
+        }
+        // 配置パスは必ず1つ。無い宣言は schema_invalid の停止になる（R16）
+        let Some(path) = path else {
+            return Err(M::Error::custom("extract requires \"path\""));
+        };
+        Ok(Extract {
+            path,
+            value,
+            of: of.unwrap_or_default(),
+            group,
+        })
+    }
+}
+
+/// `of` の `{ 鍵: 語 }` の対応。宣言された順を保つ。同じ鍵を2度書いても
+/// 黙って上書きせず、そのまま持って R18 の重複の判定に回す。
+struct OfEntries(Vec<(String, OfKind)>);
+
+impl<'de> Deserialize<'de> for OfEntries {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        d.deserialize_map(OfEntriesVisitor)
+    }
+}
+
+struct OfEntriesVisitor;
+
+impl<'de> serde::de::Visitor<'de> for OfEntriesVisitor {
+    type Value = OfEntries;
+
+    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.write_str("a mapping of placement keys to derived values")
+    }
+
+    fn visit_map<M: serde::de::MapAccess<'de>>(self, mut map: M) -> Result<OfEntries, M::Error> {
+        let mut entries = Vec::new();
+        while let Some((key, kind)) = map.next_entry::<String, OfKind>()? {
+            entries.push((key, kind));
+        }
+        Ok(OfEntries(entries))
     }
 }
 
@@ -355,8 +444,7 @@ fn validate_schema(schema: &Schema) -> Result<(), SchemaError> {
 
 fn validate_title(title: &Title) -> Result<(), SchemaError> {
     reject_item_only_of(title.extract.as_ref(), "title")?;
-    let Some(Extract::Capture { group, .. }) = title.extract.as_ref().and_then(|e| e.capture())
-    else {
+    let Some(group) = title.extract.as_ref().and_then(Extract::group) else {
         return Ok(());
     };
     // 書式2（名前付きキャプチャ）は pattern のキャプチャを取る。pattern が無い、
@@ -460,13 +548,10 @@ fn validate_table(table: Option<&Table>) -> Result<(), SchemaError> {
 /// 行ごとのオブジェクトに入れる導かれる値の鍵が、宣言された列の名前と
 /// 衝突したら停止する（R16）。列を宣言しない表は照合する相手が無い（R11）。
 fn reject_derived_key_colliding_with_column(table: &Table) -> Result<(), SchemaError> {
-    let (Some(header), Some(extracts)) = (&table.header, &table.extract) else {
+    let (Some(header), Some(extract)) = (&table.header, &table.extract) else {
         return Ok(());
     };
-    for rule in extracts.iter() {
-        let Extract::Of { path, .. } = rule else {
-            continue;
-        };
+    for (path, _) in extract.of() {
         let key = path.split('.').next().unwrap_or(path);
         if header.iter().any(|column| column == key) {
             return Err(SchemaError(format!(
@@ -542,10 +627,10 @@ fn validate_bullets(bullets: Option<&Bullets>, in_children: bool) -> Result<(), 
     Ok(())
 }
 
-/// 題名以外のノードには書式2（名前付きキャプチャ）の抽出を宣言できない（R16）。
+/// 題名以外のノードには名前付きキャプチャ（`group`）の抽出を宣言できない（R16）。
 /// 宣言すると schema_invalid の停止になる。
-fn reject_capture_extract(extract: Option<&Extracts>, node: &str) -> Result<(), SchemaError> {
-    if extract.and_then(|e| e.capture()).is_some() {
+fn reject_capture_extract(extract: Option<&Extract>, node: &str) -> Result<(), SchemaError> {
+    if extract.and_then(Extract::group).is_some() {
         return Err(SchemaError(format!(
             "{node} extract cannot use the named-group capture form"
         )));
@@ -553,18 +638,16 @@ fn reject_capture_extract(extract: Option<&Extracts>, node: &str) -> Result<(), 
     Ok(())
 }
 
-/// 項目の外のノードには `of: id` と `of: name` を宣言できない（R16）。
-fn reject_item_only_of(extract: Option<&Extracts>, node: &str) -> Result<(), SchemaError> {
-    let Some(extracts) = extract else {
+/// 項目の外のノードには `of` の `id` と `name` を宣言できない（R16）。
+fn reject_item_only_of(extract: Option<&Extract>, node: &str) -> Result<(), SchemaError> {
+    let Some(extract) = extract else {
         return Ok(());
     };
-    for e in extracts.iter() {
-        if let Extract::Of { of, .. } = e
-            && matches!(of, OfKind::Id | OfKind::Name)
-        {
+    for (_, kind) in extract.of() {
+        if matches!(kind, OfKind::Id | OfKind::Name) {
             return Err(SchemaError(format!(
                 "{node} extract cannot use of: {}",
-                match of {
+                match kind {
                     OfKind::Id => "id",
                     OfKind::Name => "name",
                     OfKind::Line => "line",
@@ -663,7 +746,8 @@ document:
 
     // @kotowari[REQ-schema-035]
     #[test]
-    fn extract_accepts_string_and_capture_forms() {
+    fn extract_accepts_the_shorthand_and_the_named_group() {
+        // 略記（`extract: <名前>`）は `{ path: <名前> }` と同じに読む（R16）
         let yaml = r#"
 document:
   title:
@@ -676,19 +760,15 @@ document:
 "#;
         let schema = parse_schema(yaml).unwrap();
         let title = schema.document.title.unwrap();
-        let title_rules: Vec<&Extract> = title.extract.as_ref().unwrap().iter().collect();
-        assert!(matches!(
-            title_rules[0],
-            Extract::Capture { path, group } if path == "id" && group == "id"
-        ));
+        let title_extract = title.extract.as_ref().unwrap();
+        assert_eq!(title_extract.path(), "id");
+        assert_eq!(title_extract.group(), Some("id"));
         let preamble = schema.document.preamble.unwrap();
-        let field_rules: Vec<&Extract> = preamble.fields[0]
-            .extract
-            .as_ref()
-            .unwrap()
-            .iter()
-            .collect();
-        assert!(matches!(field_rules[0], Extract::Path(p) if p == "status"));
+        let field_extract = preamble.fields[0].extract.as_ref().unwrap();
+        assert_eq!(field_extract.path(), "status");
+        assert_eq!(field_extract.value(), None);
+        assert!(field_extract.of().is_empty());
+        assert_eq!(field_extract.group(), None);
     }
 
     // @kotowari[REQ-schema-018, EX-schema-008]
@@ -1113,7 +1193,7 @@ document:
     - name: 記録
       fields:
         - name: 状態
-          extract: { path: id, of: id }
+          extract: { path: id, of: { id: id } }
 "#;
         assert!(
             parse_schema(yaml).is_err(),
@@ -1130,7 +1210,7 @@ document:
     - name: 記録
       fields:
         - name: 状態
-          extract: { path: x, of: column }
+          extract: { path: x, of: { x: column } }
 "#;
         assert!(
             parse_schema(yaml).is_err(),
@@ -1147,8 +1227,8 @@ document:
     - name: 要求
       item:
         extract:
-          - requirements
-          - { path: id, of: id }
+          path: requirements
+          of: { id: id }
         fields:
           - name: 種類
             extract: kind
@@ -1161,10 +1241,76 @@ document:
         );
     }
 
+    // @kotowari[REQ-schema-035, REQ-schema-048]
+    #[test]
+    fn nested_extract_declaration_loads() {
+        // 抽出の宣言は path・value・of・group を持つ1つの入れ子である（R16）
+        let yaml = r#"
+document:
+  sections:
+    - name: 用語集
+      table:
+        header: [用語, 意味]
+        extract: { path: glossary, value: cells, of: { line: line } }
+"#;
+        let schema = parse_schema(yaml).unwrap();
+        let extract = schema.document.sections[0]
+            .table
+            .as_ref()
+            .unwrap()
+            .extract
+            .as_ref()
+            .unwrap();
+        assert_eq!(extract.path(), "glossary");
+        assert_eq!(extract.value(), Some("cells"));
+        assert_eq!(
+            extract.of(),
+            [("line".to_string(), OfKind::Line)],
+            "of は鍵から導かれる値の語への対応として読む（R16）"
+        );
+    }
+
+    // @kotowari[REQ-schema-035]
+    #[test]
+    fn legacy_sequence_extract_is_schema_invalid() {
+        // 書式の並びは受けない（R16）
+        let yaml = r#"
+document:
+  sections:
+    - name: 記録
+      fields:
+        - name: 状態
+          extract:
+            - status
+            - { path: status_line, of: line }
+"#;
+        assert!(
+            parse_schema(yaml).is_err(),
+            "旧来の書式の並びは schema_invalid の停止になる（R16）"
+        );
+    }
+
+    // @kotowari[REQ-schema-035]
+    #[test]
+    fn extract_without_a_path_is_schema_invalid() {
+        let yaml = r#"
+document:
+  sections:
+    - name: 記録
+      fields:
+        - name: 状態
+          extract: { of: { status_line: line } }
+"#;
+        assert!(
+            parse_schema(yaml).is_err(),
+            "配置パスの無い宣言は schema_invalid の停止になる（R16）"
+        );
+    }
+
     // @kotowari[REQ-schema-033, REQ-schema-048]
     #[test]
     fn table_derived_key_colliding_with_a_column_name_is_a_schema_error() {
-        let yaml = "document:\n  sections:\n    - name: 用語集\n      table:\n        header: [用語, line]\n        extract:\n          - glossary\n          - { path: line, of: line }\n";
+        let yaml = "document:\n  sections:\n    - name: 用語集\n      table:\n        header: [用語, line]\n        extract: { path: glossary, of: { line: line } }\n";
         assert!(
             parse_schema(yaml).is_err(),
             "行の鍵が表の列の名前と衝突したら停止する（R16）"

@@ -16,10 +16,8 @@ document:
         id: "REQ-([a-z][a-z0-9-]*-)?\\d{3,}"
         repeat: { min: 0 }
         extract:
-          - requirements
-          - { path: id, of: id }
-          - { path: name, of: name }
-          - { path: line, of: line }
+          path: requirements
+          of: { id: id, name: name, line: line }
         fields:
           - name: 種類
             enum: [event_driven, state_driven, ubiquitous, prohibition, invariant, algorithm]
@@ -50,10 +48,8 @@ document:
         id: "TBL-([a-z][a-z0-9-]*-)?\\d{3,}"
         repeat: { min: 0 }
         extract:
-          - tables
-          - { path: id, of: id }
-          - { path: name, of: name }
-          - { path: line, of: line }
+          path: tables
+          of: { id: id, name: name, line: line }
         fields:
           - name: 出典
             separator: ","
@@ -70,10 +66,8 @@ document:
         id: "PROP-([a-z][a-z0-9-]*-)?\\d{3,}"
         repeat: { min: 0 }
         extract:
-          - properties
-          - { path: id, of: id }
-          - { path: name, of: name }
-          - { path: line, of: line }
+          path: properties
+          of: { id: id, name: name, line: line }
         fields:
           - name: 出典
             separator: ","

@@ -27,9 +27,8 @@ document:
         id: "REQ-\\d{3,}"
         repeat: { min: 0 }
         extract:
-          - requirements
-          - { path: id, of: id }
-          - { path: line, of: line }
+          path: requirements
+          of: { id: id, line: line }
         fields:
           - name: 種類
             enum: [ubiquitous, algorithm]

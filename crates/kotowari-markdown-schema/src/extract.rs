@@ -4,7 +4,7 @@ use crate::document::{
     Block, Document, Item as DocItem, RawLine, Section as DocSection, join_continuation,
 };
 use crate::schema::{
-    Bullets, Children, CodeBlock, Extract, Extracts, Field, OfKind, Schema, Statement, Table,
+    Bullets, Children, CodeBlock, Extract, Field, OfKind, Schema, Statement, Table,
     is_declared_field, item_internals_declare_extract,
 };
 use serde_json::{Map, Value};
@@ -52,30 +52,32 @@ fn extract_title(schema: &Schema, document: &Document, root: &mut Map<String, Va
     let Some(title) = &schema.document.title else {
         return;
     };
-    let Some(extracts) = &title.extract else {
+    let Some(extract) = &title.extract else {
         return;
     };
     let Some(heading) = document.titles.first() else {
         return;
     };
-    // 名前付きキャプチャ（書式2）は取る値が書式ごとに違うので個別に置く
-    for rule in extracts.iter() {
-        let Extract::Capture { path, group } = rule else {
-            continue;
-        };
-        let Some(pattern) = &title.pattern else {
-            continue;
-        };
-        let Some(caps) = pattern.captures(&heading.text) else {
-            continue;
-        };
-        if let Some(m) = caps.name(group) {
-            place(root, path, Value::String(m.as_str().to_string()));
+    // 名前付きキャプチャは題名の文字ではなく pattern の捕まえた部分を置く
+    if let Some(group) = extract.group() {
+        if let Some(caps) = title
+            .pattern
+            .as_ref()
+            .and_then(|p| p.captures(&heading.text))
+            && let Some(m) = caps.name(group)
+        {
+            place(root, extract.path(), Value::String(m.as_str().to_string()));
         }
+        place_derived(
+            root,
+            extract,
+            &Extracted::default().with_line(Value::from(heading.line)),
+        );
+        return;
     }
     let got = Extracted::of_value(Value::String(heading.text.clone()))
         .with_line(Value::from(heading.line));
-    place_all(root, extracts, &got);
+    place_all(root, extract, &got);
 }
 
 fn extract_section(
@@ -258,20 +260,14 @@ fn extract_statement(
 /// 文の1行のオブジェクト。生の行を "text" に置き、宣言された導かれる値を
 /// そのオブジェクトの中の相対パスへ置く（R16）。生の行の鍵の名前は仕様が
 /// 定めていないので、指摘が持つ生の行と同じ "text" にする。
-fn statement_line_object(raw: &RawLine, extract: &Extracts) -> Value {
+fn statement_line_object(raw: &RawLine, extract: &Extract) -> Value {
     let mut map = Map::new();
     map.insert("text".to_string(), Value::String(raw.text.clone()));
-    for rule in extract.iter() {
-        // 項目の外のノードに of: id と of: name は宣言できない（R16）
-        let Extract::Of {
-            path,
-            of: OfKind::Line,
-        } = rule
-        else {
-            continue;
-        };
-        place(&mut map, path, Value::from(raw.line));
-    }
+    place_derived(
+        &mut map,
+        extract,
+        &Extracted::default().with_line(Value::from(raw.line)),
+    );
     Value::Object(map)
 }
 
@@ -462,7 +458,7 @@ fn extract_table(table: Option<&Table>, blocks: &[&Block], root: &mut Map<String
 
 /// 表を行ごとのオブジェクトにする。`derived` を渡したとき、宣言された
 /// 導かれる値をそのオブジェクトの中の相対パスへ置く（R16）。
-fn table_objects(block: &Block, derived: Option<&Extracts>) -> Vec<Value> {
+fn table_objects(block: &Block, derived: Option<&Extract>) -> Vec<Value> {
     let Block::Table {
         header,
         rows,
@@ -481,20 +477,14 @@ fn table_objects(block: &Block, derived: Option<&Extracts>) -> Vec<Value> {
                     map.insert(key.clone(), Value::String(cell.clone()));
                 }
             }
-            if let Some(derived) = derived {
-                for rule in derived.iter() {
-                    // 表の外のノードに of: id と of: name は宣言できない（R16）
-                    let Extract::Of {
-                        path,
-                        of: OfKind::Line,
-                    } = rule
-                    else {
-                        continue;
-                    };
-                    if let Some(line) = row_lines.get(row_index) {
-                        place(&mut map, path, Value::from(*line));
-                    }
-                }
+            if let Some(derived) = derived
+                && let Some(line) = row_lines.get(row_index)
+            {
+                place_derived(
+                    &mut map,
+                    derived,
+                    &Extracted::default().with_line(Value::from(*line)),
+                );
             }
             Value::Object(map)
         })
@@ -660,21 +650,24 @@ impl Extracted {
     }
 }
 
-/// ノードが宣言したすべての書式を配置パスへ置く。名前付きキャプチャ（書式2）は
-/// 題名の側で個別に置くのでここでは飛ばす。
-fn place_all(root: &mut Map<String, Value>, extracts: &Extracts, got: &Extracted) {
-    for rule in extracts.iter() {
-        let value = match rule {
-            Extract::Path(_) => got.value.clone(),
-            Extract::Capture { .. } => continue,
-            Extract::Of { of, .. } => match of {
-                OfKind::Line => got.line.clone(),
-                OfKind::Id => got.id.clone(),
-                OfKind::Name => got.name.clone(),
-            },
+/// ノードから取れたものを、宣言された配置パスと導かれる値の鍵へ置く。
+fn place_all(root: &mut Map<String, Value>, extract: &Extract, got: &Extracted) {
+    if let Some(value) = &got.value {
+        place(root, extract.path(), value.clone());
+    }
+    place_derived(root, extract, got);
+}
+
+/// 宣言された導かれる値を、その鍵へ置く。
+fn place_derived(map: &mut Map<String, Value>, extract: &Extract, got: &Extracted) {
+    for (key, kind) in extract.of() {
+        let value = match kind {
+            OfKind::Line => got.line.clone(),
+            OfKind::Id => got.id.clone(),
+            OfKind::Name => got.name.clone(),
         };
         if let Some(value) = value {
-            place(root, rule.path(), value);
+            place(map, key, value);
         }
     }
 }
@@ -1376,8 +1369,8 @@ document:
     - name: 記録
       statement:
         extract:
-          - lines
-          - { path: line, of: line }
+          path: lines
+          of: { line: line }
 "#;
         let doc = "## 記録\n\n 文の1行目\n  字下げの2行目\n   3行目\n";
         let v = values(schema, doc);
@@ -1402,8 +1395,8 @@ document:
       statement:
         repeat: { min: 0 }
         extract:
-          - lines
-          - { path: line, of: line }
+          path: lines
+          of: { line: line }
 "#;
         let doc = "## 記録\n\n1行目\n\n次の段落\n";
         let v = values(schema, doc);
@@ -1427,8 +1420,8 @@ document:
       table:
         header: [a, b]
         extract:
-          - glossary
-          - { path: line, of: line }
+          path: glossary
+          of: { line: line }
 "#;
         let doc = "## 用語集\n\n| a | b |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n| 5 | 6 |\n";
         let v = values(schema, doc);
@@ -1454,8 +1447,8 @@ document:
         repeat: { min: 0 }
         header: [a, b]
         extract:
-          - glossary
-          - { path: line, of: line }
+          path: glossary
+          of: { line: line }
 "#;
         let doc =
             "## 用語集\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n| a | b |\n|---|---|\n| 3 | 4 |\n";
@@ -1788,7 +1781,7 @@ document:
     // @kotowari[REQ-schema-048]
     #[test]
     fn of_line_places_the_line_number_as_a_number() {
-        let schema = "document:\n  sections:\n    - name: 記録\n      fields:\n        - name: 状態\n          extract:\n            - status\n            - { path: status_line, of: line }\n";
+        let schema = "document:\n  sections:\n    - name: 記録\n      fields:\n        - name: 状態\n          extract: { path: status, of: { status_line: line } }\n";
         let doc = "## 記録\n\n- 状態: ok\n";
         let v = values(schema, doc);
         assert_eq!(v["status"], "ok", "値は今までどおり置く");
@@ -1810,10 +1803,8 @@ document:
         id: "REQ-\\d{3,}"
         repeat: { min: 0 }
         extract:
-          - requirements
-          - { path: id, of: id }
-          - { path: name, of: name }
-          - { path: line, of: line }
+          path: requirements
+          of: { id: id, name: name, line: line }
         fields:
           - name: 種類
             extract: kind
@@ -1858,8 +1849,8 @@ document:
     fn item_object_keys_come_from_the_schema_not_the_document() {
         // 同じ配置パスを宣言していれば、文書の見出しの語とフィールド行の名前が
         // 変わっても出力のキーは変わらない。出力の契約はスキーマが持つ（A22）。
-        let japanese = "document:\n  sections:\n    - name: 蔵書\n      item:\n        repeat: { min: 0 }\n        extract:\n          - books\n          - { path: code, of: id }\n        fields:\n          - name: 著者\n            extract: author\n";
-        let english = "document:\n  sections:\n    - name: Books\n      item:\n        repeat: { min: 0 }\n        extract:\n          - books\n          - { path: code, of: id }\n        fields:\n          - name: Author\n            extract: author\n";
+        let japanese = "document:\n  sections:\n    - name: 蔵書\n      item:\n        repeat: { min: 0 }\n        extract: { path: books, of: { code: id } }\n        fields:\n          - name: 著者\n            extract: author\n";
+        let english = "document:\n  sections:\n    - name: Books\n      item:\n        repeat: { min: 0 }\n        extract: { path: books, of: { code: id } }\n        fields:\n          - name: Author\n            extract: author\n";
         let japanese_doc = "## 蔵書\n\n### ISBN-1: 吾輩は猫である\n\n- 著者: 夏目漱石\n";
         let english_doc = "## Books\n\n### ISBN-1: I Am a Cat\n\n- Author: Soseki Natsume\n";
 
