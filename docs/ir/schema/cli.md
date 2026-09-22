@@ -96,12 +96,12 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 
 ### TBL-schema-009: 停止の理由
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#A44, docs/decision/records/2026-09-21-mds-spec.md#A62, docs/decision/records/2026-09-22-ir-engine.md#A56, docs/decision/records/2026-09-23-ir-engine-gaps.md#A11, docs/decision/records/2026-09-23-ir-engine-gaps.md#A19, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A30
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#A44, docs/decision/records/2026-09-21-mds-spec.md#A62, docs/decision/records/2026-09-22-ir-engine.md#A56, docs/decision/records/2026-09-23-ir-engine-gaps.md#A11, docs/decision/records/2026-09-23-ir-engine-gaps.md#A19, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A30, docs/decision/records/2026-09-23-ir-engine-gaps.md#A42
 
 | 理由 | いつ |
 |---|---|
 | スキーマが見つからない | 参照先の`スキーマ`が無い、URL の取得に失敗した、または "$schema" の無い`文書`を対象に指定した |
-| スキーマが形に合わない | `スキーマ`の YAML が読めない、`規則種別`の形に反する、`配置パス`が衝突する（同じ置き場の中で同じパスか、一方が他方の手前の段にあたるもの。要素オブジェクトの中と、`節`の直下などの要素オブジェクトの外のどちらでも判定し、要素オブジェクトの "value" と "of" の鍵も同じ置き場のパスとして数え、"a.b" と "a.c" のように途中まで同じで先が分かれるものは衝突でない）、"reading" の値が "paragraph" と "line" のどちらでもない、または`表`の規則に "header" なしで "select" を書いた |
+| スキーマが形に合わない | `スキーマ`の YAML が読めない、`規則種別`の形に反する、`配置パス`が衝突する（同じ置き場の中で同じパスか、一方が他方の手前の段にあたるもの。要素オブジェクトの中と、`節`の直下などの要素オブジェクトの外のどちらでも判定し、要素オブジェクトの "value" と "of" の鍵も同じ置き場のパスとして数え、"a.b" と "a.c" のように途中まで同じで先が分かれるものは衝突でない）、"reading" の値が "paragraph" と "line" のどちらでもない、`表`の規則に "header" なしで "select" を書いた、または "select" の値が "first" でない |
 | frontmatter が壊れている | `frontmatter`が壊れた YAML である、YAML のマッピングでない、"$schema" の値が空か空白だけである、または "$schema" の値が文字列でない |
 | 文書が読めない | `文書`のファイルを読めない |
 | 引数の誤り | 受けない "--format" の値、知らないフラグ、または "ast" に "--format text" を与えた |

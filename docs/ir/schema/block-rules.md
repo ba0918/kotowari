@@ -69,10 +69,10 @@ mds は常に、`表`のヘッダのセル列を宣言したときだけヘッ�
 ### REQ-schema-059: 表の選び方
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-23-ir-engine-gaps.md#A27, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12
+- 出典: docs/decision/records/2026-09-23-ir-engine-gaps.md#A27, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-23-ir-engine-gaps.md#A42
 - 検証: unit
 
-`表`の規則が "header" と一緒に "select: first" を宣言したとき、mds はその規則を置いた`ノード`の中で、ヘッダが宣言と合う最初の`表`だけをその規則の`表`として検査と`抽出`に使い、ほかの`表`はヘッダが合っても合わなくても宣言していない`表`として扱う。"select" を書かない`表`の規則は、ヘッダの合わない`表`を形の違反の`指摘`にする。"header" なしで "select" を書いた`スキーマ`は`停止`にする。
+`表`の規則が "header" と一緒に "select: first" を宣言したとき、mds はその規則を置いた`ノード`の中で、ヘッダが宣言と合う最初の`表`だけをその規則の`表`として検査と`抽出`に使い、ほかの`表`はヘッダが合っても合わなくても宣言していない`表`として扱う。"select" を書かない`表`の規則は、ヘッダの合わない`表`を形の違反の`指摘`にする。"header" なしで "select" を書いた`スキーマ`は`停止`にする。"select" の値は "first" だけを受け、ほかの値の`スキーマ`は`停止`にする。
 
 ### REQ-schema-034: コードブロックの検査
 
@@ -198,6 +198,12 @@ Scenario: select を書かない表の規則はヘッダの合わない表を指
   When それぞれの`スキーマ`で "mds check" を実行する
   Then 前者ではヘッダの形の違反の`指摘`が出る
   And 後者では終了コードは 2 である
+
+@id=EX-schema-050 @about=REQ-schema-059,TBL-schema-009 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A42
+Scenario: select に first 以外の値を書いたスキーマは停止する
+  Given `前置部`の`表`に "header" と "select: last" を宣言した`スキーマ`がある
+  When その`スキーマ`で "mds check" を実行する
+  Then 終了コードは 2 である
 
 @id=EX-schema-038 @about=REQ-schema-033 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A16
 Scenario: ヘッダより多いセルは捨て、少ないセルは指摘にする
