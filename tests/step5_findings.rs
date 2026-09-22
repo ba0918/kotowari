@@ -607,6 +607,31 @@ fn ex_core_269_a_document_with_a_form_finding_still_takes_the_cross_document_che
     assert_eq!(duplicates[0]["detail"], "REQ-001");
 }
 
+// @kotowari[REQ-core-168, EX-core-264]
+#[test]
+fn ex_core_264_moving_the_schema_files_away_does_not_change_the_output() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        format!("{TOPIC_HEAD}\n## 要求\n\n### REQ-001: 例\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n\n文。\n"),
+    )
+    .unwrap();
+    // スキーマのファイルの置き場。中身は読まれないので、読めない形にしておく
+    fs::create_dir_all(tmp.path().join(".mds/schemas")).unwrap();
+    for name in ["ir.yaml", "context.yaml", "flags.yaml"] {
+        fs::write(tmp.path().join(".mds/schemas").join(name), "not: [a schema").unwrap();
+    }
+    let run = || cmd().args(["check", "--format", "json"]).current_dir(tmp.path()).output().unwrap();
+    let before = run();
+    fs::rename(tmp.path().join(".mds"), tmp.path().join("moved-away")).unwrap();
+    let after = run();
+    assert_eq!(before.status.code(), after.status.code());
+    assert_eq!(before.stdout, after.stdout);
+    // 検査は実際に行われている（verification_missing が出る）
+    assert!(!findings_by_kind(&parse_json(&after), "verification_missing").is_empty());
+}
+
 // @kotowari[EX-core-267]
 #[test]
 fn ex_core_267_the_ir_of_this_repository_has_none_of_the_three() {
