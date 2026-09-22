@@ -178,11 +178,14 @@ fn validate_title(title: &Title, headings: &[Heading], findings: &mut Vec<Findin
             FindingKind::MissingTitle,
             "the document has no level-1 heading".into(),
         )),
-        n if n > 1 => findings.push(Finding::at(
-            FindingKind::MultipleTitles,
-            headings[1].line,
-            "the document has more than one level-1 heading".into(),
-        )),
+        // 2つ目以降の題名ごとに1件（REQ-schema-022）
+        n if n > 1 => findings.extend(headings[1..].iter().map(|heading| {
+            Finding::at(
+                FindingKind::MultipleTitles,
+                heading.line,
+                "the document has more than one level-1 heading".into(),
+            )
+        })),
         _ => {
             let heading = &headings[0];
             if let Some(pattern) = &title.pattern

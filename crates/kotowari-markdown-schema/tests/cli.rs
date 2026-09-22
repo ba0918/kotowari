@@ -1770,3 +1770,54 @@ fn ex_schema_048_paths_diverging_after_a_shared_level_outside_element_objects_do
         "{json}"
     );
 }
+
+// @kotowari[EX-schema-042]
+#[test]
+fn ex_schema_042_three_titles_give_two_multiple_titles_findings() {
+    let schema = "document:\n  title:\n    pattern: \".+\"\n";
+    // 行番号: 題名が4行目・6行目・8行目
+    let doc = "# 一つ目\n\n# 二つ目 `甲`\n\n#  三つ目  \n";
+    let (code, json, stderr) = mds_json(schema, doc, "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    let multiple: Vec<(u64, String)> = all_findings(&json)
+        .iter()
+        .filter(|f| f["kind"] == "multiple_titles")
+        .map(|f| {
+            (
+                f["line"].as_u64().unwrap(),
+                f["text"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        multiple,
+        vec![
+            (6, "# 二つ目 `甲`".to_string()),
+            (8, "#  三つ目  ".to_string())
+        ],
+        "{json}"
+    );
+}
+
+// @kotowari[EX-schema-049]
+#[test]
+fn ex_schema_049_occurrence_finding_carries_the_counted_rule_kind() {
+    let schema = r#"
+document:
+  sections:
+    - name: 要求
+      item:
+        repeat: { min: 0 }
+        statement:
+          repeat: { min: 1 }
+"#;
+    let doc = "## 要求\n\n### REQ-1: 文の無い項目\n";
+    let (code, json, stderr) = mds_json(schema, doc, "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    let findings = all_findings(&json);
+    let min = findings
+        .iter()
+        .find(|f| f["kind"] == "repeat_min_not_met")
+        .unwrap_or_else(|| panic!("repeat_min_not_met が無い: {json}"));
+    assert_eq!(min["rule_kind"], "statement", "{json}");
+}
