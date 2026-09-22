@@ -187,14 +187,20 @@ fn indent_width(text: &str) -> usize {
     width
 }
 
-/// 1つ以上の "#" の直後に空白が続く行なら、その "#" の数（TBL-schema-011）。
+/// CommonMark の ATX 見出しの行なら、その深さ（TBL-schema-011）。行頭の空白は3つまで、
+/// "#" は1〜6個で、その後が空白か行末。
 fn heading_depth(text: &str) -> Option<u8> {
-    let hashes = text.chars().take_while(|&c| c == '#').count();
-    if hashes == 0 {
+    let spaces = text.len() - text.trim_start_matches(' ').len();
+    if spaces > 3 {
         return None;
     }
-    match text[hashes..].chars().next() {
-        Some(' ' | '\t') => Some(u8::try_from(hashes).unwrap_or(u8::MAX)),
+    let body = &text[spaces..];
+    let hashes = body.chars().take_while(|&c| c == '#').count();
+    if !(1..=6).contains(&hashes) {
+        return None;
+    }
+    match body[hashes..].chars().next() {
+        None | Some(' ' | '\t') => u8::try_from(hashes).ok(),
         _ => None,
     }
 }
@@ -206,8 +212,7 @@ fn heading_text(text: &str) -> String {
     {
         return inline_text(&heading.children);
     }
-    // CommonMark の見出しにならない深さ7以上の行
-    text.trim_start_matches('#').trim().to_string()
+    text.trim().trim_start_matches('#').trim().to_string()
 }
 
 /// 水平線の行（同じ記号3つ以上と空白だけ）。行の読み方では`文`になる（TBL-schema-011）。
@@ -317,28 +322,28 @@ fn strip_indent(text: &str, width: usize) -> &str {
     &text[spaces.min(width)..]
 }
 
-/// 縦棒で始まり、次の行が区切りの行である並びを`表`として読む（TBL-schema-011）。
-/// 表にならなければ None で、その行は`文`になる。
+/// 見出しの行と区切りの行で始まる GFM の表を`表`として読む（TBL-schema-011）。
+/// 縦棒で始まらない表も受け、表の終わりは GFM に任せる。表にならなければ None で、
+/// その行は`文`になる。
 fn table_at(lines: &[String], index: usize) -> Option<(Block, usize)> {
-    let starts_with_pipe = |text: &str| text.trim_start().starts_with('|');
-    if !starts_with_pipe(&lines[index])
-        || !lines.get(index + 1).is_some_and(|l| is_delimiter_row(l))
-    {
+    if !lines[index].contains('|') || !lines.get(index + 1).is_some_and(|l| is_delimiter_row(l)) {
         return None;
     }
-    let end = lines[index..]
+    // 空行までを GFM に読ませ、表が終わった行から先は呼ぶ側が読み直す
+    let limit = lines[index..]
         .iter()
-        .position(|text| !starts_with_pipe(text))
+        .position(|text| text.trim().is_empty())
         .map_or(lines.len(), |offset| index + offset);
-    let chunk: Vec<&str> = lines[index..end].iter().map(|l| l.trim_start()).collect();
+    let chunk: Vec<&str> = lines[index..limit].iter().map(|l| l.trim_start()).collect();
     let root = parse_mdast(&chunk.join("\n")).ok()?;
     let Node::Root(root) = root else {
         return None;
     };
-    match root.children.as_slice() {
-        [table @ Node::Table(_)] => Some((table_block_from_node(table, index), end)),
-        _ => None,
-    }
+    let table @ Node::Table(_) = root.children.first()? else {
+        return None;
+    };
+    let rows = table.position()?.end.line;
+    Some((table_block_from_node(table, index), index + rows))
 }
 
 /// 表の区切りの行（"|---|:--:|" の形）。

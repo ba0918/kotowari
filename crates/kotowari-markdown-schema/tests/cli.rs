@@ -1338,6 +1338,71 @@ fn ex_schema_040_schema_without_reading_reads_by_paragraph() {
     );
 }
 
+// @kotowari[EX-schema-051]
+#[test]
+fn ex_schema_051_headings_are_commonmark_atx_headings_in_both_readings() {
+    let paragraph = "reading: paragraph\ndocument:\n  preamble: {}\n";
+    let line = "reading: line\ndocument:\n  preamble: {}\n";
+    // 行番号: "  ## x" が4行目、"####### y" が6行目、"#z" が8行目
+    let doc = "  ## x\n\n####### y\n\n#z\n";
+    let (code_p, check_p, stderr_p) = mds_json(paragraph, doc, "check");
+    let (code_l, check_l, stderr_l) = mds_json(line, doc, "check");
+    assert_eq!(code_p, Some(1), "stderr: {stderr_p}");
+    assert_eq!(code_l, Some(1), "stderr: {stderr_l}");
+    let kinds: Vec<(u64, String)> = all_findings(&check_l)
+        .iter()
+        .map(|f| {
+            (
+                f["line"].as_u64().unwrap(),
+                f["kind"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        kinds,
+        vec![
+            (4, "undeclared_heading".to_string()),
+            (6, "undeclared_line".to_string()),
+            (8, "undeclared_line".to_string()),
+        ],
+        "{check_l}"
+    );
+    let shape = |json: &serde_json::Value| -> Vec<(u64, String, String)> {
+        all_findings(json)
+            .iter()
+            .map(|f| {
+                (
+                    f["line"].as_u64().unwrap(),
+                    f["kind"].as_str().unwrap().to_string(),
+                    f["text"].as_str().unwrap_or_default().to_string(),
+                )
+            })
+            .collect()
+    };
+    assert_eq!(shape(&check_p), shape(&check_l));
+}
+
+// @kotowari[EX-schema-052]
+#[test]
+fn ex_schema_052_a_gfm_table_without_leading_pipes_is_a_table_when_reading_by_line() {
+    let schema = "reading: line\ndocument:\n  preamble:\n    table:\n      extract: rows\n";
+    let doc = "a | b\n--- | ---\n1 | 2\n";
+    let (code, json, stderr) = mds_json(schema, doc, "values");
+    assert_eq!(code, Some(0), "stderr: {stderr}");
+    assert_eq!(json["rows"], serde_json::json!([["1", "2"]]), "{json}");
+}
+
+// @kotowari[EX-schema-053]
+#[test]
+fn ex_schema_053_open_world_without_a_declared_preamble_allows_a_level_three_heading_before_sections()
+ {
+    let schema = "open: true\ndocument:\n  sections:\n    - name: 節\n";
+    let doc = "### X-1: a\n\n中の行\n\n## 節\n";
+    let (code, json, stderr) = mds_json(schema, doc, "check");
+    assert_eq!(code, Some(0), "stderr: {stderr} {json}");
+    assert!(all_findings(&json).is_empty(), "{json}");
+}
+
 // @kotowari[EX-schema-041]
 #[test]
 fn ex_schema_041_unknown_reading_value_stops() {
@@ -1507,7 +1572,7 @@ document:
 
 // @kotowari[TBL-schema-011]
 #[test]
-fn tbl_schema_011_line_reading_reads_hash_only_hash_word_and_equals_lines_as_statements() {
+fn tbl_schema_011_line_reading_reads_hash_word_and_equals_lines_as_statements() {
     let schema = r#"
 reading: line
 document:
@@ -1516,17 +1581,43 @@ document:
       item:
         repeat: { min: 0 }
 "#;
-    // 行番号: "#" が8行目
-    let doc = "## 要求\n\n### REQ-1: 例\n\n#\n#foo\n文の行\n===\n";
+    // 行番号: "#foo" が8行目
+    let doc = "## 要求\n\n### REQ-1: 例\n\n#foo\n文の行\n===\n";
     let (code, json, stderr) = mds_json(schema, doc, "check");
     assert_eq!(code, Some(1), "stderr: {stderr}");
     let findings = all_findings(&json);
     assert_eq!(
         undeclared_statement_lines(&findings),
-        vec![8, 9, 10, 11],
+        vec![8, 9, 10],
         "{json}"
     );
-    assert_eq!(findings.len(), 4, "見出しの指摘は出ない: {json}");
+    assert_eq!(findings.len(), 3, "見出しの指摘は出ない: {json}");
+}
+
+// @kotowari[TBL-schema-011]
+#[test]
+fn tbl_schema_011_a_hash_only_line_is_a_heading_in_both_readings() {
+    let rules =
+        "document:\n  sections:\n    - name: 要求\n      item:\n        repeat: { min: 0 }\n";
+    let doc = "## 要求\n\n### REQ-1: 例\n\n#\n";
+    let (_, paragraph, _) = mds_json(&format!("reading: paragraph\n{rules}"), doc, "check");
+    let (_, line, _) = mds_json(&format!("reading: line\n{rules}"), doc, "check");
+    let shape = |json: &serde_json::Value| -> Vec<(u64, String)> {
+        all_findings(json)
+            .iter()
+            .map(|f| {
+                (
+                    f["line"].as_u64().unwrap_or(0),
+                    f["kind"].as_str().unwrap().to_string(),
+                )
+            })
+            .collect()
+    };
+    assert_eq!(shape(&paragraph), shape(&line), "{paragraph} {line}");
+    assert!(
+        undeclared_statement_lines(&all_findings(&line)).is_empty(),
+        "\"#\" だけの行は文でない: {line}"
+    );
 }
 
 // @kotowari[EX-schema-036]

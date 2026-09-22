@@ -100,9 +100,10 @@ structures — but never for a missing requirement or a violated pattern.
 right after a list line belongs to that line, and block quotes, horizontal rules, HTML and
 image-only lines are not statements. `reading: line` reads every line on its own: each line that
 is not a heading, a list line, part of a table or part of a fenced code block is one statement,
-including a quote, HTML, a lone `#`, a `---` or `===` line, and a line indented after a blank
-line. Headings (one or more `#` followed by a space), list lines and their indented children,
-tables and fenced code blocks read the same either way. Any other value stops.
+including a quote, HTML, a `---` or `===` line, and a line indented after a blank line.
+Headings (CommonMark ATX headings: up to three leading spaces, one to six `#`, then a space or
+the end of the line), list lines and their indented children, GFM tables (with or without
+leading pipes) and fenced code blocks read the same either way. Any other value stops.
 
 ## Extraction
 
