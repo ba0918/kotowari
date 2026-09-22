@@ -91,15 +91,15 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 
 ### TBL-schema-009: 停止の理由
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A56
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A56
 
 | 理由 | いつ |
 |---|---|
 | スキーマが見つからない | 参照先の`スキーマ`が無い、URL の取得に失敗した、または "$schema" の無い`文書`を対象に指定した |
 | スキーマが形に合わない | `スキーマ`の YAML が読めない、`規則種別`の形に反する、または1つの要素オブジェクトの中で鍵が重複する |
-| frontmatter が壊れている | `frontmatter`が壊れた YAML である、または "$schema" の値が文字列でないか空である |
+| frontmatter が壊れている | `frontmatter`が壊れた YAML である、YAML のマッピングでない、または "$schema" の値が空か空白だけである |
 | 文書が読めない | `文書`のファイルを読めない |
-| 引数の誤り | 知らないフラグ、または受けない "--format" の値 |
+| 引数の誤り | 受けない "--format" の値 |
 
 ### TBL-schema-002: 指摘の分類
 
