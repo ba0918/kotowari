@@ -6,7 +6,7 @@ the order an implementer needs them.
 ```markdown
 ## Step N — <what this step produces>
 
-Purpose: <one sentence>. Specification: <path>#<heading>, <path>#<heading>.
+Purpose: <one sentence>. Specification: <path>#REQ-nnn, <path>#REQ-nnn.
 Prerequisites: <steps that must be complete; environment or data that must exist>.
 May change: <files or directories; nothing outside this scope>.
 Done when: <observable condition>.
@@ -18,7 +18,8 @@ Stop and hand back if: <conditions specific to this step, beyond the four genera
 
 Guidance per field:
 
-- **Specification** names headings, not paraphrases. If a heading you need does not exist, the
+- **Specification** names requirement IDs as `<document path>#REQ-nnn` (a topic with no IR:
+  `<path>#<heading>`), not paraphrases. If a requirement you need does not exist, the
   specification is missing something — hand back to brainstorm rather than inventing the content.
 - **Done when** is a condition someone else can observe, not "the feature works".
 - **Shown by** picks exactly one kind. *Test* means RED → GREEN → REFACTOR with named tests.
@@ -37,9 +38,10 @@ Guidance per field:
   may already exist under another name.
 
 Plan-level sections that precede the steps: **Goal** (one sentence, the result the person
-gets), **Specification** (the one governing path), **Approach and why**, **Scope of change**,
-**Step order and prerequisites**, **Verification map** (which steps prove which specification
-sections), **Left to the implementer**, **Stop conditions**, **Test command** (only when the
+gets), **Specification** (the IR store path and the requirement IDs, or for a topic with no IR the one
+governing path), **Approach and why**, **Scope of change**,
+**Step order and prerequisites**, **Verification map** (which steps prove which requirements and
+scenarios), **Left to the implementer**, **Stop conditions**, **Test command** (only when the
 project does not fix one), **Out of scope**.
 
 ## Evidence conditions

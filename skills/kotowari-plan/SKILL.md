@@ -1,6 +1,6 @@
 ---
 name: kotowari-plan
-description: "Workflow station of the kotowari workflow: turn an approved specification into one Markdown plan that an implementer with no prior context can execute, referencing specification sections instead of copying them, with per-step completion evidence and stop conditions. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to write or revise a kotowari plan from a specification. 日本語キーワード: 実装計画 手順書 計画を立てる 仕様から計画"
+description: "Workflow station of the kotowari workflow: turn an approved specification into one Markdown plan that an implementer with no prior context can execute, referencing its requirements instead of copying them, with per-step completion evidence and stop conditions. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to write or revise a kotowari plan from a specification. 日本語キーワード: 実装計画 手順書 計画を立てる 仕様から計画"
 ---
 
 # Plan
@@ -11,24 +11,58 @@ the reader cannot recover from those must be in the plan.
 
 ## Inputs and outputs
 
-In: the path of a committed specification (uncommitted means unapproved — stop and say so).
+In: the path of the IR store and the IDs of the requirements this plan covers. The specification
+is approved only when the IR documents, the glossary, the problem record, and the decision
+record are all committed and `kotowari check` reports no errors other than test-side findings
+(requirement_without_test, scenario_without_test, and findings on test files); otherwise it is
+unapproved — stop and say so. The plan itself runs neither `kotowari check` nor
+`kotowari status`: the main session runs the check that judges approval. A topic with no IR
+takes the path of its committed specification instead (such as a decision record whose
+decisions are the specification); uncommitted means unapproved.
 Out: one Markdown file, `docs/plans/<name>.md`, approved by the person and committed. The
 implementation branch will carry `<name>`; choose a name that reads well in a branch.
 
 ## What a plan is
 
-Written in plain language, one file, no machine-oriented sections. It **references** the
-specification by path and section heading and never copies specification text: copies drift,
-and the implementer must read the sections anyway. What the plan adds is what only this plan
+Written in plain language, one file, no machine-oriented sections. It **references** each
+requirement as `<document path>#REQ-nnn` — a topic with no IR, by path and section heading — and
+never copies specification text: copies drift, and the implementer must read the requirements
+anyway. What the plan adds is what only this plan
 knows — why this order, why these files, where to stop.
 
-Plan-level content: which specification sections each step verifies; approach and its
+Plan-level content: which requirements each step verifies; approach and its
 rationale; the file scope that may change; step order and prerequisites; choices left to the
 implementer; stop conditions.
 
-Per-step content (see `references/step-template.md`): purpose and the specification sections it
+Per-step content (see `references/step-template.md`): purpose and the requirements it
 rests on; prerequisites; the files it may change; what "done" means and how it is shown (test /
 check / artifact / external); choices left open; when to stop and hand back.
+
+## Reading the requirements
+
+Read a referenced requirement with `kotowari query REQ-nnn`, not by opening the document and
+searching. In the one item it returns, `path` and `line` locate it, `body` is its text, `tests`
+lists the tests already marked for it, and the `referenced_by` entries whose `via` is `about` are
+its scenarios. An unknown ID stops with `argument error: unknown id:`. To read the output of
+`kotowari list`, `query`, or `status`, read the kotowari skill's scene check
+(`references/findings.md`).
+
+The requirements and scenarios among `kotowari list`'s `items` whose `tests` is empty are what
+this plan's cycle fills; build the Verification map from them.
+
+Do not read `kotowari list` whole: in a repository of 150 requirements its JSON exceeds 200KB and
+its text form 1,000 lines. Take only the keys you need with `jq`. For example:
+
+- IDs and locations of the requirements and scenarios with no marked test (a review requirement
+  needs no test, so it is left out):
+  `kotowari list | jq -r '.items[] | select(.tests == [] and .verification != "review") | "\(.id) \(.path):\(.line)"'`
+- one item's text only: `kotowari query REQ-001 | jq -r '.items[0].body[]'`
+- its reverse references only: `kotowari query REQ-001 | jq -c '.items[0].referenced_by'`
+
+`kotowari status` is a few hundred bytes; read it whole.
+
+The last step's check commands list `kotowari check` (exit code 0) and `kotowari status`
+(`complete true`, exit code 0).
 
 ## Boundaries
 
@@ -45,9 +79,10 @@ check / artifact / external); choices left open; when to stop and hand back.
 ## Finishing
 
 1. Self-check against `references/step-template.md`: every step has all fields; every referenced
-   heading exists in the specification; no step decides a specification question.
+   requirement ID exists (`kotowari query` returns it; with no IR, every referenced heading exists
+   in the specification); no step decides a specification question.
 2. Adversarial review, only when the plan's own decisions can contradict each other — steps that
-   depend on one another, or one specification heading driving several steps. Say that reason,
+   depend on one another, or one requirement driving several steps. Say that reason,
    then launch one separate-context agent on the plan's own quality, and a second against the
    specification only when the match is one no check can make. A plan whose steps stand alone
    gets none. Findings that need no decision are fixed
