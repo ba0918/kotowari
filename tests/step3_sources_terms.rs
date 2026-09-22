@@ -2011,3 +2011,110 @@ fn req_069_md_followed_by_a_slash_is_not_a_reference() {
         result
     );
 }
+
+// --- REQ-core-117、REQ-core-122: 用語集の表の選び方と4列以上の行 ---
+
+const GLOSSARY_HEADER: &str = "| 用語 | 意味 | 出典 |\n|---|---|---|\n";
+
+/// `用語集`の表の1行
+fn glossary_row(term: &str) -> String {
+    format!("| {term} | 意味 | docs/decision/records/records.md#A1 |\n")
+}
+
+/// 用語集の文書を書き、check を走らせて (終了コード, JSON) を返す
+fn check_with_glossary(tmp: &std::path::Path, glossary: &str, statement: &str) -> (Option<i32>, serde_json::Value) {
+    make_project_with_records(tmp);
+    fs::write(tmp.join("docs/ir/CONTEXT.md"), glossary).unwrap();
+    fs::write(
+        tmp.join("docs/ir/a.md"),
+        format!("# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n{statement}\n"),
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp).output().unwrap();
+    let code = output.status.code();
+    let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+    assert_ne!(code, Some(2), "停止しない: {stderr}");
+    (code, parse_json(&output))
+}
+
+/// 指定した文書を指す指摘の種類
+fn kinds_on(v: &serde_json::Value, path: &str) -> Vec<String> {
+    v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["path"] == path)
+        .map(|f| f["kind"].as_str().unwrap().to_string())
+        .collect()
+}
+
+// @kotowari[EX-core-270]
+#[test]
+fn ex_core_270_the_first_table_with_the_header_is_the_glossary_table() {
+    let tmp = TempDir::new().unwrap();
+    let glossary = format!(
+        "# 用語集\n\n| a | b | c |\n|---|---|---|\n| x | y | z |\n\n{GLOSSARY_HEADER}{}\n{GLOSSARY_HEADER}{}",
+        glossary_row("宛先"),
+        glossary_row("経路")
+    );
+    let (_, v) = check_with_glossary(tmp.path(), &glossary, "`宛先`と`経路`を読む。");
+    let kinds = kinds_on(&v, "docs/ir/CONTEXT.md");
+    for kind in ["glossary_invalid", "invalid_glossary_row", "unknown_line"] {
+        assert!(!kinds.iter().any(|k| k == kind), "{kind}: {v}");
+    }
+    let ut = findings_by_kind(&v, "unknown_term");
+    assert!(!ut.iter().any(|f| f["detail"] == "宛先"), "{v}");
+    assert!(ut.iter().any(|f| f["detail"] == "経路"), "{v}");
+}
+
+// @kotowari[EX-core-271]
+#[test]
+fn ex_core_271_a_glossary_without_a_table_with_the_header_is_invalid() {
+    let tmp = TempDir::new().unwrap();
+    let glossary = "# 用語集\n\n| a | b | c |\n|---|---|---|\n| x | y | z |\n";
+    let (_, v) = check_with_glossary(tmp.path(), glossary, "文。");
+    let invalid: Vec<_> = findings_by_kind(&v, "glossary_invalid")
+        .into_iter()
+        .filter(|f| f["path"] == "docs/ir/CONTEXT.md")
+        .collect();
+    assert_eq!(invalid.len(), 1, "{v}");
+}
+
+// @kotowari[EX-core-272]
+#[test]
+fn ex_core_272_a_row_with_four_cells_becomes_a_term_from_its_first_three() {
+    let tmp = TempDir::new().unwrap();
+    // 行番号: 4つのセルの行が5行目、2つのセルの行が6行目
+    let glossary = format!(
+        "# 用語集\n\n{GLOSSARY_HEADER}| 宛先 | 意味 | docs/decision/records/records.md#A1 | 余り |\n| 経路 | 意味 |\n"
+    );
+    let (_, v) = check_with_glossary(tmp.path(), &glossary, "`宛先`を読む。");
+    let on_glossary: Vec<_> = v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["path"] == "docs/ir/CONTEXT.md")
+        .cloned()
+        .collect();
+    assert_eq!(on_glossary.len(), 1, "{v}");
+    assert_eq!(on_glossary[0]["kind"], "invalid_glossary_row", "{v}");
+    assert_eq!(on_glossary[0]["line"], 6, "{v}");
+    assert!(
+        !findings_by_kind(&v, "unknown_term")
+            .iter()
+            .any(|f| f["detail"] == "宛先"),
+        "{v}"
+    );
+}
+
+// @kotowari[EX-core-279]
+#[test]
+fn ex_core_279_a_table_that_did_not_become_the_glossary_table_is_dropped() {
+    let tmp = TempDir::new().unwrap();
+    let glossary = format!(
+        "# 用語集\n\n{GLOSSARY_HEADER}{}\n| a | b |\n|---|---|\n| x | y |\n",
+        glossary_row("宛先")
+    );
+    let (_, v) = check_with_glossary(tmp.path(), &glossary, "`宛先`を読む。");
+    assert!(kinds_on(&v, "docs/ir/CONTEXT.md").is_empty(), "{v}");
+}

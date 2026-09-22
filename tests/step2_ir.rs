@@ -52,8 +52,7 @@ fn req_035_multiple_titles() {
     let findings = check(&[doc], &default_config());
     let mt = find_by_kind(&findings, "multiple_titles");
     assert_eq!(mt.len(), 1);
-    // TBL-core-030: detail は`抽出`の`題名`
-    assert_eq!(mt[0].detail, "First");
+    assert_eq!(mt[0].detail, "Second");
 }
 
 // --- REQ-core-036: 範囲の行が無い ---
@@ -3436,4 +3435,25 @@ fn ex_core_276_flag_entries_without_a_section_are_read() {
     let status: serde_json::Value =
         serde_json::from_str(&String::from_utf8_lossy(&output.stdout)).expect("valid JSON");
     assert_eq!(status["items"]["flag"], 3, "{status}");
+}
+
+// @kotowari[EX-core-278]
+#[test]
+fn ex_core_278_three_titles_give_one_multiple_titles_per_extra_title() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    std::fs::write(tmp.path().join("docs/ir/a.md"), "# 一\n\n範囲。\n\n# 二\n\n#  三  \n").unwrap();
+    let v = run_cli(tmp.path());
+    let multiple: Vec<_> = v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["path"] == "docs/ir/a.md" && f["kind"] == "multiple_titles")
+        .cloned()
+        .collect();
+    assert!(multiple.iter().all(|f| f["line"].is_null()), "{v}");
+    let mut details: Vec<&str> = multiple.iter().map(|f| f["detail"].as_str().unwrap()).collect();
+    details.sort_unstable();
+    assert_eq!(details, vec!["三", "二"], "detail は2つ目と3つ目の題名: {v}");
 }

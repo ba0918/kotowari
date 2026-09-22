@@ -193,18 +193,21 @@ fn item_at<'a>(
     })
 }
 
-/// スキーマの側の指摘1件を kotowari の指摘へ写す（TBL-core-030）。
-pub fn map_finding(ctx: &MapContext, engine: &EngineFinding) -> Result<Finding, StopReason> {
+/// スキーマの側の指摘1件を kotowari の指摘へ写す（TBL-core-030）。写し先が「出さない」の
+/// 行の指摘は None を返して捨てる（REQ-core-172）。
+pub fn map_finding(
+    ctx: &MapContext,
+    engine: &EngineFinding,
+) -> Result<Option<Finding>, StopReason> {
     let make = |kind: FindingKind, line: Option<usize>, detail: String| {
-        Ok(Finding::new(kind, ctx.path.clone(), line, detail))
+        Ok(Some(Finding::new(kind, ctx.path.clone(), line, detail)))
     };
     match engine.kind {
         EngineKind::MissingTitle => make(FindingKind::MissingTitle, None, ctx.filename.clone()),
+        // 2つ目以降の題名ごとに1件。detail はその題名の行から "# " を除いた文字（TBL-core-030）
         EngineKind::MultipleTitles => {
-            let title = ctx
-                .title
-                .clone()
-                .ok_or_else(|| stop("multiple_titles has no extracted title to map".to_string()))?;
+            let line = raw_of(engine)?;
+            let title = line.strip_prefix('#').unwrap_or(&line).trim().to_string();
             make(FindingKind::MultipleTitles, None, title)
         }
         // 題名にパターンを宣言しているのは用語集のスキーマだけ（TBL-core-030）
@@ -220,6 +223,8 @@ pub fn map_finding(ctx: &MapContext, engine: &EngineFinding) -> Result<Finding, 
             RuleKind::Field | RuleKind::Bullets | RuleKind::OrderedList => {
                 make(FindingKind::UnknownField, engine.line, raw_of(engine)?)
             }
+            // select: first で用語集の表にならなかった表は写さずに捨てる（`除外`、REQ-core-117）
+            RuleKind::Table if ctx.doc_kind == DocKind::Glossary => Ok(None),
             RuleKind::Statement | RuleKind::Table | RuleKind::CodeBlock => {
                 make(FindingKind::UnknownLine, engine.line, raw_of(engine)?)
             }
@@ -265,13 +270,14 @@ pub fn map_finding(ctx: &MapContext, engine: &EngineFinding) -> Result<Finding, 
                 _ => Err(no_row(engine)),
             }
         }
-        // 用語集の表のデータ行の誤りは行ごと、表そのものの誤りは文書ごとに出す（TBL-core-030）
+        // 用語集の表のデータ行の誤りは行ごとに出す。表の開始行の食い違いは、select: first で
+        // ヘッダの合わない表が宣言の外になるので発生しない（TBL-core-030）
         EngineKind::TableHeaderMismatch if ctx.doc_kind == DocKind::Glossary => {
             let line = line_of(engine)?;
             if ctx.glossary_rows.contains(&line) {
                 make(FindingKind::InvalidGlossaryRow, Some(line), raw_of(engine)?)
             } else {
-                make(FindingKind::GlossaryInvalid, None, ctx.filename.clone())
+                Err(no_row(engine))
             }
         }
         EngineKind::CodeblockLangMismatch => {
@@ -324,7 +330,7 @@ pub fn read_document(
     let ctx = MapContext::new("", filename, doc_kind, &values);
     let findings = validate(&schema, &document, schema.open)
         .iter()
-        .map(|engine| map_finding(&ctx, engine))
+        .filter_map(|engine| map_finding(&ctx, engine).transpose())
         .collect::<Result<Vec<Finding>, StopReason>>()?;
     Ok((values, findings))
 }
@@ -358,7 +364,9 @@ mod tests {
     }
 
     fn mapped(f: EngineFinding) -> Finding {
-        map_finding(&ctx(DocKind::Topic), &f).expect("写せるはず")
+        map_finding(&ctx(DocKind::Topic), &f)
+            .expect("写せるはず")
+            .expect("捨てずに写すはず")
     }
 
     fn stopped(doc_kind: DocKind, f: EngineFinding) -> String {
@@ -381,11 +389,16 @@ mod tests {
 
     // @kotowari[REQ-core-171]
     #[test]
-    fn multiple_titles_becomes_multiple_titles_with_the_extracted_title() {
-        let f = mapped(engine(EngineKind::MultipleTitles, Some(3)));
+    fn multiple_titles_becomes_multiple_titles_with_that_title() {
+        let mut e = engine(EngineKind::MultipleTitles, Some(3));
+        e.raw = Some("#  二つ目の題名  ".to_string());
+        let f = mapped(e);
         assert_eq!(f.kind, FindingKind::MultipleTitles);
         assert_eq!(f.line, None);
-        assert_eq!(f.detail, "題名");
+        assert_eq!(
+            f.detail, "二つ目の題名",
+            "\"# \" と前後の空白を除いたその題名の文字"
+        );
     }
 
     // @kotowari[REQ-core-171]
@@ -393,7 +406,7 @@ mod tests {
     fn title_pattern_mismatch_in_the_glossary_becomes_glossary_title_invalid() {
         let mut e = engine(EngineKind::TitlePatternMismatch, Some(1));
         e.raw = Some("# 用語の一覧".to_string());
-        let f = map_finding(&ctx(DocKind::Glossary), &e).unwrap();
+        let f = map_finding(&ctx(DocKind::Glossary), &e).unwrap().unwrap();
         assert_eq!(f.kind, FindingKind::GlossaryTitleInvalid);
         assert_eq!(f.line, Some(1));
         assert_eq!(f.detail, "# 用語の一覧");
@@ -489,7 +502,7 @@ mod tests {
     fn a_glossary_data_row_with_the_wrong_columns_becomes_invalid_glossary_row() {
         let mut e = engine(EngineKind::TableHeaderMismatch, Some(6));
         e.raw = Some("| | 意味 |".to_string());
-        let f = map_finding(&ctx(DocKind::Glossary), &e).unwrap();
+        let f = map_finding(&ctx(DocKind::Glossary), &e).unwrap().unwrap();
         assert_eq!(f.kind, FindingKind::InvalidGlossaryRow);
         assert_eq!(f.line, Some(6));
         assert_eq!(f.detail, "| | 意味 |");
@@ -497,13 +510,27 @@ mod tests {
 
     // @kotowari[REQ-core-171]
     #[test]
-    fn a_glossary_table_with_the_wrong_header_becomes_glossary_invalid() {
+    fn a_glossary_table_header_mismatch_at_the_table_start_stops() {
+        // select: first でヘッダの合わない表は宣言の外になるので、表の開始行の食い違いは発生しない
         let mut e = engine(EngineKind::TableHeaderMismatch, Some(4));
         e.raw = Some("| 用語 | 意味 |".to_string());
-        let f = map_finding(&ctx(DocKind::Glossary), &e).unwrap();
-        assert_eq!(f.kind, FindingKind::GlossaryInvalid);
-        assert_eq!(f.line, None, "表そのものの誤りは行を持たない");
-        assert_eq!(f.detail, "a.md");
+        assert!(
+            stopped(DocKind::Glossary, e).contains("no mapping for table_header_mismatch"),
+            "発生しない行の指摘は停止する"
+        );
+    }
+
+    // @kotowari[REQ-core-172]
+    #[test]
+    fn an_undeclared_table_in_the_glossary_is_dropped_and_elsewhere_is_unknown_line() {
+        let mut e = engine(EngineKind::UndeclaredLine, Some(9));
+        e.raw = Some("| a | b |".to_string());
+        e.rule_kind = Some(RuleKind::Table);
+        assert!(
+            map_finding(&ctx(DocKind::Glossary), &e).unwrap().is_none(),
+            "用語集の表にならなかった表は捨てる"
+        );
+        assert_eq!(mapped(e).kind, FindingKind::UnknownLine);
     }
 
     // @kotowari[REQ-core-171]
