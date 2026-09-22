@@ -508,6 +508,7 @@ name = "kotowari-core"
 version = "0.1.0"
 dependencies = [
  "globset",
+ "kotowari-markdown-schema",
  "serde",
  "serde-saphyr",
  "serde_json",

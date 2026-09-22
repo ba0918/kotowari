@@ -8,6 +8,7 @@ name = "kotowari_core"
 path = "src/lib.rs"
 
 [dependencies]
+kotowari-markdown-schema = { path = "../kotowari-markdown-schema" }
 serde = { version = "1", features = ["derive"] }
 serde-saphyr = "1"
 globset = "0.4"

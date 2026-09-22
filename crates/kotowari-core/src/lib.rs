@@ -6,6 +6,7 @@ pub mod list;
 pub mod mutants;
 pub mod query;
 pub mod record_form;
+pub mod schema;
 pub mod sources;
 pub mod status;
 pub mod terms;
