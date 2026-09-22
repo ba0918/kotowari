@@ -107,9 +107,8 @@ item:
   id: "REQ-\\d{3,}"
   repeat: { min: 0 }
   extract:
-    - requirements
-    - { path: id, of: id }
-    - { path: line, of: line }
+    path: requirements
+    of: { id: id, line: line }
   fields:
     - name: Kind
       extract: kind
@@ -127,14 +126,30 @@ item:
 ]
 ```
 
-A table or a statement that declares `of: line` comes back as one object per row or per line,
-carrying that line number — and, for a statement, the raw line with its original indentation:
+A node that declares `value` or `of` comes back as one object per element — a row for a table,
+a line for a statement — with the element's own value under the `value` key and the derived
+values under the `of` keys. The four derived values are `line`, `id`, `name` and `raw` (the raw
+line, with its original indentation and trailing spaces):
 
-```json
-"glossary": [ { "Term": "mark", "Meaning": "...", "line": 12 } ]
+```yaml
+table:
+  header: [Term, Meaning]
+  extract:
+    path: glossary
+    value: cells
+    of: { line: line, raw: raw }
 ```
 
-Extracted values are strings; no type conversion is applied. Line numbers placed with `of: line`
+```json
+"glossary": [
+  { "cells": { "Term": "mark", "Meaning": "..." }, "line": 12, "raw": "| mark | ... |" }
+]
+```
+
+Row keys come from the schema's `header`, or, when no `header` is declared, from the column
+position (each row is an array). The document's own header row is never used as a key.
+
+Extracted values are strings; no type conversion is applied. Line numbers placed with `of`
 are the one exception, and are numbers.
 
 ## Commands and exit codes
