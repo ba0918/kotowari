@@ -29,7 +29,8 @@ reviewer perspectives a review launches is the review skill's gate, and a second
 happens only under step 4's condition. Delegating more than the reason asked for is a
 counter-example.
 
-Read the plan only to find the specification path it names; do not interpret its steps.
+Read the plan only to find the specification path it names — the IR store path and the IDs of
+the requirements it covers; do not interpret its steps.
 The findings file is `.agents/artifacts/reviews/<branch>.json` (a `/` in the branch name is a
 directory). If it already exists this is a resume: keep its findings, continue round numbers from
 the inherited maximum, and count both of ending 3's streaks from this start only (a returning closed cause
@@ -75,6 +76,15 @@ included). The limit, when the person set one, counts round trips.
   `no_longer_visible` and new findings.
 - **fixer:** carry visible findings, plan path, branch, worktree path, and the contract below. It
   returns commits and which finding each addresses, or a hand-back.
+
+In both reviews the specification path is the IR store path; the reviewer reads every document in
+the store. The requirements and scenarios the diff should cover go along as a file: narrow
+`kotowari list` with `jq` to the IDs the diff targets (as in the kotowari-plan skill's
+**Reading the requirements**), write that output to a file, and pass its path. A reviewer is
+assumed unable to run commands; never pass the whole output.
+
+Paste the kotowari skill's `references/mark.md` into the implement and fixer prompts: a delegate
+does not read skills, and that is how it learns to mark its tests.
 
 The fixer has no skill of its own. Its contract, pasted in full: for code, RED → GREEN → REFACTOR
 with a test run at every transition; any failing test it writes must satisfy the Evidence conditions
@@ -134,10 +144,28 @@ Endings 2–4 add to the terminal report the choice "run more or accept the rest
 any hand-back reason. "Run more" continues the same run (streaks kept), findings still open, at
 step 1 if untraced plan steps remain, else at step 3; a new limit, if any, is the person's to set.
 
+## kotowari check before the terminal report
+
+Right before the terminal report, run `kotowari check` and `kotowari status --format text`, and
+put both outputs in the report. Read them as the kotowari skill's scene check
+(`references/findings.md`) says. When the last line of the status is `complete false`, the reason
+is in the check's findings if `findings` shows a nonzero `error`, and in the problem record if
+`items` shows a nonzero `flag`.
+
+- Test-side findings (requirement_without_test, scenario_without_test, test_without_id,
+  invalid_marker, unparsable_file, and unresolved_reference from a mark) are findings for the
+  fixer: make them visible and run the diff loop. If they do not go away, end as ending 3 (no
+  progress).
+- IR-side findings are not fixed in the cycle. Put them in the terminal report as the person's
+  judgment; they go back to brainstorm.
+- Missed mutations: the pre-push hook runs mutations on the diff. A miss is fixed by the fixer or
+  the implementer, like a test-side finding; how to investigate one is in the kotowari skill's
+  `references/mutants.md`.
+
 ## Terminal report
 
-Always: artifacts and commits, verification results from the implement report, how to view
-the diff. When present: fixed findings, forwarded observations, reasoned out-of-plan changes, open
+Always: artifacts and commits, verification results from the implement report, the
+`kotowari check` and `kotowari status` output, how to view the diff. When present: fixed findings, forwarded observations, reasoned out-of-plan changes, open
 findings needing the person, and rules or sections identified as absent from the specification.
 This is the person's one check; merging is theirs. Cycle never merges, publishes, deletes branches
 or worktrees, edits the specification, manages issues, or runs two plans at once.

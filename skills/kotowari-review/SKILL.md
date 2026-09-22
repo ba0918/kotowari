@@ -41,6 +41,12 @@ brainstorm record while it exists, plus the repository's principles document if 
 (this workflow's convention is `docs/principles.md`; nothing guarantees it exists); skill text
 → specification; other explanatory documents → specification if one exists.
 
+When the specification is the kotowari IR, the counterpart is the IR store path, and the reviewer
+reads every document in the store. The requirements and scenarios the diff should cover arrive as a
+file listing their IDs, narrowed by the caller from `kotowari list`; a reviewer runs no command to
+get them and is never handed the whole list. A request that touches no IR item comes without that
+file.
+
 ## Reviewer setup
 
 Launch one reviewer, with the **quality** perspective (the target on its own terms). Add a second,
