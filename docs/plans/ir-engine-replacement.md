@@ -2,7 +2,7 @@
 
 ## Goal
 
-kotowari が `IR` の Markdown の形を自前で読むのをやめ、同じ workspace の `kotowari-markdown-schema`（以下エンジン）が埋め込みのスキーマで読んだ結果を写すようになる。`kotowari check` の出力は、仕様が許す 16 個の差分の外で変わらない。
+kotowari が `IR` の Markdown の形を自前で読むのをやめ、同じ workspace の `kotowari-markdown-schema`（以下エンジン）が埋め込みのスキーマで読んだ結果を写すようになる。`kotowari check` の出力は、この`IR`の置き場に対して1件も変わらない。
 
 ## Specification
 
@@ -239,14 +239,14 @@ Shown by: check — 次の順に走らせる。
 1. `CARGO_BUILD_JOBS=4 cargo test --workspace` が全件通る
 2. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format json` の終了コードが0で、`findings` が空
 3. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- status --format text` の最後の行が `complete true` で、終了コードが0。`complete true` は`問題の記録`が0件であることも求めるので、着手の前提に挙げた3件が閉じていること
-4. 置き換えの前に保存した `kotowari check --format json` の出力と `diff` を取り、差分が `REQ-core-177` の 16 個の範囲に収まる。このリポジトリの `IR` では差分が1件も出ない
+4. 置き換えの前に保存した `kotowari check --format json` の出力と `diff` を取り、差分が1件も無い（`REQ-core-177`）
 5. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-markdown-schema --bin mds -- check ./` の終了コードが0（ステップ7で frontmatter を外したあとは対象が0件になる）
 6. `CARGO_BUILD_JOBS=4 cargo clippy --workspace --all-targets -- -D warnings` の誤りが基準線から増えていない。基準線は着手前に実測してあり、`crates/kotowari-core/` の 21 件（`error` で始まる行は、まとめの2行を含めて 23 行）、`crates/kotowari-markdown-schema/` は 0 件。ステップ6で自前の読み取りが減るぶん、この数は減る見込みで、減るのは構わない
 7. `CARGO_BUILD_JOBS=4 cargo +1.89.0 check -p kotowari-markdown-schema --all-targets` が通る
 
 Left to the implementer: なし。
 
-Stop and hand back if: 4 の差分が 16 個の範囲に収まらないとき。
+Stop and hand back if: 4 の差分が1件でも出たとき。
 
 ## Verification map
 
@@ -275,7 +275,7 @@ Stop and hand back if: 4 の差分が 16 個の範囲に収まらないとき。
 
 - 仕様が黙っている振る舞いを決めないといけなくなったとき（`指摘`の新しい種類、`停止`の新しい理由、写し先の無いエンジンの種類）は壁打ちに戻す
 - `TBL-core-030` の行と実物のエンジンの種類に過不足が見つかったとき
-- `REQ-core-177` の 16 個の差分に収まらない振る舞いの差が見つかったとき
+- この`IR`の置き場に対する出力に差分が出て、仕様のどの要求からも導けないとき
 - エンジンの契約の入口6つのどれかの署名を変えないと進めないと分かったとき
 
 ## Test command

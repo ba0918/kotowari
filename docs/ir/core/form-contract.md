@@ -64,14 +64,14 @@ kotowari は常に、スキーマに`出典`の "- 出典:" の行の行番号�
 
 kotowari は常に、文書をまたぐ検査（`ID`の重複、`用語`の重複、参照切れ、`ID`の名前と置き場の一致）、行数と`要求`の数の上限、`出典`の検査（TBL-core-012）、`文`に基づく検査（`用語`、`曖昧語`、閉じないバッククォート）、`文書名の参照`、gherkin の中身、閉じない`コードブロック`、`用語集`の行の`用語`のセルが空であることの検査を自分の側で行い、スキーマへ移さない。
 
-### REQ-core-177: 読み取りの置き換えで変わってよい差分
+### REQ-core-177: 読み取りの置き換えで出力が変わらない
 
 - 種類: invariant
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A5, docs/decision/records/2026-09-22-ir-engine.md#A38, docs/decision/records/2026-09-22-ir-engine.md#A72, docs/decision/records/2026-09-22-ir-engine.md#A75, docs/decision/records/2026-09-22-ir-engine.md#A82, docs/decision/records/2026-09-22-ir-engine.md#A84
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A5, docs/decision/records/2026-09-22-ir-engine.md#A38, docs/decision/records/2026-09-22-ir-engine.md#A85
 - 検証: review
-- 確かめ方: 置き換えの前に `kotowari check --format json` の出力を保存し、後の出力と `diff` を取り、差分が下の16個の範囲に収まることを見る。このリポジトリの`IR`では差分が1件も出ないことも見る
+- 確かめ方: 置き換えの前に `kotowari check --format json` の出力を保存し、後の出力と `diff` を取り、差分が1件も無いことを見る
 
-読み取りをスキーマに置き換える前と後で、"kotowari check --format json" の出力の差分が次の16個だけであり、ほかの`指摘`の種類・detail・"line"・出る順に差が無い関係が常に成り立つ。REQ-core-174 の3種類の`指摘`の追加。TBL-core-014 が対象から外した行に書かれていた`文書名の参照`の missing_document の減少。宣言の無い "## " の見出しとその下の行に出る unknown_heading と unknown_line。最初の "## " の見出しより前にある "### " の見出しに出る unknown_heading。"## " の見出しの名前と`項目`の`ID`の接頭辞が食い違う見出しに出る unknown_heading。値が空の "- 種類:" のような行が、行の欠落ではなく値の誤りとして扱われること。同じ名前の "- xxx:" の行が3本以上あるときの`指摘`が、2つ目以降ごとではなく1件になること。`問題の記録`の`項目`に`文`が無いときに出る missing_statement。スキーマが宣言していない表とコードブロックに出る unknown_line。形に合わない見出しの下に、その中の行の`指摘`が増えること。`文書が扱う範囲`の位置と "## " の見出しの直下と、宣言の無い "## " の見出しの中にある一覧の行に出る unknown_field。条件付きで必須にした "- 定義:" と "- 確かめ方:" が、条件を満たさない`項目`で重なったときに duplicate_field が出なくなること。引用、水平線、画像だけの行が`文`に数えられなくなり、それだけを持つ`項目`に missing_statement が出ること。gherkin の`コードブロック`の外にある "Scenario:" の行が`文`として数えられること。`題名`の後、最初の "## " の見出しより前が表かコードブロックだけで`文`を持たない文書に missing_scope が出ること。"- 定義:" の行そのものが無いときの algorithm_without_definition が、kotowari の検査ではなくスキーマの側の`指摘`の写しになること。
+読み取りをスキーマに置き換える前と後で、この`IR`の置き場に対する "kotowari check --format json" の出力が1件も変わらない関係が常に成り立つ。ほかの`IR`の置き場での差は、この関係が述べる対象ではない。
 
 ## 具体例
 
