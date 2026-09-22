@@ -2405,22 +2405,17 @@ fn req_043_four_hashes_without_trailing_space_is_not_unknown_heading() {
 
 // @kotowari[REQ-core-043]
 #[test]
-fn req_043_bare_four_hashes_is_not_unknown_heading() {
-    // "####" だけの行（直後に何も無い）は unknown_heading にしない
+fn req_043_bare_four_hashes_is_an_empty_deeper_heading() {
+    // "####" だけの行は CommonMark の ATX 見出し（空の深さ4の見出し）なので、
+    // "#### " より深い見出しと同じく unknown_heading になる
     let content = "# Title\n\nScope.\n\n## 要求\n\n####\n";
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uh = find_by_kind(&findings, "unknown_heading");
-    assert!(
-        uh.is_empty(),
-        "a bare '####' line with nothing after it must not be unknown_heading: {:?}",
-        uh
-    );
-    // 見出しでない "####" の行は`文`として読まれ、節の宣言の外の行として検査を受ける
-    let ul = find_by_kind(&findings, "unknown_line");
-    assert_eq!(ul.len(), 1, "{:?}", findings);
-    assert_eq!(ul[0].line, Some(7));
-    assert_eq!(ul[0].detail, "####");
+    assert_eq!(uh.len(), 1, "{:?}", findings);
+    assert_eq!(uh[0].line, Some(7));
+    assert_eq!(uh[0].detail, "####");
+    assert!(find_by_kind(&findings, "unknown_line").is_empty(), "{:?}", findings);
 }
 
 // --- REQ-core-112: 閉じないコードブロックの前の指摘・項目は残る ---
