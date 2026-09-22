@@ -1,6 +1,6 @@
 ---
-name: ba0918-iterate
-description: "Entry point beside the ba0918 workflow for a task too small to need a specification or a plan: this session judges whether the request is a small task, delegating a read-only judge only when it cannot close the impact enumeration, then the cycle loop runs implementation, review, and fixing on it, adding only the stations the caller's one-line reason named; anything bigger is turned away with the next skill to call. Use when asked to iterate, for one more fix, to fix this bit, to add this too, or to polish it a little more. 日本語キーワード: iterate ちょっと直して これも足して もう少し磨いて 小さいタスク"
+name: kotowari-iterate
+description: "Entry point beside the kotowari workflow for a task too small to need a specification or a plan: this session judges whether the request is a small task, delegating a read-only judge only when it cannot close the impact enumeration, then the cycle loop runs implementation, review, and fixing on it, adding only the stations the caller's one-line reason named; anything bigger is turned away with the next skill to call. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to iterate, for one more fix, to fix this bit, to add this too, or to polish it a little more. 日本語キーワード: iterate ちょっと直して これも足して もう少し磨いて 小さいタスク"
 ---
 
 # Iterate
@@ -68,12 +68,12 @@ specification (it cannot run without one) or offering "continue here anyway" is 
 | Failed | Also handed back for | Destination | Ready-to-use form |
 |---|---|---|---|
 | 1 (ambiguous) | the request read two ways (implementer) | the person, via the main session | where the readings diverge, and the question to ask |
-| 2 (specification decision), 3 (contradiction) | a missing design decision (2), a contradiction with the specification (3) — implementer or fixer | brainstorm | `/ba0918-brainstorm <topic>`, with the existing specification path if any |
-| 4 (impact unreadable) | a file outside the enumeration (implementer only) | plan if a specification exists, else brainstorm | `/ba0918-plan <specification path>` or `/ba0918-brainstorm <topic>` |
+| 2 (specification decision), 3 (contradiction) | a missing design decision (2), a contradiction with the specification (3) — implementer or fixer | brainstorm | `/kotowari-brainstorm <topic>`, with the existing specification path if any |
+| 4 (impact unreadable) | a file outside the enumeration (implementer only) | plan if a specification exists, else brainstorm | `/kotowari-plan <specification path>` or `/kotowari-brainstorm <topic>` |
 
 ## The loop
 
-Read the ba0918-cycle skill body and run all of it as written, its Inputs included (the review skill
+Read the kotowari-cycle skill body and run all of it as written, its Inputs included (the review skill
 read before the first review); "cycle" there means this run. Only these substitutions apply:
 
 | In cycle's body | Read here as |

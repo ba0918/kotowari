@@ -1,6 +1,6 @@
 ---
-name: ba0918-plan
-description: "Workflow station of the ba0918 workflow: turn an approved specification into one Markdown plan that an implementer with no prior context can execute, referencing specification sections instead of copying them, with per-step completion evidence and stop conditions. Use when asked to write or revise a ba0918 plan from a specification. 日本語キーワード: 実装計画 手順書 計画を立てる 仕様から計画"
+name: kotowari-plan
+description: "Workflow station of the kotowari workflow: turn an approved specification into one Markdown plan that an implementer with no prior context can execute, referencing specification sections instead of copying them, with per-step completion evidence and stop conditions. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to write or revise a kotowari plan from a specification. 日本語キーワード: 実装計画 手順書 計画を立てる 仕様から計画"
 ---
 
 # Plan

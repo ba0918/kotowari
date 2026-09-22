@@ -1,6 +1,6 @@
 ---
-name: ba0918-investigate
-description: "Read-only investigation, called by a person and outside the ba0918 workflow stations: start from a symptom or a question, trace the direct and root cause, the impact, and whether tests cover it, then report fix options without changing a file. Use when asked to investigate something, to find why something happens, to look for a root cause, or to see the impact scope of a change. Not for checking a finished change — that is review's diagnosis. 日本語キーワード: 調べて 原因を調査して なぜ〜が起きる 影響範囲を見たい"
+name: kotowari-investigate
+description: "Read-only investigation, called by a person and outside the kotowari workflow stations: start from a symptom or a question, trace the direct and root cause, the impact, and whether tests cover it, then report fix options without changing a file. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to investigate something, to find why something happens, to look for a root cause, or to see the impact scope of a change. Not for checking a finished change — that is review's diagnosis. 日本語キーワード: 調べて 原因を調査して なぜ〜が起きる 影響範囲を見たい"
 ---
 
 # Investigate
@@ -133,14 +133,14 @@ Show invocations in a form that can be used as is.
 
 | Situation | Recommendation | Ready-to-use form |
 |---|---|---|
-| Small task | iterate | `/ba0918-iterate <request>`; the request names the place and the change |
-| No specification and medium or larger, no basis for a decision, or two readings | brainstorm | `/ba0918-brainstorm <topic>` |
-| Specification exists, medium or larger change | plan, then cycle | `/ba0918-plan <specification path>` |
+| Small task | iterate | `/kotowari-iterate <request>`; the request names the place and the change |
+| No specification and medium or larger, no basis for a decision, or two readings | brainstorm | `/kotowari-brainstorm <topic>` |
+| Specification exists, medium or larger change | plan, then cycle | `/kotowari-plan <specification path>` |
 | Deferred | the person notes it down | one line to note |
 | No fix needed | say so | `no further action needed` |
 | Not enough evidence | keep investigating | the scope to investigate next |
 
-A small task is one the ba0918-iterate skill accepts: the request has one reading, needs no
+A small task is one the kotowari-iterate skill accepts: the request has one reading, needs no
 specification decision, contradicts no existing specification, and its impact is readable (every file to
 change, files to be created included, can be enumerated in a closed list — no "there may be others" —
 and what changes in each can be said without judgment); file count does not matter. A change whose

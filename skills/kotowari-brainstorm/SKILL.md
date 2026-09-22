@@ -1,6 +1,6 @@
 ---
-name: ba0918-brainstorm
-description: "Workflow station of the ba0918 workflow: interview the person until shared understanding is complete and write the specification — decisions as a tree, questions in numbered rounds with recommended answers, term definitions and boundary scenarios on the spot, six kinds of record, adversarial review, then staged approval. Use when asked to brainstorm, define requirements, extract a specification, or resolve an ambiguity in one. 日本語キーワード: 壁打ち 要件定義 仕様抽出 ブレインストーム 質問ラウンド ドメインモデリング"
+name: kotowari-brainstorm
+description: "Workflow station of the kotowari workflow: interview the person until shared understanding is complete and write the specification — decisions as a tree, questions in numbered rounds with recommended answers, term definitions and boundary scenarios on the spot, six kinds of record, adversarial review, then staged approval. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to brainstorm, define requirements, extract a specification, or resolve an ambiguity in one. 日本語キーワード: 壁打ち 要件定義 仕様抽出 ブレインストーム 質問ラウンド ドメインモデリング"
 ---
 
 # Brainstorm

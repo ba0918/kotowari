@@ -1,6 +1,6 @@
 ---
-name: ba0918-using-workflow
-description: "Entry decider beside the ba0918 workflow: given a new request, name the skill it starts from — direct editing, iterate, brainstorm, plan then cycle, or investigate — and how much of the workflow runs, without starting the work; questions and chat are answered directly, never routed. Use when asked where to start, which skill to use, how much review a change needs, or to decide the entry point. 日本語キーワード: どこから始めるか 入口を決めて どの skill から 入口 使い分け ルーティング レビューは要るか 工程を減らす"
+name: kotowari-using-workflow
+description: "Entry decider beside the kotowari workflow: given a new request, name the skill it starts from — direct editing, iterate, brainstorm, plan then cycle, or investigate — and how much of the workflow runs, without starting the work; questions and chat are answered directly, never routed. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked where to start, which skill to use, how much review a change needs, or to decide the entry point. 日本語キーワード: どこから始めるか 入口を決めて どの skill から 入口 使い分け ルーティング レビューは要るか 工程を減らす"
 ---
 
 # Using the workflow
@@ -13,7 +13,7 @@ Decide the entry and how much of the workflow runs. Do not start the work itself
 Routed: building or changing something, a defect whose cause is unknown, and a question that
 cannot be answered without reading or searching files. A question answerable from the
 conversation, and chat, are answered directly — opening such an answer with a proposal to start
-ba0918-brainstorm is a counter-example. Committing, releasing and the like follow the
+kotowari-brainstorm is a counter-example. Committing, releasing and the like follow the
 environment's own rules. The boundary is the need to read.
 
 ## Add nothing by default
@@ -47,7 +47,7 @@ change; otherwise write "nothing would notice" in the line and go on — reviewe
 substitute for a missing check.
 
 A review left out can be asked for afterwards: the line is also how the person notices none ran,
-and ba0918-review called directly, or another ba0918-iterate run on the same branch, adds it then.
+and kotowari-review called directly, or another kotowari-iterate run on the same branch, adds it then.
 
 Outside reach shows in four signs: a publishing, distribution or version declaration;
 credentials or secrets; reaching outside (network, deploy, migration); a deletion whose users
@@ -58,21 +58,21 @@ cannot be enumerated. A fifth needs a real incident behind it.
 | Request | Entry |
 |---|---|
 | The line added no station | this session edits directly |
-| A small task | ba0918-iterate |
-| A medium-or-larger change with no specification, no grounds to judge by, or one that reads two ways | ba0918-brainstorm |
-| A medium-or-larger change with a specification | ba0918-plan, then ba0918-cycle |
-| A defect whose cause is unknown, or a question needing reading or searching | ba0918-investigate |
+| A small task | kotowari-iterate |
+| A medium-or-larger change with no specification, no grounds to judge by, or one that reads two ways | kotowari-brainstorm |
+| A medium-or-larger change with a specification | kotowari-plan, then kotowari-cycle |
+| A defect whose cause is unknown, or a question needing reading or searching | kotowari-investigate |
 
-Rows below the first fire only for what the line named. A small task is ba0918-iterate's own
+Rows below the first fire only for what the line named. A small task is kotowari-iterate's own
 definition; an unreadable impact or a specification decision makes a change medium or larger. A
-request to change a specification goes to ba0918-brainstorm with its path, not the plan row. A bare
+request to change a specification goes to kotowari-brainstorm with its path, not the plan row. A bare
 "fix it" leaves the person the path of this session fixing it directly. "Make the error message
-clearer" with no wording given reads two ways: ba0918-brainstorm, not a small task. A defect sent to
-ba0918-investigate continues from its report's recommended next action, which names the next entry.
+clearer" with no wording given reads two ways: kotowari-brainstorm, not a small task. A defect sent to
+kotowari-investigate continues from its report's recommended next action, which names the next entry.
 
 ## Exceptions
 
 Work with an approved plan or in-progress records is not rewound; it enters from where it left
 off, and its skill's resume rules own the records. "Implement it" with an approved plan is
-ba0918-cycle — implementing by hand there is a counter-example. A skill outside the table fires
+kotowari-cycle — implementing by hand there is a counter-example. A skill outside the table fires
 on its own description.
