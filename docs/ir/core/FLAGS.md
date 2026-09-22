@@ -4,22 +4,6 @@ IR の読み取りをスキーマに置き換える工程で、まだ埋まっ�
 
 ## 問題の記録
 
-### FLAG-core-001: 指摘の対応表の行がまだ無い
-
-- 種類: gap
-- 関係: REQ-core-171, TBL-core-029
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A10
-
-TBL-core-029 は対応表が持つ5つの列と、名前が同じで意味が違う3件を定めるだけで、写し先そのものを並べた表はまだ書かれていない。その表は "crates/kotowari-markdown-schema/src/finding.rs" の種類の列挙を読んで作る。壁打ちでは列だけを決め、1行ずつの中身を決めていない。
-
-### FLAG-core-002: 新しい停止の理由の文言が決まっていない
-
-- 種類: gap
-- 関係: REQ-core-175, TBL-core-018, TBL-core-020
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A9
-
-REQ-core-175 は停止の理由を1つ足すと定めるが、TBL-core-018 の標準エラーの1行目の文言も、TBL-core-020 の詳細も決まっていない。
-
 ### FLAG-core-004: docs/ir/schema の文書にスキーマの宣言が残っている
 
 - 種類: contradiction

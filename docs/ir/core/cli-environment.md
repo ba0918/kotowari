@@ -67,7 +67,7 @@ kotowari は常に、スキーマの側の`指摘`が出た文書でも、取れ
 
 ### TBL-core-018: 停止の理由の文言
 
-- 出典: docs/decision/records/records.md#A104, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A43
+- 出典: docs/decision/records/records.md#A104, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-22-ir-engine.md#A73
 
 | 理由 | 標準エラーの1行目の文言 |
 |---|---|
@@ -76,10 +76,11 @@ kotowari は常に、スキーマの側の`指摘`が出た文書でも、取れ
 | 読めないファイル | unreadable file |
 | UTF-8 でないファイル | non-UTF-8 file |
 | 結果の誤り | results error |
+| 写しの誤り | mapping error |
 
 ### TBL-core-020: 停止の詳細
 
-- 出典: docs/decision/records/records.md#A137, docs/decision/records/records.md#A147, docs/decision/records/records.md#A160, docs/decision/records/records.md#A164, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A6, docs/decision/records/2026-09-20-query-status.md#A18
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A73, docs/decision/records/records.md#A137, docs/decision/records/records.md#A147, docs/decision/records/records.md#A160, docs/decision/records/records.md#A164, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A6, docs/decision/records/2026-09-20-query-status.md#A18
 
 | 理由 | 詳細（英語） |
 |---|---|
@@ -88,6 +89,7 @@ kotowari は常に、スキーマの側の`指摘`が出た文書でも、取れ
 | 読めないファイル | 相対パスと、OS の誤りの文。カレントディレクトリを取得できないときは "current directory: " と OS の誤りの文 |
 | UTF-8 でないファイル | 相対パス |
 | 結果の誤り | 結果のファイルの相対パスと、誤りの説明 |
+| 写しの誤り | 写せなかった`指摘`の種類と`ノードの名前`、または写せなかった値の説明 |
 
 ## 具体例
 
