@@ -17,7 +17,7 @@ kotowari は、正規化した仕様（IR）を Markdown で書き、`kotowari c
 | 場面 | いつ | 読む reference |
 |---|---|---|
 | setup | 置き場が無い、初めて使う | config.md |
-| write | brainstorm の途中で IR を書く | ir-form.md と workflow.md の brainstorm の節 |
+| write | brainstorm の途中で IR と判断の記録を書く | ir-form.md と records.md と workflow.md の brainstorm の節 |
 | check | `kotowari check` の結果を読む、`kotowari list`、`kotowari query`、`kotowari status` の出力を読む | findings.md |
 | mark | テストを書くときに印を置く | mark.md |
 | mutants | `kotowari mutants` の結果を読む、見逃しを調べる | mutants.md |
