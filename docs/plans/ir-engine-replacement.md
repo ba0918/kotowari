@@ -44,7 +44,7 @@ kotowari 側（`docs/ir/core/`）:
 - `crates/kotowari-markdown-schema/src/`（`REQ-schema-055` の実装とその `#[cfg(test)]`）
 - `crates/kotowari-markdown-schema/tests/`（`EX-schema-018`〜`030` の印）
 - `crates/kotowari-core/src/`（埋め込み、写す層、自前の読み取りの削除）
-- `crates/kotowari-core/tests/` と `tests/`
+- `tests/`（根の統合テスト。`crates/kotowari-core/` に `tests/` は無く、単体テストは `src/` の `#[cfg(test)]` に置く）
 - `docs/ir/core/form-contract.md`、`docs/ir/core/ir-document.md`、`docs/ir/core/cli-environment.md`（`REQ-core-089`、`REQ-core-041`、`REQ-core-120` の確かめ方だけ）
 - `docs/ir/schema/` の各文書の frontmatter（ステップ7）
 - `skills/kotowari/references/findings.md` と `skills/kotowari/references/ir-form.md`（ステップ8）
@@ -55,7 +55,6 @@ kotowari 側（`docs/ir/core/`）:
 - `.mds/schemas/` の3つの YAML（置き換えの前提としてもう整えてある）
 - `docs/ir/` の要求・決定表・性質・具体例の本文（確かめ方の3件を除く）
 - `docs/decision/records/`（新しい決定を足さない。足したくなったら壁打ちに戻す）
-- `crates/kotowari-markdown-schema/CHANGELOG.md`
 
 ## Step order and prerequisites
 
@@ -66,7 +65,7 @@ kotowari 側（`docs/ir/core/`）:
 Purpose: kotowari が `undeclared_line` を2つの写し先に分けられるようにする。
 Specification: `docs/ir/schema/closed-world.md#REQ-schema-055`。判断の記録は `docs/decision/records/2026-09-22-ir-engine.md#A74`。
 Prerequisites: なし。
-May change: `crates/kotowari-markdown-schema/src/finding.rs`、`src/validate.rs`、それぞれの `#[cfg(test)]`、`crates/kotowari-markdown-schema/tests/cli.rs`、`crates/kotowari-markdown-schema/README.md`。
+May change: `crates/kotowari-markdown-schema/src/finding.rs`、`crates/kotowari-markdown-schema/src/validate.rs`、それぞれの `#[cfg(test)]`、`crates/kotowari-markdown-schema/tests/cli.rs`、`crates/kotowari-markdown-schema/README.md`。
 
 Done when:
 
@@ -75,7 +74,7 @@ Done when:
 - CLI の JSON がこの値を出す
 - `validate(schema, document, open) -> Vec<Finding>` の署名が変わらない
 
-Shown by: test — RED → GREEN → REFACTOR。`validate.rs` の `#[cfg(test)]` に、宣言していない `- 名前: 値` の行が`フィールド行`として、宣言していない箇条書きの行が`箇条書き`として、宣言していない表が`表`として返ることを見る3本。`tests/cli.rs` に JSON がこの値を持つことを見る1本。
+Shown by: test — RED → GREEN → REFACTOR。`crates/kotowari-markdown-schema/src/validate.rs` の `#[cfg(test)]` に、宣言していない `- 名前: 値` の行が`フィールド行`として、宣言していない箇条書きの行が`箇条書き`として、宣言していない表が`表`として返ることを見る3本。`crates/kotowari-markdown-schema/tests/cli.rs` に JSON がこの値を持つことを見る1本。
 
 Left to the implementer: 値の型（専用の列挙か文字列か）。JSON の鍵の名前。
 
@@ -105,7 +104,7 @@ Stop and hand back if: 具体例の Given が今の実装では作れない入�
 Purpose: kotowari が実行時にスキーマのファイルを読まずに、文書の種類に応じた形の宣言を持つ。
 Specification: `docs/ir/core/form-contract.md#REQ-core-168`。判断の記録は `#A8`、`#A36`。
 Prerequisites: なし。
-May change: `crates/kotowari-core/src/`（新しいモジュールを足してよい）、`crates/kotowari-core/Cargo.toml`（依存に `kotowari-markdown-schema` を足す）、`Cargo.toml` の workspace の依存。
+May change: `crates/kotowari-core/src/`（新しいモジュールを足してよい。単体テストは同じファイルの `#[cfg(test)]`）、`crates/kotowari-core/Cargo.toml`（依存に `kotowari-markdown-schema` を足す）、`Cargo.toml` の workspace の依存。
 
 Done when:
 
@@ -125,7 +124,7 @@ Stop and hand back if: 取り込んだスキーマが `parse_schema` を通ら�
 Purpose: エンジンが返した`指摘`を kotowari の`指摘`へ写す。既存の読み取りはまだ落とさない。
 Specification: `docs/ir/core/finding-map.md#REQ-core-171`、`#REQ-core-172`、`#TBL-core-029`、`#TBL-core-030`、`docs/ir/core/cli-environment.md#REQ-core-175`、`#TBL-core-018`、`#TBL-core-020`。
 Prerequisites: ステップ1。
-May change: `crates/kotowari-core/src/`（新しいモジュール）、`crates/kotowari-core/tests/`。
+May change: `crates/kotowari-core/src/`（新しいモジュール）、`tests/`。
 
 Done when:
 
@@ -146,7 +145,7 @@ Stop and hand back if: `TBL-core-030` に行の無いエンジンの種類が見
 Purpose: 置き換えで増える`指摘` 3 種類を kotowari が出す。
 Specification: `docs/ir/core/findings.md#REQ-core-174`、`#TBL-core-008`、`docs/ir/core/finding-order.md#TBL-core-019`。具体例は `EX-core-266`、`EX-core-267`。
 Prerequisites: ステップ3、ステップ4。
-May change: `crates/kotowari-core/src/`、`crates/kotowari-core/tests/`、`tests/`。
+May change: `crates/kotowari-core/src/`、`tests/`。
 
 Done when:
 
@@ -165,7 +164,7 @@ Stop and hand back if: 3種類のどれかが `TBL-core-030` の写しだけで�
 Purpose: kotowari が `IR` の Markdown の構造を自前で読まなくなる。
 Specification: `docs/ir/core/form-contract.md#REQ-core-169`、`#REQ-core-170`、`#REQ-core-173`、`docs/ir/core/cli-environment.md#REQ-core-176`。
 Prerequisites: ステップ4、ステップ5。
-May change: `crates/kotowari-core/src/ir.rs`（大きく減る）、`crates/kotowari-core/src/` のほか、`crates/kotowari-core/tests/`、`tests/`、`docs/ir/core/form-contract.md`・`docs/ir/core/ir-document.md`・`docs/ir/core/cli-environment.md` の確かめ方3件。
+May change: `crates/kotowari-core/src/ir.rs`（大きく減る）、`crates/kotowari-core/src/` のほか、`tests/`、`docs/ir/core/form-contract.md`・`docs/ir/core/ir-document.md`・`docs/ir/core/cli-environment.md` の確かめ方3件。
 
 Done when:
 
@@ -178,7 +177,7 @@ Done when:
 
 Shown by: test — RED → GREEN → REFACTOR。`EX-core-269` に印を付ける。既存の形の`指摘`のテストがすべて緑のまま。確かめ方3件は review の要求なので、書き換えた文が `kotowari check` を通ることで見る。
 
-Left to the implementer: `ir.rs` の残し方。確かめ方の言い回し。
+Left to the implementer: `crates/kotowari-core/src/ir.rs` の残し方。確かめ方の言い回し。
 
 Stop and hand back if: 残す検査のどれかが、エンジンの返す`抽出`だけでは書けないと分かったとき。
 
@@ -277,6 +276,5 @@ Stop and hand back if: 4 の差分が8つの範囲に収まらないとき。
 
 - CLI のバイナリの名前の変更
 - 2つの製品の版とタグの持ち方
-- `crates/kotowari-markdown-schema/CHANGELOG.md` への追記
 - `.mds/schemas/` の3つの YAML の変更（置き換えの前提としてもう整えてある）
 - kotowari の版を上げること
