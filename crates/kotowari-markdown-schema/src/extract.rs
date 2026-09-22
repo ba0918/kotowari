@@ -434,7 +434,10 @@ fn extract_table(
         return;
     }
     // 表はデータ行が要素の単位（R17）
-    let per_table: Vec<Vec<Value>> = tables.iter().map(|b| table_rows(b, extract, doc)).collect();
+    let per_table: Vec<Vec<Value>> = tables
+        .iter()
+        .map(|b| table_rows(b, table.header.as_deref(), extract, doc))
+        .collect();
     let value = if table.repeat.is_some() && declares_element_object(extract) {
         // 繰り返す表は配置パスの直下に表ごとの段を作る（R1）
         Value::Array(per_table.into_iter().map(Value::Array).collect())
@@ -445,13 +448,15 @@ fn extract_table(
     place(root, extract.path(), value);
 }
 
-/// 表のデータ行を要素にする。
-fn table_rows(block: &Block, extract: &Extract, doc: &Document) -> Vec<Value> {
+/// 表のデータ行を要素にする。`header` はスキーマが宣言した列の名前。
+fn table_rows(
+    block: &Block,
+    header: Option<&[String]>,
+    extract: &Extract,
+    doc: &Document,
+) -> Vec<Value> {
     let Block::Table {
-        header,
-        rows,
-        row_lines,
-        ..
+        rows, row_lines, ..
     } = block
     else {
         return Vec::new();
@@ -459,16 +464,25 @@ fn table_rows(block: &Block, extract: &Extract, doc: &Document) -> Vec<Value> {
     rows.iter()
         .enumerate()
         .map(|(row_index, row)| {
-            let mut cells = Map::new();
-            for (i, cell) in row.iter().enumerate() {
-                if let Some(key) = header.get(i) {
-                    cells.insert(key.clone(), Value::String(cell.clone()));
-                }
-            }
             let line = row_lines.get(row_index).copied().unwrap_or_default();
-            element_value(extract, doc, Value::Object(cells), &Derived::at(line))
+            element_value(extract, doc, row_value(header, row), &Derived::at(line))
         })
         .collect()
+}
+
+/// 表の1行の要素の値。鍵はスキーマが宣言した `header` の名前で、宣言が
+/// 無ければ列の位置（配列）にする。文書のヘッダ行の文字は鍵に使わない（R1）。
+/// 宣言した名前の数を正とし、文書の列が足りなければその鍵を省き、
+/// 多ければ余りを捨てる。
+fn row_value(header: Option<&[String]>, row: &[String]) -> Value {
+    let Some(header) = header else {
+        return Value::Array(row.iter().map(|cell| Value::String(cell.clone())).collect());
+    };
+    let mut cells = Map::new();
+    for (name, cell) in header.iter().zip(row) {
+        cells.insert(name.clone(), Value::String(cell.clone()));
+    }
+    Value::Object(cells)
 }
 
 fn extract_codeblock(
@@ -1475,6 +1489,74 @@ document:
                 [{ "cells": { "a": "3", "b": "4" }, "line": 9 }]
             ]),
             "繰り返す表は配置パスの直下に表ごとの段を作る（R1）"
+        );
+    }
+
+    // @kotowari[REQ-schema-033, REQ-schema-035]
+    #[test]
+    fn table_without_a_declared_header_gives_each_row_as_an_array() {
+        let schema = r#"
+document:
+  sections:
+    - name: 決定表
+      table:
+        extract: rows
+"#;
+        let doc = "## 決定表\n\n| 順 | 条件 |\n|---|---|\n| 1 | あれ |\n| 2 | これ |\n";
+        let v = values(schema, doc);
+        assert_eq!(
+            v["rows"],
+            json!([["1", "あれ"], ["2", "これ"]]),
+            "header を宣言しない表の行は列の位置の配列になる（R1）"
+        );
+    }
+
+    // @kotowari[REQ-schema-033, REQ-schema-035]
+    #[test]
+    fn table_with_empty_or_repeated_header_cells_keeps_every_column() {
+        let empty = "## 決定表\n\n|  |  |\n|---|---|\n| 1 | 2 |\n";
+        let repeated = "## 決定表\n\n| a | a |\n|---|---|\n| 1 | 2 |\n";
+        let schema = r#"
+document:
+  sections:
+    - name: 決定表
+      table:
+        extract: rows
+"#;
+        assert_eq!(
+            values(schema, empty)["rows"],
+            json!([["1", "2"]]),
+            "ヘッダのセルが空でも列の値は1つも失われない（R1）"
+        );
+        assert_eq!(
+            values(schema, repeated)["rows"],
+            json!([["1", "2"]]),
+            "同じ名前の列が2つあっても列の値は1つも失われない（R1）"
+        );
+    }
+
+    // @kotowari[REQ-schema-033, REQ-schema-035]
+    #[test]
+    fn declared_header_decides_the_row_keys_when_the_column_count_differs() {
+        let schema = r#"
+document:
+  sections:
+    - name: 用語集
+      table:
+        header: [用語, 意味, 出典]
+        extract: glossary
+"#;
+        let fewer = "## 用語集\n\n| 用語 | 意味 |\n|---|---|\n| 印 | しるし |\n";
+        let more = "## 用語集\n\n| 用語 | 意味 | 出典 | 余り |\n|---|---|---|---|\n| 印 | しるし | a.md | 捨てる |\n";
+        assert_eq!(
+            values(schema, fewer)["glossary"],
+            json!([{ "用語": "印", "意味": "しるし" }]),
+            "文書の列が足りなければその鍵を省く（R1）"
+        );
+        assert_eq!(
+            values(schema, more)["glossary"],
+            json!([{ "用語": "印", "意味": "しるし", "出典": "a.md" }]),
+            "文書の列が多ければ余りを捨てる（R1）"
         );
     }
 
