@@ -45,7 +45,7 @@
 ### REQ-core-172: 写し先の無い指摘は停止にする
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A28
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/records.md#A100, docs/decision/records/records.md#A101
 - 検証: unit
 
 対応表（TBL-core-029）に行の無い種類の`指摘`をスキーマの側から受けたとき、または写し先を「発生しない」と書いた行の種類の`指摘`を受けたとき、kotowari は`停止`し、その`指摘`を黙って捨てない。
@@ -53,10 +53,10 @@
 ### REQ-core-174: 宣言の外の行とコードブロックと用語集の題名
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A35, docs/decision/records/2026-09-22-ir-engine.md#A39
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A35, docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/records.md#A102, docs/decision/records/ir-form.md#文書
 - 検証: unit
 
-"## " の見出しの直下で最初の "### " より前に、`コードブロック`の外にあって一覧でも表でもない空でない行があるとき kotowari は unknown_line の`誤り`を、"## 具体例" の見出しの下に gherkin でない`コードブロック`があるとき unknown_code_block の`誤り`を、`用語集`の`題名`が "用語集" でないとき glossary_title_invalid の`誤り`を出す。detail は TBL-core-008、"line" は TBL-core-019 のとおりにする。
+"## " の見出しの直下で最初の "### " より前に、`コードブロック`の外にあって一覧でも表でもない空でない行があるとき kotowari は unknown_line の`誤り`を、"## 具体例" の見出しの下に gherkin でない`コードブロック`があるとき unknown_code_block の`誤り`を、`用語集`の`題名`がスキーマの宣言した形でないとき glossary_title_invalid の`誤り`を出す。detail は TBL-core-008、"line" は TBL-core-019 のとおりにする。
 
 ## 決定表
 
@@ -125,9 +125,9 @@ detail が「行の文字」「見出しの文字」「Scenario: の行の文字
 
 ### TBL-core-029: エンジンの指摘を写す対応表の列
 
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A31, docs/decision/records/2026-09-22-ir-engine.md#A40
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A3, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A24, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A31, docs/decision/records/2026-09-22-ir-engine.md#A40
 
-スキーマの側が出した`指摘`を kotowari の`指摘`の種類へ写す表は、下の5つの列を持つ。名前が同じで意味が違う種類の行には、その旨を書く。スキーマの側の invalid_id は`項目`の見出しの`ID`の形で、kotowari の invalid_id（"@id" の値）とは別物である。スキーマの側の missing_table は、`用語集`では glossary_invalid、`決定表`では missing_table に分かれる。スキーマの側の missing_required_field は kotowari の4つの種類に分かれる。
+スキーマの側が出した`指摘`を kotowari の`指摘`の種類へ写す表は、下の5つの列を持つ。名前が同じで意味が違う種類の行には、その旨を書く。スキーマの側の invalid_id は`項目`の見出しの`ID`の形で、kotowari の invalid_id（"@id" の値）とは別物である。スキーマの側の missing_table は、`用語集`では glossary_invalid、`決定表`では missing_table に分かれる。スキーマの側の missing_required_field は、欠けた`フィールド行`に応じて kotowari の missing_field、missing_source、verification_missing、algorithm_without_definition に分かれる。
 
 | 列 | 中身 |
 |---|---|
@@ -147,15 +147,15 @@ Scenario: 3か所にある ID は2件の重複になる
   Then duplicate_id の誤りが2件出る
   And 1つ目の見出しの行には duplicate_id が出ない
 
-@id=EX-core-265 @about=REQ-core-172 @source=docs/decision/records/2026-09-22-ir-engine.md#A28
+@id=EX-core-265 @about=REQ-core-172 @source=docs/decision/records/2026-09-22-ir-engine.md#A28,docs/decision/records/records.md#A100,docs/decision/records/records.md#A101
 Scenario: 写し先の無い指摘は停止になる
   Given 対応表 TBL-core-029 に行の無い種類の`指摘`と、写し先を「発生しない」と書いた行の種類の`指摘`がスキーマの側から返る
   When "kotowari check" を実行する
   Then どちらの場合も`停止`する
 
-@id=EX-core-266 @about=REQ-core-174 @source=docs/decision/records/2026-09-22-ir-engine.md#A33,docs/decision/records/2026-09-22-ir-engine.md#A35
+@id=EX-core-266 @about=REQ-core-174 @source=docs/decision/records/2026-09-22-ir-engine.md#A33,docs/decision/records/2026-09-22-ir-engine.md#A35,docs/decision/records/records.md#A102,docs/decision/records/ir-form.md#文書
 Scenario: 宣言の外の3つの場面はそれぞれ誤りになる
-  Given "## " の見出しの直下に`コードブロック`の外の空でない行を持つ`話題ごとの文書`と、"## 具体例" の見出しの下に gherkin でない`コードブロック`を持つ`話題ごとの文書`と、`題名`が "用語集" でない`用語集`がある
+  Given "## " の見出しの直下に`コードブロック`の外の空でない行を持つ`話題ごとの文書`と、"## 具体例" の見出しの下に gherkin でない`コードブロック`を持つ`話題ごとの文書`と、`題名`がスキーマの宣言した形でない`用語集`がある
   When "kotowari check --format json" を実行する
   Then unknown_line と unknown_code_block と glossary_title_invalid の`誤り`が1件ずつ出る
   And それぞれの detail は TBL-core-008、"line" は TBL-core-019 のとおりである
