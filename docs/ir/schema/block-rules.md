@@ -22,6 +22,14 @@ $schema: ../../../.mds/schemas/ir.yaml
 
 mds は常に、`フィールド行`の値に正規表現と許可リストを課し、区切り文字を宣言したときは区切った要素ごとに課す。
 
+### REQ-schema-054: 文と箇条書きの値の制約
+
+- 種類: ubiquitous
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A31, docs/decision/records/2026-09-21-mds-spec.md#A32
+- 検証: unit
+
+mds は常に、`文`と`箇条書き`の行に正規表現を課し、`文`には許可リストも課す。`箇条書き`の照合は元のマーカーの行のマーカーを除いた部分にだけ行い、`継続段落`には行わない。
+
 ### REQ-schema-030: 継続段落はその行の一部
 
 - 種類: ubiquitous
@@ -33,10 +41,10 @@ mds は常に、`継続段落`を直前の一覧の行の一部として読み�
 ### REQ-schema-031: 箇条書きの入れ子
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A10
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A34
 - 検証: unit
 
-`箇条書き`に子の一覧があるとき、mds は`スキーマ`が宣言した子の規則に照らし、宣言が無ければ子の行を`指摘`にする。
+`箇条書き`に子の一覧があるとき、mds は`スキーマ`が宣言した子の規則に照らし、宣言が無ければ子の行を`指摘`にする。子の規則には`フィールド行`と`箇条書き`を宣言でき、子の`箇条書き`はさらに子の規則を持てる。子の行の読み分けは TBL-schema-007 と同じで、特定の名前を特別扱いしない。
 
 ### REQ-schema-032: 文の数え方
 

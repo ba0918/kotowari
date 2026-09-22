@@ -33,10 +33,10 @@ mds は常に、出力の形を "--format" で受け、人間向けの "text" �
 ### REQ-schema-008: 指摘の形
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A17, docs/decision/records/2026-09-22-ir-engine.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A27, docs/decision/records/2026-09-22-ir-engine.md#A29
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A17, docs/decision/records/2026-09-21-mds-spec.md#A45, docs/decision/records/2026-09-22-ir-engine.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A27, docs/decision/records/2026-09-22-ir-engine.md#A29
 - 検証: unit
 
-mds は常に、1件の`指摘`を、種類、深刻度、`文書`のパス、行番号、`ノードの名前`、`生の行`、詳細の7つで表し、行を持たない`指摘`では行番号を省く。行番号は、違反した`ノード`があるならその`ノード`の開始行、`ノード`の欠落ならそれを含む`ノード`の開始行にし、含む`ノード`に行が無いときは省く。`ノードの名前`は宣言上の名前を持つ`ノード`の`指摘`にだけ付け、`生の行`は行番号を持つ`指摘`にだけ付ける。
+mds は常に、1件の`指摘`を、種類、深刻度、`文書`のパス、行番号、`ノードの名前`、`生の行`、詳細の7つで表し、行を持たない`指摘`では行番号を省く。行番号は、違反した`ノード`があるならその`ノード`の開始行、`ノード`の欠落ならそれを含む`ノード`の開始行にし、含む`ノード`に行が無いときは省く。`ノードの名前`は宣言上の名前を持つ`ノード`の`指摘`にだけ付け、宣言上の名前を持つのは`節`と`フィールド行`だけであり、`生の行`は行番号を持つ`指摘`にだけ付ける。
 
 ### REQ-schema-009: 検査を行えないときは停止する
 
@@ -99,15 +99,15 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 
 ### TBL-schema-009: 停止の理由
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A56
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#A44, docs/decision/records/2026-09-22-ir-engine.md#A56
 
 | 理由 | いつ |
 |---|---|
 | スキーマが見つからない | 参照先の`スキーマ`が無い、URL の取得に失敗した、または "$schema" の無い`文書`を対象に指定した |
 | スキーマが形に合わない | `スキーマ`の YAML が読めない、`規則種別`の形に反する、または1つの要素オブジェクトの中で鍵が重複する |
-| frontmatter が壊れている | `frontmatter`が壊れた YAML である、YAML のマッピングでない、または "$schema" の値が空か空白だけである |
+| frontmatter が壊れている | `frontmatter`が壊れた YAML である、YAML のマッピングでない、"$schema" の値が空か空白だけである、または "$schema" の値が文字列でない |
 | 文書が読めない | `文書`のファイルを読めない |
-| 引数の誤り | 受けない "--format" の値 |
+| 引数の誤り | 受けない "--format" の値、知らないフラグ、または "ast" に "--format text" を与えた |
 
 ### TBL-schema-002: 指摘の分類
 

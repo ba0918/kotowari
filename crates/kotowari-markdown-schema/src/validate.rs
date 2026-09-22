@@ -1985,7 +1985,7 @@ document:
         assert!(kinds(&findings).contains(&FindingKind::MissingStatement));
     }
 
-    // @kotowari[REQ-schema-032]
+    // @kotowari[REQ-schema-054]
     #[test]
     fn statement_pattern_mismatch_is_found() {
         let schema = r#"
@@ -2000,7 +2000,7 @@ document:
         assert!(kinds(&findings).contains(&FindingKind::StatementPatternMismatch));
     }
 
-    // @kotowari[REQ-schema-032]
+    // @kotowari[REQ-schema-054]
     #[test]
     fn statement_enum_invalid_is_found() {
         let schema = r#"
@@ -2024,7 +2024,7 @@ document:
         assert!(kinds(&findings).contains(&FindingKind::MissingBullets));
     }
 
-    // @kotowari[REQ-schema-028]
+    // @kotowari[REQ-schema-054]
     #[test]
     fn bullet_pattern_mismatch_is_found() {
         let schema = r#"
