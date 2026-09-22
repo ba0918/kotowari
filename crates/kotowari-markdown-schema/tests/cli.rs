@@ -633,7 +633,7 @@ fn check_directory_stops_on_invalid_schema() {
     assert!(stderr.contains("schema_invalid"));
 }
 
-// @kotowari[REQ-schema-010, REQ-schema-009, REQ-schema-042, REQ-schema-043]
+// @kotowari[REQ-schema-010, REQ-schema-009, REQ-schema-042, REQ-schema-043, REQ-schema-053]
 #[test]
 fn check_directory_stops_on_frontmatter_invalid_and_outputs_no_findings() {
     let dir = tempfile::tempdir().unwrap();

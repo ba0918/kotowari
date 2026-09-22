@@ -84,11 +84,3 @@ A64 は要素に分けない`ノード`を並べるだけで本文の作り方�
 - 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A16
 
 `crates/kotowari-markdown-schema/src/main.rs` は、引数の解析が失敗したとき（知らないフラグを含む）に argument_error の`停止`にする。`crates/kotowari-markdown-schema/src/frontmatter.rs` は "$schema" の値が文字列でないときも`停止`にする。A8 は`frontmatter`が YAML のマッピングでないときと "$schema" の値が空か空白だけのときを定めるだけで、値が文字列でないときを定めていない。CLI の引数については A16 が "--format" の受ける値を text と json の2つに定めるだけで、知らないフラグを受けたときの応答を定めた決定が無い。TBL-schema-009 からはこの2つを外した。
-
-### FLAG-schema-011: ライブラリの契約を定めた決定が無い
-
-- 種類: gap
-- 関係: REQ-schema-050, TBL-schema-010, PROP-schema-007, EX-schema-016
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A18, docs/decision/records/2026-09-21-mds-spec.md#A24
-
-復元した散文の仕様は CLI の仕様で、ライブラリの節を持たない。ライブラリへの分割は A18 が、契約の入口を列挙して仕様に書くことは A24 が決めているが、入口の名前も責務の境界もどこにも書かれていない。裏付けが無いのは次の4件である。REQ-schema-050 の「文書と`スキーマ`のファイルを読まず、URL も取得せず、`スキーマ`の位置を決めるところまでを担う」という責務の境界。TBL-schema-010 の入口6つの名前と役割と返すもの。PROP-schema-007 のうち、`スキーマ`の "open" が`抽出`の結果を変えないという部分（"--open" が "values" と "ast" に効かないことは A56 が裏付ける）。EX-schema-016 の、位置を解くだけで取得を行わないという応答。

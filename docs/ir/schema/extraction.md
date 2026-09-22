@@ -110,7 +110,7 @@ mds は常に、区切り文字による分割を`継続段落`を含めない�
 
 ### PROP-schema-007: 抽出は閉じた世界の設定に依らない
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A4
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A56, docs/decision/records/2026-09-21-mds-spec.md#A59
 
 同じ`文書`と同じ`スキーマ`であれば、`抽出`の結果は`閉じた世界`と`開いた世界`のどちらで検査しても変わらない。
 
@@ -123,9 +123,9 @@ Scenario: 配置パスに沿って入れ子の JSON を出す
   When "mds values --format json" を実行する
   Then 値はドットで区切った名前の入れ子として出る
 
-@id=EX-schema-014 @about=REQ-schema-039 @source=docs/decision/records/2026-09-21-mds-spec.md#A12
+@id=EX-schema-014 @about=REQ-schema-039 @source=docs/decision/records/2026-09-21-mds-spec.md#A12,docs/decision/records/2026-09-21-mds-spec.md#A48
 Scenario: 項目の内側の抽出は停止する
-  Given `項目`の中の`表`に`抽出`を宣言した`スキーマ`がある
+  Given `項目`自身は`抽出`を宣言せず、`項目`の中の`表`にだけ`抽出`を宣言した`スキーマ`がある
   When "mds check" を実行する
   Then 終了コードは 2 である
 
