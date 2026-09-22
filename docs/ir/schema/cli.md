@@ -136,4 +136,39 @@ Scenario: frontmatter が壊れていれば停止する
   When "mds check" を実行する
   Then 終了コードは 2 である
   And `指摘`は出力しない
+
+@id=EX-schema-026 @about=REQ-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A21,docs/decision/records/2026-09-22-ir-engine.md#A25
+Scenario: 指摘の行は違反したノードか、それを含むノードの開始行になる
+  Given 必須の`フィールド行`を落とした`項目`と、同じ`フィールド行`を2つ書いた`項目`と、列の足りない`表`を持つ`文書`がある
+  When "mds check --format json" を実行する
+  Then 欠落の`指摘`の行はその`項目`の見出しの行である
+  And 重複の`指摘`の行は2つ目の`フィールド行`の行である
+  And 列の足りない`表`の`指摘`の行はその行である
+
+@id=EX-schema-027 @about=REQ-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A27
+Scenario: 指摘は宣言されたノードの名前を持つ
+  Given 必須の`フィールド行`を落とした`項目`と、宣言した形に合わない`題名`を持つ`文書`がある
+  When "mds check --format json" を実行する
+  Then `フィールド行`の`指摘`の`ノードの名前`はスキーマが宣言した名前である
+  And `題名`の`指摘`は`ノードの名前`を持たない
+
+@id=EX-schema-028 @about=REQ-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A29
+Scenario: 行を持つ指摘は生の行をそのまま持つ
+  Given 宣言した形に合わない ID の見出しを持つ`項目`の`文書`がある
+  When "mds check --format json" を実行する
+  Then その`指摘`の`生の行`は`文書`のその行と一文字も違わない
+
+@id=EX-schema-029 @about=REQ-schema-042,TBL-schema-009 @source=docs/decision/records/2026-09-22-ir-engine.md#A56
+Scenario: 要素オブジェクトの中で鍵が重なるスキーマは停止する
+  Given 内側の`フィールド行`の`配置パス`と外側の`導かれる値`の鍵が重なる`スキーマ`がある
+  When "mds values" を実行する
+  Then 終了コードは 2 である
+  And 標準エラーは`スキーマ`が形に合わないことを知らせる
+  And `文書`を読まずに`停止`する
+
+@id=EX-schema-030 @about=REQ-schema-042,TBL-schema-009 @source=docs/decision/records/2026-09-22-ir-engine.md#A65
+Scenario: ドットの上の段を共有するだけの配置パスは重複でない
+  Given "a.b" と "a.c" を並べた`スキーマ`と、"a" と "a.b" を並べた`スキーマ`がある
+  When それぞれに "mds values" を実行する
+  Then 前者は`停止`せず、後者は終了コード 2 で終わる
 ```

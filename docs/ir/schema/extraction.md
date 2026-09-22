@@ -128,4 +128,60 @@ Scenario: 項目の内側の抽出は停止する
   Given `項目`の中の`表`に`抽出`を宣言した`スキーマ`がある
   When "mds check" を実行する
   Then 終了コードは 2 である
+
+@id=EX-schema-018 @about=TBL-schema-008,REQ-schema-035 @source=docs/decision/records/2026-09-22-ir-engine.md#A43,docs/decision/records/2026-09-22-ir-engine.md#A44,docs/decision/records/2026-09-22-ir-engine.md#A48
+Scenario: 表の行の鍵はスキーマの宣言か列の位置から取る
+  Given ヘッダのセルが空の`表`と、同じ名前の列が2つある`表`を持つ`文書`がある
+  When "mds values --format json" を実行する
+  Then "header" を宣言した`表`の行は、宣言した名前を鍵にしたオブジェクトになる
+  And "header" を宣言しない`表`の行は列の位置の配列になる
+  And どちらの`表`でも列の値は1つも失われない
+
+@id=EX-schema-019 @about=TBL-schema-008,REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A13,docs/decision/records/2026-09-22-ir-engine.md#A59
+Scenario: 導かれる値を宣言した表の行番号はデータ行を指す
+  Given ヘッダとデータ3行を持つ`表`に`導かれる値`を宣言した`スキーマ`がある
+  When "mds values --format json" を実行する
+  Then 行ごとの行番号はその`表`のデータ行の行番号と一致する
+  And `表`が繰り返すときは`配置パス`の直下に`表`ごとの段ができる
+
+@id=EX-schema-020 @about=REQ-schema-048,TBL-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A37,docs/decision/records/2026-09-22-ir-engine.md#A57,docs/decision/records/2026-09-22-ir-engine.md#A66
+Scenario: 導かれる値を宣言した文は行ごとの要素になる
+  Given 3行の`文`と空行を挟んで続く段落を持つ`項目`があり、`文`に`導かれる値`を宣言した`スキーマ`がある
+  When "mds values --format json" を実行する
+  Then 行の数と同じ数の要素が出る
+  And 字下げのある行の`要素の値`は前後の空白を取り除いた文字になる
+  And 同じ行の`生の行`は字下げと末尾の空白を含む文字になる
+  And 一覧の行の`継続段落`は要素に入らない
+
+@id=EX-schema-021 @about=TBL-schema-008,REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A55,docs/decision/records/2026-09-22-ir-engine.md#A63
+Scenario: 略記の抽出は要素に分けない
+  Given "extract: text" と "extract: rows" の略記だけを宣言した`スキーマ`がある
+  When "mds values --format json" を実行する
+  Then `文`の値は1つの文字列になり、`表`の値は行の並びになる
+  And 要素ごとのオブジェクトは作らない
+
+@id=EX-schema-022 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A45,docs/decision/records/2026-09-22-ir-engine.md#A52
+Scenario: 配置パスの無い抽出は停止する
+  Given "path" を書かない`抽出`を宣言した`スキーマ`がある
+  When "mds values" を実行する
+  Then 終了コードは 2 である
+
+@id=EX-schema-023 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A60
+Scenario: value を省くと要素は導かれる値の鍵だけを持つ
+  Given "value" を書かず "of" だけを書いた`抽出`を宣言した`スキーマ`がある
+  When "mds values --format json" を実行する
+  Then 要素のオブジェクトは`導かれる値`の鍵と、内側の`ノード`が宣言した`配置パス`だけを持つ
+
+@id=EX-schema-024 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A49,docs/decision/records/2026-09-22-ir-engine.md#A54
+Scenario: 項目にだけ宣言できる導かれる値を表に宣言すると停止する
+  Given `表`に見出しの ID を取る`導かれる値`を宣言した`スキーマ`がある
+  When "mds values" を実行する
+  Then 終了コードは 2 である
+
+@id=EX-schema-025 @about=REQ-schema-048,TBL-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A49,docs/decision/records/2026-09-22-ir-engine.md#A50,docs/decision/records/2026-09-22-ir-engine.md#A58
+Scenario: 生の行はどのノードにも宣言できる
+  Given `題名`と`表`の行と`項目`と`コードブロック`に`生の行`と行番号を宣言した`スキーマ`がある
+  When "mds values --format json" を実行する
+  Then `題名`は見出しの行、`表`の行はそのデータ行、`項目`は見出しの行をそのまま出す
+  And `コードブロック`はブロックごとにフェンスの開始行を出す
 ```
