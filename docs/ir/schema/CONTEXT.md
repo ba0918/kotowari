@@ -20,7 +20,7 @@ mds の仕様 IR で使う用語を置く。意味が一般の用法と違うも
 | 項目 | ID と名前を持つ深さ3の見出し | docs/decision/records/2026-09-21-mds-spec.md#A5 |
 | フィールド行 | 一覧のマーカーに続く「名前と値」の形の行で、名前がスキーマの宣言と一致するもの | docs/decision/records/2026-09-21-mds-spec.md#A10 |
 | 箇条書き | 一覧のマーカーで始まり、フィールド行でない一覧の行 | docs/decision/records/2026-09-21-mds-spec.md#A10 |
-| 文 | 見出しや前置部の下にある、一覧でも表でもない空でない行 | docs/decision/records/2026-09-21-mds-spec.md#A30 |
+| 文 | 見出しや前置部の下にある、一覧でも表でもない空でない行。複数行にまたがる段落は1つの文として数える | docs/decision/records/2026-09-21-mds-spec.md#A30 |
 | 継続段落 | 一覧の行の後に空行で区切って続く、その行の子である段落 | docs/decision/records/2026-09-21-mds-spec.md#A11 |
 | 表 | Markdown の表。ヘッダのセル列と列数を指定できる | docs/decision/records/2026-09-21-mds-spec.md#A13 |
 | コードブロック | フェンスで囲んだブロック。言語と行ごとの規則を指定できる | docs/decision/records/2026-09-21-mds-spec.md#A12 |

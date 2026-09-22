@@ -41,10 +41,10 @@ mds は常に、`継続段落`を直前の一覧の行の一部として読み�
 ### REQ-schema-031: 箇条書きの入れ子
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A34
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A34, docs/decision/records/2026-09-21-mds-spec.md#A67
 - 検証: unit
 
-`箇条書き`に子の一覧があるとき、mds は`スキーマ`が宣言した子の規則に照らし、宣言が無ければ子の行を`指摘`にする。子の規則には`フィールド行`と`箇条書き`を宣言でき、子の`箇条書き`はさらに子の規則を持てる。子の行の読み分けは TBL-schema-007 と同じで、特定の名前を特別扱いしない。
+`箇条書き`に子の一覧があるとき、mds は`スキーマ`が宣言した子の規則に照らし、宣言が無ければ子の行を`指摘`にする。子の規則には`フィールド行`と`箇条書き`を宣言でき、子の`箇条書き`はさらに子の規則を持てる。子の行の読み分けは TBL-schema-007 と同じで、特定の名前を特別扱いしない。子の`箇条書き`に`抽出`を宣言した`スキーマ`は`停止`にする。
 
 ### REQ-schema-032: 文の数え方
 

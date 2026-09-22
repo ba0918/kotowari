@@ -35,7 +35,7 @@ mds は常に、TBL-schema-010 が列挙した入口だけを依存するクレ�
 
 ### TBL-schema-010: ライブラリの入口
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A18, docs/decision/records/2026-09-21-mds-spec.md#A24, docs/decision/records/2026-09-21-mds-spec.md#A58
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A18, docs/decision/records/2026-09-21-mds-spec.md#A24, docs/decision/records/2026-09-21-mds-spec.md#A58, docs/decision/records/2026-09-21-mds-spec.md#A63
 
 | 入口 | 何をするか | 返すもの |
 |---|---|---|

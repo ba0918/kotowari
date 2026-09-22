@@ -25,7 +25,7 @@ mds は常に、検査の "check"、素の構文木の "ast"、抽出の "values
 ### REQ-schema-007: 出力の形
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A16
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A44
 - 検証: unit
 
 mds は常に、出力の形を "--format" で受け、人間向けの "text" と機械向けの "json" の2つから選ばせる。
@@ -33,18 +33,18 @@ mds は常に、出力の形を "--format" で受け、人間向けの "text" �
 ### REQ-schema-008: 指摘の形
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A17, docs/decision/records/2026-09-21-mds-spec.md#A45, docs/decision/records/2026-09-22-ir-engine.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A27, docs/decision/records/2026-09-22-ir-engine.md#A29
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A17, docs/decision/records/2026-09-21-mds-spec.md#A45, docs/decision/records/2026-09-21-mds-spec.md#A61, docs/decision/records/2026-09-22-ir-engine.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A27, docs/decision/records/2026-09-22-ir-engine.md#A29
 - 検証: unit
 
-mds は常に、1件の`指摘`を、種類、深刻度、`文書`のパス、行番号、`ノードの名前`、`生の行`、詳細の7つで表し、行を持たない`指摘`では行番号を省く。行番号は、違反した`ノード`があるならその`ノード`の開始行、`ノード`の欠落ならそれを含む`ノード`の開始行にし、含む`ノード`に行が無いときは省く。`ノードの名前`は宣言上の名前を持つ`ノード`の`指摘`にだけ付け、宣言上の名前を持つのは`節`と`フィールド行`だけであり、`生の行`は行番号を持つ`指摘`にだけ付ける。
+mds は常に、1件の`指摘`を、種類、深刻度、`文書`のパス、行番号、`ノードの名前`、`生の行`、詳細の7つで表し、行を持たない`指摘`では行番号を省く。行番号は、違反した`ノード`があるならその`ノード`の開始行、`ノード`の欠落ならそれを含む`ノード`の開始行にし、含む`ノード`に行が無いときは省く。`表`のデータ行のように`ノード`の中の要素が違反したときは、その要素の行にする。`ノードの名前`は宣言上の名前を持つ`ノード`の`指摘`にだけ付け、宣言上の名前を持つのは`節`と`フィールド行`だけであり、`生の行`は行番号を持つ`指摘`にだけ付ける。
 
 ### REQ-schema-009: 検査を行えないときは停止する
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#P1
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A42, docs/decision/records/2026-09-21-mds-spec.md#A62, docs/decision/records/2026-09-21-mds-spec.md#P1
 - 検証: unit
 
-`スキーマ`を解決できないとき、または`frontmatter`が壊れているとき、mds は部分的な結果を出さずに`停止`する。
+TBL-schema-009 の`停止`の理由のいずれかに当たったとき、mds は部分的な結果を出さずに`停止`する。
 
 ### REQ-schema-010: ディレクトリの検査
 
@@ -93,13 +93,13 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 
 | 順 | 条件 | 終了コード |
 |---|---|---|
-| 1 | 検査を行えなかった（`スキーマ`を解決できない、`frontmatter`が壊れている、`スキーマ`が形に合わない） | 2 |
+| 1 | 検査を行えなかった（TBL-schema-009 の`停止`の理由のいずれかに当たった） | 2 |
 | 2 | 1 に当たらず、`指摘`が1件以上ある | 1 |
 | 3 | 1 にも 2 にも当たらない | 0 |
 
 ### TBL-schema-009: 停止の理由
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#A44, docs/decision/records/2026-09-22-ir-engine.md#A56
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#A44, docs/decision/records/2026-09-21-mds-spec.md#A62, docs/decision/records/2026-09-22-ir-engine.md#A56
 
 | 理由 | いつ |
 |---|---|
@@ -117,7 +117,7 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 |---|---|
 | 題名 | `題名`が無い、2つ以上ある、正規表現に合わない |
 | 欠落 | 必須の`ノード`が無い |
-| 形の違反 | 値が正規表現や許可リストに合わない、`表`のヘッダが合わない |
+| 形の違反 | 値が正規表現や許可リストに合わない、見出しの深さが合わない、`項目`の `ID` の形が合わない、`フィールド行`の並び順が合わない、`表`のヘッダが合わない |
 | 出現回数 | `出現回数`の下限を下回る、上限を超える |
 | 閉じた世界 | 宣言していない見出しと行がある |
 

@@ -58,7 +58,7 @@ mds は常に、`条件付き規則`が参照する`フィールド行`を同じ
 
 ### TBL-schema-004: 規則種別
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A3, docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A12, docs/decision/records/2026-09-21-mds-spec.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A68
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A3, docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A12, docs/decision/records/2026-09-21-mds-spec.md#A34, docs/decision/records/2026-09-21-mds-spec.md#A38, docs/decision/records/2026-09-21-mds-spec.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A68
 
 | 規則種別 | 何を検証するか | 置ける場所 |
 |---|---|---|
@@ -68,7 +68,7 @@ mds は常に、`条件付き規則`が参照する`フィールド行`を同じ
 | `項目` | 深さ3の見出し | `節`の下 |
 | `フィールド行` | 名前と値の形の一覧の行 | `前置部`、`節`、`項目`、`箇条書き`の子 |
 | `文` | 一覧でも`表`でもない空でない行 | `前置部`、`節`、`項目` |
-| `箇条書き` | `フィールド行`でない一覧の行 | `前置部`、`節`、`項目` |
+| `箇条書き` | `フィールド行`でない一覧の行 | `前置部`、`節`、`項目`、`箇条書き`の子 |
 | `表` | Markdown の表 | `前置部`、`節`、`項目` |
 | `コードブロック` | フェンスで囲んだブロック | `前置部`、`節`、`項目` |
 
@@ -88,7 +88,7 @@ mds は常に、`条件付き規則`が参照する`フィールド行`を同じ
 
 ### PROP-schema-004: 出現回数の宣言が抽出の形を決める
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A49
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A49, docs/decision/records/2026-09-21-mds-spec.md#A50, docs/decision/records/2026-09-21-mds-spec.md#A55
 
 `出現回数`の範囲を宣言した`ノード`の`抽出`は、値が1件でも配列になる。範囲を宣言しない`ノード`の`抽出`は単一の値になる。この対応が当たるのは、区切り文字を宣言しない`フィールド行`、`文`、`節`、`項目`、`題名`、`コードブロック`である。`箇条書き`と`表`は`出現回数`の宣言に関わらず常に配列になり、区切り文字を宣言した`フィールド行`も常に配列になる。
 

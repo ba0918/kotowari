@@ -33,10 +33,10 @@ mds は常に、`frontmatter`に書いた相対パスを、`文書`の置かれ�
 ### REQ-schema-014: スキーマを指していない文書
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#P1
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#P1
 - 検証: unit
 
-`frontmatter`が YAML のマッピングでないとき、または "$schema" の値が空か空白だけのとき、mds は`停止`する。
+`frontmatter`が YAML のマッピングでないとき、"$schema" の値が空か空白だけのとき、または "$schema" の値が文字列でないとき、mds は`停止`する。
 
 ### REQ-schema-015: frontmatter の余分なキー
 
@@ -58,11 +58,11 @@ mds は常に、`frontmatter`の "$schema" 以外のキーを読まず、`指摘
 
 ### TBL-schema-003: スキーマの指定の解決
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#P1
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A27, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#P1
 
 | 順 | "$schema" の値 | 解決 |
 |---|---|---|
-| 1 | 無い、空、空白だけ、`frontmatter`がマッピングでない | `停止` |
+| 1 | 無い（ファイルを対象に指定したとき。ディレクトリのときは REQ-schema-010）、空、空白だけ、文字列でない、`frontmatter`がマッピングでない | `停止` |
 | 2 | "http://" か "https://" で始まる | 取得してキャッシュに置く。取得できなければ`停止` |
 | 3 | それ以外 | `文書`の位置からの相対パスとして読む。読めなければ`停止` |
 
