@@ -398,3 +398,47 @@ fn req_161_text_prints_body_and_referenced_by_lines() {
          \x20 <- EX-001 about docs/ir/a.md:20\n",
     );
 }
+
+// @kotowari[EX-core-277]
+#[test]
+fn ex_core_277_body_ends_before_the_next_heading_and_drops_trailing_blank_lines() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "# 題名\n\n範囲。\n\n## 要求\n\n{}{}## 性質\n\n### PROP-001: 性質\n\n- 出典: docs/decision/records/records.md#A1\n\n性質の文。\n\n",
+            requirement("REQ-001", "一", "unit"),
+            requirement("REQ-002", "二", "unit"),
+        ),
+    );
+    let fields = vec![
+        "- 種類: ubiquitous",
+        "- 出典: docs/decision/records/records.md#A1",
+        "- 検証: unit",
+        "",
+        "文である。",
+    ];
+    assert_eq!(body(only_item(&run_query(tmp.path(), "REQ-001"))), fields);
+    assert_eq!(body(only_item(&run_query(tmp.path(), "REQ-002"))), fields);
+    assert_eq!(
+        body(only_item(&run_query(tmp.path(), "PROP-001"))),
+        vec!["- 出典: docs/decision/records/records.md#A1", "", "性質の文。"],
+    );
+}
+
+// @kotowari[EX-core-280]
+#[test]
+fn ex_core_280_a_heading_shaped_line_inside_a_code_block_does_not_end_the_body() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        "# 題名\n\n範囲。\n\n## 要求\n\n### REQ-001: 一\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n文である。\n\n```\n## 例\n```\n\n### REQ-002: 二\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n文である。\n",
+    );
+    let body = body(only_item(&run_query(tmp.path(), "REQ-001")));
+    assert_eq!(body.last().map(String::as_str), Some("```"), "{body:?}");
+    assert!(body.iter().any(|line| line == "## 例"), "{body:?}");
+}

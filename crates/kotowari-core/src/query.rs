@@ -134,8 +134,9 @@ fn bodies_of(docs: &[IrDocument], ir_path: &str, id: &str) -> BTreeMap<(String, 
     bodies
 }
 
-/// TBL-core-027: 本文の行。`項目`は見出しの次の行から次の "### " か "## " の見出しの前の行まで、
-/// `シナリオ`は "@id" のタグの行から最後のステップの行まで。先頭と末尾の空の行は含めない
+/// TBL-core-027: 本文の行。`項目`は見出しの次の行から、スキーマの側が返すその`項目`の最後の行まで
+/// （REQ-core-169、REQ-core-170）。`シナリオ`は "@id" のタグの行から最後のステップの行まで。
+/// 先頭と末尾の空の行は含めない
 fn body_of(item: &Item, lines: &[&str]) -> Vec<String> {
     // 1始まりの行の範囲（両端を含む）
     let (first, last) = match item {
@@ -148,17 +149,10 @@ fn body_of(item: &Item, lines: &[&str]) -> Vec<String> {
             tag_line.unwrap_or(*line),
             steps.last().map_or(*line, |(step_line, _)| *step_line),
         ),
-        _ => {
-            let first = item.item_line() + 1;
-            let last = lines
-                .iter()
-                .enumerate()
-                .skip(first - 1)
-                .find(|(_, line)| line.starts_with("### ") || line.starts_with("## "))
-                // 見つかった見出しの1つ前の行（0始まりの位置が1始まりの前の行）
-                .map_or(lines.len(), |(index, _)| index);
-            (first, last)
-        }
+        _ => (
+            item.item_line() + 1,
+            item.end_line().unwrap_or(item.item_line()).min(lines.len()),
+        ),
     };
     if first > last {
         return Vec::new();
