@@ -23,11 +23,11 @@ kotowari の仕様に基づく（改訂 2026-09-22。本体の版は固定しな
 | 種類 | 意味 | 対処 | 担当 |
 |---|---|---|---|
 | missing_title | 題名が無い | `# ` の題名を足す | brainstorm |
-| multiple_titles | 題名が2つ以上 | 題名を1つにする | brainstorm |
+| multiple_titles | 題名が2つ以上（2つ目以降の題名ごとに1件。detail はその題名） | 題名を1つにする | brainstorm |
 | missing_scope | 話題ごとの文書に範囲の行が無い | 題名の後に文書が扱う範囲の行を足す | brainstorm |
 | unknown_heading | `### ` の見出しが `### ID: 名前` の形でない | 見出しの形を直す | brainstorm |
 | unknown_field | 見出しの下に知らない行がある | 行を取り除くか正しい形に直す | brainstorm |
-| unknown_line | `## ` の見出しの直下に一覧でも表でもない行があるか、スキーマが宣言していない表かコードブロックがある | その行を節の中の項目へ移すか取り除く | brainstorm |
+| unknown_line | `## ` の見出しの直下に一覧でも表でもない行があるか、スキーマが宣言していない表（用語集の文書の中の表は除く）かコードブロックがある | その行を節の中の項目へ移すか取り除く | brainstorm |
 | unknown_code_block | `## 具体例` の下に gherkin でないコードブロックがある | コードブロックの言語を gherkin にするか取り除く | brainstorm |
 | missing_field | 必須の行が無い（detail に行の名前） | 足りない行を足す | brainstorm |
 | missing_table | 決定表に表が無い | Markdown の表を足す | brainstorm |
