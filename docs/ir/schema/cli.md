@@ -10,7 +10,7 @@ $schema: ../../../.mds/schemas/ir.yaml
 ### REQ-schema-005: コマンドの一覧
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A1, docs/decision/records/2026-09-21-mds-spec.md#A16
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A26
 - 検証: unit
 
 mds は常に、検査の "check"、素の構文木の "ast"、抽出の "values"、版の "--version" の4つを受ける。
@@ -49,7 +49,7 @@ mds は常に、1件の`指摘`を、種類、深刻度、`文書`のパス、�
 ### REQ-schema-010: ディレクトリの検査
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A1
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A1, docs/decision/records/2026-09-21-mds-spec.md#A27
 - 検証: unit
 
 検査の対象がディレクトリのとき、mds はその下の`スキーマ`を宣言した`文書`だけを集めて検査する。
@@ -64,7 +64,7 @@ mds は常に、1件の`指摘`を、種類、深刻度、`文書`のパス、�
 ### REQ-schema-043: 停止の知らせ方
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#A16
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A42
 - 検証: unit
 
 mds が`停止`するとき、理由の名前と説明を並べた1行だけを標準エラーに出し、`指摘`は1件も出さない。
@@ -103,7 +103,7 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 
 ### TBL-schema-002: 指摘の分類
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A17, docs/decision/records/2026-09-21-mds-spec.md#A2
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A17, docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A41, docs/decision/records/2026-09-21-mds-spec.md#A40
 
 | 分類 | 何を見つけるか |
 |---|---|
@@ -116,7 +116,7 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 
 ### PROP-schema-002: 抽出は検査の合否から独立している
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A56
 
 `抽出`の結果は、同じ`文書`と同じ`スキーマ`であれば、検査で`指摘`が出たかどうかによって変わらない。
 

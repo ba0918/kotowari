@@ -26,7 +26,7 @@ mds は常に、`前置部`そのものには`抽出`の鍵を持たせず、`�
 ### REQ-schema-024: 節の名前
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A2
 - 検証: unit
 
 mds は常に、`節`を見出しの文字で見分け、`スキーマ`が宣言した名前と一致しない`節`を`指摘`にする。
@@ -58,7 +58,7 @@ mds は常に、`節`を見出しの文字で見分け、`スキーマ`が宣言
 
 ### TBL-schema-006: 項目の見出しの読み方
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A37
 
 | 順 | 見出しの形 | 読み方 |
 |---|---|---|

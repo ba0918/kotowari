@@ -58,7 +58,7 @@ mds は常に、`frontmatter`の "$schema" 以外のキーを読まず、`指摘
 
 ### TBL-schema-003: スキーマの指定の解決
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A8
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#P1
 
 | 順 | "$schema" の値 | 解決 |
 |---|---|---|

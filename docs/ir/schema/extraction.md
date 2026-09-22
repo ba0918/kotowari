@@ -17,7 +17,7 @@ $schema: ../../../.mds/schemas/ir.yaml
 ### REQ-schema-036: 配置パス
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A46
 - 検証: unit
 
 mds は常に、`抽出`した値を`配置パス`のドット区切りの名前に沿って入れ子にして置く。
@@ -25,7 +25,7 @@ mds は常に、`抽出`した値を`配置パス`のドット区切りの名前
 ### REQ-schema-037: 値の型は文字列
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A23
 - 検証: property
 
 mds は常に、`文書`から取り出した`抽出`の値を文字列として出し、日付や数値への型変換をしない。エンジンが導く位置情報はこの規則の対象外である。
@@ -33,7 +33,7 @@ mds は常に、`文書`から取り出した`抽出`の値を文字列として
 ### REQ-schema-038: 欠けた値はキーを出さない
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A47
 - 検証: unit
 
 `抽出`の対象の`ノード`が`文書`に無いとき、mds はその`配置パス`のキーを出力に出さない。
@@ -41,7 +41,7 @@ mds は常に、`文書`から取り出した`抽出`の値を文字列として
 ### REQ-schema-039: 置き場の無い内側の抽出
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A22
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A22, docs/decision/records/2026-09-21-mds-spec.md#A48
 - 検証: unit
 
 `項目`の内側の`フィールド行`、`文`、`箇条書き`、`表`、`コードブロック`が`抽出`を宣言し、その`項目`自身が`抽出`を宣言していないとき、mds は`停止`する。
@@ -82,7 +82,7 @@ mds は常に、区切り文字を宣言した`フィールド行`を`出現回�
 ### REQ-schema-046: 区切りと継続段落の順序
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A11
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A11, docs/decision/records/2026-09-21-mds-spec.md#A50
 - 検証: unit
 
 mds は常に、区切り文字による分割を`継続段落`を含めない値だけに対して行い、`継続段落`は分割した末尾の要素に改行を挟んで付ける。

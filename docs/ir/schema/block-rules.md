@@ -17,7 +17,7 @@ $schema: ../../../.mds/schemas/ir.yaml
 ### REQ-schema-029: フィールド行の値の制約
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A10
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A29
 - 検証: unit
 
 mds は常に、`フィールド行`の値に正規表現と許可リストを課し、区切り文字を宣言したときは区切った要素ごとに課す。
@@ -41,7 +41,7 @@ mds は常に、`継続段落`を直前の一覧の行の一部として読み�
 ### REQ-schema-032: 文の数え方
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A3
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A30
 - 検証: unit
 
 mds は常に、空行で区切った段落を1つの`文`として数え、引用、水平線、画像だけの行は`文`に数えず、`閉じた世界`でも`指摘`にしない。
@@ -57,7 +57,7 @@ mds は常に、`表`のヘッダのセル列を宣言したときだけヘッ�
 ### REQ-schema-034: コードブロックの検査
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A12
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A12, docs/decision/records/2026-09-21-mds-spec.md#A35
 - 検証: unit
 
 mds は常に、`コードブロック`の言語を宣言したときだけ言語を照合し、行ごとの正規表現を宣言したときは、行頭の空白を除いた空でない行だけを照合する。
@@ -65,7 +65,7 @@ mds は常に、`コードブロック`の言語を宣言したときだけ言�
 ### REQ-schema-041: フィールド行の並び順
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A10
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A36
 - 検証: unit
 
 `フィールド行`の一覧に並び順の強制を宣言したとき、mds は`スキーマ`に書いた順で現れない`フィールド行`を`指摘`にする。宣言しないときの並びは順不同である。
@@ -74,7 +74,7 @@ mds は常に、`コードブロック`の言語を宣言したときだけ言�
 
 ### TBL-schema-007: 一覧の行の読み分け
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A10
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A33
 
 | 順 | 行の形 | 読み方 |
 |---|---|---|

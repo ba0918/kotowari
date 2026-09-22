@@ -85,16 +85,10 @@ A64 は要素に分けない`ノード`を並べるだけで本文の作り方�
 
 `crates/kotowari-markdown-schema/src/main.rs` は、引数の解析が失敗したとき（知らないフラグを含む）に argument_error の`停止`にする。`crates/kotowari-markdown-schema/src/frontmatter.rs` は "$schema" の値が文字列でないときも`停止`にする。A8 は`frontmatter`が YAML のマッピングでないときと "$schema" の値が空か空白だけのときを定めるだけで、値が文字列でないときを定めていない。CLI の引数については A16 が "--format" の受ける値を text と json の2つに定めるだけで、知らないフラグを受けたときの応答を定めた決定が無い。TBL-schema-009 からはこの2つを外した。
 
-### FLAG-schema-011: 転記のときの出典が項目を裏付けていない
+### FLAG-schema-011: ライブラリの契約を定めた決定が無い
 
 - 種類: gap
-- 関係: REQ-schema-020, REQ-schema-021, REQ-schema-032, TBL-schema-005
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A3
+- 関係: REQ-schema-050, TBL-schema-010, PROP-schema-007, EX-schema-016
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A18, docs/decision/records/2026-09-21-mds-spec.md#A24
 
-mds の仕様を IR へ転記したときに付けた`出典`が、項目の内容を裏付けていないものがある。典型例は 2026-09-21-mds-spec.md#A3 で、本文は「スキーマは YAML で書く」の1文だけなのに、REQ-schema-020（条件付き規則）、REQ-schema-021（条件の探索範囲）、REQ-schema-032（文の数え方）、TBL-schema-005（出現回数の5つの書き方）、および用語5語の出典になっている。裏付けを確かめ直す対象は次のとおり。
-
-対象の要求は REQ-schema-005、REQ-schema-010、REQ-schema-020、REQ-schema-021、REQ-schema-024、REQ-schema-029、REQ-schema-032、REQ-schema-034、REQ-schema-036、REQ-schema-037、REQ-schema-038、REQ-schema-039、REQ-schema-041、REQ-schema-043、REQ-schema-046、REQ-schema-050 の 16 件。
-対象の決定表は TBL-schema-002、TBL-schema-003、TBL-schema-005、TBL-schema-006、TBL-schema-007、TBL-schema-010 の 6 件。
-対象の性質は PROP-schema-002、PROP-schema-004、PROP-schema-007 の 3 件。
-対象の具体例は EX-schema-016 の 1 件。
-対象の用語は用語集（CONTEXT.md）の`規則種別`、`ノード`、`文`、`出現回数`、`条件付き規則`、`前置部`の 6 語。
+復元した散文の仕様は CLI の仕様で、ライブラリの節を持たない。ライブラリへの分割は A18 が、契約の入口を列挙して仕様に書くことは A24 が決めているが、入口の名前も責務の境界もどこにも書かれていない。裏付けが無いのは次の4件である。REQ-schema-050 の「文書と`スキーマ`のファイルを読まず、URL も取得せず、`スキーマ`の位置を決めるところまでを担う」という責務の境界。TBL-schema-010 の入口6つの名前と役割と返すもの。PROP-schema-007 のうち、`スキーマ`の "open" が`抽出`の結果を変えないという部分（"--open" が "values" と "ast" に効かないことは A56 が裏付ける）。EX-schema-016 の、位置を解くだけで取得を行わないという応答。
