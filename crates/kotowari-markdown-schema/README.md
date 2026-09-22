@@ -126,10 +126,12 @@ item:
 ]
 ```
 
-A node that declares `value` or `of` comes back as one object per element — a row for a table,
-a line for a statement — with the element's own value under the `value` key and the derived
-values under the `of` keys. The four derived values are `line`, `id`, `name` and `raw` (the raw
-line, with its original indentation and trailing spaces):
+A node that declares `value` or `of` comes back as an object per element, with the element's own
+value under the `value` key and the derived values under the `of` keys. A table is split into one
+element per data row, a bullet list into one per line and a code block into one per block. A
+statement is split into one element per line only when it declares `of`; with `value` alone it
+stays a single string wrapped in one object. The four derived values are `line`, `id`, `name` and
+`raw` (the raw line, with its original indentation and trailing spaces):
 
 ```yaml
 table:
