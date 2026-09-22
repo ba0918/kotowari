@@ -386,7 +386,7 @@ fn emit_check(files: &[(PathBuf, Vec<Finding>)], format: &str) -> Result<(), Sto
     Ok(())
 }
 
-/// ディレクトリ配下のスキーマ宣言文書を検査する。（REQ-schema-010、REQ-schema-044）。
+/// ディレクトリ配下のスキーマ宣言文書を検査する（REQ-schema-010、REQ-schema-044）。
 fn check_directory(root: &Path, open_flag: bool) -> Result<Vec<(PathBuf, Vec<Finding>)>, Stop> {
     let mut files = Vec::new();
     let walker = WalkDir::new(root)

@@ -266,7 +266,7 @@ impl When {
     }
 }
 
-/// `of` が選ぶ、ノードから導かれる値の種類。（REQ-schema-048）。
+/// `of` が選ぶ、ノードから導かれる値の種類（REQ-schema-048）。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum OfKind {
