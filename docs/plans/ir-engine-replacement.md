@@ -11,6 +11,7 @@ IR の置き場は `docs/ir/`。この計画が受け持つ要求は次のとお
 エンジン側（`docs/ir/schema/`）:
 
 - `docs/ir/schema/closed-world.md#REQ-schema-055`
+- `docs/ir/schema/document-structure.md#REQ-schema-057`
 
 kotowari 側（`docs/ir/core/`）:
 
@@ -62,21 +63,22 @@ kotowari 側（`docs/ir/core/`）:
 
 ステップ1がステップ4の前提。ステップ2は前提を持たず、いつ走らせてもよい。ステップ3とステップ4は互いに独立で、どちらもステップ5の前提。ステップ6はステップ4とステップ5の後。ステップ7はステップ3とステップ6の後。ステップ8はステップ5の後で、ステップ7と並べてよい。ステップ9はステップ1〜8の後。各ステップの Prerequisites はこの並びと同じものを書いている。
 
-## Step 1 — 宣言していない行の指摘に規則種別を持たせる
+## Step 1 — 宣言していない行と出現回数の指摘に規則種別を持たせる
 
-Purpose: kotowari が `undeclared_line` を2つの写し先に分けられるようにする。
-Specification: `docs/ir/schema/closed-world.md#REQ-schema-055`。判断の記録は `docs/decision/records/2026-09-22-ir-engine.md#A74`。
+Purpose: kotowari が `undeclared_line` と`出現回数`の`指摘`を写し分けられるようにする。
+Specification: `docs/ir/schema/closed-world.md#REQ-schema-055`、`docs/ir/schema/document-structure.md#REQ-schema-057`。判断の記録は `docs/decision/records/2026-09-22-ir-engine.md#A74` と `#A86`。
 Prerequisites: なし。
 May change: `crates/kotowari-markdown-schema/src/finding.rs`、`crates/kotowari-markdown-schema/src/validate.rs`、それぞれの `#[cfg(test)]`、`crates/kotowari-markdown-schema/tests/cli.rs`、`crates/kotowari-markdown-schema/README.md`。
 
 Done when:
 
-- `undeclared_line` の`指摘`が、その行を`フィールド行`、`箇条書き`、順序付きリスト、`文`、`表`、`コードブロック`のどれとして読んだかを持つ
+- `undeclared_line` の`指摘`が、その行を名前と値の形の一覧の行、`箇条書き`、順序付きリスト、`文`、`表`、`コードブロック`のどれとして読んだかを持つ
+- `出現回数`の下限と上限の`指摘`が、どの`規則種別`の`ノード`を数えたかを持つ
 - ほかの種類の`指摘`の形は変わらない
 - CLI の JSON がこの値を出す
 - `validate(schema, document, open) -> Vec<Finding>` の署名が変わらない
 
-Shown by: test — RED → GREEN → REFACTOR。`crates/kotowari-markdown-schema/src/validate.rs` の `#[cfg(test)]` に、宣言していない `- 名前: 値` の行が`フィールド行`として、宣言していない箇条書きの行が`箇条書き`として、宣言していない表が`表`として返ることを見る3本。`crates/kotowari-markdown-schema/tests/cli.rs` に JSON がこの値を持つことを見る1本。
+Shown by: test — RED → GREEN → REFACTOR。`crates/kotowari-markdown-schema/src/validate.rs` の `#[cfg(test)]` に、宣言していない `- 名前: 値` の行が`フィールド行`として、宣言していない箇条書きの行が`箇条書き`として、宣言していない表が`表`として返ることを見る3本。`crates/kotowari-markdown-schema/tests/cli.rs` に JSON がこの値を持つことを見る1本。`出現回数`の`指摘`が`規則種別`を持つことを見る1本。
 
 Left to the implementer: 値の型（専用の列挙か文字列か）。
 
@@ -179,7 +181,7 @@ Done when:
 - `用語`のセルが空であることの検査は`抽出`の`用語集`の行から見る。エンジンは列の数しか見ないので、この判定はエンジンへ移さない
 - 形の`指摘`が出た文書も、文書をまたぐ検査を受ける（`EX-core-269`）
 - `REQ-core-089`、`REQ-core-041`、`REQ-core-120` の確かめ方が、残らない関数の名前を指していない
-- `REQ-core-045`、`REQ-core-047`、`REQ-core-098` の印の付いたテストが、置き換え後の振る舞い（3本以上でも1件、`問題の記録`の`項目`も`文`が要る、値が空の行は値の誤り）を確かめている
+- `REQ-core-045`、`REQ-core-047`、`REQ-core-098`、`REQ-core-043` の印の付いたテストが、置き換え後の振る舞い（3本以上でも1件、`問題の記録`の`項目`も`文`が要る、値が空の行は行の欠落として扱わない、形に合わない見出しの下も読む）を確かめている
 
 Shown by: test — RED → GREEN → REFACTOR。`EX-core-269` に印を付ける。既存の形の`指摘`のテストがすべて緑のまま。確かめ方3件は review の要求なので、書き換えた文が `kotowari check` を通ることで見る。
 
@@ -209,7 +211,7 @@ Stop and hand back if: 外すと `mds check ./` が使えなくなることが�
 ## Step 8 — スキルの references を新しい3種類に合わせる
 
 Purpose: スキルが配る`指摘`の一覧が、コードが出す種類の集合と一致する。
-Specification: `docs/ir/core/skill-references.md#REQ-core-125`。
+Specification: `docs/ir/core/skill-references.md#REQ-core-125`、`#REQ-core-127`。
 Prerequisites: ステップ5。
 May change: `skills/kotowari/references/findings.md`、`skills/kotowari/references/ir-form.md`。
 
@@ -217,9 +219,10 @@ Done when:
 
 - `skills/kotowari/references/findings.md` の表に `unknown_line`、`unknown_code_block`、`glossary_title_invalid` の行がある
 - `skills/kotowari/references/ir-form.md` の`除外`の列挙から、`"## "` の見出しの直下で最初の `"### "` より前の行が消える
-- `REQ-core-125` の一致のテストが通る
+- `skills/kotowari/references/findings.md` の`停止`の理由の文言の表に "mapping error" の行がある
+- `REQ-core-125` と `REQ-core-127` の一致のテストが通る
 
-Shown by: test — `REQ-core-125` の既存のテストが緑。
+Shown by: test — `REQ-core-125` と `REQ-core-127` の既存のテストが緑。
 
 Left to the implementer: 行の文の言い回し。
 
@@ -239,14 +242,14 @@ Shown by: check — 次の順に走らせる。
 1. `CARGO_BUILD_JOBS=4 cargo test --workspace` が全件通る
 2. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format json` の終了コードが0で、`findings` が空
 3. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- status --format text` の最後の行が `complete true` で、終了コードが0。`complete true` は`問題の記録`が0件であることも求めるので、着手の前提に挙げた3件が閉じていること
-4. 置き換えの前に保存した `kotowari check --format json` の出力と `diff` を取り、差分が1件も無い（`REQ-core-177`）
+4. 置き換えの前に保存した `kotowari check --format json` の出力から `findings` の並びだけを取り出し、後の出力の同じ並びと `diff` を取り、差分が1件も無い（`REQ-core-177`）。文書そのものを直したことで変わる文書の数と行数の数え上げは比べない
 5. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-markdown-schema --bin mds -- check ./` の終了コードが0（ステップ7で frontmatter を外したあとは対象が0件になる）
 6. `CARGO_BUILD_JOBS=4 cargo clippy --workspace --all-targets -- -D warnings` の誤りが基準線から増えていない。基準線は着手前に実測してあり、`crates/kotowari-core/` の 21 件（`error` で始まる行は、まとめの2行を含めて 23 行）、`crates/kotowari-markdown-schema/` は 0 件。ステップ6で自前の読み取りが減るぶん、この数は減る見込みで、減るのは構わない
 7. `CARGO_BUILD_JOBS=4 cargo +1.89.0 check -p kotowari-markdown-schema --all-targets` が通る
 
 Left to the implementer: なし。
 
-Stop and hand back if: 4 の差分が1件でも出たとき。
+Stop and hand back if: 4 の `findings` の差分が1件でも出たとき。
 
 ## Verification map
 
