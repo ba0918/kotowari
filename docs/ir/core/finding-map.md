@@ -38,7 +38,7 @@
 
 ### TBL-core-030: エンジンの指摘の写し先
 
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A3, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A24, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A31, docs/decision/records/2026-09-22-ir-engine.md#A40, docs/decision/records/2026-09-22-ir-engine.md#A71, docs/decision/records/2026-09-22-ir-engine.md#A74, docs/decision/records/2026-09-22-ir-engine.md#A76, docs/decision/records/2026-09-22-ir-engine.md#A77, docs/decision/records/2026-09-22-ir-engine.md#A79, docs/decision/records/2026-09-22-ir-engine.md#A81
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A3, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A24, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A31, docs/decision/records/2026-09-22-ir-engine.md#A40, docs/decision/records/2026-09-22-ir-engine.md#A71, docs/decision/records/2026-09-22-ir-engine.md#A74, docs/decision/records/2026-09-22-ir-engine.md#A76, docs/decision/records/2026-09-22-ir-engine.md#A77, docs/decision/records/2026-09-22-ir-engine.md#A79, docs/decision/records/2026-09-22-ir-engine.md#A81, docs/decision/records/2026-09-22-ir-engine.md#A82
 
 TBL-core-029 の列に沿って、スキーマの側の 24 種類をすべて並べる。「発生しない」の行の`指摘`を受けたときは REQ-core-172 のとおり`停止`する。
 
@@ -50,7 +50,7 @@ TBL-core-029 の列に沿って、スキーマの側の 24 種類をすべて並
 | undeclared_heading |  | unknown_heading | そのまま使う | 読んだ行の文字そのまま |
 | undeclared_line | 名前と値の形の一覧の行、箇条書き、順序付きリスト | unknown_field | そのまま使う | 読んだ行の文字そのまま |
 | undeclared_line | 文 | unknown_line | そのまま使う | 読んだ行の文字そのまま |
-| undeclared_line | 表、コードブロック | 決まっていない（FLAG-core-009） | — | — |
+| undeclared_line | 表、コードブロック | unknown_line | そのまま使う | 読んだ行の文字そのまま |
 | missing_required_field | 検証 | verification_missing | そのまま使う | `抽出`の`項目`の`ID` |
 | missing_required_field | 出典 | missing_source | そのまま使う | `抽出`の`項目`の`ID` |
 | missing_required_field | 種類 | missing_field | そのまま使う | ノードの名前 |

@@ -37,10 +37,10 @@
 ### REQ-core-174: 宣言の外の行とコードブロックと用語集の題名
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A35, docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/records.md#A102, docs/decision/records/ir-form.md#文書
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A35, docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A82, docs/decision/records/records.md#A102, docs/decision/records/ir-form.md#文書
 - 検証: unit
 
-"## " の見出しの直下で最初の "### " より前に、`コードブロック`の外にあって一覧でも表でもない空でない行があるとき kotowari は unknown_line の`誤り`を、"## 具体例" の見出しの下に gherkin でない`コードブロック`があるとき unknown_code_block の`誤り`を、`用語集`の`題名`がスキーマの宣言した形でないとき glossary_title_invalid の`誤り`を出す。detail は TBL-core-008、"line" は TBL-core-019 のとおりにする。
+"## " の見出しの直下で最初の "### " より前に、`コードブロック`の外にあって一覧でも表でもない空でない行があるとき、またはスキーマが宣言していない表かコードブロックがあるとき、kotowari は unknown_line の`誤り`を、"## 具体例" の見出しの下に gherkin でない`コードブロック`があるとき unknown_code_block の`誤り`を、`用語集`の`題名`がスキーマの宣言した形でないとき glossary_title_invalid の`誤り`を出す。detail は TBL-core-008、"line" は TBL-core-019 のとおりにする。
 
 ## 決定表
 

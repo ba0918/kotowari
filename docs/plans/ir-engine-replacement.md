@@ -25,7 +25,7 @@ kotowari 側（`docs/ir/core/`）:
 
 本文は `kotowari query <ID>` で読む。文書を開いて探さない。
 
-**着手の前提。** `docs/ir/core/FLAGS.md` の `FLAG-core-009`、`FLAG-core-010`、`FLAG-core-011` は人の判断を待っている。3件とも置き換えの振る舞いに直接効くので、決まるまでステップ4以降を始めない。ステップ1とステップ2は3件に依らないので先に進めてよい。ステップ9の `kotowari status` の `complete true` は`問題の記録`が0件であることも求めるので、3件が閉じるまで満たせない。
+**着手の前提。** `問題の記録`は両方の置き場で0件で、この計画が待つ人の判断は無い。仕様が黙っている場面に出会ったら、各ステップの Stop and hand back のとおり壁打ちへ戻す。
 
 ## Approach and why
 
@@ -142,7 +142,7 @@ Shown by: test — RED → GREEN → REFACTOR。`TBL-core-030` の 39 行のう�
 
 Left to the implementer: 写す関数の分け方。`抽出`の`項目`を行で引くための持ち方。
 
-Stop and hand back if: `TBL-core-030` に行の無いエンジンの種類が見つかったとき。`抽出`の`項目`の行と`指摘`の行が突き合わないものがあると分かったとき。`FLAG-core-009` の`表`と`コードブロック`の写し先が決まっていないとき。
+Stop and hand back if: `TBL-core-030` に行の無いエンジンの種類が見つかったとき。`抽出`の`項目`の行と`指摘`の行が突き合わないものがあると分かったとき。
 
 ## Step 5 — 新しい3種類の指摘を出す
 
@@ -154,10 +154,11 @@ May change: `crates/kotowari-core/src/`、`tests/`。
 Done when:
 
 - `unknown_line`、`unknown_code_block`、`glossary_title_invalid` の3種類が出る
+- `unknown_line` は、`"## "` の見出しの直下の宣言の外の行に加えて、スキーマが宣言していない表とコードブロックにも出る
 - detail と `"line"` が `TBL-core-008` と `TBL-core-019` のとおり
 - 3種類とも`誤り`で、終了コードを1にする
 
-Shown by: test — RED → GREEN → REFACTOR。3種類それぞれを出す入力で種類・detail・`"line"` が合うことを見る3本。`EX-core-266` と `EX-core-267` に印を付ける。
+Shown by: test — RED → GREEN → REFACTOR。3種類それぞれを出す入力で種類・detail・`"line"` が合うことを見る3本と、宣言の外の表とコードブロックに `unknown_line` が出ることを見る1本。`EX-core-266` と `EX-core-267` に印を付ける。
 
 Left to the implementer: なし。
 
@@ -174,7 +175,8 @@ Done when:
 
 - `crates/kotowari-core/src/ir.rs` に生の行を読む関数が、gherkin の塊の中身と閉じない`コードブロック`の検出の2つに対応するものだけ残る
 - 見出し、`"- 名前:"` の行、Markdown の表、`題名`と`文書が扱う範囲`を読む関数が無い
-- 文書をまたぐ検査、上限、`出典`の検査、`文`に基づく検査、`文書名の参照`、gherkin の中身、閉じない`コードブロック`の検査は kotowari に残る
+- 文書をまたぐ検査、上限、`出典`の検査、`文`に基づく検査、`文書名の参照`、gherkin の中身、閉じない`コードブロック`、`用語集`の行の`用語`のセルが空であることの検査は kotowari に残る
+- `用語`のセルが空であることの検査は`抽出`の`用語集`の行から見る。エンジンは列の数しか見ないので、この判定はエンジンへ移さない
 - 形の`指摘`が出た文書も、文書をまたぐ検査を受ける（`EX-core-269`）
 - `REQ-core-089`、`REQ-core-041`、`REQ-core-120` の確かめ方が、残らない関数の名前を指していない
 - `REQ-core-045`、`REQ-core-047`、`REQ-core-098` の印の付いたテストが、置き換え後の振る舞い（3本以上でも1件、`問題の記録`の`項目`も`文`が要る、値が空の行は値の誤り）を確かめている
