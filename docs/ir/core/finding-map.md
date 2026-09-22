@@ -1,6 +1,3 @@
----
-$schema: ../../../.mds/schemas/ir.yaml
----
 # エンジンの指摘の写し先
 
 この文書は、形の読み取りをスキーマに置き換えたあと、スキーマの側が返した指摘を kotowari の指摘の種類へ写す対応を扱う。指摘の種類そのものと detail は findings の文書が定める。
@@ -27,9 +24,9 @@ $schema: ../../../.mds/schemas/ir.yaml
 
 ### TBL-core-029: エンジンの指摘を写す対応表の列
 
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A3, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A24, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A29, docs/decision/records/2026-09-22-ir-engine.md#A31, docs/decision/records/2026-09-22-ir-engine.md#A40, docs/decision/records/records.md#A92, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-22-ir-engine.md#A71, docs/decision/records/2026-09-22-ir-engine.md#A74, docs/decision/records/2026-09-22-ir-engine.md#A76, docs/decision/records/2026-09-22-ir-engine.md#A77, docs/decision/records/2026-09-22-ir-engine.md#A78, docs/decision/records/2026-09-22-ir-engine.md#A79, docs/decision/records/2026-09-22-ir-engine.md#A80, docs/decision/records/2026-09-22-ir-engine.md#A81
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A3, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A24, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A29, docs/decision/records/2026-09-22-ir-engine.md#A31, docs/decision/records/2026-09-22-ir-engine.md#A40, docs/decision/records/records.md#A92, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-22-ir-engine.md#A71, docs/decision/records/2026-09-22-ir-engine.md#A74, docs/decision/records/2026-09-22-ir-engine.md#A76, docs/decision/records/2026-09-22-ir-engine.md#A77, docs/decision/records/2026-09-22-ir-engine.md#A79, docs/decision/records/2026-09-22-ir-engine.md#A81
 
-スキーマの側が出した`指摘`を kotowari の`指摘`の種類へ写す表は、下の5つの列を持つ。名前が同じで意味が違う種類の行には、その旨を書く。スキーマの側の invalid_id は`項目`の見出しの`ID`の形で、kotowari の invalid_id（"@id" の値）とは別物である。スキーマの側の missing_table は、`用語集`では glossary_invalid、`決定表`では missing_table に分かれる。スキーマの側の missing_required_field は、欠けた`フィールド行`に応じて kotowari の verification_missing、missing_source、missing_field、algorithm_without_definition に分かれる。写し先はこの4つで閉じる。「ノードの名前」の列には、スキーマの側が返す名前のほかに、kotowari が自分で知っている区別（どのスキーマで検証したか、`指摘`が行を持つか）も書く。"- 定義:" の行はスキーマの側が "- 種類:" の行の値で条件付きに必須と宣言するので、欠けたときは algorithm_without_definition へ写す。
+スキーマの側が出した`指摘`を kotowari の`指摘`の種類へ写す表は、下の5つの列を持つ。名前が同じで意味が違う種類の行には、その旨を書く。スキーマの側の invalid_id は`項目`の見出しの`ID`の形で、kotowari の invalid_id（"@id" の値）とは別物である。スキーマの側の missing_table は、`用語集`の表にも`決定表`の表にも`出現回数`の範囲を宣言したので出ない。代わりに repeat_min_not_met が出て、`用語集`では glossary_invalid、`決定表`では missing_table に分かれる。スキーマの側の missing_required_field は、欠けた`フィールド行`に応じて kotowari の verification_missing、missing_source、missing_field、algorithm_without_definition に分かれる。写し先はこの4つで閉じる。「ノードの名前」の列には、スキーマの側が返す名前のほかに、kotowari が自分で知っている区別（どのスキーマで検証したか、`指摘`が行を持つか）も書く。"- 定義:" の行はスキーマの側が "- 種類:" の行の値で条件付きに必須と宣言するので、欠けたときは algorithm_without_definition へ写す。
 
 | 列 | 中身 |
 |---|---|
@@ -41,18 +38,19 @@ $schema: ../../../.mds/schemas/ir.yaml
 
 ### TBL-core-030: エンジンの指摘の写し先
 
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A3, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A24, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A31, docs/decision/records/2026-09-22-ir-engine.md#A40, docs/decision/records/2026-09-22-ir-engine.md#A71, docs/decision/records/2026-09-22-ir-engine.md#A73, docs/decision/records/2026-09-22-ir-engine.md#A74, docs/decision/records/2026-09-22-ir-engine.md#A76, docs/decision/records/2026-09-22-ir-engine.md#A77, docs/decision/records/2026-09-22-ir-engine.md#A78, docs/decision/records/2026-09-22-ir-engine.md#A79, docs/decision/records/2026-09-22-ir-engine.md#A80, docs/decision/records/2026-09-22-ir-engine.md#A81
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A3, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A24, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A31, docs/decision/records/2026-09-22-ir-engine.md#A40, docs/decision/records/2026-09-22-ir-engine.md#A71, docs/decision/records/2026-09-22-ir-engine.md#A74, docs/decision/records/2026-09-22-ir-engine.md#A76, docs/decision/records/2026-09-22-ir-engine.md#A77, docs/decision/records/2026-09-22-ir-engine.md#A79, docs/decision/records/2026-09-22-ir-engine.md#A81
 
 TBL-core-029 の列に沿って、スキーマの側の 24 種類をすべて並べる。「発生しない」の行の`指摘`を受けたときは REQ-core-172 のとおり`停止`する。
 
 | スキーマの側の種類 | ノードの名前 | kotowari の種類 | "line" の扱い | detail の材料 |
 |---|---|---|---|---|
 | missing_title |  | missing_title | null にする | 文書名 |
-| multiple_titles |  | multiple_titles | null にする | 読んだ行の文字そのまま（"# " を除く） |
+| multiple_titles |  | multiple_titles | null にする | 読んだ行の文字そのまま（2つ目の`題名`の行から "# " を除く） |
 | title_pattern_mismatch | 用語集 | glossary_title_invalid | そのまま使う | 読んだ行の文字そのまま |
 | undeclared_heading |  | unknown_heading | そのまま使う | 読んだ行の文字そのまま |
-| undeclared_line | フィールド行 | unknown_field | そのまま使う | 読んだ行の文字そのまま |
-| undeclared_line | 箇条書き、順序付きリスト、文、表、コードブロック | unknown_line | そのまま使う | 読んだ行の文字そのまま |
+| undeclared_line | 名前と値の形の一覧の行、箇条書き、順序付きリスト | unknown_field | そのまま使う | 読んだ行の文字そのまま |
+| undeclared_line | 文 | unknown_line | そのまま使う | 読んだ行の文字そのまま |
+| undeclared_line | 表、コードブロック | 決まっていない（FLAG-core-009） | — | — |
 | missing_required_field | 検証 | verification_missing | そのまま使う | `抽出`の`項目`の`ID` |
 | missing_required_field | 出典 | missing_source | そのまま使う | `抽出`の`項目`の`ID` |
 | missing_required_field | 種類 | missing_field | そのまま使う | ノードの名前 |
@@ -60,11 +58,11 @@ TBL-core-029 の列に沿って、スキーマの側の 24 種類をすべて並
 | missing_required_field | 関係 | missing_field | そのまま使う | ノードの名前 |
 | missing_required_field | 定義 | algorithm_without_definition | そのまま使う | `抽出`の`項目`の`ID` |
 | missing_required_section |  | 発生しない（節はすべて必須でない） | — | — |
-| missing_statement | 前置部の文（指摘が行を持たない） | missing_scope | null にする | 文書名 |
+| missing_statement | 前置部の文 | 発生しない（前置部の文に`出現回数`の範囲を宣言した） | — | — |
 | missing_statement | 項目の文（指摘が行を持つ） | missing_statement | そのまま使う | `抽出`の`項目`の`ID` |
 | missing_bullets |  | 発生しない（箇条書きを宣言していない） | — | — |
-| missing_table | 用語集 | glossary_invalid | null にする | 文書名 |
-| missing_table | 決定表 | missing_table | そのまま使う | `抽出`の`項目`の`ID` |
+| missing_table | 用語集 | 発生しない（`用語集`の表に`出現回数`の範囲を宣言した） | — | — |
+| missing_table | 決定表 | 発生しない（`決定表`の表に`出現回数`の範囲を宣言した） | — | — |
 | missing_codeblock |  | 発生しない（コードブロックの下限が0） | — | — |
 | field_pattern_mismatch |  | 発生しない（出典のパターンを外した） | — | — |
 | field_enum_invalid | 種類 | unknown_kind | `項目`の見出しの行に付け直す | `抽出`の`項目`の該当の値 |
@@ -79,7 +77,10 @@ TBL-core-029 の列に沿って、スキーマの側の 24 種類をすべて並
 | table_header_mismatch | 用語集（指摘の行がデータ行） | invalid_glossary_row | そのまま使う | 読んだ行の文字そのまま |
 | codeblock_lang_mismatch |  | unknown_code_block | そのまま使う | 読んだ行の文字そのまま |
 | codeblock_line_mismatch |  | 発生しない（gherkin の行のパターンを外した） | — | — |
-| repeat_min_not_met |  | 発生しない（下限をすべて0にしている） | — | — |
+| repeat_min_not_met | 話題ごとの文書で検証し、指摘が行を持たない | missing_scope | null にする | 文書名 |
+| repeat_min_not_met | 話題ごとの文書で検証し、指摘が行を持つ | missing_table | そのまま使う | `抽出`の`項目`の`ID` |
+| repeat_min_not_met | 用語集で検証し、指摘が行を持たない | glossary_invalid | null にする | 文書名 |
+| repeat_min_not_met | 上のどれにも当たらない | 発生しない（ほかの下限はすべて0） | — | — |
 | repeat_max_exceeded | フィールド行の名前 | duplicate_field | そのまま使う | ノードの名前 |
 | repeat_max_exceeded | 節、前置部の文、表 | 発生しない（上限を課していない） | — | — |
 
