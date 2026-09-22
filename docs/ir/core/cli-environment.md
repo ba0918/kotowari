@@ -47,6 +47,22 @@ kotowari は、`除外`に列挙していない入力を、`停止`も`指摘`�
 
 kotowari は、`設定ファイル`で`問い合わせ`を足すことをしてはならない。Rust 以外の言語の`問い合わせ`は kotowari に`問い合わせ`のファイルを足すことで後から足す。
 
+### REQ-core-175: 置き換えで増える停止の境界
+
+- 種類: event_driven
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A9, docs/decision/records/2026-09-22-ir-engine.md#A20
+- 検証: unit
+
+スキーマの側から受けた値を kotowari の型へ写せないとき、または対応表（TBL-core-029）に写し先が無いとき、kotowari は TBL-core-018 に1つだけ足した理由で`停止`する。`IR`の文書が読めない、UTF-8 でないといった利用者の入力で起きる`停止`の理由と文言は変えず、スキーマを読めないことを理由とする`停止`は持たない。
+
+### REQ-core-176: 形の指摘が出た文書も文書をまたぐ検査を受ける
+
+- 種類: ubiquitous
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A5, docs/decision/records/2026-09-22-ir-engine.md#A18
+- 検証: unit
+
+kotowari は常に、スキーマの側の`指摘`が出た文書でも、取れた値で文書をまたぐ検査を続け、その文書を検査の対象から外さない。
+
 ## 決定表
 
 ### TBL-core-018: 停止の理由の文言
@@ -72,3 +88,19 @@ kotowari は、`設定ファイル`で`問い合わせ`を足すことをして�
 | 読めないファイル | 相対パスと、OS の誤りの文。カレントディレクトリを取得できないときは "current directory: " と OS の誤りの文 |
 | UTF-8 でないファイル | 相対パス |
 | 結果の誤り | 結果のファイルの相対パスと、誤りの説明 |
+
+## 具体例
+
+```gherkin
+@id=EX-core-268 @about=REQ-core-175 @source=docs/decision/records/2026-09-22-ir-engine.md#A9,docs/decision/records/2026-09-22-ir-engine.md#A20
+Scenario: 型へ写せない値は停止になる
+  Given kotowari の型へ写せない値を返すスキーマを取り込んだビルドがある
+  When "kotowari check" を実行する
+  Then 終了コードは 2 で、標準エラーの1行目は TBL-core-018 に足した理由の文言である
+
+@id=EX-core-269 @about=REQ-core-176 @source=docs/decision/records/2026-09-22-ir-engine.md#A5,docs/decision/records/2026-09-22-ir-engine.md#A18
+Scenario: 形の指摘が出た文書も文書をまたぐ検査を受ける
+  Given "- 検証:" の行が欠けた`要求`があり、その`ID`が別の文書の`要求`の`ID`と重なっている`IR`がある
+  When "kotowari check --format json" を実行する
+  Then verification_missing と duplicate_id の`誤り`が両方出る
+```
