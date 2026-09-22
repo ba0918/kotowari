@@ -113,6 +113,13 @@ pub struct RawLine {
     pub text: String,
 }
 
+/// 文書の行の範囲。両端を含む1始まりの行番号。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LineSpan {
+    pub first: usize,
+    pub last: usize,
+}
+
 #[derive(Debug)]
 pub struct Section {
     pub name: String,
@@ -142,13 +149,12 @@ pub enum Block {
         /// マーカーを除いた元の行テキスト（`名前: 値` の原形）。箇条書きとして
         /// 扱うとき（TBL-schema-007）の pattern はこの元の行に適用する
         text: String,
-        /// lead 段落の1行目がマーカー行にあるか。無ければ段落全体が元の行に
-        /// 無い内容として抽出要素に加わる（TBL-schema-008）
-        lead_on_marker_line: bool,
+        /// lead 段落の最後の行。lead 段落が無ければマーカーの行（REQ-schema-063）
+        lead_end: usize,
         name: String,
         value: String,
-        /// フィールド行の子である継続段落。REQ-schema-030 ではフィールド行の一部として扱う
-        continuation: Vec<String>,
+        /// フィールド行の子である継続段落の行の範囲。REQ-schema-030 ではフィールド行の一部として扱う
+        continuation: Vec<LineSpan>,
         /// 子のブロック（入れ子の箇条書き・コードブロック・表など）。REQ-schema-031
         children: Vec<Block>,
         line: usize,
@@ -157,11 +163,10 @@ pub enum Block {
         /// 元の行（マーカーとその直後の空白を含む）。抽出の1要素に使う（TBL-schema-008）
         line_text: String,
         text: String,
-        /// lead 段落の1行目がマーカー行にあるか。無ければ段落全体が元の行に
-        /// 無い内容として抽出要素に加わる（TBL-schema-008）
-        lead_on_marker_line: bool,
-        /// リスト項目の子である継続段落。REQ-schema-030 では箇条書きの一部として扱う
-        continuation: Vec<String>,
+        /// lead 段落の最後の行。lead 段落が無ければマーカーの行（REQ-schema-063）
+        lead_end: usize,
+        /// リスト項目の子である継続段落の行の範囲。REQ-schema-030 では箇条書きの一部として扱う
+        continuation: Vec<LineSpan>,
         /// 子のブロック（入れ子の箇条書き・コードブロック・表など）。REQ-schema-031
         children: Vec<Block>,
         line: usize,
@@ -445,10 +450,7 @@ fn blocks_from_list_item(
             Node::Paragraph(_) => {
                 let text = raw_slice(src, child);
                 if i == 0 {
-                    // 段落の1行目がマーカー行にあれば元の行が内容を持つ。
-                    // 別の行にあれば段落全体を抽出要素に加える（TBL-schema-008）
-                    let lead_on_marker_line = item.position.as_ref().map(|p| p.start.line)
-                        == child.position().map(|p| p.start.line);
+                    let lead_end = child.position().map_or(item_line, |p| p.end.line);
                     let line_text = original_item_line(item, src, preserve_indent);
                     lead_block = Some(if ordered {
                         // 順序付きリストは箇条書きの対象外。閉じた世界では undeclared_line（TBL-schema-007）
@@ -462,7 +464,7 @@ fn blocks_from_list_item(
                             Some((name, value)) => Block::Field {
                                 line_text,
                                 text,
-                                lead_on_marker_line,
+                                lead_end,
                                 name,
                                 value,
                                 continuation: Vec::new(),
@@ -472,7 +474,7 @@ fn blocks_from_list_item(
                             None => Block::Bullet {
                                 line_text,
                                 text,
-                                lead_on_marker_line,
+                                lead_end,
                                 continuation: Vec::new(),
                                 children: Vec::new(),
                                 line: item_line,
@@ -482,8 +484,10 @@ fn blocks_from_list_item(
                 } else if lead_block.is_some() {
                     match &mut lead_block {
                         Some(Block::Field { continuation, .. })
-                        | Some(Block::Bullet { continuation, .. })
-                        | Some(Block::OrderedList { continuation, .. }) => continuation.push(text),
+                        | Some(Block::Bullet { continuation, .. }) => {
+                            continuation.push(span_of(child))
+                        }
+                        Some(Block::OrderedList { continuation, .. }) => continuation.push(text),
                         _ => {}
                     }
                 } else {
@@ -536,7 +540,7 @@ fn blocks_from_list_item(
             Block::Bullet {
                 line_text: original_item_line(item, src, preserve_indent),
                 text: String::new(),
-                lead_on_marker_line: true,
+                lead_end: item_line,
                 continuation: Vec::new(),
                 children: Vec::new(),
                 line: item_line,
@@ -626,80 +630,15 @@ impl Block {
             _ => &[],
         }
     }
-
-    /// TBL-schema-008 の箇条書きの抽出要素の基本部分。元の行（マーカーとその直後の空白を含む）
-    /// と継続段落を改行でつなぐ。継続段落が複数のときは継続段落どうしを空行で
-    /// つなぐ。子の箇条書きの行の連結は、宣言された子フィールドを除外する必要が
-    /// あるため extract 側の `element_with_children` が行う（REQ-schema-031、TBL-schema-008）。
-    pub fn bullet_element(&self) -> String {
-        let Block::Bullet {
-            line_text,
-            text,
-            lead_on_marker_line,
-            continuation,
-            ..
-        } = self
-        else {
-            return String::new();
-        };
-        element_from_line(line_text, text, *lead_on_marker_line, continuation)
-    }
-
-    /// フィールド行の抽出要素。元の行（マーカーとその直後の空白を含む）と
-    /// 継続段落を改行でつなぐ。継続段落が複数のときは継続段落どうしを
-    /// 空行でつなぐ（REQ-schema-030、REQ-schema-046）。子の箇条書きの行は含めない。
-    pub fn field_element(&self) -> String {
-        let Block::Field {
-            line_text,
-            text,
-            lead_on_marker_line,
-            continuation,
-            ..
-        } = self
-        else {
-            return String::new();
-        };
-        element_from_line(line_text, text, *lead_on_marker_line, continuation)
-    }
 }
 
-/// 抽出要素を組み立てる。元の行（マーカーとその直後の空白を含む）に、lead 段落の
-/// うち元の行に無い内容を改行でつなぎ、続けて継続段落を改行でつなぐ（REQ-schema-046）。
-fn element_from_line(
-    line_text: &str,
-    text: &str,
-    lead_on_marker_line: bool,
-    continuation: &[String],
-) -> String {
-    let mut out = line_text.to_string();
-    // 段落がマーカー行に始まれば1行目は元の行が持ち、別の行に始まれば段落全体が
-    // 元の行に無い内容として加わる（TBL-schema-008）
-    let rest = if lead_on_marker_line {
-        text.split_once('\n').map(|(_, r)| r).unwrap_or("")
-    } else {
-        text
-    };
-    if !rest.is_empty() {
-        out.push('\n');
-        out.push_str(rest);
-    }
-    join_continuation(&mut out, continuation);
-    out
-}
-
-/// 継続段落を `- ` 行に改行で続けてつなぐ。複数あるときは空行でつなぐ（REQ-schema-046）。
-/// フィールド行と箇条書きの抽出要素が共有する結合規則。
-///
-/// TBL-schema-008 の抽出要素の組み立ては、ここと `extract.rs` に分かれている。
-/// この関数と `bullet_element` / `field_element` は `Block` の中身だけで
-/// 決まる部分を持ち、子の箇条書きの取り込みと宣言済み子フィールドの除外は
-/// `Children` の宣言が要るため `extract.rs` の `element_with_children` と
-/// `body_from_blocks` が担う。連結規則を変えるときは両方を見る。
-pub(crate) fn join_continuation(out: &mut String, continuation: &[String]) {
-    if !continuation.is_empty() {
-        out.push('\n');
-        out.push_str(&continuation.join("\n\n"));
-    }
+/// ノードが覆う行の範囲。位置が無ければ1行目だけとする。
+fn span_of(node: &Node) -> LineSpan {
+    node.position()
+        .map_or(LineSpan { first: 1, last: 1 }, |p| LineSpan {
+            first: p.start.line,
+            last: p.end.line,
+        })
 }
 
 /// 項目見出しを ID と題名に分ける。`:` が無ければ全体を ID にし、区切りが
@@ -835,7 +774,7 @@ mod tests {
         else {
             panic!("親が Bullet になる");
         };
-        assert_eq!(continuation, &vec!["続きの段落".to_string()]);
+        assert_eq!(continuation, &vec![LineSpan { first: 5, last: 5 }]);
         assert_eq!(children.len(), 1);
     }
 

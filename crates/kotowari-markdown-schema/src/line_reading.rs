@@ -108,7 +108,7 @@ impl LineReader {
             Some((name, value)) => Block::Field {
                 line_text,
                 text: content,
-                lead_on_marker_line: true,
+                lead_end: line,
                 name,
                 value,
                 continuation: Vec::new(),
@@ -118,7 +118,7 @@ impl LineReader {
             None => Block::Bullet {
                 line_text,
                 text: content,
-                lead_on_marker_line: true,
+                lead_end: line,
                 continuation: Vec::new(),
                 children: Vec::new(),
                 line,
