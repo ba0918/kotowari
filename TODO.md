@@ -15,11 +15,6 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 - `mds` は crates.io で他者が公開済み。`kotowari-mds` にするかどうか
 - [U1](docs/decision/records/2026-09-22-ir-engine.md#undecided)。優先度は最後と利用者が明言している
 
-### 指摘の種類が増えることの配布先への影響（kotowari）
-
-- 置き換えで`指摘`の種類が3つ増えた（[REQ-core-174](docs/ir/core/findings.md#REQ-core-174)）。配布先の既存の IR を通らなくするかどうかは配布の前に決める
-- [U3](docs/decision/records/2026-09-22-ir-engine.md#undecided)
-
 ### 2つの製品の版とタグの持ち方、旧リポジトリの扱い
 
 - `crates/kotowari-markdown-schema/` のリリースの仕組みは「workspace に正の版1つ」の前提のまま。kotowari と mds の版とタグをどう持つかが決まっていない
