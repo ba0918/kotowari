@@ -266,7 +266,7 @@ pub fn map_finding(ctx: &MapContext, engine: &EngineFinding) -> Result<Finding, 
             }
         }
         // 用語集の表のデータ行の誤りは行ごと、表そのものの誤りは文書ごとに出す（TBL-core-030）
-        EngineKind::TableHeaderMismatch => {
+        EngineKind::TableHeaderMismatch if ctx.doc_kind == DocKind::Glossary => {
             let line = line_of(engine)?;
             if ctx.glossary_rows.contains(&line) {
                 make(FindingKind::InvalidGlossaryRow, Some(line), raw_of(engine)?)
@@ -602,6 +602,11 @@ mod tests {
         let mut e = engine(EngineKind::TitlePatternMismatch, Some(1));
         e.raw = Some("# 題名".to_string());
         assert!(stopped(DocKind::Topic, e).contains("no mapping for title_pattern_mismatch"));
+
+        // 表のヘッダの食い違いの行は用語集にしか無い
+        let mut e = engine(EngineKind::TableHeaderMismatch, Some(4));
+        e.raw = Some("| a | b |".to_string());
+        assert!(stopped(DocKind::Topic, e).contains("no mapping for table_header_mismatch"));
 
         let e = engine(EngineKind::MissingRequiredField, Some(10)).of_node("知らない名前");
         let detail = stopped(DocKind::Topic, e);
