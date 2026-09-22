@@ -49,7 +49,7 @@ fn cache_path(url: &str, base: &Path) -> std::path::PathBuf {
 }
 
 fn mds() -> Command {
-    Command::cargo_bin("mds").unwrap()
+    Command::cargo_bin("kotowari-mds").unwrap()
 }
 
 // @kotowari[REQ-schema-013]

@@ -10,16 +10,6 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 ## 判断待ち
 
-### CLI のバイナリの名前（mds）
-
-- `mds` は crates.io で他者が公開済み。`kotowari-mds` にするかどうか
-- [U1](docs/decision/records/2026-09-22-ir-engine.md#undecided)。優先度は最後と利用者が明言している
-
-### 2つの製品の版とタグの持ち方、旧リポジトリの扱い
-
-- `crates/kotowari-markdown-schema/` のリリースの仕組みは「workspace に正の版1つ」の前提のまま。kotowari と mds の版とタグをどう持つかが決まっていない
-- 取り込む前の `~/develop/mds` をアーカイブするか、README に移転先を書くか
-
 ### kotowari の工程を ba0918 の workflow から分離する
 
 - `skills/kotowari/references/workflow.md` で ba0918 の brainstorm / plan / cycle に上書きをかぶせる形をやめ、`kotowari-brainstorm` / `kotowari-plan` / `kotowari-cycle` として切り出したい（2026-09-22 に利用者が提起）

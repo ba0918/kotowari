@@ -21,22 +21,22 @@ fn write_file(dir: &Path, name: &str, content: &str) -> std::path::PathBuf {
 }
 
 fn mds() -> Command {
-    Command::cargo_bin("mds").unwrap()
+    Command::cargo_bin("kotowari-mds").unwrap()
 }
 
 // @kotowari[REQ-schema-005]
 #[test]
-fn version_prints_mds_version_to_stdout_and_exits_zero() {
+fn version_prints_the_command_name_and_version_to_stdout_and_exits_zero() {
     let output = mds().arg("--version").output().unwrap();
     assert_eq!(output.status.code(), Some(0));
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.starts_with("mds "), "stdout: {stdout}");
+    assert!(stdout.starts_with("kotowari-mds "), "stdout: {stdout}");
 }
 
 // @kotowari[REQ-schema-005, REQ-schema-040]
 #[test]
 fn ast_outputs_mdast_json_for_the_adr_fixture() {
-    let mut cmd = Command::cargo_bin("mds").unwrap();
+    let mut cmd = Command::cargo_bin("kotowari-mds").unwrap();
     let output = cmd.args(["ast", "fixtures/adr/0001.md"]).output().unwrap();
     assert!(output.status.success());
     let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
@@ -57,12 +57,15 @@ fn ast_outputs_mdast_json_for_the_adr_fixture() {
 // @kotowari[REQ-schema-009, REQ-schema-042, REQ-schema-043]
 #[test]
 fn ast_with_format_text_stops_with_argument_error() {
-    let mut cmd = Command::cargo_bin("mds").unwrap();
+    let mut cmd = Command::cargo_bin("kotowari-mds").unwrap();
     cmd.args(["ast", "fixtures/adr/0001.md", "--format", "text"]);
     let output = cmd.output().unwrap();
     assert_eq!(output.status.code(), Some(2));
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("mds: argument_error:"), "stderr: {stderr}");
+    assert!(
+        stderr.contains("kotowari-mds: argument_error:"),
+        "stderr: {stderr}"
+    );
 }
 
 // @kotowari[REQ-schema-009, REQ-schema-042]
@@ -74,7 +77,10 @@ fn unknown_flag_stops_with_argument_error() {
         .unwrap();
     assert_eq!(output.status.code(), Some(2));
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("mds: argument_error:"), "stderr: {stderr}");
+    assert!(
+        stderr.contains("kotowari-mds: argument_error:"),
+        "stderr: {stderr}"
+    );
 }
 
 // @kotowari[REQ-schema-036]
@@ -828,7 +834,7 @@ fn check_json_undeclared_line_has_rule_kind() {
     assert_eq!(finding["rule_kind"], "field");
 }
 
-/// `mds values --format json` の出力を読む。`schema` は文書の隣に置く。
+/// `kotowari-mds values --format json` の出力を読む。`schema` は文書の隣に置く。
 fn values_json(schema: &str, doc_body: &str) -> serde_json::Value {
     let dir = tempfile::tempdir().unwrap();
     write_file(dir.path(), "schema.yaml", schema);
@@ -850,7 +856,7 @@ fn values_json(schema: &str, doc_body: &str) -> serde_json::Value {
     serde_json::from_slice(&output.stdout).unwrap()
 }
 
-/// `mds values` を走らせて終了コードと標準エラー・標準出力を返す。
+/// `kotowari-mds values` を走らせて終了コードと標準エラー・標準出力を返す。
 fn values_run(schema: &str, doc_body: &str) -> (Option<i32>, String, String) {
     let dir = tempfile::tempdir().unwrap();
     write_file(dir.path(), "schema.yaml", schema);
@@ -870,7 +876,7 @@ fn values_run(schema: &str, doc_body: &str) -> (Option<i32>, String, String) {
     )
 }
 
-/// `mds check --format json` の findings を読む。
+/// `kotowari-mds check --format json` の findings を読む。
 fn check_findings(schema: &str, doc_body: &str) -> Vec<serde_json::Value> {
     let dir = tempfile::tempdir().unwrap();
     write_file(dir.path(), "schema.yaml", schema);
@@ -1286,7 +1292,7 @@ fn mds_json(
     )
 }
 
-/// `mds check --format json` の全ファイルの指摘を1つの並びにする。
+/// `kotowari-mds check --format json` の全ファイルの指摘を1つの並びにする。
 fn all_findings(check_json: &serde_json::Value) -> Vec<serde_json::Value> {
     check_json["files"]
         .as_array()

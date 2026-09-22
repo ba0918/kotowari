@@ -77,21 +77,21 @@ mds は常に、`frontmatter`の "$schema" 以外のキーを読まず、`指摘
 @id=EX-schema-005 @about=REQ-schema-012 @source=docs/decision/records/2026-09-21-mds-spec.md#A14
 Scenario: 相対パスは文書の位置から解決する
   Given `文書`から離れた位置の`スキーマ`を相対パスで指した`文書`がある
-  When "mds check" を実行する
+  When "kotowari-mds check" を実行する
   Then `スキーマ`は`文書`の位置から解決される
   And 終了コードは 0 である
 
 @id=EX-schema-017 @about=REQ-schema-052 @source=docs/decision/records/2026-09-21-mds-spec.md#A25
 Scenario: 認証情報を含む URL は伏せて出す
   Given 認証情報を含む URL の`スキーマ`を指した`文書`があり、取得に失敗する
-  When "mds check" を実行する
+  When "kotowari-mds check" を実行する
   Then 標準エラーに認証情報は出ない
   And URL は伏せた形で出る
 
 @id=EX-schema-006 @about=REQ-schema-013 @source=docs/decision/records/2026-09-21-mds-spec.md#A14
 Scenario: 壊れたキャッシュは取得し直して回復する
   Given URL の`スキーマ`を指した`文書`と、壊れたキャッシュがある
-  When "mds check" を実行する
+  When "kotowari-mds check" を実行する
   Then `スキーマ`を取得し直す
   And 終了コードは 0 である
 ```

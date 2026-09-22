@@ -11,7 +11,7 @@ use walkdir::WalkDir;
 
 #[derive(Parser)]
 #[command(
-    name = "mds",
+    name = "kotowari-mds",
     version,
     about = "Validate Markdown documents against a YAML schema declared in their frontmatter and extract structured values"
 )]
@@ -104,7 +104,9 @@ fn main() -> ExitCode {
             // サブコマンドを省いたときの clap のメッセージは about の文で始まる。
             // それをそのまま停止の説明にすると誤りの説明として意味を成さない
             clap::error::ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand => {
-                eprintln!("mds: argument_error: no subcommand given (see `mds --help`)");
+                eprintln!(
+                    "kotowari-mds: argument_error: no subcommand given (see `kotowari-mds --help`)"
+                );
                 return ExitCode::from(2);
             }
             _ => {
@@ -116,7 +118,7 @@ fn main() -> ExitCode {
                     .strip_prefix("error: ")
                     .unwrap_or(first_line)
                     .to_string();
-                eprintln!("mds: argument_error: {detail}");
+                eprintln!("kotowari-mds: argument_error: {detail}");
                 return ExitCode::from(2);
             }
         },
@@ -124,7 +126,7 @@ fn main() -> ExitCode {
     match run(cli) {
         Ok(code) => ExitCode::from(code),
         Err(stop) => {
-            eprintln!("mds: {stop}");
+            eprintln!("kotowari-mds: {stop}");
             ExitCode::from(2)
         }
     }

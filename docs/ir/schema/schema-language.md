@@ -109,25 +109,25 @@ mds は常に、`条件付き規則`が参照する`フィールド行`を同じ
 @id=EX-schema-007 @about=REQ-schema-020 @source=docs/decision/records/2026-09-21-mds-spec.md#A28
 Scenario: 条件が真のときだけ必須になる
   Given 別の`フィールド行`の値が特定の値のときだけ必須になる`フィールド行`を宣言した`スキーマ`がある
-  When 条件を満たす`文書`から、その`フィールド行`を消して "mds check" を実行する
+  When 条件を満たす`文書`から、その`フィールド行`を消して "kotowari-mds check" を実行する
   Then 欠落の`指摘`が出る
 
 @id=EX-schema-008 @about=REQ-schema-018 @source=docs/decision/records/2026-09-21-mds-spec.md#P1
 Scenario: 知らないキーのあるスキーマは停止する
   Given 規則種別が受けないキーを書いた`スキーマ`がある
-  When "mds check" を実行する
+  When "kotowari-mds check" を実行する
   Then 終了コードは 2 である
 
 @id=EX-schema-040 @about=REQ-schema-060,PROP-schema-008 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A12,docs/decision/records/2026-09-23-ir-engine-gaps.md#A20,docs/decision/records/2026-09-21-mds-spec.md#A30
 Scenario: reading を書かないスキーマは段落で読む
   Given "reading" を書かない`スキーマ`と、"reading: paragraph" を書いた`スキーマ`があり、どちらも`項目`の`文`に`出現回数`の上限1を宣言している
   And 空行を挟まずに続く2行の段落を持つ`項目`の`文書`がある
-  When それぞれの`スキーマ`で "mds check --format json" と "mds values --format json" を実行する
-  Then どちらでも`指摘`は出ず（2行の段落を1つの`文`と数える）、"mds check" の出力どうしと "mds values" の出力どうしはそれぞれ一致する
+  When それぞれの`スキーマ`で "kotowari-mds check --format json" と "kotowari-mds values --format json" を実行する
+  Then どちらでも`指摘`は出ず（2行の段落を1つの`文`と数える）、"kotowari-mds check" の出力どうしと "kotowari-mds values" の出力どうしはそれぞれ一致する
 
 @id=EX-schema-041 @about=REQ-schema-060 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A20,docs/decision/records/2026-09-23-ir-engine-gaps.md#A30
 Scenario: 受けない値の reading は停止する
   Given "reading: word" を書いた`スキーマ`がある
-  When "mds check" を実行する
+  When "kotowari-mds check" を実行する
   Then 終了コードは 2 である
 ```

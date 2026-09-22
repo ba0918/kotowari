@@ -10,7 +10,7 @@ A Cargo workspace holding three Rust packages:
   beside it.
 - `crates/kotowari-core` — the `kotowari_core` library the root binary is built on. It is the
   root package's only dependency inside the workspace.
-- `crates/kotowari-markdown-schema` — the `kotowari_markdown_schema` library and the `mds`
+- `crates/kotowari-markdown-schema` — the `kotowari_markdown_schema` library and the `kotowari-mds`
   binary. See that crate's own `README.md`.
 
 `Cargo.toml` at the root declares the workspace members and excludes `experiments/`.
@@ -47,7 +47,7 @@ and `docs/ir/schema/` for `kotowari-markdown-schema`. `.kotowari/config.yaml` po
 `docs/ir/`, so one run covers both products.
 
 The documents under `docs/ir/schema/` are checked by `kotowari check` alone, the same as those
-under `docs/ir/core/`. Neither carries a `$schema` frontmatter, so `mds check` does not read them:
+under `docs/ir/core/`. Neither carries a `$schema` frontmatter, so `kotowari-mds check` does not read them:
 given a directory it skips them, and given one of them by name it stops.
 
 `docs/spec/` is **not** the specification. It holds prose — concept notes and the write-ups a
