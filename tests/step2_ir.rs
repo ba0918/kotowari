@@ -505,18 +505,18 @@ fn req_098_missing_field() {
 fn req_098_review_requirement_without_how_to_verify_is_a_missing_field() {
     let requirement = |id: &str, verification: &str, how_to_verify: &str| {
         format!(
-            "### {id}: 例\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: {verification}\n{how_to_verify}\n\n文である。\n\n"
+            "### {id}: 例\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: {verification}\n{how_to_verify}\n文である。\n\n"
         )
     };
     let content = format!(
         "# Title\n\nScope.\n\n## 要求\n\n{}{}{}{}",
         // 7 行目: 検証が review で行が無い
         requirement("REQ-001", "review", ""),
-        // 16 行目: 検証が review で行がある
+        // 15 行目: 検証が review で行がある
         requirement("REQ-002", "review", "- 確かめ方: 手で見る\n"),
-        // 26 行目: 検証が unit で行が無い
+        // 24 行目: 検証が unit で行が無い
         requirement("REQ-003", "unit", ""),
-        // 35 行目: 検証が review で値が空（REQ-core-098: 行が在るものとして扱う）
+        // 32 行目: 検証が review で値が空（REQ-core-098: 行が在るものとして扱う）
         requirement("REQ-004", "review", "- 確かめ方:\n"),
     );
     let doc = ir::parse_document("a.md", &content).unwrap();
