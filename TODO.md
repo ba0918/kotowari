@@ -10,12 +10,6 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 ## 判断待ち
 
-### ID 63: マーカー単独行の lead 段落と継続段落の結合規則（mds）
-
-- マーカー単独行（`- ` の行の後にインデントされた内容）が lead 段落と`継続段落`を両方持つとき、抽出要素の lead と継続段落の間が単一改行になる
-- [TBL-schema-008](docs/ir/schema/extraction.md#TBL-schema-008) の`箇条書き`の`要素の値`は「元の行（`継続段落`と子の`箇条書き`の行を含む）」とだけ述べ、この入力形の結合規則（単一改行か空行か）を明記していない
-- `reading: line` では`継続段落`を作らない（[REQ-schema-030](docs/ir/schema/block-rules.md#REQ-schema-030)）ので、kotowari の IR には現れない
-
 ### 表の列数の照合の基準が変わったこと（mds）
 
 - engine-gaps で、データ行の列数を比べる基準がスキーマの `header` の宣言から`文書`のヘッダ行に変わった。文書のヘッダがスキーマの宣言と違う表では、データ行ごとの列数の`指摘`が出なくなり、ヘッダの食い違いの1件だけになる

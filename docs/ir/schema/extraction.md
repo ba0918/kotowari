@@ -87,27 +87,35 @@ mds は常に、区切り文字を宣言した`フィールド行`を`出現回�
 ### REQ-schema-046: 区切りと継続段落の順序
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A11, docs/decision/records/2026-09-21-mds-spec.md#A50
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A11, docs/decision/records/2026-09-21-mds-spec.md#A50, docs/decision/records/2026-09-23-extract-original-lines.md#A7
 - 検証: unit
 
-mds は常に、区切り文字による分割を`継続段落`を含めない値だけに対して行い、`継続段落`は分割した末尾の要素に改行を挟んで付ける。
+mds は常に、区切り文字による分割を`継続段落`を含めない値だけに対して行い、`継続段落`は分割した末尾の要素に REQ-schema-063 のつなぎ方で付ける。
+
+### REQ-schema-063: 値の行は元の行のまま
+
+- 種類: ubiquitous
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A11, docs/decision/records/2026-09-23-extract-original-lines.md#A1, docs/decision/records/2026-09-23-extract-original-lines.md#A2, docs/decision/records/2026-09-23-extract-original-lines.md#A3, docs/decision/records/2026-09-23-extract-original-lines.md#A4, docs/decision/records/2026-09-23-extract-original-lines.md#A5, docs/decision/records/2026-09-23-extract-original-lines.md#A6
+- 検証: unit
+
+mds は常に、`要素の値`に入る行を`文書`の元の行のまま使い、字下げと途中の行の末尾の空白を残し、値の末尾の空白と空行を除く。値は`箇条書き`ではマーカーから、`フィールド行`では名前の後のコロンと空白の後から、`文`では段落の最初の空白でない文字から始める。複数の部分から成る値は、含める部分の間に元の`文書`で空行があれば空行1つで、無ければ改行1つでつなぎ、含めない部分の行を抜いた跡と続いた空行は空行1つにまとめ、空白だけの行は空行として扱う。この規則は`読み方`に依らない。`導かれる値`を宣言して行ごとに分けた`文`の`要素の値`は、この規則の対象外で TBL-schema-008 のとおりにする。
 
 ## 決定表
 
 ### TBL-schema-008: 抽出の形
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A13, docs/decision/records/2026-09-21-mds-spec.md#A65, docs/decision/records/2026-09-21-mds-spec.md#A66, docs/decision/records/2026-09-21-mds-spec.md#A50, docs/decision/records/2026-09-21-mds-spec.md#A51, docs/decision/records/2026-09-21-mds-spec.md#A52, docs/decision/records/2026-09-21-mds-spec.md#A53, docs/decision/records/2026-09-21-mds-spec.md#A55, docs/decision/records/2026-09-22-ir-engine.md#A43, docs/decision/records/2026-09-22-ir-engine.md#A44, docs/decision/records/2026-09-22-ir-engine.md#A48, docs/decision/records/2026-09-22-ir-engine.md#A53, docs/decision/records/2026-09-22-ir-engine.md#A57, docs/decision/records/2026-09-22-ir-engine.md#A59, docs/decision/records/2026-09-22-ir-engine.md#A64, docs/decision/records/2026-09-22-ir-engine.md#A69, docs/decision/records/2026-09-22-ir-engine.md#A70, docs/decision/records/2026-09-23-ir-engine-gaps.md#A16
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A13, docs/decision/records/2026-09-21-mds-spec.md#A65, docs/decision/records/2026-09-21-mds-spec.md#A66, docs/decision/records/2026-09-21-mds-spec.md#A50, docs/decision/records/2026-09-21-mds-spec.md#A51, docs/decision/records/2026-09-21-mds-spec.md#A52, docs/decision/records/2026-09-21-mds-spec.md#A53, docs/decision/records/2026-09-21-mds-spec.md#A55, docs/decision/records/2026-09-22-ir-engine.md#A43, docs/decision/records/2026-09-22-ir-engine.md#A44, docs/decision/records/2026-09-22-ir-engine.md#A48, docs/decision/records/2026-09-22-ir-engine.md#A53, docs/decision/records/2026-09-22-ir-engine.md#A57, docs/decision/records/2026-09-22-ir-engine.md#A59, docs/decision/records/2026-09-22-ir-engine.md#A64, docs/decision/records/2026-09-22-ir-engine.md#A69, docs/decision/records/2026-09-22-ir-engine.md#A70, docs/decision/records/2026-09-23-ir-engine-gaps.md#A16, docs/decision/records/2026-09-23-extract-original-lines.md#A3
 
 どの`ノード`でも、"value" も`導かれる値`も宣言しなければ下の「略記の形」をそのまま出し、どちらかを宣言すれば要素ごとにオブジェクトを組み立てて、`要素の値`を "value" の鍵に、`導かれる値`を "of" の鍵に置く。
 
 | `ノード` | 要素の単位 | `要素の値` | `生の行`が指す行 | 略記の形 |
 |---|---|---|---|---|
 | `題名` | 分けない | 見出しの文字列。"group" を宣言したときは名前付きキャプチャが捕まえた文字 | `題名`の見出しの行 | 見出しの文字列。"group" を宣言したときは正規表現の名前付きキャプチャ |
-| `フィールド行` | 分けない | 値の文字列。区切り文字を宣言したときは区切った文字列の配列（REQ-schema-045） | その`フィールド行`の行 | 値の文字列。区切り文字を宣言したときは区切った文字列の配列（REQ-schema-045） |
-| `文` | `導かれる値`を宣言したときだけ行、宣言しなければ分けない | 行に分けたときは前後の空白を取り除いた行の文字、分けないときは本文の文字列 | その行 | 本文の文字列 |
-| `節` | 分けない | `文`と`箇条書き`の行だけをつないだ本文の文字列。`フィールド行`、`表`、`コードブロック`、`項目`は含めない | `節`の見出しの行 | `文`と`箇条書き`の行だけをつないだ本文の文字列。`フィールド行`、`表`、`コードブロック`、`項目`は含めない |
-| `項目` | `項目` | 見出しと本文を改行でつないだ文字列。見出しは `ID` と名前だけにし、本文に`フィールド行`・`文`・`箇条書き`を含め、`表`と`コードブロック`は含めない | `項目`の見出しの行 | 内側の`配置パス`をキーにしたオブジェクト（REQ-schema-047）。オブジェクトを組み立てないときは見出しと本文を改行でつないだ文字列。見出しは `ID` と名前だけにし、本文に`フィールド行`・`文`・`箇条書き`を含め、`表`と`コードブロック`は含めない |
-| `箇条書き` | 行 | 元の行（`継続段落`と子の`箇条書き`の行を含む） | その行のマーカーの行 | 元の行を保った文字列の配列 |
+| `フィールド行` | 分けない | 値の文字列（REQ-schema-063）。区切り文字を宣言したときは区切った文字列の配列（REQ-schema-045） | その`フィールド行`の行 | 値の文字列。区切り文字を宣言したときは区切った文字列の配列（REQ-schema-045） |
+| `文` | `導かれる値`を宣言したときだけ行、宣言しなければ分けない | 行に分けたときは前後の空白を取り除いた行の文字、分けないときは本文の文字列（REQ-schema-063） | その行 | 本文の文字列（REQ-schema-063） |
+| `節` | 分けない | `文`と`箇条書き`の行だけをつないだ本文の文字列（REQ-schema-063）。`フィールド行`、`表`、`コードブロック`、`項目`は含めない | `節`の見出しの行 | `文`と`箇条書き`の行だけをつないだ本文の文字列（REQ-schema-063）。`フィールド行`、`表`、`コードブロック`、`項目`は含めない |
+| `項目` | `項目` | 見出しと本文を改行でつないだ文字列。見出しは `ID` と名前だけにし、本文に`フィールド行`・`文`・`箇条書き`を含め、`表`と`コードブロック`は含めない。本文は REQ-schema-063 のとおりにつなぐ | `項目`の見出しの行 | 内側の`配置パス`をキーにしたオブジェクト（REQ-schema-047）。オブジェクトを組み立てないときは見出しと本文を改行でつないだ文字列。見出しは `ID` と名前だけにし、本文に`フィールド行`・`文`・`箇条書き`を含め、`表`と`コードブロック`は含めない。本文は REQ-schema-063 のとおりにつなぐ |
+| `箇条書き` | 行 | 元の行（`継続段落`と子の`箇条書き`の行を含む。REQ-schema-063） | その行のマーカーの行 | 元の行を保った文字列の配列（REQ-schema-063） |
 | `表` | データ行 | データ行の値。`文書`のヘッダ行より多いセルは捨てる（REQ-schema-033）。鍵は "header" を宣言すればその名前、宣言しなければ列の位置（配列）。`要素の値`の置き場か`導かれる値`を宣言した`表`に`出現回数`の範囲も宣言したときは`配置パス`の直下に`表`ごとの段を作り、それ以外は同じ置き場の`表`のデータ行を現れた順に1つの配列へつなぐ | そのデータ行の行 | 行の配列。行の鍵は "header" を宣言すればその名前、宣言しなければ列の位置（配列）にし、`文書`のヘッダ行の文字は鍵に使わない |
 | `コードブロック` | ブロック | ブロック全体の文字列 | フェンスの開始行 | ブロック全体の文字列 |
 
@@ -203,4 +211,32 @@ Scenario: 項目と節の外の要素の最後の行は停止する
   Given `表`の`抽出`に "end" の`導かれる値`を宣言した`スキーマ`がある
   When "mds values" を実行する
   Then 終了コードは 2 である
+
+@id=EX-schema-054 @about=REQ-schema-063,TBL-schema-008 @source=docs/decision/records/2026-09-23-extract-original-lines.md#A1,docs/decision/records/2026-09-23-extract-original-lines.md#A3,docs/decision/records/2026-09-23-extract-original-lines.md#A4
+Scenario: 箇条書きの値は字下げと空行を元の行のまま持つ
+  Given 2行の lead 段落と、空行を挟んだ`継続段落`と、空行を挟んだ子の`箇条書き`を持つ`箇条書き`と、マーカーだけの行の後に lead 段落と`継続段落`を持つ`箇条書き`の`文書`がある
+  When "mds values --format json" を実行する
+  Then どちらの`箇条書き`の値も、マーカーの後の行を字下げを含む元の行のまま持つ
+  And lead 段落と`継続段落`の間と、`継続段落`と子の`箇条書き`の間に空行が1つずつ入る
+
+@id=EX-schema-055 @about=REQ-schema-063,REQ-schema-046 @source=docs/decision/records/2026-09-23-extract-original-lines.md#A1,docs/decision/records/2026-09-23-extract-original-lines.md#A2,docs/decision/records/2026-09-23-extract-original-lines.md#A3,docs/decision/records/2026-09-23-extract-original-lines.md#A7
+Scenario: フィールド行の値は名前の後から始まり継続段落を空行で付ける
+  Given 2行にわたる値と空行を挟んだ`継続段落`を持つ`フィールド行`と、区切り文字を宣言した同じ形の`フィールド行`の`文書`がある
+  When "mds values --format json" を実行する
+  Then 値は名前の後の空白の後から始まり、2行目の字下げを残す
+  And `継続段落`は空行を挟んで値か区切った末尾の要素に付く
+
+@id=EX-schema-056 @about=REQ-schema-063,TBL-schema-008 @source=docs/decision/records/2026-09-23-extract-original-lines.md#A3,docs/decision/records/2026-09-21-mds-spec.md#A51
+Scenario: 節の本文は含めない部分を抜いて空行を1つにまとめる
+  Given `文`、空行、`フィールド行`、空行、`箇条書き`の順に並び、`文`と`箇条書き`の間に空行を挟まない別の並びも持つ`節`の`文書`がある
+  When "mds values --format json" を実行する
+  Then `フィールド行`を抜いた跡の空行は1つにまとまる
+  And 空行を挟まない`文`と`箇条書き`は改行1つでつながる
+
+@id=EX-schema-057 @about=REQ-schema-063 @source=docs/decision/records/2026-09-23-extract-original-lines.md#A6
+Scenario: 行で読んでも文の行の間に空行を足さない
+  Given "reading: line" を宣言し、`文`の`抽出`に`導かれる値`を宣言しない`スキーマ`がある
+  And 空行を挟まない2行の`文`と、空行を挟んだ3行目の`文`を持つ`文書`がある
+  When "mds values --format json" を実行する
+  Then 1行目と2行目は改行1つで、2行目と3行目は空行1つでつながる
 ```
