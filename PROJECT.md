@@ -29,8 +29,8 @@ Run cargo from the repository root; it covers the whole workspace.
 | Check this repository's own IR | `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format text` |
 | Quality gates (pre-commit) | `lefthook run pre-commit --no-auto-install` |
 
-`CARGO_BUILD_JOBS=4` caps the parallel build jobs for memory reasons
-(`docs/plans/engine-positions.md`); `lefthook.yml` runs cargo the same way in both hooks.
+`CARGO_BUILD_JOBS=4` caps the parallel build jobs for memory reasons; `lefthook.yml` runs cargo
+the same way in both hooks.
 
 The minimum supported Rust version is declared per crate, not once for the workspace:
 `crates/kotowari-markdown-schema` declares `rust-version = "1.89"`, and neither `kotowari` nor
