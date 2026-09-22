@@ -3,7 +3,6 @@ name: ir-flags
 open: false
 document:
   title:
-    pattern: "^.+"
     extract: title
   preamble:
     statement:
@@ -11,7 +10,7 @@ document:
       extract: scope
   sections:
     - name: 問題の記録
-      required: false
+      repeat: { min: 0 }
       item:
         id: "FLAG-([a-z][a-z0-9-]*-)?\\d{3,}"
         repeat: { min: 0 }
@@ -22,6 +21,5 @@ document:
             separator: ","
           - name: 出典
             separator: ","
-            pattern: "^docs/"
         statement:
           required: true

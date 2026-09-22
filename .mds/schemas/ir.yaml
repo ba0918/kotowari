@@ -3,15 +3,14 @@ name: ir
 open: false
 document:
   title:
-    pattern: "^.+"
     extract: title
   preamble:
     statement:
-      required: true
+      repeat: { min: 1 }
       extract: scope
   sections:
     - name: 要求
-      required: false
+      repeat: { min: 0 }
       item:
         id: "REQ-([a-z][a-z0-9-]*-)?\\d{3,}"
         repeat: { min: 0 }
@@ -24,7 +23,6 @@ document:
             extract: kind
           - name: 出典
             separator: ","
-            pattern: "^docs/"
             extract: sources
           - name: 検証
             enum: [unit, property, proof, review]
@@ -43,7 +41,7 @@ document:
           when: { field: 種類, ne: algorithm }
           extract: text
     - name: 決定表
-      required: false
+      repeat: { min: 0 }
       item:
         id: "TBL-([a-z][a-z0-9-]*-)?\\d{3,}"
         repeat: { min: 0 }
@@ -53,15 +51,15 @@ document:
         fields:
           - name: 出典
             separator: ","
-            pattern: "^docs/"
             extract: sources
         table:
+          repeat: { min: 1 }
           extract: rows
         statement:
           required: false
           extract: text
     - name: 性質
-      required: false
+      repeat: { min: 0 }
       item:
         id: "PROP-([a-z][a-z0-9-]*-)?\\d{3,}"
         repeat: { min: 0 }
@@ -71,19 +69,13 @@ document:
         fields:
           - name: 出典
             separator: ","
-            pattern: "^docs/"
             extract: sources
         statement:
           required: true
           extract: text
     - name: 具体例
-      required: false
+      repeat: { min: 0 }
       codeblock:
         lang: gherkin
         repeat: { min: 0 }
-        lines:
-          - "^@"
-          - "^Scenario:"
-          - "^(Given|When|Then|And|But) "
-          - "^#"
         extract: scenarios

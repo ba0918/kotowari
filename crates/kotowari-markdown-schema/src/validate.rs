@@ -2186,6 +2186,25 @@ document:
         assert!(kinds(&findings).contains(&FindingKind::RepeatMinNotMet));
     }
 
+    // @kotowari[REQ-schema-056]
+    #[test]
+    fn missing_required_item_is_reported_as_repeat_min_not_met() {
+        let schema = r#"
+document:
+  sections:
+    - name: 要求
+      item:
+        id: "REQ-\\d{3}"
+        repeat: { min: 1 }
+"#;
+        let doc = "## 要求\n";
+        let findings = validate_src(schema, doc, false);
+        let ks = kinds(&findings);
+        // 項目の欠落は出現回数の下限として出る。節の欠落の種類は使わない
+        assert!(ks.contains(&FindingKind::RepeatMinNotMet));
+        assert!(!ks.contains(&FindingKind::MissingRequiredSection));
+    }
+
     // @kotowari[REQ-schema-019]
     #[test]
     fn repeat_min_not_met_for_field_is_found() {

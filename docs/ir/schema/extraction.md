@@ -41,10 +41,10 @@ mds は常に、`文書`から取り出した`抽出`の値を文字列として
 ### REQ-schema-039: 置き場の無い内側の抽出
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A22, docs/decision/records/2026-09-21-mds-spec.md#A48
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A22, docs/decision/records/2026-09-21-mds-spec.md#A48, docs/decision/records/2026-09-21-mds-spec.md#A68
 - 検証: unit
 
-`項目`の内側の`フィールド行`、`文`、`箇条書き`、`表`、`コードブロック`が`抽出`を宣言し、その`項目`自身が`抽出`を宣言していないとき、mds は`停止`する。
+`項目`の内側の`フィールド行`、`文`、`箇条書き`、`表`、`コードブロック`が`抽出`を宣言し、その`項目`自身が`抽出`を宣言していないとき、mds は`停止`する。`箇条書き`の子の`フィールド行`も`項目`の内側に数える。
 
 ### REQ-schema-047: 項目のオブジェクトの形
 
