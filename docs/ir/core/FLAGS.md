@@ -20,14 +20,6 @@ TBL-core-029 は対応表が持つ5つの列と、名前が同じで意味が違
 
 REQ-core-175 は停止の理由を1つ足すと定めるが、TBL-core-018 の標準エラーの1行目の文言も、TBL-core-020 の詳細も決まっていない。
 
-### FLAG-core-003: 埋め込むスキーマの抽出の宣言が新しい形になっていない
-
-- 種類: gap
-- 関係: REQ-core-168, REQ-schema-048
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A51
-
-".mds/schemas/" の3つの YAML の抽出の宣言 22 件（うち導かれる値を使うのは9件）は書式の並びのままで、REQ-schema-048 の入れ子の形になっていない。書き換えないと置き換えた後の "kotowari check" が通らない。
-
 ### FLAG-core-004: docs/ir/schema の文書にスキーマの宣言が残っている
 
 - 種類: contradiction
