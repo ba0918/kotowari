@@ -30,7 +30,7 @@ fn strip_frontmatter(node: &mut Node) {
     }
 }
 
-/// 位置情報を取り除く。R17 は出力に position を含めない。
+/// 位置情報を取り除く。REQ-schema-040 は出力に position を含めない。
 fn strip_positions(node: &mut Node) {
     node.position_set(None);
     if let Some(children) = node.children_mut() {

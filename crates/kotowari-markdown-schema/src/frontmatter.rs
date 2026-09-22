@@ -13,7 +13,7 @@ pub enum SchemaRef {
     Url(String),
 }
 
-/// frontmatter を読めなかった理由。R19 の `frontmatter_invalid` に相当する。
+/// frontmatter を読めなかった理由。TBL-schema-009 の「frontmatter が壊れている」に相当する。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FrontmatterError(pub String);
 
@@ -30,7 +30,7 @@ struct Frontmatter {
     schema: SchemaValue,
 }
 
-/// `$schema` キーの値。キーの有無と null を区別する（R2 は null を誤りにする）。
+/// `$schema` キーの値。キーの有無と null を区別する（REQ-schema-014 は null を停止にする）。
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 enum SchemaValue {
     /// キーが無い。スキーマを持たない文書
@@ -85,7 +85,7 @@ where
         }
     }
 
-    // 数値・配列などは visit_* が無く型エラーになり、R2 の「文字列でない $schema」として扱う
+    // 数値・配列などは visit_* が無く型エラーになり、REQ-schema-014 の「"$schema" の値が文字列でない」として扱う
     deserializer.deserialize_any(Visitor)
 }
 
@@ -278,7 +278,7 @@ mod tests {
         let src = "---\nただのスカラ\n---\n# 題名\n";
         assert!(
             frontmatter_schema(src).is_err(),
-            "frontmatter が YAML のマッピングでなければ誤りにする（R2）"
+            "frontmatter が YAML のマッピングでなければ誤りにする（REQ-schema-014）"
         );
     }
 
@@ -288,7 +288,7 @@ mod tests {
         let src = "---\n- a\n- b\n---\n# 題名\n";
         assert!(
             frontmatter_schema(src).is_err(),
-            "frontmatter が並びでも誤りにする（R2）"
+            "frontmatter が並びでも誤りにする（REQ-schema-014）"
         );
     }
 }

@@ -60,7 +60,7 @@ fn extract_title(schema: &Schema, document: &Document, root: &mut Map<String, Va
         return;
     };
     // 名前付きキャプチャを宣言した題名の要素の値は、題名の文字ではなく
-    // pattern が捕まえた部分である（R16）
+    // pattern が捕まえた部分である（REQ-schema-048）
     let value = match extract.group() {
         Some(group) => {
             let Some(captured) = title
@@ -91,7 +91,7 @@ fn extract_section(
         .collect();
 
     if let Some(extract) = &def.extract {
-        // 節は要素に分けない。繰り返すときは配置パスの直下に段ができる（R17）
+        // 節は要素に分けない。繰り返すときは配置パスの直下に段ができる（TBL-schema-008、PROP-schema-004）
         let elements: Vec<Value> = occurrences
             .iter()
             .map(|s| {
@@ -118,10 +118,10 @@ fn extract_section(
     {
         let items: Vec<&DocItem> = occurrences.iter().flat_map(|s| s.items.iter()).collect();
         if items.is_empty() {
-            // 0件のときはキーを省略する（R16）
+            // 0件のときはキーを省略する（REQ-schema-038）
         } else {
             // 内部が extract を宣言したか、項目が value か of を宣言していれば
-            // 項目ごとのオブジェクトにする（R16）
+            // 項目ごとのオブジェクトにする（REQ-schema-047）
             let as_object = item_internals_declare_extract(item)
                 || extract.has_of()
                 || extract.value().is_some();
@@ -155,7 +155,7 @@ fn extract_fields(
                 .copied()
                 .filter(|b| matches!(b, Block::Field { name, .. } if name == &field.name))
                 .collect();
-            // フィールド行は要素に分けない。繰り返すときは配置パスの直下に段ができる（R17）
+            // フィールド行は要素に分けない。繰り返すときは配置パスの直下に段ができる（TBL-schema-008、PROP-schema-004）
             let elements: Vec<Value> = occurrences
                 .iter()
                 .map(|b| {
@@ -177,8 +177,9 @@ fn field_single(field: &Field, block: &Block) -> Value {
         _ => ("", &[][..]),
     };
     match field.effective_separator() {
-        // 区切った要素は前後の空白を取り除いて抽出し、空の要素は空文字列として残す（R8）。
-        // 分割は継続段落を含めない値だけを対象にし、継続段落は末尾の要素に改行で付ける（R8・R16）
+        // 区切った要素は配列にする（REQ-schema-045）。要素は前後の空白を取り除いて抽出し、
+        // 空の要素は空文字列として残す。分割は継続段落を含めない値だけを対象にし、
+        // 継続段落は末尾の要素に改行で付ける（REQ-schema-046）
         Some(sep) => {
             let mut elements: Vec<String> =
                 value.split(sep).map(|s| s.trim().to_string()).collect();
@@ -188,8 +189,8 @@ fn field_single(field: &Field, block: &Block) -> Value {
             Value::Array(elements.into_iter().map(Value::String).collect())
         }
         None => {
-            // 継続段落はフィールド行の一部で、値と改行でつなぐ（R8・R16）。複数あるときは
-            // 箇条書きと同じく空行でつなぐ（R10）
+            // 継続段落はフィールド行の一部で、値と改行でつなぐ（REQ-schema-030、REQ-schema-046）。複数あるときは
+            // 箇条書きと同じく空行でつなぐ
             let mut full = value.to_string();
             join_continuation(&mut full, continuation);
             Value::String(full)
@@ -215,11 +216,11 @@ fn extract_statement(
         .filter(|b| matches!(b, Block::Statement { .. }))
         .collect();
     if statements.is_empty() {
-        // 0件のときはキーを省略する（R16）
+        // 0件のときはキーを省略する（REQ-schema-038）
         return;
     }
     if extract.has_of() {
-        // 導かれる値を宣言したときは行が要素の単位になる（R2）。空行で区切って
+        // 導かれる値を宣言したときは行が要素の単位になる（TBL-schema-008）。空行で区切って
         // 続く段落も同じ並びに入り、出現回数の宣言では入れ子にしない
         let elements: Vec<Value> = statements
             .iter()
@@ -240,7 +241,7 @@ fn extract_statement(
         return;
     }
     // 導かれる値を宣言しない文は行に分けない。繰り返すときは配置パスの
-    // 直下に段ができる（R2・R17）
+    // 直下に段ができる（TBL-schema-008、PROP-schema-004）
     let texts: Vec<String> = statements
         .iter()
         .map(|b| match b {
@@ -269,7 +270,7 @@ fn extract_statement(
 }
 
 /// 文の1行の要素の値。前後の空白を取り除いた行の文字にする。字下げと
-/// 末尾の空白を含む行そのままは導かれる値の `raw` で取る（R2）。
+/// 末尾の空白を含む行そのままは導かれる値の `raw` で取る（REQ-schema-048）。
 fn statement_line_text(raw: &RawLine) -> String {
     raw.text.trim().to_string()
 }
@@ -285,9 +286,9 @@ fn extract_bullets(
         return;
     };
     // 子フィールドの抽出は箇条書きの下からだけ行う。宣言済みフィールド行の下は
-    // 未宣言の構造（R13）で、そこにある子フィールド名の行を拾うと正当な子
+    // 未宣言の構造（REQ-schema-003）で、そこにある子フィールド名の行を拾うと正当な子
     // フィールドの値を覆い隠す。宣言された名前と一致しない `- 名前: 値` 行は
-    // 箇条書きとして扱う（R8）。
+    // 箇条書きとして扱う（TBL-schema-007）。
     let bullet_blocks: Vec<&Block> = blocks
         .iter()
         .copied()
@@ -305,7 +306,7 @@ fn extract_bullets(
         return;
     };
     // 箇条書きは行が要素の単位。要素の値は元のマーカー行（元のマーカーを保つ）と
-    // 子の箇条書きの行をそのままのインデントで含めた文字列（R10・R17）
+    // 子の箇条書きの行をそのままのインデントで含めた文字列（REQ-schema-031、TBL-schema-008）
     let elements: Vec<Value> = bullet_blocks
         .iter()
         .copied()
@@ -319,7 +320,7 @@ fn extract_bullets(
         })
         .collect();
     if elements.is_empty() {
-        // 0件のときはキーを省略する（R16）
+        // 0件のときはキーを省略する（REQ-schema-038）
         return;
     }
     place(root, extract.path(), Value::Array(elements));
@@ -330,7 +331,7 @@ fn extract_bullets(
 }
 
 /// 子フィールドの抽出。`children.fields` で宣言された子フィールドのうち、自身の
-/// `extract` を持つものをその配置パスに置く（R10・R16）。さらに深い入れ子の
+/// `extract` を持つものをその配置パスに置く（REQ-schema-031、REQ-schema-036）。さらに深い入れ子の
 /// 子フィールドは、子の箇条書きの `children` の宣言に沿って再帰する。
 fn extract_child_fields(
     children: &Children,
@@ -355,7 +356,7 @@ fn extract_child_fields(
         }
     }
     // 子の箇条書きの下の children に再帰する。子の箇条書きは Bullet か、この
-    // レベルの宣言と一致しない `- 名前: 値` 行（箇条書きとして扱う行）である（R8）
+    // レベルの宣言と一致しない `- 名前: 値` 行（箇条書きとして扱う行）である（TBL-schema-007）
     if let Some(child_bullets) = children.bullets.as_deref()
         && let Some(grandchildren) = &child_bullets.children
     {
@@ -375,7 +376,7 @@ fn extract_child_fields(
     }
 }
 
-/// 箇条書きの抽出要素を、子の箇条書きの行を含めて組み立てる（R10・R16）。
+/// 箇条書きの抽出要素を、子の箇条書きの行を含めて組み立てる（REQ-schema-031、TBL-schema-008）。
 /// 元の行、継続段落、子の箇条書きの行を改行でつなぐ。子の箇条書きの行は
 /// そのままのインデントで含める。`children` の宣言でフィールド行として宣言された
 /// 子の行は含めない（A12）。`children` が無ければ子はすべて箇条書きとして含める。
@@ -431,19 +432,19 @@ fn extract_table(
         .filter(|b| matches!(b, Block::Table { .. }))
         .collect();
     if tables.is_empty() {
-        // 0件のときはキーを省略する（R16）
+        // 0件のときはキーを省略する（REQ-schema-038）
         return;
     }
-    // 表はデータ行が要素の単位（R17）
+    // 表はデータ行が要素の単位（TBL-schema-008）
     let per_table: Vec<Vec<Value>> = tables
         .iter()
         .map(|b| table_rows(b, table.header.as_deref(), extract, doc))
         .collect();
     let value = if table.repeat.is_some() && declares_element_object(extract) {
-        // 繰り返す表は配置パスの直下に表ごとの段を作る（R1）
+        // 繰り返す表は配置パスの直下に表ごとの段を作る（TBL-schema-008）
         Value::Array(per_table.into_iter().map(Value::Array).collect())
     } else {
-        // 複数の表は現れた順に1つの配列へ連結する（R16）
+        // 複数の表は現れた順に1つの配列へ連結する
         Value::Array(per_table.into_iter().flatten().collect())
     };
     place(root, extract.path(), value);
@@ -478,7 +479,7 @@ fn table_rows(
 }
 
 /// 表の1行の要素の値。鍵はスキーマが宣言した `header` の名前で、宣言が
-/// 無ければ列の位置（配列）にする。文書のヘッダ行の文字は鍵に使わない（R1）。
+/// 無ければ列の位置（配列）にする。文書のヘッダ行の文字は鍵に使わない（TBL-schema-008）。
 /// 宣言した名前の数を正とし、文書の列が足りなければその鍵を省き、
 /// 多ければ余りを捨てる。
 fn row_value(header: Option<&[String]>, row: &[String]) -> Value {
@@ -509,7 +510,7 @@ fn extract_codeblock(
         .copied()
         .filter(|b| matches!(b, Block::Code { .. }))
         .collect();
-    // コードブロックはブロックが要素の単位で、行はフェンスの開始行（R17）
+    // コードブロックはブロックが要素の単位で、行はフェンスの開始行（TBL-schema-008）
     let elements: Vec<Value> = codes
         .iter()
         .map(|b| {
@@ -528,7 +529,7 @@ fn section_body(section: &DocSection, def: &crate::schema::Section) -> String {
 }
 
 /// 項目をオブジェクトに組み立てる。内部のノードの抽出は項目オブジェクトの中の
-/// 相対パスへ置き、項目自身の `of` を添えた書式も同じオブジェクトの中へ置く（R16）。
+/// 相対パスへ置き、項目自身の `of` を添えた書式も同じオブジェクトの中へ置く（REQ-schema-047）。
 fn item_object(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) -> Value {
     let mut object = Map::new();
     let blocks: Vec<&Block> = item.blocks.iter().collect();
@@ -566,7 +567,7 @@ fn item_value(item: &DocItem, item_rule: &crate::schema::Item) -> Value {
     Value::String(item_value_text(item, item_rule))
 }
 
-/// 項目の要素の値。見出しと本文をつないだ文字列（R17）。
+/// 項目の要素の値。見出しと本文をつないだ文字列（TBL-schema-008）。
 fn item_value_text(item: &DocItem, item_rule: &crate::schema::Item) -> String {
     let heading = if item.title.is_empty() {
         item.id.clone()
@@ -589,9 +590,9 @@ fn item_value_text(item: &DocItem, item_rule: &crate::schema::Item) -> String {
 /// 本文を組み立てる。文と箇条書き（必要ならフィールド行も）を含み、
 /// 表・コードブロック・項目は含めない。文どうしは空行、それ以外の
 /// 隣接（文と箇条書き・文とフィールド行・箇条書きどうしなど）は改行で
-/// つなぐ。箇条書きは R10 の抽出要素（継続段落と子の箇条書きの行を含む
+/// つなぐ。箇条書きは TBL-schema-008 の抽出要素（継続段落と子の箇条書きの行を含む
 /// 文字列）を使う。宣言された名前と一致しない `- 名前: 値` 行は箇条書きとして
-/// 本文に含める（R8）。
+/// 本文に含める（TBL-schema-007）。
 fn body_from_blocks(
     blocks: &[Block],
     fields: &[Field],
@@ -629,7 +630,7 @@ fn body_from_blocks(
     out
 }
 
-/// 1つの要素の導かれる値の材料（R17）。
+/// 1つの要素の導かれる値の材料（REQ-schema-048）。
 #[derive(Default)]
 struct Derived {
     line: Option<usize>,
@@ -648,12 +649,12 @@ impl Derived {
 }
 
 /// ノードが要素オブジェクトを作る宣言をしているか。`value` も導かれる値も
-/// 宣言していなければ、要素そのものが値になる（R16）。
+/// 宣言していなければ、要素そのものが値になる（TBL-schema-008）。
 fn declares_element_object(extract: &Extract) -> bool {
     extract.value().is_some() || extract.has_of()
 }
 
-/// 1つの要素を、宣言に応じて素の値か要素オブジェクトにする（R16・R17）。
+/// 1つの要素を、宣言に応じて素の値か要素オブジェクトにする（TBL-schema-008、REQ-schema-048）。
 fn element_value(extract: &Extract, doc: &Document, value: Value, got: &Derived) -> Value {
     if !declares_element_object(extract) {
         return value;
@@ -667,8 +668,8 @@ fn element_value(extract: &Extract, doc: &Document, value: Value, got: &Derived)
 }
 
 /// 要素に分けないノードの出現を置く。繰り返すノードは配置パスの直下に
-/// 段を作り、繰り返さないノードは最初の出現だけを置く（R17）。0件のときは
-/// キーを省略する（R16）。
+/// 段を作り、繰り返さないノードは最初の出現だけを置く（PROP-schema-004）。0件のときは
+/// キーを省略する（REQ-schema-038）。
 fn place_occurrences(
     root: &mut Map<String, Value>,
     extract: &Extract,
@@ -686,7 +687,7 @@ fn place_occurrences(
     place(root, extract.path(), value);
 }
 
-/// 宣言された導かれる値を、その鍵へ置く。`raw` は文書の生の行から取る（R17）。
+/// 宣言された導かれる値を、その鍵へ置く。`raw` は文書の生の行から取る（REQ-schema-048）。
 fn place_derived(map: &mut Map<String, Value>, extract: &Extract, doc: &Document, got: &Derived) {
     for (key, kind) in extract.of() {
         let value = match kind {
@@ -797,7 +798,7 @@ document:
         assert_eq!(
             v["reasons"],
             json!(["- 判断の記録かどうかの見分け（A134: 決定の節の見出しを1つ以上持つファイル）"]),
-            "未宣言の名前の `- 名前: 値` 行は箇条書きとして抽出する（R8・R16）"
+            "未宣言の名前の `- 名前: 値` 行は箇条書きとして抽出する（TBL-schema-007、TBL-schema-008）"
         );
     }
 
@@ -819,7 +820,7 @@ document:
         assert_eq!(
             v["sections"]["body"],
             "- 判断の記録かどうかの見分け（A134: 決定の節の見出しを1つ以上持つファイル）",
-            "節の本文はフィールド行を含めず、箇条書きとして含める（R16）"
+            "節の本文はフィールド行を含めず、箇条書きとして含める（TBL-schema-008）"
         );
     }
 
@@ -839,7 +840,7 @@ document:
         assert_eq!(
             v["reasons"],
             json!(["* 判断の記録（A134: 決定の節）"]),
-            "未宣言の名前の `* 名前: 値` 行は元のマーカーを保って箇条書きとして抽出する（R10）"
+            "未宣言の名前の `* 名前: 値` 行は元のマーカーを保って箇条書きとして抽出する（TBL-schema-008）"
         );
     }
 
@@ -860,7 +861,7 @@ document:
         let v = values(schema, doc);
         assert_eq!(
             v["sections"]["body"], "* 判断の記録（A134: 決定の節）",
-            "節の本文の箇条書き要素は元のマーカーを保つ（R16）"
+            "節の本文の箇条書き要素は元のマーカーを保つ（TBL-schema-008）"
         );
     }
 
@@ -989,7 +990,7 @@ document:
         assert_eq!(
             v["tags"],
             json!(["a", "b\n継続,の段落"]),
-            "継続段落は値の分割に含めず、末尾の要素に改行で付ける（R8・R16）"
+            "継続段落は値の分割に含めず、末尾の要素に改行で付ける（REQ-schema-046）"
         );
     }
 
@@ -1009,7 +1010,7 @@ document:
         assert_eq!(
             v["tags"],
             json!(["a", "b\n折り返し", "c"]),
-            "空行なしの折り返し行は値の一部で、separator の分割対象になる（R8）。継続段落のように末尾要素に付かない"
+            "空行なしの折り返し行は値の一部で、separator の分割対象になる（REQ-schema-045、REQ-schema-046）。継続段落のように末尾要素に付かない"
         );
     }
 
@@ -1092,7 +1093,7 @@ document:
 "#;
         let doc = "## 状況\n\n- 理由1\n\n  続きの段落\n  - 入れ子\n";
         let v = values(schema, doc);
-        // 子の箇条書きの行は、そのままのインデントで親の抽出要素に含める（R10）
+        // 子の箇条書きの行は、そのままのインデントで親の抽出要素に含める（REQ-schema-031、TBL-schema-008）
         assert_eq!(v["sections"]["body"], "- 理由1\n続きの段落\n  - 入れ子");
     }
 
@@ -1112,7 +1113,7 @@ document:
         assert_eq!(
             v["reasons"],
             json!(["* 星", "+ プラス", "- ハイフン"]),
-            "箇条書きの抽出は元のマーカーを保つ（R10）"
+            "箇条書きの抽出は元のマーカーを保つ（TBL-schema-008）"
         );
     }
 
@@ -1132,7 +1133,7 @@ document:
         assert_eq!(
             v["reasons"],
             json!(["* 親\n続きの段落"]),
-            "継続段落を付けるときも元のマーカーを保つ（R10）"
+            "継続段落を付けるときも元のマーカーを保つ（TBL-schema-008）"
         );
     }
 
@@ -1152,7 +1153,7 @@ document:
         assert_eq!(
             v["reasons"],
             json!(["-  親"]),
-            "抽出の1要素は元の行（マーカーとその直後の空白を含む）を使う（R10）"
+            "抽出の1要素は元の行（マーカーとその直後の空白を含む）を使う（TBL-schema-008）"
         );
     }
 
@@ -1172,7 +1173,7 @@ document:
         assert_eq!(
             v["reasons"],
             json!(["-  親\n続きの段落"]),
-            "継続段落とつなぐときも元の行のマーカー直後の空白を保つ（R10）"
+            "継続段落とつなぐときも元の行のマーカー直後の空白を保つ（TBL-schema-008）"
         );
     }
 
@@ -1192,7 +1193,7 @@ document:
         assert_eq!(
             v["reasons"],
             json!(["- \n親", "- 次"]),
-            "マーカー行と別の行にある lead 段落の内容を抽出要素が欠落させない（R10）"
+            "マーカー行と別の行にある lead 段落の内容を抽出要素が欠落させない（TBL-schema-008）"
         );
     }
 
@@ -1212,7 +1213,7 @@ document:
         assert_eq!(
             v["reasons"],
             json!(["- 親  \n続き"]),
-            "ハード改行の末尾空白がマーカー行から剥がれない（R10）"
+            "ハード改行の末尾空白がマーカー行から剥がれない（TBL-schema-008）"
         );
     }
 
@@ -1232,7 +1233,7 @@ document:
         assert_eq!(
             v["reasons"],
             json!(["-  判断の記録（A134: 決定の節）"]),
-            "未宣言の名前の行を箇条書きとして抽出するときも元の行を使う（R8・R10）"
+            "未宣言の名前の行を箇条書きとして抽出するときも元の行を使う（TBL-schema-007、TBL-schema-008）"
         );
     }
 
@@ -1284,7 +1285,7 @@ document:
         assert_eq!(
             v["reasons"],
             json!(["- 箇条書き"]),
-            "順序付きリストは箇条書きの対象外で抽出に含めない（R10）"
+            "順序付きリストは箇条書きの対象外で抽出に含めない（TBL-schema-007）"
         );
     }
 
@@ -1302,7 +1303,7 @@ document:
         let v = values(schema, doc);
         assert_eq!(
             v["status"], "承認済み\n継続の段落",
-            "フィールド行の継続段落は値に改行でつなぐ（R8・R16）"
+            "フィールド行の継続段落は値に改行でつなぐ（REQ-schema-046）"
         );
     }
 
@@ -1323,7 +1324,7 @@ document:
 "#;
         let doc = "## 要求\n\n### REQ-001: 名前\n\n- 種類: algorithm\n\n  継続の説明\n";
         let v = values(schema, doc);
-        // 継続段落はフィールド行の一部なので、項目の本文のフィールド行にも含める（R8・R16）
+        // 継続段落はフィールド行の一部なので、項目の本文のフィールド行にも含める（REQ-schema-030）
         assert_eq!(
             v["items"],
             json!(["REQ-001: 名前\n- 種類: algorithm\n継続の説明"])
@@ -1414,7 +1415,7 @@ document:
                 { "text": "字下げの2行目", "line": 4 },
                 { "text": "3行目", "line": 5 }
             ]),
-            "行の数と同じ数のオブジェクトが、前後の空白を取り除いた値と行番号を持つ（R2）"
+            "行が要素の単位になり（TBL-schema-008）、行の数と同じ数のオブジェクトが前後の空白を取り除いた値と行番号を持つ"
         );
     }
 
@@ -1440,7 +1441,7 @@ document:
                 { "text": "1行目", "line": 3 },
                 { "text": "次の段落", "line": 5 }
             ]),
-            "空行を挟んで続く段落も同じ並びに入る（R16）"
+            "空行を挟んで続く段落も同じ並びに入る（TBL-schema-008）"
         );
     }
 
@@ -1462,7 +1463,7 @@ document:
         assert_eq!(
             v["lines"],
             json!([{ "text": "字下げのある行", "raw": "  字下げのある行  " }]),
-            "要素の値は前後の空白を取り除いた文字、raw は行そのままで別物（R2）"
+            "要素の値は前後の空白を取り除いた文字、raw は行そのままで別物（raw は REQ-schema-048）"
         );
     }
 
@@ -1488,7 +1489,7 @@ document:
         assert_eq!(
             v["lines"],
             json!([{ "text": "素の文。", "line": 7 }]),
-            "一覧の行の継続段落は文の抽出の要素に入らない（R2）"
+            "一覧の行の継続段落は文の抽出の要素に入らない（REQ-schema-030）"
         );
     }
 
@@ -1515,7 +1516,7 @@ document:
                 { "cells": { "a": "3", "b": "4" }, "line": 6 },
                 { "cells": { "a": "5", "b": "6" }, "line": 7 }
             ]),
-            "行ごとのオブジェクトが要素の値と行番号を持つ（R16・R17）"
+            "行ごとのオブジェクトが要素の値と行番号を持つ（TBL-schema-008、REQ-schema-048）"
         );
     }
 
@@ -1543,7 +1544,7 @@ document:
                 [{ "cells": { "a": "1", "b": "2" }, "line": 5 }],
                 [{ "cells": { "a": "3", "b": "4" }, "line": 9 }]
             ]),
-            "繰り返す表は配置パスの直下に表ごとの段を作る（R1）"
+            "繰り返す表は配置パスの直下に表ごとの段を作る（TBL-schema-008）"
         );
     }
 
@@ -1562,7 +1563,7 @@ document:
         assert_eq!(
             v["rows"],
             json!([["1", "あれ"], ["2", "これ"]]),
-            "header を宣言しない表の行は列の位置の配列になる（R1）"
+            "header を宣言しない表の行は列の位置の配列になる（TBL-schema-008）"
         );
     }
 
@@ -1581,12 +1582,12 @@ document:
         assert_eq!(
             values(schema, empty)["rows"],
             json!([["1", "2"]]),
-            "ヘッダのセルが空でも列の値は1つも失われない（R1）"
+            "ヘッダのセルが空でも列の値は1つも失われない（TBL-schema-008）"
         );
         assert_eq!(
             values(schema, repeated)["rows"],
             json!([["1", "2"]]),
-            "同じ名前の列が2つあっても列の値は1つも失われない（R1）"
+            "同じ名前の列が2つあっても列の値は1つも失われない（TBL-schema-008）"
         );
     }
 
@@ -1606,12 +1607,12 @@ document:
         assert_eq!(
             values(schema, fewer)["glossary"],
             json!([{ "用語": "印", "意味": "しるし" }]),
-            "文書の列が足りなければその鍵を省く（R1）"
+            "文書の列が足りなければその鍵を省く（TBL-schema-008）"
         );
         assert_eq!(
             values(schema, more)["glossary"],
             json!([{ "用語": "印", "意味": "しるし", "出典": "a.md" }]),
-            "文書の列が多ければ余りを捨てる（R1）"
+            "文書の列が多ければ余りを捨てる（TBL-schema-008）"
         );
     }
 
@@ -1707,7 +1708,7 @@ document:
         assert_eq!(
             v["decisions"],
             json!(["- A22 判断の記録\n  - 補足の子"]),
-            "親の抽出要素に子の箇条書きの行をそのままのインデントで含める（R10・R16）"
+            "親の抽出要素に子の箇条書きの行をそのままのインデントで含める（REQ-schema-031、TBL-schema-008）"
         );
     }
 
@@ -1765,7 +1766,7 @@ document:
     // @kotowari[REQ-schema-031]
     #[test]
     fn child_of_declared_field_does_not_shadow_declared_child_field() {
-        // 宣言済みフィールド行の下の子は未宣言の構造（R13）なので、子フィールドの
+        // 宣言済みフィールド行の下の子は未宣言の構造（REQ-schema-003）なので、子フィールドの
         // 抽出で拾わない。拾うと正当な子フィールドの値を覆い隠す。
         let schema = r#"
 document:
@@ -1785,7 +1786,7 @@ document:
         let v = values(schema, doc);
         assert_eq!(
             v["superseded_by"], "[A5]",
-            "宣言済みフィールド行の下の子は、宣言済みの子フィールドの値を覆い隠さない（R13）"
+            "宣言済みフィールド行の下の子は、宣言済みの子フィールドの値を覆い隠さない（REQ-schema-003）"
         );
     }
 
@@ -1811,7 +1812,7 @@ document:
         assert_eq!(
             v["decisions"],
             json!(["- 親\n  - 子\n    - 孫"]),
-            "再帰的な入れ子が親の抽出要素に含まれる（R16）"
+            "再帰的な入れ子が親の抽出要素に含まれる（TBL-schema-008）"
         );
     }
 
@@ -1833,7 +1834,7 @@ document:
         let v = values(schema, doc);
         assert_eq!(
             v["sections"]["body"], "- 親\n  - 子",
-            "節の本文は子の箇条書きの行を含む（R16）"
+            "節の本文は子の箇条書きの行を含む（TBL-schema-008）"
         );
     }
 
@@ -1855,7 +1856,7 @@ document:
         assert_eq!(
             v["items"],
             json!(["REQ-001: 名前\n- 親\n  - 子"]),
-            "項目の本文は子の箇条書きの行を含む（R16）"
+            "項目の本文は子の箇条書きの行を含む（TBL-schema-008）"
         );
     }
 
@@ -1882,7 +1883,7 @@ document:
         assert_eq!(
             v["decisions"],
             json!(["- 親\n  - 子"]),
-            "深いレベルの宣言された子フィールドも親の抽出要素に含めない（R10）"
+            "深いレベルの宣言された子フィールドも親の抽出要素に含めない（REQ-schema-036）"
         );
         assert_eq!(
             v["notes"], "深い",
@@ -1913,7 +1914,7 @@ document:
         assert_eq!(
             v["tables"],
             json!(["TBL-001: 名前\n- 出典: docs/a.md"]),
-            "項目の抽出の本文に表を含めない（R16）"
+            "項目の抽出の本文に表を含めない（TBL-schema-008）"
         );
     }
 
@@ -1926,7 +1927,7 @@ document:
         assert_eq!(
             v["glossary"],
             json!([{"用語": "印", "意味": "テストの印"}]),
-            "前置部の表もヘッダをキーにしたオブジェクトの配列で抽出する（R5・R16）"
+            "前置部の表もヘッダをキーにしたオブジェクトの配列で抽出する（表の抽出は TBL-schema-008）"
         );
     }
 
@@ -1939,7 +1940,7 @@ document:
         assert_eq!(
             v["status"],
             json!({ "status_line": 3 }),
-            "value を省いた要素オブジェクトは導かれる値の鍵だけを持ち、行番号は数値（R16・R17）"
+            "value を省いた要素オブジェクトは導かれる値の鍵だけを持ち、行番号は数値（REQ-schema-048）"
         );
     }
 
@@ -1978,7 +1979,7 @@ document:
                 "name": "印の構文",
                 "line": 3
             }]),
-            "内部が extract を宣言したら項目はオブジェクトになる（R16）"
+            "内部が extract を宣言したら項目はオブジェクトになる（REQ-schema-047）"
         );
     }
 
@@ -1991,7 +1992,7 @@ document:
         assert_eq!(
             v["requirements"],
             json!(["REQ-001: 印の構文\n- 種類: algorithm"]),
-            "内部に extract が無ければ今までどおり文字列（R16）"
+            "内部に extract が無ければ今までどおり文字列（REQ-schema-047）"
         );
     }
 
@@ -2016,7 +2017,7 @@ document:
                 { "code": "Scenario: 1つ目", "line": 3 },
                 { "code": "Scenario: 2つ目", "line": 7 }
             ]),
-            "コードブロックはブロックが要素の単位で、行はフェンスの開始行（R17）"
+            "コードブロックはブロックが要素の単位で、行はフェンスの開始行（TBL-schema-008）"
         );
     }
 
@@ -2039,7 +2040,7 @@ document:
                 { "text": "- 理由1", "line": 3 },
                 { "text": "- 理由2", "line": 4 }
             ]),
-            "箇条書きは行が要素の単位になる（R17）"
+            "箇条書きは行が要素の単位になる（TBL-schema-008）"
         );
     }
 
@@ -2052,7 +2053,7 @@ document:
         let v = values(schema, doc);
         assert_eq!(
             v["title"]["raw"], "# 題名 `インライン`",
-            "raw は見出しの行そのままで、組み立て直さない（R17）"
+            "raw は見出しの行そのままで、組み立て直さない（REQ-schema-048）"
         );
         assert_eq!(
             v["title"]["text"], "題名 インライン",
@@ -2069,7 +2070,7 @@ document:
         assert_eq!(
             v["status"],
             json!({ "text": "ok", "line": 3 }),
-            "分けないノードでも value か of を宣言すれば配置パスの下にオブジェクトができる（R17）"
+            "分けないノードでも value か of を宣言すれば配置パスの下にオブジェクトができる（REQ-schema-048）"
         );
     }
 
@@ -2093,7 +2094,7 @@ document:
         assert_eq!(
             v["requirements"],
             json!([{ "kind": "algorithm", "line": 3 }]),
-            "value を省いた要素オブジェクトは導かれる値と内側の配置パスだけを持つ（R16）"
+            "value を省いた要素オブジェクトは導かれる値と内側の配置パスだけを持つ（REQ-schema-047、REQ-schema-048）"
         );
     }
 

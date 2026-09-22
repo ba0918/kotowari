@@ -1,6 +1,6 @@
-//! 指摘のモデル。R18。
+//! 指摘のモデル（REQ-schema-008、TBL-schema-002）。
 
-/// 指摘の種別。R18 に列挙された kind に対応する。
+/// 指摘の種別。REQ-schema-008 の「種類」で、TBL-schema-002 の分類を割ったもの。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FindingKind {
     MissingTitle,
@@ -30,7 +30,7 @@ pub enum FindingKind {
 }
 
 impl FindingKind {
-    /// R18 の kind の文字列。snake_case。
+    /// 指摘の「種類」の文字列（REQ-schema-008）。snake_case。
     pub fn as_str(&self) -> &'static str {
         match self {
             FindingKind::MissingTitle => "missing_title",

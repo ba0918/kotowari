@@ -27,7 +27,7 @@ impl Pattern {
         &self.source
     }
 
-    /// 指定の名前の名前付きキャプチャを含むか。Capture 形の抽出が使う（R16）。
+    /// 指定の名前の名前付きキャプチャを含むか。Capture 形の抽出が使う（REQ-schema-048）。
     pub fn has_capture_group(&self, name: &str) -> bool {
         self.compiled.capture_names().flatten().any(|n| n == name)
     }
@@ -44,24 +44,24 @@ impl<'de> Deserialize<'de> for Pattern {
     }
 }
 
-/// スキーマを読めなかった理由。R19 の `schema_invalid` に相当する。
+/// スキーマを読めなかった理由。TBL-schema-009 の「スキーマが形に合わない」に相当する。
 #[derive(Debug)]
 pub struct SchemaError(pub String);
 
-/// スキーマ言語の最上位。R3。
+/// スキーマ言語の最上位（REQ-schema-016）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Schema {
     /// 型の名前。`ast --schema` の `type` に使う
     pub name: Option<String>,
-    /// 閉じた世界を緩めるか。R13
+    /// 閉じた世界を緩めるか（REQ-schema-002）
     #[serde(default)]
     pub open: bool,
     /// 文書の構造の木
     pub document: Document,
 }
 
-/// `document` の下の規則種別。R3。
+/// `document` の下の規則種別（TBL-schema-004）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Document {
@@ -71,7 +71,7 @@ pub struct Document {
     pub sections: Vec<Section>,
 }
 
-/// 題名。R4。
+/// 題名（TBL-schema-004、REQ-schema-022）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Title {
@@ -79,7 +79,7 @@ pub struct Title {
     pub extract: Option<Extract>,
 }
 
-/// 前置部。R5。
+/// 前置部（TBL-schema-004、REQ-schema-023）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Preamble {
@@ -89,12 +89,12 @@ pub struct Preamble {
     pub bullets: Option<Bullets>,
     pub table: Option<Table>,
     pub codeblock: Option<CodeBlock>,
-    /// フィールド行の並び順を強制する。R8
+    /// フィールド行の並び順を強制する（REQ-schema-041）
     #[serde(default)]
     pub ordered: bool,
 }
 
-/// 節。R6。
+/// 節（TBL-schema-004、REQ-schema-024）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Section {
@@ -105,7 +105,7 @@ pub struct Section {
     pub statement: Option<Statement>,
     #[serde(default)]
     pub fields: Vec<Field>,
-    /// フィールド行の並び順を強制する。R8
+    /// フィールド行の並び順を強制する（REQ-schema-041）
     #[serde(default)]
     pub ordered: bool,
     pub bullets: Option<Bullets>,
@@ -115,7 +115,7 @@ pub struct Section {
     pub extract: Option<Extract>,
 }
 
-/// 項目。R7。
+/// 項目（TBL-schema-004、REQ-schema-025）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Item {
@@ -123,7 +123,7 @@ pub struct Item {
     pub id: Option<Pattern>,
     #[serde(default)]
     pub fields: Vec<Field>,
-    /// フィールド行の並び順を強制する。R8
+    /// フィールド行の並び順を強制する（REQ-schema-041）
     #[serde(default)]
     pub ordered: bool,
     pub statement: Option<Statement>,
@@ -135,7 +135,7 @@ pub struct Item {
     pub extract: Option<Extract>,
 }
 
-/// フィールド行。R8。
+/// フィールド行（TBL-schema-004、REQ-schema-029）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Field {
@@ -163,12 +163,12 @@ impl Field {
     }
 }
 
-/// スキーマが宣言したフィールド行の名前と一致するか。R8 のフィールド行判定。
+/// スキーマが宣言したフィールド行の名前と一致するか。TBL-schema-007 のフィールド行判定。
 pub(crate) fn is_declared_field(fields: &[Field], name: &str) -> bool {
     fields.iter().any(|f| f.name == name)
 }
 
-/// 文。R9。
+/// 文（TBL-schema-004、REQ-schema-032）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Statement {
@@ -181,7 +181,7 @@ pub struct Statement {
     pub extract: Option<Extract>,
 }
 
-/// 箇条書きの子の規則。R10。
+/// 箇条書きの子の規則（REQ-schema-031）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Children {
@@ -191,7 +191,7 @@ pub struct Children {
     pub bullets: Option<Box<Bullets>>,
 }
 
-/// 箇条書き。R10。
+/// 箇条書き（TBL-schema-004、TBL-schema-007）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Bullets {
@@ -204,18 +204,18 @@ pub struct Bullets {
     pub children: Option<Children>,
 }
 
-/// 表。R11。
+/// 表（TBL-schema-004、REQ-schema-033）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Table {
-    /// ヘッダのセル列。宣言しないときはヘッダと列数を検査しない（R11）
+    /// ヘッダのセル列。宣言しないときはヘッダと列数を検査しない（REQ-schema-033）
     pub header: Option<Vec<String>>,
     pub required: Option<bool>,
     pub repeat: Option<Repeat>,
     pub extract: Option<Extract>,
 }
 
-/// コードブロック。R12。
+/// コードブロック（TBL-schema-004、REQ-schema-034）。
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CodeBlock {
@@ -227,7 +227,7 @@ pub struct CodeBlock {
     pub extract: Option<Extract>,
 }
 
-/// 出現回数。R14。
+/// 出現回数（REQ-schema-019、TBL-schema-005）。
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Repeat {
@@ -246,7 +246,7 @@ impl Repeat {
     }
 }
 
-/// 条件付き規則。R15。
+/// 条件付き規則（REQ-schema-020）。
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct When {
@@ -266,7 +266,7 @@ impl When {
     }
 }
 
-/// `of` が選ぶ、ノードから導かれる値の種類。R16。
+/// `of` が選ぶ、ノードから導かれる値の種類。（REQ-schema-048）。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum OfKind {
@@ -281,7 +281,7 @@ pub enum OfKind {
 }
 
 /// 1つのノードが宣言した抽出規則。YAML では `配置パス`だけの略記か、
-/// `path`・`value`・`of`・`group` を持つ入れ子の写像を受ける（R16）。
+/// `path`・`value`・`of`・`group` を持つ入れ子の写像を受ける（REQ-schema-048）。
 #[derive(Debug, Clone)]
 pub struct Extract {
     /// 出力の置き場。必ず1つ
@@ -383,7 +383,7 @@ impl<'de> serde::de::Visitor<'de> for ExtractVisitor {
                 }
             }
         }
-        // 配置パスは必ず1つ。無い宣言は schema_invalid の停止になる（R16）
+        // 配置パスは必ず1つ。無い宣言は schema_invalid の停止になる（REQ-schema-048）
         let Some(path) = path else {
             return Err(M::Error::custom("extract requires \"path\""));
         };
@@ -397,7 +397,7 @@ impl<'de> serde::de::Visitor<'de> for ExtractVisitor {
 }
 
 /// `of` の `{ 鍵: 語 }` の対応。宣言された順を保つ。同じ鍵を2度書いても
-/// 黙って上書きせず、そのまま持って R18 の重複の判定に回す。
+/// 黙って上書きせず、そのまま持って TBL-schema-009 の鍵の重複の判定に回す。
 struct OfEntries(Vec<(String, OfKind)>);
 
 impl<'de> Deserialize<'de> for OfEntries {
@@ -451,7 +451,7 @@ fn validate_title(title: &Title) -> Result<(), SchemaError> {
         return Ok(());
     };
     // 書式2（名前付きキャプチャ）は pattern のキャプチャを取る。pattern が無い、
-    // または pattern が指定の名前付きキャプチャを含まない題名は schema_invalid（R16）
+    // または pattern が指定の名前付きキャプチャを含まない題名は schema_invalid（REQ-schema-048）
     let Some(pattern) = &title.pattern else {
         return Err(SchemaError(
             "title capture extract requires a pattern".into(),
@@ -498,14 +498,14 @@ fn validate_item(item: &Item) -> Result<(), SchemaError> {
     }
     reject_capture_extract(item.extract.as_ref(), "item")?;
     // 項目の内部に extract を宣言するなら、項目自身も extract を持つ必要がある。
-    // 内部の配置パスは項目オブジェクトの中の相対パスなので、置き場が要る（R16）
+    // 内部の配置パスは項目オブジェクトの中の相対パスなので、置き場が要る（REQ-schema-039、REQ-schema-047）
     let internal = item_internal_extract_paths(item);
     if item.extract.is_none() && !internal.is_empty() {
         return Err(SchemaError(
             "item internals declare extract but the item itself does not".into(),
         ));
     }
-    // 内側の配置パスも項目オブジェクトの中の鍵なので、重複の判定に含める（R18）
+    // 内側の配置パスも項目オブジェクトの中の鍵なので、重複の判定に含める（TBL-schema-009）
     reject_duplicate_element_keys(item.extract.as_ref(), "item", &internal)?;
     validate_table(item.table.as_ref())?;
     validate_codeblock(item.codeblock.as_ref())?;
@@ -516,13 +516,13 @@ fn validate_item(item: &Item) -> Result<(), SchemaError> {
 }
 
 /// 項目の内部のノードが1つでも `extract` を宣言しているか。宣言していれば
-/// 項目の抽出はオブジェクトの形になる（R16）。
+/// 項目の抽出はオブジェクトの形になる（REQ-schema-047）。
 pub(crate) fn item_internals_declare_extract(item: &Item) -> bool {
     !item_internal_extract_paths(item).is_empty()
 }
 
 /// 項目の内部のノードが宣言した配置パス。項目オブジェクトの中の相対パスで、
-/// R18 の鍵の重複の判定にも使う。
+/// TBL-schema-009 の鍵の重複の判定にも使う。
 fn item_internal_extract_paths(item: &Item) -> Vec<String> {
     let mut paths: Vec<String> = Vec::new();
     let mut push = |extract: Option<&Extract>| {
@@ -571,7 +571,7 @@ fn validate_table(table: Option<&Table>) -> Result<(), SchemaError> {
     Ok(())
 }
 
-/// 1つの要素オブジェクトの中で鍵が重複するスキーマを停止にする（R18）。鍵は
+/// 1つの要素オブジェクトの中で鍵が重複するスキーマを停止にする（TBL-schema-009）。鍵は
 /// `value`、`of` の鍵、そして内側のノードの配置パス（`internal` で渡す）である。
 /// 判定は配置パス全体で行い、`a.b` と `a.c` は別の鍵、`a` と `a.b` は重複とする。
 fn reject_duplicate_element_keys(
@@ -671,7 +671,7 @@ fn validate_bullets(bullets: Option<&Bullets>, in_children: bool) -> Result<(), 
     Ok(())
 }
 
-/// 題名以外のノードには名前付きキャプチャ（`group`）の抽出を宣言できない（R16）。
+/// 題名以外のノードには名前付きキャプチャ（`group`）の抽出を宣言できない（TBL-schema-008）。
 /// 宣言すると schema_invalid の停止になる。
 fn reject_capture_extract(extract: Option<&Extract>, node: &str) -> Result<(), SchemaError> {
     if extract.and_then(Extract::group).is_some() {
@@ -682,7 +682,7 @@ fn reject_capture_extract(extract: Option<&Extract>, node: &str) -> Result<(), S
     Ok(())
 }
 
-/// 項目の外のノードには `of` の `id` と `name` を宣言できない（R16）。
+/// 項目の外のノードには `of` の `id` と `name` を宣言できない（REQ-schema-048）。
 fn reject_item_only_of(extract: Option<&Extract>, node: &str) -> Result<(), SchemaError> {
     let Some(extract) = extract else {
         return Ok(());
@@ -792,7 +792,7 @@ document:
     // @kotowari[REQ-schema-035]
     #[test]
     fn extract_accepts_the_shorthand_and_the_named_group() {
-        // 略記（`extract: <名前>`）は `{ path: <名前> }` と同じに読む（R16）
+        // 略記（`extract: <名前>`）は `{ path: <名前> }` と同じに読む（REQ-schema-048）
         let yaml = r#"
 document:
   title:
@@ -895,7 +895,7 @@ document:
     #[test]
     fn capture_extract_outside_title_is_schema_invalid() {
         // 書式2（名前付きキャプチャ）は題名にだけ使える。題名以外のノードで
-        // 宣言したときは schema_invalid の停止になる（R16）。
+        // 宣言したときは schema_invalid の停止になる（TBL-schema-008）。
         let cases: &[(&str, &str)] = &[
             (
                 "field",
@@ -953,7 +953,7 @@ document:
     #[test]
     fn item_child_field_extract_without_item_extract_is_schema_invalid() {
         // item の bullets.children.fields も「項目の内部のフィールド行」なので、
-        // extract を宣言すると schema_invalid（R16）。
+        // extract を宣言すると schema_invalid（REQ-schema-039）。
         let yaml = r#"
 document:
   sections:
@@ -968,7 +968,7 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_err(),
-            "item の bullets.children.fields に extract を宣言すると schema_invalid（R16）"
+            "item の bullets.children.fields に extract を宣言すると schema_invalid（REQ-schema-039）"
         );
     }
 
@@ -976,7 +976,7 @@ document:
     #[test]
     fn item_deep_child_field_extract_without_item_extract_is_schema_invalid() {
         // 再帰的な入れ子（item の bullets.children.bullets.children.fields）も
-        // 項目の内部のフィールド行なので schema_invalid（R16）。
+        // 項目の内部のフィールド行なので schema_invalid（REQ-schema-039）。
         let yaml = r#"
 document:
   sections:
@@ -994,7 +994,7 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_err(),
-            "item の入れ子の子フィールドに extract を宣言すると schema_invalid（R16）"
+            "item の入れ子の子フィールドに extract を宣言すると schema_invalid（REQ-schema-039）"
         );
     }
 
@@ -1002,7 +1002,7 @@ document:
     #[test]
     fn capture_extract_without_pattern_is_schema_invalid() {
         // 書式2の抽出は pattern の名前付きキャプチャを取る。pattern が無い
-        // 題名は schema_invalid の停止になる（R16）。
+        // 題名は schema_invalid の停止になる（REQ-schema-048）。
         let yaml = r#"
 document:
   title:
@@ -1014,7 +1014,7 @@ document:
     // @kotowari[REQ-schema-035]
     #[test]
     fn capture_extract_with_pattern_missing_the_group_is_schema_invalid() {
-        // pattern が指定の名前付きキャプチャを含まない題名も schema_invalid（R16）。
+        // pattern が指定の名前付きキャプチャを含まない題名も schema_invalid（TBL-schema-008）。
         let yaml = r#"
 document:
   title:
@@ -1114,7 +1114,7 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_err(),
-            "children.bullets に extract を宣言すると schema_invalid（R10）"
+            "children.bullets に extract を宣言すると schema_invalid（TBL-schema-008）"
         );
     }
 
@@ -1134,7 +1134,7 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_err(),
-            "再帰的な children.bullets にも extract を宣言できない（R10）"
+            "再帰的な children.bullets にも extract を宣言できない（TBL-schema-008）"
         );
     }
 
@@ -1153,7 +1153,7 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_ok(),
-            "子フィールドは自分の extract を持つことができる（R10）"
+            "子フィールドは自分の extract を持つことができる（REQ-schema-036）"
         );
     }
 
@@ -1171,7 +1171,7 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_err(),
-            "項目が extract を持たないまま内部の表に宣言すると停止する（R16）"
+            "項目が extract を持たないまま内部の表に宣言すると停止する（REQ-schema-039）"
         );
     }
 
@@ -1189,7 +1189,7 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_err(),
-            "項目が extract を持たないまま内部のコードブロックに宣言すると停止する（R16）"
+            "項目が extract を持たないまま内部のコードブロックに宣言すると停止する（REQ-schema-039）"
         );
     }
 
@@ -1207,7 +1207,7 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_err(),
-            "項目の表の repeat も min > max なら停止する（R14）"
+            "項目の表の repeat も min > max なら停止する（REQ-schema-019）"
         );
     }
 
@@ -1225,7 +1225,7 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_err(),
-            "項目のコードブロックの repeat も min > max なら停止する（R14）"
+            "項目のコードブロックの repeat も min > max なら停止する（REQ-schema-019）"
         );
     }
 
@@ -1242,7 +1242,7 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_err(),
-            "of: id は項目にだけ宣言できる（R16）"
+            "of: id は項目にだけ宣言できる（REQ-schema-048）"
         );
     }
 
@@ -1259,7 +1259,7 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_err(),
-            "of の知らない語は停止する（R16）"
+            "of の知らない語は停止する（REQ-schema-048）"
         );
     }
 
@@ -1282,14 +1282,14 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_ok(),
-            "項目が extract を持てば内部にも宣言できる（R16）"
+            "項目が extract を持てば内部にも宣言できる（REQ-schema-039）"
         );
     }
 
     // @kotowari[REQ-schema-035, REQ-schema-048]
     #[test]
     fn nested_extract_declaration_loads() {
-        // 抽出の宣言は path・value・of・group を持つ1つの入れ子である（R16）
+        // 抽出の宣言は path・value・of・group を持つ1つの入れ子である（REQ-schema-048）
         let yaml = r#"
 document:
   sections:
@@ -1311,14 +1311,14 @@ document:
         assert_eq!(
             extract.of(),
             [("line".to_string(), OfKind::Line)],
-            "of は鍵から導かれる値の語への対応として読む（R16）"
+            "of は鍵から導かれる値の語への対応として読む（REQ-schema-048）"
         );
     }
 
     // @kotowari[REQ-schema-035]
     #[test]
     fn legacy_sequence_extract_is_schema_invalid() {
-        // 書式の並びは受けない（R16）
+        // 書式の並びは受けない（REQ-schema-048）
         let yaml = r#"
 document:
   sections:
@@ -1331,7 +1331,7 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_err(),
-            "旧来の書式の並びは schema_invalid の停止になる（R16）"
+            "旧来の書式の並びは schema_invalid の停止になる（REQ-schema-048）"
         );
     }
 
@@ -1348,7 +1348,7 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_err(),
-            "配置パスの無い宣言は schema_invalid の停止になる（R16）"
+            "配置パスの無い宣言は schema_invalid の停止になる（REQ-schema-048）"
         );
     }
 
@@ -1356,7 +1356,7 @@ document:
     #[test]
     fn duplicate_key_between_an_inner_node_and_a_derived_value_is_schema_invalid() {
         // 項目のオブジェクトの中で、内側のフィールド行の配置パスと外側の
-        // 導かれる値の鍵が重なるスキーマは、文書を読まずに停止する（R18）
+        // 導かれる値の鍵が重なるスキーマは、文書を読まずに停止する（TBL-schema-009）
         let yaml = r#"
 document:
   sections:
@@ -1369,7 +1369,7 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_err(),
-            "要素オブジェクトの中で鍵が重複したら停止する（R18）"
+            "要素オブジェクトの中で鍵が重複したら停止する（TBL-schema-009）"
         );
     }
 
@@ -1386,14 +1386,14 @@ document:
 "#;
         assert!(
             parse_schema(yaml).is_err(),
-            "要素の値の鍵と導かれる値の鍵が重複したら停止する（R18）"
+            "要素の値の鍵と導かれる値の鍵が重複したら停止する（TBL-schema-009）"
         );
     }
 
     // @kotowari[REQ-schema-042, REQ-schema-048]
     #[test]
     fn a_parent_key_is_a_duplicate_but_a_sibling_key_is_not() {
-        // 判定は配置パス全体で行う。a と a.b は親子で重複、a.b と a.c は別の鍵（R18）
+        // 判定は配置パス全体で行う。a と a.b は親子で重複、a.b と a.c は別の鍵（TBL-schema-009）
         let parent_and_child = r#"
 document:
   sections:
@@ -1412,11 +1412,11 @@ document:
 "#;
         assert!(
             parse_schema(parent_and_child).is_err(),
-            "a と a.b は片方が他方の親なので重複（R18）"
+            "a と a.b は片方が他方の親なので重複（TBL-schema-009）"
         );
         assert!(
             parse_schema(siblings).is_ok(),
-            "a.b と a.c は入れ子を共有するだけの別の鍵（R18）"
+            "a.b と a.c は入れ子を共有するだけの別の鍵（TBL-schema-009）"
         );
     }
 }

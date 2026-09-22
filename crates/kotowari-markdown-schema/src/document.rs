@@ -16,11 +16,11 @@ pub struct Document {
     pub stray_headings: Vec<Heading>,
     /// 前置部領域（最初の節より前）に出た深さ3の見出しとその内側の行。
     /// 題名より後の見出しは宣言済みの前置部の中の未宣言の構造として、open でも
-    /// undeclared_heading / undeclared_line の対象になる（R13）。題名より前の
+    /// undeclared_heading / undeclared_line の対象になる（REQ-schema-003）。題名より前の
     /// 見出しは open では許す
     pub stray_preamble_headings: Vec<StrayPreambleHeading>,
     /// 文書の生の行。1始まりの行番号で `raw_line` から引く。指摘が指す行の
-    /// 生の文字は組み立て直さずここから取る（R18）
+    /// 生の文字は組み立て直さずここから取る（REQ-schema-008）
     pub lines: Vec<String>,
 }
 
@@ -39,7 +39,7 @@ pub struct StrayPreambleHeading {
     pub heading: Heading,
     pub blocks: Vec<Block>,
     /// 題名より前に出たか。題名より前の見出しは open では許し、前置部領域の
-    /// 見出しは宣言済みの前置部の内側の未宣言の構造として open でも誤りになる（R13）
+    /// 見出しは宣言済みの前置部の内側の未宣言の構造として open でも誤りになる（REQ-schema-003）
     pub before_title: bool,
 }
 
@@ -51,7 +51,7 @@ pub struct Heading {
 }
 
 /// 文の1行。生の行とその行番号（1始まり）。行ごとの抽出と、指摘が指す行の
-/// 生の文字に使う（R16・R18）。
+/// 生の文字に使う（TBL-schema-008、REQ-schema-008）。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RawLine {
     pub line: usize,
@@ -72,7 +72,7 @@ pub struct Item {
     pub id: String,
     /// 見出しの ID より後
     pub title: String,
-    /// 見出しに `:` があるか。無いときは invalid_id の対象（R7）
+    /// 見出しに `:` があるか。無いときは invalid_id の対象（TBL-schema-006）
     pub has_id_separator: bool,
     pub line: usize,
     pub blocks: Vec<Block>,
@@ -82,36 +82,36 @@ pub struct Item {
 #[derive(Debug)]
 pub enum Block {
     Field {
-        /// 元の行（マーカーとその直後の空白を含む）。抽出の1要素に使う（R10）
+        /// 元の行（マーカーとその直後の空白を含む）。抽出の1要素に使う（TBL-schema-008）
         line_text: String,
         /// マーカーを除いた元の行テキスト（`名前: 値` の原形）。箇条書きとして
-        /// 扱うときの pattern はこの元の行に適用する（R10）
+        /// 扱うとき（TBL-schema-007）の pattern はこの元の行に適用する
         text: String,
         /// lead 段落の1行目がマーカー行にあるか。無ければ段落全体が元の行に
-        /// 無い内容として抽出要素に加わる（R10）
+        /// 無い内容として抽出要素に加わる（TBL-schema-008）
         lead_on_marker_line: bool,
         name: String,
         value: String,
-        /// フィールド行の子である継続段落。R8 ではフィールド行の一部として扱う
+        /// フィールド行の子である継続段落。REQ-schema-030 ではフィールド行の一部として扱う
         continuation: Vec<String>,
-        /// 子のブロック（入れ子の箇条書き・コードブロック・表など）。R10
+        /// 子のブロック（入れ子の箇条書き・コードブロック・表など）。REQ-schema-031
         children: Vec<Block>,
         line: usize,
     },
     Bullet {
-        /// 元の行（マーカーとその直後の空白を含む）。抽出の1要素に使う（R10）
+        /// 元の行（マーカーとその直後の空白を含む）。抽出の1要素に使う（TBL-schema-008）
         line_text: String,
         text: String,
         /// lead 段落の1行目がマーカー行にあるか。無ければ段落全体が元の行に
-        /// 無い内容として抽出要素に加わる（R10）
+        /// 無い内容として抽出要素に加わる（TBL-schema-008）
         lead_on_marker_line: bool,
-        /// リスト項目の子である継続段落。R10 では箇条書きの一部として扱う
+        /// リスト項目の子である継続段落。REQ-schema-030 では箇条書きの一部として扱う
         continuation: Vec<String>,
-        /// 子のブロック（入れ子の箇条書き・コードブロック・表など）。R10
+        /// 子のブロック（入れ子の箇条書き・コードブロック・表など）。REQ-schema-031
         children: Vec<Block>,
         line: usize,
     },
-    /// 順序付きリストの項目（`1. ` など）。箇条書きの対象外（R10）。
+    /// 順序付きリストの項目（`1. ` など）。箇条書きの対象外（TBL-schema-007）。
     /// 閉じた世界では undeclared_line になる。抽出では値に含めない。
     OrderedList {
         text: String,
@@ -121,14 +121,14 @@ pub enum Block {
     Statement {
         text: String,
         line: usize,
-        /// 段落が覆う行の生の行と行番号。1行目の字下げを含む（R16）
+        /// 段落が覆う行の生の行と行番号。1行目の字下げを含む（TBL-schema-008）
         raw_lines: Vec<RawLine>,
     },
     Table {
         header: Vec<String>,
         rows: Vec<Vec<String>>,
         line: usize,
-        /// データ行ごとの行番号。ヘッダの行と区切りの行は数えない（R16）
+        /// データ行ごとの行番号。ヘッダの行と区切りの行は数えない（TBL-schema-008）
         row_lines: Vec<usize>,
     },
     Code {
@@ -194,8 +194,8 @@ impl Document {
                                 current_item = Some(section.items.len() - 1);
                             }
                             None => {
-                                // 前置部領域の深さ3の見出し。内側の行をここに集める（R13）。
-                                // 題名より前に出たかどうかで open の扱いが変わる（R13）
+                                // 前置部領域の深さ3の見出し。内側の行をここに集める（REQ-schema-003）。
+                                // 題名より前に出たかどうかで open の扱いが変わる（REQ-schema-002）
                                 doc.stray_preamble_headings.push(StrayPreambleHeading {
                                     heading: Heading {
                                         text,
@@ -262,7 +262,7 @@ fn raw_line_of(lines: &[String], line: usize) -> String {
         .unwrap_or_default()
 }
 
-/// ノードが覆う行の生の行と行番号（R16・R18）。
+/// ノードが覆う行の生の行と行番号（TBL-schema-008、REQ-schema-008）。
 fn raw_lines_of(lines: &[String], node: &Node) -> Vec<RawLine> {
     let Some(position) = node.position() else {
         return Vec::new();
@@ -278,7 +278,7 @@ fn raw_lines_of(lines: &[String], node: &Node) -> Vec<RawLine> {
 fn blocks_from_node(node: &Node, src: &str, lines: &[String]) -> Vec<Block> {
     let line = start_line(node);
     match node {
-        // 画像だけの行（例: `![alt](img.png)`）は文の対象外（R9）
+        // 画像だけの行（例: `![alt](img.png)`）は文の対象外（REQ-schema-032）
         Node::Paragraph(_) if is_image_only_paragraph(node) => vec![Block::Other { line }],
         Node::Paragraph(_) => {
             vec![Block::Statement {
@@ -313,7 +313,7 @@ fn blocks_from_node(node: &Node, src: &str, lines: &[String]) -> Vec<Block> {
                 rows: rows.collect(),
                 line,
                 // ヘッダの行は行番号の並びから外す。区切りの行は表のノードに
-                // 現れないので、残りがデータ行そのものになる（R16）
+                // 現れないので、残りがデータ行そのものになる（TBL-schema-008）
                 row_lines: row_lines.into_iter().skip(1).collect(),
             }]
         }
@@ -327,14 +327,14 @@ fn blocks_from_node(node: &Node, src: &str, lines: &[String]) -> Vec<Block> {
 }
 
 /// リスト項目を1つ以上のブロックにする。先頭の段落がフィールド行か箇条書きかを
-/// 決め、続く段落（継続段落）は箇条書きの一部にする（R10）。順序付きリストの
-/// 項目は箇条書きの対象外で、閉じた世界では undeclared_line になる（R10）。
-/// 入れ子のリストは親の箇条書きの子ブロックとして保持する（R10）。コードブロック・
+/// 決め、続く段落（継続段落）は箇条書きの一部にする（REQ-schema-030）。順序付きリストの
+/// 項目は箇条書きの対象外で、閉じた世界では undeclared_line になる（TBL-schema-007）。
+/// 入れ子のリストは親の箇条書きの子ブロックとして保持する（REQ-schema-031）。コードブロック・
 /// 表などの子もブロックとして子に残し、閉じた世界の undeclared_line の対象にする。
 /// 先頭がコードブロック・表などで lead の段落が無いとき、後続の段落は文として
-/// 扱う（R10）。文の出現回数・規則（R9）の対象になり、閉じた世界では
-/// undeclared_line になる。ただし画像だけの段落は文に数えない（R9）。`preserve_indent` が真のとき、子の行の元のインデントを
-/// 保ったまま元の行を取る（仕様 R10 の「そのままのインデントで含める」のため）。
+/// 扱う（REQ-schema-030）。文の出現回数・規則（REQ-schema-032）の対象になり、閉じた世界では
+/// undeclared_line になる。ただし画像だけの段落は文に数えない（REQ-schema-032）。`preserve_indent` が真のとき、子の行の元のインデントを
+/// 保ったまま元の行を取る（TBL-schema-008 の「元の行を保った文字列」のため）。
 fn blocks_from_list_item(
     item: &markdown::mdast::ListItem,
     src: &str,
@@ -348,17 +348,17 @@ fn blocks_from_list_item(
     for (i, child) in item.children.iter().enumerate() {
         match child {
             // 先頭の段落だけがフィールド行・箇条書き・順序付き項目の lead になる。
-            // 続く段落は継続段落として lead に付く（R10）。
+            // 続く段落は継続段落として lead に付く（REQ-schema-030）。
             Node::Paragraph(_) => {
                 let text = raw_slice(src, child);
                 if i == 0 {
                     // 段落の1行目がマーカー行にあれば元の行が内容を持つ。
-                    // 別の行にあれば段落全体を抽出要素に加える（R10）
+                    // 別の行にあれば段落全体を抽出要素に加える（TBL-schema-008）
                     let lead_on_marker_line = item.position.as_ref().map(|p| p.start.line)
                         == child.position().map(|p| p.start.line);
                     let line_text = original_item_line(item, src, preserve_indent);
                     lead_block = Some(if ordered {
-                        // 順序付きリストは箇条書きの対象外。閉じた世界では undeclared_line（R10）
+                        // 順序付きリストは箇条書きの対象外。閉じた世界では undeclared_line（TBL-schema-007）
                         Block::OrderedList {
                             text,
                             continuation: Vec::new(),
@@ -396,8 +396,8 @@ fn blocks_from_list_item(
                 } else {
                     // lead が無い項目（先頭がコードブロック・表など）の段落は
                     // 文として扱う。継続段落は lead に付く場合だけだから、この
-                    // 段落はどこにも吸われない（R10）。画像だけの段落は
-                    // blocks_from_node が文の対象外にする（R9）。
+                    // 段落はどこにも吸われない（REQ-schema-030）。画像だけの段落は
+                    // blocks_from_node が文の対象外にする（REQ-schema-032）。
                     extra.extend(blocks_from_node(child, src, lines));
                 }
             }
@@ -409,7 +409,7 @@ fn blocks_from_list_item(
                     }
                 }
                 match &mut lead_block {
-                    // 入れ子のリストは親の子として保持する（R10）
+                    // 入れ子のリストは親の子として保持する（REQ-schema-031）
                     Some(Block::Field { children, .. }) | Some(Block::Bullet { children, .. }) => {
                         children.extend(nested)
                     }
@@ -418,7 +418,7 @@ fn blocks_from_list_item(
             }
             // コードブロック・表などのブロックは捨てず、子のブロックとして残す。
             // 引用・水平線などは blocks_from_node が Block::Other にして閉じた
-            // 世界でも無視される（R13）。
+            // 世界でも無視される（REQ-schema-032）。
             other => {
                 let blocks = blocks_from_node(other, src, lines);
                 match &mut lead_block {
@@ -452,9 +452,9 @@ fn is_image(node: &Node) -> bool {
 }
 
 /// リスト項目の元の1行目（マーカーとその直後の空白を含む）。行頭のインデントは
-/// トップレベルの箇条書きとして扱うため取り除く（R10）。子の行は `preserve_indent`
-/// が真で、元のインデントを保ったままの行を取る（仕様 R10 の「そのままの
-/// インデントで抽出要素に含める」のため）。行末の空白（ハード改行）は元の行の
+/// トップレベルの箇条書きとして扱うため取り除く（TBL-schema-008）。子の行は `preserve_indent`
+/// が真で、元のインデントを保ったままの行を取る（TBL-schema-008 の「元の行を保った
+/// 文字列」のため）。行末の空白（ハード改行）は元の行の
 /// 一部として残す
 fn original_item_line(
     item: &markdown::mdast::ListItem,
@@ -492,7 +492,7 @@ fn split_field(text: &str) -> Option<(String, String)> {
 }
 
 impl Block {
-    /// ブロックが現れた行番号（1始まり）。`of: line` の抽出に使う（R16）。
+    /// ブロックが現れた行番号（1始まり）。`of: line` の抽出に使う（REQ-schema-048）。
     pub fn line(&self) -> usize {
         match self {
             Block::Field { line, .. }
@@ -514,10 +514,10 @@ impl Block {
         }
     }
 
-    /// R10 の箇条書きの抽出要素の基本部分。元の行（マーカーとその直後の空白を含む）
+    /// TBL-schema-008 の箇条書きの抽出要素の基本部分。元の行（マーカーとその直後の空白を含む）
     /// と継続段落を改行でつなぐ。継続段落が複数のときは継続段落どうしを空行で
     /// つなぐ。子の箇条書きの行の連結は、宣言された子フィールドを除外する必要が
-    /// あるため extract 側の `element_with_children` が行う（R10・R16）。
+    /// あるため extract 側の `element_with_children` が行う（REQ-schema-031、TBL-schema-008）。
     pub fn bullet_element(&self) -> String {
         let Block::Bullet {
             line_text,
@@ -534,7 +534,7 @@ impl Block {
 
     /// フィールド行の抽出要素。元の行（マーカーとその直後の空白を含む）と
     /// 継続段落を改行でつなぐ。継続段落が複数のときは継続段落どうしを
-    /// 空行でつなぐ（R8・R10・R16）。子の箇条書きの行は含めない。
+    /// 空行でつなぐ（REQ-schema-030、REQ-schema-046）。子の箇条書きの行は含めない。
     pub fn field_element(&self) -> String {
         let Block::Field {
             line_text,
@@ -551,7 +551,7 @@ impl Block {
 }
 
 /// 抽出要素を組み立てる。元の行（マーカーとその直後の空白を含む）に、lead 段落の
-/// うち元の行に無い内容を改行でつなぎ、続けて継続段落を改行でつなぐ（R10）。
+/// うち元の行に無い内容を改行でつなぎ、続けて継続段落を改行でつなぐ（REQ-schema-046）。
 fn element_from_line(
     line_text: &str,
     text: &str,
@@ -560,7 +560,7 @@ fn element_from_line(
 ) -> String {
     let mut out = line_text.to_string();
     // 段落がマーカー行に始まれば1行目は元の行が持ち、別の行に始まれば段落全体が
-    // 元の行に無い内容として加わる（R10）
+    // 元の行に無い内容として加わる（TBL-schema-008）
     let rest = if lead_on_marker_line {
         text.split_once('\n').map(|(_, r)| r).unwrap_or("")
     } else {
@@ -574,10 +574,10 @@ fn element_from_line(
     out
 }
 
-/// 継続段落を `- ` 行に改行で続けてつなぐ。複数あるときは空行でつなぐ（R10）。
+/// 継続段落を `- ` 行に改行で続けてつなぐ。複数あるときは空行でつなぐ（REQ-schema-046）。
 /// フィールド行と箇条書きの抽出要素が共有する結合規則。
 ///
-/// R10 / R16 の抽出要素の組み立ては、ここと `extract.rs` に分かれている。
+/// TBL-schema-008 の抽出要素の組み立ては、ここと `extract.rs` に分かれている。
 /// この関数と `bullet_element` / `field_element` は `Block` の中身だけで
 /// 決まる部分を持ち、子の箇条書きの取り込みと宣言済み子フィールドの除外は
 /// `Children` の宣言が要るため `extract.rs` の `element_with_children` と
@@ -590,7 +590,7 @@ pub(crate) fn join_continuation(out: &mut String, continuation: &[String]) {
 }
 
 /// 項目見出しを ID と題名に分ける。`:` が無ければ全体を ID にし、区切りが
-/// 無いことを返す（R7 の invalid_id の判定に使う）。
+/// 無いことを返す（TBL-schema-006 の判定に使う）。
 fn split_item_heading(text: &str) -> (String, String, bool) {
     match text.find(':') {
         Some(idx) => (
