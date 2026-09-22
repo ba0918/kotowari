@@ -236,7 +236,7 @@ Shown by: check — 次の順に走らせる。
 3. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- status --format text` の最後の行が `complete true` で、終了コードが0
 4. 置き換えの前に保存した `kotowari check --format json` の出力と `diff` を取り、差分が `REQ-core-177` の8つの範囲に収まる。このリポジトリの `IR` では差分が1件も出ない
 5. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-markdown-schema --bin mds -- check ./` の終了コードが0（ステップ7で frontmatter を外したあとは対象が0件になる）
-6. `CARGO_BUILD_JOBS=4 cargo clippy --workspace --all-targets -- -D warnings` の誤りが基準線から増えていない（基準線はステップ1の前に実測して記録する）
+6. `CARGO_BUILD_JOBS=4 cargo clippy --workspace --all-targets -- -D warnings` の誤りが基準線から増えていない。基準線は着手前に実測してあり、`crates/kotowari-core/` の 21 件（`error` で始まる行は、まとめの2行を含めて 23 行）、`crates/kotowari-markdown-schema/` は 0 件。ステップ6で自前の読み取りが減るぶん、この数は減る見込みで、減るのは構わない
 7. `CARGO_BUILD_JOBS=4 cargo +1.89.0 check -p kotowari-markdown-schema --all-targets` が通る
 
 Left to the implementer: なし。
