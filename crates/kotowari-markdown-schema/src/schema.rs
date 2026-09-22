@@ -444,6 +444,7 @@ fn validate_schema(schema: &Schema) -> Result<(), SchemaError> {
 
 fn validate_title(title: &Title) -> Result<(), SchemaError> {
     reject_item_only_of(title.extract.as_ref(), "title")?;
+    reject_duplicate_element_keys(title.extract.as_ref(), "title", &[])?;
     let Some(group) = title.extract.as_ref().and_then(Extract::group) else {
         return Ok(());
     };
@@ -477,6 +478,7 @@ fn validate_section(section: &Section) -> Result<(), SchemaError> {
     }
     reject_capture_extract(section.extract.as_ref(), "section")?;
     reject_item_only_of(section.extract.as_ref(), "section")?;
+    reject_duplicate_element_keys(section.extract.as_ref(), "section", &[])?;
     validate_fields(&section.fields)?;
     validate_statement(section.statement.as_ref())?;
     validate_bullets(section.bullets.as_ref(), false)?;
@@ -495,11 +497,14 @@ fn validate_item(item: &Item) -> Result<(), SchemaError> {
     reject_capture_extract(item.extract.as_ref(), "item")?;
     // 項目の内部に extract を宣言するなら、項目自身も extract を持つ必要がある。
     // 内部の配置パスは項目オブジェクトの中の相対パスなので、置き場が要る（R16）
-    if item.extract.is_none() && item_internals_declare_extract(item) {
+    let internal = item_internal_extract_paths(item);
+    if item.extract.is_none() && !internal.is_empty() {
         return Err(SchemaError(
             "item internals declare extract but the item itself does not".into(),
         ));
     }
+    // 内側の配置パスも項目オブジェクトの中の鍵なので、重複の判定に含める（R18）
+    reject_duplicate_element_keys(item.extract.as_ref(), "item", &internal)?;
     validate_table(item.table.as_ref())?;
     validate_codeblock(item.codeblock.as_ref())?;
     validate_fields(&item.fields)?;
@@ -511,25 +516,44 @@ fn validate_item(item: &Item) -> Result<(), SchemaError> {
 /// 項目の内部のノードが1つでも `extract` を宣言しているか。宣言していれば
 /// 項目の抽出はオブジェクトの形になる（R16）。
 pub(crate) fn item_internals_declare_extract(item: &Item) -> bool {
-    item.fields.iter().any(|f| f.extract.is_some())
-        || item.statement.as_ref().is_some_and(|s| s.extract.is_some())
-        || item
-            .bullets
-            .as_ref()
-            .is_some_and(|b| b.extract.is_some() || bullets_children_declare_extract(b))
-        || item.table.as_ref().is_some_and(|t| t.extract.is_some())
-        || item.codeblock.as_ref().is_some_and(|c| c.extract.is_some())
+    !item_internal_extract_paths(item).is_empty()
 }
 
-fn bullets_children_declare_extract(bullets: &Bullets) -> bool {
-    let Some(children) = &bullets.children else {
-        return false;
+/// 項目の内部のノードが宣言した配置パス。項目オブジェクトの中の相対パスで、
+/// R18 の鍵の重複の判定にも使う。
+fn item_internal_extract_paths(item: &Item) -> Vec<String> {
+    let mut paths: Vec<String> = Vec::new();
+    let mut push = |extract: Option<&Extract>| {
+        if let Some(extract) = extract {
+            paths.push(extract.path().to_string());
+        }
     };
-    children.fields.iter().any(|f| f.extract.is_some())
-        || children
-            .bullets
-            .as_deref()
-            .is_some_and(bullets_children_declare_extract)
+    for field in &item.fields {
+        push(field.extract.as_ref());
+    }
+    push(item.statement.as_ref().and_then(|s| s.extract.as_ref()));
+    push(item.bullets.as_ref().and_then(|b| b.extract.as_ref()));
+    push(item.table.as_ref().and_then(|t| t.extract.as_ref()));
+    push(item.codeblock.as_ref().and_then(|c| c.extract.as_ref()));
+    if let Some(bullets) = &item.bullets {
+        collect_children_extract_paths(bullets, &mut paths);
+    }
+    paths
+}
+
+/// 箇条書きの子フィールドが宣言した配置パスを、任意の深さから集める。
+fn collect_children_extract_paths(bullets: &Bullets, paths: &mut Vec<String>) {
+    let Some(children) = &bullets.children else {
+        return;
+    };
+    for field in &children.fields {
+        if let Some(extract) = &field.extract {
+            paths.push(extract.path().to_string());
+        }
+    }
+    if let Some(child_bullets) = children.bullets.as_deref() {
+        collect_children_extract_paths(child_bullets, paths);
+    }
 }
 
 /// 表の規則を検査する。
@@ -540,26 +564,42 @@ fn validate_table(table: Option<&Table>) -> Result<(), SchemaError> {
         }
         reject_capture_extract(table.extract.as_ref(), "table")?;
         reject_item_only_of(table.extract.as_ref(), "table")?;
-        reject_derived_key_colliding_with_column(table)?;
+        reject_duplicate_element_keys(table.extract.as_ref(), "table", &[])?;
     }
     Ok(())
 }
 
-/// 行ごとのオブジェクトに入れる導かれる値の鍵が、宣言された列の名前と
-/// 衝突したら停止する（R16）。列を宣言しない表は照合する相手が無い（R11）。
-fn reject_derived_key_colliding_with_column(table: &Table) -> Result<(), SchemaError> {
-    let (Some(header), Some(extract)) = (&table.header, &table.extract) else {
-        return Ok(());
-    };
-    for (path, _) in extract.of() {
-        let key = path.split('.').next().unwrap_or(path);
-        if header.iter().any(|column| column == key) {
-            return Err(SchemaError(format!(
-                "table extract path \"{path}\" collides with the table column \"{key}\""
-            )));
+/// 1つの要素オブジェクトの中で鍵が重複するスキーマを停止にする（R18）。鍵は
+/// `value`、`of` の鍵、そして内側のノードの配置パス（`internal` で渡す）である。
+/// 判定は配置パス全体で行い、`a.b` と `a.c` は別の鍵、`a` と `a.b` は重複とする。
+fn reject_duplicate_element_keys(
+    extract: Option<&Extract>,
+    node: &str,
+    internal: &[String],
+) -> Result<(), SchemaError> {
+    let mut keys: Vec<&str> = Vec::new();
+    if let Some(extract) = extract {
+        keys.extend(extract.value());
+        keys.extend(extract.of().iter().map(|(key, _)| key.as_str()));
+    }
+    keys.extend(internal.iter().map(String::as_str));
+    for (index, key) in keys.iter().enumerate() {
+        for other in &keys[index + 1..] {
+            if key == other || is_ancestor_path(key, other) || is_ancestor_path(other, key) {
+                return Err(SchemaError(format!(
+                    "{node} element object has the key \"{key}\" twice (conflicts with \"{other}\")"
+                )));
+            }
         }
     }
     Ok(())
+}
+
+/// `outer` が `inner` の親の配置パスか。`a` は `a.b` の親で、`a` と `ab` は無関係。
+fn is_ancestor_path(outer: &str, inner: &str) -> bool {
+    inner.len() > outer.len()
+        && inner.starts_with(outer)
+        && inner.as_bytes()[outer.len()] == b'.'
 }
 
 /// コードブロックの規則を検査する。
@@ -570,6 +610,7 @@ fn validate_codeblock(codeblock: Option<&CodeBlock>) -> Result<(), SchemaError> 
         }
         reject_capture_extract(codeblock.extract.as_ref(), "codeblock")?;
         reject_item_only_of(codeblock.extract.as_ref(), "codeblock")?;
+        reject_duplicate_element_keys(codeblock.extract.as_ref(), "codeblock", &[])?;
     }
     Ok(())
 }
@@ -584,6 +625,7 @@ fn validate_fields(fields: &[Field]) -> Result<(), SchemaError> {
         }
         reject_capture_extract(field.extract.as_ref(), "field")?;
         reject_item_only_of(field.extract.as_ref(), "field")?;
+        reject_duplicate_element_keys(field.extract.as_ref(), "field", &[])?;
     }
     Ok(())
 }
@@ -598,6 +640,7 @@ fn validate_statement(statement: Option<&Statement>) -> Result<(), SchemaError> 
         }
         reject_capture_extract(statement.extract.as_ref(), "statement")?;
         reject_item_only_of(statement.extract.as_ref(), "statement")?;
+        reject_duplicate_element_keys(statement.extract.as_ref(), "statement", &[])?;
     }
     Ok(())
 }
@@ -619,6 +662,7 @@ fn validate_bullets(bullets: Option<&Bullets>, in_children: bool) -> Result<(), 
             reject_capture_extract(bullets.extract.as_ref(), "bullets")?;
         }
         reject_item_only_of(bullets.extract.as_ref(), "bullets")?;
+        reject_duplicate_element_keys(bullets.extract.as_ref(), "bullets", &[])?;
         if let Some(children) = &bullets.children {
             validate_fields(&children.fields)?;
             validate_bullets(children.bullets.as_deref(), true)?;
@@ -1307,13 +1351,72 @@ document:
         );
     }
 
-    // @kotowari[REQ-schema-033, REQ-schema-048]
+    // @kotowari[REQ-schema-042, REQ-schema-048]
     #[test]
-    fn table_derived_key_colliding_with_a_column_name_is_a_schema_error() {
-        let yaml = "document:\n  sections:\n    - name: 用語集\n      table:\n        header: [用語, line]\n        extract: { path: glossary, of: { line: line } }\n";
+    fn duplicate_key_between_an_inner_node_and_a_derived_value_is_schema_invalid() {
+        // 項目のオブジェクトの中で、内側のフィールド行の配置パスと外側の
+        // 導かれる値の鍵が重なるスキーマは、文書を読まずに停止する（R18）
+        let yaml = r#"
+document:
+  sections:
+    - name: 要求
+      item:
+        extract: { path: requirements, of: { line: line } }
+        fields:
+          - name: 状態
+            extract: line
+"#;
         assert!(
             parse_schema(yaml).is_err(),
-            "行の鍵が表の列の名前と衝突したら停止する（R16）"
+            "要素オブジェクトの中で鍵が重複したら停止する（R18）"
         );
     }
+
+    // @kotowari[REQ-schema-042, REQ-schema-048]
+    #[test]
+    fn duplicate_key_between_value_and_a_derived_value_is_schema_invalid() {
+        let yaml = r#"
+document:
+  sections:
+    - name: 用語集
+      table:
+        header: [a, b]
+        extract: { path: glossary, value: cells, of: { cells: line } }
+"#;
+        assert!(
+            parse_schema(yaml).is_err(),
+            "要素の値の鍵と導かれる値の鍵が重複したら停止する（R18）"
+        );
+    }
+
+    // @kotowari[REQ-schema-042, REQ-schema-048]
+    #[test]
+    fn a_parent_key_is_a_duplicate_but_a_sibling_key_is_not() {
+        // 判定は配置パス全体で行う。a と a.b は親子で重複、a.b と a.c は別の鍵（R18）
+        let parent_and_child = r#"
+document:
+  sections:
+    - name: 用語集
+      table:
+        header: [x]
+        extract: { path: glossary, value: a, of: { "a.b": line } }
+"#;
+        let siblings = r#"
+document:
+  sections:
+    - name: 用語集
+      table:
+        header: [x]
+        extract: { path: glossary, value: a.b, of: { "a.c": line } }
+"#;
+        assert!(
+            parse_schema(parent_and_child).is_err(),
+            "a と a.b は片方が他方の親なので重複（R18）"
+        );
+        assert!(
+            parse_schema(siblings).is_ok(),
+            "a.b と a.c は入れ子を共有するだけの別の鍵（R18）"
+        );
+    }
+
 }
