@@ -25,6 +25,8 @@ kotowari 側（`docs/ir/core/`）:
 
 本文は `kotowari query <ID>` で読む。文書を開いて探さない。
 
+**着手の前提。** `docs/ir/core/FLAGS.md` の `FLAG-core-009`、`FLAG-core-010`、`FLAG-core-011` は人の判断を待っている。3件とも置き換えの振る舞いに直接効くので、決まるまでステップ4以降を始めない。ステップ1とステップ2は3件に依らないので先に進めてよい。ステップ9の `kotowari status` の `complete true` は`問題の記録`が0件であることも求めるので、3件が閉じるまで満たせない。
+
 ## Approach and why
 
 **エンジンへの機能追加を先に終わらせる。** `REQ-schema-055` は、宣言していない行の`指摘`にその行をどの規則種別として読んだかを持たせる。これが無いと kotowari は `undeclared_line` を `unknown_field` と `unknown_line` に写し分けられない（`TBL-core-030` の2行）。kotowari 側の工程がこれを待つので、独立したステップとして先に置く。
@@ -35,7 +37,7 @@ kotowari 側（`docs/ir/core/`）:
 
 **エンジン側の具体例のテストは独立している。** `EX-schema-018` から `EX-schema-030` の 13 件は、抽出の宣言を作り直した工程で書かれてテストが付かなかったもの。置き換えとは関係なく閉じられるので、待ち時間の無いステップとして置く。
 
-**順序の理由。** ステップ1がエンジンの土台。ステップ2は誰も待たない。ステップ3（埋め込み）とステップ4（写す層）は kotowari 側の土台で、ステップ5〜7がこれに乗る。ステップ8とステップ9は後片付けで、ステップ7の後。
+**順序の理由。** ステップ1がエンジンの土台。ステップ2は誰も待たない。ステップ3（埋め込み）とステップ4（写す層）は kotowari 側の土台。ステップ5はその上、ステップ6はステップ5の後、ステップ7はステップ6の後。ステップ8はステップ5の後で、ステップ7と並べてよい。ステップ9が最後。
 
 ## Scope of change
 
@@ -48,17 +50,17 @@ kotowari 側（`docs/ir/core/`）:
 - `docs/ir/core/form-contract.md`、`docs/ir/core/ir-document.md`、`docs/ir/core/cli-environment.md`（`REQ-core-089`、`REQ-core-041`、`REQ-core-120` の確かめ方だけ）
 - `docs/ir/schema/` の各文書の frontmatter（ステップ7）
 - `skills/kotowari/references/findings.md` と `skills/kotowari/references/ir-form.md`（ステップ8）
-- `docs/ir/core/FLAGS.md`（閉じた問題の記録を外す）
+- `docs/ir/core/FLAGS.md`（人の判断で閉じた問題の記録を外す）
+- `.mds/schemas/` の3つの YAML（`REQ-core-170` と `A77` が要る宣言は着手前に足してあるが、足りないものが見つかったら直してよい）
 
 触らない場所:
 
-- `.mds/schemas/` の3つの YAML（置き換えの前提としてもう整えてある）
 - `docs/ir/` の要求・決定表・性質・具体例の本文（確かめ方の3件を除く）
 - `docs/decision/records/`（新しい決定を足さない。足したくなったら壁打ちに戻す）
 
 ## Step order and prerequisites
 
-ステップ1がステップ4の前提。ステップ2は前提を持たず、いつ走らせてもよい。ステップ3とステップ4は互いに独立。ステップ5〜7はステップ3とステップ4の後。ステップ8はステップ5の後。ステップ9が最後。
+ステップ1がステップ4の前提。ステップ2は前提を持たず、いつ走らせてもよい。ステップ3とステップ4は互いに独立で、どちらもステップ5の前提。ステップ6はステップ4とステップ5の後。ステップ7はステップ3とステップ6の後。ステップ8はステップ5の後で、ステップ7と並べてよい。ステップ9はステップ1〜8の後。各ステップの Prerequisites はこの並びと同じものを書いている。
 
 ## Step 1 — 宣言していない行の指摘に規則種別を持たせる
 
@@ -76,9 +78,9 @@ Done when:
 
 Shown by: test — RED → GREEN → REFACTOR。`crates/kotowari-markdown-schema/src/validate.rs` の `#[cfg(test)]` に、宣言していない `- 名前: 値` の行が`フィールド行`として、宣言していない箇条書きの行が`箇条書き`として、宣言していない表が`表`として返ることを見る3本。`crates/kotowari-markdown-schema/tests/cli.rs` に JSON がこの値を持つことを見る1本。
 
-Left to the implementer: 値の型（専用の列挙か文字列か）。JSON の鍵の名前。
+Left to the implementer: 値の型（専用の列挙か文字列か）。
 
-Stop and hand back if: 宣言していない行を読んだ時点でどの規則種別にも決まらない場合があると分かったとき。
+Stop and hand back if: 宣言していない行を読んだ時点でどの`規則種別`にも決まらない場合があると分かったとき。JSON の鍵の名前は`指摘`の要素を1つ増やす決定なので、`REQ-schema-008` の書き方から一意に決まらないと分かったとき。
 
 ## Step 2 — エンジン側の具体例 13 件にテストの印を付ける
 
@@ -113,11 +115,11 @@ Done when:
 - 実行時にスキーマのファイルを読む経路が無い
 - この時点では検査の結果が変わらない（土台だけ）
 
-Shown by: test — RED → GREEN → REFACTOR。取り込んだ3つのスキーマがエンジンの `parse_schema` を通ることを見る1本、文書の種類ごとに選ぶスキーマの名前が合うことを見る1本。
+Shown by: test — RED → GREEN → REFACTOR。取り込んだ3つのスキーマがエンジンの `parse_schema` を通ることを見る1本、文書の種類ごとに選ぶスキーマの名前が合うことを見る1本。`REQ-core-168` の印をこのテストに付ける。`EX-core-264`（`IR`のどの文書にも frontmatter が無い）の印は、ステップ7で frontmatter を外したあとに付ける。
 
 Left to the implementer: 取り込み方（`include_str!` かビルドスクリプトか）。選ぶ関数の置き場。
 
-Stop and hand back if: 取り込んだスキーマが `parse_schema` を通らないと分かったとき（スキーマのファイル側の問題なので、この計画の外）。
+Stop and hand back if: 取り込んだスキーマが `parse_schema` を通らないと分かったとき。取り込みはコンパイル時なので、実行時に `parse_schema` が失敗する経路をどう扱うかは仕様が黙っている。`REQ-core-175` は「スキーマを読めないことを理由とする`停止`は持たない」と定めるので、ここを実装役が決めない。
 
 Note: `crates/kotowari-markdown-schema` は `rust-version = "1.89"` を宣言し、`crates/kotowari-core` は依存の都合で 1.90 を要る。依存を足しても、ステップ9の 7 は `-p` でこのクレートだけを検査するので通る。workspace 全体で最低の Rust をそろえようとしない。
 
@@ -136,11 +138,11 @@ Done when:
 - 新しい`停止`の理由の文言が `mapping error` で、詳細が `TBL-core-020` のとおり
 - 既存の自前の読み取りはまだ動いており、`kotowari check` の出力は変わらない
 
-Shown by: test — RED → GREEN → REFACTOR。`TBL-core-030` の「発生しない」でない 21 行それぞれについて、エンジンの`指摘`を1件与えて写し先の種類・`"line"`・detail が合うことを見るテスト。行に無い種類を与えると`停止`することを見る1本（`EX-core-265`）。写せない値で`停止`することを見る1本（`EX-core-268`）。
+Shown by: test — RED → GREEN → REFACTOR。`TBL-core-030` の 39 行のうち、写し先を持つ 24 行それぞれについて、エンジンの`指摘`を1件与えて写し先の種類・`"line"`・detail が合うことを見るテスト。「発生しない」と書いた 14 行の種類を与えると`停止`することを見るテスト（`EX-core-265`。エンジンの`指摘`の種類は 24 個で閉じているので、表に行の無い種類は作れない。「発生しない」の行で確かめる）。写せない値で`停止`することを見る1本（`EX-core-268`）。
 
 Left to the implementer: 写す関数の分け方。`抽出`の`項目`を行で引くための持ち方。
 
-Stop and hand back if: `TBL-core-030` に行の無いエンジンの種類が見つかったとき。`抽出`の`項目`の行と`指摘`の行が突き合わないものがあると分かったとき。
+Stop and hand back if: `TBL-core-030` に行の無いエンジンの種類が見つかったとき。`抽出`の`項目`の行と`指摘`の行が突き合わないものがあると分かったとき。`FLAG-core-009` の`表`と`コードブロック`の写し先が決まっていないとき。
 
 ## Step 5 — 新しい3種類の指摘を出す
 
@@ -175,7 +177,7 @@ Done when:
 - 文書をまたぐ検査、上限、`出典`の検査、`文`に基づく検査、`文書名の参照`、gherkin の中身、閉じない`コードブロック`の検査は kotowari に残る
 - 形の`指摘`が出た文書も、文書をまたぐ検査を受ける（`EX-core-269`）
 - `REQ-core-089`、`REQ-core-041`、`REQ-core-120` の確かめ方が、残らない関数の名前を指していない
-- `docs/ir/core/FLAGS.md` から `FLAG-core-006` が消える
+- `REQ-core-045`、`REQ-core-047`、`REQ-core-098` の印の付いたテストが、置き換え後の振る舞い（3本以上でも1件、`問題の記録`の`項目`も`文`が要る、値が空の行は値の誤り）を確かめている
 
 Shown by: test — RED → GREEN → REFACTOR。`EX-core-269` に印を付ける。既存の形の`指摘`のテストがすべて緑のまま。確かめ方3件は review の要求なので、書き換えた文が `kotowari check` を通ることで見る。
 
@@ -188,15 +190,15 @@ Stop and hand back if: 残す検査のどれかが、エンジンの返す`抽�
 Purpose: `IR` の文書がスキーマを宣言しない状態にする。
 Specification: `docs/ir/core/form-contract.md#REQ-core-168`。
 Prerequisites: ステップ3、ステップ6。
-May change: `docs/ir/schema/` の各文書の先頭の frontmatter、`docs/ir/core/FLAGS.md`。
+May change: `docs/ir/schema/` の各文書の先頭の frontmatter。
 
 Done when:
 
 - `docs/ir/schema/` のどの文書も先頭に `$schema` の宣言を持たない
 - `kotowari check` の結果が外す前と変わらない（kotowari は文書の種類でスキーマを選ぶ）
-- `docs/ir/core/FLAGS.md` から `FLAG-core-004` が消える
+- `EX-core-264` に印が付いている
 
-Shown by: check — `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format json` の出力が、外す前と1件も変わらない。
+Shown by: check と test — `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format json` の出力が、外す前と1件も変わらない。`EX-core-264` の印の付いたテストが緑。
 
 Left to the implementer: なし。
 
@@ -207,14 +209,13 @@ Stop and hand back if: 外すと `mds check ./` が使えなくなることが�
 Purpose: スキルが配る`指摘`の一覧が、コードが出す種類の集合と一致する。
 Specification: `docs/ir/core/skill-references.md#REQ-core-125`。
 Prerequisites: ステップ5。
-May change: `skills/kotowari/references/findings.md`、`skills/kotowari/references/ir-form.md`、`docs/ir/core/FLAGS.md`。
+May change: `skills/kotowari/references/findings.md`、`skills/kotowari/references/ir-form.md`。
 
 Done when:
 
 - `skills/kotowari/references/findings.md` の表に `unknown_line`、`unknown_code_block`、`glossary_title_invalid` の行がある
 - `skills/kotowari/references/ir-form.md` の`除外`の列挙から、`"## "` の見出しの直下で最初の `"### "` より前の行が消える
 - `REQ-core-125` の一致のテストが通る
-- `docs/ir/core/FLAGS.md` から `FLAG-core-005` が消える
 
 Shown by: test — `REQ-core-125` の既存のテストが緑。
 
@@ -235,7 +236,7 @@ Shown by: check — 次の順に走らせる。
 
 1. `CARGO_BUILD_JOBS=4 cargo test --workspace` が全件通る
 2. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format json` の終了コードが0で、`findings` が空
-3. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- status --format text` の最後の行が `complete true` で、終了コードが0
+3. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- status --format text` の最後の行が `complete true` で、終了コードが0。`complete true` は`問題の記録`が0件であることも求めるので、着手の前提に挙げた3件が閉じていること
 4. 置き換えの前に保存した `kotowari check --format json` の出力と `diff` を取り、差分が `REQ-core-177` の8つの範囲に収まる。このリポジトリの `IR` では差分が1件も出ない
 5. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-markdown-schema --bin mds -- check ./` の終了コードが0（ステップ7で frontmatter を外したあとは対象が0件になる）
 6. `CARGO_BUILD_JOBS=4 cargo clippy --workspace --all-targets -- -D warnings` の誤りが基準線から増えていない。基準線は着手前に実測してあり、`crates/kotowari-core/` の 21 件（`error` で始まる行は、まとめの2行を含めて 23 行）、`crates/kotowari-markdown-schema/` は 0 件。ステップ6で自前の読み取りが減るぶん、この数は減る見込みで、減るのは構わない
@@ -261,7 +262,12 @@ Stop and hand back if: 4 の差分が8つの範囲に収まらないとき。
 | REQ-core-176 | ステップ6 |
 | REQ-core-177 | ステップ9 |
 | EX-schema-018〜030 | ステップ2 |
-| EX-core-264〜269 | ステップ4、ステップ5、ステップ6 |
+| REQ-core-089、REQ-core-041、REQ-core-120（確かめ方の書き換え） | ステップ6 |
+| REQ-core-045、REQ-core-047、REQ-core-098（置き換え後の振る舞いへ） | ステップ6 |
+| EX-core-264 | ステップ7 |
+| EX-core-265、EX-core-268 | ステップ4 |
+| EX-core-266、EX-core-267 | ステップ5 |
+| EX-core-269 | ステップ6 |
 
 ## Stop conditions
 
@@ -278,5 +284,4 @@ Stop and hand back if: 4 の差分が8つの範囲に収まらないとき。
 
 - CLI のバイナリの名前の変更
 - 2つの製品の版とタグの持ち方
-- `.mds/schemas/` の3つの YAML の変更（置き換えの前提としてもう整えてある）
 - kotowari の版を上げること
