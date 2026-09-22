@@ -434,10 +434,12 @@ fn extract_table(
     let Some(extract) = &table.extract else {
         return;
     };
+    // select で選ばれなかった表は抽出しない（REQ-schema-059）
+    let selection = table.selected_line(blocks.iter().copied());
     let tables: Vec<&Block> = blocks
         .iter()
         .copied()
-        .filter(|b| matches!(b, Block::Table { .. }))
+        .filter(|b| matches!(b, Block::Table { line, .. } if selection.takes(*line)))
         .collect();
     if tables.is_empty() {
         // 0件のときはキーを省略する（REQ-schema-038）

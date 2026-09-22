@@ -348,10 +348,17 @@ pub(crate) fn table_block_from_node(node: &Node, line_offset: usize) -> Block {
         }
     }
     let mut rows = rows.into_iter();
-    let header = rows.next().unwrap_or_default();
+    let header: Vec<String> = rows.next().unwrap_or_default();
+    // ヘッダより多いセルは捨てる（REQ-schema-033）
+    let rows = rows
+        .map(|mut row| {
+            row.truncate(header.len());
+            row
+        })
+        .collect();
     Block::Table {
         header,
-        rows: rows.collect(),
+        rows,
         line: start_line(node) + line_offset,
         // ヘッダの行は行番号の並びから外す。区切りの行は表のノードに
         // 現れないので、残りがデータ行そのものになる（TBL-schema-008）

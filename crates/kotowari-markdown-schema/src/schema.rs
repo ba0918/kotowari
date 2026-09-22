@@ -1,5 +1,6 @@
 //! スキーマ YAML のモデルと読み込み。
 
+use crate::document::Block;
 use regex::Regex;
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer};
@@ -224,9 +225,56 @@ pub struct Bullets {
 pub struct Table {
     /// ヘッダのセル列。宣言しないときはヘッダと列数を検査しない（REQ-schema-033）
     pub header: Option<Vec<String>>,
+    /// 同じノードの中の表のうち、どれをこの規則の表にするか（REQ-schema-059）。
+    /// 書かないときはすべての表がこの規則の表になる
+    pub select: Option<Select>,
     pub required: Option<bool>,
     pub repeat: Option<Repeat>,
     pub extract: Option<Extract>,
+}
+
+/// 表の規則の `select`（REQ-schema-059）。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Select {
+    /// ヘッダが宣言と合う最初の表だけ
+    First,
+}
+
+impl Table {
+    /// `blocks` の表のうち、この規則の表にするものの開始行。`select` を書かない
+    /// 規則はすべての表を受けるので None を返す（REQ-schema-059）。
+    pub(crate) fn selected_line<'a>(
+        &self,
+        blocks: impl IntoIterator<Item = &'a Block>,
+    ) -> Selection {
+        let (Some(Select::First), Some(expected)) = (self.select, &self.header) else {
+            return Selection::All;
+        };
+        Selection::Only(blocks.into_iter().find_map(|block| match block {
+            Block::Table { header, line, .. } if header == expected => Some(*line),
+            _ => None,
+        }))
+    }
+}
+
+/// 表の規則がどの表を受けるか。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Selection {
+    /// すべての表
+    All,
+    /// この開始行の表だけ。None ならどの表も受けない
+    Only(Option<usize>),
+}
+
+impl Selection {
+    /// 開始行 `line` の表を受けるか。
+    pub(crate) fn takes(self, line: usize) -> bool {
+        match self {
+            Selection::All => true,
+            Selection::Only(selected) => selected == Some(line),
+        }
+    }
 }
 
 /// コードブロック（TBL-schema-004、REQ-schema-034）。
@@ -577,6 +625,10 @@ fn validate_table(table: Option<&Table>) -> Result<(), SchemaError> {
     if let Some(table) = table {
         if let Some(repeat) = &table.repeat {
             repeat.validate()?;
+        }
+        // どの表を選ぶかはヘッダで決めるので、ヘッダの無い select は停止にする（TBL-schema-009）
+        if table.select.is_some() && table.header.is_none() {
+            return Err(SchemaError("table select requires a header".into()));
         }
         reject_capture_extract(table.extract.as_ref(), "table")?;
         reject_item_only_of(table.extract.as_ref(), "table")?;

@@ -159,6 +159,13 @@ table:
 
 Row keys come from the schema's `header`, or, when no `header` is declared, from the column
 position (each row is an array). The document's own header row is never used as a key.
+Cells beyond the document's header row are dropped; a row with fewer cells than the header is an
+error when the schema declares a `header`.
+
+A table rule that declares `header` can add `select: first`. Only the first table in that node
+whose header matches is then the rule's table, for both validation and extraction; every other
+table there is treated as undeclared. `select` without `header`, or with any value other than
+`first`, stops.
 
 Extracted values are strings; no type conversion is applied. Line numbers placed with `of`
 are the one exception, and are numbers.

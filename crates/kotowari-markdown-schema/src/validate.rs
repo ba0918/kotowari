@@ -559,6 +559,7 @@ fn validate_container(
     let mut table_lines: Vec<usize> = Vec::new();
     let mut code_lines: Vec<usize> = Vec::new();
     let mut ordered_seen: Vec<(usize, usize)> = Vec::new();
+    let table_selection = rules.table.map(|table| table.selected_line(blocks));
 
     for block in blocks {
         match block {
@@ -606,11 +607,12 @@ fn validate_container(
                 line,
                 row_lines,
             } => match rules.table {
-                Some(table) => {
+                // select で選ばれなかった表は宣言していない表として扱う（REQ-schema-059）
+                Some(table) if table_selection.is_none_or(|s| s.takes(*line)) => {
                     table_lines.push(*line);
                     validate_table_shape(table, header, rows, *line, row_lines, findings);
                 }
-                None => {
+                _ => {
                     if !open {
                         push_undeclared_line(findings, block);
                     }
@@ -795,8 +797,9 @@ fn validate_table_shape(
             format!("table header {header:?} does not match expected {expected:?}"),
         ));
     }
+    // ヘッダより多いセルは文書を読むときに捨ててあるので、足りない行だけが残る（REQ-schema-033）
     for (index, row) in rows.iter().enumerate() {
-        if row.len() != expected.len() {
+        if row.len() < header.len() {
             // 違反したのはその行なので、ヘッダの行ではなくその行を指す（REQ-schema-008）
             let row_line = row_lines.get(index).copied().unwrap_or(line);
             findings.push(Finding::at(
@@ -805,7 +808,7 @@ fn validate_table_shape(
                 format!(
                     "row has {} columns but the header has {}",
                     row.len(),
-                    expected.len()
+                    header.len()
                 ),
             ));
         }

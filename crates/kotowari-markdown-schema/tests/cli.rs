@@ -1528,3 +1528,95 @@ document:
     );
     assert_eq!(findings.len(), 4, "見出しの指摘は出ない: {json}");
 }
+
+// @kotowari[EX-schema-036]
+#[test]
+fn ex_schema_036_select_first_uses_only_the_first_table_whose_header_matches() {
+    let schema = r#"
+document:
+  preamble:
+    table:
+      header: [a, b]
+      select: first
+      extract: rows
+"#;
+    // 行番号: 1つ目の表が4行目、2つ目が8行目、3つ目が12行目
+    let doc = "| x | y |\n|---|---|\n| 0 | 0 |\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n| a | b |\n|---|---|\n| 3 | 4 |\n";
+    let (code, json, stderr) = mds_json(schema, doc, "values");
+    assert_eq!(code, Some(0), "stderr: {stderr}");
+    assert_eq!(
+        json["rows"],
+        serde_json::json!([{ "a": "1", "b": "2" }]),
+        "{json}"
+    );
+    let (code, json, stderr) = mds_json(schema, doc, "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    let findings = all_findings(&json);
+    let undeclared_tables: Vec<u64> = findings
+        .iter()
+        .filter(|f| f["kind"] == "undeclared_line" && f["rule_kind"] == "table")
+        .map(|f| f["line"].as_u64().unwrap())
+        .collect();
+    assert_eq!(undeclared_tables, vec![4, 12], "{json}");
+    assert!(
+        !findings
+            .iter()
+            .any(|f| f["kind"] == "table_header_mismatch"),
+        "{json}"
+    );
+    assert_eq!(findings.len(), 2, "{json}");
+}
+
+// @kotowari[EX-schema-037, TBL-schema-009]
+#[test]
+fn ex_schema_037_table_rule_without_select_reports_a_mismatched_header_and_select_needs_header() {
+    let header_only = "document:\n  preamble:\n    table:\n      header: [a, b]\n";
+    let select_only = "document:\n  preamble:\n    table:\n      select: first\n";
+    let doc = "| x | y |\n|---|---|\n| 0 | 0 |\n";
+    let (code, json, stderr) = mds_json(header_only, doc, "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    assert!(
+        all_findings(&json)
+            .iter()
+            .any(|f| f["kind"] == "table_header_mismatch"),
+        "{json}"
+    );
+    let (code, _json, stderr) = mds_json(select_only, doc, "check");
+    assert_eq!(code, Some(2), "stderr: {stderr}");
+    assert!(stderr.contains("schema_invalid"), "stderr: {stderr}");
+}
+
+// @kotowari[EX-schema-038]
+#[test]
+fn ex_schema_038_extra_cells_are_dropped_and_missing_cells_are_reported() {
+    let schema = r#"
+document:
+  preamble:
+    table:
+      header: [a, b, c]
+      extract: rows
+"#;
+    // 行番号: 4つのセルの行が6行目、2つのセルの行が7行目
+    let doc = "| a | b | c |\n|---|---|---|\n| 1 | 2 | 3 | 4 |\n| 5 | 6 |\n";
+    let (code, json, stderr) = mds_json(schema, doc, "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    let findings = all_findings(&json);
+    assert_eq!(findings.len(), 1, "{json}");
+    assert_eq!(findings[0]["line"], 7, "{json}");
+    let (code, json, stderr) = mds_json(schema, doc, "values");
+    assert_eq!(code, Some(0), "stderr: {stderr}");
+    assert_eq!(
+        json["rows"][0],
+        serde_json::json!({ "a": "1", "b": "2", "c": "3" }),
+        "{json}"
+    );
+}
+
+// @kotowari[EX-schema-050]
+#[test]
+fn ex_schema_050_select_other_than_first_stops() {
+    let schema = "document:\n  preamble:\n    table:\n      header: [a, b]\n      select: last\n";
+    let (code, _json, stderr) = mds_json(schema, "| a | b |\n|---|---|\n| 1 | 2 |\n", "check");
+    assert_eq!(code, Some(2), "stderr: {stderr}");
+    assert!(stderr.contains("schema_invalid"), "stderr: {stderr}");
+}
