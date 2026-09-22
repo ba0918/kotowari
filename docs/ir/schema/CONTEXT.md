@@ -1,6 +1,3 @@
----
-$schema: ../../../.mds/schemas/context.yaml
----
 # 用語集
 
 mds の仕様 IR で使う用語を置く。意味が一般の用法と違うものだけを載せる。
