@@ -18,10 +18,10 @@ mds は常に、`文書`が`題名`をちょうど1つ持つことを求め、�
 ### REQ-schema-023: 前置部の範囲
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-22-ir-engine.md#A68
 - 検証: unit
 
-mds は常に、`題名`の後から最初の`節`の前までを`前置部`として読み、そこに`フィールド行`、`文`、`箇条書き`を宣言させる。
+mds は常に、`題名`の後から最初の`節`の前までを`前置部`として読み、そこに`フィールド行`、`文`、`箇条書き`、`表`、`コードブロック`を宣言させる。
 
 ### REQ-schema-024: 節の名前
 
