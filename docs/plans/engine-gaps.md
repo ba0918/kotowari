@@ -173,7 +173,7 @@ Done when: 下の Shown by のすべてが通る。
 Shown by: check — 次の順に走らせる。
 
 1. `CARGO_BUILD_JOBS=4 cargo test --workspace` が全件通る
-2. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format json` の終了コードが0で、`findings` が空（注意 too_many_lines と too_many_requirements は `"severity": "notice"` で終了コードに効かない。記録の A37 で残すと決めている）
+2. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format json` の終了コードが0で、`findings` のうち `"severity": "error"` のものが0件。`"severity": "notice"` のものは、記録の A37 で残すと決めた5件（`docs/ir/core/ir-items.md` の too_many_requirements、`docs/ir/schema/block-rules.md` と `docs/ir/schema/extraction.md` の too_many_lines と too_many_requirements）だけ
 3. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- status --format text` の最後の行が `complete true` で、終了コードが0
 4. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-markdown-schema --bin mds -- check ./` の終了コードが0
 5. `CARGO_BUILD_JOBS=4 cargo clippy --workspace --all-targets -- -D warnings` の `error` で始まる行が 14 行（着手前の実測）から増えていない。`crates/kotowari-markdown-schema/` を指すものは0
