@@ -40,11 +40,11 @@ kotowari は常に、`IR`の形を宣言したスキーマをコンパイル時�
 ### REQ-core-169: 形の読み取りを自前で持たない
 
 - 種類: prohibition
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A1, docs/decision/records/2026-09-22-ir-engine.md#A23, docs/decision/records/2026-09-22-ir-engine.md#A37, docs/decision/records/2026-09-21-mds-spec.md#A6, docs/decision/records/records.md#A88, docs/decision/records/ir-form.md#文書名の参照
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A1, docs/decision/records/2026-09-22-ir-engine.md#A23, docs/decision/records/2026-09-22-ir-engine.md#A29, docs/decision/records/2026-09-22-ir-engine.md#A37
 - 検証: review
-- 確かめ方: `crates/kotowari-core/src/ir.rs` の関数の一覧を見て、生の行を読む関数が gherkin の塊の中身、閉じない`コードブロック`の検出、`文書名の参照`の走査の3つに対応するものだけであり、見出し、"- 名前:" の行、Markdown の表、`題名`と`文書が扱う範囲`を読む関数が無いことを確認する
+- 確かめ方: `crates/kotowari-core/src/ir.rs` の関数の一覧を見て、生の行を読む関数が gherkin の塊の中身と閉じない`コードブロック`の検出の2つに対応するものだけであり、見出し、"- 名前:" の行、Markdown の表、`題名`と`文書が扱う範囲`を読む関数が無いことを確認する
 
-kotowari は、`IR`の文書の Markdown の構造を自前で読んではならない。生の行を読んでよいのは、gherkin の塊の中身、閉じない`コードブロック`の検出、`文書名の参照`の走査の3つだけである。
+kotowari は、`IR`の文書の Markdown の構造を自前で読んではならない。生の行を読んでよいのは、gherkin の塊の中身と、閉じない`コードブロック`の検出の2つだけである。
 
 ### REQ-core-170: 指摘の行のためにスキーマへ宣言するもの
 
