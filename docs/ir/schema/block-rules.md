@@ -104,14 +104,14 @@ mds は常に、`コードブロック`の言語を宣言したときだけ言�
 
 ### TBL-schema-011: 読み方ごとの行の読み分け
 
-- 出典: docs/decision/records/2026-09-23-ir-engine-gaps.md#A1, docs/decision/records/2026-09-23-ir-engine-gaps.md#A2, docs/decision/records/2026-09-23-ir-engine-gaps.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A21, docs/decision/records/2026-09-23-ir-engine-gaps.md#A22, docs/decision/records/2026-09-23-ir-engine-gaps.md#A26, docs/decision/records/2026-09-21-mds-spec.md#A11, docs/decision/records/2026-09-21-mds-spec.md#A30, docs/decision/records/2026-09-23-ir-engine-gaps.md#A29, docs/decision/records/2026-09-23-ir-engine-gaps.md#A35, docs/decision/records/2026-09-23-ir-engine-gaps.md#A33, docs/decision/records/2026-09-23-ir-engine-gaps.md#A38, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12
+- 出典: docs/decision/records/2026-09-23-ir-engine-gaps.md#A1, docs/decision/records/2026-09-23-ir-engine-gaps.md#A2, docs/decision/records/2026-09-23-ir-engine-gaps.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A21, docs/decision/records/2026-09-23-ir-engine-gaps.md#A22, docs/decision/records/2026-09-23-ir-engine-gaps.md#A26, docs/decision/records/2026-09-21-mds-spec.md#A11, docs/decision/records/2026-09-21-mds-spec.md#A30, docs/decision/records/2026-09-23-ir-engine-gaps.md#A29, docs/decision/records/2026-09-23-ir-engine-gaps.md#A35, docs/decision/records/2026-09-23-ir-engine-gaps.md#A33, docs/decision/records/2026-09-23-ir-engine-gaps.md#A38, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-23-ir-engine-gaps.md#A43, docs/decision/records/2026-09-23-ir-engine-gaps.md#A44
 
 見出しと`前置部`の下の行を、`読み方`ごとにどう読むかを決める。どちらの`読み方`でも、一覧の行そのものの読み分けは TBL-schema-007、子の一覧は REQ-schema-031 のとおりである。
 
 | 行の形 | "paragraph" | "line" |
 |---|---|---|
-| 1つ以上の "#" の直後に空白が続く行 | 見出し | 見出し |
-| それ以外の "#" で始まる行 | CommonMark のとおり | `文` |
+| CommonMark の ATX 見出しの行（行頭の空白は3つまで、"#" は1〜6個、その後が空白か行末。"#" だけの行を含む） | 見出し | 見出し |
+| それ以外の "#" で始まる行（"#foo"、7つ以上の "#" の行） | `文` | `文` |
 | `文`の次の、"===" か "---" だけの行 | 前の行とあわせて1つの見出し | 前の行も、その行も`文` |
 | 空行で区切らずに続く、一覧でも`表`でもない複数の行 | まとめて1つの`文` | 1行ずつ`文` |
 | 一覧の行の直後に空行なしで続く、一覧の行でない行 | 直前の一覧の行の一部（`フィールド行`なら値に入る） | `文` |
@@ -120,7 +120,7 @@ mds は常に、`コードブロック`の言語を宣言したときだけ言�
 | 引用、水平線、HTML、画像の行 | `文`に数えず、`指摘`にもしない | `文` |
 | 一覧の行の後でない所で、空行の後に4つ以上の空白で字下げした行 | 字下げの`コードブロック` | `文` |
 | "```" か "~~~" のフェンスで囲んだブロック | `コードブロック` | `コードブロック` |
-| 区切りの行を持つ、縦棒で始まる行の並び | `表` | `表` |
+| GFM の表（見出しの行と区切りの行を持つ並び。縦棒で始まらなくてもよい。終わりは GFM のとおり） | `表` | `表` |
 | 区切りの行を持たず`表`にならない、縦棒で始まる行 | `文` | `文` |
 
 ## 性質
@@ -219,4 +219,18 @@ Scenario: 行で読んでも字下げした一覧の行は一覧の行のまま
   And `フィールド行`の次の行に、字下げした "  - b" の行を持つ`項目`の`文書`がある
   When "mds check --format json" を実行する
   Then その行には、宣言していない行の種別が`箇条書き`の`指摘`が出て、種別が`文`の`指摘`は出ない
+
+@id=EX-schema-051 @about=REQ-schema-058,TBL-schema-011 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A43
+Scenario: 見出しはどちらの読み方でも CommonMark の ATX 見出し
+  Given 見出しを宣言しない`スキーマ`を "reading: paragraph" と "reading: line" の2通り用意する
+  And `前置部`に、行頭に空白が2つある "  ## x" の行、"####### y" の行、"#z" の行を持つ`文書`がある
+  When それぞれの`スキーマ`で "mds check --format json" を実行する
+  Then どちらでも "  ## x" の行は見出しとして`指摘`になり、"####### y" と "#z" の行は`文`として`指摘`になり、2つの出力は一致する
+
+@id=EX-schema-052 @about=REQ-schema-058,TBL-schema-011 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A44
+Scenario: 行で読んでも縦棒で始まらない GFM の表は表になる
+  Given `前置部`の`表`に`抽出`を宣言し、"reading: line" を書いた`スキーマ`がある
+  And `前置部`に "a | b" の行と "--- | ---" の行と "1 | 2" の行が続く`文書`がある
+  When "mds values --format json" を実行する
+  Then `表`の行が1つ抽出され、その値は "1" と "2" である
 ```

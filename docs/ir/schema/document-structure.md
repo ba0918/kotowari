@@ -54,10 +54,10 @@ mds は常に、`節`を見出しの文字で見分け、`スキーマ`が宣言
 ### REQ-schema-061: 文書の直下の項目
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A23, docs/decision/records/2026-09-23-ir-engine-gaps.md#A41
+- 出典: docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A23, docs/decision/records/2026-09-23-ir-engine-gaps.md#A41, docs/decision/records/2026-09-23-ir-engine-gaps.md#A45
 - 検証: unit
 
-`スキーマ`が文書の直下の`項目`を宣言したとき、mds は最初の`節`より前にある深さ3の見出しをその`項目`として読み、`前置部`を最初の`節`か`項目`の手前で終える。同じ`文書`に`節`の下の`項目`と文書の直下の`項目`の両方があってもよい。文書の直下の`項目`を宣言しない`スキーマ`では、最初の`節`より前にある深さ3の見出しと、その内側の行を`指摘`にする（REQ-schema-027 と同じ）。
+`スキーマ`が文書の直下の`項目`を宣言したとき、mds は最初の`節`より前にある深さ3の見出しをその`項目`として読み、`前置部`を最初の`節`か`項目`の手前で終える。同じ`文書`に`節`の下の`項目`と文書の直下の`項目`の両方があってもよい。文書の直下の`項目`を宣言しない`スキーマ`では、`前置部`を宣言したときか`閉じた世界`のとき、最初の`節`より前にある深さ3の見出しと、その内側の行を`指摘`にする。`前置部`を宣言しない`開いた世界`では、未宣言の構造として許す（REQ-schema-002、REQ-schema-003）。
 
 ### REQ-schema-056: 必須の項目の欠落
 
@@ -131,4 +131,11 @@ Scenario: 文書の直下の項目を宣言しなければ節の前の深さ3の
   And 最初の`節`より前に深さ3の見出しを持つ`文書`がある
   When "mds check --format json" を実行する
   Then その見出しに`指摘`が出る
+
+@id=EX-schema-053 @about=REQ-schema-061 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A45
+Scenario: 前置部を宣言しない開いた世界では節の前の深さ3の見出しを許す
+  Given "open: true" で、文書の直下の`項目`も`前置部`も宣言しない`スキーマ`がある
+  And 最初の`節`より前に "### X-1: a" の見出しとその下の行を持つ`文書`がある
+  When "mds check --format json" を実行する
+  Then その見出しにもその下の行にも`指摘`は出ない
 ```

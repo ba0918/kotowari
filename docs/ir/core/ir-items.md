@@ -46,10 +46,10 @@ kotowari は常に、見出しの下の "- " の行を順不同で読み、行�
 ### REQ-core-178: 文を1行ずつ読む
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-23-ir-engine-gaps.md#A1, docs/decision/records/2026-09-23-ir-engine-gaps.md#A2, docs/decision/records/2026-09-23-ir-engine-gaps.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A21, docs/decision/records/2026-09-23-ir-engine-gaps.md#A22, docs/decision/records/2026-09-23-ir-engine-gaps.md#A26, docs/decision/records/2026-09-23-ir-engine-gaps.md#A35, docs/decision/records/2026-09-23-ir-engine-gaps.md#A38
+- 出典: docs/decision/records/2026-09-23-ir-engine-gaps.md#A1, docs/decision/records/2026-09-23-ir-engine-gaps.md#A2, docs/decision/records/2026-09-23-ir-engine-gaps.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A21, docs/decision/records/2026-09-23-ir-engine-gaps.md#A22, docs/decision/records/2026-09-23-ir-engine-gaps.md#A26, docs/decision/records/2026-09-23-ir-engine-gaps.md#A35, docs/decision/records/2026-09-23-ir-engine-gaps.md#A38, docs/decision/records/2026-09-23-ir-engine-gaps.md#A43
 - 検証: unit
 
-kotowari は常に、取り込んだスキーマの宣言（REQ-core-179）によって、見出しの下の、一覧の行でも表の行でもない空でない行を1行ずつ`文`として読む。"- 名前:" の行とほかの一覧の行は1行で終わり、その直後に空行なしで続く行も、空行の後に字下げして続く一覧でない行も`文`として読み、一覧の行の値に含めない。字下げした一覧の行は一覧の行として読む。引用、水平線、HTML、画像の行と、区切りの行を持たず表にならない "|" で始まる行も`文`として読む。見出しは1つ以上の "#" の直後に空白が続く行だけで、"---" か "===" だけの行はその前の行とともに`文`である。`コードブロック`は囲みの行で始まるものだけで、空行の後に4つ以上の空白で字下げした行は`文`である。
+kotowari は常に、取り込んだスキーマの宣言（REQ-core-179）によって、見出しの下の、一覧の行でも表の行でもない空でない行を1行ずつ`文`として読む。"- 名前:" の行とほかの一覧の行は1行で終わり、その直後に空行なしで続く行も、空行の後に字下げして続く一覧でない行も`文`として読み、一覧の行の値に含めない。字下げした一覧の行は一覧の行として読む。引用、水平線、HTML、画像の行と、区切りの行を持たず表にならない "|" で始まる行も`文`として読む。見出しは CommonMark の ATX 見出しの行（行頭の空白は3つまで、"#" は1〜6個、その後が空白か行末）だけで、"---" か "===" だけの行はその前の行とともに`文`である。`コードブロック`は囲みの行で始まるものだけで、空行の後に4つ以上の空白で字下げした行は`文`である。
 
 ### REQ-core-047: 文が無い
 
