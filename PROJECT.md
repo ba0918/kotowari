@@ -26,7 +26,6 @@ Run cargo from the repository root; it covers the whole workspace.
 | Build | `CARGO_BUILD_JOBS=4 cargo build --workspace` |
 | Test | `CARGO_BUILD_JOBS=4 cargo test --workspace` |
 | Test one crate | `CARGO_BUILD_JOBS=4 cargo test -p kotowari-markdown-schema` |
-| Lint | `CARGO_BUILD_JOBS=4 cargo clippy --workspace --all-targets -- -D warnings` |
 | Check this repository's own IR | `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format text` |
 | Quality gates (pre-commit) | `lefthook run pre-commit --no-auto-install` |
 
@@ -45,8 +44,11 @@ in `scripts/mutants.sh`.
 
 The specification is the IR under `docs/ir/`, and nowhere else — `docs/ir/core/` for `kotowari`
 and `docs/ir/schema/` for `kotowari-markdown-schema`. `.kotowari/config.yaml` points `check` at
-it, and each IR document declares a schema from `.mds/schemas/` in its frontmatter, so one
-`kotowari check` covers both products.
+`docs/ir/`, so one run covers both products.
+
+The documents under `docs/ir/schema/` additionally declare a schema from `.mds/schemas/` in their
+frontmatter, so `mds check docs/ir/schema` reads them as well. Those under `docs/ir/core/` carry
+no such declaration.
 
 `docs/spec/` is **not** the specification. It holds prose — concept notes and the write-ups a
 brainstorm produced — and `check` never reads it, because `.kotowari/config.yaml` points only at
