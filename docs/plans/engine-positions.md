@@ -6,7 +6,9 @@
 
 ## Specification
 
-`docs/spec/ir-engine.md`。この計画が受け持つのは **R1・R2・R16・R17・R18** の5件。R3〜R15 は別の計画（R3〜R5 はこのブランチで既に実装済み。下の「既にブランチにあるもの」を読むこと）。判断の記録は `docs/decision/records/2026-09-22-ir-engine.md`（A41〜A67 と Revisions がこの計画の範囲の判断）。
+IR の `docs/ir/schema/`。この計画が受け持つのは `docs/ir/schema/extraction.md#REQ-schema-048` と `docs/ir/schema/extraction.md#TBL-schema-008`（`抽出`の宣言の形、`ノード`ごとの要素の単位、`表`の行の鍵の出どころ）と、`docs/ir/schema/cli.md#TBL-schema-009` と `docs/ir/schema/cli.md#REQ-schema-042`（要素オブジェクトの中の鍵が重複するスキーマの`停止`）である。観測できる条件は `docs/ir/schema/extraction.md` の EX-schema-018〜EX-schema-025 と `docs/ir/schema/cli.md` の EX-schema-029・EX-schema-030 にある。
+
+`指摘`の行番号・`ノードの名前`・`生の行`（`docs/ir/schema/cli.md#REQ-schema-008`）はこのブランチで既に実装済み（下の「既にブランチにあるもの」を読むこと）。kotowari 側の置き換え（`docs/ir/core/` の REQ-core-168〜REQ-core-177）は別の計画。判断の記録は `docs/decision/records/2026-09-22-ir-engine.md`（A41〜A67 と Revisions がこの計画の範囲の判断。散文の仕様書にあった要求の番号から IR の項目への対応表は、その記録の `## Context` にある）。
 
 ## 既にブランチにあるもの
 
@@ -53,7 +55,7 @@
 変えてよい場所:
 
 - `docs/ir/schema/extraction.md`、`docs/ir/schema/cli.md`（要求と決定表）
-- ~~`crates/kotowari-markdown-schema/docs/spec/mds.md`~~（`01f6ada` で削除。仕様は `docs/ir/schema/` 1つに集約した）
+- ~~`crates/kotowari-markdown-schema/docs/spec/mds.md`~~（`01f6ada` で削除。仕様は `docs/ir/schema/` 1つに集約した）。~~`docs/spec/ir-engine.md`~~ も同じく IR へ畳んだ
 - `crates/kotowari-markdown-schema/README.md`（`抽出`の宣言の例が古くなる）
 - `crates/kotowari-markdown-schema/src/schema.rs`、`src/extract.rs`、`src/document.rs`
 - 上の各ファイルの `#[cfg(test)]`、`crates/kotowari-markdown-schema/tests/`
@@ -65,7 +67,7 @@
 - `docs/ir/core/`
 - `crates/kotowari-markdown-schema/src/finding.rs`（`指摘`の形は R3〜R5 で決着済み）。`src/validate.rs` は、ステップ5で `Heading` の生の行を外したときの追従（コンパイルを通すための参照の差し替え）だけ触れてよく、`指摘`の中身を変えてはならない
 - `crates/kotowari-markdown-schema/CHANGELOG.md` と版（仕様の「作らないもの」）
-- `docs/spec/ir-engine.md` と `docs/decision/records/`（承認済み。偽だと分かったら止めて手渡す）
+- `docs/ir/` と `docs/decision/records/`（承認済み。偽だと分かったら止めて手渡す）
 
 ## Step order and prerequisites
 
@@ -73,7 +75,7 @@
 
 ## Step 1 — IR の要求を改める
 
-Purpose: `抽出`の宣言の形と鍵の出どころと`導かれる値`の語を、R1・R2・R16〜R18 の振る舞いに合わせる。Specification: `docs/spec/ir-engine.md#R1`、`#R2`、`#R16`、`#R17`、`#R18`。
+Purpose: `抽出`の宣言の形と鍵の出どころと`導かれる値`の語を、R1・R2・R16〜R18 の振る舞いに合わせる。Specification: `docs/ir/schema/extraction.md#REQ-schema-048`、`docs/ir/schema/extraction.md#TBL-schema-008`、`docs/ir/schema/cli.md#TBL-schema-009`。
 Prerequisites: なし。始める前に次の3つを1回ずつ走らせ、結果を `.agents/baseline-engine-positions.md` に追記する（ファイルが無ければ作る。`.agents/` は git が無視する）。ステップ8の検査5はこのファイルの値と比べる。
 - `CARGO_BUILD_JOBS=4 cargo test -p kotowari-markdown-schema`（通った件数）
 - `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format text`（指摘の数）
@@ -92,7 +94,7 @@ Shown by: check — 次の順。
 3. `grep -c '^| ' docs/ir/schema/cli.md` の `TBL-schema-009` の節が見出し・区切り・5行のまま（目で数えてよい）
 4. `rg -n 'ヘッダの列の名前と同じとき' docs/ir/schema/` が0件（変更前は `docs/ir/schema/extraction.md` の `REQ-schema-048` に1件ある。「衝突」の語は変更前から `docs/ir/schema/` に0件なので、検査の語に使わない）
 
-Left to the implementer: 文の言い回し。`抽出`の入れ子の形を `REQ-schema-047` と `REQ-schema-048` のどちらに書くか。具体例（`EX-schema-018` 以降が空き）を足すかどうか。
+Left to the implementer: 文の言い回し。`抽出`の入れ子の形を `REQ-schema-047` と `REQ-schema-048` のどちらに書くか。具体例は `EX-schema-018`〜`EX-schema-025` と `EX-schema-029`・`EX-schema-030` を既に書いてある（`EX-schema-031` 以降が空き）。
 Stop and hand back if: 要求を足さずには書けないと分かったとき。`TBL-schema-009` の5つの理由のどれにも当てはめられないと分かったとき（仕様 R18 は `schema_invalid` を使うと定めている）。
 
 ## Step 2 — エンジン自身の仕様を改める（実行後に取り消した）
@@ -107,7 +109,7 @@ IR の側の改訂はステップ1が担っている。
 
 ## Step 3 — 抽出の宣言を入れ子の形にする
 
-Purpose: `抽出`の宣言を `{path, value?, of?, group?}` の入れ子で読み、旧来の書式の並びを受けなくする。**このステップでは`抽出`の出力を変えない。** Specification: `docs/spec/ir-engine.md#R16`。
+Purpose: `抽出`の宣言を `{path, value?, of?, group?}` の入れ子で読み、旧来の書式の並びを受けなくする。**このステップでは`抽出`の出力を変えない。** Specification: `docs/ir/schema/extraction.md#REQ-schema-048`。
 Prerequisites: なし（ステップ1と2は規律上の順序）。
 May change: `crates/kotowari-markdown-schema/src/schema.rs`、`src/extract.rs`（型の追従だけ）、それぞれの `#[cfg(test)]`、`crates/kotowari-markdown-schema/tests/`、`.mds/schemas/ir.yaml`、`.mds/schemas/context.yaml`、`.mds/schemas/flags.yaml`。
 Done when:
@@ -125,7 +127,7 @@ Stop and hand back if: `of` を `{ 鍵: 語 }` で読むと、`項目`の `id`�
 
 ## Step 4 — 要素オブジェクトの中の鍵の重複を停止にする
 
-Purpose: 1つの要素オブジェクトの中で鍵が重複するスキーマを、スキーマを読んだ時点で弾く。Specification: `docs/spec/ir-engine.md#R18`。
+Purpose: 1つの要素オブジェクトの中で鍵が重複するスキーマを、スキーマを読んだ時点で弾く。Specification: `docs/ir/schema/cli.md#TBL-schema-009`、`docs/ir/schema/cli.md#REQ-schema-042`。
 Prerequisites: ステップ3。
 May change: `crates/kotowari-markdown-schema/src/schema.rs`、その `#[cfg(test)]`。
 Done when:
@@ -140,7 +142,7 @@ Stop and hand back if: 今の `.mds/schemas/` のどれかがこの検査に引�
 
 ## Step 5 — 要素の単位と value の置き方、導かれる値の raw
 
-Purpose: `抽出`の**構造**を仕様のとおりにする。`ノード`ごとの要素の単位、`要素の値`を `value` の鍵へ置くこと、`導かれる値`の `raw`、繰り返しの段。Specification: `docs/spec/ir-engine.md#R16`、`#R17`。
+Purpose: `抽出`の**構造**を仕様のとおりにする。`ノード`ごとの要素の単位、`要素の値`を `value` の鍵へ置くこと、`導かれる値`の `raw`、繰り返しの段。Specification: `docs/ir/schema/extraction.md#REQ-schema-048`、`docs/ir/schema/extraction.md#TBL-schema-008`。
 Prerequisites: ステップ3。
 May change: `crates/kotowari-markdown-schema/src/extract.rs`、`src/schema.rs`（`OfKind` に `raw` を足す）、`src/document.rs`（`Heading` の生の行を外す）、`src/validate.rs`（`Heading` を外したときのコンパイルを通すための追従だけ。`指摘`の中身を変えない）、それぞれの `#[cfg(test)]`。
 
@@ -163,7 +165,7 @@ Stop and hand back if: `コードブロック`の`抽出`が今ブロック単�
 
 ## Step 6 — 表の行の鍵の出どころを変える
 
-Purpose: `表`の行の鍵を`文書`のヘッダ行の文字から作るのをやめる。**鍵の出どころだけを変え、要素の構造（ステップ5）には触れない。** Specification: `docs/spec/ir-engine.md#R1`。
+Purpose: `表`の行の鍵を`文書`のヘッダ行の文字から作るのをやめる。**鍵の出どころだけを変え、要素の構造（ステップ5）には触れない。** Specification: `docs/ir/schema/extraction.md#TBL-schema-008`（`表`の行）。
 Prerequisites: ステップ5。
 May change: `crates/kotowari-markdown-schema/src/extract.rs`（`extract_table`（`:421`）、`table_objects`（`:465`）の鍵を作る部分だけ）、その `#[cfg(test)]`、`crates/kotowari-markdown-schema/tests/`。
 Done when:
@@ -179,7 +181,7 @@ Stop and hand back if: `table_header_mismatch` を出す経路（`validate.rs`�
 
 ## Step 7 — 文の要素の値と生の行を分ける
 
-Purpose: `文`の`要素の値`を前後の空白を取り除いた文字にし、`継続段落`を`抽出`の要素から外す。**行ごとに分けること自体はステップ5までに済んでいる。** Specification: `docs/spec/ir-engine.md#R2`。
+Purpose: `文`の`要素の値`を前後の空白を取り除いた文字にし、`継続段落`を`抽出`の要素から外す。**行ごとに分けること自体はステップ5までに済んでいる。** Specification: `docs/ir/schema/extraction.md#TBL-schema-008`（`文`の行）、`docs/ir/schema/extraction.md#REQ-schema-048`。
 Prerequisites: ステップ5。
 May change: `crates/kotowari-markdown-schema/src/extract.rs`（`extract_statement`（`:202`）、`statement_line_object`（`:261`））、その `#[cfg(test)]`。
 
@@ -197,7 +199,7 @@ Stop and hand back if: `継続段落`を`文`から外すと、今`文`として
 
 ## Step 8 — 終端の確認
 
-Purpose: 5件が揃ったことと、契約とほかの製品を壊していないことを見る。Specification: `docs/spec/ir-engine.md#R1`、`#R2`、`#R16`、`#R17`、`#R18`。
+Purpose: 5件が揃ったことと、契約とほかの製品を壊していないことを見る。Specification: `docs/ir/schema/extraction.md#REQ-schema-048`、`docs/ir/schema/extraction.md#TBL-schema-008`、`docs/ir/schema/cli.md#TBL-schema-009`。
 Prerequisites: ステップ1〜7。
 May change: なし（直しが要れば当該のステップに戻る）。
 Done when: 下の Shown by のすべてが通る。
