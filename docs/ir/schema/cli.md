@@ -33,7 +33,7 @@ mds は常に、出力の形を "--format" で受け、人間向けの "text" �
 ### REQ-schema-008: 指摘の形
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A17
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A17, docs/decision/records/2026-09-22-ir-engine.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A27, docs/decision/records/2026-09-22-ir-engine.md#A29
 - 検証: unit
 
 mds は常に、1件の`指摘`を、種類、深刻度、`文書`のパス、行番号、`ノードの名前`、`生の行`、詳細の7つで表し、行を持たない`指摘`では行番号を省く。行番号は、違反した`ノード`があるならその`ノード`の開始行、`ノード`の欠落ならそれを含む`ノード`の開始行にし、含む`ノード`に行が無いときは省く。`ノードの名前`は宣言上の名前を持つ`ノード`の`指摘`にだけ付け、`生の行`は行番号を持つ`指摘`にだけ付ける。
@@ -91,7 +91,7 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 
 ### TBL-schema-009: 停止の理由
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A56
 
 | 理由 | いつ |
 |---|---|
@@ -139,10 +139,10 @@ Scenario: frontmatter が壊れていれば停止する
 
 @id=EX-schema-026 @about=REQ-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A21,docs/decision/records/2026-09-22-ir-engine.md#A25
 Scenario: 指摘の行は違反したノードか、それを含むノードの開始行になる
-  Given 必須の`フィールド行`を落とした`項目`と、同じ`フィールド行`を2つ書いた`項目`と、列の足りない`表`を持つ`文書`がある
+  Given 必須の`フィールド行`を落とした`項目`と、宣言した形に合わない値の`フィールド行`を持つ`項目`と、列の足りない`表`を持つ`文書`がある
   When "mds check --format json" を実行する
   Then 欠落の`指摘`の行はその`項目`の見出しの行である
-  And 重複の`指摘`の行は2つ目の`フィールド行`の行である
+  And 形に合わない`フィールド行`の`指摘`の行はその`フィールド行`の行である
   And 列の足りない`表`の`指摘`の行はその行である
 
 @id=EX-schema-027 @about=REQ-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A27
