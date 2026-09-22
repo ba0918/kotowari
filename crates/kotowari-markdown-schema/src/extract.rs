@@ -268,9 +268,10 @@ fn extract_statement(
     place(root, extract.path(), element);
 }
 
-/// 文の1行の要素の値。
+/// 文の1行の要素の値。前後の空白を取り除いた行の文字にする。字下げと
+/// 末尾の空白を含む行そのままは導かれる値の `raw` で取る（R2）。
 fn statement_line_text(raw: &RawLine) -> String {
-    raw.text.clone()
+    raw.text.trim().to_string()
 }
 
 fn extract_bullets(
@@ -1403,11 +1404,11 @@ document:
         assert_eq!(
             v["lines"],
             json!([
-                { "text": " 文の1行目", "line": 3 },
-                { "text": "  字下げの2行目", "line": 4 },
-                { "text": "   3行目", "line": 5 }
+                { "text": "文の1行目", "line": 3 },
+                { "text": "字下げの2行目", "line": 4 },
+                { "text": "3行目", "line": 5 }
             ]),
-            "行の数と同じ数のオブジェクトが、生の行と行番号を持つ"
+            "行の数と同じ数のオブジェクトが、前後の空白を取り除いた値と行番号を持つ（R2）"
         );
     }
 
@@ -1434,6 +1435,54 @@ document:
                 { "text": "次の段落", "line": 5 }
             ]),
             "空行を挟んで続く段落も同じ並びに入る（R16）"
+        );
+    }
+
+    // @kotowari[REQ-schema-035, REQ-schema-048]
+    #[test]
+    fn statement_element_value_is_trimmed_and_raw_keeps_the_original_line() {
+        let schema = r#"
+document:
+  sections:
+    - name: 記録
+      statement:
+        extract:
+          path: lines
+          value: text
+          of: { raw: raw }
+"#;
+        let doc = "## 記録\n\n  字下げのある行  \n";
+        let v = values(schema, doc);
+        assert_eq!(
+            v["lines"],
+            json!([{ "text": "字下げのある行", "raw": "  字下げのある行  " }]),
+            "要素の値は前後の空白を取り除いた文字、raw は行そのままで別物（R2）"
+        );
+    }
+
+    // @kotowari[REQ-schema-035, REQ-schema-048]
+    #[test]
+    fn a_continuation_paragraph_is_not_a_statement_element() {
+        let schema = r#"
+document:
+  sections:
+    - name: 記録
+      fields:
+        - name: 状態
+          extract: status
+      statement:
+        required: false
+        extract:
+          path: lines
+          value: text
+          of: { line: line }
+"#;
+        let doc = "## 記録\n\n- 状態: ok\n\n  一覧の行の継続段落。\n\n素の文。\n";
+        let v = values(schema, doc);
+        assert_eq!(
+            v["lines"],
+            json!([{ "text": "素の文。", "line": 7 }]),
+            "一覧の行の継続段落は文の抽出の要素に入らない（R2）"
         );
     }
 
