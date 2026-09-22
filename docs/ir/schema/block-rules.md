@@ -1,6 +1,3 @@
----
-$schema: ../../../.mds/schemas/ir.yaml
----
 # 見出しの下の行の規則
 
 この文書は、見出しや前置部の下に並ぶ行を、フィールド行、文、箇条書き、表、コードブロックのどれとして読むかを扱う。
@@ -17,10 +14,18 @@ $schema: ../../../.mds/schemas/ir.yaml
 ### REQ-schema-029: フィールド行の値の制約
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A10
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A29
 - 検証: unit
 
 mds は常に、`フィールド行`の値に正規表現と許可リストを課し、区切り文字を宣言したときは区切った要素ごとに課す。
+
+### REQ-schema-054: 文と箇条書きの値の制約
+
+- 種類: ubiquitous
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A31, docs/decision/records/2026-09-21-mds-spec.md#A32
+- 検証: unit
+
+mds は常に、`文`と`箇条書き`の行に正規表現を課し、`文`には許可リストも課す。`箇条書き`の照合は元のマーカーの行のマーカーを除いた部分にだけ行い、`継続段落`には行わない。
 
 ### REQ-schema-030: 継続段落はその行の一部
 
@@ -33,15 +38,15 @@ mds は常に、`継続段落`を直前の一覧の行の一部として読み�
 ### REQ-schema-031: 箇条書きの入れ子
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A10
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A34, docs/decision/records/2026-09-21-mds-spec.md#A67
 - 検証: unit
 
-`箇条書き`に子の一覧があるとき、mds は`スキーマ`が宣言した子の規則に照らし、宣言が無ければ子の行を`指摘`にする。
+`箇条書き`に子の一覧があるとき、mds は`スキーマ`が宣言した子の規則に照らし、宣言が無ければ子の行を`指摘`にする。子の規則には`フィールド行`と`箇条書き`を宣言でき、子の`箇条書き`はさらに子の規則を持てる。子の行の読み分けは TBL-schema-007 と同じで、特定の名前を特別扱いしない。子の`箇条書き`に`抽出`を宣言した`スキーマ`は`停止`にする。
 
 ### REQ-schema-032: 文の数え方
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A3
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A30
 - 検証: unit
 
 mds は常に、空行で区切った段落を1つの`文`として数え、引用、水平線、画像だけの行は`文`に数えず、`閉じた世界`でも`指摘`にしない。
@@ -57,7 +62,7 @@ mds は常に、`表`のヘッダのセル列を宣言したときだけヘッ�
 ### REQ-schema-034: コードブロックの検査
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A12
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A12, docs/decision/records/2026-09-21-mds-spec.md#A35
 - 検証: unit
 
 mds は常に、`コードブロック`の言語を宣言したときだけ言語を照合し、行ごとの正規表現を宣言したときは、行頭の空白を除いた空でない行だけを照合する。
@@ -65,7 +70,7 @@ mds は常に、`コードブロック`の言語を宣言したときだけ言�
 ### REQ-schema-041: フィールド行の並び順
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A10
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A36
 - 検証: unit
 
 `フィールド行`の一覧に並び順の強制を宣言したとき、mds は`スキーマ`に書いた順で現れない`フィールド行`を`指摘`にする。宣言しないときの並びは順不同である。
@@ -74,7 +79,7 @@ mds は常に、`コードブロック`の言語を宣言したときだけ言�
 
 ### TBL-schema-007: 一覧の行の読み分け
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A10
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A33
 
 | 順 | 行の形 | 読み方 |
 |---|---|---|

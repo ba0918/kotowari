@@ -34,11 +34,19 @@
 
 同じ`ID`が2か所以上にあるとき、kotowari は2つ目以降の場所ごとに、その見出しの行（`シナリオ`は "Scenario:" の行）を "line" にして duplicate_id の`誤り`を出す。1つ目はパスのバイト順で先の文書、同じ文書の中では行の小さいものである。
 
+### REQ-core-174: 宣言の外の行とコードブロックと用語集の題名
+
+- 種類: event_driven
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A35, docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A82, docs/decision/records/records.md#A102, docs/decision/records/ir-form.md#文書
+- 検証: unit
+
+"## " の見出しの直下で最初の "### " より前に、`コードブロック`の外にあって一覧でも表でもない空でない行があるとき、またはスキーマが宣言していない表かコードブロックがあるとき、kotowari は unknown_line の`誤り`を、"## 具体例" の見出しの下に gherkin でない`コードブロック`があるとき unknown_code_block の`誤り`を、`用語集`の`題名`がスキーマの宣言した形でないとき glossary_title_invalid の`誤り`を出す。detail は TBL-core-008、"line" は TBL-core-019 のとおりにする。
+
 ## 決定表
 
 ### TBL-core-008: 誤りの種類と detail
 
-- 出典: docs/decision/records/records.md#A142, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A68, docs/decision/records/records.md#A108, docs/decision/records/records.md#A109, docs/decision/records/records.md#A110, docs/decision/records/records.md#A112, docs/decision/records/records.md#A116, docs/decision/records/records.md#A111, docs/decision/records/records.md#A150, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A19, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-scenario-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A57, docs/decision/records/2026-09-22-id-namespace.md#A4
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/records.md#A142, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A68, docs/decision/records/records.md#A108, docs/decision/records/records.md#A109, docs/decision/records/records.md#A110, docs/decision/records/records.md#A112, docs/decision/records/records.md#A116, docs/decision/records/records.md#A111, docs/decision/records/records.md#A150, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A19, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-scenario-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A57, docs/decision/records/2026-09-22-id-namespace.md#A4
 
 detail が「行の文字」「見出しの文字」「Scenario: の行の文字」の種類では、読んだ行の文字そのまま（字下げと末尾の空白を含み、再構成しない）を入れる。
 
@@ -84,6 +92,9 @@ detail が「行の文字」「見出しの文字」「Scenario: の行の文字
 | revision_link_invalid | リンクの href。リンクが無ければ superseded_by の行の値 | REQ-core-132 |
 | mutant_survived | 変更の説明 | REQ-core-139 |
 | equivalent_invalid | 等価の一覧の1件に書かれたままの "file" と "change" を ": " でつないだ文字列 | REQ-core-143 |
+| unknown_line | 行の文字 | REQ-core-174 |
+| unknown_code_block | 開始の行の文字 | REQ-core-174 |
+| glossary_title_invalid | 題名の行の文字 | REQ-core-174 |
 
 ### TBL-core-009: 注意の種類と detail
 
@@ -105,4 +116,17 @@ Scenario: 3か所にある ID は2件の重複になる
   When "kotowari check" を実行する
   Then duplicate_id の誤りが2件出る
   And 1つ目の見出しの行には duplicate_id が出ない
+
+@id=EX-core-266 @about=REQ-core-174 @source=docs/decision/records/2026-09-22-ir-engine.md#A33,docs/decision/records/2026-09-22-ir-engine.md#A35,docs/decision/records/records.md#A102,docs/decision/records/ir-form.md#文書
+Scenario: 宣言の外の3つの場面はそれぞれ誤りになる
+  Given "## " の見出しの直下に`コードブロック`の外の空でない行を持つ`話題ごとの文書`と、"## 具体例" の見出しの下に gherkin でない`コードブロック`を持つ`話題ごとの文書`と、`題名`がスキーマの宣言した形でない`用語集`がある
+  When "kotowari check --format json" を実行する
+  Then unknown_line と unknown_code_block と glossary_title_invalid の`誤り`が1件ずつ出る
+  And それぞれの detail は TBL-core-008、"line" は TBL-core-019 のとおりである
+
+@id=EX-core-267 @about=REQ-core-174 @source=docs/decision/records/2026-09-22-ir-engine.md#A33
+Scenario: kotowari 自身の IR では3種類とも出ない
+  Given このリポジトリの`IR`の文書がある
+  When "kotowari check --format json" を実行する
+  Then unknown_line と unknown_code_block と glossary_title_invalid の`誤り`は1件も出ない
 ```

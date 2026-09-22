@@ -1,11 +1,13 @@
 pub mod cargo_mutants;
 pub mod config;
 pub mod equivalents;
+pub mod finding_map;
 pub mod ir;
 pub mod list;
 pub mod mutants;
 pub mod query;
 pub mod record_form;
+pub mod schema;
 pub mod sources;
 pub mod status;
 pub mod terms;
@@ -89,15 +91,18 @@ finding_kinds! {
     TooManyRequirements => "too_many_requirements",
     UnclosedBacktick => "unclosed_backtick",
     UnclosedCodeBlock => "unclosed_code_block",
+    UnknownCodeBlock => "unknown_code_block",
     UnknownField => "unknown_field",
     UnknownHeading => "unknown_heading",
     UnknownKind => "unknown_kind",
+    UnknownLine => "unknown_line",
     UnknownTag => "unknown_tag",
     UnknownTerm => "unknown_term",
     UnparsableFile => "unparsable_file",
     InvalidGherkinLine => "invalid_gherkin_line",
     InvalidId => "invalid_id",
     GlossaryInvalid => "glossary_invalid",
+    GlossaryTitleInvalid => "glossary_title_invalid",
     UnresolvedReference => "unresolved_reference",
     VagueWord => "vague_word",
     VerificationInvalid => "verification_invalid",
@@ -218,6 +223,7 @@ stop_reasons! {
     UnreadableFile => "unreadable file",
     NonUtf8File => "non-UTF-8 file",
     ResultsError => "results error",
+    MappingError => "mapping error",
 }
 
 /// 結果のファイルを作った変異テストの道具（REQ-core-149）

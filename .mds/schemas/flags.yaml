@@ -3,25 +3,42 @@ name: ir-flags
 open: false
 document:
   title:
-    pattern: "^.+"
     extract: title
   preamble:
     statement:
-      required: false
-      extract: scope
+      repeat: { min: 0 }
+      extract:
+        path: scope
+        value: value
+        of: { line: line, raw: raw }
   sections:
     - name: 問題の記録
-      required: false
+      repeat: { min: 0 }
       item:
-        id: "FLAG-([a-z][a-z0-9-]*-)?\\d{3,}"
+        id: "^FLAG-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
         repeat: { min: 0 }
+        extract:
+          path: flags
+          of: { id: id, name: name, line: line }
         fields:
           - name: 種類
             enum: [contradiction, gap, ambiguity]
+            extract: kind
           - name: 関係
             separator: ","
+            extract:
+              path: relations
+              value: value
+              of: { line: line }
           - name: 出典
             separator: ","
-            pattern: "^docs/"
+            extract:
+              path: sources
+              value: value
+              of: { line: line }
         statement:
-          required: true
+          repeat: { min: 1 }
+          extract:
+            path: text
+            value: value
+            of: { line: line, raw: raw }

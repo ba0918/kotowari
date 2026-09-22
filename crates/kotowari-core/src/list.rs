@@ -286,7 +286,7 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
                     sources: sources.clone(),
                     tests,
                 }),
-                Item::GlossaryTerm { .. } | Item::UnknownHeading { .. } => continue,
+                Item::GlossaryTerm { .. } => continue,
             });
         }
     }

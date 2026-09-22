@@ -20,6 +20,7 @@
 | release | ba0918-release |
 | delegate | ba0918-delegation |
 | diff-review | ba0918-diff-review |
+| writing or revising an IR document under `docs/ir/`, or acting on a `kotowari check` finding | kotowari |
 
 Refer to each rule by its skill name. Read every rule that applies before starting the work it
 governs.

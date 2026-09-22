@@ -108,27 +108,12 @@ pub fn check_document_references(
 ) {
     for doc in docs {
         let path = crate::join_display_path(ir_path, &doc.relative_path);
-        let lines = crate::ir::split_lines_for_doc_ref(&doc.filename, &doc.raw_content);
-
-        let mut current_fence: Option<crate::ir::CodeFence> = None;
-        for (idx, line) in lines.iter().enumerate() {
-            let line_num = idx + 1;
-
-            if let Some(ref fence) = current_fence {
-                if crate::ir::is_closing_fence(line, fence) {
-                    current_fence = None;
-                }
-                continue;
-            }
-            if let Some(fence) = crate::ir::parse_opening_fence(line) {
-                current_fence = Some(fence);
-                continue;
-            }
-
+        // REQ-core-170: `文`の行の文字の上で探す。見出し、一覧の行、表の行、コードブロックの中は見ない
+        for (line_num, line) in doc.statement_lines() {
             // 二重引用符の中を除外するため、引用符の外の部分だけ検査
             let parts = crate::split_outside_quotes(line);
             for part in &parts {
-                find_doc_refs(part, line_num, &path, &doc.directory, ir_paths, findings);
+                find_doc_refs(part, *line_num, &path, &doc.directory, ir_paths, findings);
             }
         }
     }

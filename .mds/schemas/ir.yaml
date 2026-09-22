@@ -3,31 +3,33 @@ name: ir
 open: false
 document:
   title:
-    pattern: "^.+"
     extract: title
   preamble:
     statement:
-      required: true
-      extract: scope
+      repeat: { min: 1 }
+      extract:
+        path: scope
+        value: value
+        of: { line: line, raw: raw }
   sections:
     - name: 要求
-      required: false
+      repeat: { min: 0 }
       item:
-        id: "REQ-([a-z][a-z0-9-]*-)?\\d{3,}"
+        id: "^REQ-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
         repeat: { min: 0 }
         extract:
-          - requirements
-          - { path: id, of: id }
-          - { path: name, of: name }
-          - { path: line, of: line }
+          path: requirements
+          of: { id: id, name: name, line: line }
         fields:
           - name: 種類
             enum: [event_driven, state_driven, ubiquitous, prohibition, invariant, algorithm]
             extract: kind
           - name: 出典
             separator: ","
-            pattern: "^docs/"
-            extract: sources
+            extract:
+              path: sources
+              value: value
+              of: { line: line }
           - name: 検証
             enum: [unit, property, proof, review]
             extract: verification
@@ -35,61 +37,72 @@ document:
             separator: ","
             required: true
             when: { field: 種類, eq: algorithm }
-            extract: definitions
+            extract:
+              path: definitions
+              value: value
+              of: { line: line }
           - name: 確かめ方
             required: true
             when: { field: 検証, eq: review }
             extract: how_to_verify
         statement:
-          required: true
+          repeat: { min: 1 }
           when: { field: 種類, ne: algorithm }
-          extract: text
+          extract:
+            path: text
+            value: value
+            of: { line: line, raw: raw }
     - name: 決定表
-      required: false
+      repeat: { min: 0 }
       item:
-        id: "TBL-([a-z][a-z0-9-]*-)?\\d{3,}"
+        id: "^TBL-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
         repeat: { min: 0 }
         extract:
-          - tables
-          - { path: id, of: id }
-          - { path: name, of: name }
-          - { path: line, of: line }
+          path: tables
+          of: { id: id, name: name, line: line }
         fields:
           - name: 出典
             separator: ","
-            pattern: "^docs/"
-            extract: sources
+            extract:
+              path: sources
+              value: value
+              of: { line: line }
         table:
+          repeat: { min: 1 }
           extract: rows
         statement:
-          required: false
-          extract: text
+          repeat: { min: 0 }
+          extract:
+            path: text
+            value: value
+            of: { line: line, raw: raw }
     - name: 性質
-      required: false
+      repeat: { min: 0 }
       item:
-        id: "PROP-([a-z][a-z0-9-]*-)?\\d{3,}"
+        id: "^PROP-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
         repeat: { min: 0 }
         extract:
-          - properties
-          - { path: id, of: id }
-          - { path: name, of: name }
-          - { path: line, of: line }
+          path: properties
+          of: { id: id, name: name, line: line }
         fields:
           - name: 出典
             separator: ","
-            pattern: "^docs/"
-            extract: sources
+            extract:
+              path: sources
+              value: value
+              of: { line: line }
         statement:
-          required: true
-          extract: text
+          repeat: { min: 1 }
+          extract:
+            path: text
+            value: value
+            of: { line: line, raw: raw }
     - name: 具体例
-      required: false
+      repeat: { min: 0 }
       codeblock:
         lang: gherkin
         repeat: { min: 0 }
-        lines:
-          - "^@"
-          - "^Scenario:"
-          - "^(Given|When|Then|And|But) "
-          - "^#"
-        extract: scenarios
+        extract:
+          path: scenarios
+          value: value
+          of: { line: line }

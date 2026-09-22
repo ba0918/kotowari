@@ -633,7 +633,7 @@ fn check_directory_stops_on_invalid_schema() {
     assert!(stderr.contains("schema_invalid"));
 }
 
-// @kotowari[REQ-schema-010, REQ-schema-009, REQ-schema-042, REQ-schema-043]
+// @kotowari[REQ-schema-010, REQ-schema-009, REQ-schema-042, REQ-schema-043, REQ-schema-053]
 #[test]
 fn check_directory_stops_on_frontmatter_invalid_and_outputs_no_findings() {
     let dir = tempfile::tempdir().unwrap();
@@ -771,4 +771,491 @@ fn no_subcommand_stops_with_a_usage_hint_not_the_about_text() {
         "about の文をそのまま停止の説明にしない: {stderr}"
     );
     assert!(stderr.contains("--help"), "使い方への案内を出す: {stderr}");
+}
+
+const NODE_SCHEMA: &str = r#"name: t
+document:
+  sections:
+    - name: 要求
+      item:
+        id: "REQ-\\d+"
+        repeat: { min: 0 }
+        fields:
+          - name: 種類
+"#;
+
+// @kotowari[REQ-schema-008]
+#[test]
+fn check_json_finding_carries_the_node_name_and_the_raw_line() {
+    let dir = tempfile::tempdir().unwrap();
+    write_file(dir.path(), "schema.yaml", NODE_SCHEMA);
+    let doc = write_file(
+        dir.path(),
+        "doc.md",
+        "---\n$schema: ./schema.yaml\n---\n## 要求\n\n### REQ-001: `名前`\n",
+    );
+    let output = mds()
+        .args(["check", doc.to_str().unwrap(), "--format", "json"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let finding = &json["files"][0]["findings"][0];
+    assert_eq!(finding["kind"], "missing_required_field");
+    assert_eq!(finding["line"], 6);
+    assert_eq!(finding["node"], "種類");
+    assert_eq!(finding["text"], "### REQ-001: `名前`");
+}
+
+// @kotowari[REQ-schema-055]
+#[test]
+fn check_json_undeclared_line_has_rule_kind() {
+    let dir = tempfile::tempdir().unwrap();
+    write_file(dir.path(), "schema.yaml", T_SCHEMA);
+    let doc = write_file(
+        dir.path(),
+        "doc.md",
+        "---\n$schema: ./schema.yaml\n---\n# T-1: 例\n\n## 状況\n\n- 種類: ubiquitous\n",
+    );
+    let output = mds()
+        .args(["check", doc.to_str().unwrap(), "--format", "json"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let finding = &json["files"][0]["findings"][0];
+    assert_eq!(finding["kind"], "undeclared_line");
+    assert_eq!(finding["rule_kind"], "field");
+}
+
+/// `mds values --format json` の出力を読む。`schema` は文書の隣に置く。
+fn values_json(schema: &str, doc_body: &str) -> serde_json::Value {
+    let dir = tempfile::tempdir().unwrap();
+    write_file(dir.path(), "schema.yaml", schema);
+    let doc = write_file(
+        dir.path(),
+        "doc.md",
+        &format!("---\n$schema: ./schema.yaml\n---\n{doc_body}"),
+    );
+    let output = mds()
+        .args(["values", doc.to_str().unwrap(), "--format", "json"])
+        .output()
+        .unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    serde_json::from_slice(&output.stdout).unwrap()
+}
+
+/// `mds values` を走らせて終了コードと標準エラー・標準出力を返す。
+fn values_run(schema: &str, doc_body: &str) -> (Option<i32>, String, String) {
+    let dir = tempfile::tempdir().unwrap();
+    write_file(dir.path(), "schema.yaml", schema);
+    let doc = write_file(
+        dir.path(),
+        "doc.md",
+        &format!("---\n$schema: ./schema.yaml\n---\n{doc_body}"),
+    );
+    let output = mds()
+        .args(["values", doc.to_str().unwrap()])
+        .output()
+        .unwrap();
+    (
+        output.status.code(),
+        String::from_utf8_lossy(&output.stdout).into_owned(),
+        String::from_utf8_lossy(&output.stderr).into_owned(),
+    )
+}
+
+/// `mds check --format json` の findings を読む。
+fn check_findings(schema: &str, doc_body: &str) -> Vec<serde_json::Value> {
+    let dir = tempfile::tempdir().unwrap();
+    write_file(dir.path(), "schema.yaml", schema);
+    let doc = write_file(
+        dir.path(),
+        "doc.md",
+        &format!("---\n$schema: ./schema.yaml\n---\n{doc_body}"),
+    );
+    let output = mds()
+        .args(["check", doc.to_str().unwrap(), "--format", "json"])
+        .output()
+        .unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    json["files"][0]["findings"].as_array().unwrap().clone()
+}
+
+// @kotowari[EX-schema-018]
+#[test]
+fn values_json_keys_table_rows_by_declared_header_or_by_column_position() {
+    let schema = r#"
+document:
+  sections:
+    - name: 宣言あり
+      table:
+        header: [用語, 意味]
+        extract: { path: declared, value: cells }
+    - name: 宣言なし
+      table:
+        extract: { path: positional, value: cells }
+"#;
+    let doc = "## 宣言あり\n\n|  | 意味 |\n|---|---|\n| 印 | しるし |\n\n## 宣言なし\n\n| a | a |\n|---|---|\n| 1 | 2 |\n";
+    let v = values_json(schema, doc);
+    assert_eq!(
+        v["declared"],
+        serde_json::json!([{ "cells": { "用語": "印", "意味": "しるし" } }]),
+        "header を宣言した表の行は宣言した名前を鍵にしたオブジェクトになる"
+    );
+    assert_eq!(
+        v["positional"],
+        serde_json::json!([{ "cells": ["1", "2"] }]),
+        "header を宣言しない表の行は列の位置の配列になる"
+    );
+}
+
+// @kotowari[EX-schema-019]
+#[test]
+fn values_json_nests_repeated_table_rows_per_table_with_the_data_row_lines() {
+    let schema = r#"
+document:
+  sections:
+    - name: 決定表
+      table:
+        repeat: { min: 0 }
+        header: [a, b]
+        extract: { path: tables, value: cells, of: { line: line } }
+"#;
+    let doc = "## 決定表\n\n| a | b |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n| 5 | 6 |\n\n| a | b |\n|---|---|\n| 7 | 8 |\n| 9 | 10 |\n| 11 | 12 |\n";
+    let v = values_json(schema, doc);
+    assert_eq!(
+        v["tables"],
+        serde_json::json!([
+            [
+                { "cells": { "a": "1", "b": "2" }, "line": 8 },
+                { "cells": { "a": "3", "b": "4" }, "line": 9 },
+                { "cells": { "a": "5", "b": "6" }, "line": 10 }
+            ],
+            [
+                { "cells": { "a": "7", "b": "8" }, "line": 14 },
+                { "cells": { "a": "9", "b": "10" }, "line": 15 },
+                { "cells": { "a": "11", "b": "12" }, "line": 16 }
+            ]
+        ]),
+        "行ごとの行番号はデータ行を指し、配置パスの直下は表ごとの段になる"
+    );
+}
+
+// @kotowari[EX-schema-020]
+#[test]
+fn values_json_splits_a_statement_with_derived_values_into_one_element_per_line() {
+    let schema = r#"
+document:
+  sections:
+    - name: 要求
+      item:
+        id: "^REQ-[0-9]+$"
+        extract: { path: requirements, of: { id: id } }
+        fields:
+          - name: 種類
+            extract: kind
+        statement:
+          extract: { path: text, value: value, of: { line: line, raw: raw } }
+"#;
+    let doc = "## 要求\n\n### REQ-001: 例\n\n- 種類: ubiquitous\n\n  一覧の行の継続段落。\n\n1行目\n  字下げの2行目  \n3行目\n\n続く段落\n";
+    let v = values_json(schema, doc);
+    assert_eq!(
+        v["requirements"]["text"],
+        serde_json::json!([
+            { "value": "1行目", "line": 12, "raw": "1行目" },
+            { "value": "字下げの2行目", "line": 13, "raw": "  字下げの2行目  " },
+            { "value": "3行目", "line": 14, "raw": "3行目" },
+            { "value": "続く段落", "line": 16, "raw": "続く段落" }
+        ]),
+        "行の数と同じ数の要素が出て、値は前後の空白を取り除き、生の行は字下げと末尾の空白を残す。一覧の行の継続段落は入らない"
+    );
+}
+
+// @kotowari[EX-schema-021]
+#[test]
+fn values_json_keeps_shorthand_extractions_unsplit() {
+    let schema = r#"
+document:
+  sections:
+    - name: 記録
+      statement:
+        extract: text
+      table:
+        required: false
+        header: [a, b]
+        extract: rows
+"#;
+    let doc = "## 記録\n\n1行目\n2行目\n\n| a | b |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n";
+    let v = values_json(schema, doc);
+    assert_eq!(
+        v["text"],
+        serde_json::json!("1行目\n2行目"),
+        "略記の文は1つの文字列になり、要素ごとのオブジェクトを作らない"
+    );
+    assert_eq!(
+        v["rows"],
+        serde_json::json!([
+            { "a": "1", "b": "2" },
+            { "a": "3", "b": "4" }
+        ]),
+        "略記の表は行の並びになり、要素ごとのオブジェクトを作らない"
+    );
+}
+
+// @kotowari[EX-schema-022]
+#[test]
+fn values_without_a_path_in_the_extract_declaration_stops() {
+    let schema = r#"
+document:
+  sections:
+    - name: 記録
+      statement:
+        extract:
+          value: text
+"#;
+    let (code, _stdout, stderr) = values_run(schema, "## 記録\n\n本文。\n");
+    assert_eq!(code, Some(2), "stderr: {stderr}");
+}
+
+// @kotowari[EX-schema-023]
+#[test]
+fn values_json_omits_the_value_key_when_the_extract_declares_only_derived_values() {
+    let schema = r#"
+document:
+  sections:
+    - name: 要求
+      item:
+        id: "^REQ-[0-9]+$"
+        extract: { path: requirements, of: { id: id, line: line } }
+        fields:
+          - name: 種類
+            extract: kind
+"#;
+    let doc = "## 要求\n\n### REQ-001: 例\n\n- 種類: ubiquitous\n";
+    let v = values_json(schema, doc);
+    assert_eq!(
+        v["requirements"],
+        serde_json::json!({ "id": "REQ-001", "line": 6, "kind": "ubiquitous" }),
+        "value を書かない要素は導かれる値の鍵と内側のノードの配置パスだけを持つ"
+    );
+}
+
+// @kotowari[EX-schema-024]
+#[test]
+fn values_with_an_unaccepted_derived_word_stops() {
+    let schema = r#"
+document:
+  sections:
+    - name: 記録
+      statement:
+        extract:
+          path: lines
+          value: text
+          of: { column: column }
+"#;
+    let (code, _stdout, stderr) = values_run(schema, "## 記録\n\n本文。\n");
+    assert_eq!(code, Some(2), "stderr: {stderr}");
+}
+
+// @kotowari[EX-schema-025]
+#[test]
+fn values_json_gives_the_raw_line_for_the_title_and_for_table_rows() {
+    let schema = r#"
+document:
+  title:
+    pattern: "^T-[0-9]+:"
+    extract:
+      path: title
+      value: value
+      of: { line: line, raw: raw }
+  sections:
+    - name: 用語集
+      table:
+        header: [用語, 意味]
+        extract:
+          path: glossary
+          value: cells
+          of: { line: line, raw: raw }
+"#;
+    let doc = "# T-1:  題名  \n\n## 用語集\n\n| 用語 | 意味 |\n|---|---|\n| 印 | しるし |\n";
+    let v = values_json(schema, doc);
+    assert_eq!(
+        v["title"]["raw"],
+        serde_json::json!("# T-1:  題名  "),
+        "題名の生の行は見出しの行をそのまま出す"
+    );
+    assert_eq!(
+        v["glossary"][0]["raw"],
+        serde_json::json!("| 印 | しるし |"),
+        "表の行の生の行はそのデータ行をそのまま出す"
+    );
+}
+
+const FINDING_POSITION_SCHEMA: &str = r#"
+document:
+  sections:
+    - name: 要求
+      repeat: { min: 0 }
+      item:
+        id: "^REQ-[0-9]+$"
+        repeat: { min: 0 }
+        fields:
+          - name: 種類
+            enum: [ubiquitous]
+    - name: 用語集
+      repeat: { min: 0 }
+      table:
+        header: [用語, 意味]
+"#;
+
+// @kotowari[EX-schema-026]
+#[test]
+fn check_json_finding_line_points_at_the_node_or_at_the_one_that_should_contain_it() {
+    let doc = "## 要求\n\n### REQ-001: 欠落\n\n### REQ-002: 形\n\n- 種類: bogus\n\n## 用語集\n\n| 用語 | 意味 |\n|---|---|\n| 印 |\n";
+    let findings = check_findings(FINDING_POSITION_SCHEMA, doc);
+    let by_kind = |kind: &str| -> serde_json::Value {
+        findings
+            .iter()
+            .find(|f| f["kind"] == kind)
+            .unwrap_or_else(|| panic!("{kind} が無い: {findings:?}"))
+            .clone()
+    };
+    assert_eq!(
+        by_kind("missing_required_field")["line"],
+        6,
+        "欠落の指摘の行はその項目の見出しの行"
+    );
+    assert_eq!(
+        by_kind("field_enum_invalid")["line"],
+        10,
+        "形に合わない値のフィールド行の指摘はそのフィールド行"
+    );
+    assert_eq!(
+        by_kind("table_header_mismatch")["line"],
+        16,
+        "列の足りない表の指摘はその行"
+    );
+}
+
+const NODE_NAME_SCHEMA: &str = r#"
+document:
+  title:
+    pattern: "^T-[0-9]+:"
+  sections:
+    - name: 要求
+      item:
+        id: "^REQ-[0-9]+$"
+        fields:
+          - name: 種類
+            enum: [ubiquitous]
+"#;
+
+// @kotowari[EX-schema-027]
+#[test]
+fn check_json_finding_carries_the_declared_name_only_where_the_node_has_one() {
+    let doc = "# 合わない題名\n\n## 要求\n\n### REQ-001: 欠落\n";
+    let findings = check_findings(NODE_NAME_SCHEMA, doc);
+    let field = findings
+        .iter()
+        .find(|f| f["kind"] == "missing_required_field")
+        .unwrap();
+    assert_eq!(
+        field["node"], "種類",
+        "フィールド行の指摘は宣言した名前を持つ"
+    );
+    let title = findings
+        .iter()
+        .find(|f| f["kind"] == "title_pattern_mismatch")
+        .unwrap();
+    assert!(
+        title.get("node").is_none(),
+        "題名の指摘はノードの名前を持たない: {title}"
+    );
+}
+
+// @kotowari[EX-schema-028]
+#[test]
+fn check_json_invalid_id_finding_carries_the_heading_line_verbatim() {
+    let doc = "# T-1: 例\n\n## 要求\n\n###  BAD-1:  `名前`  \n";
+    let findings = check_findings(NODE_NAME_SCHEMA, doc);
+    let invalid = findings
+        .iter()
+        .find(|f| f["kind"] == "invalid_id")
+        .unwrap_or_else(|| panic!("invalid_id が無い: {findings:?}"));
+    assert_eq!(
+        invalid["text"], "###  BAD-1:  `名前`  ",
+        "生の行は文書のその行と一文字も違わない"
+    );
+}
+
+// @kotowari[EX-schema-029]
+#[test]
+fn values_with_colliding_element_keys_stops_without_reporting_the_document() {
+    let schema = r#"
+document:
+  sections:
+    - name: 要求
+      item:
+        id: "^REQ-[0-9]+$"
+        extract: { path: requirements, of: { id: id } }
+        fields:
+          - name: 種類
+            extract: id
+"#;
+    let (code, stdout, stderr) =
+        values_run(schema, "## 要求\n\n### REQ-001: 例\n\n- 種類: ubiquitous\n");
+    assert_eq!(code, Some(2), "stderr: {stderr}");
+    assert!(
+        stderr.contains("schema_invalid"),
+        "標準エラーはスキーマが形に合わないことを知らせる: {stderr}"
+    );
+    assert!(stdout.is_empty(), "文書から読んだ値は出さない: {stdout}");
+}
+
+// @kotowari[EX-schema-030]
+#[test]
+fn values_with_paths_sharing_only_a_level_above_the_dot_does_not_stop() {
+    let sibling = r#"
+document:
+  sections:
+    - name: 要求
+      item:
+        id: "^REQ-[0-9]+$"
+        extract: { path: requirements, of: { id: id } }
+        fields:
+          - name: 甲
+            extract: a.b
+          - name: 乙
+            extract: a.c
+"#;
+    let nested = r#"
+document:
+  sections:
+    - name: 要求
+      item:
+        id: "^REQ-[0-9]+$"
+        extract: { path: requirements, of: { id: id } }
+        fields:
+          - name: 甲
+            extract: a
+          - name: 乙
+            extract: a.b
+"#;
+    let doc = "## 要求\n\n### REQ-001: 例\n\n- 甲: 1\n- 乙: 2\n";
+    let (code, _stdout, stderr) = values_run(sibling, doc);
+    assert_eq!(code, Some(0), "\"a.b\" と \"a.c\" は重複でない: {stderr}");
+    let (code, _stdout, stderr) = values_run(nested, doc);
+    assert_eq!(code, Some(2), "\"a\" と \"a.c\" は重複で停止する: {stderr}");
 }

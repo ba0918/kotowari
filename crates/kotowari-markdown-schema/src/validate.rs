@@ -1,7 +1,7 @@
 //! 文書の構造と閉じた世界の検証。
 
 use crate::document::{Block, Document, Heading, Item};
-use crate::finding::{Finding, FindingKind};
+use crate::finding::{Finding, FindingKind, RuleKind};
 use crate::schema::{
     Bullets, Children, CodeBlock, Field, Item as ItemRule, Preamble, Repeat, Schema, Section,
     Statement, Table, Title, When, is_declared_field,
@@ -16,13 +16,13 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
     if let Some(title) = &doc_rule.title {
         validate_title(title, &document.titles, &mut findings);
     } else if !open {
-        // title 規則が無い `#` 見出しは閉じた世界で undeclared_heading（R13）
+        // title 規則が無い `#` 見出しは閉じた世界で undeclared_heading（REQ-schema-001）
         for heading in &document.titles {
-            findings.push(Finding {
-                kind: FindingKind::UndeclaredHeading,
-                line: Some(heading.line),
-                detail: format!("undeclared title heading \"{}\"", heading.text),
-            });
+            findings.push(Finding::at(
+                FindingKind::UndeclaredHeading,
+                heading.line,
+                format!("undeclared title heading \"{}\"", heading.text),
+            ));
         }
     }
 
@@ -34,11 +34,21 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
         open
     };
     let rules = ContainerRules::for_preamble(doc_rule.preamble.as_ref());
-    validate_container(&rules, &document.preamble, effective_open, &mut findings);
+    // 前置部と文書そのものは開始行を持つノードではないので、欠落の指摘は行を持たない（REQ-schema-008）
+    validate_container(
+        &rules,
+        &document.preamble,
+        effective_open,
+        None,
+        &mut findings,
+    );
 
-    let mut section_counts: HashMap<&str, usize> = HashMap::new();
+    let mut section_lines: HashMap<&str, Vec<usize>> = HashMap::new();
     for section in &document.sections {
-        *section_counts.entry(section.name.as_str()).or_insert(0) += 1;
+        section_lines
+            .entry(section.name.as_str())
+            .or_default()
+            .push(section.line);
     }
 
     for section in &document.sections {
@@ -49,26 +59,32 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
         {
             Some(def) => {
                 let rules = ContainerRules::for_section(def);
-                validate_container(&rules, &section.blocks, false, &mut findings);
-                validate_items(def, &section.items, &mut findings);
+                validate_container(
+                    &rules,
+                    &section.blocks,
+                    false,
+                    Some(section.line),
+                    &mut findings,
+                );
+                validate_items(def, &section.items, Some(section.line), &mut findings);
             }
             None => {
                 // 宣言していない節は、閉じた世界で見出しと内側の行を誤りにする
                 if !open {
-                    findings.push(Finding {
-                        kind: FindingKind::UndeclaredHeading,
-                        line: Some(section.line),
-                        detail: format!("undeclared section heading \"{}\"", section.name),
-                    });
+                    findings.push(Finding::at(
+                        FindingKind::UndeclaredHeading,
+                        section.line,
+                        format!("undeclared section heading \"{}\"", section.name),
+                    ));
                     for block in &section.blocks {
                         push_undeclared_line(&mut findings, block);
                     }
                     for item in &section.items {
-                        findings.push(Finding {
-                            kind: FindingKind::UndeclaredHeading,
-                            line: Some(item.line),
-                            detail: format!("undeclared item heading \"{}\"", item.id),
-                        });
+                        findings.push(Finding::at(
+                            FindingKind::UndeclaredHeading,
+                            item.line,
+                            format!("undeclared item heading \"{}\"", item.id),
+                        ));
                         for block in &item.blocks {
                             push_undeclared_line(&mut findings, block);
                         }
@@ -79,32 +95,36 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
     }
 
     for def in &doc_rule.sections {
-        let count = section_counts.get(def.name.as_str()).copied().unwrap_or(0) as u64;
-        let (min, max) = bounds(def.required, def.repeat.as_ref());
+        let empty: Vec<usize> = Vec::new();
+        let lines = section_lines.get(def.name.as_str()).unwrap_or(&empty);
         check_occurrence(
-            count,
-            min,
-            max,
+            &Occurrence {
+                lines,
+                name: Some(&def.name),
+                what: format!("section \"{}\"", def.name),
+                container_line: None,
+                rule_kind: RuleKind::Section,
+            },
+            bounds(def.required, def.repeat.as_ref()),
             def.repeat.is_some(),
             FindingKind::MissingRequiredSection,
-            &format!("section \"{}\"", def.name),
             &mut findings,
         );
     }
 
     // 前置部領域の深さ3の見出し。題名より前の見出しは open では許し、閉じた
-    // 世界では undeclared_heading（R13）。題名より後の見出しは宣言済みの前置部の
+    // 世界では undeclared_heading（REQ-schema-001、REQ-schema-002）。題名より後の見出しは宣言済みの前置部の
     // 中の未宣言の構造として open でも undeclared_heading、その内側の行は
-    // undeclared_line にする（R13）。前置部が未宣言のときは閉じた世界だけで
+    // undeclared_line にする（REQ-schema-003）。前置部が未宣言のときは閉じた世界だけで
     // 同じ扱いになり、open では未宣言の構造ごと許す。
     for stray in &document.stray_preamble_headings {
         let in_declared_preamble = !stray.before_title && doc_rule.preamble.is_some();
         if in_declared_preamble || !open {
-            findings.push(Finding {
-                kind: FindingKind::UndeclaredHeading,
-                line: Some(stray.heading.line),
-                detail: format!("undeclared item heading \"{}\"", stray.heading.text),
-            });
+            findings.push(Finding::at(
+                FindingKind::UndeclaredHeading,
+                stray.heading.line,
+                format!("undeclared item heading \"{}\"", stray.heading.text),
+            ));
             for block in &stray.blocks {
                 push_undeclared_line(&mut findings, block);
             }
@@ -115,49 +135,60 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
         validate_stray_heading(heading, &mut findings);
     }
 
+    // 行を持つ指摘には、その行の生の文字をそのまま添える（REQ-schema-008）
+    for finding in &mut findings {
+        if let Some(line) = finding.line {
+            finding.raw = document.raw_line(line).map(str::to_string);
+        }
+    }
+
     findings
 }
 
 fn validate_title(title: &Title, headings: &[Heading], findings: &mut Vec<Finding>) {
     match headings.len() {
-        0 => findings.push(Finding {
-            kind: FindingKind::MissingTitle,
-            line: None,
-            detail: "the document has no level-1 heading".into(),
-        }),
-        n if n > 1 => findings.push(Finding {
-            kind: FindingKind::MultipleTitles,
-            line: Some(headings[1].line),
-            detail: "the document has more than one level-1 heading".into(),
-        }),
+        0 => findings.push(Finding::new(
+            FindingKind::MissingTitle,
+            "the document has no level-1 heading".into(),
+        )),
+        n if n > 1 => findings.push(Finding::at(
+            FindingKind::MultipleTitles,
+            headings[1].line,
+            "the document has more than one level-1 heading".into(),
+        )),
         _ => {
             let heading = &headings[0];
             if let Some(pattern) = &title.pattern
                 && !pattern.is_match(&heading.text)
             {
-                findings.push(Finding {
-                    kind: FindingKind::TitlePatternMismatch,
-                    line: Some(heading.line),
-                    detail: format!(
+                findings.push(Finding::at(
+                    FindingKind::TitlePatternMismatch,
+                    heading.line,
+                    format!(
                         "title \"{}\" does not match pattern \"{}\"",
                         heading.text,
                         pattern.source()
                     ),
-                });
+                ));
             }
         }
     }
 }
 
-fn validate_items(section: &Section, items: &[Item], findings: &mut Vec<Finding>) {
+fn validate_items(
+    section: &Section,
+    items: &[Item],
+    container_line: Option<usize>,
+    findings: &mut Vec<Finding>,
+) {
     let Some(item_rule) = &section.item else {
-        // 宣言済みの節の中に足された未宣言の項目。open でも見出しと内側の行を誤りにする（R13）
+        // 宣言済みの節の中に足された未宣言の項目。open でも見出しと内側の行を誤りにする（REQ-schema-003、REQ-schema-027）
         for item in items {
-            findings.push(Finding {
-                kind: FindingKind::UndeclaredHeading,
-                line: Some(item.line),
-                detail: format!("undeclared item heading \"{}\"", item.id),
-            });
+            findings.push(Finding::at(
+                FindingKind::UndeclaredHeading,
+                item.line,
+                format!("undeclared item heading \"{}\"", item.id),
+            ));
             for block in &item.blocks {
                 push_undeclared_line(findings, block);
             }
@@ -167,50 +198,54 @@ fn validate_items(section: &Section, items: &[Item], findings: &mut Vec<Finding>
 
     for item in items {
         if !item.has_id_separator {
-            findings.push(Finding {
-                kind: FindingKind::InvalidId,
-                line: Some(item.line),
-                detail: format!("item heading \"{}\" has no \":\" separator", item.id),
-            });
+            findings.push(Finding::at(
+                FindingKind::InvalidId,
+                item.line,
+                format!("item heading \"{}\" has no \":\" separator", item.id),
+            ));
         } else if let Some(id_pattern) = &item_rule.id
             && !id_pattern.is_match(&item.id)
         {
-            findings.push(Finding {
-                kind: FindingKind::InvalidId,
-                line: Some(item.line),
-                detail: format!(
+            findings.push(Finding::at(
+                FindingKind::InvalidId,
+                item.line,
+                format!(
                     "item id \"{}\" does not match pattern \"{}\"",
                     item.id,
                     id_pattern.source()
                 ),
-            });
+            ));
         }
         let rules = ContainerRules::for_item(item_rule);
-        validate_container(&rules, &item.blocks, false, findings);
+        validate_container(&rules, &item.blocks, false, Some(item.line), findings);
     }
 
-    let count = items.len() as u64;
-    let (min, max) = bounds(item_rule.required, item_rule.repeat.as_ref());
+    // 項目は宣言上の名前を持たないので、指摘にノードの名前を付けない（REQ-schema-008）
+    let lines: Vec<usize> = items.iter().map(|item| item.line).collect();
     check_occurrence(
-        count,
-        min,
-        max,
+        &Occurrence {
+            lines: &lines,
+            name: None,
+            what: "item".to_string(),
+            container_line,
+            rule_kind: RuleKind::Item,
+        },
+        bounds(item_rule.required, item_rule.repeat.as_ref()),
         true,
         FindingKind::MissingRequiredSection,
-        "item",
         findings,
     );
 }
 
 fn validate_stray_heading(heading: &Heading, findings: &mut Vec<Finding>) {
     // 前置部領域の深さ3の見出しは stray_preamble_headings で扱い、ここには
-    // 深さ4以上の見出しだけが来る（R13）。深さ4以上は常に heading_level_mismatch。
+    // 深さ4以上の見出しだけが来る（REQ-schema-026）。深さ4以上は常に heading_level_mismatch。
     if heading.depth >= 4 {
-        findings.push(Finding {
-            kind: FindingKind::HeadingLevelMismatch,
-            line: Some(heading.line),
-            detail: format!("heading at depth {} is not allowed", heading.depth),
-        });
+        findings.push(Finding::at(
+            FindingKind::HeadingLevelMismatch,
+            heading.line,
+            format!("heading at depth {} is not allowed", heading.depth),
+        ));
     }
 }
 
@@ -274,24 +309,39 @@ impl<'a> ContainerRules<'a> {
 }
 
 /// 宣言されていない行の指摘をブロックの種別に応じた文言で作る。
-/// 文の対象外の行種別（ブロック引用・水平線・画像など）は None を返す（R13）。
+/// 文の対象外の行種別（ブロック引用・水平線・画像など）は None を返す（REQ-schema-032）。
 fn undeclared_line_for_block(block: &Block) -> Option<Finding> {
-    let (detail, line) = match block {
-        Block::Field { name, line, .. } => (format!("undeclared field line \"{name}\""), *line),
-        Block::Bullet { text, line, .. } => (format!("undeclared bullet \"{text}\""), *line),
-        Block::OrderedList { text, line, .. } => {
-            (format!("undeclared ordered list \"{text}\""), *line)
-        }
-        Block::Statement { text, line, .. } => (format!("undeclared statement \"{text}\""), *line),
-        Block::Table { line, .. } => ("undeclared table".to_string(), *line),
-        Block::Code { line, .. } => ("undeclared code block".to_string(), *line),
+    // 呼ぶ側が生の行を読み直して種別を決めずに済むよう、読んだ規則種別を添える（REQ-schema-055）
+    let (detail, line, rule_kind) = match block {
+        Block::Field { name, line, .. } => (
+            format!("undeclared field line \"{name}\""),
+            *line,
+            RuleKind::Field,
+        ),
+        Block::Bullet { text, line, .. } => (
+            format!("undeclared bullet \"{text}\""),
+            *line,
+            RuleKind::Bullets,
+        ),
+        Block::OrderedList { text, line, .. } => (
+            format!("undeclared ordered list \"{text}\""),
+            *line,
+            RuleKind::OrderedList,
+        ),
+        Block::Statement { text, line, .. } => (
+            format!("undeclared statement \"{text}\""),
+            *line,
+            RuleKind::Statement,
+        ),
+        Block::Table { line, .. } => ("undeclared table".to_string(), *line, RuleKind::Table),
+        Block::Code { line, .. } => (
+            "undeclared code block".to_string(),
+            *line,
+            RuleKind::CodeBlock,
+        ),
         Block::Other { .. } => return None,
     };
-    Some(Finding {
-        kind: FindingKind::UndeclaredLine,
-        line: Some(line),
-        detail,
-    })
+    Some(Finding::at(FindingKind::UndeclaredLine, line, detail).of_rule(rule_kind))
 }
 
 fn push_undeclared_line(findings: &mut Vec<Finding>, block: &Block) {
@@ -302,12 +352,12 @@ fn push_undeclared_line(findings: &mut Vec<Finding>, block: &Block) {
 
 /// 箇条書きとして1本を検証する。箇条書きが宣言されていれば本数を数え、
 /// pattern を照合する。無ければ undeclared_line（閉じた世界）。
-/// `Block::Bullet` と、宣言された名前と一致しない `- 名前: 値` 行（R8）が共有する。
+/// `Block::Bullet` と、宣言された名前と一致しない `- 名前: 値` 行（TBL-schema-007）が共有する。
 fn validate_bullet(
     rules: &ContainerRules,
     block: &Block,
     blocks: &[Block],
-    bullet_count: &mut u64,
+    bullet_lines: &mut Vec<usize>,
     open: bool,
     findings: &mut Vec<Finding>,
 ) {
@@ -318,28 +368,28 @@ fn validate_bullet(
     };
     match rules.bullets {
         Some(bullets) => {
-            *bullet_count += 1;
+            bullet_lines.push(line);
             if when_allows(bullets.when.as_ref(), rules.fields, blocks)
                 && let Some(pattern) = &bullets.pattern
                 && !pattern.is_match(text)
             {
-                findings.push(Finding {
-                    kind: FindingKind::BulletPatternMismatch,
-                    line: Some(line),
-                    detail: format!(
+                findings.push(Finding::at(
+                    FindingKind::BulletPatternMismatch,
+                    line,
+                    format!(
                         "bullet \"{text}\" does not match pattern \"{}\"",
                         pattern.source()
                     ),
-                });
+                ));
             }
-            // 親の bullets 規則が宣言されたとき、子は親の children の宣言に照合する（R13）。
-            // when は required / pattern / enum の制約にだけ効く（R15）。照合は常に実行する。
+            // 親の bullets 規則が宣言されたとき、子は親の children の宣言に照合する（REQ-schema-031）。
+            // when は required / pattern / enum の制約にだけ効く（REQ-schema-020）。照合は常に実行する。
             validate_children(block, bullets.children.as_ref(), findings);
         }
         None => {
             if !open {
                 // 宣言されていない箇条書きと、その内側の子の行を undeclared_line にする。
-                // 宣言していない構造の内側の行も undeclared_line（R13）
+                // 宣言していない構造の内側の行も undeclared_line（REQ-schema-001）
                 push_undeclared_line(findings, block);
                 push_undeclared_children(findings, block);
             }
@@ -347,12 +397,12 @@ fn validate_bullet(
     }
 }
 
-/// 箇条書きの子の行を、親の `children` の宣言に照合する（R13・R10）。
+/// 箇条書きの子の行を、親の `children` の宣言に照合する（REQ-schema-031）。
 /// `children.fields` で宣言された名前と一致する `- 名前: 値` はフィールド行として
 /// 検証し、一致しない `- 名前: 値` は箇条書きとして検証する。`children` に宣言が
 /// 無い子、または親が `children` を持たないのに子リストがある場合は
 /// undeclared_line にする。親の bullets 規則が宣言されているので、open でも
-/// 宣言済みの構造の中の未宣言の子は undeclared_line になる（R13）。
+/// 宣言済みの構造の中の未宣言の子は undeclared_line になる（REQ-schema-003）。
 fn validate_children(block: &Block, children: Option<&Children>, findings: &mut Vec<Finding>) {
     let child_blocks = block.children();
     let Some(children) = children else {
@@ -360,14 +410,17 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
         return;
     };
 
-    let mut child_field_counts: HashMap<&str, usize> = HashMap::new();
-    let mut child_bullet_count = 0u64;
+    let mut child_field_lines: HashMap<&str, Vec<usize>> = HashMap::new();
+    let mut child_bullet_lines: Vec<usize> = Vec::new();
     for child in child_blocks {
         match child {
             Block::Field {
                 name, value, line, ..
             } if is_declared_field(&children.fields, name) => {
-                *child_field_counts.entry(name.as_str()).or_insert(0) += 1;
+                child_field_lines
+                    .entry(name.as_str())
+                    .or_default()
+                    .push(*line);
                 let field = children
                     .fields
                     .iter()
@@ -377,16 +430,16 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
                     validate_field_value(field, value, *line, findings);
                 }
                 // 子フィールドも children 宣言を持たない。宣言済み子フィールド行の
-                // 下の子リストは undeclared_line（R13）
+                // 下の子リストは undeclared_line（REQ-schema-001）
                 push_undeclared_children(findings, child);
             }
-            // 一致しない `- 名前: 値` 行は箇条書きとして検証する（R8・R10）
+            // 一致しない `- 名前: 値` 行は箇条書きとして検証する（TBL-schema-007）
             Block::Field { .. } | Block::Bullet { .. } => {
                 validate_child_bullet(
                     child,
                     children,
                     child_blocks,
-                    &mut child_bullet_count,
+                    &mut child_bullet_lines,
                     findings,
                 );
             }
@@ -401,34 +454,38 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
 
     for field in &children.fields {
         if when_allows(field.when.as_ref(), &children.fields, child_blocks) {
-            let count = child_field_counts
-                .get(field.name.as_str())
-                .copied()
-                .unwrap_or(0) as u64;
-            let (min, max) = bounds(field.required, field.repeat.as_ref());
+            let empty: Vec<usize> = Vec::new();
+            let lines = child_field_lines.get(field.name.as_str()).unwrap_or(&empty);
             check_occurrence(
-                count,
-                min,
-                max,
+                &Occurrence {
+                    lines,
+                    name: Some(&field.name),
+                    what: format!("field \"{}\"", field.name),
+                    container_line: Some(block.line()),
+                    rule_kind: RuleKind::Field,
+                },
+                bounds(field.required, field.repeat.as_ref()),
                 field.repeat.is_some(),
                 FindingKind::MissingRequiredField,
-                &format!("field \"{}\"", field.name),
                 findings,
             );
         }
     }
-    // 子は親の本数には数えず、children.bullets の規則で別に数える（R10）
+    // 子は親の本数には数えず、children.bullets の規則で別に数える（REQ-schema-031）
     if let Some(child_bullets) = children.bullets.as_deref()
         && when_allows(child_bullets.when.as_ref(), &children.fields, child_blocks)
     {
-        let (min, max) = bounds(child_bullets.required, child_bullets.repeat.as_ref());
         check_occurrence(
-            child_bullet_count,
-            min,
-            max,
+            &Occurrence {
+                lines: &child_bullet_lines,
+                name: None,
+                what: "bullets".to_string(),
+                container_line: Some(block.line()),
+                rule_kind: RuleKind::Bullets,
+            },
+            bounds(child_bullets.required, child_bullets.repeat.as_ref()),
             child_bullets.repeat.is_some(),
             FindingKind::MissingBullets,
-            "bullets",
             findings,
         );
     }
@@ -436,39 +493,39 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
 
 /// 子の箇条書きを1本検証する。`children.bullets` が宣言されていれば本数を数え、
 /// pattern を照合して、さらに深い入れ子を再帰する。宣言されていなければ
-/// undeclared_line（R13）。`sibling_blocks` は同じ children ノードの下の兄弟の
-/// 行で、when の探索スコープに使う（R15）。
+/// undeclared_line（REQ-schema-001）。`sibling_blocks` は同じ children ノードの下の兄弟の
+/// 行で、when の探索スコープに使う（REQ-schema-021）。
 fn validate_child_bullet(
     block: &Block,
     children: &Children,
     sibling_blocks: &[Block],
-    bullet_count: &mut u64,
+    bullet_lines: &mut Vec<usize>,
     findings: &mut Vec<Finding>,
 ) {
     let Some(bullets) = children.bullets.as_deref() else {
-        // children に宣言が無い子は undeclared_line（R13）
+        // children に宣言が無い子は undeclared_line（REQ-schema-001）
         push_undeclared_line(findings, block);
         push_undeclared_children(findings, block);
         return;
     };
-    *bullet_count += 1;
     let (text, line) = match block {
         Block::Bullet { text, line, .. } => (text.as_str(), *line),
         Block::Field { text, line, .. } => (text.as_str(), *line),
         _ => return,
     };
+    bullet_lines.push(line);
     if when_allows(bullets.when.as_ref(), &children.fields, sibling_blocks)
         && let Some(pattern) = &bullets.pattern
         && !pattern.is_match(text)
     {
-        findings.push(Finding {
-            kind: FindingKind::BulletPatternMismatch,
-            line: Some(line),
-            detail: format!(
+        findings.push(Finding::at(
+            FindingKind::BulletPatternMismatch,
+            line,
+            format!(
                 "bullet \"{text}\" does not match pattern \"{}\"",
                 pattern.source()
             ),
-        });
+        ));
     }
     validate_children(block, bullets.children.as_ref(), findings);
 }
@@ -485,13 +542,14 @@ fn validate_container(
     rules: &ContainerRules,
     blocks: &[Block],
     open: bool,
+    container_line: Option<usize>,
     findings: &mut Vec<Finding>,
 ) {
-    let mut field_counts: HashMap<&str, usize> = HashMap::new();
-    let mut statement_count = 0u64;
-    let mut bullet_count = 0u64;
-    let mut table_count = 0u64;
-    let mut code_count = 0u64;
+    let mut field_lines: HashMap<&str, Vec<usize>> = HashMap::new();
+    let mut statement_lines: Vec<usize> = Vec::new();
+    let mut bullet_lines: Vec<usize> = Vec::new();
+    let mut table_lines: Vec<usize> = Vec::new();
+    let mut code_lines: Vec<usize> = Vec::new();
     let mut ordered_seen: Vec<(usize, usize)> = Vec::new();
 
     for block in blocks {
@@ -501,29 +559,29 @@ fn validate_container(
             } => {
                 match rules.fields.iter().position(|f| f.name == *name) {
                     Some(idx) => {
-                        *field_counts.entry(name.as_str()).or_insert(0) += 1;
+                        field_lines.entry(name.as_str()).or_default().push(*line);
                         ordered_seen.push((idx, *line));
                         let field = &rules.fields[idx];
                         if when_allows(field.when.as_ref(), rules.fields, blocks) {
                             validate_field_value(field, value, *line, findings);
                         }
                         // フィールド行は children 宣言を持たない。宣言済みフィールド行の
-                        // 下の子リストは undeclared_line（R13）
+                        // 下の子リストは undeclared_line（REQ-schema-001）
                         push_undeclared_children(findings, block);
                     }
                     None => {
-                        // R8: 宣言された名前と一致しない `- 名前: 値` 行は
-                        // 箇条書きとして扱う。pattern は元の行に適用する（R10）
-                        validate_bullet(rules, block, blocks, &mut bullet_count, open, findings);
+                        // TBL-schema-007: 宣言された名前と一致しない `- 名前: 値` 行は
+                        // 箇条書きとして扱う。pattern は元の行に適用する
+                        validate_bullet(rules, block, blocks, &mut bullet_lines, open, findings);
                     }
                 }
             }
             Block::Bullet { .. } => {
-                validate_bullet(rules, block, blocks, &mut bullet_count, open, findings)
+                validate_bullet(rules, block, blocks, &mut bullet_lines, open, findings)
             }
-            Block::Statement { text, line } => match rules.statement {
+            Block::Statement { text, line, .. } => match rules.statement {
                 Some(statement) => {
-                    statement_count += 1;
+                    statement_lines.push(*line);
                     if when_allows(statement.when.as_ref(), rules.fields, blocks) {
                         validate_statement_value(statement, text, *line, findings);
                     }
@@ -534,10 +592,15 @@ fn validate_container(
                     }
                 }
             },
-            Block::Table { header, rows, line } => match rules.table {
+            Block::Table {
+                header,
+                rows,
+                line,
+                row_lines,
+            } => match rules.table {
                 Some(table) => {
-                    table_count += 1;
-                    validate_table_shape(table, header, rows, *line, findings);
+                    table_lines.push(*line);
+                    validate_table_shape(table, header, rows, *line, row_lines, findings);
                 }
                 None => {
                     if !open {
@@ -547,7 +610,7 @@ fn validate_container(
             },
             Block::Code { lang, value, line } => match rules.codeblock {
                 Some(codeblock) => {
-                    code_count += 1;
+                    code_lines.push(*line);
                     validate_codeblock_shape(codeblock, lang.as_deref(), value, *line, findings);
                 }
                 None => {
@@ -556,9 +619,9 @@ fn validate_container(
                     }
                 }
             },
-            // ブロック引用・水平線・画像などの文の対象外の行種別は閉じた世界でも無視する（R13）
+            // ブロック引用・水平線・画像などの文の対象外の行種別は閉じた世界でも無視する（REQ-schema-032）
             Block::Other { .. } => {}
-            // 順序付きリストはどの規則種別にも属さない。閉じた世界では undeclared_line にする（R10）
+            // 順序付きリストはどの規則種別にも属さない。閉じた世界では undeclared_line にする（TBL-schema-007）
             Block::OrderedList { .. } => {
                 if !open {
                     push_undeclared_line(findings, block);
@@ -569,15 +632,19 @@ fn validate_container(
 
     for field in rules.fields {
         if when_allows(field.when.as_ref(), rules.fields, blocks) {
-            let count = field_counts.get(field.name.as_str()).copied().unwrap_or(0) as u64;
-            let (min, max) = bounds(field.required, field.repeat.as_ref());
+            let empty: Vec<usize> = Vec::new();
+            let lines = field_lines.get(field.name.as_str()).unwrap_or(&empty);
             check_occurrence(
-                count,
-                min,
-                max,
+                &Occurrence {
+                    lines,
+                    name: Some(&field.name),
+                    what: format!("field \"{}\"", field.name),
+                    container_line,
+                    rule_kind: RuleKind::Field,
+                },
+                bounds(field.required, field.repeat.as_ref()),
                 field.repeat.is_some(),
                 FindingKind::MissingRequiredField,
-                &format!("field \"{}\"", field.name),
                 findings,
             );
         }
@@ -585,52 +652,64 @@ fn validate_container(
     if let Some(statement) = rules.statement
         && when_allows(statement.when.as_ref(), rules.fields, blocks)
     {
-        let (min, max) = bounds(statement.required, statement.repeat.as_ref());
         check_occurrence(
-            statement_count,
-            min,
-            max,
+            &Occurrence {
+                lines: &statement_lines,
+                name: None,
+                what: "statement".to_string(),
+                container_line,
+                rule_kind: RuleKind::Statement,
+            },
+            bounds(statement.required, statement.repeat.as_ref()),
             statement.repeat.is_some(),
             FindingKind::MissingStatement,
-            "statement",
             findings,
         );
     }
     if let Some(bullets) = rules.bullets
         && when_allows(bullets.when.as_ref(), rules.fields, blocks)
     {
-        let (min, max) = bounds(bullets.required, bullets.repeat.as_ref());
         check_occurrence(
-            bullet_count,
-            min,
-            max,
+            &Occurrence {
+                lines: &bullet_lines,
+                name: None,
+                what: "bullets".to_string(),
+                container_line,
+                rule_kind: RuleKind::Bullets,
+            },
+            bounds(bullets.required, bullets.repeat.as_ref()),
             bullets.repeat.is_some(),
             FindingKind::MissingBullets,
-            "bullets",
             findings,
         );
     }
     if let Some(table) = rules.table {
-        let (min, max) = bounds(table.required, table.repeat.as_ref());
         check_occurrence(
-            table_count,
-            min,
-            max,
+            &Occurrence {
+                lines: &table_lines,
+                name: None,
+                what: "table".to_string(),
+                container_line,
+                rule_kind: RuleKind::Table,
+            },
+            bounds(table.required, table.repeat.as_ref()),
             table.repeat.is_some(),
             FindingKind::MissingTable,
-            "table",
             findings,
         );
     }
     if let Some(codeblock) = rules.codeblock {
-        let (min, max) = bounds(codeblock.required, codeblock.repeat.as_ref());
         check_occurrence(
-            code_count,
-            min,
-            max,
+            &Occurrence {
+                lines: &code_lines,
+                name: None,
+                what: "code block".to_string(),
+                container_line,
+                rule_kind: RuleKind::CodeBlock,
+            },
+            bounds(codeblock.required, codeblock.repeat.as_ref()),
             codeblock.repeat.is_some(),
             FindingKind::MissingCodeblock,
-            "code block",
             findings,
         );
     }
@@ -641,11 +720,14 @@ fn validate_container(
             if let Some(prev_idx) = prev
                 && *idx < prev_idx
             {
-                findings.push(Finding {
-                    kind: FindingKind::FieldOrderMismatch,
-                    line: Some(*line),
-                    detail: "fields are not in the declared order".into(),
-                });
+                findings.push(
+                    Finding::at(
+                        FindingKind::FieldOrderMismatch,
+                        *line,
+                        "fields are not in the declared order".into(),
+                    )
+                    .of_node(&rules.fields[*idx].name),
+                );
                 break;
             }
             prev = Some(*idx);
@@ -653,9 +735,9 @@ fn validate_container(
     }
 }
 
-/// `separator` で分けた要素を、前後の空白を取り除いて返す。空の要素は
-/// 空文字列として残す（R8）。
-/// 文を、宣言された pattern・enum に照らす（R9）。
+/// `separator` で分けた要素を、前後の空白を取り除いて返す（REQ-schema-029）。
+/// 空の要素は空文字列として残す。
+/// 文を、宣言された pattern・enum に照らす。
 fn validate_statement_value(
     statement: &Statement,
     text: &str,
@@ -665,61 +747,64 @@ fn validate_statement_value(
     if let Some(pattern) = &statement.pattern
         && !pattern.is_match(text)
     {
-        findings.push(Finding {
-            kind: FindingKind::StatementPatternMismatch,
-            line: Some(line),
-            detail: format!(
+        findings.push(Finding::at(
+            FindingKind::StatementPatternMismatch,
+            line,
+            format!(
                 "statement \"{text}\" does not match pattern \"{}\"",
                 pattern.source()
             ),
-        });
+        ));
     }
     if let Some(allowed) = &statement.r#enum
         && !allowed.iter().any(|e| e == text)
     {
-        findings.push(Finding {
-            kind: FindingKind::StatementEnumInvalid,
-            line: Some(line),
-            detail: format!("statement \"{text}\" is not one of {allowed:?}"),
-        });
+        findings.push(Finding::at(
+            FindingKind::StatementEnumInvalid,
+            line,
+            format!("statement \"{text}\" is not one of {allowed:?}"),
+        ));
     }
 }
 
-/// 表を、宣言されたヘッダに照らす（R11）。header を宣言しないときは
+/// 表を、宣言されたヘッダに照らす（REQ-schema-033）。header を宣言しないときは
 /// ヘッダも列数も検査しない。
 fn validate_table_shape(
     table: &Table,
     header: &[String],
     rows: &[Vec<String>],
     line: usize,
+    row_lines: &[usize],
     findings: &mut Vec<Finding>,
 ) {
     let Some(expected) = &table.header else {
         return;
     };
     if header != expected.as_slice() {
-        findings.push(Finding {
-            kind: FindingKind::TableHeaderMismatch,
-            line: Some(line),
-            detail: format!("table header {header:?} does not match expected {expected:?}"),
-        });
+        findings.push(Finding::at(
+            FindingKind::TableHeaderMismatch,
+            line,
+            format!("table header {header:?} does not match expected {expected:?}"),
+        ));
     }
-    for row in rows {
+    for (index, row) in rows.iter().enumerate() {
         if row.len() != expected.len() {
-            findings.push(Finding {
-                kind: FindingKind::TableHeaderMismatch,
-                line: Some(line),
-                detail: format!(
+            // 違反したのはその行なので、ヘッダの行ではなくその行を指す（REQ-schema-008）
+            let row_line = row_lines.get(index).copied().unwrap_or(line);
+            findings.push(Finding::at(
+                FindingKind::TableHeaderMismatch,
+                row_line,
+                format!(
                     "row has {} columns but the header has {}",
                     row.len(),
                     expected.len()
                 ),
-            });
+            ));
         }
     }
 }
 
-/// コードブロックを、宣言された言語と行の pattern に照らす（R12）。
+/// コードブロックを、宣言された言語と行の pattern に照らす（REQ-schema-034）。
 /// 空行は行の照合の対象外。
 fn validate_codeblock_shape(
     codeblock: &CodeBlock,
@@ -731,34 +816,35 @@ fn validate_codeblock_shape(
     if let Some(expected) = &codeblock.lang
         && lang != Some(expected.as_str())
     {
-        findings.push(Finding {
-            kind: FindingKind::CodeblockLangMismatch,
-            line: Some(line),
-            detail: format!("code block language {lang:?} does not match \"{expected}\""),
-        });
+        findings.push(Finding::at(
+            FindingKind::CodeblockLangMismatch,
+            line,
+            format!("code block language {lang:?} does not match \"{expected}\""),
+        ));
     }
     let Some(patterns) = &codeblock.lines else {
         return;
     };
     for (i, code_line) in value.lines().enumerate() {
-        let code_line = code_line.trim();
+        // REQ-schema-034: 取り除くのは行頭の空白だけ。末尾まで落とすと "...$" の照合が変わる
+        let code_line = code_line.trim_start();
         if code_line.is_empty() {
             continue;
         }
         if !patterns.iter().any(|p| p.is_match(code_line)) {
-            findings.push(Finding {
-                kind: FindingKind::CodeblockLineMismatch,
-                line: Some(line),
-                detail: format!("line {} does not match any allowed pattern", i + 1),
-            });
+            findings.push(Finding::at(
+                FindingKind::CodeblockLineMismatch,
+                line,
+                format!("line {} does not match any allowed pattern", i + 1),
+            ));
         }
     }
 }
 
-/// フィールド行の値を、宣言された区切り・pattern・enum に照らす（R8）。
+/// フィールド行の値を、宣言された区切り・pattern・enum に照らす（REQ-schema-029）。
 /// 前置部と節のフィールド行にも、箇条書きの子フィールド行にも同じ規則を当てる。
 fn validate_field_value(field: &Field, value: &str, line: usize, findings: &mut Vec<Finding>) {
-    // 区切った要素は前後の空白を取り除いてから照合する（R8）
+    // 制約は区切った要素ごとに課す（REQ-schema-029）。照合の前に前後の空白を取り除く
     let values: Vec<String> = match field.effective_separator() {
         Some(sep) => split_trimmed(value, sep),
         None => vec![value.to_string()],
@@ -767,23 +853,29 @@ fn validate_field_value(field: &Field, value: &str, line: usize, findings: &mut 
         if let Some(pattern) = &field.pattern
             && !pattern.is_match(v)
         {
-            findings.push(Finding {
-                kind: FindingKind::FieldPatternMismatch,
-                line: Some(line),
-                detail: format!(
-                    "value \"{v}\" does not match pattern \"{}\"",
-                    pattern.source()
-                ),
-            });
+            findings.push(
+                Finding::at(
+                    FindingKind::FieldPatternMismatch,
+                    line,
+                    format!(
+                        "value \"{v}\" does not match pattern \"{}\"",
+                        pattern.source()
+                    ),
+                )
+                .of_node(&field.name),
+            );
         }
         if let Some(allowed) = &field.r#enum
             && !allowed.iter().any(|e| e == v)
         {
-            findings.push(Finding {
-                kind: FindingKind::FieldEnumInvalid,
-                line: Some(line),
-                detail: format!("value \"{v}\" is not one of {allowed:?}"),
-            });
+            findings.push(
+                Finding::at(
+                    FindingKind::FieldEnumInvalid,
+                    line,
+                    format!("value \"{v}\" is not one of {allowed:?}"),
+                )
+                .of_node(&field.name),
+            );
         }
     }
 }
@@ -794,7 +886,7 @@ fn split_trimmed(value: &str, sep: &str) -> Vec<String> {
 
 /// `when` の条件を評価する。参照フィールドが無いとき eq は偽、ne は真。
 /// 宣言された名前と一致しない `- 名前: 値` 行はフィールド行ではなく箇条書きなので、
-/// 参照フィールドとしては数えない（R8）。
+/// 参照フィールドとしては数えない（TBL-schema-007、REQ-schema-021）。
 fn when_allows(when: Option<&When>, fields: &[Field], blocks: &[Block]) -> bool {
     let Some(when) = when else {
         return true;
@@ -827,38 +919,70 @@ fn bounds(required: Option<bool>, repeat: Option<&Repeat>) -> (u64, Option<u64>)
     }
 }
 
+/// 出現回数を数える対象のノード。
+struct Occurrence<'a> {
+    /// 現れた行（1始まり）。出現回数はこの長さ
+    lines: &'a [usize],
+    /// スキーマが宣言したノードの名前。節とフィールド行だけが持つ（REQ-schema-008）
+    name: Option<&'a str>,
+    /// detail の中でノードを指す言い回し
+    what: String,
+    /// それを含むノードの開始行。欠落の指摘の行に使う（REQ-schema-008）
+    container_line: Option<usize>,
+    /// 数えたノードの規則種別。出現回数の指摘に添える（REQ-schema-057）
+    rule_kind: RuleKind,
+}
+
 fn check_occurrence(
-    count: u64,
-    min: u64,
-    max: Option<u64>,
+    occurrence: &Occurrence,
+    bounds: (u64, Option<u64>),
     repeat_style: bool,
     missing_kind: FindingKind,
-    what: &str,
     findings: &mut Vec<Finding>,
 ) {
-    if count < min {
+    let count = occurrence.lines.len() as u64;
+    let what = &occurrence.what;
+    let (min, max) = bounds;
+    let finding = if count < min {
+        // 欠落したノードには行が無いので、それを含むノードの開始行を指す（REQ-schema-008）
+        let line = occurrence.container_line;
         if repeat_style {
-            findings.push(Finding {
-                kind: FindingKind::RepeatMinNotMet,
-                line: None,
-                detail: format!("{what} appears {count} time(s), minimum is {min}"),
-            });
+            // 下限の指摘は数えたノードの規則種別を持つ（REQ-schema-057）
+            Finding::maybe_at(
+                FindingKind::RepeatMinNotMet,
+                line,
+                format!("{what} appears {count} time(s), minimum is {min}"),
+            )
+            .of_rule(occurrence.rule_kind)
         } else {
-            findings.push(Finding {
-                kind: missing_kind,
-                line: None,
-                detail: format!("{what} is required but missing"),
-            });
+            Finding::maybe_at(
+                missing_kind,
+                line,
+                format!("{what} is required but missing"),
+            )
         }
     } else if let Some(max) = max
         && count > max
     {
-        findings.push(Finding {
-            kind: FindingKind::RepeatMaxExceeded,
-            line: None,
-            detail: format!("{what} appears {count} time(s), maximum is {max}"),
-        });
-    }
+        // 上限を超えた最初のノードが違反したノードなので、その行を指す（REQ-schema-008）
+        let line = usize::try_from(max)
+            .ok()
+            .and_then(|index| occurrence.lines.get(index))
+            .copied();
+        // 上限の指摘は数えたノードの規則種別を持つ（REQ-schema-057）
+        Finding::maybe_at(
+            FindingKind::RepeatMaxExceeded,
+            line,
+            format!("{what} appears {count} time(s), maximum is {max}"),
+        )
+        .of_rule(occurrence.rule_kind)
+    } else {
+        return;
+    };
+    findings.push(match occurrence.name {
+        Some(name) => finding.of_node(name),
+        None => finding,
+    });
 }
 
 #[cfg(test)]
@@ -1086,12 +1210,12 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::MissingStatement),
-            "先頭がコードブロックのリスト項目の画像だけの段落は文に数えない（R9）: {:?}",
+            "先頭がコードブロックのリスト項目の画像だけの段落は文に数えない（REQ-schema-032）: {:?}",
             kinds(&findings)
         );
         assert!(
             !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "先頭がコードブロックのリスト項目の画像だけの段落は undeclared_line にしない（R13）: {:?}",
+            "先頭がコードブロックのリスト項目の画像だけの段落は undeclared_line にしない（REQ-schema-032）: {:?}",
             kinds(&findings)
         );
     }
@@ -1099,13 +1223,13 @@ document:
     // @kotowari[REQ-schema-031]
     #[test]
     fn nested_list_items_are_not_counted_as_top_level_bullets() {
-        // 親の bullets の本数はトップレベルの親だけを数え、子は数えない（R10）。
+        // 親の bullets の本数はトップレベルの親だけを数え、子は数えない（REQ-schema-031）。
         let schema = "document:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: { min: 2 }\n";
         let doc = "## 理由\n\n- 親\n  - 子\n";
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::RepeatMinNotMet),
-            "子は親の本数に数えず、min: 2 が満たされない（R10）: {:?}",
+            "子は親の本数に数えず、min: 2 が満たされない（REQ-schema-031）: {:?}",
             kinds(&findings)
         );
     }
@@ -1140,7 +1264,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "宣言された子フィールドは通る（R10）: {:?}",
+            "宣言された子フィールドは通る（REQ-schema-031）: {:?}",
             kinds(&findings)
         );
         assert!(!kinds(&findings).contains(&FindingKind::MissingRequiredField));
@@ -1163,7 +1287,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "一致しない `- 名前: 値` は箇条書きとして扱い、children.bullets が無いので undeclared_line（R10）: {:?}",
+            "一致しない `- 名前: 値` は箇条書きとして扱い、children.bullets が無いので undeclared_line（TBL-schema-007、REQ-schema-031）: {:?}",
             kinds(&findings)
         );
     }
@@ -1176,7 +1300,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "親が children を持たないのに子リストがある場合は undeclared_line（R13）: {:?}",
+            "親が children を持たないのに子リストがある場合は undeclared_line（REQ-schema-001）: {:?}",
             kinds(&findings)
         );
     }
@@ -1185,7 +1309,7 @@ document:
     #[test]
     fn child_list_under_declared_field_is_undeclared_line() {
         // フィールド行は children 宣言を持たない。宣言済みフィールド行の下の
-        // 子リストは、閉じた世界では undeclared_line（R13）。
+        // 子リストは、閉じた世界では undeclared_line（REQ-schema-001）。
         let schema = r#"
 document:
   sections:
@@ -1199,7 +1323,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "宣言済みフィールド行の下の子リストは undeclared_line（R13）: {:?}",
+            "宣言済みフィールド行の下の子リストは undeclared_line（REQ-schema-001）: {:?}",
             kinds(&findings)
         );
     }
@@ -1208,7 +1332,7 @@ document:
     #[test]
     fn child_list_under_declared_child_field_is_undeclared_line() {
         // 子フィールド（children.fields の宣言）も children 宣言を持たない。
-        // その下の子リストは undeclared_line（R13）。
+        // その下の子リストは undeclared_line（REQ-schema-001）。
         let schema = r#"
 document:
   sections:
@@ -1223,7 +1347,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "宣言済みの子フィールド行の下の子リストは undeclared_line（R13）: {:?}",
+            "宣言済みの子フィールド行の下の子リストは undeclared_line（REQ-schema-001）: {:?}",
             kinds(&findings)
         );
     }
@@ -1232,7 +1356,7 @@ document:
     #[test]
     fn child_bullet_when_references_a_sibling_field() {
         // children.bullets の when は、同じ children ノードの下の兄弟の
-        // children.fields を参照する（R15）。when が真のときだけ pattern が効く。
+        // children.fields を参照する（REQ-schema-021）。when が真のときだけ pattern が効く。
         let schema = r#"
 document:
   sections:
@@ -1251,7 +1375,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-            "children.bullets の when は兄弟の children.fields を参照する（R15）: {:?}",
+            "children.bullets の when は兄弟の children.fields を参照する（REQ-schema-021）: {:?}",
             kinds(&findings)
         );
     }
@@ -1259,7 +1383,7 @@ document:
     // @kotowari[REQ-schema-020, REQ-schema-031]
     #[test]
     fn children_are_validated_when_parent_bullets_when_is_true() {
-        // 親の bullets の when が真のとき、子は children の宣言に照合する（R13）。
+        // 親の bullets の when が真のとき、子は children の宣言に照合する（REQ-schema-031）。
         let schema = r#"
 document:
   sections:
@@ -1277,7 +1401,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "when が真のとき子の未宣言行は undeclared_line（R13）: {:?}",
+            "when が真のとき子の未宣言行は undeclared_line（REQ-schema-031）: {:?}",
             kinds(&findings)
         );
     }
@@ -1285,8 +1409,8 @@ document:
     // @kotowari[REQ-schema-020, REQ-schema-031]
     #[test]
     fn children_are_validated_when_parent_bullets_when_is_false() {
-        // 親の bullets の when は required / pattern / enum にだけ効く（R15）。
-        // children の照合（R13）は when の真偽に関わらず実行する。
+        // 親の bullets の when は required / pattern / enum にだけ効く（REQ-schema-020）。
+        // children の照合（REQ-schema-031）は when の真偽に関わらず実行する。
         let schema = r#"
 document:
   sections:
@@ -1304,7 +1428,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "親の bullets の when が偽でも子は children の宣言に照合する（R13）: {:?}",
+            "親の bullets の when が偽でも子は children の宣言に照合する（REQ-schema-031）: {:?}",
             kinds(&findings)
         );
     }
@@ -1331,7 +1455,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             !kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-            "再帰的な children.bullets に照合する（R10）: {:?}",
+            "再帰的な children.bullets に照合する（REQ-schema-031）: {:?}",
             kinds(&findings)
         );
     }
@@ -1358,7 +1482,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-            "子の子の箇条書きにも children.bullets の pattern を適用する（R10）: {:?}",
+            "子の子の箇条書きにも children.bullets の pattern を適用する（REQ-schema-031）: {:?}",
             kinds(&findings)
         );
     }
@@ -1379,13 +1503,13 @@ document:
         let ok = validate_src(schema, "## 理由\n\n- 親\n  - 子1\n  - 子2\n", false);
         assert!(
             !kinds(&ok).contains(&FindingKind::RepeatMinNotMet),
-            "親1本・子2本で両方満たす（R10）: {:?}",
+            "親1本・子2本で両方満たす（REQ-schema-019、REQ-schema-031）: {:?}",
             kinds(&ok)
         );
         let short = validate_src(schema, "## 理由\n\n- 親\n  - 子1\n", false);
         assert!(
             kinds(&short).contains(&FindingKind::RepeatMinNotMet),
-            "子が1本しか無ければ children.bullets の min を満たさない（R10）: {:?}",
+            "子が1本しか無ければ children.bullets の min を満たさない（REQ-schema-019、REQ-schema-031）: {:?}",
             kinds(&short)
         );
     }
@@ -1408,7 +1532,7 @@ document:
         let findings = validate_src(schema, doc, true);
         assert!(
             kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "宣言済みの構造の中の未宣言の子は open でも undeclared_line（R13）: {:?}",
+            "宣言済みの構造の中の未宣言の子は open でも undeclared_line（REQ-schema-003）: {:?}",
             kinds(&findings)
         );
     }
@@ -1431,7 +1555,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::FieldPatternMismatch),
-            "子フィールドの pattern は値に適用する（R8・R10）: {:?}",
+            "子フィールドの pattern は値に適用する（REQ-schema-029）: {:?}",
             kinds(&findings)
         );
     }
@@ -1453,7 +1577,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::MissingRequiredField),
-            "宣言された子フィールドが無ければ missing_required_field（R10）: {:?}",
+            "宣言された子フィールドが無ければ missing_required_field（REQ-schema-004、REQ-schema-031）: {:?}",
             kinds(&findings)
         );
     }
@@ -1480,7 +1604,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             !kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-            "順序付きリストは箇条書きの対象外なので pattern を適用しない（R10）"
+            "順序付きリストは箇条書きの対象外なので pattern を適用しない（TBL-schema-007）"
         );
         assert!(kinds(&findings).contains(&FindingKind::UndeclaredLine));
     }
@@ -1504,7 +1628,7 @@ document:
         assert!(kinds(&findings).contains(&FindingKind::MissingStatement));
         assert!(
             !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "継続段落はフィールド行の一部で undeclared_line にしない（R8）"
+            "継続段落はフィールド行の一部で undeclared_line にしない（REQ-schema-030）"
         );
     }
 
@@ -1558,11 +1682,11 @@ document:
         let ks = kinds(&findings);
         assert!(
             !ks.contains(&FindingKind::UndeclaredLine),
-            "未宣言の名前の `- 名前: 値` 行は箇条書きとして扱う（R8）: {ks:?}"
+            "未宣言の名前の `- 名前: 値` 行は箇条書きとして扱う（TBL-schema-007）: {ks:?}"
         );
         assert!(
             !ks.contains(&FindingKind::RepeatMinNotMet),
-            "箇条書きとして本数に数える（R10）: {ks:?}"
+            "箇条書きとして本数に数える（TBL-schema-007）: {ks:?}"
         );
     }
 
@@ -1574,7 +1698,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-            "箇条書きとして pattern を適用する（R10）"
+            "箇条書きとして pattern を適用する（TBL-schema-007）"
         );
     }
 
@@ -1586,7 +1710,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             !kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
-            "pattern は元の行に適用する（R10）: {:?}",
+            "pattern は元の行に適用する: {:?}",
             kinds(&findings)
         );
     }
@@ -1730,7 +1854,7 @@ document:
         let findings = validate_src(schema, doc, true);
         assert!(
             kinds(&findings).contains(&FindingKind::UndeclaredHeading),
-            "宣言済みの前置部の中の ### 見出しは open でも undeclared_heading（R13）: {:?}",
+            "宣言済みの前置部の中の ### 見出しは open でも undeclared_heading（REQ-schema-003）: {:?}",
             kinds(&findings)
         );
     }
@@ -1748,7 +1872,7 @@ document:
         let findings = validate_src(schema, doc, true);
         assert!(
             kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "宣言済みの前置部の中の見出しの内側の行は open でも undeclared_line（R13）: {:?}",
+            "宣言済みの前置部の中の見出しの内側の行は open でも undeclared_line（REQ-schema-003）: {:?}",
             kinds(&findings)
         );
     }
@@ -1766,12 +1890,12 @@ document:
         let findings = validate_src(schema, doc, true);
         assert!(
             !kinds(&findings).contains(&FindingKind::UndeclaredHeading),
-            "題名より前の見出しは open では許す（R13）: {:?}",
+            "題名より前の見出しは open では許す（REQ-schema-002）: {:?}",
             kinds(&findings)
         );
         assert!(
             !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "題名より前の見出しの内側の行も open では許す（R13）: {:?}",
+            "題名より前の見出しの内側の行も open では許す（REQ-schema-002）: {:?}",
             kinds(&findings)
         );
     }
@@ -1789,12 +1913,12 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::UndeclaredHeading),
-            "題名より前の見出しは閉じた世界で undeclared_heading（R13）: {:?}",
+            "題名より前の見出しは閉じた世界で undeclared_heading（REQ-schema-001）: {:?}",
             kinds(&findings)
         );
         assert!(
             kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "題名より前の見出しの内側の行は閉じた世界で undeclared_line（R13）: {:?}",
+            "題名より前の見出しの内側の行は閉じた世界で undeclared_line（REQ-schema-001）: {:?}",
             kinds(&findings)
         );
     }
@@ -1814,7 +1938,7 @@ document:
         assert!(kinds(&findings).contains(&FindingKind::UndeclaredLine));
     }
 
-    // ---- R8〜R12: 行の規則 ----
+    // ---- 行の規則（TBL-schema-007、REQ-schema-029〜REQ-schema-034） ----
 
     // @kotowari[REQ-schema-004]
     #[test]
@@ -1896,7 +2020,7 @@ document:
         assert!(kinds(&findings).contains(&FindingKind::MissingStatement));
     }
 
-    // @kotowari[REQ-schema-032]
+    // @kotowari[REQ-schema-054]
     #[test]
     fn statement_pattern_mismatch_is_found() {
         let schema = r#"
@@ -1911,7 +2035,7 @@ document:
         assert!(kinds(&findings).contains(&FindingKind::StatementPatternMismatch));
     }
 
-    // @kotowari[REQ-schema-032]
+    // @kotowari[REQ-schema-054]
     #[test]
     fn statement_enum_invalid_is_found() {
         let schema = r#"
@@ -1935,7 +2059,7 @@ document:
         assert!(kinds(&findings).contains(&FindingKind::MissingBullets));
     }
 
-    // @kotowari[REQ-schema-028]
+    // @kotowari[REQ-schema-054]
     #[test]
     fn bullet_pattern_mismatch_is_found() {
         let schema = r#"
@@ -2028,6 +2152,23 @@ document:
 
     // @kotowari[REQ-schema-034]
     #[test]
+    fn codeblock_line_matching_keeps_trailing_whitespace() {
+        let schema = r#"
+document:
+  sections:
+    - name: 具体例
+      codeblock:
+        lang: gherkin
+        lines: ["^Scenario:$"]
+"#;
+        // 末尾の空白まで取り除くと "$" で閉じた正規表現が通ってしまう
+        let doc = "## 具体例\n\n```gherkin\nScenario:  \n```\n";
+        let findings = validate_src(schema, doc, false);
+        assert!(kinds(&findings).contains(&FindingKind::CodeblockLineMismatch));
+    }
+
+    // @kotowari[REQ-schema-034]
+    #[test]
     fn codeblock_line_matching_trims_leading_whitespace_and_skips_blank_lines() {
         let schema = r#"
 document:
@@ -2063,7 +2204,7 @@ document:
         assert!(!kinds(&findings).contains(&FindingKind::UndeclaredLine));
     }
 
-    // ---- R14 / R15 / R8(ordered): 出現回数・条件付き・順序 ----
+    // ---- 出現回数・条件付き規則・並び順（REQ-schema-019、REQ-schema-020、REQ-schema-041） ----
 
     // @kotowari[REQ-schema-019]
     #[test]
@@ -2077,6 +2218,25 @@ document:
         let doc = "## 理由\n\n本文。\n";
         let findings = validate_src(schema, doc, false);
         assert!(kinds(&findings).contains(&FindingKind::RepeatMinNotMet));
+    }
+
+    // @kotowari[REQ-schema-056]
+    #[test]
+    fn missing_required_item_is_reported_as_repeat_min_not_met() {
+        let schema = r#"
+document:
+  sections:
+    - name: 要求
+      item:
+        id: "REQ-\\d{3}"
+        repeat: { min: 1 }
+"#;
+        let doc = "## 要求\n";
+        let findings = validate_src(schema, doc, false);
+        let ks = kinds(&findings);
+        // 項目の欠落は出現回数の下限として出る。節の欠落の種類は使わない
+        assert!(ks.contains(&FindingKind::RepeatMinNotMet));
+        assert!(!ks.contains(&FindingKind::MissingRequiredSection));
     }
 
     // @kotowari[REQ-schema-019]
@@ -2359,7 +2519,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "項目に宣言した表は undeclared_line にしない（R7）"
+            "項目に宣言した表は undeclared_line にしない（TBL-schema-004）"
         );
     }
 
@@ -2380,7 +2540,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::TableHeaderMismatch),
-            "項目の表のヘッダ不一致は table_header_mismatch にする（R7・R11）"
+            "項目の表のヘッダ不一致は table_header_mismatch にする（TBL-schema-004、REQ-schema-033）"
         );
     }
 
@@ -2401,7 +2561,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "項目に宣言したコードブロックは undeclared_line にしない（R7）"
+            "項目に宣言したコードブロックは undeclared_line にしない（TBL-schema-004）"
         );
     }
 
@@ -2414,7 +2574,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             !kinds(&findings).contains(&FindingKind::TableHeaderMismatch),
-            "header を宣言しないときはヘッダと列数を検査しない（R11）"
+            "header を宣言しないときはヘッダと列数を検査しない（REQ-schema-033）"
         );
     }
 
@@ -2426,7 +2586,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             kinds(&findings).contains(&FindingKind::MissingTable),
-            "header を宣言しなくても表の有無は検査する（R11）"
+            "header を宣言しなくても表の有無は検査する（REQ-schema-033）"
         );
     }
 
@@ -2438,7 +2598,7 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "前置部に宣言した表は undeclared_line にしない（R5）"
+            "前置部に宣言した表は undeclared_line にしない"
         );
     }
 
@@ -2450,7 +2610,171 @@ document:
         let findings = validate_src(schema, doc, false);
         assert!(
             !kinds(&findings).contains(&FindingKind::UndeclaredLine),
-            "前置部に宣言したコードブロックは undeclared_line にしない（R5）"
+            "前置部に宣言したコードブロックは undeclared_line にしない"
         );
+    }
+    const ITEM_SCHEMA: &str = r#"
+document:
+  sections:
+    - name: 要求
+      item:
+        id: "REQ-\\d+"
+        repeat: { min: 0 }
+        fields:
+          - name: 種類
+"#;
+
+    fn only(findings: &[Finding], kind: FindingKind) -> &Finding {
+        let found: Vec<&Finding> = findings.iter().filter(|f| f.kind == kind).collect();
+        assert_eq!(found.len(), 1, "{kind:?} が1件だけ出る: {findings:?}");
+        found[0]
+    }
+
+    // @kotowari[REQ-schema-008]
+    #[test]
+    fn missing_required_field_points_at_the_item_heading_with_the_field_name() {
+        let doc = "## 要求\n\n### REQ-001: 名前\n";
+        let findings = validate_src(ITEM_SCHEMA, doc, false);
+        let finding = only(&findings, FindingKind::MissingRequiredField);
+        assert_eq!(finding.line, Some(3), "欠落は含む項目の見出しの行を指す");
+        assert_eq!(finding.node.as_deref(), Some("種類"));
+        assert_eq!(finding.raw.as_deref(), Some("### REQ-001: 名前"));
+    }
+
+    // @kotowari[REQ-schema-008]
+    #[test]
+    fn a_field_line_declared_twice_points_at_the_second_line() {
+        let schema = "document:\n  preamble:\n    fields:\n      - name: 状態\n";
+        let doc = "- 状態: a\n- 状態: b\n";
+        let findings = validate_src(schema, doc, true);
+        let finding = only(&findings, FindingKind::RepeatMaxExceeded);
+        assert_eq!(finding.line, Some(2), "上限を超えた2つ目の行を指す");
+        assert_eq!(finding.node.as_deref(), Some("状態"));
+        assert_eq!(finding.raw.as_deref(), Some("- 状態: b"));
+    }
+
+    // @kotowari[REQ-schema-008, REQ-schema-033]
+    #[test]
+    fn a_table_row_with_the_wrong_column_count_points_at_that_row() {
+        let schema =
+            "document:\n  sections:\n    - name: 用語集\n      table:\n        header: [a, b]\n";
+        let doc = "## 用語集\n\n| a | b |\n|---|---|\n| 1 | 2 |\n| 3 |\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::TableHeaderMismatch);
+        assert_eq!(finding.line, Some(6), "ヘッダの行ではなくその行を指す");
+        assert_eq!(finding.raw.as_deref(), Some("| 3 |"));
+        assert_eq!(finding.node, None, "表は宣言上の名前を持たない");
+    }
+
+    // @kotowari[REQ-schema-008]
+    #[test]
+    fn missing_title_has_neither_a_line_nor_a_node_name() {
+        let doc = "## 状況\n\n背景。\n\n## 決定\n\n判断。\n";
+        let findings = validate_src(SCHEMA, doc, false);
+        let finding = only(&findings, FindingKind::MissingTitle);
+        assert_eq!(finding.line, None, "含むノードに行が無いので省く");
+        assert_eq!(finding.node, None);
+        assert_eq!(finding.raw, None);
+    }
+
+    // @kotowari[REQ-schema-008]
+    #[test]
+    fn invalid_id_carries_the_raw_heading_line() {
+        let doc = "## 要求\n\n### REQ-BAD: `名前`\n\n- 種類: x\n";
+        let findings = validate_src(ITEM_SCHEMA, doc, false);
+        let finding = only(&findings, FindingKind::InvalidId);
+        assert_eq!(finding.line, Some(3));
+        assert_eq!(
+            finding.raw.as_deref(),
+            Some("### REQ-BAD: `名前`"),
+            "生の行は src の行と一文字も違わない"
+        );
+    }
+
+    // @kotowari[REQ-schema-008]
+    #[test]
+    fn missing_required_section_carries_the_section_name() {
+        let schema =
+            "document:\n  sections:\n    - name: 状況\n      statement:\n        required: false\n";
+        let doc = "";
+        let findings = validate_src(schema, doc, true);
+        let finding = only(&findings, FindingKind::MissingRequiredSection);
+        assert_eq!(finding.node.as_deref(), Some("状況"));
+        assert_eq!(finding.line, None, "文書そのものには含むノードの行が無い");
+    }
+
+    // @kotowari[REQ-schema-008]
+    #[test]
+    fn field_order_mismatch_carries_the_name_of_the_field_out_of_order() {
+        let schema = "document:\n  sections:\n    - name: 要求\n      ordered: true\n      fields:\n        - name: 種類\n        - name: 定義\n";
+        let doc = "## 要求\n\n- 定義: REQ-001\n- 種類: algorithm\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::FieldOrderMismatch);
+        assert_eq!(finding.line, Some(4), "宣言の順に反した行を指す");
+        assert_eq!(finding.node.as_deref(), Some("種類"));
+        assert_eq!(finding.raw.as_deref(), Some("- 種類: algorithm"));
+    }
+
+    // @kotowari[REQ-schema-055]
+    #[test]
+    fn undeclared_field_line_carries_the_field_rule_kind() {
+        let schema = "document:\n  sections:\n    - name: 理由\n";
+        let doc = "## 理由\n\n- 種類: ubiquitous\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::UndeclaredLine);
+        assert_eq!(finding.rule_kind, Some(RuleKind::Field));
+    }
+
+    // @kotowari[REQ-schema-055]
+    #[test]
+    fn undeclared_bullet_carries_the_bullets_rule_kind() {
+        let schema = "document:\n  sections:\n    - name: 理由\n";
+        let doc = "## 理由\n\n- ただの箇条書き\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::UndeclaredLine);
+        assert_eq!(finding.rule_kind, Some(RuleKind::Bullets));
+    }
+
+    // @kotowari[REQ-schema-001]
+    #[test]
+    fn an_empty_bullet_item_is_an_undeclared_line() {
+        let schema = "document:\n  sections:\n    - name: 理由\n";
+        let doc = "## 理由\n\n-\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::UndeclaredLine);
+        assert_eq!(finding.rule_kind, Some(RuleKind::Bullets));
+        assert_eq!(finding.line, Some(3));
+        assert_eq!(finding.raw.as_deref(), Some("-"));
+    }
+
+    // @kotowari[REQ-schema-001]
+    #[test]
+    fn an_empty_ordered_list_item_is_an_undeclared_line() {
+        let schema = "document:\n  sections:\n    - name: 理由\n";
+        let doc = "## 理由\n\n1.\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::UndeclaredLine);
+        assert_eq!(finding.rule_kind, Some(RuleKind::OrderedList));
+        assert_eq!(finding.line, Some(3));
+    }
+
+    // @kotowari[REQ-schema-055]
+    #[test]
+    fn undeclared_table_carries_the_table_rule_kind() {
+        let schema = "document:\n  sections:\n    - name: 理由\n";
+        let doc = "## 理由\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::UndeclaredLine);
+        assert_eq!(finding.rule_kind, Some(RuleKind::Table));
+    }
+
+    // @kotowari[REQ-schema-057]
+    #[test]
+    fn repeat_min_not_met_carries_the_counted_rule_kind() {
+        let schema = "document:\n  sections:\n    - name: 理由\n      statement:\n        repeat: { min: 1 }\n";
+        let doc = "## 理由\n";
+        let findings = validate_src(schema, doc, false);
+        let finding = only(&findings, FindingKind::RepeatMinNotMet);
+        assert_eq!(finding.rule_kind, Some(RuleKind::Statement));
     }
 }

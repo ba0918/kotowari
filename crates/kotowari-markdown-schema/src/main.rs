@@ -62,7 +62,7 @@ struct Stop {
 
 impl std::fmt::Display for Stop {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // 停止は1行（R19、R20）。detail が複数行でも後続の行は落とす。
+        // 停止は1行（REQ-schema-043）。detail が複数行でも後続の行は落とす。
         // スキーマのパーサは誤りの位置とともに参照先ファイルの中身を引用
         // するため、そのまま流すと読める任意のファイルの断片が標準エラー
         // へ出る。1行に切る場所をここに置くのは、停止の種類が増えても
@@ -79,6 +79,16 @@ struct FindingJson<'a> {
     path: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
     line: Option<usize>,
+    /// スキーマが宣言したノードの名前。持たない指摘では鍵ごと出さない（REQ-schema-008）
+    #[serde(skip_serializing_if = "Option::is_none")]
+    node: Option<&'a str>,
+    /// 行番号が指す行の生の文字。行を持たない指摘では鍵ごと出さない（REQ-schema-008）
+    #[serde(skip_serializing_if = "Option::is_none")]
+    text: Option<&'a str>,
+    /// 宣言していない行の種別、または出現回数の指摘が数えたノードの種別。
+    /// 持たない指摘では鍵ごと出さない（REQ-schema-055、REQ-schema-057）
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rule_kind: Option<&'a str>,
     detail: &'a str,
 }
 
@@ -86,7 +96,7 @@ fn main() -> ExitCode {
     let cli = match Cli::try_parse() {
         Ok(cli) => cli,
         Err(e) => match e.kind() {
-            // --help と --version は標準出力に出して終了コード0で終わる（R1）
+            // mds は "--version" を受ける（REQ-schema-005）。--help と併せて標準出力に出し、終了コード0で終わる
             clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayVersion => {
                 let _ = e.print();
                 return ExitCode::from(0);
@@ -99,7 +109,7 @@ fn main() -> ExitCode {
             }
             _ => {
                 // clap のメッセージは複数行に分かれるので、説明の先頭行だけを
-                // 使って mds の1行の停止理由に合わせる（R19 の argument_error）
+                // 使って mds の1行の停止理由に合わせる（TBL-schema-009 の「引数の誤り」）
                 let message = e.to_string();
                 let first_line = message.lines().next().unwrap_or("invalid arguments");
                 let detail = first_line
@@ -179,12 +189,14 @@ fn check_document(path: &Path, open_flag: bool) -> Result<Vec<Finding>, Stop> {
     let src = read_document(path)?;
     let (schema, document) = load_schema_and_document(path, &src)?;
     let open = open_flag || schema.open;
-    Ok(kotowari_markdown_schema::validate::validate(&schema, &document, open))
+    Ok(kotowari_markdown_schema::validate::validate(
+        &schema, &document, open,
+    ))
 }
 
 /// frontmatter から `$schema` の参照を読む。`$schema` を持たない文書は `None`。
 /// ファイルを名指しした検査は停止し、ディレクトリ検査は飛ばすので、
-/// 「無い」の扱いは呼び出し側に残す（R2・R20）。
+/// 「無い」の扱いは呼び出し側に残す（TBL-schema-010、REQ-schema-010）。
 fn read_schema_ref(path: &Path, src: &str) -> Result<Option<SchemaRef>, Stop> {
     kotowari_markdown_schema::frontmatter::frontmatter_schema(src).map_err(|e| Stop {
         kind: "frontmatter_invalid",
@@ -199,10 +211,11 @@ fn load_schema_and_document_from(
     schema_ref: &SchemaRef,
 ) -> Result<(Schema, Document), Stop> {
     let schema_yaml = load_schema_yaml(path, schema_ref)?;
-    let schema = kotowari_markdown_schema::schema::parse_schema(&schema_yaml).map_err(|e| Stop {
-        kind: "schema_invalid",
-        detail: format!("{}: {}", path.display(), e.0),
-    })?;
+    let schema =
+        kotowari_markdown_schema::schema::parse_schema(&schema_yaml).map_err(|e| Stop {
+            kind: "schema_invalid",
+            detail: format!("{}: {}", path.display(), e.0),
+        })?;
     let document = Document::parse(src).map_err(|e| Stop {
         kind: "unreadable_file",
         detail: format!("{}: {}", path.display(), e),
@@ -230,7 +243,7 @@ const MAX_SCHEMA_BYTES: u64 = 4 * 1024 * 1024;
 const SCHEMA_FETCH_TIMEOUT: Duration = Duration::from_millis(10_000);
 
 /// URL の authority にある認証情報（`user:pass@`）を伏せる。取得に失敗した URL は
-/// 誤りの説明として標準エラーに出るので、そこへ認証情報を持ち込まない（R2）。
+/// 誤りの説明として標準エラーに出るので、そこへ認証情報を持ち込まない（REQ-schema-052）。
 fn redact_userinfo(url: &str) -> String {
     let Some(scheme_end) = url.find("://") else {
         return url.to_string();
@@ -327,7 +340,7 @@ fn cache_path(url: &str) -> PathBuf {
 fn emit_check(files: &[(PathBuf, Vec<Finding>)], format: &str) -> Result<(), Stop> {
     match format {
         "text" => {
-            // text は指摘があるときだけ出力する（R18）
+            // 人間向けの text（REQ-schema-007）は指摘があるときだけ出力する（EX-schema-003）
             for (path, findings) in files {
                 if findings.is_empty() {
                     continue;
@@ -348,7 +361,7 @@ fn emit_check(files: &[(PathBuf, Vec<Finding>)], format: &str) -> Result<(), Sto
             }
         }
         "json" => {
-            // json は指摘が無いときも files の空配列を出力する（R18）
+            // 機械向けの json（REQ-schema-007）は、指摘が無いときも files の空配列を出力する
             let files_json: Vec<serde_json::Value> = files
                 .iter()
                 .filter(|(_, findings)| !findings.is_empty())
@@ -361,6 +374,9 @@ fn emit_check(files: &[(PathBuf, Vec<Finding>)], format: &str) -> Result<(), Sto
                             severity: "error",
                             path: &path_str,
                             line: f.line,
+                            node: f.node.as_deref(),
+                            text: f.raw.as_deref(),
+                            rule_kind: f.rule_kind.map(|k| k.as_str()),
                             detail: &f.detail,
                         })
                         .collect();
@@ -375,7 +391,7 @@ fn emit_check(files: &[(PathBuf, Vec<Finding>)], format: &str) -> Result<(), Sto
     Ok(())
 }
 
-/// ディレクトリ配下のスキーマ宣言文書を検査する。R20。
+/// ディレクトリ配下のスキーマ宣言文書を検査する（REQ-schema-010、REQ-schema-044）。
 fn check_directory(root: &Path, open_flag: bool) -> Result<Vec<(PathBuf, Vec<Finding>)>, Stop> {
     let mut files = Vec::new();
     let walker = WalkDir::new(root)
@@ -403,7 +419,7 @@ fn check_directory(root: &Path, open_flag: bool) -> Result<Vec<(PathBuf, Vec<Fin
         }
         let path = entry.path().to_path_buf();
         let src = read_document(&path)?;
-        // スキーマを持たない文書は対象外（R20）
+        // スキーマを持たない文書は対象外（REQ-schema-010）
         let Some(schema_ref) = read_schema_ref(&path, &src)? else {
             continue;
         };

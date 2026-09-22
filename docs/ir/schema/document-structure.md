@@ -1,6 +1,3 @@
----
-$schema: ../../../.mds/schemas/ir.yaml
----
 # 文書の骨格
 
 この文書は、題名、前置部、節、項目という文書の骨格を、スキーマがどう検証するかを扱う。
@@ -15,18 +12,18 @@ $schema: ../../../.mds/schemas/ir.yaml
 
 mds は常に、`文書`が`題名`をちょうど1つ持つことを求め、無いときと2つ以上あるときを`指摘`にする。
 
-### REQ-schema-023: 前置部の範囲
+### REQ-schema-023: 前置部に宣言するもの
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A68
 - 検証: unit
 
-mds は常に、`題名`の後から最初の`節`の前までを`前置部`として読み、そこに`フィールド行`、`文`、`箇条書き`を宣言させる。
+mds は常に、`前置部`そのものには`抽出`の鍵を持たせず、`前置部`の内側の`ノード`（TBL-schema-004）に宣言させる。
 
 ### REQ-schema-024: 節の名前
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A2
 - 検証: unit
 
 mds は常に、`節`を見出しの文字で見分け、`スキーマ`が宣言した名前と一致しない`節`を`指摘`にする。
@@ -54,11 +51,27 @@ mds は常に、`節`を見出しの文字で見分け、`スキーマ`が宣言
 
 `項目`を宣言していない`節`の中に深さ3の見出しがあるとき、mds はその見出しと、その内側の行を`指摘`にする。`開いた世界`でも同じである。
 
+### REQ-schema-056: 必須の項目の欠落
+
+- 種類: ubiquitous
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A69
+- 検証: unit
+
+mds は常に、`出現回数`を宣言した`項目`が足りないときは、下限を割ったものとして`指摘`にする。`節`の欠落の`指摘`はこのとき出さない。
+
+### REQ-schema-057: 出現回数の指摘の規則種別
+
+- 種類: ubiquitous
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A86
+- 検証: unit
+
+mds は常に、`出現回数`の下限と上限の`指摘`に、どの`規則種別`の`ノード`を数えたかを持たせる。
+
 ## 決定表
 
 ### TBL-schema-006: 項目の見出しの読み方
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A37
 
 | 順 | 見出しの形 | 読み方 |
 |---|---|---|

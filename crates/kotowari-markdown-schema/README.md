@@ -107,9 +107,8 @@ item:
   id: "REQ-\\d{3,}"
   repeat: { min: 0 }
   extract:
-    - requirements
-    - { path: id, of: id }
-    - { path: line, of: line }
+    path: requirements
+    of: { id: id, line: line }
   fields:
     - name: Kind
       extract: kind
@@ -127,7 +126,32 @@ item:
 ]
 ```
 
-Extracted values are strings; no type conversion is applied. Line numbers placed with `of: line`
+A node that declares `value` or `of` comes back as an object per element, with the element's own
+value under the `value` key and the derived values under the `of` keys. A table is split into one
+element per data row, a bullet list into one per line and a code block into one per block. A
+statement is split into one element per line only when it declares `of`; with `value` alone it
+stays a single string wrapped in one object. The four derived values are `line`, `id`, `name` and
+`raw` (the raw line, with its original indentation and trailing spaces):
+
+```yaml
+table:
+  header: [Term, Meaning]
+  extract:
+    path: glossary
+    value: cells
+    of: { line: line, raw: raw }
+```
+
+```json
+"glossary": [
+  { "cells": { "Term": "mark", "Meaning": "..." }, "line": 12, "raw": "| mark | ... |" }
+]
+```
+
+Row keys come from the schema's `header`, or, when no `header` is declared, from the column
+position (each row is an array). The document's own header row is never used as a key.
+
+Extracted values are strings; no type conversion is applied. Line numbers placed with `of`
 are the one exception, and are numbers.
 
 ## Commands and exit codes
@@ -144,6 +168,15 @@ mds --version
 | 0 | no findings |
 | 1 | findings were reported |
 | 2 | the check could not run (schema missing or invalid, broken frontmatter, unreadable file, bad argument) |
+
+`check --format json` reports each finding as
+`{kind, severity, path, line, node, text, rule_kind, detail}`.
+`line` points at the offending node, or at the node that should have contained a missing one;
+`node` is the declared name of that node, for sections and field lines; `text` is the raw line
+`line` points at. `rule_kind` names the kind of rule the node belongs to — one of `section`,
+`item`, `field`, `bullets`, `ordered_list`, `statement`, `table`, `codeblock` — and appears on
+`undeclared_line`, which reports how the line was read, and on `repeat_min_not_met` and
+`repeat_max_exceeded`, which report what was counted. Keys that do not apply are left out.
 
 ## Using it as a library
 
@@ -164,15 +197,13 @@ let values = kotowari_markdown_schema::extract::extract_values(&schema, &documen
 
 ## Specification
 
-`docs/spec/mds.md` is the prose specification. `docs/ir/schema/` at the repository root
-carries the same specification
-normalised so that it can be checked mechanically, and every requirement there is linked to the
-tests that cover it.
+`docs/ir/schema/` at the repository root is the specification. It is normalised so that it can
+be checked mechanically, and every requirement there is linked to the tests that cover it.
 
 ## License
 
-Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or
-[MIT license](LICENSE-MIT) at your option.
+Licensed under either of [Apache License, Version 2.0](../../LICENSE-APACHE) or
+[MIT license](../../LICENSE-MIT) at your option.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in
 this work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without

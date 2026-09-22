@@ -7,9 +7,16 @@ document:
     extract: title
   preamble:
     statement:
-      required: false
-      extract: scope
+      repeat: { min: 0 }
+      extract:
+        path: scope
+        value: value
+        of: { line: line, raw: raw }
     table:
+      repeat: { min: 1 }
       header: [用語, 意味, 出典]
-      extract: glossary
+      extract:
+        path: glossary
+        value: value
+        of: { line: line, raw: raw }
   sections: []
