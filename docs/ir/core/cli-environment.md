@@ -35,7 +35,7 @@ kotowari は常に、Linux と macOS を対象にする。Windows ではパス�
 - 種類: prohibition
 - 出典: docs/decision/records/records.md#P2, docs/decision/records/records.md#A100
 - 検証: review
-- 確かめ方: `crates/kotowari-core/src/ir.rs` と `crates/kotowari-core/src/lib.rs` で、仕様に列挙されていない振る舞いを黙って決めていないことを確認。`parse_document` の gherkin 解析で有効な行の種類以外を invalid_gherkin_line にし、`read_utf8_file` で読めないファイルを停止にし、`check_documents` が仕様に無い読み飛ばしを持たないことを確認
+- 確かめ方: `crates/kotowari-core/src/ir.rs` と `crates/kotowari-core/src/lib.rs` で、仕様に列挙されていない振る舞いを黙って決めていないことを確認。`GherkinBlock` の gherkin 解析で有効な行の種類以外を invalid_gherkin_line にし、`read_utf8_file` で読めないファイルを停止にし、`parse_document` が写せない指摘と値を停止にし、`check_documents` が仕様に無い読み飛ばしを持たないことを確認
 
 kotowari は、`除外`に列挙していない入力を、`停止`も`指摘`もせずに読み飛ばしてはならない。
 
