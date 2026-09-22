@@ -15,7 +15,7 @@ name = "kotowari_markdown_schema"
 path = "src/lib.rs"
 
 [[bin]]
-name = "mds"
+name = "kotowari-mds"
 path = "src/main.rs"
 
 [dependencies]

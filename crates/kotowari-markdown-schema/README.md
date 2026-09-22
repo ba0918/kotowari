@@ -10,7 +10,13 @@ hands the contents back as JSON so that the rest of your tooling never has to pa
 ## Install
 
 ```console
-$ cargo install --git https://github.com/ba0918/mds
+$ cargo install --git https://github.com/ba0918/kotowari kotowari-markdown-schema
+```
+
+This installs the `kotowari-mds` command.
+
+```console
+$ kotowari-mds --version
 ```
 
 ## Quick start
@@ -63,8 +69,8 @@ document:
 Then:
 
 ```console
-$ mds check docs/adr/            # validate every schema-declaring document under a directory
-$ mds values docs/adr/0001.md --format json
+$ kotowari-mds check docs/adr/            # validate every schema-declaring document under a directory
+$ kotowari-mds values docs/adr/0001.md --format json
 {
   "id": "0001",
   "status": "accepted",
@@ -176,10 +182,10 @@ Extracted values are strings; no type conversion is applied. Line numbers placed
 ## Commands and exit codes
 
 ```
-mds check <path> [--format json|text] [--open]
-mds values <file> [--format json|text]
-mds ast <file> [--schema] [--format json]
-mds --version
+kotowari-mds check <path> [--format json|text] [--open]
+kotowari-mds values <file> [--format json|text]
+kotowari-mds ast <file> [--schema] [--format json]
+kotowari-mds --version
 ```
 
 | Code | Meaning |
