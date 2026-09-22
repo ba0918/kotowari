@@ -38,6 +38,12 @@ pub fn extract_values(schema: &Schema, document: &Document) -> Value {
     for def in &schema.document.sections {
         extract_section(def, document, &mut root);
     }
+    if let Some(item) = &schema.document.item {
+        // 文書の直下の項目（REQ-schema-061）
+        let items = document.preamble_items();
+        let items: Vec<&DocItem> = items.iter().collect();
+        extract_items(item, &items, document, &mut root);
+    }
     Value::Object(root)
 }
 
@@ -121,33 +127,43 @@ fn extract_section(
     extract_table(def.table.as_ref(), &blocks, document, root);
     extract_codeblock(def.codeblock.as_ref(), &blocks, document, root);
 
-    if let Some(item) = &def.item
-        && let Some(extract) = &item.extract
-    {
+    if let Some(item) = &def.item {
         let items: Vec<&DocItem> = occurrences.iter().flat_map(|s| s.items.iter()).collect();
-        if items.is_empty() {
-            // 0件のときはキーを省略する（REQ-schema-038）
-        } else {
-            // 内部が extract を宣言したか、項目が value か of を宣言していれば
-            // 項目ごとのオブジェクトにする（REQ-schema-047）
-            let as_object = item_internals_declare_extract(item)
-                || extract.has_of()
-                || extract.value().is_some();
-            let one = |i: &DocItem| {
-                if as_object {
-                    item_object(i, item, document)
-                } else {
-                    item_value(i, item)
-                }
-            };
-            let value = if item.repeat.is_some() {
-                Value::Array(items.iter().map(|i| one(i)).collect())
-            } else {
-                one(items[0])
-            };
-            place(root, extract.path(), value);
-        }
+        extract_items(item, &items, document, root);
     }
+}
+
+/// 項目の並びを、項目の規則の `extract` に沿って置く。
+fn extract_items(
+    item: &crate::schema::Item,
+    items: &[&DocItem],
+    document: &Document,
+    root: &mut Map<String, Value>,
+) {
+    let Some(extract) = &item.extract else {
+        return;
+    };
+    if items.is_empty() {
+        // 0件のときはキーを省略する（REQ-schema-038）
+        return;
+    }
+    // 内部が extract を宣言したか、項目が value か of を宣言していれば
+    // 項目ごとのオブジェクトにする（REQ-schema-047）
+    let as_object =
+        item_internals_declare_extract(item) || extract.has_of() || extract.value().is_some();
+    let one = |i: &DocItem| {
+        if as_object {
+            item_object(i, item, document)
+        } else {
+            item_value(i, item)
+        }
+    };
+    let value = if item.repeat.is_some() {
+        Value::Array(items.iter().map(|i| one(i)).collect())
+    } else {
+        one(items[0])
+    };
+    place(root, extract.path(), value);
 }
 
 fn extract_fields(

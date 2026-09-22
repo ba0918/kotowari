@@ -74,7 +74,12 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
                     Some(section.line),
                     &mut findings,
                 );
-                validate_items(def, &section.items, Some(section.line), &mut findings);
+                validate_items(
+                    def.item.as_ref(),
+                    &section.items,
+                    Some(section.line),
+                    &mut findings,
+                );
             }
             None => {
                 // 宣言していない節は、閉じた世界で見出しと内側の行を誤りにする
@@ -125,7 +130,21 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
     // 中の未宣言の構造として open でも undeclared_heading、その内側の行は
     // undeclared_line にする（REQ-schema-003）。前置部が未宣言のときは閉じた世界だけで
     // 同じ扱いになり、open では未宣言の構造ごと許す。
-    for stray in &document.stray_preamble_headings {
+    if doc_rule.item.is_some() {
+        // 文書の直下の項目を宣言したスキーマでは、最初の節より前の深さ3の見出しを
+        // その項目として読む（REQ-schema-061）。含む節が無いので欠落の指摘は行を持たない
+        validate_items(
+            doc_rule.item.as_ref(),
+            &document.preamble_items(),
+            None,
+            &mut findings,
+        );
+    }
+    for stray in document
+        .stray_preamble_headings
+        .iter()
+        .filter(|_| doc_rule.item.is_none())
+    {
         let in_declared_preamble = !stray.before_title && doc_rule.preamble.is_some();
         if in_declared_preamble || !open {
             findings.push(Finding::at(
@@ -184,12 +203,12 @@ fn validate_title(title: &Title, headings: &[Heading], findings: &mut Vec<Findin
 }
 
 fn validate_items(
-    section: &Section,
+    item_rule: Option<&ItemRule>,
     items: &[Item],
     container_line: Option<usize>,
     findings: &mut Vec<Finding>,
 ) {
-    let Some(item_rule) = &section.item else {
+    let Some(item_rule) = item_rule else {
         // 宣言済みの節の中に足された未宣言の項目。open でも見出しと内側の行を誤りにする（REQ-schema-003、REQ-schema-027）
         for item in items {
             findings.push(Finding::at(

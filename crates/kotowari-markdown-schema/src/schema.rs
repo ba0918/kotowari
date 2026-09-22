@@ -84,6 +84,8 @@ pub struct Document {
     pub preamble: Option<Preamble>,
     #[serde(default)]
     pub sections: Vec<Section>,
+    /// 節を挟まずに文書の直下に置く項目（REQ-schema-016、REQ-schema-061）
+    pub item: Option<Item>,
 }
 
 /// 題名（TBL-schema-004、REQ-schema-022）。
@@ -502,6 +504,9 @@ fn validate_schema(schema: &Schema) -> Result<(), SchemaError> {
     }
     for section in &schema.document.sections {
         validate_section(section)?;
+    }
+    if let Some(item) = &schema.document.item {
+        validate_item(item)?;
     }
     Ok(())
 }

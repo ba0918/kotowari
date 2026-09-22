@@ -35,6 +35,26 @@ impl Document {
     }
 }
 
+impl Document {
+    /// 最初の節より前の深さ3の見出しを、文書の直下の`項目`として読んだもの（REQ-schema-061）。
+    /// スキーマが文書の直下の項目を宣言したときだけ使う。
+    pub(crate) fn preamble_items(&self) -> Vec<Item> {
+        self.stray_preamble_headings
+            .iter()
+            .map(|stray| {
+                let (id, title, has_id_separator) = split_item_heading(&stray.heading.text);
+                Item {
+                    id,
+                    title,
+                    has_id_separator,
+                    line: stray.heading.line,
+                    blocks: stray.blocks.clone(),
+                }
+            })
+            .collect()
+    }
+}
+
 /// 前置部領域に出た深さ3の見出しと、その下に続く内側の行。
 #[derive(Debug)]
 pub struct StrayPreambleHeading {
@@ -68,7 +88,7 @@ pub struct Section {
     pub items: Vec<Item>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Item {
     /// 見出しの ID 部分（先頭から `:` の直前まで）
     pub id: String,
@@ -81,7 +101,7 @@ pub struct Item {
 }
 
 /// 文書の1ブロック。行の種別は仕様の「規則種別」に対応する。
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Block {
     Field {
         /// 元の行（マーカーとその直後の空白を含む）。抽出の1要素に使う（TBL-schema-008）

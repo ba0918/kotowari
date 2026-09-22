@@ -79,9 +79,9 @@ $ mds values docs/adr/0001.md --format json
 | Rule | Validates | Can hold |
 |---|---|---|
 | `title` | the `#` heading | a pattern, a named-group capture |
-| `preamble` | everything between the title and the first `##` | fields, statements, bullets, a table, a code block |
+| `preamble` | everything between the title and the first `##` (or the first `###` when `document.item` is declared) | fields, statements, bullets, a table, a code block |
 | `sections` | `##` headings | fields, statements, bullets, a table, a code block, items |
-| `item` | `### ID: Name` headings | fields, statements, bullets, a table, a code block |
+| `item` | `### ID: Name` headings, under a section or (as `document.item`) before the first section | fields, statements, bullets, a table, a code block |
 | `field` | `- Name: value` lines | a pattern, an enum, a separator, a condition |
 | `statement` | prose paragraphs | a pattern, an enum, a condition |
 | `bullets` | list lines that are not fields | a pattern, nested children |

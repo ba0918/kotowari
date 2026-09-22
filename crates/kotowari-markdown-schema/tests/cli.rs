@@ -1620,3 +1620,67 @@ fn ex_schema_050_select_other_than_first_stops() {
     assert_eq!(code, Some(2), "stderr: {stderr}");
     assert!(stderr.contains("schema_invalid"), "stderr: {stderr}");
 }
+
+// @kotowari[EX-schema-043]
+#[test]
+fn ex_schema_043_document_item_reads_items_before_the_first_section() {
+    let schema = r#"
+document:
+  preamble:
+    statement:
+      extract: scope
+  item:
+    id: "^FLAG-\\d+$"
+    repeat: { min: 0 }
+    extract: { path: flags, of: { id: id } }
+    statement:
+      extract: text
+  sections:
+    - name: 節
+      item:
+        id: "^FLAG-\\d+$"
+        repeat: { min: 0 }
+        extract: { path: section_flags, of: { id: id } }
+        statement:
+          extract: text
+"#;
+    let doc = "前置部の文。\n\n### FLAG-1: 直下\n\n直下の文。\n\n## 節\n\n### FLAG-2: 節の下\n\n節の文。\n";
+    let (code, json, stderr) = mds_json(schema, doc, "check");
+    assert_eq!(code, Some(0), "stderr: {stderr} {json}");
+    assert!(all_findings(&json).is_empty(), "{json}");
+    let (code, json, stderr) = mds_json(schema, doc, "values");
+    assert_eq!(code, Some(0), "stderr: {stderr}");
+    assert_eq!(json["scope"], "前置部の文。", "{json}");
+    assert_eq!(
+        json["flags"],
+        serde_json::json!([{ "id": "FLAG-1", "text": "直下の文。" }]),
+        "{json}"
+    );
+    assert_eq!(
+        json["section_flags"],
+        serde_json::json!([{ "id": "FLAG-2", "text": "節の文。" }]),
+        "{json}"
+    );
+}
+
+// @kotowari[EX-schema-044]
+#[test]
+fn ex_schema_044_without_document_item_a_level_three_heading_before_sections_is_reported() {
+    let schema = r#"
+document:
+  sections:
+    - name: 節
+      item:
+        repeat: { min: 0 }
+"#;
+    // 行番号: 節の前の見出しが4行目
+    let doc = "### X-1: 節の前\n\n## 節\n\n### X-2: 節の下\n";
+    let (code, json, stderr) = mds_json(schema, doc, "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    assert!(
+        all_findings(&json)
+            .iter()
+            .any(|f| f["line"] == 4 && f["kind"] == "undeclared_heading"),
+        "{json}"
+    );
+}
