@@ -7,19 +7,35 @@ document:
   preamble:
     statement:
       required: false
-      extract: scope
+      extract:
+        path: scope
+        value: value
+        of: { line: line, raw: raw }
   sections:
     - name: 問題の記録
       repeat: { min: 0 }
       item:
         id: "FLAG-([a-z][a-z0-9-]*-)?\\d{3,}"
         repeat: { min: 0 }
+        extract:
+          path: flags
+          of: { id: id, name: name, line: line }
         fields:
           - name: 種類
             enum: [contradiction, gap, ambiguity]
+            extract: kind
           - name: 関係
             separator: ","
+            extract: relations
           - name: 出典
             separator: ","
+            extract:
+              path: sources
+              value: value
+              of: { line: line }
         statement:
           required: true
+          extract:
+            path: text
+            value: value
+            of: { line: line, raw: raw }

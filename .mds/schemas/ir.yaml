@@ -7,7 +7,10 @@ document:
   preamble:
     statement:
       repeat: { min: 1 }
-      extract: scope
+      extract:
+        path: scope
+        value: value
+        of: { line: line, raw: raw }
   sections:
     - name: 要求
       repeat: { min: 0 }
@@ -23,7 +26,10 @@ document:
             extract: kind
           - name: 出典
             separator: ","
-            extract: sources
+            extract:
+              path: sources
+              value: value
+              of: { line: line }
           - name: 検証
             enum: [unit, property, proof, review]
             extract: verification
@@ -39,7 +45,10 @@ document:
         statement:
           required: true
           when: { field: 種類, ne: algorithm }
-          extract: text
+          extract:
+            path: text
+            value: value
+            of: { line: line, raw: raw }
     - name: 決定表
       repeat: { min: 0 }
       item:
@@ -51,13 +60,19 @@ document:
         fields:
           - name: 出典
             separator: ","
-            extract: sources
+            extract:
+              path: sources
+              value: value
+              of: { line: line }
         table:
           repeat: { min: 1 }
           extract: rows
         statement:
           required: false
-          extract: text
+          extract:
+            path: text
+            value: value
+            of: { line: line, raw: raw }
     - name: 性質
       repeat: { min: 0 }
       item:
@@ -69,13 +84,22 @@ document:
         fields:
           - name: 出典
             separator: ","
-            extract: sources
+            extract:
+              path: sources
+              value: value
+              of: { line: line }
         statement:
           required: true
-          extract: text
+          extract:
+            path: text
+            value: value
+            of: { line: line, raw: raw }
     - name: 具体例
       repeat: { min: 0 }
       codeblock:
         lang: gherkin
         repeat: { min: 0 }
-        extract: scenarios
+        extract:
+          path: scenarios
+          value: value
+          of: { line: line }
