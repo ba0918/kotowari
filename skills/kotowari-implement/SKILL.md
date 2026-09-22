@@ -49,6 +49,27 @@ Each plan step says how its completion is shown. Four kinds; details in
 The test command comes from, in order: the plan, the project's own instructions, the standard
 tool for the ecosystem. If none decides it, hand back to plan.
 
+## Requirements and kotowari check
+
+Read the requirements and scenarios the plan names with `kotowari query ID`: one call gives the
+text, the tests already marked for it, and its reverse references. Take only the keys you need
+with `jq` (the kotowari-plan skill's **Reading the requirements** has examples). Never read
+`kotowari list` whole.
+
+When writing a test, read the kotowari skill's scene mark (`references/mark.md`) and mark the test
+with the IDs it verifies. Run the `kotowari check` and `kotowari status` the plan lists as check
+commands; to read their output, read the kotowari skill's scene check (`references/findings.md`).
+
+When `kotowari check` exits with 1:
+
+- fix the test-side findings yourself (requirement_without_test, scenario_without_test,
+  test_without_id, invalid_marker, unparsable_file, and unresolved_reference from a mark);
+- hand back an IR-side finding as a problem with the specification.
+
+Missed mutations: the pre-push hook runs mutations on the diff. A miss is fixed by the fixer or
+the implementer, like a test-side finding; how to investigate one is in the kotowari skill's
+`references/mutants.md`.
+
 ## Committing
 
 - One concern per commit. A test and the minimal code that makes it pass are one concern.
