@@ -6,7 +6,7 @@ kotowari 方式の brainstorm / plan / cycle / implement は今、ba0918 の wor
 
 様子を見た結果、上書きは「先に reference を読めば効く」という運用に頼っていて、2026-09-22 に `ba0918-brainstorm` がそのまま回り、出力が `docs/spec/` に出て IR へ移し直す手戻りが出た。基本の考え方は同じでも細部の方針が食い違うので、相乗りをやめて kotowari 専用の工程の skill に分けるかを決める。
 
-Position: 第2ラウンドまでで構造の論点を決め（A1〜A7）、計画を立てる前に見つかった3つを第3ラウンドで決めた（A8〜A10）。承認済み（2026-09-23）。
+Position: 第2ラウンドまでで構造の論点を決め（A1〜A7）、計画を立てる前に見つかった3つを第3ラウンドで決めた（A8〜A10）。A4 と A5 の食い違いを A11 で解いた。承認済み（2026-09-23）。
 
 ## Agreements
 
@@ -54,5 +54,9 @@ Position: 第2ラウンドまでで構造の論点を決め（A1〜A7）、計�
   - why: 写す元との差分が kotowari 固有の部分だけになって読みやすく、1つの skill の中で言語が混ざらない
   - rejected: 全部を日本語にする。kotowari スキルとは揃うが、写す元との差分が全部の行になる
   - decided_by: 利用者（推奨を採用）
+
+- A11 workflow.md の brainstorm の節のうち、判断の記録の形（決定の節の見出し、補足の行、資料をまたぐ参照をリンクにする規則）は kotowari スキルの新しい reference に残し、場面 write から読ませる。手順（記録からの再開、承認の前の check と照合レビュー、stage するもの）は kotowari-brainstorm に移す。工程の skill は kotowari スキルやほかの工程の skill を名指しして「これを読め」と書いてよい
+  - why: A4 を文字どおりに読むと記録の形も工程の skill に移り、A5 の「kotowari スキルだけを入れて別の工程で使う」道で記録の書き方が分からなくなる。記録の形は check が読む kotowari の契約で、工程ではない。kotowari の skill の間の依存は認める
+  - decided_by: 利用者（推奨を採用。名指しを認めるのは利用者の言葉）
 
 ## Undecided
