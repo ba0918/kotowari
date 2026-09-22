@@ -342,6 +342,21 @@ pub enum OfKind {
     Name,
     /// 生の行。字下げと末尾の空白を含み、組み立て直さない
     Raw,
+    /// 項目と節の最後の行（1始まりの数値。REQ-schema-062）
+    End,
+}
+
+impl OfKind {
+    /// スキーマに書く語。
+    fn word(self) -> &'static str {
+        match self {
+            OfKind::Line => "line",
+            OfKind::Id => "id",
+            OfKind::Name => "name",
+            OfKind::Raw => "raw",
+            OfKind::End => "end",
+        }
+    }
 }
 
 /// 1つのノードが宣言した抽出規則。YAML では `配置パス`だけの略記か、
@@ -513,6 +528,7 @@ fn validate_schema(schema: &Schema) -> Result<(), SchemaError> {
 
 fn validate_title(title: &Title) -> Result<(), SchemaError> {
     reject_item_only_of(title.extract.as_ref(), "title")?;
+    reject_end_of(title.extract.as_ref(), "title")?;
     reject_duplicate_element_keys(title.extract.as_ref(), "title", &[])?;
     let Some(group) = title.extract.as_ref().and_then(Extract::group) else {
         return Ok(());
@@ -637,6 +653,7 @@ fn validate_table(table: Option<&Table>) -> Result<(), SchemaError> {
         }
         reject_capture_extract(table.extract.as_ref(), "table")?;
         reject_item_only_of(table.extract.as_ref(), "table")?;
+        reject_end_of(table.extract.as_ref(), "table")?;
         reject_duplicate_element_keys(table.extract.as_ref(), "table", &[])?;
     }
     Ok(())
@@ -681,6 +698,7 @@ fn validate_codeblock(codeblock: Option<&CodeBlock>) -> Result<(), SchemaError> 
         }
         reject_capture_extract(codeblock.extract.as_ref(), "codeblock")?;
         reject_item_only_of(codeblock.extract.as_ref(), "codeblock")?;
+        reject_end_of(codeblock.extract.as_ref(), "codeblock")?;
         reject_duplicate_element_keys(codeblock.extract.as_ref(), "codeblock", &[])?;
     }
     Ok(())
@@ -696,6 +714,7 @@ fn validate_fields(fields: &[Field]) -> Result<(), SchemaError> {
         }
         reject_capture_extract(field.extract.as_ref(), "field")?;
         reject_item_only_of(field.extract.as_ref(), "field")?;
+        reject_end_of(field.extract.as_ref(), "field")?;
         reject_duplicate_element_keys(field.extract.as_ref(), "field", &[])?;
     }
     Ok(())
@@ -711,6 +730,7 @@ fn validate_statement(statement: Option<&Statement>) -> Result<(), SchemaError> 
         }
         reject_capture_extract(statement.extract.as_ref(), "statement")?;
         reject_item_only_of(statement.extract.as_ref(), "statement")?;
+        reject_end_of(statement.extract.as_ref(), "statement")?;
         reject_duplicate_element_keys(statement.extract.as_ref(), "statement", &[])?;
     }
     Ok(())
@@ -733,6 +753,7 @@ fn validate_bullets(bullets: Option<&Bullets>, in_children: bool) -> Result<(), 
             reject_capture_extract(bullets.extract.as_ref(), "bullets")?;
         }
         reject_item_only_of(bullets.extract.as_ref(), "bullets")?;
+        reject_end_of(bullets.extract.as_ref(), "bullets")?;
         reject_duplicate_element_keys(bullets.extract.as_ref(), "bullets", &[])?;
         if let Some(children) = &bullets.children {
             validate_fields(&children.fields)?;
@@ -753,6 +774,17 @@ fn reject_capture_extract(extract: Option<&Extract>, node: &str) -> Result<(), S
     Ok(())
 }
 
+/// 項目と節の外のノードには `of` の `end` を宣言できない（REQ-schema-048）。
+fn reject_end_of(extract: Option<&Extract>, node: &str) -> Result<(), SchemaError> {
+    let Some(extract) = extract else {
+        return Ok(());
+    };
+    if extract.of().iter().any(|(_, kind)| *kind == OfKind::End) {
+        return Err(SchemaError(format!("{node} extract cannot use of: end")));
+    }
+    Ok(())
+}
+
 /// 項目の外のノードには `of` の `id` と `name` を宣言できない（REQ-schema-048）。
 fn reject_item_only_of(extract: Option<&Extract>, node: &str) -> Result<(), SchemaError> {
     let Some(extract) = extract else {
@@ -762,12 +794,7 @@ fn reject_item_only_of(extract: Option<&Extract>, node: &str) -> Result<(), Sche
         if matches!(kind, OfKind::Id | OfKind::Name) {
             return Err(SchemaError(format!(
                 "{node} extract cannot use of: {}",
-                match kind {
-                    OfKind::Id => "id",
-                    OfKind::Name => "name",
-                    OfKind::Line => "line",
-                    OfKind::Raw => "raw",
-                }
+                kind.word()
             )));
         }
     }

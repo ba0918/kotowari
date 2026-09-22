@@ -1684,3 +1684,56 @@ document:
         "{json}"
     );
 }
+
+// @kotowari[EX-schema-045]
+#[test]
+fn ex_schema_045_end_is_the_line_before_the_next_heading_as_deep_or_shallower() {
+    let schema = r#"
+document:
+  sections:
+    - name: 一
+      extract: { path: one, of: { line: line, end: end } }
+      item:
+        repeat: { min: 0 }
+        extract: { path: items, of: { line: line, end: end } }
+        statement:
+          required: false
+    - name: 二
+      extract: { path: two, of: { line: line, end: end } }
+      statement:
+        required: false
+"#;
+    // 行番号: "## 一" が4行目、"### A-2" が10行目、"## 二" が14行目、最後の行が16行目
+    let doc = "## 一\n\n### A-1: a\n\n文。\n\n### A-2: b\n\n文。\n\n## 二\n\n最後の文。\n";
+    let (code, json, stderr) = mds_json(schema, doc, "values");
+    assert_eq!(code, Some(0), "stderr: {stderr}");
+    assert_eq!(
+        json["items"],
+        serde_json::json!([{ "line": 6, "end": 9 }, { "line": 10, "end": 13 }]),
+        "{json}"
+    );
+    assert_eq!(
+        json["one"],
+        serde_json::json!({ "line": 4, "end": 13 }),
+        "{json}"
+    );
+    assert_eq!(
+        json["two"],
+        serde_json::json!({ "line": 14, "end": 16 }),
+        "{json}"
+    );
+}
+
+// @kotowari[EX-schema-046]
+#[test]
+fn ex_schema_046_end_outside_items_and_sections_stops() {
+    let schema = r#"
+document:
+  preamble:
+    table:
+      extract: { path: rows, of: { end: end } }
+"#;
+    let (code, _json, stderr) = mds_json(schema, "| a |\n|---|\n| 1 |\n", "values");
+    assert_eq!(code, Some(2), "stderr: {stderr}");
+    assert!(stderr.contains("schema_invalid"), "stderr: {stderr}");
+}

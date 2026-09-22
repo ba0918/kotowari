@@ -55,6 +55,39 @@ impl Document {
     }
 }
 
+impl Document {
+    /// 行 `line` の深さ `depth` の見出しに始まる要素の最後の行（REQ-schema-062）。次に現れる
+    /// 同じ深さかそれより浅い見出しの手前の行で、無ければ文書の最後の行。見出しは読み方ごとに
+    /// 組んだ木の見出しなので、コードブロックの中の見出しの形の行は数えない（TBL-schema-011）。
+    pub(crate) fn end_line(&self, line: usize, depth: u8) -> usize {
+        let titles = self.titles.iter().map(|h| (h.line, h.depth));
+        let sections = self
+            .sections
+            .iter()
+            .flat_map(|s| std::iter::once((s.line, 2)).chain(s.items.iter().map(|i| (i.line, 3))));
+        let strays = self
+            .stray_preamble_headings
+            .iter()
+            .map(|s| (s.heading.line, s.heading.depth))
+            .chain(self.stray_headings.iter().map(|h| (h.line, h.depth)));
+        titles
+            .chain(sections)
+            .chain(strays)
+            .filter(|&(l, d)| l > line && d <= depth)
+            .map(|(l, _)| l - 1)
+            .min()
+            .unwrap_or_else(|| self.last_line())
+    }
+
+    /// 文書の最後の行の行番号。文書が行の区切りで終わるとき、その後ろの空の行は数えない。
+    fn last_line(&self) -> usize {
+        match self.lines.as_slice() {
+            [.., last] if last.is_empty() && self.lines.len() > 1 => self.lines.len() - 1,
+            lines => lines.len(),
+        }
+    }
+}
+
 /// 前置部領域に出た深さ3の見出しと、その下に続く内側の行。
 #[derive(Debug)]
 pub struct StrayPreambleHeading {
@@ -927,6 +960,17 @@ mod tests {
             &vec![5, 6, 7],
             "ヘッダの行と区切りの行は数えない"
         );
+    }
+
+    // @kotowari[REQ-schema-062]
+    #[test]
+    fn end_line_does_not_count_a_heading_shaped_line_inside_a_code_block() {
+        let src = "## 節\n\n### A-1: a\n\n```\n## 中\n```\n\n### A-2: b\n";
+        let doc = Document::parse(src).unwrap();
+        assert_eq!(doc.end_line(3, 3), 8, "コードブロックの中の \"## 中\" では終わらない");
+        assert_eq!(doc.end_line(1, 2), 9, "文書の最後の行。末尾の区切りの後ろは数えない");
+        let by_line = doc.read_by_line();
+        assert_eq!(by_line.end_line(3, 3), 8, "行の読み方でも同じ");
     }
 
     // @kotowari[REQ-schema-035]

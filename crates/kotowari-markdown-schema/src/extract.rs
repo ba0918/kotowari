@@ -113,7 +113,10 @@ fn extract_section(
                     extract,
                     document,
                     Value::String(section_body(s, def)),
-                    &Derived::at(s.line),
+                    &Derived {
+                        end: Some(document.end_line(s.line, 2)),
+                        ..Derived::at(s.line)
+                    },
                 )
             })
             .collect();
@@ -576,6 +579,7 @@ fn item_object(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) 
             line: Some(item.line),
             id: Some(item.id.clone()),
             name: Some(item.title.clone()),
+            end: Some(doc.end_line(item.line, 3)),
         };
         if let Some(key) = extract.value() {
             place(
@@ -662,6 +666,8 @@ struct Derived {
     line: Option<usize>,
     id: Option<String>,
     name: Option<String>,
+    /// 要素の最後の行。項目と節だけが持つ（REQ-schema-062）
+    end: Option<usize>,
 }
 
 impl Derived {
@@ -724,6 +730,7 @@ fn place_derived(map: &mut Map<String, Value>, extract: &Extract, doc: &Document
                 .map(|raw| Value::String(raw.to_string())),
             OfKind::Id => got.id.clone().map(Value::String),
             OfKind::Name => got.name.clone().map(Value::String),
+            OfKind::End => got.end.map(Value::from),
         };
         if let Some(value) = value {
             place(map, key, value);

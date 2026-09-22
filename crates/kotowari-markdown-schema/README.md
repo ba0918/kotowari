@@ -139,8 +139,10 @@ A node that declares `value` or `of` comes back as an object per element, with t
 value under the `value` key and the derived values under the `of` keys. A table is split into one
 element per data row, a bullet list into one per line and a code block into one per block. A
 statement is split into one element per line only when it declares `of`; with `value` alone it
-stays a single string wrapped in one object. The four derived values are `line`, `id`, `name` and
-`raw` (the raw line, with its original indentation and trailing spaces):
+stays a single string wrapped in one object. The five derived values are `line`, `id`, `name`,
+`raw` (the raw line, with its original indentation and trailing spaces) and `end`. `end`, for
+items and sections only, is the line before the next heading at the same depth or shallower
+(or the document's last line), trailing blank lines included:
 
 ```yaml
 table:
@@ -168,7 +170,7 @@ table there is treated as undeclared. `select` without `header`, or with any val
 `first`, stops.
 
 Extracted values are strings; no type conversion is applied. Line numbers placed with `of`
-are the one exception, and are numbers.
+(`line` and `end`) are the one exception, and are numbers.
 
 ## Commands and exit codes
 
