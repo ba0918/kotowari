@@ -6,7 +6,7 @@ kotowari 方式の brainstorm / plan / cycle / implement は今、ba0918 の wor
 
 様子を見た結果、上書きは「先に reference を読めば効く」という運用に頼っていて、2026-09-22 に `ba0918-brainstorm` がそのまま回り、出力が `docs/spec/` に出て IR へ移し直す手戻りが出た。基本の考え方は同じでも細部の方針が食い違うので、相乗りをやめて kotowari 専用の工程の skill に分けるかを決める。
 
-Position: 第2ラウンドまでで構造の論点をすべて決めた（A1〜A7）。承認待ち（2026-09-23）。
+Position: 第2ラウンドまでで構造の論点を決め（A1〜A7）、計画を立てる前に見つかった3つを第3ラウンドで決めた（A8〜A10）。承認済み（2026-09-23）。
 
 ## Agreements
 
@@ -41,5 +41,18 @@ Position: 第2ラウンドまでで構造の論点をすべて決めた（A1〜A
 - A7 手元へは `~/.claude/skills/` にリポジトリの `skills/` の各ディレクトリへのシンボリックリンクを置いて入れる。他の人への配布の仕組みはこの記録では決めない
   - why: コピーで入れた kotowari スキルは既にリポジトリより古くなっていた（手元の改訂日が 2026-09-20 と 2026-09-17、リポジトリは 2026-09-22）。skill が9つに増えるとずれやすくなる。ローカルで使う間は常に最新を使う方針とも合う
   - decided_by: 利用者（推奨を採用。「まずは」の扱いで、配布は別の件）
+
+- A8 kotowari スキルの setup が AGENTS.md に書く雛形は「仕様は IR で管理する」の一文だけにする。kotowari-using-workflow を読ませる一文は、工程の skill の入れ方の説明に「AGENTS.md に足す1行」として書く。このリポジトリの AGENTS.md には今回その一文を足す
+  - why: A5 で kotowari スキルは工程の skill を名指ししないと決めたので、setup の雛形には書けない。工程の skill を入れる人だけがその一文を要る
+  - decided_by: 利用者（推奨を採用）
+
+- A9 工程の skill の description に「kotowari を使うリポジトリ（`.kotowari/` か `docs/ir/` がある）で使う」という条件を書く。ba0918 の skill は変えない
+  - why: 両方が入った環境では description の似た2つが同じ依頼の候補になる。入口は A2 の一文で kotowari-using-workflow に向くので、残るのは利用者が直接呼んだときの取り違えだけになる
+  - decided_by: 利用者（推奨を採用）
+
+- A10 工程の skill の本文は英語で揃える。写した本文はそのまま、workflow.md が担っていた kotowari 固有の手順は英語に訳して溶かし込む
+  - why: 写す元との差分が kotowari 固有の部分だけになって読みやすく、1つの skill の中で言語が混ざらない
+  - rejected: 全部を日本語にする。kotowari スキルとは揃うが、写す元との差分が全部の行になる
+  - decided_by: 利用者（推奨を採用）
 
 ## Undecided
