@@ -35,7 +35,7 @@ kotowari は常に、Linux と macOS を対象にする。Windows ではパス�
 - 種類: prohibition
 - 出典: docs/decision/records/records.md#P2, docs/decision/records/records.md#A100
 - 検証: review
-- 確かめ方: `crates/kotowari-core/src/ir.rs` と `crates/kotowari-core/src/lib.rs` で、仕様に列挙されていない振る舞いを黙って決めていないことを確認。`parse_document` の gherkin 解析で有効な行の種類以外を invalid_gherkin_line にし、`read_utf8_file` で読めないファイルを停止にし、`check_documents` で形に合わない見出しの下を読まないことを確認
+- 確かめ方: `crates/kotowari-core/src/ir.rs` と `crates/kotowari-core/src/lib.rs` で、仕様に列挙されていない振る舞いを黙って決めていないことを確認。`parse_document` の gherkin 解析で有効な行の種類以外を invalid_gherkin_line にし、`read_utf8_file` で読めないファイルを停止にし、`check_documents` が仕様に無い読み飛ばしを持たないことを確認
 
 kotowari は、`除外`に列挙していない入力を、`停止`も`指摘`もせずに読み飛ばしてはならない。
 
@@ -53,7 +53,7 @@ kotowari は、`設定ファイル`で`問い合わせ`を足すことをして�
 - 出典: docs/decision/records/2026-09-22-ir-engine.md#A9, docs/decision/records/2026-09-22-ir-engine.md#A20, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A36
 - 検証: unit
 
-スキーマの側から受けた値を kotowari の型へ写せないとき、または対応表（TBL-core-029）に写し先が無いとき、kotowari は TBL-core-018 に1つだけ足した理由で`停止`する。`IR`の文書が読めない、UTF-8 でないといった利用者の入力で起きる`停止`の理由と文言は変えず、スキーマを読めないことを理由とする`停止`は持たない。
+スキーマの側から受けた値を kotowari の型へ写せないとき、または対応表（TBL-core-030）に写し先が無いとき、kotowari は TBL-core-018 に1つだけ足した理由で`停止`する。`IR`の文書が読めない、UTF-8 でないといった利用者の入力で起きる`停止`の理由と文言は変えず、スキーマを読めないことを理由とする`停止`は持たない。
 
 ### REQ-core-176: 形の指摘が出た文書も文書をまたぐ検査を受ける
 

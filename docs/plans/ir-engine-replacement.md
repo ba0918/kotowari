@@ -2,7 +2,7 @@
 
 ## Goal
 
-kotowari が `IR` の Markdown の形を自前で読むのをやめ、同じ workspace の `kotowari-markdown-schema`（以下エンジン）が埋め込みのスキーマで読んだ結果を写すようになる。`kotowari check` の出力は、仕様が許す8つの差分の外で変わらない。
+kotowari が `IR` の Markdown の形を自前で読むのをやめ、同じ workspace の `kotowari-markdown-schema`（以下エンジン）が埋め込みのスキーマで読んだ結果を写すようになる。`kotowari check` の出力は、仕様が許す 16 個の差分の外で変わらない。
 
 ## Specification
 
@@ -31,7 +31,7 @@ kotowari 側（`docs/ir/core/`）:
 
 **エンジンへの機能追加を先に終わらせる。** `REQ-schema-055` は、宣言していない行の`指摘`にその行をどの規則種別として読んだかを持たせる。これが無いと kotowari は `undeclared_line` を `unknown_field` と `unknown_line` に写し分けられない（`TBL-core-030` の2行）。kotowari 側の工程がこれを待つので、独立したステップとして先に置く。
 
-**写す層を、自前の読み取りを落とす前に作る。** `TBL-core-030` の 35 行を写す関数を先に書き、既存の読み取りと並べて同じ入力で同じ`指摘`が出ることを確かめてから、自前の読み取りを落とす。落としてから写す順にすると、どのステップでも `kotowari check` が通らない時間が生まれる。
+**写す層を、自前の読み取りを落とす前に作る。** `TBL-core-030` の 39 行を写す関数を先に書き、既存の読み取りと並べて同じ入力で同じ`指摘`が出ることを確かめてから、自前の読み取りを落とす。落としてから写す順にすると、どのステップでも `kotowari check` が通らない時間が生まれる。
 
 **`docs/ir/schema/` の frontmatter は最後に外す。** 今この宣言は `mds check ./` がエンジン側の IR を検査する唯一の手がかりで、外すと検査が効かなくなる。kotowari が文書の種類でスキーマを選べるようになってから外す。
 
@@ -132,13 +132,13 @@ May change: `crates/kotowari-core/src/`（新しいモジュール）、`tests/`
 
 Done when:
 
-- `TBL-core-030` の 35 行を写す関数がある。行に無い種類と「発生しない」の行の種類を受けたときは`停止`する
+- `TBL-core-030` の 39 行を写す関数がある。行に無い種類と「発生しない」の行の種類を受けたときは`停止`する
 - `"line"` の扱いが3つとも実装されている（そのまま使う、null にする、`項目`の見出しの行に付け直す）
 - detail の材料4つがすべて使える。`抽出`の`項目`は`指摘`の行で突き合わせる
 - 新しい`停止`の理由の文言が `mapping error` で、詳細が `TBL-core-020` のとおり
 - 既存の自前の読み取りはまだ動いており、`kotowari check` の出力は変わらない
 
-Shown by: test — RED → GREEN → REFACTOR。`TBL-core-030` の 39 行のうち、写し先を持つ 24 行それぞれについて、エンジンの`指摘`を1件与えて写し先の種類・`"line"`・detail が合うことを見るテスト。「発生しない」と書いた 14 行の種類を与えると`停止`することを見るテスト（`EX-core-265`。エンジンの`指摘`の種類は 24 個で閉じているので、表に行の無い種類は作れない。「発生しない」の行で確かめる）。写せない値で`停止`することを見る1本（`EX-core-268`）。
+Shown by: test — RED → GREEN → REFACTOR。`TBL-core-030` の 39 行のうち、写し先を持つ 25 行それぞれについて、エンジンの`指摘`を1件与えて写し先の種類・`"line"`・detail が合うことを見るテスト。「発生しない」と書いた 14 行の種類を与えると`停止`することを見るテスト（`EX-core-265`。エンジンの`指摘`の種類は 24 個で閉じているので、表に行の無い種類は作れない。「発生しない」の行で確かめる）。写せない値で`停止`することを見る1本（`EX-core-268`）。
 
 Left to the implementer: 写す関数の分け方。`抽出`の`項目`を行で引くための持ち方。
 
@@ -239,14 +239,14 @@ Shown by: check — 次の順に走らせる。
 1. `CARGO_BUILD_JOBS=4 cargo test --workspace` が全件通る
 2. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format json` の終了コードが0で、`findings` が空
 3. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- status --format text` の最後の行が `complete true` で、終了コードが0。`complete true` は`問題の記録`が0件であることも求めるので、着手の前提に挙げた3件が閉じていること
-4. 置き換えの前に保存した `kotowari check --format json` の出力と `diff` を取り、差分が `REQ-core-177` の8つの範囲に収まる。このリポジトリの `IR` では差分が1件も出ない
+4. 置き換えの前に保存した `kotowari check --format json` の出力と `diff` を取り、差分が `REQ-core-177` の 16 個の範囲に収まる。このリポジトリの `IR` では差分が1件も出ない
 5. `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-markdown-schema --bin mds -- check ./` の終了コードが0（ステップ7で frontmatter を外したあとは対象が0件になる）
 6. `CARGO_BUILD_JOBS=4 cargo clippy --workspace --all-targets -- -D warnings` の誤りが基準線から増えていない。基準線は着手前に実測してあり、`crates/kotowari-core/` の 21 件（`error` で始まる行は、まとめの2行を含めて 23 行）、`crates/kotowari-markdown-schema/` は 0 件。ステップ6で自前の読み取りが減るぶん、この数は減る見込みで、減るのは構わない
 7. `CARGO_BUILD_JOBS=4 cargo +1.89.0 check -p kotowari-markdown-schema --all-targets` が通る
 
 Left to the implementer: なし。
 
-Stop and hand back if: 4 の差分が8つの範囲に収まらないとき。
+Stop and hand back if: 4 の差分が 16 個の範囲に収まらないとき。
 
 ## Verification map
 
@@ -275,7 +275,7 @@ Stop and hand back if: 4 の差分が8つの範囲に収まらないとき。
 
 - 仕様が黙っている振る舞いを決めないといけなくなったとき（`指摘`の新しい種類、`停止`の新しい理由、写し先の無いエンジンの種類）は壁打ちに戻す
 - `TBL-core-030` の行と実物のエンジンの種類に過不足が見つかったとき
-- `REQ-core-177` の8つの差分に収まらない振る舞いの差が見つかったとき
+- `REQ-core-177` の 16 個の差分に収まらない振る舞いの差が見つかったとき
 - エンジンの契約の入口6つのどれかの署名を変えないと進めないと分かったとき
 
 ## Test command

@@ -18,7 +18,7 @@
 - 出典: docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/records.md#A100, docs/decision/records/records.md#A101
 - 検証: unit
 
-対応表（TBL-core-029）に行の無い種類の`指摘`をスキーマの側から受けたとき、または写し先を「発生しない」と書いた行の種類の`指摘`を受けたとき、kotowari は`停止`し、その`指摘`を黙って捨てない。
+対応表（TBL-core-030）に行の無い種類の`指摘`をスキーマの側から受けたとき、または写し先を「発生しない」と書いた行の種類の`指摘`を受けたとき、kotowari は`停止`し、その`指摘`を黙って捨てない。
 
 ## 決定表
 
@@ -31,7 +31,7 @@
 | 列 | 中身 |
 |---|---|
 | スキーマの側の種類 | スキーマの側が出す指摘の種類 |
-| ノードの名前 | 写し先を分けるのに使う名前。使わないときは空 |
+| ノードの名前 | 写し先を分けるのに使う名前と、宣言の外の行の種別。使わないときは空 |
 | kotowari の種類 | 写し先。今のスキーマでは発生しないものは「発生しない」と書く |
 | "line" の扱い | そのまま使う、null にする（REQ-core-027 の9種類）、または`項目`の見出しの行に付け直す |
 | detail の材料 | 指摘のどの要素から作るか（読んだ行の文字そのまま、ノードの名前、文書名、`抽出`の`項目`） |
@@ -89,7 +89,7 @@ TBL-core-029 の列に沿って、スキーマの側の 24 種類をすべて並
 ```gherkin
 @id=EX-core-265 @about=REQ-core-172 @source=docs/decision/records/2026-09-22-ir-engine.md#A28,docs/decision/records/records.md#A100,docs/decision/records/records.md#A101
 Scenario: 写し先の無い指摘は停止になる
-  Given 対応表 TBL-core-029 に行の無い種類の`指摘`と、写し先を「発生しない」と書いた行の種類の`指摘`がスキーマの側から返る
+  Given 対応表 TBL-core-030 に行の無い種類の`指摘`と、写し先を「発生しない」と書いた行の種類の`指摘`がスキーマの側から返る
   When "kotowari check" を実行する
   Then どちらの場合も`停止`する
 ```

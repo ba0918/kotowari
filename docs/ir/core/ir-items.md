@@ -14,10 +14,10 @@
 ### REQ-core-043: 形に合わない見出し
 
 - 種類: event_driven
-- 出典: docs/decision/records/records.md#A52, docs/decision/records/records.md#A82, docs/decision/records/records.md#A110, docs/decision/records/records.md#A111
+- 出典: docs/decision/records/records.md#A52, docs/decision/records/records.md#A82, docs/decision/records/records.md#A110, docs/decision/records/records.md#A111, docs/decision/records/2026-09-22-ir-engine.md#A84
 - 検証: unit
 
-"### " の見出しが、REQ、TBL、PROP、FLAG のいずれかの`ID`に名前を続けた "### ID: 名前" の形でないとき、kotowari は unknown_heading の`誤り`を出す。EX の`ID`を見出しに使ったとき、および "#### " より深い見出しのときも同じである。形に合わない見出しの下の行は`項目`として読まない（`除外`）。
+"### " の見出しが、REQ、TBL、PROP、FLAG のいずれかの`ID`に名前を続けた "### ID: 名前" の形でないとき、kotowari は unknown_heading の`誤り`を出す。EX の`ID`を見出しに使ったとき、および "#### " より深い見出しのときも同じである。形に合わない見出しの下の行も`項目`の規則で読み、当てはまる`指摘`を出す。
 
 ### REQ-core-044: 知らない行
 
@@ -30,7 +30,7 @@
 ### REQ-core-045: 同じ行の重複
 
 - 種類: event_driven
-- 出典: docs/decision/records/records.md#A52, docs/decision/records/records.md#A113, docs/decision/records/2026-09-22-ir-engine.md#A75
+- 出典: docs/decision/records/records.md#A52, docs/decision/records/2026-09-22-ir-engine.md#A75
 - 検証: unit
 
 見出しの下に同じ知っている "- xxx:" の行が2つ以上あるとき、kotowari は2つ目の行に1件の duplicate_field の`誤り`を出す。3本以上あっても1件である。知らない行は重複しても unknown_field だけを出す。
