@@ -31,7 +31,7 @@ kotowari は常に、"kotowari query" で "kotowari check" と同じ設定と置
 ### REQ-core-159: query の1件の形
 
 - 種類: algorithm
-- 出典: docs/decision/records/2026-09-20-query-status.md#A2, docs/decision/records/2026-09-20-query-status.md#A3, docs/decision/records/2026-09-20-query-status.md#A4, docs/decision/records/2026-09-20-query-status.md#A16
+- 出典: docs/decision/records/2026-09-20-query-status.md#A2, docs/decision/records/2026-09-20-query-status.md#A3, docs/decision/records/2026-09-20-query-status.md#A4, docs/decision/records/2026-09-20-query-status.md#A16, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24
 - 定義: TBL-core-027
 - 検証: unit
 
@@ -55,12 +55,12 @@ kotowari は常に、"kotowari query" の "--format" の値として "json" と 
 
 ### TBL-core-027: query の1件の鍵
 
-- 出典: docs/decision/records/2026-09-20-query-status.md#A2, docs/decision/records/2026-09-20-query-status.md#A3, docs/decision/records/2026-09-20-query-status.md#A4, docs/decision/records/2026-09-20-query-status.md#A16
+- 出典: docs/decision/records/2026-09-20-query-status.md#A2, docs/decision/records/2026-09-20-query-status.md#A3, docs/decision/records/2026-09-20-query-status.md#A4, docs/decision/records/2026-09-20-query-status.md#A16, docs/decision/records/2026-09-23-ir-engine-gaps.md#A9, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24, docs/decision/records/2026-09-23-ir-engine-gaps.md#A34
 
 | 鍵 | 持つ種類 | 中身 |
 |---|---|---|
 | `TBL-core-026` のすべての鍵 | `TBL-core-026` のとおり | `TBL-core-026` のとおり |
-| body | すべて | 本文の行の並び。`項目`は見出しの次の行から、次の "### " か "## " の見出しの前の行まで。`シナリオ`は "@id" のタグの行から最後のステップの行まで。先頭と末尾の空の行は含めない。行の文字はそのまま |
+| body | すべて | 本文の行の並び。`項目`は見出しの次の行から、スキーマの側が返すその`項目`の最後の行まで。最後の行は、次の、その`項目`の見出しと同じ深さかそれより浅い見出し（"### "、"## "、"# "）の前の行（無ければ文書の最後の行）で、コードブロックの中の見出しの形の行は数えず、kotowari は生の行から見出しを探さない。`シナリオ`は "@id" のタグの行から最後のステップの行まで。先頭と末尾の空の行は含めない。行の文字はそのまま |
 | referenced_by | すべて | その `ID` を指している`項目`と`シナリオ`の並び。1件は "id"、"kind"、"path"、"line"（`TBL-core-026` と同じ意味）と "via" |
 | referenced_by の via | すべて | "definition"（"- 定義:" の行）、"relations"（"- 関係:" の行）、"about"（"@about" のタグ）、"text"（`要求`の文、`性質`の文、`シナリオ`のステップの中の、二重引用符の外でバッククォートで囲んだ `ID`。REQ-core-054 と同じ判定）のいずれか |
 
@@ -115,4 +115,18 @@ Scenario: 定義と文の中の ID が逆引きに出る
   Given IR に決定表 "TBL-001" と、"- 定義: TBL-001" の行を持つ要求 "REQ-001" と、文の中にバッククォートで囲んだ "TBL-001" を書いた要求 "REQ-002" がある
   When "kotowari query TBL-001" を実行する
   Then "items" の1件の "referenced_by" は "id" が "REQ-001" で "via" が "definition" の1件と、"id" が "REQ-002" で "via" が "text" の1件である
+
+@id=EX-core-277 @about=REQ-core-159,TBL-core-027 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A18,docs/decision/records/2026-09-23-ir-engine-gaps.md#A24
+Scenario: 本文は次の見出しの前で終わり、末尾の空行を落とす
+  Given IR の "## 要求" の節に要求 "REQ-001" と "REQ-002" がこの順にあり、"REQ-002" の文の後に空行を挟んで "## 性質" の節が続き、その下の性質 "PROP-001" が文書の最後の項目である
+  When "kotowari query REQ-001"、"kotowari query REQ-002"、"kotowari query PROP-001" を実行する
+  Then "REQ-001" の "body" は "REQ-002" の見出しの前の行までで、"REQ-002" の見出しの行を含まない
+  And "REQ-002" の "body" は文の行で終わり、末尾の空行と "## 性質" の行を含まない
+  And "PROP-001" の "body" は文書の最後の空でない行で終わる
+
+@id=EX-core-280 @about=REQ-core-159,TBL-core-027 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A34,docs/decision/records/2026-09-23-ir-engine-gaps.md#A24
+Scenario: 本文のコードブロックの中の見出しの形の行では本文を切らない
+  Given IR の要求 "REQ-001" の文の後に "```" のフェンスで囲んだブロックがあり、その中に "## 例" の行があり、ブロックの後に要求 "REQ-002" の見出しが続く
+  When "kotowari query REQ-001" を実行する
+  Then "REQ-001" の "body" はフェンスの閉じる行までを含み、"## 例" の行で終わらない
 ```

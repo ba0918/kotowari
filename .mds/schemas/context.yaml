@@ -1,6 +1,7 @@
 # kotowari の IR の用語集（CONTEXT.md）の書式
 name: ir-context
 open: false
+reading: line
 document:
   title:
     pattern: "^用語集$"
@@ -15,6 +16,7 @@ document:
     table:
       repeat: { min: 1 }
       header: [用語, 意味, 出典]
+      select: first
       extract:
         path: glossary
         value: value

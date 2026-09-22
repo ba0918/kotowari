@@ -52,8 +52,7 @@ fn req_035_multiple_titles() {
     let findings = check(&[doc], &default_config());
     let mt = find_by_kind(&findings, "multiple_titles");
     assert_eq!(mt.len(), 1);
-    // TBL-core-030: detail は`抽出`の`題名`
-    assert_eq!(mt[0].detail, "First");
+    assert_eq!(mt[0].detail, "Second");
 }
 
 // --- REQ-core-036: 範囲の行が無い ---
@@ -505,18 +504,18 @@ fn req_098_missing_field() {
 fn req_098_review_requirement_without_how_to_verify_is_a_missing_field() {
     let requirement = |id: &str, verification: &str, how_to_verify: &str| {
         format!(
-            "### {id}: 例\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: {verification}\n{how_to_verify}\n\n文である。\n\n"
+            "### {id}: 例\n\n- 種類: ubiquitous\n- 出典: brainstorm/records.md#A1\n- 検証: {verification}\n{how_to_verify}\n文である。\n\n"
         )
     };
     let content = format!(
         "# Title\n\nScope.\n\n## 要求\n\n{}{}{}{}",
         // 7 行目: 検証が review で行が無い
         requirement("REQ-001", "review", ""),
-        // 16 行目: 検証が review で行がある
+        // 15 行目: 検証が review で行がある
         requirement("REQ-002", "review", "- 確かめ方: 手で見る\n"),
-        // 26 行目: 検証が unit で行が無い
+        // 24 行目: 検証が unit で行が無い
         requirement("REQ-003", "unit", ""),
-        // 35 行目: 検証が review で値が空（REQ-core-098: 行が在るものとして扱う）
+        // 32 行目: 検証が review で値が空（REQ-core-098: 行が在るものとして扱う）
         requirement("REQ-004", "review", "- 確かめ方:\n"),
     );
     let doc = ir::parse_document("a.md", &content).unwrap();
@@ -2407,14 +2406,16 @@ fn req_043_four_hashes_without_trailing_space_is_not_unknown_heading() {
 // @kotowari[REQ-core-043]
 #[test]
 fn req_043_bare_four_hashes_is_an_empty_deeper_heading() {
-    // "####" だけの行は中身の空の4段目の見出しで、unknown_heading になる
+    // "####" だけの行は CommonMark の ATX 見出し（空の深さ4の見出し）なので、
+    // "#### " より深い見出しと同じく unknown_heading になる
     let content = "# Title\n\nScope.\n\n## 要求\n\n####\n";
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uh = find_by_kind(&findings, "unknown_heading");
-    assert_eq!(uh.len(), 1, "{:?}", uh);
-    assert_eq!(uh[0].detail, "####");
+    assert_eq!(uh.len(), 1, "{:?}", findings);
     assert_eq!(uh[0].line, Some(7));
+    assert_eq!(uh[0].detail, "####");
+    assert!(find_by_kind(&findings, "unknown_line").is_empty(), "{:?}", findings);
 }
 
 // --- REQ-core-112: 閉じないコードブロックの前の指摘・項目は残る ---
@@ -3300,4 +3301,159 @@ fn req_045_two_how_to_verify_lines_under_a_requirement_is_a_duplicate_field() {
     let duplicates = find_by_kind(&findings, "duplicate_field");
     assert_eq!(duplicates.len(), 1, "the second line is a duplicate: {duplicates:?}");
     assert_eq!(duplicates[0].detail, "確かめ方");
+}
+
+// --- REQ-core-178: 見出しの下の行は1行ずつ文として読む ---
+
+/// 要求を1つ持つ話題の文書。`fields` は "- 種類:" と "- 出典:" の後に続く行
+fn topic_with_requirement(fields: &str) -> String {
+    format!(
+        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n{fields}"
+    )
+}
+
+/// 指定した種類の指摘のうち、指定した文書を指すもの
+fn kinds_on(v: &serde_json::Value, path: &str) -> Vec<String> {
+    v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["path"] == path)
+        .map(|f| f["kind"].as_str().unwrap().to_string())
+        .collect()
+}
+
+// @kotowari[EX-core-273, REQ-core-178]
+#[test]
+fn ex_core_273_statement_right_after_a_field_line_is_not_part_of_its_value() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    std::fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        topic_with_requirement("- 検証: review\n検証の次の文。\n- 確かめ方: 見る\n確かめ方の次の文。\n"),
+    )
+    .unwrap();
+    let v = run_cli(tmp.path());
+    let kinds = kinds_on(&v, "docs/ir/a.md");
+    for kind in ["missing_statement", "verification_invalid", "requirement_without_test"] {
+        assert!(!kinds.iter().any(|k| k == kind), "{kind} が出た: {v}");
+    }
+}
+
+// @kotowari[EX-core-274]
+#[test]
+fn ex_core_274_indented_quote_and_html_lines_are_statements_checked_for_backticks() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    // 行番号: 字下げした行が13行目、引用が14行目、HTML が15行目
+    std::fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        topic_with_requirement("- 検証: unit\n\n  `字下げ\n> `引用\n<div>`HTML</div>\n"),
+    )
+    .unwrap();
+    let v = run_cli(tmp.path());
+    for line in [13, 14, 15] {
+        let on_line: Vec<_> = findings_on_line(&v, "docs/ir/a.md", line)
+            .into_iter()
+            .filter(|f| f["kind"] == "unclosed_backtick")
+            .collect();
+        assert_eq!(on_line.len(), 1, "{line} 行目: {v}");
+    }
+}
+
+// @kotowari[EX-core-275]
+#[test]
+fn ex_core_275_pipe_line_that_is_not_a_table_is_checked_as_a_statement() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    // 行番号: 縦棒の行が13行目
+    std::fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        topic_with_requirement("- 検証: unit\n\n| a | `x |\n"),
+    )
+    .unwrap();
+    let v = run_cli(tmp.path());
+    let on_line = findings_on_line(&v, "docs/ir/a.md", 13);
+    assert_eq!(
+        on_line
+            .iter()
+            .filter(|f| f["kind"] == "unclosed_backtick")
+            .count(),
+        1,
+        "{v}"
+    );
+    assert!(!kinds_on(&v, "docs/ir/a.md").iter().any(|k| k == "unknown_line"), "{v}");
+}
+
+// @kotowari[EX-core-276]
+#[test]
+fn ex_core_276_flag_entries_without_a_section_are_read() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    std::fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        topic_with_requirement("- 検証: review\n- 確かめ方: 人が読む\n\n文である。\n"),
+    )
+    .unwrap();
+    let flag = |id: &str| {
+        format!(
+            "### {id}: 例\n\n- 種類: gap\n- 関係: REQ-001\n- 出典: docs/decision/records/records.md#A1\n\n本文。\n"
+        )
+    };
+    std::fs::write(
+        tmp.path().join("docs/ir/FLAGS.md"),
+        format!("# 問題の記録\n\n{}", flag("FLAG-001")),
+    )
+    .unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/ir/sub")).unwrap();
+    std::fs::write(
+        tmp.path().join("docs/ir/sub/FLAGS.md"),
+        format!(
+            "# 問題の記録\n\n{}\n## 問題の記録\n\n{}",
+            flag("FLAG-002"),
+            flag("FLAG-003")
+        ),
+    )
+    .unwrap();
+    let v = run_cli(tmp.path());
+    for path in ["docs/ir/FLAGS.md", "docs/ir/sub/FLAGS.md"] {
+        let kinds = kinds_on(&v, path);
+        for kind in ["unknown_heading", "unknown_field", "unknown_line"] {
+            assert!(!kinds.iter().any(|k| k == kind), "{path} に {kind}: {v}");
+        }
+    }
+    let output = assert_cmd::Command::cargo_bin("kotowari")
+        .unwrap()
+        .arg("status")
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    let status: serde_json::Value =
+        serde_json::from_str(&String::from_utf8_lossy(&output.stdout)).expect("valid JSON");
+    assert_eq!(status["items"]["flag"], 3, "{status}");
+}
+
+// @kotowari[EX-core-278]
+#[test]
+fn ex_core_278_three_titles_give_one_multiple_titles_per_extra_title() {
+    use tempfile::TempDir;
+    let tmp = TempDir::new().unwrap();
+    make_cli_project(tmp.path());
+    std::fs::write(tmp.path().join("docs/ir/a.md"), "# 一\n\n範囲。\n\n# 二\n\n#  三  \n").unwrap();
+    let v = run_cli(tmp.path());
+    let multiple: Vec<_> = v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["path"] == "docs/ir/a.md" && f["kind"] == "multiple_titles")
+        .cloned()
+        .collect();
+    assert!(multiple.iter().all(|f| f["line"].is_null()), "{v}");
+    let mut details: Vec<&str> = multiple.iter().map(|f| f["detail"].as_str().unwrap()).collect();
+    details.sort_unstable();
+    assert_eq!(details, vec!["三", "二"], "detail は2つ目と3つ目の題名: {v}");
 }

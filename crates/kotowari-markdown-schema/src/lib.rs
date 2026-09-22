@@ -11,5 +11,6 @@ pub mod document;
 pub mod extract;
 pub mod finding;
 pub mod frontmatter;
+mod line_reading;
 pub mod schema;
 pub mod validate;

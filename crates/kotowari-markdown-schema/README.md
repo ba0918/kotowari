@@ -79,9 +79,9 @@ $ mds values docs/adr/0001.md --format json
 | Rule | Validates | Can hold |
 |---|---|---|
 | `title` | the `#` heading | a pattern, a named-group capture |
-| `preamble` | everything between the title and the first `##` | fields, statements, bullets, a table, a code block |
+| `preamble` | everything between the title and the first `##` (or the first `###` when `document.item` is declared) | fields, statements, bullets, a table, a code block |
 | `sections` | `##` headings | fields, statements, bullets, a table, a code block, items |
-| `item` | `### ID: Name` headings | fields, statements, bullets, a table, a code block |
+| `item` | `### ID: Name` headings, under a section or (as `document.item`) before the first section | fields, statements, bullets, a table, a code block |
 | `field` | `- Name: value` lines | a pattern, an enum, a separator, a condition |
 | `statement` | prose paragraphs | a pattern, an enum, a condition |
 | `bullets` | list lines that are not fields | a pattern, nested children |
@@ -94,6 +94,16 @@ A rule can be made conditional on another field's value with `when: { field: X, 
 Validation is **closed-world** by default: a heading or a line the schema never declared is an
 error. `open: true` in the schema, or `--open` on the command line, relaxes that for undeclared
 structures — but never for a missing requirement or a violated pattern.
+
+`reading` at the top of the schema chooses how the lines under a heading are read. The default,
+`reading: paragraph`, reads them as CommonMark does: consecutive lines form one statement, a line
+right after a list line belongs to that line, and block quotes, horizontal rules, HTML and
+image-only lines are not statements. `reading: line` reads every line on its own: each line that
+is not a heading, a list line, part of a table or part of a fenced code block is one statement,
+including a quote, HTML, a `---` or `===` line, and a line indented after a blank line.
+Headings (CommonMark ATX headings: up to three leading spaces, one to six `#`, then a space or
+the end of the line), list lines and their indented children, GFM tables (with or without
+leading pipes) and fenced code blocks read the same either way. Any other value stops.
 
 ## Extraction
 
@@ -130,8 +140,10 @@ A node that declares `value` or `of` comes back as an object per element, with t
 value under the `value` key and the derived values under the `of` keys. A table is split into one
 element per data row, a bullet list into one per line and a code block into one per block. A
 statement is split into one element per line only when it declares `of`; with `value` alone it
-stays a single string wrapped in one object. The four derived values are `line`, `id`, `name` and
-`raw` (the raw line, with its original indentation and trailing spaces):
+stays a single string wrapped in one object. The five derived values are `line`, `id`, `name`,
+`raw` (the raw line, with its original indentation and trailing spaces) and `end`. `end`, for
+items and sections only, is the line before the next heading at the same depth or shallower
+(or the document's last line), trailing blank lines included:
 
 ```yaml
 table:
@@ -150,9 +162,16 @@ table:
 
 Row keys come from the schema's `header`, or, when no `header` is declared, from the column
 position (each row is an array). The document's own header row is never used as a key.
+Cells beyond the document's header row are dropped; a row with fewer cells than the header is an
+error when the schema declares a `header`.
+
+A table rule that declares `header` can add `select: first`. Only the first table in that node
+whose header matches is then the rule's table, for both validation and extraction; every other
+table there is treated as undeclared. `select` without `header`, or with any value other than
+`first`, stops.
 
 Extracted values are strings; no type conversion is applied. Line numbers placed with `of`
-are the one exception, and are numbers.
+(`line` and `end`) are the one exception, and are numbers.
 
 ## Commands and exit codes
 

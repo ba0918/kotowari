@@ -4,13 +4,21 @@ use crate::document::{
     Block, Document, Item as DocItem, RawLine, Section as DocSection, join_continuation,
 };
 use crate::schema::{
-    Bullets, Children, CodeBlock, Extract, Field, OfKind, Schema, Statement, Table,
+    Bullets, Children, CodeBlock, Extract, Field, OfKind, Reading, Schema, Statement, Table,
     is_declared_field, item_internals_declare_extract,
 };
 use serde_json::{Map, Value};
 
 /// `values` の出力。配置パスに沿った入れ子の JSON。
 pub fn extract_values(schema: &Schema, document: &Document) -> Value {
+    let by_line;
+    let document = match schema.reading {
+        Reading::Paragraph => document,
+        Reading::Line => {
+            by_line = document.read_by_line();
+            &by_line
+        }
+    };
     let mut root = Map::new();
     extract_title(schema, document, &mut root);
     if let Some(preamble) = &schema.document.preamble {
@@ -24,11 +32,22 @@ pub fn extract_values(schema: &Schema, document: &Document) -> Value {
             document,
             &mut root,
         );
-        extract_table(preamble.table.as_ref(), &blocks, document, &mut root);
+        extract_table(
+            preamble.table.as_ref(),
+            &[blocks.as_slice()],
+            document,
+            &mut root,
+        );
         extract_codeblock(preamble.codeblock.as_ref(), &blocks, document, &mut root);
     }
     for def in &schema.document.sections {
         extract_section(def, document, &mut root);
+    }
+    if let Some(item) = &schema.document.item {
+        // 文書の直下の項目（REQ-schema-061）
+        let items = document.preamble_items();
+        let items: Vec<&DocItem> = items.iter().collect();
+        extract_items(item, &items, document, &mut root);
     }
     Value::Object(root)
 }
@@ -99,7 +118,10 @@ fn extract_section(
                     extract,
                     document,
                     Value::String(section_body(s, def)),
-                    &Derived::at(s.line),
+                    &Derived {
+                        end: Some(document.end_line(s.line, 2)),
+                        ..Derived::at(s.line)
+                    },
                 )
             })
             .collect();
@@ -110,36 +132,52 @@ fn extract_section(
     extract_fields(&def.fields, &blocks, document, root);
     extract_statement(def.statement.as_ref(), &blocks, document, root);
     extract_bullets(&def.fields, def.bullets.as_ref(), &blocks, document, root);
-    extract_table(def.table.as_ref(), &blocks, document, root);
+    // select は節の出現ごとに選ぶ。検査も出現ごとに選ぶので、両者が同じ表を指す（REQ-schema-059）
+    let per_occurrence: Vec<Vec<&Block>> = occurrences
+        .iter()
+        .map(|s| s.blocks.iter().collect())
+        .collect();
+    let groups: Vec<&[&Block]> = per_occurrence.iter().map(Vec::as_slice).collect();
+    extract_table(def.table.as_ref(), &groups, document, root);
     extract_codeblock(def.codeblock.as_ref(), &blocks, document, root);
 
-    if let Some(item) = &def.item
-        && let Some(extract) = &item.extract
-    {
+    if let Some(item) = &def.item {
         let items: Vec<&DocItem> = occurrences.iter().flat_map(|s| s.items.iter()).collect();
-        if items.is_empty() {
-            // 0件のときはキーを省略する（REQ-schema-038）
-        } else {
-            // 内部が extract を宣言したか、項目が value か of を宣言していれば
-            // 項目ごとのオブジェクトにする（REQ-schema-047）
-            let as_object = item_internals_declare_extract(item)
-                || extract.has_of()
-                || extract.value().is_some();
-            let one = |i: &DocItem| {
-                if as_object {
-                    item_object(i, item, document)
-                } else {
-                    item_value(i, item)
-                }
-            };
-            let value = if item.repeat.is_some() {
-                Value::Array(items.iter().map(|i| one(i)).collect())
-            } else {
-                one(items[0])
-            };
-            place(root, extract.path(), value);
-        }
+        extract_items(item, &items, document, root);
     }
+}
+
+/// 項目の並びを、項目の規則の `extract` に沿って置く。
+fn extract_items(
+    item: &crate::schema::Item,
+    items: &[&DocItem],
+    document: &Document,
+    root: &mut Map<String, Value>,
+) {
+    let Some(extract) = &item.extract else {
+        return;
+    };
+    if items.is_empty() {
+        // 0件のときはキーを省略する（REQ-schema-038）
+        return;
+    }
+    // 内部が extract を宣言したか、項目が value か of を宣言していれば
+    // 項目ごとのオブジェクトにする（REQ-schema-047）
+    let as_object =
+        item_internals_declare_extract(item) || extract.has_of() || extract.value().is_some();
+    let one = |i: &DocItem| {
+        if as_object {
+            item_object(i, item, document)
+        } else {
+            item_value(i, item)
+        }
+    };
+    let value = if item.repeat.is_some() {
+        Value::Array(items.iter().map(|i| one(i)).collect())
+    } else {
+        one(items[0])
+    };
+    place(root, extract.path(), value);
 }
 
 fn extract_fields(
@@ -416,7 +454,7 @@ fn element_with_children(block: &Block, children: Option<&Children>) -> String {
 
 fn extract_table(
     table: Option<&Table>,
-    blocks: &[&Block],
+    groups: &[&[&Block]],
     doc: &Document,
     root: &mut Map<String, Value>,
 ) {
@@ -426,10 +464,16 @@ fn extract_table(
     let Some(extract) = &table.extract else {
         return;
     };
-    let tables: Vec<&Block> = blocks
+    // select で選ばれなかった表は抽出しない（REQ-schema-059）。選ぶのはノードの出現ごと
+    let tables: Vec<&Block> = groups
         .iter()
-        .copied()
-        .filter(|b| matches!(b, Block::Table { .. }))
+        .flat_map(|blocks| {
+            let selection = table.selected_line(blocks.iter().copied());
+            blocks
+                .iter()
+                .copied()
+                .filter(move |b| matches!(b, Block::Table { line, .. } if selection.takes(*line)))
+        })
         .collect();
     if tables.is_empty() {
         // 0件のときはキーを省略する（REQ-schema-038）
@@ -542,7 +586,12 @@ fn item_object(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) 
         doc,
         &mut object,
     );
-    extract_table(item_rule.table.as_ref(), &blocks, doc, &mut object);
+    extract_table(
+        item_rule.table.as_ref(),
+        &[blocks.as_slice()],
+        doc,
+        &mut object,
+    );
     extract_codeblock(item_rule.codeblock.as_ref(), &blocks, doc, &mut object);
     if let Some(extract) = &item_rule.extract {
         // path は項目オブジェクトそのものの置き場なので、ここでは置かない
@@ -550,6 +599,7 @@ fn item_object(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) 
             line: Some(item.line),
             id: Some(item.id.clone()),
             name: Some(item.title.clone()),
+            end: Some(doc.end_line(item.line, 3)),
         };
         if let Some(key) = extract.value() {
             place(
@@ -636,6 +686,8 @@ struct Derived {
     line: Option<usize>,
     id: Option<String>,
     name: Option<String>,
+    /// 要素の最後の行。項目と節だけが持つ（REQ-schema-062）
+    end: Option<usize>,
 }
 
 impl Derived {
@@ -698,6 +750,7 @@ fn place_derived(map: &mut Map<String, Value>, extract: &Extract, doc: &Document
                 .map(|raw| Value::String(raw.to_string())),
             OfKind::Id => got.id.clone().map(Value::String),
             OfKind::Name => got.name.clone().map(Value::String),
+            OfKind::End => got.end.map(Value::from),
         };
         if let Some(value) = value {
             place(map, key, value);

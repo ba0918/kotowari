@@ -1,5 +1,6 @@
 //! スキーマ YAML のモデルと読み込み。
 
+use crate::document::Block;
 use regex::Regex;
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer};
@@ -57,8 +58,22 @@ pub struct Schema {
     /// 閉じた世界を緩めるか（REQ-schema-002）
     #[serde(default)]
     pub open: bool,
+    /// 見出しの下の行の読み方（REQ-schema-060）。書かないときは段落で読む
+    #[serde(default)]
+    pub reading: Reading,
     /// 文書の構造の木
     pub document: Document,
+}
+
+/// 見出しと前置部の下の行の読み方（REQ-schema-060、TBL-schema-011）。
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Reading {
+    /// CommonMark の段落として読む
+    #[default]
+    Paragraph,
+    /// 1行ずつ読み分ける
+    Line,
 }
 
 /// `document` の下の規則種別（TBL-schema-004）。
@@ -69,6 +84,8 @@ pub struct Document {
     pub preamble: Option<Preamble>,
     #[serde(default)]
     pub sections: Vec<Section>,
+    /// 節を挟まずに文書の直下に置く項目（REQ-schema-016、REQ-schema-061）
+    pub item: Option<Item>,
 }
 
 /// 題名（TBL-schema-004、REQ-schema-022）。
@@ -210,9 +227,56 @@ pub struct Bullets {
 pub struct Table {
     /// ヘッダのセル列。宣言しないときはヘッダと列数を検査しない（REQ-schema-033）
     pub header: Option<Vec<String>>,
+    /// 同じノードの中の表のうち、どれをこの規則の表にするか（REQ-schema-059）。
+    /// 書かないときはすべての表がこの規則の表になる
+    pub select: Option<Select>,
     pub required: Option<bool>,
     pub repeat: Option<Repeat>,
     pub extract: Option<Extract>,
+}
+
+/// 表の規則の `select`（REQ-schema-059）。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Select {
+    /// ヘッダが宣言と合う最初の表だけ
+    First,
+}
+
+impl Table {
+    /// `blocks` の表のうち、この規則の表にするものの開始行。`select` を書かない
+    /// 規則はすべての表を受けるので None を返す（REQ-schema-059）。
+    pub(crate) fn selected_line<'a>(
+        &self,
+        blocks: impl IntoIterator<Item = &'a Block>,
+    ) -> Selection {
+        let (Some(Select::First), Some(expected)) = (self.select, &self.header) else {
+            return Selection::All;
+        };
+        Selection::Only(blocks.into_iter().find_map(|block| match block {
+            Block::Table { header, line, .. } if header == expected => Some(*line),
+            _ => None,
+        }))
+    }
+}
+
+/// 表の規則がどの表を受けるか。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Selection {
+    /// すべての表
+    All,
+    /// この開始行の表だけ。None ならどの表も受けない
+    Only(Option<usize>),
+}
+
+impl Selection {
+    /// 開始行 `line` の表を受けるか。
+    pub(crate) fn takes(self, line: usize) -> bool {
+        match self {
+            Selection::All => true,
+            Selection::Only(selected) => selected == Some(line),
+        }
+    }
 }
 
 /// コードブロック（TBL-schema-004、REQ-schema-034）。
@@ -278,6 +342,21 @@ pub enum OfKind {
     Name,
     /// 生の行。字下げと末尾の空白を含み、組み立て直さない
     Raw,
+    /// 項目と節の最後の行（1始まりの数値。REQ-schema-062）
+    End,
+}
+
+impl OfKind {
+    /// スキーマに書く語。
+    fn word(self) -> &'static str {
+        match self {
+            OfKind::Line => "line",
+            OfKind::Id => "id",
+            OfKind::Name => "name",
+            OfKind::Raw => "raw",
+            OfKind::End => "end",
+        }
+    }
 }
 
 /// 1つのノードが宣言した抽出規則。YAML では `配置パス`だけの略記か、
@@ -441,11 +520,59 @@ fn validate_schema(schema: &Schema) -> Result<(), SchemaError> {
     for section in &schema.document.sections {
         validate_section(section)?;
     }
-    Ok(())
+    if let Some(item) = &schema.document.item {
+        validate_item(item)?;
+    }
+    reject_colliding_root_paths(&schema.document)
+}
+
+/// 要素オブジェクトの外、文書の値の根に置く配置パスの衝突を停止にする（TBL-schema-009）。
+/// 題名・前置部・節・項目と、それらの直下のノードの配置パスはすべて同じ置き場に並ぶ。
+fn reject_colliding_root_paths(document: &Document) -> Result<(), SchemaError> {
+    let mut paths: Vec<String> = Vec::new();
+    let mut push = |extract: Option<&Extract>| {
+        if let Some(extract) = extract {
+            paths.push(extract.path().to_string());
+        }
+    };
+    push(document.title.as_ref().and_then(|t| t.extract.as_ref()));
+    if let Some(preamble) = &document.preamble {
+        for field in &preamble.fields {
+            push(field.extract.as_ref());
+        }
+        push(preamble.statement.as_ref().and_then(|s| s.extract.as_ref()));
+        push(preamble.bullets.as_ref().and_then(|b| b.extract.as_ref()));
+        push(preamble.table.as_ref().and_then(|t| t.extract.as_ref()));
+        push(preamble.codeblock.as_ref().and_then(|c| c.extract.as_ref()));
+    }
+    for section in &document.sections {
+        push(section.extract.as_ref());
+        for field in &section.fields {
+            push(field.extract.as_ref());
+        }
+        push(section.statement.as_ref().and_then(|s| s.extract.as_ref()));
+        push(section.bullets.as_ref().and_then(|b| b.extract.as_ref()));
+        push(section.table.as_ref().and_then(|t| t.extract.as_ref()));
+        push(section.codeblock.as_ref().and_then(|c| c.extract.as_ref()));
+        push(section.item.as_ref().and_then(|i| i.extract.as_ref()));
+    }
+    push(document.item.as_ref().and_then(|i| i.extract.as_ref()));
+    // 箇条書きの子フィールドも、その箇条書きの置き場（根）に値を出す
+    if let Some(bullets) = document.preamble.as_ref().and_then(|p| p.bullets.as_ref()) {
+        collect_children_extract_paths(bullets, &mut paths);
+    }
+    for section in &document.sections {
+        if let Some(bullets) = &section.bullets {
+            collect_children_extract_paths(bullets, &mut paths);
+        }
+    }
+    let keys: Vec<&str> = paths.iter().map(String::as_str).collect();
+    reject_colliding_keys(&keys, "document")
 }
 
 fn validate_title(title: &Title) -> Result<(), SchemaError> {
     reject_item_only_of(title.extract.as_ref(), "title")?;
+    reject_end_of(title.extract.as_ref(), "title")?;
     reject_duplicate_element_keys(title.extract.as_ref(), "title", &[])?;
     let Some(group) = title.extract.as_ref().and_then(Extract::group) else {
         return Ok(());
@@ -564,8 +691,13 @@ fn validate_table(table: Option<&Table>) -> Result<(), SchemaError> {
         if let Some(repeat) = &table.repeat {
             repeat.validate()?;
         }
+        // どの表を選ぶかはヘッダで決めるので、ヘッダの無い select は停止にする（TBL-schema-009）
+        if table.select.is_some() && table.header.is_none() {
+            return Err(SchemaError("table select requires a header".into()));
+        }
         reject_capture_extract(table.extract.as_ref(), "table")?;
         reject_item_only_of(table.extract.as_ref(), "table")?;
+        reject_end_of(table.extract.as_ref(), "table")?;
         reject_duplicate_element_keys(table.extract.as_ref(), "table", &[])?;
     }
     Ok(())
@@ -585,11 +717,17 @@ fn reject_duplicate_element_keys(
         keys.extend(extract.of().iter().map(|(key, _)| key.as_str()));
     }
     keys.extend(internal.iter().map(String::as_str));
+    reject_colliding_keys(&keys, &format!("{node} element object"))
+}
+
+/// 同じ置き場の配置パスのうち、同じパスか一方が他方の手前の段にあたるものを停止にする
+/// （TBL-schema-009）。`a.b` と `a.c` は別の鍵、`a` と `a.b` は衝突とする。
+fn reject_colliding_keys(keys: &[&str], place: &str) -> Result<(), SchemaError> {
     for (index, key) in keys.iter().enumerate() {
         for other in &keys[index + 1..] {
             if key == other || is_ancestor_path(key, other) || is_ancestor_path(other, key) {
                 return Err(SchemaError(format!(
-                    "{node} element object has the key \"{key}\" twice (conflicts with \"{other}\")"
+                    "{place} has the key \"{key}\" twice (conflicts with \"{other}\")"
                 )));
             }
         }
@@ -610,6 +748,7 @@ fn validate_codeblock(codeblock: Option<&CodeBlock>) -> Result<(), SchemaError> 
         }
         reject_capture_extract(codeblock.extract.as_ref(), "codeblock")?;
         reject_item_only_of(codeblock.extract.as_ref(), "codeblock")?;
+        reject_end_of(codeblock.extract.as_ref(), "codeblock")?;
         reject_duplicate_element_keys(codeblock.extract.as_ref(), "codeblock", &[])?;
     }
     Ok(())
@@ -625,6 +764,7 @@ fn validate_fields(fields: &[Field]) -> Result<(), SchemaError> {
         }
         reject_capture_extract(field.extract.as_ref(), "field")?;
         reject_item_only_of(field.extract.as_ref(), "field")?;
+        reject_end_of(field.extract.as_ref(), "field")?;
         reject_duplicate_element_keys(field.extract.as_ref(), "field", &[])?;
     }
     Ok(())
@@ -640,6 +780,7 @@ fn validate_statement(statement: Option<&Statement>) -> Result<(), SchemaError> 
         }
         reject_capture_extract(statement.extract.as_ref(), "statement")?;
         reject_item_only_of(statement.extract.as_ref(), "statement")?;
+        reject_end_of(statement.extract.as_ref(), "statement")?;
         reject_duplicate_element_keys(statement.extract.as_ref(), "statement", &[])?;
     }
     Ok(())
@@ -662,6 +803,7 @@ fn validate_bullets(bullets: Option<&Bullets>, in_children: bool) -> Result<(), 
             reject_capture_extract(bullets.extract.as_ref(), "bullets")?;
         }
         reject_item_only_of(bullets.extract.as_ref(), "bullets")?;
+        reject_end_of(bullets.extract.as_ref(), "bullets")?;
         reject_duplicate_element_keys(bullets.extract.as_ref(), "bullets", &[])?;
         if let Some(children) = &bullets.children {
             validate_fields(&children.fields)?;
@@ -682,6 +824,17 @@ fn reject_capture_extract(extract: Option<&Extract>, node: &str) -> Result<(), S
     Ok(())
 }
 
+/// 項目と節の外のノードには `of` の `end` を宣言できない（REQ-schema-048）。
+fn reject_end_of(extract: Option<&Extract>, node: &str) -> Result<(), SchemaError> {
+    let Some(extract) = extract else {
+        return Ok(());
+    };
+    if extract.of().iter().any(|(_, kind)| *kind == OfKind::End) {
+        return Err(SchemaError(format!("{node} extract cannot use of: end")));
+    }
+    Ok(())
+}
+
 /// 項目の外のノードには `of` の `id` と `name` を宣言できない（REQ-schema-048）。
 fn reject_item_only_of(extract: Option<&Extract>, node: &str) -> Result<(), SchemaError> {
     let Some(extract) = extract else {
@@ -691,12 +844,7 @@ fn reject_item_only_of(extract: Option<&Extract>, node: &str) -> Result<(), Sche
         if matches!(kind, OfKind::Id | OfKind::Name) {
             return Err(SchemaError(format!(
                 "{node} extract cannot use of: {}",
-                match kind {
-                    OfKind::Id => "id",
-                    OfKind::Name => "name",
-                    OfKind::Line => "line",
-                    OfKind::Raw => "raw",
-                }
+                kind.word()
             )));
         }
     }

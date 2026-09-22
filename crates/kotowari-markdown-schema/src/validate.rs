@@ -3,13 +3,21 @@
 use crate::document::{Block, Document, Heading, Item};
 use crate::finding::{Finding, FindingKind, RuleKind};
 use crate::schema::{
-    Bullets, Children, CodeBlock, Field, Item as ItemRule, Preamble, Repeat, Schema, Section,
-    Statement, Table, Title, When, is_declared_field,
+    Bullets, Children, CodeBlock, Field, Item as ItemRule, Preamble, Reading, Repeat, Schema,
+    Section, Statement, Table, Title, When, is_declared_field,
 };
 use std::collections::HashMap;
 
 /// スキーマと文書の木から指摘を集める。`open` は閉じた世界を緩めるか（スキーマの `open` と CLI の `--open` を合わせた値）。
 pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding> {
+    let by_line;
+    let document = match schema.reading {
+        Reading::Paragraph => document,
+        Reading::Line => {
+            by_line = document.read_by_line();
+            &by_line
+        }
+    };
     let mut findings = Vec::new();
     let doc_rule = &schema.document;
 
@@ -66,7 +74,12 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
                     Some(section.line),
                     &mut findings,
                 );
-                validate_items(def, &section.items, Some(section.line), &mut findings);
+                validate_items(
+                    def.item.as_ref(),
+                    &section.items,
+                    Some(section.line),
+                    &mut findings,
+                );
             }
             None => {
                 // 宣言していない節は、閉じた世界で見出しと内側の行を誤りにする
@@ -117,7 +130,21 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
     // 中の未宣言の構造として open でも undeclared_heading、その内側の行は
     // undeclared_line にする（REQ-schema-003）。前置部が未宣言のときは閉じた世界だけで
     // 同じ扱いになり、open では未宣言の構造ごと許す。
-    for stray in &document.stray_preamble_headings {
+    if doc_rule.item.is_some() {
+        // 文書の直下の項目を宣言したスキーマでは、最初の節より前の深さ3の見出しを
+        // その項目として読む（REQ-schema-061）。含む節が無いので欠落の指摘は行を持たない
+        validate_items(
+            doc_rule.item.as_ref(),
+            &document.preamble_items(),
+            None,
+            &mut findings,
+        );
+    }
+    for stray in document
+        .stray_preamble_headings
+        .iter()
+        .filter(|_| doc_rule.item.is_none())
+    {
         let in_declared_preamble = !stray.before_title && doc_rule.preamble.is_some();
         if in_declared_preamble || !open {
             findings.push(Finding::at(
@@ -151,11 +178,14 @@ fn validate_title(title: &Title, headings: &[Heading], findings: &mut Vec<Findin
             FindingKind::MissingTitle,
             "the document has no level-1 heading".into(),
         )),
-        n if n > 1 => findings.push(Finding::at(
-            FindingKind::MultipleTitles,
-            headings[1].line,
-            "the document has more than one level-1 heading".into(),
-        )),
+        // 2つ目以降の題名ごとに1件（REQ-schema-022）
+        n if n > 1 => findings.extend(headings[1..].iter().map(|heading| {
+            Finding::at(
+                FindingKind::MultipleTitles,
+                heading.line,
+                "the document has more than one level-1 heading".into(),
+            )
+        })),
         _ => {
             let heading = &headings[0];
             if let Some(pattern) = &title.pattern
@@ -176,12 +206,12 @@ fn validate_title(title: &Title, headings: &[Heading], findings: &mut Vec<Findin
 }
 
 fn validate_items(
-    section: &Section,
+    item_rule: Option<&ItemRule>,
     items: &[Item],
     container_line: Option<usize>,
     findings: &mut Vec<Finding>,
 ) {
-    let Some(item_rule) = &section.item else {
+    let Some(item_rule) = item_rule else {
         // 宣言済みの節の中に足された未宣言の項目。open でも見出しと内側の行を誤りにする（REQ-schema-003、REQ-schema-027）
         for item in items {
             findings.push(Finding::at(
@@ -551,6 +581,7 @@ fn validate_container(
     let mut table_lines: Vec<usize> = Vec::new();
     let mut code_lines: Vec<usize> = Vec::new();
     let mut ordered_seen: Vec<(usize, usize)> = Vec::new();
+    let table_selection = rules.table.map(|table| table.selected_line(blocks));
 
     for block in blocks {
         match block {
@@ -598,11 +629,12 @@ fn validate_container(
                 line,
                 row_lines,
             } => match rules.table {
-                Some(table) => {
+                // select で選ばれなかった表は宣言していない表として扱う（REQ-schema-059）
+                Some(table) if table_selection.is_none_or(|s| s.takes(*line)) => {
                     table_lines.push(*line);
                     validate_table_shape(table, header, rows, *line, row_lines, findings);
                 }
-                None => {
+                _ => {
                     if !open {
                         push_undeclared_line(findings, block);
                     }
@@ -787,8 +819,9 @@ fn validate_table_shape(
             format!("table header {header:?} does not match expected {expected:?}"),
         ));
     }
+    // ヘッダより多いセルは文書を読むときに捨ててあるので、足りない行だけが残る（REQ-schema-033）
     for (index, row) in rows.iter().enumerate() {
-        if row.len() != expected.len() {
+        if row.len() < header.len() {
             // 違反したのはその行なので、ヘッダの行ではなくその行を指す（REQ-schema-008）
             let row_line = row_lines.get(index).copied().unwrap_or(line);
             findings.push(Finding::at(
@@ -797,7 +830,7 @@ fn validate_table_shape(
                 format!(
                     "row has {} columns but the header has {}",
                     row.len(),
-                    expected.len()
+                    header.len()
                 ),
             ));
         }

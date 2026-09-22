@@ -78,6 +78,8 @@ pub enum Item {
         id: String,
         name: String,
         line: usize,
+        /// `項目`の最後の行。スキーマの側が返す（REQ-core-170）
+        end: usize,
         kind: Option<String>,
         sources: Vec<String>,
         /// "- 出典:" の行。行が無ければ None
@@ -94,6 +96,7 @@ pub enum Item {
         id: String,
         name: String,
         line: usize,
+        end: usize,
         sources: Vec<String>,
         source_line: Option<usize>,
         statements: Vec<(usize, String)>,
@@ -102,6 +105,7 @@ pub enum Item {
         id: String,
         name: String,
         line: usize,
+        end: usize,
         sources: Vec<String>,
         source_line: Option<usize>,
         statements: Vec<(usize, String)>,
@@ -120,6 +124,7 @@ pub enum Item {
         id: String,
         name: String,
         line: usize,
+        end: usize,
         kind: Option<String>,
         relations: Vec<String>,
         /// "- 関係:" の行。行が無ければ None
@@ -148,6 +153,17 @@ impl Item {
             | Item::FlagEntry { id, .. } => Some(id),
             Item::Scenario { id, .. } => id.as_deref(),
             Item::GlossaryTerm { .. } => None,
+        }
+    }
+
+    /// `項目`の最後の行（REQ-core-170）。`シナリオ`と`用語`は持たない
+    pub fn end_line(&self) -> Option<usize> {
+        match self {
+            Item::Requirement { end, .. }
+            | Item::DecisionTable { end, .. }
+            | Item::Property { end, .. }
+            | Item::FlagEntry { end, .. } => Some(*end),
+            Item::Scenario { .. } | Item::GlossaryTerm { .. } => None,
         }
     }
 
@@ -276,7 +292,11 @@ pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopR
             }
         }
         DocKind::Flags => {
-            for obj in elements(values.get("flags")) {
+            // 問題の記録の項目は文書の直下（"flags"）と節の下（"flags_in_section"）の両方にある。
+            // 並びは下の行の順の並べ替えで揃う（TBL-core-011）
+            let direct = elements(values.get("flags"));
+            let in_section = elements(values.get("flags_in_section"));
+            for obj in direct.into_iter().chain(in_section) {
                 items.extend(flag_entry(obj, &mut findings)?);
             }
         }
@@ -411,6 +431,7 @@ fn requirement(obj: &Map<String, Value>, findings: &mut Vec<Finding>) -> Result<
         id,
         name,
         line,
+        end: number(obj, "end")?,
         kind,
         sources,
         source_line,
@@ -433,6 +454,7 @@ fn decision_table(obj: &Map<String, Value>) -> Result<Option<Item>, StopReason> 
         id,
         name,
         line,
+        end: number(obj, "end")?,
         sources,
         source_line,
         statements,
@@ -450,6 +472,7 @@ fn property(obj: &Map<String, Value>, findings: &mut Vec<Finding>) -> Result<Opt
         id,
         name,
         line,
+        end: number(obj, "end")?,
         sources,
         source_line,
         statements,
@@ -468,6 +491,7 @@ fn flag_entry(obj: &Map<String, Value>, findings: &mut Vec<Finding>) -> Result<O
         id,
         name,
         line,
+        end: number(obj, "end")?,
         kind: string(obj, "kind"),
         relations,
         relation_line,

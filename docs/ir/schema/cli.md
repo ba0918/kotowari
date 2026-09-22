@@ -30,10 +30,10 @@ mds は常に、出力の形を "--format" で受け、人間向けの "text" �
 ### REQ-schema-008: 指摘の形
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A17, docs/decision/records/2026-09-21-mds-spec.md#A45, docs/decision/records/2026-09-21-mds-spec.md#A61, docs/decision/records/2026-09-22-ir-engine.md#A74, docs/decision/records/2026-09-22-ir-engine.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A27, docs/decision/records/2026-09-22-ir-engine.md#A29
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A17, docs/decision/records/2026-09-21-mds-spec.md#A45, docs/decision/records/2026-09-21-mds-spec.md#A61, docs/decision/records/2026-09-22-ir-engine.md#A74, docs/decision/records/2026-09-22-ir-engine.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A27, docs/decision/records/2026-09-22-ir-engine.md#A29, docs/decision/records/2026-09-22-ir-engine.md#A86, docs/decision/records/2026-09-23-ir-engine-gaps.md#A8
 - 検証: unit
 
-mds は常に、1件の`指摘`を、種類、深刻度、`文書`のパス、行番号、`ノードの名前`、`生の行`、宣言していない行の種別、詳細の8つで表し、行を持たない`指摘`では行番号を省く。行番号は、違反した`ノード`があるならその`ノード`の開始行、`ノード`の欠落ならそれを含む`ノード`の開始行にし、含む`ノード`に行が無いときは省く。`表`のデータ行のように`ノード`の中の要素が違反したときは、その要素の行にする。`ノードの名前`は宣言上の名前を持つ`ノード`の`指摘`にだけ付け、宣言上の名前を持つのは`節`と`フィールド行`だけであり、宣言していない行の種別は undeclared_line の`指摘`にだけ付け、`生の行`は行番号を持つ`指摘`にだけ付ける。
+mds は常に、1件の`指摘`を、種類、深刻度、`文書`のパス、行番号、`ノードの名前`、`生の行`、種別、詳細の8つで表し、行を持たない`指摘`では行番号を省く。行番号は、違反した`ノード`があるならその`ノード`の開始行、`ノード`の欠落ならそれを含む`ノード`の開始行にし、含む`ノード`に行が無いときは省く。`表`のデータ行のように`ノード`の中の要素が違反したときは、その要素の行にする。`ノードの名前`は宣言上の名前を持つ`ノード`の`指摘`にだけ付け、宣言上の名前を持つのは`節`と`フィールド行`だけであり、種別は undeclared_line の`指摘`には宣言していない行をどう読んだか（REQ-schema-055）を、`出現回数`の下限と上限の`指摘`には数えた`ノード`の`規則種別`（REQ-schema-057）を付け、ほかの`指摘`には付けない。`生の行`は行番号を持つ`指摘`にだけ付ける。
 
 ### REQ-schema-009: 検査を行えないときは停止する
 
@@ -54,7 +54,7 @@ TBL-schema-009 の`停止`の理由のいずれかに当たったとき、mds �
 ### REQ-schema-042: 停止の理由
 
 - 種類: algorithm
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-23-ir-engine-gaps.md#A11, docs/decision/records/2026-09-23-ir-engine-gaps.md#A19
 - 定義: TBL-schema-009
 - 検証: unit
 
@@ -96,12 +96,12 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 
 ### TBL-schema-009: 停止の理由
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#A44, docs/decision/records/2026-09-21-mds-spec.md#A62, docs/decision/records/2026-09-22-ir-engine.md#A56
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#A44, docs/decision/records/2026-09-21-mds-spec.md#A62, docs/decision/records/2026-09-22-ir-engine.md#A56, docs/decision/records/2026-09-23-ir-engine-gaps.md#A11, docs/decision/records/2026-09-23-ir-engine-gaps.md#A19, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A30, docs/decision/records/2026-09-23-ir-engine-gaps.md#A42
 
 | 理由 | いつ |
 |---|---|
 | スキーマが見つからない | 参照先の`スキーマ`が無い、URL の取得に失敗した、または "$schema" の無い`文書`を対象に指定した |
-| スキーマが形に合わない | `スキーマ`の YAML が読めない、`規則種別`の形に反する、または1つの要素オブジェクトの中で鍵が重複する |
+| スキーマが形に合わない | `スキーマ`の YAML が読めない、`規則種別`の形に反する、`配置パス`が衝突する（同じ置き場の中で同じパスか、一方が他方の手前の段にあたるもの。要素オブジェクトの中と、`節`の直下などの要素オブジェクトの外のどちらでも判定し、要素オブジェクトの "value" と "of" の鍵も同じ置き場のパスとして数え、"a.b" と "a.c" のように途中まで同じで先が分かれるものは衝突でない）、"reading" の値が "paragraph" と "line" のどちらでもない、`表`の規則に "header" なしで "select" を書いた、または "select" の値が "first" でない |
 | frontmatter が壊れている | `frontmatter`が壊れた YAML である、YAML のマッピングでない、"$schema" の値が空か空白だけである、または "$schema" の値が文字列でない |
 | 文書が読めない | `文書`のファイルを読めない |
 | 引数の誤り | 受けない "--format" の値、知らないフラグ、または "ast" に "--format text" を与えた |
@@ -177,4 +177,23 @@ Scenario: ドットの上の段を共有するだけの配置パスは重複で�
   Given "a.b" と "a.c" を並べた`スキーマ`と、"a" と "a.b" を並べた`スキーマ`がある
   When それぞれに "mds values" を実行する
   Then 前者は`停止`せず、後者は終了コード 2 で終わる
+
+@id=EX-schema-047 @about=REQ-schema-042,TBL-schema-009 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A11,docs/decision/records/2026-09-23-ir-engine-gaps.md#A19
+Scenario: 要素オブジェクトの外で配置パスが衝突するスキーマは停止する
+  Given 2つの`節`の直下の`文`に同じ`配置パス`の`抽出`を宣言した`スキーマ`と、"a" と "a.b" を2つの`節`に分けて宣言した`スキーマ`がある
+  When それぞれに "mds values" を実行する
+  Then どちらも終了コードは 2 で、標準エラーは`スキーマ`が形に合わないことを知らせる
+
+@id=EX-schema-048 @about=REQ-schema-042,TBL-schema-009 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A19
+Scenario: 要素オブジェクトの外でも先が分かれる配置パスは衝突でない
+  Given "a.b" と "a.c" を2つの`節`に分けて宣言した`スキーマ`がある
+  When "mds values" を実行する
+  Then `停止`しない
+
+@id=EX-schema-049 @about=REQ-schema-008 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A8,docs/decision/records/2026-09-22-ir-engine.md#A86
+Scenario: 出現回数の指摘は数えたノードの規則種別を持つ
+  Given `項目`の`文`に`出現回数`の下限1を宣言した`スキーマ`がある
+  And `文`の無い`項目`を持つ`文書`がある
+  When "mds check --format json" を実行する
+  Then 下限を割った`指摘`の種別は`文`である
 ```
