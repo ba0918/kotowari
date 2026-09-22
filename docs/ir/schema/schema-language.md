@@ -7,10 +7,10 @@
 ### REQ-schema-016: スキーマの形
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A3, docs/decision/records/2026-09-21-mds-spec.md#A5
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A3, docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A23
 - 検証: unit
 
-mds は常に、`スキーマ`を YAML のマッピングとして読み、`題名`、`前置部`、`節`の3つを根の`ノード`として受ける。
+mds は常に、`スキーマ`を YAML のマッピングとして読み、`題名`、`前置部`、`節`、文書の直下の`項目`の4つを根の`ノード`として受ける。文書の直下の`項目`は "document.item" に、`節`の下の "item" と同じ形で宣言する。
 
 ### REQ-schema-017: 規則種別の一覧
 
@@ -19,6 +19,14 @@ mds は常に、`スキーマ`を YAML のマッピングとして読み、`題�
 - 定義: TBL-schema-004
 - 検証: review
 - 確かめ方: `crates/kotowari-markdown-schema/src/schema.rs` の公開する構造体と TBL-schema-004 の行が1対1で対応し、表に無い規則種別が存在しないこと、各構造体が置ける場所が表の「置ける場所」の列と一致することを読んで確認する。表に無い規則種別が足されても検査は通ってしまうため、機械では見られない
+
+### REQ-schema-060: 読み方の宣言
+
+- 種類: ubiquitous
+- 出典: docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20, docs/decision/records/2026-09-23-ir-engine-gaps.md#A30
+- 検証: unit
+
+mds は常に、`スキーマ`の最上位の "reading" の鍵を`読み方`の宣言として受け、値に "paragraph" と "line" の2つだけを受け、鍵を書かないときは "paragraph" として読む。"paragraph" と "line" のどちらでもない値の`スキーマ`は`停止`にする。
 
 ### REQ-schema-018: 知らないキー
 
@@ -55,14 +63,14 @@ mds は常に、`条件付き規則`が参照する`フィールド行`を同じ
 
 ### TBL-schema-004: 規則種別
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A3, docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A12, docs/decision/records/2026-09-21-mds-spec.md#A34, docs/decision/records/2026-09-21-mds-spec.md#A38, docs/decision/records/2026-09-21-mds-spec.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A68
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A3, docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A12, docs/decision/records/2026-09-21-mds-spec.md#A34, docs/decision/records/2026-09-21-mds-spec.md#A38, docs/decision/records/2026-09-21-mds-spec.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A68, docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A23
 
 | 規則種別 | 何を検証するか | 置ける場所 |
 |---|---|---|
 | `題名` | 深さ1の見出し | `スキーマ`の根 |
-| `前置部` | `題名`の後、最初の`節`より前の部分 | `スキーマ`の根 |
+| `前置部` | `題名`の後、最初の`節`より前の部分。文書の直下の`項目`を宣言したときは、最初の`節`か`項目`より前の部分 | `スキーマ`の根 |
 | `節` | 深さ2の見出し | `スキーマ`の根 |
-| `項目` | 深さ3の見出し | `節`の下 |
+| `項目` | 深さ3の見出し | `節`の下、`スキーマ`の根（文書の直下の`項目`） |
 | `フィールド行` | 名前と値の形の一覧の行 | `前置部`、`節`、`項目`、`箇条書き`の子 |
 | `文` | 一覧でも`表`でもない空でない行 | `前置部`、`節`、`項目` |
 | `箇条書き` | `フィールド行`でない一覧の行 | `前置部`、`節`、`項目`、`箇条書き`の子 |
@@ -89,6 +97,12 @@ mds は常に、`条件付き規則`が参照する`フィールド行`を同じ
 
 `出現回数`の範囲を宣言した`ノード`の`抽出`は、値が1件でも配列になる。範囲を宣言しない`ノード`の`抽出`は単一の値になる。この対応が当たるのは、区切り文字を宣言しない`フィールド行`、`文`、`節`、`項目`、`題名`、`コードブロック`である。`箇条書き`と`表`は`出現回数`の宣言に関わらず常に配列になり、区切り文字を宣言した`フィールド行`の値も常に配列になる。
 
+### PROP-schema-008: 既定の読み方は段落
+
+- 出典: docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20
+
+同じ`文書`に対して、"reading" を書かない`スキーマ`と、それに "reading: paragraph" だけを足した`スキーマ`は、同じ`指摘`の並びと同じ`抽出`の値を返す。
+
 ## 具体例
 
 ```gherkin
@@ -101,6 +115,19 @@ Scenario: 条件が真のときだけ必須になる
 @id=EX-schema-008 @about=REQ-schema-018 @source=docs/decision/records/2026-09-21-mds-spec.md#P1
 Scenario: 知らないキーのあるスキーマは停止する
   Given 規則種別が受けないキーを書いた`スキーマ`がある
+  When "mds check" を実行する
+  Then 終了コードは 2 である
+
+@id=EX-schema-040 @about=REQ-schema-060,PROP-schema-008 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A12,docs/decision/records/2026-09-23-ir-engine-gaps.md#A20
+Scenario: reading を書かないスキーマは段落で読む
+  Given "reading" を書かない`スキーマ`と、"reading: paragraph" を書いた`スキーマ`があり、どちらも`項目`の`文`に行番号の`導かれる値`を宣言している
+  And 空行を挟まずに続く2行の段落を持つ`項目`の`文書`がある
+  When それぞれの`スキーマ`で "mds values --format json" を実行する
+  Then どちらでも`文`の要素は1つで、2つの出力は一致する
+
+@id=EX-schema-041 @about=REQ-schema-060 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A20,docs/decision/records/2026-09-23-ir-engine-gaps.md#A30
+Scenario: 受けない値の reading は停止する
+  Given "reading: word" を書いた`スキーマ`がある
   When "mds check" を実行する
   Then 終了コードは 2 である
 ```

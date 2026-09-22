@@ -23,10 +23,10 @@ kotowari は常に、`IR`の置き場の下のディレクトリを深さに制�
 ### REQ-core-035: 題名が複数
 
 - 種類: event_driven
-- 出典: docs/decision/records/records.md#A42
+- 出典: docs/decision/records/records.md#A42, docs/decision/records/2026-09-23-ir-engine-gaps.md#A7, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17
 - 検証: unit
 
-`IR`の文書に`題名`が2つ以上あるとき、kotowari は multiple_titles の`誤り`を出す。
+`IR`の文書に`題名`が2つ以上あるとき、kotowari は2つ目以降の`題名`ごとに1件の multiple_titles の`誤り`を出す。
 
 ### REQ-core-036: 範囲の行が無い
 
