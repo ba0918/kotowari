@@ -1567,6 +1567,37 @@ document:
     assert_eq!(findings.len(), 2, "{json}");
 }
 
+// @kotowari[REQ-schema-059]
+#[test]
+fn req_schema_059_select_first_picks_one_table_per_occurrence_of_a_repeated_section_in_both_check_and_values()
+ {
+    let schema = r#"
+document:
+  sections:
+    - name: S
+      repeat: { min: 1 }
+      table:
+        header: [a, b]
+        select: first
+        extract: rows
+"#;
+    let doc =
+        "## S\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n## S\n\n| a | b |\n|---|---|\n| 3 | 4 |\n";
+    let (code, json, stderr) = mds_json(schema, doc, "check");
+    assert_eq!(
+        code,
+        Some(0),
+        "どちらの出現の表も検査を通る。stderr: {stderr} {json}"
+    );
+    let (code, json, stderr) = mds_json(schema, doc, "values");
+    assert_eq!(code, Some(0), "stderr: {stderr}");
+    assert_eq!(
+        json["rows"],
+        serde_json::json!([{ "a": "1", "b": "2" }, { "a": "3", "b": "4" }]),
+        "検査が受けた表は抽出にも出る: {json}"
+    );
+}
+
 // @kotowari[EX-schema-037, TBL-schema-009]
 #[test]
 fn ex_schema_037_table_rule_without_select_reports_a_mismatched_header_and_select_needs_header() {

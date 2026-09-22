@@ -32,7 +32,12 @@ pub fn extract_values(schema: &Schema, document: &Document) -> Value {
             document,
             &mut root,
         );
-        extract_table(preamble.table.as_ref(), &blocks, document, &mut root);
+        extract_table(
+            preamble.table.as_ref(),
+            &[blocks.as_slice()],
+            document,
+            &mut root,
+        );
         extract_codeblock(preamble.codeblock.as_ref(), &blocks, document, &mut root);
     }
     for def in &schema.document.sections {
@@ -127,7 +132,13 @@ fn extract_section(
     extract_fields(&def.fields, &blocks, document, root);
     extract_statement(def.statement.as_ref(), &blocks, document, root);
     extract_bullets(&def.fields, def.bullets.as_ref(), &blocks, document, root);
-    extract_table(def.table.as_ref(), &blocks, document, root);
+    // select は節の出現ごとに選ぶ。検査も出現ごとに選ぶので、両者が同じ表を指す（REQ-schema-059）
+    let per_occurrence: Vec<Vec<&Block>> = occurrences
+        .iter()
+        .map(|s| s.blocks.iter().collect())
+        .collect();
+    let groups: Vec<&[&Block]> = per_occurrence.iter().map(Vec::as_slice).collect();
+    extract_table(def.table.as_ref(), &groups, document, root);
     extract_codeblock(def.codeblock.as_ref(), &blocks, document, root);
 
     if let Some(item) = &def.item {
@@ -443,7 +454,7 @@ fn element_with_children(block: &Block, children: Option<&Children>) -> String {
 
 fn extract_table(
     table: Option<&Table>,
-    blocks: &[&Block],
+    groups: &[&[&Block]],
     doc: &Document,
     root: &mut Map<String, Value>,
 ) {
@@ -453,12 +464,16 @@ fn extract_table(
     let Some(extract) = &table.extract else {
         return;
     };
-    // select で選ばれなかった表は抽出しない（REQ-schema-059）
-    let selection = table.selected_line(blocks.iter().copied());
-    let tables: Vec<&Block> = blocks
+    // select で選ばれなかった表は抽出しない（REQ-schema-059）。選ぶのはノードの出現ごと
+    let tables: Vec<&Block> = groups
         .iter()
-        .copied()
-        .filter(|b| matches!(b, Block::Table { line, .. } if selection.takes(*line)))
+        .flat_map(|blocks| {
+            let selection = table.selected_line(blocks.iter().copied());
+            blocks
+                .iter()
+                .copied()
+                .filter(move |b| matches!(b, Block::Table { line, .. } if selection.takes(*line)))
+        })
         .collect();
     if tables.is_empty() {
         // 0件のときはキーを省略する（REQ-schema-038）
@@ -571,7 +586,12 @@ fn item_object(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) 
         doc,
         &mut object,
     );
-    extract_table(item_rule.table.as_ref(), &blocks, doc, &mut object);
+    extract_table(
+        item_rule.table.as_ref(),
+        &[blocks.as_slice()],
+        doc,
+        &mut object,
+    );
     extract_codeblock(item_rule.codeblock.as_ref(), &blocks, doc, &mut object);
     if let Some(extract) = &item_rule.extract {
         // path は項目オブジェクトそのものの置き場なので、ここでは置かない
