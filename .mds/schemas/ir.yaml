@@ -1,6 +1,7 @@
 # kotowari の IR の話題ごとの文書の書式（ir-form.md の「項目」の表）
 name: ir
 open: false
+reading: line
 document:
   title:
     extract: title
@@ -19,7 +20,7 @@ document:
         repeat: { min: 0 }
         extract:
           path: requirements
-          of: { id: id, name: name, line: line }
+          of: { id: id, name: name, line: line, end: end }
         fields:
           - name: 種類
             enum: [event_driven, state_driven, ubiquitous, prohibition, invariant, algorithm]
@@ -59,7 +60,7 @@ document:
         repeat: { min: 0 }
         extract:
           path: tables
-          of: { id: id, name: name, line: line }
+          of: { id: id, name: name, line: line, end: end }
         fields:
           - name: 出典
             separator: ","
@@ -83,7 +84,7 @@ document:
         repeat: { min: 0 }
         extract:
           path: properties
-          of: { id: id, name: name, line: line }
+          of: { id: id, name: name, line: line, end: end }
         fields:
           - name: 出典
             separator: ","

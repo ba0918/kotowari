@@ -276,7 +276,11 @@ pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopR
             }
         }
         DocKind::Flags => {
-            for obj in elements(values.get("flags")) {
+            // 問題の記録の項目は文書の直下（"flags"）と節の下（"flags_in_section"）の両方にある。
+            // 並びは下の行の順の並べ替えで揃う（TBL-core-011）
+            let direct = elements(values.get("flags"));
+            let in_section = elements(values.get("flags_in_section"));
+            for obj in direct.into_iter().chain(in_section) {
                 items.extend(flag_entry(obj, &mut findings)?);
             }
         }
