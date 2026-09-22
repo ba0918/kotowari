@@ -104,7 +104,7 @@ Stop and hand back if: 具体例の Given が今の実装では作れない入�
 Purpose: kotowari が実行時にスキーマのファイルを読まずに、文書の種類に応じた形の宣言を持つ。
 Specification: `docs/ir/core/form-contract.md#REQ-core-168`。判断の記録は `#A8`、`#A36`。
 Prerequisites: なし。
-May change: `crates/kotowari-core/src/`（新しいモジュールを足してよい。単体テストは同じファイルの `#[cfg(test)]`）、`crates/kotowari-core/Cargo.toml`（依存に `kotowari-markdown-schema` を足す）、`Cargo.toml` の workspace の依存。
+May change: `crates/kotowari-core/src/`（新しいモジュールを足してよい。単体テストは同じファイルの `#[cfg(test)]`）、`crates/kotowari-core/Cargo.toml`（`kotowari-markdown-schema` への path 依存を足す。根の `Cargo.toml` に `[workspace.dependencies]` は無いので、依存はクレートの manifest に直接書く）。
 
 Done when:
 
@@ -118,6 +118,8 @@ Shown by: test — RED → GREEN → REFACTOR。取り込んだ3つのスキー�
 Left to the implementer: 取り込み方（`include_str!` かビルドスクリプトか）。選ぶ関数の置き場。
 
 Stop and hand back if: 取り込んだスキーマが `parse_schema` を通らないと分かったとき（スキーマのファイル側の問題なので、この計画の外）。
+
+Note: `crates/kotowari-markdown-schema` は `rust-version = "1.89"` を宣言し、`crates/kotowari-core` は依存の都合で 1.90 を要る。依存を足しても、ステップ9の 7 は `-p` でこのクレートだけを検査するので通る。workspace 全体で最低の Rust をそろえようとしない。
 
 ## Step 4 — エンジンの指摘を写す層を作る
 
