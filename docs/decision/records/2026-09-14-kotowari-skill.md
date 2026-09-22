@@ -30,6 +30,7 @@
 - A25 承認の関門は「requirement_without_test 以外の誤りが0」。requirement_without_test は cycle の終端で0にする。kotowari 本体には手を入れない（推奨を採用）
 - A26 照合レビューは3回まで。3回目でも裏付けの無い項目が残れば問題の記録（FLAG）にして人に返す（推奨を採用）
 - A27 既存の ba0918 のスキルには何も書かない。agentic-rules は kotowari に依存しない。結び付けは、kotowari を使うプロジェクトの AGENTS.md にルーティングとワークフローの規則を書くことで行い、まずはそれで様子を見る（利用者）
+  - superseded_by: [A1（workflow-split）](./2026-09-23-workflow-split.md#A1)、[A2（workflow-split）](./2026-09-23-workflow-split.md#A2)（ba0918 の工程に相乗りせず、kotowari 用の工程の skill 8つに分け、入口も kotowari-using-workflow にした）
 - A28 照合レビューが brainstorm の終わりの「記録への適合」のレビューを置き換える。「仕様の品質」のレビュー1本は残す（推奨を採用）
 - A29 references を6つにする。mark.md（印の規則。cycle が implementer と fixer のプロンプトに貼る）と workflow.md（brainstorm・plan・cycle・implement の手順の置き換え）を足す（推奨を採用）
 - A30 場面を5つにして workflow を足す。plan・cycle・implement の席は workflow として workflow.md の自分の節を読む。brainstorm の席は write のまま（計画のレビューで導線の欠落が見つかった。推奨を採用）

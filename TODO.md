@@ -10,10 +10,9 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 ## 判断待ち
 
-### kotowari の工程を ba0918 の workflow から分離する
+### kotowari の skill を他の人へ配る仕組み
 
-- `skills/kotowari/references/workflow.md` で ba0918 の brainstorm / plan / cycle に上書きをかぶせる形をやめ、`kotowari-brainstorm` / `kotowari-plan` / `kotowari-cycle` として切り出したい（2026-09-22 に利用者が提起）
-- 分離するのは工程だけで規範（design / tdd / commit など）は共有する案、ba0918 と同じ部分を引用するか複製するか、が論点。未着手
+- 工程の skill 8つと kotowari スキルは `skills/` に置き、手元へはシンボリックリンクで入れると決めた（[A7（workflow-split）](docs/decision/records/2026-09-23-workflow-split.md#A7)）。他の人へ配る仕組み（agentic-workflow のような plugin marketplace など）は決めていない
 
 ## 記録のみ
 
