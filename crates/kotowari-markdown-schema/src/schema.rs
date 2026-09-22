@@ -523,7 +523,51 @@ fn validate_schema(schema: &Schema) -> Result<(), SchemaError> {
     if let Some(item) = &schema.document.item {
         validate_item(item)?;
     }
-    Ok(())
+    reject_colliding_root_paths(&schema.document)
+}
+
+/// 要素オブジェクトの外、文書の値の根に置く配置パスの衝突を停止にする（TBL-schema-009）。
+/// 題名・前置部・節・項目と、それらの直下のノードの配置パスはすべて同じ置き場に並ぶ。
+fn reject_colliding_root_paths(document: &Document) -> Result<(), SchemaError> {
+    let mut paths: Vec<String> = Vec::new();
+    let mut push = |extract: Option<&Extract>| {
+        if let Some(extract) = extract {
+            paths.push(extract.path().to_string());
+        }
+    };
+    push(document.title.as_ref().and_then(|t| t.extract.as_ref()));
+    if let Some(preamble) = &document.preamble {
+        for field in &preamble.fields {
+            push(field.extract.as_ref());
+        }
+        push(preamble.statement.as_ref().and_then(|s| s.extract.as_ref()));
+        push(preamble.bullets.as_ref().and_then(|b| b.extract.as_ref()));
+        push(preamble.table.as_ref().and_then(|t| t.extract.as_ref()));
+        push(preamble.codeblock.as_ref().and_then(|c| c.extract.as_ref()));
+    }
+    for section in &document.sections {
+        push(section.extract.as_ref());
+        for field in &section.fields {
+            push(field.extract.as_ref());
+        }
+        push(section.statement.as_ref().and_then(|s| s.extract.as_ref()));
+        push(section.bullets.as_ref().and_then(|b| b.extract.as_ref()));
+        push(section.table.as_ref().and_then(|t| t.extract.as_ref()));
+        push(section.codeblock.as_ref().and_then(|c| c.extract.as_ref()));
+        push(section.item.as_ref().and_then(|i| i.extract.as_ref()));
+    }
+    push(document.item.as_ref().and_then(|i| i.extract.as_ref()));
+    // 箇条書きの子フィールドも、その箇条書きの置き場（根）に値を出す
+    if let Some(bullets) = document.preamble.as_ref().and_then(|p| p.bullets.as_ref()) {
+        collect_children_extract_paths(bullets, &mut paths);
+    }
+    for section in &document.sections {
+        if let Some(bullets) = &section.bullets {
+            collect_children_extract_paths(bullets, &mut paths);
+        }
+    }
+    let keys: Vec<&str> = paths.iter().map(String::as_str).collect();
+    reject_colliding_keys(&keys, "document")
 }
 
 fn validate_title(title: &Title) -> Result<(), SchemaError> {
@@ -673,11 +717,17 @@ fn reject_duplicate_element_keys(
         keys.extend(extract.of().iter().map(|(key, _)| key.as_str()));
     }
     keys.extend(internal.iter().map(String::as_str));
+    reject_colliding_keys(&keys, &format!("{node} element object"))
+}
+
+/// 同じ置き場の配置パスのうち、同じパスか一方が他方の手前の段にあたるものを停止にする
+/// （TBL-schema-009）。`a.b` と `a.c` は別の鍵、`a` と `a.b` は衝突とする。
+fn reject_colliding_keys(keys: &[&str], place: &str) -> Result<(), SchemaError> {
     for (index, key) in keys.iter().enumerate() {
         for other in &keys[index + 1..] {
             if key == other || is_ancestor_path(key, other) || is_ancestor_path(other, key) {
                 return Err(SchemaError(format!(
-                    "{node} element object has the key \"{key}\" twice (conflicts with \"{other}\")"
+                    "{place} has the key \"{key}\" twice (conflicts with \"{other}\")"
                 )));
             }
         }

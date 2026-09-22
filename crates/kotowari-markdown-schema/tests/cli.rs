@@ -1737,3 +1737,36 @@ document:
     assert_eq!(code, Some(2), "stderr: {stderr}");
     assert!(stderr.contains("schema_invalid"), "stderr: {stderr}");
 }
+
+/// 2つの節の直下の文に、それぞれの配置パスの抽出を宣言したスキーマ。
+fn two_section_statement_schema(first: &str, second: &str) -> String {
+    format!(
+        "document:\n  sections:\n    - name: 一\n      statement:\n        extract: {first}\n    - name: 二\n      statement:\n        extract: {second}\n"
+    )
+}
+
+const TWO_SECTION_DOC: &str = "## 一\n\n文。\n\n## 二\n\n文。\n";
+
+// @kotowari[EX-schema-047]
+#[test]
+fn ex_schema_047_colliding_paths_outside_element_objects_stop() {
+    for (first, second) in [("a", "a"), ("a", "a.b")] {
+        let schema = two_section_statement_schema(first, second);
+        let (code, _json, stderr) = mds_json(&schema, TWO_SECTION_DOC, "values");
+        assert_eq!(code, Some(2), "{first} と {second}: stderr: {stderr}");
+        assert!(stderr.contains("schema_invalid"), "stderr: {stderr}");
+    }
+}
+
+// @kotowari[EX-schema-048]
+#[test]
+fn ex_schema_048_paths_diverging_after_a_shared_level_outside_element_objects_do_not_stop() {
+    let schema = two_section_statement_schema("a.b", "a.c");
+    let (code, json, stderr) = mds_json(&schema, TWO_SECTION_DOC, "values");
+    assert_eq!(code, Some(0), "stderr: {stderr}");
+    assert_eq!(
+        json["a"],
+        serde_json::json!({ "b": "文。", "c": "文。" }),
+        "{json}"
+    );
+}
