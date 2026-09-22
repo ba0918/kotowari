@@ -270,12 +270,14 @@ impl When {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum OfKind {
-    /// ノードが現れた行番号（1始まりの数値）
+    /// ノードまたは要素が現れた行番号（1始まりの数値）
     Line,
     /// 項目の見出しの ID 部分
     Id,
     /// 項目の見出しの名前部分
     Name,
+    /// 生の行。字下げと末尾の空白を含み、組み立て直さない
+    Raw,
 }
 
 /// 1つのノードが宣言した抽出規則。YAML では `配置パス`だけの略記か、
@@ -597,9 +599,7 @@ fn reject_duplicate_element_keys(
 
 /// `outer` が `inner` の親の配置パスか。`a` は `a.b` の親で、`a` と `ab` は無関係。
 fn is_ancestor_path(outer: &str, inner: &str) -> bool {
-    inner.len() > outer.len()
-        && inner.starts_with(outer)
-        && inner.as_bytes()[outer.len()] == b'.'
+    inner.len() > outer.len() && inner.starts_with(outer) && inner.as_bytes()[outer.len()] == b'.'
 }
 
 /// コードブロックの規則を検査する。
@@ -695,6 +695,7 @@ fn reject_item_only_of(extract: Option<&Extract>, node: &str) -> Result<(), Sche
                     OfKind::Id => "id",
                     OfKind::Name => "name",
                     OfKind::Line => "line",
+                    OfKind::Raw => "raw",
                 }
             )));
         }
@@ -1418,5 +1419,4 @@ document:
             "a.b と a.c は入れ子を共有するだけの別の鍵（R18）"
         );
     }
-
 }

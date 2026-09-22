@@ -48,9 +48,6 @@ pub struct Heading {
     pub text: String,
     pub depth: u8,
     pub line: usize,
-    /// 見出しの生の行。インラインコードのバッククォートとリンクの URL を
-    /// 含み、`text` のように組み立て直さない（R18）
-    pub raw: String,
 }
 
 /// 文の1行。生の行とその行番号（1始まり）。行ごとの抽出と、指摘が指す行の
@@ -140,9 +137,7 @@ pub enum Block {
         line: usize,
     },
     /// どの規則種別にも当てはまらないブロック（引用、水平線など）
-    Other {
-        line: usize,
-    },
+    Other { line: usize },
 }
 
 impl Document {
@@ -171,7 +166,6 @@ impl Document {
                                 text,
                                 depth: 1,
                                 line,
-                                raw: raw_line_of(&lines, line),
                             });
                             current_stray = None;
                         }
@@ -207,7 +201,6 @@ impl Document {
                                         text,
                                         depth: 3,
                                         line,
-                                        raw: raw_line_of(&lines, line),
                                     },
                                     blocks: Vec::new(),
                                     before_title: doc.titles.is_empty(),
@@ -215,12 +208,7 @@ impl Document {
                                 current_stray = Some(doc.stray_preamble_headings.len() - 1);
                             }
                         },
-                        depth => doc.stray_headings.push(Heading {
-                            text,
-                            depth,
-                            line,
-                            raw: raw_line_of(&lines, line),
-                        }),
+                        depth => doc.stray_headings.push(Heading { text, depth, line }),
                     }
                 }
                 other => {
@@ -808,13 +796,13 @@ mod tests {
     fn title_heading_keeps_the_raw_line_including_inline_code() {
         let src = "# 題名 `インライン` と [リンク](https://example.com/)\n";
         let doc = Document::parse(src).unwrap();
+        let raw = doc.raw_line(doc.titles[0].line).unwrap();
         assert_eq!(
-            doc.titles[0].raw,
-            "# 題名 `インライン` と [リンク](https://example.com/)",
-            "見出しの生の行は src の行と一文字も違わない"
+            raw, "# 題名 `インライン` と [リンク](https://example.com/)",
+            "見出しの行の生の文字は src の行と一文字も違わない"
         );
         assert_ne!(
-            doc.titles[0].raw, doc.titles[0].text,
+            raw, doc.titles[0].text,
             "組み立て直した見出しの文字とは違う"
         );
     }
