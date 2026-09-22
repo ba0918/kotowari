@@ -1,8 +1,6 @@
 //! スキーマの `extract` に沿って値を組み立てる。
 
-use crate::document::{
-    Block, Document, Item as DocItem, RawLine, Section as DocSection, join_continuation,
-};
+use crate::document::{Block, Document, Item as DocItem, LineSpan, RawLine, Section as DocSection};
 use crate::schema::{
     Bullets, Children, CodeBlock, Extract, Field, OfKind, Reading, Schema, Statement, Table,
     is_declared_field, item_internals_declare_extract,
@@ -117,7 +115,7 @@ fn extract_section(
                 element_value(
                     extract,
                     document,
-                    Value::String(section_body(s, def)),
+                    Value::String(section_body(s, def, document)),
                     &Derived {
                         end: Some(document.end_line(s.line, 2)),
                         ..Derived::at(s.line)
@@ -169,7 +167,7 @@ fn extract_items(
         if as_object {
             item_object(i, item, document)
         } else {
-            item_value(i, item)
+            item_value(i, item, document)
         }
     };
     let value = if item.repeat.is_some() {
@@ -197,7 +195,12 @@ fn extract_fields(
             let elements: Vec<Value> = occurrences
                 .iter()
                 .map(|b| {
-                    element_value(extract, doc, field_single(field, b), &Derived::at(b.line()))
+                    element_value(
+                        extract,
+                        doc,
+                        field_single(field, b, doc),
+                        &Derived::at(b.line()),
+                    )
                 })
                 .collect();
             place_occurrences(root, extract, elements, field.repeat.is_some());
@@ -205,34 +208,44 @@ fn extract_fields(
     }
 }
 
-fn field_single(field: &Field, block: &Block) -> Value {
-    let (value, continuation) = match block {
-        Block::Field {
-            value,
-            continuation,
-            ..
-        } => (value.as_str(), continuation.as_slice()),
-        _ => ("", &[][..]),
+/// フィールド行の要素の値。名前の後から始まる lead 段落の値に、継続段落を元の行のまま
+/// 付ける（REQ-schema-030、REQ-schema-063）。
+fn field_single(field: &Field, block: &Block, doc: &Document) -> Value {
+    let Block::Field {
+        value,
+        line,
+        lead_end,
+        continuation,
+        ..
+    } = block
+    else {
+        return Value::String(String::new());
     };
+    // 継続段落の部分だけを組む。lead 段落を空の部分として先頭に置き、間の空行を数えさせる
+    let lead = Piece {
+        span: LineSpan {
+            first: *line,
+            last: *lead_end,
+        },
+        text: String::new(),
+    };
+    let tail = render(
+        std::iter::once(lead).chain(continuation_pieces(continuation, doc)),
+        doc,
+    );
     match field.effective_separator() {
         // 区切った要素は配列にする（REQ-schema-045）。要素は前後の空白を取り除いて抽出し、
         // 空の要素は空文字列として残す。分割は継続段落を含めない値だけを対象にし、
-        // 継続段落は末尾の要素に改行で付ける（REQ-schema-046）
+        // 継続段落は末尾の要素に付ける（REQ-schema-046）
         Some(sep) => {
             let mut elements: Vec<String> =
                 value.split(sep).map(|s| s.trim().to_string()).collect();
             if let Some(last) = elements.last_mut() {
-                join_continuation(last, continuation);
+                last.push_str(&tail);
             }
             Value::Array(elements.into_iter().map(Value::String).collect())
         }
-        None => {
-            // 継続段落はフィールド行の一部で、値と改行でつなぐ（REQ-schema-030、REQ-schema-046）。複数あるときは
-            // 箇条書きと同じく空行でつなぐ
-            let mut full = value.to_string();
-            join_continuation(&mut full, continuation);
-            Value::String(full)
-        }
+        None => Value::String(format!("{value}{tail}")),
     }
 }
 
@@ -280,28 +293,22 @@ fn extract_statement(
     }
     // 導かれる値を宣言しない文は行に分けない。繰り返すときは配置パスの
     // 直下に段ができる（TBL-schema-008、PROP-schema-004）
-    let texts: Vec<String> = statements
-        .iter()
-        .map(|b| match b {
-            Block::Statement { text, .. } => text.clone(),
-            _ => String::new(),
-        })
-        .collect();
     if statement.repeat.is_some() {
         let elements: Vec<Value> = statements
             .iter()
-            .zip(texts)
-            .map(|(b, text)| {
+            .map(|b| {
+                let text = render(statement_piece(b), doc);
                 element_value(extract, doc, Value::String(text), &Derived::at(b.line()))
             })
             .collect();
         place(root, extract.path(), Value::Array(elements));
         return;
     }
+    let text = render(statements.iter().flat_map(|b| statement_piece(b)), doc);
     let element = element_value(
         extract,
         doc,
-        Value::String(texts.join("\n\n")),
+        Value::String(text),
         &Derived::at(statements[0].line()),
     );
     place(root, extract.path(), element);
@@ -352,7 +359,10 @@ fn extract_bullets(
             element_value(
                 extract,
                 doc,
-                Value::String(element_with_children(b, bullets.children.as_ref())),
+                Value::String(render(
+                    list_item_pieces(b, bullets.children.as_ref(), doc),
+                    doc,
+                )),
                 &Derived::at(b.line()),
             )
         })
@@ -387,7 +397,12 @@ fn extract_child_fields(
             let elements: Vec<Value> = occurrences
                 .iter()
                 .map(|b| {
-                    element_value(extract, doc, field_single(field, b), &Derived::at(b.line()))
+                    element_value(
+                        extract,
+                        doc,
+                        field_single(field, b, doc),
+                        &Derived::at(b.line()),
+                    )
                 })
                 .collect();
             place_occurrences(root, extract, elements, field.repeat.is_some());
@@ -414,42 +429,127 @@ fn extract_child_fields(
     }
 }
 
-/// 箇条書きの抽出要素を、子の箇条書きの行を含めて組み立てる（REQ-schema-031、TBL-schema-008）。
-/// 元の行、継続段落、子の箇条書きの行を改行でつなぐ。子の箇条書きの行は
-/// そのままのインデントで含める。`children` の宣言でフィールド行として宣言された
-/// 子の行は含めない（A12）。`children` が無ければ子はすべて箇条書きとして含める。
-fn element_with_children(block: &Block, children: Option<&Children>) -> String {
-    let base = match block {
-        Block::Bullet { .. } => block.bullet_element(),
-        Block::Field { .. } => block.field_element(),
-        _ => return String::new(),
-    };
-    let child_blocks = block.children();
-    if child_blocks.is_empty() {
-        return base;
+/// 値の1つの部分。元の文書の行の範囲と、その範囲から取った文字（REQ-schema-063）。
+struct Piece {
+    span: LineSpan,
+    text: String,
+}
+
+/// 部分を元の文書の順に並べてつなぐ。間に元の文書で空行があれば空行1つ、無ければ
+/// 改行1つでつなぎ、含めない部分の行は抜く。値の末尾の空白と空行は除く（REQ-schema-063）。
+fn render(pieces: impl IntoIterator<Item = Piece>, doc: &Document) -> String {
+    let mut pieces: Vec<Piece> = pieces.into_iter().collect();
+    pieces.sort_by_key(|p| p.span.first);
+    let mut out = String::new();
+    let mut previous: Option<usize> = None;
+    for piece in pieces {
+        if let Some(last) = previous {
+            let blank = (last + 1..piece.span.first)
+                .any(|line| doc.raw_line(line).is_some_and(|t| t.trim().is_empty()));
+            out.push_str(if blank { "\n\n" } else { "\n" });
+        }
+        out.push_str(&piece.text);
+        previous = Some(piece.span.last);
     }
+    out.trim_end().to_string()
+}
+
+/// 行の範囲の元の行を改行でつなぐ。
+fn source_lines(doc: &Document, first: usize, last: usize) -> String {
+    (first..=last)
+        .map(|line| doc.raw_line(line).unwrap_or(""))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn continuation_pieces<'a>(
+    continuation: &'a [LineSpan],
+    doc: &'a Document,
+) -> impl Iterator<Item = Piece> + 'a {
+    continuation.iter().map(|span| Piece {
+        span: *span,
+        text: source_lines(doc, span.first, span.last),
+    })
+}
+
+/// 文の段落を1つの部分にする。段落の最初の空白でない文字から始め、2行目からは元の行のまま
+/// （REQ-schema-063）。
+fn statement_piece(block: &Block) -> Option<Piece> {
+    let Block::Statement { raw_lines, .. } = block else {
+        return None;
+    };
+    let (first, rest) = raw_lines.split_first()?;
+    let mut text = first.text.trim_start().to_string();
+    for next in rest {
+        text.push('\n');
+        text.push_str(&next.text);
+    }
+    Some(Piece {
+        span: LineSpan {
+            first: first.line,
+            last: rest.last().map_or(first.line, |r| r.line),
+        },
+        text,
+    })
+}
+
+/// 一覧の行（箇条書きか、箇条書きとして扱うフィールド行）の部分。マーカーの行から lead 段落の
+/// 終わりまでと継続段落を元の行のまま取り、子の箇条書きの部分を加える（REQ-schema-031、
+/// REQ-schema-063、TBL-schema-008）。`children` の宣言でフィールド行として宣言された子と、
+/// 表・コードブロックなどの子は含めない（A12）。`children` が無ければ子の一覧の行はすべて含める。
+fn list_item_pieces(block: &Block, children: Option<&Children>, doc: &Document) -> Vec<Piece> {
+    let mut pieces = own_pieces(block, doc);
     let declared: Vec<&str> = children
         .map(|c| c.fields.iter().map(|f| f.name.as_str()).collect())
         .unwrap_or_default();
-    let child_rule = children.and_then(|c| c.bullets.as_deref());
-    let child_lines: Vec<String> = child_blocks
-        .iter()
-        .filter_map(|child| match child {
-            Block::Bullet { .. } => Some(element_with_children(
-                child,
-                child_rule.and_then(|b| b.children.as_ref()),
-            )),
-            Block::Field { name, .. } if !declared.contains(&name.as_str()) => Some(
-                element_with_children(child, child_rule.and_then(|b| b.children.as_ref())),
-            ),
-            _ => None,
-        })
-        .collect();
-    if child_lines.is_empty() {
-        base
-    } else {
-        base + "\n" + &child_lines.join("\n")
+    let child_rule = children
+        .and_then(|c| c.bullets.as_deref())
+        .and_then(|b| b.children.as_ref());
+    for child in block.children() {
+        match child {
+            Block::Bullet { .. } => pieces.extend(list_item_pieces(child, child_rule, doc)),
+            Block::Field { name, .. } if !declared.contains(&name.as_str()) => {
+                pieces.extend(list_item_pieces(child, child_rule, doc))
+            }
+            _ => {}
+        }
     }
+    pieces
+}
+
+/// 一覧の行そのものの部分。マーカーの行から lead 段落の終わりまでと継続段落で、子は含めない。
+fn own_pieces(block: &Block, doc: &Document) -> Vec<Piece> {
+    let (Block::Bullet {
+        line_text,
+        line,
+        lead_end,
+        continuation,
+        ..
+    }
+    | Block::Field {
+        line_text,
+        line,
+        lead_end,
+        continuation,
+        ..
+    }) = block
+    else {
+        return Vec::new();
+    };
+    let mut text = line_text.clone();
+    if lead_end > line {
+        text.push('\n');
+        text.push_str(&source_lines(doc, line + 1, *lead_end));
+    }
+    std::iter::once(Piece {
+        span: LineSpan {
+            first: *line,
+            last: *lead_end,
+        },
+        text,
+    })
+    .chain(continuation_pieces(continuation, doc))
+    .collect()
 }
 
 fn extract_table(
@@ -568,8 +668,14 @@ fn extract_codeblock(
     place_occurrences(root, extract, elements, codeblock.repeat.is_some());
 }
 
-fn section_body(section: &DocSection, def: &crate::schema::Section) -> String {
-    body_from_blocks(&section.blocks, &def.fields, def.bullets.as_ref(), false)
+fn section_body(section: &DocSection, def: &crate::schema::Section, doc: &Document) -> String {
+    body_from_blocks(
+        &section.blocks,
+        &def.fields,
+        def.bullets.as_ref(),
+        false,
+        doc,
+    )
 }
 
 /// 項目をオブジェクトに組み立てる。内部のノードの抽出は項目オブジェクトの中の
@@ -605,7 +711,7 @@ fn item_object(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) 
             place(
                 &mut object,
                 key,
-                Value::String(item_value_text(item, item_rule)),
+                Value::String(item_value_text(item, item_rule, doc)),
             );
         }
         place_derived(&mut object, extract, doc, &got);
@@ -613,12 +719,12 @@ fn item_object(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) 
     Value::Object(object)
 }
 
-fn item_value(item: &DocItem, item_rule: &crate::schema::Item) -> Value {
-    Value::String(item_value_text(item, item_rule))
+fn item_value(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) -> Value {
+    Value::String(item_value_text(item, item_rule, doc))
 }
 
 /// 項目の要素の値。見出しと本文をつないだ文字列（TBL-schema-008）。
-fn item_value_text(item: &DocItem, item_rule: &crate::schema::Item) -> String {
+fn item_value_text(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) -> String {
     let heading = if item.title.is_empty() {
         item.id.clone()
     } else {
@@ -629,6 +735,7 @@ fn item_value_text(item: &DocItem, item_rule: &crate::schema::Item) -> String {
         &item_rule.fields,
         item_rule.bullets.as_ref(),
         true,
+        doc,
     );
     if body.is_empty() {
         heading
@@ -638,46 +745,28 @@ fn item_value_text(item: &DocItem, item_rule: &crate::schema::Item) -> String {
 }
 
 /// 本文を組み立てる。文と箇条書き（必要ならフィールド行も）を含み、
-/// 表・コードブロック・項目は含めない。文どうしは空行、それ以外の
-/// 隣接（文と箇条書き・文とフィールド行・箇条書きどうしなど）は改行で
-/// つなぐ。箇条書きは TBL-schema-008 の抽出要素（継続段落と子の箇条書きの行を含む
-/// 文字列）を使う。宣言された名前と一致しない `- 名前: 値` 行は箇条書きとして
-/// 本文に含める（TBL-schema-007）。
+/// 表・コードブロック・項目は含めない。含めた部分は REQ-schema-063 のとおりにつなぐ。
+/// 宣言された名前と一致しない `- 名前: 値` 行は箇条書きとして本文に含める（TBL-schema-007）。
 fn body_from_blocks(
     blocks: &[Block],
     fields: &[Field],
     bullets: Option<&Bullets>,
     include_fields: bool,
+    doc: &Document,
 ) -> String {
-    let mut out = String::new();
-    let mut last_was_statement = false;
-    for block in blocks {
-        let (text, is_statement): (String, bool) = match block {
-            Block::Statement { text, .. } => (text.clone(), true),
-            Block::Bullet { .. } => (
-                element_with_children(block, bullets.and_then(|b| b.children.as_ref())),
-                false,
-            ),
-            Block::Field { name, .. } if include_fields && is_declared_field(fields, name) => {
-                (block.field_element(), false)
-            }
-            Block::Field { name, .. } if include_fields || !is_declared_field(fields, name) => (
-                element_with_children(block, bullets.and_then(|b| b.children.as_ref())),
-                false,
-            ),
-            _ => continue,
-        };
-        if !out.is_empty() {
-            out.push_str(if is_statement && last_was_statement {
-                "\n\n"
-            } else {
-                "\n"
-            });
+    let children = bullets.and_then(|b| b.children.as_ref());
+    let pieces = blocks.iter().flat_map(|block| match block {
+        Block::Statement { .. } => statement_piece(block).into_iter().collect(),
+        Block::Bullet { .. } => list_item_pieces(block, children, doc),
+        Block::Field { name, .. } if include_fields && is_declared_field(fields, name) => {
+            own_pieces(block, doc)
         }
-        out.push_str(&text);
-        last_was_statement = is_statement;
-    }
-    out
+        Block::Field { name, .. } if include_fields || !is_declared_field(fields, name) => {
+            list_item_pieces(block, children, doc)
+        }
+        _ => Vec::new(),
+    });
+    render(pieces, doc)
 }
 
 /// 1つの要素の導かれる値の材料（REQ-schema-048）。
@@ -1027,7 +1116,7 @@ document:
         assert_eq!(v["tags"], json!([["a", "b"], ["c"]]));
     }
 
-    // @kotowari[REQ-schema-030, REQ-schema-035, REQ-schema-046]
+    // @kotowari[REQ-schema-030, REQ-schema-035, REQ-schema-046, REQ-schema-063]
     #[test]
     fn separator_split_excludes_continuation_paragraphs() {
         let schema = r#"
@@ -1042,7 +1131,7 @@ document:
         let v = values(schema, doc);
         assert_eq!(
             v["tags"],
-            json!(["a", "b\n継続,の段落"]),
+            json!(["a", "b\n\n  継続,の段落"]),
             "継続段落は値の分割に含めず、末尾の要素に改行で付ける（REQ-schema-046）"
         );
     }
@@ -1106,7 +1195,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-schema-035]
+    // @kotowari[REQ-schema-035, REQ-schema-063]
     #[test]
     fn section_body_includes_statements_and_bullets_only() {
         let schema = r#"
@@ -1127,8 +1216,8 @@ document:
 "#;
         let doc = "## 状況\n\n背景。\n\n- 箇条1\n- 箇条2\n\n| a |\n|---|\n| x |\n\n```gherkin\nScenario: 例\n```\n";
         let v = values(schema, doc);
-        // 文と箇条書きの間は改行、文どうしだけ空行でつなぐ
-        assert_eq!(v["sections"]["body"], "背景。\n- 箇条1\n- 箇条2");
+        // 部分の間は元の文書の空行を残し、表とコードブロックは抜く（REQ-schema-063）
+        assert_eq!(v["sections"]["body"], "背景。\n\n- 箇条1\n- 箇条2");
     }
 
     // @kotowari[REQ-schema-030, REQ-schema-035]
@@ -1147,7 +1236,7 @@ document:
         let doc = "## 状況\n\n- 理由1\n\n  続きの段落\n  - 入れ子\n";
         let v = values(schema, doc);
         // 子の箇条書きの行は、そのままのインデントで親の抽出要素に含める（REQ-schema-031、TBL-schema-008）
-        assert_eq!(v["sections"]["body"], "- 理由1\n続きの段落\n  - 入れ子");
+        assert_eq!(v["sections"]["body"], "- 理由1\n\n  続きの段落\n  - 入れ子");
     }
 
     // @kotowari[REQ-schema-028, REQ-schema-035]
@@ -1185,7 +1274,7 @@ document:
         let v = values(schema, doc);
         assert_eq!(
             v["reasons"],
-            json!(["* 親\n続きの段落"]),
+            json!(["* 親\n\n  続きの段落"]),
             "継続段落を付けるときも元のマーカーを保つ（TBL-schema-008）"
         );
     }
@@ -1225,12 +1314,12 @@ document:
         let v = values(schema, doc);
         assert_eq!(
             v["reasons"],
-            json!(["-  親\n続きの段落"]),
+            json!(["-  親\n\n    続きの段落"]),
             "継続段落とつなぐときも元の行のマーカー直後の空白を保つ（TBL-schema-008）"
         );
     }
 
-    // @kotowari[REQ-schema-035]
+    // @kotowari[REQ-schema-035, REQ-schema-063]
     #[test]
     fn bullet_extract_includes_lead_paragraph_on_a_separate_line_from_the_marker() {
         let schema = r#"
@@ -1245,7 +1334,7 @@ document:
         let v = values(schema, doc);
         assert_eq!(
             v["reasons"],
-            json!(["- \n親", "- 次"]),
+            json!(["- \n  親", "- 次"]),
             "マーカー行と別の行にある lead 段落の内容を抽出要素が欠落させない（TBL-schema-008）"
         );
     }
@@ -1290,7 +1379,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-schema-030, REQ-schema-035]
+    // @kotowari[REQ-schema-030, REQ-schema-035, REQ-schema-063]
     #[test]
     fn bullet_extract_includes_marker_and_continuation() {
         let schema = r#"
@@ -1303,12 +1392,12 @@ document:
 "#;
         let doc = "## 理由\n\n- 親\n\n  続きの段落\n\n- 次\n";
         let v = values(schema, doc);
-        assert_eq!(v["reasons"], json!(["- 親\n続きの段落", "- 次"]));
+        assert_eq!(v["reasons"], json!(["- 親\n\n  続きの段落", "- 次"]));
     }
 
-    // @kotowari[REQ-schema-030, REQ-schema-035]
+    // @kotowari[REQ-schema-030, REQ-schema-035, REQ-schema-063]
     #[test]
-    fn bullet_with_multiple_continuations_joins_them_with_blank_line() {
+    fn bullet_with_multiple_continuations_keeps_the_blank_lines_between_them() {
         let schema = r#"
 document:
   sections:
@@ -1319,7 +1408,7 @@ document:
 "#;
         let doc = "## 理由\n\n- 親\n\n  続き1\n\n  続き2\n";
         let v = values(schema, doc);
-        assert_eq!(v["reasons"], json!(["- 親\n続き1\n\n続き2"]));
+        assert_eq!(v["reasons"], json!(["- 親\n\n  続き1\n\n  続き2"]));
     }
 
     // @kotowari[REQ-schema-028, REQ-schema-035]
@@ -1342,7 +1431,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-schema-030, REQ-schema-035, REQ-schema-046]
+    // @kotowari[REQ-schema-030, REQ-schema-035, REQ-schema-046, REQ-schema-063]
     #[test]
     fn field_extract_includes_continuation_paragraph() {
         let schema = r#"
@@ -1355,12 +1444,12 @@ document:
         let doc = "# 題名\n\n- 状態: 承認済み\n\n  継続の段落\n";
         let v = values(schema, doc);
         assert_eq!(
-            v["status"], "承認済み\n継続の段落",
-            "フィールド行の継続段落は値に改行でつなぐ（REQ-schema-046）"
+            v["status"], "承認済み\n\n  継続の段落",
+            "フィールド行の継続段落は元の空行と字下げのまま値に付く（REQ-schema-063）"
         );
     }
 
-    // @kotowari[REQ-schema-030, REQ-schema-035]
+    // @kotowari[REQ-schema-030, REQ-schema-035, REQ-schema-063]
     #[test]
     fn item_body_field_line_includes_continuation_paragraph() {
         let schema = r#"
@@ -1380,11 +1469,11 @@ document:
         // 継続段落はフィールド行の一部なので、項目の本文のフィールド行にも含める（REQ-schema-030）
         assert_eq!(
             v["items"],
-            json!(["REQ-001: 名前\n- 種類: algorithm\n継続の説明"])
+            json!(["REQ-001: 名前\n- 種類: algorithm\n\n  継続の説明"])
         );
     }
 
-    // @kotowari[REQ-schema-035]
+    // @kotowari[REQ-schema-035, REQ-schema-063]
     #[test]
     fn item_extract_is_heading_plus_body() {
         let schema = r#"
@@ -1401,10 +1490,10 @@ document:
 "#;
         let doc = "## 要求\n\n### REQ-001: 名前\n\n- 種類: algorithm\n\n本文。\n";
         let v = values(schema, doc);
-        // 見出しと本文は改行でつなぎ、本文内は文どうしだけ空行でつなぐ
+        // 見出しと本文は改行でつなぎ、本文の部分の間は元の文書の空行を残す（REQ-schema-063）
         assert_eq!(
             v["items"],
-            json!(["REQ-001: 名前\n- 種類: algorithm\n本文。"])
+            json!(["REQ-001: 名前\n- 種類: algorithm\n\n本文。"])
         );
     }
 

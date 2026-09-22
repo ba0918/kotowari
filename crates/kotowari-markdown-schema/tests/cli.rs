@@ -1943,3 +1943,90 @@ document:
         .unwrap_or_else(|| panic!("repeat_min_not_met が無い: {json}"));
     assert_eq!(min["rule_kind"], "statement", "{json}");
 }
+
+// @kotowari[EX-schema-054]
+#[test]
+fn values_json_keeps_bullet_lines_and_blank_lines_as_written() {
+    let schema = r#"
+document:
+  sections:
+    - name: 理由
+      bullets:
+        repeat: { min: 0 }
+        extract: reasons
+"#;
+    let doc = "## 理由\n\n- 親\n  親の二行目\n\n  続き\n\n  - 子\n- \n  単独の親\n\n  単独の続き\n";
+    let v = values_json(schema, doc);
+    assert_eq!(
+        v["reasons"],
+        serde_json::json!([
+            "- 親\n  親の二行目\n\n  続き\n\n  - 子",
+            "- \n  単独の親\n\n  単独の続き"
+        ]),
+        "マーカーの後の行は字下げを含む元の行のまま、部分の間の空行も残る"
+    );
+}
+
+// @kotowari[EX-schema-055]
+#[test]
+fn values_json_starts_a_field_value_after_the_name_and_keeps_its_continuation_apart() {
+    let schema = r#"
+document:
+  preamble:
+    fields:
+      - name: 状態
+        extract: status
+      - name: タグ
+        separator: ","
+        extract: tags
+"#;
+    let doc =
+        "# 題名\n\n- 状態: 承認\n  値の二行目\n\n  状態の続き\n- タグ: a,\n  b\n\n  継続,の段落\n";
+    let v = values_json(schema, doc);
+    assert_eq!(v["status"], "承認\n  値の二行目\n\n  状態の続き");
+    assert_eq!(
+        v["tags"],
+        serde_json::json!(["a", "b\n\n  継続,の段落"]),
+        "区切るのは lead 段落の値だけで、継続段落は空行を挟んで末尾の要素に付く"
+    );
+}
+
+// @kotowari[EX-schema-056]
+#[test]
+fn values_json_drops_excluded_blocks_from_a_section_body_and_merges_blank_lines() {
+    let schema = r#"
+document:
+  sections:
+    - name: 本文
+      extract: body
+      statement:
+        required: false
+      fields:
+        - name: 状態
+      bullets:
+        repeat: { min: 0 }
+"#;
+    let doc =
+        "## 本文\n\n文の一行目\n  文の二行目\n\n- 状態: 承認\n\n- 箇条\n\n次の文\n- 直後の箇条\n";
+    let v = values_json(schema, doc);
+    assert_eq!(
+        v["body"], "文の一行目\n  文の二行目\n\n- 箇条\n\n次の文\n- 直後の箇条",
+        "フィールド行を抜いた跡の空行は1つにまとまり、空行を挟まない文と箇条書きは改行1つでつながる"
+    );
+}
+
+// @kotowari[EX-schema-057]
+#[test]
+fn values_json_adds_no_blank_line_between_statement_lines_read_by_line() {
+    let schema = r#"
+reading: line
+document:
+  sections:
+    - name: 本文
+      statement:
+        extract: text
+"#;
+    let doc = "## 本文\n\n一行目\n二行目\n\n三行目\n";
+    let v = values_json(schema, doc);
+    assert_eq!(v["text"], "一行目\n二行目\n\n三行目");
+}
