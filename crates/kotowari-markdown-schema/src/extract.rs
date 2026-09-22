@@ -457,7 +457,10 @@ fn table_rows(
     doc: &Document,
 ) -> Vec<Value> {
     let Block::Table {
-        rows, row_lines, ..
+        rows,
+        row_lines,
+        line,
+        ..
     } = block
     else {
         return Vec::new();
@@ -465,8 +468,11 @@ fn table_rows(
     rows.iter()
         .enumerate()
         .map(|(row_index, row)| {
-            let line = row_lines.get(row_index).copied().unwrap_or_default();
-            element_value(extract, doc, row_value(header, row), &Derived::at(line))
+            // 行番号は1始まりなので 0 に落とさない。0 だと `line` は 0 を返すのに
+            // `raw` は行を引けず鍵ごと消え、同じ要素の2つの導かれる値が食い違う。
+            // 表の開始行に落として validate 側の扱いに揃える
+            let row_line = row_lines.get(row_index).copied().unwrap_or(*line);
+            element_value(extract, doc, row_value(header, row), &Derived::at(row_line))
         })
         .collect()
 }
