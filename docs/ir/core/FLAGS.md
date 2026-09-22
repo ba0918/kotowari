@@ -8,7 +8,7 @@ IR の読み取りをスキーマに置き換える工程で、まだ埋まっ�
 - 関係: REQ-core-171, TBL-core-029
 - 出典: docs/decision/records/2026-09-22-ir-engine.md#A10
 
-TBL-core-029 は対応表が持つ5つの列と、名前が同じで意味が違う3件だけを定めており、行が1つも無い。行は "crates/kotowari-markdown-schema/src/finding.rs" の種類の列挙を読んで作る。壁打ちでは行の中身を決めていない。
+TBL-core-029 は対応表が持つ5つの列と、名前が同じで意味が違う3件を定めるだけで、写し先そのものを並べた表はまだ書かれていない。その表は "crates/kotowari-markdown-schema/src/finding.rs" の種類の列挙を読んで作る。壁打ちでは列だけを決め、1行ずつの中身を決めていない。
 
 ### FLAG-core-002: 新しい停止の理由の文言が決まっていない
 
@@ -40,7 +40,7 @@ REQ-core-168 は IR の文書がスキーマを宣言しないと定めるが、
 - 関係: REQ-core-174, REQ-core-125
 - 出典: docs/decision/records/2026-09-22-ir-engine.md#A39
 
-"skills/kotowari/references/findings.md" の表に unknown_line、unknown_code_block、glossary_title_invalid の行が無く、同じ references の "ir-form.md" の除外の列挙には "## " の見出しの直下で最初の "### " より前の行が残っている。REQ-core-125 が references の1列目とコードが出す種類の集合の一致をテストで固定しているので、コードが3種類を出すようになったときに同じ工程で直す。
+"skills/kotowari/references/findings.md" の表に unknown_line、unknown_code_block、glossary_title_invalid の行が無く、同じ references の "ir-form.md" と、出典の先である "docs/decision/records/ir-form.md" の除外の列挙には、"## " の見出しの直下で最初の "### " より前の行が残っている。REQ-core-125 が references の1列目とコードが出す種類の集合の一致をテストで固定しているので、コードが3種類を出すようになったときに同じ工程で直す。
 
 ### FLAG-core-006: 自前の読み取りを名指しする確かめ方が残っている
 

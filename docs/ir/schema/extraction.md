@@ -139,10 +139,10 @@ Scenario: 表の行の鍵はスキーマの宣言か列の位置から取る
 
 @id=EX-schema-019 @about=TBL-schema-008,REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A13,docs/decision/records/2026-09-22-ir-engine.md#A59
 Scenario: 導かれる値を宣言した表の行番号はデータ行を指す
-  Given ヘッダとデータ3行を持つ`表`に`導かれる値`を宣言した`スキーマ`がある
+  Given ヘッダとデータ3行を持つ`表`が2つあり、その`表`に`導かれる値`を宣言した`スキーマ`がある
   When "mds values --format json" を実行する
   Then 行ごとの行番号はその`表`のデータ行の行番号と一致する
-  And `表`が繰り返すときは`配置パス`の直下に`表`ごとの段ができる
+  And `配置パス`の直下は`表`ごとの段になる
 
 @id=EX-schema-020 @about=REQ-schema-048,TBL-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A37,docs/decision/records/2026-09-22-ir-engine.md#A57,docs/decision/records/2026-09-22-ir-engine.md#A66
 Scenario: 導かれる値を宣言した文は行ごとの要素になる

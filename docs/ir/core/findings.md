@@ -56,7 +56,7 @@
 - 出典: docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A35, docs/decision/records/2026-09-22-ir-engine.md#A39
 - 検証: unit
 
-"## " の見出しの直下で最初の "### " より前に空でない行があるとき kotowari は unknown_line の`誤り`を、"## 具体例" の見出しの下に gherkin でない`コードブロック`があるとき unknown_code_block の`誤り`を、`用語集`の`題名`が "用語集" でないとき glossary_title_invalid の`誤り`を出す。detail は TBL-core-008、"line" は TBL-core-019 のとおりにする。
+"## " の見出しの直下で最初の "### " より前に、`コードブロック`の外にあって一覧でも表でもない空でない行があるとき kotowari は unknown_line の`誤り`を、"## 具体例" の見出しの下に gherkin でない`コードブロック`があるとき unknown_code_block の`誤り`を、`用語集`の`題名`が "用語集" でないとき glossary_title_invalid の`誤り`を出す。detail は TBL-core-008、"line" は TBL-core-019 のとおりにする。
 
 ## 決定表
 
@@ -155,7 +155,7 @@ Scenario: 写し先の無い指摘は停止になる
 
 @id=EX-core-266 @about=REQ-core-174 @source=docs/decision/records/2026-09-22-ir-engine.md#A33,docs/decision/records/2026-09-22-ir-engine.md#A35
 Scenario: 宣言の外の3つの場面はそれぞれ誤りになる
-  Given "## " の見出しの直下に宣言の外の空でない行を持つ`話題ごとの文書`と、"## 具体例" の見出しの下に gherkin でない`コードブロック`を持つ`話題ごとの文書`と、`題名`が "用語集" でない`用語集`がある
+  Given "## " の見出しの直下に`コードブロック`の外の空でない行を持つ`話題ごとの文書`と、"## 具体例" の見出しの下に gherkin でない`コードブロック`を持つ`話題ごとの文書`と、`題名`が "用語集" でない`用語集`がある
   When "kotowari check --format json" を実行する
   Then unknown_line と unknown_code_block と glossary_title_invalid の`誤り`が1件ずつ出る
   And それぞれの detail は TBL-core-008、"line" は TBL-core-019 のとおりである
