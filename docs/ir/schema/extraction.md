@@ -49,15 +49,15 @@ mds は常に、`文書`から取り出した`抽出`の値を文字列として
 ### REQ-schema-047: 項目のオブジェクトの形
 
 - 種類: state_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A22
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A22, docs/decision/records/2026-09-22-ir-engine.md#A52, docs/decision/records/2026-09-22-ir-engine.md#A60, docs/decision/records/2026-09-22-ir-engine.md#A69
 - 検証: unit
 
-`項目`の内側の`ノード`が`抽出`を宣言している間、または`項目`の`抽出`が`要素の値`の置き場か`導かれる値`を宣言している間、mds は`項目`ごとに1つのオブジェクトを組み立て、内側の`配置パス`をそのオブジェクトの中の相対パスとして解決する。どれでもない間は、見出しと本文をつないだ1つの文字列にする。
+`項目`の内側の`ノード`が`抽出`を宣言している間、または`項目`の`抽出`が`要素の値`の置き場か`導かれる値`を宣言している間、mds は`項目`ごとに1つのオブジェクトを組み立て、内側の`配置パス`をそのオブジェクトの中の相対パスとして解決する。どれでもない間は、オブジェクトを組み立てず TBL-schema-008 の略記の形にする。
 
 ### REQ-schema-048: 導かれる値
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A22, docs/decision/records/2026-09-21-mds-spec.md#A23
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A22, docs/decision/records/2026-09-21-mds-spec.md#A23, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-22-ir-engine.md#A45, docs/decision/records/2026-09-22-ir-engine.md#A49, docs/decision/records/2026-09-22-ir-engine.md#A52, docs/decision/records/2026-09-22-ir-engine.md#A53, docs/decision/records/2026-09-22-ir-engine.md#A56, docs/decision/records/2026-09-22-ir-engine.md#A58, docs/decision/records/2026-09-22-ir-engine.md#A69
 - 検証: unit
 
 mds は常に、`ノード`の`抽出`の宣言を1つの入れ子として受け、"path" に`配置パス`をちょうど1つ、"value" に`要素の値`の置き場を、"of" に`導かれる値`を、"group" に名前付きキャプチャを取る。`導かれる値`は行番号、`項目`の見出しの ID、`項目`の見出しの名前、`生の行`の4つで、行番号は数値で出し、ほかの語は`停止`にする。`ノード`が "value" か`導かれる値`を宣言したときは、その`ノード`の要素ごとに1つのオブジェクトを組み立て、"value" と "of" の鍵と内側の`ノード`の`配置パス`を、そのオブジェクトの中の相対パスとして解く。
@@ -91,7 +91,7 @@ mds は常に、区切り文字による分割を`継続段落`を含めない�
 
 ### TBL-schema-008: 抽出の形
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A13, docs/decision/records/2026-09-22-ir-engine.md#A57, docs/decision/records/2026-09-22-ir-engine.md#A59, docs/decision/records/2026-09-22-ir-engine.md#A64, docs/decision/records/2026-09-22-ir-engine.md#A69, docs/decision/records/2026-09-22-ir-engine.md#A70
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A13, docs/decision/records/2026-09-22-ir-engine.md#A43, docs/decision/records/2026-09-22-ir-engine.md#A44, docs/decision/records/2026-09-22-ir-engine.md#A48, docs/decision/records/2026-09-22-ir-engine.md#A53, docs/decision/records/2026-09-22-ir-engine.md#A57, docs/decision/records/2026-09-22-ir-engine.md#A59, docs/decision/records/2026-09-22-ir-engine.md#A64, docs/decision/records/2026-09-22-ir-engine.md#A69, docs/decision/records/2026-09-22-ir-engine.md#A70
 
 どの`ノード`でも、"value" も`導かれる値`も宣言しなければ下の「略記の形」をそのまま出し、どちらかを宣言すれば要素ごとにオブジェクトを組み立てて、`要素の値`を "value" の鍵に、`導かれる値`を "of" の鍵に置く。
 
@@ -99,11 +99,11 @@ mds は常に、区切り文字による分割を`継続段落`を含めない�
 |---|---|---|---|---|
 | `題名` | 分けない | 見出しの文字列。"group" を宣言したときは名前付きキャプチャが捕まえた文字 | `題名`の見出しの行 | 見出しの文字列。"group" を宣言したときは正規表現の名前付きキャプチャ |
 | `フィールド行` | 分けない | 値の文字列。区切り文字を宣言すれば文字列の配列 | その`フィールド行`の行 | 値の文字列。区切り文字を宣言すれば文字列の配列 |
-| `文` | `導かれる値`を宣言したときだけ行、宣言しなければ分けない | 行に分けたときは前後の空白を取り除いた行の文字、分けないときは本文の文字列 | 行に分けたときはその行、分けないときは最初の`文`の行 | 本文の文字列 |
+| `文` | `導かれる値`を宣言したときだけ行、宣言しなければ分けない | 行に分けたときは前後の空白を取り除いた行の文字、分けないときは本文の文字列 | その行 | 本文の文字列 |
 | `節` | 分けない | `文`と`箇条書き`だけをつないだ本文の文字列 | `節`の見出しの行 | `文`と`箇条書き`だけをつないだ本文の文字列 |
 | `項目` | `項目` | 見出しと本文をつないだ1つの文字列 | `項目`の見出しの行 | 見出しと本文をつないだ1つの文字列、または内側の`配置パス`をキーにしたオブジェクト（REQ-schema-047） |
 | `箇条書き` | 行 | 元の行（`継続段落`と子の`箇条書き`の行を含む） | その行のマーカーの行 | 元の行を保った文字列の配列 |
-| `表` | データ行 | データ行の値。鍵は "header" を宣言すればその名前、宣言しなければ列の位置（配列）。`出現回数`を宣言したときは`配置パス`の直下に`表`ごとの段を作る | そのデータ行の行 | 行の配列。行の鍵は "header" を宣言すればその名前、宣言しなければ列の位置（配列）にし、`文書`のヘッダ行の文字は鍵に使わない。`表`が複数あるときは現れた順に1つの配列へつなぐ |
+| `表` | データ行 | データ行の値。鍵は "header" を宣言すればその名前、宣言しなければ列の位置（配列）。`出現回数`を宣言したときは`配置パス`の直下に`表`ごとの段を作る | そのデータ行の行 | 行の配列。行の鍵は "header" を宣言すればその名前、宣言しなければ列の位置（配列）にし、`文書`のヘッダ行の文字は鍵に使わない |
 | `コードブロック` | ブロック | ブロック全体の文字列 | そのブロックのフェンスの開始行 | ブロック全体の文字列 |
 
 ## 性質
@@ -139,7 +139,7 @@ Scenario: 表の行の鍵はスキーマの宣言か列の位置から取る
 
 @id=EX-schema-019 @about=TBL-schema-008,REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A13,docs/decision/records/2026-09-22-ir-engine.md#A59
 Scenario: 導かれる値を宣言した表の行番号はデータ行を指す
-  Given ヘッダとデータ3行を持つ`表`が2つあり、その`表`に`導かれる値`を宣言した`スキーマ`がある
+  Given ヘッダとデータ3行を持つ`表`が2つあり、その`表`に`出現回数`と`導かれる値`を宣言した`スキーマ`がある
   When "mds values --format json" を実行する
   Then 行ごとの行番号はその`表`のデータ行の行番号と一致する
   And `配置パス`の直下は`表`ごとの段になる
@@ -160,25 +160,25 @@ Scenario: 略記の抽出は要素に分けない
   Then `文`の値は1つの文字列になり、`表`の値は行の並びになる
   And 要素ごとのオブジェクトは作らない
 
-@id=EX-schema-022 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A45,docs/decision/records/2026-09-22-ir-engine.md#A52
+@id=EX-schema-022 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A45,docs/decision/records/2026-09-22-ir-engine.md#A52,docs/decision/records/2026-09-21-mds-spec.md#A15,docs/decision/records/2026-09-21-mds-spec.md#P1
 Scenario: 配置パスの無い抽出は停止する
   Given "path" を書かない`抽出`を宣言した`スキーマ`がある
   When "mds values" を実行する
   Then 終了コードは 2 である
 
-@id=EX-schema-023 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A60
+@id=EX-schema-023 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A60,docs/decision/records/2026-09-22-ir-engine.md#A56
 Scenario: value を省くと要素は導かれる値の鍵だけを持つ
   Given "value" を書かず "of" だけを書いた`抽出`を宣言した`スキーマ`がある
   When "mds values --format json" を実行する
   Then 要素のオブジェクトは`導かれる値`の鍵と、内側の`ノード`が宣言した`配置パス`だけを持つ
 
-@id=EX-schema-024 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A49,docs/decision/records/2026-09-22-ir-engine.md#A54
+@id=EX-schema-024 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A49,docs/decision/records/2026-09-22-ir-engine.md#A54,docs/decision/records/2026-09-21-mds-spec.md#A23,docs/decision/records/2026-09-21-mds-spec.md#A15,docs/decision/records/2026-09-21-mds-spec.md#P1
 Scenario: 項目にだけ宣言できる導かれる値を表に宣言すると停止する
   Given `表`に見出しの ID を取る`導かれる値`を宣言した`スキーマ`がある
   When "mds values" を実行する
   Then 終了コードは 2 である
 
-@id=EX-schema-025 @about=REQ-schema-048,TBL-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A49,docs/decision/records/2026-09-22-ir-engine.md#A50,docs/decision/records/2026-09-22-ir-engine.md#A58
+@id=EX-schema-025 @about=REQ-schema-048,TBL-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A49,docs/decision/records/2026-09-22-ir-engine.md#A50,docs/decision/records/2026-09-22-ir-engine.md#A58,docs/decision/records/2026-09-22-ir-engine.md#A64
 Scenario: 生の行はどのノードにも宣言できる
   Given `題名`と`表`の行と`項目`と`コードブロック`に`生の行`と行番号を宣言した`スキーマ`がある
   When "mds values --format json" を実行する
