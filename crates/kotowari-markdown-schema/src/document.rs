@@ -492,7 +492,7 @@ fn split_field(text: &str) -> Option<(String, String)> {
 }
 
 impl Block {
-    /// ブロックが現れた行番号（1始まり）。`of: line` の抽出に使う（REQ-schema-048）。
+    /// ブロックが現れた行番号（1始まり）。導かれる値の `line` と `raw` の抽出に使う（REQ-schema-048）。
     pub fn line(&self) -> usize {
         match self {
             Block::Field { line, .. }

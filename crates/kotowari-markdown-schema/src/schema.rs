@@ -450,7 +450,7 @@ fn validate_title(title: &Title) -> Result<(), SchemaError> {
     let Some(group) = title.extract.as_ref().and_then(Extract::group) else {
         return Ok(());
     };
-    // 書式2（名前付きキャプチャ）は pattern のキャプチャを取る。pattern が無い、
+    // `group` を宣言した抽出は pattern の名前付きキャプチャを取る。pattern が無い、
     // または pattern が指定の名前付きキャプチャを含まない題名は schema_invalid（REQ-schema-048）
     let Some(pattern) = &title.pattern else {
         return Err(SchemaError(
@@ -894,7 +894,7 @@ document:
     // @kotowari[REQ-schema-035]
     #[test]
     fn capture_extract_outside_title_is_schema_invalid() {
-        // 書式2（名前付きキャプチャ）は題名にだけ使える。題名以外のノードで
+        // `group` の宣言（名前付きキャプチャ）は題名にだけ使える。題名以外のノードで
         // 宣言したときは schema_invalid の停止になる（TBL-schema-008）。
         let cases: &[(&str, &str)] = &[
             (
@@ -1001,7 +1001,7 @@ document:
     // @kotowari[REQ-schema-035]
     #[test]
     fn capture_extract_without_pattern_is_schema_invalid() {
-        // 書式2の抽出は pattern の名前付きキャプチャを取る。pattern が無い
+        // `group` を宣言した抽出は pattern の名前付きキャプチャを取る。pattern が無い
         // 題名は schema_invalid の停止になる（REQ-schema-048）。
         let yaml = r#"
 document:
@@ -1327,7 +1327,7 @@ document:
         - name: 状態
           extract:
             - status
-            - { path: status_line, of: line }
+            - { path: status_line, of: { line: line } }
 "#;
         assert!(
             parse_schema(yaml).is_err(),
