@@ -49,3 +49,11 @@ REQ-core-168 は IR の文書がスキーマを宣言しないと定めるが、
 - 出典: docs/decision/records/2026-09-22-ir-engine.md#A1
 
 REQ-core-089、REQ-core-041、REQ-core-120 の確かめ方は "crates/kotowari-core/src/ir.rs" の parse_document、scope_lines、check_documents、read_utf8_file を名指しする。REQ-core-169 で自前の読み取りをやめると、これらの関数は残らないか役割が変わる。
+
+### FLAG-core-007: 文書名の参照を走査する行の出どころが決まっていない
+
+- 種類: gap
+- 関係: REQ-core-169, REQ-core-173
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A37, docs/decision/records/ir-form.md#文書名の参照
+
+REQ-core-173 は`文書名の参照`の検査を kotowari に残すと定め、REQ-core-169 は生の行を読んでよい場面を gherkin の塊の中身と閉じない`コードブロック`の検出の2つに限る。A23 が閉じない`コードブロック`を2つ目の例外と数え、A29 と A37 の rejected が例外を3つに増やす案を2度退けているためである。一方、判断の記録の`文書名の参照`の節は`コードブロック`の外にある並びをすべて対象にしていて、見出しの行も一覧の行も表のセルも含む。A37 がエンジンに足す`文`の行ごとの`生の行`だけでは足りず、A46 は`題名`の生の行を外している。置き換えた後にこの走査がどの行を受け取るかを定めた決定が無い。
