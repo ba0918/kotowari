@@ -73,9 +73,9 @@ A64 は要素に分けない`ノード`を並べるだけで本文の作り方�
 
 - 種類: gap
 - 関係: REQ-schema-048, EX-schema-024
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A23
+- 出典: docs/decision/records/2026-09-21-mds-spec.md#A23, docs/decision/records/2026-09-22-ir-engine.md#A54
 
-`crates/kotowari-markdown-schema/src/schema.rs` の `reject_item_only_of` は、`項目`の外の`ノード`に "of" の "id" と "name" を宣言した`スキーマ`を`停止`にする。A23 は`導かれる値`を「行番号、`項目`の見出しの ID と名前」と列挙するだけで、`項目`以外の`ノード`に宣言できないことも、そのときの応答が終了コード 2 であることも定めていない。A54 が宣言できる範囲を定めるのは`生の行`だけである。EX-schema-024 は、決定のある「受けない語は`停止`」の場面に置き換えた。
+`crates/kotowari-markdown-schema/src/schema.rs` の `reject_item_only_of` は、`項目`の外の`ノード`に "of" の "id" と "name" を宣言した`スキーマ`を`停止`にする。A23 は`導かれる値`を「行番号、`項目`の見出しの ID と名前」と列挙するだけで、`項目`以外の`ノード`に宣言できないことも、そのときの応答が終了コード 2 であることも定めていない。A54 は`生の行`を宣言できる範囲を行番号と同じ（どの`ノード`にも）と定めるだけで、`項目`の見出しの ID と名前を宣言できる範囲には触れていない。EX-schema-024 は、決定のある「受けない語は`停止`」の場面に置き換えた。
 
 ### FLAG-schema-010: 停止の理由の2つの場面に決定が無い
 
