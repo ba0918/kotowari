@@ -40,7 +40,7 @@ kotowari は常に、`IR`の形を宣言したスキーマをコンパイル時�
 ### REQ-core-169: 形の読み取りを自前で持たない
 
 - 種類: prohibition
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A1, docs/decision/records/2026-09-22-ir-engine.md#A37
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A1, docs/decision/records/2026-09-22-ir-engine.md#A23, docs/decision/records/2026-09-22-ir-engine.md#A37, docs/decision/records/2026-09-21-mds-spec.md#A6, docs/decision/records/records.md#A88, docs/decision/records/ir-form.md#文書名の参照
 - 検証: review
 - 確かめ方: `crates/kotowari-core/src/ir.rs` の関数の一覧を見て、生の行を読む関数が gherkin の塊の中身、閉じない`コードブロック`の検出、`文書名の参照`の走査の3つに対応するものだけであり、見出し、"- 名前:" の行、Markdown の表、`題名`と`文書が扱う範囲`を読む関数が無いことを確認する
 
@@ -49,7 +49,7 @@ kotowari は、`IR`の文書の Markdown の構造を自前で読んではなら
 ### REQ-core-170: 指摘の行のためにスキーマへ宣言するもの
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A6, docs/decision/records/2026-09-22-ir-engine.md#A67
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A6, docs/decision/records/2026-09-22-ir-engine.md#A37, docs/decision/records/2026-09-22-ir-engine.md#A67
 - 検証: review
 - 確かめ方: 置き換えの前後で、source_invalid、gherkin の中の`指摘`、unclosed_backtick を出す既存のテストが通ることを見る
 
@@ -58,7 +58,7 @@ kotowari は常に、スキーマに`出典`の "- 出典:" の行の行番号�
 ### REQ-core-173: kotowari に残す検査
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A1, docs/decision/records/2026-09-22-ir-engine.md#A4, docs/decision/records/2026-09-22-ir-engine.md#A23, docs/decision/records/2026-09-22-ir-engine.md#A30, docs/decision/records/2026-09-22-ir-engine.md#A37
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A1, docs/decision/records/2026-09-22-ir-engine.md#A4, docs/decision/records/2026-09-22-ir-engine.md#A23, docs/decision/records/2026-09-22-ir-engine.md#A24, docs/decision/records/2026-09-22-ir-engine.md#A30, docs/decision/records/2026-09-22-ir-engine.md#A37, docs/decision/records/2026-09-22-ir-engine.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A6, docs/decision/records/2026-09-22-id-namespace.md#A3, docs/decision/records/records.md#A88, docs/decision/records/ir-form.md#文書名の参照
 - 検証: review
 - 確かめ方: 置き換えの前後で、これらの`指摘`を出す既存のテストが通ることと、同じ判定がスキーマの側にも宣言されていないことを確認する
 
