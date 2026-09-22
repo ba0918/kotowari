@@ -27,6 +27,8 @@ kotowari の仕様に基づく（改訂 2026-09-22。本体の版は固定しな
 | missing_scope | 話題ごとの文書に範囲の行が無い | 題名の後に文書が扱う範囲の行を足す | brainstorm |
 | unknown_heading | `### ` の見出しが `### ID: 名前` の形でない | 見出しの形を直す | brainstorm |
 | unknown_field | 見出しの下に知らない行がある | 行を取り除くか正しい形に直す | brainstorm |
+| unknown_line | `## ` の見出しの直下に一覧でも表でもない行があるか、スキーマが宣言していない表かコードブロックがある | その行を節の中の項目へ移すか取り除く | brainstorm |
+| unknown_code_block | `## 具体例` の下に gherkin でないコードブロックがある | コードブロックの言語を gherkin にするか取り除く | brainstorm |
 | missing_field | 必須の行が無い（detail に行の名前） | 足りない行を足す | brainstorm |
 | missing_table | 決定表に表が無い | Markdown の表を足す | brainstorm |
 | duplicate_field | 同じ行が2つ以上 | 重複した行を1つにする | brainstorm |
@@ -58,6 +60,7 @@ kotowari の仕様に基づく（改訂 2026-09-22。本体の版は固定しな
 | invalid_gherkin_line | gherkin に許されない行 | タグ、Scenario、ステップ、注釈、空行だけにする | brainstorm |
 | invalid_id | `@id` の値が `EX-nnn` の形でない | 値を `EX-nnn` の形にする | brainstorm |
 | glossary_invalid | 用語集に正しい表が無い | `| 用語 | 意味 | 出典 |` のヘッダと区切り行を足す | brainstorm |
+| glossary_title_invalid | 用語集の題名が `# 用語集` でない | 題名を `# 用語集` にする | brainstorm |
 | unclosed_backtick | バッククォートが奇数 | バッククォートを閉じる | brainstorm |
 | invalid_glossary_row | 用語集の表の行の形が崩れている | セルを3つにし用語を空にしない | brainstorm |
 | duplicate_term | 同じ用語集の中か、連鎖の根に近い用語集との重複（根から遠い側の行に出る） | 根から遠い側の行を消すか、別の語に言い換える | brainstorm |
@@ -77,3 +80,4 @@ kotowari の仕様に基づく（改訂 2026-09-22。本体の版は固定しな
 | unreadable file | 人に返す。読めないファイルのパスを伝える |
 | non-UTF-8 file | 人に返す。UTF-8 でないファイルのパスを伝える |
 | results error | 人に返す。結果のファイルが変異テストの道具の形に合っていない。詳細のパスと説明を伝える |
+| mapping error | 人に返す。スキーマの側が返した指摘を kotowari の指摘へ写せなかった。詳細の種類と名前を伝える |
