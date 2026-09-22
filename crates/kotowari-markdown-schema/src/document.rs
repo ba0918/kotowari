@@ -967,8 +967,16 @@ mod tests {
     fn end_line_does_not_count_a_heading_shaped_line_inside_a_code_block() {
         let src = "## 節\n\n### A-1: a\n\n```\n## 中\n```\n\n### A-2: b\n";
         let doc = Document::parse(src).unwrap();
-        assert_eq!(doc.end_line(3, 3), 8, "コードブロックの中の \"## 中\" では終わらない");
-        assert_eq!(doc.end_line(1, 2), 9, "文書の最後の行。末尾の区切りの後ろは数えない");
+        assert_eq!(
+            doc.end_line(3, 3),
+            8,
+            "コードブロックの中の \"## 中\" では終わらない"
+        );
+        assert_eq!(
+            doc.end_line(1, 2),
+            9,
+            "文書の最後の行。末尾の区切りの後ろは数えない"
+        );
         let by_line = doc.read_by_line();
         assert_eq!(by_line.end_line(3, 3), 8, "行の読み方でも同じ");
     }
