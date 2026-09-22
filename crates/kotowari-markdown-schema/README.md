@@ -95,6 +95,15 @@ Validation is **closed-world** by default: a heading or a line the schema never 
 error. `open: true` in the schema, or `--open` on the command line, relaxes that for undeclared
 structures — but never for a missing requirement or a violated pattern.
 
+`reading` at the top of the schema chooses how the lines under a heading are read. The default,
+`reading: paragraph`, reads them as CommonMark does: consecutive lines form one statement, a line
+right after a list line belongs to that line, and block quotes, horizontal rules, HTML and
+image-only lines are not statements. `reading: line` reads every line on its own: each line that
+is not a heading, a list line, part of a table or part of a fenced code block is one statement,
+including a quote, HTML, a lone `#`, a `---` or `===` line, and a line indented after a blank
+line. Headings (one or more `#` followed by a space), list lines and their indented children,
+tables and fenced code blocks read the same either way. Any other value stops.
+
 ## Extraction
 
 `extract` names where a value lands, so the output keys are yours, not the document's. Renaming

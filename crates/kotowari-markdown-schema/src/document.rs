@@ -22,6 +22,8 @@ pub struct Document {
     /// 文書の生の行。1始まりの行番号で `raw_line` から引く。指摘が指す行の
     /// 生の文字は組み立て直さずここから取る（REQ-schema-008）
     pub lines: Vec<String>,
+    /// 文書の先頭の frontmatter が占める行数。無ければ 0。行の読み方はこの次の行から読む
+    pub frontmatter_lines: usize,
 }
 
 impl Document {
@@ -149,85 +151,107 @@ impl Document {
         };
 
         let lines = split_lines(src);
-        let mut doc = Document::default();
-        let mut current_section: Option<usize> = None;
-        let mut current_item: Option<usize> = None;
-        let mut current_stray: Option<usize> = None;
+        let mut tree = TreeBuilder::default();
+        let mut frontmatter_lines = 0;
 
         for child in root.children {
             let line = child.position().map(|p| p.start.line).unwrap_or(1);
             match child {
-                Node::Yaml(_) | Node::Toml(_) => continue,
-                Node::Heading(h) => {
-                    let text = inline_text(&h.children);
-                    match h.depth {
-                        1 => {
-                            doc.titles.push(Heading {
-                                text,
-                                depth: 1,
-                                line,
-                            });
-                            current_stray = None;
-                        }
-                        2 => {
-                            doc.sections.push(Section {
-                                name: text,
-                                line,
-                                blocks: Vec::new(),
-                                items: Vec::new(),
-                            });
-                            current_section = Some(doc.sections.len() - 1);
-                            current_item = None;
-                            current_stray = None;
-                        }
-                        3 => match current_section {
-                            Some(sec_idx) => {
-                                let section = &mut doc.sections[sec_idx];
-                                let (id, title, has_id_separator) = split_item_heading(&text);
-                                section.items.push(Item {
-                                    id,
-                                    title,
-                                    has_id_separator,
-                                    line,
-                                    blocks: Vec::new(),
-                                });
-                                current_item = Some(section.items.len() - 1);
-                            }
-                            None => {
-                                // 前置部領域の深さ3の見出し。内側の行をここに集める（REQ-schema-003）。
-                                // 題名より前に出たかどうかで open の扱いが変わる（REQ-schema-002）
-                                doc.stray_preamble_headings.push(StrayPreambleHeading {
-                                    heading: Heading {
-                                        text,
-                                        depth: 3,
-                                        line,
-                                    },
-                                    blocks: Vec::new(),
-                                    before_title: doc.titles.is_empty(),
-                                });
-                                current_stray = Some(doc.stray_preamble_headings.len() - 1);
-                            }
-                        },
-                        depth => doc.stray_headings.push(Heading { text, depth, line }),
-                    }
+                Node::Yaml(_) | Node::Toml(_) => {
+                    frontmatter_lines = child.position().map(|p| p.end.line).unwrap_or(0);
                 }
-                other => {
-                    let blocks = blocks_from_node(&other, src, &lines);
-                    if let Some(item_idx) = current_item {
-                        let section = &mut doc.sections[current_section.unwrap()];
-                        section.items[item_idx].blocks.extend(blocks);
-                    } else if let Some(sec_idx) = current_section {
-                        doc.sections[sec_idx].blocks.extend(blocks);
-                    } else if let Some(stray_idx) = current_stray {
-                        doc.stray_preamble_headings[stray_idx].blocks.extend(blocks);
-                    } else {
-                        doc.preamble.extend(blocks);
-                    }
-                }
+                Node::Heading(h) => tree.heading(inline_text(&h.children), h.depth, line),
+                other => tree.blocks(blocks_from_node(&other, src, &lines)),
             }
         }
+        let mut doc = tree.doc;
         doc.lines = lines;
+        doc.frontmatter_lines = frontmatter_lines;
         Ok(doc)
+    }
+}
+
+/// 見出しとブロックの並びから、題名・前置部・節・項目の木を組み立てる。
+/// 段落の読み方と行の読み方が共有する（TBL-schema-011）。
+#[derive(Default)]
+pub(crate) struct TreeBuilder {
+    doc: Document,
+    current_section: Option<usize>,
+    current_item: Option<usize>,
+    current_stray: Option<usize>,
+}
+
+impl TreeBuilder {
+    pub(crate) fn into_document(self) -> Document {
+        self.doc
+    }
+
+    pub(crate) fn heading(&mut self, text: String, depth: u8, line: usize) {
+        let doc = &mut self.doc;
+        match depth {
+            1 => {
+                doc.titles.push(Heading {
+                    text,
+                    depth: 1,
+                    line,
+                });
+                self.current_stray = None;
+            }
+            2 => {
+                doc.sections.push(Section {
+                    name: text,
+                    line,
+                    blocks: Vec::new(),
+                    items: Vec::new(),
+                });
+                self.current_section = Some(doc.sections.len() - 1);
+                self.current_item = None;
+                self.current_stray = None;
+            }
+            3 => match self.current_section {
+                Some(sec_idx) => {
+                    let section = &mut doc.sections[sec_idx];
+                    let (id, title, has_id_separator) = split_item_heading(&text);
+                    section.items.push(Item {
+                        id,
+                        title,
+                        has_id_separator,
+                        line,
+                        blocks: Vec::new(),
+                    });
+                    self.current_item = Some(section.items.len() - 1);
+                }
+                None => {
+                    // 前置部領域の深さ3の見出し。内側の行をここに集める（REQ-schema-003）。
+                    // 題名より前に出たかどうかで open の扱いが変わる（REQ-schema-002）
+                    doc.stray_preamble_headings.push(StrayPreambleHeading {
+                        heading: Heading {
+                            text,
+                            depth: 3,
+                            line,
+                        },
+                        blocks: Vec::new(),
+                        before_title: doc.titles.is_empty(),
+                    });
+                    self.current_stray = Some(doc.stray_preamble_headings.len() - 1);
+                }
+            },
+            depth => doc.stray_headings.push(Heading { text, depth, line }),
+        }
+    }
+
+    pub(crate) fn blocks(&mut self, blocks: Vec<Block>) {
+        let doc = &mut self.doc;
+        if let Some(item_idx) = self.current_item {
+            let section = &mut doc.sections[self.current_section.unwrap()];
+            section.items[item_idx].blocks.extend(blocks);
+        } else if let Some(sec_idx) = self.current_section {
+            doc.sections[sec_idx].blocks.extend(blocks);
+        } else if let Some(stray_idx) = self.current_stray {
+            doc.stray_preamble_headings[stray_idx].blocks.extend(blocks);
+        } else {
+            doc.preamble.extend(blocks);
+        }
     }
 }
 
@@ -296,33 +320,42 @@ fn blocks_from_node(node: &Node, src: &str, lines: &[String]) -> Vec<Block> {
             }
             out
         }
-        Node::Table(table) => {
-            let mut rows: Vec<Vec<String>> = Vec::new();
-            let mut row_lines: Vec<usize> = Vec::new();
-            for row in &table.children {
-                if let Node::TableRow(row) = row {
-                    let cells = row.children.iter().map(cell_text).collect();
-                    rows.push(cells);
-                    row_lines.push(line_at(row.position.as_ref()));
-                }
-            }
-            let mut rows = rows.into_iter();
-            let header = rows.next().unwrap_or_default();
-            vec![Block::Table {
-                header,
-                rows: rows.collect(),
-                line,
-                // ヘッダの行は行番号の並びから外す。区切りの行は表のノードに
-                // 現れないので、残りがデータ行そのものになる（TBL-schema-008）
-                row_lines: row_lines.into_iter().skip(1).collect(),
-            }]
-        }
+        Node::Table(_) => vec![table_block_from_node(node, 0)],
         Node::Code(code) => vec![Block::Code {
             lang: code.lang.clone(),
             value: code.value.clone(),
             line,
         }],
         _ => vec![Block::Other { line }],
+    }
+}
+
+/// 表のノードを表のブロックにする。`line_offset` はノードの行番号に足す行数で、
+/// 文書の一部だけを読み直した表の行番号を文書の行番号に戻す。
+pub(crate) fn table_block_from_node(node: &Node, line_offset: usize) -> Block {
+    let Node::Table(table) = node else {
+        return Block::Other {
+            line: start_line(node) + line_offset,
+        };
+    };
+    let mut rows: Vec<Vec<String>> = Vec::new();
+    let mut row_lines: Vec<usize> = Vec::new();
+    for row in &table.children {
+        if let Node::TableRow(row) = row {
+            let cells = row.children.iter().map(cell_text).collect();
+            rows.push(cells);
+            row_lines.push(line_at(row.position.as_ref()) + line_offset);
+        }
+    }
+    let mut rows = rows.into_iter();
+    let header = rows.next().unwrap_or_default();
+    Block::Table {
+        header,
+        rows: rows.collect(),
+        line: start_line(node) + line_offset,
+        // ヘッダの行は行番号の並びから外す。区切りの行は表のノードに
+        // 現れないので、残りがデータ行そのものになる（TBL-schema-008）
+        row_lines: row_lines.into_iter().skip(1).collect(),
     }
 }
 
@@ -501,7 +534,7 @@ fn original_item_line(
 }
 
 /// `- 名前: 値` の形なら名前と値に分ける。形でなければ None。
-fn split_field(text: &str) -> Option<(String, String)> {
+pub(crate) fn split_field(text: &str) -> Option<(String, String)> {
     let idx = text.find(':')?;
     let name = text[..idx].trim();
     if name.is_empty() {
@@ -623,7 +656,7 @@ fn split_item_heading(text: &str) -> (String, String, bool) {
 }
 
 /// インライン要素のテキストを連結する。
-fn inline_text(children: &[Node]) -> String {
+pub(crate) fn inline_text(children: &[Node]) -> String {
     let mut out = String::new();
     for child in children {
         match child {

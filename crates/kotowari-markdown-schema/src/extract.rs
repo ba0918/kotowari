@@ -4,13 +4,21 @@ use crate::document::{
     Block, Document, Item as DocItem, RawLine, Section as DocSection, join_continuation,
 };
 use crate::schema::{
-    Bullets, Children, CodeBlock, Extract, Field, OfKind, Schema, Statement, Table,
+    Bullets, Children, CodeBlock, Extract, Field, OfKind, Reading, Schema, Statement, Table,
     is_declared_field, item_internals_declare_extract,
 };
 use serde_json::{Map, Value};
 
 /// `values` の出力。配置パスに沿った入れ子の JSON。
 pub fn extract_values(schema: &Schema, document: &Document) -> Value {
+    let by_line;
+    let document = match schema.reading {
+        Reading::Paragraph => document,
+        Reading::Line => {
+            by_line = document.read_by_line();
+            &by_line
+        }
+    };
     let mut root = Map::new();
     extract_title(schema, document, &mut root);
     if let Some(preamble) = &schema.document.preamble {

@@ -57,8 +57,22 @@ pub struct Schema {
     /// 閉じた世界を緩めるか（REQ-schema-002）
     #[serde(default)]
     pub open: bool,
+    /// 見出しの下の行の読み方（REQ-schema-060）。書かないときは段落で読む
+    #[serde(default)]
+    pub reading: Reading,
     /// 文書の構造の木
     pub document: Document,
+}
+
+/// 見出しと前置部の下の行の読み方（REQ-schema-060、TBL-schema-011）。
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Reading {
+    /// CommonMark の段落として読む
+    #[default]
+    Paragraph,
+    /// 1行ずつ読み分ける
+    Line,
 }
 
 /// `document` の下の規則種別（TBL-schema-004）。
