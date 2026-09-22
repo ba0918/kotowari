@@ -31,10 +31,10 @@
 ### REQ-core-122: 用語集の表の崩れた行
 
 - 種類: event_driven
-- 出典: docs/decision/records/records.md#A153, docs/decision/records/records.md#A163, docs/decision/records/2026-09-22-ir-engine.md#A83
+- 出典: docs/decision/records/records.md#A153, docs/decision/records/records.md#A163
 - 検証: unit
 
-`用語集`の表の中に、セル（行の先頭と末尾の "|" を除いて "|" で分けたもの）が3つ未満の行か`用語`のセルが空の行があるとき、kotowari は行の文字を detail にして invalid_glossary_row の`誤り`を出し、その行を`用語`にしない。両方に当たる行でも`誤り`は1件だけである。
+`用語集`の表の中に、セル（行の先頭と末尾の "|" を除いて "|" で分けたもの）が3つ未満の行か`用語`のセルが空の行があるとき、kotowari は行の文字を detail にして invalid_glossary_row の`誤り`を出し、その行を`用語`にしない。
 
 ### REQ-core-123: 用語の重複
 

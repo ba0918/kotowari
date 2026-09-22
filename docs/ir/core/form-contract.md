@@ -69,9 +69,9 @@ kotowari は常に、文書をまたぐ検査（`ID`の重複、`用語`の重�
 - 種類: invariant
 - 出典: docs/decision/records/2026-09-22-ir-engine.md#A5, docs/decision/records/2026-09-22-ir-engine.md#A38, docs/decision/records/2026-09-22-ir-engine.md#A85
 - 検証: review
-- 確かめ方: 置き換えの前に `kotowari check --format json` の出力を保存し、後の出力と `diff` を取り、差分が1件も無いことを見る
+- 確かめ方: 置き換えの前に `kotowari check --format json` の出力を保存し、後の出力と `findings` の並びだけを取り出して `diff` を取り、差分が1件も無いことを見る
 
-読み取りをスキーマに置き換える前と後で、この`IR`の置き場に対する "kotowari check --format json" の出力が1件も変わらない関係が常に成り立つ。ほかの`IR`の置き場での差は、この関係が述べる対象ではない。
+読み取りをスキーマに置き換える前と後で、この`IR`の置き場に対する "kotowari check --format json" の`指摘`の並びが1件も変わらない関係が常に成り立つ。種類・detail・"line"・出る順のどれも変わらない。文書そのものを直したことで変わる文書の数と行数の数え上げは、この関係が述べる対象ではない。ほかの`IR`の置き場での差も対象ではない。
 
 ## 具体例
 

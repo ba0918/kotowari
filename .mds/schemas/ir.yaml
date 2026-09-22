@@ -15,7 +15,7 @@ document:
     - name: 要求
       repeat: { min: 0 }
       item:
-        id: "REQ-([a-z][a-z0-9-]*-)?\\d{3,}"
+        id: "^REQ-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
         repeat: { min: 0 }
         extract:
           path: requirements
@@ -43,7 +43,7 @@ document:
             when: { field: 検証, eq: review }
             extract: how_to_verify
         statement:
-          required: true
+          repeat: { min: 1 }
           when: { field: 種類, ne: algorithm }
           extract:
             path: text
@@ -52,7 +52,7 @@ document:
     - name: 決定表
       repeat: { min: 0 }
       item:
-        id: "TBL-([a-z][a-z0-9-]*-)?\\d{3,}"
+        id: "^TBL-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
         repeat: { min: 0 }
         extract:
           path: tables
@@ -68,7 +68,7 @@ document:
           repeat: { min: 1 }
           extract: rows
         statement:
-          required: false
+          repeat: { min: 0 }
           extract:
             path: text
             value: value
@@ -76,7 +76,7 @@ document:
     - name: 性質
       repeat: { min: 0 }
       item:
-        id: "PROP-([a-z][a-z0-9-]*-)?\\d{3,}"
+        id: "^PROP-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
         repeat: { min: 0 }
         extract:
           path: properties
@@ -89,7 +89,7 @@ document:
               value: value
               of: { line: line }
         statement:
-          required: true
+          repeat: { min: 1 }
           extract:
             path: text
             value: value

@@ -78,7 +78,7 @@ kotowari は、人間向けの文書の生成（"render"）を作ってはなら
 
 ### TBL-core-001: 停止の理由
 
-- 出典: docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A48, docs/decision/records/records.md#A60, docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A66, docs/decision/records/records.md#A95, docs/decision/records/records.md#A96, docs/decision/records/records.md#A93, docs/decision/records/records.md#A103, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A136, docs/decision/records/records.md#A146, docs/decision/records/records.md#A160, docs/decision/records/2026-09-16-ir-tree.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A32, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A48
+- 出典: docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A48, docs/decision/records/records.md#A60, docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A66, docs/decision/records/records.md#A95, docs/decision/records/records.md#A96, docs/decision/records/records.md#A93, docs/decision/records/records.md#A103, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A136, docs/decision/records/records.md#A146, docs/decision/records/records.md#A160, docs/decision/records/2026-09-16-ir-tree.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A32, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A48, docs/decision/records/2026-09-22-ir-engine.md#A73
 
 | 理由 | 場面 |
 |---|---|
@@ -87,6 +87,7 @@ kotowari は、人間向けの文書の生成（"render"）を作ってはなら
 | 読めないファイル | 読むファイルを読めない（"kotowari mutants" で変異の結果か等価の一覧の1件が指すファイルは除く。REQ-core-141、REQ-core-142）、結果のファイルが無いか読めない、"mutants.equivalents" の指す先が無いか読めない、"kotowari check" で"ir"、"decisions.records"、"decisions.adr" の指すディレクトリが無いか読めない、"ir"、"decisions.records"、"decisions.adr" の下のディレクトリが読めない、または "tests.files" の走査でディレクトリが読めない、または走査で先の無いシンボリックリンクに出会った、またはカレントディレクトリを取得できない |
 | UTF-8 でないファイル | IR の文書、テストのファイル、設定ファイル、判断の記録、ADR、結果のファイル、等価の一覧のいずれかが UTF-8 でない |
 | 結果の誤り | REQ-core-144 の場面 |
+| 写しの誤り | REQ-core-175 の場面 |
 
 ### TBL-core-002: 終了コード
 

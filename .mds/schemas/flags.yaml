@@ -15,7 +15,7 @@ document:
     - name: 問題の記録
       repeat: { min: 0 }
       item:
-        id: "FLAG-([a-z][a-z0-9-]*-)?\\d{3,}"
+        id: "^FLAG-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
         repeat: { min: 0 }
         extract:
           path: flags
@@ -34,7 +34,7 @@ document:
               value: value
               of: { line: line }
         statement:
-          required: true
+          repeat: { min: 1 }
           extract:
             path: text
             value: value
