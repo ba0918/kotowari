@@ -35,6 +35,8 @@ docs/decision/records/       判断の記録
 docs/decision/adr/           ADR（空でよい）
 ```
 
+要求の文に曖昧語が含まれると指摘が出る。曖昧語の既定は「適切に」「必要に応じて」「通常は」「など」の4語で、`.kotowari/config.yaml` の `vague_words` で上書きできる。
+
 まず判断の記録に、決めたことを1行1決定で書く（`docs/decision/records/2026-01-01-login.md`）。
 
 ```markdown
@@ -58,13 +60,13 @@ docs/decision/adr/           ADR（空でよい）
 
 ログインの失敗の扱いを扱う。
 
-## 要求
+## Requirements
 
 ### REQ-001: 連続失敗でロックする
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-01-01-login.md#A1
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-01-01-login.md#A1
+- verification: unit
 
 パスワードを5回続けて間違えたとき、システムはそのアカウントを15分ロックする。
 ```
@@ -82,7 +84,7 @@ fn req_001_locks_after_five_failures() { /* ... */ }
 ```console
 $ kotowari check --format text
 docs/ir/login.md:7 [error] requirement_without_test REQ-001
-src/lib.rs:5 [error] test_without_id req_001_locks_after_five_failures
+src/lib.rs:2 [error] test_without_id req_001_locks_after_five_failures
 ```
 
 出典の決定番号を消したり書き間違えたりしても、同じように指摘が出る。

@@ -88,7 +88,7 @@ related undecided items, and anything decided silently; any of these sends you b
 dialogue. Specification silence never means "implementer decides".
 
 Each requirement has an observable success condition and a counter-example, written as scenarios
-under the IR's `## 具体例` (the kotowari skill's `references/records.md` says how). Test its verification against **Evidence conditions**. On failure, express a non-code requirement
+under the IR's `## Examples` (the kotowari skill's `references/records.md` says how). Test its verification against **Evidence conditions**. On failure, express a non-code requirement
 as human or platform inspection; drop a code behavior into an already reachable generic error path,
 recording it as rejected with its missing conditions. Agreements go into the IR documents, each item
 citing the decisions it rests on; prohibitions and rejected / undecided / delegated items stay in the
@@ -131,7 +131,7 @@ Source: `ba0918-verification`, agentic-rules v0.8.0.
       (requirement_without_test, scenario_without_test, and findings on test files) may remain at
       approval; the cycle brings them to zero at its end. Notices (too_many_lines,
       too_many_requirements) may remain; to keep one, reread the document as the kotowari skill's
-      `references/ir-form.md` section 「上限と分ける単位」 says, and write the reason for keeping
+      `references/ir-form.md` section "Limits and the unit of splitting" says, and write the reason for keeping
       it in the decision record.
    2. Collation review: count the collation scope as the kotowari skill's
       `references/collate.md` says — the items this brainstorm added or changed, and the existing

@@ -1,6 +1,6 @@
 # kotowari スキル
 
-kotowari を知らない LLM が、どの工程の中でも、仕様を IR の形で書き、`kotowari check` を回し、指摘に対処できるようにする Claude Code のスキル。判断の記録は `docs/decision/records/2026-09-14-kotowari-skill.md`（A1〜A35、P1、U1〜U2、R1〜R2、Revisions）。この仕様自身は IR ではなく kotowari の検査を受けないが、記録は参照できるように残す。承認は 2026-09-15 に会話の中で得た。計画のレビューで見つかった穴3つ（A30〜A32）は承認の後に足した。2026-09-16 の記録（`docs/decision/records/2026-09-16-skill-follow.md`）で、版の固定をやめ、置き場の再帰・注意・責務で分ける指針に追従した。2026-09-17 の記録（[decision-log](../decision/records/2026-09-17-decision-log.md)）で、判断の記録に理由を必須にし、ADR の新規作成をやめた。2026-09-23 の記録（[workflow-split](../decision/records/2026-09-23-workflow-split.md)）で、brainstorm・plan・cycle・implement の手順を kotowari-* の工程の skill に分け、このスキルから場面 workflow と `workflow.md` を外し、判断の記録の形を reference `records.md` に移し、手元へはコピーでなくシンボリックリンクで入れることにした（A27 を同記録の A1、A2 で改めた）。
+kotowari を知らない LLM が、どの工程の中でも、仕様を IR の形で書き、`kotowari check` を回し、指摘に対処できるようにする Claude Code のスキル。判断の記録は `docs/decision/records/2026-09-14-kotowari-skill.md`（A1〜A35、P1、U1〜U2、R1〜R2、Revisions）。この仕様自身は IR ではなく kotowari の検査を受けないが、記録は参照できるように残す。承認は 2026-09-15 に会話の中で得た。計画のレビューで見つかった穴3つ（A30〜A32）は承認の後に足した。2026-09-16 の記録（`docs/decision/records/2026-09-16-skill-follow.md`）で、版の固定をやめ、置き場の再帰・注意・責務で分ける指針に追従した。2026-09-17 の記録（[decision-log](../decision/records/2026-09-17-decision-log.md)）で、判断の記録に理由を必須にし、ADR の新規作成をやめた。2026-09-23 の記録（[workflow-split](../decision/records/2026-09-23-workflow-split.md)）で、brainstorm・plan・cycle・implement の手順を kotowari-* の工程の skill に分け、このスキルから場面 workflow と `workflow.md` を外し、判断の記録の形を reference `records.md` に移し、手元へはコピーでなくシンボリックリンクで入れることにした（A27 を同記録の A1、A2 で改めた）。2026-09-23 の記録（[ir-english-tokens](../decision/records/2026-09-23-ir-english-tokens.md)）で、IR の型の語（節の見出し、項目の欄の名前、用語集の題名と列、問題の記録の節）を英語にし、このスキルの SKILL.md と references の本文を英語にした（A1〜A6）。
 
 ## 結果を一文で
 
@@ -11,8 +11,8 @@ kotowari を知らない LLM が、どの工程の中でも、仕様を IR の�
 kotowari の用語集（`docs/ir/core/CONTEXT.md`）の意味をそのまま使う。この文書で出てくるものだけ、要点を写す。
 
 - **IR**: 正規化した仕様の Markdown の文書の集まり。設定の `ir` の置き場（既定 `docs/ir`）の下に、ディレクトリの深さに制限なく置く。話題ごとの文書、用語集 `CONTEXT.md`、問題の記録 `FLAGS.md` から成る
-- **項目**: 要求（`### REQ-nnn: 名前`）、決定表（`TBL-`）、性質（`PROP-`）、問題の記録（`FLAG-`）。要求は `- 種類:`、`- 出典:`、`- 検証:` を持ち、`algorithm` の要求は `- 定義:` も持つ。問題の記録は `- 種類:`、`- 関係:`、`- 出典:` を持つ
-- **シナリオ**: `## 具体例` の下の gherkin のコードブロックの中の `Scenario:`。直前の行にタグ `@id=EX-nnn`、`@about=ID,...`、`@source=出典`
+- **項目**: 要求（`### REQ-nnn: 名前`）、決定表（`TBL-`）、性質（`PROP-`）、問題の記録（`FLAG-`）。要求は `- kind:`、`- source:`、`- verification:` を持ち、`algorithm` の要求は `- definition:` も持つ。問題の記録は `- kind:`、`- related:`、`- source:` を持つ
+- **シナリオ**: `## Examples` の下の gherkin のコードブロックの中の `Scenario:`。直前の行にタグ `@id=EX-nnn`、`@about=ID,...`、`@source=出典`
 - **判断の記録**: brainstorm で決めたことを1行1決定で並べたファイル。設定の `decisions.records` の置き場（既定 `docs/decision/records`）の下に置き、決定の節の見出し（`## Agreements`、`## Prohibitions`、`## Delegated`、`## Rejected`）を1つ以上持つ
 - **決定の番号**: 決定の節の行の先頭 `- A26 ` の `A26`。英大文字1文字に1桁以上の数字
 - **出典**: 項目の元になった決定か ADR の節を指す `パス#印` の文字列。パスは基準のディレクトリからの相対
@@ -64,8 +64,8 @@ SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotow
 
 - `.kotowari/` と `.kotowari/config.yaml`。`.kotowari/` があることで基準のディレクトリがリポジトリ直下に固定される（サブディレクトリから `check` を走らせても同じ基準になる）。設定ファイルは既定と同じ値でも必ず書く（A20。既定を目に見える形にするため）。値を既定から変えるのは、テストの glob（既定 `src/**/*.rs` と `tests/**/*.rs`）か置き場を変えるときだけ
 - `docs/ir/`、`docs/decision/records/`、`docs/decision/adr/`
-- `docs/ir/CONTEXT.md`（題名の行 `# 用語集`、空行、表のヘッダ `| 用語 | 意味 | 出典 |`、区切り行 `|---|---|---|` の4行）
-- `AGENTS.md` の節（A27、[A8（工程の分離）](../decision/records/2026-09-23-workflow-split.md#A8)）: 「このプロジェクトの仕様は IR（`docs/ir/`）で管理する」の一文だけ。工程の skill には触れない（工程の skill を入れる人が足す1行は、その入れ方の説明にある）。節の見出しは `## kotowari`。`AGENTS.md` が無ければ作り、あれば節を末尾に足す。`## kotowari` の見出しが既にあれば足さない
+- `docs/ir/CONTEXT.md`（題名の行 `# Glossary`、空行、表のヘッダ `| Term | Meaning | Source |`、区切り行 `|---|---|---|` の4行）
+- `AGENTS.md` の節（A27、[A8（工程の分離）](../decision/records/2026-09-23-workflow-split.md#A8)）: 「This project manages its specification as an IR (`docs/ir/`).」の一文だけ。工程の skill には触れない（工程の skill を入れる人が足す1行は、その入れ方の説明にある）。節の見出しは `## kotowari`。`AGENTS.md` が無ければ作り、あれば節を末尾に足す。`## kotowari` の見出しが既にあれば足さない
 
 既にあるファイルやディレクトリは上書きせず、あることを人に言う（`AGENTS.md` への節の追加だけは、上書きでなく追記なので行う）。
 
@@ -82,8 +82,8 @@ SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotow
 `records.md` は、判断の記録の形と、中身の種類ごとの置き場を持つ（A11、A21、A22 のうち形の部分。[A11（工程の分離）](../decision/records/2026-09-23-workflow-split.md#A11)）。brainstorm の手順（出力を IR にすること、記録を最初から置き場に書くこと、未コミットの記録からの再開、終わりのレビューの差し替え、stage するもの）は工程の skill の側にあり、このスキルは持たない。
 
 - 判断の記録の形: 置き場とファイル名（`docs/decision/records/YYYY-MM-DD-<name>.md`。ファイル名は最初に決めて改名しない。承認後も消さない）、冒頭の `## Context` の節と Position 行、決定の節の見出し4種の下に `- A1 本文` の形で並べること（番号は使い回さない）、決定ごとの字下げの補足の行6つ（`- why:`、`- rejected:`、`- decided_by:`、`- superseded_by:`、`- decides:`、`- related:`）とその必須、補足の行が決定として読まれない理由、`Undecided` と `Revisions` の番号は出典に使えないこと、資料をまたぐ参照と IR の ID へのリンクの規則、ADR の扱い。2026-09-17 の記録（[decision-log](../decision/records/2026-09-17-decision-log.md) の A1〜A6、A10、A11）で足した規則を、今の英語の見出しと補足の行の名前で持つ。必須の補足の行とリンクの検査の指摘は `findings.md` で引く
-- 成功の条件と反例の置き場: 各要求に求める観測できる成功の条件と反例は、IR では `## 具体例` のシナリオ（成功の条件は通る場面、反例は指摘か停止が出る場面）として書く。要求の見出しの下には持てる行しか置けない
-- 禁止・却下・未決・委譲の置き場: IR の話題ごとの文書には要求・決定表・性質・具体例しか置けないので、これらは判断の記録の節に置く。矛盾・欠落・曖昧は `FLAGS.md` の `### FLAG-nnn: 名前` に `- 種類:`（`contradiction`、`gap`、`ambiguity`）、`- 関係:`（関係する ID）、`- 出典:` を付けて書く（A21）
+- 成功の条件と反例の置き場: 各要求に求める観測できる成功の条件と反例は、IR では `## Examples` のシナリオ（成功の条件は通る場面、反例は指摘か停止が出る場面）として書く。要求の見出しの下には持てる行しか置けない
+- 禁止・却下・未決・委譲の置き場: IR の話題ごとの文書には要求・決定表・性質・具体例しか置けないので、これらは判断の記録の節に置く。矛盾・欠落・曖昧は `FLAGS.md` の `### FLAG-nnn: 名前` に `- kind:`（`contradiction`、`gap`、`ambiguity`）、`- related:`（関係する ID）、`- source:` を付けて書く（A21）
 - 用語集の連鎖: 用語集はどのディレクトリにも置け、文書から見えるのは自分のディレクトリから置き場の根までの `CONTEXT.md` の用語。用語は連鎖の中で1つのファイルにだけ置く
 - 成功の条件: `ir-form.md` を読んだ LLM が、新しい要求1件、決定表か性質1件、シナリオ1件、用語1語、問題の記録1件を書き、それらが `ir-form.md` の項目の形（見出し、持つ行、タグ）に一致して、`kotowari check` の誤りがテスト側の指摘だけになる。判断の記録が `docs/decision/records/` にあり、出典がその決定の番号を指している。`ir-form.md` の節の一覧が上の列挙と一致し、`records.md` に上の4つの項目があり、各節の内容が `docs/ir/core/` の対応する文書（ir-document、ir-items、ir-references、terms-form、terms、sources、CONTEXT の除外）と食い違わない
 - 反例: 出典が `.agents/tmp/` の進捗ファイルを指している（`decisions.records` の外を指す出典は、ファイルがあっても `source_invalid` になる）。`U3` を出典に使う。要求の見出しの下に `- 反例:` の行を置く
@@ -103,9 +103,9 @@ SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotow
 
 ### R6: `check` は json で走らせ、指摘の種類ごとに対処と担当を引き、停止は人に返す
 
-`check` は `kotowari check --format json` を走らせ（A15）、終了コードを先に見る。0か1なら標準出力の JSON を読み、`findings` の各件を reference `findings.md` の表で引く。表は現在の kotowari の指摘の種類すべて（誤り33、注意2）を行に持ち、各行に「意味」「対処」「担当」がある。
+`check` は `kotowari check --format json` を走らせ（A15）、終了コードを先に見る。0か1なら標準出力の JSON を読み、`findings` の各件を reference `findings.md` の表で引く。表は現在の kotowari の指摘の種類すべて（誤り33、注意2）を行に持ち、各行に「Meaning」「Action」「Owner」の列がある。表の1列目の見出しは `Kind`、停止の文言の表の1列目の見出しは `Message` で、このリポジトリのテストがこの見出しで表を探す（[A6（ir-english-tokens）](../decision/records/2026-09-23-ir-english-tokens.md#A6)）。
 
-- 担当は表の「担当」の列を正とする（A7）。IR の置き場のファイルへの指摘は brainstorm の席が直す。テストのファイルへの指摘（`test_without_id`、`invalid_marker`、`unparsable_file`、印からの `unresolved_reference`）は implementer が直す。`unresolved_reference` は IR 側からも出るので、表は `path` で分けて2行持つ。`requirement_without_test` は `path` が IR の文書だが、直すのはテストを書く implementer なので、表で例外として明記する
+- 担当は表の「Owner」の列を正とする（A7）。IR の置き場のファイルへの指摘は brainstorm の席が直す。テストのファイルへの指摘（`test_without_id`、`invalid_marker`、`unparsable_file`、印からの `unresolved_reference`）は implementer が直す。`unresolved_reference` は IR 側からも出るので、表は `path` で分けて2行持つ。`requirement_without_test` は `path` が IR の文書だが、直すのはテストを書く implementer なので、表で例外として明記する
 - 除外の追加や規則の緩めは仕様の変更なので、スキルの中で決めず brainstorm に戻す（A7）
 - `too_many_lines` と `too_many_requirements` の対処は分割の指示ではなく、責務の混在を疑う読み直し（2026-09-16 の記録 A3）。用語集はディレクトリごとに分けられなければ設定の `limits.lines` を上げ、その判断を記録に書く（A34）
 - 停止は終了コード2で、理由は標準エラーの1行目の文言（`config error`、`argument error`、`unreadable file`、`non-UTF-8 file`）で判別する。引数の誤りは LLM 自身のコマンドの誤りなので自分で直す。残り3つは人に返す
@@ -136,7 +136,7 @@ brainstorm、plan、cycle、implement の各席が何をどの順で行うかは
 
 ### R9: references は現在の kotowari の仕様を、実験の記録を参照せずに書く
 
-references 7つ（`ir-form.md`、`findings.md`、`config.md`、`collate.md`、`mark.md`、`mutants.md`、`records.md`）は、kotowari の IR（`docs/ir/`）と形の契約から作るが、kotowari リポジトリの実験の記録（`experiments/` の下）への参照を含めない（A1。配布先で元本は読めない）。決定の番号や出典の例は架空のパス（`docs/decision/records/2026-01-01-example.md#A1`）で書く。kotowari 自身の IR の ID（`TBL-core-016` の類）を根拠として引かず、`docs/ir/` の文書名も引かない（配布先で解決できない。A32。例に使う ID は形の説明なので可）。元にする `docs/ir/` と形の契約が食い違えば `docs/ir/` が正で、実測で確かめられるなら確かめ、決まらなければ止まって人に言う（A32）。kotowari の仕様が変わったら references を更新し、先頭の改訂日を改める。
+references 7つ（`ir-form.md`、`findings.md`、`config.md`、`collate.md`、`mark.md`、`mutants.md`、`records.md`）は、kotowari の IR（`docs/ir/`）と形の契約から作るが、kotowari リポジトリの実験の記録（`experiments/` の下）への参照を含めない（A1。配布先で元本は読めない）。決定の番号や出典の例は架空のパス（`docs/decision/records/2026-01-01-example.md#A1`）で書く。kotowari 自身の IR の ID（`TBL-core-016` の類）を根拠として引かず、`docs/ir/` の文書名も引かない（配布先で解決できない。A32。例に使う ID は形の説明なので可）。元にする `docs/ir/` と形の契約が食い違えば `docs/ir/` が正で、実測で確かめられるなら確かめ、決まらなければ止まって人に言う（A32）。kotowari の仕様が変わったら references を更新し、先頭の改訂日を改める。SKILL.md と references の本文は工程の skill と同じ英語で書き、IR の型の語は英語の語で説明する。設定の `vague_words` の既定は本文の言語の話で型の語ではないので、日本語の4語のまま写す（[A4（ir-english-tokens）](../decision/records/2026-09-23-ir-english-tokens.md#A4)、[A5（ir-english-tokens）](../decision/records/2026-09-23-ir-english-tokens.md#A5)）。
 
 - 成功の条件: `rg -n 'experiments/|docs/ir/[a-z-]+\.md' skills/kotowari/` が0件（置き場の名前 `docs/ir` と、利用者側に作る `docs/ir/CONTEXT.md`・`docs/ir/FLAGS.md` は書いてよい）。人が読んで、kotowari 自身の IR の ID を「〜のとおり」のように根拠として引いている箇所が無い。`config.md` に設定ファイルの全キー（`ir`、`decisions.records`、`decisions.adr`、`tests.files`、`tests.rust.attributes`、`tests.rust.macros`、`vague_words`、`limits.lines`、`limits.requirements`）と既定値がある。`collate.md` に、渡す入力（項目と出典の対）、判定の基準（出典の決定が項目の内容を裏付けるか）、返す形（裏付けの無い項目の一覧）、回数の上限（3回）がある
 - 反例: `ir-form.md` に `experiments/003-cli/brainstorm/records.md#A145` が残っている。`mark.md` に「TBL-core-016 のとおり」と書いてある
