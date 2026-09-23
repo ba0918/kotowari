@@ -30,7 +30,8 @@ happens only under step 4's condition. Delegating more than the reason asked for
 counter-example.
 
 Read the plan only to find the specification path it names — the IR store path and the IDs of
-the requirements it covers; do not interpret its steps.
+the requirements it covers, or, for a topic with no IR, the path of its committed specification;
+do not interpret its steps.
 The findings file is `.agents/artifacts/reviews/<branch>.json` (a `/` in the branch name is a
 directory). If it already exists this is a resume: keep its findings, continue round numbers from
 the inherited maximum, and count both of ending 3's streaks from this start only (a returning closed cause
@@ -77,8 +78,9 @@ included). The limit, when the person set one, counts round trips.
 - **fixer:** carry visible findings, plan path, branch, worktree path, and the contract below. It
   returns commits and which finding each addresses, or a hand-back.
 
-In both reviews the specification path is the IR store path; the reviewer reads every document in
-the store. The requirements and scenarios the diff should cover go along as a file: narrow
+When the plan's specification is the kotowari IR, the specification path in both reviews is the
+IR store path; the reviewer reads every document in the store. For a topic with no IR it is the
+path the plan names, and no ID file goes along. The requirements and scenarios the diff should cover go along as a file: narrow
 `kotowari list` with `jq` to the IDs the diff targets (as in the kotowari-plan skill's
 **Reading the requirements**), write that output to a file, and pass its path. A reviewer is
 assumed unable to run commands; never pass the whole output.
