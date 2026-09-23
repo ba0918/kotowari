@@ -290,8 +290,9 @@ pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopR
 
     // REQ-core-112: 閉じないコードブロックは、開始から文書の終わりまでを検査の対象から外す
     if let Some((opening, raw)) = unclosed_code_block(content) {
-        findings.retain(|f| f.line.is_none_or(|l| l < opening));
-        items.retain(|item| item.item_line() < opening);
+        let before_opening = |line: usize| line < opening;
+        findings.retain(|f| f.line.is_none_or(before_opening));
+        items.retain(|item| before_opening(item.item_line()));
         findings.push(Finding::new(FindingKind::UnclosedCodeBlock, String::new(), Some(opening), raw));
     }
 
