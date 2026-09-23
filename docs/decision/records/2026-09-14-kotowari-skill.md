@@ -27,6 +27,7 @@
 - A22 判断の記録のファイル名は docs/decision/records/YYYY-MM-DD-<name>.md（REQ-core-093 にそろえる）（推奨を採用）
 - A23 追認: SKILL.md は100行以内、版は完全一致、入れ先は ~/.claude/skills/kotowari/、kotowari コマンドが無いときは導入を求めて止まる（推奨を採用）
 - A24 承認の前に照合レビューを入れる。write の承認前の手順は「check で誤り0 → 照合レビュー（別セッションの LLM が IR の各項目を判断の記録と突き合わせ、裏付けの無いものを挙げる）で0 → 人には判断の記録の差分と check の結果と照合の結果を見せる」。IR の差分は承認の対象のバイト列として添えるが読むことは求めない。盲検の判定は入れない（推奨を採用）
+  - superseded_by: [A1（collate-tiers）](./2026-09-23-collate-tiers.md#A1)、[A2（collate-tiers）](./2026-09-23-collate-tiers.md#A2)（照合に渡すのはその壁打ちで変えた項目とその出典に限り、範囲が0件なら照合しない）
 - A25 承認の関門は「requirement_without_test 以外の誤りが0」。requirement_without_test は cycle の終端で0にする。kotowari 本体には手を入れない（推奨を採用）
 - A26 照合レビューは3回まで。3回目でも裏付けの無い項目が残れば問題の記録（FLAG）にして人に返す（推奨を採用）
 - A27 既存の ba0918 のスキルには何も書かない。agentic-rules は kotowari に依存しない。結び付けは、kotowari を使うプロジェクトの AGENTS.md にルーティングとワークフローの規則を書くことで行い、まずはそれで様子を見る（利用者）
