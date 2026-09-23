@@ -2,33 +2,6 @@
 # 載せる前に、別の文脈でその変異を落とすテストを書けないか試している。
 # why には、なぜ観測できないかと、何を試して落とせなかったかを書く。
 
-- file: crates/kotowari-core/src/ir.rs
-  change: "replace < with <= in parse_document"
-  text: "f.line.map_or(true, |l| l < opening_line)"
-  class: equivalent
-  why: >-
-    REQ-core-112 の「開始から文書の終わりまでを検査の対象から外す」後始末で、閉じない囲みの中の指摘を落とす。
-    指摘に付く行は、いま読んでいる行か、前に控えた @ で始まるタグの行のどちらかだけで（Scenario: と ### の行は項目の側の出どころ）、
-    囲みを開く行は parse_opening_fence が Some を返した時点で continue するため、そのどれにもならない。
-    よって l == opening_line の指摘は作られず、<= にしても残る指摘は変わらない。
-    落とすテストの試み: 囲みが1行目、### の直後、閉じた gherkin ブロックの直後、~~~ の中の ```、
-    CRLF、長さの違う囲み、用語集の重複行や不正行の直後などになるよう、20種類の行の全組み合わせ（長さ4まで）と
-    長さ22の乱数を合わせて約352万件の文書を parse_document に通し、unclosed_code_block と同じ行に
-    別の指摘が残るものを探したが1件も無かった。指摘を1件その行に差し込むと同じ探索が
-    閉じない囲みを持つ242万件すべてを拾ったので、探し方がその違いを見られることは確かめてある。
-
-- file: crates/kotowari-core/src/ir.rs
-  change: "replace < with <= in parse_document"
-  text: "items.retain(|item| item.item_line() < opening_line);"
-  class: equivalent
-  why: >-
-    上と同じ後始末で、閉じない囲みの中で組み立てられた項目を落とす。
-    項目に付く行は ### の見出しの行、gherkin の Scenario: の行、用語表の行のどれかで、
-    囲みを開く行は先頭が ` か ~ なのでそのどれにもならない。
-    よって item_line() == opening_line の項目は作られず、<= にしても残る項目は変わらない。
-    落とすテストの試み: 上と同じ約352万件の文書で、unclosed_code_block と同じ行の項目が残るものを探したが
-    1件も無かった。項目を1件その行に差し込むと同じ探索がすべてを拾うことは確かめてある。
-
 - file: crates/kotowari-core/src/sources.rs
   change: "replace + with * in parse_links"
   text: "i = href_end + 1;"

@@ -2465,6 +2465,46 @@ unclosed content
     );
 }
 
+// @kotowari[REQ-core-112]
+#[test]
+fn req_112_the_opening_line_of_an_unclosed_fence_is_excluded_too() {
+    let head = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n\nStatement.\n\n";
+    // 閉じた囲みは、項目の中の宣言していない行として開始の行に unknown_line が付く
+    let closed = ir::parse_document("a.md", &format!("{head}```\ncontent\n```\n")).unwrap();
+    assert!(
+        closed.parse_findings.iter().any(|f| f.kind == "unknown_line" && f.line == Some(15)),
+        "{:?}",
+        closed.parse_findings
+    );
+    // 閉じないときは開始の行も対象から外れ、その行には unclosed_code_block だけが残る
+    let unclosed = ir::parse_document("a.md", &format!("{head}```\ncontent\n")).unwrap();
+    let at_opening: Vec<_> = unclosed
+        .parse_findings
+        .iter()
+        .filter(|f| f.line == Some(15))
+        .collect();
+    assert_eq!(at_opening.len(), 1, "{:?}", unclosed.parse_findings);
+    assert_eq!(at_opening[0].kind, "unclosed_code_block");
+}
+
+// @kotowari[REQ-core-112]
+#[test]
+fn req_112_a_fence_closes_only_with_at_least_as_many_marks() {
+    let unclosed = |content: &str| -> Vec<Option<usize>> {
+        ir::parse_document("a.md", content)
+            .unwrap()
+            .parse_findings
+            .iter()
+            .filter(|f| f.kind == "unclosed_code_block")
+            .map(|f| f.line)
+            .collect()
+    };
+    // 短い囲みは閉じない
+    assert_eq!(unclosed("# Title\n\nScope.\n\n````\nx\n```\n"), vec![Some(5)]);
+    // 長い囲みは閉じる
+    assert!(unclosed("# Title\n\nScope.\n\n```\nx\n````\n").is_empty());
+}
+
 // --- REQ-core-098: 値が空でも「知らない行」は無いものとして扱わない ---
 
 // @kotowari[REQ-core-098]
