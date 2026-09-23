@@ -1,0 +1,28 @@
+# 同梱の問い合わせ: Python（TBL-core-033）
+# 名前が "test" で始まる、ファイルの最上位の関数とクラスの中のメソッド。関数の中の関数は数えない。
+# デコレータは decorated_definition の中で関数の節の外にある
+id: kotowari-python-test
+language: python
+rule:
+  kind: function_definition
+  has:
+    field: name
+    regex: ^test
+    pattern: $NAME
+  any:
+    - inside:
+        kind: module
+    - inside:
+        kind: decorated_definition
+        inside:
+          kind: module
+    - inside:
+        kind: block
+        inside:
+          kind: class_definition
+    - inside:
+        kind: decorated_definition
+        inside:
+          kind: block
+          inside:
+            kind: class_definition

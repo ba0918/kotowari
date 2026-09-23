@@ -23,10 +23,10 @@ gherkin のブロックの中のタグの行（`シナリオ`に結び付くか�
 ### REQ-core-054: 参照切れ
 
 - kind: event_driven
-- source: docs/decision/records/records.md#A21, docs/decision/records/records.md#A39, docs/decision/records/records.md#A52, docs/decision/records/records.md#A28, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A67, docs/decision/records/records.md#A119, docs/decision/records/records.md#A130, docs/decision/records/records.md#A145, docs/decision/records/records.md#A152, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- source: docs/decision/records/records.md#A21, docs/decision/records/records.md#A39, docs/decision/records/records.md#A52, docs/decision/records/records.md#A28, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A67, docs/decision/records/records.md#A119, docs/decision/records/records.md#A130, docs/decision/records/records.md#A145, docs/decision/records/records.md#A152, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-24-multi-language-tests.md#A15
 - verification: unit
 
-"- definition:" の行、"@about" のタグ、`問題の記録`の "- related:" の行、`要求`と`性質`の`文`と gherkin のステップの行の中で、二重引用符の外でバッククォートで囲んだ`ID`、`印`（`問い合わせのある言語`で`テスト`の外にあるものを除く）のいずれかが存在しない`ID`を指すとき、または "- definition:"、"@about"、"- related:" の値が`ID`の形でないとき、kotowari は出現ごとに1件の unresolved_reference の`誤り`を出す。
+"- definition:" の行、"@about" のタグ、`問題の記録`の "- related:" の行、`要求`と`性質`の`文`と gherkin のステップの行の中で、二重引用符の外でバッククォートで囲んだ`ID`、`印`（`問い合わせのある言語`でどの`テスト`の`直前のコメントの塊`にも無いものを除く）のいずれかが存在しない`ID`を指すとき、または "- definition:"、"@about"、"- related:" の値が`ID`の形でないとき、kotowari は出現ごとに1件の unresolved_reference の`誤り`を出す。
 
 ### REQ-core-055: EARS の型を見ない
 

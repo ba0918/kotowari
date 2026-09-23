@@ -147,17 +147,17 @@ fn req_151_items_are_listed_despite_ir_errors_and_exit_zero() {
 #[test]
 fn req_153_test_in_a_language_without_a_query_has_a_null_name() {
     let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), &["tests/**/*.py"]);
+    make_project(tmp.path(), &["tests/**/*.go"]);
     write(
         tmp.path(),
         "docs/ir/a.md",
         &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
     );
-    write(tmp.path(), "tests/a.py", "def x():\n    # @kotowari[REQ-001]\n    pass\n");
+    write(tmp.path(), "tests/a.go", "func x() {\n    // @kotowari[REQ-001]\n}\n");
     let v = run_list(tmp.path());
     let tests = item(&v, "REQ-001")["tests"].as_array().unwrap().clone();
     assert_eq!(tests.len(), 1, "the marker of a language without a query is listed: {v}");
-    assert_eq!(tests[0]["path"], "tests/a.py");
+    assert_eq!(tests[0]["path"], "tests/a.go");
     assert_eq!(tests[0]["line"], 2);
     assert!(tests[0]["name"].is_null(), "no test name without a query: {tests:?}");
 }
@@ -453,16 +453,16 @@ fn req_155_text_prints_one_line_per_item_and_indented_test_lines() {
 #[test]
 fn req_155_text_writes_dash_for_a_null_test_name() {
     let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), &["tests/**/*.py"]);
+    make_project(tmp.path(), &["tests/**/*.go"]);
     write(
         tmp.path(),
         "docs/ir/a.md",
         &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
     );
-    write(tmp.path(), "tests/a.py", "def x():\n    # @kotowari[REQ-001]\n    pass\n");
+    write(tmp.path(), "tests/a.go", "func x() {\n    // @kotowari[REQ-001]\n}\n");
     assert_eq!(
         run_list_text(tmp.path()),
-        "REQ-001 unit 例 docs/ir/a.md:7 tests=1\n  tests/a.py:2 -\n"
+        "REQ-001 unit 例 docs/ir/a.md:7 tests=1\n  tests/a.go:2 -\n"
     );
 }
 

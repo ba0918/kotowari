@@ -1,4 +1,5 @@
 pub mod cargo_mutants;
+pub mod comment_block;
 pub mod config;
 pub mod equivalents;
 pub mod finding_map;
@@ -11,6 +12,7 @@ pub mod schema;
 pub mod sources;
 pub mod status;
 pub mod terms;
+pub mod test_queries;
 pub mod tests_discovery;
 
 use std::collections::BTreeMap;

@@ -29,6 +29,8 @@ pub struct DecisionsConfig {
 pub struct TestsConfig {
     pub files: Vec<String>,
     pub rust: RustTestsConfig,
+    /// ast-grep のルールの YAML ファイルのパス（基準のディレクトリからの相対、REQ-core-186）
+    pub rules: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -57,6 +59,7 @@ impl Default for Config {
                     attributes: vec![],
                     macros: vec![],
                 },
+                rules: vec![],
             },
             mutants: MutantsConfig { equivalents: None },
             limits: LimitsConfig {
@@ -108,6 +111,8 @@ struct RawTests {
     files: Option<Option<Vec<String>>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     rust: Option<Option<RawRustTests>>,
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    rules: Option<Option<Vec<String>>>,
 }
 
 #[derive(serde::Deserialize)]
@@ -229,7 +234,7 @@ impl Config {
         };
 
         // REQ-core-014: "tests:" と "tests.rust:" 自体、"tests.files"、
-        // "tests.rust.attributes"、"tests.rust.macros" が null のときも停止する
+        // "tests.rust.attributes"、"tests.rust.macros"、"tests.rules" が null のときも停止する
         let tests = match unwrap_or_null_option(raw.tests, "tests")? {
             Some(t) => {
                 let rust = match unwrap_or_null_option(t.rust, "tests.rust")? {
@@ -256,10 +261,16 @@ impl Config {
                         )));
                     }
                 }
+                let rules = unwrap_or_null(t.rules, "tests.rules", defaults.tests.rules)?;
+                for rule in &rules {
+                    check_not_absolute(rule, "tests.rules")?;
+                }
                 TestsConfig {
                     // REQ-core-015: 一覧は既定を置き換える
                     files,
                     rust,
+                    // REQ-core-110: パスの正規化
+                    rules: rules.iter().map(|rule| crate::normalize_path(rule)).collect(),
                 }
             }
             None => defaults.tests,

@@ -960,10 +960,10 @@ fn req_102_check_writes_nothing_under_home_tmpdir_or_base() {
     );
 }
 
-// --- REQ-core-121: 設定で問い合わせを足せない ---
+// --- TBL-core-004: キーと既定の値 ---
 
-/// TBL-core-004 の9個のキーをすべて書いた設定
-const ALL_NINE_KEYS: &str = "ir: docs/ir
+/// TBL-core-004 の11個のキーをすべて書いた設定
+const ALL_ELEVEN_KEYS: &str = "ir: docs/ir
 decisions:
   records: docs/decision/records
   adr: docs/decision/adr
@@ -973,6 +973,9 @@ tests:
   rust:
     attributes: []
     macros: []
+  rules: []
+mutants:
+  equivalents: docs/equivalents.yaml
 limits:
   lines: 200
   requirements: 10
@@ -980,29 +983,29 @@ vague_words:
   - \"適切に\"
 ";
 
-// @kotowari[REQ-core-121, REQ-core-014]
+// @kotowari[REQ-core-014, TBL-core-004]
 #[test]
-fn req_121_only_the_nine_config_keys_are_accepted() {
+fn req_014_only_the_eleven_config_keys_are_accepted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
 
-    // TBL-core-004 の9個をすべて書いた設定は通る
-    fs::write(tmp.path().join(".kotowari/config.yaml"), ALL_NINE_KEYS).unwrap();
+    // TBL-core-004 の11個をすべて書いた設定は通る
+    fs::write(tmp.path().join(".kotowari/config.yaml"), ALL_ELEVEN_KEYS).unwrap();
     let accepted = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(
         accepted.status.code(),
         Some(0),
-        "the nine keys of TBL-004 should be accepted: {}",
+        "the eleven keys of TBL-004 should be accepted: {}",
         String::from_utf8_lossy(&accepted.stderr)
     );
 
-    // 問い合わせを足す鍵は、どの階層に書いても設定の誤りで停止する
+    // 表に無い鍵は、どの階層に書いても設定の誤りで停止する
     let variants = [
-        ("top level", ALL_NINE_KEYS.replace("ir: docs/ir\n", "ir: docs/ir\nqueries:\n  python: python.scm\n")),
-        ("decisions", ALL_NINE_KEYS.replace("  adr: docs/decision/adr\n", "  adr: docs/decision/adr\n  queries: python.scm\n")),
-        ("tests", ALL_NINE_KEYS.replace("  rust:\n", "  queries:\n    python: python.scm\n  rust:\n")),
-        ("tests.rust", ALL_NINE_KEYS.replace("    macros: []\n", "    macros: []\n    queries: python.scm\n")),
-        ("limits", ALL_NINE_KEYS.replace("  requirements: 10\n", "  requirements: 10\n  queries: 3\n")),
+        ("top level", ALL_ELEVEN_KEYS.replace("ir: docs/ir\n", "ir: docs/ir\nqueries:\n  python: python.scm\n")),
+        ("decisions", ALL_ELEVEN_KEYS.replace("  adr: docs/decision/adr\n", "  adr: docs/decision/adr\n  queries: python.scm\n")),
+        ("tests", ALL_ELEVEN_KEYS.replace("  rust:\n", "  queries:\n    python: python.scm\n  rust:\n")),
+        ("tests.rust", ALL_ELEVEN_KEYS.replace("    macros: []\n", "    macros: []\n    queries: python.scm\n")),
+        ("limits", ALL_ELEVEN_KEYS.replace("  requirements: 10\n", "  requirements: 10\n  queries: 3\n")),
     ];
     for (level, yaml) in variants {
         fs::write(tmp.path().join(".kotowari/config.yaml"), &yaml).unwrap();
@@ -1019,6 +1022,67 @@ fn req_121_only_the_nine_config_keys_are_accepted() {
             "an unknown key at {level} should stop as a config error, got: {first}"
         );
     }
+}
+
+// --- REQ-core-121: 同梱の問い合わせは外せない ---
+
+// @kotowari[REQ-core-121]
+#[test]
+fn req_121_bundled_query_stays_when_rules_are_added() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    // Rust の同梱の "#[test]" と同じ言語に、別のものに当たるルールを足す
+    fs::create_dir_all(tmp.path().join("rules")).unwrap();
+    fs::write(
+        tmp.path().join("rules/bench.yml"),
+        "id: bench\nlanguage: rust\nrule:\n  kind: function_item\n  has:\n    field: name\n    regex: ^bench_\n    pattern: $NAME\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "tests:\n  files:\n    - \"tests/**/*.rs\"\n  rules:\n    - rules/bench.yml\n",
+    )
+    .unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/a.rs"),
+        "#[test]\nfn t() {}\n\nfn bench_x() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&output.stdout).expect("valid JSON");
+    let details: Vec<_> = v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["kind"] == "test_without_id")
+        .map(|f| f["detail"].as_str().unwrap().to_string())
+        .collect();
+    assert_eq!(details, vec!["t", "bench_x"], "{v}");
+}
+
+// @kotowari[TBL-core-004, REQ-core-186]
+#[test]
+fn tbl_004_tests_rules_is_read_and_defaults_to_empty() {
+    let cfg = kotowari_core::config::Config::parse("tests:\n  rules:\n    - ./rules/a.yml\n")
+        .expect("the key should be read");
+    // REQ-core-110: 設定の値のパスは正規化する
+    assert_eq!(cfg.tests.rules, vec!["rules/a.yml".to_string()]);
+    assert!(kotowari_core::config::Config::default().tests.rules.is_empty());
+}
+
+// @kotowari[REQ-core-014]
+#[test]
+fn req_014_null_tests_rules_stops() {
+    let yaml = "tests:\n  rules:\n";
+    assert!(kotowari_core::config::Config::parse(yaml).is_err(), "null tests.rules should stop");
+}
+
+// @kotowari[REQ-core-014]
+#[test]
+fn req_014_absolute_tests_rules_stops() {
+    let yaml = "tests:\n  rules:\n    - /abs/rule.yml\n";
+    assert!(kotowari_core::config::Config::parse(yaml).is_err(), "an absolute path should stop");
 }
 
 // --- TBL-core-004: 等価の一覧を指す鍵 ---

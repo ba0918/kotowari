@@ -313,18 +313,18 @@ fn write_test_file(tmp: &std::path::Path, rel: &str, content: &str) {
 // @kotowari[REQ-core-128, TBL-core-021, EX-core-035]
 #[test]
 fn req_128_tests_key_lists_files_per_extension_with_query_flag() {
-    // EX-core-035: ".rs" が2つと ".py" が1つ
+    // EX-core-035: ".rs" が2つと ".go" が1つ
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
     write_test_file(tmp.path(), "lib/a.rs", "pub fn a() {}\n");
     write_test_file(tmp.path(), "lib/b.rs", "pub fn b() {}\n");
-    write_test_file(tmp.path(), "lib/c.py", "print(1)\n");
+    write_test_file(tmp.path(), "lib/c.go", "package c\n");
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     assert_eq!(v["tests"]["rs"]["files"], 2, "two .rs files: {v}");
     assert_eq!(v["tests"]["rs"]["query"], true, "rs has a query: {v}");
-    assert_eq!(v["tests"]["py"]["files"], 1, "one .py file: {v}");
-    assert_eq!(v["tests"]["py"]["query"], false, "py has no query: {v}");
+    assert_eq!(v["tests"]["go"]["files"], 1, "one .go file: {v}");
+    assert_eq!(v["tests"]["go"]["query"], false, "go has no query: {v}");
     assert_eq!(
         v["tests"].as_object().unwrap().len(),
         2,
@@ -355,12 +355,12 @@ fn req_128_text_format_does_not_print_tests() {
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
     fs::write(tmp.path().join("docs/ir/a.md"), "# Title\n\nScope.\n").unwrap();
-    write_test_file(tmp.path(), "lib/a.py", "print(1)\n");
+    write_test_file(tmp.path(), "lib/a.go", "package a\n");
 
     // JSON には出る
     let json_output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&json_output);
-    assert_eq!(v["tests"]["py"]["files"], 1, "json should report the file: {v}");
+    assert_eq!(v["tests"]["go"]["files"], 1, "json should report the file: {v}");
 
     // text は指摘の行だけなので、指摘が無ければ何も出ない
     let text_output = cmd()
@@ -452,21 +452,21 @@ fn tbl_021_keys_are_in_byte_order() {
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
     write_test_file(tmp.path(), "lib/a.rs", "pub fn a() {}\n");
-    write_test_file(tmp.path(), "lib/a.py", "print(1)\n");
+    write_test_file(tmp.path(), "lib/a.go", "package a\n");
     write_test_file(tmp.path(), "lib/a.RS", "x\n");
     write_test_file(tmp.path(), "lib/run", "x\n");
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let stdout = String::from_utf8_lossy(&output.stdout);
     let tests_part = &stdout[stdout.find("\"tests\":").expect("tests key")..];
     let mut positions = Vec::new();
-    for key in ["\"\":", "\"RS\":", "\"py\":", "\"rs\":"] {
+    for key in ["\"\":", "\"RS\":", "\"go\":", "\"rs\":"] {
         positions.push(tests_part.find(key).unwrap_or_else(|| panic!("{key} in {tests_part}")));
     }
     let mut sorted = positions.clone();
     sorted.sort_unstable();
     assert_eq!(
         positions, sorted,
-        "keys should appear in byte order (\"\", \"RS\", \"py\", \"rs\"): {tests_part}"
+        "keys should appear in byte order (\"\", \"RS\", \"go\", \"rs\"): {tests_part}"
     );
 }
 
