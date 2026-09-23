@@ -12,10 +12,6 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 ## 記録のみ
 
-### "ast --schema" の出力の形が IR に無い（mds）
-
-- "ast --schema" は判断の記録（[A46（mds-spec）](docs/decision/records/2026-09-21-mds-spec.md#A46)、[A56（mds-spec）](docs/decision/records/2026-09-21-mds-spec.md#A56)）と README にあるが、IR の [REQ-schema-005](docs/ir/schema/cli.md#REQ-schema-005) は "ast" を素の構文木としてしか書いていない。根の "type" にスキーマの "name" を置く形も、要求としては無い（衝突の停止だけ [TBL-schema-009](docs/ir/schema/cli.md#TBL-schema-009) に書いた）。2回目の外部のレビュー（2026-09-24）で見つかった
-
 ### ID 38 / ID 60: detail 文言を assert するテスト（mds）
 
 - テストが detail の文言（`undeclared code block` など）を固定している。仕様は detail の文言を契約にしていない（[REQ-schema-008](docs/ir/schema/cli.md#REQ-schema-008)）ので、挙動を変えない文言の変更で壊れる

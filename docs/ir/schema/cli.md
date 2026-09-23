@@ -7,10 +7,10 @@
 ### REQ-schema-005: コマンドの一覧
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-21-mds-spec.md#A1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A26, docs/decision/records/2026-09-23-versions-and-cli-name.md#A4
+- source: docs/decision/records/2026-09-21-mds-spec.md#A1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A26, docs/decision/records/2026-09-23-versions-and-cli-name.md#A4, docs/decision/records/2026-09-24-ast-schema-output.md#A1
 - verification: unit
 
-mds は常に、"kotowari-mds" の名前のコマンドとして、検査の "check"、素の構文木の "ast"、抽出の "values"、版の "--version" の4つを受ける。
+mds は常に、"kotowari-mds" の名前のコマンドとして、検査の "check"、構文木の "ast"（"--schema" を付けたときは REQ-schema-067 の型付きの値）、抽出の "values"、版の "--version" の4つを受ける。
 
 ### REQ-schema-006: 終了コードの決め方
 
@@ -98,6 +98,14 @@ mds が`停止`するとき、理由の名前と説明を並べた1行だけを�
 
 mds は常に、ディレクトリの検査で、名前が "." で始まるディレクトリ、`スキーマ`とキャッシュの置き場、シンボリックリンク、拡張子が ".md" でないファイルを辿らない。
 
+### REQ-schema-067: "ast --schema" の出力
+
+- kind: event_driven
+- source: docs/decision/records/2026-09-21-mds-spec.md#A46, docs/decision/records/2026-09-21-mds-spec.md#A56, docs/decision/records/2026-09-24-ast-schema-output.md#A1, docs/decision/records/2026-09-24-ast-schema-output.md#A2
+- verification: unit
+
+"kotowari-mds ast" に "--schema" を付けたとき、mds は`文書`が宣言した`スキーマ`で "kotowari-mds values --format json" と同じ値を組み立て、`スキーマ`が最上位の "name" を宣言していれば根の "type" の鍵にその値を置いて、JSON で出す。"name" を宣言しないときは "type" を置かない。"name" は "ast --schema" の "type" にだけ使い、"check" と "values" の結果を変えない。
+
 ## Decision tables
 
 ### TBL-schema-001: 終了コード
@@ -145,6 +153,18 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 ## Examples
 
 ```gherkin
+@id=EX-schema-082 @about=REQ-schema-067 @source=docs/decision/records/2026-09-24-ast-schema-output.md#A1
+Scenario: name を宣言したスキーマでは ast --schema が type を添える
+  Given "name" を "adr" と宣言し、`題名`を`抽出`する`スキーマ`を指した`文書`がある
+  When "kotowari-mds ast --schema" を実行する
+  Then 出力は "values --format json" の値に、根の "type" が "adr" の鍵を足したものである
+
+@id=EX-schema-083 @about=REQ-schema-067 @source=docs/decision/records/2026-09-24-ast-schema-output.md#A1,docs/decision/records/2026-09-24-ast-schema-output.md#A2
+Scenario: name を宣言しないスキーマでは ast --schema は values と同じ
+  Given "name" を宣言せず、`題名`を`抽出`する`スキーマ`を指した`文書`がある
+  When "kotowari-mds ast --schema" と "kotowari-mds values --format json" を実行する
+  Then 2つの出力は同じ値で、"type" の鍵を持たない
+
 @id=EX-schema-081 @about=TBL-schema-009 @source=docs/decision/records/2026-09-24-review7-gaps.md#A4
 Scenario: 同じオプションを2回渡すと停止する
   When "kotowari-mds check" に "--format" を2回渡して実行する
