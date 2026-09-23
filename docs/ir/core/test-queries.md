@@ -55,7 +55,7 @@ kotowari は常に、Rust、TypeScript、Tsx、JavaScript、Python、Php の`問
 
 ### TBL-core-032: TypeScript と JavaScript でテストと数えるもの
 
-- source: docs/decision/records/2026-09-24-multi-language-tests.md#A18, docs/decision/records/2026-09-24-multi-language-tests.md#A25, docs/decision/records/2026-09-24-multi-language-tests.md#A13, docs/decision/records/2026-09-24-multi-language-tests.md#A37, docs/decision/records/2026-09-24-multi-language-tests.md#A21
+- source: docs/decision/records/2026-09-24-multi-language-tests.md#A18, docs/decision/records/2026-09-24-multi-language-tests.md#A25, docs/decision/records/2026-09-24-multi-language-tests.md#A13, docs/decision/records/2026-09-24-multi-language-tests.md#A37, docs/decision/records/2026-09-24-multi-language-tests.md#A21, docs/decision/records/2026-09-24-review11-gaps.md#A1
 
 TypeScript、Tsx、JavaScript に共通する。名前は REQ-core-180 のとおり引用符を外す。
 
@@ -66,6 +66,7 @@ TypeScript、Tsx、JavaScript に共通する。名前は REQ-core-180 のとお
 | 上の形のうち最後の要素が "each" の呼び出しの結果をさらに呼ぶ形（"it.each(表)(名前, 関数)"、"test.concurrent.each(表)(名前, 関数)"） | 外側の呼び出しを数える。名前は外側の最初の引数。内側の "it.each(表)" は数えない |
 | "describe(...)" と、その "." の形 | 数えない。中の呼び出しは上の行のとおり数え、名前に "describe" の名前を付けない |
 | 呼ぶ側が "it"、"test" でない呼び出し（"regex.test(s)"） | 数えない |
+| タグ付きテンプレート（"test.each`表`" だけ） | 数えない。結果を呼ぶ形（"test.each`表`(名前, 関数)"）は外側の呼び出しを数える |
 
 ### TBL-core-033: Python でテストと数えるもの
 
@@ -174,4 +175,10 @@ Scenario: マクロの中の mod の関数も数える
   Given "tests.rust.macros" が "proptest" だけの一覧で、"proptest!" の中の "mod nested {" の中に印の無い関数 "inside_module" がある
   When "kotowari check" を実行する
   Then detail が "inside_module" の test_without_id の誤りが1件出る
+
+@id=EX-core-331 @about=REQ-core-183 @source=docs/decision/records/2026-09-24-review11-gaps.md#A1
+Scenario: タグ付きテンプレートだけでは数えない
+  Given "tests.files" が "tests/**/*.ts" を含み、"tests/a.test.ts" に印の無い "test.each`a`('tagged %s', () => {})" と、その結果を呼ばない "test.each`foo`" がある
+  When "kotowari check" を実行する
+  Then detail が "tagged %s" の test_without_id の誤りが1件だけ出る
 ```
