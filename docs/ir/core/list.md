@@ -47,7 +47,7 @@ kotowari は常に、"kotowari list" の "--format" の値として "json" と "
 
 ### TBL-core-026: 項目の鍵
 
-- source: docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18, docs/decision/records/2026-09-19-read-commands.md#A22, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-19-read-commands.md#A26, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-23-ir-english-tokens.md#A8
+- source: docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18, docs/decision/records/2026-09-19-read-commands.md#A22, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-19-read-commands.md#A26, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-23-ir-english-tokens.md#A8, docs/decision/records/2026-09-24-review6-gaps.md#A1
 
 | 鍵 | 持つ種類 | 中身 |
 |---|---|---|
@@ -59,7 +59,7 @@ kotowari は常に、"kotowari list" の "--format" の値として "json" と "
 | type | 要求、問題の記録 | "- kind:" の値。無ければ null |
 | verification | 要求 | "- verification:" の値。無ければ null |
 | definition | 要求 | "- definition:" の `ID` の並び。無ければ空の並び |
-| examples | 要求、決定表、性質 | その `ID` を "@about" に持つ`シナリオ`の `ID` の並び。`ID` の昇順 |
+| examples | 要求、決定表、性質 | その `ID` を "@about" に持つ`シナリオ`の `ID` の並び。`ID` の昇順。同じ `ID` の`シナリオ`が2つ以上あるときは REQ-core-032 の1つ目だけを数える |
 | how_to_verify | 要求 | "- how_to_verify:" の値。無ければ null |
 | relations | 問題の記録 | "- related:" の `ID` の並び |
 | sources | すべて | `出典`の並び |
@@ -68,6 +68,12 @@ kotowari は常に、"kotowari list" の "--format" の値として "json" と "
 ## Examples
 
 ```gherkin
+@id=EX-core-288 @about=TBL-core-026 @source=docs/decision/records/2026-09-24-review6-gaps.md#A1
+Scenario: 重複した ID のシナリオは1つ目だけを具体例に数える
+  Given 同じ `ID` の`シナリオ`が2つあり、1つ目は "REQ-001" を、2つ目は "REQ-002" を "@about" に持つ
+  When "kotowari list --format json" を実行する
+  Then "REQ-001" の "examples" はその `ID` を持ち、"REQ-002" の "examples" は空である
+
 @id=EX-core-245 @about=REQ-core-151,REQ-core-153,TBL-core-026 @source=docs/decision/records/2026-09-19-read-commands.md#A2,docs/decision/records/2026-09-19-read-commands.md#A6,docs/decision/records/2026-09-19-read-commands.md#A9,docs/decision/records/2026-09-19-read-commands.md#A18
 Scenario: 要求と印のあるテストが1件ずつ出る
   Given IR に名前が "例" の要求 "REQ-001" が "docs/ir/a.md" の 7 行目にあり、検証が "unit" である
