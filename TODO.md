@@ -16,10 +16,6 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 ## 記録のみ
 
-### ID 23: 応答しないサーバのタイムアウト経路のテスト（mds）
-
-- 固定値10秒のタイムアウトは実装済み。この経路だけテスト対象外。仕様がタイムアウト値を契約として宣言していない限り、テストを足しても契約を固定したことにならない
-
 ### ID 38 / ID 60: detail 文言を assert するテスト（mds）
 
 - テストが detail の文言（`undeclared code block` など）を固定している。仕様は detail の文言を契約にしていない（[REQ-schema-008](docs/ir/schema/cli.md#REQ-schema-008)）ので、挙動を変えない文言の変更で壊れる
