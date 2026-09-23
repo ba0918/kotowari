@@ -2244,3 +2244,64 @@ document:
     let v = values_json(schema, doc);
     assert_eq!(v["text"], "一行目\n二行目\n\n三行目");
 }
+
+// @kotowari[EX-schema-058, REQ-schema-064]
+#[test]
+fn ex_schema_058_heading_names_and_cells_drop_inline_markup_and_keep_code() {
+    let schema = r#"
+document:
+  preamble:
+    table:
+      extract: rows
+  sections:
+    - name: 要求
+      item:
+        extract: { path: items, of: { name: name } }
+"#;
+    let doc = "| a | b | c | d |\n|---|---|---|---|\n| **太** | [参][r] | `コ` | *強* |\n\n## 要求\n\n### REQ-1: **太字** [リンク](http://x.example) [参照][r] `コード` *強調*\n\n[r]: http://example.com\n";
+    let v = values_json(schema, doc);
+    assert_eq!(v["items"]["name"], "太字 リンク 参照 コード 強調", "{v}");
+    assert_eq!(v["rows"], serde_json::json!([["太", "参", "コ", "強"]]), "{v}");
+}
+
+// @kotowari[EX-schema-059]
+#[test]
+fn ex_schema_059_a_heading_whose_text_without_markup_differs_is_undeclared() {
+    let schema = "document:\n  sections:\n    - name: Req\n";
+    // 行番号: "## **Req** x" が4行目
+    let (code, json, stderr) = mds_json(schema, "## **Req** x\n", "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    let findings = all_findings(&json);
+    let heading = findings
+        .iter()
+        .find(|f| f["kind"] == "undeclared_heading")
+        .unwrap_or_else(|| panic!("{json}"));
+    assert_eq!(heading["line"], 4, "{json}");
+    assert!(heading["detail"].as_str().unwrap().contains("\"Req x\""), "{json}");
+}
+
+const ITEM_BODY_SCHEMA: &str = r#"
+document:
+  sections:
+    - name: 要求
+      item:
+        extract: items
+        fields:
+          - name: 種類
+"#;
+
+// @kotowari[EX-schema-060, TBL-schema-008]
+#[test]
+fn ex_schema_060_an_item_body_leaves_out_the_child_bullets_of_a_declared_field() {
+    let doc = "## 要求\n\n### REQ-1: 名前\n\n- 種類: a\n  - 子\n";
+    let v = values_json(ITEM_BODY_SCHEMA, doc);
+    assert_eq!(v["items"], "REQ-1: 名前\n- 種類: a", "{v}");
+}
+
+// @kotowari[EX-schema-061, TBL-schema-008]
+#[test]
+fn ex_schema_061_an_item_body_keeps_the_child_bullets_of_an_undeclared_line() {
+    let doc = "## 要求\n\n### REQ-1: 名前\n\n- 他: b\n  - 子\n";
+    let v = values_json(ITEM_BODY_SCHEMA, doc);
+    assert_eq!(v["items"], "REQ-1: 名前\n- 他: b\n  - 子", "{v}");
+}
