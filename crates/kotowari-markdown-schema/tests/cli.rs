@@ -562,6 +562,25 @@ fn check_directory_reports_all_failing_documents() {
     assert_eq!(files[0]["findings"][0]["kind"], "undeclared_heading");
 }
 
+// @kotowari[REQ-schema-002, REQ-schema-010]
+#[test]
+fn check_directory_relaxes_a_schema_that_declares_open() {
+    let dir = tempfile::tempdir().unwrap();
+    write_file(dir.path(), "schema.yaml", &format!("open: true\n{T_SCHEMA}"));
+    write_file(dir.path(), "bad.md", bad_doc());
+    let output = mds()
+        .args(["check", dir.path().to_str().unwrap()])
+        .output()
+        .unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "open: true を宣言したスキーマの文書は、ディレクトリの検査でも宣言していない節を許す: {:?}",
+        output
+    );
+    assert!(output.stdout.is_empty());
+}
+
 // @kotowari[REQ-schema-010, REQ-schema-044]
 #[test]
 fn check_directory_skips_hidden_directories() {
