@@ -44,6 +44,13 @@ The minimum supported Rust version is declared per crate, not once for the works
 `pre-push` runs the full test suite, `kotowari check` with no exemptions, and the mutation tests
 in `scripts/mutants.sh`.
 
+The mutation tests run the whole workspace's test suite once per mutant, so the suite's wall
+time is multiplied by the number of mutants (over a thousand on a large diff). Do not write a
+test that waits on real time — a timeout actually elapsing, a `sleep`, a slow server. Inject the
+duration and keep each wait at 100 ms or less; check a specified value such as a 10-second
+timeout by testing the constant, not by waiting for it. After adding tests, look at each test
+binary's `finished in` time and find the cause of any that exceeds 0.5 s.
+
 ## Specification
 
 The specification is the IR under `docs/ir/`, and nowhere else — `docs/ir/core/` for `kotowari`
