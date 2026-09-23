@@ -1,29 +1,29 @@
-kotowari の仕様に基づく（改訂 2026-09-23。本体の版は固定しない）
+Based on the kotowari specification (revised 2026-09-23; the version of kotowari itself is not pinned)
 
-設定ファイルは `.kotowari/config.yaml`。基準のディレクトリの直下にある。空の設定ファイル（0バイトか注釈だけ）は既定の値で検査を行う。設定ファイルが無いときも既定の値で行う。
+The configuration file is `.kotowari/config.yaml`, directly under the base directory. An empty configuration file (0 bytes, or comments only) checks with the default values. When there is no configuration file, the default values are used too.
 
-| キー | 値 | 既定 |
+| Key | Value | Default |
 |---|---|---|
-| ir | ディレクトリのパス（1つの文字列） | docs/ir |
-| decisions.records | ディレクトリのパス（1つの文字列）。その下のファイルの決定を出典に指せる。判断の記録でない Markdown（形の契約、補足の文書）も置ける | docs/decision/records |
-| decisions.adr | ディレクトリのパス（1つの文字列） | docs/decision/adr |
-| tests.files | glob の一覧 | src/\*\*/\*.rs、tests/\*\*/\*.rs |
-| tests.rust.attributes | "#[test]" に足す属性のパスの一覧 | 空の一覧 |
-| tests.rust.macros | マクロの名前の一覧 | 空の一覧 |
-| mutants.equivalents | ファイルのパス（1つの文字列）。等価の一覧を指す（mutants.md） | 無し |
-| limits.lines | 数（負の数と0は不可） | 200 |
-| limits.requirements | 数（負の数と0は不可） | 10 |
-| vague_words | 語の一覧 | 「適切に」「必要に応じて」「通常は」「など」の4語 |
+| ir | Path of a directory (one string) | docs/ir |
+| decisions.records | Path of a directory (one string). Decisions in the files under it can be cited as sources. Markdown that is not a decision record (form contracts, supplementary documents) can also be placed there | docs/decision/records |
+| decisions.adr | Path of a directory (one string) | docs/decision/adr |
+| tests.files | List of globs | src/\*\*/\*.rs, tests/\*\*/\*.rs |
+| tests.rust.attributes | List of attribute paths added to "#[test]" | Empty list |
+| tests.rust.macros | List of macro names | Empty list |
+| mutants.equivalents | Path of a file (one string). Points at the list of equivalents (mutants.md) | None |
+| limits.lines | Number (negative numbers and 0 are not allowed) | 200 |
+| limits.requirements | Number (negative numbers and 0 are not allowed) | 10 |
+| vague_words | List of words | The four words 「適切に」「必要に応じて」「通常は」「など」 |
 
-既定の列は本体の既定の写し（2026-09-17 時点）で、`setup` が設定ファイルに書くのは既定のある鍵だけ。`mutants.equivalents` には既定が無く、鍵が無ければ等価の一覧は0件として動くので、手順1の YAML には書かない。等価の一覧を持つと決めたときに足す。IR の書き方の指針は数字でなく指摘の種類で持つ（ir-form.md の「上限と分ける単位」）。
+The default column is a copy of the defaults of kotowari itself (as of 2026-09-17), and `setup` writes to the configuration file only the keys that have a default. `mutants.equivalents` has no default, and without the key the list of equivalents behaves as empty, so it is not written in the YAML of step 1. Add it when you decide to keep a list of equivalents. The guidance for writing the IR is held as kinds of findings, not as numbers (ir-form.md, "Limits and the unit of splitting").
 
-一覧のキーに書いた一覧は既定の一覧を置き換える。空の一覧は要素の無い一覧として扱う。入れ子のキーは YAML の入れ子の形で書く。
+A list written for a list key replaces the default list. An empty list is treated as a list with no elements. Nested keys are written in YAML's nested form.
 
-基準のディレクトリ: カレントディレクトリから上に向かって `.kotowari/` のディレクトリのあるディレクトリを探す。最初に見つかればそのディレクトリ、見つからなければカレントディレクトリが基準になる。`.kotowari` という名前のファイルは無視して上に進む。
+The base directory: search upward from the current directory for a directory that holds a `.kotowari/` directory. The first one found is the base; if none is found, the current directory is the base. A file named `.kotowari` is ignored and the search continues upward.
 
-setup の手順: 以下を順に行う。既にあるファイルやディレクトリは上書きせず、あることを人に言う（`AGENTS.md` への節の追加だけは、上書きでなく追記なので行う）。
+The steps of setup: do the following in order. Do not overwrite files or directories that already exist; tell the person they exist (only adding a section to `AGENTS.md` is done, since it appends rather than overwrites).
 
-1. `.kotowari/config.yaml` を既定の値で書く。値を既定から変えるのはテストの glob か置き場を変えるときだけ。
+1. Write `.kotowari/config.yaml` with the default values. Change a value from its default only when changing the test globs or the places for files.
 
 ```yaml
 ir: docs/ir
@@ -47,21 +47,21 @@ vague_words:
   - "など"
 ```
 
-2. 置き場のディレクトリを作る: `docs/ir/`、`docs/decision/records/`、`docs/decision/adr/`
+2. Create the directories for the files: `docs/ir/`, `docs/decision/records/`, `docs/decision/adr/`
 
-3. `docs/ir/CONTEXT.md` を4行で作る:
+3. Create `docs/ir/CONTEXT.md` with four lines:
 
 ```
-# 用語集
+# Glossary
 
-| 用語 | 意味 | 出典 |
+| Term | Meaning | Source |
 |---|---|---|
 ```
 
-4. `AGENTS.md` に `## kotowari` の節を足す。`AGENTS.md` が無ければ作り、あれば末尾に節を足す。`## kotowari` の見出しが既にあれば足さない。雛形:
+4. Add a `## kotowari` section to `AGENTS.md`. If there is no `AGENTS.md`, create it; if there is, add the section at the end. If a `## kotowari` heading already exists, do not add it. Template:
 
 ```markdown
 ## kotowari
 
-このプロジェクトの仕様は IR（`docs/ir/`）で管理する。
+This project manages its specification as an IR (`docs/ir/`).
 ```

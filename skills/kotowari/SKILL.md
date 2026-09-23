@@ -1,33 +1,33 @@
 ---
 name: kotowari
-description: "kotowari の IR と判断の記録の書き方、check の使い方、印の置き方を場面ごとに読む。発火語: kotowari、IR、docs/ir、@kotowari、印、mutants、変異テスト"
+description: "Read, scene by scene, how to write kotowari's IR and decision records, how to use check, and how to place marks. Trigger words: kotowari, IR, docs/ir, @kotowari, marks, mutants, mutation tests. 日本語キーワード: 印 変異テスト"
 ---
 
-kotowari は、正規化した仕様（IR）を Markdown で書き、`kotowari check` で検査するための道具。読み取りのコマンド `kotowari list`（項目の一覧）、`kotowari query`（1件の本文と逆引き）、`kotowari status`（揃っているかの集計）と、変異テストの結果を読む `kotowari mutants` も持つ。このスキルは場面ごとに reference を読ませて、IR と判断の記録の書き方、検査の結果の読み方、印の置き方を伝える。
+kotowari is a tool for writing a normalised specification (the IR) in Markdown and checking it with `kotowari check`. It also has the read commands `kotowari list` (the list of items), `kotowari query` (one item's body and its reverse references) and `kotowari status` (a tally of whether everything is in place), and `kotowari mutants`, which reads the results of mutation tests. This skill has you read a reference per scene and conveys how to write the IR and decision records, how to read the check results, and how to place marks.
 
-最初に `kotowari --version` を走らせ、道具があることを確かめる。
+First run `kotowari --version` to confirm the tool is there.
 
-- コマンドが見つからない → kotowari の導入を求め、作業を始めない
-- 出力から版が読めない → 版を確認できない旨を人に言い、作業を始めない
+- The command is not found → ask for kotowari to be installed, and do not start the work
+- No version can be read from the output → tell the person the version cannot be confirmed, and do not start the work
 
-対象の版は固定しない。references は本体の仕様に追従して改訂し、先頭に改訂日を持つ。
+The target version is not pinned. The references are revised to follow the specification of kotowari itself, and carry their revision date at the top.
 
-場面の選び方: 人が名指ししたらそれに従う。なければ文脈から選ぶ。
+Choosing the scene: if the person names one, follow it. Otherwise choose from the context.
 
-| 場面 | いつ | 読む reference |
+| Scene | When | Reference to read |
 |---|---|---|
-| setup | 置き場が無い、初めて使う | config.md |
-| write | brainstorm の途中で IR と判断の記録を書く | ir-form.md と records.md |
-| check | `kotowari check` の結果を読む、`kotowari list`、`kotowari query`、`kotowari status` の出力を読む | findings.md |
-| mark | テストを書くときに印を置く | mark.md |
-| mutants | `kotowari mutants` の結果を読む、見逃しを調べる | mutants.md |
+| setup | There is no place for the files yet; first use | config.md |
+| write | Writing the IR and decision records during a brainstorm | ir-form.md and records.md |
+| check | Reading the result of `kotowari check`, or the output of `kotowari list`, `kotowari query` or `kotowari status` | findings.md |
+| mark | Placing marks while writing tests | mark.md |
+| mutants | Reading the result of `kotowari mutants`, investigating misses | mutants.md |
 
-write の承認の前に collate.md も読む。
+Before the approval in write, also read collate.md.
 
-場面と使うときの対応:
+Which work uses each scene:
 
-- setup — プロジェクトの最初に1回
-- write — brainstorm の席で IR と判断の記録を書くとき
-- check — brainstorm（承認前）と plan（要求を読むとき）と cycle（終端報告前）と implement（確認コマンド）
-- mark — implement と fixer がテストを書くとき
-- mutants — push が変異の見逃しで止まったとき、cycle の後始末で見逃しを調べるとき
+- setup — once, at the start of a project
+- write — when writing the IR and decision records in a brainstorm session
+- check — brainstorm (before approval), plan (when reading requirements), cycle (before the final report) and implement (check commands)
+- mark — when implement and the fixer write tests
+- mutants — when a push is stopped by missed mutations, and when investigating misses while cleaning up after a cycle
