@@ -135,7 +135,7 @@ Show invocations in a form that can be used as is.
 |---|---|---|
 | Small task | iterate | `/kotowari-iterate <request>`; the request names the place and the change |
 | No specification and medium or larger, no basis for a decision, or two readings | brainstorm | `/kotowari-brainstorm <topic>` |
-| Specification exists, medium or larger change | plan, then cycle | `/kotowari-plan <specification path>` |
+| Specification exists, medium or larger change | plan, then cycle | `/kotowari-plan <IR store path> <requirement IDs>` |
 | Deferred | the person notes it down | one line to note |
 | No fix needed | say so | `no further action needed` |
 | Not enough evidence | keep investigating | the scope to investigate next |

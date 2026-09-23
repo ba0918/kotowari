@@ -115,7 +115,7 @@ Source: `ba0918-verification`, agentic-rules v0.8.0.
 ## Finishing
 
 1. Adversarial review, only when the specification's own requirements can contradict each other —
-   several interdependent requirements, or one the record and the principles could pull apart.
+   several interdependent requirements, or one that two decisions in the record could pull apart.
    Say that reason, then launch one separate-context agent on the IR's own quality. Conformance
    to the decision record is not a review here: the collation review in step 3 replaces it. A
    specification of a few standalone requirements gets none. New findings become branches; keep
