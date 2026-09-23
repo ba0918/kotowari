@@ -38,6 +38,7 @@ pub struct LineMap<'s> {
 fn allowed_kinds(lang: SupportLang) -> &'static [&'static str] {
     match lang {
         SupportLang::Rust => &["attribute_item"],
+        SupportLang::Python => &["decorator"],
         _ => &[],
     }
 }

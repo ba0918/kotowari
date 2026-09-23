@@ -304,3 +304,112 @@ fn tbl_021_extensions_of_the_bundled_languages_have_a_query() {
     }
     assert_eq!(v["tests"]["go"]["query"], false, "{v}");
 }
+
+// --- Python ---
+
+// @kotowari[REQ-core-184, TBL-core-033, EX-core-302]
+#[test]
+fn ex_core_302_nested_function_is_not_counted() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.py"]);
+    write(
+        tmp.path(),
+        "tests/test_a.py",
+        "def test_foo():\n    def test_inner():\n        pass\n\n\nclass TestBar:\n    def test_baz(self):\n        pass\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["test_foo", "test_baz"], "{v}");
+}
+
+// @kotowari[REQ-core-184, TBL-core-033, TBL-core-019]
+#[test]
+fn tbl_033_decorated_test_is_counted_at_its_def_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.py"]);
+    write(
+        tmp.path(),
+        "tests/test_a.py",
+        "import pytest\n\n\n@pytest.fixture\ndef helper():\n    pass\n\n\n@pytest.mark.slow\nasync def test_x():\n    pass\n\n\nclass TestBar:\n    @staticmethod\n    def test_y():\n        pass\n",
+    );
+    let v = check(tmp.path());
+    let found: Vec<_> = findings(&v, "test_without_id")
+        .iter()
+        .map(|f| {
+            (
+                f["detail"].as_str().unwrap().to_string(),
+                f["line"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        found,
+        vec![("test_x".to_string(), 10), ("test_y".to_string(), 16)],
+        "{v}"
+    );
+}
+
+// @kotowari[REQ-core-075, TBL-core-035, EX-core-307]
+#[test]
+fn ex_core_307_mark_binds_across_a_decorator() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.py"]);
+    write(
+        tmp.path(),
+        "tests/test_a.py",
+        "# @kotowari[REQ-001]\n@pytest.mark.parametrize('a', [1])\ndef test_x(a):\n    pass\n",
+    );
+    let v = check(tmp.path());
+    assert!(unmarked(&v).is_empty(), "{v}");
+    let tests = listed_tests(tmp.path(), "REQ-001");
+    assert_eq!(tests.len(), 1, "{tests:?}");
+    assert_eq!(tests[0]["name"], "test_x");
+}
+
+// @kotowari[REQ-core-075, TBL-core-035, EX-core-308]
+#[test]
+fn ex_core_308_mark_before_a_method_binds() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.py"]);
+    write(
+        tmp.path(),
+        "tests/test_a.py",
+        "class TestBar:\n    # @kotowari[REQ-001]\n    def test_baz(self):\n        pass\n",
+    );
+    let v = check(tmp.path());
+    assert!(unmarked(&v).is_empty(), "{v}");
+    let tests = listed_tests(tmp.path(), "REQ-001");
+    assert_eq!(tests.len(), 1, "{tests:?}");
+    assert_eq!(tests[0]["name"], "test_baz");
+}
+
+// @kotowari[REQ-core-075, TBL-core-035, EX-core-318]
+#[test]
+fn ex_core_318_mark_binds_across_a_multi_line_decorator_and_a_comment() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.py"]);
+    write(
+        tmp.path(),
+        "tests/test_a.py",
+        "# @kotowari[REQ-001]\n@pytest.mark.parametrize(\n    'a', [1]\n)\n# note\ndef test_x(a):\n    pass\n",
+    );
+    let v = check(tmp.path());
+    assert!(unmarked(&v).is_empty(), "{v}");
+    let tests = listed_tests(tmp.path(), "REQ-001");
+    assert_eq!(tests.len(), 1, "{tests:?}");
+    assert_eq!(tests[0]["name"], "test_x");
+}
+
+// @kotowari[TBL-core-021, TBL-core-031]
+#[test]
+fn tbl_021_python_extensions_have_a_query() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*"]);
+    let with_query = ["py", "py3", "pyi", "bzl", "bazel"];
+    for ext in with_query {
+        write(tmp.path(), &format!("tests/a.{ext}"), "\n");
+    }
+    let v = check(tmp.path());
+    for ext in with_query {
+        assert_eq!(v["tests"][ext]["query"], true, "{ext}: {v}");
+    }
+}

@@ -10,7 +10,10 @@ use ast_grep_core::{Language, Node};
 use ast_grep_language::SupportLang;
 
 /// 同梱の`問い合わせ`（REQ-core-182）。"language" を書いたルール
-const BUNDLED_RULES: &[&str] = &[include_str!("../queries/rust.yml")];
+const BUNDLED_RULES: &[&str] = &[
+    include_str!("../queries/rust.yml"),
+    include_str!("../queries/python.yml"),
+];
 
 /// 同梱の`問い合わせ`のうち、同じ中身を複数の言語に付けるもの（"language" の行を足して読む）
 const BUNDLED_SHARED_RULES: &[(&str, &[&str])] = &[(
