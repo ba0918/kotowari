@@ -1,203 +1,203 @@
-kotowari の仕様に基づく（改訂 2026-09-22。本体の版は固定しない）
+Based on the kotowari specification (revised 2026-09-23; the version of kotowari itself is not pinned)
 
-## 文書
+## Documents
 
-IR の置き場（既定 `docs/ir`）の下を、ディレクトリの深さに制限なく辿り、拡張子が小文字の `.md` のファイルを読む。
+kotowari walks the place for the IR (default `docs/ir`) with no limit on directory depth, and reads the files whose extension is lowercase `.md`.
 
-- どのディレクトリでも `CONTEXT.md` は用語集、`FLAGS.md` は問題の記録、それ以外は話題ごとの文書
-- `README.md` は置かない（置けば話題ごとの文書として読まれ、範囲の行が無ければ missing_scope になる）。ディレクトリの説明は、そのディレクトリの `CONTEXT.md` の題名の後の範囲の行に書く
-- ディレクトリの名前は英小文字と数字とハイフンにする。kotowari はディレクトリ名を制約しないが、文書名の参照で指せるのはこの文字だけ
-- ファイルのシンボリックリンクは読む。先頭の BOM は読み飛ばす
-- `.md` 以外、隠しディレクトリ、ディレクトリのシンボリックリンク、ディレクトリでも通常のファイルでもないもの（ソケット、名前付きパイプ、デバイス）、`.kotowari` という名前のファイルは読まない。隠しディレクトリとディレクトリのシンボリックリンクはどの深さでも辿らない。空のディレクトリには指摘を出さない。読めないディレクトリがあれば停止
-- 指摘の `path` は基準のディレクトリからの相対で、置き場からの相対パスを `/` でつなぐ。missing_title、missing_scope、glossary_invalid の `detail` はディレクトリを除いたファイル名
+- In every directory, `CONTEXT.md` is a glossary, `FLAGS.md` holds flags, and anything else is a topic document
+- Do not place a `README.md` (if placed, it is read as a topic document, and without a scope line it becomes missing_scope). Describe a directory in the scope lines after the title of that directory's `CONTEXT.md`
+- Name directories with lowercase English letters, digits and hyphens. kotowari does not restrict directory names, but a document name reference can point only at these characters
+- Symbolic links to files are read. A leading BOM is skipped
+- Not read: anything but `.md`, hidden directories, symbolic links to directories, anything that is neither a directory nor a regular file (sockets, named pipes, devices), and files named `.kotowari`. Hidden directories and symbolic links to directories are not followed at any depth. Empty directories raise no finding. If a directory cannot be read, it stops
+- The `path` of a finding is relative to the base directory: the path relative to the place for the IR, joined with `/`. The `detail` of missing_title, missing_scope and glossary_invalid is the file name without the directory
 
-各文書は `# ` の題名を1つだけ持つ。題名が無ければ missing_title、2つ以上あれば2つ目以降の題名ごとに multiple_titles の誤り（detail はその題名の文字）。
+Each document has exactly one `# ` title. If there is no title, missing_title; if there are two or more, a multiple_titles error per title after the first (detail is the text of that title).
 
-見出しは CommonMark の ATX 見出しの行だけ（行頭の空白は3つまで、`#` は1〜6個、その後が空白か行末）。`#` だけの行も見出しになる。`#foo` のように `#` の直後に空白が無い行、`#` が7つ以上の行、`---` か `===` だけの行は見出しにならず、`文`として読む。
+Headings are only CommonMark ATX heading lines (up to three leading spaces, one to six `#`, then a space or the end of the line). A line of `#` alone is also a heading. A line with no space right after `#` like `#foo`, a line with seven or more `#`, and a line of only `---` or `===` are not headings; they are read as a `statement`.
 
-題名の後、最初の `## ` か `### ` より前にある空でない行を「文書が扱う範囲」とする。話題ごとの文書は1行以上持つ（無ければ missing_scope の誤り）。`CONTEXT.md` と `FLAGS.md` は持たなくてよい。
+The non-empty lines after the title and before the first `## ` or `### ` are "what the document covers" (the scope). A topic document has one or more (if none, a missing_scope error). `CONTEXT.md` and `FLAGS.md` need not have any.
 
-話題ごとの文書は次の節を持つ（要らない節は省く）。
+A topic document has the following sections (leave out the sections it does not need).
 
-- `## 要求` — 要求を置く
-- `## 決定表` — 決定表を置く
-- `## 性質` — 性質を置く
-- `## 具体例` — シナリオを置く
+- `## Requirements` — holds requirements
+- `## Decision tables` — holds decision tables
+- `## Properties` — holds properties
+- `## Examples` — holds scenarios
 
-行は `\n` で数え、`\r\n` は1行に数える。最後の行に改行が無くても1行に数える。行は1始まり。文字コードは UTF-8。
+Lines are counted by `\n`; `\r\n` counts as one line. The last line counts as one line even without a newline. Lines start at 1. The character encoding is UTF-8.
 
-コードブロック（行頭の3つ以上の `` ` `` か `~` で始まる行から、同じ文字で同じ数以上の行まで）の中は、gherkin のブロックを除いてすべて検査の対象外。閉じられずに文書が終われば unclosed_code_block の誤り。
+Inside a code block (from a line starting with three or more `` ` `` or `~` to a line of the same character with the same number or more), everything except gherkin blocks is outside the check. If the document ends without closing it, an unclosed_code_block error.
 
-## ID
+## IDs
 
-ID は次の接頭辞に、省いてよい名前と `-` を続け、その後に3桁以上の数字を置いた形。4桁以上のときは先頭を `0` にしない（`REQ-001` と `REQ-1000` と `REQ-core-001` は正しい形、`REQ-1` と `REQ-0001` と `REQ-Core-001` は形に合わない）。名前は小文字の英字で始まり、2文字目からは小文字の英数字と `-` だけ。名前を付けたときは、それが文書の置き場の第1階層と一致していないと id_domain_mismatch の誤りになる。
+An ID is one of the following prefixes, followed by an optional name and `-`, followed by a number of three or more digits. With four or more digits, the first digit is not `0` (`REQ-001`, `REQ-1000` and `REQ-core-001` are of the correct form; `REQ-1`, `REQ-0001` and `REQ-Core-001` do not fit the form). The name starts with a lowercase English letter, and from the second character on uses only lowercase English letters, digits and `-`. When a name is given, it must match the first level of the document's place, or an id_domain_mismatch error is raised.
 
-- `REQ-` — 要求
-- `TBL-` — 決定表
-- `PROP-` — 性質
-- `EX-` — シナリオ
-- `FLAG-` — 問題の記録
+- `REQ-` — requirement
+- `TBL-` — decision table
+- `PROP-` — property
+- `EX-` — scenario
+- `FLAG-` — flag
 
-ID はディレクトリをまたいで文書全体で一意。同じ ID が2か所以上にあれば duplicate_id の誤り。
+IDs are unique across all documents, across directories. If the same ID appears in two or more places, a duplicate_id error.
 
-## 項目
+## Items
 
-| 項目 | 置く場所 | 見出し | 持つ行 | 文 |
+| Item | Where it goes | Heading | Lines it has | Statement |
 |---|---|---|---|---|
-| 要求 | `## 要求` の下 | `### REQ-nnn: 名前` | `- 種類:`（event_driven、state_driven、ubiquitous、prohibition、invariant、algorithm）、`- 出典:`、`- 検証:`（unit、property、proof、review）、`- 定義:`（algorithm では持ち、ほかはあってもよい）、`- 確かめ方:`（検証が review なら必須、ほかはあってもよい。人か LLM が確かめる手順の自由文） | algorithm 以外は持つ。algorithm は持たない |
-| 決定表 | `## 決定表` の下 | `### TBL-nnn: 名前` | `- 出典:` と Markdown の表 | なし（表を持つ） |
-| 性質 | `## 性質` の下 | `### PROP-nnn: 名前` | `- 出典:` | 持つ |
-| シナリオ | `## 具体例` の下の gherkin のコードブロック | `Scenario:` の行 | 直前の行のタグ `@id=EX-nnn`、`@about=ID,...`、`@source=出典,...` | なし（ステップの行を持つ） |
-| 問題の記録 | `FLAGS.md` の `## 問題の記録` の下か、節を挟まずに題名の後 | `### FLAG-nnn: 名前` | `- 種類:`（contradiction、gap、ambiguity）、`- 関係:`（ID のコンマ区切り）、`- 出典:` | 本文を持つ |
-| 用語 | `CONTEXT.md` | 用語、意味、出典の3列のヘッダを持つ最初の表の行 | なし | なし（意味の列を持つ） |
+| Requirement | Under `## Requirements` | `### REQ-nnn: name` | `- kind:` (event_driven, state_driven, ubiquitous, prohibition, invariant, algorithm), `- source:`, `- verification:` (unit, property, proof, review), `- definition:` (an algorithm has it; others may have it), `- how_to_verify:` (required when verification is review; others may have it. Free text describing how a person or an LLM verifies it) | Has one unless algorithm. An algorithm has none |
+| Decision table | Under `## Decision tables` | `### TBL-nnn: name` | `- source:` and a Markdown table | None (has a table) |
+| Property | Under `## Properties` | `### PROP-nnn: name` | `- source:` | Has one |
+| Scenario | A gherkin code block under `## Examples` | The `Scenario:` line | The tags on the preceding line `@id=EX-nnn`, `@about=ID,...`, `@source=source,...` | None (has step lines) |
+| Flag | Under `## Flags` in `FLAGS.md`, or after the title with no section in between | `### FLAG-nnn: name` | `- kind:` (contradiction, gap, ambiguity), `- related:` (comma-separated IDs), `- source:` | Has a body |
+| Term | `CONTEXT.md` | A row of the first table whose header has the three columns Term, Meaning and Source | None | None (has the Meaning column) |
 
-`### ` の見出しが `### ID: 名前` の形でないとき（`EX-` の ID を見出しに使ったとき、`#### ` より深い見出しを含む）は unknown_heading の誤り。形に合わない見出しの下の行も項目の規則で読み、当てはまる指摘を出す。
+When a `### ` heading is not of the form `### ID: name` (including an `EX-` ID used in a heading, and headings deeper than `#### `), an unknown_heading error. The lines under a heading that does not fit the form are also read by the item rules, and the applicable findings are raised.
 
-見出しの下に置ける `- xxx:` の行は、項目の種類ごとに上の表の「持つ行」の列にあるものだけ。知らない `- xxx:` の行、または `xxx:` の形でない一覧の行（`- `、`* `、`+ `、数字と `.` で始まる行、`-` だけの行）は unknown_field の誤り。知らない行の中身は読まない。
+The `- xxx:` lines allowed under a heading are only those in the "Lines it has" column of the table above for that kind of item. An unknown `- xxx:` line, or a list line not of the form `xxx:` (a line starting with `- `, `* `, `+ `, or digits and `.`, or a line of `-` alone), is an unknown_field error. The content of an unknown line is not read.
 
-見出しの下の `- ` の行は順不同で、空行を挟んでよい。`- 定義:`、`- 関係:`、`- 出典:` の値はコンマで区切って複数書ける。同じ `- xxx:` の行が2つ以上あれば duplicate_field の誤り。
+The `- ` lines under a heading may come in any order, with blank lines in between. The values of `- definition:`, `- related:` and `- source:` may be several, separated by commas. If the same `- xxx:` line appears twice or more, a duplicate_field error.
 
-必須の行が無いときの誤り:
+Errors when a required line is missing:
 
-- `- 検証:` が無い → verification_missing
-- `- 出典:` が無いか空 → missing_source
-- それ以外（`- 種類:`、`- 関係:`）が無い → missing_field
+- No `- verification:` → verification_missing
+- No `- source:`, or it is empty → missing_source
+- Any other (`- kind:`, `- related:`) missing → missing_field
 
-`- 種類:`、`- 検証:`、`- 定義:`、`- 関係:`、`- 確かめ方:` の値が空の行は、行が在るものとして扱い、行が無いことによる指摘は出さない。`- 種類:` と `- 検証:` の空の値は、下の unknown_kind と verification_invalid の誤りになる。決定表に表が無ければ missing_table の誤り。
+A `- kind:`, `- verification:`, `- definition:`, `- related:` or `- how_to_verify:` line with an empty value counts as present, and no finding for a missing line is raised. The empty values of `- kind:` and `- verification:` become the unknown_kind and verification_invalid errors below. If a decision table has no table, a missing_table error.
 
-`- 種類:` の値が項目の種類ごとに定めた値でないとき unknown_kind の誤り。`- 検証:` の値が unit、property、proof、review でないとき verification_invalid の誤り。種類が algorithm の要求に、決定表か性質を指す `- 定義:` が無いとき algorithm_without_definition の誤り。
+When the value of `- kind:` is not one of the values defined for the kind of item, an unknown_kind error. When the value of `- verification:` is not unit, property, proof or review, a verification_invalid error. When a requirement of kind algorithm has no `- definition:` pointing at a decision table or property, an algorithm_without_definition error.
 
-文は見出しの下の、一覧でも表でもない空でない行で、1行ずつ1つの文として読む。空行を挟まずに続く行もそれぞれ別の文になる。`- xxx:` の行とほかの一覧の行は1行で終わり、その直後に空行なしで続く行も、空行の後に字下げして続く一覧でない行も文で、一覧の行の値には入らない（字下げした一覧の行は一覧の行）。引用、水平線、HTML、画像の行、`---` か `===` だけの行、空行の後に4つ以上の空白で字下げした行、区切りの行を持たず表にならない `|` で始まる行も文として検査を受ける。algorithm 以外の要求（`- 種類:` の行が無い要求を含む）、性質、問題の記録の項目に文が無ければ missing_statement の誤り。EARS の型に沿うかは検査しない。
+A statement is a non-empty line under a heading that is neither a list nor a table; each line is read as one statement. Lines that follow without a blank line in between are also separate statements. A `- xxx:` line and any other list line end at one line; a line directly following it without a blank line, and an indented non-list line following it after a blank line, are statements and do not go into the list line's value (an indented list line is a list line). Quotes, thematic breaks, HTML, image lines, lines of only `---` or `===`, lines indented by four or more spaces after a blank line, and lines starting with `|` that have no delimiter row and do not form a table are also checked as statements. If a requirement other than algorithm (including one with no `- kind:` line), a property, or a flag item has no statement, a missing_statement error. Whether it follows the EARS patterns is not checked.
 
-## シナリオ
+## Scenarios
 
-gherkin のコードブロックの中に `Scenario:` の行で書く。
+Write them as `Scenario:` lines inside a gherkin code block.
 
-直前の行にタグを置く。タグは `@id=EX-nnn`、`@about=ID,...`、`@source=出典,...` の3つだけ。値が空のタグは無いものとして扱う。タグの行は `Scenario:` の直前の行だけを結び付け、間にほかの行があれば結び付かない。`@` で始まらない語は unknown_tag の誤り。
+Put the tags on the preceding line. The tags are only the three `@id=EX-nnn`, `@about=ID,...` and `@source=source,...`. A tag with an empty value is treated as absent. A tag line binds only to the `Scenario:` directly after it; if any other line comes in between, it does not bind. A word not starting with `@` is an unknown_tag error.
 
-- `@id` か `@about` が無い → missing_tag
-- `@source` が無い → missing_source
-- `@id` の値が `EX-nnn` の形でない → invalid_id（missing_tag は出さない）
-- 3つ以外のタグ → unknown_tag
+- No `@id` or `@about` → missing_tag
+- No `@source` → missing_source
+- The value of `@id` is not of the form `EX-nnn` → invalid_id (missing_tag is not raised)
+- A tag other than the three → unknown_tag
 
-ブロックの中の行は行頭の空白を除いて見て、次だけが許される。
+Lines in the block are looked at without their leading spaces, and only the following are allowed.
 
-- タグの行（`@` で始まる）
-- `Scenario:` の行
-- ステップの行（`Given`、`When`、`Then`、`And`、`But` に半角空白1つ以上が続く）
-- `#` で始まる注釈
-- 空行
+- Tag lines (starting with `@`)
+- `Scenario:` lines
+- Step lines (`Given`, `When`, `Then`, `And`, `But` followed by one or more half-width spaces)
+- Comments starting with `#`
+- Blank lines
 
-それ以外の行（`Feature:`、`Background:`、`Scenario Outline:`、`Examples:`、データ表を含む）、`Scenario:` に続かないステップの行、`Scenario:` が直後に無いタグの行は invalid_gherkin_line の誤り。
+Any other line (including `Feature:`, `Background:`, `Scenario Outline:`, `Examples:` and data tables), a step line not following a `Scenario:`, and a tag line not directly followed by a `Scenario:` are invalid_gherkin_line errors.
 
-gherkin のブロックの外にある `Scenario:` の行はシナリオと見なさない。
+A `Scenario:` line outside a gherkin block is not taken as a scenario.
 
-## 用語集
+## Glossary
 
-用語集 `CONTEXT.md` はどのディレクトリにも置ける。文書から見える用語は、その文書のディレクトリから置き場の根までの各 `CONTEXT.md` の用語の合計（連鎖）。隣の枝の `CONTEXT.md` の用語は見えない（unknown_term）。用語は連鎖の中で1つのファイルにだけ置く。ディレクトリを切るのは、そのまとまり専用の用語が出たとき。
+A glossary `CONTEXT.md` can be placed in any directory. The terms visible from a document are the sum of the terms of every `CONTEXT.md` from that document's directory up to the root of the place for the IR (the chain). Terms of a `CONTEXT.md` in a neighbouring branch are not visible (unknown_term). A term is placed in only one file in the chain. Cut a directory when a term specific to that group appears.
 
-`CONTEXT.md` に `| 用語 | 意味 | 出典 |` のヘッダと区切り行 `|---|---|---|` で始まる表を置く。
+In `CONTEXT.md`, place a table starting with the header `| Term | Meaning | Source |` and the delimiter row `|---|---|---|`.
 
-用語集の表は、題名の後、最初の `## ` の見出しより前で、このヘッダが合う最初の表。それより前にあるヘッダの合わない表も、後にある表も、ヘッダが合うかどうかに依らず用語にも指摘にもしない。表は空行か表でない行で終わる。表の外の `|` で始まる行は用語にしない。ヘッダと区切り行があれば、用語の行が0でも表はあるものとして扱う。
+The glossary table is the first table, after the title and before the first `## ` heading, whose header matches this. Tables before it whose header does not match, and tables after it, whether or not their header matches, become neither terms nor findings. A table ends at a blank line or a non-table line. Lines starting with `|` outside the table do not become terms. If there are a header and a delimiter row, the table counts as present even with 0 term rows.
 
-- `CONTEXT.md` があるのにヘッダと区切り行が無い → glossary_invalid（その用語集は0語として扱い、連鎖のほかの用語集は見えたまま）
-- セルが3つ未満の行と用語のセルが空の行 → invalid_glossary_row（用語にしない）。セルが4つ以上の行は崩れた行にせず、先頭の3つのセルで用語にし、残りのセルを捨てる
-- 同じ用語が同じ用語集に2つ以上、または連鎖の根に近い用語集に既にある → duplicate_term（根から遠い側の行に出す。その行は用語にせず、出典の検査も受けない。語は根に近い側の定義で見えたまま）
+- There is a `CONTEXT.md` but no header and delimiter row → glossary_invalid (that glossary is treated as 0 terms; the other glossaries in the chain remain visible)
+- A row with fewer than three cells, or a row whose term cell is empty → invalid_glossary_row (it does not become a term). A row with four or more cells is not a broken row: it becomes a term from its first three cells, and the remaining cells are dropped
+- The same term twice or more in the same glossary, or already present in a glossary nearer the root of the chain → duplicate_term (raised on the row farther from the root. That row does not become a term, and its source is not checked. The word stays visible through the definition nearer the root)
 
-意味の列は用語と曖昧語の検査を受けない。出典の列は出典として検査を受ける。
+The Meaning column is not checked for terms or vague words. The Source column is checked as a source.
 
-## 問題の記録
+## Flags
 
-`FLAGS.md` の `## 問題の記録` の節の下か、節を挟まずに題名の後に、`### FLAG-nnn: 名前` の見出しを置き（同じ文書に両方があってもよい）、その下に次の行と本文を置く。
+Under the `## Flags` section of `FLAGS.md`, or after the title with no section in between, put a `### FLAG-nnn: name` heading (a document may have both), and under it the following lines and a body.
 
-- `- 種類:` — contradiction、gap、ambiguity のいずれか
-- `- 関係:` — 関係する ID をコンマ区切り
-- `- 出典:`
+- `- kind:` — one of contradiction, gap and ambiguity
+- `- related:` — the related IDs, comma-separated
+- `- source:`
 
-本文は用語と曖昧語の検査を受けない。
+The body is not checked for terms or vague words.
 
-## 出典
+## Sources
 
-出典は `パス#印` の形で書く。最初の `#` でパスと印に分ける。パスに `#` は書けない。パスは基準のディレクトリからの相対で書く（例: `docs/decision/records/2026-01-01-example.md#A1`）。パスは末尾の `/` と先頭の `./` を除き、途中の `/./` と連続する `/` を1つの `/` に畳み、`\` を `/` に直して正規化してから比べる。
+A source is written in the form `path#anchor`. It is split into path and anchor at the first `#`. A path cannot contain `#`. The path is written relative to the base directory (example: `docs/decision/records/2026-01-01-example.md#A1`). Paths are compared after normalisation: the trailing `/` and leading `./` are removed, `/./` and consecutive `/` in the middle are folded into one `/`, and `\` is changed to `/`.
 
-出典の先の判定:
+How the target of a source is judged:
 
-- パスが判断の記録の置き場（`decisions.records`）の中のファイルで、そのファイルが判断の記録（決定の節の見出しをコードブロックの外に1つ以上持つ）のとき: 印は決定の番号（英大文字1文字に1桁以上の数字。`A26`、`P1` の形）。そのファイルの決定の節（`## Agreements`、`## Prohibitions`、`## Delegated`、`## Rejected`）に `- A26 ` で始まる行か `- A26` だけの行があること。決定の節は `## ` の見出しで始まり次の `## ` の見出しで終わり、`### ` の見出しは節を終えない。決定の番号はファイルごとに探す
-- パスが判断の記録の置き場か ADR の置き場（`decisions.adr`）の中のファイルで、そのファイルが判断の記録でない Markdown（ADR、形の契約、補足の文書）のとき: 印はコードブロックの外の `## 見出し` の文字で、前後の空白を除いた完全一致
-- 上のどちらにも当たらない → source_invalid
+- When the path is a file inside the place for decision records (`decisions.records`) and that file is a decision record (it has one or more decision section headings outside code blocks): the anchor is a decision number (one uppercase English letter followed by one or more digits; of the form `A26`, `P1`). A decision section of that file (`## Agreements`, `## Prohibitions`, `## Delegated`, `## Rejected`) must have a line starting with `- A26 ` or a line of `- A26` alone. A decision section starts at a `## ` heading and ends at the next `## ` heading; a `### ` heading does not end the section. Decision numbers are looked up per file
+- When the path is a file inside the place for decision records or the place for ADRs (`decisions.adr`) and that file is Markdown that is not a decision record (an ADR, a form contract, a supplementary document): the anchor is the text of a `## heading` outside code blocks, matched exactly after trimming surrounding spaces
+- Neither of the above → source_invalid
 
-用語集の出典の列とシナリオの `@source` も同じ規則で検査する。kotowari は出典がその項目の内容を本当に述べているかは判定しない。
+The Source column of the glossary and the `@source` of scenarios are checked by the same rules. kotowari does not judge whether the source really states the content of the item.
 
-定義、@about、関係、文中の ID が存在しない ID を指すとき unresolved_reference の誤り。
+When a definition, @about, related, or an ID in a statement points at an ID that does not exist, an unresolved_reference error.
 
-## 用語と曖昧語
+## Terms and vague words
 
-バッククォートで囲んだものは、用語集の用語か ID でなければならない（unknown_term の誤り）。文書の連鎖に用語集が1つも無いときは ID 以外のすべてが unknown_term になる。二重引用符の中は見ない。パスやコード片もバッククォートで囲めば用語として検査する。具体的な値は二重引用符で書く。用語を囲み忘れたことは検出しない。
+Anything enclosed in backticks must be a term of the glossary or an ID (otherwise an unknown_term error). When the chain of a document has no glossary at all, everything but IDs becomes unknown_term. The inside of double quotes is not looked at. Paths and code fragments enclosed in backticks are also checked as terms. Write concrete values in double quotes. Forgetting to enclose a term is not detected.
 
-曖昧語は設定の `vague_words` の語の部分一致で検査する（vague_word の誤り）。
+Vague words are checked by partial match against the words in the configuration's `vague_words` (a vague_word error).
 
-検査の対象:
+What is checked:
 
-| 行 | 検査 |
+| Line | Check |
 |---|---|
-| 要求の文 | 対象 |
-| 性質の文 | 対象 |
-| gherkin の Given、When、Then、And、But の行 | 対象 |
-| gherkin の Scenario の行 | 対象外 |
-| "- " の行 | 対象外 |
-| タグの行 | 対象外 |
-| 用語集の意味の列 | 対象外 |
-| 問題の記録の本文 | 対象外 |
+| Statement of a requirement | Checked |
+| Statement of a property | Checked |
+| gherkin Given, When, Then, And, But lines | Checked |
+| gherkin Scenario line | Not checked |
+| "- " lines | Not checked |
+| Tag lines | Not checked |
+| Meaning column of the glossary | Not checked |
+| Body of a flag | Not checked |
 
-対象の行の二重引用符の外のバッククォートの数が奇数のときは unclosed_backtick の誤り。その行では用語と ID の参照の検査を行わず、曖昧語の検査は行う。
+When the number of backticks outside double quotes on a checked line is odd, an unclosed_backtick error. On that line, terms and ID references are not checked, but vague words are.
 
-指摘は出現ごとに1件。曖昧語の出現は行の左から最長一致で重ならない形で数える。
+One finding per occurrence. Occurrences of vague words are counted from the left of the line, longest match first, without overlap.
 
-## 文書名の参照
+## Document name references
 
-コードブロック（gherkin を含む）の外にある文書名の並びを参照として検査する。参照の形は2つ。
+Sequences of document names outside code blocks (including gherkin) are checked as references. A reference has one of two forms.
 
-- `/` を含まない `xxx.md` は、参照を書いた文書と同じディレクトリの文書を指す。上のディレクトリへ辿って探さない
-- `/` を含む `network/dns/xxx.md` は、IR の置き場からの相対パスの文書を指す
+- `xxx.md` without `/` points at a document in the same directory as the document that holds the reference. It does not search up through parent directories
+- `network/dns/xxx.md` with `/` points at the document at that path relative to the place for the IR
 
-参照先が読んだ文書の中に無ければ missing_document の誤り（ディレクトリのシンボリックリンクの下にあって読まない文書は無いものとする）。`.` か `..` の要素を含む参照は解決せず missing_document。置き場の外のリポジトリのパスを引用符なしで書くと `/` を含む形の参照になって missing_document になるので、具体的な値として二重引用符で書く。
+If the target is not among the documents read, a missing_document error (documents under a symbolic link to a directory, which are not read, count as absent). A reference with a `.` or `..` element is not resolved and is missing_document. Writing a repository path outside the place for the IR without quotes makes it a reference of the form with `/` and it becomes missing_document, so write it in double quotes as a concrete value.
 
-参照と見なす条件:
+Conditions for being taken as a reference:
 
-1. 並びの先頭の直前が、英数字、`_`、`-`、`/`、`.`、バッククォートのいずれでもない（行頭を含む。空白、句読点、日本語の文字は境界になるので、「設定はnetwork-x.mdで定義する」の `network-x.md` も参照になる）
-2. 要素（英小文字と数字とハイフンの並び、`.`、`..` のいずれか）を `/` で区切って1つ以上並べ、最後の要素が英小文字と数字とハイフンの並びで `.md` が続く
-3. `.md` の直後に英数字、`_`、`-`、`#`、`/` が続かない（出典の `パス#印` は参照にならない）
-4. 二重引用符の中にない。行の中の二重引用符が奇数のときは最後の引用符から行末までを引用の中と見なす
+1. The character right before the start of the sequence is none of an English letter or digit, `_`, `-`, `/`, `.` and a backtick (including the start of the line. Spaces, punctuation and Japanese characters are boundaries, so `network-x.md` in 「設定はnetwork-x.mdで定義する」 is also a reference)
+2. One or more elements (a run of lowercase English letters, digits and hyphens, `.`, or `..`) separated by `/`, the last element being a run of lowercase English letters, digits and hyphens, followed by `.md`
+3. Right after `.md` there is none of an English letter or digit, `_`, `-`, `#` and `/` (the `path#anchor` of a source is not a reference)
+4. It is not inside double quotes. When the number of double quotes on the line is odd, the text from the last quote to the end of the line is taken as inside quotes
 
-## 除外
+## Exclusions
 
-kotowari が指摘を出さずに読まないか見ないもの:
+What kotowari does not read or look at, without raising a finding:
 
-- 隠しディレクトリ
-- ディレクトリのシンボリックリンク
-- ディレクトリでも通常のファイルでもないもの（ソケット、名前付きパイプ、デバイス）
-- `.md` 以外のファイル
-- `.kotowari` という名前のファイル
-- コードブロックの中（gherkin を除く）。判断の記録と、判断の記録でない Markdown（形の契約、補足の文書、ADR）では gherkin も含み、閉じなければ文書の終わりまで。中の `## ` の見出しも数えない
-- 判断の記録では、決定の節（`## Agreements`、`## Prohibitions`、`## Delegated`、`## Rejected`）と `## Undecided`、`## Superseded` のどれでもない節（Revisions と `## Context` を含む）にある番号の行の形の行と補足の行の形の行、節の最初の番号の行より前にある補足の行の形の行、番号の行でも補足の行でも見出しでもない行
-- gherkin のブロックの外の `Scenario:` の行
-- 題名より前の空でない行
-- 用語集の文書の中の、用語集の表でない表（用語集の表より前にあるヘッダの合わない表と、後にある表）
-- テストの外と関数の本体の途中にある印
-- 行の中の二重引用符の中
-- 二重引用符が奇数のときの最後の引用符から行末まで
-- 用語と曖昧語の検査の対象外の行
+- Hidden directories
+- Symbolic links to directories
+- Anything that is neither a directory nor a regular file (sockets, named pipes, devices)
+- Files other than `.md`
+- Files named `.kotowari`
+- The inside of code blocks (except gherkin). In decision records and in Markdown that is not a decision record (form contracts, supplementary documents, ADRs), gherkin is included too, and an unclosed block runs to the end of the document. `## ` headings inside it are not counted either
+- In decision records, lines of the form of a numbered line and lines of the form of a supplementary line in a section that is none of the decision sections (`## Agreements`, `## Prohibitions`, `## Delegated`, `## Rejected`), `## Undecided` and `## Superseded` (including Revisions and `## Context`); lines of the form of a supplementary line before the first numbered line of a section; and lines that are neither numbered lines, supplementary lines nor headings
+- `Scenario:` lines outside gherkin blocks
+- Non-empty lines before the title
+- Tables in a glossary document that are not the glossary table (tables before the glossary table whose header does not match, and tables after it)
+- Marks outside tests and in the middle of a function body
+- The inside of double quotes on a line
+- From the last quote to the end of the line when the number of double quotes is odd
+- Lines not checked for terms and vague words
 
-列挙に無い読み飛ばしは作らない。
+Do not create skips that are not in this list.
 
-## 上限と分ける単位
+## Limits and the unit of splitting
 
-1文書の行数が設定の `limits.lines` を超えると too_many_lines、話題ごとの文書の要求の数が `limits.requirements` を超えると too_many_requirements の注意（severity は `notice`。終了コードは変えない）。`CONTEXT.md` と `FLAGS.md` は要求の数を数えない。上限の値は設定で変えられ、既定は本体が持つ。
+When the number of lines of one document exceeds the configuration's `limits.lines`, too_many_lines; when the number of requirements of a topic document exceeds `limits.requirements`, too_many_requirements. Both are notices (severity is `notice`; they do not change the exit code). Requirements are not counted in `CONTEXT.md` and `FLAGS.md`. The limits can be changed in the configuration, and the defaults are held by kotowari itself.
 
-分ける単位は責務であって、行数や件数ではない。注意は責務の混在を疑う合図として読む。
+The unit of splitting is responsibility, not the number of lines or items. Read a notice as a signal to suspect mixed responsibilities.
 
-- 注意が出たら文書を読み直し、範囲の行の外の要求が混じっていれば、範囲の行で説明できる単位に分ける
-- 混じっていなければ分けず、残す理由を判断の記録に書く。行数や件数を理由に切らない
-- 要求1〜2件の文書は、同じ範囲の行で説明できる隣の文書と1つにする
-- ディレクトリを切るのは、そのまとまり専用の用語が出たとき
-- 用語集の too_many_lines は、用語がディレクトリごとのまとまりに分かれるならその `CONTEXT.md` に分け、分かれないなら設定の `limits.lines` を上げてその判断を記録に書く
+- When a notice appears, reread the document. If requirements outside the scope line are mixed in, split into units the scope line can explain
+- If none are mixed in, do not split; write the reason for keeping it in the decision record. Do not cut because of the number of lines or items
+- A document with one or two requirements is merged with a neighbouring document the same scope line can explain
+- Cut a directory when a term specific to that group appears
+- For too_many_lines in a glossary, split it into the `CONTEXT.md` of each directory if the terms divide into per-directory groups; if they do not, raise `limits.lines` in the configuration and write that decision in the record

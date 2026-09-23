@@ -2,60 +2,60 @@
 
 この文書は、文書の frontmatter が指すスキーマをどう見つけ、取得し、キャッシュするかを扱う。
 
-## 要求
+## Requirements
 
 ### REQ-schema-011: スキーマの指定の解決
 
-- 種類: algorithm
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A20
-- 定義: TBL-schema-003
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A20
+- definition: TBL-schema-003
+- verification: unit
 
 ### REQ-schema-012: 相対パスの基準
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A14
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-21-mds-spec.md#A14
+- verification: unit
 
 mds は常に、`frontmatter`に書いた相対パスを、`文書`の置かれた位置を基準に解決する。`基準のディレクトリ`は相対パスの解決には使わない。
 
 ### REQ-schema-013: URL のスキーマのキャッシュ
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A20
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A20
+- verification: unit
 
 `frontmatter`が URL の`スキーマ`を指したとき、mds は取得した内容を SHA-256 の名前でキャッシュに置き、次からはキャッシュを読む。キャッシュが壊れていれば取得し直して回復する。
 
 ### REQ-schema-014: スキーマを指していない文書
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#P1
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#P1
+- verification: unit
 
 `frontmatter`が YAML のマッピングでないとき、"$schema" の値が空か空白だけのとき、または "$schema" の値が文字列でないとき、mds は`停止`する。
 
 ### REQ-schema-015: frontmatter の余分なキー
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A1
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-21-mds-spec.md#A1
+- verification: unit
 
 mds は常に、`frontmatter`の "$schema" 以外のキーを読まず、`指摘`にもしない。
 
 ### REQ-schema-052: URL の認証情報を伏せる
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A25
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A25
+- verification: unit
 
 `停止`の説明に URL を載せるとき、mds はその authority にある認証情報を伏せる。
 
-## 決定表
+## Decision tables
 
 ### TBL-schema-003: スキーマの指定の解決
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A27, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#P1
+- source: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A27, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#P1
 
 | 順 | "$schema" の値 | 解決 |
 |---|---|---|
@@ -63,15 +63,15 @@ mds は常に、`frontmatter`の "$schema" 以外のキーを読まず、`指摘
 | 2 | "http://" か "https://" で始まる | 取得してキャッシュに置く。取得できなければ`停止` |
 | 3 | それ以外 | `文書`の位置からの相対パスとして読む。読めなければ`停止` |
 
-## 性質
+## Properties
 
 ### PROP-schema-003: コマンドによって解決先が変わらない
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A14
+- source: docs/decision/records/2026-09-21-mds-spec.md#A14
 
 同じ`文書`の "$schema" は、検査、`抽出`、素の構文木のどのコマンドから読んでも同じ`スキーマ`に解決する。
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-schema-005 @about=REQ-schema-012 @source=docs/decision/records/2026-09-21-mds-spec.md#A14

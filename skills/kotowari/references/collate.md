@@ -1,40 +1,40 @@
-kotowari の仕様に基づく（改訂 2026-09-23。本体の版は固定しない）
+Based on the kotowari specification (revised 2026-09-23; the version of kotowari itself is not pinned)
 
-## 入力
+## Input
 
-別セッションの LLM に次の2つを渡す。置き場や記録をまるごと渡さない（照合の費用がリポジトリの大きさで決まってしまう）。
+Hand the following two to an LLM in a separate session. Do not hand over the places for documents or the records whole (the cost of the collation would then be set by the size of the repository).
 
-- 照合の範囲の項目（要求、決定表、性質、シナリオ、用語、問題の記録）と、それぞれの出典。各項目は `- 出典:` の行、`@source` のタグ、または用語集の出典の列で出典を持つ
-- それらの出典が指す決定の行（`docs/decision/records/` の下の判断の記録の、番号つきの行とその補足の行）
+- The items in the scope of the collation (requirements, decision tables, properties, scenarios, terms, flags) and the source of each. Each item holds its sources in its `- source:` line, its `@source` tag, or the source column of the glossary
+- The decision lines those sources point at (the numbered lines of the decision records under `docs/decision/records/`, and their supplementary lines)
 
-## 範囲
+## Scope
 
-照合の範囲は、その壁打ちで足したか変えた項目と、その壁打ちで変えた決定を出典に持つ既存の項目。起点（壁打ちのブランチが分かれたコミット）からの差分で機械的に数え、記憶から挙げない。
+The scope of the collation is the items this brainstorm added or changed, and the existing items whose sources are decisions this brainstorm changed. Count them mechanically from the diff since the starting point (the commit the brainstorm's branch forked from); do not list them from memory.
 
-- 足したか変えた項目: `git diff <起点> -- <IR の置き場>` で変わった行を、`kotowari list` の各項目の `path` と `line` に突き合わせて拾う。`kotowari list` に出ない用語集の用語と問題の記録は、差分で変わった行から拾う
-- 変えた決定を出典に持つ項目: `git diff <起点> -- <判断の記録の置き場>` で変わった決定の番号を拾い、`kotowari list` の `sources` がそれを指す項目を選ぶ。例: `kotowari list | jq -r '.items[] | select(.sources | any(test("2026-01-01-example.md#A3$"))) | .id'`
+- Items added or changed: match the lines changed in `git diff <start> -- <place for the IR>` against the `path` and `line` of each item in `kotowari list`. Terms of the glossary and flags, which do not appear in `kotowari list`, are picked from the lines changed in the diff
+- Items whose sources are changed decisions: pick the numbers of the decisions changed in `git diff <start> -- <place for decision records>`, and select the items whose `sources` in `kotowari list` point at them. Example: `kotowari list | jq -r '.items[] | select(.sources | any(test("2026-01-01-example.md#A3$"))) | .id'`
 
-範囲が0件なら照合しない。
+If the scope has 0 items, do not collate.
 
-## 基準
+## Criterion
 
-各項目について、出典が指す決定の1行または節の本文が、その項目の内容を裏付けているかを確かめる。
+For each item, confirm whether the one decision line, or the body of the section, that its source points at supports the content of the item.
 
-- 項目の内容（要求の文、表の行、性質の文、シナリオの Given・When・Then、用語の意味）の一つひとつが、その項目の出典の決定に書かれていることから言えるかを見る
-- 出典に書かれていない値、条件、応答、関係が1つでもあれば「裏付けられていない」とする
-- 判断の記録のほかの箇所に書かれていることで裏付けられる場合も、その項目の出典に書かれていなければ「裏付けられていない」とし、理由にそう書く
-- 語の言い換えは、意味が同じなら裏付けられているとみなす
+- Look at whether each piece of the item's content (the statement of a requirement, the rows of a table, the statement of a property, the Given, When and Then of a scenario, the meaning of a term) follows from what is written in the decision the item cites
+- If even one value, condition, response or relation is not written in the source, treat the item as "not supported"
+- Even when something written elsewhere in the decision records would support it, if it is not written in the item's source, treat the item as "not supported" and say so in the reason
+- A rephrasing of words counts as supported if the meaning is the same
 
-## 返す形
+## Return shape
 
-裏付けられていない項目だけを JSON で返す。形は固定:
+Return only the items that are not supported, as JSON. The shape is fixed:
 
 ```json
-{"unsupported":[{"id":"項目の ID","source":"出典の文字列","reason":"何が出典に書かれていないか"}]}
+{"unsupported":[{"id":"the item's ID","source":"the source string","reason":"what the source does not say"}]}
 ```
 
-すべて裏付けられていれば `{"unsupported":[]}` を返す。
+If everything is supported, return `{"unsupported":[]}`.
 
-## 上限
+## Limit
 
-照合は最大3回まで行う。挙がった項目について出典を足す、記録に決定を足す、または項目を直して再び照合する。2回目と3回目には、前の回で挙がった項目と、その後に直した項目と決定だけを渡す。3回目でも残るものは問題の記録（FLAG）にして人に返す。
+Collate at most three times. For the items raised, add a source, add a decision to the record, or fix the item, and collate again. On the second and third rounds, hand over only the items raised in the previous round and the items and decisions fixed since. What still remains on the third round becomes a flag (FLAG) and is returned to the person.

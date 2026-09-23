@@ -81,12 +81,12 @@ fn req_023_files_counts_all_docs_and_lines_sums_them() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# A\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStmt.\n",
+        "# A\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStmt.\n",
     )
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();

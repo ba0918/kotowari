@@ -13,7 +13,7 @@ document:
         value: value
         of: { line: line, raw: raw }
   sections:
-    - name: 要求
+    - name: Requirements
       repeat: { min: 0 }
       item:
         id: "^REQ-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
@@ -22,38 +22,38 @@ document:
           path: requirements
           of: { id: id, name: name, line: line, end: end }
         fields:
-          - name: 種類
+          - name: kind
             enum: [event_driven, state_driven, ubiquitous, prohibition, invariant, algorithm]
             extract: kind
-          - name: 出典
+          - name: source
             separator: ","
             extract:
               path: sources
               value: value
               of: { line: line }
-          - name: 検証
+          - name: verification
             enum: [unit, property, proof, review]
             extract: verification
-          - name: 定義
+          - name: definition
             separator: ","
             required: true
-            when: { field: 種類, eq: algorithm }
+            when: { field: kind, eq: algorithm }
             extract:
               path: definitions
               value: value
               of: { line: line }
-          - name: 確かめ方
+          - name: how_to_verify
             required: true
-            when: { field: 検証, eq: review }
+            when: { field: verification, eq: review }
             extract: how_to_verify
         statement:
           repeat: { min: 1 }
-          when: { field: 種類, ne: algorithm }
+          when: { field: kind, ne: algorithm }
           extract:
             path: text
             value: value
             of: { line: line, raw: raw }
-    - name: 決定表
+    - name: Decision tables
       repeat: { min: 0 }
       item:
         id: "^TBL-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
@@ -62,7 +62,7 @@ document:
           path: tables
           of: { id: id, name: name, line: line, end: end }
         fields:
-          - name: 出典
+          - name: source
             separator: ","
             extract:
               path: sources
@@ -77,7 +77,7 @@ document:
             path: text
             value: value
             of: { line: line, raw: raw }
-    - name: 性質
+    - name: Properties
       repeat: { min: 0 }
       item:
         id: "^PROP-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
@@ -86,7 +86,7 @@ document:
           path: properties
           of: { id: id, name: name, line: line, end: end }
         fields:
-          - name: 出典
+          - name: source
             separator: ","
             extract:
               path: sources
@@ -98,7 +98,7 @@ document:
             path: text
             value: value
             of: { line: line, raw: raw }
-    - name: 具体例
+    - name: Examples
       repeat: { min: 0 }
       codeblock:
         lang: gherkin

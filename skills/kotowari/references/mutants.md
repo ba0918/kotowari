@@ -1,97 +1,97 @@
-kotowari の仕様に基づく（改訂 2026-09-19。本体の版は固定しない）
+Based on the kotowari specification (revised 2026-09-23; the version of kotowari itself is not pinned)
 
-変異テストは、実装に小さな変更（変異）を1か所入れ、テストが落ちるかを見る手法。落ちなければ、その変更を縛っているテストが無い。落ちなかった変異を見逃しと呼ぶ。`kotowari check` は「要求と具体例に印のあるテストがあるか」までしか見ないので、テストが実装を縛っているかはここで見る。
+Mutation testing puts one small change (a mutation) into the implementation and sees whether the tests fail. If they do not fail, there is no test constraining that change. A mutation that did not make the tests fail is called a miss. `kotowari check` looks only as far as "do requirements and examples have tests with marks", so whether the tests constrain the implementation is looked at here.
 
-## kotowari mutants の使い方
+## Using kotowari mutants
 
-変異テストの実行は kotowari の外に置く。kotowari が読むのは、道具が書いた結果のファイル。
+Running the mutation tests is kept outside kotowari. What kotowari reads is the results file the tool wrote.
 
 ```
 kotowari mutants --tool cargo-mutants --format text mutants.out/outcomes.json
 ```
 
-- `--tool` は必須。省略や知らない値は引数の誤りで停止する。結果の形は道具ごとに違うので、既定値は置かない
-- 位置引数は結果のファイルのパスをちょうど1つ。カレントディレクトリからの相対で読む
-- `--format` は `json`（既定）か `text`。`--config` は check と同じ
+- `--tool` is required. Omitting it or an unknown value stops with an argument error. The shape of the results differs per tool, so there is no default
+- The positional argument is exactly one path of a results file, read relative to the current directory
+- `--format` is `json` (default) or `text`. `--config` is the same as check
 
-このリポジトリでは `scripts/mutants.sh` が、実行から `kotowari mutants` までを1コマンドで行う。結果のファイルを毎回その場で作るので、古い結果を読ませる余地が無い。
+In this repository, `scripts/mutants.sh` does everything from running to `kotowari mutants` in one command. It creates the results file on the spot every time, so there is no room to have stale results read.
 
-## 出力の読み方
+## Reading the output
 
-指摘は check と同じ形（`path`、`line`、`kind`、`severity`、`detail`）。種類は findings.md の表で引く。`mutant_survived` が誤り、`mutant_timeout` と `equivalent_stale` が注意、`equivalent_invalid` が誤り。
+Findings have the same shape as check (`path`, `line`, `kind`, `severity`, `detail`). Look up the kinds in the table in findings.md. `mutant_survived` is an error, `mutant_timeout` and `equivalent_stale` are notices, and `equivalent_invalid` is an error.
 
-JSON の最上位は `findings`、`counts`、`mutants` の3つだけ。`kotowari check` の `files`、`lines`、`tests` は出ない。`mutants` は変異の数え上げ:
+The top level of the JSON is only the three keys `findings`, `counts` and `mutants`. The `files`, `lines` and `tests` of `kotowari check` do not appear. `mutants` is the count of mutations:
 
-| 鍵 | 数えるもの |
+| Key | What it counts |
 |---|---|
-| caught | 変異を入れるとテストが落ちた |
-| survived | 見逃しのうち、等価の一覧のどの1件にも一致しなかった |
-| timeout | 変異を入れるとテストが時間内に終わらなかった |
-| unviable | 変異を入れるとビルドできなかった |
-| equivalent | 見逃しのうち、等価の一覧の1件以上に一致して指摘から外れた |
+| caught | The tests failed with the mutation in place |
+| survived | Misses that matched no entry in the list of equivalents |
+| timeout | The tests did not finish in time with the mutation in place |
+| unviable | It could not be built with the mutation in place |
+| equivalent | Misses that matched one or more entries in the list of equivalents and were removed from the findings |
 
-5つの合計は変異の総数に等しい。`--format text` では、指摘の行の後の最後の1行に同じ集計が出る（指摘が0件でも出る）。
+The sum of the five equals the total number of mutations. With `--format text`, the same tally appears on the last line after the finding lines (it appears even with 0 findings).
 
 ```
 src/a.rs:3 [error] mutant_survived replace == with != in f
 mutants: caught=12 survived=1 timeout=0 unviable=4 equivalent=2
 ```
 
-`equivalent` の数は毎回出る。これは等価の申告に頼った量で、増え方の異常に気づくための数字。
+The `equivalent` count appears every time. It is an amount that relies on declarations of equivalence, and a number for noticing abnormal growth.
 
-終了コードは check と同じで、誤りが1件以上あれば1、無ければ0、停止は2。時間切れだけなら0で終わる。
+The exit code is the same as check: 1 if there is one or more errors, 0 if none, 2 on a stop. Timeouts alone end with 0.
 
-## 等価の一覧
+## The list of equivalents
 
-「等価」は、変異を入れても kotowari の標準出力（JSON と text のすべての鍵と行）、標準エラー（停止の文言と詳細）、終了コードのどれも変わらない、という人か LLM の判断。関数の戻り値や内部の状態の違いは観測に数えない。機械では確かめられないので、判断を一覧のファイルに残し、理由を必須にする。
+"Equivalent" is a person's or an LLM's judgement that the mutation changes none of kotowari's standard output (every key and line of JSON and text), standard error (the stop message and details) and exit code. Differences in a function's return value or internal state do not count as observations. Since it cannot be verified by machine, the judgement is left in the list file, with a reason required.
 
-置き場は設定の `mutants.equivalents` が指す YAML のファイル。既定は無く、鍵が無ければ一覧は0件として動く。1件は5つの鍵をちょうど持つ:
+The place is the YAML file that the configuration's `mutants.equivalents` points at. There is no default, and without the key the list behaves as empty. One entry has exactly five keys:
 
 ```yaml
 - file: src/a.rs
   change: replace == with != in f
   text: "if a == b {"
   class: equivalent
-  why: この分岐は到達しない。別の文脈の LLM に落とすテストを書かせたが、書けなかった
+  why: This branch is unreachable. An LLM in a separate context was asked to write a test that fails on it, and could not
 ```
 
-| 鍵 | 中身 |
+| Key | Content |
 |---|---|
-| file | ソースのパス（基準のディレクトリからの相対。絶対パスと `..` は書けない） |
-| change | 変更の説明。結果のファイルの文をそのまま写す |
-| text | 変異が入る行の、今のソースの文面 |
-| class | `equivalent` だけ。「未検査」と「欠陥の疑い」は一覧で指摘を消せない |
-| why | 理由。空（半角空白とタブだけを含む）は誤り |
+| file | Path of the source (relative to the base directory. Absolute paths and `..` cannot be written) |
+| change | The description of the change. Copy the text of the results file as it is |
+| text | The current source text of the line the mutation goes into |
+| class | Only `equivalent`. "Untested" and "suspected defect" cannot clear a finding through the list |
+| why | The reason. An empty one (containing only half-width spaces and tabs) is an error |
 
-一致の取り方: `file` と `change` が同じ文字列で、`text` が結果の行番号のソースのその行の文面と、どちらも前後の半角空白とタブを除いて同じとき一致とする。行番号で同定しないので、行が動いただけでは外れず、その行を書き換えたときだけ外れて判断のし直しに倒れる。同じ文面の行が複数あるファイルでは、1件がそのどの行の変異にも効く。
+How matching works: an entry matches when `file` and `change` are the same strings, and `text` is the same as the text of the source line at the result's line number, both compared after trimming leading and trailing half-width spaces and tabs. Since it is not identified by line number, a line that merely moved does not come off; only rewriting that line makes it come off, and falls back to redoing the judgement. In a file with several lines of the same text, one entry applies to the mutations of any of those lines.
 
-一覧で外せるのは見逃しだけ。時間切れは注意で終了コードを変えないので、外す口が無い。
+The list can remove only misses. A timeout is a notice and does not change the exit code, so there is no way to remove it.
 
-`equivalent_stale` は、その1件の `text` の文面が `file` のどこにも無くなったときに出る。結果に現れるかどうかでは判定しない（差分だけの実走では結果に入るのが一部の変異だけで、結果に対して判定すると一覧のほとんどが誤って古いと言われる）。
+`equivalent_stale` is raised when the `text` of an entry appears nowhere in `file` any more. It is not judged by whether it appears in the results (in a run over only the diff, only some mutations make it into the results, and judging against the results would wrongly call most of the list stale).
 
-## 見逃しを調べる
+## Investigating misses
 
-見逃し1件ごとに、次の3つのどれかに分ける。
+Sort each miss into one of the following three.
 
-| 分類 | 意味 | すること |
+| Class | Meaning | What to do |
 |---|---|---|
-| 等価 | 変異を入れても kotowari の標準出力、標準エラー、終了コードのどれも変わらない（上の定義のとおり） | 下の「等価の手順」 |
-| 未検査 | 振る舞いは変わるが、テストが見ていない | 下の「未検査の手順」 |
-| 欠陥の疑い | 元のコードがおかしい | 直す。仕様の解釈が要るなら brainstorm に戻す |
+| Equivalent | The mutation changes none of kotowari's standard output, standard error and exit code (as defined above) | "The equivalent steps" below |
+| Untested | The behaviour changes, but no test looks at it | "The untested steps" below |
+| Suspected defect | The original code is wrong | Fix it. If it needs an interpretation of the specification, return to brainstorm |
 
-未検査の手順: 要求がその変異を区別できるほど具体的かを先に確かめる。曖昧で区別できないなら、テストを足さずに IR へ戻す。先にテストを足すと、曖昧な要求を実装の今の振る舞いで固定してしまう。具体的なら、その要求か具体例の印を付けたテストを足す。
+The untested steps: first confirm whether the requirement is specific enough to distinguish that mutation. If it is vague and cannot distinguish it, do not add a test; return to the IR. Adding a test first would pin the vague requirement to the implementation's current behaviour. If it is specific, add a test with the mark of that requirement or example.
 
-等価の手順:
+The equivalent steps:
 
-1. 一覧に書く前に、コードを単純にして変異そのものを無くせないかを先に見る。到達しない分岐や使われない値を消せば、その変異は生まれない。一覧が育たなければ手入れも減る
-2. それでも残るなら、一覧に1件足す前に、別の文脈の LLM にその変異を落とすテストを書かせる。落とせたらそのテストを採用する（等価ではなかった）。落とせなかったら、その試みを `why` に書く
-3. 一覧に1件足す。`why` には、何を試して落とせなかったかを書く
+1. Before writing it in the list, first see whether simplifying the code can remove the mutation itself. Deleting an unreachable branch or an unused value keeps that mutation from arising. If the list does not grow, there is less upkeep too
+2. If it still remains, before adding an entry to the list, have an LLM in a separate context write a test that fails on that mutation. If it can, adopt that test (it was not equivalent). If it cannot, write that attempt in `why`
+3. Add an entry to the list. In `why`, write what was tried and could not make it fail
 
-自分の「等価だ」という判定を自分で通さない。一覧の変更は人の普段の差分のレビューに混ざるので、人に専用の作業は作らないが、判断は差分として見えるところに出る。
+Do not pass your own "this is equivalent" judgement by yourself. Changes to the list mix into the person's ordinary diff review, so no dedicated work is created for the person, but the judgement shows up where it is visible as a diff.
 
-## 走らせる時機
+## When to run it
 
-- cycle の後: main との差分に入る変異だけ。push の前のフックが走らせ、見逃しが残れば push を止める
-- リリースの前: 全体。タグの push で同じフックが全体に切り替わる
+- After a cycle: only the mutations inside the diff with main. The pre-push hook runs it, and stops the push if misses remain
+- Before a release: everything. A push of a tag switches the same hook to everything
 
-除外は使わない。ソースの `#[mutants::skip]` と道具の除外設定は、除外した変異を測らないので、判断の置き場にならない。判断は等価の一覧に置く。
+Exclusions are not used. The source's `#[mutants::skip]` and the tool's exclusion settings do not measure the excluded mutations, so they are no place for judgements. Judgements go in the list of equivalents.

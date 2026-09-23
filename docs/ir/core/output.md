@@ -2,60 +2,60 @@
 
 "--format" で選ぶ出力の形を扱う。
 
-## 要求
+## Requirements
 
 ### REQ-core-021: 出力の形の値
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A7, docs/decision/records/records.md#A18
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/records.md#A7, docs/decision/records/records.md#A18
+- verification: unit
 
 kotowari は常に、"--format" の値として "json" と "text" の2つを受け、既定を "json" にする。
 
 ### REQ-core-022: JSON を1つ出す
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A40, docs/decision/records/ir-form.md#出力
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A40, docs/decision/records/ir-form.md#出力
+- verification: unit
 
 "--format" が "json" のとき、kotowari は標準出力に1つの JSON を出す。
 
 ### REQ-core-023: JSON の中身
 
-- 種類: algorithm
-- 出典: docs/decision/records/records.md#A40, docs/decision/records/records.md#A56, docs/decision/records/2026-09-17-check-reach.md#A15
-- 定義: TBL-core-005, TBL-core-006, TBL-core-021, PROP-core-002, PROP-core-004
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A56, docs/decision/records/2026-09-17-check-reach.md#A15
+- definition: TBL-core-005, TBL-core-006, TBL-core-021, PROP-core-002, PROP-core-004
+- verification: unit
 
 ### REQ-core-025: 文字の出力
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A40, docs/decision/records/records.md#A50, docs/decision/records/records.md#A18, docs/decision/records/ir-form.md#出力, docs/decision/records/2026-09-16-notice.md#A1
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A50, docs/decision/records/records.md#A18, docs/decision/records/ir-form.md#出力, docs/decision/records/2026-09-16-notice.md#A1
+- verification: unit
 
 "--format" が "text" のとき、kotowari は1つの`指摘`を1行で "パス:行 [error] 種類 詳細" か "パス:行 [notice] 種類 詳細" の形で出し、角括弧も出す。
 
 ### REQ-core-026: 行の無い指摘の文字の出力
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A47
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A47
+- verification: unit
 
 "--format" が "text" で`指摘`の "line" が null のとき、kotowari は行を "-" と書く。
 
 ### REQ-core-128: テストのファイルの申告
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-check-reach.md#A14, docs/decision/records/2026-09-17-check-reach.md#A15, docs/decision/records/2026-09-17-mutation-tests.md#A55
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-check-reach.md#A14, docs/decision/records/2026-09-17-check-reach.md#A15, docs/decision/records/2026-09-17-mutation-tests.md#A55
+- verification: unit
 
 kotowari は常に、"kotowari check" の JSON の最上位の "tests" に、読んだ`テストのファイル`を拡張子ごとにまとめ、`TBL-core-021` の鍵で数と`問い合わせ`の有無を出す。"--format" が "text" のときは出さない。
 
-## 決定表
+## Decision tables
 
 ### TBL-core-005: check の JSON の最上位
 
-- 出典: docs/decision/records/records.md#A40, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#出力, docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A55
+- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#出力, docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A55
 
 "kotowari check" の JSON の最上位。"kotowari mutants" の JSON の最上位は TBL-core-025。
 
@@ -69,7 +69,7 @@ kotowari は常に、"kotowari check" の JSON の最上位の "tests" に、読
 
 ### TBL-core-006: 指摘の鍵
 
-- 出典: docs/decision/records/records.md#A40, docs/decision/records/records.md#A61, docs/decision/records/records.md#A106, docs/decision/records/2026-09-16-ir-tree.md#A13, docs/decision/records/2026-09-16-notice.md#A1, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43
+- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A61, docs/decision/records/records.md#A106, docs/decision/records/2026-09-16-ir-tree.md#A13, docs/decision/records/2026-09-16-notice.md#A1, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43
 
 | 鍵 | 中身 |
 |---|---|
@@ -81,7 +81,7 @@ kotowari は常に、"kotowari check" の JSON の最上位の "tests" に、読
 
 ### TBL-core-021: "tests" の中身
 
-- 出典: docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-check-reach.md#A14, docs/decision/records/2026-09-17-check-reach.md#A19, docs/decision/records/2026-09-17-check-reach.md#A20, docs/decision/records/2026-09-17-check-reach.md#A26, docs/decision/records/records.md#A128, docs/decision/records/records.md#A165
+- source: docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-check-reach.md#A14, docs/decision/records/2026-09-17-check-reach.md#A19, docs/decision/records/2026-09-17-check-reach.md#A20, docs/decision/records/2026-09-17-check-reach.md#A26, docs/decision/records/records.md#A128, docs/decision/records/records.md#A165
 
 "tests" はオブジェクトで、鍵は読んだテストのファイルの拡張子、値は "files" と "query" の2つの鍵を持つオブジェクト。テストのファイルが0件なら "tests" は空のオブジェクト。
 
@@ -91,21 +91,21 @@ kotowari は常に、"kotowari check" の JSON の最上位の "tests" に、読
 | 拡張子の値の中 | files | その拡張子の読んだテストのファイルの数 | unparsable_file を出したファイルも数える |
 | 拡張子の値の中 | query | その拡張子が`問い合わせのある言語`なら true、そうでなければ false | 第1版では "rs" だけが true |
 
-## 性質
+## Properties
 
 ### PROP-core-002: counts と findings の一致
 
-- 出典: docs/decision/records/records.md#A40, docs/decision/records/ir-form.md#出力
+- source: docs/decision/records/records.md#A40, docs/decision/records/ir-form.md#出力
 
 "counts" の各種類の値は "findings" の中のその種類の`指摘`の数に等しく、"findings" に1件も無い種類は "counts" に無い。
 
 ### PROP-core-004: tests の files の合計
 
-- 出典: docs/decision/records/2026-09-17-check-reach.md#A15
+- source: docs/decision/records/2026-09-17-check-reach.md#A15
 
 "tests" の各拡張子の "files" の合計は、読んだ`テストのファイル`の数に等しい。
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-core-004 @about=REQ-core-025,REQ-core-026 @source=docs/decision/records/records.md#A47,docs/decision/records/records.md#A40,docs/decision/records/records.md#A50,docs/decision/records/ir-form.md#検査の種類

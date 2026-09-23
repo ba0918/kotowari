@@ -82,7 +82,7 @@ fn keys(item: &serde_json::Value) -> Vec<String> {
 /// 要求の見出しと行を作る
 fn requirement(id: &str, name: &str, verification: &str) -> String {
     format!(
-        "### {id}: {name}\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: {verification}\n\n文である。\n\n"
+        "### {id}: {name}\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: {verification}\n\n文である。\n\n"
     )
 }
 
@@ -96,7 +96,7 @@ fn req_151_requirement_with_a_marked_test_is_listed() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## 要求\n\n{}", requirement("REQ-001", "例", "unit")),
+        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
     );
     write(
         tmp.path(),
@@ -123,11 +123,11 @@ fn req_151_requirement_with_a_marked_test_is_listed() {
 fn req_151_items_are_listed_despite_ir_errors_and_exit_zero() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
-    // "- 検証:" の行の無い要求（check なら verification_missing と requirement_without_test）
+    // "- verification:" の行の無い要求（check なら verification_missing と requirement_without_test）
     write(
         tmp.path(),
         "docs/ir/a.md",
-        "# 題名\n\n範囲。\n\n## 要求\n\n### REQ-002: 例\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n\n文である。\n",
+        "# 題名\n\n範囲。\n\n## Requirements\n\n### REQ-002: 例\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n\n文である。\n",
     );
     let (code, stdout, stderr) = run_list_raw(tmp.path(), &[]);
     assert_eq!(code, Some(0), "an IR error does not change the exit code: {stderr}");
@@ -151,7 +151,7 @@ fn req_153_test_in_a_language_without_a_query_has_a_null_name() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## 要求\n\n{}", requirement("REQ-001", "例", "unit")),
+        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
     );
     write(tmp.path(), "tests/a.py", "def x():\n    # @kotowari[REQ-001]\n    pass\n");
     let v = run_list(tmp.path());
@@ -172,9 +172,9 @@ fn req_153_table_property_scenario_and_flag_carry_their_keys() {
         "docs/ir/a.md",
         concat!(
             "# 題名\n\n範囲。\n\n",
-            "## 決定表\n\n### TBL-001: 表\n\n- 出典: docs/decision/records/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n",
-            "## 性質\n\n### PROP-001: 性\n\n- 出典: docs/decision/records/records.md#A1\n\n文である。\n\n",
-            "## 具体例\n\n```gherkin\n",
+            "## Decision tables\n\n### TBL-001: 表\n\n- source: docs/decision/records/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n",
+            "## Properties\n\n### PROP-001: 性\n\n- source: docs/decision/records/records.md#A1\n\n文である。\n\n",
+            "## Examples\n\n```gherkin\n",
             "@id=EX-001 @about=TBL-001 @source=docs/decision/records/records.md#A1\n",
             "Scenario:   名前に空白がある  \n  Given 前提\n```\n",
         ),
@@ -182,7 +182,7 @@ fn req_153_table_property_scenario_and_flag_carry_their_keys() {
     write(
         tmp.path(),
         "docs/ir/FLAGS.md",
-        "# 題名\n\n範囲。\n\n## 問題の記録\n\n### FLAG-001: 記録\n\n- 種類: gap\n- 関係: TBL-001\n- 出典: docs/decision/records/records.md#A1\n\n本文である。\n",
+        "# 題名\n\n範囲。\n\n## Flags\n\n### FLAG-001: 記録\n\n- kind: gap\n- related: TBL-001\n- source: docs/decision/records/records.md#A1\n\n本文である。\n",
     );
     let v = run_list(tmp.path());
 
@@ -220,7 +220,7 @@ fn req_153_table_property_scenario_and_flag_carry_their_keys() {
     write(
         tmp.path(),
         "docs/ir/b.md",
-        &format!("# 題名\n\n範囲。\n\n## 要求\n\n{}", requirement("REQ-001", "例", "review")),
+        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "review")),
     );
     let v = run_list(tmp.path());
     assert_eq!(
@@ -239,10 +239,10 @@ fn req_153_examples_are_the_scenarios_about_the_item() {
         "docs/ir/a.md",
         concat!(
             "# 題名\n\n範囲。\n\n",
-            "## 要求\n\n### REQ-001: 例\n\n- 種類: algorithm\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n- 定義: TBL-001\n\n",
-            "## 決定表\n\n### TBL-001: 表\n\n- 出典: docs/decision/records/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n",
-            "## 性質\n\n### PROP-001: 性\n\n- 出典: docs/decision/records/records.md#A1\n\n文である。\n\n",
-            "## 具体例\n\n```gherkin\n",
+            "## Requirements\n\n### REQ-001: 例\n\n- kind: algorithm\n- source: docs/decision/records/records.md#A1\n- verification: review\n- definition: TBL-001\n\n",
+            "## Decision tables\n\n### TBL-001: 表\n\n- source: docs/decision/records/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n",
+            "## Properties\n\n### PROP-001: 性\n\n- source: docs/decision/records/records.md#A1\n\n文である。\n\n",
+            "## Examples\n\n```gherkin\n",
             "@id=EX-002 @about=REQ-001,PROP-001 @source=docs/decision/records/records.md#A1\n",
             "Scenario: 2つ目\n  Given 前提\n\n",
             "@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\n",
@@ -270,10 +270,10 @@ fn req_153_how_to_verify_is_the_value_of_the_line_or_null() {
         tmp.path(),
         "docs/ir/a.md",
         concat!(
-            "# 題名\n\n範囲。\n\n## 要求\n\n",
-            "### REQ-001: 行がある\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n- 確かめ方: 手で動かして見る\n\n文である。\n\n",
-            "### REQ-002: 行が無い\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n\n文である。\n\n",
-            "### REQ-003: 値が空\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n- 確かめ方:\n\n文である。\n",
+            "# 題名\n\n範囲。\n\n## Requirements\n\n",
+            "### REQ-001: 行がある\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n- how_to_verify: 手で動かして見る\n\n文である。\n\n",
+            "### REQ-002: 行が無い\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n\n文である。\n\n",
+            "### REQ-003: 値が空\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n- how_to_verify:\n\n文である。\n",
         ),
     );
     let v = run_list(tmp.path());
@@ -291,7 +291,7 @@ fn req_153_tests_have_one_entry_per_marker_occurrence() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## 要求\n\n{}", requirement("REQ-001", "例", "unit")),
+        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
     );
     // 同じテストの2つの行に同じ ID の印がある
     write(
@@ -320,8 +320,8 @@ fn req_154_items_and_tests_are_ordered_by_path_then_line() {
         tmp.path(),
         "docs/ir/b.md",
         concat!(
-            "# 題名\n\n範囲。\n\n## 要求\n\n",
-            "### REQ-002: 後の要求\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n文である。\n\n",
+            "# 題名\n\n範囲。\n\n## Requirements\n\n",
+            "### REQ-002: 後の要求\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n文である。\n\n",
             "```gherkin\n@id=EX-001 @about=REQ-002 @source=docs/decision/records/records.md#A1\n",
             "Scenario: 後のシナリオ\n  Given 前提\n```\n",
         ),
@@ -329,7 +329,7 @@ fn req_154_items_and_tests_are_ordered_by_path_then_line() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## 要求\n\n{}", requirement("REQ-001", "先の要求", "unit")),
+        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "先の要求", "unit")),
     );
     // 印は前の兄弟を後ろから辿って集めるので、並べ替えが無いと行の順にならない
     write(
@@ -392,7 +392,7 @@ fn req_155_json_top_level_has_only_items() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## 要求\n\n{}", requirement("REQ-001", "例", "review")),
+        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "review")),
     );
     let v = run_list(tmp.path());
     assert_eq!(
@@ -410,7 +410,7 @@ fn req_155_text_prints_one_line_per_item_and_indented_test_lines() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## 要求\n\n{}", requirement("REQ-001", "例", "unit")),
+        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
     );
     write(
         tmp.path(),
@@ -432,7 +432,7 @@ fn req_155_text_writes_dash_for_a_null_test_name() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## 要求\n\n{}", requirement("REQ-001", "例", "unit")),
+        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
     );
     write(tmp.path(), "tests/a.py", "def x():\n    # @kotowari[REQ-001]\n    pass\n");
     assert_eq!(
@@ -451,7 +451,7 @@ fn req_155_text_writes_dash_for_the_verification_of_a_non_requirement() {
         "docs/ir/a.md",
         concat!(
             "# 題名\n\n範囲。\n\n",
-            "## 決定表\n\n### TBL-001: 表\n\n- 出典: docs/decision/records/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n",
+            "## Decision tables\n\n### TBL-001: 表\n\n- source: docs/decision/records/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n",
         ),
     );
     // 要求以外の "検証" の欄は "-"。印のあるテストが無ければ tests=0 で続く行は無い
@@ -468,9 +468,9 @@ fn req_155_text_writes_dash_for_a_requirement_without_a_verification_line() {
         "docs/ir/a.md",
         concat!(
             "# 題名\n\n範囲。\n\n",
-            "## 要求\n\n### REQ-001: 例\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n\n文。\n",
+            "## Requirements\n\n### REQ-001: 例\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n\n文。\n",
         ),
     );
-    // "- 検証:" の行の無い要求の "検証" の欄も "-"
+    // "- verification:" の行の無い要求の "検証" の欄も "-"
     assert_eq!(run_list_text(tmp.path()), "REQ-001 - 例 docs/ir/a.md:7 tests=0\n");
 }

@@ -1,40 +1,40 @@
-kotowari の仕様に基づく（改訂 2026-09-23。本体の版は固定しない）
+Based on the kotowari specification (revised 2026-09-23; the version of kotowari itself is not pinned)
 
-## 判断の記録の形
+## The form of a decision record
 
-置き場とファイル名: 判断の記録は `docs/decision/records/YYYY-MM-DD-<name>.md` に置く。ファイル名は最初に決めて改名しない（出典のパスが壊れるため）。承認後も消さない。
+Place and file name: a decision record goes in `docs/decision/records/YYYY-MM-DD-<name>.md`. Decide the file name first and do not rename it (the paths of sources would break). Do not delete it after approval either.
 
-冒頭に `## Context` の節を置き、初見の人向けに「何が問題で、なぜ今決めるか」を3〜6行で書く。再開のための Position 行はその節の本文の直後に置く。
+At the top, place a `## Context` section, and write "what the problem is and why it is being decided now" in three to six lines for a first-time reader. The Position line for resuming goes right after the body of that section.
 
-決定の節の見出し（`## Agreements`、`## Prohibitions`、`## Delegated`、`## Rejected`）を1つ以上置き、その下に `- A1 決定の本文` の形で並べる。番号は使い回さない。`Undecided` と `Revisions` の番号は出典に使えない（決定の節ではない）。
+Place one or more decision section headings (`## Agreements`, `## Prohibitions`, `## Delegated`, `## Rejected`), and list under them in the form `- A1 the body of the decision`. Numbers are not reused. The numbers of `Undecided` and `Revisions` cannot be used as sources (they are not decision sections).
 
-Agreements と Prohibitions の1件は、1行目に決定の本文（1つの決定。文の数は問わないが、理由や経緯は混ぜない）だけを書き、その下に字下げの箇条書きで次を持つ:
+For one entry of Agreements and Prohibitions, the first line holds only the body of the decision (one decision; the number of sentences does not matter, but reasons and history are not mixed in), and under it, as an indented bulleted list, it has:
 
-- `- why:` 必須。書けないときは `- why: not recorded` と書き、無いことを見えるようにする（後から発明しない）
-- `- rejected:` その決定に固有の却下案があるときだけ（節としての `Rejected` も残す）
-- `- decided_by:` 利用者、利用者（推奨を採用）、のように誰が決めたか
-- `- superseded_by:` 後の決定で改められたとき、新しい決定への Markdown のリンク（別のファイルの決定で改めた場合も、古いファイルに書き足してよい）。`Revisions` の節も時系列として残す
+- `- why:` Required. When it cannot be written, write `- why: not recorded` so that its absence is visible (do not invent it afterwards)
+- `- rejected:` Only when there is a rejected alternative specific to that decision (keep the `Rejected` section too)
+- `- decided_by:` Who decided, such as the user, or the user (took the recommendation)
+- `- superseded_by:` When revised by a later decision, a Markdown link to the new decision (even when revised by a decision in another file, it may be added to the old file). Keep the `Revisions` section as the chronology too
 
-Rejected と Delegated の1件は `- why:` を必ず持ち、`- decided_by:` は任意。Undecided の1件は `- decides:` を必ず持ち、`- related:`（関係する決定の番号）は任意。補足の行の名前と見出しは利用者の言語に依存しないよう英語に固定し、値は自由文でよい。補足の行の名前はこの6つだけ。
+One entry of Rejected and Delegated always has `- why:`; `- decided_by:` is optional. One entry of Undecided always has `- decides:`; `- related:` (the numbers of related decisions) is optional. The names of the supplementary lines and the headings are fixed in English so as not to depend on the user's language, and the values may be free text. The names of the supplementary lines are only these six.
 
-形はこの reference が述べ、必須の補足の行の有無と名前、`- superseded_by:` のリンクの実在は `kotowari check` が検査する。その指摘は [findings.md](./findings.md) の表の record_field_missing、record_field_unknown、revision_link_invalid の行で引く。
+This reference states the form; `kotowari check` checks whether the required supplementary lines are present and their names, and that the link of `- superseded_by:` exists. Look up its findings in the rows record_field_missing, record_field_unknown and revision_link_invalid of the table in [findings.md](./findings.md).
 
-補足の行が決定として読まれないのは、kotowari の出典の判定が、行頭の空白を除いて `- 印 ` で始まる行のうち印が決定の番号の形（英大文字1文字に数字）のものだけを決定として読むため（`- why:` の印は番号の形ではない）。字下げそのものは判定に関係しない。
+Supplementary lines are not read as decisions because kotowari's judgement of sources reads as decisions only the lines that, after leading spaces are removed, start with `- anchor ` where the anchor has the form of a decision number (one uppercase English letter followed by digits) (the anchor of `- why:` does not have the form of a number). The indentation itself plays no part in the judgement.
 
-## 資料をまたぐ参照
+## References across documents
 
-記録とこの references の中で資料をまたいで参照するときは、必ず Markdown のリンクにする。href はその文書からの相対パスに `#番号` か `#見出し` を続けた形にする（例: 記録の中から `[A1（example）](./2026-01-01-example.md#A1)`）。基準のディレクトリからのパス（出典の形）を href に書くと、Markdown は文書の場所から解決するので辿れない。IR の ID を挙げるときは、その項目を定義する文書へのリンクを付ける（例: 記録の中から `[REQ-001](../../ir/example.md#REQ-001)`）。ID だけでは内容を判断できない。IR の文書の中の出典と文書名の参照は kotowari の契約どおり素の形で書き、この規則の対象外。
+When referring across documents in records and in these references, always make it a Markdown link. The href is the relative path from that document followed by `#number` or `#heading` (example: from inside a record, `[A1 (example)](./2026-01-01-example.md#A1)`). If a path from the base directory (the form of a source) is written as the href, Markdown resolves it from the document's location, so it cannot be followed. When listing an IR ID, attach a link to the document that defines that item (example: from inside a record, `[REQ-001](../../ir/example.md#REQ-001)`). The ID alone does not let the reader judge the content. Sources and document name references inside IR documents are written in the plain form of the kotowari contract, and are outside this rule.
 
-## ADR
+## ADRs
 
-新しく書く義務は無い。既存の ADR は出典の先として残す。ADR が担っていた理由の詳細と改訂の統合は、上の `- why:` と `- superseded_by:` が引き受ける。
+There is no obligation to write new ones. Existing ADRs are kept as targets of sources. The detail of reasons and the integration of revisions that ADRs used to carry are taken over by `- why:` and `- superseded_by:` above.
 
-## 中身の種類ごとの置き場
+## Where each kind of content goes
 
-成功の条件と反例: 各要求に求める観測できる成功の条件と反例は、IR の `## 具体例` のシナリオとして書く。成功の条件は通る場面、反例は指摘か停止が出る場面で書く。要求の見出しの下には持てる行しか置けない。
+Success conditions and counterexamples: write the observable success conditions and counterexamples required of each requirement as scenarios under the IR's `## Examples`. Write a success condition as a scene that passes, and a counterexample as a scene where a finding or a stop appears. Only the allowed lines can be placed under a requirement's heading.
 
-禁止・却下・未決・委譲: IR の話題ごとの文書には要求・決定表・性質・具体例しか置けないので、これらは判断の記録の節に置く。
+Prohibitions, rejections, undecided matters and delegations: a topic document of the IR can hold only requirements, decision tables, properties and examples, so these go in sections of the decision record.
 
-矛盾・欠落・曖昧: `FLAGS.md` の `### FLAG-nnn: 名前` に `- 種類:`、`- 関係:`、`- 出典:` を付けて書く。
+Contradictions, gaps and ambiguities: write them as `### FLAG-nnn: name` in `FLAGS.md` with `- kind:`, `- related:` and `- source:`.
 
-用語集: 用語集 `CONTEXT.md` はどのディレクトリにも置け、文書から見えるのは自分のディレクトリから置き場の根までの `CONTEXT.md` の用語（連鎖）。用語は連鎖の中で1つのファイルにだけ置く。
+Glossary: a glossary `CONTEXT.md` can be placed in any directory, and what a document sees is the terms of the `CONTEXT.md` files from its own directory up to the root of the place for the IR (the chain). A term is placed in only one file in the chain.

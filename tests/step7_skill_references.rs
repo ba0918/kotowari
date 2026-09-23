@@ -80,7 +80,7 @@ fn only_yaml_block(markdown: &str) -> String {
 // @kotowari[REQ-core-125]
 #[test]
 fn req_125_findings_reference_kinds_match_the_code() {
-    let in_reference = first_column_of_table(&read_reference("findings.md"), "種類");
+    let in_reference = first_column_of_table(&read_reference("findings.md"), "Kind");
     let in_code: BTreeSet<String> = kotowari_core::FindingKind::ALL
         .iter()
         .map(|k| k.as_str().to_string())
@@ -132,7 +132,7 @@ fn req_126_config_reference_setup_yaml_parses_to_the_defaults() {
 // @kotowari[REQ-core-127]
 #[test]
 fn req_127_findings_reference_stop_wordings_match_the_code() {
-    let in_reference = first_column_of_table(&read_reference("findings.md"), "文言");
+    let in_reference = first_column_of_table(&read_reference("findings.md"), "Message");
     // 標準エラーの1行目は StopReason の Display で、詳細の前がこの文言になる
     let in_code: BTreeSet<String> = kotowari_core::StopReason::WORDINGS
         .iter()

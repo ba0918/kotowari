@@ -1,49 +1,49 @@
-kotowari の仕様に基づく（改訂 2026-09-17。本体の版は固定しない）
+Based on the kotowari specification (revised 2026-09-23; the version of kotowari itself is not pinned)
 
-## 印の形
+## The form of a mark
 
-`@kotowari[ID, ...]` の形で書く。
+Write it in the form `@kotowari[ID, ...]`.
 
-| 部分 | 形 |
+| Part | Form |
 |---|---|
-| 始まり | @kotowari[ |
-| 中身 | ID をコンマで区切って並べる。コンマの前後に空白を置いてよい |
-| 終わり | ] |
+| Start | @kotowari[ |
+| Content | IDs separated by commas. Spaces may be placed before and after a comma |
+| End | ] |
 
-1行に複数の印を書いてよい（すべて拾う）。コメント記号は問わず、行のどの位置からも拾う。同じ行に閉じ括弧が無ければ invalid_marker の誤り。中身が空か区切りだけでも invalid_marker の誤り。
+Several marks may be written on one line (all are picked up). The comment syntax does not matter, and marks are picked up from any position on the line. If there is no closing bracket on the same line, an invalid_marker error. Content that is empty or only separators is also an invalid_marker error.
 
-例:
+Examples:
 
-- `// @kotowari[REQ-001, TBL-002]` — REQ-001 と TBL-002 に結び付く
-- `// @kotowari[REQ-001] @kotowari[TBL-002]` — 1行に2つの印。両方拾う
+- `// @kotowari[REQ-001, TBL-002]` — binds to REQ-001 and TBL-002
+- `// @kotowari[REQ-001] @kotowari[TBL-002]` — two marks on one line. Both are picked up
 
-## 具体例の印
+## Marks for examples
 
-要求の ID だけでなく、具体例（シナリオ）の ID も印に書ける。@about に検証が review 以外の要求を持つ具体例に、その ID を含む印が1つも無いと scenario_without_test の誤りになる（review だけの具体例と要求を挙げない具体例には出ない）。
+A mark can hold not only requirement IDs but also the IDs of examples (scenarios). When an example whose @about has a requirement with a verification other than review has no mark containing its ID, a scenario_without_test error is raised (not raised for an example with only review requirements, or one that names no requirement).
 
-- `// @kotowari[REQ-001, EX-201]` — 要求 REQ-001 と具体例 EX-201 の両方に結び付く
-- `// @kotowari[EX-201, EX-202]` — 1つの印で2つの具体例に結び付く
+- `// @kotowari[REQ-001, EX-201]` — binds to both the requirement REQ-001 and the example EX-201
+- `// @kotowari[EX-201, EX-202]` — one mark binding to two examples
 
-具体例の印は、その具体例が `@about` に挙げる要求の分も満たす。`@kotowari[EX-201]` だけのテストがあれば、EX-201 の `@about` の要求には requirement_without_test が出ない。逆は無い。要求の ID だけを挙げる印は、その要求の具体例の分を満たさない。
+A mark for an example also covers the requirements that example lists in `@about`. If there is a test with only `@kotowari[EX-201]`, requirement_without_test is not raised for the requirements in EX-201's `@about`. The reverse does not hold. A mark listing only a requirement's ID does not cover that requirement's examples.
 
-同じ ID の具体例が2か所以上にあるときは、1つ目（文書のパスのバイト順、同じ文書では行の小さい方）の `@about` を使う。
+When examples with the same ID are in two or more places, the `@about` of the first one (by byte order of the document path, and within the same document the smaller line) is used.
 
-## 置ける位置
+## Where marks may go
 
-テストに結び付く印の位置:
+Positions of a mark that bind to a test:
 
-| 印の位置 | 扱い |
+| Position of the mark | Treatment |
 |---|---|
-| 関数とその属性の直前に続くコメントの塊（属性を挟んでよい。空行を挟むと切れる） | その関数のテストに結び付ける |
-| 関数の本体の先頭で、どの文よりも前にあるコメントの塊 | その関数のテストに結び付ける |
-| 上の2つの両方にある | 両方の ID を合わせて結び付ける |
-| 関数の本体の途中 | 無視する |
-| テストの外 | 無視する（invalid_marker も unresolved_reference も出さない） |
-| マクロの中の関数 | 上と同じ規則を適用する |
+| The block of comments directly before a function and its attributes (attributes may come in between; a blank line cuts it) | Bound to that function's test |
+| The block of comments at the start of the function body, before any statement | Bound to that function's test |
+| Both of the above | The IDs of both are combined and bound |
+| In the middle of the function body | Ignored |
+| Outside tests | Ignored (neither invalid_marker nor unresolved_reference is raised) |
+| Functions inside macros | The same rules as above apply |
 
-印とテスト関数の間に空行が入ると結び付かない。属性（`#[test]` など）はコメントの塊の中に挟んでよい。
+If a blank line comes between the mark and the test function, they do not bind. Attributes (such as `#[test]`) may come in the middle of the comment block.
 
-例:
+Example:
 
 ```rust
 // @kotowari[REQ-001]
@@ -53,35 +53,35 @@ fn req_001_returns_ok() {
 }
 ```
 
-空行を挟む誤り:
+The mistake of a blank line in between:
 
 ```rust
 // @kotowari[REQ-001]
 
 #[test]
-fn req_001_returns_ok() {  // test_without_id になる
+fn req_001_returns_ok() {  // becomes test_without_id
     // ...
 }
 ```
 
-## テストの見分け方
+## How tests are recognised
 
-Rust でテストと数えるもの:
+What counts as a test in Rust:
 
-| 対象 | 数え方 |
+| Target | How it is counted |
 |---|---|
-| 属性のパスの末尾の要素が test の関数（`#[test]`、`#[tokio::test]` など） | 常に数える |
-| tests.rust.attributes の属性の付いた関数 | 属性のパスが完全一致すれば数える |
-| tests.rust.macros のマクロの中の関数 | マクロの名前の末尾の要素が一致すれば、中身を Rust の項目として読み直し、最上位の関数ごとに数える |
+| A function with an attribute whose path ends in the element test (`#[test]`, `#[tokio::test]` and so on) | Always counted |
+| A function with an attribute in tests.rust.attributes | Counted if the attribute path matches exactly |
+| A function inside a macro in tests.rust.macros | If the last element of the macro name matches, its content is reread as Rust items, and each top-level function is counted |
 
-設定の `tests.rust.attributes` に属性のパスを書くと、そのパスの属性が付いた関数もテストと数える。パスは `#[` と `]` と引数を除いた部分で比べる。
+Writing attribute paths in the configuration's `tests.rust.attributes` makes functions with an attribute of that path count as tests too. The path is compared on the part without `#[`, `]` and arguments.
 
-設定の `tests.rust.macros` にマクロの名前（`!` を除く）を書くと、そのマクロの名前の末尾の要素が一致するマクロの中身をテストとして読む。
+Writing macro names (without `!`) in the configuration's `tests.rust.macros` makes the content of macros whose name's last element matches be read as tests.
 
-## テスト名
+## Test names
 
-テスト名の慣習: 確かめる ID を小文字にしてハイフンを `_` に変え、先頭に付ける（例: `req_001_returns_ok`）。kotowari はテスト名を検査しない。
+The convention for test names: lowercase the ID being verified, change its hyphens to `_`, and put it at the start (example: `req_001_returns_ok`). kotowari does not check test names.
 
-## Rust 以外
+## Languages other than Rust
 
-Rust 以外の言語では、kotowari に同梱の問い合わせが無いため、テストの見分けは行わない。テストのファイル内の印はすべて拾い、requirement_without_test と scenario_without_test を消す側に数える。test_without_id は出さない。テストの正しさは人が確かめる。
+For languages other than Rust, kotowari ships no query, so tests are not recognised. Every mark in a test file is picked up and counted toward clearing requirement_without_test and scenario_without_test. test_without_id is not raised. A person verifies that the tests are correct.

@@ -57,7 +57,7 @@ fn run_status(tmp: &Path) -> (Option<i32>, serde_json::Value) {
 
 /// 要求の見出しと行を作る
 fn requirement(id: &str, name: &str, fields: &str) -> String {
-    format!("### {id}: {name}\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n{fields}\n文である。\n\n")
+    format!("### {id}: {name}\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n{fields}\n文である。\n\n")
 }
 
 /// EX-core-258 と EX-core-261 が使う文書とテスト。
@@ -68,10 +68,10 @@ fn write_ex_258_project(tmp: &Path) {
         tmp,
         "docs/ir/a.md",
         &format!(
-            "# 題名\n\n範囲。\n\n## 要求\n\n{}{}## 具体例\n\n\
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}{}## Examples\n\n\
 ```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: 例\n  Given 何か\n```\n",
-            requirement("REQ-001", "一", "- 検証: unit\n"),
-            requirement("REQ-002", "二", "- 検証: review\n- 確かめ方: 人が読む\n"),
+            requirement("REQ-001", "一", "- verification: unit\n"),
+            requirement("REQ-002", "二", "- verification: review\n- how_to_verify: 人が読む\n"),
         ),
     );
     write(
@@ -114,8 +114,8 @@ fn req_165_review_requirement_without_how_to_verify_is_not_complete() {
         tmp.path(),
         "docs/ir/a.md",
         &format!(
-            "# 題名\n\n範囲。\n\n## 要求\n\n{}",
-            requirement("REQ-002", "二", "- 検証: review\n")
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            requirement("REQ-002", "二", "- verification: review\n")
         ),
     );
     let (code, v) = run_status(tmp.path());
@@ -134,14 +134,14 @@ fn req_165_flag_makes_it_not_complete() {
         tmp.path(),
         "docs/ir/a.md",
         &format!(
-            "# 題名\n\n範囲。\n\n## 要求\n\n{}",
-            requirement("REQ-001", "一", "- 検証: review\n- 確かめ方: 人が読む\n")
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            requirement("REQ-001", "一", "- verification: review\n- how_to_verify: 人が読む\n")
         ),
     );
     write(
         tmp.path(),
         "docs/ir/FLAGS.md",
-        "# 問題の記録\n\nなし。\n\n## 問題の記録\n\n### FLAG-001: 抜け\n\n- 種類: gap\n- 関係: REQ-001\n- 出典: docs/decision/records/records.md#A1\n\n本文。\n",
+        "# 問題の記録\n\nなし。\n\n## Flags\n\n### FLAG-001: 抜け\n\n- kind: gap\n- related: REQ-001\n- source: docs/decision/records/records.md#A1\n\n本文。\n",
     );
     let (code, v) = run_status(tmp.path());
     assert_eq!(v["findings"]["error"], 0, "check reports nothing here: {v}");
@@ -161,9 +161,9 @@ fn tbl_028_requirement_covered_through_a_scenario_counts_as_with_tests() {
         tmp.path(),
         "docs/ir/a.md",
         &format!(
-            "# 題名\n\n範囲。\n\n## 要求\n\n{}## 具体例\n\n\
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}## Examples\n\n\
 ```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: 例\n  Given 何か\n```\n",
-            requirement("REQ-001", "一", "- 検証: unit\n")
+            requirement("REQ-001", "一", "- verification: unit\n")
         ),
     );
     // 具体例の ID だけの印
@@ -186,8 +186,8 @@ fn tbl_028_review_requirements_are_not_in_with_or_without_tests() {
         tmp.path(),
         "docs/ir/a.md",
         &format!(
-            "# 題名\n\n範囲。\n\n## 要求\n\n{}",
-            requirement("REQ-001", "一", "- 検証: review\n- 確かめ方: 人が読む\n")
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            requirement("REQ-001", "一", "- verification: review\n- how_to_verify: 人が読む\n")
         ),
     );
     let (_, v) = run_status(tmp.path());
@@ -204,10 +204,10 @@ fn tbl_028_requirement_without_a_verification_line_is_counted_by_marks_only() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## 要求\n\n{}", requirement("REQ-001", "一", "")),
+        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "一", "")),
     );
     let (_, v) = run_status(tmp.path());
-    // "- 検証:" の行の無い要求は検証の値のどれにも数えない
+    // "- verification:" の行の無い要求は検証の値のどれにも数えない
     for key in ["unit", "property", "proof", "review"] {
         assert_eq!(v["requirements"][key], 0, "{key}: {v}");
     }
@@ -225,18 +225,18 @@ fn tbl_028_items_are_counted_by_kind() {
         tmp.path(),
         "docs/ir/a.md",
         &format!(
-            "# 題名\n\n範囲。\n\n## 要求\n\n{}## 決定表\n\n\
-### TBL-001: 表\n\n- 出典: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n\n\
-### TBL-002: もう1つの表\n\n- 出典: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n\n\
-## 性質\n\n### PROP-001: 性\n\n- 出典: docs/decision/records/records.md#A1\n\n文である。\n\n## 具体例\n\n\
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}## Decision tables\n\n\
+### TBL-001: 表\n\n- source: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n\n\
+### TBL-002: もう1つの表\n\n- source: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n\n\
+## Properties\n\n### PROP-001: 性\n\n- source: docs/decision/records/records.md#A1\n\n文である。\n\n## Examples\n\n\
 ```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: 例\n  Given 何か\n```\n",
-            requirement("REQ-001", "一", "- 検証: review\n- 確かめ方: 人が読む\n")
+            requirement("REQ-001", "一", "- verification: review\n- how_to_verify: 人が読む\n")
         ),
     );
     write(
         tmp.path(),
         "docs/ir/FLAGS.md",
-        "# 問題の記録\n\nなし。\n\n## 問題の記録\n\n### FLAG-001: 抜け\n\n- 種類: gap\n- 関係: REQ-001\n- 出典: docs/decision/records/records.md#A1\n\n本文。\n",
+        "# 問題の記録\n\nなし。\n\n## Flags\n\n### FLAG-001: 抜け\n\n- kind: gap\n- related: REQ-001\n- source: docs/decision/records/records.md#A1\n\n本文。\n",
     );
     let (_, v) = run_status(tmp.path());
     // 決定表だけ2つにして、種類ごとの数が入れ替わらないことも見る
@@ -263,11 +263,11 @@ fn tbl_028_requirements_are_counted_by_verification_value() {
         tmp.path(),
         "docs/ir/a.md",
         &format!(
-            "# 題名\n\n範囲。\n\n## 要求\n\n{}{}{}{}",
-            requirement("REQ-001", "一", "- 検証: unit\n"),
-            requirement("REQ-002", "二", "- 検証: property\n"),
-            requirement("REQ-003", "三", "- 検証: proof\n"),
-            requirement("REQ-004", "四", "- 検証: review\n- 確かめ方: 人が読む\n"),
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}{}{}{}",
+            requirement("REQ-001", "一", "- verification: unit\n"),
+            requirement("REQ-002", "二", "- verification: property\n"),
+            requirement("REQ-003", "三", "- verification: proof\n"),
+            requirement("REQ-004", "四", "- verification: review\n- how_to_verify: 人が読む\n"),
         ),
     );
     let (_, v) = run_status(tmp.path());
@@ -293,8 +293,8 @@ fn tbl_028_notices_are_counted_apart_from_errors() {
         tmp.path(),
         "docs/ir/a.md",
         &format!(
-            "# 題名\n\n範囲。\n\n## 要求\n\n{}",
-            requirement("REQ-001", "一", "- 検証: review\n- 確かめ方: 人が読む\n")
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            requirement("REQ-001", "一", "- verification: review\n- how_to_verify: 人が読む\n")
         ),
     );
     let (code, v) = run_status(tmp.path());
@@ -362,11 +362,11 @@ fn req_166_json_top_level_has_only_the_groups() {
 fn req_162_status_writes_no_finding() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    // "- 検証:" の行の無い要求（check なら verification_missing）
+    // "- verification:" の行の無い要求（check なら verification_missing）
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## 要求\n\n{}", requirement("REQ-001", "一", "")),
+        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "一", "")),
     );
     let (code, stdout, stderr) = run(tmp.path(), &["status"]);
     assert_eq!(code, Some(1));

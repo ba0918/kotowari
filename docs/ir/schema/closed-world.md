@@ -2,57 +2,57 @@
 
 この文書は、宣言していない見出しと行をどう扱うか、どこまで緩められるかを扱う。
 
-## 要求
+## Requirements
 
 ### REQ-schema-001: 閉じた世界が既定
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A2
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-21-mds-spec.md#A2
+- verification: unit
 
 mds は常に、`スキーマ`に宣言していない見出しと行を`指摘`にする。
 
 ### REQ-schema-002: 開いた世界に緩める
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A2
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-21-mds-spec.md#A2
+- verification: unit
 
 `スキーマ`が "open: true" を宣言したとき、または検査に "--open" を付けたとき、mds は宣言していない構造と、その内側のすべての行を許す。
 
 ### REQ-schema-003: 宣言済みの構造の中は緩めない
 
-- 種類: prohibition
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A2
-- 検証: unit
+- kind: prohibition
+- source: docs/decision/records/2026-09-21-mds-spec.md#A2
+- verification: unit
 
 mds は、`開いた世界`でも、宣言済みの`前置部`、`節`、`項目`の中に足された未宣言の構造と行を許さない。
 
 ### REQ-schema-004: 欠落と形の違反は緩めない
 
-- 種類: prohibition
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A2
-- 検証: unit
+- kind: prohibition
+- source: docs/decision/records/2026-09-21-mds-spec.md#A2
+- verification: unit
 
 mds は、`開いた世界`でも、必須の`ノード`の欠落と、`出現回数`や形の違反を許さない。
 
 ### REQ-schema-055: 宣言の外の行の種別
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A74
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-22-ir-engine.md#A74
+- verification: unit
 
 mds は常に、宣言していない行の`指摘`に、その行を名前と値の形の一覧の行、`箇条書き`、順序付きリスト、`文`、`表`、`コードブロック`のどれとして読んだかを持たせる。呼ぶ側が`生の行`の文字を読み直して種別を決めずに済むようにする。
 
-## 性質
+## Properties
 
 ### PROP-schema-001: 緩める方向にしか働かない
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A2
+- source: docs/decision/records/2026-09-21-mds-spec.md#A2
 
 `開いた世界`で出る`指摘`の集まりは、同じ`文書`を`閉じた世界`で検査したときに出る`指摘`の集まりに含まれる。
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-schema-001 @about=REQ-schema-002 @source=docs/decision/records/2026-09-21-mds-spec.md#A2

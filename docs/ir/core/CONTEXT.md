@@ -1,6 +1,6 @@
-# 用語集
+# Glossary
 
-| 用語 | 意味 | 出典 |
+| Term | Meaning | Source |
 |---|---|---|
 | IR | 正規化した仕様の Markdown の文書の集まり。設定の "ir" の置き場の下に、ディレクトリの深さに制限なく置く | docs/decision/records/records.md#A12, docs/decision/records/records.md#A32, docs/decision/records/records.md#A47, docs/decision/records/records.md#A25, docs/decision/records/records.md#A52, docs/decision/records/2026-09-16-ir-tree.md#A1 |
 | 基準のディレクトリ | カレントディレクトリから上に向かって探し、最初に見つかった ".kotowari/" のあるディレクトリ。無ければカレントディレクトリ | docs/decision/records/records.md#A37 |

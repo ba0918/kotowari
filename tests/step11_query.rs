@@ -99,7 +99,7 @@ fn body(item: &serde_json::Value) -> Vec<String> {
 /// 要求の見出しと行を作る
 fn requirement(id: &str, name: &str, verification: &str) -> String {
     format!(
-        "### {id}: {name}\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: {verification}\n\n文である。\n\n"
+        "### {id}: {name}\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: {verification}\n\n文である。\n\n"
     )
 }
 
@@ -111,18 +111,18 @@ const EX_250_DOCUMENT: &str = "\
 
 範囲。
 
-## 要求
+## Requirements
 
 ### REQ-001: 例
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A1
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/records.md#A1
+- verification: unit
 
 文。
 
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1
@@ -149,9 +149,9 @@ fn req_156_item_has_body_and_referenced_by() {
     assert_eq!(
         body(req),
         vec![
-            "- 種類: ubiquitous",
-            "- 出典: docs/decision/records/records.md#A1",
-            "- 検証: unit",
+            "- kind: ubiquitous",
+            "- source: docs/decision/records/records.md#A1",
+            "- verification: unit",
             "",
             "文。",
         ],
@@ -190,7 +190,7 @@ fn req_156_duplicate_ids_are_all_listed() {
         write(
             tmp.path(),
             &format!("docs/ir/{name}"),
-            &format!("# 題名\n\n範囲。\n\n## 要求\n\n{}", requirement("REQ-001", "例", "unit")),
+            &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
         );
     }
     let v = run_query(tmp.path(), "REQ-001");
@@ -208,11 +208,11 @@ fn req_156_duplicate_ids_are_all_listed() {
 fn req_156_items_are_listed_despite_ir_errors_and_exit_zero() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    // "- 検証:" の行の無い要求（check なら verification_missing）
+    // "- verification:" の行の無い要求（check なら verification_missing）
     write(
         tmp.path(),
         "docs/ir/a.md",
-        "# 題名\n\n範囲。\n\n## 要求\n\n### REQ-002: 例\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n\n文である。\n",
+        "# 題名\n\n範囲。\n\n## Requirements\n\n### REQ-002: 例\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n\n文である。\n",
     );
     let (code, stdout, stderr) = run_query_raw(tmp.path(), &["REQ-002"]);
     assert_eq!(code, Some(0), "an IR error does not change the exit code: {stderr}");
@@ -232,7 +232,7 @@ fn req_157_unknown_id_stops() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## 要求\n\n{}", requirement("REQ-001", "例", "unit")),
+        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
     );
     let (code, stdout, stderr) = run_query_raw(tmp.path(), &["REQ-999"]);
     assert_eq!(code, Some(2));
@@ -276,10 +276,10 @@ fn tbl_027_definition_and_text_references_are_listed() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        "# 題名\n\n範囲。\n\n## 要求\n\n\
-### REQ-001: 定義する側\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n- 定義: TBL-001\n\n文である。\n\n\
-### REQ-002: 文で指す側\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n`TBL-001` を使う。\n\n\
-## 決定表\n\n### TBL-001: 表\n\n- 出典: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n",
+        "# 題名\n\n範囲。\n\n## Requirements\n\n\
+### REQ-001: 定義する側\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n- definition: TBL-001\n\n文である。\n\n\
+### REQ-002: 文で指す側\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n`TBL-001` を使う。\n\n\
+## Decision tables\n\n### TBL-001: 表\n\n- source: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n",
     );
     let v = run_query(tmp.path(), "TBL-001");
     assert_eq!(
@@ -299,10 +299,10 @@ fn tbl_027_text_reference_is_only_the_backticked_id() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        "# 題名\n\n範囲。\n\n## 要求\n\n\
-### REQ-001: 地の文で書く側\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nTBL-001 をバッククォート無しで書く。\n\n\
-### REQ-002: 引用符の中で書く側\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n\"`TBL-001`\" と引用符の中に書く。\n\n\
-## 決定表\n\n### TBL-001: 表\n\n- 出典: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n",
+        "# 題名\n\n範囲。\n\n## Requirements\n\n\
+### REQ-001: 地の文で書く側\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nTBL-001 をバッククォート無しで書く。\n\n\
+### REQ-002: 引用符の中で書く側\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n\"`TBL-001`\" と引用符の中に書く。\n\n\
+## Decision tables\n\n### TBL-001: 表\n\n- source: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n",
     );
     let v = run_query(tmp.path(), "TBL-001");
     assert!(references(only_item(&v)).is_empty(), "{v}");
@@ -317,12 +317,12 @@ fn tbl_027_body_stops_before_the_next_heading() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        "# 題名\n\n範囲。\n\n## 要求\n\n### REQ-001: 本文の無い要求\n### REQ-002: 本文が1行の要求\n- 種類: ubiquitous\n## 具体例\n",
+        "# 題名\n\n範囲。\n\n## Requirements\n\n### REQ-001: 本文の無い要求\n### REQ-002: 本文が1行の要求\n- kind: ubiquitous\n## Examples\n",
     );
     assert!(body(only_item(&run_query(tmp.path(), "REQ-001"))).is_empty());
     assert_eq!(
         body(only_item(&run_query(tmp.path(), "REQ-002"))),
-        vec!["- 種類: ubiquitous"],
+        vec!["- kind: ubiquitous"],
     );
 }
 
@@ -337,16 +337,16 @@ fn req_160_referenced_by_is_ordered_by_path_then_line() {
     write(
         tmp.path(),
         "docs/ir/b.md",
-        "# 題名\n\n範囲。\n\n## 要求\n\n\
-### REQ-003: 三\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n- 定義: TBL-001\n\n文である。\n",
+        "# 題名\n\n範囲。\n\n## Requirements\n\n\
+### REQ-003: 三\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n- definition: TBL-001\n\n文である。\n",
     );
     write(
         tmp.path(),
         "docs/ir/a.md",
-        "# 題名\n\n範囲。\n\n## 要求\n\n\
-### REQ-002: 二\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n- 定義: TBL-001\n\n文である。\n\n\
-### REQ-001: 一\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n- 定義: TBL-001\n\n文である。\n\n\
-## 決定表\n\n### TBL-001: 表\n\n- 出典: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n",
+        "# 題名\n\n範囲。\n\n## Requirements\n\n\
+### REQ-002: 二\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n- definition: TBL-001\n\n文である。\n\n\
+### REQ-001: 一\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n- definition: TBL-001\n\n文である。\n\n\
+## Decision tables\n\n### TBL-001: 表\n\n- source: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n",
     );
     let v = run_query(tmp.path(), "TBL-001");
     assert_eq!(
@@ -390,9 +390,9 @@ fn req_161_text_prints_body_and_referenced_by_lines() {
         stdout,
         "REQ-001 unit 例 docs/ir/a.md:7 tests=1\n\
          \x20 tests/a.rs:3 req_001_x\n\
-         \x20 - 種類: ubiquitous\n\
-         \x20 - 出典: docs/decision/records/records.md#A1\n\
-         \x20 - 検証: unit\n\
+         \x20 - kind: ubiquitous\n\
+         \x20 - source: docs/decision/records/records.md#A1\n\
+         \x20 - verification: unit\n\
          \x20 \n\
          \x20 文。\n\
          \x20 <- EX-001 about docs/ir/a.md:20\n",
@@ -408,15 +408,15 @@ fn ex_core_277_body_ends_before_the_next_heading_and_drops_trailing_blank_lines(
         tmp.path(),
         "docs/ir/a.md",
         &format!(
-            "# 題名\n\n範囲。\n\n## 要求\n\n{}{}## 性質\n\n### PROP-001: 性質\n\n- 出典: docs/decision/records/records.md#A1\n\n性質の文。\n\n",
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}{}## Properties\n\n### PROP-001: 性質\n\n- source: docs/decision/records/records.md#A1\n\n性質の文。\n\n",
             requirement("REQ-001", "一", "unit"),
             requirement("REQ-002", "二", "unit"),
         ),
     );
     let fields = vec![
-        "- 種類: ubiquitous",
-        "- 出典: docs/decision/records/records.md#A1",
-        "- 検証: unit",
+        "- kind: ubiquitous",
+        "- source: docs/decision/records/records.md#A1",
+        "- verification: unit",
         "",
         "文である。",
     ];
@@ -424,7 +424,7 @@ fn ex_core_277_body_ends_before_the_next_heading_and_drops_trailing_blank_lines(
     assert_eq!(body(only_item(&run_query(tmp.path(), "REQ-002"))), fields);
     assert_eq!(
         body(only_item(&run_query(tmp.path(), "PROP-001"))),
-        vec!["- 出典: docs/decision/records/records.md#A1", "", "性質の文。"],
+        vec!["- source: docs/decision/records/records.md#A1", "", "性質の文。"],
     );
 }
 
@@ -436,7 +436,7 @@ fn ex_core_280_a_heading_shaped_line_inside_a_code_block_does_not_end_the_body()
     write(
         tmp.path(),
         "docs/ir/a.md",
-        "# 題名\n\n範囲。\n\n## 要求\n\n### REQ-001: 一\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n文である。\n\n```\n## 例\n```\n\n### REQ-002: 二\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n文である。\n",
+        "# 題名\n\n範囲。\n\n## Requirements\n\n### REQ-001: 一\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n文である。\n\n```\n## 例\n```\n\n### REQ-002: 二\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n文である。\n",
     );
     let body = body(only_item(&run_query(tmp.path(), "REQ-001")));
     assert_eq!(body.last().map(String::as_str), Some("```"), "{body:?}");

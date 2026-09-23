@@ -186,7 +186,7 @@ fn count_requirement(
     coverage: &TestCoverage,
     counts: &mut Requirements,
 ) {
-    // "- 検証:" の行の無い要求はどれにも数えない
+    // "- verification:" の行の無い要求はどれにも数えない
     match requirement.verification.as_deref() {
         Some("unit") => counts.unit += 1,
         Some("property") => counts.property += 1,

@@ -2,37 +2,37 @@
 
 この文書は、mds をクレートとして使う側に向けて、契約として当てにしてよい入口と、呼び出し側に残る責務を扱う。
 
-## 要求
+## Requirements
 
 ### REQ-schema-049: ライブラリの入口
 
-- 種類: algorithm
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A18, docs/decision/records/2026-09-21-mds-spec.md#A24, docs/decision/records/2026-09-21-mds-spec.md#A58
-- 定義: TBL-schema-010
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/2026-09-21-mds-spec.md#A18, docs/decision/records/2026-09-21-mds-spec.md#A24, docs/decision/records/2026-09-21-mds-spec.md#A58
+- definition: TBL-schema-010
+- verification: unit
 
 ### REQ-schema-050: 読み書きは呼び出し側の責務
 
-- 種類: prohibition
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A18, docs/decision/records/2026-09-21-mds-spec.md#A24, docs/decision/records/2026-09-21-mds-spec.md#A57
-- 検証: unit
+- kind: prohibition
+- source: docs/decision/records/2026-09-21-mds-spec.md#A18, docs/decision/records/2026-09-21-mds-spec.md#A24, docs/decision/records/2026-09-21-mds-spec.md#A57
+- verification: unit
 
 ライブラリは、`文書`と`スキーマ`のファイルを読まず、URL の`スキーマ`も取得しない。`スキーマ`の位置を決めるところまでを行い、読み書きは呼び出し側に残す。
 
 ### REQ-schema-051: 列挙に無い公開項目
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A24, docs/decision/records/2026-09-21-mds-spec.md#A58
-- 検証: review
-- 確かめ方: TBL-schema-010 に無い公開項目が、依存するクレートから使われていないことを確認する。列挙に無い公開項目は実装の都合であり、契約ではない
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-21-mds-spec.md#A24, docs/decision/records/2026-09-21-mds-spec.md#A58
+- verification: review
+- how_to_verify: TBL-schema-010 に無い公開項目が、依存するクレートから使われていないことを確認する。列挙に無い公開項目は実装の都合であり、契約ではない
 
 mds は常に、TBL-schema-010 が列挙した入口だけを依存するクレートへの契約として約束する。
 
-## 決定表
+## Decision tables
 
 ### TBL-schema-010: ライブラリの入口
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A18, docs/decision/records/2026-09-21-mds-spec.md#A24, docs/decision/records/2026-09-21-mds-spec.md#A58, docs/decision/records/2026-09-21-mds-spec.md#A63
+- source: docs/decision/records/2026-09-21-mds-spec.md#A18, docs/decision/records/2026-09-21-mds-spec.md#A24, docs/decision/records/2026-09-21-mds-spec.md#A58, docs/decision/records/2026-09-21-mds-spec.md#A63
 
 | 入口 | 何をするか | 返すもの |
 |---|---|---|
@@ -43,7 +43,7 @@ mds は常に、TBL-schema-010 が列挙した入口だけを依存するクレ�
 | validate | `スキーマ`と`文書`を突き合わせる | `指摘`の並び |
 | extract_values | `スキーマ`の`抽出`に沿って値を組み立てる | `配置パス`に沿った JSON |
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-schema-015 @about=REQ-schema-049 @source=docs/decision/records/2026-09-21-mds-spec.md#A18,docs/decision/records/2026-09-21-mds-spec.md#A58

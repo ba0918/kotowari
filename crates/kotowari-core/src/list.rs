@@ -89,7 +89,7 @@ pub enum ListItem {
     Flag(FlagItem),
 }
 
-/// REQ-core-155: 1行に出す値。"検証" は要求以外では "-"
+/// REQ-core-155: 1行に出す値。"verification" は要求以外では "-"
 struct TextParts<'a> {
     id: &'a str,
     verification: &'a str,
@@ -104,7 +104,7 @@ impl ListItem {
         match self {
             ListItem::Requirement(i) => TextParts {
                 id: &i.id,
-                // REQ-core-155: "- 検証:" の行の無い要求も "-"
+                // REQ-core-155: "- verification:" の行の無い要求も "-"
                 verification: i.verification.as_deref().unwrap_or("-"),
                 name: &i.name,
                 path: &i.path,

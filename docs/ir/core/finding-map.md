@@ -2,31 +2,31 @@
 
 この文書は、形の読み取りをスキーマに置き換えたあと、スキーマの側が返した指摘を kotowari の指摘の種類へ写す対応を扱う。指摘の種類そのものと detail は findings の文書が定める。
 
-## 要求
+## Requirements
 
 ### REQ-core-171: 指摘の対応表
 
-- 種類: algorithm
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A40
-- 定義: TBL-core-029, TBL-core-030
-- 検証: review
-- 確かめ方: 人が対応表と `crates/kotowari-markdown-schema/src/finding.rs` の種類の列挙を突き合わせ、過不足が無いことと、REQ-core-027 の9種類を写す行の "line" の扱いが null であることを見る
+- kind: algorithm
+- source: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A40
+- definition: TBL-core-029, TBL-core-030
+- verification: review
+- how_to_verify: 人が対応表と `crates/kotowari-markdown-schema/src/finding.rs` の種類の列挙を突き合わせ、過不足が無いことと、REQ-core-027 の9種類を写す行の "line" の扱いが null であることを見る
 
 ### REQ-core-172: 写し先の無い指摘は停止にする
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/records.md#A100, docs/decision/records/records.md#A101, docs/decision/records/2026-09-23-ir-engine-gaps.md#A27, docs/decision/records/2026-09-23-ir-engine-gaps.md#A36
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/records.md#A100, docs/decision/records/records.md#A101, docs/decision/records/2026-09-23-ir-engine-gaps.md#A27, docs/decision/records/2026-09-23-ir-engine-gaps.md#A36
+- verification: unit
 
 対応表（TBL-core-030）に行の無い種類の`指摘`をスキーマの側から受けたとき、または写し先を「発生しない」と書いた行の種類の`指摘`を受けたとき、kotowari は`停止`し、その`指摘`を黙って捨てない。写し先を「出さない」と書いた行の`指摘`だけは`停止`せずに捨て、「出さない」と書けるのは`除外`に列挙した入力の行だけである。
 
-## 決定表
+## Decision tables
 
 ### TBL-core-029: エンジンの指摘を写す対応表の列
 
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A3, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A24, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A29, docs/decision/records/2026-09-22-ir-engine.md#A31, docs/decision/records/2026-09-22-ir-engine.md#A40, docs/decision/records/records.md#A92, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-22-ir-engine.md#A71, docs/decision/records/2026-09-22-ir-engine.md#A74, docs/decision/records/2026-09-22-ir-engine.md#A76, docs/decision/records/2026-09-22-ir-engine.md#A77, docs/decision/records/2026-09-22-ir-engine.md#A79, docs/decision/records/2026-09-22-ir-engine.md#A81, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17, docs/decision/records/2026-09-23-ir-engine-gaps.md#A27
+- source: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A3, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A24, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A29, docs/decision/records/2026-09-22-ir-engine.md#A31, docs/decision/records/2026-09-22-ir-engine.md#A40, docs/decision/records/records.md#A92, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-22-ir-engine.md#A71, docs/decision/records/2026-09-22-ir-engine.md#A74, docs/decision/records/2026-09-22-ir-engine.md#A76, docs/decision/records/2026-09-22-ir-engine.md#A77, docs/decision/records/2026-09-22-ir-engine.md#A79, docs/decision/records/2026-09-22-ir-engine.md#A81, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17, docs/decision/records/2026-09-23-ir-engine-gaps.md#A27, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 
-スキーマの側が出した`指摘`を kotowari の`指摘`の種類へ写す表は、下の5つの列を持つ。名前が同じで意味が違う種類の行には、その旨を書く。スキーマの側の invalid_id は`項目`の見出しの`ID`の形で、kotowari の invalid_id（"@id" の値）とは別物である。スキーマの側の missing_table は、`用語集`の表にも`決定表`の表にも`出現回数`の範囲を宣言したので出ない。代わりに repeat_min_not_met が出て、`用語集`では glossary_invalid、`決定表`では missing_table に分かれる。スキーマの側の missing_required_field は、欠けた`フィールド行`に応じて kotowari の verification_missing、missing_source、missing_field、algorithm_without_definition に分かれる。写し先はこの4つで閉じる。「ノードの名前」の列には、スキーマの側が返す名前のほかに、kotowari が自分で知っている区別（どのスキーマで検証したか、`指摘`が行を持つか）も書く。"- 定義:" の行はスキーマの側が "- 種類:" の行の値で条件付きに必須と宣言するので、欠けたときは algorithm_without_definition へ写す。
+スキーマの側が出した`指摘`を kotowari の`指摘`の種類へ写す表は、下の5つの列を持つ。名前が同じで意味が違う種類の行には、その旨を書く。スキーマの側の invalid_id は`項目`の見出しの`ID`の形で、kotowari の invalid_id（"@id" の値）とは別物である。スキーマの側の missing_table は、`用語集`の表にも`決定表`の表にも`出現回数`の範囲を宣言したので出ない。代わりに repeat_min_not_met が出て、`用語集`では glossary_invalid、`決定表`では missing_table に分かれる。スキーマの側の missing_required_field は、欠けた`フィールド行`に応じて kotowari の verification_missing、missing_source、missing_field、algorithm_without_definition に分かれる。写し先はこの4つで閉じる。「ノードの名前」の列には、スキーマの側が返す名前のほかに、kotowari が自分で知っている区別（どのスキーマで検証したか、`指摘`が行を持つか）も書く。"- definition:" の行はスキーマの側が "- kind:" の行の値で条件付きに必須と宣言するので、欠けたときは algorithm_without_definition へ写す。
 
 | 列 | 中身 |
 |---|---|
@@ -38,7 +38,7 @@
 
 ### TBL-core-030: エンジンの指摘の写し先
 
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A3, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A24, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A31, docs/decision/records/2026-09-22-ir-engine.md#A40, docs/decision/records/2026-09-22-ir-engine.md#A71, docs/decision/records/2026-09-22-ir-engine.md#A74, docs/decision/records/2026-09-22-ir-engine.md#A76, docs/decision/records/2026-09-22-ir-engine.md#A77, docs/decision/records/2026-09-22-ir-engine.md#A79, docs/decision/records/2026-09-22-ir-engine.md#A81, docs/decision/records/2026-09-22-ir-engine.md#A82, docs/decision/records/2026-09-22-ir-engine.md#A86, docs/decision/records/2026-09-22-ir-engine.md#A87, docs/decision/records/2026-09-23-ir-engine-gaps.md#A7, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/2026-09-23-ir-engine-gaps.md#A27, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A16, docs/decision/records/2026-09-23-ir-engine-gaps.md#A40
+- source: docs/decision/records/2026-09-22-ir-engine.md#A2, docs/decision/records/2026-09-22-ir-engine.md#A3, docs/decision/records/2026-09-22-ir-engine.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A24, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A31, docs/decision/records/2026-09-22-ir-engine.md#A40, docs/decision/records/2026-09-22-ir-engine.md#A71, docs/decision/records/2026-09-22-ir-engine.md#A74, docs/decision/records/2026-09-22-ir-engine.md#A76, docs/decision/records/2026-09-22-ir-engine.md#A77, docs/decision/records/2026-09-22-ir-engine.md#A79, docs/decision/records/2026-09-22-ir-engine.md#A81, docs/decision/records/2026-09-22-ir-engine.md#A82, docs/decision/records/2026-09-22-ir-engine.md#A86, docs/decision/records/2026-09-22-ir-engine.md#A87, docs/decision/records/2026-09-23-ir-engine-gaps.md#A7, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/2026-09-23-ir-engine-gaps.md#A27, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A16, docs/decision/records/2026-09-23-ir-engine-gaps.md#A40
 
 TBL-core-029 の列に沿って、スキーマの側の 24 種類をすべて並べる。「発生しない」の行の`指摘`を受けたときは REQ-core-172 のとおり`停止`し、「出さない」の行の`指摘`は捨てる。
 
@@ -86,7 +86,7 @@ TBL-core-029 の列に沿って、スキーマの側の 24 種類をすべて並
 | repeat_max_exceeded | フィールド行の名前 | duplicate_field | そのまま使う | ノードの名前 |
 | repeat_max_exceeded | フィールド行のほか | 発生しない（フィールド行以外に上限を課していない） | — | — |
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-core-265 @about=REQ-core-172 @source=docs/decision/records/2026-09-22-ir-engine.md#A28,docs/decision/records/records.md#A100,docs/decision/records/records.md#A101

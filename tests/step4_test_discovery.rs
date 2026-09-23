@@ -250,7 +250,7 @@ fn make_ir_with_req(tmp: &std::path::Path, req_id: &str, verification: &str) {
     fs::write(
         tmp.join("docs/ir/a.md"),
         format!(
-            "# Title\n\nScope.\n\n## 要求\n\n### {req_id}: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: {verification}\n\nStatement.\n"
+            "# Title\n\nScope.\n\n## Requirements\n\n### {req_id}: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: {verification}\n\nStatement.\n"
         ),
     )
     .unwrap();
@@ -654,7 +654,7 @@ fn req_075_both_places_merge_ids() {
     // 2つの要求
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: A\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStmt.\n\n### REQ-002: B\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStmt.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: A\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStmt.\n\n### REQ-002: B\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStmt.\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -1517,12 +1517,12 @@ fn req_072_detail_is_the_raw_line() {
 // @kotowari[REQ-core-085]
 #[test]
 fn req_085_requirement_without_verification_line_gets_no_coverage_finding() {
-    // "- 検証:" の行が無い要求には requirement_without_test は出ない
+    // "- verification:" の行が無い要求には requirement_without_test は出ない
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n\nStatement.\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -1614,7 +1614,7 @@ fn req_079_broken_symlink_outside_glob_stops() {
 fn req_124_four_digit_id_is_valid_in_heading_tag_and_marker() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    let content = "# Title\n\nScope.\n\n## 要求\n\n### REQ-1000: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n`EX-1000` を満たす。\n\n## 具体例\n\n```gherkin\n@id=EX-1000 @about=REQ-1000 @source=docs/decision/records/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
+    let content = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-1000: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n`EX-1000` を満たす。\n\n## Examples\n\n```gherkin\n@id=EX-1000 @about=REQ-1000 @source=docs/decision/records/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ids = kotowari_core::collect_known_ids(&[doc]);
     assert!(ids.contains("REQ-1000"), "{:?}", ids);
@@ -1640,7 +1640,7 @@ fn req_124_leading_zero_and_short_ids_are_rejected() {
     make_ir_with_req(tmp.path(), "REQ-001", "review");
     let path = tmp.path().join("docs/ir/a.md");
     let content = fs::read_to_string(&path).unwrap()
-        + "\n### REQ-0001: 名前\n\n### REQ-1: 名前\n\n## 具体例\n\n```gherkin\n@id=EX-0001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
+        + "\n### REQ-0001: 名前\n\n### REQ-1: 名前\n\n## Examples\n\n```gherkin\n@id=EX-0001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: Example\n  Given 入力\n  When 実行\n  Then 成功\n```\n";
     let doc = kotowari_core::ir::parse_document("a.md", &content).unwrap();
     let ids = kotowari_core::collect_known_ids(&[doc]);
     assert!(ids.contains("REQ-001"), "{:?}", ids);
@@ -1686,7 +1686,7 @@ fn make_ir_with_scenario(
     fs::write(
         tmp.join("docs/ir").join(name),
         format!(
-            "# Title\n\nScope.\n\n## 要求\n\n### {req_id}: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n{verification_line}\nStatement.\n\n## 具体例\n\n```gherkin\n{tags}\nScenario: S\n  Given a\n  When b\n  Then c\n```\n"
+            "# Title\n\nScope.\n\n## Requirements\n\n### {req_id}: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n{verification_line}\nStatement.\n\n## Examples\n\n```gherkin\n{tags}\nScenario: S\n  Given a\n  When b\n  Then c\n```\n"
         ),
     )
     .unwrap();
@@ -1706,7 +1706,7 @@ fn req_137_scenario_without_marker_is_an_error() {
         tmp.path(),
         "a.md",
         "REQ-001",
-        "- 検証: unit\n",
+        "- verification: unit\n",
         "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
     );
     write_test_file(
@@ -1732,7 +1732,7 @@ fn req_137_review_only_scenario_is_not_required() {
         tmp.path(),
         "a.md",
         "REQ-002",
-        "- 検証: review\n",
+        "- verification: review\n",
         "@id=EX-202 @about=REQ-002 @source=docs/decision/records/records.md#A1",
     );
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
@@ -1747,7 +1747,7 @@ fn req_137_scenario_about_a_table_only_is_not_required() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 決定表\n\n### TBL-001: Table\n\n- 出典: docs/decision/records/records.md#A1\n\n| 入力 | 出力 |\n|---|---|\n| a | b |\n\n## 具体例\n\n```gherkin\n@id=EX-203 @about=TBL-001 @source=docs/decision/records/records.md#A1\nScenario: S\n  Given a\n  When b\n  Then c\n```\n",
+        "# Title\n\nScope.\n\n## Decision tables\n\n### TBL-001: Table\n\n- source: docs/decision/records/records.md#A1\n\n| 入力 | 出力 |\n|---|---|\n| a | b |\n\n## Examples\n\n```gherkin\n@id=EX-203 @about=TBL-001 @source=docs/decision/records/records.md#A1\nScenario: S\n  Given a\n  When b\n  Then c\n```\n",
     )
     .unwrap();
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
@@ -1791,7 +1791,7 @@ fn req_137_requirement_with_invalid_verification_value_does_not_count() {
         tmp.path(),
         "a.md",
         "REQ-001",
-        "- 検証: e2e\n",
+        "- verification: e2e\n",
         "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
     );
     write_test_file(
@@ -1824,14 +1824,14 @@ fn req_137_duplicate_scenario_uses_the_first_about() {
         tmp.path(),
         "a.md",
         "REQ-002",
-        "- 検証: review\n",
+        "- verification: review\n",
         "@id=EX-201 @about=REQ-002 @source=docs/decision/records/records.md#A1",
     );
     make_ir_with_scenario(
         tmp.path(),
         "b.md",
         "REQ-001",
-        "- 検証: unit\n",
+        "- verification: unit\n",
         "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
     );
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
@@ -1854,14 +1854,14 @@ fn req_137_duplicate_scenario_reports_once_on_the_first() {
         tmp.path(),
         "a.md",
         "REQ-001",
-        "- 検証: unit\n",
+        "- verification: unit\n",
         "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
     );
     make_ir_with_scenario(
         tmp.path(),
         "b.md",
         "REQ-003",
-        "- 検証: unit\n",
+        "- verification: unit\n",
         "@id=EX-201 @about=REQ-003 @source=docs/decision/records/records.md#A1",
     );
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
@@ -1881,7 +1881,7 @@ fn req_137_scenario_without_id_is_not_reported() {
         tmp.path(),
         "a.md",
         "REQ-001",
-        "- 検証: unit\n",
+        "- verification: unit\n",
         "@about=REQ-001 @source=docs/decision/records/records.md#A1",
     );
     write_test_file(
@@ -1913,7 +1913,7 @@ fn req_137_scenario_with_invalid_id_is_not_reported() {
         tmp.path(),
         "a.md",
         "REQ-001",
-        "- 検証: unit\n",
+        "- verification: unit\n",
         "@id=BADID @about=REQ-001 @source=docs/decision/records/records.md#A1",
     );
     write_test_file(
@@ -1945,7 +1945,7 @@ fn req_137_scenario_about_an_unknown_id_is_not_required() {
         tmp.path(),
         "a.md",
         "REQ-001",
-        "- 検証: unit\n",
+        "- verification: unit\n",
         "@id=EX-201 @about=REQ-999 @source=docs/decision/records/records.md#A1",
     );
     write_test_file(
@@ -1975,7 +1975,7 @@ fn req_137_one_marker_may_name_several_scenarios() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n## 具体例\n\n```gherkin\n@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: One\n  Given a\n  When b\n  Then c\n\n@id=EX-202 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: Two\n  Given d\n  When e\n  Then f\n```\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n\n## Examples\n\n```gherkin\n@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: One\n  Given a\n  When b\n  Then c\n\n@id=EX-202 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: Two\n  Given d\n  When e\n  Then f\n```\n",
     )
     .unwrap();
     // 1つの印が2つの ID を挙げ、もう1本が同じ EX-core-201 をもう一度挙げる
@@ -2002,7 +2002,7 @@ fn req_087_marker_in_a_file_without_query_feeds_scenario_coverage() {
         tmp.path(),
         "a.md",
         "REQ-001",
-        "- 検証: unit\n",
+        "- verification: unit\n",
         "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
     );
     fs::write(
@@ -2037,7 +2037,7 @@ fn req_085_scenario_marker_covers_its_requirement() {
         tmp.path(),
         "a.md",
         "REQ-001",
-        "- 検証: unit\n",
+        "- verification: unit\n",
         "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
     );
     // 印は EX-core-201 だけで、REQ-core-001 を含む印は無い
@@ -2063,14 +2063,14 @@ fn req_085_duplicate_scenario_marker_uses_the_first_about() {
         tmp.path(),
         "a.md",
         "REQ-001",
-        "- 検証: unit\n",
+        "- verification: unit\n",
         "@id=EX-201 @about=REQ-001 @source=docs/decision/records/records.md#A1",
     );
     make_ir_with_scenario(
         tmp.path(),
         "b.md",
         "REQ-003",
-        "- 検証: unit\n",
+        "- verification: unit\n",
         "@id=EX-201 @about=REQ-003 @source=docs/decision/records/records.md#A1",
     );
     write_test_file(
@@ -2093,7 +2093,7 @@ fn req_124_four_digit_heading_is_read_and_the_other_two_are_unknown_headings() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-1000: 名前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n### REQ-0001: 名前\n\n### REQ-1: 名前\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-1000: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n\n### REQ-0001: 名前\n\n### REQ-1: 名前\n",
     )
     .unwrap();
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
@@ -2113,7 +2113,7 @@ fn req_124_four_digit_id_in_a_tag_and_a_marker_is_read_the_same_way() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-1000: 名前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n## 具体例\n\n```gherkin\n@id=EX-1000 @about=REQ-1000 @source=docs/decision/records/records.md#A1\nScenario: One\n  Given a\n  When b\n  Then c\n\n@id=EX-0001 @about=REQ-1000 @source=docs/decision/records/records.md#A1\nScenario: Two\n  Given d\n  When e\n  Then f\n```\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-1000: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n\n## Examples\n\n```gherkin\n@id=EX-1000 @about=REQ-1000 @source=docs/decision/records/records.md#A1\nScenario: One\n  Given a\n  When b\n  Then c\n\n@id=EX-0001 @about=REQ-1000 @source=docs/decision/records/records.md#A1\nScenario: Two\n  Given d\n  When e\n  Then f\n```\n",
     )
     .unwrap();
     write_test_file(
@@ -2148,7 +2148,7 @@ fn req_124_named_and_unnamed_ids_are_both_read() {
     fs::create_dir_all(tmp.path().join("docs/ir/core")).unwrap();
     fs::write(
         tmp.path().join("docs/ir/core/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-core-001: 名前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n### REQ-002: 名前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n### REQ-Core-003: 名前\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-core-001: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n\n### REQ-002: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n\n### REQ-Core-003: 名前\n",
     )
     .unwrap();
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
@@ -2172,12 +2172,12 @@ fn req_167_id_name_must_match_the_first_directory_segment() {
     fs::create_dir_all(tmp.path().join("docs/ir/core")).unwrap();
     fs::write(
         tmp.path().join("docs/ir/core/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-schema-001: 名前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-schema-001: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n",
     )
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/b.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-core-002: 名前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-core-002: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n",
     )
     .unwrap();
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
@@ -2195,7 +2195,7 @@ fn req_167_scenario_id_name_is_reported_on_the_tag_line() {
     // IR の置き場の直下なので第1階層が無く、"@id" の名前は一致する相手を持たない
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: 名前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n## 具体例\n\n```gherkin\n@id=EX-core-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: One\n  Given a\n  When b\n  Then c\n```\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n\n## Examples\n\n```gherkin\n@id=EX-core-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: One\n  Given a\n  When b\n  Then c\n```\n",
     )
     .unwrap();
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
