@@ -25,7 +25,7 @@ A document points at its schema from the frontmatter:
 
 ```markdown
 ---
-$schema: ../../.mds/schemas/adr.yaml
+$schema: ../../.kotowari/schemas/adr.yaml
 ---
 # ADR-0001: Use a YAML schema
 
@@ -78,6 +78,18 @@ $ kotowari-mds values docs/adr/0001.md --format json
   "sections": { "context": "The format of generated documents drifts.",
                 "decision": "Declare the format and check it." }
 }
+```
+
+## Where schemas and the cache live
+
+`$schema` takes a path relative to the document, or an `http://` / `https://` URL. The suggested
+place for schema files is `.kotowari/schemas/`. A URL schema is fetched once and cached under
+`.kotowari/cache/schemas/` in the base directory: the nearest directory, from the current one
+upwards, that holds a `.kotowari/` directory (the current directory when none does). The cache can
+be deleted at any time, so keep it out of version control:
+
+```gitignore
+/.kotowari/cache/
 ```
 
 ## The schema language

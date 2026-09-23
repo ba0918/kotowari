@@ -52,7 +52,7 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 - `$schema` に `http://` の URL を書くと平文で取得する。経路上で差し替えられたスキーマは、正規表現・enum・必須の宣言を通じて検証の合否をそのまま左右する
 - `https://` だけを許すと、社内の平文配布や手元の検証用サーバを使えなくなる。どこから取るかは利用者が決めることである
-- キャッシュに期限が無いのは [REQ-schema-013](docs/ir/schema/schema-resolution.md#REQ-schema-013) が定めた振る舞いであり（初回に取得して `.mds/cache/` に保存し、以降はキャッシュを使う）、欠陥ではない
+- キャッシュに期限が無いのは [REQ-schema-013](docs/ir/schema/schema-resolution.md#REQ-schema-013) が定めた振る舞いであり（初回に取得して `.kotowari/cache/schemas/` に保存し、以降はキャッシュを使う）、欠陥ではない
 - **判断（2026-09-22）**: `http://` を禁止しない。取得元の信頼は利用者の責任として扱う
 
 ## 参考

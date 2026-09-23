@@ -5,3 +5,4 @@ mutants.out/
 .claude/worktrees/
 experiments/
 .claude/settings.local.json
+/.kotowari/cache/
