@@ -281,25 +281,7 @@ fn load_schema_yaml(doc_path: &Path, schema_ref: &SchemaRef) -> Result<String, S
             {
                 return Ok(content);
             }
-            let mut response = ureq::get(&url)
-                .config()
-                .timeout_global(Some(SCHEMA_FETCH_TIMEOUT))
-                .build()
-                .call()
-                .map_err(|e| Stop {
-                    kind: "schema_not_found",
-                    detail: format!("cannot fetch schema {}: {e}", redact_userinfo(&url)),
-                })?;
-            let body = response
-                .body_mut()
-                .with_config()
-                .limit(MAX_SCHEMA_BYTES)
-                .lossy_utf8(true)
-                .read_to_string()
-                .map_err(|e| Stop {
-                    kind: "schema_not_found",
-                    detail: format!("cannot read schema {}: {e}", redact_userinfo(&url)),
-                })?;
+            let body = fetch_schema(&url, SCHEMA_FETCH_TIMEOUT)?;
             // キャッシュへの保存はベストエフォート。書けなくても取得した内容で進める
             if let Some(parent) = cache.parent() {
                 let _ = std::fs::create_dir_all(parent);
@@ -308,6 +290,30 @@ fn load_schema_yaml(doc_path: &Path, schema_ref: &SchemaRef) -> Result<String, S
             Ok(body)
         }
     }
+}
+
+/// URL のスキーマを取得する。応答が上限を超えるか、取得全体が `timeout` を超えたら停止にする
+/// （TBL-schema-003）。CLI は `SCHEMA_FETCH_TIMEOUT` を渡し、テストは短い時間を渡す。
+fn fetch_schema(url: &str, timeout: Duration) -> Result<String, Stop> {
+    let mut response = ureq::get(url)
+        .config()
+        .timeout_global(Some(timeout))
+        .build()
+        .call()
+        .map_err(|e| Stop {
+            kind: "schema_not_found",
+            detail: format!("cannot fetch schema {}: {e}", redact_userinfo(url)),
+        })?;
+    response
+        .body_mut()
+        .with_config()
+        .limit(MAX_SCHEMA_BYTES)
+        .lossy_utf8(true)
+        .read_to_string()
+        .map_err(|e| Stop {
+            kind: "schema_not_found",
+            detail: format!("cannot read schema {}: {e}", redact_userinfo(url)),
+        })
 }
 
 /// 基準のディレクトリから上に向かって、最初に見つかった `.mds/` のあるディレクトリを返す。
