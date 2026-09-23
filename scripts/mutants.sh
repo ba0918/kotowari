@@ -194,6 +194,9 @@ run_mutants() {
     # 背景に置いて wait で待つ。前面の子を待っている間、bash は trap を後回しにするので、
     # 前面のままだと INT と TERM を受けてもその場で cleanup が走らない。
     # 標準入力は渡さない（cargo-mutants は読まない。背景の実行が端末から読むのを避ける）
+    # --test-workspace=true: 既定では変異を入れた crate のテストしか走らない。kotowari-core の
+    # 振る舞いを確かめるテストの大半はルートの crate の tests/ にあるので、これが無いと
+    # kotowari-core の変異がほぼすべて見逃しになる
     systemd-run --user --wait --collect --pipe --unit="$run_unit" \
         -p MemoryMax=12G -p MemorySwapMax=0 -p OOMPolicy=continue \
         --setenv=PATH="$PATH" \
@@ -202,7 +205,7 @@ run_mutants() {
         --setenv=CARGO_BUILD_JOBS=4 \
         --setenv=TMPDIR="$run_tmpdir" \
         --working-directory="$PWD" \
-        -- cargo +nightly mutants -j 1 --no-config --workspace -o . "$@" </dev/null &
+        -- cargo +nightly mutants -j 1 --no-config --workspace --test-workspace=true -o . "$@" </dev/null &
     run_pid=$!
     wait "$run_pid" || status=$?
     run_pid=""
