@@ -119,7 +119,7 @@ What counts as a test in Python: a function whose name starts with `test` at the
 
 What counts as a test in Php: a method whose name starts with `test`; a method with an attribute whose path ends in `Test` (`#[Test]`, `#[\PHPUnit\Framework\Attributes\Test]`); a method whose preceding comment starts with `/**` and contains `@test`; a call of `test(...)` or `it(...)` (Pest), named by its first argument.
 
-The name of a test is the text captured by `$NAME`. If it starts and ends with the same quote (`'`, `"` or a backquote), one quote is removed from each end. The line of test_without_id is the first line of the test's node: the `fn` or `def` line for Rust and Python (attributes and decorators are outside the node), the `#[Test]` line for such a Php method.
+The name of a test is the text captured by `$NAME`; for a function inside a macro in tests.rust.macros it is the function's name. If the captured text starts and ends with the same quote (`'`, `"` or a backquote), one quote is removed from each end. The line of test_without_id is the first line of the test's node: the `fn` or `def` line for Rust and Python (attributes and decorators are outside the node), the `#[Test]` line for such a Php method.
 
 ## Test names
 
@@ -127,7 +127,7 @@ The convention for test names: lowercase the ID being verified, change its hyphe
 
 ## Adding rules and languages without a query
 
-Rules for more tests are added with `tests.rules` in the configuration: a list of paths, relative to the base directory, of ast-grep rule YAML files (several rules may be separated by `---`). Each rule is added to the queries of its `language` (matched without case; aliases such as `ts` and `py` are accepted). The bundled queries cannot be removed. A rule matches like `ast-grep scan -r <file>`: the matched node is the test, and `$NAME` is its name. When the rule does not capture `$NAME`, the name is null, and test_without_id uses the whole first line of the node, trimmed, as its detail. `files` and `ignores` are read as ast-grep reads them, against the path relative to the base directory. `fix`, `message`, `severity`, `note` and `metadata` are not used; a rule with `severity: off` still applies. A missing, unreadable, non-UTF-8 or malformed rule file, the same path listed twice, or an unknown `language` stops with a config error.
+Rules for more tests are added with `tests.rules` in the configuration: a list of paths, relative to the base directory, of ast-grep rule YAML files (several rules may be separated by `---`). Each rule is added to the queries of its `language` (matched without case; aliases such as `ts` and `py` are accepted). The bundled queries cannot be removed. A rule matches like `ast-grep scan -r <file>`: the matched node is the test, and `$NAME` is its name. When the rule does not capture `$NAME`, the name is null, and test_without_id uses the whole first line of the node, trimmed, as its detail. `files` and `ignores` are read as ast-grep reads them, against the path relative to the base directory. `fix`, `message`, `severity`, `note` and `metadata` are not used; a rule with `severity: off` still applies. A missing rule file, a path that is not a file, an unreadable, non-UTF-8 or malformed rule file, the same path listed twice, or an unknown `language` stops with a config error.
 
 ```yaml
 # rules/bench.yml
