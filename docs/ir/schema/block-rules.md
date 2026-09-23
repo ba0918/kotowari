@@ -104,7 +104,7 @@ mds は常に、`コードブロック`の言語を宣言したときだけ言�
 
 ### TBL-schema-011: 読み方ごとの行の読み分け
 
-- source: docs/decision/records/2026-09-23-ir-engine-gaps.md#A1, docs/decision/records/2026-09-23-ir-engine-gaps.md#A2, docs/decision/records/2026-09-23-ir-engine-gaps.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A21, docs/decision/records/2026-09-23-ir-engine-gaps.md#A22, docs/decision/records/2026-09-23-ir-engine-gaps.md#A26, docs/decision/records/2026-09-21-mds-spec.md#A11, docs/decision/records/2026-09-21-mds-spec.md#A30, docs/decision/records/2026-09-23-ir-engine-gaps.md#A29, docs/decision/records/2026-09-23-ir-engine-gaps.md#A35, docs/decision/records/2026-09-23-ir-engine-gaps.md#A33, docs/decision/records/2026-09-23-ir-engine-gaps.md#A38, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-23-ir-engine-gaps.md#A43, docs/decision/records/2026-09-23-ir-engine-gaps.md#A44
+- source: docs/decision/records/2026-09-23-ir-engine-gaps.md#A1, docs/decision/records/2026-09-23-ir-engine-gaps.md#A2, docs/decision/records/2026-09-23-ir-engine-gaps.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A21, docs/decision/records/2026-09-23-ir-engine-gaps.md#A22, docs/decision/records/2026-09-23-ir-engine-gaps.md#A26, docs/decision/records/2026-09-21-mds-spec.md#A11, docs/decision/records/2026-09-21-mds-spec.md#A30, docs/decision/records/2026-09-23-ir-engine-gaps.md#A29, docs/decision/records/2026-09-23-ir-engine-gaps.md#A35, docs/decision/records/2026-09-23-ir-engine-gaps.md#A33, docs/decision/records/2026-09-23-ir-engine-gaps.md#A38, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-23-ir-engine-gaps.md#A43, docs/decision/records/2026-09-23-ir-engine-gaps.md#A44, docs/decision/records/2026-09-23-indented-fence.md#A1
 
 見出しと`前置部`の下の行を、`読み方`ごとにどう読むかを決める。どちらの`読み方`でも、一覧の行そのものの読み分けは TBL-schema-007、子の一覧は REQ-schema-031 のとおりである。
 
@@ -118,8 +118,8 @@ mds は常に、`コードブロック`の言語を宣言したときだけ言�
 | 一覧の行の後に空行を挟み、字下げして続く、一覧の行でない行 | `継続段落` | `文` |
 | 一覧の行の後に字下げして続く一覧の行 | 一覧の行 | 一覧の行 |
 | 引用、水平線、HTML、画像の行 | `文`に数えず、`指摘`にもしない | `文` |
-| 一覧の行の後でない所で、空行の後に4つ以上の空白で字下げした行 | 字下げの`コードブロック` | `文` |
-| "```" か "~~~" のフェンスで囲んだブロック | `コードブロック` | `コードブロック` |
+| 一覧の行の後でない所で、空行の後に4つ以上の空白で字下げした行 | 字下げの`コードブロック` | `文`（フェンスの開始の行は次の行のとおり） |
+| "```" か "~~~" のフェンスで囲んだブロック | `コードブロック` | `コードブロック`（開始の行の字下げの深さを問わない） |
 | GFM の表（見出しの行と区切りの行を持つ並び。縦棒で始まらなくてもよい。終わりは GFM のとおり） | `表` | `表` |
 | 区切りの行を持たず`表`にならない、縦棒で始まる行 | `文` | `文` |
 
@@ -175,6 +175,13 @@ Scenario: 表にならない縦棒の行はどちらの読み方でも文にな�
   And その`項目`に、区切りの行を持たない "| a | b |" の行を持つ`文書`がある
   When それぞれの`スキーマ`で "kotowari-mds check --format json" を実行する
   Then どちらでも、その行に宣言していない行の種別が`文`の`指摘`が1件出る
+
+@id=EX-schema-071 @about=REQ-schema-058,TBL-schema-011 @source=docs/decision/records/2026-09-23-indented-fence.md#A1
+Scenario: 行で読むと4つ以上字下げしたフェンスもコードブロックになる
+  Given "reading: line" を宣言し、`項目`の`文`に行番号の`導かれる値`を宣言した`スキーマ`がある
+  And `項目`に、`文`の後に空行を挟んで、4つの空白で字下げした "```" の行で囲んだブロックを持つ`文書`がある
+  When "kotowari-mds values --format json" を実行する
+  Then `文`の要素はその前の`文`の1つだけで、フェンスの行とその中の行は`文`の要素として出ない
 
 @id=EX-schema-035 @about=REQ-schema-030,REQ-schema-032 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A12,docs/decision/records/2026-09-21-mds-spec.md#A11,docs/decision/records/2026-09-21-mds-spec.md#A30
 Scenario: 段落で読むと続く行は一覧の行に入り、引用の行は文に数えない
