@@ -713,6 +713,25 @@ fn req_141_path_spelling_tab_indent_and_crlf_still_match() {
     );
 }
 
+// @kotowari[REQ-core-141, TBL-core-010]
+#[test]
+fn req_141_lone_cr_ends_a_line_of_the_source() {
+    // TBL-core-010 は単独の "\r" も行の終わりに数える。"\n" だけで分けると3行目が見つからない
+    let lone_cr = "fn f() {\r    let x = 1;\r    if a == b {\r    }\r}\r";
+    let tmp = project_with_list(
+        &outcomes(&[mutant_at("src/a.rs", 3, CHANGE, "MissedMutant")]),
+        &valid_entry(),
+    );
+    write(tmp.path(), "src/a.rs", lone_cr);
+    let v = json_of(&run_in(tmp.path(), &[]));
+    assert!(
+        findings_of(&v, "mutant_survived").is_empty(),
+        "{:?}",
+        v["findings"]
+    );
+    assert_eq!(v["mutants"]["equivalent"], 1);
+}
+
 // @kotowari[REQ-core-111, REQ-core-141]
 #[test]
 fn req_111_source_with_a_bom_still_matches_on_its_first_line() {

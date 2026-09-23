@@ -447,9 +447,15 @@ fn collect_markers_from_siblings(
 ) -> (Vec<(String, usize)>, Vec<(usize, String)>) {
     let mut ids: Vec<(String, usize)> = Vec::new();
     let mut invalid = Vec::new();
+    // 空行の検査は、見ているノードとその直後のノード（最初は関数そのもの）の間で行う
+    let mut next = node;
     let mut prev = node.prev_sibling();
 
     while let Some(p) = prev {
+        if next.start_position().row > p.end_position().row + 1 {
+            // 空行がある → ここまで
+            break;
+        }
         match p.kind() {
             "line_comment" | "block_comment" => {
                 let text = &source[p.byte_range()];
@@ -475,23 +481,10 @@ fn collect_markers_from_siblings(
             "attribute_item" => {
                 // 属性は飛ばして前のコメントも見る
             }
-            _ => {
-                // 空行チェック: 前のノードと現在のノードの間に空行があれば止める
-                break;
-            }
+            _ => break,
         }
 
-        // 前のノードとさらに前のノードの間に空行があるか
-        let prev_prev = p.prev_sibling();
-        if let Some(pp) = prev_prev {
-            let gap_start = pp.end_position().row;
-            let gap_end = p.start_position().row;
-            if gap_end > gap_start + 1 {
-                // 空行がある → ここまで
-                break;
-            }
-        }
-
+        next = p;
         prev = p.prev_sibling();
     }
 

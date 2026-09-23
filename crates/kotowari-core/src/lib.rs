@@ -866,7 +866,12 @@ fn read_sources(
 fn read_source_lines(base: &Path, file: &str) -> Option<Vec<String>> {
     let bytes = std::fs::read(base.join(file)).ok()?;
     let text = String::from_utf8(bytes).ok()?;
-    Some(strip_bom(&text).lines().map(str::to_string).collect())
+    Some(
+        ir::split_lines(strip_bom(&text))
+            .into_iter()
+            .map(str::to_string)
+            .collect(),
+    )
 }
 
 /// REQ-core-024: 指摘を TBL-core-007 の順（path → line → kind → detail）に並べる

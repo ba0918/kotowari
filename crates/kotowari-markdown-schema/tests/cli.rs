@@ -1737,6 +1737,32 @@ document:
     assert!(all_findings(&json).is_empty(), "{json}");
 }
 
+// @kotowari[EX-schema-071]
+#[test]
+fn ex_schema_071_line_reading_opens_a_fence_at_any_indent() {
+    let schema = r#"
+reading: line
+document:
+  sections:
+    - name: 要求
+      item:
+        repeat: { min: 0 }
+        extract: { path: items, of: { id: id } }
+        statement:
+          repeat: { min: 0 }
+          extract: { path: lines, value: text, of: { line: line } }
+"#;
+    // 行番号: "前の文" が8行目
+    let doc = "## 要求\n\n### REQ-1: 例\n\n前の文\n\n    ```\n    中の行\n    ```\n";
+    let (code, json, stderr) = mds_json(schema, doc, "values");
+    assert_eq!(code, Some(0), "stderr: {stderr}");
+    assert_eq!(
+        json["items"][0]["lines"],
+        serde_json::json!([{ "text": "前の文", "line": 8 }]),
+        "{json}"
+    );
+}
+
 // @kotowari[EX-schema-034]
 #[test]
 fn ex_schema_034_pipe_line_without_delimiter_is_a_statement_in_both_readings() {

@@ -1051,6 +1051,29 @@ fn tbl_016_blank_line_between_marker_and_test_breaks_binding() {
 
 // @kotowari[REQ-core-075, TBL-core-016]
 #[test]
+fn tbl_016_blank_line_between_marker_and_function_breaks_binding() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    // 属性の後の印と関数の間に空行がある → 結び付かない
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "#[test]\n// @kotowari[REQ-001]\n\nfn test_a() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(
+        twi.iter().any(|f| f["detail"] == "test_a"),
+        "blank line should break marker binding: {:?}",
+        twi
+    );
+}
+
+// @kotowari[REQ-core-075, TBL-core-016]
+#[test]
 fn tbl_016_macro_function_boundary_breaks_marker_binding() {
     // マクロ内で @kotowari[REQ-core-001] → fn a() → fn b()（空行なし）
     // b には印が無いので test_without_id が出る
