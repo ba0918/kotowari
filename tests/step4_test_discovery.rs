@@ -976,11 +976,23 @@ fn req_181_test_inside_a_test_is_counted_apart() {
 fn req_181_one_node_hit_by_two_queries_is_one_test() {
     // 同梱の "#[test]" のルールと設定の属性のルールが同じ関数に当たる
     let mut config = kotowari_core::config::Config::default();
-    config.tests.rust.attributes = vec!["tokio::test".to_string()];
-    let content = "#[tokio::test]\nasync fn t() {}\n";
+    // "my::check" は設定のルールにしか当たらないので、設定のルールが効いていることも分かる
+    config.tests.rust.attributes = vec!["tokio::test".to_string(), "my::check".to_string()];
+    let content = "#[tokio::test]\nasync fn t() {}\n#[my::check]\nfn u() {}\n";
     let tests = discover_in_rust_file(content, "test.rs", &config).expect("valid rust");
-    assert_eq!(tests.len(), 1, "{tests:?}");
-    assert_eq!(tests[0].name.as_deref(), Some("t"));
+    let names: Vec<_> = tests.iter().map(|t| t.name.as_deref()).collect();
+    assert_eq!(names, vec![Some("t"), Some("u")], "{tests:?}");
+}
+
+// @kotowari[REQ-core-082, TBL-core-017]
+#[test]
+fn tbl_017_macro_with_parentheses_or_brackets_is_reread() {
+    let mut config = kotowari_core::config::Config::default();
+    config.tests.rust.macros = vec!["my_macro".to_string()];
+    let content = "my_macro!( fn parenthesized() {} );\nmy_macro![ fn bracketed() {} ];\n";
+    let tests = discover_in_rust_file(content, "test.rs", &config).expect("valid rust");
+    let names: Vec<_> = tests.iter().map(|t| t.name.as_deref()).collect();
+    assert_eq!(names, vec![Some("parenthesized"), Some("bracketed")], "{tests:?}");
 }
 
 // --- REQ-core-076: 問い合わせの無い言語の印 ---

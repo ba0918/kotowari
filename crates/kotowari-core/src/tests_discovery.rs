@@ -272,12 +272,12 @@ fn reparse_macro_body(
         return;
     };
     let body_text = body.text();
-    // token_tree の中身（{ ... } の中）
-    let inner = body_text
-        .strip_prefix('{')
-        .and_then(|s| s.strip_suffix('}'))
-        .unwrap_or(&body_text);
-    let byte_offset = body.range().start + if body_text.starts_with('{') { 1 } else { 0 };
+    // token_tree の中身（"{ ... }"、"( ... )"、"[ ... ]" の中）
+    let delimited = [('{', '}'), ('(', ')'), ('[', ']')]
+        .into_iter()
+        .find_map(|(open, close)| body_text.strip_prefix(open)?.strip_suffix(close));
+    let inner = delimited.unwrap_or(&body_text);
+    let byte_offset = body.range().start + usize::from(delimited.is_some());
     let line_offset = source[..byte_offset].matches('\n').count();
 
     // REQ-core-083: 読み直したときの構文の誤りは unparsable_file にせず、読めた関数を数える
@@ -315,7 +315,7 @@ fn collect_macro_functions(
             continue;
         };
         let first_line = child.start_pos().line();
-        // A26: マクロの外と同じ行の規則で結び付ける。中身の最初の行はマクロの "{" と同じ行なので、
+        // A26: マクロの外と同じ行の規則で結び付ける。中身の最初の行はマクロの開き括弧と同じ行なので、
         // その上の行はマクロの外にあり、ファイルの行で塊を探す
         let (marker_ids, invalid_markers) = if first_line == 0 {
             lines.markers_before(line_offset)
