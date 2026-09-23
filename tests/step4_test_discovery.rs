@@ -310,31 +310,58 @@ fn req_080_uses_tree_sitter_with_bundled_rust_query() {
     assert!(twi.iter().any(|f| f["detail"] == "my_test"), "should find test via tree-sitter: {:?}", twi);
 }
 
-// --- REQ-core-081: .rs だけが問い合わせのある言語 ---
+// --- REQ-core-081: 拡張子と言語の対応 ---
 
-// @kotowari[REQ-core-081]
+// @kotowari[REQ-core-081, TBL-core-031]
 #[test]
-fn req_081_only_rs_maps_to_rust() {
+fn req_081_extension_decides_the_language_case_sensitively() {
+    // 表の拡張子だけが言語を決め、大文字小文字を区別する。".go" は言語が決まっても
+    // 問い合わせが無いので false、".PY" と ".Rs" は言語が決まらないので false
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    // .py ファイルにテストっぽいものを書いても test_without_id は出ない
-    fs::create_dir_all(tmp.path().join("tests")).unwrap();
-    fs::write(
-        tmp.path().join("tests/test_a.py"),
-        "def test_something():\n    pass\n",
-    )
-    .unwrap();
-    // ただし .py ファイルは glob に当たらないので tests.files に追加
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n    - \"tests/**/*.rs\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*\"\n",
     )
     .unwrap();
-    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
-    let v = parse_json(&output);
-    let twi = findings_by_kind(&v, "test_without_id");
-    // .py ファイルからは test_without_id は出ない
-    assert!(!twi.iter().any(|f| f["detail"] == "test_something"), ".py should not detect tests: {:?}", twi);
+    for name in ["a.rs", "a.go", "A.PY", "a.Rs"] {
+        write_test_file(tmp.path(), name, "x\n");
+    }
+    let v = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    assert_eq!(v["tests"]["rs"]["query"], true, "{v}");
+    for ext in ["go", "PY", "Rs"] {
+        assert_eq!(v["tests"][ext]["query"], false, "{ext}: {v}");
+    }
+}
+
+// @kotowari[REQ-core-080, EX-core-293]
+#[test]
+fn ex_core_293_file_of_a_language_without_a_query_is_not_parsed() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
+    )
+    .unwrap();
+    write_test_file(tmp.path(), "a.go", "func TestA(t *testing.T) {\n");
+    let v = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    assert!(findings_by_kind(&v, "unparsable_file").is_empty(), "{v}");
+}
+
+// @kotowari[REQ-core-081, EX-core-295]
+#[test]
+fn ex_core_295_upper_case_extension_decides_no_language() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*\"\n",
+    )
+    .unwrap();
+    write_test_file(tmp.path(), "A.PY", "def test_x():\n    pass\n");
+    let v = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
+    assert!(findings_by_kind(&v, "test_without_id").is_empty(), "{v}");
 }
 
 // @kotowari[REQ-core-118, TBL-core-010]
@@ -347,12 +374,12 @@ fn tbl_010_lone_cr_ends_a_line_of_a_test_file() {
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n    - \"tests/**/*.rs\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n    - \"tests/**/*.rs\"\n",
     )
     .unwrap();
     fs::write(
-        tmp.path().join("tests/test_a.py"),
-        "first\r# @kotowari[REQ-999]\r",
+        tmp.path().join("tests/test_a.go"),
+        "first\r// @kotowari[REQ-999]\r",
     )
     .unwrap();
     fs::write(
@@ -372,7 +399,7 @@ fn tbl_010_lone_cr_ends_a_line_of_a_test_file() {
         })
         .collect();
     assert!(
-        lines.contains(&("tests/test_a.py".to_string(), 2)),
+        lines.contains(&("tests/test_a.go".to_string(), 2)),
         "{lines:?}"
     );
     assert!(
@@ -742,19 +769,19 @@ fn req_076_unknown_language_scans_raw_text() {
     make_ir_with_req(tmp.path(), "REQ-001", "unit");
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
-        tmp.path().join("tests/test_a.py"),
-        "# @kotowari[REQ-001]\ndef test_something():\n    pass\n",
+        tmp.path().join("tests/test_a.go"),
+        "// @kotowari[REQ-001]\nfunc Test_something(t *testing.T) {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let rwt = findings_by_kind(&v, "requirement_without_test");
-    // .py の印は requirement_without_test を消す
+    // .go の印は requirement_without_test を消す
     assert!(rwt.is_empty(), "unknown lang markers should count for coverage: {:?}", rwt);
 }
 
@@ -766,13 +793,13 @@ fn req_076_unknown_language_marker_line_is_one_indexed_from_its_own_line() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
-        tmp.path().join("tests/test_a.py"),
-        "# leading\n# @kotowari[REQ-999]\ndef test_something():\n    pass\n",
+        tmp.path().join("tests/test_a.go"),
+        "// leading\n// @kotowari[REQ-999]\nfunc Test_something(t *testing.T) {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -921,13 +948,13 @@ fn req_087_unknown_language_only_feeds_coverage() {
     make_ir_with_req(tmp.path(), "REQ-001", "unit");
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
-        tmp.path().join("tests/test_a.py"),
-        "# @kotowari[REQ-001]\ndef test_a():\n    pass\n",
+        tmp.path().join("tests/test_a.go"),
+        "// @kotowari[REQ-001]\nfunc Test_a(t *testing.T) {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -942,18 +969,18 @@ fn req_087_unknown_language_only_feeds_coverage() {
 // @kotowari[REQ-core-072, REQ-core-054]
 #[test]
 fn req_072_non_query_language_checks_invalid_marker() {
-    // .py ファイルの空の印 → invalid_marker が出る
+    // .go ファイルの空の印 → invalid_marker が出る
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
-        tmp.path().join("tests/test_a.py"),
-        "# @kotowari[]\ndef test_a():\n    pass\n",
+        tmp.path().join("tests/test_a.go"),
+        "// @kotowari[]\nfunc Test_a(t *testing.T) {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -969,18 +996,18 @@ fn req_072_non_query_language_checks_invalid_marker() {
 // @kotowari[REQ-core-054]
 #[test]
 fn req_054_non_query_language_checks_unresolved_reference() {
-    // .py ファイルの存在しない ID の印 → unresolved_reference が出る
+    // .go ファイルの存在しない ID の印 → unresolved_reference が出る
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
-        tmp.path().join("tests/test_a.py"),
-        "# @kotowari[REQ-999]\ndef test_a():\n    pass\n",
+        tmp.path().join("tests/test_a.go"),
+        "// @kotowari[REQ-999]\nfunc Test_a(t *testing.T) {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -1023,13 +1050,13 @@ fn req_077_malformed_id_in_marker_is_unresolved_reference_non_rs() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
     )
     .unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
-        tmp.path().join("tests/test_a.py"),
-        "# @kotowari[REQ001]\ndef test_a():\n    pass\n",
+        tmp.path().join("tests/test_a.go"),
+        "// @kotowari[REQ001]\nfunc Test_a(t *testing.T) {}\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -2074,10 +2101,10 @@ fn req_087_marker_in_a_file_without_query_feeds_scenario_coverage() {
     );
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.go\"\n",
     )
     .unwrap();
-    write_test_file(tmp.path(), "test_a.py", "# @kotowari[EX-201]\ndef test_a():\n    pass\n");
+    write_test_file(tmp.path(), "test_a.go", "// @kotowari[EX-201]\nfunc Test_a(t *testing.T) {}\n");
     // Rust のテストには EX-core-201 を含む印が無い
     write_test_file(
         tmp.path(),
