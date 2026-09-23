@@ -27,6 +27,14 @@ mds は常に、"kotowari-mds" の名前のコマンドとして、検査の "ch
 
 mds は常に、出力の形を "--format" で受け、人間向けの "text" と機械向けの "json" の2つから選ばせる。ただし "ast" は "json" だけを受け、"text" を与えたときは`停止`する。
 
+### REQ-schema-066: values の text 出力の字下げ
+
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-23-mutants-gaps.md#A8
+- verification: unit
+
+mds は常に、"values" の "text" の出力で、入れ子が1段深くなるごとに空白2つで字下げし、配列の要素には1から始まる番号と "." を付ける。
+
 ### REQ-schema-008: 指摘の形
 
 - kind: ubiquitous
@@ -66,6 +74,14 @@ TBL-schema-009 の`停止`の理由のいずれかに当たったとき、mds �
 
 mds が`停止`するとき、理由の名前と説明を並べた1行だけを標準エラーに出し、`指摘`は1件も出さない。
 
+### REQ-schema-065: 値の型や語が違うときの停止の説明
+
+- kind: event_driven
+- source: docs/decision/records/2026-09-23-mutants-gaps.md#A6
+- verification: unit
+
+`スキーマ`か`frontmatter`の値の型や語が違って mds が`停止`するとき、mds はその説明に、問題のあった欄の名前と、期待した型か受け付ける語の一覧を含める。
+
 ### REQ-schema-053: ディレクトリ検査の途中の停止
 
 - kind: event_driven
@@ -96,11 +112,11 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 
 ### TBL-schema-009: 停止の理由
 
-- source: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#A44, docs/decision/records/2026-09-21-mds-spec.md#A62, docs/decision/records/2026-09-22-ir-engine.md#A56, docs/decision/records/2026-09-23-ir-engine-gaps.md#A11, docs/decision/records/2026-09-23-ir-engine-gaps.md#A19, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A30, docs/decision/records/2026-09-23-ir-engine-gaps.md#A42
+- source: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#A44, docs/decision/records/2026-09-21-mds-spec.md#A62, docs/decision/records/2026-09-22-ir-engine.md#A56, docs/decision/records/2026-09-23-ir-engine-gaps.md#A11, docs/decision/records/2026-09-23-ir-engine-gaps.md#A19, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A30, docs/decision/records/2026-09-23-ir-engine-gaps.md#A42, docs/decision/records/2026-09-23-mutants-gaps.md#A11
 
 | 理由 | いつ |
 |---|---|
-| スキーマが見つからない | 参照先の`スキーマ`が無い、URL の取得に失敗した、または "$schema" の無い`文書`を対象に指定した |
+| スキーマが見つからない | 参照先の`スキーマ`が無い、URL の取得に失敗した（応答が 4MiB を超えたとき、取得全体が10秒を超えたときを含む）、または "$schema" の無い`文書`を対象に指定した |
 | スキーマが形に合わない | `スキーマ`の YAML が読めない、`規則種別`の形に反する、`配置パス`が衝突する（同じ置き場の中で同じパスか、一方が他方の手前の段にあたるもの。要素オブジェクトの中と、`節`の直下などの要素オブジェクトの外のどちらでも判定し、要素オブジェクトの "value" と "of" の鍵も同じ置き場のパスとして数え、"a.b" と "a.c" のように途中まで同じで先が分かれるものは衝突でない）、"reading" の値が "paragraph" と "line" のどちらでもない、`表`の規則に "header" なしで "select" を書いた、または "select" の値が "first" でない |
 | frontmatter が壊れている | `frontmatter`が壊れた YAML である、YAML のマッピングでない、"$schema" の値が空か空白だけである、または "$schema" の値が文字列でない |
 | 文書が読めない | `文書`のファイルを読めない |
@@ -196,4 +212,31 @@ Scenario: 出現回数の指摘は数えたノードの規則種別を持つ
   And `文`の無い`項目`を持つ`文書`がある
   When "kotowari-mds check --format json" を実行する
   Then 下限を割った`指摘`の種別は`文`である
+
+@id=EX-schema-062 @about=REQ-schema-065 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A6
+Scenario: 型の違う frontmatter の値の停止は欄の名前と期待した型を知らせる
+  Given "$schema" の値が数値の`frontmatter`を持つ`文書`がある
+  When "kotowari-mds check" を実行する
+  Then 終了コードは 2 である
+  And 標準エラーの説明は "$schema" と、期待した型を含む
+
+@id=EX-schema-063 @about=REQ-schema-065 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A6,docs/decision/records/2026-09-23-ir-engine-gaps.md#A20,docs/decision/records/2026-09-23-ir-engine-gaps.md#A30,docs/decision/records/2026-09-21-mds-spec.md#A15,docs/decision/records/2026-09-21-mds-spec.md#A42
+Scenario: 受けない語のスキーマの停止は欄の名前と受け付ける語の一覧を知らせる
+  Given "reading" の値が "foo" の`スキーマ`を指した`文書`がある
+  When "kotowari-mds check" を実行する
+  Then 終了コードは 2 である
+  And 標準エラーの説明は "reading" と、"paragraph" と "line" を含む
+
+@id=EX-schema-064 @about=REQ-schema-066 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A8
+Scenario: values の text 出力は入れ子ごとに空白2つで字下げする
+  Given `配置パス`に "a.b" を宣言した`スキーマ`と、その値を持つ`文書`がある
+  When "kotowari-mds values --format text" を実行する
+  Then "b" の行は "a" の行より空白2つ深く字下げされる
+
+@id=EX-schema-065 @about=REQ-schema-066 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A8
+Scenario: values の text 出力は配列の要素に1から始まる番号を付ける
+  Given 2つのデータ行を持つ`表`の`文書`と、その`表`を "header" を宣言せずに`抽出`する`スキーマ`がある
+  When "kotowari-mds values --format text" を実行する
+  Then 外側の配列の要素は "1." と "2." で始まり、要素の中の配列の要素も "1." から始まる
+  And 配列の要素の行は、その配列の鍵の行より空白2つ深く字下げされる
 ```

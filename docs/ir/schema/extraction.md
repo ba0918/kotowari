@@ -100,11 +100,19 @@ mds は常に、区切り文字による分割を`継続段落`を含めない�
 
 mds は常に、`要素の値`に入る行を`文書`の元の行のまま使い、字下げと途中の行の末尾の空白を残し、値の末尾の空白と空行を除く。値は`箇条書き`ではマーカーから、`フィールド行`では名前の後のコロンと空白の後から、`文`では段落の最初の空白でない文字から始める。複数の部分から成る値は、含める部分の間に元の`文書`で空行があれば空行1つで、無ければ改行1つでつなぎ、含めない部分の行を抜いた跡と続いた空行は空行1つにまとめ、空白だけの行は空行として扱う。この規則は`読み方`に依らない。`導かれる値`を宣言して行ごとに分けた`文`の`要素の値`は、この規則の対象外で TBL-schema-008 のとおりにする。
 
+### REQ-schema-064: 見出しの名前とセルの値のインラインの記法
+
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-23-mutants-gaps.md#A4
+- verification: unit
+
+mds は常に、見出しの名前と`表`のセルの値を、インラインの記法の記号を外した文字で読む。強調、太字、リンク、参照リンクは中の文字をつなげ、インラインコードは中身を残す。
+
 ## Decision tables
 
 ### TBL-schema-008: 抽出の形
 
-- source: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A13, docs/decision/records/2026-09-21-mds-spec.md#A65, docs/decision/records/2026-09-21-mds-spec.md#A66, docs/decision/records/2026-09-21-mds-spec.md#A50, docs/decision/records/2026-09-21-mds-spec.md#A51, docs/decision/records/2026-09-21-mds-spec.md#A52, docs/decision/records/2026-09-21-mds-spec.md#A53, docs/decision/records/2026-09-21-mds-spec.md#A55, docs/decision/records/2026-09-22-ir-engine.md#A43, docs/decision/records/2026-09-22-ir-engine.md#A44, docs/decision/records/2026-09-22-ir-engine.md#A48, docs/decision/records/2026-09-22-ir-engine.md#A53, docs/decision/records/2026-09-22-ir-engine.md#A57, docs/decision/records/2026-09-22-ir-engine.md#A59, docs/decision/records/2026-09-22-ir-engine.md#A64, docs/decision/records/2026-09-22-ir-engine.md#A69, docs/decision/records/2026-09-22-ir-engine.md#A70, docs/decision/records/2026-09-23-ir-engine-gaps.md#A16, docs/decision/records/2026-09-23-extract-original-lines.md#A3
+- source: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A13, docs/decision/records/2026-09-21-mds-spec.md#A65, docs/decision/records/2026-09-21-mds-spec.md#A66, docs/decision/records/2026-09-21-mds-spec.md#A50, docs/decision/records/2026-09-21-mds-spec.md#A51, docs/decision/records/2026-09-21-mds-spec.md#A52, docs/decision/records/2026-09-21-mds-spec.md#A53, docs/decision/records/2026-09-21-mds-spec.md#A55, docs/decision/records/2026-09-22-ir-engine.md#A43, docs/decision/records/2026-09-22-ir-engine.md#A44, docs/decision/records/2026-09-22-ir-engine.md#A48, docs/decision/records/2026-09-22-ir-engine.md#A53, docs/decision/records/2026-09-22-ir-engine.md#A57, docs/decision/records/2026-09-22-ir-engine.md#A59, docs/decision/records/2026-09-22-ir-engine.md#A64, docs/decision/records/2026-09-22-ir-engine.md#A69, docs/decision/records/2026-09-22-ir-engine.md#A70, docs/decision/records/2026-09-23-ir-engine-gaps.md#A16, docs/decision/records/2026-09-23-extract-original-lines.md#A3, docs/decision/records/2026-09-23-mutants-gaps.md#A5, docs/decision/records/2026-09-23-mutants-gaps.md#A10
 
 どの`ノード`でも、"value" も`導かれる値`も宣言しなければ下の「略記の形」をそのまま出し、どちらかを宣言すれば要素ごとにオブジェクトを組み立てて、`要素の値`を "value" の鍵に、`導かれる値`を "of" の鍵に置く。
 
@@ -114,7 +122,7 @@ mds は常に、`要素の値`に入る行を`文書`の元の行のまま使い
 | `フィールド行` | 分けない | 値の文字列（REQ-schema-063）。区切り文字を宣言したときは区切った文字列の配列（REQ-schema-045） | その`フィールド行`の行 | 値の文字列。区切り文字を宣言したときは区切った文字列の配列（REQ-schema-045） |
 | `文` | `導かれる値`を宣言したときだけ行、宣言しなければ分けない | 行に分けたときは前後の空白を取り除いた行の文字、分けないときは本文の文字列（REQ-schema-063） | その行 | 本文の文字列（REQ-schema-063） |
 | `節` | 分けない | `文`と`箇条書き`の行だけをつないだ本文の文字列（REQ-schema-063）。`フィールド行`、`表`、`コードブロック`、`項目`は含めない | `節`の見出しの行 | `文`と`箇条書き`の行だけをつないだ本文の文字列（REQ-schema-063）。`フィールド行`、`表`、`コードブロック`、`項目`は含めない |
-| `項目` | `項目` | 見出しと本文を改行でつないだ文字列。見出しは `ID` と名前だけにし、本文に`フィールド行`・`文`・`箇条書き`を含め、`表`と`コードブロック`は含めない。本文は REQ-schema-063 のとおりにつなぐ | `項目`の見出しの行 | 内側の`配置パス`をキーにしたオブジェクト（REQ-schema-047）。オブジェクトを組み立てないときは見出しと本文を改行でつないだ文字列。見出しは `ID` と名前だけにし、本文に`フィールド行`・`文`・`箇条書き`を含め、`表`と`コードブロック`は含めない。本文は REQ-schema-063 のとおりにつなぐ |
+| `項目` | `項目` | 見出しと本文を改行でつないだ文字列。見出しは `ID` と名前だけにし、本文に`フィールド行`・`文`・`箇条書き`を含め、`表`と`コードブロック`は含めない。宣言した`フィールド行`はその行と`継続段落`を入れて子の`箇条書き`を入れず、宣言していない行は子の行まで入れる。本文は REQ-schema-063 のとおりにつなぐ | `項目`の見出しの行 | 内側の`配置パス`をキーにしたオブジェクト（REQ-schema-047）。オブジェクトを組み立てないときは見出しと本文を改行でつないだ文字列。見出しは `ID` と名前だけにし、本文に`フィールド行`・`文`・`箇条書き`を含め、`表`と`コードブロック`は含めない。宣言した`フィールド行`はその行と`継続段落`を入れて子の`箇条書き`を入れず、宣言していない行は子の行まで入れる。本文は REQ-schema-063 のとおりにつなぐ |
 | `箇条書き` | 行 | 元の行（`継続段落`と子の`箇条書き`の行を含む。REQ-schema-063） | その行のマーカーの行 | 元の行を保った文字列の配列（REQ-schema-063） |
 | `表` | データ行 | データ行の値。`文書`のヘッダ行より多いセルは捨てる（REQ-schema-033）。鍵は "header" を宣言すればその名前、宣言しなければ列の位置（配列）。`要素の値`の置き場か`導かれる値`を宣言した`表`に`出現回数`の範囲も宣言したときは`配置パス`の直下に`表`ごとの段を作り、それ以外は同じ置き場の`表`のデータ行を現れた順に1つの配列へつなぐ | そのデータ行の行 | 行の配列。行の鍵は "header" を宣言すればその名前、宣言しなければ列の位置（配列）にし、`文書`のヘッダ行の文字は鍵に使わない |
 | `コードブロック` | ブロック | ブロック全体の文字列 | フェンスの開始行 | ブロック全体の文字列 |
@@ -239,4 +247,29 @@ Scenario: 行で読んでも文の行の間に空行を足さない
   And 空行を挟まない2行の`文`と、空行を挟んだ3行目の`文`を持つ`文書`がある
   When "kotowari-mds values --format json" を実行する
   Then 1行目と2行目は改行1つで、2行目と3行目は空行1つでつながる
+
+@id=EX-schema-058 @about=REQ-schema-064 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A4
+Scenario: 見出しの名前とセルの値はインラインの記法の記号を外した文字になる
+  Given 名前に太字、リンク、参照リンク、インラインコード、強調を含む`項目`の見出しと、セルに太字、参照リンク、インラインコードを含む`表`を持つ`文書`がある
+  And `項目`に見出しの名前の`導かれる値`を、`表`に`抽出`を宣言した`スキーマ`がある
+  When "kotowari-mds values --format json" を実行する
+  Then 見出しの名前とセルの値は、記号を外して中の文字をつなげた文字になり、インラインコードは中身を残す
+
+@id=EX-schema-059 @about=REQ-schema-064 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A4,docs/decision/records/2026-09-21-mds-spec.md#A2
+Scenario: 記号を外した文字が宣言した名前と違う見出しは指摘になる
+  Given `節`の名前を "Req" と宣言した`スキーマ`と、"## **Req** x" の見出しを持つ`文書`がある
+  When "kotowari-mds check" を実行する
+  Then その見出しは "Req x" と読まれ、宣言していない見出しとして`指摘`になる
+
+@id=EX-schema-060 @about=TBL-schema-008,REQ-schema-035 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A5,docs/decision/records/2026-09-23-mutants-gaps.md#A10
+Scenario: 項目の本文は宣言したフィールド行の子の行を含めない
+  Given 子の`箇条書き`を持つ宣言した`フィールド行`を持つ`項目`の`文書`と、`項目`に略記の`抽出`を宣言した`スキーマ`がある
+  When "kotowari-mds values --format json" を実行する
+  Then `項目`の本文はその`フィールド行`の行を含み、子の`箇条書き`の行を含まない
+
+@id=EX-schema-061 @about=TBL-schema-008,REQ-schema-035 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A5,docs/decision/records/2026-09-23-mutants-gaps.md#A10
+Scenario: 項目の本文は宣言していない行の子の行を含める
+  Given 子の`箇条書き`を持つ、`スキーマ`に宣言していない名前の一覧の行を持つ`項目`の`文書`と、`項目`に略記の`抽出`を宣言した`スキーマ`がある
+  When "kotowari-mds values --format json" を実行する
+  Then `項目`の本文はその行と子の`箇条書き`の行を含む
 ```

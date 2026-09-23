@@ -39,7 +39,7 @@ kotowari は常に、`IR`の置き場の下のディレクトリを深さに制�
 ### REQ-core-037: 行の数え方
 
 - kind: algorithm
-- source: docs/decision/records/records.md#A33
+- source: docs/decision/records/records.md#A33, docs/decision/records/2026-09-23-mutants-gaps.md#A1
 - definition: TBL-core-010
 - verification: unit
 
@@ -80,12 +80,13 @@ kotowari は、`文書が扱う範囲`の中身と行数を検査すること、
 
 ### TBL-core-010: 行の数え方
 
-- source: docs/decision/records/records.md#A33, docs/decision/records/records.md#A129
+- source: docs/decision/records/records.md#A33, docs/decision/records/records.md#A129, docs/decision/records/2026-09-23-mutants-gaps.md#A1
 
 | 場面 | 数え方 |
 |---|---|
 | "\n" | 1つの行の終わり |
 | "\r\n" | 1つの行の終わり（1行に数える） |
+| 単独の "\r" | 1つの行の終わり |
 | 最後の行に改行が無い | その行も1行に数える |
 | 中身が空の文書 | 0行に数える（題名が無いので missing_title を出す） |
 
@@ -103,6 +104,18 @@ Scenario: 改行の違いで行数は変わらない
   Given "a\r\nb" と書いた文書がある
   When その文書の行数を数える
   Then 行数は 2 である
+
+@id=EX-core-281 @about=REQ-core-037 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A1,docs/decision/records/records.md#A33
+Scenario: 単独の CR も1つの行の終わりに数える
+  Given "a\rb" と書いた文書と、"a\rb\r\nc" と書いた文書がある
+  When それぞれの文書の行数を数える
+  Then 前者の行数は 2、後者の行数は 3 である
+
+@id=EX-core-282 @about=REQ-core-037 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A1
+Scenario: 単独の CR の後の行の指摘は区切った後の行番号を持つ
+  Given 1行目の`題名`、2行目の範囲の行、3行目の "## Requirements"、4行目の "### foo" を単独の "\r" で区切った文書がある
+  When "kotowari check" を実行する
+  Then その文書に line が 4 の unknown_heading の誤りが出る
 
 @id=EX-core-020 @about=REQ-core-033 @source=docs/decision/records/2026-09-16-ir-tree.md#A1,docs/decision/records/2026-09-16-ir-tree.md#A13,docs/decision/records/records.md#A21
 Scenario: 深いディレクトリの文書も読む
