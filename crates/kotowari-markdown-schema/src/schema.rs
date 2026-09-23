@@ -481,7 +481,8 @@ struct OfEntries(Vec<(String, OfKind)>);
 
 impl<'de> Deserialize<'de> for OfEntries {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        d.deserialize_map(OfEntriesVisitor)
+        // deserialize_map だと serde-saphyr は写像でない値を Visitor に渡さず、期待した型を説明に出さない
+        d.deserialize_any(OfEntriesVisitor)
     }
 }
 
