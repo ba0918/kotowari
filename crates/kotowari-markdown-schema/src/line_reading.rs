@@ -339,10 +339,10 @@ fn table_at(lines: &[String], index: usize) -> Option<(Block, usize)> {
     let Node::Root(root) = root else {
         return None;
     };
-    let table @ Node::Table(_) = root.children.first()? else {
+    let Node::Table(table) = root.children.first()? else {
         return None;
     };
-    let rows = table.position()?.end.line;
+    let rows = table.position.as_ref()?.end.line;
     Some((table_block_from_node(table, index), index + rows))
 }
 

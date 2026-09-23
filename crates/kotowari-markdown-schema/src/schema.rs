@@ -737,7 +737,9 @@ fn reject_colliding_keys(keys: &[&str], place: &str) -> Result<(), SchemaError> 
 
 /// `outer` が `inner` の親の配置パスか。`a` は `a.b` の親で、`a` と `ab` は無関係。
 fn is_ancestor_path(outer: &str, inner: &str) -> bool {
-    inner.len() > outer.len() && inner.starts_with(outer) && inner.as_bytes()[outer.len()] == b'.'
+    inner
+        .strip_prefix(outer)
+        .is_some_and(|rest| rest.starts_with('.'))
 }
 
 /// コードブロックの規則を検査する。

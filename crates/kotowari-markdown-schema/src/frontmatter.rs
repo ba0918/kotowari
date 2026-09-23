@@ -63,28 +63,15 @@ where
             Ok(SchemaValue::Null)
         }
 
-        fn visit_none<E>(self) -> Result<Self::Value, E>
-        where
-            E: serde::de::Error,
-        {
-            Ok(SchemaValue::Null)
-        }
-
         fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
         where
             E: serde::de::Error,
         {
             Ok(SchemaValue::Value(value.to_string()))
         }
-
-        fn visit_string<E>(self, value: String) -> Result<Self::Value, E>
-        where
-            E: serde::de::Error,
-        {
-            Ok(SchemaValue::Value(value))
-        }
     }
 
+    // gray_matter の Pod は null を visit_unit、文字列を visit_str で渡す。
     // 数値・配列などは visit_* が無く型エラーになり、REQ-schema-014 の「"$schema" の値が文字列でない」として扱う
     deserializer.deserialize_any(Visitor)
 }
