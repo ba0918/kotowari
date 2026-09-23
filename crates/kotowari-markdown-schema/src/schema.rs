@@ -1345,6 +1345,23 @@ document:
 
     // @kotowari[REQ-schema-019]
     #[test]
+    fn repeat_with_equal_min_and_max_is_accepted() {
+        let yaml = r#"
+document:
+  sections:
+    - name: 決定表
+      item:
+        table:
+          repeat: { min: 1, max: 1 }
+"#;
+        assert!(
+            parse_schema(yaml).is_ok(),
+            "下限と上限が等しい範囲はちょうどその個数で、形に反しない"
+        );
+    }
+
+    // @kotowari[REQ-schema-019]
+    #[test]
     fn item_table_invalid_repeat_is_rejected() {
         let yaml = r#"
 document:
