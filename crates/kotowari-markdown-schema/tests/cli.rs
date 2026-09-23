@@ -1507,6 +1507,26 @@ fn ex_schema_052_a_gfm_table_without_leading_pipes_is_a_table_when_reading_by_li
     assert_eq!(json["rows"], serde_json::json!([["1", "2"]]), "{json}");
 }
 
+// @kotowari[TBL-schema-011]
+#[test]
+fn tbl_schema_011_tables_missing_a_pipe_in_the_header_or_delimiter_row_are_tables_in_both_readings()
+ {
+    let rules = "document:\n  preamble:\n    table:\n      extract: rows\n";
+    let docs = [
+        // 見出しの行に縦棒が無い
+        ("abc\n|---|\n|1|\n", serde_json::json!([["1"]])),
+        // 区切りの行に縦棒が無い1列の表
+        ("| a |\n:-\n| 1 |\n", serde_json::json!([["1"]])),
+    ];
+    for (doc, rows) in docs {
+        for reading in ["paragraph", "line"] {
+            let (code, json, stderr) = mds_json(&format!("reading: {reading}\n{rules}"), doc, "values");
+            assert_eq!(code, Some(0), "{reading} {doc:?}: {stderr}");
+            assert_eq!(json["rows"], rows, "{reading} {doc:?}: {json}");
+        }
+    }
+}
+
 // @kotowari[EX-schema-053]
 #[test]
 fn ex_schema_053_open_world_without_a_declared_preamble_allows_a_level_three_heading_before_sections()

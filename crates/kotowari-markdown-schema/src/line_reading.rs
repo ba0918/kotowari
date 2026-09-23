@@ -326,7 +326,10 @@ fn strip_indent(text: &str, width: usize) -> &str {
 /// 縦棒で始まらない表も受け、表の終わりは GFM に任せる。表にならなければ None で、
 /// その行は`文`になる。
 fn table_at(lines: &[String], index: usize) -> Option<(Block, usize)> {
-    if !lines[index].contains('|') || !lines.get(index + 1).is_some_and(|l| is_delimiter_row(l)) {
+    // 区切りの行に置ける文字だけの行が続くときだけ GFM に読ませる。表かどうかは GFM が決める
+    if !lines.get(index + 1).is_some_and(|next| {
+        next.chars().all(|c| matches!(c, '|' | '-' | ':' | ' ' | '\t'))
+    }) {
         return None;
     }
     // 空行までを GFM に読ませ、表が終わった行から先は呼ぶ側が読み直す
@@ -346,12 +349,3 @@ fn table_at(lines: &[String], index: usize) -> Option<(Block, usize)> {
     Some((table_block_from_node(table, index), index + rows))
 }
 
-/// 表の区切りの行（"|---|:--:|" の形）。
-fn is_delimiter_row(text: &str) -> bool {
-    let body = text.trim();
-    body.contains('-')
-        && body.contains('|')
-        && body
-            .chars()
-            .all(|c| matches!(c, '|' | '-' | ':' | ' ' | '\t'))
-}
