@@ -7,10 +7,10 @@
 ### REQ-schema-022: 題名は1つ
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12
+- source: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-24-review2-gaps.md#A1
 - verification: unit
 
-mds は常に、`文書`が`題名`をちょうど1つ持つことを求め、無いときを1件の`指摘`にし、2つ以上あるときは2つ目以降の`題名`ごとに、その`題名`の行番号と`生の行`を持つ`指摘`を1件ずつ出す。
+mds は常に、`文書`が`題名`をちょうど1つ持つことを求め、無いときを1件の`指摘`にし、2つ以上あるときは2つ目以降の`題名`ごとに、その`題名`の行番号と`生の行`を持つ`指摘`を1件ずつ出す。`スキーマ`が`題名`に正規表現を宣言したときは、`題名`が2つ以上あっても1つ目の`題名`を照合し、合わなければその`指摘`も出す。
 
 ### REQ-schema-023: 前置部に宣言するもの
 
@@ -103,6 +103,14 @@ Scenario: 形に合わない項目の見出しは誤りになる
   Given `項目`の ID の正規表現を宣言した`スキーマ`がある
   When 正規表現に合わない ID を持つ`文書`で "kotowari-mds check" を実行する
   Then ID の形の`指摘`が出る
+
+@id=EX-schema-072 @about=REQ-schema-022 @source=docs/decision/records/2026-09-24-review2-gaps.md#A1
+Scenario: 題名が2つあっても1つ目の題名を正規表現と照合する
+  Given `題名`に正規表現を宣言した`スキーマ`がある
+  And 正規表現に合わない`題名`の後に、2つ目の`題名`を持つ`文書`がある
+  When "kotowari-mds check --format json" を実行する
+  Then 1つ目の`題名`の行に正規表現に合わない`指摘`が出る
+  And 2つ目の`題名`の行に`題名`が複数ある`指摘`が出る
 
 @id=EX-schema-010 @about=REQ-schema-022 @source=docs/decision/records/2026-09-21-mds-spec.md#A5
 Scenario: 題名が2つある文書は誤りになる

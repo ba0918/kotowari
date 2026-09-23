@@ -188,7 +188,7 @@ pub fn parse_records_file(rel_path: &str, content: &str) -> RecordsFile {
     let mut has_context = false;
     let mut fence: Option<crate::ir::CodeFence> = None;
 
-    for (index, line) in content.lines().enumerate() {
+    for (index, line) in crate::ir::split_lines(content).into_iter().enumerate() {
         let line_number = index + 1;
         let trimmed = line.trim();
         let heading = trimmed.strip_prefix("## ").map(str::trim);
@@ -281,7 +281,7 @@ pub struct OtherFile {
 pub fn parse_other_file(rel_path: &str, content: &str) -> OtherFile {
     let mut headings = Vec::new();
     let mut fence: Option<crate::ir::CodeFence> = None;
-    for line in content.lines() {
+    for line in crate::ir::split_lines(content) {
         // コードブロックの中の見出しは数えない。閉じなければ文書の終わりまで（A47）
         if let Some(open) = &fence {
             if crate::ir::is_closing_fence(line, open) {

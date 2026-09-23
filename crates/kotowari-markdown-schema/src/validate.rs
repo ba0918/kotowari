@@ -173,36 +173,35 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
 }
 
 fn validate_title(title: &Title, headings: &[Heading], findings: &mut Vec<Finding>) {
-    match headings.len() {
-        0 => findings.push(Finding::new(
+    let Some(first) = headings.first() else {
+        findings.push(Finding::new(
             FindingKind::MissingTitle,
             "the document has no level-1 heading".into(),
-        )),
-        // 2つ目以降の題名ごとに1件（REQ-schema-022）
-        n if n > 1 => findings.extend(headings[1..].iter().map(|heading| {
-            Finding::at(
-                FindingKind::MultipleTitles,
-                heading.line,
-                "the document has more than one level-1 heading".into(),
-            )
-        })),
-        _ => {
-            let heading = &headings[0];
-            if let Some(pattern) = &title.pattern
-                && !pattern.is_match(&heading.text)
-            {
-                findings.push(Finding::at(
-                    FindingKind::TitlePatternMismatch,
-                    heading.line,
-                    format!(
-                        "title \"{}\" does not match pattern \"{}\"",
-                        heading.text,
-                        pattern.source()
-                    ),
-                ));
-            }
-        }
+        ));
+        return;
+    };
+    // 題名が2つ以上あっても、1つ目の題名は照合する（2026-09-24-review2-gaps の A1）
+    if let Some(pattern) = &title.pattern
+        && !pattern.is_match(&first.text)
+    {
+        findings.push(Finding::at(
+            FindingKind::TitlePatternMismatch,
+            first.line,
+            format!(
+                "title \"{}\" does not match pattern \"{}\"",
+                first.text,
+                pattern.source()
+            ),
+        ));
     }
+    // 2つ目以降の題名ごとに1件（REQ-schema-022）
+    findings.extend(headings[1..].iter().map(|heading| {
+        Finding::at(
+            FindingKind::MultipleTitles,
+            heading.line,
+            "the document has more than one level-1 heading".into(),
+        )
+    }));
 }
 
 fn validate_items(

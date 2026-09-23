@@ -533,13 +533,22 @@ fn validate_schema(schema: &Schema) -> Result<(), SchemaError> {
     if let Some(item) = &schema.document.item {
         validate_item(item)?;
     }
-    reject_colliding_root_paths(&schema.document)
+    reject_colliding_root_paths(&schema.document)?;
+    reject_root_paths_on_the_type_key(schema)
 }
 
 /// 要素オブジェクトの外、文書の値の根に置く配置パスの衝突を停止にする（TBL-schema-009）。
 /// 題名・前置部・節・項目と、それらの直下のノードの配置パスはすべて同じ置き場に並ぶ。
 fn reject_colliding_root_paths(document: &Document) -> Result<(), SchemaError> {
     let mut paths: Vec<String> = Vec::new();
+    collect_root_paths(document, &mut paths);
+    let keys: Vec<&str> = paths.iter().map(String::as_str).collect();
+    reject_colliding_keys(&keys, "document")
+}
+
+/// 文書の値の根に置く配置パスを集める。題名・前置部・節・項目と、それらの直下のノードと、
+/// 箇条書きの子フィールドの配置パスが同じ置き場に並ぶ
+fn collect_root_paths(document: &Document, paths: &mut Vec<String>) {
     let mut push = |extract: Option<&Extract>| {
         if let Some(extract) = extract {
             paths.push(extract.path().to_string());
@@ -569,15 +578,33 @@ fn reject_colliding_root_paths(document: &Document) -> Result<(), SchemaError> {
     push(document.item.as_ref().and_then(|i| i.extract.as_ref()));
     // 箇条書きの子フィールドも、その箇条書きの置き場（根）に値を出す
     if let Some(bullets) = document.preamble.as_ref().and_then(|p| p.bullets.as_ref()) {
-        collect_children_extract_paths(bullets, &mut paths);
+        collect_children_extract_paths(bullets, paths);
     }
     for section in &document.sections {
         if let Some(bullets) = &section.bullets {
-            collect_children_extract_paths(bullets, &mut paths);
+            collect_children_extract_paths(bullets, paths);
         }
     }
-    let keys: Vec<&str> = paths.iter().map(String::as_str).collect();
-    reject_colliding_keys(&keys, "document")
+}
+
+/// "ast --schema" は根の "type" に "name" を置くので、"name" を宣言した`スキーマ`で根の
+/// 配置パスが "type" の鍵を使うと "name" が消える。衝突と同じく停止にする
+/// （TBL-schema-009、2026-09-24-review2-gaps の A2）
+fn reject_root_paths_on_the_type_key(schema: &Schema) -> Result<(), SchemaError> {
+    if schema.name.is_none() {
+        return Ok(());
+    }
+    let mut paths: Vec<String> = Vec::new();
+    collect_root_paths(&schema.document, &mut paths);
+    match paths
+        .iter()
+        .find(|path| path.as_str() == "type" || path.starts_with("type."))
+    {
+        Some(path) => Err(SchemaError(format!(
+            "document has the key \"{path}\", which conflicts with \"type\" that ast --schema sets from \"name\""
+        ))),
+        None => Ok(()),
+    }
 }
 
 fn validate_title(title: &Title) -> Result<(), SchemaError> {
