@@ -1725,6 +1725,28 @@ fn req_058_records_place_dot_resolves_a_source_at_the_base_root() {
     assert_eq!(details, vec!["records.md#A99"], "A1 must resolve and only A99 must be invalid: {:?}", si);
 }
 
+// @kotowari[REQ-core-058, REQ-core-110, EX-core-289]
+#[test]
+fn req_110_a_parent_step_in_a_place_is_folded() {
+    // 置き場の "a/.." は畳んでから比べる。畳まないと置き場の中の出典が置き場の外に見える
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/../decision/records\n  adr: docs/decision/adr\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(si.is_empty(), "{si:?}");
+}
+
 fn write_ir(tmp: &std::path::Path, relative: &str, content: &str) {
     let path = tmp.join("docs/ir").join(relative);
     fs::create_dir_all(path.parent().unwrap()).unwrap();

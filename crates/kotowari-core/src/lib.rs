@@ -456,7 +456,7 @@ pub fn read_utf8_file(path: &Path, display_path: &str) -> Result<String, StopRea
 }
 
 /// パスを正規化する純粋な関数。
-/// 末尾の "/"、先頭の "./"、途中の "/./" と連続する "/"、"\" を正規化する。
+/// 末尾の "/"、先頭の "./"、途中の "/./" と連続する "/"、"\" を正規化し、"a/.." を畳む。
 pub fn normalize_path(path: &str) -> String {
     let s = path.replace('\\', "/");
     let mut parts: Vec<&str> = Vec::new();
@@ -465,6 +465,12 @@ pub fn normalize_path(path: &str) -> String {
             // 先頭の空（= 先頭の "/"）は保持しない（相対パスの前提）
             // 途中の空（= 連続する "/"）は飛ばす
             // "." は飛ばす
+            continue;
+        }
+        // "a/.." は畳む。畳む相手の無い ".." は残し、基準の外を指すパスのままにする
+        // （review7-gaps の A1）
+        if part == ".." && parts.last().is_some_and(|last| *last != "..") {
+            parts.pop();
             continue;
         }
         parts.push(part);
