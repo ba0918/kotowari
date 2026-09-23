@@ -112,12 +112,12 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 
 ### TBL-schema-009: 停止の理由
 
-- source: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#A44, docs/decision/records/2026-09-21-mds-spec.md#A62, docs/decision/records/2026-09-22-ir-engine.md#A56, docs/decision/records/2026-09-23-ir-engine-gaps.md#A11, docs/decision/records/2026-09-23-ir-engine-gaps.md#A19, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A30, docs/decision/records/2026-09-23-ir-engine-gaps.md#A42, docs/decision/records/2026-09-23-mutants-gaps.md#A11, docs/decision/records/2026-09-24-review2-gaps.md#A2
+- source: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#A44, docs/decision/records/2026-09-21-mds-spec.md#A62, docs/decision/records/2026-09-22-ir-engine.md#A56, docs/decision/records/2026-09-23-ir-engine-gaps.md#A11, docs/decision/records/2026-09-23-ir-engine-gaps.md#A19, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A30, docs/decision/records/2026-09-23-ir-engine-gaps.md#A42, docs/decision/records/2026-09-23-mutants-gaps.md#A11, docs/decision/records/2026-09-24-review2-gaps.md#A2, docs/decision/records/2026-09-24-review4-gaps.md#A3, docs/decision/records/2026-09-24-review4-gaps.md#A4
 
 | 理由 | いつ |
 |---|---|
 | スキーマが見つからない | 参照先の`スキーマ`が無い、URL の取得に失敗した（応答が 4MiB を超えたとき、取得全体が10秒を超えたときを含む）、または "$schema" の無い`文書`を対象に指定した |
-| スキーマが形に合わない | `スキーマ`の YAML が読めない、`規則種別`の形に反する、`配置パス`が衝突する（同じ置き場の中で同じパスか、一方が他方の手前の段にあたるもの。要素オブジェクトの中と、`節`の直下などの要素オブジェクトの外のどちらでも判定し、要素オブジェクトの "value" と "of" の鍵も同じ置き場のパスとして数え、"a.b" と "a.c" のように途中まで同じで先が分かれるものは衝突でない）、"reading" の値が "paragraph" と "line" のどちらでもない、`表`の規則に "header" なしで "select" を書いた、"select" の値が "first" でない、または "name" を宣言した`スキーマ`で要素オブジェクトの外の`配置パス`が "type" か "type." で始まる（"ast --schema" が "name" を置く鍵と衝突する） |
+| スキーマが形に合わない | `スキーマ`の YAML が読めない、`規則種別`の形に反する、`配置パス`が衝突する（同じ置き場の中で同じパスか、一方が他方の手前の段にあたるもの。要素オブジェクトの中と、`節`の直下などの要素オブジェクトの外のどちらでも判定し、要素オブジェクトの "value" と "of" の鍵も同じ置き場のパスとして数え、"a.b" と "a.c" のように途中まで同じで先が分かれるものは衝突でない）、"reading" の値が "paragraph" と "line" のどちらでもない、`表`の規則に "header" なしで "select" を書いた、"select" の値が "first" でない、"name" を宣言した`スキーマ`で要素オブジェクトの外の`配置パス`が "type" か "type." で始まる（"ast --schema" が "name" を置く鍵と衝突する）、同じ置き場に同じ名前の`節`か`フィールド行`を2度宣言した、または`配置パス`のドットで区切った名前に空のものがある |
 | frontmatter が壊れている | `frontmatter`が壊れた YAML である、YAML のマッピングでない、"$schema" の値が空か空白だけである、または "$schema" の値が文字列でない |
 | 文書が読めない | `文書`のファイルを読めない |
 | 引数の誤り | 受けない "--format" の値、知らないフラグ、または "ast" に "--format text" を与えた |
@@ -145,6 +145,18 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 ## Examples
 
 ```gherkin
+@id=EX-schema-076 @about=TBL-schema-009 @source=docs/decision/records/2026-09-24-review4-gaps.md#A3
+Scenario: 同じ名前の節やフィールド行を2度宣言したスキーマは停止する
+  Given 同じ名前の`節`を2つ宣言した`スキーマ`と、`前置部`に同じ名前の`フィールド行`を2つ宣言した`スキーマ`がある
+  When それぞれの`スキーマ`で "kotowari-mds check" を実行する
+  Then どちらも終了コードは 2 である
+
+@id=EX-schema-077 @about=REQ-schema-036,TBL-schema-009 @source=docs/decision/records/2026-09-24-review4-gaps.md#A4
+Scenario: 空の名前を含む配置パスは停止する
+  Given `題名`の`配置パス`を "a..b" にした`スキーマ`がある
+  When その`スキーマ`で "kotowari-mds values" を実行する
+  Then 終了コードは 2 である
+
 @id=EX-schema-073 @about=TBL-schema-009 @source=docs/decision/records/2026-09-24-review2-gaps.md#A2
 Scenario: name を宣言したスキーマで type に値を置くと停止する
   Given "name" を宣言し、`題名`の`抽出`の`配置パス`を "type" にした`スキーマ`がある
