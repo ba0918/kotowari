@@ -83,7 +83,7 @@ fn unknown_flag_stops_with_argument_error() {
     );
 }
 
-// @kotowari[REQ-schema-036]
+// @kotowari[REQ-schema-036, REQ-schema-067]
 #[test]
 fn ast_schema_outputs_typed_tree() {
     let output = mds()
@@ -98,6 +98,36 @@ fn ast_schema_outputs_typed_tree() {
         json["sections"]["reasons"],
         serde_json::json!(["- 理由その1", "- 理由その2"])
     );
+}
+
+// @kotowari[REQ-schema-067, EX-schema-082, EX-schema-083]
+#[test]
+fn ex_schema_082_083_ast_schema_is_values_with_the_schema_name_as_type() {
+    let dir = tempfile::tempdir().unwrap();
+    let ast_and_values = |schema: &str| {
+        write_file(dir.path(), "schema.yaml", schema);
+        let doc = write_file(
+            dir.path(),
+            "doc.md",
+            "---\n$schema: ./schema.yaml\n---\n# 題名\n",
+        );
+        let run = |args: &[&str]| {
+            let output = mds().args(args).output().unwrap();
+            assert_eq!(output.status.code(), Some(0), "{args:?}");
+            serde_json::from_slice::<serde_json::Value>(&output.stdout).unwrap()
+        };
+        let path = doc.to_str().unwrap();
+        (
+            run(&["ast", path, "--schema"]),
+            run(&["values", path, "--format", "json"]),
+        )
+    };
+    let (ast, values) = ast_and_values("name: adr\ndocument:\n  title: { extract: title }\n");
+    assert_eq!(values, serde_json::json!({ "title": "題名" }));
+    assert_eq!(ast, serde_json::json!({ "type": "adr", "title": "題名" }));
+    let (ast, values) = ast_and_values("document:\n  title: { extract: title }\n");
+    assert_eq!(ast, values);
+    assert!(ast.get("type").is_none(), "{ast}");
 }
 
 // @kotowari[REQ-schema-009, REQ-schema-014, REQ-schema-042]
