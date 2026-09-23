@@ -5,7 +5,7 @@
 use crate::StopReason;
 use crate::config::Config;
 use ast_grep_config::{GlobalRules, RuleCollection, RuleConfig, Severity, from_yaml_string};
-use ast_grep_core::tree_sitter::{LanguageExt, StrDoc};
+use ast_grep_core::tree_sitter::StrDoc;
 use ast_grep_core::{Language, Node};
 use ast_grep_language::SupportLang;
 use std::collections::BTreeSet;
@@ -167,9 +167,9 @@ pub struct ParsedFile {
 }
 
 impl ParsedFile {
-    /// 構文の誤りが1つでもあれば None（REQ-core-083）
+    /// 構文の誤りが1つでもあれば None（REQ-core-083）。構文木を作れなかったときも None
     pub fn parse(content: &str, lang: SupportLang) -> Option<Self> {
-        let root = lang.ast_grep(content);
+        let root = ast_grep_core::AstGrep::try_new(content, lang).ok()?;
         if root.root().get_inner_node().has_error() {
             return None;
         }

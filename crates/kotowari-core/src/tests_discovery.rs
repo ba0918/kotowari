@@ -6,7 +6,7 @@ use crate::ir::{IrDocument, Item, is_valid_id};
 use crate::test_queries::{ParsedFile, TestQueries, language_of};
 use crate::{Finding, FindingKind};
 use ast_grep_core::Node;
-use ast_grep_core::tree_sitter::{LanguageExt, StrDoc};
+use ast_grep_core::tree_sitter::StrDoc;
 use ast_grep_language::SupportLang;
 use globset::{Glob, GlobSetBuilder};
 use std::collections::{BTreeMap, BTreeSet};
@@ -268,7 +268,9 @@ fn reparse_macro_body(
     let line_offset = source[..byte_offset].matches('\n').count();
 
     // REQ-core-083: 読み直したときの構文の誤りは unparsable_file にせず、読めた関数を数える
-    let inner_root = SupportLang::Rust.ast_grep(inner);
+    let Ok(inner_root) = ast_grep_core::AstGrep::try_new(inner, SupportLang::Rust) else {
+        return;
+    };
     let inner_lines = LineMap::new(inner, &inner_root.root(), SupportLang::Rust);
     collect_macro_functions(
         &inner_root.root(),
