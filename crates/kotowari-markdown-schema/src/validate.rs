@@ -1385,6 +1385,29 @@ document:
         );
     }
 
+    // @kotowari[REQ-schema-031, REQ-schema-028]
+    #[test]
+    fn a_child_line_with_an_undeclared_name_is_checked_as_a_child_bullet() {
+        let schema = r#"
+document:
+  sections:
+    - name: 決定
+      bullets:
+        repeat: { min: 0 }
+        children:
+          bullets:
+            repeat: { min: 0 }
+            pattern: "^子"
+"#;
+        let doc = "## 決定\n\n- 親\n  - 名前: 値\n";
+        let findings = validate_src(schema, doc, false);
+        assert_eq!(
+            kinds(&findings),
+            vec![FindingKind::BulletPatternMismatch],
+            "宣言していない名前の子の行は子の箇条書きとして照合する"
+        );
+    }
+
     // @kotowari[REQ-schema-021]
     #[test]
     fn child_bullet_when_references_a_sibling_field() {
@@ -2413,6 +2436,28 @@ document:
         let doc = "## 要求\n\n- 定義: REQ-001\n- 種類: algorithm\n";
         let findings = validate_src(schema, doc, false);
         assert!(kinds(&findings).contains(&FindingKind::FieldOrderMismatch));
+    }
+
+    // @kotowari[REQ-schema-041]
+    #[test]
+    fn a_repeated_field_in_a_row_is_still_in_declared_order() {
+        let schema = r#"
+document:
+  sections:
+    - name: 要求
+      ordered: true
+      fields:
+        - name: 種類
+          repeat: { max: 2 }
+        - name: 定義
+"#;
+        let doc = "## 要求\n\n- 種類: algorithm\n- 種類: ubiquitous\n- 定義: REQ-001\n";
+        let findings = validate_src(schema, doc, false);
+        assert!(
+            !kinds(&findings).contains(&FindingKind::FieldOrderMismatch),
+            "同じフィールド行が続いても書いた順に反しない: {:?}",
+            kinds(&findings)
+        );
     }
 
     // @kotowari[REQ-schema-041]
