@@ -352,8 +352,8 @@ mod tests {
                     { "id": "REQ-core-002", "line": 20, "kind": "bogus", "verification": "nope" }
                 ],
                 "glossary": [
-                    { "value": { "用語": "印" }, "line": 5 },
-                    { "value": { "用語": "" }, "line": 6 }
+                    { "value": { "Term": "印" }, "line": 5 },
+                    { "value": { "Term": "" }, "line": 6 }
                 ]
             }),
         )
@@ -461,13 +461,13 @@ mod tests {
     #[test]
     fn a_missing_field_line_splits_by_the_name_of_the_field() {
         let cases = [
-            ("検証", FindingKind::VerificationMissing, "REQ-core-001"),
-            ("出典", FindingKind::MissingSource, "REQ-core-001"),
-            ("種類", FindingKind::MissingField, "種類"),
-            ("確かめ方", FindingKind::MissingField, "確かめ方"),
-            ("関係", FindingKind::MissingField, "関係"),
+            ("verification", FindingKind::VerificationMissing, "REQ-core-001"),
+            ("source", FindingKind::MissingSource, "REQ-core-001"),
+            ("kind", FindingKind::MissingField, "kind"),
+            ("how_to_verify", FindingKind::MissingField, "how_to_verify"),
+            ("related", FindingKind::MissingField, "related"),
             (
-                "定義",
+                "definition",
                 FindingKind::AlgorithmWithoutDefinition,
                 "REQ-core-001",
             ),
@@ -484,13 +484,13 @@ mod tests {
     // @kotowari[REQ-core-171]
     #[test]
     fn a_field_value_outside_the_allowed_list_is_repointed_at_the_item_heading() {
-        let e = engine(EngineKind::FieldEnumInvalid, Some(22)).of_node("種類");
+        let e = engine(EngineKind::FieldEnumInvalid, Some(22)).of_node("kind");
         let f = mapped(e);
         assert_eq!(f.kind, FindingKind::UnknownKind);
         assert_eq!(f.line, Some(20), "項目の見出しの行に付け直す");
         assert_eq!(f.detail, "bogus", "detail は抽出の項目の該当の値");
 
-        let e = engine(EngineKind::FieldEnumInvalid, Some(23)).of_node("検証");
+        let e = engine(EngineKind::FieldEnumInvalid, Some(23)).of_node("verification");
         let f = mapped(e);
         assert_eq!(f.kind, FindingKind::VerificationInvalid);
         assert_eq!(f.line, Some(20));
@@ -501,11 +501,11 @@ mod tests {
     #[test]
     fn a_glossary_data_row_with_the_wrong_columns_becomes_invalid_glossary_row() {
         let mut e = engine(EngineKind::TableHeaderMismatch, Some(6));
-        e.raw = Some("| | 意味 |".to_string());
+        e.raw = Some("| | Meaning |".to_string());
         let f = map_finding(&ctx(DocKind::Glossary), &e).unwrap().unwrap();
         assert_eq!(f.kind, FindingKind::InvalidGlossaryRow);
         assert_eq!(f.line, Some(6));
-        assert_eq!(f.detail, "| | 意味 |");
+        assert_eq!(f.detail, "| | Meaning |");
     }
 
     // @kotowari[REQ-core-171]
@@ -513,7 +513,7 @@ mod tests {
     fn a_glossary_table_header_mismatch_at_the_table_start_stops() {
         // select: first でヘッダの合わない表は宣言の外になるので、表の開始行の食い違いは発生しない
         let mut e = engine(EngineKind::TableHeaderMismatch, Some(4));
-        e.raw = Some("| 用語 | 意味 |".to_string());
+        e.raw = Some("| Term | Meaning |".to_string());
         assert!(
             stopped(DocKind::Glossary, e).contains("no mapping for table_header_mismatch"),
             "発生しない行の指摘は停止する"
@@ -583,12 +583,12 @@ mod tests {
     // @kotowari[REQ-core-171]
     #[test]
     fn a_field_line_above_its_maximum_becomes_duplicate_field_with_the_field_name() {
-        let mut e = engine(EngineKind::RepeatMaxExceeded, Some(11)).of_node("出典");
+        let mut e = engine(EngineKind::RepeatMaxExceeded, Some(11)).of_node("source");
         e.rule_kind = Some(RuleKind::Field);
         let f = mapped(e);
         assert_eq!(f.kind, FindingKind::DuplicateField);
         assert_eq!(f.line, Some(11));
-        assert_eq!(f.detail, "出典");
+        assert_eq!(f.detail, "source");
     }
 
     // --- REQ-core-172: 写し先の無い指摘は停止する ---
@@ -663,7 +663,7 @@ mod tests {
         assert!(stopped(DocKind::Topic, e).contains("carries no rule kind"));
 
         // 項目の値を要る写しに、その行を含む項目が無い
-        let e = engine(EngineKind::MissingRequiredField, Some(2)).of_node("出典");
+        let e = engine(EngineKind::MissingRequiredField, Some(2)).of_node("source");
         assert!(stopped(DocKind::Topic, e).contains("has no item to read"));
     }
 

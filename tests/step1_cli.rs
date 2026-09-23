@@ -759,7 +759,7 @@ fn dir_with_one_requirement() -> tempfile::TempDir {
     // 検証が review で確かめ方のある要求なら、テストが無くても check の指摘は出ない
     std::fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# 題名\n\n範囲。\n\n## 要求\n\n### REQ-001: 例\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n- 確かめ方: 人が読む\n\n文である。\n",
+        "# 題名\n\n範囲。\n\n## Requirements\n\n### REQ-001: 例\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n- how_to_verify: 人が読む\n\n文である。\n",
     )
     .unwrap();
     tmp

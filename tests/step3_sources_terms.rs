@@ -62,7 +62,7 @@ fn req_057_source_splits_at_first_hash_and_allows_commas() {
     // 出典にコンマ区切りで複数の出典を書く
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1, docs/decision/records/records.md#A2\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1, docs/decision/records/records.md#A2\n- verification: unit\n\nStatement.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -81,7 +81,7 @@ fn req_058_number_anchor_looks_for_decision_line_and_other_anchor_for_heading() 
     // 正しい出典（決定の番号）
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A99\n- 検証: unit\n\nStatement2.\n\n### REQ-003: Test3\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/ir-form.md#文書\n- 検証: unit\n\nStatement3.\n\n### REQ-004: Test4\n\n- 種類: ubiquitous\n- 出典: docs/decision/adr/0001-test.md#状況\n- 検証: unit\n\nStatement4.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A99\n- verification: unit\n\nStatement2.\n\n### REQ-003: Test3\n\n- kind: ubiquitous\n- source: docs/decision/records/ir-form.md#文書\n- verification: unit\n\nStatement3.\n\n### REQ-004: Test4\n\n- kind: ubiquitous\n- source: docs/decision/adr/0001-test.md#状況\n- verification: unit\n\nStatement4.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -99,7 +99,7 @@ fn req_058_source_outside_places_is_invalid() {
     make_project_with_records(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: somewhere/else.md#heading\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: somewhere/else.md#heading\n- verification: unit\n\nStatement.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -116,7 +116,7 @@ fn req_058_source_path_equal_to_a_place_itself_is_invalid_without_crashing() {
     // パスが置き場そのもの（末尾に "/..." が無い）は、置き場の中ではない
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/adr#状況\n- 検証: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: docs/decision/records#A1\n- 検証: unit\n\nStatement2.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/adr#状況\n- verification: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- kind: ubiquitous\n- source: docs/decision/records#A1\n- verification: unit\n\nStatement2.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -133,15 +133,15 @@ fn req_058_source_path_equal_to_a_place_itself_is_invalid_without_crashing() {
 fn req_059_missing_source_for_item_scenario_and_term() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
-    // 出典の行がない要求 → REQ-core-098 により missing_field detail="出典"
+    // 出典の行がない要求 → REQ-core-098 により missing_field detail="source"
     // 出典の値が空のシナリオ → REQ-core-059 により missing_source
     // 用語の出典が空 → REQ-core-059 により missing_source
     fs::write(
         tmp.path().join("docs/ir/a.md"),
         concat!(
-            "# Title\n\nScope.\n\n## 要求\n\n",
-            "### REQ-001: Test\n\n- 種類: ubiquitous\n- 検証: unit\n\nStatement.\n\n",
-            "## 具体例\n\n",
+            "# Title\n\nScope.\n\n## Requirements\n\n",
+            "### REQ-001: Test\n\n- kind: ubiquitous\n- verification: unit\n\nStatement.\n\n",
+            "## Examples\n\n",
             "```gherkin\n",
             "@id=EX-001 @about=REQ-001\n",
             "Scenario: No source\n",
@@ -152,7 +152,7 @@ fn req_059_missing_source_for_item_scenario_and_term() {
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| テスト | 意味 |  |\n",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| テスト | 意味 |  |\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -167,7 +167,7 @@ fn req_059_missing_source_for_item_scenario_and_term() {
     );
     let mf = findings_by_kind(&v, "missing_field");
     assert!(
-        !mf.iter().any(|f| f["detail"] == "出典" && f["path"].as_str().unwrap().contains("a.md")),
+        !mf.iter().any(|f| f["detail"] == "source" && f["path"].as_str().unwrap().contains("a.md")),
         "missing_field 出典 should not appear when source line is absent: {:?}",
         mf
     );
@@ -196,7 +196,7 @@ fn req_059_empty_source_value_produces_missing_source() {
     // 出典の行はあるが値が空
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典:\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source:\n- verification: unit\n\nStatement.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -217,7 +217,7 @@ fn req_060_glossary_trailing_comma_does_not_create_empty_source() {
     // 用語集の出典に末尾コンマ → 空要素ができないこと
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| テスト | テストの意味 | docs/decision/records/records.md#A1, |\n",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| テスト | テストの意味 | docs/decision/records/records.md#A1, |\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -243,7 +243,7 @@ fn req_060_glossary_and_scenario_sources_are_checked() {
     // 用語集に出典が無い用語
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| テスト | テストの意味 |  |\n",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| テスト | テストの意味 |  |\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -267,7 +267,7 @@ fn req_061_numbers_are_per_file() {
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/other.md#B1\n- 検証: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#B1\n- 検証: unit\n\nStatement2.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/other.md#B1\n- verification: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#B1\n- verification: unit\n\nStatement2.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -287,7 +287,7 @@ fn req_106_form_contract_headings_are_valid_sources() {
     make_project_with_records(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/ir-form.md#項目\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/ir-form.md#項目\n- verification: unit\n\nStatement.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -306,14 +306,14 @@ fn req_063_only_sentences_and_steps_are_checked() {
     // 用語集を作る
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| テスト | 意味 | docs/decision/records/records.md#A1 |\n",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| テスト | 意味 | docs/decision/records/records.md#A1 |\n",
     )
     .unwrap();
     // 要求の文に未知の用語を使う → 検出される
     // フィールドの行に未知の語を使う → 検出されない
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n`未知語`を使う文。\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n`未知語`を使う文。\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -331,12 +331,12 @@ fn req_064_unknown_term() {
     make_project_with_records(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| IR | 仕様の集まり | docs/decision/records/records.md#A1 |\n",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| IR | 仕様の集まり | docs/decision/records/records.md#A1 |\n",
     )
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n`IR`は良いが`不明な語`は誤り。\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n`IR`は良いが`不明な語`は誤り。\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -357,7 +357,7 @@ fn req_065_ids_pass_without_glossary() {
     // CONTEXT.md なし
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n`REQ-001`を参照する文。\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n`REQ-001`を参照する文。\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -376,7 +376,7 @@ fn req_066_vague_word_substring() {
     make_project_with_records(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n適切に処理する。\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n適切に処理する。\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -397,7 +397,7 @@ fn req_014_empty_vague_word_stops_with_config_error() {
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n適切に処理する。\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n適切に処理する。\n",
     )
     .unwrap();
     let output = cmd()
@@ -423,7 +423,7 @@ fn req_067_one_finding_per_occurrence() {
     make_project_with_records(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n適切に適切に処理。\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n適切に適切に処理。\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -444,7 +444,7 @@ fn req_069_reference_needs_boundary_and_quotes_are_skipped() {
     // 二重引用符の中は拾わない
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope with a.md reference.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nSee nonexistent.md for details. But \"quoted.md\" is skipped. And adr/0001-test-marker.md is a reference.\n",
+        "# Title\n\nScope with a.md reference.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nSee nonexistent.md for details. But \"quoted.md\" is skipped. And adr/0001-test-marker.md is a reference.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -466,7 +466,7 @@ fn req_069_quoted_text_ending_in_a_multibyte_character_is_split_at_the_quote() {
     // 閉じ引用符の直前が全角文字でも、引用の外の参照は拾う
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nこの値は\"実験\"で決まる。See nonexistent.md for details.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nこの値は\"実験\"で決まる。See nonexistent.md for details.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -484,7 +484,7 @@ fn req_069_dot_md_at_the_start_of_a_line_is_skipped_and_scanning_continues() {
     // 行頭の ".md" は名前を持たないので参照ではない。その先の参照は拾う
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n.md で終わる名前の文書を読む。See nonexistent.md for details.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n.md で終わる名前の文書を読む。See nonexistent.md for details.\n",
     )
     .unwrap();
     let output = cmd()
@@ -526,12 +526,12 @@ fn req_104_quoted_values_are_not_terms() {
     make_project_with_records(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| IR | 仕様 | docs/decision/records/records.md#A1 |\n",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| IR | 仕様 | docs/decision/records/records.md#A1 |\n",
     )
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n\"kotowari check\" を実行する。\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n\"kotowari check\" を実行する。\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -551,13 +551,13 @@ fn req_063_property_statements_and_scenario_steps_are_term_checked() {
     // 用語集を作る（既知の語は「テスト」だけ）
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| テスト | 意味 | docs/decision/records/records.md#A1 |\n",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| テスト | 意味 | docs/decision/records/records.md#A1 |\n",
     )
     .unwrap();
     // 性質の文に未知の用語、シナリオの手順に別の未知の用語を使う
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n`テスト`を使う文。\n\n## 性質\n\n### PROP-001: P\n\n- 出典: docs/decision/records/records.md#A1\n\n`性質側の未知語`を検査する。\n\n## 具体例\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: Test\n  Given `手順側の未知語`を使う\n```\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n`テスト`を使う文。\n\n## Properties\n\n### PROP-001: P\n\n- source: docs/decision/records/records.md#A1\n\n`性質側の未知語`を検査する。\n\n## Examples\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: Test\n  Given `手順側の未知語`を使う\n```\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -598,9 +598,9 @@ fn tbl_012_decision_line_with_and_without_trailing_text() {
     fs::write(
         tmp.path().join("docs/ir/a.md"),
         concat!(
-            "# Title\n\nScope.\n\n## 要求\n\n",
-            "### REQ-001: Test1\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records2.md#A26\n- 検証: unit\n\nStatement.\n\n",
-            "### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records2.md#A27\n- 検証: unit\n\nStatement2.\n",
+            "# Title\n\nScope.\n\n## Requirements\n\n",
+            "### REQ-001: Test1\n\n- kind: ubiquitous\n- source: docs/decision/records/records2.md#A26\n- verification: unit\n\nStatement.\n\n",
+            "### REQ-002: Test2\n\n- kind: ubiquitous\n- source: docs/decision/records/records2.md#A27\n- verification: unit\n\nStatement2.\n",
         ),
     )
     .unwrap();
@@ -630,7 +630,7 @@ fn tbl_012_indented_decision_line_counts() {
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records2.md#A26\n- 検証: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records2.md#A27\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records2.md#A26\n- verification: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- kind: ubiquitous\n- source: docs/decision/records/records2.md#A27\n- verification: unit\n\nStatement.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -662,7 +662,7 @@ fn tbl_012_number_inside_code_block_is_not_a_source_target() {
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/x.md#A9\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/x.md#A9\n- verification: unit\n\nStatement.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -694,7 +694,7 @@ fn tbl_012_decision_heading_only_inside_code_block_makes_the_file_not_a_record()
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/f.md#補足\n- 検証: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/f.md#A1\n- 検証: unit\n\nStatement2.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/f.md#補足\n- verification: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- kind: ubiquitous\n- source: docs/decision/records/f.md#A1\n- verification: unit\n\nStatement2.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -722,7 +722,7 @@ fn tbl_012_heading_inside_code_block_of_a_non_record_file_is_not_a_source_target
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/g.md#補足\n- 検証: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/g.md#例\n- 検証: unit\n\nStatement2.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/g.md#補足\n- verification: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- kind: ubiquitous\n- source: docs/decision/records/g.md#例\n- verification: unit\n\nStatement2.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -753,7 +753,7 @@ fn req_058_hidden_directory_under_records_is_not_a_source_target() {
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/.old/records.md#A1\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/.old/records.md#A1\n- verification: unit\n\nStatement.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -814,9 +814,9 @@ fn req_040_gherkin_code_block_doc_ref_is_not_checked() {
     fs::write(
         tmp.path().join("docs/ir/a.md"),
         concat!(
-            "# Title\n\nScope.\n\n## 要求\n\n",
-            "### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n",
-            "## 具体例\n\n",
+            "# Title\n\nScope.\n\n## Requirements\n\n",
+            "### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n\n",
+            "## Examples\n\n",
             "```gherkin\n",
             "@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\n",
             "Scenario: Test with doc ref\n",
@@ -1089,7 +1089,7 @@ fn tbl_012_file_with_decision_sections_is_a_records_file() {
     ).unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/no-numbers.md#A1\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/no-numbers.md#A1\n- verification: unit\n\nStatement.\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -1112,7 +1112,7 @@ fn tbl_012_file_without_decision_sections_matches_headings() {
     ).unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/notes.md#Overview\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/notes.md#Overview\n- verification: unit\n\nStatement.\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -1144,7 +1144,7 @@ fn req_061_subheading_does_not_end_a_section() {
     ).unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A2\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A2\n- verification: unit\n\nStatement.\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -1158,16 +1158,16 @@ fn req_061_subheading_does_not_end_a_section() {
 fn req_115_source_invalid_line_is_the_source_line() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
-    // 項目の出典が無効な場合、line は "- 出典:" の行
+    // 項目の出典が無効な場合、line は "- source:" の行
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: somewhere/bad.md#X\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: somewhere/bad.md#X\n- verification: unit\n\nStatement.\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
     assert!(!si.is_empty(), "should have source_invalid");
-    // line は出典の行（10行目: "- 出典: somewhere/bad.md#X"）
+    // line は出典の行（10行目: "- source: somewhere/bad.md#X"）
     assert_eq!(si[0]["line"], 10, "source_invalid line should be the source line (10), got {:?}", si[0]);
 }
 
@@ -1179,7 +1179,7 @@ fn req_115_decision_table_source_invalid_line_is_the_source_line_not_another_fie
     // 決定表の項目に、出典より前に別の行（種類）を持たせる
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 決定表\n\n### TBL-001: T\n\n- 種類: foo\n- 出典: somewhere/bad.md#X\n\n| a | b |\n|---|---|\n| 1 | 2 |\n",
+        "# Title\n\nScope.\n\n## Decision tables\n\n### TBL-001: T\n\n- kind: foo\n- source: somewhere/bad.md#X\n\n| a | b |\n|---|---|\n| 1 | 2 |\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -1197,7 +1197,7 @@ fn req_115_property_source_invalid_line_is_the_source_line_not_another_field() {
     // 性質の項目に、出典より前に別の行（種類）を持たせる
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 性質\n\n### PROP-001: P\n\n- 種類: foo\n- 出典: somewhere/bad.md#X\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Properties\n\n### PROP-001: P\n\n- kind: foo\n- source: somewhere/bad.md#X\n\nStatement.\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -1214,7 +1214,7 @@ fn req_115_flag_entry_source_invalid_line_is_the_source_line_not_another_field()
     // 問題の記録の項目に、出典より前に別の行（種類）を持たせる
     fs::write(
         tmp.path().join("docs/ir/FLAGS.md"),
-        "# 問題の記録\n\n## 問題の記録\n\n### FLAG-001: Issue\n\n- 種類: gap\n- 出典: somewhere/bad.md#X\n- 関係: REQ-001\n\nBody.\n",
+        "# 問題の記録\n\n## Flags\n\n### FLAG-001: Issue\n\n- kind: gap\n- source: somewhere/bad.md#X\n- related: REQ-001\n\nBody.\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -1231,11 +1231,11 @@ fn req_064_backtick_content_is_trimmed() {
     make_project_with_records(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| IR | 仕様 | docs/decision/records/records.md#A1 |\n",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| IR | 仕様 | docs/decision/records/records.md#A1 |\n",
     ).unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n` IR `は用語集にある。\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n` IR `は用語集にある。\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -1252,11 +1252,11 @@ fn req_064_empty_backticks_are_unknown_term() {
     make_project_with_records(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| IR | 仕様 | docs/decision/records/records.md#A1 |\n",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| IR | 仕様 | docs/decision/records/records.md#A1 |\n",
     ).unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nSee `` here.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nSee `` here.\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -1273,11 +1273,11 @@ fn req_116_odd_backticks_skip_terms_but_check_vague_words() {
     make_project_with_records(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| IR | 仕様 | docs/decision/records/records.md#A1 |\n",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| IR | 仕様 | docs/decision/records/records.md#A1 |\n",
     ).unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n`奇数のバッククォート 適切に処理する。\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n`奇数のバッククォート 適切に処理する。\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -1297,12 +1297,12 @@ fn tbl_008_unclosed_backtick_detail_keeps_leading_indentation() {
     make_project_with_records(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n",
     )
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n  `不完全な引用\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n  `不完全な引用\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -1327,7 +1327,7 @@ fn req_067_overlapping_vague_words_longest_match_once() {
     ).unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nなどの操作をする。\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nなどの操作をする。\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -1443,15 +1443,15 @@ fn tbl_014_bare_dot_md_with_nothing_before_it_is_not_a_reference() {
 fn req_117_second_table_is_not_glossary() {
     // 用語集の2つ目の表は用語にならない
     let content = "\
-# 用語集
+# Glossary
 
-| 用語 | 意味 | 出典 |
+| Term | Meaning | Source |
 |---|---|---|
 | テスト | 意味 | brainstorm/records.md#A1 |
 
 Some text.
 
-| 用語 | 意味 | 出典 |
+| Term | Meaning | Source |
 |---|---|---|
 | 二番目 | 意味2 | brainstorm/records.md#A1 |
 ";
@@ -1470,7 +1470,7 @@ Some text.
 fn req_117_glossary_without_proper_table_is_invalid() {
     // 用語集にヘッダの列名が違う表しかない → glossary_invalid
     let content = "\
-# 用語集
+# Glossary
 
 | Name | Meaning | Source |
 |---|---|---|
@@ -1545,7 +1545,7 @@ fn tbl_012_records_file_headings_are_not_sources() {
     ).unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/notes.md#Background\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/notes.md#Background\n- verification: unit\n\nStatement.\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -1579,7 +1579,7 @@ fn req_033_file_symlink_in_records_dir_is_read() {
     symlink(tmp.path().join("elsewhere/more.md"), tmp.path().join("docs/decision/records/more.md")).unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/more.md#A7\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/more.md#A7\n- verification: unit\n\nStatement.\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -1591,7 +1591,7 @@ fn req_033_file_symlink_in_records_dir_is_read() {
 #[test]
 fn req_117_glossary_header_without_rows_is_valid() {
     // ヘッダと区切りの行があれば表は「ある」（A148）
-    let content = "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n";
+    let content = "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n";
     let doc = kotowari_core::ir::parse_document("CONTEXT.md", content).unwrap();
     let config = kotowari_core::config::Config::default();
     let findings = kotowari_core::ir::check_documents(&[doc], &config);
@@ -1609,7 +1609,7 @@ fn req_111_bom_in_config_records_adr_and_tests_is_skipped_end_to_end() {
     fs::write(tmp.path().join("docs/decision/adr/0001-test.md"), format!("{bom}# ADR 0001\n\n## 状況\n\nx\n")).unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        format!("{bom}# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1, docs/decision/adr/0001-test.md#状況\n- 検証: unit\n\nStatement.\n"),
+        format!("{bom}# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1, docs/decision/adr/0001-test.md#状況\n- verification: unit\n\nStatement.\n"),
     ).unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(tmp.path().join("tests/t.rs"), format!("{bom}// @kotowari[REQ-001]\n#[test]\nfn t() {{}}\n")).unwrap();
@@ -1639,7 +1639,7 @@ fn req_058_records_place_dot_resolves_a_source_at_the_base_root() {
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: records.md#A1\n- 検証: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- 種類: ubiquitous\n- 出典: records.md#A99\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: records.md#A1\n- verification: unit\n\nStatement.\n\n### REQ-002: Test2\n\n- kind: ubiquitous\n- source: records.md#A99\n- verification: unit\n\nStatement.\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -1656,11 +1656,11 @@ fn write_ir(tmp: &std::path::Path, relative: &str, content: &str) {
 }
 
 fn glossary(term: &str) -> String {
-    format!("# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| {term} | 意味 | docs/decision/records/records.md#A1 |\n")
+    format!("# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| {term} | 意味 | docs/decision/records/records.md#A1 |\n")
 }
 
 fn term_statement(id: &str, statement: &str) -> String {
-    format!("# Title\n\nScope.\n\n## 要求\n\n### {id}: Name\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n\n{statement}\n")
+    format!("# Title\n\nScope.\n\n## Requirements\n\n### {id}: Name\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n\n{statement}\n")
 }
 
 // @kotowari[REQ-core-064]
@@ -1713,7 +1713,7 @@ fn req_123_duplicate_across_the_chain_is_reported_on_the_deeper_row() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_ir(tmp.path(), "CONTEXT.md", &glossary("宛先"));
-    write_ir(tmp.path(), "network/CONTEXT.md", "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| 宛先 | 意味 | |\n| 宛先 | 意味 | invalid |\n");
+    write_ir(tmp.path(), "network/CONTEXT.md", "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| 宛先 | 意味 | |\n| 宛先 | 意味 | invalid |\n");
     write_ir(tmp.path(), "network/dns/CONTEXT.md", &glossary("宛先").replace("docs/decision/records/records.md#A1", "invalid"));
     write_ir(tmp.path(), "network/dns/a.md", &term_statement("REQ-001", "`宛先`"));
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
@@ -1863,7 +1863,7 @@ fn req_117_invalid_glossary_hides_only_its_own_terms() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_ir(tmp.path(), "CONTEXT.md", &glossary("根"));
-    write_ir(tmp.path(), "network/CONTEXT.md", &glossary("網").replace("| 用語 | 意味 | 出典 |", "| Name | Meaning | Source |"));
+    write_ir(tmp.path(), "network/CONTEXT.md", &glossary("網").replace("| Term | Meaning | Source |", "| Name | Meaning | Source |"));
     write_ir(tmp.path(), "network/a.md", &term_statement("REQ-001", "`根` `網`"));
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
     let invalid = findings_by_kind(&result, "glossary_invalid");
@@ -1887,7 +1887,7 @@ fn req_062_source_content_is_not_matched_against_the_item() {
     // REQ-core-002 の出典は存在しない決定を指すので、出典の検査が動いていることが分かる。
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: 出力の形\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n\nこの道具は JSON を出す。\n\n### REQ-002: 別の要求\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A9\n- 検証: review\n\nこの道具は文書を読む。\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: 出力の形\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n\nこの道具は JSON を出す。\n\n### REQ-002: 別の要求\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A9\n- verification: review\n\nこの道具は文書を読む。\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -1911,13 +1911,13 @@ fn req_068_unquoted_term_gets_no_finding_on_its_line() {
     make_project_with_records(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| 指摘 | 検査で見つけた1件 | docs/decision/records/records.md#A1 |\n",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| 指摘 | 検査で見つけた1件 | docs/decision/records/records.md#A1 |\n",
     )
     .unwrap();
     // 13行目の文は、用語集にある「指摘」をバッククォートで囲まずに書いている
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nこの道具は指摘を出す。\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nこの道具は指摘を出す。\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -2014,7 +2014,7 @@ fn req_069_md_followed_by_a_slash_is_not_a_reference() {
 
 // --- REQ-core-117、REQ-core-122: 用語集の表の選び方と4列以上の行 ---
 
-const GLOSSARY_HEADER: &str = "| 用語 | 意味 | 出典 |\n|---|---|---|\n";
+const GLOSSARY_HEADER: &str = "| Term | Meaning | Source |\n|---|---|---|\n";
 
 /// `用語集`の表の1行
 fn glossary_row(term: &str) -> String {
@@ -2027,7 +2027,7 @@ fn check_with_glossary(tmp: &std::path::Path, glossary: &str, statement: &str) -
     fs::write(tmp.join("docs/ir/CONTEXT.md"), glossary).unwrap();
     fs::write(
         tmp.join("docs/ir/a.md"),
-        format!("# Title\n\nScope.\n\n## 要求\n\n### REQ-001: Test\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n{statement}\n"),
+        format!("# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n{statement}\n"),
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp).output().unwrap();
@@ -2053,7 +2053,7 @@ fn kinds_on(v: &serde_json::Value, path: &str) -> Vec<String> {
 fn ex_core_270_the_first_table_with_the_header_is_the_glossary_table() {
     let tmp = TempDir::new().unwrap();
     let glossary = format!(
-        "# 用語集\n\n| a | b | c |\n|---|---|---|\n| x | y | z |\n\n{GLOSSARY_HEADER}{}\n{GLOSSARY_HEADER}{}",
+        "# Glossary\n\n| a | b | c |\n|---|---|---|\n| x | y | z |\n\n{GLOSSARY_HEADER}{}\n{GLOSSARY_HEADER}{}",
         glossary_row("宛先"),
         glossary_row("経路")
     );
@@ -2071,7 +2071,7 @@ fn ex_core_270_the_first_table_with_the_header_is_the_glossary_table() {
 #[test]
 fn ex_core_271_a_glossary_without_a_table_with_the_header_is_invalid() {
     let tmp = TempDir::new().unwrap();
-    let glossary = "# 用語集\n\n| a | b | c |\n|---|---|---|\n| x | y | z |\n";
+    let glossary = "# Glossary\n\n| a | b | c |\n|---|---|---|\n| x | y | z |\n";
     let (_, v) = check_with_glossary(tmp.path(), glossary, "文。");
     let invalid: Vec<_> = findings_by_kind(&v, "glossary_invalid")
         .into_iter()
@@ -2086,7 +2086,7 @@ fn ex_core_272_a_row_with_four_cells_becomes_a_term_from_its_first_three() {
     let tmp = TempDir::new().unwrap();
     // 行番号: 4つのセルの行が5行目、2つのセルの行が6行目
     let glossary = format!(
-        "# 用語集\n\n{GLOSSARY_HEADER}| 宛先 | 意味 | docs/decision/records/records.md#A1 | 余り |\n| 経路 | 意味 |\n"
+        "# Glossary\n\n{GLOSSARY_HEADER}| 宛先 | 意味 | docs/decision/records/records.md#A1 | 余り |\n| 経路 | 意味 |\n"
     );
     let (_, v) = check_with_glossary(tmp.path(), &glossary, "`宛先`を読む。");
     let on_glossary: Vec<_> = v["findings"]
@@ -2112,7 +2112,7 @@ fn ex_core_272_a_row_with_four_cells_becomes_a_term_from_its_first_three() {
 fn ex_core_279_a_table_that_did_not_become_the_glossary_table_is_dropped() {
     let tmp = TempDir::new().unwrap();
     let glossary = format!(
-        "# 用語集\n\n{GLOSSARY_HEADER}{}\n| a | b |\n|---|---|\n| x | y |\n",
+        "# Glossary\n\n{GLOSSARY_HEADER}{}\n| a | b |\n|---|---|\n| x | y |\n",
         glossary_row("宛先")
     );
     let (_, v) = check_with_glossary(tmp.path(), &glossary, "`宛先`を読む。");

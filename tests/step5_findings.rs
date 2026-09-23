@@ -144,10 +144,10 @@ fn req_031_check_reports_no_notice_outside_the_four_kinds() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 行数超過（>200行）と要求数超過（>10件）を出す
-    let mut content = String::from("# Title\n\nScope.\n\n## 要求\n\n");
+    let mut content = String::from("# Title\n\nScope.\n\n## Requirements\n\n");
     for i in 1..=12 {
         content.push_str(&format!(
-            "### REQ-{:03}: R{i}\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStmt.\n\n",
+            "### REQ-{:03}: R{i}\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStmt.\n\n",
             i
         ));
     }
@@ -213,12 +213,12 @@ fn req_028_lines_start_at_one() {
     // line 2: (空)
     // line 3: Scope.
     // line 4: (空)
-    // line 5: ## 要求
+    // line 5: ## Requirements
     // line 6: (空)
     // line 7: ### Bad Heading
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### Bad Heading\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### Bad Heading\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -237,8 +237,8 @@ fn req_024_sorted_by_path_line_kind_detail() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 複数の文書に指摘を出す
-    fs::write(tmp.path().join("docs/ir/b.md"), "# B\n\nScope.\n\n## 要求\n\n### Bad1\n").unwrap();
-    fs::write(tmp.path().join("docs/ir/a.md"), "# A\n\nScope.\n\n## 要求\n\n### Bad2\n").unwrap();
+    fs::write(tmp.path().join("docs/ir/b.md"), "# B\n\nScope.\n\n## Requirements\n\n### Bad1\n").unwrap();
+    fs::write(tmp.path().join("docs/ir/a.md"), "# A\n\nScope.\n\n## Requirements\n\n### Bad2\n").unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let findings = v["findings"].as_array().unwrap();
@@ -311,14 +311,14 @@ fn prop_003_findings_are_sorted() {
         ).unwrap();
         for i in 0..n_docs {
             let filename = format!("doc{i}.md");
-            let mut content = format!("# Title {i}\n\nScope {i}.\n\n## 要求\n\n");
+            let mut content = format!("# Title {i}\n\nScope {i}.\n\n## Requirements\n\n");
             for j in 0..n_items {
                 let id_num = i * 10 + j + 1;
                 // 解決できない出典を使い source_invalid を出す。
                 // requirement_without_test（テスト発見モジュール）と交互に
                 // 追加されるため、ソートしないと順序が壊れる。
                 content.push_str(&format!(
-                    "### REQ-{:03}: R\n\n- 種類: ubiquitous\n- 出典: nonexistent/path#X{}\n- 検証: unit\n\nStatement.\n\n",
+                    "### REQ-{:03}: R\n\n- kind: ubiquitous\n- source: nonexistent/path#X{}\n- verification: unit\n\nStatement.\n\n",
                     id_num, id_num
                 ));
             }
@@ -365,7 +365,7 @@ fn req_027_glossary_invalid_has_null_line() {
     // 用語集にヘッダの列名が違う表しかない → glossary_invalid
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| Name | Meaning | Source |\n|---|---|---|\n| test | meaning | docs/decision/records/records.md#A1 |\n",
+        "# Glossary\n\n| Name | Meaning | Source |\n|---|---|---|\n| test | meaning | docs/decision/records/records.md#A1 |\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -381,7 +381,7 @@ fn tbl_019_unclosed_code_block_line_is_the_opening_line() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n```\nunclosed\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n```\nunclosed\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -397,7 +397,7 @@ fn tbl_019_invalid_gherkin_line_and_invalid_id_lines() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\nStatement.\n\n## 具体例\n\n```gherkin\n@id=BADID @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: Test\n  Given something\nFeature: bad\n```\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n\n## Examples\n\n```gherkin\n@id=BADID @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: Test\n  Given something\nFeature: bad\n```\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -418,11 +418,11 @@ fn tbl_019_unclosed_backtick_line() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語集\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| IR | 仕様 | docs/decision/records/records.md#A1 |\n",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| IR | 仕様 | docs/decision/records/records.md#A1 |\n",
     ).unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: unit\n\n`奇数のバッククォート。\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n`奇数のバッククォート。\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -456,7 +456,7 @@ fn tbl_019_source_invalid_line_is_the_source_line() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## 要求\n\n### REQ-001: R\n\n- 種類: ubiquitous\n- 出典: somewhere/bad.md#X\n- 検証: unit\n\nStatement.\n",
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: somewhere/bad.md#X\n- verification: unit\n\nStatement.\n",
     ).unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
@@ -478,7 +478,7 @@ fn req_174_a_line_outside_the_declaration_below_a_section_heading_is_unknown_lin
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        format!("{TOPIC_HEAD}\n## 要求\n\n節の直下の素の行。\n"),
+        format!("{TOPIC_HEAD}\n## Requirements\n\n節の直下の素の行。\n"),
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -498,7 +498,7 @@ fn req_174_an_undeclared_table_or_code_block_is_also_unknown_line() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        format!("{TOPIC_HEAD}\n## 要求\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n```text\nx\n```\n"),
+        format!("{TOPIC_HEAD}\n## Requirements\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n```text\nx\n```\n"),
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -515,7 +515,7 @@ fn req_174_a_non_gherkin_code_block_under_examples_is_unknown_code_block() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        format!("{TOPIC_HEAD}\n## 具体例\n\n```text\nScenario: 例\n```\n"),
+        format!("{TOPIC_HEAD}\n## Examples\n\n```text\nScenario: 例\n```\n"),
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -534,7 +534,7 @@ fn req_174_a_glossary_title_outside_the_declared_form_is_glossary_title_invalid(
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語の一覧\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| 印 | しるし | docs/decision/records/records.md#A1 |\n",
+        "# 用語の一覧\n\n| Term | Meaning | Source |\n|---|---|---|\n| 印 | しるし | docs/decision/records/records.md#A1 |\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -553,17 +553,17 @@ fn ex_core_266_the_three_places_outside_the_declaration_each_become_an_error() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        format!("{TOPIC_HEAD}\n## 要求\n\n節の直下の素の行。\n"),
+        format!("{TOPIC_HEAD}\n## Requirements\n\n節の直下の素の行。\n"),
     )
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/b.md"),
-        format!("{TOPIC_HEAD}\n## 具体例\n\n```text\nScenario: 例\n```\n"),
+        format!("{TOPIC_HEAD}\n## Examples\n\n```text\nScenario: 例\n```\n"),
     )
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/CONTEXT.md"),
-        "# 用語の一覧\n\n| 用語 | 意味 | 出典 |\n|---|---|---|\n| 印 | しるし | docs/decision/records/records.md#A1 |\n",
+        "# 用語の一覧\n\n| Term | Meaning | Source |\n|---|---|---|\n| 印 | しるし | docs/decision/records/records.md#A1 |\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -585,15 +585,15 @@ fn ex_core_266_the_three_places_outside_the_declaration_each_become_an_error() {
 fn ex_core_269_a_document_with_a_form_finding_still_takes_the_cross_document_checks() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    // a.md の要求は "- 検証:" の行を欠き、その ID が b.md の要求と重なる
+    // a.md の要求は "- verification:" の行を欠き、その ID が b.md の要求と重なる
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        format!("{TOPIC_HEAD}\n## 要求\n\n### REQ-001: 前\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n\n文。\n"),
+        format!("{TOPIC_HEAD}\n## Requirements\n\n### REQ-001: 前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n\n文。\n"),
     )
     .unwrap();
     fs::write(
         tmp.path().join("docs/ir/b.md"),
-        format!("{TOPIC_HEAD}\n## 要求\n\n### REQ-001: 後\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n- 検証: review\n- 確かめ方: 見る\n\n文。\n"),
+        format!("{TOPIC_HEAD}\n## Requirements\n\n### REQ-001: 後\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n- how_to_verify: 見る\n\n文。\n"),
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -614,7 +614,7 @@ fn ex_core_264_moving_the_schema_files_away_does_not_change_the_output() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        format!("{TOPIC_HEAD}\n## 要求\n\n### REQ-001: 例\n\n- 種類: ubiquitous\n- 出典: docs/decision/records/records.md#A1\n\n文。\n"),
+        format!("{TOPIC_HEAD}\n## Requirements\n\n### REQ-001: 例\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n\n文。\n"),
     )
     .unwrap();
     // スキーマのファイルの置き場。中身は読まれないので、読めない形にしておく
