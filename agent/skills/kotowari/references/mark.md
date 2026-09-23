@@ -48,7 +48,7 @@ Lines that belong to the block:
 | A Rust attribute line (`#[...]`), all lines of a multi-line attribute | Yes, may come between comment lines |
 | A Python decorator line (`@...`), all lines of a multi-line decorator | Yes, may come between comment lines |
 | A line with code and a comment (`setup(); // note`) | No, it ends the block |
-| A blank line (empty or only whitespace) | No, it ends the block. A blank line in the middle of a multi-line comment, attribute or decorator does not end it |
+| A blank line | No, it ends the block. A line of only whitespace in the middle of a multi-line comment, attribute or decorator does not end it |
 
 In other languages only comment-only lines may form the block. Within the block, marks are read only from the text of comments: a mark inside an attribute or a decorator (such as the string of `#[doc = "@kotowari[REQ-001]"]`) is not read, and raises neither invalid_marker nor unresolved_reference. A mark at the start of a function body does not bind; move it above the test.
 
