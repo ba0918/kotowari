@@ -15,10 +15,10 @@
 ### REQ-core-086: 印の無いテスト
 
 - kind: event_driven
-- source: docs/decision/records/records.md#A21, docs/decision/records/records.md#A24, docs/decision/records/ir-form.md#検査の種類
+- source: docs/decision/records/records.md#A21, docs/decision/records/records.md#A24, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-24-multi-language-tests.md#A31, docs/decision/records/2026-09-24-multi-language-tests.md#A42
 - verification: unit
 
-`問い合わせのある言語`の`テスト`に`印`が無いとき、kotowari はその関数の名前を detail にして test_without_id の`誤り`を出す。
+`問い合わせのある言語`の`テスト`に`印`が無いとき、kotowari はその`テスト`の名前を detail にして test_without_id の`誤り`を出す。名前が null なら、`テスト`の節の最初の行の全体の文字から前後の空白を除いたものを detail にする。
 
 ### REQ-core-087: 問い合わせの無い言語の対応
 
@@ -74,9 +74,9 @@ Scenario: review の要求だけの具体例には求めない
   When "kotowari check" を実行する
   Then scenario_without_test の誤りは出ない
 
-@id=EX-core-124 @about=REQ-core-087 @source=docs/decision/records/2026-09-17-scenario-tests.md#A10,docs/decision/records/2026-09-17-scenario-tests.md#A6,docs/decision/records/records.md#A24,docs/decision/records/records.md#A39,docs/decision/records/records.md#A36,docs/decision/records/records.md#A47
+@id=EX-core-124 @about=REQ-core-087 @source=docs/decision/records/2026-09-17-scenario-tests.md#A10,docs/decision/records/2026-09-17-scenario-tests.md#A6,docs/decision/records/records.md#A24,docs/decision/records/records.md#A39,docs/decision/records/records.md#A36,docs/decision/records/records.md#A47,docs/decision/records/2026-09-24-multi-language-tests.md#A7,docs/decision/records/2026-09-24-multi-language-tests.md#A8
 Scenario: 問い合わせの無い言語のファイルの具体例の印も数える
-  Given "tests.files" が "tests/**/*.py" を含み、"docs/ir/a.md" に検証が "unit" の "REQ-001" と "@id=EX-201 @about=REQ-001" のシナリオがあり、"tests/a.py" が "@kotowari[EX-201]" を含み、Rust のテストには "EX-201" を含む印が無い
+  Given "tests.files" が "tests/**/*.go" を含み、"docs/ir/a.md" に検証が "unit" の "REQ-001" と "@id=EX-201 @about=REQ-001" のシナリオがあり、"tests/a.go" が "@kotowari[EX-201]" を含み、".go" の`問い合わせ`は無く、Rust のテストには "EX-201" を含む印が無い
   When "kotowari check" を実行する
   Then "EX-201" を detail にする scenario_without_test の誤りは出ない
 
@@ -85,4 +85,10 @@ Scenario: 要求を挙げない具体例には求めない
   Given "docs/ir/a.md" に "TBL-001" の決定表と "@id=EX-203 @about=TBL-001" のシナリオがあり、"EX-203" を含む印がどのテストにも無い
   When "kotowari check" を実行する
   Then scenario_without_test の誤りは出ない
+
+@id=EX-core-310 @about=REQ-core-086 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A31,docs/decision/records/2026-09-24-multi-language-tests.md#A13
+Scenario: 名前の無いテストは最初の行を detail にする
+  Given "tests.files" が "tests/**/*.ts" を含み、"tests.rules" の "language: typescript" のルールが "bench($$$)" に当たり "$NAME" を捕まえず、"tests/a.test.ts" に印の無い "  bench(caseName, () => {" で始まる呼び出しがある
+  When "kotowari check" を実行する
+  Then detail が "bench(caseName, () => {" の test_without_id の誤りが1件出る
 ```

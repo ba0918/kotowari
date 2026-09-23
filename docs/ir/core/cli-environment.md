@@ -39,14 +39,6 @@ kotowari は常に、Linux と macOS を対象にする。Windows ではパス�
 
 kotowari は、`除外`に列挙していない入力を、`停止`も`指摘`もせずに読み飛ばしてはならない。
 
-### REQ-core-121: 設定で問い合わせを足せない
-
-- kind: prohibition
-- source: docs/decision/records/records.md#A128, docs/decision/records/records.md#A39, docs/decision/records/records.md#A58, docs/decision/records/records.md#A24, docs/decision/adr/0002-tree-sitter.md#理由, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4, docs/decision/records/2026-09-17-check-reach.md#A22
-- verification: unit
-
-kotowari は、`設定ファイル`で`問い合わせ`を足すことをしてはならない。Rust 以外の言語の`問い合わせ`は kotowari に`問い合わせ`のファイルを足すことで後から足す。
-
 ### REQ-core-175: 置き換えで増える停止の境界
 
 - kind: event_driven

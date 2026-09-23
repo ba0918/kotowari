@@ -81,7 +81,7 @@ kotowari は常に、"kotowari check" の JSON の最上位の "tests" に、読
 
 ### TBL-core-021: "tests" の中身
 
-- source: docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-check-reach.md#A14, docs/decision/records/2026-09-17-check-reach.md#A19, docs/decision/records/2026-09-17-check-reach.md#A20, docs/decision/records/2026-09-17-check-reach.md#A26, docs/decision/records/records.md#A128, docs/decision/records/records.md#A165
+- source: docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-check-reach.md#A14, docs/decision/records/2026-09-17-check-reach.md#A19, docs/decision/records/2026-09-17-check-reach.md#A20, docs/decision/records/2026-09-17-check-reach.md#A26, docs/decision/records/records.md#A128, docs/decision/records/records.md#A165, docs/decision/records/2026-09-24-multi-language-tests.md#A24, docs/decision/records/2026-09-24-multi-language-tests.md#A8, docs/decision/records/2026-09-24-multi-language-tests.md#A21, docs/decision/records/2026-09-24-multi-language-tests.md#A47
 
 "tests" はオブジェクトで、鍵は読んだテストのファイルの拡張子、値は "files" と "query" の2つの鍵を持つオブジェクト。テストのファイルが0件なら "tests" は空のオブジェクト。
 
@@ -89,7 +89,7 @@ kotowari は常に、"kotowari check" の JSON の最上位の "tests" に、読
 |---|---|---|---|
 | "tests" の直下 | 拡張子 | "files" と "query" を持つオブジェクト | 読んだテストのファイルの拡張子ごとに1つ。拡張子はファイル名の最後の "." より後ろの文字で、"." を含めない。先頭の "." だけの名前（".rs"）と "." の無い名前は拡張子なし、"foo." の拡張子は空で、いずれも鍵は空文字列。大文字小文字を区別する。並びはバイト順。ファイルはパスごとに1回数え、複数の glob に当たっても1回、シンボリックリンクと実体は別のパスとして数える。glob に当たっても読まないもの（`除外`）は数えない |
 | 拡張子の値の中 | files | その拡張子の読んだテストのファイルの数 | unparsable_file を出したファイルも数える |
-| 拡張子の値の中 | query | その拡張子が`問い合わせのある言語`なら true、そうでなければ false | 第1版では "rs" だけが true |
+| 拡張子の値の中 | query | その拡張子から決まる言語が`問い合わせのある言語`なら true、そうでなければ false | 同梱の問い合わせだけなら "rs"、"ts"、"mts"、"cts"、"tsx"、"js"、"jsx"、"mjs"、"cjs"、"py"、"py3"、"pyi"、"bzl"、"bazel"、"php" が true |
 
 ## Properties
 
@@ -120,11 +120,11 @@ Scenario: 題名の無い文書を文字で出す
   When "kotowari check --format text" を実行する
   Then "docs/ir/a.md:- [error] missing_title a.md" の行が出る
 
-@id=EX-core-035 @about=REQ-core-128,TBL-core-021 @source=docs/decision/records/2026-09-17-check-reach.md#A8,docs/decision/records/2026-09-17-check-reach.md#A14,docs/decision/records/2026-09-17-check-reach.md#A19,docs/decision/records/records.md#A128
+@id=EX-core-035 @about=REQ-core-128,TBL-core-021 @source=docs/decision/records/2026-09-17-check-reach.md#A8,docs/decision/records/2026-09-17-check-reach.md#A14,docs/decision/records/2026-09-17-check-reach.md#A19,docs/decision/records/records.md#A128,docs/decision/records/2026-09-24-multi-language-tests.md#A7,docs/decision/records/2026-09-24-multi-language-tests.md#A24
 Scenario: 問い合わせの無い言語のテストのファイルは query が false で申告される
-  Given "tests.files" の glob に ".rs" のファイルが2つと ".py" のファイルが1つ当たる
+  Given "tests.files" の glob に ".rs" のファイルが2つと ".go" のファイルが1つ当たり、".go" の`問い合わせ`は無い
   When "kotowari check" を実行する
-  Then JSON の "tests" は "rs" が "files" 2 と "query" true、"py" が "files" 1 と "query" false になる
+  Then JSON の "tests" は "rs" が "files" 2 と "query" true、"go" が "files" 1 と "query" false になる
 
 @id=EX-core-038 @about=REQ-core-128,PROP-core-004 @source=docs/decision/records/2026-09-17-check-reach.md#A14,docs/decision/records/2026-09-17-check-reach.md#A15
 Scenario: 読めないテストのファイルも数に入る

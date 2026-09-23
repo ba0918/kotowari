@@ -47,7 +47,7 @@ kotowari は常に、"kotowari list" の "--format" の値として "json" と "
 
 ### TBL-core-026: 項目の鍵
 
-- source: docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18, docs/decision/records/2026-09-19-read-commands.md#A22, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-19-read-commands.md#A26, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-23-ir-english-tokens.md#A8, docs/decision/records/2026-09-24-review6-gaps.md#A1
+- source: docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18, docs/decision/records/2026-09-19-read-commands.md#A22, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-19-read-commands.md#A26, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-23-ir-english-tokens.md#A8, docs/decision/records/2026-09-24-review6-gaps.md#A1, docs/decision/records/2026-09-24-multi-language-tests.md#A13
 
 | 鍵 | 持つ種類 | 中身 |
 |---|---|---|
@@ -63,7 +63,7 @@ kotowari は常に、"kotowari list" の "--format" の値として "json" と "
 | how_to_verify | 要求 | "- how_to_verify:" の値。無ければ null |
 | relations | 問題の記録 | "- related:" の `ID` の並び |
 | sources | すべて | `出典`の並び |
-| tests | すべて | その `ID` を`印`に含む`テスト`の並び。同じ`テスト`に同じ `ID` の`印`が複数あれば、`印`の出現ごとに1件。1件は "path"（`テストのファイル`の基準のディレクトリからの相対パス）、"line"（`印`のある行）、"name"（`テスト`の関数の名前。`問い合わせの無い言語`では null） |
+| tests | すべて | その `ID` を`印`に含む`テスト`の並び。同じ`テスト`に同じ `ID` の`印`が複数あれば、`印`の出現ごとに1件。1件は "path"（`テストのファイル`の基準のディレクトリからの相対パス）、"line"（`印`のある行）、"name"（`テスト`の名前。`問い合わせの無い言語`と、名前が null の`テスト`では null） |
 
 ## Examples
 
@@ -87,11 +87,11 @@ Scenario: IR に誤りがあっても読めた項目は出る
   When "kotowari list" を実行する
   Then 終了コードは 0 で、"items" に "id" が "REQ-002"、"verification" が null の1件があり、出力に "findings" は無い
 
-@id=EX-core-247 @about=REQ-core-153,TBL-core-026 @source=docs/decision/records/2026-09-19-read-commands.md#A13
+@id=EX-core-247 @about=REQ-core-153,TBL-core-026 @source=docs/decision/records/2026-09-19-read-commands.md#A13,docs/decision/records/2026-09-24-multi-language-tests.md#A7
 Scenario: 問い合わせの無い言語のテストは名前が null
-  Given "tests/a.py" の 2 行目に印 "@kotowari[REQ-001]" がある
+  Given "tests/a.go" の 2 行目に印 "@kotowari[REQ-001]" があり、".go" の`問い合わせ`は無い
   When "kotowari list" を実行する
-  Then "REQ-001" の "tests" に "path" が "tests/a.py"、"line" が 2、"name" が null の1件がある
+  Then "REQ-001" の "tests" に "path" が "tests/a.go"、"line" が 2、"name" が null の1件がある
 
 @id=EX-core-248 @about=REQ-core-155 @source=docs/decision/records/2026-09-19-read-commands.md#A7,docs/decision/records/2026-09-19-read-commands.md#A19
 Scenario: text は1項目1行にテストの行を続ける

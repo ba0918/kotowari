@@ -87,7 +87,7 @@ kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`�
 
 ### TBL-core-004: キーと既定の値
 
-- source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/records.md#A62, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-notice.md#A5, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A16
+- source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/records.md#A62, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-notice.md#A5, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A9, docs/decision/records/2026-09-24-multi-language-tests.md#A28
 
 | キー | 値 | 既定 |
 |---|---|---|
@@ -97,6 +97,7 @@ kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`�
 | tests.files | glob の一覧 | src/\*\*/\*.rs、tests/\*\*/\*.rs |
 | tests.rust.attributes | "#[test]" に足す属性のパスの一覧 | 空の一覧 |
 | tests.rust.macros | マクロの名前の一覧 | 空の一覧 |
+| tests.rules | ast-grep のルールの YAML ファイルのパスの一覧。基準のディレクトリからの相対パスで、glob は使えない（query-rules.md） | 空の一覧 |
 | mutants.equivalents | ファイルのパス（1つの文字列）。等価の一覧を指す | 無し（鍵が無ければ等価の一覧は0件） |
 | limits.lines | 数（負の数と0は不可） | 200 |
 | limits.requirements | 数（負の数と0は不可） | 10 |
