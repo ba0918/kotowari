@@ -14,6 +14,12 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 - 工程の skill 8つと kotowari スキルは `skills/` に置き、手元へはシンボリックリンクで入れると決めた（[A7（workflow-split）](docs/decision/records/2026-09-23-workflow-split.md#A7)）。他の人へ配る仕組み（agentic-workflow のような plugin marketplace など）は決めていない
 
+### kotowari-brainstorm の照合レビューを中身に応じて段階化する
+
+- 承認の手順2の照合レビューは、IR の項目を触らない壁打ちでも毎回別の LLM を呼び、最大3回まわる。利用者が費用を払い切れない前提（[A12（workflow-split）](docs/decision/records/2026-09-23-workflow-split.md#A12)）に合わない
+- 案: 触った IR の項目の数とつながり（`git diff` と `kotowari query` で数えられる）を合図に、照合なし・主セッションが突き合わせる・別の LLM で照合する、の3段にし、決める前に理由を1行書く。段の境の件数は実測で決める
+- 品質の敵対的レビュー（Finishing 1）は既に「要求が互いに矛盾しうるときだけ」の条件付き
+
 ## 記録のみ
 
 ### ID 23: 応答しないサーバのタイムアウト経路のテスト（mds）
