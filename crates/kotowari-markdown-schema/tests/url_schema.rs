@@ -186,34 +186,6 @@ fn corrupted_cache_is_refetched_and_recovers() {
     );
 }
 
-// @kotowari[REQ-schema-011, REQ-schema-009]
-#[test]
-fn schema_fetch_times_out_and_stops() {
-    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-    let port = listener.local_addr().unwrap().port();
-    // 接続を受け付けても応答を返さず、クライアントのタイムアウトを待つ
-    thread::spawn(move || {
-        if let Ok((mut _stream, _)) = listener.accept() {
-            thread::sleep(std::time::Duration::from_secs(30));
-        }
-    });
-    let dir = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(dir.path().join(".mds")).unwrap();
-    let doc = write_file(
-        dir.path(),
-        "doc.md",
-        &format!("---\n$schema: http://127.0.0.1:{port}/schema.yaml\n---\n# T-1234: 例\n"),
-    );
-    let output = mds()
-        .current_dir(dir.path())
-        .args(["check", doc.to_str().unwrap()])
-        .output()
-        .unwrap();
-    assert_eq!(output.status.code(), Some(2));
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("schema_not_found"));
-}
-
 // @kotowari[REQ-schema-011, REQ-schema-009, EX-schema-066]
 #[test]
 fn schema_response_over_4mib_stops() {

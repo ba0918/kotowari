@@ -540,6 +540,36 @@ mod tests {
         format!("https://{user}:{password}@example.com/ir.yaml")
     }
 
+    /// 接続を受けても `hold` の間は何も返さず、その後に閉じるサーバの URL。
+    fn silent_server(hold: Duration) -> String {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            if let Ok((stream, _)) = listener.accept() {
+                std::thread::sleep(hold);
+                drop(stream);
+            }
+        });
+        format!("http://127.0.0.1:{port}/schema.yaml")
+    }
+
+    // @kotowari[EX-schema-067, TBL-schema-003]
+    #[test]
+    fn ex_schema_067_a_fetch_past_the_time_limit_stops() {
+        let url = silent_server(Duration::from_secs(1));
+        let started = std::time::Instant::now();
+        let stop = fetch_schema(&url, Duration::from_millis(50)).unwrap_err();
+        assert_eq!(stop.kind, "schema_not_found", "{}", stop.detail);
+        // サーバが閉じるより前に、時間の上限で止まる
+        assert!(started.elapsed() < Duration::from_millis(500), "{:?}", started.elapsed());
+    }
+
+    // @kotowari[TBL-schema-003]
+    #[test]
+    fn the_cli_limits_a_schema_fetch_to_ten_seconds() {
+        assert_eq!(SCHEMA_FETCH_TIMEOUT, Duration::from_secs(10));
+    }
+
     // @kotowari[REQ-schema-052]
     #[test]
     fn userinfo_in_a_url_is_hidden_before_it_reaches_a_message() {
