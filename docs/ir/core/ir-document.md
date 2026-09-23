@@ -70,9 +70,9 @@ kotowari は常に、`コードブロック`の中を検査の対象から外す
 ### REQ-core-041: 範囲の中身と責務の分離を見ない
 
 - kind: prohibition
-- source: docs/decision/records/records.md#A17, docs/decision/records/records.md#A30
+- source: docs/decision/records/records.md#A17, docs/decision/records/records.md#A30, docs/decision/records/2026-09-24-kotowari-dir.md#A2
 - verification: review
-- how_to_verify: `.mds/schemas/ir.yaml` が範囲の文に出現回数の下限だけを宣言していることと、`crates/kotowari-core/src/ir.rs` の `check_documents` が scope_lines の中身と行数を検査しないことを確認
+- how_to_verify: `.kotowari/schemas/ir.yaml` が範囲の文に出現回数の下限だけを宣言していることと、`crates/kotowari-core/src/ir.rs` の `check_documents` が scope_lines の中身と行数を検査しないことを確認
 
 kotowari は、`文書が扱う範囲`の中身と行数を検査すること、文書の責務の分離を判定することをしてはならない。
 
