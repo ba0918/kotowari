@@ -899,6 +899,31 @@ fn tbl_016_marks_bind_only_to_the_first_macro_function_on_the_line() {
     assert_eq!(twi[0]["detail"], "b");
 }
 
+// @kotowari[REQ-core-075, TBL-core-016, TBL-core-017]
+#[test]
+fn tbl_016_macro_function_before_a_normal_test_on_the_line_takes_the_marks() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "tests:\n  rust:\n    macros:\n      - my_macro\n",
+    )
+    .unwrap();
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    // マクロの中の関数が同じ行の普通のテストより前に始まるので、印はマクロの中の関数に付く
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-001]\nmy_macro! { #[allow(dead_code)] fn b() {} } #[test] fn a() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert_eq!(twi.len(), 1, "{v}");
+    assert_eq!(twi[0]["detail"], "a");
+}
+
 // @kotowari[REQ-core-082, TBL-core-017]
 #[test]
 fn tbl_017_macro_not_in_the_configuration_is_not_reread() {

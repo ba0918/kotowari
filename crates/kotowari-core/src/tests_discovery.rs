@@ -197,7 +197,7 @@ pub fn discover_tests(
         ));
     }
     if lang == SupportLang::Rust {
-        discover_macro_tests(&root, content, file_rel, config, &mut tests);
+        discover_macro_tests(&root, content, &lines, file_rel, config, &mut tests);
     }
     tests.sort_by_key(|(start, _)| *start);
     Ok(unbind_later_tests_on_the_same_line(tests))
@@ -229,6 +229,7 @@ fn line_text(content: &str, line: usize) -> String {
 fn discover_macro_tests(
     node: &RustNode<'_>,
     source: &str,
+    lines: &LineMap<'_>,
     file_rel: &str,
     config: &Config,
     tests: &mut Vec<(usize, DiscoveredTest)>,
@@ -237,10 +238,10 @@ fn discover_macro_tests(
         match child.kind().as_ref() {
             "macro_invocation" => {
                 if is_configured_macro(&child, config) {
-                    reparse_macro_body(&child, source, file_rel, tests);
+                    reparse_macro_body(&child, source, lines, file_rel, tests);
                 }
             }
-            _ => discover_macro_tests(&child, source, file_rel, config, tests),
+            _ => discover_macro_tests(&child, source, lines, file_rel, config, tests),
         }
     }
 }
@@ -263,6 +264,7 @@ fn is_configured_macro(node: &RustNode<'_>, config: &Config) -> bool {
 fn reparse_macro_body(
     node: &RustNode<'_>,
     source: &str,
+    lines: &LineMap<'_>,
     file_rel: &str,
     tests: &mut Vec<(usize, DiscoveredTest)>,
 ) {
@@ -286,7 +288,7 @@ fn reparse_macro_body(
     collect_macro_functions(
         &inner_root.root(),
         inner,
-        &inner_lines,
+        (lines, &inner_lines),
         file_rel,
         (byte_offset, line_offset),
         tests,
@@ -297,7 +299,7 @@ fn reparse_macro_body(
 fn collect_macro_functions(
     node: &RustNode<'_>,
     inner: &str,
-    inner_lines: &LineMap<'_>,
+    (lines, inner_lines): (&LineMap<'_>, &LineMap<'_>),
     file_rel: &str,
     (byte_offset, line_offset): (usize, usize),
     tests: &mut Vec<(usize, DiscoveredTest)>,
@@ -305,29 +307,38 @@ fn collect_macro_functions(
     for child in node.children() {
         if child.kind() != "function_item" {
             let offset = (byte_offset, line_offset);
-            collect_macro_functions(&child, inner, inner_lines, file_rel, offset, tests);
+            let line_maps = (lines, inner_lines);
+            collect_macro_functions(&child, inner, line_maps, file_rel, offset, tests);
             continue;
         }
         let Some(name_node) = child.field("name") else {
             continue;
         };
         let first_line = child.start_pos().line();
-        // A26: マクロの外と同じ行の規則で結び付ける
-        let (ids, invalid) = inner_lines.markers_before(first_line);
+        // A26: マクロの外と同じ行の規則で結び付ける。中身の最初の行はマクロの "{" と同じ行なので、
+        // その上の行はマクロの外にあり、ファイルの行で塊を探す
+        let (marker_ids, invalid_markers) = if first_line == 0 {
+            lines.markers_before(line_offset)
+        } else {
+            let (ids, invalid) = inner_lines.markers_before(first_line);
+            (
+                ids.into_iter()
+                    .map(|(id, ln)| (id, line_offset + ln))
+                    .collect(),
+                invalid
+                    .into_iter()
+                    .map(|(ln, raw)| (line_offset + ln, raw))
+                    .collect(),
+            )
+        };
         let test = DiscoveredTest {
             // A38: 名前は関数の名前
             name: Some(name_node.text().to_string()),
             first_line_text: line_text(inner, first_line),
             file_path: file_rel.to_string(),
             line: line_offset + first_line + 1,
-            marker_ids: ids
-                .into_iter()
-                .map(|(id, ln)| (id, line_offset + ln))
-                .collect(),
-            invalid_markers: invalid
-                .into_iter()
-                .map(|(ln, raw)| (line_offset + ln, raw))
-                .collect(),
+            marker_ids,
+            invalid_markers,
         };
         tests.push((byte_offset + child.range().start, test));
     }
