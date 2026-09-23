@@ -13,8 +13,9 @@ not per step.
 
 In: the worktree path, the plan path, and the branch; work only inside that worktree. Out:
 commits on that branch. A plan step names the
-specification sections it rests on; read those sections and whatever else in the repository the
-step needs. Nothing else is handed to you — the repository is the context.
+requirements it rests on as `<document path>#REQ-nnn` (read them as **Requirements and kotowari
+check** below says), or, for a topic with no IR, the specification sections; read those and
+whatever else in the repository the step needs. Nothing else is handed to you — the repository is the context.
 
 ## Stop only for these
 
