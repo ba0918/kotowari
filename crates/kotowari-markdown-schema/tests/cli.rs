@@ -2133,6 +2133,50 @@ fn ex_schema_048_paths_diverging_after_a_shared_level_outside_element_objects_do
     );
 }
 
+// @kotowari[EX-schema-072]
+#[test]
+fn ex_schema_072_first_title_is_matched_even_when_there_are_more() {
+    let schema = "document:\n  title:\n    pattern: \"^甲\"\n";
+    // 行番号: 題名が4行目と6行目
+    let doc = "# 乙\n\n# 甲\n";
+    let (code, json, stderr) = mds_json(schema, doc, "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    let kinds: Vec<(String, u64)> = all_findings(&json)
+        .iter()
+        .map(|f| {
+            (
+                f["kind"].as_str().unwrap().to_string(),
+                f["line"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    assert!(
+        kinds.contains(&("title_pattern_mismatch".to_string(), 4)),
+        "{json}"
+    );
+    assert!(
+        kinds.contains(&("multiple_titles".to_string(), 6)),
+        "{json}"
+    );
+}
+
+// @kotowari[EX-schema-073]
+#[test]
+fn ex_schema_073_a_root_path_named_type_in_a_named_schema_stops() {
+    let named = "name: adr\ndocument:\n  title:\n    extract: type\n";
+    let (code, _, stderr) = mds_json(named, "# 例\n", "values");
+    assert_eq!(code, Some(2), "stderr: {stderr}");
+    assert!(stderr.contains("schema_invalid"), "{stderr}");
+    let nested = "name: adr\ndocument:\n  title:\n    extract: type.title\n";
+    let (code, _, stderr) = mds_json(nested, "# 例\n", "values");
+    assert_eq!(code, Some(2), "stderr: {stderr}");
+    // "name" が無ければ "type" の鍵は衝突しない
+    let unnamed = "document:\n  title:\n    extract: type\n";
+    let (code, json, stderr) = mds_json(unnamed, "# 例\n", "values");
+    assert_eq!(code, Some(0), "stderr: {stderr}");
+    assert_eq!(json["type"], "例", "{json}");
+}
+
 // @kotowari[EX-schema-042]
 #[test]
 fn ex_schema_042_three_titles_give_two_multiple_titles_findings() {
