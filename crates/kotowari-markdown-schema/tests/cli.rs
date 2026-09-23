@@ -1363,6 +1363,96 @@ fn ex_schema_040_schema_without_reading_reads_by_paragraph() {
     );
 }
 
+/// `kotowari-mds check --format json` の指摘を、行・種類・種別の組にする。
+fn finding_shape(check_json: &serde_json::Value) -> Vec<(u64, String, String)> {
+    all_findings(check_json)
+        .iter()
+        .map(|f| {
+            (
+                f["line"].as_u64().unwrap_or(0),
+                f["kind"].as_str().unwrap_or_default().to_string(),
+                f["rule_kind"].as_str().unwrap_or_default().to_string(),
+            )
+        })
+        .collect()
+}
+
+// @kotowari[REQ-schema-058, TBL-schema-011, REQ-schema-031]
+#[test]
+fn list_nesting_and_fences_read_the_same_in_both_readings() {
+    // 一覧の行の入れ子とフェンスのコードブロックは、どちらの読み方でも同じに読む。
+    // 子の子を宣言しないので、入れ子の深さを読み違えると宣言していない行の指摘が変わる
+    let body = "document:\n  sections:\n    - name: 節\n      bullets:\n        repeat: { min: 0 }\n        extract: items\n        children:\n          bullets:\n            repeat: { min: 0 }\n      codeblock:\n        repeat: { min: 0 }\n        extract: code\n";
+    let paragraph = format!("reading: paragraph\n{body}");
+    let line = format!("reading: line\n{body}");
+    let docs = [
+        // 空白2つの字下げは子、1つは兄弟
+        "## 節\n\n- a\n  - b\n",
+        "## 節\n\n- a\n - b\n",
+        // タブは次の4の倍数の桁まで進む
+        "## 節\n\n- a\n\t- b\n",
+        "## 節\n\n- a\n  -  b\n  \t- c\n",
+        // バッククォートの囲みの情報にバッククォートがあれば囲みでない。チルダなら囲み
+        "## 節\n\n```a`b\n",
+        "## 節\n\n~~~ a`b\nx\n~~~\n",
+        // 字下げした囲みの中身は、囲みの字下げの分まで行頭の空白を除く
+        "## 節\n\n  ```\n  x\n y\n  ```\n",
+    ];
+    for doc in docs {
+        let (code_p, check_p, stderr_p) = mds_json(&paragraph, doc, "check");
+        let (code_l, check_l, stderr_l) = mds_json(&line, doc, "check");
+        assert_eq!(code_l, code_p, "{doc:?}: {stderr_p} {stderr_l}");
+        assert_eq!(
+            finding_shape(&check_l),
+            finding_shape(&check_p),
+            "{doc:?}: {check_l} / {check_p}"
+        );
+        let (_, values_p, _) = mds_json(&paragraph, doc, "values");
+        let (_, values_l, _) = mds_json(&line, doc, "values");
+        assert_eq!(values_l, values_p, "{doc:?}");
+    }
+}
+
+// @kotowari[REQ-schema-058, TBL-schema-011]
+#[test]
+fn line_reading_takes_up_to_three_leading_spaces_for_a_heading() {
+    let line = "reading: line\ndocument:\n  preamble: {}\n";
+    // 行番号: "   ## x" が4行目、"    ## y" が6行目
+    let (code, check, stderr) = mds_json(line, "   ## x\n\n    ## y\n", "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    assert_eq!(
+        finding_shape(&check),
+        vec![
+            (4, "undeclared_heading".to_string(), String::new()),
+            (6, "undeclared_line".to_string(), "statement".to_string()),
+        ],
+        "{check}"
+    );
+}
+
+// @kotowari[REQ-schema-058, TBL-schema-011, TBL-schema-007]
+#[test]
+fn line_reading_reads_thematic_breaks_as_statements_and_numbered_lines_as_ordered_lists() {
+    let line = "reading: line\ndocument:\n  preamble: {}\n";
+    // 行番号は4行目から2行おき
+    let doc = "- - -\n\n* * *\n\n-\t-\t-\n\n1. a\n";
+    let (code, check, stderr) = mds_json(line, doc, "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    let undeclared = |line: u64, rule: &str| {
+        (line, "undeclared_line".to_string(), rule.to_string())
+    };
+    assert_eq!(
+        finding_shape(&check),
+        vec![
+            undeclared(4, "statement"),
+            undeclared(6, "statement"),
+            undeclared(8, "statement"),
+            undeclared(10, "ordered_list"),
+        ],
+        "{check}"
+    );
+}
+
 // @kotowari[EX-schema-051]
 #[test]
 fn ex_schema_051_headings_are_commonmark_atx_headings_in_both_readings() {
