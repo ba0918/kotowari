@@ -2239,6 +2239,49 @@ fn ex_schema_077_a_placement_path_with_an_empty_name_stops() {
     }
 }
 
+// @kotowari[REQ-schema-024, EX-schema-079]
+#[test]
+fn ex_schema_079_strikethrough_text_in_a_heading_is_part_of_its_name() {
+    // 見出しの名前はインラインの記法を除いた文字。打ち消し線の中の文字も名前に含める
+    let schema = "document:\n  title: {}\n  sections:\n    - name: Ax\n";
+    let (code, json, stderr) = mds_json(schema, "# T\n\n## A~~x~~\n", "check");
+    assert_eq!(code, Some(0), "stderr: {stderr} json: {json}");
+}
+
+// @kotowari[REQ-schema-022, REQ-schema-062, EX-schema-080]
+#[test]
+fn ex_schema_080_a_later_title_ends_the_section_and_item_before_it() {
+    // 2つ目の題名は、それまでの節と項目を終える。後の行は項目の文に入らない
+    let schema = "document:\n  title: {}\n  preamble:\n    statement: { repeat: { min: 0 }, extract: preamble }\n  sections:\n    - name: S\n      item:\n        extract: { path: items, of: { id: id } }\n        statement: { repeat: { min: 0 }, extract: { path: lines, value: text } }\n";
+    let doc = "# First\n\n## S\n\n### X1: one\n\nin item\n\n# Second\n\nafter title\n";
+    let (code, json, stderr) = mds_json(schema, doc, "values");
+    assert_eq!(code, Some(0), "stderr: {stderr}");
+    assert_eq!(
+        json["items"]["lines"],
+        serde_json::json!([{ "text": "in item" }]),
+        "{json}"
+    );
+}
+
+// @kotowari[TBL-schema-009, EX-schema-081]
+#[test]
+fn ex_schema_081_an_option_given_twice_stops() {
+    let dir = tempfile::tempdir().unwrap();
+    let doc = write_file(dir.path(), "doc.md", "# 題名\n");
+    let output = mds()
+        .args([
+            "check",
+            doc.to_str().unwrap(),
+            "--format",
+            "json",
+            "--format",
+            "text",
+        ])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(2));
+}
+
 // @kotowari[EX-schema-042]
 #[test]
 fn ex_schema_042_three_titles_give_two_multiple_titles_findings() {

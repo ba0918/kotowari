@@ -7,10 +7,10 @@
 ### REQ-schema-022: 題名は1つ
 
 - kind: event_driven
-- source: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-24-review2-gaps.md#A1, docs/decision/records/2026-09-24-review4-gaps.md#A1
+- source: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-24-review2-gaps.md#A1, docs/decision/records/2026-09-24-review4-gaps.md#A1, docs/decision/records/2026-09-24-review7-gaps.md#A3
 - verification: unit
 
-`スキーマ`が`題名`を宣言したとき、mds は`文書`が`題名`をちょうど1つ持つことを求め、無いときを1件の`指摘`にし、2つ以上あるときは2つ目以降の`題名`ごとに、その`題名`の行番号と`生の行`を持つ`指摘`を1件ずつ出す。`スキーマ`が`題名`に正規表現を宣言したときは、`題名`が2つ以上あっても1つ目の`題名`を照合し、合わなければその`指摘`も出す。`題名`を宣言しない`スキーマ`は`題名`を求めず、`文書`の`題名`は宣言していない見出しになる。
+`スキーマ`が`題名`を宣言したとき、mds は`文書`が`題名`をちょうど1つ持つことを求め、無いときを1件の`指摘`にし、2つ以上あるときは2つ目以降の`題名`ごとに、その`題名`の行番号と`生の行`を持つ`指摘`を1件ずつ出す。`スキーマ`が`題名`に正規表現を宣言したときは、`題名`が2つ以上あっても1つ目の`題名`を照合し、合わなければその`指摘`も出す。`題名`を宣言しない`スキーマ`は`題名`を求めず、`文書`の`題名`は宣言していない見出しになる。2つ目以降の`題名`はそれまでの`節`と`項目`を終え、その後の行は次の`節`まで`前置部`の行として読む。
 
 ### REQ-schema-023: 前置部に宣言するもの
 
@@ -23,10 +23,10 @@ mds は常に、`前置部`そのものには`抽出`の鍵を持たせず、`�
 ### REQ-schema-024: 節の名前
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A2
+- source: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-24-review7-gaps.md#A2
 - verification: unit
 
-mds は常に、`節`を見出しの文字で見分け、`スキーマ`が宣言した名前と一致しない`節`を`指摘`にする。
+mds は常に、`節`を見出しの文字（インラインの記法を除き、打ち消し線の中の文字も残した文字）で見分け、`スキーマ`が宣言した名前と一致しない`節`を`指摘`にする。
 
 ### REQ-schema-025: 項目の見出しの形
 
@@ -98,6 +98,20 @@ mds は常に、`出現回数`の下限と上限の`指摘`に、どの`規則�
 ## Examples
 
 ```gherkin
+@id=EX-schema-079 @about=REQ-schema-024 @source=docs/decision/records/2026-09-24-review7-gaps.md#A2
+Scenario: 見出しの打ち消し線の中の文字も名前に含める
+  Given "Ax" の`節`を宣言した`スキーマ`がある
+  And "A" と、打ち消し線で囲んだ "x" からなる見出しの`節`を持つ`文書`がある
+  When "kotowari-mds check" を実行する
+  Then 終了コードは 0 である
+
+@id=EX-schema-080 @about=REQ-schema-022 @source=docs/decision/records/2026-09-24-review7-gaps.md#A3
+Scenario: 2つ目の題名はそれまでの項目を終える
+  Given `項目`の`文`を`抽出`する`スキーマ`がある
+  And `項目`の`文`の後に2つ目の`題名`と、その後の行を持つ`文書`がある
+  When "kotowari-mds values --format json" を実行する
+  Then `項目`の`文`の要素は2つ目の`題名`より前の行だけである
+
 @id=EX-schema-009 @about=REQ-schema-025 @source=docs/decision/records/2026-09-21-mds-spec.md#A5
 Scenario: 形に合わない項目の見出しは誤りになる
   Given `項目`の ID の正規表現を宣言した`スキーマ`がある

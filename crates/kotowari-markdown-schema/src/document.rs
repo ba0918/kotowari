@@ -251,6 +251,10 @@ impl TreeBuilder {
                     depth: 1,
                     line,
                 });
+                // 題名はそれまでの節と項目を終える。要素の範囲（REQ-schema-062）と同じ区切り方にする
+                // （review7-gaps の A3）
+                self.current_section = None;
+                self.current_item = None;
                 self.current_stray = None;
             }
             2 => {
@@ -658,6 +662,8 @@ pub(crate) fn inline_text(children: &[Node]) -> String {
             Node::Strong(s) => out.push_str(&inline_text(&s.children)),
             Node::Link(l) => out.push_str(&inline_text(&l.children)),
             Node::LinkReference(l) => out.push_str(&inline_text(&l.children)),
+            // GFM の打ち消し線も中の文字を残す（review7-gaps の A2）
+            Node::Delete(d) => out.push_str(&inline_text(&d.children)),
             _ => {}
         }
     }

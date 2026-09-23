@@ -112,7 +112,7 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 
 ### TBL-schema-009: 停止の理由
 
-- source: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#A44, docs/decision/records/2026-09-21-mds-spec.md#A62, docs/decision/records/2026-09-22-ir-engine.md#A56, docs/decision/records/2026-09-23-ir-engine-gaps.md#A11, docs/decision/records/2026-09-23-ir-engine-gaps.md#A19, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A30, docs/decision/records/2026-09-23-ir-engine-gaps.md#A42, docs/decision/records/2026-09-23-mutants-gaps.md#A11, docs/decision/records/2026-09-24-review2-gaps.md#A2, docs/decision/records/2026-09-24-review4-gaps.md#A3, docs/decision/records/2026-09-24-review4-gaps.md#A4, docs/decision/records/2026-09-24-review4-gaps.md#A5
+- source: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#A44, docs/decision/records/2026-09-21-mds-spec.md#A62, docs/decision/records/2026-09-22-ir-engine.md#A56, docs/decision/records/2026-09-23-ir-engine-gaps.md#A11, docs/decision/records/2026-09-23-ir-engine-gaps.md#A19, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A30, docs/decision/records/2026-09-23-ir-engine-gaps.md#A42, docs/decision/records/2026-09-23-mutants-gaps.md#A11, docs/decision/records/2026-09-24-review2-gaps.md#A2, docs/decision/records/2026-09-24-review4-gaps.md#A3, docs/decision/records/2026-09-24-review4-gaps.md#A4, docs/decision/records/2026-09-24-review4-gaps.md#A5, docs/decision/records/2026-09-24-review7-gaps.md#A4
 
 | 理由 | いつ |
 |---|---|
@@ -120,7 +120,7 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 | スキーマが形に合わない | `スキーマ`の YAML が読めない、`規則種別`の形に反する、`配置パス`が衝突する（同じ置き場の中で同じパスか、一方が他方の手前の段にあたるもの。要素オブジェクトの中と、`節`の直下などの要素オブジェクトの外のどちらでも判定し、要素オブジェクトの "value" と "of" の鍵も同じ置き場のパスとして数え、"a.b" と "a.c" のように途中まで同じで先が分かれるものは衝突でない）、"reading" の値が "paragraph" と "line" のどちらでもない、`表`の規則に "header" なしで "select" を書いた、"select" の値が "first" でない、"name" を宣言した`スキーマ`で要素オブジェクトの外の`配置パス`が "type" か "type." で始まる（"ast --schema" が "name" を置く鍵と衝突する）、同じ置き場に同じ名前の`節`か`フィールド行`を2度宣言した、`表`のヘッダに同じ列の名前を2度書いた、または`配置パス`のドットで区切った名前に空のものがある |
 | frontmatter が壊れている | `frontmatter`が壊れた YAML である、YAML のマッピングでない、"$schema" の値が空か空白だけである、または "$schema" の値が文字列でない |
 | 文書が読めない | `文書`のファイルを読めない |
-| 引数の誤り | 受けない "--format" の値、知らないフラグ、または "ast" に "--format text" を与えた |
+| 引数の誤り | 受けない "--format" の値、知らないフラグ、同じオプションを2回渡した、または "ast" に "--format text" を与えた |
 
 ### TBL-schema-002: 指摘の分類
 
@@ -145,6 +145,11 @@ mds は常に、ディレクトリの検査で、名前が "." で始まるデ�
 ## Examples
 
 ```gherkin
+@id=EX-schema-081 @about=TBL-schema-009 @source=docs/decision/records/2026-09-24-review7-gaps.md#A4
+Scenario: 同じオプションを2回渡すと停止する
+  When "kotowari-mds check" に "--format" を2回渡して実行する
+  Then 終了コードは 2 である
+
 @id=EX-schema-076 @about=TBL-schema-009 @source=docs/decision/records/2026-09-24-review4-gaps.md#A3
 Scenario: 同じ名前の節やフィールド行を2度宣言したスキーマは停止する
   Given 同じ名前の`節`を2つ宣言した`スキーマ`と、`前置部`に同じ名前の`フィールド行`を2つ宣言した`スキーマ`がある
