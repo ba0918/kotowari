@@ -307,7 +307,9 @@ fn fetch_schema(url: &str, timeout: Duration) -> Result<String, Stop> {
     response
         .body_mut()
         .with_config()
-        .limit(MAX_SCHEMA_BYTES)
+        // ureq は上限ちょうどの本文でも、読み終えたかを確かめる読み取りで誤りにする。
+        // 上限ちょうどは受けるので1バイト広げる
+        .limit(MAX_SCHEMA_BYTES + 1)
         .lossy_utf8(true)
         .read_to_string()
         .map_err(|e| Stop {

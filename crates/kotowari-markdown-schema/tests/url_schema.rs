@@ -214,12 +214,12 @@ fn schema_fetch_times_out_and_stops() {
     assert!(stderr.contains("schema_not_found"));
 }
 
-// @kotowari[REQ-schema-011, REQ-schema-009]
+// @kotowari[REQ-schema-011, REQ-schema-009, EX-schema-066]
 #[test]
 fn schema_response_over_4mib_stops() {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let port = listener.local_addr().unwrap().port();
-    let body = "x".repeat(4 * 1024 * 1024 + 1000);
+    let body = "x".repeat(4 * 1024 * 1024 + 1);
     let body_len = body.len();
     thread::spawn(move || {
         if let Ok((mut stream, _)) = listener.accept() {
@@ -248,6 +248,48 @@ fn schema_response_over_4mib_stops() {
     assert_eq!(output.status.code(), Some(2));
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("schema_not_found"));
+}
+
+/// 1件の接続に `body` を返すローカル HTTP サーバの URL。
+fn serve_body_once(body: String) -> String {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = listener.local_addr().unwrap().port();
+    thread::spawn(move || {
+        if let Ok((mut stream, _)) = listener.accept() {
+            let mut buf = [0u8; 1024];
+            let _ = stream.read(&mut buf);
+            let head = format!(
+                "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+                body.len()
+            );
+            let _ = stream.write_all(head.as_bytes());
+            let _ = stream.write_all(body.as_bytes());
+            let _ = stream.flush();
+        }
+    });
+    format!("http://127.0.0.1:{port}/schema.yaml")
+}
+
+// @kotowari[EX-schema-068, TBL-schema-003]
+#[test]
+fn ex_schema_068_a_schema_of_exactly_4mib_is_used() {
+    // YAML の注釈で埋めて、応答をちょうど 4MiB にする
+    let padding = 4 * 1024 * 1024 - SCHEMA_BODY.len() - "#\n".len();
+    let url = serve_body_once(format!("{SCHEMA_BODY}#{}\n", "x".repeat(padding)));
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::create_dir_all(dir.path().join(".mds")).unwrap();
+    let doc = write_file(
+        dir.path(),
+        "doc.md",
+        &format!("---\n$schema: {url}\n---\n# T-1234: 例\n"),
+    );
+    let output = mds()
+        .current_dir(dir.path())
+        .args(["check", doc.to_str().unwrap()])
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(0), "stderr: {stderr}");
 }
 
 // @kotowari[REQ-schema-052, EX-schema-017]
