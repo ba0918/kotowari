@@ -135,6 +135,24 @@ Scenario: 例のシナリオ
 
 // --- REQ-core-156: query の読み取り ---
 
+// @kotowari[TBL-core-027, EX-core-287]
+#[test]
+fn tbl_027_an_item_citing_an_id_twice_is_one_reference() {
+    // 1つの項目が同じ ID を同じ行の種類で2回指しても、逆引きは1件
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    let doc = format!(
+        "# 題名\n\n範囲。\n\n## Requirements\n\n### REQ-001: 例\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n`REQ-002` と `REQ-002` を使う。\n\n{}",
+        requirement("REQ-002", "指される", "unit")
+    );
+    write(tmp.path(), "docs/ir/a.md", &doc);
+    let v = run_query(tmp.path(), "REQ-002");
+    assert_eq!(
+        references(only_item(&v)),
+        vec!["REQ-001 requirement text docs/ir/a.md:7".to_string()]
+    );
+}
+
 // @kotowari[REQ-core-156, REQ-core-159, TBL-core-027, EX-core-250]
 #[test]
 fn req_156_item_has_body_and_referenced_by() {

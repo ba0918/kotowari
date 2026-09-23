@@ -229,6 +229,31 @@ fn req_153_table_property_scenario_and_flag_carry_their_keys() {
     );
 }
 
+// @kotowari[TBL-core-026, EX-core-288]
+#[test]
+fn tbl_026_only_the_first_scenario_of_a_duplicated_id_counts_as_an_example() {
+    // 同じ ID のシナリオが2つあると、REQ-core-032 の1つ目だけを具体例に数える
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        concat!(
+            "# 題名\n\n範囲。\n\n",
+            "## Requirements\n\n### REQ-001: 例\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n\n文である。\n\n",
+            "### REQ-002: 例\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n\n文である。\n\n",
+            "## Examples\n\n```gherkin\n",
+            "@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\n",
+            "Scenario: 1つ目\n  Given 前提\n\n",
+            "@id=EX-001 @about=REQ-002 @source=docs/decision/records/records.md#A1\n",
+            "Scenario: 2つ目\n  Given 前提\n```\n",
+        ),
+    );
+    let v = run_list(tmp.path());
+    assert_eq!(item(&v, "REQ-001")["examples"], serde_json::json!(["EX-001"]));
+    assert_eq!(item(&v, "REQ-002")["examples"], serde_json::json!([]));
+}
+
 // @kotowari[REQ-core-153, TBL-core-026]
 #[test]
 fn req_153_examples_are_the_scenarios_about_the_item() {

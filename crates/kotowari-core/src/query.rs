@@ -102,8 +102,10 @@ fn references_to(
             let Some(listed) = by_location.get(&(path.as_str(), line)) else {
                 continue;
             };
+            // 1つの項目が同じ ID を同じ via で何度指しても1件にする（review6-gaps の A2）
+            let mut seen_vias = std::collections::BTreeSet::new();
             for reference in ir::item_references(item) {
-                if reference.id == id {
+                if reference.id == id && seen_vias.insert(reference.via.as_str()) {
                     references.push(Reference {
                         id: listed.id().to_string(),
                         kind: listed.kind(),

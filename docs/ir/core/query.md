@@ -55,18 +55,24 @@ kotowari は常に、"kotowari query" の "--format" の値として "json" と 
 
 ### TBL-core-027: query の1件の鍵
 
-- source: docs/decision/records/2026-09-20-query-status.md#A2, docs/decision/records/2026-09-20-query-status.md#A3, docs/decision/records/2026-09-20-query-status.md#A4, docs/decision/records/2026-09-20-query-status.md#A16, docs/decision/records/2026-09-23-ir-engine-gaps.md#A9, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24, docs/decision/records/2026-09-23-ir-engine-gaps.md#A34, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- source: docs/decision/records/2026-09-20-query-status.md#A2, docs/decision/records/2026-09-20-query-status.md#A3, docs/decision/records/2026-09-20-query-status.md#A4, docs/decision/records/2026-09-20-query-status.md#A16, docs/decision/records/2026-09-23-ir-engine-gaps.md#A9, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24, docs/decision/records/2026-09-23-ir-engine-gaps.md#A34, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-24-review6-gaps.md#A2
 
 | 鍵 | 持つ種類 | 中身 |
 |---|---|---|
 | `TBL-core-026` のすべての鍵 | `TBL-core-026` のとおり | `TBL-core-026` のとおり |
 | body | すべて | 本文の行の並び。`項目`は見出しの次の行から、スキーマの側が返すその`項目`の最後の行まで。最後の行は、次の、その`項目`の見出しと同じ深さかそれより浅い見出し（"### "、"## "、"# "）の前の行（無ければ文書の最後の行）で、コードブロックの中の見出しの形の行は数えず、kotowari は生の行から見出しを探さない。`シナリオ`は "@id" のタグの行から最後のステップの行まで。先頭と末尾の空の行は含めない。行の文字はそのまま |
-| referenced_by | すべて | その `ID` を指している`項目`と`シナリオ`の並び。1件は "id"、"kind"、"path"、"line"（`TBL-core-026` と同じ意味）と "via" |
+| referenced_by | すべて | その `ID` を指している`項目`と`シナリオ`の並び。1つの`項目`か`シナリオ`が同じ `ID` を同じ via で何度指しても1件にする。1件は "id"、"kind"、"path"、"line"（`TBL-core-026` と同じ意味）と "via" |
 | referenced_by の via | すべて | "definition"（"- definition:" の行）、"relations"（"- related:" の行）、"about"（"@about" のタグ）、"text"（`要求`の文、`性質`の文、`シナリオ`のステップの中の、二重引用符の外でバッククォートで囲んだ `ID`。REQ-core-054 と同じ判定）のいずれか |
 
 ## Examples
 
 ```gherkin
+@id=EX-core-287 @about=TBL-core-027 @source=docs/decision/records/2026-09-24-review6-gaps.md#A2
+Scenario: 同じ ID を2回指す項目は逆引きで1件
+  Given 文の中で "REQ-002" を2回指す "REQ-001" がある
+  When "kotowari query REQ-002" を実行する
+  Then "referenced_by" に "REQ-001" の via が "text" の件が1件だけある
+
 @id=EX-core-250 @about=REQ-core-156,REQ-core-159,TBL-core-027 @source=docs/decision/records/2026-09-20-query-status.md#A2,docs/decision/records/2026-09-20-query-status.md#A3,docs/decision/records/2026-09-20-query-status.md#A4,docs/decision/records/2026-09-20-query-status.md#A16,docs/decision/records/2026-09-20-query-status.md#A19,docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 Scenario: 1件に本文と逆引きが付く
   Given IR に名前が "例" の要求 "REQ-001" が "docs/ir/a.md" の 7 行目にあり、その下に "- kind: ubiquitous" と "- source:" と "- verification: unit" の行と文 "文。" がある
