@@ -912,6 +912,26 @@ mod tests {
         assert_eq!(by_line.end_line(3, 3), 8, "行の読み方でも同じ");
     }
 
+    // @kotowari[REQ-schema-062]
+    #[test]
+    fn end_line_is_the_last_line_when_the_document_does_not_end_with_a_break() {
+        let doc = Document::parse("## 節\n\n### A-1: a\n\n本文").unwrap();
+        assert_eq!(doc.end_line(3, 3), 5, "最後の行に区切りが無くてもその行が最後の行");
+        assert_eq!(doc.read_by_line().end_line(3, 3), 5, "行の読み方でも同じ");
+    }
+
+    // @kotowari[REQ-schema-030]
+    #[test]
+    fn a_continuation_paragraph_of_an_ordered_item_belongs_to_that_item() {
+        let doc = Document::parse("## 理由\n\n1. 順序付き\n\n   続きの段落\n").unwrap();
+        let blocks = section_blocks(&doc);
+        assert_eq!(blocks.len(), 1, "継続段落は文にならない: {blocks:?}");
+        let Block::OrderedList { continuation, .. } = &blocks[0] else {
+            panic!("順序付きの行になる: {blocks:?}");
+        };
+        assert_eq!(continuation, &vec!["続きの段落".to_string()]);
+    }
+
     // @kotowari[REQ-schema-035]
     #[test]
     fn a_lone_cr_breaks_a_line_the_same_way_as_lf_and_crlf() {
