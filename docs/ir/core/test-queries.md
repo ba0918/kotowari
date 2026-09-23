@@ -44,12 +44,13 @@ kotowari は常に、Rust、TypeScript、Tsx、JavaScript、Python、Php の`問
 
 ### TBL-core-017: Rust でテストと数えるもの
 
-- source: docs/decision/records/records.md#A26, docs/decision/records/records.md#A39, docs/decision/records/records.md#A49, docs/decision/records/records.md#A47, docs/decision/records/records.md#A121, docs/decision/records/records.md#A122, docs/decision/records/2026-09-24-multi-language-tests.md#A38
+- source: docs/decision/records/records.md#A26, docs/decision/records/records.md#A39, docs/decision/records/records.md#A49, docs/decision/records/records.md#A47, docs/decision/records/records.md#A121, docs/decision/records/records.md#A122, docs/decision/records/2026-09-24-multi-language-tests.md#A38, docs/decision/records/2026-09-24-multi-language-tests.md#A53
 
 | 対象 | 数え方 |
 |---|---|
 | 属性のパスの末尾の要素が "test" の関数（"#[test]"、"#[ test ]"、"#[core::prelude::v1::test]"、"#[tokio::test]"） | 同梱の問い合わせに固定し、常に数える |
 | tests.rust.attributes の属性の付いた関数 | 属性から "#["、"]"、引数を除いたパスが完全一致すれば数える |
+| 上の2行の関数と tests.rust.macros のマクロが、ほかの関数の本体の中にあるとき | 置き場所によらず数える |
 | tests.rust.macros のマクロ | 設定には "!" を除いた名前で書く。マクロの名前の末尾の要素が一致すれば、中身を Rust の項目として読み直し、最上位の関数ごとに数える。名前は関数の名前。印の結び付けと invalid_marker は通常の関数と同じ |
 
 ### TBL-core-032: TypeScript と JavaScript でテストと数えるもの
@@ -157,4 +158,9 @@ Scenario: 連なった each の表のテストも1つと数える
   Given "tests.files" が "tests/**/*.ts" を含み、"tests/a.test.ts" に印の無い "it.only.each([1])('each %i', (n) => {})" がある
   When "kotowari check" を実行する
   Then detail が "each %i" の test_without_id の誤りが1件だけ出る
+@id=EX-core-326 @about=REQ-core-082 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A53
+Scenario: 関数の本体の中のテストも数える
+  Given "fn helper() {" の本体の中に、印の無い "#[test]" の付いた関数 "inner" がある
+  When "kotowari check" を実行する
+  Then detail が "inner" の test_without_id の誤りが1件出る
 ```

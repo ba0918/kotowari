@@ -38,7 +38,7 @@ kotowari は常に、`印`を行のどの位置からも拾い、コメント記
 ### REQ-core-075: 印の結び付け
 
 - kind: algorithm
-- source: docs/decision/records/records.md#A26, docs/decision/records/records.md#A34, docs/decision/records/records.md#A39, docs/decision/records/records.md#A57, docs/decision/records/2026-09-24-multi-language-tests.md#A15, docs/decision/records/2026-09-24-multi-language-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A17, docs/decision/records/2026-09-24-multi-language-tests.md#A26, docs/decision/records/2026-09-24-multi-language-tests.md#A39, docs/decision/records/2026-09-24-multi-language-tests.md#A40, docs/decision/records/2026-09-24-multi-language-tests.md#A41
+- source: docs/decision/records/records.md#A26, docs/decision/records/records.md#A34, docs/decision/records/records.md#A39, docs/decision/records/records.md#A57, docs/decision/records/2026-09-24-multi-language-tests.md#A15, docs/decision/records/2026-09-24-multi-language-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A17, docs/decision/records/2026-09-24-multi-language-tests.md#A26, docs/decision/records/2026-09-24-multi-language-tests.md#A39, docs/decision/records/2026-09-24-multi-language-tests.md#A40, docs/decision/records/2026-09-24-multi-language-tests.md#A41, docs/decision/records/2026-09-24-multi-language-tests.md#A50, docs/decision/records/2026-09-24-multi-language-tests.md#A51, docs/decision/records/2026-09-24-multi-language-tests.md#A52
 - definition: TBL-core-016, TBL-core-035
 - verification: unit
 
@@ -88,20 +88,20 @@ kotowari は常に、`印`から出す unresolved_reference と invalid_marker �
 
 ### TBL-core-016: 印の結び付け（問い合わせのある言語）
 
-- source: docs/decision/records/records.md#A26, docs/decision/records/records.md#A34, docs/decision/records/records.md#A39, docs/decision/records/records.md#A57, docs/decision/records/records.md#A67, docs/decision/records/records.md#A121, docs/decision/records/2026-09-24-multi-language-tests.md#A15, docs/decision/records/2026-09-24-multi-language-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A26, docs/decision/records/2026-09-24-multi-language-tests.md#A41, docs/decision/records/2026-09-24-multi-language-tests.md#A49
+- source: docs/decision/records/records.md#A26, docs/decision/records/records.md#A34, docs/decision/records/records.md#A39, docs/decision/records/records.md#A57, docs/decision/records/records.md#A67, docs/decision/records/records.md#A121, docs/decision/records/2026-09-24-multi-language-tests.md#A15, docs/decision/records/2026-09-24-multi-language-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A26, docs/decision/records/2026-09-24-multi-language-tests.md#A41, docs/decision/records/2026-09-24-multi-language-tests.md#A49, docs/decision/records/2026-09-24-multi-language-tests.md#A52
 
 | 印の位置 | 扱い |
 |---|---|
-| テストの直前のコメントの塊 | そのテストに結び付ける |
+| テストの直前のコメントの塊 | そのテストに結び付ける。最初の行が同じテストが2つ以上あるときは、その行で最初に始まるテストにだけ結び付ける |
 | テストの節の中（関数の本体の先頭のコメントを含む）。ただし節の中にある別のテストの直前のコメントの塊は除き、1行目のとおりその別のテストに結び付ける | 無視し、invalid_marker も unresolved_reference も出さない |
 | どのテストの直前のコメントの塊にも無い | 無視し、invalid_marker も unresolved_reference も出さない |
 | "tests.rust.macros" のマクロの中の関数 | 上と同じ規則を適用する |
 
 ### TBL-core-035: コメントの塊とテストの間に挟んでよい行
 
-- source: docs/decision/records/2026-09-24-multi-language-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A17, docs/decision/records/records.md#A39, docs/decision/records/2026-09-24-multi-language-tests.md#A39, docs/decision/records/2026-09-24-multi-language-tests.md#A40
+- source: docs/decision/records/2026-09-24-multi-language-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A17, docs/decision/records/records.md#A39, docs/decision/records/2026-09-24-multi-language-tests.md#A39, docs/decision/records/2026-09-24-multi-language-tests.md#A40, docs/decision/records/2026-09-24-multi-language-tests.md#A50, docs/decision/records/2026-09-24-multi-language-tests.md#A51
 
-直前のコメントの塊は、テストの節の最初の行の直前から上に向かって、空行が来るまで続く、コメントだけの行とこの表の挟んでよい行の塊。コメントだけの行は、前後の空白を除いた行の文字がすべてコメント（tree-sitter の extra の節）の文字である行で、複数行のコメントの途中の行を含み、コードと同じ行にあるコメントの行は含まない。コメントだけの行と挟んでよい行は空行なしで混ざってよく、複数行にわたる属性とデコレータはその全部の行を挟んでよい行とする。
+直前のコメントの塊は、テストの節の最初の行の直前から上に向かって、空行が来るまで続く、コメントだけの行とこの表の挟んでよい行の塊。コメントだけの行は、前後の空白を除いた行の文字がすべてコメント（tree-sitter の extra の節）の文字である行で、複数行のコメントの途中の行を含み、コードと同じ行にあるコメントの行は含まない。コメントだけの行と挟んでよい行は空行なしで混ざってよく、複数行にわたる属性とデコレータはその全部の行を挟んでよい行とする。複数行のコメント、属性、デコレータの途中にある空白だけの行は塊を切らない。塊の行のうち、印を読むのはコメントの文字だけで、属性やデコレータの本体にある印は読まない。
 
 | 言語 | 挟んでよい行 |
 |---|---|
@@ -164,4 +164,21 @@ Scenario: コードと同じ行のコメントは塊を切る
   Given "tests.files" が "tests/**/*.ts" を含み、"tests/a.test.ts" に "// @kotowari[REQ-001]" の行、"setup(); // prepare" の行、"it('x', () => {});" の行が空行なしで続く
   When "kotowari check" を実行する
   Then detail が "x" の test_without_id の誤りが出る
+@id=EX-core-323 @about=REQ-core-075 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A50,docs/decision/records/2026-09-24-multi-language-tests.md#A40
+Scenario: 複数行のデコレータの途中の空行では塊が切れない
+  Given "tests.files" が "tests/**/*.py" を含み、"tests/test_a.py" に "# @kotowari[REQ-001]" の行、途中に空白だけの行を含む3行以上の "@pytest.mark.parametrize(" のデコレータ、"def test_x(a):" の行が続き、デコレータの外に空行は無い
+  When "kotowari check" を実行する
+  Then test_without_id の誤りは出ず、"test_x" は "REQ-001" に結び付く
+
+@id=EX-core-324 @about=REQ-core-075 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A51
+Scenario: 属性の本体の印は読まない
+  Given 文字列の値に "@kotowari[REQ-999]" を持つ "#[doc = ...]" の属性の行の直後に "#[test]" の付いた関数があり、その直前にコメントは無く、"REQ-999" は存在しない
+  When "kotowari check" を実行する
+  Then unresolved_reference の誤りは出ず、その関数に test_without_id の誤りが出る
+
+@id=EX-core-325 @about=REQ-core-075 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A52
+Scenario: 同じ行に始まるテストは最初のものだけに結び付く
+  Given "// @kotowari[REQ-001]" の行の直後の行が "#[test] fn a() {} #[test] fn b() {}" である
+  When "kotowari check" を実行する
+  Then "a" は "REQ-001" に結び付き、detail が "b" の test_without_id の誤りが1件出る
 ```
