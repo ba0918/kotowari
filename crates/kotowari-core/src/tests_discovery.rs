@@ -189,24 +189,45 @@ pub fn discover_tests(
         ParsedFile::parse(content, lang).ok_or_else(|| format!("syntax error in {file_rel}"))?;
     let root = parsed.root();
     let lines = LineMap::new(content, &root, lang);
-    let mut tests = Vec::new();
+    // `テスト`ごとの、その節が始まるバイトの位置
+    let mut tests: Vec<(usize, DiscoveredTest)> = Vec::new();
     for test in parsed.find_tests(queries, lang, file_rel) {
         let first_line = test.node.start_pos().line();
         let (marker_ids, invalid_markers) = lines.markers_before(first_line);
-        tests.push(DiscoveredTest {
-            name: test.name,
-            first_line_text: line_text(content, first_line),
-            file_path: file_rel.to_string(),
-            line: first_line + 1,
-            marker_ids,
-            invalid_markers,
-        });
+        tests.push((
+            test.node.range().start,
+            DiscoveredTest {
+                name: test.name,
+                first_line_text: line_text(content, first_line),
+                file_path: file_rel.to_string(),
+                line: first_line + 1,
+                marker_ids,
+                invalid_markers,
+            },
+        ));
     }
     if lang == SupportLang::Rust {
         discover_macro_tests(&root, content, file_rel, config, &mut tests);
     }
-    tests.sort_by_key(|t| t.line);
-    Ok(tests)
+    tests.sort_by_key(|(start, _)| *start);
+    Ok(unbind_later_tests_on_the_same_line(tests))
+}
+
+/// 最初の行が同じ`テスト`が2つ以上あるとき、印はその行で最初に始まる`テスト`にだけ結び付ける
+/// （TBL-core-016）。tests は節の始まる位置の順に並んでいる
+fn unbind_later_tests_on_the_same_line(tests: Vec<(usize, DiscoveredTest)>) -> Vec<DiscoveredTest> {
+    let mut previous_line = None;
+    tests
+        .into_iter()
+        .map(|(_, mut test)| {
+            if previous_line == Some(test.line) {
+                test.marker_ids.clear();
+                test.invalid_markers.clear();
+            }
+            previous_line = Some(test.line);
+            test
+        })
+        .collect()
 }
 
 /// 行の全体の文字から前後の空白を除いたもの（REQ-core-086 の名前が null のときの detail）
@@ -220,7 +241,7 @@ fn discover_macro_tests(
     source: &str,
     file_rel: &str,
     config: &Config,
-    tests: &mut Vec<DiscoveredTest>,
+    tests: &mut Vec<(usize, DiscoveredTest)>,
 ) {
     for child in node.children() {
         match child.kind().as_ref() {
@@ -253,7 +274,7 @@ fn reparse_macro_body(
     node: &RustNode<'_>,
     source: &str,
     file_rel: &str,
-    tests: &mut Vec<DiscoveredTest>,
+    tests: &mut Vec<(usize, DiscoveredTest)>,
 ) {
     let Some(body) = node.children().find(|c| c.kind() == "token_tree") else {
         return;
@@ -277,7 +298,7 @@ fn reparse_macro_body(
         inner,
         &inner_lines,
         file_rel,
-        line_offset,
+        (byte_offset, line_offset),
         tests,
     );
 }
@@ -288,12 +309,13 @@ fn collect_macro_functions(
     inner: &str,
     inner_lines: &LineMap<'_>,
     file_rel: &str,
-    line_offset: usize,
-    tests: &mut Vec<DiscoveredTest>,
+    (byte_offset, line_offset): (usize, usize),
+    tests: &mut Vec<(usize, DiscoveredTest)>,
 ) {
     for child in node.children() {
         if child.kind() != "function_item" {
-            collect_macro_functions(&child, inner, inner_lines, file_rel, line_offset, tests);
+            let offset = (byte_offset, line_offset);
+            collect_macro_functions(&child, inner, inner_lines, file_rel, offset, tests);
             continue;
         }
         let Some(name_node) = child.field("name") else {
@@ -302,7 +324,7 @@ fn collect_macro_functions(
         let first_line = child.start_pos().line();
         // A26: マクロの外と同じ行の規則で結び付ける
         let (ids, invalid) = inner_lines.markers_before(first_line);
-        tests.push(DiscoveredTest {
+        let test = DiscoveredTest {
             // A38: 名前は関数の名前
             name: Some(name_node.text().to_string()),
             first_line_text: line_text(inner, first_line),
@@ -316,7 +338,8 @@ fn collect_macro_functions(
                 .into_iter()
                 .map(|(ln, raw)| (line_offset + ln, raw))
                 .collect(),
-        });
+        };
+        tests.push((byte_offset + child.range().start, test));
     }
 }
 

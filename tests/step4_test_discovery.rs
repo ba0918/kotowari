@@ -826,6 +826,64 @@ fn ex_core_326_test_inside_a_function_body_is_counted() {
     assert_eq!(twi[0]["detail"], "inner");
 }
 
+// @kotowari[REQ-core-075, TBL-core-016, EX-core-325]
+#[test]
+fn ex_core_325_marks_bind_only_to_the_first_test_on_the_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "// @kotowari[REQ-001]\n#[test] fn a() {} #[test] fn b() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert_eq!(twi.len(), 1, "{v}");
+    assert_eq!(twi[0]["detail"], "b");
+    let output = cmd().arg("list").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let item = v["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|item| item["id"] == "REQ-001")
+        .unwrap();
+    let names: Vec<_> = item["tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|t| t["name"].clone())
+        .collect();
+    assert_eq!(names, vec!["a"], "{item}");
+}
+
+// @kotowari[REQ-core-075, TBL-core-016, TBL-core-017]
+#[test]
+fn tbl_016_marks_bind_only_to_the_first_macro_function_on_the_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "tests:\n  rust:\n    macros:\n      - my_macro\n",
+    )
+    .unwrap();
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "my_macro! {\n    // @kotowari[REQ-001]\n    fn a() {} fn b() {}\n}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert_eq!(twi.len(), 1, "{v}");
+    assert_eq!(twi[0]["detail"], "b");
+}
+
 // @kotowari[REQ-core-082, TBL-core-017]
 #[test]
 fn tbl_017_macro_not_in_the_configuration_is_not_reread() {
