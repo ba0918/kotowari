@@ -93,7 +93,7 @@ SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotow
 
 承認を求める直前に次を順に行う（A13、A18、A24、A25、A26、A33、A35）。この手順は工程の skill の brainstorm の側が持ち（[A11（工程の分離）](../decision/records/2026-09-23-workflow-split.md#A11)）、このスキルは手順に要る reference（`findings.md`、`collate.md`）を持って、`write` の承認の前に `collate.md` を読ませる。
 
-1. `kotowari check --format json` を走らせる。終了コードを先に見て、2なら停止として R6 のとおり扱う。`findings` のうち `path` が IR の置き場のファイルである誤りが0になるまで直す（テスト側の指摘、つまり `requirement_without_test` とテストのファイルへの指摘は、承認の時点では残ってよく、cycle の終端で0にする。A33）。注意は残してよい（残す理由を記録に書く）
+1. `kotowari check --format json` を走らせる。終了コードを先に見て、2なら停止として R6 のとおり扱う。`findings` のうち `path` が IR の置き場か判断の記録の置き場のファイルである誤りが0になるまで直す（テスト側の指摘、つまり `requirement_without_test`、`scenario_without_test` とテストのファイルへの指摘は、承認の時点では残ってよく、cycle の終端で0にする。A33）。注意は残してよい（残す理由を記録に書く）
 2. 照合レビュー: reference `collate.md` の指示で、別セッションの LLM に IR の各項目（要求、決定表、性質、シナリオ、用語、問題の記録）とその出典を渡し、出典の決定が項目の内容を裏付けていないものを挙げさせる。挙がったものは、出典を足すか、記録に決定を足すか、項目を直すかして、手順1（check）に戻ってから再び照合する（A35）。3回目の照合でも残るものは問題の記録（FLAG）にして人に返す
 3. 人に見せるもの: 判断の記録の差分（1行1決定で人が読む対象）、`check` の出力（テスト側の指摘の件数と、注意を残した文書とその理由）、照合レビューの結果、承認の対象のパスと内容の識別子（IR の文書、用語集、問題の記録、判断の記録）。IR の差分を読むことは求めない
 
