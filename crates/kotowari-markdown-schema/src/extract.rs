@@ -966,6 +966,26 @@ document:
         );
     }
 
+    // @kotowari[REQ-schema-031, REQ-schema-063]
+    #[test]
+    fn a_child_line_with_an_undeclared_name_stays_in_the_parent_bullet_value() {
+        let schema = r#"
+document:
+  sections:
+    - name: 理由
+      bullets:
+        repeat: { min: 0 }
+        extract: reasons
+"#;
+        let doc = "## 理由\n\n- 親\n  - 子: 値\n";
+        let v = values(schema, doc);
+        assert_eq!(
+            v["reasons"],
+            json!(["- 親\n  - 子: 値"]),
+            "宣言していない名前の子の行は子の箇条書きとして親の値に入る"
+        );
+    }
+
     // @kotowari[REQ-schema-035]
     #[test]
     fn undeclared_field_name_line_extract_preserves_original_marker() {
@@ -2083,6 +2103,30 @@ document:
             v["status"],
             json!({ "status_line": 3 }),
             "value を省いた要素オブジェクトは導かれる値の鍵だけを持ち、行番号は数値（REQ-schema-048）"
+        );
+    }
+
+    // @kotowari[REQ-schema-047]
+    #[test]
+    fn a_path_only_item_extract_becomes_an_object_when_internals_declare_extract() {
+        let schema = r#"
+document:
+  sections:
+    - name: 要求
+      item:
+        id: "REQ-\\d{3,}"
+        repeat: { min: 0 }
+        extract: requirements
+        fields:
+          - name: 種類
+            extract: kind
+"#;
+        let doc = "## 要求\n\n### REQ-001: 印の構文\n\n- 種類: algorithm\n";
+        let v = values(schema, doc);
+        assert_eq!(
+            v["requirements"],
+            json!([{ "kind": "algorithm" }]),
+            "項目の抽出が置き場だけでも、内側の抽出があればオブジェクトになる"
         );
     }
 
