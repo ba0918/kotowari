@@ -2505,6 +2505,27 @@ fn req_112_a_fence_closes_only_with_at_least_as_many_marks() {
     assert!(unclosed("# Title\n\nScope.\n\n```\nx\n````\n").is_empty());
 }
 
+// @kotowari[REQ-core-124, REQ-core-114]
+#[test]
+fn req_124_an_id_name_takes_lowercase_letters_digits_and_hyphens_only() {
+    let doc = |id: &str| {
+        format!(
+            "# Title\n\nScope.\n\n## Examples\n\n```gherkin\n@id={id} @about=REQ-001 @source=brainstorm/records.md#A1\nScenario: s\n  Given a\n```\n"
+        )
+    };
+    let invalid_ids = |id: &str| -> Vec<String> {
+        let parsed = ir::parse_document("a.md", &doc(id)).unwrap();
+        find_by_kind(&check(&[parsed], &default_config()), "invalid_id")
+            .iter()
+            .map(|f| f.detail.clone())
+            .collect()
+    };
+    // 2文字目から数字と "-" を置ける
+    assert!(invalid_ids("EX-a-1-001").is_empty());
+    // 2文字目以降の大文字は名前の形に合わない
+    assert_eq!(invalid_ids("EX-aB-001"), vec!["EX-aB-001"]);
+}
+
 // --- REQ-core-098: 値が空でも「知らない行」は無いものとして扱わない ---
 
 // @kotowari[REQ-core-098]
