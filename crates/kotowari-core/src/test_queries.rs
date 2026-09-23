@@ -37,11 +37,6 @@ pub struct TestQueries {
 }
 
 impl TestQueries {
-    /// 同梱のルールと "tests.rust.attributes" のルールを読む
-    pub fn new(config: &Config) -> Result<Self, StopReason> {
-        Self::build(bundled_rules(config)?)
-    }
-
     /// 同梱のルール、"tests.rust.attributes" のルール、"tests.rules" のファイルのルールを読む。
     /// ルールのファイルが読めなければ設定の誤りで停止する（REQ-core-189）
     pub fn load(base: &Path, config: &Config) -> Result<Self, StopReason> {

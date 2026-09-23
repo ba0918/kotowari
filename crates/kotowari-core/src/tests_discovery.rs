@@ -166,16 +166,6 @@ pub fn collect_test_files(
     Ok(files)
 }
 
-/// Rust ファイルのテストを、同梱の問い合わせと設定の "tests.rust" で発見する
-pub fn discover_rust_tests(
-    content: &str,
-    file_rel: &str,
-    config: &Config,
-) -> Result<Vec<DiscoveredTest>, String> {
-    let queries = TestQueries::new(config).map_err(|e| format!("{e:?}"))?;
-    discover_tests(content, file_rel, SupportLang::Rust, &queries, config)
-}
-
 /// `問い合わせのある言語`のファイルのテストを発見し、`直前のコメントの塊`の印を結び付ける。
 /// 構文の誤りが1つでもあれば Err（REQ-core-083）
 pub fn discover_tests(
