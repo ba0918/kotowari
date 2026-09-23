@@ -1099,6 +1099,34 @@ fn tbl_012_file_with_decision_sections_is_a_records_file() {
         "file with decision sections should be treated as records: {:?}", si);
 }
 
+// @kotowari[TBL-core-010, TBL-core-012]
+#[test]
+fn tbl_010_lone_cr_ends_a_line_of_records_and_adr() {
+    // TBL-core-010 は単独の "\r" も行の終わりに数える。"\n" だけで分けると
+    // 決定の節の見出しも番号の行も ADR の見出しも見つからない
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/decision/records/records.md"),
+        "# 判断の記録\r\r## Agreements\r\r- A1 最初の合意\r",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/decision/adr/0001-test.md"),
+        "# ADR 0001: テスト\r\r## 決定\r\r決定。\r",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1, docs/decision/adr/0001-test.md#決定\n- verification: unit\n\nStatement.\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(si.is_empty(), "lone CR should end a line: {:?}", si);
+}
+
 // @kotowari[TBL-core-012]
 #[test]
 fn tbl_012_file_without_decision_sections_matches_headings() {
