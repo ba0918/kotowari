@@ -30,10 +30,10 @@ kotowari は常に、"--format" の値として "json" と "text" の2つを受�
 ### REQ-core-025: 文字の出力
 
 - kind: event_driven
-- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A50, docs/decision/records/records.md#A18, docs/decision/records/ir-form.md#出力, docs/decision/records/2026-09-16-notice.md#A1
+- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A50, docs/decision/records/records.md#A18, docs/decision/records/ir-form.md#出力, docs/decision/records/2026-09-16-notice.md#A1, docs/decision/records/2026-09-24-review5-gaps.md#A2
 - verification: unit
 
-"--format" が "text" のとき、kotowari は1つの`指摘`を1行で "パス:行 [error] 種類 詳細" か "パス:行 [notice] 種類 詳細" の形で出し、角括弧も出す。
+"--format" が "text" のとき、kotowari は1つの`指摘`を1行で "パス:行 [error] 種類 詳細" か "パス:行 [notice] 種類 詳細" の形で出し、角括弧も出す。パスと詳細の中の改行（"\n" と "\r"）は、バックスラッシュと "n" または "r" の2文字で書く。
 
 ### REQ-core-026: 行の無い指摘の文字の出力
 
@@ -108,6 +108,12 @@ kotowari は常に、"kotowari check" の JSON の最上位の "tests" に、読
 ## Examples
 
 ```gherkin
+@id=EX-core-286 @about=REQ-core-025 @source=docs/decision/records/2026-09-24-review5-gaps.md#A2
+Scenario: 改行を含むファイル名でも1つの指摘は1行
+  Given 名前に改行を含み、`題名`の無い`IR`の文書がある
+  When "kotowari check --format text" を実行する
+  Then どの行もその文書のパスで始まり、パスの改行はバックスラッシュと "n" の2文字で書かれる
+
 @id=EX-core-004 @about=REQ-core-025,REQ-core-026 @source=docs/decision/records/records.md#A47,docs/decision/records/records.md#A40,docs/decision/records/records.md#A50,docs/decision/records/ir-form.md#検査の種類
 Scenario: 題名の無い文書を文字で出す
   Given "docs/ir/a.md" に題名が無い

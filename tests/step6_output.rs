@@ -188,6 +188,26 @@ fn req_025_text_has_one_line_per_finding_with_bracketed_severity() {
     }
 }
 
+// @kotowari[REQ-core-025, EX-core-286]
+#[test]
+fn req_025_a_line_break_in_a_file_name_stays_on_one_text_line() {
+    // 改行を含むファイル名でも1つの指摘は1行。改行は "\\n" と書く
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(tmp.path().join("docs/ir/a\nb.md"), "no title\n").unwrap();
+    let output = cmd()
+        .args(["check", "--format", "text"])
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert!(!lines.is_empty(), "should have text output");
+    for line in &lines {
+        assert!(line.starts_with("docs/ir/a\\nb.md:"), "{stdout}");
+    }
+}
+
 // @kotowari[REQ-core-025, REQ-core-026, EX-core-004]
 #[test]
 fn req_025_text_line_for_a_document_without_a_title() {

@@ -496,9 +496,19 @@ pub fn has_odd_backticks_outside_quotes(text: &str) -> bool {
 /// 二重引用符の外の部分からバッククォートで囲んだ語を集める（REQ-core-054, REQ-core-064, REQ-core-104）。
 /// ir モジュールと terms モジュールの両方から使う
 pub fn extract_backtick_contents_outside_quotes(text: &str) -> Vec<&str> {
-    split_outside_quotes(text)
+    // 二重引用符の外のバッククォートを行の左から順に対にし、中身は対の間の元の文字にする。
+    // 断片ごとに対にすると、引用符を挟んだ囲みが崩れて後の囲みと組み違える（review5-gaps の A1）
+    let base = text.as_ptr() as usize;
+    let backticks: Vec<usize> = split_outside_quotes(text)
         .into_iter()
-        .flat_map(ir::extract_backtick_contents)
+        .flat_map(|part| {
+            let offset = part.as_ptr() as usize - base;
+            part.match_indices('`').map(move |(i, _)| offset + i)
+        })
+        .collect();
+    backticks
+        .chunks_exact(2)
+        .map(|pair| &text[pair[0] + 1..pair[1]])
         .collect()
 }
 
@@ -774,8 +784,21 @@ fn print_mutants(result: &mutants::MutantsResult, format: Format) {
 fn print_findings_as_text(findings: &[Finding]) {
     for f in findings {
         let line = f.line.map_or("-".to_string(), |l| l.to_string());
-        println!("{}:{} [{}] {} {}", f.path, line, f.severity, f.kind, f.detail);
+        println!(
+            "{}:{} [{}] {} {}",
+            one_line(&f.path),
+            line,
+            f.severity,
+            f.kind,
+            one_line(&f.detail)
+        );
     }
+}
+
+/// 改行を "\\n" と "\\r" の2文字で書き、1つの指摘が1行に収まるようにする（REQ-core-025、
+/// review5-gaps の A2）。ファイル名は改行を含みうる
+fn one_line(text: &str) -> String {
+    text.replace('\r', "\\r").replace('\n', "\\n")
 }
 
 fn print_help() {

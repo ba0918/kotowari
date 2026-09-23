@@ -347,6 +347,32 @@ fn req_064_unknown_term() {
     assert!(!ut.iter().any(|f| f["detail"] == "IR"), "IR should be known: {:?}", ut);
 }
 
+// @kotowari[REQ-core-064, EX-core-284]
+#[test]
+fn req_064_a_quote_inside_a_backtick_pair_does_not_split_the_pair() {
+    // 二重引用符の外のバッククォートが対になり、間の引用符は囲みの中身に含まれる
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| IR | 仕様の集まり | docs/decision/records/records.md#A1 |\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n`未知 \"値\" 未知` と `未登録` は誤り。\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let details: Vec<String> = findings_by_kind(&v, "unknown_term")
+        .iter()
+        .map(|f| f["detail"].as_str().unwrap().to_string())
+        .collect();
+    // 指摘は TBL-core-007 のとおり detail の順に並ぶ
+    assert_eq!(details, vec!["未登録", "未知 \"値\" 未知"]);
+}
+
 // --- REQ-core-065: 用語集がないとき ID は通る ---
 
 // @kotowari[REQ-core-065]
@@ -1125,6 +1151,28 @@ fn tbl_010_lone_cr_ends_a_line_of_records_and_adr() {
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
     assert!(si.is_empty(), "lone CR should end a line: {:?}", si);
+}
+
+// @kotowari[TBL-core-012, EX-core-285]
+#[test]
+fn tbl_012_a_file_under_both_places_belongs_to_the_deeper_one() {
+    // adr が records の下にあるとき、adr の下のファイルは ADR として照合する
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision\n  adr: docs/decision/adr\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1, docs/decision/adr/0001-test.md#決定\n- verification: unit\n\nStatement.\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let si = findings_by_kind(&v, "source_invalid");
+    assert!(si.is_empty(), "{si:?}");
 }
 
 // @kotowari[TBL-core-012]
