@@ -305,6 +305,60 @@ fn req_043_unknown_heading() {
     assert_eq!(uh[0].detail, "### Bad Heading");
 }
 
+// @kotowari[REQ-core-043, EX-core-290]
+#[test]
+fn req_043_a_heading_with_an_empty_name_is_unknown() {
+    // "### ID:" の後に名前が無い見出しは "### ID: 名前" の形でない。ID は定義に数えない
+    let content = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001:\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
+    assert!(
+        !doc.items.iter().any(|i| i.id() == Some("REQ-001")),
+        "{:?}",
+        doc.items
+    );
+    let findings = check(&[doc], &default_config());
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert_eq!(uh.len(), 1, "{findings:?}");
+    assert_eq!(uh[0].detail, "### REQ-001:");
+}
+
+// @kotowari[TBL-core-011, EX-core-291]
+#[test]
+fn tbl_011_an_algorithm_requirement_and_a_table_may_carry_statements() {
+    // algorithm の要求と決定表は文を持たなくてよいが、持ってもよい
+    let content = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: algorithm\n- source: brainstorm/records.md#A1\n- definition: TBL-001\n- verification: unit\n\n補足の文。\n\n## Decision tables\n\n### TBL-001: T\n\n- source: brainstorm/records.md#A1\n\n表の説明の文。\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
+    let findings = check(&[doc], &default_config());
+    let form: Vec<&Finding> = findings
+        .iter()
+        .filter(|f| f.kind != "requirement_without_test" && f.kind != "source_invalid")
+        .collect();
+    assert!(form.is_empty(), "{form:?}");
+}
+
+// @kotowari[REQ-core-045, EX-core-292]
+#[test]
+fn req_045_the_first_of_duplicated_fields_is_the_one_read() {
+    // 同じ行が2つあるとき、読むのは1つ目の値。2つ目には duplicate_field だけを出す
+    let content = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: algorithm\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
+    let findings = check(&[doc], &default_config());
+    assert_eq!(
+        find_by_kind(&findings, "duplicate_field").len(),
+        1,
+        "{findings:?}"
+    );
+    assert_eq!(
+        find_by_kind(&findings, "algorithm_without_definition").len(),
+        1,
+        "{findings:?}"
+    );
+    assert!(
+        find_by_kind(&findings, "missing_statement").is_empty(),
+        "{findings:?}"
+    );
+}
+
 // @kotowari[REQ-core-043, TBL-core-008]
 #[test]
 fn req_043_unknown_heading_detail_is_full_heading_text() {

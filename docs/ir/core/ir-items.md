@@ -14,10 +14,10 @@
 ### REQ-core-043: 形に合わない見出し
 
 - kind: event_driven
-- source: docs/decision/records/records.md#A52, docs/decision/records/records.md#A82, docs/decision/records/records.md#A111, docs/decision/records/2026-09-22-ir-engine.md#A84
+- source: docs/decision/records/records.md#A52, docs/decision/records/records.md#A82, docs/decision/records/records.md#A111, docs/decision/records/2026-09-22-ir-engine.md#A84, docs/decision/records/2026-09-24-review8-gaps.md#A2
 - verification: unit
 
-"### " の見出しが、REQ、TBL、PROP、FLAG のいずれかの`ID`に名前を続けた "### ID: 名前" の形でないとき、kotowari は unknown_heading の`誤り`を出す。EX の`ID`を見出しに使ったとき、および "#### " より深い見出しのときも同じである。形に合わない見出しの下の行も`項目`の規則で読み、当てはまる`指摘`を出す。
+"### " の見出しが、REQ、TBL、PROP、FLAG のいずれかの`ID`に名前を続けた "### ID: 名前" の形でないとき（":" の後に名前が無いときを含む）、kotowari は unknown_heading の`誤り`を出す。EX の`ID`を見出しに使ったとき、および "#### " より深い見出しのときも同じである。形に合わない見出しの下の行も`項目`の規則で読み、当てはまる`指摘`を出す。
 
 ### REQ-core-044: 知らない行
 
@@ -30,10 +30,10 @@
 ### REQ-core-045: 同じ行の重複
 
 - kind: event_driven
-- source: docs/decision/records/records.md#A52, docs/decision/records/records.md#A113, docs/decision/records/2026-09-22-ir-engine.md#A75
+- source: docs/decision/records/records.md#A52, docs/decision/records/records.md#A113, docs/decision/records/2026-09-22-ir-engine.md#A75, docs/decision/records/2026-09-24-review8-gaps.md#A3
 - verification: unit
 
-見出しの下に同じ知っている "- xxx:" の行が2つ以上あるとき、kotowari は2つ目の行に1件の duplicate_field の`誤り`を出す。3本以上あっても1件である。知らない行は重複しても unknown_field だけを出す。
+見出しの下に同じ知っている "- xxx:" の行が2つ以上あるとき、kotowari は2つ目の行に1件の duplicate_field の`誤り`を出す。3本以上あっても1件である。読むのは1つ目の行の値で、2つ目以降の行の値は読まない。知らない行は重複しても unknown_field だけを出す。
 
 ### REQ-core-046: 見出しの下の行の読み方
 
@@ -95,12 +95,12 @@ kotowari は常に、取り込んだスキーマの宣言（REQ-core-179）に�
 
 ### TBL-core-011: 項目の形
 
-- source: docs/decision/records/records.md#A27, docs/decision/records/records.md#A28, docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#文書, docs/decision/records/2026-09-19-read-commands.md#A5, docs/decision/records/2026-09-19-read-commands.md#A11, docs/decision/records/2026-09-20-query-status.md#A10, docs/decision/records/2026-09-23-ir-engine-gaps.md#A4, docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- source: docs/decision/records/records.md#A27, docs/decision/records/records.md#A28, docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#文書, docs/decision/records/2026-09-19-read-commands.md#A5, docs/decision/records/2026-09-19-read-commands.md#A11, docs/decision/records/2026-09-20-query-status.md#A10, docs/decision/records/2026-09-23-ir-engine-gaps.md#A4, docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-24-review8-gaps.md#A1
 
 | 項目 | 置く場所 | 見出し | 持つ行 | 文 |
 |---|---|---|---|---|
-| 要求 | ## Requirements の下 | ### REQ-nnn: 名前 | - kind:（event_driven、state_driven、ubiquitous、prohibition、invariant、algorithm）、- source:、- verification:（unit、property、proof、review）、- definition:（algorithm では持ち、ほかはあってもよい）、- how_to_verify:（"- verification:" が review なら持つ。ほかはあってもよい。人か LLM が確かめる手順の自由文） | algorithm 以外は持つ。algorithm は持たない |
-| 決定表 | ## Decision tables の下 | ### TBL-nnn: 名前 | - source: と Markdown の表 | なし（表を持つ） |
+| 要求 | ## Requirements の下 | ### REQ-nnn: 名前 | - kind:（event_driven、state_driven、ubiquitous、prohibition、invariant、algorithm）、- source:、- verification:（unit、property、proof、review）、- definition:（algorithm では持ち、ほかはあってもよい）、- how_to_verify:（"- verification:" が review なら持つ。ほかはあってもよい。人か LLM が確かめる手順の自由文） | algorithm 以外は持つ。algorithm は持たなくてよく、持ってもよい |
+| 決定表 | ## Decision tables の下 | ### TBL-nnn: 名前 | - source: と Markdown の表 | 持たなくてよく、持ってもよい（表を持つ） |
 | 性質 | ## Properties の下 | ### PROP-nnn: 名前 | - source: | 持つ |
 | シナリオ | ## Examples の下の gherkin のコードブロック | Scenario: の行 | 直前の行のタグ @id=EX-nnn、@about=ID,...、@source=出典,... | なし（ステップの行を持つ） |
 | 問題の記録 | 問題の記録の文書の ## Flags の下か、節を挟まずに文書の直下（同じ文書に両方があってもよい） | ### FLAG-nnn: 名前 | - kind:（contradiction、gap、ambiguity）、- related:（ID のコンマ区切り）、- source: | 本文を持つ |
@@ -109,6 +109,24 @@ kotowari は常に、取り込んだスキーマの宣言（REQ-core-179）に�
 ## Examples
 
 ```gherkin
+@id=EX-core-290 @about=REQ-core-043 @source=docs/decision/records/2026-09-24-review8-gaps.md#A2
+Scenario: 名前の無い見出しは形に合わない
+  Given "### REQ-001:" の見出しの下に、必要な行と文を持つ`要求`がある
+  When "kotowari check" を実行する
+  Then その見出しの行に unknown_heading が出て、"REQ-001" は定義に数えない
+
+@id=EX-core-291 @about=TBL-core-011 @source=docs/decision/records/2026-09-24-review8-gaps.md#A1
+Scenario: algorithm の要求と決定表は文を持ってもよい
+  Given 文を持つ algorithm の`要求`と、表の前に文を持つ`決定表`がある
+  When "kotowari check" を実行する
+  Then 形の`指摘`は出ない
+
+@id=EX-core-292 @about=REQ-core-045 @source=docs/decision/records/2026-09-24-review8-gaps.md#A3
+Scenario: 同じ行が2つあるときは1つ目の値を読む
+  Given "- kind: algorithm" の後に "- kind: ubiquitous" を持ち、文も定義も無い`要求`がある
+  When "kotowari check" を実行する
+  Then duplicate_field と algorithm_without_definition が出て、missing_statement は出ない
+
 @id=EX-core-008 @about=REQ-core-044 @source=docs/decision/records/records.md#A42
 Scenario: 知らない行は誤りになる
   Given `要求`の見出しの下に "- 優先度: 高" の行がある

@@ -286,6 +286,22 @@ pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopR
         }
         DocKind::Glossary => read_glossary(&values, &mut items, &mut findings)?,
     }
+    // REQ-core-043: "### ID:" の後に名前の無い見出しは "### ID: 名前" の形でない。
+    // その ID は定義に数えず、見出しの行を detail にした unknown_heading にする（review8-gaps の A2）
+    let lines = split_lines(content);
+    items.retain(|item| {
+        let nameless = heading_name(item).is_some_and(|name| name.trim().is_empty());
+        let line = item.item_line();
+        // コロンの無い見出しは、スキーマの側が既に unknown_heading にしている
+        let flagged = findings
+            .iter()
+            .any(|f| f.kind == FindingKind::UnknownHeading && f.line == Some(line));
+        if nameless && !flagged {
+            let raw = lines.get(line - 1).copied().unwrap_or_default();
+            findings.push(Finding::new(FindingKind::UnknownHeading, String::new(), Some(line), raw.to_string()));
+        }
+        !nameless
+    });
     items.sort_by_key(Item::item_line);
 
     // REQ-core-112: 閉じないコードブロックは、開始から文書の終わりまでを検査の対象から外す
@@ -307,6 +323,17 @@ pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopR
         raw_content: content.to_string(),
         parse_findings: findings,
     })
+}
+
+/// 見出しで始まる`項目`の見出しの名前。見出しを持たない`シナリオ`と`用語`は None
+fn heading_name(item: &Item) -> Option<&str> {
+    match item {
+        Item::Requirement { name, .. }
+        | Item::DecisionTable { name, .. }
+        | Item::Property { name, .. }
+        | Item::FlagEntry { name, .. } => Some(name),
+        Item::Scenario { .. } | Item::GlossaryTerm { .. } => None,
+    }
 }
 
 // --- `抽出`の値から型へ写す ---
