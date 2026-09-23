@@ -14,10 +14,10 @@
 ### REQ-core-064: 用語集に無い語
 
 - kind: event_driven
-- source: docs/decision/records/records.md#A31, docs/decision/records/records.md#A42, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A63, docs/decision/records/records.md#A116, docs/decision/records/records.md#A145
+- source: docs/decision/records/records.md#A31, docs/decision/records/records.md#A42, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A63, docs/decision/records/records.md#A116, docs/decision/records/records.md#A145, docs/decision/records/2026-09-24-review5-gaps.md#A1
 - verification: unit
 
-`対象の行`の二重引用符の外でバッククォートで囲んだもの（前後の空白を除いた文字）が`用語`でも`ID`でもないとき、kotowari は、それがパスかコード片であっても、除いた後の文字を detail にして unknown_term の`誤り`を出す。中身が空の囲みは detail を "``" にする。
+`対象の行`の二重引用符の外のバッククォートを行の左から順に対にし、対の間の文字（二重引用符を含んでよい。前後の空白を除いた文字）が`用語`でも`ID`でもないとき、kotowari は、それがパスかコード片であっても、除いた後の文字を detail にして unknown_term の`誤り`を出す。中身が空の囲みは detail を "``" にする。
 
 ### REQ-core-065: 用語集が無いとき
 
@@ -97,6 +97,13 @@ kotowari は、`用語`をバッククォートで囲み忘れたことを検出
 ## Examples
 
 ```gherkin
+@id=EX-core-284 @about=REQ-core-064 @source=docs/decision/records/2026-09-24-review5-gaps.md#A1
+Scenario: 二重引用符を中に持つ囲みは崩れない
+  Given `用語`でない語の間に二重引用符で囲んだ文字を挟んだ囲みと、その後に`用語`でない語の囲みを持つ`文`がある
+  When "kotowari check" を実行する
+  Then 1つ目の囲みの中身全体と、2つ目の囲みの中身を detail にした unknown_term が1件ずつ出る
+  And 2つの囲みの間の文字は unknown_term にならない
+
 @id=EX-core-013 @about=REQ-core-064 @source=docs/decision/records/records.md#A42,docs/decision/records/records.md#A56,docs/decision/records/ir-form.md#検査の種類
 Scenario: 囲んだパスは誤りになる
   Given `要求`の`文`に "src/main.rs" をバッククォートで囲んで書いている

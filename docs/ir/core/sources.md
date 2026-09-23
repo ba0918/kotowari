@@ -71,7 +71,9 @@ kotowari は常に、source_invalid の "line" を`出典`が書かれた行（`
 
 ### TBL-core-012: 出典の判定
 
-- source: docs/decision/records/records.md#A38, docs/decision/records/records.md#A48, docs/decision/records/records.md#A69, docs/decision/records/records.md#A91, docs/decision/records/records.md#A115, docs/decision/records/records.md#A134, docs/decision/records/records.md#A158, docs/decision/records/records.md#A165, docs/decision/records/2026-09-17-record-form.md#A33, docs/decision/records/2026-09-17-record-form.md#A34, docs/decision/records/2026-09-17-record-form.md#A47
+- source: docs/decision/records/records.md#A38, docs/decision/records/records.md#A48, docs/decision/records/records.md#A69, docs/decision/records/records.md#A91, docs/decision/records/records.md#A115, docs/decision/records/records.md#A134, docs/decision/records/records.md#A158, docs/decision/records/records.md#A165, docs/decision/records/2026-09-17-record-form.md#A33, docs/decision/records/2026-09-17-record-form.md#A34, docs/decision/records/2026-09-17-record-form.md#A47, docs/decision/records/2026-09-24-review5-gaps.md#A3
+
+パスが decisions.records と decisions.adr の両方の中にあるとき（一方の置き場が他方の下にあるとき）は、深い方の置き場の中のファイルとして判定する。
 
 | 順 | 条件 | 結果 |
 |---|---|---|
@@ -85,6 +87,13 @@ kotowari は常に、source_invalid の "line" を`出典`が書かれた行（`
 ## Examples
 
 ```gherkin
+@id=EX-core-285 @about=TBL-core-012 @source=docs/decision/records/2026-09-24-review5-gaps.md#A3
+Scenario: 両方の置き場の中のファイルは深い方の置き場で判定する
+  Given decisions.records が "docs/decision"、decisions.adr が "docs/decision/adr" の設定がある
+  And "docs/decision/adr" の下の ADR の見出しと、"docs/decision/records" の下の`判断の記録`の決定を出典に持つ`要求`がある
+  When "kotowari check" を実行する
+  Then source_invalid は出ない
+
 @id=EX-core-011 @about=REQ-core-058 @source=docs/decision/records/records.md#A38
 Scenario: 決定の節にある番号は正しい出典である
   Given "decisions.records" が "docs/decision/records" で、"docs/decision/records/records.md" の Agreements の節に "- A26 " で始まる行がある
