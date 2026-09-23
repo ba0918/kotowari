@@ -2,76 +2,76 @@
 
 出典の書式と、出典の先が実在するかの検査を扱う。
 
-## 要求
+## Requirements
 
 ### REQ-core-057: 出典の書式
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A3, docs/decision/records/records.md#A13, docs/decision/records/records.md#A38, docs/decision/records/records.md#A84, docs/decision/records/records.md#A106
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/records.md#A3, docs/decision/records/records.md#A13, docs/decision/records/records.md#A38, docs/decision/records/records.md#A84, docs/decision/records/records.md#A106
+- verification: unit
 
 kotowari は常に、`出典`を "パス#印" の形だけで読み、最初の "#" でパスと印に分ける。パスに "#" は書けない。パスは`基準のディレクトリ`からの相対で、置き場からの全体を書く（"docs/decision/records/records.md#A26" の形）。パスは REQ-core-110 の正規化の後で置き場と比べる。
 
 ### REQ-core-058: 出典の判定
 
-- 種類: algorithm
-- 出典: docs/decision/records/records.md#A38, docs/decision/records/records.md#A48, docs/decision/records/records.md#A69
-- 定義: TBL-core-012
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/records.md#A38, docs/decision/records/records.md#A48, docs/decision/records/records.md#A69
+- definition: TBL-core-012
+- verification: unit
 
 ### REQ-core-059: 出典が無い
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A38, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A90
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A38, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A90
+- verification: unit
 
 `要求`、`決定表`、`性質`、`問題の記録`の`項目`に出典の行が無いか空のとき、`シナリオ`に "@source" のタグが無いとき、または`用語`の出典の列が空のとき、kotowari は missing_source の`誤り`を出す。"@id" の無い`シナリオ`では detail は "Scenario:" の行の文字にする。
 
 ### REQ-core-060: 用語集とシナリオの出典
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A52, docs/decision/records/ir-form.md#出典
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/records.md#A52, docs/decision/records/ir-form.md#出典
+- verification: unit
 
 kotowari は常に、`用語集`の出典の列と`シナリオ`の "@source" のタグを、出典の行と同じ規則で検査する。
 
 ### REQ-core-061: 決定の番号はファイルごと
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A48, docs/decision/records/records.md#A115
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/records.md#A48, docs/decision/records/records.md#A115
+- verification: unit
 
 kotowari は常に、`決定の番号`を`出典`のパスの指す`判断の記録`のファイルの中だけで探す。`決定の節`は "## " の見出しで始まり次の "## " の見出しで終わり、"### " の見出しは節を終えない。
 
 ### REQ-core-062: 内容の照合をしない
 
-- 種類: prohibition
-- 出典: docs/decision/records/records.md#A4, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4
-- 検証: unit
+- kind: prohibition
+- source: docs/decision/records/records.md#A4, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4
+- verification: unit
 
 kotowari は、`出典`がその`項目`の内容を本当に述べているかを判定してはならない。
 
 ### REQ-core-106: 形の契約を出典に指せる
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A52, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-ir-tree.md#A2
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/records.md#A52, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-ir-tree.md#A2
+- verification: unit
 
 kotowari は常に、形の契約の "docs/decision/records/ir-form.md" を、"## " の見出しで指す`出典`の先として受ける。
 
 ### REQ-core-115: 出典の指摘の行
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A114, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/records.md#A114, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- verification: unit
 
 kotowari は常に、source_invalid の "line" を`出典`が書かれた行（`項目`なら "- source:" の行、`シナリオ`ならタグの行、`用語`なら表の行）にする。
 
-## 決定表
+## Decision tables
 
 ### TBL-core-012: 出典の判定
 
-- 出典: docs/decision/records/records.md#A38, docs/decision/records/records.md#A48, docs/decision/records/records.md#A69, docs/decision/records/records.md#A91, docs/decision/records/records.md#A115, docs/decision/records/records.md#A134, docs/decision/records/records.md#A158, docs/decision/records/records.md#A165, docs/decision/records/2026-09-17-record-form.md#A33, docs/decision/records/2026-09-17-record-form.md#A34, docs/decision/records/2026-09-17-record-form.md#A47
+- source: docs/decision/records/records.md#A38, docs/decision/records/records.md#A48, docs/decision/records/records.md#A69, docs/decision/records/records.md#A91, docs/decision/records/records.md#A115, docs/decision/records/records.md#A134, docs/decision/records/records.md#A158, docs/decision/records/records.md#A165, docs/decision/records/2026-09-17-record-form.md#A33, docs/decision/records/2026-09-17-record-form.md#A34, docs/decision/records/2026-09-17-record-form.md#A47
 
 | 順 | 条件 | 結果 |
 |---|---|---|
@@ -82,7 +82,7 @@ kotowari は常に、source_invalid の "line" を`出典`が書かれた行（`
 | 5 | パスが decisions.records か decisions.adr の中で、2 から 4 のどれにも当たらない | source_invalid |
 | 6 | パスが decisions.records と decisions.adr のどちらの中でもない | source_invalid |
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-core-011 @about=REQ-core-058 @source=docs/decision/records/records.md#A38

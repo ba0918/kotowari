@@ -10,16 +10,16 @@ document:
       path: flags
       of: { id: id, name: name, line: line, end: end }
     fields:
-      - name: 種類
+      - name: kind
         enum: [contradiction, gap, ambiguity]
         extract: kind
-      - name: 関係
+      - name: related
         separator: ","
         extract:
           path: relations
           value: value
           of: { line: line }
-      - name: 出典
+      - name: source
         separator: ","
         extract:
           path: sources
@@ -41,7 +41,7 @@ document:
         value: value
         of: { line: line, raw: raw }
   sections:
-    - name: 問題の記録
+    - name: Flags
       repeat: { min: 0 }
       item:
         id: "^FLAG-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
@@ -50,16 +50,16 @@ document:
           path: flags_in_section
           of: { id: id, name: name, line: line, end: end }
         fields:
-          - name: 種類
+          - name: kind
             enum: [contradiction, gap, ambiguity]
             extract: kind
-          - name: 関係
+          - name: related
             separator: ","
             extract:
               path: relations
               value: value
               of: { line: line }
-          - name: 出典
+          - name: source
             separator: ","
             extract:
               path: sources

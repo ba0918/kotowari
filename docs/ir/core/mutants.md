@@ -2,61 +2,61 @@
 
 "kotowari mutants" が`変異の結果`から`見逃し`と時間切れを`指摘`にし、集計を出すところを扱う。結果のファイルの読み取りは mutants-input.md で、`等価の一覧`の読み方は equivalents.md で扱う。
 
-## 要求
+## Requirements
 
 ### REQ-core-139: 見逃しの指摘
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A2, docs/decision/records/2026-09-17-mutation-tests.md#A7, docs/decision/records/2026-09-17-mutation-tests.md#A11, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A37, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A50
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-17-mutation-tests.md#A2, docs/decision/records/2026-09-17-mutation-tests.md#A7, docs/decision/records/2026-09-17-mutation-tests.md#A11, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A37, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A50
+- verification: unit
 
 "kotowari mutants" で、`変異の結果`の結果が「見逃した」で、`等価の一覧`のどの1件にも一致しないとき、kotowari は "path" をその`変異の結果`のファイル、"line" をその行、detail を変更の説明にして mutant_survived の`誤り`を出す。結果が「捕まえた」か「ビルド不能」の`変異の結果`には`指摘`を出さず、`等価の一覧`との一致も見ない。同じ内容の`変異の結果`が2件以上あっても畳まず、1件ごとに`指摘`を出す。
 
 ### REQ-core-140: 時間切れの指摘
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A11, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A37, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A50
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-17-mutation-tests.md#A11, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A37, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A50
+- verification: unit
 
 "kotowari mutants" で、`変異の結果`の結果が「時間切れ」のとき、kotowari は "path" をその`変異の結果`のファイル、"line" をその行、detail を変更の説明にして mutant_timeout の`注意`を出す。`等価の一覧`との一致は見ない。
 
 ### REQ-core-145: 変異の集計
 
-- 種類: algorithm
-- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A28, docs/decision/records/2026-09-17-mutation-tests.md#A35, docs/decision/records/2026-09-17-mutation-tests.md#A38, docs/decision/records/2026-09-17-mutation-tests.md#A50, docs/decision/records/2026-09-17-mutation-tests.md#A55
-- 定義: TBL-core-025, PROP-core-005
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/2026-09-17-mutation-tests.md#A28, docs/decision/records/2026-09-17-mutation-tests.md#A35, docs/decision/records/2026-09-17-mutation-tests.md#A38, docs/decision/records/2026-09-17-mutation-tests.md#A50, docs/decision/records/2026-09-17-mutation-tests.md#A55
+- definition: TBL-core-025, PROP-core-005
+- verification: unit
 
 ### REQ-core-146: 集計の文字の出力
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A28, docs/decision/records/2026-09-17-mutation-tests.md#A35, docs/decision/records/2026-09-17-mutation-tests.md#A38
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-17-mutation-tests.md#A28, docs/decision/records/2026-09-17-mutation-tests.md#A35, docs/decision/records/2026-09-17-mutation-tests.md#A38
+- verification: unit
 
 "kotowari mutants" で "--format" が "text" のとき、kotowari は`指摘`の行の後の最後の1行に "mutants: caught=数 survived=数 timeout=数 unviable=数 equivalent=数" の形で集計を出す。`指摘`が0件でも出す。
 
 ### REQ-core-147: 読む範囲
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A35, docs/decision/records/2026-09-17-mutation-tests.md#A47, docs/decision/records/2026-09-17-mutation-tests.md#A55
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-17-mutation-tests.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A35, docs/decision/records/2026-09-17-mutation-tests.md#A47, docs/decision/records/2026-09-17-mutation-tests.md#A55
+- verification: unit
 
 kotowari は常に、"kotowari mutants" で`設定ファイル`、結果のファイル、`等価の一覧`、`変異の結果`が指すファイル、`等価の一覧`の1件の "file" が指すファイルだけを読み、`IR`と`テストのファイル`と`判断の記録`と ADR を読まず、"kotowari check" の検査を行わず、"ir"、"decisions.records"、"decisions.adr" の指す先が無くても`停止`しない。
 
 ### REQ-core-150: 道具に固有の語を使わない
 
-- 種類: prohibition
-- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A12, docs/decision/records/2026-09-17-mutation-tests.md#A13, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A54
-- 検証: review
-- 確かめ方: 指摘の種類名（mutant_survived、mutant_timeout、equivalent_stale、equivalent_invalid）と detail を組み立てる crates/kotowari-core/src/mutants.rs と crates/kotowari-core/src/lib.rs に、道具の結果の値の綴り（CaughtMutant、MissedMutant）が現れないことを rg -n 'CaughtMutant|MissedMutant' crates/kotowari-core/src/mutants.rs crates/kotowari-core/src/lib.rs が何も出さないことで確認。道具の値を写す crates/kotowari-core/src/cargo_mutants.rs は対象外
+- kind: prohibition
+- source: docs/decision/records/2026-09-17-mutation-tests.md#A12, docs/decision/records/2026-09-17-mutation-tests.md#A13, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A54
+- verification: review
+- how_to_verify: 指摘の種類名（mutant_survived、mutant_timeout、equivalent_stale、equivalent_invalid）と detail を組み立てる crates/kotowari-core/src/mutants.rs と crates/kotowari-core/src/lib.rs に、道具の結果の値の綴り（CaughtMutant、MissedMutant）が現れないことを rg -n 'CaughtMutant|MissedMutant' crates/kotowari-core/src/mutants.rs crates/kotowari-core/src/lib.rs が何も出さないことで確認。道具の値を写す crates/kotowari-core/src/cargo_mutants.rs は対象外
 
 kotowari は、`指摘`の種類と detail の形に、変異テストの道具に固有の語を使ってはならない。detail の中の変更の説明は道具が出した文のままで、この対象にしない。
 
-## 決定表
+## Decision tables
 
 ### TBL-core-025: "kotowari mutants" の JSON
 
-- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A35, docs/decision/records/2026-09-17-mutation-tests.md#A38, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A55
+- source: docs/decision/records/2026-09-17-mutation-tests.md#A35, docs/decision/records/2026-09-17-mutation-tests.md#A38, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A55
 
 "kotowari mutants" の JSON の最上位は findings、counts、mutants の3つの鍵だけを持つ。
 
@@ -71,15 +71,15 @@ kotowari は、`指摘`の種類と detail の形に、変異テストの道具�
 | "mutants" の中 | unviable | 結果が「ビルド不能」の変異の結果の数 |
 | "mutants" の中 | equivalent | 結果が「見逃した」で、等価の一覧の1件以上に一致する変異の結果の数 |
 
-## 性質
+## Properties
 
 ### PROP-core-005: 集計の合計
 
-- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A11, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A38, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A50
+- source: docs/decision/records/2026-09-17-mutation-tests.md#A11, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A38, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A50
 
 "mutants" の5つの値の合計は`変異の結果`の数に等しく、"survived" は mutant_survived の`指摘`の数に、"timeout" は mutant_timeout の`指摘`の数に等しい。
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-core-204 @about=REQ-core-138,REQ-core-139,TBL-core-024 @source=docs/decision/records/2026-09-17-mutation-tests.md#A2,docs/decision/records/2026-09-17-mutation-tests.md#A7,docs/decision/records/2026-09-17-mutation-tests.md#A11,docs/decision/records/2026-09-17-mutation-tests.md#A31,docs/decision/records/2026-09-17-mutation-tests.md#A40,docs/decision/records/2026-09-17-mutation-tests.md#A42,docs/decision/records/2026-09-17-mutation-tests.md#A50,docs/decision/records/2026-09-17-mutation-tests.md#A16

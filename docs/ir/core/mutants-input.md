@@ -2,28 +2,28 @@
 
 "kotowari mutants" が変異テストの道具の結果のファイルを`変異の結果`に写すところと、写せない結果のファイルでの`停止`を扱う。`指摘`と集計は mutants.md で扱う。
 
-## 要求
+## Requirements
 
 ### REQ-core-138: 道具の結果を変異の結果に写す
 
-- 種類: algorithm
-- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A1, docs/decision/records/2026-09-17-mutation-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A13, docs/decision/records/2026-09-17-mutation-tests.md#A14, docs/decision/records/2026-09-17-mutation-tests.md#A42, docs/decision/records/2026-09-17-mutation-tests.md#A50, docs/decision/records/2026-09-17-mutation-tests.md#A51, docs/decision/records/2026-09-17-mutation-tests.md#A56
-- 定義: TBL-core-024
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/2026-09-17-mutation-tests.md#A1, docs/decision/records/2026-09-17-mutation-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A13, docs/decision/records/2026-09-17-mutation-tests.md#A14, docs/decision/records/2026-09-17-mutation-tests.md#A42, docs/decision/records/2026-09-17-mutation-tests.md#A50, docs/decision/records/2026-09-17-mutation-tests.md#A51, docs/decision/records/2026-09-17-mutation-tests.md#A56
+- definition: TBL-core-024
+- verification: unit
 
 ### REQ-core-144: 結果の誤り
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A32, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A42, docs/decision/records/2026-09-17-mutation-tests.md#A50, docs/decision/records/2026-09-17-mutation-tests.md#A51
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-17-mutation-tests.md#A32, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A42, docs/decision/records/2026-09-17-mutation-tests.md#A50, docs/decision/records/2026-09-17-mutation-tests.md#A51
+- verification: unit
 
 結果のファイルが JSON として読めないとき、TBL-core-024 の写す元の鍵が無いか型が違うとき、1件の結果が TBL-core-024 のどの行にも当たらないとき、基準の実行の結果が TBL-core-024 の「基準の実行の成功」でないとき、行が1未満のとき、変更の説明の前置きが TBL-core-024 の形でないとき、またはファイルが絶対パスか ".." の要素を含むとき、kotowari は結果の誤りを理由に`停止`する。基準の実行が1件も無い結果のファイルでは`停止`しない。TBL-core-024 に挙げていない鍵は見ない。結果のファイルが無い、読めない、UTF-8 でないときは、読めないファイルか UTF-8 でないファイルを理由に`停止`する。
 
-## 決定表
+## Decision tables
 
 ### TBL-core-024: cargo-mutants の結果からの写し方
 
-- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A13, docs/decision/records/2026-09-17-mutation-tests.md#A33, docs/decision/records/2026-09-17-mutation-tests.md#A42, docs/decision/records/2026-09-17-mutation-tests.md#A50, docs/decision/records/2026-09-17-mutation-tests.md#A51, docs/decision/records/2026-09-17-mutation-tests.md#A56
+- source: docs/decision/records/2026-09-17-mutation-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A13, docs/decision/records/2026-09-17-mutation-tests.md#A33, docs/decision/records/2026-09-17-mutation-tests.md#A42, docs/decision/records/2026-09-17-mutation-tests.md#A50, docs/decision/records/2026-09-17-mutation-tests.md#A51, docs/decision/records/2026-09-17-mutation-tests.md#A56
 
 "--tool" が "cargo-mutants" のとき、結果のファイルは最上位の "outcomes" の鍵に並びを持つ JSON で、並びの1件ごとに次のとおりに写す。"scenario" が文字列 "Baseline" の1件は基準の実行で、変異の結果にしない。それ以外の1件は "scenario" の下の "Mutant" に変異を持つ。
 
@@ -38,7 +38,7 @@
 | 結果「ビルド不能」 | "summary" が "Unviable" |
 | 基準の実行の成功 | 基準の実行の1件の "summary" が "Success" |
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-core-207 @about=REQ-core-144 @source=docs/decision/records/2026-09-17-mutation-tests.md#A32,docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A42

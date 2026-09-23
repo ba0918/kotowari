@@ -4,7 +4,7 @@ open: false
 reading: line
 document:
   title:
-    pattern: "^用語集$"
+    pattern: "^Glossary$"
     extract: title
   preamble:
     statement:
@@ -15,7 +15,7 @@ document:
         of: { line: line, raw: raw }
     table:
       repeat: { min: 1 }
-      header: [用語, 意味, 出典]
+      header: [Term, Meaning, Source]
       select: first
       extract:
         path: glossary

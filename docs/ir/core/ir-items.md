@@ -2,100 +2,100 @@
 
 要求、決定表、性質、シナリオ、問題の記録の形と、見出しの下の行の検査を扱う。
 
-## 要求
+## Requirements
 
 ### REQ-core-042: 項目の形
 
-- 種類: algorithm
-- 出典: docs/decision/records/records.md#A27, docs/decision/records/records.md#A28, docs/decision/records/records.md#A42, docs/decision/records/records.md#A52
-- 定義: TBL-core-011
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/records.md#A27, docs/decision/records/records.md#A28, docs/decision/records/records.md#A42, docs/decision/records/records.md#A52
+- definition: TBL-core-011
+- verification: unit
 
 ### REQ-core-043: 形に合わない見出し
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A52, docs/decision/records/records.md#A82, docs/decision/records/records.md#A111, docs/decision/records/2026-09-22-ir-engine.md#A84
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A52, docs/decision/records/records.md#A82, docs/decision/records/records.md#A111, docs/decision/records/2026-09-22-ir-engine.md#A84
+- verification: unit
 
 "### " の見出しが、REQ、TBL、PROP、FLAG のいずれかの`ID`に名前を続けた "### ID: 名前" の形でないとき、kotowari は unknown_heading の`誤り`を出す。EX の`ID`を見出しに使ったとき、および "#### " より深い見出しのときも同じである。形に合わない見出しの下の行も`項目`の規則で読み、当てはまる`指摘`を出す。
 
 ### REQ-core-044: 知らない行
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A42, docs/decision/records/records.md#A52, docs/decision/records/records.md#A81, docs/decision/records/ir-form.md#項目, docs/decision/records/records.md#A87, docs/decision/records/records.md#A111, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A42, docs/decision/records/records.md#A52, docs/decision/records/records.md#A81, docs/decision/records/ir-form.md#項目, docs/decision/records/records.md#A87, docs/decision/records/records.md#A111, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- verification: unit
 
 見出しの下に知らない "- xxx:" の行、または "xxx:" の形でない一覧の行（"- "、"* "、"+ "、数字と "." で始まる行、および "-" だけの行）があるとき、kotowari は読んだ行の文字をそのまま detail にして unknown_field の`誤り`を出す。知らない行の中身は読まない（`ID` が書かれていても参照にしない）。知っている行は`項目`の種類ごとに TBL-core-011 の「持つ行」の列にあるものだけで、`性質`なら "- source:" だけである。
 
 ### REQ-core-045: 同じ行の重複
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A52, docs/decision/records/records.md#A113, docs/decision/records/2026-09-22-ir-engine.md#A75
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A52, docs/decision/records/records.md#A113, docs/decision/records/2026-09-22-ir-engine.md#A75
+- verification: unit
 
 見出しの下に同じ知っている "- xxx:" の行が2つ以上あるとき、kotowari は2つ目の行に1件の duplicate_field の`誤り`を出す。3本以上あっても1件である。知らない行は重複しても unknown_field だけを出す。
 
 ### REQ-core-046: 見出しの下の行の読み方
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A42, docs/decision/records/records.md#A52, docs/decision/records/ir-form.md#項目, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/records.md#A42, docs/decision/records/records.md#A52, docs/decision/records/ir-form.md#項目, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- verification: unit
 
 kotowari は常に、見出しの下の "- " の行を順不同で読み、行の間の空行を許し、"- definition:"、"- related:"、"- source:" の値をコンマで区切って読む。
 
 ### REQ-core-178: 文を1行ずつ読む
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-23-ir-engine-gaps.md#A1, docs/decision/records/2026-09-23-ir-engine-gaps.md#A2, docs/decision/records/2026-09-23-ir-engine-gaps.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A21, docs/decision/records/2026-09-23-ir-engine-gaps.md#A22, docs/decision/records/2026-09-23-ir-engine-gaps.md#A26, docs/decision/records/2026-09-23-ir-engine-gaps.md#A35, docs/decision/records/2026-09-23-ir-engine-gaps.md#A38, docs/decision/records/2026-09-23-ir-engine-gaps.md#A43
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-23-ir-engine-gaps.md#A1, docs/decision/records/2026-09-23-ir-engine-gaps.md#A2, docs/decision/records/2026-09-23-ir-engine-gaps.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A21, docs/decision/records/2026-09-23-ir-engine-gaps.md#A22, docs/decision/records/2026-09-23-ir-engine-gaps.md#A26, docs/decision/records/2026-09-23-ir-engine-gaps.md#A35, docs/decision/records/2026-09-23-ir-engine-gaps.md#A38, docs/decision/records/2026-09-23-ir-engine-gaps.md#A43
+- verification: unit
 
 kotowari は常に、取り込んだスキーマの宣言（REQ-core-179）によって、見出しの下の、一覧の行でも表の行でもない空でない行を1行ずつ`文`として読む。"- 名前:" の行とほかの一覧の行は1行で終わり、その直後に空行なしで続く行も、空行の後に字下げして続く一覧でない行も`文`として読み、一覧の行の値に含めない。字下げした一覧の行は一覧の行として読む。引用、水平線、HTML、画像の行と、区切りの行を持たず表にならない "|" で始まる行も`文`として読む。見出しは CommonMark の ATX 見出しの行（行頭の空白は3つまで、"#" は1〜6個、その後が空白か行末）だけで、"---" か "===" だけの行はその前の行とともに`文`である。`コードブロック`は囲みの行で始まるものだけで、空行の後に4つ以上の空白で字下げした行は`文`である。
 
 ### REQ-core-047: 文が無い
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A131, docs/decision/records/2026-09-22-ir-engine.md#A75, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A131, docs/decision/records/2026-09-22-ir-engine.md#A75, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- verification: unit
 
 種類が "algorithm" 以外の`要求`（"- kind:" の行が無い`要求`を含む）、`性質`、または`問題の記録`の`項目`に`文`が無いとき、kotowari は missing_statement の`誤り`を出す。
 
 ### REQ-core-048: 検証の行が無い
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A21, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A21, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- verification: unit
 
 `要求`に "- verification:" の行が無いとき、kotowari は verification_missing の`誤り`を出す。
 
 ### REQ-core-049: 検証の値の誤り
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A21, docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#検査の種類
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A21, docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#検査の種類
+- verification: unit
 
 `要求`の検証の値が "unit"、"property"、"proof"、"review" のいずれでもないとき、kotowari は verification_invalid の`誤り`を出す。
 
 ### REQ-core-050: 種類の値の誤り
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A28, docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#検査の種類
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A28, docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#検査の種類
+- verification: unit
 
 `要求`か`問題の記録`の`項目`の種類が TBL-core-011 で決めた値でないとき、kotowari は unknown_kind の`誤り`を出す。
 
 ### REQ-core-051: 定義の無い algorithm
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A21, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-22-ir-engine.md#A71, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A21, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-22-ir-engine.md#A71, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- verification: unit
 
 種類が "algorithm" の`要求`に、`決定表`か`性質`を指す "- definition:" の行が無いとき（行そのものが無いときを含む）、kotowari は algorithm_without_definition の`誤り`を出す。
 
-## 決定表
+## Decision tables
 
 ### TBL-core-011: 項目の形
 
-- 出典: docs/decision/records/records.md#A27, docs/decision/records/records.md#A28, docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#文書, docs/decision/records/2026-09-19-read-commands.md#A5, docs/decision/records/2026-09-19-read-commands.md#A11, docs/decision/records/2026-09-20-query-status.md#A10, docs/decision/records/2026-09-23-ir-engine-gaps.md#A4, docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- source: docs/decision/records/records.md#A27, docs/decision/records/records.md#A28, docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#文書, docs/decision/records/2026-09-19-read-commands.md#A5, docs/decision/records/2026-09-19-read-commands.md#A11, docs/decision/records/2026-09-20-query-status.md#A10, docs/decision/records/2026-09-23-ir-engine-gaps.md#A4, docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 
 | 項目 | 置く場所 | 見出し | 持つ行 | 文 |
 |---|---|---|---|---|
@@ -106,7 +106,7 @@ kotowari は常に、取り込んだスキーマの宣言（REQ-core-179）に�
 | 問題の記録 | 問題の記録の文書の ## Flags の下か、節を挟まずに文書の直下（同じ文書に両方があってもよい） | ### FLAG-nnn: 名前 | - kind:（contradiction、gap、ambiguity）、- related:（ID のコンマ区切り）、- source: | 本文を持つ |
 | 用語 | 用語集の文書 | Term、Meaning、Source の3列のヘッダを持つ最初の表の行（REQ-core-117） | なし | なし（意味の列を持つ） |
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-core-008 @about=REQ-core-044 @source=docs/decision/records/records.md#A42

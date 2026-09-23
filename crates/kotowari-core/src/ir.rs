@@ -82,13 +82,13 @@ pub enum Item {
         end: usize,
         kind: Option<String>,
         sources: Vec<String>,
-        /// "- 出典:" の行。行が無ければ None
+        /// "- source:" の行。行が無ければ None
         source_line: Option<usize>,
         verification: Option<String>,
         definitions: Vec<String>,
-        /// "- 定義:" の行。行が無ければ None
+        /// "- definition:" の行。行が無ければ None
         definition_line: Option<usize>,
-        /// TBL-core-011: "- 確かめ方:" の値。人が確かめる手順の自由文
+        /// TBL-core-011: "- how_to_verify:" の値。人が確かめる手順の自由文
         how_to_verify: Option<String>,
         statements: Vec<(usize, String)>,
     },
@@ -127,7 +127,7 @@ pub enum Item {
         end: usize,
         kind: Option<String>,
         relations: Vec<String>,
-        /// "- 関係:" の行。行が無ければ None
+        /// "- related:" の行。行が無ければ None
         relation_line: Option<usize>,
         sources: Vec<String>,
         source_line: Option<usize>,
@@ -141,7 +141,7 @@ pub enum Item {
     },
 }
 
-/// REQ-core-049: "- 検証:" に書ける4つの値
+/// REQ-core-049: "- verification:" に書ける4つの値
 pub const VERIFICATION_VALUES: [&str; 4] = ["unit", "property", "proof", "review"];
 
 impl Item {
@@ -538,7 +538,7 @@ fn read_glossary(
                 .and_then(|cells| string(cells, name))
                 .unwrap_or_default()
         };
-        let term = cell("用語");
+        let term = cell("Term");
         if term.is_empty() {
             let raw = string(row, "raw").ok_or_else(|| unmappable("raw"))?;
             findings.push(Finding::new(FindingKind::InvalidGlossaryRow, String::new(), Some(line), raw));
@@ -546,13 +546,13 @@ fn read_glossary(
             // REQ-core-123: 同じ用語の2つ目以降の行は duplicate_term だけを出し、用語にしない
             findings.push(Finding::new(FindingKind::DuplicateTerm, String::new(), Some(line), term));
         } else {
-            let sources = cell("出典")
+            let sources = cell("Source")
                 .split(',')
                 .map(str::trim)
                 .filter(|s| !s.is_empty())
                 .map(str::to_string)
                 .collect();
-            items.push(Item::GlossaryTerm { term, meaning: cell("意味"), sources, line });
+            items.push(Item::GlossaryTerm { term, meaning: cell("Meaning"), sources, line });
         }
     }
     Ok(())
@@ -968,7 +968,7 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
     findings
 }
 
-/// "- 出典:" の行はあるのに値が1つも無い（REQ-core-059）。行そのものが無いときは
+/// "- source:" の行はあるのに値が1つも無い（REQ-core-059）。行そのものが無いときは
 /// スキーマの側が missing_source にしている
 fn has_empty_source_line(sources: &[String], source_line: &Option<usize>) -> bool {
     source_line.is_some() && sources.is_empty()
@@ -983,7 +983,7 @@ fn check_item(item: &Item, path: &str, findings: &mut Vec<Finding>) {
             }
 
             // REQ-core-051: algorithm に決定表か性質を指す定義がない。
-            // "- 定義:" の行そのものが無いときはスキーマの側が出している（A71）
+            // "- definition:" の行そのものが無いときはスキーマの側が出している（A71）
             let has_tbl_or_prop_def = definitions.iter().any(|d| {
                 matches!(id_prefix(d), Some(IdPrefix::Tbl) | Some(IdPrefix::Prop))
             });
@@ -1061,9 +1061,9 @@ fn check_item(item: &Item, path: &str, findings: &mut Vec<Finding>) {
 /// 項目が `ID` を指している場所（TBL-core-027 の "via"）
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Via {
-    /// "- 定義:" の行
+    /// "- definition:" の行
     Definition,
-    /// "- 関係:" の行
+    /// "- related:" の行
     Relations,
     /// "@about" のタグ
     About,
@@ -1097,7 +1097,7 @@ pub struct ItemReference<'a> {
 /// check の unresolved_reference と query の逆引きはどちらもここを読む。
 /// 文とステップの中は `ID` の形に合うものだけを拾い、地の文の `ID` は拾わない
 pub fn item_references<'a>(item: &'a Item) -> Vec<ItemReference<'a>> {
-    // TBL-core-019: "- 定義:" か "- 関係:" の行（行が無ければ見出しの行）
+    // TBL-core-019: "- definition:" か "- related:" の行（行が無ければ見出しの行）
     let from_text = |texts: &'a [(usize, String)]| {
         texts.iter().flat_map(|(text_line, text)| {
             backtick_ids(text).into_iter().map(move |id| ItemReference {
@@ -1135,7 +1135,7 @@ pub fn item_references<'a>(item: &'a Item) -> Vec<ItemReference<'a>> {
 }
 
 /// 参照の解決チェック（REQ-core-054）。
-/// `ID` の形でない "- 定義:" の値は`ID`の一覧に入らないので、ここで誤りになる
+/// `ID` の形でない "- definition:" の値は`ID`の一覧に入らないので、ここで誤りになる
 fn check_references(
     items: &[Item],
     known_ids: &BTreeSet<String>,

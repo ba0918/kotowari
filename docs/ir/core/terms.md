@@ -2,75 +2,75 @@
 
 バッククォートで囲んだ語、曖昧語、文書名の参照の検査を扱う。
 
-## 要求
+## Requirements
 
 ### REQ-core-063: 対象の行
 
-- 種類: algorithm
-- 出典: docs/decision/records/records.md#A42, docs/decision/records/records.md#A53, docs/decision/records/records.md#A56
-- 定義: TBL-core-013
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/records.md#A42, docs/decision/records/records.md#A53, docs/decision/records/records.md#A56
+- definition: TBL-core-013
+- verification: unit
 
 ### REQ-core-064: 用語集に無い語
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A31, docs/decision/records/records.md#A42, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A63, docs/decision/records/records.md#A116, docs/decision/records/records.md#A145
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A31, docs/decision/records/records.md#A42, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A63, docs/decision/records/records.md#A116, docs/decision/records/records.md#A145
+- verification: unit
 
 `対象の行`の二重引用符の外でバッククォートで囲んだもの（前後の空白を除いた文字）が`用語`でも`ID`でもないとき、kotowari は、それがパスかコード片であっても、除いた後の文字を detail にして unknown_term の`誤り`を出す。中身が空の囲みは detail を "``" にする。
 
 ### REQ-core-065: 用語集が無いとき
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A56, docs/decision/records/records.md#A63, docs/decision/records/records.md#A53, docs/decision/records/2026-09-16-ir-tree.md#A3
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A56, docs/decision/records/records.md#A63, docs/decision/records/records.md#A53, docs/decision/records/2026-09-16-ir-tree.md#A3
+- verification: unit
 
 文書の`連鎖`に`用語集`が1つも無いとき、kotowari は`対象の行`でバッククォートで囲んだもののうち、`ID`でないものをすべて unknown_term の`誤り`にする。
 
 ### REQ-core-066: 曖昧語
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A21, docs/decision/records/records.md#A41, docs/decision/records/records.md#A42, docs/decision/records/records.md#A53, docs/decision/records/ir-form.md#検査の種類
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A21, docs/decision/records/records.md#A41, docs/decision/records/records.md#A42, docs/decision/records/records.md#A53, docs/decision/records/ir-form.md#検査の種類
+- verification: unit
 
 `対象の行`に`曖昧語`が部分一致で含まれるとき、kotowari は vague_word の`誤り`を出す。
 
 ### REQ-core-067: 出現ごとに1件
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A53, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A117, docs/decision/records/records.md#A142
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/records.md#A53, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A117, docs/decision/records/records.md#A142
+- verification: unit
 
 kotowari は常に、unknown_term と vague_word の`指摘`を出現ごとに1件出し、`曖昧語`の出現は行の左から最長一致で重ならない形で数える。
 
 ### REQ-core-068: 囲み忘れを検出しない
 
-- 種類: prohibition
-- 出典: docs/decision/records/records.md#A31, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4
-- 検証: unit
+- kind: prohibition
+- source: docs/decision/records/records.md#A31, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4
+- verification: unit
 
 kotowari は、`用語`をバッククォートで囲み忘れたことを検出してはならない。
 
 ### REQ-core-069: 文書名の参照の見つけ方
 
-- 種類: algorithm
-- 出典: docs/decision/records/records.md#A42, docs/decision/records/records.md#A47, docs/decision/records/2026-09-16-ir-tree.md#A21, docs/decision/records/2026-09-22-ir-engine.md#A72
-- 定義: TBL-core-014
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/records.md#A42, docs/decision/records/records.md#A47, docs/decision/records/2026-09-16-ir-tree.md#A21, docs/decision/records/2026-09-22-ir-engine.md#A72
+- definition: TBL-core-014
+- verification: unit
 
 ### REQ-core-070: 参照された文書が無い
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A17, docs/decision/records/2026-09-16-ir-tree.md#A18, docs/decision/records/ir-form.md#検査の種類
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A17, docs/decision/records/2026-09-16-ir-tree.md#A18, docs/decision/records/ir-form.md#検査の種類
+- verification: unit
 
 `文書名の参照`が "/" を含まないときにその名前の文書が参照を書いた文書と同じディレクトリに無いとき、"/" を含むときにその`IR`の置き場からの相対パスの文書が無いとき、または並びに "." か ".." の要素を含むとき、kotowari は参照の文字列を detail にして missing_document の`誤り`を出す。文書の有無は読んだ`IR`の文書の中に有るかで見る（ディレクトリのシンボリックリンクの下にあって読まない文書は無いものとする）。同じディレクトリに無い文書を上のディレクトリへ辿って探さない。
 
-## 決定表
+## Decision tables
 
 ### TBL-core-013: 用語と曖昧語の検査の対象
 
-- 出典: docs/decision/records/records.md#A42, docs/decision/records/records.md#A53, docs/decision/records/records.md#A56, docs/decision/records/records.md#A133
+- source: docs/decision/records/records.md#A42, docs/decision/records/records.md#A53, docs/decision/records/records.md#A56, docs/decision/records/records.md#A133
 
 | 行 | 検査 |
 |---|---|
@@ -85,7 +85,7 @@ kotowari は、`用語`をバッククォートで囲み忘れたことを検出
 
 ### TBL-core-014: 文書名の参照の条件
 
-- 出典: docs/decision/records/records.md#A47, docs/decision/records/ir-form.md#文書名の参照, docs/decision/records/records.md#A73, docs/decision/records/records.md#A118, docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A12, docs/decision/records/2026-09-16-ir-tree.md#A14, docs/decision/records/2026-09-16-ir-tree.md#A17, docs/decision/records/2026-09-16-ir-tree.md#A21, docs/decision/records/2026-09-22-ir-engine.md#A72
+- source: docs/decision/records/records.md#A47, docs/decision/records/ir-form.md#文書名の参照, docs/decision/records/records.md#A73, docs/decision/records/records.md#A118, docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A12, docs/decision/records/2026-09-16-ir-tree.md#A14, docs/decision/records/2026-09-16-ir-tree.md#A17, docs/decision/records/2026-09-16-ir-tree.md#A21, docs/decision/records/2026-09-22-ir-engine.md#A72
 
 | 順 | 条件 |
 |---|---|
@@ -94,7 +94,7 @@ kotowari は、`用語`をバッククォートで囲み忘れたことを検出
 | 3 | 要素（英小文字と数字とハイフンの並び、"."、".." のいずれか）を "/" で区切って1つ以上並べ、最後の要素が英小文字と数字とハイフンの並びで ".md" が続き、".md" の直後が英数字、"_"、"-"、"#"、"/" のいずれでもない |
 | 4 | 二重引用符の中にない。行の中の二重引用符が奇数のときは、最後の引用符から行末までを引用符の中と見なす |
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-core-013 @about=REQ-core-064 @source=docs/decision/records/records.md#A42,docs/decision/records/records.md#A56,docs/decision/records/ir-form.md#検査の種類

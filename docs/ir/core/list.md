@@ -2,52 +2,52 @@
 
 "kotowari list" が`IR`の`項目`と`シナリオ`と、それらを指す`印`のある`テスト`を、人と LLM が読める形で出すところを扱う。何を読むかは check と同じで、`指摘`は出さない。
 
-## 要求
+## Requirements
 
 ### REQ-core-151: list の読み取り
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-19-read-commands.md#A1, docs/decision/records/2026-09-19-read-commands.md#A2, docs/decision/records/2026-09-19-read-commands.md#A9, docs/decision/records/2026-09-19-read-commands.md#A21
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-19-read-commands.md#A1, docs/decision/records/2026-09-19-read-commands.md#A2, docs/decision/records/2026-09-19-read-commands.md#A9, docs/decision/records/2026-09-19-read-commands.md#A21
+- verification: unit
 
 kotowari は常に、"kotowari list" で "kotowari check" と同じ設定と置き場から`IR`の文書と`テストのファイル`を読み、読めた`項目`と`シナリオ`をすべて標準出力に出し、`指摘`を出さず、終了コードを0にする。`IR`の文書に`誤り`があっても、読めた`項目`と`シナリオ`は出す。
 
 ### REQ-core-152: list の停止
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-19-read-commands.md#A9, docs/decision/records/2026-09-19-read-commands.md#A20
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-19-read-commands.md#A9, docs/decision/records/2026-09-19-read-commands.md#A20
+- verification: unit
 
 "kotowari list" で、"kotowari check" が`停止`する条件（設定の誤り、読めないファイル、引数の誤り）が成り立つとき、kotowari は check と同じ理由と文言で`停止`する。
 
 ### REQ-core-153: 項目の形
 
-- 種類: algorithm
-- 出典: docs/decision/records/2026-09-19-read-commands.md#A3, docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A12, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18
-- 定義: TBL-core-026
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/2026-09-19-read-commands.md#A3, docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A12, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18
+- definition: TBL-core-026
+- verification: unit
 
 ### REQ-core-154: 一覧の順
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-19-read-commands.md#A12
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-19-read-commands.md#A12
+- verification: unit
 
 kotowari は常に、"items" の1件を "path" の昇順、同じ "path" の中は "line" の昇順に並べ、1件の "tests" も "path" の昇順、同じ "path" の中は "line" の昇順に並べる。
 
 ### REQ-core-155: 出力の形
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A8, docs/decision/records/2026-09-19-read-commands.md#A12, docs/decision/records/2026-09-19-read-commands.md#A19, docs/decision/records/2026-09-19-read-commands.md#A25, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A8, docs/decision/records/2026-09-19-read-commands.md#A12, docs/decision/records/2026-09-19-read-commands.md#A19, docs/decision/records/2026-09-19-read-commands.md#A25, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- verification: unit
 
 kotowari は常に、"kotowari list" の "--format" の値として "json" と "text" の2つだけを受け、既定を "json" にし、絞り込みのオプションを持たない。"json" では最上位が "items" だけの JSON を1つ出し、"items" は`TBL-core-026` の鍵を持つ1件の並びである。"text" では "items" の1件を1行で "ID 検証 名前 パス:行 tests=数" の形で出し（"検証" は要求以外と、"- verification:" の行の無い要求では "-"）、その直後に "tests" の1件ごとに2つの半角空白で字下げした "パス:行 名前" の行を続ける（"名前" が null のときは "-"）。
 
-## 決定表
+## Decision tables
 
 ### TBL-core-026: 項目の鍵
 
-- 出典: docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18, docs/decision/records/2026-09-19-read-commands.md#A22, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-19-read-commands.md#A26, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-23-ir-english-tokens.md#A8
+- source: docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18, docs/decision/records/2026-09-19-read-commands.md#A22, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-19-read-commands.md#A26, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-23-ir-english-tokens.md#A8
 
 | 鍵 | 持つ種類 | 中身 |
 |---|---|---|
@@ -65,7 +65,7 @@ kotowari は常に、"kotowari list" の "--format" の値として "json" と "
 | sources | すべて | `出典`の並び |
 | tests | すべて | その `ID` を`印`に含む`テスト`の並び。同じ`テスト`に同じ `ID` の`印`が複数あれば、`印`の出現ごとに1件。1件は "path"（`テストのファイル`の基準のディレクトリからの相対パス）、"line"（`印`のある行）、"name"（`テスト`の関数の名前。`問い合わせの無い言語`では null） |
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-core-245 @about=REQ-core-151,REQ-core-153,TBL-core-026 @source=docs/decision/records/2026-09-19-read-commands.md#A2,docs/decision/records/2026-09-19-read-commands.md#A6,docs/decision/records/2026-09-19-read-commands.md#A9,docs/decision/records/2026-09-19-read-commands.md#A18

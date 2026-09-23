@@ -2,41 +2,41 @@
 
 `等価の一覧`の置き場と形、`変異の結果`との一致の取り方、一覧の1件への`指摘`を扱う。
 
-## 要求
+## Requirements
 
 ### REQ-core-141: 一覧の1件との一致
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A9, docs/decision/records/2026-09-17-mutation-tests.md#A15, docs/decision/records/2026-09-17-mutation-tests.md#A33, docs/decision/records/2026-09-17-mutation-tests.md#A37, docs/decision/records/2026-09-17-mutation-tests.md#A48, docs/decision/records/2026-09-17-mutation-tests.md#A51, docs/decision/records/2026-09-17-mutation-tests.md#A52, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A44
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-17-mutation-tests.md#A9, docs/decision/records/2026-09-17-mutation-tests.md#A15, docs/decision/records/2026-09-17-mutation-tests.md#A33, docs/decision/records/2026-09-17-mutation-tests.md#A37, docs/decision/records/2026-09-17-mutation-tests.md#A48, docs/decision/records/2026-09-17-mutation-tests.md#A51, docs/decision/records/2026-09-17-mutation-tests.md#A52, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A44
+- verification: unit
 
 kotowari は常に、結果が「見逃した」の`変異の結果`と形の正しい`等価の一覧`の1件を、REQ-core-110 の正規化を掛けた "file" が`変異の結果`のファイルと同じ文字列で、"change" が変更の説明と同じ文字列で、"text" が`変異の結果`のファイルの今の内容のその行の文面と、どちらも前後の半角空白とタブを除いて同じ文字列のときに一致とする。行は TBL-core-010 のとおりに区切り、行の終わりの "\r\n" の "\r" は文面に含めない。`変異の結果`のファイルが無い、読めない、UTF-8 でない、または行がそのファイルの行数を超えるとき、kotowari は`停止`せず、その`変異の結果`はどの1件にも一致しない。同じ文面の行が複数あるファイルでは、1件がそのどの行の`変異の結果`にも一致する。
 
 ### REQ-core-142: 文面の無くなった1件
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A20, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A48, docs/decision/records/2026-09-17-mutation-tests.md#A52, docs/decision/records/2026-09-17-mutation-tests.md#A53, docs/decision/records/2026-09-17-mutation-tests.md#A57
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-17-mutation-tests.md#A20, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A48, docs/decision/records/2026-09-17-mutation-tests.md#A52, docs/decision/records/2026-09-17-mutation-tests.md#A53, docs/decision/records/2026-09-17-mutation-tests.md#A57
+- verification: unit
 
 "kotowari mutants" で、形の正しい`等価の一覧`の1件の "text" と、どちらも前後の半角空白とタブを除いて同じ文面の行が "file" のファイルに1つも無いとき（ファイルが無い、読めない、UTF-8 でないときを含む）、kotowari は "path" を`等価の一覧`のファイル、"line" を null、detail を一覧に書かれたままの "file" と "change" を ": " でつないだ文字列にして equivalent_stale の`注意`を1件ごとに出す。結果のファイルにその`変異`が現れるかは見ない。形の誤った1件には出さない。
 
 ### REQ-core-143: 形の誤った1件
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A17, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A37, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A44, docs/decision/records/2026-09-17-mutation-tests.md#A51, docs/decision/records/2026-09-17-mutation-tests.md#A53, docs/decision/records/2026-09-17-mutation-tests.md#A57
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A17, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A37, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A44, docs/decision/records/2026-09-17-mutation-tests.md#A51, docs/decision/records/2026-09-17-mutation-tests.md#A53, docs/decision/records/2026-09-17-mutation-tests.md#A57
+- verification: unit
 
 "kotowari mutants" で、`等価の一覧`の1件が鍵と値の組でないとき、"file"、"change"、"text"、"class"、"why" のいずれかの鍵が無いとき、この5つ以外の鍵を持つとき、値が文字列でないとき、"why" が前後の半角空白とタブを除いて空のとき、"class" が "equivalent" でないとき、または "file" が絶対パスか ".." の要素を含むとき、kotowari は "path" を`等価の一覧`のファイル、"line" を null、detail を一覧に書かれたままの "file" と "change" を ": " でつないだ文字列にして equivalent_invalid の`誤り`を1件ごとに出し、その1件をどの`変異の結果`とも一致させない。detail の "file" と "change" は、無いか文字列でなければ空の文字列にする。同じ内容の1件が2つ以上あること自体は検査しない。
 
 ### REQ-core-148: 一覧の置き場
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A44, docs/decision/records/2026-09-17-mutation-tests.md#A45, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A44, docs/decision/records/2026-09-17-mutation-tests.md#A45, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55
+- verification: unit
 
 設定に "mutants.equivalents" の鍵が無いとき、または指す先が空（0バイトか注釈だけ）のとき、kotowari は`等価の一覧`を0件として "kotowari mutants" を続ける。鍵の指す先が無いか読めないとき、kotowari は読めないファイルを理由に`停止`する。指す先が UTF-8 でないとき、kotowari は UTF-8 でないファイルを理由に`停止`する。指す先が YAML として読めないとき、または最上位が並びでないとき、kotowari は設定の誤りを理由に`停止`し、詳細に`等価の一覧`のファイルの相対パスを出す。"kotowari check" は鍵の値を REQ-core-014 のとおりに検査するだけで、指す先を読まず、有無も見ない。
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-core-211 @about=REQ-core-139,REQ-core-141,REQ-core-145 @source=docs/decision/records/2026-09-17-mutation-tests.md#A9,docs/decision/records/2026-09-17-mutation-tests.md#A11,docs/decision/records/2026-09-17-mutation-tests.md#A15,docs/decision/records/2026-09-17-mutation-tests.md#A31,docs/decision/records/2026-09-17-mutation-tests.md#A37,docs/decision/records/2026-09-17-mutation-tests.md#A38,docs/decision/records/2026-09-17-mutation-tests.md#A52

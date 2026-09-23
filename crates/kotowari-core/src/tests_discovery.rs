@@ -736,7 +736,7 @@ pub struct ScenarioCoverage {
 /// 同じ ID の`シナリオ`が2か所以上にあるときは REQ-core-032 の1つ目（文書はパスのバイト順、
 /// 同じ文書では行の小さい方）を使う。docs も items もその順に並んでいる。
 pub fn collect_scenarios(docs: &[IrDocument], ir_path: &str) -> BTreeMap<String, ScenarioCoverage> {
-    // 要求の ID から "- 検証:" の値を引く（行が無ければ None）
+    // 要求の ID から "- verification:" の値を引く（行が無ければ None）
     let mut verifications: BTreeMap<&str, Option<&str>> = BTreeMap::new();
     for doc in docs {
         for item in &doc.items {
@@ -750,7 +750,7 @@ pub fn collect_scenarios(docs: &[IrDocument], ir_path: &str) -> BTreeMap<String,
     for doc in docs {
         for item in &doc.items {
             if let Item::Scenario { id: Some(id), line, tag_line, about, .. } = item {
-                // 要求として解決できない "@about"、"- 検証:" の行の無い要求、
+                // 要求として解決できない "@about"、"- verification:" の行の無い要求、
                 // 検証の値が4つ以外の要求、検証が "review" の要求は数えない
                 let needs_test = about.iter().any(|a| {
                     matches!(verifications.get(a.as_str()), Some(Some(v))

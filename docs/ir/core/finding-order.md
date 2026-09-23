@@ -2,36 +2,36 @@
 
 指摘の並べ方と、指摘の "line" の決め方を扱う。
 
-## 要求
+## Requirements
 
 ### REQ-core-024: 指摘の並べ方
 
-- 種類: algorithm
-- 出典: docs/decision/records/records.md#A61, docs/decision/records/records.md#A70
-- 定義: TBL-core-007, PROP-core-003
-- 検証: property
+- kind: algorithm
+- source: docs/decision/records/records.md#A61, docs/decision/records/records.md#A70
+- definition: TBL-core-007, PROP-core-003
+- verification: property
 
 ### REQ-core-027: 文書全体への指摘
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A40, docs/decision/records/records.md#A83, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A112, docs/decision/records/records.md#A144, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A83, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A112, docs/decision/records/records.md#A144, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43
+- verification: unit
 
 kotowari は常に、種類が missing_title、multiple_titles、missing_scope、too_many_lines、too_many_requirements、unparsable_file、glossary_invalid、equivalent_stale、equivalent_invalid の`指摘`の "line" を null にし、ほかの種類の "line" を TBL-core-019 のとおりにする。
 
 ### REQ-core-028: 行は1始まり
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A61
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/records.md#A61
+- verification: unit
 
 kotowari は常に、`指摘`の "line" を1始まりで数える。
 
-## 決定表
+## Decision tables
 
 ### TBL-core-007: findings の並べ方
 
-- 出典: docs/decision/records/records.md#A61, docs/decision/records/records.md#A70
+- source: docs/decision/records/records.md#A61, docs/decision/records/records.md#A70
 
 | 順 | 鍵 | 並べ方 |
 |---|---|---|
@@ -42,7 +42,7 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 
 ### TBL-core-019: 指摘の行
 
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A40, docs/decision/records/records.md#A144, docs/decision/records/records.md#A114, docs/decision/records/records.md#A121, docs/decision/records/records.md#A139, docs/decision/records/records.md#A108, docs/decision/records/records.md#A61, docs/decision/records/records.md#A72, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A4, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-scenario-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-22-id-namespace.md#A3
+- source: docs/decision/records/2026-09-22-ir-engine.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A40, docs/decision/records/records.md#A144, docs/decision/records/records.md#A114, docs/decision/records/records.md#A121, docs/decision/records/records.md#A139, docs/decision/records/records.md#A108, docs/decision/records/records.md#A61, docs/decision/records/records.md#A72, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A4, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-scenario-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-22-id-namespace.md#A3
 
 | 種類 | line |
 |---|---|
@@ -66,10 +66,10 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 | unknown_code_block | 開始の行 |
 | glossary_title_invalid | 題名の行 |
 
-## 性質
+## Properties
 
 ### PROP-core-003: findings は並んでいる
 
-- 出典: docs/decision/records/records.md#A61, docs/decision/records/records.md#A70, docs/decision/records/ir-form.md#出力
+- source: docs/decision/records/records.md#A61, docs/decision/records/records.md#A70, docs/decision/records/ir-form.md#出力
 
 "findings" の中で隣り合うどの2つの`指摘`も、TBL-core-007 の順で比べて後ろのものが前のものより先に来ない。

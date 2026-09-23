@@ -2,60 +2,60 @@
 
 "kotowari query" が `ID` を1つ受け、その `ID` を持つ`項目`か`シナリオ`を "kotowari list" の1件の形に本文と逆引きを足して出すところを扱う。
 
-## 要求
+## Requirements
 
 ### REQ-core-156: query の読み取り
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-20-query-status.md#A1, docs/decision/records/2026-09-20-query-status.md#A4, docs/decision/records/2026-09-20-query-status.md#A6, docs/decision/records/2026-09-20-query-status.md#A19
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-20-query-status.md#A1, docs/decision/records/2026-09-20-query-status.md#A4, docs/decision/records/2026-09-20-query-status.md#A6, docs/decision/records/2026-09-20-query-status.md#A19
+- verification: unit
 
 kotowari は常に、"kotowari query" で "kotowari check" と同じ設定と置き場から`IR`の文書と`テストのファイル`を読み、位置引数と同じ `ID` を持つ`項目`と`シナリオ`をすべて "items" に出し、`指摘`を出さず、終了コードを0にする。`IR`の文書に`誤り`があっても、読めた`項目`と`シナリオ`は出す。同じ `ID` を持つものが複数あれば全部出す。
 
 ### REQ-core-157: query の引数
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A136, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A6
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A136, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A6
+- verification: unit
 
 "--help" も "--version" も無い "kotowari query" で、位置引数がちょうど1つでないとき、位置引数が `ID` の形でないとき、または位置引数と同じ `ID` を持つ`項目`も`シナリオ`も無いとき、kotowari は引数の誤りを理由に`停止`する。`ID` を持つものが無いときの詳細は "unknown id: " に位置引数の文字を続けた形である。
 
 ### REQ-core-158: query の停止
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-20-query-status.md#A19
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-20-query-status.md#A19
+- verification: unit
 
 "kotowari query" で、"kotowari check" が`停止`する条件（設定の誤り、読めないファイル、引数の誤り）が成り立つとき、kotowari は check と同じ理由と文言で`停止`する。
 
 ### REQ-core-159: query の1件の形
 
-- 種類: algorithm
-- 出典: docs/decision/records/2026-09-20-query-status.md#A2, docs/decision/records/2026-09-20-query-status.md#A3, docs/decision/records/2026-09-20-query-status.md#A4, docs/decision/records/2026-09-20-query-status.md#A16, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24
-- 定義: TBL-core-027
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/2026-09-20-query-status.md#A2, docs/decision/records/2026-09-20-query-status.md#A3, docs/decision/records/2026-09-20-query-status.md#A4, docs/decision/records/2026-09-20-query-status.md#A16, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24
+- definition: TBL-core-027
+- verification: unit
 
 ### REQ-core-160: query の並び
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-20-query-status.md#A15, docs/decision/records/2026-09-20-query-status.md#A20
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-20-query-status.md#A15, docs/decision/records/2026-09-20-query-status.md#A20
+- verification: unit
 
 kotowari は常に、"items" を "kotowari list" と同じ順に並べ、1件の "referenced_by" を "path" の昇順、同じ "path" の中は "line" の昇順に並べる。
 
 ### REQ-core-161: query の出力の形
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-20-query-status.md#A4, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A7, docs/decision/records/2026-09-20-query-status.md#A13
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-20-query-status.md#A4, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A7, docs/decision/records/2026-09-20-query-status.md#A13
+- verification: unit
 
 kotowari は常に、"kotowari query" の "--format" の値として "json" と "text" の2つだけを受け、既定を "json" にする。"json" では最上位が "items" だけの JSON を1つ出し、"items" は `TBL-core-027` の鍵を持つ1件の並びである。"text" では1件ごとに、"kotowari list" の "text" と同じ1行目と "tests" の行を出し、その後に "body" の各行を2つの半角空白で字下げして出し、最後に "referenced_by" の1件ごとに "  <- ID via パス:行" の行を出す。
 
-## 決定表
+## Decision tables
 
 ### TBL-core-027: query の1件の鍵
 
-- 出典: docs/decision/records/2026-09-20-query-status.md#A2, docs/decision/records/2026-09-20-query-status.md#A3, docs/decision/records/2026-09-20-query-status.md#A4, docs/decision/records/2026-09-20-query-status.md#A16, docs/decision/records/2026-09-23-ir-engine-gaps.md#A9, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24, docs/decision/records/2026-09-23-ir-engine-gaps.md#A34, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- source: docs/decision/records/2026-09-20-query-status.md#A2, docs/decision/records/2026-09-20-query-status.md#A3, docs/decision/records/2026-09-20-query-status.md#A4, docs/decision/records/2026-09-20-query-status.md#A16, docs/decision/records/2026-09-23-ir-engine-gaps.md#A9, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24, docs/decision/records/2026-09-23-ir-engine-gaps.md#A34, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 
 | 鍵 | 持つ種類 | 中身 |
 |---|---|---|
@@ -64,7 +64,7 @@ kotowari は常に、"kotowari query" の "--format" の値として "json" と 
 | referenced_by | すべて | その `ID` を指している`項目`と`シナリオ`の並び。1件は "id"、"kind"、"path"、"line"（`TBL-core-026` と同じ意味）と "via" |
 | referenced_by の via | すべて | "definition"（"- definition:" の行）、"relations"（"- related:" の行）、"about"（"@about" のタグ）、"text"（`要求`の文、`性質`の文、`シナリオ`のステップの中の、二重引用符の外でバッククォートで囲んだ `ID`。REQ-core-054 と同じ判定）のいずれか |
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-core-250 @about=REQ-core-156,REQ-core-159,TBL-core-027 @source=docs/decision/records/2026-09-20-query-status.md#A2,docs/decision/records/2026-09-20-query-status.md#A3,docs/decision/records/2026-09-20-query-status.md#A4,docs/decision/records/2026-09-20-query-status.md#A16,docs/decision/records/2026-09-20-query-status.md#A19,docs/decision/records/2026-09-23-ir-english-tokens.md#A2

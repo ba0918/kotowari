@@ -2,83 +2,83 @@
 
 テストに書く印の構文と、印をテストに結び付ける規則を扱う。
 
-## 要求
+## Requirements
 
 ### REQ-core-071: 印の構文
 
-- 種類: algorithm
-- 出典: docs/decision/records/records.md#A14, docs/decision/records/records.md#A57
-- 定義: TBL-core-015
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/records.md#A14, docs/decision/records/records.md#A57
+- definition: TBL-core-015
+- verification: unit
 
 ### REQ-core-072: 形の誤った印
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A57, docs/decision/records/records.md#A67, docs/decision/records/records.md#A39, docs/decision/records/records.md#A121, docs/decision/records/records.md#A111
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A57, docs/decision/records/records.md#A67, docs/decision/records/records.md#A39, docs/decision/records/records.md#A121, docs/decision/records/records.md#A111
+- verification: unit
 
 `問い合わせのある言語`で`テスト`の外にあるものを除く`印`について、その中が空か区切りだけのとき、またはその`印`に同じ行の閉じ括弧が無いとき、kotowari は行の文字を detail にして invalid_marker の`誤り`を出す。
 
 ### REQ-core-073: 1行に複数の印
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A57
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/records.md#A57
+- verification: unit
 
 kotowari は常に、1行の中の`印`をすべて拾う。
 
 ### REQ-core-074: コメント記号を見ない
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A14
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/records.md#A14
+- verification: unit
 
 kotowari は常に、`印`を行のどの位置からも拾い、コメント記号を見ない。
 
 ### REQ-core-075: 印の結び付け
 
-- 種類: algorithm
-- 出典: docs/decision/records/records.md#A26, docs/decision/records/records.md#A34, docs/decision/records/records.md#A39, docs/decision/records/records.md#A57
-- 定義: TBL-core-016
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/records.md#A26, docs/decision/records/records.md#A34, docs/decision/records/records.md#A39, docs/decision/records/records.md#A57
+- definition: TBL-core-016
+- verification: unit
 
 ### REQ-core-076: 問い合わせの無い言語の印
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A39, docs/decision/records/records.md#A57
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A39, docs/decision/records/records.md#A57
+- verification: unit
 
 `問い合わせの無い言語`の`テストのファイル`を読むとき、kotowari はコメントかどうかを問わず、ファイルの文字の中の`印`をすべて拾う。
 
 ### REQ-core-077: 存在しない ID だけを指す印
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A57, docs/decision/records/records.md#A89
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A57, docs/decision/records/records.md#A89
+- verification: unit
 
 `印`が存在しない`ID`だけを指すとき、kotowari はその`印`の結び付いた`テスト`を`印`のあるものと数える。`印`の角括弧の中の`ID`の形でない要素（"REQ001" のように区切りの無いもの）は、存在しない`ID`を指したものとして unresolved_reference の`誤り`を出す。
 
 ### REQ-core-078: review の要求を指す印
 
-- 種類: event_driven
-- 出典: docs/decision/records/records.md#A39
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/records.md#A39
+- verification: unit
 
 `印`が検証の値 "review" の`要求`を指すとき、kotowari はそれを`誤り`にしない。
 
 ### REQ-core-118: 印の指摘の行
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/records.md#A121
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/records.md#A121
+- verification: unit
 
 kotowari は常に、`印`から出す unresolved_reference と invalid_marker の "line" を`印`のある行（行をまたぐ`印`なら "@kotowari[" のある行）にする。
 
-## 決定表
+## Decision tables
 
 ### TBL-core-015: 印の構文
 
-- 出典: docs/decision/records/records.md#A14, docs/decision/records/records.md#A57
+- source: docs/decision/records/records.md#A14, docs/decision/records/records.md#A57
 
 | 部分 | 形 |
 |---|---|
@@ -88,7 +88,7 @@ kotowari は常に、`印`から出す unresolved_reference と invalid_marker �
 
 ### TBL-core-016: 印の結び付け（問い合わせのある言語）
 
-- 出典: docs/decision/records/records.md#A26, docs/decision/records/records.md#A34, docs/decision/records/records.md#A39, docs/decision/records/records.md#A57, docs/decision/records/records.md#A67, docs/decision/records/records.md#A121
+- source: docs/decision/records/records.md#A26, docs/decision/records/records.md#A34, docs/decision/records/records.md#A39, docs/decision/records/records.md#A57, docs/decision/records/records.md#A67, docs/decision/records/records.md#A121
 
 | 印の位置 | 扱い |
 |---|---|
@@ -99,7 +99,7 @@ kotowari は常に、`印`から出す unresolved_reference と invalid_marker �
 | テストの外 | 無視し、invalid_marker も unresolved_reference も出さない |
 | マクロの中の関数 | 上と同じ規則を適用する |
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-core-015 @about=REQ-core-073 @source=docs/decision/records/records.md#A57,docs/decision/records/records.md#A26,docs/decision/records/records.md#A39

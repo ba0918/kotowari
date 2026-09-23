@@ -25,9 +25,9 @@ pub struct ExtractedItem {
     pub line: usize,
     /// 見出しの ID
     pub id: String,
-    /// "- 種類:" の値
+    /// "- kind:" の値
     pub kind: Option<String>,
-    /// "- 検証:" の値
+    /// "- verification:" の値
     pub verification: Option<String>,
 }
 
@@ -236,12 +236,12 @@ pub fn map_finding(
                 Ok(item_at(ctx, engine, line_of(engine)?)?.id.clone())
             };
             match node {
-                "検証" => make(FindingKind::VerificationMissing, engine.line, id()?),
-                "出典" => make(FindingKind::MissingSource, engine.line, id()?),
-                "種類" | "確かめ方" | "関係" => {
+                "verification" => make(FindingKind::VerificationMissing, engine.line, id()?),
+                "source" => make(FindingKind::MissingSource, engine.line, id()?),
+                "kind" | "how_to_verify" | "related" => {
                     make(FindingKind::MissingField, engine.line, node.to_string())
                 }
-                "定義" => make(FindingKind::AlgorithmWithoutDefinition, engine.line, id()?),
+                "definition" => make(FindingKind::AlgorithmWithoutDefinition, engine.line, id()?),
                 _ => Err(no_row(engine)),
             }
         }
@@ -257,15 +257,15 @@ pub fn map_finding(
                 })
             };
             match node_of(engine)? {
-                "種類" => make(
+                "kind" => make(
                     FindingKind::UnknownKind,
                     Some(item.line),
-                    value(&item.kind, "種類")?,
+                    value(&item.kind, "kind")?,
                 ),
-                "検証" => make(
+                "verification" => make(
                     FindingKind::VerificationInvalid,
                     Some(item.line),
-                    value(&item.verification, "検証")?,
+                    value(&item.verification, "verification")?,
                 ),
                 _ => Err(no_row(engine)),
             }

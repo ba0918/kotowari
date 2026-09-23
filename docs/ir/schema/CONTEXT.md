@@ -1,8 +1,8 @@
-# 用語集
+# Glossary
 
 mds の仕様 IR で使う用語を置く。意味が一般の用法と違うものだけを載せる。
 
-| 用語 | 意味 | 出典 |
+| Term | Meaning | Source |
 |---|---|---|
 | スキーマ | 文書の書式（構造と制約）と抽出規則を宣言する YAML ファイル | docs/decision/records/2026-09-21-mds-spec.md#A1 |
 | 文書 | mds が検査と抽出の対象にする Markdown ファイル | docs/decision/records/2026-09-21-mds-spec.md#A1 |

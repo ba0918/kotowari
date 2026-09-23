@@ -2,52 +2,52 @@
 
 "kotowari status" が`IR`と`印`のある`テスト`と "kotowari check" の`指摘`を集計し、揃っているか（complete）を数と真偽で出すところを扱う。
 
-## 要求
+## Requirements
 
 ### REQ-core-162: status の読み取り
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A19
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A19
+- verification: unit
 
 kotowari は常に、"kotowari status" で "kotowari check" と同じ設定と置き場から`IR`の文書と`テストのファイル`を読み、check と同じ検査を行い、`指摘`を出さず、`TBL-core-028` の鍵を持つ集計を1つ標準出力に出す。
 
 ### REQ-core-163: status の停止
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-20-query-status.md#A19
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-20-query-status.md#A19
+- verification: unit
 
 "kotowari status" で、"kotowari check" が`停止`する条件（設定の誤り、読めないファイル、引数の誤り）が成り立つとき、kotowari は check と同じ理由と文言で`停止`する。
 
 ### REQ-core-164: 集計の鍵
 
-- 種類: algorithm
-- 出典: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A12
-- 定義: TBL-core-028
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A12
+- definition: TBL-core-028
+- verification: unit
 
 ### REQ-core-165: complete と終了コード
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-20-query-status.md#A9, docs/decision/records/2026-09-20-query-status.md#A11
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-20-query-status.md#A9, docs/decision/records/2026-09-20-query-status.md#A11
+- verification: unit
 
 kotowari は常に、"kotowari check" の`誤り`が0件で、かつ`問題の記録`の`項目`が0件のときだけ "complete" を true にし、そのとき終了コードを0にし、false のとき終了コードを1にする。`停止`は2である。
 
 ### REQ-core-166: status の出力の形
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-20-query-status.md#A13, docs/decision/records/2026-09-20-query-status.md#A14, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-20-query-status.md#A20
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-20-query-status.md#A13, docs/decision/records/2026-09-20-query-status.md#A14, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-20-query-status.md#A20
+- verification: unit
 
 kotowari は常に、"kotowari status" の "--format" の値として "json" と "text" の2つだけを受け、既定を "json" にする。"json" では最上位が `TBL-core-028` の群の鍵だけの JSON を1つ出し、群の順は `TBL-core-028` の表の順で "complete" が最後である。"text" では `TBL-core-028` の群ごとに "群名 鍵=値 鍵=値" の形の1行を、`TBL-core-028` の表の順に出す。鍵の語は JSON と同じで、値の間は1つの半角空白で区切り、桁揃えの空白は入れない。"complete" の行は "complete true" か "complete false" である。
 
-## 決定表
+## Decision tables
 
 ### TBL-core-028: status の鍵
 
-- 出典: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A9, docs/decision/records/2026-09-20-query-status.md#A12, docs/decision/records/2026-09-20-query-status.md#A14, docs/decision/records/2026-09-20-query-status.md#A20, docs/decision/records/2026-09-17-scenario-tests.md#A9, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- source: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A9, docs/decision/records/2026-09-20-query-status.md#A12, docs/decision/records/2026-09-20-query-status.md#A14, docs/decision/records/2026-09-20-query-status.md#A20, docs/decision/records/2026-09-17-scenario-tests.md#A9, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 
 | 群 | 鍵 | 中身 |
 |---|---|---|
@@ -63,7 +63,7 @@ kotowari は常に、"kotowari status" の "--format" の値として "json" と
 | findings | error、notice | "kotowari check" の`指摘`のうち severity が "error" のものと "notice" のものの数 |
 | complete | （値だけ） | true か false（REQ-core-165） |
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-core-258 @about=REQ-core-162,REQ-core-165,TBL-core-028 @source=docs/decision/records/2026-09-20-query-status.md#A8,docs/decision/records/2026-09-20-query-status.md#A9,docs/decision/records/2026-09-20-query-status.md#A11,docs/decision/records/2026-09-20-query-status.md#A20,docs/decision/records/2026-09-23-ir-english-tokens.md#A2

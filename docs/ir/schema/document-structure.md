@@ -2,84 +2,84 @@
 
 この文書は、題名、前置部、節、項目という文書の骨格を、スキーマがどう検証するかを扱う。
 
-## 要求
+## Requirements
 
 ### REQ-schema-022: 題名は1つ
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12
+- verification: unit
 
 mds は常に、`文書`が`題名`をちょうど1つ持つことを求め、無いときを1件の`指摘`にし、2つ以上あるときは2つ目以降の`題名`ごとに、その`題名`の行番号と`生の行`を持つ`指摘`を1件ずつ出す。
 
 ### REQ-schema-023: 前置部に宣言するもの
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A68
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-22-ir-engine.md#A68
+- verification: unit
 
 mds は常に、`前置部`そのものには`抽出`の鍵を持たせず、`前置部`の内側の`ノード`（TBL-schema-004）に宣言させる。
 
 ### REQ-schema-024: 節の名前
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A2
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A2
+- verification: unit
 
 mds は常に、`節`を見出しの文字で見分け、`スキーマ`が宣言した名前と一致しない`節`を`指摘`にする。
 
 ### REQ-schema-025: 項目の見出しの形
 
-- 種類: algorithm
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
-- 定義: TBL-schema-006
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/2026-09-21-mds-spec.md#A5
+- definition: TBL-schema-006
+- verification: unit
 
 ### REQ-schema-026: 深すぎる見出し
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-21-mds-spec.md#A5
+- verification: unit
 
 深さ4以上の見出しがあるとき、mds はその見出しを`指摘`にする。
 
 ### REQ-schema-027: 宣言していない項目
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A5
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A5
+- verification: unit
 
 `項目`を宣言していない`節`の中に深さ3の見出しがあるとき、mds はその見出しと、その内側の行を`指摘`にする。`開いた世界`でも同じである。
 
 ### REQ-schema-061: 文書の直下の項目
 
-- 種類: event_driven
-- 出典: docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A23, docs/decision/records/2026-09-23-ir-engine-gaps.md#A41, docs/decision/records/2026-09-23-ir-engine-gaps.md#A45
-- 検証: unit
+- kind: event_driven
+- source: docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A23, docs/decision/records/2026-09-23-ir-engine-gaps.md#A41, docs/decision/records/2026-09-23-ir-engine-gaps.md#A45
+- verification: unit
 
 `スキーマ`が文書の直下の`項目`を宣言したとき、mds は最初の`節`より前にある深さ3の見出しをその`項目`として読み、`前置部`を最初の`節`か`項目`の手前で終える。同じ`文書`に`節`の下の`項目`と文書の直下の`項目`の両方があってもよい。文書の直下の`項目`を宣言しない`スキーマ`では、`前置部`を宣言したときか`閉じた世界`のとき、最初の`節`より前にある深さ3の見出しと、その内側の行を`指摘`にする。`前置部`を宣言しない`開いた世界`では、未宣言の構造として許す（REQ-schema-002、REQ-schema-003）。
 
 ### REQ-schema-056: 必須の項目の欠落
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A69
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-21-mds-spec.md#A69
+- verification: unit
 
 mds は常に、`出現回数`を宣言した`項目`が足りないときは、下限を割ったものとして`指摘`にする。`節`の欠落の`指摘`はこのとき出さない。
 
 ### REQ-schema-057: 出現回数の指摘の規則種別
 
-- 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A86
-- 検証: unit
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-22-ir-engine.md#A86
+- verification: unit
 
 mds は常に、`出現回数`の下限と上限の`指摘`に、どの`規則種別`の`ノード`を数えたかを持たせる。
 
-## 決定表
+## Decision tables
 
 ### TBL-schema-006: 項目の見出しの読み方
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A37
+- source: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A37
 
 | 順 | 見出しの形 | 読み方 |
 |---|---|---|
@@ -87,15 +87,15 @@ mds は常に、`出現回数`の下限と上限の`指摘`に、どの`規則�
 | 2 | コロンがあり、その前が`スキーマ`の正規表現に合う | ID と名前として読む |
 | 3 | コロンがあり、その前が正規表現に合わない | ID の形に合わない`指摘` |
 
-## 性質
+## Properties
 
 ### PROP-schema-005: 骨格の深さは3段で閉じている
 
-- 出典: docs/decision/records/2026-09-21-mds-spec.md#A5
+- source: docs/decision/records/2026-09-21-mds-spec.md#A5
 
 `スキーマ`が宣言できる見出しの深さは、`題名`、`節`、`項目`の3段だけであり、`項目`の下にさらに見出しの`ノード`を宣言する手段は無い。
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-schema-009 @about=REQ-schema-025 @source=docs/decision/records/2026-09-21-mds-spec.md#A5

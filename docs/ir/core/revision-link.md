@@ -2,20 +2,20 @@
 
 判断の記録の superseded_by の補足の行にあるリンクの形と、先の実在の検査を扱う。適用の範囲（"## Context" の有無を見ずすべての判断の記録に適用する）は record-form.md の REQ-core-129 が決め、補足の行の有無と名前の検査も record-form.md が扱う。
 
-## 要求
+## Requirements
 
 ### REQ-core-132: superseded_by のリンク
 
-- 種類: algorithm
-- 出典: docs/decision/records/2026-09-17-record-form.md#A4, docs/decision/records/2026-09-17-record-form.md#A6, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A18, docs/decision/records/2026-09-17-record-form.md#A19, docs/decision/records/2026-09-17-record-form.md#A20, docs/decision/records/2026-09-17-record-form.md#A21, docs/decision/records/2026-09-17-record-form.md#A22, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-record-form.md#A27, docs/decision/records/2026-09-17-record-form.md#A29, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A36, docs/decision/records/2026-09-17-record-form.md#A37, docs/decision/records/2026-09-17-record-form.md#A38, docs/decision/records/2026-09-17-decision-log.md#A3, docs/decision/records/2026-09-17-decision-log.md#A10, docs/decision/records/2026-09-17-record-form.md#A33, docs/decision/records/2026-09-17-record-form.md#A42, docs/decision/records/2026-09-17-record-form.md#A43, docs/decision/records/2026-09-17-record-form.md#A41, docs/decision/records/2026-09-17-record-form.md#A44
-- 定義: TBL-core-023
-- 検証: unit
+- kind: algorithm
+- source: docs/decision/records/2026-09-17-record-form.md#A4, docs/decision/records/2026-09-17-record-form.md#A6, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A18, docs/decision/records/2026-09-17-record-form.md#A19, docs/decision/records/2026-09-17-record-form.md#A20, docs/decision/records/2026-09-17-record-form.md#A21, docs/decision/records/2026-09-17-record-form.md#A22, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-record-form.md#A27, docs/decision/records/2026-09-17-record-form.md#A29, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A36, docs/decision/records/2026-09-17-record-form.md#A37, docs/decision/records/2026-09-17-record-form.md#A38, docs/decision/records/2026-09-17-decision-log.md#A3, docs/decision/records/2026-09-17-decision-log.md#A10, docs/decision/records/2026-09-17-record-form.md#A33, docs/decision/records/2026-09-17-record-form.md#A42, docs/decision/records/2026-09-17-record-form.md#A43, docs/decision/records/2026-09-17-record-form.md#A41, docs/decision/records/2026-09-17-record-form.md#A44
+- definition: TBL-core-023
+- verification: unit
 
-## 決定表
+## Decision tables
 
 ### TBL-core-023: superseded_by のリンクの判定
 
-- 出典: docs/decision/records/2026-09-17-record-form.md#A4, docs/decision/records/2026-09-17-record-form.md#A6, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A18, docs/decision/records/2026-09-17-record-form.md#A19, docs/decision/records/2026-09-17-record-form.md#A20, docs/decision/records/2026-09-17-record-form.md#A21, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-record-form.md#A27, docs/decision/records/2026-09-17-record-form.md#A29, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A36, docs/decision/records/2026-09-17-record-form.md#A37, docs/decision/records/2026-09-17-record-form.md#A38, docs/decision/records/2026-09-17-record-form.md#A33, docs/decision/records/2026-09-17-record-form.md#A42, docs/decision/records/2026-09-17-record-form.md#A43, docs/decision/records/2026-09-17-record-form.md#A41, docs/decision/records/2026-09-17-record-form.md#A44, docs/decision/records/2026-09-19-mutants-followup.md#A3, docs/decision/records/2026-09-19-mutants-followup.md#A8
+- source: docs/decision/records/2026-09-17-record-form.md#A4, docs/decision/records/2026-09-17-record-form.md#A6, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A18, docs/decision/records/2026-09-17-record-form.md#A19, docs/decision/records/2026-09-17-record-form.md#A20, docs/decision/records/2026-09-17-record-form.md#A21, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-record-form.md#A27, docs/decision/records/2026-09-17-record-form.md#A29, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A36, docs/decision/records/2026-09-17-record-form.md#A37, docs/decision/records/2026-09-17-record-form.md#A38, docs/decision/records/2026-09-17-record-form.md#A33, docs/decision/records/2026-09-17-record-form.md#A42, docs/decision/records/2026-09-17-record-form.md#A43, docs/decision/records/2026-09-17-record-form.md#A41, docs/decision/records/2026-09-17-record-form.md#A44, docs/decision/records/2026-09-19-mutants-followup.md#A3, docs/decision/records/2026-09-19-mutants-followup.md#A8
 
 名前が "superseded_by" で値が空でない`補足の行`の値にある "[文字](href)" の形をリンクとする。リンクは、値の "[" から最初の "]" まで、その直後が "(" のときは最初の ")" までとし、"(" と ")" の間を href とする。文字は空でもよい。"]" が無いとき、"]" の直後が "(" でないとき、その "(" に対応する ")" が無いときは、その "[" はこの形に当たらず読み飛ばし、走査はその "[" の次の文字から続ける。リンクとして読めたときは、走査はその ")" の次の文字から続け、リンクの中の "[" から別のリンクを読み始めない。判定はリンクごとに行い、無効なリンク1つにつき、"line" をその`補足の行`にして revision_link_invalid の`誤り`を1件出す。同じ行に同じ href が複数あっても出現ごとに1件出す。detail は href（順1では行の値。値は REQ-core-133 のとおり前後の空白を除いたもので、行の文字そのままではない）。順3の解決は、href の最初の "#" より前を記録のファイルのディレクトリに字面でつなぎ、REQ-core-110 の正規化をかけた後に、".." を左から順に直前の要素を消して解く。消す要素が無ければ置き場の外とする。
 
@@ -28,7 +28,7 @@
 | 5 | 先の`決定の節`と`Superseded の節`のどこにも、その番号の`番号の行`が無い | revision_link_invalid |
 | 6 | 1 から 5 のどれにも当たらない | 正しい |
 
-## 具体例
+## Examples
 
 ```gherkin
 @id=EX-core-106 @about=REQ-core-132 @source=docs/decision/records/2026-09-17-record-form.md#A4,docs/decision/records/2026-09-17-record-form.md#A18,docs/decision/records/2026-09-17-record-form.md#A20,docs/decision/records/2026-09-17-record-form.md#A21,docs/decision/records/2026-09-17-record-form.md#A22,docs/decision/records/2026-09-17-record-form.md#A27
