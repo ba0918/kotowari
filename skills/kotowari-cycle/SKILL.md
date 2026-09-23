@@ -81,8 +81,8 @@ included). The limit, when the person set one, counts round trips.
 When the plan's specification is the kotowari IR, the specification path in both reviews is the
 IR store path; the reviewer reads every document in the store. For a topic with no IR it is the
 path the plan names, and no ID file goes along. The requirements and scenarios the diff should cover go along as a file: narrow
-`kotowari list` with `jq` to the IDs the diff targets (as in the kotowari-plan skill's
-**Reading the requirements**), write that output to a file, and pass its path. A reviewer is
+`kotowari list` with `jq` to the IDs the plan covers (select by `.id`; the kotowari-plan skill's
+**Reading the requirements** shows the `jq` style), write that output to a file, and pass its path. A reviewer is
 assumed unable to run commands; never pass the whole output.
 
 Paste the kotowari skill's `references/mark.md` into the implement and fixer prompts: a delegate
@@ -154,11 +154,18 @@ put both outputs in the report. Read them as the kotowari skill's scene check
 is in the check's findings if `findings` shows a nonzero `error`, and in the problem record if
 `items` shows a nonzero `flag`.
 
-- Test-side findings (requirement_without_test, scenario_without_test, test_without_id,
-  invalid_marker, unparsable_file, and unresolved_reference from a mark) are findings for the
-  fixer: make them visible and run the diff loop. If they do not go away, end as ending 3 (no
-  progress).
-- IR-side findings are not fixed in the cycle. Put them in the terminal report as the person's
+Only this run's findings are worked on. A finding is this run's when its `path` is a file the
+branch changed (`git diff --name-only <base>..HEAD`) or it names an ID the plan covers; narrow the
+JSON with `jq` rather than reading it whole. Every other finding was there before the run: count
+it in the terminal report by kind, and never delegate it — fixing what the run did not touch
+spends a loop on work nobody asked for. The same holds for a `complete false` whose reason is
+only such findings or problem records that were already committed.
+
+- This run's test-side findings (requirement_without_test, scenario_without_test,
+  test_without_id, invalid_marker, unparsable_file, and unresolved_reference from a mark) are
+  findings for the fixer: make them visible and run the diff loop. If they do not go away, end as
+  ending 3 (no progress).
+- This run's IR-side findings are not fixed in the cycle. Put them in the terminal report as the person's
   judgment; they go back to brainstorm.
 - Missed mutations: the pre-push hook runs mutations on the diff. A miss is fixed by the fixer or
   the implementer, like a test-side finding; how to investigate one is in the kotowari skill's

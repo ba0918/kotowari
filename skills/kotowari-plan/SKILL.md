@@ -61,8 +61,12 @@ its text form 1,000 lines. Take only the keys you need with `jq`. For example:
 
 `kotowari status` is a few hundred bytes; read it whole.
 
-The last step's check commands list `kotowari check` (exit code 0) and `kotowari status`
-(`complete true`, exit code 0).
+The last step's check commands confirm the plan's own work, not the whole repository: every
+requirement and scenario the plan covers has a marked test (`kotowari query ID` shows a
+nonempty `tests`; a requirement verified by review needs none), and `kotowari check` reports no
+error on a file the branch changed or on an ID the plan covers. Do not require `kotowari status`
+to be `complete true` or `kotowari check` to exit 0: both also count findings and problem records
+that were there before the plan, and a committed problem record can keep them false forever.
 
 ## Boundaries
 

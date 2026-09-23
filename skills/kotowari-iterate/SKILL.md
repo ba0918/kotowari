@@ -69,7 +69,7 @@ specification (it cannot run without one) or offering "continue here anyway" is 
 |---|---|---|---|
 | 1 (ambiguous) | the request read two ways (implementer) | the person, via the main session | where the readings diverge, and the question to ask |
 | 2 (specification decision), 3 (contradiction) | a missing design decision (2), a contradiction with the specification (3) — implementer or fixer | brainstorm | `/kotowari-brainstorm <topic>`, with the existing specification path if any |
-| 4 (impact unreadable) | a file outside the enumeration (implementer only) | plan if a specification exists, else brainstorm | `/kotowari-plan <specification path>` or `/kotowari-brainstorm <topic>` |
+| 4 (impact unreadable) | a file outside the enumeration (implementer only) | plan if a specification exists, else brainstorm | `/kotowari-plan <IR store path> <requirement IDs>` or `/kotowari-brainstorm <topic>` |
 
 ## The loop
 
@@ -88,6 +88,7 @@ read before the first review); "cycle" there means this run. Only these substitu
 | "run more" re-entering at step 1 when steps remain | always the diff loop |
 | the specification path and the file of IDs to cover in review delegations | the specification path and the request, both; the file of IDs only when the request touches IR items; neither path nor file when there is no specification |
 | ending 4 (a hand-back to brainstorm or plan) and its "run more or accept the rest" choice | the destination is one of the guidance table's three; the choice is not offered — the report (as in Out above) adds the hand-back reason and the guidance, and the person restarts with a new request holding their answer |
+| "names an ID the plan covers" in **kotowari check before the terminal report** | names an ID the request's enumeration covers; with none, only the files the branch changed count |
 | any other plan word meaning the plan (one plan at once, out-of-plan changes) | the request (out-of-request changes); plan as a skill name, a destination, stays; sentences about plan steps (do not interpret its steps, if steps remain) do not apply — there is no plan |
 
 The **implementer** is cycle's fixer contract pasted in full, the request replacing the visible

@@ -61,7 +61,8 @@ When writing a test, read the kotowari skill's scene mark (`references/mark.md`)
 with the IDs it verifies. Run the `kotowari check` and `kotowari status` the plan lists as check
 commands; to read their output, read the kotowari skill's scene check (`references/findings.md`).
 
-When `kotowari check` exits with 1:
+When `kotowari check` exits with 1, work only on the findings whose `path` is a file you changed
+or that name an ID the plan covers; list any others in the report without touching them:
 
 - fix the test-side findings yourself (requirement_without_test, scenario_without_test,
   test_without_id, invalid_marker, unparsable_file, and unresolved_reference from a mark);
