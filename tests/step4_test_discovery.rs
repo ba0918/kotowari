@@ -841,6 +841,29 @@ fn ex_core_326_test_inside_a_function_body_is_counted() {
     assert_eq!(twi[0]["detail"], "inner");
 }
 
+// @kotowari[REQ-core-082, TBL-core-017, EX-core-330]
+#[test]
+fn ex_core_330_function_in_a_mod_inside_a_macro_is_counted() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "tests:\n  rust:\n    macros:\n      - proptest\n",
+    )
+    .unwrap();
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "proptest! {\n    mod nested {\n        fn inside_module() {}\n    }\n}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert_eq!(twi.len(), 1, "{v}");
+    assert_eq!(twi[0]["detail"], "inside_module");
+}
+
 // @kotowari[REQ-core-075, TBL-core-016, EX-core-325]
 #[test]
 fn ex_core_325_marks_bind_only_to_the_first_test_on_the_line() {

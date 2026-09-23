@@ -77,8 +77,9 @@ impl<'s> LineMap<'s> {
     fn joins_block(&self, line: usize) -> bool {
         let (start, end) = self.lines[line];
         let mut has_text = false;
-        for (offset, c) in self.source.as_bytes()[start..end].iter().enumerate() {
-            if c.is_ascii_whitespace() {
+        // 空白は Unicode の空白（全角空白と NBSP を含む）
+        for (offset, c) in self.source[start..end].char_indices() {
+            if c.is_whitespace() {
                 continue;
             }
             if self.bytes[start + offset] == ByteClass::Code {

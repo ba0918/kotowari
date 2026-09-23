@@ -31,7 +31,9 @@ pub fn language_of(path: &str) -> Option<SupportLang> {
 
 /// 同梱のルールと設定から作るルールをまとめた、言語ごとの`問い合わせ`
 pub struct TestQueries {
-    rules: RuleCollection<SupportLang>,
+    /// ルールごとの1件だけの集まり。RuleCollection は "files" のあるルールを後ろに回すので、
+    /// 同梱、"tests.rules" の並びの順（REQ-core-181 の名前の順）を保つために分けて持つ
+    rules: Vec<RuleCollection<SupportLang>>,
     /// ルールが1つ以上ある言語
     languages: Vec<SupportLang>,
 }
@@ -64,7 +66,10 @@ impl TestQueries {
                 rule.severity = Severity::Hint;
             }
         }
-        let rules = RuleCollection::try_new(rules)
+        let rules = rules
+            .into_iter()
+            .map(|rule| RuleCollection::try_new(vec![rule]))
+            .collect::<Result<Vec<_>, _>>()
             .map_err(|e| config_error(format!("invalid glob in tests.rules: {e}")))?;
         Ok(TestQueries { rules, languages })
     }
@@ -76,7 +81,10 @@ impl TestQueries {
 
     /// その言語のルールのうち、"files" と "ignores" がそのファイルに当てることを許すもの（REQ-core-187）
     fn rules_for(&self, lang: SupportLang, rel_path: &str) -> Vec<&RuleConfig<SupportLang>> {
-        self.rules.get_rule_from_lang(Path::new(rel_path), lang)
+        self.rules
+            .iter()
+            .flat_map(|rules| rules.get_rule_from_lang(Path::new(rel_path), lang))
+            .collect()
     }
 }
 
@@ -186,13 +194,17 @@ impl ParsedFile {
         let mut found: Vec<TestNode<'_>> = Vec::new();
         for rule in queries.rules_for(lang, rel_path) {
             for m in root.find_all(&rule.matcher) {
-                if found.iter().any(|t| t.node.node_id() == m.node_id()) {
-                    continue;
-                }
                 let name = m
                     .get_env()
                     .get_match("NAME")
                     .map(|n| strip_quotes(&n.text()));
+                // 同じ節は1つと数え、名前は "$NAME" を捕まえた最初の`問い合わせ`のものにする
+                if let Some(t) = found.iter_mut().find(|t| t.node.node_id() == m.node_id()) {
+                    if t.name.is_none() {
+                        t.name = name;
+                    }
+                    continue;
+                }
                 found.push(TestNode {
                     node: m.get_node().clone(),
                     name,

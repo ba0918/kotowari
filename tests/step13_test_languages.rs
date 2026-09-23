@@ -194,6 +194,20 @@ fn ex_core_317_chained_each_table_test_is_one_test() {
     assert_eq!(unmarked(&v), vec!["each %i"], "{v}");
 }
 
+// @kotowari[REQ-core-183, TBL-core-032]
+#[test]
+fn tbl_032_test_whose_result_is_called_again_is_counted() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.ts"]);
+    write(
+        tmp.path(),
+        "tests/a.test.ts",
+        "it('curried', () => {})('other')\nit.only('chained', () => {})('other')\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["curried", "chained"], "{v}");
+}
+
 // @kotowari[REQ-core-183, TBL-core-032, EX-core-300]
 #[test]
 fn ex_core_300_describe_and_other_callers_are_not_counted() {
@@ -282,6 +296,22 @@ fn ex_core_319_mark_before_a_nested_test_binds_to_it() {
     assert_eq!(inner[0]["name"], "inner");
 }
 
+// @kotowari[REQ-core-075, TBL-core-035, EX-core-327]
+#[test]
+fn ex_core_327_comment_after_a_full_width_space_joins_the_block() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.ts"]);
+    write(
+        tmp.path(),
+        "tests/a.test.ts",
+        "\u{3000}// @kotowari[REQ-001]\n\u{a0}// @kotowari[REQ-002]\nit('x', () => {});\n",
+    );
+    let v = check(tmp.path());
+    assert!(unmarked(&v).is_empty(), "{v}");
+    assert_eq!(listed_tests(tmp.path(), "REQ-001")[0]["name"], "x");
+    assert_eq!(listed_tests(tmp.path(), "REQ-002")[0]["name"], "x");
+}
+
 // @kotowari[REQ-core-075, EX-core-320]
 #[test]
 fn ex_core_320_comment_after_code_on_the_same_line_breaks_the_block() {
@@ -357,6 +387,20 @@ fn tbl_033_decorated_test_is_counted_at_its_def_line() {
         vec![("test_x".to_string(), 10), ("test_y".to_string(), 16)],
         "{v}"
     );
+}
+
+// @kotowari[REQ-core-184, TBL-core-033, EX-core-329]
+#[test]
+fn ex_core_329_method_of_a_class_inside_a_function_is_counted() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.py"]);
+    write(
+        tmp.path(),
+        "tests/test_a.py",
+        "def test_outer():\n    class C:\n        def test_in_class(self):\n            pass\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["test_outer", "test_in_class"], "{v}");
 }
 
 // @kotowari[REQ-core-075, TBL-core-035, EX-core-307]
@@ -808,4 +852,50 @@ fn req_180_test_without_a_name_is_listed_with_a_null_name() {
     let tests = listed_tests(tmp.path(), "REQ-001");
     assert_eq!(tests.len(), 1, "{tests:?}");
     assert!(tests[0]["name"].is_null(), "{tests:?}");
+}
+
+// @kotowari[REQ-core-181, EX-core-328]
+#[test]
+fn ex_core_328_name_comes_from_the_first_rule_that_captures_it() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(
+        tmp.path(),
+        &["tests/**/*.ts"],
+        &["rules/unnamed.yml", "rules/named.yml"],
+    );
+    write(
+        tmp.path(),
+        "rules/unnamed.yml",
+        "id: unnamed\nlanguage: typescript\nrule:\n  pattern: bench($$$)\n",
+    );
+    write(tmp.path(), "rules/named.yml", BENCH_RULE);
+    write(tmp.path(), "tests/a.test.ts", "bench('chosen', () => {})\n");
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["chosen"], "{v}");
+}
+
+// @kotowari[REQ-core-181, REQ-core-187]
+#[test]
+fn req_181_rule_with_files_keeps_its_place_in_the_order() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(
+        tmp.path(),
+        &["tests/**/*.ts"],
+        &["rules/first.yml", "rules/second.yml"],
+    );
+    write(
+        tmp.path(),
+        "rules/first.yml",
+        "id: first\nlanguage: typescript\nfiles:\n  - \"**/*.ts\"\nrule:\n  pattern: bench($NAME, $$$)\n",
+    );
+    write(
+        tmp.path(),
+        "rules/second.yml",
+        "id: second\nlanguage: typescript\nrule:\n  pattern: bench($A, $NAME)\n",
+    );
+    write(tmp.path(), "tests/a.test.ts", "bench('first', 'second')\n");
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["first"], "{v}");
 }
