@@ -24,7 +24,7 @@ A topic document has the following sections (leave out the sections it does not 
 - `## Properties` — holds properties
 - `## Examples` — holds scenarios
 
-Lines are counted by `\n`; `\r\n` counts as one line. The last line counts as one line even without a newline. Lines start at 1. The character encoding is UTF-8.
+A line ends at `\n`, at `\r\n` (counted as one line end) or at a lone `\r`. The last line counts as one line even without a newline. Lines start at 1. The character encoding is UTF-8.
 
 Inside a code block (from a line starting with three or more `` ` `` or `~` to a line of the same character with the same number or more), everything except gherkin blocks is outside the check. If the document ends without closing it, an unclosed_code_block error.
 

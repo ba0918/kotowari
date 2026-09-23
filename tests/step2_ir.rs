@@ -95,6 +95,40 @@ fn req_037_crlf_counts_as_one_line() {
     assert_eq!(doc3.line_count, 1);
 }
 
+// @kotowari[EX-core-281]
+#[test]
+fn ex_core_281_bare_cr_ends_a_line() {
+    assert_eq!(ir::parse_document("a.md", "a\rb").unwrap().line_count, 2);
+    assert_eq!(ir::parse_document("b.md", "a\rb\r\nc").unwrap().line_count, 3);
+}
+
+// @kotowari[EX-core-282]
+#[test]
+fn ex_core_282_finding_after_bare_cr_has_the_split_line_number() {
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
+    std::fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\rScope.\r## Requirements\r### foo\r",
+    )
+    .unwrap();
+    let (_, findings) = ir::load_and_check(tmp.path(), &default_config()).unwrap();
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert_eq!(uh.len(), 1, "{findings:?}");
+    assert_eq!(uh[0].line, Some(4), "{findings:?}");
+}
+
+// @kotowari[TBL-core-010, REQ-core-112]
+#[test]
+fn tbl_core_010_bare_cr_keeps_items_before_an_unclosed_fence() {
+    let head = "# Title\r\rScope.\r\r## Requirements\r\r### REQ-001: R\r\r- kind: ubiquitous\r- source: brainstorm/records.md#A1\r- verification: unit\r\rStatement.\r\r";
+    let doc = ir::parse_document("a.md", &format!("{head}```\ncontent\n")).unwrap();
+    let uc: Vec<_> = doc.parse_findings.iter().filter(|f| f.kind == "unclosed_code_block").collect();
+    assert_eq!(uc.len(), 1, "{:?}", doc.parse_findings);
+    assert_eq!(uc[0].line, Some(15), "{:?}", doc.parse_findings);
+    assert_eq!(doc.items.len(), 1, "the requirement before the fence stays: {:?}", doc.items);
+}
+
 // --- REQ-core-038: 行数の上限 ---
 
 // @kotowari[REQ-core-038]
@@ -2463,6 +2497,67 @@ unclosed content
         "an item completed before the unclosed fence must be retained: {:?}",
         doc.items
     );
+}
+
+// @kotowari[REQ-core-112]
+#[test]
+fn req_112_the_opening_line_of_an_unclosed_fence_is_excluded_too() {
+    let head = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n\nStatement.\n\n";
+    // 閉じた囲みは、項目の中の宣言していない行として開始の行に unknown_line が付く
+    let closed = ir::parse_document("a.md", &format!("{head}```\ncontent\n```\n")).unwrap();
+    assert!(
+        closed.parse_findings.iter().any(|f| f.kind == "unknown_line" && f.line == Some(15)),
+        "{:?}",
+        closed.parse_findings
+    );
+    // 閉じないときは開始の行も対象から外れ、その行には unclosed_code_block だけが残る
+    let unclosed = ir::parse_document("a.md", &format!("{head}```\ncontent\n")).unwrap();
+    let at_opening: Vec<_> = unclosed
+        .parse_findings
+        .iter()
+        .filter(|f| f.line == Some(15))
+        .collect();
+    assert_eq!(at_opening.len(), 1, "{:?}", unclosed.parse_findings);
+    assert_eq!(at_opening[0].kind, "unclosed_code_block");
+}
+
+// @kotowari[REQ-core-112]
+#[test]
+fn req_112_a_fence_closes_only_with_at_least_as_many_marks() {
+    let unclosed = |content: &str| -> Vec<Option<usize>> {
+        ir::parse_document("a.md", content)
+            .unwrap()
+            .parse_findings
+            .iter()
+            .filter(|f| f.kind == "unclosed_code_block")
+            .map(|f| f.line)
+            .collect()
+    };
+    // 短い囲みは閉じない
+    assert_eq!(unclosed("# Title\n\nScope.\n\n````\nx\n```\n"), vec![Some(5)]);
+    // 長い囲みは閉じる
+    assert!(unclosed("# Title\n\nScope.\n\n```\nx\n````\n").is_empty());
+}
+
+// @kotowari[REQ-core-124, REQ-core-114]
+#[test]
+fn req_124_an_id_name_takes_lowercase_letters_digits_and_hyphens_only() {
+    let doc = |id: &str| {
+        format!(
+            "# Title\n\nScope.\n\n## Examples\n\n```gherkin\n@id={id} @about=REQ-001 @source=brainstorm/records.md#A1\nScenario: s\n  Given a\n```\n"
+        )
+    };
+    let invalid_ids = |id: &str| -> Vec<String> {
+        let parsed = ir::parse_document("a.md", &doc(id)).unwrap();
+        find_by_kind(&check(&[parsed], &default_config()), "invalid_id")
+            .iter()
+            .map(|f| f.detail.clone())
+            .collect()
+    };
+    // 2文字目から数字と "-" を置ける
+    assert!(invalid_ids("EX-a-1-001").is_empty());
+    // 2文字目以降の大文字は名前の形に合わない
+    assert_eq!(invalid_ids("EX-aB-001"), vec!["EX-aB-001"]);
 }
 
 // --- REQ-core-098: 値が空でも「知らない行」は無いものとして扱わない ---

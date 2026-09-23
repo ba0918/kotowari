@@ -562,6 +562,29 @@ fn check_directory_reports_all_failing_documents() {
     assert_eq!(files[0]["findings"][0]["kind"], "undeclared_heading");
 }
 
+// @kotowari[REQ-schema-002, REQ-schema-010]
+#[test]
+fn check_directory_relaxes_a_schema_that_declares_open() {
+    let dir = tempfile::tempdir().unwrap();
+    write_file(
+        dir.path(),
+        "schema.yaml",
+        &format!("open: true\n{T_SCHEMA}"),
+    );
+    write_file(dir.path(), "bad.md", bad_doc());
+    let output = mds()
+        .args(["check", dir.path().to_str().unwrap()])
+        .output()
+        .unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "open: true を宣言したスキーマの文書は、ディレクトリの検査でも宣言していない節を許す: {:?}",
+        output
+    );
+    assert!(output.stdout.is_empty());
+}
+
 // @kotowari[REQ-schema-010, REQ-schema-044]
 #[test]
 fn check_directory_skips_hidden_directories() {
@@ -1344,6 +1367,95 @@ fn ex_schema_040_schema_without_reading_reads_by_paragraph() {
     );
 }
 
+/// `kotowari-mds check --format json` の指摘を、行・種類・種別の組にする。
+fn finding_shape(check_json: &serde_json::Value) -> Vec<(u64, String, String)> {
+    all_findings(check_json)
+        .iter()
+        .map(|f| {
+            (
+                f["line"].as_u64().unwrap_or(0),
+                f["kind"].as_str().unwrap_or_default().to_string(),
+                f["rule_kind"].as_str().unwrap_or_default().to_string(),
+            )
+        })
+        .collect()
+}
+
+// @kotowari[REQ-schema-058, TBL-schema-011, REQ-schema-031]
+#[test]
+fn list_nesting_and_fences_read_the_same_in_both_readings() {
+    // 一覧の行の入れ子とフェンスのコードブロックは、どちらの読み方でも同じに読む。
+    // 子の子を宣言しないので、入れ子の深さを読み違えると宣言していない行の指摘が変わる
+    let body = "document:\n  sections:\n    - name: 節\n      bullets:\n        repeat: { min: 0 }\n        extract: items\n        children:\n          bullets:\n            repeat: { min: 0 }\n      codeblock:\n        repeat: { min: 0 }\n        extract: code\n";
+    let paragraph = format!("reading: paragraph\n{body}");
+    let line = format!("reading: line\n{body}");
+    let docs = [
+        // 空白2つの字下げは子、1つは兄弟
+        "## 節\n\n- a\n  - b\n",
+        "## 節\n\n- a\n - b\n",
+        // タブは次の4の倍数の桁まで進む
+        "## 節\n\n- a\n\t- b\n",
+        "## 節\n\n- a\n  -  b\n  \t- c\n",
+        // バッククォートの囲みの情報にバッククォートがあれば囲みでない。チルダなら囲み
+        "## 節\n\n```a`b\n",
+        "## 節\n\n~~~ a`b\nx\n~~~\n",
+        // 字下げした囲みの中身は、囲みの字下げの分まで行頭の空白を除く
+        "## 節\n\n  ```\n  x\n y\n  ```\n",
+    ];
+    for doc in docs {
+        let (code_p, check_p, stderr_p) = mds_json(&paragraph, doc, "check");
+        let (code_l, check_l, stderr_l) = mds_json(&line, doc, "check");
+        assert_eq!(code_l, code_p, "{doc:?}: {stderr_p} {stderr_l}");
+        assert_eq!(
+            finding_shape(&check_l),
+            finding_shape(&check_p),
+            "{doc:?}: {check_l} / {check_p}"
+        );
+        let (_, values_p, _) = mds_json(&paragraph, doc, "values");
+        let (_, values_l, _) = mds_json(&line, doc, "values");
+        assert_eq!(values_l, values_p, "{doc:?}");
+    }
+}
+
+// @kotowari[REQ-schema-058, TBL-schema-011]
+#[test]
+fn line_reading_takes_up_to_three_leading_spaces_for_a_heading() {
+    let line = "reading: line\ndocument:\n  preamble: {}\n";
+    // 行番号: "   ## x" が4行目、"    ## y" が6行目
+    let (code, check, stderr) = mds_json(line, "   ## x\n\n    ## y\n", "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    assert_eq!(
+        finding_shape(&check),
+        vec![
+            (4, "undeclared_heading".to_string(), String::new()),
+            (6, "undeclared_line".to_string(), "statement".to_string()),
+        ],
+        "{check}"
+    );
+}
+
+// @kotowari[REQ-schema-058, TBL-schema-011, TBL-schema-007]
+#[test]
+fn line_reading_reads_thematic_breaks_as_statements_and_numbered_lines_as_ordered_lists() {
+    let line = "reading: line\ndocument:\n  preamble: {}\n";
+    // 行番号は4行目から2行おき
+    let doc = "- - -\n\n* * *\n\n-\t-\t-\n\n1. a\n";
+    let (code, check, stderr) = mds_json(line, doc, "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    let undeclared =
+        |line: u64, rule: &str| (line, "undeclared_line".to_string(), rule.to_string());
+    assert_eq!(
+        finding_shape(&check),
+        vec![
+            undeclared(4, "statement"),
+            undeclared(6, "statement"),
+            undeclared(8, "statement"),
+            undeclared(10, "ordered_list"),
+        ],
+        "{check}"
+    );
+}
+
 // @kotowari[EX-schema-051]
 #[test]
 fn ex_schema_051_headings_are_commonmark_atx_headings_in_both_readings() {
@@ -1398,6 +1510,27 @@ fn ex_schema_052_a_gfm_table_without_leading_pipes_is_a_table_when_reading_by_li
     assert_eq!(json["rows"], serde_json::json!([["1", "2"]]), "{json}");
 }
 
+// @kotowari[TBL-schema-011]
+#[test]
+fn tbl_schema_011_tables_missing_a_pipe_in_the_header_or_delimiter_row_are_tables_in_both_readings()
+{
+    let rules = "document:\n  preamble:\n    table:\n      extract: rows\n";
+    let docs = [
+        // 見出しの行に縦棒が無い
+        ("abc\n|---|\n|1|\n", serde_json::json!([["1"]])),
+        // 区切りの行に縦棒が無い1列の表
+        ("| a |\n:-\n| 1 |\n", serde_json::json!([["1"]])),
+    ];
+    for (doc, rows) in docs {
+        for reading in ["paragraph", "line"] {
+            let (code, json, stderr) =
+                mds_json(&format!("reading: {reading}\n{rules}"), doc, "values");
+            assert_eq!(code, Some(0), "{reading} {doc:?}: {stderr}");
+            assert_eq!(json["rows"], rows, "{reading} {doc:?}: {json}");
+        }
+    }
+}
+
 // @kotowari[EX-schema-053]
 #[test]
 fn ex_schema_053_open_world_without_a_declared_preamble_allows_a_level_three_heading_before_sections()
@@ -1416,6 +1549,81 @@ fn ex_schema_041_unknown_reading_value_stops() {
     let (code, _json, stderr) = mds_json(schema, "## 要求\n", "check");
     assert_eq!(code, Some(2), "stderr: {stderr}");
     assert!(stderr.contains("schema_invalid"), "stderr: {stderr}");
+}
+
+// @kotowari[EX-schema-063]
+#[test]
+fn ex_schema_063_an_unknown_reading_word_names_the_field_and_the_accepted_words() {
+    let schema = "reading: foo\ndocument:\n  sections:\n    - name: 要求\n";
+    let (code, _json, stderr) = mds_json(schema, "## 要求\n", "check");
+    assert_eq!(code, Some(2), "stderr: {stderr}");
+    for word in ["reading", "paragraph", "line"] {
+        assert!(stderr.contains(word), "{word}: {stderr}");
+    }
+}
+
+// @kotowari[EX-schema-062]
+#[test]
+fn ex_schema_062_a_non_string_schema_value_names_the_field_and_the_expected_type() {
+    let dir = tempfile::tempdir().unwrap();
+    let doc = write_file(dir.path(), "doc.md", "---\n$schema: 3\n---\n## 要求\n");
+    let output = mds()
+        .args(["check", doc.to_str().unwrap()])
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(2), "stderr: {stderr}");
+    for word in ["$schema", "string"] {
+        assert!(stderr.contains(word), "{word}: {stderr}");
+    }
+}
+
+// @kotowari[REQ-schema-065]
+#[test]
+fn req_schema_065_a_wrongly_typed_schema_value_names_the_field_and_the_expected_type() {
+    let cases = [
+        (
+            "open: 3\ndocument:\n  sections:\n    - name: 要求\n",
+            vec!["open", "boolean"],
+        ),
+        (
+            "document:\n  sections:\n    - name: 要求\n      item:\n        extract: 3\n",
+            vec!["extract", "path"],
+        ),
+        (
+            "document:\n  sections:\n    - name: 要求\n      item:\n        extract: { path: a, of: 3 }\n",
+            vec!["extract.of", "mapping"],
+        ),
+    ];
+    for (schema, words) in cases {
+        let (code, _json, stderr) = mds_json(schema, "## 要求\n", "check");
+        assert_eq!(code, Some(2), "{schema}: {stderr}");
+        for word in words {
+            assert!(stderr.contains(word), "{word}: {stderr}");
+        }
+    }
+}
+
+// @kotowari[REQ-schema-065]
+#[test]
+fn req_schema_065_an_of_word_not_accepted_by_the_node_names_it_and_the_accepted_words() {
+    let cases = [
+        (
+            "document:\n  sections:\n    - name: 要求\n      extract:\n        path: a\n        of: { at: id }\n",
+            vec!["\"id\"", "\"line\"", "\"raw\"", "\"end\""],
+        ),
+        (
+            "document:\n  preamble:\n    statement:\n      extract:\n        path: a\n        of: { at: end }\n",
+            vec!["\"end\"", "\"line\"", "\"raw\""],
+        ),
+    ];
+    for (schema, words) in cases {
+        let (code, _json, stderr) = mds_json(schema, "## 要求\n", "check");
+        assert_eq!(code, Some(2), "{schema}: {stderr}");
+        for word in words {
+            assert!(stderr.contains(word), "{word}: {stderr}");
+        }
+    }
 }
 
 // @kotowari[EX-schema-035]
@@ -2035,4 +2243,113 @@ document:
     let doc = "## 本文\n\n一行目\n二行目\n\n三行目\n";
     let v = values_json(schema, doc);
     assert_eq!(v["text"], "一行目\n二行目\n\n三行目");
+}
+
+// @kotowari[EX-schema-058, REQ-schema-064]
+#[test]
+fn ex_schema_058_heading_names_and_cells_drop_inline_markup_and_keep_code() {
+    let schema = r#"
+document:
+  preamble:
+    table:
+      extract: rows
+  sections:
+    - name: 要求
+      item:
+        extract: { path: items, of: { name: name } }
+"#;
+    let doc = "| a | b | c | d |\n|---|---|---|---|\n| **太** | [参][r] | `コ` | *強* |\n\n## 要求\n\n### REQ-1: **太字** [リンク](http://x.example) [参照][r] `コード` *強調*\n\n[r]: http://example.com\n";
+    let v = values_json(schema, doc);
+    assert_eq!(v["items"]["name"], "太字 リンク 参照 コード 強調", "{v}");
+    assert_eq!(v["rows"], serde_json::json!([["太", "参", "コ", "強"]]), "{v}");
+}
+
+// @kotowari[EX-schema-059]
+#[test]
+fn ex_schema_059_a_heading_whose_text_without_markup_differs_is_undeclared() {
+    let schema = "document:\n  sections:\n    - name: Req\n";
+    // 行番号: "## **Req** x" が4行目
+    let (code, json, stderr) = mds_json(schema, "## **Req** x\n", "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    let findings = all_findings(&json);
+    let heading = findings
+        .iter()
+        .find(|f| f["kind"] == "undeclared_heading")
+        .unwrap_or_else(|| panic!("{json}"));
+    assert_eq!(heading["line"], 4, "{json}");
+    assert!(heading["detail"].as_str().unwrap().contains("\"Req x\""), "{json}");
+}
+
+const ITEM_BODY_SCHEMA: &str = r#"
+document:
+  sections:
+    - name: 要求
+      item:
+        extract: items
+        fields:
+          - name: 種類
+"#;
+
+// @kotowari[EX-schema-060, TBL-schema-008]
+#[test]
+fn ex_schema_060_an_item_body_leaves_out_the_child_bullets_of_a_declared_field() {
+    let doc = "## 要求\n\n### REQ-1: 名前\n\n- 種類: a\n  - 子\n";
+    let v = values_json(ITEM_BODY_SCHEMA, doc);
+    assert_eq!(v["items"], "REQ-1: 名前\n- 種類: a", "{v}");
+}
+
+// @kotowari[EX-schema-061, TBL-schema-008]
+#[test]
+fn ex_schema_061_an_item_body_keeps_the_child_bullets_of_an_undeclared_line() {
+    let doc = "## 要求\n\n### REQ-1: 名前\n\n- 他: b\n  - 子\n";
+    let v = values_json(ITEM_BODY_SCHEMA, doc);
+    assert_eq!(v["items"], "REQ-1: 名前\n- 他: b\n  - 子", "{v}");
+}
+
+/// `kotowari-mds values --format text` の標準出力。
+fn values_text(schema: &str, doc_body: &str) -> String {
+    let dir = tempfile::tempdir().unwrap();
+    write_file(dir.path(), "schema.yaml", schema);
+    let doc = write_file(
+        dir.path(),
+        "doc.md",
+        &format!("---\n$schema: ./schema.yaml\n---\n{doc_body}"),
+    );
+    let output = mds()
+        .args(["values", doc.to_str().unwrap(), "--format", "text"])
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(0), "stderr: {stderr}");
+    String::from_utf8(output.stdout).unwrap()
+}
+
+// @kotowari[EX-schema-064, REQ-schema-066]
+#[test]
+fn ex_schema_064_values_text_indents_two_spaces_per_level() {
+    let schema = "document:\n  preamble:\n    statement:\n      extract: a.b\n";
+    assert_eq!(values_text(schema, "文\n"), "a:\n  b: 文\n");
+}
+
+// @kotowari[EX-schema-065, REQ-schema-066]
+#[test]
+fn ex_schema_065_values_text_numbers_array_elements_from_one() {
+    // 配列を1段深い所に置き、字下げの幅が入れ子の深さで決まることも見る
+    let schema = "document:\n  preamble:\n    table:\n      extract: t.rows\n";
+    let doc = "| a | b |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n";
+    assert_eq!(
+        values_text(schema, doc),
+        "t:\n  rows:\n    1.\n      1. 1\n      2. 2\n    2.\n      1. 3\n      2. 4\n"
+    );
+}
+
+// @kotowari[REQ-schema-066]
+#[test]
+fn req_schema_066_values_text_indents_the_later_lines_of_an_array_element_one_level_deeper() {
+    let schema = "document:\n  preamble:\n    bullets:\n      extract: t.list\n";
+    let doc = "- x\n  - y\n- z\n";
+    assert_eq!(
+        values_text(schema, doc),
+        "t:\n  list:\n    1. - x\n        - y\n    2. - z\n"
+    );
 }

@@ -281,25 +281,7 @@ fn load_schema_yaml(doc_path: &Path, schema_ref: &SchemaRef) -> Result<String, S
             {
                 return Ok(content);
             }
-            let mut response = ureq::get(&url)
-                .config()
-                .timeout_global(Some(SCHEMA_FETCH_TIMEOUT))
-                .build()
-                .call()
-                .map_err(|e| Stop {
-                    kind: "schema_not_found",
-                    detail: format!("cannot fetch schema {}: {e}", redact_userinfo(&url)),
-                })?;
-            let body = response
-                .body_mut()
-                .with_config()
-                .limit(MAX_SCHEMA_BYTES)
-                .lossy_utf8(true)
-                .read_to_string()
-                .map_err(|e| Stop {
-                    kind: "schema_not_found",
-                    detail: format!("cannot read schema {}: {e}", redact_userinfo(&url)),
-                })?;
+            let body = fetch_schema(&url, SCHEMA_FETCH_TIMEOUT)?;
             // キャッシュへの保存はベストエフォート。書けなくても取得した内容で進める
             if let Some(parent) = cache.parent() {
                 let _ = std::fs::create_dir_all(parent);
@@ -308,6 +290,32 @@ fn load_schema_yaml(doc_path: &Path, schema_ref: &SchemaRef) -> Result<String, S
             Ok(body)
         }
     }
+}
+
+/// URL のスキーマを取得する。応答が上限を超えるか、取得全体が `timeout` を超えたら停止にする
+/// （TBL-schema-003）。CLI は `SCHEMA_FETCH_TIMEOUT` を渡し、テストは短い時間を渡す。
+fn fetch_schema(url: &str, timeout: Duration) -> Result<String, Stop> {
+    let mut response = ureq::get(url)
+        .config()
+        .timeout_global(Some(timeout))
+        .build()
+        .call()
+        .map_err(|e| Stop {
+            kind: "schema_not_found",
+            detail: format!("cannot fetch schema {}: {e}", redact_userinfo(url)),
+        })?;
+    response
+        .body_mut()
+        .with_config()
+        // ureq は上限ちょうどの本文でも、読み終えたかを確かめる読み取りで誤りにする。
+        // 上限ちょうどは受けるので1バイト広げる
+        .limit(MAX_SCHEMA_BYTES + 1)
+        .lossy_utf8(true)
+        .read_to_string()
+        .map_err(|e| Stop {
+            kind: "schema_not_found",
+            detail: format!("cannot read schema {}: {e}", redact_userinfo(url)),
+        })
 }
 
 /// 基準のディレクトリから上に向かって、最初に見つかった `.mds/` のあるディレクトリを返す。
@@ -530,6 +538,36 @@ mod tests {
     /// 走査の道具がそれを本物の認証情報として報告し、写した人が真似るため。
     fn url_with_userinfo(user: &str, password: &str) -> String {
         format!("https://{user}:{password}@example.com/ir.yaml")
+    }
+
+    /// 接続を受けても `hold` の間は何も返さず、その後に閉じるサーバの URL。
+    fn silent_server(hold: Duration) -> String {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            if let Ok((stream, _)) = listener.accept() {
+                std::thread::sleep(hold);
+                drop(stream);
+            }
+        });
+        format!("http://127.0.0.1:{port}/schema.yaml")
+    }
+
+    // @kotowari[EX-schema-067, TBL-schema-003]
+    #[test]
+    fn ex_schema_067_a_fetch_past_the_time_limit_stops() {
+        let url = silent_server(Duration::from_secs(1));
+        let started = std::time::Instant::now();
+        let stop = fetch_schema(&url, Duration::from_millis(50)).unwrap_err();
+        assert_eq!(stop.kind, "schema_not_found", "{}", stop.detail);
+        // サーバが閉じるより前に、時間の上限で止まる
+        assert!(started.elapsed() < Duration::from_millis(500), "{:?}", started.elapsed());
+    }
+
+    // @kotowari[TBL-schema-003]
+    #[test]
+    fn the_cli_limits_a_schema_fetch_to_ten_seconds() {
+        assert_eq!(SCHEMA_FETCH_TIMEOUT, Duration::from_secs(10));
     }
 
     // @kotowari[REQ-schema-052]

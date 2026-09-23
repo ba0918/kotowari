@@ -29,6 +29,7 @@ clap = { version = "4", features = ["derive"] }
 sha2 = "0.10"
 ureq = "3"
 walkdir = "2"
+serde_path_to_error = "0.1"
 
 [dev-dependencies]
 proptest = "1"

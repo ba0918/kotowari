@@ -25,7 +25,7 @@ mds の仕様 IR で使う用語を置く。意味が一般の用法と違うも
 | 配置パス | 抽出した値を置く場所を指すドット区切りの名前 | docs/decision/records/2026-09-21-mds-spec.md#A4 |
 | 指摘 | 検査が出す1件の結果 | docs/decision/records/2026-09-21-mds-spec.md#A17 |
 | 停止 | 検査を行えないときに終了コード 2 で終わること | docs/decision/records/2026-09-21-mds-spec.md#A15 |
-| 基準のディレクトリ | カレントディレクトリから上に向かって探し、最初に見つかった ".mds/" のあるディレクトリ | docs/decision/records/2026-09-21-mds-spec.md#A14 |
+| 基準のディレクトリ | カレントディレクトリから上に向かって探し、最初に見つかった ".mds/" のあるディレクトリ。見つからなければカレントディレクトリ | docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-23-mutants-gaps.md#A9, docs/decision/records/2026-09-23-mutants-gaps.md#A12 |
 | 出現回数 | ノードが現れてよい個数の下限と上限 | docs/decision/records/2026-09-21-mds-spec.md#A40 |
 | 条件付き規則 | あるフィールド行の値に応じて、別の規則の適用を切り替える条件節 | docs/decision/records/2026-09-21-mds-spec.md#A28 |
 | 導かれる値 | 抽出の宣言で、文書の文字ではなく位置や識別子から導く値。行番号、項目の見出しの ID、項目の見出しの名前、生の行、要素の最後の行の5つ | docs/decision/records/2026-09-22-ir-engine.md#A49, docs/decision/records/2026-09-21-mds-spec.md#A23, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24 |

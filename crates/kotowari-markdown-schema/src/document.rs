@@ -81,10 +81,8 @@ impl Document {
 
     /// 文書の最後の行の行番号。文書が行の区切りで終わるとき、その後ろの空の行は数えない。
     fn last_line(&self) -> usize {
-        match self.lines.as_slice() {
-            [.., last] if last.is_empty() && self.lines.len() > 1 => self.lines.len() - 1,
-            lines => lines.len(),
-        }
+        let ends_with_break = self.lines.last().is_some_and(String::is_empty);
+        self.lines.len() - usize::from(ends_with_break)
     }
 }
 
@@ -378,7 +376,7 @@ fn blocks_from_node(node: &Node, src: &str, lines: &[String]) -> Vec<Block> {
             }
             out
         }
-        Node::Table(_) => vec![table_block_from_node(node, 0)],
+        Node::Table(table) => vec![table_block_from_node(table, 0)],
         Node::Code(code) => vec![Block::Code {
             lang: code.lang.clone(),
             value: code.value.clone(),
@@ -390,12 +388,7 @@ fn blocks_from_node(node: &Node, src: &str, lines: &[String]) -> Vec<Block> {
 
 /// 表のノードを表のブロックにする。`line_offset` はノードの行番号に足す行数で、
 /// 文書の一部だけを読み直した表の行番号を文書の行番号に戻す。
-pub(crate) fn table_block_from_node(node: &Node, line_offset: usize) -> Block {
-    let Node::Table(table) = node else {
-        return Block::Other {
-            line: start_line(node) + line_offset,
-        };
-    };
+pub(crate) fn table_block_from_node(table: &markdown::mdast::Table, line_offset: usize) -> Block {
     let mut rows: Vec<Vec<String>> = Vec::new();
     let mut row_lines: Vec<usize> = Vec::new();
     for row in &table.children {
@@ -417,7 +410,7 @@ pub(crate) fn table_block_from_node(node: &Node, line_offset: usize) -> Block {
     Block::Table {
         header,
         rows,
-        line: start_line(node) + line_offset,
+        line: line_at(table.position.as_ref()) + line_offset,
         // ヘッダの行は行番号の並びから外す。区切りの行は表のノードに
         // 現れないので、残りがデータ行そのものになる（TBL-schema-008）
         row_lines: row_lines.into_iter().skip(1).collect(),
@@ -665,7 +658,6 @@ pub(crate) fn inline_text(children: &[Node]) -> String {
             Node::Strong(s) => out.push_str(&inline_text(&s.children)),
             Node::Link(l) => out.push_str(&inline_text(&l.children)),
             Node::LinkReference(l) => out.push_str(&inline_text(&l.children)),
-            Node::Break(_) => out.push(' '),
             _ => {}
         }
     }
@@ -918,6 +910,26 @@ mod tests {
         );
         let by_line = doc.read_by_line();
         assert_eq!(by_line.end_line(3, 3), 8, "行の読み方でも同じ");
+    }
+
+    // @kotowari[REQ-schema-062]
+    #[test]
+    fn end_line_is_the_last_line_when_the_document_does_not_end_with_a_break() {
+        let doc = Document::parse("## 節\n\n### A-1: a\n\n本文").unwrap();
+        assert_eq!(doc.end_line(3, 3), 5, "最後の行に区切りが無くてもその行が最後の行");
+        assert_eq!(doc.read_by_line().end_line(3, 3), 5, "行の読み方でも同じ");
+    }
+
+    // @kotowari[REQ-schema-030]
+    #[test]
+    fn a_continuation_paragraph_of_an_ordered_item_belongs_to_that_item() {
+        let doc = Document::parse("## 理由\n\n1. 順序付き\n\n   続きの段落\n").unwrap();
+        let blocks = section_blocks(&doc);
+        assert_eq!(blocks.len(), 1, "継続段落は文にならない: {blocks:?}");
+        let Block::OrderedList { continuation, .. } = &blocks[0] else {
+            panic!("順序付きの行になる: {blocks:?}");
+        };
+        assert_eq!(continuation, &vec!["続きの段落".to_string()]);
     }
 
     // @kotowari[REQ-schema-035]

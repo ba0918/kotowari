@@ -643,6 +643,22 @@ mod tests {
         );
     }
 
+    // @kotowari[REQ-core-172]
+    #[test]
+    fn a_table_header_mismatch_outside_the_glossary_stops_even_on_a_glossary_row_line() {
+        // invalid_glossary_row の行は用語集の文書にだけある。用語集でない文書では、
+        // その行番号が用語集の表のデータ行と同じでも写し先が無い
+        for doc_kind in [DocKind::Topic, DocKind::Flags] {
+            let mut e = engine(EngineKind::TableHeaderMismatch, Some(5));
+            e.raw = Some("| a |".to_string());
+            let detail = stopped(doc_kind, e);
+            assert!(
+                detail.contains("no mapping for table_header_mismatch"),
+                "{doc_kind:?}: {detail}"
+            );
+        }
+    }
+
     // --- REQ-core-175: 写せない値は停止する ---
 
     // @kotowari[REQ-core-175, EX-core-268]
