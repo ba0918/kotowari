@@ -10,10 +10,6 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 ## 判断待ち
 
-### 照合レビューに使うモデル
-
-- 照合は「この項目はこの決定から言えるか」の狭い比べ方で、安いモデルで足りる見込みがある。同じ照合を2つのモデルで回して実測してから、利用者が決める（[U4（collate-tiers）](docs/decision/records/2026-09-23-collate-tiers.md#Undecided)）
-
 ## 記録のみ
 
 ### ID 38 / ID 60: detail 文言を assert するテスト（mds）
