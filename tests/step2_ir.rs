@@ -322,6 +322,20 @@ fn req_043_a_heading_with_an_empty_name_is_unknown() {
     assert_eq!(uh[0].detail, "### REQ-001:");
 }
 
+// @kotowari[REQ-core-043]
+#[test]
+fn req_043_a_nameless_heading_is_reported_beside_another_unknown_heading() {
+    // 別の行の unknown_heading は、名前の無い見出しの unknown_heading を消さない
+    let content = "# Title\n\nScope.\n\n## Requirements\n\n### Bad Heading\n\nSome text.\n\n### REQ-001:\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
+    let findings = check(&[doc], &default_config());
+    let details: Vec<&str> = find_by_kind(&findings, "unknown_heading")
+        .iter()
+        .map(|f| f.detail.as_str())
+        .collect();
+    assert_eq!(details, vec!["### Bad Heading", "### REQ-001:"]);
+}
+
 // @kotowari[TBL-core-011, EX-core-291]
 #[test]
 fn tbl_011_an_algorithm_requirement_and_a_table_may_carry_statements() {
