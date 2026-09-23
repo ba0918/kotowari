@@ -264,6 +264,43 @@ fn ex_schema_068_a_schema_of_exactly_4mib_is_used() {
     assert_eq!(output.status.code(), Some(0), "stderr: {stderr}");
 }
 
+// @kotowari[EX-schema-069]
+#[test]
+fn ex_schema_069_the_cache_goes_under_the_base_directory_above_the_current_one() {
+    let (url, _) = serve_schema();
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::create_dir_all(dir.path().join(".mds")).unwrap();
+    let sub = dir.path().join("sub");
+    let doc = write_file(&sub, "doc.md", &format!("---\n$schema: {url}\n---\n# T-1234: 例\n"));
+    let output = mds()
+        .current_dir(&sub)
+        .args(["check", doc.to_str().unwrap()])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(0), "{}", String::from_utf8_lossy(&output.stderr));
+    assert!(cache_path(&url, dir.path()).is_file(), "基準のディレクトリの下に置く");
+    assert!(!sub.join(".mds").exists(), "カレントディレクトリの下には置かない");
+}
+
+// @kotowari[EX-schema-070]
+#[test]
+fn ex_schema_070_without_a_base_directory_the_cache_goes_under_the_current_one() {
+    let (url, _) = serve_schema();
+    let dir = tempfile::tempdir().unwrap();
+    assert!(
+        !dir.path().ancestors().any(|a| a.join(".mds").is_dir()),
+        "前提: 上のどこにも .mds/ が無い"
+    );
+    let doc = write_file(dir.path(), "doc.md", &format!("---\n$schema: {url}\n---\n# T-1234: 例\n"));
+    let output = mds()
+        .current_dir(dir.path())
+        .args(["check", doc.to_str().unwrap()])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(0), "{}", String::from_utf8_lossy(&output.stderr));
+    assert!(cache_path(&url, dir.path()).is_file(), "カレントディレクトリの下に置く");
+}
+
 // @kotowari[REQ-schema-052, EX-schema-017]
 #[test]
 fn userinfo_in_a_schema_url_does_not_reach_the_error_output() {
