@@ -41,6 +41,7 @@ Position: 第2ラウンドまでで構造の論点を決め（A1〜A7）、計�
 - A7 手元へは `~/.claude/skills/` にリポジトリの `skills/` の各ディレクトリへのシンボリックリンクを置いて入れる。他の人への配布の仕組みはこの記録では決めない
   - why: コピーで入れた kotowari スキルは既にリポジトリより古くなっていた（手元の改訂日が 2026-09-20 と 2026-09-17、リポジトリは 2026-09-22）。skill が9つに増えるとずれやすくなる。ローカルで使う間は常に最新を使う方針とも合う
   - decided_by: 利用者（推奨を採用。「まずは」の扱いで、配布は別の件）
+  - superseded_by: [A1（skill-distribution）](./2026-09-23-skill-distribution.md#A1)、[A2（skill-distribution）](./2026-09-23-skill-distribution.md#A2)
 
 - A8 kotowari スキルの setup が AGENTS.md に書く雛形は「仕様は IR で管理する」の一文だけにする。kotowari-using-workflow を読ませる一文は、工程の skill の入れ方の説明に「AGENTS.md に足す1行」として書く。このリポジトリの AGENTS.md には今回その一文を足す
   - why: A5 で kotowari スキルは工程の skill を名指ししないと決めたので、setup の雛形には書けない。工程の skill を入れる人だけがその一文を要る
@@ -73,3 +74,7 @@ Position: 第2ラウンドまでで構造の論点を決め（A1〜A7）、計�
   - decided_by: 主セッション（利用者が A12 の方針で任せた）
 
 ## Undecided
+
+## Revisions
+
+- A7 の置き場を [A1（skill-distribution）](./2026-09-23-skill-distribution.md#A1) で `agent/skills/` に改め、決めていなかった他の人への配り方を [A2（skill-distribution）](./2026-09-23-skill-distribution.md#A2) で決めた。手元へのシンボリックリンクの入れ方は変えていない

@@ -26,13 +26,13 @@ kotowari の用語集（`docs/ir/core/CONTEXT.md`）の意味をそのまま使�
 
 作るもの:
 
-- スキル `kotowari`: `SKILL.md` と references 7つ（`ir-form.md`、`findings.md`、`config.md`、`collate.md`、`mark.md`、`mutants.md`、`records.md`）。元本は kotowari リポジトリの `skills/kotowari/`
+- スキル `kotowari`: `SKILL.md` と references 7つ（`ir-form.md`、`findings.md`、`config.md`、`collate.md`、`mark.md`、`mutants.md`、`records.md`）。元本は kotowari リポジトリの `agent/skills/kotowari/`
 - kotowari を使うプロジェクトの `AGENTS.md` に足す、仕様を IR で管理するという一文の雛形（`setup` が書く。A27、[A8（工程の分離）](../decision/records/2026-09-23-workflow-split.md#A8)）
 
 作らないもの:
 
 - 既存の ba0918 のスキル（brainstorm、plan、cycle、implement）への変更。agentic-rules は kotowari に依存しない（A27）
-- 工程の手順（brainstorm、plan、cycle、implement などの席が何をどの順で行うか）。リポジトリの `skills/` に kotowari-* の工程の skill として別に置き、このスキルはそれを名指ししない（[A4（工程の分離）](../decision/records/2026-09-23-workflow-split.md#A4)、[A5（工程の分離）](../decision/records/2026-09-23-workflow-split.md#A5)）
+- 工程の手順（brainstorm、plan、cycle、implement などの席が何をどの順で行うか）。リポジトリの `agent/skills/` に kotowari-* の工程の skill として別に置き、このスキルはそれを名指ししない（[A4（工程の分離）](../decision/records/2026-09-23-workflow-split.md#A4)、[A5（工程の分離）](../decision/records/2026-09-23-workflow-split.md#A5)）
 - 人間が IR を読むための描画（U1）
 - Rust 以外の言語の印の規則（A12。kotowari 本体に問い合わせが足されてから）
 - 配布の仕組み（crates.io、CI、ライセンス。実験003の記録の U38）
@@ -128,23 +128,23 @@ SKILL.md は、frontmatter（`name: kotowari`、`description` に発火語 kotow
 
 ### R8: 工程の手順はこのスキルに置かない
 
-brainstorm、plan、cycle、implement の各席が何をどの順で行うかは、このスキルではなく、リポジトリの `skills/` にある kotowari-* の工程の skill の本文にある（[A4（工程の分離）](../decision/records/2026-09-23-workflow-split.md#A4)）。依存は工程の skill からこのスキルへの一方向で、工程の skill が場面ごとにこのスキルの reference を読み、このスキルは工程の skill を名指ししない（[A5（工程の分離）](../decision/records/2026-09-23-workflow-split.md#A5)）。このスキルだけを入れて別の工程で使っても、IR と判断の記録を書き、`check` の結果を読み、印を置ける。
+brainstorm、plan、cycle、implement の各席が何をどの順で行うかは、このスキルではなく、リポジトリの `agent/skills/` にある kotowari-* の工程の skill の本文にある（[A4（工程の分離）](../decision/records/2026-09-23-workflow-split.md#A4)）。依存は工程の skill からこのスキルへの一方向で、工程の skill が場面ごとにこのスキルの reference を読み、このスキルは工程の skill を名指ししない（[A5（工程の分離）](../decision/records/2026-09-23-workflow-split.md#A5)）。このスキルだけを入れて別の工程で使っても、IR と判断の記録を書き、`check` の結果を読み、印を置ける。
 
-- 成功の条件: SKILL.md の場面の表に工程の手順を読ませる行が無く、references に席ごとの手順の節を持つ文書が無い。`skills/kotowari/` の中に kotowari- で始まる工程の skill の名前が無い
+- 成功の条件: SKILL.md の場面の表に工程の手順を読ませる行が無く、references に席ごとの手順の節を持つ文書が無い。`agent/skills/kotowari/` の中に kotowari- で始まる工程の skill の名前が無い
 - 反例: SKILL.md が「plan の席では工程の skill の plan を読め」と書く。references に cycle の席の終端の手順の節がある
-- 確かめ方: 人が SKILL.md と references を読み、`rg -n 'kotowari-[a-z]' skills/kotowari/` の当たりが無いことを見る
+- 確かめ方: 人が SKILL.md と references を読み、`rg -n 'kotowari-[a-z]' agent/skills/kotowari/` の当たりが無いことを見る
 
 ### R9: references は現在の kotowari の仕様を、実験の記録を参照せずに書く
 
 references 7つ（`ir-form.md`、`findings.md`、`config.md`、`collate.md`、`mark.md`、`mutants.md`、`records.md`）は、kotowari の IR（`docs/ir/`）と形の契約から作るが、kotowari リポジトリの実験の記録（`experiments/` の下）への参照を含めない（A1。配布先で元本は読めない）。決定の番号や出典の例は架空のパス（`docs/decision/records/2026-01-01-example.md#A1`）で書く。kotowari 自身の IR の ID（`TBL-core-016` の類）を根拠として引かず、`docs/ir/` の文書名も引かない（配布先で解決できない。A32。例に使う ID は形の説明なので可）。元にする `docs/ir/` と形の契約が食い違えば `docs/ir/` が正で、実測で確かめられるなら確かめ、決まらなければ止まって人に言う（A32）。kotowari の仕様が変わったら references を更新し、先頭の改訂日を改める。SKILL.md と references の本文は工程の skill と同じ英語で書き、IR の型の語は英語の語で説明する。設定の `vague_words` の既定は本文の言語の話で型の語ではないので、日本語の4語のまま写す（[A4（ir-english-tokens）](../decision/records/2026-09-23-ir-english-tokens.md#A4)、[A5（ir-english-tokens）](../decision/records/2026-09-23-ir-english-tokens.md#A5)）。
 
-- 成功の条件: `rg -n 'experiments/|docs/ir/[a-z-]+\.md' skills/kotowari/` が0件（置き場の名前 `docs/ir` と、利用者側に作る `docs/ir/CONTEXT.md`・`docs/ir/FLAGS.md` は書いてよい）。人が読んで、kotowari 自身の IR の ID を「〜のとおり」のように根拠として引いている箇所が無い。`config.md` に設定ファイルの全キー（`ir`、`decisions.records`、`decisions.adr`、`tests.files`、`tests.rust.attributes`、`tests.rust.macros`、`vague_words`、`limits.lines`、`limits.requirements`）と既定値がある。`collate.md` に、渡す入力（項目と出典の対）、判定の基準（出典の決定が項目の内容を裏付けるか）、返す形（裏付けの無い項目の一覧）、回数の上限（3回）がある
+- 成功の条件: `rg -n 'experiments/|docs/ir/[a-z-]+\.md' agent/skills/kotowari/` が0件（置き場の名前 `docs/ir` と、利用者側に作る `docs/ir/CONTEXT.md`・`docs/ir/FLAGS.md` は書いてよい）。人が読んで、kotowari 自身の IR の ID を「〜のとおり」のように根拠として引いている箇所が無い。`config.md` に設定ファイルの全キー（`ir`、`decisions.records`、`decisions.adr`、`tests.files`、`tests.rust.attributes`、`tests.rust.macros`、`vague_words`、`limits.lines`、`limits.requirements`）と既定値がある。`collate.md` に、渡す入力（項目と出典の対）、判定の基準（出典の決定が項目の内容を裏付けるか）、返す形（裏付けの無い項目の一覧）、回数の上限（3回）がある
 - 反例: `ir-form.md` に `experiments/003-cli/brainstorm/records.md#A145` が残っている。`mark.md` に「TBL-core-016 のとおり」と書いてある
 - 確かめ方: 上の `rg`。人が `config.md` のキーを `docs/ir/core/config.md` の TBL-core-004 と突き合わせ、`collate.md` の4つの要素を見る
 
 ### R10: 元本の置き場と入れ方
 
-元本は kotowari リポジトリの `skills/kotowari/`（`SKILL.md` と `references/` の7つ）。手元へは `~/.claude/skills/kotowari` にリポジトリの `skills/kotowari/` へのシンボリックリンクを置いて入れる（A5、A23 を [A7（工程の分離）](../decision/records/2026-09-23-workflow-split.md#A7) で改めた）。他の人への配布の仕組みは決めていない。
+元本は kotowari リポジトリの `agent/skills/kotowari/`（`SKILL.md` と `references/` の7つ）。手元へは `~/.claude/skills/kotowari` にリポジトリの `agent/skills/kotowari/` へのシンボリックリンクを置いて入れる（A5、A23 を [A7（工程の分離）](../decision/records/2026-09-23-workflow-split.md#A7) で改め、置き場を [A1（配布）](../decision/records/2026-09-23-skill-distribution.md#A1) で改めた）。他の人へは APM・gh skill・npx skills のどれか1行で入れる（[A2（配布）](../decision/records/2026-09-23-skill-distribution.md#A2)）。
 
 - 成功の条件: kotowari リポジトリ以外のプロジェクトで、`~/.claude/skills/kotowari` のリンクからスキルを呼んだとき、スキルのディレクトリの外にある kotowari リポジトリのファイルを1つも読まずに5つの場面が動く
 - 反例: SKILL.md が `../../docs/ir/...` を読ませる

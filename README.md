@@ -103,12 +103,12 @@ src/lib.rs:2 [error] test_without_id req_001_locks_after_five_failures
 
 ## LLM と一緒に使う
 
-`skills/` に Claude Code の skill がある。
+`agent/skills/` に Claude Code の skill がある。
 
 - `kotowari`：IR と判断の記録の書き方、指摘の直し方、印の置き方を LLM に教える
 - `kotowari-*`：壁打ちから計画、実装、レビューまでの工程を kotowari の上で回す（任意）
 
-入れ方は [skills/README.md](skills/README.md) を読む。
+入れ方は [agent/skills/README.md](agent/skills/README.md) を読む。
 
 ## 同梱のもの
 

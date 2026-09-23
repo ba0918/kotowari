@@ -5,7 +5,7 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 fn references_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/kotowari/references")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("agent/skills/kotowari/references")
 }
 
 fn read_reference(name: &str) -> String {

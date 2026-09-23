@@ -1,7 +1,8 @@
 # Review profiles
 
-When cycle is the caller and no profile was given, choose from changed paths: `skills/` → Skill;
-`docs/` and top-level explanatory documents → Document; other source and configuration → Code.
+When cycle is the caller and no profile was given, choose from changed paths: under a `skills/`
+directory at any depth → Skill; `docs/` and top-level explanatory documents → Document; other
+source and configuration → Code.
 A direct call uses the person's choice. Several kinds → every profile that applies; each finding
 records which one it came from.
 

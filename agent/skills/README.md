@@ -24,12 +24,24 @@ Claude Code の skill を9つ置いている。
 
 工程の skill は agentic-workflow の ba0918 の工程の skill を元に写して独立させたもので、ba0918 の skill を読むことも、それに追従することもしない。
 
-## 手元への入れ方
+## 入れ方
 
-`~/.claude/skills/` に、このリポジトリの `skills/` の各ディレクトリへのシンボリックリンクを置く。リンクにしておくと、リポジトリを更新すれば手元の skill も常に最新になる。
+次のどれか1行で、9つをまとめて入れられる。どれも GitHub の ba0918/kotowari から取る。
 
 ```sh
-for d in /path/to/kotowari/skills/kotowari*/; do
+apm install ba0918/kotowari/agent --target claude
+gh skill install ba0918/kotowari --agent claude-code --all
+npx skills add ba0918/kotowari --agent claude-code --skill '*'
+```
+
+APM は `agent/` を指定すると、リポジトリ全体ではなく skill の分だけを落とす。入れる先や入れる skill を選ぶ方法は、それぞれの道具の help を読む。
+
+## リポジトリを手元に置いている場合の入れ方
+
+`~/.claude/skills/` に、このリポジトリの `agent/skills/` の各ディレクトリへのシンボリックリンクを置く。リンクにしておくと、リポジトリを更新すれば手元の skill も常に最新になる。
+
+```sh
+for d in /path/to/kotowari/agent/skills/kotowari*/; do
   ln -s "${d%/}" ~/.claude/skills/
 done
 ```

@@ -10,19 +10,11 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 ## 判断待ち
 
-### kotowari の skill を他の人へ配る仕組み
-
-- 工程の skill 8つと kotowari スキルは `skills/` に置き、手元へはシンボリックリンクで入れると決めた（[A7（workflow-split）](docs/decision/records/2026-09-23-workflow-split.md#A7)）。他の人へ配る仕組み（agentic-workflow のような plugin marketplace など）は決めていない
-
 ### 照合レビューに使うモデル
 
 - 照合は「この項目はこの決定から言えるか」の狭い比べ方で、安いモデルで足りる見込みがある。同じ照合を2つのモデルで回して実測してから、利用者が決める（[U4（collate-tiers）](docs/decision/records/2026-09-23-collate-tiers.md#Undecided)）
 
 ## 記録のみ
-
-### ID 23: 応答しないサーバのタイムアウト経路のテスト（mds）
-
-- 固定値10秒のタイムアウトは実装済み。この経路だけテスト対象外。仕様がタイムアウト値を契約として宣言していない限り、テストを足しても契約を固定したことにならない
 
 ### ID 38 / ID 60: detail 文言を assert するテスト（mds）
 
