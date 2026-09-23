@@ -410,6 +410,23 @@ fn ex_core_318_mark_binds_across_a_multi_line_decorator_and_a_comment() {
     assert_eq!(tests[0]["name"], "test_x");
 }
 
+// @kotowari[REQ-core-075, TBL-core-035, EX-core-323]
+#[test]
+fn ex_core_323_blank_line_inside_a_multi_line_decorator_does_not_cut_the_block() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.py"]);
+    write(
+        tmp.path(),
+        "tests/test_a.py",
+        "# @kotowari[REQ-001]\n@pytest.mark.parametrize(\n    'a',\n\n    [1],\n)\ndef test_x(a):\n    pass\n",
+    );
+    let v = check(tmp.path());
+    assert!(unmarked(&v).is_empty(), "{v}");
+    let tests = listed_tests(tmp.path(), "REQ-001");
+    assert_eq!(tests.len(), 1, "{tests:?}");
+    assert_eq!(tests[0]["name"], "test_x");
+}
+
 // --- Php ---
 
 // @kotowari[REQ-core-185, TBL-core-034, TBL-core-019]
