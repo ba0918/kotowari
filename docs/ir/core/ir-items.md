@@ -22,10 +22,10 @@
 ### REQ-core-044: 知らない行
 
 - kind: event_driven
-- source: docs/decision/records/records.md#A42, docs/decision/records/records.md#A52, docs/decision/records/records.md#A81, docs/decision/records/ir-form.md#項目, docs/decision/records/records.md#A87, docs/decision/records/records.md#A111, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- source: docs/decision/records/records.md#A42, docs/decision/records/records.md#A52, docs/decision/records/records.md#A81, docs/decision/records/ir-form.md#項目, docs/decision/records/records.md#A87, docs/decision/records/records.md#A111, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-24-review3-gaps.md#A2
 - verification: unit
 
-見出しの下に知らない "- xxx:" の行、または "xxx:" の形でない一覧の行（"- "、"* "、"+ "、数字と "." で始まる行、および "-" だけの行）があるとき、kotowari は読んだ行の文字をそのまま detail にして unknown_field の`誤り`を出す。知らない行の中身は読まない（`ID` が書かれていても参照にしない）。知っている行は`項目`の種類ごとに TBL-core-011 の「持つ行」の列にあるものだけで、`性質`なら "- source:" だけである。
+見出しの下に知らない "- xxx:" の行、または "xxx:" の形でない一覧の行（"- "、"* "、"+ "、数字と "." か ")" で始まる行、および "-" だけの行）があるとき、kotowari は読んだ行の文字をそのまま detail にして unknown_field の`誤り`を出す。知らない行の中身は読まない（`ID` が書かれていても参照にしない）。知っている行は`項目`の種類ごとに TBL-core-011 の「持つ行」の列にあるものだけで、`性質`なら "- source:" だけである。
 
 ### REQ-core-045: 同じ行の重複
 

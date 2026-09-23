@@ -1439,7 +1439,7 @@ fn line_reading_takes_up_to_three_leading_spaces_for_a_heading() {
 fn line_reading_reads_thematic_breaks_as_statements_and_numbered_lines_as_ordered_lists() {
     let line = "reading: line\ndocument:\n  preamble: {}\n";
     // 行番号は4行目から2行おき
-    let doc = "- - -\n\n* * *\n\n-\t-\t-\n\n1. a\n";
+    let doc = "- - -\n\n* * *\n\n-\t-\t-\n\n1. a\n\n1) b\n";
     let (code, check, stderr) = mds_json(line, doc, "check");
     assert_eq!(code, Some(1), "stderr: {stderr}");
     let undeclared =
@@ -1451,6 +1451,7 @@ fn line_reading_reads_thematic_breaks_as_statements_and_numbered_lines_as_ordere
             undeclared(6, "statement"),
             undeclared(8, "statement"),
             undeclared(10, "ordered_list"),
+            undeclared(12, "ordered_list"),
         ],
         "{check}"
     );

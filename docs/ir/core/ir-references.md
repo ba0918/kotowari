@@ -47,10 +47,10 @@ kotowari は、`問題の記録`の矛盾の読みが2つ以上あるかを検�
 ### REQ-core-113: gherkin のブロックの中の行
 
 - kind: event_driven
-- source: docs/decision/records/records.md#A109, docs/decision/records/records.md#A132, docs/decision/records/records.md#A133, docs/decision/records/records.md#A155
+- source: docs/decision/records/records.md#A109, docs/decision/records/records.md#A132, docs/decision/records/records.md#A133, docs/decision/records/records.md#A155, docs/decision/records/2026-09-24-review3-gaps.md#A1
 - verification: unit
 
-gherkin の`コードブロック`の中の行を行頭の空白を除いて見て、タグの行（"@" で始まる）、"Scenario:" の行、ステップの行（"Given"、"When"、"Then"、"And"、"But" に半角空白1つ以上が続く行）、"#" で始まる注釈、空行のいずれでもない行（"Feature:"、"Background:"、"Scenario Outline:"、"Examples:"、データ表の行を含む）があるとき、kotowari は行の文字を detail にして invalid_gherkin_line の`誤り`を出す。直前に "Scenario:" もステップの行も無いステップの行、および直後が "Scenario:" でないタグの行も、同じ`誤り`を出す。タグの行は "Scenario:" の直前の行だけを結び付け、間にほかの行があれば結び付けない。
+gherkin の`コードブロック`の中の行を行頭の空白を除いて見て、タグの行（"@" で始まる）、"Scenario:" の行、ステップの行（"Given"、"When"、"Then"、"And"、"But" に半角空白1つ以上が続く行）、"#" で始まる注釈、空行のいずれでもない行（"Feature:"、"Background:"、"Scenario Outline:"、"Examples:"、データ表の行を含む）があるとき、kotowari は行の文字を detail にして invalid_gherkin_line の`誤り`を出す。同じブロックの中でそれより前に "Scenario:" の行が無いステップの行、および直後が "Scenario:" でないタグの行も、同じ`誤り`を出す。ただし空行と注釈を挟まずに続くステップの行は、最初のステップの行の`誤り`に含める。前に "Scenario:" の行があるステップの行は、間に空行、注釈、誤りの行があってもそのシナリオのステップになる。タグの行は "Scenario:" の直前の行だけを結び付け、間にほかの行があれば結び付けない。
 
 ### REQ-core-114: ID の定義と形に合わない @id
 
@@ -79,6 +79,12 @@ gherkin の`コードブロック`の中の行を行頭の空白を除いて見�
 ## Examples
 
 ```gherkin
+@id=EX-core-283 @about=REQ-core-113 @source=docs/decision/records/2026-09-24-review3-gaps.md#A1
+Scenario: シナリオの中の空行と注釈はステップを切らない
+  Given gherkin のブロックに、"Scenario:" の行の後に空行と注釈を挟んで3つのステップの行を持つ`シナリオ`がある
+  When "kotowari check" を実行する
+  Then invalid_gherkin_line は出ず、`シナリオ`は3つのステップを持つ
+
 @id=EX-core-009 @about=REQ-core-052 @source=docs/decision/records/records.md#A27,docs/decision/records/ir-form.md#検査の種類
 Scenario: やめたタグは誤りになる
   Given `シナリオ`に "@requirement=REQ-001" のタグがある
