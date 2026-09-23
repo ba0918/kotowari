@@ -331,13 +331,13 @@ fn unmappable(what: &str) -> StopReason {
     StopReason::MappingError(format!("extracted value has no {what}"))
 }
 
-/// 抽出の値の並び。1つだけのときも並びと同じに読む
+/// 抽出の値の並び。IR のスキーマはどの要素にも`出現回数`を宣言しているので、
+/// 要素の値は1つだけのときも配列で来る（TBL-schema-008）
 fn elements(value: Option<&Value>) -> Vec<&Map<String, Value>> {
-    match value {
-        Some(Value::Array(values)) => values.iter().filter_map(Value::as_object).collect(),
-        Some(Value::Object(obj)) => vec![obj],
-        _ => Vec::new(),
-    }
+    value
+        .and_then(Value::as_array)
+        .map(|values| values.iter().filter_map(Value::as_object).collect())
+        .unwrap_or_default()
 }
 
 fn string(obj: &Map<String, Value>, key: &str) -> Option<String> {
@@ -369,13 +369,13 @@ fn listed(value: Option<&Value>) -> Result<(Vec<String>, Option<usize>), StopRea
     let Some(obj) = value.and_then(Value::as_object) else {
         return Ok((Vec::new(), None));
     };
-    let values = match obj.get("value") {
-        Some(Value::Array(values)) => values.iter().filter_map(Value::as_str).collect(),
-        Some(Value::String(value)) => vec![value.as_str()],
-        _ => Vec::new(),
-    };
-    let values = values
+    // 区切り文字を宣言したフィールド行の値は常に配列（REQ-schema-045）
+    let values = obj
+        .get("value")
+        .and_then(Value::as_array)
         .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
         .flat_map(|value| value.split(','))
         .map(str::trim)
         .filter(|value| !value.is_empty())
@@ -519,13 +519,9 @@ fn read_glossary(
         .filter(|f| f.kind == FindingKind::InvalidGlossaryRow)
         .filter_map(|f| f.line)
         .collect();
-    // REQ-core-117: 用語になるのは最初の表の行だけ。表が繰り返すと表ごとの段ができる
-    let rows = match values.get("glossary") {
-        Some(Value::Array(tables)) if tables.first().is_some_and(Value::is_array) => {
-            elements(tables.first())
-        }
-        other => elements(other),
-    };
+    // REQ-core-117: 用語になるのは最初の表の行だけ。用語集のスキーマは表に`出現回数`を
+    // 宣言しているので、表ごとの段が必ずできる（TBL-schema-008）
+    let rows = elements(values.get("glossary").and_then(|tables| tables.get(0)));
     let mut seen_terms = BTreeSet::new();
     for row in rows {
         let line = number(row, "line")?;
