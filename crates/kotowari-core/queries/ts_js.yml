@@ -1,0 +1,34 @@
+# 同梱の問い合わせ: TypeScript、Tsx、JavaScript（TBL-core-032）
+# "language:" の行は読み込むときに言語ごとに足し、3つの言語に同じ中身を付ける（REQ-core-182）
+id: kotowari-ts-js-test
+rule:
+  kind: call_expression
+  has:
+    field: arguments
+    has:
+      nthChild: 1
+      pattern: $NAME
+  # "it.each(表)(名前, 関数)" の内側の "it.each(表)" は数えない
+  not:
+    inside:
+      kind: call_expression
+      field: function
+  any:
+    # "it(...)"、"test(...)"
+    - has:
+        field: function
+        kind: identifier
+        regex: ^(it|test)$
+    # "it.only(...)"、"test.concurrent(...)"、"it.only.each(...)"
+    - has:
+        field: function
+        kind: member_expression
+        regex: ^(it|test)(\s*\.\s*[A-Za-z_$][A-Za-z0-9_$]*)+$
+    # "it.each(表)(名前, 関数)"、"test.concurrent.each(表)(名前, 関数)"
+    - has:
+        field: function
+        kind: call_expression
+        has:
+          field: function
+          kind: member_expression
+          regex: ^(it|test)(\s*\.\s*[A-Za-z_$][A-Za-z0-9_$]*)*\s*\.\s*each$

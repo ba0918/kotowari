@@ -9,8 +9,14 @@ use ast_grep_core::tree_sitter::{LanguageExt, StrDoc};
 use ast_grep_core::{Language, Node};
 use ast_grep_language::SupportLang;
 
-/// 同梱の`問い合わせ`（REQ-core-182）
+/// 同梱の`問い合わせ`（REQ-core-182）。"language" を書いたルール
 const BUNDLED_RULES: &[&str] = &[include_str!("../queries/rust.yml")];
+
+/// 同梱の`問い合わせ`のうち、同じ中身を複数の言語に付けるもの（"language" の行を足して読む）
+const BUNDLED_SHARED_RULES: &[(&str, &[&str])] = &[(
+    include_str!("../queries/ts_js.yml"),
+    &["typescript", "tsx", "javascript"],
+)];
 
 /// 拡張子から言語を決める。表に無い拡張子は言語が決まらない（TBL-core-031）
 pub fn language_of(path: &str) -> Option<SupportLang> {
@@ -28,6 +34,12 @@ impl TestQueries {
         let mut rules = Vec::new();
         for yaml in BUNDLED_RULES {
             rules.extend(parse_rules(yaml).map_err(StopReason::ConfigError)?);
+        }
+        for (yaml, languages) in BUNDLED_SHARED_RULES {
+            for language in *languages {
+                let yaml = format!("language: {language}\n{yaml}");
+                rules.extend(parse_rules(&yaml).map_err(StopReason::ConfigError)?);
+            }
         }
         for attribute in &config.tests.rust.attributes {
             rules.extend(
