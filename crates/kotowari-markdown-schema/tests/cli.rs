@@ -566,7 +566,11 @@ fn check_directory_reports_all_failing_documents() {
 #[test]
 fn check_directory_relaxes_a_schema_that_declares_open() {
     let dir = tempfile::tempdir().unwrap();
-    write_file(dir.path(), "schema.yaml", &format!("open: true\n{T_SCHEMA}"));
+    write_file(
+        dir.path(),
+        "schema.yaml",
+        &format!("open: true\n{T_SCHEMA}"),
+    );
     write_file(dir.path(), "bad.md", bad_doc());
     let output = mds()
         .args(["check", dir.path().to_str().unwrap()])
@@ -1438,9 +1442,8 @@ fn line_reading_reads_thematic_breaks_as_statements_and_numbered_lines_as_ordere
     let doc = "- - -\n\n* * *\n\n-\t-\t-\n\n1. a\n";
     let (code, check, stderr) = mds_json(line, doc, "check");
     assert_eq!(code, Some(1), "stderr: {stderr}");
-    let undeclared = |line: u64, rule: &str| {
-        (line, "undeclared_line".to_string(), rule.to_string())
-    };
+    let undeclared =
+        |line: u64, rule: &str| (line, "undeclared_line".to_string(), rule.to_string());
     assert_eq!(
         finding_shape(&check),
         vec![
@@ -1510,7 +1513,7 @@ fn ex_schema_052_a_gfm_table_without_leading_pipes_is_a_table_when_reading_by_li
 // @kotowari[TBL-schema-011]
 #[test]
 fn tbl_schema_011_tables_missing_a_pipe_in_the_header_or_delimiter_row_are_tables_in_both_readings()
- {
+{
     let rules = "document:\n  preamble:\n    table:\n      extract: rows\n";
     let docs = [
         // 見出しの行に縦棒が無い
@@ -1520,7 +1523,8 @@ fn tbl_schema_011_tables_missing_a_pipe_in_the_header_or_delimiter_row_are_table
     ];
     for (doc, rows) in docs {
         for reading in ["paragraph", "line"] {
-            let (code, json, stderr) = mds_json(&format!("reading: {reading}\n{rules}"), doc, "values");
+            let (code, json, stderr) =
+                mds_json(&format!("reading: {reading}\n{rules}"), doc, "values");
             assert_eq!(code, Some(0), "{reading} {doc:?}: {stderr}");
             assert_eq!(json["rows"], rows, "{reading} {doc:?}: {json}");
         }
@@ -1545,6 +1549,81 @@ fn ex_schema_041_unknown_reading_value_stops() {
     let (code, _json, stderr) = mds_json(schema, "## 要求\n", "check");
     assert_eq!(code, Some(2), "stderr: {stderr}");
     assert!(stderr.contains("schema_invalid"), "stderr: {stderr}");
+}
+
+// @kotowari[EX-schema-063]
+#[test]
+fn ex_schema_063_an_unknown_reading_word_names_the_field_and_the_accepted_words() {
+    let schema = "reading: foo\ndocument:\n  sections:\n    - name: 要求\n";
+    let (code, _json, stderr) = mds_json(schema, "## 要求\n", "check");
+    assert_eq!(code, Some(2), "stderr: {stderr}");
+    for word in ["reading", "paragraph", "line"] {
+        assert!(stderr.contains(word), "{word}: {stderr}");
+    }
+}
+
+// @kotowari[EX-schema-062]
+#[test]
+fn ex_schema_062_a_non_string_schema_value_names_the_field_and_the_expected_type() {
+    let dir = tempfile::tempdir().unwrap();
+    let doc = write_file(dir.path(), "doc.md", "---\n$schema: 3\n---\n## 要求\n");
+    let output = mds()
+        .args(["check", doc.to_str().unwrap()])
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(2), "stderr: {stderr}");
+    for word in ["$schema", "string"] {
+        assert!(stderr.contains(word), "{word}: {stderr}");
+    }
+}
+
+// @kotowari[REQ-schema-065]
+#[test]
+fn req_schema_065_a_wrongly_typed_schema_value_names_the_field_and_the_expected_type() {
+    let cases = [
+        (
+            "open: 3\ndocument:\n  sections:\n    - name: 要求\n",
+            vec!["open", "boolean"],
+        ),
+        (
+            "document:\n  sections:\n    - name: 要求\n      item:\n        extract: 3\n",
+            vec!["extract", "path"],
+        ),
+        (
+            "document:\n  sections:\n    - name: 要求\n      item:\n        extract: { path: a, of: 3 }\n",
+            vec!["extract.of", "mapping"],
+        ),
+    ];
+    for (schema, words) in cases {
+        let (code, _json, stderr) = mds_json(schema, "## 要求\n", "check");
+        assert_eq!(code, Some(2), "{schema}: {stderr}");
+        for word in words {
+            assert!(stderr.contains(word), "{word}: {stderr}");
+        }
+    }
+}
+
+// @kotowari[REQ-schema-065]
+#[test]
+fn req_schema_065_an_of_word_not_accepted_by_the_node_names_it_and_the_accepted_words() {
+    let cases = [
+        (
+            "document:\n  sections:\n    - name: 要求\n      extract:\n        path: a\n        of: { at: id }\n",
+            vec!["\"id\"", "\"line\"", "\"raw\"", "\"end\""],
+        ),
+        (
+            "document:\n  preamble:\n    statement:\n      extract:\n        path: a\n        of: { at: end }\n",
+            vec!["\"end\"", "\"line\"", "\"raw\""],
+        ),
+    ];
+    for (schema, words) in cases {
+        let (code, _json, stderr) = mds_json(schema, "## 要求\n", "check");
+        assert_eq!(code, Some(2), "{schema}: {stderr}");
+        for word in words {
+            assert!(stderr.contains(word), "{word}: {stderr}");
+        }
+    }
 }
 
 // @kotowari[EX-schema-035]

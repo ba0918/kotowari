@@ -505,7 +505,16 @@ impl<'de> serde::de::Visitor<'de> for OfEntriesVisitor {
 
 /// スキーマ YAML を型付きのモデルに読み、形の違反を `SchemaError` にする。
 pub fn parse_schema(yaml: &str) -> Result<Schema, SchemaError> {
-    let schema: Schema = serde_saphyr::from_str(yaml).map_err(|e| SchemaError(format!("{e}")))?;
+    // 型や語が違うときに問題の欄の名前を説明に入れるため、読みながら欄の道筋を控える（REQ-schema-065）。
+    // 停止は説明の1行目だけを出すので、欄の名前は複数行になる serde-saphyr の説明より前に置く
+    let mut track = serde_path_to_error::Track::new();
+    let parsed = serde_saphyr::with_deserializer_from_str(yaml, |de| {
+        Schema::deserialize(serde_path_to_error::Deserializer::new(de, &mut track))
+    });
+    let schema = parsed.map_err(|e| match track.path().to_string().as_str() {
+        "." => SchemaError(format!("{e}")),
+        field => SchemaError(format!("in {field}: {e}")),
+    })?;
     validate_schema(&schema)?;
     Ok(schema)
 }
@@ -571,8 +580,7 @@ fn reject_colliding_root_paths(document: &Document) -> Result<(), SchemaError> {
 }
 
 fn validate_title(title: &Title) -> Result<(), SchemaError> {
-    reject_item_only_of(title.extract.as_ref(), "title")?;
-    reject_end_of(title.extract.as_ref(), "title")?;
+    reject_of_words(title.extract.as_ref(), "title", OUTSIDE_ITEM_OF)?;
     reject_duplicate_element_keys(title.extract.as_ref(), "title", &[])?;
     let Some(group) = title.extract.as_ref().and_then(Extract::group) else {
         return Ok(());
@@ -606,7 +614,7 @@ fn validate_section(section: &Section) -> Result<(), SchemaError> {
         repeat.validate()?;
     }
     reject_capture_extract(section.extract.as_ref(), "section")?;
-    reject_item_only_of(section.extract.as_ref(), "section")?;
+    reject_of_words(section.extract.as_ref(), "section", SECTION_OF)?;
     reject_duplicate_element_keys(section.extract.as_ref(), "section", &[])?;
     validate_fields(&section.fields)?;
     validate_statement(section.statement.as_ref())?;
@@ -696,8 +704,7 @@ fn validate_table(table: Option<&Table>) -> Result<(), SchemaError> {
             return Err(SchemaError("table select requires a header".into()));
         }
         reject_capture_extract(table.extract.as_ref(), "table")?;
-        reject_item_only_of(table.extract.as_ref(), "table")?;
-        reject_end_of(table.extract.as_ref(), "table")?;
+        reject_of_words(table.extract.as_ref(), "table", OUTSIDE_ITEM_OF)?;
         reject_duplicate_element_keys(table.extract.as_ref(), "table", &[])?;
     }
     Ok(())
@@ -749,8 +756,7 @@ fn validate_codeblock(codeblock: Option<&CodeBlock>) -> Result<(), SchemaError> 
             repeat.validate()?;
         }
         reject_capture_extract(codeblock.extract.as_ref(), "codeblock")?;
-        reject_item_only_of(codeblock.extract.as_ref(), "codeblock")?;
-        reject_end_of(codeblock.extract.as_ref(), "codeblock")?;
+        reject_of_words(codeblock.extract.as_ref(), "codeblock", OUTSIDE_ITEM_OF)?;
         reject_duplicate_element_keys(codeblock.extract.as_ref(), "codeblock", &[])?;
     }
     Ok(())
@@ -765,8 +771,7 @@ fn validate_fields(fields: &[Field]) -> Result<(), SchemaError> {
             when.validate()?;
         }
         reject_capture_extract(field.extract.as_ref(), "field")?;
-        reject_item_only_of(field.extract.as_ref(), "field")?;
-        reject_end_of(field.extract.as_ref(), "field")?;
+        reject_of_words(field.extract.as_ref(), "field", OUTSIDE_ITEM_OF)?;
         reject_duplicate_element_keys(field.extract.as_ref(), "field", &[])?;
     }
     Ok(())
@@ -781,8 +786,7 @@ fn validate_statement(statement: Option<&Statement>) -> Result<(), SchemaError> 
             when.validate()?;
         }
         reject_capture_extract(statement.extract.as_ref(), "statement")?;
-        reject_item_only_of(statement.extract.as_ref(), "statement")?;
-        reject_end_of(statement.extract.as_ref(), "statement")?;
+        reject_of_words(statement.extract.as_ref(), "statement", OUTSIDE_ITEM_OF)?;
         reject_duplicate_element_keys(statement.extract.as_ref(), "statement", &[])?;
     }
     Ok(())
@@ -804,8 +808,7 @@ fn validate_bullets(bullets: Option<&Bullets>, in_children: bool) -> Result<(), 
         if !in_children {
             reject_capture_extract(bullets.extract.as_ref(), "bullets")?;
         }
-        reject_item_only_of(bullets.extract.as_ref(), "bullets")?;
-        reject_end_of(bullets.extract.as_ref(), "bullets")?;
+        reject_of_words(bullets.extract.as_ref(), "bullets", OUTSIDE_ITEM_OF)?;
         reject_duplicate_element_keys(bullets.extract.as_ref(), "bullets", &[])?;
         if let Some(children) = &bullets.children {
             validate_fields(&children.fields)?;
@@ -826,27 +829,30 @@ fn reject_capture_extract(extract: Option<&Extract>, node: &str) -> Result<(), S
     Ok(())
 }
 
-/// 項目と節の外のノードには `of` の `end` を宣言できない（REQ-schema-048）。
-fn reject_end_of(extract: Option<&Extract>, node: &str) -> Result<(), SchemaError> {
-    let Some(extract) = extract else {
-        return Ok(());
-    };
-    if extract.of().iter().any(|(_, kind)| *kind == OfKind::End) {
-        return Err(SchemaError(format!("{node} extract cannot use of: end")));
-    }
-    Ok(())
-}
+/// 項目と節の外のノードが `of` に宣言できる語。`id` と `name` は項目だけ、`end` は項目と節だけ（REQ-schema-048）。
+const OUTSIDE_ITEM_OF: &[OfKind] = &[OfKind::Line, OfKind::Raw];
+/// 節が `of` に宣言できる語（REQ-schema-048）。
+const SECTION_OF: &[OfKind] = &[OfKind::Line, OfKind::Raw, OfKind::End];
 
-/// 項目の外のノードには `of` の `id` と `name` を宣言できない（REQ-schema-048）。
-fn reject_item_only_of(extract: Option<&Extract>, node: &str) -> Result<(), SchemaError> {
+/// ノードが受け付けない `of` の語を schema_invalid の停止にし、受け付ける語の一覧を示す（REQ-schema-065）。
+fn reject_of_words(
+    extract: Option<&Extract>,
+    node: &str,
+    accepted: &[OfKind],
+) -> Result<(), SchemaError> {
     let Some(extract) = extract else {
         return Ok(());
     };
     for (_, kind) in extract.of() {
-        if matches!(kind, OfKind::Id | OfKind::Name) {
+        if !accepted.contains(kind) {
+            let words: Vec<String> = accepted
+                .iter()
+                .map(|k| format!("\"{}\"", k.word()))
+                .collect();
             return Err(SchemaError(format!(
-                "{node} extract cannot use of: {}",
-                kind.word()
+                "{node} extract cannot use \"{}\" in of; accepted: {}",
+                kind.word(),
+                words.join(", ")
             )));
         }
     }
