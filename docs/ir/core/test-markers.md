@@ -99,9 +99,9 @@ kotowari は常に、`印`から出す unresolved_reference と invalid_marker �
 
 ### TBL-core-035: コメントの塊とテストの間に挟んでよい行
 
-- source: docs/decision/records/2026-09-24-multi-language-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A17, docs/decision/records/records.md#A39, docs/decision/records/2026-09-24-multi-language-tests.md#A39, docs/decision/records/2026-09-24-multi-language-tests.md#A40, docs/decision/records/2026-09-24-multi-language-tests.md#A50, docs/decision/records/2026-09-24-multi-language-tests.md#A51
+- source: docs/decision/records/2026-09-24-multi-language-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A17, docs/decision/records/records.md#A39, docs/decision/records/2026-09-24-multi-language-tests.md#A39, docs/decision/records/2026-09-24-multi-language-tests.md#A40, docs/decision/records/2026-09-24-multi-language-tests.md#A50, docs/decision/records/2026-09-24-multi-language-tests.md#A51, docs/decision/records/2026-09-24-review10-gaps.md#A1
 
-直前のコメントの塊は、テストの節の最初の行の直前から上に向かって、空行が来るまで続く、コメントだけの行とこの表の挟んでよい行の塊。コメントだけの行は、前後の空白を除いた行の文字がすべてコメント（tree-sitter の extra の節）の文字である行で、複数行のコメントの途中の行を含み、コードと同じ行にあるコメントの行は含まない。コメントだけの行と挟んでよい行は空行なしで混ざってよく、複数行にわたる属性とデコレータはその全部の行を挟んでよい行とする。複数行のコメント、属性、デコレータの途中にある空白だけの行は塊を切らない。塊の行のうち、印を読むのはコメントの文字だけで、属性やデコレータの本体にある印は読まない。
+直前のコメントの塊は、テストの節の最初の行の直前から上に向かって、空行が来るまで続く、コメントだけの行とこの表の挟んでよい行の塊。コメントだけの行は、前後の空白（Unicode の空白。全角空白と NBSP を含む）を除いた行の文字がすべてコメント（tree-sitter の extra の節）の文字である行で、複数行のコメントの途中の行を含み、コードと同じ行にあるコメントの行は含まない。コメントだけの行と挟んでよい行は空行なしで混ざってよく、複数行にわたる属性とデコレータはその全部の行を挟んでよい行とする。複数行のコメント、属性、デコレータの途中にある空白だけの行は塊を切らない。塊の行のうち、印を読むのはコメントの文字だけで、属性やデコレータの本体にある印は読まない。
 
 | 言語 | 挟んでよい行 |
 |---|---|
@@ -181,4 +181,9 @@ Scenario: 同じ行に始まるテストは最初のものだけに結び付く
   Given "// @kotowari[REQ-001]" の行の直後の行が "#[test] fn a() {} #[test] fn b() {}" である
   When "kotowari check" を実行する
   Then "a" は "REQ-001" に結び付き、detail が "b" の test_without_id の誤りが1件出る
+@id=EX-core-327 @about=REQ-core-075 @source=docs/decision/records/2026-09-24-review10-gaps.md#A1,docs/decision/records/2026-09-24-multi-language-tests.md#A16,docs/decision/records/2026-09-24-multi-language-tests.md#A18
+Scenario: 全角空白の後のコメントも塊に入る
+  Given "tests.files" が "tests/**/*.ts" を含み、"tests/a.test.ts" に全角空白で始まる "// @kotowari[REQ-001]" の行と "it('x', () => {});" の行が空行なしで続く
+  When "kotowari check" を実行する
+  Then test_without_id の誤りは出ず、"x" は "REQ-001" に結び付く
 ```

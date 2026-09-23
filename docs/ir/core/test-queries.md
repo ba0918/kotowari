@@ -44,14 +44,14 @@ kotowari は常に、Rust、TypeScript、Tsx、JavaScript、Python、Php の`問
 
 ### TBL-core-017: Rust でテストと数えるもの
 
-- source: docs/decision/records/records.md#A26, docs/decision/records/records.md#A39, docs/decision/records/records.md#A49, docs/decision/records/records.md#A47, docs/decision/records/records.md#A121, docs/decision/records/records.md#A122, docs/decision/records/2026-09-24-multi-language-tests.md#A38, docs/decision/records/2026-09-24-multi-language-tests.md#A53
+- source: docs/decision/records/records.md#A26, docs/decision/records/records.md#A39, docs/decision/records/records.md#A49, docs/decision/records/records.md#A47, docs/decision/records/records.md#A121, docs/decision/records/records.md#A122, docs/decision/records/2026-09-24-multi-language-tests.md#A38, docs/decision/records/2026-09-24-multi-language-tests.md#A53, docs/decision/records/2026-09-24-review10-gaps.md#A4
 
 | 対象 | 数え方 |
 |---|---|
 | 属性のパスの末尾の要素が "test" の関数（"#[test]"、"#[ test ]"、"#[core::prelude::v1::test]"、"#[tokio::test]"） | 同梱の問い合わせに固定し、常に数える |
 | tests.rust.attributes の属性の付いた関数 | 属性から "#["、"]"、引数を除いたパスが完全一致すれば数える |
 | 上の2行の関数と tests.rust.macros のマクロが、ほかの関数の本体の中にあるとき | 置き場所によらず数える |
-| tests.rust.macros のマクロ | 設定には "!" を除いた名前で書く。マクロの名前の末尾の要素が一致すれば、中身を Rust の項目として読み直し、最上位の関数ごとに数える。名前は関数の名前。印の結び付けと invalid_marker は通常の関数と同じ |
+| tests.rust.macros のマクロ | 設定には "!" を除いた名前で書く。マクロの名前の末尾の要素が一致すれば、中身を Rust の項目として読み直し、最上位の関数（ほかの関数の本体の中にない関数。"mod" や "impl" の中の関数を含む）ごとに数える。名前は関数の名前。印の結び付けと invalid_marker は通常の関数と同じ |
 
 ### TBL-core-032: TypeScript と JavaScript でテストと数えるもの
 
@@ -69,12 +69,12 @@ TypeScript、Tsx、JavaScript に共通する。名前は REQ-core-180 のとお
 
 ### TBL-core-033: Python でテストと数えるもの
 
-- source: docs/decision/records/2026-09-24-multi-language-tests.md#A19, docs/decision/records/2026-09-24-multi-language-tests.md#A17, docs/decision/records/2026-09-24-multi-language-tests.md#A32, docs/decision/records/2026-09-24-multi-language-tests.md#A48
+- source: docs/decision/records/2026-09-24-multi-language-tests.md#A19, docs/decision/records/2026-09-24-multi-language-tests.md#A17, docs/decision/records/2026-09-24-multi-language-tests.md#A32, docs/decision/records/2026-09-24-multi-language-tests.md#A48, docs/decision/records/2026-09-24-review10-gaps.md#A3
 
 | 対象 | 数え方 |
 |---|---|
 | 名前が "test" で始まる、ファイルの最上位の関数 | 数える。名前は関数の名前 |
-| 名前が "test" で始まる、クラスの中のメソッド | 数える。名前はメソッドの名前 |
+| 名前が "test" で始まる、クラスの中のメソッド（クラスが関数の中にあっても） | 数える。名前はメソッドの名前 |
 | 上の関数とメソッドにデコレータが付いたもの | 数える。デコレータはテストの節の外にある |
 | 関数の中に入れ子になった関数 | 数えない |
 
@@ -163,4 +163,15 @@ Scenario: 関数の本体の中のテストも数える
   Given "fn helper() {" の本体の中に、印の無い "#[test]" の付いた関数 "inner" がある
   When "kotowari check" を実行する
   Then detail が "inner" の test_without_id の誤りが1件出る
+@id=EX-core-329 @about=REQ-core-184 @source=docs/decision/records/2026-09-24-review10-gaps.md#A3,docs/decision/records/2026-09-24-multi-language-tests.md#A19
+Scenario: 関数の中のクラスのメソッドも数える
+  Given "tests.files" が "tests/**/*.py" を含み、"tests/test_a.py" の "def test_outer():" の中に "class C:" があり、その中に印の無い "def test_in_class(self):" がある
+  When "kotowari check" を実行する
+  Then detail が "test_in_class" の test_without_id の誤りが出る
+
+@id=EX-core-330 @about=REQ-core-082 @source=docs/decision/records/2026-09-24-review10-gaps.md#A4
+Scenario: マクロの中の mod の関数も数える
+  Given "tests.rust.macros" が "proptest" だけの一覧で、"proptest!" の中の "mod nested {" の中に印の無い関数 "inside_module" がある
+  When "kotowari check" を実行する
+  Then detail が "inside_module" の test_without_id の誤りが1件出る
 ```
