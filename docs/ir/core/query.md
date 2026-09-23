@@ -92,11 +92,11 @@ Scenario: 重複した ID は全部出る
   When "kotowari query REQ-001" を実行する
   Then 終了コードは 0 で、"items" は "path" が "docs/ir/a.md" と "docs/ir/b.md" の2件である
 
-@id=EX-core-254 @about=REQ-core-161 @source=docs/decision/records/2026-09-19-read-commands.md#A7,docs/decision/records/2026-09-19-read-commands.md#A19,docs/decision/records/2026-09-20-query-status.md#A3,docs/decision/records/2026-09-20-query-status.md#A7,docs/decision/records/2026-09-20-query-status.md#A13
+@id=EX-core-254 @about=REQ-core-161 @source=docs/decision/records/2026-09-19-read-commands.md#A7,docs/decision/records/2026-09-19-read-commands.md#A19,docs/decision/records/2026-09-20-query-status.md#A3,docs/decision/records/2026-09-20-query-status.md#A7,docs/decision/records/2026-09-20-query-status.md#A13,docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 Scenario: text は本文と逆引きの行を続ける
   Given EX-core-250 と同じ IR があり、"tests/a.rs" の 3 行目の印 "@kotowari[REQ-001]" の直後にテスト "req_001_x" がある
   When "kotowari query --format text REQ-001" を実行する
-  Then 1行目は "REQ-001 unit 例 docs/ir/a.md:7 tests=1"、2行目は "  tests/a.rs:3 req_001_x"、3行目は "  - 種類: ubiquitous"、最後の行は "  <- EX-001 about docs/ir/a.md:20" である
+  Then 1行目は "REQ-001 unit 例 docs/ir/a.md:7 tests=1"、2行目は "  tests/a.rs:3 req_001_x"、3行目は "  - kind: ubiquitous"、最後の行は "  <- EX-001 about docs/ir/a.md:20" である
 
 @id=EX-core-255 @about=TBL-core-027 @source=docs/decision/records/2026-09-20-query-status.md#A3,docs/decision/records/2026-09-20-query-status.md#A16
 Scenario: シナリオの本文はタグの行から始まる
