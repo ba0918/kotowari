@@ -1,4 +1,4 @@
-kotowari の仕様に基づく（改訂 2026-09-17。本体の版は固定しない）
+kotowari の仕様に基づく（改訂 2026-09-23。本体の版は固定しない）
 
 設定ファイルは `.kotowari/config.yaml`。基準のディレクトリの直下にある。空の設定ファイル（0バイトか注釈だけ）は既定の値で検査を行う。設定ファイルが無いときも既定の値で行う。
 
@@ -63,5 +63,5 @@ vague_words:
 ```markdown
 ## kotowari
 
-このプロジェクトの仕様は IR（`docs/ir/`）で管理する。brainstorm、plan、cycle、implement の各席では `kotowari` スキルを読み、場面に応じた reference に従う。
+このプロジェクトの仕様は IR（`docs/ir/`）で管理する。
 ```

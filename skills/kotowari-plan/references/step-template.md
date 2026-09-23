@@ -1,0 +1,61 @@
+# Step template
+
+Each step in the plan carries these fields, in prose or as a short list. The order below is
+the order an implementer needs them.
+
+```markdown
+## Step N — <what this step produces>
+
+Purpose: <one sentence>. Specification: <path>#REQ-nnn, <path>#REQ-nnn.
+Prerequisites: <steps that must be complete; environment or data that must exist>.
+May change: <files or directories; nothing outside this scope>.
+Done when: <observable condition>.
+Shown by: test | check | artifact | external — <test names / commands / artifact path / what to
+observe and where>.
+Left to the implementer: <choices where every option keeps approved behavior> (or "none").
+Stop and hand back if: <conditions specific to this step, beyond the four general ones>.
+```
+
+Guidance per field:
+
+- **Specification** names requirement IDs as `<document path>#REQ-nnn` (a topic with no IR:
+  `<path>#<heading>`), not paraphrases. If a requirement you need does not exist, the
+  specification is missing something — hand back to brainstorm rather than inventing the content.
+- **Done when** is a condition someone else can observe, not "the feature works".
+- **Shown by** picks exactly one kind. *Test* means RED → GREEN → REFACTOR with named tests.
+  *Check* lists commands in order. *Artifact* names the file and any format check. *External*
+  says what to observe, on what, and what counts as pass; if it is unsafe, privileged, or
+  irreversible, say that a human runs or confirms it. Name only tests that meet **Evidence
+  conditions**. Do not add tests for conditions already true or match their count to the
+  number of Done conditions; use one test per behavior being implemented. If no test qualifies
+  and the specification does not require human or platform inspection, hand back to brainstorm.
+- **Left to the implementer** holds choices delegated for this step; plan-wide ones go in the
+  plan-level section. Naming, internal
+  structure, and helper extraction usually qualify; input formats, limits, error behavior, and
+  persistence never do.
+- **Stop and hand back if** names conditions the implementer could not infer: a dependency that
+  may be unavailable, a measurement that may disagree with the specification, an interface that
+  may already exist under another name.
+
+Plan-level sections that precede the steps: **Goal** (one sentence, the result the person
+gets), **Specification** (the IR store path and the requirement IDs, or for a topic with no IR the one
+governing path), **Approach and why**, **Scope of change**,
+**Step order and prerequisites**, **Verification map** (which steps prove which requirements and
+scenarios), **Left to the implementer**, **Stop conditions**, **Test command** (only when the
+project does not fix one), **Out of scope**.
+
+## Evidence conditions
+
+An oracle — a test, a check, or a fixture — counts as evidence only when the condition it
+produces has a named operational producer in a supported environment (untrusted input arriving
+at a boundary is one), its subject is the product or a check rather than the oracle itself, the
+rule it enforces is stated by the specification, and every wording, file layout, or internal
+name it pins is declared there as a contract. An oracle that fails any of these is a cost: do
+not add it, keep it in a change under review, or demand it.
+
+A requirement whose only oracle would fail these conditions is not mechanically verifiable:
+when it is not code, verify it by a human-run check or by the platform's own checker; when it
+is code, drop the requirement and let the failure join a generic error path a reachable
+failure already proves — never resolve it by having the implementer build the fixture.
+
+Source: `ba0918-verification`, agentic-rules v0.8.0.
