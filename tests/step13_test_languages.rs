@@ -208,6 +208,34 @@ fn tbl_032_test_whose_result_is_called_again_is_counted() {
     assert_eq!(unmarked(&v), vec!["curried", "chained"], "{v}");
 }
 
+// @kotowari[REQ-core-183, TBL-core-032]
+#[test]
+fn tbl_032_dotted_form_with_a_unicode_name_or_a_comment_is_counted() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.ts"]);
+    write(
+        tmp.path(),
+        "tests/a.test.ts",
+        "it.検証('unicode', () => {});\nit /* note */ .only('withComment', () => {});\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["unicode", "withComment"], "{v}");
+}
+
+// @kotowari[REQ-core-183, TBL-core-032, EX-core-331]
+#[test]
+fn ex_core_331_tagged_template_alone_is_not_counted() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.ts"]);
+    write(
+        tmp.path(),
+        "tests/a.test.ts",
+        "test.each`a`('tagged %s', () => {});\ntest.each`foo`;\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["tagged %s"], "{v}");
+}
+
 // @kotowari[REQ-core-183, TBL-core-032, EX-core-300]
 #[test]
 fn ex_core_300_describe_and_other_callers_are_not_counted() {

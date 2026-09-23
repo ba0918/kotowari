@@ -1,40 +1,52 @@
 # 同梱の問い合わせ: TypeScript、Tsx、JavaScript（TBL-core-032）
 # "language:" の行は読み込むときに言語ごとに足し、3つの言語に同じ中身を付ける（REQ-core-182）
 id: kotowari-ts-js-test
+utils:
+  # "it"、"test"、またはそれに "." と名前が1つ以上続く式（"it.only"、"it.only.each"）。
+  # 名前の文字と、"." の前後のコメントは構文木が扱う
+  it-chain:
+    any:
+      - kind: identifier
+        regex: ^(it|test)$
+      - kind: member_expression
+        has:
+          field: object
+          matches: it-chain
+  # 上の形のうち、最後の要素が "each" のもの
+  each-member:
+    kind: member_expression
+    all:
+      - matches: it-chain
+      - has:
+          field: property
+          regex: ^each$
 rule:
   kind: call_expression
-  has:
-    field: arguments
-    has:
-      nthChild: 1
-      pattern: $NAME
-  # "it.each(表)(名前, 関数)" の内側の "it.each(表)" は数えない。
-  # 結果をさらに呼ぶ形でも、最後の要素が "each" でなければ数える（"it('x', fn)('y')"）
-  not:
-    all:
-      - inside:
-          kind: call_expression
-          field: function
-      - has:
-          field: function
-          kind: member_expression
-          regex: \.\s*each$
-  any:
-    # "it(...)"、"test(...)"
+  all:
+    # 括弧の引数を持つ呼び出しだけ。タグ付きテンプレート（"test.each`表`"）は数えない
     - has:
-        field: function
-        kind: identifier
-        regex: ^(it|test)$
-    # "it.only(...)"、"test.concurrent(...)"、"it.only.each(...)"
-    - has:
-        field: function
-        kind: member_expression
-        regex: ^(it|test)(\s*\.\s*[A-Za-z_$][A-Za-z0-9_$]*)+$
-    # "it.each(表)(名前, 関数)"、"test.concurrent.each(表)(名前, 関数)"
-    - has:
-        field: function
-        kind: call_expression
+        field: arguments
+        kind: arguments
         has:
-          field: function
-          kind: member_expression
-          regex: ^(it|test)(\s*\.\s*[A-Za-z_$][A-Za-z0-9_$]*)*\s*\.\s*each$
+          nthChild: 1
+          pattern: $NAME
+    # "it.each(表)(名前, 関数)" の内側の "it.each(表)" は数えない。
+    # 結果をさらに呼ぶ形でも、最後の要素が "each" でなければ数える（"it('x', fn)('y')"）
+    - not:
+        all:
+          - inside:
+              kind: call_expression
+              field: function
+          - has:
+              field: function
+              matches: each-member
+    - has:
+        field: function
+        any:
+          # "it(...)"、"test(...)"、"it.only(...)"、"test.concurrent(...)"、"it.only.each(...)"
+          - matches: it-chain
+          # "it.each(表)(名前, 関数)"、"test.concurrent.each(表)(名前, 関数)"
+          - kind: call_expression
+            has:
+              field: function
+              matches: each-member
