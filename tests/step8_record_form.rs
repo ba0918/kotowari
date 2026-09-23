@@ -578,6 +578,31 @@ fn req_132_parent_directory_href_to_superseded_number_passes() {
     );
 }
 
+// @kotowari[REQ-core-132, REQ-core-110, EX-core-289]
+#[test]
+fn req_132_a_parent_step_in_the_records_place_is_folded() {
+    // 置き場の設定に "a/.." があっても、置き場の中の記録を指すリンクは通る
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/../decision/records\n  adr: docs/decision/adr\n",
+    )
+    .unwrap();
+    write_record(
+        tmp.path(),
+        "b.md",
+        "# 記録 b\n\n## Agreements\n\n- A2 新しい合意\n",
+    );
+    write_record(
+        tmp.path(),
+        "a.md",
+        "# 記録 a\n\n## Agreements\n\n- A1 ある合意\n- superseded_by: [A2](./b.md#A2)\n",
+    );
+    let v = check(tmp.path());
+    assert!(link_findings(&v).is_empty(), "{:?}", link_findings(&v));
+}
+
 // @kotowari[REQ-core-133, REQ-core-132]
 #[test]
 fn req_133_empty_superseded_by_is_not_a_link_finding() {

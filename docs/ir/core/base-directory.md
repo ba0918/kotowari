@@ -22,10 +22,10 @@ kotowari は常に、`設定ファイル`の値のパス、`出典`のパス、�
 ### REQ-core-110: パスの正規化
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A106, docs/decision/records/2026-09-16-ir-tree.md#A13
+- source: docs/decision/records/records.md#A106, docs/decision/records/2026-09-16-ir-tree.md#A13, docs/decision/records/2026-09-24-review7-gaps.md#A1
 - verification: unit
 
-kotowari は常に、`設定ファイル`の値のパスと`出典`のパスを、比べる前と出力の前に、末尾の "/" と先頭の "./" を除き、途中の "/./" と連続する "/" を1つの "/" に畳み、"\\" を "/" に直して正規化し、出力の "path" を正規化した置き場と、置き場からの文書の相対パスを "/" でつないで作る。
+kotowari は常に、`設定ファイル`の値のパスと`出典`のパスを、比べる前と出力の前に、末尾の "/" と先頭の "./" を除き、途中の "/./" と連続する "/" を1つの "/" に畳み、"\\" を "/" に直し、"a/.." を畳んで（畳む相手の無い ".." は残す）正規化し、出力の "path" を正規化した置き場と、置き場からの文書の相対パスを "/" でつないで作る。
 
 ## Decision tables
 
@@ -49,6 +49,13 @@ kotowari は常に、`設定ファイル`の値のパスと`出典`のパスを�
 ## Examples
 
 ```gherkin
+@id=EX-core-289 @about=REQ-core-110 @source=docs/decision/records/2026-09-24-review7-gaps.md#A1
+Scenario: 置き場の "a/.." は畳んでから比べる
+  Given decisions.records を "docs/decision/../decision/records" にした設定がある
+  And その置き場の中の`判断の記録`の決定を出典に持つ`要求`がある
+  When "kotowari check" を実行する
+  Then source_invalid は出ない
+
 @id=EX-core-002 @about=REQ-core-009 @source=docs/decision/records/records.md#A37
 Scenario: 上のディレクトリの .kotowari を基準にする
   Given "/repo/.kotowari/" があり、"/repo/src/" に ".kotowari/" は無い
