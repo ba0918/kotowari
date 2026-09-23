@@ -133,11 +133,15 @@ Source: `ba0918-verification`, agentic-rules v0.8.0.
       too_many_requirements) may remain; to keep one, reread the document as the kotowari skill's
       `references/ir-form.md` section 「上限と分ける単位」 says, and write the reason for keeping
       it in the decision record.
-   2. Collation review: as the kotowari skill's `references/collate.md` directs, give a
-      separate-session LLM each IR item and its sources, and have it list the items whose cited
-      decisions do not support their content. For each item in the returned JSON's `unsupported`,
+   2. Collation review: count the collation scope as the kotowari skill's
+      `references/collate.md` says — the items this brainstorm added or changed, and the existing
+      items citing a decision it changed. Write one line with the count and the resulting choice
+      before acting. With a scope of zero, do not collate. Otherwise give a separate-session LLM
+      the items in scope and the decisions they cite, as `collate.md` directs, and have it list
+      the items whose cited decisions do not support their content. For each item in the returned JSON's `unsupported`,
       add a source, add a decision to the record, or fix the item. After changing the IR or the
-      record, go back to step 1 (check) before collating again. What still remains at the third
+      record, go back to step 1 (check) before collating again. The second and third collations take only
+      the items flagged last time and what was fixed since. What still remains at the third
       collation becomes a problem record (FLAG) and goes back to the person.
    3. Stage the IR documents, the glossary, the problem record, and the decision record. Show the
       person the decision record's diff (one decision per line; this is what they read), the check
