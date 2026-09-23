@@ -232,35 +232,19 @@ impl IrDocument {
     }
 }
 
-/// 行を \n で分割し、\r\n は1行として数える（TBL-core-010）
+/// 行を "\n"、"\r\n"、単独の "\r" で分割する。"\r\n" は1つの行の終わりに数える（TBL-core-010）
 pub fn split_lines(content: &str) -> Vec<&str> {
     let mut lines = Vec::new();
-    let mut start = 0;
-    let bytes = content.as_bytes();
-    let len = bytes.len();
-
-    while start < len {
-        if let Some(pos) = content[start..].find('\n') {
-            let end = start + pos;
-            let line = if end > start && bytes[end - 1] == b'\r' {
-                &content[start..end - 1]
-            } else {
-                &content[start..end]
-            };
-            lines.push(line);
-            start = end + 1;
-        } else {
-            // 最後の行（改行なし）
-            lines.push(&content[start..]);
-            break;
-        }
+    let mut rest = content;
+    while let Some(pos) = rest.find(['\n', '\r']) {
+        lines.push(&rest[..pos]);
+        let ending = if rest[pos..].starts_with("\r\n") { 2 } else { 1 };
+        rest = &rest[pos + ending..];
     }
-
-    // 空の入力は0行
-    if lines.is_empty() && !content.is_empty() {
-        lines.push(content);
+    // 最後の行（改行なし）
+    if !rest.is_empty() {
+        lines.push(rest);
     }
-
     lines
 }
 

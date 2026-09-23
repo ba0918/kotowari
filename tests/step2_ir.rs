@@ -95,6 +95,40 @@ fn req_037_crlf_counts_as_one_line() {
     assert_eq!(doc3.line_count, 1);
 }
 
+// @kotowari[EX-core-281]
+#[test]
+fn ex_core_281_bare_cr_ends_a_line() {
+    assert_eq!(ir::parse_document("a.md", "a\rb").unwrap().line_count, 2);
+    assert_eq!(ir::parse_document("b.md", "a\rb\r\nc").unwrap().line_count, 3);
+}
+
+// @kotowari[EX-core-282]
+#[test]
+fn ex_core_282_finding_after_bare_cr_has_the_split_line_number() {
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
+    std::fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# Title\rScope.\r## Requirements\r### foo\r",
+    )
+    .unwrap();
+    let (_, findings) = ir::load_and_check(tmp.path(), &default_config()).unwrap();
+    let uh = find_by_kind(&findings, "unknown_heading");
+    assert_eq!(uh.len(), 1, "{findings:?}");
+    assert_eq!(uh[0].line, Some(4), "{findings:?}");
+}
+
+// @kotowari[TBL-core-010, REQ-core-112]
+#[test]
+fn tbl_core_010_bare_cr_keeps_items_before_an_unclosed_fence() {
+    let head = "# Title\r\rScope.\r\r## Requirements\r\r### REQ-001: R\r\r- kind: ubiquitous\r- source: brainstorm/records.md#A1\r- verification: unit\r\rStatement.\r\r";
+    let doc = ir::parse_document("a.md", &format!("{head}```\ncontent\n")).unwrap();
+    let uc: Vec<_> = doc.parse_findings.iter().filter(|f| f.kind == "unclosed_code_block").collect();
+    assert_eq!(uc.len(), 1, "{:?}", doc.parse_findings);
+    assert_eq!(uc[0].line, Some(15), "{:?}", doc.parse_findings);
+    assert_eq!(doc.items.len(), 1, "the requirement before the fence stays: {:?}", doc.items);
+}
+
 // --- REQ-core-038: 行数の上限 ---
 
 // @kotowari[REQ-core-038]
