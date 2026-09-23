@@ -2305,3 +2305,51 @@ fn ex_schema_061_an_item_body_keeps_the_child_bullets_of_an_undeclared_line() {
     let v = values_json(ITEM_BODY_SCHEMA, doc);
     assert_eq!(v["items"], "REQ-1: 名前\n- 他: b\n  - 子", "{v}");
 }
+
+/// `kotowari-mds values --format text` の標準出力。
+fn values_text(schema: &str, doc_body: &str) -> String {
+    let dir = tempfile::tempdir().unwrap();
+    write_file(dir.path(), "schema.yaml", schema);
+    let doc = write_file(
+        dir.path(),
+        "doc.md",
+        &format!("---\n$schema: ./schema.yaml\n---\n{doc_body}"),
+    );
+    let output = mds()
+        .args(["values", doc.to_str().unwrap(), "--format", "text"])
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(0), "stderr: {stderr}");
+    String::from_utf8(output.stdout).unwrap()
+}
+
+// @kotowari[EX-schema-064, REQ-schema-066]
+#[test]
+fn ex_schema_064_values_text_indents_two_spaces_per_level() {
+    let schema = "document:\n  preamble:\n    statement:\n      extract: a.b\n";
+    assert_eq!(values_text(schema, "文\n"), "a:\n  b: 文\n");
+}
+
+// @kotowari[EX-schema-065, REQ-schema-066]
+#[test]
+fn ex_schema_065_values_text_numbers_array_elements_from_one() {
+    // 配列を1段深い所に置き、字下げの幅が入れ子の深さで決まることも見る
+    let schema = "document:\n  preamble:\n    table:\n      extract: t.rows\n";
+    let doc = "| a | b |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n";
+    assert_eq!(
+        values_text(schema, doc),
+        "t:\n  rows:\n    1.\n      1. 1\n      2. 2\n    2.\n      1. 3\n      2. 4\n"
+    );
+}
+
+// @kotowari[REQ-schema-066]
+#[test]
+fn req_schema_066_values_text_indents_the_later_lines_of_an_array_element_one_level_deeper() {
+    let schema = "document:\n  preamble:\n    bullets:\n      extract: t.list\n";
+    let doc = "- x\n  - y\n- z\n";
+    assert_eq!(
+        values_text(schema, doc),
+        "t:\n  list:\n    1. - x\n        - y\n    2. - z\n"
+    );
+}
