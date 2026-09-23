@@ -16,16 +16,6 @@ enum ByteClass {
     Allowed,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum LineClass {
-    Blank,
-    Code,
-    /// コメントだけの行
-    Comment,
-    /// 挟んでよい行（Rust の属性、Python のデコレータ）。コメントが混ざってもよい
-    Allowed,
-}
-
 /// 1つのファイル（またはマクロの中身）の行ごとの分類
 pub struct LineMap<'s> {
     source: &'s str,
@@ -55,12 +45,8 @@ impl<'s> LineMap<'s> {
             } else {
                 continue;
             };
-            for b in &mut bytes[node.range()] {
-                // コメントの中に節があっても、外側の分類を保つ
-                if *b == ByteClass::Code {
-                    *b = class;
-                }
-            }
+            // 深さ優先で親から子の順に来るので、属性やデコレータの中のコメントはコメントになる
+            bytes[node.range()].fill(class);
         }
         let mut lines = Vec::new();
         let mut start = 0;
@@ -76,9 +62,9 @@ impl<'s> LineMap<'s> {
                 start = i + 1;
             }
         }
-        if start < source.len() {
-            lines.push((start, source.len()));
-        }
+        // 改行で終わらない最後の行。改行で終わるときは空の行が1つ増えるが、
+        // その下に`テスト`の節が無いので塊には入らない
+        lines.push((start, source.len()));
         LineMap {
             source,
             lines,
@@ -86,33 +72,21 @@ impl<'s> LineMap<'s> {
         }
     }
 
-    fn class_of(&self, line: usize) -> LineClass {
+    /// 塊に入る行か。空白を除いた文字がすべてコメントか挟んでよい節の文字である行と、
+    /// 複数行のコメントや属性の途中にある空白だけの行（行の終わりの改行がその節の中）
+    fn joins_block(&self, line: usize) -> bool {
         let (start, end) = self.lines[line];
-        let text = &self.source.as_bytes()[start..end];
-        let mut has_allowed = false;
-        let mut has_comment = false;
-        for (offset, c) in text.iter().enumerate() {
+        let mut has_text = false;
+        for (offset, c) in self.source.as_bytes()[start..end].iter().enumerate() {
             if c.is_ascii_whitespace() {
                 continue;
             }
-            match self.bytes[start + offset] {
-                ByteClass::Code => return LineClass::Code,
-                ByteClass::Allowed => has_allowed = true,
-                ByteClass::Comment => has_comment = true,
+            if self.bytes[start + offset] == ByteClass::Code {
+                return false;
             }
+            has_text = true;
         }
-        if has_allowed {
-            LineClass::Allowed
-        } else if has_comment || self.inside_comment(end) {
-            LineClass::Comment
-        } else {
-            LineClass::Blank
-        }
-    }
-
-    /// 空白だけの行が複数行のコメントの途中にあるか（行の終わりの改行がコメントの中）
-    fn inside_comment(&self, end: usize) -> bool {
-        self.bytes.get(end) == Some(&ByteClass::Comment)
+        has_text || self.bytes.get(end).is_some_and(|b| *b != ByteClass::Code)
     }
 
     /// `テスト`の節の最初の行（0始まり）の`直前のコメントの塊`の印を集める。
@@ -123,17 +97,11 @@ impl<'s> LineMap<'s> {
     ) -> (Vec<(String, usize)>, Vec<(usize, String)>) {
         let mut ids = Vec::new();
         let mut invalid = Vec::new();
-        let mut line = first_line;
-        let mut block = Vec::new();
-        while line > 0 {
-            line -= 1;
-            match self.class_of(line) {
-                LineClass::Comment | LineClass::Allowed => block.push(line),
-                LineClass::Blank | LineClass::Code => break,
-            }
+        let mut top = first_line;
+        while top > 0 && self.joins_block(top - 1) {
+            top -= 1;
         }
-        block.reverse();
-        for line in block {
+        for line in top..first_line {
             let (start, end) = self.lines[line];
             let raw = &self.source[start..end];
             let line_num = line + 1;

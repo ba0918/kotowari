@@ -115,12 +115,8 @@ fn read_rule_file(base: &Path, path: &str) -> Result<Vec<RuleConfig<SupportLang>
     if !metadata.is_file() {
         return Err(config_error(format!("not a file in tests.rules: {path}")));
     }
-    let text = crate::read_utf8_file(&full, path).map_err(|e| match e {
-        StopReason::NonUtf8File(_) => {
-            config_error(format!("non-UTF-8 file in tests.rules: {path}"))
-        }
-        other => config_error(format!("unreadable file in tests.rules: {other}")),
-    })?;
+    let text = crate::read_utf8_file(&full, path)
+        .map_err(|e| config_error(format!("unreadable file in tests.rules: {e}")))?;
     parse_rules(&text)
         .map_err(|e| config_error(format!("invalid rule in tests.rules: {path}: {e}")))
 }

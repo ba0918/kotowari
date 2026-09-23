@@ -202,7 +202,7 @@ pub fn discover_tests(
             invalid_markers,
         });
     }
-    if lang == SupportLang::Rust && !config.tests.rust.macros.is_empty() {
+    if lang == SupportLang::Rust {
         discover_macro_tests(&root, content, file_rel, config, &mut tests);
     }
     tests.sort_by_key(|t| t.line);
@@ -214,8 +214,7 @@ fn line_text(content: &str, line: usize) -> String {
     content.lines().nth(line).unwrap_or("").trim().to_string()
 }
 
-/// "tests.rust.macros" のマクロを探し、中身を Rust の項目として読み直す（TBL-core-017）。
-/// 関数の中には入らない
+/// "tests.rust.macros" のマクロを探し、中身を Rust の項目として読み直す（TBL-core-017）
 fn discover_macro_tests(
     node: &RustNode<'_>,
     source: &str,
@@ -225,7 +224,6 @@ fn discover_macro_tests(
 ) {
     for child in node.children() {
         match child.kind().as_ref() {
-            "function_item" => {}
             "macro_invocation" => {
                 if is_configured_macro(&child, config) {
                     reparse_macro_body(&child, source, file_rel, tests);

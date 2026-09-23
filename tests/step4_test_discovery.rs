@@ -753,6 +753,30 @@ fn tbl_035_comments_and_multi_line_attributes_form_one_block() {
 
 // @kotowari[REQ-core-075, TBL-core-035]
 #[test]
+fn tbl_035_blank_line_inside_a_comment_or_an_attribute_does_not_cut_the_block() {
+    // 空白だけの行でも、複数行のコメントや属性の途中にあれば塊の行に数える
+    let in_comment = "/* @kotowari[REQ-001]\n\n*/\n#[test]\nfn t() {}\n";
+    let in_attribute = "// @kotowari[REQ-001]\n#[cfg_attr(\n\n    test, ignore)]\n#[test]\nfn t() {}\n";
+    for content in [in_comment, in_attribute] {
+        let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
+            .expect("valid rust");
+        assert_eq!(tests.len(), 1);
+        assert_eq!(tests[0].marker_ids, vec![("REQ-001".to_string(), 1)], "{content:?}: {tests:?}");
+    }
+}
+
+// @kotowari[REQ-core-072, TBL-core-008, TBL-core-010]
+#[test]
+fn tbl_008_invalid_marker_detail_of_a_crlf_test_file_has_no_carriage_return() {
+    let content = "// @kotowari[]\r\n#[test]\r\nfn t() {}\r\n";
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
+        .expect("valid rust");
+    assert_eq!(tests.len(), 1);
+    assert_eq!(tests[0].invalid_markers, vec![(1, "// @kotowari[]".to_string())], "{tests:?}");
+}
+
+// @kotowari[REQ-core-075, TBL-core-035]
+#[test]
 fn tbl_035_comment_after_code_on_the_same_line_breaks_the_block() {
     let content = "// @kotowari[REQ-001]\nconst N: u8 = 1; // note\n#[test]\nfn t() {}\n";
     let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
