@@ -15,7 +15,7 @@ use kotowari_markdown_schema::finding::{
 use kotowari_markdown_schema::validate::validate;
 use serde_json::Value;
 
-/// 用語集の表の行を`抽出`が置く配置パス（`.mds/schemas/context.yaml`）。
+/// 用語集の表の行を`抽出`が置く配置パス（`.kotowari/schemas/context.yaml`）。
 const GLOSSARY_ROWS: &str = "glossary";
 
 /// `抽出`から拾った`項目`。`指摘`の行で突き合わせる。

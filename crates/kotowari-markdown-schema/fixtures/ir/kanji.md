@@ -1,5 +1,5 @@
 ---
-$schema: ../.mds/schemas/ir.yaml
+$schema: ../.kotowari/schemas/ir.yaml
 ---
 # 印の仕様
 

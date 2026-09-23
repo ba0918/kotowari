@@ -38,7 +38,7 @@ document:
           extract: text
 "#;
 
-const DOCUMENT: &str = "---\n$schema: ../.mds/schemas/ir.yaml\n---\n# 題名\n\nこの文書が扱う範囲。\n\n## 要求\n\n### REQ-001: 名前\n\n- 種類: ubiquitous\n\n本文。\n";
+const DOCUMENT: &str = "---\n$schema: ../.kotowari/schemas/ir.yaml\n---\n# 題名\n\nこの文書が扱う範囲。\n\n## 要求\n\n### REQ-001: 名前\n\n- 種類: ubiquitous\n\n本文。\n";
 
 // @kotowari[REQ-schema-049, EX-schema-015]
 #[test]
@@ -46,7 +46,7 @@ fn a_dependent_crate_can_run_the_whole_pipeline() {
     // 1. 文書から "$schema" を読む
     let schema_ref = frontmatter_schema(DOCUMENT).unwrap().unwrap();
     assert!(
-        matches!(schema_ref, SchemaRef::Relative(ref p) if p == "../.mds/schemas/ir.yaml"),
+        matches!(schema_ref, SchemaRef::Relative(ref p) if p == "../.kotowari/schemas/ir.yaml"),
         "相対パスの参照をそのまま返す"
     );
 
@@ -54,7 +54,7 @@ fn a_dependent_crate_can_run_the_whole_pipeline() {
     let resolved = resolve_schema(Path::new("docs/ir/x.md"), &schema_ref);
     assert_eq!(
         resolved,
-        ResolvedSchema::File(PathBuf::from("docs/.mds/schemas/ir.yaml")),
+        ResolvedSchema::File(PathBuf::from("docs/.kotowari/schemas/ir.yaml")),
         "相対パスは文書の位置から解決する"
     );
 

@@ -45,7 +45,7 @@ fn cache_path(url: &str, base: &Path) -> std::path::PathBuf {
     let mut hasher = Sha256::new();
     hasher.update(url.as_bytes());
     let hash = format!("{:x}", hasher.finalize());
-    base.join(".mds").join("cache").join(format!("{hash}.yaml"))
+    base.join(".kotowari").join("cache").join("schemas").join(format!("{hash}.yaml"))
 }
 
 fn mds() -> Command {
@@ -57,7 +57,7 @@ fn mds() -> Command {
 fn url_schema_is_fetched_once_and_cached() {
     let (url, counter) = serve_schema();
     let dir = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(dir.path().join(".mds")).unwrap();
+    std::fs::create_dir_all(dir.path().join(".kotowari")).unwrap();
     let doc = write_file(
         dir.path(),
         "doc.md",
@@ -75,7 +75,7 @@ fn url_schema_is_fetched_once_and_cached() {
         "1回目はサーバから取得して成功"
     );
 
-    let cache_dir = dir.path().join(".mds").join("cache");
+    let cache_dir = dir.path().join(".kotowari").join("cache").join("schemas");
     let entries: Vec<_> = std::fs::read_dir(&cache_dir)
         .unwrap()
         .filter_map(Result::ok)
@@ -102,7 +102,7 @@ fn url_schema_is_fetched_once_and_cached() {
 fn url_schema_resolves_the_same_for_all_commands() {
     let (url, counter) = serve_schema();
     let dir = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(dir.path().join(".mds")).unwrap();
+    std::fs::create_dir_all(dir.path().join(".kotowari")).unwrap();
     let doc = write_file(
         dir.path(),
         "doc.md",
@@ -128,7 +128,7 @@ fn url_schema_resolves_the_same_for_all_commands() {
 #[test]
 fn url_schema_without_cache_and_unreachable_server_stops() {
     let dir = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(dir.path().join(".mds")).unwrap();
+    std::fs::create_dir_all(dir.path().join(".kotowari")).unwrap();
     // ポートを取得して閉じ、接続できない URL を作る
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let port = listener.local_addr().unwrap().port();
@@ -153,7 +153,7 @@ fn url_schema_without_cache_and_unreachable_server_stops() {
 fn corrupted_cache_is_refetched_and_recovers() {
     let (url, counter) = serve_schema();
     let dir = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(dir.path().join(".mds")).unwrap();
+    std::fs::create_dir_all(dir.path().join(".kotowari")).unwrap();
     // 壊れた YAML のキャッシュを先に置く
     let cache = cache_path(&url, dir.path());
     std::fs::create_dir_all(cache.parent().unwrap()).unwrap();
@@ -206,7 +206,7 @@ fn schema_response_over_4mib_stops() {
         }
     });
     let dir = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(dir.path().join(".mds")).unwrap();
+    std::fs::create_dir_all(dir.path().join(".kotowari")).unwrap();
     let doc = write_file(
         dir.path(),
         "doc.md",
@@ -249,7 +249,7 @@ fn ex_schema_068_a_schema_of_exactly_4mib_is_used() {
     let padding = 4 * 1024 * 1024 - SCHEMA_BODY.len() - "#\n".len();
     let url = serve_body_once(format!("{SCHEMA_BODY}#{}\n", "x".repeat(padding)));
     let dir = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(dir.path().join(".mds")).unwrap();
+    std::fs::create_dir_all(dir.path().join(".kotowari")).unwrap();
     let doc = write_file(
         dir.path(),
         "doc.md",
@@ -269,7 +269,7 @@ fn ex_schema_068_a_schema_of_exactly_4mib_is_used() {
 fn ex_schema_069_the_cache_goes_under_the_base_directory_above_the_current_one() {
     let (url, _) = serve_schema();
     let dir = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(dir.path().join(".mds")).unwrap();
+    std::fs::create_dir_all(dir.path().join(".kotowari")).unwrap();
     let sub = dir.path().join("sub");
     let doc = write_file(&sub, "doc.md", &format!("---\n$schema: {url}\n---\n# T-1234: 例\n"));
     let output = mds()
@@ -279,7 +279,7 @@ fn ex_schema_069_the_cache_goes_under_the_base_directory_above_the_current_one()
         .unwrap();
     assert_eq!(output.status.code(), Some(0), "{}", String::from_utf8_lossy(&output.stderr));
     assert!(cache_path(&url, dir.path()).is_file(), "基準のディレクトリの下に置く");
-    assert!(!sub.join(".mds").exists(), "カレントディレクトリの下には置かない");
+    assert!(!sub.join(".kotowari").exists(), "カレントディレクトリの下には置かない");
 }
 
 // @kotowari[EX-schema-070]
@@ -288,8 +288,8 @@ fn ex_schema_070_without_a_base_directory_the_cache_goes_under_the_current_one()
     let (url, _) = serve_schema();
     let dir = tempfile::tempdir().unwrap();
     assert!(
-        !dir.path().ancestors().any(|a| a.join(".mds").is_dir()),
-        "前提: 上のどこにも .mds/ が無い"
+        !dir.path().ancestors().any(|a| a.join(".kotowari").is_dir()),
+        "前提: 上のどこにも .kotowari/ が無い"
     );
     let doc = write_file(dir.path(), "doc.md", &format!("---\n$schema: {url}\n---\n# T-1234: 例\n"));
     let output = mds()
@@ -305,7 +305,7 @@ fn ex_schema_070_without_a_base_directory_the_cache_goes_under_the_current_one()
 #[test]
 fn userinfo_in_a_schema_url_does_not_reach_the_error_output() {
     let dir = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(dir.path().join(".mds")).unwrap();
+    std::fs::create_dir_all(dir.path().join(".kotowari")).unwrap();
     // ポートを取得して閉じ、接続できない URL を作る
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let port = listener.local_addr().unwrap().port();

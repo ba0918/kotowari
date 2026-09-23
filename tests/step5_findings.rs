@@ -618,13 +618,13 @@ fn ex_core_264_moving_the_schema_files_away_does_not_change_the_output() {
     )
     .unwrap();
     // スキーマのファイルの置き場。中身は読まれないので、読めない形にしておく
-    fs::create_dir_all(tmp.path().join(".mds/schemas")).unwrap();
+    fs::create_dir_all(tmp.path().join(".kotowari/schemas")).unwrap();
     for name in ["ir.yaml", "context.yaml", "flags.yaml"] {
-        fs::write(tmp.path().join(".mds/schemas").join(name), "not: [a schema").unwrap();
+        fs::write(tmp.path().join(".kotowari/schemas").join(name), "not: [a schema").unwrap();
     }
     let run = || cmd().args(["check", "--format", "json"]).current_dir(tmp.path()).output().unwrap();
     let before = run();
-    fs::rename(tmp.path().join(".mds"), tmp.path().join("moved-away")).unwrap();
+    fs::rename(tmp.path().join(".kotowari/schemas"), tmp.path().join("moved-away")).unwrap();
     let after = run();
     assert_eq!(before.status.code(), after.status.code());
     assert_eq!(before.stdout, after.stdout);

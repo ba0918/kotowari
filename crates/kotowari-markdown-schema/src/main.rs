@@ -318,13 +318,13 @@ fn fetch_schema(url: &str, timeout: Duration) -> Result<String, Stop> {
         })
 }
 
-/// 基準のディレクトリから上に向かって、最初に見つかった `.mds/` のあるディレクトリを返す。
+/// 基準のディレクトリから上に向かって、最初に見つかった `.kotowari/` のあるディレクトリを返す。
 /// 無ければカレントディレクトリ。
 fn base_dir() -> PathBuf {
     let cwd = std::env::current_dir().unwrap_or_default();
     let mut dir = cwd.as_path();
     loop {
-        if dir.join(".mds").is_dir() {
+        if dir.join(".kotowari").is_dir() {
             return dir.to_path_buf();
         }
         match dir.parent() {
@@ -334,7 +334,7 @@ fn base_dir() -> PathBuf {
     }
 }
 
-/// URL スキーマのキャッシュファイルの置き場。基準のディレクトリの `.mds/cache/` に
+/// URL スキーマのキャッシュファイルの置き場。基準のディレクトリの `.kotowari/cache/schemas/` に
 /// URL の SHA-256 の16進で置く。
 fn cache_path(url: &str) -> PathBuf {
     use sha2::{Digest, Sha256};
@@ -342,8 +342,9 @@ fn cache_path(url: &str) -> PathBuf {
     hasher.update(url.as_bytes());
     let hash = format!("{:x}", hasher.finalize());
     base_dir()
-        .join(".mds")
+        .join(".kotowari")
         .join("cache")
+        .join("schemas")
         .join(format!("{hash}.yaml"))
 }
 
@@ -409,7 +410,7 @@ fn check_directory(root: &Path, open_flag: bool) -> Result<Vec<(PathBuf, Vec<Fin
         .sort_by_file_name()
         .into_iter()
         .filter_entry(|entry| {
-            // 隠しディレクトリと .mds/ は辿らない。ルート自身は除く。
+            // 隠しディレクトリ（.kotowari/ を含む）は辿らない。ルート自身は除く。
             if entry.depth() == 0 || !entry.file_type().is_dir() {
                 return true;
             }

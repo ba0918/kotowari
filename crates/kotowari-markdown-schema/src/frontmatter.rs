@@ -146,14 +146,14 @@ mod tests {
     use super::*;
 
     fn adr() -> &'static str {
-        "---\n$schema: ../.mds/schemas/adr.yaml\ntitle: 例\n---\n# 題名\n"
+        "---\n$schema: ../.kotowari/schemas/adr.yaml\ntitle: 例\n---\n# 題名\n"
     }
 
     // @kotowari[REQ-schema-011, REQ-schema-015]
     #[test]
     fn reads_relative_schema_ref_and_ignores_other_keys() {
         let ref_ = frontmatter_schema(adr()).unwrap().unwrap();
-        assert_eq!(ref_, SchemaRef::Relative("../.mds/schemas/adr.yaml".into()));
+        assert_eq!(ref_, SchemaRef::Relative("../.kotowari/schemas/adr.yaml".into()));
     }
 
     // @kotowari[REQ-schema-011]
@@ -226,11 +226,11 @@ mod tests {
     #[test]
     fn relative_ref_resolves_against_document_location() {
         let doc = std::path::Path::new("fixtures/adr/0001.md");
-        let ref_ = SchemaRef::Relative("../.mds/schemas/adr.yaml".into());
+        let ref_ = SchemaRef::Relative("../.kotowari/schemas/adr.yaml".into());
         let resolved = resolve_schema(doc, &ref_);
         assert_eq!(
             resolved,
-            ResolvedSchema::File(std::path::PathBuf::from("fixtures/.mds/schemas/adr.yaml"))
+            ResolvedSchema::File(std::path::PathBuf::from("fixtures/.kotowari/schemas/adr.yaml"))
         );
     }
 

@@ -1,5 +1,5 @@
 ---
-$schema: ../.mds/schemas/decision.yaml
+$schema: ../.kotowari/schemas/decision.yaml
 ---
 # 判断の記録
 
