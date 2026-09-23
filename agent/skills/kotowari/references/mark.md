@@ -1,4 +1,4 @@
-Based on the kotowari specification (revised 2026-09-23; the version of kotowari itself is not pinned)
+Based on the kotowari specification (revised 2026-09-24; the version of kotowari itself is not pinned)
 
 ## The form of a mark
 
@@ -30,7 +30,7 @@ When examples with the same ID are in two or more places, the `@about` of the fi
 
 ## Where marks may go
 
-A mark binds only from the comment block directly before a test. The block starts on the line just above the first line of the test's node and runs upward, line by line, until a blank line or a line of code:
+A mark binds only from the comment block directly before a test. The block starts on the line just above the first line of the test's node and runs upward, line by line, until a blank line or a line of code. When two or more tests start on the same first line, the marks bind only to the test that starts first on that line; the others have no marks and each raises test_without_id:
 
 | Position of the mark | Treatment |
 |---|---|
@@ -48,9 +48,9 @@ Lines that belong to the block:
 | A Rust attribute line (`#[...]`), all lines of a multi-line attribute | Yes, may come between comment lines |
 | A Python decorator line (`@...`), all lines of a multi-line decorator | Yes, may come between comment lines |
 | A line with code and a comment (`setup(); // note`) | No, it ends the block |
-| A blank line | No, it ends the block |
+| A blank line (empty or only whitespace) | No, it ends the block. A blank line in the middle of a multi-line comment, attribute or decorator does not end it |
 
-In other languages only comment-only lines may form the block. A mark at the start of a function body does not bind; move it above the test.
+In other languages only comment-only lines may form the block. Within the block, marks are read only from the text of comments: a mark inside an attribute or a decorator (such as the string of `#[doc = "@kotowari[REQ-001]"]`) is not read, and raises neither invalid_marker nor unresolved_reference. A mark at the start of a function body does not bind; move it above the test.
 
 Example:
 
@@ -100,6 +100,7 @@ What counts as a test in Rust:
 | A function with an attribute whose path ends in the element test (`#[test]`, `#[tokio::test]` and so on) | Always counted |
 | A function with an attribute in tests.rust.attributes | Counted if the attribute path matches exactly |
 | A function inside a macro in tests.rust.macros | If the last element of the macro name matches, its content is reread as Rust items, and each top-level function is counted |
+| The functions and macros above inside another function's body | Counted wherever they are |
 
 Writing attribute paths in the configuration's `tests.rust.attributes` makes functions with an attribute of that path count as tests too. The path is compared on the part without `#[`, `]` and arguments.
 
