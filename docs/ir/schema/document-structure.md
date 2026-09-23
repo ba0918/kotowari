@@ -6,11 +6,11 @@
 
 ### REQ-schema-022: 題名は1つ
 
-- kind: ubiquitous
-- source: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-24-review2-gaps.md#A1
+- kind: event_driven
+- source: docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-24-review2-gaps.md#A1, docs/decision/records/2026-09-24-review4-gaps.md#A1
 - verification: unit
 
-mds は常に、`文書`が`題名`をちょうど1つ持つことを求め、無いときを1件の`指摘`にし、2つ以上あるときは2つ目以降の`題名`ごとに、その`題名`の行番号と`生の行`を持つ`指摘`を1件ずつ出す。`スキーマ`が`題名`に正規表現を宣言したときは、`題名`が2つ以上あっても1つ目の`題名`を照合し、合わなければその`指摘`も出す。
+`スキーマ`が`題名`を宣言したとき、mds は`文書`が`題名`をちょうど1つ持つことを求め、無いときを1件の`指摘`にし、2つ以上あるときは2つ目以降の`題名`ごとに、その`題名`の行番号と`生の行`を持つ`指摘`を1件ずつ出す。`スキーマ`が`題名`に正規表現を宣言したときは、`題名`が2つ以上あっても1つ目の`題名`を照合し、合わなければその`指摘`も出す。`題名`を宣言しない`スキーマ`は`題名`を求めず、`文書`の`題名`は宣言していない見出しになる。
 
 ### REQ-schema-023: 前置部に宣言するもの
 
@@ -62,10 +62,10 @@ mds は常に、`節`を見出しの文字で見分け、`スキーマ`が宣言
 ### REQ-schema-056: 必須の項目の欠落
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-21-mds-spec.md#A69
+- source: docs/decision/records/2026-09-21-mds-spec.md#A69, docs/decision/records/2026-09-24-review4-gaps.md#A2
 - verification: unit
 
-mds は常に、`出現回数`を宣言した`項目`が足りないときは、下限を割ったものとして`指摘`にする。`節`の欠落の`指摘`はこのとき出さない。
+mds は常に、`項目`が足りないときは、`出現回数`を書いたかどうかを問わず、下限を割ったものとして`指摘`にする。書かないときの下限は既定のちょうど1個（TBL-schema-005）の1である。`節`の欠落の`指摘`はこのとき出さない。
 
 ### REQ-schema-057: 出現回数の指摘の規則種別
 
@@ -111,6 +111,20 @@ Scenario: 題名が2つあっても1つ目の題名を正規表現と照合す�
   When "kotowari-mds check --format json" を実行する
   Then 1つ目の`題名`の行に正規表現に合わない`指摘`が出る
   And 2つ目の`題名`の行に`題名`が複数ある`指摘`が出る
+
+@id=EX-schema-074 @about=REQ-schema-022 @source=docs/decision/records/2026-09-24-review4-gaps.md#A1
+Scenario: 題名を宣言しないスキーマは題名を求めない
+  Given `題名`を宣言せず、`前置部`に`文`を宣言した`スキーマ`がある
+  And `題名`の無い`文書`がある
+  When "kotowari-mds check" を実行する
+  Then 終了コードは 0 である
+
+@id=EX-schema-075 @about=REQ-schema-056 @source=docs/decision/records/2026-09-24-review4-gaps.md#A2
+Scenario: 出現回数を書かない項目が無いと下限を割った指摘になる
+  Given `出現回数`を書かない`項目`を`節`に宣言した`スキーマ`がある
+  And その`節`に`項目`の無い`文書`がある
+  When "kotowari-mds check --format json" を実行する
+  Then その`節`の行に下限を割った`指摘`が1件だけ出る
 
 @id=EX-schema-010 @about=REQ-schema-022 @source=docs/decision/records/2026-09-21-mds-spec.md#A5
 Scenario: 題名が2つある文書は誤りになる

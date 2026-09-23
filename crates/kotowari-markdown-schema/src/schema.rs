@@ -417,6 +417,7 @@ impl<'de> serde::de::Visitor<'de> for ExtractVisitor {
     }
 
     fn visit_str<E: serde::de::Error>(self, v: &str) -> Result<Extract, E> {
+        check_placement_path(v).map_err(E::custom)?;
         Ok(Extract {
             path: v.to_string(),
             value: None,
@@ -466,6 +467,7 @@ impl<'de> serde::de::Visitor<'de> for ExtractVisitor {
         let Some(path) = path else {
             return Err(M::Error::custom("extract requires \"path\""));
         };
+        check_placement_path(&path).map_err(M::Error::custom)?;
         Ok(Extract {
             path,
             value,
@@ -473,6 +475,15 @@ impl<'de> serde::de::Visitor<'de> for ExtractVisitor {
             group,
         })
     }
+}
+
+/// 配置パスのドットで区切った名前のどれかが空なら誤りにする（REQ-schema-036、
+/// 2026-09-24-review4-gaps の A5）。空の名前は空文字列の JSON の鍵になってしまう
+fn check_placement_path(path: &str) -> Result<(), String> {
+    if path.split('.').any(str::is_empty) {
+        return Err(format!("placement path \"{path}\" has an empty name"));
+    }
+    Ok(())
 }
 
 /// `of` の `{ 鍵: 語 }` の対応。宣言された順を保つ。同じ鍵を2度書いても
@@ -527,6 +538,10 @@ fn validate_schema(schema: &Schema) -> Result<(), SchemaError> {
     if let Some(preamble) = &schema.document.preamble {
         validate_preamble(preamble)?;
     }
+    reject_duplicate_names(
+        schema.document.sections.iter().map(|s| s.name.as_str()),
+        "section",
+    )?;
     for section in &schema.document.sections {
         validate_section(section)?;
     }
@@ -731,6 +746,9 @@ fn validate_table(table: Option<&Table>) -> Result<(), SchemaError> {
         if table.select.is_some() && table.header.is_none() {
             return Err(SchemaError("table select requires a header".into()));
         }
+        if let Some(header) = &table.header {
+            reject_duplicate_names(header.iter().map(String::as_str), "table header column")?;
+        }
         reject_capture_extract(table.extract.as_ref(), "table")?;
         reject_of_words(table.extract.as_ref(), "table", OUTSIDE_ITEM_OF)?;
         reject_duplicate_element_keys(table.extract.as_ref(), "table", &[])?;
@@ -790,7 +808,23 @@ fn validate_codeblock(codeblock: Option<&CodeBlock>) -> Result<(), SchemaError> 
     Ok(())
 }
 
+/// 同じ置き場で同じ名前を2度宣言したスキーマを停止にする（TBL-schema-009、
+/// 2026-09-24-review4-gaps の A3、A5）。検査と抽出で効く宣言が食い違うか、値が黙って消える
+fn reject_duplicate_names<'a>(
+    names: impl Iterator<Item = &'a str>,
+    what: &str,
+) -> Result<(), SchemaError> {
+    let mut seen = std::collections::BTreeSet::new();
+    for name in names {
+        if !seen.insert(name) {
+            return Err(SchemaError(format!("{what} \"{name}\" is declared twice")));
+        }
+    }
+    Ok(())
+}
+
 fn validate_fields(fields: &[Field]) -> Result<(), SchemaError> {
+    reject_duplicate_names(fields.iter().map(|f| f.name.as_str()), "field")?;
     for field in fields {
         if let Some(repeat) = &field.repeat {
             repeat.validate()?;

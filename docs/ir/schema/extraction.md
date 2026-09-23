@@ -14,10 +14,10 @@
 ### REQ-schema-036: 配置パス
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A46
+- source: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A46, docs/decision/records/2026-09-24-review4-gaps.md#A4
 - verification: unit
 
-mds は常に、`抽出`した値を`配置パス`のドット区切りの名前に沿って入れ子にして置く。
+mds は常に、`抽出`した値を`配置パス`のドット区切りの名前に沿って入れ子にして置く。区切った名前はどれも空でない。
 
 ### REQ-schema-037: 値の型は文字列
 

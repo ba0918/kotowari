@@ -2178,6 +2178,67 @@ fn ex_schema_073_a_root_path_named_type_in_a_named_schema_stops() {
     assert_eq!(json["type"], "例", "{json}");
 }
 
+// @kotowari[EX-schema-074]
+#[test]
+fn ex_schema_074_a_schema_without_a_title_rule_does_not_ask_for_a_title() {
+    let schema = "document:\n  preamble:\n    statement: { repeat: { min: 0 } }\n";
+    let (code, json, stderr) = mds_json(schema, "文だけ\n", "check");
+    assert_eq!(code, Some(0), "stderr: {stderr} json: {json}");
+}
+
+// @kotowari[EX-schema-075]
+#[test]
+fn ex_schema_075_a_missing_item_without_repeat_is_below_its_minimum() {
+    let schema =
+        "document:\n  title: {}\n  sections:\n    - name: S\n      item: { id: \"^X-\" }\n";
+    // 行番号: "## S" が6行目
+    let (code, json, stderr) = mds_json(schema, "# T\n\n## S\n", "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    let kinds: Vec<(String, u64)> = all_findings(&json)
+        .iter()
+        .map(|f| {
+            (
+                f["kind"].as_str().unwrap().to_string(),
+                f["line"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    assert_eq!(kinds, vec![("repeat_min_not_met".to_string(), 6)], "{json}");
+}
+
+// @kotowari[EX-schema-076]
+#[test]
+fn ex_schema_076_the_same_name_declared_twice_in_one_place_stops() {
+    let sections = "document:\n  title: {}\n  sections:\n    - name: S\n    - name: S\n";
+    let fields =
+        "document:\n  title: {}\n  preamble:\n    fields:\n      - name: X\n      - name: X\n";
+    for schema in [sections, fields] {
+        let (code, _, stderr) = mds_json(schema, "# T\n", "check");
+        assert_eq!(code, Some(2), "schema: {schema} stderr: {stderr}");
+        assert!(stderr.contains("schema_invalid"), "{stderr}");
+    }
+}
+
+// @kotowari[EX-schema-078]
+#[test]
+fn ex_schema_078_a_table_header_naming_a_column_twice_stops() {
+    let schema = "document:\n  title: {}\n  preamble:\n    table: { header: [A, A] }\n";
+    let (code, _, stderr) = mds_json(schema, "# T\n", "check");
+    assert_eq!(code, Some(2), "stderr: {stderr}");
+    assert!(stderr.contains("schema_invalid"), "{stderr}");
+}
+
+// @kotowari[REQ-schema-036, EX-schema-077]
+#[test]
+fn ex_schema_077_a_placement_path_with_an_empty_name_stops() {
+    for path in ["\"\"", "a..b", ".a", "a."] {
+        let schema = format!("document:\n  title: {{ extract: {path} }}\n");
+        let (code, _, stderr) = mds_json(&schema, "# T\n", "values");
+        assert_eq!(code, Some(2), "path: {path} stderr: {stderr}");
+        assert!(stderr.contains("schema_invalid"), "{stderr}");
+    }
+}
+
 // @kotowari[EX-schema-042]
 #[test]
 fn ex_schema_042_three_titles_give_two_multiple_titles_findings() {
