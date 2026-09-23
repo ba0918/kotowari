@@ -15,7 +15,7 @@ The configuration file is `.kotowari/config.yaml`, directly under the base direc
 | limits.requirements | Number (negative numbers and 0 are not allowed) | 10 |
 | vague_words | List of words | The four words 「適切に」「必要に応じて」「通常は」「など」 |
 
-The default column is a copy of the defaults of kotowari itself (as of 2026-09-17), and `setup` writes to the configuration file only the keys that have a default. `mutants.equivalents` has no default, and without the key the list of equivalents behaves as empty, so it is not written in the YAML of step 1. Add it when you decide to keep a list of equivalents. The guidance for writing the IR is held as kinds of findings, not as numbers (ir-form.md, "Limits and the unit of splitting").
+The default column copies the defaults of kotowari itself, and `setup` writes to the configuration file only the keys that have a default. `mutants.equivalents` has no default, and without the key the list of equivalents behaves as empty, so it is not written in the YAML of step 1. Add it when you decide to keep a list of equivalents. The guidance for writing the IR is held as kinds of findings, not as numbers (ir-form.md, "Limits and the unit of splitting").
 
 A list written for a list key replaces the default list. An empty list is treated as a list with no elements. Nested keys are written in YAML's nested form.
 
