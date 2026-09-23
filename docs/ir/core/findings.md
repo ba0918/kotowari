@@ -37,10 +37,10 @@
 ### REQ-core-174: 宣言の外の行とコードブロックと用語集の題名
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A35, docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A82, docs/decision/records/records.md#A102, docs/decision/records/ir-form.md#文書, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/2026-09-23-ir-engine-gaps.md#A27
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A35, docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A82, docs/decision/records/records.md#A102, docs/decision/records/ir-form.md#文書, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/2026-09-23-ir-engine-gaps.md#A27, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 - 検証: unit
 
-"## " の見出しの直下で最初の "### " より前に、`コードブロック`の外にあって一覧でも表でもない空でない行があるとき、またはスキーマが宣言していない表（`用語集`の文書の中の表は除く。REQ-core-117）かコードブロックがあるとき、kotowari は unknown_line の`誤り`を、"## 具体例" の見出しの下に gherkin でない`コードブロック`があるとき unknown_code_block の`誤り`を、`用語集`の`題名`がスキーマの宣言した形でないとき glossary_title_invalid の`誤り`を出す。detail は TBL-core-008、"line" は TBL-core-019 のとおりにする。
+"## " の見出しの直下で最初の "### " より前に、`コードブロック`の外にあって一覧でも表でもない空でない行があるとき、またはスキーマが宣言していない表（`用語集`の文書の中の表は除く。REQ-core-117）かコードブロックがあるとき、kotowari は unknown_line の`誤り`を、"## Examples" の見出しの下に gherkin でない`コードブロック`があるとき unknown_code_block の`誤り`を、`用語集`の`題名`がスキーマの宣言した形でないとき glossary_title_invalid の`誤り`を出す。detail は TBL-core-008、"line" は TBL-core-019 のとおりにする。
 
 ## 決定表
 
@@ -117,9 +117,9 @@ Scenario: 3か所にある ID は2件の重複になる
   Then duplicate_id の誤りが2件出る
   And 1つ目の見出しの行には duplicate_id が出ない
 
-@id=EX-core-266 @about=REQ-core-174 @source=docs/decision/records/2026-09-22-ir-engine.md#A33,docs/decision/records/2026-09-22-ir-engine.md#A35,docs/decision/records/records.md#A102,docs/decision/records/ir-form.md#文書
+@id=EX-core-266 @about=REQ-core-174 @source=docs/decision/records/2026-09-22-ir-engine.md#A33,docs/decision/records/2026-09-22-ir-engine.md#A35,docs/decision/records/records.md#A102,docs/decision/records/ir-form.md#文書,docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 Scenario: 宣言の外の3つの場面はそれぞれ誤りになる
-  Given "## " の見出しの直下に`コードブロック`の外の空でない行を持つ`話題ごとの文書`と、"## 具体例" の見出しの下に gherkin でない`コードブロック`を持つ`話題ごとの文書`と、`題名`がスキーマの宣言した形でない`用語集`がある
+  Given "## " の見出しの直下に`コードブロック`の外の空でない行を持つ`話題ごとの文書`と、"## Examples" の見出しの下に gherkin でない`コードブロック`を持つ`話題ごとの文書`と、`題名`がスキーマの宣言した形でない`用語集`がある
   When "kotowari check --format json" を実行する
   Then unknown_line と unknown_code_block と glossary_title_invalid の`誤り`が1件ずつ出る
   And それぞれの detail は TBL-core-008、"line" は TBL-core-019 のとおりである

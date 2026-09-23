@@ -7,10 +7,10 @@
 ### REQ-core-085: テストのない要求
 
 - 種類: event_driven
-- 出典: docs/decision/records/records.md#A21, docs/decision/records/records.md#A39, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A120, docs/decision/records/2026-09-17-scenario-tests.md#A4, docs/decision/records/2026-09-17-scenario-tests.md#A9, docs/decision/records/2026-09-17-scenario-tests.md#A15, docs/decision/records/2026-09-17-scenario-tests.md#A16
+- 出典: docs/decision/records/records.md#A21, docs/decision/records/records.md#A39, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A120, docs/decision/records/2026-09-17-scenario-tests.md#A4, docs/decision/records/2026-09-17-scenario-tests.md#A9, docs/decision/records/2026-09-17-scenario-tests.md#A15, docs/decision/records/2026-09-17-scenario-tests.md#A16, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 - 検証: unit
 
-検証が "review" 以外の`要求`で、その`ID`を含む`印`も、"@about" にその`ID`を持つ`シナリオ`の`ID`を含む`印`も1つも無いとき、kotowari は requirement_without_test の`誤り`を出す。同じ`ID`の`シナリオ`が2か所以上にあるときの "@about" は REQ-core-032 の1つ目の`シナリオ`のもの。"- 検証:" の行が無い`要求`には verification_missing だけを出し、requirement_without_test は出さない。
+検証が "review" 以外の`要求`で、その`ID`を含む`印`も、"@about" にその`ID`を持つ`シナリオ`の`ID`を含む`印`も1つも無いとき、kotowari は requirement_without_test の`誤り`を出す。同じ`ID`の`シナリオ`が2か所以上にあるときの "@about" は REQ-core-032 の1つ目の`シナリオ`のもの。"- verification:" の行が無い`要求`には verification_missing だけを出し、requirement_without_test は出さない。
 
 ### REQ-core-086: 印の無いテスト
 
@@ -31,10 +31,10 @@
 ### REQ-core-137: テストのない具体例
 
 - 種類: event_driven
-- 出典: docs/decision/records/2026-09-17-scenario-tests.md#A2, docs/decision/records/2026-09-17-scenario-tests.md#A3, docs/decision/records/2026-09-17-scenario-tests.md#A6, docs/decision/records/2026-09-17-scenario-tests.md#A8, docs/decision/records/2026-09-17-scenario-tests.md#A11, docs/decision/records/2026-09-17-scenario-tests.md#A14, docs/decision/records/2026-09-17-scenario-tests.md#A15, docs/decision/records/2026-09-17-scenario-tests.md#A16, docs/decision/records/ir-form.md#検査の種類
+- 出典: docs/decision/records/2026-09-17-scenario-tests.md#A2, docs/decision/records/2026-09-17-scenario-tests.md#A3, docs/decision/records/2026-09-17-scenario-tests.md#A6, docs/decision/records/2026-09-17-scenario-tests.md#A8, docs/decision/records/2026-09-17-scenario-tests.md#A11, docs/decision/records/2026-09-17-scenario-tests.md#A14, docs/decision/records/2026-09-17-scenario-tests.md#A15, docs/decision/records/2026-09-17-scenario-tests.md#A16, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 - 検証: unit
 
-"@about" の`ID`のうち`要求`として解決できたものの中に検証の値が "review" 以外のものが1つでもある`シナリオ`で、その`ID`を含む`印`が1つも無いとき、kotowari は detail をその`ID`にして scenario_without_test の`誤り`を出す。"@about" に`要求`が無い`シナリオ`と、"@about" の`要求`がすべて "review" の`シナリオ`には出さない。"- 検証:" の行が無い`要求`と検証の値が4つ以外の`要求`は数えない。"@id" が無い`シナリオ`と invalid_id の`シナリオ`には出さない。同じ`ID`の`シナリオ`が2か所以上にあるときは、REQ-core-032 の1つ目の`シナリオ`の "@about" を使い、`誤り`は1つ目の`シナリオ`のタグの行に1件だけ出す。同じ`ID`を複数の`印`が挙げても、1つの`印`が複数の`ID`を挙げても数は見ない。
+"@about" の`ID`のうち`要求`として解決できたものの中に検証の値が "review" 以外のものが1つでもある`シナリオ`で、その`ID`を含む`印`が1つも無いとき、kotowari は detail をその`ID`にして scenario_without_test の`誤り`を出す。"@about" に`要求`が無い`シナリオ`と、"@about" の`要求`がすべて "review" の`シナリオ`には出さない。"- verification:" の行が無い`要求`と検証の値が4つ以外の`要求`は数えない。"@id" が無い`シナリオ`と invalid_id の`シナリオ`には出さない。同じ`ID`の`シナリオ`が2か所以上にあるときは、REQ-core-032 の1つ目の`シナリオ`の "@about" を使い、`誤り`は1つ目の`シナリオ`のタグの行に1件だけ出す。同じ`ID`を複数の`印`が挙げても、1つの`印`が複数の`ID`を挙げても数は見ない。
 
 ### REQ-core-088: IR に文書が無いとき
 

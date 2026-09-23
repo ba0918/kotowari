@@ -7,10 +7,10 @@
 ### REQ-core-125: 指摘の種類の一致
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-17-check-reach.md#A6, docs/decision/records/2026-09-17-check-reach.md#A7
+- 出典: docs/decision/records/2026-09-17-check-reach.md#A6, docs/decision/records/2026-09-17-check-reach.md#A7, docs/decision/records/2026-09-23-ir-english-tokens.md#A6
 - 検証: unit
 
-このリポジトリのテストは常に、"skills/kotowari/references/findings.md" のヘッダの1列目が「種類」の表について、ヘッダと区切りの行を除いた1列目の集合が、本体のコードが出す`指摘`の種類の集合と等しいことを確かめる。
+このリポジトリのテストは常に、"skills/kotowari/references/findings.md" のヘッダの1列目が「Kind」の表について、ヘッダと区切りの行を除いた1列目の集合が、本体のコードが出す`指摘`の種類の集合と等しいことを確かめる。
 
 ### REQ-core-126: 既定の一致
 
@@ -23,7 +23,7 @@
 ### REQ-core-127: 停止の文言の一致
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-17-check-reach.md#A6, docs/decision/records/2026-09-17-check-reach.md#A7, docs/decision/records/2026-09-17-check-reach.md#A12
+- 出典: docs/decision/records/2026-09-17-check-reach.md#A6, docs/decision/records/2026-09-17-check-reach.md#A7, docs/decision/records/2026-09-17-check-reach.md#A12, docs/decision/records/2026-09-23-ir-english-tokens.md#A6
 - 検証: unit
 
-このリポジトリのテストは常に、"skills/kotowari/references/findings.md" のヘッダの1列目が「文言」の表について、ヘッダと区切りの行を除いた1列目の集合が、本体のコードが`停止`の理由として標準エラーの1行目に出す文言の集合と等しいことを確かめる。
+このリポジトリのテストは常に、"skills/kotowari/references/findings.md" のヘッダの1列目が「Message」の表について、ヘッダと区切りの行を除いた1列目の集合が、本体のコードが`停止`の理由として標準エラーの1行目に出す文言の集合と等しいことを確かめる。

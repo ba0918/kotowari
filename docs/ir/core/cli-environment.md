@@ -100,9 +100,9 @@ Scenario: 型へ写せない値は停止になる
   When "kotowari check" を実行する
   Then 終了コードは 2 で、標準エラーの1行目は TBL-core-018 に足した理由の文言である
 
-@id=EX-core-269 @about=REQ-core-176 @source=docs/decision/records/2026-09-22-ir-engine.md#A5,docs/decision/records/2026-09-22-ir-engine.md#A18,docs/decision/records/records.md#A100,docs/decision/records/records.md#A101
+@id=EX-core-269 @about=REQ-core-176 @source=docs/decision/records/2026-09-22-ir-engine.md#A5,docs/decision/records/2026-09-22-ir-engine.md#A18,docs/decision/records/records.md#A100,docs/decision/records/records.md#A101,docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 Scenario: 形の指摘が出た文書も文書をまたぐ検査を受ける
-  Given "- 検証:" の行が欠けた`要求`があり、その`ID`が別の文書の`要求`の`ID`と重なっている`IR`がある
+  Given "- verification:" の行が欠けた`要求`があり、その`ID`が別の文書の`要求`の`ID`と重なっている`IR`がある
   When "kotowari check --format json" を実行する
   Then verification_missing と duplicate_id の`誤り`が両方出る
 ```

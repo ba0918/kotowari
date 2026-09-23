@@ -38,16 +38,16 @@ kotowari は常に、"items" の1件を "path" の昇順、同じ "path" の中�
 ### REQ-core-155: 出力の形
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A8, docs/decision/records/2026-09-19-read-commands.md#A12, docs/decision/records/2026-09-19-read-commands.md#A19, docs/decision/records/2026-09-19-read-commands.md#A25
+- 出典: docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A8, docs/decision/records/2026-09-19-read-commands.md#A12, docs/decision/records/2026-09-19-read-commands.md#A19, docs/decision/records/2026-09-19-read-commands.md#A25, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 - 検証: unit
 
-kotowari は常に、"kotowari list" の "--format" の値として "json" と "text" の2つだけを受け、既定を "json" にし、絞り込みのオプションを持たない。"json" では最上位が "items" だけの JSON を1つ出し、"items" は`TBL-core-026` の鍵を持つ1件の並びである。"text" では "items" の1件を1行で "ID 検証 名前 パス:行 tests=数" の形で出し（"検証" は要求以外と、"- 検証:" の行の無い要求では "-"）、その直後に "tests" の1件ごとに2つの半角空白で字下げした "パス:行 名前" の行を続ける（"名前" が null のときは "-"）。
+kotowari は常に、"kotowari list" の "--format" の値として "json" と "text" の2つだけを受け、既定を "json" にし、絞り込みのオプションを持たない。"json" では最上位が "items" だけの JSON を1つ出し、"items" は`TBL-core-026` の鍵を持つ1件の並びである。"text" では "items" の1件を1行で "ID 検証 名前 パス:行 tests=数" の形で出し（"検証" は要求以外と、"- verification:" の行の無い要求では "-"）、その直後に "tests" の1件ごとに2つの半角空白で字下げした "パス:行 名前" の行を続ける（"名前" が null のときは "-"）。
 
 ## 決定表
 
 ### TBL-core-026: 項目の鍵
 
-- 出典: docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18, docs/decision/records/2026-09-19-read-commands.md#A22, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-19-read-commands.md#A26
+- 出典: docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18, docs/decision/records/2026-09-19-read-commands.md#A22, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-19-read-commands.md#A26, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-23-ir-english-tokens.md#A8
 
 | 鍵 | 持つ種類 | 中身 |
 |---|---|---|
@@ -56,12 +56,12 @@ kotowari は常に、"kotowari list" の "--format" の値として "json" と "
 | name | すべて | 見出しの名前。`シナリオ`は "Scenario:" の後の文字から前後の半角空白とタブを除いたもの |
 | path | すべて | `項目`のある文書の、基準のディレクトリからの相対パス |
 | line | すべて | 見出しの行。`シナリオ`は "Scenario:" の行 |
-| type | 要求、問題の記録 | "- 種類:" の値。無ければ null |
-| verification | 要求 | "- 検証:" の値。無ければ null |
-| definition | 要求 | "- 定義:" の `ID` の並び。無ければ空の並び |
+| type | 要求、問題の記録 | "- kind:" の値。無ければ null |
+| verification | 要求 | "- verification:" の値。無ければ null |
+| definition | 要求 | "- definition:" の `ID` の並び。無ければ空の並び |
 | examples | 要求、決定表、性質 | その `ID` を "@about" に持つ`シナリオ`の `ID` の並び。`ID` の昇順 |
-| how_to_verify | 要求 | "- 確かめ方:" の値。無ければ null |
-| relations | 問題の記録 | "- 関係:" の `ID` の並び |
+| how_to_verify | 要求 | "- how_to_verify:" の値。無ければ null |
+| relations | 問題の記録 | "- related:" の `ID` の並び |
 | sources | すべて | `出典`の並び |
 | tests | すべて | その `ID` を`印`に含む`テスト`の並び。同じ`テスト`に同じ `ID` の`印`が複数あれば、`印`の出現ごとに1件。1件は "path"（`テストのファイル`の基準のディレクトリからの相対パス）、"line"（`印`のある行）、"name"（`テスト`の関数の名前。`問い合わせの無い言語`では null） |
 
@@ -75,9 +75,9 @@ Scenario: 要求と印のあるテストが1件ずつ出る
   When "kotowari list" を実行する
   Then 終了コードは 0 で、"items" に "id" が "REQ-001"、"kind" が "requirement"、"verification" が "unit" の1件があり、その "tests" は "path" が "tests/a.rs"、"line" が 3、"name" が "req_001_x" の1件である
 
-@id=EX-core-246 @about=REQ-core-151 @source=docs/decision/records/2026-09-19-read-commands.md#A9,docs/decision/records/2026-09-19-read-commands.md#A18
+@id=EX-core-246 @about=REQ-core-151 @source=docs/decision/records/2026-09-19-read-commands.md#A9,docs/decision/records/2026-09-19-read-commands.md#A18,docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 Scenario: IR に誤りがあっても読めた項目は出る
-  Given IR に "- 検証:" の行の無い要求 "REQ-002" がある
+  Given IR に "- verification:" の行の無い要求 "REQ-002" がある
   When "kotowari list" を実行する
   Then 終了コードは 0 で、"items" に "id" が "REQ-002"、"verification" が null の1件があり、出力に "findings" は無い
 

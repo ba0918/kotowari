@@ -49,20 +49,20 @@ kotowari は、`IR`の文書の Markdown の構造を自前で読んではなら
 ### REQ-core-170: 指摘の行のためにスキーマへ宣言するもの
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-22-ir-engine.md#A6, docs/decision/records/2026-09-22-ir-engine.md#A37, docs/decision/records/2026-09-22-ir-engine.md#A67, docs/decision/records/2026-09-22-ir-engine.md#A72, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24
+- 出典: docs/decision/records/2026-09-22-ir-engine.md#A6, docs/decision/records/2026-09-22-ir-engine.md#A37, docs/decision/records/2026-09-22-ir-engine.md#A67, docs/decision/records/2026-09-22-ir-engine.md#A72, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 - 検証: review
 - 確かめ方: 置き換えの前後で、source_invalid、gherkin の中の`指摘`、unclosed_backtick、missing_document を出す既存のテストと、query の本文を確かめる既存のテストが通ることを見る
 
-kotowari は常に、スキーマに`出典`の "- 出典:" の行の行番号と、`シナリオ`を包む`コードブロック`の開始行と、`文`の行番号と行の文字そのままと、`項目`の最後の行を取る宣言を置き、query の本文の範囲を`項目`の最後の行から作り、source_invalid の "line"、gherkin の中の`指摘`の文書の先頭から数えた "line"、unclosed_backtick の detail をそこから作り、`文書名の参照`の走査もその`文`の行の文字の上で行う。
+kotowari は常に、スキーマに`出典`の "- source:" の行の行番号と、`シナリオ`を包む`コードブロック`の開始行と、`文`の行番号と行の文字そのままと、`項目`の最後の行を取る宣言を置き、query の本文の範囲を`項目`の最後の行から作り、source_invalid の "line"、gherkin の中の`指摘`の文書の先頭から数えた "line"、unclosed_backtick の detail をそこから作り、`文書名の参照`の走査もその`文`の行の文字の上で行う。
 
 ### REQ-core-179: 取り込んだスキーマの読み方と選び方の宣言
 
 - 種類: ubiquitous
-- 出典: docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-23-ir-engine-gaps.md#A31, docs/decision/records/2026-09-23-ir-engine-gaps.md#A32
+- 出典: docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A23, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-23-ir-engine-gaps.md#A31, docs/decision/records/2026-09-23-ir-engine-gaps.md#A32, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-23-ir-english-tokens.md#A7
 - 検証: review
-- 確かめ方: `.mds/schemas/ir.yaml`、`.mds/schemas/context.yaml`、`.mds/schemas/flags.yaml` を読み、3つとも最上位に "reading: line" を書いていること、flags.yaml が`問題の記録`の`項目`を文書の直下（"document.item"、"flags"）と "## 問題の記録" の節の下（"flags_in_section"）の両方に宣言していること、context.yaml の表の規則が "header: [用語, 意味, 出典]" と "select: first" を書いていること、ir.yaml の3種類の`項目`と flags.yaml の`問題の記録`の`項目`の抽出が "end" を取ることを確認する
+- 確かめ方: `.mds/schemas/ir.yaml`、`.mds/schemas/context.yaml`、`.mds/schemas/flags.yaml` を読み、3つとも最上位に "reading: line" を書いていること、flags.yaml が`問題の記録`の`項目`を文書の直下（"document.item"、"flags"）と "## Flags" の節の下（"flags_in_section"）の両方に宣言していること、context.yaml の表の規則が "header: [Term, Meaning, Source]" と "select: first" を書いていること、ir.yaml の`項目`と flags.yaml の`問題の記録`の`項目`の抽出が "end" を取ることを確認する
 
-kotowari は常に、取り込んだ3つのスキーマ（`話題ごとの文書`、`用語集`、`問題の記録`）に "reading: line" を宣言し、`問題の記録`のスキーマには`問題の記録`の`項目`を文書の直下（"flags" に抽出する）と "## 問題の記録" の節の下（"flags_in_section" に抽出する）の両方に宣言し、`用語集`のスキーマには表のヘッダを "用語"、"意味"、"出典" と宣言して "select: first" を添え、`話題ごとの文書`と`問題の記録`のスキーマには`項目`の最後の行（"end"）を取る宣言を置く。エンジンの既定の読み方には頼らない。
+kotowari は常に、取り込んだ3つのスキーマ（`話題ごとの文書`、`用語集`、`問題の記録`）に "reading: line" を宣言し、`問題の記録`のスキーマには`問題の記録`の`項目`を文書の直下（"flags" に抽出する）と "## Flags" の節の下（"flags_in_section" に抽出する）の両方に宣言し、`用語集`のスキーマには表のヘッダを "Term"、"Meaning"、"Source" と宣言して "select: first" を添え、`話題ごとの文書`と`問題の記録`のスキーマには`項目`の最後の行（"end"）を取る宣言を置く。エンジンの既定の読み方には頼らない。
 
 ### REQ-core-173: kotowari に残す検査
 

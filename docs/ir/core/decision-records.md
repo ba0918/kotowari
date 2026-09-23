@@ -52,9 +52,9 @@
 ### REQ-core-097: 既存の ADR を消さない
 
 - 種類: prohibition
-- 出典: docs/decision/records/2026-09-17-decision-log.md#A5
+- 出典: docs/decision/records/2026-09-17-decision-log.md#A5, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 - 検証: review
-- 確かめ方: `- 出典:` の行、`@source=` のタグ、用語集の出典の列に現れる `docs/decision/adr/` のファイルを列挙し（`rg -o 'docs/decision/adr/[^ ,|]+' docs/ir` の出典の行だけ）、そのファイルがすべて存在することを確認。2026-09-17 時点で 0002 と 0003
+- 確かめ方: `- source:` の行、`@source=` のタグ、用語集の出典の列に現れる `docs/decision/adr/` のファイルを列挙し（`rg -o 'docs/decision/adr/[^ ,|]+' docs/ir` の出典の行だけ）、そのファイルがすべて存在することを確認。2026-09-17 時点で 0002 と 0003
 
 記録の運用は、既存の`ADR`を消すことをしてはならない。
 

@@ -47,15 +47,15 @@ kotowari は常に、"kotowari status" の "--format" の値として "json" と
 
 ### TBL-core-028: status の鍵
 
-- 出典: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A9, docs/decision/records/2026-09-20-query-status.md#A12, docs/decision/records/2026-09-20-query-status.md#A14, docs/decision/records/2026-09-20-query-status.md#A20, docs/decision/records/2026-09-17-scenario-tests.md#A9, docs/decision/records/2026-09-19-read-commands.md#A24
+- 出典: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A9, docs/decision/records/2026-09-20-query-status.md#A12, docs/decision/records/2026-09-20-query-status.md#A14, docs/decision/records/2026-09-20-query-status.md#A20, docs/decision/records/2026-09-17-scenario-tests.md#A9, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 
 | 群 | 鍵 | 中身 |
 |---|---|---|
 | documents | files、lines | 読んだ`IR`の文書の数と行数の合計（"kotowari check" の "files" と "lines" と同じ） |
 | items | requirement、table、property、scenario、flag | `ID` を持つ`項目`と`シナリオ`の種類ごとの数 |
-| requirements | unit、property、proof、review | "- 検証:" の値ごとの`要求`の数。行の無い`要求`はどれにも数えない |
-| requirements | with_tests、without_tests | "- 検証:" が review でない`要求`のうち、その `ID` を`印`に含む`テスト`があるか、その `ID` を "@about" に持つ`シナリオ`の `ID` を`印`に含む`テスト`があるものの数と、無いものの数 |
-| requirements | review_with_how_to_verify、review_without_how_to_verify | "- 検証:" が review の`要求`のうち、"- 確かめ方:" の行があるものの数と、無いものの数 |
+| requirements | unit、property、proof、review | "- verification:" の値ごとの`要求`の数。行の無い`要求`はどれにも数えない |
+| requirements | with_tests、without_tests | "- verification:" が review でない`要求`のうち、その `ID` を`印`に含む`テスト`があるか、その `ID` を "@about" に持つ`シナリオ`の `ID` を`印`に含む`テスト`があるものの数と、無いものの数 |
+| requirements | review_with_how_to_verify、review_without_how_to_verify | "- verification:" が review の`要求`のうち、"- how_to_verify:" の行があるものの数と、無いものの数 |
 | requirements | without_examples | その `ID` を "@about" に持つ`シナリオ`が無い`要求`の数 |
 | scenarios | with_tests、without_tests | その `ID` を`印`に含む`テスト`がある`シナリオ`の数と、無いものの数 |
 | tests | marks | `印`の出現の数。1つの`印`に `ID` が複数あれば `ID` ごとに1つ（list の "tests" の1件と同じ数え方） |
@@ -66,19 +66,19 @@ kotowari は常に、"kotowari status" の "--format" の値として "json" と
 ## 具体例
 
 ```gherkin
-@id=EX-core-258 @about=REQ-core-162,REQ-core-165,TBL-core-028 @source=docs/decision/records/2026-09-20-query-status.md#A8,docs/decision/records/2026-09-20-query-status.md#A9,docs/decision/records/2026-09-20-query-status.md#A11,docs/decision/records/2026-09-20-query-status.md#A20
+@id=EX-core-258 @about=REQ-core-162,REQ-core-165,TBL-core-028 @source=docs/decision/records/2026-09-20-query-status.md#A8,docs/decision/records/2026-09-20-query-status.md#A9,docs/decision/records/2026-09-20-query-status.md#A11,docs/decision/records/2026-09-20-query-status.md#A20,docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 Scenario: 揃っていれば complete で終了コード 0
-  Given IR の文書は "docs/ir/a.md" の1つで、そこに検証が unit の要求 "REQ-001" と検証が review で "- 確かめ方:" の行のある要求 "REQ-002" と "@about=REQ-001" のシナリオ "EX-001" があり、"tests/a.rs" に印 "@kotowari[REQ-001, EX-001]" のテストがある
+  Given IR の文書は "docs/ir/a.md" の1つで、そこに検証が unit の要求 "REQ-001" と検証が review で "- how_to_verify:" の行のある要求 "REQ-002" と "@about=REQ-001" のシナリオ "EX-001" があり、"tests/a.rs" に印 "@kotowari[REQ-001, EX-001]" のテストがある
   And "kotowari check" の指摘は 0 件で、問題の記録は 0 件である
   When "kotowari status" を実行する
   Then 終了コードは 0 で、"requirements" は "unit" が 1、"review" が 1、"with_tests" が 1、"review_with_how_to_verify" が 1 で、"scenarios" の "with_tests" が 1、"tests" の "marks" が 2、"findings" の "error" が 0、"complete" が true である
 
-@id=EX-core-259 @about=REQ-core-165,REQ-core-098 @source=docs/decision/records/2026-09-20-query-status.md#A8,docs/decision/records/2026-09-20-query-status.md#A9,docs/decision/records/2026-09-20-query-status.md#A10,docs/decision/records/2026-09-20-query-status.md#A11,docs/decision/records/2026-09-20-query-status.md#A17
+@id=EX-core-259 @about=REQ-core-165,REQ-core-098 @source=docs/decision/records/2026-09-20-query-status.md#A8,docs/decision/records/2026-09-20-query-status.md#A9,docs/decision/records/2026-09-20-query-status.md#A10,docs/decision/records/2026-09-20-query-status.md#A11,docs/decision/records/2026-09-20-query-status.md#A17,docs/decision/records/2026-09-20-query-status.md#A20,docs/decision/records/2026-09-23-ir-english-tokens.md#A2,docs/decision/records/2026-09-23-ir-english-tokens.md#A7
 Scenario: 確かめ方の無い review の要求は誤りになり complete でない
-  Given IR に検証が review で "- 確かめ方:" の行の無い要求 "REQ-002" がある
+  Given IR に検証が review で "- how_to_verify:" の行の無い要求 "REQ-002" がある
   When "kotowari status" を実行する
   Then 終了コードは 1 で、"findings" の "error" は 1 以上で、"complete" は false である
-  And "kotowari check" は detail が "確かめ方" の missing_field の誤りを出す
+  And "kotowari check" は detail が "how_to_verify" の missing_field の誤りを出す
 
 @id=EX-core-260 @about=REQ-core-165 @source=docs/decision/records/2026-09-20-query-status.md#A8,docs/decision/records/2026-09-20-query-status.md#A9,docs/decision/records/2026-09-20-query-status.md#A11
 Scenario: 問題の記録があれば complete でない

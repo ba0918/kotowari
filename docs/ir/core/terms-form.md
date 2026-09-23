@@ -23,10 +23,10 @@
 ### REQ-core-117: 用語集の表の範囲
 
 - 種類: event_driven
-- 出典: docs/decision/records/records.md#A112, docs/decision/records/records.md#A141, docs/decision/records/records.md#A148, docs/decision/records/2026-09-16-ir-tree.md#A3, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/2026-09-23-ir-engine-gaps.md#A27, docs/decision/records/2026-09-23-ir-engine-gaps.md#A39
+- 出典: docs/decision/records/records.md#A112, docs/decision/records/records.md#A141, docs/decision/records/records.md#A148, docs/decision/records/2026-09-16-ir-tree.md#A3, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/2026-09-23-ir-engine-gaps.md#A27, docs/decision/records/2026-09-23-ir-engine-gaps.md#A39, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 - 検証: unit
 
-`用語集`の表は、各セルの前後の空白を除いて "用語"、"意味"、"出典" の3列と一致するヘッダの行と、各セルが3つ以上の "-"（前後に ":" があってもよい）の区切りの行から始まる表のうち、`用語集`の文書の題名の後、最初の "## " の見出しより前で最初に現れるものであり、空行か表でない行で終わる。それより前にあるヘッダの合わない表も、後にある表も、ヘッダが合うかどうかに依らず`用語`にも`指摘`にもしない（`除外`）。表の外の "|" で始まる行は`用語`にしない。`用語集`の文書があるのにこの形のヘッダと区切りの行が無いとき、kotowari は文書名を detail にして glossary_invalid の`誤り`を出し、その`用語集`の`用語`を0語として扱い、`連鎖`のほかの`用語集`の`用語`は見えたままで検査を続ける。ヘッダと区切りの行があれば、`用語`の行が0でも表はあるものとして扱う。
+`用語集`の表は、各セルの前後の空白を除いて "Term"、"Meaning"、"Source" の3列と一致するヘッダの行と、各セルが3つ以上の "-"（前後に ":" があってもよい）の区切りの行から始まる表のうち、`用語集`の文書の題名の後、最初の "## " の見出しより前で最初に現れるものであり、空行か表でない行で終わる。それより前にあるヘッダの合わない表も、後にある表も、ヘッダが合うかどうかに依らず`用語`にも`指摘`にもしない（`除外`）。表の外の "|" で始まる行は`用語`にしない。`用語集`の文書があるのにこの形のヘッダと区切りの行が無いとき、kotowari は文書名を detail にして glossary_invalid の`誤り`を出し、その`用語集`の`用語`を0語として扱い、`連鎖`のほかの`用語集`の`用語`は見えたままで検査を続ける。ヘッダと区切りの行があれば、`用語`の行が0でも表はあるものとして扱う。
 
 ### REQ-core-122: 用語集の表の崩れた行
 
