@@ -55,10 +55,10 @@ kotowari は常に、`問い合わせ`が当たった構文木の節を1つの`�
 ### REQ-core-181: 重なった当たり
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-24-multi-language-tests.md#A27
+- source: docs/decision/records/2026-09-24-multi-language-tests.md#A27, docs/decision/records/2026-09-24-review10-gaps.md#A2
 - verification: unit
 
-kotowari は常に、同じ節に複数の`問い合わせ`が当たったときその節を1つの`テスト`と数え、`テスト`の節の中でさらに当たった節は別の`テスト`として数える。
+kotowari は常に、同じ節に複数の`問い合わせ`が当たったときその節を1つの`テスト`と数え、`テスト`の節の中でさらに当たった節は別の`テスト`として数える。同じ節に当たった`問い合わせ`の名前は、"$NAME" を捕まえた`問い合わせ`のうち、同梱の`問い合わせ`、"tests.rules" の並びの順で最初のものの名前にする。
 
 ## Decision tables
 
@@ -131,5 +131,9 @@ Scenario: テストの中のテストは別に数える
   Given "tests.files" が "tests/**/*.ts" を含み、"tests/a.test.ts" に印の無い "it('outer', ...)" があり、その中に印の無い "it('inner', ...)" がある
   When "kotowari check" を実行する
   Then detail が "outer" と "inner" の test_without_id の誤りが1件ずつ出る
+@id=EX-core-328 @about=REQ-core-181 @source=docs/decision/records/2026-09-24-review10-gaps.md#A2,docs/decision/records/2026-09-24-multi-language-tests.md#A9
+Scenario: 名前を捕まえた問い合わせの名前を採る
+  Given "tests.files" が "tests/**/*.ts" を含み、"tests.rules" が "language: typescript" で "bench($$$)" に当たるルールのファイル、"bench($NAME, $$$)" に当たるルールのファイルの順に並び、"tests/a.test.ts" に印の無い "bench('chosen', () => {})" がある
+  When "kotowari check" を実行する
+  Then detail が "chosen" の test_without_id の誤りが1件出る
 ```
-

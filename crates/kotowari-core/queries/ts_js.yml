@@ -8,11 +8,17 @@ rule:
     has:
       nthChild: 1
       pattern: $NAME
-  # "it.each(表)(名前, 関数)" の内側の "it.each(表)" は数えない
+  # "it.each(表)(名前, 関数)" の内側の "it.each(表)" は数えない。
+  # 結果をさらに呼ぶ形でも、最後の要素が "each" でなければ数える（"it('x', fn)('y')"）
   not:
-    inside:
-      kind: call_expression
-      field: function
+    all:
+      - inside:
+          kind: call_expression
+          field: function
+      - has:
+          field: function
+          kind: member_expression
+          regex: \.\s*each$
   any:
     # "it(...)"、"test(...)"
     - has:
