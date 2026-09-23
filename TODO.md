@@ -10,10 +10,6 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 ## 判断待ち
 
-### 表のヘッダに同じ列の名前を2度書いたときの扱い（mds）
-
-- 今は検査を通り、抽出では後の列の値が前の列を上書きする。停止にするか、上書きを仕様として書くかを利用者が決める（[U1（review4-gaps）](docs/decision/records/2026-09-24-review4-gaps.md#Undecided)）
-
 ## 記録のみ
 
 ### "ast --schema" の出力の形が IR に無い（mds）

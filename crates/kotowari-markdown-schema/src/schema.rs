@@ -746,6 +746,9 @@ fn validate_table(table: Option<&Table>) -> Result<(), SchemaError> {
         if table.select.is_some() && table.header.is_none() {
             return Err(SchemaError("table select requires a header".into()));
         }
+        if let Some(header) = &table.header {
+            reject_duplicate_names(header.iter().map(String::as_str), "table header column")?;
+        }
         reject_capture_extract(table.extract.as_ref(), "table")?;
         reject_of_words(table.extract.as_ref(), "table", OUTSIDE_ITEM_OF)?;
         reject_duplicate_element_keys(table.extract.as_ref(), "table", &[])?;
@@ -806,7 +809,7 @@ fn validate_codeblock(codeblock: Option<&CodeBlock>) -> Result<(), SchemaError> 
 }
 
 /// 同じ置き場で同じ名前を2度宣言したスキーマを停止にする（TBL-schema-009、
-/// 2026-09-24-review4-gaps の A3）。検査は1つ目の宣言だけを、抽出は両方を使ってしまう
+/// 2026-09-24-review4-gaps の A3、A5）。検査と抽出で効く宣言が食い違うか、値が黙って消える
 fn reject_duplicate_names<'a>(
     names: impl Iterator<Item = &'a str>,
     what: &str,

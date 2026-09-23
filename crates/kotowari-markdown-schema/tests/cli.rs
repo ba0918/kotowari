@@ -2219,6 +2219,15 @@ fn ex_schema_076_the_same_name_declared_twice_in_one_place_stops() {
     }
 }
 
+// @kotowari[EX-schema-078]
+#[test]
+fn ex_schema_078_a_table_header_naming_a_column_twice_stops() {
+    let schema = "document:\n  title: {}\n  preamble:\n    table: { header: [A, A] }\n";
+    let (code, _, stderr) = mds_json(schema, "# T\n", "check");
+    assert_eq!(code, Some(2), "stderr: {stderr}");
+    assert!(stderr.contains("schema_invalid"), "{stderr}");
+}
+
 // @kotowari[REQ-schema-036, EX-schema-077]
 #[test]
 fn ex_schema_077_a_placement_path_with_an_empty_name_stops() {

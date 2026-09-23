@@ -1796,18 +1796,18 @@ document:
 
     // @kotowari[REQ-schema-033, REQ-schema-035]
     #[test]
-    fn table_extract_keys_by_header_and_later_column_overrides() {
+    fn table_extract_keys_rows_by_header() {
         let schema = r#"
 document:
   sections:
     - name: 用語集
       table:
-        header: [a, b, a]
+        header: [a, b]
         extract: glossary
 "#;
-        let doc = "## 用語集\n\n| a | b | a |\n|---|---|---|\n| 1 | 2 | 3 |\n";
+        let doc = "## 用語集\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
         let v = values(schema, doc);
-        assert_eq!(v["glossary"], json!([{ "a": "3", "b": "2" }]));
+        assert_eq!(v["glossary"], json!([{ "a": "1", "b": "2" }]));
     }
 
     // @kotowari[REQ-schema-019, REQ-schema-035]
