@@ -337,6 +337,50 @@ fn req_081_only_rs_maps_to_rust() {
     assert!(!twi.iter().any(|f| f["detail"] == "test_something"), ".py should not detect tests: {:?}", twi);
 }
 
+// @kotowari[REQ-core-118, TBL-core-010]
+#[test]
+fn tbl_010_lone_cr_ends_a_line_of_a_test_file() {
+    // TBL-core-010 は単独の "\r" も行の終わりに数える。"\n" だけで数えると、
+    // "\r" の後の印が前の行に報告される
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"tests/**/*.py\"\n    - \"tests/**/*.rs\"\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.py"),
+        "first\r# @kotowari[REQ-999]\r",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("tests/test_b.rs"),
+        "#[test]\r/* first\r@kotowari[REQ-998] */\rfn t() {}\r",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let lines: Vec<(String, u64)> = findings_by_kind(&v, "unresolved_reference")
+        .iter()
+        .map(|f| {
+            (
+                f["path"].as_str().unwrap().to_string(),
+                f["line"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    assert!(
+        lines.contains(&("tests/test_a.py".to_string(), 2)),
+        "{lines:?}"
+    );
+    assert!(
+        lines.contains(&("tests/test_b.rs".to_string(), 3)),
+        "{lines:?}"
+    );
+}
+
 // --- REQ-core-082: Rust のテスト ---
 
 // @kotowari[REQ-core-082, TBL-core-017]

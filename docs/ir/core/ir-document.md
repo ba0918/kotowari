@@ -80,7 +80,9 @@ kotowari は、`文書が扱う範囲`の中身と行数を検査すること、
 
 ### TBL-core-010: 行の数え方
 
-- source: docs/decision/records/records.md#A33, docs/decision/records/records.md#A129, docs/decision/records/2026-09-23-mutants-gaps.md#A1
+- source: docs/decision/records/records.md#A33, docs/decision/records/records.md#A129, docs/decision/records/2026-09-23-mutants-gaps.md#A1, docs/decision/records/2026-09-24-review3-gaps.md#A3
+
+この数え方は、`IR`の文書だけでなく、kotowari が行番号を出すファイルのすべて（`判断の記録`、ADR、`テストのファイル`、`変異の結果`のソース）に使う。
 
 | 場面 | 数え方 |
 |---|---|
