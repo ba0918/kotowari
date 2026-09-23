@@ -785,6 +785,29 @@ fn tbl_035_comment_after_code_on_the_same_line_breaks_the_block() {
     assert!(tests[0].marker_ids.is_empty(), "{tests:?}");
 }
 
+// @kotowari[REQ-core-075, TBL-core-035, EX-core-324]
+#[test]
+fn ex_core_324_mark_in_an_attribute_body_is_not_read() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    make_ir_with_req(tmp.path(), "REQ-001", "unit");
+    fs::create_dir_all(tmp.path().join("tests")).unwrap();
+    fs::write(
+        tmp.path().join("tests/test_a.rs"),
+        "#[doc = \"@kotowari[REQ-999]\"]\n#[test]\nfn t() {}\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    assert!(
+        findings_by_kind(&v, "unresolved_reference").is_empty(),
+        "{v}"
+    );
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert_eq!(twi.len(), 1, "{v}");
+    assert_eq!(twi[0]["detail"], "t");
+}
+
 // @kotowari[REQ-core-082, TBL-core-017]
 #[test]
 fn tbl_017_macro_not_in_the_configuration_is_not_reread() {
