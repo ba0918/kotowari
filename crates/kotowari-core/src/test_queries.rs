@@ -4,10 +4,12 @@
 
 use crate::StopReason;
 use crate::config::Config;
-use ast_grep_config::{GlobalRules, RuleConfig, from_yaml_string};
+use ast_grep_config::{GlobalRules, RuleCollection, RuleConfig, Severity, from_yaml_string};
 use ast_grep_core::tree_sitter::{LanguageExt, StrDoc};
 use ast_grep_core::{Language, Node};
 use ast_grep_language::SupportLang;
+use std::collections::BTreeSet;
+use std::path::Path;
 
 /// 同梱の`問い合わせ`（REQ-core-182）。"language" を書いたルール
 const BUNDLED_RULES: &[&str] = &[
@@ -29,39 +31,98 @@ pub fn language_of(path: &str) -> Option<SupportLang> {
 
 /// 同梱のルールと設定から作るルールをまとめた、言語ごとの`問い合わせ`
 pub struct TestQueries {
-    rules: Vec<RuleConfig<SupportLang>>,
+    rules: RuleCollection<SupportLang>,
+    /// ルールが1つ以上ある言語
+    languages: Vec<SupportLang>,
 }
 
 impl TestQueries {
     /// 同梱のルールと "tests.rust.attributes" のルールを読む
     pub fn new(config: &Config) -> Result<Self, StopReason> {
-        let mut rules = Vec::new();
-        for yaml in BUNDLED_RULES {
-            rules.extend(parse_rules(yaml).map_err(StopReason::ConfigError)?);
+        Self::build(bundled_rules(config)?)
+    }
+
+    /// 同梱のルール、"tests.rust.attributes" のルール、"tests.rules" のファイルのルールを読む。
+    /// ルールのファイルが読めなければ設定の誤りで停止する（REQ-core-189）
+    pub fn load(base: &Path, config: &Config) -> Result<Self, StopReason> {
+        let mut rules = bundled_rules(config)?;
+        let mut seen = BTreeSet::new();
+        for path in &config.tests.rules {
+            if !seen.insert(path) {
+                return Err(config_error(format!(
+                    "duplicate path in tests.rules: {path}"
+                )));
+            }
+            rules.extend(read_rule_file(base, path)?);
         }
-        for (yaml, languages) in BUNDLED_SHARED_RULES {
-            for language in *languages {
-                let yaml = format!("language: {language}\n{yaml}");
-                rules.extend(parse_rules(&yaml).map_err(StopReason::ConfigError)?);
+        Self::build(rules)
+    }
+
+    fn build(mut rules: Vec<RuleConfig<SupportLang>>) -> Result<Self, StopReason> {
+        let mut languages = Vec::new();
+        for rule in &mut rules {
+            if !languages.contains(&rule.language) {
+                languages.push(rule.language);
+            }
+            // REQ-core-188: "severity" は見ない。RuleCollection は "off" のルールを外すので付け替える
+            if matches!(rule.severity, Severity::Off) {
+                rule.severity = Severity::Hint;
             }
         }
-        for attribute in &config.tests.rust.attributes {
-            rules.extend(
-                parse_rules(&configured_attribute_rule(attribute))
-                    .map_err(StopReason::ConfigError)?,
-            );
-        }
-        Ok(TestQueries { rules })
+        let rules = RuleCollection::try_new(rules)
+            .map_err(|e| config_error(format!("invalid glob in tests.rules: {e}")))?;
+        Ok(TestQueries { rules, languages })
     }
 
     /// その言語が`問い合わせのある言語`か（ルールが1つ以上ある）
     pub fn has_query(&self, lang: SupportLang) -> bool {
-        self.rules.iter().any(|rule| rule.language == lang)
+        self.languages.contains(&lang)
     }
 
-    fn rules_for(&self, lang: SupportLang) -> impl Iterator<Item = &RuleConfig<SupportLang>> {
-        self.rules.iter().filter(move |rule| rule.language == lang)
+    /// その言語のルールのうち、"files" と "ignores" がそのファイルに当てることを許すもの（REQ-core-187）
+    fn rules_for(&self, lang: SupportLang, rel_path: &str) -> Vec<&RuleConfig<SupportLang>> {
+        self.rules.get_rule_from_lang(Path::new(rel_path), lang)
     }
+}
+
+fn config_error(detail: String) -> StopReason {
+    StopReason::ConfigError(detail)
+}
+
+fn bundled_rules(config: &Config) -> Result<Vec<RuleConfig<SupportLang>>, StopReason> {
+    let mut rules = Vec::new();
+    for yaml in BUNDLED_RULES {
+        rules.extend(parse_rules(yaml).map_err(config_error)?);
+    }
+    for (yaml, languages) in BUNDLED_SHARED_RULES {
+        for language in *languages {
+            let yaml = format!("language: {language}\n{yaml}");
+            rules.extend(parse_rules(&yaml).map_err(config_error)?);
+        }
+    }
+    for attribute in &config.tests.rust.attributes {
+        rules.extend(parse_rules(&configured_attribute_rule(attribute)).map_err(config_error)?);
+    }
+    Ok(rules)
+}
+
+/// "tests.rules" の1つのファイルを読む。無い、ファイルでない、読めない、UTF-8 でない、
+/// ルールとして読めないときは設定の誤り（REQ-core-189）
+fn read_rule_file(base: &Path, path: &str) -> Result<Vec<RuleConfig<SupportLang>>, StopReason> {
+    let full = base.join(path);
+    let metadata = std::fs::metadata(&full)
+        .map_err(|e| config_error(format!("unreadable file in tests.rules: {path}: {e}")))?;
+    if !metadata.is_file() {
+        return Err(config_error(format!("not a file in tests.rules: {path}")));
+    }
+    let text = crate::read_utf8_file(&full, path).map_err(|e| match e {
+        StopReason::NonUtf8File(_) => {
+            config_error(format!("non-UTF-8 file in tests.rules: {path}"))
+        }
+        other => config_error(format!("unreadable file in tests.rules: {other}")),
+    })?;
+    parse_rules(&text)
+        .map_err(|e| config_error(format!("invalid rule in tests.rules: {path}: {e}")))
 }
 
 fn parse_rules(yaml: &str) -> Result<Vec<RuleConfig<SupportLang>>, String> {
@@ -124,10 +185,15 @@ impl ParsedFile {
     }
 
     /// その言語の`問い合わせ`をすべて当てる。同じ節に複数当たっても1つと数える（REQ-core-181）
-    pub fn find_tests(&self, queries: &TestQueries, lang: SupportLang) -> Vec<TestNode<'_>> {
+    pub fn find_tests(
+        &self,
+        queries: &TestQueries,
+        lang: SupportLang,
+        rel_path: &str,
+    ) -> Vec<TestNode<'_>> {
         let root = self.root.root();
         let mut found: Vec<TestNode<'_>> = Vec::new();
-        for rule in queries.rules_for(lang) {
+        for rule in queries.rules_for(lang, rel_path) {
             for m in root.find_all(&rule.matcher) {
                 if found.iter().any(|t| t.node.node_id() == m.node_id()) {
                     continue;

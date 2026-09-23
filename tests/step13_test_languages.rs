@@ -489,3 +489,298 @@ fn tbl_034_mark_before_a_docblock_test_binds() {
     assert!(unmarked(&v).is_empty(), "{v}");
     assert_eq!(listed_tests(tmp.path(), "REQ-001")[0]["name"], "itWorks");
 }
+
+// --- "tests.rules" で足すルール ---
+
+/// "tests.files" と "tests.rules" を書いた設定に置き換える
+fn configure(tmp: &Path, test_globs: &[&str], rules: &[&str]) {
+    let mut config = String::from("tests:\n  files:\n");
+    for glob in test_globs {
+        config.push_str(&format!("    - \"{glob}\"\n"));
+    }
+    config.push_str("  rules:\n");
+    for rule in rules {
+        config.push_str(&format!("    - \"{rule}\"\n"));
+    }
+    fs::write(tmp.join(".kotowari/config.yaml"), config).unwrap();
+}
+
+const BENCH_RULE: &str = "id: bench\nlanguage: typescript\nrule:\n  pattern: bench($NAME, $$$)\n";
+
+/// 終了コードと標準エラーの1行目
+fn stop(tmp: &Path) -> (Option<i32>, String) {
+    let output = cmd().arg("check").current_dir(tmp).output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    (
+        output.status.code(),
+        stderr.lines().next().unwrap_or("").to_string(),
+    )
+}
+
+// @kotowari[REQ-core-186, EX-core-311]
+#[test]
+fn ex_core_311_added_rule_counts_tests() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
+    write(tmp.path(), "rules/bench.yml", BENCH_RULE);
+    write(tmp.path(), "tests/a.test.ts", "bench('fast', () => {})\n");
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["fast"], "{v}");
+}
+
+// @kotowari[REQ-core-186]
+#[test]
+fn req_186_rules_separated_by_dashes_all_apply_and_give_a_language_a_query() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(tmp.path(), &["tests/**/*"], &["rules/many.yml"]);
+    write(
+        tmp.path(),
+        "rules/many.yml",
+        "id: go-test\nlanguage: go\nrule:\n  kind: function_declaration\n  has:\n    field: name\n    regex: ^Test\n    pattern: $NAME\n---\nid: bench\nlanguage: typescript\nrule:\n  pattern: bench($NAME, $$$)\n",
+    );
+    write(
+        tmp.path(),
+        "tests/a_test.go",
+        "package a\n\nfunc TestA(t *testing.T) {}\n",
+    );
+    write(tmp.path(), "tests/a.test.ts", "bench('fast', () => {})\n");
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["fast", "TestA"], "{v}");
+    assert_eq!(v["tests"]["go"]["query"], true, "{v}");
+}
+
+// @kotowari[REQ-core-121, REQ-core-181, EX-core-312]
+#[test]
+fn ex_core_312_rule_hitting_the_bundled_node_counts_once() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(tmp.path(), &["tests/**/*.ts"], &["rules/it.yml"]);
+    write(
+        tmp.path(),
+        "rules/it.yml",
+        "id: it\nlanguage: typescript\nrule:\n  pattern: it($NAME, $$$)\n",
+    );
+    write(tmp.path(), "tests/a.test.ts", "it('x', () => {})\n");
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["x"], "{v}");
+}
+
+// @kotowari[REQ-core-187, EX-core-313]
+#[test]
+fn ex_core_313_rule_is_not_applied_outside_its_files() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
+    write(
+        tmp.path(),
+        "rules/bench.yml",
+        &format!("{BENCH_RULE}files:\n  - \"**/*.spec.ts\"\n"),
+    );
+    write(tmp.path(), "tests/a.test.ts", "bench('fast', () => {})\n");
+    write(tmp.path(), "tests/b.spec.ts", "bench('spec', () => {})\n");
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["spec"], "{v}");
+}
+
+// @kotowari[REQ-core-187]
+#[test]
+fn req_187_rule_is_not_applied_to_its_ignores() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
+    write(
+        tmp.path(),
+        "rules/bench.yml",
+        &format!("{BENCH_RULE}ignores:\n  - \"tests/skip/**\"\n"),
+    );
+    write(tmp.path(), "tests/a.test.ts", "bench('fast', () => {})\n");
+    write(
+        tmp.path(),
+        "tests/skip/b.test.ts",
+        "bench('skipped', () => {})\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["fast"], "{v}");
+}
+
+// @kotowari[REQ-core-188, EX-core-314]
+#[test]
+fn ex_core_314_rule_with_severity_off_is_applied() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
+    write(
+        tmp.path(),
+        "rules/bench.yml",
+        &format!("{BENCH_RULE}severity: off\n"),
+    );
+    write(tmp.path(), "tests/a.test.ts", "bench('fast', () => {})\n");
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["fast"], "{v}");
+}
+
+// @kotowari[REQ-core-188]
+#[test]
+fn req_188_fix_message_note_and_metadata_do_not_change_the_tests() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
+    write(
+        tmp.path(),
+        "rules/bench.yml",
+        &format!(
+            "{BENCH_RULE}fix: other($NAME)\nmessage: a bench\nnote: see the docs\nseverity: error\nmetadata:\n  owner: me\n"
+        ),
+    );
+    write(tmp.path(), "tests/a.test.ts", "bench('fast', () => {})\n");
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["fast"], "{v}");
+}
+
+// @kotowari[REQ-core-189, EX-core-315]
+#[test]
+fn ex_core_315_missing_rule_file_stops() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(tmp.path(), &["tests/**/*.ts"], &["rules/missing.yml"]);
+    let (code, first) = stop(tmp.path());
+    assert_eq!(code, Some(2));
+    assert!(first.starts_with("config error"), "{first}");
+}
+
+// @kotowari[REQ-core-189, EX-core-316]
+#[test]
+fn ex_core_316_rule_of_an_unknown_language_stops() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(tmp.path(), &["tests/**/*.ts"], &["rules/cobol.yml"]);
+    write(
+        tmp.path(),
+        "rules/cobol.yml",
+        "id: cobol\nlanguage: cobol\nrule:\n  pattern: foo\n",
+    );
+    let (code, first) = stop(tmp.path());
+    assert_eq!(code, Some(2));
+    assert!(first.starts_with("config error"), "{first}");
+}
+
+// @kotowari[REQ-core-189, EX-core-321]
+#[test]
+fn ex_core_321_same_rule_file_twice_stops() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(
+        tmp.path(),
+        &["tests/**/*.ts"],
+        &["rules/bench.yml", "rules/bench.yml"],
+    );
+    write(tmp.path(), "rules/bench.yml", BENCH_RULE);
+    let (code, first) = stop(tmp.path());
+    assert_eq!(code, Some(2));
+    assert!(first.starts_with("config error"), "{first}");
+}
+
+// @kotowari[REQ-core-189]
+#[test]
+fn req_189_unreadable_or_malformed_rule_files_stop() {
+    let cases: [(&str, &[u8]); 4] = [
+        ("a directory", b""),
+        ("not UTF-8", b"\xff\xfe"),
+        ("not YAML", b"id: [unclosed\n"),
+        ("not an ast-grep rule", b"id: x\nlanguage: typescript\n"),
+    ];
+    for (case, content) in cases {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), &[]);
+        configure(tmp.path(), &["tests/**/*.ts"], &["rules/r.yml"]);
+        if case == "a directory" {
+            fs::create_dir_all(tmp.path().join("rules/r.yml")).unwrap();
+        } else {
+            fs::create_dir_all(tmp.path().join("rules")).unwrap();
+            fs::write(tmp.path().join("rules/r.yml"), content).unwrap();
+        }
+        let (code, first) = stop(tmp.path());
+        assert_eq!(code, Some(2), "{case}");
+        assert!(first.starts_with("config error"), "{case}: {first}");
+    }
+}
+
+// @kotowari[REQ-core-189, EX-core-322]
+#[test]
+fn ex_core_322_language_alias_is_accepted() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
+    write(
+        tmp.path(),
+        "rules/bench.yml",
+        "id: bench\nlanguage: ts\nrule:\n  pattern: bench($NAME, $$$)\n",
+    );
+    write(tmp.path(), "tests/a.test.ts", "bench('fast', () => {})\n");
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    let v: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(unmarked(&v), vec!["fast"], "{v}");
+}
+
+// @kotowari[REQ-core-189]
+#[test]
+fn req_189_language_is_matched_without_case() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(tmp.path(), &["tests/**/*.py"], &["rules/r.yml"]);
+    write(
+        tmp.path(),
+        "rules/r.yml",
+        "id: check\nlanguage: PY\nrule:\n  kind: function_definition\n  has:\n    field: name\n    regex: ^check_\n    pattern: $NAME\n",
+    );
+    write(tmp.path(), "tests/test_a.py", "def check_x():\n    pass\n");
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["check_x"], "{v}");
+}
+
+// @kotowari[REQ-core-086, EX-core-310]
+#[test]
+fn ex_core_310_test_without_a_name_uses_its_first_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
+    write(
+        tmp.path(),
+        "rules/bench.yml",
+        "id: bench\nlanguage: typescript\nrule:\n  pattern: bench($$$)\n",
+    );
+    write(
+        tmp.path(),
+        "tests/a.test.ts",
+        "describe('d', () => {\n  bench(caseName, () => {\n  });\n});\n",
+    );
+    let v = check(tmp.path());
+    let found = findings(&v, "test_without_id");
+    assert_eq!(found.len(), 1, "{v}");
+    assert_eq!(found[0]["detail"], "bench(caseName, () => {");
+    assert_eq!(found[0]["line"], 2);
+}
+
+// @kotowari[REQ-core-180, TBL-core-026]
+#[test]
+fn req_180_test_without_a_name_is_listed_with_a_null_name() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
+    write(
+        tmp.path(),
+        "rules/bench.yml",
+        "id: bench\nlanguage: typescript\nrule:\n  pattern: bench($$$)\n",
+    );
+    write(
+        tmp.path(),
+        "tests/a.test.ts",
+        "// @kotowari[REQ-001]\nbench(caseName, () => {});\n",
+    );
+    let tests = listed_tests(tmp.path(), "REQ-001");
+    assert_eq!(tests.len(), 1, "{tests:?}");
+    assert!(tests[0]["name"].is_null(), "{tests:?}");
+}

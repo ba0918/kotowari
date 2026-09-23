@@ -190,7 +190,7 @@ pub fn discover_tests(
     let root = parsed.root();
     let lines = LineMap::new(content, &root, lang);
     let mut tests = Vec::new();
-    for test in parsed.find_tests(queries, lang) {
+    for test in parsed.find_tests(queries, lang, file_rel) {
         let first_line = test.node.start_pos().line();
         let (marker_ids, invalid_markers) = lines.markers_before(first_line);
         tests.push(DiscoveredTest {
@@ -346,7 +346,7 @@ pub fn discover_and_check(
     findings: &mut Vec<Finding>,
 ) -> Result<(BTreeMap<String, crate::TestFileTally>, Vec<TestMarker>), crate::StopReason> {
     let test_files = collect_test_files(base, config)?;
-    let queries = TestQueries::new(config)?;
+    let queries = TestQueries::load(base, config)?;
     let mut all_tests: Vec<DiscoveredTest> = Vec::new();
     // REQ-core-153: list の "tests" の元。check は使わない
     let mut markers: Vec<TestMarker> = Vec::new();
