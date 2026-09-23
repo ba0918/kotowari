@@ -10,6 +10,7 @@ The configuration file is `.kotowari/config.yaml`, directly under the base direc
 | tests.files | List of globs | src/\*\*/\*.rs, tests/\*\*/\*.rs |
 | tests.rust.attributes | List of attribute paths added to "#[test]" | Empty list |
 | tests.rust.macros | List of macro names | Empty list |
+| tests.rules | List of paths of ast-grep rule YAML files, relative to the base directory. Globs are not allowed. The rules are added to the bundled queries of their `language` (mark.md) | Empty list |
 | mutants.equivalents | Path of a file (one string). Points at the list of equivalents (mutants.md) | None |
 | limits.lines | Number (negative numbers and 0 are not allowed) | 200 |
 | limits.requirements | Number (negative numbers and 0 are not allowed) | 10 |
@@ -37,6 +38,7 @@ tests:
   rust:
     attributes: []
     macros: []
+  rules: []
 limits:
   lines: 200
   requirements: 10
