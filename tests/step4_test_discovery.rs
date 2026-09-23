@@ -785,6 +785,17 @@ fn tbl_035_comment_after_code_on_the_same_line_breaks_the_block() {
     assert!(tests[0].marker_ids.is_empty(), "{tests:?}");
 }
 
+// @kotowari[REQ-core-082, TBL-core-017]
+#[test]
+fn tbl_017_macro_not_in_the_configuration_is_not_reread() {
+    let mut config = kotowari_core::config::Config::default();
+    config.tests.rust.macros = vec!["my_macro".to_string()];
+    let content = "other_macro! {\n    fn t() {}\n}\nmy_macro! {\n    fn u() {}\n}\n";
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &config).expect("valid rust");
+    let names: Vec<_> = tests.iter().map(|t| t.name.as_deref()).collect();
+    assert_eq!(names, vec![Some("u")]);
+}
+
 // @kotowari[REQ-core-181]
 #[test]
 fn req_181_test_inside_a_test_is_counted_apart() {

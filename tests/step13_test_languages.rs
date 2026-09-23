@@ -124,12 +124,20 @@ fn req_180_only_one_pair_of_the_same_quotes_is_stripped() {
     write(
         tmp.path(),
         "tests/a.test.ts",
-        "it(\"double\", () => {});\nit(`back`, () => {});\nit(caseName, () => {});\nit('\"inner\"', () => {});\nit('', () => {});\n",
+        "it(\"double\", () => {});\nit(`back`, () => {});\nit(caseName, () => {});\nit('\"inner\"', () => {});\nit('', () => {});\nit('a' + b, () => {});\nit(a + 'b', () => {});\n",
     );
     let v = check(tmp.path());
     assert_eq!(
         unmarked(&v),
-        vec!["double", "back", "caseName", "\"inner\"", ""],
+        vec![
+            "double",
+            "back",
+            "caseName",
+            "\"inner\"",
+            "",
+            "'a' + b",
+            "a + 'b'"
+        ],
         "{v}"
     );
 }
