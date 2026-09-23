@@ -376,6 +376,20 @@ fn req_044_unknown_field_without_colon_has_line_text_as_detail() {
     );
 }
 
+// @kotowari[REQ-core-044]
+#[test]
+fn req_044_numbered_lines_with_a_period_or_a_parenthesis_are_unknown_fields() {
+    // CommonMark のとおり、数字の後の区切りは "." と ")" のどちらも一覧の行
+    let content = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n1. a\n2) b\n\nStatement.\n";
+    let doc = ir::parse_document("a.md", content).unwrap();
+    let findings = check(&[doc], &default_config());
+    let details: Vec<&str> = find_by_kind(&findings, "unknown_field")
+        .iter()
+        .map(|f| f.detail.as_str())
+        .collect();
+    assert_eq!(details, vec!["1. a", "2) b"]);
+}
+
 // --- REQ-core-045: 同じ行の重複 ---
 
 // @kotowari[REQ-core-045]
@@ -1572,6 +1586,49 @@ Statement.
     if let Item::Scenario { steps, .. } = scenario.unwrap() {
         assert_eq!(steps.len(), 3, "should have 3 steps: {:?}", steps);
     }
+}
+
+// @kotowari[REQ-core-113, EX-core-283]
+#[test]
+fn req_113_blank_lines_and_comments_inside_a_scenario_keep_its_steps() {
+    // 空行と注釈を挟んだステップも、同じブロックの前にある Scenario: のステップになる
+    let content = "\
+# Title
+
+Scope.
+
+## Examples
+
+```gherkin
+@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1
+Scenario: Spaced steps
+
+  Given a precondition
+  # a note
+  When an action
+
+  Then a result
+```
+
+## Requirements
+
+### REQ-001: R
+
+- kind: ubiquitous
+- source: brainstorm/records.md#A1
+- verification: unit
+
+Statement.
+";
+    let doc = ir::parse_document("a.md", content).unwrap();
+    let scenario = doc.items.iter().find(|i| matches!(i, Item::Scenario { id: Some(id), .. } if id == "EX-001"));
+    let Some(Item::Scenario { steps, .. }) = scenario else {
+        panic!("should parse EX-001");
+    };
+    assert_eq!(steps.len(), 3, "{steps:?}");
+    let findings = check(&[doc], &default_config());
+    let ig = find_by_kind(&findings, "invalid_gherkin_line");
+    assert!(ig.is_empty(), "{ig:?}");
 }
 
 // @kotowari[REQ-core-113]

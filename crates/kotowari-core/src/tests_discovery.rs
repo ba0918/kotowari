@@ -540,6 +540,22 @@ fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> (Vec<(St
     (ids, invalid)
 }
 
+/// 単独の "\r" を "\n" に置き換える。TBL-core-010 は単独の "\r" も行の終わりに数えるが、
+/// `str::lines()` も tree-sitter の行も "\n" でしか行を分けない。どちらも1バイトなので、
+/// 置き換えてもバイトの位置は変わらない
+fn lone_cr_to_lf(content: &str) -> String {
+    let mut out = String::with_capacity(content.len());
+    let mut chars = content.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '\r' && chars.peek() != Some(&'\n') {
+            out.push('\n');
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
+
 /// テストの発見と印のチェックの全体
 pub fn discover_and_check(
     base: &Path,
@@ -557,10 +573,10 @@ pub fn discover_and_check(
     let mut tally: BTreeMap<String, crate::TestFileTally> = BTreeMap::new();
 
     for (rel_path, abs_path) in &test_files {
-        let content = crate::read_utf8_file(
+        let content = lone_cr_to_lf(&crate::read_utf8_file(
             std::path::Path::new(abs_path),
             rel_path,
-        )?;
+        )?);
 
         let ext = std::path::Path::new(rel_path)
             .extension()

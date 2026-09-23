@@ -94,13 +94,13 @@ mds は常に、`コードブロック`の言語を宣言したときだけ言�
 
 ### TBL-schema-007: 一覧の行の読み分け
 
-- source: docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A33
+- source: docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A33, docs/decision/records/2026-09-24-review3-gaps.md#A2
 
 | 順 | 行の形 | 読み方 |
 |---|---|---|
 | 1 | マーカーに「名前と値」が続き、名前が`スキーマ`の宣言と一致する | `フィールド行` |
 | 2 | マーカーに続くが、1 に当たらない | `箇条書き` |
-| 3 | 数字と区切りの点で始まる | どの規則種別にも属さず、`閉じた世界`では`指摘` |
+| 3 | 数字と "." か ")" の区切りで始まる | どの規則種別にも属さず、`閉じた世界`では`指摘` |
 
 ### TBL-schema-011: 読み方ごとの行の読み分け
 
