@@ -13,6 +13,7 @@ use ast_grep_language::SupportLang;
 const BUNDLED_RULES: &[&str] = &[
     include_str!("../queries/rust.yml"),
     include_str!("../queries/python.yml"),
+    include_str!("../queries/php.yml"),
 ];
 
 /// 同梱の`問い合わせ`のうち、同じ中身を複数の言語に付けるもの（"language" の行を足して読む）

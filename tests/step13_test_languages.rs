@@ -288,12 +288,15 @@ fn ex_core_320_comment_after_code_on_the_same_line_breaks_the_block() {
     assert_eq!(unmarked(&v), vec!["x"], "{v}");
 }
 
-// @kotowari[TBL-core-021, REQ-core-182]
+// @kotowari[TBL-core-021, TBL-core-031, REQ-core-182]
 #[test]
 fn tbl_021_extensions_of_the_bundled_languages_have_a_query() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*"]);
-    let with_query = ["rs", "ts", "mts", "cts", "tsx", "js", "jsx", "mjs", "cjs"];
+    let with_query = [
+        "rs", "ts", "mts", "cts", "tsx", "js", "jsx", "mjs", "cjs", "py", "py3", "pyi", "bzl",
+        "bazel", "php",
+    ];
     for ext in with_query {
         write(tmp.path(), &format!("tests/a.{ext}"), "\n");
     }
@@ -399,17 +402,90 @@ fn ex_core_318_mark_binds_across_a_multi_line_decorator_and_a_comment() {
     assert_eq!(tests[0]["name"], "test_x");
 }
 
-// @kotowari[TBL-core-021, TBL-core-031]
+// --- Php ---
+
+// @kotowari[REQ-core-185, TBL-core-034, TBL-core-019]
 #[test]
-fn tbl_021_python_extensions_have_a_query() {
+fn tbl_034_test_methods_and_attributes() {
     let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), &["tests/**/*"]);
-    let with_query = ["py", "py3", "pyi", "bzl", "bazel"];
-    for ext in with_query {
-        write(tmp.path(), &format!("tests/a.{ext}"), "\n");
-    }
+    make_project(tmp.path(), &["tests/**/*.php"]);
+    write(
+        tmp.path(),
+        "tests/FooTest.php",
+        "<?php\nclass FooTest\n{\n    public function testAdds()\n    {\n    }\n\n    #[Test]\n    public function other()\n    {\n    }\n\n    #[DataProvider('p')]\n    public function helper()\n    {\n    }\n}\n",
+    );
     let v = check(tmp.path());
-    for ext in with_query {
-        assert_eq!(v["tests"][ext]["query"], true, "{ext}: {v}");
-    }
+    let found: Vec<_> = findings(&v, "test_without_id")
+        .iter()
+        .map(|f| {
+            (
+                f["detail"].as_str().unwrap().to_string(),
+                f["line"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    // "#[Test]" はメソッドの節の中にあるので、行は "#[Test]" の行
+    assert_eq!(
+        found,
+        vec![("testAdds".to_string(), 4), ("other".to_string(), 8)],
+        "{v}"
+    );
+}
+
+// @kotowari[REQ-core-185, TBL-core-034, EX-core-303]
+#[test]
+fn ex_core_303_method_with_a_qualified_test_attribute_is_counted() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.php"]);
+    write(
+        tmp.path(),
+        "tests/FooTest.php",
+        "<?php\nclass FooTest\n{\n    #[\\PHPUnit\\Framework\\Attributes\\Test]\n    public function other()\n    {\n    }\n}\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["other"], "{v}");
+}
+
+// @kotowari[REQ-core-185, TBL-core-034, EX-core-304]
+#[test]
+fn ex_core_304_method_with_a_test_docblock_is_counted() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.php"]);
+    write(
+        tmp.path(),
+        "tests/FooTest.php",
+        "<?php\nclass FooTest\n{\n    /** @test */\n    public function itWorks()\n    {\n    }\n\n    /* @test */\n    public function notADocblock()\n    {\n    }\n\n    /** @testdox adds */\n    public function notATestTag()\n    {\n    }\n}\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["itWorks"], "{v}");
+}
+
+// @kotowari[REQ-core-185, TBL-core-034, EX-core-305]
+#[test]
+fn ex_core_305_pest_test_call_is_counted() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.php"]);
+    write(
+        tmp.path(),
+        "tests/FooTest.php",
+        "<?php\ntest('adds', function () {});\nit(\"works\", function () {});\ndescribe('d', function () {});\n",
+    );
+    let v = check(tmp.path());
+    assert_eq!(unmarked(&v), vec!["adds", "works"], "{v}");
+}
+
+// @kotowari[REQ-core-075, TBL-core-034]
+#[test]
+fn tbl_034_mark_before_a_docblock_test_binds() {
+    // "@test" の docblock はコメントの行なので、その上の印も同じ塊に入る
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &["tests/**/*.php"]);
+    write(
+        tmp.path(),
+        "tests/FooTest.php",
+        "<?php\nclass FooTest\n{\n    // @kotowari[REQ-001]\n    /**\n     * @test\n     */\n    public function itWorks()\n    {\n    }\n}\n",
+    );
+    let v = check(tmp.path());
+    assert!(unmarked(&v).is_empty(), "{v}");
+    assert_eq!(listed_tests(tmp.path(), "REQ-001")[0]["name"], "itWorks");
 }

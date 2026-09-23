@@ -1,0 +1,48 @@
+# 同梱の問い合わせ: Php（TBL-core-034）
+# 属性（"#[Test]"）はメソッドの節の中にある。"@test" の docblock はメソッドの直前のコメントの節で見る
+id: kotowari-php-test
+language: php
+rule:
+  any:
+    - kind: method_declaration
+      has:
+        field: name
+        pattern: $NAME
+      any:
+        # 名前が "test" で始まるメソッド
+        - has:
+            field: name
+            regex: ^test
+        # パスの最後の要素が "Test" の属性（"#[Test]"、"#[\PHPUnit\Framework\Attributes\Test]"）
+        - has:
+            field: attributes
+            has:
+              kind: attribute_group
+              has:
+                kind: attribute
+                has:
+                  nthChild: 1
+                  any:
+                    - kind: name
+                      regex: ^Test$
+                    - kind: qualified_name
+                      has:
+                        kind: name
+                        regex: ^Test$
+        # 直前の "/**" で始まるコメントに "@test" がある
+        - follows:
+            kind: comment
+            regex: '^/\*\*[\s\S]*@test\b'
+    # Pest の "test(...)" と "it(...)"
+    - kind: function_call_expression
+      all:
+        - has:
+            field: function
+            kind: name
+            regex: ^(test|it)$
+        - has:
+            field: arguments
+            has:
+              nthChild: 1
+              kind: argument
+              pattern: $NAME
