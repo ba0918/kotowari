@@ -1,0 +1,28 @@
+# 同梱の問い合わせ: Rust（TBL-core-017 の1行目）
+# 属性のパスの末尾の要素が "test" の関数。属性とコメントを挟んで前に並ぶ属性を見る
+id: kotowari-rust-test
+language: rust
+rule:
+  kind: function_item
+  has:
+    field: name
+    pattern: $NAME
+  follows:
+    stopBy:
+      not:
+        any:
+          - kind: attribute_item
+          - kind: line_comment
+          - kind: block_comment
+    kind: attribute_item
+    has:
+      kind: attribute
+      has:
+        nthChild: 1
+        any:
+          - kind: identifier
+            regex: ^test$
+          - kind: scoped_identifier
+            has:
+              field: name
+              regex: ^test$

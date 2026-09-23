@@ -42,16 +42,17 @@ fn req_082_macro_function_and_marker_lines_use_additive_offset() {
         .expect("valid rust");
     assert_eq!(tests.len(), 1);
     assert_eq!(tests[0].line, 7, "function line: {:?}", tests);
+    // 本体の先頭の印は結び付かず、invalid_marker にも数えない（TBL-core-016）
     assert_eq!(
         tests[0].marker_ids,
-        vec![("REQ-999".to_string(), 5), ("REQ-888".to_string(), 8)],
-        "marker lines (before the function and at body start): {:?}",
+        vec![("REQ-999".to_string(), 5)],
+        "marker lines (only before the function): {:?}",
         tests
     );
     assert_eq!(
         tests[0].invalid_markers,
-        vec![(6, "    // @kotowari[]".to_string()), (9, "        // @kotowari[]".to_string())],
-        "invalid marker lines (before the function and at body start): {:?}",
+        vec![(6, "    // @kotowari[]".to_string())],
+        "invalid marker lines (only before the function): {:?}",
         tests
     );
 }
@@ -89,7 +90,7 @@ fn req_082_has_attribute_skips_block_comment_to_find_test_attribute() {
     let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
         .expect("valid rust");
     assert!(
-        tests.iter().any(|t| t.name == "t"),
+        tests.iter().any(|t| t.name.as_deref() == Some("t")),
         "block comment between #[test] and fn must not hide the test: {:?}",
         tests
     );
@@ -105,7 +106,7 @@ fn req_082_has_configured_attribute_skips_line_comment() {
     let content = "#[kani::proof(unwind = 3)]\n// intermediate comment\nfn my_proof() {}\n";
     let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &config).expect("valid rust");
     assert!(
-        tests.iter().any(|t| t.name == "my_proof"),
+        tests.iter().any(|t| t.name.as_deref() == Some("my_proof")),
         "a line comment between a configured attribute and fn must not hide the test: {:?}",
         tests
     );
@@ -119,7 +120,7 @@ fn req_082_has_configured_attribute_skips_block_comment() {
     let content = "#[kani::proof]\n/* note */\nfn my_proof() {}\n";
     let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &config).expect("valid rust");
     assert!(
-        tests.iter().any(|t| t.name == "my_proof"),
+        tests.iter().any(|t| t.name.as_deref() == Some("my_proof")),
         "a block comment between a configured attribute and fn must not hide the test: {:?}",
         tests
     );
@@ -161,68 +162,45 @@ fn req_072_indented_invalid_marker_before_test_keeps_indentation() {
     );
 }
 
-// @kotowari[REQ-core-072]
+// @kotowari[REQ-core-072, TBL-core-035]
 #[test]
 fn req_072_invalid_marker_line_index_stays_additive_at_boundary() {
-    // コメントの最後の行に他のコードが続くとき、生の行の文字はその続きも含む
-    // （境界での掛け算のような誤り方をすると、この続きが失われる）
-    let content = "// leading 1\n// leading 2\n// leading 3\n/* line2\nline3\nline4\n@kotowari[] */ #[test] fn t() {}";
+    // 複数行のコメントの最後の行の印の行番号は、コメントの開始行からの足し算で決まる
+    let content = "// leading 1\n// leading 2\n// leading 3\n/* line2\nline3\nline4\n@kotowari[] */\n#[test] fn t() {}";
     let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
         .expect("valid rust");
     assert_eq!(tests.len(), 1);
     assert_eq!(
         tests[0].invalid_markers,
-        vec![(7, "@kotowari[] */ #[test] fn t() {}".to_string())],
-        "invalid marker detail should be the full raw line, continuation included: {:?}",
+        vec![(7, "@kotowari[] */".to_string())],
+        "invalid marker line should be the comment's own last line: {:?}",
         tests
     );
+
+    // コメントの最後の行にテストのコードが続くと、その行は直前のコメントの塊に入らない
+    let shared = "/* line1\n@kotowari[] */ #[test] fn t() {}";
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(shared, "test.rs", &kotowari_core::config::Config::default())
+        .expect("valid rust");
+    assert_eq!(tests.len(), 1);
+    assert!(tests[0].invalid_markers.is_empty(), "{:?}", tests);
 }
 
-// --- REQ-core-075, REQ-core-072: 関数本体の先頭の複数行コメントの中の印の行番号 ---
+// --- TBL-core-016: 関数本体の先頭のコメントの印は無視する ---
 
-// @kotowari[REQ-core-075, REQ-core-072]
+// @kotowari[REQ-core-072, TBL-core-016]
 #[test]
-fn req_072_body_start_multiline_comment_marker_uses_additive_offset() {
-    let content = "#[test]\nfn t() {\n    /* note\n    @kotowari[] */\n}\n";
-    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
-        .expect("valid rust");
-    assert_eq!(tests.len(), 1);
-    assert_eq!(
-        tests[0].invalid_markers,
-        vec![(4, "    @kotowari[] */".to_string())],
-        "body-start invalid marker line and text should come from the comment's own 2nd line: {:?}",
-        tests
-    );
-}
-
-// @kotowari[REQ-core-072]
-#[test]
-fn req_072_indented_body_start_invalid_marker_keeps_indentation() {
-    let content = "#[test]\nfn t() {\n    // @kotowari[]\n}\n";
-    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
-        .expect("valid rust");
-    assert_eq!(tests.len(), 1);
-    assert_eq!(
-        tests[0].invalid_markers,
-        vec![(3, "    // @kotowari[]".to_string())],
-        "body-start invalid marker detail should be the raw indented line: {:?}",
-        tests
-    );
-}
-
-// @kotowari[REQ-core-072]
-#[test]
-fn req_072_body_start_invalid_marker_line_index_stays_additive_at_boundary() {
-    let content = "#[test]\nfn t() {\n/* line2\nline3\nline4\n@kotowari[] */}\n";
-    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
-        .expect("valid rust");
-    assert_eq!(tests.len(), 1);
-    assert_eq!(
-        tests[0].invalid_markers,
-        vec![(6, "@kotowari[] */}".to_string())],
-        "body-start invalid marker detail should be the full raw line, continuation included: {:?}",
-        tests
-    );
+fn tbl_016_invalid_marker_at_body_start_is_ignored() {
+    for content in [
+        "#[test]\nfn t() {\n    /* note\n    @kotowari[] */\n}\n",
+        "#[test]\nfn t() {\n    // @kotowari[]\n}\n",
+        "#[test]\nfn t() {\n/* line2\nline3\nline4\n@kotowari[] */}\n",
+    ] {
+        let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
+            .expect("valid rust");
+        assert_eq!(tests.len(), 1);
+        assert!(tests[0].marker_ids.is_empty(), "{content:?}: {tests:?}");
+        assert!(tests[0].invalid_markers.is_empty(), "{content:?}: {tests:?}");
+    }
 }
 
 fn cmd() -> Command {
@@ -697,9 +675,9 @@ fn req_075_marker_before_attributes_binds() {
     assert!(twi.is_empty(), "test should have marker: {:?}", twi);
 }
 
-// @kotowari[REQ-core-075, TBL-core-016]
+// @kotowari[REQ-core-075, TBL-core-016, EX-core-306]
 #[test]
-fn req_075_marker_at_body_start_binds() {
+fn ex_core_306_marker_at_body_start_does_not_bind() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_ir_with_req(tmp.path(), "REQ-001", "unit");
@@ -711,15 +689,17 @@ fn req_075_marker_at_body_start_binds() {
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
-    let rwt = findings_by_kind(&v, "requirement_without_test");
     let twi = findings_by_kind(&v, "test_without_id");
-    assert!(rwt.is_empty(), "marker at body start should bind: {:?}", rwt);
-    assert!(twi.is_empty(), "test should have marker: {:?}", twi);
+    assert_eq!(twi.len(), 1, "{v}");
+    assert_eq!(twi[0]["detail"], "body_start_test");
+    assert_eq!(twi[0]["line"], 2);
+    let rwt = findings_by_kind(&v, "requirement_without_test");
+    assert_eq!(rwt.len(), 1, "the marker at the body start covers nothing: {v}");
 }
 
 // @kotowari[REQ-core-075, TBL-core-016]
 #[test]
-fn req_075_both_places_merge_ids() {
+fn req_075_body_start_marker_does_not_add_to_the_marks_before() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 2つの要求
@@ -737,7 +717,8 @@ fn req_075_both_places_merge_ids() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let rwt = findings_by_kind(&v, "requirement_without_test");
-    assert!(rwt.is_empty(), "both markers should merge: {:?}", rwt);
+    assert_eq!(rwt.len(), 1, "only the marker before the test binds: {:?}", rwt);
+    assert_eq!(rwt[0]["detail"], "REQ-002");
 }
 
 // @kotowari[REQ-core-075, TBL-core-016]
@@ -757,6 +738,52 @@ fn req_075_marker_in_body_middle_is_ignored() {
     let twi = findings_by_kind(&v, "test_without_id");
     // 本体の途中の印は無視される
     assert!(twi.iter().any(|f| f["detail"] == "mid_body_test"), "marker in body middle should be ignored: {:?}", twi);
+}
+
+// @kotowari[REQ-core-075, TBL-core-035]
+#[test]
+fn tbl_035_comments_and_multi_line_attributes_form_one_block() {
+    // コメントの行と複数行にわたる属性の行が空行なしで混ざっても、1つの塊として結び付く
+    let content = "// @kotowari[REQ-001]\n#[cfg_attr(\n    feature = \"x\",\n    ignore\n)]\n// note\n#[test]\nfn t() {}\n";
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
+        .expect("valid rust");
+    assert_eq!(tests.len(), 1);
+    assert_eq!(tests[0].marker_ids, vec![("REQ-001".to_string(), 1)], "{tests:?}");
+}
+
+// @kotowari[REQ-core-075, TBL-core-035]
+#[test]
+fn tbl_035_comment_after_code_on_the_same_line_breaks_the_block() {
+    let content = "// @kotowari[REQ-001]\nconst N: u8 = 1; // note\n#[test]\nfn t() {}\n";
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
+        .expect("valid rust");
+    assert_eq!(tests.len(), 1);
+    assert!(tests[0].marker_ids.is_empty(), "{tests:?}");
+}
+
+// @kotowari[REQ-core-181]
+#[test]
+fn req_181_test_inside_a_test_is_counted_apart() {
+    let content = "#[test]\nfn outer() {\n    // @kotowari[REQ-001]\n    #[test]\n    fn inner() {}\n}\n";
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &kotowari_core::config::Config::default())
+        .expect("valid rust");
+    let names: Vec<_> = tests.iter().map(|t| t.name.as_deref()).collect();
+    assert_eq!(names, vec![Some("outer"), Some("inner")]);
+    // 外の`テスト`の節の中でも、内側の`テスト`の直前の印はその内側に結び付く
+    assert!(tests[0].marker_ids.is_empty(), "{tests:?}");
+    assert_eq!(tests[1].marker_ids, vec![("REQ-001".to_string(), 3)], "{tests:?}");
+}
+
+// @kotowari[REQ-core-181, REQ-core-180]
+#[test]
+fn req_181_one_node_hit_by_two_queries_is_one_test() {
+    // 同梱の "#[test]" のルールと設定の属性のルールが同じ関数に当たる
+    let mut config = kotowari_core::config::Config::default();
+    config.tests.rust.attributes = vec!["tokio::test".to_string()];
+    let content = "#[tokio::test]\nasync fn t() {}\n";
+    let tests = kotowari_core::tests_discovery::discover_rust_tests(content, "test.rs", &config).expect("valid rust");
+    assert_eq!(tests.len(), 1, "{tests:?}");
+    assert_eq!(tests[0].name.as_deref(), Some("t"));
 }
 
 // --- REQ-core-076: 問い合わせの無い言語の印 ---
@@ -1490,10 +1517,10 @@ fn tbl_017_nested_function_in_macro_is_not_counted() {
         "inner function should not be counted: {:?}", twi);
 }
 
-// @kotowari[TBL-core-017]
+// @kotowari[TBL-core-016, TBL-core-017]
 #[test]
-fn tbl_017_macro_function_body_marker_binds() {
-    // マクロの中の関数の本体の先頭のコメントの印が結び付く
+fn tbl_016_macro_function_body_marker_does_not_bind() {
+    // マクロの中の関数でも、本体の先頭のコメントの印は結び付かない
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_ir_with_req(tmp.path(), "REQ-001", "unit");
@@ -1509,7 +1536,9 @@ fn tbl_017_macro_function_body_marker_binds() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let rwt = findings_by_kind(&v, "requirement_without_test");
-    assert!(rwt.is_empty(), "body marker in macro function should bind: {:?}", rwt);
+    assert_eq!(rwt.len(), 1, "body marker in macro function should not bind: {:?}", rwt);
+    let twi = findings_by_kind(&v, "test_without_id");
+    assert!(twi.iter().any(|f| f["detail"] == "body_marker"), "{:?}", twi);
 }
 
 // @kotowari[TBL-core-016]

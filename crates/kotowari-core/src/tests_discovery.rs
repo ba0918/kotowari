@@ -1,8 +1,13 @@
 //! テストの発見と印の結び付け（REQ-core-071〜REQ-core-088）
 
+use crate::comment_block::LineMap;
 use crate::config::Config;
-use crate::ir::{is_valid_id, IrDocument, Item};
+use crate::ir::{IrDocument, Item, is_valid_id};
+use crate::test_queries::{ParsedFile, TestQueries, language_of};
 use crate::{Finding, FindingKind};
+use ast_grep_core::Node;
+use ast_grep_core::tree_sitter::{LanguageExt, StrDoc};
+use ast_grep_language::SupportLang;
 use globset::{Glob, GlobSetBuilder};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
@@ -11,8 +16,12 @@ use walkdir::WalkDir;
 /// 発見されたテスト
 #[derive(Debug, Clone)]
 pub struct DiscoveredTest {
-    pub name: String,
+    /// `テスト`の名前。`問い合わせ`が "$NAME" を捕まえなければ None（REQ-core-180）
+    pub name: Option<String>,
+    /// `テスト`の節の最初の行の全体の文字から前後の空白を除いたもの
+    pub first_line_text: String,
     pub file_path: String,
+    /// `テスト`の節の最初の行
     pub line: usize,
     /// 印の出現ごとの (ID, 印のある行)。A152: 同じ ID の印が複数あっても出現ごとに数える
     pub marker_ids: Vec<(String, usize)>,
@@ -29,7 +38,7 @@ pub struct TestMarker {
     pub path: String,
     /// 印のある行
     pub line: usize,
-    /// `テスト`の関数の名前。`問い合わせの無い言語`では無い（REQ-core-081）
+    /// `テスト`の名前。`問い合わせの無い言語`と、`問い合わせ`が "$NAME" を捕まえない`テスト`では無い
     pub name: Option<String>,
 }
 
@@ -157,387 +166,158 @@ pub fn collect_test_files(
     Ok(files)
 }
 
-/// Rust ファイルのテストを tree-sitter で発見する
+/// Rust ファイルのテストを、同梱の問い合わせと設定の "tests.rust" で発見する
 pub fn discover_rust_tests(
     content: &str,
     file_rel: &str,
     config: &Config,
 ) -> Result<Vec<DiscoveredTest>, String> {
-    let mut parser = tree_sitter::Parser::new();
-    let language = tree_sitter_rust::LANGUAGE;
-    parser
-        .set_language(&language.into())
-        .map_err(|e| format!("failed to set language: {e}"))?;
+    let queries = TestQueries::new(config).map_err(|e| format!("{e:?}"))?;
+    discover_tests(content, file_rel, SupportLang::Rust, &queries, config)
+}
 
-    let tree = parser
-        .parse(content, None)
-        .ok_or_else(|| format!("failed to parse {file_rel}"))?;
-
-    if tree.root_node().has_error() {
-        return Err(format!("syntax error in {file_rel}"));
-    }
-
-    let lines: Vec<&str> = content.lines().collect();
+/// `問い合わせのある言語`のファイルのテストを発見し、`直前のコメントの塊`の印を結び付ける。
+/// 構文の誤りが1つでもあれば Err（REQ-core-083）
+pub fn discover_tests(
+    content: &str,
+    file_rel: &str,
+    lang: SupportLang,
+    queries: &TestQueries,
+    config: &Config,
+) -> Result<Vec<DiscoveredTest>, String> {
+    let parsed =
+        ParsedFile::parse(content, lang).ok_or_else(|| format!("syntax error in {file_rel}"))?;
+    let root = parsed.root();
+    let lines = LineMap::new(content, &root, lang);
     let mut tests = Vec::new();
-
-    discover_tests_in_node(
-        tree.root_node(),
-        content,
-        &lines,
-        file_rel,
-        config,
-        &mut tests,
-        false,
-    );
-
+    for test in parsed.find_tests(queries, lang) {
+        let first_line = test.node.start_pos().line();
+        let (marker_ids, invalid_markers) = lines.markers_before(first_line);
+        tests.push(DiscoveredTest {
+            name: test.name,
+            first_line_text: line_text(content, first_line),
+            file_path: file_rel.to_string(),
+            line: first_line + 1,
+            marker_ids,
+            invalid_markers,
+        });
+    }
+    if lang == SupportLang::Rust && !config.tests.rust.macros.is_empty() {
+        discover_macro_tests(&root, content, file_rel, config, &mut tests);
+    }
+    tests.sort_by_key(|t| t.line);
     Ok(tests)
 }
 
-fn discover_tests_in_node(
-    node: tree_sitter::Node,
+/// 行の全体の文字から前後の空白を除いたもの（REQ-core-086 の名前が null のときの detail）
+fn line_text(content: &str, line: usize) -> String {
+    content.lines().nth(line).unwrap_or("").trim().to_string()
+}
+
+/// "tests.rust.macros" のマクロを探し、中身を Rust の項目として読み直す（TBL-core-017）。
+/// 関数の中には入らない
+fn discover_macro_tests(
+    node: &RustNode<'_>,
     source: &str,
-    lines: &[&str],
     file_rel: &str,
     config: &Config,
     tests: &mut Vec<DiscoveredTest>,
-    in_macro: bool,
 ) {
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        match child.kind() {
-            "function_item" => {
-                check_function(child, source, lines, file_rel, config, tests);
-            }
+    for child in node.children() {
+        match child.kind().as_ref() {
+            "function_item" => {}
             "macro_invocation" => {
-                // マクロ名をチェック
-                if let Some(macro_node) = child.child_by_field_name("macro") {
-                    let macro_name = &source[macro_node.byte_range()];
-                    // 末尾のセグメントで比較
-                    let last_segment = macro_name.rsplit("::").next().unwrap_or(macro_name);
-
-                    if config.tests.rust.macros.iter().any(|m| {
-                        let m_last = m.rsplit("::").next().unwrap_or(m);
-                        m_last == last_segment
-                    }) {
-                        // マクロの中身を Rust として再パース
-                        // token_tree を子ノードから直接探す
-                        let body_node = {
-                            let mut cursor2 = child.walk();
-                            child.children(&mut cursor2)
-                                .find(|c| c.kind() == "token_tree")
-                        };
-                        if let Some(body) = body_node {
-                            let body_text = &source[body.byte_range()];
-                            // token_tree の中身（{ ... } の中）を取得
-                            let inner = body_text
-                                .strip_prefix('{')
-                                .and_then(|s| s.strip_suffix('}'))
-                                .unwrap_or(body_text);
-
-                            let byte_offset = body.start_byte()
-                                + if body_text.starts_with('{') { 1 } else { 0 };
-                            let line_offset = source[..byte_offset].matches('\n').count();
-
-                            // 再パース
-                            let mut inner_parser = tree_sitter::Parser::new();
-                            let language = tree_sitter_rust::LANGUAGE;
-                            inner_parser.set_language(&language.into()).ok();
-
-                            if let Some(inner_tree) = inner_parser.parse(inner, None) {
-                                let inner_lines: Vec<&str> = inner.lines().collect();
-                                // マクロ内の関数を検出
-                                let mut inner_tests = Vec::new();
-                                discover_macro_functions(
-                                    inner_tree.root_node(),
-                                    inner,
-                                    &inner_lines,
-                                    file_rel,
-                                    config,
-                                    &mut inner_tests,
-                                    line_offset,
-                                );
-                                tests.extend(inner_tests);
-                            }
-                        }
-                    }
+                if is_configured_macro(&child, config) {
+                    reparse_macro_body(&child, source, file_rel, tests);
                 }
             }
-            _ => {
-                // 再帰
-                discover_tests_in_node(child, source, lines, file_rel, config, tests, in_macro);
-            }
+            _ => discover_macro_tests(&child, source, file_rel, config, tests),
         }
     }
 }
 
-fn discover_macro_functions(
-    node: tree_sitter::Node,
-    inner_source: &str,
-    inner_lines: &[&str],
-    file_rel: &str,
-    config: &Config,
-    tests: &mut Vec<DiscoveredTest>,
-    line_offset: usize,
-) {
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        if child.kind() == "function_item" {
-            // マクロ内の最上位の関数はすべてテストと数える（入れ子の関数は数えない）
-            if let Some(name_node) = child.child_by_field_name("name") {
-                let name = &inner_source[name_node.byte_range()];
-                let inner_line = child.start_position().row;
-                let actual_line = line_offset + inner_line + 1;
+type RustNode<'r> = Node<'r, StrDoc<SupportLang>>;
 
-                // A121: マクロの中の関数も通常の関数と同じ規則で印を集める（木の節で遡る）
-                let (all_ids_raw, before_invalid) = collect_markers_from_siblings(child, inner_source, inner_lines);
-                // line_offset を足す
-                let all_ids: Vec<(String, usize)> = all_ids_raw.into_iter()
-                    .map(|(id, ln)| (id, line_offset + ln))
-                    .collect();
-
-                // 関数本体の先頭のコメントの印も集める（A121: 通常の関数と同じ規則）
-                let (body_ids, body_invalid) = collect_body_start_markers(child, inner_source);
-                let mut merged_ids = all_ids;
-                merged_ids.extend(body_ids.into_iter().map(|(id, ln)| (id, line_offset + ln)));
-                let mut invalid_markers: Vec<(usize, String)> = before_invalid.into_iter()
-                    .map(|(ln, raw)| (line_offset + ln, raw))
-                    .collect();
-                invalid_markers.extend(body_invalid.into_iter()
-                    .map(|(ln, raw)| (line_offset + ln, raw)));
-
-                tests.push(DiscoveredTest {
-                    name: name.to_string(),
-                    file_path: file_rel.to_string(),
-                    line: actual_line,
-                    marker_ids: merged_ids,
-                    invalid_markers,
-                });
-            }
-            // 入れ子の関数は数えない（再帰しない）
-        } else {
-            discover_macro_functions(
-                child,
-                inner_source,
-                inner_lines,
-                file_rel,
-                config,
-                tests,
-                line_offset,
-            );
-        }
-    }
-}
-
-fn check_function(
-    node: tree_sitter::Node,
-    source: &str,
-    lines: &[&str],
-    file_rel: &str,
-    config: &Config,
-    tests: &mut Vec<DiscoveredTest>,
-) {
-    let has_test_attr = has_attribute(node, source, "#[test]")
-        || config.tests.rust.attributes.iter().any(|attr| {
-            has_configured_attribute(node, source, attr)
-        });
-
-    if !has_test_attr {
-        return;
-    }
-
-    let name = match node.child_by_field_name("name") {
-        Some(n) => source[n.byte_range()].to_string(),
-        None => return,
+/// マクロの名前の末尾の要素が設定のどれかと一致するか
+fn is_configured_macro(node: &RustNode<'_>, config: &Config) -> bool {
+    let Some(macro_node) = node.field("macro") else {
+        return false;
     };
-
-    let func_line = node.start_position().row; // 0-indexed
-    let actual_line = func_line + 1;
-
-    // 前の兄弟ノード（コメント、属性）から印を集める
-    let (mut all_ids, mut all_invalid) = collect_markers_from_siblings(node, source, lines);
-
-    // 関数本体の先頭のコメントの印を集める
-    let (body_ids, body_invalid) = collect_body_start_markers(node, source);
-    all_ids.extend(body_ids);
-    all_invalid.extend(body_invalid);
-
-    tests.push(DiscoveredTest {
-        name,
-        file_path: file_rel.to_string(),
-        line: actual_line,
-        marker_ids: all_ids,
-        invalid_markers: all_invalid,
-    });
+    let macro_name = macro_node.text();
+    let last_segment = macro_name.rsplit("::").next().unwrap_or(&macro_name);
+    config.tests.rust.macros.iter().any(|m| {
+        let m_last = m.rsplit("::").next().unwrap_or(m);
+        m_last == last_segment
+    })
 }
 
-/// 属性のパスの末尾の要素が "test" かを判定する（A122）
-/// "#[test]"、"#[ test ]"、"#[core::prelude::v1::test]"、"#[tokio::test]" を含む
-fn attr_path_ends_with_test(attr_text: &str) -> bool {
-    let inner = attr_text.trim()
-        .strip_prefix("#[")
-        .and_then(|s| s.strip_suffix(']'));
-    if let Some(inner) = inner {
-        let path = if let Some(paren) = inner.find('(') {
-            &inner[..paren]
-        } else {
-            inner
-        };
-        let path = path.trim();
-        let last_segment = path.rsplit("::").next().unwrap_or(path).trim();
-        last_segment == "test"
-    } else {
-        false
-    }
-}
-
-/// 関数が #[test] 属性を持つか
-fn has_attribute(node: tree_sitter::Node, source: &str, _attr_text: &str) -> bool {
-    // 属性は function_item の子にならず、前の兄弟ノードとして並ぶ
-    let mut prev = node.prev_sibling();
-    while let Some(p) = prev {
-        if p.kind() == "attribute_item" {
-            let text = &source[p.byte_range()];
-            if attr_path_ends_with_test(text) {
-                return true;
-            }
-        } else if p.kind() != "line_comment" && p.kind() != "block_comment" {
-            break;
-        }
-        prev = p.prev_sibling();
-    }
-
-    false
-}
-
-/// 設定の属性を持つか（パスの完全一致、引数は無視）
-fn has_configured_attribute(node: tree_sitter::Node, source: &str, attr_path: &str) -> bool {
-    let mut prev = node.prev_sibling();
-    while let Some(p) = prev {
-        if p.kind() == "attribute_item" {
-            let text = &source[p.byte_range()];
-            // #[path] or #[path(args)] の形
-            let inner = text
-                .trim()
-                .strip_prefix("#[")
-                .and_then(|s| s.strip_suffix(']'));
-            if let Some(inner) = inner {
-                let path_part = if let Some(paren) = inner.find('(') {
-                    &inner[..paren]
-                } else {
-                    inner
-                };
-                if path_part.trim() == attr_path {
-                    return true;
-                }
-            }
-        } else if p.kind() != "line_comment" && p.kind() != "block_comment" {
-            break;
-        }
-        prev = p.prev_sibling();
-    }
-    false
-}
-
-/// 関数の前の兄弟ノード（属性、コメント）から印を集める
-/// 返り値: (出現ごとの (ID, 印の行), 空・不正な印の (行, 行の文字) のリスト)
-fn collect_markers_from_siblings(
-    node: tree_sitter::Node,
+fn reparse_macro_body(
+    node: &RustNode<'_>,
     source: &str,
-    lines: &[&str],
-) -> (Vec<(String, usize)>, Vec<(usize, String)>) {
-    let mut ids: Vec<(String, usize)> = Vec::new();
-    let mut invalid = Vec::new();
-    // 空行の検査は、見ているノードとその直後のノード（最初は関数そのもの）の間で行う
-    let mut next = node;
-    let mut prev = node.prev_sibling();
+    file_rel: &str,
+    tests: &mut Vec<DiscoveredTest>,
+) {
+    let Some(body) = node.children().find(|c| c.kind() == "token_tree") else {
+        return;
+    };
+    let body_text = body.text();
+    // token_tree の中身（{ ... } の中）
+    let inner = body_text
+        .strip_prefix('{')
+        .and_then(|s| s.strip_suffix('}'))
+        .unwrap_or(&body_text);
+    let byte_offset = body.range().start + if body_text.starts_with('{') { 1 } else { 0 };
+    let line_offset = source[..byte_offset].matches('\n').count();
 
-    while let Some(p) = prev {
-        if next.start_position().row > p.end_position().row + 1 {
-            // 空行がある → ここまで
-            break;
-        }
-        match p.kind() {
-            "line_comment" | "block_comment" => {
-                let text = &source[p.byte_range()];
-                let comment_start_row = p.start_position().row;
-                // コメントが複数行にまたがる場合は行ごとに処理
-                let comment_lines: Vec<&str> = text.lines().collect();
-                for (offset, cline) in comment_lines.iter().enumerate() {
-                    let line_num = comment_start_row + offset + 1;
-                    let raw_line = lines.get(comment_start_row + offset).copied().unwrap_or(cline);
-                    for marker in parse_markers_in_line(cline, line_num) {
-                        if marker.ids.is_empty() {
-                            // REQ-core-072: 空の印や閉じ括弧のない印
-                            invalid.push((line_num, raw_line.to_string()));
-                        } else {
-                            // A152: 同じ ID の印が複数あっても出現ごとに1件数える
-                            for id in &marker.ids {
-                                ids.push((id.clone(), line_num));
-                            }
-                        }
-                    }
-                }
-            }
-            "attribute_item" => {
-                // 属性は飛ばして前のコメントも見る
-            }
-            _ => break,
-        }
-
-        next = p;
-        prev = p.prev_sibling();
-    }
-
-    (ids, invalid)
+    // REQ-core-083: 読み直したときの構文の誤りは unparsable_file にせず、読めた関数を数える
+    let inner_root = SupportLang::Rust.ast_grep(inner);
+    let inner_lines = LineMap::new(inner, &inner_root.root(), SupportLang::Rust);
+    collect_macro_functions(
+        &inner_root.root(),
+        inner,
+        &inner_lines,
+        file_rel,
+        line_offset,
+        tests,
+    );
 }
 
-/// 関数本体の先頭のコメントから印を集める
-/// 返り値: (正常な印の ID → 印の行 のマップ, 空・不正な印の (行, 行の文字) のリスト)
-fn collect_body_start_markers(node: tree_sitter::Node, source: &str) -> (Vec<(String, usize)>, Vec<(usize, String)>) {
-    let mut ids: Vec<(String, usize)> = Vec::new();
-    let mut invalid = Vec::new();
-    let lines: Vec<&str> = source.lines().collect();
-
-    if let Some(body) = node.child_by_field_name("body") {
-        let mut cursor = body.walk();
-        let mut past_open_brace = false;
-        for child in body.children(&mut cursor) {
-            if child.kind() == "{" {
-                past_open_brace = true;
-                continue;
-            }
-            if child.kind() == "}" {
-                continue;
-            }
-            if !past_open_brace {
-                continue;
-            }
-            if child.kind() == "line_comment" || child.kind() == "block_comment" {
-                let text = &source[child.byte_range()];
-                let comment_start_row = child.start_position().row;
-                let comment_lines_iter: Vec<&str> = text.lines().collect();
-                for (offset, cline) in comment_lines_iter.iter().enumerate() {
-                    let line_num = comment_start_row + offset + 1;
-                    let raw_line = lines.get(comment_start_row + offset).copied().unwrap_or(cline);
-                    for marker in parse_markers_in_line(cline, line_num) {
-                        if marker.ids.is_empty() {
-                            invalid.push((line_num, raw_line.to_string()));
-                        } else {
-                            // A152: 同じ ID の印が複数あっても出現ごとに1件数える
-                            for id in &marker.ids {
-                                ids.push((id.clone(), line_num));
-                            }
-                        }
-                    }
-                }
-            } else {
-                // コメント以外が来たら止める（本体の途中の印は無視）
-                break;
-            }
+/// マクロの中の最上位の関数ごとに数える（入れ子の関数は数えない）
+fn collect_macro_functions(
+    node: &RustNode<'_>,
+    inner: &str,
+    inner_lines: &LineMap<'_>,
+    file_rel: &str,
+    line_offset: usize,
+    tests: &mut Vec<DiscoveredTest>,
+) {
+    for child in node.children() {
+        if child.kind() != "function_item" {
+            collect_macro_functions(&child, inner, inner_lines, file_rel, line_offset, tests);
+            continue;
         }
+        let Some(name_node) = child.field("name") else {
+            continue;
+        };
+        let first_line = child.start_pos().line();
+        // A26: マクロの外と同じ行の規則で結び付ける
+        let (ids, invalid) = inner_lines.markers_before(first_line);
+        tests.push(DiscoveredTest {
+            // A38: 名前は関数の名前
+            name: Some(name_node.text().to_string()),
+            first_line_text: line_text(inner, first_line),
+            file_path: file_rel.to_string(),
+            line: line_offset + first_line + 1,
+            marker_ids: ids
+                .into_iter()
+                .map(|(id, ln)| (id, line_offset + ln))
+                .collect(),
+            invalid_markers: invalid
+                .into_iter()
+                .map(|(ln, raw)| (line_offset + ln, raw))
+                .collect(),
+        });
     }
-
-    (ids, invalid)
 }
 
 /// 単独の "\r" を "\n" に置き換える。TBL-core-010 は単独の "\r" も行の終わりに数えるが、
@@ -566,6 +346,7 @@ pub fn discover_and_check(
     findings: &mut Vec<Finding>,
 ) -> Result<(BTreeMap<String, crate::TestFileTally>, Vec<TestMarker>), crate::StopReason> {
     let test_files = collect_test_files(base, config)?;
+    let queries = TestQueries::new(config)?;
     let mut all_tests: Vec<DiscoveredTest> = Vec::new();
     // REQ-core-153: list の "tests" の元。check は使わない
     let mut markers: Vec<TestMarker> = Vec::new();
@@ -582,17 +363,17 @@ pub fn discover_and_check(
             .extension()
             .and_then(|e| e.to_str())
             .unwrap_or("");
-        // REQ-core-081: 問い合わせのある言語は ".rs" だけ
-        let query = ext == "rs";
+        // REQ-core-081: 拡張子から言語を決め、その言語にルールがあれば問い合わせのある言語
+        let lang = language_of(rel_path).filter(|lang| queries.has_query(*lang));
+        let query = lang.is_some();
 
         tally
             .entry(ext.to_string())
             .or_insert(crate::TestFileTally { files: 0, query })
             .files += 1;
 
-        if query {
-            // 問い合わせのある言語（Rust）
-            match discover_rust_tests(&content, rel_path, config) {
+        if let Some(lang) = lang {
+            match discover_tests(&content, rel_path, lang, &queries, config) {
                 Ok(tests) => {
                     for test in &tests {
                         // 印の検証
@@ -602,7 +383,7 @@ pub fn discover_and_check(
                                 id: id.clone(),
                                 path: rel_path.clone(),
                                 line: *marker_line,
-                                name: Some(test.name.clone()),
+                                name: test.name.clone(),
                             });
                         }
                         // REQ-core-072: テストに結び付く空・不正な印
@@ -673,7 +454,9 @@ pub fn discover_and_check(
     // REQ-core-086: 印の無いテスト
     for test in &all_tests {
         if test.marker_ids.is_empty() {
-            findings.push(Finding::new(FindingKind::TestWithoutId, test.file_path.clone(), Some(test.line), test.name.clone()));
+            // 名前が null なら節の最初の行の文字を detail にする
+            let detail = test.name.clone().unwrap_or_else(|| test.first_line_text.clone());
+            findings.push(Finding::new(FindingKind::TestWithoutId, test.file_path.clone(), Some(test.line), detail));
         }
     }
 
