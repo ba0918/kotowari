@@ -274,6 +274,12 @@ pub enum Cli {
         format: Format,
         config_path: Option<PathBuf>,
     },
+    /// 計画書の形を検査する（REQ-core-190）
+    Plan {
+        format: Format,
+        /// 計画書のファイルのパス。カレントディレクトリからの相対
+        path: PathBuf,
+    },
     /// 使い方を表示する
     Help,
     /// 版を表示する
@@ -281,9 +287,9 @@ pub enum Cli {
 }
 
 /// REQ-core-001: 1つ目の位置引数として受けるコマンド
-const COMMANDS: [&str; 5] = ["check", "list", "mutants", "query", "status"];
+const COMMANDS: [&str; 6] = ["check", "list", "mutants", "plan", "query", "status"];
 
-/// 引数を解析する（REQ-core-002, REQ-core-004, REQ-core-107, REQ-core-149, REQ-core-157）
+/// 引数を解析する（REQ-core-002, REQ-core-004, REQ-core-107, REQ-core-149, REQ-core-157, REQ-core-190）
 pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     // REQ-core-107: --help か --version があればほかの引数を見ない
     for arg in args {
@@ -334,7 +340,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                 _ => tool = Some(args[i].clone()),
             }
         } else if command.is_none() {
-            // REQ-core-001: 1つ目の位置引数は check、list、mutants、query、status のどれか
+            // REQ-core-001: 1つ目の位置引数は check、list、mutants、plan、query、status のどれか
             if COMMANDS.contains(&arg.as_str()) {
                 command = Some(arg.clone());
             } else {
@@ -348,9 +354,16 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
 
     let Some(command) = command else {
         return Err(StopReason::ArgumentError(
-            "expected command: check, list, mutants, query or status".to_string(),
+            "expected command: check, list, mutants, plan, query or status".to_string(),
         ));
     };
+
+    // REQ-core-190: plan は設定を読まないので "--config" を受けない。指す先を見る前に止める
+    if command == "plan" && saw_config {
+        return Err(StopReason::ArgumentError(
+            "unexpected option for plan: --config".to_string(),
+        ));
+    }
 
     // REQ-core-004: --config がディレクトリを指すとき
     if let Some(ref cp) = config_path {
@@ -375,6 +388,19 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
             return Err(StopReason::ArgumentError(format!(
                 "unexpected option for {command}: --tool"
             )));
+        }
+        // REQ-core-190: "plan" の位置引数は計画書のファイルのパスがちょうど1つ
+        if command == "plan" {
+            let [path] = positionals.as_slice() else {
+                return Err(StopReason::ArgumentError(format!(
+                    "plan expects exactly one plan file path, got {}",
+                    positionals.len()
+                )));
+            };
+            return Ok(Cli::Plan {
+                format,
+                path: PathBuf::from(path),
+            });
         }
         // REQ-core-157: "query" の位置引数は ID がちょうど1つ
         if command == "query" {
@@ -732,6 +758,7 @@ pub fn run(args: &[String]) -> u8 {
                 Err(reason) => stop(&reason),
             }
         }
+        Cli::Plan { .. } => unimplemented!("kotowari plan"),
     }
 }
 
