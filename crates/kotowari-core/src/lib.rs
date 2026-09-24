@@ -516,7 +516,6 @@ pub fn join_display_path(dir: &str, name: &str) -> String {
     }
 }
 
-/// 二重引用符の外の部分を返す。
 /// 二重引用符の外のバッククォートの数が奇数か（REQ-core-116。二重引用符の中は A145 で対象外）。
 /// ir モジュールと terms モジュールの両方から使う
 pub fn has_odd_backticks_outside_quotes(text: &str) -> bool {
@@ -582,7 +581,7 @@ pub fn split_outside_quotes(line: &str) -> Vec<&str> {
     parts
 }
 
-/// パスの "." と ".." をファイルシステムに触れずに畳む（`--config` の相対パス表示用）。
+/// パスの "." と ".." をファイルシステムに触れずに畳む（`基準のディレクトリ`からの相対パスの表示用）。
 fn lexically_normalize(path: &Path) -> PathBuf {
     use std::path::Component;
     let mut result = PathBuf::new();
@@ -990,7 +989,8 @@ fn load_config(
     })
 }
 
-/// check と list が共有する読み取りの結果（REQ-core-151: list は check と同じ読み取りを使う）
+/// check、list、query、status が共有する読み取りの結果
+/// （REQ-core-151、REQ-core-156、REQ-core-162: どれも check と同じ読み取りを使う）
 pub struct Loaded {
     pub cfg: config::Config,
     pub docs: Vec<ir::IrDocument>,
@@ -1002,7 +1002,7 @@ pub struct Loaded {
 }
 
 /// 設定と置き場から IR の文書とテストのファイルを読み、検査もする。
-/// check はこの指摘を出し、list は捨てる（REQ-core-151）
+/// check はこの指摘を出し、list と query は捨て、status は数だけを出す（REQ-core-151、REQ-core-156、REQ-core-162）
 pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopReason> {
     let base = find_base(cwd);
     let cfg = load_config(cwd, &base, config_path)?;

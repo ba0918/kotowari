@@ -411,7 +411,6 @@ impl SourceContext {
     }
 }
 
-/// ソースコンテキストを構築する
 /// パスが置き場の下にあるか。置き場が空（"." を正規化したもの）なら基準の直下なので常に真
 pub fn is_under_place(path: &str, place: &str) -> bool {
     place.is_empty()
@@ -420,6 +419,7 @@ pub fn is_under_place(path: &str, place: &str) -> bool {
             && path.as_bytes()[place.len()] == b'/')
 }
 
+/// 判断の記録と ADR の置き場を読み、出典の検査コンテキストを構築する
 pub fn build_context(
     base: &Path,
     config: &crate::config::Config,
