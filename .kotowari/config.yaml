@@ -14,5 +14,9 @@ tests:
   rust:
     attributes: [kani::proof]
     macros: [proptest]
+guides:
+  # 利用者向けの使い方の文書。印の指紋を今の IR と照らす（docs/ir/core/guides.md）
+  files:
+    - "docs/guides/**/*.md"
 mutants:
   equivalents: .kotowari/equivalents.yaml
