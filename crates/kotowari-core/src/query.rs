@@ -122,7 +122,11 @@ fn references_to(
 }
 
 /// その `ID` を持つ`項目`と`シナリオ`の本文を、"path" と "line" から引ける形で集める
-fn bodies_of(docs: &[IrDocument], ir_path: &str, id: &str) -> BTreeMap<(String, usize), Vec<String>> {
+fn bodies_of(
+    docs: &[IrDocument],
+    ir_path: &str,
+    id: &str,
+) -> BTreeMap<(String, usize), Vec<String>> {
     let mut bodies = BTreeMap::new();
     for doc in docs {
         let path = crate::join_display_path(ir_path, &doc.relative_path);

@@ -562,7 +562,11 @@ mod tests {
         let stop = fetch_schema(&url, Duration::from_millis(50)).unwrap_err();
         assert_eq!(stop.kind, "schema_not_found", "{}", stop.detail);
         // サーバが閉じるより前に、時間の上限で止まる
-        assert!(started.elapsed() < Duration::from_millis(500), "{:?}", started.elapsed());
+        assert!(
+            started.elapsed() < Duration::from_millis(500),
+            "{:?}",
+            started.elapsed()
+        );
     }
 
     // @kotowari[TBL-schema-003]

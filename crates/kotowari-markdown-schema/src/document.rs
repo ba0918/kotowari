@@ -922,7 +922,11 @@ mod tests {
     #[test]
     fn end_line_is_the_last_line_when_the_document_does_not_end_with_a_break() {
         let doc = Document::parse("## 節\n\n### A-1: a\n\n本文").unwrap();
-        assert_eq!(doc.end_line(3, 3), 5, "最後の行に区切りが無くてもその行が最後の行");
+        assert_eq!(
+            doc.end_line(3, 3),
+            5,
+            "最後の行に区切りが無くてもその行が最後の行"
+        );
         assert_eq!(doc.read_by_line().end_line(3, 3), 5, "行の読み方でも同じ");
     }
 

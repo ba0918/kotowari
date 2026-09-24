@@ -1,7 +1,7 @@
 //! "kotowari list" の項目の組み立て（REQ-core-151、REQ-core-153、REQ-core-154、TBL-core-026）
 
 use crate::ir::{IrDocument, Item};
-use crate::tests_discovery::{collect_scenarios, TestMarker};
+use crate::tests_discovery::{TestMarker, collect_scenarios};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
@@ -231,7 +231,10 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
                     tests,
                 }),
                 Item::DecisionTable {
-                    name, line, sources, ..
+                    name,
+                    line,
+                    sources,
+                    ..
                 } => ListItem::WithExamples(ExampleItem {
                     id,
                     kind: "table",
@@ -243,7 +246,10 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
                     tests,
                 }),
                 Item::Property {
-                    name, line, sources, ..
+                    name,
+                    line,
+                    sources,
+                    ..
                 } => ListItem::WithExamples(ExampleItem {
                     id,
                     kind: "property",

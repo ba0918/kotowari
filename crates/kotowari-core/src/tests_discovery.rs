@@ -13,6 +13,12 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use walkdir::WalkDir;
 
+/// 印の出現ごとの (ID, 印のある行)。A152: 同じ ID の印が複数あっても出現ごとに数える
+pub type MarkerIds = Vec<(String, usize)>;
+
+/// 中身が空または閉じ括弧のない印の (印のある行, 行の文字)
+pub type InvalidMarkers = Vec<(usize, String)>;
+
 /// 発見されたテスト
 #[derive(Debug, Clone)]
 pub struct DiscoveredTest {
@@ -23,10 +29,10 @@ pub struct DiscoveredTest {
     pub file_path: String,
     /// `テスト`の節の最初の行
     pub line: usize,
-    /// 印の出現ごとの (ID, 印のある行)。A152: 同じ ID の印が複数あっても出現ごとに数える
-    pub marker_ids: Vec<(String, usize)>,
+    /// テストに結び付く印
+    pub marker_ids: MarkerIds,
     /// テストに結び付く位置にある、中身が空または閉じ括弧のない印
-    pub invalid_markers: Vec<(usize, String)>,
+    pub invalid_markers: InvalidMarkers,
 }
 
 /// `印`の1つの出現。`ID` ごとに1件で、同じ行の同じ `ID` の2つ目も1件（TBL-core-026 の "tests"）
@@ -67,11 +73,17 @@ pub fn parse_markers_in_line(line: &str, line_num: usize) -> Vec<Marker> {
                 .map(|s| s.trim().to_string())
                 .filter(|s| !s.is_empty())
                 .collect();
-            markers.push(Marker { ids, line: line_num });
+            markers.push(Marker {
+                ids,
+                line: line_num,
+            });
             search_start = close_pos;
         } else {
             // 閉じ括弧がない
-            markers.push(Marker { ids: vec![], line: line_num });
+            markers.push(Marker {
+                ids: vec![],
+                line: line_num,
+            });
             break;
         }
     }
@@ -87,14 +99,13 @@ pub fn collect_test_files(
     let mut builder = GlobSetBuilder::new();
     for pattern in &config.tests.files {
         // glob の構文は Config::parse で検証済み
-        let g = Glob::new(pattern).map_err(|e| {
-            crate::StopReason::ConfigError(format!("invalid glob: {pattern}: {e}"))
-        })?;
+        let g = Glob::new(pattern)
+            .map_err(|e| crate::StopReason::ConfigError(format!("invalid glob: {pattern}: {e}")))?;
         builder.add(g);
     }
-    let globset = builder.build().map_err(|e| {
-        crate::StopReason::ConfigError(format!("glob build error: {e}"))
-    })?;
+    let globset = builder
+        .build()
+        .map_err(|e| crate::StopReason::ConfigError(format!("glob build error: {e}")))?;
 
     let mut files = Vec::new();
 
@@ -111,10 +122,10 @@ pub fn collect_test_files(
                     // filter_entry ではディレクトリかどうかで判定
                     // WalkDir は follow_links(false) なのでシンボリックリンクは展開されない
                     // ここで辿って判定する
-                    if let Ok(meta) = std::fs::metadata(e.path()) {
-                        if meta.is_dir() {
-                            return false; // ディレクトリリンクは辿らない
-                        }
+                    if let Ok(meta) = std::fs::metadata(e.path())
+                        && meta.is_dir()
+                    {
+                        return false; // ディレクトリリンクは辿らない
                     }
                     return true; // ファイルリンクは含める
                 }
@@ -128,10 +139,7 @@ pub fn collect_test_files(
     {
         // REQ-core-018（A96）: 走査でディレクトリが読めなければ停止する
         let entry = entry.map_err(|e| {
-            let where_ = e.path()
-                .map(|p| p.strip_prefix(base).unwrap_or(p))
-                .map(|p| p.to_string_lossy().replace('\\', "/"))
-                .unwrap_or_default();
+            let where_ = e.path().map(|p| relative_to(base, p)).unwrap_or_default();
             crate::StopReason::UnreadableFile(format!("{where_}: {e}"))
         })?;
         // ファイルまたはファイルのシンボリックリンク
@@ -140,22 +148,14 @@ pub fn collect_test_files(
             std::fs::metadata(entry.path())
                 .map(|m| m.is_file())
                 .map_err(|e| {
-                    let rel = entry.path().strip_prefix(base).unwrap_or(entry.path())
-                        .to_string_lossy().replace('\\', "/");
+                    let rel = relative_to(base, entry.path());
                     crate::StopReason::UnreadableFile(format!("{rel}: {e}"))
                 })?
         } else {
             entry.file_type().is_file()
         };
         if is_file {
-            let rel = entry
-                .path()
-                .strip_prefix(base)
-                .unwrap_or(entry.path())
-                .to_string_lossy()
-                .to_string();
-            // Windows パス区切りを / に
-            let rel = rel.replace('\\', "/");
+            let rel = relative_to(base, entry.path());
             if globset.is_match(&rel) {
                 files.push((rel, entry.path().to_string_lossy().to_string()));
             }
@@ -164,6 +164,14 @@ pub fn collect_test_files(
 
     files.sort();
     Ok(files)
+}
+
+/// 基準のディレクトリからの相対パスを、Windows の区切りも "/" にして作る。基準の外のパスは相対にしない
+fn relative_to(base: &Path, path: &Path) -> String {
+    path.strip_prefix(base)
+        .unwrap_or(path)
+        .to_string_lossy()
+        .replace('\\', "/")
 }
 
 /// `問い合わせのある言語`のファイルのテストを発見し、`直前のコメントの塊`の印を結び付ける。
@@ -399,62 +407,121 @@ pub fn discover_and_check(
         if let Some(lang) = lang {
             match discover_tests(&content, rel_path, lang, &queries, config) {
                 Ok(tests) => {
-                    for test in &tests {
-                        // 印の検証
-                        check_test_markers(test, rel_path, known_ids, findings);
-                        for (id, marker_line) in &test.marker_ids {
-                            markers.push(TestMarker {
-                                id: id.clone(),
-                                path: rel_path.clone(),
-                                line: *marker_line,
-                                name: test.name.clone(),
-                            });
-                        }
-                        // REQ-core-072: テストに結び付く空・不正な印
-                        for (line_num, raw) in &test.invalid_markers {
-                            findings.push(Finding::new(FindingKind::InvalidMarker, rel_path.clone(), Some(*line_num), raw.clone()));
-                        }
-                    }
+                    record_test_markers(&tests, rel_path, known_ids, &mut markers, findings);
                     all_tests.extend(tests);
                 }
                 Err(_) => {
-                    findings.push(Finding::new(FindingKind::UnparsableFile, rel_path.clone(), None, rel_path.clone()));
+                    findings.push(Finding::new(
+                        FindingKind::UnparsableFile,
+                        rel_path.clone(),
+                        None,
+                        rel_path.clone(),
+                    ));
                 }
             }
         } else {
-            // 問い合わせの無い言語: 印を拾い、検査もする（REQ-core-076, REQ-core-087, REQ-core-072, REQ-core-054）
-            for (idx, line) in content.lines().enumerate() {
-                let line_num = idx + 1;
-                for marker in parse_markers_in_line(line, line_num) {
-                    if marker.ids.is_empty() {
-                        // REQ-core-072: 空の印、または閉じ括弧のない印
-                        findings.push(Finding::new(FindingKind::InvalidMarker, rel_path.clone(), Some(line_num), line.to_string()));
-                    } else {
-                        for id in &marker.ids {
-                            markers.push(TestMarker {
-                                id: id.clone(),
-                                path: rel_path.clone(),
-                                line: line_num,
-                                name: None,
-                            });
-                            // REQ-core-054: 存在しない ID への参照
-                            if !known_ids.contains(id) {
-                                findings.push(Finding::new(FindingKind::UnresolvedReference, rel_path.clone(), Some(line_num), id.clone()));
-                            }
-                        }
+            record_line_markers(&content, rel_path, known_ids, &mut markers, findings);
+        }
+    }
+
+    check_missing_tests(docs, ir_path, &markers, &all_tests, findings);
+
+    Ok((tally, markers))
+}
+
+/// `問い合わせのある言語`のファイルで見つけた`テスト`の印を積み、印を検査する
+fn record_test_markers(
+    tests: &[DiscoveredTest],
+    rel_path: &str,
+    known_ids: &BTreeSet<String>,
+    markers: &mut Vec<TestMarker>,
+    findings: &mut Vec<Finding>,
+) {
+    for test in tests {
+        // 印の検証
+        check_test_markers(test, rel_path, known_ids, findings);
+        for (id, marker_line) in &test.marker_ids {
+            markers.push(TestMarker {
+                id: id.clone(),
+                path: rel_path.to_string(),
+                line: *marker_line,
+                name: test.name.clone(),
+            });
+        }
+        // REQ-core-072: テストに結び付く空・不正な印
+        for (line_num, raw) in &test.invalid_markers {
+            findings.push(Finding::new(
+                FindingKind::InvalidMarker,
+                rel_path.to_string(),
+                Some(*line_num),
+                raw.clone(),
+            ));
+        }
+    }
+}
+
+/// 問い合わせの無い言語: 印を行ごとに拾い、検査もする（REQ-core-076, REQ-core-087, REQ-core-072, REQ-core-054）
+fn record_line_markers(
+    content: &str,
+    rel_path: &str,
+    known_ids: &BTreeSet<String>,
+    markers: &mut Vec<TestMarker>,
+    findings: &mut Vec<Finding>,
+) {
+    for (idx, line) in content.lines().enumerate() {
+        let line_num = idx + 1;
+        for marker in parse_markers_in_line(line, line_num) {
+            if marker.ids.is_empty() {
+                // REQ-core-072: 空の印、または閉じ括弧のない印
+                findings.push(Finding::new(
+                    FindingKind::InvalidMarker,
+                    rel_path.to_string(),
+                    Some(line_num),
+                    line.to_string(),
+                ));
+            } else {
+                for id in &marker.ids {
+                    markers.push(TestMarker {
+                        id: id.clone(),
+                        path: rel_path.to_string(),
+                        line: line_num,
+                        name: None,
+                    });
+                    // REQ-core-054: 存在しない ID への参照
+                    if !known_ids.contains(id) {
+                        findings.push(Finding::new(
+                            FindingKind::UnresolvedReference,
+                            rel_path.to_string(),
+                            Some(line_num),
+                            id.clone(),
+                        ));
                     }
                 }
             }
         }
     }
+}
 
+/// 集めた印から、テストのない具体例・テストのない要求・印の無いテストを検査する
+fn check_missing_tests(
+    docs: &[IrDocument],
+    ir_path: &str,
+    markers: &[TestMarker],
+    all_tests: &[DiscoveredTest],
+    findings: &mut Vec<Finding>,
+) {
     let scenarios = collect_scenarios(docs, ir_path);
-    let coverage = TestCoverage::new(&markers, &scenarios);
+    let coverage = TestCoverage::new(markers, &scenarios);
 
     // REQ-core-137: テストのない具体例
     for (id, scenario) in &scenarios {
         if scenario.needs_test && !coverage.is_marked(id) {
-            findings.push(Finding::new(FindingKind::ScenarioWithoutTest, scenario.path.clone(), Some(scenario.line), id.clone()));
+            findings.push(Finding::new(
+                FindingKind::ScenarioWithoutTest,
+                scenario.path.clone(),
+                Some(scenario.line),
+                id.clone(),
+            ));
         }
     }
 
@@ -462,29 +529,41 @@ pub fn discover_and_check(
     for doc in docs {
         for item in &doc.items {
             if let Item::Requirement {
-                id, verification, ..
+                id,
+                verification: Some(v),
+                ..
             } = item
+                && v != "review"
+                && is_valid_id(id)
+                && !coverage.has_test(id)
             {
-                if let Some(v) = verification {
-                    if v != "review" && is_valid_id(id) && !coverage.has_test(id) {
-                        let path = crate::join_display_path(ir_path, &doc.relative_path);
-                        findings.push(Finding::new(FindingKind::RequirementWithoutTest, path, Some(item.item_line()), id.clone()));
-                    }
-                }
+                let path = crate::join_display_path(ir_path, &doc.relative_path);
+                findings.push(Finding::new(
+                    FindingKind::RequirementWithoutTest,
+                    path,
+                    Some(item.item_line()),
+                    id.clone(),
+                ));
             }
         }
     }
 
     // REQ-core-086: 印の無いテスト
-    for test in &all_tests {
+    for test in all_tests {
         if test.marker_ids.is_empty() {
             // 名前が null なら節の最初の行の文字を detail にする
-            let detail = test.name.clone().unwrap_or_else(|| test.first_line_text.clone());
-            findings.push(Finding::new(FindingKind::TestWithoutId, test.file_path.clone(), Some(test.line), detail));
+            let detail = test
+                .name
+                .clone()
+                .unwrap_or_else(|| test.first_line_text.clone());
+            findings.push(Finding::new(
+                FindingKind::TestWithoutId,
+                test.file_path.clone(),
+                Some(test.line),
+                detail,
+            ));
         }
     }
-
-    Ok((tally, markers))
 }
 
 /// テストの印を検証する
@@ -497,11 +576,15 @@ fn check_test_markers(
     // REQ-core-054, REQ-core-118: unresolved_reference の line は印のある行
     for (id, marker_line) in &test.marker_ids {
         if !id.is_empty() && !known_ids.contains(id) {
-            findings.push(Finding::new(FindingKind::UnresolvedReference, file_path.to_string(), Some(*marker_line), id.clone()));
+            findings.push(Finding::new(
+                FindingKind::UnresolvedReference,
+                file_path.to_string(),
+                Some(*marker_line),
+                id.clone(),
+            ));
         }
     }
 }
-
 
 /// REQ-core-085: `ID` に結び付く`テスト`があるかの判定。
 /// check の requirement_without_test と status の with_tests はこの同じ判定を使う
@@ -520,7 +603,10 @@ impl TestCoverage {
             .filter_map(|id| scenarios.get(id))
             .flat_map(|scenario| scenario.about.iter().cloned())
             .collect();
-        TestCoverage { marked, covered_by_scenario }
+        TestCoverage {
+            marked,
+            covered_by_scenario,
+        }
     }
 
     /// その `ID` を`印`に含む`テスト`があるか
@@ -556,8 +642,13 @@ pub fn collect_scenarios(docs: &[IrDocument], ir_path: &str) -> BTreeMap<String,
     let mut verifications: BTreeMap<&str, Option<&str>> = BTreeMap::new();
     for doc in docs {
         for item in &doc.items {
-            if let Item::Requirement { id, verification, .. } = item {
-                verifications.entry(id).or_insert_with(|| verification.as_deref());
+            if let Item::Requirement {
+                id, verification, ..
+            } = item
+            {
+                verifications
+                    .entry(id)
+                    .or_insert_with(|| verification.as_deref());
             }
         }
     }
@@ -565,19 +656,28 @@ pub fn collect_scenarios(docs: &[IrDocument], ir_path: &str) -> BTreeMap<String,
     let mut scenarios: BTreeMap<String, ScenarioCoverage> = BTreeMap::new();
     for doc in docs {
         for item in &doc.items {
-            if let Item::Scenario { id: Some(id), line, tag_line, about, .. } = item {
+            if let Item::Scenario {
+                id: Some(id),
+                line,
+                tag_line,
+                about,
+                ..
+            } = item
+            {
                 // 要求として解決できない "@about"、"- verification:" の行の無い要求、
                 // 検証の値が4つ以外の要求、検証が "review" の要求は数えない
                 let needs_test = about.iter().any(|a| {
                     matches!(verifications.get(a.as_str()), Some(Some(v))
                         if crate::ir::VERIFICATION_VALUES.contains(v) && *v != "review")
                 });
-                scenarios.entry(id.clone()).or_insert_with(|| ScenarioCoverage {
-                    about: about.clone(),
-                    path: crate::join_display_path(ir_path, &doc.relative_path),
-                    line: tag_line.unwrap_or(*line),
-                    needs_test,
-                });
+                scenarios
+                    .entry(id.clone())
+                    .or_insert_with(|| ScenarioCoverage {
+                        about: about.clone(),
+                        path: crate::join_display_path(ir_path, &doc.relative_path),
+                        line: tag_line.unwrap_or(*line),
+                        needs_test,
+                    });
             }
         }
     }

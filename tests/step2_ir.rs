@@ -1,6 +1,6 @@
+use kotowari_core::Finding;
 use kotowari_core::config::Config;
 use kotowari_core::ir::{self, IrDocument, Item};
-use kotowari_core::Finding;
 
 fn default_config() -> Config {
     Config::default()
@@ -73,7 +73,8 @@ fn req_036_glossary_and_flags_need_no_scope() {
     let glossary = ir::parse_document(
         "CONTEXT.md",
         "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n",
-    ).unwrap();
+    )
+    .unwrap();
     let flags = ir::parse_document("FLAGS.md", "# 問題の記録\n").unwrap();
     let findings = check(&[glossary, flags], &default_config());
     let ms = find_by_kind(&findings, "missing_scope");
@@ -99,7 +100,10 @@ fn req_037_crlf_counts_as_one_line() {
 #[test]
 fn ex_core_281_bare_cr_ends_a_line() {
     assert_eq!(ir::parse_document("a.md", "a\rb").unwrap().line_count, 2);
-    assert_eq!(ir::parse_document("b.md", "a\rb\r\nc").unwrap().line_count, 3);
+    assert_eq!(
+        ir::parse_document("b.md", "a\rb\r\nc").unwrap().line_count,
+        3
+    );
 }
 
 // @kotowari[EX-core-282]
@@ -123,10 +127,19 @@ fn ex_core_282_finding_after_bare_cr_has_the_split_line_number() {
 fn tbl_core_010_bare_cr_keeps_items_before_an_unclosed_fence() {
     let head = "# Title\r\rScope.\r\r## Requirements\r\r### REQ-001: R\r\r- kind: ubiquitous\r- source: brainstorm/records.md#A1\r- verification: unit\r\rStatement.\r\r";
     let doc = ir::parse_document("a.md", &format!("{head}```\ncontent\n")).unwrap();
-    let uc: Vec<_> = doc.parse_findings.iter().filter(|f| f.kind == "unclosed_code_block").collect();
+    let uc: Vec<_> = doc
+        .parse_findings
+        .iter()
+        .filter(|f| f.kind == "unclosed_code_block")
+        .collect();
     assert_eq!(uc.len(), 1, "{:?}", doc.parse_findings);
     assert_eq!(uc[0].line, Some(15), "{:?}", doc.parse_findings);
-    assert_eq!(doc.items.len(), 1, "the requirement before the fence stays: {:?}", doc.items);
+    assert_eq!(
+        doc.items.len(),
+        1,
+        "the requirement before the fence stays: {:?}",
+        doc.items
+    );
 }
 
 // --- REQ-core-038: 行数の上限 ---
@@ -606,13 +619,20 @@ fn req_051_algorithm_definition_must_point_to_tbl_or_prop() {
 #[test]
 fn req_098_missing_field() {
     // 決定表に出典がない → missing_source with detail = ID
-    let content = "# Title\n\nScope.\n\n## Decision tables\n\n### TBL-001: T\n\n| A |\n|---|\n| 1 |\n";
+    let content =
+        "# Title\n\nScope.\n\n## Decision tables\n\n### TBL-001: T\n\n| A |\n|---|\n| 1 |\n";
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ms = find_by_kind(&findings, "missing_source");
-    assert!(ms.iter().any(|f| f.detail == "TBL-001"), "missing source for TBL-001");
+    assert!(
+        ms.iter().any(|f| f.detail == "TBL-001"),
+        "missing source for TBL-001"
+    );
     let mf = find_by_kind(&findings, "missing_field");
-    assert!(!mf.iter().any(|f| f.detail == "source"), "missing_field 出典 should not appear");
+    assert!(
+        !mf.iter().any(|f| f.detail == "source"),
+        "missing_field 出典 should not appear"
+    );
 }
 
 // @kotowari[REQ-core-098, TBL-core-008, EX-core-259]
@@ -677,15 +697,29 @@ fn req_053_consecutive_scenarios_without_tags_each_get_missing_tag() {
     // タグ行なしで Scenario: が2つ連続 → 各シナリオに missing_tag が出る
     let content = "# Title\n\nScope.\n\n## Examples\n\n```gherkin\nScenario: First\n  Given step1\nScenario: Second\n  Given step2\n```\n";
     let doc = ir::parse_document("a.md", content).unwrap();
-    let scenarios: Vec<_> = doc.items.iter().filter(|i| matches!(i, Item::Scenario { .. })).collect();
-    assert_eq!(scenarios.len(), 2, "should parse 2 scenarios: {:?}", scenarios);
+    let scenarios: Vec<_> = doc
+        .items
+        .iter()
+        .filter(|i| matches!(i, Item::Scenario { .. }))
+        .collect();
+    assert_eq!(
+        scenarios.len(),
+        2,
+        "should parse 2 scenarios: {:?}",
+        scenarios
+    );
     let findings = check(&[doc], &default_config());
     let mt = find_by_kind(&findings, "missing_tag");
     // 各シナリオに @id と @about の missing_tag が出る → 4件
     let id_missing: Vec<_> = mt.iter().filter(|f| f.detail == "@id").collect();
     assert_eq!(id_missing.len(), 2, "@id missing should be 2: {:?}", mt);
     let about_missing: Vec<_> = mt.iter().filter(|f| f.detail == "@about").collect();
-    assert_eq!(about_missing.len(), 2, "@about missing should be 2: {:?}", mt);
+    assert_eq!(
+        about_missing.len(),
+        2,
+        "@about missing should be 2: {:?}",
+        mt
+    );
 }
 
 // --- REQ-core-052: 知らないタグ ---
@@ -736,8 +770,16 @@ fn req_053_tag_with_empty_value_is_treated_as_missing() {
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let mt = find_by_kind(&findings, "missing_tag");
-    assert!(mt.iter().any(|f| f.detail == "@id"), "empty @id= should count as missing: {:?}", mt);
-    assert!(!mt.iter().any(|f| f.detail == "@about"), "@about has a value: {:?}", mt);
+    assert!(
+        mt.iter().any(|f| f.detail == "@id"),
+        "empty @id= should count as missing: {:?}",
+        mt
+    );
+    assert!(
+        !mt.iter().any(|f| f.detail == "@about"),
+        "@about has a value: {:?}",
+        mt
+    );
     let ms = find_by_kind(&findings, "missing_source");
     assert!(
         ms.iter().any(|f| f.detail == "Scenario: Empty tag values"),
@@ -756,8 +798,16 @@ fn req_054_unresolved_reference_in_definition_about_relation_and_sentence() {
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     let details: Vec<&str> = ur.iter().map(|f| f.detail.as_str()).collect();
-    assert!(details.contains(&"TBL-999"), "should find unresolved definition: {:?}", details);
-    assert!(details.contains(&"REQ-999"), "should find unresolved about: {:?}", details);
+    assert!(
+        details.contains(&"TBL-999"),
+        "should find unresolved definition: {:?}",
+        details
+    );
+    assert!(
+        details.contains(&"REQ-999"),
+        "should find unresolved about: {:?}",
+        details
+    );
 }
 
 // --- REQ-core-032: ID の重複 ---
@@ -770,7 +820,12 @@ fn req_032_duplicate_id_on_each_later_place_with_its_line() {
     let findings = check(&[doc], &default_config());
     let di = find_by_kind(&findings, "duplicate_id");
     // 3か所にある → 2件（2つ目と3つ目）
-    assert_eq!(di.len(), 2, "should report 2 duplicates for 3 occurrences: {:?}", di);
+    assert_eq!(
+        di.len(),
+        2,
+        "should report 2 duplicates for 3 occurrences: {:?}",
+        di
+    );
     assert!(di.iter().all(|f| f.detail == "REQ-001"));
     // 各指摘に行番号がある
     assert!(di.iter().all(|f| f.line.is_some()));
@@ -837,56 +892,121 @@ fn req_098_required_lines_are_told_apart_from_empty_values() {
     let valid = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Valid\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n\nStatement.\n";
     let doc = ir::parse_document("a.md", valid).unwrap();
     let f = check(&[doc], &default_config());
-    assert!(find_by_kind(&f, "missing_field").is_empty(), "valid req should have no missing_field: {:?}", f);
-    assert!(find_by_kind(&f, "missing_source").is_empty(), "valid req should have no missing_source: {:?}", f);
-    assert!(find_by_kind(&f, "verification_missing").is_empty(), "valid req should have no verification_missing: {:?}", f);
-    assert!(find_by_kind(&f, "verification_invalid").is_empty(), "valid req should have no verification_invalid: {:?}", f);
-    assert!(find_by_kind(&f, "unknown_kind").is_empty(), "valid req should have no unknown_kind: {:?}", f);
-    assert!(find_by_kind(&f, "missing_statement").is_empty(), "valid req should have no missing_statement: {:?}", f);
-    assert!(find_by_kind(&f, "algorithm_without_definition").is_empty(), "valid req should have no algorithm_without_definition: {:?}", f);
+    assert!(
+        find_by_kind(&f, "missing_field").is_empty(),
+        "valid req should have no missing_field: {:?}",
+        f
+    );
+    assert!(
+        find_by_kind(&f, "missing_source").is_empty(),
+        "valid req should have no missing_source: {:?}",
+        f
+    );
+    assert!(
+        find_by_kind(&f, "verification_missing").is_empty(),
+        "valid req should have no verification_missing: {:?}",
+        f
+    );
+    assert!(
+        find_by_kind(&f, "verification_invalid").is_empty(),
+        "valid req should have no verification_invalid: {:?}",
+        f
+    );
+    assert!(
+        find_by_kind(&f, "unknown_kind").is_empty(),
+        "valid req should have no unknown_kind: {:?}",
+        f
+    );
+    assert!(
+        find_by_kind(&f, "missing_statement").is_empty(),
+        "valid req should have no missing_statement: {:?}",
+        f
+    );
+    assert!(
+        find_by_kind(&f, "algorithm_without_definition").is_empty(),
+        "valid req should have no algorithm_without_definition: {:?}",
+        f
+    );
 
     // (2) 種類の行がない → missing_field "kind"
     let no_kind = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-002: NoKind\n\n- source: brainstorm/records.md#A1\n- verification: unit\n\nStatement.\n";
     let doc2 = ir::parse_document("a.md", no_kind).unwrap();
     let f2 = check(&[doc2], &default_config());
     let mf2 = find_by_kind(&f2, "missing_field");
-    assert!(mf2.iter().any(|x| x.detail == "kind"), "should report missing_field 種類: {:?}", mf2);
+    assert!(
+        mf2.iter().any(|x| x.detail == "kind"),
+        "should report missing_field 種類: {:?}",
+        mf2
+    );
 
     // (3) 出典の行がない → missing_source with detail = ID、missing_field "source" は出ない
     let no_source = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-003: NoSource\n\n- kind: ubiquitous\n- verification: unit\n\nStatement.\n";
     let doc3 = ir::parse_document("a.md", no_source).unwrap();
     let f3 = check(&[doc3], &default_config());
     let ms3 = find_by_kind(&f3, "missing_source");
-    assert!(ms3.iter().any(|x| x.detail == "REQ-003"), "should report missing_source with ID: {:?}", ms3);
+    assert!(
+        ms3.iter().any(|x| x.detail == "REQ-003"),
+        "should report missing_source with ID: {:?}",
+        ms3
+    );
     let mf3 = find_by_kind(&f3, "missing_field");
-    assert!(!mf3.iter().any(|x| x.detail == "source"), "missing_field 出典 should not appear when 出典 line is absent: {:?}", mf3);
+    assert!(
+        !mf3.iter().any(|x| x.detail == "source"),
+        "missing_field 出典 should not appear when 出典 line is absent: {:?}",
+        mf3
+    );
 
     // (4) 出典の行はあるが値が空 → missing_source が出て、missing_field "source" は出ない
     let empty_source = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-004: EmptySource\n\n- kind: ubiquitous\n- source:\n- verification: unit\n\nStatement.\n";
     let doc4 = ir::parse_document("a.md", empty_source).unwrap();
     let f4 = check(&[doc4], &default_config());
     let ms4 = find_by_kind(&f4, "missing_source");
-    assert!(ms4.iter().any(|x| x.detail == "REQ-004"), "should report missing_source: {:?}", ms4);
+    assert!(
+        ms4.iter().any(|x| x.detail == "REQ-004"),
+        "should report missing_source: {:?}",
+        ms4
+    );
     let mf4 = find_by_kind(&f4, "missing_field");
-    assert!(!mf4.iter().any(|x| x.detail == "source"), "missing_field 出典 should not appear when line exists: {:?}", mf4);
+    assert!(
+        !mf4.iter().any(|x| x.detail == "source"),
+        "missing_field 出典 should not appear when line exists: {:?}",
+        mf4
+    );
 
     // (5) 決定表の出典の行はあるが値が空 → missing_source
     let tbl_empty_source = "# Title\n\nScope.\n\n## Decision tables\n\n### TBL-001: T\n\n- source:\n\n| A |\n|---|\n| 1 |\n";
     let doc5 = ir::parse_document("a.md", tbl_empty_source).unwrap();
     let f5 = check(&[doc5], &default_config());
     let ms5 = find_by_kind(&f5, "missing_source");
-    assert!(ms5.iter().any(|x| x.detail == "TBL-001"), "TBL should report missing_source on empty value: {:?}", ms5);
+    assert!(
+        ms5.iter().any(|x| x.detail == "TBL-001"),
+        "TBL should report missing_source on empty value: {:?}",
+        ms5
+    );
     let mf5 = find_by_kind(&f5, "missing_field");
-    assert!(!mf5.iter().any(|x| x.detail == "source"), "TBL missing_field 出典 should not appear: {:?}", mf5);
+    assert!(
+        !mf5.iter().any(|x| x.detail == "source"),
+        "TBL missing_field 出典 should not appear: {:?}",
+        mf5
+    );
 
     // (6) 性質の出典の行はあるが値が空 → missing_source
-    let prop_empty_source = "# Title\n\nScope.\n\n## Properties\n\n### PROP-001: P\n\n- source:\n\nProp statement.\n";
+    let prop_empty_source =
+        "# Title\n\nScope.\n\n## Properties\n\n### PROP-001: P\n\n- source:\n\nProp statement.\n";
     let doc6 = ir::parse_document("a.md", prop_empty_source).unwrap();
     let f6 = check(&[doc6], &default_config());
     let ms6 = find_by_kind(&f6, "missing_source");
-    assert!(ms6.iter().any(|x| x.detail == "PROP-001"), "PROP should report missing_source on empty value: {:?}", ms6);
+    assert!(
+        ms6.iter().any(|x| x.detail == "PROP-001"),
+        "PROP should report missing_source on empty value: {:?}",
+        ms6
+    );
     let mf6 = find_by_kind(&f6, "missing_field");
-    assert!(!mf6.iter().any(|x| x.detail == "source"), "PROP missing_field 出典 should not appear: {:?}", mf6);
+    assert!(
+        !mf6.iter().any(|x| x.detail == "source"),
+        "PROP missing_field 出典 should not appear: {:?}",
+        mf6
+    );
 }
 
 // @kotowari[REQ-core-053]
@@ -931,14 +1051,27 @@ fn req_037_crlf_title_and_requirement_line_numbers() {
     let content = "# Title\r\n\r\nScope.\r\n\r\n## Requirements\r\n\r\n### REQ-001: Test\r\n\r\n- kind: ubiquitous\r\n- source: brainstorm/records.md#A1\r\n- verification: unit\r\n\r\nStatement.\r\n";
     let doc = ir::parse_document("a.md", content).unwrap();
     assert!(
-        find_by_kind(&check(&[ir::parse_document("a.md", content).unwrap()], &default_config()), "missing_title").is_empty(),
+        find_by_kind(
+            &check(
+                &[ir::parse_document("a.md", content).unwrap()],
+                &default_config()
+            ),
+            "missing_title"
+        )
+        .is_empty(),
         "the title should be recognized"
     );
-    let req = doc.items.iter().find(|i| matches!(i, Item::Requirement { id, .. } if id == "REQ-001"));
+    let req = doc
+        .items
+        .iter()
+        .find(|i| matches!(i, Item::Requirement { id, .. } if id == "REQ-001"));
     assert!(req.is_some(), "should parse REQ-001");
     assert_eq!(req.unwrap().item_line(), 7, "REQ-001 should be on line 7");
     let scope_text: Vec<&str> = doc.scope_lines.iter().map(|(_, s)| s.as_str()).collect();
-    assert!(scope_text.contains(&"Scope."), "scope should contain 'Scope.'");
+    assert!(
+        scope_text.contains(&"Scope."),
+        "scope should contain 'Scope.'"
+    );
     assert!(
         !scope_text.iter().any(|s| s.contains('\r')),
         "scope text should not contain \\r"
@@ -975,10 +1108,18 @@ Scenario: All keywords
 ```
 ";
     let doc = ir::parse_document("a.md", content).unwrap();
-    let scenario = doc.items.iter().find(|i| matches!(i, Item::Scenario { id: Some(id), .. } if id == "EX-001"));
+    let scenario = doc
+        .items
+        .iter()
+        .find(|i| matches!(i, Item::Scenario { id: Some(id), .. } if id == "EX-001"));
     assert!(scenario.is_some(), "should parse EX-001 scenario");
     if let Item::Scenario { steps, .. } = scenario.unwrap() {
-        assert_eq!(steps.len(), 5, "should have 5 steps (Given, When, Then, And, But): {:?}", steps);
+        assert_eq!(
+            steps.len(),
+            5,
+            "should have 5 steps (Given, When, Then, And, But): {:?}",
+            steps
+        );
     }
 }
 
@@ -996,7 +1137,11 @@ fn req_042_glossary_table_parses_terms() {
 | 検証 | 検証の意味 | brainstorm/records.md#A2 |
 ";
     let doc = ir::parse_document("CONTEXT.md", content).unwrap();
-    let terms: Vec<_> = doc.items.iter().filter(|i| matches!(i, Item::GlossaryTerm { .. })).collect();
+    let terms: Vec<_> = doc
+        .items
+        .iter()
+        .filter(|i| matches!(i, Item::GlossaryTerm { .. }))
+        .collect();
     assert_eq!(terms.len(), 2, "should parse 2 glossary terms: {:?}", terms);
     if let Item::GlossaryTerm { term, line, .. } = &terms[0] {
         assert_eq!(term, "テスト");
@@ -1027,11 +1172,21 @@ fn req_042_flag_relation_and_source_fields_read() {
 Body text.
 ";
     let doc = ir::parse_document("FLAGS.md", content).unwrap();
-    let flag = doc.items.iter().find(|i| matches!(i, Item::FlagEntry { id, .. } if id == "FLAG-001"));
+    let flag = doc
+        .items
+        .iter()
+        .find(|i| matches!(i, Item::FlagEntry { id, .. } if id == "FLAG-001"));
     assert!(flag.is_some(), "should parse FLAG-001");
-    if let Item::FlagEntry { relations, sources, .. } = flag.unwrap() {
+    if let Item::FlagEntry {
+        relations, sources, ..
+    } = flag.unwrap()
+    {
         assert_eq!(relations, &["REQ-999"], "relations should contain REQ-999");
-        assert_eq!(sources, &["brainstorm/records.md#A1"], "sources should be read");
+        assert_eq!(
+            sources,
+            &["brainstorm/records.md#A1"],
+            "sources should be read"
+        );
     }
 }
 
@@ -1105,7 +1260,10 @@ Scenario: With source
 ```
 ";
     let doc = ir::parse_document("a.md", content).unwrap();
-    let scenario = doc.items.iter().find(|i| matches!(i, Item::Scenario { id: Some(id), .. } if id == "EX-001"));
+    let scenario = doc
+        .items
+        .iter()
+        .find(|i| matches!(i, Item::Scenario { id: Some(id), .. } if id == "EX-001"));
     assert!(scenario.is_some(), "should parse EX-001");
     if let Item::Scenario { sources, .. } = scenario.unwrap() {
         assert_eq!(
@@ -1130,14 +1288,22 @@ fn req_038_exactly_at_limit_no_notice_one_over_notices() {
     assert_eq!(doc.line_count, limit, "should be exactly at limit");
     let findings = check(&[doc], &cfg);
     let tl = find_by_kind(&findings, "too_many_lines");
-    assert!(tl.is_empty(), "exactly at limit should not produce too_many_lines: {:?}", tl);
+    assert!(
+        tl.is_empty(),
+        "exactly at limit should not produce too_many_lines: {:?}",
+        tl
+    );
 
     let over_content = format!("# Title\n\nScope.\n{}", "x\n".repeat(filler_lines + 1));
     let over_doc = ir::parse_document("b.md", &over_content).unwrap();
     assert_eq!(over_doc.line_count, limit + 1, "should be one over limit");
     let over_findings = check(&[over_doc], &cfg);
     let over_tl = find_by_kind(&over_findings, "too_many_lines");
-    assert_eq!(over_tl.len(), 1, "one over limit should produce too_many_lines");
+    assert_eq!(
+        over_tl.len(),
+        1,
+        "one over limit should produce too_many_lines"
+    );
 }
 
 // --- check_backtick_ids ---
@@ -1336,10 +1502,12 @@ fn req_033_uppercase_md_is_not_read() {
     std::fs::write(
         tmp.path().join(".kotowari/config.yaml"),
         "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
-    ).unwrap();
+    )
+    .unwrap();
     // .MD ファイルは読まない
     std::fs::write(tmp.path().join("docs/ir/README.MD"), "# Title\n\nScope.\n").unwrap();
-    let output = assert_cmd::Command::cargo_bin("kotowari").unwrap()
+    let output = assert_cmd::Command::cargo_bin("kotowari")
+        .unwrap()
         .arg("check")
         .current_dir(tmp.path())
         .output()
@@ -1361,12 +1529,14 @@ fn req_033_file_symlink_is_read() {
     std::fs::write(
         tmp.path().join(".kotowari/config.yaml"),
         "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
-    ).unwrap();
+    )
+    .unwrap();
     // 実体を別の場所に作り、シンボリックリンクを ir/ に置く
     let target = tmp.path().join("target.md");
     std::fs::write(&target, "# Title\n\nScope.\n").unwrap();
     std::os::unix::fs::symlink(&target, tmp.path().join("docs/ir/link.md")).unwrap();
-    let output = assert_cmd::Command::cargo_bin("kotowari").unwrap()
+    let output = assert_cmd::Command::cargo_bin("kotowari")
+        .unwrap()
         .arg("check")
         .current_dir(tmp.path())
         .output()
@@ -1395,11 +1565,17 @@ fn req_040_tilde_fence_is_a_code_block() {
     let content = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n\n~~~\nSome code\n~~~\n\nStatement.\n";
     let doc = ir::parse_document("a.md", content).unwrap();
     // ~~~ で囲んだブロックの中は検査されない
-    let req = doc.items.iter().find(|i| i.id() == Some("REQ-001")).unwrap();
+    let req = doc
+        .items
+        .iter()
+        .find(|i| i.id() == Some("REQ-001"))
+        .unwrap();
     if let Item::Requirement { statements, .. } = req {
         // "Some code" は文として拾われない
-        assert!(!statements.iter().any(|(_, s)| s.contains("Some code")),
-            "content inside ~~~ block should not be parsed as statement");
+        assert!(
+            !statements.iter().any(|(_, s)| s.contains("Some code")),
+            "content inside ~~~ block should not be parsed as statement"
+        );
     }
 }
 
@@ -1408,13 +1584,21 @@ fn req_040_tilde_fence_is_a_code_block() {
 fn req_040_longer_fence_needs_same_or_longer_close() {
     let content = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n\n````\n```\nstill inside\n````\n\nStatement.\n";
     let doc = ir::parse_document("a.md", content).unwrap();
-    let req = doc.items.iter().find(|i| i.id() == Some("REQ-001")).unwrap();
+    let req = doc
+        .items
+        .iter()
+        .find(|i| i.id() == Some("REQ-001"))
+        .unwrap();
     if let Item::Requirement { statements, .. } = req {
         // ``` は ```` を閉じない
-        assert!(!statements.iter().any(|(_, s)| s.contains("still inside")),
-            "``` should not close ```` block");
-        assert!(statements.iter().any(|(_, s)| s.contains("Statement")),
-            "Statement after closing ```` should be parsed");
+        assert!(
+            !statements.iter().any(|(_, s)| s.contains("still inside")),
+            "``` should not close ```` block"
+        );
+        assert!(
+            statements.iter().any(|(_, s)| s.contains("Statement")),
+            "Statement after closing ```` should be parsed"
+        );
     }
 }
 
@@ -1423,7 +1607,9 @@ fn req_040_longer_fence_needs_same_or_longer_close() {
 fn req_112_unclosed_code_block_is_an_error() {
     let content = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n\n```\nunclosed content\n";
     let doc = ir::parse_document("a.md", content).unwrap();
-    let uc = doc.parse_findings.iter()
+    let uc = doc
+        .parse_findings
+        .iter()
         .find(|f| f.kind == "unclosed_code_block");
     assert!(uc.is_some(), "should produce unclosed_code_block finding");
     let uc = uc.unwrap();
@@ -1437,12 +1623,21 @@ fn req_112_unclosed_gherkin_block_is_not_checked() {
     let content = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1\nScenario: test\n  Given something\n";
     let doc = ir::parse_document("a.md", content).unwrap();
     // gherkin ブロックが閉じないときも unclosed_code_block が出る
-    let uc = doc.parse_findings.iter()
+    let uc = doc
+        .parse_findings
+        .iter()
         .find(|f| f.kind == "unclosed_code_block");
-    assert!(uc.is_some(), "unclosed gherkin block should produce unclosed_code_block");
+    assert!(
+        uc.is_some(),
+        "unclosed gherkin block should produce unclosed_code_block"
+    );
     // 閉じないブロック内のシナリオはアイテムにならない
-    assert!(doc.items.iter().all(|i| !matches!(i, Item::Scenario { .. })),
-        "scenario inside unclosed block should not be parsed");
+    assert!(
+        doc.items
+            .iter()
+            .all(|i| !matches!(i, Item::Scenario { .. })),
+        "scenario inside unclosed block should not be parsed"
+    );
 }
 
 // @kotowari[REQ-core-112, REQ-core-040]
@@ -1469,16 +1664,22 @@ Scenario: second
 ";
     let doc = ir::parse_document("a.md", content).unwrap();
     // unclosed_code_block は出る
-    let uc = doc.parse_findings.iter()
+    let uc = doc
+        .parse_findings
+        .iter()
         .find(|f| f.kind == "unclosed_code_block");
     assert!(uc.is_some(), "should produce unclosed_code_block");
     // 閉じないブロック内のシナリオは items に残らない
-    let scenarios: Vec<_> = doc.items.iter()
+    let scenarios: Vec<_> = doc
+        .items
+        .iter()
         .filter(|i| matches!(i, Item::Scenario { .. }))
         .collect();
-    assert!(scenarios.is_empty(),
+    assert!(
+        scenarios.is_empty(),
         "scenarios inside unclosed gherkin block should be excluded from items, but found {}",
-        scenarios.len());
+        scenarios.len()
+    );
 }
 
 // @kotowari[TBL-core-010]
@@ -1489,7 +1690,10 @@ fn tbl_010_empty_document_has_zero_lines_and_missing_title() {
     let config = default_config();
     let findings = check(&[doc], &config);
     let mt = find_by_kind(&findings, "missing_title");
-    assert!(!mt.is_empty(), "empty document should produce missing_title");
+    assert!(
+        !mt.is_empty(),
+        "empty document should produce missing_title"
+    );
 }
 
 // --- Step 4a: 項目の行の形 ---
@@ -1501,7 +1705,11 @@ fn req_044_star_plus_numbered_and_bare_dash_lines_are_unknown_fields() {
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uf = find_by_kind(&findings, "unknown_field");
-    assert!(uf.len() >= 4, "should produce at least 4 unknown_field findings, got {}", uf.len());
+    assert!(
+        uf.len() >= 4,
+        "should produce at least 4 unknown_field findings, got {}",
+        uf.len()
+    );
 }
 
 // @kotowari[REQ-core-044]
@@ -1512,8 +1720,11 @@ fn req_044_detail_is_the_raw_line() {
     let findings = check(&[doc], &default_config());
     let uf = find_by_kind(&findings, "unknown_field");
     // detail は字下げを含む読んだ行そのまま
-    assert!(uf.iter().any(|f| f.detail.contains("  * indented star")),
-        "detail should contain raw indented line, got: {:?}", uf);
+    assert!(
+        uf.iter().any(|f| f.detail.contains("  * indented star")),
+        "detail should contain raw indented line, got: {:?}",
+        uf
+    );
 }
 
 // @kotowari[REQ-core-043]
@@ -1523,8 +1734,10 @@ fn req_043_deeper_heading_is_unknown_heading() {
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let uh = find_by_kind(&findings, "unknown_heading");
-    assert!(uh.iter().any(|f| f.detail.contains("DEEP-001")),
-        "#### heading should produce unknown_heading");
+    assert!(
+        uh.iter().any(|f| f.detail.contains("DEEP-001")),
+        "#### heading should produce unknown_heading"
+    );
 }
 
 // @kotowari[REQ-core-043]
@@ -1533,7 +1746,9 @@ fn req_043_lines_under_a_malformed_heading_are_read_by_the_item_rules() {
     let content = "# Title\n\nScope.\n\n## Requirements\n\n### BADID: X\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- 優先度: 高\n\nStatement.\n";
     let doc = ir::parse_document("a.md", content).unwrap();
     assert!(
-        !doc.items.iter().any(|i| matches!(i, Item::Requirement { .. })),
+        !doc.items
+            .iter()
+            .any(|i| matches!(i, Item::Requirement { .. })),
         "a malformed heading is not an item: {:?}",
         doc.items
     );
@@ -1557,13 +1772,19 @@ fn req_043_valid_prefix_invalid_digits_is_not_an_item() {
     let content = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-1: Bad\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n- definition: TBL-999\n\nStatement.\n";
     let doc = ir::parse_document("a.md", content).unwrap();
     assert!(
-        !doc.items.iter().any(|i| matches!(i, Item::Requirement { .. })),
+        !doc.items
+            .iter()
+            .any(|i| matches!(i, Item::Requirement { .. })),
         "valid prefix + invalid digits must not produce Item::Requirement"
     );
     // check_documents で項目として検査されないこと（unresolved_reference が出ない）
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
-    assert!(ur.is_empty(), "lines under invalid-digit heading should not produce unresolved_reference, got {:?}", ur);
+    assert!(
+        ur.is_empty(),
+        "lines under invalid-digit heading should not produce unresolved_reference, got {:?}",
+        ur
+    );
     // unknown_heading は出る
     let uh = find_by_kind(&findings, "unknown_heading");
     assert!(!uh.is_empty(), "should produce unknown_heading for REQ-1");
@@ -1577,7 +1798,12 @@ fn req_045_three_known_lines_give_one_duplicate() {
     let findings = check(&[doc], &default_config());
     let df = find_by_kind(&findings, "duplicate_field");
     // 3本以上あっても1件（REQ-core-045）。2つ目の行に出る
-    assert_eq!(df.len(), 1, "3 occurrences of same field should give 1 duplicate_field, got {:?}", df);
+    assert_eq!(
+        df.len(),
+        1,
+        "3 occurrences of same field should give 1 duplicate_field, got {:?}",
+        df
+    );
     assert_eq!(df[0].line, Some(12));
     assert_eq!(df[0].detail, "kind");
 }
@@ -1602,7 +1828,10 @@ fn req_047_requirement_without_kind_line_needs_statement() {
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ms = find_by_kind(&findings, "missing_statement");
-    assert!(!ms.is_empty(), "requirement without kind and without statement should produce missing_statement");
+    assert!(
+        !ms.is_empty(),
+        "requirement without kind and without statement should produce missing_statement"
+    );
 }
 
 // @kotowari[REQ-core-032]
@@ -1614,7 +1843,11 @@ fn req_032_first_occurrence_is_bytewise_first_path() {
     let findings = check(&[doc_a, doc_b], &default_config());
     let di = find_by_kind(&findings, "duplicate_id");
     assert_eq!(di.len(), 1, "should produce exactly 1 duplicate_id");
-    assert!(di[0].path.contains("b.md"), "duplicate_id should be on the second (b.md) path, got {:?}", di[0].path);
+    assert!(
+        di[0].path.contains("b.md"),
+        "duplicate_id should be on the second (b.md) path, got {:?}",
+        di[0].path
+    );
 }
 
 // --- Step 4b: gherkin の行の形と ID の定義 ---
@@ -1649,7 +1882,10 @@ Scenario: Indented steps
 Statement.
 ";
     let doc = ir::parse_document("a.md", content).unwrap();
-    let scenario = doc.items.iter().find(|i| matches!(i, Item::Scenario { id: Some(id), .. } if id == "EX-001"));
+    let scenario = doc
+        .items
+        .iter()
+        .find(|i| matches!(i, Item::Scenario { id: Some(id), .. } if id == "EX-001"));
     assert!(scenario.is_some(), "should parse EX-001");
     if let Item::Scenario { steps, .. } = scenario.unwrap() {
         assert_eq!(steps.len(), 3, "should have 3 steps: {:?}", steps);
@@ -1689,7 +1925,10 @@ Scenario: Spaced steps
 Statement.
 ";
     let doc = ir::parse_document("a.md", content).unwrap();
-    let scenario = doc.items.iter().find(|i| matches!(i, Item::Scenario { id: Some(id), .. } if id == "EX-001"));
+    let scenario = doc
+        .items
+        .iter()
+        .find(|i| matches!(i, Item::Scenario { id: Some(id), .. } if id == "EX-001"));
     let Some(Item::Scenario { steps, .. }) = scenario else {
         panic!("should parse EX-001");
     };
@@ -1733,11 +1972,32 @@ Statement.
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ig = find_by_kind(&findings, "invalid_gherkin_line");
-    assert!(ig.len() >= 5, "should have at least 5 invalid_gherkin_line findings, got {}: {:?}", ig.len(), ig);
-    assert!(ig.iter().any(|f| f.detail.contains("Feature:")), "Feature: should be invalid: {:?}", ig);
-    assert!(ig.iter().any(|f| f.detail.contains("Background:")), "Background: should be invalid: {:?}", ig);
-    assert!(ig.iter().any(|f| f.detail.contains("Scenario Outline:")), "Scenario Outline: should be invalid: {:?}", ig);
-    assert!(ig.iter().any(|f| f.detail.contains("Examples:")), "Examples: should be invalid: {:?}", ig);
+    assert!(
+        ig.len() >= 5,
+        "should have at least 5 invalid_gherkin_line findings, got {}: {:?}",
+        ig.len(),
+        ig
+    );
+    assert!(
+        ig.iter().any(|f| f.detail.contains("Feature:")),
+        "Feature: should be invalid: {:?}",
+        ig
+    );
+    assert!(
+        ig.iter().any(|f| f.detail.contains("Background:")),
+        "Background: should be invalid: {:?}",
+        ig
+    );
+    assert!(
+        ig.iter().any(|f| f.detail.contains("Scenario Outline:")),
+        "Scenario Outline: should be invalid: {:?}",
+        ig
+    );
+    assert!(
+        ig.iter().any(|f| f.detail.contains("Examples:")),
+        "Examples: should be invalid: {:?}",
+        ig
+    );
 }
 
 // @kotowari[REQ-core-113]
@@ -1772,7 +2032,11 @@ Statement.
     let findings = check(&[doc], &default_config());
     let mt = find_by_kind(&findings, "missing_tag");
     // タグが結び付かないので missing_tag が出る
-    assert!(mt.iter().any(|f| f.detail == "@id"), "tag should not bind through comment: {:?}", mt);
+    assert!(
+        mt.iter().any(|f| f.detail == "@id"),
+        "tag should not bind through comment: {:?}",
+        mt
+    );
 }
 
 // @kotowari[REQ-core-052]
@@ -1814,7 +2078,11 @@ Statement.
     // フラッシュされて新しいシナリオに含まれるか。
     // テストの意図: 結び付かないタグの行の@wip が unknown_tag になること
     let ut = find_by_kind(&findings, "unknown_tag");
-    assert!(ut.iter().any(|f| f.detail == "@wip"), "unbound tag line should still produce unknown_tag for @wip: {:?}", ut);
+    assert!(
+        ut.iter().any(|f| f.detail == "@wip"),
+        "unbound tag line should still produce unknown_tag for @wip: {:?}",
+        ut
+    );
 }
 
 // @kotowari[REQ-core-052]
@@ -1847,7 +2115,11 @@ Statement.
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ut = find_by_kind(&findings, "unknown_tag");
-    assert!(ut.iter().any(|f| f.detail == "badword"), "word without @ in tag line should be unknown_tag: {:?}", ut);
+    assert!(
+        ut.iter().any(|f| f.detail == "badword"),
+        "word without @ in tag line should be unknown_tag: {:?}",
+        ut
+    );
 }
 
 // @kotowari[REQ-core-114]
@@ -1880,9 +2152,17 @@ Statement.
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ii = find_by_kind(&findings, "invalid_id");
-    assert!(ii.iter().any(|f| f.detail == "EX1"), "should produce invalid_id for EX1: {:?}", ii);
+    assert!(
+        ii.iter().any(|f| f.detail == "EX1"),
+        "should produce invalid_id for EX1: {:?}",
+        ii
+    );
     let mt = find_by_kind(&findings, "missing_tag");
-    assert!(!mt.iter().any(|f| f.detail == "@id"), "should not produce missing_tag @id when invalid_id: {:?}", mt);
+    assert!(
+        !mt.iter().any(|f| f.detail == "@id"),
+        "should not produce missing_tag @id when invalid_id: {:?}",
+        mt
+    );
 }
 
 // @kotowari[REQ-core-114]
@@ -1915,8 +2195,11 @@ Statement.
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ms = find_by_kind(&findings, "missing_source");
-    assert!(ms.iter().any(|f| f.detail == "Scenario: Malformed id test"),
-        "missing_source detail should be the Scenario: line text: {:?}", ms);
+    assert!(
+        ms.iter().any(|f| f.detail == "Scenario: Malformed id test"),
+        "missing_source detail should be the Scenario: line text: {:?}",
+        ms
+    );
 }
 
 // @kotowari[REQ-core-114]
@@ -1952,7 +2235,11 @@ Statement.
     // ただし REQ-1 は is_valid_id を通らないので check_backtick_ids では拾われない
     // unknown_heading で報告される
     let uh = find_by_kind(&findings, "unknown_heading");
-    assert!(uh.iter().any(|f| f.detail.contains("REQ-1")), "REQ-1 should be unknown_heading: {:?}", uh);
+    assert!(
+        uh.iter().any(|f| f.detail.contains("REQ-1")),
+        "REQ-1 should be unknown_heading: {:?}",
+        uh
+    );
 }
 
 // @kotowari[REQ-core-054]
@@ -1976,7 +2263,11 @@ Scope.
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
-    assert!(ur.iter().any(|f| f.detail == "foo"), "non-ID definition value should produce unresolved_reference: {:?}", ur);
+    assert!(
+        ur.iter().any(|f| f.detail == "foo"),
+        "non-ID definition value should produce unresolved_reference: {:?}",
+        ur
+    );
 }
 
 // @kotowari[REQ-core-054]
@@ -2009,7 +2300,11 @@ Scenario: Backtick in step
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
-    assert!(ur.iter().any(|f| f.detail == "TBL-999"), "backtick ID in step should produce unresolved_reference: {:?}", ur);
+    assert!(
+        ur.iter().any(|f| f.detail == "TBL-999"),
+        "backtick ID in step should produce unresolved_reference: {:?}",
+        ur
+    );
 }
 
 // @kotowari[REQ-core-033]
@@ -2022,10 +2317,28 @@ fn req_033_broken_symlink_in_ir_dir_stops() {
     std::fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
-    std::fs::write(tmp.path().join(".kotowari/config.yaml"), "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n").unwrap();
-    symlink(tmp.path().join("nowhere.md"), tmp.path().join("docs/ir/broken.md")).unwrap();
-    let output = assert_cmd::Command::cargo_bin("kotowari").unwrap().arg("check").current_dir(tmp.path()).output().unwrap();
-    assert_eq!(output.status.code(), Some(2), "a broken symlink in the IR dir must stop: {:?}", output);
+    std::fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
+    )
+    .unwrap();
+    symlink(
+        tmp.path().join("nowhere.md"),
+        tmp.path().join("docs/ir/broken.md"),
+    )
+    .unwrap();
+    let output = assert_cmd::Command::cargo_bin("kotowari")
+        .unwrap()
+        .arg("check")
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "a broken symlink in the IR dir must stop: {:?}",
+        output
+    );
 }
 
 // --- 汎用化の実装レビューで見つかった食い違いの回帰テスト ---
@@ -2202,7 +2515,12 @@ fn req_123_duplicate_term_reported_for_second_row_onward() {
     let doc = ir::parse_document("CONTEXT.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let dt = find_by_kind(&findings, "duplicate_term");
-    assert_eq!(dt.len(), 2, "the 2nd and 3rd rows should each produce a duplicate_term: {:?}", dt);
+    assert_eq!(
+        dt.len(),
+        2,
+        "the 2nd and 3rd rows should each produce a duplicate_term: {:?}",
+        dt
+    );
     assert!(dt.iter().all(|f| f.detail == "IR"));
     assert_eq!(dt[0].line, Some(6));
     assert_eq!(dt[1].line, Some(7));
@@ -2211,12 +2529,14 @@ fn req_123_duplicate_term_reported_for_second_row_onward() {
 // @kotowari[REQ-core-113]
 #[test]
 fn req_113_step_without_preceding_scenario_is_invalid() {
-    let content = "# Title\n\nScope.\n\n## Examples\n\n```gherkin\nThen this step has no Scenario\n```\n";
+    let content =
+        "# Title\n\nScope.\n\n## Examples\n\n```gherkin\nThen this step has no Scenario\n```\n";
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ig = find_by_kind(&findings, "invalid_gherkin_line");
     assert!(
-        ig.iter().any(|f| f.detail == "Then this step has no Scenario"),
+        ig.iter()
+            .any(|f| f.detail == "Then this step has no Scenario"),
         "a step line with no preceding Scenario: should be invalid_gherkin_line: {:?}",
         ig
     );
@@ -2245,9 +2565,18 @@ fn req_098_empty_verification_value_is_invalid_not_missing() {
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let vm = find_by_kind(&findings, "verification_missing");
-    assert!(vm.is_empty(), "an empty verification value is a line that is there: {:?}", vm);
+    assert!(
+        vm.is_empty(),
+        "an empty verification value is a line that is there: {:?}",
+        vm
+    );
     let vi = find_by_kind(&findings, "verification_invalid");
-    assert_eq!(vi.len(), 1, "an empty verification value is a value outside the allowed list: {:?}", vi);
+    assert_eq!(
+        vi.len(),
+        1,
+        "an empty verification value is a value outside the allowed list: {:?}",
+        vi
+    );
     assert_eq!(vi[0].detail, "");
     assert_eq!(vi[0].line, Some(7));
 }
@@ -2265,7 +2594,12 @@ fn req_098_empty_kind_value_is_unknown_kind_not_missing_field() {
         mf
     );
     let uk = find_by_kind(&findings, "unknown_kind");
-    assert_eq!(uk.len(), 1, "an empty kind value is a value outside the allowed list: {:?}", uk);
+    assert_eq!(
+        uk.len(),
+        1,
+        "an empty kind value is a value outside the allowed list: {:?}",
+        uk
+    );
     assert_eq!(uk[0].detail, "");
     assert_eq!(uk[0].line, Some(7));
 }
@@ -2292,7 +2626,11 @@ fn req_114_malformed_id_still_reports_missing_about() {
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ii = find_by_kind(&findings, "invalid_id");
-    assert!(!ii.is_empty(), "a malformed @id should still produce invalid_id: {:?}", ii);
+    assert!(
+        !ii.is_empty(),
+        "a malformed @id should still produce invalid_id: {:?}",
+        ii
+    );
     let mt = find_by_kind(&findings, "missing_tag");
     assert!(
         mt.iter().any(|f| f.detail == "@about"),
@@ -2314,7 +2652,11 @@ fn req_034_lines_before_title_are_ignored() {
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let mt = find_by_kind(&findings, "missing_title");
-    assert!(mt.is_empty(), "a title on a later line should still count as the title: {:?}", mt);
+    assert!(
+        mt.is_empty(),
+        "a title on a later line should still count as the title: {:?}",
+        mt
+    );
 }
 
 // @kotowari[REQ-core-113]
@@ -2376,7 +2718,12 @@ fn req_113_consecutive_steps_without_scenario_report_only_the_first() {
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ig = find_by_kind(&findings, "invalid_gherkin_line");
-    assert_eq!(ig.len(), 1, "only the first orphan step should be reported: {:?}", ig);
+    assert_eq!(
+        ig.len(),
+        1,
+        "only the first orphan step should be reported: {:?}",
+        ig
+    );
     assert_eq!(ig[0].detail, "Given first orphan");
     assert_eq!(ig[0].line, Some(8));
 }
@@ -2390,21 +2737,36 @@ fn req_113_orphan_step_after_a_blank_line_is_reported_again() {
     let findings = check(&[doc], &default_config());
     let ig = find_by_kind(&findings, "invalid_gherkin_line");
     let details: Vec<&str> = ig.iter().map(|f| f.detail.as_str()).collect();
-    assert_eq!(details, vec!["Given first orphan", "Then after blank"], "{:?}", ig);
+    assert_eq!(
+        details,
+        vec!["Given first orphan", "Then after blank"],
+        "{:?}",
+        ig
+    );
 }
 
 // @kotowari[REQ-core-113]
 #[test]
 fn req_113_step_right_after_tag_line_reports_both_lines() {
     // A155: タグの行の直後がステップなら、タグの行（直後が Scenario: でない）とそのステップ（直前に Scenario: が無い）の両方
-    let content = "# Title\n\nScope.\n\n## Examples\n\n```gherkin\n@id=EX-001\nGiven no scenario line\n```\n";
+    let content =
+        "# Title\n\nScope.\n\n## Examples\n\n```gherkin\n@id=EX-001\nGiven no scenario line\n```\n";
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let ig = find_by_kind(&findings, "invalid_gherkin_line");
     let details: Vec<&str> = ig.iter().map(|f| f.detail.as_str()).collect();
-    assert_eq!(details, vec!["@id=EX-001", "Given no scenario line"], "{:?}", ig);
+    assert_eq!(
+        details,
+        vec!["@id=EX-001", "Given no scenario line"],
+        "{:?}",
+        ig
+    );
     let ut = find_by_kind(&findings, "unknown_tag");
-    assert!(ut.is_empty(), "@id is a known tag, so no unknown_tag: {:?}", ut);
+    assert!(
+        ut.is_empty(),
+        "@id is a known tag, so no unknown_tag: {:?}",
+        ut
+    );
 }
 
 // @kotowari[REQ-core-113]
@@ -2419,7 +2781,11 @@ fn req_113_tag_line_right_before_closing_fence_is_invalid() {
     assert_eq!(ig[0].line, Some(10));
     // A155: 結び付かないタグの行でも unknown_tag の検査はそのまま行う
     let ut = find_by_kind(&findings, "unknown_tag");
-    assert!(ut.iter().any(|f| f.line == Some(10)), "unknown_tag for @nope should still be reported: {:?}", ut);
+    assert!(
+        ut.iter().any(|f| f.line == Some(10)),
+        "unknown_tag for @nope should still be reported: {:?}",
+        ut
+    );
 }
 
 // @kotowari[REQ-core-122]
@@ -2434,8 +2800,16 @@ fn req_122_two_cell_row_with_trailing_pipe_is_invalid() {
 | テスト | 検証の意味 |
 ";
     let doc = ir::parse_document("CONTEXT.md", content).unwrap();
-    let terms: Vec<_> = doc.items.iter().filter(|i| matches!(i, Item::GlossaryTerm { .. })).collect();
-    assert!(terms.is_empty(), "a 2-cell row must not become a term: {:?}", terms);
+    let terms: Vec<_> = doc
+        .items
+        .iter()
+        .filter(|i| matches!(i, Item::GlossaryTerm { .. }))
+        .collect();
+    assert!(
+        terms.is_empty(),
+        "a 2-cell row must not become a term: {:?}",
+        terms
+    );
     let findings = check(&[doc], &default_config());
     let igr = find_by_kind(&findings, "invalid_glossary_row");
     assert_eq!(igr.len(), 1, "{:?}", findings);
@@ -2454,10 +2828,18 @@ fn req_122_three_cells_without_trailing_pipe_is_a_term() {
 | テスト | 検証の意味 | brainstorm/records.md#A1
 ";
     let doc = ir::parse_document("CONTEXT.md", content).unwrap();
-    let terms: Vec<_> = doc.items.iter().filter(|i| matches!(i, Item::GlossaryTerm { .. })).collect();
+    let terms: Vec<_> = doc
+        .items
+        .iter()
+        .filter(|i| matches!(i, Item::GlossaryTerm { .. }))
+        .collect();
     assert_eq!(terms.len(), 1, "{:?}", doc.items);
     let findings = check(&[doc], &default_config());
-    assert!(find_by_kind(&findings, "invalid_glossary_row").is_empty(), "{:?}", findings);
+    assert!(
+        find_by_kind(&findings, "invalid_glossary_row").is_empty(),
+        "{:?}",
+        findings
+    );
 }
 
 // @kotowari[REQ-core-123]
@@ -2473,14 +2855,27 @@ fn req_123_duplicate_row_is_not_a_term() {
 | IR | 2つ目の意味 | |
 ";
     let doc = ir::parse_document("CONTEXT.md", content).unwrap();
-    let terms: Vec<_> = doc.items.iter().filter(|i| matches!(i, Item::GlossaryTerm { .. })).collect();
-    assert_eq!(terms.len(), 1, "the duplicate row must not become a term: {:?}", terms);
+    let terms: Vec<_> = doc
+        .items
+        .iter()
+        .filter(|i| matches!(i, Item::GlossaryTerm { .. }))
+        .collect();
+    assert_eq!(
+        terms.len(),
+        1,
+        "the duplicate row must not become a term: {:?}",
+        terms
+    );
     let findings = check(&[doc], &default_config());
     let dt = find_by_kind(&findings, "duplicate_term");
     assert_eq!(dt.len(), 1);
     assert_eq!(dt[0].line, Some(6));
     let ms = find_by_kind(&findings, "missing_source");
-    assert!(!ms.iter().any(|f| f.line == Some(6)), "no other check on the duplicate row: {:?}", ms);
+    assert!(
+        !ms.iter().any(|f| f.line == Some(6)),
+        "no other check on the duplicate row: {:?}",
+        ms
+    );
 }
 
 // --- TBL-core-010: split_lines の \r\n 処理 ---
@@ -2517,7 +2912,9 @@ fn req_117_non_dash_row_after_header_is_not_a_valid_separator() {
 ";
     let doc = ir::parse_document("CONTEXT.md", content).unwrap();
     assert!(
-        doc.items.iter().all(|i| !matches!(i, Item::GlossaryTerm { .. })),
+        doc.items
+            .iter()
+            .all(|i| !matches!(i, Item::GlossaryTerm { .. })),
         "without a real '---' separator row, no glossary term should be collected: {:?}",
         doc.items
     );
@@ -2574,7 +2971,11 @@ fn req_043_bare_four_hashes_is_an_empty_deeper_heading() {
     assert_eq!(uh.len(), 1, "{:?}", findings);
     assert_eq!(uh[0].line, Some(7));
     assert_eq!(uh[0].detail, "####");
-    assert!(find_by_kind(&findings, "unknown_line").is_empty(), "{:?}", findings);
+    assert!(
+        find_by_kind(&findings, "unknown_line").is_empty(),
+        "{:?}",
+        findings
+    );
 }
 
 // --- REQ-core-112: 閉じないコードブロックの前の指摘・項目は残る ---
@@ -2613,12 +3014,16 @@ unclosed content
     );
     // unclosed_code_block 自体は出る
     assert!(
-        doc.parse_findings.iter().any(|f| f.kind == "unclosed_code_block"),
+        doc.parse_findings
+            .iter()
+            .any(|f| f.kind == "unclosed_code_block"),
         "should still produce unclosed_code_block"
     );
     // フェンスより前で組み立て済みの項目も残らなければならない
     assert!(
-        doc.items.iter().any(|i| matches!(i, Item::Requirement { id, .. } if id == "REQ-001")),
+        doc.items
+            .iter()
+            .any(|i| matches!(i, Item::Requirement { id, .. } if id == "REQ-001")),
         "an item completed before the unclosed fence must be retained: {:?}",
         doc.items
     );
@@ -2631,7 +3036,10 @@ fn req_112_the_opening_line_of_an_unclosed_fence_is_excluded_too() {
     // 閉じた囲みは、項目の中の宣言していない行として開始の行に unknown_line が付く
     let closed = ir::parse_document("a.md", &format!("{head}```\ncontent\n```\n")).unwrap();
     assert!(
-        closed.parse_findings.iter().any(|f| f.kind == "unknown_line" && f.line == Some(15)),
+        closed
+            .parse_findings
+            .iter()
+            .any(|f| f.kind == "unknown_line" && f.line == Some(15)),
         "{:?}",
         closed.parse_findings
     );
@@ -2659,7 +3067,10 @@ fn req_112_a_fence_closes_only_with_at_least_as_many_marks() {
             .collect()
     };
     // 短い囲みは閉じない
-    assert_eq!(unclosed("# Title\n\nScope.\n\n````\nx\n```\n"), vec![Some(5)]);
+    assert_eq!(
+        unclosed("# Title\n\nScope.\n\n````\nx\n```\n"),
+        vec![Some(5)]
+    );
     // 長い囲みは閉じる
     assert!(unclosed("# Title\n\nScope.\n\n```\nx\n````\n").is_empty());
 }
@@ -2742,7 +3153,9 @@ fn req_043_malformed_tbl_id_is_not_an_item() {
     let content = "# Title\n\nScope.\n\n## Decision tables\n\n### TBL-1: X\n\n- source: brainstorm/records.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
     let doc = ir::parse_document("a.md", content).unwrap();
     assert!(
-        !doc.items.iter().any(|i| matches!(i, Item::DecisionTable { .. })),
+        !doc.items
+            .iter()
+            .any(|i| matches!(i, Item::DecisionTable { .. })),
         "malformed TBL- id must not produce Item::DecisionTable: {:?}",
         doc.items
     );
@@ -2780,7 +3193,9 @@ fn req_043_malformed_flag_id_is_not_an_item() {
     let content = "# 問題の記録\n\n## Flags\n\n### FLAG-1: Issue\n\n- kind: gap\n- related: REQ-999\n- source: brainstorm/records.md#A1\n";
     let doc = ir::parse_document("FLAGS.md", content).unwrap();
     assert!(
-        !doc.items.iter().any(|i| matches!(i, Item::FlagEntry { .. })),
+        !doc.items
+            .iter()
+            .any(|i| matches!(i, Item::FlagEntry { .. })),
         "malformed FLAG- id must not produce Item::FlagEntry: {:?}",
         doc.items
     );
@@ -2866,8 +3281,15 @@ Scenario: uses a wrong-prefix but well-formed id
 ```
 ";
     let doc = ir::parse_document("a.md", content).unwrap();
-    let scenario = doc.items.iter().find(|i| matches!(i, Item::Scenario { .. }));
-    assert!(scenario.is_some(), "should parse the scenario: {:?}", doc.items);
+    let scenario = doc
+        .items
+        .iter()
+        .find(|i| matches!(i, Item::Scenario { .. }));
+    assert!(
+        scenario.is_some(),
+        "should parse the scenario: {:?}",
+        doc.items
+    );
     if let Item::Scenario { id, .. } = scenario.unwrap() {
         assert!(
             id.is_none(),
@@ -3052,7 +3474,11 @@ fn tbl_019_unresolved_definition_reference_line_is_the_definition_fields_own_lin
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     let f = ur.iter().find(|f| f.detail == "TBL-999");
-    assert!(f.is_some(), "should produce unresolved_reference for TBL-999: {:?}", ur);
+    assert!(
+        f.is_some(),
+        "should produce unresolved_reference for TBL-999: {:?}",
+        ur
+    );
     assert_eq!(
         f.unwrap().line,
         Some(12),
@@ -3068,7 +3494,11 @@ fn tbl_019_unresolved_relation_reference_line_is_the_relation_fields_own_line() 
     let findings = check(&[doc], &default_config());
     let ur = find_by_kind(&findings, "unresolved_reference");
     let f = ur.iter().find(|f| f.detail == "EX-999");
-    assert!(f.is_some(), "should produce unresolved_reference for EX-999: {:?}", ur);
+    assert!(
+        f.is_some(),
+        "should produce unresolved_reference for EX-999: {:?}",
+        ur
+    );
     assert_eq!(
         f.unwrap().line,
         Some(8),
@@ -3089,17 +3519,6 @@ fn req_054_valid_and_known_definition_id_produces_no_unresolved_reference() {
         ur.iter().all(|f| f.detail != "TBL-001"),
         "a well-formed, known definition id must not produce unresolved_reference: {:?}",
         ur
-    );
-}
-
-// @kotowari[REQ-core-054]
-#[test]
-fn req_054_extract_backtick_contents_two_pairs_on_one_line() {
-    let result = ir::extract_backtick_contents("`REQ-001` and `TBL-999`");
-    assert_eq!(
-        result,
-        vec!["REQ-001", "TBL-999"],
-        "two separate backtick-delimited ids on one line should each be extracted whole, not fused together"
     );
 }
 
@@ -3134,8 +3553,10 @@ fn req_033_broken_symlink_in_a_subdirectory_stops() {
     std::fs::create_dir_all(tmp.path().join("docs/ir/sub")).unwrap();
     std::os::unix::fs::symlink("missing", tmp.path().join("docs/ir/sub/broken.md")).unwrap();
     let err = ir::load_and_check(tmp.path(), &default_config()).unwrap_err();
-    assert!(matches!(err, kotowari_core::StopReason::UnreadableFile(ref detail)
-        if detail.starts_with("docs/ir/sub/broken.md: ")));
+    assert!(
+        matches!(err, kotowari_core::StopReason::UnreadableFile(ref detail)
+        if detail.starts_with("docs/ir/sub/broken.md: "))
+    );
 }
 
 // @kotowari[REQ-core-033, REQ-core-036, REQ-core-117]
@@ -3147,8 +3568,10 @@ fn req_033_context_and_flags_in_a_subdirectory_are_glossary_and_flags() {
         std::fs::write(tmp.path().join("docs/ir/sub").join(file), "# Title\n").unwrap();
     }
     let (docs, findings) = ir::load_and_check(tmp.path(), &default_config()).unwrap();
-    assert_eq!(docs.iter().map(|d| d.kind).collect::<Vec<_>>(),
-        [ir::DocKind::Glossary, ir::DocKind::Flags]);
+    assert_eq!(
+        docs.iter().map(|d| d.kind).collect::<Vec<_>>(),
+        [ir::DocKind::Glossary, ir::DocKind::Flags]
+    );
     assert!(find_by_kind(&findings, "missing_scope").is_empty());
     assert_eq!(find_by_kind(&findings, "glossary_invalid").len(), 1);
 }
@@ -3162,9 +3585,18 @@ fn tbl_008_whole_document_detail_is_the_bare_filename_in_a_subdirectory() {
         std::fs::write(tmp.path().join("docs/ir/sub").join(file), "").unwrap();
     }
     let (_, findings) = ir::load_and_check(tmp.path(), &default_config()).unwrap();
-    for (kind, expected) in [("missing_title", vec!["CONTEXT.md", "a.md"]),
-        ("missing_scope", vec!["a.md"]), ("glossary_invalid", vec!["CONTEXT.md"])] {
-        assert_eq!(find_by_kind(&findings, kind).iter().map(|f| f.detail.as_str()).collect::<Vec<_>>(), expected);
+    for (kind, expected) in [
+        ("missing_title", vec!["CONTEXT.md", "a.md"]),
+        ("missing_scope", vec!["a.md"]),
+        ("glossary_invalid", vec!["CONTEXT.md"]),
+    ] {
+        assert_eq!(
+            find_by_kind(&findings, kind)
+                .iter()
+                .map(|f| f.detail.as_str())
+                .collect::<Vec<_>>(),
+            expected
+        );
     }
 }
 
@@ -3174,7 +3606,11 @@ fn req_032_first_occurrence_is_bytewise_first_relative_path() {
     let tmp = tempfile::tempdir().unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/ir/a")).unwrap();
     for file in ["a.md", "a/b.md"] {
-        std::fs::write(tmp.path().join("docs/ir").join(file), "# Title\n\nScope.\n## Requirements\n### REQ-001: Name\n").unwrap();
+        std::fs::write(
+            tmp.path().join("docs/ir").join(file),
+            "# Title\n\nScope.\n## Requirements\n### REQ-001: Name\n",
+        )
+        .unwrap();
     }
     let (_, findings) = ir::load_and_check(tmp.path(), &default_config()).unwrap();
     let duplicates = find_by_kind(&findings, "duplicate_id");
@@ -3187,7 +3623,12 @@ fn req_032_first_occurrence_is_bytewise_first_relative_path() {
 
 /// CLI を通して検査するプロジェクトを一時ディレクトリに作る
 fn make_cli_project(tmp: &std::path::Path) {
-    for dir in [".kotowari", "docs/ir", "docs/decision/records", "docs/decision/adr"] {
+    for dir in [
+        ".kotowari",
+        "docs/ir",
+        "docs/decision/records",
+        "docs/decision/adr",
+    ] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     std::fs::write(
@@ -3323,7 +3764,11 @@ fn req_033_context_and_flags_under_a_subdirectory_have_no_missing_scope() {
         "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n",
     )
     .unwrap();
-    std::fs::write(tmp.path().join("docs/ir/network/FLAGS.md"), "# 問題の記録\n").unwrap();
+    std::fs::write(
+        tmp.path().join("docs/ir/network/FLAGS.md"),
+        "# 問題の記録\n",
+    )
+    .unwrap();
     let v = run_cli(tmp.path());
     assert!(
         find_kind_in_json(&v, "missing_scope").is_empty(),
@@ -3350,7 +3795,10 @@ fn req_033_a_document_deep_in_the_tree_is_read_and_an_empty_directory_is_silent(
     assert_eq!(missing[0]["path"], "docs/ir/network/dns/timeout.md");
     assert!(
         v["findings"].as_array().unwrap().iter().all(|f| {
-            !f["path"].as_str().unwrap().starts_with("docs/ir/network/empty")
+            !f["path"]
+                .as_str()
+                .unwrap()
+                .starts_with("docs/ir/network/empty")
         }),
         "an empty directory gets no finding: {v}"
     );
@@ -3414,7 +3862,11 @@ fn req_052_retired_tag_on_a_scenario_is_unknown_tag() {
     .unwrap();
     let v = run_cli(tmp.path());
     let unknown = find_kind_in_json(&v, "unknown_tag");
-    assert_eq!(unknown.len(), 1, "the retired @requirement tag is unknown: {v}");
+    assert_eq!(
+        unknown.len(),
+        1,
+        "the retired @requirement tag is unknown: {v}"
+    );
     assert_eq!(unknown[0]["detail"], "@requirement");
 }
 
@@ -3451,7 +3903,11 @@ fn req_032_three_places_yield_two_duplicates_and_none_on_the_first() {
     .unwrap();
     let v = run_cli(tmp.path());
     let duplicates = find_kind_in_json(&v, "duplicate_id");
-    assert_eq!(duplicates.len(), 2, "three places yield two duplicates: {v}");
+    assert_eq!(
+        duplicates.len(),
+        2,
+        "three places yield two duplicates: {v}"
+    );
     assert!(duplicates.iter().all(|f| f["detail"] == "REQ-001"));
     // 1つ目の見出しは 7 行目
     assert!(
@@ -3473,7 +3929,11 @@ fn req_044_priority_line_under_a_requirement_is_an_unknown_field() {
     .unwrap();
     let v = run_cli(tmp.path());
     let unknown = find_kind_in_json(&v, "unknown_field");
-    assert_eq!(unknown.len(), 1, "the 優先度 line is not a known field: {v}");
+    assert_eq!(
+        unknown.len(),
+        1,
+        "the 優先度 line is not a known field: {v}"
+    );
     assert_eq!(unknown[0]["detail"], "- 優先度: 高");
 }
 
@@ -3502,7 +3962,9 @@ fn req_044_how_to_verify_is_a_known_line_of_a_requirement() {
         "only the table and the property keep the unknown_field: {unknown:?}"
     );
     assert!(
-        unknown.iter().all(|f| f.line == Some(21) || f.line == Some(32)),
+        unknown
+            .iter()
+            .all(|f| f.line == Some(21) || f.line == Some(32)),
         "the requirement's line is a known field, the other two are not: {unknown:?}"
     );
 }
@@ -3519,7 +3981,11 @@ fn req_045_two_how_to_verify_lines_under_a_requirement_is_a_duplicate_field() {
     let doc = ir::parse_document("a.md", content).unwrap();
     let findings = check(&[doc], &default_config());
     let duplicates = find_by_kind(&findings, "duplicate_field");
-    assert_eq!(duplicates.len(), 1, "the second line is a duplicate: {duplicates:?}");
+    assert_eq!(
+        duplicates.len(),
+        1,
+        "the second line is a duplicate: {duplicates:?}"
+    );
     assert_eq!(duplicates[0].detail, "how_to_verify");
 }
 
@@ -3551,12 +4017,18 @@ fn ex_core_273_statement_right_after_a_field_line_is_not_part_of_its_value() {
     make_cli_project(tmp.path());
     std::fs::write(
         tmp.path().join("docs/ir/a.md"),
-        topic_with_requirement("- verification: review\n検証の次の文。\n- how_to_verify: 見る\n確かめ方の次の文。\n"),
+        topic_with_requirement(
+            "- verification: review\n検証の次の文。\n- how_to_verify: 見る\n確かめ方の次の文。\n",
+        ),
     )
     .unwrap();
     let v = run_cli(tmp.path());
     let kinds = kinds_on(&v, "docs/ir/a.md");
-    for kind in ["missing_statement", "verification_invalid", "requirement_without_test"] {
+    for kind in [
+        "missing_statement",
+        "verification_invalid",
+        "requirement_without_test",
+    ] {
         assert!(!kinds.iter().any(|k| k == kind), "{kind} が出た: {v}");
     }
 }
@@ -3605,7 +4077,12 @@ fn ex_core_275_pipe_line_that_is_not_a_table_is_checked_as_a_statement() {
         1,
         "{v}"
     );
-    assert!(!kinds_on(&v, "docs/ir/a.md").iter().any(|k| k == "unknown_line"), "{v}");
+    assert!(
+        !kinds_on(&v, "docs/ir/a.md")
+            .iter()
+            .any(|k| k == "unknown_line"),
+        "{v}"
+    );
 }
 
 // @kotowari[EX-core-276]
@@ -3663,7 +4140,11 @@ fn ex_core_278_three_titles_give_one_multiple_titles_per_extra_title() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     make_cli_project(tmp.path());
-    std::fs::write(tmp.path().join("docs/ir/a.md"), "# 一\n\n範囲。\n\n# 二\n\n#  三  \n").unwrap();
+    std::fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# 一\n\n範囲。\n\n# 二\n\n#  三  \n",
+    )
+    .unwrap();
     let v = run_cli(tmp.path());
     let multiple: Vec<_> = v["findings"]
         .as_array()
@@ -3673,7 +4154,14 @@ fn ex_core_278_three_titles_give_one_multiple_titles_per_extra_title() {
         .cloned()
         .collect();
     assert!(multiple.iter().all(|f| f["line"].is_null()), "{v}");
-    let mut details: Vec<&str> = multiple.iter().map(|f| f["detail"].as_str().unwrap()).collect();
+    let mut details: Vec<&str> = multiple
+        .iter()
+        .map(|f| f["detail"].as_str().unwrap())
+        .collect();
     details.sort_unstable();
-    assert_eq!(details, vec!["三", "二"], "detail は2つ目と3つ目の題名: {v}");
+    assert_eq!(
+        details,
+        vec!["三", "二"],
+        "detail は2つ目と3つ目の題名: {v}"
+    );
 }

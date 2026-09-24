@@ -45,9 +45,9 @@ pub fn read_list(text: &str, display: &str) -> Result<EquivalentList, StopReason
 
     let root: Value = serde_saphyr::from_str(text)
         .map_err(|e| StopReason::ConfigError(format!("{display}: {e}")))?;
-    let items = root.as_array().ok_or_else(|| {
-        StopReason::ConfigError(format!("{display}: the list is not a sequence"))
-    })?;
+    let items = root
+        .as_array()
+        .ok_or_else(|| StopReason::ConfigError(format!("{display}: the list is not a sequence")))?;
 
     let mut entries = Vec::new();
     let mut findings = Vec::new();

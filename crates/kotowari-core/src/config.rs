@@ -134,9 +134,9 @@ struct RawMutants {
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RawLimits {
-    #[serde(default, deserialize_with = "deserialize_nullable_nonzero")]
+    #[serde(default, deserialize_with = "deserialize_nullable")]
     lines: Option<Option<NonZeroU64>>,
-    #[serde(default, deserialize_with = "deserialize_nullable_nonzero")]
+    #[serde(default, deserialize_with = "deserialize_nullable")]
     requirements: Option<Option<NonZeroU64>>,
 }
 
@@ -150,31 +150,25 @@ where
     Ok(Some(opt))
 }
 
-fn deserialize_nullable_nonzero<'de, D>(deserializer: D) -> Result<Option<Option<NonZeroU64>>, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let opt = Option::<NonZeroU64>::deserialize(deserializer)?;
-    Ok(Some(opt))
-}
-
 use serde::Deserialize;
 
-/// null チェック付きで Option<Option<T>> から値を取り出す
-fn unwrap_or_null<T>(field: Option<Option<T>>, key: &str, default: T) -> Result<T, StopReason> {
-    match field {
-        None => Ok(default),           // キー不在 → 既定値
-        Some(None) => Err(StopReason::ConfigError(format!("null value for key: {key}"))),
-        Some(Some(v)) => Ok(v),
-    }
+/// キーの値を取り出す。キーが無ければ既定値にし、値が null なら設定の誤りで停止する（REQ-core-014）
+fn non_null_or_default<T>(
+    field: Option<Option<T>>,
+    key: &str,
+    default: T,
+) -> Result<T, StopReason> {
+    Ok(non_null(field, key)?.unwrap_or(default))
 }
 
 /// null チェック付きで、入れ子のキーを (キー不在 → None、値あり → Some(v)) にする。
 /// 値が null なら設定の誤りで停止する（REQ-core-014）。
-fn unwrap_or_null_option<T>(field: Option<Option<T>>, key: &str) -> Result<Option<T>, StopReason> {
+fn non_null<T>(field: Option<Option<T>>, key: &str) -> Result<Option<T>, StopReason> {
     match field {
         None => Ok(None),
-        Some(None) => Err(StopReason::ConfigError(format!("null value for key: {key}"))),
+        Some(None) => Err(StopReason::ConfigError(format!(
+            "null value for key: {key}"
+        ))),
         Some(Some(v)) => Ok(Some(v)),
     }
 }
@@ -208,24 +202,28 @@ impl Config {
             return Ok(Config::default());
         }
 
-        let raw: RawConfig = serde_saphyr::from_str(yaml)
-            .map_err(|e| StopReason::ConfigError(format!("{e}")))?;
+        let raw: RawConfig =
+            serde_saphyr::from_str(yaml).map_err(|e| StopReason::ConfigError(format!("{e}")))?;
 
         let defaults = Config::default();
 
         // REQ-core-014: null 値の検出と絶対パスの検出
         // REQ-core-110: パスの正規化
-        let ir = unwrap_or_null(raw.ir, "ir", defaults.ir)?;
+        let ir = non_null_or_default(raw.ir, "ir", defaults.ir)?;
         check_not_absolute(&ir, "ir")?;
         let ir = crate::normalize_path(&ir);
 
         // REQ-core-014: "decisions:" 自体が null のときも設定の誤りで停止する
-        let decisions = match unwrap_or_null_option(raw.decisions, "decisions")? {
+        let decisions = match non_null(raw.decisions, "decisions")? {
             Some(d) => {
-                let records = unwrap_or_null(d.records, "decisions.records", defaults.decisions.records)?;
+                let records = non_null_or_default(
+                    d.records,
+                    "decisions.records",
+                    defaults.decisions.records,
+                )?;
                 check_not_absolute(&records, "decisions.records")?;
                 let records = crate::normalize_path(&records);
-                let adr = unwrap_or_null(d.adr, "decisions.adr", defaults.decisions.adr)?;
+                let adr = non_null_or_default(d.adr, "decisions.adr", defaults.decisions.adr)?;
                 check_not_absolute(&adr, "decisions.adr")?;
                 let adr = crate::normalize_path(&adr);
                 DecisionsConfig { records, adr }
@@ -235,16 +233,16 @@ impl Config {
 
         // REQ-core-014: "tests:" と "tests.rust:" 自体、"tests.files"、
         // "tests.rust.attributes"、"tests.rust.macros"、"tests.rules" が null のときも停止する
-        let tests = match unwrap_or_null_option(raw.tests, "tests")? {
+        let tests = match non_null(raw.tests, "tests")? {
             Some(t) => {
-                let rust = match unwrap_or_null_option(t.rust, "tests.rust")? {
+                let rust = match non_null(t.rust, "tests.rust")? {
                     Some(r) => RustTestsConfig {
-                        attributes: unwrap_or_null(
+                        attributes: non_null_or_default(
                             r.attributes,
                             "tests.rust.attributes",
                             defaults.tests.rust.attributes,
                         )?,
-                        macros: unwrap_or_null(
+                        macros: non_null_or_default(
                             r.macros,
                             "tests.rust.macros",
                             defaults.tests.rust.macros,
@@ -252,7 +250,7 @@ impl Config {
                     },
                     None => defaults.tests.rust,
                 };
-                let files = unwrap_or_null(t.files, "tests.files", defaults.tests.files)?;
+                let files = non_null_or_default(t.files, "tests.files", defaults.tests.files)?;
                 // REQ-core-014: glob として読めない要素
                 for pattern in &files {
                     if globset::Glob::new(pattern).is_err() {
@@ -261,7 +259,7 @@ impl Config {
                         )));
                     }
                 }
-                let rules = unwrap_or_null(t.rules, "tests.rules", defaults.tests.rules)?;
+                let rules = non_null_or_default(t.rules, "tests.rules", defaults.tests.rules)?;
                 for rule in &rules {
                     check_not_absolute(rule, "tests.rules")?;
                 }
@@ -270,17 +268,19 @@ impl Config {
                     files,
                     rust,
                     // REQ-core-110: パスの正規化
-                    rules: rules.iter().map(|rule| crate::normalize_path(rule)).collect(),
+                    rules: rules
+                        .iter()
+                        .map(|rule| crate::normalize_path(rule))
+                        .collect(),
                 }
             }
             None => defaults.tests,
         };
 
         // REQ-core-014: "mutants:" 自体と "mutants.equivalents" が null のときも停止する
-        let mutants = match unwrap_or_null_option(raw.mutants, "mutants")? {
+        let mutants = match non_null(raw.mutants, "mutants")? {
             Some(m) => {
-                let equivalents = match unwrap_or_null_option(m.equivalents, "mutants.equivalents")?
-                {
+                let equivalents = match non_null(m.equivalents, "mutants.equivalents")? {
                     Some(path) => {
                         check_not_absolute(&path, "mutants.equivalents")?;
                         Some(crate::normalize_path(&path))
@@ -293,17 +293,25 @@ impl Config {
         };
 
         // REQ-core-014: "limits:" 自体が null のときも停止する
-        let limits = match unwrap_or_null_option(raw.limits, "limits")? {
+        let limits = match non_null(raw.limits, "limits")? {
             Some(l) => {
-                let lines = unwrap_or_null(l.lines, "limits.lines", defaults.limits.lines)?;
-                let requirements = unwrap_or_null(l.requirements, "limits.requirements", defaults.limits.requirements)?;
-                LimitsConfig { lines, requirements }
+                let lines = non_null_or_default(l.lines, "limits.lines", defaults.limits.lines)?;
+                let requirements = non_null_or_default(
+                    l.requirements,
+                    "limits.requirements",
+                    defaults.limits.requirements,
+                )?;
+                LimitsConfig {
+                    lines,
+                    requirements,
+                }
             }
             None => defaults.limits,
         };
 
         // REQ-core-014: "vague_words:" 自体が null のときも停止する
-        let vague_words = unwrap_or_null(raw.vague_words, "vague_words", defaults.vague_words)?;
+        let vague_words =
+            non_null_or_default(raw.vague_words, "vague_words", defaults.vague_words)?;
         if vague_words.iter().any(|w| w.is_empty()) {
             return Err(StopReason::ConfigError(
                 "vague_words contains an empty string".to_string(),

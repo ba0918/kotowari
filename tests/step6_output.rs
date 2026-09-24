@@ -92,7 +92,10 @@ fn req_023_files_counts_all_docs_and_lines_sums_them() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     // files は用語集を含む
-    assert_eq!(v["files"], 2, "files should count all docs including glossary");
+    assert_eq!(
+        v["files"], 2,
+        "files should count all docs including glossary"
+    );
     // lines は合計
     assert!(v["lines"].as_u64().unwrap() > 0, "lines should be positive");
     // findings は配列
@@ -221,7 +224,9 @@ fn req_025_text_line_for_a_document_without_a_title() {
         .unwrap();
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
-        stdout.lines().any(|l| l == "docs/ir/a.md:- [error] missing_title a.md"),
+        stdout
+            .lines()
+            .any(|l| l == "docs/ir/a.md:- [error] missing_title a.md"),
         "the finding without a line prints the path, a dash, the severity, the kind and the detail: {stdout}"
     );
 }
@@ -257,11 +262,7 @@ fn req_007_exit_code_one_on_error_and_zero_on_notice_only() {
     make_project(tmp.path());
 
     // 誤りなし → 終了コード 0
-    fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n",
-    )
-    .unwrap();
+    fs::write(tmp.path().join("docs/ir/a.md"), "# Title\n\nScope.\n").unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(output.status.code(), Some(0), "no errors should exit 0");
 
@@ -270,9 +271,19 @@ fn req_007_exit_code_one_on_error_and_zero_on_notice_only() {
     fs::write(tmp.path().join("docs/ir/a.md"), long).unwrap();
     let output_notice = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let stdout = String::from_utf8_lossy(&output_notice.stdout);
-    assert!(stdout.contains("too_many_lines"), "notice should be present: {stdout}");
-    assert!(stdout.contains("\"notice\""), "severity should be notice: {stdout}");
-    assert_eq!(output_notice.status.code(), Some(0), "notice only should exit 0");
+    assert!(
+        stdout.contains("too_many_lines"),
+        "notice should be present: {stdout}"
+    );
+    assert!(
+        stdout.contains("\"notice\""),
+        "severity should be notice: {stdout}"
+    );
+    assert_eq!(
+        output_notice.status.code(),
+        Some(0),
+        "notice only should exit 0"
+    );
 
     // 誤りあり → 終了コード 1
     fs::write(tmp.path().join("docs/ir/a.md"), "no title\n").unwrap();
@@ -360,7 +371,10 @@ fn req_128_text_format_does_not_print_tests() {
     // JSON には出る
     let json_output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&json_output);
-    assert_eq!(v["tests"]["go"]["files"], 1, "json should report the file: {v}");
+    assert_eq!(
+        v["tests"]["go"]["files"], 1,
+        "json should report the file: {v}"
+    );
 
     // text は指摘の行だけなので、指摘が無ければ何も出ない
     let text_output = cmd()
@@ -369,7 +383,10 @@ fn req_128_text_format_does_not_print_tests() {
         .output()
         .unwrap();
     let stdout = String::from_utf8_lossy(&text_output.stdout);
-    assert_eq!(stdout, "", "text format should print findings only: {stdout}");
+    assert_eq!(
+        stdout, "",
+        "text format should print findings only: {stdout}"
+    );
 }
 
 // @kotowari[TBL-core-021]
@@ -383,12 +400,18 @@ fn tbl_021_extension_is_after_the_last_dot_and_dotless_names_share_the_empty_key
     write_test_file(tmp.path(), "lib/foo.", "x\n");
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
-    assert_eq!(v["tests"]["rs"]["files"], 1, "a.test.rs has the rs key: {v}");
+    assert_eq!(
+        v["tests"]["rs"]["files"], 1,
+        "a.test.rs has the rs key: {v}"
+    );
     assert_eq!(
         v["tests"][""]["files"], 3,
         ".rs, run and foo. share the empty key: {v}"
     );
-    assert_eq!(v["tests"][""]["query"], false, "the empty key has no query: {v}");
+    assert_eq!(
+        v["tests"][""]["query"], false,
+        "the empty key has no query: {v}"
+    );
     assert_eq!(v["tests"].as_object().unwrap().len(), 2, "two keys: {v}");
 }
 
@@ -424,7 +447,10 @@ fn tbl_021_unparsable_file_is_counted() {
         .filter(|f| f["kind"] == "unparsable_file")
         .collect();
     assert_eq!(unparsable.len(), 1, "one unparsable file: {v}");
-    assert_eq!(v["tests"]["rs"]["files"], 2, "the unparsable file is counted: {v}");
+    assert_eq!(
+        v["tests"]["rs"]["files"], 2,
+        "the unparsable file is counted: {v}"
+    );
 }
 
 // @kotowari[TBL-core-021]
@@ -460,7 +486,11 @@ fn tbl_021_keys_are_in_byte_order() {
     let tests_part = &stdout[stdout.find("\"tests\":").expect("tests key")..];
     let mut positions = Vec::new();
     for key in ["\"\":", "\"RS\":", "\"go\":", "\"rs\":"] {
-        positions.push(tests_part.find(key).unwrap_or_else(|| panic!("{key} in {tests_part}")));
+        positions.push(
+            tests_part
+                .find(key)
+                .unwrap_or_else(|| panic!("{key} in {tests_part}")),
+        );
     }
     let mut sorted = positions.clone();
     sorted.sort_unstable();

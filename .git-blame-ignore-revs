@@ -1,0 +1,2 @@
+# rustfmt に揃えただけのコミット。git blame で飛ばす（git config blame.ignoreRevsFile .git-blame-ignore-revs）
+ad21648ddddc2e900aba56ed0645409c4538b7f0

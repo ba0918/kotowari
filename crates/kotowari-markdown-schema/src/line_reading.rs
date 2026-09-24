@@ -328,7 +328,8 @@ fn strip_indent(text: &str, width: usize) -> &str {
 fn table_at(lines: &[String], index: usize) -> Option<(Block, usize)> {
     // 区切りの行に置ける文字だけの行が続くときだけ GFM に読ませる。表かどうかは GFM が決める
     if !lines.get(index + 1).is_some_and(|next| {
-        next.chars().all(|c| matches!(c, '|' | '-' | ':' | ' ' | '\t'))
+        next.chars()
+            .all(|c| matches!(c, '|' | '-' | ':' | ' ' | '\t'))
     }) {
         return None;
     }
@@ -348,4 +349,3 @@ fn table_at(lines: &[String], index: usize) -> Option<(Block, usize)> {
     let rows = table.position.as_ref()?.end.line;
     Some((table_block_from_node(table, index), index + rows))
 }
-

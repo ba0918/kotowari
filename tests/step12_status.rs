@@ -57,7 +57,9 @@ fn run_status(tmp: &Path) -> (Option<i32>, serde_json::Value) {
 
 /// 要求の見出しと行を作る
 fn requirement(id: &str, name: &str, fields: &str) -> String {
-    format!("### {id}: {name}\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n{fields}\n文である。\n\n")
+    format!(
+        "### {id}: {name}\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n{fields}\n文である。\n\n"
+    )
 }
 
 /// EX-core-258 と EX-core-261 が使う文書とテスト。
@@ -71,7 +73,11 @@ fn write_ex_258_project(tmp: &Path) {
             "# 題名\n\n範囲。\n\n## Requirements\n\n{}{}## Examples\n\n\
 ```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: 例\n  Given 何か\n```\n",
             requirement("REQ-001", "一", "- verification: unit\n"),
-            requirement("REQ-002", "二", "- verification: review\n- how_to_verify: 人が読む\n"),
+            requirement(
+                "REQ-002",
+                "二",
+                "- verification: review\n- how_to_verify: 人が読む\n"
+            ),
         ),
     );
     write(
@@ -135,7 +141,11 @@ fn req_165_flag_makes_it_not_complete() {
         "docs/ir/a.md",
         &format!(
             "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
-            requirement("REQ-001", "一", "- verification: review\n- how_to_verify: 人が読む\n")
+            requirement(
+                "REQ-001",
+                "一",
+                "- verification: review\n- how_to_verify: 人が読む\n"
+            )
         ),
     );
     write(
@@ -187,7 +197,11 @@ fn tbl_028_review_requirements_are_not_in_with_or_without_tests() {
         "docs/ir/a.md",
         &format!(
             "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
-            requirement("REQ-001", "一", "- verification: review\n- how_to_verify: 人が読む\n")
+            requirement(
+                "REQ-001",
+                "一",
+                "- verification: review\n- how_to_verify: 人が読む\n"
+            )
         ),
     );
     let (_, v) = run_status(tmp.path());
@@ -204,7 +218,10 @@ fn tbl_028_requirement_without_a_verification_line_is_counted_by_marks_only() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "一", "")),
+        &format!(
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            requirement("REQ-001", "一", "")
+        ),
     );
     let (_, v) = run_status(tmp.path());
     // "- verification:" の行の無い要求は検証の値のどれにも数えない
@@ -230,7 +247,11 @@ fn tbl_028_items_are_counted_by_kind() {
 ### TBL-002: もう1つの表\n\n- source: docs/decision/records/records.md#A1\n\n| A |\n|---|\n| 1 |\n\n\
 ## Properties\n\n### PROP-001: 性\n\n- source: docs/decision/records/records.md#A1\n\n文である。\n\n## Examples\n\n\
 ```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: 例\n  Given 何か\n```\n",
-            requirement("REQ-001", "一", "- verification: review\n- how_to_verify: 人が読む\n")
+            requirement(
+                "REQ-001",
+                "一",
+                "- verification: review\n- how_to_verify: 人が読む\n"
+            )
         ),
     );
     write(
@@ -267,7 +288,11 @@ fn tbl_028_requirements_are_counted_by_verification_value() {
             requirement("REQ-001", "一", "- verification: unit\n"),
             requirement("REQ-002", "二", "- verification: property\n"),
             requirement("REQ-003", "三", "- verification: proof\n"),
-            requirement("REQ-004", "四", "- verification: review\n- how_to_verify: 人が読む\n"),
+            requirement(
+                "REQ-004",
+                "四",
+                "- verification: review\n- how_to_verify: 人が読む\n"
+            ),
         ),
     );
     let (_, v) = run_status(tmp.path());
@@ -294,7 +319,11 @@ fn tbl_028_notices_are_counted_apart_from_errors() {
         "docs/ir/a.md",
         &format!(
             "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
-            requirement("REQ-001", "一", "- verification: review\n- how_to_verify: 人が読む\n")
+            requirement(
+                "REQ-001",
+                "一",
+                "- verification: review\n- how_to_verify: 人が読む\n"
+            )
         ),
     );
     let (code, v) = run_status(tmp.path());
@@ -352,7 +381,11 @@ fn req_166_json_top_level_has_only_the_groups() {
         "\"complete\"",
     ]
     .iter()
-    .map(|key| stdout.find(key).unwrap_or_else(|| panic!("no {key} in {stdout}")))
+    .map(|key| {
+        stdout
+            .find(key)
+            .unwrap_or_else(|| panic!("no {key} in {stdout}"))
+    })
     .collect();
     assert!(order.windows(2).all(|w| w[0] < w[1]), "{stdout}");
 }
@@ -366,17 +399,28 @@ fn req_162_status_writes_no_finding() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "一", "")),
+        &format!(
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            requirement("REQ-001", "一", "")
+        ),
     );
     let (code, stdout, stderr) = run(tmp.path(), &["status"]);
     assert_eq!(code, Some(1));
     assert_eq!(stderr, "", "status writes no finding to stderr");
     let v: serde_json::Value = serde_json::from_str(&stdout).expect("valid JSON");
-    let mut names: Vec<&str> = v["findings"].as_object().unwrap().keys().map(String::as_str).collect();
+    let mut names: Vec<&str> = v["findings"]
+        .as_object()
+        .unwrap()
+        .keys()
+        .map(String::as_str)
+        .collect();
     names.sort_unstable();
     assert_eq!(names, vec!["error", "notice"]);
     for key in ["\"kind\"", "\"detail\"", "\"severity\""] {
-        assert!(!stdout.contains(key), "status writes no finding to stdout: {stdout}");
+        assert!(
+            !stdout.contains(key),
+            "status writes no finding to stdout: {stdout}"
+        );
     }
 }
 
@@ -394,7 +438,10 @@ fn req_166_text_prints_one_line_per_group() {
         "got: {:?}",
         lines[0]
     );
-    assert_eq!(lines[1], "items requirement=2 table=0 property=0 scenario=1 flag=0");
+    assert_eq!(
+        lines[1],
+        "items requirement=2 table=0 property=0 scenario=1 flag=0"
+    );
     assert_eq!(
         lines[2],
         "requirements unit=1 property=0 proof=0 review=1 with_tests=1 without_tests=0 review_with_how_to_verify=1 review_without_how_to_verify=0 without_examples=1"

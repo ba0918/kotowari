@@ -461,7 +461,11 @@ mod tests {
     #[test]
     fn a_missing_field_line_splits_by_the_name_of_the_field() {
         let cases = [
-            ("verification", FindingKind::VerificationMissing, "REQ-core-001"),
+            (
+                "verification",
+                FindingKind::VerificationMissing,
+                "REQ-core-001",
+            ),
             ("source", FindingKind::MissingSource, "REQ-core-001"),
             ("kind", FindingKind::MissingField, "kind"),
             ("how_to_verify", FindingKind::MissingField, "how_to_verify"),

@@ -157,7 +157,10 @@ fn req_031_check_reports_no_notice_outside_the_four_kinds() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let findings = v["findings"].as_array().unwrap();
-    let notices: Vec<_> = findings.iter().filter(|f| f["severity"] == "notice").collect();
+    let notices: Vec<_> = findings
+        .iter()
+        .filter(|f| f["severity"] == "notice")
+        .collect();
     // 警告が実際に存在すること
     assert!(
         !notices.is_empty(),
@@ -198,7 +201,10 @@ fn req_027_document_wide_findings_have_null_line() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let mt = findings_by_kind(&v, "missing_title");
-    assert!(mt[0]["line"].is_null(), "missing_title should have null line");
+    assert!(
+        mt[0]["line"].is_null(),
+        "missing_title should have null line"
+    );
 }
 
 // --- REQ-core-028: 行は1始まり ---
@@ -237,8 +243,16 @@ fn req_024_sorted_by_path_line_kind_detail() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 複数の文書に指摘を出す
-    fs::write(tmp.path().join("docs/ir/b.md"), "# B\n\nScope.\n\n## Requirements\n\n### Bad1\n").unwrap();
-    fs::write(tmp.path().join("docs/ir/a.md"), "# A\n\nScope.\n\n## Requirements\n\n### Bad2\n").unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/b.md"),
+        "# B\n\nScope.\n\n## Requirements\n\n### Bad1\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        "# A\n\nScope.\n\n## Requirements\n\n### Bad2\n",
+    )
+    .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let findings = v["findings"].as_array().unwrap();
@@ -264,10 +278,7 @@ fn req_024_sorted_by_path_line_kind_detail() {
         let kind_cmp = prev_kind.cmp(curr_kind);
         let detail_cmp = prev_detail.cmp(curr_detail);
 
-        let overall = path_cmp
-            .then(line_cmp)
-            .then(kind_cmp)
-            .then(detail_cmp);
+        let overall = path_cmp.then(line_cmp).then(kind_cmp).then(detail_cmp);
         assert!(
             overall != std::cmp::Ordering::Greater,
             "findings not sorted at index {i}: prev=({prev_path},{prev_line:?},{prev_kind},{prev_detail}) curr=({curr_path},{curr_line:?},{curr_kind},{curr_detail})"
@@ -371,7 +382,10 @@ fn req_027_glossary_invalid_has_null_line() {
     let v = parse_json(&output);
     let gi = findings_by_kind(&v, "glossary_invalid");
     assert!(!gi.is_empty(), "should produce glossary_invalid: {:?}", gi);
-    assert!(gi[0]["line"].is_null(), "glossary_invalid line should be null");
+    assert!(
+        gi[0]["line"].is_null(),
+        "glossary_invalid line should be null"
+    );
 }
 
 // @kotowari[TBL-core-019]
@@ -404,11 +418,17 @@ fn tbl_019_invalid_gherkin_line_and_invalid_id_lines() {
     let ig = findings_by_kind(&v, "invalid_gherkin_line");
     assert!(!ig.is_empty(), "should have invalid_gherkin_line");
     // invalid_gherkin_line の line はその行
-    assert_eq!(ig[0]["line"], 21, "invalid_gherkin_line should be on its own line (21)");
+    assert_eq!(
+        ig[0]["line"], 21,
+        "invalid_gherkin_line should be on its own line (21)"
+    );
     let ii = findings_by_kind(&v, "invalid_id");
     assert!(!ii.is_empty(), "should have invalid_id");
     // invalid_id の line はタグの行
-    assert_eq!(ii[0]["line"], 18, "invalid_id line should be the tag line (18)");
+    assert_eq!(
+        ii[0]["line"], 18,
+        "invalid_id line should be the tag line (18)"
+    );
 }
 
 // @kotowari[TBL-core-019]
@@ -428,7 +448,10 @@ fn tbl_019_unclosed_backtick_line() {
     let v = parse_json(&output);
     let ub = findings_by_kind(&v, "unclosed_backtick");
     assert!(!ub.is_empty(), "should produce unclosed_backtick");
-    assert_eq!(ub[0]["line"], 13, "unclosed_backtick should be on its own line (13)");
+    assert_eq!(
+        ub[0]["line"], 13,
+        "unclosed_backtick should be on its own line (13)"
+    );
 }
 
 // @kotowari[TBL-core-019]
@@ -441,12 +464,16 @@ fn tbl_019_marker_findings_line_is_the_marker_line() {
     fs::write(
         tmp.path().join("tests/test_a.rs"),
         "// @kotowari[]\n#[test]\nfn test_a() {}\n",
-    ).unwrap();
+    )
+    .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let im = findings_by_kind(&v, "invalid_marker");
     assert!(!im.is_empty(), "should have invalid_marker");
-    assert_eq!(im[0]["line"], 1, "invalid_marker line should be the marker line (1)");
+    assert_eq!(
+        im[0]["line"], 1,
+        "invalid_marker line should be the marker line (1)"
+    );
 }
 
 // @kotowari[TBL-core-019]
@@ -463,7 +490,10 @@ fn tbl_019_source_invalid_line_is_the_source_line() {
     let si = findings_by_kind(&v, "source_invalid");
     assert!(!si.is_empty(), "should have source_invalid");
     // line は出典の行（10行目）
-    assert_eq!(si[0]["line"], 10, "source_invalid line should be the source line (10)");
+    assert_eq!(
+        si[0]["line"], 10,
+        "source_invalid line should be the source line (10)"
+    );
 }
 
 // --- REQ-core-174: 宣言の外の行・コードブロック・用語集の題名 ---
@@ -485,7 +515,10 @@ fn req_174_a_line_outside_the_declaration_below_a_section_heading_is_unknown_lin
     let v = parse_json(&output);
     let found = findings_by_kind(&v, "unknown_line");
     assert_eq!(found.len(), 1, "{:?}", v["findings"]);
-    assert_eq!(found[0]["detail"], "節の直下の素の行。", "detail は行の文字");
+    assert_eq!(
+        found[0]["detail"], "節の直下の素の行。",
+        "detail は行の文字"
+    );
     assert_eq!(found[0]["line"], 7, "\"line\" はその行");
     assert_eq!(found[0]["severity"], "error");
     assert_eq!(output.status.code(), Some(1));
@@ -498,7 +531,9 @@ fn req_174_an_undeclared_table_or_code_block_is_also_unknown_line() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join("docs/ir/a.md"),
-        format!("{TOPIC_HEAD}\n## Requirements\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n```text\nx\n```\n"),
+        format!(
+            "{TOPIC_HEAD}\n## Requirements\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n```text\nx\n```\n"
+        ),
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -541,7 +576,10 @@ fn req_174_a_glossary_title_outside_the_declared_form_is_glossary_title_invalid(
     let v = parse_json(&output);
     let found = findings_by_kind(&v, "glossary_title_invalid");
     assert_eq!(found.len(), 1, "{:?}", v["findings"]);
-    assert_eq!(found[0]["detail"], "# 用語の一覧", "detail は題名の行の文字");
+    assert_eq!(
+        found[0]["detail"], "# 用語の一覧",
+        "detail は題名の行の文字"
+    );
     assert_eq!(found[0]["line"], 1, "\"line\" は題名の行");
     assert_eq!(found[0]["severity"], "error");
 }
@@ -620,11 +658,25 @@ fn ex_core_264_moving_the_schema_files_away_does_not_change_the_output() {
     // スキーマのファイルの置き場。中身は読まれないので、読めない形にしておく
     fs::create_dir_all(tmp.path().join(".kotowari/schemas")).unwrap();
     for name in ["ir.yaml", "context.yaml", "flags.yaml"] {
-        fs::write(tmp.path().join(".kotowari/schemas").join(name), "not: [a schema").unwrap();
+        fs::write(
+            tmp.path().join(".kotowari/schemas").join(name),
+            "not: [a schema",
+        )
+        .unwrap();
     }
-    let run = || cmd().args(["check", "--format", "json"]).current_dir(tmp.path()).output().unwrap();
+    let run = || {
+        cmd()
+            .args(["check", "--format", "json"])
+            .current_dir(tmp.path())
+            .output()
+            .unwrap()
+    };
     let before = run();
-    fs::rename(tmp.path().join(".kotowari/schemas"), tmp.path().join("moved-away")).unwrap();
+    fs::rename(
+        tmp.path().join(".kotowari/schemas"),
+        tmp.path().join("moved-away"),
+    )
+    .unwrap();
     let after = run();
     assert_eq!(before.status.code(), after.status.code());
     assert_eq!(before.stdout, after.stdout);
@@ -641,7 +693,11 @@ fn ex_core_267_the_ir_of_this_repository_has_none_of_the_three() {
         .output()
         .unwrap();
     let v = parse_json(&output);
-    for kind in ["unknown_line", "unknown_code_block", "glossary_title_invalid"] {
+    for kind in [
+        "unknown_line",
+        "unknown_code_block",
+        "glossary_title_invalid",
+    ] {
         assert!(
             findings_by_kind(&v, kind).is_empty(),
             "{kind} がこのリポジトリの IR で出ている"

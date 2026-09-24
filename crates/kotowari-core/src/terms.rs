@@ -1,6 +1,6 @@
 //! 用語、曖昧語、文書名の参照の検査（REQ-core-063〜REQ-core-070, REQ-core-104）
 
-use crate::ir::{is_valid_id, IrDocument, Item};
+use crate::ir::{IrDocument, Item, is_valid_id};
 use crate::{Finding, FindingKind};
 use std::collections::BTreeSet;
 
@@ -24,11 +24,7 @@ pub fn collect_glossary_terms(docs: &[IrDocument], directory: &str) -> Option<BT
         }
     }
 
-    if has_glossary {
-        Some(terms)
-    } else {
-        None
-    }
+    if has_glossary { Some(terms) } else { None }
 }
 
 /// 対象の行からバッククォートで囲んだ語を検査する（REQ-core-064, REQ-core-065, REQ-core-116）
@@ -43,7 +39,12 @@ pub fn check_unknown_terms(
     // REQ-core-116: バッククォートが奇数の行は unclosed_backtick
     // 二重引用符の外のバッククォートだけを数える
     if crate::has_odd_backticks_outside_quotes(text) {
-        findings.push(Finding::new(FindingKind::UnclosedBacktick, path.to_string(), Some(line), text.to_string()));
+        findings.push(Finding::new(
+            FindingKind::UnclosedBacktick,
+            path.to_string(),
+            Some(line),
+            text.to_string(),
+        ));
         return;
     }
     for content in crate::extract_backtick_contents_outside_quotes(text) {
@@ -51,7 +52,12 @@ pub fn check_unknown_terms(
         let trimmed = content.trim();
         // REQ-core-064: 中身が空の囲み
         if trimmed.is_empty() {
-            findings.push(Finding::new(FindingKind::UnknownTerm, path.to_string(), Some(line), "``".to_string()));
+            findings.push(Finding::new(
+                FindingKind::UnknownTerm,
+                path.to_string(),
+                Some(line),
+                "``".to_string(),
+            ));
             continue;
         }
         // ID なら参照チェック（ir モジュールで済み）、用語チェックはしない
@@ -64,7 +70,12 @@ pub fn check_unknown_terms(
             None => false, // 用語集がない → すべて unknown
         };
         if !is_known {
-            findings.push(Finding::new(FindingKind::UnknownTerm, path.to_string(), Some(line), trimmed.to_string()));
+            findings.push(Finding::new(
+                FindingKind::UnknownTerm,
+                path.to_string(),
+                Some(line),
+                trimmed.to_string(),
+            ));
         }
     }
 }
@@ -91,7 +102,12 @@ pub fn check_vague_words(
             .filter(|w| !w.is_empty() && remaining.starts_with(w.as_str()))
             .max_by_key(|w| w.chars().count());
         if let Some(word) = best_word {
-            findings.push(Finding::new(FindingKind::VagueWord, path.to_string(), Some(line), word.clone()));
+            findings.push(Finding::new(
+                FindingKind::VagueWord,
+                path.to_string(),
+                Some(line),
+                word.clone(),
+            ));
             pos += word.chars().count();
         } else {
             pos += 1;
@@ -140,7 +156,12 @@ fn find_doc_refs(
         let after_md = md_abs + 3;
         if after_md < len {
             let next_byte = bytes[after_md];
-            if next_byte.is_ascii_alphanumeric() || next_byte == b'_' || next_byte == b'-' || next_byte == b'#' || next_byte == b'/' {
+            if next_byte.is_ascii_alphanumeric()
+                || next_byte == b'_'
+                || next_byte == b'-'
+                || next_byte == b'#'
+                || next_byte == b'/'
+            {
                 i = md_abs + 1;
                 continue;
             }
@@ -150,7 +171,12 @@ fn find_doc_refs(
         let mut name_start = md_abs;
         while name_start > 0 {
             let prev = bytes[name_start - 1];
-            if prev.is_ascii_lowercase() || prev.is_ascii_digit() || prev == b'-' || prev == b'/' || prev == b'.' {
+            if prev.is_ascii_lowercase()
+                || prev.is_ascii_digit()
+                || prev == b'-'
+                || prev == b'/'
+                || prev == b'.'
+            {
                 name_start -= 1;
             } else {
                 break;
@@ -163,15 +189,13 @@ fn find_doc_refs(
             true
         } else {
             let prev_char = text[..name_start].chars().next_back().unwrap();
-            !prev_char.is_ascii_alphanumeric()
-                && !matches!(prev_char, '_' | '-' | '/' | '.' | '`')
+            !prev_char.is_ascii_alphanumeric() && !matches!(prev_char, '_' | '-' | '/' | '.' | '`')
         };
 
         let mut elements = text[name_start..md_abs].rsplit('/');
         let name_ok = elements.next().is_some_and(is_reference_name);
-        let directories_ok = elements.all(|element| {
-            element == "." || element == ".." || is_reference_name(element)
-        });
+        let directories_ok =
+            elements.all(|element| element == "." || element == ".." || is_reference_name(element));
 
         if boundary_ok && name_ok && directories_ok {
             let target = if doc_name.contains('/') {
@@ -180,7 +204,12 @@ fn find_doc_refs(
                 crate::join_display_path(directory, doc_name)
             };
             if !ir_paths.contains(&target) {
-                findings.push(Finding::new(FindingKind::MissingDocument, path.to_string(), Some(line), doc_name.to_string()));
+                findings.push(Finding::new(
+                    FindingKind::MissingDocument,
+                    path.to_string(),
+                    Some(line),
+                    doc_name.to_string(),
+                ));
             }
         }
 
@@ -190,7 +219,9 @@ fn find_doc_refs(
 
 fn is_reference_name(element: &str) -> bool {
     !element.is_empty()
-        && element.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+        && element
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
 }
 
 /// IR 文書の対象の行（TBL-core-013）で用語と曖昧語を検査する

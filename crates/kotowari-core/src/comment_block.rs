@@ -7,7 +7,7 @@ use ast_grep_core::Node;
 use ast_grep_core::tree_sitter::StrDoc;
 use ast_grep_language::SupportLang;
 
-use crate::tests_discovery::parse_markers_in_line;
+use crate::tests_discovery::{InvalidMarkers, MarkerIds, parse_markers_in_line};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum ByteClass {
@@ -91,11 +91,8 @@ impl<'s> LineMap<'s> {
     }
 
     /// `テスト`の節の最初の行（0始まり）の`直前のコメントの塊`の印を集める。
-    /// 返り値: (出現ごとの (ID, 印の行), 空・閉じ括弧の無い印の (行, 行の文字))。行は1始まり
-    pub fn markers_before(
-        &self,
-        first_line: usize,
-    ) -> (Vec<(String, usize)>, Vec<(usize, String)>) {
+    /// 返り値: (印の出現, 空・閉じ括弧の無い印)。行は1始まり
+    pub fn markers_before(&self, first_line: usize) -> (MarkerIds, InvalidMarkers) {
         let mut ids = Vec::new();
         let mut invalid = Vec::new();
         let mut top = first_line;

@@ -325,16 +325,12 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                 }
             };
             if *slot {
-                return Err(StopReason::ArgumentError(format!(
-                    "repeated option: {arg}"
-                )));
+                return Err(StopReason::ArgumentError(format!("repeated option: {arg}")));
             }
             *slot = true;
             i += 1;
             if i >= args.len() {
-                return Err(StopReason::ArgumentError(format!(
-                    "{arg} requires a value"
-                )));
+                return Err(StopReason::ArgumentError(format!("{arg} requires a value")));
             }
             match arg.as_str() {
                 "--format" => format_str = Some(args[i].clone()),
@@ -368,19 +364,17 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     }
 
     // REQ-core-004: --config がディレクトリを指すとき
-    if let Some(ref cp) = config_path {
-        if cp.is_dir() {
-            return Err(StopReason::ArgumentError(format!(
-                "--config is a directory: {}",
-                cp.display()
-            )));
-        }
+    if let Some(ref cp) = config_path
+        && cp.is_dir()
+    {
+        return Err(StopReason::ArgumentError(format!(
+            "--config is a directory: {}",
+            cp.display()
+        )));
     }
 
-    let format = match Format::parse(format_str.as_deref().unwrap_or("json")) {
-        Ok(f) => f,
-        Err(e) => return Err(StopReason::ArgumentError(e)),
-    };
+    let format = Format::parse(format_str.as_deref().unwrap_or("json"))
+        .map_err(StopReason::ArgumentError)?;
 
     // REQ-core-152、REQ-core-158、REQ-core-163: list、query、status は check と同じ条件で、
     // 同じ理由と文言で停止する
@@ -480,8 +474,8 @@ pub fn strip_bom(text: &str) -> &str {
 pub fn read_utf8_file(path: &Path, display_path: &str) -> Result<String, StopReason> {
     let bytes = std::fs::read(path)
         .map_err(|e| StopReason::UnreadableFile(format!("{display_path}: {e}")))?;
-    let text = String::from_utf8(bytes)
-        .map_err(|_| StopReason::NonUtf8File(display_path.to_string()))?;
+    let text =
+        String::from_utf8(bytes).map_err(|_| StopReason::NonUtf8File(display_path.to_string()))?;
     Ok(strip_bom(&text).to_string())
 }
 
@@ -522,11 +516,16 @@ pub fn join_display_path(dir: &str, name: &str) -> String {
     }
 }
 
-/// 二重引用符の外の部分を返す。
 /// 二重引用符の外のバッククォートの数が奇数か（REQ-core-116。二重引用符の中は A145 で対象外）。
 /// ir モジュールと terms モジュールの両方から使う
 pub fn has_odd_backticks_outside_quotes(text: &str) -> bool {
-    split_outside_quotes(text).join("").chars().filter(|&c| c == '`').count() % 2 != 0
+    split_outside_quotes(text)
+        .join("")
+        .chars()
+        .filter(|&c| c == '`')
+        .count()
+        % 2
+        != 0
 }
 
 /// 二重引用符の外の部分からバッククォートで囲んだ語を集める（REQ-core-054, REQ-core-064, REQ-core-104）。
@@ -557,7 +556,11 @@ pub fn split_outside_quotes(line: &str) -> Vec<&str> {
     let mut parts = Vec::new();
     let mut start = 0;
     let mut in_quote = false;
-    let last_quote_pos = if odd_quotes { line.rfind('"').unwrap_or(0) } else { 0 };
+    let last_quote_pos = if odd_quotes {
+        line.rfind('"').unwrap_or(0)
+    } else {
+        0
+    };
 
     for (i, c) in line.char_indices() {
         if c == '"' {
@@ -578,7 +581,7 @@ pub fn split_outside_quotes(line: &str) -> Vec<&str> {
     parts
 }
 
-/// パスの "." と ".." をファイルシステムに触れずに畳む（`--config` の相対パス表示用）。
+/// パスの "." と ".." をファイルシステムに触れずに畳む（`基準のディレクトリ`からの相対パスの表示用）。
 fn lexically_normalize(path: &Path) -> PathBuf {
     use std::path::Component;
     let mut result = PathBuf::new();
@@ -676,104 +679,65 @@ pub fn run(args: &[String]) -> u8 {
         Cli::Check {
             format,
             config_path,
-        } => {
-            let cwd = match current_dir() {
-                Ok(cwd) => cwd,
-                Err(reason) => return stop(&reason),
-            };
-            match run_check(&cwd, format, config_path.as_deref()) {
-                Ok((result, format)) => {
-                    print_check(&result, format);
-                    exit_code_for(&result.findings)
-                }
-                Err(reason) => stop(&reason),
-            }
-        }
+        } => with_cwd(|cwd| {
+            let (result, format) = run_check(cwd, format, config_path.as_deref())?;
+            print_check(&result, format);
+            Ok(exit_code_for(&result.findings))
+        }),
         // REQ-core-151: check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
         Cli::List {
             format,
             config_path,
-        } => {
-            let cwd = match current_dir() {
-                Ok(cwd) => cwd,
-                Err(reason) => return stop(&reason),
-            };
-            match run_list(&cwd, config_path.as_deref()) {
-                Ok(result) => {
-                    print_list(&result, format);
-                    0
-                }
-                Err(reason) => stop(&reason),
-            }
-        }
+        } => with_cwd(|cwd| {
+            let result = run_list(cwd, config_path.as_deref())?;
+            print_list(&result, format);
+            Ok(0)
+        }),
         // REQ-core-156: check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
         Cli::Query {
             format,
             config_path,
             id,
-        } => {
-            let cwd = match current_dir() {
-                Ok(cwd) => cwd,
-                Err(reason) => return stop(&reason),
-            };
-            match run_query(&cwd, config_path.as_deref(), &id) {
-                Ok(result) => {
-                    print_query(&result, format);
-                    0
-                }
-                Err(reason) => stop(&reason),
-            }
-        }
+        } => with_cwd(|cwd| {
+            let result = run_query(cwd, config_path.as_deref(), &id)?;
+            print_query(&result, format);
+            Ok(0)
+        }),
         // REQ-core-162: check と同じ検査を走らせ、指摘は出さず集計だけを出す
         Cli::Status {
             format,
             config_path,
-        } => {
-            let cwd = match current_dir() {
-                Ok(cwd) => cwd,
-                Err(reason) => return stop(&reason),
-            };
-            match run_status(&cwd, config_path.as_deref()) {
-                Ok(result) => {
-                    print_status(&result, format);
-                    // REQ-core-165: complete なら 0、そうでなければ 1
-                    u8::from(!result.complete)
-                }
-                Err(reason) => stop(&reason),
-            }
-        }
+        } => with_cwd(|cwd| {
+            let result = run_status(cwd, config_path.as_deref())?;
+            print_status(&result, format);
+            // REQ-core-165: complete なら 0、そうでなければ 1
+            Ok(u8::from(!result.complete))
+        }),
         Cli::Mutants {
             format,
             config_path,
             tool,
             results,
-        } => {
-            let cwd = match current_dir() {
-                Ok(cwd) => cwd,
-                Err(reason) => return stop(&reason),
-            };
-            match run_mutants(&cwd, config_path.as_deref(), tool, &results) {
-                Ok(result) => {
-                    print_mutants(&result, format);
-                    exit_code_for(&result.findings)
-                }
-                Err(reason) => stop(&reason),
-            }
-        }
+        } => with_cwd(|cwd| {
+            let result = run_mutants(cwd, config_path.as_deref(), tool, &results)?;
+            print_mutants(&result, format);
+            Ok(exit_code_for(&result.findings))
+        }),
         // REQ-core-196: 設定を読まず、計画書のファイルだけを読む
-        Cli::Plan { format, path } => {
-            let cwd = match current_dir() {
-                Ok(cwd) => cwd,
-                Err(reason) => return stop(&reason),
-            };
-            match run_plan(&cwd, &path) {
-                Ok(result) => {
-                    print_plan(&result, format);
-                    exit_code_for(&result.findings)
-                }
-                Err(reason) => stop(&reason),
-            }
-        }
+        Cli::Plan { format, path } => with_cwd(|cwd| {
+            let result = run_plan(cwd, &path)?;
+            print_plan(&result, format);
+            Ok(exit_code_for(&result.findings))
+        }),
+    }
+}
+
+/// カレントディレクトリを取って command を走らせ、その終了コードを返す。
+/// カレントディレクトリが取れないか command が止まれば`停止`する
+fn with_cwd(command: impl FnOnce(&Path) -> Result<u8, StopReason>) -> u8 {
+    match current_dir().and_then(|cwd| command(&cwd)) {
+        Ok(code) => code,
+        Err(reason) => stop(&reason),
     }
 }
 
@@ -925,29 +889,25 @@ pub fn run_mutants(
     };
 
     let sources = read_sources(&base, &list.entries);
-    let (mut findings, counts) =
+    let (mut findings, mutant_counts) =
         mutants::check_outcomes(&outcomes, &list.entries, &list_path, &sources);
     findings.extend(list.findings);
     sort_findings(&mut findings);
-    let kinds = count_findings(&findings);
+    let counts = count_findings(&findings);
 
     Ok(mutants::MutantsResult {
         findings,
-        counts: kinds,
-        mutants: counts,
+        counts,
+        mutants: mutant_counts,
     })
 }
 
 /// 一致を見るのに要るソースだけを読む。読めなかったファイルは持たない（REQ-core-141、REQ-core-142）
-fn read_sources(
-    base: &Path,
-    entries: &[equivalents::Equivalent],
-) -> BTreeMap<String, Vec<String>> {
+fn read_sources(base: &Path, entries: &[equivalents::Equivalent]) -> BTreeMap<String, Vec<String>> {
     let mut sources = BTreeMap::new();
     // 一致にも文面の検査にも要るのは一覧の1件が指すファイルだけ。
     // 一致には "file" が同じであることが要るので、どの1件も指さないファイルは読んでも使われない
-    let files: std::collections::BTreeSet<&str> =
-        entries.iter().map(|e| e.file.as_str()).collect();
+    let files: std::collections::BTreeSet<&str> = entries.iter().map(|e| e.file.as_str()).collect();
     for file in files {
         if let Some(lines) = read_source_lines(base, file) {
             sources.insert(file.to_string(), lines);
@@ -975,13 +935,8 @@ fn sort_findings(findings: &mut [Finding]) {
     findings.sort_by(|a, b| {
         a.path
             .cmp(&b.path)
-            .then_with(|| match (a.line, b.line) {
-                // TBL-core-007: line は null が先、その後は小さい順
-                (None, None) => std::cmp::Ordering::Equal,
-                (None, Some(_)) => std::cmp::Ordering::Less,
-                (Some(_), None) => std::cmp::Ordering::Greater,
-                (Some(al), Some(bl)) => al.cmp(&bl),
-            })
+            // TBL-core-007: line は null が先、その後は小さい順（Option の順序が None を先に置く）
+            .then_with(|| a.line.cmp(&b.line))
             .then_with(|| a.kind.as_str().cmp(b.kind.as_str()))
             .then_with(|| a.detail.cmp(&b.detail))
     });
@@ -1014,9 +969,7 @@ fn load_config(
             }
             // TBL-core-020/A164: 詳細のパスは基準のディレクトリからの相対
             // （外にあれば "../" を含む。ファイルシステムには触れない）
-            let display =
-                relative_display(&lexically_normalize(base), &lexically_normalize(&abs));
-            (abs, display)
+            (abs, display_from_base(base, cwd, cp))
         }
         // 既定: base/.kotowari/config.yaml
         None => {
@@ -1036,7 +989,8 @@ fn load_config(
     })
 }
 
-/// check と list が共有する読み取りの結果（REQ-core-151: list は check と同じ読み取りを使う）
+/// check、list、query、status が共有する読み取りの結果
+/// （REQ-core-151、REQ-core-156、REQ-core-162: どれも check と同じ読み取りを使う）
 pub struct Loaded {
     pub cfg: config::Config,
     pub docs: Vec<ir::IrDocument>,
@@ -1048,7 +1002,7 @@ pub struct Loaded {
 }
 
 /// 設定と置き場から IR の文書とテストのファイルを読み、検査もする。
-/// check はこの指摘を出し、list は捨てる（REQ-core-151）
+/// check はこの指摘を出し、list と query は捨て、status は数だけを出す（REQ-core-151、REQ-core-156、REQ-core-162）
 pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopReason> {
     let base = find_base(cwd);
     let cfg = load_config(cwd, &base, config_path)?;
@@ -1065,7 +1019,9 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
         (&adr_dir, &cfg.decisions.adr),
     ] {
         if !dir.is_dir() {
-            let err = std::fs::read_dir(dir).err().map(|e| e.to_string())
+            let err = std::fs::read_dir(dir)
+                .err()
+                .map(|e| e.to_string())
                 .unwrap_or_else(|| "not a directory".to_string());
             return Err(StopReason::UnreadableFile(format!("{configured}: {err}")));
         }
@@ -1083,9 +1039,7 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
 
     // 用語と曖昧語の検査
     let known_ids = collect_known_ids(&docs);
-    terms::check_terms_and_vague_words(
-        &docs, &known_ids, &cfg.vague_words, &cfg.ir, &mut findings,
-    );
+    terms::check_terms_and_vague_words(&docs, &known_ids, &cfg.vague_words, &cfg.ir, &mut findings);
 
     // 文書名の参照の検査
     let ir_paths: std::collections::BTreeSet<String> =
@@ -1094,10 +1048,21 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
 
     // テストの発見と印の検査
     let (tally, markers) = tests_discovery::discover_and_check(
-        &base, &cfg, &docs, &known_ids, &cfg.ir, &mut findings,
+        &base,
+        &cfg,
+        &docs,
+        &known_ids,
+        &cfg.ir,
+        &mut findings,
     )?;
 
-    Ok(Loaded { cfg, docs, findings, tally, markers })
+    Ok(Loaded {
+        cfg,
+        docs,
+        findings,
+        tally,
+        markers,
+    })
 }
 
 /// 検査のエントリポイント

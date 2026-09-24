@@ -174,9 +174,17 @@ fn req_156_item_has_body_and_referenced_by() {
             "文。",
         ],
     );
-    assert_eq!(references(req), vec!["EX-001 scenario about docs/ir/a.md:20"]);
+    assert_eq!(
+        references(req),
+        vec!["EX-001 scenario about docs/ir/a.md:20"]
+    );
     // TBL-core-027: list の1件の鍵に "body" と "referenced_by" が増えた形
-    let mut names: Vec<&str> = req.as_object().unwrap().keys().map(String::as_str).collect();
+    let mut names: Vec<&str> = req
+        .as_object()
+        .unwrap()
+        .keys()
+        .map(String::as_str)
+        .collect();
     names.sort_unstable();
     assert_eq!(
         names,
@@ -208,7 +216,10 @@ fn req_156_duplicate_ids_are_all_listed() {
         write(
             tmp.path(),
             &format!("docs/ir/{name}"),
-            &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
+            &format!(
+                "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+                requirement("REQ-001", "例", "unit")
+            ),
         );
     }
     let v = run_query(tmp.path(), "REQ-001");
@@ -233,11 +244,18 @@ fn req_156_items_are_listed_despite_ir_errors_and_exit_zero() {
         "# 題名\n\n範囲。\n\n## Requirements\n\n### REQ-002: 例\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n\n文である。\n",
     );
     let (code, stdout, stderr) = run_query_raw(tmp.path(), &["REQ-002"]);
-    assert_eq!(code, Some(0), "an IR error does not change the exit code: {stderr}");
+    assert_eq!(
+        code,
+        Some(0),
+        "an IR error does not change the exit code: {stderr}"
+    );
     assert_eq!(stderr, "", "query writes no finding to stderr");
     let v: serde_json::Value = serde_json::from_str(&stdout).expect("valid JSON");
     assert!(only_item(&v)["verification"].is_null());
-    assert!(v.get("findings").is_none(), "query writes no finding to stdout: {v}");
+    assert!(
+        v.get("findings").is_none(),
+        "query writes no finding to stdout: {v}"
+    );
 }
 
 // --- REQ-core-157: 無い ID ---
@@ -250,7 +268,10 @@ fn req_157_unknown_id_stops() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
+        &format!(
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            requirement("REQ-001", "例", "unit")
+        ),
     );
     let (code, stdout, stderr) = run_query_raw(tmp.path(), &["REQ-999"]);
     assert_eq!(code, Some(2));
@@ -442,7 +463,11 @@ fn ex_core_277_body_ends_before_the_next_heading_and_drops_trailing_blank_lines(
     assert_eq!(body(only_item(&run_query(tmp.path(), "REQ-002"))), fields);
     assert_eq!(
         body(only_item(&run_query(tmp.path(), "PROP-001"))),
-        vec!["- source: docs/decision/records/records.md#A1", "", "性質の文。"],
+        vec![
+            "- source: docs/decision/records/records.md#A1",
+            "",
+            "性質の文。"
+        ],
     );
 }
 

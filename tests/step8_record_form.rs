@@ -76,7 +76,12 @@ fn req_130_context_record_without_why_is_record_field_missing() {
     );
     let v = check(tmp.path());
     let found = findings_by_kind(&v, "record_field_missing");
-    assert_eq!(found.len(), 1, "one finding for the missing why: {:?}", found);
+    assert_eq!(
+        found.len(),
+        1,
+        "one finding for the missing why: {:?}",
+        found
+    );
     assert_eq!(found[0]["path"], "docs/decision/records/x.md");
     assert_eq!(found[0]["line"], 9);
     assert_eq!(found[0]["detail"], "why");
@@ -119,7 +124,12 @@ fn req_130_superseded_line_without_superseded_by_is_missing() {
     );
     let v = check(tmp.path());
     let found = findings_by_kind(&v, "record_field_missing");
-    assert_eq!(found.len(), 1, "the Superseded line needs superseded_by: {:?}", found);
+    assert_eq!(
+        found.len(),
+        1,
+        "the Superseded line needs superseded_by: {:?}",
+        found
+    );
     assert_eq!(found[0]["line"], 14);
     assert_eq!(found[0]["detail"], "superseded_by");
 }
@@ -139,12 +149,21 @@ fn req_131_unknown_field_name_is_record_field_unknown() {
     );
     let v = check(tmp.path());
     let unknown = findings_by_kind(&v, "record_field_unknown");
-    assert_eq!(unknown.len(), 1, "\"reason\" is not one of the six names: {:?}", unknown);
+    assert_eq!(
+        unknown.len(),
+        1,
+        "\"reason\" is not one of the six names: {:?}",
+        unknown
+    );
     assert_eq!(unknown[0]["line"], 11);
     assert_eq!(unknown[0]["detail"], "reason");
     assert_eq!(unknown[0]["severity"], "error");
     let missing = findings_by_kind(&v, "record_field_missing");
-    assert!(missing.is_empty(), "why is present, so nothing is missing: {:?}", missing);
+    assert!(
+        missing.is_empty(),
+        "why is present, so nothing is missing: {:?}",
+        missing
+    );
 }
 
 // @kotowari[REQ-core-131, REQ-core-133, TBL-core-019]
@@ -160,8 +179,16 @@ fn req_131_unknown_name_on_two_lines_yields_two_findings() {
     );
     let v = check(tmp.path());
     let unknown = findings_by_kind(&v, "record_field_unknown");
-    let lines: Vec<i64> = unknown.iter().map(|f| f["line"].as_i64().unwrap()).collect();
-    assert_eq!(lines, vec![11, 12], "one finding per line, blank value included: {:?}", unknown);
+    let lines: Vec<i64> = unknown
+        .iter()
+        .map(|f| f["line"].as_i64().unwrap())
+        .collect();
+    assert_eq!(
+        lines,
+        vec![11, 12],
+        "one finding per line, blank value included: {:?}",
+        unknown
+    );
     assert!(unknown.iter().all(|f| f["detail"] == "reason"));
 }
 
@@ -274,7 +301,11 @@ fn req_135_unclosed_code_block_runs_to_the_end_of_the_file() {
         .iter()
         .filter(|f| f["path"] == "docs/decision/records/uc.md")
         .collect();
-    assert!(for_file.is_empty(), "no finding for an unclosed code block: {:?}", for_file);
+    assert!(
+        for_file.is_empty(),
+        "no finding for an unclosed code block: {:?}",
+        for_file
+    );
 }
 
 // @kotowari[REQ-core-130, EX-core-114]
@@ -421,7 +452,10 @@ fn req_132_heading_anchor_is_invalid() {
         "# 記録 a2\n\n## Agreements\n\n- A1 ある合意\n- superseded_by: [出典](./ir-form.md#出典)\n",
     );
     let v = check(tmp.path());
-    assert_eq!(link_findings(&v), vec![(6, "./ir-form.md#出典".to_string())]);
+    assert_eq!(
+        link_findings(&v),
+        vec![(6, "./ir-form.md#出典".to_string())]
+    );
 }
 
 // @kotowari[REQ-core-132, TBL-core-023, EX-core-117]
@@ -486,10 +520,7 @@ fn tbl_023_unclosed_link_is_skipped_and_falls_to_no_link() {
     let v = check(tmp.path());
     assert_eq!(
         link_findings(&v),
-        vec![
-            (6, "[A1](#A1".to_string()),
-            (8, "[A2] を見よ".to_string())
-        ]
+        vec![(6, "[A1](#A1".to_string()), (8, "[A2] を見よ".to_string())]
     );
 }
 
@@ -620,9 +651,18 @@ fn req_133_empty_superseded_by_is_not_a_link_finding() {
         "# 記録 noctx\n\n## Agreements\n\n- A1 ある合意\n\n## Superseded\n\n- A4 置き換えられた決定\n- superseded_by:\n",
     );
     let v = check(tmp.path());
-    assert!(link_findings(&v).is_empty(), "a blank value is not a link: {:?}", link_findings(&v));
+    assert!(
+        link_findings(&v).is_empty(),
+        "a blank value is not a link: {:?}",
+        link_findings(&v)
+    );
     let missing = findings_by_kind(&v, "record_field_missing");
-    assert_eq!(missing.len(), 1, "only the record with \"## Context\": {:?}", missing);
+    assert_eq!(
+        missing.len(),
+        1,
+        "only the record with \"## Context\": {:?}",
+        missing
+    );
     assert_eq!(missing[0]["path"], "docs/decision/records/ctx.md");
     assert_eq!(missing[0]["line"], 14);
     assert_eq!(missing[0]["detail"], "superseded_by");
@@ -665,5 +705,9 @@ fn req_129_broken_link_in_a_file_without_decision_sections_is_not_checked() {
         .iter()
         .filter(|f| f["path"] == "docs/decision/records/plain.md")
         .collect();
-    assert!(for_file.is_empty(), "no finding for a file that is not a record: {:?}", for_file);
+    assert!(
+        for_file.is_empty(),
+        "no finding for a file that is not a record: {:?}",
+        for_file
+    );
 }

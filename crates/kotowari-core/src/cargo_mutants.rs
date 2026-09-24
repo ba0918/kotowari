@@ -1,7 +1,7 @@
 //! cargo-mutants の結果のファイルを`変異の結果`に写す（REQ-core-138、TBL-core-024）。
 //! 道具に固有の鍵と値を知るのはこのモジュールだけで、写した先はどの語も知らない。
 
-use crate::mutants::{normalize_source_path, MutantOutcome, MutantResult};
+use crate::mutants::{MutantOutcome, MutantResult, normalize_source_path};
 use serde_json::Value;
 
 /// 基準の実行を表す "scenario" の値
@@ -81,9 +81,7 @@ fn number(mutant: &Value, key: &str) -> Result<u64, String> {
     mutant
         .pointer(&format!("/span/start/{key}"))
         .and_then(Value::as_u64)
-        .ok_or_else(|| {
-            format!("\"scenario.Mutant.span.start.{key}\" is missing or not a number")
-        })
+        .ok_or_else(|| format!("\"scenario.Mutant.span.start.{key}\" is missing or not a number"))
 }
 
 /// TBL-core-024: "summary" の4つの値を結果に写す。ほかの値は結果の誤り
