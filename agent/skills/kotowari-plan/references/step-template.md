@@ -23,14 +23,13 @@ them.
 
 Form rules the check enforces:
 
-- Write every field as a list line `- Name: value` (`*` or `+` also work) and keep its value on
-  that one line. A line right after it, or an indented line after a blank line, is not part of
-  the value; it is a finding.
+- Write every field as a list line `- Name: value` (`*` or `+` also work) and keep its value,
+  commands included, on that one line. A line right after it, or an indented line after a blank
+  line, is not part of the value; it is a finding.
 - Nothing else goes under a step: no prose, no other list, no table, and nothing between
   `## Steps` and the first step.
 - **Shown by** starts with one of the four words `test`, `check`, `artifact`, `external`,
-  followed by a space or nothing. A check's commands go in the value as `1) … 2) …` on the same
-  line.
+  followed by a space or nothing.
 - The step number is `S` and digits; gaps, repeats and the name after `:` are not checked.
 - Do not put a frontmatter block at the top of the plan. The check skips one unread, but the plan
   does not name its schema.
