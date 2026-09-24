@@ -85,7 +85,8 @@ perspective; no optional seat is attached to conformance. The quality and confor
   directory outside it right before that seat is launched: the worktree's HEAD with its
   uncommitted changes and its untracked, non-ignored files laid over it (for example, a detached
   `git worktree add` at HEAD, `git diff HEAD --binary` applied in it, and the untracked files
-  copied in). The caller that created the copy deletes it once its JSON is read; the copy is not
+  copied in). The caller that created the copy deletes it when the seat ends, whatever the outcome (its JSON
+  read, or the seat absent for any reason); the copy is not
   one of the person's worktrees. Nothing a seat writes reaches the person's worktree.
 - **Time limit.** Apply one only when the seat's entry writes it; otherwise wait for the launch
   means to finish.
