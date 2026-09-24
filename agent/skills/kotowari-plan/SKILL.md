@@ -97,9 +97,9 @@ that were there before the plan, and a committed problem record can keep them fa
    of standard error and stop. Finishing is the only place in the workflow that checks the form,
    so the check must follow the plan's last edit; nothing checks it again after approval. Then
    self-check against `references/step-template.md`
-   for what the form check cannot see: every referenced requirement ID exists (`kotowari query`
-   returns it; with no IR, every referenced heading exists in the specification); no step
-   decides a specification question.
+   for what the form check cannot see: every field of every step has a non-empty value; every
+   referenced requirement ID exists (`kotowari query` returns it; with no IR, every referenced
+   heading exists in the specification); no step decides a specification question.
 2. Adversarial review, only when the plan's own decisions can contradict each other — steps that
    depend on one another, or one requirement driving several steps. Say that reason,
    then launch one separate-context agent on the plan's own quality, and a second against the
