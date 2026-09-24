@@ -57,3 +57,13 @@
     マクロの外のテストの節はマクロの token_tree の中から始まれないので、1バイトのずれで前後が入れ替わる相手が無い。
     落とすテストの試み: 主セッションが、マクロの開き括弧と同じ行と、閉じ括弧と同じ行に普通のテストを置く配置を考え、
     外のテストの始まりが中の関数の鍵とその1前の間に入れないことをソースで確かめた（2026-09-24）。
+- file: crates/kotowari-core/src/plan.rs
+  change: "replace < with <= in check_plan"
+  text: "let before_title = |line: Option<usize>| line.zip(title_line).is_some_and(|(l, t)| l < t);"
+  class: equivalent
+  why: >-
+    題名の行ちょうどの指摘まで捨てるかどうかだけが変わる。計画書のスキーマは題名の規則に pattern を持たない（.kotowari/schemas/plan.yaml の title: {}）ので、
+    mds が1つ目の題名の行に出す指摘は title_pattern_mismatch だけで、それは出ない（crates/kotowari-markdown-schema/src/validate.rs の validate_title）。
+    2つ目以降の題名の multiple_titles は後の行に付き、題名が無ければ比べる行が無い。
+    落とすテストの試み: 主セッションが、題名の前に節を置く、題名の字下げを変える、題名を2つにする計画書を kotowari plan に渡し、
+    1つ目の題名の行に指摘が出ないことを確かめた（2026-09-24）。
