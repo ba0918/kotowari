@@ -23,10 +23,10 @@ kotowari は常に、"kotowari query" で "kotowari check" と同じ設定と置
 ### REQ-core-158: query の停止
 
 - kind: event_driven
-- source: docs/decision/records/2026-09-20-query-status.md#A19
+- source: docs/decision/records/2026-09-20-query-status.md#A19, docs/decision/records/2026-09-24-doc-marks.md#A22
 - verification: unit
 
-"kotowari query" で、"kotowari check" が`停止`する条件（設定の誤り、読めないファイル、引数の誤り）が成り立つとき、kotowari は check と同じ理由と文言で`停止`する。
+"kotowari query" で、"kotowari check" が`停止`する条件（設定の誤り、読めないファイル、引数の誤り）が成り立つとき、kotowari は check と同じ理由と文言で`停止`する。 ただし "kotowari query" は`ガイド`を読まず、`ガイド`の置き場と読み込みによる`停止`（REQ-core-198、REQ-core-199）はしない。
 
 ### REQ-core-159: query の1件の形
 

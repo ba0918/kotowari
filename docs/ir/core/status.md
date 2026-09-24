@@ -7,10 +7,10 @@
 ### REQ-core-162: status の読み取り
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A19
+- source: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A19, docs/decision/records/2026-09-24-doc-marks.md#A22
 - verification: unit
 
-kotowari は常に、"kotowari status" で "kotowari check" と同じ設定と置き場から`IR`の文書と`テストのファイル`を読み、check と同じ検査を行い、`指摘`を出さず、`TBL-core-028` の鍵を持つ集計を1つ標準出力に出す。
+kotowari は常に、"kotowari status" で "kotowari check" と同じ設定と置き場から`IR`の文書と`テストのファイル`と`ガイド`を読み、check と同じ検査を行い、`指摘`を出さず、`TBL-core-028` の鍵を持つ集計を1つ標準出力に出す。
 
 ### REQ-core-163: status の停止
 
@@ -47,7 +47,7 @@ kotowari は常に、"kotowari status" の "--format" の値として "json" と
 
 ### TBL-core-028: status の鍵
 
-- source: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A9, docs/decision/records/2026-09-20-query-status.md#A12, docs/decision/records/2026-09-20-query-status.md#A14, docs/decision/records/2026-09-20-query-status.md#A20, docs/decision/records/2026-09-17-scenario-tests.md#A9, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- source: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A9, docs/decision/records/2026-09-20-query-status.md#A12, docs/decision/records/2026-09-20-query-status.md#A14, docs/decision/records/2026-09-20-query-status.md#A20, docs/decision/records/2026-09-17-scenario-tests.md#A9, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-24-doc-marks.md#A17
 
 | 群 | 鍵 | 中身 |
 |---|---|---|
@@ -60,6 +60,7 @@ kotowari は常に、"kotowari status" の "--format" の値として "json" と
 | scenarios | with_tests、without_tests | その `ID` を`印`に含む`テスト`がある`シナリオ`の数と、無いものの数 |
 | tests | marks | `印`の出現の数。1つの`印`に `ID` が複数あれば `ID` ごとに1つ（list の "tests" の1件と同じ数え方） |
 | tests | files | "kotowari check" の "tests" と同じ（`TBL-core-021`）。"text" では拡張子ごとに "拡張子=ファイルの数" |
+| guides | files、marks | "kotowari check" の "guides" と同じ（`TBL-core-005`） |
 | findings | error、notice | "kotowari check" の`指摘`のうち severity が "error" のものと "notice" のものの数 |
 | complete | （値だけ） | true か false（REQ-core-165） |
 

@@ -15,10 +15,10 @@ kotowari は常に、"kotowari list" で "kotowari check" と同じ設定と置�
 ### REQ-core-152: list の停止
 
 - kind: event_driven
-- source: docs/decision/records/2026-09-19-read-commands.md#A9, docs/decision/records/2026-09-19-read-commands.md#A20
+- source: docs/decision/records/2026-09-19-read-commands.md#A9, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-24-doc-marks.md#A22
 - verification: unit
 
-"kotowari list" で、"kotowari check" が`停止`する条件（設定の誤り、読めないファイル、引数の誤り）が成り立つとき、kotowari は check と同じ理由と文言で`停止`する。
+"kotowari list" で、"kotowari check" が`停止`する条件（設定の誤り、読めないファイル、引数の誤り）が成り立つとき、kotowari は check と同じ理由と文言で`停止`する。 ただし "kotowari list" は`ガイド`を読まず、`ガイド`の置き場と読み込みによる`停止`（REQ-core-198、REQ-core-199）はしない。
 
 ### REQ-core-153: 項目の形
 
@@ -47,7 +47,7 @@ kotowari は常に、"kotowari list" の "--format" の値として "json" と "
 
 ### TBL-core-026: 項目の鍵
 
-- source: docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18, docs/decision/records/2026-09-19-read-commands.md#A22, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-19-read-commands.md#A26, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-23-ir-english-tokens.md#A8, docs/decision/records/2026-09-24-review6-gaps.md#A1, docs/decision/records/2026-09-24-multi-language-tests.md#A13
+- source: docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18, docs/decision/records/2026-09-19-read-commands.md#A22, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-19-read-commands.md#A26, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-23-ir-english-tokens.md#A8, docs/decision/records/2026-09-24-review6-gaps.md#A1, docs/decision/records/2026-09-24-multi-language-tests.md#A13, docs/decision/records/2026-09-24-doc-marks.md#A14
 
 | 鍵 | 持つ種類 | 中身 |
 |---|---|---|
@@ -64,6 +64,7 @@ kotowari は常に、"kotowari list" の "--format" の値として "json" と "
 | relations | 問題の記録 | "- related:" の `ID` の並び |
 | sources | すべて | `出典`の並び |
 | tests | すべて | その `ID` を`印`に含む`テスト`の並び。同じ`テスト`に同じ `ID` の`印`が複数あれば、`印`の出現ごとに1件。1件は "path"（`テストのファイル`の基準のディレクトリからの相対パス）、"line"（`印`のある行）、"name"（`テスト`の名前。`問い合わせの無い言語`と、名前が null の`テスト`では null） |
+| fingerprint | すべて | その`項目`か`シナリオ`の`指紋`（REQ-core-203） |
 
 ## Examples
 

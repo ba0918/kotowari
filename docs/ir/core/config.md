@@ -30,10 +30,10 @@
 ### REQ-core-014: 設定の誤り
 
 - kind: event_driven
-- source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A93, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A161
+- source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A93, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A161, docs/decision/records/2026-09-24-doc-marks.md#A16
 - verification: unit
 
-`設定ファイル`が YAML として読めないとき、または`設定ファイル`に知らないキー、同じキーの2回目、値が null のキー（"ir:" だけの行。空の一覧は REQ-core-016 のとおり受ける）、型の違う値、負の数、0、絶対パスの値（先頭が "/" のもの）、"vague_words" の空の文字列の要素か同じ語の2回目、"tests.files" の glob として読めない要素のいずれかがあるとき、kotowari は設定の誤りを理由に`停止`する。
+`設定ファイル`が YAML として読めないとき、または`設定ファイル`に知らないキー、同じキーの2回目、値が null のキー（"ir:" だけの行。空の一覧は REQ-core-016 のとおり受ける）、型の違う値、負の数、0、絶対パスの値（先頭が "/" のもの）、"vague_words" の空の文字列の要素か同じ語の2回目、"tests.files" か "guides.files" の glob として読めない要素のいずれかがあるとき、kotowari は設定の誤りを理由に`停止`する。
 
 ### REQ-core-015: 一覧は既定を置き換える
 
@@ -62,10 +62,10 @@ kotowari は常に、`設定ファイル`のキーを入れ子の形（"decision
 ### REQ-core-018: 置き場が無いとき
 
 - kind: event_driven
-- source: docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A66, docs/decision/records/records.md#A95, docs/decision/records/records.md#A96, docs/decision/records/records.md#A124, docs/decision/records/records.md#A146, docs/decision/records/2026-09-16-ir-tree.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A55
+- source: docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A66, docs/decision/records/records.md#A95, docs/decision/records/records.md#A96, docs/decision/records/records.md#A124, docs/decision/records/records.md#A146, docs/decision/records/2026-09-16-ir-tree.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-24-doc-marks.md#A16
 - verification: unit
 
-"kotowari check" で、"ir"、"decisions.records"、"decisions.adr" の指す先が無いとき、ディレクトリでないとき、または読めないとき、kotowari は読めないファイルを理由に`停止`する。"ir"、"decisions.records"、"decisions.adr" の下のディレクトリが読めないとき、"tests.files" の走査でディレクトリが読めないとき、および走査で先の無いシンボリックリンクに出会ったときも同じ理由で`停止`する。
+"kotowari check" で、"ir"、"decisions.records"、"decisions.adr" の指す先が無いとき、ディレクトリでないとき、または読めないとき、kotowari は読めないファイルを理由に`停止`する。"ir"、"decisions.records"、"decisions.adr" の下のディレクトリが読めないとき、"tests.files" と "guides.files" の走査でディレクトリが読めないとき、および走査で先の無いシンボリックリンクに出会ったときも同じ理由で`停止`する。
 
 ### REQ-core-019: glob の読み方
 
@@ -87,7 +87,7 @@ kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`�
 
 ### TBL-core-004: キーと既定の値
 
-- source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/records.md#A62, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-notice.md#A5, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A9, docs/decision/records/2026-09-24-multi-language-tests.md#A28
+- source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/records.md#A62, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-notice.md#A5, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A9, docs/decision/records/2026-09-24-multi-language-tests.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A4
 
 | キー | 値 | 既定 |
 |---|---|---|
@@ -95,6 +95,7 @@ kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`�
 | decisions.records | ディレクトリのパス（1つの文字列）。その下のファイルの決定を出典に指せる。判断の記録でない Markdown（形の契約、補足の文書）も置ける | docs/decision/records |
 | decisions.adr | ディレクトリのパス（1つの文字列） | docs/decision/adr |
 | tests.files | glob の一覧 | src/\*\*/\*.rs、tests/\*\*/\*.rs |
+| guides.files | glob の一覧。`ガイド`の置き場（guides.md） | 空の一覧 |
 | tests.rust.attributes | "#[test]" に足す属性のパスの一覧 | 空の一覧 |
 | tests.rust.macros | マクロの名前の一覧 | 空の一覧 |
 | tests.rules | ast-grep のルールの YAML ファイルのパスの一覧。基準のディレクトリからの相対パスで、glob は使えない（query-rules.md） | 空の一覧 |

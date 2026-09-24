@@ -51,11 +51,19 @@ kotowari は常に、"--format" の値として "json" と "text" の2つを受�
 
 kotowari は常に、"kotowari check" の JSON の最上位の "tests" に、読んだ`テストのファイル`を拡張子ごとにまとめ、`TBL-core-021` の鍵で数と`問い合わせ`の有無を出す。"--format" が "text" のときは出さない。
 
+### REQ-core-206: ガイドの申告
+
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-24-doc-marks.md#A17, docs/decision/records/2026-09-24-doc-marks.md#A35
+- verification: unit
+
+kotowari は常に、"kotowari check" の JSON の最上位の "guides" に、読んだ`ガイド`の数を "files"、形の正しい`ガイドの印`の1件の数を "marks" として出す。"files" はファイルを TBL-core-021 と同じ数え方（パスごとに1回、複数の glob に当たっても1回、シンボリックリンクと実体は別のパス）で数える。`ガイド`が0件なら、どちらも 0 である。"--format" が "text" のときは出さない。
+
 ## Decision tables
 
 ### TBL-core-005: check の JSON の最上位
 
-- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#出力, docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-24-plan-schema.md#A17
+- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#出力, docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-24-plan-schema.md#A17, docs/decision/records/2026-09-24-doc-marks.md#A17, docs/decision/records/2026-09-24-doc-marks.md#A35
 
 "kotowari check" の JSON の最上位。"kotowari mutants" の JSON の最上位は TBL-core-025、"kotowari plan" の JSON の最上位は REQ-core-194。
 
@@ -66,16 +74,17 @@ kotowari は常に、"kotowari check" の JSON の最上位の "tests" に、読
 | findings | 指摘の一覧 |
 | counts | 種類ごとの指摘の数 |
 | tests | 読んだテストのファイルの拡張子ごとの数と、その拡張子が問い合わせのある言語か（TBL-core-021） |
+| guides | "files"（読んだ`ガイド`の数）と "marks"（形の正しい`ガイドの印`の1件の数）の2つの鍵を持つオブジェクト（REQ-core-206） |
 
 ### TBL-core-006: 指摘の鍵
 
-- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A61, docs/decision/records/records.md#A106, docs/decision/records/2026-09-16-ir-tree.md#A13, docs/decision/records/2026-09-16-notice.md#A1, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-24-plan-schema.md#A26
+- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A61, docs/decision/records/records.md#A106, docs/decision/records/2026-09-16-ir-tree.md#A13, docs/decision/records/2026-09-16-notice.md#A1, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-24-plan-schema.md#A26, docs/decision/records/2026-09-24-doc-marks.md#A10, docs/decision/records/2026-09-24-doc-marks.md#A11, docs/decision/records/2026-09-24-doc-marks.md#A32
 
 | 鍵 | 中身 |
 |---|---|
 | kind | 指摘の種類（TBL-core-008、TBL-core-009） |
 | severity | error か notice |
-| path | 基準のディレクトリからの相対パス。正規化した置き場と、置き場からの文書の相対パスを "/" でつなぐ（REQ-core-110）。"kotowari mutants" の指摘では変異の結果のファイルか等価の一覧のファイル（REQ-core-139、REQ-core-140、REQ-core-142、REQ-core-143）。"kotowari plan" の指摘では`計画書`のファイル（REQ-core-193） |
+| path | 基準のディレクトリからの相対パス。正規化した置き場と、置き場からの文書の相対パスを "/" でつなぐ（REQ-core-110）。"kotowari mutants" の指摘では変異の結果のファイルか等価の一覧のファイル（REQ-core-139、REQ-core-140、REQ-core-142、REQ-core-143）。"kotowari plan" の指摘では`計画書`のファイル（REQ-core-193）。ガイドへの指摘では`ガイド`の基準のディレクトリからの相対パス（REQ-core-202、REQ-core-204） |
 | line | 行（1始まり）。文書全体への指摘は null |
 | detail | 種類ごとに TBL-core-008、TBL-core-009 で決めた文字列 |
 
