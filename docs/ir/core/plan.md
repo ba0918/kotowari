@@ -251,9 +251,9 @@ Scenario: 壊れた frontmatter も読まずに飛ばす
   Then 終了コードは 0 である
 @id=EX-core-381 @about=REQ-core-193,REQ-core-207 @source=docs/decision/records/2026-09-24-guide-gaps.md#A4,docs/decision/records/ir-form.md#出力,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A3
 Scenario: 欄の欠けたステップは見出しの行を指す
-  Given `計画書` "docs/plans/a.md" の5行目が "### S1: 作る" で、そのステップに "- Done when:" の行が無い
+  Given ほかは形の揃った`計画書` "docs/plans/a.md" の "### S1: 作る" のステップに "- Done when:" の行が無い
   When "kotowari plan docs/plans/a.md --format text" を実行する
-  Then 終了コードは 1 で、標準出力は "docs/plans/a.md:5 [error] invalid_plan " で始まる行だけである
+  Then 終了コードは 1 で、標準出力は "docs/plans/a.md:" に "### S1: 作る" の行の番号と " [error] invalid_plan " を続けた形で始まる行だけである
 
 @id=EX-core-382 @about=REQ-core-207 @source=docs/decision/records/2026-09-24-guide-gaps.md#A4,docs/decision/records/ir-form.md#出力
 Scenario: 指摘の無い計画書の text は何も出さない

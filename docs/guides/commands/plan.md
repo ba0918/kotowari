@@ -115,7 +115,7 @@ frontmatter の `$schema` でスキーマを指しても使われず、指摘に
 
 ### text
 
-<!-- @kotowari[REQ-core-193:ae035033, REQ-core-207:0285f5b9, REQ-core-025:b4d331d2, EX-core-381:ba8f6f94, EX-core-382:6ec8630a] -->
+<!-- @kotowari[REQ-core-193:ae035033, REQ-core-207:0285f5b9, REQ-core-025:b4d331d2, EX-core-381:8fc95ec2, EX-core-382:6ec8630a] -->
 
 指摘を1件1行で `パス:行 [error] invalid_plan 詳細` の形で出し、ほかの行は出しません。
 指摘が0件のときは何も出しません（集計の行はありません）。
