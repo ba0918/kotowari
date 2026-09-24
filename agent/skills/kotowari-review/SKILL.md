@@ -89,7 +89,9 @@ perspective; no optional seat is attached to conformance. The quality and confor
   directory outside it right before that seat is launched: the worktree's HEAD with its
   uncommitted changes and its untracked, non-ignored files laid over it (for example, a
   `git clone --shared` of the repository checked out detached at HEAD with its remote removed,
-  `git diff HEAD --binary` applied in it when not empty, and the untracked files copied in). The
+  `git diff HEAD --binary` applied in it when not empty, and the untracked files copied in).
+  Leave out untracked symbolic links: a copied link still points where it did, and a seat
+  writing through it reaches the person's worktree. The
   copy has its own repository, so a seat's stash, branches, and config stay in it. The caller
   that created the copy deletes it when the seat ends, whatever the outcome (its JSON read, or the
   seat absent for any reason); the copy is not one of the person's worktrees. Nothing a seat
