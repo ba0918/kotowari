@@ -407,27 +407,7 @@ pub fn discover_and_check(
         if let Some(lang) = lang {
             match discover_tests(&content, rel_path, lang, &queries, config) {
                 Ok(tests) => {
-                    for test in &tests {
-                        // 印の検証
-                        check_test_markers(test, rel_path, known_ids, findings);
-                        for (id, marker_line) in &test.marker_ids {
-                            markers.push(TestMarker {
-                                id: id.clone(),
-                                path: rel_path.clone(),
-                                line: *marker_line,
-                                name: test.name.clone(),
-                            });
-                        }
-                        // REQ-core-072: テストに結び付く空・不正な印
-                        for (line_num, raw) in &test.invalid_markers {
-                            findings.push(Finding::new(
-                                FindingKind::InvalidMarker,
-                                rel_path.clone(),
-                                Some(*line_num),
-                                raw.clone(),
-                            ));
-                        }
-                    }
+                    record_test_markers(&tests, rel_path, known_ids, &mut markers, findings);
                     all_tests.extend(tests);
                 }
                 Err(_) => {
@@ -440,44 +420,98 @@ pub fn discover_and_check(
                 }
             }
         } else {
-            // 問い合わせの無い言語: 印を拾い、検査もする（REQ-core-076, REQ-core-087, REQ-core-072, REQ-core-054）
-            for (idx, line) in content.lines().enumerate() {
-                let line_num = idx + 1;
-                for marker in parse_markers_in_line(line, line_num) {
-                    if marker.ids.is_empty() {
-                        // REQ-core-072: 空の印、または閉じ括弧のない印
+            record_line_markers(&content, rel_path, known_ids, &mut markers, findings);
+        }
+    }
+
+    check_missing_tests(docs, ir_path, &markers, &all_tests, findings);
+
+    Ok((tally, markers))
+}
+
+/// `問い合わせのある言語`のファイルで見つけた`テスト`の印を積み、印を検査する
+fn record_test_markers(
+    tests: &[DiscoveredTest],
+    rel_path: &str,
+    known_ids: &BTreeSet<String>,
+    markers: &mut Vec<TestMarker>,
+    findings: &mut Vec<Finding>,
+) {
+    for test in tests {
+        // 印の検証
+        check_test_markers(test, rel_path, known_ids, findings);
+        for (id, marker_line) in &test.marker_ids {
+            markers.push(TestMarker {
+                id: id.clone(),
+                path: rel_path.to_string(),
+                line: *marker_line,
+                name: test.name.clone(),
+            });
+        }
+        // REQ-core-072: テストに結び付く空・不正な印
+        for (line_num, raw) in &test.invalid_markers {
+            findings.push(Finding::new(
+                FindingKind::InvalidMarker,
+                rel_path.to_string(),
+                Some(*line_num),
+                raw.clone(),
+            ));
+        }
+    }
+}
+
+/// 問い合わせの無い言語: 印を行ごとに拾い、検査もする（REQ-core-076, REQ-core-087, REQ-core-072, REQ-core-054）
+fn record_line_markers(
+    content: &str,
+    rel_path: &str,
+    known_ids: &BTreeSet<String>,
+    markers: &mut Vec<TestMarker>,
+    findings: &mut Vec<Finding>,
+) {
+    for (idx, line) in content.lines().enumerate() {
+        let line_num = idx + 1;
+        for marker in parse_markers_in_line(line, line_num) {
+            if marker.ids.is_empty() {
+                // REQ-core-072: 空の印、または閉じ括弧のない印
+                findings.push(Finding::new(
+                    FindingKind::InvalidMarker,
+                    rel_path.to_string(),
+                    Some(line_num),
+                    line.to_string(),
+                ));
+            } else {
+                for id in &marker.ids {
+                    markers.push(TestMarker {
+                        id: id.clone(),
+                        path: rel_path.to_string(),
+                        line: line_num,
+                        name: None,
+                    });
+                    // REQ-core-054: 存在しない ID への参照
+                    if !known_ids.contains(id) {
                         findings.push(Finding::new(
-                            FindingKind::InvalidMarker,
-                            rel_path.clone(),
+                            FindingKind::UnresolvedReference,
+                            rel_path.to_string(),
                             Some(line_num),
-                            line.to_string(),
+                            id.clone(),
                         ));
-                    } else {
-                        for id in &marker.ids {
-                            markers.push(TestMarker {
-                                id: id.clone(),
-                                path: rel_path.clone(),
-                                line: line_num,
-                                name: None,
-                            });
-                            // REQ-core-054: 存在しない ID への参照
-                            if !known_ids.contains(id) {
-                                findings.push(Finding::new(
-                                    FindingKind::UnresolvedReference,
-                                    rel_path.clone(),
-                                    Some(line_num),
-                                    id.clone(),
-                                ));
-                            }
-                        }
                     }
                 }
             }
         }
     }
+}
 
+/// 集めた印から、テストのない具体例・テストのない要求・印の無いテストを検査する
+fn check_missing_tests(
+    docs: &[IrDocument],
+    ir_path: &str,
+    markers: &[TestMarker],
+    all_tests: &[DiscoveredTest],
+    findings: &mut Vec<Finding>,
+) {
     let scenarios = collect_scenarios(docs, ir_path);
-    let coverage = TestCoverage::new(&markers, &scenarios);
+    let coverage = TestCoverage::new(markers, &scenarios);
 
     // REQ-core-137: テストのない具体例
     for (id, scenario) in &scenarios {
@@ -515,7 +549,7 @@ pub fn discover_and_check(
     }
 
     // REQ-core-086: 印の無いテスト
-    for test in &all_tests {
+    for test in all_tests {
         if test.marker_ids.is_empty() {
             // 名前が null なら節の最初の行の文字を detail にする
             let detail = test
@@ -530,8 +564,6 @@ pub fn discover_and_check(
             ));
         }
     }
-
-    Ok((tally, markers))
 }
 
 /// テストの印を検証する
