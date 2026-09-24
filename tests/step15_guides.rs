@@ -430,7 +430,7 @@ fn ex_366_marks_outside_comments_and_inside_code_are_not_read() {
     assert_eq!(v["guides"]["marks"], 0);
 }
 
-// @kotowari[REQ-core-202, TBL-core-036, TBL-core-008, TBL-core-019, EX-core-367]
+// @kotowari[REQ-core-201, REQ-core-202, TBL-core-036, TBL-core-008, TBL-core-019, EX-core-367]
 #[test]
 fn ex_367_a_mark_without_fingerprint_and_an_uppercase_fingerprint_are_invalid() {
     let tmp = TempDir::new().unwrap();
@@ -447,7 +447,7 @@ guides/a.md:5 [error] invalid_marker <!-- @kotowari[REQ-001:8C0D7663] -->\n"
     );
 }
 
-// @kotowari[REQ-core-202, TBL-core-036, EX-core-373]
+// @kotowari[REQ-core-201, REQ-core-202, TBL-core-036, EX-core-373]
 #[test]
 fn ex_373_one_malformed_entry_leaves_the_whole_mark_unmatched() {
     let tmp = TempDir::new().unwrap();
@@ -461,7 +461,7 @@ fn ex_373_one_malformed_entry_leaves_the_whole_mark_unmatched() {
     assert_eq!(v["guides"]["marks"], 0);
 }
 
-// @kotowari[REQ-core-200, TBL-core-036, EX-core-374]
+// @kotowari[REQ-core-200, REQ-core-201, TBL-core-036, EX-core-374]
 #[test]
 fn ex_374_spaces_inside_the_brackets_are_allowed_and_text_after_the_comment_is_not_read() {
     let tmp = TempDir::new().unwrap();
@@ -664,7 +664,7 @@ fn write_ex_001_project(tmp: &Path, tags: &str, name: &str, guide: &str) {
 
 const EX_001_TAGS: &str = "@id=EX-001 @about=REQ-001 @source=docs/decision/records/r.md#A1";
 
-// @kotowari[REQ-core-200, REQ-core-204, REQ-core-206, TBL-core-036, EX-core-371]
+// @kotowari[REQ-core-200, REQ-core-201, REQ-core-204, REQ-core-206, TBL-core-036, EX-core-371]
 #[test]
 fn ex_371_two_entries_in_one_mark_are_counted_and_matched_one_by_one() {
     let tmp = TempDir::new().unwrap();
