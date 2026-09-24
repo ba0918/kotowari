@@ -7,7 +7,7 @@
 
 ## 書式
 
-<!-- @kotowari[REQ-core-002:da12d397, REQ-core-157:f0e9d719] -->
+<!-- @kotowari[REQ-core-002:06abb59d, REQ-core-157:f0e9d719, EX-core-380:3c688038] -->
 
 ```sh
 kotowari query [--format json|text] [--config <path>] <ID>
@@ -16,7 +16,7 @@ kotowari query --version
 ```
 
 位置引数はちょうど1つの ID です。
-オプションはコマンドの前に書いても、ID の後に書いても受けます（2026-09-24 に `kotowari query REQ-001 --format text` で確かめました）。
+オプションはコマンドの前に書いても、ID の後に書いても受けます（`kotowari query REQ-001 --format text` も同じ意味です）。
 
 ## オプションと引数
 

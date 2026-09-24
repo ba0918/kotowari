@@ -763,6 +763,39 @@ fn ex_core_316_rule_of_an_unknown_language_stops() {
     assert!(first.starts_with("config error"), "{first}");
 }
 
+// @kotowari[REQ-core-189, TBL-core-020, EX-core-378]
+#[test]
+fn ex_core_378_a_missing_rule_file_stop_points_at_the_rule_file() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(tmp.path(), &["tests/**/*.ts"], &["rules/missing.yml"]);
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.starts_with("config error: "), "{stderr}");
+    assert!(stderr.contains("rules/missing.yml"), "{stderr}");
+    assert!(!stderr.contains(".kotowari/config.yaml"), "{stderr}");
+}
+
+// @kotowari[REQ-core-189, EX-core-379]
+#[test]
+fn ex_core_379_an_unknown_language_stop_names_the_language_in_one_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    configure(tmp.path(), &["tests/**/*.ts"], &["r.yml"]);
+    write(
+        tmp.path(),
+        "r.yml",
+        "id: cobol\nlanguage: cobol\nrule:\n  pattern: foo\n",
+    );
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("r.yml"), "{stderr}");
+    assert!(stderr.contains("unknown language: cobol"), "{stderr}");
+    assert_eq!(stderr.lines().count(), 1, "{stderr}");
+}
+
 // @kotowari[REQ-core-189, EX-core-321]
 #[test]
 fn ex_core_321_same_rule_file_twice_stops() {

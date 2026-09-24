@@ -585,6 +585,68 @@ fn req_174_a_glossary_title_outside_the_declared_form_is_glossary_title_invalid(
     assert_eq!(found[0]["severity"], "error");
 }
 
+// @kotowari[REQ-core-174, REQ-core-113, EX-core-376]
+#[test]
+fn ex_core_376_lines_in_a_non_gherkin_block_are_not_read_as_gherkin() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        format!("{TOPIC_HEAD}\n## Examples\n\n```text\nメモ\n```\n"),
+    )
+    .unwrap();
+    let output = cmd()
+        .args(["check", "--format", "text"])
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.contains("docs/ir/a.md:7 [error] unknown_code_block "),
+        "{stdout}"
+    );
+    assert!(!stdout.contains("invalid_gherkin_line"), "{stdout}");
+}
+
+// @kotowari[REQ-core-174, REQ-core-113]
+#[test]
+fn req_174_a_gherkin_block_beside_a_non_gherkin_block_is_still_read_as_gherkin() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/a.md"),
+        format!("{TOPIC_HEAD}\n## Examples\n\n```text\nメモ\n```\n\n```gherkin\n読めない行\n```\n"),
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    let v = parse_json(&output);
+    let found = findings_by_kind(&v, "invalid_gherkin_line");
+    assert_eq!(found.len(), 1, "{:?}", v["findings"]);
+    assert_eq!(found[0]["line"], 12, "gherkin のブロックの中の行だけ");
+}
+
+// @kotowari[REQ-core-174, EX-core-377]
+#[test]
+fn ex_core_377_a_glossary_titled_other_than_glossary_is_glossary_title_invalid() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join("docs/ir/CONTEXT.md"),
+        "# 用語集\n\n| Term | Meaning | Source |\n|---|---|---|\n| 印 | しるし | docs/decision/records/records.md#A1 |\n",
+    )
+    .unwrap();
+    let output = cmd()
+        .args(["check", "--format", "text"])
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.contains("docs/ir/CONTEXT.md:1 [error] glossary_title_invalid "),
+        "{stdout}"
+    );
+}
+
 // @kotowari[EX-core-266]
 #[test]
 fn ex_core_266_the_three_places_outside_the_declaration_each_become_an_error() {

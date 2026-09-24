@@ -5,7 +5,7 @@ kotowari-plan の工程で計画書を書き終えたとき、承認を求める
 
 ## 書式
 
-<!-- @kotowari[REQ-core-190:41d0464a, REQ-core-002:da12d397] -->
+<!-- @kotowari[REQ-core-190:41d0464a, REQ-core-002:06abb59d] -->
 
 ```sh
 kotowari plan [--format json|text] <計画書のファイル>
@@ -16,7 +16,7 @@ kotowari plan [--format json|text] <計画書のファイル>
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-190:41d0464a, REQ-core-002:da12d397, REQ-core-021:14bd7b25] -->
+<!-- @kotowari[REQ-core-190:41d0464a, REQ-core-002:06abb59d, REQ-core-021:14bd7b25] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
@@ -115,19 +115,26 @@ frontmatter の `$schema` でスキーマを指しても使われず、指摘に
 
 ### text
 
-<!-- @kotowari[REQ-core-193:34e5d948, REQ-core-025:b4d331d2] -->
+<!-- @kotowari[REQ-core-193:ae035033, REQ-core-207:0285f5b9, REQ-core-025:b4d331d2, EX-core-381:ba8f6f94, EX-core-382:6ec8630a] -->
 
-指摘を1件1行で `パス:行 [error] invalid_plan 詳細` の形で出します。
+指摘を1件1行で `パス:行 [error] invalid_plan 詳細` の形で出し、ほかの行は出しません。
 指摘が0件のときは何も出しません（集計の行はありません）。
 
 ```text
 docs/plans/broken.md:69 [error] invalid_plan field_pattern_mismatch: value "manual — read the output" does not match pattern "^(test|check|artifact|external)(\s|$)"
 ```
 
+ステップに必須の欄が無いときは、そのステップの見出しの行を指します。
+次は、45行目の `### S1: 入力を読む` のステップに `- Done when:` の行が無い計画書の出力です。
+
+```text
+docs/plans/a.md:45 [error] invalid_plan missing_required_field: field "Done when" is required but missing
+```
+
 | 部分 | 中身 |
 |---|---|
 | パス | 計画書のファイルの、基準のディレクトリからの相対パス。正規化し、基準の外なら `../` を含む |
-| 行 | スキーマの側が出した行。行が無ければ `-` |
+| 行 | スキーマの側が出した行。ステップに必須の欄が無いときはそのステップの見出しの行。行が無ければ `-` |
 | 詳細 | スキーマの側の種類と詳細を `: ` でつないだもの（`field_pattern_mismatch: ...`） |
 
 指摘の種類は `invalid_plan` の1つだけで、重さは誤りです。
@@ -147,7 +154,7 @@ docs/plans/broken.md:69 [error] invalid_plan field_pattern_mismatch: value "manu
 
 ## 終了コード
 
-<!-- @kotowari[TBL-core-002:46c482a8, REQ-core-193:34e5d948] -->
+<!-- @kotowari[TBL-core-002:46c482a8, REQ-core-193:ae035033] -->
 
 | コード | 意味 |
 |---|---|

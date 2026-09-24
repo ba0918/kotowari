@@ -288,7 +288,7 @@ $ echo $?
 
 ## 設定の誤り
 
-<!-- @kotowari[REQ-core-014:c5e13de5, EX-core-003:6f823b5e] -->
+<!-- @kotowari[REQ-core-014:c5e13de5, EX-core-003:6f823b5e, EX-core-383:53b1ffc1] -->
 
 次のどれかがあると、kotowari は検査を行わずに止まります（終了コード 2）。
 標準エラーの1行目は `config error: ` で始まり、設定ファイルのパスと理由が続きます。
@@ -333,11 +333,20 @@ $ kotowari check --format text
 config error: .kotowari/config.yaml: invalid glob pattern: tests/[a
 ```
 
-YAML の読み方に関わる誤り（知らないキー、型の違い、0、同じキー）は、行と列の付いた説明が続きます（[つまずき](#知らないキーで止まる)）。
+```console
+$ cat .kotowari/config.yaml
+ir: docs/ir
+ir: docs/ir
+$ kotowari check --format text
+config error: .kotowari/config.yaml: duplicate key: ir
+```
+
+同じキーの2回目は、そのキーの名前だけを1行で示します。
+YAML の読み方に関わるほかの誤り（知らないキー、型の違い、0）は、行と列の付いた説明が続きます（[つまずき](#知らないキーで止まる)）。
 
 ### `tests.rules` のファイルの誤り
 
-<!-- @kotowari[REQ-core-189:1b29fe26, EX-core-315:ab1132fc] -->
+<!-- @kotowari[REQ-core-189:1b29fe26, EX-core-315:ab1132fc, EX-core-378:babae1dc, EX-core-379:bcb6c3e7] -->
 
 次のときも設定の誤りで止まります。
 
@@ -361,7 +370,7 @@ language: cobol
 rule:
   pattern: x
 $ kotowari check --format text
-config error: invalid rule in tests.rules: rules/c.yml: Fail to parse yaml as RuleConfig
+config error: invalid rule in tests.rules: rules/c.yml: unknown language: cobol
 ```
 
 ルールの `id` が重なっていても誤りにはしません。

@@ -224,6 +224,17 @@ pub fn is_blank_yaml(text: &str) -> bool {
     })
 }
 
+/// YAML のライブラリの誤りを設定の誤りにする。キーの重複はライブラリの文言と抜粋を出さず、
+/// "duplicate key: キー" の1行にする（REQ-core-014）
+fn yaml_error(e: serde_saphyr::Error) -> StopReason {
+    match e.without_snippet() {
+        serde_saphyr::Error::DuplicateMappingKey { key: Some(key), .. } => {
+            StopReason::ConfigError(format!("duplicate key: {key}"))
+        }
+        _ => StopReason::ConfigError(format!("{e}")),
+    }
+}
+
 impl Config {
     /// YAML 文字列から設定を読む
     pub fn parse(yaml: &str) -> Result<Self, StopReason> {
@@ -232,8 +243,7 @@ impl Config {
             return Ok(Config::default());
         }
 
-        let raw: RawConfig =
-            serde_saphyr::from_str(yaml).map_err(|e| StopReason::ConfigError(format!("{e}")))?;
+        let raw: RawConfig = serde_saphyr::from_str(yaml).map_err(yaml_error)?;
 
         let defaults = Config::default();
 

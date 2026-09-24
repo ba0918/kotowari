@@ -552,6 +552,24 @@ fn req_014_duplicate_key_stops() {
     assert!(result.is_err(), "duplicate key should stop");
 }
 
+// @kotowari[REQ-core-014, EX-core-383]
+#[test]
+fn ex_core_383_a_duplicate_key_stops_with_one_line_naming_the_key() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\nir: docs/ir\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.starts_with("config error: "), "{stderr}");
+    assert!(stderr.contains("duplicate key: ir"), "{stderr}");
+    assert_eq!(stderr.lines().count(), 1, "{stderr}");
+}
+
 // @kotowari[REQ-core-014]
 #[test]
 fn req_014_null_value_stops() {
