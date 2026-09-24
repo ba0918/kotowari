@@ -134,9 +134,9 @@ struct RawMutants {
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RawLimits {
-    #[serde(default, deserialize_with = "deserialize_nullable_nonzero")]
+    #[serde(default, deserialize_with = "deserialize_nullable")]
     lines: Option<Option<NonZeroU64>>,
-    #[serde(default, deserialize_with = "deserialize_nullable_nonzero")]
+    #[serde(default, deserialize_with = "deserialize_nullable")]
     requirements: Option<Option<NonZeroU64>>,
 }
 
@@ -150,27 +150,12 @@ where
     Ok(Some(opt))
 }
 
-fn deserialize_nullable_nonzero<'de, D>(
-    deserializer: D,
-) -> Result<Option<Option<NonZeroU64>>, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let opt = Option::<NonZeroU64>::deserialize(deserializer)?;
-    Ok(Some(opt))
-}
-
 use serde::Deserialize;
 
 /// null チェック付きで Option<Option<T>> から値を取り出す
 fn unwrap_or_null<T>(field: Option<Option<T>>, key: &str, default: T) -> Result<T, StopReason> {
-    match field {
-        None => Ok(default), // キー不在 → 既定値
-        Some(None) => Err(StopReason::ConfigError(format!(
-            "null value for key: {key}"
-        ))),
-        Some(Some(v)) => Ok(v),
-    }
+    // キー不在 → 既定値
+    Ok(unwrap_or_null_option(field, key)?.unwrap_or(default))
 }
 
 /// null チェック付きで、入れ子のキーを (キー不在 → None、値あり → Some(v)) にする。
