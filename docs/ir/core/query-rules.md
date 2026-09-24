@@ -39,7 +39,7 @@ kotowari は常に、ルールの "fix"、"message"、"severity"、"note"、"met
 ### REQ-core-189: ルールのファイルの誤り
 
 - kind: event_driven
-- source: docs/decision/records/2026-09-24-multi-language-tests.md#A22, docs/decision/records/2026-09-24-multi-language-tests.md#A43, docs/decision/records/2026-09-24-multi-language-tests.md#A44
+- source: docs/decision/records/2026-09-24-multi-language-tests.md#A22, docs/decision/records/2026-09-24-multi-language-tests.md#A43, docs/decision/records/2026-09-24-multi-language-tests.md#A44, docs/decision/records/2026-09-24-guide-gaps.md#A2, docs/decision/records/2026-09-24-guide-gaps.md#A7
 - verification: unit
 
 "tests.rules" のパスのファイルが無いとき、パスがファイルでないとき、読めないとき、UTF-8 でないとき、同じパスが2回並んでいるとき、YAML として読めないとき、ast-grep のルールとして読めないとき、またはルールの "language" が TBL-core-031 の言語に無いとき、kotowari は設定の誤りを理由に`停止`する。"language" は ast-grep と同じく大文字小文字を区別せずに突き合わせ、ast-grep の別名（"ts"、"py"）も受ける。ルールの "id" の重なりは見ない。
@@ -93,4 +93,15 @@ Scenario: language の別名を受ける
   Given "tests.files" が "tests/**/*.ts" を含み、"tests.rules" のルールが "language: ts" で "bench($NAME, $$$)" に当たり、"tests/a.test.ts" に印の無い "bench('fast', () => {})" がある
   When "kotowari check" を実行する
   Then 終了コードは 1 で、detail が "fast" の test_without_id の誤りが1件出る
+@id=EX-core-378 @about=REQ-core-189,TBL-core-020 @source=docs/decision/records/2026-09-24-guide-gaps.md#A2,docs/decision/records/ir-form.md#出力,docs/decision/records/2026-09-24-multi-language-tests.md#A22,docs/decision/records/2026-09-24-multi-language-tests.md#A43,docs/decision/records/2026-09-24-multi-language-tests.md#A44
+Scenario: 無いルールのファイルで止まるとき、詳細はルールのファイルを指す
+  Given "tests.rules" が "rules/missing.yml" を並べ、そのファイルが無い
+  When "kotowari check" を実行する
+  Then 終了コードは 2 で、標準エラーは "config error: " で始まり "rules/missing.yml" を含み、".kotowari/config.yaml" を含まない
+
+@id=EX-core-379 @about=REQ-core-189 @source=docs/decision/records/2026-09-24-guide-gaps.md#A7,docs/decision/records/2026-09-24-guide-gaps.md#A2,docs/decision/records/ir-form.md#出力
+Scenario: 知らない言語のルールで止まるとき、その言語を示す
+  Given "tests.rules" のルールのファイル "r.yml" の "language" が "cobol" である
+  When "kotowari check" を実行する
+  Then 終了コードは 2 で、標準エラーは "r.yml" と "unknown language: cobol" を含む1行である
 ```

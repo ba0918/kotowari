@@ -10,53 +10,11 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 ## 判断待ち
 
-### gherkin でないブロックの中の行にも invalid_gherkin_line が出る（kotowari）
-
-- `## Examples` の下に gherkin でないコードブロック（```` ```text ````）を置くと、unknown_code_block と一緒に、ブロックの中の行にも invalid_gherkin_line が出る（2026-09-24、ガイドを書くときに実行して観測）
-- [REQ-core-113](docs/ir/core/ir-references.md#REQ-core-113) は invalid_gherkin_line を gherkin のブロックの中の行に限り、[REQ-core-174](docs/ir/core/findings.md#REQ-core-174) と EX-core-266 もこの二重の指摘を定めていない。実装を直すか、二重に出すことを仕様にするか
-
-### tests.rules の誤りの停止の詳細に設定ファイルのパスが無い（kotowari）
-
-- `tests.rules` のファイルが無いときと読めないルールのときの停止は `config error: unreadable file in tests.rules: rules/missing.yml: ...` と `config error: invalid rule in tests.rules: rules/c.yml: ...` の形で、設定ファイルのパスが出ない（2026-09-24 に観測）
-- [TBL-core-020](docs/ir/core/cli-environment.md#TBL-core-020) は設定の誤りの詳細を「設定ファイルの相対パスと説明」とし、例外は REQ-core-148 と REQ-core-199 だけ。表と実装のどちらに合わせるか
-- 同じ表の場面を並べる [TBL-core-001](docs/ir/core/cli.md#TBL-core-001) の「設定の誤り」にも [REQ-core-189](docs/ir/core/query-rules.md#REQ-core-189)（tests.rules の誤り）が入っていない
-
-### 位置引数の後ろのオプション（kotowari）
-
-- 実装は `kotowari query REQ-001 --format text` を受け付ける（2026-09-24 に観測）。[REQ-core-002](docs/ir/core/cli.md#REQ-core-002) は位置引数とオプションの順を問わないコマンドとして mutants と plan だけを挙げている。仕様に query を足すか、実装を仕様に合わせるか
-
-### plan の指摘の行と、指摘が0件のときの text（kotowari）
-
-- 計画書のステップで欄が欠けたとき、実装はそのステップの見出しの行を出す（観測）。[REQ-core-193](docs/ir/core/plan.md#REQ-core-193) は「スキーマの側が出した行」とだけ書き、どの行かを決めていない
-- `kotowari plan --format text` は指摘が0件のとき何も出さない（観測）。mutants には集計の行を必ず出す要求（[REQ-core-146](docs/ir/core/mutants.md#REQ-core-146)）があるが、plan には text の形を決める要求が無い
-
 ## 記録のみ
 
-### query の停止の文言（kotowari）
+### REQ-core-174 の前からの出典の漏れ（kotowari）
 
-- [REQ-core-157](docs/ir/core/query.md#REQ-core-157) が文言を決めているのは `unknown id: ` だけ。実装が出す `query expects exactly one id, got N` と `not an id: X` は仕様に文言の定めが無い
-
-### 用語集の題名の形（kotowari）
-
-- 用語集の題名は `# Glossary` でなければ glossary_title_invalid になるが、その形は同梱のスキーマ（`.kotowari/schemas/context.yaml` の `pattern: "^Glossary$"`）にしか無い。[REQ-core-174](docs/ir/core/findings.md#REQ-core-174) は「スキーマの宣言した形」とだけ書いている
-
-### 設定の誤りの文言がライブラリのまま（kotowari）
-
-- 設定のキーが重複すると、YAML のライブラリの文言（`set DuplicateKeyPolicy in Options if acceptable`）がそのまま停止の詳細に出る
-- 知らない言語の `tests.rules` のルールは `Fail to parse yaml as RuleConfig` で止まり、どの言語が問題かが出ない
-
-### 用語集の「等価」が kotowari 自身の定義（kotowari）
-
-- `docs/ir/core/CONTEXT.md` の「等価」は「変異を入れても kotowari の標準出力、標準エラー、終了コードが変わらない」で、kotowari を使うほかのプロジェクトには当てはまらない。利用者向けのガイド（`docs/guides/commands/mutants.md`）は「観測できる振る舞いが変わらない」と書いている
-
-### `## Context` の無い判断の記録は補足の行を検査しない（kotowari）
-
-- [REQ-core-129](docs/ir/core/record-form.md#REQ-core-129) のとおりの振る舞いだが、`why` の無い決定を書いても何も出ないので、利用者がつまずきやすい
-
-### 出典の漏れ（kotowari）
-
-- [TBL-core-008](docs/ir/core/findings.md#TBL-core-008) の unknown_line、unknown_code_block、glossary_title_invalid、id_domain_mismatch の detail と、[TBL-core-019](docs/ir/core/finding-order.md#TBL-core-019) の id_domain_mismatch の行を支える決定が、項目の出典に無い（2026-09-24 の照合で見つかった）
-- 用語集の「除外」のうち「二重引用符が奇数のときの最後の引用符から行末まで」を支える決定が出典に無い
+- [REQ-core-174](docs/ir/core/findings.md#REQ-core-174) のうち、unknown_line・unknown_code_block・glossary_title_invalid の "line" を TBL-core-019 のとおりにすること、unknown_code_block と glossary_title_invalid を誤りにすることの出典は ir-engine の A89 で足りるが、"## " の直下の宣言の外の行から一覧を外す条件を支える決定が出典に無い（2026-09-24 の照合で見つかった。今回の変更の範囲の外）
 
 ### ID 38 / ID 60: detail 文言を assert するテスト（mds）
 

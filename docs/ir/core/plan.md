@@ -47,10 +47,10 @@ kotowari は常に、"kotowari plan" で`計画書`を1行ずつ読み、次の�
 ### REQ-core-193: 形の指摘
 
 - kind: event_driven
-- source: docs/decision/records/2026-09-24-plan-schema.md#A11, docs/decision/records/2026-09-24-plan-schema.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A26, docs/decision/records/2026-09-24-plan-schema.md#A33
+- source: docs/decision/records/2026-09-24-plan-schema.md#A11, docs/decision/records/2026-09-24-plan-schema.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A26, docs/decision/records/2026-09-24-plan-schema.md#A33, docs/decision/records/2026-09-24-guide-gaps.md#A4
 - verification: unit
 
-"kotowari plan" で`計画書`が REQ-core-192 の形から外れるとき、kotowari はスキーマの側の`指摘`を TBL-core-030 で写さず、1件ごとに、"path" を`計画書`のファイルの`基準のディレクトリ`からの相対パス（正規化し、基準の外なら "../" を含める）、"line" をスキーマの側が出した行（行が無ければ null）、detail をスキーマの側の種類と詳細を ": " でつないだ文字列にして invalid_plan の`誤り`を出す。
+"kotowari plan" で`計画書`が REQ-core-192 の形から外れるとき、kotowari はスキーマの側の`指摘`を TBL-core-030 で写さず、1件ごとに、"path" を`計画書`のファイルの`基準のディレクトリ`からの相対パス（正規化し、基準の外なら "../" を含める）、"line" をスキーマの側が出した行（ステップに必須の欄が無いときはそのステップの見出しの行。行が無ければ null）、detail をスキーマの側の種類と詳細を ": " でつないだ文字列にして invalid_plan の`誤り`を出す。
 
 ### REQ-core-194: plan の JSON
 
@@ -59,6 +59,14 @@ kotowari は常に、"kotowari plan" で`計画書`を1行ずつ読み、次の�
 - verification: unit
 
 "kotowari plan" で "--format" が "json" のとき、kotowari は最上位に "findings" と "counts" の2つの鍵だけを持つ JSON を出す。"findings" の`指摘`の鍵と "counts" の中身は "kotowari check" と同じである。
+
+### REQ-core-207: plan の text
+
+- kind: event_driven
+- source: docs/decision/records/2026-09-24-guide-gaps.md#A4
+- verification: unit
+
+"kotowari plan" で "--format" が "text" のとき、kotowari は`指摘`を REQ-core-025 の形で1件1行に出し、ほかの行を出さない。`指摘`が0件なら何も出さない。
 
 ## Examples
 
@@ -241,4 +249,15 @@ Scenario: 壊れた frontmatter も読まずに飛ばす
   Given 先頭の frontmatter が YAML として読めず、ほかは形の揃った`計画書` "docs/plans/a.md" がある
   When "kotowari plan docs/plans/a.md" を実行する
   Then 終了コードは 0 である
+@id=EX-core-381 @about=REQ-core-193,REQ-core-207 @source=docs/decision/records/2026-09-24-guide-gaps.md#A4,docs/decision/records/ir-form.md#出力,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A3
+Scenario: 欄の欠けたステップは見出しの行を指す
+  Given `計画書` "docs/plans/a.md" の5行目が "### S1: 作る" で、そのステップに "- Done when:" の行が無い
+  When "kotowari plan docs/plans/a.md --format text" を実行する
+  Then 終了コードは 1 で、標準出力は "docs/plans/a.md:5 [error] invalid_plan " で始まる行だけである
+
+@id=EX-core-382 @about=REQ-core-207 @source=docs/decision/records/2026-09-24-guide-gaps.md#A4,docs/decision/records/ir-form.md#出力
+Scenario: 指摘の無い計画書の text は何も出さない
+  Given 形の揃った`計画書` "docs/plans/a.md" がある
+  When "kotowari plan docs/plans/a.md --format text" を実行する
+  Then 終了コードは 0 で、標準出力は空である
 ```

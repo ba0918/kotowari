@@ -15,10 +15,10 @@ kotowari は常に、"kotowari check"、"kotowari list"、"kotowari mutants"、"
 ### REQ-core-002: 受けるオプション
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A19, docs/decision/records/records.md#A103, docs/decision/records/2026-09-17-mutation-tests.md#A14, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A58, docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-09-24-plan-schema.md#A16
+- source: docs/decision/records/records.md#A19, docs/decision/records/records.md#A103, docs/decision/records/2026-09-17-mutation-tests.md#A14, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A58, docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-09-24-plan-schema.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A3
 - verification: unit
 
-kotowari は常に、"check"、"list"、"query"、"status" ではオプションとして "--format"、"--config"、"--help"、"--version" だけを受け、"mutants" ではそれに加えて "--tool" を受け、"plan" では "--format"、"--help"、"--version" だけを受け、どのコマンドでも、オプションをコマンドの前後どちらに書いても受け、"mutants" と "plan" では位置引数とオプションの順を問わない。
+kotowari は常に、"check"、"list"、"query"、"status" ではオプションとして "--format"、"--config"、"--help"、"--version" だけを受け、"mutants" ではそれに加えて "--tool" を受け、"plan" では "--format"、"--help"、"--version" だけを受け、どのコマンドでも、オプションをコマンドの前後どちらに書いても受け、位置引数とオプションの順を問わない。
 
 ### REQ-core-003: 設定のパスの基準
 
@@ -78,11 +78,11 @@ kotowari は、人間向けの文書の生成（"render"）を作ってはなら
 
 ### TBL-core-001: 停止の理由
 
-- source: docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A48, docs/decision/records/records.md#A60, docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A66, docs/decision/records/records.md#A95, docs/decision/records/records.md#A96, docs/decision/records/records.md#A93, docs/decision/records/records.md#A103, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A136, docs/decision/records/records.md#A146, docs/decision/records/records.md#A160, docs/decision/records/2026-09-16-ir-tree.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A32, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A48, docs/decision/records/2026-09-22-ir-engine.md#A73, docs/decision/records/2026-09-24-plan-schema.md#A16, docs/decision/records/2026-09-24-doc-marks.md#A15, docs/decision/records/2026-09-24-doc-marks.md#A16
+- source: docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A48, docs/decision/records/records.md#A60, docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A66, docs/decision/records/records.md#A95, docs/decision/records/records.md#A96, docs/decision/records/records.md#A93, docs/decision/records/records.md#A103, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A136, docs/decision/records/records.md#A146, docs/decision/records/records.md#A160, docs/decision/records/2026-09-16-ir-tree.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A32, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A48, docs/decision/records/2026-09-22-ir-engine.md#A73, docs/decision/records/2026-09-24-plan-schema.md#A16, docs/decision/records/2026-09-24-doc-marks.md#A15, docs/decision/records/2026-09-24-doc-marks.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A2
 
 | 理由 | 場面 |
 |---|---|
-| 設定の誤り | REQ-core-014 の場面と、REQ-core-148 の等価の一覧が YAML として読めないか最上位が並びでない場面と、REQ-core-199 のガイドとテストの置き場が重なる場面 |
+| 設定の誤り | REQ-core-014 の場面と、REQ-core-189 の "tests.rules" の誤りの場面と、REQ-core-148 の等価の一覧が YAML として読めないか最上位が並びでない場面と、REQ-core-199 のガイドとテストの置き場が重なる場面 |
 | 引数の誤り | REQ-core-004、REQ-core-149、REQ-core-190 の場面 |
 | 読めないファイル | "kotowari plan" の`計画書`のファイルが無いか、ディレクトリか、読めない（REQ-core-197）、読むファイルを読めない（"kotowari mutants" で変異の結果か等価の一覧の1件が指すファイルは除く。REQ-core-141、REQ-core-142）、結果のファイルが無いか読めない、"mutants.equivalents" の指す先が無いか読めない、"kotowari check" で"ir"、"decisions.records"、"decisions.adr" の指すディレクトリが無いか読めない、"ir"、"decisions.records"、"decisions.adr" の下のディレクトリが読めない、または "tests.files" か "guides.files" の走査でディレクトリが読めない、または走査で先の無いシンボリックリンクに出会った、またはカレントディレクトリを取得できない |
 | UTF-8 でないファイル | IR の文書、テストのファイル、ガイド、設定ファイル、判断の記録、ADR、結果のファイル、等価の一覧、計画書のいずれかが UTF-8 でない |
@@ -145,5 +145,10 @@ Scenario: オプションだけの実行は6つのコマンドを挙げて停止
 Scenario: mutants のオプションはコマンドの前にも結果のパスの後にも書ける
   Given 結果のファイル "outcomes.json" に "summary" が "CaughtMutant" の1件がある
   When "kotowari --tool cargo-mutants mutants outcomes.json --format text" を実行する
+  Then 終了コードは 0 である
+@id=EX-core-380 @about=REQ-core-002 @source=docs/decision/records/2026-09-24-guide-gaps.md#A3,docs/decision/records/ir-form.md#出力,docs/decision/records/2026-09-20-query-status.md#A7
+Scenario: query の ID の後ろにオプションを書ける
+  Given `IR`に "REQ-001" がある
+  When "kotowari query REQ-001 --format text" を実行する
   Then 終了コードは 0 である
 ```

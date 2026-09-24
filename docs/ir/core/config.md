@@ -30,7 +30,7 @@
 ### REQ-core-014: 設定の誤り
 
 - kind: event_driven
-- source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A93, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A161, docs/decision/records/2026-09-24-doc-marks.md#A16
+- source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A93, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A161, docs/decision/records/2026-09-24-doc-marks.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A7
 - verification: unit
 
 `設定ファイル`が YAML として読めないとき、または`設定ファイル`に知らないキー、同じキーの2回目、値が null のキー（"ir:" だけの行。空の一覧は REQ-core-016 のとおり受ける）、型の違う値、負の数、0、絶対パスの値（先頭が "/" のもの）、"vague_words" の空の文字列の要素か同じ語の2回目、"tests.files" か "guides.files" の glob として読めない要素のいずれかがあるとき、kotowari は設定の誤りを理由に`停止`する。
@@ -112,4 +112,9 @@ Scenario: 知らないキーで停止する
   Given 設定ファイルに "limit:" という知らないキーがある
   When "kotowari check" を実行する
   Then 終了コードは 2 である
+@id=EX-core-383 @about=REQ-core-014 @source=docs/decision/records/2026-09-24-guide-gaps.md#A7,docs/decision/records/ir-form.md#出力
+Scenario: 重複したキーで止まるとき、そのキーを1行で示す
+  Given `設定ファイル`に "ir: docs/ir" の行が2回ある
+  When "kotowari check" を実行する
+  Then 終了コードは 2 で、標準エラーは "config error: " で始まり "duplicate key: ir" を含む1行である
 ```
