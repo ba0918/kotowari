@@ -1,4 +1,4 @@
-Based on the kotowari specification (revised 2026-09-23; the version of kotowari itself is not pinned)
+Based on the kotowari specification (revised 2026-09-24; the version of kotowari itself is not pinned)
 
 The configuration file is `.kotowari/config.yaml`, directly under the base directory. An empty configuration file (0 bytes, or comments only) checks with the default values. When there is no configuration file, the default values are used too.
 
@@ -8,6 +8,7 @@ The configuration file is `.kotowari/config.yaml`, directly under the base direc
 | decisions.records | Path of a directory (one string). Decisions in the files under it can be cited as sources. Markdown that is not a decision record (form contracts, supplementary documents) can also be placed there | docs/decision/records |
 | decisions.adr | Path of a directory (one string) | docs/decision/adr |
 | tests.files | List of globs | src/\*\*/\*.rs, tests/\*\*/\*.rs |
+| guides.files | List of globs. The places of the guides, the user-facing documents whose guide marks are compared with the IR (guides.md) | Empty list |
 | tests.rust.attributes | List of attribute paths added to "#[test]" | Empty list |
 | tests.rust.macros | List of macro names | Empty list |
 | tests.rules | List of paths of ast-grep rule YAML files, relative to the base directory. Globs are not allowed. The rules are added to the bundled queries of their `language` (mark.md) | Empty list |
@@ -39,6 +40,8 @@ tests:
     attributes: []
     macros: []
   rules: []
+guides:
+  files: []
 limits:
   lines: 200
   requirements: 10

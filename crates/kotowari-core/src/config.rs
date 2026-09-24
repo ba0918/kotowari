@@ -7,9 +7,17 @@ pub struct Config {
     pub ir: String,
     pub decisions: DecisionsConfig,
     pub tests: TestsConfig,
+    pub guides: GuidesConfig,
     pub mutants: MutantsConfig,
     pub limits: LimitsConfig,
     pub vague_words: Vec<String>,
+}
+
+/// `ガイド`の置き場（TBL-core-004、REQ-core-198）
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct GuidesConfig {
+    /// `ガイド`に当たる glob の一覧。既定は空の一覧で、空なら`ガイド`を1つも読まない
+    pub files: Vec<String>,
 }
 
 /// 変異テストに関わる設定（TBL-core-004）
@@ -61,6 +69,7 @@ impl Default for Config {
                 },
                 rules: vec![],
             },
+            guides: GuidesConfig::default(),
             mutants: MutantsConfig { equivalents: None },
             limits: LimitsConfig {
                 lines: NonZeroU64::new(200).unwrap(),
@@ -87,6 +96,8 @@ struct RawConfig {
     decisions: Option<Option<RawDecisions>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     tests: Option<Option<RawTests>>,
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    guides: Option<Option<RawGuides>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     mutants: Option<Option<RawMutants>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
@@ -122,6 +133,13 @@ struct RawRustTests {
     attributes: Option<Option<Vec<String>>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     macros: Option<Option<Vec<String>>>,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawGuides {
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    files: Option<Option<Vec<String>>>,
 }
 
 #[derive(serde::Deserialize)]
@@ -180,6 +198,18 @@ fn check_not_absolute(path: &str, key: &str) -> Result<(), StopReason> {
         return Err(StopReason::ConfigError(format!(
             "absolute path not allowed for {key}: {path}"
         )));
+    }
+    Ok(())
+}
+
+/// REQ-core-014: glob として読めない要素があれば設定の誤りで停止する（"tests.files" と "guides.files"）
+fn check_globs(patterns: &[String]) -> Result<(), StopReason> {
+    for pattern in patterns {
+        if globset::Glob::new(pattern).is_err() {
+            return Err(StopReason::ConfigError(format!(
+                "invalid glob pattern: {pattern}"
+            )));
+        }
     }
     Ok(())
 }
@@ -251,14 +281,7 @@ impl Config {
                     None => defaults.tests.rust,
                 };
                 let files = non_null_or_default(t.files, "tests.files", defaults.tests.files)?;
-                // REQ-core-014: glob として読めない要素
-                for pattern in &files {
-                    if globset::Glob::new(pattern).is_err() {
-                        return Err(StopReason::ConfigError(format!(
-                            "invalid glob pattern: {pattern}"
-                        )));
-                    }
-                }
+                check_globs(&files)?;
                 let rules = non_null_or_default(t.rules, "tests.rules", defaults.tests.rules)?;
                 for rule in &rules {
                     check_not_absolute(rule, "tests.rules")?;
@@ -275,6 +298,16 @@ impl Config {
                 }
             }
             None => defaults.tests,
+        };
+
+        // REQ-core-014: "guides:" 自体と "guides.files" が null のときも停止する
+        let guides = match non_null(raw.guides, "guides")? {
+            Some(g) => {
+                let files = non_null_or_default(g.files, "guides.files", defaults.guides.files)?;
+                check_globs(&files)?;
+                GuidesConfig { files }
+            }
+            None => defaults.guides,
         };
 
         // REQ-core-014: "mutants:" 自体と "mutants.equivalents" が null のときも停止する
@@ -333,6 +366,7 @@ impl Config {
             ir,
             decisions,
             tests,
+            guides,
             mutants,
             limits,
             // REQ-core-015: 一覧は既定を置き換える
