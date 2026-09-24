@@ -74,7 +74,8 @@ perspective; no optional seat is attached to conformance. The quality and confor
   skill names no seat, tool, or skill of its own.
 - **How many.** The person's word for this run ("one seat this time", "all seats") or the caller's
   one-line reason overrides the count; otherwise run every seat on the list. The count includes the
-  required quality reviewer: "one seat" means no optional seat.
+  required quality reviewer: "one seat" means no optional seat. A smaller count takes optional
+  seats from the top of the list.
 - **Which reviews.** Full reviews only, and a person's direct call under the same rules. Never a
   diff review. A review another station runs on its own, not through this skill, gets none.
 - **Launching.** The caller launches optional seats itself; a reviewer delegation never carries the
