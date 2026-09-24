@@ -369,7 +369,7 @@ impl SourceContext {
                 let full_path = crate::join_display_path(&self.records_path, &rf.rel_path);
                 full_path == path
             }) {
-                // records_files に積むのは判断の記録と読めたファイルだけ（load_all_md）
+                // records_files に積むのは判断の記録と読めたファイルだけ（build_context）
                 if rf.is_records {
                     // 判断の記録: 印は決定の番号
                     if is_decision_number(anchor) && rf.has_decision_number(anchor) {
@@ -431,20 +431,31 @@ pub fn build_context(
     let mut records_other_files = Vec::new();
     let mut adr_files = Vec::new();
 
-    // records ディレクトリを読む
+    // records ディレクトリを読む。判断の記録とそれ以外のファイルに分ける
     if records_dir.is_dir() {
-        load_all_md(
+        for_each_md(
             &records_dir,
             "",
             &config.decisions.records,
-            &mut records_files,
-            &mut records_other_files,
+            &mut |rel, content| {
+                let rf = parse_records_file(&rel, content);
+                if rf.is_records {
+                    records_files.push(rf);
+                } else {
+                    records_other_files.push(OtherFile {
+                        rel_path: rel,
+                        headings: rf.headings,
+                    });
+                }
+            },
         )?;
     }
 
     // adr ディレクトリを読む
     if adr_dir.is_dir() {
-        load_all_md_as_other(&adr_dir, "", &config.decisions.adr, &mut adr_files)?;
+        for_each_md(&adr_dir, "", &config.decisions.adr, &mut |rel, content| {
+            adr_files.push(parse_other_file(&rel, content));
+        })?;
     }
 
     Ok(SourceContext {
@@ -456,12 +467,12 @@ pub fn build_context(
     })
 }
 
-fn load_all_md(
+/// 置き場の下の .md をファイル名の順に深さ優先で読み、置き場からの相対パスと中身を visit に渡す
+fn for_each_md(
     dir: &Path,
     prefix: &str,
     config_key: &str,
-    records: &mut Vec<RecordsFile>,
-    others: &mut Vec<OtherFile>,
+    visit: &mut dyn FnMut(String, &str),
 ) -> Result<(), crate::StopReason> {
     let entries = std::fs::read_dir(dir)
         .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", config_key)))?;
@@ -503,78 +514,12 @@ fn load_all_md(
             if name.starts_with('.') {
                 continue;
             }
-            load_all_md(&path, &rel, config_key, records, others)?;
+            for_each_md(&path, &rel, config_key, visit)?;
         } else if is_file && path.extension().is_some_and(|ext| ext == "md") {
             let display = crate::join_display_path(config_key, &rel);
             let content = crate::read_utf8_file(&path, &display)?;
 
-            let rf = parse_records_file(&rel, &content);
-            if rf.is_records {
-                records.push(rf);
-            } else {
-                others.push(OtherFile {
-                    rel_path: rel,
-                    headings: rf.headings,
-                });
-            }
-        }
-    }
-    Ok(())
-}
-
-fn load_all_md_as_other(
-    dir: &Path,
-    prefix: &str,
-    config_key: &str,
-    files: &mut Vec<OtherFile>,
-) -> Result<(), crate::StopReason> {
-    let entries = std::fs::read_dir(dir)
-        .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", config_key)))?;
-
-    let mut sorted = Vec::new();
-    for entry in entries {
-        sorted.push(
-            entry.map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", config_key)))?,
-        );
-    }
-    sorted.sort_by_key(|e| e.file_name());
-
-    for entry in sorted {
-        let path = entry.path();
-        let name = entry.file_name().to_string_lossy().to_string();
-        let rel = if prefix.is_empty() {
-            name.clone()
-        } else {
-            format!("{prefix}/{name}")
-        };
-
-        let ft = entry.file_type().map_err(|e| {
-            let display = crate::join_display_path(config_key, &rel);
-            crate::StopReason::UnreadableFile(format!("{display}: {e}"))
-        })?;
-        // A102: ファイルのシンボリックリンクは読む。ディレクトリのリンクは辿らない。
-        // A146: 先の無いリンクは読めないファイルとして停止する
-        let (is_dir, is_file) = if ft.is_symlink() {
-            let meta = std::fs::metadata(&path).map_err(|e| {
-                let display = crate::join_display_path(config_key, &rel);
-                crate::StopReason::UnreadableFile(format!("{display}: {e}"))
-            })?;
-            (false, meta.is_file())
-        } else {
-            (ft.is_dir(), ft.is_file())
-        };
-        if is_dir {
-            // 除外: 隠しディレクトリは辿らない（CONTEXT.md の除外）
-            if name.starts_with('.') {
-                continue;
-            }
-            load_all_md_as_other(&path, &rel, config_key, files)?;
-        } else if is_file && path.extension().is_some_and(|ext| ext == "md") {
-            let display = crate::join_display_path(config_key, &rel);
-            let content = crate::read_utf8_file(&path, &display)?;
-
-            let of = parse_other_file(&rel, &content);
-            files.push(of);
+            visit(rel, &content);
         }
     }
     Ok(())
