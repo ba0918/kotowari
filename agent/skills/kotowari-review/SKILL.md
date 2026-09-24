@@ -79,16 +79,19 @@ perspective; no optional seat is attached to conformance. The quality and confor
   diff review. A review another station runs on its own, not through this skill, gets none.
 - **Launching.** The caller launches optional seats itself; a reviewer delegation never carries the
   list or this section. Seats may be launched in parallel. Hand each launch means the
-  self-contained prompt the quality reviewer gets, and read what it returns as the JSON in
-  **Output**.
+  self-contained prompt the quality reviewer gets, rewritten for the seat's copy (below): the
+  copy's path wherever the worktree's path appears, and every file the prompt references (such as
+  the file listing requirement IDs) placed inside the copy or inlined. Run the launch means with the copy as its working
+  directory, and read what it returns as the JSON in **Output**.
 - **Throwaway copy.** Each seat runs inside its own copy of the worktree, created in a temporary
   directory outside it right before that seat is launched: the worktree's HEAD with its
-  uncommitted changes and its untracked, non-ignored files laid over it (for example, a `git clone --shared`
-  of the repository checked out detached at HEAD with its remote removed, `git diff HEAD
-  --binary` applied in it when not empty, and the untracked files copied in). The copy has its
-  own repository, so a seat's stash, branches, and config stay in it. The caller that created the copy deletes it when the seat ends, whatever the outcome (its JSON
-  read, or the seat absent for any reason); the copy is not
-  one of the person's worktrees. Nothing a seat writes reaches the person's worktree.
+  uncommitted changes and its untracked, non-ignored files laid over it (for example, a
+  `git clone --shared` of the repository checked out detached at HEAD with its remote removed,
+  `git diff HEAD --binary` applied in it when not empty, and the untracked files copied in). The
+  copy has its own repository, so a seat's stash, branches, and config stay in it. The caller
+  that created the copy deletes it when the seat ends, whatever the outcome (its JSON read, or the
+  seat absent for any reason); the copy is not one of the person's worktrees. Nothing a seat
+  writes reaches the person's worktree.
 - **Time limit.** Apply one only when the seat's entry writes it; otherwise wait for the launch
   means to finish.
 - **Absent seats.** An optional seat that fails once is absent and is never retried. The reasons:
