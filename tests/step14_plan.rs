@@ -761,6 +761,33 @@ fn ex_core_355_a_line_between_the_title_and_the_first_section_is_an_error() {
     ));
 }
 
+// @kotowari[REQ-core-192]
+#[test]
+fn req_core_192_a_line_before_the_title_is_not_checked() {
+    assert_valid_plan(&format!("前の行\n\n{VALID_PLAN}"));
+}
+
+// @kotowari[REQ-core-192]
+#[test]
+fn req_core_192_a_line_before_the_title_does_not_hide_a_line_after_the_title() {
+    // 題名は3行目、題名と最初の節の間の地の文は5行目
+    let plan = format!(
+        "前の行\n\n{}",
+        replace_once(
+            VALID_PLAN,
+            "# 計画: 入力を読んで結果を出す\n",
+            "# 計画: 入力を読んで結果を出す\n\n要約の地の文\n",
+        )
+    );
+    let (code, stdout) = plan_outcome(&plan);
+    assert_eq!(code, Some(1), "{stdout}");
+    let lines: Vec<_> = findings_of(&stdout)
+        .iter()
+        .map(|f| f["line"].clone())
+        .collect();
+    assert_eq!(lines, vec![serde_json::json!(5)], "{stdout}");
+}
+
 // @kotowari[REQ-core-192, EX-core-356]
 #[test]
 fn ex_core_356_field_lines_may_use_an_asterisk() {
