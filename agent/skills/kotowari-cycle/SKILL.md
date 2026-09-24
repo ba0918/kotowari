@@ -76,7 +76,11 @@ included). The limit, when the person set one, counts round trips.
   and the same review items and Evidence conditions. It returns per-finding `still_present` or
   `no_longer_visible` and new findings.
 - **fixer:** carry visible findings, plan path, branch, worktree path, and the contract below. It
-  returns commits and which finding each addresses, or a hand-back.
+  returns commits and which finding each addresses, or a hand-back. For a finding that is
+  `still_present` after a fix, also carry that fix's commits, and require the fixer, before
+  changing code, to report the one-sentence premise that fix assumed and the output of a command
+  it ran to test that premise. The next fix starts from that result; another fix resting on the
+  same premise is not the changed approach ending 3 waits for.
 
 When the plan's specification is the kotowari IR, the specification path in both reviews is the
 IR store path; the reviewer reads every document in the store. For a topic with no IR it is the
@@ -97,7 +101,9 @@ user-facing documentation when none exists; supported environments are those it 
 For a deletion, completion is all existing checks passing after deletion; no failing test is needed.
 For external work, hand back before anything unsafe, privileged, or irreversible. One concern per
 commit; `git add <path>` only; never disable hooks; never name a station or finding ID in a commit
-message. Missing design decisions are handed back, not guessed. Stop and ask before an irreversible
+message. Missing design decisions are handed back, not guessed; a question a throwaway run in the
+worktree can answer is a fact, not a decision — run it, keep it out of the commits, and report the
+command and its output. Stop and ask before an irreversible
 or privileged operation, a dangerous target, or a spreading accident.
 
 Immediately below that contract, paste the first paragraph from the kotowari-review skill's

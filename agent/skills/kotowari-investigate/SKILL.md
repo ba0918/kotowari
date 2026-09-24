@@ -116,6 +116,13 @@ items of evidence. 5: fix options. 6: recommended next action. A report missing 
 
 State uncertainty honestly; `high` on the strength of a file you did not read is a counter-example.
 
+Name the one fact the conclusion rests on, and take it as far down this ladder as a read-only step
+allows, saying where it stopped: asserted; pointed at (`file:line`, or the dependency's own source);
+walked (the failure path traced step by step); ran (a read-only command or test that would fail if
+the fact were wrong); reproduced (the symptom observed). Label each evidence item with its rung.
+Code shows what it does, not why it was written; a claim about intent needs a commit, a record, or
+a comment that says so, or it is labelled inferred.
+
 ### Fix options
 
 Sort each defect by whether it causes the stated symptom or the breakage the question points at. One that

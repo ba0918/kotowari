@@ -29,6 +29,12 @@ Hand back (stop, state the reason, do not guess) when:
 - after diagnosing and changing approach once there is still no progress → stop;
 - no test command can be determined (see below) → back to plan before writing product code.
 
+Before handing back a missing decision, ask whether running something in the worktree would answer
+it (what a library returns, whether a check passes, how long a command takes). Such an answer is a
+fact, not a decision: run the smallest throwaway probe, keep it out of the commits, act on what it
+showed, and put the command and its output in the report. Hand back only what no run can settle —
+what the specification should mean.
+
 Everything else you recover from yourself: an unplanned but safe file to add, a flaky helper
 tool, a hook failure, an ordinary command failure, a missing bit of record you can reconstruct.
 Never ask for acceptance of the result step by step; that happens once, at the end of the cycle.
