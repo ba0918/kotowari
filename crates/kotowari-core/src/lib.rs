@@ -325,16 +325,12 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                 }
             };
             if *slot {
-                return Err(StopReason::ArgumentError(format!(
-                    "repeated option: {arg}"
-                )));
+                return Err(StopReason::ArgumentError(format!("repeated option: {arg}")));
             }
             *slot = true;
             i += 1;
             if i >= args.len() {
-                return Err(StopReason::ArgumentError(format!(
-                    "{arg} requires a value"
-                )));
+                return Err(StopReason::ArgumentError(format!("{arg} requires a value")));
             }
             match arg.as_str() {
                 "--format" => format_str = Some(args[i].clone()),
@@ -480,8 +476,8 @@ pub fn strip_bom(text: &str) -> &str {
 pub fn read_utf8_file(path: &Path, display_path: &str) -> Result<String, StopReason> {
     let bytes = std::fs::read(path)
         .map_err(|e| StopReason::UnreadableFile(format!("{display_path}: {e}")))?;
-    let text = String::from_utf8(bytes)
-        .map_err(|_| StopReason::NonUtf8File(display_path.to_string()))?;
+    let text =
+        String::from_utf8(bytes).map_err(|_| StopReason::NonUtf8File(display_path.to_string()))?;
     Ok(strip_bom(&text).to_string())
 }
 
@@ -526,7 +522,13 @@ pub fn join_display_path(dir: &str, name: &str) -> String {
 /// 二重引用符の外のバッククォートの数が奇数か（REQ-core-116。二重引用符の中は A145 で対象外）。
 /// ir モジュールと terms モジュールの両方から使う
 pub fn has_odd_backticks_outside_quotes(text: &str) -> bool {
-    split_outside_quotes(text).join("").chars().filter(|&c| c == '`').count() % 2 != 0
+    split_outside_quotes(text)
+        .join("")
+        .chars()
+        .filter(|&c| c == '`')
+        .count()
+        % 2
+        != 0
 }
 
 /// 二重引用符の外の部分からバッククォートで囲んだ語を集める（REQ-core-054, REQ-core-064, REQ-core-104）。
@@ -557,7 +559,11 @@ pub fn split_outside_quotes(line: &str) -> Vec<&str> {
     let mut parts = Vec::new();
     let mut start = 0;
     let mut in_quote = false;
-    let last_quote_pos = if odd_quotes { line.rfind('"').unwrap_or(0) } else { 0 };
+    let last_quote_pos = if odd_quotes {
+        line.rfind('"').unwrap_or(0)
+    } else {
+        0
+    };
 
     for (i, c) in line.char_indices() {
         if c == '"' {
@@ -939,15 +945,11 @@ pub fn run_mutants(
 }
 
 /// 一致を見るのに要るソースだけを読む。読めなかったファイルは持たない（REQ-core-141、REQ-core-142）
-fn read_sources(
-    base: &Path,
-    entries: &[equivalents::Equivalent],
-) -> BTreeMap<String, Vec<String>> {
+fn read_sources(base: &Path, entries: &[equivalents::Equivalent]) -> BTreeMap<String, Vec<String>> {
     let mut sources = BTreeMap::new();
     // 一致にも文面の検査にも要るのは一覧の1件が指すファイルだけ。
     // 一致には "file" が同じであることが要るので、どの1件も指さないファイルは読んでも使われない
-    let files: std::collections::BTreeSet<&str> =
-        entries.iter().map(|e| e.file.as_str()).collect();
+    let files: std::collections::BTreeSet<&str> = entries.iter().map(|e| e.file.as_str()).collect();
     for file in files {
         if let Some(lines) = read_source_lines(base, file) {
             sources.insert(file.to_string(), lines);
@@ -1009,8 +1011,7 @@ fn load_config(
             }
             // TBL-core-020/A164: 詳細のパスは基準のディレクトリからの相対
             // （外にあれば "../" を含む。ファイルシステムには触れない）
-            let display =
-                relative_display(&lexically_normalize(base), &lexically_normalize(&abs));
+            let display = relative_display(&lexically_normalize(base), &lexically_normalize(&abs));
             (abs, display)
         }
         // 既定: base/.kotowari/config.yaml
@@ -1060,7 +1061,9 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
         (&adr_dir, &cfg.decisions.adr),
     ] {
         if !dir.is_dir() {
-            let err = std::fs::read_dir(dir).err().map(|e| e.to_string())
+            let err = std::fs::read_dir(dir)
+                .err()
+                .map(|e| e.to_string())
                 .unwrap_or_else(|| "not a directory".to_string());
             return Err(StopReason::UnreadableFile(format!("{configured}: {err}")));
         }
@@ -1078,9 +1081,7 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
 
     // 用語と曖昧語の検査
     let known_ids = collect_known_ids(&docs);
-    terms::check_terms_and_vague_words(
-        &docs, &known_ids, &cfg.vague_words, &cfg.ir, &mut findings,
-    );
+    terms::check_terms_and_vague_words(&docs, &known_ids, &cfg.vague_words, &cfg.ir, &mut findings);
 
     // 文書名の参照の検査
     let ir_paths: std::collections::BTreeSet<String> =
@@ -1089,10 +1090,21 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
 
     // テストの発見と印の検査
     let (tally, markers) = tests_discovery::discover_and_check(
-        &base, &cfg, &docs, &known_ids, &cfg.ir, &mut findings,
+        &base,
+        &cfg,
+        &docs,
+        &known_ids,
+        &cfg.ir,
+        &mut findings,
     )?;
 
-    Ok(Loaded { cfg, docs, findings, tally, markers })
+    Ok(Loaded {
+        cfg,
+        docs,
+        findings,
+        tally,
+        markers,
+    })
 }
 
 /// 検査のエントリポイント

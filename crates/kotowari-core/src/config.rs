@@ -150,7 +150,9 @@ where
     Ok(Some(opt))
 }
 
-fn deserialize_nullable_nonzero<'de, D>(deserializer: D) -> Result<Option<Option<NonZeroU64>>, D::Error>
+fn deserialize_nullable_nonzero<'de, D>(
+    deserializer: D,
+) -> Result<Option<Option<NonZeroU64>>, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
@@ -163,8 +165,10 @@ use serde::Deserialize;
 /// null チェック付きで Option<Option<T>> から値を取り出す
 fn unwrap_or_null<T>(field: Option<Option<T>>, key: &str, default: T) -> Result<T, StopReason> {
     match field {
-        None => Ok(default),           // キー不在 → 既定値
-        Some(None) => Err(StopReason::ConfigError(format!("null value for key: {key}"))),
+        None => Ok(default), // キー不在 → 既定値
+        Some(None) => Err(StopReason::ConfigError(format!(
+            "null value for key: {key}"
+        ))),
         Some(Some(v)) => Ok(v),
     }
 }
@@ -174,7 +178,9 @@ fn unwrap_or_null<T>(field: Option<Option<T>>, key: &str, default: T) -> Result<
 fn unwrap_or_null_option<T>(field: Option<Option<T>>, key: &str) -> Result<Option<T>, StopReason> {
     match field {
         None => Ok(None),
-        Some(None) => Err(StopReason::ConfigError(format!("null value for key: {key}"))),
+        Some(None) => Err(StopReason::ConfigError(format!(
+            "null value for key: {key}"
+        ))),
         Some(Some(v)) => Ok(Some(v)),
     }
 }
@@ -208,8 +214,8 @@ impl Config {
             return Ok(Config::default());
         }
 
-        let raw: RawConfig = serde_saphyr::from_str(yaml)
-            .map_err(|e| StopReason::ConfigError(format!("{e}")))?;
+        let raw: RawConfig =
+            serde_saphyr::from_str(yaml).map_err(|e| StopReason::ConfigError(format!("{e}")))?;
 
         let defaults = Config::default();
 
@@ -222,7 +228,8 @@ impl Config {
         // REQ-core-014: "decisions:" 自体が null のときも設定の誤りで停止する
         let decisions = match unwrap_or_null_option(raw.decisions, "decisions")? {
             Some(d) => {
-                let records = unwrap_or_null(d.records, "decisions.records", defaults.decisions.records)?;
+                let records =
+                    unwrap_or_null(d.records, "decisions.records", defaults.decisions.records)?;
                 check_not_absolute(&records, "decisions.records")?;
                 let records = crate::normalize_path(&records);
                 let adr = unwrap_or_null(d.adr, "decisions.adr", defaults.decisions.adr)?;
@@ -270,7 +277,10 @@ impl Config {
                     files,
                     rust,
                     // REQ-core-110: パスの正規化
-                    rules: rules.iter().map(|rule| crate::normalize_path(rule)).collect(),
+                    rules: rules
+                        .iter()
+                        .map(|rule| crate::normalize_path(rule))
+                        .collect(),
                 }
             }
             None => defaults.tests,
@@ -296,8 +306,15 @@ impl Config {
         let limits = match unwrap_or_null_option(raw.limits, "limits")? {
             Some(l) => {
                 let lines = unwrap_or_null(l.lines, "limits.lines", defaults.limits.lines)?;
-                let requirements = unwrap_or_null(l.requirements, "limits.requirements", defaults.limits.requirements)?;
-                LimitsConfig { lines, requirements }
+                let requirements = unwrap_or_null(
+                    l.requirements,
+                    "limits.requirements",
+                    defaults.limits.requirements,
+                )?;
+                LimitsConfig {
+                    lines,
+                    requirements,
+                }
             }
             None => defaults.limits,
         };

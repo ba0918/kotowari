@@ -5,7 +5,13 @@ use tempfile::TempDir;
 
 /// 置き場と設定を作る。`test_globs` が空でなければ "tests.files" に書く
 fn make_project(tmp: &Path, test_globs: &[&str]) {
-    for dir in [".kotowari", "docs/ir", "docs/decision/records", "docs/decision/adr", "tests"] {
+    for dir in [
+        ".kotowari",
+        "docs/ir",
+        "docs/decision/records",
+        "docs/decision/adr",
+        "tests",
+    ] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     let mut config =
@@ -96,7 +102,10 @@ fn req_151_requirement_with_a_marked_test_is_listed() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
+        &format!(
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            requirement("REQ-001", "例", "unit")
+        ),
     );
     write(
         tmp.path(),
@@ -130,11 +139,18 @@ fn req_151_items_are_listed_despite_ir_errors_and_exit_zero() {
         "# 題名\n\n範囲。\n\n## Requirements\n\n### REQ-002: 例\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n\n文である。\n",
     );
     let (code, stdout, stderr) = run_list_raw(tmp.path(), &[]);
-    assert_eq!(code, Some(0), "an IR error does not change the exit code: {stderr}");
+    assert_eq!(
+        code,
+        Some(0),
+        "an IR error does not change the exit code: {stderr}"
+    );
     assert_eq!(stderr, "", "list writes no finding to stderr");
     let v: serde_json::Value = serde_json::from_str(&stdout).expect("valid JSON");
     let req = item(&v, "REQ-002");
-    assert!(req["verification"].is_null(), "the missing line is null: {req}");
+    assert!(
+        req["verification"].is_null(),
+        "the missing line is null: {req}"
+    );
     assert!(
         v.get("findings").is_none(),
         "list writes no finding to stdout: {v}"
@@ -151,15 +167,29 @@ fn req_153_test_in_a_language_without_a_query_has_a_null_name() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
+        &format!(
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            requirement("REQ-001", "例", "unit")
+        ),
     );
-    write(tmp.path(), "tests/a.go", "func x() {\n    // @kotowari[REQ-001]\n}\n");
+    write(
+        tmp.path(),
+        "tests/a.go",
+        "func x() {\n    // @kotowari[REQ-001]\n}\n",
+    );
     let v = run_list(tmp.path());
     let tests = item(&v, "REQ-001")["tests"].as_array().unwrap().clone();
-    assert_eq!(tests.len(), 1, "the marker of a language without a query is listed: {v}");
+    assert_eq!(
+        tests.len(),
+        1,
+        "the marker of a language without a query is listed: {v}"
+    );
     assert_eq!(tests[0]["path"], "tests/a.go");
     assert_eq!(tests[0]["line"], 2);
-    assert!(tests[0]["name"].is_null(), "no test name without a query: {tests:?}");
+    assert!(
+        tests[0]["name"].is_null(),
+        "no test name without a query: {tests:?}"
+    );
 }
 
 // @kotowari[REQ-core-153, TBL-core-026]
@@ -188,15 +218,22 @@ fn req_153_table_property_scenario_and_flag_carry_their_keys() {
 
     let common = ["id", "kind", "line", "name", "path", "sources", "tests"];
     let with = |extra: &[&str]| {
-        let mut names: Vec<String> =
-            common.iter().chain(extra.iter()).map(|s| s.to_string()).collect();
+        let mut names: Vec<String> = common
+            .iter()
+            .chain(extra.iter())
+            .map(|s| s.to_string())
+            .collect();
         names.sort();
         names
     };
 
     let table = item(&v, "TBL-001");
     assert_eq!(table["kind"], "table");
-    assert_eq!(keys(table), with(&["examples"]), "a table has no type: {table}");
+    assert_eq!(
+        keys(table),
+        with(&["examples"]),
+        "a table has no type: {table}"
+    );
 
     let property = item(&v, "PROP-001");
     assert_eq!(property["kind"], "property");
@@ -204,7 +241,11 @@ fn req_153_table_property_scenario_and_flag_carry_their_keys() {
 
     let scenario = item(&v, "EX-001");
     assert_eq!(scenario["kind"], "scenario");
-    assert_eq!(keys(scenario), with(&[]), "a scenario has no examples: {scenario}");
+    assert_eq!(
+        keys(scenario),
+        with(&[]),
+        "a scenario has no examples: {scenario}"
+    );
     // TBL-core-026: "Scenario:" の後の文字から前後の半角空白とタブを除いたもの
     assert_eq!(scenario["name"], "名前に空白がある");
     // TBL-core-026: "Scenario:" の行（26 行目のタグの行ではない）
@@ -220,12 +261,21 @@ fn req_153_table_property_scenario_and_flag_carry_their_keys() {
     write(
         tmp.path(),
         "docs/ir/b.md",
-        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "review")),
+        &format!(
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            requirement("REQ-001", "例", "review")
+        ),
     );
     let v = run_list(tmp.path());
     assert_eq!(
         keys(item(&v, "REQ-001")),
-        with(&["type", "verification", "definition", "examples", "how_to_verify"])
+        with(&[
+            "type",
+            "verification",
+            "definition",
+            "examples",
+            "how_to_verify"
+        ])
     );
 }
 
@@ -250,7 +300,10 @@ fn tbl_026_only_the_first_scenario_of_a_duplicated_id_counts_as_an_example() {
         ),
     );
     let v = run_list(tmp.path());
-    assert_eq!(item(&v, "REQ-001")["examples"], serde_json::json!(["EX-001"]));
+    assert_eq!(
+        item(&v, "REQ-001")["examples"],
+        serde_json::json!(["EX-001"])
+    );
     assert_eq!(item(&v, "REQ-002")["examples"], serde_json::json!([]));
 }
 
@@ -280,10 +333,16 @@ fn req_153_examples_are_the_scenarios_about_the_item() {
         item(&v, "REQ-001")["examples"],
         serde_json::json!(["EX-001", "EX-002"])
     );
-    assert_eq!(item(&v, "PROP-001")["examples"], serde_json::json!(["EX-002"]));
+    assert_eq!(
+        item(&v, "PROP-001")["examples"],
+        serde_json::json!(["EX-002"])
+    );
     // 誰も挙げない決定表は空の並び（鍵ごと消えない）
     assert_eq!(item(&v, "TBL-001")["examples"], serde_json::json!([]));
-    assert_eq!(item(&v, "REQ-001")["definition"], serde_json::json!(["TBL-001"]));
+    assert_eq!(
+        item(&v, "REQ-001")["definition"],
+        serde_json::json!(["TBL-001"])
+    );
 }
 
 // @kotowari[REQ-core-153, TBL-core-026, TBL-core-011]
@@ -305,7 +364,11 @@ fn req_153_how_to_verify_is_the_value_of_the_line_or_null() {
     assert_eq!(item(&v, "REQ-001")["how_to_verify"], "手で動かして見る");
     assert!(item(&v, "REQ-002")["how_to_verify"].is_null());
     // REQ-core-098: 値が空の行は行が在るものとして扱う
-    assert_eq!(item(&v, "REQ-003")["how_to_verify"], "", "a blank value is a line that is there: {v}");
+    assert_eq!(
+        item(&v, "REQ-003")["how_to_verify"],
+        "",
+        "a blank value is a line that is there: {v}"
+    );
 }
 
 // @kotowari[REQ-core-153, TBL-core-026]
@@ -316,7 +379,10 @@ fn req_153_tests_have_one_entry_per_marker_occurrence() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
+        &format!(
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            requirement("REQ-001", "例", "unit")
+        ),
     );
     // 同じテストの2つの行に同じ ID の印がある
     write(
@@ -354,7 +420,10 @@ fn req_154_items_and_tests_are_ordered_by_path_then_line() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "先の要求", "unit")),
+        &format!(
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            requirement("REQ-001", "先の要求", "unit")
+        ),
     );
     // 印は前の兄弟を後ろから辿って集めるので、並べ替えが無いと行の順にならない
     write(
@@ -382,8 +451,14 @@ fn req_154_items_and_tests_are_ordered_by_path_then_line() {
         .collect();
     let mut sorted = order.clone();
     sorted.sort();
-    assert_eq!(order, sorted, "items are ordered by path then line: {order:?}");
-    assert_eq!(order[0].0, "docs/ir/a.md", "the first document comes first: {order:?}");
+    assert_eq!(
+        order, sorted,
+        "items are ordered by path then line: {order:?}"
+    );
+    assert_eq!(
+        order[0].0, "docs/ir/a.md",
+        "the first document comes first: {order:?}"
+    );
 
     let tests: Vec<(String, u64)> = item(&v, "REQ-001")["tests"]
         .as_array()
@@ -417,7 +492,10 @@ fn req_155_json_top_level_has_only_items() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "review")),
+        &format!(
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            requirement("REQ-001", "例", "review")
+        ),
     );
     let v = run_list(tmp.path());
     assert_eq!(
@@ -435,7 +513,10 @@ fn req_155_text_prints_one_line_per_item_and_indented_test_lines() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
+        &format!(
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            requirement("REQ-001", "例", "unit")
+        ),
     );
     write(
         tmp.path(),
@@ -457,9 +538,16 @@ fn req_155_text_writes_dash_for_a_null_test_name() {
     write(
         tmp.path(),
         "docs/ir/a.md",
-        &format!("# 題名\n\n範囲。\n\n## Requirements\n\n{}", requirement("REQ-001", "例", "unit")),
+        &format!(
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            requirement("REQ-001", "例", "unit")
+        ),
     );
-    write(tmp.path(), "tests/a.go", "func x() {\n    // @kotowari[REQ-001]\n}\n");
+    write(
+        tmp.path(),
+        "tests/a.go",
+        "func x() {\n    // @kotowari[REQ-001]\n}\n",
+    );
     assert_eq!(
         run_list_text(tmp.path()),
         "REQ-001 unit 例 docs/ir/a.md:7 tests=1\n  tests/a.go:2 -\n"
@@ -480,7 +568,10 @@ fn req_155_text_writes_dash_for_the_verification_of_a_non_requirement() {
         ),
     );
     // 要求以外の "検証" の欄は "-"。印のあるテストが無ければ tests=0 で続く行は無い
-    assert_eq!(run_list_text(tmp.path()), "TBL-001 - 表 docs/ir/a.md:7 tests=0\n");
+    assert_eq!(
+        run_list_text(tmp.path()),
+        "TBL-001 - 表 docs/ir/a.md:7 tests=0\n"
+    );
 }
 
 // @kotowari[REQ-core-155]
@@ -497,5 +588,8 @@ fn req_155_text_writes_dash_for_a_requirement_without_a_verification_line() {
         ),
     );
     // "- verification:" の行の無い要求の "検証" の欄も "-"
-    assert_eq!(run_list_text(tmp.path()), "REQ-001 - 例 docs/ir/a.md:7 tests=0\n");
+    assert_eq!(
+        run_list_text(tmp.path()),
+        "REQ-001 - 例 docs/ir/a.md:7 tests=0\n"
+    );
 }

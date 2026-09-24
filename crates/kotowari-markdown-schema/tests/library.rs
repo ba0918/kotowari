@@ -6,7 +6,9 @@ use std::path::{Path, PathBuf};
 use kotowari_markdown_schema::document::Document;
 use kotowari_markdown_schema::extract::extract_values;
 use kotowari_markdown_schema::finding::FindingKind;
-use kotowari_markdown_schema::frontmatter::{ResolvedSchema, SchemaRef, frontmatter_schema, resolve_schema};
+use kotowari_markdown_schema::frontmatter::{
+    ResolvedSchema, SchemaRef, frontmatter_schema, resolve_schema,
+};
 use kotowari_markdown_schema::schema::parse_schema;
 use kotowari_markdown_schema::validate::validate;
 

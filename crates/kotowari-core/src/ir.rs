@@ -198,24 +198,35 @@ pub struct IrDocument {
 
 impl IrDocument {
     pub(crate) fn is_glossary_in_chain(&self, directory: &str) -> bool {
-        self.kind == DocKind::Glossary && (self.directory.is_empty()
-            || self.directory == directory
-            || directory.strip_prefix(&self.directory).is_some_and(|rest| rest.starts_with('/')))
+        self.kind == DocKind::Glossary
+            && (self.directory.is_empty()
+                || self.directory == directory
+                || directory
+                    .strip_prefix(&self.directory)
+                    .is_some_and(|rest| rest.starts_with('/')))
     }
 
     pub(crate) fn duplicate_glossary_rows(&self, docs: &[IrDocument]) -> BTreeSet<usize> {
-        let ancestors: BTreeSet<&str> = docs.iter()
-            .filter(|doc| doc.directory != self.directory && doc.is_glossary_in_chain(&self.directory))
+        let ancestors: BTreeSet<&str> = docs
+            .iter()
+            .filter(|doc| {
+                doc.directory != self.directory && doc.is_glossary_in_chain(&self.directory)
+            })
             .flat_map(|doc| &doc.items)
             .filter_map(|item| match item {
                 Item::GlossaryTerm { term, .. } => Some(term.as_str()),
                 _ => None,
             })
             .collect();
-        self.items.iter().filter_map(|item| match item {
-            Item::GlossaryTerm { term, line, .. } if ancestors.contains(term.as_str()) => Some(*line),
-            _ => None,
-        }).collect()
+        self.items
+            .iter()
+            .filter_map(|item| match item {
+                Item::GlossaryTerm { term, line, .. } if ancestors.contains(term.as_str()) => {
+                    Some(*line)
+                }
+                _ => None,
+            })
+            .collect()
     }
 
     /// 文書の`文`の行（`文書が扱う範囲`、`項目`の`文`、`問題の記録`の本文）。
@@ -225,7 +236,9 @@ impl IrDocument {
             Item::Requirement { statements, .. }
             | Item::DecisionTable { statements, .. }
             | Item::Property { statements, .. }
-            | Item::FlagEntry { body: statements, .. } => statements.as_slice(),
+            | Item::FlagEntry {
+                body: statements, ..
+            } => statements.as_slice(),
             Item::Scenario { .. } | Item::GlossaryTerm { .. } => &[],
         });
         self.scope_lines.iter().chain(item_lines)
@@ -238,7 +251,11 @@ pub fn split_lines(content: &str) -> Vec<&str> {
     let mut rest = content;
     while let Some(pos) = rest.find(['\n', '\r']) {
         lines.push(&rest[..pos]);
-        let ending = if rest[pos..].starts_with("\r\n") { 2 } else { 1 };
+        let ending = if rest[pos..].starts_with("\r\n") {
+            2
+        } else {
+            1
+        };
         rest = &rest[pos + ending..];
     }
     // 最後の行（改行なし）
@@ -298,7 +315,12 @@ pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopR
             .any(|f| f.kind == FindingKind::UnknownHeading && f.line == Some(line));
         if nameless && !flagged {
             let raw = lines.get(line - 1).copied().unwrap_or_default();
-            findings.push(Finding::new(FindingKind::UnknownHeading, String::new(), Some(line), raw.to_string()));
+            findings.push(Finding::new(
+                FindingKind::UnknownHeading,
+                String::new(),
+                Some(line),
+                raw.to_string(),
+            ));
         }
         !nameless
     });
@@ -309,7 +331,12 @@ pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopR
         let before_opening = |line: usize| line < opening;
         findings.retain(|f| f.line.is_none_or(before_opening));
         items.retain(|item| before_opening(item.item_line()));
-        findings.push(Finding::new(FindingKind::UnclosedCodeBlock, String::new(), Some(opening), raw));
+        findings.push(Finding::new(
+            FindingKind::UnclosedCodeBlock,
+            String::new(),
+            Some(opening),
+            raw,
+        ));
     }
 
     Ok(IrDocument {
@@ -424,12 +451,20 @@ fn item_statements(
         .cloned()
         .collect();
     if requires_statement && kept.is_empty() && !all.is_empty() {
-        findings.push(Finding::new(FindingKind::MissingStatement, String::new(), Some(line), id.to_string()));
+        findings.push(Finding::new(
+            FindingKind::MissingStatement,
+            String::new(),
+            Some(line),
+            id.to_string(),
+        ));
     }
     Ok(kept)
 }
 
-fn requirement(obj: &Map<String, Value>, findings: &mut Vec<Finding>) -> Result<Option<Item>, StopReason> {
+fn requirement(
+    obj: &Map<String, Value>,
+    findings: &mut Vec<Finding>,
+) -> Result<Option<Item>, StopReason> {
     let (id, name, line) = head(obj)?;
     if !is_item_id(&id, IdPrefix::Req) {
         return Ok(None);
@@ -473,7 +508,10 @@ fn decision_table(obj: &Map<String, Value>) -> Result<Option<Item>, StopReason> 
     }))
 }
 
-fn property(obj: &Map<String, Value>, findings: &mut Vec<Finding>) -> Result<Option<Item>, StopReason> {
+fn property(
+    obj: &Map<String, Value>,
+    findings: &mut Vec<Finding>,
+) -> Result<Option<Item>, StopReason> {
     let (id, name, line) = head(obj)?;
     if !is_item_id(&id, IdPrefix::Prop) {
         return Ok(None);
@@ -491,7 +529,10 @@ fn property(obj: &Map<String, Value>, findings: &mut Vec<Finding>) -> Result<Opt
     }))
 }
 
-fn flag_entry(obj: &Map<String, Value>, findings: &mut Vec<Finding>) -> Result<Option<Item>, StopReason> {
+fn flag_entry(
+    obj: &Map<String, Value>,
+    findings: &mut Vec<Finding>,
+) -> Result<Option<Item>, StopReason> {
     let (id, name, line) = head(obj)?;
     if !is_item_id(&id, IdPrefix::Flag) {
         return Ok(None);
@@ -522,7 +563,10 @@ fn read_glossary(
     findings: &mut Vec<Finding>,
 ) -> Result<(), StopReason> {
     // REQ-core-117: 表の形が無ければ、その用語集の用語は0語
-    if findings.iter().any(|f| f.kind == FindingKind::GlossaryInvalid) {
+    if findings
+        .iter()
+        .any(|f| f.kind == FindingKind::GlossaryInvalid)
+    {
         return Ok(());
     }
     // REQ-core-122: 列の数の合わない行は用語にしない
@@ -549,10 +593,20 @@ fn read_glossary(
         let term = cell("Term");
         if term.is_empty() {
             let raw = string(row, "raw").ok_or_else(|| unmappable("raw"))?;
-            findings.push(Finding::new(FindingKind::InvalidGlossaryRow, String::new(), Some(line), raw));
+            findings.push(Finding::new(
+                FindingKind::InvalidGlossaryRow,
+                String::new(),
+                Some(line),
+                raw,
+            ));
         } else if !seen_terms.insert(term.clone()) {
             // REQ-core-123: 同じ用語の2つ目以降の行は duplicate_term だけを出し、用語にしない
-            findings.push(Finding::new(FindingKind::DuplicateTerm, String::new(), Some(line), term));
+            findings.push(Finding::new(
+                FindingKind::DuplicateTerm,
+                String::new(),
+                Some(line),
+                term,
+            ));
         } else {
             let sources = cell("Source")
                 .split(',')
@@ -560,7 +614,12 @@ fn read_glossary(
                 .filter(|s| !s.is_empty())
                 .map(str::to_string)
                 .collect();
-            items.push(Item::GlossaryTerm { term, meaning: cell("Meaning"), sources, line });
+            items.push(Item::GlossaryTerm {
+                term,
+                meaning: cell("Meaning"),
+                sources,
+                line,
+            });
         }
     }
     Ok(())
@@ -632,12 +691,24 @@ impl GherkinBlock {
 
     fn flush_scenario(&mut self, items: &mut Vec<Item>) {
         if let Some(scenario_line) = self.scenario_line.take() {
-            items.push(build_scenario(&self.tags, self.tag_line, scenario_line, &self.steps, &self.scenario_text));
+            items.push(build_scenario(
+                &self.tags,
+                self.tag_line,
+                scenario_line,
+                &self.steps,
+                &self.scenario_text,
+            ));
             self.steps.clear();
         }
     }
 
-    fn line(&mut self, line_num: usize, line: &str, items: &mut Vec<Item>, findings: &mut Vec<Finding>) {
+    fn line(
+        &mut self,
+        line_num: usize,
+        line: &str,
+        items: &mut Vec<Item>,
+        findings: &mut Vec<Finding>,
+    ) {
         let trimmed = line.trim();
         let is_scenario_line = trimmed.starts_with("Scenario:");
 
@@ -659,7 +730,8 @@ impl GherkinBlock {
             for part in trimmed.split_whitespace() {
                 if part.starts_with('@') {
                     if let Some((tag_name, tag_value)) = part.split_once('=') {
-                        self.tags.push((tag_name.to_string(), tag_value.to_string()));
+                        self.tags
+                            .push((tag_name.to_string(), tag_value.to_string()));
                     } else {
                         // "=" のない裸のタグ（@wip 等）
                         self.tags.push((part.to_string(), String::new()));
@@ -889,7 +961,12 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
         // REQ-core-038: 行数の上限
         let limit_lines = config.limits.lines.get() as usize;
         if doc.line_count > limit_lines {
-            findings.push(Finding::new(FindingKind::TooManyLines, path.clone(), None, doc.line_count.to_string()));
+            findings.push(Finding::new(
+                FindingKind::TooManyLines,
+                path.clone(),
+                None,
+                doc.line_count.to_string(),
+            ));
         }
 
         // REQ-core-039: 要求の数の上限（用語集と問題の記録を除く）
@@ -901,7 +978,12 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
                 .count();
             let limit_reqs = config.limits.requirements.get() as usize;
             if req_count > limit_reqs {
-                findings.push(Finding::new(FindingKind::TooManyRequirements, path.clone(), None, req_count.to_string()));
+                findings.push(Finding::new(
+                    FindingKind::TooManyRequirements,
+                    path.clone(),
+                    None,
+                    req_count.to_string(),
+                ));
             }
         }
 
@@ -910,7 +992,12 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
         for item in &doc.items {
             if duplicate_rows.contains(&item.item_line()) {
                 if let Item::GlossaryTerm { term, line, .. } = item {
-                    findings.push(Finding::new(FindingKind::DuplicateTerm, path.clone(), Some(*line), term.clone()));
+                    findings.push(Finding::new(
+                        FindingKind::DuplicateTerm,
+                        path.clone(),
+                        Some(*line),
+                        term.clone(),
+                    ));
                 }
                 continue;
             }
@@ -950,7 +1037,12 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
     for (id, locations) in &all_ids {
         // 2つ目以降の場所に指摘
         for (path, line) in locations.iter().skip(1) {
-            findings.push(Finding::new(FindingKind::DuplicateId, path.clone(), Some(*line), id.clone()));
+            findings.push(Finding::new(
+                FindingKind::DuplicateId,
+                path.clone(),
+                Some(*line),
+                id.clone(),
+            ));
         }
     }
 
@@ -985,26 +1077,71 @@ fn has_empty_source_line(sources: &[String], source_line: &Option<usize>) -> boo
 /// 項目の検査のうち、スキーマの側に宣言の無いもの
 fn check_item(item: &Item, path: &str, findings: &mut Vec<Finding>) {
     match item {
-        Item::Requirement { id, line, kind, sources, source_line, definitions, definition_line, .. } => {
+        Item::Requirement {
+            id,
+            line,
+            kind,
+            sources,
+            source_line,
+            definitions,
+            definition_line,
+            ..
+        } => {
             if has_empty_source_line(sources, source_line) {
-                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.clone()));
+                findings.push(Finding::new(
+                    FindingKind::MissingSource,
+                    path.to_string(),
+                    Some(*line),
+                    id.clone(),
+                ));
             }
 
             // REQ-core-051: algorithm に決定表か性質を指す定義がない。
             // "- definition:" の行そのものが無いときはスキーマの側が出している（A71）
-            let has_tbl_or_prop_def = definitions.iter().any(|d| {
-                matches!(id_prefix(d), Some(IdPrefix::Tbl) | Some(IdPrefix::Prop))
-            });
-            if kind.as_deref() == Some("algorithm") && definition_line.is_some() && !has_tbl_or_prop_def {
-                findings.push(Finding::new(FindingKind::AlgorithmWithoutDefinition, path.to_string(), Some(*line), id.clone()));
+            let has_tbl_or_prop_def = definitions
+                .iter()
+                .any(|d| matches!(id_prefix(d), Some(IdPrefix::Tbl) | Some(IdPrefix::Prop)));
+            if kind.as_deref() == Some("algorithm")
+                && definition_line.is_some()
+                && !has_tbl_or_prop_def
+            {
+                findings.push(Finding::new(
+                    FindingKind::AlgorithmWithoutDefinition,
+                    path.to_string(),
+                    Some(*line),
+                    id.clone(),
+                ));
             }
         }
 
-        Item::DecisionTable { id, line, sources, source_line, .. }
-        | Item::Property { id, line, sources, source_line, .. }
-        | Item::FlagEntry { id, line, sources, source_line, .. } => {
+        Item::DecisionTable {
+            id,
+            line,
+            sources,
+            source_line,
+            ..
+        }
+        | Item::Property {
+            id,
+            line,
+            sources,
+            source_line,
+            ..
+        }
+        | Item::FlagEntry {
+            id,
+            line,
+            sources,
+            source_line,
+            ..
+        } => {
             if has_empty_source_line(sources, source_line) {
-                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), id.clone()));
+                findings.push(Finding::new(
+                    FindingKind::MissingSource,
+                    path.to_string(),
+                    Some(*line),
+                    id.clone(),
+                ));
             }
         }
 
@@ -1024,25 +1161,55 @@ fn check_item(item: &Item, path: &str, findings: &mut Vec<Finding>) {
             for (tag_name, tag_value) in tags {
                 if tag_name.is_empty() {
                     // "@" で始まらない語
-                    findings.push(Finding::new(FindingKind::UnknownTag, path.to_string(), Some(tag_or_scenario_line), tag_value.clone()));
+                    findings.push(Finding::new(
+                        FindingKind::UnknownTag,
+                        path.to_string(),
+                        Some(tag_or_scenario_line),
+                        tag_value.clone(),
+                    ));
                 } else if !["@id", "@about", "@source"].contains(&tag_name.as_str()) {
-                    findings.push(Finding::new(FindingKind::UnknownTag, path.to_string(), Some(tag_or_scenario_line), tag_name.clone()));
+                    findings.push(Finding::new(
+                        FindingKind::UnknownTag,
+                        path.to_string(),
+                        Some(tag_or_scenario_line),
+                        tag_name.clone(),
+                    ));
                 }
             }
 
             // REQ-core-114: @id の値が EX の ID の形でないとき
-            let malformed_id = tags.iter()
-                .find(|(n, v)| n == "@id" && !v.is_empty() && !(is_valid_id(v) && id_prefix(v) == Some(IdPrefix::Ex)))
+            let malformed_id = tags
+                .iter()
+                .find(|(n, v)| {
+                    n == "@id"
+                        && !v.is_empty()
+                        && !(is_valid_id(v) && id_prefix(v) == Some(IdPrefix::Ex))
+                })
                 .map(|(_, v)| v.clone());
             if let Some(malformed_value) = &malformed_id {
-                findings.push(Finding::new(FindingKind::InvalidId, path.to_string(), Some(tag_or_scenario_line), malformed_value.clone()));
+                findings.push(Finding::new(
+                    FindingKind::InvalidId,
+                    path.to_string(),
+                    Some(tag_or_scenario_line),
+                    malformed_value.clone(),
+                ));
                 // missing_tag は出さない、missing_source の detail は Scenario: の行の文字
             } else if !tags.iter().any(|(n, v)| n == "@id" && !v.is_empty()) {
                 // REQ-core-053: 無いタグ
-                findings.push(Finding::new(FindingKind::MissingTag, path.to_string(), Some(tag_or_scenario_line), "@id".to_string()));
+                findings.push(Finding::new(
+                    FindingKind::MissingTag,
+                    path.to_string(),
+                    Some(tag_or_scenario_line),
+                    "@id".to_string(),
+                ));
             }
             if !tags.iter().any(|(n, v)| n == "@about" && !v.is_empty()) {
-                findings.push(Finding::new(FindingKind::MissingTag, path.to_string(), Some(tag_or_scenario_line), "@about".to_string()));
+                findings.push(Finding::new(
+                    FindingKind::MissingTag,
+                    path.to_string(),
+                    Some(tag_or_scenario_line),
+                    "@about".to_string(),
+                ));
             }
 
             // REQ-core-059: シナリオの出典
@@ -1053,14 +1220,29 @@ fn check_item(item: &Item, path: &str, findings: &mut Vec<Finding>) {
                 } else {
                     id.as_deref().unwrap_or(scenario_text).to_string()
                 };
-                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(tag_or_scenario_line), detail));
+                findings.push(Finding::new(
+                    FindingKind::MissingSource,
+                    path.to_string(),
+                    Some(tag_or_scenario_line),
+                    detail,
+                ));
             }
         }
 
-        Item::GlossaryTerm { term, sources, line, .. } => {
+        Item::GlossaryTerm {
+            term,
+            sources,
+            line,
+            ..
+        } => {
             // REQ-core-059/REQ-core-060: 用語の出典が空
             if sources.is_empty() {
-                findings.push(Finding::new(FindingKind::MissingSource, path.to_string(), Some(*line), term.clone()));
+                findings.push(Finding::new(
+                    FindingKind::MissingSource,
+                    path.to_string(),
+                    Some(*line),
+                    term.clone(),
+                ));
             }
         }
     }
@@ -1117,25 +1299,57 @@ pub fn item_references<'a>(item: &'a Item) -> Vec<ItemReference<'a>> {
     };
 
     match item {
-        Item::Requirement { line, definitions, definition_line, statements, .. } => {
+        Item::Requirement {
+            line,
+            definitions,
+            definition_line,
+            statements,
+            ..
+        } => {
             let def_line = definition_line.unwrap_or(*line);
-            definitions.iter()
-                .map(|id| ItemReference { id, via: Via::Definition, finding_line: def_line })
+            definitions
+                .iter()
+                .map(|id| ItemReference {
+                    id,
+                    via: Via::Definition,
+                    finding_line: def_line,
+                })
                 .chain(from_text(statements))
                 .collect()
         }
         Item::Property { statements, .. } => from_text(statements).collect(),
-        Item::Scenario { line, tag_line, about, steps, .. } => {
+        Item::Scenario {
+            line,
+            tag_line,
+            about,
+            steps,
+            ..
+        } => {
             let about_line = tag_line.unwrap_or(*line);
-            about.iter()
-                .map(|id| ItemReference { id, via: Via::About, finding_line: about_line })
+            about
+                .iter()
+                .map(|id| ItemReference {
+                    id,
+                    via: Via::About,
+                    finding_line: about_line,
+                })
                 .chain(from_text(steps))
                 .collect()
         }
-        Item::FlagEntry { line, relations, relation_line, .. } => {
+        Item::FlagEntry {
+            line,
+            relations,
+            relation_line,
+            ..
+        } => {
             let rel_line = relation_line.unwrap_or(*line);
-            relations.iter()
-                .map(|id| ItemReference { id, via: Via::Relations, finding_line: rel_line })
+            relations
+                .iter()
+                .map(|id| ItemReference {
+                    id,
+                    via: Via::Relations,
+                    finding_line: rel_line,
+                })
                 .collect()
         }
         _ => Vec::new(),
@@ -1258,7 +1472,9 @@ pub fn load_and_check(
 
     let mut docs = Vec::new();
     for (relative_path, path) in entries {
-        let (directory, filename) = relative_path.rsplit_once('/').unwrap_or(("", &relative_path));
+        let (directory, filename) = relative_path
+            .rsplit_once('/')
+            .unwrap_or(("", &relative_path));
         let display = crate::join_display_path(&config.ir, &relative_path);
         let content = crate::read_utf8_file(&path, &display)?;
         let mut doc = parse_document(filename, &content)?;

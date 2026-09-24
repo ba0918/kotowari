@@ -6,7 +6,9 @@ fn cmd() -> Command {
 }
 
 fn valid_project_dir() -> &'static Path {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-project").leak()
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures/valid-project")
+        .leak()
 }
 
 // --- REQ-core-001: コマンドは6つ ---
@@ -382,11 +384,7 @@ fn req_005_stderr_detail_path_is_relative() {
     )
     .unwrap();
     // docs/ir を作らない → 読めないファイル
-    let out = cmd()
-        .arg("check")
-        .current_dir(tmp.path())
-        .output()
-        .unwrap();
+    let out = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let stderr = String::from_utf8_lossy(&out.stderr);
     let first_line = stderr.lines().next().unwrap_or("");
     assert!(
@@ -449,7 +447,6 @@ fn req_005_config_outside_the_base_is_shown_relative_with_parent_segments() {
         "the detail should be relative to the base (../bad.yaml), not to the CWD: {first_line:?}"
     );
 }
-
 
 // --- REQ-core-002、REQ-core-144: "kotowari mutants" の引数が結果のファイルに届く ---
 
@@ -559,10 +556,7 @@ fn req_149_mutants_without_a_result_path_is_an_argument_error() {
 // @kotowari[REQ-core-004]
 #[test]
 fn req_004_tool_on_check_is_an_argument_error() {
-    assert_argument_error(
-        &["check", "--tool", "cargo-mutants"],
-        valid_project_dir(),
-    );
+    assert_argument_error(&["check", "--tool", "cargo-mutants"], valid_project_dir());
 }
 
 // --- REQ-core-152: list の停止 ---
@@ -605,11 +599,7 @@ fn req_152_unreadable_config_stops_like_check() {
     std::fs::write(tmp.path().join(".kotowari/config.yaml"), "ir: [unclosed\n").unwrap();
 
     let first_line_of = |command: &str| {
-        let output = cmd()
-            .arg(command)
-            .current_dir(tmp.path())
-            .output()
-            .unwrap();
+        let output = cmd().arg(command).current_dir(tmp.path()).output().unwrap();
         assert_eq!(
             output.status.code(),
             Some(2),

@@ -120,7 +120,12 @@ fn req_058_source_path_equal_to_a_place_itself_is_invalid_without_crashing() {
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
-    assert_eq!(output.status.code(), Some(1), "should finish with errors, not crash: {:?}", output);
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "should finish with errors, not crash: {:?}",
+        output
+    );
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
     assert_eq!(si.len(), 2, "{:?}", si);
@@ -161,13 +166,15 @@ fn req_059_missing_source_for_item_scenario_and_term() {
     // 要求: 出典の行が無い → missing_source detail = ID
     let ms = findings_by_kind(&v, "missing_source");
     assert!(
-        ms.iter().any(|f| f["detail"] == "REQ-001" && f["path"].as_str().unwrap().contains("a.md")),
+        ms.iter()
+            .any(|f| f["detail"] == "REQ-001" && f["path"].as_str().unwrap().contains("a.md")),
         "absent source line should produce missing_source with detail 'REQ-001': {:?}",
         ms
     );
     let mf = findings_by_kind(&v, "missing_field");
     assert!(
-        !mf.iter().any(|f| f["detail"] == "source" && f["path"].as_str().unwrap().contains("a.md")),
+        !mf.iter()
+            .any(|f| f["detail"] == "source" && f["path"].as_str().unwrap().contains("a.md")),
         "missing_field 出典 should not appear when source line is absent: {:?}",
         mf
     );
@@ -230,7 +237,11 @@ fn req_060_glossary_trailing_comma_does_not_create_empty_source() {
         si
     );
     // 正常な出典は通る
-    assert!(si.is_empty(), "valid source with trailing comma should pass: {:?}", si);
+    assert!(
+        si.is_empty(),
+        "valid source with trailing comma should pass: {:?}",
+        si
+    );
 }
 
 // --- REQ-core-060: 用語集とシナリオの出典 ---
@@ -249,7 +260,11 @@ fn req_060_glossary_and_scenario_sources_are_checked() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let ms = findings_by_kind(&v, "missing_source");
-    assert!(ms.iter().any(|f| f["detail"] == "テスト"), "glossary term without source: {:?}", ms);
+    assert!(
+        ms.iter().any(|f| f["detail"] == "テスト"),
+        "glossary term without source: {:?}",
+        ms
+    );
 }
 
 // --- REQ-core-061: 決定の番号はファイルごと ---
@@ -293,7 +308,11 @@ fn req_106_form_contract_headings_are_valid_sources() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
-    assert!(si.is_empty(), "ir-form.md headings should be valid: {:?}", si);
+    assert!(
+        si.is_empty(),
+        "ir-form.md headings should be valid: {:?}",
+        si
+    );
 }
 
 // --- REQ-core-063: 対象の行 ---
@@ -319,7 +338,11 @@ fn req_063_only_sentences_and_steps_are_checked() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let ut = findings_by_kind(&v, "unknown_term");
-    assert!(ut.iter().any(|f| f["detail"] == "未知語"), "should find unknown term in sentence: {:?}", ut);
+    assert!(
+        ut.iter().any(|f| f["detail"] == "未知語"),
+        "should find unknown term in sentence: {:?}",
+        ut
+    );
 }
 
 // --- REQ-core-064: 用語集に無い語 ---
@@ -342,9 +365,17 @@ fn req_064_unknown_term() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let ut = findings_by_kind(&v, "unknown_term");
-    assert!(ut.iter().any(|f| f["detail"] == "不明な語"), "should find unknown term: {:?}", ut);
+    assert!(
+        ut.iter().any(|f| f["detail"] == "不明な語"),
+        "should find unknown term: {:?}",
+        ut
+    );
     // IR は用語集にある → unknown_term にならない
-    assert!(!ut.iter().any(|f| f["detail"] == "IR"), "IR should be known: {:?}", ut);
+    assert!(
+        !ut.iter().any(|f| f["detail"] == "IR"),
+        "IR should be known: {:?}",
+        ut
+    );
 }
 
 // @kotowari[REQ-core-064, EX-core-284]
@@ -390,7 +421,11 @@ fn req_065_ids_pass_without_glossary() {
     let v = parse_json(&output);
     let ut = findings_by_kind(&v, "unknown_term");
     // ID は用語集がなくても通る
-    assert!(!ut.iter().any(|f| f["detail"] == "REQ-001"), "IDs should pass without glossary: {:?}", ut);
+    assert!(
+        !ut.iter().any(|f| f["detail"] == "REQ-001"),
+        "IDs should pass without glossary: {:?}",
+        ut
+    );
 }
 
 // --- REQ-core-066: 曖昧語 ---
@@ -408,7 +443,11 @@ fn req_066_vague_word_substring() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let vw = findings_by_kind(&v, "vague_word");
-    assert!(vw.iter().any(|f| f["detail"] == "適切に"), "should find vague word: {:?}", vw);
+    assert!(
+        vw.iter().any(|f| f["detail"] == "適切に"),
+        "should find vague word: {:?}",
+        vw
+    );
 }
 
 // @kotowari[REQ-core-014]
@@ -456,7 +495,11 @@ fn req_067_one_finding_per_occurrence() {
     let v = parse_json(&output);
     let vw = findings_by_kind(&v, "vague_word");
     let count = vw.iter().filter(|f| f["detail"] == "適切に").count();
-    assert_eq!(count, 2, "should report 2 occurrences of vague word: {:?}", vw);
+    assert_eq!(
+        count, 2,
+        "should report 2 occurrences of vague word: {:?}",
+        vw
+    );
 }
 
 // --- REQ-core-069: 文書名の参照の境界と引用符 ---
@@ -477,10 +520,25 @@ fn req_069_reference_needs_boundary_and_quotes_are_skipped() {
     let v = parse_json(&output);
     let md = findings_by_kind(&v, "missing_document");
     // nonexistent.md → missing_document
-    assert!(md.iter().any(|f| f["detail"] == "nonexistent.md"), "should find missing document: {:?}", md);
+    assert!(
+        md.iter().any(|f| f["detail"] == "nonexistent.md"),
+        "should find missing document: {:?}",
+        md
+    );
     // quoted.md → 引用符の中なので拾わない
-    assert!(!md.iter().any(|f| f["detail"] == "quoted.md"), "quoted should be skipped: {:?}", md);
-    assert_eq!(md.iter().filter(|f| f["detail"] == "adr/0001-test-marker.md").count(), 1, "{:?}", md);
+    assert!(
+        !md.iter().any(|f| f["detail"] == "quoted.md"),
+        "quoted should be skipped: {:?}",
+        md
+    );
+    assert_eq!(
+        md.iter()
+            .filter(|f| f["detail"] == "adr/0001-test-marker.md")
+            .count(),
+        1,
+        "{:?}",
+        md
+    );
     assert_eq!(md.len(), 2, "{:?}", md);
 }
 
@@ -496,10 +554,19 @@ fn req_069_quoted_text_ending_in_a_multibyte_character_is_split_at_the_quote() {
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
-    assert_eq!(output.status.code(), Some(1), "should finish with errors, not crash: {:?}", output);
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "should finish with errors, not crash: {:?}",
+        output
+    );
     let v = parse_json(&output);
     let md = findings_by_kind(&v, "missing_document");
-    assert!(md.iter().any(|f| f["detail"] == "nonexistent.md"), "{:?}", md);
+    assert!(
+        md.iter().any(|f| f["detail"] == "nonexistent.md"),
+        "{:?}",
+        md
+    );
 }
 
 // @kotowari[REQ-core-069, TBL-core-014]
@@ -519,10 +586,19 @@ fn req_069_dot_md_at_the_start_of_a_line_is_skipped_and_scanning_continues() {
         .timeout(std::time::Duration::from_secs(10))
         .output()
         .unwrap();
-    assert_eq!(output.status.code(), Some(1), "should finish, not hang: {:?}", output);
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "should finish, not hang: {:?}",
+        output
+    );
     let v = parse_json(&output);
     let md = findings_by_kind(&v, "missing_document");
-    assert!(md.iter().any(|f| f["detail"] == "nonexistent.md"), "{:?}", md);
+    assert!(
+        md.iter().any(|f| f["detail"] == "nonexistent.md"),
+        "{:?}",
+        md
+    );
 }
 
 // --- REQ-core-070: 参照された文書が無い ---
@@ -540,7 +616,11 @@ fn req_070_missing_document() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let md = findings_by_kind(&v, "missing_document");
-    assert!(md.iter().any(|f| f["detail"] == "missing-doc.md"), "should find missing document: {:?}", md);
+    assert!(
+        md.iter().any(|f| f["detail"] == "missing-doc.md"),
+        "should find missing document: {:?}",
+        md
+    );
 }
 
 // --- REQ-core-104: 具体的な値は二重引用符で書く ---
@@ -564,7 +644,11 @@ fn req_104_quoted_values_are_not_terms() {
     let v = parse_json(&output);
     let ut = findings_by_kind(&v, "unknown_term");
     // 二重引用符の中は用語チェックの対象外
-    assert!(!ut.iter().any(|f| f["detail"] == "kotowari check"), "quoted values should not be checked: {:?}", ut);
+    assert!(
+        !ut.iter().any(|f| f["detail"] == "kotowari check"),
+        "quoted values should not be checked: {:?}",
+        ut
+    );
 }
 
 // --- REQ-core-063, REQ-core-064: 性質の文とシナリオの手順でも用語を検査する ---
@@ -662,7 +746,10 @@ fn tbl_012_indented_decision_line_counts() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
-    let details: Vec<&str> = si.iter().map(|f| f["detail"].as_str().unwrap_or("")).collect();
+    let details: Vec<&str> = si
+        .iter()
+        .map(|f| f["detail"].as_str().unwrap_or(""))
+        .collect();
     // A26（字下げした決定）は解決し、無い番号 A27 だけが source_invalid になる（検査が走ったことの対）
     assert_eq!(
         details,
@@ -694,7 +781,10 @@ fn tbl_012_number_inside_code_block_is_not_a_source_target() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
-    let details: Vec<&str> = si.iter().map(|f| f["detail"].as_str().unwrap_or("")).collect();
+    let details: Vec<&str> = si
+        .iter()
+        .map(|f| f["detail"].as_str().unwrap_or(""))
+        .collect();
     assert_eq!(
         details,
         vec!["docs/decision/records/x.md#A9"],
@@ -726,7 +816,10 @@ fn tbl_012_decision_heading_only_inside_code_block_makes_the_file_not_a_record()
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
-    let details: Vec<&str> = si.iter().map(|f| f["detail"].as_str().unwrap_or("")).collect();
+    let details: Vec<&str> = si
+        .iter()
+        .map(|f| f["detail"].as_str().unwrap_or(""))
+        .collect();
     assert_eq!(
         details,
         vec!["docs/decision/records/f.md#A1"],
@@ -754,7 +847,10 @@ fn tbl_012_heading_inside_code_block_of_a_non_record_file_is_not_a_source_target
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
-    let details: Vec<&str> = si.iter().map(|f| f["detail"].as_str().unwrap_or("")).collect();
+    let details: Vec<&str> = si
+        .iter()
+        .map(|f| f["detail"].as_str().unwrap_or(""))
+        .collect();
     assert_eq!(
         details,
         vec!["docs/decision/records/g.md#例"],
@@ -786,7 +882,8 @@ fn req_058_hidden_directory_under_records_is_not_a_source_target() {
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
     assert!(
-        si.iter().any(|f| f["detail"] == "docs/decision/records/.old/records.md#A1"),
+        si.iter()
+            .any(|f| f["detail"] == "docs/decision/records/.old/records.md#A1"),
         "a source pointing under a hidden directory must not resolve: {:?}",
         si
     );
@@ -903,10 +1000,16 @@ fn tbl_012_check_source_outside_records_and_adr_returns_err() {
         records_other_files: vec![],
     };
     let result = ctx.check_source("somewhere/else.md#heading");
-    assert!(result.is_err(), "source outside records/adr should return Err");
+    assert!(
+        result.is_err(),
+        "source outside records/adr should return Err"
+    );
 
     let result2 = ctx.check_source("docs/decision/records#A1");
-    assert!(result2.is_err(), "path equal to records_path (no subpath) should return Err");
+    assert!(
+        result2.is_err(),
+        "path equal to records_path (no subpath) should return Err"
+    );
 }
 
 // @kotowari[REQ-core-057]
@@ -944,12 +1047,14 @@ fn req_058_absolute_path_source_is_rejected_even_if_it_would_otherwise_resolve()
     };
     // 相対パスなら正しい出典
     assert!(
-        ctx.check_source("docs/decision/records/records.md#A1").is_ok(),
+        ctx.check_source("docs/decision/records/records.md#A1")
+            .is_ok(),
         "the relative form should resolve"
     );
     // 先頭に "/" を付けると、正規化後に同じ場所を指しても出典として不正
     assert!(
-        ctx.check_source("/docs/decision/records/records.md#A1").is_err(),
+        ctx.check_source("/docs/decision/records/records.md#A1")
+            .is_err(),
         "a source starting with '/' must be rejected even if it would resolve after normalization"
     );
 }
@@ -1017,9 +1122,13 @@ fn req_069_doc_ref_line_number_is_correct() {
         &ir_filenames,
         &mut findings,
     );
-    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    let md: Vec<_> = findings
+        .iter()
+        .filter(|f| f.kind == "missing_document")
+        .collect();
     assert!(
-        md.iter().any(|f| f.detail == "nonexistent.md" && f.line == Some(5)),
+        md.iter()
+            .any(|f| f.detail == "nonexistent.md" && f.line == Some(5)),
         "missing_document on line 5: {:?}",
         md
     );
@@ -1035,10 +1144,19 @@ fn req_069_doc_ref_at_line_end() {
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
-    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    kotowari_core::terms::check_document_references(
+        &[doc],
+        "docs/ir",
+        &ir_filenames,
+        &mut findings,
+    );
+    let md: Vec<_> = findings
+        .iter()
+        .filter(|f| f.kind == "missing_document")
+        .collect();
     assert!(
-        md.iter().any(|f| f.detail == "nonexistent.md" && f.line == Some(3)),
+        md.iter()
+            .any(|f| f.detail == "nonexistent.md" && f.line == Some(3)),
         "doc ref at end of line should be detected on line 3: {:?}",
         md
     );
@@ -1052,10 +1170,19 @@ fn req_069_doc_ref_at_line_start() {
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
-    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    kotowari_core::terms::check_document_references(
+        &[doc],
+        "docs/ir",
+        &ir_filenames,
+        &mut findings,
+    );
+    let md: Vec<_> = findings
+        .iter()
+        .filter(|f| f.kind == "missing_document")
+        .collect();
     assert!(
-        md.iter().any(|f| f.detail == "not-found.md" && f.line == Some(3)),
+        md.iter()
+            .any(|f| f.detail == "not-found.md" && f.line == Some(3)),
         "doc ref at line start should be detected on line 3: {:?}",
         md
     );
@@ -1069,10 +1196,19 @@ fn req_069_doc_ref_after_punctuation() {
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
-    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    kotowari_core::terms::check_document_references(
+        &[doc],
+        "docs/ir",
+        &ir_filenames,
+        &mut findings,
+    );
+    let md: Vec<_> = findings
+        .iter()
+        .filter(|f| f.kind == "missing_document")
+        .collect();
     assert!(
-        md.iter().any(|f| f.detail == "not-found.md" && f.line == Some(5)),
+        md.iter()
+            .any(|f| f.detail == "not-found.md" && f.line == Some(5)),
         "doc ref after punctuation should be detected on line 5: {:?}",
         md
     );
@@ -1086,8 +1222,16 @@ fn req_069_mdx_extension_not_matched_but_md_after_it_is() {
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
-    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    kotowari_core::terms::check_document_references(
+        &[doc],
+        "docs/ir",
+        &ir_filenames,
+        &mut findings,
+    );
+    let md: Vec<_> = findings
+        .iter()
+        .filter(|f| f.kind == "missing_document")
+        .collect();
     assert!(
         !md.iter().any(|f| f.detail.contains("foo")),
         "foo.mdx should not be matched: {:?}",
@@ -1112,7 +1256,8 @@ fn tbl_012_file_with_decision_sections_is_a_records_file() {
     fs::write(
         tmp.path().join("docs/decision/records/no-numbers.md"),
         "# No numbers\n\n## Agreements\n\nJust text, no decisions.\n",
-    ).unwrap();
+    )
+    .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
         "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/no-numbers.md#A1\n- verification: unit\n\nStatement.\n",
@@ -1121,8 +1266,12 @@ fn tbl_012_file_with_decision_sections_is_a_records_file() {
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
     // 判断の記録として扱われるので番号 A1 で照合 → 見つからないので source_invalid
-    assert!(si.iter().any(|f| f["detail"].as_str().unwrap().contains("no-numbers.md#A1")),
-        "file with decision sections should be treated as records: {:?}", si);
+    assert!(
+        si.iter()
+            .any(|f| f["detail"].as_str().unwrap().contains("no-numbers.md#A1")),
+        "file with decision sections should be treated as records: {:?}",
+        si
+    );
 }
 
 // @kotowari[TBL-core-010, TBL-core-012]
@@ -1185,7 +1334,8 @@ fn tbl_012_file_without_decision_sections_matches_headings() {
     fs::write(
         tmp.path().join("docs/decision/records/notes.md"),
         "# Notes\n\n## Overview\n\nSome notes.\n",
-    ).unwrap();
+    )
+    .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
         "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/notes.md#Overview\n- verification: unit\n\nStatement.\n",
@@ -1194,17 +1344,25 @@ fn tbl_012_file_without_decision_sections_matches_headings() {
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
     // 見出しで照合 → Overview が見つかるので通る
-    assert!(si.is_empty(), "file without decision sections should match by headings: {:?}", si);
+    assert!(
+        si.is_empty(),
+        "file without decision sections should match by headings: {:?}",
+        si
+    );
 }
 
 // @kotowari[TBL-core-012]
 #[test]
 fn tbl_012_two_letter_prefix_is_not_a_decision_number() {
     // "AB1" は決定の番号でない（英大文字1文字に1桁以上の数字）
-    assert!(!kotowari_core::sources::is_decision_number("AB1"),
-        "AB1 should not be a decision number (two letters)");
-    assert!(kotowari_core::sources::is_decision_number("A1"),
-        "A1 should be a decision number");
+    assert!(
+        !kotowari_core::sources::is_decision_number("AB1"),
+        "AB1 should not be a decision number (two letters)"
+    );
+    assert!(
+        kotowari_core::sources::is_decision_number("A1"),
+        "A1 should be a decision number"
+    );
 }
 
 // @kotowari[REQ-core-061]
@@ -1226,7 +1384,11 @@ fn req_061_subheading_does_not_end_a_section() {
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
     // ### は節を終えないので A2 は見つかる
-    assert!(si.is_empty(), "### subheading should not end a section: {:?}", si);
+    assert!(
+        si.is_empty(),
+        "### subheading should not end a section: {:?}",
+        si
+    );
 }
 
 // @kotowari[REQ-core-115]
@@ -1244,7 +1406,11 @@ fn req_115_source_invalid_line_is_the_source_line() {
     let si = findings_by_kind(&v, "source_invalid");
     assert!(!si.is_empty(), "should have source_invalid");
     // line は出典の行（10行目: "- source: somewhere/bad.md#X"）
-    assert_eq!(si[0]["line"], 10, "source_invalid line should be the source line (10), got {:?}", si[0]);
+    assert_eq!(
+        si[0]["line"], 10,
+        "source_invalid line should be the source line (10), got {:?}",
+        si[0]
+    );
 }
 
 // @kotowari[REQ-core-115]
@@ -1262,7 +1428,11 @@ fn req_115_decision_table_source_invalid_line_is_the_source_line_not_another_fie
     let si = findings_by_kind(&v, "source_invalid");
     assert!(!si.is_empty(), "should have source_invalid: {:?}", v);
     // line は出典の行（10行目）であって、それより前の種類の行（9行目）ではない
-    assert_eq!(si[0]["line"], 10, "source_invalid line should be the 出典 line (10), not an earlier field line: {:?}", si[0]);
+    assert_eq!(
+        si[0]["line"], 10,
+        "source_invalid line should be the 出典 line (10), not an earlier field line: {:?}",
+        si[0]
+    );
 }
 
 // @kotowari[REQ-core-115]
@@ -1279,7 +1449,11 @@ fn req_115_property_source_invalid_line_is_the_source_line_not_another_field() {
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
     assert!(!si.is_empty(), "should have source_invalid: {:?}", v);
-    assert_eq!(si[0]["line"], 10, "source_invalid line should be the 出典 line (10), not an earlier field line: {:?}", si[0]);
+    assert_eq!(
+        si[0]["line"], 10,
+        "source_invalid line should be the 出典 line (10), not an earlier field line: {:?}",
+        si[0]
+    );
 }
 
 // @kotowari[REQ-core-115]
@@ -1296,7 +1470,11 @@ fn req_115_flag_entry_source_invalid_line_is_the_source_line_not_another_field()
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
     assert!(!si.is_empty(), "should have source_invalid: {:?}", v);
-    assert_eq!(si[0]["line"], 8, "source_invalid line should be the 出典 line (8), not an earlier field line: {:?}", si[0]);
+    assert_eq!(
+        si[0]["line"], 8,
+        "source_invalid line should be the 出典 line (8), not an earlier field line: {:?}",
+        si[0]
+    );
 }
 
 // @kotowari[REQ-core-064]
@@ -1316,8 +1494,12 @@ fn req_064_backtick_content_is_trimmed() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let ut = findings_by_kind(&v, "unknown_term");
-    assert!(!ut.iter().any(|f| f["detail"] == "IR" || f["detail"] == " IR "),
-        "trimmed backtick content should match glossary term: {:?}", ut);
+    assert!(
+        !ut.iter()
+            .any(|f| f["detail"] == "IR" || f["detail"] == " IR "),
+        "trimmed backtick content should match glossary term: {:?}",
+        ut
+    );
 }
 
 // @kotowari[REQ-core-064]
@@ -1337,8 +1519,11 @@ fn req_064_empty_backticks_are_unknown_term() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let ut = findings_by_kind(&v, "unknown_term");
-    assert!(ut.iter().any(|f| f["detail"] == "``"),
-        "empty backticks should produce unknown_term with detail '``': {:?}", ut);
+    assert!(
+        ut.iter().any(|f| f["detail"] == "``"),
+        "empty backticks should produce unknown_term with detail '``': {:?}",
+        ut
+    );
 }
 
 // @kotowari[REQ-core-116]
@@ -1358,11 +1543,23 @@ fn req_116_odd_backticks_skip_terms_but_check_vague_words() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let ub = findings_by_kind(&v, "unclosed_backtick");
-    assert!(!ub.is_empty(), "odd backticks should produce unclosed_backtick: {:?}", ub);
+    assert!(
+        !ub.is_empty(),
+        "odd backticks should produce unclosed_backtick: {:?}",
+        ub
+    );
     let vw = findings_by_kind(&v, "vague_word");
-    assert!(vw.iter().any(|f| f["detail"] == "適切に"), "vague words should still be checked: {:?}", vw);
+    assert!(
+        vw.iter().any(|f| f["detail"] == "適切に"),
+        "vague words should still be checked: {:?}",
+        vw
+    );
     let ut = findings_by_kind(&v, "unknown_term");
-    assert!(ut.is_empty(), "unknown_term should not be checked on odd backtick line: {:?}", ut);
+    assert!(
+        ut.is_empty(),
+        "unknown_term should not be checked on odd backtick line: {:?}",
+        ut
+    );
 }
 
 // @kotowari[REQ-core-116, TBL-core-008]
@@ -1409,8 +1606,17 @@ fn req_067_overlapping_vague_words_longest_match_once() {
     let v = parse_json(&output);
     let vw = findings_by_kind(&v, "vague_word");
     // "などの" で1件だけ
-    assert_eq!(vw.len(), 1, "overlapping vague words should match longest once: {:?}", vw);
-    assert_eq!(vw[0]["detail"], "などの", "should match 'などの' not 'など': {:?}", vw);
+    assert_eq!(
+        vw.len(),
+        1,
+        "overlapping vague words should match longest once: {:?}",
+        vw
+    );
+    assert_eq!(
+        vw[0]["detail"], "などの",
+        "should match 'などの' not 'など': {:?}",
+        vw
+    );
 }
 
 // @kotowari[TBL-core-014]
@@ -1422,8 +1628,16 @@ fn tbl_014_md_followed_by_letter_is_not_a_reference() {
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
-    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    kotowari_core::terms::check_document_references(
+        &[doc],
+        "docs/ir",
+        &ir_filenames,
+        &mut findings,
+    );
+    let md: Vec<_> = findings
+        .iter()
+        .filter(|f| f.kind == "missing_document")
+        .collect();
     assert!(md.is_empty(), "a.mdX should not be a reference: {:?}", md);
 }
 
@@ -1436,9 +1650,21 @@ fn tbl_014_unclosed_quote_hides_the_rest_of_the_line() {
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
-    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
-    assert!(md.is_empty(), "unclosed quote should hide the rest of the line: {:?}", md);
+    kotowari_core::terms::check_document_references(
+        &[doc],
+        "docs/ir",
+        &ir_filenames,
+        &mut findings,
+    );
+    let md: Vec<_> = findings
+        .iter()
+        .filter(|f| f.kind == "missing_document")
+        .collect();
+    assert!(
+        md.is_empty(),
+        "unclosed quote should hide the rest of the line: {:?}",
+        md
+    );
 }
 
 // @kotowari[TBL-core-014]
@@ -1451,8 +1677,16 @@ fn tbl_014_text_between_the_second_and_third_quote_is_still_scanned() {
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
-    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    kotowari_core::terms::check_document_references(
+        &[doc],
+        "docs/ir",
+        &ir_filenames,
+        &mut findings,
+    );
+    let md: Vec<_> = findings
+        .iter()
+        .filter(|f| f.kind == "missing_document")
+        .collect();
     assert!(
         md.iter().any(|f| f.detail == "outside.md"),
         "text between the 2nd and 3rd quote is outside quotes and should still be scanned: {:?}",
@@ -1469,10 +1703,19 @@ fn tbl_014_long_digit_run_before_mdx_does_not_produce_a_spurious_reference() {
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
-    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    kotowari_core::terms::check_document_references(
+        &[doc],
+        "docs/ir",
+        &ir_filenames,
+        &mut findings,
+    );
+    let md: Vec<_> = findings
+        .iter()
+        .filter(|f| f.kind == "missing_document")
+        .collect();
     assert!(
-        !md.iter().any(|f| f.detail.contains("01234567890123456789012")),
+        !md.iter()
+            .any(|f| f.detail.contains("01234567890123456789012")),
         "a long digit run before .mdx must not be treated as a .md reference: {:?}",
         md
     );
@@ -1487,8 +1730,16 @@ fn tbl_014_md_followed_by_hyphen_is_not_a_reference() {
     let doc = kotowari_core::ir::parse_document("x.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
-    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    kotowari_core::terms::check_document_references(
+        &[doc],
+        "docs/ir",
+        &ir_filenames,
+        &mut findings,
+    );
+    let md: Vec<_> = findings
+        .iter()
+        .filter(|f| f.kind == "missing_document")
+        .collect();
     assert!(
         !md.iter().any(|f| f.detail == "a.md"),
         "'a.md-suffix' must not be treated as a reference to 'a.md': {:?}",
@@ -1505,8 +1756,16 @@ fn tbl_014_bare_dot_md_with_nothing_before_it_is_not_a_reference() {
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
     let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
     let mut findings = Vec::new();
-    kotowari_core::terms::check_document_references(&[doc], "docs/ir", &ir_filenames, &mut findings);
-    let md: Vec<_> = findings.iter().filter(|f| f.kind == "missing_document").collect();
+    kotowari_core::terms::check_document_references(
+        &[doc],
+        "docs/ir",
+        &ir_filenames,
+        &mut findings,
+    );
+    let md: Vec<_> = findings
+        .iter()
+        .filter(|f| f.kind == "missing_document")
+        .collect();
     assert!(
         !md.iter().any(|f| f.detail == ".md"),
         "a bare '.md' with no name before it must not be treated as a document reference: {:?}",
@@ -1532,10 +1791,17 @@ Some text.
 | 二番目 | 意味2 | brainstorm/records.md#A1 |
 ";
     let doc = kotowari_core::ir::parse_document("CONTEXT.md", content).unwrap();
-    let terms: Vec<_> = doc.items.iter()
+    let terms: Vec<_> = doc
+        .items
+        .iter()
         .filter(|i| matches!(i, kotowari_core::ir::Item::GlossaryTerm { .. }))
         .collect();
-    assert_eq!(terms.len(), 1, "second table should not be parsed as glossary: {:?}", terms);
+    assert_eq!(
+        terms.len(),
+        1,
+        "second table should not be parsed as glossary: {:?}",
+        terms
+    );
     if let kotowari_core::ir::Item::GlossaryTerm { term, .. } = &terms[0] {
         assert_eq!(term, "テスト", "only first table terms should be parsed");
     }
@@ -1555,10 +1821,20 @@ fn req_117_glossary_without_proper_table_is_invalid() {
     let doc = kotowari_core::ir::parse_document("CONTEXT.md", content).unwrap();
     let config = kotowari_core::config::Config::default();
     let findings = kotowari_core::ir::check_documents(&[doc], &config);
-    let gi: Vec<_> = findings.iter().filter(|f| f.kind == "glossary_invalid").collect();
-    assert!(!gi.is_empty(), "glossary without proper table should produce glossary_invalid: {:?}", gi);
+    let gi: Vec<_> = findings
+        .iter()
+        .filter(|f| f.kind == "glossary_invalid")
+        .collect();
+    assert!(
+        !gi.is_empty(),
+        "glossary without proper table should produce glossary_invalid: {:?}",
+        gi
+    );
     assert!(gi[0].line.is_none(), "glossary_invalid line should be null");
-    assert_eq!(gi[0].detail, "CONTEXT.md", "glossary_invalid detail should be filename");
+    assert_eq!(
+        gi[0].detail, "CONTEXT.md",
+        "glossary_invalid detail should be filename"
+    );
 }
 
 // --- TBL-core-001: 非 UTF-8 の判断の記録または ADR で停止 ---
@@ -1569,16 +1845,8 @@ fn tbl_001_non_utf8_records_or_adr_stops() {
     // 判断の記録に非 UTF-8 ファイルを置くと停止する
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
-    fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n",
-    )
-    .unwrap();
-    fs::write(
-        tmp.path().join("docs/decision/records/bad.md"),
-        b"\xff\xfe",
-    )
-    .unwrap();
+    fs::write(tmp.path().join("docs/ir/a.md"), "# Title\n\nScope.\n").unwrap();
+    fs::write(tmp.path().join("docs/decision/records/bad.md"), b"\xff\xfe").unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(
         output.status.code(),
@@ -1590,17 +1858,13 @@ fn tbl_001_non_utf8_records_or_adr_stops() {
     // ADR に非 UTF-8 ファイルを置くと停止する
     let tmp2 = TempDir::new().unwrap();
     make_project_with_records(tmp2.path());
-    fs::write(
-        tmp2.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n",
-    )
-    .unwrap();
-    fs::write(
-        tmp2.path().join("docs/decision/adr/bad.md"),
-        b"\xff\xfe",
-    )
-    .unwrap();
-    let output2 = cmd().arg("check").current_dir(tmp2.path()).output().unwrap();
+    fs::write(tmp2.path().join("docs/ir/a.md"), "# Title\n\nScope.\n").unwrap();
+    fs::write(tmp2.path().join("docs/decision/adr/bad.md"), b"\xff\xfe").unwrap();
+    let output2 = cmd()
+        .arg("check")
+        .current_dir(tmp2.path())
+        .output()
+        .unwrap();
     assert_eq!(
         output2.status.code(),
         Some(2),
@@ -1626,8 +1890,14 @@ fn tbl_012_records_file_headings_are_not_sources() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
-    assert!(si.iter().any(|f| f["detail"].as_str().unwrap().contains("notes.md#Background")),
-        "a records file (has a decision section) must be matched by decision numbers, not headings: {:?}", si);
+    assert!(
+        si.iter().any(|f| f["detail"]
+            .as_str()
+            .unwrap()
+            .contains("notes.md#Background")),
+        "a records file (has a decision section) must be matched by decision numbers, not headings: {:?}",
+        si
+    );
 }
 
 // @kotowari[REQ-core-018, TBL-core-001]
@@ -1637,9 +1907,18 @@ fn req_018_broken_symlink_in_records_dir_stops() {
     use std::os::unix::fs::symlink;
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
-    symlink(tmp.path().join("nowhere.md"), tmp.path().join("docs/decision/records/broken.md")).unwrap();
+    symlink(
+        tmp.path().join("nowhere.md"),
+        tmp.path().join("docs/decision/records/broken.md"),
+    )
+    .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
-    assert_eq!(output.status.code(), Some(2), "a broken symlink must stop: {:?}", output);
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "a broken symlink must stop: {:?}",
+        output
+    );
     assert!(output.stdout.is_empty());
 }
 
@@ -1651,8 +1930,16 @@ fn req_033_file_symlink_in_records_dir_is_read() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     fs::create_dir_all(tmp.path().join("elsewhere")).unwrap();
-    fs::write(tmp.path().join("elsewhere/more.md"), "# More\n\n## Agreements\n\n- A7 linked decision\n").unwrap();
-    symlink(tmp.path().join("elsewhere/more.md"), tmp.path().join("docs/decision/records/more.md")).unwrap();
+    fs::write(
+        tmp.path().join("elsewhere/more.md"),
+        "# More\n\n## Agreements\n\n- A7 linked decision\n",
+    )
+    .unwrap();
+    symlink(
+        tmp.path().join("elsewhere/more.md"),
+        tmp.path().join("docs/decision/records/more.md"),
+    )
+    .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
         "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/more.md#A7\n- verification: unit\n\nStatement.\n",
@@ -1660,7 +1947,11 @@ fn req_033_file_symlink_in_records_dir_is_read() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
-    assert!(si.is_empty(), "a file symlink in the records dir must be read: {:?}", si);
+    assert!(
+        si.is_empty(),
+        "a file symlink in the records dir must be read: {:?}",
+        si
+    );
 }
 
 // @kotowari[REQ-core-117]
@@ -1671,7 +1962,11 @@ fn req_117_glossary_header_without_rows_is_valid() {
     let doc = kotowari_core::ir::parse_document("CONTEXT.md", content).unwrap();
     let config = kotowari_core::config::Config::default();
     let findings = kotowari_core::ir::check_documents(&[doc], &config);
-    assert!(!findings.iter().any(|f| f.kind == "glossary_invalid"), "header + separator with no rows must not be glossary_invalid: {:?}", findings);
+    assert!(
+        !findings.iter().any(|f| f.kind == "glossary_invalid"),
+        "header + separator with no rows must not be glossary_invalid: {:?}",
+        findings
+    );
 }
 
 // @kotowari[REQ-core-111]
@@ -1681,16 +1976,33 @@ fn req_111_bom_in_config_records_adr_and_tests_is_skipped_end_to_end() {
     make_project_with_records(tmp.path());
     let bom = "\u{feff}";
     fs::write(tmp.path().join(".kotowari/config.yaml"), format!("{bom}ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n")).unwrap();
-    fs::write(tmp.path().join("docs/decision/records/records.md"), format!("{bom}# Records\n\n## Agreements\n\n- A1 first\n")).unwrap();
-    fs::write(tmp.path().join("docs/decision/adr/0001-test.md"), format!("{bom}# ADR 0001\n\n## 状況\n\nx\n")).unwrap();
+    fs::write(
+        tmp.path().join("docs/decision/records/records.md"),
+        format!("{bom}# Records\n\n## Agreements\n\n- A1 first\n"),
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/decision/adr/0001-test.md"),
+        format!("{bom}# ADR 0001\n\n## 状況\n\nx\n"),
+    )
+    .unwrap();
     fs::write(
         tmp.path().join("docs/ir/a.md"),
         format!("{bom}# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1, docs/decision/adr/0001-test.md#状況\n- verification: unit\n\nStatement.\n"),
     ).unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
-    fs::write(tmp.path().join("tests/t.rs"), format!("{bom}// @kotowari[REQ-001]\n#[test]\nfn t() {{}}\n")).unwrap();
+    fs::write(
+        tmp.path().join("tests/t.rs"),
+        format!("{bom}// @kotowari[REQ-001]\n#[test]\nfn t() {{}}\n"),
+    )
+    .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
-    assert_eq!(output.status.code(), Some(0), "BOM in every file kind must be skipped: {:?}", output);
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "BOM in every file kind must be skipped: {:?}",
+        output
+    );
     let v = parse_json(&output);
     assert!(v["findings"].as_array().unwrap().is_empty(), "{:?}", v);
 }
@@ -1721,8 +2033,16 @@ fn req_058_records_place_dot_resolves_a_source_at_the_base_root() {
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let si = findings_by_kind(&v, "source_invalid");
-    let details: Vec<&str> = si.iter().map(|f| f["detail"].as_str().unwrap_or("")).collect();
-    assert_eq!(details, vec!["records.md#A99"], "A1 must resolve and only A99 must be invalid: {:?}", si);
+    let details: Vec<&str> = si
+        .iter()
+        .map(|f| f["detail"].as_str().unwrap_or(""))
+        .collect();
+    assert_eq!(
+        details,
+        vec!["records.md#A99"],
+        "A1 must resolve and only A99 must be invalid: {:?}",
+        si
+    );
 }
 
 // @kotowari[REQ-core-058, REQ-core-110, EX-core-289]
@@ -1754,11 +2074,15 @@ fn write_ir(tmp: &std::path::Path, relative: &str, content: &str) {
 }
 
 fn glossary(term: &str) -> String {
-    format!("# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| {term} | 意味 | docs/decision/records/records.md#A1 |\n")
+    format!(
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| {term} | 意味 | docs/decision/records/records.md#A1 |\n"
+    )
 }
 
 fn term_statement(id: &str, statement: &str) -> String {
-    format!("# Title\n\nScope.\n\n## Requirements\n\n### {id}: Name\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n\n{statement}\n")
+    format!(
+        "# Title\n\nScope.\n\n## Requirements\n\n### {id}: Name\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n\n{statement}\n"
+    )
 }
 
 // @kotowari[REQ-core-064]
@@ -1767,7 +2091,11 @@ fn req_064_term_from_a_sibling_glossary_is_unknown() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_ir(tmp.path(), "network/publish/CONTEXT.md", &glossary("公開"));
-    write_ir(tmp.path(), "network/dns/a.md", &term_statement("REQ-001", "`公開`"));
+    write_ir(
+        tmp.path(),
+        "network/dns/a.md",
+        &term_statement("REQ-001", "`公開`"),
+    );
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
     let unknown = findings_by_kind(&result, "unknown_term");
     assert_eq!(unknown.len(), 1);
@@ -1782,7 +2110,11 @@ fn req_064_term_from_a_parent_glossary_is_visible() {
     make_project_with_records(tmp.path());
     write_ir(tmp.path(), "CONTEXT.md", &glossary("根"));
     write_ir(tmp.path(), "network/CONTEXT.md", &glossary("網"));
-    write_ir(tmp.path(), "network/dns/a.md", &term_statement("REQ-001", "`根` `網`"));
+    write_ir(
+        tmp.path(),
+        "network/dns/a.md",
+        &term_statement("REQ-001", "`根` `網`"),
+    );
     write_ir(tmp.path(), "a.md", &term_statement("REQ-002", "`根` `網`"));
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
     let unknown = findings_by_kind(&result, "unknown_term");
@@ -1797,11 +2129,25 @@ fn req_065_document_with_no_glossary_in_its_chain_flags_every_backtick() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_ir(tmp.path(), "network/CONTEXT.md", &glossary("網"));
-    write_ir(tmp.path(), "a.md", &term_statement("REQ-001", "`網` `未定義` `REQ-001`"));
-    write_ir(tmp.path(), "network/a.md", &term_statement("REQ-002", "`網`"));
+    write_ir(
+        tmp.path(),
+        "a.md",
+        &term_statement("REQ-001", "`網` `未定義` `REQ-001`"),
+    );
+    write_ir(
+        tmp.path(),
+        "network/a.md",
+        &term_statement("REQ-002", "`網`"),
+    );
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
     let unknown = findings_by_kind(&result, "unknown_term");
-    assert_eq!(unknown.iter().map(|f| f["detail"].as_str().unwrap()).collect::<Vec<_>>(), ["未定義", "網"]);
+    assert_eq!(
+        unknown
+            .iter()
+            .map(|f| f["detail"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["未定義", "網"]
+    );
     assert!(unknown.iter().all(|f| f["path"] == "docs/ir/a.md"));
 }
 
@@ -1811,14 +2157,35 @@ fn req_123_duplicate_across_the_chain_is_reported_on_the_deeper_row() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_ir(tmp.path(), "CONTEXT.md", &glossary("宛先"));
-    write_ir(tmp.path(), "network/CONTEXT.md", "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| 宛先 | 意味 | |\n| 宛先 | 意味 | invalid |\n");
-    write_ir(tmp.path(), "network/dns/CONTEXT.md", &glossary("宛先").replace("docs/decision/records/records.md#A1", "invalid"));
-    write_ir(tmp.path(), "network/dns/a.md", &term_statement("REQ-001", "`宛先`"));
+    write_ir(
+        tmp.path(),
+        "network/CONTEXT.md",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| 宛先 | 意味 | |\n| 宛先 | 意味 | invalid |\n",
+    );
+    write_ir(
+        tmp.path(),
+        "network/dns/CONTEXT.md",
+        &glossary("宛先").replace("docs/decision/records/records.md#A1", "invalid"),
+    );
+    write_ir(
+        tmp.path(),
+        "network/dns/a.md",
+        &term_statement("REQ-001", "`宛先`"),
+    );
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
     let duplicates = findings_by_kind(&result, "duplicate_term");
     assert_eq!(duplicates.len(), 3);
-    assert_eq!(duplicates.iter().map(|f| (f["path"].as_str().unwrap(), f["line"].as_u64().unwrap())).collect::<Vec<_>>(),
-        [("docs/ir/network/CONTEXT.md", 5), ("docs/ir/network/CONTEXT.md", 6), ("docs/ir/network/dns/CONTEXT.md", 5)]);
+    assert_eq!(
+        duplicates
+            .iter()
+            .map(|f| (f["path"].as_str().unwrap(), f["line"].as_u64().unwrap()))
+            .collect::<Vec<_>>(),
+        [
+            ("docs/ir/network/CONTEXT.md", 5),
+            ("docs/ir/network/CONTEXT.md", 6),
+            ("docs/ir/network/dns/CONTEXT.md", 5)
+        ]
+    );
     assert!(duplicates.iter().all(|f| f["detail"] == "宛先"));
     assert!(findings_by_kind(&result, "unknown_term").is_empty());
     assert!(findings_by_kind(&result, "missing_source").is_empty());
@@ -1831,10 +2198,14 @@ fn tbl_014_md_followed_by_hash_or_slash_is_not_a_reference() {
     let doc = kotowari_core::ir::parse_document(
         "x.md",
         "# Title\n\na.md#A12 docs/decision/records/records.md#A12 a.md/b.md a//b.md\n",
-    ).unwrap();
+    )
+    .unwrap();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
-        &[doc], "docs/ir", &Default::default(), &mut findings,
+        &[doc],
+        "docs/ir",
+        &Default::default(),
+        &mut findings,
     );
     assert!(findings.is_empty(), "{:?}", findings);
 }
@@ -1842,12 +2213,14 @@ fn tbl_014_md_followed_by_hash_or_slash_is_not_a_reference() {
 // @kotowari[REQ-core-069, REQ-core-070, TBL-core-014]
 #[test]
 fn tbl_014_slash_separated_path_is_a_reference() {
-    let doc = kotowari_core::ir::parse_document(
-        "a.md", "# Title\n\nSee network/dns/b.md.\n",
-    ).unwrap();
+    let doc =
+        kotowari_core::ir::parse_document("a.md", "# Title\n\nSee network/dns/b.md.\n").unwrap();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
-        &[doc], "docs/ir", &Default::default(), &mut findings,
+        &[doc],
+        "docs/ir",
+        &Default::default(),
+        &mut findings,
     );
     assert_eq!(findings.len(), 1, "{:?}", findings);
     assert_eq!(findings[0].detail, "network/dns/b.md");
@@ -1859,15 +2232,27 @@ fn req_070_bare_name_resolves_in_the_same_directory_only() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     fs::create_dir_all(tmp.path().join("docs/ir/network/dns")).unwrap();
-    fs::write(tmp.path().join("docs/ir/network/dns/a.md"), "# Title\n\nSee b.md.\n").unwrap();
-    fs::write(tmp.path().join("docs/ir/network/b.md"), "# Title\n\nScope.\n").unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/network/dns/a.md"),
+        "# Title\n\nSee b.md.\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/network/b.md"),
+        "# Title\n\nScope.\n",
+    )
+    .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let missing = findings_by_kind(&parse_json(&output), "missing_document");
     assert_eq!(missing.len(), 1, "{:?}", missing);
     assert_eq!(missing[0]["path"], "docs/ir/network/dns/a.md");
     assert_eq!(missing[0]["detail"], "b.md");
 
-    fs::write(tmp.path().join("docs/ir/network/dns/b.md"), "# Title\n\nScope.\n").unwrap();
+    fs::write(
+        tmp.path().join("docs/ir/network/dns/b.md"),
+        "# Title\n\nScope.\n",
+    )
+    .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert!(findings_by_kind(&parse_json(&output), "missing_document").is_empty());
 }
@@ -1877,10 +2262,18 @@ fn req_070_bare_name_resolves_in_the_same_directory_only() {
 fn req_070_slash_path_resolves_from_the_ir_root() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
-    write_ir(tmp.path(), "network/dns/a.md", "# Title\n\nSee network/publish/c.md.\n");
+    write_ir(
+        tmp.path(),
+        "network/dns/a.md",
+        "# Title\n\nSee network/publish/c.md.\n",
+    );
     write_ir(tmp.path(), "network/publish/c.md", "# Title\n\nScope.\n");
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
-    assert!(findings_by_kind(&result, "missing_document").is_empty(), "{:?}", result);
+    assert!(
+        findings_by_kind(&result, "missing_document").is_empty(),
+        "{:?}",
+        result
+    );
     assert_eq!(result["files"], 2);
 }
 
@@ -1889,16 +2282,27 @@ fn req_070_slash_path_resolves_from_the_ir_root() {
 fn req_070_dot_and_dotdot_elements_never_resolve() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
-    write_ir(tmp.path(), "network/dns/a.md", "# Title\n\n../b.md ./c.md\n");
+    write_ir(
+        tmp.path(),
+        "network/dns/a.md",
+        "# Title\n\n../b.md ./c.md\n",
+    );
     write_ir(tmp.path(), "network/b.md", "# Title\n\nScope.\n");
     write_ir(tmp.path(), "network/dns/c.md", "# Title\n\nScope.\n");
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
     let missing = findings_by_kind(&result, "missing_document");
     assert_eq!(missing.len(), 2, "{:?}", missing);
     for reference in ["../b.md", "./c.md"] {
-        assert_eq!(missing.iter().filter(|f| f["detail"] == reference).count(), 1);
+        assert_eq!(
+            missing.iter().filter(|f| f["detail"] == reference).count(),
+            1
+        );
     }
-    assert!(missing.iter().all(|f| f["path"] == "docs/ir/network/dns/a.md"));
+    assert!(
+        missing
+            .iter()
+            .all(|f| f["path"] == "docs/ir/network/dns/a.md")
+    );
 }
 
 // @kotowari[REQ-core-069, REQ-core-070, TBL-core-014, TBL-core-008, EX-core-014]
@@ -1906,11 +2310,18 @@ fn req_070_dot_and_dotdot_elements_never_resolve() {
 fn req_070_detail_is_the_whole_reference() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
-    write_ir(tmp.path(), "a.md", "# Title\n\ndocs/decision/adr/0001-test-marker.md\n");
+    write_ir(
+        tmp.path(),
+        "a.md",
+        "# Title\n\ndocs/decision/adr/0001-test-marker.md\n",
+    );
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
     let missing = findings_by_kind(&result, "missing_document");
     assert_eq!(missing.len(), 1, "{:?}", missing);
-    assert_eq!(missing[0]["detail"], "docs/decision/adr/0001-test-marker.md");
+    assert_eq!(
+        missing[0]["detail"],
+        "docs/decision/adr/0001-test-marker.md"
+    );
 }
 
 // @kotowari[REQ-core-033, REQ-core-070, TBL-core-014, EX-core-032]
@@ -1935,7 +2346,11 @@ fn req_070_document_under_a_directory_symlink_is_missing() {
 fn tbl_014_reference_after_a_japanese_character_is_recognized() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
-    write_ir(tmp.path(), "a.md", "# Title\n\n設定の形はtimeout-config.mdで定める\n");
+    write_ir(
+        tmp.path(),
+        "a.md",
+        "# Title\n\n設定の形はtimeout-config.mdで定める\n",
+    );
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
     let missing = findings_by_kind(&result, "missing_document");
     assert_eq!(missing.len(), 1, "{:?}", missing);
@@ -1952,7 +2367,11 @@ fn tbl_014_backticked_path_is_a_term_not_a_reference() {
     let unknown = findings_by_kind(&result, "unknown_term");
     assert_eq!(unknown.len(), 1, "{:?}", unknown);
     assert_eq!(unknown[0]["detail"], "a.md");
-    assert!(findings_by_kind(&result, "missing_document").is_empty(), "{:?}", result);
+    assert!(
+        findings_by_kind(&result, "missing_document").is_empty(),
+        "{:?}",
+        result
+    );
 }
 
 // @kotowari[REQ-core-117, REQ-core-064]
@@ -1961,8 +2380,16 @@ fn req_117_invalid_glossary_hides_only_its_own_terms() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     write_ir(tmp.path(), "CONTEXT.md", &glossary("根"));
-    write_ir(tmp.path(), "network/CONTEXT.md", &glossary("網").replace("| Term | Meaning | Source |", "| Name | Meaning | Source |"));
-    write_ir(tmp.path(), "network/a.md", &term_statement("REQ-001", "`根` `網`"));
+    write_ir(
+        tmp.path(),
+        "network/CONTEXT.md",
+        &glossary("網").replace("| Term | Meaning | Source |", "| Name | Meaning | Source |"),
+    );
+    write_ir(
+        tmp.path(),
+        "network/a.md",
+        &term_statement("REQ-001", "`根` `網`"),
+    );
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
     let invalid = findings_by_kind(&result, "glossary_invalid");
     assert_eq!(invalid.len(), 1, "{:?}", invalid);
@@ -2050,10 +2477,19 @@ fn req_123_same_term_above_and_below_the_chain_is_reported_on_the_lower_row() {
     make_project_with_records(tmp.path());
     write_ir(tmp.path(), "CONTEXT.md", &glossary("宛先"));
     write_ir(tmp.path(), "network/CONTEXT.md", &glossary("宛先"));
-    write_ir(tmp.path(), "network/a.md", &term_statement("REQ-001", "`宛先`"));
+    write_ir(
+        tmp.path(),
+        "network/a.md",
+        &term_statement("REQ-001", "`宛先`"),
+    );
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
     let duplicates = findings_by_kind(&result, "duplicate_term");
-    assert_eq!(duplicates.len(), 1, "only the lower row is the duplicate: {:?}", result);
+    assert_eq!(
+        duplicates.len(),
+        1,
+        "only the lower row is the duplicate: {:?}",
+        result
+    );
     assert_eq!(duplicates[0]["path"], "docs/ir/network/CONTEXT.md");
     assert_eq!(duplicates[0]["detail"], "宛先");
     assert!(
@@ -2070,7 +2506,11 @@ fn req_123_same_term_above_and_below_the_chain_is_reported_on_the_lower_row() {
 fn req_064_a_backticked_path_outside_the_glossary_is_an_unknown_term() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
-    write_ir(tmp.path(), "a.md", &term_statement("REQ-001", "`src/main.rs`"));
+    write_ir(
+        tmp.path(),
+        "a.md",
+        &term_statement("REQ-001", "`src/main.rs`"),
+    );
     let result = parse_json(&cmd().arg("check").current_dir(tmp.path()).output().unwrap());
     let unknown = findings_by_kind(&result, "unknown_term");
     assert_eq!(unknown.len(), 1, "{:?}", result);
@@ -2120,7 +2560,11 @@ fn glossary_row(term: &str) -> String {
 }
 
 /// 用語集の文書を書き、check を走らせて (終了コード, JSON) を返す
-fn check_with_glossary(tmp: &std::path::Path, glossary: &str, statement: &str) -> (Option<i32>, serde_json::Value) {
+fn check_with_glossary(
+    tmp: &std::path::Path,
+    glossary: &str,
+    statement: &str,
+) -> (Option<i32>, serde_json::Value) {
     make_project_with_records(tmp);
     fs::write(tmp.join("docs/ir/CONTEXT.md"), glossary).unwrap();
     fs::write(

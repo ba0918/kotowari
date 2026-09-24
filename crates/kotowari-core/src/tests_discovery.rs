@@ -67,11 +67,17 @@ pub fn parse_markers_in_line(line: &str, line_num: usize) -> Vec<Marker> {
                 .map(|s| s.trim().to_string())
                 .filter(|s| !s.is_empty())
                 .collect();
-            markers.push(Marker { ids, line: line_num });
+            markers.push(Marker {
+                ids,
+                line: line_num,
+            });
             search_start = close_pos;
         } else {
             // 閉じ括弧がない
-            markers.push(Marker { ids: vec![], line: line_num });
+            markers.push(Marker {
+                ids: vec![],
+                line: line_num,
+            });
             break;
         }
     }
@@ -87,14 +93,13 @@ pub fn collect_test_files(
     let mut builder = GlobSetBuilder::new();
     for pattern in &config.tests.files {
         // glob の構文は Config::parse で検証済み
-        let g = Glob::new(pattern).map_err(|e| {
-            crate::StopReason::ConfigError(format!("invalid glob: {pattern}: {e}"))
-        })?;
+        let g = Glob::new(pattern)
+            .map_err(|e| crate::StopReason::ConfigError(format!("invalid glob: {pattern}: {e}")))?;
         builder.add(g);
     }
-    let globset = builder.build().map_err(|e| {
-        crate::StopReason::ConfigError(format!("glob build error: {e}"))
-    })?;
+    let globset = builder
+        .build()
+        .map_err(|e| crate::StopReason::ConfigError(format!("glob build error: {e}")))?;
 
     let mut files = Vec::new();
 
@@ -128,7 +133,8 @@ pub fn collect_test_files(
     {
         // REQ-core-018（A96）: 走査でディレクトリが読めなければ停止する
         let entry = entry.map_err(|e| {
-            let where_ = e.path()
+            let where_ = e
+                .path()
                 .map(|p| p.strip_prefix(base).unwrap_or(p))
                 .map(|p| p.to_string_lossy().replace('\\', "/"))
                 .unwrap_or_default();
@@ -140,8 +146,12 @@ pub fn collect_test_files(
             std::fs::metadata(entry.path())
                 .map(|m| m.is_file())
                 .map_err(|e| {
-                    let rel = entry.path().strip_prefix(base).unwrap_or(entry.path())
-                        .to_string_lossy().replace('\\', "/");
+                    let rel = entry
+                        .path()
+                        .strip_prefix(base)
+                        .unwrap_or(entry.path())
+                        .to_string_lossy()
+                        .replace('\\', "/");
                     crate::StopReason::UnreadableFile(format!("{rel}: {e}"))
                 })?
         } else {
@@ -412,13 +422,23 @@ pub fn discover_and_check(
                         }
                         // REQ-core-072: テストに結び付く空・不正な印
                         for (line_num, raw) in &test.invalid_markers {
-                            findings.push(Finding::new(FindingKind::InvalidMarker, rel_path.clone(), Some(*line_num), raw.clone()));
+                            findings.push(Finding::new(
+                                FindingKind::InvalidMarker,
+                                rel_path.clone(),
+                                Some(*line_num),
+                                raw.clone(),
+                            ));
                         }
                     }
                     all_tests.extend(tests);
                 }
                 Err(_) => {
-                    findings.push(Finding::new(FindingKind::UnparsableFile, rel_path.clone(), None, rel_path.clone()));
+                    findings.push(Finding::new(
+                        FindingKind::UnparsableFile,
+                        rel_path.clone(),
+                        None,
+                        rel_path.clone(),
+                    ));
                 }
             }
         } else {
@@ -428,7 +448,12 @@ pub fn discover_and_check(
                 for marker in parse_markers_in_line(line, line_num) {
                     if marker.ids.is_empty() {
                         // REQ-core-072: 空の印、または閉じ括弧のない印
-                        findings.push(Finding::new(FindingKind::InvalidMarker, rel_path.clone(), Some(line_num), line.to_string()));
+                        findings.push(Finding::new(
+                            FindingKind::InvalidMarker,
+                            rel_path.clone(),
+                            Some(line_num),
+                            line.to_string(),
+                        ));
                     } else {
                         for id in &marker.ids {
                             markers.push(TestMarker {
@@ -439,7 +464,12 @@ pub fn discover_and_check(
                             });
                             // REQ-core-054: 存在しない ID への参照
                             if !known_ids.contains(id) {
-                                findings.push(Finding::new(FindingKind::UnresolvedReference, rel_path.clone(), Some(line_num), id.clone()));
+                                findings.push(Finding::new(
+                                    FindingKind::UnresolvedReference,
+                                    rel_path.clone(),
+                                    Some(line_num),
+                                    id.clone(),
+                                ));
                             }
                         }
                     }
@@ -454,7 +484,12 @@ pub fn discover_and_check(
     // REQ-core-137: テストのない具体例
     for (id, scenario) in &scenarios {
         if scenario.needs_test && !coverage.is_marked(id) {
-            findings.push(Finding::new(FindingKind::ScenarioWithoutTest, scenario.path.clone(), Some(scenario.line), id.clone()));
+            findings.push(Finding::new(
+                FindingKind::ScenarioWithoutTest,
+                scenario.path.clone(),
+                Some(scenario.line),
+                id.clone(),
+            ));
         }
     }
 
@@ -471,7 +506,12 @@ pub fn discover_and_check(
                 && !coverage.has_test(id)
             {
                 let path = crate::join_display_path(ir_path, &doc.relative_path);
-                findings.push(Finding::new(FindingKind::RequirementWithoutTest, path, Some(item.item_line()), id.clone()));
+                findings.push(Finding::new(
+                    FindingKind::RequirementWithoutTest,
+                    path,
+                    Some(item.item_line()),
+                    id.clone(),
+                ));
             }
         }
     }
@@ -480,8 +520,16 @@ pub fn discover_and_check(
     for test in &all_tests {
         if test.marker_ids.is_empty() {
             // 名前が null なら節の最初の行の文字を detail にする
-            let detail = test.name.clone().unwrap_or_else(|| test.first_line_text.clone());
-            findings.push(Finding::new(FindingKind::TestWithoutId, test.file_path.clone(), Some(test.line), detail));
+            let detail = test
+                .name
+                .clone()
+                .unwrap_or_else(|| test.first_line_text.clone());
+            findings.push(Finding::new(
+                FindingKind::TestWithoutId,
+                test.file_path.clone(),
+                Some(test.line),
+                detail,
+            ));
         }
     }
 
@@ -498,11 +546,15 @@ fn check_test_markers(
     // REQ-core-054, REQ-core-118: unresolved_reference の line は印のある行
     for (id, marker_line) in &test.marker_ids {
         if !id.is_empty() && !known_ids.contains(id) {
-            findings.push(Finding::new(FindingKind::UnresolvedReference, file_path.to_string(), Some(*marker_line), id.clone()));
+            findings.push(Finding::new(
+                FindingKind::UnresolvedReference,
+                file_path.to_string(),
+                Some(*marker_line),
+                id.clone(),
+            ));
         }
     }
 }
-
 
 /// REQ-core-085: `ID` に結び付く`テスト`があるかの判定。
 /// check の requirement_without_test と status の with_tests はこの同じ判定を使う
@@ -521,7 +573,10 @@ impl TestCoverage {
             .filter_map(|id| scenarios.get(id))
             .flat_map(|scenario| scenario.about.iter().cloned())
             .collect();
-        TestCoverage { marked, covered_by_scenario }
+        TestCoverage {
+            marked,
+            covered_by_scenario,
+        }
     }
 
     /// その `ID` を`印`に含む`テスト`があるか
@@ -557,8 +612,13 @@ pub fn collect_scenarios(docs: &[IrDocument], ir_path: &str) -> BTreeMap<String,
     let mut verifications: BTreeMap<&str, Option<&str>> = BTreeMap::new();
     for doc in docs {
         for item in &doc.items {
-            if let Item::Requirement { id, verification, .. } = item {
-                verifications.entry(id).or_insert_with(|| verification.as_deref());
+            if let Item::Requirement {
+                id, verification, ..
+            } = item
+            {
+                verifications
+                    .entry(id)
+                    .or_insert_with(|| verification.as_deref());
             }
         }
     }
@@ -566,19 +626,28 @@ pub fn collect_scenarios(docs: &[IrDocument], ir_path: &str) -> BTreeMap<String,
     let mut scenarios: BTreeMap<String, ScenarioCoverage> = BTreeMap::new();
     for doc in docs {
         for item in &doc.items {
-            if let Item::Scenario { id: Some(id), line, tag_line, about, .. } = item {
+            if let Item::Scenario {
+                id: Some(id),
+                line,
+                tag_line,
+                about,
+                ..
+            } = item
+            {
                 // 要求として解決できない "@about"、"- verification:" の行の無い要求、
                 // 検証の値が4つ以外の要求、検証が "review" の要求は数えない
                 let needs_test = about.iter().any(|a| {
                     matches!(verifications.get(a.as_str()), Some(Some(v))
                         if crate::ir::VERIFICATION_VALUES.contains(v) && *v != "review")
                 });
-                scenarios.entry(id.clone()).or_insert_with(|| ScenarioCoverage {
-                    about: about.clone(),
-                    path: crate::join_display_path(ir_path, &doc.relative_path),
-                    line: tag_line.unwrap_or(*line),
-                    needs_test,
-                });
+                scenarios
+                    .entry(id.clone())
+                    .or_insert_with(|| ScenarioCoverage {
+                        about: about.clone(),
+                        path: crate::join_display_path(ir_path, &doc.relative_path),
+                        line: tag_line.unwrap_or(*line),
+                        needs_test,
+                    });
             }
         }
     }

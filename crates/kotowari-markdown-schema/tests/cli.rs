@@ -2466,7 +2466,11 @@ document:
     let doc = "| a | b | c | d |\n|---|---|---|---|\n| **太** | [参][r] | `コ` | *強* |\n\n## 要求\n\n### REQ-1: **太字** [リンク](http://x.example) [参照][r] `コード` *強調*\n\n[r]: http://example.com\n";
     let v = values_json(schema, doc);
     assert_eq!(v["items"]["name"], "太字 リンク 参照 コード 強調", "{v}");
-    assert_eq!(v["rows"], serde_json::json!([["太", "参", "コ", "強"]]), "{v}");
+    assert_eq!(
+        v["rows"],
+        serde_json::json!([["太", "参", "コ", "強"]]),
+        "{v}"
+    );
 }
 
 // @kotowari[EX-schema-059]
@@ -2482,7 +2486,10 @@ fn ex_schema_059_a_heading_whose_text_without_markup_differs_is_undeclared() {
         .find(|f| f["kind"] == "undeclared_heading")
         .unwrap_or_else(|| panic!("{json}"));
     assert_eq!(heading["line"], 4, "{json}");
-    assert!(heading["detail"].as_str().unwrap().contains("\"Req x\""), "{json}");
+    assert!(
+        heading["detail"].as_str().unwrap().contains("\"Req x\""),
+        "{json}"
+    );
 }
 
 const ITEM_BODY_SCHEMA: &str = r#"

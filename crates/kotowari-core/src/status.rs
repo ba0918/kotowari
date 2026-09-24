@@ -2,7 +2,7 @@
 
 use crate::ir::IrDocument;
 use crate::list::{self, ListItem};
-use crate::tests_discovery::{collect_scenarios, TestCoverage, TestMarker};
+use crate::tests_discovery::{TestCoverage, TestMarker, collect_scenarios};
 use crate::{Finding, TestFileTally};
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -113,7 +113,10 @@ review_with_how_to_verify={} review_without_how_to_verify={} without_examples={}
     }
     println!("{tests}");
     let findings = &result.findings;
-    println!("findings error={} notice={}", findings.error, findings.notice);
+    println!(
+        "findings error={} notice={}",
+        findings.error, findings.notice
+    );
     println!("complete {}", result.complete);
 }
 

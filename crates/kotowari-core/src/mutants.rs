@@ -152,11 +152,7 @@ fn matches(
 }
 
 /// その文面の行がファイルに1つでもあるか（REQ-core-141: 同じ文面の行が複数あればどの行にも効く）
-fn has_line_with_text(
-    sources: &BTreeMap<String, Vec<String>>,
-    file: &str,
-    text: &str,
-) -> bool {
+fn has_line_with_text(sources: &BTreeMap<String, Vec<String>>, file: &str, text: &str) -> bool {
     sources.get(file).is_some_and(|lines| {
         lines
             .iter()

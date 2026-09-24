@@ -153,7 +153,10 @@ mod tests {
     #[test]
     fn reads_relative_schema_ref_and_ignores_other_keys() {
         let ref_ = frontmatter_schema(adr()).unwrap().unwrap();
-        assert_eq!(ref_, SchemaRef::Relative("../.kotowari/schemas/adr.yaml".into()));
+        assert_eq!(
+            ref_,
+            SchemaRef::Relative("../.kotowari/schemas/adr.yaml".into())
+        );
     }
 
     // @kotowari[REQ-schema-011]
@@ -230,7 +233,9 @@ mod tests {
         let resolved = resolve_schema(doc, &ref_);
         assert_eq!(
             resolved,
-            ResolvedSchema::File(std::path::PathBuf::from("fixtures/.kotowari/schemas/adr.yaml"))
+            ResolvedSchema::File(std::path::PathBuf::from(
+                "fixtures/.kotowari/schemas/adr.yaml"
+            ))
         );
     }
 

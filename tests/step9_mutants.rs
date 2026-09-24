@@ -17,7 +17,13 @@ fn mutant(file: &str, line: u64, column: u64, name: &str, summary: &str) -> Stri
 
 /// ファイルと行と列から名前を組み立てた、結果が `summary` の変異の1件
 fn mutant_at(file: &str, line: u64, change: &str, summary: &str) -> String {
-    mutant(file, line, 5, &format!("{file}:{line}:5: {change}"), summary)
+    mutant(
+        file,
+        line,
+        5,
+        &format!("{file}:{line}:5: {change}"),
+        summary,
+    )
 }
 
 /// 結果のファイルの中身
@@ -236,7 +242,10 @@ fn req_140_timeout_is_a_notice_even_when_listed() {
     assert_eq!(v["mutants"]["timeout"], 1);
     assert_eq!(v["mutants"]["equivalent"], 0);
     // 一覧の1件の文面は今のソースにあるので古くない（REQ-core-142）
-    assert!(findings_of(&v, "equivalent_stale").is_empty(), "{findings:?}");
+    assert!(
+        findings_of(&v, "equivalent_stale").is_empty(),
+        "{findings:?}"
+    );
     assert_eq!(output.status.code(), Some(0));
 }
 
@@ -550,11 +559,7 @@ fn req_148_check_ignores_a_missing_list_file() {
         ".kotowari/config.yaml",
         "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\nmutants:\n  equivalents: docs/equivalents.yaml\n",
     );
-    let output = cmd()
-        .arg("check")
-        .current_dir(tmp.path())
-        .output()
-        .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_ne!(
         output.status.code(),
         Some(2),

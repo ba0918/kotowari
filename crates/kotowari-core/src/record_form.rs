@@ -2,8 +2,8 @@
 //! 読み取りは `sources::parse_records_file` が済ませてあり、ここはその構造だけを読む（REQ-core-136）。
 
 use crate::sources::{
-    is_decision_number, is_under_place, required_field_of, RecordsFile, SourceContext,
-    KNOWN_FIELD_NAMES,
+    KNOWN_FIELD_NAMES, RecordsFile, SourceContext, is_decision_number, is_under_place,
+    required_field_of,
 };
 use crate::{Finding, FindingKind};
 

@@ -105,7 +105,6 @@ impl RecordsFile {
             .filter(|s| DECISION_SECTIONS.contains(&s.name.as_str()) || s.name == "Superseded")
             .any(|s| s.numbered_lines.iter().any(|n| n.number == number))
     }
-
 }
 
 /// 決定の番号の形（英大文字1文字に1桁以上の数字。A26, P1, D1, R6 など）
@@ -173,7 +172,9 @@ fn parse_links(value: &str) -> Vec<RecordLink> {
             continue;
         };
         let href_end = after + 1 + offset;
-        links.push(RecordLink { href: value[after + 1..href_end].to_string() });
+        links.push(RecordLink {
+            href: value[after + 1..href_end].to_string(),
+        });
         i = href_end + 1;
     }
     links
@@ -349,7 +350,11 @@ impl SourceContext {
         let in_records_raw = is_under_place(path, &self.records_path);
         let in_adr_raw = is_under_place(path, &self.adr_path);
         let (in_records, in_adr) = if in_records_raw && in_adr_raw {
-            if self.records_path.len() >= self.adr_path.len() { (true, false) } else { (false, true) }
+            if self.records_path.len() >= self.adr_path.len() {
+                (true, false)
+            } else {
+                (false, true)
+            }
         } else {
             (in_records_raw, in_adr_raw)
         };
@@ -410,7 +415,9 @@ impl SourceContext {
 /// パスが置き場の下にあるか。置き場が空（"." を正規化したもの）なら基準の直下なので常に真
 pub fn is_under_place(path: &str, place: &str) -> bool {
     place.is_empty()
-        || (path.starts_with(place) && path.len() > place.len() && path.as_bytes()[place.len()] == b'/')
+        || (path.starts_with(place)
+            && path.len() > place.len()
+            && path.as_bytes()[place.len()] == b'/')
 }
 
 pub fn build_context(
@@ -426,7 +433,13 @@ pub fn build_context(
 
     // records ディレクトリを読む
     if records_dir.is_dir() {
-        load_all_md(&records_dir, "", &config.decisions.records, &mut records_files, &mut records_other_files)?;
+        load_all_md(
+            &records_dir,
+            "",
+            &config.decisions.records,
+            &mut records_files,
+            &mut records_other_files,
+        )?;
     }
 
     // adr ディレクトリを読む
@@ -455,9 +468,9 @@ fn load_all_md(
 
     let mut sorted = Vec::new();
     for entry in entries {
-        sorted.push(entry.map_err(|e| {
-            crate::StopReason::UnreadableFile(format!("{}: {e}", config_key))
-        })?);
+        sorted.push(
+            entry.map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", config_key)))?,
+        );
     }
     sorted.sort_by_key(|e| e.file_name());
 
@@ -520,9 +533,9 @@ fn load_all_md_as_other(
 
     let mut sorted = Vec::new();
     for entry in entries {
-        sorted.push(entry.map_err(|e| {
-            crate::StopReason::UnreadableFile(format!("{}: {e}", config_key))
-        })?);
+        sorted.push(
+            entry.map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", config_key)))?,
+        );
     }
     sorted.sort_by_key(|e| e.file_name());
 
@@ -583,13 +596,36 @@ pub fn check_sources(
             }
             let (sources, source_line) = match item {
                 // REQ-core-115: 出典の行（行が無ければ見出しの行）
-                crate::ir::Item::Requirement { sources, source_line, line, .. }
-                | crate::ir::Item::DecisionTable { sources, source_line, line, .. }
-                | crate::ir::Item::Property { sources, source_line, line, .. }
-                | crate::ir::Item::FlagEntry { sources, source_line, line, .. } => {
-                    (sources.clone(), source_line.unwrap_or(*line))
+                crate::ir::Item::Requirement {
+                    sources,
+                    source_line,
+                    line,
+                    ..
                 }
-                crate::ir::Item::Scenario { sources, tag_line, line, .. } => {
+                | crate::ir::Item::DecisionTable {
+                    sources,
+                    source_line,
+                    line,
+                    ..
+                }
+                | crate::ir::Item::Property {
+                    sources,
+                    source_line,
+                    line,
+                    ..
+                }
+                | crate::ir::Item::FlagEntry {
+                    sources,
+                    source_line,
+                    line,
+                    ..
+                } => (sources.clone(), source_line.unwrap_or(*line)),
+                crate::ir::Item::Scenario {
+                    sources,
+                    tag_line,
+                    line,
+                    ..
+                } => {
                     // シナリオはタグの行
                     (sources.clone(), tag_line.unwrap_or(*line))
                 }
@@ -601,7 +637,12 @@ pub fn check_sources(
 
             for source in &sources {
                 if let Err(bad) = ctx.check_source(source) {
-                    findings.push(Finding::new(FindingKind::SourceInvalid, path.clone(), Some(source_line), bad));
+                    findings.push(Finding::new(
+                        FindingKind::SourceInvalid,
+                        path.clone(),
+                        Some(source_line),
+                        bad,
+                    ));
                 }
             }
         }
