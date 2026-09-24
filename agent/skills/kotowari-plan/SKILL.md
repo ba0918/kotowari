@@ -94,8 +94,9 @@ that were there before the plan, and a committed problem record can keep them fa
    kotowari skill's scene check (`references/findings.md`) says. On 1, fix the plan where each
    invalid_plan finding points and run it again until it exits with 0; fixing the form is not a
    decision, so do not ask the person. On 2, show the person the stop reason from the first line
-   of standard error and stop. This is the only place in the workflow that checks the form;
-   nothing checks it again after approval. Then self-check against `references/step-template.md`
+   of standard error and stop. Finishing is the only place in the workflow that checks the form,
+   so the check must follow the plan's last edit; nothing checks it again after approval. Then
+   self-check against `references/step-template.md`
    for what the form check cannot see: every referenced requirement ID exists (`kotowari query`
    returns it; with no IR, every referenced heading exists in the specification); no step
    decides a specification question.
@@ -107,8 +108,10 @@ that were there before the plan, and a committed problem record can keep them fa
    directly. Findings that need a decision: under the four stop conditions (missing meaning or
    departure from approved content; irreversible, privileged, or dangerous operation; spreading
    accident; no progress after a changed approach) stop and ask the person now; otherwise decide
-   yourself and list the decision among step 3's judgment points.
-3. Approval: stage only the plan, give the person the path, the command to view the diff, and
+   yourself and list the decision among step 3's judgment points. If this step changed the plan,
+   run the form check again as in step 1, with the same handling of exit codes 1 and 2.
+3. Approval, only after the form check has exited with 0 on the plan's last edit: stage only the
+   plan, give the person the path, the command to view the diff, and
    the points needing their judgment. Do not paste the plan, and never let a summary be what
    they approve. The person commits, or tells you
    to. A plan is approved only once committed.
