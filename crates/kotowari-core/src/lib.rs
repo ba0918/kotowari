@@ -3,6 +3,7 @@ pub mod comment_block;
 pub mod config;
 pub mod equivalents;
 pub mod finding_map;
+pub mod fingerprint;
 pub mod ir;
 pub mod list;
 pub mod mutants;

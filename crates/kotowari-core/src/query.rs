@@ -1,6 +1,7 @@
 //! "kotowari query" の1件の組み立て（REQ-core-156、REQ-core-159、REQ-core-160、TBL-core-027）
 
-use crate::ir::{self, IrDocument, Item};
+use crate::fingerprint;
+use crate::ir::{self, IrDocument};
 use crate::list::{self, ListItem};
 use crate::tests_discovery::TestMarker;
 use serde::Serialize;
@@ -133,43 +134,12 @@ fn bodies_of(
         let lines = ir::split_lines(&doc.raw_content);
         for item in &doc.items {
             if item.id() == Some(id) {
-                bodies.insert((path.clone(), item.item_line()), body_of(item, &lines));
+                bodies.insert(
+                    (path.clone(), item.item_line()),
+                    fingerprint::body_of(item, &lines),
+                );
             }
         }
     }
     bodies
-}
-
-/// TBL-core-027: 本文の行。`項目`は見出しの次の行から、スキーマの側が返すその`項目`の最後の行まで
-/// （REQ-core-169、REQ-core-170）。`シナリオ`は "@id" のタグの行から最後のステップの行まで。
-/// 先頭と末尾の空の行は含めない
-fn body_of(item: &Item, lines: &[&str]) -> Vec<String> {
-    // 1始まりの行の範囲（両端を含む）
-    let (first, last) = match item {
-        Item::Scenario {
-            line,
-            tag_line,
-            steps,
-            ..
-        } => (
-            tag_line.unwrap_or(*line),
-            steps.last().map_or(*line, |(step_line, _)| *step_line),
-        ),
-        _ => (
-            item.item_line() + 1,
-            item.end_line().unwrap_or(item.item_line()).min(lines.len()),
-        ),
-    };
-    if first > last {
-        return Vec::new();
-    }
-
-    let mut body = &lines[first - 1..last];
-    while body.first().is_some_and(|line| line.is_empty()) {
-        body = &body[1..];
-    }
-    while body.last().is_some_and(|line| line.is_empty()) {
-        body = &body[..body.len() - 1];
-    }
-    body.iter().map(|line| line.to_string()).collect()
 }

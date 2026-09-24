@@ -1,6 +1,7 @@
 //! "kotowari list" の項目の組み立て（REQ-core-151、REQ-core-153、REQ-core-154、TBL-core-026）
 
-use crate::ir::{IrDocument, Item};
+use crate::fingerprint::fingerprint_of;
+use crate::ir::{self, IrDocument, Item};
 use crate::tests_discovery::{TestMarker, collect_scenarios};
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -36,6 +37,8 @@ pub struct RequirementItem {
     pub how_to_verify: Option<String>,
     pub sources: Vec<String>,
     pub tests: Vec<TestRef>,
+    /// その`項目`か`シナリオ`の`指紋`（REQ-core-203）
+    pub fingerprint: String,
 }
 
 /// 決定表と性質の持つ鍵（TBL-core-026。2つは同じ集合で、"kind" の値だけが違う）
@@ -49,6 +52,8 @@ pub struct ExampleItem {
     pub examples: Vec<String>,
     pub sources: Vec<String>,
     pub tests: Vec<TestRef>,
+    /// その`項目`か`シナリオ`の`指紋`（REQ-core-203）
+    pub fingerprint: String,
 }
 
 /// シナリオの持つ鍵（TBL-core-026）
@@ -61,6 +66,8 @@ pub struct ScenarioItem {
     pub line: usize,
     pub sources: Vec<String>,
     pub tests: Vec<TestRef>,
+    /// その`項目`か`シナリオ`の`指紋`（REQ-core-203）
+    pub fingerprint: String,
 }
 
 /// 問題の記録の持つ鍵（TBL-core-026）
@@ -76,6 +83,8 @@ pub struct FlagItem {
     pub relations: Vec<String>,
     pub sources: Vec<String>,
     pub tests: Vec<TestRef>,
+    /// その`項目`か`シナリオ`の`指紋`（REQ-core-203）
+    pub fingerprint: String,
 }
 
 /// 一覧の1件。鍵の集合は種類で決まるので、種類ごとの構造をそのまま出す（TBL-core-026）
@@ -199,11 +208,13 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
 
     for doc in docs {
         let path = crate::join_display_path(ir_path, &doc.relative_path);
+        let lines = ir::split_lines(&doc.raw_content);
         for item in &doc.items {
             // 記録の A6: `ID` の無い項目（"@id" の無いシナリオ、形に合わない見出し、用語）は出さない
             let Some(id) = item.id() else { continue };
             let tests = tests_by_id.get(id).cloned().unwrap_or_default();
             let examples = examples_by_about.get(id).cloned().unwrap_or_default();
+            let fingerprint = fingerprint_of(item, &lines);
             let id = id.to_string();
             let path = path.clone();
             items.push(match item {
@@ -229,6 +240,7 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
                     how_to_verify: how_to_verify.clone(),
                     sources: sources.clone(),
                     tests,
+                    fingerprint,
                 }),
                 Item::DecisionTable {
                     name,
@@ -244,6 +256,7 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
                     examples,
                     sources: sources.clone(),
                     tests,
+                    fingerprint,
                 }),
                 Item::Property {
                     name,
@@ -259,6 +272,7 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
                     examples,
                     sources: sources.clone(),
                     tests,
+                    fingerprint,
                 }),
                 Item::Scenario {
                     line,
@@ -273,6 +287,7 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
                     line: *line,
                     sources: sources.clone(),
                     tests,
+                    fingerprint,
                 }),
                 Item::FlagEntry {
                     name,
@@ -291,6 +306,7 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
                     relations: relations.clone(),
                     sources: sources.clone(),
                     tests,
+                    fingerprint,
                 }),
                 Item::GlossaryTerm { .. } => continue,
             });

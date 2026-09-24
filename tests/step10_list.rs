@@ -216,7 +216,16 @@ fn req_153_table_property_scenario_and_flag_carry_their_keys() {
     );
     let v = run_list(tmp.path());
 
-    let common = ["id", "kind", "line", "name", "path", "sources", "tests"];
+    let common = [
+        "id",
+        "kind",
+        "line",
+        "name",
+        "path",
+        "sources",
+        "tests",
+        "fingerprint",
+    ];
     let with = |extra: &[&str]| {
         let mut names: Vec<String> = common
             .iter()
