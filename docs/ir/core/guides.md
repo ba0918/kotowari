@@ -15,10 +15,10 @@ kotowari は常に、"kotowari check" と "kotowari status" で設定の "guides
 ### REQ-core-199: ガイドとテストの置き場の重なり
 
 - kind: event_driven
-- source: docs/decision/records/2026-09-24-doc-marks.md#A15, docs/decision/records/2026-09-24-doc-marks.md#A28
+- source: docs/decision/records/2026-09-24-doc-marks.md#A15, docs/decision/records/2026-09-24-doc-marks.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A36
 - verification: unit
 
-"kotowari check" で、1つのファイルが "guides.files" の glob と "tests.files" の glob の両方に当たるとき、kotowari は設定の誤りを理由に`停止`し、詳細に重なったファイルのうちパスのバイト順で最初の1つの`基準のディレクトリ`からの相対パスを出す。
+"kotowari check" で、1つのファイルが "guides.files" の glob と "tests.files" の glob の両方に当たるとき、kotowari は設定の誤りを理由に`停止`し、詳細に、重なったファイルのうちパスのバイト順で最初の1つの`基準のディレクトリ`からの相対パスに ": matched by both guides.files and tests.files" を続けた文字列を出す。
 
 ### REQ-core-200: ガイドの印を読む場所
 
@@ -62,9 +62,9 @@ kotowari は常に、`項目`と`シナリオ`の`指紋`を、次の行の並�
 ### REQ-core-205: ガイドを書く場面
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-24-doc-marks.md#A12, docs/decision/records/2026-09-24-doc-marks.md#A13, docs/decision/records/2026-09-24-doc-marks.md#A18, docs/decision/records/2026-09-24-doc-marks.md#A2, docs/decision/records/2026-09-24-doc-marks.md#A14
+- source: docs/decision/records/2026-09-24-doc-marks.md#A12, docs/decision/records/2026-09-24-doc-marks.md#A13, docs/decision/records/2026-09-24-doc-marks.md#A18, docs/decision/records/2026-09-24-doc-marks.md#A2, docs/decision/records/2026-09-24-doc-marks.md#A14, docs/decision/records/2026-09-24-doc-marks.md#A37
 - verification: review
-- how_to_verify: "agent/skills/kotowari/" の skill を読み、`ガイド`を書く場面と見直す場面があること、その場面が`ガイドの印`を置く細かさの目安（1つの`ガイドの印`に `ID` が数個まで）、節の内容に対応する`項目`を "kotowari query" で確かめて`ガイドの印`に足す手順、guide_stale の detail の今の`指紋`を`ガイドの印`に書き写す前に節を見直す手順を持つことを確かめる
+- how_to_verify: "agent/skills/kotowari/" の skill を読み、`ガイド`を書く場面と見直す場面があること、その場面が`ガイドの印`を置く細かさの目安（1つの`ガイドの印`に `ID` が数個まで）、`ガイドの印`をそれが受け持つ節の見出しの隣に1つ置く決まり、節の内容に対応する`項目`を "kotowari query" で確かめて`ガイドの印`に足す手順、guide_stale の detail の今の`指紋`を`ガイドの印`に書き写す前に節を見直す手順を持つことを確かめる
 
 kotowari の skill は常に、`ガイド`を書く場面と見直す場面を持つ。
 
@@ -123,11 +123,11 @@ Scenario: 指紋の無い印と大文字の指紋は形の誤り
   Then 3行目と5行目に invalid_marker の`誤り`が1件ずつ出て、どちらの行にも guide_stale は出ない
   And 終了コードは 1 である
 
-@id=EX-core-368 @about=REQ-core-199 @source=docs/decision/records/2026-09-24-doc-marks.md#A15
+@id=EX-core-368 @about=REQ-core-199 @source=docs/decision/records/2026-09-24-doc-marks.md#A15,docs/decision/records/2026-09-24-doc-marks.md#A36
 Scenario: ガイドとテストの置き場が重なると停止する
   Given "guides.files" が "docs/**/*.md" で、"tests.files" が "**/*" で、"docs/guide.md" がある
   When "kotowari check" を実行する
-  Then 終了コードは 2 で、停止の詳細は "docs/guide.md" を含む
+  Then 終了コードは 2 で、停止の詳細は "docs/guide.md: matched by both guides.files and tests.files" である
 
 @id=EX-core-369 @about=REQ-core-198,REQ-core-206 @source=docs/decision/records/2026-09-24-doc-marks.md#A4,docs/decision/records/2026-09-24-doc-marks.md#A17
 Scenario: guides.files が無ければガイドは読まない
