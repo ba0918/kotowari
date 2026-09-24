@@ -120,8 +120,28 @@ fn read_rule_file(base: &Path, path: &str) -> Result<Vec<RuleConfig<SupportLang>
     }
     let text = crate::read_utf8_file(&full, path)
         .map_err(|e| config_error(format!("unreadable file in tests.rules: {e}")))?;
-    parse_rules(&text)
-        .map_err(|e| config_error(format!("invalid rule in tests.rules: {path}: {e}")))
+    let invalid = |e: String| config_error(format!("invalid rule in tests.rules: {path}: {e}"));
+    if let Some(language) = unknown_language(&text) {
+        return Err(invalid(format!("unknown language: {language}")));
+    }
+    parse_rules(&text).map_err(invalid)
+}
+
+/// ルールの "language" の値だけを読むための形。ほかのキーは読み捨てる
+#[derive(serde::Deserialize)]
+struct LanguageOnly {
+    language: Option<String>,
+}
+
+/// ルールのうち、"language" が知らない言語の最初のものの値（REQ-core-189）。
+/// ast-grep と同じ `SupportLang` の読み方で突き合わせるので、大文字小文字と別名の受け方は変わらない。
+/// "language" の値だけを読めないときは、ルールとして読むほうの誤りに任せる
+fn unknown_language(yaml: &str) -> Option<String> {
+    let rules: Vec<LanguageOnly> = serde_saphyr::from_multiple(yaml).ok()?;
+    rules
+        .into_iter()
+        .filter_map(|rule| rule.language)
+        .find(|language| language.parse::<SupportLang>().is_err())
 }
 
 fn parse_rules(yaml: &str) -> Result<Vec<RuleConfig<SupportLang>>, String> {
