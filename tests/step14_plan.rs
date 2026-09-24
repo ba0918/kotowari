@@ -229,6 +229,18 @@ fn req_core_025_plan_text_output_has_one_line_per_finding() {
     assert!(lines[0].starts_with(&prefix), "{stdout}");
 }
 
+// @kotowari[REQ-core-025, REQ-core-193]
+#[test]
+fn req_core_025_plan_text_output_shows_a_missing_line_as_a_dash() {
+    let tmp = project_with_plan("");
+    let (code, stdout) = run_plan(tmp.path(), &["plan", "docs/plans/a.md", "--format", "text"]);
+    assert_eq!(code, Some(1), "{stdout}");
+    assert!(
+        stdout.contains("docs/plans/a.md:- [error] invalid_plan "),
+        "{stdout}"
+    );
+}
+
 // @kotowari[REQ-core-197, EX-core-344]
 #[test]
 fn ex_core_344_a_missing_plan_stops_as_an_unreadable_file() {
@@ -765,6 +777,23 @@ fn ex_core_355_a_line_between_the_title_and_the_first_section_is_an_error() {
 #[test]
 fn req_core_192_a_line_before_the_title_is_not_checked() {
     assert_valid_plan(&format!("前の行\n\n{VALID_PLAN}"));
+}
+
+// @kotowari[REQ-core-192]
+#[test]
+fn req_core_192_a_section_before_the_title_does_not_count_as_a_second_one() {
+    assert_valid_plan(&format!("## Goal\n\n{VALID_PLAN}"));
+}
+
+// @kotowari[REQ-core-192]
+#[test]
+fn req_core_192_a_section_before_the_title_does_not_fill_a_missing_one() {
+    let without_goal = replace_once(
+        VALID_PLAN,
+        "## Goal\n\n利用者が入力のファイルを渡すと、結果が標準出力に出る。\n\n",
+        "",
+    );
+    assert_invalid_plan(&format!("## Goal\n\n{without_goal}"));
 }
 
 // @kotowari[REQ-core-192]

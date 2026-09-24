@@ -2,7 +2,7 @@
 //!
 //! 形の読み取りはスキーマの側（mds）に任せ、IR の対応表（TBL-core-030）は通さずに、
 //! スキーマの側の指摘を1件ずつ invalid_plan へ写す（REQ-core-193）。
-//! 題名より前の空でない行は`除外`なので、そこに出た指摘は写さない（REQ-core-192）。
+//! 題名より前の空でない行は`除外`なので、空の行に置き換えてから検査する（REQ-core-192）。
 
 use crate::schema::plan_schema;
 use crate::{Finding, FindingKind};
@@ -26,11 +26,15 @@ pub fn check_plan(path: &str, content: &str) -> Vec<Finding> {
     // 構文の誤りを持たず、読み取りは失敗しない。先頭の frontmatter は中身を見ずに飛ばす
     // （REQ-core-191）
     let document = Document::parse(content).expect("Markdown without MDX always parses");
-    let title_line = document.titles.first().map(|title| title.line);
-    let before_title = |line: Option<usize>| line.zip(title_line).is_some_and(|(l, t)| l < t);
+    // 題名より前の節が必須の節を満たしたり、題名の後の節と重なって数えられたりしないよう、
+    // 行の番号を保ったまま空にしてから読み直す
+    let document = match document.titles.first() {
+        Some(title) => Document::parse(&blank_lines_before(content, title.line))
+            .expect("Markdown without MDX always parses"),
+        None => document,
+    };
     validate(&schema, &document, schema.open)
         .into_iter()
-        .filter(|f| !before_title(f.line))
         .map(|f| {
             Finding::new(
                 FindingKind::InvalidPlan,
@@ -38,6 +42,21 @@ pub fn check_plan(path: &str, content: &str) -> Vec<Finding> {
                 f.line,
                 format!("{}: {}", f.kind.as_str(), f.detail),
             )
+        })
+        .collect()
+}
+
+/// 1始まりで `line` 行目より前の行を、改行を残して空にする
+fn blank_lines_before(content: &str, line: usize) -> String {
+    content
+        .split_inclusive('\n')
+        .enumerate()
+        .map(|(i, text)| {
+            if i + 1 < line {
+                &text[text.trim_end_matches(['\r', '\n']).len()..]
+            } else {
+                text
+            }
         })
         .collect()
 }
