@@ -33,34 +33,6 @@ impl DocKind {
     }
 }
 
-/// 要求の種類
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum RequirementKind {
-    EventDriven,
-    StateDriven,
-    Ubiquitous,
-    Prohibition,
-    Invariant,
-    Algorithm,
-}
-
-/// 検証の種類
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Verification {
-    Unit,
-    Property,
-    Proof,
-    Review,
-}
-
-/// 問題の記録の種類
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum FlagKind {
-    Contradiction,
-    Gap,
-    Ambiguity,
-}
-
 /// 項目の ID の種別
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum IdPrefix {
