@@ -676,6 +676,7 @@ dependencies = [
  "ast-grep-language",
  "globset",
  "kotowari-markdown-schema",
+ "markdown",
  "regex",
  "serde",
  "serde-saphyr",

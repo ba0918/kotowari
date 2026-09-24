@@ -359,3 +359,162 @@ fn req_152_list_and_query_do_not_read_guides_and_do_not_stop_on_their_overlap() 
         assert_eq!(code, Some(0), "{args:?}: {stderr}");
     }
 }
+
+// --- REQ-core-200、REQ-core-201、REQ-core-202、TBL-core-036: ガイドの印を読む ---
+
+/// EX-core-362 の`IR`と、"REQ-001" に印を付けたテストと、`ガイド`の "guides/a.md" を作る。
+/// `ガイド`を除けば`指摘`は出ない
+fn write_ex_362_project(tmp: &Path, guide: &str) {
+    make_project(tmp, GUIDES_MD);
+    write(tmp, "docs/ir/a.md", &ir_doc(REQ_001, ""));
+    write(
+        tmp,
+        "tests/a.rs",
+        "// @kotowari[REQ-001]\n#[test]\nfn req_001() {}\n",
+    );
+    write(tmp, "guides/a.md", guide);
+}
+
+/// "kotowari check --format json" を走らせて (終了コード, JSON) を返す
+fn check_json(tmp: &Path) -> (Option<i32>, serde_json::Value) {
+    let (code, stdout, stderr) = run(tmp, &["check", "--format", "json"]);
+    assert_ne!(code, Some(2), "{stderr}");
+    (code, json(&stdout))
+}
+
+/// その path への`指摘`の (kind, line, detail)
+fn findings_on(v: &serde_json::Value, path: &str) -> Vec<(String, u64, String)> {
+    v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["path"] == path)
+        .map(|f| {
+            (
+                f["kind"].as_str().unwrap().to_string(),
+                f["line"].as_u64().unwrap(),
+                f["detail"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect()
+}
+
+// @kotowari[REQ-core-198, REQ-core-200, REQ-core-206]
+#[test]
+fn req_200_the_ex_362_project_without_a_guide_mark_has_no_findings() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_362_project(tmp.path(), "# ガイド\n");
+    let (code, v) = check_json(tmp.path());
+    assert_eq!(code, Some(0), "{v}");
+    assert_eq!(v["findings"], serde_json::json!([]));
+    assert_eq!(v["guides"], serde_json::json!({"files": 1, "marks": 0}));
+}
+
+// @kotowari[REQ-core-200, EX-core-366]
+#[test]
+fn ex_366_marks_outside_comments_and_inside_code_are_not_read() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_362_project(
+        tmp.path(),
+        concat!(
+            "# ガイド\n\n",
+            "```\n<!-- @kotowari[REQ-001] -->\n```\n\n",
+            "@kotowari[REQ-001] の形で書く\n\n",
+            // 字下げの形のコードブロックとコードスパンも読まない
+            "    <!-- @kotowari[REQ-001] -->\n\n",
+            "本文の `<!-- @kotowari[REQ-001] -->` は例\n",
+        ),
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(findings_on(&v, "guides/a.md"), vec![], "{v}");
+    assert_eq!(v["guides"]["marks"], 0);
+}
+
+// @kotowari[REQ-core-202, TBL-core-036, TBL-core-008, TBL-core-019, EX-core-367]
+#[test]
+fn ex_367_a_mark_without_fingerprint_and_an_uppercase_fingerprint_are_invalid() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_362_project(
+        tmp.path(),
+        "# ガイド\n\n<!-- @kotowari[REQ-001] -->\n\n<!-- @kotowari[REQ-001:8C0D7663] -->\n",
+    );
+    let (code, stdout, _) = run(tmp.path(), &["check", "--format", "text"]);
+    assert_eq!(code, Some(1), "{stdout}");
+    assert_eq!(
+        stdout,
+        "guides/a.md:3 [error] invalid_marker <!-- @kotowari[REQ-001] -->\n\
+guides/a.md:5 [error] invalid_marker <!-- @kotowari[REQ-001:8C0D7663] -->\n"
+    );
+}
+
+// @kotowari[REQ-core-202, TBL-core-036, EX-core-373]
+#[test]
+fn ex_373_one_malformed_entry_leaves_the_whole_mark_unmatched() {
+    let tmp = TempDir::new().unwrap();
+    let line = "<!-- @kotowari[REQ-001:00000000, foo:51b1f3da] -->";
+    write_ex_362_project(tmp.path(), &format!("# ガイド\n\n{line}\n"));
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(
+        findings_on(&v, "guides/a.md"),
+        vec![("invalid_marker".to_string(), 3, line.to_string())]
+    );
+    assert_eq!(v["guides"]["marks"], 0);
+}
+
+// @kotowari[REQ-core-200, TBL-core-036, EX-core-374]
+#[test]
+fn ex_374_spaces_inside_the_brackets_are_allowed_and_text_after_the_comment_is_not_read() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_362_project(
+        tmp.path(),
+        "# ガイド\n\n<!-- @kotowari[ REQ-001 : 51b1f3da ] -->\n\n<!-- a --> @kotowari[REQ-001:00000000]\n",
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(findings_on(&v, "guides/a.md"), vec![], "{v}");
+    assert_eq!(v["guides"]["marks"], 1);
+}
+
+// @kotowari[REQ-core-200, REQ-core-206]
+#[test]
+fn req_200_inline_comments_and_several_marks_in_one_comment_are_all_read() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_362_project(
+        tmp.path(),
+        concat!(
+            "# ガイド\n\n",
+            "本文 <!-- @kotowari[REQ-001:51b1f3da] --> の続き\n\n",
+            "<!-- @kotowari[REQ-001:51b1f3da] @kotowari[REQ-001:51b1f3da] -->\n\n",
+            "<!--\n  @kotowari[REQ-001:51b1f3da]\n-->\n",
+        ),
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(findings_on(&v, "guides/a.md"), vec![], "{v}");
+    assert_eq!(v["guides"]["marks"], 4);
+}
+
+// @kotowari[REQ-core-202, TBL-core-008]
+#[test]
+fn req_202_an_empty_mark_and_a_mark_without_its_closing_bracket_are_invalid() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_362_project(
+        tmp.path(),
+        "# ガイド\n\n<!-- @kotowari[ , ] -->\n\n<!--\n  @kotowari[REQ-001:51b1f3da\n  ]\n-->\n",
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(
+        findings_on(&v, "guides/a.md"),
+        vec![
+            (
+                "invalid_marker".to_string(),
+                3,
+                "<!-- @kotowari[ , ] -->".to_string()
+            ),
+            (
+                "invalid_marker".to_string(),
+                6,
+                "  @kotowari[REQ-001:51b1f3da".to_string()
+            ),
+        ]
+    );
+    assert_eq!(v["guides"]["marks"], 0);
+}
