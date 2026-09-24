@@ -504,6 +504,32 @@ fn req_200_inline_comments_and_several_marks_in_one_comment_are_all_read() {
     assert_eq!(v["guides"]["marks"], 4);
 }
 
+// @kotowari[REQ-core-200, REQ-core-204]
+#[test]
+fn req_200_each_comment_of_one_html_block_is_read_and_the_text_between_them_is_not() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_362_project(
+        tmp.path(),
+        concat!(
+            "# ガイド\n\n",
+            "<!-- @kotowari[REQ-001:51b1f3da] --> @kotowari[REQ-001:00000000] ",
+            "<!-- @kotowari[REQ-001:11111111] -->\n\n",
+            "<!-- a <!--> @kotowari[REQ-001:00000000] -->\n",
+        ),
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(
+        findings_on(&v, "guides/a.md"),
+        vec![(
+            "guide_stale".to_string(),
+            3,
+            "REQ-001 11111111 51b1f3da".to_string()
+        )],
+        "{v}"
+    );
+    assert_eq!(v["guides"]["marks"], 2);
+}
+
 // @kotowari[REQ-core-202, TBL-core-008]
 #[test]
 fn req_202_an_empty_mark_and_a_mark_without_its_closing_bracket_are_invalid() {
