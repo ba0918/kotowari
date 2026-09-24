@@ -676,10 +676,12 @@ dependencies = [
  "ast-grep-language",
  "globset",
  "kotowari-markdown-schema",
+ "markdown",
  "regex",
  "serde",
  "serde-saphyr",
  "serde_json",
+ "sha2",
  "walkdir",
 ]
 

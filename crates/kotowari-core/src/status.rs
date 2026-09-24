@@ -1,5 +1,6 @@
 //! "kotowari status" の集計（REQ-core-162、REQ-core-164、REQ-core-165、TBL-core-028）
 
+use crate::guides::GuideTally;
 use crate::ir::IrDocument;
 use crate::list::{self, ListItem};
 use crate::tests_discovery::{TestCoverage, TestMarker, collect_scenarios};
@@ -15,6 +16,8 @@ pub struct StatusResult {
     pub requirements: Requirements,
     pub scenarios: Scenarios,
     pub tests: Tests,
+    /// "kotowari check" の "guides" と同じ（TBL-core-005）
+    pub guides: GuideTally,
     pub findings: Findings,
     /// REQ-core-165: `誤り`が0件で、かつ`問題の記録`の`項目`が0件のときだけ true
     pub complete: bool,
@@ -112,6 +115,10 @@ review_with_how_to_verify={} review_without_how_to_verify={} without_examples={}
         tests.push_str(&format!(" {extension}={}", tally.files));
     }
     println!("{tests}");
+    println!(
+        "guides files={} marks={}",
+        result.guides.files, result.guides.marks
+    );
     let findings = &result.findings;
     println!(
         "findings error={} notice={}",
@@ -126,6 +133,7 @@ pub fn build(
     ir_path: &str,
     markers: &[TestMarker],
     tally: BTreeMap<String, TestFileTally>,
+    guides: GuideTally,
     findings: &[Finding],
 ) -> StatusResult {
     // 数える母集団は "kotowari list" の "items" と同じ（`ID` を持つ項目とシナリオ）
@@ -179,6 +187,7 @@ pub fn build(
             marks: markers.len(),
             files: tally,
         },
+        guides,
         findings: counts,
     }
 }

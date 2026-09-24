@@ -192,6 +192,7 @@ fn req_156_item_has_body_and_referenced_by() {
             "body",
             "definition",
             "examples",
+            "fingerprint",
             "how_to_verify",
             "id",
             "kind",
