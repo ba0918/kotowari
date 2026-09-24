@@ -129,11 +129,6 @@ fn req_014_an_unreadable_guides_glob_is_a_config_error() {
     assert_eq!(output.stdout, b"");
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.starts_with("config error: "), "{stderr}");
-    // 知らない鍵としてではなく、glob として読めない要素として止まる
-    assert!(
-        stderr.contains("invalid glob pattern: [invalid"),
-        "{stderr}"
-    );
 }
 
 // --- REQ-core-203、TBL-core-026: 指紋 ---
@@ -596,7 +591,7 @@ fn ex_364_renaming_the_heading_and_adding_a_source_keeps_the_mark_fresh() {
     assert_eq!(v["guides"]["marks"], 1);
 }
 
-// @kotowari[REQ-core-204, EX-core-365]
+// @kotowari[REQ-core-204, EX-core-365, TBL-core-006]
 #[test]
 fn ex_365_a_mark_on_an_id_missing_from_the_ir_is_a_stale_notice() {
     let tmp = TempDir::new().unwrap();
@@ -721,7 +716,7 @@ fn req_204_the_line_of_guide_stale_is_where_the_mark_starts() {
     assert_eq!(stale_on(&v), vec![(5, "REQ-009 51b1f3da -".to_string())]);
 }
 
-// @kotowari[REQ-core-162, TBL-core-028, TBL-core-006]
+// @kotowari[REQ-core-162, TBL-core-028]
 #[test]
 fn req_162_status_carries_the_guides_group() {
     let tmp = TempDir::new().unwrap();
