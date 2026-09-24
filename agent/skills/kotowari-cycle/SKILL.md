@@ -145,7 +145,10 @@ it was closed `accepted`. Reviewers only evaluate; the fixer only reports commit
 - A delegate hands back a missing design decision: ending 4.
 - An optional seat rewrote the worktree: as with a `security` finding, pause the whole loop before
   delegating anything and show the person the changed files. Their answer says whether the
-  changes are reverted before the loop continues or the loop continues as is.
+  changes are reverted before the loop continues or the loop continues as is. The person, not
+  cycle, performs the revert or commits the changes they keep. The loop resumes only when the
+  worktree matches the snapshot taken before that seat ran, or when the kept changes are
+  committed; committed kept changes are covered by the next review like any other commit.
 
 ## Endings
 
