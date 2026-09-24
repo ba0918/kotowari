@@ -305,7 +305,7 @@ fn req_199_only_the_first_overlapping_file_in_byte_order_is_reported() {
     assert!(!stderr.contains("notes/b.md"), "{stderr}");
 }
 
-// @kotowari[REQ-core-198, REQ-core-206, EX-core-369]
+// @kotowari[REQ-core-198, REQ-core-206, TBL-core-005, EX-core-369]
 #[test]
 fn ex_369_without_the_guides_key_no_guide_is_read() {
     let tmp = TempDir::new().unwrap();
