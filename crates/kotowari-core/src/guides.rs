@@ -50,7 +50,9 @@ pub fn read_guides(
         .iter()
         .find(|(rel, _)| test_files.binary_search(rel).is_ok())
     {
-        return Err(StopReason::ConfigError(overlap.clone()));
+        return Err(StopReason::ConfigError(format!(
+            "{overlap}: matched by both guides.files and tests.files"
+        )));
     }
     let mut entries = Vec::new();
     for (rel, abs) in &files {

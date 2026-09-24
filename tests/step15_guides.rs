@@ -268,7 +268,10 @@ fn ex_368_check_stops_when_a_guide_is_also_a_test_file() {
     assert_eq!(code, Some(2), "{stdout}");
     assert_eq!(stdout, "");
     assert!(stderr.starts_with("config error: "), "{stderr}");
-    assert!(stderr.contains("docs/guide.md"), "{stderr}");
+    assert!(
+        stderr.contains("docs/guide.md: matched by both guides.files and tests.files"),
+        "{stderr}"
+    );
 }
 
 // @kotowari[REQ-core-163, REQ-core-199, EX-core-368]
@@ -281,7 +284,10 @@ fn ex_368_status_stops_when_a_guide_is_also_a_test_file() {
     assert_eq!(code, Some(2), "{stdout}");
     assert_eq!(stdout, "");
     assert!(stderr.starts_with("config error: "), "{stderr}");
-    assert!(stderr.contains("docs/guide.md"), "{stderr}");
+    assert!(
+        stderr.contains("docs/guide.md: matched by both guides.files and tests.files"),
+        "{stderr}"
+    );
 }
 
 // @kotowari[REQ-core-199, TBL-core-020]
