@@ -133,11 +133,7 @@ pub fn collect_test_files(
     {
         // REQ-core-018（A96）: 走査でディレクトリが読めなければ停止する
         let entry = entry.map_err(|e| {
-            let where_ = e
-                .path()
-                .map(|p| p.strip_prefix(base).unwrap_or(p))
-                .map(|p| p.to_string_lossy().replace('\\', "/"))
-                .unwrap_or_default();
+            let where_ = e.path().map(|p| relative_to(base, p)).unwrap_or_default();
             crate::StopReason::UnreadableFile(format!("{where_}: {e}"))
         })?;
         // ファイルまたはファイルのシンボリックリンク
@@ -146,26 +142,14 @@ pub fn collect_test_files(
             std::fs::metadata(entry.path())
                 .map(|m| m.is_file())
                 .map_err(|e| {
-                    let rel = entry
-                        .path()
-                        .strip_prefix(base)
-                        .unwrap_or(entry.path())
-                        .to_string_lossy()
-                        .replace('\\', "/");
+                    let rel = relative_to(base, entry.path());
                     crate::StopReason::UnreadableFile(format!("{rel}: {e}"))
                 })?
         } else {
             entry.file_type().is_file()
         };
         if is_file {
-            let rel = entry
-                .path()
-                .strip_prefix(base)
-                .unwrap_or(entry.path())
-                .to_string_lossy()
-                .to_string();
-            // Windows パス区切りを / に
-            let rel = rel.replace('\\', "/");
+            let rel = relative_to(base, entry.path());
             if globset.is_match(&rel) {
                 files.push((rel, entry.path().to_string_lossy().to_string()));
             }
@@ -174,6 +158,14 @@ pub fn collect_test_files(
 
     files.sort();
     Ok(files)
+}
+
+/// 基準のディレクトリからの相対パスを、Windows の区切りも "/" にして作る。基準の外のパスは相対にしない
+fn relative_to(base: &Path, path: &Path) -> String {
+    path.strip_prefix(base)
+        .unwrap_or(path)
+        .to_string_lossy()
+        .replace('\\', "/")
 }
 
 /// `問い合わせのある言語`のファイルのテストを発見し、`直前のコメントの塊`の印を結び付ける。
