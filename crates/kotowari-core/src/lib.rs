@@ -889,16 +889,16 @@ pub fn run_mutants(
     };
 
     let sources = read_sources(&base, &list.entries);
-    let (mut findings, counts) =
+    let (mut findings, mutant_counts) =
         mutants::check_outcomes(&outcomes, &list.entries, &list_path, &sources);
     findings.extend(list.findings);
     sort_findings(&mut findings);
-    let kinds = count_findings(&findings);
+    let counts = count_findings(&findings);
 
     Ok(mutants::MutantsResult {
         findings,
-        counts: kinds,
-        mutants: counts,
+        counts,
+        mutants: mutant_counts,
     })
 }
 
