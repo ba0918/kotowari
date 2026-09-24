@@ -231,6 +231,17 @@ fn req_203_crlf_line_endings_do_not_change_the_fingerprint() {
         &ir_doc(REQ_001, "").replace('\n', "\r\n"),
     );
     assert_eq!(listed_fingerprint(tmp.path(), "REQ-001"), "51b1f3da");
+    // シナリオのステップの行にも "\r" を入れない
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &scenario_doc(
+            "@id=EX-001 @about=REQ-001 @source=docs/decision/records/r.md#A1",
+            "例",
+        )
+        .replace('\n', "\r\n"),
+    );
+    assert_eq!(listed_fingerprint(tmp.path(), "EX-001"), "ec19e8a0");
 }
 
 // --- REQ-core-198、REQ-core-199、REQ-core-206: ガイドのファイルを集める ---
