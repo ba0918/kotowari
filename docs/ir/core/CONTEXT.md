@@ -17,6 +17,7 @@
 | 用語集 | IR の置き場のどのディレクトリにも置ける "CONTEXT.md"。文書から見えるのは、その文書の連鎖にある用語集 | docs/decision/records/records.md#A41, docs/decision/records/records.md#A56, docs/decision/records/2026-09-16-ir-tree.md#A3, docs/decision/records/2026-09-16-ir-tree.md#A8 |
 | 連鎖 | 文書のあるディレクトリから IR の置き場の根までの各ディレクトリの "CONTEXT.md" の並び。根に近い方が先 | docs/decision/records/2026-09-16-ir-tree.md#A3, docs/decision/records/2026-09-16-ir-tree.md#A4 |
 | 用語 | 文書の連鎖にある用語集の表の用語の列にある語。IR の文の中ではバッククォートで囲む | docs/decision/records/records.md#A31, docs/decision/records/records.md#A42, docs/decision/records/2026-09-16-ir-tree.md#A3 |
+| 計画書 | kotowari-plan の工程が書く実装の手順の Markdown の文書。"kotowari plan" が本体に同梱したスキーマで形を検査する | docs/decision/records/2026-09-24-plan-schema.md#A9, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A7 |
 | 問題の記録 | IR の置き場のどのディレクトリにも置ける "FLAGS.md" | docs/decision/records/records.md#A28, docs/decision/records/records.md#A56, docs/decision/records/2026-09-16-ir-tree.md#A8 |
 | 題名 | 文書の "# " で始まる行 | docs/decision/records/records.md#A42 |
 | 文書が扱う範囲 | 題名の後、最初の "## " か "### " より前にある空でない行 | docs/decision/records/records.md#A30, docs/decision/records/records.md#A55 |

@@ -1,6 +1,6 @@
 # スキルの references と本体の一致
 
-スキル kotowari の references（"agent/skills/kotowari/references/" の文書）に写した本体の値が本体と一致することの検査を扱う。この検査は kotowari の振る舞いではなく、このリポジトリのテストが行う。突き合わせる相手は本体のコードが持つ値であり、IR の表ではない。
+"agent/skills/" の下のスキルの references（"agent/skills/kotowari/references/" と "agent/skills/kotowari-plan/references/" の文書）に写した本体の値や形が本体と一致することの検査を扱う。この検査は kotowari の振る舞いではなく、このリポジトリのテストが行う。突き合わせる相手は本体のコードが持つ値であり、IR の表ではない。
 
 ## Requirements
 
@@ -27,3 +27,11 @@
 - verification: unit
 
 このリポジトリのテストは常に、"agent/skills/kotowari/references/findings.md" のヘッダの1列目が「Message」の表について、ヘッダと区切りの行を除いた1列目の集合が、本体のコードが`停止`の理由として標準エラーの1行目に出す文言の集合と等しいことを確かめる。
+
+### REQ-core-195: 例の計画書の一致
+
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-24-plan-schema.md#A13, docs/decision/records/2026-09-23-skill-distribution.md#A1, docs/decision/records/2026-09-24-plan-schema.md#A34
+- verification: unit
+
+このリポジトリのテストは常に、"agent/skills/kotowari-plan/references/plan-example.md" を本体のコードで`計画書`として読んだとき、`指摘`が1件も出ないことを確かめる。

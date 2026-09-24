@@ -42,10 +42,10 @@ kotowari は、`除外`に列挙していない入力を、`停止`も`指摘`�
 ### REQ-core-175: 置き換えで増える停止の境界
 
 - kind: event_driven
-- source: docs/decision/records/2026-09-22-ir-engine.md#A9, docs/decision/records/2026-09-22-ir-engine.md#A20, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A36
+- source: docs/decision/records/2026-09-22-ir-engine.md#A9, docs/decision/records/2026-09-22-ir-engine.md#A20, docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/2026-09-22-ir-engine.md#A36, docs/decision/records/2026-09-24-plan-schema.md#A11
 - verification: unit
 
-スキーマの側から受けた値を kotowari の型へ写せないとき、または対応表（TBL-core-030）に写し先が無いとき、kotowari は TBL-core-018 に1つだけ足した理由で`停止`する。`IR`の文書が読めない、UTF-8 でないといった利用者の入力で起きる`停止`の理由と文言は変えず、スキーマを読めないことを理由とする`停止`は持たない。
+`IR`の文書について、スキーマの側から受けた値を kotowari の型へ写せないとき、または対応表（TBL-core-030）に写し先が無いとき、kotowari は TBL-core-018 に1つだけ足した理由で`停止`する。`IR`の文書が読めない、UTF-8 でないといった利用者の入力で起きる`停止`の理由と文言は変えず、スキーマを読めないことを理由とする`停止`は持たない。
 
 ### REQ-core-176: 形の指摘が出た文書も文書をまたぐ検査を受ける
 
@@ -72,12 +72,12 @@ kotowari は常に、スキーマの側の`指摘`が出た文書でも、取れ
 
 ### TBL-core-020: 停止の詳細
 
-- source: docs/decision/records/2026-09-22-ir-engine.md#A73, docs/decision/records/records.md#A137, docs/decision/records/records.md#A147, docs/decision/records/records.md#A160, docs/decision/records/records.md#A164, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A6, docs/decision/records/2026-09-20-query-status.md#A18
+- source: docs/decision/records/2026-09-22-ir-engine.md#A73, docs/decision/records/records.md#A137, docs/decision/records/records.md#A147, docs/decision/records/records.md#A160, docs/decision/records/records.md#A164, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A6, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A30
 
 | 理由 | 詳細（英語） |
 |---|---|
 | 設定の誤り | 設定ファイルの基準のディレクトリからの相対パス（基準の外にあれば "../" を含む）と、誤りの説明。等価の一覧の誤り（REQ-core-148）では等価の一覧のファイルの相対パスと、誤りの説明 |
-| 引数の誤り | 説明の文と、問題の引数の文字。引数が1つも無いときと、1つ目の位置引数が無いときは "expected command: check, list, mutants, query or status"。"kotowari query" で `ID` を持つものが無いときは "unknown id: " と位置引数の文字（REQ-core-157） |
+| 引数の誤り | 説明の文と、問題の引数の文字。引数が1つも無いときと、1つ目の位置引数が無いときは "expected command: check, list, mutants, plan, query or status"。"kotowari query" で `ID` を持つものが無いときは "unknown id: " と位置引数の文字（REQ-core-157） |
 | 読めないファイル | 相対パスと、OS の誤りの文。カレントディレクトリを取得できないときは "current directory: " と OS の誤りの文 |
 | UTF-8 でないファイル | 相対パス |
 | 結果の誤り | 結果のファイルの相対パスと、誤りの説明 |

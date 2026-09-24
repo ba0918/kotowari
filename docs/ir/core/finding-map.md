@@ -15,10 +15,10 @@
 ### REQ-core-172: 写し先の無い指摘は停止にする
 
 - kind: event_driven
-- source: docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/records.md#A100, docs/decision/records/records.md#A101, docs/decision/records/2026-09-23-ir-engine-gaps.md#A27, docs/decision/records/2026-09-23-ir-engine-gaps.md#A36
+- source: docs/decision/records/2026-09-22-ir-engine.md#A28, docs/decision/records/records.md#A100, docs/decision/records/records.md#A101, docs/decision/records/2026-09-23-ir-engine-gaps.md#A27, docs/decision/records/2026-09-23-ir-engine-gaps.md#A36, docs/decision/records/2026-09-24-plan-schema.md#A11
 - verification: unit
 
-対応表（TBL-core-030）に行の無い種類の`指摘`をスキーマの側から受けたとき、または写し先を「発生しない」と書いた行の種類の`指摘`を受けたとき、kotowari は`停止`し、その`指摘`を黙って捨てない。写し先を「出さない」と書いた行の`指摘`だけは`停止`せずに捨て、「出さない」と書けるのは`除外`に列挙した入力の行だけである。
+`IR`の文書について、対応表（TBL-core-030）に行の無い種類の`指摘`をスキーマの側から受けたとき、または写し先を「発生しない」と書いた行の種類の`指摘`を受けたとき、kotowari は`停止`し、その`指摘`を黙って捨てない。写し先を「出さない」と書いた行の`指摘`だけは`停止`せずに捨て、「出さない」と書けるのは`除外`に列挙した入力の行だけである。
 
 ## Decision tables
 

@@ -55,9 +55,9 @@ kotowari は常に、"kotowari check" の JSON の最上位の "tests" に、読
 
 ### TBL-core-005: check の JSON の最上位
 
-- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#出力, docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A55
+- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#出力, docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-24-plan-schema.md#A17
 
-"kotowari check" の JSON の最上位。"kotowari mutants" の JSON の最上位は TBL-core-025。
+"kotowari check" の JSON の最上位。"kotowari mutants" の JSON の最上位は TBL-core-025、"kotowari plan" の JSON の最上位は REQ-core-194。
 
 | 鍵 | 中身 |
 |---|---|
@@ -69,13 +69,13 @@ kotowari は常に、"kotowari check" の JSON の最上位の "tests" に、読
 
 ### TBL-core-006: 指摘の鍵
 
-- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A61, docs/decision/records/records.md#A106, docs/decision/records/2026-09-16-ir-tree.md#A13, docs/decision/records/2026-09-16-notice.md#A1, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43
+- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A61, docs/decision/records/records.md#A106, docs/decision/records/2026-09-16-ir-tree.md#A13, docs/decision/records/2026-09-16-notice.md#A1, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-24-plan-schema.md#A26
 
 | 鍵 | 中身 |
 |---|---|
 | kind | 指摘の種類（TBL-core-008、TBL-core-009） |
 | severity | error か notice |
-| path | 基準のディレクトリからの相対パス。正規化した置き場と、置き場からの文書の相対パスを "/" でつなぐ（REQ-core-110）。"kotowari mutants" の指摘では変異の結果のファイルか等価の一覧のファイル（REQ-core-139、REQ-core-140、REQ-core-142、REQ-core-143） |
+| path | 基準のディレクトリからの相対パス。正規化した置き場と、置き場からの文書の相対パスを "/" でつなぐ（REQ-core-110）。"kotowari mutants" の指摘では変異の結果のファイルか等価の一覧のファイル（REQ-core-139、REQ-core-140、REQ-core-142、REQ-core-143）。"kotowari plan" の指摘では`計画書`のファイル（REQ-core-193） |
 | line | 行（1始まり）。文書全体への指摘は null |
 | detail | 種類ごとに TBL-core-008、TBL-core-009 で決めた文字列 |
 

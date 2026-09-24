@@ -7,10 +7,10 @@
 ### REQ-core-011: 設定ファイルの場所
 
 - kind: event_driven
-- source: docs/decision/records/records.md#A2, docs/decision/records/records.md#A37
+- source: docs/decision/records/records.md#A2, docs/decision/records/records.md#A37, docs/decision/records/2026-09-24-plan-schema.md#A15
 - verification: unit
 
-"--config" を受けないとき、kotowari は`基準のディレクトリ`の ".kotowari/config.yaml" を`設定ファイル`として読む。
+"kotowari plan" でないコマンドで "--config" を受けないとき、kotowari は`基準のディレクトリ`の ".kotowari/config.yaml" を`設定ファイル`として読む。
 
 ### REQ-core-012: 設定ファイルが無いとき
 

@@ -62,7 +62,7 @@ kotowari は常に、スキーマに`出典`の "- source:" の行の行番号�
 - verification: review
 - how_to_verify: `.kotowari/schemas/ir.yaml`、`.kotowari/schemas/context.yaml`、`.kotowari/schemas/flags.yaml` を読み、3つとも最上位に "reading: line" を書いていること、flags.yaml が`問題の記録`の`項目`を文書の直下（"document.item"、"flags"）と "## Flags" の節の下（"flags_in_section"）の両方に宣言していること、context.yaml の表の規則が "header: [Term, Meaning, Source]" と "select: first" を書いていること、ir.yaml の`項目`と flags.yaml の`問題の記録`の`項目`の抽出が "end" を取ることを確認する
 
-kotowari は常に、取り込んだ3つのスキーマ（`話題ごとの文書`、`用語集`、`問題の記録`）に "reading: line" を宣言し、`問題の記録`のスキーマには`問題の記録`の`項目`を文書の直下（"flags" に抽出する）と "## Flags" の節の下（"flags_in_section" に抽出する）の両方に宣言し、`用語集`のスキーマには表のヘッダを "Term"、"Meaning"、"Source" と宣言して "select: first" を添え、`話題ごとの文書`と`問題の記録`のスキーマには`項目`の最後の行（"end"）を取る宣言を置く。エンジンの既定の読み方には頼らない。
+kotowari は常に、取り込んだ`IR`の3つのスキーマ（`話題ごとの文書`、`用語集`、`問題の記録`）に "reading: line" を宣言し、`問題の記録`のスキーマには`問題の記録`の`項目`を文書の直下（"flags" に抽出する）と "## Flags" の節の下（"flags_in_section" に抽出する）の両方に宣言し、`用語集`のスキーマには表のヘッダを "Term"、"Meaning"、"Source" と宣言して "select: first" を添え、`話題ごとの文書`と`問題の記録`のスキーマには`項目`の最後の行（"end"）を取る宣言を置く。エンジンの既定の読み方には頼らない。
 
 ### REQ-core-173: kotowari に残す検査
 
