@@ -91,13 +91,15 @@ pub fn parse_markers_in_line(line: &str, line_num: usize) -> Vec<Marker> {
     markers
 }
 
-/// テストのファイルを glob で収集する
-pub fn collect_test_files(
+/// glob の一覧に当たるファイルを集める。`テストのファイル`（"tests.files"）と`ガイド`（"guides.files"）が
+/// 同じ走査と`除外`を使う（REQ-core-019、REQ-core-079、REQ-core-018、REQ-core-198）。
+/// (`基準のディレクトリ`からの相対パス, 絶対パス) を相対パスのバイト順に並べて返す
+pub fn collect_files(
     base: &Path,
-    config: &Config,
+    patterns: &[String],
 ) -> Result<Vec<(String, String)>, crate::StopReason> {
     let mut builder = GlobSetBuilder::new();
-    for pattern in &config.tests.files {
+    for pattern in patterns {
         // glob の構文は Config::parse で検証済み
         let g = Glob::new(pattern)
             .map_err(|e| crate::StopReason::ConfigError(format!("invalid glob: {pattern}: {e}")))?;
@@ -376,8 +378,8 @@ pub fn discover_and_check(
     known_ids: &BTreeSet<String>,
     ir_path: &str,
     findings: &mut Vec<Finding>,
-) -> Result<(BTreeMap<String, crate::TestFileTally>, Vec<TestMarker>), crate::StopReason> {
-    let test_files = collect_test_files(base, config)?;
+) -> Result<DiscoveredTests, crate::StopReason> {
+    let test_files = collect_files(base, &config.tests.files)?;
     let queries = TestQueries::load(base, config)?;
     let mut all_tests: Vec<DiscoveredTest> = Vec::new();
     // REQ-core-153: list の "tests" の元。check は使わない
@@ -426,7 +428,21 @@ pub fn discover_and_check(
 
     check_missing_tests(docs, ir_path, &markers, &all_tests, findings);
 
-    Ok((tally, markers))
+    Ok(DiscoveredTests {
+        tally,
+        markers,
+        files: test_files.into_iter().map(|(rel, _)| rel).collect(),
+    })
+}
+
+/// テストの発見の結果
+pub struct DiscoveredTests {
+    /// TBL-core-021: 読んだテストのファイルの拡張子ごとの数
+    pub tally: BTreeMap<String, crate::TestFileTally>,
+    /// TBL-core-026: 印の出現ごとの (ID, テストのファイル, 行, テストの名前)
+    pub markers: Vec<TestMarker>,
+    /// 読んだ`テストのファイル`の`基準のディレクトリ`からの相対パス。バイト順（REQ-core-199 の重なりの判定）
+    pub files: Vec<String>,
 }
 
 /// `問い合わせのある言語`のファイルで見つけた`テスト`の印を積み、印を検査する

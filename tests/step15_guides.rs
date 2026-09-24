@@ -232,3 +232,130 @@ fn req_203_crlf_line_endings_do_not_change_the_fingerprint() {
     );
     assert_eq!(listed_fingerprint(tmp.path(), "REQ-001"), "51b1f3da");
 }
+
+// --- REQ-core-198、REQ-core-199、REQ-core-206: ガイドのファイルを集める ---
+
+/// 空の置き場だけを作り、設定を `config` にする（`IR`も`判断の記録`も1つも無い）
+fn make_empty_project(tmp: &Path, config: &str) {
+    for dir in [
+        ".kotowari",
+        "docs/ir",
+        "docs/decision/records",
+        "docs/decision/adr",
+    ] {
+        std::fs::create_dir_all(tmp.join(dir)).unwrap();
+    }
+    write(tmp, ".kotowari/config.yaml", config);
+}
+
+/// EX-core-368 の設定。"docs/guide.md" は両方の glob に当たる
+const OVERLAPPING: &str =
+    "guides:\n  files:\n    - \"docs/**/*.md\"\ntests:\n  files:\n    - \"**/*\"\n";
+
+// @kotowari[REQ-core-199, TBL-core-001, TBL-core-020, EX-core-368]
+#[test]
+fn ex_368_check_stops_when_a_guide_is_also_a_test_file() {
+    let tmp = TempDir::new().unwrap();
+    make_empty_project(tmp.path(), OVERLAPPING);
+    write(tmp.path(), "docs/guide.md", "# ガイド\n");
+    let (code, stdout, stderr) = run(tmp.path(), &["check"]);
+    assert_eq!(code, Some(2), "{stdout}");
+    assert_eq!(stdout, "");
+    assert!(stderr.starts_with("config error: "), "{stderr}");
+    assert!(stderr.contains("docs/guide.md"), "{stderr}");
+}
+
+// @kotowari[REQ-core-163, REQ-core-199, EX-core-368]
+#[test]
+fn ex_368_status_stops_when_a_guide_is_also_a_test_file() {
+    let tmp = TempDir::new().unwrap();
+    make_empty_project(tmp.path(), OVERLAPPING);
+    write(tmp.path(), "docs/guide.md", "# ガイド\n");
+    let (code, stdout, stderr) = run(tmp.path(), &["status"]);
+    assert_eq!(code, Some(2), "{stdout}");
+    assert_eq!(stdout, "");
+    assert!(stderr.starts_with("config error: "), "{stderr}");
+    assert!(stderr.contains("docs/guide.md"), "{stderr}");
+}
+
+// @kotowari[REQ-core-199, TBL-core-020]
+#[test]
+fn req_199_only_the_first_overlapping_file_in_byte_order_is_reported() {
+    let tmp = TempDir::new().unwrap();
+    make_empty_project(
+        tmp.path(),
+        "guides:\n  files:\n    - \"notes/**/*.md\"\ntests:\n  files:\n    - \"notes/**/*.md\"\n",
+    );
+    write(tmp.path(), "notes/b.md", "b\n");
+    write(tmp.path(), "notes/a.md", "a\n");
+    let (code, _, stderr) = run(tmp.path(), &["check"]);
+    assert_eq!(code, Some(2));
+    assert!(stderr.contains("notes/a.md"), "{stderr}");
+    assert!(!stderr.contains("notes/b.md"), "{stderr}");
+}
+
+// @kotowari[REQ-core-198, REQ-core-206, EX-core-369]
+#[test]
+fn ex_369_without_the_guides_key_no_guide_is_read() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), "");
+    write(tmp.path(), "docs/ir/a.md", &ir_doc(REQ_001, ""));
+    write(
+        tmp.path(),
+        "docs/guide.md",
+        "# ガイド\n\n<!-- @kotowari[REQ-001:00000000] -->\n",
+    );
+    let (code, stdout, stderr) = run(tmp.path(), &["check", "--format", "json"]);
+    assert_ne!(code, Some(2), "{stderr}");
+    let v = json(&stdout);
+    assert_eq!(v["guides"], serde_json::json!({"files": 0, "marks": 0}));
+    assert!(!stdout.contains("guide_stale"), "{stdout}");
+}
+
+// @kotowari[REQ-core-198, TBL-core-001]
+#[test]
+fn req_198_a_guide_that_is_not_utf8_stops() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), GUIDES_MD);
+    std::fs::create_dir_all(tmp.path().join("guides")).unwrap();
+    std::fs::write(tmp.path().join("guides/a.md"), [0xff, 0xfe, 0x00]).unwrap();
+    let (code, stdout, stderr) = run(tmp.path(), &["check"]);
+    assert_eq!(code, Some(2), "{stdout}");
+    assert_eq!(stderr.trim_end(), "non-UTF-8 file: guides/a.md");
+}
+
+// @kotowari[REQ-core-198, REQ-core-206]
+#[test]
+fn req_198_a_guides_glob_may_hit_the_ir_documents() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), "guides:\n  files:\n    - \"docs/ir/**/*.md\"\n");
+    write(tmp.path(), "docs/ir/a.md", &ir_doc(REQ_001, ""));
+    let (code, stdout, stderr) = run(tmp.path(), &["check", "--format", "json"]);
+    assert_ne!(code, Some(2), "{stderr}");
+    let v = json(&stdout);
+    assert_eq!(v["files"], 1, "the IR document is still read as IR: {v}");
+    assert_eq!(v["guides"]["files"], 1, "and also as a guide: {v}");
+}
+
+// @kotowari[REQ-core-152, REQ-core-158]
+#[test]
+fn req_152_list_and_query_do_not_read_guides_and_do_not_stop_on_their_overlap() {
+    let tmp = TempDir::new().unwrap();
+    make_project(
+        tmp.path(),
+        "guides:\n  files:\n    - \"tests/**/*.rs\"\n    - \"guides/**/*.md\"\n",
+    );
+    write(tmp.path(), "docs/ir/a.md", &ir_doc(REQ_001, ""));
+    write(
+        tmp.path(),
+        "tests/a.rs",
+        "// @kotowari[REQ-001]\n#[test]\nfn req_001() {}\n",
+    );
+    // UTF-8 でないガイドも、list と query は読まないので止まらない
+    std::fs::create_dir_all(tmp.path().join("guides")).unwrap();
+    std::fs::write(tmp.path().join("guides/a.md"), [0xff, 0xfe, 0x00]).unwrap();
+    for args in [&["list"][..], &["query", "REQ-001"][..]] {
+        let (code, _, stderr) = run(tmp.path(), args);
+        assert_eq!(code, Some(0), "{args:?}: {stderr}");
+    }
+}

@@ -4,6 +4,7 @@ pub mod config;
 pub mod equivalents;
 pub mod finding_map;
 pub mod fingerprint;
+pub mod guides;
 pub mod ir;
 pub mod list;
 pub mod mutants;
@@ -28,6 +29,8 @@ pub struct CheckResult {
     pub findings: Vec<Finding>,
     pub counts: BTreeMap<String, usize>,
     pub tests: BTreeMap<String, TestFileTally>,
+    /// REQ-core-206: 読んだ`ガイド`の数と、形の正しい`ガイドの印`の1件の数
+    pub guides: guides::GuideTally,
 }
 
 /// 読んだテストのファイルの、1つの拡張子の数と問い合わせの有無（TBL-core-021）
@@ -993,6 +996,8 @@ fn load_config(
 /// check、list、query、status が共有する読み取りの結果
 /// （REQ-core-151、REQ-core-156、REQ-core-162: どれも check と同じ読み取りを使う）
 pub struct Loaded {
+    /// `基準のディレクトリ`
+    pub base: PathBuf,
     pub cfg: config::Config,
     pub docs: Vec<ir::IrDocument>,
     pub findings: Vec<Finding>,
@@ -1000,10 +1005,14 @@ pub struct Loaded {
     pub tally: BTreeMap<String, TestFileTally>,
     /// TBL-core-026: 印の出現ごとの (ID, テストのファイル, 行, テストの名前)
     pub markers: Vec<tests_discovery::TestMarker>,
+    /// 読んだ`テストのファイル`の相対パス。バイト順（REQ-core-199）
+    pub test_files: Vec<String>,
 }
 
 /// 設定と置き場から IR の文書とテストのファイルを読み、検査もする。
-/// check はこの指摘を出し、list と query は捨て、status は数だけを出す（REQ-core-151、REQ-core-156、REQ-core-162）
+/// check はこの指摘を出し、list と query は捨て、status は数だけを出す（REQ-core-151、REQ-core-156、REQ-core-162）。
+/// `ガイド`はここでは読まない。list と query は`ガイド`を読まない（REQ-core-152、REQ-core-158）ので、
+/// check と status だけが `read_guides` を続けて呼ぶ
 pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopReason> {
     let base = find_base(cwd);
     let cfg = load_config(cwd, &base, config_path)?;
@@ -1048,7 +1057,7 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
     terms::check_document_references(&docs, &cfg.ir, &ir_paths, &mut findings);
 
     // テストの発見と印の検査
-    let (tally, markers) = tests_discovery::discover_and_check(
+    let discovered = tests_discovery::discover_and_check(
         &base,
         &cfg,
         &docs,
@@ -1058,12 +1067,29 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
     )?;
 
     Ok(Loaded {
+        base,
         cfg,
         docs,
         findings,
-        tally,
-        markers,
+        tally: discovered.tally,
+        markers: discovered.markers,
+        test_files: discovered.files,
     })
+}
+
+/// check と status の読み取り: `load_all` に続けて`ガイド`を読み、その`指摘`を足す（REQ-core-198、REQ-core-162）
+fn load_with_guides(
+    cwd: &Path,
+    config_path: Option<&Path>,
+) -> Result<(Loaded, guides::GuideTally), StopReason> {
+    let mut loaded = load_all(cwd, config_path)?;
+    let tally = guides::read_guides(
+        &loaded.base,
+        &loaded.cfg,
+        &loaded.test_files,
+        &mut loaded.findings,
+    )?;
+    Ok((loaded, tally))
 }
 
 /// 検査のエントリポイント
@@ -1072,7 +1098,7 @@ pub fn run_check(
     format: Format,
     config_path: Option<&Path>,
 ) -> Result<(CheckResult, Format), StopReason> {
-    let loaded = load_all(cwd, config_path)?;
+    let (loaded, guides) = load_with_guides(cwd, config_path)?;
 
     let files = loaded.docs.len();
     let lines: usize = loaded.docs.iter().map(|d| d.line_count).sum();
@@ -1087,6 +1113,7 @@ pub fn run_check(
         findings,
         counts,
         tests: loaded.tally,
+        guides,
     };
 
     Ok((result, format))
@@ -1115,7 +1142,7 @@ pub fn run_status(
     cwd: &Path,
     config_path: Option<&Path>,
 ) -> Result<status::StatusResult, StopReason> {
-    let loaded = load_all(cwd, config_path)?;
+    let (loaded, _guides) = load_with_guides(cwd, config_path)?;
     Ok(status::build(
         &loaded.docs,
         &loaded.cfg.ir,
