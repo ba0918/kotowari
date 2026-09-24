@@ -56,6 +56,7 @@ A requirement whose verification is review needs a `- how_to_verify:` line. How 
 | test_without_id | A test has no mark | Put an `@kotowari[ID]` mark on it | implementer |
 | invalid_marker | The form of a mark is not correct | Fix it to the form `@kotowari[ID, ...]` | implementer |
 | unparsable_file | A test file cannot be read | Fix the syntax error in the test | implementer |
+| invalid_plan | In `kotowari plan`, the plan file does not have the form of the bundled plan schema (detail is the schema side's kind, `: `, and its detail) | Fix the plan at `line` as detail says, and run `kotowari plan` again | the writer of the plan |
 | unclosed_code_block | A code block is not closed | Close the code block | brainstorm |
 | invalid_gherkin_line | A line not allowed in gherkin | Keep only tags, Scenario, steps, comments and blank lines | brainstorm |
 | invalid_id | The value of `@id` is not of the form `EX-nnn` | Make the value of the form `EX-nnn` | brainstorm |

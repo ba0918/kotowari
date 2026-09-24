@@ -1,0 +1,51 @@
+# kotowari-plan が書く計画書の書式（docs/ir/core/plan.md の REQ-core-192）
+name: plan
+open: false
+reading: line
+document:
+  title: {}
+  sections:
+    - name: Goal
+      statement: { repeat: { min: 0 } }
+      bullets: { repeat: { min: 0 } }
+    - name: Specification
+      statement: { repeat: { min: 0 } }
+      bullets: { repeat: { min: 0 } }
+    - name: Approach and why
+      statement: { repeat: { min: 0 } }
+      bullets: { repeat: { min: 0 } }
+    - name: Scope of change
+      statement: { repeat: { min: 0 } }
+      bullets: { repeat: { min: 0 } }
+    - name: Step order and prerequisites
+      statement: { repeat: { min: 0 } }
+      bullets: { repeat: { min: 0 } }
+    - name: Verification map
+      statement: { repeat: { min: 0 } }
+      bullets: { repeat: { min: 0 } }
+    - name: Left to the implementer
+      statement: { repeat: { min: 0 } }
+      bullets: { repeat: { min: 0 } }
+    - name: Stop conditions
+      statement: { repeat: { min: 0 } }
+      bullets: { repeat: { min: 0 } }
+    - name: Test command
+      required: false
+      statement: { repeat: { min: 0 } }
+      bullets: { repeat: { min: 0 } }
+    - name: Out of scope
+      statement: { repeat: { min: 0 } }
+      bullets: { repeat: { min: 0 } }
+    - name: Steps
+      item:
+        id: "^S[0-9]+$"
+        repeat: { min: 1 }
+        fields:
+          - name: Purpose
+          - name: Specification
+          - name: Prerequisites
+          - name: May change
+          - name: Done when
+          - name: Shown by
+          - name: Left to the implementer
+          - name: Stop and hand back if

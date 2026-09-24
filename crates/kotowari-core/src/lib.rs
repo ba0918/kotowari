@@ -6,6 +6,7 @@ pub mod finding_map;
 pub mod ir;
 pub mod list;
 pub mod mutants;
+pub mod plan;
 pub mod query;
 pub mod record_form;
 pub mod schema;
@@ -103,6 +104,7 @@ finding_kinds! {
     UnparsableFile => "unparsable_file",
     InvalidGherkinLine => "invalid_gherkin_line",
     InvalidId => "invalid_id",
+    InvalidPlan => "invalid_plan",
     GlossaryInvalid => "glossary_invalid",
     GlossaryTitleInvalid => "glossary_title_invalid",
     UnresolvedReference => "unresolved_reference",
@@ -758,7 +760,20 @@ pub fn run(args: &[String]) -> u8 {
                 Err(reason) => stop(&reason),
             }
         }
-        Cli::Plan { .. } => unimplemented!("kotowari plan"),
+        // REQ-core-196: 設定を読まず、計画書のファイルだけを読む
+        Cli::Plan { format, path } => {
+            let cwd = match current_dir() {
+                Ok(cwd) => cwd,
+                Err(reason) => return stop(&reason),
+            };
+            match run_plan(&cwd, &path) {
+                Ok(result) => {
+                    print_plan(&result, format);
+                    exit_code_for(&result.findings)
+                }
+                Err(reason) => stop(&reason),
+            }
+        }
     }
 }
 
@@ -815,6 +830,14 @@ fn print_mutants(result: &mutants::MutantsResult, format: Format) {
     }
 }
 
+/// "kotowari plan" の結果を出す（REQ-core-194、REQ-core-025）
+fn print_plan(result: &plan::PlanResult, format: Format) {
+    match format {
+        Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
+        Format::Text => print_findings_as_text(&result.findings),
+    }
+}
+
 /// REQ-core-025, REQ-core-026: 1つの指摘を1行で出し、"line" が null なら "-" と書く
 fn print_findings_as_text(findings: &[Finding]) {
     for f in findings {
@@ -843,6 +866,7 @@ fn print_help() {
     println!("  check      Check IR documents and test markers");
     println!("  list       List IR items and the tests marked for them");
     println!("  mutants    Read a mutation testing result file and report survivors");
+    println!("  plan       Check the form of one plan file against the bundled schema");
     println!("  query      Show one item or scenario with its body and back references");
     println!("  status     Summarise the IR and tell whether it is complete");
     println!();
@@ -852,6 +876,20 @@ fn print_help() {
     println!("  --tool <TOOL>      Mutation testing tool of the result file: cargo-mutants");
     println!("  --help             Show this help message");
     println!("  --version          Show version");
+}
+
+/// 計画書の検査のエントリポイント（REQ-core-196）。設定、IR、判断の記録、テストのファイルを読まない
+pub fn run_plan(cwd: &Path, path: &Path) -> Result<plan::PlanResult, StopReason> {
+    let base = find_base(cwd);
+    // 計画書のパスはカレントディレクトリからの相対（REQ-core-190）、
+    // 指摘と停止の path は基準のディレクトリからの相対（REQ-core-193、TBL-core-020）
+    let display = display_from_base(&base, cwd, path);
+    // REQ-core-197: 無い、ディレクトリ、読めないは読めないファイル、UTF-8 でなければ UTF-8 でないファイル
+    let text = read_utf8_file(&cwd.join(path), &display)?;
+    let mut findings = plan::check_plan(&display, &text);
+    sort_findings(&mut findings);
+    let counts = count_findings(&findings);
+    Ok(plan::PlanResult { findings, counts })
 }
 
 /// 変異の結果の検査のエントリポイント

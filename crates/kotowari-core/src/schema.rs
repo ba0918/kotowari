@@ -12,6 +12,8 @@ const TOPIC: &str = include_str!("../../../.kotowari/schemas/ir.yaml");
 const GLOSSARY: &str = include_str!("../../../.kotowari/schemas/context.yaml");
 /// 問題の記録（FLAGS.md）のスキーマ
 const FLAGS: &str = include_str!("../../../.kotowari/schemas/flags.yaml");
+/// 計画書のスキーマ（REQ-core-191）
+const PLAN: &str = include_str!("../../../.kotowari/schemas/plan.yaml");
 
 /// 文書の種類に応じた、取り込んだスキーマの YAML（REQ-core-168）。
 pub fn schema_source(kind: DocKind) -> &'static str {
@@ -25,6 +27,11 @@ pub fn schema_source(kind: DocKind) -> &'static str {
 /// 文書の種類に応じたスキーマを読む（REQ-core-168）。
 pub fn schema_for(kind: DocKind) -> Result<Schema, SchemaError> {
     parse_schema(schema_source(kind))
+}
+
+/// 計画書のスキーマを読む（REQ-core-191）。IR の文書の種類とは別に持つ。
+pub fn plan_schema() -> Result<Schema, SchemaError> {
+    parse_schema(PLAN)
 }
 
 #[cfg(test)]
@@ -50,5 +57,13 @@ mod tests {
         assert_eq!(name(DocKind::Topic).as_deref(), Some("ir"));
         assert_eq!(name(DocKind::Glossary).as_deref(), Some("ir-context"));
         assert_eq!(name(DocKind::Flags).as_deref(), Some("ir-flags"));
+    }
+
+    // @kotowari[REQ-core-191]
+    #[test]
+    fn req_core_191_the_embedded_plan_schema_parses() {
+        let schema = plan_schema();
+        assert!(schema.is_ok(), "計画書のスキーマが parse_schema を通らない: {:?}", schema.err());
+        assert_eq!(schema.unwrap().name.as_deref(), Some("plan"));
     }
 }

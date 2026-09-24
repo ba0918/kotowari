@@ -33,7 +33,7 @@ fn req_001_six_commands_only() {
         .current_dir(tmp.path())
         .assert()
         .code(0);
-    // "kotowari query" は4つ目、"kotowari status" は5つ目のコマンドとして通る
+    // "kotowari query" と "kotowari status" もコマンドとして通る
     let project = dir_with_one_requirement();
     cmd()
         .args(["query", "REQ-001"])
@@ -42,6 +42,14 @@ fn req_001_six_commands_only() {
         .code(0);
     cmd()
         .arg("status")
+        .current_dir(project.path())
+        .assert()
+        .code(0);
+    // "kotowari plan" は6つ目のコマンドとして通る
+    let plan = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/plans/valid.md");
+    cmd()
+        .arg("plan")
+        .arg(&plan)
         .current_dir(project.path())
         .assert()
         .code(0);
