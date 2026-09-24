@@ -16,9 +16,10 @@ is approved only when the IR documents, the glossary, the problem record, and th
 record are all committed and `kotowari check` reports no errors other than test-side findings
 (requirement_without_test, scenario_without_test, and findings on test files); otherwise it is
 unapproved — stop and say so. The plan itself runs neither `kotowari check` nor
-`kotowari status`: the main session runs the check that judges approval. A topic with no IR
-takes the path of its committed specification instead (such as a decision record whose
-decisions are the specification); uncommitted means unapproved.
+`kotowari status`: the main session runs the check that judges approval. The one kotowari
+command that looks at the plan file is `kotowari plan`, which checks only its form (Finishing
+1). A topic with no IR takes the path of its committed specification instead (such as a
+decision record whose decisions are the specification); uncommitted means unapproved.
 Out: one Markdown file, `docs/plans/<name>.md`, approved by the person and committed. The
 implementation branch will carry `<name>`; choose a name that reads well in a branch.
 
@@ -37,6 +38,13 @@ implementer; stop conditions.
 Per-step content (see `references/step-template.md`): purpose and the requirements it
 rests on; prerequisites; the files it may change; what "done" means and how it is shown (test /
 check / artifact / external); choices left open; when to stop and hand back.
+
+The form is fixed so that `kotowari plan` can check it against the schema bundled in kotowari
+(`references/step-template.md` states the rules; `references/plan-example.md` is a whole plan
+that passes). The plan-level content goes in its fixed `## ` sections, and the steps go under
+`## Steps` as `### S<number>: <name>` headings, each followed only by its eight field lines
+`- Name: value` in the template's order. Write each field's value on that one line. Put no
+frontmatter at the top of the plan: it names no schema, and the check uses its own.
 
 ## Reading the requirements
 
@@ -82,9 +90,16 @@ that were there before the plan, and a committed problem record can keep them fa
 
 ## Finishing
 
-1. Self-check against `references/step-template.md`: every step has all fields; every referenced
-   requirement ID exists (`kotowari query` returns it; with no IR, every referenced heading exists
-   in the specification); no step decides a specification question.
+1. Form check, then self-check. Run `kotowari plan <plan path>` and read its exit code as the
+   kotowari skill's scene check (`references/findings.md`) says. On 1, fix the plan where each
+   invalid_plan finding points and run it again until it exits with 0; fixing the form is not a
+   decision, so do not ask the person. On 2, show the person the stop reason from the first line
+   of standard error and stop. Finishing is the only place in the workflow that checks the form,
+   so the check must follow the plan's last edit; nothing checks it again after approval. Then
+   self-check against `references/step-template.md`
+   for what the form check cannot see: every field of every step has a non-empty value; every
+   referenced requirement ID exists (`kotowari query` returns it; with no IR, every referenced
+   heading exists in the specification); no step decides a specification question.
 2. Adversarial review, only when the plan's own decisions can contradict each other — steps that
    depend on one another, or one requirement driving several steps. Say that reason,
    then launch one separate-context agent on the plan's own quality, and a second against the
@@ -93,8 +108,10 @@ that were there before the plan, and a committed problem record can keep them fa
    directly. Findings that need a decision: under the four stop conditions (missing meaning or
    departure from approved content; irreversible, privileged, or dangerous operation; spreading
    accident; no progress after a changed approach) stop and ask the person now; otherwise decide
-   yourself and list the decision among step 3's judgment points.
-3. Approval: stage only the plan, give the person the path, the command to view the diff, and
+   yourself and list the decision among step 3's judgment points. If this step changed the plan,
+   run the form check again as in step 1, with the same handling of exit codes 1 and 2.
+3. Approval, only after the form check has exited with 0 on the plan's last edit: stage only the
+   plan, give the person the path, the command to view the diff, and
    the points needing their judgment. Do not paste the plan, and never let a summary be what
    they approve. The person commits, or tells you
    to. A plan is approved only once committed.

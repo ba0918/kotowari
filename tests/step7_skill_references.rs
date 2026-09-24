@@ -1,5 +1,6 @@
 //! スキル kotowari の references に写した本体の値が、本体のコードと一致することの検査
-//! （REQ-core-125、REQ-core-126、REQ-core-127）。突き合わせる相手は本体のコードが持つ値で、IR の表ではない。
+//! （REQ-core-125、REQ-core-126、REQ-core-127）と、例の計画書が同梱のスキーマを通ること（REQ-core-195）。
+//! 突き合わせる相手は本体のコードが持つ値で、IR の表ではない。
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -142,5 +143,21 @@ fn req_127_findings_reference_stop_wordings_match_the_code() {
     assert_eq!(
         in_reference, in_code,
         "the stop wordings in references/findings.md should be exactly the wordings the code prints"
+    );
+}
+
+// --- REQ-core-195: 例の計画書と同梱のスキーマの一致 ---
+
+// @kotowari[REQ-core-195]
+#[test]
+fn req_core_195_the_plan_example_has_no_findings_under_the_bundled_schema() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("agent/skills/kotowari-plan/references/plan-example.md");
+    let content =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+    let findings = kotowari_core::plan::check_plan("plan-example.md", &content);
+    assert!(
+        findings.is_empty(),
+        "plan-example.md should be a plan the bundled schema accepts: {findings:#?}"
     );
 }

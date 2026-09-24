@@ -9,11 +9,11 @@ fn valid_project_dir() -> &'static Path {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/valid-project").leak()
 }
 
-// --- REQ-core-001: コマンドは5つ ---
+// --- REQ-core-001: コマンドは6つ ---
 
 // @kotowari[REQ-core-001]
 #[test]
-fn req_001_five_commands_only() {
+fn req_001_six_commands_only() {
     // "kotowari check" は通る
     cmd()
         .arg("check")
@@ -33,7 +33,7 @@ fn req_001_five_commands_only() {
         .current_dir(tmp.path())
         .assert()
         .code(0);
-    // "kotowari query" は4つ目、"kotowari status" は5つ目のコマンドとして通る
+    // "kotowari query" と "kotowari status" もコマンドとして通る
     let project = dir_with_one_requirement();
     cmd()
         .args(["query", "REQ-001"])
@@ -42,6 +42,14 @@ fn req_001_five_commands_only() {
         .code(0);
     cmd()
         .arg("status")
+        .current_dir(project.path())
+        .assert()
+        .code(0);
+    // "kotowari plan" は6つ目のコマンドとして通る
+    let plan = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/plans/valid.md");
+    cmd()
+        .arg("plan")
+        .arg(&plan)
         .current_dir(project.path())
         .assert()
         .code(0);
@@ -145,20 +153,20 @@ fn req_004_unknown_command_before_check_has_the_unknown_command_wording() {
 
 // @kotowari[REQ-core-004, TBL-core-020, EX-core-219]
 #[test]
-fn req_004_no_arguments_names_all_five_commands() {
+fn req_004_no_arguments_names_all_six_commands() {
     let output = cmd().current_dir(valid_project_dir()).output().unwrap();
     assert_eq!(output.status.code(), Some(2));
     let stderr = String::from_utf8_lossy(&output.stderr);
     let first_line = stderr.lines().next().unwrap_or("");
     assert_eq!(
-        first_line, "argument error: expected command: check, list, mutants, query or status",
+        first_line, "argument error: expected command: check, list, mutants, plan, query or status",
         "got: {first_line:?}"
     );
 }
 
 // @kotowari[REQ-core-004, TBL-core-020, EX-core-241]
 #[test]
-fn req_004_options_without_a_command_names_all_five_commands() {
+fn req_004_options_without_a_command_names_all_six_commands() {
     let output = cmd()
         .args(["--format", "text"])
         .current_dir(valid_project_dir())
@@ -168,7 +176,7 @@ fn req_004_options_without_a_command_names_all_five_commands() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     let first_line = stderr.lines().next().unwrap_or("");
     assert_eq!(
-        first_line, "argument error: expected command: check, list, mutants, query or status",
+        first_line, "argument error: expected command: check, list, mutants, plan, query or status",
         "got: {first_line:?}"
     );
 }
