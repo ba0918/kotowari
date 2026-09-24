@@ -682,104 +682,65 @@ pub fn run(args: &[String]) -> u8 {
         Cli::Check {
             format,
             config_path,
-        } => {
-            let cwd = match current_dir() {
-                Ok(cwd) => cwd,
-                Err(reason) => return stop(&reason),
-            };
-            match run_check(&cwd, format, config_path.as_deref()) {
-                Ok((result, format)) => {
-                    print_check(&result, format);
-                    exit_code_for(&result.findings)
-                }
-                Err(reason) => stop(&reason),
-            }
-        }
+        } => with_cwd(|cwd| {
+            let (result, format) = run_check(cwd, format, config_path.as_deref())?;
+            print_check(&result, format);
+            Ok(exit_code_for(&result.findings))
+        }),
         // REQ-core-151: check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
         Cli::List {
             format,
             config_path,
-        } => {
-            let cwd = match current_dir() {
-                Ok(cwd) => cwd,
-                Err(reason) => return stop(&reason),
-            };
-            match run_list(&cwd, config_path.as_deref()) {
-                Ok(result) => {
-                    print_list(&result, format);
-                    0
-                }
-                Err(reason) => stop(&reason),
-            }
-        }
+        } => with_cwd(|cwd| {
+            let result = run_list(cwd, config_path.as_deref())?;
+            print_list(&result, format);
+            Ok(0)
+        }),
         // REQ-core-156: check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
         Cli::Query {
             format,
             config_path,
             id,
-        } => {
-            let cwd = match current_dir() {
-                Ok(cwd) => cwd,
-                Err(reason) => return stop(&reason),
-            };
-            match run_query(&cwd, config_path.as_deref(), &id) {
-                Ok(result) => {
-                    print_query(&result, format);
-                    0
-                }
-                Err(reason) => stop(&reason),
-            }
-        }
+        } => with_cwd(|cwd| {
+            let result = run_query(cwd, config_path.as_deref(), &id)?;
+            print_query(&result, format);
+            Ok(0)
+        }),
         // REQ-core-162: check と同じ検査を走らせ、指摘は出さず集計だけを出す
         Cli::Status {
             format,
             config_path,
-        } => {
-            let cwd = match current_dir() {
-                Ok(cwd) => cwd,
-                Err(reason) => return stop(&reason),
-            };
-            match run_status(&cwd, config_path.as_deref()) {
-                Ok(result) => {
-                    print_status(&result, format);
-                    // REQ-core-165: complete なら 0、そうでなければ 1
-                    u8::from(!result.complete)
-                }
-                Err(reason) => stop(&reason),
-            }
-        }
+        } => with_cwd(|cwd| {
+            let result = run_status(cwd, config_path.as_deref())?;
+            print_status(&result, format);
+            // REQ-core-165: complete なら 0、そうでなければ 1
+            Ok(u8::from(!result.complete))
+        }),
         Cli::Mutants {
             format,
             config_path,
             tool,
             results,
-        } => {
-            let cwd = match current_dir() {
-                Ok(cwd) => cwd,
-                Err(reason) => return stop(&reason),
-            };
-            match run_mutants(&cwd, config_path.as_deref(), tool, &results) {
-                Ok(result) => {
-                    print_mutants(&result, format);
-                    exit_code_for(&result.findings)
-                }
-                Err(reason) => stop(&reason),
-            }
-        }
+        } => with_cwd(|cwd| {
+            let result = run_mutants(cwd, config_path.as_deref(), tool, &results)?;
+            print_mutants(&result, format);
+            Ok(exit_code_for(&result.findings))
+        }),
         // REQ-core-196: 設定を読まず、計画書のファイルだけを読む
-        Cli::Plan { format, path } => {
-            let cwd = match current_dir() {
-                Ok(cwd) => cwd,
-                Err(reason) => return stop(&reason),
-            };
-            match run_plan(&cwd, &path) {
-                Ok(result) => {
-                    print_plan(&result, format);
-                    exit_code_for(&result.findings)
-                }
-                Err(reason) => stop(&reason),
-            }
-        }
+        Cli::Plan { format, path } => with_cwd(|cwd| {
+            let result = run_plan(cwd, &path)?;
+            print_plan(&result, format);
+            Ok(exit_code_for(&result.findings))
+        }),
+    }
+}
+
+/// カレントディレクトリを取って command を走らせ、その終了コードを返す。
+/// カレントディレクトリが取れないか command が止まれば`停止`する
+fn with_cwd(command: impl FnOnce(&Path) -> Result<u8, StopReason>) -> u8 {
+    match current_dir().and_then(|cwd| command(&cwd)) {
+        Ok(code) => code,
+        Err(reason) => stop(&reason),
     }
 }
 
@@ -1011,8 +972,7 @@ fn load_config(
             }
             // TBL-core-020/A164: 詳細のパスは基準のディレクトリからの相対
             // （外にあれば "../" を含む。ファイルシステムには触れない）
-            let display = relative_display(&lexically_normalize(base), &lexically_normalize(&abs));
-            (abs, display)
+            (abs, display_from_base(base, cwd, cp))
         }
         // 既定: base/.kotowari/config.yaml
         None => {
