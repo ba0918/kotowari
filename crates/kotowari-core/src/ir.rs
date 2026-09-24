@@ -1398,27 +1398,6 @@ pub fn is_closing_fence(line: &str, opening: &CodeFence) -> bool {
     line[fence_len..].trim().is_empty()
 }
 
-/// バッククォートで囲まれた内容を抽出する。
-/// 空の内容（``）も返す。
-pub fn extract_backtick_contents(text: &str) -> Vec<&str> {
-    let mut result = Vec::new();
-    let mut start = 0;
-    while let Some(open) = text[start..].find('`') {
-        let open_abs = start + open + 1;
-        if open_abs >= text.len() {
-            break;
-        }
-        if let Some(close) = text[open_abs..].find('`') {
-            let content = &text[open_abs..open_abs + close];
-            result.push(content);
-            start = open_abs + close + 1;
-        } else {
-            break;
-        }
-    }
-    result
-}
-
 /// 文やステップの中の、バッククォートで囲んだ `ID` を拾う（REQ-core-054、REQ-core-116）
 fn backtick_ids(text: &str) -> Vec<&str> {
     // REQ-core-054/REQ-core-116: 二重引用符の外だけを見る

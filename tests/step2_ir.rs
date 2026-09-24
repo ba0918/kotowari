@@ -3522,17 +3522,6 @@ fn req_054_valid_and_known_definition_id_produces_no_unresolved_reference() {
     );
 }
 
-// @kotowari[REQ-core-054]
-#[test]
-fn req_054_extract_backtick_contents_two_pairs_on_one_line() {
-    let result = ir::extract_backtick_contents("`REQ-001` and `TBL-999`");
-    assert_eq!(
-        result,
-        vec!["REQ-001", "TBL-999"],
-        "two separate backtick-delimited ids on one line should each be extracted whole, not fused together"
-    );
-}
-
 // @kotowari[REQ-core-033]
 #[test]
 #[cfg(unix)]
