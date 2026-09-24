@@ -13,6 +13,12 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use walkdir::WalkDir;
 
+/// 印の出現ごとの (ID, 印のある行)。A152: 同じ ID の印が複数あっても出現ごとに数える
+pub type MarkerIds = Vec<(String, usize)>;
+
+/// 中身が空または閉じ括弧のない印の (印のある行, 行の文字)
+pub type InvalidMarkers = Vec<(usize, String)>;
+
 /// 発見されたテスト
 #[derive(Debug, Clone)]
 pub struct DiscoveredTest {
@@ -23,10 +29,10 @@ pub struct DiscoveredTest {
     pub file_path: String,
     /// `テスト`の節の最初の行
     pub line: usize,
-    /// 印の出現ごとの (ID, 印のある行)。A152: 同じ ID の印が複数あっても出現ごとに数える
-    pub marker_ids: Vec<(String, usize)>,
+    /// テストに結び付く印
+    pub marker_ids: MarkerIds,
     /// テストに結び付く位置にある、中身が空または閉じ括弧のない印
-    pub invalid_markers: Vec<(usize, String)>,
+    pub invalid_markers: InvalidMarkers,
 }
 
 /// `印`の1つの出現。`ID` ごとに1件で、同じ行の同じ `ID` の2つ目も1件（TBL-core-026 の "tests"）
