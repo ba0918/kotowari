@@ -474,15 +474,12 @@ fn for_each_md(
     config_key: &str,
     visit: &mut dyn FnMut(String, &str),
 ) -> Result<(), crate::StopReason> {
-    let entries = std::fs::read_dir(dir)
-        .map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", config_key)))?;
-
-    let mut sorted = Vec::new();
-    for entry in entries {
-        sorted.push(
-            entry.map_err(|e| crate::StopReason::UnreadableFile(format!("{}: {e}", config_key)))?,
-        );
-    }
+    let unreadable =
+        |e: std::io::Error| crate::StopReason::UnreadableFile(format!("{config_key}: {e}"));
+    let mut sorted = std::fs::read_dir(dir)
+        .map_err(unreadable)?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(unreadable)?;
     sorted.sort_by_key(|e| e.file_name());
 
     for entry in sorted {

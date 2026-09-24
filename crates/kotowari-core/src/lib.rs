@@ -373,10 +373,8 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         )));
     }
 
-    let format = match Format::parse(format_str.as_deref().unwrap_or("json")) {
-        Ok(f) => f,
-        Err(e) => return Err(StopReason::ArgumentError(e)),
-    };
+    let format = Format::parse(format_str.as_deref().unwrap_or("json"))
+        .map_err(StopReason::ArgumentError)?;
 
     // REQ-core-152、REQ-core-158、REQ-core-163: list、query、status は check と同じ条件で、
     // 同じ理由と文言で停止する
