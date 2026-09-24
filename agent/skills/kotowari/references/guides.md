@@ -4,7 +4,7 @@ A guide is a user-facing document on how to use the product, written by a person
 
 ## Where guides are
 
-Guides are the files matching the globs in `guides.files` of the configuration (config.md). Without the key, or with an empty list, no guide is read and nothing here applies. The globs are read, walked and excluded the same way as `tests.files`. A file matched by both `guides.files` and `tests.files` stops check and status with a config error naming that file: change the globs so that they do not overlap. A guide glob may match IR documents or decision records; those files are then read both ways.
+Guides are the files matching the globs in `guides.files` of the configuration (config.md). Without the key, or with an empty list, no guide is read and nothing here applies. The globs are read, walked and excluded the same way as `tests.files`. A file matched by both `guides.files` and `tests.files` stops check and status with a config error whose detail is that file followed by `: matched by both guides.files and tests.files`: change the globs so that they do not overlap. A guide glob may match IR documents or decision records; those files are then read both ways.
 
 Only `kotowari check` and `kotowari status` read guides. `kotowari list` and `kotowari query` do not.
 
