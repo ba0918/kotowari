@@ -1,20 +1,39 @@
 # Step template
 
-Each step in the plan carries these fields, in prose or as a short list. The order below is
-the order an implementer needs them.
+The plan's form is checked by `kotowari plan <plan path>` against the schema bundled in
+kotowari. A whole plan that passes it is in [plan-example.md](plan-example.md); copy its shape.
+
+The steps go under one `## Steps` section, after the plan-level sections (listed at the end of
+this file). Each step is a `### S<number>: <what this step produces>` heading followed by these
+eight field lines, in this order, each exactly once. The order is the order an implementer needs
+them.
 
 ```markdown
-## Step N — <what this step produces>
+### S1: <what this step produces>
 
-Purpose: <one sentence>. Specification: <path>#REQ-nnn, <path>#REQ-nnn.
-Prerequisites: <steps that must be complete; environment or data that must exist>.
-May change: <files or directories; nothing outside this scope>.
-Done when: <observable condition>.
-Shown by: test | check | artifact | external — <test names / commands / artifact path / what to
-observe and where>.
-Left to the implementer: <choices where every option keeps approved behavior> (or "none").
-Stop and hand back if: <conditions specific to this step, beyond the four general ones>.
+- Purpose: <one sentence>
+- Specification: <path>#REQ-nnn, <path>#REQ-nnn
+- Prerequisites: <steps that must be complete; environment or data that must exist>
+- May change: <files or directories; nothing outside this scope>
+- Done when: <observable condition>
+- Shown by: test | check | artifact | external — <test names / commands / artifact path / what to observe and where>
+- Left to the implementer: <choices where every option keeps approved behavior> (or "none")
+- Stop and hand back if: <conditions specific to this step, beyond the four general ones>
 ```
+
+Form rules the check enforces:
+
+- Write every field as a list line `- Name: value` (`*` or `+` also work) and keep its value on
+  that one line. A line right after it, or an indented line after a blank line, is not part of
+  the value; it is a finding.
+- Nothing else goes under a step: no prose, no other list, no table, and nothing between
+  `## Steps` and the first step.
+- **Shown by** starts with one of the four words `test`, `check`, `artifact`, `external`,
+  followed by a space or nothing. A check's commands go in the value as `1) … 2) …` on the same
+  line.
+- The step number is `S` and digits; gaps, repeats and the name after `:` are not checked.
+- Do not put a frontmatter block at the top of the plan. The check skips one unread, but the plan
+  does not name its schema.
 
 Guidance per field:
 
@@ -37,12 +56,15 @@ Guidance per field:
   may be unavailable, a measurement that may disagree with the specification, an interface that
   may already exist under another name.
 
-Plan-level sections that precede the steps: **Goal** (one sentence, the result the person
-gets), **Specification** (the IR store path and the requirement IDs, or for a topic with no IR the one
-governing path), **Approach and why**, **Scope of change**,
-**Step order and prerequisites**, **Verification map** (which steps prove which requirements and
-scenarios), **Left to the implementer**, **Stop conditions**, **Test command** (only when the
-project does not fix one), **Out of scope**.
+Plan-level sections, each exactly once beside `## Steps` (their order is not checked):
+**Goal** (one sentence, the result the person gets), **Specification** (the IR store path and
+the requirement IDs, or for a topic with no IR the one governing path), **Approach and why**,
+**Scope of change**, **Step order and prerequisites**, **Verification map** (which steps prove
+which requirements and scenarios), **Left to the implementer**, **Stop conditions**, **Test
+command** (optional: only when the project does not fix one), **Out of scope**. No other `## `
+section. Under them write prose, `-` lists with their child lists, tables and code blocks;
+numbered lists and `### ` or deeper headings are findings. Nothing but blank lines goes between
+the title and the first `## ` section.
 
 ## Evidence conditions
 
