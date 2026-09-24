@@ -229,6 +229,34 @@ fn req_core_025_plan_text_output_has_one_line_per_finding() {
     assert!(lines[0].starts_with(&prefix), "{stdout}");
 }
 
+// @kotowari[REQ-core-193, REQ-core-207, EX-core-381]
+#[test]
+fn ex_core_381_a_step_missing_a_field_points_at_its_heading() {
+    let plan = plan_without_done_when();
+    let heading = plan
+        .lines()
+        .position(|l| l == "### S1: 入力を読む")
+        .unwrap()
+        + 1;
+    let tmp = project_with_plan(&plan);
+    let (code, stdout) = run_plan(tmp.path(), &["plan", "docs/plans/a.md", "--format", "text"]);
+    assert_eq!(code, Some(1), "{stdout}");
+    let prefix = format!("docs/plans/a.md:{heading} [error] invalid_plan ");
+    assert!(!stdout.is_empty());
+    for line in stdout.lines() {
+        assert!(line.starts_with(&prefix), "{stdout}");
+    }
+}
+
+// @kotowari[REQ-core-207, EX-core-382]
+#[test]
+fn ex_core_382_the_text_of_a_plan_without_findings_is_empty() {
+    let tmp = project_with_plan(VALID_PLAN);
+    let (code, stdout) = run_plan(tmp.path(), &["plan", "docs/plans/a.md", "--format", "text"]);
+    assert_eq!(code, Some(0), "{stdout}");
+    assert_eq!(stdout, "");
+}
+
 // @kotowari[REQ-core-025, REQ-core-193]
 #[test]
 fn req_core_025_plan_text_output_shows_a_missing_line_as_a_dash() {

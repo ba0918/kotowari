@@ -689,6 +689,17 @@ fn req_002_query_and_status_options_before_or_after_the_command() {
     }
 }
 
+// @kotowari[REQ-core-002, EX-core-380]
+#[test]
+fn ex_core_380_query_takes_an_option_after_the_id() {
+    let project = dir_with_one_requirement();
+    cmd()
+        .args(["query", "REQ-001", "--format", "text"])
+        .current_dir(project.path())
+        .assert()
+        .code(0);
+}
+
 // @kotowari[REQ-core-158, EX-core-256]
 #[test]
 fn req_158_unreadable_config_stops_like_check() {
