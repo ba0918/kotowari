@@ -294,8 +294,8 @@ pub fn parse_other_file(rel_path: &str, content: &str) -> OtherFile {
             continue;
         }
         let trimmed = line.trim();
-        if trimmed.starts_with("## ") {
-            headings.push(trimmed[3..].trim().to_string());
+        if let Some(heading) = trimmed.strip_prefix("## ") {
+            headings.push(heading.trim().to_string());
         }
     }
     OtherFile {
@@ -367,10 +367,8 @@ impl SourceContext {
                 // records_files に積むのは判断の記録と読めたファイルだけ（load_all_md）
                 if rf.is_records {
                     // 判断の記録: 印は決定の番号
-                    if is_decision_number(anchor) {
-                        if rf.has_decision_number(anchor) {
-                            return Ok(());
-                        }
+                    if is_decision_number(anchor) && rf.has_decision_number(anchor) {
+                        return Ok(());
                     }
                     return Err(source.to_string());
                 }

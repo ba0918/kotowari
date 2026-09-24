@@ -368,13 +368,13 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     }
 
     // REQ-core-004: --config がディレクトリを指すとき
-    if let Some(ref cp) = config_path {
-        if cp.is_dir() {
-            return Err(StopReason::ArgumentError(format!(
-                "--config is a directory: {}",
-                cp.display()
-            )));
-        }
+    if let Some(ref cp) = config_path
+        && cp.is_dir()
+    {
+        return Err(StopReason::ArgumentError(format!(
+            "--config is a directory: {}",
+            cp.display()
+        )));
     }
 
     let format = match Format::parse(format_str.as_deref().unwrap_or("json")) {
@@ -975,13 +975,8 @@ fn sort_findings(findings: &mut [Finding]) {
     findings.sort_by(|a, b| {
         a.path
             .cmp(&b.path)
-            .then_with(|| match (a.line, b.line) {
-                // TBL-core-007: line は null が先、その後は小さい順
-                (None, None) => std::cmp::Ordering::Equal,
-                (None, Some(_)) => std::cmp::Ordering::Less,
-                (Some(_), None) => std::cmp::Ordering::Greater,
-                (Some(al), Some(bl)) => al.cmp(&bl),
-            })
+            // TBL-core-007: line は null が先、その後は小さい順（Option の順序が None を先に置く）
+            .then_with(|| a.line.cmp(&b.line))
             .then_with(|| a.kind.as_str().cmp(b.kind.as_str()))
             .then_with(|| a.detail.cmp(&b.detail))
     });

@@ -917,29 +917,29 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
             check_item(item, &path, &mut findings);
 
             // ID を収集（形に合う ID だけ。REQ-core-114）
-            if let Some(id) = item.id() {
-                if is_valid_id(id) {
-                    all_ids
-                        .entry(id.to_string())
-                        .or_default()
-                        .push((path.clone(), item.item_line()));
+            if let Some(id) = item.id()
+                && is_valid_id(id)
+            {
+                all_ids
+                    .entry(id.to_string())
+                    .or_default()
+                    .push((path.clone(), item.item_line()));
 
-                    // REQ-core-167: ID の名前は文書の置き場の第1階層と一致する。
-                    // 第1階層を持たない文書（IR の置き場の直下）では指す先が無いので不一致になる
-                    if let Some(name) = id_name(id) {
-                        let domain = doc.directory.split('/').next().unwrap_or("");
-                        if name != domain {
-                            let line = match item {
-                                Item::Scenario { tag_line, line, .. } => tag_line.unwrap_or(*line),
-                                _ => item.item_line(),
-                            };
-                            findings.push(Finding::new(
-                                FindingKind::IdDomainMismatch,
-                                path.clone(),
-                                Some(line),
-                                id.to_string(),
-                            ));
-                        }
+                // REQ-core-167: ID の名前は文書の置き場の第1階層と一致する。
+                // 第1階層を持たない文書（IR の置き場の直下）では指す先が無いので不一致になる
+                if let Some(name) = id_name(id) {
+                    let domain = doc.directory.split('/').next().unwrap_or("");
+                    if name != domain {
+                        let line = match item {
+                            Item::Scenario { tag_line, line, .. } => tag_line.unwrap_or(*line),
+                            _ => item.item_line(),
+                        };
+                        findings.push(Finding::new(
+                            FindingKind::IdDomainMismatch,
+                            path.clone(),
+                            Some(line),
+                            id.to_string(),
+                        ));
                     }
                 }
             }

@@ -111,10 +111,10 @@ pub fn collect_test_files(
                     // filter_entry ではディレクトリかどうかで判定
                     // WalkDir は follow_links(false) なのでシンボリックリンクは展開されない
                     // ここで辿って判定する
-                    if let Ok(meta) = std::fs::metadata(e.path()) {
-                        if meta.is_dir() {
-                            return false; // ディレクトリリンクは辿らない
-                        }
+                    if let Ok(meta) = std::fs::metadata(e.path())
+                        && meta.is_dir()
+                    {
+                        return false; // ディレクトリリンクは辿らない
                     }
                     return true; // ファイルリンクは含める
                 }
@@ -462,15 +462,16 @@ pub fn discover_and_check(
     for doc in docs {
         for item in &doc.items {
             if let Item::Requirement {
-                id, verification, ..
+                id,
+                verification: Some(v),
+                ..
             } = item
+                && v != "review"
+                && is_valid_id(id)
+                && !coverage.has_test(id)
             {
-                if let Some(v) = verification {
-                    if v != "review" && is_valid_id(id) && !coverage.has_test(id) {
-                        let path = crate::join_display_path(ir_path, &doc.relative_path);
-                        findings.push(Finding::new(FindingKind::RequirementWithoutTest, path, Some(item.item_line()), id.clone()));
-                    }
-                }
+                let path = crate::join_display_path(ir_path, &doc.relative_path);
+                findings.push(Finding::new(FindingKind::RequirementWithoutTest, path, Some(item.item_line()), id.clone()));
             }
         }
     }
