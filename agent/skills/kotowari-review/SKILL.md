@@ -80,20 +80,22 @@ perspective; no optional seat is attached to conformance. The quality and confor
 - **Launching.** The caller launches optional seats itself; a reviewer delegation never carries the
   list or this section. Launch them one at a time, never in parallel. Hand each launch means the
   self-contained prompt the quality reviewer gets, and read what it returns as the JSON in
-  **Output**. Take `git status` in the worktree right before and right after each seat; a
-  difference belongs to that seat.
+  **Output**. Right before and right after each seat, take a snapshot of the worktree: the
+  `git status` output, the `git rev-parse HEAD` output, and a hash of the `git diff HEAD` output. A
+  difference in any of the three belongs to that seat.
 - **Time limit.** Apply one only when the seat's entry writes it; otherwise wait for the launch
   means to finish.
 - **Absent seats.** An optional seat that fails once is absent and is never retried. The reasons:
   quota exhausted, time limit reached, launch failed, output unreadable as finding JSON, and worktree
   rewritten. An absent optional seat does not stop the review or make it unsuccessful. A required
   seat that fails is handled as a failed review already is.
-- **A rewritten worktree.** When the two `git status` outputs differ, discard that seat's findings,
-  mark it absent for the rewrite, revert nothing, and show the changed files to the person before
-  anything else proceeds; their answer decides whether the changes are reverted or kept. Inside
-  cycle the loop pauses for this as the cycle skill says; in a direct call the main session stops
-  and asks before handing over the report. Launch means are written to run read-only; this check
-  exists because nothing here can guarantee it.
+- **A rewritten worktree.** When the two snapshots differ, discard that seat's findings, mark it
+  absent for the rewrite, revert nothing, and show the changed files to the person before anything
+  else proceeds; their answer decides whether the changes are reverted or kept. Reverting restores
+  only what the seat changed relative to the snapshot taken before it ran, never edits the person
+  already had there. Inside cycle the loop pauses for this as the cycle skill says; in a direct
+  call the main session stops and asks before handing over the report. Launch means are written
+  to run read-only; this check exists because nothing here can guarantee it.
 - **Merging and reporting.** The caller merges and dedupes optional seats' findings with the others
   as **Output** says; the finding shape does not change, and several seats raising the same thing
   adds no weight. The report states which optional seats attended and which were absent, each
