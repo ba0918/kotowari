@@ -78,27 +78,21 @@ perspective; no optional seat is attached to conformance. The quality and confor
 - **Which reviews.** Full reviews only, and a person's direct call under the same rules. Never a
   diff review. A review another station runs on its own, not through this skill, gets none.
 - **Launching.** The caller launches optional seats itself; a reviewer delegation never carries the
-  list or this section. Launch them one at a time, never in parallel. Hand each launch means the
+  list or this section. Seats may be launched in parallel. Hand each launch means the
   self-contained prompt the quality reviewer gets, and read what it returns as the JSON in
-  **Output**. Right before and right after each seat, take a snapshot of the worktree: the
-  `git status` output, the `git rev-parse HEAD` output, and a hash of the `git diff HEAD` output. A
-  difference in any of the three belongs to that seat.
+  **Output**.
+- **Throwaway copy.** Each seat runs inside its own copy of the worktree, created in a temporary
+  directory outside it right before that seat is launched: the worktree's HEAD with its
+  uncommitted changes and its untracked, non-ignored files laid over it (for example, a detached
+  `git worktree add` at HEAD, `git diff HEAD --binary` applied in it, and the untracked files
+  copied in). The caller that created the copy deletes it once its JSON is read; the copy is not
+  one of the person's worktrees. Nothing a seat writes reaches the person's worktree.
 - **Time limit.** Apply one only when the seat's entry writes it; otherwise wait for the launch
   means to finish.
 - **Absent seats.** An optional seat that fails once is absent and is never retried. The reasons:
-  quota exhausted, time limit reached, launch failed, output unreadable as finding JSON, and worktree
-  rewritten. An absent optional seat does not stop the review or make it unsuccessful. A required
-  seat that fails is handled as a failed review already is.
-- **A rewritten worktree.** When the two snapshots differ, discard that seat's findings, mark it
-  absent for the rewrite, revert nothing, and before anything else proceeds show the person every
-  file modified relative to HEAD at that moment and every commit the seat made, saying that the
-  snapshots cannot tell which of those edits are the seat's; their answer decides whether the
-  changes are reverted or kept. Files that were unmodified before the seat, and commits the seat
-  made, can be restored to the state before it ran; in a file the person had already modified,
-  the snapshots cannot separate the seat's edit from the person's, and the person sorts it out.
-  Inside cycle the loop pauses for this as the cycle skill says; in a direct call the main session
-  stops and asks before handing over the report. Launch means are written to run read-only; this
-  check exists because nothing here can guarantee it.
+  quota exhausted, time limit reached, launch failed, and output unreadable as finding JSON. An
+  absent optional seat does not stop the review or make it unsuccessful. A required seat that
+  fails is handled as a failed review already is.
 - **Merging and reporting.** The caller merges and dedupes optional seats' findings with the others
   as **Output** says; the finding shape does not change, and several seats raising the same thing
   adds no weight. The report states which optional seats attended and which were absent, each
