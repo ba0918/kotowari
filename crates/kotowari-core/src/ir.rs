@@ -260,6 +260,14 @@ pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopR
             }
             for obj in elements(values.get("scenarios")) {
                 let opening = number(obj, "line")?;
+                // REQ-core-174: gherkin でないブロックはスキーマの側が unknown_code_block にしている。
+                // その中の行は gherkin として読まない
+                let not_gherkin = findings
+                    .iter()
+                    .any(|f| f.kind == FindingKind::UnknownCodeBlock && f.line == Some(opening));
+                if not_gherkin {
+                    continue;
+                }
                 let content = string(obj, "value").unwrap_or_default();
                 GherkinBlock::read(opening, &content, &mut items, &mut findings);
             }
