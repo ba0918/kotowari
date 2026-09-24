@@ -1,9 +1,11 @@
 //! `ガイド`を読み、`ガイドの印`を取り出す（REQ-core-198〜REQ-core-202、REQ-core-206、TBL-core-036）
 
 use crate::config::Config;
-use crate::ir::{is_valid_id, split_lines};
+use crate::fingerprint::fingerprint_of;
+use crate::ir::{IrDocument, is_valid_id, split_lines};
 use crate::{Finding, FindingKind, StopReason};
 use markdown::mdast::Node;
+use std::collections::BTreeMap;
 use std::ops::Range;
 use std::path::Path;
 
@@ -28,13 +30,14 @@ pub struct GuideTally {
     pub marks: usize,
 }
 
-/// "guides.files" に当たるファイルを`ガイド`として読む。
+/// "guides.files" に当たるファイルを`ガイド`として読み、`ガイドの印`を今の`IR`の`指紋`と照らす。
 /// `テストのファイル`と重なるファイルがあれば、バイト順で最初の1つを詳細にして設定の誤りで停止する（REQ-core-199）。
 /// `test_files` はバイト順に並んだ`テストのファイル`の相対パス
 pub fn read_guides(
     base: &Path,
     cfg: &Config,
     test_files: &[String],
+    docs: &[IrDocument],
     findings: &mut Vec<Finding>,
 ) -> Result<GuideTally, StopReason> {
     let files = crate::tests_discovery::collect_files(base, &cfg.guides.files)?;
@@ -50,10 +53,53 @@ pub fn read_guides(
         let content = crate::read_utf8_file(Path::new(abs), rel)?;
         read_marks(rel, &content, &mut entries, findings);
     }
+    check_stale(&entries, &fingerprints_by_id(docs), findings);
     Ok(GuideTally {
         files: files.len(),
         marks: entries.len(),
     })
+}
+
+/// `ID` から、その `ID` の`項目`と`シナリオ`の`指紋`を REQ-core-032 の順（文書はパスのバイト順、
+/// 同じ文書では行の小さい順）に引く。docs も items もその順に並んでいる
+fn fingerprints_by_id(docs: &[IrDocument]) -> BTreeMap<&str, Vec<String>> {
+    let mut by_id: BTreeMap<&str, Vec<String>> = BTreeMap::new();
+    for doc in docs {
+        let lines = split_lines(&doc.raw_content);
+        for item in &doc.items {
+            if let Some(id) = item.id() {
+                by_id
+                    .entry(id)
+                    .or_default()
+                    .push(fingerprint_of(item, &lines));
+            }
+        }
+    }
+    by_id
+}
+
+/// REQ-core-204: どの`項目`と`シナリオ`の`指紋`とも同じでない1件ごとに guide_stale を出す。
+/// detail の今の`指紋`は、`IR`に無ければ "-"、あれば1つ目の`指紋`
+fn check_stale(
+    entries: &[GuideEntry],
+    fingerprints: &BTreeMap<&str, Vec<String>>,
+    findings: &mut Vec<Finding>,
+) {
+    for entry in entries {
+        let current = fingerprints.get(entry.id.as_str());
+        if current.is_some_and(|all| all.contains(&entry.fingerprint)) {
+            continue;
+        }
+        let first = current
+            .and_then(|all| all.first())
+            .map_or("-", String::as_str);
+        findings.push(Finding::new(
+            FindingKind::GuideStale,
+            entry.path.clone(),
+            Some(entry.line),
+            format!("{} {} {first}", entry.id, entry.fingerprint),
+        ));
+    }
 }
 
 const MARK_START: &str = "@kotowari[";

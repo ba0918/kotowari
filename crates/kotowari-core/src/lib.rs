@@ -111,6 +111,7 @@ finding_kinds! {
     InvalidPlan => "invalid_plan",
     GlossaryInvalid => "glossary_invalid",
     GlossaryTitleInvalid => "glossary_title_invalid",
+    GuideStale => "guide_stale",
     UnresolvedReference => "unresolved_reference",
     VagueWord => "vague_word",
     VerificationInvalid => "verification_invalid",
@@ -124,7 +125,8 @@ impl FindingKind {
             FindingKind::TooManyLines
             | FindingKind::TooManyRequirements
             | FindingKind::MutantTimeout
-            | FindingKind::EquivalentStale => "notice",
+            | FindingKind::EquivalentStale
+            | FindingKind::GuideStale => "notice",
             _ => "error",
         }
     }
@@ -1087,6 +1089,7 @@ fn load_with_guides(
         &loaded.base,
         &loaded.cfg,
         &loaded.test_files,
+        &loaded.docs,
         &mut loaded.findings,
     )?;
     Ok((loaded, tally))
@@ -1142,12 +1145,13 @@ pub fn run_status(
     cwd: &Path,
     config_path: Option<&Path>,
 ) -> Result<status::StatusResult, StopReason> {
-    let (loaded, _guides) = load_with_guides(cwd, config_path)?;
+    let (loaded, guides) = load_with_guides(cwd, config_path)?;
     Ok(status::build(
         &loaded.docs,
         &loaded.cfg.ir,
         &loaded.markers,
         loaded.tally,
+        guides,
         &loaded.findings,
     ))
 }

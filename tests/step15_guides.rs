@@ -518,3 +518,210 @@ fn req_202_an_empty_mark_and_a_mark_without_its_closing_bracket_are_invalid() {
     );
     assert_eq!(v["guides"]["marks"], 0);
 }
+
+// --- REQ-core-204、REQ-core-031、REQ-core-162: 指紋の照合と guide_stale ---
+
+/// EX-core-362 の`ガイドの印`
+const MARK_362: &str = "# ガイド\n\n<!-- @kotowari[REQ-001:51b1f3da] -->\n";
+
+/// guide_stale の`指摘`の (line, detail)
+fn stale_on(v: &serde_json::Value) -> Vec<(u64, String)> {
+    findings_on(v, "guides/a.md")
+        .into_iter()
+        .filter(|(kind, _, _)| kind == "guide_stale")
+        .map(|(_, line, detail)| (line, detail))
+        .collect()
+}
+
+// @kotowari[REQ-core-198, REQ-core-200, REQ-core-203, REQ-core-204, REQ-core-206, EX-core-362]
+#[test]
+fn ex_362_a_mark_with_the_current_fingerprint_yields_nothing() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_362_project(tmp.path(), MARK_362);
+    let (code, v) = check_json(tmp.path());
+    assert_eq!(code, Some(0), "{v}");
+    assert_eq!(v["findings"], serde_json::json!([]));
+    assert_eq!(v["guides"], serde_json::json!({"files": 1, "marks": 1}));
+}
+
+// @kotowari[REQ-core-204, REQ-core-031, TBL-core-009, TBL-core-019, EX-core-363]
+#[test]
+fn ex_363_a_changed_body_makes_the_mark_a_stale_notice() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_362_project(tmp.path(), MARK_362);
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &ir_doc(&REQ_001.replace("文。", "別の文。"), ""),
+    );
+    let (code, stdout, _) = run(tmp.path(), &["check", "--format", "text"]);
+    assert_eq!(
+        code,
+        Some(0),
+        "a notice does not change the exit code: {stdout}"
+    );
+    assert_eq!(
+        stdout,
+        "guides/a.md:3 [notice] guide_stale REQ-001 51b1f3da e4f95a33\n"
+    );
+    let (code, stdout, _) = run(tmp.path(), &["status"]);
+    assert_eq!(code, Some(0), "{stdout}");
+    let v = json(&stdout);
+    assert_eq!(v["complete"], true);
+    assert_eq!(v["findings"]["notice"], 1);
+}
+
+// @kotowari[REQ-core-203, REQ-core-204, EX-core-364]
+#[test]
+fn ex_364_renaming_the_heading_and_adding_a_source_keeps_the_mark_fresh() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_362_project(tmp.path(), MARK_362);
+    let renamed = REQ_001
+        .replace("名前", "別の名前")
+        .replace("r.md#A1\n", "r.md#A1, docs/decision/records/r.md#A1\n");
+    write(tmp.path(), "docs/ir/a.md", &ir_doc(&renamed, ""));
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(stale_on(&v), vec![], "{v}");
+    assert_eq!(v["guides"]["marks"], 1);
+}
+
+// @kotowari[REQ-core-204, EX-core-365]
+#[test]
+fn ex_365_a_mark_on_an_id_missing_from_the_ir_is_a_stale_notice() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_362_project(
+        tmp.path(),
+        "# ガイド\n\n<!-- @kotowari[REQ-009:51b1f3da] -->\n",
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(
+        findings_on(&v, "guides/a.md"),
+        vec![(
+            "guide_stale".to_string(),
+            3,
+            "REQ-009 51b1f3da -".to_string()
+        )],
+        "no unresolved_reference: {v}"
+    );
+}
+
+// @kotowari[REQ-core-204, EX-core-370]
+#[test]
+fn ex_370_matching_any_item_of_a_duplicated_id_keeps_the_mark_fresh() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_362_project(tmp.path(), MARK_362);
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &ir_doc(&REQ_001.replace("文。", "別の文。"), ""),
+    );
+    write(tmp.path(), "docs/ir/b.md", &ir_doc(REQ_001, ""));
+    let (_, v) = check_json(tmp.path());
+    assert!(
+        v["findings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|f| f["kind"] == "duplicate_id"),
+        "{v}"
+    );
+    assert_eq!(stale_on(&v), vec![], "{v}");
+    assert_eq!(v["guides"]["marks"], 1);
+}
+
+// @kotowari[REQ-core-204, REQ-core-032]
+#[test]
+fn req_204_a_duplicated_id_matching_neither_item_reports_the_first_fingerprint() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_362_project(
+        tmp.path(),
+        "# ガイド\n\n<!-- @kotowari[REQ-001:00000000] -->\n",
+    );
+    // 1つ目（パスのバイト順で先の docs/ir/a.md）の指紋は "e4f95a33"、2つ目は "51b1f3da"
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &ir_doc(&REQ_001.replace("文。", "別の文。"), ""),
+    );
+    write(tmp.path(), "docs/ir/b.md", &ir_doc(REQ_001, ""));
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(
+        stale_on(&v),
+        vec![(3, "REQ-001 00000000 e4f95a33".to_string())]
+    );
+}
+
+/// "EX-001"（`指紋`は "ec19e8a0"）を足した EX-core-362 の`IR`と、両方に印を付けたテスト
+fn write_ex_001_project(tmp: &Path, tags: &str, name: &str, guide: &str) {
+    write_ex_362_project(tmp, guide);
+    write(tmp, "docs/ir/a.md", &scenario_doc(tags, name));
+    write(
+        tmp,
+        "tests/a.rs",
+        "// @kotowari[REQ-001, EX-001]\n#[test]\nfn req_001() {}\n",
+    );
+}
+
+const EX_001_TAGS: &str = "@id=EX-001 @about=REQ-001 @source=docs/decision/records/r.md#A1";
+
+// @kotowari[REQ-core-200, REQ-core-204, REQ-core-206, TBL-core-036, EX-core-371]
+#[test]
+fn ex_371_two_entries_in_one_mark_are_counted_and_matched_one_by_one() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_001_project(
+        tmp.path(),
+        EX_001_TAGS,
+        "例",
+        "# ガイド\n\n<!-- @kotowari[REQ-001:51b1f3da, EX-001:51b1f3da] -->\n",
+    );
+    let (code, v) = check_json(tmp.path());
+    assert_eq!(code, Some(0), "{v}");
+    assert_eq!(v["guides"], serde_json::json!({"files": 1, "marks": 2}));
+    assert_eq!(
+        stale_on(&v),
+        vec![(3, "EX-001 51b1f3da ec19e8a0".to_string())]
+    );
+}
+
+// @kotowari[REQ-core-203, REQ-core-204, EX-core-375]
+#[test]
+fn ex_375_renaming_a_scenario_and_changing_its_source_tag_keeps_the_mark_fresh() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_001_project(
+        tmp.path(),
+        "@id=EX-001 @about=REQ-001 @source=docs/decision/records/r.md#A1,docs/decision/records/r.md#A1",
+        "別の名前",
+        "# ガイド\n\n<!-- @kotowari[EX-001:ec19e8a0] -->\n",
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(stale_on(&v), vec![], "{v}");
+    assert_eq!(v["guides"]["marks"], 1);
+}
+
+// @kotowari[REQ-core-204, TBL-core-019]
+#[test]
+fn req_204_the_line_of_guide_stale_is_where_the_mark_starts() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_362_project(
+        tmp.path(),
+        "# ガイド\n\n<!--\n説明\n  @kotowari[REQ-009:51b1f3da]\n-->\n",
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(stale_on(&v), vec![(5, "REQ-009 51b1f3da -".to_string())]);
+}
+
+// @kotowari[REQ-core-162, TBL-core-028, TBL-core-006]
+#[test]
+fn req_162_status_carries_the_guides_group() {
+    let tmp = TempDir::new().unwrap();
+    write_ex_362_project(tmp.path(), MARK_362);
+    let (code, stdout, stderr) = run(tmp.path(), &["status"]);
+    assert_eq!(code, Some(0), "{stderr}");
+    let v = json(&stdout);
+    assert_eq!(v["guides"], serde_json::json!({"files": 1, "marks": 1}));
+    let (_, text, _) = run(tmp.path(), &["status", "--format", "text"]);
+    let lines: Vec<&str> = text.lines().collect();
+    let tests = lines.iter().position(|l| l.starts_with("tests ")).unwrap();
+    assert_eq!(lines[tests + 1], "guides files=1 marks=1", "{text}");
+    assert!(lines[tests + 2].starts_with("findings "), "{text}");
+}
