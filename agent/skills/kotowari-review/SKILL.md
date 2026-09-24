@@ -91,13 +91,15 @@ perspective; no optional seat is attached to conformance. The quality and confor
   seat that fails is handled as a failed review already is.
 - **A rewritten worktree.** When the two snapshots differ, discard that seat's findings, mark it
   absent for the rewrite, revert nothing, and show the changed files to the person before anything
-  else proceeds; their answer decides whether the changes are reverted or kept. The snapshots show
-  which files and commits the seat changed. Files that were unmodified before the seat, and commits
-  the seat made, can be restored to the state before it ran; in a file the person had already
-  modified, the snapshots cannot separate the seat's edit from the person's, and the person sorts
-  it out. Inside cycle the loop pauses for this as the cycle skill says; in a direct call the main
-  session stops and asks before handing over the report. Launch means are written to run
-  read-only; this check exists because nothing here can guarantee it.
+  else proceeds; their answer decides whether the changes are reverted or kept. The snapshots name
+  the files whose status changed and the commits the seat made. When only the diff hash differs,
+  they cannot name the file, so show the person every file that was already modified before the
+  seat ran. Files that were unmodified before the seat, and commits the seat made, can be restored
+  to the state before it ran; in a file the person had already modified, the snapshots cannot
+  separate the seat's edit from the person's, and the person sorts it out. Inside cycle the loop
+  pauses for this as the cycle skill says; in a direct call the main session stops and asks before
+  handing over the report. Launch means are written to run read-only; this check exists because
+  nothing here can guarantee it.
 - **Merging and reporting.** The caller merges and dedupes optional seats' findings with the others
   as **Output** says; the finding shape does not change, and several seats raising the same thing
   adds no weight. The report states which optional seats attended and which were absent, each
