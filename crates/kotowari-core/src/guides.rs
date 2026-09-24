@@ -40,6 +40,10 @@ pub fn read_guides(
     docs: &[IrDocument],
     findings: &mut Vec<Finding>,
 ) -> Result<GuideTally, StopReason> {
+    // 空の一覧ならガイドは1つも読まない（REQ-core-198）。走査そのものを省く
+    if cfg.guides.files.is_empty() {
+        return Ok(GuideTally::default());
+    }
     let files = crate::tests_discovery::collect_files(base, &cfg.guides.files)?;
     // files はバイト順なので、最初に見つかる重なりがバイト順で最初の1つ
     if let Some((overlap, _)) = files
