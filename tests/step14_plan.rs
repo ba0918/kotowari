@@ -162,7 +162,9 @@ fn ex_core_333_a_step_missing_a_field_is_an_invalid_plan_error() {
         assert_eq!(f["path"], "docs/plans/a.md", "{f}");
         // detail はスキーマの側の種類に ": " と詳細が続く
         let detail = f["detail"].as_str().unwrap();
-        let (kind, rest) = detail.split_once(": ").unwrap_or_else(|| panic!("{detail:?}"));
+        let (kind, rest) = detail
+            .split_once(": ")
+            .unwrap_or_else(|| panic!("{detail:?}"));
         assert!(
             !kind.is_empty() && kind.chars().all(|c| c.is_ascii_lowercase() || c == '_'),
             "{detail:?}"
@@ -239,7 +241,10 @@ fn ex_core_344_a_missing_plan_stops_as_an_unreadable_file() {
     assert_eq!(output.status.code(), Some(2));
     assert!(output.stdout.is_empty());
     let first_line = first_stderr_line(&output);
-    assert!(first_line.starts_with("unreadable file: "), "{first_line:?}");
+    assert!(
+        first_line.starts_with("unreadable file: "),
+        "{first_line:?}"
+    );
 }
 
 // @kotowari[REQ-core-197]
@@ -254,7 +259,10 @@ fn req_core_197_a_directory_given_as_the_plan_stops_as_an_unreadable_file() {
         .unwrap();
     assert_eq!(output.status.code(), Some(2));
     let first_line = first_stderr_line(&output);
-    assert!(first_line.starts_with("unreadable file: "), "{first_line:?}");
+    assert!(
+        first_line.starts_with("unreadable file: "),
+        "{first_line:?}"
+    );
 }
 
 // @kotowari[REQ-core-197, EX-core-358]
@@ -442,7 +450,12 @@ fn ex_core_335_shown_by_word_followed_by_more_letters_is_an_error() {
 // @kotowari[REQ-core-192]
 #[test]
 fn req_core_192_each_of_the_four_words_may_start_shown_by_alone_or_before_a_space() {
-    for value in ["test", "check — 3つのコマンド", "artifact — README.md", "external\t実機"] {
+    for value in [
+        "test",
+        "check — 3つのコマンド",
+        "artifact — README.md",
+        "external\t実機",
+    ] {
         assert_valid_plan(&replace_once(
             VALID_PLAN,
             "- Shown by: test — REQ-core-001",
@@ -460,7 +473,11 @@ fn ex_core_336_a_plan_without_a_step_is_an_error() {
 // @kotowari[REQ-core-192, EX-core-337]
 #[test]
 fn ex_core_337_the_test_command_section_may_be_absent() {
-    assert_valid_plan(&replace_once(VALID_PLAN, "## Test command\n\n`cargo test`\n\n", ""));
+    assert_valid_plan(&replace_once(
+        VALID_PLAN,
+        "## Test command\n\n`cargo test`\n\n",
+        "",
+    ));
 }
 
 // @kotowari[REQ-core-192]
@@ -550,7 +567,11 @@ fn req_core_192_the_name_after_the_colon_of_a_step_heading_is_not_checked() {
 // @kotowari[REQ-core-192]
 #[test]
 fn req_core_192_a_step_heading_without_a_colon_is_an_error() {
-    assert_invalid_plan(&replace_once(VALID_PLAN, "### S1: 入力を読む", "### S1 入力を読む"));
+    assert_invalid_plan(&replace_once(
+        VALID_PLAN,
+        "### S1: 入力を読む",
+        "### S1 入力を読む",
+    ));
 }
 
 // @kotowari[REQ-core-192, EX-core-347]
@@ -681,7 +702,11 @@ fn ex_core_351_a_line_before_the_first_step_is_an_error() {
 // @kotowari[REQ-core-192]
 #[test]
 fn req_core_192_a_list_before_the_first_step_is_an_error() {
-    assert_invalid_plan(&replace_once(VALID_PLAN, "## Steps\n\n", "## Steps\n\n- 前置き\n\n"));
+    assert_invalid_plan(&replace_once(
+        VALID_PLAN,
+        "## Steps\n\n",
+        "## Steps\n\n- 前置き\n\n",
+    ));
 }
 
 // @kotowari[REQ-core-192, EX-core-352]

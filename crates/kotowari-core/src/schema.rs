@@ -63,7 +63,11 @@ mod tests {
     #[test]
     fn req_core_191_the_embedded_plan_schema_parses() {
         let schema = plan_schema();
-        assert!(schema.is_ok(), "計画書のスキーマが parse_schema を通らない: {:?}", schema.err());
+        assert!(
+            schema.is_ok(),
+            "計画書のスキーマが parse_schema を通らない: {:?}",
+            schema.err()
+        );
         assert_eq!(schema.unwrap().name.as_deref(), Some("plan"));
     }
 }
