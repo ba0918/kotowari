@@ -84,7 +84,7 @@
 
 ### 文書の形
 
-<!-- @kotowari[REQ-core-034:c8bed0c9, REQ-core-035:43c6f733, REQ-core-036:613b3ecf, REQ-core-174:3050c2ac, REQ-core-112:204f8368] -->
+<!-- @kotowari[REQ-core-034:c8bed0c9, REQ-core-035:43c6f733, REQ-core-036:613b3ecf, REQ-core-174:43144ec6, REQ-core-112:204f8368] -->
 
 ```text
 docs/ir/misc/notitle.md:- [error] missing_title notitle.md
@@ -101,7 +101,7 @@ docs/ir/misc/table.md:18 [error] unclosed_code_block ```gherkin
 | `multiple_titles` | `# ` の見出しが2つ以上ある | 題名を1つにし、ほかは `## ` 以下にするか文書を分ける |
 | `missing_scope` | 題名と最初の `## ` の間に、文書が扱う範囲の行が無い | 題名の直後に、その文書が扱うことを1〜3行で書く（用語集と問題の記録は対象外） |
 | `unknown_line` | `## ` の直下（最初の `### ` より前）に地の文を書いた | 説明は範囲の行か項目の文に移す |
-| `unknown_code_block` | `## Examples` の下に gherkin でないコードブロックを置いた | 具体例は ` ```gherkin ` のブロックにする。このとき、ブロックの中の行にも `invalid_gherkin_line` が並んで出る（下の例の15行目） |
+| `unknown_code_block` | `## Examples` の下に gherkin でないコードブロックを置いた | 具体例は ` ```gherkin ` のブロックにする。gherkin でないブロックの中の行は gherkin として読まれないので、`invalid_gherkin_line` は出ない |
 | `unclosed_code_block` | コードブロックを閉じ忘れた | 開始と同じ記号で、同じ数以上の閉じの行を書く。閉じるまで、その後ろは検査されない |
 
 ### 項目の見出しと行
@@ -186,7 +186,7 @@ docs/ir/shop/cart.md:36 [error] missing_document price.md
 
 ### 用語集
 
-<!-- @kotowari[REQ-core-117:e5395be3, REQ-core-122:1b0fa7a3, REQ-core-123:e560f6b5, REQ-core-174:3050c2ac] -->
+<!-- @kotowari[REQ-core-117:e5395be3, REQ-core-122:1b0fa7a3, REQ-core-123:e560f6b5, REQ-core-174:43144ec6] -->
 
 ```text
 docs/ir/misc/CONTEXT.md:- [error] glossary_invalid CONTEXT.md
@@ -198,7 +198,7 @@ docs/ir/shop/CONTEXT.md:7 [error] invalid_glossary_row | 在庫 | |
 | 種類 | よくある原因 | 直し方 |
 |---|---|---|
 | `glossary_invalid` | `CONTEXT.md` に `| Term | Meaning | Source |` のヘッダと区切りの行を持つ表が無い（列名を日本語にした、など） | 題名の後、最初の `## ` より前に、このヘッダの表を置く。この誤りの間、その用語集の用語は0語として扱われる |
-| `glossary_title_invalid` | 用語集の題名が決まった形でない | 題名を `# Glossary` にする（同梱のスキーマが決めた形） |
+| `glossary_title_invalid` | 用語集の題名が `# Glossary` でない（`# 用語集` にした、など） | 題名を `# Glossary` にする |
 | `invalid_glossary_row` | 表の行のセルが3つ未満か、用語のセルが空 | 用語、意味、出典の3つのセルを埋める |
 | `duplicate_term` | 同じ用語集の前の行か、上のディレクトリの用語集に同じ用語がある | 重複した行を消す。見えるのは、根に近い側の1つ目の定義 |
 
@@ -324,7 +324,7 @@ docs/decision/records/2026-09-24-shop.md:17 [error] revision_link_invalid #A9
 
 ### mutants と plan
 
-<!-- @kotowari[REQ-core-139:0cb2c43f, REQ-core-140:062bb90d, REQ-core-142:8341bf8d, REQ-core-143:71734415, REQ-core-193:34e5d948] -->
+<!-- @kotowari[REQ-core-139:0cb2c43f, REQ-core-140:062bb90d, REQ-core-142:8341bf8d, REQ-core-143:71734415, REQ-core-193:ae035033] -->
 
 この5種類は `kotowari check` では出ません。
 `kotowari mutants` と `kotowari plan` だけが出します。
@@ -365,7 +365,6 @@ docs/ir/misc/table.md:- [error] multiple_titles もう一つの題名
 docs/ir/misc/table.md:6 [error] unknown_line 説明の行をここに書いた。
 docs/ir/misc/table.md:8 [error] missing_table TBL-misc-001
 docs/ir/misc/table.md:14 [error] unknown_code_block ```text
-docs/ir/misc/table.md:15 [error] invalid_gherkin_line メモ
 docs/ir/misc/table.md:18 [error] unclosed_code_block ```gherkin
 docs/ir/shop/CONTEXT.md:6 [error] duplicate_term かご
 docs/ir/shop/CONTEXT.md:7 [error] invalid_glossary_row | 在庫 | |

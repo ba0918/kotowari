@@ -8,7 +8,7 @@ IR の形の検査とテストとの対応の検査は、この1つのコマン�
 
 ## 書式
 
-<!-- @kotowari[REQ-core-002:da12d397] -->
+<!-- @kotowari[REQ-core-002:06abb59d] -->
 
 ```sh
 kotowari check [--format json|text] [--config <path>]
@@ -18,7 +18,7 @@ kotowari check [--format json|text] [--config <path>]
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-002:da12d397, REQ-core-021:14bd7b25, REQ-core-003:ccf703c7] -->
+<!-- @kotowari[REQ-core-002:06abb59d, REQ-core-021:14bd7b25, REQ-core-003:ccf703c7] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|

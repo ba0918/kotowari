@@ -26,7 +26,7 @@ flowchart BT
 
 ## 書式
 
-<!-- @kotowari[REQ-core-002:da12d397, REQ-core-004:e34832b6] -->
+<!-- @kotowari[REQ-core-002:06abb59d, REQ-core-004:e34832b6] -->
 
 ```sh
 kotowari status [--format json|text] [--config <path>]

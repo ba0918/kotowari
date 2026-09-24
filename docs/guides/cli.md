@@ -8,7 +8,7 @@ kotowari の6つのコマンドに共通する決まりをまとめたページ�
 
 ## 書式
 
-<!-- @kotowari[REQ-core-001:c859c183, REQ-core-002:da12d397] -->
+<!-- @kotowari[REQ-core-001:c859c183, REQ-core-002:06abb59d, EX-core-380:3c688038] -->
 
 ```sh
 kotowari <command> [--format json|text] [--config <path>] [argument]
@@ -29,11 +29,11 @@ kotowari --version
 
 オプションはコマンドの前にも後にも書けます。
 `kotowari --format text check` と `kotowari check --format text` は同じです。
-`mutants` と `plan` では、位置引数とオプションの順も問いません。
+位置引数とオプションの順も、どのコマンドでも問いません（`kotowari query REQ-001 --format text` も受けます）。
 
 ## 共通のオプション
 
-<!-- @kotowari[REQ-core-002:da12d397, REQ-core-021:14bd7b25, REQ-core-003:ccf703c7, REQ-core-107:b0d16f0b] -->
+<!-- @kotowari[REQ-core-002:06abb59d, REQ-core-021:14bd7b25, REQ-core-003:ccf703c7, REQ-core-107:b0d16f0b] -->
 
 | 名前 | 値 | 既定 | 説明 | 受けるコマンド |
 |---|---|---|---|---|
@@ -136,12 +136,12 @@ CI では終了コードだけで「直す必要があるか」を判定でき�
 
 ### 停止の理由
 
-<!-- @kotowari[TBL-core-018:6994583a, TBL-core-020:fc933c27, TBL-core-001:c99d6f5f] -->
+<!-- @kotowari[TBL-core-018:6994583a, TBL-core-020:80b871df, TBL-core-001:af14e0f5] -->
 
 | 1行目の文言 | 理由 | 詳細 | 主な場面 |
 |---|---|---|---|
 | `argument error` | 引数の誤り | 説明の文と問題の引数 | 知らないオプション、`--format` の知らない値、値の無いオプション、同じオプションの2回目、余分な位置引数、`--config` の先が無いかディレクトリ |
-| `config error` | 設定の誤り | 設定ファイルの相対パスと誤りの説明 | 設定ファイルが YAML として読めない、知らないキー、型の違う値、glob として読めない要素 |
+| `config error` | 設定の誤り | 設定ファイルの相対パスと誤りの説明（`tests.rules` と等価の一覧の誤りではそのファイルの相対パス） | 設定ファイルが YAML として読めない、知らないキー、同じキーの2回目、型の違う値、glob として読めない要素、`tests.rules` のルールのファイルが無いか読めない |
 | `unreadable file` | 読めないファイル | 相対パスと OS の誤りの文 | 置き場のディレクトリが無い、ファイルやディレクトリが読めない |
 | `non-UTF-8 file` | UTF-8 でないファイル | 相対パス | 読むファイルのどれかが UTF-8 でない |
 | `results error` | 結果の誤り | 結果のファイルの相対パスと誤りの説明 | `mutants` の結果のファイルの形が壊れている |
@@ -262,7 +262,7 @@ $ echo $?
 
 ### ファイルと設定の問題で止まる
 
-<!-- @kotowari[TBL-core-018:6994583a, TBL-core-020:fc933c27] -->
+<!-- @kotowari[TBL-core-018:6994583a, TBL-core-020:80b871df] -->
 
 ```console
 $ kotowari check --format text      # docs/decision/adr が無い
@@ -278,9 +278,13 @@ config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected 
   | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, limits, vague_words
 3 |   lines: 20
   |
+$ kotowari check --format text      # rules/c.yml の language が cobol
+config error: invalid rule in tests.rules: rules/c.yml: unknown language: cobol
 ```
 
-設定の誤りでは、1行目の後に該当箇所の抜粋が続きます。
+YAML の読み方に関わる設定の誤り（知らないキー、型の違いなど）では、1行目の後に該当箇所の抜粋が続きます。
+同じキーの2回目と、`tests.rules` のルールの知らない言語は1行だけです。
+`tests.rules` の誤りの詳細は、設定ファイルでなくルールのファイルを指します。
 決まっているのは1行目の形だけです。
 
 ### サブディレクトリから実行する
