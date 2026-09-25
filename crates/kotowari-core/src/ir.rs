@@ -41,6 +41,8 @@ pub enum Item {
         definition_line: Option<usize>,
         /// TBL-core-011: "- how_to_verify:" の値。人が確かめる手順の自由文
         how_to_verify: Option<String>,
+        /// 見出しの下の "- deferred:" の行（REQ-core-208）。行が無ければ None
+        deferred: Option<Deferral>,
         statements: Vec<(usize, String)>,
     },
     DecisionTable {
@@ -92,6 +94,15 @@ pub enum Item {
     },
 }
 
+/// "- deferred:" の行1つ。値は`出典`の並びで、空でもよい（REQ-core-208、REQ-core-210）
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Deferral {
+    /// コンマで区切った`出典`の並び（空の値は除く）
+    pub sources: Vec<String>,
+    /// その行
+    pub line: usize,
+}
+
 /// REQ-core-049: "- verification:" に書ける4つの値
 pub const VERIFICATION_VALUES: [&str; 4] = ["unit", "property", "proof", "review"];
 
@@ -139,6 +150,8 @@ pub struct IrDocument {
     pub kind: DocKind,
     /// `文書が扱う範囲`の`文`の行（行番号と行の文字そのまま）
     pub scope_lines: Vec<(usize, String)>,
+    /// 文書単位の "- deferred:" の行（REQ-core-209）。2つ目以降の行は読まない
+    pub deferred: Option<Deferral>,
     pub line_count: usize,
     pub items: Vec<Item>,
     pub raw_content: String,
@@ -252,6 +265,7 @@ pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopR
         directory: String::new(),
         kind,
         scope_lines: statements_of(values.get("scope"))?,
+        deferred: deferral(values.get("deferred"))?,
         line_count: split_lines(content).len(),
         items,
         raw_content: content.to_string(),
@@ -414,6 +428,12 @@ fn listed(value: Option<&Value>) -> Result<(Vec<String>, Option<usize>), StopRea
     Ok((values, Some(number(obj, "line")?)))
 }
 
+/// "- deferred:" の行。行が無ければ None
+fn deferral(value: Option<&Value>) -> Result<Option<Deferral>, StopReason> {
+    let (sources, line) = listed(value)?;
+    Ok(line.map(|line| Deferral { sources, line }))
+}
+
 /// `文`の行の並び（行番号と行の文字そのまま）
 fn statements_of(value: Option<&Value>) -> Result<Vec<(usize, String)>, StopReason> {
     elements(value)
@@ -477,6 +497,7 @@ fn requirement(
         definitions,
         definition_line,
         how_to_verify: string(obj, "how_to_verify"),
+        deferred: deferral(obj.get("deferred"))?,
         statements,
     }))
 }
@@ -991,6 +1012,8 @@ pub(crate) fn check_documents_with_duplicates(
             }
         }
 
+        check_empty_deferral(doc.deferred.as_ref(), &path, &mut findings);
+
         // 項目の検査
         for item in &doc.items {
             if duplicate_rows.contains(&item.item_line()) {
@@ -1077,6 +1100,20 @@ fn has_empty_source_line(sources: &[String], source_line: &Option<usize>) -> boo
     source_line.is_some() && sources.is_empty()
 }
 
+/// REQ-core-210: 値の空の "- deferred:" の行には、その行に detail が "deferred" の missing_source
+fn check_empty_deferral(deferral: Option<&Deferral>, path: &str, findings: &mut Vec<Finding>) {
+    if let Some(deferral) = deferral
+        && deferral.sources.is_empty()
+    {
+        findings.push(Finding::new(
+            FindingKind::MissingSource,
+            path.to_string(),
+            Some(deferral.line),
+            "deferred".to_string(),
+        ));
+    }
+}
+
 /// 項目の検査のうち、スキーマの側に宣言の無いもの
 fn check_item(item: &Item, path: &str, findings: &mut Vec<Finding>) {
     match item {
@@ -1088,6 +1125,7 @@ fn check_item(item: &Item, path: &str, findings: &mut Vec<Finding>) {
             source_line,
             definitions,
             definition_line,
+            deferred,
             ..
         } => {
             if has_empty_source_line(sources, source_line) {
@@ -1098,6 +1136,7 @@ fn check_item(item: &Item, path: &str, findings: &mut Vec<Finding>) {
                     id.clone(),
                 ));
             }
+            check_empty_deferral(deferred.as_ref(), path, findings);
 
             // REQ-core-051: algorithm に決定表か性質を指す定義がない。
             // "- definition:" の行そのものが無いときはスキーマの側が出している（A71）

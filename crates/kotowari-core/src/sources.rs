@@ -542,9 +542,13 @@ pub(crate) fn check_sources_with_duplicates(
 ) {
     for (doc, duplicate_rows) in docs.iter().zip(duplicates.rows()) {
         let path = crate::join_display_path(ir_path, &doc.relative_path);
+        check_deferral_sources(doc.deferred.as_ref(), ctx, &path, findings);
         for item in &doc.items {
             if duplicate_rows.contains(&item.item_line()) {
                 continue;
+            }
+            if let crate::ir::Item::Requirement { deferred, .. } = item {
+                check_deferral_sources(deferred.as_ref(), ctx, &path, findings);
             }
             let (sources, source_line) = match item {
                 // REQ-core-115: 出典の行（行が無ければ見出しの行）
@@ -587,16 +591,40 @@ pub(crate) fn check_sources_with_duplicates(
                 }
             };
 
-            for source in &sources {
-                if let Err(bad) = ctx.check_source(source) {
-                    findings.push(Finding::new(
-                        FindingKind::SourceInvalid,
-                        path.clone(),
-                        Some(source_line),
-                        bad,
-                    ));
-                }
-            }
+            check_listed_sources(&sources, source_line, ctx, &path, findings);
         }
+    }
+}
+
+/// 出典の並びを検査し、source_invalid をその行に出す（REQ-core-115）
+fn check_listed_sources(
+    sources: &[String],
+    line: usize,
+    ctx: &SourceContext,
+    path: &str,
+    findings: &mut Vec<Finding>,
+) {
+    for source in sources {
+        if let Err(bad) = ctx.check_source(source) {
+            findings.push(Finding::new(
+                FindingKind::SourceInvalid,
+                path.to_string(),
+                Some(line),
+                bad,
+            ));
+        }
+    }
+}
+
+/// REQ-core-210、REQ-core-115: "- deferred:" の値を "- source:" と同じ規則で検査し、
+/// source_invalid はその "- deferred:" の行に出す
+fn check_deferral_sources(
+    deferral: Option<&crate::ir::Deferral>,
+    ctx: &SourceContext,
+    path: &str,
+    findings: &mut Vec<Finding>,
+) {
+    if let Some(deferral) = deferral {
+        check_listed_sources(&deferral.sources, deferral.line, ctx, path, findings);
     }
 }

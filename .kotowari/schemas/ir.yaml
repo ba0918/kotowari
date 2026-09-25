@@ -6,6 +6,14 @@ document:
   title:
     extract: title
   preamble:
+    fields:
+      - name: deferred
+        separator: ","
+        required: false
+        extract:
+          path: deferred
+          value: value
+          of: { line: line }
     statement:
       repeat: { min: 1 }
       extract:
@@ -46,6 +54,13 @@ document:
             required: true
             when: { field: verification, eq: review }
             extract: how_to_verify
+          - name: deferred
+            separator: ","
+            required: false
+            extract:
+              path: deferred
+              value: value
+              of: { line: line }
         statement:
           repeat: { min: 1 }
           when: { field: kind, ne: algorithm }
