@@ -3,7 +3,7 @@
 //! スキーマの YAML はコンパイル時に取り込む。実行時にスキーマのファイルを読む経路は無く、
 //! IR の文書は自分の形を宣言しないので、文書の種類からスキーマを選ぶ。
 
-use crate::ir::DocKind;
+use crate::doc_kind::DocKind;
 use kotowari_markdown_schema::schema::{Schema, SchemaError, parse_schema};
 
 /// 話題ごとの文書のスキーマ

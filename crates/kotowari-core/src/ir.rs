@@ -5,33 +5,12 @@
 //! 読むのは、gherkin の塊の中身と、閉じない`コードブロック`の検出の2つだけ。
 
 use crate::config::Config;
+pub use crate::doc_kind::DocKind;
 use crate::finding_map::read_document;
 use crate::{Finding, FindingKind, StopReason};
 use serde_json::{Map, Value};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
-
-/// IR の文書の種類
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DocKind {
-    /// 話題ごとの文書
-    Topic,
-    /// 用語集（CONTEXT.md）
-    Glossary,
-    /// 問題の記録（FLAGS.md）
-    Flags,
-}
-
-impl DocKind {
-    /// 文書名から種類を決める
-    fn of(filename: &str) -> Self {
-        match filename {
-            "CONTEXT.md" => DocKind::Glossary,
-            "FLAGS.md" => DocKind::Flags,
-            _ => DocKind::Topic,
-        }
-    }
-}
 
 /// 項目の ID の種別
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]

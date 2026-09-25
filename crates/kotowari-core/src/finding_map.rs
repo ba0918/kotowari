@@ -4,7 +4,7 @@
 //! 種類を受けたときは、黙って捨てずに`停止`する（REQ-core-172）。写せない値を受けたときも
 //! 同じ理由で`停止`する（REQ-core-175）。
 
-use crate::ir::DocKind;
+use crate::doc_kind::DocKind;
 use crate::schema::schema_for;
 use crate::{Finding, FindingKind, StopReason};
 use kotowari_markdown_schema::document::Document;
