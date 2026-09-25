@@ -47,17 +47,19 @@ kotowari は常に、"kotowari status" の "--format" の値として "json" と
 
 ### TBL-core-028: status の鍵
 
-- source: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A9, docs/decision/records/2026-09-20-query-status.md#A12, docs/decision/records/2026-09-20-query-status.md#A14, docs/decision/records/2026-09-20-query-status.md#A20, docs/decision/records/2026-09-17-scenario-tests.md#A9, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-24-doc-marks.md#A17
+- source: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A9, docs/decision/records/2026-09-20-query-status.md#A12, docs/decision/records/2026-09-20-query-status.md#A14, docs/decision/records/2026-09-20-query-status.md#A20, docs/decision/records/2026-09-17-scenario-tests.md#A9, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-24-doc-marks.md#A17, docs/decision/records/2026-09-25-deferred-items.md#A8, docs/decision/records/2026-09-25-deferred-items.md#A15, docs/decision/records/2026-09-25-deferred-items.md#A16, docs/decision/records/2026-09-25-deferred-items.md#A24, docs/decision/records/2026-09-25-deferred-items.md#A26
 
 | 群 | 鍵 | 中身 |
 |---|---|---|
 | documents | files、lines | 読んだ`IR`の文書の数と行数の合計（"kotowari check" の "files" と "lines" と同じ） |
 | items | requirement、table、property、scenario、flag | `ID` を持つ`項目`と`シナリオ`の種類ごとの数 |
 | requirements | unit、property、proof、review | "- verification:" の値ごとの`要求`の数。行の無い`要求`はどれにも数えない |
-| requirements | with_tests、without_tests | "- verification:" が review でない`要求`のうち、その `ID` を`印`に含む`テスト`があるか、その `ID` を "@about" に持つ`シナリオ`の `ID` を`印`に含む`テスト`があるものの数と、無いものの数 |
+| requirements | with_tests、without_tests | "- verification:" が review でなく`後回し`でない`要求`のうち、その `ID` を`印`に含む`テスト`があるか、その `ID` を "@about" に持つ`シナリオ`の `ID` を`印`に含む`テスト`があるものの数と、無いものの数 |
 | requirements | review_with_how_to_verify、review_without_how_to_verify | "- verification:" が review の`要求`のうち、"- how_to_verify:" の行があるものの数と、無いものの数 |
-| requirements | without_examples | その `ID` を "@about" に持つ`シナリオ`が無い`要求`の数 |
-| scenarios | with_tests、without_tests | その `ID` を`印`に含む`テスト`がある`シナリオ`の数と、無いものの数 |
+| requirements | without_examples | その `ID` を "@about" に持つ`シナリオ`が無い`要求`の数。`後回し`の`要求`も数える |
+| requirements | deferred | `後回し`の`要求`の数（"unit" などと同じく`項目`の出現ごとに数え、同じ `ID` の`要求`は REQ-core-032 の1つ目で`後回し`かどうかを決める） |
+| scenarios | with_tests、without_tests | `後回しのシナリオ`でない`シナリオ`のうち、その `ID` を`印`に含む`テスト`があるものの数と、無いものの数 |
+| scenarios | deferred | `後回しのシナリオ`の数 |
 | tests | marks | `印`の出現の数。1つの`印`に `ID` が複数あれば `ID` ごとに1つ（list の "tests" の1件と同じ数え方） |
 | tests | files | "kotowari check" の "tests" と同じ（`TBL-core-021`）。"text" では拡張子ごとに "拡張子=ファイルの数" |
 | guides | files、marks | "kotowari check" の "guides" と同じ（`TBL-core-005`） |
@@ -87,11 +89,11 @@ Scenario: 問題の記録があれば complete でない
   When "kotowari status" を実行する
   Then 終了コードは 1 で、"items" の "flag" は 1 で、"complete" は false である
 
-@id=EX-core-261 @about=REQ-core-166 @source=docs/decision/records/2026-09-20-query-status.md#A8,docs/decision/records/2026-09-20-query-status.md#A13,docs/decision/records/2026-09-20-query-status.md#A14,docs/decision/records/2026-09-20-query-status.md#A20
+@id=EX-core-261 @about=REQ-core-166 @source=docs/decision/records/2026-09-20-query-status.md#A8,docs/decision/records/2026-09-20-query-status.md#A13,docs/decision/records/2026-09-20-query-status.md#A14,docs/decision/records/2026-09-20-query-status.md#A20,docs/decision/records/2026-09-25-deferred-items.md#A8
 Scenario: text は群ごとに1行
   Given EX-core-258 と同じ IR とテストがある
   When "kotowari status --format text" を実行する
-  Then 出力の1行目は "documents files=1 lines=" で始まり、"requirements " で始まる行は "unit=1 property=0 proof=0 review=1 with_tests=1 without_tests=0 review_with_how_to_verify=1 review_without_how_to_verify=0 without_examples=1" を含み、最後の行は "complete true" である
+  Then 出力の1行目は "documents files=1 lines=" で始まり、"requirements " で始まる行は "unit=1 property=0 proof=0 review=1 with_tests=1 without_tests=0 review_with_how_to_verify=1 review_without_how_to_verify=0 without_examples=1 deferred=0" を含み、"scenarios " で始まる行は "with_tests=1 without_tests=0 deferred=0" で終わり、最後の行は "complete true" である
 
 @id=EX-core-262 @about=REQ-core-163 @source=docs/decision/records/2026-09-20-query-status.md#A19
 Scenario: 設定が読めなければ check と同じく停止する
@@ -104,4 +106,10 @@ Scenario: シナリオ経由でテストのある要求も with_tests に数え�
   Given IR に検証が unit の要求 "REQ-001" と "@about=REQ-001" のシナリオ "EX-001" があり、"tests/a.rs" に印 "@kotowari[EX-001]" のテストだけがある
   When "kotowari status" を実行する
   Then "requirements" の "with_tests" は 1 で "without_tests" は 0 である
+
+@id=EX-core-398 @about=TBL-core-028,REQ-core-165 @source=docs/decision/records/2026-09-25-deferred-items.md#A4,docs/decision/records/2026-09-25-deferred-items.md#A8,docs/decision/records/2026-09-25-deferred-items.md#A15,docs/decision/records/2026-09-25-deferred-items.md#A16
+Scenario: 後回しは件数に出て complete を左右しない
+  Given IR に検証が unit の要求 "REQ-001" と "@about=REQ-001" のシナリオ "EX-001" があり、"REQ-001" は後回しで、どちらの ID を含む印も無く、ほかに指摘も問題の記録も無い
+  When "kotowari status" を実行する
+  Then "requirements" の "deferred" は 1、"with_tests" と "without_tests" と "without_examples" は 0 で、"scenarios" の "deferred" は 1、"with_tests" と "without_tests" は 0 で、"complete" は true である
 ```

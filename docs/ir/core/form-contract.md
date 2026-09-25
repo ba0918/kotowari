@@ -49,11 +49,11 @@ kotowari は、`IR`の文書の Markdown の構造を自前で読んではなら
 ### REQ-core-170: 指摘の行のためにスキーマへ宣言するもの
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-22-ir-engine.md#A6, docs/decision/records/2026-09-22-ir-engine.md#A37, docs/decision/records/2026-09-22-ir-engine.md#A67, docs/decision/records/2026-09-22-ir-engine.md#A72, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- source: docs/decision/records/2026-09-22-ir-engine.md#A6, docs/decision/records/2026-09-22-ir-engine.md#A37, docs/decision/records/2026-09-22-ir-engine.md#A67, docs/decision/records/2026-09-22-ir-engine.md#A72, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-25-deferred-items.md#A24
 - verification: review
 - how_to_verify: 置き換えの前後で、source_invalid、gherkin の中の`指摘`、unclosed_backtick、missing_document を出す既存のテストと、query の本文を確かめる既存のテストが通ることを見る
 
-kotowari は常に、スキーマに`出典`の "- source:" の行の行番号と、`シナリオ`を包む`コードブロック`の開始行と、`文`の行番号と行の文字そのままと、`項目`の最後の行を取る宣言を置き、query の本文の範囲を`項目`の最後の行から作り、source_invalid の "line"、gherkin の中の`指摘`の文書の先頭から数えた "line"、unclosed_backtick の detail をそこから作り、`文書名の参照`の走査もその`文`の行の文字の上で行う。
+kotowari は常に、スキーマに`出典`の "- source:" の行と "- deferred:" の行（見出しの下の行と文書単位の行）の行番号と、`シナリオ`を包む`コードブロック`の開始行と、`文`の行番号と行の文字そのままと、`項目`の最後の行を取る宣言を置き、query の本文の範囲を`項目`の最後の行から作り、source_invalid の "line"、gherkin の中の`指摘`の文書の先頭から数えた "line"、unclosed_backtick の detail をそこから作り、`文書名の参照`の走査もその`文`の行の文字の上で行う。
 
 ### REQ-core-179: 取り込んだスキーマの読み方と選び方の宣言
 

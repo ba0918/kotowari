@@ -46,10 +46,10 @@ kotowari は常に、`ガイド`を CommonMark として読み、HTML のコメ�
 ### REQ-core-203: 指紋の取り方
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-24-doc-marks.md#A6, docs/decision/records/2026-09-24-doc-marks.md#A7, docs/decision/records/2026-09-24-doc-marks.md#A26, docs/decision/records/2026-09-24-doc-marks.md#A27, docs/decision/records/2026-09-24-doc-marks.md#A33
+- source: docs/decision/records/2026-09-24-doc-marks.md#A6, docs/decision/records/2026-09-24-doc-marks.md#A7, docs/decision/records/2026-09-24-doc-marks.md#A26, docs/decision/records/2026-09-24-doc-marks.md#A27, docs/decision/records/2026-09-24-doc-marks.md#A33, docs/decision/records/2026-09-25-deferred-items.md#A6, docs/decision/records/2026-09-25-deferred-items.md#A20, docs/decision/records/2026-09-25-deferred-items.md#A23, docs/decision/records/2026-09-25-deferred-items.md#A26
 - verification: unit
 
-kotowari は常に、`項目`と`シナリオ`の`指紋`を、次の行の並びを "\n" でつないだ文字列（最後の行の後には "\n" を付けない）の UTF-8 のバイト列の SHA-256 を16進の小文字で書いた先頭の8文字にする。`項目`は `TBL-core-027` の "body" の行から "- source:" の行を除いた並び、`シナリオ`はステップの行だけの並びである。行の終わりの文字（"\r\n" の "\r" を含む）は行に入れない。見出しの名前、`シナリオ`のタグの行と "Scenario:" の行は`指紋`に入らない。
+kotowari は常に、`項目`と`シナリオ`の`指紋`を、次の行の並びを "\n" でつないだ文字列（最後の行の後には "\n" を付けない）の UTF-8 のバイト列の SHA-256 を16進の小文字で書いた先頭の8文字にする。`項目`は `TBL-core-027` の "body" の行から "- source:" の行を除いた並び（文書単位の "- deferred:" の行を持つ文書の`要求`では、その1つ目の行を並びの先頭に加える）、`シナリオ`はステップの行だけの並びである。行の終わりの文字（"\r\n" の "\r" を含む）は行に入れない。見出しの名前、`シナリオ`のタグの行と "Scenario:" の行は`指紋`に入らない。
 
 ### REQ-core-204: 古いガイドの印
 

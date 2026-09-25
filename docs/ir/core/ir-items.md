@@ -38,10 +38,10 @@
 ### REQ-core-046: 見出しの下の行の読み方
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A42, docs/decision/records/records.md#A52, docs/decision/records/ir-form.md#項目, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- source: docs/decision/records/records.md#A42, docs/decision/records/records.md#A52, docs/decision/records/ir-form.md#項目, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-25-deferred-items.md#A2
 - verification: unit
 
-kotowari は常に、見出しの下の "- " の行を順不同で読み、行の間の空行を許し、"- definition:"、"- related:"、"- source:" の値をコンマで区切って読む。
+kotowari は常に、見出しの下の "- " の行を順不同で読み、行の間の空行を許し、"- definition:"、"- related:"、"- source:"、"- deferred:" の値をコンマで区切って読む。
 
 ### REQ-core-178: 文を1行ずつ読む
 
@@ -95,11 +95,11 @@ kotowari は常に、取り込んだスキーマの宣言（REQ-core-179）に�
 
 ### TBL-core-011: 項目の形
 
-- source: docs/decision/records/records.md#A27, docs/decision/records/records.md#A28, docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#文書, docs/decision/records/2026-09-19-read-commands.md#A5, docs/decision/records/2026-09-19-read-commands.md#A11, docs/decision/records/2026-09-20-query-status.md#A10, docs/decision/records/2026-09-23-ir-engine-gaps.md#A4, docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-24-review8-gaps.md#A1
+- source: docs/decision/records/records.md#A27, docs/decision/records/records.md#A28, docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#文書, docs/decision/records/2026-09-19-read-commands.md#A5, docs/decision/records/2026-09-19-read-commands.md#A11, docs/decision/records/2026-09-20-query-status.md#A10, docs/decision/records/2026-09-23-ir-engine-gaps.md#A4, docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-24-review8-gaps.md#A1, docs/decision/records/2026-09-25-deferred-items.md#A1, docs/decision/records/2026-09-25-deferred-items.md#A2
 
 | 項目 | 置く場所 | 見出し | 持つ行 | 文 |
 |---|---|---|---|---|
-| 要求 | ## Requirements の下 | ### REQ-nnn: 名前 | - kind:（event_driven、state_driven、ubiquitous、prohibition、invariant、algorithm）、- source:、- verification:（unit、property、proof、review）、- definition:（algorithm では持ち、ほかはあってもよい）、- how_to_verify:（"- verification:" が review なら持つ。ほかはあってもよい。人か LLM が確かめる手順の自由文） | algorithm 以外は持つ。algorithm は持たなくてよく、持ってもよい |
+| 要求 | ## Requirements の下 | ### REQ-nnn: 名前 | - kind:（event_driven、state_driven、ubiquitous、prohibition、invariant、algorithm）、- source:、- verification:（unit、property、proof、review）、- definition:（algorithm では持ち、ほかはあってもよい）、- how_to_verify:（"- verification:" が review なら持つ。ほかはあってもよい。人か LLM が確かめる手順の自由文）、- deferred:（`後回し`にするときだけ持つ。出典のコンマ区切り） | algorithm 以外は持つ。algorithm は持たなくてよく、持ってもよい |
 | 決定表 | ## Decision tables の下 | ### TBL-nnn: 名前 | - source: と Markdown の表 | 持たなくてよく、持ってもよい（表を持つ） |
 | 性質 | ## Properties の下 | ### PROP-nnn: 名前 | - source: | 持つ |
 | シナリオ | ## Examples の下の gherkin のコードブロック | Scenario: の行 | 直前の行のタグ @id=EX-nnn、@about=ID,...、@source=出典,... | なし（ステップの行を持つ） |

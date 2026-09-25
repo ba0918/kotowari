@@ -42,11 +42,11 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 
 ### TBL-core-019: 指摘の行
 
-- source: docs/decision/records/2026-09-22-ir-engine.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A40, docs/decision/records/records.md#A144, docs/decision/records/records.md#A114, docs/decision/records/records.md#A121, docs/decision/records/records.md#A139, docs/decision/records/records.md#A108, docs/decision/records/records.md#A61, docs/decision/records/records.md#A72, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A4, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-scenario-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-22-id-namespace.md#A3, docs/decision/records/2026-09-24-multi-language-tests.md#A32, docs/decision/records/2026-09-24-doc-marks.md#A10, docs/decision/records/2026-09-24-doc-marks.md#A11, docs/decision/records/2026-09-24-doc-marks.md#A12, docs/decision/records/2026-09-24-doc-marks.md#A32, docs/decision/records/2026-09-24-guide-gaps.md#A10
+- source: docs/decision/records/2026-09-22-ir-engine.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A40, docs/decision/records/records.md#A144, docs/decision/records/records.md#A114, docs/decision/records/records.md#A121, docs/decision/records/records.md#A139, docs/decision/records/records.md#A108, docs/decision/records/records.md#A61, docs/decision/records/records.md#A72, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A4, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-scenario-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-22-id-namespace.md#A3, docs/decision/records/2026-09-24-multi-language-tests.md#A32, docs/decision/records/2026-09-24-doc-marks.md#A10, docs/decision/records/2026-09-24-doc-marks.md#A11, docs/decision/records/2026-09-24-doc-marks.md#A12, docs/decision/records/2026-09-24-doc-marks.md#A32, docs/decision/records/2026-09-24-guide-gaps.md#A10, docs/decision/records/2026-09-25-deferred-items.md#A2, docs/decision/records/2026-09-25-deferred-items.md#A11, docs/decision/records/2026-09-25-deferred-items.md#A21, docs/decision/records/2026-09-25-deferred-items.md#A23
 
 | 種類 | line |
 |---|---|
-| missing_source | 項目の見出しの行。シナリオはタグの行（無ければ "Scenario:" の行）。用語は表の行 |
+| missing_source | 項目の見出しの行。シナリオはタグの行（無ければ "Scenario:" の行）。用語は表の行。値の空の "- deferred:" の行はその行（REQ-core-210） |
 | source_invalid | 出典が書かれた行（REQ-core-115） |
 | missing_tag、unknown_tag、invalid_id、scenario_without_test | タグの行（無ければ "Scenario:" の行） |
 | unknown_term、vague_word、unclosed_backtick、missing_document | その行 |
@@ -63,6 +63,8 @@ kotowari は常に、`指摘`の "line" を1始まりで数える。
 | record_field_unknown、revision_link_invalid | その行 |
 | mutant_survived、mutant_timeout | 変異の結果の行 |
 | guide_stale | ガイドの印の始まりの行（REQ-core-204） |
+| deferred_with_test | 要求の見出しの行。シナリオはタグの行（REQ-core-211） |
+| depends_on_deferred | 参照の書かれた行（REQ-core-212） |
 | unknown_line | その行 |
 | unknown_code_block | 開始の行 |
 | glossary_title_invalid | 題名の行 |

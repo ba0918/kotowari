@@ -62,10 +62,10 @@ kotowari は常に、形の契約の "docs/decision/records/ir-form.md" を、"#
 ### REQ-core-115: 出典の指摘の行
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A114, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- source: docs/decision/records/records.md#A114, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-25-deferred-items.md#A24
 - verification: unit
 
-kotowari は常に、source_invalid の "line" を`出典`が書かれた行（`項目`なら "- source:" の行、`シナリオ`ならタグの行、`用語`なら表の行）にする。
+kotowari は常に、source_invalid の "line" を`出典`が書かれた行（`項目`なら "- source:" の行、`シナリオ`ならタグの行、`用語`なら表の行、`後回し`の宣言ならその "- deferred:" の行）にする。
 
 ## Decision tables
 

@@ -38,16 +38,16 @@ kotowari は常に、"items" の1件を "path" の昇順、同じ "path" の中�
 ### REQ-core-155: 出力の形
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A8, docs/decision/records/2026-09-19-read-commands.md#A12, docs/decision/records/2026-09-19-read-commands.md#A19, docs/decision/records/2026-09-19-read-commands.md#A25, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- source: docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A8, docs/decision/records/2026-09-19-read-commands.md#A12, docs/decision/records/2026-09-19-read-commands.md#A19, docs/decision/records/2026-09-19-read-commands.md#A25, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-25-deferred-items.md#A9
 - verification: unit
 
-kotowari は常に、"kotowari list" の "--format" の値として "json" と "text" の2つだけを受け、既定を "json" にし、絞り込みのオプションを持たない。"json" では最上位が "items" だけの JSON を1つ出し、"items" は`TBL-core-026` の鍵を持つ1件の並びである。"text" では "items" の1件を1行で "ID 検証 名前 パス:行 tests=数" の形で出し（"検証" は要求以外と、"- verification:" の行の無い要求では "-"）、その直後に "tests" の1件ごとに2つの半角空白で字下げした "パス:行 名前" の行を続ける（"名前" が null のときは "-"）。
+kotowari は常に、"kotowari list" の "--format" の値として "json" と "text" の2つだけを受け、既定を "json" にし、絞り込みのオプションを持たない。"json" では最上位が "items" だけの JSON を1つ出し、"items" は`TBL-core-026` の鍵を持つ1件の並びである。"text" では "items" の1件を1行で "ID 検証 名前 パス:行 tests=数" の形で出し（"検証" は要求以外と、"- verification:" の行の無い要求では "-"）、"deferred" が true の1件ではその行の末尾に " deferred" を付け、その直後に "tests" の1件ごとに2つの半角空白で字下げした "パス:行 名前" の行を続ける（"名前" が null のときは "-"）。
 
 ## Decision tables
 
 ### TBL-core-026: 項目の鍵
 
-- source: docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18, docs/decision/records/2026-09-19-read-commands.md#A22, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-19-read-commands.md#A26, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-23-ir-english-tokens.md#A8, docs/decision/records/2026-09-24-review6-gaps.md#A1, docs/decision/records/2026-09-24-multi-language-tests.md#A13, docs/decision/records/2026-09-24-doc-marks.md#A14
+- source: docs/decision/records/2026-09-19-read-commands.md#A6, docs/decision/records/2026-09-19-read-commands.md#A13, docs/decision/records/2026-09-19-read-commands.md#A14, docs/decision/records/2026-09-19-read-commands.md#A18, docs/decision/records/2026-09-19-read-commands.md#A22, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-19-read-commands.md#A26, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-23-ir-english-tokens.md#A8, docs/decision/records/2026-09-24-review6-gaps.md#A1, docs/decision/records/2026-09-24-multi-language-tests.md#A13, docs/decision/records/2026-09-24-doc-marks.md#A14, docs/decision/records/2026-09-25-deferred-items.md#A9
 
 | 鍵 | 持つ種類 | 中身 |
 |---|---|---|
@@ -65,6 +65,7 @@ kotowari は常に、"kotowari list" の "--format" の値として "json" と "
 | sources | すべて | `出典`の並び |
 | tests | すべて | その `ID` を`印`に含む`テスト`の並び。同じ`テスト`に同じ `ID` の`印`が複数あれば、`印`の出現ごとに1件。1件は "path"（`テストのファイル`の基準のディレクトリからの相対パス）、"line"（`印`のある行）、"name"（`テスト`の名前。`問い合わせの無い言語`と、名前が null の`テスト`では null） |
 | fingerprint | すべて | その`項目`か`シナリオ`の`指紋`（REQ-core-203） |
+| deferred | すべて | `後回し`の`要求`と`後回しのシナリオ`は true、ほかは false |
 
 ## Examples
 
@@ -105,4 +106,10 @@ Scenario: 設定が読めなければ check と同じく停止する
   Given 設定ファイルが YAML として読めない
   When "kotowari list" を実行する
   Then 終了コードは 2 で、標準エラーの1行目は "kotowari check" と同じ文言である
+
+@id=EX-core-399 @about=TBL-core-026,REQ-core-155 @source=docs/decision/records/2026-09-25-deferred-items.md#A9,docs/decision/records/2026-09-25-deferred-items.md#A15,docs/decision/records/2026-09-19-read-commands.md#A19
+Scenario: 後回しの要求とシナリオは deferred が付く
+  Given "docs/ir/a.md" の 7 行目に名前が "例" で検証が "unit" の後回しの要求 "REQ-001" があり、"@about=REQ-001" のシナリオ "EX-001" と、後回しでない要求 "REQ-002" があり、どの ID を含む印も無い
+  When "kotowari list" と "kotowari list --format text" を実行する
+  Then json では "REQ-001" と "EX-001" の "deferred" が true、"REQ-002" の "deferred" が false で、text の "REQ-001" の行は "REQ-001 unit 例 docs/ir/a.md:7 tests=0 deferred" である
 ```

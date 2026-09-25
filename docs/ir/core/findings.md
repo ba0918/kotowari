@@ -18,13 +18,13 @@
 - definition: TBL-core-009
 - verification: unit
 
-### REQ-core-031: 注意は5つだけ
+### REQ-core-031: 注意は7つだけ
 
 - kind: invariant
-- source: docs/decision/records/records.md#A29, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2, docs/decision/records/2026-09-17-mutation-tests.md#A11, docs/decision/records/2026-09-17-mutation-tests.md#A20, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-24-doc-marks.md#A8
+- source: docs/decision/records/records.md#A29, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2, docs/decision/records/2026-09-17-mutation-tests.md#A11, docs/decision/records/2026-09-17-mutation-tests.md#A20, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-24-doc-marks.md#A8, docs/decision/records/2026-09-25-deferred-items.md#A11, docs/decision/records/2026-09-25-deferred-items.md#A12
 - verification: unit
 
-種類が too_many_lines、too_many_requirements、mutant_timeout、equivalent_stale、guide_stale の`指摘`だけが`注意`で、ほかの種類の`指摘`はすべて`誤り`である関係が常に成り立つ。
+種類が too_many_lines、too_many_requirements、mutant_timeout、equivalent_stale、guide_stale、deferred_with_test、depends_on_deferred の`指摘`だけが`注意`で、ほかの種類の`指摘`はすべて`誤り`である関係が常に成り立つ。
 
 ### REQ-core-032: ID の重複
 
@@ -46,7 +46,7 @@
 
 ### TBL-core-008: 誤りの種類と detail
 
-- source: docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/records.md#A142, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A68, docs/decision/records/records.md#A108, docs/decision/records/records.md#A109, docs/decision/records/records.md#A110, docs/decision/records/records.md#A112, docs/decision/records/records.md#A116, docs/decision/records/records.md#A111, docs/decision/records/records.md#A150, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A19, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-scenario-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A57, docs/decision/records/2026-09-22-id-namespace.md#A4, docs/decision/records/2026-09-23-ir-engine-gaps.md#A7, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17, docs/decision/records/2026-09-23-ir-engine-gaps.md#A40, docs/decision/records/2026-09-24-multi-language-tests.md#A31, docs/decision/records/2026-09-24-multi-language-tests.md#A42, docs/decision/records/2026-09-24-plan-schema.md#A18, docs/decision/records/2026-09-24-doc-marks.md#A10, docs/decision/records/2026-09-24-doc-marks.md#A31, docs/decision/records/2026-09-24-guide-gaps.md#A10
+- source: docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/records.md#A142, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A68, docs/decision/records/records.md#A108, docs/decision/records/records.md#A109, docs/decision/records/records.md#A110, docs/decision/records/records.md#A112, docs/decision/records/records.md#A116, docs/decision/records/records.md#A111, docs/decision/records/records.md#A150, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A19, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-scenario-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A57, docs/decision/records/2026-09-22-id-namespace.md#A4, docs/decision/records/2026-09-23-ir-engine-gaps.md#A7, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17, docs/decision/records/2026-09-23-ir-engine-gaps.md#A40, docs/decision/records/2026-09-24-multi-language-tests.md#A31, docs/decision/records/2026-09-24-multi-language-tests.md#A42, docs/decision/records/2026-09-24-plan-schema.md#A18, docs/decision/records/2026-09-24-doc-marks.md#A10, docs/decision/records/2026-09-24-doc-marks.md#A31, docs/decision/records/2026-09-24-guide-gaps.md#A10, docs/decision/records/2026-09-25-deferred-items.md#A2, docs/decision/records/2026-09-25-deferred-items.md#A19
 
 detail が「行の文字」「見出しの文字」「Scenario: の行の文字」の種類では、読んだ行の文字そのまま（字下げと末尾の空白を含み、再構成しない）を入れる。
 
@@ -59,8 +59,8 @@ detail が「行の文字」「見出しの文字」「Scenario: の行の文字
 | unknown_field | 行の文字 | REQ-core-044 |
 | missing_field | 行の名前 | REQ-core-098 |
 | missing_table | 決定表の ID | REQ-core-099 |
-| duplicate_field | 行の名前 | REQ-core-045 |
-| missing_source | 項目の ID か用語 | REQ-core-059 |
+| duplicate_field | 行の名前 | REQ-core-045、REQ-core-209 |
+| missing_source | 項目の ID か用語。値の空の "- deferred:" の行では "deferred" | REQ-core-059、REQ-core-210 |
 | source_invalid | 出典の文字列 | REQ-core-058 |
 | unknown_term | 囲んだ文字列 | REQ-core-064、REQ-core-065 |
 | missing_document | 文書名の参照の文字列 | REQ-core-070 |
@@ -99,7 +99,7 @@ detail が「行の文字」「見出しの文字」「Scenario: の行の文字
 
 ### TBL-core-009: 注意の種類と detail
 
-- source: docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A57, docs/decision/records/2026-09-24-doc-marks.md#A8, docs/decision/records/2026-09-24-doc-marks.md#A14
+- source: docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A57, docs/decision/records/2026-09-24-doc-marks.md#A8, docs/decision/records/2026-09-24-doc-marks.md#A14, docs/decision/records/2026-09-25-deferred-items.md#A11, docs/decision/records/2026-09-25-deferred-items.md#A12
 
 | 種類 | detail | 条件を定める要求 |
 |---|---|---|
@@ -108,6 +108,8 @@ detail が「行の文字」「見出しの文字」「Scenario: の行の文字
 | mutant_timeout | 変更の説明 | REQ-core-140 |
 | equivalent_stale | 等価の一覧の1件に書かれたままの "file" と "change" を ": " でつないだ文字列 | REQ-core-142 |
 | guide_stale | `ID`、`ガイドの印`の1件に書かれた`指紋`、今の`指紋`を1つの半角空白で区切った文字列 | REQ-core-204 |
+| deferred_with_test | `後回し`の`要求`か`後回しのシナリオ`の`ID` | REQ-core-211 |
+| depends_on_deferred | 参照元の`ID`と参照先の`ID`を1つの半角空白で区切った文字列 | REQ-core-212 |
 
 ## Examples
 
