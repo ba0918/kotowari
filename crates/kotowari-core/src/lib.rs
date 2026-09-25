@@ -15,6 +15,7 @@ pub mod schema;
 pub mod sources;
 pub mod status;
 pub mod terms;
+mod test_markers;
 pub mod test_queries;
 pub mod tests_discovery;
 

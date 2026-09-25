@@ -7,7 +7,7 @@ use ast_grep_core::Node;
 use ast_grep_core::tree_sitter::StrDoc;
 use ast_grep_language::SupportLang;
 
-use crate::tests_discovery::{InvalidMarkers, MarkerIds, parse_markers_in_line};
+use crate::test_markers::{InvalidMarkers, MarkerIds, parse_markers_in_line};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum ByteClass {

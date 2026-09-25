@@ -3,6 +3,7 @@
 use crate::comment_block::LineMap;
 use crate::config::Config;
 use crate::ir::{IrDocument, Item, is_valid_id};
+pub use crate::test_markers::{InvalidMarkers, Marker, MarkerIds, parse_markers_in_line};
 use crate::test_queries::{ParsedFile, TestQueries, language_of};
 use crate::{Finding, FindingKind};
 use ast_grep_core::Node;
@@ -12,12 +13,6 @@ use globset::{Glob, GlobSetBuilder};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use walkdir::WalkDir;
-
-/// 印の出現ごとの (ID, 印のある行)。A152: 同じ ID の印が複数あっても出現ごとに数える
-pub type MarkerIds = Vec<(String, usize)>;
-
-/// 中身が空または閉じ括弧のない印の (印のある行, 行の文字)
-pub type InvalidMarkers = Vec<(usize, String)>;
 
 /// 発見されたテスト
 #[derive(Debug, Clone)]
@@ -46,49 +41,6 @@ pub struct TestMarker {
     pub line: usize,
     /// `テスト`の名前。`問い合わせの無い言語`と、`問い合わせ`が "$NAME" を捕まえない`テスト`では無い
     pub name: Option<String>,
-}
-
-/// 印の解析結果
-#[derive(Debug, Clone)]
-pub struct Marker {
-    pub ids: Vec<String>,
-    pub line: usize,
-}
-
-/// @kotowari[...] 印を1行から抽出する
-pub fn parse_markers_in_line(line: &str, line_num: usize) -> Vec<Marker> {
-    let mut markers = Vec::new();
-    let mut search_start = 0;
-
-    while let Some(start) = line[search_start..].find("@kotowari[") {
-        let abs_start = search_start + start;
-        let content_start = abs_start + "@kotowari[".len();
-
-        if let Some(close) = line[content_start..].find(']') {
-            // "]" の位置。"]" から "@kotowari[" は始まらないので、次の探索はここから始める
-            let close_pos = content_start + close;
-            let content = &line[content_start..close_pos];
-            let ids: Vec<String> = content
-                .split(',')
-                .map(|s| s.trim().to_string())
-                .filter(|s| !s.is_empty())
-                .collect();
-            markers.push(Marker {
-                ids,
-                line: line_num,
-            });
-            search_start = close_pos;
-        } else {
-            // 閉じ括弧がない
-            markers.push(Marker {
-                ids: vec![],
-                line: line_num,
-            });
-            break;
-        }
-    }
-
-    markers
 }
 
 /// glob の一覧に当たるファイルを集める。`テストのファイル`（"tests.files"）と`ガイド`（"guides.files"）が
