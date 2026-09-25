@@ -236,27 +236,20 @@ pub fn check_terms_and_vague_words(
         let glossary = collect_glossary_terms(docs, &doc.directory);
         let path = crate::join_display_path(ir_path, &doc.relative_path);
         for item in &doc.items {
-            match item {
-                Item::Requirement { statements, .. } => {
-                    for (line, text) in statements {
-                        check_unknown_terms(text, *line, &glossary, known_ids, &path, findings);
-                        check_vague_words(text, *line, vague_words, &path, findings);
-                    }
+            let lines = match item {
+                Item::Requirement {
+                    statements: lines, ..
                 }
-                Item::Property { statements, .. } => {
-                    for (line, text) in statements {
-                        check_unknown_terms(text, *line, &glossary, known_ids, &path, findings);
-                        check_vague_words(text, *line, vague_words, &path, findings);
-                    }
+                | Item::Property {
+                    statements: lines, ..
                 }
-                Item::Scenario { steps, .. } => {
-                    for (line, text) in steps {
-                        check_unknown_terms(text, *line, &glossary, known_ids, &path, findings);
-                        check_vague_words(text, *line, vague_words, &path, findings);
-                    }
-                }
+                | Item::Scenario { steps: lines, .. } => lines,
                 // 用語集の意味の列、問題の記録の本文は対象外
-                _ => {}
+                _ => continue,
+            };
+            for (line, text) in lines {
+                check_unknown_terms(text, *line, &glossary, known_ids, &path, findings);
+                check_vague_words(text, *line, vague_words, &path, findings);
             }
         }
     }
