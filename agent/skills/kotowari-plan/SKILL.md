@@ -57,8 +57,8 @@ its scenarios. An unknown ID stops with `argument error: unknown id:`. To read t
 
 The requirements and scenarios among `kotowari list`'s `items` whose `tests` is empty are what
 this plan's cycle fills; build the Verification map from them. Leave out every item whose
-`deferred` is true: a deferred requirement, and a scenario only about deferred or review
-requirements, is specified but not built now. Do not put a deferred requirement's ID in the plan —
+`deferred` is true: a deferred requirement, and a scenario whose `@about` requirements are all
+deferred or review with at least one deferred, is specified but not built now. Do not put a deferred requirement's ID in the plan —
 not in a step, not in the Verification map — and do not plan a test for it. If building the
 plan's requirements needs a deferred one, that is a specification question: hand it back to
 brainstorm.
