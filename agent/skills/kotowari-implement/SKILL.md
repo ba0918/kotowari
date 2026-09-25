@@ -74,6 +74,11 @@ or that name an ID the plan covers; list any others in the report without touchi
   test_without_id, invalid_marker, unparsable_file, and unresolved_reference from a mark);
 - hand back an IR-side finding as a problem with the specification.
 
+A deferred requirement or deferred scenario (`deferred` true in `kotowari query`) is not built
+now and raises no test-side finding: write no test for it and put its ID in no mark. If your mark
+raised deferred_with_test, remove the mark; hand back any other deferred_with_test or
+depends_on_deferred notice on a file you changed or an ID the plan covers, as an IR-side finding.
+
 Missed mutations: the pre-push hook runs mutations on the diff. A miss is fixed by the fixer or
 the implementer, like a test-side finding; how to investigate one is in the kotowari skill's
 `references/mutants.md`.

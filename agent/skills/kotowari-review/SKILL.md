@@ -46,7 +46,10 @@ When the specification is the kotowari IR, the counterpart is the IR store path,
 reads every document in the store. The requirements and scenarios the diff should cover arrive as a
 file listing their IDs, narrowed by the caller from `kotowari list`; a reviewer runs no command to
 get them and is never handed the whole list. A request that touches no IR item comes without that
-file.
+file. A deferred requirement or deferred scenario (the `- deferred:` line; `deferred` true in the
+list) is specified but not built now: a missing test or implementation for it is not a finding,
+no finding demands one, and the test-side findings a review asks to bring to zero never include
+it.
 
 ## Reviewer setup
 

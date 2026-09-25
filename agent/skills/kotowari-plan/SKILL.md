@@ -56,14 +56,19 @@ its scenarios. An unknown ID stops with `argument error: unknown id:`. To read t
 (`references/findings.md`).
 
 The requirements and scenarios among `kotowari list`'s `items` whose `tests` is empty are what
-this plan's cycle fills; build the Verification map from them.
+this plan's cycle fills; build the Verification map from them. Leave out every item whose
+`deferred` is true: a deferred requirement, and a scenario only about deferred or review
+requirements, is specified but not built now. Do not put a deferred requirement's ID in the plan —
+not in a step, not in the Verification map — and do not plan a test for it. If building the
+plan's requirements needs a deferred one, that is a specification question: hand it back to
+brainstorm.
 
 Do not read `kotowari list` whole: in a repository of 150 requirements its JSON exceeds 200KB and
 its text form 1,000 lines. Take only the keys you need with `jq`. For example:
 
 - IDs and locations of the requirements and scenarios with no marked test (a review requirement
-  needs no test, so it is left out):
-  `kotowari list | jq -r '.items[] | select(.tests == [] and .verification != "review") | "\(.id) \(.path):\(.line)"'`
+  and a deferred item need no test, so they are left out):
+  `kotowari list | jq -r '.items[] | select(.tests == [] and .verification != "review" and (.deferred | not)) | "\(.id) \(.path):\(.line)"'`
 - one item's text only: `kotowari query REQ-001 | jq -r '.items[0].body[]'`
 - its reverse references only: `kotowari query REQ-001 | jq -c '.items[0].referenced_by'`
 

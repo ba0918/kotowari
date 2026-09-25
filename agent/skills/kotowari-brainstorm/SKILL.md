@@ -96,6 +96,16 @@ decision record's own sections, since an IR document holds only requirements, de
 properties, and scenarios. Require
 expensive model-running verification only when the person asks.
 
+A requirement that is specified now but will not be built now (an upstream constraint, a later
+phase) is deferred rather than left out: write the decision to defer it, with its reason, in the
+decision record, and cite that decision as the source on a `- deferred:` line — under the
+requirement, or once after the title of a topic document to defer all its requirements (the
+kotowari skill's `references/ir-form.md`). Deferring keeps its form and reference checks and its
+ID; it only stops check from asking for its tests. When the person decides to build it, remove
+the line in the same way, with the decision recorded. A depends_on_deferred notice means an item
+that will be built relies on a deferred one; settle it with the person — defer that item too,
+bring the requirement back, or drop the reference.
+
 ### Evidence conditions
 
 An oracle — a test, a check, or a fixture — counts as evidence only when the condition it
