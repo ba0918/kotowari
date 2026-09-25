@@ -225,6 +225,7 @@ fn req_153_table_property_scenario_and_flag_carry_their_keys() {
         "sources",
         "tests",
         "fingerprint",
+        "deferred",
     ];
     let with = |extra: &[&str]| {
         let mut names: Vec<String> = common

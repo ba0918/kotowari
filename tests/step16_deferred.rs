@@ -789,3 +789,120 @@ fn req_212_references_to_a_deferred_scenario_and_from_the_flags_are_not_notices(
         "{result}"
     );
 }
+
+// --- S4: status と list と query の後回し ---
+
+/// 7行目の後回しの要求 REQ-001（名前は "例"）と、それを指すシナリオ EX-001 と、後回しでない要求 REQ-002
+fn deferred_with_scenario_and_other() -> String {
+    format!(
+        "{HEAD}### REQ-001: 例\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: unit\n{DEFER}\n文。\n\n{}\n## Examples\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/r.md#A1\nScenario: 例\n  Given a\n  When b\n  Then c\n```\n",
+        unit_requirement("REQ-002", "")
+    )
+}
+
+// @kotowari[TBL-core-028, REQ-core-165, EX-core-398]
+#[test]
+fn ex_398_deferred_items_are_counted_and_leave_complete_true() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "{}\n## Examples\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/r.md#A1\nScenario: 例\n  Given a\n  When b\n  Then c\n```\n",
+            deferred_req_001()
+        ),
+    );
+    let (code, stdout) = run(tmp.path(), &["status"]);
+    let v: Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(v["requirements"]["deferred"], 1, "{v}");
+    assert_eq!(v["requirements"]["with_tests"], 0, "{v}");
+    assert_eq!(v["requirements"]["without_tests"], 0, "{v}");
+    assert_eq!(v["requirements"]["without_examples"], 0, "{v}");
+    assert_eq!(v["scenarios"]["deferred"], 1, "{v}");
+    assert_eq!(v["scenarios"]["with_tests"], 0, "{v}");
+    assert_eq!(v["scenarios"]["without_tests"], 0, "{v}");
+    assert_eq!(v["complete"], true, "{v}");
+    assert_eq!(code, Some(0));
+}
+
+// @kotowari[TBL-core-028]
+#[test]
+fn tbl_028_a_deferred_requirement_without_examples_is_counted_in_without_examples() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(tmp.path(), "docs/ir/a.md", &deferred_req_001());
+    let (_, stdout) = run(tmp.path(), &["status"]);
+    let v: Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(v["requirements"]["deferred"], 1, "{v}");
+    assert_eq!(v["requirements"]["without_examples"], 1, "{v}");
+}
+
+// @kotowari[TBL-core-026, REQ-core-155, EX-core-399]
+#[test]
+fn ex_399_list_marks_deferred_requirements_and_scenarios() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &deferred_with_scenario_and_other(),
+    );
+    let (_, stdout) = run(tmp.path(), &["list"]);
+    let v: Value = serde_json::from_str(&stdout).unwrap();
+    let deferred: Vec<(String, Value)> = v["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| {
+            (
+                item["id"].as_str().unwrap().to_string(),
+                item["deferred"].clone(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        deferred,
+        vec![
+            ("REQ-001".to_string(), Value::Bool(true)),
+            ("REQ-002".to_string(), Value::Bool(false)),
+            ("EX-001".to_string(), Value::Bool(true)),
+        ],
+        "{v}"
+    );
+    let (_, text) = run(tmp.path(), &["list", "--format", "text"]);
+    assert_eq!(
+        text.lines().next(),
+        Some("REQ-001 unit 例 docs/ir/a.md:7 tests=0 deferred"),
+        "{text}"
+    );
+    assert!(
+        text.lines()
+            .any(|line| line.starts_with("REQ-002 ") && line.ends_with(" tests=0")),
+        "{text}"
+    );
+}
+
+// @kotowari[TBL-core-027, REQ-core-161]
+#[test]
+fn tbl_027_query_carries_deferred_in_json_and_on_the_first_text_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &deferred_with_scenario_and_other(),
+    );
+    let (_, stdout) = run(tmp.path(), &["query", "REQ-001"]);
+    let v: Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(v["items"][0]["deferred"], true, "{v}");
+    let (_, stdout) = run(tmp.path(), &["query", "REQ-002"]);
+    let v: Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(v["items"][0]["deferred"], false, "{v}");
+    let (_, text) = run(tmp.path(), &["query", "EX-001", "--format", "text"]);
+    assert_eq!(
+        text.lines().next(),
+        Some("EX-001 - 例 docs/ir/a.md:28 tests=0 deferred"),
+        "{text}"
+    );
+}

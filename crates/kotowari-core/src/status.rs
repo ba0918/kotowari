@@ -52,6 +52,8 @@ pub struct Requirements {
     pub review_with_how_to_verify: usize,
     pub review_without_how_to_verify: usize,
     pub without_examples: usize,
+    /// `後回し`の`要求`の数。`項目`の出現ごとに数える
+    pub deferred: usize,
 }
 
 /// `シナリオ`の数（TBL-core-028）
@@ -59,6 +61,8 @@ pub struct Requirements {
 pub struct Scenarios {
     pub with_tests: usize,
     pub without_tests: usize,
+    /// `後回しのシナリオ`の数
+    pub deferred: usize,
 }
 
 /// `印`と読んだ`テストのファイル`（TBL-core-028）
@@ -93,7 +97,7 @@ pub fn print_text(result: &StatusResult) {
     let requirements = &result.requirements;
     println!(
         "requirements unit={} property={} proof={} review={} with_tests={} without_tests={} \
-review_with_how_to_verify={} review_without_how_to_verify={} without_examples={}",
+review_with_how_to_verify={} review_without_how_to_verify={} without_examples={} deferred={}",
         requirements.unit,
         requirements.property,
         requirements.proof,
@@ -102,12 +106,13 @@ review_with_how_to_verify={} review_without_how_to_verify={} without_examples={}
         requirements.without_tests,
         requirements.review_with_how_to_verify,
         requirements.review_without_how_to_verify,
-        requirements.without_examples
+        requirements.without_examples,
+        requirements.deferred
     );
     let scenarios = &result.scenarios;
     println!(
-        "scenarios with_tests={} without_tests={}",
-        scenarios.with_tests, scenarios.without_tests
+        "scenarios with_tests={} without_tests={} deferred={}",
+        scenarios.with_tests, scenarios.without_tests, scenarios.deferred
     );
     // TBL-core-028: "text" では読んだテストのファイルを拡張子ごとに数える
     let mut tests = format!("tests marks={}", result.tests.marks);
@@ -154,7 +159,9 @@ pub fn build(
             ListItem::WithExamples(_) => items.property += 1,
             ListItem::Scenario(scenario) => {
                 items.scenario += 1;
-                if coverage.is_marked(&scenario.id) {
+                if scenario.deferred {
+                    scenarios.deferred += 1;
+                } else if coverage.is_marked(&scenario.id) {
                     scenarios.with_tests += 1;
                 } else {
                     scenarios.without_tests += 1;
@@ -214,6 +221,8 @@ fn count_requirement(
         } else {
             counts.review_with_how_to_verify += 1;
         }
+    } else if requirement.deferred {
+        // TBL-core-028: with_tests と without_tests は`後回し`でない要求だけを数える
     } else if coverage.has_test(&requirement.id) {
         // REQ-core-085: 検証が review でない要求だけを分母にする
         counts.with_tests += 1;
@@ -223,5 +232,8 @@ fn count_requirement(
 
     if requirement.examples.is_empty() {
         counts.without_examples += 1;
+    }
+    if requirement.deferred {
+        counts.deferred += 1;
     }
 }

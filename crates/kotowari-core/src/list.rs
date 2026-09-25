@@ -1,8 +1,9 @@
 //! "kotowari list" の項目の組み立て（REQ-core-151、REQ-core-153、REQ-core-154、TBL-core-026）
 
+use crate::deferred;
 use crate::fingerprint::fingerprint_of;
 use crate::ir::{self, IrDocument, Item};
-use crate::tests_discovery::{TestMarker, collect_scenarios};
+use crate::tests_discovery::{ScenarioCoverage, TestMarker, collect_scenarios};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
@@ -39,6 +40,8 @@ pub struct RequirementItem {
     pub tests: Vec<TestRef>,
     /// その`項目`か`シナリオ`の`指紋`（REQ-core-203）
     pub fingerprint: String,
+    /// `後回し`の`要求`と`後回しのシナリオ`は true
+    pub deferred: bool,
 }
 
 /// 決定表と性質の持つ鍵（TBL-core-026。2つは同じ集合で、"kind" の値だけが違う）
@@ -54,6 +57,8 @@ pub struct ExampleItem {
     pub tests: Vec<TestRef>,
     /// その`項目`か`シナリオ`の`指紋`（REQ-core-203）
     pub fingerprint: String,
+    /// `後回し`の`要求`と`後回しのシナリオ`は true
+    pub deferred: bool,
 }
 
 /// シナリオの持つ鍵（TBL-core-026）
@@ -68,6 +73,8 @@ pub struct ScenarioItem {
     pub tests: Vec<TestRef>,
     /// その`項目`か`シナリオ`の`指紋`（REQ-core-203）
     pub fingerprint: String,
+    /// `後回し`の`要求`と`後回しのシナリオ`は true
+    pub deferred: bool,
 }
 
 /// 問題の記録の持つ鍵（TBL-core-026）
@@ -85,6 +92,8 @@ pub struct FlagItem {
     pub tests: Vec<TestRef>,
     /// その`項目`か`シナリオ`の`指紋`（REQ-core-203）
     pub fingerprint: String,
+    /// `後回し`の`要求`と`後回しのシナリオ`は true
+    pub deferred: bool,
 }
 
 /// 一覧の1件。鍵の集合は種類で決まるので、種類ごとの構造をそのまま出す（TBL-core-026）
@@ -106,6 +115,7 @@ struct TextParts<'a> {
     path: &'a str,
     line: usize,
     tests: &'a [TestRef],
+    deferred: bool,
 }
 
 impl ListItem {
@@ -119,6 +129,7 @@ impl ListItem {
                 path: &i.path,
                 line: i.line,
                 tests: &i.tests,
+                deferred: i.deferred,
             },
             ListItem::WithExamples(i) => TextParts {
                 id: &i.id,
@@ -127,6 +138,7 @@ impl ListItem {
                 path: &i.path,
                 line: i.line,
                 tests: &i.tests,
+                deferred: i.deferred,
             },
             ListItem::Scenario(i) => TextParts {
                 id: &i.id,
@@ -135,6 +147,7 @@ impl ListItem {
                 path: &i.path,
                 line: i.line,
                 tests: &i.tests,
+                deferred: i.deferred,
             },
             ListItem::Flag(i) => TextParts {
                 id: &i.id,
@@ -143,6 +156,7 @@ impl ListItem {
                 path: &i.path,
                 line: i.line,
                 tests: &i.tests,
+                deferred: i.deferred,
             },
         }
     }
@@ -181,8 +195,10 @@ pub fn print_text(result: &ListResult) {
 /// query の "text" もこの2種類の行から始まる（REQ-core-161）
 pub fn print_item_text(item: &ListItem) {
     let p = item.text_parts();
+    // REQ-core-155: "deferred" が true の1件は行の末尾に " deferred" を付ける
+    let deferred = if p.deferred { " deferred" } else { "" };
     println!(
-        "{} {} {} {}:{} tests={}",
+        "{} {} {} {}:{} tests={}{deferred}",
         p.id,
         p.verification,
         p.name,
@@ -203,7 +219,9 @@ pub fn print_item_text(item: &ListItem) {
 /// 読めた`項目`と`シナリオ`から "items" を組み立てる（REQ-core-151、REQ-core-153、REQ-core-154）
 pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> ListResult {
     let tests_by_id = tests_by_id(markers);
-    let examples_by_about = examples_by_about(docs, ir_path);
+    let scenarios = collect_scenarios(docs, ir_path);
+    let examples_by_about = examples_by_about(&scenarios);
+    let requirements = deferred::Requirements::new(docs);
     let mut items: Vec<ListItem> = Vec::new();
 
     for doc in docs {
@@ -215,6 +233,11 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
             let tests = tests_by_id.get(id).cloned().unwrap_or_default();
             let examples = examples_by_about.get(id).cloned().unwrap_or_default();
             let fingerprint = fingerprint_of(item, &lines);
+            let deferred = match item {
+                Item::Requirement { .. } => requirements.is_deferred(id),
+                Item::Scenario { .. } => scenarios.get(id).is_some_and(|s| s.deferred),
+                _ => false,
+            };
             let id = id.to_string();
             let path = path.clone();
             items.push(match item {
@@ -241,6 +264,7 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
                     sources: sources.clone(),
                     tests,
                     fingerprint,
+                    deferred,
                 }),
                 Item::DecisionTable {
                     name,
@@ -257,6 +281,7 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
                     sources: sources.clone(),
                     tests,
                     fingerprint,
+                    deferred,
                 }),
                 Item::Property {
                     name,
@@ -273,6 +298,7 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
                     sources: sources.clone(),
                     tests,
                     fingerprint,
+                    deferred,
                 }),
                 Item::Scenario {
                     line,
@@ -288,6 +314,7 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
                     sources: sources.clone(),
                     tests,
                     fingerprint,
+                    deferred,
                 }),
                 Item::FlagEntry {
                     name,
@@ -307,6 +334,7 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
                     sources: sources.clone(),
                     tests,
                     fingerprint,
+                    deferred,
                 }),
                 Item::GlossaryTerm { .. } => continue,
             });
@@ -342,9 +370,11 @@ fn tests_by_id(markers: &[TestMarker]) -> BTreeMap<&str, Vec<TestRef>> {
 
 /// `ID` から、その `ID` を "@about" に持つ`シナリオ`の `ID` の並びを引く（TBL-core-026 の "examples"）。
 /// 同じ `ID` の`シナリオ`が2か所以上にあるときは REQ-core-032 の1つ目だけを数える
-fn examples_by_about(docs: &[IrDocument], ir_path: &str) -> BTreeMap<String, Vec<String>> {
+fn examples_by_about(
+    scenarios: &BTreeMap<String, ScenarioCoverage>,
+) -> BTreeMap<String, Vec<String>> {
     let mut by_about: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    for (scenario_id, coverage) in collect_scenarios(docs, ir_path) {
+    for (scenario_id, coverage) in scenarios {
         for about in &coverage.about {
             by_about
                 .entry(about.clone())
