@@ -337,10 +337,7 @@ fn extract_bullets(
     let bullet_blocks: Vec<&Block> = blocks
         .iter()
         .copied()
-        .filter(|b| {
-            matches!(b, Block::Bullet { .. })
-                || matches!(b, Block::Field { name, .. } if !is_declared_field(fields, name))
-        })
+        .filter(|b| is_bullet_under(fields, b))
         .collect();
     let Some(extract) = &bullets.extract else {
         // 子フィールドの抽出は、親の抽出が無くても子フィールド自身の extract に
@@ -413,20 +410,18 @@ fn extract_child_fields(
     if let Some(child_bullets) = children.bullets.as_deref()
         && let Some(grandchildren) = &child_bullets.children
     {
-        let declared: Vec<&str> = children.fields.iter().map(|f| f.name.as_str()).collect();
         let bullet_blocks: Vec<&Block> = blocks
             .iter()
             .flat_map(|b| b.children().iter())
-            .filter(|c| {
-                matches!(c, Block::Bullet { .. })
-                    || matches!(
-                        c,
-                        Block::Field { name, .. } if !declared.contains(&name.as_str())
-                    )
-            })
+            .filter(|c| is_bullet_under(&children.fields, c))
             .collect();
         extract_child_fields(grandchildren, &bullet_blocks, doc, root);
     }
+}
+
+fn is_bullet_under(fields: &[Field], block: &Block) -> bool {
+    matches!(block, Block::Bullet { .. })
+        || matches!(block, Block::Field { name, .. } if !is_declared_field(fields, name))
 }
 
 /// 値の1つの部分。元の文書の行の範囲と、その範囲から取った文字（REQ-schema-063）。
