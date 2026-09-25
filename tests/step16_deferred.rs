@@ -321,3 +321,168 @@ fn req_210_an_empty_declaration_is_a_missing_source_on_its_line() {
         "{result}"
     );
 }
+
+// --- S2: 後回しの要求と後回しのシナリオはテストの無さの検査から外す ---
+
+/// 検査の結果に、その ID を detail にする requirement_without_test と scenario_without_test があるか
+fn without_test_details(result: &Value) -> Vec<(String, String)> {
+    ["requirement_without_test", "scenario_without_test"]
+        .into_iter()
+        .flat_map(|kind| {
+            findings_of(result, kind)
+                .into_iter()
+                .map(move |(_, _, detail)| (kind.to_string(), detail))
+        })
+        .collect()
+}
+
+// @kotowari[REQ-core-208, REQ-core-210, REQ-core-085, EX-core-384]
+#[test]
+fn ex_384_a_requirement_level_declaration_removes_the_missing_test() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            unit_requirement("REQ-001", "- deferred: docs/decision/records/r.md#A1\n")
+        ),
+    );
+    let result = check(tmp.path());
+    assert!(without_test_details(&result).is_empty(), "{result}");
+    assert!(
+        findings_of(&result, "source_invalid").is_empty(),
+        "{result}"
+    );
+}
+
+// @kotowari[REQ-core-208, REQ-core-209, REQ-core-137, EX-core-385]
+#[test]
+fn ex_385_a_document_level_declaration_defers_every_requirement_of_the_document() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "# 題名\n\n範囲。\n- deferred: docs/decision/records/r.md#A1\n\n## Requirements\n\n{}\n{}\n## Examples\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/r.md#A1\nScenario: 例\n  Given a\n  When b\n  Then c\n```\n",
+            unit_requirement("REQ-001", ""),
+            unit_requirement("REQ-002", "")
+        ),
+    );
+    let result = check(tmp.path());
+    assert!(kinds(&result).is_empty(), "{result}");
+}
+
+// @kotowari[REQ-core-208, REQ-core-210, EX-core-389]
+#[test]
+fn ex_389_an_empty_declaration_still_defers_the_requirement() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            unit_requirement("REQ-001", "- deferred:\n")
+        ),
+    );
+    let result = check(tmp.path());
+    assert_eq!(
+        findings_of(&result, "missing_source"),
+        vec![("docs/ir/a.md".to_string(), Some(12), "deferred".to_string())],
+        "{result}"
+    );
+    assert!(without_test_details(&result).is_empty(), "{result}");
+}
+
+/// 後回しの要求 REQ-001（unit）と、fields で決めた要求 REQ-002 と、@about が about のシナリオ EX-001
+fn deferred_and_other_with_scenario(req_002_fields: &str, about: &str) -> String {
+    format!(
+        "# 題名\n\n範囲。\n\n## Requirements\n\n{}\n### REQ-002: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n{req_002_fields}\n文。\n\n## Examples\n\n```gherkin\n@id=EX-001 @about={about} @source=docs/decision/records/r.md#A1\nScenario: 例\n  Given a\n  When b\n  Then c\n```\n",
+        unit_requirement("REQ-001", "- deferred: docs/decision/records/r.md#A1\n")
+    )
+}
+
+// @kotowari[REQ-core-137]
+#[test]
+fn req_137_a_scenario_about_only_deferred_and_review_requirements_needs_no_test() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &deferred_and_other_with_scenario(
+            "- verification: review\n- how_to_verify: 読む\n",
+            "REQ-001,REQ-002",
+        ),
+    );
+    let result = check(tmp.path());
+    assert!(without_test_details(&result).is_empty(), "{result}");
+}
+
+// @kotowari[REQ-core-137]
+#[test]
+fn req_137_a_requirement_without_verification_does_not_keep_a_scenario_from_being_deferred() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &deferred_and_other_with_scenario("", "REQ-001,REQ-002"),
+    );
+    let result = check(tmp.path());
+    assert_eq!(
+        findings_of(&result, "verification_missing").len(),
+        1,
+        "{result}"
+    );
+    assert!(without_test_details(&result).is_empty(), "{result}");
+}
+
+// @kotowari[REQ-core-137]
+#[test]
+fn req_137_the_first_of_two_scenarios_with_one_id_decides_whether_it_is_deferred() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    let doc = deferred_and_other_with_scenario("- verification: unit\n", "REQ-001").replace(
+        "```\n",
+        "\n@id=EX-001 @about=REQ-002 @source=docs/decision/records/r.md#A1\nScenario: 二つ目\n  Given a\n  When b\n  Then c\n```\n",
+    );
+    write(tmp.path(), "docs/ir/a.md", &doc);
+    write(
+        tmp.path(),
+        "tests/a.rs",
+        "// @kotowari[REQ-002]\n#[test]\nfn t() {}\n",
+    );
+    let result = check(tmp.path());
+    assert_eq!(findings_of(&result, "duplicate_id").len(), 1, "{result}");
+    assert!(without_test_details(&result).is_empty(), "{result}");
+}
+
+// @kotowari[REQ-core-208, REQ-core-085]
+#[test]
+fn req_208_the_first_of_two_requirements_with_one_id_decides_whether_it_is_deferred() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            unit_requirement("REQ-001", "- deferred: docs/decision/records/r.md#A1\n")
+        ),
+    );
+    write(
+        tmp.path(),
+        "docs/ir/b.md",
+        &format!(
+            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+            unit_requirement("REQ-001", "")
+        ),
+    );
+    let result = check(tmp.path());
+    assert_eq!(findings_of(&result, "duplicate_id").len(), 1, "{result}");
+    assert!(without_test_details(&result).is_empty(), "{result}");
+}

@@ -1,6 +1,7 @@
 pub mod cargo_mutants;
 pub mod comment_block;
 pub mod config;
+pub mod deferred;
 mod doc_kind;
 pub mod equivalents;
 pub mod finding_map;
