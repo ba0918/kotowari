@@ -857,22 +857,24 @@ fn check_gherkin_tags_findings(
     findings: &mut Vec<crate::Finding>,
 ) {
     for (tag_name, tag_value) in tags {
-        if tag_name.is_empty() {
-            // "@" で始まらない語
+        if let Some(detail) = unknown_gherkin_tag(tag_name, tag_value) {
             findings.push(crate::Finding::new(
                 crate::FindingKind::UnknownTag,
                 String::new(),
                 tag_line,
-                tag_value.clone(),
-            ));
-        } else if !["@id", "@about", "@source"].contains(&tag_name.as_str()) {
-            findings.push(crate::Finding::new(
-                crate::FindingKind::UnknownTag,
-                String::new(),
-                tag_line,
-                tag_name.clone(),
+                detail.to_string(),
             ));
         }
+    }
+}
+
+fn unknown_gherkin_tag<'a>(name: &'a str, value: &'a str) -> Option<&'a str> {
+    if name.is_empty() {
+        Some(value)
+    } else if !["@id", "@about", "@source"].contains(&name) {
+        Some(name)
+    } else {
+        None
     }
 }
 
@@ -1139,20 +1141,12 @@ fn check_item(item: &Item, path: &str, findings: &mut Vec<Finding>) {
 
             // REQ-core-052: 知らないタグ（結び付くかを問わない）
             for (tag_name, tag_value) in tags {
-                if tag_name.is_empty() {
-                    // "@" で始まらない語
+                if let Some(detail) = unknown_gherkin_tag(tag_name, tag_value) {
                     findings.push(Finding::new(
                         FindingKind::UnknownTag,
                         path.to_string(),
                         Some(tag_or_scenario_line),
-                        tag_value.clone(),
-                    ));
-                } else if !["@id", "@about", "@source"].contains(&tag_name.as_str()) {
-                    findings.push(Finding::new(
-                        FindingKind::UnknownTag,
-                        path.to_string(),
-                        Some(tag_or_scenario_line),
-                        tag_name.clone(),
+                        detail.to_string(),
                     ));
                 }
             }
