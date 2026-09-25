@@ -196,6 +196,23 @@ impl IrDocument {
     }
 }
 
+/// 文書群に対して一度求めた、親の用語集と重なる行。
+pub(crate) struct GlossaryDuplicates(Vec<BTreeSet<usize>>);
+
+impl GlossaryDuplicates {
+    pub(crate) fn new(docs: &[IrDocument]) -> Self {
+        Self(
+            docs.iter()
+                .map(|doc| doc.duplicate_glossary_rows(docs))
+                .collect(),
+        )
+    }
+
+    pub(crate) fn rows(&self) -> impl Iterator<Item = &BTreeSet<usize>> {
+        self.0.iter()
+    }
+}
+
 /// 行を "\n"、"\r\n"、単独の "\r" で分割する。"\r\n" は1つの行の終わりに数える（TBL-core-010）
 pub fn split_lines(content: &str) -> Vec<&str> {
     let mut lines = Vec::new();
@@ -926,12 +943,21 @@ fn build_scenario(
 /// 文書1つで決まる指摘は`parse_findings`から写す。形の指摘が出た文書も、取れた値で
 /// 文書をまたぐ検査を受ける（REQ-core-176）
 pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
+    let duplicates = GlossaryDuplicates::new(docs);
+    check_documents_with_duplicates(docs, config, &duplicates)
+}
+
+pub(crate) fn check_documents_with_duplicates(
+    docs: &[IrDocument],
+    config: &Config,
+    duplicates: &GlossaryDuplicates,
+) -> Vec<Finding> {
     let mut findings = Vec::new();
 
     // 全 ID を収集して重複を検出
     let mut all_ids: BTreeMap<String, Vec<(String, usize)>> = BTreeMap::new(); // id -> [(path, line)]
 
-    for doc in docs {
+    for (doc, duplicate_rows) in docs.iter().zip(duplicates.rows()) {
         let path = crate::join_display_path(&config.ir, &doc.relative_path);
 
         // REQ-core-038: 行数の上限
@@ -964,7 +990,6 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
         }
 
         // 項目の検査
-        let duplicate_rows = doc.duplicate_glossary_rows(docs);
         for item in &doc.items {
             if duplicate_rows.contains(&item.item_line()) {
                 if let Item::GlossaryTerm { term, line, .. } = item {
@@ -1412,6 +1437,14 @@ pub fn load_and_check(
     base: &Path,
     config: &Config,
 ) -> Result<(Vec<IrDocument>, Vec<Finding>), crate::StopReason> {
+    let (docs, findings, _) = load_and_check_with_duplicates(base, config)?;
+    Ok((docs, findings))
+}
+
+pub(crate) fn load_and_check_with_duplicates(
+    base: &Path,
+    config: &Config,
+) -> Result<(Vec<IrDocument>, Vec<Finding>, GlossaryDuplicates), crate::StopReason> {
     let ir_dir = base.join(&config.ir);
     let mut entries = Vec::new();
     collect_ir_paths(&ir_dir, "", &config.ir, &mut entries)?;
@@ -1429,8 +1462,9 @@ pub fn load_and_check(
         doc.relative_path = relative_path;
         docs.push(doc);
     }
-    let findings = check_documents(&docs, config);
-    Ok((docs, findings))
+    let duplicates = GlossaryDuplicates::new(&docs);
+    let findings = check_documents_with_duplicates(&docs, config, &duplicates);
+    Ok((docs, findings, duplicates))
 }
 
 fn collect_ir_paths(

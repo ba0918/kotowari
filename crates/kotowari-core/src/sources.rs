@@ -529,9 +529,19 @@ pub fn check_sources(
     ir_path: &str,
     findings: &mut Vec<Finding>,
 ) {
-    for doc in docs {
+    let duplicates = crate::ir::GlossaryDuplicates::new(docs);
+    check_sources_with_duplicates(docs, ctx, ir_path, &duplicates, findings);
+}
+
+pub(crate) fn check_sources_with_duplicates(
+    docs: &[crate::ir::IrDocument],
+    ctx: &SourceContext,
+    ir_path: &str,
+    duplicates: &crate::ir::GlossaryDuplicates,
+    findings: &mut Vec<Finding>,
+) {
+    for (doc, duplicate_rows) in docs.iter().zip(duplicates.rows()) {
         let path = crate::join_display_path(ir_path, &doc.relative_path);
-        let duplicate_rows = doc.duplicate_glossary_rows(docs);
         for item in &doc.items {
             if duplicate_rows.contains(&item.item_line()) {
                 continue;

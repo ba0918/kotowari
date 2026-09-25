@@ -1,18 +1,26 @@
 //! 用語、曖昧語、文書名の参照の検査（REQ-core-063〜REQ-core-070, REQ-core-104）
 
-use crate::ir::{IrDocument, Item, is_valid_id};
+use crate::ir::{GlossaryDuplicates, IrDocument, Item, is_valid_id};
 use crate::{Finding, FindingKind};
 use std::collections::BTreeSet;
 
 /// 用語集から用語の集合を作る
 pub fn collect_glossary_terms(docs: &[IrDocument], directory: &str) -> Option<BTreeSet<String>> {
+    let duplicates = GlossaryDuplicates::new(docs);
+    collect_glossary_terms_with_duplicates(docs, directory, &duplicates)
+}
+
+fn collect_glossary_terms_with_duplicates(
+    docs: &[IrDocument],
+    directory: &str,
+    duplicates: &GlossaryDuplicates,
+) -> Option<BTreeSet<String>> {
     let mut has_glossary = false;
     let mut terms = BTreeSet::new();
 
-    for doc in docs {
+    for (doc, duplicate_rows) in docs.iter().zip(duplicates.rows()) {
         if doc.is_glossary_in_chain(directory) {
             has_glossary = true;
-            let duplicate_rows = doc.duplicate_glossary_rows(docs);
             for item in &doc.items {
                 if duplicate_rows.contains(&item.item_line()) {
                     continue;
@@ -232,8 +240,27 @@ pub fn check_terms_and_vague_words(
     ir_path: &str,
     findings: &mut Vec<Finding>,
 ) {
+    let duplicates = GlossaryDuplicates::new(docs);
+    check_terms_and_vague_words_with_duplicates(
+        docs,
+        known_ids,
+        vague_words,
+        ir_path,
+        &duplicates,
+        findings,
+    );
+}
+
+pub(crate) fn check_terms_and_vague_words_with_duplicates(
+    docs: &[IrDocument],
+    known_ids: &BTreeSet<String>,
+    vague_words: &[String],
+    ir_path: &str,
+    duplicates: &GlossaryDuplicates,
+    findings: &mut Vec<Finding>,
+) {
     for doc in docs {
-        let glossary = collect_glossary_terms(docs, &doc.directory);
+        let glossary = collect_glossary_terms_with_duplicates(docs, &doc.directory, duplicates);
         let path = crate::join_display_path(ir_path, &doc.relative_path);
         for item in &doc.items {
             let lines = match item {

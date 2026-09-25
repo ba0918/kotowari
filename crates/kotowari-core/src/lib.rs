@@ -1042,18 +1042,25 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
     }
 
     // IR の文書を読んで検査する
-    let (docs, mut findings) = ir::load_and_check(&base, &cfg)?;
+    let (docs, mut findings, duplicates) = ir::load_and_check_with_duplicates(&base, &cfg)?;
 
     // 出典の検査
     let source_ctx = sources::build_context(&base, &cfg)?;
-    sources::check_sources(&docs, &source_ctx, &cfg.ir, &mut findings);
+    sources::check_sources_with_duplicates(&docs, &source_ctx, &cfg.ir, &duplicates, &mut findings);
 
     // 判断の記録の形の検査
     record_form::check_record_forms(&source_ctx, &mut findings);
 
     // 用語と曖昧語の検査
     let known_ids = collect_known_ids(&docs);
-    terms::check_terms_and_vague_words(&docs, &known_ids, &cfg.vague_words, &cfg.ir, &mut findings);
+    terms::check_terms_and_vague_words_with_duplicates(
+        &docs,
+        &known_ids,
+        &cfg.vague_words,
+        &cfg.ir,
+        &duplicates,
+        &mut findings,
+    );
 
     // 文書名の参照の検査
     let ir_paths: std::collections::BTreeSet<String> =
