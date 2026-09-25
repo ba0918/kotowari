@@ -224,18 +224,40 @@ pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopR
     let content = content.strip_prefix('\u{FEFF}').unwrap_or(content);
     let kind = DocKind::of(filename);
     let (values, mut findings) = read_document(filename, kind, content)?;
+    let mut items = extract_items(kind, &values, &mut findings)?;
+    discard_nameless_items(&mut items, &mut findings, content);
+    items.sort_by_key(Item::item_line);
+    exclude_unclosed_code_block(&mut items, &mut findings, content);
 
+    Ok(IrDocument {
+        filename: filename.to_string(),
+        relative_path: filename.to_string(),
+        directory: String::new(),
+        kind,
+        scope_lines: statements_of(values.get("scope"))?,
+        line_count: split_lines(content).len(),
+        items,
+        raw_content: content.to_string(),
+        parse_findings: findings,
+    })
+}
+
+fn extract_items(
+    kind: DocKind,
+    values: &Value,
+    findings: &mut Vec<Finding>,
+) -> Result<Vec<Item>, StopReason> {
     let mut items = Vec::new();
     match kind {
         DocKind::Topic => {
             for obj in elements(values.get("requirements")) {
-                items.extend(requirement(obj, &mut findings)?);
+                items.extend(requirement(obj, findings)?);
             }
             for obj in elements(values.get("tables")) {
                 items.extend(decision_table(obj)?);
             }
             for obj in elements(values.get("properties")) {
-                items.extend(property(obj, &mut findings)?);
+                items.extend(property(obj, findings)?);
             }
             for obj in elements(values.get("scenarios")) {
                 let opening = number(obj, "line")?;
@@ -248,7 +270,7 @@ pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopR
                     continue;
                 }
                 let content = string(obj, "value").unwrap_or_default();
-                GherkinBlock::read(opening, &content, &mut items, &mut findings);
+                GherkinBlock::read(opening, &content, &mut items, findings);
             }
         }
         DocKind::Flags => {
@@ -257,11 +279,15 @@ pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopR
             let direct = elements(values.get("flags"));
             let in_section = elements(values.get("flags_in_section"));
             for obj in direct.into_iter().chain(in_section) {
-                items.extend(flag_entry(obj, &mut findings)?);
+                items.extend(flag_entry(obj, findings)?);
             }
         }
-        DocKind::Glossary => read_glossary(&values, &mut items, &mut findings)?,
+        DocKind::Glossary => read_glossary(values, &mut items, findings)?,
     }
+    Ok(items)
+}
+
+fn discard_nameless_items(items: &mut Vec<Item>, findings: &mut Vec<Finding>, content: &str) {
     // REQ-core-043: "### ID:" の後に名前の無い見出しは "### ID: 名前" の形でない。
     // その ID は定義に数えず、見出しの行を detail にした unknown_heading にする（review8-gaps の A2）
     let lines = split_lines(content);
@@ -283,8 +309,9 @@ pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopR
         }
         !nameless
     });
-    items.sort_by_key(Item::item_line);
+}
 
+fn exclude_unclosed_code_block(items: &mut Vec<Item>, findings: &mut Vec<Finding>, content: &str) {
     // REQ-core-112: 閉じないコードブロックは、開始から文書の終わりまでを検査の対象から外す
     if let Some((opening, raw)) = unclosed_code_block(content) {
         let before_opening = |line: usize| line < opening;
@@ -297,18 +324,6 @@ pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopR
             raw,
         ));
     }
-
-    Ok(IrDocument {
-        filename: filename.to_string(),
-        relative_path: filename.to_string(),
-        directory: String::new(),
-        kind,
-        scope_lines: statements_of(values.get("scope"))?,
-        line_count: split_lines(content).len(),
-        items,
-        raw_content: content.to_string(),
-        parse_findings: findings,
-    })
 }
 
 /// 見出しで始まる`項目`の見出しの名前。見出しを持たない`シナリオ`と`用語`は None
