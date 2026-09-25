@@ -164,24 +164,18 @@ fn run(cli: Cli) -> Result<u8, Stop> {
             Ok(0)
         }
         Command::Check { path, format, open } => {
-            if path.is_dir() {
-                let files = check_directory(&path, open)?;
-                emit_check(&files, &format)?;
-                Ok(if files.iter().any(|(_, f)| !f.is_empty()) {
-                    1
-                } else {
-                    0
-                })
+            let files = if path.is_dir() {
+                check_directory(&path, open)?
             } else {
                 let findings = check_document(&path, open)?;
-                let files = vec![(path, findings)];
-                emit_check(&files, &format)?;
-                Ok(if files.iter().any(|(_, f)| !f.is_empty()) {
-                    1
-                } else {
-                    0
-                })
-            }
+                vec![(path, findings)]
+            };
+            emit_check(&files, &format)?;
+            Ok(if files.iter().any(|(_, f)| !f.is_empty()) {
+                1
+            } else {
+                0
+            })
         }
     }
 }
