@@ -581,6 +581,16 @@ fn push_undeclared_children(findings: &mut Vec<Finding>, block: &Block) {
     }
 }
 
+#[derive(Default)]
+struct ContainerOccurrences<'a> {
+    fields: HashMap<&'a str, Vec<usize>>,
+    statements: Vec<usize>,
+    bullets: Vec<usize>,
+    tables: Vec<usize>,
+    codeblocks: Vec<usize>,
+    ordered_fields: Vec<(usize, usize)>,
+}
+
 fn validate_container(
     rules: &ContainerRules,
     blocks: &[Block],
@@ -588,12 +598,7 @@ fn validate_container(
     container_line: Option<usize>,
     findings: &mut Vec<Finding>,
 ) {
-    let mut field_lines: HashMap<&str, Vec<usize>> = HashMap::new();
-    let mut statement_lines: Vec<usize> = Vec::new();
-    let mut bullet_lines: Vec<usize> = Vec::new();
-    let mut table_lines: Vec<usize> = Vec::new();
-    let mut code_lines: Vec<usize> = Vec::new();
-    let mut ordered_seen: Vec<(usize, usize)> = Vec::new();
+    let mut seen = ContainerOccurrences::default();
     let table_selection = rules.table.map(|table| table.selected_line(blocks));
 
     for block in blocks {
@@ -603,8 +608,8 @@ fn validate_container(
             } => {
                 match rules.fields.iter().position(|f| f.name == *name) {
                     Some(idx) => {
-                        field_lines.entry(name.as_str()).or_default().push(*line);
-                        ordered_seen.push((idx, *line));
+                        seen.fields.entry(name.as_str()).or_default().push(*line);
+                        seen.ordered_fields.push((idx, *line));
                         let field = &rules.fields[idx];
                         if when_allows(field.when.as_ref(), rules.fields, blocks) {
                             validate_field_value(field, value, *line, findings);
@@ -616,16 +621,16 @@ fn validate_container(
                     None => {
                         // TBL-schema-007: 宣言された名前と一致しない `- 名前: 値` 行は
                         // 箇条書きとして扱う。pattern は元の行に適用する
-                        validate_bullet(rules, block, blocks, &mut bullet_lines, open, findings);
+                        validate_bullet(rules, block, blocks, &mut seen.bullets, open, findings);
                     }
                 }
             }
             Block::Bullet { .. } => {
-                validate_bullet(rules, block, blocks, &mut bullet_lines, open, findings)
+                validate_bullet(rules, block, blocks, &mut seen.bullets, open, findings)
             }
             Block::Statement { text, line, .. } => match rules.statement {
                 Some(statement) => {
-                    statement_lines.push(*line);
+                    seen.statements.push(*line);
                     if when_allows(statement.when.as_ref(), rules.fields, blocks) {
                         validate_statement_value(statement, text, *line, findings);
                     }
@@ -644,7 +649,7 @@ fn validate_container(
             } => match rules.table {
                 // select で選ばれなかった表は宣言していない表として扱う（REQ-schema-059）
                 Some(table) if table_selection.is_none_or(|s| s.takes(*line)) => {
-                    table_lines.push(*line);
+                    seen.tables.push(*line);
                     validate_table_shape(table, header, rows, *line, row_lines, findings);
                 }
                 _ => {
@@ -655,7 +660,7 @@ fn validate_container(
             },
             Block::Code { lang, value, line } => match rules.codeblock {
                 Some(codeblock) => {
-                    code_lines.push(*line);
+                    seen.codeblocks.push(*line);
                     validate_codeblock_shape(codeblock, lang.as_deref(), value, *line, findings);
                 }
                 None => {
@@ -675,10 +680,40 @@ fn validate_container(
         }
     }
 
+    check_container_occurrences(rules, blocks, &seen, container_line, findings);
+
+    if rules.ordered {
+        let mut prev: Option<usize> = None;
+        for (idx, line) in &seen.ordered_fields {
+            if let Some(prev_idx) = prev
+                && *idx < prev_idx
+            {
+                findings.push(
+                    Finding::at(
+                        FindingKind::FieldOrderMismatch,
+                        *line,
+                        "fields are not in the declared order".into(),
+                    )
+                    .of_node(&rules.fields[*idx].name),
+                );
+                break;
+            }
+            prev = Some(*idx);
+        }
+    }
+}
+
+fn check_container_occurrences(
+    rules: &ContainerRules,
+    blocks: &[Block],
+    seen: &ContainerOccurrences<'_>,
+    container_line: Option<usize>,
+    findings: &mut Vec<Finding>,
+) {
     for field in rules.fields {
         if when_allows(field.when.as_ref(), rules.fields, blocks) {
             let empty: Vec<usize> = Vec::new();
-            let lines = field_lines.get(field.name.as_str()).unwrap_or(&empty);
+            let lines = seen.fields.get(field.name.as_str()).unwrap_or(&empty);
             check_occurrence(
                 &Occurrence {
                     lines,
@@ -699,7 +734,7 @@ fn validate_container(
     {
         check_occurrence(
             &Occurrence {
-                lines: &statement_lines,
+                lines: &seen.statements,
                 name: None,
                 what: "statement".to_string(),
                 container_line,
@@ -716,7 +751,7 @@ fn validate_container(
     {
         check_occurrence(
             &Occurrence {
-                lines: &bullet_lines,
+                lines: &seen.bullets,
                 name: None,
                 what: "bullets".to_string(),
                 container_line,
@@ -731,7 +766,7 @@ fn validate_container(
     if let Some(table) = rules.table {
         check_occurrence(
             &Occurrence {
-                lines: &table_lines,
+                lines: &seen.tables,
                 name: None,
                 what: "table".to_string(),
                 container_line,
@@ -746,7 +781,7 @@ fn validate_container(
     if let Some(codeblock) = rules.codeblock {
         check_occurrence(
             &Occurrence {
-                lines: &code_lines,
+                lines: &seen.codeblocks,
                 name: None,
                 what: "code block".to_string(),
                 container_line,
@@ -757,26 +792,6 @@ fn validate_container(
             FindingKind::MissingCodeblock,
             findings,
         );
-    }
-
-    if rules.ordered {
-        let mut prev: Option<usize> = None;
-        for (idx, line) in &ordered_seen {
-            if let Some(prev_idx) = prev
-                && *idx < prev_idx
-            {
-                findings.push(
-                    Finding::at(
-                        FindingKind::FieldOrderMismatch,
-                        *line,
-                        "fields are not in the declared order".into(),
-                    )
-                    .of_node(&rules.fields[*idx].name),
-                );
-                break;
-            }
-            prev = Some(*idx);
-        }
     }
 }
 
