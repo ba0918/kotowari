@@ -5,11 +5,6 @@ use crate::{Finding, FindingKind};
 use std::collections::BTreeSet;
 
 /// 用語集から用語の集合を作る
-pub fn collect_glossary_terms(docs: &[IrDocument], directory: &str) -> Option<BTreeSet<String>> {
-    let duplicates = GlossaryDuplicates::new(docs);
-    collect_glossary_terms_with_duplicates(docs, directory, &duplicates)
-}
-
 fn collect_glossary_terms_with_duplicates(
     docs: &[IrDocument],
     directory: &str,
@@ -233,24 +228,6 @@ fn is_reference_name(element: &str) -> bool {
 }
 
 /// IR 文書の対象の行（TBL-core-013）で用語と曖昧語を検査する
-pub fn check_terms_and_vague_words(
-    docs: &[IrDocument],
-    known_ids: &BTreeSet<String>,
-    vague_words: &[String],
-    ir_path: &str,
-    findings: &mut Vec<Finding>,
-) {
-    let duplicates = GlossaryDuplicates::new(docs);
-    check_terms_and_vague_words_with_duplicates(
-        docs,
-        known_ids,
-        vague_words,
-        ir_path,
-        &duplicates,
-        findings,
-    );
-}
-
 pub(crate) fn check_terms_and_vague_words_with_duplicates(
     docs: &[IrDocument],
     known_ids: &BTreeSet<String>,

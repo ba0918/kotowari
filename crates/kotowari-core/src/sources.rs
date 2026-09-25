@@ -523,16 +523,6 @@ fn for_each_md(
 }
 
 /// 出典を検査して Finding に追加する
-pub fn check_sources(
-    docs: &[crate::ir::IrDocument],
-    ctx: &SourceContext,
-    ir_path: &str,
-    findings: &mut Vec<Finding>,
-) {
-    let duplicates = crate::ir::GlossaryDuplicates::new(docs);
-    check_sources_with_duplicates(docs, ctx, ir_path, &duplicates, findings);
-}
-
 pub(crate) fn check_sources_with_duplicates(
     docs: &[crate::ir::IrDocument],
     ctx: &SourceContext,
