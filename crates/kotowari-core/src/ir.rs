@@ -638,6 +638,15 @@ fn unclosed_code_block(content: &str) -> Option<(usize, String)> {
     open.map(|(_, line, raw)| (line, raw.to_string()))
 }
 
+/// 直前の行。ステップはシナリオ外の連続した行を一つの誤りに数えるためにも使う
+#[derive(Default, PartialEq, Eq)]
+enum PreviousGherkinLine {
+    #[default]
+    Other,
+    Tag,
+    Step,
+}
+
 /// gherkin の塊1つの中身からタグとシナリオを組み立てる（REQ-core-113、A1、A6）
 #[derive(Default)]
 struct GherkinBlock {
@@ -647,9 +656,7 @@ struct GherkinBlock {
     scenario_line: Option<usize>,
     scenario_text: String,
     steps: Vec<(usize, String)>,
-    prev_was_tag: bool,
-    /// 直前の行がステップだったか（Scenario: の無いブロックで続くステップを誤りにしないため）
-    prev_was_step: bool,
+    previous_line: PreviousGherkinLine,
 }
 
 impl GherkinBlock {
@@ -704,7 +711,7 @@ impl GherkinBlock {
         let is_scenario_line = trimmed.starts_with("Scenario:");
 
         // REQ-core-113/A155: タグの行の直後が Scenario: でなければ、そのタグの行自体が invalid_gherkin_line
-        if self.prev_was_tag && !is_scenario_line {
+        if self.previous_line == PreviousGherkinLine::Tag && !is_scenario_line {
             self.invalid_tag_line(findings);
             // 結び付かないタグの検査（REQ-core-052: 結び付くかを問わない）をしてから捨てる
             check_gherkin_tags_findings(&self.tags, self.tag_line, findings);
@@ -732,27 +739,25 @@ impl GherkinBlock {
                     self.tags.push((String::new(), part.to_string()));
                 }
             }
-            self.prev_was_tag = true;
-            self.prev_was_step = false;
+            self.previous_line = PreviousGherkinLine::Tag;
         } else if is_scenario_line {
             self.flush_scenario(items);
             // REQ-core-113: このタグは直前の行にあるときだけ、いま始まるシナリオに結び付く。
             // 結び付かない（直前がタグの行でない）ときは、前のシナリオで使い終えたタグを持ち越さない。
-            if !self.prev_was_tag {
+            if self.previous_line != PreviousGherkinLine::Tag {
                 self.clear_tags();
             }
             self.scenario_line = Some(line_num);
             // A150: detail の元になる Scenario: の行は生の行（字下げを含む）を持つ
             self.scenario_text = line.to_string();
-            self.prev_was_tag = false;
-            self.prev_was_step = false;
+            self.previous_line = PreviousGherkinLine::Other;
         } else if ["Given ", "When ", "Then ", "And ", "But "]
             .iter()
             .any(|keyword| trimmed.starts_with(keyword))
         {
             if self.scenario_line.is_some() {
                 self.steps.push((line_num, line.to_string()));
-            } else if !self.prev_was_step {
+            } else if self.previous_line != PreviousGherkinLine::Step {
                 // REQ-core-113/A155: 直前に Scenario: もステップも無いステップの行は invalid_gherkin_line。
                 // 続く2つ目以降のステップは最初のステップの誤りに含め、別の誤りにしない
                 findings.push(Finding::new(
@@ -762,12 +767,10 @@ impl GherkinBlock {
                     line.to_string(),
                 ));
             }
-            self.prev_was_tag = false;
-            self.prev_was_step = true;
+            self.previous_line = PreviousGherkinLine::Step;
         } else if trimmed.starts_with('#') || trimmed.is_empty() {
             // REQ-core-113: 注釈と空行は有効
-            self.prev_was_tag = false;
-            self.prev_was_step = false;
+            self.previous_line = PreviousGherkinLine::Other;
         } else {
             // REQ-core-113: それ以外は invalid_gherkin_line
             // TBL-core-008: detail は行の文字そのまま（字下げと末尾の空白を含む）
@@ -777,15 +780,14 @@ impl GherkinBlock {
                 Some(line_num),
                 line.to_string(),
             ));
-            self.prev_was_tag = false;
-            self.prev_was_step = false;
+            self.previous_line = PreviousGherkinLine::Other;
         }
     }
 
     /// 塊の終わり
     fn finish(mut self, items: &mut Vec<Item>, findings: &mut Vec<Finding>) {
         // REQ-core-113/A155: ブロックの終わりが Scenario: でなければ、直前のタグの行は invalid_gherkin_line
-        if self.prev_was_tag {
+        if self.previous_line == PreviousGherkinLine::Tag {
             self.invalid_tag_line(findings);
         }
         if self.scenario_line.is_some() {
