@@ -21,7 +21,7 @@ kotowari list --version
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-155:1344c960, REQ-core-003:ccf703c7, REQ-core-011:549c5c91] -->
+<!-- @kotowari[REQ-core-155:fbd06b39, REQ-core-003:ccf703c7, REQ-core-011:549c5c91] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
@@ -41,13 +41,19 @@ kotowari list --version
 
 ### text
 
-<!-- @kotowari[REQ-core-155:1344c960, EX-core-248:7651c98a] -->
+<!-- @kotowari[REQ-core-155:fbd06b39, EX-core-248:7651c98a, EX-core-399:bcb01e70] -->
 
 1件を1行で出し、その下に印の付いたテストを1件ずつ字下げして続けます。
 
 ```text
 ID 検証 名前 パス:行 tests=数
   パス:行 テストの名前
+```
+
+[後回し](../deferred.md)の要求と後回しのシナリオ（JSON の `deferred` が true の1件）では、行の末尾に ` deferred` が付きます。
+
+```text
+REQ-001 unit 例 docs/ir/a.md:7 tests=0 deferred
 ```
 
 | 欄 | 中身 |
@@ -59,7 +65,7 @@ ID 検証 名前 パス:行 tests=数
 
 ### JSON
 
-<!-- @kotowari[TBL-core-026:45be3187, REQ-core-153:513617dc, EX-core-288:30fa9a16] -->
+<!-- @kotowari[TBL-core-026:05d8938e, REQ-core-153:513617dc, EX-core-288:30fa9a16] -->
 
 最上位は `items` だけのオブジェクトです。
 `items` は1件ずつのオブジェクトの並びで、種類によって持つ鍵が違います。持たない鍵は出ません。
@@ -80,6 +86,7 @@ ID 検証 名前 パス:行 tests=数
 | `sources` | 文字列の並び | すべて | 出典 |
 | `tests` | オブジェクトの並び | すべて | その ID を印に含むテスト。1件は `path`、`line`（印の行）、`name`（テストの名前か null） |
 | `fingerprint` | 文字列 | すべて | 指紋（16進8桁）。[ガイドの印](../writing-guides.md)に写す値 |
+| `deferred` | 真偽値 | すべて | [後回し](../deferred.md)の要求と後回しのシナリオは true、ほかは false |
 
 同じテストに同じ ID の印が2つあれば、`tests` には2件出ます。
 同じ ID のシナリオが2つあるときは、`examples` には1つ目だけを数えます。
@@ -171,7 +178,8 @@ $ kotowari list | jq '.items[0]'
       "name": "greets_with_name"
     }
   ],
-  "fingerprint": "ec0d8b1c"
+  "fingerprint": "ec0d8b1c",
+  "deferred": false
 }
 ```
 
@@ -208,7 +216,7 @@ CI で誤りを止めたいなら `kotowari check` か [`kotowari status`](./sta
 
 ### テストの名前が `-`（JSON では null）になる
 
-<!-- @kotowari[TBL-core-026:45be3187, EX-core-247:fccadbbf] -->
+<!-- @kotowari[TBL-core-026:05d8938e, EX-core-247:fccadbbf] -->
 
 問い合わせの無い言語のテストのファイルでは、kotowari は印だけを拾い、テストの名前は取りません。
 `path` と `line` は印の位置です。
@@ -216,11 +224,12 @@ CI で誤りを止めたいなら `kotowari check` か [`kotowari status`](./sta
 
 ### `tests=0` の要求が status では「テストあり」に数えられている
 
-<!-- @kotowari[TBL-core-026:45be3187, TBL-core-028:e870328f] -->
+<!-- @kotowari[TBL-core-026:05d8938e, TBL-core-028:6aa7ef3b] -->
 
 `list` の `tests` は、その ID を直接印に含むテストだけです。
 [`kotowari status`](./status.md) の `with_tests` は、その要求を `@about` に持つシナリオに付いたテストも数えます。
 `tests=0` の要求を見つけたら、その要求の `examples` に並ぶシナリオの `tests` も確かめてください。
+`deferred` が true の要求は、`status` では `with_tests` にも `without_tests` にも数えず、`deferred` に数えます。
 
 ### check や status は設定の誤りで止まるのに、list は動く
 

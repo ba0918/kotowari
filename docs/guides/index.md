@@ -16,6 +16,7 @@ kotowari は、Markdown で書いた仕様（IR）を機械的に検査する CL
 | 置き場やテストのファイルの場所を設定する | [設定ファイル](config.md) |
 | 仕様を検査して、指摘を直す | [kotowari check](commands/check.md) と [指摘の種類](findings.md) |
 | テストと要求を結び付ける | [テストに印を付ける](marks.md) |
+| 今は作らない要求をテストの検査から外す | [要求を後回しにする](deferred.md) |
 
 ## コマンド
 
@@ -34,6 +35,7 @@ kotowari は、Markdown で書いた仕様（IR）を機械的に検査する CL
 - [設定ファイル](config.md) — `.kotowari/config.yaml` の全キー
 - [指摘の種類](findings.md) — 誤りと注意の一覧、detail、直し方
 - [テストに印を付ける](marks.md) — `@kotowari[...]` の書き方と、見つかるテスト
+- [要求を後回しにする](deferred.md) — `- deferred:` の書き方、効き目、食い違いの注意
 - [ガイドを書く](writing-guides.md) — このガイドのような利用者向けの文書に印と指紋を付け、IR の変更に追従させる
 
 ## このガイドの保ち方
