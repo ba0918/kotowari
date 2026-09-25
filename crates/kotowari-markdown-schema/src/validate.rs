@@ -396,25 +396,16 @@ fn validate_bullet(
         _ => return,
     };
     match rules.bullets {
-        Some(bullets) => {
-            bullet_lines.push(line);
-            if when_allows(bullets.when.as_ref(), rules.fields, blocks)
-                && let Some(pattern) = &bullets.pattern
-                && !pattern.is_match(text)
-            {
-                findings.push(Finding::at(
-                    FindingKind::BulletPatternMismatch,
-                    line,
-                    format!(
-                        "bullet \"{text}\" does not match pattern \"{}\"",
-                        pattern.source()
-                    ),
-                ));
-            }
-            // 親の bullets 規則が宣言されたとき、子は親の children の宣言に照合する（REQ-schema-031）。
-            // when は required / pattern / enum の制約にだけ効く（REQ-schema-020）。照合は常に実行する。
-            validate_children(block, bullets.children.as_ref(), findings);
-        }
+        Some(bullets) => validate_declared_bullet(
+            block,
+            text,
+            line,
+            bullets,
+            rules.fields,
+            blocks,
+            bullet_lines,
+            findings,
+        ),
         None => {
             if !open {
                 // 宣言されていない箇条書きと、その内側の子の行を undeclared_line にする。
@@ -542,8 +533,30 @@ fn validate_child_bullet(
         Block::Field { text, line, .. } => (text.as_str(), *line),
         _ => return,
     };
+    validate_declared_bullet(
+        block,
+        text,
+        line,
+        bullets,
+        &children.fields,
+        sibling_blocks,
+        bullet_lines,
+        findings,
+    );
+}
+
+fn validate_declared_bullet(
+    block: &Block,
+    text: &str,
+    line: usize,
+    bullets: &Bullets,
+    fields: &[Field],
+    sibling_blocks: &[Block],
+    bullet_lines: &mut Vec<usize>,
+    findings: &mut Vec<Finding>,
+) {
     bullet_lines.push(line);
-    if when_allows(bullets.when.as_ref(), &children.fields, sibling_blocks)
+    if when_allows(bullets.when.as_ref(), fields, sibling_blocks)
         && let Some(pattern) = &bullets.pattern
         && !pattern.is_match(text)
     {
@@ -556,6 +569,7 @@ fn validate_child_bullet(
             ),
         ));
     }
+    // when は required / pattern / enum にだけ効く。子の照合は常に行う（REQ-schema-020）。
     validate_children(block, bullets.children.as_ref(), findings);
 }
 
