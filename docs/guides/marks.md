@@ -26,7 +26,7 @@ IR を書き終えたら既存のテストに印を付けていくと、どの�
 
 ## まず1本付けてみる
 
-<!-- @kotowari[REQ-core-075:c5389c2a, TBL-core-026:45be3187] -->
+<!-- @kotowari[REQ-core-075:c5389c2a, TBL-core-026:05d8938e] -->
 
 例として、要求2つとシナリオ1つだけの小さな IR を用意しました。
 
@@ -165,7 +165,7 @@ proptest! {
 
 ## 要求に付けるか、シナリオに付けるか
 
-<!-- @kotowari[REQ-core-085:4831b36c, REQ-core-137:19ec5f8f, EX-core-121:7af1d762, EX-core-122:580060f8] -->
+<!-- @kotowari[REQ-core-085:9c02a2ea, REQ-core-137:192fc62f, EX-core-121:7af1d762, EX-core-122:580060f8] -->
 
 印に書く ID は、要求（`REQ-`）でもシナリオ（`EX-`）でもかまいません。
 `check` は2段で見ています。
@@ -195,6 +195,10 @@ docs/ir/discount.md:26 [error] scenario_without_test EX-001
 シナリオのある要求なら、シナリオの ID を書くのが近道です。
 シナリオの無い要求（例の REQ-002）には、要求の ID を直接書きます。
 
+[後回し](deferred.md)の要求は、どちらの誤りにもなりません。
+後回しの要求だけ（と review の要求）を `@about` に持つシナリオも同じです。
+後回しの ID を印に書くと、`deferred_with_test` の注意が出ます。
+
 ### 検証が review の要求
 
 <!-- @kotowari[REQ-core-078:56b1ab82, EX-core-123:8f683517] -->
@@ -205,7 +209,7 @@ docs/ir/discount.md:26 [error] scenario_without_test EX-001
 
 ### `list` の `tests=0` は「テストが無い」とは限らない
 
-<!-- @kotowari[TBL-core-026:45be3187, EX-core-122:580060f8] -->
+<!-- @kotowari[TBL-core-026:05d8938e, EX-core-122:580060f8] -->
 
 `list` の `tests` は、その ID を**直接**書いた印だけを並べます。
 シナリオの ID だけを書いたとき、`list` では要求が `tests=0` に見えますが、`check` と `status` はテストありと数えます。
@@ -218,7 +222,7 @@ REQ-002 unit 会員でない注文 docs/ir/discount.md:15 tests=1
 EX-001 - 1000円の注文は900円になる docs/ir/discount.md:27 tests=1
   tests/discount.rs:1 member_gets_ten_percent_off
 $ kotowari status --format text | grep requirements
-requirements unit=2 property=0 proof=0 review=0 with_tests=2 without_tests=0 review_with_how_to_verify=0 review_without_how_to_verify=0 without_examples=1
+requirements unit=2 property=0 proof=0 review=0 with_tests=2 without_tests=0 review_with_how_to_verify=0 review_without_how_to_verify=0 without_examples=1 deferred=0
 ```
 
 テストの無い要求を探すときは、`tests=0` の要求のシナリオ側も確かめてください。

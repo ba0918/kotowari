@@ -57,17 +57,17 @@ kotowari status --version
 
 ### text
 
-<!-- @kotowari[REQ-core-166:5789e852, EX-core-261:780aa92a] -->
+<!-- @kotowari[REQ-core-166:5789e852, EX-core-261:a208b1bc] -->
 
 1つの群を1行にして、`群名 鍵=値 鍵=値 …` の形で出します。
 鍵の語は JSON と同じで、値は1つの半角空白で区切り、桁揃えはしません。
 群の順は下の表の順で、最後の行は `complete true` か `complete false` です。
 
-`tests` の行だけは、JSON の `files` を開いて `拡張子=ファイルの数` を並べます（例: `tests marks=1945 rs=51`）。
+`tests` の行だけは、JSON の `files` を開いて `拡張子=ファイルの数` を並べます（例: `tests marks=2042 rs=55`）。
 
 ### JSON
 
-<!-- @kotowari[TBL-core-028:e870328f, REQ-core-164:c48d77e2] -->
+<!-- @kotowari[TBL-core-028:6aa7ef3b, REQ-core-164:c48d77e2, EX-core-398:6a32dbad] -->
 
 最上位は次の群の鍵だけのオブジェクトで、`complete` が最後です。
 全部の鍵の定義は [status の IR](../../ir/core/status.md) の TBL-core-028 にあります。
@@ -77,10 +77,12 @@ kotowari status --version
 | `documents` | `files`、`lines` | 数 | 読んだ IR の文書の数と、行数の合計 |
 | `items` | `requirement`、`table`、`property`、`scenario`、`flag` | 数 | ID を持つ項目とシナリオの、種類ごとの数 |
 | `requirements` | `unit`、`property`、`proof`、`review` | 数 | `- verification:` の値ごとの要求の数。行の無い要求はどれにも数えない |
-| `requirements` | `with_tests`、`without_tests` | 数 | 検証が review でない要求のうち、テストがあるものと無いものの数 |
+| `requirements` | `with_tests`、`without_tests` | 数 | 検証が review でなく[後回し](../deferred.md)でない要求のうち、テストがあるものと無いものの数 |
 | `requirements` | `review_with_how_to_verify`、`review_without_how_to_verify` | 数 | 検証が review の要求のうち、`- how_to_verify:` の行があるものと無いものの数 |
-| `requirements` | `without_examples` | 数 | その ID を `@about` に持つシナリオが無い要求の数 |
-| `scenarios` | `with_tests`、`without_tests` | 数 | 印の付いたテストがあるシナリオと無いシナリオの数 |
+| `requirements` | `without_examples` | 数 | その ID を `@about` に持つシナリオが無い要求の数。後回しの要求も数える |
+| `requirements` | `deferred` | 数 | 後回しの要求の数 |
+| `scenarios` | `with_tests`、`without_tests` | 数 | 後回しのシナリオでないシナリオのうち、印の付いたテストがあるものと無いものの数 |
+| `scenarios` | `deferred` | 数 | 後回しのシナリオの数 |
 | `tests` | `marks` | 数 | 印の出現の数。1つの印に ID が複数あれば ID ごとに1つ |
 | `tests` | `files` | オブジェクト | `check` の JSON の `tests` と同じ。鍵は拡張子、値は `files`（ファイルの数）と `query`（問い合わせのある言語か） |
 | `guides` | `files`、`marks` | 数 | 読んだガイドの数と、ガイドの印の数（`check` の `guides` と同じ） |
@@ -89,7 +91,7 @@ kotowari status --version
 
 ### よく見る数
 
-<!-- @kotowari[TBL-core-028:e870328f] -->
+<!-- @kotowari[TBL-core-028:6aa7ef3b] -->
 
 特によく見る数だけ挙げます。
 
@@ -98,6 +100,7 @@ kotowari status --version
 | `requirements` | `without_tests` | 0 でなければ、テストが一つも付いていない要求がある |
 | `requirements` | `review_without_how_to_verify` | 0 でなければ、人か LLM が目で確かめる要求なのに、確かめ方が書かれていない |
 | `requirements` | `without_examples` | 具体例（シナリオ）の無い要求の数。欠陥ではないが、仕様が薄い所の目安になる |
+| `requirements`、`scenarios` | `deferred` | 今は作らないと宣言した要求とシナリオの数。`without_tests` には入らないので、増えても `complete` は変わらない |
 | `items` | `flag` | 「仕様として書ききれていない」と自分で記録した箇所の数 |
 | `guides` | `files` / `marks` | 読んだガイドの数と、ガイドの印の数。設定の glob を書き間違えると 0 になる |
 | `findings` | `error` / `notice` | `check` の指摘の数。`notice` は注意で、揃っているかの判定には効かない |
@@ -132,24 +135,24 @@ kotowari status --version
 
 ### 使ってみる
 
-<!-- @kotowari[REQ-core-166:5789e852, EX-core-261:780aa92a] -->
+<!-- @kotowari[REQ-core-166:5789e852, EX-core-261:a208b1bc] -->
 
 リポジトリの根で実行します。
 人が読むなら `--format text` が便利です。
 
 ```console
 $ kotowari status --format text
-documents files=47 lines=5545
-items requirement=272 table=47 property=13 scenario=320 flag=0
-requirements unit=242 property=3 proof=0 review=27 with_tests=245 without_tests=0 review_with_how_to_verify=27 review_without_how_to_verify=0 without_examples=126
-scenarios with_tests=320 without_tests=0
-tests marks=1945 rs=51
-guides files=12 marks=458
+documents files=48 lines=5759
+items requirement=279 table=47 property=13 scenario=344 flag=0
+requirements unit=248 property=3 proof=0 review=28 with_tests=251 without_tests=0 review_with_how_to_verify=28 review_without_how_to_verify=0 without_examples=127 deferred=0
+scenarios with_tests=344 without_tests=0 deferred=0
+tests marks=2042 rs=55
+guides files=13 marks=494
 findings error=0 notice=8
 complete true
 ```
 
-これは kotowari 自身のリポジトリで 2026-09-24 に実行した結果です。
+これは kotowari 自身のリポジトリで 2026-09-25 に実行した結果です。
 最後の `complete true` が答えで、それより上の行はその内訳です。
 `notice` があっても `complete true` になっている点に注目してください。
 
@@ -180,12 +183,14 @@ true
 
 ### `without_tests` が 0 でない
 
-<!-- @kotowari[TBL-core-028:e870328f, TBL-core-026:45be3187, EX-core-263:93a87c06] -->
+<!-- @kotowari[TBL-core-028:6aa7ef3b, TBL-core-026:05d8938e, EX-core-263:93a87c06] -->
 
 テストに印（`@kotowari[REQ-...]`）が付いていない要求があります。
 `kotowari list --format text | grep 'tests=0$'` で、印の付いたテストが無い項目を探せます。
+後回しの項目は行の末尾が ` deferred` なので、この grep には当たりません。
 ただし要求は、直接印が無くても、その要求を `@about` に持つシナリオにテストが付いていれば「テストあり」に数えられます。
 一覧で `tests=0` の要求を見つけたら、そのシナリオ側も確かめてください。
+今は作らないと決めた要求なら、テストの代わりに[後回し](../deferred.md)にすると `without_tests` から外れます。
 
 ### `review_without_how_to_verify` が 0 でない
 
@@ -203,7 +208,7 @@ true
 
 ### `unit`、`property`、`proof`、`review` の合計が `requirement` より少ない
 
-<!-- @kotowari[TBL-core-028:e870328f] -->
+<!-- @kotowari[TBL-core-028:6aa7ef3b] -->
 
 `- verification:` の行の無い要求があります。そうした要求は検証の種類ごとの数のどれにも入りません。
 この要求は `check` の誤りでもあるので、`complete` は false になります。
@@ -230,6 +235,10 @@ true
 - **テストの無い要求の数から review の要求を外している。**
   review の要求はそもそもテストを求めないので、分母に入れると常に「テスト不足」に見えてしまいます。
   （[A12](../../decision/records/2026-09-20-query-status.md#A12)）
+- **後回しは `with_tests` と `without_tests` の外に数える。**
+  後回しを `without_tests` に数えると、その数が本物の未完を表さなくなります。
+  件数は `deferred` に出すので、後回しが黙って増え続けることもありません。
+  （[2026-09-25-deferred-items.md A8](../../decision/records/2026-09-25-deferred-items.md#A8)）
 - **text の行は JSON の鍵をそのまま並べ、桁揃えをしない。**
   text と JSON の対応を覚えなくて済み、値の桁で見た目が変わらないので出力を契約として固定できます。
   （[A14](../../decision/records/2026-09-20-query-status.md#A14)）

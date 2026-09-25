@@ -64,7 +64,7 @@ ID 検証 名前 パス:行 tests=数
 <!-- @kotowari[TBL-core-027:62b02eff, REQ-core-159:4b71c072] -->
 
 最上位は `items` だけのオブジェクトで、`list` と同じ形です。
-1件は [`kotowari list` の1件の鍵](./list.md#json)（`id`、`kind`、`name`、`path`、`line`、`type`、`verification`、`definition`、`examples`、`how_to_verify`、`relations`、`sources`、`tests`、`fingerprint`）をすべて持ち、次の2つの鍵が増えます。
+1件は [`kotowari list` の1件の鍵](./list.md#json)（`id`、`kind`、`name`、`path`、`line`、`type`、`verification`、`definition`、`examples`、`how_to_verify`、`relations`、`sources`、`tests`、`fingerprint`、`deferred`）をすべて持ち、次の2つの鍵が増えます。
 
 | 鍵 | 型 | 説明 |
 |---|---|---|
@@ -169,7 +169,7 @@ EX-001 - 名前を受けて挨拶する docs/ir/greet.md:28 tests=1
 
 ### ガイドの印に写す指紋を取る
 
-<!-- @kotowari[TBL-core-026:45be3187, REQ-core-203:35ad47f9] -->
+<!-- @kotowari[TBL-core-026:05d8938e, REQ-core-203:e195dec1] -->
 
 ガイドの印に書く指紋は、`fingerprint` の値をそのまま写します。手で計算しません。
 

@@ -239,6 +239,41 @@ fn req_203_crlf_line_endings_do_not_change_the_fingerprint() {
     assert_eq!(listed_fingerprint(tmp.path(), "EX-001"), "ec19e8a0");
 }
 
+// @kotowari[REQ-core-203, REQ-core-209]
+#[test]
+fn req_203_a_document_level_declaration_leads_the_fingerprint_of_its_requirements_only() {
+    // 要求は "- deferred: docs/decision/records/r.md#A1" の行を先頭に加えた並び
+    // （sha256sum で計算した値）。決定表とシナリオの指紋は宣言の無いときと同じ
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), "");
+    let doc = ir_doc(
+        REQ_001,
+        "## Decision tables\n\n### TBL-001: 表\n\n- source: docs/decision/records/r.md#A1\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n## Examples\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/r.md#A1\nScenario: 例\n  # 注釈\n  Given 何か\n\n  Then 結果\n```\n",
+    )
+    .replace(
+        "範囲。\n",
+        "範囲。\n- deferred: docs/decision/records/r.md#A1\n- deferred: docs/decision/records/r.md#A1, docs/decision/records/r.md#A1\n",
+    );
+    write(tmp.path(), "docs/ir/a.md", &doc);
+    assert_eq!(listed_fingerprint(tmp.path(), "REQ-001"), "470a8ffe");
+    assert_eq!(listed_fingerprint(tmp.path(), "TBL-001"), "39edaaf8");
+    assert_eq!(listed_fingerprint(tmp.path(), "EX-001"), "ec19e8a0");
+}
+
+// @kotowari[REQ-core-203, REQ-core-208]
+#[test]
+fn req_203_a_requirement_level_declaration_is_part_of_the_body_it_fingerprints() {
+    // "- deferred:" の行は "- source:" の行と違って除かない（sha256sum で計算した値）
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), "");
+    let deferred = REQ_001.replace(
+        "- verification: unit\n",
+        "- verification: unit\n- deferred: docs/decision/records/r.md#A1\n",
+    );
+    write(tmp.path(), "docs/ir/a.md", &ir_doc(&deferred, ""));
+    assert_eq!(listed_fingerprint(tmp.path(), "REQ-001"), "e29882df");
+}
+
 // --- REQ-core-198、REQ-core-199、REQ-core-206: ガイドのファイルを集める ---
 
 /// 空の置き場だけを作り、設定を `config` にする（`IR`も`判断の記録`も1つも無い）

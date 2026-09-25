@@ -1,4 +1,4 @@
-Based on the kotowari specification (revised 2026-09-23; the version of kotowari itself is not pinned)
+Based on the kotowari specification (revised 2026-09-25; the version of kotowari itself is not pinned)
 
 ## Documents
 
@@ -15,7 +15,9 @@ Each document has exactly one `# ` title. If there is no title, missing_title; i
 
 Headings are only CommonMark ATX heading lines (up to three leading spaces, one to six `#`, then a space or the end of the line). A line of `#` alone is also a heading. A line with no space right after `#` like `#foo`, a line with seven or more `#`, and a line of only `---` or `===` are not headings; they are read as a `statement`.
 
-The non-empty lines after the title and before the first `## ` or `### ` are "what the document covers" (the scope). A topic document has one or more (if none, a missing_scope error). `CONTEXT.md` and `FLAGS.md` need not have any.
+The non-empty lines after the title and before the first `## ` or `### ` that are neither list lines nor table lines are "what the document covers" (the scope). A topic document has one or more (if none, a missing_scope error). `CONTEXT.md` and `FLAGS.md` need not have any.
+
+In a topic document, a `- deferred:` line in the same place (after the title, before the first `## ` or `### `) is the document-level declaration that defers every requirement of the document (see "Deferred requirements" below). It is a list line, so it does not count as a scope line: a document with only that line is still missing_scope. A second document-level `- deferred:` line is a duplicate_field error (detail `deferred`), and only the first one's value is read. In `CONTEXT.md` and `FLAGS.md` the same line is an unknown_field error.
 
 A topic document has the following sections (leave out the sections it does not need).
 
@@ -44,7 +46,7 @@ IDs are unique across all documents, across directories. If the same ID appears 
 
 | Item | Where it goes | Heading | Lines it has | Statement |
 |---|---|---|---|---|
-| Requirement | Under `## Requirements` | `### REQ-nnn: name` | `- kind:` (event_driven, state_driven, ubiquitous, prohibition, invariant, algorithm), `- source:`, `- verification:` (unit, property, proof, review), `- definition:` (an algorithm has it; others may have it), `- how_to_verify:` (required when verification is review; others may have it. Free text describing how a person or an LLM verifies it) | Has one unless algorithm. An algorithm has none |
+| Requirement | Under `## Requirements` | `### REQ-nnn: name` | `- kind:` (event_driven, state_driven, ubiquitous, prohibition, invariant, algorithm), `- source:`, `- verification:` (unit, property, proof, review), `- definition:` (an algorithm has it; others may have it), `- how_to_verify:` (required when verification is review; others may have it. Free text describing how a person or an LLM verifies it), `- deferred:` (only when deferring it; comma-separated sources) | Has one unless algorithm. An algorithm has none |
 | Decision table | Under `## Decision tables` | `### TBL-nnn: name` | `- source:` and a Markdown table | None (has a table) |
 | Property | Under `## Properties` | `### PROP-nnn: name` | `- source:` | Has one |
 | Scenario | A gherkin code block under `## Examples` | The `Scenario:` line | The tags on the preceding line `@id=EX-nnn`, `@about=ID,...`, `@source=source,...` | None (has step lines) |
@@ -55,7 +57,7 @@ When a `### ` heading is not of the form `### ID: name` (including an `EX-` ID u
 
 The `- xxx:` lines allowed under a heading are only those in the "Lines it has" column of the table above for that kind of item. An unknown `- xxx:` line, or a list line not of the form `xxx:` (a line starting with `- `, `* `, `+ `, or digits and `.`, or a line of `-` alone), is an unknown_field error. The content of an unknown line is not read.
 
-The `- ` lines under a heading may come in any order, with blank lines in between. The values of `- definition:`, `- related:` and `- source:` may be several, separated by commas. If the same `- xxx:` line appears twice or more, a duplicate_field error.
+The `- ` lines under a heading may come in any order, with blank lines in between. The values of `- definition:`, `- related:`, `- source:` and `- deferred:` may be several, separated by commas. If the same `- xxx:` line appears twice or more, a duplicate_field error.
 
 Errors when a required line is missing:
 
@@ -63,7 +65,7 @@ Errors when a required line is missing:
 - No `- source:`, or it is empty → missing_source
 - Any other (`- kind:`, `- related:`) missing → missing_field
 
-A `- kind:`, `- verification:`, `- definition:`, `- related:` or `- how_to_verify:` line with an empty value counts as present, and no finding for a missing line is raised. The empty values of `- kind:` and `- verification:` become the unknown_kind and verification_invalid errors below. If a decision table has no table, a missing_table error.
+A `- kind:`, `- verification:`, `- definition:`, `- related:` or `- how_to_verify:` line with an empty value counts as present, and no finding for a missing line is raised. A `- deferred:` line with an empty value is a missing_source error on that line with detail `deferred`; the requirement is still deferred. The empty values of `- kind:` and `- verification:` become the unknown_kind and verification_invalid errors below. If a decision table has no table, a missing_table error.
 
 When the value of `- kind:` is not one of the values defined for the kind of item, an unknown_kind error. When the value of `- verification:` is not unit, property, proof or review, a verification_invalid error. When a requirement of kind algorithm has no `- definition:` pointing at a decision table or property, an algorithm_without_definition error.
 
@@ -91,6 +93,18 @@ Lines in the block are looked at without their leading spaces, and only the foll
 Any other line (including `Feature:`, `Background:`, `Scenario Outline:`, `Examples:` and data tables), a step line not following a `Scenario:`, and a tag line not directly followed by a `Scenario:` are invalid_gherkin_line errors.
 
 A `Scenario:` line outside a gherkin block is not taken as a scenario.
+
+## Deferred requirements
+
+A requirement that is specified but not built now is deferred with a `- deferred:` line whose value is the sources of the decision to defer it (write that decision, with its reason, in the decision record). Put the line under the requirement's heading to defer that requirement, or after the title of a topic document (the document-level declaration above) to defer every requirement of the document. Both may be present at once; that raises nothing.
+
+- The value is read as comma-separated sources and checked like `- source:` (see Sources); a source_invalid is raised on the `- deferred:` line. An empty value or an invalid source still defers the requirement
+- A deferred requirement raises no requirement_without_test. A deferred scenario raises no scenario_without_test: a scenario is deferred when, among its `@about` requirements whose verification is unit, property, proof or review, at least one is deferred and all of them are deferred or review (a requirement with no `- verification:` line is left out of this judgement). A scenario about a deferred and a non-deferred unit requirement still needs a test
+- Everything else stays: the form checks (verification_missing and the rest), the reference checks, and the reservation of the ID (duplicate_id)
+- When the same ID is in two or more places, the first one (by byte order of the document path, then by line) decides whether the requirement is deferred, and whether the scenario is deferred
+- A mark containing the ID of a deferred requirement or deferred scenario raises the deferred_with_test notice; a requirement or property that is not deferred, or a scenario that is not deferred, pointing at a deferred requirement raises the depends_on_deferred notice (findings.md)
+- `kotowari status` counts deferred requirements and deferred scenarios in `deferred` and leaves them out of `with_tests` and `without_tests`; `kotowari list` and `kotowari query` give every item `deferred` (true or false)
+- Decision tables, properties and scenarios cannot be deferred by themselves
 
 ## Glossary
 

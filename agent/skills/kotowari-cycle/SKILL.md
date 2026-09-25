@@ -179,6 +179,11 @@ only such findings or problem records that were already committed.
   test_without_id, invalid_marker, unparsable_file, and unresolved_reference from a mark) are
   findings for the fixer: make them visible and run the diff loop. If they do not go away, end as
   ending 3 (no progress).
+- Deferred requirements and deferred scenarios (`deferred` true in `kotowari list`) are not
+  among what the run brings to zero: check raises no test-side finding for them, and the run
+  writes no test for them. A deferred_with_test notice caused by a mark this run added is fixed
+  by removing that mark; any other deferred_with_test or depends_on_deferred notice among this
+  run's findings is the person's judgment, like an IR-side finding.
 - This run's IR-side findings are not fixed in the cycle. Put them in the terminal report as the person's
   judgment; they go back to brainstorm.
 - Missed mutations: the pre-push hook runs mutations on the diff. A miss is fixed by the fixer or

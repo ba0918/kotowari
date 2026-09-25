@@ -1,6 +1,6 @@
 # 指摘の種類
 
-<!-- @kotowari[REQ-core-029:f774ea58, REQ-core-030:4fe666c1, REQ-core-031:bd6efc32] -->
+<!-- @kotowari[REQ-core-029:f774ea58, REQ-core-030:4fe666c1, REQ-core-031:5f373416] -->
 
 `kotowari check`、`kotowari mutants`、`kotowari plan` が出す指摘の種類を、すべて並べたページです。
 出力に知らない種類が出たら、まず下の一覧で引き、原因と直し方は種類をまとめた節で読んでください。
@@ -12,12 +12,12 @@
 | 誤り（`error`） | 1件でもあれば1 | 直す必要がある |
 | 注意（`notice`） | 変えない | 見直す価値のある手がかり。放置しても `status` の `complete` は妨げない |
 
-注意は `too_many_lines`、`too_many_requirements`、`mutant_timeout`、`equivalent_stale`、`guide_stale` の5種類だけで、ほかはすべて誤りです。
+注意は `too_many_lines`、`too_many_requirements`、`mutant_timeout`、`equivalent_stale`、`guide_stale`、`deferred_with_test`、`depends_on_deferred` の7種類だけで、ほかはすべて誤りです。
 指摘の鍵（`kind`、`severity`、`path`、`line`、`detail`）と text の形は [cli.md](cli.md#指摘の出し方) にあります。
 
 ## 種類の一覧
 
-<!-- @kotowari[TBL-core-008:e5dd3606, TBL-core-009:81ef0c0a, TBL-core-019:6a68887f, REQ-core-027:04e0bdcc] -->
+<!-- @kotowari[TBL-core-008:d1b20735, TBL-core-009:e7049178, TBL-core-019:58ab824b, REQ-core-027:04e0bdcc] -->
 
 「行」の列は、指摘の `line` が指す行です。
 「なし」は文書全体への指摘で、`line` は null、text では `-` になります。
@@ -41,7 +41,7 @@
 | `verification_invalid` | 誤り | 値 | 項目の見出し | [項目の値と文](#項目の値と文) |
 | `unknown_kind` | 誤り | 値 | 項目の見出し | [項目の値と文](#項目の値と文) |
 | `algorithm_without_definition` | 誤り | 要求の ID | 項目の見出し | [項目の値と文](#項目の値と文) |
-| `missing_source` | 誤り | 項目の ID か用語 | 項目の見出し。シナリオはタグの行、用語は表の行 | [出典](#出典) |
+| `missing_source` | 誤り | 項目の ID か用語。値の空の `- deferred:` の行では `deferred` | 項目の見出し。シナリオはタグの行、用語は表の行、値の空の `- deferred:` の行はその行 | [出典](#出典) |
 | `source_invalid` | 誤り | 出典の文字列 | 出典を書いた行 | [出典](#出典) |
 | `unknown_term` | 誤り | バッククォートで囲んだ文字列 | その行 | [用語と曖昧語](#用語と曖昧語) |
 | `unclosed_backtick` | 誤り | 行の文字 | その行 | [用語と曖昧語](#用語と曖昧語) |
@@ -74,6 +74,8 @@
 | `mutant_timeout` | 注意 | 変更の説明 | 変異の結果の行 | [mutants と plan](#mutants-と-plan) |
 | `equivalent_stale` | 注意 | 一覧の `file` と `change` を `: ` でつないだもの | なし | [mutants と plan](#mutants-と-plan) |
 | `guide_stale` | 注意 | `ID 書かれた指紋 今の指紋` | ガイドの印の始まりの行 | [ガイドの印](#ガイドの印) |
+| `deferred_with_test` | 注意 | 後回しの要求か後回しのシナリオの ID | 要求の見出し。シナリオはタグの行 | [後回し](#後回し) |
+| `depends_on_deferred` | 注意 | `参照元の ID 参照先の ID` | 参照を書いた行 | [後回し](#後回し) |
 
 一覧の定義は [findings.md の TBL-core-008 と TBL-core-009](../ir/core/findings.md)、行の定義は [finding-order.md の TBL-core-019](../ir/core/finding-order.md) にあります。
 
@@ -147,7 +149,7 @@ docs/ir/misc/table.md:8 [error] missing_table TBL-misc-001
 
 ### 出典
 
-<!-- @kotowari[REQ-core-059:877343dd, REQ-core-058:0012abf7, TBL-core-012:b17febcd] -->
+<!-- @kotowari[REQ-core-059:877343dd, REQ-core-058:0012abf7, TBL-core-012:b17febcd, REQ-core-210:3ab477dc] -->
 
 ```text
 docs/ir/shop/cart.md:22 [error] missing_source REQ-shop-003
@@ -157,8 +159,8 @@ docs/ir/greet/greet.md:18 [error] source_invalid docs/decision/records/2026-09-2
 
 | 種類 | よくある原因 | 直し方 |
 |---|---|---|
-| `missing_source` | 項目に `- source:` が無いか空。シナリオに `@source` が無い。用語集の出典の列が空 | 元になった決定を `パス#決定の番号` で書く。`@id` の無いシナリオでは、detail が `Scenario:` の行の文字になる |
-| `source_invalid` | 出典の先に、その決定の番号の行が無い。パスが `decisions.records` と `decisions.adr` のどちらの中でもない。`パス#印` の形でない | 判断の記録に実在する決定の番号（`A12` など）か、ADR の `## ` の見出しの文字を指す。パスは基準のディレクトリからの全体を書く（`docs/decision/records/records.md#A26`） |
+| `missing_source` | 項目に `- source:` が無いか空。シナリオに `@source` が無い。用語集の出典の列が空。`- deferred:` の値が空（detail は `deferred`、行はその行） | 元になった決定を `パス#決定の番号` で書く。`@id` の無いシナリオでは、detail が `Scenario:` の行の文字になる |
+| `source_invalid` | 出典の先に、その決定の番号の行が無い。パスが `decisions.records` と `decisions.adr` のどちらの中でもない。`パス#印` の形でない。`- deferred:` の値も同じ規則で検査し、行はその `- deferred:` の行 | 判断の記録に実在する決定の番号（`A12` など）か、ADR の `## ` の見出しの文字を指す。パスは基準のディレクトリからの全体を書く（`docs/decision/records/records.md#A26`） |
 
 kotowari が見るのは、出典の先が実在するかだけです。
 その決定が要求の内容を本当に述べているかは見ません。
@@ -261,7 +263,7 @@ docs/ir/shop/cart.md:- [notice] too_many_requirements 5
 
 ### テストとの対応
 
-<!-- @kotowari[REQ-core-085:4831b36c, REQ-core-137:19ec5f8f, REQ-core-086:190ec5a3, REQ-core-072:51247600, REQ-core-083:9db1b29c] -->
+<!-- @kotowari[REQ-core-085:9c02a2ea, REQ-core-137:192fc62f, REQ-core-086:190ec5a3, REQ-core-072:51247600, REQ-core-083:9db1b29c] -->
 
 ```text
 docs/ir/greet/greet.md:15 [error] requirement_without_test REQ-greet-002
@@ -274,8 +276,8 @@ tests/broken.rs:- [error] unparsable_file tests/broken.rs
 
 | 種類 | よくある原因 | 直し方 |
 |---|---|---|
-| `requirement_without_test` | review 以外の要求に、その ID を挙げた印も、その要求を `@about` に持つシナリオの ID を挙げた印も無い | テストの直前のコメントに `@kotowari[REQ-…]` か `@kotowari[EX-…]` を書く。シナリオの印は、そのシナリオの `@about` の要求の分も満たす |
-| `scenario_without_test` | シナリオの ID を挙げた印が無い（`@about` の要求がすべて review のシナリオには出ない） | そのシナリオを確かめるテストに `@kotowari[EX-…]` を書く。要求の印はシナリオの分を満たさない |
+| `requirement_without_test` | review 以外の後回しでない要求に、その ID を挙げた印も、その要求を `@about` に持つシナリオの ID を挙げた印も無い | テストの直前のコメントに `@kotowari[REQ-…]` か `@kotowari[EX-…]` を書く。シナリオの印は、そのシナリオの `@about` の要求の分も満たす。今は作らないと決めた要求なら、テストの代わりに後回しにする（[deferred.md](deferred.md)） |
+| `scenario_without_test` | シナリオの ID を挙げた印が無い（`@about` の要求がすべて review か後回しのシナリオには出ない） | そのシナリオを確かめるテストに `@kotowari[EX-…]` を書く。要求の印はシナリオの分を満たさない |
 | `test_without_id` | テストに印が無い。印を関数の本体の中や、空行で切り離したコメントに書いた | テストの直前のコメントの塊に印を書く |
 | `invalid_marker` | テストの印の中が空か区切りだけ。`]` が同じ行に無い | `@kotowari[ID, ID]` を1行で閉じる |
 | `unparsable_file` | テストのファイルに構文の誤りがあり、tree-sitter で読めない | ファイルの構文を直す。このファイルは飛ばされ、印も読まれない |
@@ -283,6 +285,22 @@ tests/broken.rs:- [error] unparsable_file tests/broken.rs
 どのテストの直前のコメントの塊にも無い印は、指摘も出さずに無視されます。
 そのため印の置き場を間違えると、`invalid_marker` ではなく `test_without_id` と `requirement_without_test` が出ます。
 印の書き方は [marks.md](marks.md) にあります。
+
+### 後回し
+
+<!-- @kotowari[REQ-core-211:d7879896, REQ-core-212:e533fb7e] -->
+
+```text
+docs/ir/greet/greet.md:13 [notice] depends_on_deferred REQ-greet-001 REQ-greet-003
+docs/ir/greet/greet.md:15 [notice] deferred_with_test REQ-greet-003
+```
+
+| 種類 | 重さ | よくある原因 | 直し方 |
+|---|---|---|---|
+| `deferred_with_test` | 注意 | 後回しの要求か後回しのシナリオの ID を含む印がある。作り終えたのに `- deferred:` を消し忘れたか、印の付け間違い | 作り終えたなら、決定を判断の記録に書いてから `- deferred:` の行を消す。まだ作らないなら印を消す |
+| `depends_on_deferred` | 注意 | 後回しでない要求か性質か、後回しのシナリオでないシナリオが、後回しの要求を参照している（`- definition:`、`@about`、文とステップの中のバッククォートで囲んだ ID）。参照1件ごとに1件 | 参照元も後回しにするか、要求を後回しから戻すか、参照を外す。どれも仕様の判断 |
+
+後回しの書き方と効き目は [deferred.md](deferred.md) にあります。
 
 ### ガイドの印
 
@@ -433,10 +451,10 @@ tests/greet.rs:5 [error] unresolved_reference REQ-greet-02
 
 ### 注意が残っているのに終了コードが0
 
-<!-- @kotowari[REQ-core-031:bd6efc32] -->
+<!-- @kotowari[REQ-core-031:5f373416] -->
 
 仕様どおりです。
-注意の5種類は、終了コードも `status` の `complete` も変えません。
+注意の7種類は、終了コードも `status` の `complete` も変えません。
 kotowari 自身のリポジトリでも、`too_many_lines` と `too_many_requirements` が8件出たまま、終了コードは0です。
 
 ## なぜこういう作りか

@@ -144,7 +144,7 @@ glob を書き間違えても指摘は出ないので、ここで確かめます
 
 ### 指摘の並びと行
 
-<!-- @kotowari[TBL-core-007:d8427397, REQ-core-027:04e0bdcc, TBL-core-019:6a68887f] -->
+<!-- @kotowari[TBL-core-007:d8427397, REQ-core-027:04e0bdcc, TBL-core-019:58ab824b] -->
 
 指摘は `path`、`line`（null が先）、`kind`、`detail` の順に並びます（[cli.md](../cli.md#指摘の並び)）。
 同じ行の指摘は、種類の名前の順に並びます。
@@ -181,7 +181,7 @@ tests/greet.rs                            テスト2本
 
 ### 書いたばかりの IR を検査する
 
-<!-- @kotowari[REQ-core-085:4831b36c, REQ-core-086:190ec5a3, REQ-core-137:19ec5f8f] -->
+<!-- @kotowari[REQ-core-085:9c02a2ea, REQ-core-086:190ec5a3, REQ-core-137:192fc62f] -->
 
 IR の本体（`docs/ir/greet/greet.md`）とテストは次のとおりです。
 
@@ -249,10 +249,11 @@ $ kotowari check | jq '.findings[0]'
 
 ### テストの印を直す
 
-<!-- @kotowari[REQ-core-085:4831b36c, REQ-core-137:19ec5f8f] -->
+<!-- @kotowari[REQ-core-085:9c02a2ea, REQ-core-137:192fc62f] -->
 
 `rejects_empty_name` に印を足し、`greets_with_name` の印をシナリオの ID に替えます。
 シナリオの印は、そのシナリオの `@about` の要求の分も満たします。
+今は作らないと決めた要求なら、印の代わりに[後回し](../deferred.md)を宣言してもこの誤りは消えます。
 
 ```rust
 // @kotowari[EX-greet-001]

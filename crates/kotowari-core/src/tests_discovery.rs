@@ -2,6 +2,7 @@
 
 use crate::comment_block::LineMap;
 use crate::config::Config;
+use crate::deferred;
 use crate::ir::{IrDocument, Item, is_valid_id};
 pub use crate::test_markers::{InvalidMarkers, Marker, MarkerIds, parse_markers_in_line};
 use crate::test_queries::{ParsedFile, TestQueries, language_of};
@@ -480,6 +481,7 @@ fn check_missing_tests(
 ) {
     let scenarios = collect_scenarios(docs, ir_path);
     let coverage = TestCoverage::new(markers, &scenarios);
+    let requirements = deferred::Requirements::new(docs);
 
     // REQ-core-137: テストのない具体例
     for (id, scenario) in &scenarios {
@@ -493,7 +495,7 @@ fn check_missing_tests(
         }
     }
 
-    // REQ-core-085: テストのない要求
+    // REQ-core-085: テストのない要求。`後回し`の要求には出さない
     for doc in docs {
         for item in &doc.items {
             if let Item::Requirement {
@@ -503,6 +505,7 @@ fn check_missing_tests(
             } = item
                 && v != "review"
                 && is_valid_id(id)
+                && !requirements.is_deferred(id)
                 && !coverage.has_test(id)
             {
                 let path = crate::join_display_path(ir_path, &doc.relative_path);
@@ -598,28 +601,18 @@ pub struct ScenarioCoverage {
     pub path: String,
     /// TBL-core-019: タグの行（無ければ "Scenario:" の行）
     pub line: usize,
-    /// REQ-core-137 の適用条件を満たすか（"@about" に、検証が "unit"・"property"・"proof" の要求がある）
+    /// REQ-core-137 の適用条件を満たすか（"@about" に、検証が "unit"・"property"・"proof" で
+    /// `後回し`でない要求がある）
     pub needs_test: bool,
+    /// `後回しのシナリオ`か
+    pub deferred: bool,
 }
 
 /// 具体例の ID から "@about" と場所を引く表を作る。
 /// 同じ ID の`シナリオ`が2か所以上にあるときは REQ-core-032 の1つ目（文書はパスのバイト順、
 /// 同じ文書では行の小さい方）を使う。docs も items もその順に並んでいる。
 pub fn collect_scenarios(docs: &[IrDocument], ir_path: &str) -> BTreeMap<String, ScenarioCoverage> {
-    // 要求の ID から "- verification:" の値を引く（行が無ければ None）
-    let mut verifications: BTreeMap<&str, Option<&str>> = BTreeMap::new();
-    for doc in docs {
-        for item in &doc.items {
-            if let Item::Requirement {
-                id, verification, ..
-            } = item
-            {
-                verifications
-                    .entry(id)
-                    .or_insert_with(|| verification.as_deref());
-            }
-        }
-    }
+    let requirements = deferred::Requirements::new(docs);
 
     let mut scenarios: BTreeMap<String, ScenarioCoverage> = BTreeMap::new();
     for doc in docs {
@@ -632,19 +625,14 @@ pub fn collect_scenarios(docs: &[IrDocument], ir_path: &str) -> BTreeMap<String,
                 ..
             } = item
             {
-                // 要求として解決できない "@about"、"- verification:" の行の無い要求、
-                // 検証の値が4つ以外の要求、検証が "review" の要求は数えない
-                let needs_test = about.iter().any(|a| {
-                    matches!(verifications.get(a.as_str()), Some(Some(v))
-                        if crate::ir::VERIFICATION_VALUES.contains(v) && *v != "review")
-                });
                 scenarios
                     .entry(id.clone())
                     .or_insert_with(|| ScenarioCoverage {
                         about: about.clone(),
                         path: crate::join_display_path(ir_path, &doc.relative_path),
                         line: tag_line.unwrap_or(*line),
-                        needs_test,
+                        needs_test: requirements.needs_test(about),
+                        deferred: requirements.is_deferred_scenario(about),
                     });
             }
         }

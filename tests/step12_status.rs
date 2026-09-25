@@ -446,9 +446,12 @@ fn req_166_text_prints_one_line_per_group() {
     );
     assert_eq!(
         lines[2],
-        "requirements unit=1 property=0 proof=0 review=1 with_tests=1 without_tests=0 review_with_how_to_verify=1 review_without_how_to_verify=0 without_examples=1"
+        "requirements unit=1 property=0 proof=0 review=1 with_tests=1 without_tests=0 review_with_how_to_verify=1 review_without_how_to_verify=0 without_examples=1 deferred=0"
     );
-    assert_eq!(lines[3], "scenarios with_tests=1 without_tests=0");
+    assert_eq!(
+        lines[3],
+        "scenarios with_tests=1 without_tests=0 deferred=0"
+    );
     assert_eq!(lines[4], "tests marks=2 rs=1");
     assert_eq!(lines[5], "guides files=0 marks=0");
     assert_eq!(lines[6], "findings error=0 notice=0");

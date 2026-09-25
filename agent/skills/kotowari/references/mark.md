@@ -19,7 +19,7 @@ Examples:
 
 ## Marks for examples
 
-A mark can hold not only requirement IDs but also the IDs of examples (scenarios). When an example whose @about has a requirement with a verification other than review has no mark containing its ID, a scenario_without_test error is raised (not raised for an example with only review requirements, or one that names no requirement).
+A mark can hold not only requirement IDs but also the IDs of examples (scenarios). When an example whose @about has a requirement with a verification other than review has no mark containing its ID, a scenario_without_test error is raised (not raised for an example with only review requirements, one that names no requirement, or a deferred scenario: one whose @about requirements are all deferred or review, with at least one deferred).
 
 - `// @kotowari[REQ-001, EX-201]` — binds to both the requirement REQ-001 and the example EX-201
 - `// @kotowari[EX-201, EX-202]` — one mark binding to two examples

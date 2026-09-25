@@ -1,6 +1,8 @@
 pub mod cargo_mutants;
 pub mod comment_block;
 pub mod config;
+pub mod deferred;
+pub mod deferred_notices;
 mod doc_kind;
 pub mod equivalents;
 pub mod finding_map;
@@ -70,6 +72,8 @@ macro_rules! finding_kinds {
 
 finding_kinds! {
     AlgorithmWithoutDefinition => "algorithm_without_definition",
+    DeferredWithTest => "deferred_with_test",
+    DependsOnDeferred => "depends_on_deferred",
     DuplicateField => "duplicate_field",
     DuplicateId => "duplicate_id",
     DuplicateTerm => "duplicate_term",
@@ -128,7 +132,9 @@ impl FindingKind {
             | FindingKind::TooManyRequirements
             | FindingKind::MutantTimeout
             | FindingKind::EquivalentStale
-            | FindingKind::GuideStale => "notice",
+            | FindingKind::GuideStale
+            | FindingKind::DeferredWithTest
+            | FindingKind::DependsOnDeferred => "notice",
             _ => "error",
         }
     }
@@ -1076,6 +1082,9 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
         &cfg.ir,
         &mut findings,
     )?;
+
+    // 後回しとの食い違い（REQ-core-211、REQ-core-212）
+    deferred_notices::check(&docs, &cfg.ir, &discovered.markers, &mut findings);
 
     Ok(Loaded {
         base,

@@ -1,14 +1,21 @@
 //! `項目`と`シナリオ`の本文と`指紋`（TBL-core-027 の "body"、REQ-core-203）。
 //! "kotowari query" の "body"、"kotowari list" の "fingerprint"、`ガイドの印`の照合が同じ切り出しを使う
 
-use crate::ir::Item;
+use crate::ir::{IrDocument, Item};
 use sha2::{Digest, Sha256};
 
 /// REQ-core-203: `指紋`の元の行を "\n" でつないだ UTF-8 のバイト列の SHA-256 を、16進の小文字で書いた先頭の8文字。
 /// `項目`は本文から "- source:" の行を除いた並び（除いた後で空の行を除き直さない）、
-/// `シナリオ`はステップの行だけの並び。行はどれも行の終わりの文字を含まない
-pub fn fingerprint_of(item: &Item, lines: &[&str]) -> String {
-    let joined = fingerprint_lines(item, lines).join("\n");
+/// `シナリオ`はステップの行だけの並び。行はどれも行の終わりの文字を含まない。
+/// 文書単位の "- deferred:" の行を持つ文書の`要求`では、その1つ目の行を並びの先頭に加える。
+/// lines は doc の行
+pub fn fingerprint_of(doc: &IrDocument, item: &Item, lines: &[&str]) -> String {
+    let mut fingerprinted = Vec::new();
+    if let (Item::Requirement { .. }, Some(deferral)) = (item, &doc.deferred) {
+        fingerprinted.push(lines[deferral.line - 1].to_string());
+    }
+    fingerprinted.extend(fingerprint_lines(item, lines));
+    let joined = fingerprinted.join("\n");
     let digest = Sha256::digest(joined.as_bytes());
     digest.iter().take(4).map(|b| format!("{b:02x}")).collect()
 }

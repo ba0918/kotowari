@@ -190,6 +190,7 @@ fn req_156_item_has_body_and_referenced_by() {
         names,
         vec![
             "body",
+            "deferred",
             "definition",
             "examples",
             "fingerprint",
