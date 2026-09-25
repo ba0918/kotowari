@@ -221,13 +221,14 @@ fn count_requirement(
         } else {
             counts.review_with_how_to_verify += 1;
         }
-    } else if requirement.deferred {
+    } else if !requirement.deferred {
         // TBL-core-028: with_tests と without_tests は`後回し`でない要求だけを数える
-    } else if coverage.has_test(&requirement.id) {
         // REQ-core-085: 検証が review でない要求だけを分母にする
-        counts.with_tests += 1;
-    } else {
-        counts.without_tests += 1;
+        if coverage.has_test(&requirement.id) {
+            counts.with_tests += 1;
+        } else {
+            counts.without_tests += 1;
+        }
     }
 
     if requirement.examples.is_empty() {
