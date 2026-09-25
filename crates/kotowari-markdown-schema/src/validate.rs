@@ -766,8 +766,6 @@ fn validate_container(
     }
 }
 
-/// `separator` で分けた要素を、前後の空白を取り除いて返す（REQ-schema-029）。
-/// 空の要素は空文字列として残す。
 /// 文を、宣言された pattern・enum に照らす。
 fn validate_statement_value(
     statement: &Statement,
