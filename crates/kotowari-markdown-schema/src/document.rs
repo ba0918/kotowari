@@ -227,14 +227,24 @@ impl Document {
     }
 }
 
+#[derive(Clone, Copy, Default)]
+enum BlockOwner {
+    #[default]
+    Preamble,
+    Section(usize),
+    Item {
+        section: usize,
+        item: usize,
+    },
+    StrayPreambleHeading(usize),
+}
+
 /// 見出しとブロックの並びから、題名・前置部・節・項目の木を組み立てる。
 /// 段落の読み方と行の読み方が共有する（TBL-schema-011）。
 #[derive(Default)]
 pub(crate) struct TreeBuilder {
     doc: Document,
-    current_section: Option<usize>,
-    current_item: Option<usize>,
-    current_stray: Option<usize>,
+    owner: BlockOwner,
 }
 
 impl TreeBuilder {
@@ -253,9 +263,7 @@ impl TreeBuilder {
                 });
                 // 題名はそれまでの節と項目を終える。要素の範囲（REQ-schema-062）と同じ区切り方にする
                 // （review7-gaps の A3）
-                self.current_section = None;
-                self.current_item = None;
-                self.current_stray = None;
+                self.owner = BlockOwner::Preamble;
             }
             2 => {
                 doc.sections.push(Section {
@@ -264,12 +272,13 @@ impl TreeBuilder {
                     blocks: Vec::new(),
                     items: Vec::new(),
                 });
-                self.current_section = Some(doc.sections.len() - 1);
-                self.current_item = None;
-                self.current_stray = None;
+                self.owner = BlockOwner::Section(doc.sections.len() - 1);
             }
-            3 => match self.current_section {
-                Some(sec_idx) => {
+            3 => match self.owner {
+                BlockOwner::Section(sec_idx)
+                | BlockOwner::Item {
+                    section: sec_idx, ..
+                } => {
                     let section = &mut doc.sections[sec_idx];
                     let (id, title, has_id_separator) = split_item_heading(&text);
                     section.items.push(Item {
@@ -279,9 +288,12 @@ impl TreeBuilder {
                         line,
                         blocks: Vec::new(),
                     });
-                    self.current_item = Some(section.items.len() - 1);
+                    self.owner = BlockOwner::Item {
+                        section: sec_idx,
+                        item: section.items.len() - 1,
+                    };
                 }
-                None => {
+                BlockOwner::Preamble | BlockOwner::StrayPreambleHeading(_) => {
                     // 前置部領域の深さ3の見出し。内側の行をここに集める（REQ-schema-003）。
                     // 題名より前に出たかどうかで open の扱いが変わる（REQ-schema-002）
                     doc.stray_preamble_headings.push(StrayPreambleHeading {
@@ -293,7 +305,8 @@ impl TreeBuilder {
                         blocks: Vec::new(),
                         before_title: doc.titles.is_empty(),
                     });
-                    self.current_stray = Some(doc.stray_preamble_headings.len() - 1);
+                    self.owner =
+                        BlockOwner::StrayPreambleHeading(doc.stray_preamble_headings.len() - 1);
                 }
             },
             depth => doc.stray_headings.push(Heading { text, depth, line }),
@@ -302,15 +315,15 @@ impl TreeBuilder {
 
     pub(crate) fn blocks(&mut self, blocks: Vec<Block>) {
         let doc = &mut self.doc;
-        if let Some(item_idx) = self.current_item {
-            let section = &mut doc.sections[self.current_section.unwrap()];
-            section.items[item_idx].blocks.extend(blocks);
-        } else if let Some(sec_idx) = self.current_section {
-            doc.sections[sec_idx].blocks.extend(blocks);
-        } else if let Some(stray_idx) = self.current_stray {
-            doc.stray_preamble_headings[stray_idx].blocks.extend(blocks);
-        } else {
-            doc.preamble.extend(blocks);
+        match self.owner {
+            BlockOwner::Preamble => doc.preamble.extend(blocks),
+            BlockOwner::Section(section) => doc.sections[section].blocks.extend(blocks),
+            BlockOwner::Item { section, item } => {
+                doc.sections[section].items[item].blocks.extend(blocks);
+            }
+            BlockOwner::StrayPreambleHeading(heading) => {
+                doc.stray_preamble_headings[heading].blocks.extend(blocks);
+            }
         }
     }
 }
