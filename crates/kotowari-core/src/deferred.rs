@@ -1,9 +1,7 @@
 //! `後回し`の`要求`と`後回しのシナリオ`の判定（REQ-core-208、用語「後回しのシナリオ」）。
-//! check のテストの無さの検査、2つの`注意`、status、list はどれもこの判定を使う
+//! check のテストの無さの検査、2つの`注意`（deferred_notices）、status、list はどれもこの判定を使う
 
-use crate::ir::{IrDocument, Item, VERIFICATION_VALUES, item_references};
-use crate::tests_discovery::{ScenarioCoverage, TestCoverage, collect_scenarios};
-use crate::{Finding, FindingKind};
+use crate::ir::{IrDocument, Item, VERIFICATION_VALUES};
 use std::collections::BTreeMap;
 
 /// `要求`の `ID` ごとの、判定に要る値
@@ -49,6 +47,14 @@ impl<'a> Requirements<'a> {
         Requirements(facts)
     }
 
+    /// `後回し`の`要求`の `ID` と、その1つ目の`要求`の文書と見出しの行
+    pub fn deferred(&self) -> impl Iterator<Item = (&'a str, &'a IrDocument, usize)> + '_ {
+        self.0
+            .iter()
+            .filter(|(_, facts)| facts.deferred)
+            .map(|(id, facts)| (*id, facts.doc, facts.line))
+    }
+
     /// REQ-core-208: その `ID` の`要求`が`後回し`か。`要求`でない `ID` は`後回し`でない
     pub fn is_deferred(&self, id: &str) -> bool {
         self.0.get(id).is_some_and(|facts| facts.deferred)
@@ -86,70 +92,5 @@ impl<'a> Requirements<'a> {
                 .contains(&verification)
                 .then_some((verification, *facts))
         })
-    }
-}
-
-/// REQ-core-211: `後回し`の`要求`と`後回しのシナリオ`のうち、その `ID` を含む`印`があるものごとに、
-/// 1つ目の`要求`の見出しの行（`シナリオ`はタグの行）に deferred_with_test を1件出す
-pub(crate) fn check_marked(
-    requirements: &Requirements<'_>,
-    scenarios: &BTreeMap<String, ScenarioCoverage>,
-    coverage: &TestCoverage,
-    ir_path: &str,
-    findings: &mut Vec<Finding>,
-) {
-    for (id, facts) in &requirements.0 {
-        if facts.deferred && coverage.is_marked(id) {
-            findings.push(Finding::new(
-                FindingKind::DeferredWithTest,
-                crate::join_display_path(ir_path, &facts.doc.relative_path),
-                Some(facts.line),
-                id.to_string(),
-            ));
-        }
-    }
-    for (id, scenario) in scenarios {
-        if scenario.deferred && coverage.is_marked(id) {
-            findings.push(Finding::new(
-                FindingKind::DeferredWithTest,
-                scenario.path.clone(),
-                Some(scenario.line),
-                id.clone(),
-            ));
-        }
-    }
-}
-
-/// REQ-core-212: `後回し`でない`要求`と`性質`と、`後回しのシナリオ`でない`シナリオ`から
-/// `後回し`の`要求`への参照1件ごとに、参照の書かれた行に depends_on_deferred を出す。
-/// 参照は REQ-core-054 が読む場所と同じで、`問題の記録`の "- related:" は含めない
-pub fn check_dependencies(docs: &[IrDocument], ir_path: &str, findings: &mut Vec<Finding>) {
-    let requirements = Requirements::new(docs);
-    let scenarios = collect_scenarios(docs, ir_path);
-    for doc in docs {
-        let path = crate::join_display_path(ir_path, &doc.relative_path);
-        for item in &doc.items {
-            let source = match item {
-                Item::Requirement { id, .. } if !requirements.is_deferred(id) => id,
-                Item::Property { id, .. } => id,
-                Item::Scenario { id: Some(id), .. }
-                    if !scenarios.get(id).is_some_and(|scenario| scenario.deferred) =>
-                {
-                    id
-                }
-                // `ID` の無い`シナリオ`は参照元の `ID` を持たない（query の逆引きにも出ない）
-                _ => continue,
-            };
-            for reference in item_references(item) {
-                if requirements.is_deferred(reference.id) {
-                    findings.push(Finding::new(
-                        FindingKind::DependsOnDeferred,
-                        path.clone(),
-                        Some(reference.finding_line),
-                        format!("{source} {}", reference.id),
-                    ));
-                }
-            }
-        }
     }
 }

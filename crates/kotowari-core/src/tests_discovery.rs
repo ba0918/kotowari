@@ -495,8 +495,6 @@ fn check_missing_tests(
         }
     }
 
-    deferred::check_marked(&requirements, &scenarios, &coverage, ir_path, findings);
-
     // REQ-core-085: テストのない要求。`後回し`の要求には出さない
     for doc in docs {
         for item in &doc.items {

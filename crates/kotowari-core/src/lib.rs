@@ -2,6 +2,7 @@ pub mod cargo_mutants;
 pub mod comment_block;
 pub mod config;
 pub mod deferred;
+pub mod deferred_notices;
 mod doc_kind;
 pub mod equivalents;
 pub mod finding_map;
@@ -1072,9 +1073,6 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
         docs.iter().map(|d| d.relative_path.clone()).collect();
     terms::check_document_references(&docs, &cfg.ir, &ir_paths, &mut findings);
 
-    // 後回しの要求への参照（REQ-core-212）
-    deferred::check_dependencies(&docs, &cfg.ir, &mut findings);
-
     // テストの発見と印の検査
     let discovered = tests_discovery::discover_and_check(
         &base,
@@ -1084,6 +1082,9 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
         &cfg.ir,
         &mut findings,
     )?;
+
+    // 後回しとの食い違い（REQ-core-211、REQ-core-212）
+    deferred_notices::check(&docs, &cfg.ir, &discovered.markers, &mut findings);
 
     Ok(Loaded {
         base,
