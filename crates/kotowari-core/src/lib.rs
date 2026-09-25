@@ -71,6 +71,8 @@ macro_rules! finding_kinds {
 
 finding_kinds! {
     AlgorithmWithoutDefinition => "algorithm_without_definition",
+    DeferredWithTest => "deferred_with_test",
+    DependsOnDeferred => "depends_on_deferred",
     DuplicateField => "duplicate_field",
     DuplicateId => "duplicate_id",
     DuplicateTerm => "duplicate_term",
@@ -129,7 +131,9 @@ impl FindingKind {
             | FindingKind::TooManyRequirements
             | FindingKind::MutantTimeout
             | FindingKind::EquivalentStale
-            | FindingKind::GuideStale => "notice",
+            | FindingKind::GuideStale
+            | FindingKind::DeferredWithTest
+            | FindingKind::DependsOnDeferred => "notice",
             _ => "error",
         }
     }
@@ -1067,6 +1071,9 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
     let ir_paths: std::collections::BTreeSet<String> =
         docs.iter().map(|d| d.relative_path.clone()).collect();
     terms::check_document_references(&docs, &cfg.ir, &ir_paths, &mut findings);
+
+    // 後回しの要求への参照（REQ-core-212）
+    deferred::check_dependencies(&docs, &cfg.ir, &mut findings);
 
     // テストの発見と印の検査
     let discovered = tests_discovery::discover_and_check(

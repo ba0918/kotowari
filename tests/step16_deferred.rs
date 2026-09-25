@@ -85,8 +85,13 @@ fn kinds(result: &Value) -> Vec<String> {
 
 /// 検証が "unit" の要求の見出しと行。extra は "- verification:" の行の直後に入る
 fn unit_requirement(id: &str, extra: &str) -> String {
+    unit_requirement_saying(id, extra, "文。")
+}
+
+/// unit_requirement の`文`を statement にしたもの
+fn unit_requirement_saying(id: &str, extra: &str, statement: &str) -> String {
     format!(
-        "### {id}: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: unit\n{extra}\n文。\n"
+        "### {id}: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: unit\n{extra}\n{statement}\n"
     )
 }
 
@@ -485,4 +490,302 @@ fn req_208_the_first_of_two_requirements_with_one_id_decides_whether_it_is_defer
     let result = check(tmp.path());
     assert_eq!(findings_of(&result, "duplicate_id").len(), 1, "{result}");
     assert!(without_test_details(&result).is_empty(), "{result}");
+}
+
+// --- S3: deferred_with_test と depends_on_deferred の注意 ---
+
+/// 題名と範囲と "## Requirements" の6行
+const HEAD: &str = "# 題名\n\n範囲。\n\n## Requirements\n\n";
+/// 後回しの宣言の行
+const DEFER: &str = "- deferred: docs/decision/records/r.md#A1\n";
+
+/// 7行目から始まる後回しの要求 REQ-001（14行目で終わる）
+fn deferred_req_001() -> String {
+    format!("{HEAD}{}", unit_requirement("REQ-001", DEFER))
+}
+
+/// その種類の注意の (path, line, detail)。どれも severity が notice であることも確かめる
+fn notices_of(result: &Value, kind: &str) -> Vec<(String, Option<u64>, String)> {
+    for f in result["findings"].as_array().unwrap() {
+        if f["kind"] == kind {
+            assert_eq!(f["severity"], "notice", "{f}");
+        }
+    }
+    findings_of(result, kind)
+}
+
+fn at(line: u64, detail: &str) -> (String, Option<u64>, String) {
+    ("docs/ir/a.md".to_string(), Some(line), detail.to_string())
+}
+
+// @kotowari[REQ-core-211, REQ-core-031, TBL-core-009, TBL-core-019, EX-core-392]
+#[test]
+fn ex_392_a_mark_on_a_deferred_requirement_is_a_notice_on_its_heading() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(tmp.path(), "docs/ir/a.md", &deferred_req_001());
+    write(
+        tmp.path(),
+        "tests/a.rs",
+        "// @kotowari[REQ-001]\n#[test]\nfn t() {}\n",
+    );
+    let (code, stdout) = run(tmp.path(), &["check"]);
+    let result: Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(
+        notices_of(&result, "deferred_with_test"),
+        vec![at(7, "REQ-001")],
+        "{result}"
+    );
+    assert_eq!(code, Some(0), "a notice does not change the exit code");
+}
+
+// @kotowari[REQ-core-211, TBL-core-019, EX-core-393]
+#[test]
+fn ex_393_a_mark_on_a_deferred_scenario_is_a_notice_on_its_tag_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "{}\n## Examples\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/r.md#A1\nScenario: 例\n  Given a\n  When b\n  Then c\n```\n",
+            deferred_req_001()
+        ),
+    );
+    write(
+        tmp.path(),
+        "tests/a.rs",
+        "// @kotowari[EX-001]\n#[test]\nfn t() {}\n",
+    );
+    let result = check(tmp.path());
+    assert_eq!(
+        notices_of(&result, "deferred_with_test"),
+        vec![at(19, "EX-001")],
+        "{result}"
+    );
+}
+
+// @kotowari[REQ-core-211]
+#[test]
+fn req_211_a_mark_from_a_language_without_a_query_counts() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        ".kotowari/config.yaml",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files: [\"tests/**\"]\n",
+    );
+    write(tmp.path(), "docs/ir/a.md", &deferred_req_001());
+    write(tmp.path(), "tests/a.go", "// @kotowari[REQ-001]\n");
+    let result = check(tmp.path());
+    assert_eq!(result["tests"]["go"]["query"], false, "{result}");
+    assert_eq!(
+        notices_of(&result, "deferred_with_test"),
+        vec![at(7, "REQ-001")],
+        "{result}"
+    );
+}
+
+// @kotowari[REQ-core-211]
+#[test]
+fn req_211_two_marks_on_one_id_are_one_notice() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(tmp.path(), "docs/ir/a.md", &deferred_req_001());
+    write(
+        tmp.path(),
+        "tests/a.rs",
+        "// @kotowari[REQ-001]\n#[test]\nfn t() {}\n\n// @kotowari[REQ-001, REQ-001]\n#[test]\nfn u() {}\n",
+    );
+    let result = check(tmp.path());
+    assert_eq!(
+        notices_of(&result, "deferred_with_test"),
+        vec![at(7, "REQ-001")],
+        "{result}"
+    );
+}
+
+// @kotowari[REQ-core-211]
+#[test]
+fn req_211_the_notice_goes_to_the_first_of_two_requirements_with_one_id() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(tmp.path(), "docs/ir/a.md", &deferred_req_001());
+    write(
+        tmp.path(),
+        "docs/ir/b.md",
+        &format!(
+            "# 題名\n\n範囲。\n範囲の続き。\n\n## Requirements\n\n{}",
+            unit_requirement("REQ-001", "")
+        ),
+    );
+    write(
+        tmp.path(),
+        "tests/a.rs",
+        "// @kotowari[REQ-001]\n#[test]\nfn t() {}\n",
+    );
+    let result = check(tmp.path());
+    assert_eq!(
+        notices_of(&result, "deferred_with_test"),
+        vec![at(7, "REQ-001")],
+        "{result}"
+    );
+}
+
+// @kotowari[REQ-core-212, REQ-core-031, TBL-core-009, TBL-core-019, EX-core-394]
+#[test]
+fn ex_394_a_statement_of_a_requirement_that_is_not_deferred_pointing_at_one_is_a_notice() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "{}\n{}",
+            deferred_req_001(),
+            unit_requirement_saying("REQ-002", "", "`REQ-001` を使う。")
+        ),
+    );
+    let result = check(tmp.path());
+    assert_eq!(
+        notices_of(&result, "depends_on_deferred"),
+        vec![at(22, "REQ-002 REQ-001")],
+        "{result}"
+    );
+}
+
+// @kotowari[REQ-core-212, REQ-core-137, EX-core-395]
+#[test]
+fn ex_395_a_scenario_about_deferred_and_other_requirements_is_a_notice_and_needs_a_test() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &deferred_and_other_with_scenario("- verification: unit\n", "REQ-001,REQ-002"),
+    );
+    let result = check(tmp.path());
+    assert_eq!(
+        notices_of(&result, "depends_on_deferred"),
+        vec![at(27, "EX-001 REQ-001")],
+        "{result}"
+    );
+    assert_eq!(
+        findings_of(&result, "scenario_without_test"),
+        vec![at(27, "EX-001")],
+        "{result}"
+    );
+}
+
+// @kotowari[REQ-core-212, EX-core-396]
+#[test]
+fn ex_396_references_from_deferred_requirements_are_not_notices() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "{HEAD}{}\n{}\n{}",
+            unit_requirement_saying("REQ-001", DEFER, "`REQ-002` を使う。"),
+            unit_requirement("REQ-002", ""),
+            unit_requirement_saying("REQ-003", DEFER, "`REQ-001` を使う。")
+        ),
+    );
+    let result = check(tmp.path());
+    assert!(
+        notices_of(&result, "depends_on_deferred").is_empty(),
+        "{result}"
+    );
+}
+
+// @kotowari[REQ-core-212, EX-core-397]
+#[test]
+fn ex_397_each_reference_in_a_step_is_one_notice() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "{}\n{}\n## Examples\n\n```gherkin\n@id=EX-002 @about=REQ-002 @source=docs/decision/records/r.md#A1\nScenario: 例\n  Given `REQ-001` と `REQ-001`\n  When b\n  Then c\n```\n",
+            deferred_req_001(),
+            unit_requirement("REQ-002", "")
+        ),
+    );
+    let result = check(tmp.path());
+    assert_eq!(
+        notices_of(&result, "depends_on_deferred"),
+        vec![at(29, "EX-002 REQ-001"), at(29, "EX-002 REQ-001")],
+        "{result}"
+    );
+}
+
+// @kotowari[REQ-core-212]
+#[test]
+fn req_212_a_definition_line_pointing_at_a_deferred_requirement_is_a_notice() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "{}\n{}",
+            deferred_req_001(),
+            unit_requirement("REQ-002", "- definition: REQ-001\n")
+        ),
+    );
+    let result = check(tmp.path());
+    assert_eq!(
+        notices_of(&result, "depends_on_deferred"),
+        vec![at(21, "REQ-002 REQ-001")],
+        "{result}"
+    );
+}
+
+// @kotowari[REQ-core-212]
+#[test]
+fn req_212_a_property_statement_pointing_at_a_deferred_requirement_is_a_notice() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "{}\n## Properties\n\n### PROP-001: 性質\n\n- source: docs/decision/records/r.md#A1\n\n`REQ-001` が成り立つ。\n",
+            deferred_req_001()
+        ),
+    );
+    let result = check(tmp.path());
+    assert_eq!(
+        notices_of(&result, "depends_on_deferred"),
+        vec![at(22, "PROP-001 REQ-001")],
+        "{result}"
+    );
+}
+
+// @kotowari[REQ-core-212]
+#[test]
+fn req_212_references_to_a_deferred_scenario_and_from_the_flags_are_not_notices() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "{}\n{}\n## Examples\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/r.md#A1\nScenario: 例\n  Given a\n  When b\n  Then c\n```\n",
+            deferred_req_001(),
+            unit_requirement_saying("REQ-002", "", "`EX-001` を見る。")
+        ),
+    );
+    write(
+        tmp.path(),
+        "docs/ir/FLAGS.md",
+        "# Flags\n\n### FLAG-001: 穴\n\n- kind: gap\n- related: REQ-001\n- source: docs/decision/records/r.md#A1\n\n本文。\n",
+    );
+    let result = check(tmp.path());
+    assert!(
+        notices_of(&result, "depends_on_deferred").is_empty(),
+        "{result}"
+    );
 }

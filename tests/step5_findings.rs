@@ -110,11 +110,11 @@ fn req_030_notice_kinds_have_the_detail_of_the_table() {
     assert!(line_count > 200);
 }
 
-// --- REQ-core-031: 注意は5種類だけ ---
+// --- REQ-core-031: 注意は7種類だけ ---
 
 // @kotowari[REQ-core-031]
 #[test]
-fn req_031_only_five_kinds_are_notices() {
+fn req_031_only_seven_kinds_are_notices() {
     // 本体が注意にする種類（"kotowari mutants" の2種類は check の出力には現れない）
     let notices: std::collections::BTreeSet<&str> = kotowari_core::FindingKind::ALL
         .iter()
@@ -124,6 +124,8 @@ fn req_031_only_five_kinds_are_notices() {
     assert_eq!(
         notices,
         std::collections::BTreeSet::from([
+            "deferred_with_test",
+            "depends_on_deferred",
             "equivalent_stale",
             "guide_stale",
             "mutant_timeout",
