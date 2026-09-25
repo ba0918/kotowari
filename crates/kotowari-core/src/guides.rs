@@ -77,7 +77,7 @@ fn fingerprints_by_id(docs: &[IrDocument]) -> BTreeMap<&str, Vec<String>> {
                 by_id
                     .entry(id)
                     .or_default()
-                    .push(fingerprint_of(item, &lines));
+                    .push(fingerprint_of(doc, item, &lines));
             }
         }
     }

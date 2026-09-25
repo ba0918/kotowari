@@ -232,7 +232,7 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
             let Some(id) = item.id() else { continue };
             let tests = tests_by_id.get(id).cloned().unwrap_or_default();
             let examples = examples_by_about.get(id).cloned().unwrap_or_default();
-            let fingerprint = fingerprint_of(item, &lines);
+            let fingerprint = fingerprint_of(doc, item, &lines);
             let deferred = match item {
                 Item::Requirement { .. } => requirements.is_deferred(id),
                 Item::Scenario { .. } => scenarios.get(id).is_some_and(|s| s.deferred),
