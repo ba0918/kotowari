@@ -1,4 +1,4 @@
-Based on the kotowari specification (revised 2026-09-24; the version of kotowari itself is not pinned)
+Based on the kotowari specification (revised 2026-09-25; the version of kotowari itself is not pinned)
 
 A guide is a user-facing document on how to use the product, written by a person or an LLM who has read the IR. It is not generated from the IR. Each section of a guide carries guide marks naming the IR items it explains, together with each item's fingerprint at the time the section was written. `kotowari check` compares those fingerprints with the IR as it is now, so the sections that may have fallen behind can be found at any time, not only right after the IR changed. kotowari never writes to a guide; the fingerprints are copied in by hand.
 
@@ -29,7 +29,7 @@ A guide mark whose content is empty or only commas, that has no `]` on its line,
 
 ## The fingerprint
 
-The fingerprint of an item or a scenario is the `fingerprint` of its entry in `kotowari list` and `kotowari query`. Take it from there; do not compute it by hand. It is taken from the body of the item without the `- source:` line, and from the step lines of a scenario, so renaming a heading, adding a source, renaming a scenario and changing its tags do not change it. Any other change to the body does.
+The fingerprint of an item or a scenario is the `fingerprint` of its entry in `kotowari list` and `kotowari query`. Take it from there; do not compute it by hand. It is taken from the body of the item without the `- source:` line, and from the step lines of a scenario, so renaming a heading, adding a source, renaming a scenario and changing its tags do not change it. Any other change to the body does, including a `- deferred:` line under a requirement. For a requirement in a topic document with a document-level `- deferred:` line (after the title), the first such line is put in front of the body, so declaring or removing it changes the fingerprints of that document's requirements, but not of its decision tables and scenarios.
 
 ## Scene: writing a guide
 
