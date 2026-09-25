@@ -84,16 +84,16 @@ pub fn frontmatter_schema(src: &str) -> Result<Option<SchemaRef>, FrontmatterErr
     let result = matter
         .parse::<Frontmatter>(src)
         .map_err(|e| FrontmatterError(format!("{e}")))?;
-    match result.data {
-        Some(frontmatter) => match frontmatter.schema {
-            SchemaValue::Missing => Ok(None),
-            SchemaValue::Null => Err(FrontmatterError("$schema is null".into())),
-            SchemaValue::Value(value) if value.trim().is_empty() => {
-                Err(FrontmatterError("$schema is empty".into()))
-            }
-            SchemaValue::Value(value) => Ok(Some(classify(value))),
-        },
-        None => Ok(None),
+    let Some(frontmatter) = result.data else {
+        return Ok(None);
+    };
+    match frontmatter.schema {
+        SchemaValue::Missing => Ok(None),
+        SchemaValue::Null => Err(FrontmatterError("$schema is null".into())),
+        SchemaValue::Value(value) if value.trim().is_empty() => {
+            Err(FrontmatterError("$schema is empty".into()))
+        }
+        SchemaValue::Value(value) => Ok(Some(classify(value))),
     }
 }
 
