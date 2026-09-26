@@ -10,7 +10,7 @@ the tests are compared and each finding is sorted to a fixed destination: what a
 the specification as it stands, what disagrees or is missing is left undecided as a FLAG, and
 nothing is decided on the spot. Deciding belongs to brainstorm, when the feature is next worked on.
 
-**Legacy documents** (旧資料, `docs/ir/core/CONTEXT.md`): documents older than the adoption that
+**Legacy documents** (旧資料): documents older than the adoption that
 state a specification or a decision — old specifications, existing decision records and ADRs, the
 parts of a README that explain behavior, and, when re-adopting a topic that already has IR, that
 topic's IR. Code comments and commit logs are not legacy documents. Use this term only.
