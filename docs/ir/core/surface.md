@@ -15,18 +15,18 @@ kotowari は常に、"surface.rules" が空の一覧でないとき、`面のフ
 ### REQ-core-224: 面の規則と面のファイルの読み方
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A23, docs/decision/records/2026-09-27-surface-check.md#A25
+- source: docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A29, docs/decision/records/2026-09-27-surface-check.md#A25
 - verification: unit
 
-kotowari は常に、"surface.rules" に並んだパスを`基準のディレクトリ`からの相対パスとして読み、その中身を REQ-core-186 と同じく ast-grep のルールの YAML（"---" で区切って複数の`面の規則`を並べてよい）として読み、`面の規則`を`問い合わせ`に加えない。`面の規則`の "files" と "ignores" は REQ-core-187 と同じ読み方で`面のファイル`の`基準のディレクトリ`からの相対パスに当て、"fix"、"message"、"severity"、"note"、"metadata" を`面`の取り出しに使わず、"severity" が "off" の`面の規則`も当てる。"surface.files" の glob の読み方、走査、`除外`、読めないファイルと UTF-8 でないファイルと先の無いシンボリックリンクでの`停止`は、"tests.files" と`テストのファイル`のとおりにする（REQ-core-019、REQ-core-079、REQ-core-018）。
+kotowari は常に、"surface.rules" に並んだパスを`基準のディレクトリ`からの相対パスとして読み、その中身を REQ-core-186 と同じく ast-grep のルールの YAML（"---" で区切って複数の`面の規則`を並べてよい）として読み、`面の規則`を`問い合わせ`に加えない。`面の規則`の "files" と "ignores" は REQ-core-187 と同じ読み方で`面のファイル`の`基準のディレクトリ`からの相対パスに当て、"fix"、"message"、"severity"、"note"、"metadata" を`面`の取り出しに使わず、"severity" が "off" の`面の規則`も当てる。"surface.files" の glob の読み方、走査、`除外`、先の無いシンボリックリンクでの`停止`は "tests.files" のとおりにし、REQ-core-236 が読む`面のファイル`が読めないときと UTF-8 でないときの`停止`は`テストのファイル`のとおりにする（REQ-core-019、REQ-core-079、REQ-core-018）。
 
 ### REQ-core-236: 木にする面のファイル
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A23
+- source: docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A29
 - verification: unit
 
-kotowari は常に、`面のファイル`のうち拡張子から TBL-core-031 のとおりに決まる言語がどれかの`面の規則`の "language" と同じものだけを tree-sitter で読み、構文の誤りが1つでもあるとき REQ-core-083 のとおり unparsable_file の`誤り`を出してそのファイルを飛ばす。同じパスに`テストのファイル`として unparsable_file を出したときは重ねて出さない。ほかの`面のファイル`は tree-sitter で読まず、unparsable_file を出さない。
+kotowari は常に、`面のファイル`のうち拡張子から TBL-core-031 のとおりに決まる言語がどれかの`面の規則`の "language" と同じものだけを読んで tree-sitter で木にし、構文の誤りが1つでもあるとき REQ-core-083 のとおり unparsable_file の`誤り`を出してそのファイルを飛ばす。同じパスに`テストのファイル`として unparsable_file を出したときは重ねて出さない。ほかの`面のファイル`は読まず、unparsable_file を出さず、読めないことも UTF-8 でないことも`停止`の理由にしない。
 
 ### REQ-core-225: 面の設定の誤り
 
@@ -71,9 +71,9 @@ kotowari は常に、`面のファイル`と`面の規則`のファイルと`未
 ### REQ-core-230: スキルの面の書き方
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-27-surface-check.md#A5, docs/decision/records/2026-09-27-surface-check.md#A11, docs/decision/records/2026-09-27-surface-check.md#A15
+- source: docs/decision/records/2026-09-27-surface-check.md#A5, docs/decision/records/2026-09-27-surface-check.md#A11, docs/decision/records/2026-09-27-surface-check.md#A15, docs/decision/records/2026-09-27-surface-check.md#A26, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A6
 - verification: review
-- how_to_verify: "agent/skills/kotowari/references/surface.md" があり、面の検査の書き方と直し方と、面の規則の書き方の例として clap のフラグとサブコマンドを取り出す規則を載せていること、"agent/skills/kotowari/references/config.md" に "surface.files"、"surface.rules"、"surface.unspecified" の鍵が、"agent/skills/kotowari/references/findings.md" に surface_without_spec、surface_unspecified_invalid、surface_unspecified_stale の種類が載っていることを確かめる
+- how_to_verify: "agent/skills/kotowari/references/surface.md" があり、面の検査の書き方と直し方と、面の規則の書き方の例として clap のフラグとサブコマンドを取り出す規則を載せていること、"agent/skills/kotowari/references/config.md" に "surface.files"、"surface.rules"、"surface.unspecified" の鍵が、"agent/skills/kotowari/references/findings.md" に surface_without_spec、surface_unspecified_invalid、surface_unspecified_stale の種類が載っていること、surface_without_spec の直し方として未記載の面の一覧に1件を足すのは kotowari-brainstorm と kotowari-adopt だけで、実装役には IR に無い面を brainstorm に戻すことだけを書いていることを確かめる
 
 "agent/skills/" の下の kotowari スキルは常に、`面`の検査の書き方と直し方を独立した reference に持ち、`面の規則`の書き方の例を載せ、`面`の設定の鍵と`指摘`の種類を既存の reference に載せる。
 
