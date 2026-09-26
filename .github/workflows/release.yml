@@ -10,13 +10,21 @@ on:
     tags:
       - "kotowari-v*"
       - "kotowari-mds-v*"
+  # タグの push で起動しなかったときに、既にあるタグから Release を作り直さずに作る入口。
+  # タグは動かさず、入力したタグを取り出して同じ手順を踏む
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release を作るタグ（例: kotowari-v0.1.0）"
+        required: true
+        type: string
 
 # 書き込みの権限は Release を作るジョブだけに渡す。依存のビルドが走るジョブには読み取りだけ
 permissions:
   contents: read
 
 env:
-  TAG: ${{ github.ref_name }}
+  TAG: ${{ inputs.tag || github.ref_name }}
   CARGO_TERM_COLOR: always
 
 jobs:
@@ -32,6 +40,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: refs/tags/${{ env.TAG }}
           persist-credentials: false
       - id: product
         name: タグから製品を引く
@@ -95,6 +104,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: refs/tags/${{ env.TAG }}
           persist-credentials: false
       - name: Rust を用意する
         run: |
@@ -128,6 +138,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: refs/tags/${{ env.TAG }}
           persist-credentials: false
       - name: Rust を用意する
         run: |
