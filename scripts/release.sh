@@ -77,18 +77,23 @@ unreleased_has_entries "$changelog" || die "$changelog の Unreleased の節が�
 
 # --- 書き換え。ここから先で止まったら、書き換えたファイルを戻す ---
 
+# タグが無いことは上で確かめたので、戻すときにあるタグはこのスクリプトが作ったもの。
+# コミットとタグは、作った直後に中断されても戻せるように、フラグでなく今の状態で見る
 written=("${manifests[@]}" Cargo.lock "$changelog")
-commit_made=0
+start_head="$(git rev-parse HEAD)"
 done_ok=0
 restore() {
     if [ "$done_ok" -eq 1 ]; then
         return
     fi
-    if [ "$commit_made" -eq 1 ]; then
-        git reset -q --soft HEAD~1
+    if git rev-parse --quiet --verify "refs/tags/$tag" > /dev/null; then
+        git tag -d "$tag" > /dev/null
+    fi
+    if [ "$(git rev-parse HEAD)" != "$start_head" ]; then
+        git reset -q --soft "$start_head"
     fi
     git restore --staged --worktree -- "${written[@]}"
-    printf 'release.sh: 書き換えを戻した。コミットもタグも作っていない\n' >&2
+    printf 'release.sh: 書き換えを戻した。コミットもタグも残していない\n' >&2
 }
 trap restore EXIT
 
@@ -152,7 +157,6 @@ CARGO_BUILD_JOBS=4 cargo test --workspace || die "テストが落ちた"
 
 git add -- "${written[@]}"
 git commit -q -m "chore: ${product} ${version} をリリースする" || die "コミットできなかった"
-commit_made=1
 git tag -a "$tag" -m "${product} ${version}" || die "タグを作れなかった"
 done_ok=1
 
