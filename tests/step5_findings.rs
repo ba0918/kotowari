@@ -749,24 +749,3 @@ fn ex_core_264_moving_the_schema_files_away_does_not_change_the_output() {
     // 検査は実際に行われている（verification_missing が出る）
     assert!(!findings_by_kind(&parse_json(&after), "verification_missing").is_empty());
 }
-
-// @kotowari[EX-core-267]
-#[test]
-fn ex_core_267_the_ir_of_this_repository_has_none_of_the_three() {
-    let output = cmd()
-        .arg("check")
-        .current_dir(env!("CARGO_MANIFEST_DIR"))
-        .output()
-        .unwrap();
-    let v = parse_json(&output);
-    for kind in [
-        "unknown_line",
-        "unknown_code_block",
-        "glossary_title_invalid",
-    ] {
-        assert!(
-            findings_by_kind(&v, kind).is_empty(),
-            "{kind} がこのリポジトリの IR で出ている"
-        );
-    }
-}

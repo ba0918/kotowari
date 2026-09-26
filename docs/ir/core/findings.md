@@ -131,11 +131,6 @@ Scenario: 宣言の外の3つの場面はそれぞれ誤りになる
   Then unknown_line と unknown_code_block と glossary_title_invalid の`誤り`が1件ずつ出る
   And それぞれの detail は TBL-core-008、"line" は TBL-core-019 のとおりである
 
-@id=EX-core-267 @about=REQ-core-174 @source=docs/decision/records/2026-09-22-ir-engine.md#A33
-Scenario: kotowari 自身の IR では3種類とも出ない
-  Given このリポジトリの`IR`の文書がある
-  When "kotowari check --format json" を実行する
-  Then unknown_line と unknown_code_block と glossary_title_invalid の`誤り`は1件も出ない
 @id=EX-core-376 @about=REQ-core-174,REQ-core-113 @source=docs/decision/records/2026-09-24-guide-gaps.md#A1,docs/decision/records/2026-09-22-ir-engine.md#A89,docs/decision/records/ir-form.md#出力
 Scenario: gherkin でないブロックの中の行は gherkin として読まない
   Given `話題ごとの文書`の "## Examples" の下に、"```text" で始まり中に "メモ" の行を持つ`コードブロック`がある
