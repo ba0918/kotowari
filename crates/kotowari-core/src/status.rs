@@ -3,6 +3,7 @@
 use crate::guides::GuideTally;
 use crate::ir::IrDocument;
 use crate::list::{self, ListItem};
+use crate::surface::SurfaceTally;
 use crate::tests_discovery::{TestCoverage, TestMarker, collect_scenarios};
 use crate::{Finding, TestFileTally};
 use serde::Serialize;
@@ -18,6 +19,8 @@ pub struct StatusResult {
     pub tests: Tests,
     /// "kotowari check" の "guides" と同じ（TBL-core-005）
     pub guides: GuideTally,
+    /// `面`の数。"surface.rules" が空の一覧なら3つとも 0（REQ-core-229）
+    pub surface: SurfaceTally,
     pub findings: Findings,
     /// REQ-core-165: `誤り`が0件で、かつ`問題の記録`の`項目`が0件のときだけ true
     pub complete: bool,
@@ -124,6 +127,11 @@ review_with_how_to_verify={} review_without_how_to_verify={} without_examples={}
         "guides files={} marks={}",
         result.guides.files, result.guides.marks
     );
+    let surface = &result.surface;
+    println!(
+        "surface total={} specified={} unspecified={}",
+        surface.total, surface.specified, surface.unspecified
+    );
     let findings = &result.findings;
     println!(
         "findings error={} notice={}",
@@ -139,6 +147,7 @@ pub fn build(
     markers: &[TestMarker],
     tally: BTreeMap<String, TestFileTally>,
     guides: GuideTally,
+    surface: SurfaceTally,
     findings: &[Finding],
 ) -> StatusResult {
     // 数える母集団は "kotowari list" の "items" と同じ（`ID` を持つ項目とシナリオ）
@@ -195,6 +204,7 @@ pub fn build(
             files: tally,
         },
         guides,
+        surface,
         findings: counts,
     }
 }

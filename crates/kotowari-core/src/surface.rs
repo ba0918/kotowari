@@ -70,21 +70,38 @@ pub fn extract(
     Ok(surfaces)
 }
 
+/// `面`の種類と名前の組の数（TBL-core-028 の "surface"）
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize)]
+pub struct SurfaceTally {
+    /// `面`の種類と名前の組の数
+    pub total: usize,
+    /// そのうち`IR`にあるものの数
+    pub specified: usize,
+    /// `IR`になく`未記載の面の一覧`の形の正しい1件に一致したものの数
+    pub unspecified: usize,
+}
+
+/// "kotowari check" の "surface"（TBL-core-005、REQ-core-228）
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+pub struct Unlisted {
+    /// `未記載の面の一覧`で外した`面`の種類と名前の組の数
+    pub unspecified: usize,
+}
+
 /// check と status の`面`の検査（REQ-core-229）。`面`を取り出し、`未記載の面の一覧`を読み、
-/// `指摘`を足す。"surface.rules" が空の一覧なら何も読まない
+/// `指摘`を足して数を返す。"surface.rules" が空の一覧なら何も読まず None を返す
 pub fn check(
     base: &Path,
     cfg: &Config,
     docs: &[IrDocument],
     findings: &mut Vec<Finding>,
-) -> Result<(), StopReason> {
+) -> Result<Option<SurfaceTally>, StopReason> {
     if cfg.surface.rules.is_empty() {
-        return Ok(());
+        return Ok(None);
     }
     let surfaces = extract(base, cfg, findings)?;
     let list = read_unspecified_file(base, cfg)?;
-    report(&surfaces, docs, &list, findings);
-    Ok(())
+    Ok(Some(report(&surfaces, docs, &list, findings)))
 }
 
 /// 形の正しい`未記載の面の一覧`の1件（REQ-core-232）
@@ -168,7 +185,7 @@ fn report(
     docs: &[IrDocument],
     list: &UnspecifiedList,
     findings: &mut Vec<Finding>,
-) {
+) -> SurfaceTally {
     let quoted = quoted_in_ir(docs);
     let in_ir = |name: &str| quoted.contains(name);
     let listed = |surface: &Surface| {
@@ -190,8 +207,18 @@ fn report(
             ));
         }
     }
+    let mut tally = SurfaceTally::default();
     let mut first: BTreeMap<(&str, &str), &Surface> = BTreeMap::new();
+    let mut seen: BTreeSet<(&str, &str)> = BTreeSet::new();
     for surface in surfaces {
+        if seen.insert((&surface.kind, &surface.name)) {
+            tally.total += 1;
+            if in_ir(&surface.name) {
+                tally.specified += 1;
+            } else if listed(surface) {
+                tally.unspecified += 1;
+            }
+        }
         if in_ir(&surface.name) || listed(surface) {
             continue;
         }
@@ -212,6 +239,7 @@ fn report(
             format!("{kind} {name}"),
         ));
     }
+    tally
 }
 
 /// `話題ごとの文書`の`要求`の`文`、`決定表`の表のセル（見出しの行を含む）、`シナリオ`のステップの行で、

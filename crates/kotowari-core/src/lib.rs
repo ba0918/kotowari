@@ -36,6 +36,9 @@ pub struct CheckResult {
     pub tests: BTreeMap<String, TestFileTally>,
     /// REQ-core-206: 読んだ`ガイド`の数と、形の正しい`ガイドの印`の1件の数
     pub guides: guides::GuideTally,
+    /// REQ-core-228: "surface.rules" が空の一覧でないときだけ出す
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub surface: Option<surface::Unlisted>,
 }
 
 /// 読んだテストのファイルの、1つの拡張子の数と問い合わせの有無（TBL-core-021）
@@ -782,7 +785,13 @@ fn exit_code_for(findings: &[Finding]) -> u8 {
 fn print_check(result: &CheckResult, format: Format) {
     match format {
         Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
-        Format::Text => print_findings_as_text(&result.findings),
+        Format::Text => {
+            print_findings_as_text(&result.findings);
+            // REQ-core-228: 指摘の行の後の最後の1行。指摘が0件でも出す
+            if let Some(surface) = &result.surface {
+                println!("surface: unspecified={}", surface.unspecified);
+            }
+        }
     }
 }
 
@@ -1116,7 +1125,7 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
 fn load_with_guides(
     cwd: &Path,
     config_path: Option<&Path>,
-) -> Result<(Loaded, guides::GuideTally), StopReason> {
+) -> Result<(Loaded, guides::GuideTally, Option<surface::SurfaceTally>), StopReason> {
     let mut loaded = load_all(cwd, config_path)?;
     let tally = guides::read_guides(
         &loaded.base,
@@ -1125,13 +1134,13 @@ fn load_with_guides(
         &loaded.docs,
         &mut loaded.findings,
     )?;
-    surface::check(
+    let surface = surface::check(
         &loaded.base,
         &loaded.cfg,
         &loaded.docs,
         &mut loaded.findings,
     )?;
-    Ok((loaded, tally))
+    Ok((loaded, tally, surface))
 }
 
 /// 検査のエントリポイント
@@ -1140,7 +1149,7 @@ pub fn run_check(
     format: Format,
     config_path: Option<&Path>,
 ) -> Result<(CheckResult, Format), StopReason> {
-    let (loaded, guides) = load_with_guides(cwd, config_path)?;
+    let (loaded, guides, surface) = load_with_guides(cwd, config_path)?;
 
     let files = loaded.docs.len();
     let lines: usize = loaded.docs.iter().map(|d| d.line_count).sum();
@@ -1156,6 +1165,9 @@ pub fn run_check(
         counts,
         tests: loaded.tally,
         guides,
+        surface: surface.map(|tally| surface::Unlisted {
+            unspecified: tally.unspecified,
+        }),
     };
 
     Ok((result, format))
@@ -1184,13 +1196,14 @@ pub fn run_status(
     cwd: &Path,
     config_path: Option<&Path>,
 ) -> Result<status::StatusResult, StopReason> {
-    let (loaded, guides) = load_with_guides(cwd, config_path)?;
+    let (loaded, guides, surface) = load_with_guides(cwd, config_path)?;
     Ok(status::build(
         &loaded.docs,
         &loaded.cfg.ir,
         &loaded.markers,
         loaded.tally,
         guides,
+        surface.unwrap_or_default(),
         &loaded.findings,
     ))
 }

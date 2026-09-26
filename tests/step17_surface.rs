@@ -981,3 +981,180 @@ fn req_229_list_and_query_do_not_read_the_surface_list_or_files() {
         assert_eq!(code, Some(0), "{args:?}: {stderr}");
     }
 }
+
+// --- S5: check の出力と status ---
+
+/// EX-core-407 の場面: "--format" を`要求`の`文`に書き、"--verbose" を`未記載の面の一覧`に載せる
+fn ex_407_ir(tmp: &Path) {
+    write(
+        tmp,
+        "docs/ir/a.md",
+        &ir_doc(
+            &review_requirement("REQ-001", "\"--format\" を受ける。"),
+            "",
+        ),
+    );
+}
+
+// @kotowari[EX-core-407, REQ-core-223, REQ-core-226, REQ-core-228, TBL-core-005]
+#[test]
+fn ex_core_407_a_surface_quoted_in_a_requirement_is_not_an_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), SURFACE_RS);
+    write(tmp.path(), "rules/surface.yml", FLAG_RULE);
+    let mut lines = vec!["let _ = 0;"; 4];
+    lines[0] = "fn main() {";
+    lines[2] = "    let _ = \"--format\";";
+    lines[3] = "}";
+    write(tmp.path(), "src/cli.rs", &(lines.join("\n") + "\n"));
+    ex_407_ir(tmp.path());
+    let (code, v) = check_json(tmp.path());
+    assert!(without_spec(&v).is_empty(), "{v}");
+    assert_eq!(v["surface"], serde_json::json!({"unspecified": 0}), "{v}");
+    assert_eq!(code, Some(0), "{v}");
+}
+
+// @kotowari[EX-core-414, REQ-core-228]
+#[test]
+fn ex_core_414_the_count_line_is_printed_even_with_no_findings() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), SURFACE_RS);
+    write(tmp.path(), "rules/surface.yml", FLAG_RULE);
+    write(
+        tmp.path(),
+        "src/cli.rs",
+        "fn main() {\n    let _ = \"--format\";\n}\n",
+    );
+    ex_407_ir(tmp.path());
+    let (code, stdout, stderr) = run(tmp.path(), &["check", "--format", "text"]);
+    assert_eq!(stdout, "surface: unspecified=0\n", "{stderr}");
+    assert_eq!(code, Some(0));
+}
+
+// @kotowari[EX-core-413, REQ-core-227, REQ-core-228]
+#[test]
+fn ex_core_413_a_project_without_surface_rules_sees_nothing() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), "");
+    write(tmp.path(), "src/cli.rs", &cli_rs());
+    ex_407_ir(tmp.path());
+    let (_, stdout, _) = run(tmp.path(), &["check", "--format", "text"]);
+    assert!(!stdout.contains("surface"), "{stdout}");
+    let (_, v) = check_json(tmp.path());
+    assert!(v.get("surface").is_none(), "{v}");
+}
+
+// @kotowari[EX-core-419, REQ-core-232, REQ-core-228]
+#[test]
+fn ex_core_419_a_listed_surface_is_not_an_error_and_is_counted() {
+    let tmp = TempDir::new().unwrap();
+    ex_408_project_with_list(tmp.path(), &entry("flag", "--verbose", "まだ決めていない"));
+    let (code, v) = check_json(tmp.path());
+    assert!(without_spec(&v).is_empty(), "{v}");
+    assert_eq!(v["surface"]["unspecified"], 1, "{v}");
+    assert_eq!(code, Some(0), "{v}");
+}
+
+// @kotowari[EX-core-423, REQ-core-228]
+#[test]
+fn ex_core_423_a_listed_surface_now_in_the_ir_is_not_counted() {
+    let tmp = TempDir::new().unwrap();
+    ex_408_project_with_list(tmp.path(), &entry("flag", "--verbose", "理由"));
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &ir_doc(
+            &review_requirement("REQ-001", "\"--format\" と \"--verbose\" を受ける。"),
+            "",
+        ),
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(
+        findings_of(&v, "surface_unspecified_stale")
+            .into_iter()
+            .map(|(_, _, detail)| detail)
+            .collect::<Vec<_>>(),
+        vec!["flag --verbose"],
+        "{v}"
+    );
+    assert_eq!(v["surface"]["unspecified"], 0, "{v}");
+}
+
+/// 面が4つ（"--format" と "--config" は IR に、"--verbose" は一覧に、"--tool" はどこにも無い）のプロジェクト。
+/// "--config" は2か所にあっても種類と名前の組で1つに数える
+fn four_surfaces(tmp: &Path) {
+    ex_408_project_with_list(tmp, &entry("flag", "--verbose", "理由"));
+    write(
+        tmp,
+        "src/more.rs",
+        "fn m() {\n    let _ = [\"--config\", \"--tool\", \"--config\"];\n}\n",
+    );
+    write(
+        tmp,
+        "docs/ir/a.md",
+        &ir_doc(
+            &review_requirement("REQ-001", "\"--format\" と `--config` を受ける。"),
+            "",
+        ),
+    );
+    write(
+        tmp,
+        "docs/ir/CONTEXT.md",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| --config | 設定 | docs/decision/records/r.md#A1 |\n",
+    );
+}
+
+// @kotowari[REQ-core-228, TBL-core-005]
+#[test]
+fn req_228_the_count_line_comes_after_the_findings() {
+    let tmp = TempDir::new().unwrap();
+    four_surfaces(tmp.path());
+    let (code, stdout, stderr) = run(tmp.path(), &["check", "--format", "text"]);
+    assert_eq!(
+        stdout, "src/more.rs:2 [error] surface_without_spec flag --tool\nsurface: unspecified=1\n",
+        "{stderr}"
+    );
+    assert_eq!(code, Some(1));
+}
+
+// @kotowari[REQ-core-229, REQ-core-162, TBL-core-028]
+#[test]
+fn req_229_status_counts_surfaces_and_a_surface_error_makes_it_incomplete() {
+    let tmp = TempDir::new().unwrap();
+    four_surfaces(tmp.path());
+    let (code, stdout, stderr) = run(tmp.path(), &["status"]);
+    let v: serde_json::Value =
+        serde_json::from_str(&stdout).unwrap_or_else(|e| panic!("{e}: {stdout}{stderr}"));
+    assert_eq!(
+        v["surface"],
+        serde_json::json!({"total": 4, "specified": 2, "unspecified": 1}),
+        "{v}"
+    );
+    assert_eq!(v["findings"]["error"], 1, "{v}");
+    assert_eq!(v["complete"], false, "{v}");
+    assert_eq!(code, Some(1));
+    let (_, text, _) = run(tmp.path(), &["status", "--format", "text"]);
+    let lines: Vec<&str> = text.lines().collect();
+    let guides = lines.iter().position(|l| l.starts_with("guides ")).unwrap();
+    assert_eq!(
+        lines[guides + 1],
+        "surface total=4 specified=2 unspecified=1",
+        "{text}"
+    );
+}
+
+// @kotowari[TBL-core-028, REQ-core-162]
+#[test]
+fn tbl_028_status_surface_counts_are_zero_without_surface_rules() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), "");
+    ex_407_ir(tmp.path());
+    let (_, stdout, stderr) = run(tmp.path(), &["status"]);
+    let v: serde_json::Value =
+        serde_json::from_str(&stdout).unwrap_or_else(|e| panic!("{e}: {stdout}{stderr}"));
+    assert_eq!(
+        v["surface"],
+        serde_json::json!({"total": 0, "specified": 0, "unspecified": 0}),
+        "{v}"
+    );
+}
