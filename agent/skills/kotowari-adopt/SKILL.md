@@ -134,6 +134,10 @@ only when the decision it cites states the item's content.
   that will not be built gets its own entry under `## Rejected`, stating what is not built — one per
   line, in the same record.
 
+The confirmation, "leave this undecided as a FLAG", and deferral decisions go under `## Agreements`,
+because they are cited as sources and the numbers of `## Undecided` cannot be. Only the entries for
+what is not built go under `## Rejected`.
+
 ## After approval
 
 Hand the person one request text, in the conversation only — do not write it to a file. It holds:
