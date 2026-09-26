@@ -15,11 +15,11 @@ A Cargo workspace holding three Rust packages:
 
 `Cargo.toml` at the root declares the workspace members and excludes `experiments/`.
 
-The Claude Code skills live in `agent/skills/`, nine of them: the `kotowari` skill (`kotowari/`:
-how to write the IR and decision records, read `check`, and place marks) and eight workflow
+The Claude Code skills live in `agent/skills/`, ten of them: the `kotowari` skill (`kotowari/`:
+how to write the IR and decision records, read `check`, and place marks) and nine workflow
 skills that depend on it (`kotowari-brainstorm/`, `-plan/`, `-cycle/`, `-implement/`,
-`-review/`, `-iterate/`, `-investigate/`, `-using-workflow/`). `agent/skills/README.md` says how
-they relate and how to install them.
+`-review/`, `-iterate/`, `-investigate/`, `-using-workflow/`, `-adopt/`).
+`agent/skills/README.md` says how they relate and how to install them.
 
 ## Build and test
 

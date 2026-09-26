@@ -61,14 +61,18 @@ cannot be enumerated. A fifth needs a real incident behind it.
 | A small task | kotowari-iterate |
 | A medium-or-larger change with no specification, no grounds to judge by, or one that reads two ways | kotowari-brainstorm |
 | A medium-or-larger change with a specification | kotowari-plan, then kotowari-cycle |
+| Bringing an existing specification or existing code into the IR, or not knowing whether the IR matches the implementation | kotowari-adopt |
 | A defect whose cause is unknown, or a question needing reading or searching | kotowari-investigate |
 
 Rows below the first fire only for what the line named. A small task is kotowari-iterate's own
 definition; an unreadable impact or a specification decision makes a change medium or larger. A
-request to change a specification goes to kotowari-brainstorm with its path, not the plan row. A bare
-"fix it" leaves the person the path of this session fixing it directly. "Make the error message
-clearer" with no wording given reads two ways: kotowari-brainstorm, not a small task. A defect sent to
-kotowari-investigate continues from its report's recommended next action, which names the next entry.
+request to change a specification goes to kotowari-brainstorm with its path, not the plan row;
+re-sorting a topic's existing IR against its implementation, without deciding changes, is
+kotowari-adopt. The kotowari-adopt row is chosen by the kind of request, not by the stations the
+line named. A bare "fix it" leaves the person the path of this session fixing it directly. "Make
+the error message clearer" with no wording given reads two ways: kotowari-brainstorm, not a small
+task. A defect sent to kotowari-investigate continues from its report's recommended next action,
+which names the next entry.
 
 ## Exceptions
 

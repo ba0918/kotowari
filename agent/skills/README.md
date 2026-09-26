@@ -1,6 +1,6 @@
 # kotowari の skill
 
-Claude Code の skill を9つ置いている。
+Claude Code の skill を10個置いている。
 
 | skill | 役目 |
 |---|---|
@@ -13,8 +13,9 @@ Claude Code の skill を9つ置いている。
 | `kotowari-review` | 差分や文書を別の文脈でレビューする（cycle から呼ばれるか、人が直接呼ぶ） |
 | `kotowari-iterate` | 仕様も計画も要らない小さな作業を cycle の繰り返しで回す |
 | `kotowari-investigate` | 読むだけの調査。原因と影響を調べて直し方を報告する |
+| `kotowari-adopt` | 既存のプロジェクトに話題1つずつ kotowari を入れる。旧資料と実装とテストを仕分けて IR と判断の記録と FLAG に書き、承認を得て、テストの作業の依頼文を渡す |
 
-`kotowari-` で始まる8つを工程の skill と呼ぶ。
+`kotowari-` で始まる9個を工程の skill と呼ぶ。
 
 ## 関係
 
@@ -26,7 +27,7 @@ Claude Code の skill を9つ置いている。
 
 ## 入れ方
 
-次のどれか1行で、9つをまとめて入れられる。どれも GitHub の ba0918/kotowari から取る。
+次のどれか1行で、10個をまとめて入れられる。どれも GitHub の ba0918/kotowari から取る。
 
 ```sh
 apm install ba0918/kotowari/agent --target claude
