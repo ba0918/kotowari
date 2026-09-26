@@ -13,9 +13,9 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 ## 後でやる
 
-### 0.1.0 を出した後に入れ方を試す（kotowari）
+### リポジトリを公開した後に README の curl の手順を試す（kotowari）
 
-- 0.1.0 の GitHub Release ができたら、mise の入れ方（`github:` の書き方）、README のバイナリを落として SHA256 を確かめる手順、タグで版を固定した `cargo install --git ... --tag` を実際に試す。動いた mise の書き方を README の入れ方に足す（[判断の記録 2026-09-26-release-flow](docs/decision/records/2026-09-26-release-flow.md) の A12。mise の書き方は Release ができてから試して動いたものだけを書く）
+- README の「ビルド済みのバイナリ」の手順（`curl -LO` で落として `shasum -a 256 -c` で確かめる）は、リポジトリが非公開のうちは認証の無い `curl` が "Not Found" を受け取るので試せない。公開したら文字どおりに走らせる。mise の `github:`（`version_prefix=kotowari-v` を付けた形）と、タグで固定した `cargo install --git` は 2026-09-26 に認証付きで入ることを確かめた
 
 ### タグの push でリリースのワークフローが起動しなかった原因を確かめる（kotowari）
 
