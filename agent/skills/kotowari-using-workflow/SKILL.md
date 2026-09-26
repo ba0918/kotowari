@@ -1,6 +1,6 @@
 ---
 name: kotowari-using-workflow
-description: "Entry decider beside the kotowari workflow: given a new request, name the skill it starts from — direct editing, iterate, brainstorm, plan then cycle, or investigate — and how much of the workflow runs, without starting the work; questions and chat are answered directly, never routed. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked where to start, which skill to use, how much review a change needs, or to decide the entry point. 日本語キーワード: どこから始めるか 入口を決めて どの skill から 入口 使い分け ルーティング レビューは要るか 工程を減らす"
+description: "Entry decider beside the kotowari workflow: given a new request, name the skill it starts from — direct editing, iterate, brainstorm, plan then cycle, adopt, or investigate — and how much of the workflow runs, without starting the work; questions and chat are answered directly, never routed. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked where to start, which skill to use, how much review a change needs, or to decide the entry point. 日本語キーワード: どこから始めるか 入口を決めて どの skill から 入口 使い分け ルーティング レビューは要るか 工程を減らす"
 ---
 
 # Using the workflow
