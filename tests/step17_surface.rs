@@ -1213,3 +1213,30 @@ fn ex_core_427_check_reports_the_unparsable_surface_file_beside_a_test_file_one(
         .collect();
     assert_eq!(paths, vec!["src/bad.rs", "tests/broken.rs"], "{v}");
 }
+
+// @kotowari[REQ-core-226]
+#[test]
+fn req_226_a_backticked_term_in_a_decision_table_cell_counts() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), SURFACE_RS);
+    write(
+        tmp.path(),
+        "rules/surface.yml",
+        "id: command\nlanguage: rust\nrule:\n  kind: string_literal\n  pattern: $NAME\n",
+    );
+    write(tmp.path(), "src/cli.rs", "const S: &str = \"status\";\n");
+    write(
+        tmp.path(),
+        "docs/ir/CONTEXT.md",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| status | 集計 | docs/decision/records/r.md#A1 |\n",
+    );
+    let table = "## Decision tables\n\n### TBL-001: 表\n\n- source: docs/decision/records/r.md#A1\n\n| コマンド | 中身 |\n|---|---|\n| `status` | 集計 |\n\n";
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &ir_doc(&review_requirement("REQ-001", "文。"), table),
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), Vec::<String>::new(), "{v}");
+    assert!(findings_of(&v, "unknown_term").is_empty(), "{v}");
+}
