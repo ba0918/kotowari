@@ -62,8 +62,7 @@ breakdown are shown, not asked.
 
 Write the IR and the decision record from the answers, then approve once by kotowari-brainstorm's
 **Finishing**, step 3 ("Approve in this order"). The decision record's diff the person reads there is
-the final version of the list. Test-side findings (requirement_without_test, scenario_without_test)
-are expected to remain at approval; the request text below clears them.
+the final version of the list.
 
 ## Sorting behaviors and terms
 
