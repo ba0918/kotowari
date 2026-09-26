@@ -12,6 +12,11 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 - まだ IR にしない面は、`surface.unspecified` が指す一覧に理由付きで載せると外せる。形の誤った1件は `surface_unspecified_invalid` の誤り、要らなくなった1件は `surface_unspecified_stale` の注意になる。外した数は `check` の最後の行 `surface: unspecified=数`（JSON は `surface`）に、面の数は `status` の `surface` の行に出る。
 - `kotowari` skill に面の検査の reference `surface.md` を足し、`kotowari-adopt` に一覧の減らし方を書いた。一覧に足すのは `kotowari-brainstorm` と `kotowari-adopt` だけで、実装役は IR に無い面を壁打ちに戻す。
 
+### Changed
+
+- `kotowari-adopt` は範囲の確認で話題の利用者の入口（コマンドや画面の操作）も確かめ、その入口から観測できる振る舞いだけを一覧の行にする。範囲の外で見つけた振る舞いは件数と次の話題の候補だけを見せる。1行は要求1つの候補で、値や文言だけが違うものは1行にまとめて決定表の候補にし、候補が `limits.requirements` を超えたら入口が混ざっていないかを見直す。
+- `kotowari status` の出力に `surface` の群（`total`、`specified`、`unspecified`）がいつも入る。面の規則を書いていなければ3つとも 0。
+
 ## [0.1.0] - 2026-09-26
 
 ### Added
