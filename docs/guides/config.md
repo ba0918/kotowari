@@ -30,7 +30,7 @@ mutants:
 surface:
   files: []
   rules: []
-  unspecified: docs/surface-unspecified.yaml   # 既定は「無し」。書いたときだけ読む
+  # unspecified: docs/surface-unspecified.yaml   # 既定は「無し」。surface.rules が空の一覧のときは書けない
 limits:
   lines: 200
   requirements: 10
@@ -39,7 +39,7 @@ vague_words: [適切に, 必要に応じて, 通常は, など]
 
 `mutants.equivalents` と `surface.unspecified` だけは既定が「鍵が無い」状態です。
 上の例の値は書き方を示すためのもので、既定ではありません。
-ただし `surface.unspecified` は `surface.rules` が空の一覧のまま書くと止まります（[`surface.*`](#surfacefilessurfacerulessurfaceunspecified)）。
+`surface.unspecified` は `surface.rules` が空の一覧のまま書くと止まるので、例では `#` で外しています（[`surface.*`](#surfacefilessurfacerulessurfaceunspecified)）。
 
 ## キーの一覧
 
