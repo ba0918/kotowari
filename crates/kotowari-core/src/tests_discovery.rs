@@ -310,7 +310,7 @@ fn collect_macro_functions(
 /// 単独の "\r" を "\n" に置き換える。TBL-core-010 は単独の "\r" も行の終わりに数えるが、
 /// `str::lines()` も tree-sitter の行も "\n" でしか行を分けない。どちらも1バイトなので、
 /// 置き換えてもバイトの位置は変わらない
-fn lone_cr_to_lf(content: &str) -> String {
+pub(crate) fn lone_cr_to_lf(content: &str) -> String {
     let mut out = String::with_capacity(content.len());
     let mut chars = content.chars().peekable();
     while let Some(c) = chars.next() {

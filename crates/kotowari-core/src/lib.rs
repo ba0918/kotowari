@@ -17,6 +17,7 @@ pub mod record_form;
 pub mod schema;
 pub mod sources;
 pub mod status;
+pub mod surface;
 pub mod terms;
 mod test_markers;
 pub mod test_queries;
@@ -1097,7 +1098,8 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
     })
 }
 
-/// check と status の読み取り: `load_all` に続けて`ガイド`を読み、その`指摘`を足す（REQ-core-198、REQ-core-162）
+/// check と status の読み取り: `load_all` に続けて`ガイド`と`面`を読み、その`指摘`を足す
+/// （REQ-core-198、REQ-core-162、REQ-core-229）
 fn load_with_guides(
     cwd: &Path,
     config_path: Option<&Path>,
@@ -1110,6 +1112,7 @@ fn load_with_guides(
         &loaded.docs,
         &mut loaded.findings,
     )?;
+    surface::extract(&loaded.base, &loaded.cfg, &mut loaded.findings)?;
     Ok((loaded, tally))
 }
 
