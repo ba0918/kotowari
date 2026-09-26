@@ -1,11 +1,11 @@
 # 設定ファイル — `.kotowari/config.yaml`
 
-kotowari が読む場所（IR、判断の記録、テスト、ガイド）と、検査に使う値を書く YAML のファイルです。
+kotowari が読む場所（IR、判断の記録、テスト、ガイド、面のファイル）と、検査に使う値を書く YAML のファイルです。
 ファイルが無ければ既定の値で動くので、既定から変えたいキーだけを書きます。
 
 ## 書式
 
-<!-- @kotowari[REQ-core-013:f8877aec, REQ-core-017:471b53f5, TBL-core-004:37cd61fb] -->
+<!-- @kotowari[REQ-core-013:f8877aec, REQ-core-017:471b53f5, TBL-core-004:97227aba] -->
 
 すべてのキーを既定の値で書くと次のようになります。
 キーは入れ子の形で書きます（`decisions:` の下に `records:`）。
@@ -27,18 +27,23 @@ guides:
   files: []
 mutants:
   equivalents: .kotowari/equivalents.yaml   # 既定は「無し」。書いたときだけ読む
+surface:
+  files: []
+  rules: []
+  unspecified: docs/surface-unspecified.yaml   # 既定は「無し」。書いたときだけ読む
 limits:
   lines: 200
   requirements: 10
 vague_words: [適切に, 必要に応じて, 通常は, など]
 ```
 
-`mutants.equivalents` だけは既定が「鍵が無い」状態です。
+`mutants.equivalents` と `surface.unspecified` だけは既定が「鍵が無い」状態です。
 上の例の値は書き方を示すためのもので、既定ではありません。
+ただし `surface.unspecified` は `surface.rules` が空の一覧のまま書くと止まります（[`surface.*`](#surfacefilessurfacerulessurfaceunspecified)）。
 
 ## キーの一覧
 
-<!-- @kotowari[TBL-core-004:37cd61fb] -->
+<!-- @kotowari[TBL-core-004:97227aba] -->
 
 | キー | 値の型 | 既定 | 説明 |
 |---|---|---|---|
@@ -51,6 +56,9 @@ vague_words: [適切に, 必要に応じて, 通常は, など]
 | `tests.rules` | パスの一覧 | 空 | テストを見つける ast-grep のルールの YAML ファイル。glob は使えない |
 | `guides.files` | glob の一覧 | 空 | ガイドの置き場。空ならガイドを読まない |
 | `mutants.equivalents` | パス（文字列） | 無し | 等価の一覧のファイル。無ければ等価の一覧は0件 |
+| `surface.files` | glob の一覧 | 空 | 面を取り出すコードのファイル（面のファイル）の置き場 |
+| `surface.rules` | パスの一覧 | 空 | 面を取り出す ast-grep のルールの YAML ファイル。glob は使えない。空の一覧でなければ面の検査をする |
+| `surface.unspecified` | パス（文字列） | 無し | 未記載の面の一覧のファイル。無ければ一覧は0件 |
 | `limits.lines` | 正の整数 | `200` | IR の文書の行数の上限。超えると `too_many_lines` の注意 |
 | `limits.requirements` | 正の整数 | `10` | 1つの文書の要求の数の上限。超えると `too_many_requirements` の注意 |
 | `vague_words` | 語の一覧 | `適切に`、`必要に応じて`、`通常は`、`など` | 曖昧語。IR の文に含まれると `vague_word` の誤り |
@@ -163,7 +171,7 @@ tests:
 
 ### `ir`、`decisions.records`、`decisions.adr`
 
-<!-- @kotowari[REQ-core-018:b4d76651] -->
+<!-- @kotowari[REQ-core-018:64a197f1] -->
 
 `kotowari check` は、指す先が無い、ディレクトリでない、読めないときに、読めないファイルを理由に止まります。
 
@@ -255,6 +263,26 @@ tests/discount.bench.ts:4 [error] test_without_id non-member is fast
 - 1つのファイルが `guides.files` と `tests.files` の両方に当たると、設定の誤りで止まります（[つまずき](#ガイドとテストの置き場が重なって止まる)）。
 - IR や判断の記録の置き場と重なるのはかまいません。そのファイルはガイドとしても読まれます。
 
+### `surface.files`、`surface.rules`、`surface.unspecified`
+
+<!-- @kotowari[REQ-core-224:d03df609, REQ-core-225:77439286, REQ-core-229:34b4f0ca] -->
+
+コードから利用者に見える面（CLI のサブコマンドやフラグ、設定の鍵など）を取り出し、IR に書かれているかを確かめる検査の設定です。
+使い方は [面の検査](surface.md) を見てください。
+
+- `surface.files` の glob の読み方、走査、読めないファイルでの停止は `tests.files` と同じです。
+- `surface.rules` の書き方と、ファイルの誤りで止まる条件は `tests.rules` と同じです。ただし面の規則はテストを見つける問い合わせには加わりません。
+- `surface.files` と `surface.rules` は組で書きます。片方だけのとき、`surface.rules` が空で `surface.unspecified` を書いたときは、設定を読むどのコマンドでも設定の誤りで止まります。
+- 面のファイル、面の規則のファイル、未記載の面の一覧を読むのは `kotowari check` と `kotowari status` だけです。
+
+```console
+$ cat .kotowari/config.yaml
+surface:
+  rules: ["rules/surface.yml"]
+$ kotowari check --format text
+config error: .kotowari/config.yaml: surface.rules is set but surface.files is empty
+```
+
 ### `mutants.equivalents`
 
 <!-- @kotowari[REQ-core-148:9c499a9d] -->
@@ -288,11 +316,11 @@ $ echo $?
 
 ## 設定の誤り
 
-<!-- @kotowari[REQ-core-014:c5e13de5, EX-core-003:6f823b5e, EX-core-383:53b1ffc1] -->
+<!-- @kotowari[REQ-core-014:1116b7ec, EX-core-003:6f823b5e, EX-core-383:53b1ffc1, REQ-core-225:77439286] -->
 
 次のどれかがあると、kotowari は検査を行わずに止まります（終了コード 2）。
 標準エラーの1行目は `config error: ` で始まり、設定ファイルのパスと理由が続きます。
-`tests.rules` のファイルの誤りと置き場の重なりでは、設定ファイルでなく、そのファイルのパスが出ます（下の例）。
+`tests.rules` と `surface.rules` のファイルの誤り、未記載の面の一覧の誤り、置き場の重なりでは、設定ファイルでなく、そのファイルのパスが出ます（下の例）。
 
 | 場面 | 例 |
 |---|---|
@@ -304,7 +332,8 @@ $ echo $?
 | 負の数、0 | `lines: 0` |
 | 絶対パス（先頭が `/`） | `ir: /docs/ir` |
 | `vague_words` の空の文字列、同じ語の2回目 | `vague_words: [""]` |
-| `tests.files`、`guides.files` の glob として読めない要素 | `files: ["tests/[a"]` |
+| `tests.files`、`guides.files`、`surface.files` の glob として読めない要素 | `files: ["tests/[a"]` |
+| `surface.files` と `surface.rules` の片方だけ、または `surface.rules` の無い `surface.unspecified` | [`surface.*`](#surfacefilessurfacerulessurfaceunspecified) |
 | ガイドとテストの置き場の重なり | [つまずき](#ガイドとテストの置き場が重なって止まる) |
 
 空の一覧（`files: []`）は誤りではありません。
@@ -379,7 +408,7 @@ config error: invalid rule in tests.rules: rules/c.yml: unknown language: cobol
 
 ### 知らないキーで止まる
 
-<!-- @kotowari[REQ-core-014:c5e13de5, EX-core-003:6f823b5e] -->
+<!-- @kotowari[REQ-core-014:1116b7ec, EX-core-003:6f823b5e] -->
 
 ```console
 $ cat .kotowari/config.yaml
@@ -387,12 +416,12 @@ ir: docs/ir
 limit:
   lines: 100
 $ kotowari check --format text
-config error: .kotowari/config.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, limits, vague_words
+config error: .kotowari/config.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, vague_words
  --> <input>:2:1
   |
 1 | ir: docs/ir
 2 | limit:
-  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, limits, vague_words
+  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, vague_words
 3 |   lines: 100
   |
 $ echo $?
