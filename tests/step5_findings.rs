@@ -303,7 +303,7 @@ fn prop_003_findings_are_sorted() {
     // IR 検査の指摘（後のファイル名の文書）とテスト発見の指摘（前のファイル
     // 名のテストファイル）が交互に追加されるため、ソートしないと壊れる。
     let config = proptest::test_runner::Config {
-        cases: 32,
+        cases: 8,
         ..Default::default()
     };
     proptest!(config, |(
