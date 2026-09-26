@@ -115,18 +115,24 @@ line in the decision record's Context.
 ## Writing the decision record
 
 One decision record per run, `docs/decision/records/YYYY-MM-DD-adopt-<topic>.md`, form as in
-`references/records.md`. One decision per line:
+`references/records.md`. One decision per line. Besides its fixed wording, each decision's body
+states that row's own content: the approval's collation (`references/collate.md`) accepts an item
+only when the decision it cites states the item's content.
 
 - Each confirmed behavior row and each confirmed term (one word) gets its own decision: "the legacy
   document and the current implementation agree, so this is taken as the specification without
   review" (for a row marked "no legacy document", or a term defined from the implementation: the
-  current implementation is taken as the specification without review). Its `- decided_by:` is `利用者（現状追認の一覧を承認）` (the person, approving the
+  current implementation is taken as the specification without review), followed by the content —
+  for a behavior, what the legacy document says and what the implementation does (only the latter
+  for a row marked "no legacy document"); for a term, its definition. Its `- decided_by:` is `利用者（現状追認の一覧を承認）` (the person, approving the
   confirmation list). The requirement or term cites that row's decision.
-- Each FLAG, whatever its kind, gets its own decision "leave this undecided as a FLAG", and the FLAG
+- Each FLAG, whatever its kind, gets its own decision "leave this undecided as a FLAG", followed by
+  what disagrees (contradiction), what is missing (gap), or what is unclear (ambiguity), and the FLAG
   cites it. Show where the legacy document is, in the decision's body or as a link. A FLAG born from an
   existing requirement has that requirement's ID in `- related:`, whatever its kind.
-- Each deferral gets its own decision to defer, and each legacy statement that will not be built gets
-  its own entry under `## Rejected` — one per line, in the same record.
+- Each deferral gets its own decision to defer, stating what is deferred, and each legacy statement
+  that will not be built gets its own entry under `## Rejected`, stating what is not built — one per
+  line, in the same record.
 
 ## After approval
 
