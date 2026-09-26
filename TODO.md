@@ -17,6 +17,10 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 - 0.1.0 の GitHub Release ができたら、mise の入れ方（`github:` の書き方）、README のバイナリを落として SHA256 を確かめる手順、タグで版を固定した `cargo install --git ... --tag` を実際に試す。動いた mise の書き方を README の入れ方に足す（[判断の記録 2026-09-26-release-flow](docs/decision/records/2026-09-26-release-flow.md) の A12。mise の書き方は Release ができてから試して動いたものだけを書く）
 
+### タグの push でリリースのワークフローが起動しなかった原因を確かめる（kotowari）
+
+- 2026-09-26 に `scripts/release.sh` が表示する `git push --atomic origin main kotowari-v0.1.0` で main とタグを一緒に push したところ、タグはリモートにできたが `.github/workflows/release.yml` は起動せず、Actions の実行は0件だった（GitHub のイベントの一覧にもタグの作成が出なかった）。ワークフローを初めて入れたのと同じ push だったことも重なっている。次のリリースで起動するかを見て、起動しなければ main とタグを別々に push するよう `scripts/release.sh` の表示と PROJECT.md のリリースの節を直す。起動しなかったときは `gh workflow run release -f tag=<タグ>` で作れる
+
 ## 記録のみ
 
 ### REQ-core-174 の前からの出典の漏れ（kotowari）
