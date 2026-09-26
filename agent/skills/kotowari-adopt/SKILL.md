@@ -119,7 +119,8 @@ One decision record per run, `docs/decision/records/YYYY-MM-DD-adopt-<topic>.md`
 
 - Each confirmed behavior row and each confirmed term (one word) gets its own decision: "the legacy
   document and the current implementation agree, so this is taken as the specification without
-  review". Its `- decided_by:` is `利用者（現状追認の一覧を承認）` (the person, approving the
+  review" (for a row marked "no legacy document", or a term defined from the implementation: the
+  current implementation is taken as the specification without review). Its `- decided_by:` is `利用者（現状追認の一覧を承認）` (the person, approving the
   confirmation list). The requirement or term cites that row's decision.
 - Each FLAG, whatever its kind, gets its own decision "leave this undecided as a FLAG", and the FLAG
   cites it. Show where the legacy document is, in the decision's body or as a link. A FLAG born from an
