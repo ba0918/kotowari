@@ -18,8 +18,29 @@ kotowari は仕様を「IR」と呼ぶ正規化した Markdown に書かせ、�
 
 ## 入れ方
 
+版は `kotowari-v0.1.0` の形のタグで出している。次の2通りのどちらかで入れる。例の `0.1.0` は入れたい版に置き換える。
+
+### ビルド済みのバイナリ
+
+[GitHub Release](https://github.com/ba0918/kotowari/releases) に、Linux x86_64 と macOS arm64 のバイナリを置いている。ファイルの名前は `kotowari-v<版>-<ターゲット>.tar.gz` で、ターゲットは Linux が `x86_64-unknown-linux-gnu`、macOS が `aarch64-apple-darwin`。中身は `kotowari` のバイナリと README とライセンスで、それぞれに SHA256 の `.sha256` を付けている。
+
 ```console
-$ cargo install --git https://github.com/ba0918/kotowari kotowari
+$ curl -LO https://github.com/ba0918/kotowari/releases/download/kotowari-v0.1.0/kotowari-v0.1.0-x86_64-unknown-linux-gnu.tar.gz
+$ curl -LO https://github.com/ba0918/kotowari/releases/download/kotowari-v0.1.0/kotowari-v0.1.0-x86_64-unknown-linux-gnu.tar.gz.sha256
+$ shasum -a 256 -c kotowari-v0.1.0-x86_64-unknown-linux-gnu.tar.gz.sha256
+$ tar -xzf kotowari-v0.1.0-x86_64-unknown-linux-gnu.tar.gz
+$ install kotowari-v0.1.0-x86_64-unknown-linux-gnu/kotowari ~/.local/bin/
+$ kotowari --version
+```
+
+置き先の `~/.local/bin/` は `PATH` の通った好きな場所に置き換える。
+
+### ソースからビルドする
+
+Rust のツールチェーンがあれば、タグで版を固定して `cargo install` で入れられる。手元でビルドするので時間がかかる。
+
+```console
+$ cargo install --git https://github.com/ba0918/kotowari --tag kotowari-v0.1.0 kotowari
 $ kotowari --version
 ```
 

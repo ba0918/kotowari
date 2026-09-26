@@ -76,3 +76,56 @@ IR cites them as its sources. `docs/decision/adr/` holds the four ADRs written b
 2026-09-17; they are kept as citation targets and no new ones are written.
 
 Implementation plans are in `docs/plans/`. Unresolved specification questions are in `TODO.md`.
+
+## Release
+
+The release flow is decided in
+[docs/decision/records/2026-09-26-release-flow.md](docs/decision/records/2026-09-26-release-flow.md);
+the version and tag form in
+[docs/decision/records/2026-09-23-versions-and-cli-name.md](docs/decision/records/2026-09-23-versions-and-cli-name.md).
+It is not part of the IR.
+
+The two products carry separate versions, each declared in one place:
+
+| Product | Where the version lives | Declarations that follow it | Tag | Changelog |
+|---|---|---|---|---|
+| `kotowari` (with `kotowari-core` and the skills in `agent/skills/`) | `version` in `[package]` of the root `Cargo.toml` | `version` of `crates/kotowari-core/Cargo.toml`; the `kotowari` and `kotowari-core` entries of `Cargo.lock` | `kotowari-v<version>` | `CHANGELOG.md` |
+| `kotowari-mds` | `version` in `[package]` of `crates/kotowari-markdown-schema/Cargo.toml` | the `kotowari-markdown-schema` entry of `Cargo.lock` | `kotowari-mds-v<version>` | `crates/kotowari-markdown-schema/CHANGELOG.md` (created at the next mds release; until then `kotowari-mds` cannot be released) |
+
+`scripts/check-versions.sh` exits 1 when a following declaration of either product disagrees
+with that product's version; given a tag, it also checks the tag's version against that product's
+`Cargo.toml`. The
+release script and the release workflow both run it. Fix a mismatch by correcting the versions,
+never by loosening the check.
+
+A change a user of the product can notice — a command, an option, a finding, a skill's
+instructions, the install procedure, what a release contains — is written under
+`## [Unreleased]` of that product's changelog, in Keep a Changelog form, on the same branch as the
+change. Nothing checks this mechanically. The entry says what changed for someone who installed
+the product, not how it was built.
+
+To release:
+
+1. On `main`, with a clean tree and a filled Unreleased section, run
+   `scripts/release.sh kotowari <version>`. It writes the version into every declaration, turns
+   the Unreleased section into `## [<version>] - <date>` under a new empty Unreleased, and adds the
+   comparison links. It then runs `scripts/check-versions.sh <tag>`, `kotowari check` (exit 0
+   required) and the full test suite. Only when all pass does it make one commit and the annotated
+   tag; otherwise it restores the files and leaves no commit and no tag. It refuses to start when
+   the tag already exists locally or on `origin`, or when `origin` cannot be reached to tell. It
+   never pushes.
+2. Push both with the command it prints, `git push --atomic origin main kotowari-v<version>`. The
+   pre-push hook runs the mutation tests over the whole workspace because a tag is pushed. If the
+   push is rejected, first check whether the tag is already on the remote
+   (`git ls-remote --tags origin kotowari-v<version>`). If it is not, nothing was published: delete
+   the local tag (`git tag -d`), drop the release commit (`git reset --keep HEAD~1`), fix and
+   commit, and run the script again with the same version. If it is, that version is published
+   and must not be reused: drop the local tag and commit the same way, bring in the remote, and
+   release a new version.
+3. The pushed tag starts `.github/workflows/release.yml`. It reruns the tests, `kotowari check` and
+   the version check, builds `x86_64-unknown-linux-gnu` and `aarch64-apple-darwin` binaries as
+   `<product>-v<version>-<target>.tar.gz` (binary, README, licences) each with a `.sha256`, and
+   creates the GitHub Release with that version's changelog section as its notes.
+
+A pushed tag is published: never move or re-create it. A published release is fixed by releasing
+a new version. The release workflow is the only CI; the other gates are the local hooks.
