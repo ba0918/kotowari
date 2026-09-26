@@ -83,7 +83,7 @@ Not counted: statements of properties, the scope line, the lines starting with `
 
 | Kind | Fix |
 |---|---|
-| surface_without_spec | The surface is user-visible but no requirement, decision table or scenario quotes it. Write it into the requirement that specifies it, quoting the name exactly; a behavior missing from the IR is a change to the specification, made in a brainstorm. If it is not to be specified now, add an entry for it to the list of unspecified surfaces |
+| surface_without_spec | The surface is user-visible but no requirement, decision table or scenario quotes it. A behavior missing from the IR is a change to the specification: the implementer returns it to brainstorm and never adds an entry to the list of unspecified surfaces. In kotowari-brainstorm, write it into the requirement that specifies it, quoting the name exactly, or, if it is not to be specified now, add an entry for it to the list. Adding an entry is done only in kotowari-brainstorm or kotowari-adopt |
 | surface_unspecified_invalid | Fix the entry to the form below. Until then it excludes nothing |
 | surface_unspecified_stale | The entry is no longer needed: no surface with that kind and name is taken from the code, or the surface is now in the IR. Delete the entry (or change `name` if the surface was renamed) |
 
