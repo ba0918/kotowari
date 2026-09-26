@@ -111,11 +111,17 @@ To release:
    the Unreleased section into `## [<version>] - <date>` under a new empty Unreleased, and adds the
    comparison links. It then runs `scripts/check-versions.sh <tag>`, `kotowari check` (exit 0
    required) and the full test suite. Only when all pass does it make one commit and the annotated
-   tag; otherwise it restores the files and leaves no commit and no tag. It never pushes.
+   tag; otherwise it restores the files and leaves no commit and no tag. It refuses to start when
+   the tag already exists locally or on `origin`, or when `origin` cannot be reached to tell. It
+   never pushes.
 2. Push both with the command it prints, `git push --atomic origin main kotowari-v<version>`. The
    pre-push hook runs the mutation tests over the whole workspace because a tag is pushed. If the
-   push is rejected, nothing was published: delete the local tag (`git tag -d`), drop the release
-   commit (`git reset --keep HEAD~1`), fix and commit, and run the script again.
+   push is rejected, first check whether the tag is already on the remote
+   (`git ls-remote --tags origin kotowari-v<version>`). If it is not, nothing was published: delete
+   the local tag (`git tag -d`), drop the release commit (`git reset --keep HEAD~1`), fix and
+   commit, and run the script again with the same version. If it is, that version is published
+   and must not be reused: drop the local tag and commit the same way, bring in the remote, and
+   release a new version.
 3. The pushed tag starts `.github/workflows/release.yml`. It reruns the tests, `kotowari check` and
    the version check, builds `x86_64-unknown-linux-gnu` and `aarch64-apple-darwin` binaries as
    `<product>-v<version>-<target>.tar.gz` (binary, README, licences) each with a `.sha256`, and

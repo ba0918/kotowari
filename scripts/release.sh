@@ -60,6 +60,15 @@ branch="$(git symbolic-ref --quiet --short HEAD || true)"
 if git rev-parse --quiet --verify "refs/tags/$tag" > /dev/null; then
     die "タグ $tag が既にある"
 fi
+# origin にあるタグは公開済みなので、その版は使い直さない。ls-remote の --exit-code は
+# 見つかれば 0、見つからなければ 2 で終わり、それ以外は origin に届かなかったことを表す
+remote_status=0
+git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null || remote_status=$?
+case "$remote_status" in
+    0) die "タグ $tag は origin に既にある（公開済み）。この版は使い直さず、新しい版でリリースする" ;;
+    2) ;;
+    *) die "origin に届かず、タグ $tag が公開済みかを確かめられない" ;;
+esac
 [ -f "$changelog" ] || die "変更履歴 $changelog が無い"
 
 # Unreleased の節（見出しの次の行から、次の ## の見出しかリンクの定義の手前まで）に、
@@ -169,10 +178,17 @@ ${tag} を作った（まだ push していない）。公開するには次を�
 タグの push では pre-push のフックが変異テストを全体で回すので時間がかかる。
 通れば GitHub Actions がバイナリを付けた GitHub Release を作る。
 
-pre-push で push が拒まれたら、タグもコミットもまだ公開されていないので、次で戻してから直す:
+push が拒まれたら、まず同名のタグが origin にあるかを確かめる:
+
+  git ls-remote --tags origin ${tag}
+
+何も出なければ、タグもコミットもまだ公開されていない。次で戻し、直しをコミットしてから、
+もう一度 scripts/release.sh ${product} ${version} を走らせる:
 
   git tag -d ${tag}
   git reset --keep HEAD~1
 
-直しをコミットしてから、もう一度 scripts/release.sh ${product} ${version} を走らせる。
+出たら、${version} は既に公開されている。その版は使い直さない（origin のタグを消したり
+作り直したりしない）。手元のタグとコミットは公開されたものとは別物なので上と同じ2つで捨て、
+origin を取り込んでから、新しい版で scripts/release.sh ${product} <新しい版> を走らせる。
 EOF
