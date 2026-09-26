@@ -1,8 +1,12 @@
 //! `面`の検査（docs/ir/core/surface.md）。`面の規則`で`面のファイル`から`面`を取り出す。
 
 use crate::config::Config;
+use crate::doc_kind::DocKind;
+use crate::ir::{IrDocument, Item, split_lines};
 use crate::test_queries::{ParsedFile, RuleSet, language_of};
 use crate::{Finding, FindingKind, StopReason};
+use markdown::mdast::Node;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 /// `面の規則`で取り出した`面`1つ（REQ-core-223）
@@ -67,4 +71,115 @@ pub fn extract(
         );
     }
     Ok(surfaces)
+}
+
+/// IR に無い`面`に、種類と名前の組ごとに1件の surface_without_spec を出す。
+/// 場所は`面のファイル`のパスのバイト順、次に行の小さい順で最初の`面`（REQ-core-227）
+pub fn report(surfaces: &[Surface], docs: &[IrDocument], findings: &mut Vec<Finding>) {
+    let quoted = quoted_in_ir(docs);
+    let mut first: BTreeMap<(&str, &str), &Surface> = BTreeMap::new();
+    for surface in surfaces {
+        if quoted.contains(surface.name.as_str()) {
+            continue;
+        }
+        first
+            .entry((surface.kind.as_str(), surface.name.as_str()))
+            .and_modify(|current| {
+                if (&surface.path, surface.line) < (&current.path, current.line) {
+                    *current = surface;
+                }
+            })
+            .or_insert(surface);
+    }
+    for ((kind, name), surface) in first {
+        findings.push(Finding::new(
+            FindingKind::SurfaceWithoutSpec,
+            surface.path.clone(),
+            Some(surface.line),
+            format!("{kind} {name}"),
+        ));
+    }
+}
+
+/// `話題ごとの文書`の`要求`の`文`、`決定表`の表のセル（見出しの行を含む）、`シナリオ`のステップの行で、
+/// 二重引用符の対かバッククォートの対で囲んだ中身の集まり。中身の前後の空白は除かない（REQ-core-226）
+fn quoted_in_ir(docs: &[IrDocument]) -> BTreeSet<String> {
+    let mut quoted = BTreeSet::new();
+    let mut collect = |text: &str| {
+        for line in split_lines(text) {
+            quoted.extend(
+                crate::double_quoted_contents(line)
+                    .into_iter()
+                    .map(str::to_string),
+            );
+            quoted.extend(
+                crate::extract_backtick_contents_outside_quotes(line)
+                    .into_iter()
+                    .map(str::to_string),
+            );
+        }
+    };
+    for doc in docs.iter().filter(|doc| doc.kind == DocKind::Topic) {
+        for item in &doc.items {
+            match item {
+                Item::Requirement { statements, .. } => {
+                    statements.iter().for_each(|(_, text)| collect(text));
+                }
+                Item::Scenario { steps, .. } => steps.iter().for_each(|(_, text)| collect(text)),
+                _ => {}
+            }
+        }
+        for cell in decision_table_cells(doc) {
+            collect(&cell);
+        }
+    }
+    quoted
+}
+
+/// `決定表`の`項目`の中にある表の、見出しの行を含むすべてのセルの元の文字
+fn decision_table_cells(doc: &IrDocument) -> Vec<String> {
+    let ranges: Vec<(usize, usize)> = doc
+        .items
+        .iter()
+        .filter_map(|item| match item {
+            Item::DecisionTable { line, end, .. } => Some((*line, *end)),
+            _ => None,
+        })
+        .collect();
+    if ranges.is_empty() {
+        return Vec::new();
+    }
+    let Ok(root) = kotowari_markdown_schema::ast::parse_mdast(&doc.raw_content) else {
+        return Vec::new();
+    };
+    let mut cells = Vec::new();
+    collect_cells(&root, &doc.raw_content, &ranges, &mut cells);
+    cells
+}
+
+/// 行が `ranges` のどれかに入る表のセルの、中身の元の文字を集める
+fn collect_cells(node: &Node, source: &str, ranges: &[(usize, usize)], cells: &mut Vec<String>) {
+    if let Node::TableCell(cell) = node {
+        let span = cell
+            .children
+            .first()
+            .zip(cell.children.last())
+            .and_then(|(first, last)| {
+                Some((
+                    first.position()?.start.clone(),
+                    last.position()?.end.clone(),
+                ))
+            });
+        if let Some((start, end)) = span
+            && ranges
+                .iter()
+                .any(|(from, to)| (*from..=*to).contains(&start.line))
+        {
+            cells.push(source[start.offset..end.offset].to_string());
+        }
+        return;
+    }
+    for child in node.children().into_iter().flatten() {
+        collect_cells(child, source, ranges, cells);
+    }
 }

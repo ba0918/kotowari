@@ -481,3 +481,280 @@ fn req_236_a_file_already_unparsable_as_a_test_file_is_not_reported_twice() {
         serde_json::from_str(&stdout).unwrap_or_else(|e| panic!("{e}: {stdout}{stderr}"));
     assert_eq!(v["counts"]["unparsable_file"], 1, "{v}");
 }
+
+// --- S3: IR にあるかの判定と surface_without_spec ---
+
+/// "surface.files" を "src/**/*.rs" に、"surface.rules" を "rules/surface.yml" にする設定の行
+const SURFACE_RS: &str =
+    "surface:\n  files:\n    - \"src/**/*.rs\"\n  rules:\n    - \"rules/surface.yml\"\n";
+
+/// "src/cli.rs" の3行目に "--format"、12行目と30行目に "--verbose" の文字列のリテラルを置く
+fn cli_rs() -> String {
+    let mut lines = vec!["let _ = 0;".to_string(); 31];
+    lines[0] = "fn main() {".to_string();
+    lines[2] = "    let _ = \"--format\";".to_string();
+    lines[11] = "    let _ = \"--verbose\";".to_string();
+    lines[29] = "    let _ = \"--verbose\";".to_string();
+    lines[30] = "}".to_string();
+    lines.join("\n") + "\n"
+}
+
+/// review の`要求`1つの節。`文`は `statement`
+fn review_requirement(id: &str, statement: &str) -> String {
+    format!(
+        "### {id}: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: review\n- how_to_verify: 読んで確かめる\n\n{statement}\n\n"
+    )
+}
+
+/// 要求の節とほかの節から IR の文書を作る
+fn ir_doc(requirements: &str, rest: &str) -> String {
+    format!("# 題名\n\n範囲。\n\n## Requirements\n\n{requirements}{rest}")
+}
+
+/// EX-core-407 の場面: "--format" を`要求`の`文`に二重引用符で書いた IR と、面の規則と "src/cli.rs"
+fn ex_407_project(tmp: &Path) {
+    make_project(tmp, SURFACE_RS);
+    write(tmp, "rules/surface.yml", FLAG_RULE);
+    write(tmp, "src/cli.rs", &cli_rs());
+}
+
+/// check --format json の結果
+fn check_json(tmp: &Path) -> (Option<i32>, serde_json::Value) {
+    let (code, stdout, stderr) = run(tmp, &["check", "--format", "json"]);
+    let v = serde_json::from_str(&stdout).unwrap_or_else(|e| panic!("{e}: {stdout}{stderr}"));
+    (code, v)
+}
+
+/// その種類の指摘の (path, line, detail) の並び
+fn findings_of(v: &serde_json::Value, kind: &str) -> Vec<(String, serde_json::Value, String)> {
+    v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["kind"] == kind)
+        .map(|f| {
+            (
+                f["path"].as_str().unwrap().to_string(),
+                f["line"].clone(),
+                f["detail"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect()
+}
+
+/// surface_without_spec の detail の並び
+fn without_spec(v: &serde_json::Value) -> Vec<String> {
+    findings_of(v, "surface_without_spec")
+        .into_iter()
+        .map(|(_, _, detail)| detail)
+        .collect()
+}
+
+// @kotowari[EX-core-408, EX-core-409, REQ-core-227, TBL-core-019, TBL-core-006, TBL-core-008]
+#[test]
+fn ex_core_408_a_surface_absent_from_the_ir_is_an_error_at_its_first_place() {
+    let tmp = TempDir::new().unwrap();
+    ex_407_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &ir_doc(
+            &review_requirement("REQ-001", "\"--format\" を受ける。"),
+            "",
+        ),
+    );
+    let (code, v) = check_json(tmp.path());
+    assert_eq!(
+        findings_of(&v, "surface_without_spec"),
+        vec![(
+            "src/cli.rs".to_string(),
+            serde_json::json!(12),
+            "flag --verbose".to_string()
+        )],
+        "{v}"
+    );
+    assert_eq!(v["findings"][0]["severity"], "error", "{v}");
+    assert_eq!(code, Some(1));
+}
+
+// @kotowari[REQ-core-227]
+#[test]
+fn req_227_the_first_place_is_by_path_bytes_then_line() {
+    let tmp = TempDir::new().unwrap();
+    ex_407_project(tmp.path());
+    let mut a = vec!["let _ = 0;"; 9];
+    a[8] = "fn a() { let _ = \"--verbose\"; }";
+    write(tmp.path(), "src/a.rs", &(a.join("\n") + "\n"));
+    write(
+        tmp.path(),
+        "src/b.rs",
+        "fn b() { let _ = \"--verbose\"; }\n",
+    );
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &ir_doc(
+            &review_requirement("REQ-001", "\"--format\" を受ける。"),
+            "",
+        ),
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(
+        findings_of(&v, "surface_without_spec"),
+        vec![(
+            "src/a.rs".to_string(),
+            serde_json::json!(9),
+            "flag --verbose".to_string()
+        )],
+        "{v}"
+    );
+}
+
+// @kotowari[EX-core-410, REQ-core-226]
+#[test]
+fn ex_core_410_a_name_that_is_only_part_of_the_quoted_content_is_not_in_the_ir() {
+    let tmp = TempDir::new().unwrap();
+    ex_407_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &ir_doc(
+            &review_requirement(
+                "REQ-001",
+                "\"--format\" と \"--verbose true\" と \" --verbose\" を受ける。",
+            ),
+            "",
+        ),
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
+}
+
+// @kotowari[REQ-core-226]
+#[test]
+fn req_226_double_quotes_pair_from_the_left() {
+    let tmp = TempDir::new().unwrap();
+    ex_407_project(tmp.path());
+    // 左から対にすると "x" の後の引用符と "--verbose" の前の引用符が対になる
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &ir_doc(
+            &review_requirement("REQ-001", "\"--format\" と x\" \"--verbose\" を受ける。"),
+            "",
+        ),
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
+}
+
+// @kotowari[EX-core-411, REQ-core-226]
+#[test]
+fn ex_core_411_table_cells_deferred_statements_and_steps_count() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), SURFACE_RS);
+    write(
+        tmp.path(),
+        "rules/surface.yml",
+        "id: command\nlanguage: rust\nrule:\n  kind: string_literal\n  pattern: $NAME\n",
+    );
+    write(
+        tmp.path(),
+        "src/cli.rs",
+        "const C: [&str; 4] = [\"list\", \"query\", \"plan\", \"head\"];\n",
+    );
+    let deferred = "### REQ-002: 後回し\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: unit\n- deferred: docs/decision/records/r.md#A1\n\n\"query\" を受ける。\n\n";
+    let table = "## Decision tables\n\n### TBL-001: 表\n\n- source: docs/decision/records/r.md#A1\n\n| \"head\" | 中身 |\n|---|---|\n| \"list\" | 一覧 |\n\n";
+    let example = "## Examples\n\n```gherkin\n@id=EX-001 @about=REQ-001\nScenario: 場面\n  When \"plan\" を実行する\n  Then 終わる\n```\n";
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &ir_doc(
+            &format!("{}{deferred}", review_requirement("REQ-001", "文。")),
+            &format!("{table}{example}"),
+        ),
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), Vec::<String>::new(), "{v}");
+}
+
+// @kotowari[EX-core-412, REQ-core-226]
+#[test]
+fn ex_core_412_a_glossary_term_in_backticks_counts() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), SURFACE_RS);
+    write(
+        tmp.path(),
+        "rules/surface.yml",
+        "id: command\nlanguage: rust\nrule:\n  kind: string_literal\n  pattern: $NAME\n",
+    );
+    write(tmp.path(), "src/cli.rs", "const S: &str = \"status\";\n");
+    write(
+        tmp.path(),
+        "docs/ir/CONTEXT.md",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| status | 集計 | docs/decision/records/r.md#A1 |\n",
+    );
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &ir_doc(&review_requirement("REQ-001", "`status` を出す。"), ""),
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), Vec::<String>::new(), "{v}");
+    assert!(findings_of(&v, "unknown_term").is_empty(), "{v}");
+}
+
+// @kotowari[EX-core-429, REQ-core-226]
+#[test]
+fn ex_core_429_property_statements_and_how_to_verify_lines_do_not_count() {
+    let tmp = TempDir::new().unwrap();
+    ex_407_project(tmp.path());
+    let requirement = "### REQ-001: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: review\n- how_to_verify: \"--verbose\" を確かめる\n\n\"--format\" を受ける。\n\n";
+    let property = "## Properties\n\n### PROP-001: 性質\n\n- source: docs/decision/records/r.md#A1\n\n\"--verbose\" が常に成り立つ。\n\n";
+    write(tmp.path(), "docs/ir/a.md", &ir_doc(requirement, property));
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
+}
+
+// @kotowari[REQ-core-226]
+#[test]
+fn req_226_scope_lines_flags_and_the_glossary_do_not_count() {
+    let tmp = TempDir::new().unwrap();
+    ex_407_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &format!(
+            "# 題名\n\n\"--verbose\" を扱う。\n\n## Requirements\n\n{}",
+            review_requirement("REQ-001", "\"--format\" を受ける。")
+        ),
+    );
+    write(
+        tmp.path(),
+        "docs/ir/FLAGS.md",
+        "# Flags\n\n### FLAG-001: 問題\n\n- kind: gap\n- source: docs/decision/records/r.md#A1\n\n\"--verbose\" が決まっていない。\n",
+    );
+    write(
+        tmp.path(),
+        "docs/ir/CONTEXT.md",
+        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| 冗長 | \"--verbose\" の出力 | docs/decision/records/r.md#A1 |\n",
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
+}
+
+// @kotowari[REQ-core-227]
+#[test]
+fn req_227_no_surface_is_extracted_when_surface_rules_is_empty() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), "");
+    write(tmp.path(), "src/cli.rs", &cli_rs());
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &ir_doc(&review_requirement("REQ-001", "文。"), ""),
+    );
+    let (code, v) = check_json(tmp.path());
+    assert!(without_spec(&v).is_empty(), "{v}");
+    assert_eq!(code, Some(0), "{v}");
+}

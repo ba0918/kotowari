@@ -100,6 +100,7 @@ finding_kinds! {
     RevisionLinkInvalid => "revision_link_invalid",
     ScenarioWithoutTest => "scenario_without_test",
     SourceInvalid => "source_invalid",
+    SurfaceWithoutSpec => "surface_without_spec",
     TestWithoutId => "test_without_id",
     TooManyLines => "too_many_lines",
     TooManyRequirements => "too_many_requirements",
@@ -559,6 +560,15 @@ pub fn extract_backtick_contents_outside_quotes(text: &str) -> Vec<&str> {
     backticks
         .chunks_exact(2)
         .map(|pair| &text[pair[0] + 1..pair[1]])
+        .collect()
+}
+
+/// 二重引用符を行の左から順に対にし、対の中身を集める。対にならない最後の引用符は捨てる（REQ-core-226）
+pub fn double_quoted_contents(line: &str) -> Vec<&str> {
+    let quotes: Vec<usize> = line.match_indices('"').map(|(i, _)| i).collect();
+    quotes
+        .chunks_exact(2)
+        .map(|pair| &line[pair[0] + 1..pair[1]])
         .collect()
 }
 
@@ -1112,7 +1122,8 @@ fn load_with_guides(
         &loaded.docs,
         &mut loaded.findings,
     )?;
-    surface::extract(&loaded.base, &loaded.cfg, &mut loaded.findings)?;
+    let surfaces = surface::extract(&loaded.base, &loaded.cfg, &mut loaded.findings)?;
+    surface::report(&surfaces, &loaded.docs, &mut loaded.findings);
     Ok((loaded, tally))
 }
 
