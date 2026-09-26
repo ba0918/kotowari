@@ -1,4 +1,4 @@
-Based on the kotowari specification (revised 2026-09-24; the version of kotowari itself is not pinned)
+Based on the kotowari specification (revised 2026-09-27; the version of kotowari itself is not pinned)
 
 The configuration file is `.kotowari/config.yaml`, directly under the base directory. An empty configuration file (0 bytes, or comments only) checks with the default values. When there is no configuration file, the default values are used too.
 
@@ -12,12 +12,15 @@ The configuration file is `.kotowari/config.yaml`, directly under the base direc
 | tests.rust.attributes | List of attribute paths added to "#[test]" | Empty list |
 | tests.rust.macros | List of macro names | Empty list |
 | tests.rules | List of paths of ast-grep rule YAML files, relative to the base directory. Globs are not allowed. The rules are added to the bundled queries of their `language` (mark.md) | Empty list |
+| surface.files | List of globs. The surface files, the code from which surfaces are taken (surface.md) | Empty list |
+| surface.rules | List of paths of ast-grep rule YAML files, relative to the base directory. Globs are not allowed. When not empty, check and status take surfaces with these rules and check them against the IR (surface.md). They are not added to the queries for tests | Empty list |
+| surface.unspecified | Path of a file (one string). Points at the list of unspecified surfaces (surface.md) | None |
 | mutants.equivalents | Path of a file (one string). Points at the list of equivalents (mutants.md) | None |
 | limits.lines | Number (negative numbers and 0 are not allowed) | 200 |
 | limits.requirements | Number (negative numbers and 0 are not allowed) | 10 |
 | vague_words | List of words | The four words 「適切に」「必要に応じて」「通常は」「など」 |
 
-The default column copies the defaults of kotowari itself, and `setup` writes to the configuration file only the keys that have a default. `mutants.equivalents` has no default, and without the key the list of equivalents behaves as empty, so it is not written in the YAML of step 1. Add it when you decide to keep a list of equivalents. The guidance for writing the IR is held as kinds of findings, not as numbers (ir-form.md, "Limits and the unit of splitting").
+The default column copies the defaults of kotowari itself, and `setup` writes to the configuration file only the keys that have a default. `mutants.equivalents` has no default, and without the key the list of equivalents behaves as empty, so it is not written in the YAML of step 1. Add it when you decide to keep a list of equivalents. `surface.unspecified` has no default for the same reason. `surface.files` and `surface.rules` must be written together: one without the other, or `surface.unspecified` without `surface.rules`, stops every command that reads the configuration with a config error. The guidance for writing the IR is held as kinds of findings, not as numbers (ir-form.md, "Limits and the unit of splitting").
 
 A list written for a list key replaces the default list. An empty list is treated as a list with no elements. Nested keys are written in YAML's nested form.
 
@@ -42,6 +45,9 @@ tests:
   rules: []
 guides:
   files: []
+surface:
+  files: []
+  rules: []
 limits:
   lines: 200
   requirements: 10

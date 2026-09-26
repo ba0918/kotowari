@@ -31,7 +31,7 @@ kotowari check [--format json|text] [--config <path>]
 
 ## 読むもの
 
-<!-- @kotowari[TBL-core-004:37cd61fb] -->
+<!-- @kotowari[TBL-core-004:97227aba] -->
 
 `check` は、設定ファイルが指す置き場から、次のものを読みます。
 
@@ -42,7 +42,10 @@ kotowari check [--format json|text] [--config <path>]
 | ADR（出典の先） | `decisions.adr` | `docs/decision/adr` |
 | テストのファイル | `tests.files` | `src/**/*.rs`、`tests/**/*.rs` |
 | ガイド | `guides.files` | 空（読まない） |
+| 面のファイルと面の規則のファイル | `surface.files`、`surface.rules` | 空（読まない） |
+| 未記載の面の一覧 | `surface.unspecified` | 無し（0件） |
 
+面の3つは `surface.rules` が空の一覧でないときだけ読みます（[面の検査](../surface.md)）。
 キーの全部は [config.md](../config.md) にあります。
 
 ### 設定ファイル
@@ -57,16 +60,17 @@ kotowari check [--format json|text] [--config <path>]
 
 ### 置き場が無いとき
 
-<!-- @kotowari[REQ-core-018:b4d76651, REQ-core-019:04ed8450] -->
+<!-- @kotowari[REQ-core-018:64a197f1, REQ-core-019:04ed8450] -->
 
 `ir`、`decisions.records`、`decisions.adr` の3つは、既定のままでもディレクトリが存在している必要があります。
 どれかが無い、ディレクトリでない、読めないときは、`unreadable file` で停止します。
 使わない置き場でも、空のディレクトリを作っておいてください。
 
-`tests.files` と `guides.files` は glob の一覧です。
+`tests.files`、`guides.files`、`surface.files` は glob の一覧です。
 何にも当たらない glob は誤りになりません。
 `**` は再帰として読みます。
 隠しディレクトリは glob が名指ししても含めず、ディレクトリのシンボリックリンクは辿りません。
+走査でディレクトリが読めないときと、先の無いシンボリックリンクに出会ったときは、`unreadable file` で停止します。
 
 ### 文字コードと閉じないコードブロック
 
@@ -104,9 +108,12 @@ docs/ir/greet/greet.md:- [notice] too_many_lines 30
 
 text には、下の JSON の `files`、`lines`、`tests`、`guides` は出ません。
 
+設定の `surface.rules` が空の一覧でないときは、指摘の行の後の最後の1行に、未記載の面の一覧で外した面の数を `surface: unspecified=数` の形で出します。
+指摘が0件でも、数が0でも出します（[面の検査](../surface.md#外した数を見る)）。
+
 ### JSON
 
-<!-- @kotowari[REQ-core-022:e6e6163f, TBL-core-005:fc1dc8df, PROP-core-002:2b264d92] -->
+<!-- @kotowari[REQ-core-022:e6e6163f, TBL-core-005:c0473587, PROP-core-002:2b264d92, REQ-core-228:59fca9bf] -->
 
 既定の出力です。
 標準出力に JSON のオブジェクトを1つ出します。
@@ -119,6 +126,7 @@ text には、下の JSON の `files`、`lines`、`tests`、`guides` は出ま�
 | `counts` | オブジェクト | 種類ごとの指摘の数。0件の種類は鍵ごと出ない |
 | `tests` | オブジェクト | 読んだテストのファイルの、拡張子ごとの数（下の節） |
 | `guides` | オブジェクト | 読んだガイドの数と、ガイドの印の数（下の節） |
+| `surface` | オブジェクト | `unspecified`（未記載の面の一覧で外した面の、種類と名前の組の数）の鍵1つ。`surface.rules` が空の一覧のときは鍵ごと出ない |
 
 `counts` の値は、いつも `findings` の中のその種類の件数と一致します。
 
@@ -144,13 +152,13 @@ glob を書き間違えても指摘は出ないので、ここで確かめます
 
 ### 指摘の並びと行
 
-<!-- @kotowari[TBL-core-007:d8427397, REQ-core-027:04e0bdcc, TBL-core-019:58ab824b] -->
+<!-- @kotowari[TBL-core-007:d8427397, REQ-core-027:6e77baf3, TBL-core-019:126b34ea] -->
 
 指摘は `path`、`line`（null が先）、`kind`、`detail` の順に並びます（[cli.md](../cli.md#指摘の並び)）。
 同じ行の指摘は、種類の名前の順に並びます。
 
 `line` は種類ごとに決まっています。
-文書全体への指摘（`missing_title`、`missing_scope`、`too_many_lines` など）は null、項目への指摘は項目の見出しの行、シナリオへの指摘はタグの行です。
+文書全体への指摘（`missing_title`、`missing_scope`、`too_many_lines` など）と、未記載の面の一覧の1件への指摘は null、項目への指摘は項目の見出しの行、シナリオへの指摘はタグの行、`surface_without_spec` は面の節の最初の行です。
 種類ごとの行は [findings.md](../findings.md#種類の一覧) の表にあります。
 
 ## 終了コード
@@ -310,7 +318,7 @@ $ echo $?
 
 ### 設定ファイルを置いていないのに `unreadable file` で止まる
 
-<!-- @kotowari[REQ-core-018:b4d76651, REQ-core-012:c9ab4bdd] -->
+<!-- @kotowari[REQ-core-018:64a197f1, REQ-core-012:c9ab4bdd] -->
 
 ```console
 $ kotowari check --format text

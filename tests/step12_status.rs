@@ -368,6 +368,7 @@ fn req_166_json_top_level_has_only_the_groups() {
             "items",
             "requirements",
             "scenarios",
+            "surface",
             "tests",
         ],
     );
@@ -379,6 +380,7 @@ fn req_166_json_top_level_has_only_the_groups() {
         "\"scenarios\"",
         "\"tests\"",
         "\"guides\"",
+        "\"surface\"",
         "\"findings\"",
         "\"complete\"",
     ]
@@ -434,7 +436,7 @@ fn req_166_text_prints_one_line_per_group() {
     let (code, stdout, stderr) = run(tmp.path(), &["status", "--format", "text"]);
     assert_eq!(code, Some(0), "{stderr}");
     let lines: Vec<&str> = stdout.lines().collect();
-    assert_eq!(lines.len(), 8, "one line per group: {stdout}");
+    assert_eq!(lines.len(), 9, "one line per group: {stdout}");
     assert!(
         lines[0].starts_with("documents files=1 lines="),
         "got: {:?}",
@@ -454,6 +456,7 @@ fn req_166_text_prints_one_line_per_group() {
     );
     assert_eq!(lines[4], "tests marks=2 rs=1");
     assert_eq!(lines[5], "guides files=0 marks=0");
-    assert_eq!(lines[6], "findings error=0 notice=0");
-    assert_eq!(lines[7], "complete true");
+    assert_eq!(lines[6], "surface total=0 specified=0 unspecified=0");
+    assert_eq!(lines[7], "findings error=0 notice=0");
+    assert_eq!(lines[8], "complete true");
 }

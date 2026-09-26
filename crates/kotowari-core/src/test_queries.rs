@@ -29,39 +29,25 @@ pub fn language_of(path: &str) -> Option<SupportLang> {
     SupportLang::from_path(path)
 }
 
-/// 同梱のルールと設定から作るルールをまとめた、言語ごとの`問い合わせ`
-pub struct TestQueries {
+/// ast-grep のルールの集まり。`問い合わせ`（"tests.rules" と同梱のルール）と`面の規則`
+/// （"surface.rules"）がそれぞれ別の集まりを持ち、読み方と当て方だけを共有する（REQ-core-224）
+pub struct RuleSet {
     /// ルールごとの1件だけの集まり。RuleCollection は "files" のあるルールを後ろに回すので、
-    /// 同梱、"tests.rules" の並びの順（REQ-core-181 の名前の順）を保つために分けて持つ
+    /// 並びの順（REQ-core-181 の名前の順）を保つために分けて持つ
     rules: Vec<RuleCollection<SupportLang>>,
     /// ルールが1つ以上ある言語
     languages: Vec<SupportLang>,
 }
 
-impl TestQueries {
-    /// 同梱のルール、"tests.rust.attributes" のルール、"tests.rules" のファイルのルールを読む。
-    /// ルールのファイルが読めなければ設定の誤りで停止する（REQ-core-189）
-    pub fn load(base: &Path, config: &Config) -> Result<Self, StopReason> {
-        let mut rules = bundled_rules(config)?;
-        let mut seen = BTreeSet::new();
-        for path in &config.tests.rules {
-            if !seen.insert(path) {
-                return Err(config_error(format!(
-                    "duplicate path in tests.rules: {path}"
-                )));
-            }
-            rules.extend(read_rule_file(base, path)?);
-        }
-        Self::build(rules)
-    }
-
-    fn build(mut rules: Vec<RuleConfig<SupportLang>>) -> Result<Self, StopReason> {
+impl RuleSet {
+    /// `key` は誤りの詳細に出す設定の鍵の名前
+    fn build(mut rules: Vec<RuleConfig<SupportLang>>, key: &str) -> Result<Self, StopReason> {
         let mut languages = Vec::new();
         for rule in &mut rules {
             if !languages.contains(&rule.language) {
                 languages.push(rule.language);
             }
-            // REQ-core-188: "severity" は見ない。RuleCollection は "off" のルールを外すので付け替える
+            // REQ-core-188、REQ-core-224: "severity" は見ない。RuleCollection は "off" のルールを外すので付け替える
             if matches!(rule.severity, Severity::Off) {
                 rule.severity = Severity::Hint;
             }
@@ -70,12 +56,17 @@ impl TestQueries {
             .into_iter()
             .map(|rule| RuleCollection::try_new(vec![rule]))
             .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| config_error(format!("invalid glob in tests.rules: {e}")))?;
-        Ok(TestQueries { rules, languages })
+            .map_err(|e| config_error(format!("invalid glob in {key}: {e}")))?;
+        Ok(RuleSet { rules, languages })
     }
 
-    /// その言語が`問い合わせのある言語`か（ルールが1つ以上ある）
-    pub fn has_query(&self, lang: SupportLang) -> bool {
+    /// 設定の鍵 `key` に並んだルールのファイルだけから集まりを作る（REQ-core-224）
+    pub fn load(base: &Path, paths: &[String], key: &str) -> Result<Self, StopReason> {
+        Self::build(read_rule_files(base, paths, key)?, key)
+    }
+
+    /// その言語のルールが1つ以上あるか
+    pub fn has_language(&self, lang: SupportLang) -> bool {
         self.languages.contains(&lang)
     }
 
@@ -86,6 +77,45 @@ impl TestQueries {
             .flat_map(|rules| rules.get_rule_from_lang(Path::new(rel_path), lang))
             .collect()
     }
+}
+
+/// 同梱のルールと設定から作るルールをまとめた、言語ごとの`問い合わせ`
+pub struct TestQueries {
+    rules: RuleSet,
+}
+
+impl TestQueries {
+    /// 同梱のルール、"tests.rust.attributes" のルール、"tests.rules" のファイルのルールを読む。
+    /// ルールのファイルが読めなければ設定の誤りで停止する（REQ-core-189）
+    pub fn load(base: &Path, config: &Config) -> Result<Self, StopReason> {
+        let mut rules = bundled_rules(config)?;
+        rules.extend(read_rule_files(base, &config.tests.rules, "tests.rules")?);
+        Ok(TestQueries {
+            rules: RuleSet::build(rules, "tests.rules")?,
+        })
+    }
+
+    /// その言語が`問い合わせのある言語`か（ルールが1つ以上ある）
+    pub fn has_query(&self, lang: SupportLang) -> bool {
+        self.rules.has_language(lang)
+    }
+}
+
+/// 設定の鍵 `key` に並んだルールのファイルを順に読む。同じパスの2回目は設定の誤り（REQ-core-189）
+fn read_rule_files(
+    base: &Path,
+    paths: &[String],
+    key: &str,
+) -> Result<Vec<RuleConfig<SupportLang>>, StopReason> {
+    let mut rules = Vec::new();
+    let mut seen = BTreeSet::new();
+    for path in paths {
+        if !seen.insert(path) {
+            return Err(config_error(format!("duplicate path in {key}: {path}")));
+        }
+        rules.extend(read_rule_file(base, path, key)?);
+    }
+    Ok(rules)
 }
 
 fn config_error(detail: String) -> StopReason {
@@ -109,18 +139,22 @@ fn bundled_rules(config: &Config) -> Result<Vec<RuleConfig<SupportLang>>, StopRe
     Ok(rules)
 }
 
-/// "tests.rules" の1つのファイルを読む。無い、ファイルでない、読めない、UTF-8 でない、
-/// ルールとして読めないときは設定の誤り（REQ-core-189）
-fn read_rule_file(base: &Path, path: &str) -> Result<Vec<RuleConfig<SupportLang>>, StopReason> {
+/// ルールのファイルを1つ読む。無い、ファイルでない、読めない、UTF-8 でない、
+/// ルールとして読めないときは設定の誤りで、詳細は `key` とそのパス（REQ-core-189、REQ-core-225）
+fn read_rule_file(
+    base: &Path,
+    path: &str,
+    key: &str,
+) -> Result<Vec<RuleConfig<SupportLang>>, StopReason> {
     let full = base.join(path);
     let metadata = std::fs::metadata(&full)
-        .map_err(|e| config_error(format!("unreadable file in tests.rules: {path}: {e}")))?;
+        .map_err(|e| config_error(format!("unreadable file in {key}: {path}: {e}")))?;
     if !metadata.is_file() {
-        return Err(config_error(format!("not a file in tests.rules: {path}")));
+        return Err(config_error(format!("not a file in {key}: {path}")));
     }
     let text = crate::read_utf8_file(&full, path)
-        .map_err(|e| config_error(format!("unreadable file in tests.rules: {e}")))?;
-    let invalid = |e: String| config_error(format!("invalid rule in tests.rules: {path}: {e}"));
+        .map_err(|e| config_error(format!("unreadable file in {key}: {e}")))?;
+    let invalid = |e: String| config_error(format!("invalid rule in {key}: {path}: {e}"));
     if let Some(language) = unknown_language(&text) {
         return Err(invalid(format!("unknown language: {language}")));
     }
@@ -212,7 +246,7 @@ impl ParsedFile {
     ) -> Vec<TestNode<'_>> {
         let root = self.root.root();
         let mut found: Vec<TestNode<'_>> = Vec::new();
-        for rule in queries.rules_for(lang, rel_path) {
+        for rule in queries.rules.rules_for(lang, rel_path) {
             for m in root.find_all(&rule.matcher) {
                 let name = m
                     .get_env()
@@ -236,7 +270,47 @@ impl ParsedFile {
     }
 }
 
-/// 最初と最後が同じ引用符なら、その1文字ずつを外す（REQ-core-180）
+/// 1つのルールが1つの節に当たり、"$NAME" を捕まえたもの
+pub struct NamedMatch {
+    /// 当てたルールの "id"
+    pub rule_id: String,
+    /// "$NAME" の文字（引用符を1組外したもの）
+    pub name: String,
+    /// 当たった節の最初の行（1始まり）
+    pub line: usize,
+}
+
+impl ParsedFile {
+    /// その言語の規則をすべて当て、"$NAME" を捕まえた当たりをルールごとに返す（REQ-core-223）
+    pub fn find_named(
+        &self,
+        rules: &RuleSet,
+        lang: SupportLang,
+        rel_path: &str,
+    ) -> Vec<NamedMatch> {
+        let root = self.root.root();
+        let mut found = Vec::new();
+        for rule in rules.rules_for(lang, rel_path) {
+            for m in root.find_all(&rule.matcher) {
+                let Some(name) = m
+                    .get_env()
+                    .get_match("NAME")
+                    .map(|n| strip_quotes(&n.text()))
+                else {
+                    continue;
+                };
+                found.push(NamedMatch {
+                    rule_id: rule.id.clone(),
+                    name,
+                    line: m.start_pos().line() + 1,
+                });
+            }
+        }
+        found
+    }
+}
+
+/// 最初と最後が同じ引用符なら、その1文字ずつを外す（REQ-core-180、REQ-core-223）
 fn strip_quotes(text: &str) -> String {
     for quote in ['\'', '"', '`'] {
         if text.len() >= 2 && text.starts_with(quote) && text.ends_with(quote) {

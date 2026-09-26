@@ -1,6 +1,6 @@
 # 指摘の種類
 
-<!-- @kotowari[REQ-core-029:f774ea58, REQ-core-030:4fe666c1, REQ-core-031:5f373416] -->
+<!-- @kotowari[REQ-core-029:f774ea58, REQ-core-030:4fe666c1, REQ-core-031:7277c20b] -->
 
 `kotowari check`、`kotowari mutants`、`kotowari plan` が出す指摘の種類を、すべて並べたページです。
 出力に知らない種類が出たら、まず下の一覧で引き、原因と直し方は種類をまとめた節で読んでください。
@@ -12,12 +12,12 @@
 | 誤り（`error`） | 1件でもあれば1 | 直す必要がある |
 | 注意（`notice`） | 変えない | 見直す価値のある手がかり。放置しても `status` の `complete` は妨げない |
 
-注意は `too_many_lines`、`too_many_requirements`、`mutant_timeout`、`equivalent_stale`、`guide_stale`、`deferred_with_test`、`depends_on_deferred` の7種類だけで、ほかはすべて誤りです。
+注意は `too_many_lines`、`too_many_requirements`、`mutant_timeout`、`equivalent_stale`、`guide_stale`、`deferred_with_test`、`depends_on_deferred`、`surface_unspecified_stale` の8種類だけで、ほかはすべて誤りです。
 指摘の鍵（`kind`、`severity`、`path`、`line`、`detail`）と text の形は [cli.md](cli.md#指摘の出し方) にあります。
 
 ## 種類の一覧
 
-<!-- @kotowari[TBL-core-008:d1b20735, TBL-core-009:e7049178, TBL-core-019:58ab824b, REQ-core-027:04e0bdcc] -->
+<!-- @kotowari[TBL-core-008:ffbd0335, TBL-core-009:e42a4a68, TBL-core-019:126b34ea, REQ-core-027:6e77baf3] -->
 
 「行」の列は、指摘の `line` が指す行です。
 「なし」は文書全体への指摘で、`line` は null、text では `-` になります。
@@ -62,13 +62,15 @@
 | `scenario_without_test` | 誤り | シナリオの ID | タグの行 | [テストとの対応](#テストとの対応) |
 | `test_without_id` | 誤り | テストの名前 | テストの最初の行 | [テストとの対応](#テストとの対応) |
 | `invalid_marker` | 誤り | 行の文字 | 印のある行 | [テストとの対応](#テストとの対応)、[ガイドの印](#ガイドの印) |
-| `unparsable_file` | 誤り | ファイルのパス | なし | [テストとの対応](#テストとの対応) |
+| `unparsable_file` | 誤り | ファイルのパス | なし | [テストとの対応](#テストとの対応)、[面の検査](#面の検査) |
 | `record_field_missing` | 誤り | 無い補足の行の名前 | 番号の行 | [判断の記録](#判断の記録) |
 | `record_field_unknown` | 誤り | 補足の行の名前 | その行 | [判断の記録](#判断の記録) |
 | `revision_link_invalid` | 誤り | リンクの href | その行 | [判断の記録](#判断の記録) |
 | `mutant_survived` | 誤り | 変更の説明 | 変異の結果の行 | [mutants と plan](#mutants-と-plan) |
 | `equivalent_invalid` | 誤り | 一覧の `file` と `change` を `: ` でつないだもの | なし | [mutants と plan](#mutants-と-plan) |
 | `invalid_plan` | 誤り | スキーマの側の種類と詳細を `: ` でつないだもの | スキーマの側が出した行 | [mutants と plan](#mutants-と-plan) |
+| `surface_without_spec` | 誤り | `面の種類 面の名前` | 面の節の最初の行 | [面の検査](#面の検査) |
+| `surface_unspecified_invalid` | 誤り | 一覧に書かれたままの `kind` と `name` を半角空白1つで区切ったもの | なし | [面の検査](#面の検査) |
 | `too_many_lines` | 注意 | 行数 | なし | [文書の大きさ](#文書の大きさ) |
 | `too_many_requirements` | 注意 | 要求の数 | なし | [文書の大きさ](#文書の大きさ) |
 | `mutant_timeout` | 注意 | 変更の説明 | 変異の結果の行 | [mutants と plan](#mutants-と-plan) |
@@ -76,6 +78,7 @@
 | `guide_stale` | 注意 | `ID 書かれた指紋 今の指紋` | ガイドの印の始まりの行 | [ガイドの印](#ガイドの印) |
 | `deferred_with_test` | 注意 | 後回しの要求か後回しのシナリオの ID | 要求の見出し。シナリオはタグの行 | [後回し](#後回し) |
 | `depends_on_deferred` | 注意 | `参照元の ID 参照先の ID` | 参照を書いた行 | [後回し](#後回し) |
+| `surface_unspecified_stale` | 注意 | 一覧に書かれたままの `kind` と `name` を半角空白1つで区切ったもの | なし | [面の検査](#面の検査) |
 
 一覧の定義は [findings.md の TBL-core-008 と TBL-core-009](../ir/core/findings.md)、行の定義は [finding-order.md の TBL-core-019](../ir/core/finding-order.md) にあります。
 
@@ -321,6 +324,27 @@ guides/cart.md:7 [error] invalid_marker <!-- @kotowari[REQ-shop-002] -->
 節を直さずに指紋だけ写すと、古い節が隠れるだけです。
 手順は [writing-guides.md](writing-guides.md) にあります。
 
+### 面の検査
+
+<!-- @kotowari[REQ-core-227:136a7242, REQ-core-233:2469b632, REQ-core-234:a4232959, REQ-core-236:0ec64529] -->
+
+設定の `surface.rules` を書いたプロジェクトでだけ出ます（[surface.md](surface.md)）。
+
+```text
+docs/surface-unspecified.yaml:- [error] surface_unspecified_invalid flag --legacy
+docs/surface-unspecified.yaml:- [notice] surface_unspecified_stale flag --old
+src/cli.rs:12 [error] surface_without_spec flag --verbose
+```
+
+| 種類 | 重さ | よくある原因 | 直し方 |
+|---|---|---|---|
+| `surface_without_spec` | 誤り | コードから取り出した面の名前が、どの要求の文、決定表のセル、シナリオのステップにも、二重引用符かバッククォートで囲んだ中身として完全に一致して出てこない。同じ種類と名前の面は、パスのバイト順、行の順で最初の1か所に1件だけ出る | その面を決める要求に名前を引用して書く（仕様の変更なので壁打ちで）。今は仕様にしないなら、理由を付けて未記載の面の一覧に載せる |
+| `surface_unspecified_invalid` | 誤り | 未記載の面の一覧の1件が `kind`、`name`、`why` のちょうど3つの鍵を持たない、値が文字列でない、`why` が空白だけ | 1件の形を直す。直すまでその1件はどの面も外さない |
+| `surface_unspecified_stale` | 注意 | 未記載の面の一覧の1件に一致する面がコードに無い、または一致する面が IR に書かれた | その1件を消す。面の名前を変えたなら `name` を直す |
+
+面の規則の言語のファイルに構文の誤りがあると、`unparsable_file` が出ます。
+同じファイルにテストのファイルとして `unparsable_file` を出したときは、重ねて出しません。
+
 ### 判断の記録
 
 <!-- @kotowari[REQ-core-130:f72db551, REQ-core-131:97405a57, REQ-core-132:cb010297] -->
@@ -451,10 +475,10 @@ tests/greet.rs:5 [error] unresolved_reference REQ-greet-02
 
 ### 注意が残っているのに終了コードが0
 
-<!-- @kotowari[REQ-core-031:5f373416] -->
+<!-- @kotowari[REQ-core-031:7277c20b] -->
 
 仕様どおりです。
-注意の7種類は、終了コードも `status` の `complete` も変えません。
+注意の8種類は、終了コードも `status` の `complete` も変えません。
 kotowari 自身のリポジトリでも、`too_many_lines` と `too_many_requirements` が8件出たまま、終了コードは0です。
 
 ## なぜこういう作りか

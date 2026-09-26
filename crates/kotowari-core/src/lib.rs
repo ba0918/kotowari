@@ -17,6 +17,7 @@ pub mod record_form;
 pub mod schema;
 pub mod sources;
 pub mod status;
+pub mod surface;
 pub mod terms;
 mod test_markers;
 pub mod test_queries;
@@ -35,6 +36,9 @@ pub struct CheckResult {
     pub tests: BTreeMap<String, TestFileTally>,
     /// REQ-core-206: 読んだ`ガイド`の数と、形の正しい`ガイドの印`の1件の数
     pub guides: guides::GuideTally,
+    /// REQ-core-228: "surface.rules" が空の一覧でないときだけ出す
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub surface: Option<surface::Unlisted>,
 }
 
 /// 読んだテストのファイルの、1つの拡張子の数と問い合わせの有無（TBL-core-021）
@@ -99,6 +103,9 @@ finding_kinds! {
     RevisionLinkInvalid => "revision_link_invalid",
     ScenarioWithoutTest => "scenario_without_test",
     SourceInvalid => "source_invalid",
+    SurfaceUnspecifiedInvalid => "surface_unspecified_invalid",
+    SurfaceUnspecifiedStale => "surface_unspecified_stale",
+    SurfaceWithoutSpec => "surface_without_spec",
     TestWithoutId => "test_without_id",
     TooManyLines => "too_many_lines",
     TooManyRequirements => "too_many_requirements",
@@ -133,6 +140,7 @@ impl FindingKind {
             | FindingKind::MutantTimeout
             | FindingKind::EquivalentStale
             | FindingKind::GuideStale
+            | FindingKind::SurfaceUnspecifiedStale
             | FindingKind::DeferredWithTest
             | FindingKind::DependsOnDeferred => "notice",
             _ => "error",
@@ -561,6 +569,15 @@ pub fn extract_backtick_contents_outside_quotes(text: &str) -> Vec<&str> {
         .collect()
 }
 
+/// 二重引用符を行の左から順に対にし、対の中身を集める。対にならない最後の引用符は捨てる（REQ-core-226）
+pub fn double_quoted_contents(line: &str) -> Vec<&str> {
+    let quotes: Vec<usize> = line.match_indices('"').map(|(i, _)| i).collect();
+    quotes
+        .chunks_exact(2)
+        .map(|pair| &line[pair[0] + 1..pair[1]])
+        .collect()
+}
+
 /// TBL-core-014: 引用符が奇数のときは最後の引用符から行末を引用の中とみなす。
 /// ir モジュールと terms モジュールの両方から使う（REQ-core-054, REQ-core-064, REQ-core-104）。
 pub fn split_outside_quotes(line: &str) -> Vec<&str> {
@@ -768,7 +785,13 @@ fn exit_code_for(findings: &[Finding]) -> u8 {
 fn print_check(result: &CheckResult, format: Format) {
     match format {
         Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
-        Format::Text => print_findings_as_text(&result.findings),
+        Format::Text => {
+            print_findings_as_text(&result.findings);
+            // REQ-core-228: 指摘の行の後の最後の1行。指摘が0件でも出す
+            if let Some(surface) = &result.surface {
+                println!("surface: unspecified={}", surface.unspecified);
+            }
+        }
     }
 }
 
@@ -1097,11 +1120,12 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
     })
 }
 
-/// check と status の読み取り: `load_all` に続けて`ガイド`を読み、その`指摘`を足す（REQ-core-198、REQ-core-162）
+/// check と status の読み取り: `load_all` に続けて`ガイド`と`面`を読み、その`指摘`を足す
+/// （REQ-core-198、REQ-core-162、REQ-core-229）
 fn load_with_guides(
     cwd: &Path,
     config_path: Option<&Path>,
-) -> Result<(Loaded, guides::GuideTally), StopReason> {
+) -> Result<(Loaded, guides::GuideTally, Option<surface::SurfaceTally>), StopReason> {
     let mut loaded = load_all(cwd, config_path)?;
     let tally = guides::read_guides(
         &loaded.base,
@@ -1110,7 +1134,13 @@ fn load_with_guides(
         &loaded.docs,
         &mut loaded.findings,
     )?;
-    Ok((loaded, tally))
+    let surface = surface::check(
+        &loaded.base,
+        &loaded.cfg,
+        &loaded.docs,
+        &mut loaded.findings,
+    )?;
+    Ok((loaded, tally, surface))
 }
 
 /// 検査のエントリポイント
@@ -1119,7 +1149,7 @@ pub fn run_check(
     format: Format,
     config_path: Option<&Path>,
 ) -> Result<(CheckResult, Format), StopReason> {
-    let (loaded, guides) = load_with_guides(cwd, config_path)?;
+    let (loaded, guides, surface) = load_with_guides(cwd, config_path)?;
 
     let files = loaded.docs.len();
     let lines: usize = loaded.docs.iter().map(|d| d.line_count).sum();
@@ -1135,6 +1165,9 @@ pub fn run_check(
         counts,
         tests: loaded.tally,
         guides,
+        surface: surface.map(|tally| surface::Unlisted {
+            unspecified: tally.unspecified,
+        }),
     };
 
     Ok((result, format))
@@ -1163,13 +1196,14 @@ pub fn run_status(
     cwd: &Path,
     config_path: Option<&Path>,
 ) -> Result<status::StatusResult, StopReason> {
-    let (loaded, guides) = load_with_guides(cwd, config_path)?;
+    let (loaded, guides, surface) = load_with_guides(cwd, config_path)?;
     Ok(status::build(
         &loaded.docs,
         &loaded.cfg.ir,
         &loaded.markers,
         loaded.tally,
         guides,
+        surface.unwrap_or_default(),
         &loaded.findings,
     ))
 }

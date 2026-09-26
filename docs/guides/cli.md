@@ -58,7 +58,7 @@ kotowari --version
 
 ### JSON の指摘
 
-<!-- @kotowari[REQ-core-022:e6e6163f, TBL-core-006:faac47cf, REQ-core-028:03dc4671] -->
+<!-- @kotowari[REQ-core-022:e6e6163f, TBL-core-006:da871a1d, REQ-core-028:03dc4671] -->
 
 `--format json`（既定）では、標準出力に JSON を1つ出します。
 指摘の1件は次の5つの鍵を持つオブジェクトです。
@@ -67,7 +67,7 @@ kotowari --version
 |---|---|---|
 | `kind` | 文字列 | 指摘の種類（`missing_source` など）。一覧は [findings.md](findings.md) |
 | `severity` | 文字列 | `error`（誤り）か `notice`（注意） |
-| `path` | 文字列 | 基準のディレクトリからの相対パス |
+| `path` | 文字列 | 基準のディレクトリからの相対パス。IR の文書への指摘は文書、テストへの指摘はテストのファイル、`surface_without_spec` は面のファイル、一覧の1件への指摘は一覧のファイル |
 | `line` | 数か null | 1始まりの行。文書全体への指摘では null |
 | `detail` | 文字列 | 種類ごとに決まった短い文字列。多くは ID、問題の語、行の文字そのまま |
 
@@ -122,7 +122,7 @@ CI では終了コードだけで「直す必要があるか」を判定でき�
 
 ## 停止
 
-<!-- @kotowari[REQ-core-005:948bc7d9, REQ-core-109:cf3343c2] -->
+<!-- @kotowari[REQ-core-005:948bc7d9, REQ-core-109:f299dcec] -->
 
 入力を全体として読めないとき、kotowari は検査をせずに終了コード2で終わります。
 これを「停止」と呼びます。
@@ -132,17 +132,17 @@ CI では終了コードだけで「直す必要があるか」を判定でき�
 - 詳細にパスを含めるときは、基準のディレクトリからの相対パスです。
 
 読めない入力を黙って飛ばすことはありません。
-ファイルや設定を全体として読む前提が崩れるものは停止に、読めたが一部が形から外れるものはその場所への誤りの指摘になります。
+ファイルや設定を全体として読む前提が崩れるもの（等価の一覧と未記載の面の一覧の構文の誤りを含む）は停止に、読めたが一部が形から外れるもの（一覧の1件の形の誤りなど）はその場所への誤りの指摘になります。
 
 ### 停止の理由
 
-<!-- @kotowari[TBL-core-018:6994583a, TBL-core-020:80b871df, TBL-core-001:af14e0f5] -->
+<!-- @kotowari[TBL-core-018:6994583a, TBL-core-020:c3b8e7f8, TBL-core-001:5f0a483f] -->
 
 | 1行目の文言 | 理由 | 詳細 | 主な場面 |
 |---|---|---|---|
 | `argument error` | 引数の誤り | 説明の文と問題の引数 | 知らないオプション、`--format` の知らない値、値の無いオプション、同じオプションの2回目、余分な位置引数、`--config` の先が無いかディレクトリ |
-| `config error` | 設定の誤り | 設定ファイルの相対パスと誤りの説明（`tests.rules` と等価の一覧の誤りではそのファイルの相対パス） | 設定ファイルが YAML として読めない、知らないキー、同じキーの2回目、型の違う値、glob として読めない要素、`tests.rules` のルールのファイルが無いか読めない |
-| `unreadable file` | 読めないファイル | 相対パスと OS の誤りの文 | 置き場のディレクトリが無い、ファイルやディレクトリが読めない |
+| `config error` | 設定の誤り | 設定ファイルの相対パスと誤りの説明（`tests.rules` と `surface.rules` のルールのファイル、等価の一覧、未記載の面の一覧の誤りではそのファイルの相対パス） | 設定ファイルが YAML として読めない、知らないキー、同じキーの2回目、型の違う値、glob として読めない要素、`surface.files` と `surface.rules` の片方だけ、`tests.rules` か `surface.rules` のルールのファイルが無いか読めない、未記載の面の一覧が YAML として読めないか最上位が並びでない |
+| `unreadable file` | 読めないファイル | 相対パスと OS の誤りの文 | 置き場のディレクトリが無い、ファイルやディレクトリが読めない、`surface.unspecified` の指す先が無い |
 | `non-UTF-8 file` | UTF-8 でないファイル | 相対パス | 読むファイルのどれかが UTF-8 でない |
 | `results error` | 結果の誤り | 結果のファイルの相対パスと誤りの説明 | `mutants` の結果のファイルの形が壊れている |
 | `mapping error` | 写しの誤り | 写せなかった指摘の種類か値の説明 | kotowari の内部の不整合。利用者の入力では起きない想定 |
@@ -262,7 +262,7 @@ $ echo $?
 
 ### ファイルと設定の問題で止まる
 
-<!-- @kotowari[TBL-core-018:6994583a, TBL-core-020:80b871df] -->
+<!-- @kotowari[TBL-core-018:6994583a, TBL-core-020:c3b8e7f8] -->
 
 ```console
 $ kotowari check --format text      # docs/decision/adr が無い
@@ -270,12 +270,12 @@ unreadable file: docs/decision/adr: No such file or directory (os error 2)
 $ kotowari check --format text      # docs/ir/greet/bad.md が UTF-8 でない
 non-UTF-8 file: docs/ir/greet/bad.md
 $ kotowari check --config bad.yaml  # limits を limit と書き間違えた
-config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, limits, vague_words
+config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, vague_words
  --> <input>:2:1
   |
 1 | ir: docs/ir
 2 | limit:
-  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, limits, vague_words
+  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, vague_words
 3 |   lines: 20
   |
 $ kotowari check --format text      # rules/c.yml の language が cobol
@@ -309,7 +309,7 @@ tests/greet.rs:6 [error] test_without_id rejects_empty_name
 $ kotowari check --config .kotowari/config.yaml
 argument error: config file not found: .kotowari/config.yaml
 $ kotowari --format text check --config ../bad.yaml
-config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, limits, vague_words
+config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, vague_words
 …
 ```
 

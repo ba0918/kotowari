@@ -1,13 +1,13 @@
 # kotowari status
 
-<!-- @kotowari[REQ-core-162:3010211a] -->
+<!-- @kotowari[REQ-core-162:fbe9f9f3] -->
 
 `kotowari status` は、IR（仕様）とテストが「いま揃っているか」を、数と一つの真偽で答えるコマンドです。
 CI に一行足すだけで、仕様の抜けやテストの無い要求が紛れ込んだ変更を止められます。
 
 ## 3 つの読み取りコマンドの中での位置
 
-<!-- @kotowari[REQ-core-162:3010211a] -->
+<!-- @kotowari[REQ-core-162:fbe9f9f3] -->
 
 kotowari には、IR を読む道具が段になって並んでいます。
 
@@ -52,7 +52,7 @@ kotowari status --version
 
 ## 出力
 
-`status` は `check` と同じ設定と置き場から、IR の文書、テストのファイル、ガイドを読み、`check` と同じ検査を行います。
+`status` は `check` と同じ設定と置き場から、IR の文書、テストのファイル、ガイドを読み、`surface.rules` が空の一覧でなければ面のファイルと面の規則のファイルと未記載の面の一覧も読んで、`check` と同じ検査を行います。
 指摘そのものは出さず、数と `complete` だけを出します。
 
 ### text
@@ -67,7 +67,7 @@ kotowari status --version
 
 ### JSON
 
-<!-- @kotowari[TBL-core-028:6aa7ef3b, REQ-core-164:c48d77e2, EX-core-398:6a32dbad] -->
+<!-- @kotowari[TBL-core-028:43f83e8c, REQ-core-164:c48d77e2, EX-core-398:6a32dbad] -->
 
 最上位は次の群の鍵だけのオブジェクトで、`complete` が最後です。
 全部の鍵の定義は [status の IR](../../ir/core/status.md) の TBL-core-028 にあります。
@@ -86,12 +86,13 @@ kotowari status --version
 | `tests` | `marks` | 数 | 印の出現の数。1つの印に ID が複数あれば ID ごとに1つ |
 | `tests` | `files` | オブジェクト | `check` の JSON の `tests` と同じ。鍵は拡張子、値は `files`（ファイルの数）と `query`（問い合わせのある言語か） |
 | `guides` | `files`、`marks` | 数 | 読んだガイドの数と、ガイドの印の数（`check` の `guides` と同じ） |
+| `surface` | `total`、`specified`、`unspecified` | 数 | 面の種類と名前の組の数、そのうち IR にあるものの数、IR になく未記載の面の一覧で外したものの数（[面の検査](../surface.md)）。`surface.rules` が空の一覧なら3つとも 0 |
 | `findings` | `error`、`notice` | 数 | `check` の誤りと注意の数 |
 | `complete` | （値だけ） | 真偽 | 揃っているか。条件は次の節 |
 
 ### よく見る数
 
-<!-- @kotowari[TBL-core-028:6aa7ef3b] -->
+<!-- @kotowari[TBL-core-028:43f83e8c] -->
 
 特によく見る数だけ挙げます。
 
@@ -103,6 +104,7 @@ kotowari status --version
 | `requirements`、`scenarios` | `deferred` | 今は作らないと宣言した要求とシナリオの数。`without_tests` には入らないので、増えても `complete` は変わらない |
 | `items` | `flag` | 「仕様として書ききれていない」と自分で記録した箇所の数 |
 | `guides` | `files` / `marks` | 読んだガイドの数と、ガイドの印の数。設定の glob を書き間違えると 0 になる |
+| `surface` | `unspecified` | IR に書かないまま未記載の面の一覧で外している面の数。導入の残りの量の目安で、0 に近づけていく |
 | `findings` | `error` / `notice` | `check` の指摘の数。`notice` は注意で、揃っているかの判定には効かない |
 
 ### `complete` が true になる条件
@@ -142,17 +144,18 @@ kotowari status --version
 
 ```console
 $ kotowari status --format text
-documents files=48 lines=5759
-items requirement=279 table=47 property=13 scenario=344 flag=0
-requirements unit=248 property=3 proof=0 review=28 with_tests=251 without_tests=0 review_with_how_to_verify=28 review_without_how_to_verify=0 without_examples=127 deferred=0
-scenarios with_tests=344 without_tests=0 deferred=0
-tests marks=2042 rs=55
-guides files=13 marks=494
+documents files=51 lines=6206
+items requirement=302 table=48 property=13 scenario=374 flag=0
+requirements unit=260 property=3 proof=0 review=39 with_tests=263 without_tests=0 review_with_how_to_verify=39 review_without_how_to_verify=0 without_examples=135 deferred=0
+scenarios with_tests=367 without_tests=7 deferred=0
+tests marks=2145 rs=58
+guides files=14 marks=525
+surface total=9 specified=9 unspecified=0
 findings error=0 notice=8
 complete true
 ```
 
-これは kotowari 自身のリポジトリで 2026-09-25 に実行した結果です。
+これは kotowari 自身のリポジトリで 2026-09-27 に実行した結果です。
 最後の `complete true` が答えで、それより上の行はその内訳です。
 `notice` があっても `complete true` になっている点に注目してください。
 
@@ -183,7 +186,7 @@ true
 
 ### `without_tests` が 0 でない
 
-<!-- @kotowari[TBL-core-028:6aa7ef3b, TBL-core-026:05d8938e, EX-core-263:93a87c06] -->
+<!-- @kotowari[TBL-core-028:43f83e8c, TBL-core-026:05d8938e, EX-core-263:93a87c06] -->
 
 テストに印（`@kotowari[REQ-...]`）が付いていない要求があります。
 `kotowari list --format text | grep 'tests=0$'` で、印の付いたテストが無い項目を探せます。
@@ -208,7 +211,7 @@ true
 
 ### `unit`、`property`、`proof`、`review` の合計が `requirement` より少ない
 
-<!-- @kotowari[TBL-core-028:6aa7ef3b] -->
+<!-- @kotowari[TBL-core-028:43f83e8c] -->
 
 `- verification:` の行の無い要求があります。そうした要求は検証の種類ごとの数のどれにも入りません。
 この要求は `check` の誤りでもあるので、`complete` は false になります。

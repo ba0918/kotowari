@@ -8,6 +8,9 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 ### Added
 
 - README の入れ方に mise の `github:` で入れる方法（`mise use -g 'github:ba0918/kotowari[version_prefix=kotowari-v]@0.1.0'`）を足した。
+- 面の検査。設定の `surface.files` と `surface.rules`（ast-grep の規則）でコードから利用者に見える面（CLI のサブコマンドやフラグなど）を取り出し、名前が IR の要求の文、決定表のセル、シナリオのステップに引用されていなければ `kotowari check` が `surface_without_spec` の誤りにする。規則を書かなければ何も起きない。
+- まだ IR にしない面は、`surface.unspecified` が指す一覧に理由付きで載せると外せる。形の誤った1件は `surface_unspecified_invalid` の誤り、要らなくなった1件は `surface_unspecified_stale` の注意になる。外した数は `check` の最後の行 `surface: unspecified=数`（JSON は `surface`）に、面の数は `status` の `surface` の行に出る。
+- `kotowari` skill に面の検査の reference `surface.md` を足し、`kotowari-adopt` に一覧の減らし方を書いた。
 
 ## [0.1.0] - 2026-09-26
 

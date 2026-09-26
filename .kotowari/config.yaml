@@ -20,3 +20,10 @@ guides:
     - "docs/guides/**/*.md"
 mutants:
   equivalents: .kotowari/equivalents.yaml
+surface:
+  # 利用者から見える kotowari の CLI の面を取り出し、IR に引用されているかを確かめる（docs/ir/core/surface.md）
+  files:
+    - "src/**/*.rs"
+    - "crates/kotowari-core/src/**/*.rs"
+  rules:
+    - ".kotowari/rules/surface.yml"

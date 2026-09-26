@@ -101,7 +101,7 @@ REQ-001 unit 例 docs/ir/a.md:7 tests=0 deferred
 
 ## 終了コード
 
-<!-- @kotowari[REQ-core-151:4e40b186, REQ-core-152:c0f8af67] -->
+<!-- @kotowari[REQ-core-151:4e40b186, REQ-core-152:fc02940b] -->
 
 | コード | 意味 |
 |---|---|
@@ -224,7 +224,7 @@ CI で誤りを止めたいなら `kotowari check` か [`kotowari status`](./sta
 
 ### `tests=0` の要求が status では「テストあり」に数えられている
 
-<!-- @kotowari[TBL-core-026:05d8938e, TBL-core-028:6aa7ef3b] -->
+<!-- @kotowari[TBL-core-026:05d8938e, TBL-core-028:43f83e8c] -->
 
 `list` の `tests` は、その ID を直接印に含むテストだけです。
 [`kotowari status`](./status.md) の `with_tests` は、その要求を `@about` に持つシナリオに付いたテストも数えます。
@@ -233,9 +233,11 @@ CI で誤りを止めたいなら `kotowari check` か [`kotowari status`](./sta
 
 ### check や status は設定の誤りで止まるのに、list は動く
 
-<!-- @kotowari[REQ-core-152:c0f8af67, REQ-core-198:ec0e5ea4, REQ-core-199:38cf396d] -->
+<!-- @kotowari[REQ-core-152:fc02940b, REQ-core-198:ec0e5ea4, REQ-core-199:38cf396d] -->
 
 `list` はガイドを読まないので、ガイドの置き場に関わる停止（`guides.files` と `tests.files` の重なりなど）はしません。
+面のファイル、面の規則のファイル、未記載の面の一覧も読まないので、それらが無い、読めない、壊れているときの停止もしません。
+ただし `surface.files` と `surface.rules` の片方だけを書いたときなど、設定の鍵の組み合わせの誤りでは `list` も止まります（[設定](../config.md)）。
 それ以外の停止の条件は `check` と同じです。
 設定を直すときは `kotowari check` で確かめてください。
 
