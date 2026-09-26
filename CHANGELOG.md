@@ -5,6 +5,10 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added
+
+- README の入れ方に mise の `github:` で入れる方法（`mise use -g 'github:ba0918/kotowari[version_prefix=kotowari-v]@0.1.0'`）を足した。
+
 ## [0.1.0] - 2026-09-26
 
 ### Added

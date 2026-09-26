@@ -18,7 +18,7 @@ kotowari は仕様を「IR」と呼ぶ正規化した Markdown に書かせ、�
 
 ## 入れ方
 
-版は `kotowari-v0.1.0` の形のタグで出している。次の2通りのどちらかで入れる。例の `0.1.0` は入れたい版に置き換える。
+版は `kotowari-v0.1.0` の形のタグで出している。次の3通りのどれかで入れる。例の `0.1.0` は入れたい版に置き換える。
 
 ### ビルド済みのバイナリ
 
@@ -34,6 +34,15 @@ $ kotowari --version
 ```
 
 置き先の `~/.local/bin/` は `PATH` の通った好きな場所に置き換える。
+
+### mise
+
+[mise](https://mise.jdx.dev/) の `github:` で、GitHub Release のバイナリを入れられる。タグの頭の `kotowari-v` を `version_prefix` で外すと、版を `0.1.0` の形で書ける。
+
+```console
+$ mise use -g 'github:ba0918/kotowari[version_prefix=kotowari-v]@0.1.0'
+$ kotowari --version
+```
 
 ### ソースからビルドする
 
