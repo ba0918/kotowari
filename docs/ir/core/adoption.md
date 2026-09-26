@@ -13,15 +13,6 @@
 
 "agent/skills/" の下の kotowari のスキルは常に、導入を工程のスキル kotowari-adopt として持ち、その承認を kotowari-brainstorm の承認の手順で行う。kotowari-using-workflow は、既存の仕様やコードを IR に取り込みたい依頼と、IR が実装と合っているか分からない依頼を kotowari-adopt に振る。
 
-### REQ-core-215: 導入の範囲と準備
-
-- kind: ubiquitous
-- source: docs/decision/records/2026-09-26-adoption.md#A2, docs/decision/records/2026-09-26-adoption.md#A19, docs/decision/records/2026-09-26-adoption.md#A23, docs/decision/records/2026-09-26-adoption.md#A27, docs/decision/records/2026-09-26-adoption.md#A28, docs/decision/records/2026-09-26-adoption.md#A33
-- verification: review
-- how_to_verify: "agent/skills/kotowari-adopt/" を読み、次のすべてが書いてあることを確かめる。最初に ".kotowari/config.yaml" があるかを確かめ、無ければ kotowari スキルの "references/config.md" の準備の手順を名指しして先に行うこと。1回で扱う話題は1つで、範囲の確認のラウンドで人が選び、既定は次に変更する予定の機能であること。同じラウンドで、話題の範囲のコードファイルとテストファイルの案と、読む`旧資料`の候補を人に確かめること。読んで仕分けるのは主セッションで、1回で読み切れない大きさなら別の agent に読ませず、範囲の確認のラウンドで話題を小さく割ることを人に提案すること
-
-kotowari-adopt は常に、設定があることを確かめてから、範囲の確認のラウンドで話題1つと範囲のコードファイルとテストファイルと読む`旧資料`を人に確かめ、主セッションで読んで仕分ける。
-
 ### REQ-core-216: 振る舞いと用語の仕分け
 
 - kind: algorithm
