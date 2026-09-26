@@ -7,7 +7,7 @@ use crate::test_queries::{ParsedFile, RuleSet, language_of};
 use crate::{Finding, FindingKind, StopReason};
 use markdown::mdast::Node;
 use serde_json::Value;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::path::Path;
 
 /// `面の規則`で取り出した`面`1つ（REQ-core-223）
@@ -208,36 +208,27 @@ fn report(
         }
     }
     let mut tally = SurfaceTally::default();
-    let mut first: BTreeMap<(&str, &str), &Surface> = BTreeMap::new();
+    // 種類と名前の組ごとに、面のファイルのパスのバイト順、次に行の小さい順で最初の面だけを見る（REQ-core-227）
+    let mut ordered: Vec<&Surface> = surfaces.iter().collect();
+    ordered.sort_by(|a, b| a.path.cmp(&b.path).then(a.line.cmp(&b.line)));
     let mut seen: BTreeSet<(&str, &str)> = BTreeSet::new();
-    for surface in surfaces {
-        if seen.insert((&surface.kind, &surface.name)) {
-            tally.total += 1;
-            if in_ir(&surface.name) {
-                tally.specified += 1;
-            } else if listed(surface) {
-                tally.unspecified += 1;
-            }
-        }
-        if in_ir(&surface.name) || listed(surface) {
+    for surface in ordered {
+        if !seen.insert((&surface.kind, &surface.name)) {
             continue;
         }
-        first
-            .entry((surface.kind.as_str(), surface.name.as_str()))
-            .and_modify(|current| {
-                if (&surface.path, surface.line) < (&current.path, current.line) {
-                    *current = surface;
-                }
-            })
-            .or_insert(surface);
-    }
-    for ((kind, name), surface) in first {
-        findings.push(Finding::new(
-            FindingKind::SurfaceWithoutSpec,
-            surface.path.clone(),
-            Some(surface.line),
-            format!("{kind} {name}"),
-        ));
+        tally.total += 1;
+        if in_ir(&surface.name) {
+            tally.specified += 1;
+        } else if listed(surface) {
+            tally.unspecified += 1;
+        } else {
+            findings.push(Finding::new(
+                FindingKind::SurfaceWithoutSpec,
+                surface.path.clone(),
+                Some(surface.line),
+                format!("{} {}", surface.kind, surface.name),
+            ));
+        }
     }
     tally
 }

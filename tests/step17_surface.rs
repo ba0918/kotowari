@@ -1158,3 +1158,58 @@ fn tbl_028_status_surface_counts_are_zero_without_surface_rules() {
         "{v}"
     );
 }
+
+// @kotowari[REQ-core-227]
+#[test]
+fn req_227_the_first_place_is_the_smallest_line_even_when_rules_share_an_id() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), SURFACE_RS);
+    // 同じ id の規則が2つあり、先の規則は後の行にだけ当たる
+    write(
+        tmp.path(),
+        "rules/surface.yml",
+        "id: flag\nlanguage: rust\nrule:\n  kind: string_literal\n  pattern: $NAME\n  inside:\n    kind: const_item\n    stopBy: end\n---\nid: flag\nlanguage: rust\nrule:\n  kind: string_literal\n  pattern: $NAME\n",
+    );
+    write(
+        tmp.path(),
+        "src/cli.rs",
+        "fn f() { let _ = \"--verbose\"; }\nconst C: &str = \"--verbose\";\n",
+    );
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &ir_doc(&review_requirement("REQ-001", "文。"), ""),
+    );
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(
+        findings_of(&v, "surface_without_spec"),
+        vec![(
+            "src/cli.rs".to_string(),
+            serde_json::json!(1),
+            "flag --verbose".to_string()
+        )],
+        "{v}"
+    );
+}
+
+// @kotowari[EX-core-427, REQ-core-236]
+#[test]
+fn ex_core_427_check_reports_the_unparsable_surface_file_beside_a_test_file_one() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), SURFACE_RS);
+    write(tmp.path(), "rules/surface.yml", FLAG_RULE);
+    write(tmp.path(), "src/bad.rs", "fn f( {\n");
+    // 別のパスのテストのファイルにも unparsable_file が出ている
+    write(tmp.path(), "tests/broken.rs", "fn g( {\n");
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &ir_doc(&review_requirement("REQ-001", "文。"), ""),
+    );
+    let (_, v) = check_json(tmp.path());
+    let paths: Vec<String> = findings_of(&v, "unparsable_file")
+        .into_iter()
+        .map(|(path, _, _)| path)
+        .collect();
+    assert_eq!(paths, vec!["src/bad.rs", "tests/broken.rs"], "{v}");
+}
