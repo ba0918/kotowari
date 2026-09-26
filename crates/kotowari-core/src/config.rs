@@ -9,8 +9,20 @@ pub struct Config {
     pub tests: TestsConfig,
     pub guides: GuidesConfig,
     pub mutants: MutantsConfig,
+    pub surface: SurfaceConfig,
     pub limits: LimitsConfig,
     pub vague_words: Vec<String>,
+}
+
+/// `面`の検査の設定（TBL-core-004、docs/ir/core/surface.md）
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct SurfaceConfig {
+    /// `面のファイル`に当たる glob の一覧。既定は空の一覧
+    pub files: Vec<String>,
+    /// `面の規則`の YAML ファイルのパス（基準のディレクトリからの相対）。空の一覧なら面の検査をしない
+    pub rules: Vec<String>,
+    /// `未記載の面の一覧`のファイルのパス。既定は無く、無ければ一覧は0件（REQ-core-231）
+    pub unspecified: Option<String>,
 }
 
 /// `ガイド`の置き場（TBL-core-004、REQ-core-198）
@@ -71,6 +83,7 @@ impl Default for Config {
             },
             guides: GuidesConfig::default(),
             mutants: MutantsConfig { equivalents: None },
+            surface: SurfaceConfig::default(),
             limits: LimitsConfig {
                 lines: NonZeroU64::new(200).unwrap(),
                 requirements: NonZeroU64::new(10).unwrap(),
@@ -100,6 +113,8 @@ struct RawConfig {
     guides: Option<Option<RawGuides>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     mutants: Option<Option<RawMutants>>,
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    surface: Option<Option<RawSurface>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     limits: Option<Option<RawLimits>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
@@ -147,6 +162,17 @@ struct RawGuides {
 struct RawMutants {
     #[serde(default, deserialize_with = "deserialize_nullable")]
     equivalents: Option<Option<String>>,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawSurface {
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    files: Option<Option<Vec<String>>>,
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    rules: Option<Option<Vec<String>>>,
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    unspecified: Option<Option<String>>,
 }
 
 #[derive(serde::Deserialize)]
@@ -202,7 +228,7 @@ fn check_not_absolute(path: &str, key: &str) -> Result<(), StopReason> {
     Ok(())
 }
 
-/// REQ-core-014: glob として読めない要素があれば設定の誤りで停止する（"tests.files" と "guides.files"）
+/// REQ-core-014: glob として読めない要素があれば設定の誤りで停止する（"tests.files"、"guides.files"、"surface.files"）
 fn check_globs(patterns: &[String]) -> Result<(), StopReason> {
     for pattern in patterns {
         if globset::Glob::new(pattern).is_err() {
@@ -233,6 +259,46 @@ fn yaml_error(e: serde_saphyr::Error) -> StopReason {
         }
         _ => StopReason::ConfigError(format!("{e}")),
     }
+}
+
+/// "surface" の鍵を読む。null、絶対パス、glob として読めない要素（REQ-core-014）と、
+/// 鍵の組み合わせの誤り（REQ-core-225）は設定の誤りで停止する
+fn read_surface(raw: RawSurface) -> Result<SurfaceConfig, StopReason> {
+    let files = non_null_or_default(raw.files, "surface.files", Vec::new())?;
+    check_globs(&files)?;
+    let rules = non_null_or_default(raw.rules, "surface.rules", Vec::new())?;
+    for rule in &rules {
+        check_not_absolute(rule, "surface.rules")?;
+    }
+    let unspecified = non_null(raw.unspecified, "surface.unspecified")?;
+    if let Some(path) = &unspecified {
+        check_not_absolute(path, "surface.unspecified")?;
+    }
+    // REQ-core-225: 規則だけ、ファイルだけ、規則の無い一覧は、検査しているつもりで何もしない
+    if rules.is_empty() && !files.is_empty() {
+        return Err(StopReason::ConfigError(
+            "surface.files is set but surface.rules is empty".to_string(),
+        ));
+    }
+    if files.is_empty() && !rules.is_empty() {
+        return Err(StopReason::ConfigError(
+            "surface.rules is set but surface.files is empty".to_string(),
+        ));
+    }
+    if rules.is_empty() && unspecified.is_some() {
+        return Err(StopReason::ConfigError(
+            "surface.unspecified is set but surface.rules is empty".to_string(),
+        ));
+    }
+    Ok(SurfaceConfig {
+        files,
+        // REQ-core-110: パスの正規化
+        rules: rules
+            .iter()
+            .map(|rule| crate::normalize_path(rule))
+            .collect(),
+        unspecified: unspecified.map(|path| crate::normalize_path(&path)),
+    })
 }
 
 impl Config {
@@ -335,6 +401,11 @@ impl Config {
             None => defaults.mutants,
         };
 
+        let surface = match non_null(raw.surface, "surface")? {
+            Some(s) => read_surface(s)?,
+            None => defaults.surface,
+        };
+
         // REQ-core-014: "limits:" 自体が null のときも停止する
         let limits = match non_null(raw.limits, "limits")? {
             Some(l) => {
@@ -378,6 +449,7 @@ impl Config {
             tests,
             guides,
             mutants,
+            surface,
             limits,
             // REQ-core-015: 一覧は既定を置き換える
             vague_words,
