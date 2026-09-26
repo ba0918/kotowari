@@ -13,7 +13,8 @@
 #   そして差分に入る変異の見逃し0件（判断の記録 docs/decision/records/2026-09-17-mutation-tests.md
 #   の A25、A26、A27）。時間がかかるので push 側に置く。テストの無い要求は push で止まる。
 #   mutants は cargo-test と kotowari-check の後に直列で走る（名前の順）。
-#   push される参照にタグがあれば全体、無ければ origin/main との差分だけを走らせる。
+#   push される参照にタグがあれば同じ製品の1つ前のリリースのタグとの差分（前のタグが無ければ全体）、
+#   無ければ origin/main との差分だけを走らせる（docs/decision/records/2026-09-27-release-mutants-scope.md の A1）。
 #   その判定にフックの標準入力の行が要るので use_stdin を立てる。
 pre-commit:
   commands:

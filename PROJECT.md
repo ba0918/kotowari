@@ -44,6 +44,13 @@ The minimum supported Rust version is declared per crate, not once for the works
 `pre-push` runs the full test suite, `kotowari check` with no exemptions, and the mutation tests
 in `scripts/mutants.sh`.
 
+The mutation tests in the hook cover only a diff: a branch push runs the mutants in the diff from
+`origin/main`, and a tag push runs those in the diff from the product's previous release tag (the
+whole workspace only when there is no previous tag). A miss in code that did not change — one
+created by deleting or weakening the test that caught a mutant there — is not caught by either.
+Run the whole workspace by hand with `scripts/mutants.sh full` when that matters; it takes about
+two hours (1,800 mutants on 2026-09-26).
+
 The mutation tests run the whole workspace's test suite once per mutant, so the suite's wall
 time is multiplied by the number of mutants (over a thousand on a large diff). Do not write a
 test that waits on real time — a timeout actually elapsing, a `sleep`, a slow server. Inject the

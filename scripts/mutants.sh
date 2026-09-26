@@ -257,13 +257,23 @@ run_full() {
 }
 
 # git の pre-push は "<ローカルの参照> <ローカルの SHA> <リモートの参照> <リモートの SHA>" を
-# 標準入力に渡す。A26: タグの push なら全体、それ以外は差分だけ
+# 標準入力に渡す。タグの push なら、同じ製品の1つ前のリリースのタグとの差分だけを回し、
+# 前のタグが無いときだけ全体を回す（判断の記録 docs/decision/records/2026-09-27-release-mutants-scope.md
+# の A1。全体は約2時間かかるので、人が full で好きなときに回す）。それ以外は origin/main との差分だけ
 choose_from_stdin() {
-    local local_ref local_sha remote_ref remote_sha chosen
+    local local_ref local_sha remote_ref chosen tag product previous
     chosen='diff origin/main'
-    while read -r local_ref local_sha remote_ref remote_sha; do
+    while read -r local_ref local_sha remote_ref _; do
         case "${local_ref}${remote_ref}" in
-        *refs/tags/*) chosen='full' ;;
+        *refs/tags/*)
+            tag="${local_ref#refs/tags/}"
+            product="${tag%%-v[0-9]*}"
+            if previous="$(git describe --tags --abbrev=0 --match "${product}-v[0-9]*" "${local_sha}^" 2>/dev/null)"; then
+                chosen="diff ${previous}"
+            else
+                chosen='full'
+            fi
+            ;;
         esac
     done
     printf '%s\n' "$chosen"
@@ -285,9 +295,11 @@ main() {
         choose_from_stdin
         ;;
     hook)
-        case "$(choose_from_stdin)" in
+        local chosen
+        chosen="$(choose_from_stdin)"
+        case "$chosen" in
         full) run_full ;;
-        *) run_diff origin/main ;;
+        diff\ *) run_diff "${chosen#diff }" ;;
         esac
         ;;
     *)
