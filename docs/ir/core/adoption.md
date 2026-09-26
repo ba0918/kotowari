@@ -42,7 +42,7 @@ kotowari-adopt は常に、追認する振る舞いと用語、FLAG に残す件
 ### REQ-core-218: テストの仕分け
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-26-adoption.md#A25, docs/decision/records/2026-09-26-adoption.md#A29, docs/decision/records/2026-09-26-adoption.md#A34
+- source: docs/decision/records/2026-09-26-adopt-verification.md#A2, docs/decision/records/2026-09-26-adoption.md#A29, docs/decision/records/2026-09-26-adoption.md#A34
 - verification: review
 - how_to_verify: "agent/skills/kotowari-adopt/" を読み、範囲のテストをすべて、`要求`の根拠（`要求`になる行と追認の候補の行を確かめるもの）、FLAG の振る舞いのテスト、実装の細部をなぞるだけ（削除の候補）、残す（IR にしない内部の振る舞いを確かめるものと判断がつかないもの）の4つのどれか1つに振り分けること、その内訳を一覧のラウンドと承認で見せて`判断の記録`の Context に1行で書くこと、kotowari-adopt 自身はテストに`印`を付けず、テストを消さず、移さないことが書いてあることを確かめる
 
@@ -51,29 +51,38 @@ kotowari-adopt は常に、話題の範囲の既存のテストを1件ずつ4つ
 ### REQ-core-219: 人に聞く回数
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-26-adoption.md#A1, docs/decision/records/2026-09-26-adoption.md#A5, docs/decision/records/2026-09-26-adoption.md#A9, docs/decision/records/2026-09-26-adoption.md#A29, docs/decision/records/2026-09-26-adoption.md#A30, docs/decision/records/2026-09-26-adoption.md#A33, docs/decision/records/2026-09-26-adoption.md#A35
+- source: docs/decision/records/2026-09-26-adoption.md#A1, docs/decision/records/2026-09-26-adoption.md#A5, docs/decision/records/2026-09-26-adoption.md#A9, docs/decision/records/2026-09-26-adoption.md#A29, docs/decision/records/2026-09-26-adoption.md#A30, docs/decision/records/2026-09-26-adoption.md#A33, docs/decision/records/2026-09-26-adoption.md#A35, docs/decision/records/2026-09-26-adopt-verification.md#A1
 - verification: review
-- how_to_verify: "agent/skills/kotowari-adopt/" を読み、次のすべてが書いてあることを確かめる。人に聞くのは範囲の確認、一覧の1ラウンド、承認の3回で、設定の準備での問いはこれに数えないこと。一覧の振る舞いの行に`旧資料`の記述、実装の振る舞い、根拠のテストの場所（無ければなし）を、用語の行に`旧資料`の定義、実装での使われ方、根拠を並べること。追認の候補は違和感のある行だけを人が外し、迷った行は残すこと。実装の無い`旧資料`の記述と既存の`要求`は作る予定の有無を聞くこと。FLAG にする行とテストの内訳は見せるだけであること。承認は kotowari-brainstorm の承認の手順で1回行うこと
+- how_to_verify: "agent/skills/kotowari-adopt/" を読み、次のすべてが書いてあることを確かめる。人に聞くのは範囲の確認、一覧の1ラウンド、承認の3回で、設定の準備での問いはこれに数えないこと。一覧の振る舞いの行に`旧資料`の記述、実装の振る舞い、根拠のテストの場所（無ければなし）、`要求`にしたときの検証の値を、用語の行に`旧資料`の定義、実装での使われ方、根拠を並べること。追認の候補は違和感のある行だけを人が外し、迷った行は残すこと。実装の無い`旧資料`の記述と既存の`要求`は作る予定の有無を聞くこと。FLAG にする行とテストの内訳は見せるだけであること。承認は kotowari-brainstorm の承認の手順で1回行うこと
 
 kotowari-adopt は常に、人に聞くのを範囲の確認と一覧の1ラウンドと承認の3回にとどめ、項目ごとの面談をしない。
 
 ### REQ-core-220: 承認の後の依頼
 
 - kind: event_driven
-- source: docs/decision/records/2026-09-26-adoption.md#A25, docs/decision/records/2026-09-26-adoption.md#A34, docs/decision/records/2026-09-26-adoption.md#A38
+- source: docs/decision/records/2026-09-26-adopt-verification.md#A2, docs/decision/records/2026-09-26-adoption.md#A34, docs/decision/records/2026-09-26-adoption.md#A38
 - verification: review
-- how_to_verify: "agent/skills/kotowari-adopt/" を読み、承認の後に、根拠のテストが`要求`を十分に確かめるかを審査して十分なものだけに`印`を付ける作業、細部をなぞるだけのテストを消すかを人がまとめて決める作業、`印`を付けるテストを設定の "tests.files" の範囲に入れる作業を1つの依頼文にまとめて人に渡し、工程は kotowari-using-workflow が決めると書いていること、依頼文をファイルに残さないこと、変異テストを回しているプロジェクトでは削除の前後で話題のコードに対して生き残る変異を比べ、増えたら消したテストを戻して残すに入れると依頼文に含めることを確かめる
+- how_to_verify: "agent/skills/kotowari-adopt/" を読み、承認の後に、根拠のテストが`要求`を十分に確かめるかを審査して十分なものだけに`印`を付ける作業、細部をなぞるだけのテストを消すかを人がまとめて決める作業、`印`を付けるテストを設定の "tests.files" の範囲に入れる作業、根拠のテストが無い`要求`のテストを書く作業を1つの依頼文にまとめて人に渡し、工程は kotowari-using-workflow が決めると書いていること、依頼文をファイルに残さないこと、変異テストを回しているプロジェクトでは削除の前後で話題のコードに対して生き残る変異を比べ、増えたら消したテストを戻して残すに入れると依頼文に含めることを確かめる
 
-承認を得たとき、kotowari-adopt は`印`を付ける作業と細部のテストを消すかを決める作業とテストを置き直す作業を1つの依頼文にして人に渡し、どの工程で回すかは kotowari-using-workflow に任せる。
+承認を得たとき、kotowari-adopt は`印`を付ける作業と細部のテストを消すかを決める作業とテストを置き直す作業と根拠のテストが無い`要求`のテストを書く作業を1つの依頼文にして人に渡し、どの工程で回すかは kotowari-using-workflow に任せる。
 
 ### REQ-core-221: 導入の案内
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-26-adoption.md#A25, docs/decision/records/2026-09-26-adoption.md#A27
+- source: docs/decision/records/2026-09-26-adopt-verification.md#A2, docs/decision/records/2026-09-26-adoption.md#A27
 - verification: review
-- how_to_verify: "agent/skills/kotowari-adopt/" を読み、設定の "tests.files" の外のテストは kotowari の対象外で`印`が無くても`誤り`にならないこと、FLAG が残る間は "kotowari status" の complete が false になり、それが回収待ちの一覧として狙いどおりであることが書いてあることを確かめる
+- how_to_verify: "agent/skills/kotowari-adopt/" を読み、設定の "tests.files" の外のテストは kotowari の対象外で`印`が無くても`誤り`にならないこと、FLAG が残る間は "kotowari status" の complete が false になり、それが回収待ちの一覧として狙いどおりであること、根拠のテストが無い`要求`の requirement_without_test はテストを書くまで残り、push や CI で "kotowari check" を求めるプロジェクトではそれで止まるので、導入と後のテストの作業を同じブランチで進めることが書いてあることを確かめる
 
-kotowari-adopt は常に、`印`の無いテストが`誤り`にならない範囲と、FLAG が残る間 complete が false のままである理由を利用者に案内する。
+kotowari-adopt は常に、`印`の無いテストが`誤り`にならない範囲と、FLAG が残る間 complete が false のままである理由と、テストの無い`要求`が残す`誤り`のために導入と後のテストの作業を同じブランチで進めることを利用者に案内する。
+
+### REQ-core-222: 追認した要求の検証とシナリオ
+
+- kind: ubiquitous
+- source: docs/decision/records/2026-09-26-adopt-verification.md#A1, docs/decision/records/2026-09-26-adopt-verification.md#A3
+- verification: review
+- how_to_verify: "agent/skills/kotowari-adopt/" を読み、追認して書く`要求`の検証の値を、実装の振る舞いは "unit"、入力の全体に成り立つ性質は "property"、コードの外のもの（文書、運用手順）は "review" にして how_to_verify に確かめ方を書くと決めていること、テストが無いことを理由に "review" にしないこと、成功条件と反例の`シナリオ`は必須にせず`旧資料`か根拠のテストに具体的な場面があるときだけ書くことが書いてあることを確かめる
+
+kotowari-adopt は常に、追認して書く`要求`の検証の値を振る舞いの中身で決め、テストの有無では決めず、`シナリオ`は具体的な場面があるときだけ書く。
 
 ## Decision tables
 
@@ -145,7 +154,7 @@ Scenario: 旧資料に無い振る舞いを人が外す
   When kotowari-adopt が IR と`判断の記録`を書く
   Then その振る舞いは`要求`にならず、kind が "contradiction" の FLAG になる
 
-@id=EX-core-406 @about=REQ-core-218 @source=docs/decision/records/2026-09-26-adoption.md#A34,docs/decision/records/2026-09-26-adoption.md#A29,docs/decision/records/2026-09-26-adoption.md#A25
+@id=EX-core-406 @about=REQ-core-218 @source=docs/decision/records/2026-09-26-adoption.md#A34,docs/decision/records/2026-09-26-adoption.md#A29,docs/decision/records/2026-09-26-adopt-verification.md#A2
 Scenario: テストの数の差を内訳で示す
   Given 話題の範囲に既存のテストが300件あり、`要求`の根拠になるのは40件
   When kotowari-adopt が一覧のラウンドを示す
