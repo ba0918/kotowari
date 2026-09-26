@@ -148,6 +148,21 @@ The confirmation, "leave this undecided as a FLAG", and deferral decisions go un
 because they are cited as sources and the numbers of `## Undecided` cannot be. Only the entries for
 what is not built go under `## Rejected`.
 
+## Surfaces
+
+When the project checks surfaces (`surface.rules` in the configuration; the kotowari skill's
+`references/surface.md`), the list of unspecified surfaces carries what adoption has not reached yet.
+
+- When surface rules are first written, the first `kotowari check` raises surface_without_spec for
+  every user-visible surface the IR does not quote yet. Put every one of them into the list of
+  unspecified surfaces, one entry each, with a `why` that names it as not yet adopted. Do not write
+  requirements for them then; that is the work of each topic's adoption.
+- In each run, the topic's surfaces become requirements through the list round like any other behavior
+  row. When a confirmed requirement quotes a surface's name, remove that surface's entry from the list
+  in the same run; `kotowari check` raises surface_unspecified_stale for an entry left behind.
+- A surface of the topic that becomes a FLAG, or that the person removes from the list round, keeps its
+  entry.
+
 ## After approval
 
 Hand the person one request text, in the conversation only — do not write it to a file. It holds:

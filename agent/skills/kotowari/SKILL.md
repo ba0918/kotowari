@@ -1,6 +1,6 @@
 ---
 name: kotowari
-description: "Read, scene by scene, how to write kotowari's IR and decision records, how to use check, and how to place marks. Trigger words: kotowari, IR, docs/ir, @kotowari, marks, mutants, mutation tests, guides, guide_stale. 日本語キーワード: 印 変異テスト ガイド"
+description: "Read, scene by scene, how to write kotowari's IR and decision records, how to use check, and how to place marks. Trigger words: kotowari, IR, docs/ir, @kotowari, marks, mutants, mutation tests, guides, guide_stale, surface, surface_without_spec. 日本語キーワード: 印 変異テスト ガイド 面"
 ---
 
 kotowari is a tool for writing a normalised specification (the IR) in Markdown and checking it with `kotowari check`. It also has the read commands `kotowari list` (the list of items), `kotowari query` (one item's body and its reverse references) and `kotowari status` (a tally of whether everything is in place), `kotowari mutants`, which reads the results of mutation tests, and `kotowari plan`, which checks the form of one plan file against the schema bundled in kotowari. This skill has you read a reference per scene and conveys how to write the IR and decision records, how to read the check results, and how to place marks.
@@ -21,6 +21,7 @@ Choosing the scene: if the person names one, follow it. Otherwise choose from th
 | check | Reading the result of `kotowari check` or `kotowari plan`, or the output of `kotowari list`, `kotowari query` or `kotowari status` | findings.md |
 | mark | Placing marks while writing tests | mark.md |
 | mutants | Reading the result of `kotowari mutants`, investigating misses | mutants.md |
+| surface | Writing surface rules (`surface.rules`) and the list of unspecified surfaces, or fixing surface_without_spec, surface_unspecified_invalid or surface_unspecified_stale | surface.md |
 | guide | Writing a guide (a user-facing document listed in `guides.files`) and placing its guide marks, or reviewing a guide after `kotowari check` raised guide_stale | guides.md |
 
 Before the approval in write, also read collate.md.
@@ -32,4 +33,5 @@ Which work uses each scene:
 - check — brainstorm (before approval), plan (when reading requirements, and when checking the plan's form), cycle (before the final report) and implement (check commands)
 - mark — when implement and the fixer write tests
 - mutants — when a push is stopped by missed mutations, and when investigating misses while cleaning up after a cycle
+- surface — when first writing surface rules for a project (adopt), and when `kotowari check` raises a surface finding
 - guide — when writing or revising a guide, and when `kotowari check` raises guide_stale
