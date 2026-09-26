@@ -78,9 +78,9 @@ kotowari-adopt は常に、追認して書く`要求`の検証の値を振る舞
 ### REQ-core-235: 未記載の面の一覧を減らす
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-27-surface-check.md#A4, docs/decision/records/2026-09-27-surface-check.md#A11
+- source: docs/decision/records/2026-09-27-surface-check.md#A4, docs/decision/records/2026-09-27-surface-check.md#A11, docs/decision/records/2026-09-27-surface-check.md#A28, docs/decision/records/2026-09-27-surface-check.md#A15
 - verification: review
-- how_to_verify: "agent/skills/kotowari-adopt/" を読み、面の規則を最初に書いたときに出る surface_without_spec の面をすべて未記載の面の一覧に載せ、導入の話題ごとに減らすこと、導入で話題の面を要求にしたら未記載の面の一覧からその面の1件を外すことが書いてあることを確かめる
+- how_to_verify: "agent/skills/kotowari-adopt/" を読み、面の規則を最初に書いたときに出る surface_without_spec の面をすべて未記載の面の一覧に載せ、導入の話題ごとに減らすこと、導入で話題の面を要求にしたら未記載の面の一覧からその面の1件を外すこと、FLAG になった面と一覧のラウンドで人が外した面の1件は残すことが書いてあることを確かめる
 
 kotowari-adopt は常に、`面の規則`を最初に書いたときに`IR`に無い`面`をすべて`未記載の面の一覧`に載せ、導入の話題ごとにその話題の`面`を`要求`にして`未記載の面の一覧`から外す。
 

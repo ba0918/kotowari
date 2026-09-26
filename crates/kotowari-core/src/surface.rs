@@ -24,7 +24,7 @@ pub struct Surface {
 }
 
 /// "surface.rules" で "surface.files" から`面`を取り出す（REQ-core-223）。
-/// 規則の言語の`面のファイル`の構文の誤りは unparsable_file にし、同じパスに
+/// 規則の言語の`面のファイル`だけを読み、構文の誤りは unparsable_file にし、同じパスに
 /// `テストのファイル`として出していれば重ねない（REQ-core-236）
 pub fn extract(
     base: &Path,
@@ -35,12 +35,13 @@ pub fn extract(
     let files = crate::tests_discovery::collect_files(base, &cfg.surface.files)?;
     let mut surfaces = Vec::new();
     for (rel, abs) in &files {
-        // REQ-core-224: 読めないファイルと UTF-8 でないファイルでの停止は "tests.files" と同じ
-        let content =
-            crate::tests_discovery::lone_cr_to_lf(&crate::read_utf8_file(Path::new(abs), rel)?);
+        // REQ-core-236: 規則の言語でないファイルは読まない
         let Some(lang) = language_of(rel).filter(|lang| rules.has_language(*lang)) else {
             continue;
         };
+        // REQ-core-224: 読めないファイルと UTF-8 でないファイルでの停止は`テストのファイル`と同じ
+        let content =
+            crate::tests_discovery::lone_cr_to_lf(&crate::read_utf8_file(Path::new(abs), rel)?);
         let Some(parsed) = ParsedFile::parse(&content, lang) else {
             let reported = findings
                 .iter()

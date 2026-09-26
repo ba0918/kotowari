@@ -338,19 +338,32 @@ fn req_224_surface_rules_are_not_added_to_the_test_queries() {
 
 // @kotowari[REQ-core-224]
 #[test]
-fn req_224_a_non_utf8_surface_file_stops_as_a_test_file_does() {
+fn req_224_a_non_utf8_surface_file_in_a_rule_language_stops_as_a_test_file_does() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_SRC);
     write(tmp.path(), "rules/surface.yml", FLAG_RULE);
     write(tmp.path(), "docs/ir/a.md", "# A\n\n範囲。\n");
     std::fs::create_dir_all(tmp.path().join("src")).unwrap();
-    std::fs::write(tmp.path().join("src/data.bin"), [0xff, 0xfe, 0x00]).unwrap();
+    std::fs::write(tmp.path().join("src/data.rs"), [0xff, 0xfe, 0x00]).unwrap();
     let (code, _, stderr) = run(tmp.path(), &["check"]);
     assert_eq!(code, Some(2), "{stderr}");
     assert!(
-        stderr.starts_with("non-UTF-8 file: src/data.bin"),
+        stderr.starts_with("non-UTF-8 file: src/data.rs"),
         "{stderr}"
     );
+}
+
+// @kotowari[REQ-core-236, REQ-core-224]
+#[test]
+fn req_236_a_non_utf8_surface_file_not_in_a_rule_language_is_not_read() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), SURFACE_SRC);
+    write(tmp.path(), "rules/surface.yml", FLAG_RULE);
+    write(tmp.path(), "docs/ir/a.md", "# A\n\n範囲。\n");
+    std::fs::create_dir_all(tmp.path().join("src")).unwrap();
+    std::fs::write(tmp.path().join("src/logo.png"), [0xff, 0xfe, 0x00]).unwrap();
+    let (code, stdout, stderr) = run(tmp.path(), &["check"]);
+    assert_eq!(code, Some(0), "{stdout}{stderr}");
 }
 
 // @kotowari[REQ-core-018, TBL-core-001]

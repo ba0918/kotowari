@@ -1,4 +1,4 @@
-# kotowari 自身の CLI の面（判断の記録 docs/decision/records/2026-09-27-surface-check.md の A9）。
+# kotowari 自身の CLI の面（判断の記録 docs/decision/records/2026-09-27-surface-check.md の A27）。
 # 指摘の種類の名前は REQ-core-125 がコードと突き合わせているので、ここでは取り出さない。
 
 # サブコマンド: 1つ目の位置引数として受けるコマンドの表 COMMANDS の中の文字列
@@ -14,13 +14,22 @@ rule:
       regex: ^COMMANDS$
     stopBy: end
 ---
-# フラグ: match の腕のパターンにある "--" で始まる文字列
+# フラグ: "--" で始まる文字列のうち、match の腕のパターンにあるものと、if の条件で == で比べるもの
 id: flag
 language: rust
 rule:
   kind: string_literal
   regex: ^"--
   pattern: $NAME
-  inside:
-    kind: match_pattern
-    stopBy: end
+  any:
+    - inside:
+        kind: match_pattern
+        stopBy: end
+    - inside:
+        kind: binary_expression
+        has:
+          field: operator
+          regex: ^==$
+        inside:
+          kind: if_expression
+          field: condition
