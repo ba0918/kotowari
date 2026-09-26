@@ -10,7 +10,7 @@ Only `kotowari check` and `kotowari status` read the surface files, the surface 
 
 | Key | Value |
 |---|---|
-| surface.files | Globs of the files surfaces are taken from. Read like `tests.files`: the same walk, the same exclusions, and the same stops for an unreadable file, a file that is not UTF-8, and a dangling symbolic link |
+| surface.files | Globs of the files surfaces are taken from. Walked like `tests.files`: the same exclusions and the same stop for a dangling symbolic link. Only the files of a surface rule's language are read, and an unreadable or non-UTF-8 one among them stops as a test file does; other files are not read, so a broad glob such as `src/**` may match images or other binary files |
 | surface.rules | Paths of ast-grep rule YAML files, relative to the base directory. The check runs only when this list is not empty |
 | surface.unspecified | Path of the list of unspecified surfaces (below). Optional |
 
@@ -33,7 +33,7 @@ A surface rule is an ast-grep rule, read as `tests.rules` reads its rules (mark.
 - If the captured text starts and ends with the same quote (`'`, `"` or a backquote), one quote is removed from each end. Nothing else is changed: kotowari adds no `--` and changes no case. Write the rule so that it captures the text a user sees, and quote that same text in the IR.
 - `language` is matched without case and accepts ast-grep's aliases (`ts`, `py`). A rule applies only to surface files whose extension gives that language.
 - `files` and `ignores` apply against the path relative to the base directory. `fix`, `message`, `severity`, `note` and `metadata` are not used; a rule with `severity: off` still applies.
-- Only surface files of a language some surface rule has are parsed. A syntax error in one raises unparsable_file (once per path, even if the file is also a test file); other surface files are not parsed and raise nothing.
+- Only surface files of a language some surface rule has are read and parsed. A syntax error in one raises unparsable_file (once per path, even if the file is also a test file); other surface files are not read and raise nothing, even when they are unreadable or not UTF-8.
 - A missing rule file, a path that is not a file, an unreadable, non-UTF-8 or malformed rule file, the same path listed twice, or an unknown `language` stops check and status with a config error naming the rule file.
 - kotowari bundles no surface rules.
 
