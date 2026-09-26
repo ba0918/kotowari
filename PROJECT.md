@@ -123,7 +123,8 @@ To release:
    never pushes.
 2. Push with the command it prints, `git push origin main && git push origin kotowari-v<version>`:
    main first, and the tag only when main was accepted. The
-   pre-push hook runs the mutation tests over the whole workspace because a tag is pushed. If the
+   pre-push hook runs the mutation tests in the diff from the product's previous release tag
+   because a tag is pushed (the whole workspace when there is none). If the
    push is rejected, first check whether the tag is already on the remote
    (`git ls-remote --tags origin kotowari-v<version>`). If it is not, nothing was published: delete
    the local tag (`git tag -d`), drop the release commit (`git reset --keep HEAD~1`), fix and
