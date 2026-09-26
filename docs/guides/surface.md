@@ -49,9 +49,9 @@ surface:
 - kotowari は面の規則を同梱しません。
 
 clap の builder API で書いた CLI のフラグとサブコマンドを取り出す例です。
+コードは `src/main.rs`、規則は `rules/surface.yml` に置きます。
 
 ```rust
-// src/main.rs
 use clap::{Arg, ArgAction, Command};
 
 fn cli() -> Command {
