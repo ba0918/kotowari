@@ -40,14 +40,17 @@ interview item by item.
 
 - One topic per run. The person chooses it; the default offered is the feature they plan to change
   next. Topics not chosen stay as legacy documents, untouched; there is no project-wide inventory.
-- In the same round, propose the topic's code files and test files, and the candidate legacy
-  documents to read, and have the person confirm them.
+- In the same round, propose the topic's user entry points (the commands, subcommands, or screen
+  operations a user touches), its code files and test files, and the candidate legacy documents to
+  read, and have the person confirm them.
 - This session reads and sorts everything itself. If the topic is too large to read in one go, do
   not hand the reading to another agent: propose, in this same round, splitting the topic smaller.
 
 ### 2. List round
 
-After sorting (below), show one list:
+After sorting (below), show one list. One row is one candidate requirement: behaviors under one rule
+that differ only in a value or a wording (skip-reason messages, for example) are one row, a
+candidate decision table, with the table's contents listed briefly in the implementation column.
 
 - a behavior row: the legacy statement, the implementation's behavior, where the grounds test is
   (or "none"), and the verification value the requirement gets (below);
@@ -56,7 +59,13 @@ After sorting (below), show one list:
 The person answers two things only. For confirmation candidates, they remove only the rows that feel
 wrong; a row they are unsure of stays and is confirmed. For legacy statements and existing
 requirements with no implementation, they say whether it will be built. FLAG rows and the test
-breakdown are shown, not asked.
+breakdown are shown, not asked. Also show, as a count only, the behaviors found outside the scope
+(below), with the names of the topics they suggest next.
+
+When the candidate requirements outnumber `limits.requirements` in the configuration, check whether
+the entry points are mixed. If they are, propose in this same round to split the topic, and the
+person picks the side for this run. If they are not, do not split for the count; split the IR into
+documents by responsibility when writing it.
 
 ### 3. Approval
 
@@ -65,6 +74,12 @@ Write the IR and the decision record from the answers, then approve once by koto
 the final version of the list.
 
 ## Sorting behaviors and terms
+
+Only behaviors observable through the topic's entry points become rows. Code shared with another
+entry point does not widen the scope: a behavior observed through another entry point (merge taking
+a backup, when the topic is rollback) is outside it. Reading files outside the confirmed scope to
+understand the topic is fine, but a behavior found there becomes no row and is not written in the
+decision record; it is only counted for the list round.
 
 Judge agreement by reading the implementation; whether a test exists is written in the list, not a
 condition of agreement. "A legacy statement" below does not include the topic's existing IR
