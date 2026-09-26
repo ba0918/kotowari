@@ -5,6 +5,8 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-26
+
 ### Added
 
 - 仕様を「IR」と呼ぶ決まった形の Markdown に書き、機械で検査する CLI `kotowari`。出力は既定で JSON で、人が読むときは `--format text` を付ける。
@@ -17,3 +19,6 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 - テストの印 `@kotowari[ID]` は、Rust、TypeScript、JavaScript、Python、PHP のテストなら同梱の規則で読む。ほかの言語でも、ast-grep（tree-sitter）が扱える言語なら、設定の `tests.rules` に規則を書けば読める。
 - Claude Code の skill を `agent/skills/` に10個。`kotowari` は IR と判断の記録の書き方、指摘の直し方、印の置き方を教える。`kotowari-` で始まる9個は、壁打ちから計画、実装、レビューまでの工程を kotowari の上で回す（任意）。
 - 入れ方は2通り。GitHub Release のビルド済みのバイナリ（Linux x86_64、macOS arm64。SHA256 付き）と、タグで版を固定した `cargo install --git https://github.com/ba0918/kotowari --tag kotowari-v0.1.0 kotowari`。skill は `gh skill install` の `--pin` にタグを渡すと版を固定して入れられる。
+
+[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.1.0...HEAD
+[0.1.0]: https://github.com/ba0918/kotowari/releases/tag/kotowari-v0.1.0
