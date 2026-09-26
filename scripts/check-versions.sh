@@ -3,7 +3,9 @@
 # 版の宣言のずれを検査する（判断の記録 docs/decision/records/2026-09-26-release-flow.md の A5、A13）。
 #
 #   check-versions.sh          kotowari の版（根の Cargo.toml）に、kotowari-core の Cargo.toml と
-#                              Cargo.lock の kotowari、kotowari-core の版が揃っているかを見る
+#                              Cargo.lock の kotowari、kotowari-core の版が揃っているかを見る。
+#                              kotowari-mds の版（crates/kotowari-markdown-schema/Cargo.toml）に
+#                              Cargo.lock の kotowari-markdown-schema の版が揃っているかも見る
 #   check-versions.sh <タグ>   上に加えて、タグ（kotowari-v<版> か kotowari-mds-v<版>）の版が
 #                              その製品の Cargo.toml の版と同じかを見る
 #
@@ -57,22 +59,33 @@ if [ -n "$tag" ]; then
     tag_version="${BASH_REMATCH[2]}"
 fi
 
-expected="$(manifest_version Cargo.toml)"
-if [ -z "$expected" ]; then
+readonly MDS_MANIFEST="crates/kotowari-markdown-schema/Cargo.toml"
+
+kotowari_version="$(manifest_version Cargo.toml)"
+if [ -z "$kotowari_version" ]; then
     printf 'check-versions.sh: Cargo.toml の [package] に version が無い\n' >&2
     exit 1
 fi
+mds_version="$(manifest_version "$MDS_MANIFEST")"
+if [ -z "$mds_version" ]; then
+    printf 'check-versions.sh: %s の [package] に version が無い\n' "$MDS_MANIFEST" >&2
+    exit 1
+fi
 
-# 箇所と読んだ版を1行ずつ並べる。kotowari の版に従う宣言のすべて
-declarations="Cargo.toml [package] version	$expected
-crates/kotowari-core/Cargo.toml [package] version	$(manifest_version crates/kotowari-core/Cargo.toml)
-Cargo.lock kotowari	$(lock_version Cargo.lock kotowari)
-Cargo.lock kotowari-core	$(lock_version Cargo.lock kotowari-core)"
+# 箇所と読んだ版と従う製品を1行ずつ並べる。製品の版に従う宣言のすべて
+declarations="crates/kotowari-core/Cargo.toml [package] version	$(manifest_version crates/kotowari-core/Cargo.toml)	kotowari
+Cargo.lock kotowari	$(lock_version Cargo.lock kotowari)	kotowari
+Cargo.lock kotowari-core	$(lock_version Cargo.lock kotowari-core)	kotowari
+Cargo.lock kotowari-markdown-schema	$(lock_version Cargo.lock kotowari-markdown-schema)	kotowari-mds"
 
 status=0
-while IFS=$'\t' read -r place version; do
+while IFS=$'\t' read -r place version product; do
+    case "$product" in
+        kotowari) expected="$kotowari_version" ;;
+        kotowari-mds) expected="$mds_version" ;;
+    esac
     if [ "$version" != "$expected" ]; then
-        printf '%s: %s（kotowari の版は %s）\n' "$place" "${version:-(無い)}" "$expected"
+        printf '%s: %s（%s の版は %s）\n' "$place" "${version:-(無い)}" "$product" "$expected"
         status=1
     fi
 done <<< "$declarations"
@@ -80,7 +93,7 @@ done <<< "$declarations"
 if [ -n "$tag" ]; then
     case "$tag_product" in
         kotowari) product_manifest="Cargo.toml" ;;
-        kotowari-mds) product_manifest="crates/kotowari-markdown-schema/Cargo.toml" ;;
+        kotowari-mds) product_manifest="$MDS_MANIFEST" ;;
     esac
     product_version="$(manifest_version "$product_manifest")"
     if [ "$product_version" != "$tag_version" ]; then

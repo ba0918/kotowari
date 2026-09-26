@@ -92,8 +92,9 @@ The two products carry separate versions, each declared in one place:
 | `kotowari` (with `kotowari-core` and the skills in `agent/skills/`) | `version` in `[package]` of the root `Cargo.toml` | `version` of `crates/kotowari-core/Cargo.toml`; the `kotowari` and `kotowari-core` entries of `Cargo.lock` | `kotowari-v<version>` | `CHANGELOG.md` |
 | `kotowari-mds` | `version` in `[package]` of `crates/kotowari-markdown-schema/Cargo.toml` | the `kotowari-markdown-schema` entry of `Cargo.lock` | `kotowari-mds-v<version>` | `crates/kotowari-markdown-schema/CHANGELOG.md` (created at the next mds release; until then `kotowari-mds` cannot be released) |
 
-`scripts/check-versions.sh` exits 1 when a following declaration disagrees with the kotowari
-version; given a tag, it also checks the tag's version against that product's `Cargo.toml`. The
+`scripts/check-versions.sh` exits 1 when a following declaration of either product disagrees
+with that product's version; given a tag, it also checks the tag's version against that product's
+`Cargo.toml`. The
 release script and the release workflow both run it. Fix a mismatch by correcting the versions,
 never by loosening the check.
 
