@@ -265,12 +265,12 @@ tests/discount.bench.ts:4 [error] test_without_id non-member is fast
 
 ### `surface.files`、`surface.rules`、`surface.unspecified`
 
-<!-- @kotowari[REQ-core-224:d03df609, REQ-core-225:77439286, REQ-core-229:34b4f0ca] -->
+<!-- @kotowari[REQ-core-224:89c8931f, REQ-core-225:77439286, REQ-core-229:34b4f0ca] -->
 
 コードから利用者に見える面（CLI のサブコマンドやフラグ、設定の鍵など）を取り出し、IR に書かれているかを確かめる検査の設定です。
 使い方は [面の検査](surface.md) を見てください。
 
-- `surface.files` の glob の読み方、走査、読めないファイルでの停止は `tests.files` と同じです。
+- `surface.files` の glob の読み方と走査は `tests.files` と同じです。読むのは面の規則の言語のファイルだけで、それが読めないか UTF-8 でないときの停止はテストのファイルと同じです。ほかのファイルは読まないので、`src/**` のように広く書いて画像などに当たっても止まりません。
 - `surface.rules` の書き方と、ファイルの誤りで止まる条件は `tests.rules` と同じです。ただし面の規則はテストを見つける問い合わせには加わりません。
 - `surface.files` と `surface.rules` は組で書きます。片方だけのとき、`surface.rules` が空で `surface.unspecified` を書いたときは、設定を読むどのコマンドでも設定の誤りで止まります。
 - 面のファイル、面の規則のファイル、未記載の面の一覧を読むのは `kotowari check` と `kotowari status` だけです。

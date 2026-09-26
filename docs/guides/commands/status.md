@@ -144,13 +144,13 @@ kotowari status --version
 
 ```console
 $ kotowari status --format text
-documents files=51 lines=6206
-items requirement=302 table=48 property=13 scenario=374 flag=0
-requirements unit=260 property=3 proof=0 review=39 with_tests=263 without_tests=0 review_with_how_to_verify=39 review_without_how_to_verify=0 without_examples=135 deferred=0
+documents files=52 lines=6238
+items requirement=305 table=48 property=13 scenario=374 flag=0
+requirements unit=260 property=3 proof=0 review=42 with_tests=263 without_tests=0 review_with_how_to_verify=42 review_without_how_to_verify=0 without_examples=138 deferred=0
 scenarios with_tests=367 without_tests=7 deferred=0
-tests marks=2145 rs=58
+tests marks=2152 rs=58
 guides files=14 marks=525
-surface total=9 specified=9 unspecified=0
+surface total=11 specified=11 unspecified=0
 findings error=0 notice=8
 complete true
 ```
