@@ -49,8 +49,8 @@ interview item by item.
 
 After sorting (below), show one list:
 
-- a behavior row: the legacy statement, the implementation's behavior, and where the grounds test is
-  (or "none");
+- a behavior row: the legacy statement, the implementation's behavior, where the grounds test is
+  (or "none"), and the verification value the requirement gets (below);
 - a term row: the legacy definition, how the implementation uses the term, and the grounds.
 
 The person answers two things only. For confirmation candidates, they remove only the rows that feel
@@ -97,6 +97,17 @@ cites as its source a decision of its own.
 Confirmation candidates include terms: a confirmed term goes into `CONTEXT.md`, a removed one becomes
 a contradiction FLAG. When citing an existing decision that agrees, cite it even if it lacks a reason,
 and do not rewrite the legacy document.
+
+## Requirements written by confirmation
+
+Decide each requirement's `- verification:` by what the behavior is, never by whether a test exists:
+`unit` for a behavior of the implementation, `property` for a property that holds over the whole
+input, `review` for something outside the code (a document, an operating procedure), with
+`- how_to_verify:` saying how to check it. Making a requirement `review` because it has no test hides
+the missing test in the specification; do not. The value is shown in the list, not asked.
+
+Scenarios (success condition and counter-example) are not required for these requirements. Write one
+only when a legacy document or a grounds test already holds a concrete case.
 
 ## Sorting tests
 
@@ -147,14 +158,18 @@ Hand the person one request text, in the conversation only — do not write it t
   details;
 - bring the tests to be marked into the range of `tests.files` in the configuration — move them in or
   widen `tests.files`, following the project's existing setting;
+- write tests for the requirements that have no grounds test;
 - in a project that runs mutation tests: compare the surviving mutants on the topic's code before and
   after the deletion, and if they increase, restore the deleted tests and put them in "keep".
 
 Which station runs it is decided by kotowari-using-workflow, not here. The FLAGs are collected by
 kotowari-brainstorm when that feature is next worked on.
 
-Tell the person two things:
+Tell the person three things:
 
 - tests outside `tests.files` are outside kotowari: a test with no mark there is not an error;
+- a requirement with no grounds test keeps its requirement_without_test until its test is written, and
+  a project whose push or CI requires `kotowari check` to pass stops on it — so run the adoption and the
+  test work that follows on one branch;
 - while FLAGs remain, `kotowari status` reports `complete` false. That is intended: it is the list of
   what awaits collection, not a breakage.
