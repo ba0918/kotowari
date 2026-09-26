@@ -11,8 +11,9 @@ on:
       - "kotowari-v*"
       - "kotowari-mds-v*"
 
+# 書き込みの権限は Release を作るジョブだけに渡す。依存のビルドが走るジョブには読み取りだけ
 permissions:
-  contents: write
+  contents: read
 
 env:
   TAG: ${{ github.ref_name }}
@@ -30,6 +31,8 @@ jobs:
       readme: ${{ steps.product.outputs.readme }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - id: product
         name: タグから製品を引く
         run: |
@@ -91,6 +94,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Rust を用意する
         run: |
           rustup toolchain install stable --profile minimal
@@ -122,6 +127,8 @@ jobs:
       README: ${{ needs.meta.outputs.readme }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Rust を用意する
         run: |
           rustup toolchain install stable --profile minimal
@@ -150,6 +157,8 @@ jobs:
     name: Release を作る
     needs: [meta, build]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
