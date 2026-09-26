@@ -173,7 +173,9 @@ cat <<EOF
 
 ${tag} を作った（まだ push していない）。公開するには次を打つ:
 
-  git push --atomic origin main ${tag}
+  git push origin main && git push origin ${tag}
+
+main の push が通ってからタグを push する（main が拒まれたらタグは出さない）。
 
 タグの push では pre-push のフックが変異テストを全体で回すので時間がかかる。
 通れば GitHub Actions がバイナリを付けた GitHub Release を作る。

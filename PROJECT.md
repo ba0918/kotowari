@@ -121,7 +121,8 @@ To release:
    tag; otherwise it restores the files and leaves no commit and no tag. It refuses to start when
    the tag already exists locally or on `origin`, or when `origin` cannot be reached to tell. It
    never pushes.
-2. Push both with the command it prints, `git push --atomic origin main kotowari-v<version>`. The
+2. Push with the command it prints, `git push origin main && git push origin kotowari-v<version>`:
+   main first, and the tag only when main was accepted. The
    pre-push hook runs the mutation tests over the whole workspace because a tag is pushed. If the
    push is rejected, first check whether the tag is already on the remote
    (`git ls-remote --tags origin kotowari-v<version>`). If it is not, nothing was published: delete
