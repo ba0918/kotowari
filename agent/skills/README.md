@@ -37,6 +37,16 @@ npx skills add ba0918/kotowari --agent claude-code --skill '*'
 
 APM は `agent/` を指定すると、リポジトリ全体ではなく skill の分だけを落とす。入れる先や入れる skill を選ぶ方法は、それぞれの道具の help を読む。
 
+### 版を固定して入れる
+
+skill は kotowari 本体と同じタグ（`kotowari-v0.1.0` の形）で出している。版を固定して入れるときは、`gh skill install` の `--pin` にそのタグを渡す。
+
+```sh
+gh skill install ba0918/kotowari --agent claude-code --all --pin kotowari-v0.1.0
+```
+
+`kotowari-v0.1.0` は入れたい版のタグに置き換える。入れた kotowari 本体と同じ版にそろえると、skill が教える書き方と `kotowari check` の検査が食い違わない。
+
 ## リポジトリを手元に置いている場合の入れ方
 
 `~/.claude/skills/` に、このリポジトリの `agent/skills/` の各ディレクトリへのシンボリックリンクを置く。リンクにしておくと、リポジトリを更新すれば手元の skill も常に最新になる。
