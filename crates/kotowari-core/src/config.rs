@@ -250,6 +250,26 @@ pub fn is_blank_yaml(text: &str) -> bool {
     })
 }
 
+/// 一覧のファイル（`等価の一覧`と`未記載の面の一覧`）の中身を、最上位の並びの要素として読む。
+/// 空（0バイトか注釈だけ）なら0件。YAML として読めないか最上位が並びでないときは、
+/// 一覧のファイルの相対パス `display` を詳細にして設定の誤りで`停止`する（REQ-core-148、REQ-core-231）
+pub(crate) fn read_yaml_sequence(
+    text: &str,
+    display: &str,
+) -> Result<Vec<serde_json::Value>, StopReason> {
+    if is_blank_yaml(text) {
+        return Ok(Vec::new());
+    }
+    let root: serde_json::Value = serde_saphyr::from_str(text)
+        .map_err(|e| StopReason::ConfigError(format!("{display}: {e}")))?;
+    match root {
+        serde_json::Value::Array(items) => Ok(items),
+        _ => Err(StopReason::ConfigError(format!(
+            "{display}: the list is not a sequence"
+        ))),
+    }
+}
+
 /// YAML のライブラリの誤りを設定の誤りにする。キーの重複はライブラリの文言と抜粋を出さず、
 /// "duplicate key: キー" の1行にする（REQ-core-014）
 fn yaml_error(e: serde_saphyr::Error) -> StopReason {

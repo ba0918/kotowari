@@ -114,7 +114,7 @@ fn req_030_notice_kinds_have_the_detail_of_the_table() {
 
 // @kotowari[REQ-core-031]
 #[test]
-fn req_031_only_seven_kinds_are_notices() {
+fn req_031_only_eight_kinds_are_notices() {
     // 本体が注意にする種類（"kotowari mutants" の2種類は check の出力には現れない）
     let notices: std::collections::BTreeSet<&str> = kotowari_core::FindingKind::ALL
         .iter()
@@ -129,6 +129,7 @@ fn req_031_only_seven_kinds_are_notices() {
             "equivalent_stale",
             "guide_stale",
             "mutant_timeout",
+            "surface_unspecified_stale",
             "too_many_lines",
             "too_many_requirements",
         ])

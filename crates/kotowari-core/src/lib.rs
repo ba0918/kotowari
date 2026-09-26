@@ -100,6 +100,8 @@ finding_kinds! {
     RevisionLinkInvalid => "revision_link_invalid",
     ScenarioWithoutTest => "scenario_without_test",
     SourceInvalid => "source_invalid",
+    SurfaceUnspecifiedInvalid => "surface_unspecified_invalid",
+    SurfaceUnspecifiedStale => "surface_unspecified_stale",
     SurfaceWithoutSpec => "surface_without_spec",
     TestWithoutId => "test_without_id",
     TooManyLines => "too_many_lines",
@@ -135,6 +137,7 @@ impl FindingKind {
             | FindingKind::MutantTimeout
             | FindingKind::EquivalentStale
             | FindingKind::GuideStale
+            | FindingKind::SurfaceUnspecifiedStale
             | FindingKind::DeferredWithTest
             | FindingKind::DependsOnDeferred => "notice",
             _ => "error",
@@ -1122,8 +1125,12 @@ fn load_with_guides(
         &loaded.docs,
         &mut loaded.findings,
     )?;
-    let surfaces = surface::extract(&loaded.base, &loaded.cfg, &mut loaded.findings)?;
-    surface::report(&surfaces, &loaded.docs, &mut loaded.findings);
+    surface::check(
+        &loaded.base,
+        &loaded.cfg,
+        &loaded.docs,
+        &mut loaded.findings,
+    )?;
     Ok((loaded, tally))
 }
 

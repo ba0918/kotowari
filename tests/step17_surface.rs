@@ -758,3 +758,226 @@ fn req_227_no_surface_is_extracted_when_surface_rules_is_empty() {
     assert!(without_spec(&v).is_empty(), "{v}");
     assert_eq!(code, Some(0), "{v}");
 }
+
+// --- S4: 未記載の面の一覧 ---
+
+/// EX-core-408 の場面（"--format" だけが IR にある）に、"surface.unspecified" と一覧の中身を足す
+fn ex_408_project_with_list(tmp: &Path, list: &str) {
+    make_project(
+        tmp,
+        &format!("{SURFACE_RS}  unspecified: \"docs/surface.yaml\"\n"),
+    );
+    write(tmp, "rules/surface.yml", FLAG_RULE);
+    write(tmp, "src/cli.rs", &cli_rs());
+    write(
+        tmp,
+        "docs/ir/a.md",
+        &ir_doc(
+            &review_requirement("REQ-001", "\"--format\" を受ける。"),
+            "",
+        ),
+    );
+    write(tmp, "docs/surface.yaml", list);
+}
+
+/// 一覧の1件
+fn entry(kind: &str, name: &str, why: &str) -> String {
+    format!("- kind: \"{kind}\"\n  name: \"{name}\"\n  why: \"{why}\"\n")
+}
+
+// @kotowari[REQ-core-232]
+#[test]
+fn req_232_a_matching_entry_removes_the_error() {
+    let tmp = TempDir::new().unwrap();
+    // 同じ内容の1件が2つあっても検査しない
+    let one = entry("flag", "--verbose", "まだ決めていない");
+    ex_408_project_with_list(tmp.path(), &format!("{one}{one}"));
+    let (code, v) = check_json(tmp.path());
+    assert!(v["findings"].as_array().unwrap().is_empty(), "{v}");
+    assert_eq!(code, Some(0));
+}
+
+// @kotowari[EX-core-420, REQ-core-232]
+#[test]
+fn ex_core_420_an_entry_of_another_kind_does_not_match() {
+    let tmp = TempDir::new().unwrap();
+    ex_408_project_with_list(tmp.path(), &entry("subcommand", "--verbose", "理由"));
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
+}
+
+// @kotowari[REQ-core-232]
+#[test]
+fn req_232_names_are_compared_without_trimming() {
+    let tmp = TempDir::new().unwrap();
+    ex_408_project_with_list(tmp.path(), &entry("flag", "--verbose ", "理由"));
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
+}
+
+// @kotowari[EX-core-421, REQ-core-233, REQ-core-027, TBL-core-006, TBL-core-008]
+#[test]
+fn ex_core_421_an_entry_whose_reason_is_blank_is_invalid_and_removes_nothing() {
+    let tmp = TempDir::new().unwrap();
+    ex_408_project_with_list(tmp.path(), &entry("flag", "--verbose", " \t "));
+    let (code, v) = check_json(tmp.path());
+    assert_eq!(
+        findings_of(&v, "surface_unspecified_invalid"),
+        vec![(
+            "docs/surface.yaml".to_string(),
+            serde_json::Value::Null,
+            "flag --verbose".to_string()
+        )],
+        "{v}"
+    );
+    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
+    assert!(
+        findings_of(&v, "surface_unspecified_stale").is_empty(),
+        "{v}"
+    );
+    assert_eq!(code, Some(1));
+}
+
+// @kotowari[REQ-core-233]
+#[test]
+fn req_233_each_malformed_entry_is_invalid_with_the_written_kind_and_name() {
+    let tmp = TempDir::new().unwrap();
+    let list = [
+        "- \"not a mapping\"\n",
+        "- kind: \"flag\"\n  name: \"--a\"\n",
+        "- kind: \"flag\"\n  name: \"--b\"\n  why: \"理由\"\n  extra: \"x\"\n",
+        "- kind: \"flag\"\n  name: 3\n  why: \"理由\"\n",
+        "- name: \"--c\"\n  why: \"理由\"\n",
+        "- kind: \"flag\"\n  name: \"--d\"\n  why: 1\n",
+    ]
+    .concat();
+    ex_408_project_with_list(tmp.path(), &list);
+    let (_, v) = check_json(tmp.path());
+    let mut details: Vec<String> = findings_of(&v, "surface_unspecified_invalid")
+        .into_iter()
+        .map(|(_, _, detail)| detail)
+        .collect();
+    details.sort();
+    assert_eq!(
+        details,
+        vec![" ", " --c", "flag ", "flag --a", "flag --b", "flag --d"],
+        "{v}"
+    );
+    assert!(
+        findings_of(&v, "surface_unspecified_stale").is_empty(),
+        "{v}"
+    );
+}
+
+// @kotowari[EX-core-422, REQ-core-234, REQ-core-027, TBL-core-009]
+#[test]
+fn ex_core_422_an_entry_for_a_surface_gone_from_the_code_is_a_notice() {
+    let tmp = TempDir::new().unwrap();
+    let list = [
+        entry("flag", "--verbose", "理由"),
+        entry("flag", "--old", "理由"),
+    ]
+    .concat();
+    ex_408_project_with_list(tmp.path(), &list);
+    let (code, v) = check_json(tmp.path());
+    assert_eq!(
+        findings_of(&v, "surface_unspecified_stale"),
+        vec![(
+            "docs/surface.yaml".to_string(),
+            serde_json::Value::Null,
+            "flag --old".to_string()
+        )],
+        "{v}"
+    );
+    let stale = v["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|f| f["kind"] == "surface_unspecified_stale")
+        .unwrap();
+    assert_eq!(stale["severity"], "notice");
+    assert_eq!(code, Some(0), "a notice does not change the exit code: {v}");
+}
+
+// @kotowari[EX-core-423, REQ-core-234]
+#[test]
+fn ex_core_423_an_entry_for_a_surface_now_in_the_ir_is_a_notice() {
+    let tmp = TempDir::new().unwrap();
+    ex_408_project_with_list(tmp.path(), &entry("flag", "--format", "理由"));
+    let (_, v) = check_json(tmp.path());
+    assert_eq!(
+        findings_of(&v, "surface_unspecified_stale"),
+        vec![(
+            "docs/surface.yaml".to_string(),
+            serde_json::Value::Null,
+            "flag --format".to_string()
+        )],
+        "{v}"
+    );
+}
+
+// @kotowari[EX-core-424, REQ-core-231, TBL-core-001]
+#[test]
+fn ex_core_424_a_missing_list_file_stops_as_unreadable() {
+    let tmp = TempDir::new().unwrap();
+    ex_408_project_with_list(tmp.path(), "");
+    std::fs::remove_file(tmp.path().join("docs/surface.yaml")).unwrap();
+    let (code, _, stderr) = run(tmp.path(), &["check"]);
+    assert_eq!(code, Some(2), "{stderr}");
+    assert!(stderr.starts_with("unreadable file: "), "{stderr}");
+}
+
+// @kotowari[EX-core-425, REQ-core-231, TBL-core-020]
+#[test]
+fn ex_core_425_a_list_that_is_not_a_sequence_stops_naming_the_list() {
+    let tmp = TempDir::new().unwrap();
+    ex_408_project_with_list(tmp.path(), "kind: flag\n");
+    let (code, _, stderr) = run(tmp.path(), &["check"]);
+    assert_eq!(code, Some(2), "{stderr}");
+    assert!(
+        stderr.starts_with("config error: docs/surface.yaml"),
+        "{stderr}"
+    );
+}
+
+// @kotowari[REQ-core-231, TBL-core-001, TBL-core-020]
+#[test]
+fn req_231_a_list_that_is_not_yaml_or_not_utf8_stops_check_and_status() {
+    let cases: [(&[u8], &str); 2] = [
+        (b"- [unclosed\n", "config error: docs/surface.yaml"),
+        (&[0xff, 0xfe], "non-UTF-8 file: docs/surface.yaml"),
+    ];
+    for (content, wording) in cases {
+        let tmp = TempDir::new().unwrap();
+        ex_408_project_with_list(tmp.path(), "");
+        std::fs::write(tmp.path().join("docs/surface.yaml"), content).unwrap();
+        for command in ["check", "status"] {
+            let (code, _, stderr) = run(tmp.path(), &[command]);
+            assert_eq!(code, Some(2), "{command}: {stderr}");
+            assert!(stderr.starts_with(wording), "{command}: {stderr}");
+        }
+    }
+}
+
+// @kotowari[REQ-core-231]
+#[test]
+fn req_231_a_blank_list_has_no_entries() {
+    let tmp = TempDir::new().unwrap();
+    ex_408_project_with_list(tmp.path(), "# まだ無い\n\n");
+    let (code, v) = check_json(tmp.path());
+    assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
+    assert_eq!(code, Some(1));
+}
+
+// @kotowari[REQ-core-229, REQ-core-152, REQ-core-158]
+#[test]
+fn req_229_list_and_query_do_not_read_the_surface_list_or_files() {
+    let tmp = TempDir::new().unwrap();
+    ex_408_project_with_list(tmp.path(), "");
+    std::fs::remove_file(tmp.path().join("docs/surface.yaml")).unwrap();
+    std::fs::write(tmp.path().join("src/data.bin"), [0xff, 0xfe]).unwrap();
+    for args in [&["list"][..], &["query", "REQ-001"]] {
+        let (code, _, stderr) = run(tmp.path(), args);
+        assert_eq!(code, Some(0), "{args:?}: {stderr}");
+    }
+}

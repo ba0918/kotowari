@@ -36,22 +36,11 @@ pub struct EquivalentList {
 /// YAML として読めないか最上位が並びでないときは設定の誤りで`停止`する（REQ-core-148）。
 pub fn read_list(text: &str, display: &str) -> Result<EquivalentList, StopReason> {
     // REQ-core-148: 空（0バイトか注釈だけ）の一覧は0件
-    if crate::config::is_blank_yaml(text) {
-        return Ok(EquivalentList {
-            entries: Vec::new(),
-            findings: Vec::new(),
-        });
-    }
-
-    let root: Value = serde_saphyr::from_str(text)
-        .map_err(|e| StopReason::ConfigError(format!("{display}: {e}")))?;
-    let items = root
-        .as_array()
-        .ok_or_else(|| StopReason::ConfigError(format!("{display}: the list is not a sequence")))?;
+    let items = crate::config::read_yaml_sequence(text, display)?;
 
     let mut entries = Vec::new();
     let mut findings = Vec::new();
-    for item in items {
+    for item in &items {
         match read_entry(item) {
             Ok(entry) => entries.push(entry),
             // REQ-core-143: 形の誤った1件は1件ごとに誤りを出し、どの変異の結果とも一致させない
