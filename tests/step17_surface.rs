@@ -982,6 +982,26 @@ fn req_229_list_and_query_do_not_read_the_surface_list_or_files() {
     }
 }
 
+// @kotowari[REQ-core-229]
+#[test]
+fn req_229_mutants_does_not_read_the_surface_list_rules_or_files() {
+    let tmp = TempDir::new().unwrap();
+    ex_408_project_with_list(tmp.path(), "");
+    std::fs::remove_file(tmp.path().join("docs/surface.yaml")).unwrap();
+    std::fs::write(tmp.path().join("rules/surface.yml"), [0xff, 0xfe]).unwrap();
+    std::fs::write(tmp.path().join("src/data.bin"), [0xff, 0xfe]).unwrap();
+    write(
+        tmp.path(),
+        "results.json",
+        r#"{"outcomes":[{"scenario":"Baseline","summary":"Success"}]}"#,
+    );
+    let (code, _, stderr) = run(
+        tmp.path(),
+        &["mutants", "--tool", "cargo-mutants", "results.json"],
+    );
+    assert_eq!(code, Some(0), "{stderr}");
+}
+
 // --- S5: check の出力と status ---
 
 /// EX-core-407 の場面: "--format" を`要求`の`文`に書き、"--verbose" を`未記載の面の一覧`に載せる
