@@ -13,10 +13,6 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 ## 後でやる
 
-### リポジトリを公開した後に README の curl の手順を試す（kotowari）
-
-- README の「ビルド済みのバイナリ」の手順（`curl -LO` で落として `shasum -a 256 -c` で確かめる）は、リポジトリが非公開のうちは認証の無い `curl` が "Not Found" を受け取るので試せない。公開したら文字どおりに走らせる。mise の `github:`（`version_prefix=kotowari-v` を付けた形）と、タグで固定した `cargo install --git` は 2026-09-26 に認証付きで入ることを確かめた
-
 ### タグの push でリリースのワークフローが起動しなかった原因を確かめる（kotowari）
 
 - 2026-09-26 に `scripts/release.sh` が表示する `git push --atomic origin main kotowari-v0.1.0` で main とタグを一緒に push したところ、タグはリモートにできたが `.github/workflows/release.yml` は起動せず、Actions の実行は0件だった（GitHub のイベントの一覧にもタグの作成が出なかった）。ワークフローを初めて入れたのと同じ push だったことも重なっている。次のリリースで起動するかを見て、起動しなければ main とタグを別々に push するよう `scripts/release.sh` の表示と PROJECT.md のリリースの節を直す。起動しなかったときは `gh workflow run release -f tag=<タグ>` で作れる
