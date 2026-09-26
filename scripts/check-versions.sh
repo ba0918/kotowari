@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+#
+# 版の宣言のずれを検査する（判断の記録 docs/decision/records/2026-09-26-release-flow.md の A5、A13）。
+#
+#   check-versions.sh          kotowari の版（根の Cargo.toml）に、kotowari-core の Cargo.toml と
+#                              Cargo.lock の kotowari、kotowari-core の版が揃っているかを見る
+#   check-versions.sh <タグ>   上に加えて、タグ（kotowari-v<版> か kotowari-mds-v<版>）の版が
+#                              その製品の Cargo.toml の版と同じかを見る
+#
+# 終了コード: 0 揃っている、1 ずれがある（ずれた箇所を出す）、2 引数の形が違う
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+readonly TAG_PATTERN='^(kotowari|kotowari-mds)-v([0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?)$'
+
+usage() {
+    printf 'usage: %s [kotowari-v<版> | kotowari-mds-v<版>]\n' "$0" >&2
+    exit 2
+}
+
+# Cargo.toml の [package] の表にある version の値を出す
+manifest_version() {
+    awk '
+        /^\[/ { in_package = ($0 == "[package]"); next }
+        in_package && /^version[[:space:]]*=/ {
+            sub(/^version[[:space:]]*=[[:space:]]*"/, ""); sub(/".*$/, ""); print; exit
+        }
+    ' "$1"
+}
+
+# Cargo.lock から、名前が $2 のパッケージの version の値を出す
+lock_version() {
+    awk -v name="$2" '
+        /^\[\[package\]\]$/ { in_block = 0; next }
+        $0 == "name = \"" name "\"" { in_block = 1; next }
+        in_block && /^version = / {
+            sub(/^version = "/, ""); sub(/".*$/, ""); print; exit
+        }
+    ' "$1"
+}
+
+if [ "$#" -gt 1 ]; then
+    usage
+fi
+
+tag="${1:-}"
+tag_product=""
+tag_version=""
+if [ -n "$tag" ]; then
+    if [[ ! "$tag" =~ $TAG_PATTERN ]]; then
+        printf 'check-versions.sh: タグの形が違う: %s\n' "$tag" >&2
+        usage
+    fi
+    tag_product="${BASH_REMATCH[1]}"
+    tag_version="${BASH_REMATCH[2]}"
+fi
+
+expected="$(manifest_version Cargo.toml)"
+if [ -z "$expected" ]; then
+    printf 'check-versions.sh: Cargo.toml の [package] に version が無い\n' >&2
+    exit 1
+fi
+
+# 箇所と読んだ版を1行ずつ並べる。kotowari の版に従う宣言のすべて
+declarations="Cargo.toml [package] version	$expected
+crates/kotowari-core/Cargo.toml [package] version	$(manifest_version crates/kotowari-core/Cargo.toml)
+Cargo.lock kotowari	$(lock_version Cargo.lock kotowari)
+Cargo.lock kotowari-core	$(lock_version Cargo.lock kotowari-core)"
+
+status=0
+while IFS=$'\t' read -r place version; do
+    if [ "$version" != "$expected" ]; then
+        printf '%s: %s（kotowari の版は %s）\n' "$place" "${version:-(無い)}" "$expected"
+        status=1
+    fi
+done <<< "$declarations"
+
+if [ -n "$tag" ]; then
+    case "$tag_product" in
+        kotowari) product_manifest="Cargo.toml" ;;
+        kotowari-mds) product_manifest="crates/kotowari-markdown-schema/Cargo.toml" ;;
+    esac
+    product_version="$(manifest_version "$product_manifest")"
+    if [ "$product_version" != "$tag_version" ]; then
+        printf '%s [package] version: %s（タグ %s の版は %s）\n' \
+            "$product_manifest" "${product_version:-(無い)}" "$tag" "$tag_version"
+        status=1
+    fi
+fi
+
+exit "$status"
