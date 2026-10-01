@@ -126,17 +126,21 @@ src/lib.rs:2 [error] test_without_id req_001_locks_after_five_failures
 
 出典の決定番号を消したり書き間違えたりしても、同じように指摘が出る。
 
+## リファレンス
+
+詳しい使い方は[リファレンスの目次](docs/guides/index.md)から調べられる。[設定ファイル](docs/guides/config.md)、[テストの印の付け方](docs/guides/marks.md)、[指摘の種類と直し方](docs/guides/findings.md)のほか、各コマンドの説明をまとめている。
+
 ## コマンド
 
 | コマンド | 役目 |
 |---|---|
-| `kotowari check` | IRの形式、出典の実在、テストの印を検査する。終了コード0は指摘なし、1は誤りあり、2は検査を開始できなかったことを示す |
-| `kotowari list` | IRの項目と、印の付いたテストの一覧 |
-| `kotowari query <ID>` | 1件の本文、テスト、逆引き |
-| `kotowari status` | 揃っているかを集計し、最後の行に`complete true`か`complete false`を出力する |
-| `kotowari mutants --tool cargo-mutants <結果のファイル>` | 変異テスト（cargo-mutants）の結果から見逃しを報告する |
-| `kotowari plan <計画のファイル>` | 同梱のスキーマに従って、実装計画のファイルが決まった形式で書かれているかを検査する |
-| `kotowari changes --base <REV> (--head <REV> \| --staged) --phase <implementation\|review>` | Gitの比較元と対象の差分を照合記録と突き合わせ、照合が漏れている箇所や記録が古くなっている箇所を報告する。設定に`changes`を記述した場合のみ使える。[使い方](docs/guides/commands/changes.md) |
+| [`kotowari check`](docs/guides/commands/check.md) | IRの形式、出典の実在、テストの印を検査する。終了コード0は指摘なし、1は誤りあり、2は検査を開始できなかったことを示す |
+| [`kotowari list`](docs/guides/commands/list.md) | IRの項目と、印の付いたテストの一覧 |
+| [`kotowari query <ID>`](docs/guides/commands/query.md) | 1件の本文、テスト、逆引き |
+| [`kotowari status`](docs/guides/commands/status.md) | 揃っているかを集計し、最後の行に`complete true`か`complete false`を出力する |
+| [`kotowari mutants --tool cargo-mutants <結果のファイル>`](docs/guides/commands/mutants.md) | 変異テスト（cargo-mutants）の結果から見逃しを報告する |
+| [`kotowari plan <計画のファイル>`](docs/guides/commands/plan.md) | 同梱のスキーマに従って、実装計画のファイルが決まった形式で書かれているかを検査する |
+| [`kotowari changes --base <REV> (--head <REV> \| --staged) --phase <implementation\|review>`](docs/guides/commands/changes.md) | Gitの比較元と対象の差分を照合記録と突き合わせ、照合が漏れている箇所や記録が古くなっている箇所を報告する。設定に`changes`を記述した場合のみ使える。 |
 
 現在、テストの印を読み取れるのはRustのみ。ただし、IRの検査はほかの言語を使うプロジェクトでも利用できる。
 
