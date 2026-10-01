@@ -426,3 +426,53 @@ fn an_invalid_entry_never_covers_a_change_while_its_valid_neighbour_does() {
     let both = format!("{valid}{invalid_entry}");
     assert_eq!(summary(&both), (1, vec!["change_record_invalid".into()]));
 }
+
+// @kotowari[REQ-core-263]
+#[test]
+fn changes_rejects_a_positional_argument_and_a_tool_each_alone() {
+    let d = repository();
+    let required = ["--base", "HEAD", "--staged", "--phase", "implementation"];
+    for extra in [vec!["extra"], vec!["--tool", "cargo-mutants"]] {
+        let args: Vec<&str> = ["changes"]
+            .into_iter()
+            .chain(extra.iter().copied())
+            .chain(required)
+            .collect();
+        assert_eq!(run(d.path(), &args).status.code(), Some(2), "{args:?}");
+    }
+}
+
+// @kotowari[REQ-core-263]
+#[test]
+fn other_commands_reject_staged_alone() {
+    let d = repository();
+    for dir in ["docs/ir", "docs/decision/adr"] {
+        fs::create_dir_all(d.path().join(dir)).unwrap();
+    }
+    // Without the option the same check runs, so exit 2 can only come from the option.
+    assert_eq!(run(d.path(), &["check"]).status.code(), Some(0));
+    assert_eq!(run(d.path(), &["check", "--staged"]).status.code(), Some(2));
+}
+
+// @kotowari[REQ-core-272, REQ-core-274]
+#[test]
+fn an_uncovered_change_names_the_missing_role() {
+    let d = repository();
+    fs::write(d.path().join("src/a"), "after").unwrap();
+    git(d.path(), &["add", "src/a"]);
+    git(d.path(), &["commit", "-qm", "change"]);
+    let missing = |root: &Path| {
+        let args = [
+            "changes", "--base", "HEAD~1", "--head", "HEAD", "--phase", "review",
+        ];
+        let json: serde_json::Value = serde_json::from_slice(&run(root, &args).stdout).unwrap();
+        json["findings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|f| f["kind"] == "change_uncovered")
+            .map(|f| f["detail"].as_str().unwrap().to_string())
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(missing(d.path()), ["implementer", "reviewer"]);
+}

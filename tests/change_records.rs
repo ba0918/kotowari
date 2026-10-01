@@ -300,3 +300,144 @@ fn explicitly_named_hidden_records_are_checked_without_reading_other_hidden_dirs
         );
     }
 }
+
+const TOPIC: &str = "# 範囲\n\n内容。\n\n## Requirements\n\n### REQ-core-999: 既存\n\n- kind: ubiquitous\n- source: docs/decision/records/test.md#A1\n- verification: unit\n\n既存。\n";
+const OTHER: &str = "# 別\n\n内容。\n";
+
+fn details_with_ir(record: &str) -> Vec<String> {
+    let dir = project(record);
+    std::fs::create_dir_all(dir.path().join("docs/ir/core")).unwrap();
+    std::fs::write(dir.path().join("docs/ir/core/topic.md"), TOPIC).unwrap();
+    std::fs::write(dir.path().join("docs/ir/core/other.md"), OTHER).unwrap();
+    let (result, _) =
+        kotowari_core::run_check(dir.path(), kotowari_core::Format::Json, None).unwrap();
+    result
+        .findings
+        .into_iter()
+        .filter(|f| f.kind.as_str() == "change_record_invalid")
+        .map(|f| f.detail)
+        .collect()
+}
+
+fn with_ir(record: &str, path: &str) -> String {
+    record.replace(
+        "ir: []",
+        &format!(
+            "ir: [{{path: {path}, sha256: 'sha256:{}'}}]",
+            "a".repeat(64)
+        ),
+    )
+}
+
+// @kotowari[REQ-core-268]
+#[test]
+fn a_base_must_be_a_full_lowercase_hex_object_id() {
+    for base in ["g".repeat(40), "a".repeat(39)] {
+        let record = entry().replace(&"0".repeat(40), &base);
+        let details = details_with_ir(&record);
+        assert!(
+            details.iter().any(|d| d.ends_with("invalid base")),
+            "{base}: {details:?}"
+        );
+    }
+}
+
+// @kotowari[REQ-core-269]
+#[test]
+fn an_unnormalized_ir_path_is_reported_as_an_invalid_path() {
+    let details = details_with_ir(&with_ir(&entry(), "../docs/ir/core/topic.md"));
+    assert!(
+        details
+            .iter()
+            .any(|d| d.ends_with("invalid or duplicate IR path")),
+        "{details:?}"
+    );
+}
+
+// @kotowari[REQ-core-271]
+#[test]
+fn a_recorded_gap_alone_needs_no_requirement() {
+    let record = entry().replace("gaps: []", "gaps: [{category: missing_spec, disposition: recorded, refs: ['docs/decision/records/test.md#A1']}]");
+    assert_eq!(details_with_ir(&record), Vec::<String>::new());
+}
+
+// @kotowari[REQ-core-270]
+#[test]
+fn an_existing_conclusion_without_ir_is_reported_as_lacking_both() {
+    let record = entry()
+        .replace("conclusion: new", "conclusion: existing")
+        .replace("requirements: []", "requirements: [REQ-core-999]");
+    let details = details_with_ir(&record);
+    assert!(
+        details
+            .iter()
+            .any(|d| d.ends_with("requirements and definition IR required")),
+        "{details:?}"
+    );
+}
+
+// @kotowari[REQ-core-271]
+#[test]
+fn only_fixed_gaps_require_an_existing_conclusion() {
+    let record = with_ir(&entry(), "docs/ir/core/topic.md")
+        .replace("requirements: []", "requirements: [REQ-core-999]")
+        .replace("gaps: []", "gaps: [{category: spec_conflict, disposition: fixed, refs: ['docs/decision/records/test.md#A1']}]");
+    let details = details_with_ir(&record);
+    assert!(
+        details
+            .iter()
+            .any(|d| d.ends_with("gap conclusion mismatch")),
+        "{details:?}"
+    );
+}
+
+// @kotowari[REQ-core-270]
+#[test]
+fn a_requirement_must_be_cited_with_the_ir_that_defines_it() {
+    let record = with_ir(&entry(), "docs/ir/core/other.md")
+        .replace("requirements: []", "requirements: [REQ-core-999]");
+    let details = details_with_ir(&record);
+    assert!(
+        details
+            .iter()
+            .any(|d| d.ends_with("missing definition IR docs/ir/core/topic.md")),
+        "{details:?}"
+    );
+}
+
+// @kotowari[REQ-core-270, REQ-core-274]
+#[test]
+fn a_malformed_decision_reference_is_reported_once() {
+    let record = entry().replace("test.md#A1", "test.md#bad");
+    let details = details_with_ir(&record);
+    assert_eq!(details.len(), 1, "{details:?}");
+}
+
+// @kotowari[REQ-core-249]
+#[cfg(unix)]
+#[test]
+fn a_record_reached_through_a_file_symlink_is_checked() {
+    let dir = project("version: 1\nentries: []\n");
+    std::fs::create_dir_all(dir.path().join("store")).unwrap();
+    std::fs::write(
+        dir.path().join("store/real.yaml"),
+        "version: 2\nentries: []\n",
+    )
+    .unwrap();
+    std::os::unix::fs::symlink(
+        dir.path().join("store/real.yaml"),
+        dir.path().join("docs/changes/link.yaml"),
+    )
+    .unwrap();
+    let (result, _) =
+        kotowari_core::run_check(dir.path(), kotowari_core::Format::Json, None).unwrap();
+    assert!(
+        result
+            .findings
+            .iter()
+            .any(|f| f.kind.as_str() == "change_record_invalid"
+                && f.path == "docs/changes/link.yaml"),
+        "{:?}",
+        result.findings
+    );
+}
