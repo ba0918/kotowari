@@ -10,6 +10,7 @@ pub struct Config {
     pub guides: GuidesConfig,
     pub mutants: MutantsConfig,
     pub surface: SurfaceConfig,
+    pub changes: Option<ChangesConfig>,
     pub limits: LimitsConfig,
     pub vague_words: Vec<String>,
 }
@@ -84,6 +85,7 @@ impl Default for Config {
             guides: GuidesConfig::default(),
             mutants: MutantsConfig { equivalents: None },
             surface: SurfaceConfig::default(),
+            changes: None,
             limits: LimitsConfig {
                 lines: NonZeroU64::new(200).unwrap(),
                 requirements: NonZeroU64::new(10).unwrap(),
@@ -117,6 +119,8 @@ struct RawConfig {
     surface: Option<Option<RawSurface>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     limits: Option<Option<RawLimits>>,
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    changes: Option<Option<ChangesConfig>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     vague_words: Option<Option<Vec<String>>>,
 }
@@ -421,6 +425,24 @@ impl Config {
             None => defaults.mutants,
         };
 
+        let changes = non_null(raw.changes, "changes")?;
+        if let Some(c) = &changes {
+            if c.files.is_empty() || c.records.is_empty() {
+                return Err(StopReason::ConfigError(
+                    "changes.files and changes.records must be nonempty".into(),
+                ));
+            }
+            for patterns in [&c.files, &c.exclude, &c.records] {
+                check_globs(patterns)?;
+                for pattern in patterns {
+                    check_not_absolute(pattern, "changes")?;
+                    if pattern.is_empty() {
+                        return Err(StopReason::ConfigError("empty changes glob".into()));
+                    }
+                }
+            }
+        }
+
         let surface = match non_null(raw.surface, "surface")? {
             Some(s) => read_surface(s)?,
             None => defaults.surface,
@@ -470,9 +492,25 @@ impl Config {
             guides,
             mutants,
             surface,
+            changes,
             limits,
             // REQ-core-015: 一覧は既定を置き換える
             vague_words,
         })
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ChangesConfig {
+    #[serde(deserialize_with = "required_list")]
+    pub files: Vec<String>,
+    #[serde(deserialize_with = "required_list")]
+    pub records: Vec<String>,
+    #[serde(default, deserialize_with = "required_list")]
+    pub exclude: Vec<String>,
+}
+
+fn required_list<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Vec<String>, D::Error> {
+    Option::<Vec<String>>::deserialize(d)?.ok_or_else(|| serde::de::Error::custom("null list"))
 }

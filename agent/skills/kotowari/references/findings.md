@@ -28,6 +28,7 @@ A requirement whose verification is review needs a `- how_to_verify:` line. How 
 
 | Kind | Meaning | Action | Owner |
 |---|---|---|---|
+| change_record_invalid | A change record has an invalid format, conclusion or reference | Repair the named file or entry; check and status validate active references without Git | caller |
 | missing_title | There is no title | Add a `# ` title | brainstorm |
 | multiple_titles | There are two or more titles (one per title after the first; detail is that title) | Keep one title | brainstorm |
 | missing_scope | A topic document has no scope line | Add, after the title, a line stating what the document covers | brainstorm |

@@ -1,4 +1,5 @@
 pub mod cargo_mutants;
+pub mod change_records;
 pub mod comment_block;
 pub mod config;
 pub mod deferred;
@@ -75,6 +76,7 @@ macro_rules! finding_kinds {
 }
 
 finding_kinds! {
+    ChangeRecordInvalid => "change_record_invalid",
     AlgorithmWithoutDefinition => "algorithm_without_definition",
     DeferredWithTest => "deferred_with_test",
     DependsOnDeferred => "depends_on_deferred",
@@ -1127,6 +1129,12 @@ fn load_with_guides(
     config_path: Option<&Path>,
 ) -> Result<(Loaded, guides::GuideTally, Option<surface::SurfaceTally>), StopReason> {
     let mut loaded = load_all(cwd, config_path)?;
+    change_records::static_check(
+        &loaded.base,
+        &loaded.cfg,
+        &loaded.docs,
+        &mut loaded.findings,
+    )?;
     let tally = guides::read_guides(
         &loaded.base,
         &loaded.cfg,
