@@ -113,7 +113,7 @@ fn tree(root: &Path, revision: Option<&str>) -> Result<Vec<TreeEntry>, StopReaso
         })
         .collect()
 }
-fn blobs(root: &Path, entries: &[TreeEntry]) -> Result<BTreeMap<String, Vec<u8>>, StopReason> {
+fn blobs(root: &Path, entries: &[&TreeEntry]) -> Result<BTreeMap<String, Vec<u8>>, StopReason> {
     let objects: BTreeSet<_> = entries
         .iter()
         .filter(|e| e.mode != "160000")
@@ -165,7 +165,7 @@ fn blobs(root: &Path, entries: &[TreeEntry]) -> Result<BTreeMap<String, Vec<u8>>
     Ok(result)
 }
 fn snapshot_blobs(
-    entries: &[TreeEntry],
+    entries: &[&TreeEntry],
     bytes: &BTreeMap<String, Vec<u8>>,
 ) -> BTreeMap<String, Blob> {
     entries
@@ -216,19 +216,6 @@ pub fn read(
             Target::Commit(_) => Some(&target_oid),
         },
     )?;
-    let bytes = blobs(
-        &root,
-        &old.iter()
-            .chain(&new)
-            .map(|e| TreeEntry {
-                path: e.path.clone(),
-                mode: e.mode.clone(),
-                object: e.object.clone(),
-            })
-            .collect::<Vec<_>>(),
-    )?;
-    let before = snapshot_blobs(&old, &bytes);
-    let after = snapshot_blobs(&new, &bytes);
     let config_path = config_path.unwrap_or(Path::new(".kotowari/config.yaml"));
     let raw_config = config_path
         .to_str()
@@ -241,8 +228,13 @@ pub fn read(
             "config must stay inside Git root".into(),
         ));
     }
-    let config_blob = after
-        .get(config_path)
+    let config_entry: Vec<&TreeEntry> = new
+        .iter()
+        .filter(|e| e.path == config_path.as_bytes())
+        .collect();
+    let config_bytes = blobs(&root, &config_entry)?;
+    let config_blob = snapshot_blobs(&config_entry, &config_bytes)
+        .remove(config_path)
         .ok_or_else(|| error(format!("unreadable target configuration {config_path}")))?;
     let content = std::str::from_utf8(&config_blob.bytes)
         .map_err(|_| StopReason::NonUtf8File(config_path.into()))?;
@@ -254,14 +246,13 @@ pub fn read(
     let included = change_records::glob(&changes.files);
     let excluded = change_records::glob(&changes.exclude);
     let records = change_records::glob(&changes.records);
+    let places = [&config.ir, &config.decisions.records, &config.decisions.adr];
     let selected = |path: &Path| {
         included.is_match(path)
             && !excluded.is_match(path)
             && !records.is_match(path)
             && path != Path::new(config_path)
-            && ![&config.ir, &config.decisions.records, &config.decisions.adr]
-                .iter()
-                .any(|place| path.starts_with(place))
+            && !places.iter().any(|place| path.starts_with(place))
     };
     let old_objects: BTreeMap<_, _> = old
         .iter()
@@ -271,16 +262,34 @@ pub fn read(
         .iter()
         .map(|e| (&e.path, (&e.mode, &e.object)))
         .collect();
+    let changed = |e: &TreeEntry| {
+        old_objects.get(&e.path) != new_objects.get(&e.path) && selected(&byte_path(&e.path))
+    };
     for e in old.iter().chain(&new) {
-        let changed = old_objects.get(&e.path) != new_objects.get(&e.path);
-        if changed
-            && selected(&byte_path(&e.path))
+        if changed(e)
             && (std::str::from_utf8(&e.path).is_err()
                 || !["100644", "100755"].contains(&e.mode.as_str()))
         {
             return Err(error("unsupported selected path or Git mode"));
         }
     }
+    // Only changed files and the documents changes reads are loaded, so unrelated
+    // large blobs never enter memory.
+    let referenced = |e: &TreeEntry| {
+        let path = byte_path(&e.path);
+        records.is_match(&path) || places.iter().any(|place| path.starts_with(place))
+    };
+    let old_needed: Vec<&TreeEntry> = old.iter().filter(|e| changed(e)).collect();
+    let new_needed: Vec<&TreeEntry> = new
+        .iter()
+        .filter(|e| changed(e) || referenced(e) || e.path == config_path.as_bytes())
+        .collect();
+    let bytes = blobs(
+        &root,
+        &[old_needed.as_slice(), new_needed.as_slice()].concat(),
+    )?;
+    let before = snapshot_blobs(&old_needed, &bytes);
+    let after = snapshot_blobs(&new_needed, &bytes);
     let paths: BTreeSet<_> = before.keys().chain(after.keys()).collect();
     let files = paths
         .into_iter()
