@@ -1,6 +1,6 @@
 # kotowari check
 
-<!-- @kotowari[REQ-core-001:c859c183] -->
+<!-- @kotowari[REQ-core-001:c1c19656] -->
 
 IR（仕様）の書き方の誤りと、IR とテストの対応の抜けを、1件ずつの指摘として挙げるコマンドです。
 IR やテストを書いたら実行し、指摘を直して、誤りが0件になるまで繰り返します。
@@ -18,7 +18,7 @@ kotowari check [--format json|text] [--config <path>]
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-002:06abb59d, REQ-core-021:14bd7b25, REQ-core-003:ccf703c7] -->
+<!-- @kotowari[REQ-core-002:06abb59d, REQ-core-021:14bd7b25, REQ-core-003:7fb82a37] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
@@ -31,7 +31,7 @@ kotowari check [--format json|text] [--config <path>]
 
 ## 読むもの
 
-<!-- @kotowari[TBL-core-004:97227aba] -->
+<!-- @kotowari[TBL-core-004:014841a3] -->
 
 `check` は、設定ファイルが指す置き場から、次のものを読みます。
 
@@ -60,7 +60,7 @@ kotowari check [--format json|text] [--config <path>]
 
 ### 置き場が無いとき
 
-<!-- @kotowari[REQ-core-018:64a197f1, REQ-core-019:04ed8450] -->
+<!-- @kotowari[REQ-core-018:64a197f1, REQ-core-019:96f84a1a] -->
 
 `ir`、`decisions.records`、`decisions.adr` の3つは、既定のままでもディレクトリが存在している必要があります。
 どれかが無い、ディレクトリでない、読めないときは、`unreadable file` で停止します。
@@ -386,3 +386,5 @@ tests/greet.rs:6 [error] test_without_id rejects_empty_name
 - 設定のキー: [config.md](../config.md)
 - 全体として揃っているかを見る: [status](status.md)
 - 1件ずつの項目とテストを見る: [list](list.md)
+
+`changes.records` を設定すると照合記録の形式を全件、参照を active な件だけ検査します。archived の現在の参照切れは誤りにしません。Git の比較元は不要で、内容の鮮度と変更の coverage は [changes](changes.md) で検査します。

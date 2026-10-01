@@ -1,5 +1,6 @@
 pub mod cargo_mutants;
 pub mod change_records;
+mod change_service;
 pub mod changes;
 pub mod comment_block;
 pub mod config;
@@ -280,6 +281,13 @@ impl Tool {
 /// 引数の解析結果
 #[derive(Debug)]
 pub enum Cli {
+    Changes {
+        format: Format,
+        config_path: Option<PathBuf>,
+        base: String,
+        target: git_snapshot::Target,
+        phase: changes::Phase,
+    },
     /// 検査を行う
     Check {
         format: Format,
@@ -321,7 +329,9 @@ pub enum Cli {
 }
 
 /// REQ-core-001: 1つ目の位置引数として受けるコマンド
-const COMMANDS: [&str; 6] = ["check", "list", "mutants", "plan", "query", "status"];
+const COMMANDS: [&str; 7] = [
+    "changes", "check", "list", "mutants", "plan", "query", "status",
+];
 
 /// 引数を解析する（REQ-core-002, REQ-core-004, REQ-core-107, REQ-core-149, REQ-core-157, REQ-core-190）
 pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
@@ -343,10 +353,34 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     let mut saw_format = false;
     let mut saw_config = false;
     let mut saw_tool = false;
+    let mut change_options = BTreeMap::new();
+    let mut staged = false;
     let mut i = 0;
 
     while i < args.len() {
         let arg = &args[i];
+        if arg == "--staged" {
+            if staged {
+                return Err(StopReason::ArgumentError(
+                    "repeated option: --staged".into(),
+                ));
+            }
+            staged = true;
+            i += 1;
+            continue;
+        }
+        if ["--base", "--head", "--phase"].contains(&arg.as_str()) {
+            if change_options.contains_key(arg) {
+                return Err(StopReason::ArgumentError(format!("repeated option: {arg}")));
+            }
+            i += 1;
+            let value = args
+                .get(i)
+                .ok_or_else(|| StopReason::ArgumentError(format!("{arg} requires a value")))?;
+            change_options.insert(arg.clone(), value.clone());
+            i += 1;
+            continue;
+        }
         if arg.starts_with("--") {
             let slot = match arg.as_str() {
                 "--format" => &mut saw_format,
@@ -384,10 +418,45 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
 
     let Some(command) = command else {
         return Err(StopReason::ArgumentError(
-            "expected command: check, list, mutants, plan, query or status".to_string(),
+            "expected command: changes, check, list, mutants, plan, query or status".to_string(),
         ));
     };
 
+    if command == "changes" {
+        if tool.is_some() || !positionals.is_empty() {
+            return Err(StopReason::ArgumentError(
+                "unexpected changes argument".into(),
+            ));
+        }
+        let base = change_options
+            .remove("--base")
+            .ok_or_else(|| StopReason::ArgumentError("changes requires --base".into()))?;
+        let phase = changes::Phase::parse(
+            &change_options
+                .remove("--phase")
+                .ok_or_else(|| StopReason::ArgumentError("changes requires --phase".into()))?,
+        )?;
+        let head = change_options.remove("--head");
+        let target = match (staged, head) {
+            (true, None) if base == "HEAD" && phase == changes::Phase::Implementation => git_snapshot::Target::Index,
+            (false, Some(head)) => git_snapshot::Target::Commit(head),
+            _ => return Err(StopReason::ArgumentError("changes requires --head or --staged; --staged requires --base HEAD --phase implementation".into())),
+        };
+        let format = Format::parse(format_str.as_deref().unwrap_or("json"))
+            .map_err(StopReason::ArgumentError)?;
+        return Ok(Cli::Changes {
+            format,
+            config_path,
+            base,
+            target,
+            phase,
+        });
+    }
+    if staged || !change_options.is_empty() {
+        return Err(StopReason::ArgumentError(format!(
+            "unexpected change option for {command}"
+        )));
+    }
     // REQ-core-190: plan は設定を読まないので "--config" を受けない。指す先を見る前に止める
     if command == "plan" && saw_config {
         return Err(StopReason::ArgumentError(
@@ -708,6 +777,20 @@ pub fn run(args: &[String]) -> u8 {
     };
 
     match cli {
+        Cli::Changes {
+            format,
+            config_path,
+            base,
+            target,
+            phase,
+        } => with_cwd(|cwd| {
+            let result = change_service::run(cwd, &base, target, phase, config_path.as_deref())?;
+            match format {
+                Format::Json => println!("{}", serde_json::to_string(&result).unwrap()),
+                Format::Text => print_findings_as_text(&result.findings),
+            }
+            Ok(exit_code_for(&result.findings))
+        }),
         // REQ-core-107: 検査を行わず、使い方か版を出して終了コード0
         Cli::Help => {
             print_help();
@@ -874,6 +957,7 @@ fn print_help() {
     println!("Usage: kotowari [OPTIONS] <COMMAND> [ARGUMENT]");
     println!();
     println!("Commands:");
+    println!("  changes    Check change records against a Git base and target snapshot");
     println!("  check      Check IR documents and test markers");
     println!("  list       List IR items and the tests marked for them");
     println!("  mutants    Read a mutation testing result file and report survivors");
@@ -881,6 +965,7 @@ fn print_help() {
     println!("  query      Show one item or scenario with its body and back references");
     println!("  status     Summarise the IR and tell whether it is complete");
     println!();
+    println!("Changes: --base <REV> (--head <REV> | --staged) --phase <implementation|review>");
     println!("Options:");
     println!("  --format <FORMAT>  Output format: json (default) or text");
     println!("  --config <PATH>    Path to configuration file");

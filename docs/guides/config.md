@@ -1,11 +1,11 @@
 # 設定ファイル — `.kotowari/config.yaml`
 
 kotowari が読む場所（IR、判断の記録、テスト、ガイド、面のファイル）と、検査に使う値を書く YAML のファイルです。
-ファイルが無ければ既定の値で動くので、既定から変えたいキーだけを書きます。
+`changes` 以外はファイルが無ければ既定の値で動くので、既定から変えたいキーだけを書きます。
 
 ## 書式
 
-<!-- @kotowari[REQ-core-013:f8877aec, REQ-core-017:471b53f5, TBL-core-004:97227aba] -->
+<!-- @kotowari[REQ-core-013:f8877aec, REQ-core-017:471b53f5, TBL-core-004:014841a3] -->
 
 すべてのキーを既定の値で書くと次のようになります。
 キーは入れ子の形で書きます（`decisions:` の下に `records:`）。
@@ -37,13 +37,13 @@ limits:
 vague_words: [適切に, 必要に応じて, 通常は, など]
 ```
 
-`mutants.equivalents` と `surface.unspecified` だけは既定が「鍵が無い」状態です。
+`changes`、`mutants.equivalents`、`surface.unspecified` は既定が「鍵が無い」状態です。
 上の例の値は書き方を示すためのもので、既定ではありません。
 `surface.unspecified` は `surface.rules` が空の一覧のまま書くと止まるので、例では `#` で外しています（[`surface.*`](#surfacefilessurfacerulessurfaceunspecified)）。
 
 ## キーの一覧
 
-<!-- @kotowari[TBL-core-004:97227aba] -->
+<!-- @kotowari[TBL-core-004:014841a3] -->
 
 | キー | 値の型 | 既定 | 説明 |
 |---|---|---|---|
@@ -59,6 +59,9 @@ vague_words: [適切に, 必要に応じて, 通常は, など]
 | `surface.files` | glob の一覧 | 空 | 面を取り出すコードのファイル（面のファイル）の置き場 |
 | `surface.rules` | パスの一覧 | 空 | 面を取り出す ast-grep のルールの YAML ファイル。glob は使えない。空の一覧でなければ面の検査をする |
 | `surface.unspecified` | パス（文字列） | 無し | 未記載の面の一覧のファイル。無ければ一覧は0件 |
+| `changes.files` | 相対 glob の文字列一覧 | `changes` の省略可。記載時は必須・空不可 | 変更を照合する対象 |
+| `changes.exclude` | 相対 glob の文字列一覧 | 空 | 変更の対象から外すファイル |
+| `changes.records` | 相対 glob の文字列一覧 | 記載時は必須・空不可 | YAML 照合記録 |
 | `limits.lines` | 正の整数 | `200` | IR の文書の行数の上限。超えると `too_many_lines` の注意 |
 | `limits.requirements` | 正の整数 | `10` | 1つの文書の要求の数の上限。超えると `too_many_requirements` の注意 |
 | `vague_words` | 語の一覧 | `適切に`、`必要に応じて`、`通常は`、`など` | 曖昧語。IR の文に含まれると `vague_word` の誤り |
@@ -68,7 +71,7 @@ vague_words: [適切に, 必要に応じて, 通常は, など]
 
 ## 設定ファイルの場所
 
-<!-- @kotowari[REQ-core-011:549c5c91, REQ-core-003:ccf703c7, REQ-core-020:7aa89f30] -->
+<!-- @kotowari[REQ-core-011:549c5c91, REQ-core-003:7fb82a37, REQ-core-020:7aa89f30] -->
 
 | 指定 | 読むファイル |
 |---|---|
@@ -136,7 +139,7 @@ EX-001 - 1000円の注文は900円になる docs/ir/discount.md:27 tests=1
 
 ## 一覧のキー
 
-<!-- @kotowari[REQ-core-015:0e28306b, REQ-core-016:c6986765] -->
+<!-- @kotowari[REQ-core-015:0e28306b, REQ-core-016:28882807] -->
 
 一覧のキー（`tests.files`、`guides.files`、`vague_words` など）には一覧だけを書きます。
 書いた一覧は既定の一覧に足されるのではなく、**置き換え**ます。
@@ -151,7 +154,7 @@ tests:
 
 ## glob の読み方
 
-<!-- @kotowari[REQ-core-019:04ed8450, REQ-core-079:0976730b] -->
+<!-- @kotowari[REQ-core-019:96f84a1a, REQ-core-079:0976730b] -->
 
 `tests.files` と `guides.files` の glob は次のように読みます。
 
@@ -512,3 +515,16 @@ $ echo $?
 - テストの見つけ方と印: [テストに印を付ける](marks.md)
 - ガイドの置き場と印: [ガイドを書く](writing-guides.md)
 - 指摘の種類: [指摘の一覧](findings.md)
+
+## 変更照合の設定
+
+`changes` を省略すると check/status は照合記録を読まず、changes コマンドは設定の誤りで停止します。`changes.files` と `changes.records` は明示して空でない一覧にします。各 glob は基準からの相対で、未知の鍵・null・空文字・不正な glob は停止します。
+
+```yaml
+changes:
+  files: ["src/**", "crates/**", "tests/**", "agent/skills/**", "Cargo.toml", "Cargo.lock", "lefthook.yml", ".github/workflows/**", "scripts/**"]
+  exclude: []
+  records: ["docs/changes/**/*.yaml"]
+```
+
+changes は Git ルートを基準に対象 snapshot の設定を読みます。`--config` も Git ルートからの相対です。Git に含まれる隠しディレクトリも glob が当たれば含めます。IR・判断の記録・使用する設定と照合記録自身は差分の対象から外し、参照として検査します。対象に選ばれた symlink、submodule、UTF-8 でないパスは停止します。通常の check/status は作業ツリーを読みます。

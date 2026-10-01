@@ -8,7 +8,7 @@
 
 ## 書式
 
-<!-- @kotowari[REQ-core-002:06abb59d, REQ-core-004:e34832b6] -->
+<!-- @kotowari[REQ-core-002:06abb59d, REQ-core-004:7735d4c3] -->
 
 ```sh
 kotowari list [--format json|text] [--config <path>]
@@ -21,7 +21,7 @@ kotowari list --version
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-155:fbd06b39, REQ-core-003:ccf703c7, REQ-core-011:549c5c91] -->
+<!-- @kotowari[REQ-core-155:fbd06b39, REQ-core-003:7fb82a37, REQ-core-011:549c5c91] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|

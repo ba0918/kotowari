@@ -5,6 +5,10 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Added
+
+- `kotowari changes` で指定した Git 比較元と commit または index の変更を列挙し、実装・review の照合記録と内容の鮮度を検査できる。設定の `changes` は省略可能で、導入した場合は check/status でも記録の形式と有効な参照を検査する。
+
 ## [0.2.0] - 2026-09-27
 
 ### Added
