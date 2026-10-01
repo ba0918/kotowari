@@ -46,10 +46,10 @@ kotowari は常に、一覧のキーに一覧だけを受け、書かれた一�
 ### REQ-core-016: 空の一覧
 
 - kind: event_driven
-- source: docs/decision/records/records.md#A59
+- source: docs/decision/records/2026-10-01-change-details.md#A2, docs/decision/records/records.md#A59
 - verification: unit
 
-一覧のキーに空の一覧が書かれているとき、kotowari はそのキーを要素の無い一覧として扱う。
+一覧のキーに空の一覧が書かれているとき、kotowari はそのキーを要素の無い一覧として扱う。ただし changes.files と changes.records の空の一覧は設定の誤りで停止する。
 
 ### REQ-core-017: 入れ子のキー
 
@@ -70,10 +70,10 @@ kotowari は常に、`設定ファイル`のキーを入れ子の形（"decision
 ### REQ-core-019: glob の読み方
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A59, docs/decision/records/records.md#A102
+- source: docs/decision/records/2026-10-01-change-details.md#A4, docs/decision/records/records.md#A59, docs/decision/records/records.md#A102
 - verification: unit
 
-kotowari は常に、glob の "**" を再帰として読み、隠しディレクトリを glob が名指ししても含めず、隠しファイルは glob が当てれば読み、ディレクトリのシンボリックリンクを辿らない。
+kotowari は常に、glob の "**" を再帰として読み、changes の対象の列挙以外では隠しディレクトリを glob が名指ししても含めず、隠しファイルは glob が当てれば読み、ディレクトリのシンボリックリンクを辿らない。
 
 ### REQ-core-020: 直下の kotowari.toml を読まない
 
@@ -87,7 +87,7 @@ kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`�
 
 ### TBL-core-004: キーと既定の値
 
-- source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/records.md#A62, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-notice.md#A5, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A9, docs/decision/records/2026-09-24-multi-language-tests.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A4, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A3, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A22
+- source: docs/decision/records/2026-10-01-change-details.md#A2, docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/records.md#A62, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-notice.md#A5, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A9, docs/decision/records/2026-09-24-multi-language-tests.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A4, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A3, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A22
 
 | キー | 値 | 既定 |
 |---|---|---|
@@ -106,6 +106,9 @@ kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`�
 | limits.lines | 数（負の数と0は不可） | 200 |
 | limits.requirements | 数（負の数と0は不可） | 10 |
 | vague_words | 語の一覧 | 「適切に」「必要に応じて」「通常は」「など」の4語 |
+| changes.files | 変更照合の対象の相対 glob 一覧。changes を書くときは必須で空不可 | changes の省略時は照合記録検査なし |
+| changes.exclude | 変更照合の対象から外す相対 glob 一覧 | 空の一覧 |
+| changes.records | 照合記録の相対 glob 一覧。changes を書くときは必須で空不可 | changes の省略時は照合記録検査なし |
 
 ## Examples
 

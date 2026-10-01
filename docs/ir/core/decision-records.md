@@ -13,14 +13,14 @@
 
 `判断の記録`と、書かれた`ADR`が残る関係が常に成り立つ。`ADR`が1本も無いリポジトリでも成り立つ。
 
-### REQ-core-093: 判断の記録は brainstorm ごと
+### REQ-core-093: 判断の記録は検討のまとまりごと
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A22
+- source: docs/decision/records/records.md#A22, docs/decision/records/2026-10-01-change-conformance.md#A13
 - verification: review
-- how_to_verify: 判断の記録の検査は出典の存在確認のみで、ファイルの上書きはしない
+- how_to_verify: 判断の記録を読むスキルと記録を確認し、brainstorm の起動なしでも検討ごとに日付と題を付けて保存し、決定の本文の変更を追加の決定と改訂の参照で追えることを確認する
 
-`判断の記録`は常に、brainstorm ごとに日付と題を付けた別のファイルで、上書きされない。
+`判断の記録`は常に、brainstorm の起動の有無を問わず、判断を行った検討のまとまりごとに日付と題を付けた別のファイルで残す。既存の決定の行を別の決定で上書きせず、変更は追加の決定と改訂の参照で残す。
 
 ### REQ-core-094: ADR の節
 
