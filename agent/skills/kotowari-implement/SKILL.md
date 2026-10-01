@@ -21,8 +21,7 @@ whatever else in the repository the step needs. Nothing else is handed to you �
 
 Hand back (stop, state the reason, do not guess) when:
 
-- a consequential design decision is not in the plan or the specification, or the approved
-  content must change → back to brainstorm;
+- a consequential decision lacks grounds, exceeds the delegation, changes or deletes an approved requirement, or contradicts an existing choice → back to brainstorm;
 - the plan step asks for confirmation before an irreversible operation, a privileged operation,
   or a dangerous target (production data, configuration, external effects) → ask, then continue;
 - continuing would spread damage (secret exposure, unintended publication, data loss) → stop;
@@ -72,7 +71,7 @@ or that name an ID the plan covers; list any others in the report without touchi
 
 - fix the test-side findings yourself (requirement_without_test, scenario_without_test,
   test_without_id, invalid_marker, unparsable_file, and unresolved_reference from a mark);
-- hand back an IR-side finding as a problem with the specification.
+- for an IR-side finding, record and add only justified concrete IR within the delegated scope while keeping approved requirements unchanged; rerun check and independent conformance review. Hand back consequential meaning or approved-requirement changes.
 
 A deferred requirement or deferred scenario (`deferred` true in `kotowari query`) is not built
 now and raises no test-side finding: write no test for it and put its ID in no mark. If your mark
@@ -109,3 +108,9 @@ external checks) and approved-but-unexecuted human decisions are redone or re-as
 
 Commits made, verification evidence per step (test names run, check commands, artifact paths,
 external summaries), out-of-plan changes with reasons, anything handed back and why.
+
+## Change conformance records
+
+For changes-enabled projects, read the kotowari skill's changes scene. Author implementer YAML records and decision records with choice, grounds and deciding role; reflect behavior/constraint changes in permitted concrete IR. Missing records alone are repaired autonomously. This explicitly changes the former unconditional stop on concrete IR additions; approved requirements cannot be changed or deleted, contradictions and unsupported meaning go back to the person.
+
+Prepare HEAD-based implementer entries for each formatted index commit and run `changes --base HEAD --staged --phase implementation` alongside check. At delivery, recreate branch-base implementer records and report the fixed comparison base and candidate head. Independent review authors its own records; never invent its identity or result. Reconcile whole affected entries after any code/IR change, commit and rerun the required checks. Final integration requires check and branch-wide review-phase changes both to exit 0.

@@ -1,9 +1,13 @@
 ---
 name: kotowari
-description: "Read, scene by scene, how to write kotowari's IR and decision records, how to use check, and how to place marks. Trigger words: kotowari, IR, docs/ir, @kotowari, marks, mutants, mutation tests, guides, guide_stale, surface, surface_without_spec. 日本語キーワード: 印 変異テスト ガイド 面"
+description: "Read, scene by scene, how to write kotowari's IR and decision records, how to use check, and how to place marks. Trigger words: kotowari, IR, docs/ir, @kotowari, marks, mutants, mutation tests, guides, guide_stale, surface, surface_without_spec, changes, change_stale, change_record_invalid. 日本語キーワード: 印 変異テスト ガイド 面 変更照合"
 ---
 
-kotowari is a tool for writing a normalised specification (the IR) in Markdown and checking it with `kotowari check`. It also has the read commands `kotowari list` (the list of items), `kotowari query` (one item's body and its reverse references) and `kotowari status` (a tally of whether everything is in place), `kotowari mutants`, which reads the results of mutation tests, and `kotowari plan`, which checks the form of one plan file against the schema bundled in kotowari. This skill has you read a reference per scene and conveys how to write the IR and decision records, how to read the check results, and how to place marks.
+## Scope
+
+This skill governs IR, record and marker use and reading the tool results. Workflow decisions belong to the named workflow skills.
+
+kotowari is a tool for writing a normalised specification (the IR) in Markdown and checking it with `kotowari check`. It also has the read commands `kotowari list` (the list of items), `kotowari query` (one item's body and its reverse references) and `kotowari status` (a tally of whether everything is in place), `kotowari mutants`, which reads the results of mutation tests, and `kotowari plan`, which checks the form of one plan file against the schema bundled in kotowari. `kotowari changes` compares caller-written records with a Git snapshot. This skill has you read a reference per scene and conveys how to write the IR and decision records, how to read the check results, and how to place marks.
 
 First run `kotowari --version` to confirm the tool is there.
 
@@ -16,6 +20,7 @@ Choosing the scene: if the person names one, follow it. Otherwise choose from th
 
 | Scene | When | Reference to read |
 |---|---|---|
+| changes | Writing or reconciling change records; intermediate commits, independent final review, hooks and CI | changes.md |
 | setup | There is no place for the files yet; first use | config.md |
 | write | Writing the IR and decision records during a brainstorm | ir-form.md and records.md |
 | check | Reading the result of `kotowari check` or `kotowari plan`, or the output of `kotowari list`, `kotowari query` or `kotowari status` | findings.md |

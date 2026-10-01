@@ -1,6 +1,6 @@
 ---
 name: kotowari-review
-description: "Workflow station of the kotowari workflow: adversarial review of a diff or a document set by separate-context reviewers that return findings as JSON and never edit. Invoked by kotowari-cycle inside its loop, or directly by a person for a codebase diagnosis or a full review. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked for a kotowari review, a finding list, a full or diff review, or when cycle delegates a review. 日本語キーワード: レビュー 指摘 フルレビュー 差分レビュー 診断 敵対的レビュー 検証 動作確認 実装確認"
+description: "Workflow station of the kotowari workflow: adversarial review of a diff or a document set by separate-context reviewers that return findings as JSON and never edit the evaluation target. Invoked by kotowari-cycle inside its loop, or directly by a person for a codebase diagnosis or a full review. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked for a kotowari review, a finding list, a full or diff review, or when cycle delegates a review. 日本語キーワード: レビュー 指摘 フルレビュー 差分レビュー 診断 敵対的レビュー 検証 動作確認 実装確認"
 ---
 
 # Review
@@ -161,7 +161,7 @@ cannot run it safely, record why and mark it `not_run`.
 
 ## Output
 
-Reviewers return only the JSON in `references/finding-schema.md`. The caller assigns IDs (a
+Reviewers return findings as the JSON in `references/finding-schema.md`. For change conformance they separately author the common YAML record described below; it is not an added findings JSON field. The caller assigns IDs (a
 diff review keeps the IDs it was given), merges reviewers, dedupes, and is the one who writes
 the snapshot shape (`id`, `status`, `commits`, `evaluations`) — a direct call included.
 
@@ -171,3 +171,11 @@ Markdown report under `.agents/tmp/`, verifies each finding itself, and marks it
 the JSON is read by cycle, the fixer, and the next reviewer only.
 
 Profiles: `references/profiles.md`. Finding shape: `references/finding-schema.md`.
+
+## Change conformance review
+
+For changes-enabled projects read the kotowari skill's changes scene. Review independently of implementation using the caller-fixed branch base, candidate head, approved requirements, all changed files and implementation records. Prioritise requirement-marked test additions, expectation changes and deletions. Do not omit product code or helpers because test expectations did not change.
+
+Confirm the reason supports the choice, specification and implementation mean the same thing, and decisions stay inside delegation. Author reviewer YAML for the exact file identities and all related IR of corresponding implementer entries, separately from internal findings JSON. The reviewer may author this record but never modify the evaluation target or implementer's assertions. Role labels do not prove independence. Reconcile whole entries after fixes and IR additions and return the candidate identities; the caller commits records and runs check and branch-wide review-phase changes. Both must exit 0 before integration.
+
+Classify missing_spec/spec_conflict/premise_conflict independently of severity and action. Require a decision-backed recorded/fixed/deferred disposition and its related IR, requirements or handoff as specified. info and record_only never suffice. Verify every delegated concrete addition keeps approved requirements unchanged; changes/deletions of approved requirements, contradictory choices, unsupported meaning and scope expansion return to the person.

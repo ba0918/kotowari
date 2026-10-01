@@ -160,3 +160,7 @@ Source: `ba0918-verification`, agentic-rules v0.8.0.
       reason), the collation result, and the paths approved with a content identifier for each —
       never the full text, never the IR's diff as something they must read, and never a summary as
       the thing approved. The person commits or says to.
+
+## Decisions carried into change conformance
+
+For changes-enabled projects read the kotowari skill's changes scene. Make the delegated concrete choices and their constraints explicit in the decision record and IR. Implementation and planning roles record their new choices, grounds and deciding role; behavior/constraint changes are reflected in IR. Concrete additions may preserve approved requirements within delegation; approved-requirement changes/deletions, contradictory choices or unsupported consequential meaning return here. Specification gaps need a decision-backed recorded/fixed/deferred disposition with related IR, existing requirements or explicit handoff. Final independent review verifies grounds, meaning and delegation before check and branch-wide review-phase changes pass.

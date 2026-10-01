@@ -84,8 +84,7 @@ that were there before the plan, and a committed problem record can keep them fa
 ## Boundaries
 
 - A choice may be left to the implementer only if every option leaves the approved behavior
-  unchanged. New input kinds, acceptance boundaries, and error handling are specification
-  decisions: if the specification is silent, do not decide here — hand back to brainstorm.
+  unchanged. New input kinds, acceptance boundaries, and error handling need grounded authorization: a concrete addition within explicitly delegated scope may be recorded with its grounds and deciding role while keeping approved requirements unchanged; otherwise hand back to brainstorm.
   "The specification does not say" never means "the implementer decides".
 - A human check inside a step is written as an ordinary sentence in that step, and only for an
   irreversible operation, a privileged operation, or a dangerous target. Meaning-changing
@@ -123,3 +122,7 @@ that were there before the plan, and a committed problem record can keep them fa
 
 Finished plans are deleted by the main session after the person accepts the result and
 merges the branch; the plan stays readable in git history. Do not delete it yourself.
+
+## Change conformance planning
+
+For changes-enabled projects read the kotowari skill's changes scene. Plan intermediate HEAD/index implementer records and final branch-base records from both implementation and independent review. Name branch-wide base/head evidence and both check and review-phase changes as integration gates; scope-limited implementation verification may finish while an unrelated error still blocks integration. Include whole-entry reconciliation after code or IR changes. Record planning choices, grounds and deciding role in decision records and reflect behavior/constraint choices in IR. Supported delegated concrete additions preserve approved requirements; changing/deleting them, contradictions or consequential meaning without grounds returns to the person.

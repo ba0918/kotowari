@@ -68,7 +68,7 @@ rules, paste the Evidence conditions from
    With no such reason, the diff loop clearing every visible finding is convergence.
 
 Visible findings = open findings whose final action is `auto_fix` or `fix_and_verify`. Findings with
-`human_judgment` or `record_only` are never delegated; they stay open for the terminal report. When
+`human_judgment` or `record_only` stay open for the terminal report. A specification gap also needs a separate disposition under Change conformance below; its action does not close that obligation. When
 it runs, the second full review cancels the taint a diff review carries from seeing prior findings.
 A **round trip** is one review invocation (any number of reviewers, full or diff, the first one
 included). The limit, when the person set one, counts round trips.
@@ -184,8 +184,7 @@ only such findings or problem records that were already committed.
   writes no test for them. A deferred_with_test notice caused by a mark this run added is fixed
   by removing that mark; any other deferred_with_test or depends_on_deferred notice among this
   run's findings is the person's judgment, like an IR-side finding.
-- This run's IR-side findings are not fixed in the cycle. Put them in the terminal report as the person's
-  judgment; they go back to brainstorm.
+- Cycle does not fix IR itself. Delegate justified concrete additions within the approved constraints to the implementer/fixer, then rerun check and separate conformance review. Approved-requirement changes, contradictions and unsupported consequential meaning go back to the person.
 - Missed mutations: the pre-push hook runs mutations on the diff. A miss is fixed by the fixer or
   the implementer, like a test-side finding; how to investigate one is in the kotowari skill's
   `references/mutants.md`.
@@ -199,3 +198,11 @@ When a full review ran optional seats: which attended and which were absent, eac
 its reason.
 This is the person's one check; merging is theirs. Cycle never merges, publishes, deletes branches
 or worktrees, edits the specification, manages issues, or runs two plans at once.
+
+## Change conformance
+
+For changes-enabled projects read the kotowari skill's changes scene. Pass the branch-wide comparison base and target to delegates, retain the implementer and independent reviewer YAML records separately from internal findings JSON, and require both check and review-phase changes to exit 0 before integration. Fix the candidate head after records and fixes are committed; after any changed file or IR, delegate whole-entry reconciliation and rerun review/checks at the new head. status complete or zero visible findings alone cannot finish this gate.
+
+Cycle delegates choice/grounds/deciding-role records and any permitted concrete IR to the role making the judgment; it never decides meaning or implements itself. This changes the former blanket IR-side hand-back only for supported concrete additions that preserve approved requirements. Independent review confirms grounds, meaning and delegation and authors its own common YAML entries. Prioritise requirement-marked test additions, changed expectations and deletions while retaining product/helper changes in the comparison.
+
+Classify specification gaps independently of severity/action as missing_spec, spec_conflict or premise_conflict. Require recorded with decision and related IR, fixed with decision and existing requirements/IR, or deferred with explicit decision and handoff. info/record_only does not discharge this obligation. Delegate supported in-scope recording even when the finding's ordinary action is record_only; unresolved consequential choice returns to the person. A pending gap blocks final review-phase success. Archive completed comparisons and report base, head, phase, command results and any blocked integration gate.

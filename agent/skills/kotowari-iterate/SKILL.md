@@ -117,3 +117,7 @@ Cycle's terminal report and "never" list apply, verification results from the im
 plus the guidance when not small or handed back. "Look into this" belongs to the investigate skill,
 "check that it works" and "verify this" to review's diagnosis; implementing from them is a boundary
 breach. "Fix it" or "add it" alone never starts this skill; ask for a reviewed loop.
+
+## Change conformance for small tasks
+
+For changes-enabled projects read the kotowari skill's changes scene and retain cycle's intermediate and final gates even without a plan. Pass the fixed branch-wide base and delegated file scope to implementation and a separate review. Keep implementer/reviewer YAML separate from internal findings JSON, and run check plus review-phase changes before integration. A need to change or delete approved requirements or decide new consequential meaning still fails the small-task conditions; recording a supported concrete addition within delegated approved constraints does not grant wider authority. Reconcile each affected whole entry after code or IR edits and rerun independent conformance review.
