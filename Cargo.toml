@@ -22,7 +22,3 @@ serde-saphyr = "1"
 members = ["crates/kotowari-core", "crates/kotowari-markdown-schema"]
 exclude = ["experiments"]
 resolver = "3"
-
-[[example]]
-name = "release-record-paths"
-path = "scripts/release-record-paths.rs"

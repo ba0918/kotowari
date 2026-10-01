@@ -44,7 +44,6 @@ changes:
     - "PROJECT.md"
     - "CHANGELOG.md"
     - "docs/guides/**"
-    - "docs/release/**"
   exclude: []
   records:
     - ".kotowari/changes/*.yaml"

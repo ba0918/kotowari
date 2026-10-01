@@ -229,54 +229,6 @@
       "gaps": []
     },
     {
-      "id": "change-conformance-release",
-      "base": "7bfdad87c69e1eeeb1e84861d5caa1b8d2cff233",
-      "role": "implementer",
-      "conclusion": "new",
-      "reason": "人が承認したリリースの準備・照合・確定と状態だけの中止を、採用済み操作仕様に基づき具体化する。release固有の操作はIR外の判断で支え、既存の変更照合の境界・形式・フックを維持する。",
-      "handoff": null,
-      "files": [
-        {
-          "path": "Cargo.toml",
-          "before": "sha256:96142b370612ec603195ac06afb0033943be39dd1c9383c1b57349e8741b50b1",
-          "after": "sha256:2e86be13db5dff8bec159a1a947380134f35b818a98960e1f19a1b18ae33e6b0"
-        },
-        {
-          "path": "scripts/release-generate.sh",
-          "before": null,
-          "after": "sha256:8a1e21a3335c58e274be617d56836570a0e65aa02f99820ff90a7b43a8c4a47c"
-        },
-        {
-          "path": "scripts/release-record-paths.rs",
-          "before": null,
-          "after": "sha256:6abc9b9a07a23d73902751f52a39f9514e5e4fe75148cd919c9a9c172030e1de"
-        },
-        {
-          "path": "scripts/test-release.sh",
-          "before": null,
-          "after": "sha256:13a35b28b08490985c96d2143771ec1a4a88afc352a9fb0bc92f38ce0dd25c55"
-        }
-      ],
-      "ir": [
-        {
-          "path": "docs/ir/core/change-workflow.md",
-          "sha256": "sha256:db3b843608ae38ae625ba7106a9edbb4f2e24b4a003bcb00aca991f0bdbf719d"
-        }
-      ],
-      "requirements": [
-        "REQ-core-258",
-        "REQ-core-259",
-        "REQ-core-261",
-        "REQ-core-276"
-      ],
-      "decisions": [
-        "docs/decision/records/2026-10-01-release-conformance.md#A1",
-        "docs/decision/records/2026-10-01-release-conformance.md#A10",
-        "docs/decision/records/2026-10-01-release-conformance.md#A11"
-      ],
-      "gaps": []
-    },
-    {
       "id": "current-records",
       "role": "implementer",
       "conclusion": "new",

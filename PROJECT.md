@@ -112,30 +112,26 @@ instructions, the install procedure, what a release contains — is written unde
 change. Nothing checks this mechanically. The entry says what changed for someone who installed
 the product, not how it was built.
 
-To release (the local handoff is specified in [docs/release/change-conformance.md](docs/release/change-conformance.md), based on [the adopted decision](docs/decision/records/2026-10-01-release-conformance.md)):
+To release:
 
 1. On `main`, with a clean tree and a filled Unreleased section, run
-   `scripts/release.sh kotowari <version>` (or `prepare kotowari <version>`). **This now prepares only;
-   it does not stage, commit or tag.** It saves the start SHA and fixed generated contents in ignored
-   `.agents/release/prepared.json`, then writes the following versions and promotes the changelog.
-   Give the generated diff to the implementer and an independent reviewer. Each creates or replaces its current tracked
-   change-record YAML against the saved start SHA, using `new` and the adopted release decisions as
-   grounds; the release operation is outside the IR. If other product, IR or decision changes are
-   needed, abort and complete those ordinary changes before preparing again.
-2. Run `scripts/release.sh finalize kotowari <version>`. It accepts only the fixed generated files
-   and configured record additions, updates or deletions, stages each path, runs staged implementation conformance and
-   the existing commit hooks, and fixes the candidate SHA/tree. On that same candidate it requires
-   the version check, `kotowari check` exit 0, workspace tests and review conformance exit 0 before
-   creating the annotated tag. It never pushes. Use the printed public command:
-   `git push origin main && git push origin kotowari-v<version>` (main must be accepted first).
-   Failures retain contents, records and any candidate commit; use `status` to inspect and retry
-   `finalize` on the same clean candidate. Before a candidate exists, `abort` restores only verified
-   generated files and retains record additions, updates and deletions. After a candidate or tag exists, `abort` changes only
-   the operation state, retaining Git history, tags and records even if HEAD changed. Resolve ordinary
-   changes or unpublished local history separately, then return to a clean tree and prepare again.
-   Terminal state is archived to ignored operation history before replacement. Never move or reuse
-   a published tag; use a new version for a published fix. A surviving lock must be removed only
-   after its holder stopped; retain the state and inspect it with `status` afterward.
+   `scripts/release.sh kotowari <version>`. It writes the version into every declaration, turns
+   the Unreleased section into `## [<version>] - <date>` under a new empty Unreleased, and adds the
+   comparison links. It then runs `scripts/check-versions.sh <tag>`, `kotowari check` (exit 0
+   required) and the full test suite. Only when all pass does it make one commit and the annotated
+   tag; otherwise it restores the files and leaves no commit and no tag. It refuses to start when
+   the tag already exists locally or on `origin`, or when `origin` cannot be reached to tell. It
+   never pushes.
+2. Push with the command it prints, `git push origin main && git push origin kotowari-v<version>`:
+   main first, and the tag only when main was accepted. The
+   pre-push hook runs the mutation tests in the diff from the product's previous release tag
+   because a tag is pushed (the whole workspace when there is none). If the
+   push is rejected, first check whether the tag is already on the remote
+   (`git ls-remote --tags origin kotowari-v<version>`). If it is not, nothing was published: delete
+   the local tag (`git tag -d`), drop the release commit (`git reset --keep HEAD~1`), fix and
+   commit, and run the script again with the same version. If it is, that version is published
+   and must not be reused: drop the local tag and commit the same way, bring in the remote, and
+   release a new version.
 3. The pushed tag starts `.github/workflows/release.yml`. It reruns the tests, `kotowari check` and
    the version check, builds `x86_64-unknown-linux-gnu` and `aarch64-apple-darwin` binaries as
    `<product>-v<version>-<target>.tar.gz` (binary, README, licences) each with a `.sha256`, and
