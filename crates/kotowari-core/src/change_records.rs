@@ -289,29 +289,18 @@ pub fn validate_references(
                 Some(_) => {}
             }
         }
-        if e.conclusion == Conclusion::Existing
-            || e.gaps.iter().any(|g| g.disposition == Disposition::Fixed)
-        {
-            if e.requirements.is_empty() || e.ir.is_empty() {
-                errors.push("requirements and definition IR required".into());
-            }
-        }
-        if e.conclusion != Conclusion::Existing && e.decisions.is_empty() {
-            errors.push("decision required".into());
-        }
-        if e.conclusion == Conclusion::Deferred && e.handoff.is_none() {
-            errors.push("handoff required".into());
-        }
+        // Conclusion shape and reference shape are already reported by parse.
         for reference in e
             .decisions
             .iter()
             .chain(e.handoff.iter())
             .chain(e.gaps.iter().flat_map(|g| &g.refs))
         {
-            let valid = crate::sources::split_source(reference).is_some_and(|(path, anchor)| {
-                normalized_relative(path) && crate::sources::is_decision_number(anchor)
-            });
-            if !valid || sources.check_source(reference).is_err() {
+            let well_formed =
+                crate::sources::split_source(reference).is_some_and(|(path, anchor)| {
+                    normalized_relative(path) && crate::sources::is_decision_number(anchor)
+                });
+            if well_formed && sources.check_source(reference).is_err() {
                 errors.push(format!("invalid decision {reference}"));
             }
         }

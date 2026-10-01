@@ -108,6 +108,13 @@ fn new_conclusion_requires_decision_reference() {
     assert!(!invalids(&entry().replace("['docs/decision/records/test.md#A1']", "[]")).is_empty());
 }
 
+// @kotowari[REQ-core-251, REQ-core-270]
+#[test]
+fn one_missing_decision_is_reported_once() {
+    let findings = invalids(&entry().replace("['docs/decision/records/test.md#A1']", "[]"));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+}
+
 // @kotowari[REQ-core-252, REQ-core-270, EX-core-440]
 #[test]
 fn deferred_conclusion_requires_handoff() {
