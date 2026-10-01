@@ -5,28 +5,38 @@
       "id": "current-commit",
       "role": "implementer",
       "conclusion": "existing",
-      "reason": "採用済み現在保持の手順と矛盾する完了比較の archive 指示を除去する。gap の処理、比較元と対象と結果の報告、Git 履歴と最終 commit.yaml 削除の義務を保つ。",
+      "reason": "全現在参照と旧 state 鍵の拒否を change_record_invalid の有無で検証し、保存形式に宣言されていない内部診断文字列を固定しない。正常な stateless 記録の受理と参照切れ/旧鍵の拒否は維持する。",
       "requirements": [
-        "REQ-core-276"
+        "REQ-core-249",
+        "REQ-core-268",
+        "REQ-core-273"
       ],
       "decisions": [
-        "docs/decision/records/2026-10-01-current-change-records.md#A1",
-        "docs/decision/records/2026-10-01-current-change-records.md#A3"
+        "docs/decision/records/2026-10-01-current-change-records.md#A4",
+        "docs/decision/records/2026-10-01-current-change-records.md#A5"
       ],
       "handoff": null,
       "gaps": [],
-      "base": "7f43852ca464479bff4c808194bf50b280264eb1",
+      "base": "9ab5b520e3d445d76d3f85cedfbf7a64bf34bb1c",
       "files": [
         {
-          "path": "agent/skills/kotowari-cycle/SKILL.md",
-          "before": "sha256:739233c841241804b0d27a91e4c4727fe4cf531d82f1de55301aabc7f8f1dbac",
-          "after": "sha256:c441221b05fbe8d506722b69b45de15ea5ceef737254ac7fce9069277b642212"
+          "path": "tests/change_records.rs",
+          "before": "sha256:e6de1d0749c0b90a23ef9b6e89c591d7c878b62842ba8bc303733cfd68e5d05d",
+          "after": "sha256:8e6bf5abc391ba91bee824ee9b93f1412b2c4b8337c425fe88ba7c79dbc01613"
         }
       ],
       "ir": [
         {
-          "path": "docs/ir/core/change-workflow.md",
-          "sha256": "sha256:db3b843608ae38ae625ba7106a9edbb4f2e24b4a003bcb00aca991f0bdbf719d"
+          "path": "docs/ir/core/change-record-format.md",
+          "sha256": "sha256:035dcc86f70fa4660eea95773ec7674a01fea09b4946ea658377732c9f0e2cee"
+        },
+        {
+          "path": "docs/ir/core/change-records.md",
+          "sha256": "sha256:880f694931ca598c6f3585b8ebc2c3588bc040c3baee094994b02c74f5d07de8"
+        },
+        {
+          "path": "docs/ir/core/changes-results.md",
+          "sha256": "sha256:58dc6ec0f9d32751438ed5e7810d2c72e39fdb4d0737cf27ff189645cf73348d"
         }
       ]
     }
