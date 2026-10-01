@@ -5,6 +5,8 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-01
+
 ### Added
 
 - 配布スキルに、判断の記録への書き戻しと両役の YAML 照合記録、独立 review 後のブランチ全体検査、仕様の穴の処理先を追加した。承認済み要求を保つ委譲範囲の具体的な IR 追加を認め、変更・削除や根拠の無い意味の判断は人へ戻す。
@@ -39,6 +41,7 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 - Claude Code の skill を `agent/skills/` に10個。`kotowari` は IR と判断の記録の書き方、指摘の直し方、印の置き方を教える。`kotowari-` で始まる9個は、壁打ちから計画、実装、レビューまでの工程を kotowari の上で回す（任意）。
 - 入れ方は2通り。GitHub Release のビルド済みのバイナリ（Linux x86_64、macOS arm64。SHA256 付き）と、タグで版を固定した `cargo install --git https://github.com/ba0918/kotowari --tag kotowari-v0.1.0 kotowari`。skill は `gh skill install` の `--pin` にタグを渡すと版を固定して入れられる。
 
-[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.2.0...HEAD
+[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.3.0...HEAD
+[0.3.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.2.0...kotowari-v0.3.0
 [0.2.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.1.0...kotowari-v0.2.0
 [0.1.0]: https://github.com/ba0918/kotowari/releases/tag/kotowari-v0.1.0
