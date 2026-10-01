@@ -230,10 +230,10 @@ entries:
       - "docs/decision/records/2026-10-01-release-conformance.md#A10"
       - "docs/decision/records/2026-10-01-release-conformance.md#A11"
     gaps: []
-  - id: "change-conformance-release-intermediate"
+  - id: "change-conformance-release-intermediate-a49c6475b72e"
     base: "a49c6475b72ee0fe2d8d3582ecad80295d245f3c"
     role: "implementer"
-    state: "active"
+    state: "archived"
     conclusion: "new"
     reason: "人が承認したリリースの準備・照合・確定と状態だけの中止を、採用済み操作仕様に基づき具体化する。release固有の操作はIR外の判断で支え、既存の変更照合の境界・形式・フックを維持する。"
     handoff: null
@@ -262,6 +262,30 @@ entries:
       - path: "scripts/test-release.sh"
         before: null
         after: "sha256:13a35b28b08490985c96d2143771ec1a4a88afc352a9fb0bc92f38ce0dd25c55"
+    ir:
+      - path: "docs/ir/core/change-workflow.md"
+        sha256: "sha256:33334b98afa8ba9dbd4daf0417f2f7272d62aad283a11053e4bb9165f136ac5c"
+    requirements:
+      - "REQ-core-258"
+      - "REQ-core-259"
+      - "REQ-core-261"
+      - "REQ-core-276"
+    decisions:
+      - "docs/decision/records/2026-10-01-release-conformance.md#A1"
+      - "docs/decision/records/2026-10-01-release-conformance.md#A10"
+      - "docs/decision/records/2026-10-01-release-conformance.md#A11"
+    gaps: []
+  - id: "change-conformance-release-intermediate"
+    base: "ab20c63ad20e3a5c51bb5b1aa38af5cb57e42286"
+    role: "implementer"
+    state: "active"
+    conclusion: "new"
+    reason: "人が承認したリリースの準備・照合・確定と状態だけの中止を、採用済み操作仕様に基づき具体化する。release固有の操作はIR外の判断で支え、既存の変更照合の境界・形式・フックを維持する。"
+    handoff: null
+    files:
+      - path: "scripts/release.sh"
+        before: "sha256:39f86d0b1ae8fe021e561f04cc11ec8e3696498c617150bf1bf952a246457b32"
+        after: "sha256:2e7111e4c48268ec7280be4f1786b52f0ca7a50a41a401805dc6fed9d873ec1b"
     ir:
       - path: "docs/ir/core/change-workflow.md"
         sha256: "sha256:33334b98afa8ba9dbd4daf0417f2f7272d62aad283a11053e4bb9165f136ac5c"

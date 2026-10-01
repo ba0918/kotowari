@@ -235,7 +235,7 @@ entries:
         after: "sha256:fb14f29365197caa9b9259cedb39bb336a237856a3ad01dd33c966b8a9d1d44f"
       - path: "scripts/release.sh"
         before: "sha256:2eab50b8c7c7080b740ead4492721c17f5adfd458f0ee9552f34e867cec5100c"
-        after: "sha256:39f86d0b1ae8fe021e561f04cc11ec8e3696498c617150bf1bf952a246457b32"
+        after: "sha256:2e7111e4c48268ec7280be4f1786b52f0ca7a50a41a401805dc6fed9d873ec1b"
       - path: "scripts/test-release.sh"
         before: null
         after: "sha256:13a35b28b08490985c96d2143771ec1a4a88afc352a9fb0bc92f38ce0dd25c55"

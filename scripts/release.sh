@@ -178,9 +178,12 @@ abort() {
         report_aborted
         return
     fi
-    # A commit may already have landed while the state still says prepared.
+    # A hook can leave a commit that fails candidate recognition. Canceling the
+    # operation must retain that Git result without adopting it as a valid candidate.
     if [ "$stage" = prepared ] && [ "$(git rev-parse HEAD)" != "$start_head" ]; then
-        recognize_candidate || die "HEAD は今回の候補と一致しない。生成内容は戻さない"
+        set_stage aborted
+        report_aborted
+        return
     fi
     case "$stage" in
         candidate | complete)
