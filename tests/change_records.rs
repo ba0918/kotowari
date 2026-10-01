@@ -115,6 +115,19 @@ fn one_missing_decision_is_reported_once() {
     assert_eq!(findings.len(), 1, "{findings:?}");
 }
 
+// @kotowari[REQ-core-274]
+#[test]
+fn an_entry_without_an_id_is_named_by_position_only() {
+    let findings = invalids("version: 1\nentries:\n  - 5\n");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].detail.starts_with("entry 0: "));
+    assert!(
+        !findings[0].detail.starts_with("entry 0: :"),
+        "{}",
+        findings[0].detail
+    );
+}
+
 // @kotowari[REQ-core-252, REQ-core-270, EX-core-440]
 #[test]
 fn deferred_conclusion_requires_handoff() {

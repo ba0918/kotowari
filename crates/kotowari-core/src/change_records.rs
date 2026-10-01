@@ -139,11 +139,12 @@ pub fn parse(path: &str, content: &str) -> (Vec<LocatedEntry>, Vec<Finding>) {
         let id = value
             .get("id")
             .and_then(serde_json::Value::as_str)
-            .unwrap_or("");
+            .map(|id| format!("{id}: "))
+            .unwrap_or_default();
         let entry: Entry = match serde_json::from_value(value.clone()) {
             Ok(entry) => entry,
             Err(error) => {
-                findings.push(invalid(path, format!("entry {index}: {id}: {error}")));
+                findings.push(invalid(path, format!("entry {index}: {id}{error}")));
                 continue;
             }
         };
