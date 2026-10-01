@@ -46,7 +46,7 @@ entries:
         after: "sha256:4e7932d437a88c19a85e0da6a0354321812cf2db08c56667bb63638e6777f931"
       - path: "crates/kotowari-core/src/change_records.rs"
         before: null
-        after: "sha256:4ae24d9532f241f4f0da38dfc51c1887fb49528d427cd6a6011e0d23126ee86c"
+        after: "sha256:0e95b626ecf086641711615e49be8a78f3b8cdfd8d8c00cf7902b8362e1382dd"
       - path: "crates/kotowari-core/src/change_service.rs"
         before: null
         after: "sha256:8252a3e1a253d0b328e2849d9c829d08c2465a3823152a95cafe5aa4a890a054"

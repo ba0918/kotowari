@@ -352,28 +352,10 @@ pub fn static_check(
     let Some(changes) = &cfg.changes else {
         return Ok(());
     };
-    let patterns = glob(&changes.records);
-    let mut paths = Vec::new();
-    for result in walkdir::WalkDir::new(base).into_iter().filter_entry(|e| {
-        e.file_name() != ".git" && e.file_name() != "target" && e.file_name() != ".agents"
-    }) {
-        let item = result.map_err(|e| crate::StopReason::UnreadableFile(e.to_string()))?;
-        if item.file_type().is_file() {
-            let path = item
-                .path()
-                .strip_prefix(base)
-                .unwrap()
-                .to_string_lossy()
-                .replace('\\', "/");
-            if patterns.is_match(&path) {
-                paths.push(path);
-            }
-        }
-    }
-    paths.sort();
+    let paths = crate::tests_discovery::collect_files(base, &changes.records)?;
     let mut entries = vec![];
-    for path in paths {
-        let content = crate::read_utf8_file(&base.join(&path), &path)?;
+    for (path, absolute) in paths {
+        let content = crate::read_utf8_file(std::path::Path::new(&absolute), &path)?;
         let (parsed, errors) = parse(&path, &content);
         entries.extend(parsed);
         findings.extend(errors);
