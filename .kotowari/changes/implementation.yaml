@@ -329,7 +329,7 @@
         {
           "path": "agent/skills/kotowari-cycle/SKILL.md",
           "before": "sha256:81c6df4b4712f25cd2ebfd296de5b59a93a2ea3425473ebbb2924ba04a2fa454",
-          "after": "sha256:739233c841241804b0d27a91e4c4727fe4cf531d82f1de55301aabc7f8f1dbac"
+          "after": "sha256:c441221b05fbe8d506722b69b45de15ea5ceef737254ac7fce9069277b642212"
         },
         {
           "path": "agent/skills/kotowari-implement/SKILL.md",
