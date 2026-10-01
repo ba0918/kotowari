@@ -3,6 +3,8 @@ use std::{fs, path::Path, process::Command as Git};
 fn git(root: &Path, args: &[&str]) -> String {
     let output = Git::new("git")
         .current_dir(root)
+        // The user's global hooks must not decide whether a fixture commit succeeds.
+        .args(["-c", "core.hooksPath=/dev/null"])
         .args(args)
         .output()
         .unwrap();

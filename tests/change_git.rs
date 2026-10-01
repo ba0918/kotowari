@@ -4,6 +4,8 @@ use std::{fs, path::Path, process::Command};
 fn git(root: &Path, args: &[&str]) -> String {
     let out = Command::new("git")
         .current_dir(root)
+        // The user's global hooks must not decide whether a fixture commit succeeds.
+        .args(["-c", "core.hooksPath=/dev/null"])
         .args(args)
         .output()
         .unwrap();
@@ -103,6 +105,8 @@ fn conflict_index_and_unreadable_revision_stop() {
     git(d.path(), &["commit", "-qam", "ours"]);
     Command::new("git")
         .current_dir(d.path())
+        // The user's global hooks must not decide whether a fixture commit succeeds.
+        .args(["-c", "core.hooksPath=/dev/null"])
         .args(["merge", "other"])
         .output()
         .unwrap();
