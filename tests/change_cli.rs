@@ -375,3 +375,52 @@ fn changing_comparison_base_rejects_old_current_records() {
             .contains("change_uncovered")
     );
 }
+
+// @kotowari[REQ-core-272, REQ-core-274]
+#[test]
+fn an_invalid_entry_never_covers_a_change_while_its_valid_neighbour_does() {
+    let d = repository();
+    fs::write(d.path().join("src/a"), "after").unwrap();
+    git(d.path(), &["add", "src/a"]);
+    record(d.path(), "implementer", "HEAD");
+    let path = d.path().join(".kotowari/changes/implementation.yaml");
+    let valid = fs::read_to_string(&path).unwrap();
+    let invalid_entry = valid
+        .split_once("entries:\n")
+        .unwrap()
+        .1
+        .replace("id: implementer", "id: broken")
+        .replace("['docs/decision/records/test.md#A1']", "[]");
+    let summary = |content: &str| {
+        fs::write(&path, content).unwrap();
+        git(d.path(), &["add", ".kotowari/changes/implementation.yaml"]);
+        let args = [
+            "changes",
+            "--base",
+            "HEAD",
+            "--staged",
+            "--phase",
+            "implementation",
+            "--format",
+            "json",
+        ];
+        let json: serde_json::Value = serde_json::from_slice(&run(d.path(), &args).stdout).unwrap();
+        let kinds: Vec<String> = json["findings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|f| f["kind"].as_str().unwrap().to_string())
+            .collect();
+        (json["covered"].as_u64().unwrap(), kinds)
+    };
+    let only_invalid = format!("version: 1\nentries:\n{invalid_entry}");
+    assert_eq!(
+        summary(&only_invalid),
+        (
+            0,
+            vec!["change_record_invalid".into(), "change_uncovered".into()]
+        )
+    );
+    let both = format!("{valid}{invalid_entry}");
+    assert_eq!(summary(&both), (1, vec!["change_record_invalid".into()]));
+}

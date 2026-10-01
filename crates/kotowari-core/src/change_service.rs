@@ -89,17 +89,8 @@ pub fn run(
     }
     let (requirements, ir_paths, sources) = reference_context(&snapshot.blobs, &snapshot.config)?;
     let reference_errors =
-        change_records::validate_references(&entries, &requirements, &ir_paths, &sources);
-    let valid_entries: Vec<_> = entries
-        .into_iter()
-        .filter(|entry| {
-            !findings.iter().chain(&reference_errors).any(|f| {
-                f.path == entry.path
-                    && (f.detail.starts_with("file: ")
-                        || f.detail.contains(&format!(": {}:", entry.entry.id)))
-            })
-        })
-        .collect();
+        change_records::validate_references(&mut entries, &requirements, &ir_paths, &sources);
+    let valid_entries: Vec<_> = entries.into_iter().filter(|entry| !entry.invalid).collect();
     findings.extend(reference_errors);
     let mut result = changes::evaluate(&snapshot, &valid_entries, phase);
     result.findings.extend(findings);

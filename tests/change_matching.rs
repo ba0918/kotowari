@@ -49,6 +49,7 @@ fn reviewer(entries: &mut Vec<LocatedEntry>) {
         index: 0,
         path: "docs/changes/review.yaml".into(),
         entry: e,
+        invalid: false,
     });
 }
 fn has(result: &kotowari_core::changes::ChangeResult, kind: &str) -> bool {
@@ -147,6 +148,7 @@ fn different_file_groupings_cover_the_same_changes() {
         index: 0,
         path: "docs/changes/review.yaml".into(),
         entry: second,
+        invalid: false,
     });
     let result = evaluate(&s, &e, Phase::Review);
     assert_eq!(result.files, 2);

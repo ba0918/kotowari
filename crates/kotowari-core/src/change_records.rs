@@ -111,6 +111,8 @@ pub struct LocatedEntry {
     pub index: usize,
     pub path: String,
     pub entry: Entry,
+    /// Set when parsing or reference validation reported an error for this entry.
+    pub invalid: bool,
 }
 
 pub fn parse(path: &str, content: &str) -> (Vec<LocatedEntry>, Vec<Finding>) {
@@ -245,6 +247,7 @@ pub fn parse(path: &str, content: &str) -> (Vec<LocatedEntry>, Vec<Finding>) {
                 errors.push("gap conclusion mismatch");
             }
         }
+        let has_errors = !errors.is_empty();
         for error in errors {
             findings.push(invalid(
                 path,
@@ -255,24 +258,25 @@ pub fn parse(path: &str, content: &str) -> (Vec<LocatedEntry>, Vec<Finding>) {
             index,
             path: path.into(),
             entry,
+            invalid: has_errors,
         });
     }
     (entries, findings)
 }
 
 pub fn validate_references(
-    entries: &[LocatedEntry],
+    entries: &mut [LocatedEntry],
     requirements: &BTreeMap<String, String>,
     ir_paths: &BTreeSet<String>,
     sources: &SourceContext,
 ) -> Vec<Finding> {
     let mut findings = vec![];
     let mut ids = BTreeSet::new();
-    for located in entries {
+    for located in entries.iter_mut() {
         let index = located.index;
         let e = &located.entry;
         let mut errors: Vec<String> = vec![];
-        if !ids.insert(&e.id) {
+        if !ids.insert(e.id.clone()) {
             errors.push("duplicate id".into());
         }
         for ir in &e.ir {
@@ -304,12 +308,13 @@ pub fn validate_references(
                 errors.push(format!("invalid decision {reference}"));
             }
         }
-        for error in errors {
+        for error in &errors {
             findings.push(invalid(
                 &located.path,
                 format!("entry {index}: {}: {error}", e.id),
             ));
         }
+        located.invalid |= !errors.is_empty();
     }
     findings
 }
@@ -416,7 +421,7 @@ pub fn static_check(
         .map(|d| crate::join_display_path(&cfg.ir, &d.relative_path))
         .collect();
     findings.extend(validate_references(
-        &entries,
+        &mut entries,
         &requirements,
         &ir_paths,
         &crate::sources::build_context(base, cfg)?,
