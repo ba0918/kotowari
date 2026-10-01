@@ -182,6 +182,18 @@ fn configuration_comes_from_target_and_git_root_from_nested_directory() {
         ".kotowari/config.yaml",
     ];
     assert!(run(&d.path().join("src"), &args).status.success());
+    let dotted = [
+        "changes",
+        "--base",
+        "HEAD",
+        "--head",
+        "HEAD",
+        "--phase",
+        "review",
+        "--config",
+        "./.kotowari/config.yaml",
+    ];
+    assert!(run(d.path(), &dotted).status.success());
     assert_eq!(
         run(
             d.path(),

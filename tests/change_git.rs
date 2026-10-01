@@ -124,3 +124,13 @@ fn selected_symlink_stops_but_excluded_symlink_does_not() {
     git(d.path(), &["add", ".kotowari/config.yaml"]);
     assert!(read(d.path(), "HEAD", Target::Index, None).is_ok());
 }
+
+// @kotowari[REQ-core-266]
+#[test]
+fn unchanged_symlink_is_not_a_selected_change() {
+    let d = repository();
+    std::os::unix::fs::symlink("a", d.path().join("src/link")).unwrap();
+    git(d.path(), &["add", "src/link"]);
+    git(d.path(), &["commit", "-qm", "link"]);
+    assert!(read(d.path(), "HEAD", Target::Commit("HEAD".into()), None).is_ok());
+}

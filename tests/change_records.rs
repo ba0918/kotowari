@@ -195,3 +195,39 @@ fn recorded_and_fixed_gaps_can_share_a_new_conclusion() {
         result.findings
     );
 }
+
+// @kotowari[REQ-core-268, REQ-core-270, REQ-core-273]
+#[test]
+fn archival_skips_reference_existence_but_keeps_conclusion_shape() {
+    for record in [
+        entry()
+            .replace("state: active", "state: archived")
+            .replace("conclusion: new", "conclusion: existing"),
+        entry()
+            .replace("state: active", "state: archived")
+            .replace("['docs/decision/records/test.md#A1']", "[]"),
+        entry()
+            .replace("state: active", "state: archived")
+            .replace("test.md#A1", "test.md#bad"),
+    ] {
+        assert!(!invalids(&record).is_empty());
+    }
+}
+
+// @kotowari[REQ-core-274]
+#[test]
+fn reference_error_positions_are_local_to_each_record_file() {
+    let dir = project(&entry());
+    let second = entry()
+        .replace("id: entry", "id: other")
+        .replace("test.md#A1", "missing.md#A1");
+    std::fs::write(dir.path().join("docs/changes/z-other.yaml"), second).unwrap();
+    let (result, _) =
+        kotowari_core::run_check(dir.path(), kotowari_core::Format::Json, None).unwrap();
+    let f = result
+        .findings
+        .iter()
+        .find(|f| f.path == "docs/changes/z-other.yaml")
+        .unwrap();
+    assert!(f.detail.starts_with("entry 0: "), "{}", f.detail);
+}

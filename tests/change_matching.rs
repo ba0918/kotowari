@@ -46,6 +46,7 @@ fn reviewer(entries: &mut Vec<LocatedEntry>) {
     e.id = "review".into();
     e.role = change_records::Role::Reviewer;
     entries.push(LocatedEntry {
+        index: 0,
         path: "docs/changes/review.yaml".into(),
         entry: e,
     });
@@ -143,6 +144,7 @@ fn different_file_groupings_cover_the_same_changes() {
     second.id = "second".into();
     second.files = vec![file];
     e.push(LocatedEntry {
+        index: 0,
         path: "docs/changes/review.yaml".into(),
         entry: second,
     });

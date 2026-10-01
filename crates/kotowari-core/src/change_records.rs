@@ -115,6 +115,7 @@ fn invalid(path: &str, detail: String) -> Finding {
 }
 
 pub struct LocatedEntry {
+    pub index: usize,
     pub path: String,
     pub entry: Entry,
 }
@@ -198,6 +199,34 @@ pub fn parse(path: &str, content: &str) -> (Vec<LocatedEntry>, Vec<Finding>) {
                 errors.push("invalid IR identity");
             }
         }
+        if entry.conclusion == Conclusion::Existing
+            || entry
+                .gaps
+                .iter()
+                .any(|g| g.disposition == Disposition::Fixed)
+        {
+            if entry.requirements.is_empty() || entry.ir.is_empty() {
+                errors.push("requirements and definition IR required");
+            }
+        }
+        if entry.conclusion != Conclusion::Existing && entry.decisions.is_empty() {
+            errors.push("decision required");
+        }
+        if entry.conclusion == Conclusion::Deferred && entry.handoff.is_none() {
+            errors.push("handoff required");
+        }
+        for reference in entry
+            .decisions
+            .iter()
+            .chain(entry.handoff.iter())
+            .chain(entry.gaps.iter().flat_map(|g| &g.refs))
+        {
+            if !crate::sources::split_source(reference).is_some_and(|(path, anchor)| {
+                normalized_relative(path) && crate::sources::is_decision_number(anchor)
+            }) {
+                errors.push("invalid decision reference shape");
+            }
+        }
         for gap in &entry.gaps {
             if gap.refs.is_empty() {
                 errors.push("empty gap refs");
@@ -230,6 +259,7 @@ pub fn parse(path: &str, content: &str) -> (Vec<LocatedEntry>, Vec<Finding>) {
             ));
         }
         entries.push(LocatedEntry {
+            index,
             path: path.into(),
             entry,
         });
@@ -245,7 +275,8 @@ pub fn validate_references(
 ) -> Vec<Finding> {
     let mut findings = vec![];
     let mut ids = BTreeSet::new();
-    for (index, located) in entries.iter().enumerate() {
+    for located in entries {
+        let index = located.index;
         let e = &located.entry;
         let mut errors: Vec<String> = vec![];
         if !ids.insert(&e.id) {

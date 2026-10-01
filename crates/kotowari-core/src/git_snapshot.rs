@@ -227,12 +227,17 @@ pub fn read(
     let before = snapshot_blobs(&old, &bytes);
     let after = snapshot_blobs(&new, &bytes);
     let config_path = config_path.unwrap_or(Path::new(".kotowari/config.yaml"));
-    let config_path = config_path
+    let raw_config = config_path
         .to_str()
-        .filter(|p| change_records::normalized_relative(p))
-        .ok_or_else(|| {
-            StopReason::ConfigError("config must be a normalized Git-root-relative path".into())
-        })?;
+        .filter(|p| !p.starts_with('/'))
+        .ok_or_else(|| StopReason::ConfigError("config must be Git-root-relative".into()))?;
+    let normalized_config = crate::normalize_path(raw_config);
+    let config_path = normalized_config.as_str();
+    if !change_records::normalized_relative(config_path) {
+        return Err(StopReason::ConfigError(
+            "config must stay inside Git root".into(),
+        ));
+    }
     let config_blob = after
         .get(config_path)
         .ok_or_else(|| error(format!("unreadable target configuration {config_path}")))?;
@@ -255,8 +260,18 @@ pub fn read(
                 .iter()
                 .any(|place| path.starts_with(place))
     };
+    let old_objects: BTreeMap<_, _> = old
+        .iter()
+        .map(|e| (&e.path, (&e.mode, &e.object)))
+        .collect();
+    let new_objects: BTreeMap<_, _> = new
+        .iter()
+        .map(|e| (&e.path, (&e.mode, &e.object)))
+        .collect();
     for e in old.iter().chain(&new) {
-        if selected(&byte_path(&e.path))
+        let changed = old_objects.get(&e.path) != new_objects.get(&e.path);
+        if changed
+            && selected(&byte_path(&e.path))
             && (std::str::from_utf8(&e.path).is_err()
                 || !["100644", "100755"].contains(&e.mode.as_str()))
         {
