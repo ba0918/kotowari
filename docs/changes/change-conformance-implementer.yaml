@@ -55,7 +55,7 @@ entries:
         after: "sha256:25016e6b49e75d0111fa647bbfb65d23890800513089bed592b82486e37cd701"
       - path: "crates/kotowari-core/src/git_snapshot.rs"
         before: null
-        after: "sha256:901f9f497334d3215c27d5964e6dc21785edec298cee289f0b73dc534b37ebad"
+        after: "sha256:33cb8c7bca5eb778d08e9eb244253dd233583d3766ca04ac30311cff33aab4e8"
       - path: "crates/kotowari-core/src/lib.rs"
         before: "sha256:af1fc768cbc463227784731b708d34697025e85005cb23fd9bfc5ed01bc0a3c1"
         after: "sha256:cdba93b8e9309d8e9b349ec390872af9205cdb5ba00956a3ad0632b82bdb8e91"

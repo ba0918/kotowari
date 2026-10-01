@@ -199,7 +199,10 @@ pub fn read(
     target: Target,
     config_path: Option<&Path>,
 ) -> Result<Snapshot, StopReason> {
-    let root = PathBuf::from(text(git(cwd, &["rev-parse", "--show-toplevel"])?)?);
+    let root_response = String::from_utf8(git(cwd, &["rev-parse", "--show-toplevel"])?)
+        .map_err(|_| error("non-UTF-8 Git response"))?;
+    // Whitespace is part of a valid path; only Git's output newline is removed.
+    let root = PathBuf::from(root_response.strip_suffix('\n').unwrap_or(&root_response));
     let base = resolve(&root, base)?;
     let target_oid = match &target {
         Target::Index => "index".into(),

@@ -275,10 +275,10 @@ entries:
       - "docs/decision/records/2026-10-01-release-conformance.md#A10"
       - "docs/decision/records/2026-10-01-release-conformance.md#A11"
     gaps: []
-  - id: "change-conformance-release-intermediate"
+  - id: "change-conformance-release-intermediate-ab20c63ad20e"
     base: "ab20c63ad20e3a5c51bb5b1aa38af5cb57e42286"
     role: "implementer"
-    state: "active"
+    state: "archived"
     conclusion: "new"
     reason: "人が承認したリリースの準備・照合・確定と状態だけの中止を、採用済み操作仕様に基づき具体化する。release固有の操作はIR外の判断で支え、既存の変更照合の境界・形式・フックを維持する。"
     handoff: null
@@ -298,4 +298,32 @@ entries:
       - "docs/decision/records/2026-10-01-release-conformance.md#A1"
       - "docs/decision/records/2026-10-01-release-conformance.md#A10"
       - "docs/decision/records/2026-10-01-release-conformance.md#A11"
+    gaps: []
+  - id: "change-conformance-git-root-intermediate"
+    base: "b675c131a7518f2ac4953cb52a4e035f11320ef7"
+    role: "implementer"
+    state: "active"
+    conclusion: "existing"
+    reason: "有効なGit rootの空白を変更せず、出力の終端LFだけを除いてGit snapshotを読む。比較元や対象の解決、UTF-8境界と既存照合の入力・合否・保存形式を維持する。"
+    handoff: null
+    files:
+      - path: "crates/kotowari-core/src/git_snapshot.rs"
+        before: "sha256:901f9f497334d3215c27d5964e6dc21785edec298cee289f0b73dc534b37ebad"
+        after: "sha256:33cb8c7bca5eb778d08e9eb244253dd233583d3766ca04ac30311cff33aab4e8"
+    ir:
+      - path: "docs/ir/core/changes-inputs.md"
+        sha256: "sha256:f1a53e5c8cf13e30212c8c172e5ec3bdc6d893eac8a16199e318c21662159917"
+      - path: "docs/ir/core/changes.md"
+        sha256: "sha256:55a0b973e132c64a257f2f478e08b6eb79ff9a277b3d5007fd4bec1cf37b364b"
+      - path: "docs/ir/core/cli.md"
+        sha256: "sha256:5557691858591546e1f684696db4d915ba6d3dc3312403d9f2dc5ba2d98c8f87"
+      - path: "docs/ir/core/config.md"
+        sha256: "sha256:603cb00b7ae84340f20b8f2161d25248e733755999dae5c8fa94de965c10f9c5"
+    requirements:
+      - "REQ-core-003"
+      - "REQ-core-019"
+      - "REQ-core-241"
+      - "REQ-core-263"
+      - "REQ-core-267"
+    decisions: []
     gaps: []
