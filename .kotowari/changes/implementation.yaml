@@ -242,11 +242,6 @@
           "after": "sha256:2e86be13db5dff8bec159a1a947380134f35b818a98960e1f19a1b18ae33e6b0"
         },
         {
-          "path": "scripts/release-fixture.py",
-          "before": null,
-          "after": "sha256:018e64ee7306c247bc80aeccb97594f9ae652d978854956f946e9b0e3eb3d7b3"
-        },
-        {
           "path": "scripts/release-generate.sh",
           "before": null,
           "after": "sha256:8a1e21a3335c58e274be617d56836570a0e65aa02f99820ff90a7b43a8c4a47c"
@@ -255,16 +250,6 @@
           "path": "scripts/release-record-paths.rs",
           "before": null,
           "after": "sha256:6abc9b9a07a23d73902751f52a39f9514e5e4fe75148cd919c9a9c172030e1de"
-        },
-        {
-          "path": "scripts/release-state.sh",
-          "before": null,
-          "after": "sha256:fb14f29365197caa9b9259cedb39bb336a237856a3ad01dd33c966b8a9d1d44f"
-        },
-        {
-          "path": "scripts/release.sh",
-          "before": "sha256:2eab50b8c7c7080b740ead4492721c17f5adfd458f0ee9552f34e867cec5100c",
-          "after": "sha256:2e7111e4c48268ec7280be4f1786b52f0ca7a50a41a401805dc6fed9d873ec1b"
         },
         {
           "path": "scripts/test-release.sh",
@@ -300,6 +285,8 @@
         "REQ-core-019",
         "REQ-core-249",
         "REQ-core-253",
+        "REQ-core-258",
+        "REQ-core-259",
         "REQ-core-265",
         "REQ-core-267",
         "REQ-core-268",
@@ -403,6 +390,21 @@
           "path": "docs/release/change-conformance.md",
           "before": null,
           "after": "sha256:e4db675fd6289256461faa8808a69505ba74ba958580e144d1ef0286906d860e"
+        },
+        {
+          "path": "scripts/release-fixture.py",
+          "before": null,
+          "after": "sha256:806cf30e22640195b61a98678819b0de1d3f2c106b14c691324dd880ada91bfc"
+        },
+        {
+          "path": "scripts/release-state.sh",
+          "before": null,
+          "after": "sha256:d29c827c9976d4268651d39cf374d73f0ee845125a1f67319dc5dc3f1a11b917"
+        },
+        {
+          "path": "scripts/release.sh",
+          "before": "sha256:2eab50b8c7c7080b740ead4492721c17f5adfd458f0ee9552f34e867cec5100c",
+          "after": "sha256:9970dd8b8fe4754b2014dccc38f51ada125daa00ea8ab312688dbbe62c186288"
         },
         {
           "path": "tests/change_cli.rs",

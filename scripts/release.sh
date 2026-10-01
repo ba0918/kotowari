@@ -140,7 +140,13 @@ finalize() {
             else
                 inspect_prepared_boundary
                 CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format text || die "新規記録を含む参照検査が落ちた"
-                for path in "${generated[@]}" "${records[@]}"; do git add -- "$path"; done
+                for path in "${generated[@]}" "${records[@]}"; do
+                    if [ -e "$path" ] || [ -L "$path" ]; then
+                        git add -- "$path"
+                    elif git ls-files --error-unmatch -- "$path" >/dev/null 2>&1; then
+                        git add -u -- "$path"
+                    fi
+                done
                 # Filters or concurrent writes cannot silently change the fixed input.
                 inspect_prepared_boundary
                 planned="$(git write-tree)"

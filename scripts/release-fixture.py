@@ -79,7 +79,7 @@ fi
         run(['git', 'init', '-q', '--bare', str(self.home / 'origin.git')], self.home)
         self.git('remote', 'add', 'origin', str(self.home / 'origin.git'))
         for d in ['scripts', '.kotowari', 'docs/ir', 'docs/decision/records',
-                  'docs/decision/adr', 'docs/changes', 'crates/kotowari-core',
+                  'docs/decision/adr', '.kotowari/changes', 'crates/kotowari-core',
                   'crates/kotowari-markdown-schema']:
             (self.repo / d).mkdir(parents=True, exist_ok=True)
         for name in ['release.sh', 'release-state.sh', 'release-generate.sh', 'check-versions.sh']:
@@ -98,7 +98,7 @@ fi
         (self.repo / '.kotowari/config.yaml').write_text('''ir: docs/ir
 changes:
   files: ["Cargo.toml", "Cargo.lock", "CHANGELOG.md", "crates/**"]
-  records: ["docs/changes/**/*.yaml"]
+  records: [".kotowari/changes/*.yaml"]
 ''')
         (self.repo / 'docs/decision/records/release.md').write_text('''# Release grounds
 
@@ -151,11 +151,26 @@ set -euo pipefail
             files.append({'path': path, 'before': identity(content),
                           'after': identity(b'old' if stale else (self.repo / path).read_bytes())})
         for role in ['implementer', 'reviewer'] if reviewer else ['implementer']:
-            e = dict(id=role, base=self.base, role=role, state='active', files=files, ir=[],
+            e = dict(id=role, base=self.base, role=role, files=files, ir=[],
                      conclusion=conclusion, reason='Fixture conformance against adopted release grounds.',
                      requirements=[], decisions=['docs/decision/records/release.md#A1'],
                      handoff='docs/decision/records/release.md#A1' if conclusion == 'deferred' else None, gaps=[])
-            (self.repo / f'docs/changes/{role}.yaml').write_text(json.dumps({'version': 1, 'entries': [e]}))
+            (self.repo / f'.kotowari/changes/{"implementation" if role == "implementer" else "review"}.yaml').write_text(json.dumps({'version': 1, 'entries': [e]}))
+
+    def add_changelog_entry(self):
+        p=self.repo/'CHANGELOG.md'
+        p.write_text(p.read_text().replace('## [Unreleased]', '## [Unreleased]\n\n- Correction.'))
+        self.git('add','CHANGELOG.md')
+        start=self.head()
+        before=run(['git','show',f'{start}:CHANGELOG.md'],self.repo,self.env).stdout.encode()
+        def identity(content):
+            return 'sha256:'+hashlib.sha256(b'100644\0'+content).hexdigest()
+        data=json.loads((self.repo/'.kotowari/changes/implementation.yaml').read_text())
+        e=data['entries'][0].copy()
+        e.update(id='intermediate',base=start,files=[dict(path='CHANGELOG.md',before=identity(before),after=identity(p.read_bytes()))])
+        (self.repo/'.kotowari/changes/commit.yaml').write_text(json.dumps(dict(version=1,entries=[e])))
+        self.git('add','.kotowari/changes/commit.yaml')
+        self.git('commit','-q','-m','record normal correction')
 
     def flag(self, name):
         (self.home / 'control' / name).touch()
@@ -168,7 +183,7 @@ set -euo pipefail
         files={str(p.relative_to(self.repo)):content(p) for p in self.repo.rglob('*')
                if not set(p.relative_to(self.repo).parts) & {'.git','.agents'}
                and (p.is_file() or p.is_symlink())}
-        records={k:v for k,v in files.items() if k.startswith('docs/changes/')}
+        records={k:v for k,v in files.items() if k.startswith('.kotowari/changes/')}
         return (self.head(), self.git('write-tree'), self.git('show-ref'), files, records)
 
     def no_tag(self):
@@ -229,17 +244,25 @@ def missing(f, kind):
 
 
 def precommit_abort(f):
+    for name in ['implementation','review']:
+        (f.repo/f'.kotowari/changes/{name}.yaml').write_text('{"version":1,"entries":[]}')
+        f.git('add',f'.kotowari/changes/{name}.yaml')
+    f.git('commit','-q','-m','current record baseline')
+    f.base=f.head()
     f.release('prepare', 'kotowari', '0.2.0')
     f.records()
-    f.git('add', 'docs/changes/implementer.yaml')
+    (f.repo/'.kotowari/changes/review.yaml').unlink()
+    f.git('add', '.kotowari/changes/implementation.yaml', '.kotowari/changes/review.yaml')
     records = f.snapshot()[-1]
+    index_records=f.git('ls-files','--stage','--','.kotowari/changes')
     f.release('abort', 'kotowari', '0.2.0')
     assert f.head() == f.base
     f.no_tag()
     assert f.snapshot()[-1] == records
+    assert f.git('ls-files','--stage','--','.kotowari/changes') == index_records
     for path, content in f.before.items():
         assert (f.repo / path).read_bytes() == content
-    assert f.git('diff', '--cached', '--name-only') == 'docs/changes/implementer.yaml'
+    assert f.git('diff', '--cached', '--name-only').splitlines() == ['.kotowari/changes/implementation.yaml','.kotowari/changes/review.yaml']
     before = f.snapshot()
     f.release('abort', 'kotowari', '0.2.0')
     assert f.snapshot() == before
@@ -262,20 +285,7 @@ def failure_and_abort(f, flag):
     assert f.snapshot() == before
     (f.home / 'control' / flag).unlink()
     f.release('prepare', 'kotowari', '0.3.0', expected=1)  # empty Unreleased
-    p = f.repo / 'CHANGELOG.md'
-    p.write_text(p.read_text().replace('## [Unreleased]', '## [Unreleased]\n\n- Correction.'))
-    f.git('add', 'CHANGELOG.md')
-    # Normal correction also carries actual implementer evidence against current HEAD.
-    start = f.head()
-    before_bytes = run(['git', 'show', f'{start}:CHANGELOG.md'], f.repo, f.env).stdout.encode()
-    def identity(b):
-        return 'sha256:' + hashlib.sha256(b'100644\0' + b).hexdigest()
-    data=json.loads((f.repo/'docs/changes/implementer.yaml').read_text())
-    e=data['entries'][0].copy()
-    e.update(id='correction',base=start,files=[dict(path='CHANGELOG.md',before=identity(before_bytes),after=identity(p.read_bytes()))])
-    (f.repo/'docs/changes/correction.yaml').write_text(json.dumps(dict(version=1,entries=[e])))
-    f.git('add','docs/changes/correction.yaml')
-    f.git('commit','-q','-m','record normal correction')
+    f.add_changelog_entry()
     f.release('prepare', 'kotowari', '0.3.0')
     assert list((f.repo / '.agents/release/history').iterdir())
     assert f.head() != candidate
@@ -298,7 +308,7 @@ scenario('mds candidate and annotated tag agree', lambda f: successful(f, 'kotow
 scenario('tracked contamination retained', lambda f: refusal(f, lambda x: (x.repo/'scripts/check-versions.sh').write_text('changed')))
 scenario('untracked nonrecord retained', lambda f: refusal(f, lambda x: (x.repo/'extra').write_text('changed')))
 scenario('generated content changed retained', lambda f: refusal(f, lambda x: (x.repo/'Cargo.toml').write_text('changed')))
-scenario('staged and worktree record disagree', lambda f: refusal(f, lambda x: (x.git('add','docs/changes/implementer.yaml'),(x.repo/'docs/changes/implementer.yaml').write_text('{}'))))
+scenario('staged and worktree record disagree', lambda f: refusal(f, lambda x: (x.git('add','.kotowari/changes/implementation.yaml'),(x.repo/'.kotowari/changes/implementation.yaml').write_text('{}'))))
 scenario('base advancement rejected', lambda f: refusal(f, lambda x: x.git('commit','--allow-empty','-q','-m','base advance')))
 for kind in ['missing', 'stale', 'review', 'deferred']:
     scenario(f'{kind} conformance prevents tag', lambda f, k=kind: missing(f, k))
@@ -352,20 +362,38 @@ def prepare_interrupt(f):
 
 
 scenario('prepare interruption reuses fixed contents',prepare_interrupt)
-scenario('record symlink rejected and retained',lambda f: refusal(f,lambda x: ((x.repo/'docs/changes/implementer.yaml').unlink(),(x.repo/'docs/changes/implementer.yaml').symlink_to(x.home/'outside'))))
+scenario('record symlink rejected and retained',lambda f: refusal(f,lambda x: ((x.repo/'.kotowari/changes/implementation.yaml').unlink(),(x.repo/'.kotowari/changes/implementation.yaml').symlink_to(x.home/'outside'))))
 
 
 def existing_record_change(f):
-    p=f.repo/'docs/changes/old.yaml'
+    p=f.repo/'.kotowari/changes/old.yaml'
     p.write_text('{"version":1,"entries":[]}')
-    f.git('add','docs/changes/old.yaml')
+    f.git('add','.kotowari/changes/old.yaml')
     f.git('commit','-q','-m','existing record')
     f.base=f.head()
-    refusal(f,lambda x: p.write_text('{"version":1,"entries":[]}\n'))
+    f.release('prepare','kotowari','0.2.0')
+    p.unlink()
+    f.records()
+    f.release('finalize','kotowari','0.2.0')
+    assert not p.exists()
+    f.release('abort','kotowari','0.2.0')
+    f.add_changelog_entry()
+    f.base=f.head()
+    f.release('prepare','kotowari','0.3.0')
+    f.records()
+    (f.repo/'.kotowari/changes/implementation.yaml').unlink()
+    f.git('add','.kotowari/changes/implementation.yaml')
+    result=f.release('finalize','kotowari','0.3.0',expected=1)
+    assert 'change_uncovered' in result.stdout, (result.stdout,result.stderr)
+    assert f.head() == f.base
+    assert not f.git('tag','--list','kotowari-v0.3.0')
+    f.records()
+    f.git('add','.kotowari/changes/implementation.yaml','.kotowari/changes/review.yaml')
+    f.release('finalize','kotowari','0.3.0')
+    assert f.git('rev-parse','kotowari-v0.3.0^{commit}') == f.head()
 
 
-scenario('existing record edits cannot hide extra changes',existing_record_change)
-
+scenario('tracked current records are replaced on the next release',existing_record_change)
 
 def abort_contamination(f):
     f.release('prepare','kotowari','0.2.0')
@@ -526,7 +554,7 @@ def stale_ir(f):
     f.base=f.head()
     f.release('prepare','kotowari','0.2.0')
     f.records()
-    p=f.repo/'docs/changes/implementer.yaml'
+    p=f.repo/'.kotowari/changes/implementation.yaml'
     data=json.loads(p.read_text())
     data['entries'][0]['ir']=[dict(path='docs/ir/workflow.md',sha256='sha256:'+hashlib.sha256(b'old context').hexdigest())]
     p.write_text(json.dumps(data))

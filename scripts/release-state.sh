@@ -120,7 +120,7 @@ require_no_conflicts() {
     [ -z "$(git ls-files --unmerged)" ] || die "競合した index は渡せない"
 }
 
-# New configured records are the only additions; existing records are ordinary tracked files.
+# Configured records may be added, replaced or deleted; other changes stay generated-only.
 inspect_prepared_boundary() {
     local path image staged_mode staged_blob _
     records=()
@@ -131,9 +131,7 @@ inspect_prepared_boundary() {
         [ "$image" = "$(saved_image "$path" after)" ] || die "生成内容が変わった: $path"
     done
     while IFS= read -r -d '' path; do
-        if git cat-file -e "$start_head:$path" 2>/dev/null; then
-            is_generated "$path" || die "生成対象外の tracked 変更: $path"
-        fi
+        is_generated "$path" || records+=("$path")
     done < <(git diff --no-renames --name-only -z HEAD --)
     while IFS= read -r -d '' path; do
         if git cat-file -e "$start_head:$path" 2>/dev/null; then
@@ -141,14 +139,20 @@ inspect_prepared_boundary() {
         fi
         records+=("$path")
     done < <(git ls-files --cached --others --exclude-standard -z)
-    CARGO_BUILD_JOBS=4 cargo run -q -p kotowari --example release-record-paths -- "${records[@]}" || die "設定された新規照合記録以外の追加がある"
+    CARGO_BUILD_JOBS=4 cargo run -q -p kotowari --example release-record-paths -- "${records[@]}" || die "生成対象と設定された照合記録以外の変更がある"
     for path in "${records[@]}"; do
-        worktree_image "$path" >/dev/null
+        if [ -e "$path" ] || [ -L "$path" ]; then
+            worktree_image "$path" >/dev/null
+        fi
     done
     # Index can be untouched or contain exactly the same fixed worktree content.
     while IFS= read -r -d '' path; do
-        read -r staged_mode staged_blob _ < <(git ls-files --stage -- "$path")
-        [ "$staged_mode $staged_blob" = "$(worktree_image "$path")" ] || die "staged と未 stage の内容が違う: $path"
+        if [ -n "$(git ls-files --stage -- "$path")" ]; then
+            read -r staged_mode staged_blob _ < <(git ls-files --stage -- "$path")
+            [ "$staged_mode $staged_blob" = "$(worktree_image "$path")" ] || die "staged と未 stage の内容が違う: $path"
+        else
+            [ ! -e "$path" ] && [ ! -L "$path" ] || die "staged 削除と作業内容が違う: $path"
+        fi
     done < <(git diff --no-renames --cached --name-only -z HEAD --)
 }
 

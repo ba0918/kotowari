@@ -1,4 +1,83 @@
 {
   "version": 1,
-  "entries": []
+  "entries": [
+    {
+      "id": "current-commit",
+      "role": "implementer",
+      "conclusion": "new",
+      "reason": "採用済み現在状態方針に合わせて state を廃止し全件参照を検査する。明示された隠し記録のみを静的検査し、固定現在ファイルと探索 ignore・無効時の独立再照合へ運用を揃える。旧形式は当時のツール版で再検証する。release の記録更新・削除許可と保持は追加委譲の同じ境界で接続する。",
+      "requirements": [
+        "REQ-core-019",
+        "REQ-core-249",
+        "REQ-core-253",
+        "REQ-core-258",
+        "REQ-core-259",
+        "REQ-core-265",
+        "REQ-core-267",
+        "REQ-core-268",
+        "REQ-core-272",
+        "REQ-core-273",
+        "REQ-core-276"
+      ],
+      "decisions": [
+        "docs/decision/records/2026-10-01-current-change-records.md#A1",
+        "docs/decision/records/2026-10-01-current-change-records.md#A2",
+        "docs/decision/records/2026-10-01-current-change-records.md#A3",
+        "docs/decision/records/2026-10-01-current-change-records.md#A4",
+        "docs/decision/records/2026-10-01-current-change-records.md#A5",
+        "docs/decision/records/2026-10-01-current-change-records.md#A6",
+        "docs/decision/records/2026-10-01-current-change-records.md#A7",
+        "docs/decision/records/2026-10-01-current-change-records.md#A8",
+        "docs/decision/records/2026-10-01-current-change-records.md#A9",
+        "docs/decision/records/2026-10-01-current-change-records.md#A10",
+        "docs/decision/records/2026-10-01-current-change-records.md#A11"
+      ],
+      "handoff": null,
+      "gaps": [],
+      "base": "5938ecf9ffeef14161ac48101e0a7dcefdbb066e",
+      "files": [
+        {
+          "path": "scripts/release-fixture.py",
+          "before": "sha256:018e64ee7306c247bc80aeccb97594f9ae652d978854956f946e9b0e3eb3d7b3",
+          "after": "sha256:806cf30e22640195b61a98678819b0de1d3f2c106b14c691324dd880ada91bfc"
+        },
+        {
+          "path": "scripts/release-state.sh",
+          "before": "sha256:fb14f29365197caa9b9259cedb39bb336a237856a3ad01dd33c966b8a9d1d44f",
+          "after": "sha256:d29c827c9976d4268651d39cf374d73f0ee845125a1f67319dc5dc3f1a11b917"
+        },
+        {
+          "path": "scripts/release.sh",
+          "before": "sha256:2e7111e4c48268ec7280be4f1786b52f0ca7a50a41a401805dc6fed9d873ec1b",
+          "after": "sha256:9970dd8b8fe4754b2014dccc38f51ada125daa00ea8ab312688dbbe62c186288"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/change-record-format.md",
+          "sha256": "sha256:035dcc86f70fa4660eea95773ec7674a01fea09b4946ea658377732c9f0e2cee"
+        },
+        {
+          "path": "docs/ir/core/change-records.md",
+          "sha256": "sha256:880f694931ca598c6f3585b8ebc2c3588bc040c3baee094994b02c74f5d07de8"
+        },
+        {
+          "path": "docs/ir/core/change-workflow.md",
+          "sha256": "sha256:db3b843608ae38ae625ba7106a9edbb4f2e24b4a003bcb00aca991f0bdbf719d"
+        },
+        {
+          "path": "docs/ir/core/changes-inputs.md",
+          "sha256": "sha256:68ee26520c97494c22dc528b5116a991b113f64dd2da10cefec0fdd7239fa9b1"
+        },
+        {
+          "path": "docs/ir/core/changes-results.md",
+          "sha256": "sha256:58dc6ec0f9d32751438ed5e7810d2c72e39fdb4d0737cf27ff189645cf73348d"
+        },
+        {
+          "path": "docs/ir/core/config.md",
+          "sha256": "sha256:e0b82ea717179d5ffaf5aa4d5e2d452302fb7976f0468da959ab99a7f22d8f47"
+        }
+      ]
+    }
+  ]
 }
