@@ -85,3 +85,12 @@ kotowari のスキルと導入手順は常に、次の契約を満たす。imple
 
 kotowari のスキルと導入手順は常に、次の契約を満たす。導入例では changes.files に製品コード・テスト・配布スキル・ビルドとフックと CI の設定を列挙し、changes.records は "docs/changes/**/*.yaml" とする。生成物は明示した exclude だけで外す。pre-commit は整形後の index に対して "changes --base HEAD --staged --phase implementation" を行い、check も別に行う。CI は pull_request の比較元を base SHA と head SHA の merge-base、対象を head SHA とし、両履歴を取得して "changes --base <比較元> --head <対象> --phase review" と check を行う。merge 用の SHA は対象に使わない。push の導入例はイベントの before と after の比較とし、before が全0の新規ブランチは停止して比較元を明示する。途中のコミット用には HEAD を base とした実装側の件を作り、最終検査用にはブランチの比較元を base とした実装側の件と review 側の件を作り直す。再照合は変わったファイルまたは IR を含む件ごとに行い、同じ件の全ファイルと関連 IR を再確認する。
 
+
+### REQ-core-277: 優先して再照合するテストの変更
+
+- kind: ubiquitous
+- source: docs/decision/records/2026-10-01-change-conformance.md#A7
+- verification: review
+- how_to_verify: review のスキルと照合結果を読み、要求 ID のあるテストの追加・期待値変更・削除を優先して確認し、製品コードだけの変更も対象に残すことを確認する。
+
+kotowari の review のスキルは常に、要求 ID のあるテストの追加・期待値変更・削除を優先して再照合し、その期待値が変わらないことだけを理由に製品コードや補助関数の変更を対象から外さない手順を持つ。

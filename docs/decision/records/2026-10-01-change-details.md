@@ -7,7 +7,7 @@
 この記録の細部は文書作成者の推奨案であり、利用者による採用は今回のレビューで確認する。
 既存の方針は [変更照合の記録](./2026-10-01-change-conformance.md#Agreements) を継続する。
 
-Position: A1〜A14 は作成者が具体化した推奨案。採用は文書レビューと仕様のコミットで確定する。実装計画は採用と仕様コミット後に作る。
+Position: A1〜A14 は利用者がレビューで採用し、IR とともに e2159ac にコミットした。A15 は一覧表記の補足で、計画のレビューで採用を確認する。
 
 ## Agreements
 
@@ -53,6 +53,10 @@ Position: A1〜A14 は作成者が具体化した推奨案。採用は文書レ�
 - A14 導入例では changes.files に製品コード・テスト・配布スキル・ビルドとフックと CI の設定を列挙し、changes.records は "docs/changes/**/*.yaml" とする。生成物は明示した exclude だけで外す。pre-commit は整形後の index に対して "changes --base HEAD --staged --phase implementation" を行い、check も別に行う。CI は pull_request の比較元を base SHA と head SHA の merge-base、対象を head SHA とし、両履歴を取得して "changes --base <比較元> --head <対象> --phase review" と check を行う。merge 用の SHA は対象に使わない。push の導入例はイベントの before と after の比較とし、before が全0の新規ブランチは停止して比較元を明示する。途中のコミット用には HEAD を base とした実装側の件を作り、最終検査用にはブランチの比較元を base とした実装側の件と review 側の件を作り直す。再照合は変わったファイルまたは IR を含む件ごとに行い、同じ件の全ファイルと関連 IR を再確認する。
   - why: 既存の lefthook を再利用し、GitHub のイベントの比較元を呼び出し側が指定する。配布スキルの変更にも記録を求める。
   - decided_by: 文書作成者（推奨案、利用者の採用はレビューで確認）
+
+- A15 コマンドが無い場合の停止詳細は "expected command: check, changes, list, mutants, plan, query or status" とする。既存の一覧表記を維持し、changes をコマンド名のバイト順の位置に加える。
+  - why: コマンド名の一覧は決まったが、細かな表記に旧 FLAG の未決参照が残っていた。実装役が表記を判断する余地を残さない
+  - decided_by: 文書作成者（補足の推奨案、利用者の採用は計画のレビューで確認）
 
 ## Reuse
 
