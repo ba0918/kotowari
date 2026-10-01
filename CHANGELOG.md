@@ -10,10 +10,6 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 - 配布スキルに、判断の記録への書き戻しと両役の YAML 照合記録、独立 review 後のブランチ全体検査、仕様の穴の処理先を追加した。承認済み要求を保つ委譲範囲の具体的な IR 追加を認め、変更・削除や根拠の無い意味の判断は人へ戻す。
 - `kotowari changes` で指定した Git 比較元と commit または index の変更を列挙し、実装・review の照合記録と内容の鮮度を検査できる。設定の `changes` は省略可能で、導入した場合は check/status でも記録の形式と有効な参照を検査する。
 
-### Changed
-
-- **BREAKING** 開発中の照合記録 version: 1 から `state` を除去し、旧キーは拒否する。現在の比較を `.kotowari/changes/` の固定ファイルに上書きし、履歴は Git に残す。旧形式の過去 commit は当時のツール版で再検証する。check/status は明示された隠し記録の形式・参照を全件検査する。通常の探索は `.ignore` で記録を外せる。
-
 ## [0.2.0] - 2026-09-27
 
 ### Added
