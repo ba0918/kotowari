@@ -8,6 +8,7 @@ mod doc_kind;
 pub mod equivalents;
 pub mod finding_map;
 pub mod fingerprint;
+pub mod git_snapshot;
 pub mod guides;
 pub mod ir;
 pub mod list;
@@ -252,6 +253,7 @@ stop_reasons! {
     NonUtf8File => "non-UTF-8 file",
     ResultsError => "results error",
     MappingError => "mapping error",
+    GitError => "git error",
 }
 
 /// 結果のファイルを作った変異テストの道具（REQ-core-149）

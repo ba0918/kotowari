@@ -94,4 +94,5 @@ Adding an exclusion or loosening a rule is a change to the specification, so do 
 | unreadable file | Return to the person. Report the path of the file that cannot be read |
 | non-UTF-8 file | Return to the person. Report the path of the file that is not UTF-8 |
 | results error | Return to the person. The results file does not match the form of the mutation-testing tool. Report the path and the description in the details |
+| git error | Git history, target or index cannot be read | Repair the input or fetch the required history; do not supplement with working tree files | caller |
 | mapping error | Return to the person. A finding returned by the schema side could not be mapped to a kotowari finding. Report the kind and name in the details |
