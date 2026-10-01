@@ -27,3 +27,22 @@ surface:
     - "crates/kotowari-core/src/**/*.rs"
   rules:
     - ".kotowari/rules/surface.yml"
+
+changes:
+  files:
+    - "src/**"
+    - "crates/**"
+    - "tests/**"
+    - "agent/skills/**"
+    - "scripts/**"
+    - ".github/workflows/**"
+    - ".kotowari/**"
+    - "Cargo.toml"
+    - "Cargo.lock"
+    - "lefthook.yml"
+    - "PROJECT.md"
+    - "CHANGELOG.md"
+    - "docs/guides/**"
+  exclude: []
+  records:
+    - "docs/changes/**/*.yaml"

@@ -40,7 +40,8 @@ The minimum supported Rust version is declared per crate, not once for the works
 `crates/kotowari-markdown-schema` declares `rust-version = "1.89"`, and neither `kotowari` nor
 `kotowari-core` declares one. All three are on `edition = "2024"`.
 
-`lefthook.yml` defines the gates: `pre-commit` runs the secret scan and `kotowari check`,
+`lefthook.yml` defines the gates: `pre-commit` runs rustfmt and explicitly restages those paths before the secret scan,
+`kotowari check` and `changes --base HEAD --staged --phase implementation`,
 `pre-push` runs the full test suite, `kotowari check` with no exemptions, and the mutation tests
 in `scripts/mutants.sh`.
 
@@ -138,3 +139,20 @@ To release:
 
 A pushed tag is published: never move or re-create it. A published release is fixed by releasing
 a new version. The release workflow is the only CI; the other gates are the local hooks.
+
+## Change conformance
+
+`.kotowari/config.yaml` enables change records under `docs/changes/**/*.yaml` for code, tests,
+skills, build/hook/CI configuration and guides. Before each commit, prepare implementer records
+against HEAD and the formatted index. Final records use the branch-wide comparison base and
+both implementation and an independent review; archive completed comparisons.
+
+Before integration, pin the full base and candidate head, run the workspace tests, then require
+both `kotowari check` and `kotowari changes --base <base> --head <head> --phase review` to exit 0.
+`status complete` is not evidence that the branch's changes have been reconciled. Out-of-scope
+findings remain reported without widening the fix; they may still block the integration gate.
+
+The pull-request workflow derives the base from the event base/head merge-base and checks the
+head SHA after fetching both histories. `scripts/change-base.sh` also supports a push example
+using before/after and stops for a zero before until a comparison base is provided. Workflow
+files are prepared locally; publishing requires approval. See `docs/guides/change-conformance.md`.

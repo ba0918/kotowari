@@ -1,0 +1,39 @@
+version: 1
+entries:
+  - id: "change-conformance-intermediate"
+    base: "e29f9ee43cacd0e327ef0de623816caeaaa5e7dc"
+    role: "implementer"
+    state: "active"
+    conclusion: "new"
+    reason: "承認済みの整形後 index 検査を、実測した再ステージ順序で実現する。選択と根拠を判断の記録に残した。"
+    handoff: null
+    files:
+      - path: ".github/workflows/change-conformance.yml"
+        before: null
+        after: "sha256:12831ca673b9bc2ff22ca749012af92e0ae5611ff7f67d6011bfed3066bad992"
+      - path: "PROJECT.md"
+        before: "sha256:7e73e63f288dbe70dd9d057d7e8c9062793375b5714a8de9ed271624b433cf42"
+        after: "sha256:ec32744e73a4e32da75f9f192327206d004e83bd68451dddae02171a980cacb7"
+      - path: "docs/guides/change-conformance.md"
+        before: null
+        after: "sha256:80682cad8dcbc4b214a1aabd65054cd6f15ee3aafd82eed31a20ee47a52692af"
+      - path: "lefthook.yml"
+        before: "sha256:2837e92c840e335d40b7e9f1f3a77dcf397a56bb36974ffebe57955f8b8810ac"
+        after: "sha256:8de8600261f5ee9ae4394512abe607e352635cbe17318dcc773346bb2648ca6d"
+      - path: "scripts/change-base.sh"
+        before: null
+        after: "sha256:388dbcb0c59f7e855828022a318c2f847040337c687c7f6a78de8292474ecd41"
+      - path: "scripts/check-changes.sh"
+        before: null
+        after: "sha256:dddea154bfad40700b1a0b827fcbaf6073ae85a63e4b9b96e86ffba453497ba8"
+    ir:
+      - path: "docs/ir/core/change-workflow.md"
+        sha256: "sha256:33334b98afa8ba9dbd4daf0417f2f7272d62aad283a11053e4bb9165f136ac5c"
+    requirements:
+      - "REQ-core-258"
+      - "REQ-core-259"
+      - "REQ-core-261"
+      - "REQ-core-276"
+    decisions:
+      - "docs/decision/records/2026-10-01-change-index-restaging.md#A1"
+    gaps: []
