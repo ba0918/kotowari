@@ -1,5 +1,6 @@
 pub mod cargo_mutants;
 pub mod change_records;
+pub mod changes;
 pub mod comment_block;
 pub mod config;
 pub mod deferred;
@@ -77,6 +78,11 @@ macro_rules! finding_kinds {
 }
 
 finding_kinds! {
+    ChangeStale => "change_stale",
+    ChangeIrStale => "change_ir_stale",
+    ChangeUncovered => "change_uncovered",
+    ChangeDeferred => "change_deferred",
+    ChangeConclusionConflict => "change_conclusion_conflict",
     ChangeRecordInvalid => "change_record_invalid",
     AlgorithmWithoutDefinition => "algorithm_without_definition",
     DeferredWithTest => "deferred_with_test",

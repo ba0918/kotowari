@@ -28,6 +28,11 @@ A requirement whose verification is review needs a `- how_to_verify:` line. How 
 
 | Kind | Meaning | Action | Owner |
 |---|---|---|---|
+| change_uncovered | A changed file lacks the required role or related IR | Add or reconcile the needed caller record | caller |
+| change_stale | An active entry has different file identities | Reconcile the whole entry with the target snapshot | caller |
+| change_ir_stale | An active entry has different related IR bytes | Reconcile the whole entry with the target IR | caller |
+| change_conclusion_conflict | Active entries disagree for the same base and file identities | Resolve the conclusion before final review | caller |
+| change_deferred | A matching entry is deferred in review phase | Record an adopted decision and IR, then reconcile again | caller |
 | change_record_invalid | A change record has an invalid format, conclusion or reference | Repair the named file or entry; check and status validate active references without Git | caller |
 | missing_title | There is no title | Add a `# ` title | brainstorm |
 | multiple_titles | There are two or more titles (one per title after the first; detail is that title) | Keep one title | brainstorm |
