@@ -163,4 +163,4 @@ Source: `ba0918-verification`, agentic-rules v0.8.0.
 
 ## Decisions carried into change conformance
 
-For changes-enabled projects read the kotowari skill's changes scene. Make the delegated concrete choices and their constraints explicit in the decision record and IR. Implementation and planning roles record their new choices, grounds and deciding role; behavior/constraint changes are reflected in IR. Concrete additions may preserve approved requirements within delegation; approved-requirement changes/deletions, contradictory choices or unsupported consequential meaning return here. Specification gaps need a decision-backed recorded/fixed/deferred disposition with related IR, existing requirements or explicit handoff. Final independent review verifies grounds, meaning and delegation before check and branch-wide review-phase changes pass.
+For changes-enabled projects read the kotowari skill's changes scene. Make delegated concrete choices and their limits explicit in the decision record and IR, so that implementation can record additions within them; changes to approved requirements come back here.

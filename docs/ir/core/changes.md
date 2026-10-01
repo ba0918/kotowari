@@ -55,15 +55,15 @@ kotowari は常に、変更に対する照合の欠落と古さを検査する�
 ### REQ-core-246: ステージされた対象
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-change-conformance.md#A8
+- source: docs/decision/records/2026-10-01-conformance-at-integration.md#A2
 - verification: unit
 
-変更照合の専用コマンドは常に、pre-commit の検査では HEAD とステージ済みの内容を比較し、ステージされていない作業ツリーの変更をコミット対象として数えない。
+変更照合の専用コマンドは常に、"--staged" の検査では HEAD とステージ済みの内容を比較し、ステージされていない作業ツリーの変更をコミット対象として数えない。
 
 ### REQ-core-247: 最終検査の対象
 
 - kind: prohibition
-- source: docs/decision/records/2026-10-01-change-conformance.md#A8, docs/decision/records/2026-10-01-change-conformance.md#A12
+- source: docs/decision/records/2026-10-01-conformance-at-integration.md#A1, docs/decision/records/2026-10-01-change-conformance.md#A12
 - verification: unit
 
 変更照合の専用コマンドは常に、cycle の最終検査と CI では、呼び出し元が指定した比較元から対象ブランチ全体の変更を検査する。直前の1コミットだけを最終検査の対象にしてはならない。
@@ -102,13 +102,13 @@ Scenario: テストを変えない製品コードの変更
   When 変更照合の専用コマンドでその比較元と対象を検査する
   Then 製品コードの変更は照合対象に含まれる
 
-@id=EX-core-435 @about=REQ-core-246 @source=docs/decision/records/2026-10-01-change-conformance.md#A8
+@id=EX-core-435 @about=REQ-core-246 @source=docs/decision/records/2026-10-01-conformance-at-integration.md#A2
 Scenario: コミット対象と作業ツリーを分ける
   Given ファイルにステージ済みの変更と、追加のステージされていない変更がある
-  When pre-commit の変更照合を実行する
+  When "--staged" で変更照合を実行する
   Then ステージ済みの内容を対象に検査し、追加の変更をコミット対象として数えない
 
-@id=EX-core-436 @about=REQ-core-247,REQ-core-242 @source=docs/decision/records/2026-10-01-change-conformance.md#A3,docs/decision/records/2026-10-01-change-conformance.md#A6,docs/decision/records/2026-10-01-change-conformance.md#A8,docs/decision/records/2026-10-01-change-conformance.md#A12
+@id=EX-core-436 @about=REQ-core-247,REQ-core-242 @source=docs/decision/records/2026-10-01-change-conformance.md#A3,docs/decision/records/2026-10-01-change-conformance.md#A6,docs/decision/records/2026-10-01-change-conformance.md#A12,docs/decision/records/2026-10-01-conformance-at-integration.md#A1
 Scenario: 以前のコミットにある未照合変更
   Given ブランチの以前のコミットに照合されていない対象変更があり、直前のコミットには照合記録だけがある
   When 指定された比較元からブランチ全体を最終検査する

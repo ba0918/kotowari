@@ -6,7 +6,7 @@ This reference governs caller-written change records, snapshot checks and their 
 
 ## Inputs and responsibility
 
-The caller fixes the full comparison-base commit ID, target commit ID (or index for a commit in progress), phase, worktree and approved scope. Derive these from the branch or CI event, never from a record's self-report. The implementer and a review separate from implementation each author their own YAML records. The caller stages and commits them. `kotowari` writes only stdout/stderr and never creates records or gap dispositions. Review findings JSON remains internal; it does not replace either role's common YAML record.
+The caller fixes the full comparison-base commit ID, target commit ID, phase, worktree and approved scope. Derive these from the branch or CI event, never from a record's self-report. The implementer and a review separate from implementation each author their own YAML records. The caller stages and commits them. `kotowari` writes only stdout/stderr and never creates records or gap dispositions. Review findings JSON remains internal; it does not replace either role's common YAML record.
 
 Prioritise additions, expectation changes and deletions in tests carrying requirement IDs. Confirm their expectations against the requirements. Keep changes to product code and helpers in scope even if test expectations did not change.
 
@@ -28,21 +28,13 @@ The role making a new judgment records the choice, grounds and deciding role in 
 
 This changes the former unconditional hand-back of IR additions: implementer and fixer may add concrete IR only within the delegated scope, with evidence, while keeping approved requirements unchanged. They may not change or delete approved requirements, contradict an existing choice, choose consequential meaning without grounds, or use recording authority to expand scope. Those cases return to the person; irreversible, dangerous and externally visible actions also return. Cycle orchestrates and delegates recording; it never implements or decides meaning itself. After an IR addition, rerun check and review the specification and implementation including the addition.
 
-## Intermediate commit
+## Before a commit (optional)
 
-After formatting and restaging, replace `commit.yaml` with current implementer entries whose base is HEAD's full ID and whose file identities match the actual index. Read configuration, files, records, related IR and decision records from that index. Stage the records too; a record only in the working tree cannot cover the commit.
-
-Run check separately, then:
-
-```sh
-kotowari changes --base HEAD --staged --phase implementation
-```
-
-Read the findings, update justified records and any permitted concrete IR, restage, and rerun. Intermediate commits require implementer coverage; they do not require final independent review. deferred can pass implementation when its structure and references are complete.
+Intermediate commits need no records, and no hook runs changes. An implementer may check its own staged records before committing with `kotowari changes --base HEAD --staged --phase implementation`; this is a self-check, never a gate.
 
 ## Final independent review
 
-Fix the branch-wide base and candidate head. Recreate implementer records for that base. A review separate from implementation checks grounds, meaning and delegated scope, then authors reviewer records for the same changed bytes and all related IR. Grouping and IDs may differ by role. A reviewer record must include all IR of corresponding implementer entries; additional IR is allowed. Neither a self-declared reviewer role nor passing the machine check proves that review ran.
+Fix the branch-wide base and candidate head. Create implementer records for that base. A review separate from implementation checks grounds, meaning and delegated scope, then authors reviewer records for the same changed bytes and all related IR. Grouping and IDs may differ by role. A reviewer record must include all IR of corresponding implementer entries; additional IR is allowed. Neither a self-declared reviewer role nor passing the machine check proves that review ran.
 
 Run the whole branch comparison, never just HEAD's parent:
 
@@ -53,11 +45,11 @@ kotowari changes --base <full-base-id> --head <full-head-id> --phase review --fo
 
 Both must exit 0 before integration. Keep out-of-scope findings in the report without expanding the fix; distinguish verified implementation scope from an integration gate that remains blocked. A status complete value does not prove final change conformance. Deferred entries cannot pass review; formally adopting a deferral requires the permission in decision records and IR, then reconciliation as existing or new.
 
-When code or IR changes, reconcile the entire entry containing it: all its files and related IR, both roles as required, then commit, pin the new head and rerun tests, check and changes. Old records with another base do not cover the new comparison. Keep only the current comparison in fixed `implementation.yaml` and independently authored `review.yaml`; delete intermediate `commit.yaml` at final completion. Do not append past entries or add dated/hash-named history files or a README here: Git carries history. These names are an adoption convention, not a core constraint. Delete both invalidated final records before reconciliation after code, IR or decision-meaning changes, rebase, cherry-pick or parallel integration; reauthor both after independent review. Record files, IR, decisions and the selected config are excluded from change enumeration, so adding final records does not create a reconciliation cycle.
+When code or IR changes, reconcile the entire entry containing it: all its files and related IR, both roles as required, then commit, pin the new head and rerun tests, check and changes. Old records with another base do not cover the new comparison. Keep only the current comparison in fixed `implementation.yaml` and independently authored `review.yaml`. Do not append past entries or add dated/hash-named history files or a README here: Git carries history. These names are an adoption convention, not a core constraint. Delete both invalidated final records before reconciliation after code, IR or decision-meaning changes, rebase, cherry-pick or parallel integration; reauthor both after independent review. Record files, IR, decisions and the selected config are excluded from change enumeration, so adding final records does not create a reconciliation cycle.
 
 ## CI and local adoption
 
-Pre-commit runs changes against the formatted index with base HEAD and phase implementation, alongside check. A pull_request workflow fetches base and head history, derives the comparison base using their merge-base, and checks the event's head SHA. Do not use the synthetic merge SHA. Run the same check and changes engine as locally.
+Hooks do not run changes. A pull_request workflow fetches base and head history, derives the comparison base using their merge-base, and checks the event's head SHA. Do not use the synthetic merge SHA. Run the same check and changes engine as locally.
 
 For a push example, use the event's before and after SHAs. A before consisting only of zeros is a new branch with no event comparison base: stop and require an explicit base rather than inventing one. A read or history failure also stops. Configure these gates locally before publishing a workflow; publication needs the person's authority.
 

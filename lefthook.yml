@@ -17,18 +17,14 @@
 #   無ければ origin/main との差分だけを走らせる（docs/decision/records/2026-09-27-release-mutants-scope.md の A1）。
 #   その判定にフックの標準入力の行が要るので use_stdin を立てる。
 pre-commit:
-  parallel: false
   commands:
     rustfmt:
-      priority: 1
       glob: "*.rs"
-      run: rustfmt --edition 2024 {staged_files} && git add -- {staged_files}
+      run: rustfmt --edition 2024 {staged_files}
       stage_fixed: true
     secretlint:
-      priority: 2
       run: bash "$(git rev-parse --git-common-dir)/hooks/pre-commit.old"
     kotowari-check:
-      priority: 3
       run: |
         out=$(CARGO_BUILD_JOBS=4 cargo run -q -- check --format json); code=$?
         if [ "$code" -eq 2 ]; then exit 2; fi
@@ -39,9 +35,6 @@ pre-commit:
             | select((.kind == "unresolved_reference" and ((.path | startswith("docs/ir/")) | not)) | not)
           ] | .[] | "\(.path):\(.line // "-") [\(.severity)] \(.kind) \(.detail)"')
         if [ -n "$rest" ]; then printf '%s\n' "$rest"; exit 1; fi
-    kotowari-changes:
-      priority: 4
-      run: scripts/check-changes.sh
 pre-push:
   commands:
     cargo-test:

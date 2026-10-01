@@ -17,9 +17,11 @@ Position: 利用者が配置・保持方針・検証の方向を採用し、実�
 - A2 このリポジトリと導入例では .kotowari/changes/ に commit.yaml、implementation.yaml、review.yaml を置く。cache 配下には置かず、Git 管理する。固定3ファイルは導入規約であり、コアは引き続き changes.records の設定を使う。
   - why: コマンドと保存場所を対応させる。再レビューは可能でも当時の判断・独立レビューの証拠は削除後に再生成できるキャッシュではなく、対象コミットに必要な証拠である。
   - decided_by: 利用者（配置と運用を採用）
+  - superseded_by: [途中用の記録を置かない A3](./2026-10-01-conformance-at-integration.md#A3)
 - A3 commit.yaml は HEAD と整形後 index の実装側照合をコミットごとに置き換える。最終確認ではブランチ比較元と対象を固定し implementation.yaml と review.yaml を別々の役で作り直し、commit.yaml を削除する。各件は現在の変更意図を表し、日付・SHA 別ファイルや過去 entries を蓄積しない。
   - why: 途中のコミットを進められる条件と、ブランチ全体の独立レビュー完了を区別する。最新1件という解釈で必要な役・変更を落とさない。
   - decided_by: 利用者（運用案を採用）
+  - superseded_by: [途中用の記録を置かない A3](./2026-10-01-conformance-at-integration.md#A3)
 - A4 保存形式の開発中 version 1 から state 鍵と active/archived の区別を外す。各件は id、base、role、files、ir、conclusion、reason、requirements、decisions、handoff、gaps の11鍵をすべて必須とする。旧 state は未知鍵として拒否し、自動移行しない。
   - why: 初版公開前の契約を現在状態の保存に合わせて簡素化する。履歴保持のためだけの参照検査免除を残さない。
   - decided_by: 文書作成者（承認された履歴廃止の委譲具体化）
@@ -38,9 +40,11 @@ Position: 利用者が配置・保持方針・検証の方向を採用し、実�
 - A9 release finalize は設定された照合記録の追加・更新・削除を受け渡せる。固定生成ファイル以外の通常 tracked 変更、記録以外の untracked、不対応入力、競合 index 等の拒否は維持する。削除した記録が必要な coverage を落とせば changes が拒否する。
   - why: 新規追加だけを許す現行 release 境界は固定ファイルの置換運用と衝突する。記録パスだけに許可を限定して生成外変更の混入防止を維持する。
   - decided_by: 文書作成者（承認された release 接続修正の委譲具体化）
+  - superseded_by: [リリースを特別に扱わない A4](./2026-10-01-conformance-at-integration.md#A4)
 - A10 release の候補前 abort は生成ファイルだけを従来の安全確認後に戻す。LLM が追加・更新・削除した記録は index と作業ツリーとも勝手に復元・削除しない。候補後 abort は履歴・タグ・記録を変更せず状態だけを中止する。
   - why: LLM の現在の判断・レビューを操作の自動復旧で失わない。候補後の中止について既に承認された意味を維持する。
   - decided_by: 文書作成者（既承認の中止契約を記録置換へ具体化）
+  - superseded_by: [リリースを特別に扱わない A4](./2026-10-01-conformance-at-integration.md#A4)
 - A11 通常探索の除外には既存 rg の .ignore を使い、.kotowari/changes/ を除外する。.ignore 自体は changes.files に含めて照合対象とする。Git 管理・snapshot 読み取り・check/status の明示記録探索を除外しない。
   - why: 新しい探索基盤を追加せず、探索と検証の目的を分ける。rg --no-ignore や明示ファイル読み込みでは読めるためスキルの読取条件も必要である。
   - decided_by: 文書作成者（探索手順の委譲具体化）
@@ -53,8 +57,8 @@ Position: 利用者が配置・保持方針・検証の方向を採用し、実�
 | 記録の形式・合否 | 既存 serde-saphyr と静的検査・純粋な照合 evaluator を改訂。新依存不要 |
 | 隠し記録探索 | 既存 globset と記録専用 walker の境界を改訂。一般文書探索は拡張しない |
 | 通常探索の除外 | 既存 rg の .ignore を採用。独自探索器は追加しない |
-| release の混入検査 | 既存 release-state と設定 glob 読取り helper を再利用。許可対象の変更種別だけを拡張 |
 
 ## Revisions
 
 - 利用者の current state と .kotowari/changes/ の採用、および「その方向で進めてください」を受けて改訂した。docs/release/ の配置変更は今回に含めない。
+- [照合を取り込み前だけで要求する判断](./2026-10-01-conformance-at-integration.md)により、commit.yaml の運用（A2、A3 の途中用の部分）と release の受け渡し（A9、A10）を改めた。

@@ -85,4 +85,4 @@ on its own description.
 
 ## Change conformance routing
 
-For a changes-enabled project, the entry route does not replace its commit and integration gates. Route caller-written records, stale entries, intermediate index checks and independent final review to the kotowari skill's changes scene. A missing record alone is repaired within delegation; unsupported consequential meaning, changing/deleting approved requirements or contradictory choices returns to brainstorm. All implementation routes retain check and branch-wide review-phase changes before integration; the route selector itself does not implement, author another role's judgment or declare machine-verified meaning.
+For changes-enabled projects every implementation route keeps the integration gate (check and review-phase changes) from the kotowari skill's changes scene. A missing record alone is repaired within delegation; changing approved requirements or unsupported consequential meaning returns to brainstorm.

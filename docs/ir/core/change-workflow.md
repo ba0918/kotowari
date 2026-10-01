@@ -1,6 +1,6 @@
 # 変更の照合を回すスキルとフック・CI
 
-実装中の記録、独立した review、途中と最終の完了条件、人への確認、フックと CI の分担を扱う。これは配布するスキルと導入手順の契約であり、CLI が意味を判定する要求ではない。
+実装中の記録、独立した review、途中のコミットと取り込み前の完了条件、人への確認、フックと CI の分担を扱う。これは配布するスキルと導入手順の契約であり、CLI が意味を判定する要求ではない。
 
 ## Requirements
 
@@ -16,27 +16,27 @@ kotowari のスキルは常に、実装や計画で新しい判断をした役�
 ### REQ-core-257: 実装側とは別の review
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-change-conformance.md#A6, docs/decision/records/2026-10-01-change-conformance.md#A8
+- source: docs/decision/records/2026-10-01-change-conformance.md#A6, docs/decision/records/2026-10-01-conformance-at-integration.md#A1
 - verification: review
-- how_to_verify: cycle と review のスキルを読み、実装側の申告だけで最終の照合済みにしないことと、確認する3点が A6 と A8 に一致することを確認する。
+- how_to_verify: cycle と review のスキルを読み、実装側の申告だけで最終の照合済みにしないことと、確認する3点が A6 と照合を取り込み前だけで要求する判断の A1 に一致することを確認する。
 
 kotowari のスキルは常に、最終の照合で、実装側とは別の review が根拠の妥当性、仕様と実装の意味の一致、委譲範囲を確認し、照合対象と結果を記録する手順を持つ。
 
 ### REQ-core-258: 途中のコミットの完了条件
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-change-conformance.md#A8, docs/decision/records/2026-10-01-change-conformance.md#A9
+- source: docs/decision/records/2026-10-01-conformance-at-integration.md#A1, docs/decision/records/2026-10-01-conformance-at-integration.md#A2
 - verification: review
-- how_to_verify: 導入手順、実装と cycle のスキルを読み、pre-commit の対象・必要な段階・指摘から再検査までの流れが A8 と A9 に一致することを確認する。
+- how_to_verify: 導入手順、フックの設定、実装と cycle のスキルを読み、途中のコミットに照合記録と変更照合の合格を要求する手順やフックが無く、"--staged" が任意の自己検査として扱われていることを確認する。
 
-kotowari の導入手順とスキルは常に、pre-commit に、HEAD とステージ済みの内容に対する実装側の判断・根拠・対応記録の機械検査を置き、指摘を LLM が読んで記録や必要な`IR`を更新し、再検査する手順を持つ。途中のコミットごとに最終 review の完了を要求しない。
+kotowari の導入手順とスキルは常に、途中のコミットに照合記録と変更照合の合格を要求せず、pre-commit に変更照合を置かない。"--staged" による実装側の自己検査は任意とする。
 
 ### REQ-core-259: 取り込み前の完了条件
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-01-change-conformance.md#A8, docs/decision/records/2026-10-01-change-conformance.md#A12
+- source: docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-01-change-conformance.md#A12, docs/decision/records/2026-10-01-conformance-at-integration.md#A1
 - verification: review
-- how_to_verify: 導入手順と cycle のスキルを読み、対象がブランチ全体であり、両コマンドを必須にし、check だけで完了としないことが A2・A8・A12 に一致することを確認する。
+- how_to_verify: 導入手順と cycle のスキルを読み、対象がブランチ全体であり、両コマンドを必須にし、check だけで完了としないことが A2・A12 と照合を取り込み前だけで要求する判断の A1 に一致することを確認する。
 
 kotowari の導入手順とスキルは常に、cycle の最終検査と CI に、ブランチ全体について review の照合までを要求する機械検査を置き、取り込み前に check と changes の両方を必須にする。check の成功だけを今回の変更が照合済みである証拠にしない。
 
@@ -79,11 +79,11 @@ kotowari のスキルと導入手順は常に、次の契約を満たす。imple
 ### REQ-core-276: 導入と再照合
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-change-details.md#A14, docs/decision/records/2026-10-01-current-change-records.md#A2, docs/decision/records/2026-10-01-current-change-records.md#A3, docs/decision/records/2026-10-01-current-change-records.md#A6, docs/decision/records/2026-10-01-current-change-records.md#A7, docs/decision/records/2026-10-01-current-change-records.md#A11
+- source: docs/decision/records/2026-10-01-change-details.md#A14, docs/decision/records/2026-10-01-current-change-records.md#A2, docs/decision/records/2026-10-01-conformance-at-integration.md#A3, docs/decision/records/2026-10-01-current-change-records.md#A6, docs/decision/records/2026-10-01-current-change-records.md#A7, docs/decision/records/2026-10-01-current-change-records.md#A11
 - verification: review
 - how_to_verify: 配布スキルと導入例を読み、出典 A14 の入力・責任境界・再実行条件を満たすことを確認する。
 
-kotowari のスキルと導入手順は常に、次の契約を満たす。導入例では changes.files に製品コード・テスト・配布スキル・ビルドとフックと CI の設定を列挙し、changes.records は ".kotowari/changes/*.yaml" とし、固定の commit.yaml・implementation.yaml・review.yaml を用途別に使う。この固定配置は導入規約であり、コアの必須パスにはしない。生成物は明示した exclude だけで外す。pre-commit は整形後の index に対して "changes --base HEAD --staged --phase implementation" を行い、check も別に行う。CI は pull_request の比較元を base SHA と head SHA の merge-base、対象を head SHA とし、両履歴を取得して "changes --base <比較元> --head <対象> --phase review" と check を行う。merge 用の SHA は対象に使わない。push の導入例はイベントの before と after の比較とし、before が全0の新規ブランチは停止して比較元を明示する。途中のコミット用には HEAD を base とした実装側の件を作り、最終検査用にはブランチの比較元を base とした実装側の件と review 側の件を作り直す。commit.yaml は毎コミット置き換え、最終確認では削除し、両最終記録だけを保持する。新しいコード・関連 IR・関連判断の変更が最終照合を無効にするなら両最終記録を削除し再照合する。rebase の比較元変更、cherry-pick、並行統合では記録の連結・一方の採用だけで完了とせず、統合後の比較について再照合する。関連判断の意味の変更は機械の参照存在検査では検出できず、スキルと独立 review が確認する。再照合は変更のある件の全ファイルと関連 IR を確認する。通常の文書探索では .kotowari/changes/ を除外し、必要な件だけ読む。判断の原本は decisions、仕様は IR とし、reason は対応説明に絞る。過去の記録は必要時に Git 履歴から読む。
+kotowari のスキルと導入手順は常に、次の契約を満たす。導入例では changes.files に製品コード・テスト・配布スキル・ビルドとフックと CI の設定を列挙し、changes.records は ".kotowari/changes/*.yaml" とし、固定の implementation.yaml・review.yaml を役別に使う。この固定配置は導入規約であり、コアの必須パスにはしない。生成物は明示した exclude だけで外す。CI は pull_request の比較元を base SHA と head SHA の merge-base、対象を head SHA とし、両履歴を取得して "changes --base <比較元> --head <対象> --phase review" と check を行う。merge 用の SHA は対象に使わない。push の導入例はイベントの before と after の比較とし、before が全0の新規ブランチは停止して比較元を明示する。最終検査用にはブランチの比較元を base とした実装側の件と review 側の件を作り直す。新しいコード・関連 IR・関連判断の変更が最終照合を無効にするなら両最終記録を削除し再照合する。rebase の比較元変更、cherry-pick、並行統合では記録の連結・一方の採用だけで完了とせず、統合後の比較について再照合する。関連判断の意味の変更は機械の参照存在検査では検出できず、スキルと独立 review が確認する。再照合は変更のある件の全ファイルと関連 IR を確認する。通常の文書探索では .kotowari/changes/ を除外し、必要な件だけ読む。判断の原本は decisions、仕様は IR とし、reason は対応説明に絞る。過去の記録は必要時に Git 履歴から読む。
 
 
 ### REQ-core-277: 優先して再照合するテストの変更

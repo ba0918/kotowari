@@ -531,4 +531,4 @@ changes:
 
 changes は Git ルートを基準に対象 snapshot の設定を読みます。`--config` も Git ルートからの相対です。Git に含まれる隠しディレクトリも glob が当たれば含めます。IR・判断の記録・使用する設定と照合記録自身は差分の対象から外し、参照として検査します。対象に選ばれた symlink、submodule、UTF-8 でないパスは停止します。通常の check/status は作業ツリーを読みます。
 
-`changes.records` は明示した隠しディレクトリ（例 `.kotowari/changes`）を check/status でも読みます。名指していない隠しディレクトリは広い `**` では読みません。この導入例の固定 `commit.yaml`・`implementation.yaml`・`review.yaml` は運用の約束で、別の配置も設定できます。
+`changes.records` は明示した隠しディレクトリ（例 `.kotowari/changes`）を check/status でも読みます。名指していない隠しディレクトリは広い `**` では読みません。この導入例の固定 `implementation.yaml`・`review.yaml` は運用の約束で、別の配置も設定できます。

@@ -80,7 +80,7 @@ Scenario: 記録自身の循環を避ける
 
 
 ```gherkin
-@id=EX-core-458 @about=REQ-core-265,REQ-core-267 @source=docs/decision/records/2026-10-01-current-change-records.md#A2
+@id=EX-core-458 @about=REQ-core-265,REQ-core-267 @source=docs/decision/records/2026-10-01-conformance-at-integration.md#A3,docs/decision/records/2026-10-01-change-details.md#A5
 Scenario: 固定記録を更新しても自己照合は循環しない
   Given .kotowari/changes/ の設定された記録だけを更新または削除し、残る記録は正しい
   When その index の changes を実行する

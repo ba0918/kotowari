@@ -120,6 +120,4 @@ breach. "Fix it" or "add it" alone never starts this skill; ask for a reviewed l
 
 ## Change conformance for small tasks
 
-For changes-enabled projects read the kotowari skill's changes scene and retain cycle's intermediate and final gates even without a plan. Pass the fixed branch-wide base and delegated file scope to implementation and a separate review. Keep implementer/reviewer YAML separate from internal findings JSON, and run check plus review-phase changes before integration. A need to change or delete approved requirements or decide new consequential meaning still fails the small-task conditions; recording a supported concrete addition within delegated approved constraints does not grant wider authority. Reconcile each affected whole entry after code or IR edits and rerun independent conformance review.
-
-Use the kotowari changes scene for fixed current records, `.ignore` exploration and invalidation after code, IR, decision-meaning, base or parallel-integration changes. Keep cycle’s separate implementer and reviewer authorship and final removal of `commit.yaml`; do not retain or concatenate past entries as current evidence.
+For changes-enabled projects cycle's integration gate still applies without a plan; read the kotowari skill's changes scene. Needing to change or delete approved requirements, or to decide new consequential meaning, fails the small-task conditions.

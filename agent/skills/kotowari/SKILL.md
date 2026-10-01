@@ -20,7 +20,7 @@ Choosing the scene: if the person names one, follow it. Otherwise choose from th
 
 | Scene | When | Reference to read |
 |---|---|---|
-| changes | Writing or reconciling change records; intermediate commits, independent final review, hooks and CI | changes.md |
+| changes | Writing or reconciling change records; the optional self-check before a commit, independent final review and CI | changes.md |
 | setup | There is no place for the files yet; first use | config.md |
 | write | Writing the IR and decision records during a brainstorm | ir-form.md and records.md |
 | check | Reading the result of `kotowari check` or `kotowari plan`, or the output of `kotowari list`, `kotowari query` or `kotowari status` | findings.md |

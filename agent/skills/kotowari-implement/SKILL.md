@@ -111,8 +111,4 @@ external summaries), out-of-plan changes with reasons, anything handed back and 
 
 ## Change conformance records
 
-For changes-enabled projects, read the kotowari skill's changes scene. Author implementer YAML records and decision records with choice, grounds and deciding role; reflect behavior/constraint changes in permitted concrete IR. Missing records alone are repaired autonomously. This explicitly changes the former unconditional stop on concrete IR additions; approved requirements cannot be changed or deleted, contradictions and unsupported meaning go back to the person.
-
-Prepare HEAD-based implementer entries for each formatted index commit and run `changes --base HEAD --staged --phase implementation` alongside check. At delivery, recreate branch-base implementer records and report the fixed comparison base and candidate head. Independent review authors its own records; never invent its identity or result. Reconcile whole affected entries after any code/IR change, commit and rerun the required checks. Final integration requires check and branch-wide review-phase changes both to exit 0.
-
-Use the kotowari changes scene for retention and exploration. Replace the fixed intermediate `commit.yaml` per commit and branch-wide `implementation.yaml` at delivery; remove obsolete records rather than append history. Delete invalidated final records after changes or integration and request independent reconciliation. Do not recreate `review.yaml` yourself. Read machine records only for their current task; ordinary exploration uses `.ignore`.
+For changes-enabled projects read the kotowari skill's changes scene. Record each new choice with its grounds and deciding role, and add concrete IR only within the delegation as that scene describes. At delivery, author `implementation.yaml` against the branch-wide base the caller fixed; never author `review.yaml`. Intermediate commits need no records.

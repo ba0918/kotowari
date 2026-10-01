@@ -159,7 +159,7 @@ entries:
       - REQ-core-261
       - REQ-core-276
     decisions:
-      - docs/decision/records/2026-10-01-change-index-restaging.md#A1
+      - docs/decision/records/2026-10-01-conformance-at-integration.md#A1
     handoff: null
     gaps: []
   - id: change-conformance-current-review

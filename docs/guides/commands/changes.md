@@ -33,6 +33,6 @@ implementation は各ファイルの実装側の記録を要求します。revie
 
 JSON は base、target、phase、files、covered、findings の6鍵です。target は commit ID または index、files と covered はファイル数です。findings と text の1件の表記は check と共通で、誤りなしは終了0、誤りありは1、入力や実行の停止は2です。Git 読み取りの停止理由は `git error` です。
 
-途中用の記録は HEAD を base にし、最終用はブランチ全体の比較元を base にして実装側と独立 reviewer が別々に作ります。現在の比較だけを固定ファイルに置き、完了時も同じファイルを維持します。履歴は Git に残し、過去の比較はその commit の設定と記録から再検証します。変更・IR・判断の意味の修正、rebase、cherry-pick、並行変更の取り込みで無効になった両役の最終記録を消し、件全体を独立再照合して書き直し、check と changes を再実行します。check/status の成功だけでは今回の変更が照合済みとは言えません。
+記録はブランチ全体の比較元を base にして実装側と独立 reviewer が別々に作ります。`--staged` はコミット前の任意の自己検査で、途中のコミットに記録は要りません。現在の比較だけを固定ファイルに置きます。履歴は Git に残し、過去の比較はその commit の設定と記録から再検証します。変更・IR・判断の意味の修正、rebase、cherry-pick、並行変更の取り込みで無効になった両役の記録を消し、件全体を独立再照合して書き直し、check と changes を再実行します。check/status の成功だけでは今回の変更が照合済みとは言えません。
 
 開発中の version: 1 から `state` を除去しました。旧 `state` 付き記録は未知キーとして拒否し、自動変換しません。旧形式の過去 commit は当時のツール版で再検証してください。新版形式を持つ過去 commit は新版でもその snapshot から読めます。

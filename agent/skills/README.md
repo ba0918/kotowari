@@ -101,6 +101,4 @@ done
 
 `changes` を導入したリポジトリでは kotowari skill の changes scene を読む。実装・計画で選択した役が根拠と判断者を判断の記録に残し、振る舞い・制約は IR に反映する。承認済み要求を変えない委譲範囲の具体化だけを自律追記できる。
 
-途中は整形後の index に HEAD 基準の implementer YAML を用意し、check と implementation 段階の changes を行う。最終はブランチ全体の比較元に両役の YAML を作り、実装と別の review が根拠・意味・委譲範囲を確認する。内部 findings JSON と YAML は別の成果物。取り込み前に check と review 段階の changes の終了0が必要で、status complete だけでは完了にならない。
-
-仕様の穴は重要度やアクションと別に分類し、判断と IR への反映、既存仕様への修正、明示的保留の処理先を記録する。info/record_only だけで処理済みにはしない。導入例と再照合は kotowari skill の changes scene にある。
+途中のコミットに照合記録は要らない。取り込み前に、ブランチ全体の比較元で実装側と、実装と別の review がそれぞれ YAML 記録を作り、check と review 段階の changes の終了0を必要とする。仕様の穴は info/record_only だけで処理済みにしない。
