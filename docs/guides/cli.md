@@ -245,7 +245,7 @@ Options:
 
 ```console
 $ kotowari
-argument error: expected command: check, list, mutants, plan, query or status
+argument error: expected command: check, changes, list, mutants, plan, query or status
 $ kotowari check --verbose
 argument error: unknown option: --verbose
 $ kotowari check --format xml

@@ -418,7 +418,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
 
     let Some(command) = command else {
         return Err(StopReason::ArgumentError(
-            "expected command: changes, check, list, mutants, plan, query or status".to_string(),
+            "expected command: check, changes, list, mutants, plan, query or status".to_string(),
         ));
     };
 

@@ -61,10 +61,10 @@ entries:
         after: "sha256:901f9f497334d3215c27d5964e6dc21785edec298cee289f0b73dc534b37ebad"
       - path: "crates/kotowari-core/src/lib.rs"
         before: "sha256:af1fc768cbc463227784731b708d34697025e85005cb23fd9bfc5ed01bc0a3c1"
-        after: "sha256:92ebde7257f83be69bd407f7f4d728b38a1bac1df3cf325fbc4fb69c9d7e0c56"
+        after: "sha256:cdba93b8e9309d8e9b349ec390872af9205cdb5ba00956a3ad0632b82bdb8e91"
       - path: "docs/guides/cli.md"
         before: "sha256:532b216970bf232bec4324380e9a6aaf7df2df6c0921606cbbdaabdb4e826bcf"
-        after: "sha256:7cea08cfa1f8b8701023476242b59aa3e27f1ff85ef31486f0a9b0d80f6a132a"
+        after: "sha256:ccde0fb4011b0f72639ca8a460a3179cbd8df9bd2e7110f73b8f0b9d16ca6fab"
       - path: "docs/guides/commands/changes.md"
         before: null
         after: "sha256:619ab289f1319fdcb146218ea4212a59d65f1f8d3e52bd2a243e7d4e770ab3b1"
@@ -103,7 +103,7 @@ entries:
         after: "sha256:4cf4a0e6ef4ad1ad2f1a409fb5538757b4a6aaa84114eff4babbc54a0e5cd901"
       - path: "tests/step1_cli.rs"
         before: "sha256:8aa6288af5b2e54cc12e878944a0f3d63bc5ad4f80585a30ee0e529b01423f62"
-        after: "sha256:f5a268ba78769681d3ee9616f5a8e6081c0d7af6ee9f3e74f79804833c14cdc4"
+        after: "sha256:461b584d46eb72b93c19977e55cd041559dd6ea3f66755999b1f4d7aede184b8"
     ir:
       - path: "docs/ir/core/change-record-format.md"
         sha256: "sha256:0cfa84b55f067545bd42b3486ffde510f78bf2b9312e7e076f1ef56d8215d55b"

@@ -162,7 +162,7 @@ fn req_004_no_arguments_names_all_seven_commands() {
     let first_line = stderr.lines().next().unwrap_or("");
     assert_eq!(
         first_line,
-        "argument error: expected command: changes, check, list, mutants, plan, query or status",
+        "argument error: expected command: check, changes, list, mutants, plan, query or status",
         "got: {first_line:?}"
     );
 }
@@ -180,7 +180,7 @@ fn req_004_options_without_a_command_names_all_seven_commands() {
     let first_line = stderr.lines().next().unwrap_or("");
     assert_eq!(
         first_line,
-        "argument error: expected command: changes, check, list, mutants, plan, query or status",
+        "argument error: expected command: check, changes, list, mutants, plan, query or status",
         "got: {first_line:?}"
     );
 }
