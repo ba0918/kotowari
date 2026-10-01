@@ -118,19 +118,19 @@ To release (the local handoff is specified in [docs/release/change-conformance.m
    `scripts/release.sh kotowari <version>` (or `prepare kotowari <version>`). **This now prepares only;
    it does not stage, commit or tag.** It saves the start SHA and fixed generated contents in ignored
    `.agents/release/prepared.json`, then writes the following versions and promotes the changelog.
-   Give the generated diff to the implementer and an independent reviewer. Each adds a new tracked
+   Give the generated diff to the implementer and an independent reviewer. Each creates or replaces its current tracked
    change-record YAML against the saved start SHA, using `new` and the adopted release decisions as
    grounds; the release operation is outside the IR. If other product, IR or decision changes are
    needed, abort and complete those ordinary changes before preparing again.
 2. Run `scripts/release.sh finalize kotowari <version>`. It accepts only the fixed generated files
-   and new configured record files, stages each path, runs staged implementation conformance and
+   and configured record additions, updates or deletions, stages each path, runs staged implementation conformance and
    the existing commit hooks, and fixes the candidate SHA/tree. On that same candidate it requires
    the version check, `kotowari check` exit 0, workspace tests and review conformance exit 0 before
    creating the annotated tag. It never pushes. Use the printed public command:
    `git push origin main && git push origin kotowari-v<version>` (main must be accepted first).
    Failures retain contents, records and any candidate commit; use `status` to inspect and retry
    `finalize` on the same clean candidate. Before a candidate exists, `abort` restores only verified
-   generated files and retains new records. After a candidate or tag exists, `abort` changes only
+   generated files and retains record additions, updates and deletions. After a candidate or tag exists, `abort` changes only
    the operation state, retaining Git history, tags and records even if HEAD changed. Resolve ordinary
    changes or unpublished local history separately, then return to a clean tree and prepare again.
    Terminal state is archived to ignored operation history before replacement. Never move or reuse
@@ -147,10 +147,14 @@ The local hooks remain required gates.
 
 ## Change conformance
 
-`.kotowari/config.yaml` enables change records under `docs/changes/**/*.yaml` for code, tests,
+`.kotowari/config.yaml` enables current change records under `.kotowari/changes/*.yaml` for code, tests,
 skills, build/hook/CI configuration and guides. Before each commit, prepare implementer records
 against HEAD and the formatted index. Final records use the branch-wide comparison base and
-both implementation and an independent review; archive completed comparisons.
+both implementation and an independent review. Replace `commit.yaml` on every commit, remove it
+at final verification, and keep only current `implementation.yaml` and `review.yaml`. Remove invalidated
+final records and reconcile again after changes to related code, IR or decisions, or the comparison
+base. Past evidence is read from Git history; do not accumulate archived entries. Normal document
+search excludes `.kotowari/changes/`; read only the needed entries while reconciling.
 
 Before integration, pin the full base and candidate head, run the workspace tests, then require
 both `kotowari check` and `kotowari changes --base <base> --head <head> --phase review` to exit 0.

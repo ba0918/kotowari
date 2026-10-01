@@ -1,5 +1,7 @@
 # Plan: 変更の照合漏れと判断の書き戻しを検出する
 
+今回の実行対象は S9〜S12。S1〜S8 と S7 は完了済みの履歴であり再実行しない。旧 steps の docs/changes・active/archived の記述より、今回改訂した IR と追加 steps の現在状態契約を優先する。S12 が今回の最終検証を更新する。
+
 ## Goal
 
 実装側の記録を pre-commit で、独立 review の照合を取り込み前と CI で要求し、未申告の変更・古い照合・処理先の無い仕様の穴を検出する。
@@ -63,6 +65,8 @@ IR は docs/ir/。基礎となる仕様コミットは e2159ac。コマンド一
 
 ## Scope of change
 
+今回追加する改訂は [.kotowari/changes/ の判断](../decision/records/2026-10-01-current-change-records.md)に従う。旧 docs/changes/ を削除し、新配置と記録形式へ置換する。.ignore と changes.files の対象追加を含む。docs/release/ の場所は今回変更しない。
+
 - crates/kotowari-core/src の記録解析・照合・Git adapter の新モジュール、config、lib、status、finding の接続
 - src/main.rs、tests とコアの単体テスト
 - agent/skills の kotowari、implement、cycle、review、plan、brainstorm、iterate、using-workflow と直接参照する資料
@@ -73,7 +77,7 @@ IR は docs/ir/。基礎となる仕様コミットは e2159ac。コマンド一
 
 ## Step order and prerequisites
 
-S1 → S2 → S3 → S4 → S5 → S6 → S8 → S7。S7 は S8 の変更と照合記録も含めた最終対象 SHA でやり直す。実装開始時に branch と worktree を宣言し、計画と仕様コミットを引き継ぐ。全コード変更は ba0918-tdd に従い RED と GREEN の実行結果を残す。
+S1 → S2 → S3 → S4 → S5 → S6 → S8 → S7。S1〜S8 と S7 の初回検証は 5d2dcec までに完了済みで、以下に過去の実行計画を保持する。現在状態の改訂は S9 → S10 → S11 → S12 を追加実行し、最終検証を更新する。S7 は S8 の変更と照合記録も含めた最終対象 SHA でやり直す。実装開始時に branch と worktree を宣言し、計画と仕様コミットを引き継ぐ。全コード変更は ba0918-tdd に従い RED と GREEN の実行結果を残す。
 
 ## Verification map
 
@@ -189,3 +193,47 @@ S1 → S2 → S3 → S4 → S5 → S6 → S8 → S7。S7 は S8 の変更と照�
 - Shown by: check — 対象 SHA の checkout で git status --porcelain に今回の未コミット変更が無いことを確認し、CARGO_BUILD_JOBS=4 cargo test --workspace、kotowari query の対象テスト対応、kotowari check --format json の対象内の誤り0と全体の終了コード、kotowari changes --base <比較元の完全な SHA> --head <対象の完全な SHA> --phase review --format json の終了0を記録する。比較元・対象 SHA・実行結果を引き渡し、変更を追加したら記録・コミット・再照合・検証をやり直す。無関係な誤りと通知は種類別に報告する
 - Left to the implementer: なし
 - Stop and hand back if: 記録を追加すると再照合が循環する、または独立 review に意味の不一致が残る
+
+### S9: 履歴区分を外して現在の記録を検査する
+
+- Purpose: 過去 entries を保持する契約を外し、全件の静的検査と比較元ごとの照合へ揃える
+- Specification: docs/ir/core/change-record-format.md#REQ-core-268, docs/ir/core/change-records.md#REQ-core-249, docs/ir/core/change-records.md#REQ-core-253, docs/ir/core/changes-results.md#REQ-core-272, docs/ir/core/changes-results.md#REQ-core-273, docs/ir/core/config.md#REQ-core-019
+- Prerequisites: 利用者採用済みの現在状態方針と今回文書 draft の読取り。追加承認は不要
+- May change: 記録 parser・純粋照合・作業ツリー記録 walker と対応テスト、今回の仕様 draft の確定
+- Done when: 11必須鍵を受け、旧 state を未知鍵で拒否する。全件の参照を検査し、異なる base は現在 coverage に使わない。明示された隠し記録配下を check/status が検査し、未指定の隠し配下と他の文書探索は従来通り除外する
+- Shown by: test — EX-core-451・455 の旧 archived 前提テストを新契約へ更新する。EX455 の成功から失敗への変更理由は現在記録に参照検査免除が不要になったため。EX451 は別 base を coverage に使わない対照へ変更する。EX456・457・460 を RED→GREEN で観測し、state 欠落成功・state 存在失敗・隠し記録の形式/参照切れを check と status の双方で検査する
+- Left to the implementer: 型・内部 helper と既存 glob の再利用。隠し配下の名指しは正規化した glob のパス成分で判断し、一般 walker は拡張しない
+- Stop and hand back if: 開発中 version 1 以外の公開データの移行が必要、隠し配下を全面探索する必要がある
+
+### S10: 固定記録と探索範囲へ導入を揃える
+
+- Purpose: 現在の変更に必要な一式だけを保持し、通常探索から機械用記録を外す
+- Specification: docs/ir/core/change-workflow.md#REQ-core-276, docs/ir/core/changes-inputs.md#REQ-core-265, docs/ir/core/changes-inputs.md#REQ-core-267, docs/ir/core/change-records.md#REQ-core-253
+- Prerequisites: S9。自己フックを旧記録から新形式へ移行できる順序を宣言する
+- May change: agent/skills の直接関連する手順・参照、docs/guides と確認後のガイド印、PROJECT.md、CHANGELOG.md、.kotowari/config.yaml、.ignore、docs/changes の削除と .kotowari/changes の現在記録
+- Done when: commit.yaml は HEAD→整形後 index の現在照合だけへ毎回置換され、最終記録は branch base→target の両役で作り直す。最終時 commit.yaml を削除する。無効化した両最終記録を削除し再照合する。通常 rg 探索は記録を除外し、Git と機械検査は読める。.ignore 自体を照合対象に含める
+- Shown by: test — EX458・459 を実 Git fixture で RED→GREEN。固定ファイル更新・削除後の現在比較と過去コミット再検証、次コード変更の change_stale、次関連 IR 変更の change_ir_stale、base 変更の EX460 を観測する。artifact — EX461・462 は独立 review が判断意味変更・rebase・cherry-pick・並行統合後の再照合手順を確認し、仕様文面一致のテストは作らない。check — rg の通常探索除外と明示読取可能な限界を確認する
+- Left to the implementer: 既存 rg の .ignore を使う。README や過去の理由一覧を機械用記録ディレクトリへ増やさない。コアへ固定3ファイル名の制約を加えない
+- Stop and hand back if: フック免除が必要、過去の Git 履歴を書換える必要、判断の意味を機械証明する必要がある
+
+### S11: release の記録置換と中止保持を接続する
+
+- Purpose: 既存記録がある次の release を、固定ファイル更新・削除で確定できるようにする
+- Specification: [現在状態の追加判断 A9](../decision/records/2026-10-01-current-change-records.md#A9)、[中止保持 A10](../decision/records/2026-10-01-current-change-records.md#A10)、[確定前の混入検査](../release/change-conformance.md#確定前の混入検査)、[失敗・中止・再開](../release/change-conformance.md#失敗中止再開)
+- Prerequisites: S9、S10。prepare/finalize/status/abort の既承認の意味は維持する
+- May change: scripts/release-state.sh と既存設定 glob helper、scripts/release-fixture.py、必要最小 release テスト・説明
+- Done when: 設定記録の追加・更新・削除を受理し個別に stage する。通常 tracked 混入・記録以外 untracked・競合等は拒否する。候補前 abort は LLM 記録の index/作業ツリーの追加・更新・削除を保持し、候補後 abort は従来通り状態だけを中止する
+- Shown by: test — 固定記録を既に含む開始コミットから prepare→記録更新と不要記録削除→finalize の実 Git fixture を RED→GREEN で検証する。削除による coverage 不足、通常 tracked 混入拒否、候補前/後 abort による各記録状態保持を index・tree・ファイル・Git 参照で観測する。scripts/test-release.sh と bash -n を実行する。実公開・実 origin 書込みはしない
+- Left to the implementer: 既存設定判定と境界 helper の再利用。記録以外の tracked 変更へ許可を広げない
+- Stop and hand back if: 候補後 abort の意味変更、LLM 記録の自動復元・削除、公開操作が必要になる
+
+### S12: 現在記録で独立レビューと最終検証を更新する
+
+- Purpose: 追加改訂を含めた同じ対象 snapshot に両役の現在記録と検証を揃える
+- Specification: docs/ir/core/change-workflow.md#REQ-core-257, docs/ir/core/change-workflow.md#REQ-core-259, docs/ir/core/change-workflow.md#REQ-core-276, docs/ir/core/changes-results.md#REQ-core-274
+- Prerequisites: S9〜S11。実装とは別の review が今回の仕様・実装・スキルの照合を実施済み
+- May change: .kotowari/changes/ の現在記録、今回発見の修正を既存 Scope 内へ委譲する箇所
+- Done when: 過去データを蓄積せず両最終記録が全ブランチ差分を覆い、commit.yaml が存在せず、固定 SHA の check と changes の review 段階が終了0となる。対象の必要な要求・例のテスト対応が揃う
+- Shown by: check — CARGO_BUILD_JOBS=4 cargo test --workspace、scripts/test-release.sh、kotowari plan docs/plans/change-conformance.md、kotowari check、対象 ID の query、kotowari changes --base <完全SHA> --head <完全SHA> --phase review を固定対象で実行する。通常探索と機械検査の境界、変更path・ID・未確認事項を引き渡す。ファイル追加後は内容と対象 SHA を再検証する
+- Left to the implementer: なし。独立 review の記録は review 側が作成する
+- Stop and hand back if: 未確認の意味の不一致、自己照合の循環、作業ツリーに過去データを残す必要が出る

@@ -154,7 +154,7 @@ tests:
 
 ## glob の読み方
 
-<!-- @kotowari[REQ-core-019:96f84a1a, REQ-core-079:0976730b] -->
+<!-- @kotowari[REQ-core-019:bf607913, REQ-core-079:0976730b] -->
 
 `tests.files` と `guides.files` の glob は次のように読みます。
 
@@ -166,6 +166,8 @@ tests:
 | ディレクトリのシンボリックリンク | 辿らない |
 | ファイルのシンボリックリンク | 読む。先が無ければ止まる |
 | ソケット、名前付きパイプ、デバイス | 読まない |
+
+照合記録の `changes.records` は例外として、パス成分で明示した隠しディレクトリを読みます。名指ししない隠し配下は広い `**` でも除外します。
 
 走査は基準のディレクトリの全体（隠しディレクトリを除く）を歩いてから glob で選びます。
 そのため、glob に当たらない場所にある読めないディレクトリでも止まります。
@@ -524,7 +526,9 @@ $ echo $?
 changes:
   files: ["src/**", "crates/**", "tests/**", "agent/skills/**", "Cargo.toml", "Cargo.lock", "lefthook.yml", ".github/workflows/**", "scripts/**"]
   exclude: []
-  records: ["docs/changes/**/*.yaml"]
+  records: [".kotowari/changes/*.yaml"]
 ```
 
 changes は Git ルートを基準に対象 snapshot の設定を読みます。`--config` も Git ルートからの相対です。Git に含まれる隠しディレクトリも glob が当たれば含めます。IR・判断の記録・使用する設定と照合記録自身は差分の対象から外し、参照として検査します。対象に選ばれた symlink、submodule、UTF-8 でないパスは停止します。通常の check/status は作業ツリーを読みます。
+
+`changes.records` は明示した隠しディレクトリ（例 `.kotowari/changes`）を check/status でも読みます。名指していない隠しディレクトリは広い `**` では読みません。この導入例の固定 `commit.yaml`・`implementation.yaml`・`review.yaml` は運用の約束で、別の配置も設定できます。

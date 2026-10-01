@@ -7,10 +7,10 @@
 ### REQ-core-268: 保存形式
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-change-details.md#A6
+- source: docs/decision/records/2026-10-01-current-change-records.md#A4
 - verification: unit
 
-変更照合の検査は常に、次の契約を満たす。照合記録は UTF-8 の YAML とし、1ファイルは version: 1 と entries の一覧だけを持つ。entries は空でもよい。未知の版、未知の鍵、重複した YAML の鍵、誤った型は change_record_invalid の誤りとする。各件の鍵は id、base、role、state、files、ir、conclusion、reason、requirements、decisions、handoff、gaps の12個だけとし、すべて必須とする。id は "[A-Za-z0-9][A-Za-z0-9._-]*" に合う文字列、reason は空白だけでない文字列、base は Git の完全な object ID（40桁または64桁の小文字16進）、role は implementer または reviewer、state は active または archived、conclusion は existing、new または deferred とする。id は読む照合記録全体で一意とする。files は1件以上、ir・requirements・decisions・gaps は0件以上の一覧、handoff は null または判断の記録への参照文字列とする。保存場所は changes.records が指定し、版の異なる記録を自動変換しない。
+変更照合の検査は常に、次の契約を満たす。照合記録は UTF-8 の YAML とし、1ファイルは version: 1 と entries の一覧だけを持つ。entries は空でもよい。未知の版、未知の鍵、重複した YAML の鍵、誤った型は change_record_invalid の誤りとする。各件の鍵は id、base、role、files、ir、conclusion、reason、requirements、decisions、handoff、gaps の11個だけとし、すべて必須とする。id は "[A-Za-z0-9][A-Za-z0-9._-]*" に合う文字列、reason は空白だけでない文字列、base は Git の完全な object ID（40桁または64桁の小文字16進）、role は implementer または reviewer、conclusion は existing、new または deferred とする。id は読む照合記録全体で一意とする。files は1件以上、ir・requirements・decisions・gaps は0件以上の一覧、handoff は null または判断の記録への参照文字列とする。保存場所は changes.records が指定し、版の異なる記録を自動変換しない。開発中の旧 state 鍵も未知の鍵として拒否し、自動移行しない。
 
 ### REQ-core-269: ファイルと IR の内容識別
 
@@ -69,4 +69,14 @@ Scenario: 新仕様と既存仕様への修正を同じ件にまとめる
   And conclusion は new である
   When check を実行する
   Then 処理先の混在を理由に change_record_invalid を出さない
+```
+
+
+```gherkin
+@id=EX-core-456 @about=REQ-core-268 @source=docs/decision/records/2026-10-01-current-change-records.md#A4
+Scenario: 旧 state 鍵を暗黙変換しない
+  Given version 1 の件に旧 state 鍵がある
+  When check を実行する
+  Then 未知の鍵として change_record_invalid が出る
+
 ```

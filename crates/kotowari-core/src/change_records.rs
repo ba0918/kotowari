@@ -15,7 +15,6 @@ pub struct Entry {
     pub id: String,
     pub base: String,
     pub role: Role,
-    pub state: State,
     pub files: Vec<FileChange>,
     pub ir: Vec<IrIdentity>,
     pub conclusion: Conclusion,
@@ -40,12 +39,6 @@ impl Role {
             Self::Reviewer => "reviewer",
         }
     }
-}
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum State {
-    Active,
-    Archived,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -282,47 +275,44 @@ pub fn validate_references(
         if !ids.insert(&e.id) {
             errors.push("duplicate id".into());
         }
-        if e.state == State::Active {
-            for ir in &e.ir {
-                if !ir_paths.contains(&ir.path) {
-                    errors.push(format!("missing IR {}", ir.path));
+        for ir in &e.ir {
+            if !ir_paths.contains(&ir.path) {
+                errors.push(format!("missing IR {}", ir.path));
+            }
+        }
+        for req in &e.requirements {
+            match requirements.get(req) {
+                None => errors.push(format!("missing requirement {req}")),
+                Some(path) if !e.ir.iter().any(|ir| &ir.path == path) => {
+                    errors.push(format!("missing definition IR {path}"))
                 }
+                Some(_) => {}
             }
-            for req in &e.requirements {
-                match requirements.get(req) {
-                    None => errors.push(format!("missing requirement {req}")),
-                    Some(path) if !e.ir.iter().any(|ir| &ir.path == path) => {
-                        errors.push(format!("missing definition IR {path}"))
-                    }
-                    Some(_) => {}
-                }
+        }
+        if e.conclusion == Conclusion::Existing
+            || e.gaps.iter().any(|g| g.disposition == Disposition::Fixed)
+        {
+            if e.requirements.is_empty() || e.ir.is_empty() {
+                errors.push("requirements and definition IR required".into());
             }
-            if e.conclusion == Conclusion::Existing
-                || e.gaps.iter().any(|g| g.disposition == Disposition::Fixed)
-            {
-                if e.requirements.is_empty() || e.ir.is_empty() {
-                    errors.push("requirements and definition IR required".into());
-                }
-            }
-            if e.conclusion != Conclusion::Existing && e.decisions.is_empty() {
-                errors.push("decision required".into());
-            }
-            if e.conclusion == Conclusion::Deferred && e.handoff.is_none() {
-                errors.push("handoff required".into());
-            }
-            for reference in e
-                .decisions
-                .iter()
-                .chain(e.handoff.iter())
-                .chain(e.gaps.iter().flat_map(|g| &g.refs))
-            {
-                let valid =
-                    crate::sources::split_source(reference).is_some_and(|(path, anchor)| {
-                        normalized_relative(path) && crate::sources::is_decision_number(anchor)
-                    });
-                if !valid || sources.check_source(reference).is_err() {
-                    errors.push(format!("invalid decision {reference}"));
-                }
+        }
+        if e.conclusion != Conclusion::Existing && e.decisions.is_empty() {
+            errors.push("decision required".into());
+        }
+        if e.conclusion == Conclusion::Deferred && e.handoff.is_none() {
+            errors.push("handoff required".into());
+        }
+        for reference in e
+            .decisions
+            .iter()
+            .chain(e.handoff.iter())
+            .chain(e.gaps.iter().flat_map(|g| &g.refs))
+        {
+            let valid = crate::sources::split_source(reference).is_some_and(|(path, anchor)| {
+                normalized_relative(path) && crate::sources::is_decision_number(anchor)
+            });
+            if !valid || sources.check_source(reference).is_err() {
+                errors.push(format!("invalid decision {reference}"));
             }
         }
         for error in errors {
@@ -343,6 +333,66 @@ pub fn glob(patterns: &[String]) -> globset::GlobSet {
     builder.build().expect("validated globs")
 }
 
+fn collect_records(
+    base: &std::path::Path,
+    patterns: &[String],
+) -> Result<Vec<(String, String)>, crate::StopReason> {
+    let records = glob(patterns);
+    let hidden_prefixes: Vec<String> = patterns
+        .iter()
+        .flat_map(|pattern| {
+            let components: Vec<_> = pattern.split('/').collect();
+            components
+                .iter()
+                .enumerate()
+                .filter(|(_, component)| component.starts_with('.') && **component != ".")
+                .map(|(index, _)| components[..=index].join("/"))
+                .collect::<Vec<_>>()
+        })
+        .collect();
+    let named_hidden = glob(&hidden_prefixes);
+    let relative = |path: &std::path::Path| {
+        path.strip_prefix(base)
+            .unwrap_or(path)
+            .to_string_lossy()
+            .replace('\\', "/")
+    };
+    let mut files = vec![];
+    for entry in walkdir::WalkDir::new(base)
+        .follow_links(false)
+        .into_iter()
+        .filter_entry(|entry| {
+            if entry.depth() == 0 {
+                return true;
+            }
+            if entry.file_type().is_symlink() {
+                return !std::fs::metadata(entry.path()).is_ok_and(|meta| meta.is_dir());
+            }
+            !entry.file_type().is_dir()
+                || !entry.file_name().to_string_lossy().starts_with('.')
+                || named_hidden.is_match(relative(entry.path()))
+        })
+    {
+        let entry = entry.map_err(|error| {
+            let path = error.path().map(relative).unwrap_or_default();
+            crate::StopReason::UnreadableFile(format!("{path}: {error}"))
+        })?;
+        let path = relative(entry.path());
+        let is_file = if entry.file_type().is_symlink() {
+            std::fs::metadata(entry.path())
+                .map_err(|error| crate::StopReason::UnreadableFile(format!("{path}: {error}")))?
+                .is_file()
+        } else {
+            entry.file_type().is_file()
+        };
+        if is_file && records.is_match(&path) {
+            files.push((path, entry.path().to_string_lossy().into_owned()));
+        }
+    }
+    files.sort();
+    Ok(files)
+}
+
 pub fn static_check(
     base: &std::path::Path,
     cfg: &Config,
@@ -352,7 +402,7 @@ pub fn static_check(
     let Some(changes) = &cfg.changes else {
         return Ok(());
     };
-    let paths = crate::tests_discovery::collect_files(base, &changes.records)?;
+    let paths = collect_records(base, &changes.records)?;
     let mut entries = vec![];
     for (path, absolute) in paths {
         let content = crate::read_utf8_file(std::path::Path::new(&absolute), &path)?;

@@ -70,10 +70,10 @@ kotowari は常に、`設定ファイル`のキーを入れ子の形（"decision
 ### REQ-core-019: glob の読み方
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-change-details.md#A4, docs/decision/records/records.md#A59, docs/decision/records/records.md#A102
+- source: docs/decision/records/2026-10-01-current-change-records.md#A8
 - verification: unit
 
-kotowari は常に、glob の "**" を再帰として読み、changes の対象の列挙以外では隠しディレクトリを glob が名指ししても含めず、隠しファイルは glob が当てれば読み、ディレクトリのシンボリックリンクを辿らない。
+kotowari は常に、glob の "**" を再帰として読む。changes の Git 対象列挙と、check/status の changes.records がパス成分で明示した隠し配下の照合記録探索を除き、隠しディレクトリを glob が名指ししても含めない。広い "**" だけでは未指定の隠し配下へ入らない。隠しファイルは glob が当てれば読み、ディレクトリのシンボリックリンクを辿らない。
 
 ### REQ-core-020: 直下の kotowari.toml を読まない
 

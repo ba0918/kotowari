@@ -1,6 +1,6 @@
 use crate::{
     Finding, FindingKind,
-    change_records::{Conclusion, LocatedEntry, Role, State},
+    change_records::{Conclusion, LocatedEntry, Role},
     git_snapshot::{Snapshot, ir_identity},
 };
 use std::collections::BTreeSet;
@@ -47,8 +47,7 @@ pub fn evaluate(snapshot: &Snapshot, entries: &[LocatedEntry], phase: Phase) -> 
     let applicable: Vec<_> = entries
         .iter()
         .filter(|e| {
-            e.entry.state == State::Active
-                && e.entry.base == snapshot.base
+            e.entry.base == snapshot.base
                 && e.entry
                     .files
                     .iter()

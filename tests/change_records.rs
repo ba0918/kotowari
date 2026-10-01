@@ -55,7 +55,7 @@ fn project(record: &str) -> tempfile::TempDir {
 
 fn entry() -> String {
     format!(
-        "version: 1\nentries:\n  - id: entry\n    base: '{}'\n    role: implementer\n    state: active\n    files:\n      - path: src/main.rs\n        before: null\n        after: 'sha256:{}'\n    ir: []\n    conclusion: new\n    reason: 根拠\n    requirements: []\n    decisions: ['docs/decision/records/test.md#A1']\n    handoff: null\n    gaps: []\n",
+        "version: 1\nentries:\n  - id: entry\n    base: '{}'\n    role: implementer\n    files:\n      - path: src/main.rs\n        before: null\n        after: 'sha256:{}'\n    ir: []\n    conclusion: new\n    reason: 根拠\n    requirements: []\n    decisions: ['docs/decision/records/test.md#A1']\n    handoff: null\n    gaps: []\n",
         "0".repeat(40),
         "a".repeat(64)
     )
@@ -82,13 +82,11 @@ fn unknown_record_version_is_a_static_finding() {
 
 // @kotowari[REQ-core-248, REQ-core-268, REQ-core-269, REQ-core-273]
 #[test]
-fn malformed_entries_are_rejected_even_when_archived() {
+fn malformed_current_entries_are_rejected() {
     for record in [
         entry().replace("    reason: 根拠\n", ""),
         entry().replace("src/main.rs", "../main.rs"),
-        entry()
-            .replace("state: active", "state: archived")
-            .replace("sha256:", "sha512:"),
+        entry().replace("sha256:", "sha512:"),
         entry().replace("role: implementer", "role: unknown"),
         entry().replace("id: entry", "id: bad id"),
         entry().replace("    gaps: []", "    gaps: []\n    extra: true"),
@@ -125,11 +123,13 @@ fn unknown_gap_category_is_rejected() {
 
 // @kotowari[REQ-core-273, EX-core-455]
 #[test]
-fn archived_entry_does_not_require_live_references() {
-    let record = entry()
-        .replace("state: active", "state: archived")
-        .replace("test.md#A1", "absent.md#A1");
-    assert!(invalids(&record).is_empty());
+fn current_entry_requires_live_references() {
+    let record = entry().replace("test.md#A1", "absent.md#A1");
+    assert!(
+        invalids(&record)
+            .iter()
+            .any(|f| f.detail.contains("invalid decision"))
+    );
 }
 
 // @kotowari[REQ-core-249, REQ-core-254, EX-core-439]
@@ -198,17 +198,11 @@ fn recorded_and_fixed_gaps_can_share_a_new_conclusion() {
 
 // @kotowari[REQ-core-268, REQ-core-270, REQ-core-273]
 #[test]
-fn archival_skips_reference_existence_but_keeps_conclusion_shape() {
+fn current_records_require_conclusion_shape_and_live_references() {
     for record in [
-        entry()
-            .replace("state: active", "state: archived")
-            .replace("conclusion: new", "conclusion: existing"),
-        entry()
-            .replace("state: active", "state: archived")
-            .replace("['docs/decision/records/test.md#A1']", "[]"),
-        entry()
-            .replace("state: active", "state: archived")
-            .replace("test.md#A1", "test.md#bad"),
+        entry().replace("conclusion: new", "conclusion: existing"),
+        entry().replace("['docs/decision/records/test.md#A1']", "[]"),
+        entry().replace("test.md#A1", "test.md#bad"),
     ] {
         assert!(!invalids(&record).is_empty());
     }
@@ -230,4 +224,67 @@ fn reference_error_positions_are_local_to_each_record_file() {
         .find(|f| f.path == "docs/changes/z-other.yaml")
         .unwrap();
     assert!(f.detail.starts_with("entry 0: "), "{}", f.detail);
+}
+
+// @kotowari[REQ-core-268, EX-core-456]
+#[test]
+fn current_record_accepts_no_state_and_rejects_legacy_state() {
+    assert!(invalids(&entry()).is_empty());
+    for state in ["active", "archived"] {
+        let record = entry().replace(
+            "    role: implementer",
+            &format!("    role: implementer\n    state: {state}"),
+        );
+        assert!(
+            invalids(&record)
+                .iter()
+                .any(|f| f.detail.contains("unknown field `state`"))
+        );
+    }
+}
+
+// @kotowari[REQ-core-019, REQ-core-249, REQ-core-253, EX-core-457]
+#[test]
+fn explicitly_named_hidden_records_are_checked_without_reading_other_hidden_dirs() {
+    let dir = project("version: 1\nentries: []\n");
+    std::fs::create_dir_all(dir.path().join(".kotowari/changes")).unwrap();
+    std::fs::create_dir_all(dir.path().join(".hidden")).unwrap();
+    std::fs::write(
+        dir.path().join(".hidden/record.yaml"),
+        "version: 2\nentries: []\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.path().join(".kotowari/config.yaml"),
+        "changes:\n  files: ['src/**']\n  records: ['.kotowari/changes/*.yaml', '**/*.yaml']\n",
+    )
+    .unwrap();
+    for content in [
+        "version: 2\nentries: []\n".to_string(),
+        entry().replace("test.md#A1", "missing.md#A1"),
+    ] {
+        std::fs::write(dir.path().join(".kotowari/changes/commit.yaml"), content).unwrap();
+        let (result, _) =
+            kotowari_core::run_check(dir.path(), kotowari_core::Format::Json, None).unwrap();
+        assert!(
+            result
+                .findings
+                .iter()
+                .any(|f| f.path == ".kotowari/changes/commit.yaml"
+                    && f.kind.as_str() == "change_record_invalid")
+        );
+        assert!(
+            !result
+                .findings
+                .iter()
+                .any(|f| f.path.starts_with(".hidden/"))
+        );
+        assert!(
+            kotowari_core::run_status(dir.path(), None)
+                .unwrap()
+                .findings
+                .error
+                > 0
+        );
+    }
 }

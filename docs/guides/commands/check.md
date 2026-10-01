@@ -60,7 +60,7 @@ kotowari check [--format json|text] [--config <path>]
 
 ### 置き場が無いとき
 
-<!-- @kotowari[REQ-core-018:64a197f1, REQ-core-019:96f84a1a] -->
+<!-- @kotowari[REQ-core-018:64a197f1, REQ-core-019:bf607913] -->
 
 `ir`、`decisions.records`、`decisions.adr` の3つは、既定のままでもディレクトリが存在している必要があります。
 どれかが無い、ディレクトリでない、読めないときは、`unreadable file` で停止します。
@@ -70,6 +70,8 @@ kotowari check [--format json|text] [--config <path>]
 何にも当たらない glob は誤りになりません。
 `**` は再帰として読みます。
 隠しディレクトリは glob が名指ししても含めず、ディレクトリのシンボリックリンクは辿りません。
+照合記録の `changes.records` は例外として、パス成分で明示した隠しディレクトリを読みます。名指ししない隠し配下は広い `**` でも除外します。
+
 走査でディレクトリが読めないときと、先の無いシンボリックリンクに出会ったときは、`unreadable file` で停止します。
 
 ### 文字コードと閉じないコードブロック
@@ -387,4 +389,4 @@ tests/greet.rs:6 [error] test_without_id rejects_empty_name
 - 全体として揃っているかを見る: [status](status.md)
 - 1件ずつの項目とテストを見る: [list](list.md)
 
-`changes.records` を設定すると照合記録の形式を全件、参照を active な件だけ検査します。archived の現在の参照切れは誤りにしません。Git の比較元は不要で、内容の鮮度と変更の coverage は [changes](changes.md) で検査します。
+`changes.records` を設定すると照合記録の形式と現在の参照を全件検査します。別 base の件でも参照切れは誤りです。`changes.records` のパス成分で名指した隠しディレクトリは読み、名指していない隠しディレクトリは広い `**` でも読みません。通常の tests/guides の隠し除外は変わりません。Git の比較元は不要で、内容の鮮度と変更の coverage は [changes](changes.md) で検査します。

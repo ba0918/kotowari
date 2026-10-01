@@ -18,12 +18,17 @@ fn repository() -> tempfile::TempDir {
     git(d.path(), &["init", "-q", "-b", "main"]);
     git(d.path(), &["config", "user.name", "Test"]);
     git(d.path(), &["config", "user.email", "test@example.invalid"]);
-    for path in [".kotowari", "src", "docs/changes", "docs/decision/records"] {
+    for path in [
+        ".kotowari",
+        "src",
+        ".kotowari/changes",
+        "docs/decision/records",
+    ] {
         fs::create_dir_all(d.path().join(path)).unwrap();
     }
     fs::write(
         d.path().join(".kotowari/config.yaml"),
-        "changes:\n  files: ['src/**']\n  records: ['docs/changes/**']\n",
+        "changes:\n  files: ['src/**']\n  records: ['.kotowari/changes/**']\n",
     )
     .unwrap();
     fs::write(d.path().join("src/a"), "before").unwrap();
@@ -62,12 +67,17 @@ fn record(root: &Path, role: &str, base: &str) {
     .unwrap();
     let file = &snapshot.files[0];
     let content = format!(
-        "version: 1\nentries:\n- id: {role}\n  base: '{}'\n  role: {role}\n  state: active\n  files: [{{path: src/a, before: '{}', after: '{}'}}]\n  ir: []\n  conclusion: new\n  reason: 根拠\n  requirements: []\n  decisions: ['docs/decision/records/test.md#A1']\n  handoff: null\n  gaps: []\n",
+        "version: 1\nentries:\n- id: {role}\n  base: '{}'\n  role: {role}\n  files: [{{path: src/a, before: '{}', after: '{}'}}]\n  ir: []\n  conclusion: new\n  reason: 根拠\n  requirements: []\n  decisions: ['docs/decision/records/test.md#A1']\n  handoff: null\n  gaps: []\n",
         snapshot.base,
         file.before.as_ref().unwrap(),
         file.after.as_ref().unwrap()
     );
-    let path = format!("docs/changes/{role}.yaml");
+    let slot = if role == "implementer" {
+        "implementation"
+    } else {
+        "review"
+    };
+    let path = format!(".kotowari/changes/{slot}.yaml");
     fs::write(root.join(&path), content).unwrap();
 }
 
@@ -138,10 +148,10 @@ fn staged_records_are_required_and_commit_review_is_read_only() {
         "implementation",
     ];
     assert_eq!(run(d.path(), &args).status.code(), Some(1));
-    git(d.path(), &["add", "docs/changes/implementer.yaml"]);
+    git(d.path(), &["add", ".kotowari/changes/implementation.yaml"]);
     assert!(run(d.path(), &args).status.success());
     record(d.path(), "reviewer", "HEAD");
-    git(d.path(), &["add", "docs/changes/reviewer.yaml"]);
+    git(d.path(), &["add", ".kotowari/changes/review.yaml"]);
     git(d.path(), &["commit", "-qm", "target"]);
     let head = git(d.path(), &["rev-parse", "HEAD"]);
     let state = git(d.path(), &["status", "--porcelain"]);
@@ -229,11 +239,11 @@ fn final_comparison_includes_earlier_uncovered_commits() {
     fs::write(d.path().join("src/a"), "changed").unwrap();
     git(d.path(), &["commit", "-qam", "earlier"]);
     fs::write(
-        d.path().join("docs/changes/empty.yaml"),
+        d.path().join(".kotowari/changes/empty.yaml"),
         "version: 1\nentries: []\n",
     )
     .unwrap();
-    git(d.path(), &["add", "docs/changes/empty.yaml"]);
+    git(d.path(), &["add", ".kotowari/changes/empty.yaml"]);
     git(d.path(), &["commit", "-qm", "record"]);
     let out = run(
         d.path(),
@@ -245,4 +255,123 @@ fn final_comparison_includes_earlier_uncovered_commits() {
     let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     assert_eq!(value["files"], 1);
     assert_eq!(value["covered"], 0);
+}
+
+// @kotowari[REQ-core-265, REQ-core-267, REQ-core-253, EX-core-458, EX-core-459]
+#[test]
+fn replacing_current_records_preserves_past_commit_reverification() {
+    let d = repository();
+    let root = d.path();
+    let base = git(root, &["rev-parse", "HEAD"]);
+    fs::write(root.join("src/a"), "first").unwrap();
+    git(root, &["add", "src/a"]);
+    record(root, "implementer", &base);
+    record(root, "reviewer", &base);
+    git(root, &["add", ".kotowari/changes"]);
+    git(root, &["commit", "-qm", "first"]);
+    let first = git(root, &["rev-parse", "HEAD"]);
+    assert!(
+        run(
+            root,
+            &[
+                "changes", "--base", &base, "--head", &first, "--phase", "review"
+            ]
+        )
+        .status
+        .success()
+    );
+    fs::remove_file(root.join(".kotowari/changes/review.yaml")).unwrap();
+    git(root, &["add", ".kotowari/changes"]);
+    let record_only = run(
+        root,
+        &[
+            "changes",
+            "--base",
+            "HEAD",
+            "--staged",
+            "--phase",
+            "implementation",
+        ],
+    );
+    assert!(record_only.status.success());
+    assert_eq!(
+        serde_json::from_slice::<serde_json::Value>(&record_only.stdout).unwrap()["files"],
+        0
+    );
+
+    fs::write(root.join("src/a"), "second").unwrap();
+    git(root, &["add", "src/a"]);
+    record(root, "implementer", &first);
+    git(root, &["add", ".kotowari/changes"]);
+    assert!(
+        run(
+            root,
+            &[
+                "changes",
+                "--base",
+                "HEAD",
+                "--staged",
+                "--phase",
+                "implementation"
+            ]
+        )
+        .status
+        .success()
+    );
+    git(root, &["commit", "-qm", "second"]);
+    let second = git(root, &["rev-parse", "HEAD"]);
+    assert!(
+        !run(
+            root,
+            &[
+                "changes", "--base", &first, "--head", &second, "--phase", "review"
+            ]
+        )
+        .status
+        .success()
+    );
+    assert!(
+        run(
+            root,
+            &[
+                "changes", "--base", &base, "--head", &first, "--phase", "review"
+            ]
+        )
+        .status
+        .success()
+    );
+}
+
+// @kotowari[REQ-core-272, REQ-core-273, EX-core-460]
+#[test]
+fn changing_comparison_base_rejects_old_current_records() {
+    let d = repository();
+    let root = d.path();
+    let base = git(root, &["rev-parse", "HEAD"]);
+    fs::write(root.join("src/a"), "changed").unwrap();
+    git(root, &["add", "src/a"]);
+    record(root, "implementer", &base);
+    record(root, "reviewer", &base);
+    git(root, &["add", ".kotowari/changes"]);
+    git(root, &["commit", "-qm", "recorded change"]);
+    git(
+        root,
+        &["commit", "--allow-empty", "-qm", "new comparison base"],
+    );
+    let newer = git(root, &["rev-parse", "HEAD"]);
+    fs::write(root.join("src/a"), "next").unwrap();
+    git(root, &["add", "src/a"]);
+    git(root, &["commit", "-qm", "next"]);
+    let result = run(
+        root,
+        &[
+            "changes", "--base", &newer, "--head", "HEAD", "--phase", "review",
+        ],
+    );
+    assert_eq!(result.status.code(), Some(1));
+    assert!(
+        String::from_utf8(result.stdout)
+            .unwrap()
+            .contains("change_uncovered")
+    );
 }

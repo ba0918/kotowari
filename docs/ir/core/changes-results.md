@@ -7,18 +7,18 @@
 ### REQ-core-272: 段階ごとの合否
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-change-details.md#A10
+- source: docs/decision/records/2026-10-01-current-change-records.md#A5
 - verification: unit
 
-変更照合の検査は常に、次の契約を満たす。implementation 段階では各ファイルの同じ比較元と before・after に対応する active な implementer の件を、review 段階では active な implementer と reviewer の両方の件を要求する。coverage の単位は各ファイルで、両役のファイルのまとめ方と件の id は一致しなくてもよい。reviewer の関連 IR の集合は対応する implementer の件の関連 IR をすべて含め、追加の IR も含められる。必要な関連 IR を含まない reviewer の件はそのファイルの review の coverage を満たさず、change_uncovered を出す。結論 deferred は implementation 段階で形式・参照が揃えば通せるが、review 段階では change_deferred の誤りとして通さない。同じ変更が複数件に現れること自体は許すが、同じ base とファイルの before・after の組に対応する active な件に異なる結論があれば change_conclusion_conflict の誤りとする。照合漏れと covered の集計はファイル単位、鮮度の検査は件単位とし、対象変更を含む active な件の対象内のファイルか関連 IR が1つでも不一致ならその件の全ファイルを covered に数えない。保留を正式に採用する場合は判断と IR にその許容を明示して既存仕様または新判断として再照合する。記録の role は独立性の証明ではなく、別の review の実行はスキルが保証する。
+変更照合の検査は常に、次の契約を満たす。implementation 段階では各ファイルの同じ比較元と before・after に対応する implementer の件を、review 段階では implementer と reviewer の両方の件を要求する。coverage の単位は各ファイルで、両役のファイルのまとめ方と件の id は一致しなくてもよい。reviewer の関連 IR の集合は対応する implementer の件の関連 IR をすべて含め、追加の IR も含められる。必要な関連 IR を含まない reviewer の件はそのファイルの review の coverage を満たさず、change_uncovered を出す。結論 deferred は implementation 段階で形式・参照が揃えば通せるが、review 段階では change_deferred の誤りとして通さない。同じ変更が複数件に現れること自体は許すが、同じ base とファイルの before・after の組に対応する 件に異なる結論があれば change_conclusion_conflict の誤りとする。照合漏れと covered の集計はファイル単位、鮮度の検査は件単位とし、対象変更を含む 件の対象内のファイルか関連 IR が1つでも不一致ならその件の全ファイルを covered に数えない。保留を正式に採用する場合は判断と IR にその許容を明示して既存仕様または新判断として再照合する。記録の role は独立性の証明ではなく、別の review の実行はスキルが保証する。
 
-### REQ-core-273: 古い履歴の扱い
+### REQ-core-273: 現在の記録と比較元ごとの検査
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-change-details.md#A11
+- source: docs/decision/records/2026-10-01-current-change-records.md#A5, docs/decision/records/2026-10-01-current-change-records.md#A8
 - verification: unit
 
-変更照合の検査は常に、次の契約を満たす。changes は形式の検査を全照合記録に行い、参照の存在・整合の検査は active な件だけに行う。coverage と鮮度は active で指定された base と一致する件についてだけ検査する。check と status も形式は全件、参照の存在・整合は active な件だけを検査する。archived な件は現在の参照切れを誤りにせず、coverage の根拠にも使わない。完了した比較の記録は呼び出し側が archived に更新してリポジトリに保持する。base が異なる履歴の件を古さの誤りとしては出さない。対象変更に対応する件が無いときは change_uncovered、before・after の不一致は change_stale、IR の不一致は change_ir_stale とする。比較元に一致する記録が対象外になったファイルを持つ場合、そのファイルの coverage と鮮度は検査しない。
+変更照合の検査は常に、全照合記録の形式と全件の参照の存在・整合を検査する。coverage と鮮度は指定 base と一致する件についてだけ検査する。check と status も全件の形式と参照を検査し、changes.records がパス成分で明示した隠し配下を読む。別 base の件を現在の coverage に使わず、その内容の古さだけでは誤りにしない。対応する件の不足は change_uncovered、before・after の不一致は change_stale、IR の不一致は change_ir_stale とする。比較元に一致する件が対象外になったファイルを持つ場合、そのファイルの coverage と鮮度は検査しない。過去の完了件を蓄積する状態区分は持たない。
 
 ### REQ-core-274: 出力と停止
 
@@ -37,11 +37,11 @@ Scenario: 最終検査の保留
   When review 段階の changes を実行する
   Then change_deferred の誤りが出て終了1となる
 
-@id=EX-core-451 @about=REQ-core-273 @source=docs/decision/records/2026-10-01-change-details.md#A11,docs/decision/records/2026-10-01-change-details.md#A12
-Scenario: 過去の完了記録を保存する
-  Given 形式と参照は正しいが別の base の過去の記録がある
+@id=EX-core-451 @about=REQ-core-273 @source=docs/decision/records/2026-10-01-current-change-records.md#A5
+Scenario: 別の比較元を現在の証拠に使わない
+  Given 現在の対象変更について別の base の形式と参照が正しい記録だけがある
   When 現在の base の changes を実行する
-  Then 過去の記録の内容の古さは誤りにしない
+  Then 別 base の内容の古さだけは誤りにせず、現在の対象変更を change_uncovered とする
 
 @id=EX-core-452 @about=REQ-core-274 @source=docs/decision/records/2026-10-01-change-details.md#A12,docs/decision/records/2026-10-01-change-details.md#A11
 Scenario: 対象と段階を出力する
@@ -56,9 +56,20 @@ Scenario: 両役でファイルのまとめ方が違う
   When review 段階の changes を実行する
   Then files 2、covered 2 で成功する
 
-@id=EX-core-455 @about=REQ-core-273 @source=docs/decision/records/2026-10-01-change-details.md#A11
-Scenario: 完了した照合の参照先が廃止される
-  Given archived な件の形式は正しく、参照する要求は現在の IR から廃止されている
+@id=EX-core-455 @about=REQ-core-273 @source=docs/decision/records/2026-10-01-current-change-records.md#A5
+Scenario: 現在の照合記録の参照先が欠ける
+  Given 件の形式は正しいが、参照する要求は対象の IR に存在しない
   When check を実行する
-  Then archived な件の参照切れは誤りにしない
+  Then change_record_invalid の誤りが出る
+```
+
+
+```gherkin
+@id=EX-core-460 @about=REQ-core-273,REQ-core-242 @source=docs/decision/records/2026-10-01-current-change-records.md#A6
+Scenario: 比較元を変更した記録では現在の変更を通さない
+  Given rebase 後の比較元は記録の base と異なる
+  And 現在の対象変更に一致する base の記録はない
+  When review 段階の changes を実行する
+  Then change_uncovered が出る
+
 ```

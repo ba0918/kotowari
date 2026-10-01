@@ -1,6 +1,6 @@
 # 変更の照合記録と仕様の穴の処理先
 
-照合記録の持つ情報、通常の check の静的検査、仕様の穴の処理先と、機械検査の保証の限界を扱う。保存形式と検査の具体的な構文は FLAGS.md の未決事項にある。
+照合記録の持つ情報、通常の check の静的検査、仕様の穴の処理先と、機械検査の保証の限界を扱う。保存形式は change-record-format.md、現在状態の検査は changes-results.md に定める。
 
 ## Requirements
 
@@ -15,10 +15,10 @@
 ### REQ-core-249: 通常の check の静的検査
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-change-details.md#A11, docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-01-change-conformance.md#A6
+- source: docs/decision/records/2026-10-01-current-change-records.md#A5, docs/decision/records/2026-10-01-current-change-records.md#A8
 - verification: unit
 
-kotowari は常に、"kotowari check" で、設定された照合記録すべての形式と、active な件の`IR`・`判断の記録`・保留先への参照を検査し、必須の情報や参照の欠落を検出して出す。archived な件の参照先の存在は現在の仕様で検査しない。この検査のために Git の比較元を要求しない。
+kotowari は常に、"kotowari check" で、設定された照合記録すべての形式と、各件の`IR`・`判断の記録`・保留先への参照を検査し、必須情報や参照の欠落を出す。changes.records がパス成分で明示した隠しディレクトリ内の記録も読み、未指定の隠し配下は読まない。この静的検査のために Git の比較元を要求しない。
 
 ### REQ-core-250: 既存仕様の範囲という結論
 
@@ -47,10 +47,10 @@ kotowari は常に、"kotowari check" で、設定された照合記録すべて
 ### REQ-core-253: 記録は呼び出し側が書く
 
 - kind: prohibition
-- source: docs/decision/records/2026-10-01-change-conformance.md#A11
+- source: docs/decision/records/2026-10-01-current-change-records.md#A1
 - verification: unit
 
-kotowari は、照合記録や仕様の穴の処理先を、標準出力と標準エラーのほかへ書き出してはならない。これらは cycle または別の呼び出し側が共通の形式で書き、最終的な照合記録をリポジトリに残す。
+kotowari は、照合記録や仕様の穴の処理先を、標準出力と標準エラーのほかへ書き出してはならない。これらは cycle または別の呼び出し側が共通の形式で書き、現在の変更に必要な照合記録だけをリポジトリに残す。更新で不要な過去記録は削除し、過去の証拠は Git 履歴から確認する。
 
 ### REQ-core-254: 機械検査の意味の限界
 
@@ -97,3 +97,15 @@ Scenario: 保留先の欠落
 
 ```
 
+
+
+```gherkin
+@id=EX-core-457 @about=REQ-core-249,REQ-core-019 @source=docs/decision/records/2026-10-01-current-change-records.md#A8
+Scenario: 名指しした隠し記録を静的検査する
+  Given changes.records が .kotowari/changes/*.yaml を指定する
+  And その配下に不正な形式または参照切れの記録がある
+  When check と status を実行する
+  Then 両方で change_record_invalid が出る
+  And 未指定の .hidden 配下は検査しない
+
+```

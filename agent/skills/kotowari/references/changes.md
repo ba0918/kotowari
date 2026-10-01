@@ -2,7 +2,7 @@ Based on the kotowari specification (revised 2026-10-01; the version of kotowari
 
 # Change conformance
 
-This reference governs caller-written change records, snapshot checks and their review. `check` validates record shape and active references; `changes` validates coverage and freshness. Neither proves the reason supports the choice, meaning matches the IR, authority stays delegated, or the reviewer is independent.
+This reference governs caller-written change records, snapshot checks and their review. `check` validates record shape and all current references; `changes` validates coverage and freshness. Neither proves the reason supports the choice, meaning matches the IR, authority stays delegated, or the reviewer is independent.
 
 ## Inputs and responsibility
 
@@ -12,13 +12,13 @@ Prioritise additions, expectation changes and deletions in tests carrying requir
 
 ## Records
 
-Set `changes.files` to product code, tests, distributed skills, build configuration, hooks and CI. Declare generated-file exclusions in `changes.exclude`; `changes.records` is `docs/changes/**/*.yaml` in the adoption example. All globs are relative to the Git root; files and records must be explicit and nonempty. Omission leaves check/status unchanged and makes changes stop with a configuration error.
+Set `changes.files` to product code, tests, distributed skills, build configuration, hooks and CI. Declare generated-file exclusions in `changes.exclude`; `changes.records` is `.kotowari/changes/*.yaml` in the adoption example. All globs are relative to the Git root; files and records must be explicit and nonempty. Omission leaves check/status unchanged and makes changes stop with a configuration error.
 
-A record is UTF-8 YAML with exactly version: 1 and entries. Every entry has all twelve keys: id, base, role, state, files, ir, conclusion, reason, requirements, decisions, handoff, gaps. IDs are unique across all read files and match `[A-Za-z0-9][A-Za-z0-9._-]*`. base is a full lowercase Git object ID; role is implementer/reviewer; state active/archived; reason is nonblank. files is nonempty. The other lists may be empty when the conclusion permits; handoff is null or a decision reference. Unknown keys, duplicate YAML keys, wrong types and other versions are errors, not migrations.
+A record is UTF-8 YAML with exactly version: 1 and entries. Every entry has all eleven keys: id, base, role, files, ir, conclusion, reason, requirements, decisions, handoff, gaps. IDs are unique across all read files and match `[A-Za-z0-9][A-Za-z0-9._-]*`. base is a full lowercase Git object ID; role is implementer/reviewer; reason is nonblank. files is nonempty. The other lists may be empty when the conclusion permits; handoff is null or a decision reference. Unknown keys, duplicate YAML keys, wrong types and other versions are errors, not migrations.
 
 files contains path, before and after. The identities are null or `sha256:` plus 64 lowercase hexadecimal characters; both cannot be null. Hash Git's six-character mode, one NUL byte and all blob bytes, in that order. Mode-only changes therefore need reconciliation. ir contains path and sha256, hashing all bytes of the IR file alone. Paths are normal relative paths with no empty component, absolute prefix, `.`, `..` or backslash. No path repeats within either list.
 
-existing needs requirements and all their definition IR files, plus the reason it stays inside them. new needs decisions describing the choice and reason; a behavior or constraint change is also reflected in related IR. deferred needs decisions and a non-null handoff with explicit deferral. Decision references use repository-relative `path#decision-number`, like `docs/decision/records/topic.md#A1`, and must exist for active entries.
+existing needs requirements and all their definition IR files, plus the reason it stays inside them. new needs decisions describing the choice and reason; a behavior or constraint change is also reflected in related IR. deferred needs decisions and a non-null handoff with explicit deferral. Decision references use repository-relative `path#decision-number`, like `docs/decision/records/topic.md#A1`, and must exist for every configured entry.
 
 Each gap has category (missing_spec, spec_conflict, premise_conflict), disposition (recorded, fixed, deferred), and nonempty refs to decision records. recorded points at the adopted choice and reason and related IR; fixed points at the correction decision and existing requirements and their definition IR; deferred points at explicit deferral and handoff. Severity and action are separate from this classification: info/record_only alone never closes a specification gap. Mixed recorded and fixed gaps are allowed. Any deferred gap makes conclusion deferred; otherwise any recorded gap makes it new; otherwise existing. fixed still needs its requirements and IR when the conclusion is new.
 
@@ -30,7 +30,7 @@ This changes the former unconditional hand-back of IR additions: implementer and
 
 ## Intermediate commit
 
-After formatting and restaging, author active implementer entries whose base is HEAD's full ID and whose file identities match the actual index. Read configuration, files, records, related IR and decision records from that index. Stage the records too; a record only in the working tree cannot cover the commit.
+After formatting and restaging, replace `commit.yaml` with current implementer entries whose base is HEAD's full ID and whose file identities match the actual index. Read configuration, files, records, related IR and decision records from that index. Stage the records too; a record only in the working tree cannot cover the commit.
 
 Run check separately, then:
 
@@ -53,7 +53,7 @@ kotowari changes --base <full-base-id> --head <full-head-id> --phase review --fo
 
 Both must exit 0 before integration. Keep out-of-scope findings in the report without expanding the fix; distinguish verified implementation scope from an integration gate that remains blocked. A status complete value does not prove final change conformance. Deferred entries cannot pass review; formally adopting a deferral requires the permission in decision records and IR, then reconciliation as existing or new.
 
-When code or IR changes, reconcile the entire entry containing it: all its files and related IR, both roles as required, then commit, pin the new head and rerun tests, check and changes. Old records with another base do not cover the new comparison. Archive completed comparisons and retain their records; archived entries still need correct shape, but current reference existence and freshness are not checked. Record files, IR, decisions and the selected config are excluded from change enumeration, so adding final records does not create a reconciliation cycle.
+When code or IR changes, reconcile the entire entry containing it: all its files and related IR, both roles as required, then commit, pin the new head and rerun tests, check and changes. Old records with another base do not cover the new comparison. Keep only the current comparison in fixed `implementation.yaml` and independently authored `review.yaml`; delete intermediate `commit.yaml` at final completion. Do not append past entries or add dated/hash-named history files or a README here: Git carries history. These names are an adoption convention, not a core constraint. Delete both invalidated final records before reconciliation after code, IR or decision-meaning changes, rebase, cherry-pick or parallel integration; reauthor both after independent review. Record files, IR, decisions and the selected config are excluded from change enumeration, so adding final records does not create a reconciliation cycle.
 
 ## CI and local adoption
 
@@ -64,3 +64,9 @@ For a push example, use the event's before and after SHAs. A before consisting o
 ## Output and stops
 
 JSON has exactly base, target, phase, files, covered and findings. target is the resolved commit ID or index. Counts are per changed file; freshness is per entry. Findings use check's shape and text layout, with error severity and null line. change_uncovered names the changed path and required role. Other change findings name the record path and the entry ID and affected path; invalid files use `file:`, invalid entries use `entry N:` with zero-based position. Sort by path, kind, detail. Exit 0 means no errors, 1 means errors, 2 means input/execution stopped; Git reads stop with `git error`.
+
+## Exploration and compatibility
+
+Put `.kotowari/changes/` in `.ignore` to omit machine records from ordinary rg exploration. Read named files explicitly or use `rg --no-ignore` when reconciling. Git tracking and static/Git validation do not use this exploration ignore. check/status enter hidden directories named in `changes.records` path components; a broad `**` does not discover unnamed hidden directories. Other walks keep their existing hidden exclusions.
+
+Completed comparisons are reproducible from their committed configuration and records. During development version 1 removed `state`; legacy entries with that key are rejected, not migrated. Reverify legacy snapshots with the tool version of that commit. A new-format historical snapshot can still be read by the new binary. Every configured entry has live shape/reference checks even for a different base; only freshness and coverage use the selected base.

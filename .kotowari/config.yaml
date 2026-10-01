@@ -40,10 +40,11 @@ changes:
     - "Cargo.toml"
     - "Cargo.lock"
     - "lefthook.yml"
+    - ".ignore"
     - "PROJECT.md"
     - "CHANGELOG.md"
     - "docs/guides/**"
     - "docs/release/**"
   exclude: []
   records:
-    - "docs/changes/**/*.yaml"
+    - ".kotowari/changes/*.yaml"

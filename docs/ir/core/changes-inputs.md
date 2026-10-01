@@ -77,3 +77,20 @@ Scenario: 記録自身の循環を避ける
   When changes を実行する
   Then 対象変更0件として成功する
 ```
+
+
+```gherkin
+@id=EX-core-458 @about=REQ-core-265,REQ-core-267 @source=docs/decision/records/2026-10-01-current-change-records.md#A2
+Scenario: 固定記録を更新しても自己照合は循環しない
+  Given .kotowari/changes/ の設定された記録だけを更新または削除し、残る記録は正しい
+  When その index の changes を実行する
+  Then 対象変更は0件で成功する
+
+@id=EX-core-459 @about=REQ-core-265,REQ-core-273 @source=docs/decision/records/2026-10-01-current-change-records.md#A1
+Scenario: 現在の置換後も過去のコミットを照合できる
+  Given 現在の固定記録を置き換え、過去の件は現在のファイルにない
+  And 過去の対象コミットには当時の設定と記録がある
+  When 過去の比較元と対象コミットを changes で検査する
+  Then 当時の記録で検査でき、現在の記録で補わない
+
+```

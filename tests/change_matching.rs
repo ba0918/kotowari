@@ -16,7 +16,7 @@ fn fixture() -> (Snapshot, Vec<LocatedEntry>) {
         after: Some(blob.identity()),
     };
     let record = format!(
-        "version: 1\nentries:\n- id: impl\n  base: '{}'\n  role: implementer\n  state: active\n  files: [{{path: src/a, before: null, after: '{}'}}]\n  ir: [{{path: docs/ir/a.md, sha256: '{}'}}]\n  conclusion: existing\n  reason: reason\n  requirements: [REQ-core-001]\n  decisions: []\n  handoff: null\n  gaps: []\n",
+        "version: 1\nentries:\n- id: impl\n  base: '{}'\n  role: implementer\n  files: [{{path: src/a, before: null, after: '{}'}}]\n  ir: [{{path: docs/ir/a.md, sha256: '{}'}}]\n  conclusion: existing\n  reason: reason\n  requirements: [REQ-core-001]\n  decisions: []\n  handoff: null\n  gaps: []\n",
         "0".repeat(40),
         blob.identity(),
         ir_identity(b"IR")
@@ -122,7 +122,7 @@ fn different_conclusions_for_matching_content_conflict() {
 }
 // @kotowari[REQ-core-273, EX-core-451]
 #[test]
-fn unrelated_history_and_archived_entries_are_not_stale() {
+fn different_base_entries_cannot_cover_current_changes() {
     let (s, mut e) = fixture();
     e[0].entry.base = "f".repeat(40);
     e[0].entry.ir[0].sha256 = "old".into();

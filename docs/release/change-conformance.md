@@ -16,7 +16,7 @@ prepare は main、tracked・untracked を含めた clean-tree、同じ作業ツ
 
 作業ツリーごとに `.agents/release/prepared.json` を1件保存する。このパスと `.agents/release/lock/` は ignore されていなければ準備開始前に停止する。状態は version 1 の JSON で、製品・版・タグ、開始 HEAD の完全 SHA、生成日、生成ファイル一覧と各ファイルの変更前後の mode・blob、開始時の index tree、段階、`planned_tree` と `candidate_commit` を持つ。欠落・未知の版・不正な型の状態を推測して修復しない。状態を shell の source/eval として実行しない。
 
-段階は preparing、prepared、candidate、complete、aborted。`planned_tree` は staging が完了するまで null とし、生成ファイルと許された新規記録を stage して予定 tree を確定した時点で、commit 実行前にその完全な tree object ID を保存する。`candidate_commit` は候補 commit を判定するまで null とし、commit の実行後または中断後の再開時に、開始 SHA・planned_tree・固定 commit メッセージとの一致を確認した時点で完全な commit SHA を保存する。candidate 段階は両方が確定した状態とする。その他の必須項目も省略しない。状態の保存は同じディレクトリの一時ファイルから rename して途中の JSON を読ませない。
+段階は preparing、prepared、candidate、complete、aborted。`planned_tree` は staging が完了するまで null とし、生成ファイルと許された記録の追加・更新・削除を stage して予定 tree を確定した時点で、commit 実行前にその完全な tree object ID を保存する。`candidate_commit` は候補 commit を判定するまで null とし、commit の実行後または中断後の再開時に、開始 SHA・planned_tree・固定 commit メッセージとの一致を確認した時点で完全な commit SHA を保存する。candidate 段階は両方が確定した状態とする。その他の必須項目も省略しない。状態の保存は同じディレクトリの一時ファイルから rename して途中の JSON を読ませない。
 
 prepare は書き換え前に全生成内容を計算し、変更前後を preparing として保存してから固定した生成内容を配置する。完了時に prepared にする。準備中断後は保存された前後の内容のどちらかであるファイルだけを今回の準備と認め、同じ製品・版の prepare が残りの配置を完了できる。前後のどちらでもない変更、HEAD の変化、index の変更、生成対象外の変更があれば停止して保存状態を保持する。準備では index を更新しない。
 
@@ -24,7 +24,7 @@ prepare は書き換え前に全生成内容を計算し、変更前後を prepa
 
 ## LLM への受け渡し
 
-prepare の出力には製品・版・タグ、開始 SHA、生成ファイルと確定コマンドを示す。LLM は生成差分を独立に読み、変更が既存のリリース仕様に従うか照合する。実装側と別の review が `changes.records` に当たる新規 YAML を別々に作る。両者の base は開始 SHA、生成ファイルの before/after と関連 IR の識別値は現在の固定内容に対応させる。
+prepare の出力には製品・版・タグ、開始 SHA、生成ファイルと確定コマンドを示す。LLM は生成差分を独立に読み、変更が既存のリリース仕様に従うか照合する。実装側と別の review が `changes.records` に当たる現在の implementation.yaml と review.yaml を別々に作成または置換し、不要な commit.yaml を削除する。両者の base は開始 SHA、生成ファイルの before/after と関連 IR の識別値は現在の固定内容に対応させる。
 
 release 固有仕様は IR 外にあるため、リリース生成変更の conclusion は `new` とし、既存リリース判断への decisions 参照と根拠を記す。ここで `new` は未承認仕様を自動採用する意味ではなく、IR の existing 要求へ対応させられない判断の記録で支える変更として使う。仕様を変えないリリース生成に無関係な IR を創作して `existing` を通してはならない。関連 IR がなければ ir は空でもよく、根拠の意味は独立 review が確認する。
 
@@ -34,9 +34,9 @@ release 固有仕様は IR 外にあるため、リリース生成変更の conc
 
 finalize は main と準備状態を確認する。prepared では HEAD が開始 SHA のまま、生成ファイルは mode・blob とも保存した after と一致することを要求する。候補前に base が進んだ場合は停止し、自動 rebase や base の書き換えをしない。
 
-許される tracked の差分は生成ファイルの固定変更だけ。追加の untracked/index-added ファイルは `changes.records` に当たる新規記録だけを許す。既存記録の変更・削除、生成対象外の tracked 変更、記録以外の untracked、symlink やリポジトリ外参照、競合 index は拒否する。stage 済みと未 stage の同じファイルの内容が異なる場合も拒否する。参照検査は新規記録を含めて通す。生成物用の既存 ignore は維持する。
+許される tracked の差分は生成ファイルの固定変更と `changes.records` に当たる記録の更新・削除だけ。追加の untracked/index-added ファイルは設定された記録だけを許す。生成対象外かつ記録以外の tracked 変更、記録以外の untracked、symlink やリポジトリ外参照、競合 index は拒否する。stage 済みと未 stage の同じファイルの内容が異なる場合も拒否する。参照検査は追加・更新後に残る記録すべてについて通す。記録削除で必要な照合が欠ければ changes が拒否する。生成物用の既存 ignore は維持する。
 
-確定は対象パスを個別に stage する。生成ファイルと許された新規記録から予定 tree を固定し、その完全な tree ID を `planned_tree` に保存してから、`changes --base HEAD --staged --phase implementation` を実行する。`git commit` は既存フックを全て通す。フック後に tree が予定内容と異なればタグを作らず候補を保持して停止する。
+確定は対象パスを個別に stage する。生成ファイルと許された記録の追加・更新・削除から予定 tree を固定し、その完全な tree ID を `planned_tree` に保存してから、`changes --base HEAD --staged --phase implementation` を実行する。`git commit` は既存フックを全て通す。フック後に tree が予定内容と異なればタグを作らず候補を保持して停止する。
 
 ## 候補の検証とタグ
 
@@ -52,7 +52,7 @@ candidate では保存した候補 SHA が HEAD と一致し、clean-tree であ
 
 検査失敗は生成内容・記録・候補コミットを保持し、タグを作らず終了1。check/test/changes の失敗をフック無効化や除外追加で通さない。candidate の再検証は同じ HEAD と clean-tree のまま finalize を再実行する。候補を修正する必要があれば状態と異なる commit を自動受け入れず、通常の履歴修正と再準備の判断へ戻す。
 
-commit 前の abort は main と開始 HEAD を確認し、生成対象の現在内容が保存した前後のどちらかであり、index が未変更または生成後内容だけを持つときに限って生成対象を変更前へ戻す。LLM の新規記録は staged/unstaged とも保持し、消さない。生成ファイルに他者の変更が混ざった場合は何も戻さず停止する。abort 完了は aborted に保存する。再準備には保持した記録を利用者が保存・コミットするか片付け、clean-tree に戻す必要がある。
+commit 前の abort は main と開始 HEAD を確認し、生成対象の現在内容が保存した前後のどちらかであり、index が未変更または生成後内容だけを持つときに限って生成対象を変更前へ戻す。LLM が追加・更新・削除した記録は index/作業ツリーともそのまま保持し、復元・削除しない。生成ファイルに他者の変更が混ざった場合は何も戻さず停止する。abort 完了は aborted に保存する。再準備には保持した記録を利用者が保存・コミットするか片付け、clean-tree に戻す必要がある。
 
 candidate/complete の abort は履歴・タグ・照合記録を一切変更せず、開始点・planned_tree・candidate_commit とタグ情報を保持して操作状態だけを aborted として保存し、明示中止の成功として終了0にする。保存候補と現在 HEAD を両方報告する。現在 HEAD が候補と違う場合も、無関係な HEAD を保存候補へ採用せず、Git の結果を合格・確定と扱わない。ローカルタグや公開済みタグは有無を問わず触らない。利用者が通常の修正や、公開済みかを確認した上で必要な手元履歴の処理を行い、clean-tree に戻した後に再準備する。ローカルまたは origin に同名タグがあれば prepare は既存規則どおり拒否する。自動 reset、タグ削除、force push は行わない。aborted への abort 再実行は Git に触れず既存の中止結果を報告して終了0とする。
 
@@ -64,3 +64,5 @@ status は保存状態と Git の照合結果を表示するだけで、生成�
 実際の Git index と pre-commit を使い、未照合・古い照合・独立 review 不在でタグができないことと、両役の適合記録で候補と注釈付きタグの対象が一致することを観測する。
 origin 同名タグ、origin 到達失敗、チェック失敗、pre-commit 拒否、commit 前後・タグ前後の中断、再確定、共有作業の混入、abort 時の記録保持、candidate の HEAD が変わっていても状態だけを中止して参照・tree・index・記録を保持すること、中止後の通常修正と clean-tree からの再準備、および終端状態の ignored 履歴保存を観測する。
 テスト fixture は一時領域の PATH とローカル Git remote で外部コマンドの成功・失敗を作る。製品スクリプトへ検査免除のオプションは足さない。スクリプトの文言・行順の一致を oracle とせず、Git の参照、tree、index、ファイル内容、終了状態で判定する。
+
+既存の固定記録を含む clean な開始コミットから次の release を準備し、記録の更新・不要記録の削除で finalize が通ることを観測する。候補前・候補後 abort が追加・更新・削除済み記録の index と作業ツリーを維持することも観測する。記録以外の通常 tracked 変更は引き続き拒否する。

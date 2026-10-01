@@ -79,11 +79,11 @@ kotowari のスキルと導入手順は常に、次の契約を満たす。imple
 ### REQ-core-276: 導入と再照合
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-change-details.md#A14
+- source: docs/decision/records/2026-10-01-change-details.md#A14, docs/decision/records/2026-10-01-current-change-records.md#A2, docs/decision/records/2026-10-01-current-change-records.md#A3, docs/decision/records/2026-10-01-current-change-records.md#A6, docs/decision/records/2026-10-01-current-change-records.md#A7, docs/decision/records/2026-10-01-current-change-records.md#A11
 - verification: review
 - how_to_verify: 配布スキルと導入例を読み、出典 A14 の入力・責任境界・再実行条件を満たすことを確認する。
 
-kotowari のスキルと導入手順は常に、次の契約を満たす。導入例では changes.files に製品コード・テスト・配布スキル・ビルドとフックと CI の設定を列挙し、changes.records は "docs/changes/**/*.yaml" とする。生成物は明示した exclude だけで外す。pre-commit は整形後の index に対して "changes --base HEAD --staged --phase implementation" を行い、check も別に行う。CI は pull_request の比較元を base SHA と head SHA の merge-base、対象を head SHA とし、両履歴を取得して "changes --base <比較元> --head <対象> --phase review" と check を行う。merge 用の SHA は対象に使わない。push の導入例はイベントの before と after の比較とし、before が全0の新規ブランチは停止して比較元を明示する。途中のコミット用には HEAD を base とした実装側の件を作り、最終検査用にはブランチの比較元を base とした実装側の件と review 側の件を作り直す。再照合は変わったファイルまたは IR を含む件ごとに行い、同じ件の全ファイルと関連 IR を再確認する。
+kotowari のスキルと導入手順は常に、次の契約を満たす。導入例では changes.files に製品コード・テスト・配布スキル・ビルドとフックと CI の設定を列挙し、changes.records は ".kotowari/changes/*.yaml" とし、固定の commit.yaml・implementation.yaml・review.yaml を用途別に使う。この固定配置は導入規約であり、コアの必須パスにはしない。生成物は明示した exclude だけで外す。pre-commit は整形後の index に対して "changes --base HEAD --staged --phase implementation" を行い、check も別に行う。CI は pull_request の比較元を base SHA と head SHA の merge-base、対象を head SHA とし、両履歴を取得して "changes --base <比較元> --head <対象> --phase review" と check を行う。merge 用の SHA は対象に使わない。push の導入例はイベントの before と after の比較とし、before が全0の新規ブランチは停止して比較元を明示する。途中のコミット用には HEAD を base とした実装側の件を作り、最終検査用にはブランチの比較元を base とした実装側の件と review 側の件を作り直す。commit.yaml は毎コミット置き換え、最終確認では削除し、両最終記録だけを保持する。新しいコード・関連 IR・関連判断の変更が最終照合を無効にするなら両最終記録を削除し再照合する。rebase の比較元変更、cherry-pick、並行統合では記録の連結・一方の採用だけで完了とせず、統合後の比較について再照合する。関連判断の意味の変更は機械の参照存在検査では検出できず、スキルと独立 review が確認する。再照合は変更のある件の全ファイルと関連 IR を確認する。通常の文書探索では .kotowari/changes/ を除外し、必要な件だけ読む。判断の原本は decisions、仕様は IR とし、reason は対応説明に絞る。過去の記録は必要時に Git 履歴から読む。
 
 
 ### REQ-core-277: 優先して再照合するテストの変更
@@ -94,3 +94,20 @@ kotowari のスキルと導入手順は常に、次の契約を満たす。導�
 - how_to_verify: review のスキルと照合結果を読み、要求 ID のあるテストの追加・期待値変更・削除を優先して確認し、製品コードだけの変更も対象に残すことを確認する。
 
 kotowari の review のスキルは常に、要求 ID のあるテストの追加・期待値変更・削除を優先して再照合し、その期待値が変わらないことだけを理由に製品コードや補助関数の変更を対象から外さない手順を持つ。
+
+## Examples
+
+```gherkin
+@id=EX-core-461 @about=REQ-core-276 @source=docs/decision/records/2026-10-01-current-change-records.md#A6
+Scenario: 関連判断の意味の変更を再照合する
+  Given 関連判断の参照は存在するが選択の意味が変わっている
+  When 実装側と独立 review が現在の変更を照合する
+  Then 最終照合への影響を確認し、無効な両最終記録を削除して再照合する
+
+@id=EX-core-462 @about=REQ-core-276 @source=docs/decision/records/2026-10-01-current-change-records.md#A6
+Scenario: 並行ブランチ統合後に記録を作り直す
+  Given 並行ブランチの固定記録が競合または別々の比較に対応する
+  When ブランチを統合する
+  Then 記録の連結や一方の採用だけで完了とせず、統合後の比較で両役が再照合する
+
+```

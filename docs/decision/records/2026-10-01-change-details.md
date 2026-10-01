@@ -29,6 +29,8 @@ Position: A1〜A14 は利用者がレビューで採用し、IR とともに e21
 - A6 照合記録は UTF-8 の YAML とし、1ファイルは version: 1 と entries の一覧だけを持つ。entries は空でもよい。未知の版、未知の鍵、重複した YAML の鍵、誤った型は change_record_invalid の誤りとする。各件の鍵は id、base、role、state、files、ir、conclusion、reason、requirements、decisions、handoff、gaps の12個だけとし、すべて必須とする。id は "[A-Za-z0-9][A-Za-z0-9._-]*" に合う文字列、reason は空白だけでない文字列、base は Git の完全な object ID（40桁または64桁の小文字16進）、role は implementer または reviewer、state は active または archived、conclusion は existing、new または deferred とする。id は読む照合記録全体で一意とする。files は1件以上、ir・requirements・decisions・gaps は0件以上の一覧、handoff は null または判断の記録への参照文字列とする。保存場所は changes.records が指定し、版の異なる記録を自動変換しない。
   - why: 既存の YAML 読み取り基盤を再利用し、手書きと LLM の両方で読める保存契約を作る。欠落と意図的な空の一覧を区別する。
   - decided_by: 文書作成者（推奨案、利用者の採用はレビューで確認）
+  - superseded_by: [現在状態の照合記録 A4](./2026-10-01-current-change-records.md#A4)
+
 - A7 files の各件は path、before、after の3鍵だけを持つ。path は基準からの正規化した相対パス、before と after は null または "sha256:" と64桁の小文字16進で、両方 null にしない。追加は before を null、削除は after を null とし、変更は両方に識別値を持つ。識別値は Git の6文字の mode、NUL 1バイト、blob の全バイトを順に連結した値の SHA-256 とする。ir の各件は path と sha256 の2鍵で、sha256 は IR ファイルの全バイトだけを SHA-256 で計算した同じ表記とする。path は空、絶対パス、..、.、バックスラッシュを含む成分を認めない。files と ir の各一覧内の重複パスは誤りとする。
   - why: 既存のガイド用の短い指紋とは別に、Git の対象内容を改行や出典も含めて固定する。before の検査で過去の別の変更を流用できないようにする。
   - decided_by: 文書作成者（推奨案、利用者の採用はレビューで確認）
@@ -41,9 +43,13 @@ Position: A1〜A14 は利用者がレビューで採用し、IR とともに e21
 - A10 implementation 段階では各ファイルの同じ比較元と before・after に対応する active な implementer の件を、review 段階では active な implementer と reviewer の両方の件を要求する。coverage の単位は各ファイルで、両役のファイルのまとめ方と件の id は一致しなくてもよい。reviewer の関連 IR の集合は対応する implementer の件の関連 IR をすべて含め、追加の IR も含められる。必要な関連 IR を含まない reviewer の件はそのファイルの review の coverage を満たさず、change_uncovered を出す。結論 deferred は implementation 段階で形式・参照が揃えば通せるが、review 段階では change_deferred の誤りとして通さない。同じ変更が複数件に現れること自体は許すが、同じ base とファイルの before・after の組に対応する active な件に異なる結論があれば change_conclusion_conflict の誤りとする。照合漏れと covered の集計はファイル単位、鮮度の検査は件単位とし、対象変更を含む active な件の対象内のファイルか関連 IR が1つでも不一致ならその件の全ファイルを covered に数えない。保留を正式に採用する場合は判断と IR にその許容を明示して既存仕様または新判断として再照合する。記録の role は独立性の証明ではなく、別の review の実行はスキルが保証する。
   - why: 途中のコミットは進められるが、未決の仕様を残したまま取り込む条件は初版に持ち込まない。
   - decided_by: 文書作成者（推奨案、利用者の採用はレビューで確認）
+  - superseded_by: [現在状態の照合記録 A5](./2026-10-01-current-change-records.md#A5)
+
 - A11 changes は形式の検査を全照合記録に行い、参照の存在・整合の検査は active な件だけに行う。coverage と鮮度は active で指定された base と一致する件についてだけ検査する。check と status も形式は全件、参照の存在・整合は active な件だけを検査する。archived な件は現在の参照切れを誤りにせず、coverage の根拠にも使わない。完了した比較の記録は呼び出し側が archived に更新してリポジトリに保持する。base が異なる履歴の件を古さの誤りとしては出さない。対象変更に対応する件が無いときは change_uncovered、before・after の不一致は change_stale、IR の不一致は change_ir_stale とする。比較元に一致する記録が対象外になったファイルを持つ場合、そのファイルの coverage と鮮度は検査しない。
   - why: 完了した過去のレビューの保存が、次のブランチを永続的に止めることを避ける。
   - decided_by: 文書作成者（推奨案、利用者の採用はレビューで確認）
+  - superseded_by: [現在状態の照合記録 A5](./2026-10-01-current-change-records.md#A5)
+
 - A12 changes の JSON は base、target、phase、files、covered、findings の6鍵を持つ。base は解決した完全な object ID、target は commit の object ID または "index"、phase は指定値、files は列挙した対象変更数、covered はその段階の記録と鮮度が揃い結論が適合する変更数。findings の形と text の1件の表記は check と同じとする。形式・結論・必須情報・参照の静的な不整合は change_record_invalid とする。今回の新しい指摘はすべて severity error、path は照合記録の相対パス、line は null、detail は関連する件の id と対象パスを示す。change_record_invalid では取得できない id やパスを要求せず、ファイル全体の不正は "file: " と説明、件の不正は "entry " と entries 内の0始まりの位置と ": " と説明を出す。id を取得できるときだけ説明に含める。ただし change_uncovered は対象ファイルのパス、line null、detail は必要な role とする。指摘は path、kind、detail のバイト順で並べる。誤り0件で終了0、誤りありで終了1、実行や入力の停止で終了2。Git の読み取りの停止理由は "git error" とする。check と status は記録の静的検査の誤りを既存の findings に算入し、新しい最上位集計鍵を加えない。status の complete は差分の最終照合を保証しない。
   - why: 既存の指摘の形を使い、CI は終了コードで停止できるようにする。専用コマンドの対象と段階は出力でも確認できる。
   - decided_by: 文書作成者（推奨案、利用者の採用はレビューで確認）
@@ -53,6 +59,7 @@ Position: A1〜A14 は利用者がレビューで採用し、IR とともに e21
 - A14 導入例では changes.files に製品コード・テスト・配布スキル・ビルドとフックと CI の設定を列挙し、changes.records は "docs/changes/**/*.yaml" とする。生成物は明示した exclude だけで外す。pre-commit は整形後の index に対して "changes --base HEAD --staged --phase implementation" を行い、check も別に行う。CI は pull_request の比較元を base SHA と head SHA の merge-base、対象を head SHA とし、両履歴を取得して "changes --base <比較元> --head <対象> --phase review" と check を行う。merge 用の SHA は対象に使わない。push の導入例はイベントの before と after の比較とし、before が全0の新規ブランチは停止して比較元を明示する。途中のコミット用には HEAD を base とした実装側の件を作り、最終検査用にはブランチの比較元を base とした実装側の件と review 側の件を作り直す。再照合は変わったファイルまたは IR を含む件ごとに行い、同じ件の全ファイルと関連 IR を再確認する。
   - why: 既存の lefthook を再利用し、GitHub のイベントの比較元を呼び出し側が指定する。配布スキルの変更にも記録を求める。
   - decided_by: 文書作成者（推奨案、利用者の採用はレビューで確認）
+  - superseded_by: [現在状態の照合記録 A2](./2026-10-01-current-change-records.md#A2)
 
 - A15 コマンドが無い場合の停止詳細は "expected command: check, changes, list, mutants, plan, query or status" とする。既存の一覧表記を維持し、changes をコマンド名のバイト順の位置に加える。
   - why: コマンド名の一覧は決まったが、細かな表記に旧 FLAG の未決参照が残っていた。実装役が表記を判断する余地を残さない
@@ -71,3 +78,5 @@ Position: A1〜A14 は利用者がレビューで採用し、IR とともに e21
 ## Revisions
 
 - 利用者の「gogo」を受けて未決の具体案を作成した。各細部の採用を先取りせず、推奨案として記録した。
+
+- 現在状態だけを保持する改訂により、上記 superseded_by の範囲を置き換えた。旧本文は過去判断として保持する。
