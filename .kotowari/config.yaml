@@ -43,6 +43,7 @@ changes:
     - "PROJECT.md"
     - "CHANGELOG.md"
     - "docs/guides/**"
+    - "docs/release/**"
   exclude: []
   records:
     - "docs/changes/**/*.yaml"

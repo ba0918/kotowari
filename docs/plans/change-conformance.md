@@ -55,6 +55,8 @@ IR は docs/ir/。基礎となる仕様コミットは e2159ac。コマンド一
 - docs/ir/core/config.md#TBL-core-004
 - docs/ir/core/cli-environment.md#TBL-core-020
 
+独立 review で発見した release.sh の自動生成変更と新 pre-commit の接続漏れは、利用者が今回の追加範囲として承認した。リリース固有仕様は IR 外の [追加判断](../decision/records/2026-10-01-release-conformance.md)と[操作仕様](../release/change-conformance.md)に置き、S8 が参照する全節を対象とする。実リリースは承認範囲に含めない。
+
 ## Approach and why
 
 記録の解析・参照検査、Git の読み取り、照合の純粋な判定、CLI の接続を分ける。既存の serde-saphyr、serde_json、globset、sha2 と Git の plumbing を使い、Git の履歴解析やパーサーを自作しない。既存の sources・finding・status に接続する。副作用は adapter に閉じ、照合には取得済みの値を渡す。新しい依存が必要なら理由と固定する契約を返す。自分自身のフックは新コマンドと記録が用意できた最後に有効化する。スキルの意味は独立 review で検証する。
@@ -67,10 +69,11 @@ IR は docs/ir/。基礎となる仕様コミットは e2159ac。コマンド一
 - docs/guides、agent/skills/README.md、PROJECT.md、CHANGELOG.md
 - .kotowari/config.yaml、lefthook.yml、docs/changes、必要最小限の scripts
 - .github/workflows/change-conformance.yml の PR 検査をローカルに作るところまで
+- scripts/release.sh と安全な scripts 内の fixture テスト、docs/release/change-conformance.md、追加判断の記録、必要最小限の ignore 定義
 
 ## Step order and prerequisites
 
-S1 → S2 → S3 → S4 → S5 → S6 → S7。実装開始時に branch と worktree を宣言し、計画と仕様コミットを引き継ぐ。全コード変更は ba0918-tdd に従い RED と GREEN の実行結果を残す。
+S1 → S2 → S3 → S4 → S5 → S6 → S8 → S7。S7 は S8 の変更と照合記録も含めた最終対象 SHA でやり直す。実装開始時に branch と worktree を宣言し、計画と仕様コミットを引き継ぐ。全コード変更は ba0918-tdd に従い RED と GREEN の実行結果を残す。
 
 ## Verification map
 
@@ -82,6 +85,7 @@ S1 → S2 → S3 → S4 → S5 → S6 → S7。実装開始時に branch と wor
 | S4 | REQ-core-001, REQ-core-003, REQ-core-004, REQ-core-240, REQ-core-249, REQ-core-253, REQ-core-254, REQ-core-263, REQ-core-264, REQ-core-274、TBL-core-020 | EX-core-219、241 と上記例の CLI 接続 |
 | S5 | REQ-core-093, REQ-core-256, REQ-core-257, REQ-core-258, REQ-core-259, REQ-core-260, REQ-core-261, REQ-core-262, REQ-core-275, REQ-core-276, REQ-core-277 | review 要求は手順と独立 review で確認 |
 | S6 | REQ-core-258, REQ-core-259, REQ-core-261, REQ-core-276 | 未ステージの記録・複数コミット・イベント比較元の実行検証 |
+| S8 | 追加判断 A1〜A10、操作仕様の全節 | 操作仕様の全受け入れ条件を実 Git と安全な shell fixture で検証 |
 | S7 | REQ-core-240, REQ-core-248, REQ-core-259, REQ-core-274 | 計画の全要求と全例のテスト対応と照合 |
 
 ## Left to the implementer
@@ -164,11 +168,22 @@ S1 → S2 → S3 → S4 → S5 → S6 → S7。実装開始時に branch と wor
 - Left to the implementer: フックのシェル構成と補助処理の分け方
 - Stop and hand back if: 自己導入にフック無効化や未規定の免除が必要になる、または CI の比較元を確定できない
 
+### S8: リリース生成変更を LLM の照合へ受け渡す
+
+- Purpose: 独立 review が発見した release.sh と新 pre-commit の接続漏れを、フックを維持した準備・照合・確定で解消する
+- Specification: [追加判断](../decision/records/2026-10-01-release-conformance.md#Agreements)、[入力と開始](../release/change-conformance.md#入力と開始)、[準備状態](../release/change-conformance.md#準備状態)、[LLM への受け渡し](../release/change-conformance.md#LLM-への受け渡し)、[確定前の混入検査](../release/change-conformance.md#確定前の混入検査)、[候補の検証とタグ](../release/change-conformance.md#候補の検証とタグ)、[失敗・中止・再開](../release/change-conformance.md#失敗中止再開)、[観測する受け入れ条件](../release/change-conformance.md#観測する受け入れ条件)、[既存リリース判断](../decision/records/2026-09-26-release-flow.md#Agreements)
+- Prerequisites: S1〜S6、追加判断と操作仕様の独立 review と採用、既存スクリプトと新フックの実行経路を確認済み
+- May change: scripts/release.sh、必要最小限の scripts 内の状態・境界処理と安全な fixture テスト、PROJECT.md の Release、既存入口と失敗時の動作の breaking change を明記する CHANGELOG.md、今回の判断記録と docs/release/change-conformance.md、docs/guides と CHANGELOG.md、生成以外の変更を対象外にしない範囲で必要な ignore 定義
+- Done when: 両製品の prepare は commit/tag/push をせず、LLM の tracked 記録を追加して finalize が既存フックと全ゲートを通す。混入・base 前進・未照合・古い照合・review 不在・公開済み同名タグでタグを作らず、中断と二重確定を保存状態と Git の実状態から安全に扱い、候補失敗から状態だけの明示中止・通常修正・再準備へ移れる
+- Shown by: test — scripts/test-release.sh を安全な一時 Git リポジトリとローカル bare origin で実行し、操作仕様の受け入れ条件を Git の参照・tree・index・ファイル保持・終了状態で観測する。製品スクリプトと fixture に bash -n を実行し、既存の版/check/test/pre-commit の保持と操作仕様との一致を独立 review で確認する。新規 fixture は RED→GREEN の実行証拠を残す。実リリース・実 origin への書込み・tag push は行わない
+- Left to the implementer: 状態処理と Git adapter の内部構成、fixture helper の抽出。操作の入力・保存契約・境界・停止と復旧の意味は委ねない
+- Stop and hand back if: release 固有の判断を既存 IR の制約変更で解決する必要がある、他者の変更や記録を自動 reset/delete する必要がある、フック免除や生成境界の拡大が必要になる、実公開が必要になる
+
 ### S7: 計画の対象を検証して引き渡す
 
 - Purpose: 計画の対象を検証して引き渡すことで次の段階が必要とする判定と証拠を用意する
 - Specification: docs/ir/core/changes.md#REQ-core-240, docs/ir/core/change-records.md#REQ-core-248, docs/ir/core/change-workflow.md#REQ-core-259, docs/ir/core/changes-results.md#REQ-core-274
-- Prerequisites: S1〜S6、仕様と実装の独立 review とその指摘への対応が完了。必要な修正と両役の最終記録をコミットし、引き渡す対象 commit の完全な SHA を固定済み
+- Prerequisites: S1〜S6 と S8、仕様と実装の独立 review とその指摘への対応が完了。必要な修正と両役の最終記録をコミットし、引き渡す対象 commit の完全な SHA を固定済み
 - May change: docs/changes の照合記録、今回の検証で修正が必要と分かった Scope of change 内の箇所
 - Done when: 計画の全要求と例に必要なテストがあり、固定した対象 SHA と一致する変更でテストと check を検証し、変更ファイルと対象 ID に check の誤りがなく、review 段階の changes が終了0となる。取り込み可能とするには check 全体の終了0も必要。対象外の誤りがあれば範囲を広げず、実装範囲の結果と取り込みゲート未通過を区別して引き渡す
 - Shown by: check — 対象 SHA の checkout で git status --porcelain に今回の未コミット変更が無いことを確認し、CARGO_BUILD_JOBS=4 cargo test --workspace、kotowari query の対象テスト対応、kotowari check --format json の対象内の誤り0と全体の終了コード、kotowari changes --base <比較元の完全な SHA> --head <対象の完全な SHA> --phase review --format json の終了0を記録する。比較元・対象 SHA・実行結果を引き渡し、変更を追加したら記録・コミット・再照合・検証をやり直す。無関係な誤りと通知は種類別に報告する

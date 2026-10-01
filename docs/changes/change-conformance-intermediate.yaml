@@ -120,10 +120,10 @@ entries:
       - "REQ-core-277"
     decisions: []
     gaps: []
-  - id: "change-conformance-intermediate"
+  - id: "change-conformance-intermediate-bafcd975923d"
     base: "bafcd975923d391f7f352092a0287f8db833bb06"
     role: "implementer"
-    state: "active"
+    state: "archived"
     conclusion: "existing"
     reason: "承認済みの停止文言と通常の記録走査の契約へ合わせる修正。既存要求の入力・合否・保存形式は変えない。"
     handoff: null
@@ -196,4 +196,37 @@ entries:
       - "REQ-core-276"
       - "REQ-core-277"
     decisions: []
+    gaps: []
+  - id: "change-conformance-release-intermediate"
+    base: "5a010d83dd31470e892556d869cd269aa42ed891"
+    role: "implementer"
+    state: "active"
+    conclusion: "new"
+    reason: "人が承認したリリースの準備・照合・確定と状態だけの中止を、採用済み操作仕様に基づき具体化する。release固有の操作はIR外の判断で支え、既存の変更照合の境界・形式・フックを維持する。"
+    handoff: null
+    files:
+      - path: "CHANGELOG.md"
+        before: "sha256:be664a92072e907fee1d0238dafadbea53b9f32d527d22034e6d4b3f0ed3ba8c"
+        after: "sha256:5cdf65b7e52a31be9e40c4445a5c2b145dbbc173ec140959d679bab954997ded"
+      - path: "PROJECT.md"
+        before: "sha256:ec32744e73a4e32da75f9f192327206d004e83bd68451dddae02171a980cacb7"
+        after: "sha256:86c7c3bc1b2b12ffbfc824646d6c78ea27b78403a3d5cd8931e840c885c47fb9"
+      - path: "docs/plans/change-conformance.md"
+        before: "sha256:473c9ddce3c7f63a05be105a34b507d172d220d931ef8f797073a2a0389c6d56"
+        after: "sha256:eff84015f9a5d479d073d085fa345ae41f3ee968600c973283dbc642fde1905c"
+      - path: "docs/release/change-conformance.md"
+        before: null
+        after: "sha256:09c548c234427c18c617eb090ea2533cb300beb399e240f12543d9b832516aa2"
+    ir:
+      - path: "docs/ir/core/change-workflow.md"
+        sha256: "sha256:33334b98afa8ba9dbd4daf0417f2f7272d62aad283a11053e4bb9165f136ac5c"
+    requirements:
+      - "REQ-core-258"
+      - "REQ-core-259"
+      - "REQ-core-261"
+      - "REQ-core-276"
+    decisions:
+      - "docs/decision/records/2026-10-01-release-conformance.md#A1"
+      - "docs/decision/records/2026-10-01-release-conformance.md#A10"
+      - "docs/decision/records/2026-10-01-release-conformance.md#A11"
     gaps: []

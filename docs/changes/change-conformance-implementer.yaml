@@ -8,9 +8,6 @@ entries:
     reason: "承認済みの変更照合の入力・保存形式・段階別判定と、判断の書き戻し・独立 review の手順を具体化する。要求の制約は変更しない。"
     handoff: null
     files:
-      - path: "CHANGELOG.md"
-        before: "sha256:504f950046647629762aa339e30d33da8e8050174a0a335db38483a9e7666fb4"
-        after: "sha256:be664a92072e907fee1d0238dafadbea53b9f32d527d22034e6d4b3f0ed3ba8c"
       - path: "agent/skills/README.md"
         before: "sha256:3be78cc3560398a0268316b7241278abb3975b55384127f509bd05b26a8bdad6"
         after: "sha256:a016083ed5be1afbac95f4fe554b661d143f7e6b3d434c481b0b3a6e81fd7115"
@@ -181,9 +178,6 @@ entries:
       - path: ".github/workflows/change-conformance.yml"
         before: null
         after: "sha256:12831ca673b9bc2ff22ca749012af92e0ae5611ff7f67d6011bfed3066bad992"
-      - path: "PROJECT.md"
-        before: "sha256:7e73e63f288dbe70dd9d057d7e8c9062793375b5714a8de9ed271624b433cf42"
-        after: "sha256:ec32744e73a4e32da75f9f192327206d004e83bd68451dddae02171a980cacb7"
       - path: "docs/guides/change-conformance.md"
         before: null
         after: "sha256:80682cad8dcbc4b214a1aabd65054cd6f15ee3aafd82eed31a20ee47a52692af"
@@ -206,4 +200,34 @@ entries:
       - "REQ-core-276"
     decisions:
       - "docs/decision/records/2026-10-01-change-index-restaging.md#A1"
+    gaps: []
+  - id: "change-conformance-release"
+    base: "7bfdad87c69e1eeeb1e84861d5caa1b8d2cff233"
+    role: "implementer"
+    state: "active"
+    conclusion: "new"
+    reason: "人が承認したリリースの準備・照合・確定と状態だけの中止を、採用済み操作仕様に基づき具体化する。release固有の操作はIR外の判断で支え、既存の変更照合の境界・形式・フックを維持する。"
+    handoff: null
+    files:
+      - path: "CHANGELOG.md"
+        before: "sha256:504f950046647629762aa339e30d33da8e8050174a0a335db38483a9e7666fb4"
+        after: "sha256:5cdf65b7e52a31be9e40c4445a5c2b145dbbc173ec140959d679bab954997ded"
+      - path: "PROJECT.md"
+        before: "sha256:7e73e63f288dbe70dd9d057d7e8c9062793375b5714a8de9ed271624b433cf42"
+        after: "sha256:86c7c3bc1b2b12ffbfc824646d6c78ea27b78403a3d5cd8931e840c885c47fb9"
+      - path: "docs/release/change-conformance.md"
+        before: null
+        after: "sha256:09c548c234427c18c617eb090ea2533cb300beb399e240f12543d9b832516aa2"
+    ir:
+      - path: "docs/ir/core/change-workflow.md"
+        sha256: "sha256:33334b98afa8ba9dbd4daf0417f2f7272d62aad283a11053e4bb9165f136ac5c"
+    requirements:
+      - "REQ-core-258"
+      - "REQ-core-259"
+      - "REQ-core-261"
+      - "REQ-core-276"
+    decisions:
+      - "docs/decision/records/2026-10-01-release-conformance.md#A1"
+      - "docs/decision/records/2026-10-01-release-conformance.md#A10"
+      - "docs/decision/records/2026-10-01-release-conformance.md#A11"
     gaps: []
