@@ -58,7 +58,7 @@ vague_words:
   - "など"
 ```
 
-2. Create the directories for the files: `docs/ir/`, `docs/decision/records/`, `docs/decision/adr/`
+2. Create the directories configured by `ir`, `decisions.records` and `decisions.adr` (defaults: `docs/ir/`, `docs/decision/records/`, `docs/decision/adr/`). In each newly created decision directory, also create an empty `.gitkeep`. Git does not retain empty directories, so include these files when committing the setup files to preserve the directories in clones and worktrees. Do not stage or commit them without the person's approval. The IR directory receives `CONTEXT.md` in step 3 and needs no `.gitkeep`.
 
 3. Create `docs/ir/CONTEXT.md` with four lines:
 

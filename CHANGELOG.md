@@ -5,6 +5,10 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Fixed
+
+- `kotowari` スキルのセットアップ手順に、判断の記録用ディレクトリへの `.gitkeep` 作成とコミット対象に含める指示を追加した。空ディレクトリが clone／worktree で失われ、`kotowari check` がエラーになるのを防ぐ。
+
 ## [0.3.0] - 2026-10-01
 
 ### Added
