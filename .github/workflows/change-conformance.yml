@@ -19,7 +19,7 @@ jobs:
         run: git fetch --no-tags origin "$EVENT_BASE" "$EVENT_HEAD"
       - name: Derive branch comparison
         id: comparison
-        run: scripts/change-base.sh pull_request "$GITHUB_EVENT_PATH" >> "$GITHUB_OUTPUT"
+        run: printf 'base=%s\nhead=%s\n' "$(git merge-base "$EVENT_BASE" "$EVENT_HEAD")" "$EVENT_HEAD" >> "$GITHUB_OUTPUT"
       - name: Test
         run: cargo test --workspace
       - name: Check records and specification
