@@ -128,6 +128,8 @@ src/lib.rs:2 [error] test_without_id req_001_locks_after_five_failures
 | `kotowari query <ID>` | 1件の本文、テスト、逆引き |
 | `kotowari status` | 揃っているかの集計。最後の行が `complete true` か `complete false` |
 | `kotowari mutants --tool cargo-mutants <結果のファイル>` | 変異テスト（cargo-mutants）の結果から見逃しを報告する |
+| `kotowari plan <計画のファイル>` | 実装の計画のファイルの形を、kotowari に同梱のスキーマで検査する |
+| `kotowari changes --base <REV> (--head <REV> \| --staged) --phase <implementation\|review>` | Git の比較元と対象の差分を照合記録と突き合わせ、照合の漏れと古さを報告する。設定に `changes` を書いたときだけ使える（[使い方](docs/guides/commands/changes.md)） |
 
 テストの印を読めるのは今のところ Rust のテストだけ。ほかの言語でも、IR の側の検査は使える。
 
