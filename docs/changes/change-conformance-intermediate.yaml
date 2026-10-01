@@ -197,10 +197,10 @@ entries:
       - "REQ-core-277"
     decisions: []
     gaps: []
-  - id: "change-conformance-release-intermediate"
+  - id: "change-conformance-release-intermediate-5a010d83dd31"
     base: "5a010d83dd31470e892556d869cd269aa42ed891"
     role: "implementer"
-    state: "active"
+    state: "archived"
     conclusion: "new"
     reason: "人が承認したリリースの準備・照合・確定と状態だけの中止を、採用済み操作仕様に基づき具体化する。release固有の操作はIR外の判断で支え、既存の変更照合の境界・形式・フックを維持する。"
     handoff: null
@@ -217,6 +217,51 @@ entries:
       - path: "docs/release/change-conformance.md"
         before: null
         after: "sha256:09c548c234427c18c617eb090ea2533cb300beb399e240f12543d9b832516aa2"
+    ir:
+      - path: "docs/ir/core/change-workflow.md"
+        sha256: "sha256:33334b98afa8ba9dbd4daf0417f2f7272d62aad283a11053e4bb9165f136ac5c"
+    requirements:
+      - "REQ-core-258"
+      - "REQ-core-259"
+      - "REQ-core-261"
+      - "REQ-core-276"
+    decisions:
+      - "docs/decision/records/2026-10-01-release-conformance.md#A1"
+      - "docs/decision/records/2026-10-01-release-conformance.md#A10"
+      - "docs/decision/records/2026-10-01-release-conformance.md#A11"
+    gaps: []
+  - id: "change-conformance-release-intermediate"
+    base: "a49c6475b72ee0fe2d8d3582ecad80295d245f3c"
+    role: "implementer"
+    state: "active"
+    conclusion: "new"
+    reason: "人が承認したリリースの準備・照合・確定と状態だけの中止を、採用済み操作仕様に基づき具体化する。release固有の操作はIR外の判断で支え、既存の変更照合の境界・形式・フックを維持する。"
+    handoff: null
+    files:
+      - path: "Cargo.toml"
+        before: "sha256:96142b370612ec603195ac06afb0033943be39dd1c9383c1b57349e8741b50b1"
+        after: "sha256:2e86be13db5dff8bec159a1a947380134f35b818a98960e1f19a1b18ae33e6b0"
+      - path: "PROJECT.md"
+        before: "sha256:86c7c3bc1b2b12ffbfc824646d6c78ea27b78403a3d5cd8931e840c885c47fb9"
+        after: "sha256:660b3851d9d9eef95e2a10cdcb4336cf69ee8e830cebbf9c60cb6eb8fee1643e"
+      - path: "scripts/release-fixture.py"
+        before: null
+        after: "sha256:018e64ee7306c247bc80aeccb97594f9ae652d978854956f946e9b0e3eb3d7b3"
+      - path: "scripts/release-generate.sh"
+        before: null
+        after: "sha256:8a1e21a3335c58e274be617d56836570a0e65aa02f99820ff90a7b43a8c4a47c"
+      - path: "scripts/release-record-paths.rs"
+        before: null
+        after: "sha256:6abc9b9a07a23d73902751f52a39f9514e5e4fe75148cd919c9a9c172030e1de"
+      - path: "scripts/release-state.sh"
+        before: null
+        after: "sha256:fb14f29365197caa9b9259cedb39bb336a237856a3ad01dd33c966b8a9d1d44f"
+      - path: "scripts/release.sh"
+        before: "sha256:2eab50b8c7c7080b740ead4492721c17f5adfd458f0ee9552f34e867cec5100c"
+        after: "sha256:39f86d0b1ae8fe021e561f04cc11ec8e3696498c617150bf1bf952a246457b32"
+      - path: "scripts/test-release.sh"
+        before: null
+        after: "sha256:13a35b28b08490985c96d2143771ec1a4a88afc352a9fb0bc92f38ce0dd25c55"
     ir:
       - path: "docs/ir/core/change-workflow.md"
         sha256: "sha256:33334b98afa8ba9dbd4daf0417f2f7272d62aad283a11053e4bb9165f136ac5c"

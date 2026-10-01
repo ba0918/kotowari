@@ -142,7 +142,8 @@ To release (the local handoff is specified in [docs/release/change-conformance.m
    creates the GitHub Release with that version's changelog section as its notes.
 
 A pushed tag is published: never move or re-create it. A published release is fixed by releasing
-a new version. The release workflow is the only CI; the other gates are the local hooks.
+a new version. The release workflow publishes releases; the change-conformance workflow checks pull requests.
+The local hooks remain required gates.
 
 ## Change conformance
 
