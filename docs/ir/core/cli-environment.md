@@ -59,7 +59,7 @@ kotowari は常に、スキーマの側の`指摘`が出た文書でも、取れ
 
 ### TBL-core-018: 停止の理由の文言
 
-- source: docs/decision/records/records.md#A104, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-22-ir-engine.md#A73
+- source: docs/decision/records/records.md#A104, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-22-ir-engine.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A61, docs/decision/records/2026-10-02-whole-picture.md#A72
 
 | 理由 | 標準エラーの1行目の文言 |
 |---|---|
@@ -69,19 +69,23 @@ kotowari は常に、スキーマの側の`指摘`が出た文書でも、取れ
 | UTF-8 でないファイル | non-UTF-8 file |
 | 結果の誤り | results error |
 | 写しの誤り | mapping error |
+| 元データの誤り | overview error |
+| ポートの誤り | port error |
 
 ### TBL-core-020: 停止の詳細
 
-- source: docs/decision/records/2026-09-22-ir-engine.md#A73, docs/decision/records/records.md#A137, docs/decision/records/records.md#A147, docs/decision/records/records.md#A160, docs/decision/records/records.md#A164, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A6, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A30, docs/decision/records/2026-09-24-doc-marks.md#A15, docs/decision/records/2026-09-24-doc-marks.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A36, docs/decision/records/2026-09-24-guide-gaps.md#A2, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-09-27-surface-check.md#A24, docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-01-change-details.md#A15
+- source: docs/decision/records/2026-09-22-ir-engine.md#A73, docs/decision/records/records.md#A137, docs/decision/records/records.md#A147, docs/decision/records/records.md#A160, docs/decision/records/records.md#A164, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A6, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A30, docs/decision/records/2026-09-24-doc-marks.md#A15, docs/decision/records/2026-09-24-doc-marks.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A36, docs/decision/records/2026-09-24-guide-gaps.md#A2, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-09-27-surface-check.md#A24, docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-01-change-details.md#A15, docs/decision/records/2026-10-02-whole-picture.md#A61, docs/decision/records/2026-10-02-whole-picture.md#A72, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A75, docs/decision/records/2026-10-02-whole-picture.md#A78, docs/decision/records/2026-10-02-whole-picture.md#A85
 
 | 理由 | 詳細（英語） |
 |---|---|
-| 設定の誤り | 設定ファイルの基準のディレクトリからの相対パス（基準の外にあれば "../" を含む）と、誤りの説明。等価の一覧の誤り（REQ-core-148）では等価の一覧のファイルの相対パスと、誤りの説明。"tests.rules" の誤り（REQ-core-189）と "surface.rules" の誤り（REQ-core-225）ではルールのファイルの相対パスと、誤りの説明。未記載の面の一覧の誤り（REQ-core-231）では未記載の面の一覧のファイルの相対パスと、誤りの説明。ガイドとテストの置き場の重なり（REQ-core-199）では重なったファイルのうちパスのバイト順で最初の1つの相対パスに ": matched by both guides.files and tests.files" を続けたもの |
-| 引数の誤り | 説明の文と、問題の引数の文字。引数が1つも無いときと、1つ目の位置引数が無いときは "expected command: check, changes, list, mutants, plan, query or status"。"kotowari query" で `ID` を持つものが無いときは "unknown id: " と位置引数の文字（REQ-core-157） |
+| 設定の誤り | 設定ファイルの基準のディレクトリからの相対パス（基準の外にあれば "../" を含む）と、誤りの説明。等価の一覧の誤り（REQ-core-148）では等価の一覧のファイルの相対パスと、誤りの説明。"tests.rules" の誤り（REQ-core-189）と "surface.rules" の誤り（REQ-core-225）ではルールのファイルの相対パスと、誤りの説明。未記載の面の一覧の誤り（REQ-core-231）では未記載の面の一覧のファイルの相対パスと、誤りの説明。ガイドとテストの置き場の重なり（REQ-core-199）では重なったファイルのうちパスのバイト順で最初の1つの相対パスに ": matched by both guides.files and tests.files" を続けたもの。`全体像の元データ`の置き場の重なり（REQ-core-280）では同じく ": matched by both overview.files and guides.files" か ": matched by both overview.files and tests.files" を続けたもの。"overview" の鍵が無いまま "kotowari overview build" か "kotowari overview serve" を実行したとき（REQ-core-279）は "overview is not configured" だけ |
+| 引数の誤り | 説明の文と、問題の引数の文字。引数が1つも無いときと、1つ目の位置引数が無いときは "expected command: check, changes, list, mutants, overview, plan, query or status"。"kotowari query" で `ID` を持つものが無いときは "unknown id: " と位置引数の文字（REQ-core-157） |
 | 読めないファイル | 相対パスと、OS の誤りの文。カレントディレクトリを取得できないときは "current directory: " と OS の誤りの文 |
 | UTF-8 でないファイル | 相対パス |
 | 結果の誤り | 結果のファイルの相対パスと、誤りの説明 |
 | 写しの誤り | 写せなかった`指摘`の種類と`ノードの名前`、または写せなかった値の説明 |
+| 元データの誤り | `誤り`の件数と " errors in overview data; run kotowari check"（REQ-core-294） |
+| ポートの誤り | "127.0.0.1:<ポート>" と、": " と、OS の誤りの文（REQ-core-298） |
 
 ## Examples
 

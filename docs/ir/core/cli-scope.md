@@ -16,10 +16,10 @@ kotowari は常に、第一に LLM が使う CLI であり、人間が確認の�
 ### REQ-core-102: 状態を保存しない
 
 - kind: prohibition
-- source: docs/decision/records/records.md#A75, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4, docs/decision/records/2026-09-17-check-reach.md#A21
+- source: docs/decision/records/records.md#A75, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4, docs/decision/records/2026-09-17-check-reach.md#A21, docs/decision/records/2026-10-02-whole-picture.md#A28, docs/decision/records/2026-10-02-whole-picture.md#A80, docs/decision/records/2026-10-02-whole-picture.md#A72
 - verification: unit
 
-kotowari は、状態を保存すること、標準出力と標準エラーのほかに書き出すことをしてはならない。
+kotowari は、状態を保存すること、標準出力と標準エラーのほかに書き出すことをしてはならない。ただし "kotowari overview build" と "kotowari overview serve" が`基準のディレクトリ`の ".kotowari/cache/overview/" の下に書き、その下のファイルを消すことだけは除く（REQ-core-296）。
 
 ### REQ-core-105: crate と CLI の置き場
 

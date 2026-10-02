@@ -63,7 +63,7 @@ kotowari は常に、"kotowari check" の JSON の最上位の "guides" に、�
 
 ### TBL-core-005: check の JSON の最上位
 
-- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#出力, docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-24-plan-schema.md#A17, docs/decision/records/2026-09-24-doc-marks.md#A17, docs/decision/records/2026-09-24-doc-marks.md#A35, docs/decision/records/2026-09-27-surface-check.md#A3, docs/decision/records/2026-09-27-surface-check.md#A4, docs/decision/records/2026-09-27-surface-check.md#A16
+- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#出力, docs/decision/records/2026-09-17-check-reach.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-24-plan-schema.md#A17, docs/decision/records/2026-09-24-doc-marks.md#A17, docs/decision/records/2026-09-24-doc-marks.md#A35, docs/decision/records/2026-09-27-surface-check.md#A3, docs/decision/records/2026-09-27-surface-check.md#A4, docs/decision/records/2026-09-27-surface-check.md#A16, docs/decision/records/2026-10-02-whole-picture.md#A64
 
 "kotowari check" の JSON の最上位。"kotowari mutants" の JSON の最上位は TBL-core-025、"kotowari plan" の JSON の最上位は REQ-core-194。
 
@@ -75,6 +75,7 @@ kotowari は常に、"kotowari check" の JSON の最上位の "guides" に、�
 | counts | 種類ごとの指摘の数 |
 | tests | 読んだテストのファイルの拡張子ごとの数と、その拡張子が問い合わせのある言語か（TBL-core-021） |
 | guides | "files"（読んだ`ガイド`の数）と "marks"（形の正しい`ガイドの印`の1件の数）の2つの鍵を持つオブジェクト（REQ-core-206） |
+| overview | "files"（読んだ`全体像の元データ`の数）と "marks"（`全体像の元データ`の中の形の正しい`ガイドの印`の1件の数）の2つの鍵を持つオブジェクト（REQ-core-288） |
 | surface | "unspecified"（未記載の面の一覧で外した面の数）の鍵1つを持つオブジェクト。"surface.rules" が空の一覧のときは鍵ごと出さない（REQ-core-228） |
 
 ### TBL-core-006: 指摘の鍵
