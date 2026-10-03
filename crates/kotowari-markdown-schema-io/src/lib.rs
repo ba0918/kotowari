@@ -187,7 +187,7 @@ impl SchemaLoader {
 
     pub fn load(&self, path: &Path) -> Result<LoadedDocument, Error> {
         let absolute = self.resolve(path);
-        let source = read_document(&absolute)?;
+        let source = read_document(&absolute, path)?;
         let reference = schema_ref(path, &source)?.ok_or_else(|| {
             Error::new(
                 ErrorKind::SchemaNotFound,
@@ -207,7 +207,7 @@ impl SchemaLoader {
         source: &str,
         reference: &SchemaRef,
     ) -> Result<LoadedDocument, Error> {
-        let yaml = self.schema_yaml(absolute, reference)?;
+        let yaml = self.schema_yaml(absolute, display, reference)?;
         let schema = Schema::parse(&yaml).map_err(|e| {
             Error::new(
                 ErrorKind::SchemaInvalid,
@@ -223,12 +223,23 @@ impl SchemaLoader {
         Ok(LoadedDocument { schema, document })
     }
 
-    fn schema_yaml(&self, path: &Path, reference: &SchemaRef) -> Result<String, Error> {
+    fn schema_yaml(
+        &self,
+        path: &Path,
+        display: &Path,
+        reference: &SchemaRef,
+    ) -> Result<String, Error> {
         match kotowari_markdown_schema::resolve_schema(path, reference) {
             ResolvedSchema::File(path) => std::fs::read_to_string(&path).map_err(|e| {
                 Error::new(
                     ErrorKind::SchemaNotFound,
-                    format!("cannot read schema {}: {e}", path.display()),
+                    format!(
+                        "cannot read schema {}: {e}",
+                        match kotowari_markdown_schema::resolve_schema(display, reference) {
+                            ResolvedSchema::File(display) => display.display().to_string(),
+                            ResolvedSchema::Url(url) => url,
+                        }
+                    ),
                 )
             }),
             ResolvedSchema::Url(url) => {
@@ -273,7 +284,14 @@ impl SchemaLoader {
             let entry = entry.map_err(|e| {
                 Error::new(
                     ErrorKind::UnreadableFile,
-                    format!("cannot walk {}: {e}", path.display()),
+                    format!(
+                        "cannot walk {}: {}",
+                        path.display(),
+                        e.to_string().replace(
+                            absolute.to_string_lossy().as_ref(),
+                            path.to_string_lossy().as_ref()
+                        )
+                    ),
                 )
             })?;
             if !entry.file_type().is_file()
@@ -282,7 +300,7 @@ impl SchemaLoader {
                 continue;
             }
             let display = path.join(entry.path().strip_prefix(&absolute).unwrap());
-            let source = read_document(entry.path())?;
+            let source = read_document(entry.path(), &display)?;
             let Some(reference) = schema_ref(&display, &source)? else {
                 continue;
             };
@@ -305,18 +323,18 @@ fn schema_ref(path: &Path, source: &str) -> Result<Option<SchemaRef>, Error> {
     })
 }
 
-fn read_document(path: &Path) -> Result<String, Error> {
+fn read_document(path: &Path, display: &Path) -> Result<String, Error> {
     let bytes = std::fs::read(path).map_err(|e| {
         Error::new(
             ErrorKind::UnreadableFile,
-            format!("{}: {e}", path.display()),
+            format!("{}: {e}", display.display()),
         )
     })?;
     let bytes = bytes.strip_prefix(&[0xEF, 0xBB, 0xBF]).unwrap_or(&bytes);
     String::from_utf8(bytes.to_vec()).map_err(|e| {
         Error::new(
             ErrorKind::UnreadableFile,
-            format!("{}: {e}", path.display()),
+            format!("{}: {e}", display.display()),
         )
     })
 }
