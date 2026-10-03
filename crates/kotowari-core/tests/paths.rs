@@ -68,6 +68,7 @@ fn inspection_compares_original_test_and_surface_source_texts() {
         findings: vec![],
     }]);
     inputs.read.config.surface.rules = vec!["rules.yaml".into()];
+    inputs.read.config.surface.files = vec!["src/**".into()];
     inputs.surface = Some(vec![SurfaceAnalysis {
         source: SourceText::new("src/memory.rs", "two").unwrap(),
         language: Some("rust".into()),

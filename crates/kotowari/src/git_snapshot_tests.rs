@@ -1,4 +1,4 @@
-use kotowari_core::git_snapshot::{Target, read};
+use crate::git_snapshot::{Target, read};
 use std::{fs, path::Path, process::Command};
 
 fn git(root: &Path, args: &[&str]) -> String {

@@ -54,7 +54,7 @@ jobs:
           fi
           case "$product" in
             kotowari)
-              package=kotowari
+              package=kotowari-cli
               bin=kotowari
               changelog=CHANGELOG.md
               readme=README.md
@@ -113,7 +113,7 @@ jobs:
       - name: テスト全件
         run: cargo test --workspace --locked
       - name: kotowari check
-        run: cargo run -q --locked -p kotowari -- check --format text
+        run: cargo run -q --locked -p kotowari-cli --bin kotowari -- check --format text
       - name: 版のずれの検査
         run: scripts/check-versions.sh "$TAG"
 

@@ -1,0 +1,16 @@
+[package]
+name = "kotowari"
+version = "0.3.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+kotowari-core = { path = "../kotowari-core", version = "0.3.0" }
+kotowari-source-analysis = { path = "../kotowari-source-analysis", version = "0.3.0" }
+walkdir = "2"
+globset = "0.4"
+
+[dev-dependencies]
+tempfile = "3"
+serde_json = "1"
+assert_cmd = "2"

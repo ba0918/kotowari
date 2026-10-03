@@ -60,19 +60,23 @@ fn run(root: &Path, args: &[&str]) -> std::process::Output {
         .unwrap()
 }
 fn record(root: &Path, role: &str, base: &str) {
-    let snapshot = kotowari_core::git_snapshot::read(
-        root,
-        base,
-        kotowari_core::git_snapshot::Target::Index,
-        None,
-    )
-    .unwrap();
-    let file = &snapshot.files[0];
+    let resolved_base = git(root, &["rev-parse", base]);
+    let before = git(root, &["show", &format!("{base}:src/a")]);
+    let after = git(root, &["show", ":src/a"]);
+    let before_mode = git(root, &["ls-tree", base, "src/a"]);
+    let after_mode = git(root, &["ls-files", "--stage", "src/a"]);
+    let identity = |mode: &str, text: String| {
+        kotowari_core::comparison::Blob {
+            mode: mode.split_whitespace().next().unwrap().into(),
+            bytes: text.into_bytes(),
+        }
+        .identity()
+    };
     let content = format!(
         "version: 1\nentries:\n- id: {role}\n  base: '{}'\n  role: {role}\n  files: [{{path: src/a, before: '{}', after: '{}'}}]\n  ir: []\n  conclusion: new\n  reason: 根拠\n  requirements: []\n  decisions: ['docs/decision/records/test.md#A1']\n  handoff: null\n  gaps: []\n",
-        snapshot.base,
-        file.before.as_ref().unwrap(),
-        file.after.as_ref().unwrap()
+        resolved_base,
+        identity(&before_mode, before),
+        identity(&after_mode, after)
     );
     let slot = if role == "implementer" {
         "implementation"

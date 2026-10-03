@@ -98,7 +98,28 @@ impl ReadList {
 }
 
 impl ReadModel {
-    pub fn build(inputs: ReadInputs) -> Result<Self, InputError> {
+    #[doc(hidden)]
+    pub fn from_calculation(
+        config: crate::config::Config,
+        docs: Vec<crate::ir::IrDocument>,
+        findings: Vec<crate::Finding>,
+        discovered: crate::tests_discovery::DiscoveredTests,
+    ) -> Self {
+        Self {
+            inputs: ReadInputs {
+                config,
+                ..Default::default()
+            },
+            docs,
+            findings,
+            discovered,
+        }
+    }
+    pub fn build(mut inputs: ReadInputs) -> Result<Self, InputError> {
+        inputs.config = inputs
+            .config
+            .validated()
+            .map_err(|error| InputError::ConfigError(error.to_string()))?;
         required(&inputs.ir, "IR")?;
         required(&inputs.records, "records")?;
         required(&inputs.adr, "ADR")?;
@@ -283,6 +304,10 @@ pub struct Inspection {
 pub struct StatusReport(crate::status::StatusResult);
 
 impl StatusReport {
+    #[doc(hidden)]
+    pub fn from_calculation(result: crate::status::StatusResult) -> Self {
+        Self(result)
+    }
     pub fn complete(&self) -> bool {
         self.0.complete
     }
@@ -333,7 +358,32 @@ impl CheckReport {
 }
 
 impl Inspection {
-    pub fn build(inputs: CheckInputs) -> Result<Self, InputError> {
+    #[doc(hidden)]
+    pub fn into_check(self) -> CheckReport {
+        self.check
+    }
+    #[doc(hidden)]
+    pub fn into_status(self) -> StatusReport {
+        self.status
+    }
+    #[doc(hidden)]
+    pub fn from_calculation(
+        read: ReadModel,
+        check: crate::CheckResult,
+        status: crate::status::StatusResult,
+    ) -> Self {
+        Self {
+            read,
+            check: CheckReport(check),
+            status: StatusReport(status),
+        }
+    }
+    pub fn build(mut inputs: CheckInputs) -> Result<Self, InputError> {
+        inputs.read.config = inputs
+            .read
+            .config
+            .validated()
+            .map_err(|error| InputError::ConfigError(error.to_string()))?;
         let config = &inputs.read.config;
         if !config.guides.files.is_empty() {
             required(&inputs.guides, "guides")?;
@@ -465,5 +515,34 @@ impl Inspection {
     }
     pub fn status(&self) -> &StatusReport {
         &self.status
+    }
+}
+
+impl CheckReport {
+    #[doc(hidden)]
+    pub fn from_calculation(result: crate::CheckResult) -> Self {
+        Self(result)
+    }
+    #[doc(hidden)]
+    pub fn presentation(&self) -> &crate::CheckResult {
+        &self.0
+    }
+}
+impl ReadList {
+    #[doc(hidden)]
+    pub fn presentation(&self) -> &crate::list::ListResult {
+        &self.0
+    }
+}
+impl QueryReport {
+    #[doc(hidden)]
+    pub fn presentation(&self) -> &crate::query::QueryResult {
+        &self.0
+    }
+}
+impl StatusReport {
+    #[doc(hidden)]
+    pub fn presentation(&self) -> &crate::status::StatusResult {
+        &self.0
     }
 }

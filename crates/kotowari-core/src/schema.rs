@@ -7,13 +7,13 @@ use crate::doc_kind::DocKind;
 use kotowari_markdown_schema::schema::{Schema, SchemaError, parse_schema};
 
 /// 話題ごとの文書のスキーマ
-const TOPIC: &str = include_str!("../../../.kotowari/schemas/ir.yaml");
+const TOPIC: &str = include_str!("../schemas/ir.yaml");
 /// 用語集（CONTEXT.md）のスキーマ
-const GLOSSARY: &str = include_str!("../../../.kotowari/schemas/context.yaml");
+const GLOSSARY: &str = include_str!("../schemas/context.yaml");
 /// 問題の記録（FLAGS.md）のスキーマ
-const FLAGS: &str = include_str!("../../../.kotowari/schemas/flags.yaml");
+const FLAGS: &str = include_str!("../schemas/flags.yaml");
 /// 計画書のスキーマ（REQ-core-191）
-const PLAN: &str = include_str!("../../../.kotowari/schemas/plan.yaml");
+const PLAN: &str = include_str!("../schemas/plan.yaml");
 
 /// 文書の種類に応じた、取り込んだスキーマの YAML（REQ-core-168）。
 pub fn schema_source(kind: DocKind) -> &'static str {

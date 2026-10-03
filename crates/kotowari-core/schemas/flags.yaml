@@ -1,0 +1,73 @@
+# kotowari の IR の問題の記録（FLAGS.md）の書式
+name: ir-flags
+open: false
+reading: line
+document:
+  item:
+    id: "^FLAG-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
+    repeat: { min: 0 }
+    extract:
+      path: flags
+      of: { id: id, name: name, line: line, end: end }
+    fields:
+      - name: kind
+        enum: [contradiction, gap, ambiguity]
+        extract: kind
+      - name: related
+        separator: ","
+        extract:
+          path: relations
+          value: value
+          of: { line: line }
+      - name: source
+        separator: ","
+        extract:
+          path: sources
+          value: value
+          of: { line: line }
+    statement:
+      repeat: { min: 1 }
+      extract:
+        path: text
+        value: value
+        of: { line: line, raw: raw }
+  title:
+    extract: title
+  preamble:
+    statement:
+      repeat: { min: 0 }
+      extract:
+        path: scope
+        value: value
+        of: { line: line, raw: raw }
+  sections:
+    - name: Flags
+      repeat: { min: 0 }
+      item:
+        id: "^FLAG-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
+        repeat: { min: 0 }
+        extract:
+          path: flags_in_section
+          of: { id: id, name: name, line: line, end: end }
+        fields:
+          - name: kind
+            enum: [contradiction, gap, ambiguity]
+            extract: kind
+          - name: related
+            separator: ","
+            extract:
+              path: relations
+              value: value
+              of: { line: line }
+          - name: source
+            separator: ","
+            extract:
+              path: sources
+              value: value
+              of: { line: line }
+        statement:
+          repeat: { min: 1 }
+          extract:
+            path: text
+            value: value
+            of: { line: line, raw: raw }

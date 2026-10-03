@@ -35,8 +35,12 @@ fn entry() -> String {
 
 fn invalids(record: &str) -> Vec<kotowari_core::Finding> {
     let dir = project(record);
-    let (result, _) =
-        kotowari_core::run_check(dir.path(), kotowari_core::Format::Json, None).unwrap();
+    let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
+        .unwrap()
+        .check()
+        .unwrap()
+        .presentation()
+        .clone();
     result
         .findings
         .into_iter()
@@ -48,8 +52,12 @@ fn invalids(record: &str) -> Vec<kotowari_core::Finding> {
 #[test]
 fn check_and_status_validate_records_without_git_or_extra_tallies() {
     let dir = project(&entry());
-    let (result, _) =
-        kotowari_core::run_check(dir.path(), kotowari_core::Format::Json, None).unwrap();
+    let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
+        .unwrap()
+        .check()
+        .unwrap()
+        .presentation()
+        .clone();
     assert!(
         !result
             .findings
@@ -57,7 +65,11 @@ fn check_and_status_validate_records_without_git_or_extra_tallies() {
             .any(|f| f.kind.as_str() == "change_record_invalid")
     );
     let dir = project("version: 2\nentries: []\n");
-    let result = kotowari_core::run_status(dir.path(), None).unwrap();
+    let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
+        .unwrap()
+        .status()
+        .map(|report| report.presentation().clone())
+        .unwrap();
     assert!(result.findings.error > 0);
     let value = serde_json::to_value(result).unwrap();
     assert!(value.get("changes").is_none());
@@ -72,8 +84,12 @@ fn recorded_and_fixed_gaps_can_share_a_new_conclusion() {
     let dir = project(&record);
     std::fs::create_dir_all(dir.path().join("docs/ir/core")).unwrap();
     std::fs::write(dir.path().join("docs/ir/core/topic.md"), "# 範囲\n\n内容。\n\n## Requirements\n\n### REQ-core-999: 既存\n\n- kind: ubiquitous\n- source: docs/decision/records/test.md#A1\n- verification: unit\n\n既存。\n").unwrap();
-    let (result, _) =
-        kotowari_core::run_check(dir.path(), kotowari_core::Format::Json, None).unwrap();
+    let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
+        .unwrap()
+        .check()
+        .unwrap()
+        .presentation()
+        .clone();
     assert!(
         !result
             .findings
@@ -92,8 +108,12 @@ fn reference_error_positions_are_local_to_each_record_file() {
         .replace("id: entry", "id: other")
         .replace("test.md#A1", "missing.md#A1");
     std::fs::write(dir.path().join("docs/changes/z-other.yaml"), second).unwrap();
-    let (result, _) =
-        kotowari_core::run_check(dir.path(), kotowari_core::Format::Json, None).unwrap();
+    let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
+        .unwrap()
+        .check()
+        .unwrap()
+        .presentation()
+        .clone();
     let f = result
         .findings
         .iter()
@@ -123,8 +143,12 @@ fn explicitly_named_hidden_records_are_checked_without_reading_other_hidden_dirs
         entry().replace("test.md#A1", "missing.md#A1"),
     ] {
         std::fs::write(dir.path().join(".kotowari/changes/commit.yaml"), content).unwrap();
-        let (result, _) =
-            kotowari_core::run_check(dir.path(), kotowari_core::Format::Json, None).unwrap();
+        let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
+            .unwrap()
+            .check()
+            .unwrap()
+            .presentation()
+            .clone();
         assert!(
             result
                 .findings
@@ -139,7 +163,10 @@ fn explicitly_named_hidden_records_are_checked_without_reading_other_hidden_dirs
                 .any(|f| f.path.starts_with(".hidden/"))
         );
         assert!(
-            kotowari_core::run_status(dir.path(), None)
+            kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
+                .unwrap()
+                .status()
+                .map(|report| report.presentation().clone())
                 .unwrap()
                 .findings
                 .error
@@ -156,8 +183,12 @@ fn details_with_ir(record: &str) -> Vec<String> {
     std::fs::create_dir_all(dir.path().join("docs/ir/core")).unwrap();
     std::fs::write(dir.path().join("docs/ir/core/topic.md"), TOPIC).unwrap();
     std::fs::write(dir.path().join("docs/ir/core/other.md"), OTHER).unwrap();
-    let (result, _) =
-        kotowari_core::run_check(dir.path(), kotowari_core::Format::Json, None).unwrap();
+    let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
+        .unwrap()
+        .check()
+        .unwrap()
+        .presentation()
+        .clone();
     result
         .findings
         .into_iter()
@@ -276,8 +307,12 @@ fn a_record_reached_through_a_file_symlink_is_checked() {
         dir.path().join("docs/changes/link.yaml"),
     )
     .unwrap();
-    let (result, _) =
-        kotowari_core::run_check(dir.path(), kotowari_core::Format::Json, None).unwrap();
+    let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
+        .unwrap()
+        .check()
+        .unwrap()
+        .presentation()
+        .clone();
     assert!(
         result
             .findings

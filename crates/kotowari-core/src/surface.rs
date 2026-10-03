@@ -1,14 +1,11 @@
 //! `面`の検査（docs/ir/core/surface.md）。`面の規則`で`面のファイル`から`面`を取り出す。
 
-use crate::config::Config;
 use crate::doc_kind::DocKind;
 use crate::ir::{IrDocument, Item, split_lines};
-use crate::test_queries::{ParsedFile, RuleSet, language_of};
 use crate::{Finding, FindingKind, StopReason};
 use markdown::mdast::Node;
 use serde_json::Value;
 use std::collections::BTreeSet;
-use std::path::Path;
 
 /// `面の規則`で取り出した`面`1つ（REQ-core-223）
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -21,54 +18,6 @@ pub struct Surface {
     pub path: String,
     /// 節の最初の行
     pub line: usize,
-}
-
-/// "surface.rules" で "surface.files" から`面`を取り出す（REQ-core-223）。
-/// 規則の言語の`面のファイル`だけを読み、構文の誤りは unparsable_file にし、同じパスに
-/// `テストのファイル`として出していれば重ねない（REQ-core-236）
-pub fn extract(
-    base: &Path,
-    cfg: &Config,
-    findings: &mut Vec<Finding>,
-) -> Result<Vec<Surface>, StopReason> {
-    let rules = RuleSet::load(base, &cfg.surface.rules, "surface.rules")?;
-    let files = crate::tests_discovery::collect_files(base, &cfg.surface.files)?;
-    let mut surfaces = Vec::new();
-    for (rel, abs) in &files {
-        // REQ-core-236: 規則の言語でないファイルは読まない
-        let Some(lang) = language_of(rel).filter(|lang| rules.has_language(*lang)) else {
-            continue;
-        };
-        // REQ-core-224: 読めないファイルと UTF-8 でないファイルでの停止は`テストのファイル`と同じ
-        let content =
-            crate::tests_discovery::lone_cr_to_lf(&crate::read_utf8_file(Path::new(abs), rel)?);
-        let Some(parsed) = ParsedFile::parse(&content, lang) else {
-            let reported = findings
-                .iter()
-                .any(|f| f.kind == FindingKind::UnparsableFile && f.path == *rel);
-            if !reported {
-                findings.push(Finding::new(
-                    FindingKind::UnparsableFile,
-                    rel.clone(),
-                    None,
-                    rel.clone(),
-                ));
-            }
-            continue;
-        };
-        surfaces.extend(
-            parsed
-                .find_named(&rules, lang, rel)
-                .into_iter()
-                .map(|m| Surface {
-                    kind: m.rule_id,
-                    name: m.name,
-                    path: rel.clone(),
-                    line: m.line,
-                }),
-        );
-    }
-    Ok(surfaces)
 }
 
 /// `面`の種類と名前の組の数（TBL-core-028 の "surface"）
@@ -89,22 +38,6 @@ pub struct Unlisted {
     pub unspecified: usize,
 }
 
-/// check と status の`面`の検査（REQ-core-229）。`面`を取り出し、`未記載の面の一覧`を読み、
-/// `指摘`を足して数を返す。"surface.rules" が空の一覧なら何も読まず None を返す
-pub fn check(
-    base: &Path,
-    cfg: &Config,
-    docs: &[IrDocument],
-    findings: &mut Vec<Finding>,
-) -> Result<Option<SurfaceTally>, StopReason> {
-    if cfg.surface.rules.is_empty() {
-        return Ok(None);
-    }
-    let surfaces = extract(base, cfg, findings)?;
-    let list = read_unspecified_file(base, cfg)?;
-    Ok(Some(report(&surfaces, docs, &list, findings)))
-}
-
 /// 形の正しい`未記載の面の一覧`の1件（REQ-core-232）
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Unspecified {
@@ -123,36 +56,7 @@ struct UnspecifiedList {
     findings: Vec<Finding>,
 }
 
-/// "surface.unspecified" の指す先を読む。鍵が無ければ0件。無いか読めなければ読めないファイル、
-/// UTF-8 でなければ UTF-8 でないファイル、YAML として読めないか最上位が並びでなければ
-/// 設定の誤りで`停止`する（REQ-core-231）。形の誤った1件は surface_unspecified_invalid にして
-/// 一覧から外す（REQ-core-233）
-fn read_unspecified_file(base: &Path, cfg: &Config) -> Result<UnspecifiedList, StopReason> {
-    let Some(path) = &cfg.surface.unspecified else {
-        return Ok(UnspecifiedList::default());
-    };
-    let text = crate::read_utf8_file(&base.join(path), path)?;
-    let mut entries = Vec::new();
-    let mut findings = Vec::new();
-    for item in &crate::config::read_yaml_sequence(&text, path)? {
-        match read_entry(item) {
-            Some(entry) => entries.push(entry),
-            None => findings.push(Finding::new(
-                FindingKind::SurfaceUnspecifiedInvalid,
-                path.clone(),
-                None,
-                written_detail(item),
-            )),
-        }
-    }
-    Ok(UnspecifiedList {
-        path: path.clone(),
-        entries,
-        findings,
-    })
-}
-
-pub(crate) fn check_analysis(
+pub fn check_analysis(
     analysis: &[crate::SurfaceAnalysis],
     docs: &[IrDocument],
     unspecified: &[crate::SourceText],

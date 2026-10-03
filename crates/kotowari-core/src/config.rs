@@ -334,7 +334,45 @@ impl Config {
         }
 
         let raw: RawConfig = serde_saphyr::from_str(yaml).map_err(yaml_error)?;
+        Self::from_raw(raw)
+    }
 
+    pub(crate) fn validated(&self) -> Result<Self, StopReason> {
+        Self::from_raw(RawConfig {
+            ir: Some(Some(self.ir.clone())),
+            decisions: Some(Some(RawDecisions {
+                records: Some(Some(self.decisions.records.clone())),
+                adr: Some(Some(self.decisions.adr.clone())),
+            })),
+            tests: Some(Some(RawTests {
+                files: Some(Some(self.tests.files.clone())),
+                rules: Some(Some(self.tests.rules.clone())),
+                rust: Some(Some(RawRustTests {
+                    attributes: Some(Some(self.tests.rust.attributes.clone())),
+                    macros: Some(Some(self.tests.rust.macros.clone())),
+                })),
+            })),
+            guides: Some(Some(RawGuides {
+                files: Some(Some(self.guides.files.clone())),
+            })),
+            mutants: Some(Some(RawMutants {
+                equivalents: self.mutants.equivalents.clone().map(Some),
+            })),
+            surface: Some(Some(RawSurface {
+                files: Some(Some(self.surface.files.clone())),
+                rules: Some(Some(self.surface.rules.clone())),
+                unspecified: self.surface.unspecified.clone().map(Some),
+            })),
+            changes: self.changes.clone().map(Some),
+            limits: Some(Some(RawLimits {
+                lines: Some(Some(self.limits.lines)),
+                requirements: Some(Some(self.limits.requirements)),
+            })),
+            vague_words: Some(Some(self.vague_words.clone())),
+        })
+    }
+
+    fn from_raw(raw: RawConfig) -> Result<Self, StopReason> {
         let defaults = Config::default();
 
         // REQ-core-014: null 値の検出と絶対パスの検出

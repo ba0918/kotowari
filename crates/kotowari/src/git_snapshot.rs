@@ -1,5 +1,5 @@
-pub use crate::comparison::{Blob, Comparison as Snapshot, ir_identity};
-use crate::{
+pub use kotowari_core::comparison::{Blob, Comparison as Snapshot};
+use kotowari_core::{
     StopReason,
     change_records::{self, FileChange},
     config::Config,
@@ -197,7 +197,7 @@ pub fn read(
         .to_str()
         .filter(|p| !p.starts_with('/'))
         .ok_or_else(|| StopReason::ConfigError("config must be Git-root-relative".into()))?;
-    let normalized_config = crate::normalize_path(raw_config);
+    let normalized_config = kotowari_core::normalize_path(raw_config);
     let config_path = normalized_config.as_str();
     if !change_records::normalized_relative(config_path) {
         return Err(StopReason::ConfigError(

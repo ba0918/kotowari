@@ -2,12 +2,12 @@
 //!
 //! 拡張子から言語を決め（TBL-core-031）、その言語の ast-grep のルールを当てて`テスト`の節を見つける。
 
-use crate::StopReason;
-use crate::config::Config;
 use ast_grep_config::{GlobalRules, RuleCollection, RuleConfig, Severity, from_yaml_string};
 use ast_grep_core::tree_sitter::StrDoc;
 use ast_grep_core::{Language, Node};
 use ast_grep_language::SupportLang;
+use kotowari_core::StopReason;
+use kotowari_core::config::Config;
 use std::collections::BTreeSet;
 use std::path::Path;
 
@@ -61,8 +61,8 @@ impl RuleSet {
     }
 
     /// 設定の鍵 `key` に並んだルールのファイルだけから集まりを作る（REQ-core-224）
-    pub fn load(base: &Path, paths: &[String], key: &str) -> Result<Self, StopReason> {
-        Self::build(read_rule_files(base, paths, key)?, key)
+    pub fn from_texts(texts: &[kotowari_core::SourceText], key: &str) -> Result<Self, StopReason> {
+        Self::build(read_rule_texts(texts, key)?, key)
     }
 
     /// その言語のルールが1つ以上あるか
@@ -87,9 +87,12 @@ pub struct TestQueries {
 impl TestQueries {
     /// 同梱のルール、"tests.rust.attributes" のルール、"tests.rules" のファイルのルールを読む。
     /// ルールのファイルが読めなければ設定の誤りで停止する（REQ-core-189）
-    pub fn load(base: &Path, config: &Config) -> Result<Self, StopReason> {
+    pub fn from_texts(
+        config: &Config,
+        texts: &[kotowari_core::SourceText],
+    ) -> Result<Self, StopReason> {
         let mut rules = bundled_rules(config)?;
-        rules.extend(read_rule_files(base, &config.tests.rules, "tests.rules")?);
+        rules.extend(read_rule_texts(texts, "tests.rules")?);
         Ok(TestQueries {
             rules: RuleSet::build(rules, "tests.rules")?,
         })
@@ -102,18 +105,22 @@ impl TestQueries {
 }
 
 /// 設定の鍵 `key` に並んだルールのファイルを順に読む。同じパスの2回目は設定の誤り（REQ-core-189）
-fn read_rule_files(
-    base: &Path,
-    paths: &[String],
+fn read_rule_texts(
+    texts: &[kotowari_core::SourceText],
     key: &str,
 ) -> Result<Vec<RuleConfig<SupportLang>>, StopReason> {
     let mut rules = Vec::new();
     let mut seen = BTreeSet::new();
-    for path in paths {
+    for source in texts {
+        let path = source.path();
         if !seen.insert(path) {
             return Err(config_error(format!("duplicate path in {key}: {path}")));
         }
-        rules.extend(read_rule_file(base, path, key)?);
+        let invalid = |error| config_error(format!("invalid rule in {key}: {path}: {error}"));
+        if let Some(language) = unknown_language(source.text()) {
+            return Err(invalid(format!("unknown language: {language}")));
+        }
+        rules.extend(parse_rules(source.text()).map_err(invalid)?);
     }
     Ok(rules)
 }
@@ -141,25 +148,6 @@ fn bundled_rules(config: &Config) -> Result<Vec<RuleConfig<SupportLang>>, StopRe
 
 /// ルールのファイルを1つ読む。無い、ファイルでない、読めない、UTF-8 でない、
 /// ルールとして読めないときは設定の誤りで、詳細は `key` とそのパス（REQ-core-189、REQ-core-225）
-fn read_rule_file(
-    base: &Path,
-    path: &str,
-    key: &str,
-) -> Result<Vec<RuleConfig<SupportLang>>, StopReason> {
-    let full = base.join(path);
-    let metadata = std::fs::metadata(&full)
-        .map_err(|e| config_error(format!("unreadable file in {key}: {path}: {e}")))?;
-    if !metadata.is_file() {
-        return Err(config_error(format!("not a file in {key}: {path}")));
-    }
-    let text = crate::read_utf8_file(&full, path)
-        .map_err(|e| config_error(format!("unreadable file in {key}: {e}")))?;
-    let invalid = |e: String| config_error(format!("invalid rule in {key}: {path}: {e}"));
-    if let Some(language) = unknown_language(&text) {
-        return Err(invalid(format!("unknown language: {language}")));
-    }
-    parse_rules(&text).map_err(invalid)
-}
 
 /// ルールの "language" の値だけを読むための形。ほかのキーは読み捨てる
 #[derive(serde::Deserialize)]

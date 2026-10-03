@@ -45,7 +45,7 @@
     違いは1件も無かった。範囲の始まりを last + 2 にした版では同じ探索が55510件の違いを見つけるので、
     空行の有無の違いを見られる探索であることは確かめてある。
 
-- file: crates/kotowari-core/src/tests_discovery.rs
+- file: crates/kotowari-source-analysis/src/discovery.rs
   change: "replace + with * in reparse_macro_body"
   text: "let byte_offset = body.range().start + usize::from(delimited.is_some());"
   class: equivalent
@@ -58,7 +58,7 @@
     落とすテストの試み: 主セッションが、マクロの開き括弧と同じ行と、閉じ括弧と同じ行に普通のテストを置く配置を考え、
     外のテストの始まりが中の関数の鍵とその1前の間に入れないことをソースで確かめた（2026-09-24）。
 
-- file: crates/kotowari-core/src/git_snapshot.rs
+- file: crates/kotowari/src/git_snapshot.rs
   change: "replace || with && in blobs"
   text: "if fields.len() != 3 || fields[0] != expected || fields[1] != \"blob\" {"
   class: equivalent
@@ -71,7 +71,7 @@
     落とすテストの試み: 主セッションが、存在しない blob を求めたときの git の出力（2つの見出し）で両方の変異の
     分岐を追い、元と同じく git error になることを確かめた（2026-10-01）。
 
-- file: crates/kotowari-core/src/git_snapshot.rs
+- file: crates/kotowari/src/git_snapshot.rs
   change: "replace || with && in blobs"
   text: "if remaining.len() <= size || remaining[size] != b'\\n' {"
   class: equivalent
@@ -82,7 +82,7 @@
     落とすテストの試み: 主セッションが、終了状態の検査がこの解析より前にあることをソースで確かめ、
     成功した git の出力ではこの条件が常に偽になることを確かめた（2026-10-01）。
 
-- file: crates/kotowari-core/src/git_snapshot.rs
+- file: crates/kotowari/src/git_snapshot.rs
   change: "replace byte_path -> PathBuf with Default::default()"
   text: "PathBuf::from(String::from_utf8_lossy(bytes).as_ref())"
   class: equivalent

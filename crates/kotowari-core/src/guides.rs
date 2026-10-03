@@ -1,13 +1,11 @@
 //! `ガイド`を読み、`ガイドの印`を取り出す（REQ-core-198〜REQ-core-202、REQ-core-206、TBL-core-036）
 
-use crate::config::Config;
 use crate::fingerprint::fingerprint_of;
 use crate::ir::{IrDocument, is_valid_id, split_lines};
 use crate::{Finding, FindingKind, StopReason};
 use markdown::mdast::Node;
 use std::collections::BTreeMap;
 use std::ops::Range;
-use std::path::Path;
 
 /// 形の正しい`ガイドの印`の1件（TBL-core-036）
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -28,43 +26,6 @@ pub struct GuideTally {
     pub files: usize,
     /// 形の正しい`ガイドの印`の1件の数
     pub marks: usize,
-}
-
-/// "guides.files" に当たるファイルを`ガイド`として読み、`ガイドの印`を今の`IR`の`指紋`と照らす。
-/// `テストのファイル`と重なるファイルがあれば、バイト順で最初の1つを詳細にして設定の誤りで停止する（REQ-core-199）。
-/// `test_files` はバイト順に並んだ`テストのファイル`の相対パス
-pub fn read_guides(
-    base: &Path,
-    cfg: &Config,
-    test_files: &[String],
-    docs: &[IrDocument],
-    findings: &mut Vec<Finding>,
-) -> Result<GuideTally, StopReason> {
-    // 空の一覧ならガイドは1つも読まない（REQ-core-198）。走査そのものを省く
-    if cfg.guides.files.is_empty() {
-        return Ok(GuideTally::default());
-    }
-    let files = crate::tests_discovery::collect_files(base, &cfg.guides.files)?;
-    // files はバイト順なので、最初に見つかる重なりがバイト順で最初の1つ
-    if let Some((overlap, _)) = files
-        .iter()
-        .find(|(rel, _)| test_files.binary_search(rel).is_ok())
-    {
-        return Err(StopReason::ConfigError(format!(
-            "{overlap}: matched by both guides.files and tests.files"
-        )));
-    }
-    let mut sources = Vec::new();
-    for (rel, abs) in &files {
-        let content = crate::read_utf8_file(Path::new(abs), rel)?;
-        sources.push((rel.as_str(), content));
-    }
-    check_entries(
-        sources.iter().map(|(path, text)| (*path, text.as_str())),
-        test_files,
-        docs,
-        findings,
-    )
 }
 
 /// `ID` から、その `ID` の`項目`と`シナリオ`の`指紋`を REQ-core-032 の順（文書はパスのバイト順、
@@ -99,7 +60,7 @@ pub(crate) fn check_texts(
     )
 }
 
-fn check_entries<'a>(
+pub fn check_entries<'a>(
     files: impl IntoIterator<Item = (&'a str, &'a str)>,
     test_files: &[String],
     docs: &[IrDocument],

@@ -1,9 +1,9 @@
-use crate::{
+use crate::git_snapshot::{self, Blob, Target};
+use kotowari_core::{
     StopReason,
     change_records::{self, LocatedEntry},
     changes::{self, ChangeResult, Phase},
     config::Config,
-    git_snapshot::{self, Blob, Target},
     ir::{self, Item},
     sources::{self, SourceContext},
 };

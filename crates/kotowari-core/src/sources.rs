@@ -1,7 +1,6 @@
 //! 判断の記録の読み取り（節・番号の行・補足の行・リンクの構造。REQ-core-133、REQ-core-135、REQ-core-136、TBL-core-022、TBL-core-023 の定数と走査）と、出典の検査（REQ-core-057〜REQ-core-061, REQ-core-106, TBL-core-012）
 
 use crate::{Finding, FindingKind};
-use std::path::Path;
 
 /// `判断の記録` の `補足の行` の値にあるリンク（"[文字](href)"。TBL-core-023）
 #[derive(Debug, Clone)]
@@ -419,52 +418,6 @@ pub fn is_under_place(path: &str, place: &str) -> bool {
             && path.as_bytes()[place.len()] == b'/')
 }
 
-/// 判断の記録と ADR の置き場を読み、出典の検査コンテキストを構築する
-pub fn build_context(
-    base: &Path,
-    config: &crate::config::Config,
-) -> Result<SourceContext, crate::StopReason> {
-    let records_dir = base.join(&config.decisions.records);
-    let adr_dir = base.join(&config.decisions.adr);
-
-    let mut records = Vec::new();
-    let mut adr = Vec::new();
-
-    // records ディレクトリを読む。判断の記録とそれ以外のファイルに分ける
-    if records_dir.is_dir() {
-        for_each_md(
-            &records_dir,
-            "",
-            &config.decisions.records,
-            &mut |rel, content| {
-                records.push((
-                    crate::join_display_path(&config.decisions.records, &rel),
-                    content.to_owned(),
-                ));
-            },
-        )?;
-    }
-
-    // adr ディレクトリを読む
-    if adr_dir.is_dir() {
-        for_each_md(&adr_dir, "", &config.decisions.adr, &mut |rel, content| {
-            adr.push((
-                crate::join_display_path(&config.decisions.adr, &rel),
-                content.to_owned(),
-            ));
-        })?;
-    }
-
-    Ok(context_from_entries(
-        config,
-        records
-            .iter()
-            .map(|(path, text)| (path.as_str(), text.as_str())),
-        adr.iter()
-            .map(|(path, text)| (path.as_str(), text.as_str())),
-    ))
-}
-
 pub(crate) fn context_from_texts(
     config: &crate::config::Config,
     records: &[crate::SourceText],
@@ -477,7 +430,7 @@ pub(crate) fn context_from_texts(
     )
 }
 
-fn context_from_entries<'a>(
+pub fn context_from_entries<'a>(
     config: &crate::config::Config,
     records: impl IntoIterator<Item = (&'a str, &'a str)>,
     adr: impl IntoIterator<Item = (&'a str, &'a str)>,
@@ -519,63 +472,8 @@ fn context_from_entries<'a>(
     }
 }
 
-/// 置き場の下の .md をファイル名の順に深さ優先で読み、置き場からの相対パスと中身を visit に渡す
-fn for_each_md(
-    dir: &Path,
-    prefix: &str,
-    config_key: &str,
-    visit: &mut dyn FnMut(String, &str),
-) -> Result<(), crate::StopReason> {
-    let unreadable =
-        |e: std::io::Error| crate::StopReason::UnreadableFile(format!("{config_key}: {e}"));
-    let mut sorted = std::fs::read_dir(dir)
-        .map_err(unreadable)?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(unreadable)?;
-    sorted.sort_by_key(|e| e.file_name());
-
-    for entry in sorted {
-        let path = entry.path();
-        let name = entry.file_name().to_string_lossy().to_string();
-        let rel = if prefix.is_empty() {
-            name.clone()
-        } else {
-            format!("{prefix}/{name}")
-        };
-
-        let ft = entry.file_type().map_err(|e| {
-            let display = crate::join_display_path(config_key, &rel);
-            crate::StopReason::UnreadableFile(format!("{display}: {e}"))
-        })?;
-        // A102: ファイルのシンボリックリンクは読む。ディレクトリのリンクは辿らない。
-        // A146: 先の無いリンクは読めないファイルとして停止する
-        let (is_dir, is_file) = if ft.is_symlink() {
-            let meta = std::fs::metadata(&path).map_err(|e| {
-                let display = crate::join_display_path(config_key, &rel);
-                crate::StopReason::UnreadableFile(format!("{display}: {e}"))
-            })?;
-            (false, meta.is_file())
-        } else {
-            (ft.is_dir(), ft.is_file())
-        };
-        if is_dir {
-            // 除外: 隠しディレクトリは辿らない（CONTEXT.md の除外）
-            if name.starts_with('.') {
-                continue;
-            }
-            for_each_md(&path, &rel, config_key, visit)?;
-        } else if is_file && path.extension().is_some_and(|ext| ext == "md") {
-            let display = crate::join_display_path(config_key, &rel);
-            let content = crate::read_utf8_file(&path, &display)?;
-
-            visit(rel, &content);
-        }
-    }
-    Ok(())
-}
-
 /// 出典を検査して Finding に追加する
-pub(crate) fn check_sources_with_duplicates(
+pub fn check_sources_with_duplicates(
     docs: &[crate::ir::IrDocument],
     ctx: &SourceContext,
     ir_path: &str,

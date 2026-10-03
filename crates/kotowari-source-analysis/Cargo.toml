@@ -1,0 +1,20 @@
+[package]
+name = "kotowari-source-analysis"
+version = "0.3.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+kotowari-core = { path = "../kotowari-core", version = "0.3.0" }
+serde = { version = "1", features = ["derive"] }
+serde-saphyr = "1"
+regex = "1"
+ast-grep-core = "=0.45.3"
+ast-grep-config = "=0.45.3"
+ast-grep-language = "=0.45.3"
+
+[dev-dependencies]
+tempfile = "3"
+serde_json = "1"
+globset = "0.4"
+walkdir = "2"

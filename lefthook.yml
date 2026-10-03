@@ -26,7 +26,7 @@ pre-commit:
       run: bash "$(git rev-parse --git-common-dir)/hooks/pre-commit.old"
     kotowari-check:
       run: |
-        out=$(CARGO_BUILD_JOBS=4 cargo run -q -- check --format json); code=$?
+        out=$(CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-cli --bin kotowari -- check --format json); code=$?
         if [ "$code" -eq 2 ]; then exit 2; fi
         rest=$(printf '%s' "$out" | jq -r '
           [ .findings[]
@@ -38,9 +38,9 @@ pre-commit:
 pre-push:
   commands:
     cargo-test:
-      run: CARGO_BUILD_JOBS=4 cargo test
+      run: CARGO_BUILD_JOBS=4 cargo test --workspace --all-features
     kotowari-check:
-      run: CARGO_BUILD_JOBS=4 cargo run -q -- check --format text
+      run: CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-cli --bin kotowari -- check --format text
     mutants:
       run: scripts/mutants.sh hook
       use_stdin: true

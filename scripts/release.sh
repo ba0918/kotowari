@@ -37,8 +37,8 @@ version="$2"
 # 製品ごとの、版の宣言（先頭が置き場、残りは従う宣言）、Cargo.lock のパッケージ、変更履歴
 case "$product" in
     kotowari)
-        manifests=(Cargo.toml crates/kotowari-core/Cargo.toml)
-        lock_packages=(kotowari kotowari-core)
+        manifests=(Cargo.toml crates/kotowari/Cargo.toml crates/kotowari-core/Cargo.toml crates/kotowari-source-analysis/Cargo.toml)
+        lock_packages=(kotowari-cli kotowari kotowari-core kotowari-source-analysis)
         changelog="CHANGELOG.md"
         ;;
     kotowari-mds)
@@ -158,7 +158,7 @@ awk -v heading="## [${version}] - ${release_date}" \
 printf 'release.sh: 版のずれを検査する\n' >&2
 scripts/check-versions.sh "$tag" || die "版のずれの検査が落ちた"
 printf 'release.sh: kotowari check を回す\n' >&2
-CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format text || die "kotowari check が終了コード0で終わらなかった"
+CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-cli --bin kotowari -- check --format text || die "kotowari check が終了コード0で終わらなかった"
 printf 'release.sh: テスト全件を回す\n' >&2
 CARGO_BUILD_JOBS=4 cargo test --workspace || die "テストが落ちた"
 

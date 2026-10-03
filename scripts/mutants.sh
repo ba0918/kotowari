@@ -230,7 +230,7 @@ run_mutants() {
     fi
 
     # 見逃しや時間切れで止めるかどうかは kotowari の側で決める（上の 2 と 3 では止めない）
-    CARGO_BUILD_JOBS=4 cargo run -q -- mutants --tool cargo-mutants --format text "$RESULTS"
+    CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-cli --bin kotowari -- mutants --tool cargo-mutants --format text "$RESULTS"
 }
 
 run_diff() {

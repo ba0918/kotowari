@@ -10,7 +10,6 @@ use crate::finding_map::read_document;
 use crate::{Finding, FindingKind, StopReason};
 use serde_json::{Map, Value};
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
 
 /// 項目の ID の種別
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -210,10 +209,10 @@ impl IrDocument {
 }
 
 /// 文書群に対して一度求めた、親の用語集と重なる行。
-pub(crate) struct GlossaryDuplicates(Vec<BTreeSet<usize>>);
+pub struct GlossaryDuplicates(Vec<BTreeSet<usize>>);
 
 impl GlossaryDuplicates {
-    pub(crate) fn new(docs: &[IrDocument]) -> Self {
+    pub fn new(docs: &[IrDocument]) -> Self {
         Self(
             docs.iter()
                 .map(|doc| doc.duplicate_glossary_rows(docs))
@@ -1066,7 +1065,7 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
     check_documents_with_duplicates(docs, config, &duplicates)
 }
 
-pub(crate) fn check_documents_with_duplicates(
+pub fn check_documents_with_duplicates(
     docs: &[IrDocument],
     config: &Config,
     duplicates: &GlossaryDuplicates,
@@ -1567,71 +1566,4 @@ fn backtick_ids(text: &str) -> Vec<&str> {
         .map(str::trim)
         .filter(|id| !id.is_empty() && is_valid_id(id))
         .collect()
-}
-
-/// IR のディレクトリからすべての文書を読んで検査する
-pub fn load_and_check(
-    base: &Path,
-    config: &Config,
-) -> Result<(Vec<IrDocument>, Vec<Finding>), crate::StopReason> {
-    let (docs, findings, _) = load_and_check_with_duplicates(base, config)?;
-    Ok((docs, findings))
-}
-
-pub(crate) fn load_and_check_with_duplicates(
-    base: &Path,
-    config: &Config,
-) -> Result<(Vec<IrDocument>, Vec<Finding>, GlossaryDuplicates), crate::StopReason> {
-    let ir_dir = base.join(&config.ir);
-    let mut entries = Vec::new();
-    collect_ir_paths(&ir_dir, "", &config.ir, &mut entries)?;
-    entries.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
-
-    let mut docs = Vec::new();
-    for (relative_path, path) in entries {
-        let (directory, filename) = relative_path
-            .rsplit_once('/')
-            .unwrap_or(("", &relative_path));
-        let display = crate::join_display_path(&config.ir, &relative_path);
-        let content = crate::read_utf8_file(&path, &display)?;
-        let mut doc = parse_document(filename, &content)?;
-        doc.directory = directory.to_string();
-        doc.relative_path = relative_path;
-        docs.push(doc);
-    }
-    let duplicates = GlossaryDuplicates::new(&docs);
-    let findings = check_documents_with_duplicates(&docs, config, &duplicates);
-    Ok((docs, findings, duplicates))
-}
-
-fn collect_ir_paths(
-    dir: &Path,
-    prefix: &str,
-    ir_path: &str,
-    paths: &mut Vec<(String, std::path::PathBuf)>,
-) -> Result<(), crate::StopReason> {
-    let display = crate::join_display_path(ir_path, prefix);
-    let display = if prefix.is_empty() { ir_path } else { &display };
-    let unreadable = |e| crate::StopReason::UnreadableFile(format!("{display}: {e}"));
-    for entry in std::fs::read_dir(dir).map_err(unreadable)? {
-        let entry = entry.map_err(unreadable)?;
-        let path = entry.path();
-        let name = entry.file_name().to_string_lossy().to_string();
-        let relative_path = crate::join_display_path(prefix, &name);
-        let entry_display = crate::join_display_path(ir_path, &relative_path);
-        let entry_error = |e| crate::StopReason::UnreadableFile(format!("{entry_display}: {e}"));
-        let file_type = entry.file_type().map_err(entry_error)?;
-        let (is_dir, is_file) = if file_type.is_symlink() {
-            let metadata = std::fs::metadata(&path).map_err(entry_error)?;
-            (false, metadata.is_file())
-        } else {
-            (file_type.is_dir(), file_type.is_file())
-        };
-        if is_dir && !name.starts_with('.') {
-            collect_ir_paths(&path, &relative_path, ir_path, paths)?;
-        } else if is_file && path.extension().is_some_and(|ext| ext == "md") {
-            paths.push((relative_path, path));
-        }
-    }
-    Ok(())
 }

@@ -9,6 +9,8 @@ tests:
   files:
     - "src/**/*.rs"
     - "crates/kotowari-core/**/*.rs"
+    - "crates/kotowari/**/*.rs"
+    - "crates/kotowari-source-analysis/**/*.rs"
     - "crates/kotowari-markdown-schema/**/*.rs"
     - "crates/kotowari-markdown-schema-io/**/*.rs"
     - "crates/kotowari-mds/**/*.rs"

@@ -344,11 +344,7 @@ fn prop_003_findings_are_sorted() {
             tmp.path().join("tests/check.rs"),
             "#[test]\nfn unmarked() {}\n",
         ).unwrap();
-        let (result, _) = kotowari_core::run_check(
-            tmp.path(),
-            kotowari_core::Format::Json,
-            None,
-        ).expect("run_check should succeed");
+        let result = kotowari::Project::new(kotowari::ProjectOptions::new(tmp.path())).unwrap().check().expect("run_check should succeed").presentation().clone();
         // findings が TBL-core-007 の順で並んでいることを検証する
         let findings = &result.findings;
         for i in 1..findings.len() {

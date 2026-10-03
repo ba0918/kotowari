@@ -1,0 +1,107 @@
+# kotowari-plan が書く計画書の書式（docs/ir/core/plan.md の REQ-core-192）
+#
+# 計画全体の節には文、番号の無い一覧とその子の一覧、表、コードブロックを置ける。
+# 番号付きの一覧と "### " 以下の見出しは宣言しないので、閉じた世界で指摘になる。
+# 節の並び順、ステップの番号の連番と重複、見出しの ":" の後の名前は検査しない。
+name: plan
+open: false
+reading: line
+document:
+  title: {}
+  sections:
+    - name: Goal
+      statement: { repeat: { min: 0 } }
+      bullets:
+        repeat: { min: 0 }
+        children:
+          bullets: { repeat: { min: 0 } }
+      table: { repeat: { min: 0 } }
+      codeblock: { repeat: { min: 0 } }
+    - name: Specification
+      statement: { repeat: { min: 0 } }
+      bullets:
+        repeat: { min: 0 }
+        children:
+          bullets: { repeat: { min: 0 } }
+      table: { repeat: { min: 0 } }
+      codeblock: { repeat: { min: 0 } }
+    - name: Approach and why
+      statement: { repeat: { min: 0 } }
+      bullets:
+        repeat: { min: 0 }
+        children:
+          bullets: { repeat: { min: 0 } }
+      table: { repeat: { min: 0 } }
+      codeblock: { repeat: { min: 0 } }
+    - name: Scope of change
+      statement: { repeat: { min: 0 } }
+      bullets:
+        repeat: { min: 0 }
+        children:
+          bullets: { repeat: { min: 0 } }
+      table: { repeat: { min: 0 } }
+      codeblock: { repeat: { min: 0 } }
+    - name: Step order and prerequisites
+      statement: { repeat: { min: 0 } }
+      bullets:
+        repeat: { min: 0 }
+        children:
+          bullets: { repeat: { min: 0 } }
+      table: { repeat: { min: 0 } }
+      codeblock: { repeat: { min: 0 } }
+    - name: Verification map
+      statement: { repeat: { min: 0 } }
+      bullets:
+        repeat: { min: 0 }
+        children:
+          bullets: { repeat: { min: 0 } }
+      table: { repeat: { min: 0 } }
+      codeblock: { repeat: { min: 0 } }
+    - name: Left to the implementer
+      statement: { repeat: { min: 0 } }
+      bullets:
+        repeat: { min: 0 }
+        children:
+          bullets: { repeat: { min: 0 } }
+      table: { repeat: { min: 0 } }
+      codeblock: { repeat: { min: 0 } }
+    - name: Stop conditions
+      statement: { repeat: { min: 0 } }
+      bullets:
+        repeat: { min: 0 }
+        children:
+          bullets: { repeat: { min: 0 } }
+      table: { repeat: { min: 0 } }
+      codeblock: { repeat: { min: 0 } }
+    - name: Test command
+      required: false
+      statement: { repeat: { min: 0 } }
+      bullets:
+        repeat: { min: 0 }
+        children:
+          bullets: { repeat: { min: 0 } }
+      table: { repeat: { min: 0 } }
+      codeblock: { repeat: { min: 0 } }
+    - name: Out of scope
+      statement: { repeat: { min: 0 } }
+      bullets:
+        repeat: { min: 0 }
+        children:
+          bullets: { repeat: { min: 0 } }
+      table: { repeat: { min: 0 } }
+      codeblock: { repeat: { min: 0 } }
+    - name: Steps
+      item:
+        id: "^S[0-9]+$"
+        repeat: { min: 1 }
+        ordered: true
+        fields:
+          - name: Purpose
+          - name: Specification
+          - name: Prerequisites
+          - name: May change
+          - name: Done when
+          - name: Shown by
+            pattern: "^(test|check|artifact|external)(\\s|$)"
+          - name: Left to the implementer
+          - name: Stop and hand back if

@@ -74,7 +74,11 @@ fi
 
 # 箇所と読んだ版と従う製品を1行ずつ並べる。製品の版に従う宣言のすべて
 declarations="crates/kotowari-core/Cargo.toml [package] version	$(manifest_version crates/kotowari-core/Cargo.toml)	kotowari
+crates/kotowari/Cargo.toml [package] version	$(manifest_version crates/kotowari/Cargo.toml)	kotowari
+crates/kotowari-source-analysis/Cargo.toml [package] version	$(manifest_version crates/kotowari-source-analysis/Cargo.toml)	kotowari
 Cargo.lock kotowari	$(lock_version Cargo.lock kotowari)	kotowari
+Cargo.lock kotowari-cli	$(lock_version Cargo.lock kotowari-cli)	kotowari
+Cargo.lock kotowari-source-analysis	$(lock_version Cargo.lock kotowari-source-analysis)	kotowari
 Cargo.lock kotowari-core	$(lock_version Cargo.lock kotowari-core)	kotowari
 Cargo.lock kotowari-markdown-schema	$(lock_version Cargo.lock kotowari-markdown-schema)	kotowari-mds
 crates/kotowari-markdown-schema-io/Cargo.toml [package] version	$(manifest_version crates/kotowari-markdown-schema-io/Cargo.toml)	kotowari-mds

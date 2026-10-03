@@ -51,10 +51,11 @@ fn enabled_check_groups_must_be_provided_even_when_empty() {
     inputs.read.adr = Some(vec![]);
     inputs.read.config.guides.files = vec!["guides/**".into()];
     inputs.read.config.surface.rules = vec!["rules.yaml".into()];
+    inputs.read.config.surface.files = vec!["src/**".into()];
     inputs.read.config.surface.unspecified = Some("unspecified.yaml".into());
     inputs.read.config.changes = Some(kotowari_core::config::ChangesConfig {
-        files: vec![],
-        records: vec![],
+        files: vec!["src/**".into()],
+        records: vec!["changes/**".into()],
         exclude: vec![],
     });
     for group in 0..4 {
@@ -98,6 +99,7 @@ fn supplied_analysis_preserves_diagnostics_counts_and_duplicate_suppression() {
         findings: vec![diagnostic.clone()],
     }]);
     inputs.read.config.surface.rules = vec!["rules.yaml".into()];
+    inputs.read.config.surface.files = vec!["src/**".into()];
     inputs.surface = Some(vec![SurfaceAnalysis {
         source,
         language: Some("rust".into()),
@@ -161,6 +163,7 @@ fn enabled_guide_and_surface_inputs_are_evaluated_without_acquisition() {
         SourceText::new("guides/memory.md", "<!-- @kotowari[REQ-001:12345678] -->\n").unwrap(),
     ]);
     inputs.read.config.surface.rules = vec!["rules.yaml".into()];
+    inputs.read.config.surface.files = vec!["src/**".into()];
     inputs.surface = Some(vec![SurfaceAnalysis {
         source: SourceText::new("src/memory.rs", "anything").unwrap(),
         language: Some("rust".into()),
@@ -326,4 +329,20 @@ fn same_text_shared_between_guides_and_tests_uses_the_overlap_rule() {
         }
         _ => panic!("expected the existing guide/test overlap error"),
     }
+}
+
+// @kotowari[REQ-core-312, EX-core-484]
+#[test]
+fn invalid_typed_configuration_is_an_execution_failure_not_a_completed_inspection() {
+    use kotowari_core::{CheckInputs, InputError, Inspection};
+    let mut inputs = CheckInputs::default();
+    inputs.read.ir = Some(vec![]);
+    inputs.read.records = Some(vec![]);
+    inputs.read.adr = Some(vec![]);
+    inputs.read.config.tests.files = vec!["[".into()];
+    inputs.read.tests = Some(vec![]);
+    assert!(matches!(
+        Inspection::build(inputs),
+        Err(InputError::ConfigError(_))
+    ));
 }

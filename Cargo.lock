@@ -660,6 +660,20 @@ name = "kotowari"
 version = "0.3.0"
 dependencies = [
  "assert_cmd",
+ "globset",
+ "kotowari-core",
+ "kotowari-source-analysis",
+ "serde_json",
+ "tempfile",
+ "walkdir",
+]
+
+[[package]]
+name = "kotowari-cli"
+version = "0.3.0"
+dependencies = [
+ "assert_cmd",
+ "kotowari",
  "kotowari-core",
  "proptest",
  "serde-saphyr",
@@ -671,9 +685,6 @@ dependencies = [
 name = "kotowari-core"
 version = "0.3.0"
 dependencies = [
- "ast-grep-config",
- "ast-grep-core",
- "ast-grep-language",
  "globset",
  "kotowari-markdown-schema",
  "markdown",
@@ -682,7 +693,6 @@ dependencies = [
  "serde-saphyr",
  "serde_json",
  "sha2",
- "walkdir",
 ]
 
 [[package]]
@@ -724,6 +734,23 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
+]
+
+[[package]]
+name = "kotowari-source-analysis"
+version = "0.3.0"
+dependencies = [
+ "ast-grep-config",
+ "ast-grep-core",
+ "ast-grep-language",
+ "globset",
+ "kotowari-core",
+ "regex",
+ "serde",
+ "serde-saphyr",
+ "serde_json",
+ "tempfile",
+ "walkdir",
 ]
 
 [[package]]
