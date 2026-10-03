@@ -3,10 +3,21 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import tomllib
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PACKAGES = ["kotowari", "kotowari-core", "kotowari-source-analysis", "kotowari-markdown-schema", "kotowari-markdown-schema-io", "kotowari-mds"]
+
+
+def version(root, family):
+    path = "Cargo.toml" if family == "kotowari" else "crates/kotowari-markdown-schema/Cargo.toml"
+    return tomllib.loads((root / path).read_text())["package"]["version"]
+
+
+def next_patch(current):
+    major, minor, patch = current.split(".")
+    return f"{major}.{minor}.{int(patch) + 1}"
 
 
 class VersionChecks(unittest.TestCase):
@@ -43,7 +54,8 @@ class VersionChecks(unittest.TestCase):
                 root = pathlib.Path(temporary)
                 self.fixture(root)
                 manifest = root / "crates" / name / "Cargo.toml"
-                manifest.write_text(manifest.read_text().replace('version = "0.3.0"', 'version = "0.3.1"', 1))
+                baseline = version(root, "kotowari")
+                manifest.write_text(manifest.read_text().replace(f'version = "{baseline}"', f'version = "{next_patch(baseline)}"', 1))
                 result = subprocess.run(["bash", str(root / "scripts/check-versions.sh")], capture_output=True, text=True)
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
 
@@ -52,19 +64,20 @@ class VersionChecks(unittest.TestCase):
             root = pathlib.Path(temporary)
             self.fixture(root)
             manifest = root / "crates/kotowari-core/Cargo.toml"
-            manifest.write_text(manifest.read_text().replace('version = "0.1.0"', 'version = "0.1.1"'))
+            baseline = version(root, "kotowari-mds")
+            manifest.write_text(manifest.read_text().replace(f'version = "{baseline}"', f'version = "{next_patch(baseline)}"'))
             result = subprocess.run(["bash", str(root / "scripts/check-versions.sh")], capture_output=True)
             self.assertEqual(result.returncode, 1)
 
     def test_family_transformation_updates_incoming_edges_and_retains_the_other_family(self):
-        import tomllib
-        for family, version in [("kotowari", "0.3.1"), ("kotowari-mds", "0.1.1")]:
+        for family in ["kotowari", "kotowari-mds"]:
             with self.subTest(family=family), tempfile.TemporaryDirectory() as temporary:
                 root = pathlib.Path(temporary)
                 self.fixture(root)
+                target_version = next_patch(version(root, family))
                 original = {p: p.read_bytes() for p in root.rglob("Cargo.toml")}
                 command = 'source "$1"; update_versions "$2" "$3" "$4"'
-                result = subprocess.run(["bash", "-c", command, "fixture", str(ROOT / "scripts/release.sh"), str(root), family, version], capture_output=True, text=True)
+                result = subprocess.run(["bash", "-c", command, "fixture", str(ROOT / "scripts/release.sh"), str(root), family, target_version], capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 series = {"kotowari-cli", "kotowari", "kotowari-core", "kotowari-source-analysis"}
                 if family == "kotowari-mds":
@@ -72,13 +85,10 @@ class VersionChecks(unittest.TestCase):
                 for path in original:
                     before = tomllib.loads(original[path].decode())
                     after = tomllib.loads(path.read_text())
-                    expected = version if before["package"]["name"] in series else before["package"]["version"]
+                    expected = target_version if before["package"]["name"] in series else before["package"]["version"]
                     self.assertEqual(after["package"]["version"], expected)
                 check = subprocess.run(["bash", str(root / "scripts/check-versions.sh")], capture_output=True, text=True)
                 self.assertEqual(check.returncode, 0, check.stdout + check.stderr)
-                for path, content in original.items():
-                    path.write_bytes(content)
-                self.assertEqual({p: p.read_bytes() for p in original}, original)
 
 
 if __name__ == "__main__":
