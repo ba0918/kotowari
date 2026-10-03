@@ -449,7 +449,7 @@
         {
           "path": "crates/kotowari-markdown-schema/tests/library.rs",
           "before": "sha256:927863de1d16b35e44c759346c1c9731412728c329718eaaccec96188ac82c7b",
-          "after": "sha256:c5936785b6616d3a2460ae591430ccdfad68004b64aaa57bac8c037a4c83b776"
+          "after": "sha256:4dd9cdd19215e6214639b11648096bab561e8f46aad0666c67609efb745d5d39"
         },
         {
           "path": "crates/kotowari-markdown-schema/tests/properties.rs",
