@@ -10,6 +10,27 @@ PACKAGES = ["kotowari", "kotowari-core", "kotowari-source-analysis", "kotowari-m
 
 
 class VersionChecks(unittest.TestCase):
+    def test_failed_release_restores_every_manifest_lock_and_changelog_without_a_tag(self):
+        import re
+        for family in ['kotowari', 'kotowari-mds']:
+            with self.subTest(family=family), tempfile.TemporaryDirectory() as temporary:
+                root = pathlib.Path(temporary)
+                self.fixture(root)
+                changelog = 'CHANGELOG.md' if family == 'kotowari' else 'crates/kotowari-markdown-schema/CHANGELOG.md'
+                (root / changelog).write_text('original changelog\n')
+                files = ['Cargo.toml', 'Cargo.lock', changelog] + [f'crates/{name}/Cargo.toml' for name in PACKAGES]
+                original = {path: (root / path).read_bytes() for path in files}
+                for args in [['init', '-q'], ['add', '--', *files], ['-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture']]:
+                    subprocess.run(['git', *args], cwd=root, check=True, capture_output=True)
+                script = (ROOT / 'scripts/release.sh').read_text()
+                restore = re.search(r'(?ms)^restore\(\) \{.*?^\}', script).group()
+                command = 'source "$1"; update_versions . "$2" "9.9.9"; printf changed > "$3"; ' + restore + '\ndone_ok=0; tag=never-created; start_head=$(git rev-parse HEAD); written=("${@:4}"); restore'
+                result = subprocess.run(['bash', '-c', command, 'fixture', str(ROOT / 'scripts/release.sh'), family, changelog, *files], cwd=root, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual({p: (root / p).read_bytes() for p in files}, original)
+                self.assertEqual(subprocess.check_output(['git', 'tag', '--list'], cwd=root), b'')
+                self.assertEqual(subprocess.check_output(['git', 'status', '--porcelain', '--', *files], cwd=root), b'')
+
     def fixture(self, root):
         for path in ["Cargo.toml", "Cargo.lock", "scripts/check-versions.sh", "scripts/release.sh"] + [f"crates/{name}/Cargo.toml" for name in PACKAGES]:
             destination = root / path
