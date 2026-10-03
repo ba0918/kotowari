@@ -23,6 +23,7 @@ Position: Plan draft prepared for parent-owned independent review and approval. 
   - rejected: cargo package --list alone; publish --dry-run against unavailable registry versions; patching manifests to point back at the working tree; installing an unapproved registry tool.
   - decided_by: Plan author under [D1](./2026-10-03-public-crate-api.md#D1)
 - A4 Move the four embedded YAML schemas into crates/kotowari-core/schemas and retain their former .kotowari/schemas paths as relative symlinks to the canonical files.
+  - superseded_by: [A11 canonical review paths without legacy links](#A11)
   - why: [A46](./2026-10-03-public-crate-api.md#A46) forbids package-external embedded assets and duplicate content. Existing review instructions in [the form contract](../../ir/core/form-contract.md) and [IR documents](../../ir/core/ir-document.md) name the old paths. Links preserve those read paths without copying bytes or revising approved IR. The package contains regular canonical files and does not rely on the links.
   - decided_by: Plan author under [D1](./2026-10-03-public-crate-api.md#D1)
 - A5 Split existing mixed test files by responsibility. Keep process-level CLI tests with their binary package; move library tests to their owning package and keep private-helper tests inside private modules. Make hooks and automation select the full workspace explicitly.
@@ -49,7 +50,16 @@ Position: Plan draft prepared for parent-owned independent review and approval. 
   - why: A shared scheduler crate would violate the seven-package graph. Moving the permit into the worker preserves the bound after caller cancellation. Semaphore-queued runtime shutdown supplies an observable task submission failure without fabricating an unreachable error. Private RawSchema validation prevents unchecked deserialization; read-only wrappers reuse existing algorithms and preserve lower-level type identity without exposing third-party parser types.
   - decided_by: Implementer within [D1](./2026-10-03-public-crate-api.md#D1).
 
+## Agreements
+
+- A11 Remove the four legacy schema symlinks and update only the schema-location text in the verification references of [REQ-core-179](../../ir/core/form-contract.md#REQ-core-179) and [REQ-core-041](../../ir/core/ir-document.md#REQ-core-041) to the canonical crates/kotowari-core/schemas paths.
+  - why: The selected legacy symlinks make the required branch snapshot stop under the existing [REQ-core-266](../../ir/core/changes-inputs.md#REQ-core-266) unsupported-mode rule. Removing them keeps one canonical copy of the original schema bytes and preserves symlink rejection, change selection, exclusions and all gates. The user expressly authorized only these two verification-reference path updates, without changing requirement behavior or unrelated overview.yaml references.
+  - rejected: accepting changed selected symlinks; adding change exclusions; maintaining duplicate schema contents.
+  - decided_by: User, accepting the parent's narrow legacy-path correction request.
+
 ## Revisions
+
+The user adopted A11 to supersede A4's legacy-link layout after the whole-branch snapshot stopped on selected symlink modes. Only the two named verification-method path references are relaxed from the earlier approved-IR edit prohibition; all requirement behavior and the fixed comparison base remain unchanged.
 
 The parent adopted A8 after implementation reached the package gate. A8 supersedes A3's operational staging prescription, while retaining its artifact and consumer verification obligations. The fixed branch-wide comparison base from A6 remains unchanged. Standalone validation is still mandatory; archive creation alone is not a completion claim.
 
