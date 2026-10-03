@@ -774,7 +774,7 @@
         {
           "path": "scripts/tests/test_public_crate_versions.py",
           "before": null,
-          "after": "sha256:4b5bc423f217d0db527e10a5d3821b31188528cd3a4370948d581c3389399f1a"
+          "after": "sha256:26f118961376441b5a6f48962b4e3dd6bb669259080daa5fc092ddc3926ac6ec"
         },
         {
           "path": "src/cli.rs",
