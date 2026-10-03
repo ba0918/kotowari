@@ -68,6 +68,22 @@ pub fn check_analysis(
     unspecified: &[crate::SourceText],
     findings: &mut Vec<Finding>,
 ) -> Result<SurfaceTally, StopReason> {
+    check_entries(
+        analysis.iter(),
+        docs,
+        unspecified
+            .iter()
+            .map(|source| (source.path(), source.text())),
+        findings,
+    )
+}
+
+pub fn check_entries<'a>(
+    analysis: impl IntoIterator<Item = &'a crate::SurfaceAnalysis>,
+    docs: &[IrDocument],
+    unspecified: impl IntoIterator<Item = (&'a str, &'a str)>,
+    findings: &mut Vec<Finding>,
+) -> Result<SurfaceTally, StopReason> {
     let mut surfaces = Vec::new();
     for file in analysis {
         surfaces.extend(file.surfaces.iter().cloned());
@@ -83,14 +99,14 @@ pub fn check_analysis(
         }
     }
     let mut list = UnspecifiedList::default();
-    for source in unspecified {
-        list.path = source.path().to_owned();
-        for item in &crate::config::read_yaml_sequence(source.text(), source.path())? {
+    for (path, text) in unspecified {
+        list.path = path.to_owned();
+        for item in &crate::config::read_yaml_sequence(text, path)? {
             match read_entry(item) {
                 Some(entry) => list.entries.push(entry),
                 None => list.findings.push(Finding::new(
                     FindingKind::SurfaceUnspecifiedInvalid,
-                    source.path().to_owned(),
+                    path.to_owned(),
                     None,
                     written_detail(item),
                 )),

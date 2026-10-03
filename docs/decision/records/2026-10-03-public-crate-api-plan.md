@@ -64,6 +64,13 @@ Position: Plan draft prepared for parent-owned independent review and approval. 
   - rejected: treating doc-hidden signatures as private; exposing a replacement result constructor; changing path normalization or JSON output contracts; removing Serialize from legitimate public values solely because the CLI uses its own conversion.
   - decided_by: Implementer within [D1](./2026-10-03-public-crate-api.md#D1), applying [A40](./2026-10-03-public-crate-api.md#A40) and [V3](./2026-10-03-public-crate-api.md#V3).
 
+## Agreements
+
+- A13 Retain lossless native source provenance separately from each producer's display and rule path. Route logical and native input adaptation through shared core admission, phase calculations and immutable assembly, with opaque text-only preparation between acquisition steps.
+  - why: Reproducible execution of the fixed BASE accepts distinct Unix tests/a\b.rs and tests/a/b.rs and guides/a\b.md and guides/a/b.md with equal displayed paths, two tests and two guides. A display string or canonical analysis.source path therefore cannot identify the original source. Native duplicates and conflicting text must use original provenance while preserving those counts, spellings and matching. Early parsing and guide overlap must retain their stops before later acquisition failures.
+  - rejected: collapsing native provenance into SourceText; ignoring native duplicate or original-text checks; independent native calculation policy; arbitrary finished-report construction.
+  - decided_by: Parent adjudication under [D1](./2026-10-03-public-crate-api.md#D1), approving the demonstrated BASE-compatible distinction.
+
 ## Revisions
 
 The user adopted A11 to supersede A4's legacy-link layout after the whole-branch snapshot stopped on selected symlink modes. Only the two named verification-method path references are relaxed from the earlier approved-IR edit prohibition; all requirement behavior and the fixed comparison base remain unchanged.
@@ -83,3 +90,7 @@ The parent adopted A8 after implementation reached the package gate. A8 supersed
 | Contract verification | Adopt existing Rust integration tests, proptest, tempfile, assert_cmd and loopback HTTP helpers; split ownership and extend only missing behavior. |
 | Packaging | Adopt Cargo package/vendor and Python standard-library tarfile, hashlib, json, tomllib and subprocess; build a small repository helper to connect them and verify resolution evidence. |
 | Version and release preparation | Extend existing check-versions.sh, release.sh, mutants.sh and workflow mappings; preserve the two existing version authorities. |
+| Shared input admission | Adopt Config::validated, existing required-group rules and standard BTreeMap/BTreeSet; select enabled groups once and retain original text by identity. |
+| Native provenance | Build a small typed PathBuf/text/display value using the standard library; neither canonical logical paths nor lossy producer display strings retain native identity. |
+| Interleaved calculation | Adopt existing parse_document, context_from_entries, test/check algorithms and result builders; expose opaque preparation only for the acquisition phases that already exist. |
+| Overlap preflight | Extract and reuse the existing pure byte-ordered overlap rule before guide reads and at raw-input admission; no new validator or dependency. |

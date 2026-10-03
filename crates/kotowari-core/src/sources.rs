@@ -418,18 +418,6 @@ pub fn is_under_place(path: &str, place: &str) -> bool {
             && path.as_bytes()[place.len()] == b'/')
 }
 
-pub(crate) fn context_from_texts(
-    config: &crate::config::Config,
-    records: &[crate::SourceText],
-    adr: &[crate::SourceText],
-) -> SourceContext {
-    context_from_entries(
-        config,
-        records.iter().map(|source| (source.path(), source.text())),
-        adr.iter().map(|source| (source.path(), source.text())),
-    )
-}
-
 pub fn context_from_entries<'a>(
     config: &crate::config::Config,
     records: impl IntoIterator<Item = (&'a str, &'a str)>,

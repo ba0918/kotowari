@@ -7,7 +7,7 @@ use walkdir::WalkDir;
 pub fn collect_files(
     base: &Path,
     patterns: &[String],
-) -> Result<Vec<(String, String)>, kotowari_core::StopReason> {
+) -> Result<Vec<(String, std::path::PathBuf)>, kotowari_core::StopReason> {
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
         // glob の構文は Config::parse で検証済み
@@ -70,7 +70,7 @@ pub fn collect_files(
         if is_file {
             let rel = relative_to(base, entry.path());
             if globset.is_match(&rel) {
-                files.push((rel, entry.path().to_string_lossy().to_string()));
+                files.push((rel, entry.path().to_path_buf()));
             }
         }
     }
@@ -117,7 +117,7 @@ pub fn read_rules(
 pub fn analyze(
     base: &Path,
     config: &kotowari_core::config::Config,
-) -> Result<Vec<(String, kotowari_core::TestAnalysis)>, kotowari_core::StopReason> {
+) -> Result<Vec<kotowari_core::NativeTestAnalysis>, kotowari_core::StopReason> {
     let files = collect_files(base, &config.tests.files)?;
     let analyzer = kotowari_source_analysis::Analyzer::new(
         config.clone(),
@@ -125,20 +125,21 @@ pub fn analyze(
         vec![],
     )
     .map_err(|error| kotowari_core::StopReason::ConfigError(error.detail().into()))?;
-    let analysis = files
-        .iter()
+    files
+        .into_iter()
         .map(|(path, absolute)| {
-            let text = crate::acquisition::read_utf8_file(Path::new(absolute), path)?;
+            let text = crate::acquisition::read_utf8_file(&absolute, &path)?;
+            let original =
+                kotowari_core::NativeSourceText::new(absolute, path.clone(), text.clone());
             let source = kotowari_core::SourceText::new(path.clone(), text)
                 .map_err(|error| kotowari_core::StopReason::MappingError(error.to_string()))?;
             analyzer
-                .tests_at(source, path)
+                .tests_at(source, &path)
+                .map(|analysis| kotowari_core::NativeTestAnalysis {
+                    source: original,
+                    analysis,
+                })
                 .map_err(|error| kotowari_core::StopReason::ConfigError(error.detail().into()))
         })
-        .collect::<Result<Vec<_>, _>>()?;
-    Ok(files
-        .into_iter()
-        .zip(analysis)
-        .map(|((path, _), file)| (path, file))
-        .collect())
+        .collect()
 }

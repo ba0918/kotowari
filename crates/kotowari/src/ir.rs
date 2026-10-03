@@ -67,21 +67,20 @@ fn collect_ir_paths(
     Ok(())
 }
 
-pub fn read_texts(
+pub fn prepare(
     base: &Path,
     config: &Config,
-) -> Result<Vec<(String, String)>, kotowari_core::StopReason> {
+) -> Result<kotowari_core::RepositoryReadPreparation, kotowari_core::StopReason> {
     let mut entries = Vec::new();
     collect_ir_paths(&base.join(&config.ir), "", &config.ir, &mut entries)?;
     entries.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
-    entries
-        .into_iter()
-        .map(|(path, absolute)| {
-            let text = read_utf8_file(
-                &absolute,
-                &kotowari_core::join_display_path(&config.ir, &path),
-            )?;
-            Ok((path, text))
-        })
-        .collect()
+    let mut preparation = kotowari_core::RepositoryReadPreparation::new(config.clone())?;
+    for (path, absolute) in entries {
+        let text = read_utf8_file(
+            &absolute,
+            &kotowari_core::join_display_path(&config.ir, &path),
+        )?;
+        preparation.push_ir(kotowari_core::NativeSourceText::new(absolute, path, text))?;
+    }
+    Ok(preparation)
 }

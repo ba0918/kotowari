@@ -5,8 +5,8 @@ pub fn analyze(
     cfg: &Config,
 ) -> Result<
     (
-        Option<Vec<kotowari_core::SurfaceAnalysis>>,
-        Option<Vec<SourceText>>,
+        Option<Vec<kotowari_core::NativeSurfaceAnalysis>>,
+        Option<Vec<kotowari_core::NativeSourceText>>,
     ),
     StopReason,
 > {
@@ -25,7 +25,8 @@ pub fn analyze(
         if !analyzer.supports_surfaces(&path) {
             continue;
         }
-        let text = crate::acquisition::read_utf8_file(Path::new(&absolute), &path)?;
+        let text = crate::acquisition::read_utf8_file(&absolute, &path)?;
+        let original = kotowari_core::NativeSourceText::new(absolute, path.clone(), text.clone());
         let source = SourceText::new(path.clone(), text)
             .map_err(|error| StopReason::MappingError(error.to_string()))?;
         let mut file = analyzer
@@ -37,15 +38,19 @@ pub fn analyze(
         for finding in &mut file.findings {
             *finding = Finding::new(finding.kind(), path.clone(), finding.line(), path.clone());
         }
-        analysis.push(file);
+        analysis.push(kotowari_core::NativeSurfaceAnalysis {
+            source: original,
+            analysis: file,
+        });
     }
     let mut unspecified = vec![];
     if let Some(path) = &cfg.surface.unspecified {
         let text = crate::acquisition::read_utf8_file(&base.join(path), path)?;
-        unspecified.push(
-            SourceText::new(path.clone(), text)
-                .map_err(|error| StopReason::MappingError(error.to_string()))?,
-        );
+        unspecified.push(kotowari_core::NativeSourceText::new(
+            base.join(path),
+            path.clone(),
+            text,
+        ));
     }
     Ok((Some(analysis), Some(unspecified)))
 }

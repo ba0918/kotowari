@@ -213,16 +213,10 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<ReadModel, Sto
         }
     }
 
-    let ir = ir::read_texts(&base, &cfg)?;
+    let preparation = ir::prepare(&base, &cfg)?;
     let (records, adr) = sources::read_texts(&base, &cfg)?;
     let tests = tests_discovery::analyze(&base, &cfg)?;
-    ReadModel::build_repository(RepositoryReadInputs {
-        config: cfg,
-        ir,
-        records,
-        adr,
-        tests,
-    })
+    preparation.finish(records, adr, tests)
 }
 
 /// check と status の読み取り: `load_all` に続けて`ガイド`と`面`を読み、その`指摘`を足す
@@ -230,13 +224,12 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<ReadModel, Sto
 pub fn load_with_guides(cwd: &Path, config_path: Option<&Path>) -> Result<Inspection, StopReason> {
     let read = load_all(cwd, config_path)?;
     let base = find_base(cwd);
-    let changes = change_records::read_texts(&base, read.config())?;
-    let guides = guides::read_texts(&base, read.config())?;
-    let (surface, unspecified) = surface::analyze(&base, read.config())?;
-    read.inspect_repository(RepositoryCheckInputs {
-        changes,
-        guides,
-        surface,
-        unspecified,
-    })
+    let mut preparation = read.prepare_repository_inspection();
+    let changes = change_records::read_texts(&base, preparation.config())?;
+    preparation.changes(changes)?;
+    let guides = guides::read_texts(&base, &preparation)?;
+    preparation.guides(guides)?;
+    let (surface, unspecified) = surface::analyze(&base, preparation.config())?;
+    preparation.surface(surface, unspecified)?;
+    preparation.finish()
 }

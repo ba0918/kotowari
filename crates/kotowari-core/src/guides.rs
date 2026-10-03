@@ -49,20 +49,6 @@ fn fingerprints_by_id(docs: &[IrDocument]) -> BTreeMap<&str, Vec<String>> {
     by_id
 }
 
-pub(crate) fn check_texts(
-    files: &[crate::SourceText],
-    test_files: &[String],
-    docs: &[IrDocument],
-    findings: &mut Vec<Finding>,
-) -> Result<GuideTally, StopReason> {
-    check_entries(
-        files.iter().map(|source| (source.path(), source.text())),
-        test_files,
-        docs,
-        findings,
-    )
-}
-
 pub fn check_entries<'a>(
     files: impl IntoIterator<Item = (&'a str, &'a str)>,
     test_files: &[String],
@@ -70,16 +56,7 @@ pub fn check_entries<'a>(
     findings: &mut Vec<Finding>,
 ) -> Result<GuideTally, StopReason> {
     let files: Vec<_> = files.into_iter().collect();
-    let mut paths: Vec<_> = files.iter().map(|(path, _)| *path).collect();
-    paths.sort();
-    if let Some(overlap) = paths
-        .into_iter()
-        .find(|path| test_files.binary_search(&path.to_string()).is_ok())
-    {
-        return Err(StopReason::ConfigError(format!(
-            "{overlap}: matched by both guides.files and tests.files"
-        )));
-    }
+    validate_overlap(files.iter().map(|(path, _)| *path), test_files)?;
     let mut entries = Vec::new();
     for (path, text) in &files {
         read_marks(path, text, &mut entries, findings);
@@ -89,6 +66,23 @@ pub fn check_entries<'a>(
         files: files.len(),
         marks: entries.len(),
     })
+}
+
+pub fn validate_overlap<'a>(
+    paths: impl IntoIterator<Item = &'a str>,
+    test_files: &[String],
+) -> Result<(), StopReason> {
+    let tests: std::collections::BTreeSet<_> = test_files.iter().map(String::as_str).collect();
+    if let Some(overlap) = paths
+        .into_iter()
+        .filter(|path| tests.contains(path))
+        .min_by(|a, b| a.as_bytes().cmp(b.as_bytes()))
+    {
+        return Err(StopReason::ConfigError(format!(
+            "{overlap}: matched by both guides.files and tests.files"
+        )));
+    }
+    Ok(())
 }
 
 /// REQ-core-204: どの`項目`と`シナリオ`の`指紋`とも同じでない1件ごとに guide_stale を出す。

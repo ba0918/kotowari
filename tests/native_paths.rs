@@ -4,6 +4,64 @@ use std::fs;
 
 // @kotowari[REQ-core-313, EX-core-485]
 #[test]
+fn distinct_native_files_with_equal_display_paths_keep_both_counts_and_findings() {
+    let project = tempfile::tempdir().unwrap();
+    for dir in [
+        ".kotowari",
+        "docs/ir",
+        "docs/decision/records",
+        "docs/decision/adr",
+        "tests/a",
+        "guides/a",
+    ] {
+        fs::create_dir_all(project.path().join(dir)).unwrap();
+    }
+    fs::write(
+        project.path().join(".kotowari/config.yaml"),
+        "tests:\n  files: ['tests/**']\nguides:\n  files: ['guides/**']\n",
+    )
+    .unwrap();
+    for (path, text) in [
+        ("tests/a\\b.rs", "#[test]\nfn first() {}\n"),
+        ("tests/a/b.rs", "#[test]\nfn second() {}\n"),
+        ("guides/a\\b.md", "first\n"),
+        ("guides/a/b.md", "second\n"),
+    ] {
+        fs::write(project.path().join(path), text).unwrap();
+    }
+    let output = Command::cargo_bin("kotowari")
+        .unwrap()
+        .args(["check", "--format", "json"])
+        .current_dir(project.path())
+        .output()
+        .unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["tests"]["rs"]["files"], 2);
+    assert_eq!(value["guides"]["files"], 2);
+    let findings = value["findings"].as_array().unwrap();
+    assert_eq!(findings.len(), 2, "{value}");
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding["detail"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["first", "second"]
+    );
+    assert!(
+        findings.iter().all(
+            |finding| finding["path"] == "tests/a/b.rs" && finding["kind"] == "test_without_id"
+        )
+    );
+}
+
+// @kotowari[REQ-core-313, EX-core-485]
+#[test]
 fn acquired_diagnostic_paths_do_not_collapse_filename_components() {
     let project = tempfile::tempdir().unwrap();
     for dir in [

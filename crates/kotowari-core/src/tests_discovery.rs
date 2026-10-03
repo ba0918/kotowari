@@ -46,22 +46,6 @@ pub struct DiscoveredTests {
     pub files: Vec<String>,
 }
 
-pub(crate) fn check_analysis(
-    analysis: &[crate::TestAnalysis],
-    docs: &[IrDocument],
-    known_ids: &BTreeSet<String>,
-    ir_path: &str,
-    findings: &mut Vec<Finding>,
-) -> DiscoveredTests {
-    check_entries(
-        analysis.iter().map(|file| (file.source.path(), file)),
-        docs,
-        known_ids,
-        ir_path,
-        findings,
-    )
-}
-
 pub fn check_entries<'a>(
     analysis: impl IntoIterator<Item = (&'a str, &'a crate::TestAnalysis)>,
     docs: &[IrDocument],

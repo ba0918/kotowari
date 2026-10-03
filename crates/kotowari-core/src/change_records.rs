@@ -328,22 +328,6 @@ pub fn glob(patterns: &[String]) -> globset::GlobSet {
     builder.build().expect("validated globs")
 }
 
-pub(crate) fn check_texts(
-    texts: &[crate::SourceText],
-    cfg: &Config,
-    docs: &[ir::IrDocument],
-    context: &crate::sources::SourceContext,
-    findings: &mut Vec<Finding>,
-) {
-    check_entries(
-        texts.iter().map(|source| (source.path(), source.text())),
-        cfg,
-        docs,
-        context,
-        findings,
-    )
-}
-
 pub fn check_entries<'a>(
     texts: impl IntoIterator<Item = (&'a str, &'a str)>,
     cfg: &Config,

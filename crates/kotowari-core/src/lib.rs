@@ -42,9 +42,10 @@ pub mod guides;
 mod inputs;
 pub mod ir;
 pub use inputs::{
-    CheckInputs, CheckReport, InputError, Inspection, QueryReport, ReadInputs, ReadList, ReadModel,
-    RepositoryCheckInputs, RepositoryReadInputs, SourceText, StatusReport, SurfaceAnalysis,
-    TestAnalysis,
+    CheckInputs, CheckReport, InputError, Inspection, NativeSourceText, NativeSurfaceAnalysis,
+    NativeTestAnalysis, QueryReport, ReadInputs, ReadList, ReadModel, RepositoryCheckInputs,
+    RepositoryInspectionPreparation, RepositoryReadInputs, RepositoryReadPreparation, SourceText,
+    StatusReport, SurfaceAnalysis, TestAnalysis,
 };
 pub use ir::{IrOptions, ParsedIrDocument as IrDocument, ParsedItem};
 mod list;

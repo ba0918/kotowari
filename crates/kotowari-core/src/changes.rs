@@ -44,7 +44,8 @@ impl ChangeResult {
 pub fn inspect(snapshot: &Comparison, phase: Phase) -> Result<ChangeResult, crate::StopReason> {
     use crate::{change_records, ir, sources};
     use std::collections::BTreeMap;
-    let config = &snapshot.config;
+    let admitted_config = snapshot.config.clone().validated()?;
+    let config = &admitted_config;
     let content = |path: &str| {
         std::str::from_utf8(&snapshot.blobs[path].bytes)
             .map_err(|_| crate::StopReason::NonUtf8File(path.into()))

@@ -4,7 +4,7 @@ use kotowari_core::config::Config;
 fn collect_records(
     base: &std::path::Path,
     patterns: &[String],
-) -> Result<Vec<(String, String)>, kotowari_core::StopReason> {
+) -> Result<Vec<(String, std::path::PathBuf)>, kotowari_core::StopReason> {
     let records = glob(patterns);
     let hidden_prefixes: Vec<String> = patterns
         .iter()
@@ -56,7 +56,7 @@ fn collect_records(
             entry.file_type().is_file()
         };
         if is_file && records.is_match(&path) {
-            files.push((path, entry.path().to_string_lossy().into_owned()));
+            files.push((path, entry.path().to_path_buf()));
         }
     }
     files.sort();
@@ -66,15 +66,15 @@ fn collect_records(
 pub fn read_texts(
     base: &std::path::Path,
     cfg: &Config,
-) -> Result<Option<Vec<(String, String)>>, kotowari_core::StopReason> {
+) -> Result<Option<Vec<kotowari_core::NativeSourceText>>, kotowari_core::StopReason> {
     let Some(changes) = &cfg.changes else {
         return Ok(None);
     };
     collect_records(base, &changes.records)?
         .into_iter()
         .map(|(path, absolute)| {
-            let text = read_utf8_file(std::path::Path::new(&absolute), &path)?;
-            Ok((path, text))
+            let text = read_utf8_file(&absolute, &path)?;
+            Ok(kotowari_core::NativeSourceText::new(absolute, path, text))
         })
         .collect::<Result<Vec<_>, _>>()
         .map(Some)
