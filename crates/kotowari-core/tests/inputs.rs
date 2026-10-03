@@ -246,3 +246,84 @@ fn non_query_marker_facts_are_consumed_without_source_discovery() {
     );
     assert_eq!(inspection.status().tests().marks, 1);
 }
+
+// @kotowari[REQ-core-315, EX-core-488, EX-core-489]
+#[test]
+fn each_enabled_group_is_required_independently_and_empty_is_provided() {
+    use kotowari_core::{CheckInputs, InputError, Inspection};
+    let mut all = CheckInputs::default();
+    all.read.ir = Some(vec![]);
+    all.read.records = Some(vec![]);
+    all.read.adr = Some(vec![]);
+    all.read.tests = Some(vec![]);
+    all.read.config.guides.files = vec!["guides/**".into()];
+    all.read.config.surface.files = vec!["src/**".into()];
+    all.read.config.surface.rules = vec!["rules.yaml".into()];
+    all.read.config.surface.unspecified = Some("unspecified.yaml".into());
+    all.read.config.changes = Some(kotowari_core::config::ChangesConfig {
+        files: vec!["src/**".into()],
+        records: vec!["changes/**".into()],
+        exclude: vec![],
+    });
+    all.guides = Some(vec![]);
+    all.surface = Some(vec![]);
+    all.unspecified = Some(vec![]);
+    all.changes = Some(vec![]);
+    assert!(Inspection::build(all.clone()).is_ok());
+    for (index, expected) in [
+        "IR",
+        "records",
+        "ADR",
+        "test information",
+        "guides",
+        "surface analysis",
+        "unspecified surfaces",
+        "change records",
+    ]
+    .iter()
+    .enumerate()
+    {
+        let mut missing = all.clone();
+        match index {
+            0 => missing.read.ir = None,
+            1 => missing.read.records = None,
+            2 => missing.read.adr = None,
+            3 => missing.read.tests = None,
+            4 => missing.guides = None,
+            5 => missing.surface = None,
+            6 => missing.unspecified = None,
+            _ => missing.changes = None,
+        }
+        match Inspection::build(missing) {
+            Err(InputError::InputMissing(group)) => assert_eq!(group, *expected),
+            _ => panic!("expected missing {expected}"),
+        }
+    }
+}
+
+// @kotowari[REQ-core-315, REQ-core-322, EX-core-488, EX-core-489, EX-core-499]
+#[test]
+fn same_text_shared_between_guides_and_tests_uses_the_overlap_rule() {
+    use kotowari_core::{CheckInputs, InputError, Inspection, TestAnalysis};
+    let source = SourceText::new("shared.txt", "text").unwrap();
+    let mut inputs = CheckInputs::default();
+    inputs.read.ir = Some(vec![]);
+    inputs.read.records = Some(vec![]);
+    inputs.read.adr = Some(vec![]);
+    inputs.read.tests = Some(vec![TestAnalysis {
+        source: source.clone(),
+        language: None,
+        has_query: false,
+        tests: vec![],
+        line_markers: vec![],
+        findings: vec![],
+    }]);
+    inputs.read.config.guides.files = vec!["shared.txt".into()];
+    inputs.guides = Some(vec![source]);
+    match Inspection::build(inputs) {
+        Err(InputError::ConfigError(detail)) => {
+            assert!(detail.contains("shared.txt: matched by both"))
+        }
+        _ => panic!("expected the existing guide/test overlap error"),
+    }
+}
