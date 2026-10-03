@@ -1,5 +1,10 @@
 # mds
 
+The pure Rust API remains in `kotowari-markdown-schema`. The CLI now belongs to `kotowari-mds`, and acquisition belongs to `kotowari-markdown-schema-io`.
+Install the CLI from this source tree with `cargo install --path crates/kotowari-mds --bin kotowari-mds`; old tags retain their own package layouts.
+Use `extract_validated` for validated values, or `extract_partial` to retain values alongside findings.
+See the [API guide](https://github.com/ba0918/kotowari/blob/main/docs/guides/public-crate-api.md).
+
 Validate Markdown documents against a YAML schema declared in their own frontmatter, and
 extract structured values from them.
 
@@ -10,7 +15,7 @@ hands the contents back as JSON so that the rest of your tooling never has to pa
 ## Install
 
 ```console
-$ cargo install --git https://github.com/ba0918/kotowari kotowari-markdown-schema
+$ cargo install --git https://github.com/ba0918/kotowari --bin kotowari-mds kotowari-mds
 ```
 
 This installs the `kotowari-mds` command.

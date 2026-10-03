@@ -13,6 +13,8 @@ kotowari は、Markdown で書いた仕様（IR）を機械的に検査する CL
 | やりたいこと | 読むページ |
 |---|---|
 | コマンドの共通の書式、終了コード、止まったときの読み方を知る | [CLI（全コマンド共通）](cli.md) |
+| Rustから型付きAPIを呼ぶ | [公開クレートAPI](public-crate-api.md) |
+| 独立した配布アーカイブを検証する | [パッケージ検証](package-validation.md) |
 | 置き場やテストのファイルの場所を設定する | [設定ファイル](config.md) |
 | 仕様を検査して、指摘を直す | [kotowari check](commands/check.md) と [指摘の種類](findings.md) |
 | テストと要求を結び付ける | [テストに印を付ける](marks.md) |

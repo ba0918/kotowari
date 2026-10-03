@@ -5,6 +5,15 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING（Rust API・パッケージ構成）** 根を`kotowari-cli`に変更し、`kotowari`を明示した開始点から操作するライブラリに分離した。メモリ計算は`kotowari-core`、ソース解析は`kotowari-source-analysis`を使う。旧coreのCLI・取得APIを呼ぶコードは移行が必要。バイナリのコマンド、出力、終了コードは変わらない。
+
+### Added
+
+- 同期`Project`、保持して再利用する`ReadModel`・`Inspection`と、既定で無効な`tokio` featureの`AsyncProject`を追加した。
+- 7クレートの実際の配布アーカイブを独立したオフライン環境で検証する手順を追加した。版の番号と2製品の配布名は変更していない。
+
 ### Fixed
 
 - `kotowari` スキルのセットアップ手順に、判断の記録用ディレクトリへの `.gitkeep` 作成とコミット対象に含める指示を追加した。空ディレクトリが clone／worktree で失われ、`kotowari check` がエラーになるのを防ぐ。

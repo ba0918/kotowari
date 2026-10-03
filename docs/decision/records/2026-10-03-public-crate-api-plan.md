@@ -39,6 +39,16 @@ Position: Plan draft prepared for parent-owned independent review and approval. 
   - rejected: treating the diagnostic archives as already independently verified; copying working-tree packages into the source simulation; editing shipped manifests or regenerating a failing shipped lockfile.
   - decided_by: Parent adjudication after observing both staging failures and the successful native offline probe, within approved [D1](./2026-10-03-public-crate-api.md#D1).
 
+## Agreements
+
+- A9 Keep native filesystem spellings at the acquisition boundary and use canonical logical paths only for caller-provided memory input. Use private iterator boundaries to feed acquired source spellings to the shared calculations and rule matching without a public normalization switch.
+  - why: Existing walkers have different separator behavior. Canonicalizing a literal Unix backslash before source matching changes the existing source_invalid result and configured test-rule matching. The retained CLI regression and source/guide/change-record tests demonstrate that keeping each walker's established spelling preserves behavior, while memory-input tests continue to require canonical SourceText paths.
+  - rejected: imposing a new global normalization policy; duplicating validation; adding a public normalization mode.
+  - decided_by: Implementer within [D1](./2026-10-03-public-crate-api.md#D1).
+- A10 Keep a small private bounded blocking scheduler in each of the two async adapters, sharing a semaphore across clones and carrying its owned permit into the worker. Keep validated schema deserialization private and expose retained calculation results through read-only wrappers.
+  - why: A shared scheduler crate would violate the seven-package graph. Moving the permit into the worker preserves the bound after caller cancellation. Semaphore-queued runtime shutdown supplies an observable task submission failure without fabricating an unreachable error. Private RawSchema validation prevents unchecked deserialization; read-only wrappers reuse existing algorithms and preserve lower-level type identity without exposing third-party parser types.
+  - decided_by: Implementer within [D1](./2026-10-03-public-crate-api.md#D1).
+
 ## Revisions
 
 The parent adopted A8 after implementation reached the package gate. A8 supersedes A3's operational staging prescription, while retaining its artifact and consumer verification obligations. The fixed branch-wide comparison base from A6 remains unchanged. Standalone validation is still mandatory; archive creation alone is not a completion claim.

@@ -59,6 +59,11 @@ $ kotowari --version
 ```
 
 ## 最小の例
+現在のソースツリーでは、CLIパッケージは`kotowari-cli`と`kotowari-mds`です。
+チェックアウトから入れる場合は`cargo install --path . --bin kotowari`と`cargo install --path crates/kotowari-mds --bin kotowari-mds`を使います。
+上の旧タグの例は、そのタグにある旧パッケージ名を使っています。
+Rustからの呼出は[公開クレートAPI](docs/guides/public-crate-api.md)を参照してください。実行ファイルのコマンド、出力、終了コードは変わりません。
+
 
 既定では、設定や仕様、判断の記録を次の場所に置く。
 

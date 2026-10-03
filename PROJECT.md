@@ -2,16 +2,14 @@
 
 ## What this is
 
-A Cargo workspace holding three Rust packages:
+A Cargo workspace holding seven Rust packages. The root package is `kotowari-cli`; `crates/kotowari` owns acquisition and typed APIs, and `crates/kotowari-source-analysis` owns ast-grep analysis. The schema I/O and mds binary are separate packages at `crates/kotowari-markdown-schema-io` and `crates/kotowari-mds`.
 
-- `kotowari` at the repository root — the `kotowari` binary (`src/main.rs`). A normalised
+- `kotowari-cli` at the repository root — the `kotowari` binary (`src/main.rs`). A normalised
   specification (the IR) is written as Markdown and checked mechanically by `kotowari check`,
   with the read commands `list`, `query` and `status` and the mutation-test reader `mutants`
   beside it.
-- `crates/kotowari-core` — the `kotowari_core` library the root binary is built on. It is the
-  root package's only dependency inside the workspace.
-- `crates/kotowari-markdown-schema` — the `kotowari_markdown_schema` library and the `kotowari-mds`
-  binary. See that crate's own `README.md`.
+- `crates/kotowari-core` — pure memory parsing, comparison and inspection. The root binary depends normally only on the high-level `kotowari` library.
+- `crates/kotowari-markdown-schema` — pure schema/document validation and extraction. See that crate's own `README.md`.
 
 `Cargo.toml` at the root declares the workspace members and excludes `experiments/`.
 
@@ -30,7 +28,8 @@ Run cargo from the repository root; it covers the whole workspace.
 | Build | `CARGO_BUILD_JOBS=4 cargo build --workspace` |
 | Test | `CARGO_BUILD_JOBS=4 cargo test --workspace` |
 | Test one crate | `CARGO_BUILD_JOBS=4 cargo test -p kotowari-markdown-schema` |
-| Check this repository's own IR | `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format text` |
+| Check this repository's own IR | `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-cli --bin kotowari -- check --format text` |
+| Test optional adapters | `CARGO_BUILD_JOBS=4 cargo test --workspace --all-features --locked` |
 | Quality gates (pre-commit) | `lefthook run pre-commit --no-auto-install` |
 
 `CARGO_BUILD_JOBS=4` caps the parallel build jobs for memory reasons; `lefthook.yml` runs cargo
@@ -38,7 +37,7 @@ the same way in both hooks.
 
 The minimum supported Rust version is declared per crate, not once for the workspace:
 `crates/kotowari-markdown-schema` declares `rust-version = "1.89"`, and neither `kotowari` nor
-`kotowari-core` declares one. All three are on `edition = "2024"`.
+`kotowari-core` declares one. Schema I/O and mds retain Rust 1.89. All seven use `edition = "2024"`.
 
 `lefthook.yml` defines the gates: `pre-commit` runs the secret scan and `kotowari check`,
 `pre-push` runs the full test suite, `kotowari check` with no exemptions, and the mutation tests
@@ -96,8 +95,8 @@ The two products carry separate versions, each declared in one place:
 
 | Product | Where the version lives | Declarations that follow it | Tag | Changelog |
 |---|---|---|---|---|
-| `kotowari` (with `kotowari-core` and the skills in `agent/skills/`) | `version` in `[package]` of the root `Cargo.toml` | `version` of `crates/kotowari-core/Cargo.toml`; the `kotowari` and `kotowari-core` entries of `Cargo.lock` | `kotowari-v<version>` | `CHANGELOG.md` |
-| `kotowari-mds` | `version` in `[package]` of `crates/kotowari-markdown-schema/Cargo.toml` | the `kotowari-markdown-schema` entry of `Cargo.lock` | `kotowari-mds-v<version>` | `crates/kotowari-markdown-schema/CHANGELOG.md` (created at the next mds release; until then `kotowari-mds` cannot be released) |
+| `kotowari` | root `Cargo.toml` package version | CLI, kotowari, core and source-analysis manifests/lock entries and incoming dependency versions | `kotowari-v<version>` | `CHANGELOG.md` |
+| `kotowari-mds` | schema `Cargo.toml` package version | schema, schema-io and mds manifests/lock entries and incoming dependency versions, including core-to-schema | `kotowari-mds-v<version>` | `crates/kotowari-markdown-schema/CHANGELOG.md` |
 
 `scripts/check-versions.sh` exits 1 when a following declaration of either product disagrees
 with that product's version; given a tag, it also checks the tag's version against that product's
