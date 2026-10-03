@@ -155,6 +155,8 @@ fn native_display_collisions_do_not_merge_original_files() {
         test("tests/a\\b.rs", "tests/a/b.rs", "first"),
         test("tests/a/b.rs", "tests/a/b.rs", "second"),
     ];
+    assert_eq!(input.tests[0].source.path(), "tests/a/b.rs");
+    assert_eq!(input.tests[1].source.path(), "tests/a/b.rs");
     input.config.guides.files = vec!["guides/**".into()];
     let inspection = ReadModel::build_repository(input)
         .unwrap()
@@ -168,6 +170,45 @@ fn native_display_collisions_do_not_merge_original_files() {
         .unwrap();
     assert_eq!(inspection.check().tests()["rs"].files(), 2);
     assert_eq!(inspection.check().guides().files(), 2);
+}
+
+// @kotowari[REQ-core-311, REQ-core-315, REQ-core-317, EX-core-483, EX-core-491]
+#[test]
+fn native_read_preparation_retains_the_configured_ir_and_disabled_tests() {
+    let mut config = Config::default();
+    config.ir = "specifications".into();
+    config.tests.files.clear();
+    config.guides.files = vec!["notes/**".into()];
+    let mut preparation = kotowari_core::RepositoryReadPreparation::new(config).unwrap();
+    assert_eq!(preparation.config().ir, "specifications");
+    assert!(preparation.config().tests.files.is_empty());
+    assert_eq!(preparation.config().guides.files, ["notes/**"]);
+    preparation.push_ir(source("specifications/topic.md", "topic.md", "# Topic\n\nScope.\n\n## Requirements\n\n### REQ-001: Retained\n\n- kind: ubiquitous\n- verification: review\n- how_to_verify: Inspect.\n\nStatement.\n")).unwrap();
+    let read = preparation.finish(vec![], vec![], vec![]).unwrap();
+    assert_eq!(
+        read.query("REQ-001").unwrap().items()[0]
+            .item()
+            .location()
+            .0,
+        "specifications/topic.md"
+    );
+}
+
+// @kotowari[REQ-core-315, EX-core-488, EX-core-489]
+#[test]
+fn native_inspection_cannot_finish_without_its_required_guides() {
+    let read = || {
+        let mut config = Config::default();
+        config.tests.files.clear();
+        config.guides.files = vec!["guides/**".into()];
+        ReadModel::build_repository(inputs(config)).unwrap()
+    };
+    assert!(read().prepare_repository_inspection().finish().is_err());
+    let mut preparation = read().prepare_repository_inspection();
+    preparation.changes(None).unwrap();
+    preparation.guides(Some(vec![])).unwrap();
+    preparation.surface(None, None).unwrap();
+    assert_eq!(preparation.finish().unwrap().check().guides().files(), 0);
 }
 
 // @kotowari[REQ-core-315, EX-core-490]

@@ -239,6 +239,31 @@ fn nested_ir_paths_preserve_the_document_kind_of_the_filename() {
     let document = ir::parse(&source, Default::default()).unwrap();
     assert_eq!(document.items().len(), 1);
     assert_eq!(document.items()[0].id(), Some("FLAG-001"));
+    assert_eq!(document.path(), "docs/ir/topic/FLAGS.md");
+}
+
+// @kotowari[REQ-core-314, REQ-core-317, REQ-core-322, REQ-core-054, EX-core-487, EX-core-498]
+#[test]
+fn parsed_documents_retain_nested_paths_and_definition_and_statement_references() {
+    let text = "# Topic\n\nScope.\n\n## Requirements\n\n### REQ-001: Selection\n\n- kind: algorithm\n- verification: unit\n- definition: TBL-001\n\nUses `REQ-002`.\n";
+    let full = ir::parse_document("nested/topic.md", text).unwrap();
+    assert_eq!(full.filename(), "topic.md");
+    assert_eq!(full.relative_path(), "nested/topic.md");
+    let source = SourceText::new("docs/ir/nested/topic.md", text).unwrap();
+    let partial = ir::parse(&source, Default::default()).unwrap();
+    assert_eq!(partial.path(), "docs/ir/nested/topic.md");
+    let references = partial.items()[0].references();
+    assert_eq!(
+        references
+            .iter()
+            .map(|reference| reference.id)
+            .collect::<Vec<_>>(),
+        ["TBL-001", "REQ-002"]
+    );
+    assert!(matches!(references[0].via, ir::Via::Definition));
+    assert!(matches!(references[1].via, ir::Via::Text));
+    assert_eq!(references[0].finding_line, 11);
+    assert_eq!(references[1].finding_line, 13);
 }
 
 // @kotowari[REQ-core-308, REQ-core-315, EX-core-481, EX-core-496]
