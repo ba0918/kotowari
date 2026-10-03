@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "macos-15-release-implementation",
+      "base": "9f615b756a55589ab38a663e713c79e3959dca96",
+      "role": "implementer",
+      "files": [
+        {
+          "path": ".github/workflows/release.yml",
+          "before": "sha256:8fa8d97e5286df9108876e7cf5133f84b19c12a2548958b98a0b76a4f0cdd1ac",
+          "after": "sha256:81a0f1f63a2465e1e644877703ef84786dab3298f9c5c40c12ae1f18c5edd21e"
+        }
+      ],
+      "ir": [],
+      "conclusion": "new",
+      "reason": "macos-14 の提供終了に備え、A7 に従って ARM64 runner を macos-15 へ移す。Linux x86_64 と macOS ARM64 の配布先、製品別パッケージ、deployment target、公開条件は変えない。",
+      "requirements": [],
+      "decisions": [
+        "docs/decision/records/2026-09-26-release-flow.md#A7"
+      ],
+      "handoff": null,
+      "gaps": []
+    }
+  ]
+}

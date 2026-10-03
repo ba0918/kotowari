@@ -34,8 +34,8 @@ Position: 承認済み（2026-09-26）。3ラウンド（A1〜A15）で木が尽
   - why: コミットログは何をどう変えたかを、変更履歴は上げる人が何をするかを書く場所で、読み手が違う
   - decided_by: 利用者（推奨を採用）
 
-- A7 GitHub Actions のワークフローは自分で書く。ubuntu と macos-14 の2つで "cargo build --release" し、tar.gz と SHA256 を作り、変更履歴のその版の節を切り出して "gh release create" で Release を作る
-  - why: 配る先が2つだけで、自分で書いたほうが読めて直しやすい
+- A7 GitHub Actions のワークフローは自分で書く。ubuntu と macos-15 の2つで "cargo build --release" し、tar.gz と SHA256 を作り、変更履歴のその版の節を切り出して "gh release create" で Release を作る
+  - why: 配る先が2つだけで、自分で書いたほうが読めて直しやすい。2026-10-03 に macos-14 の提供終了（[公式告知](https://github.com/actions/runner-images/issues/13518)）に備えて ARM64 runner を macos-15 に更新した。配布ターゲットと macOS の deployment target は変えない
   - rejected: cargo-dist。専用の設定ファイルと大きなワークフローが生成され、今は要らないインストーラーまで付く
   - decided_by: 利用者（推奨を採用）
 
