@@ -262,6 +262,7 @@ impl SchemaLoader {
         let mut files = Vec::new();
         let walker = walkdir::WalkDir::new(&absolute)
             .follow_links(false)
+            .sort_by_file_name()
             .into_iter()
             .filter_entry(|entry| {
                 entry.depth() == 0
