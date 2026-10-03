@@ -205,7 +205,7 @@ run_mutants() {
         --setenv=CARGO_BUILD_JOBS=4 \
         --setenv=TMPDIR="$run_tmpdir" \
         --working-directory="$PWD" \
-        -- cargo +nightly mutants -j 1 --no-config --workspace --test-workspace=true -o . "$@" </dev/null &
+        -- cargo +nightly mutants -j 1 --no-config --workspace --all-features --test-workspace=true -o . "$@" </dev/null &
     run_pid=$!
     wait "$run_pid" || status=$?
     run_pid=""

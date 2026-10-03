@@ -78,6 +78,13 @@ Position: Plan draft prepared for parent-owned independent review and approval. 
   - rejected: treating lossless identity retention as authorization to read different files; merging enumeration entries by actual read origin; blanket lossy conversion of other readers; weakening duplicate/original-text admission.
   - decided_by: Parent preservation adjudication under [D1](./2026-10-03-public-crate-api.md#D1), applying the existing CLI-parity contract without an IR meaning change.
 
+## Agreements
+
+- A15 Enable all features for workspace mutation builds and tests while preserving the ordinary default test lane, test-workspace selection, diff/product-tag selection, checksum freshness, resource limits, watchdog and result-policy gates.
+  - why: The sealed default mutation run did not compile the optional Tokio source bodies or execute their marked tests. Fifteen substitutions therefore passed without observing the promised async behavior. Enabling those bodies can make unsupported Default replacements unviable; that is not a caught mutant. The ordinary default suite and default dependency checks remain independent obligations.
+  - rejected: adding redundant async tests for compiled-out bodies; weakening the exit policy; excluding optional sources; replacing final full mutation with selected probes.
+  - decided_by: User, accepting the parent's explicit mutation-lane selection choice on 2026-10-04.
+
 ## Revisions
 
 The user adopted A11 to supersede A4's legacy-link layout after the whole-branch snapshot stopped on selected symlink modes. Only the two named verification-method path references are relaxed from the earlier approved-IR edit prohibition; all requirement behavior and the fixed comparison base remain unchanged.
