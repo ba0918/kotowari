@@ -179,7 +179,7 @@
         {
           "path": "crates/kotowari-core/src/inputs.rs",
           "before": null,
-          "after": "sha256:1df4da64fdfa4e3cca83304a20b9e0a6ea4a9c72e027730847ce88960810436b"
+          "after": "sha256:73369f38e5e48ced175324fb0e318685331aa623bc56cfa0cda44843b815b0de"
         },
         {
           "path": "crates/kotowari-core/src/ir.rs",
@@ -654,7 +654,7 @@
         {
           "path": "crates/kotowari/src/change_records.rs",
           "before": null,
-          "after": "sha256:60109b70214e8696738be4224a0c01fdd98be8f9d61bf7637be71c4f4266576a"
+          "after": "sha256:0ed20a35464a087bd05b177c41ce42ea2ab11f4d1513a6bbf3d2f410cb853893"
         },
         {
           "path": "crates/kotowari/src/change_service.rs",
@@ -674,7 +674,7 @@
         {
           "path": "crates/kotowari/src/guides.rs",
           "before": null,
-          "after": "sha256:2569fdaa9b5024a99bb7f74eaa152e5722c499cdb9fabb2abd2c6c8c1fcadadf"
+          "after": "sha256:86fafcca567ac029ea95684ba75f40ba94e387698917a8c028c562cc6ab0a178"
         },
         {
           "path": "crates/kotowari/src/ir.rs",
@@ -699,12 +699,12 @@
         {
           "path": "crates/kotowari/src/surface.rs",
           "before": null,
-          "after": "sha256:a01c1e2c2cdc7e4871d3f61ab3127af6553de8b756cd485451fcb30998b0e393"
+          "after": "sha256:c5777907182f617a3f58b0f1d46c90d44733847154ed0939280217fabbc3b695"
         },
         {
           "path": "crates/kotowari/src/test_files.rs",
           "before": null,
-          "after": "sha256:1c82bf0ab38cc6083cc3880d8c590edda7a5073b1b0bf5d7525c75f564d43969"
+          "after": "sha256:963b844157dec9ec6cfc3d80b152e8e00a0c4f7fae06015cda074b1e3563aa42"
         },
         {
           "path": "crates/kotowari/tests/async.rs",
@@ -834,7 +834,7 @@
         {
           "path": "tests/native_paths.rs",
           "before": null,
-          "after": "sha256:2674172672aceac2277e2a10667fbf8ed491b1a480280fdfa48f3dab67a19c0b"
+          "after": "sha256:a533711c2b95f176f94c9db28c2c9041097fcfd49f54e53b4fef6e741caa3e27"
         },
         {
           "path": "tests/step14_plan.rs",
@@ -935,7 +935,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "The seven-package restructuring implements the approved synchronous and optional Tokio contracts while retaining both CLI contracts. Core admits configuration and enabled groups, retains original source identity and text, and computes read and check results through shared private phases. Logical SourceText remains canonical; native acquisition carries lossless PathBuf provenance separately from producer display/rule spellings, preserving the BASE-supported display collisions, counts and matching. Opaque preparation parses each IR file before later acquisition and checks guide overlap after enumeration but before guide bodies and surface acquisition. Public changes inspection validates consumed configuration while fact-only evaluation stays independent. Results remain read-only, CLI conversion remains CLI-owned, and useful facade aliases retain lower-type identity. List/query member order is restored without changing values, nulls or arrays. Canonical version fixtures retain intentional mismatches, transformations and real production rollback; inherited change-record diagnostic assertions are unchanged. The previously authorized two schema verification references and newly authorized three acquisition verification references preserve requirement meaning. The linked stop guide was reviewed and only its related fingerprint refreshed. Chronological repair RED, GREEN and REFACTOR evidence, current workspace/CLI/source-consumer checks and exact baseline differences are retained separately. The earlier broader constructor TDD deviation is not relabeled. Final sealed-head shipped-artifact and full mutation gates remain deferred pending parent-owned review; historical archives and raw mutation misses do not prove this candidate. This implementer record does not claim independent approval or integration readiness.",
+      "reason": "The seven-package restructuring implements the approved synchronous and optional Tokio contracts while retaining both CLI contracts. Core admits configuration and enabled groups, retains original source identity and text, and computes read and check results through shared private phases. Logical SourceText remains canonical; native acquisition carries lossless PathBuf provenance separately from producer display/rule spellings, preserving the BASE-supported display collisions, counts and matching. Opaque preparation parses each IR file before later acquisition and checks guide overlap after enumeration but before guide bodies and surface acquisition. Public changes inspection validates consumed configuration while fact-only evaluation stays independent. Results remain read-only, CLI conversion remains CLI-owned, and useful facade aliases retain lower-type identity. List/query member order is restored without changing values, nulls or arrays. Canonical version fixtures retain intentional mismatches, transformations and real production rollback; inherited change-record diagnostic assertions are unchanged. The previously authorized two schema verification references and newly authorized three acquisition verification references preserve requirement meaning. The linked stop guide was reviewed and only its related fingerprint refreshed. Chronological repair RED, GREEN and REFACTOR evidence, current workspace/CLI/source-consumer checks and exact baseline differences are retained separately. The earlier broader constructor TDD deviation is not relabeled. Final sealed-head shipped-artifact and full mutation gates remain deferred pending parent-owned review; historical archives and raw mutation misses do not prove this candidate. This implementer record does not claim independent approval or integration readiness. Legacy collected-file acquisition preserves the BASE lossy absolute read selection and ordering for tests, guides, surfaces and change records while retaining distinct lossless enumeration identities. Original IR and decision-source PathBuf reads remain unchanged. Text consistency compares actually acquired source by enumeration identity, without inode discovery, merging legacy read aliases or weakening public admission. The byte-filename-only stop and byte-name-plus-replacement multiplicity are covered by chronological producer-grounded regressions, and the approved backslash collision remains an exact BASE output match. Planning A14 records this preservation adjudication without any further IR edit.",
       "requirements": [
         "REQ-core-041",
         "REQ-core-092",
@@ -984,7 +984,8 @@
         "docs/decision/records/2026-10-03-public-crate-api-plan.md#A10",
         "docs/decision/records/2026-10-03-public-crate-api-plan.md#A11",
         "docs/decision/records/2026-10-03-public-crate-api-plan.md#A12",
-        "docs/decision/records/2026-10-03-public-crate-api-plan.md#A13"
+        "docs/decision/records/2026-10-03-public-crate-api-plan.md#A13",
+        "docs/decision/records/2026-10-03-public-crate-api-plan.md#A14"
       ],
       "handoff": null,
       "gaps": []
