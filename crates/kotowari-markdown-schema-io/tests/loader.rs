@@ -55,6 +55,8 @@ fn loaded_pairs_are_reusable_and_findings_do_not_prevent_partial_extraction() {
     .unwrap();
     let loader = SchemaLoader::new(LoaderOptions::new(root.path().to_path_buf())).unwrap();
     let pair = loader.load(Path::new("doc.md")).unwrap();
+    assert_eq!(pair.document().raw_line(4), Some("# Other"));
+    assert_eq!(pair.document().title_line(), Some(4));
     assert!(!pair.validate(Default::default()).is_empty());
     assert!(pair.extract_validated(Default::default()).is_err());
     assert!(

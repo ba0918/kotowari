@@ -76,6 +76,8 @@ fn semantic_schema_errors_are_rejected_before_document_operations() {
         Schema::parse("document:\n  sections:\n    - name: x\n      repeat: { min: 3, max: 1 }\n")
             .unwrap_err();
     assert!(error.0.contains("min is greater than max"));
+    assert!(error.to_string().contains("min"));
+    assert!(error.to_string().contains("max"));
     let _: &dyn std::error::Error = &error;
 }
 
@@ -92,19 +94,44 @@ fn violating_documents_have_partial_values_but_no_validated_values() {
     assert_eq!(partial.findings()[0].kind(), FindingKind::FieldEnumInvalid);
 }
 
-// @kotowari[REQ-schema-070, EX-schema-088]
+// @kotowari[REQ-schema-069, REQ-schema-070, EX-schema-087, EX-schema-088]
 #[test]
 fn validation_respects_schema_open_and_explicit_relaxation() {
     use kotowari_markdown_schema::{Schema, ValidationOptions};
     let document = Document::parse("## Undeclared\n").unwrap();
     for open in [false, true] {
         let schema = Schema::parse(&format!("open: {open}\ndocument: {{}}\n")).unwrap();
+        assert_eq!(schema.is_open(), open);
         for relax in [false, true] {
             let findings =
                 kotowari_markdown_schema::validate(&schema, &document, ValidationOptions { relax });
             assert_eq!(findings.is_empty(), open || relax);
+            let partial = kotowari_markdown_schema::extract_partial(
+                &schema,
+                &document,
+                ValidationOptions { relax },
+            );
+            assert_eq!(partial.findings().is_empty(), open || relax);
+            assert_eq!(
+                kotowari_markdown_schema::extract_validated(
+                    &schema,
+                    &document,
+                    ValidationOptions { relax }
+                )
+                .is_ok(),
+                open || relax
+            );
         }
     }
+}
+
+// @kotowari[REQ-schema-049, REQ-schema-014]
+#[test]
+fn a_null_schema_reference_has_an_explanatory_public_error() {
+    let error = frontmatter_schema("---\n$schema: null\n---\n# Topic\n").unwrap_err();
+    let message = error.to_string();
+    assert!(message.contains("$schema"));
+    assert!(message.contains("null"));
 }
 
 // @kotowari[REQ-schema-071, EX-schema-089]
