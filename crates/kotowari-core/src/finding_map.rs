@@ -228,7 +228,7 @@ pub fn map_finding(
             RuleKind::Statement | RuleKind::Table | RuleKind::CodeBlock => {
                 make(FindingKind::UnknownLine, engine.line, raw_of(engine)?)
             }
-            RuleKind::Section | RuleKind::Item => Err(no_row(engine)),
+            _ => Err(no_row(engine)),
         },
         EngineKind::MissingRequiredField => {
             let node = node_of(engine)?;

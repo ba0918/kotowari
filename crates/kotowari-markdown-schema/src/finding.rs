@@ -2,6 +2,7 @@
 
 /// 指摘の種別。REQ-schema-008 の「種類」で、TBL-schema-002 の分類を割ったもの。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum FindingKind {
     MissingTitle,
     MultipleTitles,
@@ -65,6 +66,7 @@ impl FindingKind {
 /// 宣言していない行の`指摘`と`出現回数`の`指摘`が、どの種別として読んだか・数えたかを持つ
 /// （REQ-schema-055、REQ-schema-057）。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum RuleKind {
     Section,
     Item,

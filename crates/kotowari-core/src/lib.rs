@@ -64,6 +64,7 @@ macro_rules! finding_kinds {
     ($($variant:ident => $text:literal,)+) => {
         /// 指摘の種類
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        #[non_exhaustive]
         pub enum FindingKind {
             $($variant,)+
         }
