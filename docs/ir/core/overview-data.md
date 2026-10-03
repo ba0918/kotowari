@@ -78,11 +78,11 @@ kotowari は常に、`全体像の元データ`の中の`ガイドの印`を`ガ
 ### REQ-core-287: 元データの検査は kotowari-overview が行う
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A21, docs/decision/records/2026-10-02-whole-picture.md#A48, docs/decision/records/2026-10-02-whole-picture.md#A49
+- source: docs/decision/records/2026-10-02-whole-picture.md#A21, docs/decision/records/2026-10-02-whole-picture.md#A48, docs/decision/records/2026-10-02-whole-picture.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A33
 - verification: review
-- how_to_verify: "crates/kotowari-overview/" があり、REQ-core-278 から REQ-core-286 の検査がそこにあること、"crates/kotowari-core/Cargo.toml" が kotowari-overview にも kotowari-markdown-view にも依存しないこと、"crates/kotowari-overview/Cargo.toml" が kotowari-core と kotowari-markdown-view に依存することを確かめる
+- how_to_verify: overviewを実装する別計画で、検査がkotowari-overviewにあり、同クレートがcoreとmarkdown-viewに依存し、coreが両者に依存しないことを確認する。checkへの結果統合はkotowariライブラリで行う。
 
-kotowari は常に、`全体像の元データ`の読み取りと検査を kotowari-overview のクレートで行い、kotowari-core はそれを知らない。
+kotowari は常に、`全体像の元データ`の読み取りと検査を kotowari-overview のクレートで行い、kotowari-core はそれを知らない。検査結果をcheckへ統合するのはkotowariライブラリとする。
 
 ## Decision tables
 

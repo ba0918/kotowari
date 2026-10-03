@@ -21,6 +21,7 @@ Position: 承認済み（2026-09-26）。3ラウンド（A1〜A15）で木が尽
 - A3 配るのは GitHub Release（リリースノート付き）とビルド済みのバイナリ（Linux x86_64、macOS arm64）で、crates.io には出さない
   - why: "cargo install --git" はビルドに時間がかかり、kotowari を取ってくる CI やバイナリで入れる道具のために速い入れ方が要る。crates.io に出すと kotowari-core の公開と公開する API の約束まで背負う。ほかの OS は使う人が出てから足す
   - decided_by: 利用者（推奨を採用）
+  - superseded_by: [A48: 既存配布を維持して将来のcrates.io公開を準備する](./2026-10-03-public-crate-api.md#A48)
 
 - A4 リリースは2段にする。手元のスクリプト（例: "scripts/release.sh kotowari 0.1.0"）が版の書き換え、変更履歴の Unreleased の節を版の見出しにすること、比較のリンクの追加を1つのコミットにし、チェックが通ったらタグを作る。タグの push は人が行い、それを受けて GitHub Actions がチェックをもう一度走らせ、バイナリを作り、変更履歴のその版の節を本文にした GitHub Release を作る
   - why: 公開したタグは取り消せないので、最後の1歩は人が踏む。手で同じ数字を何か所も書き換えるとずれる

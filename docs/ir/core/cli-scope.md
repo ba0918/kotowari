@@ -24,9 +24,9 @@ kotowari は、状態を保存すること、標準出力と標準エラーの�
 ### REQ-core-105: crate と CLI の置き場
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A8
+- source: docs/decision/records/records.md#A8, docs/decision/records/2026-10-03-public-crate-api.md#A14, docs/decision/records/2026-10-03-public-crate-api.md#A34, docs/decision/records/2026-10-03-public-crate-api.md#A35
 - verification: review
-- how_to_verify: CLI は `src/main.rs` のバイナリ1つ、ライブラリは `crates/kotowari-core/`。モジュールは config, ir, sources, terms, tests_discovery, list, query, status, mutants, cargo_mutants, equivalents, record_form
+- how_to_verify: ルートのkotowari-cliパッケージがsrc/main.rsでkotowariバイナリを提供し、ライブラリがTBL-core-040の責務と依存に従ってcrates配下に分かれていることを確認する。
 
 kotowari のコードは常に、層が増えるたびに crate を足し、CLI を直下の "src/" で管理する。
 

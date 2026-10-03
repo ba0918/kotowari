@@ -232,6 +232,7 @@ Position: 利用者が kemi で承認した（2026-10-02、コメントなし）
   - why: 全体像は core の責務ではない（A21）。スキーマを書き写さず正を view の1つに保つ（A45、A47）
   - rejected: core の中のモジュールにする
   - decided_by: 利用者（推奨を採用）
+  - superseded_by: [A33: 検査結果の統合先だけをkotowariライブラリへ変更](./2026-10-03-public-crate-api.md#A33)
 - A50 全体像の指摘も core の指摘の並び順の決まり（finding-order.md）に従う。core はその並び順を公開の関数としてバイナリから使えるようにする。
   - why: 出力の順番の仕様を2つに分けない
   - decided_by: 利用者（推奨を採用）

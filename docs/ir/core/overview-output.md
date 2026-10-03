@@ -23,10 +23,10 @@ kotowari は常に、"kotowari status" に "kotowari check" と同じ "overview"
 ### REQ-core-290: 元データの指摘は check の指摘に加わる
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A33, docs/decision/records/2026-10-02-whole-picture.md#A49, docs/decision/records/2026-10-02-whole-picture.md#A50, docs/decision/records/2026-10-02-whole-picture.md#A64
+- source: docs/decision/records/2026-10-02-whole-picture.md#A33, docs/decision/records/2026-10-02-whole-picture.md#A49, docs/decision/records/2026-10-02-whole-picture.md#A50, docs/decision/records/2026-10-02-whole-picture.md#A64, docs/decision/records/2026-10-03-public-crate-api.md#A33
 - verification: unit
 
-kotowari は常に、`全体像の元データ`の`指摘`を "kotowari check" と "kotowari status" の`指摘`に加え、ほかの`指摘`と合わせて REQ-core-024 の並びで出し、"counts" と終了コードと "complete" にもほかの`指摘`と同じく数える。合わせて並べるのはルートのバイナリで、kotowari-core は並べ方を公開の関数として持つ。
+kotowari は常に、`全体像の元データ`の`指摘`を "kotowari check" と "kotowari status" の`指摘`に加え、ほかの`指摘`と合わせて REQ-core-024 の並びで出し、"counts" と終了コードと "complete" にもほかの`指摘`と同じく数える。合わせて並べるのはkotowariライブラリで、kotowari-core は並べ方を公開の関数として持つ。
 
 ## Examples
 
