@@ -24,6 +24,35 @@ fn mds() -> Command {
     Command::cargo_bin("kotowari-mds").unwrap()
 }
 
+// @kotowari[REQ-schema-044, REQ-schema-073, REQ-core-313]
+#[test]
+fn directory_check_reports_dot_prefixed_markdown_and_skips_hidden_directories() {
+    let root = tempfile::tempdir().unwrap();
+    write_file(root.path(), "schema.yaml", "document:\n  title: {}\n");
+    write_file(root.path(), ".draft.md", "---\n$schema: schema.yaml\n---\n");
+    write_file(
+        root.path(),
+        ".hidden/ignored.md",
+        "---\n$schema: missing.yaml\n---\n",
+    );
+    let output = mds()
+        .args(["check", "--format", "json"])
+        .arg(root.path())
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    assert!(output.stderr.is_empty());
+    let result: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(result["files"].as_array().unwrap().len(), 1);
+    assert!(
+        result["files"][0]["path"]
+            .as_str()
+            .unwrap()
+            .ends_with(".draft.md")
+    );
+    assert_eq!(result["files"][0]["findings"][0]["kind"], "missing_title");
+}
+
 // @kotowari[REQ-schema-005]
 #[test]
 fn version_prints_the_command_name_and_version_to_stdout_and_exits_zero() {

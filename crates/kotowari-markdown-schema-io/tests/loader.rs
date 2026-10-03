@@ -1,6 +1,34 @@
 use kotowari_markdown_schema_io::{LoaderOptions, SchemaLoader};
 use std::path::{Path, PathBuf};
 
+// @kotowari[REQ-schema-044, REQ-schema-073]
+#[test]
+fn directory_checks_dot_prefixed_documents_but_skips_hidden_directories() {
+    let root = tempfile::tempdir().unwrap();
+    std::fs::write(root.path().join("schema.yaml"), "document:\n  title: {}\n").unwrap();
+    std::fs::write(
+        root.path().join(".draft.md"),
+        "---\n$schema: schema.yaml\n---\n",
+    )
+    .unwrap();
+    std::fs::create_dir(root.path().join(".hidden")).unwrap();
+    std::fs::write(
+        root.path().join(".hidden/ignored.md"),
+        "---\n$schema: missing.yaml\n---\n",
+    )
+    .unwrap();
+    let loader = SchemaLoader::new(LoaderOptions::new(root.path().to_path_buf())).unwrap();
+    let result = loader.check(Path::new("."), Default::default()).unwrap();
+    assert_eq!(result.files().len(), 1);
+    assert_eq!(result.files()[0].path().file_name().unwrap(), ".draft.md");
+    assert!(
+        result.files()[0]
+            .findings()
+            .iter()
+            .any(|finding| finding.kind.as_str() == "missing_title")
+    );
+}
+
 // @kotowari[REQ-core-323, EX-core-500]
 #[test]
 fn relative_start_and_cache_bases_are_rejected() {

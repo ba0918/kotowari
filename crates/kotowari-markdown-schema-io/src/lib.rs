@@ -264,7 +264,9 @@ impl SchemaLoader {
             .follow_links(false)
             .into_iter()
             .filter_entry(|entry| {
-                entry.depth() == 0 || !entry.file_name().to_string_lossy().starts_with('.')
+                entry.depth() == 0
+                    || !entry.file_type().is_dir()
+                    || !entry.file_name().to_string_lossy().starts_with('.')
             });
         for entry in walker {
             let entry = entry.map_err(|e| {
