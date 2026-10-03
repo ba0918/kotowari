@@ -140,3 +140,25 @@ fn facade_names_are_the_same_lower_result_types() {
     }
     let _ = (same_query, same_requirement, same_guides, same_mutants);
 }
+
+// @kotowari[REQ-core-312, REQ-core-315, REQ-core-322, EX-core-484, EX-core-488, EX-core-498]
+#[test]
+fn public_admission_errors_keep_distinct_facade_classifications_and_details() {
+    use kotowari::ErrorKind;
+    use kotowari_core::{ReadInputs, ReadModel, SourceText};
+    let invalid = SourceText::new("/absolute/topic.md", "text").unwrap_err();
+    let missing = ReadModel::build(ReadInputs::default()).err().unwrap();
+    let mut malformed = ReadInputs::default();
+    malformed.config.tests.files = vec!["[".into()];
+    let config = ReadModel::build(malformed).err().unwrap();
+    for (error, expected) in [
+        (invalid, ErrorKind::InvalidInput),
+        (missing, ErrorKind::InputMissing),
+        (config, ErrorKind::ConfigError),
+    ] {
+        let detail = error.to_string();
+        let facade = kotowari::Error::from(error);
+        assert_eq!(facade.kind(), expected);
+        assert!(facade.to_string().contains(&detail));
+    }
+}
