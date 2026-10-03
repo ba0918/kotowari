@@ -25,6 +25,15 @@ SCHEMA = {"kotowari-markdown-schema", "kotowari-markdown-schema-io", "kotowari-m
 def series_version(name): return "0.1.0" if name in SCHEMA else "0.3.0"
 def digest(path): return hashlib.sha256(path.read_bytes()).hexdigest()
 
+def consumer_manifest(name, dependencies, asynchronous=False):
+    content = f'[package]\nname = "consumer-{name}"\nversion = "0.0.0"\nedition = "2024"\n[workspace]\n[dependencies]\n'
+    for dependency in dependencies:
+        features = ', features = ["tokio"]' if asynchronous else ''
+        content += f'{dependency} = {{version = "={series_version(dependency)}"{features}}}\n'
+    if asynchronous:
+        content += 'tokio = {version = "1.53.1", features = ["rt-multi-thread"]}\n[features]\ndefault = ["tokio"]\ntokio = []\n'
+    return content
+
 def stage_command(config, target):
     return ["cargo", "package", "--workspace", "--all-features", "--no-verify", "--offline", "--config", config, "--target-dir", target]
 
@@ -174,15 +183,12 @@ def main():
     for name in PATHS:
         verify(pristine[name])
         if name in {"kotowari", "kotowari-markdown-schema-io"}: verify(pristine[name], "tokio")
-    for name, example in {"kotowari-core": "memory", "kotowari-markdown-schema": "extraction", "kotowari-source-analysis": "analysis", "kotowari": "project", "kotowari-markdown-schema-io": "loader"}.items():
+    for name, example in {"kotowari-core": "memory", "kotowari-markdown-schema": "extraction", "kotowari-source-analysis": "analysis", "kotowari": "project", "kotowari-markdown-schema-io": "loader", "identity": "identity"}.items():
         consumer = output / "consumers" / name
         (consumer / "src").mkdir(parents=True)
-        shutil.copy2(pristine[name] / "examples" / (example+'.rs'), consumer / "src/main.rs")
-        content = f'[package]\nname = "consumer-{name}"\nversion = "0.0.0"\nedition = "2024"\n[workspace]\n[dependencies]\n{name} = {{version = "={series_version(name)}"}}\n'
-        if name in {"kotowari", "kotowari-markdown-schema-io"}:
-            content = content.replace('"}', '", features = ["tokio"]}')
-            content += 'tokio = {version = "1.53.1", features = ["rt-multi-thread"]}\n'
-            content += '[features]\ndefault = ["tokio"]\ntokio = []\n'
+        owner = 'kotowari' if name == 'identity' else name
+        shutil.copy2(pristine[owner] / "examples" / (example+'.rs'), consumer / "src/main.rs")
+        content = consumer_manifest(name, ['kotowari', 'kotowari-core'] if name == 'identity' else [name], name in {"kotowari", "kotowari-markdown-schema-io"})
         (consumer / "Cargo.toml").write_text(content)
         run(["cargo", "generate-lockfile", "--offline", "--config", config], cwd=consumer)
         verify(consumer)
@@ -190,6 +196,11 @@ def main():
     for binary in ["kotowari", "kotowari-mds"]:
         run([output / "isolated-target/debug" / binary, "--version"], cwd=output)
         run([output / "isolated-target/debug" / binary, "--help"], cwd=output)
+    # Archive-local integration suites above execute the retained CLI compatibility fixtures.
+    fixture = output / 'binary-fixtures'
+    fixture.mkdir()
+    run([output / 'isolated-target/debug/kotowari', 'plan', pristine['kotowari-cli'] / 'docs/plans/public-crate-api.md', '--format', 'json'], cwd=fixture)
+    run([output / 'isolated-target/debug/kotowari-mds', 'values', 'fixtures/adr/0001.md', '--format', 'json'], cwd=pristine['kotowari-mds'])
     if digest(original_lock) != lock_hash: raise ValueError("workspace lockfile changed")
     for archive in archives:
         if digest(archive) != hashes[archive.name]: raise ValueError("archive mutated")

@@ -10,6 +10,11 @@ spec.loader.exec_module(packages)
 
 
 class PackageContracts(unittest.TestCase):
+    def test_dual_consumer_declares_exact_versions_without_paths(self):
+        manifest = packages.consumer_manifest('identity', ['kotowari', 'kotowari-core'])
+        self.assertIn('kotowari-core = {version = "=0.3.0"}', manifest)
+        self.assertNotIn('path =', manifest)
+
     def test_native_stage_uses_a_separate_config_and_rejects_inherited_replacement(self):
         command = packages.stage_command(pathlib.Path('/scratch/stage.toml'), pathlib.Path('/scratch/target'))
         self.assertIn('--offline', command)
