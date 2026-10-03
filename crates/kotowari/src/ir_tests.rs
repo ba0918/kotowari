@@ -4,7 +4,7 @@ fn default_config() -> Config {
     Config::default()
 }
 fn find_by_kind<'a>(findings: &'a [Finding], kind: &str) -> Vec<&'a Finding> {
-    findings.iter().filter(|f| f.kind == kind).collect()
+    findings.iter().filter(|f| f.kind() == kind).collect()
 }
 // @kotowari[REQ-core-033, REQ-core-037, TBL-core-005]
 #[test]
@@ -18,7 +18,7 @@ fn req_033_subdirectories_are_read_at_any_depth() {
     }
     let (docs, findings) = ir::load_and_check(tmp.path(), &default_config()).unwrap();
     assert_eq!(docs.len(), 3);
-    assert_eq!(docs.iter().map(|doc| doc.line_count).sum::<usize>(), 9);
+    assert_eq!(docs.iter().map(|doc| doc.line_count()).sum::<usize>(), 9);
     assert!(findings.is_empty(), "{findings:?}");
 }
 
@@ -35,7 +35,7 @@ fn ex_core_282_finding_after_bare_cr_has_the_split_line_number() {
     let (_, findings) = ir::load_and_check(tmp.path(), &default_config()).unwrap();
     let uh = find_by_kind(&findings, "unknown_heading");
     assert_eq!(uh.len(), 1, "{findings:?}");
-    assert_eq!(uh[0].line, Some(4), "{findings:?}");
+    assert_eq!(uh[0].line(), Some(4), "{findings:?}");
 }
 
 // @kotowari[REQ-core-033]
@@ -85,7 +85,7 @@ fn req_033_context_and_flags_in_a_subdirectory_are_glossary_and_flags() {
     }
     let (docs, findings) = ir::load_and_check(tmp.path(), &default_config()).unwrap();
     assert_eq!(
-        docs.iter().map(|d| d.kind).collect::<Vec<_>>(),
+        docs.iter().map(|d| d.kind()).collect::<Vec<_>>(),
         [
             kotowari_core::ir::DocKind::Glossary,
             kotowari_core::ir::DocKind::Flags
@@ -112,7 +112,7 @@ fn tbl_008_whole_document_detail_is_the_bare_filename_in_a_subdirectory() {
         assert_eq!(
             find_by_kind(&findings, kind)
                 .iter()
-                .map(|f| f.detail.as_str())
+                .map(|f| f.detail())
                 .collect::<Vec<_>>(),
             expected
         );
@@ -134,6 +134,6 @@ fn req_032_first_occurrence_is_bytewise_first_relative_path() {
     let (_, findings) = ir::load_and_check(tmp.path(), &default_config()).unwrap();
     let duplicates = find_by_kind(&findings, "duplicate_id");
     assert_eq!(duplicates.len(), 1);
-    assert_eq!(duplicates[0].path, "docs/ir/a/b.md");
-    assert_eq!(duplicates[0].line, Some(5));
+    assert_eq!(duplicates[0].path(), "docs/ir/a/b.md");
+    assert_eq!(duplicates[0].line(), Some(5));
 }

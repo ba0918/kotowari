@@ -1159,7 +1159,7 @@ fn req_069_doc_ref_line_number_is_correct() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope.\n\nSee nonexistent.md here.\n";
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
-    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let ir_filenames: BTreeSet<String> = [doc.filename().to_owned()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
         &[doc],
@@ -1169,11 +1169,11 @@ fn req_069_doc_ref_line_number_is_correct() {
     );
     let md: Vec<_> = findings
         .iter()
-        .filter(|f| f.kind == "missing_document")
+        .filter(|f| f.kind() == "missing_document")
         .collect();
     assert!(
         md.iter()
-            .any(|f| f.detail == "nonexistent.md" && f.line == Some(5)),
+            .any(|f| f.detail() == "nonexistent.md" && f.line() == Some(5)),
         "missing_document on line 5: {:?}",
         md
     );
@@ -1187,7 +1187,7 @@ fn req_069_doc_ref_at_line_end() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope with nonexistent.md\n";
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
-    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let ir_filenames: BTreeSet<String> = [doc.filename().to_owned()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
         &[doc],
@@ -1197,11 +1197,11 @@ fn req_069_doc_ref_at_line_end() {
     );
     let md: Vec<_> = findings
         .iter()
-        .filter(|f| f.kind == "missing_document")
+        .filter(|f| f.kind() == "missing_document")
         .collect();
     assert!(
         md.iter()
-            .any(|f| f.detail == "nonexistent.md" && f.line == Some(3)),
+            .any(|f| f.detail() == "nonexistent.md" && f.line() == Some(3)),
         "doc ref at end of line should be detected on line 3: {:?}",
         md
     );
@@ -1213,7 +1213,7 @@ fn req_069_doc_ref_at_line_start() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nnot-found.md is referenced.\n";
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
-    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let ir_filenames: BTreeSet<String> = [doc.filename().to_owned()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
         &[doc],
@@ -1223,11 +1223,11 @@ fn req_069_doc_ref_at_line_start() {
     );
     let md: Vec<_> = findings
         .iter()
-        .filter(|f| f.kind == "missing_document")
+        .filter(|f| f.kind() == "missing_document")
         .collect();
     assert!(
         md.iter()
-            .any(|f| f.detail == "not-found.md" && f.line == Some(3)),
+            .any(|f| f.detail() == "not-found.md" && f.line() == Some(3)),
         "doc ref at line start should be detected on line 3: {:?}",
         md
     );
@@ -1239,7 +1239,7 @@ fn req_069_doc_ref_after_punctuation() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope.\n\nSee,not-found.md for details.\n";
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
-    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let ir_filenames: BTreeSet<String> = [doc.filename().to_owned()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
         &[doc],
@@ -1249,11 +1249,11 @@ fn req_069_doc_ref_after_punctuation() {
     );
     let md: Vec<_> = findings
         .iter()
-        .filter(|f| f.kind == "missing_document")
+        .filter(|f| f.kind() == "missing_document")
         .collect();
     assert!(
         md.iter()
-            .any(|f| f.detail == "not-found.md" && f.line == Some(5)),
+            .any(|f| f.detail() == "not-found.md" && f.line() == Some(5)),
         "doc ref after punctuation should be detected on line 5: {:?}",
         md
     );
@@ -1265,7 +1265,7 @@ fn req_069_mdx_extension_not_matched_but_md_after_it_is() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nfoo.mdx bar.md text.\n";
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
-    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let ir_filenames: BTreeSet<String> = [doc.filename().to_owned()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
         &[doc],
@@ -1275,15 +1275,15 @@ fn req_069_mdx_extension_not_matched_but_md_after_it_is() {
     );
     let md: Vec<_> = findings
         .iter()
-        .filter(|f| f.kind == "missing_document")
+        .filter(|f| f.kind() == "missing_document")
         .collect();
     assert!(
-        !md.iter().any(|f| f.detail.contains("foo")),
+        !md.iter().any(|f| f.detail().contains("foo")),
         "foo.mdx should not be matched: {:?}",
         md
     );
     assert!(
-        md.iter().any(|f| f.detail == "bar.md"),
+        md.iter().any(|f| f.detail() == "bar.md"),
         "bar.md should be matched: {:?}",
         md
     );
@@ -1671,7 +1671,7 @@ fn tbl_014_md_followed_by_letter_is_not_a_reference() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope with a.mdX text.\n";
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
-    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let ir_filenames: BTreeSet<String> = [doc.filename().to_owned()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
         &[doc],
@@ -1681,7 +1681,7 @@ fn tbl_014_md_followed_by_letter_is_not_a_reference() {
     );
     let md: Vec<_> = findings
         .iter()
-        .filter(|f| f.kind == "missing_document")
+        .filter(|f| f.kind() == "missing_document")
         .collect();
     assert!(md.is_empty(), "a.mdX should not be a reference: {:?}", md);
 }
@@ -1693,7 +1693,7 @@ fn tbl_014_unclosed_quote_hides_the_rest_of_the_line() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope.\n\nSee \"unclosed quote nonexistent.md here.\n";
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
-    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let ir_filenames: BTreeSet<String> = [doc.filename().to_owned()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
         &[doc],
@@ -1703,7 +1703,7 @@ fn tbl_014_unclosed_quote_hides_the_rest_of_the_line() {
     );
     let md: Vec<_> = findings
         .iter()
-        .filter(|f| f.kind == "missing_document")
+        .filter(|f| f.kind() == "missing_document")
         .collect();
     assert!(
         md.is_empty(),
@@ -1720,7 +1720,7 @@ fn tbl_014_text_between_the_second_and_third_quote_is_still_scanned() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nScope.\n\nSee \"note\" and outside.md here \"trail\n";
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
-    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let ir_filenames: BTreeSet<String> = [doc.filename().to_owned()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
         &[doc],
@@ -1730,10 +1730,10 @@ fn tbl_014_text_between_the_second_and_third_quote_is_still_scanned() {
     );
     let md: Vec<_> = findings
         .iter()
-        .filter(|f| f.kind == "missing_document")
+        .filter(|f| f.kind() == "missing_document")
         .collect();
     assert!(
-        md.iter().any(|f| f.detail == "outside.md"),
+        md.iter().any(|f| f.detail() == "outside.md"),
         "text between the 2nd and 3rd quote is outside quotes and should still be scanned: {:?}",
         md
     );
@@ -1746,7 +1746,7 @@ fn tbl_014_long_digit_run_before_mdx_does_not_produce_a_spurious_reference() {
     use std::collections::BTreeSet;
     let content = "# Title\n\n01234567890123456789012.mdx\n";
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
-    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let ir_filenames: BTreeSet<String> = [doc.filename().to_owned()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
         &[doc],
@@ -1756,11 +1756,11 @@ fn tbl_014_long_digit_run_before_mdx_does_not_produce_a_spurious_reference() {
     );
     let md: Vec<_> = findings
         .iter()
-        .filter(|f| f.kind == "missing_document")
+        .filter(|f| f.kind() == "missing_document")
         .collect();
     assert!(
         !md.iter()
-            .any(|f| f.detail.contains("01234567890123456789012")),
+            .any(|f| f.detail().contains("01234567890123456789012")),
         "a long digit run before .mdx must not be treated as a .md reference: {:?}",
         md
     );
@@ -1773,7 +1773,7 @@ fn tbl_014_md_followed_by_hyphen_is_not_a_reference() {
     use std::collections::BTreeSet;
     let content = "# Title\n\na.md-suffix\n";
     let doc = kotowari_core::ir::parse_document("x.md", content).unwrap();
-    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let ir_filenames: BTreeSet<String> = [doc.filename().to_owned()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
         &[doc],
@@ -1783,10 +1783,10 @@ fn tbl_014_md_followed_by_hyphen_is_not_a_reference() {
     );
     let md: Vec<_> = findings
         .iter()
-        .filter(|f| f.kind == "missing_document")
+        .filter(|f| f.kind() == "missing_document")
         .collect();
     assert!(
-        !md.iter().any(|f| f.detail == "a.md"),
+        !md.iter().any(|f| f.detail() == "a.md"),
         "'a.md-suffix' must not be treated as a reference to 'a.md': {:?}",
         md
     );
@@ -1799,7 +1799,7 @@ fn tbl_014_bare_dot_md_with_nothing_before_it_is_not_a_reference() {
     use std::collections::BTreeSet;
     let content = "# Title\n\nthe .md file\n";
     let doc = kotowari_core::ir::parse_document("a.md", content).unwrap();
-    let ir_filenames: BTreeSet<String> = [doc.filename.clone()].into_iter().collect();
+    let ir_filenames: BTreeSet<String> = [doc.filename().to_owned()].into_iter().collect();
     let mut findings = Vec::new();
     kotowari_core::terms::check_document_references(
         &[doc],
@@ -1809,10 +1809,10 @@ fn tbl_014_bare_dot_md_with_nothing_before_it_is_not_a_reference() {
     );
     let md: Vec<_> = findings
         .iter()
-        .filter(|f| f.kind == "missing_document")
+        .filter(|f| f.kind() == "missing_document")
         .collect();
     assert!(
-        !md.iter().any(|f| f.detail == ".md"),
+        !md.iter().any(|f| f.detail() == ".md"),
         "a bare '.md' with no name before it must not be treated as a document reference: {:?}",
         md
     );
@@ -1837,7 +1837,7 @@ Some text.
 ";
     let doc = kotowari_core::ir::parse_document("CONTEXT.md", content).unwrap();
     let terms: Vec<_> = doc
-        .items
+        .items()
         .iter()
         .filter(|i| matches!(i, kotowari_core::ir::Item::GlossaryTerm { .. }))
         .collect();
@@ -1868,16 +1868,20 @@ fn req_117_glossary_without_proper_table_is_invalid() {
     let findings = kotowari_core::ir::check_documents(&[doc], &config);
     let gi: Vec<_> = findings
         .iter()
-        .filter(|f| f.kind == "glossary_invalid")
+        .filter(|f| f.kind() == "glossary_invalid")
         .collect();
     assert!(
         !gi.is_empty(),
         "glossary without proper table should produce glossary_invalid: {:?}",
         gi
     );
-    assert!(gi[0].line.is_none(), "glossary_invalid line should be null");
+    assert!(
+        gi[0].line().is_none(),
+        "glossary_invalid line should be null"
+    );
     assert_eq!(
-        gi[0].detail, "CONTEXT.md",
+        gi[0].detail(),
+        "CONTEXT.md",
         "glossary_invalid detail should be filename"
     );
 }
@@ -2008,7 +2012,7 @@ fn req_117_glossary_header_without_rows_is_valid() {
     let config = kotowari_core::config::Config::default();
     let findings = kotowari_core::ir::check_documents(&[doc], &config);
     assert!(
-        !findings.iter().any(|f| f.kind == "glossary_invalid"),
+        !findings.iter().any(|f| f.kind() == "glossary_invalid"),
         "header + separator with no rows must not be glossary_invalid: {:?}",
         findings
     );
@@ -2268,7 +2272,7 @@ fn tbl_014_slash_separated_path_is_a_reference() {
         &mut findings,
     );
     assert_eq!(findings.len(), 1, "{:?}", findings);
-    assert_eq!(findings[0].detail, "network/dns/b.md");
+    assert_eq!(findings[0].detail(), "network/dns/b.md");
 }
 
 // @kotowari[REQ-core-070, TBL-core-014, EX-core-023]

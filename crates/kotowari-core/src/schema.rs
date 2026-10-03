@@ -4,7 +4,10 @@
 //! IR の文書は自分の形を宣言しないので、文書の種類からスキーマを選ぶ。
 
 use crate::doc_kind::DocKind;
-use kotowari_markdown_schema::schema::{Schema, SchemaError, parse_schema};
+use kotowari_markdown_schema::{Schema, SchemaError};
+fn parse_schema(yaml: &str) -> Result<Schema, SchemaError> {
+    Schema::parse(yaml)
+}
 
 /// 話題ごとの文書のスキーマ
 const TOPIC: &str = include_str!("../schemas/ir.yaml");

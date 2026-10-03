@@ -7,6 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 mod list;
+mod output;
 mod query;
 mod status;
 #[cfg(test)]
@@ -386,7 +387,7 @@ pub fn run(args: &[String]) -> u8 {
             let result = run_changes(cwd, &base, target, phase, config_path.as_deref())?;
             match format {
                 Format::Json => {
-                    println!("{}", serde_json::to_string(result.presentation()).unwrap())
+                    println!("{}", output::changes(&result))
                 }
                 Format::Text => print_findings_as_text(result.findings()),
             }
@@ -468,7 +469,7 @@ fn with_cwd(command: impl FnOnce(&Path) -> Result<u8, StopReason>) -> u8 {
 
 /// TBL-core-002: 誤りが1件以上あれば1、無ければ0
 fn exit_code_for(findings: &[Finding]) -> u8 {
-    if findings.iter().any(|f| f.severity == "error") {
+    if findings.iter().any(|f| f.severity() == "error") {
         1
     } else {
         0
@@ -477,14 +478,13 @@ fn exit_code_for(findings: &[Finding]) -> u8 {
 
 /// "kotowari check" の結果を出す（TBL-core-005, REQ-core-025, REQ-core-026）
 fn print_check(result: &CheckReport, format: Format) {
-    let result = result.presentation();
     match format {
-        Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
+        Format::Json => println!("{}", output::check(result)),
         Format::Text => {
-            print_findings_as_text(&result.findings);
+            print_findings_as_text(result.findings());
             // REQ-core-228: 指摘の行の後の最後の1行。指摘が0件でも出す
-            if let Some(surface) = &result.surface {
-                println!("surface: unspecified={}", surface.unspecified);
+            if let Some(surface) = result.surface() {
+                println!("surface: unspecified={}", surface.unspecified());
             }
         }
     }
@@ -492,64 +492,59 @@ fn print_check(result: &CheckReport, format: Format) {
 
 /// "kotowari list" の一覧を出す（REQ-core-155）
 fn print_list(result: &ReadList, format: Format) {
-    let result = result.presentation();
     match format {
-        Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
+        Format::Json => println!("{}", output::list(result)),
         Format::Text => list::print_text(result),
     }
 }
 
 /// "kotowari query" の1件を出す（REQ-core-161）
 fn print_query(result: &QueryReport, format: Format) {
-    let result = result.presentation();
     match format {
-        Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
+        Format::Json => println!("{}", output::query(result)),
         Format::Text => query::print_text(result),
     }
 }
 
 /// "kotowari status" の集計を出す（REQ-core-166）
 fn print_status(result: &StatusReport, format: Format) {
-    let result = result.presentation();
     match format {
-        Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
+        Format::Json => println!("{}", output::status(result)),
         Format::Text => status::print_text(result),
     }
 }
 
 /// "kotowari mutants" の結果を出す（TBL-core-025, REQ-core-146）
 fn print_mutants(result: &MutantsReport, format: Format) {
-    let result = result.presentation();
     match format {
-        Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
+        Format::Json => println!("{}", output::mutants(result)),
         Format::Text => {
-            print_findings_as_text(&result.findings);
+            print_findings_as_text(result.findings());
             // REQ-core-146: 指摘の行の後の最後の1行。指摘が0件でも出す
-            println!("{}", result.mutants.summary_line());
+            println!("{}", result.mutants().summary_line());
         }
     }
 }
 
 /// "kotowari plan" の結果を出す（REQ-core-194、REQ-core-025）
 fn print_plan(result: &PlanReport, format: Format) {
-    let result = result.presentation();
     match format {
-        Format::Json => println!("{}", serde_json::to_string(result).unwrap()),
-        Format::Text => print_findings_as_text(&result.findings),
+        Format::Json => println!("{}", output::plan(result)),
+        Format::Text => print_findings_as_text(result.findings()),
     }
 }
 
 /// REQ-core-025, REQ-core-026: 1つの指摘を1行で出し、"line" が null なら "-" と書く
 fn print_findings_as_text(findings: &[Finding]) {
     for f in findings {
-        let line = f.line.map_or("-".to_string(), |l| l.to_string());
+        let line = f.line().map_or("-".to_string(), |l| l.to_string());
         println!(
             "{}:{} [{}] {} {}",
-            one_line(&f.path),
+            one_line(f.path()),
             line,
-            f.severity,
-            f.kind,
-            one_line(&f.detail)
+            f.severity(),
+            f.kind(),
+            one_line(f.detail())
         );
     }
 }

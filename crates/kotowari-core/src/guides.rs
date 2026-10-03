@@ -23,9 +23,12 @@ pub struct GuideEntry {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize)]
 pub struct GuideTally {
     /// 読んだ`ガイド`の数。パスごとに1回
-    pub files: usize,
+    pub(crate) files: usize,
     /// 形の正しい`ガイドの印`の1件の数
-    pub marks: usize,
+    pub(crate) marks: usize,
+}
+impl GuideTally {
+    readonly!(copy files: usize, marks: usize);
 }
 
 /// `ID` から、その `ID` の`項目`と`シナリオ`の`指紋`を REQ-core-032 の順（文書はパスのバイト順、

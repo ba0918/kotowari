@@ -24,18 +24,24 @@ pub struct Surface {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize)]
 pub struct SurfaceTally {
     /// `面`の種類と名前の組の数
-    pub total: usize,
+    pub(crate) total: usize,
     /// そのうち`IR`にあるものの数
-    pub specified: usize,
+    pub(crate) specified: usize,
     /// `IR`になく`未記載の面の一覧`の形の正しい1件に一致したものの数
-    pub unspecified: usize,
+    pub(crate) unspecified: usize,
+}
+impl SurfaceTally {
+    readonly!(copy total: usize, specified: usize, unspecified: usize);
 }
 
 /// "kotowari check" の "surface"（TBL-core-005、REQ-core-228）
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 pub struct Unlisted {
     /// `未記載の面の一覧`で外した`面`の種類と名前の組の数
-    pub unspecified: usize,
+    pub(crate) unspecified: usize,
+}
+impl Unlisted {
+    readonly!(copy unspecified: usize);
 }
 
 /// 形の正しい`未記載の面の一覧`の1件（REQ-core-232）

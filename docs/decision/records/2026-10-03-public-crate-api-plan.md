@@ -57,6 +57,13 @@ Position: Plan draft prepared for parent-owned independent review and approval. 
   - rejected: accepting changed selected symlinks; adding change exclusions; maintaining duplicate schema contents.
   - decided_by: User, accepting the parent's narrow legacy-path correction request.
 
+## Agreements
+
+- A12 Replace cross-crate result-assembly constructors with core-owned operations over acquired text and analysis facts. Preserve native acquisition spellings in explicit RepositoryReadInputs and RepositoryCheckInputs; derive documents, diagnostics and retained results inside core. Keep the parsed schema document and public diagnostic/result fields read-only, and preserve CLI JSON through CLI-owned conversion.
+  - why: Hidden public constructors still let external callers combine unchecked internal documents with unrelated results. Computing from acquired input protects construction without changing the native-path compatibility demonstrated by A9. Private schema implementation modules remove the old bypasses; read-only accessors preserve inspection and lower-level type identity. Existing private-helper tests run as core unit modules rather than requiring public mutable internals. The same ownership moves change-record, plan and mutation-result assembly into pure core operations while the high-level package continues to own I/O.
+  - rejected: treating doc-hidden signatures as private; exposing a replacement result constructor; changing path normalization or JSON output contracts; removing Serialize from legitimate public values solely because the CLI uses its own conversion.
+  - decided_by: Implementer within [D1](./2026-10-03-public-crate-api.md#D1), applying [A40](./2026-10-03-public-crate-api.md#A40) and [V3](./2026-10-03-public-crate-api.md#V3).
+
 ## Revisions
 
 The user adopted A11 to supersede A4's legacy-link layout after the whole-branch snapshot stopped on selected symlink modes. Only the two named verification-method path references are relaxed from the earlier approved-IR edit prohibition; all requirement behavior and the fixed comparison base remain unchanged.

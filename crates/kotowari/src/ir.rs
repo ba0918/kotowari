@@ -12,6 +12,7 @@ pub fn load_and_check(
     Ok((docs, findings))
 }
 
+#[cfg(test)]
 pub fn load_and_check_with_duplicates(
     base: &Path,
     config: &Config,
@@ -23,14 +24,9 @@ pub fn load_and_check_with_duplicates(
 
     let mut docs = Vec::new();
     for (relative_path, path) in entries {
-        let (directory, filename) = relative_path
-            .rsplit_once('/')
-            .unwrap_or(("", &relative_path));
         let display = kotowari_core::join_display_path(&config.ir, &relative_path);
         let content = read_utf8_file(&path, &display)?;
-        let mut doc = parse_document(filename, &content)?;
-        doc.directory = directory.to_string();
-        doc.relative_path = relative_path;
+        let doc = parse_document(&relative_path, &content)?;
         docs.push(doc);
     }
     let duplicates = GlossaryDuplicates::new(&docs);
@@ -69,4 +65,23 @@ fn collect_ir_paths(
         }
     }
     Ok(())
+}
+
+pub fn read_texts(
+    base: &Path,
+    config: &Config,
+) -> Result<Vec<(String, String)>, kotowari_core::StopReason> {
+    let mut entries = Vec::new();
+    collect_ir_paths(&base.join(&config.ir), "", &config.ir, &mut entries)?;
+    entries.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
+    entries
+        .into_iter()
+        .map(|(path, absolute)| {
+            let text = read_utf8_file(
+                &absolute,
+                &kotowari_core::join_display_path(&config.ir, &path),
+            )?;
+            Ok((path, text))
+        })
+        .collect()
 }

@@ -26,14 +26,107 @@ impl Phase {
         }
     }
 }
-#[derive(serde::Serialize)]
+#[derive(Clone, serde::Serialize)]
 pub struct ChangeResult {
-    pub base: String,
-    pub target: String,
-    pub phase: String,
-    pub files: usize,
-    pub covered: usize,
-    pub findings: Vec<Finding>,
+    pub(crate) base: String,
+    pub(crate) target: String,
+    pub(crate) phase: String,
+    pub(crate) files: usize,
+    pub(crate) covered: usize,
+    pub(crate) findings: Vec<Finding>,
+}
+impl ChangeResult {
+    readonly!(copy files: usize, covered: usize);
+    readonly!(borrow base: String, target: String, phase: String, findings: Vec<Finding>);
+}
+
+/// Parse change records, validate their references and evaluate one acquired comparison.
+pub fn inspect(snapshot: &Comparison, phase: Phase) -> Result<ChangeResult, crate::StopReason> {
+    use crate::{change_records, ir, sources};
+    use std::collections::BTreeMap;
+    let config = &snapshot.config;
+    let content = |path: &str| {
+        std::str::from_utf8(&snapshot.blobs[path].bytes)
+            .map_err(|_| crate::StopReason::NonUtf8File(path.into()))
+    };
+    let changes = config
+        .changes
+        .as_ref()
+        .ok_or_else(|| crate::StopReason::ConfigError("changes configuration required".into()))?;
+    let patterns = change_records::glob(&changes.records);
+    let mut entries = vec![];
+    let mut findings = vec![];
+    for path in snapshot.blobs.keys() {
+        if patterns.is_match(path) {
+            let (parsed, errors) = change_records::parse(path, content(path)?);
+            entries.extend(parsed);
+            findings.extend(errors);
+        }
+    }
+    let mut requirements = BTreeMap::new();
+    let mut ir_paths = BTreeSet::new();
+    let mut context = sources::SourceContext {
+        records_path: config.decisions.records.clone(),
+        adr_path: config.decisions.adr.clone(),
+        records_files: vec![],
+        adr_files: vec![],
+        records_other_files: vec![],
+    };
+    for path in snapshot.blobs.keys().filter(|path| path.ends_with(".md")) {
+        if sources::is_under_place(path, &config.ir) {
+            ir_paths.insert(path.clone());
+            let doc = ir::parse_document(
+                path.strip_prefix(&format!("{}/", config.ir))
+                    .unwrap_or(path),
+                content(path)?,
+            )?;
+            for item in doc.items() {
+                if let ir::Item::Requirement { id, .. } = item {
+                    requirements
+                        .entry(id.clone())
+                        .or_insert_with(|| path.clone());
+                }
+            }
+        }
+        if sources::is_under_place(path, &config.decisions.records) {
+            let rel = path
+                .strip_prefix(&format!("{}/", config.decisions.records))
+                .unwrap_or(path);
+            let record = sources::parse_records_file(rel, content(path)?);
+            if record.is_records {
+                context.records_files.push(record);
+            } else {
+                context.records_other_files.push(sources::OtherFile {
+                    rel_path: rel.into(),
+                    headings: record.headings,
+                });
+            }
+        }
+        if sources::is_under_place(path, &config.decisions.adr) {
+            let rel = path
+                .strip_prefix(&format!("{}/", config.decisions.adr))
+                .unwrap_or(path);
+            context
+                .adr_files
+                .push(sources::parse_other_file(rel, content(path)?));
+        }
+    }
+    findings.extend(change_records::validate_references(
+        &mut entries,
+        &requirements,
+        &ir_paths,
+        &context,
+    ));
+    let valid_entries = entries
+        .into_iter()
+        .filter(|entry| !entry.invalid)
+        .collect::<Vec<_>>();
+    let mut result = evaluate(snapshot, &valid_entries, phase);
+    result.findings.extend(findings);
+    result.findings.sort_by(|a, b| {
+        (a.path(), a.kind().as_str(), a.detail()).cmp(&(b.path(), b.kind().as_str(), b.detail()))
+    });
+    Ok(result)
 }
 fn finding(entry: &LocatedEntry, kind: FindingKind, path: &str) -> Finding {
     Finding::new(

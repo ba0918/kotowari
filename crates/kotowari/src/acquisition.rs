@@ -80,10 +80,7 @@ pub fn run_plan(cwd: &Path, path: &Path) -> Result<plan::PlanResult, StopReason>
     let display = display_from_base(&base, cwd, path);
     // REQ-core-197: 無い、ディレクトリ、読めないは読めないファイル、UTF-8 でなければ UTF-8 でないファイル
     let text = read_utf8_file(&cwd.join(path), &display)?;
-    let mut findings = plan::check_plan(&display, &text);
-    sort_findings(&mut findings);
-    let counts = count_findings(&findings);
-    Ok(plan::PlanResult { findings, counts })
+    Ok(plan::check(&display, &text))
 }
 
 /// 変異の結果の検査のエントリポイント
@@ -118,18 +115,8 @@ pub fn run_mutants(
         }
     };
 
-    let sources = read_sources(&base, &list.entries);
-    let (mut findings, mutant_counts) =
-        mutants::check_outcomes(&outcomes, &list.entries, &list_path, &sources);
-    findings.extend(list.findings);
-    sort_findings(&mut findings);
-    let counts = count_findings(&findings);
-
-    Ok(mutants::MutantsResult {
-        findings,
-        counts,
-        mutants: mutant_counts,
-    })
+    let sources = read_sources(&base, list.entries());
+    Ok(mutants::inspect(&outcomes, &list, &list_path, &sources))
 }
 
 /// 一致を見るのに要るソースだけを読む。読めなかったファイルは持たない（REQ-core-141、REQ-core-142）
@@ -202,7 +189,7 @@ pub fn load_config(
 /// check はこの指摘を出し、list と query は捨て、status は数だけを出す（REQ-core-151、REQ-core-156、REQ-core-162）。
 /// `ガイド`はここでは読まない。list と query は`ガイド`を読まない（REQ-core-152、REQ-core-158）ので、
 /// check と status だけが `read_guides` を続けて呼ぶ
-pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopReason> {
+pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<ReadModel, StopReason> {
     let base = find_base(cwd);
     let cfg = load_config(cwd, &base, config_path)?;
 
@@ -226,151 +213,30 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopRe
         }
     }
 
-    // IR の文書を読んで検査する
-    let (docs, mut findings, duplicates) = ir::load_and_check_with_duplicates(&base, &cfg)?;
-
-    // 出典の検査
-    let source_ctx = sources::build_context(&base, &cfg)?;
-    kotowari_core::sources::check_sources_with_duplicates(
-        &docs,
-        &source_ctx,
-        &cfg.ir,
-        &duplicates,
-        &mut findings,
-    );
-
-    // 判断の記録の形の検査
-    record_form::check_record_forms(&source_ctx, &mut findings);
-
-    // 用語と曖昧語の検査
-    let known_ids = collect_known_ids(&docs);
-    kotowari_core::terms::check_terms_and_vague_words_with_duplicates(
-        &docs,
-        &known_ids,
-        &cfg.vague_words,
-        &cfg.ir,
-        &duplicates,
-        &mut findings,
-    );
-
-    // 文書名の参照の検査
-    let ir_paths: std::collections::BTreeSet<String> =
-        docs.iter().map(|d| d.relative_path.clone()).collect();
-    terms::check_document_references(&docs, &cfg.ir, &ir_paths, &mut findings);
-
-    // テストの発見と印の検査
-    let discovered = tests_discovery::discover_and_check(
-        &base,
-        &cfg,
-        &docs,
-        &known_ids,
-        &cfg.ir,
-        &mut findings,
-    )?;
-
-    // 後回しとの食い違い（REQ-core-211、REQ-core-212）
-    deferred_notices::check(&docs, &cfg.ir, &discovered.markers, &mut findings);
-
-    Ok(Loaded {
-        base,
-        cfg,
-        docs,
-        findings,
-        tally: discovered.tally,
-        markers: discovered.markers,
-        test_files: discovered.files,
+    let ir = ir::read_texts(&base, &cfg)?;
+    let (records, adr) = sources::read_texts(&base, &cfg)?;
+    let tests = tests_discovery::analyze(&base, &cfg)?;
+    ReadModel::build_repository(RepositoryReadInputs {
+        config: cfg,
+        ir,
+        records,
+        adr,
+        tests,
     })
 }
 
 /// check と status の読み取り: `load_all` に続けて`ガイド`と`面`を読み、その`指摘`を足す
 /// （REQ-core-198、REQ-core-162、REQ-core-229）
-pub fn load_with_guides(
-    cwd: &Path,
-    config_path: Option<&Path>,
-) -> Result<
-    (
-        Loaded,
-        kotowari_core::guides::GuideTally,
-        Option<kotowari_core::surface::SurfaceTally>,
-    ),
-    StopReason,
-> {
-    let mut loaded = load_all(cwd, config_path)?;
-    change_records::static_check(
-        &loaded.base,
-        &loaded.cfg,
-        &loaded.docs,
-        &mut loaded.findings,
-    )?;
-    let tally = guides::read_guides(
-        &loaded.base,
-        &loaded.cfg,
-        &loaded.test_files,
-        &loaded.docs,
-        &mut loaded.findings,
-    )?;
-    let surface = surface::check(
-        &loaded.base,
-        &loaded.cfg,
-        &loaded.docs,
-        &mut loaded.findings,
-    )?;
-    Ok((loaded, tally, surface))
-}
-
-pub struct Loaded {
-    /// `基準のディレクトリ`
-    pub base: PathBuf,
-    pub cfg: config::Config,
-    pub docs: Vec<kotowari_core::ir::IrDocument>,
-    pub findings: Vec<Finding>,
-    /// TBL-core-021: 読んだテストのファイルの拡張子ごとの数
-    pub tally: BTreeMap<String, TestFileTally>,
-    /// TBL-core-026: 印の出現ごとの (ID, テストのファイル, 行, テストの名前)
-    pub markers: Vec<kotowari_core::tests_discovery::TestMarker>,
-    /// 読んだ`テストのファイル`の相対パス。バイト順（REQ-core-199）
-    pub test_files: Vec<String>,
-}
-
-impl Loaded {
-    pub fn into_read(self) -> ReadModel {
-        ReadModel::from_calculation(
-            self.cfg,
-            self.docs,
-            self.findings,
-            kotowari_core::tests_discovery::DiscoveredTests {
-                tally: self.tally,
-                markers: self.markers,
-                files: self.test_files,
-            },
-        )
-    }
-    pub fn into_inspection(
-        mut self,
-        guides: kotowari_core::guides::GuideTally,
-        surface: Option<kotowari_core::surface::SurfaceTally>,
-    ) -> Inspection {
-        sort_findings(&mut self.findings);
-        let status = kotowari_core::status::build(
-            &self.docs,
-            &self.cfg.ir,
-            &self.markers,
-            self.tally.clone(),
-            guides,
-            surface.unwrap_or_default(),
-            &self.findings,
-        );
-        let check = CheckResult {
-            files: self.docs.len(),
-            lines: self.docs.iter().map(|doc| doc.line_count).sum(),
-            counts: count_findings(&self.findings),
-            findings: self.findings.clone(),
-            tests: self.tally.clone(),
-            guides,
-            surface: surface.map(|tally| kotowari_core::surface::Unlisted {
-                unspecified: tally.unspecified,
-            }),
-        };
-        Inspection::from_calculation(self.into_read(), check, status)
-    }
+pub fn load_with_guides(cwd: &Path, config_path: Option<&Path>) -> Result<Inspection, StopReason> {
+    let read = load_all(cwd, config_path)?;
+    let base = find_base(cwd);
+    let changes = change_records::read_texts(&base, read.config())?;
+    let guides = guides::read_texts(&base, read.config())?;
+    let (surface, unspecified) = surface::analyze(&base, read.config())?;
+    read.inspect_repository(RepositoryCheckInputs {
+        changes,
+        guides,
+        surface,
+        unspecified,
+    })
 }

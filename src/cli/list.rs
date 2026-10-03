@@ -1,8 +1,8 @@
-use kotowari::presentation::list::*;
+use kotowari::{ListItem, ReadList, TestRef};
 /// REQ-core-155: 1つの項目を1行で出し、その直後に "tests" の1件ごとの行を字下げして続ける。
 /// 名前と検証の値はエスケープせずそのまま出す
-pub fn print_text(result: &ListResult) {
-    for item in &result.items {
+pub fn print_text(result: &ReadList) {
+    for item in result.items() {
         print_item_text(item);
     }
 }
@@ -25,9 +25,9 @@ pub fn print_item_text(item: &ListItem) {
     for test in p.tests {
         println!(
             "  {}:{} {}",
-            test.path,
-            test.line,
-            test.name.as_deref().unwrap_or("-")
+            test.path(),
+            test.line(),
+            test.name().as_deref().unwrap_or("-")
         );
     }
 }
@@ -46,41 +46,41 @@ struct TextParts<'a> {
 fn text_parts(item: &ListItem) -> TextParts<'_> {
     match item {
         ListItem::Requirement(i) => TextParts {
-            id: &i.id,
+            id: i.id(),
             // REQ-core-155: "- verification:" の行の無い要求も "-"
-            verification: i.verification.as_deref().unwrap_or("-"),
-            name: &i.name,
-            path: &i.path,
-            line: i.line,
-            tests: &i.tests,
-            deferred: i.deferred,
+            verification: i.verification().as_deref().unwrap_or("-"),
+            name: i.name(),
+            path: i.path(),
+            line: i.line(),
+            tests: i.tests(),
+            deferred: i.deferred(),
         },
         ListItem::WithExamples(i) => TextParts {
-            id: &i.id,
+            id: i.id(),
             verification: "-",
-            name: &i.name,
-            path: &i.path,
-            line: i.line,
-            tests: &i.tests,
-            deferred: i.deferred,
+            name: i.name(),
+            path: i.path(),
+            line: i.line(),
+            tests: i.tests(),
+            deferred: i.deferred(),
         },
         ListItem::Scenario(i) => TextParts {
-            id: &i.id,
+            id: i.id(),
             verification: "-",
-            name: &i.name,
-            path: &i.path,
-            line: i.line,
-            tests: &i.tests,
-            deferred: i.deferred,
+            name: i.name(),
+            path: i.path(),
+            line: i.line(),
+            tests: i.tests(),
+            deferred: i.deferred(),
         },
         ListItem::Flag(i) => TextParts {
-            id: &i.id,
+            id: i.id(),
             verification: "-",
-            name: &i.name,
-            path: &i.path,
-            line: i.line,
-            tests: &i.tests,
-            deferred: i.deferred,
+            name: i.name(),
+            path: i.path(),
+            line: i.line(),
+            tests: i.tests(),
+            deferred: i.deferred(),
         },
     }
 }

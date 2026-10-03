@@ -7,13 +7,13 @@
 //! 参照しない。節番号は文書を書き直すたびに指す先が変わる。
 
 pub mod ast;
-pub mod document;
-pub mod extract;
+mod document;
+mod extract;
 pub mod finding;
 pub mod frontmatter;
 mod line_reading;
-pub mod schema;
-pub mod validate;
+mod schema;
+mod validate;
 
 pub use ast::{ParseError, ast_json};
 pub use document::Document;

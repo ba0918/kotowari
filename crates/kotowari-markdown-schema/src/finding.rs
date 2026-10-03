@@ -97,23 +97,41 @@ impl RuleKind {
 /// 指摘1件。`path` と `severity` は CLI 側が付ける。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Finding {
-    pub kind: FindingKind,
+    pub(crate) kind: FindingKind,
     /// 1始まりの行番号。行を持たない指摘は None。
-    pub line: Option<usize>,
+    pub(crate) line: Option<usize>,
     /// スキーマが宣言したノードの名前。宣言上の名前を持たないノードの指摘は None。
-    pub node: Option<String>,
+    pub(crate) node: Option<String>,
     /// 行番号が指す行の生の文字。字下げと末尾の空白を含み、組み立て直さない。
     /// 行を持たない指摘は None。
-    pub raw: Option<String>,
+    pub(crate) raw: Option<String>,
     /// 宣言していない行をどの`規則種別`として読んだか（REQ-schema-055）、
     /// または`出現回数`の`指摘`がどの`規則種別`のノードを数えたか（REQ-schema-057）。
     /// そのどちらでもない指摘は None。
-    pub rule_kind: Option<RuleKind>,
+    pub(crate) rule_kind: Option<RuleKind>,
     /// 指摘の詳細（英語）
-    pub detail: String,
+    pub(crate) detail: String,
 }
 
 impl Finding {
+    pub fn kind(&self) -> FindingKind {
+        self.kind
+    }
+    pub fn line(&self) -> Option<usize> {
+        self.line
+    }
+    pub fn node(&self) -> Option<&str> {
+        self.node.as_deref()
+    }
+    pub fn raw(&self) -> Option<&str> {
+        self.raw.as_deref()
+    }
+    pub fn rule_kind(&self) -> Option<RuleKind> {
+        self.rule_kind
+    }
+    pub fn detail(&self) -> &str {
+        &self.detail
+    }
     /// 行を持たない指摘。
     pub fn new(kind: FindingKind, detail: String) -> Self {
         Finding::maybe_at(kind, None, detail)

@@ -94,7 +94,7 @@ fn extract(tmp: &Path) -> (Vec<(String, String, String, usize)>, Vec<(String, St
             result
                 .findings
                 .into_iter()
-                .map(|finding| (finding.kind.to_string(), finding.path)),
+                .map(|finding| (finding.kind().to_string(), finding.path().to_owned())),
         );
     }
     (surfaces, findings)

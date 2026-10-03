@@ -1,15 +1,17 @@
-use kotowari_core::{
-    Finding, SourceText, StopReason, config::Config, ir::IrDocument, surface::SurfaceTally,
-};
+use kotowari_core::{Finding, SourceText, StopReason, config::Config};
 use std::path::Path;
-pub fn check(
+pub fn analyze(
     base: &Path,
     cfg: &Config,
-    docs: &[IrDocument],
-    findings: &mut Vec<Finding>,
-) -> Result<Option<SurfaceTally>, StopReason> {
+) -> Result<
+    (
+        Option<Vec<kotowari_core::SurfaceAnalysis>>,
+        Option<Vec<SourceText>>,
+    ),
+    StopReason,
+> {
     if cfg.surface.rules.is_empty() {
-        return Ok(None);
+        return Ok((None, None));
     }
     let analyzer = kotowari_source_analysis::Analyzer::new(
         cfg.clone(),
@@ -33,8 +35,7 @@ pub fn check(
             surface.path = path.clone();
         }
         for finding in &mut file.findings {
-            finding.path = path.clone();
-            finding.detail = path.clone();
+            *finding = Finding::new(finding.kind(), path.clone(), finding.line(), path.clone());
         }
         analysis.push(file);
     }
@@ -46,10 +47,5 @@ pub fn check(
                 .map_err(|error| StopReason::MappingError(error.to_string()))?,
         );
     }
-    Ok(Some(kotowari_core::surface::check_analysis(
-        &analysis,
-        docs,
-        &unspecified,
-        findings,
-    )?))
+    Ok((Some(analysis), Some(unspecified)))
 }

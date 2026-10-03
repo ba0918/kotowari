@@ -25,7 +25,7 @@ fn directory_checks_dot_prefixed_documents_but_skips_hidden_directories() {
         result.files()[0]
             .findings()
             .iter()
-            .any(|finding| finding.kind.as_str() == "missing_title")
+            .any(|finding| finding.kind().as_str() == "missing_title")
     );
 }
 

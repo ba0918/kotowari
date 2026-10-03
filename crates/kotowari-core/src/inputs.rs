@@ -79,6 +79,7 @@ pub struct ReadModel {
     pub(crate) docs: Vec<crate::ir::IrDocument>,
     pub(crate) findings: Vec<crate::Finding>,
     pub(crate) discovered: crate::tests_discovery::DiscoveredTests,
+    pub(crate) context: crate::sources::SourceContext,
 }
 
 pub struct ReadList(crate::list::ListResult);
@@ -98,23 +99,6 @@ impl ReadList {
 }
 
 impl ReadModel {
-    #[doc(hidden)]
-    pub fn from_calculation(
-        config: crate::config::Config,
-        docs: Vec<crate::ir::IrDocument>,
-        findings: Vec<crate::Finding>,
-        discovered: crate::tests_discovery::DiscoveredTests,
-    ) -> Self {
-        Self {
-            inputs: ReadInputs {
-                config,
-                ..Default::default()
-            },
-            docs,
-            findings,
-            discovered,
-        }
-    }
     pub fn build(mut inputs: ReadInputs) -> Result<Self, InputError> {
         inputs.config = inputs
             .config
@@ -218,6 +202,7 @@ impl ReadModel {
             docs,
             findings,
             discovered,
+            context,
         })
     }
 
@@ -304,10 +289,6 @@ pub struct Inspection {
 pub struct StatusReport(crate::status::StatusResult);
 
 impl StatusReport {
-    #[doc(hidden)]
-    pub fn from_calculation(result: crate::status::StatusResult) -> Self {
-        Self(result)
-    }
     pub fn complete(&self) -> bool {
         self.0.complete
     }
@@ -340,6 +321,12 @@ impl StatusReport {
 pub struct CheckReport(crate::CheckResult);
 
 impl CheckReport {
+    pub fn guides(&self) -> &crate::guides::GuideTally {
+        &self.0.guides
+    }
+    pub fn surface(&self) -> Option<&crate::surface::Unlisted> {
+        self.0.surface.as_ref()
+    }
     pub fn findings(&self) -> &[crate::Finding] {
         &self.0.findings
     }
@@ -358,25 +345,11 @@ impl CheckReport {
 }
 
 impl Inspection {
-    #[doc(hidden)]
     pub fn into_check(self) -> CheckReport {
         self.check
     }
-    #[doc(hidden)]
     pub fn into_status(self) -> StatusReport {
         self.status
-    }
-    #[doc(hidden)]
-    pub fn from_calculation(
-        read: ReadModel,
-        check: crate::CheckResult,
-        status: crate::status::StatusResult,
-    ) -> Self {
-        Self {
-            read,
-            check: CheckReport(check),
-            status: StatusReport(status),
-        }
     }
     pub fn build(mut inputs: CheckInputs) -> Result<Self, InputError> {
         inputs.read.config = inputs
@@ -518,31 +491,190 @@ impl Inspection {
     }
 }
 
-impl CheckReport {
-    #[doc(hidden)]
-    pub fn from_calculation(result: crate::CheckResult) -> Self {
-        Self(result)
-    }
-    #[doc(hidden)]
-    pub fn presentation(&self) -> &crate::CheckResult {
-        &self.0
-    }
+/// Acquired text and discovery facts, with the acquisition layer's display spellings.
+/// Unlike canonical logical SourceText paths, these paths preserve native CLI identities.
+/// No document, finding result or independently assembled report is accepted here.
+pub struct RepositoryReadInputs {
+    pub config: crate::config::Config,
+    /// Paths relative to the configured IR place and original text.
+    pub ir: Vec<(String, String)>,
+    pub records: Vec<(String, String)>,
+    pub adr: Vec<(String, String)>,
+    pub tests: Vec<(String, TestAnalysis)>,
 }
-impl ReadList {
-    #[doc(hidden)]
-    pub fn presentation(&self) -> &crate::list::ListResult {
-        &self.0
-    }
+
+/// Additional acquired inputs for an inspection of an existing repository read.
+#[derive(Default)]
+pub struct RepositoryCheckInputs {
+    pub guides: Option<Vec<(String, String)>>,
+    pub changes: Option<Vec<(String, String)>>,
+    pub surface: Option<Vec<SurfaceAnalysis>>,
+    pub unspecified: Option<Vec<SourceText>>,
 }
-impl QueryReport {
-    #[doc(hidden)]
-    pub fn presentation(&self) -> &crate::query::QueryResult {
-        &self.0
+
+impl ReadModel {
+    /// Parse and calculate all read results from acquired input. Configuration is validated
+    /// and all IR documents and diagnostics are derived here, not supplied by the caller.
+    pub fn build_repository(mut input: RepositoryReadInputs) -> Result<Self, crate::StopReason> {
+        input.config = input.config.validated()?;
+        let config = &input.config;
+        let mut docs = Vec::new();
+        for (relative, text) in &input.ir {
+            let (directory, filename) = relative.rsplit_once('/').unwrap_or(("", relative));
+            let mut doc = crate::ir::parse_document(filename, text)?;
+            doc.relative_path = relative.clone();
+            doc.directory = directory.into();
+            docs.push(doc);
+        }
+        docs.sort_by(|left, right| {
+            left.relative_path
+                .as_bytes()
+                .cmp(right.relative_path.as_bytes())
+        });
+        let duplicates = crate::ir::GlossaryDuplicates::new(&docs);
+        let mut findings = crate::ir::check_documents_with_duplicates(&docs, config, &duplicates);
+        let context = crate::sources::context_from_entries(
+            config,
+            input
+                .records
+                .iter()
+                .map(|(path, text)| (path.as_str(), text.as_str())),
+            input
+                .adr
+                .iter()
+                .map(|(path, text)| (path.as_str(), text.as_str())),
+        );
+        crate::sources::check_sources_with_duplicates(
+            &docs,
+            &context,
+            &config.ir,
+            &duplicates,
+            &mut findings,
+        );
+        crate::record_form::check_record_forms(&context, &mut findings);
+        let known_ids = crate::collect_known_ids(&docs);
+        crate::terms::check_terms_and_vague_words_with_duplicates(
+            &docs,
+            &known_ids,
+            &config.vague_words,
+            &config.ir,
+            &duplicates,
+            &mut findings,
+        );
+        let paths = docs.iter().map(|doc| doc.relative_path.clone()).collect();
+        crate::terms::check_document_references(&docs, &config.ir, &paths, &mut findings);
+        let discovered = crate::tests_discovery::check_entries(
+            input.tests.iter().map(|(path, file)| (path.as_str(), file)),
+            &docs,
+            &known_ids,
+            &config.ir,
+            &mut findings,
+        );
+        crate::deferred_notices::check(&docs, &config.ir, &discovered.markers, &mut findings);
+        Ok(Self {
+            inputs: ReadInputs {
+                config: input.config,
+                ..Default::default()
+            },
+            docs,
+            findings,
+            discovered,
+            context,
+        })
     }
-}
-impl StatusReport {
-    #[doc(hidden)]
-    pub fn presentation(&self) -> &crate::status::StatusResult {
-        &self.0
+
+    /// Compute an inspection from this read and the additional acquired text/facts.
+    pub fn inspect_repository(
+        self,
+        input: RepositoryCheckInputs,
+    ) -> Result<Inspection, crate::StopReason> {
+        let config = &self.inputs.config;
+        let required = |provided: bool, group: &str| {
+            if provided {
+                Ok(())
+            } else {
+                Err(crate::StopReason::ConfigError(format!(
+                    "input missing: {group}"
+                )))
+            }
+        };
+        if config.changes.is_some() {
+            required(input.changes.is_some(), "change records")?;
+        }
+        if !config.guides.files.is_empty() {
+            required(input.guides.is_some(), "guides")?;
+        }
+        if !config.surface.rules.is_empty() {
+            required(input.surface.is_some(), "surface analysis")?;
+            if config.surface.unspecified.is_some() {
+                required(input.unspecified.is_some(), "unspecified surfaces")?;
+            }
+        }
+        let mut findings = self.findings.clone();
+        if config.changes.is_some() {
+            crate::change_records::check_entries(
+                input
+                    .changes
+                    .as_ref()
+                    .unwrap()
+                    .iter()
+                    .map(|(path, text)| (path.as_str(), text.as_str())),
+                config,
+                &self.docs,
+                &self.context,
+                &mut findings,
+            );
+        }
+        let guides = if config.guides.files.is_empty() {
+            Default::default()
+        } else {
+            crate::guides::check_entries(
+                input
+                    .guides
+                    .as_ref()
+                    .unwrap()
+                    .iter()
+                    .map(|(path, text)| (path.as_str(), text.as_str())),
+                &self.discovered.files,
+                &self.docs,
+                &mut findings,
+            )?
+        };
+        let surface = if config.surface.rules.is_empty() {
+            None
+        } else {
+            Some(crate::surface::check_analysis(
+                input.surface.as_ref().unwrap(),
+                &self.docs,
+                input.unspecified.as_deref().unwrap_or(&[]),
+                &mut findings,
+            )?)
+        };
+        crate::sort_findings(&mut findings);
+        let status = StatusReport(crate::status::build(
+            &self.docs,
+            &config.ir,
+            &self.discovered.markers,
+            self.discovered.tally.clone(),
+            guides,
+            surface.unwrap_or_default(),
+            &findings,
+        ));
+        let check = CheckReport(crate::CheckResult {
+            files: self.docs.len(),
+            lines: self.docs.iter().map(|doc| doc.line_count).sum(),
+            counts: crate::count_findings(&findings),
+            findings,
+            tests: self.discovered.tally.clone(),
+            guides,
+            surface: surface.map(|tally| crate::surface::Unlisted {
+                unspecified: tally.unspecified,
+            }),
+        });
+        Ok(Inspection {
+            read: self,
+            check,
+            status,
+        })
     }
 }

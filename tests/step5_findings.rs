@@ -344,24 +344,24 @@ fn prop_003_findings_are_sorted() {
             tmp.path().join("tests/check.rs"),
             "#[test]\nfn unmarked() {}\n",
         ).unwrap();
-        let result = kotowari::Project::new(kotowari::ProjectOptions::new(tmp.path())).unwrap().check().expect("run_check should succeed").presentation().clone();
+        let result = kotowari::Project::new(kotowari::ProjectOptions::new(tmp.path())).unwrap().check().expect("run_check should succeed");
         // findings が TBL-core-007 の順で並んでいることを検証する
-        let findings = &result.findings;
+        let findings = result.findings();
         for i in 1..findings.len() {
             let a = &findings[i-1];
             let b = &findings[i];
-            let cmp = a.path.cmp(&b.path)
-                .then_with(|| match (a.line, b.line) {
+            let cmp = a.path().cmp(b.path())
+                .then_with(|| match (a.line(), b.line()) {
                     (None, None) => std::cmp::Ordering::Equal,
                     (None, Some(_)) => std::cmp::Ordering::Less,
                     (Some(_), None) => std::cmp::Ordering::Greater,
                     (Some(al), Some(bl)) => al.cmp(&bl),
                 })
-                .then_with(|| a.kind.as_str().cmp(b.kind.as_str()))
-                .then_with(|| a.detail.cmp(&b.detail));
+                .then_with(|| a.kind().as_str().cmp(b.kind().as_str()))
+                .then_with(|| a.detail().cmp(b.detail()));
             prop_assert!(cmp != std::cmp::Ordering::Greater,
                 "findings not sorted at index {}: prev=({},{:?},{},{}) curr=({},{:?},{},{})",
-                i, a.path, a.line, a.kind, a.detail, b.path, b.line, b.kind, b.detail);
+                i, a.path(), a.line(), a.kind(), a.detail(), b.path(), b.line(), b.kind(), b.detail());
         }
     });
 }

@@ -12,9 +12,9 @@ fn partial_parsing_retains_a_nameless_requirement_and_its_heading_diagnostic() {
         document
             .findings()
             .iter()
-            .any(|finding| finding.kind.as_str() == "unknown_heading"
-                && finding.line == Some(7)
-                && finding.detail == "### REQ-001:")
+            .any(|finding| finding.kind().as_str() == "unknown_heading"
+                && finding.line() == Some(7)
+                && finding.detail() == "### REQ-001:")
     );
 }
 
@@ -131,13 +131,13 @@ fn supplied_analysis_preserves_diagnostics_counts_and_duplicate_suppression() {
         result
             .findings()
             .iter()
-            .filter(|finding| finding.kind == FindingKind::UnparsableFile)
+            .filter(|finding| finding.kind() == FindingKind::UnparsableFile)
             .count(),
         1
     );
-    assert_eq!(result.tests()["rs"].files, 1);
-    assert!(result.tests()["rs"].query);
-    assert_eq!(inspection.status().tests().files["rs"].files, 1);
+    assert_eq!(result.tests()["rs"].files(), 1);
+    assert!(result.tests()["rs"].query());
+    assert_eq!(inspection.status().tests().files()["rs"].files(), 1);
     assert!(!inspection.status().complete());
 }
 
@@ -200,14 +200,14 @@ fn enabled_guide_and_surface_inputs_are_evaluated_without_acquisition() {
             .check()
             .findings()
             .iter()
-            .any(|finding| finding.kind == FindingKind::GuideStale)
+            .any(|finding| finding.kind() == FindingKind::GuideStale)
     );
     assert!(
         inspection
             .check()
             .findings()
             .iter()
-            .any(|finding| finding.kind == FindingKind::SurfaceWithoutSpec)
+            .any(|finding| finding.kind() == FindingKind::SurfaceWithoutSpec)
     );
 }
 
@@ -263,9 +263,9 @@ fn non_query_marker_facts_are_consumed_without_source_discovery() {
             .check()
             .findings()
             .iter()
-            .any(|finding| finding.kind == FindingKind::RequirementWithoutTest)
+            .any(|finding| finding.kind() == FindingKind::RequirementWithoutTest)
     );
-    assert_eq!(inspection.status().tests().marks, 1);
+    assert_eq!(inspection.status().tests().marks(), 1);
 }
 
 // @kotowari[REQ-core-315, EX-core-488, EX-core-489]

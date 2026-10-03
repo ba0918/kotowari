@@ -1,4 +1,5 @@
 [package]
+autotests = false
 name = "kotowari-core"
 version = "0.3.0"
 edition = "2024"
@@ -10,6 +11,14 @@ description = "Pure specification parsing and inspection from owned memory input
 [lib]
 name = "kotowari_core"
 path = "src/lib.rs"
+
+[[test]]
+name = "inputs"
+path = "tests/inputs.rs"
+
+[[test]]
+name = "paths"
+path = "tests/paths.rs"
 
 [dependencies]
 kotowari-markdown-schema = { path = "../kotowari-markdown-schema", version = "0.1.0" }

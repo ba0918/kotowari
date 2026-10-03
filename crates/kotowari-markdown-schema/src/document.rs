@@ -4,29 +4,39 @@ use crate::ast::parse_mdast;
 use markdown::mdast::Node;
 
 /// 検証・抽出の対象にする文書の木。
+///
+/// Parsed document data cannot be changed independently of its source.
+/// ```compile_fail
+/// let mut document = kotowari_markdown_schema::Document::parse("# Original\n").unwrap();
+/// document.lines.clear();
+/// ```
 #[derive(Debug, Default)]
 pub struct Document {
     /// 深さ1の見出し（題名）
-    pub titles: Vec<Heading>,
+    pub(crate) titles: Vec<Heading>,
     /// 最初の節より前のブロック
-    pub preamble: Vec<Block>,
+    pub(crate) preamble: Vec<Block>,
     /// 深さ2の節
-    pub sections: Vec<Section>,
+    pub(crate) sections: Vec<Section>,
     /// 節の外に出た深さ3以上の見出し（深さ4以上は heading_level_mismatch の対象）
-    pub stray_headings: Vec<Heading>,
+    pub(crate) stray_headings: Vec<Heading>,
     /// 前置部領域（最初の節より前）に出た深さ3の見出しとその内側の行。
     /// 題名より後の見出しは宣言済みの前置部の中の未宣言の構造として、open でも
     /// undeclared_heading / undeclared_line の対象になる（REQ-schema-003）。題名より前の
     /// 見出しは open では許す
-    pub stray_preamble_headings: Vec<StrayPreambleHeading>,
+    pub(crate) stray_preamble_headings: Vec<StrayPreambleHeading>,
     /// 文書の生の行。1始まりの行番号で `raw_line` から引く。指摘が指す行の
     /// 生の文字は組み立て直さずここから取る（REQ-schema-008）
-    pub lines: Vec<String>,
+    pub(crate) lines: Vec<String>,
     /// 文書の先頭の frontmatter が占める行数。無ければ 0。行の読み方はこの次の行から読む
-    pub frontmatter_lines: usize,
+    pub(crate) frontmatter_lines: usize,
 }
 
 impl Document {
+    /// Original line of the first title, when present.
+    pub fn title_line(&self) -> Option<usize> {
+        self.titles.first().map(|title| title.line)
+    }
     /// 1始まりの行番号の生の行。字下げと末尾の空白を含む。範囲の外は None。
     pub fn raw_line(&self, line: usize) -> Option<&str> {
         self.lines

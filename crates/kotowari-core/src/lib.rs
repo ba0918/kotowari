@@ -1,32 +1,64 @@
 pub mod cargo_mutants;
+macro_rules! readonly {
+    (copy $($name:ident : $type:ty),* $(,)?) => {
+        $(pub fn $name(&self) -> $type { self.$name })*
+    };
+    (borrow $($name:ident : $type:ty),* $(,)?) => {
+        $(pub fn $name(&self) -> &$type { &self.$name })*
+    };
+}
+#[cfg(test)]
+extern crate self as kotowari_core;
 pub mod change_records;
 pub mod changes;
 pub mod comparison;
+#[cfg(test)]
+#[path = "../tests/test_facts.rs"]
+mod fact_contract_tests;
+#[cfg(test)]
+#[path = "../tests/guides.rs"]
+mod guide_contract_tests;
+#[cfg(test)]
+#[path = "../tests/ir.rs"]
+mod ir_contract_tests;
+#[cfg(test)]
+#[path = "../tests/change_matching.rs"]
+mod matching_contract_tests;
+#[cfg(test)]
+#[path = "../tests/change_records.rs"]
+mod record_contract_tests;
+#[cfg(test)]
+#[path = "../tests/surface.rs"]
+mod surface_contract_tests;
 pub use comparison::Comparison;
 pub mod config;
-pub mod deferred;
-pub mod deferred_notices;
+mod deferred;
+mod deferred_notices;
 mod doc_kind;
 pub mod equivalents;
-pub mod finding_map;
-pub mod fingerprint;
+mod finding_map;
+mod fingerprint;
 pub mod guides;
 mod inputs;
 pub mod ir;
 pub use inputs::{
     CheckInputs, CheckReport, InputError, Inspection, QueryReport, ReadInputs, ReadList, ReadModel,
-    SourceText, StatusReport, SurfaceAnalysis, TestAnalysis,
+    RepositoryCheckInputs, RepositoryReadInputs, SourceText, StatusReport, SurfaceAnalysis,
+    TestAnalysis,
 };
 pub use ir::{IrOptions, ParsedIrDocument as IrDocument, ParsedItem};
-pub mod list;
+mod list;
+pub use list::{ExampleItem, FlagItem, ListItem, RequirementItem, ScenarioItem, TestRef};
 mod markdown;
 pub mod mutants;
 pub mod plan;
-pub mod query;
-pub mod record_form;
-pub mod schema;
+mod query;
+pub use query::{QueryItem, Reference};
+mod record_form;
+mod schema;
 pub mod sources;
-pub mod status;
+mod status;
+pub use status::{Documents, Findings, Items, Requirements, Scenarios, Tests};
 pub mod surface;
 pub mod terms;
 mod test_markers;
@@ -36,8 +68,8 @@ use std::collections::BTreeMap;
 
 /// 検査結果の最上位の構造
 #[derive(Clone, serde::Serialize)]
-pub struct CheckResult {
-    pub files: usize,
+pub(crate) struct CheckResult {
+    pub(crate) files: usize,
     pub lines: usize,
     pub findings: Vec<Finding>,
     pub counts: BTreeMap<String, usize>,
@@ -53,9 +85,13 @@ pub struct CheckResult {
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct TestFileTally {
     /// その拡張子の読んだテストのファイルの数
-    pub files: usize,
+    pub(crate) files: usize,
     /// その拡張子が問い合わせのある言語か
-    pub query: bool,
+    pub(crate) query: bool,
+}
+
+impl TestFileTally {
+    readonly!(copy files: usize, query: bool);
 }
 
 /// 指摘の種類と、その JSON での文字列。
@@ -189,15 +225,36 @@ impl serde::Serialize for FindingKind {
 
 /// 指摘
 #[derive(Debug, serde::Serialize, Clone)]
+/// A diagnostic whose kind, severity and source identity cannot be changed independently.
+/// ```compile_fail
+/// let mut finding = kotowari_core::Finding::new(
+///     kotowari_core::FindingKind::MissingTitle, "topic.md".into(), None, String::new());
+/// finding.severity = "notice".into();
+/// ```
 pub struct Finding {
-    pub kind: FindingKind,
-    pub severity: String,
-    pub path: String,
-    pub line: Option<usize>,
-    pub detail: String,
+    pub(crate) kind: FindingKind,
+    pub(crate) severity: String,
+    pub(crate) path: String,
+    pub(crate) line: Option<usize>,
+    pub(crate) detail: String,
 }
 
 impl Finding {
+    pub fn kind(&self) -> FindingKind {
+        self.kind
+    }
+    pub fn severity(&self) -> &str {
+        &self.severity
+    }
+    pub fn path(&self) -> &str {
+        &self.path
+    }
+    pub fn line(&self) -> Option<usize> {
+        self.line
+    }
+    pub fn detail(&self) -> &str {
+        &self.detail
+    }
     /// 指摘を作る。severity は kind から自動で決まる。
     pub fn new(kind: FindingKind, path: String, line: Option<usize>, detail: String) -> Self {
         Finding {

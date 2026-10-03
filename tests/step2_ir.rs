@@ -11,7 +11,7 @@ fn check(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
 }
 
 fn find_by_kind<'a>(findings: &'a [Finding], kind: &str) -> Vec<&'a Finding> {
-    findings.iter().filter(|f| f.kind == kind).collect()
+    findings.iter().filter(|f| f.kind() == kind).collect()
 }
 
 // --- REQ-core-034: 題名が無い ---

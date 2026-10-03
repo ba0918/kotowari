@@ -38,13 +38,12 @@ fn invalids(record: &str) -> Vec<kotowari_core::Finding> {
     let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
         .unwrap()
         .check()
-        .unwrap()
-        .presentation()
-        .clone();
+        .unwrap();
     result
-        .findings
-        .into_iter()
-        .filter(|f| f.kind.as_str() == "change_record_invalid")
+        .findings()
+        .iter()
+        .filter(|f| f.kind().as_str() == "change_record_invalid")
+        .cloned()
         .collect()
 }
 
@@ -55,24 +54,19 @@ fn check_and_status_validate_records_without_git_or_extra_tallies() {
     let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
         .unwrap()
         .check()
-        .unwrap()
-        .presentation()
-        .clone();
+        .unwrap();
     assert!(
         !result
-            .findings
+            .findings()
             .iter()
-            .any(|f| f.kind.as_str() == "change_record_invalid")
+            .any(|f| f.kind().as_str() == "change_record_invalid")
     );
     let dir = project("version: 2\nentries: []\n");
     let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
         .unwrap()
         .status()
-        .map(|report| report.presentation().clone())
         .unwrap();
-    assert!(result.findings.error > 0);
-    let value = serde_json::to_value(result).unwrap();
-    assert!(value.get("changes").is_none());
+    assert!(result.findings().error() > 0);
 }
 
 // @kotowari[REQ-core-271, EX-core-453]
@@ -87,16 +81,14 @@ fn recorded_and_fixed_gaps_can_share_a_new_conclusion() {
     let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
         .unwrap()
         .check()
-        .unwrap()
-        .presentation()
-        .clone();
+        .unwrap();
     assert!(
         !result
-            .findings
+            .findings()
             .iter()
-            .any(|f| f.kind.as_str() == "change_record_invalid"),
+            .any(|f| f.kind().as_str() == "change_record_invalid"),
         "{:?}",
-        result.findings
+        result.findings()
     );
 }
 
@@ -111,15 +103,13 @@ fn reference_error_positions_are_local_to_each_record_file() {
     let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
         .unwrap()
         .check()
-        .unwrap()
-        .presentation()
-        .clone();
-    let f = result
-        .findings
-        .iter()
-        .find(|f| f.path == "docs/changes/z-other.yaml")
         .unwrap();
-    assert!(f.detail.starts_with("entry 0: "), "{}", f.detail);
+    let f = result
+        .findings()
+        .iter()
+        .find(|f| f.path() == "docs/changes/z-other.yaml")
+        .unwrap();
+    assert!(f.detail().starts_with("entry 0: "), "{}", f.detail());
 }
 
 // @kotowari[REQ-core-019, REQ-core-249, REQ-core-253, EX-core-457]
@@ -146,30 +136,27 @@ fn explicitly_named_hidden_records_are_checked_without_reading_other_hidden_dirs
         let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
             .unwrap()
             .check()
-            .unwrap()
-            .presentation()
-            .clone();
+            .unwrap();
         assert!(
             result
-                .findings
+                .findings()
                 .iter()
-                .any(|f| f.path == ".kotowari/changes/commit.yaml"
-                    && f.kind.as_str() == "change_record_invalid")
+                .any(|f| f.path() == ".kotowari/changes/commit.yaml"
+                    && f.kind().as_str() == "change_record_invalid")
         );
         assert!(
             !result
-                .findings
+                .findings()
                 .iter()
-                .any(|f| f.path.starts_with(".hidden/"))
+                .any(|f| f.path().starts_with(".hidden/"))
         );
         assert!(
             kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
                 .unwrap()
                 .status()
-                .map(|report| report.presentation().clone())
                 .unwrap()
-                .findings
-                .error
+                .findings()
+                .error()
                 > 0
         );
     }
@@ -186,14 +173,12 @@ fn details_with_ir(record: &str) -> Vec<String> {
     let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
         .unwrap()
         .check()
-        .unwrap()
-        .presentation()
-        .clone();
+        .unwrap();
     result
-        .findings
-        .into_iter()
-        .filter(|f| f.kind.as_str() == "change_record_invalid")
-        .map(|f| f.detail)
+        .findings()
+        .iter()
+        .filter(|f| f.kind().as_str() == "change_record_invalid")
+        .map(|f| f.detail().to_owned())
         .collect()
 }
 
@@ -310,16 +295,14 @@ fn a_record_reached_through_a_file_symlink_is_checked() {
     let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
         .unwrap()
         .check()
-        .unwrap()
-        .presentation()
-        .clone();
+        .unwrap();
     assert!(
         result
-            .findings
+            .findings()
             .iter()
-            .any(|f| f.kind.as_str() == "change_record_invalid"
-                && f.path == "docs/changes/link.yaml"),
+            .any(|f| f.kind().as_str() == "change_record_invalid"
+                && f.path() == "docs/changes/link.yaml"),
         "{:?}",
-        result.findings
+        result.findings()
     );
 }

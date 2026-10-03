@@ -114,14 +114,10 @@ pub fn read_rules(
         })
         .collect()
 }
-pub fn discover_and_check(
+pub fn analyze(
     base: &Path,
     config: &kotowari_core::config::Config,
-    docs: &[kotowari_core::ir::IrDocument],
-    known_ids: &std::collections::BTreeSet<String>,
-    ir_path: &str,
-    findings: &mut Vec<kotowari_core::Finding>,
-) -> Result<kotowari_core::tests_discovery::DiscoveredTests, kotowari_core::StopReason> {
+) -> Result<Vec<(String, kotowari_core::TestAnalysis)>, kotowari_core::StopReason> {
     let files = collect_files(base, &config.tests.files)?;
     let analyzer = kotowari_source_analysis::Analyzer::new(
         config.clone(),
@@ -140,14 +136,9 @@ pub fn discover_and_check(
                 .map_err(|error| kotowari_core::StopReason::ConfigError(error.detail().into()))
         })
         .collect::<Result<Vec<_>, _>>()?;
-    Ok(kotowari_core::tests_discovery::check_entries(
-        files
-            .iter()
-            .zip(&analysis)
-            .map(|((path, _), file)| (path.as_str(), file)),
-        docs,
-        known_ids,
-        ir_path,
-        findings,
-    ))
+    Ok(files
+        .into_iter()
+        .zip(analysis)
+        .map(|((path, _), file)| (path, file))
+        .collect())
 }

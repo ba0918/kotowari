@@ -199,18 +199,18 @@ fn emit_check(files: &[(PathBuf, &[Finding])], format: &str) {
         "text" => {
             for (path, findings) in files {
                 for finding in *findings {
-                    match finding.line {
+                    match finding.line() {
                         Some(line) => println!(
                             "{}:{line}: {}: {}",
                             path.display(),
-                            finding.kind.as_str(),
-                            finding.detail
+                            finding.kind().as_str(),
+                            finding.detail()
                         ),
                         None => println!(
                             "{}: {}: {}",
                             path.display(),
-                            finding.kind.as_str(),
-                            finding.detail
+                            finding.kind().as_str(),
+                            finding.detail()
                         ),
                     }
                 }
@@ -225,14 +225,14 @@ fn emit_check(files: &[(PathBuf, &[Finding])], format: &str) {
                     let findings: Vec<_> = findings
                         .iter()
                         .map(|finding| FindingJson {
-                            kind: finding.kind.as_str(),
+                            kind: finding.kind().as_str(),
                             severity: "error",
                             path: &path,
-                            line: finding.line,
-                            node: finding.node.as_deref(),
-                            text: finding.raw.as_deref(),
-                            rule_kind: finding.rule_kind.map(|kind| kind.as_str()),
-                            detail: &finding.detail,
+                            line: finding.line(),
+                            node: finding.node(),
+                            text: finding.raw(),
+                            rule_kind: finding.rule_kind().map(|kind| kind.as_str()),
+                            detail: finding.detail(),
                         })
                         .collect();
                     serde_json::json!({"path": path, "findings": findings})

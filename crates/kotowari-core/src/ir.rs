@@ -141,25 +141,44 @@ impl Item {
 }
 
 /// 解析した IR 文書
+/// ```compile_fail
+/// let mut document = kotowari_core::ir::parse_document("topic.md", "# Topic\n").unwrap();
+/// document.items.clear();
+/// ```
 #[derive(Debug)]
 pub struct IrDocument {
-    pub filename: String,
-    pub relative_path: String,
-    pub directory: String,
-    pub kind: DocKind,
+    pub(crate) filename: String,
+    pub(crate) relative_path: String,
+    pub(crate) directory: String,
+    pub(crate) kind: DocKind,
     /// `文書が扱う範囲`の`文`の行（行番号と行の文字そのまま）
-    pub scope_lines: Vec<(usize, String)>,
+    pub(crate) scope_lines: Vec<(usize, String)>,
     /// 文書単位の "- deferred:" の行（REQ-core-209）。2つ目以降の行は読まない
-    pub deferred: Option<Deferral>,
-    pub line_count: usize,
-    pub items: Vec<Item>,
-    pub raw_content: String,
+    pub(crate) deferred: Option<Deferral>,
+    pub(crate) line_count: usize,
+    pub(crate) items: Vec<Item>,
+    pub(crate) raw_content: String,
     /// 文書1つで決まる指摘（スキーマの側から写したもの、gherkin の中身、閉じないコードブロック、
     /// 用語集の行）。パスは空で、`check_documents` が入れる
-    pub parse_findings: Vec<crate::Finding>,
+    pub(crate) parse_findings: Vec<crate::Finding>,
 }
 
 impl IrDocument {
+    pub fn filename(&self) -> &str {
+        &self.filename
+    }
+    pub fn relative_path(&self) -> &str {
+        &self.relative_path
+    }
+    pub fn kind(&self) -> DocKind {
+        self.kind
+    }
+    pub fn line_count(&self) -> usize {
+        self.line_count
+    }
+    pub fn items(&self) -> &[Item] {
+        &self.items
+    }
     pub(crate) fn is_glossary_in_chain(&self, directory: &str) -> bool {
         self.kind == DocKind::Glossary
             && (self.directory.is_empty()
@@ -249,7 +268,11 @@ pub fn split_lines(content: &str) -> Vec<&str> {
 /// `項目`を組み立てる（REQ-core-169、REQ-core-170）。写せない`指摘`や値は`停止`になる
 /// （REQ-core-172、REQ-core-175）
 pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopReason> {
-    parse_document_mode(filename, content, false)
+    let (directory, name) = filename.rsplit_once('/').unwrap_or(("", filename));
+    let mut document = parse_document_mode(name, content, false)?;
+    document.relative_path = filename.into();
+    document.directory = directory.into();
+    Ok(document)
 }
 
 fn parse_document_mode(

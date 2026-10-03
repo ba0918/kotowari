@@ -54,19 +54,41 @@ pub fn normalize_source_path(raw: &str) -> Result<String, String> {
 /// "kotowari mutants" の出力（TBL-core-025。最上位はこの3つの鍵だけ）
 #[derive(Debug, serde::Serialize)]
 pub struct MutantsResult {
-    pub findings: Vec<Finding>,
-    pub counts: BTreeMap<String, usize>,
-    pub mutants: MutantCounts,
+    pub(crate) findings: Vec<Finding>,
+    pub(crate) counts: BTreeMap<String, usize>,
+    pub(crate) mutants: MutantCounts,
+}
+impl MutantsResult {
+    readonly!(borrow findings: Vec<Finding>, counts: BTreeMap<String, usize>, mutants: MutantCounts);
+}
+
+pub fn inspect(
+    outcomes: &[MutantOutcome],
+    list: &crate::equivalents::EquivalentList,
+    list_path: &str,
+    sources: &BTreeMap<String, Vec<String>>,
+) -> MutantsResult {
+    let (mut findings, mutants) = check_outcomes(outcomes, &list.entries, list_path, sources);
+    findings.extend(list.findings.iter().cloned());
+    crate::sort_findings(&mut findings);
+    MutantsResult {
+        counts: crate::count_findings(&findings),
+        findings,
+        mutants,
+    }
 }
 
 /// 変異の集計（TBL-core-025、PROP-core-005）
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 pub struct MutantCounts {
-    pub caught: usize,
-    pub survived: usize,
-    pub timeout: usize,
-    pub unviable: usize,
-    pub equivalent: usize,
+    pub(crate) caught: usize,
+    pub(crate) survived: usize,
+    pub(crate) timeout: usize,
+    pub(crate) unviable: usize,
+    pub(crate) equivalent: usize,
+}
+impl MutantCounts {
+    readonly!(copy caught: usize, survived: usize, timeout: usize, unviable: usize, equivalent: usize);
 }
 
 impl MutantCounts {

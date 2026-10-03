@@ -3,14 +3,26 @@
 
 use std::path::{Path, PathBuf};
 
-use kotowari_markdown_schema::document::Document;
-use kotowari_markdown_schema::extract::extract_values;
+use kotowari_markdown_schema::{Document, Schema, ValidationOptions};
+fn extract_values(schema: &Schema, document: &Document) -> serde_json::Value {
+    kotowari_markdown_schema::extract_partial(schema, document, ValidationOptions::default())
+        .values()
+        .clone()
+}
 use kotowari_markdown_schema::finding::FindingKind;
 use kotowari_markdown_schema::frontmatter::{
     ResolvedSchema, SchemaRef, frontmatter_schema, resolve_schema,
 };
-use kotowari_markdown_schema::schema::parse_schema;
-use kotowari_markdown_schema::validate::validate;
+fn parse_schema(yaml: &str) -> Result<Schema, kotowari_markdown_schema::SchemaError> {
+    Schema::parse(yaml)
+}
+fn validate(
+    schema: &Schema,
+    document: &Document,
+    relax: bool,
+) -> Vec<kotowari_markdown_schema::finding::Finding> {
+    kotowari_markdown_schema::validate(schema, document, ValidationOptions { relax })
+}
 
 const SCHEMA: &str = r#"
 name: ir
@@ -74,10 +86,10 @@ fn violating_documents_have_partial_values_but_no_validated_values() {
     let schema = Schema::parse(SCHEMA).unwrap();
     let document = Document::parse(&DOCUMENT.replace("ubiquitous", "bogus")).unwrap();
     let findings = extract_validated(&schema, &document, ValidationOptions::default()).unwrap_err();
-    assert_eq!(findings[0].kind, FindingKind::FieldEnumInvalid);
+    assert_eq!(findings[0].kind(), FindingKind::FieldEnumInvalid);
     let partial = extract_partial(&schema, &document, ValidationOptions::default());
     assert_eq!(partial.values()["requirements"][0]["kind"], "bogus");
-    assert_eq!(partial.findings()[0].kind, FindingKind::FieldEnumInvalid);
+    assert_eq!(partial.findings()[0].kind(), FindingKind::FieldEnumInvalid);
 }
 
 // @kotowari[REQ-schema-070, EX-schema-088]
@@ -104,7 +116,7 @@ fn typed_partial_json_keeps_obtainable_values_and_schema_name() {
     let partial = extract_typed_partial(&schema, &document, ValidationOptions::default());
     assert_eq!(partial.values()["type"], "ir");
     assert_eq!(partial.values()["requirements"][0]["kind"], "bogus");
-    assert_eq!(partial.findings()[0].kind, FindingKind::FieldEnumInvalid);
+    assert_eq!(partial.findings()[0].kind(), FindingKind::FieldEnumInvalid);
 }
 
 // @kotowari[REQ-schema-049, EX-schema-015]
@@ -157,9 +169,9 @@ fn findings_carry_the_kind_line_and_detail() {
     let document = Document::parse(&broken).unwrap();
     let findings = validate(&schema, &document, false);
     let finding = findings.first().expect("指摘が1件は出る");
-    assert_eq!(finding.kind, FindingKind::FieldEnumInvalid);
-    assert_eq!(finding.line, Some(12));
-    assert!(!finding.detail.is_empty());
+    assert_eq!(finding.kind(), FindingKind::FieldEnumInvalid);
+    assert_eq!(finding.line(), Some(12));
+    assert!(!finding.detail().is_empty());
 }
 
 // @kotowari[REQ-schema-049, REQ-schema-050, EX-schema-016]

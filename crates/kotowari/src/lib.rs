@@ -23,12 +23,9 @@ pub use kotowari_core::ir::is_valid_id;
 pub use kotowari_core::{
     CheckInputs, CheckReport, Comparison, Finding, FindingKind, InputError, Inspection, IrDocument,
     IrOptions, ParsedItem, QueryReport, ReadInputs, ReadList, ReadModel, SourceText, StatusReport,
-    SurfaceAnalysis, TestAnalysis, Tool,
+    SurfaceAnalysis, TestAnalysis, TestFileTally, Tool,
 };
-#[doc(hidden)]
-pub mod presentation {
-    pub use kotowari_core::{list, query, status};
-}
+pub use kotowari_core::{ListItem, TestRef};
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone)]
@@ -124,37 +121,44 @@ pub struct ChangesOptions {
 pub struct PlanReport(kotowari_core::plan::PlanResult);
 impl PlanReport {
     pub fn findings(&self) -> &[Finding] {
-        &self.0.findings
+        self.0.findings()
     }
     pub fn counts(&self) -> &std::collections::BTreeMap<String, usize> {
-        &self.0.counts
-    }
-    #[doc(hidden)]
-    pub fn presentation(&self) -> &kotowari_core::plan::PlanResult {
-        &self.0
+        self.0.counts()
     }
 }
 pub struct MutantsReport(kotowari_core::mutants::MutantsResult);
 impl MutantsReport {
     pub fn findings(&self) -> &[Finding] {
-        &self.0.findings
+        self.0.findings()
     }
     pub fn mutants(&self) -> &kotowari_core::mutants::MutantCounts {
-        &self.0.mutants
+        self.0.mutants()
     }
-    #[doc(hidden)]
-    pub fn presentation(&self) -> &kotowari_core::mutants::MutantsResult {
-        &self.0
+    pub fn counts(&self) -> &std::collections::BTreeMap<String, usize> {
+        self.0.counts()
     }
 }
+#[derive(Clone)]
 pub struct ChangesReport(kotowari_core::changes::ChangeResult);
 impl ChangesReport {
     pub fn findings(&self) -> &[Finding] {
-        &self.0.findings
+        self.0.findings()
     }
-    #[doc(hidden)]
-    pub fn presentation(&self) -> &kotowari_core::changes::ChangeResult {
-        &self.0
+    pub fn base(&self) -> &str {
+        self.0.base()
+    }
+    pub fn target(&self) -> &str {
+        self.0.target()
+    }
+    pub fn phase(&self) -> &str {
+        self.0.phase()
+    }
+    pub fn files(&self) -> usize {
+        self.0.files()
+    }
+    pub fn covered(&self) -> usize {
+        self.0.covered()
     }
 }
 
@@ -173,13 +177,16 @@ impl Project {
         Ok(Self { options })
     }
     pub fn read(&self) -> Result<ReadModel, Error> {
-        let loaded = acquisition::load_all(&self.options.start, self.options.config.as_deref())?;
-        Ok(loaded.into_read())
+        Ok(acquisition::load_all(
+            &self.options.start,
+            self.options.config.as_deref(),
+        )?)
     }
     pub fn inspect(&self) -> Result<Inspection, Error> {
-        let (loaded, guides, surface) =
-            acquisition::load_with_guides(&self.options.start, self.options.config.as_deref())?;
-        Ok(loaded.into_inspection(guides, surface))
+        Ok(acquisition::load_with_guides(
+            &self.options.start,
+            self.options.config.as_deref(),
+        )?)
     }
     pub fn check(&self) -> Result<CheckReport, Error> {
         self.inspect().map(Inspection::into_check)

@@ -1,12 +1,10 @@
 use crate::acquisition::read_utf8_file;
 use kotowari_core::config::Config;
-use kotowari_core::sources::*;
 use std::path::Path;
-/// 判断の記録と ADR の置き場を読み、出典の検査コンテキストを構築する
-pub fn build_context(
+pub fn read_texts(
     base: &Path,
     config: &Config,
-) -> Result<SourceContext, kotowari_core::StopReason> {
+) -> Result<(Vec<(String, String)>, Vec<(String, String)>), kotowari_core::StopReason> {
     let records_dir = base.join(&config.decisions.records);
     let adr_dir = base.join(&config.decisions.adr);
 
@@ -38,14 +36,7 @@ pub fn build_context(
         })?;
     }
 
-    Ok(context_from_entries(
-        config,
-        records
-            .iter()
-            .map(|(path, text)| (path.as_str(), text.as_str())),
-        adr.iter()
-            .map(|(path, text)| (path.as_str(), text.as_str())),
-    ))
+    Ok((records, adr))
 }
 
 /// 置き場の下の .md をファイル名の順に深さ優先で読み、置き場からの相対パスと中身を visit に渡す

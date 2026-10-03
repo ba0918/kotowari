@@ -1,7 +1,6 @@
 use crate::acquisition::read_utf8_file;
 use kotowari_core::change_records::*;
-use kotowari_core::ir;
-use kotowari_core::{Finding, config::Config};
+use kotowari_core::config::Config;
 fn collect_records(
     base: &std::path::Path,
     patterns: &[String],
@@ -64,29 +63,19 @@ fn collect_records(
     Ok(files)
 }
 
-pub fn static_check(
+pub fn read_texts(
     base: &std::path::Path,
     cfg: &Config,
-    docs: &[ir::IrDocument],
-    findings: &mut Vec<Finding>,
-) -> Result<(), kotowari_core::StopReason> {
+) -> Result<Option<Vec<(String, String)>>, kotowari_core::StopReason> {
     let Some(changes) = &cfg.changes else {
-        return Ok(());
+        return Ok(None);
     };
-    let paths = collect_records(base, &changes.records)?;
-    let mut texts = vec![];
-    for (path, absolute) in paths {
-        let content = read_utf8_file(std::path::Path::new(&absolute), &path)?;
-        texts.push((path, content));
-    }
-    kotowari_core::change_records::check_entries(
-        texts
-            .iter()
-            .map(|(path, text)| (path.as_str(), text.as_str())),
-        cfg,
-        docs,
-        &crate::sources::build_context(base, cfg)?,
-        findings,
-    );
-    Ok(())
+    collect_records(base, &changes.records)?
+        .into_iter()
+        .map(|(path, absolute)| {
+            let text = read_utf8_file(std::path::Path::new(&absolute), &path)?;
+            Ok((path, text))
+        })
+        .collect::<Result<Vec<_>, _>>()
+        .map(Some)
 }
