@@ -54,16 +54,17 @@ pub fn read_guides(
             "{overlap}: matched by both guides.files and tests.files"
         )));
     }
-    let mut entries = Vec::new();
+    let mut sources = Vec::new();
     for (rel, abs) in &files {
         let content = crate::read_utf8_file(Path::new(abs), rel)?;
-        read_marks(rel, &content, &mut entries, findings);
+        sources.push((rel.as_str(), content));
     }
-    check_stale(&entries, &fingerprints_by_id(docs), findings);
-    Ok(GuideTally {
-        files: files.len(),
-        marks: entries.len(),
-    })
+    check_entries(
+        sources.iter().map(|(path, text)| (*path, text.as_str())),
+        test_files,
+        docs,
+        findings,
+    )
 }
 
 /// `ID` から、その `ID` の`項目`と`シナリオ`の`指紋`を REQ-core-032 の順（文書はパスのバイト順、
@@ -90,7 +91,22 @@ pub(crate) fn check_texts(
     docs: &[IrDocument],
     findings: &mut Vec<Finding>,
 ) -> Result<GuideTally, StopReason> {
-    let mut paths: Vec<_> = files.iter().map(|source| source.path()).collect();
+    check_entries(
+        files.iter().map(|source| (source.path(), source.text())),
+        test_files,
+        docs,
+        findings,
+    )
+}
+
+fn check_entries<'a>(
+    files: impl IntoIterator<Item = (&'a str, &'a str)>,
+    test_files: &[String],
+    docs: &[IrDocument],
+    findings: &mut Vec<Finding>,
+) -> Result<GuideTally, StopReason> {
+    let files: Vec<_> = files.into_iter().collect();
+    let mut paths: Vec<_> = files.iter().map(|(path, _)| *path).collect();
     paths.sort();
     if let Some(overlap) = paths
         .into_iter()
@@ -101,8 +117,8 @@ pub(crate) fn check_texts(
         )));
     }
     let mut entries = Vec::new();
-    for source in files {
-        read_marks(source.path(), source.text(), &mut entries, findings);
+    for (path, text) in &files {
+        read_marks(path, text, &mut entries, findings);
     }
     check_stale(&entries, &fingerprints_by_id(docs), findings);
     Ok(GuideTally {

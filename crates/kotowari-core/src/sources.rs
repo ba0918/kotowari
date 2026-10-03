@@ -427,9 +427,8 @@ pub fn build_context(
     let records_dir = base.join(&config.decisions.records);
     let adr_dir = base.join(&config.decisions.adr);
 
-    let mut records_files = Vec::new();
-    let mut records_other_files = Vec::new();
-    let mut adr_files = Vec::new();
+    let mut records = Vec::new();
+    let mut adr = Vec::new();
 
     // records ディレクトリを読む。判断の記録とそれ以外のファイルに分ける
     if records_dir.is_dir() {
@@ -438,15 +437,10 @@ pub fn build_context(
             "",
             &config.decisions.records,
             &mut |rel, content| {
-                let rf = parse_records_file(&rel, content);
-                if rf.is_records {
-                    records_files.push(rf);
-                } else {
-                    records_other_files.push(OtherFile {
-                        rel_path: rel,
-                        headings: rf.headings,
-                    });
-                }
+                records.push((
+                    crate::join_display_path(&config.decisions.records, &rel),
+                    content.to_owned(),
+                ));
             },
         )?;
     }
@@ -454,23 +448,39 @@ pub fn build_context(
     // adr ディレクトリを読む
     if adr_dir.is_dir() {
         for_each_md(&adr_dir, "", &config.decisions.adr, &mut |rel, content| {
-            adr_files.push(parse_other_file(&rel, content));
+            adr.push((
+                crate::join_display_path(&config.decisions.adr, &rel),
+                content.to_owned(),
+            ));
         })?;
     }
 
-    Ok(SourceContext {
-        records_path: config.decisions.records.clone(),
-        adr_path: config.decisions.adr.clone(),
-        records_files,
-        adr_files,
-        records_other_files,
-    })
+    Ok(context_from_entries(
+        config,
+        records
+            .iter()
+            .map(|(path, text)| (path.as_str(), text.as_str())),
+        adr.iter()
+            .map(|(path, text)| (path.as_str(), text.as_str())),
+    ))
 }
 
 pub(crate) fn context_from_texts(
     config: &crate::config::Config,
     records: &[crate::SourceText],
     adr: &[crate::SourceText],
+) -> SourceContext {
+    context_from_entries(
+        config,
+        records.iter().map(|source| (source.path(), source.text())),
+        adr.iter().map(|source| (source.path(), source.text())),
+    )
+}
+
+fn context_from_entries<'a>(
+    config: &crate::config::Config,
+    records: impl IntoIterator<Item = (&'a str, &'a str)>,
+    adr: impl IntoIterator<Item = (&'a str, &'a str)>,
 ) -> SourceContext {
     let records_path = crate::normalize_path(&config.decisions.records);
     let adr_path = crate::normalize_path(&config.decisions.adr);
@@ -485,8 +495,8 @@ pub(crate) fn context_from_texts(
     };
     let mut records_files = Vec::new();
     let mut records_other_files = Vec::new();
-    for source in records {
-        let file = parse_records_file(&relative(source.path(), &records_path), source.text());
+    for (path, text) in records {
+        let file = parse_records_file(&relative(path, &records_path), text);
         if file.is_records {
             records_files.push(file);
         } else {
@@ -497,8 +507,8 @@ pub(crate) fn context_from_texts(
         }
     }
     let adr_files = adr
-        .iter()
-        .map(|source| parse_other_file(&relative(source.path(), &adr_path), source.text()))
+        .into_iter()
+        .map(|(path, text)| parse_other_file(&relative(path, &adr_path), text))
         .collect();
     SourceContext {
         records_path,

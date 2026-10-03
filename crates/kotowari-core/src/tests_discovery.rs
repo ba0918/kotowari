@@ -334,39 +334,29 @@ pub fn discover_and_check(
 ) -> Result<DiscoveredTests, crate::StopReason> {
     let test_files = collect_files(base, &config.tests.files)?;
     let queries = TestQueries::load(base, config)?;
-    let mut all_tests: Vec<DiscoveredTest> = Vec::new();
-    // REQ-core-153: list の "tests" の元。check は使わない
-    let mut markers: Vec<TestMarker> = Vec::new();
-    // TBL-core-021: 読んだテストのファイルを拡張子ごとに数える
-    let mut tally: BTreeMap<String, crate::TestFileTally> = BTreeMap::new();
+    let mut analysis = Vec::new();
 
     for (rel_path, abs_path) in &test_files {
-        let content = lone_cr_to_lf(&crate::read_utf8_file(
-            std::path::Path::new(abs_path),
-            rel_path,
-        )?);
-
-        let ext = std::path::Path::new(rel_path)
-            .extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("");
+        let source = crate::read_utf8_file(std::path::Path::new(abs_path), rel_path)?;
+        let content = lone_cr_to_lf(&source);
         // REQ-core-081: 拡張子から言語を決め、その言語にルールがあれば問い合わせのある言語
         let lang = language_of(rel_path).filter(|lang| queries.has_query(*lang));
-        let query = lang.is_some();
-
-        tally
-            .entry(ext.to_string())
-            .or_insert(crate::TestFileTally { files: 0, query })
-            .files += 1;
-
+        let mut parsed = crate::TestAnalysis {
+            source: crate::SourceText::new(rel_path.clone(), source)
+                .map_err(|error| crate::StopReason::MappingError(error.to_string()))?,
+            language: lang.map(|language| format!("{language:?}")),
+            has_query: lang.is_some(),
+            tests: Vec::new(),
+            line_markers: Vec::new(),
+            findings: Vec::new(),
+        };
         if let Some(lang) = lang {
             match discover_tests(&content, rel_path, lang, &queries, config) {
                 Ok(tests) => {
-                    record_test_markers(&tests, rel_path, known_ids, &mut markers, findings);
-                    all_tests.extend(tests);
+                    parsed.tests = tests;
                 }
                 Err(_) => {
-                    findings.push(Finding::new(
+                    parsed.findings.push(Finding::new(
                         FindingKind::UnparsableFile,
                         rel_path.clone(),
                         None,
@@ -375,17 +365,25 @@ pub fn discover_and_check(
                 }
             }
         } else {
-            record_line_markers(&content, rel_path, known_ids, &mut markers, findings);
+            parsed.line_markers = content
+                .lines()
+                .enumerate()
+                .flat_map(|(index, line)| parse_markers_in_line(line, index + 1))
+                .collect();
         }
+        analysis.push(parsed);
     }
 
-    check_missing_tests(docs, ir_path, &markers, &all_tests, findings);
-
-    Ok(DiscoveredTests {
-        tally,
-        markers,
-        files: test_files.into_iter().map(|(rel, _)| rel).collect(),
-    })
+    Ok(check_entries(
+        test_files
+            .iter()
+            .zip(&analysis)
+            .map(|((path, _), file)| (path.as_str(), file)),
+        docs,
+        known_ids,
+        ir_path,
+        findings,
+    ))
 }
 
 /// テストの発見の結果
@@ -405,12 +403,27 @@ pub(crate) fn check_analysis(
     ir_path: &str,
     findings: &mut Vec<Finding>,
 ) -> DiscoveredTests {
+    check_entries(
+        analysis.iter().map(|file| (file.source.path(), file)),
+        docs,
+        known_ids,
+        ir_path,
+        findings,
+    )
+}
+
+fn check_entries<'a>(
+    analysis: impl IntoIterator<Item = (&'a str, &'a crate::TestAnalysis)>,
+    docs: &[IrDocument],
+    known_ids: &BTreeSet<String>,
+    ir_path: &str,
+    findings: &mut Vec<Finding>,
+) -> DiscoveredTests {
     let mut all_tests = Vec::new();
     let mut markers = Vec::new();
     let mut tally = BTreeMap::new();
     let mut files = Vec::new();
-    for file in analysis {
-        let path = file.source.path();
+    for (path, file) in analysis {
         let extension = Path::new(path)
             .extension()
             .and_then(|ext| ext.to_str())
@@ -498,48 +511,6 @@ fn record_test_markers(
                 Some(*line_num),
                 raw.clone(),
             ));
-        }
-    }
-}
-
-/// 問い合わせの無い言語: 印を行ごとに拾い、検査もする（REQ-core-076, REQ-core-087, REQ-core-072, REQ-core-054）
-fn record_line_markers(
-    content: &str,
-    rel_path: &str,
-    known_ids: &BTreeSet<String>,
-    markers: &mut Vec<TestMarker>,
-    findings: &mut Vec<Finding>,
-) {
-    for (idx, line) in content.lines().enumerate() {
-        let line_num = idx + 1;
-        for marker in parse_markers_in_line(line, line_num) {
-            if marker.ids.is_empty() {
-                // REQ-core-072: 空の印、または閉じ括弧のない印
-                findings.push(Finding::new(
-                    FindingKind::InvalidMarker,
-                    rel_path.to_string(),
-                    Some(line_num),
-                    line.to_string(),
-                ));
-            } else {
-                for id in &marker.ids {
-                    markers.push(TestMarker {
-                        id: id.clone(),
-                        path: rel_path.to_string(),
-                        line: line_num,
-                        name: None,
-                    });
-                    // REQ-core-054: 存在しない ID への参照
-                    if !known_ids.contains(id) {
-                        findings.push(Finding::new(
-                            FindingKind::UnresolvedReference,
-                            rel_path.to_string(),
-                            Some(line_num),
-                            id.clone(),
-                        ));
-                    }
-                }
-            }
         }
     }
 }

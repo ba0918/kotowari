@@ -398,35 +398,20 @@ pub fn static_check(
         return Ok(());
     };
     let paths = collect_records(base, &changes.records)?;
-    let mut entries = vec![];
+    let mut texts = vec![];
     for (path, absolute) in paths {
         let content = crate::read_utf8_file(std::path::Path::new(&absolute), &path)?;
-        let (parsed, errors) = parse(&path, &content);
-        entries.extend(parsed);
-        findings.extend(errors);
+        texts.push((path, content));
     }
-    let requirements = docs
-        .iter()
-        .flat_map(|d| {
-            d.items.iter().filter_map(|i| match i {
-                ir::Item::Requirement { id, .. } => Some((
-                    id.clone(),
-                    crate::join_display_path(&cfg.ir, &d.relative_path),
-                )),
-                _ => None,
-            })
-        })
-        .collect();
-    let ir_paths = docs
-        .iter()
-        .map(|d| crate::join_display_path(&cfg.ir, &d.relative_path))
-        .collect();
-    findings.extend(validate_references(
-        &mut entries,
-        &requirements,
-        &ir_paths,
+    check_entries(
+        texts
+            .iter()
+            .map(|(path, text)| (path.as_str(), text.as_str())),
+        cfg,
+        docs,
         &crate::sources::build_context(base, cfg)?,
-    ));
+        findings,
+    );
     Ok(())
 }
 
@@ -437,9 +422,25 @@ pub(crate) fn check_texts(
     context: &crate::sources::SourceContext,
     findings: &mut Vec<Finding>,
 ) {
+    check_entries(
+        texts.iter().map(|source| (source.path(), source.text())),
+        cfg,
+        docs,
+        context,
+        findings,
+    )
+}
+
+fn check_entries<'a>(
+    texts: impl IntoIterator<Item = (&'a str, &'a str)>,
+    cfg: &Config,
+    docs: &[ir::IrDocument],
+    context: &crate::sources::SourceContext,
+    findings: &mut Vec<Finding>,
+) {
     let mut entries = Vec::new();
-    for source in texts {
-        let (parsed, errors) = parse(source.path(), source.text());
+    for (path, text) in texts {
+        let (parsed, errors) = parse(path, text);
         entries.extend(parsed);
         findings.extend(errors);
     }

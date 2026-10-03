@@ -52,6 +52,51 @@ fn findings_by_kind(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value>
         .collect()
 }
 
+// @kotowari[REQ-core-313, EX-core-485]
+#[cfg(unix)]
+#[test]
+fn literal_backslash_filenames_do_not_become_source_directories() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_records(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "tests:\n  files: []\n",
+    )
+    .unwrap();
+    fs::write(tmp.path().join("docs/decision/records/a\\b.md"), "# Decision\n\n## Context\n\nScope.\n\n## Agreements\n\n- A1 Decision.\n  - why: Reason.\n  - decided_by: Person.\n").unwrap();
+    fs::write(tmp.path().join("docs/ir/topic.md"), "# Topic\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/a/b.md#A1\n- verification: review\n- how_to_verify: Review the statement.\n\nStatement.\n").unwrap();
+    let output = cmd()
+        .args(["check", "--format", "json"])
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    let value = parse_json(&output);
+    let invalid = findings_by_kind(&value, "source_invalid");
+    assert_eq!(invalid.len(), 1);
+    assert_eq!(invalid[0]["path"], "docs/ir/topic.md");
+    assert_eq!(invalid[0]["detail"], "docs/decision/records/a/b.md#A1");
+
+    fs::write(
+        tmp.path().join("docs/decision/records/a\\b.md"),
+        "# Decision\n\n## Context\n\nScope.\n\n## Agreements\n\n- A1 Decision.\n",
+    )
+    .unwrap();
+    let output = cmd()
+        .args(["check", "--format", "json"])
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    let value = parse_json(&output);
+    let missing = findings_by_kind(&value, "record_field_missing");
+    assert!(!missing.is_empty());
+    assert!(
+        missing
+            .iter()
+            .all(|finding| finding["path"] == "docs/decision/records/a\\b.md")
+    );
+}
+
 // --- REQ-core-057: 出典の書式 ---
 
 // @kotowari[REQ-core-057]
