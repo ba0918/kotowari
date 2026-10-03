@@ -25,6 +25,28 @@ SCHEMA = {"kotowari-markdown-schema", "kotowari-markdown-schema-io", "kotowari-m
 def series_version(name): return "0.1.0" if name in SCHEMA else "0.3.0"
 def digest(path): return hashlib.sha256(path.read_bytes()).hexdigest()
 
+def stage_command(config, target):
+    return ["cargo", "package", "--workspace", "--all-features", "--no-verify", "--offline", "--config", config, "--target-dir", target]
+
+def validate_stage_config(config):
+    if any(source.get("replace-with") for source in config.get("source", {}).values()):
+        raise ValueError("native staging cannot inherit a directory-source replacement")
+
+def inherited_stage_configs():
+    home = Path(os.environ.get("CARGO_HOME", Path.home() / ".cargo"))
+    directories = [home, *(parent / ".cargo" for parent in ROOT.parents), ROOT / ".cargo"]
+    result = []
+    for directory in directories:
+        for name in ["config", "config.toml"]:
+            path = directory / name
+            if path.is_file():
+                config = tomllib.loads(path.read_text())
+                validate_stage_config(config)
+                result.append({"path": str(path), "sha256": digest(path), "replacement": False})
+    if any(key.startswith("CARGO_SOURCE_") and key.endswith("_REPLACE_WITH") for key in os.environ):
+        raise ValueError("native staging inherited a source replacement environment variable")
+    return result
+
 def dependency_tables(manifest):
     for section in [manifest, *manifest.get("target", {}).values()]:
         for key in ["dependencies", "dev-dependencies", "build-dependencies"]:
@@ -112,9 +134,10 @@ def main():
     external = lock_checksums(original_lock)
     (output / "workspace-metadata.json").write_text(json.dumps(metadata, indent=2))
     (output / "vendor-config.toml").write_text(run(["cargo", "vendor", "--locked", "--versioned-dirs", output / "vendor"]))
-    config = output / "cargo-config.toml"
-    config.write_text('[source.crates-io]\nreplace-with = "local-packages"\n[source.local-packages]\ndirectory = '+json.dumps(str(output / "vendor"))+'\n')
-    run(["cargo", "package", "--workspace", "--all-features", "--no-verify", "--offline", "--config", config, "--target-dir", output / "package-target"])
+    (output / "stage-config-inheritance.json").write_text(json.dumps(inherited_stage_configs(), indent=2))
+    stage_config = output / "stage-config.toml"
+    stage_config.write_text('[net]\noffline = true\n')
+    run(stage_command(stage_config, output / "package-target"))
     archives = list((output / "package-target/package").glob("*.crate"))
     expected = {f"{name}-{series_version(name)}.crate" for name in PATHS}
     if {p.name for p in archives} != expected: raise ValueError("archive set mismatch")
@@ -137,6 +160,8 @@ def main():
         for asset in assets:
             if not (pristine[name] / asset).is_file(): raise ValueError(f"unshipped embedded asset: {name}/{asset}")
     (output / "dependency-order.json").write_text(json.dumps(list(PATHS), indent=2))
+    config = output / "cargo-config.toml"
+    config.write_text('[source.crates-io]\nreplace-with = "local-packages"\n[source.local-packages]\ndirectory = '+json.dumps(str(output / "vendor"))+'\n')
     def verify(directory, feature=None):
         common = ["--manifest-path", directory / "Cargo.toml", "--locked", "--offline", "--config", config]
         if feature: common += ["--features", feature]

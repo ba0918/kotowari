@@ -18,6 +18,7 @@ Position: Plan draft prepared for parent-owned independent review and approval. 
   - why: [A15](./2026-10-03-public-crate-api.md#A15), [A28](./2026-10-03-public-crate-api.md#A28), [A34](./2026-10-03-public-crate-api.md#A34) and [A48](./2026-10-03-public-crate-api.md#A48) require independent series and updated automation, but do not require changing the established canonical locations or making a release.
   - decided_by: Plan author under [D1](./2026-10-03-public-crate-api.md#D1)
 - A3 Use Cargo's multi-package packaging support to produce original .crate artifacts, then build their unmodified extracted manifests in an isolated, offline directory-source simulation containing those artifacts and Cargo-vendored external dependencies. Record artifact checksums and compare all resolved versions with the locked workspace graph. Run external consumers against the same artifact source.
+  - superseded_by: [A8 operational staging correction](#A8)
   - why: [A46](./2026-10-03-public-crate-api.md#A46) requires actual standalone package builds before publication. Installed Cargo 1.98.1 documents --workspace packaging and lockfile preparation for interdependent packages; cargo vendor and directory sources provide dependency resolution without an extra tool. Python's standard library supplies archive extraction, TOML reading and checksums. This is a local prepublication simulation, not evidence that these versions already exist on crates.io. The package helper must fail if Cargo cannot resolve the staged packages or if a workspace path escapes into a standalone build.
   - rejected: cargo package --list alone; publish --dry-run against unavailable registry versions; patching manifests to point back at the working tree; installing an unapproved registry tool.
   - decided_by: Plan author under [D1](./2026-10-03-public-crate-api.md#D1)
@@ -33,6 +34,14 @@ Position: Plan draft prepared for parent-owned independent review and approval. 
 - A7 The parent session orchestrates implementation and fixing with openai/gpt-6.1-sol after approval and obtains separate-context review. The plan author does not implement or self-approve.
   - why: This is the user's execution instruction for this task, not a product requirement or a permanent executor assignment. No model variant was requested.
   - decided_by: User through the parent task instruction
+- A8 Vendor locked external dependencies first, create original archives with native cached offline Cargo workspace staging under a separate configuration without source replacement, then apply the isolated directory-source replacement for standalone builds, tests and consumers.
+  - why: Cargo 1.98.1 rejects the initial replacement-source staging command. Naming crates-io explicitly gets past that rejection but fails to resolve the staged schema dependency through the vendor directory. The corresponding native offline staging probe produced all seven original archives with exit 0. Delaying replacement preserves original artifact bytes, locked external version/checksum checks, offline standalone resolution and the no-upload/no-patch guarantees of [A46](./2026-10-03-public-crate-api.md#A46). This corrects only the verification method in [the implementation plan](../../plans/public-crate-api.md#verification-map); the original approved bytes did not contain it.
+  - rejected: treating the diagnostic archives as already independently verified; copying working-tree packages into the source simulation; editing shipped manifests or regenerating a failing shipped lockfile.
+  - decided_by: Parent adjudication after observing both staging failures and the successful native offline probe, within approved [D1](./2026-10-03-public-crate-api.md#D1).
+
+## Revisions
+
+The parent adopted A8 after implementation reached the package gate. A8 supersedes A3's operational staging prescription, while retaining its artifact and consumer verification obligations. The fixed branch-wide comparison base from A6 remains unchanged. Standalone validation is still mandatory; archive creation alone is not a completion claim.
 
 ## Reuse decisions
 

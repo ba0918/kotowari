@@ -10,6 +10,14 @@ spec.loader.exec_module(packages)
 
 
 class PackageContracts(unittest.TestCase):
+    def test_native_stage_uses_a_separate_config_and_rejects_inherited_replacement(self):
+        command = packages.stage_command(pathlib.Path('/scratch/stage.toml'), pathlib.Path('/scratch/target'))
+        self.assertIn('--offline', command)
+        self.assertIn('/scratch/stage.toml', list(map(str, command)))
+        packages.validate_stage_config({'net': {'offline': True}})
+        with self.assertRaises(ValueError):
+            packages.validate_stage_config({'source': {'crates-io': {'replace-with': 'vendor'}}})
+
     def test_wrong_edges_and_missing_registry_versions_are_rejected(self):
         import tomllib
         manifests = {name: tomllib.loads((ROOT / path / "Cargo.toml").read_text()) for name, path in packages.PATHS.items()}
