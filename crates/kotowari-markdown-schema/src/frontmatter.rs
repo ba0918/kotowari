@@ -17,6 +17,14 @@ pub enum SchemaRef {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FrontmatterError(pub String);
 
+impl std::fmt::Display for FrontmatterError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl std::error::Error for FrontmatterError {}
+
 /// 解決済みのスキーマの位置。ファイル読み書きは CLI 側の責務なので、ここでは位置だけを決める。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ResolvedSchema {
@@ -183,11 +191,13 @@ mod tests {
         assert_eq!(frontmatter_schema(src).unwrap(), None);
     }
 
-    // @kotowari[REQ-schema-014]
+    // @kotowari[REQ-schema-014, REQ-schema-049]
     #[test]
     fn broken_frontmatter_is_an_error() {
         let src = "---\n$schema: [\n---\n# 題名\n";
         assert!(frontmatter_schema(src).is_err());
+        let error = frontmatter_schema(src).unwrap_err();
+        let _: &dyn std::error::Error = &error;
     }
 
     // @kotowari[REQ-schema-014]

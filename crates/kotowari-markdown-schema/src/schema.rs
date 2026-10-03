@@ -49,6 +49,14 @@ impl<'de> Deserialize<'de> for Pattern {
 #[derive(Debug)]
 pub struct SchemaError(pub String);
 
+impl std::fmt::Display for SchemaError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl std::error::Error for SchemaError {}
+
 /// スキーマ言語の最上位（REQ-schema-016）。
 ///
 /// Construction and mutation cannot bypass semantic validation.

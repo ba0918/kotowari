@@ -3,6 +3,23 @@
 use markdown::{Constructs, ParseOptions, mdast::Node, to_mdast};
 use serde_json::Value;
 
+#[derive(Debug)]
+pub struct ParseError(pub(crate) String);
+
+impl ParseError {
+    pub fn detail(&self) -> &str {
+        &self.0
+    }
+}
+
+impl std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl std::error::Error for ParseError {}
+
 /// Markdown を mdast の木に解析する。GFM（表）と frontmatter の構文を有効にする。
 pub(crate) fn parse_mdast(src: &str) -> Result<Node, String> {
     let mut constructs = Constructs::gfm();
@@ -15,11 +32,11 @@ pub(crate) fn parse_mdast(src: &str) -> Result<Node, String> {
 }
 
 /// 素の AST を JSON で返す。frontmatter のノードと位置情報は含めない。
-pub fn ast_json(src: &str) -> Result<Value, String> {
-    let mut root = parse_mdast(src)?;
+pub fn ast_json(src: &str) -> Result<Value, ParseError> {
+    let mut root = parse_mdast(src).map_err(ParseError)?;
     strip_frontmatter(&mut root);
     strip_positions(&mut root);
-    serde_json::to_value(&root).map_err(|e| e.to_string())
+    serde_json::to_value(&root).map_err(|e| ParseError(e.to_string()))
 }
 
 /// 文書先頭の frontmatter（YAML / TOML）ノードを取り除く。

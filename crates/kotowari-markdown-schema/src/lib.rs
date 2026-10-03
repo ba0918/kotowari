@@ -15,7 +15,7 @@ mod line_reading;
 pub mod schema;
 pub mod validate;
 
-pub use ast::ast_json;
+pub use ast::{ParseError, ast_json};
 pub use document::Document;
 pub use frontmatter::{frontmatter_schema, resolve_schema};
 pub use schema::{Schema, SchemaError};

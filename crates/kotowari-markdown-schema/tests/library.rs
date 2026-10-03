@@ -47,7 +47,9 @@ const DOCUMENT: &str = "---\n$schema: ../.kotowari/schemas/ir.yaml\n---\n# 題�
 fn parsed_values_can_be_reused_for_validated_extraction() {
     use kotowari_markdown_schema::{Schema, ValidationOptions, extract_validated};
     let schema = Schema::parse(SCHEMA).unwrap();
-    let document = Document::parse(DOCUMENT).unwrap();
+    let document: Result<Document, kotowari_markdown_schema::ParseError> =
+        Document::parse(DOCUMENT);
+    let document = document.unwrap();
     for _ in 0..2 {
         let values = extract_validated(&schema, &document, ValidationOptions::default()).unwrap();
         assert_eq!(values.values()["requirements"][0]["id"], "REQ-001");
@@ -62,6 +64,7 @@ fn semantic_schema_errors_are_rejected_before_document_operations() {
         Schema::parse("document:\n  sections:\n    - name: x\n      repeat: { min: 3, max: 1 }\n")
             .unwrap_err();
     assert!(error.0.contains("min is greater than max"));
+    let _: &dyn std::error::Error = &error;
 }
 
 // @kotowari[REQ-schema-069, EX-schema-087]
@@ -107,6 +110,9 @@ fn typed_partial_json_keeps_obtainable_values_and_schema_name() {
 // @kotowari[REQ-schema-049, EX-schema-015]
 #[test]
 fn a_dependent_crate_can_run_the_whole_pipeline() {
+    let ast: Result<serde_json::Value, kotowari_markdown_schema::ParseError> =
+        kotowari_markdown_schema::ast_json(DOCUMENT);
+    assert_eq!(ast.unwrap()["type"], "root");
     // 1. 文書から "$schema" を読む
     let schema_ref = frontmatter_schema(DOCUMENT).unwrap().unwrap();
     assert!(

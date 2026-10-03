@@ -200,8 +200,8 @@ pub enum Block {
 
 impl Document {
     /// Markdown を mdast に解析し、文書の木に組み立てる。
-    pub fn parse(src: &str) -> Result<Document, String> {
-        let root = parse_mdast(src)?;
+    pub fn parse(src: &str) -> Result<Document, crate::ParseError> {
+        let root = parse_mdast(src).map_err(crate::ParseError)?;
         let Node::Root(root) = root else {
             return Ok(Document::default());
         };
