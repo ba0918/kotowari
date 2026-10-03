@@ -10,6 +10,8 @@ tests:
     - "src/**/*.rs"
     - "crates/kotowari-core/**/*.rs"
     - "crates/kotowari-markdown-schema/**/*.rs"
+    - "crates/kotowari-markdown-schema-io/**/*.rs"
+    - "crates/kotowari-mds/**/*.rs"
     - "tests/**/*.rs"
   rust:
     attributes: [kani::proof]

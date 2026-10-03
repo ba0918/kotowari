@@ -76,7 +76,11 @@ fi
 declarations="crates/kotowari-core/Cargo.toml [package] version	$(manifest_version crates/kotowari-core/Cargo.toml)	kotowari
 Cargo.lock kotowari	$(lock_version Cargo.lock kotowari)	kotowari
 Cargo.lock kotowari-core	$(lock_version Cargo.lock kotowari-core)	kotowari
-Cargo.lock kotowari-markdown-schema	$(lock_version Cargo.lock kotowari-markdown-schema)	kotowari-mds"
+Cargo.lock kotowari-markdown-schema	$(lock_version Cargo.lock kotowari-markdown-schema)	kotowari-mds
+crates/kotowari-markdown-schema-io/Cargo.toml [package] version	$(manifest_version crates/kotowari-markdown-schema-io/Cargo.toml)	kotowari-mds
+crates/kotowari-mds/Cargo.toml [package] version	$(manifest_version crates/kotowari-mds/Cargo.toml)	kotowari-mds
+Cargo.lock kotowari-markdown-schema-io	$(lock_version Cargo.lock kotowari-markdown-schema-io)	kotowari-mds
+Cargo.lock kotowari-mds	$(lock_version Cargo.lock kotowari-mds)	kotowari-mds"
 
 status=0
 while IFS=$'\t' read -r place version product; do

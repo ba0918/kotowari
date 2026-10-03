@@ -19,6 +19,6 @@ serde_json = "1"
 serde-saphyr = "1"
 
 [workspace]
-members = ["crates/kotowari-core", "crates/kotowari-markdown-schema"]
+members = ["crates/kotowari-core", "crates/kotowari-markdown-schema", "crates/kotowari-markdown-schema-io", "crates/kotowari-mds"]
 exclude = ["experiments"]
 resolver = "3"

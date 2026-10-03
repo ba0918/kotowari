@@ -42,8 +42,8 @@ case "$product" in
         changelog="CHANGELOG.md"
         ;;
     kotowari-mds)
-        manifests=(crates/kotowari-markdown-schema/Cargo.toml)
-        lock_packages=(kotowari-markdown-schema)
+        manifests=(crates/kotowari-markdown-schema/Cargo.toml crates/kotowari-markdown-schema-io/Cargo.toml crates/kotowari-mds/Cargo.toml)
+        lock_packages=(kotowari-markdown-schema kotowari-markdown-schema-io kotowari-mds)
         changelog="crates/kotowari-markdown-schema/CHANGELOG.md"
         ;;
     *)

@@ -690,7 +690,6 @@ name = "kotowari-markdown-schema"
 version = "0.1.0"
 dependencies = [
  "assert_cmd",
- "clap",
  "gray_matter",
  "markdown",
  "proptest",
@@ -699,10 +698,32 @@ dependencies = [
  "serde-saphyr",
  "serde_json",
  "serde_path_to_error",
+ "tempfile",
+]
+
+[[package]]
+name = "kotowari-markdown-schema-io"
+version = "0.1.0"
+dependencies = [
+ "kotowari-markdown-schema",
  "sha2",
  "tempfile",
  "ureq",
  "walkdir",
+]
+
+[[package]]
+name = "kotowari-mds"
+version = "0.1.0"
+dependencies = [
+ "assert_cmd",
+ "clap",
+ "kotowari-markdown-schema",
+ "kotowari-markdown-schema-io",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
 ]
 
 [[package]]

@@ -60,7 +60,7 @@ jobs:
               readme=README.md
               ;;
             kotowari-mds)
-              package=kotowari-markdown-schema
+              package=kotowari-mds
               bin=kotowari-mds
               changelog=crates/kotowari-markdown-schema/CHANGELOG.md
               readme=crates/kotowari-markdown-schema/README.md

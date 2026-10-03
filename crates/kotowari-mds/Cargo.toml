@@ -1,0 +1,24 @@
+[package]
+name = "kotowari-mds"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.89"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ba0918/kotowari"
+description = "Validate Markdown documents and extract structured values"
+
+[[bin]]
+name = "kotowari-mds"
+path = "src/main.rs"
+
+[dependencies]
+kotowari-markdown-schema = { path = "../kotowari-markdown-schema", version = "0.1.0" }
+kotowari-markdown-schema-io = { path = "../kotowari-markdown-schema-io", version = "0.1.0" }
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+
+[dev-dependencies]
+sha2 = "0.10"
+assert_cmd = "2"
+tempfile = "3"

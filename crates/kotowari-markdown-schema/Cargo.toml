@@ -14,10 +14,6 @@ description = "Validate Markdown documents against a YAML schema declared in the
 name = "kotowari_markdown_schema"
 path = "src/lib.rs"
 
-[[bin]]
-name = "kotowari-mds"
-path = "src/main.rs"
-
 [dependencies]
 markdown = { version = "1", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
@@ -25,10 +21,6 @@ serde_json = { version = "1", features = ["preserve_order"] }
 gray_matter = { version = "0.3", features = ["yaml"] }
 regex = "1"
 serde-saphyr = "1"
-clap = { version = "4", features = ["derive"] }
-sha2 = "0.10"
-ureq = "3"
-walkdir = "2"
 serde_path_to_error = "0.1"
 
 [dev-dependencies]
