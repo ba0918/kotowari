@@ -22,7 +22,9 @@ EDGES = {
     "kotowari": {"kotowari-core", "kotowari-source-analysis"}, "kotowari-cli": {"kotowari"},
 }
 SCHEMA = {"kotowari-markdown-schema", "kotowari-markdown-schema-io", "kotowari-mds"}
-def series_version(name): return "0.1.0" if name in SCHEMA else "0.3.0"
+def series_version(name):
+    authority = PATHS["kotowari-markdown-schema"] if name in SCHEMA else PATHS["kotowari-cli"]
+    return tomllib.loads((ROOT / authority / "Cargo.toml").read_text())["package"]["version"]
 def digest(path): return hashlib.sha256(path.read_bytes()).hexdigest()
 
 def consumer_manifest(name, dependencies, asynchronous=False):
