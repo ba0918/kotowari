@@ -6,6 +6,10 @@ use kotowari_markdown_schema::{
     Document, PartialExtraction, Schema, ValidatedValues, ValidationOptions,
 };
 use std::path::{Path, PathBuf};
+#[cfg(feature = "tokio")]
+mod asynchronous;
+#[cfg(feature = "tokio")]
+pub use asynchronous::{AsyncOptions, AsyncSchemaLoader};
 
 #[derive(Debug, Clone)]
 pub struct LoaderOptions {
@@ -30,6 +34,8 @@ pub enum ErrorKind {
     FrontmatterInvalid,
     SchemaNotFound,
     SchemaInvalid,
+    RuntimeUnavailable,
+    TaskFailure,
 }
 
 impl ErrorKind {
@@ -40,6 +46,8 @@ impl ErrorKind {
             Self::FrontmatterInvalid => "frontmatter_invalid",
             Self::SchemaNotFound => "schema_not_found",
             Self::SchemaInvalid => "schema_invalid",
+            Self::RuntimeUnavailable => "runtime_unavailable",
+            Self::TaskFailure => "task_failure",
         }
     }
 }

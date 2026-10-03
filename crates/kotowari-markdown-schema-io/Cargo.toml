@@ -8,10 +8,16 @@ repository = "https://github.com/ba0918/kotowari"
 description = "Load Markdown schemas and documents from files and URLs"
 
 [dependencies]
+tokio = { version = "1.53.1", optional = true, features = ["rt", "sync"] }
 kotowari-markdown-schema = { path = "../kotowari-markdown-schema", version = "0.1.0" }
 sha2 = "0.10"
 ureq = "3"
 walkdir = "2"
 
 [dev-dependencies]
+tokio = { version = "1.53.1", features = ["rt-multi-thread"] }
 tempfile = "3"
+
+[features]
+default = []
+tokio = ["dep:tokio"]

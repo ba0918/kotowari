@@ -1,4 +1,8 @@
 mod acquisition;
+#[cfg(feature = "tokio")]
+mod asynchronous;
+#[cfg(feature = "tokio")]
+pub use asynchronous::{AsyncOptions, AsyncProject};
 mod change_records;
 mod change_service;
 mod git_snapshot;
@@ -51,6 +55,8 @@ pub enum ErrorKind {
     ReadFailure,
     GitFailure,
     InternalMapping,
+    RuntimeUnavailable,
+    TaskFailure,
 }
 #[derive(Debug)]
 pub struct Error {
