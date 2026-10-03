@@ -160,7 +160,7 @@ LLMと一緒に使うためのClaude Code用スキルを`agent/skills/`に用意
 
 ## 同梱ツール
 
-`crates/kotowari-markdown-schema`には、Markdown文書をYAMLのスキーマで検査する汎用CLIツール`kotowari-mds`がある。
+`crates/kotowari-mds`には、Markdown文書をYAMLのスキーマで検査する汎用CLIツール`kotowari-mds`がある。
 kotowariはこの仕組みでIRを読み取っているが、`kotowari-mds`は単独でも利用できる。詳しくは[README](crates/kotowari-markdown-schema/README.md)を参照。
 
 ## ライセンス
