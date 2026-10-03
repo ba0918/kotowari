@@ -26,7 +26,7 @@ kotowari は常に、Linux と macOS を対象にする。Windows ではパス�
 - kind: invariant
 - source: docs/decision/records/records.md#A100, docs/decision/records/records.md#A101, docs/decision/records/records.md#P2, docs/decision/records/records.md#A102, docs/decision/records/2026-09-17-mutation-tests.md#A48, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-09-27-surface-check.md#A24
 - verification: review
-- how_to_verify: `crates/kotowari-core/src/lib.rs` の `load_all` で置き場の存在を検査し、`StopReason` で停止していることを確認。黙って飛ばす経路が無いことを `rg 'filter_map|if let Ok' crates/kotowari-core/src/` で確認
+- how_to_verify: `crates/kotowari/src/acquisition.rs` の `load_all` で置き場の存在を検査し、`StopReason` で停止していることを確認。黙って飛ばす経路が無いことを `rg 'filter_map|if let Ok' crates/kotowari/src/ crates/kotowari-core/src/` で確認
 
 読めない入力、壊れている入力、契約の形に合わない入力に対して、kotowari は`停止`か`誤り`の`指摘`のどちらかを必ず行い、黙って飛ばさない関係が常に成り立つ。ファイルや設定を全体として読む前提が崩れる入力（読めない、UTF-8 でない、設定の構文と型と値の誤り、引数の誤り、glob の構文の誤り、結果のファイルの誤り、`等価の一覧`と`未記載の面の一覧`の構文の誤り）では`停止`し、読めたが局所的に形から外れる入力ではその場所への`誤り`の`指摘`を出す。読まないものは`除外`だけである。`変異の結果`か`等価の一覧`の1件が指すファイルが無い、読めない、UTF-8 でないときは、REQ-core-141 と REQ-core-142 のとおり`停止`せず、`誤り`か`注意`の`指摘`に倒す。
 
@@ -35,7 +35,7 @@ kotowari は常に、Linux と macOS を対象にする。Windows ではパス�
 - kind: prohibition
 - source: docs/decision/records/records.md#P2, docs/decision/records/records.md#A100
 - verification: review
-- how_to_verify: `crates/kotowari-core/src/ir.rs` と `crates/kotowari-core/src/lib.rs` で、仕様に列挙されていない振る舞いを黙って決めていないことを確認。`GherkinBlock` の gherkin 解析で有効な行の種類以外を invalid_gherkin_line にし、`read_utf8_file` で読めないファイルを停止にし、`parse_document` が写せない指摘と値を停止にし、`check_documents` が仕様に無い読み飛ばしを持たないことを確認
+- how_to_verify: `crates/kotowari-core/src/ir.rs` と `crates/kotowari/src/acquisition.rs` で、仕様に列挙されていない振る舞いを黙って決めていないことを確認。`GherkinBlock` の gherkin 解析で有効な行の種類以外を invalid_gherkin_line にし、`read_utf8_file` で読めないファイルを停止にし、`parse_document` が写せない指摘と値を停止にし、`check_documents` が仕様に無い読み飛ばしを持たないことを確認
 
 kotowari は、`除外`に列挙していない入力を、`停止`も`指摘`もせずに読み飛ばしてはならない。
 
