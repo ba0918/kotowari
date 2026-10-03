@@ -181,7 +181,7 @@ fn is_fingerprint(text: &str) -> bool {
 /// 行番号と detail の行の文字には元の行が要る。"-->" の無い "<!--" はコメントにしない
 fn html_comments(content: &str) -> Vec<Range<usize>> {
     // GFM と frontmatter の読み方は MDX の構文を持たないので、parse_mdast が誤りを返すことはない
-    let Ok(root) = kotowari_markdown_schema::ast::parse_mdast(content) else {
+    let Ok(root) = crate::markdown::parse(content) else {
         return Vec::new();
     };
     let mut html = Vec::new();

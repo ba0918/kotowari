@@ -19,7 +19,7 @@ impl Pattern {
     }
 
     /// 名前付きキャプチャを含む最初の一致を取る。
-    pub fn captures<'h>(&self, text: &'h str) -> Option<regex::Captures<'h>> {
+    pub(crate) fn captures<'h>(&self, text: &'h str) -> Option<regex::Captures<'h>> {
         self.compiled.captures(text)
     }
 
@@ -50,19 +50,59 @@ impl<'de> Deserialize<'de> for Pattern {
 pub struct SchemaError(pub String);
 
 /// スキーマ言語の最上位（REQ-schema-016）。
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
+///
+/// Construction and mutation cannot bypass semantic validation.
+///
+/// ```compile_fail
+/// use kotowari_markdown_schema::Schema;
+/// let schema = Schema { name: None, open: false, reading: Default::default(), document: todo!() };
+/// ```
+///
+/// ```compile_fail
+/// use kotowari_markdown_schema::Schema;
+/// let mut schema = Schema::parse("document: {}").unwrap();
+/// schema.open = true;
+/// ```
+///
+/// ```compile_fail
+/// use kotowari_markdown_schema::Schema;
+/// let schema: Schema = serde_saphyr::from_str("document: {}").unwrap();
+/// ```
+#[derive(Debug)]
 pub struct Schema {
     /// 型の名前。`ast --schema` の `type` に使う
-    pub name: Option<String>,
+    pub(crate) name: Option<String>,
     /// 閉じた世界を緩めるか（REQ-schema-002）
-    #[serde(default)]
-    pub open: bool,
+    pub(crate) open: bool,
     /// 見出しの下の行の読み方（REQ-schema-060）。書かないときは段落で読む
-    #[serde(default)]
-    pub reading: Reading,
+    pub(crate) reading: Reading,
     /// 文書の構造の木
-    pub document: Document,
+    pub(crate) document: Document,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawSchema {
+    name: Option<String>,
+    #[serde(default)]
+    open: bool,
+    #[serde(default)]
+    reading: Reading,
+    document: Document,
+}
+
+impl Schema {
+    pub fn parse(yaml: &str) -> Result<Self, SchemaError> {
+        parse_schema(yaml)
+    }
+
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
+    }
+
+    pub fn is_open(&self) -> bool {
+        self.open
+    }
 }
 
 /// 見出しと前置部の下の行の読み方（REQ-schema-060、TBL-schema-011）。
@@ -521,12 +561,18 @@ pub fn parse_schema(yaml: &str) -> Result<Schema, SchemaError> {
     // 停止は説明の1行目だけを出すので、欄の名前は複数行になる serde-saphyr の説明より前に置く
     let mut track = serde_path_to_error::Track::new();
     let parsed = serde_saphyr::with_deserializer_from_str(yaml, |de| {
-        Schema::deserialize(serde_path_to_error::Deserializer::new(de, &mut track))
+        RawSchema::deserialize(serde_path_to_error::Deserializer::new(de, &mut track))
     });
     let schema = parsed.map_err(|e| match track.path().to_string().as_str() {
         "." => SchemaError(format!("{e}")),
         field => SchemaError(format!("in {field}: {e}")),
     })?;
+    let schema = Schema {
+        name: schema.name,
+        open: schema.open,
+        reading: schema.reading,
+        document: schema.document,
+    };
     validate_schema(&schema)?;
     Ok(schema)
 }

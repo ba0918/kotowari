@@ -282,7 +282,7 @@ fn decision_table_cells(doc: &IrDocument) -> Vec<String> {
     if ranges.is_empty() {
         return Vec::new();
     }
-    let Ok(root) = kotowari_markdown_schema::ast::parse_mdast(&doc.raw_content) else {
+    let Ok(root) = crate::markdown::parse(&doc.raw_content) else {
         return Vec::new();
     };
     let mut cells = Vec::new();

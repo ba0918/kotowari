@@ -142,7 +142,13 @@ fn run(cli: Cli) -> Result<u8, Stop> {
             let src = read_document(&file)?;
             let json = if schema {
                 let (schema, document) = load_schema_and_document(&file, &src)?;
-                kotowari_markdown_schema::extract::extract_typed(&schema, &document)
+                kotowari_markdown_schema::extract_typed_partial(
+                    &schema,
+                    &document,
+                    Default::default(),
+                )
+                .values()
+                .clone()
             } else {
                 kotowari_markdown_schema::ast::ast_json(&src).map_err(|e| Stop {
                     kind: "unreadable_file",
@@ -155,7 +161,9 @@ fn run(cli: Cli) -> Result<u8, Stop> {
         Command::Values { file, format } => {
             let src = read_document(&file)?;
             let (schema, document) = load_schema_and_document(&file, &src)?;
-            let values = kotowari_markdown_schema::extract::extract_values(&schema, &document);
+            let partial =
+                kotowari_markdown_schema::extract_partial(&schema, &document, Default::default());
+            let values = partial.values();
             match format.as_str() {
                 "json" => println!("{}", serde_json::to_string_pretty(&values).unwrap()),
                 "text" => print!("{}", render_values_text(&values)),
@@ -184,7 +192,7 @@ fn run(cli: Cli) -> Result<u8, Stop> {
 fn check_document(path: &Path, open_flag: bool) -> Result<Vec<Finding>, Stop> {
     let src = read_document(path)?;
     let (schema, document) = load_schema_and_document(path, &src)?;
-    let open = open_flag || schema.open;
+    let open = open_flag || schema.is_open();
     Ok(kotowari_markdown_schema::validate::validate(
         &schema, &document, open,
     ))
@@ -429,7 +437,7 @@ fn check_directory(root: &Path, open_flag: bool) -> Result<Vec<(PathBuf, Vec<Fin
             continue;
         };
         let (schema, document) = load_schema_and_document_from(&path, &src, &schema_ref)?;
-        let open = open_flag || schema.open;
+        let open = open_flag || schema.is_open();
         let findings = kotowari_markdown_schema::validate::validate(&schema, &document, open);
         files.push((path, findings));
     }

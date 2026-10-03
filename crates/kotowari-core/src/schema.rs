@@ -53,7 +53,7 @@ mod tests {
     // @kotowari[REQ-core-168]
     #[test]
     fn req_core_168_the_schema_chosen_per_document_kind_is_the_one_named_for_it() {
-        let name = |kind| schema_for(kind).unwrap().name;
+        let name = |kind| schema_for(kind).unwrap().name().map(str::to_owned);
         assert_eq!(name(DocKind::Topic).as_deref(), Some("ir"));
         assert_eq!(name(DocKind::Glossary).as_deref(), Some("ir-context"));
         assert_eq!(name(DocKind::Flags).as_deref(), Some("ir-flags"));
@@ -68,6 +68,6 @@ mod tests {
             "計画書のスキーマが parse_schema を通らない: {:?}",
             schema.err()
         );
-        assert_eq!(schema.unwrap().name.as_deref(), Some("plan"));
+        assert_eq!(schema.unwrap().name(), Some("plan"));
     }
 }

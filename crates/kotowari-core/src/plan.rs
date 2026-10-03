@@ -33,7 +33,7 @@ pub fn check_plan(path: &str, content: &str) -> Vec<Finding> {
             .expect("Markdown without MDX always parses"),
         None => document,
     };
-    validate(&schema, &document, schema.open)
+    validate(&schema, &document, schema.is_open())
         .into_iter()
         .map(|f| {
             Finding::new(

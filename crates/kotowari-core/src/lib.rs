@@ -14,6 +14,7 @@ pub mod git_snapshot;
 pub mod guides;
 pub mod ir;
 pub mod list;
+mod markdown;
 pub mod mutants;
 pub mod plan;
 pub mod query;

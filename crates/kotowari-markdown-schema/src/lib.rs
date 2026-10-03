@@ -14,3 +14,84 @@ pub mod frontmatter;
 mod line_reading;
 pub mod schema;
 pub mod validate;
+
+pub use ast::ast_json;
+pub use document::Document;
+pub use frontmatter::{frontmatter_schema, resolve_schema};
+pub use schema::{Schema, SchemaError};
+
+pub fn validate(
+    schema: &Schema,
+    document: &Document,
+    options: ValidationOptions,
+) -> Vec<finding::Finding> {
+    validate::validate(schema, document, schema.open || options.relax)
+}
+
+/// Options for document validation. Relaxation never closes an open schema.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct ValidationOptions {
+    pub relax: bool,
+}
+
+/// Values obtained from a document without validation findings.
+#[derive(Debug, Clone)]
+pub struct ValidatedValues(serde_json::Value);
+
+impl ValidatedValues {
+    pub fn values(&self) -> &serde_json::Value {
+        &self.0
+    }
+}
+
+/// Obtainable JSON values together with all document validation findings.
+#[derive(Debug)]
+pub struct PartialExtraction {
+    values: serde_json::Value,
+    findings: Vec<finding::Finding>,
+}
+
+impl PartialExtraction {
+    pub fn values(&self) -> &serde_json::Value {
+        &self.values
+    }
+
+    pub fn findings(&self) -> &[finding::Finding] {
+        &self.findings
+    }
+}
+
+pub fn extract_partial(
+    schema: &Schema,
+    document: &Document,
+    options: ValidationOptions,
+) -> PartialExtraction {
+    PartialExtraction {
+        values: extract::extract_values(schema, document),
+        findings: validate::validate(schema, document, schema.open || options.relax),
+    }
+}
+
+pub fn extract_typed_partial(
+    schema: &Schema,
+    document: &Document,
+    options: ValidationOptions,
+) -> PartialExtraction {
+    PartialExtraction {
+        values: extract::extract_typed(schema, document),
+        findings: validate(schema, document, options),
+    }
+}
+
+pub fn extract_validated(
+    schema: &Schema,
+    document: &Document,
+    options: ValidationOptions,
+) -> Result<ValidatedValues, Vec<finding::Finding>> {
+    let findings = validate::validate(schema, document, schema.open || options.relax);
+    if findings.is_empty() {
+        Ok(ValidatedValues(extract::extract_values(schema, document)))
+    } else {
+        Err(findings)
+    }
+}

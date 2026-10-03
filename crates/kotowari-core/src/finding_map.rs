@@ -328,7 +328,7 @@ pub fn read_document(
         Document::parse(content).map_err(|e| stop(format!("{filename}: document: {e}")))?;
     let values = extract_values(&schema, &document);
     let ctx = MapContext::new("", filename, doc_kind, &values);
-    let findings = validate(&schema, &document, schema.open)
+    let findings = validate(&schema, &document, schema.is_open())
         .iter()
         .filter_map(|engine| map_finding(&ctx, engine).transpose())
         .collect::<Result<Vec<Finding>, StopReason>>()?;

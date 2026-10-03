@@ -42,6 +42,68 @@ document:
 
 const DOCUMENT: &str = "---\n$schema: ../.kotowari/schemas/ir.yaml\n---\n# 題名\n\nこの文書が扱う範囲。\n\n## 要求\n\n### REQ-001: 名前\n\n- 種類: ubiquitous\n\n本文。\n";
 
+// @kotowari[REQ-schema-068, REQ-schema-069, EX-schema-085]
+#[test]
+fn parsed_values_can_be_reused_for_validated_extraction() {
+    use kotowari_markdown_schema::{Schema, ValidationOptions, extract_validated};
+    let schema = Schema::parse(SCHEMA).unwrap();
+    let document = Document::parse(DOCUMENT).unwrap();
+    for _ in 0..2 {
+        let values = extract_validated(&schema, &document, ValidationOptions::default()).unwrap();
+        assert_eq!(values.values()["requirements"][0]["id"], "REQ-001");
+    }
+}
+
+// @kotowari[REQ-schema-068, EX-schema-086]
+#[test]
+fn semantic_schema_errors_are_rejected_before_document_operations() {
+    use kotowari_markdown_schema::Schema;
+    let error =
+        Schema::parse("document:\n  sections:\n    - name: x\n      repeat: { min: 3, max: 1 }\n")
+            .unwrap_err();
+    assert!(error.0.contains("min is greater than max"));
+}
+
+// @kotowari[REQ-schema-069, EX-schema-087]
+#[test]
+fn violating_documents_have_partial_values_but_no_validated_values() {
+    use kotowari_markdown_schema::{Schema, ValidationOptions, extract_partial, extract_validated};
+    let schema = Schema::parse(SCHEMA).unwrap();
+    let document = Document::parse(&DOCUMENT.replace("ubiquitous", "bogus")).unwrap();
+    let findings = extract_validated(&schema, &document, ValidationOptions::default()).unwrap_err();
+    assert_eq!(findings[0].kind, FindingKind::FieldEnumInvalid);
+    let partial = extract_partial(&schema, &document, ValidationOptions::default());
+    assert_eq!(partial.values()["requirements"][0]["kind"], "bogus");
+    assert_eq!(partial.findings()[0].kind, FindingKind::FieldEnumInvalid);
+}
+
+// @kotowari[REQ-schema-070, EX-schema-088]
+#[test]
+fn validation_respects_schema_open_and_explicit_relaxation() {
+    use kotowari_markdown_schema::{Schema, ValidationOptions};
+    let document = Document::parse("## Undeclared\n").unwrap();
+    for open in [false, true] {
+        let schema = Schema::parse(&format!("open: {open}\ndocument: {{}}\n")).unwrap();
+        for relax in [false, true] {
+            let findings =
+                kotowari_markdown_schema::validate(&schema, &document, ValidationOptions { relax });
+            assert_eq!(findings.is_empty(), open || relax);
+        }
+    }
+}
+
+// @kotowari[REQ-schema-071, EX-schema-089]
+#[test]
+fn typed_partial_json_keeps_obtainable_values_and_schema_name() {
+    use kotowari_markdown_schema::{Schema, ValidationOptions, extract_typed_partial};
+    let schema = Schema::parse(SCHEMA).unwrap();
+    let document = Document::parse(&DOCUMENT.replace("ubiquitous", "bogus")).unwrap();
+    let partial = extract_typed_partial(&schema, &document, ValidationOptions::default());
+    assert_eq!(partial.values()["type"], "ir");
+    assert_eq!(partial.values()["requirements"][0]["kind"], "bogus");
+    assert_eq!(partial.findings()[0].kind, FindingKind::FieldEnumInvalid);
+}
+
 // @kotowari[REQ-schema-049, EX-schema-015]
 #[test]
 fn a_dependent_crate_can_run_the_whole_pipeline() {
