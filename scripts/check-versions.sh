@@ -111,4 +111,21 @@ if [ -n "$tag" ]; then
     fi
 fi
 
+python3 - <<'PY' || status=1
+import pathlib, sys, tomllib
+files = [pathlib.Path('Cargo.toml'), *sorted(pathlib.Path('crates').glob('*/Cargo.toml'))]
+manifests = [(path, tomllib.loads(path.read_text())) for path in files]
+versions = {manifest['package']['name']: manifest['package']['version'] for _, manifest in manifests}
+for path, manifest in manifests:
+    tables = [manifest.get(key, {}) for key in ['dependencies', 'dev-dependencies', 'build-dependencies']]
+    for target in manifest.get('target', {}).values():
+        tables.extend(target.get(key, {}) for key in ['dependencies', 'dev-dependencies', 'build-dependencies'])
+    for table in tables:
+        for key, dependency in table.items():
+            if isinstance(dependency, dict) and 'path' in dependency:
+                name = dependency.get('package', key)
+                if name not in versions or dependency.get('version') != versions[name]:
+                    print(f'{path}: registry version differs for {name}', file=sys.stderr)
+                    sys.exit(1)
+PY
 exit "$status"

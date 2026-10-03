@@ -3,6 +3,9 @@ name = "kotowari-source-analysis"
 version = "0.3.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/ba0918/kotowari"
+description = "In-memory source analysis producing core-owned specification facts"
 
 [dependencies]
 kotowari-core = { path = "../kotowari-core", version = "0.3.0" }

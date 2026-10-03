@@ -3,6 +3,9 @@ name = "kotowari"
 version = "0.3.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/ba0918/kotowari"
+description = "Explicitly rooted specification operations with optional Tokio adapters"
 
 [dependencies]
 tokio = { version = "1.53.1", optional = true, features = ["rt", "sync"] }

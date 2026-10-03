@@ -11,7 +11,7 @@ PACKAGES = ["kotowari", "kotowari-core", "kotowari-source-analysis", "kotowari-m
 
 class VersionChecks(unittest.TestCase):
     def fixture(self, root):
-        for path in ["Cargo.toml", "Cargo.lock", "scripts/check-versions.sh"] + [f"crates/{name}/Cargo.toml" for name in PACKAGES]:
+        for path in ["Cargo.toml", "Cargo.lock", "scripts/check-versions.sh", "scripts/release.sh"] + [f"crates/{name}/Cargo.toml" for name in PACKAGES]:
             destination = root / path
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / path, destination)
@@ -25,6 +25,39 @@ class VersionChecks(unittest.TestCase):
                 manifest.write_text(manifest.read_text().replace('version = "0.3.0"', 'version = "0.3.1"', 1))
                 result = subprocess.run(["bash", str(root / "scripts/check-versions.sh")], capture_output=True, text=True)
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+
+    def test_incoming_dependency_versions_are_checked(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            self.fixture(root)
+            manifest = root / "crates/kotowari-core/Cargo.toml"
+            manifest.write_text(manifest.read_text().replace('version = "0.1.0"', 'version = "0.1.1"'))
+            result = subprocess.run(["bash", str(root / "scripts/check-versions.sh")], capture_output=True)
+            self.assertEqual(result.returncode, 1)
+
+    def test_family_transformation_updates_incoming_edges_and_retains_the_other_family(self):
+        import tomllib
+        for family, version in [("kotowari", "0.3.1"), ("kotowari-mds", "0.1.1")]:
+            with self.subTest(family=family), tempfile.TemporaryDirectory() as temporary:
+                root = pathlib.Path(temporary)
+                self.fixture(root)
+                original = {p: p.read_bytes() for p in root.rglob("Cargo.toml")}
+                command = 'source "$1"; update_versions "$2" "$3" "$4"'
+                result = subprocess.run(["bash", "-c", command, "fixture", str(ROOT / "scripts/release.sh"), str(root), family, version], capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                series = {"kotowari-cli", "kotowari", "kotowari-core", "kotowari-source-analysis"}
+                if family == "kotowari-mds":
+                    series = {"kotowari-markdown-schema", "kotowari-markdown-schema-io", "kotowari-mds"}
+                for path in original:
+                    before = tomllib.loads(original[path].decode())
+                    after = tomllib.loads(path.read_text())
+                    expected = version if before["package"]["name"] in series else before["package"]["version"]
+                    self.assertEqual(after["package"]["version"], expected)
+                check = subprocess.run(["bash", str(root / "scripts/check-versions.sh")], capture_output=True, text=True)
+                self.assertEqual(check.returncode, 0, check.stdout + check.stderr)
+                for path, content in original.items():
+                    path.write_bytes(content)
+                self.assertEqual({p: p.read_bytes() for p in original}, original)
 
 
 if __name__ == "__main__":

@@ -2,9 +2,8 @@ mod comment_block;
 mod discovery;
 mod test_queries;
 
-use kotowari_core::{
-    Finding, FindingKind, SourceText, SurfaceAnalysis, TestAnalysis, config::Config,
-};
+use kotowari_core::{Finding, FindingKind, config::Config};
+pub use kotowari_core::{SourceText, SurfaceAnalysis, TestAnalysis};
 
 #[derive(Debug)]
 #[non_exhaustive]
