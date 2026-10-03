@@ -16,7 +16,7 @@ def version(root, family):
 
 
 def next_patch(current):
-    major, minor, patch = current.split(".")
+    major, minor, patch = current.split("-", 1)[0].split(".")
     return f"{major}.{minor}.{int(patch) + 1}"
 
 
