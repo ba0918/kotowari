@@ -17,7 +17,7 @@ fn tests(values: &[kotowari::TestRef]) -> Vec<Value> {
         .collect()
 }
 fn item(value: &ListItem) -> Value {
-    let mut result = match value {
+    let variant = match value {
         ListItem::Requirement(i) => {
             json!({"name":i.name(),"type":i.type_(),"verification":i.verification(),"definition":i.definition(),"examples":i.examples(),"how_to_verify":i.how_to_verify(),"sources":i.sources(),"tests":tests(i.tests()),"fingerprint":i.fingerprint(),"deferred":i.deferred()})
         }
@@ -32,11 +32,17 @@ fn item(value: &ListItem) -> Value {
         }
     };
     let (path, line) = value.location();
+    let mut result =
+        json!({"id":value.id(),"kind":value.kind(),"name":variant["name"],"path":path,"line":line});
     let object = result.as_object_mut().unwrap();
-    object.insert("id".into(), json!(value.id()));
-    object.insert("kind".into(), json!(value.kind()));
-    object.insert("path".into(), json!(path));
-    object.insert("line".into(), json!(line));
+    object.extend(
+        variant
+            .as_object()
+            .unwrap()
+            .iter()
+            .filter(|(key, _)| key.as_str() != "name")
+            .map(|(key, value)| (key.clone(), value.clone())),
+    );
     result
 }
 pub fn list(value: &ReadList) -> Value {
