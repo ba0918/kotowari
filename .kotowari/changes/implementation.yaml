@@ -1,0 +1,966 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "public-crate-api-implementation",
+      "base": "b22c1ba6c7d657e91b0da9d9cbe36a46ad48a046",
+      "role": "implementer",
+      "files": [
+        {
+          "path": ".github/workflows/change-conformance.yml",
+          "before": "sha256:7322dfbccfa4808047003e8483dfe18a72f6674148dc2b96e5e1f4ff7b0de86f",
+          "after": "sha256:495ff203347c97232e56d67140d3d24bd10b4be1b5538cf2ab7da4e6849b87d3"
+        },
+        {
+          "path": ".github/workflows/release.yml",
+          "before": "sha256:8fa8d97e5286df9108876e7cf5133f84b19c12a2548958b98a0b76a4f0cdd1ac",
+          "after": "sha256:699f5384bd9b6a9995b445f1c22907e5fffa8ba42f55b6533b58c7a3deac33bd"
+        },
+        {
+          "path": ".kotowari/equivalents.yaml",
+          "before": "sha256:600a50641b47eb8ea419406df2e3c1da19917e24dfb0ac243e4d3805c9e75a7d",
+          "after": "sha256:2d81fae767733e5beca5f403efd4c4cf0a1d454374d92de0b5b801eecb0fde9e"
+        },
+        {
+          "path": ".kotowari/schemas/context.yaml",
+          "before": "sha256:84ef425db1ab466685bdaba2fbb4efa9c10fd5d677cc29daf8411f61d8c29dd4",
+          "after": null
+        },
+        {
+          "path": ".kotowari/schemas/flags.yaml",
+          "before": "sha256:b539af74e961ee20f1697811163e139afe1dadfc1652813ae5e0af860e8bb6d7",
+          "after": null
+        },
+        {
+          "path": ".kotowari/schemas/ir.yaml",
+          "before": "sha256:20d207326256dbdf80821c6f3f6329e233ebff0fc4b94e0506bca1ad504be238",
+          "after": null
+        },
+        {
+          "path": ".kotowari/schemas/plan.yaml",
+          "before": "sha256:16cebf9babc2af6c29ee1ca41e94a91c8669857baa534641afd88ffe7d023628",
+          "after": null
+        },
+        {
+          "path": "CHANGELOG.md",
+          "before": "sha256:65c67a93142998d772c61992aad13bd4325d2471270e6a3750ccaaec73d3aefc",
+          "after": "sha256:82f56b37b8b06d1e115ffb0d8f0b5449eebf7a4fa0fa7ddb4232f112f80c3545"
+        },
+        {
+          "path": "Cargo.lock",
+          "before": "sha256:5467e58291ef066ca491309f9b602305c746b18ae1a7157a9508d316cbdfd1f5",
+          "after": "sha256:f500026613a437b7d4ba200ff2c7e19a96ab91e6a1f802dd7e1aa2cea2d09614"
+        },
+        {
+          "path": "Cargo.toml",
+          "before": "sha256:90259385e11911ab2f9e440017f0386fbbc88fe6888e403f546cfaabdb011e07",
+          "after": "sha256:8c7c9431f18f89b287fa98a50bd4b52e601e3313be25996227b10eac5913d4c6"
+        },
+        {
+          "path": "PROJECT.md",
+          "before": "sha256:aa8b4c6b51be483bec0aacb73643d0b434184490ec39328ec76d5388eedea50a",
+          "after": "sha256:1b109b91fc455535d1123d45a445940be3c02fe59caf6e0394f33bd64761d727"
+        },
+        {
+          "path": "crates/kotowari-core/Cargo.toml",
+          "before": "sha256:71c475c4c107b3135f8dea409d47ca4c416f65c2a0e95916906c47d61c0a172d",
+          "after": "sha256:fb7e6e647cc4da18fee947358234025e38bbca16548c12bf0e0e4f47fbf8951e"
+        },
+        {
+          "path": "crates/kotowari-core/LICENSE-APACHE",
+          "before": null,
+          "after": "sha256:759f9ba3dead8247a3cd4c2eabe512c04135dd07d15fa91293adb0bf4c654849"
+        },
+        {
+          "path": "crates/kotowari-core/LICENSE-MIT",
+          "before": null,
+          "after": "sha256:1ef6314e318eb58d36a7e295dbfc2eb835b4df2b78a23a5217a5c5055454e264"
+        },
+        {
+          "path": "crates/kotowari-core/README.md",
+          "before": null,
+          "after": "sha256:b1c1187c3e63f505bf741c0098570e38bff081dd4b2f0d69ad6a65de27d61f73"
+        },
+        {
+          "path": "crates/kotowari-core/examples/memory.rs",
+          "before": null,
+          "after": "sha256:17b2ebaf28bc3ad6abc5009f9f8e65bb7ab53da7ab64e97b5e5d868221ad9692"
+        },
+        {
+          "path": "crates/kotowari-core/queries/php.yml",
+          "before": "sha256:ddeed38ee7dc876f718cfdf12add8076866d676ae8ba501f4df29c8bca08a982",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-core/queries/python.yml",
+          "before": "sha256:ac1369286fa80a7dee7113f6e327737df64ee8ff490b6053e584aa4b5823ccfd",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-core/queries/rust.yml",
+          "before": "sha256:562ad457a4b6bb51b31a00357be868d333575b4b9b116200fa6eae994ec9c0fc",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-core/queries/ts_js.yml",
+          "before": "sha256:97d930a08d91b1a9e7a6f2f49a6874b05e05335efa749910df698813df0b1843",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-core/schemas/context.yaml",
+          "before": null,
+          "after": "sha256:84ef425db1ab466685bdaba2fbb4efa9c10fd5d677cc29daf8411f61d8c29dd4"
+        },
+        {
+          "path": "crates/kotowari-core/schemas/flags.yaml",
+          "before": null,
+          "after": "sha256:b539af74e961ee20f1697811163e139afe1dadfc1652813ae5e0af860e8bb6d7"
+        },
+        {
+          "path": "crates/kotowari-core/schemas/ir.yaml",
+          "before": null,
+          "after": "sha256:20d207326256dbdf80821c6f3f6329e233ebff0fc4b94e0506bca1ad504be238"
+        },
+        {
+          "path": "crates/kotowari-core/schemas/plan.yaml",
+          "before": null,
+          "after": "sha256:16cebf9babc2af6c29ee1ca41e94a91c8669857baa534641afd88ffe7d023628"
+        },
+        {
+          "path": "crates/kotowari-core/src/change_records.rs",
+          "before": "sha256:f8cc2bed27fb30509a25785de05e3397d648aaaf43981d56c01302ef6deed11d",
+          "after": "sha256:03d8aca49735b0aba7cd495deacd960e72350579c890ce579c0fc7afdb14e861"
+        },
+        {
+          "path": "crates/kotowari-core/src/change_service.rs",
+          "before": "sha256:832f5cf2d1f59e87015bd8c073f6e77ed844487dc06b1b6c9d0016bdde717dda",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-core/src/changes.rs",
+          "before": "sha256:61c1618d0c198a90498a7265b8d6ba2e3eafe634cea4129ed6089b7a60ac5d7a",
+          "after": "sha256:d2afeb9e055670cba8246cb0e09a3cedfd3fc74f7a8ae0e79fc960bec8c1850f"
+        },
+        {
+          "path": "crates/kotowari-core/src/comment_block.rs",
+          "before": "sha256:6170929d2b3be4c546cd8ea31ef779232fc9c31014d3c7fa014f6c19672cf307",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-core/src/comparison.rs",
+          "before": null,
+          "after": "sha256:8e17c2d60ec4e46e64fcc43acdf1f921bac7a557985d45e73aee7965528a40ac"
+        },
+        {
+          "path": "crates/kotowari-core/src/config.rs",
+          "before": "sha256:25016e6b49e75d0111fa647bbfb65d23890800513089bed592b82486e37cd701",
+          "after": "sha256:c54170c4edc9531c8591fa64600036efeedc85856d427be0498d6d1cd8a9dc78"
+        },
+        {
+          "path": "crates/kotowari-core/src/equivalents.rs",
+          "before": "sha256:fd6b4ba2cc3f11802b636168770e68c2a2d59c5799d322d35fcfd98d06df6d74",
+          "after": "sha256:353793acda767ef47f42e36a1821ee30d55a426bc07d377f78577ea8a891137d"
+        },
+        {
+          "path": "crates/kotowari-core/src/finding_map.rs",
+          "before": "sha256:a50390a26072bb7dc5dff9a0cba843fae3abdb62c4efa3da96f194129dfa1506",
+          "after": "sha256:a169bbec0fb2abc50b368b5626d0284d82046e305de0ff28ac9af9505d3343f9"
+        },
+        {
+          "path": "crates/kotowari-core/src/git_snapshot.rs",
+          "before": "sha256:1e54eb1764e236b0aa990da6134152fdd24cd67aa4dc036bda0d7df709d21ed9",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-core/src/guides.rs",
+          "before": "sha256:e9e6d640604b22a2f4a3f2071519872cbee25f5445b3b5f01b2f653f4079e919",
+          "after": "sha256:bd18d047f1405d9dd17e3d6e25e9fa88e09b84f31af9b75d038db8c3235d9271"
+        },
+        {
+          "path": "crates/kotowari-core/src/inputs.rs",
+          "before": null,
+          "after": "sha256:f435ea0d3539a19608636e7c295681116bc157bf831f11327c32a7dd2ac5365e"
+        },
+        {
+          "path": "crates/kotowari-core/src/ir.rs",
+          "before": "sha256:ab7ff6547bb9604fba4e284f28a050a2b9f94c722a6c8d23ba7cde3bf169a3b8",
+          "after": "sha256:010ee0c22acec8f3d87156a65462f78a68b789908b2c205a2dd3f6da8d53c673"
+        },
+        {
+          "path": "crates/kotowari-core/src/lib.rs",
+          "before": "sha256:cdba93b8e9309d8e9b349ec390872af9205cdb5ba00956a3ad0632b82bdb8e91",
+          "after": "sha256:a963a43a3e89cdee30daaa1a0e237b1ca4deb9ec403300371c5317c8c7f41ebd"
+        },
+        {
+          "path": "crates/kotowari-core/src/list.rs",
+          "before": "sha256:786dd68e4ead5b9e44d71a8ef7c611bef1794808bb859e609bd9bfe84068b551",
+          "after": "sha256:43c5b089a84c07a5121fcfd2a814aade5810df77e49c0e4f181a2e9b7f24c983"
+        },
+        {
+          "path": "crates/kotowari-core/src/markdown.rs",
+          "before": null,
+          "after": "sha256:4c59f55c75a32514f88b9e26a113c910dc1324b47d5d9c8c7df19394e55287a5"
+        },
+        {
+          "path": "crates/kotowari-core/src/mutants.rs",
+          "before": "sha256:2f4d93862ff01b60639fc8c1fced86fdf4e24c512b11274808fd26a7c447dc0b",
+          "after": "sha256:b9d0a1fed98d7170f5dc45f39bddff617b5da5364da9cc2af4c13ef23868b588"
+        },
+        {
+          "path": "crates/kotowari-core/src/plan.rs",
+          "before": "sha256:d6b237d859b48a87bb94328fc57168765375c67bdcb33efb8e4ecb109d1777ad",
+          "after": "sha256:18efec6ff7fe601aa04b2f7b4243fe1fba02ff94630bfe7689b7597b60922bc5"
+        },
+        {
+          "path": "crates/kotowari-core/src/query.rs",
+          "before": "sha256:c3256efdd8edc8b780daa10bb39e283cff100bdcc74d300397433a1aa5a18c86",
+          "after": "sha256:6b82f20f2965c44e8d833046f2bceefc9faf694225f7607e6cbf17071982cd60"
+        },
+        {
+          "path": "crates/kotowari-core/src/schema.rs",
+          "before": "sha256:ec9963077e9dbf29d9dd3a6f7a71ac21b0b3bad0857a780e3246f61fc6bbc403",
+          "after": "sha256:2b2dfe4630979cecb4dce561b5ba388521f99af601bc9b507432fe61662b3e70"
+        },
+        {
+          "path": "crates/kotowari-core/src/sources.rs",
+          "before": "sha256:c38195dd2557f43e46cf59a6e2c7e241d38998f805501125dd933f2c4ea007c5",
+          "after": "sha256:f5644d3cfec50b66cf2c7e82ce7d594a0b0ed29023b2c0a54122b38592669d70"
+        },
+        {
+          "path": "crates/kotowari-core/src/status.rs",
+          "before": "sha256:e8b18b0ff12a2e24ce931e916b7fbf9ac8b48353aded7a9efc6ec6ed3e54255b",
+          "after": "sha256:e1450d1bf796a787008cdc16f19d4f90c19bdb41f40954f51d8b11028856da66"
+        },
+        {
+          "path": "crates/kotowari-core/src/surface.rs",
+          "before": "sha256:b04c6da733b7bc710694affb51332391c1e162146c043fa10ce4587e623d8a55",
+          "after": "sha256:e9d3ae00698248aff6faf972cabafa7f4c608b2196ced17b7cce2e2e66905e80"
+        },
+        {
+          "path": "crates/kotowari-core/src/terms.rs",
+          "before": "sha256:e3cea5ee5c4d5f6c123279d2f4641468fe895c8cff3b929aa403be22c8e2f7e3",
+          "after": "sha256:c0fcfe89ea2aa98b3de692d471eecf82bbd4e19647017e60a33bff8fb35be217"
+        },
+        {
+          "path": "crates/kotowari-core/src/test_queries.rs",
+          "before": "sha256:f6e5aac9c0b7c9c562a347001aac908bc8f6164030dac68f103859365f1663b3",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-core/src/tests_discovery.rs",
+          "before": "sha256:ed93918d836762bf9ae21f799ea6db018edb935d00522ce54997adc223c4cddd",
+          "after": "sha256:909747eda6f1b428e75375ab4aaaecf9788d0d947e0c3a668d97bc8c215d8746"
+        },
+        {
+          "path": "crates/kotowari-core/tests/change_matching.rs",
+          "before": null,
+          "after": "sha256:06b1430c142bc2312245219676925413dd7507b26cf9433a9c5b2d05f9ee93e5"
+        },
+        {
+          "path": "crates/kotowari-core/tests/change_records.rs",
+          "before": null,
+          "after": "sha256:da125d0b38427a376cf513d747f8e128a32eaa5391e72409b4a35ea1a683220d"
+        },
+        {
+          "path": "crates/kotowari-core/tests/guides.rs",
+          "before": null,
+          "after": "sha256:b6478bb3761d60df32fa63ced99a3062744be3d55bd6d96f43f5beac039edf25"
+        },
+        {
+          "path": "crates/kotowari-core/tests/inputs.rs",
+          "before": null,
+          "after": "sha256:1ed268da8de340039fd6541522b65a3e5ce01f0ec684343d3dec892cdf0915ec"
+        },
+        {
+          "path": "crates/kotowari-core/tests/ir.rs",
+          "before": null,
+          "after": "sha256:802e34989a466e7c68d5ec6cec89c6404b4f21d16d6d3289b96415a258bd252b"
+        },
+        {
+          "path": "crates/kotowari-core/tests/paths.rs",
+          "before": null,
+          "after": "sha256:3a11d3b2adf297401615c120816686a11ae01831d0f4c2307cc259b759ec571d"
+        },
+        {
+          "path": "crates/kotowari-core/tests/surface.rs",
+          "before": null,
+          "after": "sha256:0e0daa9f0a8016cb48dafafba098b7d070f8ae1aefbc191a551ddcdbea7d8b88"
+        },
+        {
+          "path": "crates/kotowari-core/tests/test_facts.rs",
+          "before": null,
+          "after": "sha256:6ad095bf167289c1ef63376f910e60daec6589dad6b9d0ee43a453944b3598b9"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema-io/Cargo.toml",
+          "before": null,
+          "after": "sha256:0e906d1d19431edf004529570280505e1a612b005c75371f1590a13224f211d4"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema-io/LICENSE-APACHE",
+          "before": null,
+          "after": "sha256:759f9ba3dead8247a3cd4c2eabe512c04135dd07d15fa91293adb0bf4c654849"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema-io/LICENSE-MIT",
+          "before": null,
+          "after": "sha256:1ef6314e318eb58d36a7e295dbfc2eb835b4df2b78a23a5217a5c5055454e264"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema-io/README.md",
+          "before": null,
+          "after": "sha256:7c90bf2bcb88d3c879a21610d5be6c8ed95116447f1b163d6d2439aef6f1095b"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema-io/examples/loader.rs",
+          "before": null,
+          "after": "sha256:4f3438ec47d2aa86a4e7340a2f7f854e2c05cca6d7bae842a80f2b9dd5df5601"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema-io/src/async_tests.rs",
+          "before": null,
+          "after": "sha256:e74a98cea1ae82a5e9fef416bd3cce607816fcc9ffd4c5de266651f0e67ea11e"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema-io/src/asynchronous.rs",
+          "before": null,
+          "after": "sha256:3b71237ff53ea787021a2183ad6a3ca07b92db6c01e3cf30f9b0141e7217d25d"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema-io/src/lib.rs",
+          "before": null,
+          "after": "sha256:9eea391088ca1f4389d7670679c6f4545dae923755162483cb1a92b5ddb8acab"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema-io/tests/async.rs",
+          "before": null,
+          "after": "sha256:016172bad51877edfa1e81736305d0ee90515e591804c87ddb654c17346eb7ea"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema-io/tests/loader.rs",
+          "before": null,
+          "after": "sha256:bfa74b4f22ae902a817b88665aaf5b62f196557fad7b8b9b21fb7f82b8ee734c"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/CHANGELOG.md",
+          "before": null,
+          "after": "sha256:b91992aa68294bf0c78d5b0c9e53d70850e00fe06cb7d6a2aa8acf97638d054d"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/Cargo.toml",
+          "before": "sha256:be13540e2a57091e2344fd549dcaab7c422a3e900a998fe288c0507c312a9a81",
+          "after": "sha256:0dccbdefafae02484e0ed2943b70a12b519900e42c9bf4e2a2fb3d6a8c72da5f"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/LICENSE-APACHE",
+          "before": null,
+          "after": "sha256:759f9ba3dead8247a3cd4c2eabe512c04135dd07d15fa91293adb0bf4c654849"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/LICENSE-MIT",
+          "before": null,
+          "after": "sha256:1ef6314e318eb58d36a7e295dbfc2eb835b4df2b78a23a5217a5c5055454e264"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/README.md",
+          "before": "sha256:4fed31b2c6c02e2eadd5aae539170084a3eff004120f3cdb17195e5f81ff7eba",
+          "after": "sha256:c08411138cd86080319a2fb8dfb052d443ac8ef060d19f9e6a56660866b147eb"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/examples/extraction.rs",
+          "before": null,
+          "after": "sha256:00a9525425e0020ad748446160bbdec2420d4faf046798e29ef0d80d30dafb62"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/fixtures/.kotowari/schemas/adr.yaml",
+          "before": "sha256:227a5a19608e28ea86df167d0119338f738a8169f13f6dce8129cfbad2551d47",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/fixtures/.kotowari/schemas/decision.yaml",
+          "before": "sha256:e514fdccdbf428c2db01d29c5cde543d89edd7c5d19082422fd17526b63701d7",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/fixtures/.kotowari/schemas/ir.yaml",
+          "before": "sha256:acccc5e4da8c30fa0e241f3771da652d451e94f33097168b4375d2be5992dbdb",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/fixtures/adr/0001.md",
+          "before": "sha256:a9232b5203c4122d3883902f57371bfce35f0d2d43cea945075c574ad0042eca",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/fixtures/decision/records.md",
+          "before": "sha256:e45d84acc30e243992d88e4a9aee58cdd04375c75c6a9d7359d01f4bc70b311e",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/fixtures/ir/kanji.md",
+          "before": "sha256:842e1569c68d271c2af0e96882368fecfde8c90d7212e0356ecf558b2a320e42",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/src/ast.rs",
+          "before": "sha256:b77bbc2140a7e5bb544ec3502f255fc34eb207562ed985edf1fc337442539a3b",
+          "after": "sha256:3e9bcb1e9d066f9fac7b2309477b3312db760b791a8d1380c5b324d983f2ee84"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/src/document.rs",
+          "before": "sha256:3496a64ba8d145386af31bebfd02b737ee13211f1d310db7a0ef9b175f1267b7",
+          "after": "sha256:03906a3ea9e9740ffa058fac4987857d3060269ffb959addf78409a93ab5b7b8"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/src/finding.rs",
+          "before": "sha256:1db6883ba95df929e3981a74154cc403207af78cec5d07fd619aa60acf558b26",
+          "after": "sha256:dbc3850318ae49117984cd66f0a06da3d3b1c5d842b62c6cabdfc0ceaf2c8bb4"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/src/frontmatter.rs",
+          "before": "sha256:747d9b852f716db4fb2a86a7c6f5961be0cf347f000a41e5631bb68bb7f45e36",
+          "after": "sha256:05dfca07b88d9a6e8514774f9f8e5b7c5a9bde5b7d3389ad1877bed42e15c789"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/src/lib.rs",
+          "before": "sha256:a269bc2352c9600707cbe0559f4a4a1f8d2c0a055ee7edf7a2d954b1e3d808fb",
+          "after": "sha256:bffcfa0e657715a954ef4d7215285ff1d5b99348d0056cc3ed4e6ec85d3eb149"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/src/main.rs",
+          "before": "sha256:83e3f0a0f35062467bbf7c57c833b332d26b04c96bef11bd032dc417a022c9b3",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/src/schema.rs",
+          "before": "sha256:bb9d86db774a56e8fd4e2ce394dca4e004f3c98e1f494e72239ee70527eea351",
+          "after": "sha256:3f3e8b907776ef6cacf6f5fc82fa10f29030066bc7f310d78fb2588acd565633"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/tests/cli.rs",
+          "before": "sha256:7f652afbff7921fe95387c1e3f778b796f35557b1a7005a1adcf6ac4437af93c",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/tests/library.rs",
+          "before": "sha256:927863de1d16b35e44c759346c1c9731412728c329718eaaccec96188ac82c7b",
+          "after": "sha256:926fe11a0a1915d2c4f63c23f22437ddab67f1d110fe50bf09d638c61072d2c2"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/tests/properties.rs",
+          "before": "sha256:c4663dc23abc0efd668b1be08021428fdaf1a69d32de1f911dbc57cc0ebccbae",
+          "after": "sha256:2da23d7920bb0c054860168fe02f3860f5a5df10f525e52df8fc2f82eedfe1ac"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/tests/url_schema.rs",
+          "before": "sha256:5264e0f6b40ae68dcce97125f57ff998cf211cb34b880b5aa5b45e95474d2c35",
+          "after": null
+        },
+        {
+          "path": "crates/kotowari-mds/Cargo.toml",
+          "before": null,
+          "after": "sha256:2740ec3308e6a04595a8b01530035c60cfb43f0d9bd4b1973f9c0e0aed79cc91"
+        },
+        {
+          "path": "crates/kotowari-mds/LICENSE-APACHE",
+          "before": null,
+          "after": "sha256:759f9ba3dead8247a3cd4c2eabe512c04135dd07d15fa91293adb0bf4c654849"
+        },
+        {
+          "path": "crates/kotowari-mds/LICENSE-MIT",
+          "before": null,
+          "after": "sha256:1ef6314e318eb58d36a7e295dbfc2eb835b4df2b78a23a5217a5c5055454e264"
+        },
+        {
+          "path": "crates/kotowari-mds/README.md",
+          "before": null,
+          "after": "sha256:a64bdf736572d1fdcbdeee494b309bd05f466872993b3175366ece1022a6f866"
+        },
+        {
+          "path": "crates/kotowari-mds/fixtures/.kotowari/schemas/adr.yaml",
+          "before": null,
+          "after": "sha256:6204e4e0c1788391930bcd5c0ff39f77f6711fb0c7a13c0f8a9abb197ca6c278"
+        },
+        {
+          "path": "crates/kotowari-mds/fixtures/.kotowari/schemas/decision.yaml",
+          "before": null,
+          "after": "sha256:d265e8f440cce5ebebddab4455cb7c2e4d373dea18ce909031972e6f3436028a"
+        },
+        {
+          "path": "crates/kotowari-mds/fixtures/.kotowari/schemas/ir.yaml",
+          "before": null,
+          "after": "sha256:b3cafd3a505acef669482b483fc4baaf31367f9cdefa741924e07c34382ea143"
+        },
+        {
+          "path": "crates/kotowari-mds/fixtures/adr/0001.md",
+          "before": null,
+          "after": "sha256:c9647f98b18e709c27cf24c2bc14daf956bf959c3d4e0dad9572a62ab8b11fdf"
+        },
+        {
+          "path": "crates/kotowari-mds/fixtures/decision/records.md",
+          "before": null,
+          "after": "sha256:01d86f112dc5a3fad00c41421eb35ae9fbab19b4a47f58602bdcfd1c043dfcc5"
+        },
+        {
+          "path": "crates/kotowari-mds/fixtures/ir/kanji.md",
+          "before": null,
+          "after": "sha256:9cb01d99df04f3e8f8a9ea416e330ff5a38b2c9c0e120cdc4effbdd5483b511b"
+        },
+        {
+          "path": "crates/kotowari-mds/src/main.rs",
+          "before": null,
+          "after": "sha256:7e2eb787cd3570e69f086c9a4a1b64e479833160cd526703c2c6eb7870773105"
+        },
+        {
+          "path": "crates/kotowari-mds/tests/cli.rs",
+          "before": null,
+          "after": "sha256:7742b576ab0ec18724649e6616944be71a17fba14ec2c14756cc771a1bed08b1"
+        },
+        {
+          "path": "crates/kotowari-mds/tests/url_schema.rs",
+          "before": null,
+          "after": "sha256:5264e0f6b40ae68dcce97125f57ff998cf211cb34b880b5aa5b45e95474d2c35"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/Cargo.toml",
+          "before": null,
+          "after": "sha256:9f83f0019c7e58d5561b92f8f1b0f08c9b3ee6d4ce071e23b339015437cf3666"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/LICENSE-APACHE",
+          "before": null,
+          "after": "sha256:759f9ba3dead8247a3cd4c2eabe512c04135dd07d15fa91293adb0bf4c654849"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/LICENSE-MIT",
+          "before": null,
+          "after": "sha256:1ef6314e318eb58d36a7e295dbfc2eb835b4df2b78a23a5217a5c5055454e264"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/README.md",
+          "before": null,
+          "after": "sha256:b22a998ca96f21fb4216a82878f907e677a7372bcba88de506010759a8f24d47"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/examples/analysis.rs",
+          "before": null,
+          "after": "sha256:1f9ffe167491fd98a5c18aa2ef45f1fe53150dae9691b45dcd525bad5126b439"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/queries/php.yml",
+          "before": null,
+          "after": "sha256:ddeed38ee7dc876f718cfdf12add8076866d676ae8ba501f4df29c8bca08a982"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/queries/python.yml",
+          "before": null,
+          "after": "sha256:ac1369286fa80a7dee7113f6e327737df64ee8ff490b6053e584aa4b5823ccfd"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/queries/rust.yml",
+          "before": null,
+          "after": "sha256:562ad457a4b6bb51b31a00357be868d333575b4b9b116200fa6eae994ec9c0fc"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/queries/ts_js.yml",
+          "before": null,
+          "after": "sha256:97d930a08d91b1a9e7a6f2f49a6874b05e05335efa749910df698813df0b1843"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/src/comment_block.rs",
+          "before": null,
+          "after": "sha256:1e260cb83400ade2d65c0cdd8c72ac8f3d6fd6e6fc7d4078508d6b42cd20c2f7"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/src/discovery.rs",
+          "before": null,
+          "after": "sha256:608a75f621b837334ad4abba7f33f8c2d4d6dffd12e1e0ee9dfde8ca15d79a50"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/src/lib.rs",
+          "before": null,
+          "after": "sha256:76b96ee893a9e5d7fe694505a7b6541e2bfa0152df81c5152a8cfc5fff6a84e5"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/src/test_queries.rs",
+          "before": null,
+          "after": "sha256:805a1633618bd3a7a3c7d08c436e57acc6bcad22fb01ca1d98888c75960842f0"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/tests/analyzer.rs",
+          "before": null,
+          "after": "sha256:9ab082cecfc16c4b328a5877a6e637e9cc08bb115473668ee7b03e5b0ecb13a7"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/tests/discovery.rs",
+          "before": null,
+          "after": "sha256:4d1eaf63b8d87fa31b22481126685bb2329826dc7804b409eeffc2fabf78ac24"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/tests/surface.rs",
+          "before": null,
+          "after": "sha256:4d9fd7a631278fd9d2ca2d1332616ac774a41c241f50a928fd48f11ab650d82e"
+        },
+        {
+          "path": "crates/kotowari/Cargo.toml",
+          "before": null,
+          "after": "sha256:adf9bcd583e308d9bd3d6753b8b97c168d8794dde05c4e9d52d205f534ee0952"
+        },
+        {
+          "path": "crates/kotowari/LICENSE-APACHE",
+          "before": null,
+          "after": "sha256:759f9ba3dead8247a3cd4c2eabe512c04135dd07d15fa91293adb0bf4c654849"
+        },
+        {
+          "path": "crates/kotowari/LICENSE-MIT",
+          "before": null,
+          "after": "sha256:1ef6314e318eb58d36a7e295dbfc2eb835b4df2b78a23a5217a5c5055454e264"
+        },
+        {
+          "path": "crates/kotowari/README.md",
+          "before": null,
+          "after": "sha256:ac3e366ddb0213e344bb30542a6a9b5a8058d4df77da46d66abbdeefd8d5ec7b"
+        },
+        {
+          "path": "crates/kotowari/examples/identity.rs",
+          "before": null,
+          "after": "sha256:c21243f247c8c4c27cbf3e825171cc63a4f4e76a82977526025be64bea556792"
+        },
+        {
+          "path": "crates/kotowari/examples/project.rs",
+          "before": null,
+          "after": "sha256:2cf2548a97fa57706f820a044c776540f63dfe7f8127ae19a50517c0accd1e66"
+        },
+        {
+          "path": "crates/kotowari/src/acquisition.rs",
+          "before": null,
+          "after": "sha256:2a443ce56e7a07103538cecbac507e8f024bf09a2ee9abaf5469cb9357ae597c"
+        },
+        {
+          "path": "crates/kotowari/src/async_tests.rs",
+          "before": null,
+          "after": "sha256:e74a98cea1ae82a5e9fef416bd3cce607816fcc9ffd4c5de266651f0e67ea11e"
+        },
+        {
+          "path": "crates/kotowari/src/asynchronous.rs",
+          "before": null,
+          "after": "sha256:f3b55eba48635147cc81146760f33739acd56f487b5abab0d3f11b5d7af16f31"
+        },
+        {
+          "path": "crates/kotowari/src/change_records.rs",
+          "before": null,
+          "after": "sha256:37117e2f71e6017ea1feb4e30cd6551b381efff57109bbe08909431b196ba49a"
+        },
+        {
+          "path": "crates/kotowari/src/change_service.rs",
+          "before": null,
+          "after": "sha256:61ec557451efc3ef7c9f4830937ce1949c472cc9069baff0dfb19de3f70ba28f"
+        },
+        {
+          "path": "crates/kotowari/src/git_snapshot.rs",
+          "before": null,
+          "after": "sha256:cd190f0bd86d2684521c23708d300825a81f14d2be69da8cdc6d232776dc06a4"
+        },
+        {
+          "path": "crates/kotowari/src/git_snapshot_tests.rs",
+          "before": null,
+          "after": "sha256:1ab356b51b15a58d23fc5124bb519c637e7b3c7b3ec932d712c379a25795a4e0"
+        },
+        {
+          "path": "crates/kotowari/src/guides.rs",
+          "before": null,
+          "after": "sha256:2f22df7b401bb739f0753a9dbfa76878fff6c87bda3f03df62f83166afb190b7"
+        },
+        {
+          "path": "crates/kotowari/src/ir.rs",
+          "before": null,
+          "after": "sha256:2dcd167ab411934f6c73822c617cd6d0241dc55953d86920b938000f12c0864b"
+        },
+        {
+          "path": "crates/kotowari/src/ir_tests.rs",
+          "before": null,
+          "after": "sha256:aed6d71b7d884fd446f7271589007bf3e019af70c3a6bf6c65ecdb160b2defd9"
+        },
+        {
+          "path": "crates/kotowari/src/lib.rs",
+          "before": null,
+          "after": "sha256:5f886d36897003593a6b22bc523f82985262e3c91a93f2546f6c7195ca8e970e"
+        },
+        {
+          "path": "crates/kotowari/src/sources.rs",
+          "before": null,
+          "after": "sha256:4b45197fbf61f25e0f689e775457d0c533a559925de228fb017cc1ec2cd7e5b5"
+        },
+        {
+          "path": "crates/kotowari/src/surface.rs",
+          "before": null,
+          "after": "sha256:1953ac0938ec15161d4ccc7f56f2c0d90df81d31988ebc680da48f3653baf97a"
+        },
+        {
+          "path": "crates/kotowari/src/test_files.rs",
+          "before": null,
+          "after": "sha256:01b4aeaf7e1683c0dc7621991e6cfd37556c21b6bed4f4ced2917b7d3dceb978"
+        },
+        {
+          "path": "crates/kotowari/tests/async.rs",
+          "before": null,
+          "after": "sha256:782fdc4e46d66020701f14387f4033ec9f87d159165ee1ad20c62ece5853f6da"
+        },
+        {
+          "path": "crates/kotowari/tests/change_records.rs",
+          "before": null,
+          "after": "sha256:5b872ae4845cc5dddd61ae72fa5b800830cffd50628b663fd9465362626ce756"
+        },
+        {
+          "path": "crates/kotowari/tests/project.rs",
+          "before": null,
+          "after": "sha256:8a11adc1690b27b40f67d33f39c1be1afc8183003450009998338dfdfb66baab"
+        },
+        {
+          "path": "docs/guides/index.md",
+          "before": "sha256:40c6d002816f8217c8af9776167c92f95682d4ed6147d45b4f3b993f9bc571f1",
+          "after": "sha256:732ef4e41b09728649fcdcb8d598c179db819a83a1dd46432f5cf65ec392176c"
+        },
+        {
+          "path": "docs/guides/package-validation.md",
+          "before": null,
+          "after": "sha256:1620cee21b43d7946b52e81f6f8dd82960142c92c643e8871da2bddf9f3a1138"
+        },
+        {
+          "path": "docs/guides/public-crate-api.md",
+          "before": null,
+          "after": "sha256:a24a76e41a389d239cb591b070bf0e675179f3400bf2c359f5455224234ca9a4"
+        },
+        {
+          "path": "lefthook.yml",
+          "before": "sha256:2837e92c840e335d40b7e9f1f3a77dcf397a56bb36974ffebe57955f8b8810ac",
+          "after": "sha256:dbdc660f3acb1722b0d9f58ca699824f6e7117fa2755ba351c821c89450b2ff2"
+        },
+        {
+          "path": "scripts/check-packages.py",
+          "before": null,
+          "after": "sha256:4620eb5b6b829fb4a342c685bdd135b40e0b48887d420ad165771c1917d5ab69"
+        },
+        {
+          "path": "scripts/check-versions.sh",
+          "before": "sha256:8e1ce20aca0334fabbd7a7c34987664466f81e2c61939cf2bbd7039ceb39df5a",
+          "after": "sha256:be58d25c8d4d0c776684ec3faf7cecb0d0bf2decc8dc5cb90da1f440b492df4e"
+        },
+        {
+          "path": "scripts/mutants.sh",
+          "before": "sha256:a179e696ae83b3792c42d03997cf5eae8634c831e1552fcfb1bb92ed9883fc66",
+          "after": "sha256:5a92a5dcfc3fda107c0fea420f558a530355f020003f1bfda568694ac0606dac"
+        },
+        {
+          "path": "scripts/release.sh",
+          "before": "sha256:2eab50b8c7c7080b740ead4492721c17f5adfd458f0ee9552f34e867cec5100c",
+          "after": "sha256:f9ab915af5faa779d3e20896574a505c36184f2b23b116f1ca628c3a48a4a1c1"
+        },
+        {
+          "path": "scripts/tests/test_public_crate_packaging.py",
+          "before": null,
+          "after": "sha256:0187ce1c96d0a74a8a2b5f651a439ce27f4cbe366bcc267a20e7a9d2ccd93a1a"
+        },
+        {
+          "path": "scripts/tests/test_public_crate_versions.py",
+          "before": null,
+          "after": "sha256:de056beb79bd588a0b8696b6e0a8f5fb89706c1b2da8f2bc8761f1b521d5b16e"
+        },
+        {
+          "path": "src/cli.rs",
+          "before": null,
+          "after": "sha256:5156d3219720a941e23afa0bdb30b9cea79cd9d0e8ae6232b8795a16024eb141"
+        },
+        {
+          "path": "src/cli/list.rs",
+          "before": null,
+          "after": "sha256:474dbe1450e4fc7a47fd7e81e1fbb7c13fb1e5ca3ecbf27c86ea868df828a065"
+        },
+        {
+          "path": "src/cli/output.rs",
+          "before": null,
+          "after": "sha256:98c3e07b69a88c4977b3fecbed3d18b634443b9a2e18c357ff6f231468f19738"
+        },
+        {
+          "path": "src/cli/query.rs",
+          "before": null,
+          "after": "sha256:f298920357c3082c1b3ab4625e63c643f56faf7e73832f85a9af39690aeac6ba"
+        },
+        {
+          "path": "src/cli/status.rs",
+          "before": null,
+          "after": "sha256:ecbbb6c216f9a940a523504ef5efc9fcf5b9151a49b15db3c7fe78e87c05d49b"
+        },
+        {
+          "path": "src/cli/tests.rs",
+          "before": null,
+          "after": "sha256:549f8e7ed081bde8fbb7c1e20843c244af9db78cd3f01714ec03589cdab0db87"
+        },
+        {
+          "path": "src/main.rs",
+          "before": "sha256:d6560295a8f874c383d573c035c0d0a51d4cc3cd9a55d0936826ae1fd5eea7b1",
+          "after": "sha256:6859b8ac56b1da8892aa591139fe2b8b861bb0d4c4e9dea0ed73c957612a3306"
+        },
+        {
+          "path": "tests/change_cli.rs",
+          "before": "sha256:21f0213770423f4a5f9d8cbdb1d4b7770bab72922cafc0492228d1ad7353e622",
+          "after": "sha256:dd89eafc15edbb4584b9a0e02a58c0d0fdf64b4a509ede9b116c61a4fb05a58f"
+        },
+        {
+          "path": "tests/change_git.rs",
+          "before": "sha256:cd08d7009e9884bce3858da0a2affd8bf8aa3ac099a07a0ee463a4566424a7cc",
+          "after": null
+        },
+        {
+          "path": "tests/change_matching.rs",
+          "before": "sha256:d86f902374b476f6b9dc90cf8e3eddea154698fb263d373654c2f1bfc8846fd0",
+          "after": null
+        },
+        {
+          "path": "tests/change_records.rs",
+          "before": "sha256:253ebdbeae47cc30d15f9ff634f972d383eeb774d87684092b604210b43b781f",
+          "after": null
+        },
+        {
+          "path": "tests/native_paths.rs",
+          "before": null,
+          "after": "sha256:f716986fec0e7ee0c44b53c001e223dc60397cd205ac08f67656408fd3416792"
+        },
+        {
+          "path": "tests/step14_plan.rs",
+          "before": "sha256:12a5e0d4381c8a893a58a5b4f783197dc1f7a3ef65ba3bf0dfd038506cebffd1",
+          "after": "sha256:5f3813e192a47e83cbf0497efffd45dc631cfd59793ae956585a9f0eaa654037"
+        },
+        {
+          "path": "tests/step15_guides.rs",
+          "before": "sha256:8c6e2226d9a84fe38ea01381af882e72027f4f6eac9f2e17d6d2d0d8c91c5551",
+          "after": "sha256:96482ea28059bce16c18af25663b893d97d5edf7c36abbc2b23e17c62566a07d"
+        },
+        {
+          "path": "tests/step17_surface.rs",
+          "before": "sha256:28b3cf1a2c37fceb8bf4d075ce4dc27cf4fdd7ff72c61996d5343dac04d0e5cb",
+          "after": "sha256:aad7fa2702783540688df039480357e6acd7f1c6b001791a859c8313ec46ab27"
+        },
+        {
+          "path": "tests/step2_ir.rs",
+          "before": "sha256:4ca758b8a8b02330436fc4e57bd43deb1aeceea1c95a01fbf2f7724bb718213a",
+          "after": "sha256:2ccd5022d469ae1ab020a38d0939aa3e3c3593869cbe11f57adf2b0816489bf1"
+        },
+        {
+          "path": "tests/step3_sources_terms.rs",
+          "before": "sha256:0ffc8d5edd46310ef211ad555e4ddb0aaa06f11004ec08c798d9f77709192929",
+          "after": "sha256:9f6de95997b065237639d873822cd606508ed1ff74cc82a9c9081277fc8c8571"
+        },
+        {
+          "path": "tests/step4_test_discovery.rs",
+          "before": "sha256:23065d38ae7cfc1b758757955dab3deebc604f6e5e10309ec49b74aaf521503b",
+          "after": "sha256:dac6fd318621a6a97b52349360bad22cad27fa3b72381da17b8d4a9a8d0a6031"
+        },
+        {
+          "path": "tests/step5_findings.rs",
+          "before": "sha256:1febf30b98618b7529d2aea6b6f1cd4357ae6333a22213cca7fb87ff2e181265",
+          "after": "sha256:e6a35d3d42acb505e7c28ae5651b0e77fef19ccf850edc352db22e1b250f5654"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/cli-scope.md",
+          "sha256": "sha256:829853663b9221e93ca213f85606e27ee0f0b7b12cfa82141f449db39a50e4e3"
+        },
+        {
+          "path": "docs/ir/core/form-contract.md",
+          "sha256": "sha256:a059592223d12d7c20e4811ca37e3bdc2512acb705fc4b067fe354186f4d2df3"
+        },
+        {
+          "path": "docs/ir/core/ir-document.md",
+          "sha256": "sha256:781a8dfc8bd87aed5eb850980968e9a14f0f39208970416bf46c4ee27a6c3d58"
+        },
+        {
+          "path": "docs/ir/core/library-api.md",
+          "sha256": "sha256:49b738c68c92cbfa746f7c3fd17346d0dedeedc008e61238db5ae263a3fec931"
+        },
+        {
+          "path": "docs/ir/core/library-async.md",
+          "sha256": "sha256:e9639792fd47cb826d2afb764866ca941176b3406c0e8a97c00304f3dcb4c5b2"
+        },
+        {
+          "path": "docs/ir/core/library-crates.md",
+          "sha256": "sha256:3cd5559271f625cf7132cfe9c72e4d8f370859d461659b3c984b40f48561f811"
+        },
+        {
+          "path": "docs/ir/core/library-inputs.md",
+          "sha256": "sha256:60eee46c7d14163ef4ba302b430931c391708e2bb4f288ff0115b98cc82669bb"
+        },
+        {
+          "path": "docs/ir/core/library-paths.md",
+          "sha256": "sha256:127677141e649520f5b95778af8dc38462c734a2ab1a709c656a2b42edf6769a"
+        },
+        {
+          "path": "docs/ir/schema/cli.md",
+          "sha256": "sha256:4adc3671b9324df4695cd6fcd71cc3703d73042a3344ad9e2478071e90dd9c19"
+        },
+        {
+          "path": "docs/ir/schema/library-extraction.md",
+          "sha256": "sha256:6b34678518d69473395109995e4a8f7d887c1e493ea224c270b0f1065ef9d936"
+        },
+        {
+          "path": "docs/ir/schema/library-io.md",
+          "sha256": "sha256:a0565aa7060f39ed4c06e784ac65756c8f2c0c3aac69a0b10bc1526242a477df"
+        },
+        {
+          "path": "docs/ir/schema/library.md",
+          "sha256": "sha256:3193cd349bf10cca519bb051d37423ff7c597af434b5ced3a3310df1aedc94c1"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "The seven-package restructuring implements the approved synchronous and optional Tokio contracts while retaining existing CLI assertions, schema algorithms and configuration meaning. Core derives documents and read-only results from acquired text and analysis facts rather than accepting unchecked internal documents and independently supplied results. Schema construction and document data are protected; CLI-owned conversion maintains existing JSON contracts. The partial IR parser retains nameless items with their original heading diagnostics, while CLI filtering remains unchanged. Native acquisition spellings, hidden-directory exclusions, dot-file discovery, filename ordering and diagnostic display paths preserve established behavior. Canonical schema bytes and the two user-authorized verification-reference corrections are retained. Source-level default/Tokio/CLI tests, hidden-item API inspection and external consumers verify the additional corrections. Prior shipped-archive and mutation observations apply only to their recorded earlier heads; final sealed-candidate package and mutation gates remain required and deferred pending parent-owned review. This implementer record does not claim independent review or integration readiness.",
+      "requirements": [
+        "REQ-core-105",
+        "REQ-core-310",
+        "REQ-core-311",
+        "REQ-core-312",
+        "REQ-core-313",
+        "REQ-core-318",
+        "REQ-core-319",
+        "REQ-core-320",
+        "REQ-core-321",
+        "REQ-core-306",
+        "REQ-core-307",
+        "REQ-core-308",
+        "REQ-core-309",
+        "REQ-core-314",
+        "REQ-core-315",
+        "REQ-core-316",
+        "REQ-core-317",
+        "REQ-core-322",
+        "REQ-core-323",
+        "REQ-schema-068",
+        "REQ-schema-069",
+        "REQ-schema-070",
+        "REQ-schema-071",
+        "REQ-schema-072",
+        "REQ-schema-073",
+        "REQ-schema-074",
+        "REQ-schema-075",
+        "REQ-schema-049",
+        "REQ-schema-050",
+        "REQ-schema-051",
+        "REQ-core-179",
+        "REQ-core-041",
+        "REQ-schema-044"
+      ],
+      "decisions": [
+        "docs/decision/records/2026-10-03-public-crate-api.md#D1",
+        "docs/decision/records/2026-10-03-public-crate-api-plan.md#A2",
+        "docs/decision/records/2026-10-03-public-crate-api-plan.md#A5",
+        "docs/decision/records/2026-10-03-public-crate-api-plan.md#A8",
+        "docs/decision/records/2026-10-03-public-crate-api-plan.md#A9",
+        "docs/decision/records/2026-10-03-public-crate-api-plan.md#A10",
+        "docs/decision/records/2026-10-03-public-crate-api-plan.md#A11",
+        "docs/decision/records/2026-10-03-public-crate-api-plan.md#A12"
+      ],
+      "handoff": null,
+      "gaps": []
+    }
+  ]
+}
