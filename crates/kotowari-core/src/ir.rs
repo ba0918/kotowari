@@ -262,8 +262,9 @@ fn parse_document_mode(
     let kind = DocKind::of(filename);
     let (values, mut findings) = read_document(filename, kind, content)?;
     let mut items = extract_items(kind, &values, &mut findings, partial)?;
+    diagnose_nameless_items(&items, &mut findings, content);
     if !partial {
-        discard_nameless_items(&mut items, &mut findings, content);
+        items.retain(|item| !is_nameless(item));
     }
     items.sort_by_key(Item::item_line);
     exclude_unclosed_code_block(&mut items, &mut findings, content);
@@ -328,12 +329,16 @@ fn extract_items(
     Ok(items)
 }
 
-fn discard_nameless_items(items: &mut Vec<Item>, findings: &mut Vec<Finding>, content: &str) {
+fn is_nameless(item: &Item) -> bool {
+    heading_name(item).is_some_and(|name| name.trim().is_empty())
+}
+
+fn diagnose_nameless_items(items: &[Item], findings: &mut Vec<Finding>, content: &str) {
     // REQ-core-043: "### ID:" の後に名前の無い見出しは "### ID: 名前" の形でない。
     // その ID は定義に数えず、見出しの行を detail にした unknown_heading にする（review8-gaps の A2）
     let lines = split_lines(content);
-    items.retain(|item| {
-        let nameless = heading_name(item).is_some_and(|name| name.trim().is_empty());
+    for item in items {
+        let nameless = is_nameless(item);
         let line = item.item_line();
         // コロンの無い見出しは、スキーマの側が既に unknown_heading にしている
         let flagged = findings
@@ -348,8 +353,7 @@ fn discard_nameless_items(items: &mut Vec<Item>, findings: &mut Vec<Finding>, co
                 raw.to_string(),
             ));
         }
-        !nameless
-    });
+    }
 }
 
 fn exclude_unclosed_code_block(items: &mut Vec<Item>, findings: &mut Vec<Finding>, content: &str) {

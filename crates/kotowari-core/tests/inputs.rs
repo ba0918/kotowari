@@ -1,5 +1,23 @@
 use kotowari_core::{SourceText, ir};
 
+// @kotowari[REQ-core-314, REQ-core-043, EX-core-290]
+#[test]
+fn partial_parsing_retains_a_nameless_requirement_and_its_heading_diagnostic() {
+    let source = SourceText::new("docs/ir/topic.md", "# Topic\n\nScope.\n\n## Requirements\n\n### REQ-001:\n\n- kind: ubiquitous\n- verification: unit\n\nBody.\n").unwrap();
+    let document = ir::parse(&source, Default::default()).unwrap();
+    assert_eq!(document.items().len(), 1);
+    assert_eq!(document.items()[0].id(), Some("REQ-001"));
+    assert_eq!(document.items()[0].line(), 7);
+    assert!(
+        document
+            .findings()
+            .iter()
+            .any(|finding| finding.kind.as_str() == "unknown_heading"
+                && finding.line == Some(7)
+                && finding.detail == "### REQ-001:")
+    );
+}
+
 // @kotowari[REQ-core-315, REQ-core-317, EX-core-488, EX-core-489]
 #[test]
 fn required_groups_are_distinct_from_explicit_empty_groups() {
