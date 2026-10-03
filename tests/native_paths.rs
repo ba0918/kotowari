@@ -1,6 +1,200 @@
 #![cfg(unix)]
 use assert_cmd::Command;
 use std::fs;
+use std::os::unix::ffi::OsStringExt;
+
+fn byte_filename_project(group: &str) -> tempfile::TempDir {
+    let project = tempfile::tempdir().unwrap();
+    for dir in [
+        ".kotowari",
+        "docs/ir",
+        "docs/decision/records",
+        "docs/decision/adr",
+        group,
+        "rules",
+    ] {
+        fs::create_dir_all(project.path().join(dir)).unwrap();
+    }
+    let extra = match group {
+        "tests" => "tests:\n  files: ['tests/**']\n",
+        "guides" => "tests:\n  files: []\nguides:\n  files: ['guides/**']\n",
+        "surface" => {
+            "tests:\n  files: []\nsurface:\n  files: ['surface/**']\n  rules: ['rules/surface.yaml']\n"
+        }
+        "records" => {
+            "tests:\n  files: []\nchanges:\n  files: ['src/**']\n  records: ['records/**']\n"
+        }
+        _ => unreachable!(),
+    };
+    fs::write(project.path().join(".kotowari/config.yaml"), extra).unwrap();
+    fs::write(
+        project.path().join("rules/surface.yaml"),
+        "id: command\nlanguage: rust\nrule:\n  pattern: 'fn $NAME() { $$$ }'\n",
+    )
+    .unwrap();
+    project
+}
+
+fn byte_path(project: &std::path::Path, group: &str, extension: &str) -> std::path::PathBuf {
+    let mut name = b"a\xff.".to_vec();
+    name.extend(extension.as_bytes());
+    project.join(group).join(std::ffi::OsString::from_vec(name))
+}
+
+fn native_check(project: &std::path::Path) -> std::process::Output {
+    Command::cargo_bin("kotowari")
+        .unwrap()
+        .args(["check", "--format", "json"])
+        .current_dir(project)
+        .output()
+        .unwrap()
+}
+
+// @kotowari[REQ-core-313, REQ-core-018, REQ-core-198, REQ-core-224, EX-core-485]
+#[test]
+fn byte_named_files_without_legacy_read_aliases_keep_the_unreadable_stop() {
+    for (group, extension) in [
+        ("tests", "rs"),
+        ("guides", "md"),
+        ("surface", "rs"),
+        ("records", "yaml"),
+    ] {
+        let project = byte_filename_project(group);
+        fs::write(
+            byte_path(project.path(), group, extension),
+            "#[test]\nfn original() {}\n",
+        )
+        .unwrap();
+        let output = native_check(project.path());
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "{group}: {}",
+            String::from_utf8_lossy(&output.stdout)
+        );
+        assert!(output.stdout.is_empty());
+        let display = format!("{group}/a�.{extension}");
+        let expected = fs::read(project.path().join(&display)).unwrap_err();
+        assert_eq!(
+            String::from_utf8(output.stderr).unwrap(),
+            format!("unreadable file: {display}: {expected}\n")
+        );
+    }
+}
+
+// @kotowari[REQ-core-313, REQ-core-198, REQ-core-206, REQ-core-224, EX-core-485]
+#[test]
+fn distinct_byte_named_entries_keep_the_legacy_alias_text_and_multiplicity() {
+    for (group, extension, original, replacement) in [
+        (
+            "tests",
+            "rs",
+            "#[test]\nfn original() {}\n",
+            "#[test]\nfn replacement() {}\n",
+        ),
+        (
+            "guides",
+            "md",
+            "<!-- @kotowari[REQ-001:12345678] -->\n",
+            "replacement\n",
+        ),
+        (
+            "surface",
+            "rs",
+            "fn original() {}\n",
+            "fn replacement() {}\n",
+        ),
+        ("records", "yaml", "original", "version: 1\nentries: []\n"),
+    ] {
+        let project = byte_filename_project(group);
+        let original_path = byte_path(project.path(), group, extension);
+        if group == "records" {
+            fs::write(original_path, [0xff]).unwrap();
+        } else {
+            fs::write(original_path, original).unwrap();
+        }
+        fs::write(
+            project.path().join(group).join(format!("a�.{extension}")),
+            replacement,
+        )
+        .unwrap();
+        let output = native_check(project.path());
+        assert_eq!(
+            output.status.code(),
+            Some(if group == "tests" || group == "surface" {
+                1
+            } else {
+                0
+            }),
+            "{group}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(output.stderr.is_empty());
+        let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        match group {
+            "tests" => {
+                assert_eq!(value["tests"]["rs"]["files"], 2);
+                assert_eq!(
+                    value["findings"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|finding| finding["detail"].as_str().unwrap())
+                        .collect::<Vec<_>>(),
+                    ["replacement", "replacement"]
+                );
+            }
+            "guides" => {
+                assert_eq!(value["guides"]["files"], 2);
+                assert_eq!(value["guides"]["marks"], 0);
+                assert!(value["findings"].as_array().unwrap().is_empty());
+            }
+            "surface" => {
+                let findings = value["findings"].as_array().unwrap();
+                assert_eq!(findings.len(), 1);
+                assert_eq!(findings[0]["kind"], "surface_without_spec");
+                assert_eq!(findings[0]["detail"], "command replacement");
+            }
+            "records" => assert!(value["findings"].as_array().unwrap().is_empty()),
+            _ => unreachable!(),
+        }
+    }
+}
+
+// @kotowari[REQ-core-313, REQ-core-092, EX-core-485]
+#[test]
+fn ir_and_decision_source_walkers_still_read_original_byte_named_paths() {
+    let project = byte_filename_project("tests");
+    fs::write(
+        project.path().join(".kotowari/config.yaml"),
+        "tests:\n  files: []\n",
+    )
+    .unwrap();
+    fs::write(
+        byte_path(project.path(), "docs/ir", "md"),
+        "# Topic\n\nScope.\n",
+    )
+    .unwrap();
+    fs::write(
+        byte_path(project.path(), "docs/decision/records", "md"),
+        "# Records\n\n## Agreements\n\n- A1 Original\n",
+    )
+    .unwrap();
+    fs::write(
+        byte_path(project.path(), "docs/decision/adr", "md"),
+        "# Original\n",
+    )
+    .unwrap();
+    let output = native_check(project.path());
+    assert_ne!(
+        output.status.code(),
+        Some(2),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["files"], 1);
+}
 
 // @kotowari[REQ-core-313, EX-core-485]
 #[test]

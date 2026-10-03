@@ -36,7 +36,8 @@ impl SourceText {
     }
 }
 
-/// Original acquisition identity is not the lossy display/rule path.
+/// Lossless enumeration identity is not the lossy display/rule path.
+/// Text is what the producer actually acquired, including any legacy read-path conversion.
 /// IR display paths are relative to the configured IR place; other paths are project-relative.
 #[derive(Debug, Clone)]
 pub struct NativeSourceText {

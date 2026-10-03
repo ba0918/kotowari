@@ -1,4 +1,3 @@
-use crate::acquisition::read_utf8_file;
 use kotowari_core::{StopReason, config::Config};
 use std::path::Path;
 pub fn read_texts(
@@ -14,7 +13,7 @@ pub fn read_texts(
     files
         .into_iter()
         .map(|(path, absolute)| {
-            let text = read_utf8_file(&absolute, &path)?;
+            let text = crate::test_files::read_collected_text(&absolute, &path)?;
             Ok(kotowari_core::NativeSourceText::new(absolute, path, text))
         })
         .collect::<Result<Vec<_>, _>>()

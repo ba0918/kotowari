@@ -75,8 +75,19 @@ pub fn collect_files(
         }
     }
 
-    files.sort();
+    files.sort_by_cached_key(|(display, original)| {
+        (display.clone(), original.to_string_lossy().into_owned())
+    });
     Ok(files)
+}
+
+pub(crate) fn read_collected_text(
+    original: &Path,
+    display: &str,
+) -> Result<String, kotowari_core::StopReason> {
+    // Legacy collectors read a lossy absolute string. Keeping enumeration identity lossless
+    // must not change which file supplies the acquired text or its existing read failure.
+    crate::acquisition::read_utf8_file(Path::new(original.to_string_lossy().as_ref()), display)
 }
 
 /// 基準のディレクトリからの相対パスを、Windows の区切りも "/" にして作る。基準の外のパスは相対にしない
@@ -128,7 +139,7 @@ pub fn analyze(
     files
         .into_iter()
         .map(|(path, absolute)| {
-            let text = crate::acquisition::read_utf8_file(&absolute, &path)?;
+            let text = read_collected_text(&absolute, &path)?;
             let original =
                 kotowari_core::NativeSourceText::new(absolute, path.clone(), text.clone());
             let source = kotowari_core::SourceText::new(path.clone(), text)

@@ -71,6 +71,13 @@ Position: Plan draft prepared for parent-owned independent review and approval. 
   - rejected: collapsing native provenance into SourceText; ignoring native duplicate or original-text checks; independent native calculation policy; arbitrary finished-report construction.
   - decided_by: Parent adjudication under [D1](./2026-10-03-public-crate-api.md#D1), approving the demonstrated BASE-compatible distinction.
 
+## Agreements
+
+- A14 Preserve each BASE producer's actual read-path selection and ordering while retaining lossless enumeration identity separately from display/rule spelling and the actually acquired text.
+  - why: On Unix, the BASE test/guide collector stores a lossy absolute string and reads that pathname. A byte-named file without the replacement-character alias therefore stops as unreadable; when both exist, two enumerated entries read the replacement file twice. BASE surface and change-record collectors use the same conversion. Preserving multiplicity requires distinct enumeration identities even when actual read paths coincide. IR and decision-source walkers already read original PathBuf paths and must not receive this conversion. Core compares actually acquired text by enumeration identity, without inode discovery or rejecting legacy read aliases.
+  - rejected: treating lossless identity retention as authorization to read different files; merging enumeration entries by actual read origin; blanket lossy conversion of other readers; weakening duplicate/original-text admission.
+  - decided_by: Parent preservation adjudication under [D1](./2026-10-03-public-crate-api.md#D1), applying the existing CLI-parity contract without an IR meaning change.
+
 ## Revisions
 
 The user adopted A11 to supersede A4's legacy-link layout after the whole-branch snapshot stopped on selected symlink modes. Only the two named verification-method path references are relaxed from the earlier approved-IR edit prohibition; all requirement behavior and the fixed comparison base remain unchanged.

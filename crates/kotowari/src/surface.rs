@@ -25,7 +25,7 @@ pub fn analyze(
         if !analyzer.supports_surfaces(&path) {
             continue;
         }
-        let text = crate::acquisition::read_utf8_file(&absolute, &path)?;
+        let text = crate::test_files::read_collected_text(&absolute, &path)?;
         let original = kotowari_core::NativeSourceText::new(absolute, path.clone(), text.clone());
         let source = SourceText::new(path.clone(), text)
             .map_err(|error| StopReason::MappingError(error.to_string()))?;

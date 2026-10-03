@@ -1,4 +1,3 @@
-use crate::acquisition::read_utf8_file;
 use kotowari_core::change_records::*;
 use kotowari_core::config::Config;
 fn collect_records(
@@ -59,7 +58,9 @@ fn collect_records(
             files.push((path, entry.path().to_path_buf()));
         }
     }
-    files.sort();
+    files.sort_by_cached_key(|(display, original)| {
+        (display.clone(), original.to_string_lossy().into_owned())
+    });
     Ok(files)
 }
 
@@ -73,7 +74,7 @@ pub fn read_texts(
     collect_records(base, &changes.records)?
         .into_iter()
         .map(|(path, absolute)| {
-            let text = read_utf8_file(&absolute, &path)?;
+            let text = crate::test_files::read_collected_text(&absolute, &path)?;
             Ok(kotowari_core::NativeSourceText::new(absolute, path, text))
         })
         .collect::<Result<Vec<_>, _>>()
