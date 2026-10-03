@@ -250,12 +250,22 @@ pub fn split_lines(content: &str) -> Vec<&str> {
 /// `項目`を組み立てる（REQ-core-169、REQ-core-170）。写せない`指摘`や値は`停止`になる
 /// （REQ-core-172、REQ-core-175）
 pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopReason> {
+    parse_document_mode(filename, content, false)
+}
+
+fn parse_document_mode(
+    filename: &str,
+    content: &str,
+    partial: bool,
+) -> Result<IrDocument, StopReason> {
     // BOM の読み飛ばし（read_utf8_file でも除去するが、直接呼ばれた場合にも対応）
     let content = content.strip_prefix('\u{FEFF}').unwrap_or(content);
     let kind = DocKind::of(filename);
     let (values, mut findings) = read_document(filename, kind, content)?;
-    let mut items = extract_items(kind, &values, &mut findings)?;
-    discard_nameless_items(&mut items, &mut findings, content);
+    let mut items = extract_items(kind, &values, &mut findings, partial)?;
+    if !partial {
+        discard_nameless_items(&mut items, &mut findings, content);
+    }
     items.sort_by_key(Item::item_line);
     exclude_unclosed_code_block(&mut items, &mut findings, content);
 
@@ -277,18 +287,19 @@ fn extract_items(
     kind: DocKind,
     values: &Value,
     findings: &mut Vec<Finding>,
+    partial: bool,
 ) -> Result<Vec<Item>, StopReason> {
     let mut items = Vec::new();
     match kind {
         DocKind::Topic => {
             for obj in elements(values.get("requirements")) {
-                items.extend(requirement(obj, findings)?);
+                items.extend(requirement(obj, findings, partial)?);
             }
             for obj in elements(values.get("tables")) {
-                items.extend(decision_table(obj)?);
+                items.extend(decision_table(obj, partial)?);
             }
             for obj in elements(values.get("properties")) {
-                items.extend(property(obj, findings)?);
+                items.extend(property(obj, findings, partial)?);
             }
             for obj in elements(values.get("scenarios")) {
                 let opening = number(obj, "line")?;
@@ -310,7 +321,7 @@ fn extract_items(
             let direct = elements(values.get("flags"));
             let in_section = elements(values.get("flags_in_section"));
             for obj in direct.into_iter().chain(in_section) {
-                items.extend(flag_entry(obj, findings)?);
+                items.extend(flag_entry(obj, findings, partial)?);
             }
         }
         DocKind::Glossary => read_glossary(values, &mut items, findings)?,
@@ -475,9 +486,10 @@ fn item_statements(
 fn requirement(
     obj: &Map<String, Value>,
     findings: &mut Vec<Finding>,
+    partial: bool,
 ) -> Result<Option<Item>, StopReason> {
     let (id, name, line) = head(obj)?;
-    if !is_item_id(&id, IdPrefix::Req) {
+    if !partial && !is_item_id(&id, IdPrefix::Req) {
         return Ok(None);
     }
     let (sources, source_line) = listed(obj.get("sources"))?;
@@ -502,9 +514,91 @@ fn requirement(
     }))
 }
 
-fn decision_table(obj: &Map<String, Value>) -> Result<Option<Item>, StopReason> {
+#[derive(Debug, Clone)]
+pub struct IrOptions {
+    pub ir: String,
+}
+
+impl Default for IrOptions {
+    fn default() -> Self {
+        Self {
+            ir: "docs/ir".into(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ParsedIrDocument {
+    document: IrDocument,
+    items: Vec<ParsedItem>,
+}
+
+#[derive(Debug)]
+pub struct ParsedItem(Item);
+
+impl ParsedItem {
+    pub fn id(&self) -> Option<&str> {
+        self.0.id().filter(|id| !id.is_empty())
+    }
+    pub fn line(&self) -> usize {
+        self.0.item_line()
+    }
+    pub fn end_line(&self) -> Option<usize> {
+        self.0.end_line()
+    }
+    pub fn references(&self) -> Vec<ItemReference<'_>> {
+        item_references(&self.0)
+    }
+}
+
+impl ParsedIrDocument {
+    pub fn path(&self) -> &str {
+        &self.document.relative_path
+    }
+    pub fn items(&self) -> &[ParsedItem] {
+        &self.items
+    }
+    pub fn findings(&self) -> &[Finding] {
+        &self.document.parse_findings
+    }
+}
+
+pub fn parse(
+    source: &crate::SourceText,
+    options: IrOptions,
+) -> Result<ParsedIrDocument, crate::InputError> {
+    let place = crate::normalize_path(&options.ir);
+    let relative = if place.is_empty() {
+        source.path()
+    } else {
+        source
+            .path()
+            .strip_prefix(&format!("{place}/"))
+            .ok_or_else(|| {
+                crate::InputError::InvalidInput(
+                    "IR source must be under its configured place".into(),
+                )
+            })?
+    };
+    let filename = relative.rsplit('/').next().unwrap();
+    let mut document = parse_document_mode(filename, source.text(), true)
+        .map_err(|error| crate::InputError::InvalidInput(error.to_string()))?;
+    document.relative_path = source.path().to_owned();
+    document.directory = relative
+        .rsplit_once('/')
+        .map(|(dir, _)| dir)
+        .unwrap_or("")
+        .to_owned();
+    for finding in &mut document.parse_findings {
+        finding.path = source.path().to_owned();
+    }
+    let items = document.items.iter().cloned().map(ParsedItem).collect();
+    Ok(ParsedIrDocument { document, items })
+}
+
+fn decision_table(obj: &Map<String, Value>, partial: bool) -> Result<Option<Item>, StopReason> {
     let (id, name, line) = head(obj)?;
-    if !is_item_id(&id, IdPrefix::Tbl) {
+    if !partial && !is_item_id(&id, IdPrefix::Tbl) {
         return Ok(None);
     }
     let (sources, source_line) = listed(obj.get("sources"))?;
@@ -523,9 +617,10 @@ fn decision_table(obj: &Map<String, Value>) -> Result<Option<Item>, StopReason> 
 fn property(
     obj: &Map<String, Value>,
     findings: &mut Vec<Finding>,
+    partial: bool,
 ) -> Result<Option<Item>, StopReason> {
     let (id, name, line) = head(obj)?;
-    if !is_item_id(&id, IdPrefix::Prop) {
+    if !partial && !is_item_id(&id, IdPrefix::Prop) {
         return Ok(None);
     }
     let (sources, source_line) = listed(obj.get("sources"))?;
@@ -544,9 +639,10 @@ fn property(
 fn flag_entry(
     obj: &Map<String, Value>,
     findings: &mut Vec<Finding>,
+    partial: bool,
 ) -> Result<Option<Item>, StopReason> {
     let (id, name, line) = head(obj)?;
-    if !is_item_id(&id, IdPrefix::Flag) {
+    if !partial && !is_item_id(&id, IdPrefix::Flag) {
         return Ok(None);
     }
     let (relations, relation_line) = listed(obj.get("relations"))?;

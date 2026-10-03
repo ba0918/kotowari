@@ -3,6 +3,8 @@ pub mod change_records;
 mod change_service;
 pub mod changes;
 pub mod comment_block;
+pub mod comparison;
+pub use comparison::Comparison;
 pub mod config;
 pub mod deferred;
 pub mod deferred_notices;
@@ -12,7 +14,13 @@ pub mod finding_map;
 pub mod fingerprint;
 pub mod git_snapshot;
 pub mod guides;
+mod inputs;
 pub mod ir;
+pub use inputs::{
+    CheckInputs, CheckReport, InputError, Inspection, QueryReport, ReadInputs, ReadList, ReadModel,
+    SourceText, StatusReport, SurfaceAnalysis, TestAnalysis,
+};
+pub use ir::{IrOptions, ParsedIrDocument as IrDocument, ParsedItem};
 pub mod list;
 mod markdown;
 pub mod mutants;

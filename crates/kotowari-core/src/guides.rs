@@ -84,6 +84,33 @@ fn fingerprints_by_id(docs: &[IrDocument]) -> BTreeMap<&str, Vec<String>> {
     by_id
 }
 
+pub(crate) fn check_texts(
+    files: &[crate::SourceText],
+    test_files: &[String],
+    docs: &[IrDocument],
+    findings: &mut Vec<Finding>,
+) -> Result<GuideTally, StopReason> {
+    let mut paths: Vec<_> = files.iter().map(|source| source.path()).collect();
+    paths.sort();
+    if let Some(overlap) = paths
+        .into_iter()
+        .find(|path| test_files.binary_search(&path.to_string()).is_ok())
+    {
+        return Err(StopReason::ConfigError(format!(
+            "{overlap}: matched by both guides.files and tests.files"
+        )));
+    }
+    let mut entries = Vec::new();
+    for source in files {
+        read_marks(source.path(), source.text(), &mut entries, findings);
+    }
+    check_stale(&entries, &fingerprints_by_id(docs), findings);
+    Ok(GuideTally {
+        files: files.len(),
+        marks: entries.len(),
+    })
+}
+
 /// REQ-core-204: どの`項目`と`シナリオ`の`指紋`とも同じでない1件ごとに guide_stale を出す。
 /// detail の今の`指紋`は、`IR`に無ければ "-"、あれば1つ目の`指紋`
 fn check_stale(

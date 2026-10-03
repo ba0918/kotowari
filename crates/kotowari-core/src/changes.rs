@@ -1,7 +1,7 @@
 use crate::{
     Finding, FindingKind,
     change_records::{Conclusion, LocatedEntry, Role},
-    git_snapshot::{Snapshot, ir_identity},
+    comparison::{Comparison, ir_identity},
 };
 use std::collections::BTreeSet;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -43,7 +43,7 @@ fn finding(entry: &LocatedEntry, kind: FindingKind, path: &str) -> Finding {
         format!("{}: {path}", entry.entry.id),
     )
 }
-pub fn evaluate(snapshot: &Snapshot, entries: &[LocatedEntry], phase: Phase) -> ChangeResult {
+pub fn evaluate(snapshot: &Comparison, entries: &[LocatedEntry], phase: Phase) -> ChangeResult {
     let applicable: Vec<_> = entries
         .iter()
         .filter(|e| {

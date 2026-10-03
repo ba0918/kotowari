@@ -398,6 +398,79 @@ pub struct DiscoveredTests {
     pub files: Vec<String>,
 }
 
+pub(crate) fn check_analysis(
+    analysis: &[crate::TestAnalysis],
+    docs: &[IrDocument],
+    known_ids: &BTreeSet<String>,
+    ir_path: &str,
+    findings: &mut Vec<Finding>,
+) -> DiscoveredTests {
+    let mut all_tests = Vec::new();
+    let mut markers = Vec::new();
+    let mut tally = BTreeMap::new();
+    let mut files = Vec::new();
+    for file in analysis {
+        let path = file.source.path();
+        let extension = Path::new(path)
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .unwrap_or("");
+        tally
+            .entry(extension.to_owned())
+            .or_insert(crate::TestFileTally {
+                files: 0,
+                query: file.has_query,
+            })
+            .files += 1;
+        files.push(path.to_owned());
+        findings.extend(file.findings.iter().cloned());
+        if file.has_query {
+            record_test_markers(&file.tests, path, known_ids, &mut markers, findings);
+            all_tests.extend(file.tests.iter().cloned());
+        } else {
+            let lines = crate::ir::split_lines(file.source.text());
+            for marker in &file.line_markers {
+                if marker.ids.is_empty() {
+                    findings.push(Finding::new(
+                        FindingKind::InvalidMarker,
+                        path.to_owned(),
+                        Some(marker.line),
+                        lines
+                            .get(marker.line.saturating_sub(1))
+                            .copied()
+                            .unwrap_or("")
+                            .to_owned(),
+                    ));
+                } else {
+                    for id in &marker.ids {
+                        markers.push(TestMarker {
+                            id: id.clone(),
+                            path: path.to_owned(),
+                            line: marker.line,
+                            name: None,
+                        });
+                        if !known_ids.contains(id) {
+                            findings.push(Finding::new(
+                                FindingKind::UnresolvedReference,
+                                path.to_owned(),
+                                Some(marker.line),
+                                id.clone(),
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    files.sort();
+    check_missing_tests(docs, ir_path, &markers, &all_tests, findings);
+    DiscoveredTests {
+        tally,
+        markers,
+        files,
+    }
+}
+
 /// `問い合わせのある言語`のファイルで見つけた`テスト`の印を積み、印を検査する
 fn record_test_markers(
     tests: &[DiscoveredTest],

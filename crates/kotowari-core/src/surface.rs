@@ -152,6 +152,44 @@ fn read_unspecified_file(base: &Path, cfg: &Config) -> Result<UnspecifiedList, S
     })
 }
 
+pub(crate) fn check_analysis(
+    analysis: &[crate::SurfaceAnalysis],
+    docs: &[IrDocument],
+    unspecified: &[crate::SourceText],
+    findings: &mut Vec<Finding>,
+) -> Result<SurfaceTally, StopReason> {
+    let mut surfaces = Vec::new();
+    for file in analysis {
+        surfaces.extend(file.surfaces.iter().cloned());
+        for finding in &file.findings {
+            if finding.kind == FindingKind::UnparsableFile
+                && findings
+                    .iter()
+                    .any(|old| old.kind == finding.kind && old.path == finding.path)
+            {
+                continue;
+            }
+            findings.push(finding.clone());
+        }
+    }
+    let mut list = UnspecifiedList::default();
+    for source in unspecified {
+        list.path = source.path().to_owned();
+        for item in &crate::config::read_yaml_sequence(source.text(), source.path())? {
+            match read_entry(item) {
+                Some(entry) => list.entries.push(entry),
+                None => list.findings.push(Finding::new(
+                    FindingKind::SurfaceUnspecifiedInvalid,
+                    source.path().to_owned(),
+                    None,
+                    written_detail(item),
+                )),
+            }
+        }
+    }
+    Ok(report(&surfaces, docs, &list, findings))
+}
+
 /// 1件を読む。鍵と値の組で、"kind"、"name"、"why" のちょうど3つの鍵の値がどれも文字列で、
 /// "why" が前後の半角空白とタブを除いて空でないときだけ形が正しい（REQ-core-233）
 fn read_entry(item: &Value) -> Option<Unspecified> {

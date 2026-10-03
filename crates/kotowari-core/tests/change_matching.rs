@@ -1,8 +1,8 @@
 use kotowari_core::{
     change_records::{self, LocatedEntry},
     changes::{Phase, evaluate},
+    comparison::{Blob, Comparison as Snapshot, ir_identity},
     config::Config,
-    git_snapshot::{Blob, Snapshot, ir_identity},
 };
 use std::collections::BTreeMap;
 fn fixture() -> (Snapshot, Vec<LocatedEntry>) {

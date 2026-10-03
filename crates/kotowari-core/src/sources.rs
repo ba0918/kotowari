@@ -467,6 +467,48 @@ pub fn build_context(
     })
 }
 
+pub(crate) fn context_from_texts(
+    config: &crate::config::Config,
+    records: &[crate::SourceText],
+    adr: &[crate::SourceText],
+) -> SourceContext {
+    let records_path = crate::normalize_path(&config.decisions.records);
+    let adr_path = crate::normalize_path(&config.decisions.adr);
+    let relative = |path: &str, place: &str| {
+        if place.is_empty() {
+            path.to_owned()
+        } else {
+            path.strip_prefix(&format!("{place}/"))
+                .unwrap_or(path)
+                .to_owned()
+        }
+    };
+    let mut records_files = Vec::new();
+    let mut records_other_files = Vec::new();
+    for source in records {
+        let file = parse_records_file(&relative(source.path(), &records_path), source.text());
+        if file.is_records {
+            records_files.push(file);
+        } else {
+            records_other_files.push(OtherFile {
+                rel_path: file.rel_path,
+                headings: file.headings,
+            });
+        }
+    }
+    let adr_files = adr
+        .iter()
+        .map(|source| parse_other_file(&relative(source.path(), &adr_path), source.text()))
+        .collect();
+    SourceContext {
+        records_path,
+        adr_path,
+        records_files,
+        adr_files,
+        records_other_files,
+    }
+}
+
 /// 置き場の下の .md をファイル名の順に深さ優先で読み、置き場からの相対パスと中身を visit に渡す
 fn for_each_md(
     dir: &Path,

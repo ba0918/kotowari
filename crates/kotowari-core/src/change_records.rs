@@ -429,3 +429,40 @@ pub fn static_check(
     ));
     Ok(())
 }
+
+pub(crate) fn check_texts(
+    texts: &[crate::SourceText],
+    cfg: &Config,
+    docs: &[ir::IrDocument],
+    context: &crate::sources::SourceContext,
+    findings: &mut Vec<Finding>,
+) {
+    let mut entries = Vec::new();
+    for source in texts {
+        let (parsed, errors) = parse(source.path(), source.text());
+        entries.extend(parsed);
+        findings.extend(errors);
+    }
+    let requirements = docs
+        .iter()
+        .flat_map(|doc| {
+            doc.items.iter().filter_map(|item| match item {
+                ir::Item::Requirement { id, .. } => Some((
+                    id.clone(),
+                    crate::join_display_path(&cfg.ir, &doc.relative_path),
+                )),
+                _ => None,
+            })
+        })
+        .collect();
+    let ir_paths = docs
+        .iter()
+        .map(|doc| crate::join_display_path(&cfg.ir, &doc.relative_path))
+        .collect();
+    findings.extend(validate_references(
+        &mut entries,
+        &requirements,
+        &ir_paths,
+        context,
+    ));
+}
