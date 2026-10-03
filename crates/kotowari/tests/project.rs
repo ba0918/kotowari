@@ -123,3 +123,20 @@ fn absolute_resolution_bases_survive_a_child_process_directory_change() {
         String::from_utf8_lossy(&output.stdout)
     );
 }
+// @kotowari[REQ-core-322, EX-core-499]
+#[test]
+fn facade_names_are_the_same_lower_result_types() {
+    fn same_query(value: &kotowari::QueryItem) -> &kotowari_core::QueryItem {
+        value
+    }
+    fn same_requirement(value: &kotowari::RequirementItem) -> &kotowari_core::RequirementItem {
+        value
+    }
+    fn same_guides(value: &kotowari::GuideTally) -> &kotowari_core::guides::GuideTally {
+        value
+    }
+    fn same_mutants(value: &kotowari::MutantCounts) -> &kotowari_core::mutants::MutantCounts {
+        value
+    }
+    let _ = (same_query, same_requirement, same_guides, same_mutants);
+}

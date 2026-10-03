@@ -19,13 +19,19 @@ mod test_files;
 pub use git_snapshot::Target;
 pub use kotowari_core::changes::Phase;
 pub use kotowari_core::config::{ChangesConfig, Config};
+pub use kotowari_core::guides::GuideTally;
 pub use kotowari_core::ir::is_valid_id;
+pub use kotowari_core::mutants::MutantCounts;
+pub use kotowari_core::surface::{SurfaceTally, Unlisted};
 pub use kotowari_core::{
     CheckInputs, CheckReport, Comparison, Finding, FindingKind, InputError, Inspection, IrDocument,
     IrOptions, ParsedItem, QueryReport, ReadInputs, ReadList, ReadModel, SourceText, StatusReport,
     SurfaceAnalysis, TestAnalysis, TestFileTally, Tool,
 };
-pub use kotowari_core::{ListItem, TestRef};
+pub use kotowari_core::{
+    Documents, ExampleItem, Findings, FlagItem, Items, ListItem, QueryItem, Reference,
+    RequirementItem, Requirements, ScenarioItem, Scenarios, TestRef, Tests,
+};
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone)]
