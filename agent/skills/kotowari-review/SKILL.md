@@ -49,7 +49,10 @@ get them and is never handed the whole list. A request that touches no IR item c
 file. A deferred requirement or deferred scenario (the `- deferred:` line; `deferred` true in the
 list) is specified but not built now: a missing test or implementation for it is not a finding,
 no finding demands one, and the test-side findings a review asks to bring to zero never include
-it.
+it. A changed file the IR does not hold (CI, hooks, release, build configuration, the oracles
+themselves; the kotowari skill's **What the IR holds**) has no IR counterpart: a missing
+requirement or test for it is not a finding, and no finding asks to add one to the IR. Its
+counterpart is the decision record.
 
 ## Reviewer setup
 

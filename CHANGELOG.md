@@ -13,6 +13,9 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 
 - **BREAKING（Rust API・パッケージ構成）** 根を`kotowari-cli`に変更し、`kotowari`を明示した開始点から操作するライブラリに分離した。メモリ計算は`kotowari-core`、ソース解析は`kotowari-source-analysis`を使う。旧coreのCLI・取得APIを呼ぶコードは移行が必要。バイナリのコマンド、出力、終了コードは変わらない。
 
+- `kotowari` スキルに「What the IR holds」を足し、IR に書くのは製品の利用者が観測できる振る舞いだけと定めた。CI とワークフロー、フック、リリース手順、ビルド設定、リポジトリ自身のデータ、プロジェクト自身のテストと検査は IR に書かず、判断の記録に書いて要求もテストも持たせない。迷ったら書かない側に倒し、テストを正当にするために IR に書き足すことは禁じた。壁打ち、計画、実装、cycle、review、iterate はこの定義を参照する。
+- 変更照合の reference で、CI・フック・リリース・ビルド設定だけの変更は、決定を引いた `new` で `ir` と `requirements` を空にし、`missing_spec` の穴にしないと明記した。
+
 ### Added
 
 - 仕様・判断の記録・テストのつながりと、機械検査の範囲を説明する日英の紹介ページを追加した。
