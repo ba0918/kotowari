@@ -250,3 +250,21 @@ fn req_view_008_deferred_references_are_marked_and_no_reference_links_out() {
     let start = position(&text, "<section");
     assert!(!text[start..].contains("href="));
 }
+
+// @kotowari[EX-view-005, REQ-view-009]
+#[test]
+fn ex_view_005_only_the_stale_section_carries_the_mark() {
+    let mut stale = section("節A", vec![]);
+    stale.stale = true;
+    let input = RenderInput {
+        documents: vec![document("a", "題名", vec![stale, section("節B", vec![])])],
+        references: vec![],
+    };
+    let text = page(&render(&input), "a.html").to_string();
+    assert_eq!(text.matches("class=\"stale-mark\"").count(), 1);
+    let a = position(&text, "節A");
+    let mark = position(&text, "class=\"stale-mark\"");
+    let b = position(&text, "節B");
+    assert!(a < mark && mark < b);
+    assert!(text[mark..b].contains("見直していない"));
+}

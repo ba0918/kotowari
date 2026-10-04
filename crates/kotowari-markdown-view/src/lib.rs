@@ -78,6 +78,7 @@ pub struct Page {
 
 const STYLE: &str = include_str!("style.css");
 const INDEX: &str = "index.html";
+const STALE_MARK: &str = "<span class=\"stale-mark\">IR が変わった後、まだ見直していない節</span>";
 
 /// 描画の入力からページの並びを返す。ページは名前のバイト順に並ぶ（REQ-view-002）
 pub fn render(input: &RenderInput) -> Vec<Page> {
@@ -123,8 +124,10 @@ fn document_page(document: &Document, refs: &parts::Refs) -> String {
     );
     body.push_str(&parts::part(&document.lead, refs));
     for section in &document.sections {
+        // REQ-view-009: 古い節の見出しの隣に、まだ見直していないことを示す印を描く
+        let mark = if section.stale { STALE_MARK } else { "" };
         body.push_str(&format!(
-            "<section class=\"section\">\n<h2>{}</h2>\n",
+            "<section class=\"section\">\n<h2>{}{mark}</h2>\n",
             html::escape(&section.heading)
         ));
         body.push_str(&blocks(&section.blocks, refs));
