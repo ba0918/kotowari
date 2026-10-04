@@ -285,3 +285,29 @@ fn overview_build_stops_with_a_cache_error_and_the_os_error_when_a_write_fails()
     );
     assert!(detail.len() > "cache error: .kotowari/cache/overview/index.html: ".len());
 }
+
+// @kotowari[REQ-core-324, TBL-core-020]
+#[cfg(unix)]
+#[test]
+fn overview_write_names_the_place_it_could_not_inspect() {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = overview_project(true);
+    let project = Project::new(ProjectOptions::new(dir.path())).unwrap();
+    let prepared = project.overview_prepare().unwrap();
+    let place = dir.path().join(".kotowari");
+    std::fs::set_permissions(&place, std::fs::Permissions::from_mode(0o000)).unwrap();
+    // 権限を無視できる実行者（root）では、中を調べられない置き場を作れない
+    let inspectable = std::fs::symlink_metadata(place.join("cache")).is_ok();
+    let result = prepared.write();
+    std::fs::set_permissions(&place, std::fs::Permissions::from_mode(0o755)).unwrap();
+    if inspectable {
+        return;
+    }
+    let error = result.unwrap_err();
+    assert_eq!(error.kind(), kotowari::ErrorKind::CacheFailure);
+    assert!(
+        error.detail().starts_with("cache error: .kotowari/cache: "),
+        "{}",
+        error.detail()
+    );
+}

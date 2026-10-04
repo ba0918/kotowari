@@ -380,6 +380,7 @@ fn req_core_304_the_port_is_a_decimal_integer_from_1_to_65535() {
         "1.5",
         "",
         "0x50",
+        "+80",
         "99999999999999999999",
     ] {
         argument_error(tmp.path(), &["overview", "serve", "--port", port]);
