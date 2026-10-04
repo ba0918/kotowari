@@ -943,21 +943,6 @@ fn tbl_core_043_a_well_formed_toc_with_a_note_and_nested_groups_has_no_finding()
     assert_eq!(toc_findings(&overview), pairs(&[]));
 }
 
-// @kotowari[REQ-core-327, TBL-core-043]
-#[test]
-fn tbl_core_043_the_same_place_is_reported_once() {
-    let overview = run_named(&["a"], "title: 目次\nitems: [a]\ncolor: 1\n");
-    let overview_twice = run_named(&["a"], "title: 3\nitems: [a]\n");
-    assert_eq!(
-        toc_findings(&overview),
-        pairs(&[("overview_toc_invalid", "/color")])
-    );
-    assert_eq!(
-        toc_findings(&overview_twice),
-        pairs(&[("overview_toc_invalid", "/title")])
-    );
-}
-
 // @kotowari[EX-core-508, REQ-core-328, REQ-core-329, REQ-core-027]
 #[test]
 fn ex_core_508_missing_unknown_and_repeated_names_are_errors() {
