@@ -130,3 +130,13 @@
     ユーザーがこの置換だけの限定判断を承認した。依存と前提・再検証条件は
     docs/decision/records/2026-10-03-public-crate-api-plan.md の A16 に記録する。
     現行の照合は file・change・text の一致であり、依存や解析設定の変化を自動検知しない。
+
+- file: crates/kotowari-overview/src/references.rs
+  change: 'replace > with >= in without_date'
+  text: 'let is_date = bytes.len() > 11'
+  class: equivalent
+  why: >-
+    > と >= が違う結果になるのは、判断の記録のファイル名が日付と "-" だけの "YYYY-MM-DD-.md" のときだけで、
+    その記録は参照の表の表示名を空にするかどうかだけが変わる。判断の記録はトピックの名前を必ず持つので、
+    この名前を作るものが無い。別の文脈の LLM（変異の見逃しを塞ぐ役）がこの変異を落とすテストを試み、
+    実在する入力では書けないと報告した。利用者が等価として登録することを承認した（2026-10-04）。
