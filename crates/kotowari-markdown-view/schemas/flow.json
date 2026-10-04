@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "flow",
+  "description": "Columns of boxes flowing from left to right",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "columns"
+  ],
+  "properties": {
+    "columns": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "$ref": "#/$defs/box"
+        }
+      }
+    },
+    "width": {
+      "enum": [
+        "half"
+      ],
+      "description": "Draw the part at half width beside the next half part"
+    }
+  },
+  "$defs": {
+    "box": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "body": {
+          "type": "string"
+        },
+        "tone": {
+          "enum": [
+            "accent",
+            "good",
+            "warn",
+            "bad",
+            "muted"
+          ]
+        }
+      }
+    }
+  }
+}

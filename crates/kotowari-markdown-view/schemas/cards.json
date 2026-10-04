@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "cards",
+  "description": "Cards each with a heading and a list of items",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cards"
+  ],
+  "properties": {
+    "cards": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "tone": {
+            "enum": [
+              "accent",
+              "good",
+              "warn",
+              "bad",
+              "muted"
+            ]
+          }
+        }
+      }
+    },
+    "width": {
+      "enum": [
+        "half"
+      ],
+      "description": "Draw the part at half width beside the next half part"
+    }
+  }
+}

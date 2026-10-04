@@ -127,14 +127,64 @@ fn document_page(document: &Document, refs: &parts::Refs) -> String {
             "<section class=\"section\">\n<h2>{}</h2>\n",
             html::escape(&section.heading)
         ));
-        for block in &section.blocks {
-            match block {
-                Block::Markdown(source) => body.push_str(&text::to_html(source)),
-                Block::Part(part) => body.push_str(&parts::part(part, refs)),
-            }
-        }
+        body.push_str(&blocks(&section.blocks, refs));
         body.push_str("</section>\n");
     }
     body.push_str("</main>\n");
     html::shell(&document.title, &body)
+}
+
+/// 節の中身を描く。続く半分の幅の部品は先頭から2つずつ組にして左右に並べ、
+/// 組にならずに残った1つとほかのブロックは幅いっぱいに描く（REQ-view-015）
+fn blocks(blocks: &[Block], refs: &parts::Refs) -> String {
+    let mut out = String::new();
+    let mut index = 0;
+    while index < blocks.len() {
+        if let (Some(Block::Part(left)), Some(Block::Part(right))) =
+            (blocks.get(index), blocks.get(index + 1))
+            && parts::is_half(left)
+            && parts::is_half(right)
+        {
+            out.push_str("<div class=\"row\">\n");
+            out.push_str(&parts::part(left, refs));
+            out.push_str(&parts::part(right, refs));
+            out.push_str("</div><!-- row -->\n");
+            index += 2;
+            continue;
+        }
+        match &blocks[index] {
+            Block::Markdown(source) => out.push_str(&text::to_html(source)),
+            Block::Part(part) => out.push_str(&parts::part(part, refs)),
+        }
+        index += 1;
+    }
+    out
+}
+
+/// 描ける部品の種類の名前（TBL-view-001）
+pub const PART_KINDS: &[&str] = &[
+    "lead",
+    "flow",
+    "steps",
+    "cards",
+    "status",
+    "compare",
+    "decisions",
+    "quiz",
+];
+
+/// 種類の名前から、その種類の部品のスキーマ（JSON Schema の文字列）を返す。
+/// スキーマはクレートに埋め込んであり、知らない名前には何も返さない（REQ-view-012）
+pub fn part_schema(kind: &str) -> Option<&'static str> {
+    Some(match kind {
+        "lead" => include_str!("../schemas/lead.json"),
+        "flow" => include_str!("../schemas/flow.json"),
+        "steps" => include_str!("../schemas/steps.json"),
+        "cards" => include_str!("../schemas/cards.json"),
+        "status" => include_str!("../schemas/status.json"),
+        "compare" => include_str!("../schemas/compare.json"),
+        "decisions" => include_str!("../schemas/decisions.json"),
+        "quiz" => include_str!("../schemas/quiz.json"),
+        _ => return None,
+    })
 }

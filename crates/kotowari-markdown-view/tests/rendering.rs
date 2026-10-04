@@ -172,3 +172,81 @@ fn req_view_007_markdown_text_follows_commonmark_and_gfm_tables() {
         assert!(text.contains(needle), "{needle}");
     }
 }
+
+fn reference(key: &str, label: &str, body: &str, state: ReferenceState) -> Reference {
+    Reference {
+        key: key.into(),
+        label: label.into(),
+        body: body.into(),
+        state,
+    }
+}
+
+fn steps_with_refs(refs: &[&str]) -> Block {
+    Block::Part(Part {
+        kind: "steps".into(),
+        value: json!({"items": [{"title": "段階", "refs": refs}]}),
+    })
+}
+
+// @kotowari[EX-view-004, REQ-view-008]
+#[test]
+fn ex_view_004_a_superseded_reference_opens_its_body_in_place_with_a_mark() {
+    let input = RenderInput {
+        documents: vec![document(
+            "a",
+            "題名",
+            vec![section("節", vec![steps_with_refs(&["docs/x.md#A1"])])],
+        )],
+        references: vec![reference(
+            "docs/x.md#A1",
+            "x A1",
+            "古い決定",
+            ReferenceState::Superseded,
+        )],
+    };
+    let text = page(&render(&input), "a.html").to_string();
+    let details = position(&text, "<details class=\"ref ref-superseded\">");
+    let label = position(&text, "x A1");
+    let mark = position(&text, "置き換え済み");
+    let body = position(&text, "古い決定");
+    assert!(details < label && label < mark && mark < body);
+    assert!(!text.contains("href=\"docs/x.md"));
+}
+
+// @kotowari[REQ-view-008]
+#[test]
+fn req_view_008_deferred_references_are_marked_and_no_reference_links_out() {
+    let input = RenderInput {
+        documents: vec![document(
+            "a",
+            "題名",
+            vec![section(
+                "節",
+                vec![steps_with_refs(&["REQ-x-001", "REQ-x-002", "missing"])],
+            )],
+        )],
+        references: vec![
+            reference(
+                "REQ-x-001",
+                "REQ-x-001",
+                "後回しの要求",
+                ReferenceState::Deferred,
+            ),
+            reference(
+                "REQ-x-002",
+                "REQ-x-002",
+                "今の要求",
+                ReferenceState::Current,
+            ),
+        ],
+    };
+    let text = page(&render(&input), "a.html").to_string();
+    assert!(text.contains("<details class=\"ref ref-deferred\">"));
+    assert!(position(&text, "後回しの要求") > position(&text, "（後回し）"));
+    assert!(text.contains("今の要求"));
+    assert_eq!(text.matches("（後回し）").count(), 1);
+    assert_eq!(text.matches("置き換え済み").count(), 0);
+    let start = position(&text, "<section");
+    assert!(!text[start..].contains("href="));
+}

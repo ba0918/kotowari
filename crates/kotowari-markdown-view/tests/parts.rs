@@ -1,0 +1,409 @@
+use kotowari_markdown_view::{
+    Block, Document, PART_KINDS, Part, Reference, ReferenceState, RenderInput, Section,
+    part_schema, render,
+};
+use serde_json::{Value, json};
+
+/// TBL-view-001 の種類の名前
+const KINDS: [&str; 8] = [
+    "lead",
+    "flow",
+    "steps",
+    "cards",
+    "status",
+    "compare",
+    "decisions",
+    "quiz",
+];
+
+/// 種類ごとの、スキーマに合う部品の例（REQ-view-014）
+fn examples() -> Vec<(&'static str, Value)> {
+    vec![
+        (
+            "lead",
+            json!({"conclusion": "結論", "points": ["要点1", "要点2"]}),
+        ),
+        ("lead", json!({"conclusion": "要点の無い結論"})),
+        (
+            "flow",
+            json!({"columns": [
+                [{"title": "入力", "body": "元データ", "tone": "accent"}],
+                [{"title": "検査"}, {"title": "描画", "body": "view", "tone": "good"}]
+            ]}),
+        ),
+        (
+            "steps",
+            json!({"items": [
+                {"title": "読む", "body": "元データを読む", "refs": ["REQ-x-001"]},
+                {"title": "書く"}
+            ], "width": "half"}),
+        ),
+        (
+            "cards",
+            json!({"cards": [
+                {"title": "build", "items": ["書く", "消す"], "tone": "warn"},
+                {"title": "serve", "items": []}
+            ]}),
+        ),
+        (
+            "status",
+            json!({"items": [
+                {"state": "決定", "text": "build を作る", "refs": ["docs/x.md#A1"]},
+                {"state": "予定", "text": "serve"},
+                {"state": "未決", "text": "hot reload"},
+                {"state": "取り下げ", "text": "render"}
+            ]}),
+        ),
+        (
+            "compare",
+            json!({"items": [
+                {"before": "毎回 HTML を書く", "after": "元データから描く", "why": "見た目を揃える", "refs": []}
+            ]}),
+        ),
+        (
+            "decisions",
+            json!({"roots": [
+                {"ref": "docs/x.md#A1", "text": "根の判断", "by": "利用者", "children": [
+                    {"ref": "docs/x.md#A2", "text": "下の判断", "by": "LLM", "children": [
+                        {"ref": "docs/x.md#A3", "text": "さらに下", "by": "LLM"}
+                    ]}
+                ]}
+            ]}),
+        ),
+        (
+            "quiz",
+            json!({"items": [{"q": "どこに書く?", "a": "cache の下", "refs": ["REQ-x-001"]}]}),
+        ),
+    ]
+}
+
+fn validator(kind: &str) -> jsonschema::Validator {
+    let schema: Value = serde_json::from_str(part_schema(kind).expect(kind)).expect(kind);
+    jsonschema::validator_for(&schema).expect(kind)
+}
+
+fn lead() -> Part {
+    Part {
+        kind: "lead".into(),
+        value: json!({"conclusion": "結論"}),
+    }
+}
+
+fn page_with(blocks: Vec<Block>, references: Vec<Reference>) -> String {
+    let input = RenderInput {
+        documents: vec![Document {
+            name: "a".into(),
+            title: "題名".into(),
+            lead: lead(),
+            sections: vec![Section {
+                heading: "節".into(),
+                stale: false,
+                blocks,
+            }],
+        }],
+        references,
+    };
+    render(&input)
+        .into_iter()
+        .find(|page| page.name == "a.html")
+        .unwrap()
+        .content
+}
+
+fn part(kind: &str, value: Value) -> Block {
+    Block::Part(Part {
+        kind: kind.into(),
+        value,
+    })
+}
+
+fn draw(kind: &str, value: Value) -> String {
+    let text = page_with(vec![part(kind, value)], vec![]);
+    let start = text.find("<section").unwrap();
+    text[start..].to_string()
+}
+
+// @kotowari[EX-view-007, REQ-view-012, REQ-view-011]
+#[test]
+fn ex_view_007_schemas_exist_for_the_eight_kinds_and_not_for_others() {
+    assert_eq!(PART_KINDS, KINDS);
+    for kind in KINDS {
+        let schema = part_schema(kind).unwrap_or_else(|| panic!("{kind}"));
+        let value: Value = serde_json::from_str(schema).unwrap();
+        assert_eq!(value["type"], "object", "{kind}");
+    }
+    assert_eq!(part_schema("chart"), None);
+    assert_eq!(part_schema(""), None);
+}
+
+/// 型が object の部分スキーマのうち "additionalProperties": false を宣言しないものの場所
+fn open_objects(schema: &Value, at: &str, found: &mut Vec<String>) {
+    match schema {
+        Value::Object(map) => {
+            let is_object = map.get("type") == Some(&json!("object"));
+            if is_object && map.get("additionalProperties") != Some(&json!(false)) {
+                found.push(if at.is_empty() {
+                    "(root)".into()
+                } else {
+                    at.into()
+                });
+            }
+            for (key, child) in map {
+                open_objects(child, &format!("{at}/{key}"), found);
+            }
+        }
+        Value::Array(items) => {
+            for (index, child) in items.iter().enumerate() {
+                open_objects(child, &format!("{at}/{index}"), found);
+            }
+        }
+        _ => {}
+    }
+}
+
+// @kotowari[REQ-view-013]
+#[test]
+fn req_view_013_every_object_in_every_part_schema_is_closed() {
+    for kind in KINDS {
+        let schema: Value = serde_json::from_str(part_schema(kind).unwrap()).unwrap();
+        let mut found = vec![];
+        open_objects(&schema, "", &mut found);
+        assert!(found.is_empty(), "{kind}: {found:?}");
+    }
+}
+
+// @kotowari[EX-view-009, REQ-view-013]
+#[test]
+fn ex_view_009_an_object_without_additional_properties_is_caught() {
+    let schema = json!({
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {"items": {"type": "array", "items": {"$ref": "#/$defs/item"}}},
+        "$defs": {"item": {"type": "object", "properties": {"x": {"type": "string"}}}}
+    });
+    let mut found = vec![];
+    open_objects(&schema, "", &mut found);
+    assert_eq!(found, ["/$defs/item"]);
+}
+
+// @kotowari[REQ-view-014, EX-view-009]
+#[test]
+fn req_view_014_every_kind_has_examples_that_fit_their_schema_and_render() {
+    let examples = examples();
+    for kind in KINDS {
+        assert!(
+            examples.iter().any(|(example, _)| *example == kind),
+            "no example for {kind}"
+        );
+    }
+    for (kind, value) in examples {
+        let validator = validator(kind);
+        let errors: Vec<String> = validator
+            .iter_errors(&value)
+            .map(|error| format!("{} {:?}", error.instance_path(), error.kind()))
+            .collect();
+        assert!(errors.is_empty(), "{kind}: {errors:?}");
+        let drawn = draw(kind, value);
+        assert!(drawn.contains(&format!("class=\"part {kind}")), "{kind}");
+    }
+}
+
+// @kotowari[REQ-view-015]
+#[test]
+fn req_view_015_every_schema_accepts_only_half_as_the_width() {
+    for (kind, value) in examples() {
+        let validator = validator(kind);
+        let mut half = value.clone();
+        half["width"] = json!("half");
+        assert!(validator.is_valid(&half), "{kind}");
+        for other in [json!("full"), json!(""), json!(2)] {
+            let mut wide = value.clone();
+            wide["width"] = other;
+            assert!(!validator.is_valid(&wide), "{kind}");
+        }
+    }
+}
+
+// @kotowari[EX-view-008, REQ-view-015]
+#[test]
+fn ex_view_008_two_following_half_parts_sit_side_by_side() {
+    let cards = |title: &str| {
+        part(
+            "cards",
+            json!({"cards": [{"title": title, "items": []}], "width": "half"}),
+        )
+    };
+    let text = page_with(
+        vec![
+            cards("左のカード"),
+            cards("右のカード"),
+            part(
+                "status",
+                json!({"items": [{"state": "決定", "text": "全幅の状態"}]}),
+            ),
+        ],
+        vec![],
+    );
+    let row = text.find("<div class=\"row\">").expect("row");
+    let row_end = row + text[row..].find("</div><!-- row -->").expect("row end");
+    let inside = &text[row..row_end];
+    assert!(inside.contains("左のカード") && inside.contains("右のカード"));
+    let status = text.find("全幅の状態").unwrap();
+    assert!(status > row_end);
+}
+
+// @kotowari[REQ-view-015]
+#[test]
+fn req_view_015_a_half_part_left_over_and_others_are_drawn_full_width() {
+    let half = |title: &str| {
+        part(
+            "steps",
+            json!({"items": [{"title": title}], "width": "half"}),
+        )
+    };
+    let text = page_with(
+        vec![
+            half("一"),
+            half("二"),
+            half("三"),
+            Block::Markdown("間の文".into()),
+            half("四"),
+        ],
+        vec![],
+    );
+    assert_eq!(text.matches("<div class=\"row\">").count(), 1);
+    let row_end = text.find("</div><!-- row -->").unwrap();
+    assert!(text.find("三").unwrap() > row_end);
+    assert!(text.find("四").unwrap() > row_end);
+}
+
+// @kotowari[REQ-view-011, TBL-view-001]
+#[test]
+fn tbl_view_001_lead_draws_the_conclusion_and_the_points() {
+    let drawn = draw(
+        "lead",
+        json!({"conclusion": "結論の文", "points": ["点A", "点B"]}),
+    );
+    assert!(drawn.contains("結論の文"));
+    assert!(drawn.find("点A").unwrap() < drawn.find("点B").unwrap());
+}
+
+// @kotowari[REQ-view-011, TBL-view-001]
+#[test]
+fn tbl_view_001_flow_draws_columns_of_boxes_on_a_grid_from_left_to_right() {
+    let drawn = draw(
+        "flow",
+        json!({"columns": [[{"title": "左", "tone": "accent"}], [{"title": "右", "body": "説明"}]]}),
+    );
+    assert_eq!(drawn.matches("class=\"flow-column\"").count(), 2);
+    assert!(drawn.find("左").unwrap() < drawn.find("右").unwrap());
+    assert!(drawn.contains("tone-accent"));
+    assert!(drawn.contains("説明"));
+    assert!(
+        !drawn.contains("style="),
+        "positions come from the grid, not from the data"
+    );
+}
+
+// @kotowari[REQ-view-011, TBL-view-001]
+#[test]
+fn tbl_view_001_steps_are_a_numbered_sequence() {
+    let drawn = draw(
+        "steps",
+        json!({"items": [{"title": "最初", "body": "本文"}, {"title": "次"}]}),
+    );
+    assert!(drawn.contains("<ol class=\"steps\">"));
+    assert!(drawn.find("最初").unwrap() < drawn.find("次").unwrap());
+    assert!(drawn.contains("本文"));
+}
+
+// @kotowari[REQ-view-011, TBL-view-001]
+#[test]
+fn tbl_view_001_cards_draw_a_title_and_a_list_of_items() {
+    let drawn = draw(
+        "cards",
+        json!({"cards": [{"title": "カード", "items": ["項目1", "項目2"], "tone": "bad"}]}),
+    );
+    assert!(drawn.contains("カード"));
+    assert!(drawn.contains("<li>項目1</li>") && drawn.contains("<li>項目2</li>"));
+    assert!(drawn.contains("tone-bad"));
+}
+
+// @kotowari[REQ-view-011, TBL-view-001]
+#[test]
+fn tbl_view_001_status_draws_a_label_for_each_of_the_four_states() {
+    let drawn = draw(
+        "status",
+        json!({"items": [
+            {"state": "決定", "text": "t1"}, {"state": "予定", "text": "t2"},
+            {"state": "未決", "text": "t3"}, {"state": "取り下げ", "text": "t4"}
+        ]}),
+    );
+    for (state, class) in [
+        ("決定", "state-decided"),
+        ("予定", "state-planned"),
+        ("未決", "state-open"),
+        ("取り下げ", "state-dropped"),
+    ] {
+        assert!(
+            drawn.contains(&format!("<span class=\"badge {class}\">{state}</span>")),
+            "{state}"
+        );
+    }
+}
+
+// @kotowari[REQ-view-011, TBL-view-001]
+#[test]
+fn tbl_view_001_compare_strikes_through_the_before() {
+    let drawn = draw(
+        "compare",
+        json!({"items": [{"before": "前の形", "after": "後の形", "why": "理由"}]}),
+    );
+    assert!(drawn.contains("<del>前の形</del>"));
+    assert!(drawn.contains("後の形") && drawn.contains("理由"));
+}
+
+// @kotowari[REQ-view-011, TBL-view-001]
+#[test]
+fn tbl_view_001_decisions_draw_a_tree_with_who_decided() {
+    let drawn = draw(
+        "decisions",
+        json!({"roots": [{"ref": "r1", "text": "根", "by": "利用者", "children": [
+            {"ref": "r2", "text": "枝", "by": "LLM"}
+        ]}]}),
+    );
+    let root = drawn.find("根").unwrap();
+    let nested = drawn.find("<ul").unwrap();
+    assert!(root < drawn.find("枝").unwrap());
+    assert!(drawn[nested..].contains("<ul"));
+    assert!(drawn.contains("<span class=\"by\">利用者</span>"));
+    assert!(drawn.contains("<span class=\"by\">LLM</span>"));
+}
+
+// @kotowari[REQ-view-011, TBL-view-001]
+#[test]
+fn tbl_view_001_quiz_hides_the_answer_until_chosen() {
+    let drawn = draw("quiz", json!({"items": [{"q": "問い", "a": "答え"}]}));
+    let details = drawn.find("<details").unwrap();
+    let summary = drawn.find("<summary>問い</summary>").unwrap();
+    assert!(details < summary && summary < drawn.find("答え").unwrap());
+}
+
+// @kotowari[REQ-view-003]
+#[test]
+fn req_view_003_a_value_that_does_not_fit_is_drawn_without_reporting() {
+    let text = page_with(
+        vec![
+            part("steps", json!({"items": "not a list", "unknown": 1})),
+            part("chart", json!({"x": 1})),
+            part("quiz", json!(null)),
+        ],
+        vec![Reference {
+            key: "k".into(),
+            label: "k".into(),
+            body: String::new(),
+            state: ReferenceState::Current,
+        }],
+    );
+    assert!(text.contains("</html>"));
+}
