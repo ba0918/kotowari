@@ -195,6 +195,32 @@ fn req_view_007_text_after_a_comment_on_its_line_is_drawn_as_without_the_comment
     }
 }
 
+/// 空白の並びを1つにまとめたページ。HTML では空白の並びは1つの空白と同じに描かれる
+fn collapsed(page: &str) -> String {
+    page.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+// @kotowari[REQ-view-007]
+#[test]
+fn req_view_007_a_comment_spanning_lines_inside_a_paragraph_keeps_one_paragraph() {
+    let with = one_section_page(vec![Block::Markdown("before <!--\nc\n--> AFTER\n".into())]);
+    let without = one_section_page(vec![Block::Markdown("before AFTER\n".into())]);
+    assert_eq!(collapsed(&with), collapsed(&without));
+}
+
+// @kotowari[REQ-view-007]
+#[test]
+fn req_view_007_a_comment_after_a_container_marker_does_not_indent_the_text() {
+    for (source, plain) in [
+        ("> <!-- c -->    QUOTED\n", "> QUOTED\n"),
+        ("- <!-- c -->     LISTED\n", "- LISTED\n"),
+    ] {
+        let with = one_section_page(vec![Block::Markdown(source.into())]);
+        let without = one_section_page(vec![Block::Markdown(plain.into())]);
+        assert_eq!(collapsed(&with), collapsed(&without), "{source:?}");
+    }
+}
+
 // @kotowari[REQ-view-007]
 #[test]
 fn req_view_007_markdown_text_follows_commonmark_and_gfm_tables() {
