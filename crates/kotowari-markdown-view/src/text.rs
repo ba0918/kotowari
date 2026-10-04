@@ -22,11 +22,9 @@ const ESCAPED_MARK: &str = "&lt;!--\u{E000}--&gt;";
 pub(crate) fn to_html(source: &str) -> String {
     let options = markdown::Options {
         parse: parse_options(),
-        compile: markdown::CompileOptions {
-            allow_dangerous_html: false,
-            allow_dangerous_protocol: false,
-            ..markdown::CompileOptions::gfm()
-        },
+        // 生の HTML と危険なプロトコルのリンクは、既定のまま許さない（allow_dangerous_html と
+        // allow_dangerous_protocol は false）
+        compile: markdown::CompileOptions::gfm(),
     };
     // GFM の読み方は MDX の構文を持たないので誤りを返さない
     markdown::to_html_with_options(&marked_comments(source), &options)
@@ -49,9 +47,8 @@ fn marked_comments(source: &str) -> String {
     let mut copied = 0;
     for (start, end) in nodes {
         let mut from = start.max(copied);
-        while from < end
-            && let Some(open) = source[from..end].find("<!--")
-        {
+        // 節は重ならないので from は end を越えない
+        while let Some(open) = source[from..end].find("<!--") {
             let open = from + open;
             let close = source[open + 4..end]
                 .find("-->")
