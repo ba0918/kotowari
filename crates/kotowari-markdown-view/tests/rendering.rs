@@ -177,15 +177,6 @@ fn ex_view_003_raw_html_is_text_and_comments_are_dropped() {
     assert!(text.contains("後の文"));
 }
 
-/// 節の中身だけ。ページの枠は比べない
-fn section_body(page: &str) -> String {
-    let start = page.find("<h2").expect("section heading");
-    let end = page[start..]
-        .find("</section>")
-        .map_or(page.len(), |end| start + end);
-    page[start..end].to_string()
-}
-
 // @kotowari[REQ-view-007]
 #[test]
 fn req_view_007_text_next_to_a_comment_is_not_drawn_as_code() {
@@ -197,7 +188,7 @@ fn req_view_007_text_next_to_a_comment_is_not_drawn_as_code() {
         "> <!-- c -->    text\n",
         "- <!-- c -->     text\n",
     ] {
-        let body = section_body(&one_section_page(vec![Block::Markdown(source.into())]));
+        let body = one_section_page(vec![Block::Markdown(source.into())]);
         assert!(body.contains("text"), "{source:?}");
         assert!(!body.contains("<pre"), "{source:?}");
         assert!(!body.contains("&lt;!--"), "{source:?}");
@@ -225,8 +216,8 @@ fn req_view_007_a_comment_line_keeps_the_blocks_around_it_apart() {
         ("p\n<!-- c -->\n---\n", "p\n\n---\n"),
         ("> q\n<!-- c -->\n> r\n", "> q\n\n> r\n"),
     ] {
-        let with = section_body(&one_section_page(vec![Block::Markdown(source.into())]));
-        let without = section_body(&one_section_page(vec![Block::Markdown(expected.into())]));
+        let with = one_section_page(vec![Block::Markdown(source.into())]);
+        let without = one_section_page(vec![Block::Markdown(expected.into())]);
         assert_eq!(collapsed(&with), collapsed(&without), "{source:?}");
     }
 }
