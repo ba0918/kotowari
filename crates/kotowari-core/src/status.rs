@@ -24,6 +24,9 @@ pub struct StatusResult {
     pub findings: Findings,
     /// REQ-core-165: `誤り`が0件で、かつ`問題の記録`の`項目`が0件のときだけ true
     pub complete: bool,
+    /// 追加の指摘の群の数（TBL-core-042）。check と同じ
+    #[serde(skip)]
+    pub(crate) groups: Vec<crate::GroupTally>,
 }
 
 /// 読んだ `IR` の文書（TBL-core-028。"kotowari check" の "files" と "lines" と同じ）
@@ -169,6 +172,7 @@ pub fn build(
         guides,
         surface,
         findings: counts,
+        groups: Vec::new(),
     }
 }
 

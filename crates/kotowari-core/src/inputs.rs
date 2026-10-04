@@ -140,6 +140,62 @@ pub struct CheckInputs {
     pub surface: Option<Vec<SurfaceAnalysis>>,
     pub unspecified: Option<Vec<SourceText>>,
     pub changes: Option<Vec<SourceText>>,
+    /// 追加の指摘の群。渡したものだけを加える（TBL-core-042）
+    pub groups: Vec<FindingGroup>,
+}
+
+/// 名前を付けた追加の指摘の群（TBL-core-042）。core は群の意味を知らず、指摘をほかの指摘と
+/// 合わせて並べて数え、名前と数を結果に持たせるだけである
+#[derive(Debug, Clone)]
+pub struct FindingGroup {
+    tally: GroupTally,
+    findings: Vec<crate::Finding>,
+}
+impl FindingGroup {
+    pub fn new(
+        name: impl Into<String>,
+        files: usize,
+        marks: usize,
+        findings: Vec<crate::Finding>,
+    ) -> Self {
+        Self {
+            tally: GroupTally {
+                name: name.into(),
+                files,
+                marks,
+            },
+            findings,
+        }
+    }
+    pub fn tally(&self) -> &GroupTally {
+        &self.tally
+    }
+    pub fn findings(&self) -> &[crate::Finding] {
+        &self.findings
+    }
+}
+
+/// 追加の指摘の群の名前と、読んだファイルの数と印の数
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GroupTally {
+    name: String,
+    files: usize,
+    marks: usize,
+}
+impl GroupTally {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+    pub fn files(&self) -> usize {
+        self.files
+    }
+    pub fn marks(&self) -> usize {
+        self.marks
+    }
+}
+
+fn find_group<'a>(groups: &'a [GroupTally], name: &str) -> Option<&'a GroupTally> {
+    groups.iter().find(|group| group.name == name)
 }
 pub struct RepositoryReadInputs {
     pub config: crate::config::Config,
@@ -552,6 +608,7 @@ struct CheckPreparation {
     findings: Vec<crate::Finding>,
     guides: crate::guides::GuideTally,
     surface: Option<crate::surface::SurfaceTally>,
+    groups: Vec<GroupTally>,
 }
 impl CheckPreparation {
     fn new(read: ReadModel) -> Self {
@@ -561,7 +618,19 @@ impl CheckPreparation {
             findings,
             guides: Default::default(),
             surface: None,
+            groups: Vec::new(),
         }
+    }
+    fn group(&mut self, group: FindingGroup) -> Result<(), InputError> {
+        if find_group(&self.groups, &group.tally.name).is_some() {
+            return Err(InputError::InvalidInput(format!(
+                "duplicate finding group: {}",
+                group.tally.name
+            )));
+        }
+        self.findings.extend(group.findings);
+        self.groups.push(group.tally);
+        Ok(())
     }
     fn changes(&mut self, files: &[Text]) {
         if self.read.policy.changes() {
@@ -604,7 +673,7 @@ impl CheckPreparation {
     }
     fn finish(mut self) -> Inspection {
         crate::sort_findings(&mut self.findings);
-        let status = StatusReport(crate::status::build(
+        let mut status = crate::status::build(
             &self.read.docs,
             &self.read.config().ir,
             &self.read.discovered.markers,
@@ -612,7 +681,9 @@ impl CheckPreparation {
             self.guides,
             self.surface.unwrap_or_default(),
             &self.findings,
-        ));
+        );
+        status.groups = self.groups.clone();
+        let status = StatusReport(status);
         let check = CheckReport(crate::CheckResult {
             files: self.read.docs.len(),
             lines: self.read.docs.iter().map(|doc| doc.line_count).sum(),
@@ -623,6 +694,7 @@ impl CheckPreparation {
             surface: self.surface.map(|tally| crate::surface::Unlisted {
                 unspecified: tally.unspecified,
             }),
+            groups: self.groups,
         });
         Inspection {
             read: self.read,
@@ -730,6 +802,10 @@ impl RepositoryInspectionPreparation {
         self.phase = InspectionPhase::Complete;
         Ok(())
     }
+    /// 追加の指摘の群を加える（TBL-core-042）。どの段の間でも加えられる
+    pub fn group(&mut self, group: FindingGroup) -> Result<(), crate::StopReason> {
+        self.inner.group(group).map_err(native_error)
+    }
     pub fn finish(self) -> Result<Inspection, crate::StopReason> {
         self.at_phase(InspectionPhase::Complete)?;
         Ok(self.inner.finish())
@@ -760,6 +836,7 @@ impl Inspection {
             policy.changes(),
             "change records",
         )?);
+        let groups = inputs.groups;
         let mut read = logical_read(inputs.read, policy)?;
         read.originals.admit(&guides)?;
         read.originals
@@ -772,6 +849,9 @@ impl Inspection {
         preparation
             .surface(&surface, &unspecified)
             .map_err(input_stop)?;
+        for group in groups {
+            preparation.group(group)?;
+        }
         Ok(preparation.finish())
     }
     pub fn into_check(self) -> CheckReport {
@@ -819,6 +899,13 @@ impl StatusReport {
     pub fn findings(&self) -> &crate::status::Findings {
         &self.0.findings
     }
+    /// 追加の指摘の群の数。渡した順に並ぶ（TBL-core-042）
+    pub fn groups(&self) -> &[GroupTally] {
+        &self.0.groups
+    }
+    pub fn group(&self, name: &str) -> Option<&GroupTally> {
+        find_group(&self.0.groups, name)
+    }
 }
 pub struct CheckReport(crate::CheckResult);
 impl CheckReport {
@@ -842,5 +929,12 @@ impl CheckReport {
     }
     pub fn counts(&self) -> &BTreeMap<String, usize> {
         &self.0.counts
+    }
+    /// 追加の指摘の群の数。渡した順に並ぶ（TBL-core-042）
+    pub fn groups(&self) -> &[GroupTally] {
+        &self.0.groups
+    }
+    pub fn group(&self, name: &str) -> Option<&GroupTally> {
+        find_group(&self.0.groups, name)
     }
 }

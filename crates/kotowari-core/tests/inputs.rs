@@ -380,3 +380,110 @@ fn invalid_typed_configuration_is_an_execution_failure_not_a_completed_inspectio
         Err(InputError::ConfigError(_))
     ));
 }
+
+fn empty_check_inputs() -> kotowari_core::CheckInputs {
+    let mut inputs = kotowari_core::CheckInputs::default();
+    inputs.read.config.tests.files.clear();
+    inputs.read.ir = Some(vec![SourceText::new(
+        "docs/ir/topic.md",
+        "# Topic\n\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: review\n- how_to_verify: read\n\nBody.\n",
+    )
+    .unwrap()]);
+    inputs.read.records = Some(vec![
+        SourceText::new(
+            "docs/decision/records/r.md",
+            "# R\n\n## Context\n\nc\n\n## Agreements\n\n- A1 decided\n  - why: because\n",
+        )
+        .unwrap(),
+    ]);
+    inputs.read.adr = Some(vec![]);
+    inputs
+}
+
+fn group(name: &str, files: usize, marks: usize) -> kotowari_core::FindingGroup {
+    use kotowari_core::{Finding, FindingKind};
+    kotowari_core::FindingGroup::new(
+        name,
+        files,
+        marks,
+        vec![
+            Finding::new(
+                FindingKind::OverviewLeadMissing,
+                ".kotowari/overview/b.md".into(),
+                None,
+                "b.md".into(),
+            ),
+            Finding::new(
+                FindingKind::GuideStale,
+                ".kotowari/overview/a.md".into(),
+                Some(9),
+                "REQ-001 00000000 11111111".into(),
+            ),
+            Finding::new(
+                FindingKind::OverviewPartUnknown,
+                ".kotowari/overview/a.md".into(),
+                Some(3),
+                "chart".into(),
+            ),
+        ],
+    )
+}
+
+// @kotowari[REQ-core-315, TBL-core-042, REQ-core-290]
+#[test]
+fn an_additional_group_is_sorted_counted_and_reported_with_its_numbers() {
+    use kotowari_core::Inspection;
+    let mut inputs = empty_check_inputs();
+    inputs.groups = vec![group("overview", 2, 5)];
+    let inspection = Inspection::build(inputs).unwrap();
+    let check = inspection.check();
+    let found: Vec<(&str, Option<usize>, &str)> = check
+        .findings()
+        .iter()
+        .map(|finding| (finding.path(), finding.line(), finding.kind().as_str()))
+        .collect();
+    assert_eq!(
+        found,
+        [
+            (".kotowari/overview/a.md", Some(3), "overview_part_unknown"),
+            (".kotowari/overview/a.md", Some(9), "guide_stale"),
+            (".kotowari/overview/b.md", None, "overview_lead_missing"),
+        ]
+    );
+    assert_eq!(check.counts().get("overview_lead_missing"), Some(&1));
+    assert_eq!(check.counts().get("guide_stale"), Some(&1));
+    let tally = check.group("overview").expect("group tally");
+    assert_eq!(
+        (tally.name(), tally.files(), tally.marks()),
+        ("overview", 2, 5)
+    );
+    let status = inspection.status();
+    assert_eq!(status.findings().error(), 2);
+    assert_eq!(status.findings().notice(), 1);
+    assert!(!status.complete());
+    let tally = status.group("overview").expect("status group tally");
+    assert_eq!((tally.files(), tally.marks()), (2, 5));
+}
+
+// @kotowari[REQ-core-315, TBL-core-042]
+#[test]
+fn an_additional_group_is_optional_and_only_added_when_given() {
+    use kotowari_core::Inspection;
+    let inspection = Inspection::build(empty_check_inputs()).unwrap();
+    assert!(inspection.check().findings().is_empty());
+    assert!(inspection.check().group("overview").is_none());
+    assert!(inspection.check().groups().is_empty());
+    assert!(inspection.status().complete());
+}
+
+// @kotowari[REQ-core-315, TBL-core-042]
+#[test]
+fn two_additional_groups_with_one_name_are_invalid_input() {
+    use kotowari_core::{InputError, Inspection};
+    let mut inputs = empty_check_inputs();
+    inputs.groups = vec![group("overview", 0, 0), group("overview", 1, 0)];
+    assert!(matches!(
+        Inspection::build(inputs),
+        Err(InputError::InvalidInput(_))
+    ));
+}

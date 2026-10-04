@@ -42,10 +42,10 @@ pub mod guides;
 mod inputs;
 pub mod ir;
 pub use inputs::{
-    CheckInputs, CheckReport, InputError, Inspection, NativeSourceText, NativeSurfaceAnalysis,
-    NativeTestAnalysis, QueryReport, ReadInputs, ReadList, ReadModel, RepositoryCheckInputs,
-    RepositoryInspectionPreparation, RepositoryReadInputs, RepositoryReadPreparation, SourceText,
-    StatusReport, SurfaceAnalysis, TestAnalysis,
+    CheckInputs, CheckReport, FindingGroup, GroupTally, InputError, Inspection, NativeSourceText,
+    NativeSurfaceAnalysis, NativeTestAnalysis, QueryReport, ReadInputs, ReadList, ReadModel,
+    RepositoryCheckInputs, RepositoryInspectionPreparation, RepositoryReadInputs,
+    RepositoryReadPreparation, SourceText, StatusReport, SurfaceAnalysis, TestAnalysis,
 };
 pub use ir::{IrOptions, ParsedIrDocument as IrDocument, ParsedItem};
 mod list;
@@ -80,6 +80,9 @@ pub(crate) struct CheckResult {
     /// REQ-core-228: "surface.rules" が空の一覧でないときだけ出す
     #[serde(skip_serializing_if = "Option::is_none")]
     pub surface: Option<surface::Unlisted>,
+    /// 追加の指摘の群の数（TBL-core-042）。出し方は呼び出し側が決める
+    #[serde(skip)]
+    pub(crate) groups: Vec<GroupTally>,
 }
 
 /// 読んだテストのファイルの、1つの拡張子の数と問い合わせの有無（TBL-core-021）
