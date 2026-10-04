@@ -13,6 +13,11 @@ fn parse_options() -> markdown::ParseOptions {
     }
 }
 
+/// コメントを置き換える印。中身が私用領域の1文字なので、利用者の文章とは重ならない
+const MARK: &str = "<!--\u{E000}-->";
+/// 生の HTML を文字として出したときの印
+const ESCAPED_MARK: &str = "&lt;!--\u{E000}--&gt;";
+
 /// CommonMark と GFM の表として HTML にする。生の HTML は文字として出し、HTML のコメントは出さない
 pub(crate) fn to_html(source: &str) -> String {
     let options = markdown::Options {
@@ -24,24 +29,25 @@ pub(crate) fn to_html(source: &str) -> String {
         },
     };
     // GFM の読み方は MDX の構文を持たないので誤りを返さない
-    markdown::to_html_with_options(&without_comments(source), &options).unwrap_or_default()
+    markdown::to_html_with_options(&marked_comments(source), &options)
+        .unwrap_or_default()
+        .replace(ESCAPED_MARK, "")
 }
 
-/// HTML のコメントを取り除いた文章。どう取り除くかは、読み取りがそのコメントを置いた場所で決める。
-/// 文の中（段落や見出しの中）のコメントは、行の区切りも含めて丸ごと取り除くので、段落は分かれない。
-/// ブロックとして置かれたコメントは、取り除いた後に続く空白も取り除くので、後の文字が字下げの
-/// コードブロックにならない。コメントの後に何も無く、行の初めからコメントまでが空白だけなら、その行を
-/// 行の区切りごと取り除くので、前後の段落はつながったままになる。コードブロックとコードスパンの中は
-/// HTML の節にならないので残る
-fn without_comments(source: &str) -> String {
+/// HTML のコメントを、中身の無い1行のコメントの印に置き換えた文章。
+/// コメントを消してから読むと、コメントが段落を区切っていた所でブロックがつながり、コメントの後の
+/// 空白が字下げのコードブロックになる。印に置き換えればコメントがある場合と同じ構造に読まれ、
+/// 描いた後で文字になった印だけを取り除ける。コメントが行をまたいでいても印は1行なので、文の中の
+/// コメントで段落が分かれない。コードブロックとコードスパンの中は HTML の節にならないので残る
+fn marked_comments(source: &str) -> String {
     let Ok(root) = markdown::to_mdast(source, &parse_options()) else {
         return source.to_string();
     };
     let mut nodes = Vec::new();
-    collect_html(&root, false, &mut nodes);
+    collect_html(&root, &mut nodes);
     let mut out = String::with_capacity(source.len());
     let mut copied = 0;
-    for (start, end, flow) in nodes {
+    for (start, end) in nodes {
         let mut from = start.max(copied);
         while from < end
             && let Some(open) = source[from..end].find("<!--")
@@ -51,44 +57,24 @@ fn without_comments(source: &str) -> String {
                 .find("-->")
                 .map_or(end, |close| open + 4 + close + 3);
             out.push_str(&source[copied..open]);
+            out.push_str(MARK);
             copied = close;
-            if flow {
-                copied += source[close..]
-                    .find(|c| c != ' ' && c != '\t')
-                    .unwrap_or(source.len() - close);
-                let line = out.rsplit(['\n', '\r']).next().unwrap_or("");
-                let alone = line.chars().all(|c| c == ' ' || c == '\t');
-                let rest = &source[copied..];
-                let line_break = if rest.starts_with("\r\n") {
-                    2
-                } else {
-                    usize::from(rest.starts_with(['\n', '\r']))
-                };
-                if alone && line_break > 0 {
-                    out.truncate(out.trim_end_matches([' ', '\t']).len());
-                    copied += line_break;
-                }
-            }
             from = copied;
         }
     }
-    // 切る位置は ASCII の "<!--"、"-->"、空白、行の区切りか節の終わりなので、文字を途中で切らない
+    // 切る位置は ASCII の "<!--"、"-->" か節の終わりなので、文字を途中で切らない
     out.push_str(&source[copied..]);
     out
 }
 
-/// HTML の節の範囲と、ブロックとして置かれたか（親が文書、引用、一覧の項目、脚注の定義か）
-fn collect_html(node: &Node, flow: bool, nodes: &mut Vec<(usize, usize, bool)>) {
+/// HTML の節の範囲
+fn collect_html(node: &Node, nodes: &mut Vec<(usize, usize)>) {
     if let Node::Html(_) = node
         && let Some(position) = node.position()
     {
-        nodes.push((position.start.offset, position.end.offset, flow));
+        nodes.push((position.start.offset, position.end.offset));
     }
-    let children_flow = matches!(
-        node,
-        Node::Root(_) | Node::Blockquote(_) | Node::ListItem(_) | Node::FootnoteDefinition(_)
-    );
     for child in node.children().into_iter().flatten() {
-        collect_html(child, children_flow, nodes);
+        collect_html(child, nodes);
     }
 }

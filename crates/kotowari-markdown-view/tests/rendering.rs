@@ -177,21 +177,30 @@ fn ex_view_003_raw_html_is_text_and_comments_are_dropped() {
     assert!(text.contains("後の文"));
 }
 
+/// 節の中身だけ。ページの枠は比べない
+fn section_body(page: &str) -> String {
+    let start = page.find("<h2").expect("section heading");
+    let end = page[start..]
+        .find("</section>")
+        .map_or(page.len(), |end| start + end);
+    page[start..end].to_string()
+}
+
 // @kotowari[REQ-view-007]
 #[test]
-fn req_view_007_text_after_a_comment_on_its_line_is_drawn_as_without_the_comment() {
-    let plain = one_section_page(vec![Block::Markdown("text\n".into())]);
+fn req_view_007_text_next_to_a_comment_is_not_drawn_as_code() {
     for source in [
         "<!-- c -->text\n",
         "  <!-- c -->  text\n",
         "<!-- a --> <!-- b -->\ttext\n",
         "<!--\nc\n-->     text\n",
+        "> <!-- c -->    text\n",
+        "- <!-- c -->     text\n",
     ] {
-        assert_eq!(
-            one_section_page(vec![Block::Markdown(source.into())]).replace('\n', ""),
-            plain.replace('\n', ""),
-            "{source:?}"
-        );
+        let body = section_body(&one_section_page(vec![Block::Markdown(source.into())]));
+        assert!(body.contains("text"), "{source:?}");
+        assert!(!body.contains("<pre"), "{source:?}");
+        assert!(!body.contains("&lt;!--"), "{source:?}");
     }
 }
 
@@ -210,13 +219,14 @@ fn req_view_007_a_comment_spanning_lines_inside_a_paragraph_keeps_one_paragraph(
 
 // @kotowari[REQ-view-007]
 #[test]
-fn req_view_007_a_comment_after_a_container_marker_does_not_indent_the_text() {
-    for (source, plain) in [
-        ("> <!-- c -->    QUOTED\n", "> QUOTED\n"),
-        ("- <!-- c -->     LISTED\n", "- LISTED\n"),
+fn req_view_007_a_comment_line_keeps_the_blocks_around_it_apart() {
+    for (source, expected) in [
+        ("para1\n<!-- c -->\npara2\n", "para1\n\npara2\n"),
+        ("p\n<!-- c -->\n---\n", "p\n\n---\n"),
+        ("> q\n<!-- c -->\n> r\n", "> q\n\n> r\n"),
     ] {
-        let with = one_section_page(vec![Block::Markdown(source.into())]);
-        let without = one_section_page(vec![Block::Markdown(plain.into())]);
+        let with = section_body(&one_section_page(vec![Block::Markdown(source.into())]));
+        let without = section_body(&one_section_page(vec![Block::Markdown(expected.into())]));
         assert_eq!(collapsed(&with), collapsed(&without), "{source:?}");
     }
 }
