@@ -344,12 +344,9 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                     port: port.as_deref().map_or(Ok(DEFAULT_PORT), parse_port)?,
                     config_path,
                 }),
-                [sub] => Err(StopReason::ArgumentError(format!(
-                    "unknown overview command: {sub}"
-                ))),
                 _ => Err(StopReason::ArgumentError(format!(
-                    "overview expects exactly one of build or serve, got {}",
-                    positionals.len()
+                    "overview expects exactly one of build or serve, got: {}",
+                    positionals.join(" ")
                 ))),
             };
         }
