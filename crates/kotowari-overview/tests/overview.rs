@@ -364,7 +364,15 @@ fn ex_core_471_an_unknown_frontmatter_key_is_a_form_error() {
     let model = model();
     let text = format!("---\nir:\n  - docs/ir/core/cli.md\ntitle: x\n---\n\n# a\n\n{LEAD}");
     let overview = run(&model, &[(A, &text)]);
-    assert_eq!(of_kind(&overview, "overview_form_invalid").len(), 1);
+    assert_eq!(
+        of_kind(&overview, "overview_form_invalid"),
+        [(
+            A.into(),
+            None,
+            "overview_form_invalid".into(),
+            "frontmatter".into()
+        )]
+    );
 }
 
 // @kotowari[REQ-core-281, TBL-core-038, REQ-core-027]
@@ -384,8 +392,10 @@ fn tbl_core_038_frontmatter_must_hold_only_a_nonempty_ir_list_of_strings() {
         let forms = of_kind(&run(&model, &[(A, &text)]), "overview_form_invalid");
         assert!(!forms.is_empty(), "{front:?}");
         assert!(
-            forms.iter().all(|(_, line, _, _)| line.is_none()),
-            "{front:?}"
+            forms
+                .iter()
+                .all(|(_, line, _, detail)| line.is_none() && detail == "frontmatter"),
+            "{front:?}: {forms:?}"
         );
     }
 }
