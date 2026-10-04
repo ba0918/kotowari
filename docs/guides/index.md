@@ -1,6 +1,6 @@
 # kotowari ガイド
 
-<!-- @kotowari[REQ-core-001:c1c19656] -->
+<!-- @kotowari[REQ-core-001:67e34470] -->
 
 kotowari は、Markdown で書いた仕様（IR）を機械的に検査する CLI です。
 要求・決定表・シナリオを決まった形で書き、それぞれが決定の記録に出典を持ち、テストに結び付いているかを `kotowari check` が確かめます。
@@ -13,6 +13,8 @@ kotowari は、Markdown で書いた仕様（IR）を機械的に検査する CL
 | やりたいこと | 読むページ |
 |---|---|
 | コマンドの共通の書式、終了コード、止まったときの読み方を知る | [CLI（全コマンド共通）](cli.md) |
+| Rustから型付きAPIを呼ぶ | [公開クレートAPI](public-crate-api.md) |
+| 独立した配布アーカイブを検証する | [パッケージ検証](package-validation.md) |
 | 置き場やテストのファイルの場所を設定する | [設定ファイル](config.md) |
 | 仕様を検査して、指摘を直す | [kotowari check](commands/check.md) と [指摘の種類](findings.md) |
 | テストと要求を結び付ける | [テストに印を付ける](marks.md) |
@@ -30,6 +32,7 @@ kotowari は、Markdown で書いた仕様（IR）を機械的に検査する CL
 | [status](commands/status.md) | 揃っているかを数と1つの真偽で答える |
 | [mutants](commands/mutants.md) | 変異テストの結果を読み、見逃しを指摘にする |
 | [plan](commands/plan.md) | 実装計画の形を、同梱のスキーマで検査する |
+| [overview](../ir/core/overview-commands.md) | 全体像の元データから全体像のページを `build` で書き、`serve` で書いて手元で配る |
 
 ## リファレンス
 

@@ -1,19 +1,11 @@
 //! テストの発見と印の結び付け（REQ-core-071〜REQ-core-088）
 
-use crate::comment_block::LineMap;
-use crate::config::Config;
 use crate::deferred;
 use crate::ir::{IrDocument, Item, is_valid_id};
 pub use crate::test_markers::{InvalidMarkers, Marker, MarkerIds, parse_markers_in_line};
-use crate::test_queries::{ParsedFile, TestQueries, language_of};
 use crate::{Finding, FindingKind};
-use ast_grep_core::Node;
-use ast_grep_core::tree_sitter::StrDoc;
-use ast_grep_language::SupportLang;
-use globset::{Glob, GlobSetBuilder};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
-use walkdir::WalkDir;
 
 /// 発見されたテスト
 #[derive(Debug, Clone)]
@@ -44,350 +36,6 @@ pub struct TestMarker {
     pub name: Option<String>,
 }
 
-/// glob の一覧に当たるファイルを集める。`テストのファイル`（"tests.files"）と`ガイド`（"guides.files"）が
-/// 同じ走査と`除外`を使う（REQ-core-019、REQ-core-079、REQ-core-018、REQ-core-198）。
-/// (`基準のディレクトリ`からの相対パス, 絶対パス) を相対パスのバイト順に並べて返す
-pub fn collect_files(
-    base: &Path,
-    patterns: &[String],
-) -> Result<Vec<(String, String)>, crate::StopReason> {
-    let mut builder = GlobSetBuilder::new();
-    for pattern in patterns {
-        // glob の構文は Config::parse で検証済み
-        let g = Glob::new(pattern)
-            .map_err(|e| crate::StopReason::ConfigError(format!("invalid glob: {pattern}: {e}")))?;
-        builder.add(g);
-    }
-    let globset = builder
-        .build()
-        .map_err(|e| crate::StopReason::ConfigError(format!("glob build error: {e}")))?;
-
-    let mut files = Vec::new();
-
-    for entry in WalkDir::new(base)
-        .follow_links(false)
-        .into_iter()
-        .filter_entry(|e| {
-            // 隠しディレクトリを除外（REQ-core-019）。ルートは除外しない
-            // ディレクトリのシンボリックリンクは辿らない（REQ-core-079, A102）
-            if e.depth() > 0 {
-                let ft = e.file_type();
-                if ft.is_symlink() {
-                    // シンボリックリンク: ファイルなら含める、ディレクトリなら除外
-                    // filter_entry ではディレクトリかどうかで判定
-                    // WalkDir は follow_links(false) なのでシンボリックリンクは展開されない
-                    // ここで辿って判定する
-                    if let Ok(meta) = std::fs::metadata(e.path())
-                        && meta.is_dir()
-                    {
-                        return false; // ディレクトリリンクは辿らない
-                    }
-                    return true; // ファイルリンクは含める
-                }
-                if ft.is_dir() {
-                    let name = e.file_name().to_string_lossy();
-                    return !name.starts_with('.');
-                }
-            }
-            true
-        })
-    {
-        // REQ-core-018（A96）: 走査でディレクトリが読めなければ停止する
-        let entry = entry.map_err(|e| {
-            let where_ = e.path().map(|p| relative_to(base, p)).unwrap_or_default();
-            crate::StopReason::UnreadableFile(format!("{where_}: {e}"))
-        })?;
-        // ファイルまたはファイルのシンボリックリンク
-        let is_file = if entry.file_type().is_symlink() {
-            // A146: 先の無いシンボリックリンクは読めないファイルとして停止する
-            std::fs::metadata(entry.path())
-                .map(|m| m.is_file())
-                .map_err(|e| {
-                    let rel = relative_to(base, entry.path());
-                    crate::StopReason::UnreadableFile(format!("{rel}: {e}"))
-                })?
-        } else {
-            entry.file_type().is_file()
-        };
-        if is_file {
-            let rel = relative_to(base, entry.path());
-            if globset.is_match(&rel) {
-                files.push((rel, entry.path().to_string_lossy().to_string()));
-            }
-        }
-    }
-
-    files.sort();
-    Ok(files)
-}
-
-/// 基準のディレクトリからの相対パスを、Windows の区切りも "/" にして作る。基準の外のパスは相対にしない
-fn relative_to(base: &Path, path: &Path) -> String {
-    path.strip_prefix(base)
-        .unwrap_or(path)
-        .to_string_lossy()
-        .replace('\\', "/")
-}
-
-/// `問い合わせのある言語`のファイルのテストを発見し、`直前のコメントの塊`の印を結び付ける。
-/// 構文の誤りが1つでもあれば Err（REQ-core-083）
-pub fn discover_tests(
-    content: &str,
-    file_rel: &str,
-    lang: SupportLang,
-    queries: &TestQueries,
-    config: &Config,
-) -> Result<Vec<DiscoveredTest>, String> {
-    let parsed =
-        ParsedFile::parse(content, lang).ok_or_else(|| format!("syntax error in {file_rel}"))?;
-    let root = parsed.root();
-    let lines = LineMap::new(content, &root, lang);
-    // `テスト`ごとの、その節が始まるバイトの位置
-    let mut tests: Vec<(usize, DiscoveredTest)> = Vec::new();
-    for test in parsed.find_tests(queries, lang, file_rel) {
-        let first_line = test.node.start_pos().line();
-        let (marker_ids, invalid_markers) = lines.markers_before(first_line);
-        tests.push((
-            test.node.range().start,
-            DiscoveredTest {
-                name: test.name,
-                first_line_text: line_text(content, first_line),
-                file_path: file_rel.to_string(),
-                line: first_line + 1,
-                marker_ids,
-                invalid_markers,
-            },
-        ));
-    }
-    if lang == SupportLang::Rust {
-        discover_macro_tests(&root, content, &lines, file_rel, config, &mut tests);
-    }
-    tests.sort_by_key(|(start, _)| *start);
-    Ok(unbind_later_tests_on_the_same_line(tests))
-}
-
-/// 最初の行が同じ`テスト`が2つ以上あるとき、印はその行で最初に始まる`テスト`にだけ結び付ける
-/// （TBL-core-016）。tests は節の始まる位置の順に並んでいる
-fn unbind_later_tests_on_the_same_line(tests: Vec<(usize, DiscoveredTest)>) -> Vec<DiscoveredTest> {
-    let mut previous_line = None;
-    tests
-        .into_iter()
-        .map(|(_, mut test)| {
-            if previous_line == Some(test.line) {
-                test.marker_ids.clear();
-                test.invalid_markers.clear();
-            }
-            previous_line = Some(test.line);
-            test
-        })
-        .collect()
-}
-
-/// 行の全体の文字から前後の空白を除いたもの（REQ-core-086 の名前が null のときの detail）
-fn line_text(content: &str, line: usize) -> String {
-    content.lines().nth(line).unwrap_or("").trim().to_string()
-}
-
-/// "tests.rust.macros" のマクロを探し、中身を Rust の項目として読み直す（TBL-core-017）
-fn discover_macro_tests(
-    node: &RustNode<'_>,
-    source: &str,
-    lines: &LineMap<'_>,
-    file_rel: &str,
-    config: &Config,
-    tests: &mut Vec<(usize, DiscoveredTest)>,
-) {
-    for child in node.children() {
-        match child.kind().as_ref() {
-            "macro_invocation" => {
-                if is_configured_macro(&child, config) {
-                    reparse_macro_body(&child, source, lines, file_rel, tests);
-                }
-            }
-            _ => discover_macro_tests(&child, source, lines, file_rel, config, tests),
-        }
-    }
-}
-
-type RustNode<'r> = Node<'r, StrDoc<SupportLang>>;
-
-/// マクロの名前の末尾の要素が設定のどれかと一致するか
-fn is_configured_macro(node: &RustNode<'_>, config: &Config) -> bool {
-    let Some(macro_node) = node.field("macro") else {
-        return false;
-    };
-    let macro_name = macro_node.text();
-    let last_segment = macro_name.rsplit("::").next().unwrap_or(&macro_name);
-    config.tests.rust.macros.iter().any(|m| {
-        let m_last = m.rsplit("::").next().unwrap_or(m);
-        m_last == last_segment
-    })
-}
-
-fn reparse_macro_body(
-    node: &RustNode<'_>,
-    source: &str,
-    lines: &LineMap<'_>,
-    file_rel: &str,
-    tests: &mut Vec<(usize, DiscoveredTest)>,
-) {
-    let Some(body) = node.children().find(|c| c.kind() == "token_tree") else {
-        return;
-    };
-    let body_text = body.text();
-    // token_tree の中身（"{ ... }"、"( ... )"、"[ ... ]" の中）
-    let delimited = [('{', '}'), ('(', ')'), ('[', ']')]
-        .into_iter()
-        .find_map(|(open, close)| body_text.strip_prefix(open)?.strip_suffix(close));
-    let inner = delimited.unwrap_or(&body_text);
-    let byte_offset = body.range().start + usize::from(delimited.is_some());
-    let line_offset = source[..byte_offset].matches('\n').count();
-
-    // REQ-core-083: 読み直したときの構文の誤りは unparsable_file にせず、読めた関数を数える
-    let Ok(inner_root) = ast_grep_core::AstGrep::try_new(inner, SupportLang::Rust) else {
-        return;
-    };
-    let inner_lines = LineMap::new(inner, &inner_root.root(), SupportLang::Rust);
-    collect_macro_functions(
-        &inner_root.root(),
-        inner,
-        (lines, &inner_lines),
-        file_rel,
-        (byte_offset, line_offset),
-        tests,
-    );
-}
-
-/// マクロの中の最上位の関数ごとに数える（入れ子の関数は数えない）
-fn collect_macro_functions(
-    node: &RustNode<'_>,
-    inner: &str,
-    (lines, inner_lines): (&LineMap<'_>, &LineMap<'_>),
-    file_rel: &str,
-    (byte_offset, line_offset): (usize, usize),
-    tests: &mut Vec<(usize, DiscoveredTest)>,
-) {
-    for child in node.children() {
-        if child.kind() != "function_item" {
-            let offset = (byte_offset, line_offset);
-            let line_maps = (lines, inner_lines);
-            collect_macro_functions(&child, inner, line_maps, file_rel, offset, tests);
-            continue;
-        }
-        let Some(name_node) = child.field("name") else {
-            continue;
-        };
-        let first_line = child.start_pos().line();
-        // A26: マクロの外と同じ行の規則で結び付ける。中身の最初の行はマクロの開き括弧と同じ行なので、
-        // その上の行はマクロの外にあり、ファイルの行で塊を探す
-        let (marker_ids, invalid_markers) = if first_line == 0 {
-            lines.markers_before(line_offset)
-        } else {
-            let (ids, invalid) = inner_lines.markers_before(first_line);
-            (
-                ids.into_iter()
-                    .map(|(id, ln)| (id, line_offset + ln))
-                    .collect(),
-                invalid
-                    .into_iter()
-                    .map(|(ln, raw)| (line_offset + ln, raw))
-                    .collect(),
-            )
-        };
-        let test = DiscoveredTest {
-            // A38: 名前は関数の名前
-            name: Some(name_node.text().to_string()),
-            first_line_text: line_text(inner, first_line),
-            file_path: file_rel.to_string(),
-            line: line_offset + first_line + 1,
-            marker_ids,
-            invalid_markers,
-        };
-        tests.push((byte_offset + child.range().start, test));
-    }
-}
-
-/// 単独の "\r" を "\n" に置き換える。TBL-core-010 は単独の "\r" も行の終わりに数えるが、
-/// `str::lines()` も tree-sitter の行も "\n" でしか行を分けない。どちらも1バイトなので、
-/// 置き換えてもバイトの位置は変わらない
-pub(crate) fn lone_cr_to_lf(content: &str) -> String {
-    let mut out = String::with_capacity(content.len());
-    let mut chars = content.chars().peekable();
-    while let Some(c) = chars.next() {
-        if c == '\r' && chars.peek() != Some(&'\n') {
-            out.push('\n');
-        } else {
-            out.push(c);
-        }
-    }
-    out
-}
-
-/// テストの発見と印のチェックの全体
-pub fn discover_and_check(
-    base: &Path,
-    config: &Config,
-    docs: &[IrDocument],
-    known_ids: &BTreeSet<String>,
-    ir_path: &str,
-    findings: &mut Vec<Finding>,
-) -> Result<DiscoveredTests, crate::StopReason> {
-    let test_files = collect_files(base, &config.tests.files)?;
-    let queries = TestQueries::load(base, config)?;
-    let mut all_tests: Vec<DiscoveredTest> = Vec::new();
-    // REQ-core-153: list の "tests" の元。check は使わない
-    let mut markers: Vec<TestMarker> = Vec::new();
-    // TBL-core-021: 読んだテストのファイルを拡張子ごとに数える
-    let mut tally: BTreeMap<String, crate::TestFileTally> = BTreeMap::new();
-
-    for (rel_path, abs_path) in &test_files {
-        let content = lone_cr_to_lf(&crate::read_utf8_file(
-            std::path::Path::new(abs_path),
-            rel_path,
-        )?);
-
-        let ext = std::path::Path::new(rel_path)
-            .extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("");
-        // REQ-core-081: 拡張子から言語を決め、その言語にルールがあれば問い合わせのある言語
-        let lang = language_of(rel_path).filter(|lang| queries.has_query(*lang));
-        let query = lang.is_some();
-
-        tally
-            .entry(ext.to_string())
-            .or_insert(crate::TestFileTally { files: 0, query })
-            .files += 1;
-
-        if let Some(lang) = lang {
-            match discover_tests(&content, rel_path, lang, &queries, config) {
-                Ok(tests) => {
-                    record_test_markers(&tests, rel_path, known_ids, &mut markers, findings);
-                    all_tests.extend(tests);
-                }
-                Err(_) => {
-                    findings.push(Finding::new(
-                        FindingKind::UnparsableFile,
-                        rel_path.clone(),
-                        None,
-                        rel_path.clone(),
-                    ));
-                }
-            }
-        } else {
-            record_line_markers(&content, rel_path, known_ids, &mut markers, findings);
-        }
-    }
-
-    check_missing_tests(docs, ir_path, &markers, &all_tests, findings);
-
-    Ok(DiscoveredTests {
-        tally,
-        markers,
-        files: test_files.into_iter().map(|(rel, _)| rel).collect(),
-    })
-}
-
 /// テストの発見の結果
 pub struct DiscoveredTests {
     /// TBL-core-021: 読んだテストのファイルの拡張子ごとの数
@@ -396,6 +44,78 @@ pub struct DiscoveredTests {
     pub markers: Vec<TestMarker>,
     /// 読んだ`テストのファイル`の`基準のディレクトリ`からの相対パス。バイト順（REQ-core-199 の重なりの判定）
     pub files: Vec<String>,
+}
+
+pub fn check_entries<'a>(
+    analysis: impl IntoIterator<Item = (&'a str, &'a crate::TestAnalysis)>,
+    docs: &[IrDocument],
+    known_ids: &BTreeSet<String>,
+    ir_path: &str,
+    findings: &mut Vec<Finding>,
+) -> DiscoveredTests {
+    let mut all_tests = Vec::new();
+    let mut markers = Vec::new();
+    let mut tally = BTreeMap::new();
+    let mut files = Vec::new();
+    for (path, file) in analysis {
+        let extension = Path::new(path)
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .unwrap_or("");
+        tally
+            .entry(extension.to_owned())
+            .or_insert(crate::TestFileTally {
+                files: 0,
+                query: file.has_query,
+            })
+            .files += 1;
+        files.push(path.to_owned());
+        findings.extend(file.findings.iter().cloned());
+        if file.has_query {
+            record_test_markers(&file.tests, path, known_ids, &mut markers, findings);
+            all_tests.extend(file.tests.iter().cloned());
+        } else {
+            let lines = crate::ir::split_lines(file.source.text());
+            for marker in &file.line_markers {
+                if marker.ids.is_empty() {
+                    findings.push(Finding::new(
+                        FindingKind::InvalidMarker,
+                        path.to_owned(),
+                        Some(marker.line),
+                        lines
+                            .get(marker.line.saturating_sub(1))
+                            .copied()
+                            .unwrap_or("")
+                            .to_owned(),
+                    ));
+                } else {
+                    for id in &marker.ids {
+                        markers.push(TestMarker {
+                            id: id.clone(),
+                            path: path.to_owned(),
+                            line: marker.line,
+                            name: None,
+                        });
+                        if !known_ids.contains(id) {
+                            findings.push(Finding::new(
+                                FindingKind::UnresolvedReference,
+                                path.to_owned(),
+                                Some(marker.line),
+                                id.clone(),
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    files.sort();
+    check_missing_tests(docs, ir_path, &markers, &all_tests, findings);
+    DiscoveredTests {
+        tally,
+        markers,
+        files,
+    }
 }
 
 /// `問い合わせのある言語`のファイルで見つけた`テスト`の印を積み、印を検査する
@@ -425,48 +145,6 @@ fn record_test_markers(
                 Some(*line_num),
                 raw.clone(),
             ));
-        }
-    }
-}
-
-/// 問い合わせの無い言語: 印を行ごとに拾い、検査もする（REQ-core-076, REQ-core-087, REQ-core-072, REQ-core-054）
-fn record_line_markers(
-    content: &str,
-    rel_path: &str,
-    known_ids: &BTreeSet<String>,
-    markers: &mut Vec<TestMarker>,
-    findings: &mut Vec<Finding>,
-) {
-    for (idx, line) in content.lines().enumerate() {
-        let line_num = idx + 1;
-        for marker in parse_markers_in_line(line, line_num) {
-            if marker.ids.is_empty() {
-                // REQ-core-072: 空の印、または閉じ括弧のない印
-                findings.push(Finding::new(
-                    FindingKind::InvalidMarker,
-                    rel_path.to_string(),
-                    Some(line_num),
-                    line.to_string(),
-                ));
-            } else {
-                for id in &marker.ids {
-                    markers.push(TestMarker {
-                        id: id.clone(),
-                        path: rel_path.to_string(),
-                        line: line_num,
-                        name: None,
-                    });
-                    // REQ-core-054: 存在しない ID への参照
-                    if !known_ids.contains(id) {
-                        findings.push(Finding::new(
-                            FindingKind::UnresolvedReference,
-                            rel_path.to_string(),
-                            Some(line_num),
-                            id.clone(),
-                        ));
-                    }
-                }
-            }
         }
     }
 }

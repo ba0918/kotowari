@@ -2,10 +2,11 @@
 #
 # 版の宣言のずれを検査する（判断の記録 docs/decision/records/2026-09-26-release-flow.md の A5、A13）。
 #
-#   check-versions.sh          kotowari の版（根の Cargo.toml）に、kotowari-core の Cargo.toml と
-#                              Cargo.lock の kotowari、kotowari-core の版が揃っているかを見る。
-#                              kotowari-mds の版（crates/kotowari-markdown-schema/Cargo.toml）に
-#                              Cargo.lock の kotowari-markdown-schema の版が揃っているかも見る
+#   check-versions.sh          kotowari の版（根の Cargo.toml）に、kotowari 系のパッケージ（kotowari、
+#                              kotowari-core、kotowari-source-analysis、kotowari-overview）の Cargo.toml と
+#                              Cargo.lock の版が揃っているかを見る。kotowari-mds の版
+#                              （crates/kotowari-markdown-schema/Cargo.toml）に、Markdown スキーマ系の
+#                              パッケージ（schema-io、mds、kotowari-markdown-view）の版が揃っているかも見る
 #   check-versions.sh <タグ>   上に加えて、タグ（kotowari-v<版> か kotowari-mds-v<版>）の版が
 #                              その製品の Cargo.toml の版と同じかを見る
 #
@@ -74,9 +75,21 @@ fi
 
 # 箇所と読んだ版と従う製品を1行ずつ並べる。製品の版に従う宣言のすべて
 declarations="crates/kotowari-core/Cargo.toml [package] version	$(manifest_version crates/kotowari-core/Cargo.toml)	kotowari
+crates/kotowari/Cargo.toml [package] version	$(manifest_version crates/kotowari/Cargo.toml)	kotowari
+crates/kotowari-source-analysis/Cargo.toml [package] version	$(manifest_version crates/kotowari-source-analysis/Cargo.toml)	kotowari
+crates/kotowari-overview/Cargo.toml [package] version	$(manifest_version crates/kotowari-overview/Cargo.toml)	kotowari
 Cargo.lock kotowari	$(lock_version Cargo.lock kotowari)	kotowari
+Cargo.lock kotowari-cli	$(lock_version Cargo.lock kotowari-cli)	kotowari
+Cargo.lock kotowari-source-analysis	$(lock_version Cargo.lock kotowari-source-analysis)	kotowari
 Cargo.lock kotowari-core	$(lock_version Cargo.lock kotowari-core)	kotowari
-Cargo.lock kotowari-markdown-schema	$(lock_version Cargo.lock kotowari-markdown-schema)	kotowari-mds"
+Cargo.lock kotowari-overview	$(lock_version Cargo.lock kotowari-overview)	kotowari
+Cargo.lock kotowari-markdown-schema	$(lock_version Cargo.lock kotowari-markdown-schema)	kotowari-mds
+crates/kotowari-markdown-schema-io/Cargo.toml [package] version	$(manifest_version crates/kotowari-markdown-schema-io/Cargo.toml)	kotowari-mds
+crates/kotowari-mds/Cargo.toml [package] version	$(manifest_version crates/kotowari-mds/Cargo.toml)	kotowari-mds
+crates/kotowari-markdown-view/Cargo.toml [package] version	$(manifest_version crates/kotowari-markdown-view/Cargo.toml)	kotowari-mds
+Cargo.lock kotowari-markdown-schema-io	$(lock_version Cargo.lock kotowari-markdown-schema-io)	kotowari-mds
+Cargo.lock kotowari-mds	$(lock_version Cargo.lock kotowari-mds)	kotowari-mds
+Cargo.lock kotowari-markdown-view	$(lock_version Cargo.lock kotowari-markdown-view)	kotowari-mds"
 
 status=0
 while IFS=$'\t' read -r place version product; do
@@ -103,4 +116,21 @@ if [ -n "$tag" ]; then
     fi
 fi
 
+python3 - <<'PY' || status=1
+import pathlib, sys, tomllib
+files = [pathlib.Path('Cargo.toml'), *sorted(pathlib.Path('crates').glob('*/Cargo.toml'))]
+manifests = [(path, tomllib.loads(path.read_text())) for path in files]
+versions = {manifest['package']['name']: manifest['package']['version'] for _, manifest in manifests}
+for path, manifest in manifests:
+    tables = [manifest.get(key, {}) for key in ['dependencies', 'dev-dependencies', 'build-dependencies']]
+    for target in manifest.get('target', {}).values():
+        tables.extend(target.get(key, {}) for key in ['dependencies', 'dev-dependencies', 'build-dependencies'])
+    for table in tables:
+        for key, dependency in table.items():
+            if isinstance(dependency, dict) and 'path' in dependency:
+                name = dependency.get('package', key)
+                if name not in versions or dependency.get('version') != versions[name]:
+                    print(f'{path}: registry version differs for {name}', file=sys.stderr)
+                    sys.exit(1)
+PY
 exit "$status"

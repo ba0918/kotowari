@@ -4,21 +4,21 @@ kotowari のコマンド、受ける引数、停止と終了コードを扱う�
 
 ## Requirements
 
-### REQ-core-001: コマンドは7つ
+### REQ-core-001: コマンドは8つ
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A19, docs/decision/records/2026-09-17-mutation-tests.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-19-read-commands.md#A1, docs/decision/records/2026-09-19-read-commands.md#A10, docs/decision/records/2026-09-20-query-status.md#A1, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-10-01-change-conformance.md#A2
+- source: docs/decision/records/records.md#A19, docs/decision/records/2026-09-17-mutation-tests.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-19-read-commands.md#A1, docs/decision/records/2026-09-19-read-commands.md#A10, docs/decision/records/2026-09-20-query-status.md#A1, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-02-whole-picture.md#A23, docs/decision/records/2026-10-02-whole-picture.md#A27
 - verification: unit
 
-kotowari は常に、"kotowari check"、"kotowari list"、"kotowari mutants"、"kotowari plan"、"kotowari query"、"kotowari status"、"kotowari changes" の7つのコマンドだけを持ち、"kotowari check" の1つのコマンドで`IR`の検査と`テスト`との対応の検査を両方行う。変更に対する照合の欠落と古さの検査は "kotowari changes" が行う（REQ-core-240）。
+kotowari は常に、"kotowari check"、"kotowari list"、"kotowari mutants"、"kotowari plan"、"kotowari query"、"kotowari status"、"kotowari changes"、"kotowari overview" の8つのコマンドだけを持ち、"kotowari check" の1つのコマンドで`IR`の検査と`テスト`との対応の検査を両方行う。変更に対する照合の欠落と古さの検査は "kotowari changes" が行う（REQ-core-240）。"kotowari overview" は "build" と "serve" の2つの下位のコマンドを持つ（REQ-core-293、REQ-core-297）。
 
 ### REQ-core-002: 受けるオプション
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A19, docs/decision/records/records.md#A103, docs/decision/records/2026-09-17-mutation-tests.md#A14, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A58, docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-09-24-plan-schema.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A3
+- source: docs/decision/records/records.md#A19, docs/decision/records/records.md#A103, docs/decision/records/2026-09-17-mutation-tests.md#A14, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A58, docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-09-24-plan-schema.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A3, docs/decision/records/2026-10-02-whole-picture.md#A62, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-02-whole-picture.md#A78
 - verification: unit
 
-kotowari は常に、"check"、"list"、"query"、"status" ではオプションとして "--format"、"--config"、"--help"、"--version" だけを受け、"mutants" ではそれに加えて "--tool" を受け、"plan" では "--format"、"--help"、"--version" だけを受け、どのコマンドでも、オプションをコマンドの前後どちらに書いても受け、位置引数とオプションの順を問わない。
+kotowari は常に、"check"、"list"、"query"、"status" ではオプションとして "--format"、"--config"、"--help"、"--version" だけを受け、"mutants" ではそれに加えて "--tool" を受け、"plan" では "--format"、"--help"、"--version" だけを受け、"overview build" では "--format"、"--config"、"--help"、"--version" だけを受け、"overview serve" では "--port"、"--config"、"--help"、"--version" だけを受け、どのコマンドでも、オプションをコマンドの前後どちらに書いても受け、位置引数とオプションの順を問わない。
 
 ### REQ-core-003: 設定のパスの基準
 
@@ -31,10 +31,10 @@ kotowari は常に、"--config" に与えたパスを、changes 以外ではカ�
 ### REQ-core-004: 引数の誤り
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-01-change-details.md#A3, docs/decision/records/records.md#A60, docs/decision/records/records.md#A103, docs/decision/records/records.md#A136, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-10-01-change-conformance.md#A2
+- source: docs/decision/records/2026-10-01-change-details.md#A3, docs/decision/records/records.md#A60, docs/decision/records/records.md#A103, docs/decision/records/records.md#A136, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-02-whole-picture.md#A27, docs/decision/records/2026-10-02-whole-picture.md#A63
 - verification: unit
 
-"--help" も "--version" も無いときに、知らないオプション、"mutants" でないコマンドに付けた "--tool"、"check"、"list"、"mutants"、"plan"、"query"、"status"、"changes" のいずれでもない1つ目の位置引数、"check"、"list"、"status" の後の位置引数、"--format" の知らない値、値の無いオプション、同じオプションの2回目のいずれかを受けたとき、引数が1つも無いとき、オプションだけがあって1つ目の位置引数が無いとき、または "changes" 以外で "--config" の指す先が無いかディレクトリのとき、kotowari は引数の誤りを理由に`停止`する。
+"--help" も "--version" も無いときに、知らないオプション、"mutants" でないコマンドに付けた "--tool"、"overview serve" でないコマンドに付けた "--port"、"overview serve" に付けた "--format"、"check"、"list"、"mutants"、"plan"、"query"、"status"、"changes"、"overview" のいずれでもない1つ目の位置引数、"check"、"list"、"status" の後の位置引数、"--format" の知らない値、値の無いオプション、同じオプションの2回目のいずれかを受けたとき、引数が1つも無いとき、オプションだけがあって1つ目の位置引数が無いとき、または "changes" 以外で "--config" の指す先が無いかディレクトリのとき、kotowari は引数の誤りを理由に`停止`する。
 
 ### REQ-core-149: mutants の引数
 
@@ -43,6 +43,14 @@ kotowari は常に、"--config" に与えたパスを、changes 以外ではカ�
 - verification: unit
 
 "--help" も "--version" も無い "kotowari mutants" で、"--tool" が無いとき、"--tool" の値が "cargo-mutants" でないとき、または "mutants" の後の位置引数がちょうど1つでないとき、kotowari は引数の誤りを理由に`停止`する。位置引数は結果のファイルのパスで、カレントディレクトリからの相対パスとして読む。
+
+### REQ-core-304: overview の引数
+
+- kind: event_driven
+- source: docs/decision/records/2026-10-02-whole-picture.md#A27, docs/decision/records/2026-10-02-whole-picture.md#A57, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-02-whole-picture.md#A72
+- verification: unit
+
+"--help" も "--version" も無い "kotowari overview" で、"overview" の後の位置引数がちょうど1つでないとき、それが "build" か "serve" でないとき、または "--port" の値が1から65535までの10進の整数でないとき、kotowari は引数の誤りを理由に`停止`する。
 
 ### REQ-core-005: 停止の出力
 
@@ -69,25 +77,28 @@ kotowari は常に、"--config" に与えたパスを、changes 以外ではカ�
 ### REQ-core-008: 作らないコマンド
 
 - kind: prohibition
-- source: docs/decision/records/records.md#P1, docs/decision/records/records.md#A99, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4, docs/decision/records/2026-09-17-check-reach.md#A23, docs/decision/records/2026-09-19-read-commands.md#A2, docs/decision/records/2026-09-20-query-status.md#A1
+- source: docs/decision/records/records.md#P1, docs/decision/records/records.md#A99, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4, docs/decision/records/2026-09-17-check-reach.md#A23, docs/decision/records/2026-09-19-read-commands.md#A2, docs/decision/records/2026-09-20-query-status.md#A1, docs/decision/records/2026-10-02-whole-picture.md#A60, docs/decision/records/2026-10-02-whole-picture.md#A73
 - verification: unit
 
-kotowari は、人間向けの文書の生成（"render"）を作ってはならない。
+kotowari は、`IR`から構成と中身を写した人間向けの文書を生成してはならない。`全体像`は LLM が書いた`全体像の元データ`を描くもので、`部品`の参照が指す`項目`の本文をその場で開いて見せること（REQ-core-291）は、これに当たらない。
 
 ## Decision tables
 
 ### TBL-core-001: 停止の理由
 
-- source: docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A48, docs/decision/records/records.md#A60, docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A66, docs/decision/records/records.md#A95, docs/decision/records/records.md#A96, docs/decision/records/records.md#A93, docs/decision/records/records.md#A103, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A136, docs/decision/records/records.md#A146, docs/decision/records/records.md#A160, docs/decision/records/2026-09-16-ir-tree.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A32, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A48, docs/decision/records/2026-09-22-ir-engine.md#A73, docs/decision/records/2026-09-24-plan-schema.md#A16, docs/decision/records/2026-09-24-doc-marks.md#A15, docs/decision/records/2026-09-24-doc-marks.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A2, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-09-27-surface-check.md#A24, docs/decision/records/2026-09-27-surface-check.md#A29
+- source: docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A48, docs/decision/records/records.md#A60, docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A66, docs/decision/records/records.md#A95, docs/decision/records/records.md#A96, docs/decision/records/records.md#A93, docs/decision/records/records.md#A103, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A136, docs/decision/records/records.md#A146, docs/decision/records/records.md#A160, docs/decision/records/2026-09-16-ir-tree.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A32, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A48, docs/decision/records/2026-09-22-ir-engine.md#A73, docs/decision/records/2026-09-24-plan-schema.md#A16, docs/decision/records/2026-09-24-doc-marks.md#A15, docs/decision/records/2026-09-24-doc-marks.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A2, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-09-27-surface-check.md#A24, docs/decision/records/2026-09-27-surface-check.md#A29, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A57, docs/decision/records/2026-10-02-whole-picture.md#A58, docs/decision/records/2026-10-02-whole-picture.md#A61, docs/decision/records/2026-10-02-whole-picture.md#A72, docs/decision/records/2026-10-02-whole-picture.md#A76, docs/decision/records/2026-10-04-overview-on-public-api.md#A9
 
 | 理由 | 場面 |
 |---|---|
-| 設定の誤り | REQ-core-014 の場面と、REQ-core-189 の "tests.rules" の誤りの場面と、REQ-core-225 の面の設定と "surface.rules" の誤りの場面と、REQ-core-231 の未記載の面の一覧が YAML として読めないか最上位が並びでない場面と、REQ-core-148 の等価の一覧が YAML として読めないか最上位が並びでない場面と、REQ-core-199 のガイドとテストの置き場が重なる場面 |
-| 引数の誤り | REQ-core-004、REQ-core-149、REQ-core-190 の場面 |
-| 読めないファイル | "kotowari plan" の`計画書`のファイルが無いか、ディレクトリか、読めない（REQ-core-197）、読むファイルを読めない（"kotowari mutants" で変異の結果か等価の一覧の1件が指すファイルは除く。REQ-core-141、REQ-core-142）、結果のファイルが無いか読めない、"mutants.equivalents" の指す先が無いか読めない、"kotowari check" か "kotowari status" で "surface.unspecified" の指す先が無いか読めない、"kotowari check" で"ir"、"decisions.records"、"decisions.adr" の指すディレクトリが無いか読めない、"ir"、"decisions.records"、"decisions.adr" の下のディレクトリが読めない、または "tests.files"、"guides.files"、"surface.files" のいずれかの走査でディレクトリが読めない、または走査で先の無いシンボリックリンクに出会った、またはカレントディレクトリを取得できない |
-| UTF-8 でないファイル | IR の文書、テストのファイル、ガイド、面のファイル（REQ-core-236 が読むもの）、未記載の面の一覧、設定ファイル、判断の記録、ADR、結果のファイル、等価の一覧、計画書のいずれかが UTF-8 でない |
+| 設定の誤り | REQ-core-014 の場面と、REQ-core-189 の "tests.rules" の誤りの場面と、REQ-core-225 の面の設定と "surface.rules" の誤りの場面と、REQ-core-231 の未記載の面の一覧が YAML として読めないか最上位が並びでない場面と、REQ-core-148 の等価の一覧が YAML として読めないか最上位が並びでない場面と、REQ-core-199 のガイドとテストの置き場が重なる場面と、REQ-core-279 と REQ-core-280 の`全体像の元データ`の場面 |
+| 引数の誤り | REQ-core-004、REQ-core-149、REQ-core-190、REQ-core-304 の場面 |
+| 読めないファイル | "kotowari plan" の`計画書`のファイルが無いか、ディレクトリか、読めない（REQ-core-197）、読むファイルを読めない（"kotowari mutants" で変異の結果か等価の一覧の1件が指すファイルは除く。REQ-core-141、REQ-core-142）、結果のファイルが無いか読めない、"mutants.equivalents" の指す先が無いか読めない、"kotowari check" か "kotowari status" で "surface.unspecified" の指す先が無いか読めない、"kotowari check"、"kotowari overview build"、"kotowari overview serve" で"ir"、"decisions.records"、"decisions.adr" の指すディレクトリが無いか読めない、"ir"、"decisions.records"、"decisions.adr" の下のディレクトリが読めない、または "tests.files"、"guides.files"、"surface.files"、"overview.files" のいずれかの走査でディレクトリが読めない、または走査で先の無いシンボリックリンクに出会った、またはカレントディレクトリを取得できない |
+| UTF-8 でないファイル | IR の文書、テストのファイル、ガイド、面のファイル（REQ-core-236 が読むもの）、未記載の面の一覧、設定ファイル、判断の記録、ADR、結果のファイル、等価の一覧、計画書、`全体像の元データ`のいずれかが UTF-8 でない |
 | 結果の誤り | REQ-core-144 の場面 |
 | 写しの誤り | REQ-core-175 の場面 |
+| 元データの誤り | REQ-core-294 の場面 |
+| ポートの誤り | REQ-core-298 の場面 |
+| 置き場の誤り | REQ-core-324 の場面 |
 
 ### TBL-core-002: 終了コード
 
@@ -121,7 +132,7 @@ Scenario: 道具の指定が無い mutants は停止する
 Scenario: 引数が無いときはコマンドを挙げる
   When "kotowari" を引数なしで実行する
   Then 終了コードは 2 である
-  And 標準エラーの理由には REQ-core-001 の7つのコマンド名が挙げられる
+  And 標準エラーの理由には REQ-core-001 の8つのコマンド名が挙げられる
 
 @id=EX-core-240 @about=REQ-core-149 @source=docs/decision/records/2026-09-17-mutation-tests.md#A14,docs/decision/records/2026-09-17-mutation-tests.md#A39
 Scenario: 知らない道具の名前は停止する
@@ -139,7 +150,7 @@ Scenario: 結果のファイルを2つ渡すと停止する
 Scenario: オプションだけの実行はコマンドを挙げて停止する
   When "kotowari --format text" を実行する
   Then 終了コードは 2 である
-  And 標準エラーの理由には REQ-core-001 の7つのコマンド名が挙げられる
+  And 標準エラーの理由には REQ-core-001 の8つのコマンド名が挙げられる
 
 @id=EX-core-244 @about=REQ-core-002 @source=docs/decision/records/2026-09-17-mutation-tests.md#A41,docs/decision/records/2026-09-17-mutation-tests.md#A58
 Scenario: mutants のオプションはコマンドの前にも結果のパスの後にも書ける

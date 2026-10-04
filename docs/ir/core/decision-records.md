@@ -9,7 +9,7 @@
 - kind: invariant
 - source: docs/decision/records/records.md#A22, docs/decision/records/2026-09-17-decision-log.md#A5
 - verification: review
-- how_to_verify: 判断の記録と ADR の両方のディレクトリを読むことを `crates/kotowari-core/src/sources.rs` で確認
+- how_to_verify: 判断の記録と ADR の両方のディレクトリを読むことを `crates/kotowari/src/sources.rs` の `read_texts` で確認
 
 `判断の記録`と、書かれた`ADR`が残る関係が常に成り立つ。`ADR`が1本も無いリポジトリでも成り立つ。
 

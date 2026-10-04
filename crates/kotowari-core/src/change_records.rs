@@ -328,90 +328,26 @@ pub fn glob(patterns: &[String]) -> globset::GlobSet {
     builder.build().expect("validated globs")
 }
 
-fn collect_records(
-    base: &std::path::Path,
-    patterns: &[String],
-) -> Result<Vec<(String, String)>, crate::StopReason> {
-    let records = glob(patterns);
-    let hidden_prefixes: Vec<String> = patterns
-        .iter()
-        .flat_map(|pattern| {
-            let components: Vec<_> = pattern.split('/').collect();
-            components
-                .iter()
-                .enumerate()
-                .filter(|(_, component)| component.starts_with('.') && **component != ".")
-                .map(|(index, _)| components[..=index].join("/"))
-                .collect::<Vec<_>>()
-        })
-        .collect();
-    let named_hidden = glob(&hidden_prefixes);
-    let relative = |path: &std::path::Path| {
-        path.strip_prefix(base)
-            .unwrap_or(path)
-            .to_string_lossy()
-            .replace('\\', "/")
-    };
-    let mut files = vec![];
-    for entry in walkdir::WalkDir::new(base)
-        .follow_links(false)
-        .into_iter()
-        .filter_entry(|entry| {
-            if entry.depth() == 0 {
-                return true;
-            }
-            if entry.file_type().is_symlink() {
-                return !std::fs::metadata(entry.path()).is_ok_and(|meta| meta.is_dir());
-            }
-            !entry.file_type().is_dir()
-                || !entry.file_name().to_string_lossy().starts_with('.')
-                || named_hidden.is_match(relative(entry.path()))
-        })
-    {
-        let entry = entry.map_err(|error| {
-            let path = error.path().map(relative).unwrap_or_default();
-            crate::StopReason::UnreadableFile(format!("{path}: {error}"))
-        })?;
-        let path = relative(entry.path());
-        let is_file = if entry.file_type().is_symlink() {
-            std::fs::metadata(entry.path())
-                .map_err(|error| crate::StopReason::UnreadableFile(format!("{path}: {error}")))?
-                .is_file()
-        } else {
-            entry.file_type().is_file()
-        };
-        if is_file && records.is_match(&path) {
-            files.push((path, entry.path().to_string_lossy().into_owned()));
-        }
-    }
-    files.sort();
-    Ok(files)
-}
-
-pub fn static_check(
-    base: &std::path::Path,
+pub fn check_entries<'a>(
+    texts: impl IntoIterator<Item = (&'a str, &'a str)>,
     cfg: &Config,
     docs: &[ir::IrDocument],
+    context: &crate::sources::SourceContext,
     findings: &mut Vec<Finding>,
-) -> Result<(), crate::StopReason> {
-    let Some(changes) = &cfg.changes else {
-        return Ok(());
-    };
-    let paths = collect_records(base, &changes.records)?;
-    let mut entries = vec![];
-    for (path, absolute) in paths {
-        let content = crate::read_utf8_file(std::path::Path::new(&absolute), &path)?;
-        let (parsed, errors) = parse(&path, &content);
+) {
+    let mut entries = Vec::new();
+    for (path, text) in texts {
+        let (parsed, errors) = parse(path, text);
         entries.extend(parsed);
         findings.extend(errors);
     }
     let requirements = docs
         .iter()
-        .flat_map(|d| {
-            d.items.iter().filter_map(|i| match i {
+        .flat_map(|doc| {
+            doc.items.iter().filter_map(|item| match item {
                 ir::Item::Requirement { id, .. } => Some((
                     id.clone(),
-                    crate::join_display_path(&cfg.ir, &d.relative_path),
+                    crate::join_display_path(&cfg.ir, &doc.relative_path),
                 )),
                 _ => None,
             })
@@ -419,13 +355,12 @@ pub fn static_check(
         .collect();
     let ir_paths = docs
         .iter()
-        .map(|d| crate::join_display_path(&cfg.ir, &d.relative_path))
+        .map(|doc| crate::join_display_path(&cfg.ir, &doc.relative_path))
         .collect();
     findings.extend(validate_references(
         &mut entries,
         &requirements,
         &ir_paths,
-        &crate::sources::build_context(base, cfg)?,
+        context,
     ));
-    Ok(())
 }

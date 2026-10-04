@@ -16,17 +16,17 @@ kotowari は常に、第一に LLM が使う CLI であり、人間が確認の�
 ### REQ-core-102: 状態を保存しない
 
 - kind: prohibition
-- source: docs/decision/records/records.md#A75, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4, docs/decision/records/2026-09-17-check-reach.md#A21
+- source: docs/decision/records/records.md#A75, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4, docs/decision/records/2026-09-17-check-reach.md#A21, docs/decision/records/2026-10-02-whole-picture.md#A28, docs/decision/records/2026-10-02-whole-picture.md#A80, docs/decision/records/2026-10-02-whole-picture.md#A72
 - verification: unit
 
-kotowari は、状態を保存すること、標準出力と標準エラーのほかに書き出すことをしてはならない。
+kotowari は、状態を保存すること、標準出力と標準エラーのほかに書き出すことをしてはならない。ただし "kotowari overview build" と "kotowari overview serve" が`基準のディレクトリ`の ".kotowari/cache/overview/" の下に書き、その下のファイルを消すことだけは除く（REQ-core-296）。
 
 ### REQ-core-105: crate と CLI の置き場
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A8
+- source: docs/decision/records/records.md#A8, docs/decision/records/2026-10-03-public-crate-api.md#A14, docs/decision/records/2026-10-03-public-crate-api.md#A34, docs/decision/records/2026-10-03-public-crate-api.md#A35
 - verification: review
-- how_to_verify: CLI は `src/main.rs` のバイナリ1つ、ライブラリは `crates/kotowari-core/`。モジュールは config, ir, sources, terms, tests_discovery, list, query, status, mutants, cargo_mutants, equivalents, record_form
+- how_to_verify: ルートのkotowari-cliパッケージがsrc/main.rsでkotowariバイナリを提供し、ライブラリがTBL-core-040の責務と依存に従ってcrates配下に分かれていることを確認する。
 
 kotowari のコードは常に、層が増えるたびに crate を足し、CLI を直下の "src/" で管理する。
 

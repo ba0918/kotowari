@@ -15,10 +15,10 @@ kotowari は常に、"kotowari list" で "kotowari check" と同じ設定と置�
 ### REQ-core-152: list の停止
 
 - kind: event_driven
-- source: docs/decision/records/2026-09-19-read-commands.md#A9, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-24-doc-marks.md#A22, docs/decision/records/2026-09-27-surface-check.md#A14, docs/decision/records/2026-09-27-surface-check.md#A24
+- source: docs/decision/records/2026-09-19-read-commands.md#A9, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-24-doc-marks.md#A22, docs/decision/records/2026-09-27-surface-check.md#A14, docs/decision/records/2026-09-27-surface-check.md#A24, docs/decision/records/2026-10-02-whole-picture.md#A73
 - verification: unit
 
-"kotowari list" で、"kotowari check" が`停止`する条件（設定の誤り、読めないファイル、引数の誤り）が成り立つとき、kotowari は check と同じ理由と文言で`停止`する。 ただし "kotowari list" は`ガイド`を読まず、`ガイド`の置き場と読み込みによる`停止`（REQ-core-198、REQ-core-199）はしない。`面のファイル`と`面の規則`のファイルと`未記載の面の一覧`も読まず、その読み込みによる`停止`（REQ-core-229）はしない。
+"kotowari list" で、"kotowari check" が`停止`する条件（設定の誤り、読めないファイル、引数の誤り）が成り立つとき、kotowari は check と同じ理由と文言で`停止`する。 ただし "kotowari list" は`ガイド`を読まず、`ガイド`の置き場と読み込みによる`停止`（REQ-core-198、REQ-core-199）はしない。`面のファイル`と`面の規則`のファイルと`未記載の面の一覧`も読まず、その読み込みによる`停止`（REQ-core-229）はしない。`全体像の元データ`も読まず、その置き場と読み込みによる`停止`（REQ-core-278、REQ-core-280）はしない。
 
 ### REQ-core-153: 項目の形
 

@@ -1,9 +1,21 @@
 //! 性質テスト。例を並べても網羅にならない要求を、生成した入力で確かめる。
 
-use kotowari_markdown_schema::document::Document;
-use kotowari_markdown_schema::extract::extract_values;
-use kotowari_markdown_schema::schema::parse_schema;
-use kotowari_markdown_schema::validate::validate;
+use kotowari_markdown_schema::{Document, Schema, ValidationOptions};
+fn extract_values(schema: &Schema, document: &Document) -> serde_json::Value {
+    kotowari_markdown_schema::extract_partial(schema, document, ValidationOptions::default())
+        .values()
+        .clone()
+}
+fn parse_schema(yaml: &str) -> Result<Schema, kotowari_markdown_schema::SchemaError> {
+    Schema::parse(yaml)
+}
+fn validate(
+    schema: &Schema,
+    document: &Document,
+    relax: bool,
+) -> Vec<kotowari_markdown_schema::finding::Finding> {
+    kotowari_markdown_schema::validate(schema, document, ValidationOptions { relax })
+}
 use proptest::prelude::*;
 use serde_json::Value;
 
@@ -53,14 +65,11 @@ fn document_with(markers: &[usize], names: &[usize], values: &[&str]) -> String 
     out
 }
 
-fn findings_of(
-    schema: &kotowari_markdown_schema::schema::Schema,
-    source: &str,
-) -> Vec<(String, Option<usize>, String)> {
+fn findings_of(schema: &Schema, source: &str) -> Vec<(String, Option<usize>, String)> {
     let document = Document::parse(source).unwrap();
     validate(schema, &document, false)
         .into_iter()
-        .map(|f| (format!("{:?}", f.kind), f.line, f.detail))
+        .map(|f| (format!("{:?}", f.kind()), f.line(), f.detail().to_owned()))
         .collect()
 }
 

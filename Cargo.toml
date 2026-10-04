@@ -1,24 +1,30 @@
 [package]
-name = "kotowari"
+name = "kotowari-cli"
 version = "0.3.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/ba0918/kotowari"
+description = "CLI for checking normalized specifications and their implementation evidence"
 
 [[bin]]
 name = "kotowari"
 path = "src/main.rs"
 
 [dependencies]
-kotowari-core = { path = "crates/kotowari-core" }
+kotowari = { path = "crates/kotowari", version = "0.3.0" }
+serde_json = "1"
+tiny_http = "0.12"
+ctrlc = "3.5"
 
 [dev-dependencies]
+kotowari-core = { path = "crates/kotowari-core", version = "0.3.0" }
 assert_cmd = "2"
 proptest = "1"
 tempfile = "3"
-serde_json = "1"
 serde-saphyr = "1"
 
 [workspace]
-members = ["crates/kotowari-core", "crates/kotowari-markdown-schema"]
+members = ["crates/kotowari", "crates/kotowari-core", "crates/kotowari-source-analysis", "crates/kotowari-markdown-schema", "crates/kotowari-markdown-schema-io", "crates/kotowari-markdown-view", "crates/kotowari-overview", "crates/kotowari-mds"]
 exclude = ["experiments"]
 resolver = "3"

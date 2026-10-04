@@ -10,90 +10,110 @@ use std::collections::BTreeMap;
 /// "kotowari list" の出力の最上位。"items" だけを持つ（REQ-core-155）
 #[derive(Debug, Serialize)]
 pub struct ListResult {
-    pub items: Vec<ListItem>,
+    pub(crate) items: Vec<ListItem>,
 }
 
 /// "tests" の1件（TBL-core-026）
 #[derive(Debug, Clone, Serialize)]
 pub struct TestRef {
-    pub path: String,
-    pub line: usize,
+    pub(crate) path: String,
+    pub(crate) line: usize,
     /// `問い合わせの無い言語`では null（REQ-core-081）
-    pub name: Option<String>,
+    pub(crate) name: Option<String>,
+}
+impl TestRef {
+    readonly!(copy line: usize);
+    readonly!(borrow path: String, name: Option<String>);
 }
 
 /// 要求の持つ鍵（TBL-core-026）
 #[derive(Debug, Serialize)]
 pub struct RequirementItem {
-    pub id: String,
-    pub kind: &'static str,
-    pub name: String,
-    pub path: String,
-    pub line: usize,
+    pub(crate) id: String,
+    pub(crate) kind: &'static str,
+    pub(crate) name: String,
+    pub(crate) path: String,
+    pub(crate) line: usize,
     #[serde(rename = "type")]
-    pub type_: Option<String>,
-    pub verification: Option<String>,
-    pub definition: Vec<String>,
-    pub examples: Vec<String>,
-    pub how_to_verify: Option<String>,
-    pub sources: Vec<String>,
-    pub tests: Vec<TestRef>,
+    pub(crate) type_: Option<String>,
+    pub(crate) verification: Option<String>,
+    pub(crate) definition: Vec<String>,
+    pub(crate) examples: Vec<String>,
+    pub(crate) how_to_verify: Option<String>,
+    pub(crate) sources: Vec<String>,
+    pub(crate) tests: Vec<TestRef>,
     /// その`項目`か`シナリオ`の`指紋`（REQ-core-203）
-    pub fingerprint: String,
+    pub(crate) fingerprint: String,
     /// `後回し`の`要求`と`後回しのシナリオ`は true
-    pub deferred: bool,
+    pub(crate) deferred: bool,
+}
+impl RequirementItem {
+    readonly!(copy kind: &'static str, line: usize, deferred: bool);
+    readonly!(borrow id: String, name: String, path: String, type_: Option<String>, verification: Option<String>, definition: Vec<String>, examples: Vec<String>, how_to_verify: Option<String>, sources: Vec<String>, tests: Vec<TestRef>, fingerprint: String);
 }
 
 /// 決定表と性質の持つ鍵（TBL-core-026。2つは同じ集合で、"kind" の値だけが違う）
 #[derive(Debug, Serialize)]
 pub struct ExampleItem {
-    pub id: String,
-    pub kind: &'static str,
-    pub name: String,
-    pub path: String,
-    pub line: usize,
-    pub examples: Vec<String>,
-    pub sources: Vec<String>,
-    pub tests: Vec<TestRef>,
+    pub(crate) id: String,
+    pub(crate) kind: &'static str,
+    pub(crate) name: String,
+    pub(crate) path: String,
+    pub(crate) line: usize,
+    pub(crate) examples: Vec<String>,
+    pub(crate) sources: Vec<String>,
+    pub(crate) tests: Vec<TestRef>,
     /// その`項目`か`シナリオ`の`指紋`（REQ-core-203）
-    pub fingerprint: String,
+    pub(crate) fingerprint: String,
     /// `後回し`の`要求`と`後回しのシナリオ`は true
-    pub deferred: bool,
+    pub(crate) deferred: bool,
+}
+impl ExampleItem {
+    readonly!(copy kind: &'static str, line: usize, deferred: bool);
+    readonly!(borrow id: String, name: String, path: String, examples: Vec<String>, sources: Vec<String>, tests: Vec<TestRef>, fingerprint: String);
 }
 
 /// シナリオの持つ鍵（TBL-core-026）
 #[derive(Debug, Serialize)]
 pub struct ScenarioItem {
-    pub id: String,
-    pub kind: &'static str,
-    pub name: String,
-    pub path: String,
-    pub line: usize,
-    pub sources: Vec<String>,
-    pub tests: Vec<TestRef>,
+    pub(crate) id: String,
+    pub(crate) kind: &'static str,
+    pub(crate) name: String,
+    pub(crate) path: String,
+    pub(crate) line: usize,
+    pub(crate) sources: Vec<String>,
+    pub(crate) tests: Vec<TestRef>,
     /// その`項目`か`シナリオ`の`指紋`（REQ-core-203）
-    pub fingerprint: String,
+    pub(crate) fingerprint: String,
     /// `後回し`の`要求`と`後回しのシナリオ`は true
-    pub deferred: bool,
+    pub(crate) deferred: bool,
+}
+impl ScenarioItem {
+    readonly!(copy kind: &'static str, line: usize, deferred: bool);
+    readonly!(borrow id: String, name: String, path: String, sources: Vec<String>, tests: Vec<TestRef>, fingerprint: String);
 }
 
 /// 問題の記録の持つ鍵（TBL-core-026）
 #[derive(Debug, Serialize)]
 pub struct FlagItem {
-    pub id: String,
-    pub kind: &'static str,
-    pub name: String,
-    pub path: String,
-    pub line: usize,
+    pub(crate) id: String,
+    pub(crate) kind: &'static str,
+    pub(crate) name: String,
+    pub(crate) path: String,
+    pub(crate) line: usize,
     #[serde(rename = "type")]
-    pub type_: Option<String>,
-    pub relations: Vec<String>,
-    pub sources: Vec<String>,
-    pub tests: Vec<TestRef>,
+    pub(crate) type_: Option<String>,
+    pub(crate) relations: Vec<String>,
+    pub(crate) sources: Vec<String>,
+    pub(crate) tests: Vec<TestRef>,
     /// その`項目`か`シナリオ`の`指紋`（REQ-core-203）
-    pub fingerprint: String,
+    pub(crate) fingerprint: String,
     /// `後回し`の`要求`と`後回しのシナリオ`は true
-    pub deferred: bool,
+    pub(crate) deferred: bool,
+}
+impl FlagItem {
+    readonly!(copy kind: &'static str, line: usize, deferred: bool);
+    readonly!(borrow id: String, name: String, path: String, type_: Option<String>, relations: Vec<String>, sources: Vec<String>, tests: Vec<TestRef>, fingerprint: String);
 }
 
 /// 一覧の1件。鍵の集合は種類で決まるので、種類ごとの構造をそのまま出す（TBL-core-026）
@@ -107,63 +127,15 @@ pub enum ListItem {
     Flag(FlagItem),
 }
 
-/// REQ-core-155: 1行に出す値。"verification" は要求以外では "-"
-struct TextParts<'a> {
-    id: &'a str,
-    verification: &'a str,
-    name: &'a str,
-    path: &'a str,
-    line: usize,
-    tests: &'a [TestRef],
-    deferred: bool,
-}
-
 impl ListItem {
-    fn text_parts(&self) -> TextParts<'_> {
-        match self {
-            ListItem::Requirement(i) => TextParts {
-                id: &i.id,
-                // REQ-core-155: "- verification:" の行の無い要求も "-"
-                verification: i.verification.as_deref().unwrap_or("-"),
-                name: &i.name,
-                path: &i.path,
-                line: i.line,
-                tests: &i.tests,
-                deferred: i.deferred,
-            },
-            ListItem::WithExamples(i) => TextParts {
-                id: &i.id,
-                verification: "-",
-                name: &i.name,
-                path: &i.path,
-                line: i.line,
-                tests: &i.tests,
-                deferred: i.deferred,
-            },
-            ListItem::Scenario(i) => TextParts {
-                id: &i.id,
-                verification: "-",
-                name: &i.name,
-                path: &i.path,
-                line: i.line,
-                tests: &i.tests,
-                deferred: i.deferred,
-            },
-            ListItem::Flag(i) => TextParts {
-                id: &i.id,
-                verification: "-",
-                name: &i.name,
-                path: &i.path,
-                line: i.line,
-                tests: &i.tests,
-                deferred: i.deferred,
-            },
-        }
-    }
-
     /// TBL-core-026: 1件の `ID`
     pub fn id(&self) -> &str {
-        self.text_parts().id
+        match self {
+            Self::Requirement(item) => &item.id,
+            Self::WithExamples(item) => &item.id,
+            Self::Scenario(item) => &item.id,
+            Self::Flag(item) => &item.id,
+        }
     }
 
     /// TBL-core-026: 1件の "kind"
@@ -178,41 +150,12 @@ impl ListItem {
 
     /// TBL-core-026: 1件の "path" と "line"（REQ-core-154 の並べ替えの鍵）
     pub fn location(&self) -> (&str, usize) {
-        let parts = self.text_parts();
-        (parts.path, parts.line)
-    }
-}
-
-/// REQ-core-155: 1つの項目を1行で出し、その直後に "tests" の1件ごとの行を字下げして続ける。
-/// 名前と検証の値はエスケープせずそのまま出す
-pub fn print_text(result: &ListResult) {
-    for item in &result.items {
-        print_item_text(item);
-    }
-}
-
-/// REQ-core-155: 1つの項目の1行と、その "tests" の1件ごとの行。
-/// query の "text" もこの2種類の行から始まる（REQ-core-161）
-pub fn print_item_text(item: &ListItem) {
-    let p = item.text_parts();
-    // REQ-core-155: "deferred" が true の1件は行の末尾に " deferred" を付ける
-    let deferred = if p.deferred { " deferred" } else { "" };
-    println!(
-        "{} {} {} {}:{} tests={}{deferred}",
-        p.id,
-        p.verification,
-        p.name,
-        p.path,
-        p.line,
-        p.tests.len()
-    );
-    for test in p.tests {
-        println!(
-            "  {}:{} {}",
-            test.path,
-            test.line,
-            test.name.as_deref().unwrap_or("-")
-        );
+        match self {
+            Self::Requirement(item) => (&item.path, item.line),
+            Self::WithExamples(item) => (&item.path, item.line),
+            Self::Scenario(item) => (&item.path, item.line),
+            Self::Flag(item) => (&item.path, item.line),
+        }
     }
 }
 

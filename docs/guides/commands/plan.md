@@ -5,7 +5,7 @@ kotowari-plan の工程で計画書を書き終えたとき、承認を求める
 
 ## 書式
 
-<!-- @kotowari[REQ-core-190:41d0464a, REQ-core-002:06abb59d] -->
+<!-- @kotowari[REQ-core-190:41d0464a, REQ-core-002:410b78a4] -->
 
 ```sh
 kotowari plan [--format json|text] <計画書のファイル>
@@ -16,7 +16,7 @@ kotowari plan [--format json|text] <計画書のファイル>
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-190:41d0464a, REQ-core-002:06abb59d, REQ-core-021:14bd7b25] -->
+<!-- @kotowari[REQ-core-190:41d0464a, REQ-core-002:410b78a4, REQ-core-021:14bd7b25] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|

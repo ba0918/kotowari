@@ -7,10 +7,10 @@
 ### REQ-core-162: status の読み取り
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A19, docs/decision/records/2026-09-24-doc-marks.md#A22, docs/decision/records/2026-09-27-surface-check.md#A14, docs/decision/records/2026-09-27-surface-check.md#A3, docs/decision/records/2026-09-27-surface-check.md#A24
+- source: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A19, docs/decision/records/2026-09-24-doc-marks.md#A22, docs/decision/records/2026-09-27-surface-check.md#A14, docs/decision/records/2026-09-27-surface-check.md#A3, docs/decision/records/2026-09-27-surface-check.md#A24, docs/decision/records/2026-10-02-whole-picture.md#A64
 - verification: unit
 
-kotowari は常に、"kotowari status" で "kotowari check" と同じ設定と置き場から`IR`の文書と`テストのファイル`と`ガイド`を読み、"surface.rules" が空の一覧でなければ`面のファイル`と`面の規則`のファイルと`未記載の面の一覧`も読み、check と同じ検査を行い、`指摘`を出さず、`TBL-core-028` の鍵を持つ集計を1つ標準出力に出す。
+kotowari は常に、"kotowari status" で "kotowari check" と同じ設定と置き場から`IR`の文書と`テストのファイル`と`ガイド`と`全体像の元データ`を読み、"surface.rules" が空の一覧でなければ`面のファイル`と`面の規則`のファイルと`未記載の面の一覧`も読み、check と同じ検査を行い、`指摘`を出さず、`TBL-core-028` の鍵を持つ集計を1つ標準出力に出す。
 
 ### REQ-core-163: status の停止
 
@@ -47,7 +47,7 @@ kotowari は常に、"kotowari status" の "--format" の値として "json" と
 
 ### TBL-core-028: status の鍵
 
-- source: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A9, docs/decision/records/2026-09-20-query-status.md#A12, docs/decision/records/2026-09-20-query-status.md#A14, docs/decision/records/2026-09-20-query-status.md#A20, docs/decision/records/2026-09-17-scenario-tests.md#A9, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-24-doc-marks.md#A17, docs/decision/records/2026-09-25-deferred-items.md#A8, docs/decision/records/2026-09-25-deferred-items.md#A15, docs/decision/records/2026-09-25-deferred-items.md#A16, docs/decision/records/2026-09-25-deferred-items.md#A24, docs/decision/records/2026-09-25-deferred-items.md#A26, docs/decision/records/2026-09-27-surface-check.md#A10, docs/decision/records/2026-09-27-surface-check.md#A14, docs/decision/records/2026-09-27-surface-check.md#A17, docs/decision/records/2026-09-27-surface-check.md#A16, docs/decision/records/2026-09-27-surface-check.md#A7
+- source: docs/decision/records/2026-09-20-query-status.md#A8, docs/decision/records/2026-09-20-query-status.md#A9, docs/decision/records/2026-09-20-query-status.md#A12, docs/decision/records/2026-09-20-query-status.md#A14, docs/decision/records/2026-09-20-query-status.md#A20, docs/decision/records/2026-09-17-scenario-tests.md#A9, docs/decision/records/2026-09-19-read-commands.md#A24, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-24-doc-marks.md#A17, docs/decision/records/2026-09-25-deferred-items.md#A8, docs/decision/records/2026-09-25-deferred-items.md#A15, docs/decision/records/2026-09-25-deferred-items.md#A16, docs/decision/records/2026-09-25-deferred-items.md#A24, docs/decision/records/2026-09-25-deferred-items.md#A26, docs/decision/records/2026-09-27-surface-check.md#A10, docs/decision/records/2026-09-27-surface-check.md#A14, docs/decision/records/2026-09-27-surface-check.md#A17, docs/decision/records/2026-09-27-surface-check.md#A16, docs/decision/records/2026-09-27-surface-check.md#A7, docs/decision/records/2026-10-02-whole-picture.md#A64
 
 | 群 | 鍵 | 中身 |
 |---|---|---|
@@ -63,6 +63,7 @@ kotowari は常に、"kotowari status" の "--format" の値として "json" と
 | tests | marks | `印`の出現の数。1つの`印`に `ID` が複数あれば `ID` ごとに1つ（list の "tests" の1件と同じ数え方） |
 | tests | files | "kotowari check" の "tests" と同じ（`TBL-core-021`）。"text" では拡張子ごとに "拡張子=ファイルの数" |
 | guides | files、marks | "kotowari check" の "guides" と同じ（`TBL-core-005`） |
+| overview | files、marks | "kotowari check" の "overview" と同じ（`TBL-core-005`） |
 | surface | total、specified、unspecified | `面`の種類と名前の組の数、そのうち`IR`にあるものの数、`IR`になく`未記載の面の一覧`の形の正しい1件に一致したものの数（REQ-core-229）。"surface.rules" が空の一覧なら3つとも 0 |
 | findings | error、notice | "kotowari check" の`指摘`のうち severity が "error" のものと "notice" のものの数 |
 | complete | （値だけ） | true か false（REQ-core-165） |

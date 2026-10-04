@@ -11,7 +11,7 @@ fn valid_project_dir() -> &'static Path {
         .leak()
 }
 
-// --- REQ-core-001: コマンドは7つ ---
+// --- REQ-core-001: コマンドは8つ ---
 
 // @kotowari[REQ-core-001]
 #[test]
@@ -155,21 +155,21 @@ fn req_004_unknown_command_before_check_has_the_unknown_command_wording() {
 
 // @kotowari[REQ-core-004, TBL-core-020, EX-core-219]
 #[test]
-fn req_004_no_arguments_names_all_seven_commands() {
+fn req_004_no_arguments_names_all_eight_commands() {
     let output = cmd().current_dir(valid_project_dir()).output().unwrap();
     assert_eq!(output.status.code(), Some(2));
     let stderr = String::from_utf8_lossy(&output.stderr);
     let first_line = stderr.lines().next().unwrap_or("");
     assert_eq!(
         first_line,
-        "argument error: expected command: check, changes, list, mutants, plan, query or status",
+        "argument error: expected command: check, changes, list, mutants, overview, plan, query or status",
         "got: {first_line:?}"
     );
 }
 
 // @kotowari[REQ-core-004, TBL-core-020, EX-core-241]
 #[test]
-fn req_004_options_without_a_command_names_all_seven_commands() {
+fn req_004_options_without_a_command_names_all_eight_commands() {
     let output = cmd()
         .args(["--format", "text"])
         .current_dir(valid_project_dir())
@@ -180,7 +180,7 @@ fn req_004_options_without_a_command_names_all_seven_commands() {
     let first_line = stderr.lines().next().unwrap_or("");
     assert_eq!(
         first_line,
-        "argument error: expected command: check, changes, list, mutants, plan, query or status",
+        "argument error: expected command: check, changes, list, mutants, overview, plan, query or status",
         "got: {first_line:?}"
     );
 }

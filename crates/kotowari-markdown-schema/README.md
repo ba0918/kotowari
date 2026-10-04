@@ -1,5 +1,10 @@
 # mds
 
+The pure Rust API remains in `kotowari-markdown-schema`. The CLI now belongs to `kotowari-mds`, and acquisition belongs to `kotowari-markdown-schema-io`.
+Install the CLI from this source tree with `cargo install --path crates/kotowari-mds --bin kotowari-mds`; old tags retain their own package layouts.
+Use `extract_validated` for validated values, or `extract_partial` to retain values alongside findings.
+See the [API guide](https://github.com/ba0918/kotowari/blob/main/docs/guides/public-crate-api.md).
+
 Validate Markdown documents against a YAML schema declared in their own frontmatter, and
 extract structured values from them.
 
@@ -10,7 +15,7 @@ hands the contents back as JSON so that the rest of your tooling never has to pa
 ## Install
 
 ```console
-$ cargo install --git https://github.com/ba0918/kotowari kotowari-markdown-schema
+$ cargo install --git https://github.com/ba0918/kotowari --bin kotowari-mds kotowari-mds
 ```
 
 This installs the `kotowari-mds` command.
@@ -219,17 +224,19 @@ kotowari-mds --version
 
 The library holds the schema language, validation and extraction, with no CLI dependencies.
 Reading files and fetching URLs stays with the caller. The entry points promised to dependent
-crates are listed in `docs/ir/schema/library.md` at the repository root; anything else that happens to be public is an
-implementation detail.
+crates are listed in `docs/ir/schema/library.md` at the repository root. Public input and result
+types are compatibility-managed contracts; implementation modules remain private.
 
 ```rust
 let schema_ref = kotowari_markdown_schema::frontmatter::frontmatter_schema(source)?.unwrap();
 let location = kotowari_markdown_schema::frontmatter::resolve_schema(doc_path, &schema_ref);
 // read or fetch `location` yourself, then:
-let schema = kotowari_markdown_schema::schema::parse_schema(&schema_yaml)?;
-let document = kotowari_markdown_schema::document::Document::parse(source)?;
-let findings = kotowari_markdown_schema::validate::validate(&schema, &document, false);
-let values = kotowari_markdown_schema::extract::extract_values(&schema, &document);
+let schema = kotowari_markdown_schema::Schema::parse(&schema_yaml)?;
+let document = kotowari_markdown_schema::Document::parse(source)?;
+let options = kotowari_markdown_schema::ValidationOptions::default();
+let findings = kotowari_markdown_schema::validate(&schema, &document, options);
+let partial = kotowari_markdown_schema::extract_partial(&schema, &document, options);
+let values = partial.values();
 ```
 
 ## Specification

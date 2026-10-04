@@ -228,7 +228,7 @@ fn is_reference_name(element: &str) -> bool {
 }
 
 /// IR 文書の対象の行（TBL-core-013）で用語と曖昧語を検査する
-pub(crate) fn check_terms_and_vague_words_with_duplicates(
+pub fn check_terms_and_vague_words_with_duplicates(
     docs: &[IrDocument],
     known_ids: &BTreeSet<String>,
     vague_words: &[String],

@@ -45,7 +45,7 @@
     違いは1件も無かった。範囲の始まりを last + 2 にした版では同じ探索が55510件の違いを見つけるので、
     空行の有無の違いを見られる探索であることは確かめてある。
 
-- file: crates/kotowari-core/src/tests_discovery.rs
+- file: crates/kotowari-source-analysis/src/discovery.rs
   change: "replace + with * in reparse_macro_body"
   text: "let byte_offset = body.range().start + usize::from(delimited.is_some());"
   class: equivalent
@@ -58,7 +58,7 @@
     落とすテストの試み: 主セッションが、マクロの開き括弧と同じ行と、閉じ括弧と同じ行に普通のテストを置く配置を考え、
     外のテストの始まりが中の関数の鍵とその1前の間に入れないことをソースで確かめた（2026-09-24）。
 
-- file: crates/kotowari-core/src/git_snapshot.rs
+- file: crates/kotowari/src/git_snapshot.rs
   change: "replace || with && in blobs"
   text: "if fields.len() != 3 || fields[0] != expected || fields[1] != \"blob\" {"
   class: equivalent
@@ -71,7 +71,7 @@
     落とすテストの試み: 主セッションが、存在しない blob を求めたときの git の出力（2つの見出し）で両方の変異の
     分岐を追い、元と同じく git error になることを確かめた（2026-10-01）。
 
-- file: crates/kotowari-core/src/git_snapshot.rs
+- file: crates/kotowari/src/git_snapshot.rs
   change: "replace || with && in blobs"
   text: "if remaining.len() <= size || remaining[size] != b'\\n' {"
   class: equivalent
@@ -82,7 +82,7 @@
     落とすテストの試み: 主セッションが、終了状態の検査がこの解析より前にあることをソースで確かめ、
     成功した git の出力ではこの条件が常に偽になることを確かめた（2026-10-01）。
 
-- file: crates/kotowari-core/src/git_snapshot.rs
+- file: crates/kotowari/src/git_snapshot.rs
   change: "replace byte_path -> PathBuf with Default::default()"
   text: "PathBuf::from(String::from_utf8_lossy(bytes).as_ref())"
   class: equivalent
@@ -90,3 +90,53 @@
     #[cfg(not(unix))] の版の byte_path で、変異テストを回す Linux ではコンパイルされず、どの出力も変わらない。
     unix の版は別の行にあり、変異はそちらで検査される。
     落とすテストの試み: Linux のビルドにこの関数が含まれないことを cfg の属性で確かめた（2026-10-01）。
+
+- file: crates/kotowari-markdown-schema/src/ast.rs
+  change: 'replace ParseError::detail -> &str with ""'
+  text: '&self.0'
+  class: equivalent
+  why: >-
+    ParseError の受け手を作る公開経路が現在の固定依存と GFM・frontmatter の設定では無い。
+    Document::parse と ast_json の解析は MDX を有効にせず、mdast の閉じた型の JSON 値化にも
+    返却エラーを作る値やコールバックが無い。公開の生成・変換・Deserialize も無いので、空文字の差を観測できない。
+    独立した反証の試みは非 MDX の解析エラー、frontmatter、タグ付き enum の Serialize、
+    特殊な serializer 名と公開の生成経路を調べたが、対象の ParseError を返す経路を見つけなかった。
+    ユーザーがこの置換だけの限定判断を承認した。依存と前提・再検証条件は
+    docs/decision/records/2026-10-03-public-crate-api-plan.md の A16 に記録する。
+    現行の照合は file・change・text の一致であり、依存や解析設定の変化を自動検知しない。
+
+- file: crates/kotowari-markdown-schema/src/ast.rs
+  change: 'replace ParseError::detail -> &str with "xyzzy"'
+  text: '&self.0'
+  class: equivalent
+  why: >-
+    現在の固定依存と GFM・frontmatter の設定では ParseError を返す公開経路が無く、
+    公開の生成・変換・Deserialize も無い。受け手を取得できないため xyzzy の差を観測できない。
+    独立した反証の試みは非 MDX の解析エラーと閉じた mdast の値化の失敗、
+    特殊な serializer と公開生成経路を追ったが、対象エラーの生成経路を見つけなかった。
+    ユーザーがこの置換だけの限定判断を承認した。依存と前提・再検証条件は
+    docs/decision/records/2026-10-03-public-crate-api-plan.md の A16 に記録する。
+    現行の照合は file・change・text の一致であり、依存や解析設定の変化を自動検知しない。
+
+- file: crates/kotowari-markdown-schema/src/ast.rs
+  change: 'replace <impl std::fmt::Display for ParseError>::fmt -> std::fmt::Result with Ok(Default::default())'
+  text: 'f.write_str(&self.0)'
+  class: equivalent
+  why: >-
+    実在する ParseError があれば Display の出力と書き込み失敗は変わるが、現在の固定依存と
+    GFM・frontmatter の設定にはその受け手を返す公開経路も公開生成・Deserialize も無い。
+    独立した反証では失敗する書き込み先も検討し、受け手が必要なことと、
+    非 MDX 解析・タグ付き mdast の JSON 値化がそのエラーを作らないことを確認した。
+    ユーザーがこの置換だけの限定判断を承認した。依存と前提・再検証条件は
+    docs/decision/records/2026-10-03-public-crate-api-plan.md の A16 に記録する。
+    現行の照合は file・change・text の一致であり、依存や解析設定の変化を自動検知しない。
+
+- file: crates/kotowari-overview/src/references.rs
+  change: 'replace > with >= in without_date'
+  text: 'let is_date = bytes.len() > 11'
+  class: equivalent
+  why: >-
+    > と >= が違う結果になるのは、判断の記録のファイル名が日付と "-" だけの "YYYY-MM-DD-.md" のときだけで、
+    厳密には等価でなく、作る者のいない入力での食い違いである（その入力では >= のほうが TBL-core-039 の
+    文字どおりに表示名を空にする）。判断の記録はトピックの名前を必ず持つので、この名前を作るものが無い。別の文脈の LLM（変異の見逃しを塞ぐ役）がこの変異を落とすテストを試み、
+    実在する入力では書けないと報告した。利用者が等価として登録することを承認した（2026-10-04）。

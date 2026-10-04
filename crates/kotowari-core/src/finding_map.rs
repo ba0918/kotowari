@@ -7,12 +7,53 @@
 use crate::doc_kind::DocKind;
 use crate::schema::schema_for;
 use crate::{Finding, FindingKind, StopReason};
-use kotowari_markdown_schema::document::Document;
-use kotowari_markdown_schema::extract::extract_values;
-use kotowari_markdown_schema::finding::{
-    Finding as EngineFinding, FindingKind as EngineKind, RuleKind,
-};
-use kotowari_markdown_schema::validate::validate;
+use kotowari_markdown_schema::finding::{FindingKind as EngineKind, RuleKind};
+struct EngineFinding {
+    kind: EngineKind,
+    line: Option<usize>,
+    node: Option<String>,
+    raw: Option<String>,
+    rule_kind: Option<RuleKind>,
+}
+impl From<kotowari_markdown_schema::finding::Finding> for EngineFinding {
+    fn from(value: kotowari_markdown_schema::finding::Finding) -> Self {
+        Self {
+            kind: value.kind(),
+            line: value.line(),
+            node: value.node().map(str::to_owned),
+            raw: value.raw().map(str::to_owned),
+            rule_kind: value.rule_kind(),
+        }
+    }
+}
+#[cfg(test)]
+impl EngineFinding {
+    fn maybe_at(kind: EngineKind, line: Option<usize>, _detail: String) -> Self {
+        Self {
+            kind,
+            line,
+            node: None,
+            raw: None,
+            rule_kind: None,
+        }
+    }
+    fn of_node(mut self, node: &str) -> Self {
+        self.node = Some(node.into());
+        self
+    }
+}
+use kotowari_markdown_schema::{Document, Schema, ValidationOptions};
+fn extract_values(schema: &Schema, document: &Document) -> Value {
+    kotowari_markdown_schema::extract_partial(schema, document, ValidationOptions::default())
+        .values()
+        .clone()
+}
+fn validate(schema: &Schema, document: &Document, relax: bool) -> Vec<EngineFinding> {
+    kotowari_markdown_schema::validate(schema, document, ValidationOptions { relax })
+        .into_iter()
+        .map(EngineFinding::from)
+        .collect()
+}
 use serde_json::Value;
 
 /// 用語集の表の行を`抽出`が置く配置パス（`.kotowari/schemas/context.yaml`）。
@@ -195,10 +236,7 @@ fn item_at<'a>(
 
 /// スキーマの側の指摘1件を kotowari の指摘へ写す（TBL-core-030）。写し先が「出さない」の
 /// 行の指摘は None を返して捨てる（REQ-core-172）。
-pub fn map_finding(
-    ctx: &MapContext,
-    engine: &EngineFinding,
-) -> Result<Option<Finding>, StopReason> {
+fn map_finding(ctx: &MapContext, engine: &EngineFinding) -> Result<Option<Finding>, StopReason> {
     let make = |kind: FindingKind, line: Option<usize>, detail: String| {
         Ok(Some(Finding::new(kind, ctx.path.clone(), line, detail)))
     };
@@ -228,7 +266,7 @@ pub fn map_finding(
             RuleKind::Statement | RuleKind::Table | RuleKind::CodeBlock => {
                 make(FindingKind::UnknownLine, engine.line, raw_of(engine)?)
             }
-            RuleKind::Section | RuleKind::Item => Err(no_row(engine)),
+            _ => Err(no_row(engine)),
         },
         EngineKind::MissingRequiredField => {
             let node = node_of(engine)?;
@@ -328,7 +366,7 @@ pub fn read_document(
         Document::parse(content).map_err(|e| stop(format!("{filename}: document: {e}")))?;
     let values = extract_values(&schema, &document);
     let ctx = MapContext::new("", filename, doc_kind, &values);
-    let findings = validate(&schema, &document, schema.open)
+    let findings = validate(&schema, &document, schema.is_open())
         .iter()
         .filter_map(|engine| map_finding(&ctx, engine).transpose())
         .collect::<Result<Vec<Finding>, StopReason>>()?;

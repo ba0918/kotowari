@@ -1,13 +1,11 @@
 //! `ガイド`を読み、`ガイドの印`を取り出す（REQ-core-198〜REQ-core-202、REQ-core-206、TBL-core-036）
 
-use crate::config::Config;
 use crate::fingerprint::fingerprint_of;
 use crate::ir::{IrDocument, is_valid_id, split_lines};
 use crate::{Finding, FindingKind, StopReason};
 use markdown::mdast::Node;
 use std::collections::BTreeMap;
 use std::ops::Range;
-use std::path::Path;
 
 /// 形の正しい`ガイドの印`の1件（TBL-core-036）
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -25,45 +23,12 @@ pub struct GuideEntry {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize)]
 pub struct GuideTally {
     /// 読んだ`ガイド`の数。パスごとに1回
-    pub files: usize,
+    pub(crate) files: usize,
     /// 形の正しい`ガイドの印`の1件の数
-    pub marks: usize,
+    pub(crate) marks: usize,
 }
-
-/// "guides.files" に当たるファイルを`ガイド`として読み、`ガイドの印`を今の`IR`の`指紋`と照らす。
-/// `テストのファイル`と重なるファイルがあれば、バイト順で最初の1つを詳細にして設定の誤りで停止する（REQ-core-199）。
-/// `test_files` はバイト順に並んだ`テストのファイル`の相対パス
-pub fn read_guides(
-    base: &Path,
-    cfg: &Config,
-    test_files: &[String],
-    docs: &[IrDocument],
-    findings: &mut Vec<Finding>,
-) -> Result<GuideTally, StopReason> {
-    // 空の一覧ならガイドは1つも読まない（REQ-core-198）。走査そのものを省く
-    if cfg.guides.files.is_empty() {
-        return Ok(GuideTally::default());
-    }
-    let files = crate::tests_discovery::collect_files(base, &cfg.guides.files)?;
-    // files はバイト順なので、最初に見つかる重なりがバイト順で最初の1つ
-    if let Some((overlap, _)) = files
-        .iter()
-        .find(|(rel, _)| test_files.binary_search(rel).is_ok())
-    {
-        return Err(StopReason::ConfigError(format!(
-            "{overlap}: matched by both guides.files and tests.files"
-        )));
-    }
-    let mut entries = Vec::new();
-    for (rel, abs) in &files {
-        let content = crate::read_utf8_file(Path::new(abs), rel)?;
-        read_marks(rel, &content, &mut entries, findings);
-    }
-    check_stale(&entries, &fingerprints_by_id(docs), findings);
-    Ok(GuideTally {
-        files: files.len(),
-        marks: entries.len(),
-    })
+impl GuideTally {
+    readonly!(copy files: usize, marks: usize);
 }
 
 /// `ID` から、その `ID` の`項目`と`シナリオ`の`指紋`を REQ-core-032 の順（文書はパスのバイト順、
@@ -84,6 +49,124 @@ fn fingerprints_by_id(docs: &[IrDocument]) -> BTreeMap<&str, Vec<String>> {
     by_id
 }
 
+/// 1つの文書から読んだ形の正しい`ガイドの印`の1件と、その古さ（REQ-core-204）
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GuideMark {
+    line: usize,
+    id: String,
+    fingerprint: String,
+    stale: bool,
+}
+impl GuideMark {
+    /// その`ガイドの印`の始まりの行
+    pub fn line(&self) -> usize {
+        self.line
+    }
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+    /// 1件に書かれた`指紋`
+    pub fn fingerprint(&self) -> &str {
+        &self.fingerprint
+    }
+    /// guide_stale を受けるか
+    pub fn stale(&self) -> bool {
+        self.stale
+    }
+}
+
+/// 1つの文書の`ガイドの印`を読んだ結果。印と、その文書の invalid_marker と guide_stale
+#[derive(Debug, Clone)]
+pub struct GuideMarks {
+    marks: Vec<GuideMark>,
+    findings: Vec<Finding>,
+}
+impl GuideMarks {
+    pub fn marks(&self) -> &[GuideMark] {
+        &self.marks
+    }
+    pub fn findings(&self) -> &[Finding] {
+        &self.findings
+    }
+    pub fn into_findings(self) -> Vec<Finding> {
+        self.findings
+    }
+}
+
+/// `ガイド`と同じ規則で、ほかの文書の`ガイドの印`を1つずつ読む（REQ-core-200〜REQ-core-204）。
+/// 置き場の重なりの`停止`（REQ-core-199）は読む側が決めるので、ここでは見ない。
+/// `項目`と`シナリオ`の`指紋`は作るときに1回だけ求める
+pub struct GuideReader<'a> {
+    fingerprints: BTreeMap<&'a str, Vec<String>>,
+}
+impl<'a> GuideReader<'a> {
+    pub(crate) fn new(docs: &'a [IrDocument]) -> Self {
+        Self {
+            fingerprints: fingerprints_by_id(docs),
+        }
+    }
+    /// path を指摘の "path" にして1つの文書を読む
+    pub fn read(&self, path: &str, text: &str) -> GuideMarks {
+        let mut entries = Vec::new();
+        let mut findings = Vec::new();
+        read_marks(path, text, &mut entries, &mut findings);
+        check_stale(&entries, &self.fingerprints, &mut findings);
+        crate::sort_findings(&mut findings);
+        let marks = entries
+            .into_iter()
+            .map(|entry| GuideMark {
+                stale: !is_current(&entry, &self.fingerprints),
+                line: entry.line,
+                id: entry.id,
+                fingerprint: entry.fingerprint,
+            })
+            .collect();
+        GuideMarks { marks, findings }
+    }
+}
+
+fn is_current(entry: &GuideEntry, fingerprints: &BTreeMap<&str, Vec<String>>) -> bool {
+    fingerprints
+        .get(entry.id.as_str())
+        .is_some_and(|all| all.contains(&entry.fingerprint))
+}
+
+pub fn check_entries<'a>(
+    files: impl IntoIterator<Item = (&'a str, &'a str)>,
+    test_files: &[String],
+    docs: &[IrDocument],
+    findings: &mut Vec<Finding>,
+) -> Result<GuideTally, StopReason> {
+    let files: Vec<_> = files.into_iter().collect();
+    validate_overlap(files.iter().map(|(path, _)| *path), test_files)?;
+    let mut entries = Vec::new();
+    for (path, text) in &files {
+        read_marks(path, text, &mut entries, findings);
+    }
+    check_stale(&entries, &fingerprints_by_id(docs), findings);
+    Ok(GuideTally {
+        files: files.len(),
+        marks: entries.len(),
+    })
+}
+
+pub fn validate_overlap<'a>(
+    paths: impl IntoIterator<Item = &'a str>,
+    test_files: &[String],
+) -> Result<(), StopReason> {
+    let tests: std::collections::BTreeSet<_> = test_files.iter().map(String::as_str).collect();
+    if let Some(overlap) = paths
+        .into_iter()
+        .filter(|path| tests.contains(path))
+        .min_by(|a, b| a.as_bytes().cmp(b.as_bytes()))
+    {
+        return Err(StopReason::ConfigError(format!(
+            "{overlap}: matched by both guides.files and tests.files"
+        )));
+    }
+    Ok(())
+}
+
 /// REQ-core-204: どの`項目`と`シナリオ`の`指紋`とも同じでない1件ごとに guide_stale を出す。
 /// detail の今の`指紋`は、`IR`に無ければ "-"、あれば1つ目の`指紋`
 fn check_stale(
@@ -92,10 +175,10 @@ fn check_stale(
     findings: &mut Vec<Finding>,
 ) {
     for entry in entries {
-        let current = fingerprints.get(entry.id.as_str());
-        if current.is_some_and(|all| all.contains(&entry.fingerprint)) {
+        if is_current(entry, fingerprints) {
             continue;
         }
+        let current = fingerprints.get(entry.id.as_str());
         let first = current
             .and_then(|all| all.first())
             .map_or("-", String::as_str);
@@ -181,7 +264,7 @@ fn is_fingerprint(text: &str) -> bool {
 /// 行番号と detail の行の文字には元の行が要る。"-->" の無い "<!--" はコメントにしない
 fn html_comments(content: &str) -> Vec<Range<usize>> {
     // GFM と frontmatter の読み方は MDX の構文を持たないので、parse_mdast が誤りを返すことはない
-    let Ok(root) = kotowari_markdown_schema::ast::parse_mdast(content) else {
+    let Ok(root) = crate::markdown::parse(content) else {
         return Vec::new();
     };
     let mut html = Vec::new();

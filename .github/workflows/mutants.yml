@@ -1,5 +1,5 @@
 # PR ごとに、PR の基準との merge-base からの差分に入る変異を回す（判断の記録
-# docs/decision/records/2026-10-04-mutants-in-ci.md の A2、A3）。
+# docs/decision/records/2026-10-04-mutants-in-ci.md の A2、A3、A13）。
 #
 # main のブランチ保護で必須にするのは最後の "mutants" のジョブだけ。分担の数を変えても保護を直さなくてよい。
 # 合成のマージの commit ではなく、PR の先頭の commit を回す。

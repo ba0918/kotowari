@@ -10,7 +10,7 @@ use serde::Serialize;
 use std::collections::BTreeMap;
 
 /// "kotowari status" の出力の最上位。TBL-core-028 の群を表の順に持つ（REQ-core-166）
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct StatusResult {
     pub documents: Documents,
     pub items: Items,
@@ -24,120 +24,86 @@ pub struct StatusResult {
     pub findings: Findings,
     /// REQ-core-165: `誤り`が0件で、かつ`問題の記録`の`項目`が0件のときだけ true
     pub complete: bool,
+    /// 追加の指摘の群の数（TBL-core-042）。check と同じ
+    #[serde(skip)]
+    pub(crate) groups: Vec<crate::GroupTally>,
 }
 
 /// 読んだ `IR` の文書（TBL-core-028。"kotowari check" の "files" と "lines" と同じ）
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct Documents {
-    pub files: usize,
-    pub lines: usize,
+    pub(crate) files: usize,
+    pub(crate) lines: usize,
+}
+impl Documents {
+    readonly!(copy files: usize, lines: usize);
 }
 
 /// `ID` を持つ`項目`と`シナリオ`の種類ごとの数（TBL-core-028）
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct Items {
-    pub requirement: usize,
-    pub table: usize,
-    pub property: usize,
-    pub scenario: usize,
-    pub flag: usize,
+    pub(crate) requirement: usize,
+    pub(crate) table: usize,
+    pub(crate) property: usize,
+    pub(crate) scenario: usize,
+    pub(crate) flag: usize,
+}
+impl Items {
+    readonly!(copy requirement: usize, table: usize, property: usize, scenario: usize, flag: usize);
 }
 
 /// `要求`の数（TBL-core-028）
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct Requirements {
-    pub unit: usize,
-    pub property: usize,
-    pub proof: usize,
-    pub review: usize,
-    pub with_tests: usize,
-    pub without_tests: usize,
-    pub review_with_how_to_verify: usize,
-    pub review_without_how_to_verify: usize,
-    pub without_examples: usize,
+    pub(crate) unit: usize,
+    pub(crate) property: usize,
+    pub(crate) proof: usize,
+    pub(crate) review: usize,
+    pub(crate) with_tests: usize,
+    pub(crate) without_tests: usize,
+    pub(crate) review_with_how_to_verify: usize,
+    pub(crate) review_without_how_to_verify: usize,
+    pub(crate) without_examples: usize,
     /// `後回し`の`要求`の数。`項目`の出現ごとに数える
-    pub deferred: usize,
+    pub(crate) deferred: usize,
+}
+impl Requirements {
+    readonly!(copy unit: usize, property: usize, proof: usize, review: usize, with_tests: usize, without_tests: usize, review_with_how_to_verify: usize, review_without_how_to_verify: usize, without_examples: usize, deferred: usize);
 }
 
 /// `シナリオ`の数（TBL-core-028）
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct Scenarios {
-    pub with_tests: usize,
-    pub without_tests: usize,
+    pub(crate) with_tests: usize,
+    pub(crate) without_tests: usize,
     /// `後回しのシナリオ`の数
-    pub deferred: usize,
+    pub(crate) deferred: usize,
+}
+impl Scenarios {
+    readonly!(copy with_tests: usize, without_tests: usize, deferred: usize);
 }
 
 /// `印`と読んだ`テストのファイル`（TBL-core-028）
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Tests {
     /// `印`の出現の数。1つの`印`に `ID` が複数あれば `ID` ごとに1つ
-    pub marks: usize,
+    pub(crate) marks: usize,
     /// TBL-core-021: "kotowari check" の "tests" と同じ
-    pub files: BTreeMap<String, TestFileTally>,
+    pub(crate) files: BTreeMap<String, TestFileTally>,
+}
+impl Tests {
+    readonly!(copy marks: usize);
+    readonly!(borrow files: BTreeMap<String, TestFileTally>);
 }
 
 /// "kotowari check" の`指摘`の数（TBL-core-028）
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct Findings {
-    pub error: usize,
-    pub notice: usize,
+    pub(crate) error: usize,
+    pub(crate) notice: usize,
 }
-
-/// REQ-core-166: TBL-core-028 の群ごとに "群名 鍵=値 鍵=値" の1行を、表の順に出す。
-/// 鍵の語は JSON と同じで、値の間は半角空白1つ、桁揃えの空白は入れない
-pub fn print_text(result: &StatusResult) {
-    let documents = &result.documents;
-    println!(
-        "documents files={} lines={}",
-        documents.files, documents.lines
-    );
-    let items = &result.items;
-    println!(
-        "items requirement={} table={} property={} scenario={} flag={}",
-        items.requirement, items.table, items.property, items.scenario, items.flag
-    );
-    let requirements = &result.requirements;
-    println!(
-        "requirements unit={} property={} proof={} review={} with_tests={} without_tests={} \
-review_with_how_to_verify={} review_without_how_to_verify={} without_examples={} deferred={}",
-        requirements.unit,
-        requirements.property,
-        requirements.proof,
-        requirements.review,
-        requirements.with_tests,
-        requirements.without_tests,
-        requirements.review_with_how_to_verify,
-        requirements.review_without_how_to_verify,
-        requirements.without_examples,
-        requirements.deferred
-    );
-    let scenarios = &result.scenarios;
-    println!(
-        "scenarios with_tests={} without_tests={} deferred={}",
-        scenarios.with_tests, scenarios.without_tests, scenarios.deferred
-    );
-    // TBL-core-028: "text" では読んだテストのファイルを拡張子ごとに数える
-    let mut tests = format!("tests marks={}", result.tests.marks);
-    for (extension, tally) in &result.tests.files {
-        tests.push_str(&format!(" {extension}={}", tally.files));
-    }
-    println!("{tests}");
-    println!(
-        "guides files={} marks={}",
-        result.guides.files, result.guides.marks
-    );
-    let surface = &result.surface;
-    println!(
-        "surface total={} specified={} unspecified={}",
-        surface.total, surface.specified, surface.unspecified
-    );
-    let findings = &result.findings;
-    println!(
-        "findings error={} notice={}",
-        findings.error, findings.notice
-    );
-    println!("complete {}", result.complete);
+impl Findings {
+    readonly!(copy error: usize, notice: usize);
 }
 
 /// check と同じ読み取りと検査の結果から TBL-core-028 の集計を作る（REQ-core-162、REQ-core-164）
@@ -206,6 +172,7 @@ pub fn build(
         guides,
         surface,
         findings: counts,
+        groups: Vec::new(),
     }
 }
 

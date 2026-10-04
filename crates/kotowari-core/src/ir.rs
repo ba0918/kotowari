@@ -10,7 +10,6 @@ use crate::finding_map::read_document;
 use crate::{Finding, FindingKind, StopReason};
 use serde_json::{Map, Value};
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
 
 /// 項目の ID の種別
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -142,25 +141,44 @@ impl Item {
 }
 
 /// 解析した IR 文書
+/// ```compile_fail
+/// let mut document = kotowari_core::ir::parse_document("topic.md", "# Topic\n").unwrap();
+/// document.items.clear();
+/// ```
 #[derive(Debug)]
 pub struct IrDocument {
-    pub filename: String,
-    pub relative_path: String,
-    pub directory: String,
-    pub kind: DocKind,
+    pub(crate) filename: String,
+    pub(crate) relative_path: String,
+    pub(crate) directory: String,
+    pub(crate) kind: DocKind,
     /// `文書が扱う範囲`の`文`の行（行番号と行の文字そのまま）
-    pub scope_lines: Vec<(usize, String)>,
+    pub(crate) scope_lines: Vec<(usize, String)>,
     /// 文書単位の "- deferred:" の行（REQ-core-209）。2つ目以降の行は読まない
-    pub deferred: Option<Deferral>,
-    pub line_count: usize,
-    pub items: Vec<Item>,
-    pub raw_content: String,
+    pub(crate) deferred: Option<Deferral>,
+    pub(crate) line_count: usize,
+    pub(crate) items: Vec<Item>,
+    pub(crate) raw_content: String,
     /// 文書1つで決まる指摘（スキーマの側から写したもの、gherkin の中身、閉じないコードブロック、
     /// 用語集の行）。パスは空で、`check_documents` が入れる
-    pub parse_findings: Vec<crate::Finding>,
+    pub(crate) parse_findings: Vec<crate::Finding>,
 }
 
 impl IrDocument {
+    pub fn filename(&self) -> &str {
+        &self.filename
+    }
+    pub fn relative_path(&self) -> &str {
+        &self.relative_path
+    }
+    pub fn kind(&self) -> DocKind {
+        self.kind
+    }
+    pub fn line_count(&self) -> usize {
+        self.line_count
+    }
+    pub fn items(&self) -> &[Item] {
+        &self.items
+    }
     pub(crate) fn is_glossary_in_chain(&self, directory: &str) -> bool {
         self.kind == DocKind::Glossary
             && (self.directory.is_empty()
@@ -210,10 +228,10 @@ impl IrDocument {
 }
 
 /// 文書群に対して一度求めた、親の用語集と重なる行。
-pub(crate) struct GlossaryDuplicates(Vec<BTreeSet<usize>>);
+pub struct GlossaryDuplicates(Vec<BTreeSet<usize>>);
 
 impl GlossaryDuplicates {
-    pub(crate) fn new(docs: &[IrDocument]) -> Self {
+    pub fn new(docs: &[IrDocument]) -> Self {
         Self(
             docs.iter()
                 .map(|doc| doc.duplicate_glossary_rows(docs))
@@ -250,12 +268,27 @@ pub fn split_lines(content: &str) -> Vec<&str> {
 /// `項目`を組み立てる（REQ-core-169、REQ-core-170）。写せない`指摘`や値は`停止`になる
 /// （REQ-core-172、REQ-core-175）
 pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopReason> {
+    let (directory, name) = filename.rsplit_once('/').unwrap_or(("", filename));
+    let mut document = parse_document_mode(name, content, false)?;
+    document.relative_path = filename.into();
+    document.directory = directory.into();
+    Ok(document)
+}
+
+fn parse_document_mode(
+    filename: &str,
+    content: &str,
+    partial: bool,
+) -> Result<IrDocument, StopReason> {
     // BOM の読み飛ばし（read_utf8_file でも除去するが、直接呼ばれた場合にも対応）
     let content = content.strip_prefix('\u{FEFF}').unwrap_or(content);
     let kind = DocKind::of(filename);
     let (values, mut findings) = read_document(filename, kind, content)?;
-    let mut items = extract_items(kind, &values, &mut findings)?;
-    discard_nameless_items(&mut items, &mut findings, content);
+    let mut items = extract_items(kind, &values, &mut findings, partial)?;
+    diagnose_nameless_items(&items, &mut findings, content);
+    if !partial {
+        items.retain(|item| !is_nameless(item));
+    }
     items.sort_by_key(Item::item_line);
     exclude_unclosed_code_block(&mut items, &mut findings, content);
 
@@ -277,18 +310,19 @@ fn extract_items(
     kind: DocKind,
     values: &Value,
     findings: &mut Vec<Finding>,
+    partial: bool,
 ) -> Result<Vec<Item>, StopReason> {
     let mut items = Vec::new();
     match kind {
         DocKind::Topic => {
             for obj in elements(values.get("requirements")) {
-                items.extend(requirement(obj, findings)?);
+                items.extend(requirement(obj, findings, partial)?);
             }
             for obj in elements(values.get("tables")) {
-                items.extend(decision_table(obj)?);
+                items.extend(decision_table(obj, partial)?);
             }
             for obj in elements(values.get("properties")) {
-                items.extend(property(obj, findings)?);
+                items.extend(property(obj, findings, partial)?);
             }
             for obj in elements(values.get("scenarios")) {
                 let opening = number(obj, "line")?;
@@ -310,7 +344,7 @@ fn extract_items(
             let direct = elements(values.get("flags"));
             let in_section = elements(values.get("flags_in_section"));
             for obj in direct.into_iter().chain(in_section) {
-                items.extend(flag_entry(obj, findings)?);
+                items.extend(flag_entry(obj, findings, partial)?);
             }
         }
         DocKind::Glossary => read_glossary(values, &mut items, findings)?,
@@ -318,12 +352,16 @@ fn extract_items(
     Ok(items)
 }
 
-fn discard_nameless_items(items: &mut Vec<Item>, findings: &mut Vec<Finding>, content: &str) {
+fn is_nameless(item: &Item) -> bool {
+    heading_name(item).is_some_and(|name| name.trim().is_empty())
+}
+
+fn diagnose_nameless_items(items: &[Item], findings: &mut Vec<Finding>, content: &str) {
     // REQ-core-043: "### ID:" の後に名前の無い見出しは "### ID: 名前" の形でない。
     // その ID は定義に数えず、見出しの行を detail にした unknown_heading にする（review8-gaps の A2）
     let lines = split_lines(content);
-    items.retain(|item| {
-        let nameless = heading_name(item).is_some_and(|name| name.trim().is_empty());
+    for item in items {
+        let nameless = is_nameless(item);
         let line = item.item_line();
         // コロンの無い見出しは、スキーマの側が既に unknown_heading にしている
         let flagged = findings
@@ -338,8 +376,7 @@ fn discard_nameless_items(items: &mut Vec<Item>, findings: &mut Vec<Finding>, co
                 raw.to_string(),
             ));
         }
-        !nameless
-    });
+    }
 }
 
 fn exclude_unclosed_code_block(items: &mut Vec<Item>, findings: &mut Vec<Finding>, content: &str) {
@@ -475,9 +512,10 @@ fn item_statements(
 fn requirement(
     obj: &Map<String, Value>,
     findings: &mut Vec<Finding>,
+    partial: bool,
 ) -> Result<Option<Item>, StopReason> {
     let (id, name, line) = head(obj)?;
-    if !is_item_id(&id, IdPrefix::Req) {
+    if !partial && !is_item_id(&id, IdPrefix::Req) {
         return Ok(None);
     }
     let (sources, source_line) = listed(obj.get("sources"))?;
@@ -502,9 +540,91 @@ fn requirement(
     }))
 }
 
-fn decision_table(obj: &Map<String, Value>) -> Result<Option<Item>, StopReason> {
+#[derive(Debug, Clone)]
+pub struct IrOptions {
+    pub ir: String,
+}
+
+impl Default for IrOptions {
+    fn default() -> Self {
+        Self {
+            ir: "docs/ir".into(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ParsedIrDocument {
+    document: IrDocument,
+    items: Vec<ParsedItem>,
+}
+
+#[derive(Debug)]
+pub struct ParsedItem(Item);
+
+impl ParsedItem {
+    pub fn id(&self) -> Option<&str> {
+        self.0.id().filter(|id| !id.is_empty())
+    }
+    pub fn line(&self) -> usize {
+        self.0.item_line()
+    }
+    pub fn end_line(&self) -> Option<usize> {
+        self.0.end_line()
+    }
+    pub fn references(&self) -> Vec<ItemReference<'_>> {
+        item_references(&self.0)
+    }
+}
+
+impl ParsedIrDocument {
+    pub fn path(&self) -> &str {
+        &self.document.relative_path
+    }
+    pub fn items(&self) -> &[ParsedItem] {
+        &self.items
+    }
+    pub fn findings(&self) -> &[Finding] {
+        &self.document.parse_findings
+    }
+}
+
+pub fn parse(
+    source: &crate::SourceText,
+    options: IrOptions,
+) -> Result<ParsedIrDocument, crate::InputError> {
+    let place = crate::normalize_path(&options.ir);
+    let relative = if place.is_empty() {
+        source.path()
+    } else {
+        source
+            .path()
+            .strip_prefix(&format!("{place}/"))
+            .ok_or_else(|| {
+                crate::InputError::InvalidInput(
+                    "IR source must be under its configured place".into(),
+                )
+            })?
+    };
+    let filename = relative.rsplit('/').next().unwrap();
+    let mut document = parse_document_mode(filename, source.text(), true)
+        .map_err(|error| crate::InputError::InvalidInput(error.to_string()))?;
+    document.relative_path = source.path().to_owned();
+    document.directory = relative
+        .rsplit_once('/')
+        .map(|(dir, _)| dir)
+        .unwrap_or("")
+        .to_owned();
+    for finding in &mut document.parse_findings {
+        finding.path = source.path().to_owned();
+    }
+    let items = document.items.iter().cloned().map(ParsedItem).collect();
+    Ok(ParsedIrDocument { document, items })
+}
+
+fn decision_table(obj: &Map<String, Value>, partial: bool) -> Result<Option<Item>, StopReason> {
     let (id, name, line) = head(obj)?;
-    if !is_item_id(&id, IdPrefix::Tbl) {
+    if !partial && !is_item_id(&id, IdPrefix::Tbl) {
         return Ok(None);
     }
     let (sources, source_line) = listed(obj.get("sources"))?;
@@ -523,9 +643,10 @@ fn decision_table(obj: &Map<String, Value>) -> Result<Option<Item>, StopReason> 
 fn property(
     obj: &Map<String, Value>,
     findings: &mut Vec<Finding>,
+    partial: bool,
 ) -> Result<Option<Item>, StopReason> {
     let (id, name, line) = head(obj)?;
-    if !is_item_id(&id, IdPrefix::Prop) {
+    if !partial && !is_item_id(&id, IdPrefix::Prop) {
         return Ok(None);
     }
     let (sources, source_line) = listed(obj.get("sources"))?;
@@ -544,9 +665,10 @@ fn property(
 fn flag_entry(
     obj: &Map<String, Value>,
     findings: &mut Vec<Finding>,
+    partial: bool,
 ) -> Result<Option<Item>, StopReason> {
     let (id, name, line) = head(obj)?;
-    if !is_item_id(&id, IdPrefix::Flag) {
+    if !partial && !is_item_id(&id, IdPrefix::Flag) {
         return Ok(None);
     }
     let (relations, relation_line) = listed(obj.get("relations"))?;
@@ -970,7 +1092,7 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
     check_documents_with_duplicates(docs, config, &duplicates)
 }
 
-pub(crate) fn check_documents_with_duplicates(
+pub fn check_documents_with_duplicates(
     docs: &[IrDocument],
     config: &Config,
     duplicates: &GlossaryDuplicates,
@@ -1471,71 +1593,4 @@ fn backtick_ids(text: &str) -> Vec<&str> {
         .map(str::trim)
         .filter(|id| !id.is_empty() && is_valid_id(id))
         .collect()
-}
-
-/// IR のディレクトリからすべての文書を読んで検査する
-pub fn load_and_check(
-    base: &Path,
-    config: &Config,
-) -> Result<(Vec<IrDocument>, Vec<Finding>), crate::StopReason> {
-    let (docs, findings, _) = load_and_check_with_duplicates(base, config)?;
-    Ok((docs, findings))
-}
-
-pub(crate) fn load_and_check_with_duplicates(
-    base: &Path,
-    config: &Config,
-) -> Result<(Vec<IrDocument>, Vec<Finding>, GlossaryDuplicates), crate::StopReason> {
-    let ir_dir = base.join(&config.ir);
-    let mut entries = Vec::new();
-    collect_ir_paths(&ir_dir, "", &config.ir, &mut entries)?;
-    entries.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
-
-    let mut docs = Vec::new();
-    for (relative_path, path) in entries {
-        let (directory, filename) = relative_path
-            .rsplit_once('/')
-            .unwrap_or(("", &relative_path));
-        let display = crate::join_display_path(&config.ir, &relative_path);
-        let content = crate::read_utf8_file(&path, &display)?;
-        let mut doc = parse_document(filename, &content)?;
-        doc.directory = directory.to_string();
-        doc.relative_path = relative_path;
-        docs.push(doc);
-    }
-    let duplicates = GlossaryDuplicates::new(&docs);
-    let findings = check_documents_with_duplicates(&docs, config, &duplicates);
-    Ok((docs, findings, duplicates))
-}
-
-fn collect_ir_paths(
-    dir: &Path,
-    prefix: &str,
-    ir_path: &str,
-    paths: &mut Vec<(String, std::path::PathBuf)>,
-) -> Result<(), crate::StopReason> {
-    let display = crate::join_display_path(ir_path, prefix);
-    let display = if prefix.is_empty() { ir_path } else { &display };
-    let unreadable = |e| crate::StopReason::UnreadableFile(format!("{display}: {e}"));
-    for entry in std::fs::read_dir(dir).map_err(unreadable)? {
-        let entry = entry.map_err(unreadable)?;
-        let path = entry.path();
-        let name = entry.file_name().to_string_lossy().to_string();
-        let relative_path = crate::join_display_path(prefix, &name);
-        let entry_display = crate::join_display_path(ir_path, &relative_path);
-        let entry_error = |e| crate::StopReason::UnreadableFile(format!("{entry_display}: {e}"));
-        let file_type = entry.file_type().map_err(entry_error)?;
-        let (is_dir, is_file) = if file_type.is_symlink() {
-            let metadata = std::fs::metadata(&path).map_err(entry_error)?;
-            (false, metadata.is_file())
-        } else {
-            (file_type.is_dir(), file_type.is_file())
-        };
-        if is_dir && !name.starts_with('.') {
-            collect_ir_paths(&path, &relative_path, ir_path, paths)?;
-        } else if is_file && path.extension().is_some_and(|ext| ext == "md") {
-            paths.push((relative_path, path));
-        }
-    }
-    Ok(())
 }

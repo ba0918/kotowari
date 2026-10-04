@@ -14,6 +14,32 @@
 
 set -euo pipefail
 
+update_versions() {
+    python3 - "$1" "$2" "$3" <<'PY'
+from pathlib import Path
+import re, sys, tomllib
+root, family, version = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+selected = {'kotowari-cli', 'kotowari', 'kotowari-core', 'kotowari-source-analysis', 'kotowari-overview'} if family == 'kotowari' else {'kotowari-markdown-schema', 'kotowari-markdown-schema-io', 'kotowari-mds', 'kotowari-markdown-view'}
+for path in [root / 'Cargo.toml', *sorted((root / 'crates').glob('*/Cargo.toml'))]:
+    text = path.read_text()
+    manifest = tomllib.loads(text)
+    if manifest['package']['name'] in selected:
+        text = re.sub(r'(?ms)(^\[package\]\n(?:(?!^\[).)*?^version\s*=\s*)"[^"]+"', lambda match: match[1] + '"' + version + '"', text, count=1)
+    for name in selected:
+        text = re.sub(r'(?m)^(\s*' + re.escape(name) + r'\s*=\s*\{[^\n]*?\bversion\s*=\s*)"[^"]+"', lambda match: match[1] + '"' + version + '"', text)
+    path.write_text(text)
+path = root / 'Cargo.lock'
+text = path.read_text()
+for name in selected:
+    text = re.sub(r'(?m)(^name = "' + re.escape(name) + r'"\nversion = )"[^"]+"', lambda match: match[1] + '"' + version + '"', text)
+path.write_text(text)
+PY
+}
+
+if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+    return
+fi
+
 cd "$(dirname "$0")/.."
 
 readonly REPO_URL="https://github.com/ba0918/kotowari"
@@ -37,13 +63,13 @@ version="$2"
 # 製品ごとの、版の宣言（先頭が置き場、残りは従う宣言）、Cargo.lock のパッケージ、変更履歴
 case "$product" in
     kotowari)
-        manifests=(Cargo.toml crates/kotowari-core/Cargo.toml)
-        lock_packages=(kotowari kotowari-core)
+        manifests=(Cargo.toml crates/kotowari/Cargo.toml crates/kotowari-core/Cargo.toml crates/kotowari-source-analysis/Cargo.toml crates/kotowari-overview/Cargo.toml)
+        lock_packages=(kotowari-cli kotowari kotowari-core kotowari-source-analysis kotowari-overview)
         changelog="CHANGELOG.md"
         ;;
     kotowari-mds)
-        manifests=(crates/kotowari-markdown-schema/Cargo.toml)
-        lock_packages=(kotowari-markdown-schema)
+        manifests=(crates/kotowari-markdown-schema/Cargo.toml crates/kotowari-markdown-schema-io/Cargo.toml crates/kotowari-mds/Cargo.toml crates/kotowari-markdown-view/Cargo.toml)
+        lock_packages=(kotowari-markdown-schema kotowari-markdown-schema-io kotowari-mds kotowari-markdown-view)
         changelog="crates/kotowari-markdown-schema/CHANGELOG.md"
         ;;
     *)
@@ -88,7 +114,7 @@ unreleased_has_entries "$changelog" || die "$changelog の Unreleased の節が�
 
 # タグが無いことは上で確かめたので、戻すときにあるタグはこのスクリプトが作ったもの。
 # コミットとタグは、作った直後に中断されても戻せるように、フラグでなく今の状態で見る
-written=("${manifests[@]}" Cargo.lock "$changelog")
+written=(Cargo.toml crates/kotowari/Cargo.toml crates/kotowari-core/Cargo.toml crates/kotowari-source-analysis/Cargo.toml crates/kotowari-overview/Cargo.toml crates/kotowari-markdown-schema/Cargo.toml crates/kotowari-markdown-schema-io/Cargo.toml crates/kotowari-mds/Cargo.toml crates/kotowari-markdown-view/Cargo.toml Cargo.lock "$changelog")
 start_head="$(git rev-parse HEAD)"
 done_ok=0
 restore() {
@@ -115,22 +141,7 @@ replace_with_stdin() {
     rm -f "$tmp"
 }
 
-for manifest in "${manifests[@]}"; do
-    awk -v v="$version" '
-        /^\[/ { in_package = ($0 == "[package]") }
-        in_package && !changed && /^version[[:space:]]*=/ { print "version = \"" v "\""; changed = 1; next }
-        { print }
-    ' "$manifest" | replace_with_stdin "$manifest"
-done
-
-for package in "${lock_packages[@]}"; do
-    awk -v name="$package" -v v="$version" '
-        /^\[\[package\]\]$/ { in_block = 0 }
-        $0 == "name = \"" name "\"" { in_block = 1 }
-        in_block && /^version = / { print "version = \"" v "\""; in_block = 0; next }
-        { print }
-    ' Cargo.lock | replace_with_stdin Cargo.lock
-done
+update_versions . "$product" "$version"
 
 # 前のタグ（この製品の、版の順でいちばん新しいもの）。無ければ最初のリリース
 previous_tag="$(git tag --list "${product}-v*" --sort=-v:refname | head -n 1)"
@@ -158,7 +169,7 @@ awk -v heading="## [${version}] - ${release_date}" \
 printf 'release.sh: 版のずれを検査する\n' >&2
 scripts/check-versions.sh "$tag" || die "版のずれの検査が落ちた"
 printf 'release.sh: kotowari check を回す\n' >&2
-CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format text || die "kotowari check が終了コード0で終わらなかった"
+CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-cli --bin kotowari -- check --format text || die "kotowari check が終了コード0で終わらなかった"
 printf 'release.sh: テスト全件を回す\n' >&2
 CARGO_BUILD_JOBS=4 cargo test --workspace || die "テストが落ちた"
 

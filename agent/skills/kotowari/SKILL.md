@@ -1,13 +1,13 @@
 ---
 name: kotowari
-description: "Read, scene by scene, how to write kotowari's IR and decision records, how to use check, and how to place marks. Trigger words: kotowari, IR, docs/ir, @kotowari, marks, mutants, mutation tests, guides, guide_stale, surface, surface_without_spec, changes, change_stale, change_record_invalid. 日本語キーワード: 印 変異テスト ガイド 面 変更照合"
+description: "Read, scene by scene, how to write kotowari's IR and decision records, how to use check, and how to place marks. Trigger words: kotowari, IR, docs/ir, @kotowari, marks, mutants, mutation tests, guides, guide_stale, overview, overview build, overview serve, surface, surface_without_spec, changes, change_stale, change_record_invalid. 日本語キーワード: 印 変異テスト ガイド 全体像 面 変更照合"
 ---
 
 ## Scope
 
 This skill governs IR, record and marker use and reading the tool results. Workflow decisions belong to the named workflow skills.
 
-kotowari is a tool for writing a normalised specification (the IR) in Markdown and checking it with `kotowari check`. It also has the read commands `kotowari list` (the list of items), `kotowari query` (one item's body and its reverse references) and `kotowari status` (a tally of whether everything is in place), `kotowari mutants`, which reads the results of mutation tests, and `kotowari plan`, which checks the form of one plan file against the schema bundled in kotowari. `kotowari changes` compares caller-written records with a Git snapshot. This skill has you read a reference per scene and conveys how to write the IR and decision records, how to read the check results, and how to place marks.
+kotowari is a tool for writing a normalised specification (the IR) in Markdown and checking it with `kotowari check`. It also has the read commands `kotowari list` (the list of items), `kotowari query` (one item's body and its reverse references) and `kotowari status` (a tally of whether everything is in place), `kotowari mutants`, which reads the results of mutation tests, and `kotowari plan`, which checks the form of one plan file against the schema bundled in kotowari. `kotowari changes` compares caller-written records with a Git snapshot. `kotowari overview build` and `kotowari overview serve` render the overview data an LLM writes into pages that show the whole picture of a topic. This skill has you read a reference per scene and conveys how to write the IR and decision records, how to read the check results, and how to place marks.
 
 First run `kotowari --version` to confirm the tool is there.
 
@@ -27,6 +27,7 @@ Choosing the scene: if the person names one, follow it. Otherwise choose from th
 | mark | Placing marks while writing tests | mark.md |
 | mutants | Reading the result of `kotowari mutants`, investigating misses | mutants.md |
 | surface | Writing surface rules (`surface.rules`) and the list of unspecified surfaces, or fixing surface_without_spec, surface_unspecified_invalid or surface_unspecified_stale | surface.md |
+| overview | Writing or revising overview data at a brainstorm approval, choosing the unit of an overview, running `kotowari overview build` or `serve`, or reading an overview finding or guide_stale on overview data | overview.md |
 | guide | Writing a guide (a user-facing document listed in `guides.files`) and placing its guide marks, or reviewing a guide after `kotowari check` raised guide_stale | guides.md |
 
 Before the approval in write, also read collate.md.
@@ -39,4 +40,5 @@ Which work uses each scene:
 - mark — when implement and the fixer write tests
 - mutants — when a push is stopped by missed mutations, and when investigating misses while cleaning up after a cycle
 - surface — when first writing surface rules for a project (adopt), and when `kotowari check` raises a surface finding
+- overview — brainstorm (at approval, only in a project whose configuration has the `overview` key); never cycle or implement
 - guide — when writing or revising a guide, and when `kotowari check` raises guide_stale

@@ -6,15 +6,25 @@
 
 use crate::schema::plan_schema;
 use crate::{Finding, FindingKind};
-use kotowari_markdown_schema::document::Document;
-use kotowari_markdown_schema::validate::validate;
+use kotowari_markdown_schema::{Document, ValidationOptions};
 use std::collections::BTreeMap;
 
 /// "kotowari plan" の JSON の最上位（REQ-core-194）
 #[derive(serde::Serialize)]
 pub struct PlanResult {
-    pub findings: Vec<Finding>,
-    pub counts: BTreeMap<String, usize>,
+    pub(crate) findings: Vec<Finding>,
+    pub(crate) counts: BTreeMap<String, usize>,
+}
+impl PlanResult {
+    readonly!(borrow findings: Vec<Finding>, counts: BTreeMap<String, usize>);
+}
+pub fn check(path: &str, content: &str) -> PlanResult {
+    let mut findings = check_plan(path, content);
+    crate::sort_findings(&mut findings);
+    PlanResult {
+        counts: crate::count_findings(&findings),
+        findings,
+    }
 }
 
 /// 計画書の中身を同梱のスキーマで検査し、指摘を invalid_plan にして返す（REQ-core-191、REQ-core-193）。
@@ -28,19 +38,19 @@ pub fn check_plan(path: &str, content: &str) -> Vec<Finding> {
     let document = Document::parse(content).expect("Markdown without MDX always parses");
     // 題名より前の節が必須の節を満たしたり、題名の後の節と重なって数えられたりしないよう、
     // 行の番号を保ったまま空にしてから読み直す
-    let document = match document.titles.first() {
-        Some(title) => Document::parse(&blank_lines_before(content, title.line))
+    let document = match document.title_line() {
+        Some(line) => Document::parse(&blank_lines_before(content, line))
             .expect("Markdown without MDX always parses"),
         None => document,
     };
-    validate(&schema, &document, schema.open)
+    kotowari_markdown_schema::validate(&schema, &document, ValidationOptions::default())
         .into_iter()
         .map(|f| {
             Finding::new(
                 FindingKind::InvalidPlan,
                 path.to_string(),
-                f.line,
-                format!("{}: {}", f.kind.as_str(), f.detail),
+                f.line(),
+                format!("{}: {}", f.kind().as_str(), f.detail()),
             )
         })
         .collect()

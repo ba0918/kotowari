@@ -8,7 +8,7 @@
 
 ## 書式
 
-<!-- @kotowari[REQ-core-002:06abb59d, REQ-core-004:7735d4c3] -->
+<!-- @kotowari[REQ-core-002:410b78a4, REQ-core-004:6c8139b3] -->
 
 ```sh
 kotowari list [--format json|text] [--config <path>]
@@ -37,7 +37,7 @@ kotowari list --version
 ## 出力
 
 何を読むかは `kotowari check` と同じです（同じ設定、同じ置き場の IR の文書とテストのファイル）。
-ただしガイドは読みません。
+ただしガイドと全体像の元データは読みません。
 
 ### text
 
@@ -101,7 +101,7 @@ REQ-001 unit 例 docs/ir/a.md:7 tests=0 deferred
 
 ## 終了コード
 
-<!-- @kotowari[REQ-core-151:4e40b186, REQ-core-152:fc02940b] -->
+<!-- @kotowari[REQ-core-151:4e40b186, REQ-core-152:ec925e06] -->
 
 | コード | 意味 |
 |---|---|
@@ -224,7 +224,7 @@ CI で誤りを止めたいなら `kotowari check` か [`kotowari status`](./sta
 
 ### `tests=0` の要求が status では「テストあり」に数えられている
 
-<!-- @kotowari[TBL-core-026:05d8938e, TBL-core-028:43f83e8c] -->
+<!-- @kotowari[TBL-core-026:05d8938e, TBL-core-028:669e5402] -->
 
 `list` の `tests` は、その ID を直接印に含むテストだけです。
 [`kotowari status`](./status.md) の `with_tests` は、その要求を `@about` に持つシナリオに付いたテストも数えます。
@@ -233,10 +233,11 @@ CI で誤りを止めたいなら `kotowari check` か [`kotowari status`](./sta
 
 ### check や status は設定の誤りで止まるのに、list は動く
 
-<!-- @kotowari[REQ-core-152:fc02940b, REQ-core-198:ec0e5ea4, REQ-core-199:38cf396d] -->
+<!-- @kotowari[REQ-core-152:ec925e06, REQ-core-198:ec0e5ea4, REQ-core-199:38cf396d] -->
 
 `list` はガイドを読まないので、ガイドの置き場に関わる停止（`guides.files` と `tests.files` の重なりなど）はしません。
 面のファイル、面の規則のファイル、未記載の面の一覧も読まないので、それらが無い、読めない、壊れているときの停止もしません。
+全体像の元データも読まないので、その置き場と読み込みによる停止（`overview.files` とガイドかテストの置き場の重なりなど）もしません。
 ただし `surface.files` と `surface.rules` の片方だけを書いたときなど、設定の鍵の組み合わせの誤りでは `list` も止まります（[設定](../config.md)）。
 それ以外の停止の条件は `check` と同じです。
 設定を直すときは `kotowari check` で確かめてください。

@@ -4,16 +4,19 @@
 //! IR の文書は自分の形を宣言しないので、文書の種類からスキーマを選ぶ。
 
 use crate::doc_kind::DocKind;
-use kotowari_markdown_schema::schema::{Schema, SchemaError, parse_schema};
+use kotowari_markdown_schema::{Schema, SchemaError};
+fn parse_schema(yaml: &str) -> Result<Schema, SchemaError> {
+    Schema::parse(yaml)
+}
 
 /// 話題ごとの文書のスキーマ
-const TOPIC: &str = include_str!("../../../.kotowari/schemas/ir.yaml");
+const TOPIC: &str = include_str!("../schemas/ir.yaml");
 /// 用語集（CONTEXT.md）のスキーマ
-const GLOSSARY: &str = include_str!("../../../.kotowari/schemas/context.yaml");
+const GLOSSARY: &str = include_str!("../schemas/context.yaml");
 /// 問題の記録（FLAGS.md）のスキーマ
-const FLAGS: &str = include_str!("../../../.kotowari/schemas/flags.yaml");
+const FLAGS: &str = include_str!("../schemas/flags.yaml");
 /// 計画書のスキーマ（REQ-core-191）
-const PLAN: &str = include_str!("../../../.kotowari/schemas/plan.yaml");
+const PLAN: &str = include_str!("../schemas/plan.yaml");
 
 /// 文書の種類に応じた、取り込んだスキーマの YAML（REQ-core-168）。
 pub fn schema_source(kind: DocKind) -> &'static str {
@@ -53,7 +56,7 @@ mod tests {
     // @kotowari[REQ-core-168]
     #[test]
     fn req_core_168_the_schema_chosen_per_document_kind_is_the_one_named_for_it() {
-        let name = |kind| schema_for(kind).unwrap().name;
+        let name = |kind| schema_for(kind).unwrap().name().map(str::to_owned);
         assert_eq!(name(DocKind::Topic).as_deref(), Some("ir"));
         assert_eq!(name(DocKind::Glossary).as_deref(), Some("ir-context"));
         assert_eq!(name(DocKind::Flags).as_deref(), Some("ir-flags"));
@@ -68,6 +71,6 @@ mod tests {
             "計画書のスキーマが parse_schema を通らない: {:?}",
             schema.err()
         );
-        assert_eq!(schema.unwrap().name.as_deref(), Some("plan"));
+        assert_eq!(schema.unwrap().name(), Some("plan"));
     }
 }

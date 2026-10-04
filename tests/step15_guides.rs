@@ -53,6 +53,30 @@ fn json(stdout: &str) -> serde_json::Value {
     serde_json::from_str(stdout).unwrap_or_else(|e| panic!("{e}: {stdout}"))
 }
 
+// @kotowari[REQ-core-199, REQ-core-313, EX-core-485]
+#[test]
+fn overlap_precedes_guide_only_invalid_utf8_and_missing_surface_rules() {
+    for later in ["content", "surface"] {
+        let tmp = TempDir::new().unwrap();
+        make_project(
+            tmp.path(),
+            "guides:\n  files: ['tests/**', 'guides/**']\nsurface:\n  files: ['src/**']\n  rules: ['missing.yaml']\n",
+        );
+        write(tmp.path(), "tests/z.rs", "#[test]\nfn z() {}\n");
+        write(tmp.path(), "tests/a.rs", "#[test]\nfn a() {}\n");
+        if later == "content" {
+            std::fs::create_dir_all(tmp.path().join("guides")).unwrap();
+            std::fs::write(tmp.path().join("guides/bad.md"), [0xff]).unwrap();
+        }
+        let (code, _, stderr) = run(tmp.path(), &["check", "--format", "json"]);
+        assert_eq!(code, Some(2));
+        assert!(
+            stderr.contains("tests/a.rs: matched by both guides.files and tests.files"),
+            "{later}: {stderr}"
+        );
+    }
+}
+
 /// "guides.files" を "guides/**/*.md" にする設定の行
 const GUIDES_MD: &str = "guides:\n  files:\n    - \"guides/**/*.md\"\n";
 
@@ -82,25 +106,6 @@ fn listed_fingerprint(tmp: &Path, id: &str) -> String {
 }
 
 // --- REQ-core-014、TBL-core-004: "guides.files" の鍵 ---
-
-// @kotowari[TBL-core-004]
-#[test]
-fn tbl_004_guides_files_defaults_to_an_empty_list() {
-    assert!(Config::default().guides.files.is_empty());
-    let cfg = Config::parse("ir: docs/ir\n").unwrap();
-    assert!(
-        cfg.guides.files.is_empty(),
-        "without the key there are no guides"
-    );
-}
-
-// @kotowari[TBL-core-004]
-#[test]
-fn tbl_004_guides_files_reads_a_list_of_globs() {
-    let cfg = Config::parse("guides:\n  files:\n    - \"guides/**/*.md\"\n    - \"README.md\"\n")
-        .unwrap();
-    assert_eq!(cfg.guides.files, vec!["guides/**/*.md", "README.md"]);
-}
 
 // @kotowari[REQ-core-014]
 #[test]
@@ -796,5 +801,6 @@ fn req_162_status_carries_the_guides_group() {
     let lines: Vec<&str> = text.lines().collect();
     let tests = lines.iter().position(|l| l.starts_with("tests ")).unwrap();
     assert_eq!(lines[tests + 1], "guides files=1 marks=1", "{text}");
-    assert!(lines[tests + 2].starts_with("surface "), "{text}");
+    assert!(lines[tests + 2].starts_with("overview "), "{text}");
+    assert!(lines[tests + 3].starts_with("surface "), "{text}");
 }

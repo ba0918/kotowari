@@ -2,16 +2,14 @@
 
 ## What this is
 
-A Cargo workspace holding three Rust packages:
+A Cargo workspace holding nine Rust packages. The root package is `kotowari-cli`; `crates/kotowari` owns acquisition and typed APIs, and `crates/kotowari-source-analysis` owns ast-grep analysis. The schema I/O and mds binary are separate packages at `crates/kotowari-markdown-schema-io` and `crates/kotowari-mds`. `crates/kotowari-overview` checks overview data and builds its render input in memory, and `crates/kotowari-markdown-view` renders it to static HTML pages in memory; `kotowari overview build` and `serve` write and show those pages.
 
-- `kotowari` at the repository root — the `kotowari` binary (`src/main.rs`). A normalised
+- `kotowari-cli` at the repository root — the `kotowari` binary (`src/main.rs`). A normalised
   specification (the IR) is written as Markdown and checked mechanically by `kotowari check`,
-  with the read commands `list`, `query` and `status` and the mutation-test reader `mutants`
-  beside it.
-- `crates/kotowari-core` — the `kotowari_core` library the root binary is built on. It is the
-  root package's only dependency inside the workspace.
-- `crates/kotowari-markdown-schema` — the `kotowari_markdown_schema` library and the `kotowari-mds`
-  binary. See that crate's own `README.md`.
+  with the read commands `list`, `query` and `status`, the mutation-test reader `mutants`, and
+  `overview build` and `overview serve` for the overview pages beside it.
+- `crates/kotowari-core` — pure memory parsing, comparison and inspection. The root binary depends normally only on the high-level `kotowari` library.
+- `crates/kotowari-markdown-schema` — pure schema/document validation and extraction. See that crate's own `README.md`.
 
 `Cargo.toml` at the root declares the workspace members and excludes `experiments/`.
 
@@ -30,7 +28,8 @@ Run cargo from the repository root; it covers the whole workspace.
 | Build | `CARGO_BUILD_JOBS=4 cargo build --workspace` |
 | Test | `CARGO_BUILD_JOBS=4 cargo test --workspace` |
 | Test one crate | `CARGO_BUILD_JOBS=4 cargo test -p kotowari-markdown-schema` |
-| Check this repository's own IR | `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari -- check --format text` |
+| Check this repository's own IR | `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-cli --bin kotowari -- check --format text` |
+| Test optional adapters | `CARGO_BUILD_JOBS=4 cargo test --workspace --all-features --locked` |
 | Quality gates (pre-commit) | `lefthook run pre-commit --no-auto-install` |
 
 `CARGO_BUILD_JOBS=4` caps the parallel build jobs for memory reasons; `lefthook.yml` runs cargo
@@ -38,21 +37,27 @@ the same way in both hooks.
 
 The minimum supported Rust version is declared per crate, not once for the workspace:
 `crates/kotowari-markdown-schema` declares `rust-version = "1.89"`, and neither `kotowari` nor
-`kotowari-core` declares one. All three are on `edition = "2024"`.
+`kotowari-core` declares one. Schema I/O, mds and `kotowari-markdown-view` declare Rust 1.89. All nine use `edition = "2024"`.
 
 `lefthook.yml` defines the local gates: `pre-commit` runs the secret scan and `kotowari check`,
 and `pre-push` runs the full test suite and `kotowari check` with no exemptions. The mutation
 tests do not run in the hooks; they blocked every push for one to two hours.
 
-The mutation tests run in GitHub Actions, split into eight parallel shards
-(`.github/workflows/mutants-run.yml`). Every pull request runs the mutants in the diff from its
-merge base (`.github/workflows/mutants.yml`), and branch protection on `main` requires that
-workflow's `mutants` job, for administrators too, so `main` only takes commits that passed it.
+The mutation tests run in GitHub Actions, split into sixteen parallel shards
+(`.github/workflows/mutants-run.yml`), each inside a systemd scope capped at 12G of memory and
+300% CPU, with cargo-mutants on the pinned `nightly-2026-10-03` and a per-mutant timeout derived
+from the baseline run. Every pull request runs the mutants in the diff from its merge base
+(`.github/workflows/mutants.yml`), and branch protection on `main` requires that workflow's
+`mutants` job, for administrators too, so `main` only takes commits that passed it. A weekly
+run over the whole code base on `main` (`.github/workflows/mutants-scheduled.yml`) opens an
+issue when it finds survivors; it is not a gate.
 A release runs the mutants in the diff from the product's previous release tag (the whole
 workspace only when there is no previous tag) before building binaries. A miss in code that did
 not change — one created by deleting or weakening the test that caught a mutant there — is not
-caught by either. Run the whole workspace by hand with `scripts/mutants.sh full` when that
-matters. `MUTANTS_JOBS` sets how many mutants run at once; keep the default of 1 locally, since 3
+caught by either gate; the weekly whole run finds it. On a workstation, run only the files whose
+tests are being written (`scripts/mutants.sh full -- -f <path>`), in the background; it needs the
+pinned nightly (`rustup toolchain install nightly-2026-10-03`) and runs inside a user service
+capped at 12G and 400% CPU at the lowest priority. `MUTANTS_JOBS` sets how many mutants run at once; keep the default of 1 locally, since 3
 and 4 were slower on 2026-10-04 and produced a false timeout.
 
 The mutation tests run the whole workspace's test suite once per mutant, so the suite's wall
@@ -100,8 +105,8 @@ The two products carry separate versions, each declared in one place:
 
 | Product | Where the version lives | Declarations that follow it | Tag | Changelog |
 |---|---|---|---|---|
-| `kotowari` (with `kotowari-core` and the skills in `agent/skills/`) | `version` in `[package]` of the root `Cargo.toml` | `version` of `crates/kotowari-core/Cargo.toml`; the `kotowari` and `kotowari-core` entries of `Cargo.lock` | `kotowari-v<version>` | `CHANGELOG.md` |
-| `kotowari-mds` | `version` in `[package]` of `crates/kotowari-markdown-schema/Cargo.toml` | the `kotowari-markdown-schema` entry of `Cargo.lock` | `kotowari-mds-v<version>` | `crates/kotowari-markdown-schema/CHANGELOG.md` (created at the next mds release; until then `kotowari-mds` cannot be released) |
+| `kotowari` | root `Cargo.toml` package version | CLI, kotowari, core, source-analysis and overview manifests/lock entries and incoming dependency versions | `kotowari-v<version>` | `CHANGELOG.md` |
+| `kotowari-mds` | schema `Cargo.toml` package version | schema, schema-io, mds and markdown-view manifests/lock entries and incoming dependency versions, including core-to-schema and overview-to-view | `kotowari-mds-v<version>` | `crates/kotowari-markdown-schema/CHANGELOG.md` |
 
 `scripts/check-versions.sh` exits 1 when a following declaration of either product disagrees
 with that product's version; given a tag, it also checks the tag's version against that product's

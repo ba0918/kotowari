@@ -17,36 +17,26 @@ pub struct QueryResult {
 #[derive(Debug, Serialize)]
 pub struct QueryItem {
     #[serde(flatten)]
-    pub item: ListItem,
-    pub body: Vec<String>,
-    pub referenced_by: Vec<Reference>,
+    pub(crate) item: ListItem,
+    pub(crate) body: Vec<String>,
+    pub(crate) referenced_by: Vec<Reference>,
+}
+impl QueryItem {
+    readonly!(borrow item: ListItem, body: Vec<String>, referenced_by: Vec<Reference>);
 }
 
 /// "referenced_by" の1件（TBL-core-027）
 #[derive(Debug, Clone, Serialize)]
 pub struct Reference {
-    pub id: String,
-    pub kind: &'static str,
-    pub path: String,
-    pub line: usize,
-    pub via: &'static str,
+    pub(crate) id: String,
+    pub(crate) kind: &'static str,
+    pub(crate) path: String,
+    pub(crate) line: usize,
+    pub(crate) via: &'static str,
 }
-
-/// REQ-core-161: 1件ごとに "kotowari list" と同じ1行目と "tests" の行を出し、
-/// 続けて本文の各行を2つの半角空白で字下げし、最後に逆引きの1件ごとの行を出す
-pub fn print_text(result: &QueryResult) {
-    for item in &result.items {
-        list::print_item_text(&item.item);
-        for line in &item.body {
-            println!("  {line}");
-        }
-        for reference in &item.referenced_by {
-            println!(
-                "  <- {} {} {}:{}",
-                reference.id, reference.via, reference.path, reference.line
-            );
-        }
-    }
+impl Reference {
+    readonly!(copy kind: &'static str, line: usize, via: &'static str);
+    readonly!(borrow id: String, path: String);
 }
 
 /// 位置引数と同じ `ID` を持つ`項目`と`シナリオ`を組み立てる（REQ-core-156）。

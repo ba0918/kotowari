@@ -27,9 +27,12 @@ pub struct Equivalent {
 #[derive(Debug, Default)]
 pub struct EquivalentList {
     /// 形の正しい1件
-    pub entries: Vec<Equivalent>,
+    pub(crate) entries: Vec<Equivalent>,
     /// 形の誤った1件への equivalent_invalid（A53: この1件には equivalent_stale を出さない）
-    pub findings: Vec<Finding>,
+    pub(crate) findings: Vec<Finding>,
+}
+impl EquivalentList {
+    readonly!(borrow entries: Vec<Equivalent>, findings: Vec<Finding>);
 }
 
 /// 一覧の中身を読む。`display` は一覧のファイルの`基準のディレクトリ`からの相対パス。

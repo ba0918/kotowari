@@ -696,6 +696,69 @@ fn req_014_invalid_glob_stops() {
     assert!(result.is_err(), "invalid glob should stop");
 }
 
+// @kotowari[REQ-core-014, TBL-core-004]
+#[test]
+fn req_014_overview_files_is_read_as_a_glob_list() {
+    let cfg = kotowari_core::config::Config::parse(
+        "overview:\n  files:\n    - \".kotowari/overview/*.md\"\n",
+    )
+    .expect("overview.files should parse");
+    assert_eq!(
+        cfg.overview.map(|overview| overview.files),
+        Some(vec![".kotowari/overview/*.md".to_string()])
+    );
+}
+
+// @kotowari[REQ-core-013, TBL-core-004]
+#[test]
+fn tbl_core_004_without_the_overview_key_no_overview_data_is_configured() {
+    assert_eq!(kotowari_core::config::Config::default().overview, None);
+    let cfg = kotowari_core::config::Config::parse("ir: docs/ir\n").unwrap();
+    assert_eq!(cfg.overview, None);
+}
+
+// @kotowari[REQ-core-014]
+#[test]
+fn req_014_invalid_overview_glob_stops() {
+    let result = kotowari_core::config::Config::parse("overview:\n  files:\n    - \"[invalid\"\n");
+    assert!(
+        result.is_err(),
+        "invalid glob in overview.files should stop"
+    );
+}
+
+// @kotowari[REQ-core-014, TBL-core-004]
+#[test]
+fn req_014_overview_without_files_or_with_null_stops() {
+    for yaml in [
+        "overview:\n",
+        "overview: {}\n",
+        "overview:\n  files:\n",
+        "overview:\n  files: []\n  extra: 1\n",
+    ] {
+        assert!(
+            kotowari_core::config::Config::parse(yaml).is_err(),
+            "{yaml:?} should stop"
+        );
+    }
+}
+
+// @kotowari[REQ-core-014]
+#[test]
+fn req_014_an_invalid_overview_glob_stops_check_with_a_config_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "overview:\n  files:\n    - \"[invalid\"\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    assert!(output.stdout.is_empty());
+    assert!(String::from_utf8_lossy(&output.stderr).starts_with("config error: "));
+}
+
 // @kotowari[REQ-core-012]
 #[test]
 fn req_012_empty_config_uses_defaults() {

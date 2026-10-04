@@ -1,7 +1,6 @@
 //! "kotowari plan" が計画書を1つ読み、同梱のスキーマで形を検査すること（docs/ir/core/plan.md）
 
 use assert_cmd::Command;
-use kotowari_core::{Cli, parse_args};
 use std::path::Path;
 use tempfile::TempDir;
 
@@ -76,22 +75,6 @@ fn req_core_190_config_pointing_to_a_directory_on_plan_stops() {
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
     std::fs::write(tmp.path().join("a.md"), "# a\n").unwrap();
     assert_argument_error(&["plan", "--config", ".kotowari", "a.md"], tmp.path());
-}
-
-// @kotowari[REQ-core-002]
-#[test]
-fn req_core_002_plan_takes_the_format_before_or_after_the_path() {
-    for list in [
-        ["plan", "--format", "text", "a.md"],
-        ["plan", "a.md", "--format", "text"],
-        ["--format", "text", "plan", "a.md"],
-    ] {
-        let parsed = parse_args(&args(&list));
-        assert!(
-            matches!(parsed, Ok(Cli::Plan { ref path, .. }) if path == Path::new("a.md")),
-            "{list:?}: {parsed:?}"
-        );
-    }
 }
 
 // @kotowari[REQ-core-004]

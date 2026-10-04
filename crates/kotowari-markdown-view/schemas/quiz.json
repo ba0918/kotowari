@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "quiz",
+  "description": "Questions whose answers open when chosen",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "items"
+  ],
+  "properties": {
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "q",
+          "a"
+        ],
+        "properties": {
+          "q": {
+            "type": "string",
+            "minLength": 1
+          },
+          "a": {
+            "type": "string",
+            "minLength": 1
+          },
+          "refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "width": {
+      "enum": [
+        "half"
+      ],
+      "description": "Draw the part at half width beside the next half part"
+    }
+  }
+}

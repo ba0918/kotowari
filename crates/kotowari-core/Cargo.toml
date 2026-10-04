@@ -1,22 +1,31 @@
 [package]
+autotests = false
 name = "kotowari-core"
 version = "0.3.0"
 edition = "2024"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/ba0918/kotowari"
+description = "Pure specification parsing and inspection from owned memory inputs"
 
 [lib]
 name = "kotowari_core"
 path = "src/lib.rs"
 
+[[test]]
+name = "inputs"
+path = "tests/inputs.rs"
+
+[[test]]
+name = "paths"
+path = "tests/paths.rs"
+
 [dependencies]
-kotowari-markdown-schema = { path = "../kotowari-markdown-schema" }
+kotowari-markdown-schema = { path = "../kotowari-markdown-schema", version = "0.1.0" }
 serde = { version = "1", features = ["derive"] }
 serde-saphyr = "1"
 globset = "0.4"
-walkdir = "2"
 serde_json = "1"
-ast-grep-core = "=0.45.3"
-ast-grep-config = "=0.45.3"
-ast-grep-language = "=0.45.3"
 regex = "1"
 sha2 = "0.10"
 markdown = "1"

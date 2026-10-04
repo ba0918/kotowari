@@ -1,5 +1,5 @@
 //! スキル kotowari の references に写した本体の値が、本体のコードと一致することの検査
-//! （REQ-core-125、REQ-core-126、REQ-core-127）と、例の計画書が同梱のスキーマを通ること（REQ-core-195）。
+//! （REQ-core-125、REQ-core-126。REQ-core-127 は src/cli/tests.rs）と、例の計画書が同梱のスキーマを通ること（REQ-core-195）。
 //! 突き合わせる相手は本体のコードが持つ値で、IR の表ではない。
 
 use std::collections::BTreeSet;
@@ -131,21 +131,8 @@ fn req_126_config_reference_setup_yaml_parses_to_the_defaults() {
 }
 
 // --- REQ-core-127: 停止の文言の一致 ---
-
-// @kotowari[REQ-core-127]
-#[test]
-fn req_127_findings_reference_stop_wordings_match_the_code() {
-    let in_reference = first_column_of_table(&read_reference("findings.md"), "Message");
-    // 標準エラーの1行目は StopReason の Display で、詳細の前がこの文言になる
-    let in_code: BTreeSet<String> = kotowari_core::StopReason::WORDINGS
-        .iter()
-        .map(|wording| wording.to_string())
-        .collect();
-    assert_eq!(
-        in_reference, in_code,
-        "the stop wordings in references/findings.md should be exactly the wordings the code prints"
-    );
-}
+// 停止の文言は core、kotowari ライブラリ、CLI の3か所に持つので、3つを読めるバイナリの単体テスト
+// （src/cli/tests.rs）で突き合わせる
 
 // --- REQ-core-195: 例の計画書と同梱のスキーマの一致 ---
 

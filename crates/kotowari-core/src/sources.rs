@@ -1,7 +1,6 @@
 //! 判断の記録の読み取り（節・番号の行・補足の行・リンクの構造。REQ-core-133、REQ-core-135、REQ-core-136、TBL-core-022、TBL-core-023 の定数と走査）と、出典の検査（REQ-core-057〜REQ-core-061, REQ-core-106, TBL-core-012）
 
 use crate::{Finding, FindingKind};
-use std::path::Path;
 
 /// `判断の記録` の `補足の行` の値にあるリンク（"[文字](href)"。TBL-core-023）
 #[derive(Debug, Clone)]
@@ -28,6 +27,8 @@ pub struct FieldLine {
 pub struct NumberedLine {
     /// 決定の番号（"A26" など）
     pub number: String,
+    /// 決定の番号より後の文字（前後の空白を除く）
+    pub text: String,
     /// 1始まりの行番号
     pub line: usize,
     /// この行に付く `補足の行`
@@ -235,6 +236,7 @@ pub fn parse_records_file(rel_path: &str, content: &str) -> RecordsFile {
         if let Some(number) = number_of_line(rest) {
             sections[section].numbered_lines.push(NumberedLine {
                 number: number.to_string(),
+                text: rest[number.len()..].trim().to_string(),
                 line: line_number,
                 fields: Vec::new(),
             });
@@ -337,13 +339,27 @@ pub struct SourceContext {
 impl SourceContext {
     /// 出典1つを検査する
     pub fn check_source(&self, source: &str) -> Result<(), String> {
-        let (raw_path, anchor) = split_source(source).ok_or_else(|| source.to_string())?;
+        self.resolve(source)
+            .map(|_| ())
+            .ok_or_else(|| source.to_string())
+    }
+
+    /// 出典が指す先（TBL-core-012）。指す先が無ければ None
+    pub fn resolve(&self, source: &str) -> Option<ResolvedSource> {
+        let (raw_path, anchor) = split_source(source)?;
         // 絶対パスは出典として不正
         if raw_path.starts_with('/') || raw_path.starts_with('\\') {
-            return Err(source.to_string());
+            return None;
         }
         let path_normalized = crate::normalize_path(raw_path);
         let path = path_normalized.as_str();
+        let found = |decision| {
+            Some(ResolvedSource {
+                path: path.to_string(),
+                anchor: anchor.to_string(),
+                decision,
+            })
+        };
 
         // パスが records の中か adr の中かを判定（置き場が空 = 基準の直下なら何でも中。REQ-core-110）
         // 両方に当たるときは長い置き場を採る（"." の置き場の下に別の置き場があるとき）
@@ -359,10 +375,6 @@ impl SourceContext {
             (in_records_raw, in_adr_raw)
         };
 
-        if !in_records && !in_adr {
-            return Err(source.to_string());
-        }
-
         if in_records {
             // records 内のファイルを探す
             if let Some(rf) = self.records_files.iter().find(|rf| {
@@ -373,9 +385,9 @@ impl SourceContext {
                 if rf.is_records {
                     // 判断の記録: 印は決定の番号
                     if is_decision_number(anchor) && rf.has_decision_number(anchor) {
-                        return Ok(());
+                        return found(true);
                     }
-                    return Err(source.to_string());
+                    return None;
                 }
             }
 
@@ -385,12 +397,10 @@ impl SourceContext {
                 full_path == path
             }) {
                 if of.headings.iter().any(|h| h == anchor) {
-                    return Ok(());
+                    return found(false);
                 }
-                return Err(source.to_string());
             }
-
-            return Err(source.to_string());
+            return None;
         }
 
         if in_adr {
@@ -398,17 +408,97 @@ impl SourceContext {
             if let Some(of) = self.adr_files.iter().find(|of| {
                 let full_path = crate::join_display_path(&self.adr_path, &of.rel_path);
                 full_path == path
-            }) {
-                if of.headings.iter().any(|h| h == anchor) {
-                    return Ok(());
-                }
-                return Err(source.to_string());
+            }) && of.headings.iter().any(|h| h == anchor)
+            {
+                return found(false);
             }
-            return Err(source.to_string());
         }
-
-        Err(source.to_string())
+        None
     }
+}
+
+/// 出典が指す先の場所（TBL-core-012）
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResolvedSource {
+    /// 基準のディレクトリからの相対パス（正規化したもの）
+    pub path: String,
+    /// "#" の後
+    pub anchor: String,
+    /// 判断の記録の決定の番号を指すか。偽なら判断の記録でない Markdown の見出しを指す
+    pub decision: bool,
+}
+
+/// 出典が指す先とその中身（TBL-core-039 の本文と状態の元）
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SourceTarget {
+    /// 判断の記録の決定の`番号の行`
+    Decision {
+        path: String,
+        number: String,
+        /// `決定の番号`より後の文字
+        text: String,
+        /// 値の空でない "- superseded_by:" の行を持つか（REQ-core-133 と同じく空の値は無いものと数える）
+        superseded: bool,
+    },
+    /// 判断の記録でない Markdown のファイルの "## " の見出し
+    Heading {
+        path: String,
+        heading: String,
+        /// その見出しから次の "## " の見出しまでの空でない行（コードブロックの中を含む）
+        lines: Vec<String>,
+    },
+}
+
+impl SourceTarget {
+    pub(crate) fn read(resolved: ResolvedSource, text: &str) -> Option<Self> {
+        if resolved.decision {
+            let file = parse_records_file(&resolved.path, text);
+            let line = file
+                .sections
+                .iter()
+                .filter(|section| DECISION_SECTIONS.contains(&section.name.as_str()))
+                .flat_map(|section| &section.numbered_lines)
+                .find(|line| line.number == resolved.anchor)?;
+            Some(Self::Decision {
+                path: resolved.path,
+                number: resolved.anchor,
+                text: line.text.clone(),
+                superseded: line
+                    .fields
+                    .iter()
+                    .any(|field| field.name == "superseded_by" && !field.value.is_empty()),
+            })
+        } else {
+            Some(Self::Heading {
+                lines: heading_lines(text, &resolved.anchor),
+                path: resolved.path,
+                heading: resolved.anchor,
+            })
+        }
+    }
+}
+
+/// "## " の見出しの節の空でない行。見出しはコードブロックの外のものだけを数える（A47）
+fn heading_lines(content: &str, heading: &str) -> Vec<String> {
+    let mut lines = Vec::new();
+    let mut inside = false;
+    let mut fence: Option<crate::ir::CodeFence> = None;
+    for line in crate::ir::split_lines(content) {
+        if let Some(open) = &fence {
+            if crate::ir::is_closing_fence(line, open) {
+                fence = None;
+            }
+        } else if let Some(open) = crate::ir::parse_opening_fence(line) {
+            fence = Some(open);
+        } else if let Some(text) = line.trim().strip_prefix("## ") {
+            inside = text.trim() == heading;
+            continue;
+        }
+        if inside && !line.trim().is_empty() {
+            lines.push(line.trim_end().to_string());
+        }
+    }
+    lines
 }
 
 /// パスが置き場の下にあるか。置き場が空（"." を正規化したもの）なら基準の直下なので常に真
@@ -419,111 +509,50 @@ pub fn is_under_place(path: &str, place: &str) -> bool {
             && path.as_bytes()[place.len()] == b'/')
 }
 
-/// 判断の記録と ADR の置き場を読み、出典の検査コンテキストを構築する
-pub fn build_context(
-    base: &Path,
+pub fn context_from_entries<'a>(
     config: &crate::config::Config,
-) -> Result<SourceContext, crate::StopReason> {
-    let records_dir = base.join(&config.decisions.records);
-    let adr_dir = base.join(&config.decisions.adr);
-
+    records: impl IntoIterator<Item = (&'a str, &'a str)>,
+    adr: impl IntoIterator<Item = (&'a str, &'a str)>,
+) -> SourceContext {
+    let records_path = crate::normalize_path(&config.decisions.records);
+    let adr_path = crate::normalize_path(&config.decisions.adr);
+    let relative = |path: &str, place: &str| {
+        if place.is_empty() {
+            path.to_owned()
+        } else {
+            path.strip_prefix(&format!("{place}/"))
+                .unwrap_or(path)
+                .to_owned()
+        }
+    };
     let mut records_files = Vec::new();
     let mut records_other_files = Vec::new();
-    let mut adr_files = Vec::new();
-
-    // records ディレクトリを読む。判断の記録とそれ以外のファイルに分ける
-    if records_dir.is_dir() {
-        for_each_md(
-            &records_dir,
-            "",
-            &config.decisions.records,
-            &mut |rel, content| {
-                let rf = parse_records_file(&rel, content);
-                if rf.is_records {
-                    records_files.push(rf);
-                } else {
-                    records_other_files.push(OtherFile {
-                        rel_path: rel,
-                        headings: rf.headings,
-                    });
-                }
-            },
-        )?;
+    for (path, text) in records {
+        let file = parse_records_file(&relative(path, &records_path), text);
+        if file.is_records {
+            records_files.push(file);
+        } else {
+            records_other_files.push(OtherFile {
+                rel_path: file.rel_path,
+                headings: file.headings,
+            });
+        }
     }
-
-    // adr ディレクトリを読む
-    if adr_dir.is_dir() {
-        for_each_md(&adr_dir, "", &config.decisions.adr, &mut |rel, content| {
-            adr_files.push(parse_other_file(&rel, content));
-        })?;
-    }
-
-    Ok(SourceContext {
-        records_path: config.decisions.records.clone(),
-        adr_path: config.decisions.adr.clone(),
+    let adr_files = adr
+        .into_iter()
+        .map(|(path, text)| parse_other_file(&relative(path, &adr_path), text))
+        .collect();
+    SourceContext {
+        records_path,
+        adr_path,
         records_files,
         adr_files,
         records_other_files,
-    })
-}
-
-/// 置き場の下の .md をファイル名の順に深さ優先で読み、置き場からの相対パスと中身を visit に渡す
-fn for_each_md(
-    dir: &Path,
-    prefix: &str,
-    config_key: &str,
-    visit: &mut dyn FnMut(String, &str),
-) -> Result<(), crate::StopReason> {
-    let unreadable =
-        |e: std::io::Error| crate::StopReason::UnreadableFile(format!("{config_key}: {e}"));
-    let mut sorted = std::fs::read_dir(dir)
-        .map_err(unreadable)?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(unreadable)?;
-    sorted.sort_by_key(|e| e.file_name());
-
-    for entry in sorted {
-        let path = entry.path();
-        let name = entry.file_name().to_string_lossy().to_string();
-        let rel = if prefix.is_empty() {
-            name.clone()
-        } else {
-            format!("{prefix}/{name}")
-        };
-
-        let ft = entry.file_type().map_err(|e| {
-            let display = crate::join_display_path(config_key, &rel);
-            crate::StopReason::UnreadableFile(format!("{display}: {e}"))
-        })?;
-        // A102: ファイルのシンボリックリンクは読む。ディレクトリのリンクは辿らない。
-        // A146: 先の無いリンクは読めないファイルとして停止する
-        let (is_dir, is_file) = if ft.is_symlink() {
-            let meta = std::fs::metadata(&path).map_err(|e| {
-                let display = crate::join_display_path(config_key, &rel);
-                crate::StopReason::UnreadableFile(format!("{display}: {e}"))
-            })?;
-            (false, meta.is_file())
-        } else {
-            (ft.is_dir(), ft.is_file())
-        };
-        if is_dir {
-            // 除外: 隠しディレクトリは辿らない（CONTEXT.md の除外）
-            if name.starts_with('.') {
-                continue;
-            }
-            for_each_md(&path, &rel, config_key, visit)?;
-        } else if is_file && path.extension().is_some_and(|ext| ext == "md") {
-            let display = crate::join_display_path(config_key, &rel);
-            let content = crate::read_utf8_file(&path, &display)?;
-
-            visit(rel, &content);
-        }
     }
-    Ok(())
 }
 
 /// 出典を検査して Finding に追加する
-pub(crate) fn check_sources_with_duplicates(
+pub fn check_sources_with_duplicates(
     docs: &[crate::ir::IrDocument],
     ctx: &SourceContext,
     ir_path: &str,

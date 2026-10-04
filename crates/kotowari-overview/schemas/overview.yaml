@@ -1,0 +1,15 @@
+# 全体像の元データの Markdown としての形（docs/ir/core/overview-data.md の TBL-core-038）
+#
+# 題名はちょうど1つ。題名の後で最初の "## " より前には部品（情報文字列が "view" で始まるフェンス）と
+# HTML のコメントだけを置ける。節の見出しの文字は全体像ごとに自由なので節は宣言せず、開いた世界で
+# 節の中の文、箇条書き、番号付きの一覧、表、コードブロック、HTML のコメント、"### " の見出しを許す。
+# 深さ4以上の見出しは開いた世界でも指摘になる。frontmatter は Markdown の形の外なので、
+# kotowari-overview が別に検査する。
+name: overview
+open: true
+document:
+  title: {}
+  preamble:
+    codeblock:
+      lang: view
+      repeat: { min: 0 }

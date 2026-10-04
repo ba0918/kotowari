@@ -9,10 +9,14 @@
 #                                                            リリースの CI がタグから範囲を決めるのに使う）
 #
 # 環境変数:
+#   MUTANTS_TOOLCHAIN   cargo-mutants を動かす日付つきの nightly（既定 nightly-2026-10-03）
+#   MUTANTS_CPU_QUOTA   境界の CPU の上限（既定 400%）。MUTANTS_BUILD_JOBS はその中のビルドの並列数（既定 4）
 #   MUTANTS_JOBS     同時に回す変異の数（既定 1。手元で3や4に上げると、写しのビルドが CPU を取り合って
 #                    遅くなり、偽の時間切れも出た。判断の記録 docs/decision/records/2026-10-04-mutants-in-ci.md の A6）
-#   MUTANTS_SERVICE  systemd（既定。メモリ上限つきのユーザーのサービスで回す）か none（そのまま回す。
-#                    ユーザーの systemd が無い CI のランナー用）
+#   MUTANTS_SERVICE  systemd（既定。メモリ上限つきのユーザーのサービスで回す）、scope（sudo の
+#                    systemd-run でメモリ上限つきのスコープに入れて回す。ユーザーの systemd が無い
+#                    CI のランナー用。判断の記録 docs/decision/records/2026-10-04-mutants-in-ci.md の A11）
+#                    か none（上限なしでそのまま回す）
 #
 # 見逃し0件の関門は PR とリリースの CI が持つ（判断の記録
 # docs/decision/records/2026-10-04-mutants-in-ci.md の A1〜A6）。手元では好きなときに回す。
@@ -35,6 +39,11 @@ readonly STOP_TRIES=20
 readonly STOP_INTERVAL=0.3
 readonly JOBS="${MUTANTS_JOBS:-1}"
 readonly SERVICE="${MUTANTS_SERVICE:-systemd}"
+# 日付で固定した nightly（判断の記録 docs/decision/records/2026-10-04-mutants-in-ci.md の A16）
+readonly TOOLCHAIN="${MUTANTS_TOOLCHAIN:-nightly-2026-10-03}"
+# 境界の CPU の上限と、その中のビルドの並列数（同じ記録の A15）
+readonly CPU_QUOTA="${MUTANTS_CPU_QUOTA:-400%}"
+readonly BUILD_JOBS="${MUTANTS_BUILD_JOBS:-4}"
 
 watchdog_pid=""
 kill_count_file=""
@@ -202,8 +211,8 @@ run_mutants() {
     '' | *[!0-9]* | 0) die "MUTANTS_JOBS must be a positive integer: $JOBS" ;;
     esac
     case "$SERVICE" in
-    systemd | none) ;;
-    *) die "MUTANTS_SERVICE must be systemd or none: $SERVICE" ;;
+    systemd | scope | none) ;;
+    *) die "MUTANTS_SERVICE must be systemd, scope or none: $SERVICE" ;;
     esac
 
     start_watchdog
@@ -214,22 +223,35 @@ run_mutants() {
     # --test-workspace=true: 既定では変異を入れた crate のテストしか走らない。kotowari-core の
     # 振る舞いを確かめるテストの大半はルートの crate の tests/ にあるので、これが無いと
     # kotowari-core の変異がほぼすべて見逃しになる
-    local -a mutants_command=(cargo +nightly mutants -j "$JOBS" --no-config --workspace --test-workspace=true -o . "$@")
+    # 境界の中から、所属する cgroup とメモリと CPU の上限を最初に出す（A15）。"max" は上限が無いこと
+    local -a mutants_command=(sh -c 'g="/sys/fs/cgroup$(cut -d: -f3 /proc/self/cgroup)"
+echo "mutants.sh: cgroup $g memory.max $(cat "$g/memory.max" 2>/dev/null) cpu.max $(cat "$g/cpu.max" 2>/dev/null)"
+exec "$@"' sh
+        cargo "+$TOOLCHAIN" mutants -j "$JOBS" --no-config --workspace --all-features --test-workspace=true -o . "$@")
     if [ "$SERVICE" = systemd ]; then
         # この実行だけの名前を付ける。中断されたとき cleanup がこの名前でサービスを止める
         run_unit="kotowari-mutants-$$"
         systemd-run --user --wait --collect --pipe --unit="$run_unit" \
             -p MemoryMax=12G -p MemorySwapMax=0 -p OOMPolicy=continue \
+            -p CPUQuota="$CPU_QUOTA" -p Nice=19 -p IOSchedulingClass=idle \
             --setenv=PATH="$PATH" \
             --setenv=HOME="$HOME" \
             --setenv=CARGO_UNSTABLE_CHECKSUM_FRESHNESS=true \
-            --setenv=CARGO_BUILD_JOBS=4 \
+            --setenv=CARGO_BUILD_FINGERPRINT=content \
+            --setenv=CARGO_BUILD_JOBS="$BUILD_JOBS" \
             --setenv=TMPDIR="$run_tmpdir" \
             --working-directory="$PWD" \
             -- "${mutants_command[@]}" </dev/null &
-    else
-        CARGO_UNSTABLE_CHECKSUM_FRESHNESS=true CARGO_BUILD_JOBS=4 TMPDIR="$run_tmpdir" \
+    elif [ "$SERVICE" = scope ]; then
+        # sudo は PATH を入れ替えるので、env で今の値を渡し直す。スコープの中は呼んだ利用者で動かす
+        sudo systemd-run --scope --quiet --uid="$(id -u)" --gid="$(id -g)" \
+            -p MemoryMax=12G -p MemorySwapMax=0 -p OOMPolicy=continue -p CPUQuota="$CPU_QUOTA" \
+            -- env PATH="$PATH" HOME="$HOME" CARGO_UNSTABLE_CHECKSUM_FRESHNESS=true \
+            CARGO_BUILD_FINGERPRINT=content CARGO_BUILD_JOBS="$BUILD_JOBS" TMPDIR="$run_tmpdir" \
             "${mutants_command[@]}" </dev/null &
+    else
+        CARGO_UNSTABLE_CHECKSUM_FRESHNESS=true CARGO_BUILD_FINGERPRINT=content \
+            CARGO_BUILD_JOBS="$BUILD_JOBS" TMPDIR="$run_tmpdir" "${mutants_command[@]}" </dev/null &
     fi
     run_pid=$!
     wait "$run_pid" || status=$?
@@ -247,15 +269,20 @@ run_mutants() {
     esac
 
     if [ ! -f "$RESULTS" ]; then
-        # 差分に Rust のソースが無いとき、cargo-mutants は結果のファイルを作らずに0で終わる
-        if [ "$status" -eq 0 ]; then
-            return 0
-        fi
-        die "the mutation testing tool wrote no result file (exit $status)"
+        # 候補が0件のとき、cargo-mutants は結果のファイルを作らずに0で終わる。同じ範囲と分担で
+        # 候補を並べ直し、成功して0件のときだけ通す（A17）
+        [ "$status" -eq 0 ] || die "the mutation testing tool wrote no result file (exit $status)"
+        local listed
+        listed="$(CARGO_UNSTABLE_CHECKSUM_FRESHNESS=true CARGO_BUILD_FINGERPRINT=content \
+            cargo "+$TOOLCHAIN" mutants --list --no-config --workspace --all-features "$@" </dev/null)" \
+            || die 'the mutation testing tool wrote no result file and could not list the candidates'
+        [ -z "$listed" ] || die 'the mutation testing tool wrote no result file although candidates exist'
+        printf 'mutants.sh: no candidates in this scope\n'
+        return 0
     fi
 
     # 見逃しや時間切れで止めるかどうかは kotowari の側で決める（上の 2 と 3 では止めない）
-    CARGO_BUILD_JOBS=4 cargo run -q -- mutants --tool cargo-mutants --format text "$RESULTS"
+    CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-cli --bin kotowari -- mutants --tool cargo-mutants --format text "$RESULTS"
 }
 
 run_diff() {

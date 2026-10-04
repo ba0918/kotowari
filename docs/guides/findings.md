@@ -17,7 +17,7 @@
 
 ## 種類の一覧
 
-<!-- @kotowari[TBL-core-008:ffbd0335, TBL-core-009:e42a4a68, TBL-core-019:126b34ea, REQ-core-027:6e77baf3] -->
+<!-- @kotowari[TBL-core-008:4eb267cb, TBL-core-009:e42a4a68, TBL-core-019:508f1afa, REQ-core-027:d02224c9] -->
 
 「行」の列は、指摘の `line` が指す行です。
 「なし」は文書全体への指摘で、`line` は null、text では `-` になります。
@@ -71,6 +71,14 @@
 | `invalid_plan` | 誤り | スキーマの側の種類と詳細を `: ` でつないだもの | スキーマの側が出した行 | [mutants と plan](#mutants-と-plan) |
 | `surface_without_spec` | 誤り | `面の種類 面の名前` | 面の節の最初の行 | [面の検査](#面の検査) |
 | `surface_unspecified_invalid` | 誤り | 一覧に書かれたままの `kind` と `name` を半角空白1つで区切ったもの | なし | [面の検査](#面の検査) |
+| `overview_form_invalid` | 誤り | kotowari-markdown-schema の指摘の種類の名前。frontmatter の違反では `frontmatter` | その行。文書全体にかかるものはなし | [全体像の元データ](../ir/core/overview-data.md) |
+| `overview_part_unknown` | 誤り | 部品の種類の名前 | 部品のフェンスの開始の行 | [全体像の元データ](../ir/core/overview-data.md) |
+| `overview_part_invalid` | 誤り | 部品の種類の名前、半角空白1つ、合わなかった場所（値の全体は `(root)`、YAML として読めないときは `(yaml)`） | 部品のフェンスの開始の行 | [全体像の元データ](../ir/core/overview-data.md) |
+| `overview_lead_missing` | 誤り | 文書名（ディレクトリを除いたファイル名） | なし | [全体像の元データ](../ir/core/overview-data.md) |
+| `overview_ir_missing` | 誤り | `ir` の1件の文字 | なし | [全体像の元データ](../ir/core/overview-data.md) |
+| `overview_ir_shared` | 誤り | 2つ以上の全体像の元データの `ir` にある IR の文書のパス | なし | [全体像の元データ](../ir/core/overview-data.md) |
+| `overview_ref_unresolved` | 誤り | 参照の文字 | 部品のフェンスの開始の行 | [全体像の元データ](../ir/core/overview-data.md) |
+| `overview_name_conflict` | 誤り | `.md` を除いたファイル名 | なし | [全体像の元データ](../ir/core/overview-data.md) |
 | `too_many_lines` | 注意 | 行数 | なし | [文書の大きさ](#文書の大きさ) |
 | `too_many_requirements` | 注意 | 要求の数 | なし | [文書の大きさ](#文書の大きさ) |
 | `mutant_timeout` | 注意 | 変更の説明 | 変異の結果の行 | [mutants と plan](#mutants-と-plan) |

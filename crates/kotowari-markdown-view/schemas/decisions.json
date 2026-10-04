@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "decisions",
+  "description": "A tree of decisions from the root decisions down, each labelled with who decided",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "roots"
+  ],
+  "properties": {
+    "roots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "width": {
+      "enum": [
+        "half"
+      ],
+      "description": "Draw the part at half width beside the next half part"
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ref",
+        "text",
+        "by"
+      ],
+      "properties": {
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "by": {
+          "type": "string",
+          "minLength": 1
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        }
+      }
+    }
+  }
+}
