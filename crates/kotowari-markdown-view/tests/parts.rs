@@ -532,3 +532,54 @@ fn req_view_003_the_characters_of_field_values_are_drawn_as_text_not_markup() {
         assert!(!drawn.contains(raw), "{raw} is written as markup");
     }
 }
+
+// @kotowari[REQ-view-011, TBL-view-001]
+#[test]
+fn tbl_view_001_the_four_status_badges_are_drawn_distinguishably() {
+    let states = ["決定", "予定", "未決", "取り下げ"];
+    // 札の文字を除いても残る違いが、見た目の違いである
+    let drawn: Vec<String> = states
+        .iter()
+        .map(|state| {
+            draw("status", json!({"items": [{"state": state, "text": "文"}]})).replace(state, "")
+        })
+        .collect();
+    let first = drawn[0].as_bytes();
+    let prefix = (0..first.len())
+        .take_while(|&at| {
+            drawn
+                .iter()
+                .all(|other| other.as_bytes().get(at) == first.get(at))
+        })
+        .count();
+    let suffix = (0..first.len() - prefix)
+        .take_while(|&back| {
+            drawn.iter().all(|other| {
+                let other = other.as_bytes();
+                other.len() > prefix + back
+                    && other[other.len() - 1 - back] == first[first.len() - 1 - back]
+            })
+        })
+        .count();
+    let differences: Vec<&str> = drawn
+        .iter()
+        .map(|text| &text[prefix..text.len() - suffix])
+        .collect();
+    let style = render(&RenderInput::default())
+        .into_iter()
+        .find(|page| page.name == "style.css")
+        .unwrap()
+        .content;
+    for (index, difference) in differences.iter().enumerate() {
+        assert!(!difference.is_empty(), "{}", states[index]);
+        // 違いはページが使う共通のスタイルが見た目を与えるものである
+        assert!(
+            style.contains(difference),
+            "{}: {difference}",
+            states[index]
+        );
+        for other in &differences[index + 1..] {
+            assert_ne!(difference, other);
+        }
+    }
+}
