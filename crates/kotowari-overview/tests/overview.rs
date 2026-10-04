@@ -240,6 +240,26 @@ fn ex_core_468_a_missing_ir_document_and_one_shared_by_two_overviews_are_errors(
     );
 }
 
+// @kotowari[REQ-core-284, REQ-core-281]
+#[test]
+fn req_core_284_a_valid_ir_list_is_checked_beside_other_frontmatter_violations() {
+    let model = model();
+    let text = format!(
+        "---\nir:\n  - docs/ir/core/cli.md\n  - docs/ir/core/none.md\ntitle: x\n---\n\n# a\n\n{LEAD}"
+    );
+    let overview = run(&model, &[(A, &text)]);
+    assert_eq!(of_kind(&overview, "overview_form_invalid").len(), 1);
+    assert_eq!(
+        of_kind(&overview, "overview_ir_missing"),
+        [(
+            A.into(),
+            None,
+            "overview_ir_missing".into(),
+            "docs/ir/core/none.md".into()
+        )]
+    );
+}
+
 // @kotowari[REQ-core-284]
 #[test]
 fn req_core_284_only_topic_documents_count_as_ir_documents() {

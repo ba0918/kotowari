@@ -35,7 +35,8 @@ impl Form {
     }
 }
 
-/// frontmatter の "ir" の一覧と、形の違反。違反があれば一覧は None。
+/// frontmatter の "ir" の一覧と、形の違反。一覧は "ir" そのものが1件以上の文字列の一覧のときだけ返し、
+/// ほかの鍵の違反があっても返す（REQ-core-284 の検査を続けるため）。
 /// frontmatter の違反には kotowari-markdown-schema の指摘の種類のうち、意味の近い名前を使う
 pub(crate) fn frontmatter(yaml: Option<&str>) -> (Option<Vec<String>>, Vec<FormFinding>) {
     let missing = (None, FindingKind::MissingRequiredField.as_str());
@@ -73,11 +74,7 @@ pub(crate) fn frontmatter(yaml: Option<&str>) -> (Option<Vec<String>>, Vec<FormF
             None
         }
     };
-    if findings.is_empty() {
-        (ir, findings)
-    } else {
-        (None, findings)
-    }
+    (ir, findings)
 }
 
 #[cfg(test)]
