@@ -132,3 +132,43 @@ fn req_view_006_the_lead_follows_the_title_and_sections_keep_their_order() {
     let second = position(&text, "後の節");
     assert!(title < lead && lead < first && first < second);
 }
+
+fn one_section_page(blocks: Vec<Block>) -> String {
+    let input = RenderInput {
+        documents: vec![document("a", "題名", vec![section("節", blocks)])],
+        references: vec![],
+    };
+    page(&render(&input), "a.html").to_string()
+}
+
+// @kotowari[EX-view-003, REQ-view-007]
+#[test]
+fn ex_view_003_raw_html_is_text_and_comments_are_dropped() {
+    let text = one_section_page(vec![Block::Markdown(
+        "前の文\n\n<script>x</script>\n\n<!-- @kotowari[REQ-core-001:00000000] -->\n\n後の文 <!-- inline --> 続き\n"
+            .into(),
+    )]);
+    assert!(!text.contains("<script>"));
+    assert!(text.contains("&lt;script&gt;"));
+    assert!(!text.contains("@kotowari["));
+    assert!(!text.contains("inline"));
+    assert!(text.contains("後の文"));
+}
+
+// @kotowari[REQ-view-007]
+#[test]
+fn req_view_007_markdown_text_follows_commonmark_and_gfm_tables() {
+    let text = one_section_page(vec![Block::Markdown(
+        "### 小見出し\n\n- 項目\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n`code` と **強調**\n".into(),
+    )]);
+    for needle in [
+        "<h3>小見出し</h3>",
+        "<li>項目</li>",
+        "<table>",
+        "<td>2</td>",
+        "<code>code</code>",
+        "<strong>強調</strong>",
+    ] {
+        assert!(text.contains(needle), "{needle}");
+    }
+}
