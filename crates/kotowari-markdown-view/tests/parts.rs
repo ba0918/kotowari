@@ -407,3 +407,63 @@ fn req_view_003_a_value_that_does_not_fit_is_drawn_without_reporting() {
     );
     assert!(text.contains("</html>"));
 }
+
+// @kotowari[EX-view-006, REQ-view-010, REQ-view-003]
+#[test]
+fn ex_view_006_pages_with_every_kind_load_nothing_from_outside() {
+    let blocks = examples()
+        .into_iter()
+        .map(|(kind, value)| part(kind, value))
+        .collect();
+    let references = vec![Reference {
+        key: "REQ-x-001".into(),
+        label: "REQ-x-001".into(),
+        body: "本文".into(),
+        state: ReferenceState::Current,
+    }];
+    let input = RenderInput {
+        documents: vec![Document {
+            name: "a".into(),
+            title: "題名".into(),
+            lead: lead(),
+            sections: vec![Section {
+                heading: "節".into(),
+                stale: true,
+                blocks,
+            }],
+        }],
+        references,
+    };
+    for page in render(&input) {
+        let text = page.content.to_lowercase();
+        for scheme in ["http://", "https://"] {
+            for attribute in ["src=\"", "href=\""] {
+                assert!(
+                    !text.contains(&format!("{attribute}{scheme}")),
+                    "{}: {attribute}{scheme}",
+                    page.name
+                );
+            }
+        }
+        assert!(!text.contains("@import"), "{}", page.name);
+        assert!(!text.contains("url("), "{}", page.name);
+    }
+}
+
+// @kotowari[REQ-view-010]
+#[test]
+fn req_view_010_markdown_text_cannot_make_the_page_load_images_scripts_or_styles() {
+    let text = page_with(
+        vec![Block::Markdown(
+            "![図](https://example.com/a.png)\n\n<img src=\"https://example.com/b.png\">\n\n<link rel=\"stylesheet\" href=\"https://example.com/c.css\">\n\n<style>@import url(https://example.com/d.css);</style>\n"
+                .into(),
+        )],
+        vec![],
+    );
+    let start = text.find("<main").unwrap();
+    let main = &text[start..];
+    for tag in ["<img", "<script", "<link", "<style", "<iframe"] {
+        assert!(!main.contains(tag), "{tag}");
+    }
+    assert!(!main.contains("src=\""));
+}
