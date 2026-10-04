@@ -44,7 +44,7 @@
         {
           "path": "lefthook.yml",
           "before": "sha256:2837e92c840e335d40b7e9f1f3a77dcf397a56bb36974ffebe57955f8b8810ac",
-          "after": "sha256:c40348e6e36c80331b08f041db5a2b2731dfcb476ee490a1e80865eaf9e395e6"
+          "after": "sha256:4c10f27d3c64f9957151f0ab4e5bd0bc8e7b7c21c30195064d8c2aac981ef79a"
         },
         {
           "path": "scripts/mutants.sh",
@@ -59,7 +59,7 @@
       ],
       "ir": [],
       "conclusion": "new",
-      "reason": "変異テストを pre-push から外し、PR（マージ基準からの差分）とリリース（同じ製品の1つ前のタグからの差分、無ければ全体）の GitHub Actions で8分割して回す。見逃しの判定は従来どおり scripts/mutants.sh が kotowari mutants に読ませて行い、等価の一覧と mutants::skip の検査、設定を読まない実行は変えない。手元の既定の同時実行数は測定の結果1のまま。関門の設定は IR に書かない決まり（A8）なので IR は変えない。",
+      "reason": "変異テストを pre-push から外し、PR（マージ基準からの差分）とリリース（同じ製品の1つ前のタグからの差分、無ければ全体）の GitHub Actions で8分割して回す。見逃しの判定は従来どおり scripts/mutants.sh が kotowari mutants に読ませて行い、等価の一覧と mutants::skip の検査、設定を読まない実行は変えない。手元の既定の同時実行数は測定の結果1のまま。関門の設定は IR に書かない決まり（A8）なので IR は変えない。 pre-push のテストの前に GIT_ で始まる環境変数を外す。worktree からの push で git がフックに渡す GIT_DIR がテストに引き継がれ、本物のリポジトリを書き換えたため（使い捨てのリポジトリを GIT_DIR に指して再現し、外すと書き換わらないことを確かめた）。",
       "requirements": [],
       "decisions": [
         "docs/decision/records/2026-10-04-mutants-in-ci.md#A1",
