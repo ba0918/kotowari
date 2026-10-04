@@ -13,15 +13,19 @@ import tarfile
 import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
-PATHS = {name: Path("crates") / name for name in ["kotowari-markdown-schema", "kotowari-core", "kotowari-markdown-schema-io", "kotowari-source-analysis", "kotowari-mds", "kotowari"]}
+PATHS = {name: Path("crates") / name for name in ["kotowari-markdown-schema", "kotowari-core", "kotowari-markdown-schema-io", "kotowari-markdown-view", "kotowari-source-analysis", "kotowari-overview", "kotowari-mds", "kotowari"]}
 PATHS["kotowari-cli"] = Path(".")
 EDGES = {
     "kotowari-markdown-schema": set(), "kotowari-core": {"kotowari-markdown-schema"},
     "kotowari-markdown-schema-io": {"kotowari-markdown-schema"}, "kotowari-source-analysis": {"kotowari-core"},
     "kotowari-mds": {"kotowari-markdown-schema", "kotowari-markdown-schema-io"},
-    "kotowari": {"kotowari-core", "kotowari-source-analysis"}, "kotowari-cli": {"kotowari"},
+    "kotowari-markdown-view": set(),
+    "kotowari-overview": {"kotowari-core", "kotowari-markdown-schema", "kotowari-markdown-view"},
+    "kotowari": {"kotowari-core", "kotowari-source-analysis", "kotowari-overview"}, "kotowari-cli": {"kotowari"},
 }
-SCHEMA = {"kotowari-markdown-schema", "kotowari-markdown-schema-io", "kotowari-mds"}
+SCHEMA = {"kotowari-markdown-schema", "kotowari-markdown-schema-io", "kotowari-mds", "kotowari-markdown-view"}
+# Registry crates a usage example needs besides the package it shows
+EXAMPLE_EXTRAS = {"kotowari-markdown-view": ['serde_json = "1"']}
 def series_version(name):
     authority = PATHS["kotowari-markdown-schema"] if name in SCHEMA else PATHS["kotowari-cli"]
     return tomllib.loads((ROOT / authority / "Cargo.toml").read_text())["package"]["version"]
@@ -32,6 +36,8 @@ def consumer_manifest(name, dependencies, asynchronous=False):
     for dependency in dependencies:
         features = ', features = ["tokio"]' if asynchronous else ''
         content += f'{dependency} = {{version = "={series_version(dependency)}"{features}}}\n'
+    for extra in EXAMPLE_EXTRAS.get(name, []):
+        content += extra + '\n'
     if asynchronous:
         content += 'tokio = {version = "1.53.1", features = ["rt-multi-thread"]}\n[features]\ndefault = ["tokio"]\ntokio = []\n'
     return content
@@ -64,7 +70,7 @@ def dependency_tables(manifest):
             yield section.get(key, {})
 
 def validate_manifests(manifests):
-    if set(manifests) != set(PATHS): raise ValueError("workspace membership differs from the seven-package contract")
+    if set(manifests) != set(PATHS): raise ValueError("workspace membership differs from the nine-package contract")
     for name, manifest in manifests.items():
         package = manifest["package"]
         if package["name"] != name or package["version"] != series_version(name): raise ValueError(f"wrong version: {name}")
@@ -167,7 +173,7 @@ def main():
         checksum_entry(entry, hashes[archive.name])
         pristine[name] = extract(archive, output / "build-extractions" / name)
         shipped_hashes[name] = {str(p.relative_to(pristine[name])): digest(p) for p in pristine[name].rglob("*") if p.is_file()}
-    for name, assets in {"kotowari-core": ["schemas/ir.yaml", "schemas/context.yaml", "schemas/flags.yaml", "schemas/plan.yaml"], "kotowari-source-analysis": ["queries/rust.yml", "queries/python.yml", "queries/php.yml", "queries/ts_js.yml"]}.items():
+    for name, assets in {"kotowari-core": ["schemas/ir.yaml", "schemas/context.yaml", "schemas/flags.yaml", "schemas/plan.yaml"], "kotowari-source-analysis": ["queries/rust.yml", "queries/python.yml", "queries/php.yml", "queries/ts_js.yml"], "kotowari-overview": ["schemas/overview.yaml"], "kotowari-markdown-view": ["src/style.css", *(f"schemas/{kind}.json" for kind in ["lead", "flow", "steps", "cards", "status", "compare", "decisions", "quiz"])]}.items():
         for asset in assets:
             if not (pristine[name] / asset).is_file(): raise ValueError(f"unshipped embedded asset: {name}/{asset}")
     (output / "dependency-order.json").write_text(json.dumps(list(PATHS), indent=2))
@@ -185,12 +191,13 @@ def main():
     for name in PATHS:
         verify(pristine[name])
         if name in {"kotowari", "kotowari-markdown-schema-io"}: verify(pristine[name], "tokio")
-    for name, example in {"kotowari-core": "memory", "kotowari-markdown-schema": "extraction", "kotowari-source-analysis": "analysis", "kotowari": "project", "kotowari-markdown-schema-io": "loader", "identity": "identity"}.items():
+    for name, example in {"kotowari-core": "memory", "kotowari-markdown-schema": "extraction", "kotowari-source-analysis": "analysis", "kotowari": "project", "kotowari-markdown-schema-io": "loader", "kotowari-markdown-view": "render", "kotowari-overview": "overview", "identity": "identity"}.items():
         consumer = output / "consumers" / name
         (consumer / "src").mkdir(parents=True)
         owner = 'kotowari' if name == 'identity' else name
         shutil.copy2(pristine[owner] / "examples" / (example+'.rs'), consumer / "src/main.rs")
-        content = consumer_manifest(name, ['kotowari', 'kotowari-core'] if name == 'identity' else [name], name in {"kotowari", "kotowari-markdown-schema-io"})
+        dependencies = {'identity': ['kotowari', 'kotowari-core'], 'kotowari-overview': ['kotowari-overview', 'kotowari-core']}.get(name, [name])
+        content = consumer_manifest(name, dependencies, name in {"kotowari", "kotowari-markdown-schema-io"})
         (consumer / "Cargo.toml").write_text(content)
         run(["cargo", "generate-lockfile", "--offline", "--config", config], cwd=consumer)
         verify(consumer)

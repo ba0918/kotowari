@@ -19,7 +19,7 @@ update_versions() {
 from pathlib import Path
 import re, sys, tomllib
 root, family, version = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
-selected = {'kotowari-cli', 'kotowari', 'kotowari-core', 'kotowari-source-analysis'} if family == 'kotowari' else {'kotowari-markdown-schema', 'kotowari-markdown-schema-io', 'kotowari-mds'}
+selected = {'kotowari-cli', 'kotowari', 'kotowari-core', 'kotowari-source-analysis', 'kotowari-overview'} if family == 'kotowari' else {'kotowari-markdown-schema', 'kotowari-markdown-schema-io', 'kotowari-mds', 'kotowari-markdown-view'}
 for path in [root / 'Cargo.toml', *sorted((root / 'crates').glob('*/Cargo.toml'))]:
     text = path.read_text()
     manifest = tomllib.loads(text)
@@ -63,13 +63,13 @@ version="$2"
 # 製品ごとの、版の宣言（先頭が置き場、残りは従う宣言）、Cargo.lock のパッケージ、変更履歴
 case "$product" in
     kotowari)
-        manifests=(Cargo.toml crates/kotowari/Cargo.toml crates/kotowari-core/Cargo.toml crates/kotowari-source-analysis/Cargo.toml)
-        lock_packages=(kotowari-cli kotowari kotowari-core kotowari-source-analysis)
+        manifests=(Cargo.toml crates/kotowari/Cargo.toml crates/kotowari-core/Cargo.toml crates/kotowari-source-analysis/Cargo.toml crates/kotowari-overview/Cargo.toml)
+        lock_packages=(kotowari-cli kotowari kotowari-core kotowari-source-analysis kotowari-overview)
         changelog="CHANGELOG.md"
         ;;
     kotowari-mds)
-        manifests=(crates/kotowari-markdown-schema/Cargo.toml crates/kotowari-markdown-schema-io/Cargo.toml crates/kotowari-mds/Cargo.toml)
-        lock_packages=(kotowari-markdown-schema kotowari-markdown-schema-io kotowari-mds)
+        manifests=(crates/kotowari-markdown-schema/Cargo.toml crates/kotowari-markdown-schema-io/Cargo.toml crates/kotowari-mds/Cargo.toml crates/kotowari-markdown-view/Cargo.toml)
+        lock_packages=(kotowari-markdown-schema kotowari-markdown-schema-io kotowari-mds kotowari-markdown-view)
         changelog="crates/kotowari-markdown-schema/CHANGELOG.md"
         ;;
     *)
@@ -114,7 +114,7 @@ unreleased_has_entries "$changelog" || die "$changelog の Unreleased の節が�
 
 # タグが無いことは上で確かめたので、戻すときにあるタグはこのスクリプトが作ったもの。
 # コミットとタグは、作った直後に中断されても戻せるように、フラグでなく今の状態で見る
-written=(Cargo.toml crates/kotowari/Cargo.toml crates/kotowari-core/Cargo.toml crates/kotowari-source-analysis/Cargo.toml crates/kotowari-markdown-schema/Cargo.toml crates/kotowari-markdown-schema-io/Cargo.toml crates/kotowari-mds/Cargo.toml Cargo.lock "$changelog")
+written=(Cargo.toml crates/kotowari/Cargo.toml crates/kotowari-core/Cargo.toml crates/kotowari-source-analysis/Cargo.toml crates/kotowari-overview/Cargo.toml crates/kotowari-markdown-schema/Cargo.toml crates/kotowari-markdown-schema-io/Cargo.toml crates/kotowari-mds/Cargo.toml crates/kotowari-markdown-view/Cargo.toml Cargo.lock "$changelog")
 start_head="$(git rev-parse HEAD)"
 done_ok=0
 restore() {

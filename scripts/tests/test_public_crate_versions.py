@@ -7,7 +7,7 @@ import tomllib
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-PACKAGES = ["kotowari", "kotowari-core", "kotowari-source-analysis", "kotowari-markdown-schema", "kotowari-markdown-schema-io", "kotowari-mds"]
+PACKAGES = ["kotowari", "kotowari-core", "kotowari-source-analysis", "kotowari-overview", "kotowari-markdown-schema", "kotowari-markdown-schema-io", "kotowari-mds", "kotowari-markdown-view"]
 
 
 def version(root, family):
@@ -49,7 +49,7 @@ class VersionChecks(unittest.TestCase):
             shutil.copy2(ROOT / path, destination)
 
     def test_all_kotowari_series_packages_follow_the_root_version(self):
-        for name in ["kotowari", "kotowari-source-analysis"]:
+        for name in ["kotowari", "kotowari-source-analysis", "kotowari-overview"]:
             with self.subTest(package=name), tempfile.TemporaryDirectory() as temporary:
                 root = pathlib.Path(temporary)
                 self.fixture(root)
@@ -58,6 +58,17 @@ class VersionChecks(unittest.TestCase):
                 manifest.write_text(manifest.read_text().replace(f'version = "{baseline}"', f'version = "{next_patch(baseline)}"', 1))
                 result = subprocess.run(["bash", str(root / "scripts/check-versions.sh")], capture_output=True, text=True)
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+
+    def test_the_view_follows_the_markdown_schema_version(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            self.fixture(root)
+            manifest = root / "crates/kotowari-markdown-view/Cargo.toml"
+            baseline = version(root, "kotowari-mds")
+            manifest.write_text(manifest.read_text().replace(f'version = "{baseline}"', f'version = "{next_patch(baseline)}"', 1))
+            result = subprocess.run(["bash", str(root / "scripts/check-versions.sh")], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertIn("kotowari-markdown-view", result.stdout)
 
     def test_incoming_dependency_versions_are_checked(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -79,9 +90,9 @@ class VersionChecks(unittest.TestCase):
                 command = 'source "$1"; update_versions "$2" "$3" "$4"'
                 result = subprocess.run(["bash", "-c", command, "fixture", str(ROOT / "scripts/release.sh"), str(root), family, target_version], capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                series = {"kotowari-cli", "kotowari", "kotowari-core", "kotowari-source-analysis"}
+                series = {"kotowari-cli", "kotowari", "kotowari-core", "kotowari-source-analysis", "kotowari-overview"}
                 if family == "kotowari-mds":
-                    series = {"kotowari-markdown-schema", "kotowari-markdown-schema-io", "kotowari-mds"}
+                    series = {"kotowari-markdown-schema", "kotowari-markdown-schema-io", "kotowari-mds", "kotowari-markdown-view"}
                 for path in original:
                     before = tomllib.loads(original[path].decode())
                     after = tomllib.loads(path.read_text())
