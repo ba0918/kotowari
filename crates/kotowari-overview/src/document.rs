@@ -132,10 +132,9 @@ pub(crate) fn parse(text: &str) -> RawDocument {
     let mut looking_for_lead = false;
     let mut pending = Pending { range: None };
     for node in &root.children {
+        // frontmatter の読み方は文書の先頭の1つだけを YAML の節にする
         if let Node::Yaml(yaml) = node {
-            if document.frontmatter.is_none() && document.title.is_none() {
-                document.frontmatter = Some(yaml.value.clone());
-            }
+            document.frontmatter = Some(yaml.value.clone());
             continue;
         }
         if let Node::Heading(heading) = node {
