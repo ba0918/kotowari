@@ -2,73 +2,66 @@
   "version": 1,
   "entries": [
     {
-      "id": "mutants-in-ci-implementation",
-      "base": "d0646650ba983c4ae951d0f0eb6b66074963d6cf",
+      "id": "ir-scope-implementation",
+      "base": "4bb9e6e5421ce06858d6ec05dd2792b6fe2df369",
       "role": "implementer",
       "files": [
         {
-          "path": ".github/workflows/mutants-run.yml",
-          "before": null,
-          "after": "sha256:9a06df8256ad96e16b427641850692d7ff98b415c550fbea4183fe96a55a0086"
+          "path": "CHANGELOG.md",
+          "before": "sha256:65c67a93142998d772c61992aad13bd4325d2471270e6a3750ccaaec73d3aefc",
+          "after": "sha256:2b08a5d8b2f2841cc9b48ecd41556d83879bce6e7d6ea90389ddf180c222e909"
         },
         {
-          "path": ".github/workflows/mutants.yml",
-          "before": null,
-          "after": "sha256:324dba36e0c729ee3f5cf4e702d51c13eb0591c74280423fadb36761b43396d8"
-        },
-        {
-          "path": ".github/workflows/release.yml",
-          "before": "sha256:81a0f1f63a2465e1e644877703ef84786dab3298f9c5c40c12ae1f18c5edd21e",
-          "after": "sha256:2391e6eae7ce1cdc4a9b997abbdfa6116b190e71ce3d8cac975666d0852933e5"
-        },
-        {
-          "path": "PROJECT.md",
-          "before": "sha256:aa8b4c6b51be483bec0aacb73643d0b434184490ec39328ec76d5388eedea50a",
-          "after": "sha256:1c3cf6d5e653e8d7969828777a1d61504916db73af7c750fd825e36c440094e0"
+          "path": "agent/skills/kotowari-brainstorm/SKILL.md",
+          "before": "sha256:77a96434780052613e064a6019be6a2d819afcb335c72e97a23a75f40824c94f",
+          "after": "sha256:958781860f85e5cc3cbbe4c0470abeaceaf926954c1567f5ee66b8bb63f88544"
         },
         {
           "path": "agent/skills/kotowari-cycle/SKILL.md",
-          "before": "sha256:934957edd6f100e9a64f40f5efd9bb3266b7003249dadf98baf076ee75ec271c",
-          "after": "sha256:2041e574b1ff179846dd71436b0bc881ba15c1f27db010c50a3db29d2f2393e4"
+          "before": "sha256:2041e574b1ff179846dd71436b0bc881ba15c1f27db010c50a3db29d2f2393e4",
+          "after": "sha256:26bfcb6afd3502cefb8743d5c10b1bb9bcba2b3c38fceab821b7eda4d02717da"
         },
         {
           "path": "agent/skills/kotowari-implement/SKILL.md",
-          "before": "sha256:d5c4e0027e2376c9bac2035c1e71c15454fbe077aa62208dff8d09d6055083a9",
-          "after": "sha256:37541622de32fe8ca91490f8306301771bb7d913f2f966718f03ef1ed31af3cf"
+          "before": "sha256:37541622de32fe8ca91490f8306301771bb7d913f2f966718f03ef1ed31af3cf",
+          "after": "sha256:7186df8fac49b83502ecaae10614cf728fbe0c655fe1b5fac7d7824a85f8eea9"
         },
         {
-          "path": "agent/skills/kotowari/references/mutants.md",
-          "before": "sha256:9eb99d1855674312ad97432ca2d5e50af2b2e821b29cdc54aa0a6bf3a2b00dae",
-          "after": "sha256:1cc3d1f319f3f10d1a5b30ae45c6b025b549556943498c495bcd851eed2ddd3e"
+          "path": "agent/skills/kotowari-iterate/SKILL.md",
+          "before": "sha256:67a3ed15f25a2b82160c93df9394b28332b9c557a8fd157b7d3eb295d240e74c",
+          "after": "sha256:af51b5ae10369c922d4958c041b0c3a7785b59b09c7bf3128e91ba295805a516"
         },
         {
-          "path": "lefthook.yml",
-          "before": "sha256:2837e92c840e335d40b7e9f1f3a77dcf397a56bb36974ffebe57955f8b8810ac",
-          "after": "sha256:4c10f27d3c64f9957151f0ab4e5bd0bc8e7b7c21c30195064d8c2aac981ef79a"
+          "path": "agent/skills/kotowari-plan/SKILL.md",
+          "before": "sha256:a93b92821708ce697793b4453a1cfcadbd8044d765579e9d7c79229ae15a46d3",
+          "after": "sha256:f35bfd4973439c1b30a90b8e50877d7c557b61c7d20bd6d5b04490c92f94d00b"
         },
         {
-          "path": "scripts/mutants.sh",
-          "before": "sha256:a179e696ae83b3792c42d03997cf5eae8634c831e1552fcfb1bb92ed9883fc66",
-          "after": "sha256:daae2ef9759d01b2152c620d6cd4142a7dfbc0d1712761c36d8058fb6356379c"
+          "path": "agent/skills/kotowari-review/SKILL.md",
+          "before": "sha256:1f4f5b3895d285371cb2f539c0edff9da084e3844a331ec4493bb701f5a06b37",
+          "after": "sha256:c65eb9963656753a5844762692b1ba328e72d739f7ef391b7282023c8e3a07b7"
         },
         {
-          "path": "scripts/release.sh",
-          "before": "sha256:2eab50b8c7c7080b740ead4492721c17f5adfd458f0ee9552f34e867cec5100c",
-          "after": "sha256:dc2245a5518d068b7283e4bb740390e87ce6d34e30846fdea9b2a4746e7a8523"
+          "path": "agent/skills/kotowari/SKILL.md",
+          "before": "sha256:d3fb7a71f2d973f388222a0b5ccf7286201aec1f0860d043abcfa46bdb3c7a8a",
+          "after": "sha256:ac1709d666892a5b183db3acff7dd5e461dde5bc4babd5bb5fde9e6207a9a813"
+        },
+        {
+          "path": "agent/skills/kotowari/references/changes.md",
+          "before": "sha256:286b1cf323144e1d169561e6ffd32e56c25a0df42243fe53583753da3e630737",
+          "after": "sha256:f557825d6f0d64561771d97c24ed1f2ac4e47626066769ca7a36dbaba373fb4d"
         }
       ],
       "ir": [],
       "conclusion": "new",
-      "reason": "変異テストを pre-push から外し、PR（マージ基準からの差分）とリリース（同じ製品の1つ前のタグからの差分、無ければ全体）の GitHub Actions で8分割して回す。見逃しの判定は従来どおり scripts/mutants.sh が kotowari mutants に読ませて行い、等価の一覧と mutants::skip の検査、設定を読まない実行は変えない。手元の既定の同時実行数は測定の結果1のまま。関門の設定は IR に書かない決まり（A8）なので IR は変えない。 pre-push のテストの前に GIT_ で始まる環境変数を外す。worktree からの push で git がフックに渡す GIT_DIR がテストに引き継がれ、本物のリポジトリを書き換えたため（使い捨てのリポジトリを GIT_DIR に指して再現し、外すと書き換わらないことを確かめた）。",
+      "reason": "配布スキルの文言だけを変える。kotowari スキルに What the IR holds を足して IR に書くものを製品の利用者が観測できる振る舞いに限り、CI・フック・リリース・ビルド設定・リポジトリ自身のデータ・プロジェクト自身のテストと検査を IR の外と列挙した（A1、A2、A3）。壁打ち、計画、実装、cycle、review、iterate と変更照合の reference はその定義を参照する（A4、A5）。この決まりは IR に書かない（A5）ので IR は変えない。CHANGELOG の Unreleased に利用者向けの変更を足した。",
       "requirements": [],
       "decisions": [
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A1",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A2",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A3",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A4",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A5",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A6",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A8"
+        "docs/decision/records/2026-10-04-ir-scope.md#A1",
+        "docs/decision/records/2026-10-04-ir-scope.md#A2",
+        "docs/decision/records/2026-10-04-ir-scope.md#A3",
+        "docs/decision/records/2026-10-04-ir-scope.md#A4",
+        "docs/decision/records/2026-10-04-ir-scope.md#A5"
       ],
       "handoff": null,
       "gaps": []
