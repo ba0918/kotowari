@@ -11,6 +11,8 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 
 ### Added
 
+- 仕様・判断の記録・テストのつながりと、機械検査の範囲を説明する日英の紹介ページを追加した。
+
 - `kotowari overview build`と`kotowari overview serve`を追加した。設定の`overview.files`に当たる全体像の元データ（frontmatterの`ir`、題名、冒頭の`lead`の部品、節と部品を持つMarkdown）を検査し、誤りが無ければ`.kotowari/cache/overview/`の下に一覧と全体像ごとのHTMLのページを書く。serveはそれを`http://127.0.0.1:<port>/`（既定4590、`--port`で変更）で配り、Ctrl-Cで終わる。元データに誤りがあれば何も書かずに`overview error`で、ポートを使えないか配っている間に接続を受け付けられなければ`port error`で止まる。`.kotowari`、`.kotowari/cache`、`.kotowari/cache/overview`のどれかがシンボリックリンクかディレクトリでなければ何も書かず消さずに、置き場の作成、書き込み、削除に失敗したときもそこで、`cache error`で止まる。
 - 設定に`overview`の鍵を書くと、`kotowari check`と`kotowari status`が全体像の元データを読み、形、部品の中身、冒頭の`lead`、扱うIRの文書、部品の中の参照、ページの名前の重なりの誤り（`overview_form_invalid`、`overview_part_unknown`、`overview_part_invalid`、`overview_lead_missing`、`overview_ir_missing`、`overview_ir_shared`、`overview_ref_unresolved`、`overview_name_conflict`）と、元データの節のガイドの印の古さを報告する。checkのJSONとstatusにはいつも`overview`の群（`files`と`marks`）が入り、鍵が無ければ両方0。
 - `Project`と`AsyncProject`に、何も書かない`overview_prepare`と、続けて書く`overview_build`を追加した。`check`、`status`、`inspect`は全体像の元データの指摘と`overview`の群を含む。全体像の検査を行う`kotowari-overview`クレートを追加した。

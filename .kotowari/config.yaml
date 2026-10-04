@@ -50,6 +50,9 @@ changes:
     - "PROJECT.md"
     - "CHANGELOG.md"
     - "docs/guides/**"
-  exclude: []
+    - "site/**"
+  exclude:
+    - "site/dist/**"
+    - "site/__pycache__/**"
   records:
     - ".kotowari/changes/*.yaml"
