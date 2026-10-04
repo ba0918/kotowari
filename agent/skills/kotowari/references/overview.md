@@ -47,7 +47,7 @@ items:
 
 | Part | Form |
 |---|---|
-| Group | A mapping with only `title` (required, a non-empty string), `note` (optional, one line without a line break) and `items` (required, a non-empty list of page names and groups) |
+| Group | A mapping with only `title` (required, a non-empty string), `note` (optional, one line without a line break) and `items` (required, a list of page names and groups; an empty list is the error overview_toc_group_empty, not a form error) |
 | Page name | The name of an overview data file: its file name without `.md`, as a non-empty string |
 
 - Every page is in the table of contents exactly once. A page missing from it, a name with no overview data, a name written twice and a group without items are errors.
