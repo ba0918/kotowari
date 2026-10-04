@@ -1,0 +1,55 @@
+# PR ごとに、PR の基準との merge-base からの差分に入る変異を回す（判断の記録
+# docs/decision/records/2026-10-04-mutants-in-ci.md の A2、A3）。
+#
+# main のブランチ保護で必須にするのは最後の "mutants" のジョブだけ。分担の数を変えても保護を直さなくてよい。
+# 合成のマージの commit ではなく、PR の先頭の commit を回す。
+name: Mutants
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mutants-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  scope:
+    name: 範囲を決める
+    runs-on: ubuntu-latest
+    outputs:
+      scope: ${{ steps.base.outputs.scope }}
+    env:
+      EVENT_BASE: ${{ github.event.pull_request.base.sha }}
+      EVENT_HEAD: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - id: base
+        run: printf 'scope=diff %s\n' "$(git merge-base "$EVENT_BASE" "$EVENT_HEAD")" >>"$GITHUB_OUTPUT"
+
+  run:
+    needs: scope
+    uses: ./.github/workflows/mutants-run.yml
+    with:
+      ref: ${{ github.event.pull_request.head.sha }}
+      scope: ${{ needs.scope.outputs.scope }}
+
+  mutants:
+    name: mutants
+    needs: [scope, run]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 全部の分担が通ったか
+        env:
+          SCOPE_RESULT: ${{ needs.scope.result }}
+          RUN_RESULT: ${{ needs.run.result }}
+        run: |
+          echo "scope: $SCOPE_RESULT, run: $RUN_RESULT"
+          test "$SCOPE_RESULT" = success && test "$RUN_RESULT" = success

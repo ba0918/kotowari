@@ -117,15 +117,43 @@ jobs:
       - name: 版のずれの検査
         run: scripts/check-versions.sh "$TAG"
 
+  # 同じ製品の1つ前のリリースのタグとの差分（前のタグが無ければ全体）の変異を回し、見逃しがあれば
+  # バイナリを作らない（判断の記録 docs/decision/records/2026-10-04-mutants-in-ci.md の A4）。
+  # 範囲の選び方は scripts/mutants.sh plan に pre-push と同じ形の行を渡して決める
+  mutants-scope:
+    name: 変異テストの範囲を決める
+    needs: meta
+    runs-on: ubuntu-latest
+    outputs:
+      scope: ${{ steps.plan.outputs.scope }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ env.TAG }}
+          fetch-depth: 0
+          persist-credentials: false
+      - id: plan
+        run: |
+          scope="$(printf 'refs/tags/%s %s refs/tags/%s 0\n' "$TAG" "$(git rev-parse "refs/tags/${TAG}^{commit}")" "$TAG" | scripts/mutants.sh plan)"
+          echo "scope: $scope"
+          printf 'scope=%s\n' "$scope" >>"$GITHUB_OUTPUT"
+
+  mutants:
+    needs: mutants-scope
+    uses: ./.github/workflows/mutants-run.yml
+    with:
+      ref: refs/tags/${{ inputs.tag || github.ref_name }}
+      scope: ${{ needs.mutants-scope.outputs.scope }}
+
   build:
     name: ビルド（${{ matrix.target }}）
-    needs: [meta, check]
+    needs: [meta, check, mutants]
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-          - os: macos-14
+          - os: macos-15
             target: aarch64-apple-darwin
     runs-on: ${{ matrix.os }}
     env:

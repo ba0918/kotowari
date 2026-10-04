@@ -4,9 +4,18 @@
 #
 #   mutants.sh diff <base> [-- <cargo-mutants の引数>...]  <base> との差分に入る変異だけを走らせる
 #   mutants.sh full [-- <cargo-mutants の引数>...]          全体を走らせる
-#   mutants.sh plan                                          git の pre-push の行を標準入力から読み、
-#                                                            選ぶ副コマンドを1行出す（何も走らせない）
-#   mutants.sh hook                                          plan と同じ判定をして、そのまま実行する
+#   mutants.sh plan                                          git の pre-push と同じ形の行を標準入力から読み、
+#                                                            選ぶ副コマンドを1行出す（何も走らせない。
+#                                                            リリースの CI がタグから範囲を決めるのに使う）
+#
+# 環境変数:
+#   MUTANTS_JOBS     同時に回す変異の数（既定 1。手元で3や4に上げると、写しのビルドが CPU を取り合って
+#                    遅くなり、偽の時間切れも出た。判断の記録 docs/decision/records/2026-10-04-mutants-in-ci.md の A6）
+#   MUTANTS_SERVICE  systemd（既定。メモリ上限つきのユーザーのサービスで回す）か none（そのまま回す。
+#                    ユーザーの systemd が無い CI のランナー用）
+#
+# 見逃し0件の関門は PR とリリースの CI が持つ（判断の記録
+# docs/decision/records/2026-10-04-mutants-in-ci.md の A1〜A6）。手元では好きなときに回す。
 #
 # 走らせ方は 2026-09-17 の実測で固めた（判断の記録 docs/decision/records/2026-09-17-mutation-tests.md
 # の A4、A23、A29）。安定版の cargo だと更新時刻の判定で変異が再コンパイルされず、幻の見逃しが出る
@@ -24,6 +33,8 @@ readonly WATCH_INTERVAL=10
 # 後始末でサービスの停止を確かめる回数と間隔（この積が後始末の待ちの上限）
 readonly STOP_TRIES=20
 readonly STOP_INTERVAL=0.3
+readonly JOBS="${MUTANTS_JOBS:-1}"
+readonly SERVICE="${MUTANTS_SERVICE:-systemd}"
 
 watchdog_pid=""
 kill_count_file=""
@@ -187,25 +198,39 @@ run_mutants() {
     run_tmpdir="$(mktemp -d)"
     [ -n "$run_tmpdir" ] || die 'cannot make the temporary directory for this run'
 
+    case "$JOBS" in
+    '' | *[!0-9]* | 0) die "MUTANTS_JOBS must be a positive integer: $JOBS" ;;
+    esac
+    case "$SERVICE" in
+    systemd | none) ;;
+    *) die "MUTANTS_SERVICE must be systemd or none: $SERVICE" ;;
+    esac
+
     start_watchdog
     local status=0
-    # この実行だけの名前を付ける。中断されたとき cleanup がこの名前でサービスを止める
-    run_unit="kotowari-mutants-$$"
     # 背景に置いて wait で待つ。前面の子を待っている間、bash は trap を後回しにするので、
     # 前面のままだと INT と TERM を受けてもその場で cleanup が走らない。
     # 標準入力は渡さない（cargo-mutants は読まない。背景の実行が端末から読むのを避ける）
     # --test-workspace=true: 既定では変異を入れた crate のテストしか走らない。kotowari-core の
     # 振る舞いを確かめるテストの大半はルートの crate の tests/ にあるので、これが無いと
     # kotowari-core の変異がほぼすべて見逃しになる
-    systemd-run --user --wait --collect --pipe --unit="$run_unit" \
-        -p MemoryMax=12G -p MemorySwapMax=0 -p OOMPolicy=continue \
-        --setenv=PATH="$PATH" \
-        --setenv=HOME="$HOME" \
-        --setenv=CARGO_UNSTABLE_CHECKSUM_FRESHNESS=true \
-        --setenv=CARGO_BUILD_JOBS=4 \
-        --setenv=TMPDIR="$run_tmpdir" \
-        --working-directory="$PWD" \
-        -- cargo +nightly mutants -j 1 --no-config --workspace --all-features --test-workspace=true -o . "$@" </dev/null &
+    local -a mutants_command=(cargo +nightly mutants -j "$JOBS" --no-config --workspace --all-features --test-workspace=true -o . "$@")
+    if [ "$SERVICE" = systemd ]; then
+        # この実行だけの名前を付ける。中断されたとき cleanup がこの名前でサービスを止める
+        run_unit="kotowari-mutants-$$"
+        systemd-run --user --wait --collect --pipe --unit="$run_unit" \
+            -p MemoryMax=12G -p MemorySwapMax=0 -p OOMPolicy=continue \
+            --setenv=PATH="$PATH" \
+            --setenv=HOME="$HOME" \
+            --setenv=CARGO_UNSTABLE_CHECKSUM_FRESHNESS=true \
+            --setenv=CARGO_BUILD_JOBS=4 \
+            --setenv=TMPDIR="$run_tmpdir" \
+            --working-directory="$PWD" \
+            -- "${mutants_command[@]}" </dev/null &
+    else
+        CARGO_UNSTABLE_CHECKSUM_FRESHNESS=true CARGO_BUILD_JOBS=4 TMPDIR="$run_tmpdir" \
+            "${mutants_command[@]}" </dev/null &
+    fi
     run_pid=$!
     wait "$run_pid" || status=$?
     run_pid=""
@@ -240,7 +265,7 @@ run_diff() {
     if [ "${1:-}" = "--" ]; then
         shift
     fi
-    # フックの中では fetch しない。解決できない基準はその場で失敗させる
+    # ここでは fetch しない。解決できない基準はその場で失敗させる
     git rev-parse --verify --quiet "${base}^{commit}" >/dev/null \
         || die "cannot resolve the base: $base"
 
@@ -256,10 +281,10 @@ run_full() {
     run_mutants "$@"
 }
 
-# git の pre-push は "<ローカルの参照> <ローカルの SHA> <リモートの参照> <リモートの SHA>" を
-# 標準入力に渡す。タグの push なら、同じ製品の1つ前のリリースのタグとの差分だけを回し、
-# 前のタグが無いときだけ全体を回す（判断の記録 docs/decision/records/2026-09-27-release-mutants-scope.md
-# の A1。全体は約2時間かかるので、人が full で好きなときに回す）。それ以外は origin/main との差分だけ
+# 標準入力の行は git の pre-push と同じ "<ローカルの参照> <ローカルの SHA> <リモートの参照> <リモートの SHA>"。
+# タグなら、同じ製品の1つ前のリリースのタグとの差分だけを回し、前のタグが無いときだけ全体を回す
+# （判断の記録 docs/decision/records/2026-09-27-release-mutants-scope.md の A1。回す場所はリリースの CI、
+# docs/decision/records/2026-10-04-mutants-in-ci.md の A4）。それ以外は origin/main との差分だけ
 choose_from_stdin() {
     local local_ref local_sha remote_ref chosen tag product previous
     chosen='diff origin/main'
@@ -294,16 +319,8 @@ main() {
     plan)
         choose_from_stdin
         ;;
-    hook)
-        local chosen
-        chosen="$(choose_from_stdin)"
-        case "$chosen" in
-        full) run_full ;;
-        diff\ *) run_diff "${chosen#diff }" ;;
-        esac
-        ;;
     *)
-        die 'usage: mutants.sh <diff <base> | full | plan | hook> [-- <cargo-mutants args>...]'
+        die 'usage: mutants.sh <diff <base> | full | plan> [-- <cargo-mutants args>...]'
         ;;
     esac
 }

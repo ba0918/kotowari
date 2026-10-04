@@ -39,16 +39,20 @@ The minimum supported Rust version is declared per crate, not once for the works
 `crates/kotowari-markdown-schema` declares `rust-version = "1.89"`, and neither `kotowari` nor
 `kotowari-core` declares one. Schema I/O and mds retain Rust 1.89. All seven use `edition = "2024"`.
 
-`lefthook.yml` defines the gates: `pre-commit` runs the secret scan and `kotowari check`,
-`pre-push` runs the full test suite, `kotowari check` with no exemptions, and the mutation tests
-in `scripts/mutants.sh`.
+`lefthook.yml` defines the local gates: `pre-commit` runs the secret scan and `kotowari check`,
+and `pre-push` runs the full test suite and `kotowari check` with no exemptions. The mutation
+tests do not run in the hooks; they blocked every push for one to two hours.
 
-The mutation tests in the hook cover only a diff: a branch push runs the mutants in the diff from
-`origin/main`, and a tag push runs those in the diff from the product's previous release tag (the
-whole workspace only when there is no previous tag). A miss in code that did not change — one
-created by deleting or weakening the test that caught a mutant there — is not caught by either.
-Run the whole workspace by hand with `scripts/mutants.sh full` when that matters; it takes about
-two hours (1,800 mutants on 2026-09-26).
+The mutation tests run in GitHub Actions, split into eight parallel shards
+(`.github/workflows/mutants-run.yml`). Every pull request runs the mutants in the diff from its
+merge base (`.github/workflows/mutants.yml`), and branch protection on `main` requires that
+workflow's `mutants` job, for administrators too, so `main` only takes commits that passed it.
+A release runs the mutants in the diff from the product's previous release tag (the whole
+workspace only when there is no previous tag) before building binaries. A miss in code that did
+not change — one created by deleting or weakening the test that caught a mutant there — is not
+caught by either. Run the whole workspace by hand with `scripts/mutants.sh full` when that
+matters. `MUTANTS_JOBS` sets how many mutants run at once; keep the default of 1 locally, since 3
+and 4 were slower on 2026-10-04 and produced a false timeout.
 
 The mutation tests run the whole workspace's test suite once per mutant, so the suite's wall
 time is multiplied by the number of mutants (over a thousand on a large diff). Do not write a
@@ -120,10 +124,10 @@ To release:
    tag; otherwise it restores the files and leaves no commit and no tag. It refuses to start when
    the tag already exists locally or on `origin`, or when `origin` cannot be reached to tell. It
    never pushes.
-2. Push with the command it prints, `git push origin main && git push origin kotowari-v<version>`:
-   main first, and the tag only when main was accepted. The
-   pre-push hook runs the mutation tests in the diff from the product's previous release tag
-   because a tag is pushed (the whole workspace when there is none). If the
+2. Push the release commit to a `release/<tag>` branch and open a pull request, as the script
+   prints, so that the required checks run on that commit. When they pass, push with
+   `git push origin main && git push origin kotowari-v<version>`: main first, and the tag only
+   when main was accepted. If the
    push is rejected, first check whether the tag is already on the remote
    (`git ls-remote --tags origin kotowari-v<version>`). If it is not, nothing was published: delete
    the local tag (`git tag -d`), drop the release commit (`git reset --keep HEAD~1`), fix and
@@ -131,7 +135,8 @@ To release:
    and must not be reused: drop the local tag and commit the same way, bring in the remote, and
    release a new version.
 3. The pushed tag starts `.github/workflows/release.yml`. It reruns the tests, `kotowari check` and
-   the version check, builds `x86_64-unknown-linux-gnu` and `aarch64-apple-darwin` binaries as
+   the version check, runs the mutation tests in the diff from the product's previous release tag
+   (the whole workspace when there is none), builds `x86_64-unknown-linux-gnu` and `aarch64-apple-darwin` binaries as
    `<product>-v<version>-<target>.tar.gz` (binary, README, licences) each with a `.sha256`, and
    creates the GitHub Release with that version's changelog section as its notes.
 

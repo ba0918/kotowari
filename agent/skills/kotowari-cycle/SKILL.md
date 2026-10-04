@@ -185,7 +185,7 @@ only such findings or problem records that were already committed.
   by removing that mark; any other deferred_with_test or depends_on_deferred notice among this
   run's findings is the person's judgment, like an IR-side finding.
 - Cycle does not fix IR itself. Delegate justified concrete additions within the approved constraints to the implementer/fixer, then rerun check and separate conformance review. Approved-requirement changes, contradictions and unsupported consequential meaning go back to the person.
-- Missed mutations: the pre-push hook runs mutations on the diff. A miss is fixed by the fixer or
+- Missed mutations: the project's mutation gate (in kotowari itself, the pull request CI) runs mutations on the diff. A miss is fixed by the fixer or
   the implementer, like a test-side finding; how to investigate one is in the kotowari skill's
   `references/mutants.md`.
 
