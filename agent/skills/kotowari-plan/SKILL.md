@@ -86,6 +86,9 @@ that were there before the plan, and a committed problem record can keep them fa
 - A choice may be left to the implementer only if every option leaves the approved behavior
   unchanged. New input kinds, acceptance boundaries, and error handling need grounded authorization: a concrete addition within explicitly delegated scope may be recorded with its grounds and deciding role while keeping approved requirements unchanged; otherwise hand back to brainstorm.
   "The specification does not say" never means "the implementer decides".
+- A step that changes only what the IR does not hold (CI, hooks, release, build configuration;
+  the kotowari skill's **What the IR holds**) names its decisions instead of requirements, is
+  shown by check or external, and adds no requirement and no test.
 - A human check inside a step is written as an ordinary sentence in that step, and only for an
   irreversible operation, a privileged operation, or a dangerous target. Meaning-changing
   decisions go back to brainstorm; acceptance of the result belongs to the end of the cycle.

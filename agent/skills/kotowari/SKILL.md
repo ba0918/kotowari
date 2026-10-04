@@ -9,6 +9,31 @@ This skill governs IR, record and marker use and reading the tool results. Workf
 
 kotowari is a tool for writing a normalised specification (the IR) in Markdown and checking it with `kotowari check`. It also has the read commands `kotowari list` (the list of items), `kotowari query` (one item's body and its reverse references) and `kotowari status` (a tally of whether everything is in place), `kotowari mutants`, which reads the results of mutation tests, and `kotowari plan`, which checks the form of one plan file against the schema bundled in kotowari. `kotowari changes` compares caller-written records with a Git snapshot. This skill has you read a reference per scene and conveys how to write the IR and decision records, how to read the check results, and how to place marks.
 
+## What the IR holds
+
+The IR holds what the product delivers to the people who install and use it: the behavior they
+can observe through its commands, configuration, output, and distributed files. The test for a
+rule: if it changed, would someone using the product see a difference? If not, it is not IR.
+
+Not IR, in every station:
+
+- CI and workflow definitions, hooks, and the gates they enforce;
+- the release procedure and the build configuration;
+- the repository's own data being in some state (its IR, records, and documents that do not ship);
+- the project's own tests, checks, and fixtures: what verifies the product is not the product (a
+  check the product ships to its users is product);
+- the development process.
+
+A decision about these goes in the decision record, and the rule is written where contributors
+read it (the project's instructions, a comment in the file). It gets no requirement and no mark;
+verify it by running it once or with the platform's own checker (a workflow linter, for
+example), not with a test written for it.
+
+When unsure, the default is not IR: record the decision as not IR with its reason, and show it to
+the person at the next point they see the work. Never add a rule to the IR to make a test count
+as evidence or to give a change record something to point at. What the IR may hold is settled
+here first; whether an oracle meets the evidence conditions is asked only after that.
+
 First run `kotowari --version` to confirm the tool is there.
 
 - The command is not found → ask for kotowari to be installed, and do not start the work

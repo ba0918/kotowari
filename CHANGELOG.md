@@ -5,6 +5,11 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 
 ## [Unreleased]
 
+### Changed
+
+- `kotowari` スキルに「What the IR holds」を足し、IR に書くのは製品の利用者が観測できる振る舞いだけと定めた。CI とワークフロー、フック、リリース手順、ビルド設定、リポジトリ自身のデータ、プロジェクト自身のテストと検査は IR に書かず、判断の記録に書いて要求もテストも持たせない。迷ったら書かない側に倒し、テストを正当にするために IR に書き足すことは禁じた。壁打ち、計画、実装、cycle、review、iterate はこの定義を参照する。
+- 変更照合の reference で、CI・フック・リリース・ビルド設定だけの変更は、決定を引いた `new` で `ir` と `requirements` を空にし、`missing_spec` の穴にしないと明記した。
+
 ### Fixed
 
 - `kotowari` スキルのセットアップ手順に、判断の記録用ディレクトリへの `.gitkeep` 作成とコミット対象に含める指示を追加した。空ディレクトリが clone／worktree で失われ、`kotowari check` がエラーになるのを防ぐ。

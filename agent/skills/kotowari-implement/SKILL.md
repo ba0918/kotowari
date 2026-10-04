@@ -71,7 +71,7 @@ or that name an ID the plan covers; list any others in the report without touchi
 
 - fix the test-side findings yourself (requirement_without_test, scenario_without_test,
   test_without_id, invalid_marker, unparsable_file, and unresolved_reference from a mark);
-- for an IR-side finding, record and add only justified concrete IR within the delegated scope while keeping approved requirements unchanged; rerun check and independent conformance review. Hand back consequential meaning or approved-requirement changes.
+- for an IR-side finding, record and add only justified concrete IR within the delegated scope, and only what the IR holds (the kotowari skill's **What the IR holds**), while keeping approved requirements unchanged; rerun check and independent conformance review. Hand back consequential meaning or approved-requirement changes.
 
 A deferred requirement or deferred scenario (`deferred` true in `kotowari query`) is not built
 now and raises no test-side finding: write no test for it and put its ID in no mark. If your mark
@@ -94,6 +94,8 @@ the implementer, like a test-side finding; how to investigate one is in the koto
 - Do not invent verification of verification: tests whose subject is a check or test helper itself,
   and tests pinning workflow prose, are created only when the plan, finding, or specification
   requires them. This does not bar unit tests of product helpers for behavior they support.
+  A change to CI, hooks, release, or build configuration gets no test and no IR of its own; the
+  kotowari skill's **What the IR holds** lists what the IR leaves out.
 - For a deletion finding, no failing test is needed. Completion evidence is all existing checks
   passing after deletion.
 - Keeping secrets out of commits is your responsibility; nothing scans for you.
