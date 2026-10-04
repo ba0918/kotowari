@@ -253,3 +253,35 @@ fn overview_operations_fail_with_kinds_for_bad_data_and_a_missing_key() {
         .unwrap_err();
     assert_eq!(error.kind(), kotowari::ErrorKind::ConfigError);
 }
+
+// @kotowari[REQ-core-324, REQ-core-312]
+#[test]
+fn overview_build_stops_with_a_cache_error_when_the_place_is_not_a_directory() {
+    let dir = overview_project(true);
+    std::fs::write(dir.path().join(".kotowari/cache"), "a file").unwrap();
+    let project = Project::new(ProjectOptions::new(dir.path())).unwrap();
+    let error = project.overview_build().unwrap_err();
+    assert_eq!(error.kind(), kotowari::ErrorKind::CacheFailure);
+    assert_eq!(error.detail(), "cache error: .kotowari/cache");
+    assert_eq!(
+        std::fs::read_to_string(dir.path().join(".kotowari/cache")).unwrap(),
+        "a file"
+    );
+}
+
+// @kotowari[REQ-core-324, REQ-core-312]
+#[test]
+fn overview_build_stops_with_a_cache_error_and_the_os_error_when_a_write_fails() {
+    let dir = overview_project(true);
+    // 書くページの名前にディレクトリがあると、書き込みが失敗する
+    std::fs::create_dir_all(dir.path().join(".kotowari/cache/overview/index.html")).unwrap();
+    let project = Project::new(ProjectOptions::new(dir.path())).unwrap();
+    let error = project.overview_build().unwrap_err();
+    assert_eq!(error.kind(), kotowari::ErrorKind::CacheFailure);
+    let detail = error.detail();
+    assert!(
+        detail.starts_with("cache error: .kotowari/cache/overview/index.html: "),
+        "{detail}"
+    );
+    assert!(detail.len() > "cache error: .kotowari/cache/overview/index.html: ".len());
+}

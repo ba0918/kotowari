@@ -456,3 +456,60 @@ fn req_core_296_a_symbolic_link_in_the_cache_is_replaced_not_written_through() {
     );
     assert!(strings(&json(&stdout)["written"]).contains(&".kotowari/cache/overview/style.css"));
 }
+
+// @kotowari[EX-core-504, REQ-core-324, REQ-core-296, TBL-core-001, TBL-core-018, TBL-core-020]
+#[cfg(unix)]
+#[test]
+fn ex_core_504_a_linked_cache_place_stops_without_writing_outside() {
+    let tmp = two_documents();
+    let outside = TempDir::new().unwrap();
+    write(outside.path(), "keep", "keep");
+    std::fs::create_dir_all(tmp.path().join(".kotowari/cache")).unwrap();
+    std::os::unix::fs::symlink(outside.path(), tmp.path().join(CACHE)).unwrap();
+    let (code, stdout, stderr) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(2), "{stderr}");
+    assert!(stdout.is_empty());
+    assert!(
+        stderr.starts_with("cache error: .kotowari/cache/overview"),
+        "{stderr}"
+    );
+    let names: Vec<String> = std::fs::read_dir(outside.path())
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name().to_string_lossy().to_string())
+        .collect();
+    assert_eq!(names, ["keep"]);
+    assert_eq!(
+        std::fs::read_to_string(outside.path().join("keep")).unwrap(),
+        "keep"
+    );
+}
+
+// @kotowari[REQ-core-324, REQ-core-296]
+#[cfg(unix)]
+#[test]
+fn req_core_324_a_link_above_the_cache_place_also_stops() {
+    for linked in [".kotowari/cache", ".kotowari"] {
+        let tmp = two_documents();
+        let outside = TempDir::new().unwrap();
+        if linked == ".kotowari" {
+            // 設定と元データはリンク先から読める。書き込みだけが外に届く
+            std::fs::rename(tmp.path().join(".kotowari"), outside.path().join("k")).unwrap();
+            std::os::unix::fs::symlink(outside.path().join("k"), tmp.path().join(linked)).unwrap();
+        } else {
+            std::os::unix::fs::symlink(outside.path(), tmp.path().join(linked)).unwrap();
+        }
+        let before = snapshot(outside.path(), &outside.path().join("none"));
+        let (code, _, stderr) = run(tmp.path(), &["overview", "build"]);
+        assert_eq!(code, Some(2), "{linked}: {stderr}");
+        assert_eq!(
+            stderr.lines().next(),
+            Some(format!("cache error: {linked}").as_str()),
+            "{linked}"
+        );
+        assert_eq!(
+            snapshot(outside.path(), &outside.path().join("none")),
+            before,
+            "{linked}"
+        );
+    }
+}

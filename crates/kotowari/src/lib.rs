@@ -57,6 +57,8 @@ impl ProjectOptions {
 pub enum ErrorKind {
     /// 全体像の元データに誤りがあり、全体像を書かない（REQ-core-294）
     OverviewData,
+    /// 全体像の置き場がシンボリックリンクかディレクトリでないか、作成、書き込み、削除に失敗した（REQ-core-324）
+    CacheFailure,
     InputMissing,
     InvalidInput,
     ConfigError,
@@ -88,9 +90,22 @@ impl std::fmt::Display for Error {
 impl std::error::Error for Error {}
 /// 全体像の元データの誤りで止まるときの、標準エラーの1行目で詳細の前に出る文言（TBL-core-018）
 const OVERVIEW_ERROR: &str = "overview error";
+/// 全体像の置き場が使えずに止まるときの文言（TBL-core-018）
+const CACHE_ERROR: &str = "cache error";
 impl Error {
     /// core の停止の理由に無い、このライブラリの失敗の文言のすべて
-    pub const WORDINGS: &'static [&'static str] = &[OVERVIEW_ERROR];
+    pub const WORDINGS: &'static [&'static str] = &[OVERVIEW_ERROR, CACHE_ERROR];
+    /// 置き場の誤り。詳細は`基準のディレクトリ`からの相対パスと、あれば OS の誤りの文（TBL-core-020）
+    fn cache(path: &str, error: Option<std::io::Error>) -> Self {
+        let detail = match error {
+            Some(error) => format!("{CACHE_ERROR}: {path}: {error}"),
+            None => format!("{CACHE_ERROR}: {path}"),
+        };
+        Self {
+            kind: ErrorKind::CacheFailure,
+            detail,
+        }
+    }
     fn overview_data(errors: usize) -> Self {
         Self {
             kind: ErrorKind::OverviewData,
@@ -207,15 +222,24 @@ impl OverviewPrepared {
     /// ファイルは書かず、今回返さなかったファイルを消す（REQ-core-293）
     pub fn write(&self) -> Result<OverviewBuild, Error> {
         let cache = self.directory();
-        let write_error = |path: &str, error: std::io::Error| Error {
-            kind: ErrorKind::ReadFailure,
-            detail: kotowari_core::StopReason::UnreadableFile(format!(
-                "{}/{path}: {error}",
-                overview::CACHE
-            ))
-            .to_string(),
-        };
-        std::fs::create_dir_all(&cache).map_err(|error| write_error("", error))?;
+        let write_error =
+            |path: &str, error| Error::cache(&format!("{}/{path}", overview::CACHE), Some(error));
+        // REQ-core-324: 置き場かその上がリンクかディレクトリでなければ、何も書かず消さずに止める
+        let mut place = String::new();
+        for component in overview::CACHE.split('/') {
+            if !place.is_empty() {
+                place.push('/');
+            }
+            place.push_str(component);
+            match std::fs::symlink_metadata(self.base.join(&place)) {
+                Ok(meta) if meta.file_type().is_dir() => {}
+                Ok(_) => return Err(Error::cache(&place, None)),
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => break,
+                Err(error) => return Err(Error::cache(&place, Some(error))),
+            }
+        }
+        std::fs::create_dir_all(&cache)
+            .map_err(|error| Error::cache(overview::CACHE, Some(error)))?;
         let existing = overview::existing(&cache)?;
         let mut build = OverviewBuild::default();
         for page in &self.pages {
