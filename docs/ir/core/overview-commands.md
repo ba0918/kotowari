@@ -64,10 +64,10 @@ kotowari は常に、"kotowari overview serve" で、`全体像の元データ`�
 ### REQ-core-298: ポートが使えないとき
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-02-whole-picture.md#A57, docs/decision/records/2026-10-02-whole-picture.md#A72
+- source: docs/decision/records/2026-10-02-whole-picture.md#A57, docs/decision/records/2026-10-02-whole-picture.md#A72, docs/decision/records/2026-10-04-overview-on-public-api.md#A14
 - verification: unit
 
-"kotowari overview serve" で、"127.0.0.1" の指定のポートを使えないとき、kotowari はほかのポートを試さずに、読めないファイルでなく引数の誤りでもない、ポートの誤りを理由に`停止`し、詳細を "127.0.0.1:<ポート>" と OS の誤りの文にする。
+"kotowari overview serve" で、"127.0.0.1" の指定のポートを使えないとき、kotowari はほかのポートを試さずに、読めないファイルでなく引数の誤りでもない、ポートの誤りを理由に`停止`し、詳細を "127.0.0.1:<ポート>" と OS の誤りの文にする。配っている間に接続の受け付けに失敗したときも、同じくポートの誤りを理由に`停止`する。
 
 ### REQ-core-299: serve が配る範囲
 

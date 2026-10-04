@@ -47,7 +47,7 @@ view は常に、同じ`節`の中で続く、値に "width": "half" を持つ`�
 
 ### TBL-view-001: 部品の種類
 
-- source: docs/decision/records/2026-10-02-whole-picture.md#A36, docs/decision/records/2026-10-02-whole-picture.md#A66, docs/decision/records/2026-10-02-whole-picture.md#A31, docs/decision/records/2026-10-02-whole-picture.md#A83, docs/decision/records/2026-10-02-whole-picture.md#A7, docs/decision/records/2026-10-02-whole-picture.md#A38, docs/decision/records/2026-10-02-whole-picture.md#A85
+- source: docs/decision/records/2026-10-02-whole-picture.md#A36, docs/decision/records/2026-10-02-whole-picture.md#A66, docs/decision/records/2026-10-02-whole-picture.md#A31, docs/decision/records/2026-10-02-whole-picture.md#A83, docs/decision/records/2026-10-02-whole-picture.md#A7, docs/decision/records/2026-10-02-whole-picture.md#A38, docs/decision/records/2026-10-02-whole-picture.md#A85, docs/decision/records/2026-10-04-overview-on-public-api.md#A13
 
 | 種類の名前 | 描くもの | 主な欄 |
 |---|---|---|
@@ -55,7 +55,7 @@ view は常に、同じ`節`の中で続く、値に "width": "half" を持つ`�
 | flow | 左から右へ流れる列の箱の並び。箱は格子に並べ、文字の位置を手で決めない | columns（列の並び。列は箱の並び。箱は title、body、tone） |
 | steps | 番号付きの段階の並び | items（title、body、refs） |
 | cards | 見出しと項目の一覧を持つカードの並び | cards（title、items、tone） |
-| status | 状態の札と文の並び。札は "決定"、"予定"、"未決"、"取り下げ" | items（state、text、refs） |
+| status | 状態の札と文の並び。札は "決定"、"予定"、"未決"、"取り下げ" で、4つを互いに見分けられる見た目で描く | items（state、text、refs） |
 | compare | 前と後と理由の組の並び。前は取り消し線で描く | items（before、after、why、refs） |
 | decisions | 根の判断とその下の判断の木。判断した者の札を付ける | roots（ref、text、by、children） |
 | quiz | 問いと、選ぶと開く答えの並び | items（q、a、refs） |
