@@ -1044,7 +1044,7 @@
         {
           "path": "src/cli.rs",
           "before": null,
-          "after": "sha256:c367ae199b519eb84df5491d7158c4d2c14851b14ac8682aba0594d307468590"
+          "after": "sha256:918c3423cb587f014e14ad6a6fe54f6bdecf0e736ac04711c77d9e821bd40ada"
         },
         {
           "path": "src/cli/list.rs",
@@ -1064,7 +1064,7 @@
         {
           "path": "src/cli/serve.rs",
           "before": null,
-          "after": "sha256:a00614ff27d272a2a4581f1e76ff6023a312a0b9e6caea16b4073f6d098cb274"
+          "after": "sha256:48b68ad503a8d2bfe6ef772e558082597f23586f6e9bdedf120fe2329f5261ee"
         },
         {
           "path": "src/cli/status.rs",
@@ -1149,7 +1149,7 @@
         {
           "path": "tests/step20_overview_serve.rs",
           "before": null,
-          "after": "sha256:a46cefb5c3a5522f1c9863c1458a5827ba920330ef2c1d444dca7c3460bcfaa3"
+          "after": "sha256:35df3dbf52e86236a0b05305de65ff6f5b7bf3f6f1fdddd6188b968d18120edb"
         },
         {
           "path": "tests/step2_ir.rs",
@@ -1448,6 +1448,12 @@
         "docs/decision/records/2026-10-04-mutants-in-ci.md#A10",
         "docs/decision/records/2026-10-04-mutants-in-ci.md#A11",
         "docs/decision/records/2026-10-04-mutants-in-ci.md#A12",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A13",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A14",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A15",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A16",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A17",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A18",
         "docs/decision/records/2026-10-04-overview-on-public-api.md#A1",
         "docs/decision/records/2026-10-04-overview-on-public-api.md#A2",
         "docs/decision/records/2026-10-04-overview-on-public-api.md#A3",
@@ -1462,12 +1468,6 @@
         "docs/decision/records/2026-10-04-overview-on-public-api.md#A12",
         "docs/decision/records/2026-10-04-overview-on-public-api.md#A13",
         "docs/decision/records/2026-10-04-overview-on-public-api.md#A14",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A13",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A14",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A15",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A16",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A17",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A18",
         "docs/decision/records/2026-10-02-whole-picture.md#A22",
         "docs/decision/records/2026-10-02-whole-picture.md#A25",
         "docs/decision/records/2026-10-02-whole-picture.md#A27",
