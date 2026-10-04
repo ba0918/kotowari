@@ -32,10 +32,10 @@ kotowari は常に、"kotowari overview build" で、すべての`全体像の�
 ### REQ-core-294: 元データに誤りがあれば書かない
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-02-whole-picture.md#A33, docs/decision/records/2026-10-02-whole-picture.md#A61, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-02-whole-picture.md#A79
+- source: docs/decision/records/2026-10-02-whole-picture.md#A33, docs/decision/records/2026-10-02-whole-picture.md#A61, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-02-whole-picture.md#A79, docs/decision/records/2026-10-05-overview-index.md#A12
 - verification: unit
 
-"kotowari overview build" か "kotowari overview serve" で、`全体像の元データ`に REQ-core-278 から REQ-core-286 と REQ-core-305 の`誤り`が1件以上あるとき、kotowari はファイルを1つも書かず消さずに、元データの誤りを理由に`停止`し、詳細を`誤り`の件数と "errors in overview data; run kotowari check" にする。
+"kotowari overview build" か "kotowari overview serve" で、`全体像の元データ`か`目次`に REQ-core-278 から REQ-core-286 と REQ-core-305 と REQ-core-327 から REQ-core-330 の`誤り`が1件以上あるとき、kotowari はファイルを1つも書かず消さずに、元データの誤りを理由に`停止`し、詳細を`誤り`の件数と "errors in overview data; run kotowari check" にする。
 
 ### REQ-core-295: build の出力
 

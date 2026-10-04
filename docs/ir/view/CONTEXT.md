@@ -4,7 +4,7 @@ kotowari-markdown-view（view）の仕様 IR で使う用語を置く。view は
 
 | Term | Meaning | Source |
 |---|---|---|
-| 描画の入力 | view が1回の描画で受け取るものの全体。`文書`の並びと`参照の表`からなる | docs/decision/records/2026-10-02-whole-picture.md#A25, docs/decision/records/2026-10-02-whole-picture.md#A42 |
+| 描画の入力 | view が1回の描画で受け取るものの全体。`文書`の並びと`参照の表`と`目次`からなる | docs/decision/records/2026-10-02-whole-picture.md#A25, docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-05-overview-index.md#A10, docs/decision/records/2026-10-05-overview-index.md#A33 |
 | 文書 | `描画の入力`の中の1つの`ページ`の元。名前、題名、冒頭の lead の`部品`、lead に続く冒頭の`部品`の並び、`節`の並びを持つ。ファイルではない | docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-02-whole-picture.md#A68, docs/decision/records/2026-10-02-whole-picture.md#A82, docs/decision/records/2026-10-04-overview-on-public-api.md#A10 |
 | 節 | `文書`の中の "## " の見出し1つとその下の`ブロック`の並び。古いかどうかの真偽を持つ | docs/decision/records/2026-10-02-whole-picture.md#A39, docs/decision/records/2026-10-02-whole-picture.md#A68 |
 | ブロック | `節`の中身の単位。Markdown の文章の塊か`部品`のどちらか | docs/decision/records/2026-10-02-whole-picture.md#A42 |
@@ -13,3 +13,5 @@ kotowari-markdown-view（view）の仕様 IR で使う用語を置く。view は
 | 参照 | `部品`の値の中の、名前が "refs" か "ref" の欄に書いた文字列 | docs/decision/records/2026-10-02-whole-picture.md#A66 |
 | 参照の表 | `参照`の文字列から、表示名、本文、状態への対応。view の外で作られて渡される。リンク表とは言わない | docs/decision/records/2026-10-02-whole-picture.md#A25, docs/decision/records/2026-10-02-whole-picture.md#A51, docs/decision/records/2026-10-02-whole-picture.md#A65, docs/decision/records/2026-10-02-whole-picture.md#A67 |
 | ページ | view が出す1つのファイルの名前と中身の組。view はファイルを書かず、ページの並びを返す | docs/decision/records/2026-10-02-whole-picture.md#A26, docs/decision/records/2026-10-02-whole-picture.md#A56, docs/decision/records/2026-10-02-whole-picture.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A82 |
+| 目次 | `描画の入力`の一部で、一覧の`ページ`の並びと入れ子を決める、いちばん外側の`目次の群`。地図・索引とは言わない | docs/decision/records/2026-10-05-overview-index.md#A7, docs/decision/records/2026-10-05-overview-index.md#A9, docs/decision/records/2026-10-05-overview-index.md#A15, docs/decision/records/2026-10-05-overview-index.md#A33 |
+| 目次の群 | `目次`の中の束。題名、省いてよい一行の説明、`文書`の名前と`目次の群`を順に並べた項目を持つ。カテゴリ・フォルダとは言わない | docs/decision/records/2026-10-05-overview-index.md#A4, docs/decision/records/2026-10-05-overview-index.md#A9, docs/decision/records/2026-10-05-overview-index.md#A10 |

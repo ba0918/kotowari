@@ -7,11 +7,11 @@
 ### REQ-core-300: 承認で全体像を作って示す
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A2, docs/decision/records/2026-10-02-whole-picture.md#A8, docs/decision/records/2026-10-02-whole-picture.md#A34, docs/decision/records/2026-10-02-whole-picture.md#A52, docs/decision/records/2026-10-02-whole-picture.md#A84
+- source: docs/decision/records/2026-10-02-whole-picture.md#A2, docs/decision/records/2026-10-02-whole-picture.md#A8, docs/decision/records/2026-10-02-whole-picture.md#A34, docs/decision/records/2026-10-02-whole-picture.md#A52, docs/decision/records/2026-10-02-whole-picture.md#A84, docs/decision/records/2026-10-05-overview-index.md#A19
 - verification: review
-- how_to_verify: "agent/skills/kotowari-brainstorm/SKILL.md" の承認の手順を読み、check と照合レビューの後に、関わる`全体像`を "ir" の一覧で決めること、`全体像の元データ`を作るか直すこと、"kotowari overview build" を走らせて誤りを直すこと、serve を起動して URL を参考として示し裏で起動できなければコマンドを示すことが、この順で書いてあり、承認の対象と承認の材料を変えていないことを確かめる
+- how_to_verify: "agent/skills/kotowari-brainstorm/SKILL.md" の承認の手順を読み、check と照合レビューの後に、関わる`全体像`を "ir" の一覧で決めること、`全体像の元データ`を作るか直すこと、`目次`を直すこと、"kotowari overview build" を走らせて誤りを直すこと、serve を起動して URL を参考として示し裏で起動できなければコマンドを示すことが、この順で書いてあり、承認の対象と承認の材料を変えていないことを確かめる
 
-kotowari-brainstorm は常に、"overview" の鍵を持つプロジェクトの承認で、今の check と照合レビューの後に、変えた`IR`の`話題ごとの文書`から関わる`全体像`を`全体像の元データ`の "ir" の一覧で決め、その`全体像の元データ`を作るか直し、"kotowari overview build" を走らせて誤りを直し、"kotowari overview serve" を起動して URL を参考として示す。`全体像`は承認の対象にせず、見るかどうかは人に委ねる。
+kotowari-brainstorm は常に、"overview" の鍵を持つプロジェクトの承認で、今の check と照合レビューの後に、変えた`IR`の`話題ごとの文書`から関わる`全体像`を`全体像の元データ`の "ir" の一覧で決め、その`全体像の元データ`を作るか直し、`目次`を直し、"kotowari overview build" を走らせて誤りを直し、"kotowari overview serve" を起動して URL を参考として示す。`全体像`は承認の対象にせず、見るかどうかは人に委ねる。
 
 ### REQ-core-301: 全体像の単位を決める
 
@@ -39,3 +39,12 @@ kotowari のスキルは常に、`全体像の元データ`を書く場面を持
 - how_to_verify: "agent/skills/kotowari-cycle/" と "agent/skills/kotowari-implement/" を読み、`全体像の元データ`を直す手順が無いこと、`全体像の元データ`の guide_stale を次にその話題に触れた壁打ちが直すと kotowari のスキルの references に書いてあることを確かめる
 
 kotowari のスキルは常に、cycle と実装の工程で`全体像の元データ`を直さず、`全体像の元データ`の guide_stale を次にその話題に触れた壁打ちで直す。
+
+### REQ-core-333: 目次の置き方
+
+- kind: ubiquitous
+- source: docs/decision/records/2026-10-05-overview-index.md#A4, docs/decision/records/2026-10-05-overview-index.md#A6, docs/decision/records/2026-10-05-overview-index.md#A19
+- verification: review
+- how_to_verify: kotowari のスキルの references を読み、承認のときに新しい`全体像`を`目次`のどこに置くかと、`目次の群`を分けるか新しく作るかを LLM が決めて`目次`を直し人に聞かないこと、`目次`を承認の対象にしないこと、`目次の群`を分けるのはその群が大きくなってからにすること、同じ階層の中を読む人に意味のある順（使う順や工程の順）に並べることが書いてあることを確かめる
+
+kotowari のスキルは常に、承認のときに新しい`全体像`を`目次`のどこに置くかと、`目次の群`を分けるか新しく作るかを LLM が決めて`目次`を直すことを求め、`目次`を承認の対象にせず、`目次の群`を分けるのをその群が大きくなってからにし、同じ階層の中を読む人に意味のある順に並べることを求める。
