@@ -11,8 +11,17 @@ pub struct Config {
     pub mutants: MutantsConfig,
     pub surface: SurfaceConfig,
     pub changes: Option<ChangesConfig>,
+    /// `全体像の元データ`の置き場。鍵が無ければ None で、元データを読まない（TBL-core-004）
+    pub overview: Option<OverviewConfig>,
     pub limits: LimitsConfig,
     pub vague_words: Vec<String>,
+}
+
+/// `全体像の元データ`の置き場（TBL-core-004）
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OverviewConfig {
+    /// `全体像の元データ`に当たる glob の一覧。"overview" を書くときは必須
+    pub files: Vec<String>,
 }
 
 /// `面`の検査の設定（TBL-core-004、docs/ir/core/surface.md）
@@ -86,6 +95,7 @@ impl Default for Config {
             mutants: MutantsConfig { equivalents: None },
             surface: SurfaceConfig::default(),
             changes: None,
+            overview: None,
             limits: LimitsConfig {
                 lines: NonZeroU64::new(200).unwrap(),
                 requirements: NonZeroU64::new(10).unwrap(),
@@ -122,7 +132,16 @@ struct RawConfig {
     #[serde(default, deserialize_with = "deserialize_nullable")]
     changes: Option<Option<ChangesConfig>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
+    overview: Option<Option<RawOverview>>,
+    #[serde(default, deserialize_with = "deserialize_nullable")]
     vague_words: Option<Option<Vec<String>>>,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawOverview {
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    files: Option<Option<Vec<String>>>,
 }
 
 #[derive(serde::Deserialize)]
@@ -364,6 +383,11 @@ impl Config {
                 unspecified: self.surface.unspecified.clone().map(Some),
             })),
             changes: self.changes.clone().map(Some),
+            overview: self.overview.as_ref().map(|overview| {
+                Some(RawOverview {
+                    files: Some(Some(overview.files.clone())),
+                })
+            }),
             limits: Some(Some(RawLimits {
                 lines: Some(Some(self.limits.lines)),
                 requirements: Some(Some(self.limits.requirements)),
@@ -481,6 +505,18 @@ impl Config {
             }
         }
 
+        // TBL-core-004: "overview" を書くときは "overview.files" が必須。glob は REQ-core-014 のとおり検査する
+        let overview = match non_null(raw.overview, "overview")? {
+            Some(o) => {
+                let files = non_null(o.files, "overview.files")?.ok_or_else(|| {
+                    StopReason::ConfigError("overview.files is required".to_string())
+                })?;
+                check_globs(&files)?;
+                Some(OverviewConfig { files })
+            }
+            None => None,
+        };
+
         let surface = match non_null(raw.surface, "surface")? {
             Some(s) => read_surface(s)?,
             None => defaults.surface,
@@ -531,6 +567,7 @@ impl Config {
             mutants,
             surface,
             changes,
+            overview,
             limits,
             // REQ-core-015: 一覧は既定を置き換える
             vague_words,
