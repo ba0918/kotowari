@@ -214,6 +214,53 @@ fn req_core_299_a_percent_encoded_page_name_is_decoded_to_the_file_in_the_cache(
     assert_eq!(child.wait().unwrap().code(), Some(0));
 }
 
+// @kotowari[REQ-core-298, TBL-core-001, TBL-core-018, TBL-core-020]
+#[cfg(unix)]
+#[test]
+fn req_core_298_a_failure_to_accept_while_serving_stops_with_a_port_error() {
+    let tmp = make_project(OVERVIEW, true);
+    let port = free_port();
+    // 開けるファイルの数を絞り、受け付けきれない数の接続で accept を失敗させる
+    let mut child = Command::new("sh")
+        .args([
+            "-c",
+            "ulimit -n 16 && exec \"$0\" \"$@\"",
+            assert_cmd::cargo::cargo_bin("kotowari").to_str().unwrap(),
+            "overview",
+            "serve",
+            "--port",
+            &port.to_string(),
+        ])
+        .current_dir(tmp.path())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let mut stdout = BufReader::new(child.stdout.take().unwrap());
+    let mut line = String::new();
+    stdout.read_line(&mut line).unwrap();
+    assert_eq!(line, format!("http://127.0.0.1:{port}/\n"));
+    // 受け付けが止まった後の接続は断られる
+    let held: Vec<TcpStream> = (0..32)
+        .filter_map(|_| TcpStream::connect(("127.0.0.1", port)).ok())
+        .collect();
+    let mut stderr = String::new();
+    child
+        .stderr
+        .take()
+        .unwrap()
+        .read_to_string(&mut stderr)
+        .unwrap();
+    let code = child.wait().unwrap().code();
+    drop(held);
+    assert_eq!(code, Some(2), "{stderr}");
+    assert!(
+        stderr.starts_with(&format!("port error: 127.0.0.1:{port}: ")),
+        "{stderr}"
+    );
+    assert!(stderr.lines().next().unwrap().len() > format!("port error: 127.0.0.1:{port}: ").len());
+}
+
 fn stopped(tmp: &Path, port: u16) -> (Option<i32>, String, String) {
     let output = kotowari()
         .args(["overview", "serve", "--port", &port.to_string()])

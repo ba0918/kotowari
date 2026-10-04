@@ -34,7 +34,11 @@ pub fn run(project: &kotowari::Project, port: u16) -> Result<u8, StopReason> {
         match server.recv() {
             Ok(request) => respond(&cache, request),
             Err(_) if stopping.load(Ordering::SeqCst) => return Ok(0),
-            Err(_) => continue,
+            // 割り込みのほかの誤りは、受け付けの失敗である。HTTP のクレートは受け付けに一度
+            // 失敗すると受け付けを再開しないので、配り続けられない（REQ-core-298）
+            Err(error) => {
+                return Err(StopReason::PortError(format!("127.0.0.1:{port}: {error}")));
+            }
         }
     }
 }
