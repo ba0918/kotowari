@@ -126,6 +126,32 @@ fn req_view_005_the_note_of_the_contents_is_drawn_under_the_index_heading() {
     assert!(heading < note && note < position(&index, "題名A"));
 }
 
+// @kotowari[REQ-view-005]
+#[test]
+fn req_view_005_the_note_of_a_nested_group_is_part_of_the_group_heading() {
+    let input = RenderInput {
+        documents: vec![document("a", "題名A", vec![])],
+        references: vec![],
+        toc: TocGroup {
+            title: "目次".into(),
+            note: None,
+            items: vec![TocItem::Group(TocGroup {
+                title: "群".into(),
+                note: Some("群の説明".into()),
+                items: vec![TocItem::Document("a".into())],
+            })],
+        },
+    };
+    let index = page(&render(&input), "index.html").to_string();
+    // 畳んでも見える見出しは <summary> の中。群の題名と説明はその中にある（REQ-view-018）
+    let start = position(&index, "<summary");
+    let end = position(&index, "</summary>");
+    let title = position(&index, ">群<");
+    let note = position(&index, "群の説明");
+    assert!(start < title && title < end);
+    assert!(start < note && note < end);
+}
+
 // @kotowari[REQ-view-002]
 #[test]
 fn req_view_002_pages_refer_to_the_shared_style_and_to_each_other_relatively() {

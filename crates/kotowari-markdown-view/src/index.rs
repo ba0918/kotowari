@@ -124,6 +124,15 @@ fn note(group: &TocGroup) -> String {
         .unwrap_or_default()
 }
 
+/// 入れ子の群の説明。<summary> の中に置けるよう段落でなく span で描く
+fn group_note(group: &TocGroup) -> String {
+    group
+        .note
+        .as_ref()
+        .map(|note| format!("<span class=\"note\">{}</span>", html::escape(note)))
+        .unwrap_or_default()
+}
+
 /// 項目を書かれた順に描き、その下の数を合わせる（REQ-view-017、REQ-view-021）
 fn items(items: &[TocItem], documents: &Documents, path: &mut Vec<usize>) -> (String, Counts) {
     let mut out = String::from("<ul class=\"entries\">\n");
@@ -148,13 +157,14 @@ fn items(items: &[TocItem], documents: &Documents, path: &mut Vec<usize>) -> (St
                 path.push(index);
                 let (inner, counts) = self::items(&group.items, documents, path);
                 total.add(counts);
-                // REQ-view-018: 開いた状態で描き、見出しを選ぶと畳める。スクリプトは使わない
+                // REQ-view-018: 開いた状態で描き、見出しを選ぶと畳める。スクリプトは使わない。
+                // REQ-view-005: 群の説明は見出しの一部なので、畳んでも見える <summary> の中に描く
                 out.push_str(&format!(
-                    "<li class=\"group\" id=\"{}\"><details open>\n<summary><span class=\"group-title\">{}</span>{}</summary>\n{}{inner}</details></li>\n",
+                    "<li class=\"group\" id=\"{}\"><details open>\n<summary><span class=\"group-title\">{}</span>{}{}</summary>\n{inner}</details></li>\n",
                     anchor(path),
                     html::escape(&group.title),
                     counts.group(),
-                    note(group)
+                    group_note(group)
                 ));
                 path.pop();
             }
