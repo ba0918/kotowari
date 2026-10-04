@@ -3,6 +3,8 @@ use kotowari_markdown_view::{
 };
 use serde_json::json;
 
+mod common;
+
 fn lead(conclusion: &str) -> Part {
     Part {
         kind: "lead".into(),
@@ -254,19 +256,10 @@ fn req_view_021_names_without_a_document_are_not_counted_in_a_group() {
     assert!(top(&index).contains("1 ページ"));
 }
 
-/// 題名より上にあるリンクの、href と文字の並び
+/// 題名より上にあるリンクの、リンク先と文字の並び
 fn links_above_title(page: &str) -> Vec<(String, String)> {
-    let head = &page[..page.find("<h1>").expect("title")];
-    let body = &head[head.find("<body>").expect("body")..];
-    body.split("<a href=\"")
-        .skip(1)
-        .map(|link| {
-            let (href, rest) = link.split_once('"').expect("href");
-            let text =
-                &rest[rest.find('>').expect("tag end") + 1..rest.find("</a>").expect("a end")];
-            (href.to_string(), text.to_string())
-        })
-        .collect()
+    let head = &page[..page.find("<h1").expect("title")];
+    common::links(&head[head.find("<body").expect("body")..])
 }
 
 /// 一覧の中で、その場所（id）の後に最初に出てくる文字。目次の群の場所なら、その題名である
@@ -308,7 +301,10 @@ fn ex_view_014_a_page_shows_its_place_and_the_other_pages_of_its_group() {
     assert_eq!(title_at(index, &links[0].0), "kotowari");
     assert_eq!(title_at(index, &links[1].0), "テスト");
     let tail = after_last_section(a);
-    assert!(tail.contains("<a href=\"b.html\">題名b</a>"), "{tail}");
+    assert!(
+        common::links(tail).contains(&("b.html".into(), "題名b".into())),
+        "{tail}"
+    );
     assert!(!a.contains("z.html") && !a.contains("href=\"a.html\""));
 }
 

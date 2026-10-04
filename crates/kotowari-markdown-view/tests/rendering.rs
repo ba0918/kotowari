@@ -4,6 +4,8 @@ use kotowari_markdown_view::{
 };
 use serde_json::json;
 
+mod common;
+
 fn lead(conclusion: &str) -> Part {
     Part {
         kind: "lead".into(),
@@ -106,8 +108,15 @@ fn ex_view_010_the_index_follows_the_contents_order_and_nesting() {
     let note = position(index, "テストとの対応");
     assert!(group < note && note < b && b < b_conclusion && b_conclusion < end);
     assert!(end < position(index, "題名A") && end < position(index, "題名Aの結論"));
-    assert!(index.contains("<a href=\"b.html\"><span class=\"title\">題名B</span></a>"));
-    assert!(index.contains("<a href=\"a.html\"><span class=\"title\">題名A</span></a>"));
+    let links = common::links(index);
+    assert!(
+        links.contains(&("b.html".into(), "題名B".into())),
+        "{links:?}"
+    );
+    assert!(
+        links.contains(&("a.html".into(), "題名A".into())),
+        "{links:?}"
+    );
 }
 
 // @kotowari[REQ-view-005]
