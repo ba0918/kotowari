@@ -181,6 +181,15 @@ finding_kinds! {
     VagueWord => "vague_word",
     VerificationInvalid => "verification_invalid",
     VerificationMissing => "verification_missing",
+    // 全体像の元データの指摘（TBL-core-008）。core はこの種類を作らず、追加の指摘の群として受け取って並べ、数える
+    OverviewFormInvalid => "overview_form_invalid",
+    OverviewPartUnknown => "overview_part_unknown",
+    OverviewPartInvalid => "overview_part_invalid",
+    OverviewLeadMissing => "overview_lead_missing",
+    OverviewIrMissing => "overview_ir_missing",
+    OverviewIrShared => "overview_ir_shared",
+    OverviewRefUnresolved => "overview_ref_unresolved",
+    OverviewNameConflict => "overview_name_conflict",
 }
 
 impl FindingKind {
