@@ -14,7 +14,7 @@
         {
           "path": "agent/skills/kotowari-brainstorm/SKILL.md",
           "before": "sha256:77a96434780052613e064a6019be6a2d819afcb335c72e97a23a75f40824c94f",
-          "after": "sha256:958781860f85e5cc3cbbe4c0470abeaceaf926954c1567f5ee66b8bb63f88544"
+          "after": "sha256:d02de7cb1dfd598be24ebcf770efee20fffcefb12efc301cb5b4a2ae26756e18"
         },
         {
           "path": "agent/skills/kotowari-cycle/SKILL.md",
@@ -39,12 +39,12 @@
         {
           "path": "agent/skills/kotowari-review/SKILL.md",
           "before": "sha256:1f4f5b3895d285371cb2f539c0edff9da084e3844a331ec4493bb701f5a06b37",
-          "after": "sha256:c65eb9963656753a5844762692b1ba328e72d739f7ef391b7282023c8e3a07b7"
+          "after": "sha256:0c46299bc599229008ad94a3c9ebd9725240474d8e90a4234ac3302852bed66f"
         },
         {
           "path": "agent/skills/kotowari/SKILL.md",
           "before": "sha256:d3fb7a71f2d973f388222a0b5ccf7286201aec1f0860d043abcfa46bdb3c7a8a",
-          "after": "sha256:ac1709d666892a5b183db3acff7dd5e461dde5bc4babd5bb5fde9e6207a9a813"
+          "after": "sha256:773026ef3277e641709d24019a1426a67b7028ac9007908c68365bafec514829"
         },
         {
           "path": "agent/skills/kotowari/references/changes.md",
@@ -54,14 +54,15 @@
       ],
       "ir": [],
       "conclusion": "new",
-      "reason": "配布スキルの文言だけを変える。kotowari スキルに What the IR holds を足して IR に書くものを製品の利用者が観測できる振る舞いに限り、CI・フック・リリース・ビルド設定・リポジトリ自身のデータ・プロジェクト自身のテストと検査を IR の外と列挙した（A1、A2、A3）。壁打ち、計画、実装、cycle、review、iterate と変更照合の reference はその定義を参照する（A4、A5）。この決まりは IR に書かない（A5）ので IR は変えない。CHANGELOG の Unreleased に利用者向けの変更を足した。",
+      "reason": "配布スキルの文言だけを変える。kotowari スキルに What the IR holds を足して IR に書くものを製品の利用者が観測できる振る舞いに限り、CI・フック・リリース・ビルド設定・リポジトリ自身のデータ・プロジェクト自身のテストと検査についての規則を IR の外と列挙した（A1、A2、A3）。製品のテストは引き続き要求の印を持ち、既存の承認済み IR は人が決めるまで残す（A7）。壁打ち、計画、実装、cycle、review、iterate と変更照合の reference はその定義を参照し、review では CI やフックの関門の規則を判断の記録から読む（A4、A5）。この決まりは IR に書かない（A5）ので IR は変えない。CHANGELOG の Unreleased に利用者向けの変更を足した。",
       "requirements": [],
       "decisions": [
         "docs/decision/records/2026-10-04-ir-scope.md#A1",
         "docs/decision/records/2026-10-04-ir-scope.md#A2",
         "docs/decision/records/2026-10-04-ir-scope.md#A3",
         "docs/decision/records/2026-10-04-ir-scope.md#A4",
-        "docs/decision/records/2026-10-04-ir-scope.md#A5"
+        "docs/decision/records/2026-10-04-ir-scope.md#A5",
+        "docs/decision/records/2026-10-04-ir-scope.md#A7"
       ],
       "handoff": null,
       "gaps": []
