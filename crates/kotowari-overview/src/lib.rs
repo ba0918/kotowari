@@ -10,7 +10,8 @@ mod parts;
 mod references;
 
 use kotowari_core::{DocKind, Finding, FindingGroup, FindingKind, ReadModel, SourceText};
-use kotowari_markdown_view::{Block, Document, Page, Part, Reference, RenderInput, Section};
+pub use kotowari_markdown_view::Page;
+use kotowari_markdown_view::{Block, Document, Part, Reference, RenderInput, Section};
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 

@@ -104,6 +104,14 @@ impl AsyncProject {
         let options = options.clone();
         self.blocking.run(move || project.mutants(&options)).await
     }
+    pub async fn overview_prepare(&self) -> Result<crate::OverviewPrepared, Error> {
+        let project = self.project.clone();
+        self.blocking.run(move || project.overview_prepare()).await
+    }
+    pub async fn overview_build(&self) -> Result<crate::OverviewBuild, Error> {
+        let project = self.project.clone();
+        self.blocking.run(move || project.overview_build()).await
+    }
     pub async fn changes(
         &self,
         options: &crate::ChangesOptions,

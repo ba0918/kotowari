@@ -66,3 +66,36 @@ pub(crate) fn group(read: &ReadModel, texts: Option<Vec<SourceText>>) -> Finding
         None => FindingGroup::new(kotowari_overview::GROUP, 0, 0, Vec::new()),
     }
 }
+
+/// 置き場。`基準のディレクトリ`の下に固定し、設定で変えられない（REQ-core-296）
+pub(crate) const CACHE: &str = ".kotowari/cache/overview";
+
+/// "overview" の鍵が無いまま build か serve を実行したとき（REQ-core-279）
+pub(crate) fn not_configured() -> StopReason {
+    StopReason::ConfigError("overview is not configured".into())
+}
+
+/// 置き場の下のファイルを、置き場からの相対パスで集める。ディレクトリのシンボリックリンクは辿らない
+pub(crate) fn existing(cache: &Path) -> Result<Vec<String>, StopReason> {
+    if !cache.is_dir() {
+        return Ok(Vec::new());
+    }
+    let mut files = Vec::new();
+    for entry in walkdir::WalkDir::new(cache)
+        .follow_links(false)
+        .min_depth(1)
+    {
+        let entry =
+            entry.map_err(|error| StopReason::UnreadableFile(format!("{CACHE}: {error}")))?;
+        if !entry.file_type().is_dir() {
+            let relative = entry
+                .path()
+                .strip_prefix(cache)
+                .unwrap_or(entry.path())
+                .to_string_lossy()
+                .replace('\\', "/");
+            files.push(relative);
+        }
+    }
+    Ok(files)
+}

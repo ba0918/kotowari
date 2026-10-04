@@ -108,3 +108,56 @@ fn every_operation_is_send_and_reuses_sync_results_and_failure_kinds() {
         );
     });
 }
+
+// @kotowari[REQ-core-310, TBL-core-041, REQ-core-318]
+#[test]
+fn overview_prepare_and_build_return_what_the_sync_operations_return() {
+    let make = || {
+        let dir = tempfile::tempdir().unwrap();
+        for path in [
+            ".kotowari/overview",
+            "docs/ir",
+            "docs/decision/records",
+            "docs/decision/adr",
+        ] {
+            std::fs::create_dir_all(dir.path().join(path)).unwrap();
+        }
+        std::fs::write(
+            dir.path().join(".kotowari/config.yaml"),
+            "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n",
+        )
+        .unwrap();
+        std::fs::write(dir.path().join("docs/ir/topic.md"), "# Topic\n\nScope.\n").unwrap();
+        std::fs::write(
+            dir.path().join(".kotowari/overview/a.md"),
+            "---\nir:\n  - docs/ir/topic.md\n---\n\n# a\n\n```view lead\nconclusion: c\n```\n",
+        )
+        .unwrap();
+        dir
+    };
+    let (sync_dir, async_dir) = (make(), make());
+    let sync = Project::new(ProjectOptions::new(sync_dir.path())).unwrap();
+    let adapter = AsyncProject::new(
+        ProjectOptions::new(async_dir.path()),
+        AsyncOptions::default(),
+    )
+    .unwrap();
+    let runtime = tokio::runtime::Runtime::new().unwrap();
+    runtime.block_on(async {
+        let prepared = send(adapter.overview_prepare()).await.unwrap();
+        assert_eq!(prepared.pages(), sync.overview_prepare().unwrap().pages());
+        assert!(!async_dir.path().join(".kotowari/cache").exists());
+        let built = send(adapter.overview_build()).await.unwrap();
+        assert_eq!(built, sync.overview_build().unwrap());
+        assert_eq!(
+            send(adapter.overview_build()).await.unwrap(),
+            sync.overview_build().unwrap()
+        );
+        std::fs::remove_file(sync_dir.path().join(".kotowari/overview/a.md")).unwrap();
+        std::fs::remove_file(async_dir.path().join(".kotowari/overview/a.md")).unwrap();
+        assert_eq!(
+            send(adapter.overview_build()).await.unwrap(),
+            sync.overview_build().unwrap()
+        );
+    });
+}

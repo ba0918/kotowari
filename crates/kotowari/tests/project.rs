@@ -195,3 +195,61 @@ fn project_check_status_and_inspect_include_the_overview_group() {
     let inspection = project.inspect().unwrap();
     assert_eq!(lead_missing(inspection.check().findings()), 1);
 }
+
+fn overview_project(lead: bool) -> tempfile::TempDir {
+    let dir = project();
+    std::fs::write(
+        dir.path().join(".kotowari/config.yaml"),
+        "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(dir.path().join(".kotowari/overview")).unwrap();
+    let lead = if lead {
+        "```view lead\nconclusion: c\n```\n"
+    } else {
+        ""
+    };
+    std::fs::write(
+        dir.path().join(".kotowari/overview/a.md"),
+        format!("---\nir:\n  - docs/ir/topic.md\n---\n\n# a\n\n{lead}\n## s\n\ntext\n"),
+    )
+    .unwrap();
+    dir
+}
+
+// @kotowari[REQ-core-310, TBL-core-041, REQ-core-293, REQ-core-294]
+#[test]
+fn overview_prepare_writes_nothing_and_overview_build_writes_the_cache() {
+    let dir = overview_project(true);
+    let project = Project::new(ProjectOptions::new(dir.path())).unwrap();
+    let prepared = project.overview_prepare().unwrap();
+    let names: Vec<&str> = prepared
+        .pages()
+        .iter()
+        .map(|page| page.name.as_str())
+        .collect();
+    assert_eq!(names, ["a.html", "index.html", "style.css"]);
+    assert!(!dir.path().join(".kotowari/cache").exists());
+    let build = project.overview_build().unwrap();
+    assert_eq!(build.written().len(), 3);
+    assert_eq!(build.unchanged(), 0);
+    let again = prepared.write().unwrap();
+    assert!(again.written().is_empty() && again.removed().is_empty());
+    assert_eq!(again.unchanged(), 3);
+}
+
+// @kotowari[REQ-core-294, REQ-core-312, REQ-core-279]
+#[test]
+fn overview_operations_fail_with_kinds_for_bad_data_and_a_missing_key() {
+    let dir = overview_project(false);
+    let broken = Project::new(ProjectOptions::new(dir.path())).unwrap();
+    let error = broken.overview_build().unwrap_err();
+    assert_eq!(error.kind(), kotowari::ErrorKind::OverviewData);
+    assert!(!dir.path().join(".kotowari/cache").exists());
+    let plain = project();
+    let error = Project::new(ProjectOptions::new(plain.path()))
+        .unwrap()
+        .overview_prepare()
+        .unwrap_err();
+    assert_eq!(error.kind(), kotowari::ErrorKind::ConfigError);
+}
