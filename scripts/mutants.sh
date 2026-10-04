@@ -11,8 +11,10 @@
 # 環境変数:
 #   MUTANTS_JOBS     同時に回す変異の数（既定 1。手元で3や4に上げると、写しのビルドが CPU を取り合って
 #                    遅くなり、偽の時間切れも出た。判断の記録 docs/decision/records/2026-10-04-mutants-in-ci.md の A6）
-#   MUTANTS_SERVICE  systemd（既定。メモリ上限つきのユーザーのサービスで回す）か none（そのまま回す。
-#                    ユーザーの systemd が無い CI のランナー用）
+#   MUTANTS_SERVICE  systemd（既定。メモリ上限つきのユーザーのサービスで回す）、scope（sudo の
+#                    systemd-run でメモリ上限つきのスコープに入れて回す。ユーザーの systemd が無い
+#                    CI のランナー用。判断の記録 docs/decision/records/2026-10-04-mutants-in-ci.md の A11）
+#                    か none（上限なしでそのまま回す）
 #
 # 見逃し0件の関門は PR とリリースの CI が持つ（判断の記録
 # docs/decision/records/2026-10-04-mutants-in-ci.md の A1〜A6）。手元では好きなときに回す。
@@ -202,8 +204,8 @@ run_mutants() {
     '' | *[!0-9]* | 0) die "MUTANTS_JOBS must be a positive integer: $JOBS" ;;
     esac
     case "$SERVICE" in
-    systemd | none) ;;
-    *) die "MUTANTS_SERVICE must be systemd or none: $SERVICE" ;;
+    systemd | scope | none) ;;
+    *) die "MUTANTS_SERVICE must be systemd, scope or none: $SERVICE" ;;
     esac
 
     start_watchdog
@@ -227,6 +229,12 @@ run_mutants() {
             --setenv=TMPDIR="$run_tmpdir" \
             --working-directory="$PWD" \
             -- "${mutants_command[@]}" </dev/null &
+    elif [ "$SERVICE" = scope ]; then
+        # sudo は PATH を入れ替えるので、env で今の値を渡し直す。スコープの中は呼んだ利用者で動かす
+        sudo systemd-run --scope --quiet --uid="$(id -u)" --gid="$(id -g)" \
+            -p MemoryMax=12G -p MemorySwapMax=0 -p OOMPolicy=continue \
+            -- env PATH="$PATH" HOME="$HOME" CARGO_UNSTABLE_CHECKSUM_FRESHNESS=true \
+            CARGO_BUILD_JOBS=4 TMPDIR="$run_tmpdir" "${mutants_command[@]}" </dev/null &
     else
         CARGO_UNSTABLE_CHECKSUM_FRESHNESS=true CARGO_BUILD_JOBS=4 TMPDIR="$run_tmpdir" \
             "${mutants_command[@]}" </dev/null &

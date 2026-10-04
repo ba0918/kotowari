@@ -2,7 +2,8 @@
 # docs/decision/records/2026-10-04-mutants-in-ci.md の A3）。PR（mutants.yml）とリリース（release.yml）が使う。
 #
 # 分担ごとに scripts/mutants.sh が自分の結果を kotowari mutants に読ませ、等価の一覧の分を除いた
-# 見逃しがあれば失敗する。ランナーにはユーザーの systemd が無いので、メモリ上限つきのサービスは使わない（A6）。
+# 見逃しがあれば失敗する。ランナーにはユーザーの systemd が無いので、sudo の systemd-run のスコープで
+# メモリに上限をかける（A11）。
 name: mutants-run
 
 on:
@@ -23,11 +24,14 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   CARGO_BUILD_JOBS: "4"
-  MUTANTS_SERVICE: none
+  # メモリ上限つきのスコープで回す（判断の記録 2026-10-04-mutants-in-ci.md の A11）
+  MUTANTS_SERVICE: scope
   MUTANTS_JOBS: "1"
   # 手元の scripts/mutants.sh と同じ版（出力の終了コードの扱いがこの版に合わせてある）
   CARGO_MUTANTS_VERSION: "27.1.0"
   SHARDS: "8"
+  # 変異1件のテストの時間切れの秒数（同じ記録の A10）
+  MUTANTS_TIMEOUT: "20"
 
 jobs:
   shard:
@@ -57,7 +61,7 @@ jobs:
         run: |
           read -r mode base <<<"$SCOPE"
           case "$mode" in
-          diff) scripts/mutants.sh diff "$base" -- --shard "$SHARD/$SHARDS" ;;
-          full) scripts/mutants.sh full -- --shard "$SHARD/$SHARDS" ;;
+          diff) scripts/mutants.sh diff "$base" -- --shard "$SHARD/$SHARDS" --timeout "$MUTANTS_TIMEOUT" ;;
+          full) scripts/mutants.sh full -- --shard "$SHARD/$SHARDS" --timeout "$MUTANTS_TIMEOUT" ;;
           *) echo "unknown scope: $SCOPE" >&2; exit 1 ;;
           esac

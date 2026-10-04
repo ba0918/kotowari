@@ -44,8 +44,11 @@ and `pre-push` runs the full test suite and `kotowari check` with no exemptions.
 tests do not run in the hooks; they blocked every push for one to two hours.
 
 The mutation tests run in GitHub Actions, split into eight parallel shards
-(`.github/workflows/mutants-run.yml`). Every pull request runs the mutants in the diff from its
-merge base (`.github/workflows/mutants.yml`), and branch protection on `main` requires that
+(`.github/workflows/mutants-run.yml`), each inside a systemd scope capped at 12G of memory and
+with a 20-second test timeout per mutant. Every pull request runs the mutants in the diff from
+the newest commit of the same pull request whose `mutants` check passed, or from its merge base
+when none passed yet (`.github/workflows/mutants.yml`), so a push that only adds a fix does not
+rerun mutants already checked. Branch protection on `main` requires that
 workflow's `mutants` job, for administrators too, so `main` only takes commits that passed it.
 A release runs the mutants in the diff from the product's previous release tag (the whole
 workspace only when there is no previous tag) before building binaries. A miss in code that did
