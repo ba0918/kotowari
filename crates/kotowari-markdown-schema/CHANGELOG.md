@@ -10,5 +10,6 @@
 ### Added
 
 - 再利用する読込み結果を返す`SchemaLoader`と、既定で無効な`tokio` featureの`AsyncSchemaLoader`を追加した。
+- Markdownの文章と種類の決まった部品からなる文書を、メモリの中で静的なHTMLのページにする`kotowari-markdown-view`クレートを追加した。8種の部品のJSON Schemaを`part_schema`で返す。ファイルを読み書きせず、ページは外から何も読み込まない。
 
 版の基準はこのクレートの`Cargo.toml`にある。この変更にはリリース、タグ、公開を含めない。

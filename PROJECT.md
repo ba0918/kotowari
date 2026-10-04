@@ -2,12 +2,12 @@
 
 ## What this is
 
-A Cargo workspace holding seven Rust packages. The root package is `kotowari-cli`; `crates/kotowari` owns acquisition and typed APIs, and `crates/kotowari-source-analysis` owns ast-grep analysis. The schema I/O and mds binary are separate packages at `crates/kotowari-markdown-schema-io` and `crates/kotowari-mds`.
+A Cargo workspace holding nine Rust packages. The root package is `kotowari-cli`; `crates/kotowari` owns acquisition and typed APIs, and `crates/kotowari-source-analysis` owns ast-grep analysis. The schema I/O and mds binary are separate packages at `crates/kotowari-markdown-schema-io` and `crates/kotowari-mds`. `crates/kotowari-overview` checks overview data and builds its render input in memory, and `crates/kotowari-markdown-view` renders it to static HTML pages in memory; `kotowari overview build` and `serve` write and show those pages.
 
 - `kotowari-cli` at the repository root — the `kotowari` binary (`src/main.rs`). A normalised
   specification (the IR) is written as Markdown and checked mechanically by `kotowari check`,
-  with the read commands `list`, `query` and `status` and the mutation-test reader `mutants`
-  beside it.
+  with the read commands `list`, `query` and `status`, the mutation-test reader `mutants`, and
+  `overview build` and `overview serve` for the overview pages beside it.
 - `crates/kotowari-core` — pure memory parsing, comparison and inspection. The root binary depends normally only on the high-level `kotowari` library.
 - `crates/kotowari-markdown-schema` — pure schema/document validation and extraction. See that crate's own `README.md`.
 
@@ -37,7 +37,7 @@ the same way in both hooks.
 
 The minimum supported Rust version is declared per crate, not once for the workspace:
 `crates/kotowari-markdown-schema` declares `rust-version = "1.89"`, and neither `kotowari` nor
-`kotowari-core` declares one. Schema I/O and mds retain Rust 1.89. All seven use `edition = "2024"`.
+`kotowari-core` declares one. Schema I/O, mds and `kotowari-markdown-view` declare Rust 1.89. All nine use `edition = "2024"`.
 
 `lefthook.yml` defines the local gates: `pre-commit` runs the secret scan and `kotowari check`,
 and `pre-push` runs the full test suite and `kotowari check` with no exemptions. The mutation
@@ -99,8 +99,8 @@ The two products carry separate versions, each declared in one place:
 
 | Product | Where the version lives | Declarations that follow it | Tag | Changelog |
 |---|---|---|---|---|
-| `kotowari` | root `Cargo.toml` package version | CLI, kotowari, core and source-analysis manifests/lock entries and incoming dependency versions | `kotowari-v<version>` | `CHANGELOG.md` |
-| `kotowari-mds` | schema `Cargo.toml` package version | schema, schema-io and mds manifests/lock entries and incoming dependency versions, including core-to-schema | `kotowari-mds-v<version>` | `crates/kotowari-markdown-schema/CHANGELOG.md` |
+| `kotowari` | root `Cargo.toml` package version | CLI, kotowari, core, source-analysis and overview manifests/lock entries and incoming dependency versions | `kotowari-v<version>` | `CHANGELOG.md` |
+| `kotowari-mds` | schema `Cargo.toml` package version | schema, schema-io, mds and markdown-view manifests/lock entries and incoming dependency versions, including core-to-schema and overview-to-view | `kotowari-mds-v<version>` | `crates/kotowari-markdown-schema/CHANGELOG.md` |
 
 `scripts/check-versions.sh` exits 1 when a following declaration of either product disagrees
 with that product's version; given a tag, it also checks the tag's version against that product's
