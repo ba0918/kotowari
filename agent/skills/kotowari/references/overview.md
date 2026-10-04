@@ -24,6 +24,7 @@ Without the key nothing here applies: check and status read no overview data, an
 - When a brainstorm changes a topic document that no overview's `ir` lists, propose either adding it to an existing overview or starting a new one, and let the person decide. The first time overviews are made, propose the units and let the person decide.
 - Once decided, keep the units. Split or merge overviews only when a brainstorm decides to.
 - Do not make overviews for topics the brainstorm did not touch. Existing topics get an overview the first time a brainstorm touches their IR, not all at once.
+- Add the `overview` key to the configuration only together with the first overview data and its contents file. With the key and no overview data, no contents file passes check: a missing file stops, an empty outermost group is `overview_toc_group_empty`, and any name is `overview_toc_page_unknown`.
 
 ## The table of contents
 
