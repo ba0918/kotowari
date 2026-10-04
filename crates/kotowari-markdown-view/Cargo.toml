@@ -1,0 +1,23 @@
+[package]
+name = "kotowari-markdown-view"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.89"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/ba0918/kotowari"
+keywords = ["markdown", "html", "render", "static-site"]
+categories = ["text-processing"]
+description = "Render documents made of Markdown text and declared parts into static HTML pages in memory"
+
+[lib]
+name = "kotowari_markdown_view"
+path = "src/lib.rs"
+
+[dependencies]
+markdown = "1"
+serde_json = "1"
+
+[dev-dependencies]
+jsonschema = { version = "0.58.4", default-features = false }
+proptest = "1"

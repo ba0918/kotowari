@@ -13,6 +13,7 @@ tests:
     - "crates/kotowari-source-analysis/**/*.rs"
     - "crates/kotowari-markdown-schema/**/*.rs"
     - "crates/kotowari-markdown-schema-io/**/*.rs"
+    - "crates/kotowari-markdown-view/**/*.rs"
     - "crates/kotowari-mds/**/*.rs"
     - "tests/**/*.rs"
   rust:
