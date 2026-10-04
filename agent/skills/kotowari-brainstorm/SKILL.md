@@ -154,12 +154,26 @@ Source: `ba0918-verification`, agentic-rules v0.8.0.
       record, go back to step 1 (check) before collating again. The second and third collations take only
       the items flagged last time and what was fixed since. What still remains at the third
       collation becomes a problem record (FLAG) and goes back to the person.
-   3. Stage the IR documents, the glossary, the problem record, and the decision record. Show the
+   3. Only in a project whose configuration has the `overview` key, draw the whole picture, as the
+      kotowari skill's `references/overview.md` says. The overview is reference material for the
+      person, not something they approve, and it changes neither what is approved nor the material
+      and order of step 4:
+      1. From the topic documents of the IR this brainstorm changed, find the overviews to revise
+         through the `ir` lists of the overview data. For a changed topic document that no overview
+         lists, propose adding it to an existing overview or starting a new one, and let the person
+         decide.
+      2. Create or revise that overview data.
+      3. Run `kotowari overview build` and fix the errors until it exits 0.
+      4. Start `kotowari overview serve` in the background and give its URL as a reference; whether
+         to look is the person's choice. Where nothing can run in the background, give the command
+         instead.
+   4. Stage the IR documents, the glossary, the problem record, and the decision record. Show the
       person the decision record's diff (one decision per line; this is what they read), the check
       output (the count of test-side findings, and each document whose notice was kept, with the
       reason), the collation result, and the paths approved with a content identifier for each —
       never the full text, never the IR's diff as something they must read, and never a summary as
-      the thing approved. The person commits or says to.
+      the thing approved. Overview data revised in step 3 is committed with them, but is not part
+      of what is shown for approval. The person commits or says to.
 
 ## Decisions carried into change conformance
 
