@@ -24,7 +24,7 @@
         {
           "path": "agent/skills/kotowari/references/overview.md",
           "before": "sha256:b9529911f16ffc8ff1154e576dfe5339c2018daaca334a3ee2c27cb2b13ad63b",
-          "after": "sha256:66a599a1bd0685d2fa37f025d8fa1835d0908a63ed2459c651c9ff7e929f5d0f"
+          "after": "sha256:13ed28430deff80aa930a127d6c45eb92be49856181ec755a1e94f181106d461"
         },
         {
           "path": "crates/kotowari-core/src/config.rs",
@@ -49,17 +49,22 @@
         {
           "path": "crates/kotowari-markdown-view/src/index.rs",
           "before": null,
-          "after": "sha256:7c4b67a88e95c4f60e50d03331c8ad21c6cd8d71776790528eb7cd9753ef65e9"
+          "after": "sha256:abb630bb053498b9e3b072d595cd0661c4a255033c456887fcc5066897156c4b"
         },
         {
           "path": "crates/kotowari-markdown-view/src/lib.rs",
           "before": "sha256:dfadeed4f91e1f3562a168f102a1ef5359a56a47a0dbc1bf77fa316f1c2a78a2",
-          "after": "sha256:6880bde58a1cc600c6269a9e47a11da4a98707f46132ddf3171c4812da20dcd2"
+          "after": "sha256:622254e5e79a4d191444bba1753e3445748da8c28c4b405c3284aad84656140b"
         },
         {
           "path": "crates/kotowari-markdown-view/src/style.css",
           "before": "sha256:d26280ca012d9e7b7ad57096daab6ebc2d91992de38b9596791e277abb627bca",
-          "after": "sha256:a179cdb92a86938108329e465e34161af9abc342dc9dd91c056f871c6e8f7c54"
+          "after": "sha256:099b8a41edecbcaf77623ab56344ecda3b6a386be675235a4d831c490ae01fc7"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/tests/common/mod.rs",
+          "before": null,
+          "after": "sha256:712fd1b2adc6fddec5869242700affb93fc92b22bdb0214c37491e6683260f91"
         },
         {
           "path": "crates/kotowari-markdown-view/tests/determinism.rs",
@@ -69,7 +74,7 @@
         {
           "path": "crates/kotowari-markdown-view/tests/navigation.rs",
           "before": null,
-          "after": "sha256:917b1aa67b8c43794b9a9473404903c1a7a501dace238cfc1921aba3048db5b0"
+          "after": "sha256:e938873c36313fafda0d8efc5be9af37fe79166db679119ce3ad236d89dbb7bd"
         },
         {
           "path": "crates/kotowari-markdown-view/tests/parts.rs",
@@ -79,7 +84,7 @@
         {
           "path": "crates/kotowari-markdown-view/tests/rendering.rs",
           "before": "sha256:aaa67efdc63d7a4459050db478dced8084bb0d1b84f58cc0a2f84088feab9d70",
-          "after": "sha256:2e1b1feb8df184b30837301d3f9302580048fd4e485f9d720af04be3b0205e65"
+          "after": "sha256:e65b50d73d54c356c330b294a7ad2ebcc9202351dd15194f8e8e2a394af101b3"
         },
         {
           "path": "crates/kotowari-overview/README.md",
@@ -114,7 +119,7 @@
         {
           "path": "crates/kotowari-overview/tests/overview.rs",
           "before": "sha256:0b8690baa2be3df2e3c248675b56b5d10bd3cd5b2554b358bb490d5d5eac662e",
-          "after": "sha256:d07f44c88f77e8aa3b70ac3de89137fc0c914d0c791cd4c748624cec17555a12"
+          "after": "sha256:bce3a359052d54bf845b5cd4db751f06cb709a1fb513ad0790ae86006369abb4"
         },
         {
           "path": "crates/kotowari/src/acquisition.rs",
@@ -135,6 +140,31 @@
           "path": "crates/kotowari/tests/project.rs",
           "before": "sha256:f220a9c1704f34367488a5788de489a9b6a39c09fd74c237f5e950f01a0a2cdb",
           "after": "sha256:ca15163f4d4eab44446066ebb946d8196749aa1885ab9f4d35aeb66669af5944"
+        },
+        {
+          "path": "docs/guides/cli.md",
+          "before": "sha256:c82f8724c71f2277f0f04db6391096a23091e0449b16e1bee1f3de306e39ea36",
+          "after": "sha256:6296edacdd23fe812df8b665ed06b50db1d3cecb7f44abd8091e386e3d1e232b"
+        },
+        {
+          "path": "docs/guides/commands/check.md",
+          "before": "sha256:1e702a174c04f7d628f4746e2ead94db909c8e75379e06ed7d962dbc09fe85b0",
+          "after": "sha256:411bf30272d254fc6c4d232f3f33b121d95a813e596e2104e70baf180da37ebd"
+        },
+        {
+          "path": "docs/guides/config.md",
+          "before": "sha256:bd944721bb87e92608f49ecad646c342af692a92bfa1e3f1d83148e22093ed67",
+          "after": "sha256:2d73c78b853b5c375827f5f1d865e950a781ebb74d49f54e68251e088e6f10c4"
+        },
+        {
+          "path": "docs/guides/deferred.md",
+          "before": "sha256:75997df48e521eb85ca3584521efe618574a6038b5c12c4b08c15a83c9d4ff48",
+          "after": "sha256:b43308e1c33b7199a0a835bca914309b7600187418328885ef83f522e722e6f3"
+        },
+        {
+          "path": "docs/guides/findings.md",
+          "before": "sha256:705a392cfa30893ebea07c53cc248c6404f9c4adf7d215ef6c4f34672be2a20f",
+          "after": "sha256:648092a355ce3bb58e22f4d2765e8aee9f5b79864382c60016bf751d610bfdc0"
         },
         {
           "path": "tests/step18_overview.rs",
@@ -240,7 +270,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "The branch implements the approved overview-index specification (2026-10-05-overview-index.md A1 to A36 and D1) inside its requirements, without changing the IR or the decision records. kotowari-markdown-view takes the table of contents as the third part of the render input (REQ-view-001) and, without checking it (REQ-view-003, REQ-view-021), draws the index with the outermost title and note as the heading, nested groups as open details elements that fold without a script (REQ-view-005, REQ-view-018), each document card with its title, lead conclusion and the non-zero counts of stale sections and of 未決 and 予定 labels from the preamble and section status parts (REQ-view-016), and each group heading, the outermost included, with its descendant page count and the non-zero totals of stale sections and 未決 (REQ-view-017). Names without a document are skipped and not counted, documents not in the contents keep their page without an index entry, and repeated names are drawn and counted each time. Each document page shows above its title the groups leading to the first depth-first occurrence of its name, linked to their places in the index, or only a link to the index when it is not in the contents (REQ-view-019), and after its last section links, by title, to the other documents named directly in the same group in written order (REQ-view-020). The markup, the position-based anchors (toc, toc-0, toc-0-1) and the style are the implementer choices that the plan and D1 leave open. kotowari-core gains only the required overview.toc path key, checked for null and absolute values like other paths (REQ-core-013, REQ-core-014, TBL-core-004), and the five overview_toc_* finding kinds, which the skill findings reference lists (REQ-core-125, TBL-core-008). kotowari-overview checks the contents text against an embedded JSON Schema with the same place notation as overview_part_invalid (REQ-core-327, TBL-core-043); the schema uses if/then/else instead of anyOf for items so that a nested violation reports its own place. Only a well-formed contents is compared with the overview data names: missing pages, unknown names on every occurrence, repeated names from the second depth-first occurrence and empty groups, with (root) for the outermost (REQ-core-328 to REQ-core-331); all have the contents file as path and a null line (REQ-core-027), and the contents is passed to the view as written (REQ-core-332). The kotowari library reads the file overview.toc names in check, status, build and serve after the existing overlap checks, stopping with a config error when the file is one of the files the overview, guides or tests walks read, and as an unreadable or non-UTF-8 file like overview data (REQ-core-325, REQ-core-326, TBL-core-001); contents errors stop build and serve before writing or binding (REQ-core-294). With the guides and tests overlap judged first and the overview data overlap judged before it, a contents file matched by two of the walks always stops at an earlier check, so the key order of REQ-core-326 is implemented but only the single-key cases are observable. Existing tests that enable overview gained a contents file listing their data names; the EX-core-476 test now expects a.html to be rewritten as well, because its group link to the removed page disappears (REQ-view-020); the REQ-core-324 test moves the data and contents out of the linked .kotowari because the data walk does not enter a linked hidden directory; the sync and async comparison removes one of two pages instead of the only one, since an empty contents is an error. The brainstorm skill revises the contents after the overview data at approval, and the overview reference documents the key, the form, the stops, the findings and placement by the LLM without asking, splitting a group only once it grows and ordering each level for the reader (REQ-core-300, REQ-core-333, verified by review). Mutation tests have not been run locally; the pull request CI runs them.",
+      "reason": "The branch implements the approved overview-index specification (2026-10-05-overview-index.md A1 to A36 and D1) inside its requirements, without changing the IR or the decision records. kotowari-markdown-view takes the table of contents as the third part of the render input (REQ-view-001) and, without checking it (REQ-view-003, REQ-view-021), draws the index with the outermost title and note as the heading, nested groups as open details elements that fold without a script (REQ-view-005, REQ-view-018), each document card with its title, lead conclusion and the non-zero counts of stale sections and of 未決 and 予定 labels from the preamble and section status parts (REQ-view-016), and each group heading, the outermost included, with its descendant page count (a nested group's note is drawn inside its summary so that it stays visible when the group is folded, REQ-view-005, REQ-view-018) and the non-zero totals of stale sections and 未決 (REQ-view-017). Names without a document are skipped and not counted, documents not in the contents keep their page without an index entry, and repeated names are drawn and counted each time. Each document page shows above its title the groups leading to the first depth-first occurrence of its name, linked to their places in the index, or only a link to the index when it is not in the contents (REQ-view-019); the first occurrence of each name is found by one depth-first walk per render instead of one walk per page, with the same result, and after its last section links, by title, to the other documents named directly in the same group in written order (REQ-view-020). The markup, the position-based anchors (toc, toc-0, toc-0-1) and the style are the implementer choices that the plan and D1 leave open. kotowari-core gains only the required overview.toc path key, checked for null and absolute values like other paths (REQ-core-013, REQ-core-014, TBL-core-004), and the five overview_toc_* finding kinds, which the skill findings reference lists (REQ-core-125, TBL-core-008). kotowari-overview checks the contents text against an embedded JSON Schema with the same place notation as overview_part_invalid (REQ-core-327, TBL-core-043); the schema uses if/then/else instead of anyOf for items so that a nested violation reports its own place. Only a well-formed contents is compared with the overview data names: missing pages, unknown names on every occurrence, repeated names from the second depth-first occurrence and empty groups, with (root) for the outermost (REQ-core-328 to REQ-core-331); all have the contents file as path and a null line (REQ-core-027), and the contents is passed to the view as written (REQ-core-332). The kotowari library reads the file overview.toc names in check, status, build and serve after the existing overlap checks, stopping with a config error when the file is one of the files the overview, guides or tests walks read, and as an unreadable or non-UTF-8 file like overview data (REQ-core-325, REQ-core-326, TBL-core-001); contents errors stop build and serve before writing or binding (REQ-core-294). With the guides and tests overlap judged first and the overview data overlap judged before it, a contents file matched by two of the walks always stops at an earlier check, so the key order of REQ-core-326 is implemented but only the single-key cases are observable. Existing tests that enable overview gained a contents file listing their data names; the EX-core-476 test now expects a.html to be rewritten as well, because its group link to the removed page disappears (REQ-view-020); the REQ-core-324 test moves the data and contents out of the linked .kotowari because the data walk does not enter a linked hidden directory; the sync and async comparison removes one of two pages instead of the only one, since an empty contents is an error. The brainstorm skill revises the contents after the overview data at approval, and the overview reference documents the key, the form, the stops, the findings and placement by the LLM without asking, splitting a group only once it grows and ordering each level for the reader (REQ-core-300, REQ-core-333, verified by review). The tests of the index and group links compare each link by its target and visible text, not by its markup, because the specification fixes only those. The overview reference also states that an empty items list is well-formed and reported as overview_toc_group_empty (REQ-core-330), and the user guides (docs/guides) document the overview.toc key, its config errors, the five overview_toc_* kinds, the null line and the stops, with their section marks refreshed to the current IR. The rule that the same detail is reported once (TBL-core-043) is kept in toc.rs, but no test pins it: a probe of 300,000 random contents through the validator and the place notation found no input that yields two errors at the same place (0 duplicates among 112,345 multi-error inputs), because a type error, an unknown key and a missing key never coincide on one value and key names are escaped with ~0 and ~1, so a test claiming to cover it was removed. Mutation tests over crates/kotowari-overview/src/toc.rs ran locally (scripts/mutants.sh full -- -f crates/kotowari-overview/src/toc.rs): 8 mutants, 7 caught, 1 unviable, none survived, including delete ! in form on the dedup line; the pull request CI runs them over the whole diff.",
       "requirements": [
         "REQ-core-012",
         "REQ-core-013",
