@@ -4,15 +4,22 @@ use kotowari_core::{FindingGroup, ReadModel, SourceText, StopReason, config::Con
 use std::collections::BTreeSet;
 use std::path::Path;
 
-/// "overview" の鍵があれば、"overview.files" に当たり拡張子が小文字の ".md" のファイルを読む。
-/// 隠しディレクトリは glob が名指ししたものだけに入る（REQ-core-019）。読む前に、ガイドとテストの
-/// 置き場との重なりを検査する（REQ-core-280）。鍵が無ければ何も読まずに None
+/// 読んだ`全体像の元データ`と`目次`
+pub(crate) struct Texts {
+    pub(crate) data: Vec<SourceText>,
+    pub(crate) toc: SourceText,
+}
+
+/// "overview" の鍵があれば、"overview.files" に当たり拡張子が小文字の ".md" のファイルと、"overview.toc"
+/// の指す`目次`を読む。隠しディレクトリは glob が名指ししたものだけに入る（REQ-core-019）。読む前に、
+/// 元データとガイドとテストの置き場との重なり（REQ-core-280）、次に`目次`の重なり（REQ-core-326）を
+/// 検査する。鍵が無ければ何も読まずに None
 pub(crate) fn read_texts(
     base: &Path,
     config: &Config,
     guides: &[&str],
     tests: &[String],
-) -> Result<Option<Vec<SourceText>>, StopReason> {
+) -> Result<Option<Texts>, StopReason> {
     let Some(overview) = &config.overview else {
         return Ok(None);
     };
@@ -22,14 +29,46 @@ pub(crate) fn read_texts(
             .filter(|(path, _)| Path::new(path).extension().is_some_and(|ext| ext == "md"))
             .collect();
     validate_overlap(files.iter().map(|(path, _)| path.as_str()), guides, tests)?;
-    files
+    validate_toc_overlap(
+        &overview.toc,
+        files.iter().map(|(path, _)| path.as_str()),
+        guides,
+        tests,
+    )?;
+    let data = files
         .into_iter()
         .map(|(path, absolute)| {
             let text = crate::test_files::read_collected_text(&absolute, &path)?;
             SourceText::new(path, text).map_err(|error| StopReason::MappingError(error.to_string()))
         })
-        .collect::<Result<Vec<_>, _>>()
-        .map(Some)
+        .collect::<Result<Vec<_>, _>>()?;
+    // REQ-core-325: 読めないときと UTF-8 でないときは、元データと同じ理由で止まる
+    let text = crate::acquisition::read_utf8_file(&base.join(&overview.toc), &overview.toc)?;
+    let toc = SourceText::new(overview.toc.as_str(), text)
+        .map_err(|error| StopReason::MappingError(error.to_string()))?;
+    Ok(Some(Texts { data, toc }))
+}
+
+/// REQ-core-326: `目次`のファイルが、元データ、ガイド、テストの走査で読むファイルのどれかに入るか。
+/// 当たった鍵はこの順の最初のもの
+fn validate_toc_overlap<'a>(
+    toc: &str,
+    overview: impl IntoIterator<Item = &'a str>,
+    guides: &[&str],
+    tests: &[String],
+) -> Result<(), StopReason> {
+    let key = if overview.into_iter().any(|path| path == toc) {
+        "overview.files"
+    } else if guides.contains(&toc) {
+        "guides.files"
+    } else if tests.iter().any(|path| path == toc) {
+        "tests.files"
+    } else {
+        return Ok(());
+    };
+    Err(StopReason::ConfigError(format!(
+        "{toc}: matched by both overview.toc and {key}"
+    )))
 }
 
 /// REQ-core-280: パスのバイト順で最初の重なったファイル。3つすべてに当たれば guides の文言にする
@@ -60,31 +99,11 @@ fn validate_overlap<'a>(
 }
 
 /// check と status に加える "overview" の群。鍵が無ければ数は両方 0（REQ-core-288）
-pub(crate) fn group(read: &ReadModel, texts: Option<Vec<SourceText>>) -> FindingGroup {
+pub(crate) fn group(read: &ReadModel, texts: Option<Texts>) -> FindingGroup {
     match texts {
-        Some(texts) => kotowari_overview::inspect(read, &texts, &name_order(&texts)).into_group(),
+        Some(texts) => kotowari_overview::inspect(read, &texts.data, &texts.toc).into_group(),
         None => FindingGroup::new(kotowari_overview::GROUP, 0, 0, Vec::new()),
     }
-}
-
-/// 元データの名前を名前の順に1段に並べた目次
-pub(crate) fn name_order(texts: &[SourceText]) -> SourceText {
-    let names: BTreeSet<&str> = texts
-        .iter()
-        .map(|text| {
-            let name = text.path().rsplit('/').next().unwrap_or_default();
-            name.strip_suffix(".md").unwrap_or(name)
-        })
-        .collect();
-    let items: String = names
-        .iter()
-        .map(|name| format!("  - '{}'\n", name.replace('\'', "''")))
-        .collect();
-    SourceText::new(
-        ".kotowari/toc.yaml",
-        format!("title: Overview\nitems:\n{items}"),
-    )
-    .expect("a relative path")
 }
 
 /// 置き場。`基準のディレクトリ`の下に固定し、設定で変えられない（REQ-core-296）

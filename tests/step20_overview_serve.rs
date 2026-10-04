@@ -41,6 +41,11 @@ fn make_project(config: &str, lead: bool) -> TempDir {
         ".kotowari/overview/a.md",
         &format!("---\nir:\n  - docs/ir/cli.md\n---\n\n# A\n\n{lead}\n## 節\n\n文。\n"),
     );
+    write(
+        tmp.path(),
+        ".kotowari/toc.yaml",
+        "title: 目次\nitems: [a]\n",
+    );
     tmp
 }
 
@@ -189,6 +194,11 @@ fn req_core_299_a_percent_encoded_page_name_is_decoded_to_the_file_in_the_cache(
     let tmp = make_project(OVERVIEW, true);
     let data = tmp.path().join(".kotowari/overview");
     std::fs::rename(data.join("a.md"), data.join("変更 a.md")).unwrap();
+    write(
+        tmp.path(),
+        ".kotowari/toc.yaml",
+        "title: 目次\nitems: ['変更 a']\n",
+    );
     let port = free_port();
     let (mut child, _stdout, _) = serve(tmp.path(), port);
     let cache = tmp.path().join(".kotowari/cache/overview");
@@ -292,4 +302,25 @@ fn req_core_280_serve_stops_on_an_overlap_with_the_guides() {
         stderr.lines().next(),
         Some("config error: notes/a.md: matched by both overview.files and guides.files")
     );
+}
+
+// @kotowari[REQ-core-294, REQ-core-328]
+#[test]
+fn req_core_294_serve_on_toc_errors_stops_before_binding() {
+    let tmp = make_project(OVERVIEW, true);
+    write(
+        tmp.path(),
+        ".kotowari/toc.yaml",
+        "title: 目次\nitems: [z]\n",
+    );
+    let occupied = TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = occupied.local_addr().unwrap().port();
+    let (code, stdout, stderr) = stopped(tmp.path(), port);
+    assert_eq!(code, Some(2));
+    assert!(stdout.is_empty());
+    assert_eq!(
+        stderr.lines().next(),
+        Some("overview error: 2 errors in overview data; run kotowari check")
+    );
+    assert!(!tmp.path().join(".kotowari/cache").exists());
 }

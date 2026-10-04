@@ -83,6 +83,7 @@ fn ex_core_464_overview_data_in_a_named_hidden_directory_is_read() {
         ".kotowari/overview/changes.md",
         &valid("変更照合"),
     );
+    write_toc(tmp.path(), &["changes"]);
     let (code, stdout, stderr) = run(tmp.path(), &["check", "--format", "json"]);
     assert_eq!(code, Some(0), "{stderr}{stdout}");
     let value = json(&stdout);
@@ -105,6 +106,7 @@ fn req_core_019_a_broad_glob_does_not_enter_hidden_directories_it_does_not_name(
         ".kotowari/overview/a.md",
         &without_lead("docs/ir/cli.md"),
     );
+    write_toc(tmp.path(), &["cli", "r"]);
     let (_, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
     let value = json(&stdout);
     assert!(kinds_on(&value, ".kotowari/overview/a.md").is_empty());
@@ -123,6 +125,7 @@ fn req_core_019_a_broad_glob_does_not_enter_hidden_directories_it_does_not_name(
         ".kotowari/overview/.hidden/c.md",
         &without_lead("docs/ir/cli.md"),
     );
+    write_toc(tmp.path(), &["a", "b"]);
     let (_, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
     let value = json(&stdout);
     assert!(kinds_on(&value, ".kotowari/overview/.hidden/c.md").is_empty());
@@ -141,6 +144,7 @@ fn req_core_278_only_files_with_a_lowercase_md_extension_are_read() {
     write(tmp.path(), "notes/b.MD", "broken");
     write(tmp.path(), "notes/c.txt", "broken");
     write(tmp.path(), "notes/d.md.bak", "broken");
+    write_toc(tmp.path(), &["a"]);
     let (code, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
     assert_eq!(code, Some(0), "{stdout}");
     assert_eq!(json(&stdout)["overview"]["files"], 1);
@@ -249,6 +253,7 @@ fn ex_core_472_errors_in_overview_data_join_findings_counts_and_the_exit_code() 
         ".kotowari/overview/b.md",
         &without_lead("docs/ir/other.md"),
     );
+    write_toc(tmp.path(), &["a", "b"]);
     let (code, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
     assert_eq!(code, Some(1));
     let value = json(&stdout);
@@ -279,6 +284,7 @@ fn req_core_290_overview_findings_are_sorted_with_the_other_findings() {
     // docs/ir/ の IR の誤りより docs/a.md が先、docs/z.md は後に並ぶ
     write(tmp.path(), "docs/ir/bad.md", "no title\n");
     write(tmp.path(), "docs/z.md", &without_lead("docs/ir/none.md"));
+    write_toc(tmp.path(), &["a", "z"]);
     let (_, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
     let paths: Vec<String> = json(&stdout)["findings"]
         .as_array()
@@ -299,6 +305,7 @@ fn req_core_288_the_text_format_does_not_show_the_overview_group() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), OVERVIEW);
     write(tmp.path(), ".kotowari/overview/a.md", &valid("a"));
+    write_toc(tmp.path(), &["a"]);
     let (code, stdout, _) = run(tmp.path(), &["check", "--format", "text"]);
     assert_eq!(code, Some(0));
     assert!(!stdout.contains("overview"), "{stdout}");
@@ -334,6 +341,7 @@ fn ex_core_473_an_error_in_overview_data_keeps_status_from_complete() {
         ".kotowari/overview/a.md",
         &without_lead("docs/ir/cli.md"),
     );
+    write_toc(tmp.path(), &["a"]);
     let (code, stdout, _) = run(tmp.path(), &["status", "--format", "json"]);
     assert_eq!(code, Some(1));
     let value = json(&stdout);
@@ -351,6 +359,7 @@ fn req_core_289_status_text_shows_the_overview_group_after_guides() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), OVERVIEW);
     write(tmp.path(), ".kotowari/overview/a.md", &valid("a"));
+    write_toc(tmp.path(), &["a"]);
     let (code, stdout, _) = run(tmp.path(), &["status", "--format", "text"]);
     assert_eq!(code, Some(0), "{stdout}");
     let lines: Vec<&str> = stdout.lines().collect();
@@ -376,4 +385,151 @@ fn req_core_152_list_and_query_neither_read_overview_data_nor_stop_on_it() {
     assert_eq!(code, Some(0), "{stderr}");
     let (code, _, stderr) = run(tmp.path(), &["query", "REQ-001"]);
     assert_eq!(code, Some(0), "{stderr}");
+}
+
+const TOC: &str = ".kotowari/toc.yaml";
+
+/// 名前を書かれた順に1段に並べた目次を書く
+fn write_toc(tmp: &Path, names: &[&str]) {
+    write(
+        tmp,
+        TOC,
+        &format!("title: 目次\nitems: [{}]\n", names.join(", ")),
+    );
+}
+
+// @kotowari[REQ-core-325, REQ-core-328, REQ-core-329, REQ-core-288]
+#[test]
+fn req_core_325_check_reads_the_toc_and_reports_its_errors_on_the_toc_file() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), OVERVIEW);
+    write(tmp.path(), ".kotowari/overview/a.md", &valid("a"));
+    write_toc(tmp.path(), &["z"]);
+    let (code, stdout, stderr) = run(tmp.path(), &["check", "--format", "json"]);
+    assert_eq!(code, Some(1), "{stderr}");
+    let value = json(&stdout);
+    let mut kinds = kinds_on(&value, TOC);
+    kinds.sort();
+    assert_eq!(
+        kinds,
+        ["overview_toc_page_missing", "overview_toc_page_unknown"]
+    );
+    // 目次は元データの数に入らない
+    assert_eq!(
+        value["overview"],
+        serde_json::json!({"files": 1, "marks": 0})
+    );
+}
+
+// @kotowari[REQ-core-325]
+#[test]
+fn req_core_325_status_stops_when_the_toc_file_is_missing() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), OVERVIEW);
+    write(tmp.path(), ".kotowari/overview/a.md", &valid("a"));
+    for command in ["check", "status"] {
+        let (code, stdout, stderr) = run(tmp.path(), &[command]);
+        assert_eq!(code, Some(2), "{command}");
+        assert!(stdout.is_empty(), "{command}");
+        assert!(
+            stderr.starts_with(&format!("unreadable file: {TOC}: ")),
+            "{command}: {stderr}"
+        );
+    }
+}
+
+// @kotowari[REQ-core-325, TBL-core-001]
+#[test]
+fn req_core_325_a_toc_that_is_not_utf8_stops() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), OVERVIEW);
+    write(tmp.path(), ".kotowari/overview/a.md", &valid("a"));
+    std::fs::write(tmp.path().join(TOC), [0xff, 0xfe]).unwrap();
+    let (code, _, stderr) = run(tmp.path(), &["check"]);
+    assert_eq!(code, Some(2));
+    assert_eq!(
+        stderr.lines().next(),
+        Some(format!("non-UTF-8 file: {TOC}").as_str())
+    );
+}
+
+// @kotowari[EX-core-506, REQ-core-326, TBL-core-001]
+#[test]
+fn ex_core_506_a_toc_matched_by_the_overview_glob_is_a_config_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(
+        tmp.path(),
+        "overview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/overview/toc.md\n",
+    );
+    write(tmp.path(), ".kotowari/overview/a.md", &valid("a"));
+    write(
+        tmp.path(),
+        ".kotowari/overview/toc.md",
+        "title: 目次\nitems: [a]\n",
+    );
+    let (code, stdout, stderr) = run(tmp.path(), &["check"]);
+    assert_eq!(code, Some(2));
+    assert!(stdout.is_empty());
+    assert_eq!(
+        stderr.lines().next(),
+        Some(
+            "config error: .kotowari/overview/toc.md: matched by both overview.toc and overview.files"
+        )
+    );
+}
+
+// @kotowari[REQ-core-326]
+#[test]
+fn req_core_326_the_toc_is_compared_with_the_files_each_walk_reads() {
+    // overview.files は ".md" だけを読むので、同じ glob に当たる YAML の目次は重ならない
+    let tmp = TempDir::new().unwrap();
+    make_project(
+        tmp.path(),
+        "overview:\n  files: ['notes/*']\n  toc: notes/toc.yaml\n",
+    );
+    write(tmp.path(), "notes/a.md", &valid("a"));
+    write(tmp.path(), "notes/toc.yaml", "title: 目次\nitems: [a]\n");
+    let (code, _, stderr) = run(tmp.path(), &["check"]);
+    assert_eq!(code, Some(0), "{stderr}");
+    // ガイドとテストの走査はファイルを拡張子で選ばないので、目次に当たる
+    for (config, key) in [
+        (
+            "guides:\n  files: ['notes/*.yaml']\noverview:\n  files: ['notes/*.md']\n  toc: notes/toc.yaml\n",
+            "guides.files",
+        ),
+        (
+            "tests:\n  files: ['notes/*.yaml']\noverview:\n  files: ['notes/*.md']\n  toc: notes/toc.yaml\n",
+            "tests.files",
+        ),
+    ] {
+        write(tmp.path(), ".kotowari/config.yaml", config);
+        let (code, _, stderr) = run(tmp.path(), &["status"]);
+        assert_eq!(code, Some(2), "{config}: {stderr}");
+        assert_eq!(
+            stderr.lines().next(),
+            Some(
+                format!("config error: notes/toc.yaml: matched by both overview.toc and {key}")
+                    .as_str()
+            ),
+            "{config}"
+        );
+    }
+}
+
+// @kotowari[REQ-core-326, REQ-core-280]
+#[test]
+fn req_core_326_the_overview_data_overlap_is_judged_before_the_toc_overlap() {
+    let tmp = TempDir::new().unwrap();
+    make_project(
+        tmp.path(),
+        "overview:\n  files: ['notes/*.md']\n  toc: notes/toc.md\nguides:\n  files: ['notes/*.md']\n",
+    );
+    write(tmp.path(), "notes/a.md", &valid("a"));
+    write(tmp.path(), "notes/toc.md", "title: 目次\nitems: [a]\n");
+    let (code, _, stderr) = run(tmp.path(), &["check"]);
+    assert_eq!(code, Some(2));
+    assert_eq!(
+        stderr.lines().next(),
+        Some("config error: notes/a.md: matched by both overview.files and guides.files")
+    );
 }

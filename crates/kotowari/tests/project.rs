@@ -178,6 +178,11 @@ fn project_check_status_and_inspect_include_the_overview_group() {
         "---\nir:\n  - docs/ir/topic.md\n---\n\n# a\n\n## no lead\n",
     )
     .unwrap();
+    std::fs::write(
+        dir.path().join(".kotowari/toc.yaml"),
+        "title: t\nitems: [a]\n",
+    )
+    .unwrap();
     let project = Project::new(ProjectOptions::new(dir.path())).unwrap();
     let lead_missing = |findings: &[kotowari::Finding]| {
         findings
@@ -212,6 +217,11 @@ fn overview_project(lead: bool) -> tempfile::TempDir {
     std::fs::write(
         dir.path().join(".kotowari/overview/a.md"),
         format!("---\nir:\n  - docs/ir/topic.md\n---\n\n# a\n\n{lead}\n## s\n\ntext\n"),
+    )
+    .unwrap();
+    std::fs::write(
+        dir.path().join(".kotowari/toc.yaml"),
+        "title: t\nitems: [a]\n",
     )
     .unwrap();
     dir

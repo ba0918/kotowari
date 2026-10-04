@@ -139,6 +139,11 @@ fn overview_prepare_and_build_return_what_the_sync_operations_return() {
             )
             .unwrap();
         }
+        std::fs::write(
+            dir.path().join(".kotowari/toc.yaml"),
+            "title: t\nitems: [a, b]\n",
+        )
+        .unwrap();
         dir
     };
     let (sync_dir, async_dir) = (make(), make());
@@ -161,9 +166,28 @@ fn overview_prepare_and_build_return_what_the_sync_operations_return() {
         );
         std::fs::remove_file(sync_dir.path().join(".kotowari/overview/a.md")).unwrap();
         std::fs::remove_file(async_dir.path().join(".kotowari/overview/a.md")).unwrap();
+        for dir in [&sync_dir, &async_dir] {
+            std::fs::write(
+                dir.path().join(".kotowari/toc.yaml"),
+                "title: t\nitems: [b]\n",
+            )
+            .unwrap();
+        }
         assert_eq!(
             send(adapter.overview_build()).await.unwrap(),
             sync.overview_build().unwrap()
         );
+        // 目次の誤りも同期と同じ誤りで止まる
+        for dir in [&sync_dir, &async_dir] {
+            std::fs::write(
+                dir.path().join(".kotowari/toc.yaml"),
+                "title: t\nitems: [z]\n",
+            )
+            .unwrap();
+        }
+        let error = send(adapter.overview_prepare()).await.unwrap_err();
+        let expected = sync.overview_prepare().unwrap_err();
+        assert_eq!(error.kind(), expected.kind());
+        assert_eq!(error.detail(), expected.detail());
     });
 }
