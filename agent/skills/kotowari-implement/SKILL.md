@@ -78,7 +78,7 @@ now and raises no test-side finding: write no test for it and put its ID in no m
 raised deferred_with_test, remove the mark; hand back any other deferred_with_test or
 depends_on_deferred notice on a file you changed or an ID the plan covers, as an IR-side finding.
 
-Missed mutations: the pre-push hook runs mutations on the diff. A miss is fixed by the fixer or
+Missed mutations: the project's mutation gate (in kotowari itself, the pull request CI) runs mutations on the diff. A miss is fixed by the fixer or
 the implementer, like a test-side finding; how to investigate one is in the kotowari skill's
 `references/mutants.md`.
 

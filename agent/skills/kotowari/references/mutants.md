@@ -91,7 +91,7 @@ Do not pass your own "this is equivalent" judgement by yourself. Changes to the 
 
 ## When to run it
 
-- After a cycle: only the mutations inside the diff with main. The pre-push hook runs it, and stops the push if misses remain
-- Before a release: everything. A push of a tag switches the same hook to everything
+- After a cycle: only the mutations inside the diff with main. The project's gate runs it and stops the integration if misses remain. In kotowari itself that gate is the pull request CI, split into parallel shards, and no hook runs it, because running it before every push made the work wait for hours
+- Before a release: the mutations inside the diff from the product's previous release tag, or everything when there is none. In kotowari itself the release CI runs it before building binaries
 
 Exclusions are not used. The source's `#[mutants::skip]` and the tool's exclusion settings do not measure the excluded mutations, so they are no place for judgements. Judgements go in the list of equivalents.
