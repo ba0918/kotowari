@@ -175,10 +175,13 @@ fn ex_core_476_the_page_of_removed_overview_data_is_removed() {
         [".kotowari/cache/overview/b.html"]
     );
     assert!(!tmp.path().join(CACHE).join("b.html").exists());
-    // 一覧は b を並べなくなったので書き直される
+    // 一覧は b を並べなくなり、a のページは同じ目次の群の b へのリンクを失うので書き直される
     assert_eq!(
         strings(&value["written"]),
-        [".kotowari/cache/overview/index.html"]
+        [
+            ".kotowari/cache/overview/a.html",
+            ".kotowari/cache/overview/index.html"
+        ]
     );
 }
 
