@@ -278,6 +278,8 @@ fn ex_view_008_two_following_half_parts_sit_side_by_side() {
     let text = page_with(blocks.clone(), vec![]);
     let wide = page_with(blocks.iter().map(full).collect(), vec![]);
     // 幅いっぱいに描いた場合と比べ、2つの cards を囲む所だけが変わり、status は変わらない
+    // 組にすると、幅いっぱいの描き方に横並びの囲みが加わる
+    assert!(text.len() > wide.len());
     let (start, end) = changed(&text, &wide).expect("a row");
     let at = |needle: &str| text.find(needle).unwrap();
     assert!(start < at("左のカード") && at("右のカード") < end);
@@ -303,6 +305,7 @@ fn req_view_015_a_half_part_left_over_and_others_are_drawn_full_width() {
     let text = page_with(blocks.clone(), vec![]);
     let wide = page_with(blocks.iter().map(full).collect(), vec![]);
     // 幅いっぱいに描いた場合と比べて変わるのは一と二を組にする所だけで、三から後は同じ
+    assert!(text.len() > wide.len());
     let (start, end) = changed(&text, &wide).expect("a row");
     let at = |needle: &str| text.find(needle).unwrap();
     assert!(start < at("一") && at("二") < end);
@@ -507,4 +510,25 @@ fn req_view_010_markdown_text_cannot_make_the_page_load_images_scripts_or_styles
         assert!(!main.contains(tag), "{tag}");
     }
     assert!(!main.contains("src=\""));
+}
+
+// @kotowari[REQ-view-003, REQ-view-011, REQ-view-007]
+#[test]
+fn req_view_003_the_characters_of_field_values_are_drawn_as_text_not_markup() {
+    let text = "前置き q<q q>q z&z q\"q q'q";
+    let drawn = page_with(
+        vec![
+            part("steps", json!({"items": [{"title": text}]})),
+            // スキーマに合わない値も検査せずに描く。属性の中に置かれる値も文字のまま描く
+            part(
+                "cards",
+                json!({"cards": [{"title": "c", "items": [], "tone": "x\" onclick=\"y"}]}),
+            ),
+        ],
+        vec![],
+    );
+    assert!(drawn.contains("前置き"));
+    for raw in ["q<q", "q>q", "z&z", "q\"q", "q'q", "x\" onclick"] {
+        assert!(!drawn.contains(raw), "{raw} is written as markup");
+    }
 }
