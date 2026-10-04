@@ -114,11 +114,12 @@ pub fn render(input: &RenderInput) -> Vec<Page> {
     let mut pages: BTreeMap<String, String> = BTreeMap::new();
     pages.insert(INDEX.into(), index::page(&input.toc, &documents));
     pages.insert("style.css".into(), STYLE.into());
+    let places = index::places(&input.toc);
     for document in documents.values() {
-        let place = index::place(&input.toc, &document.name);
+        let place = places.get(document.name.as_str());
         pages.insert(
             page_name(document),
-            document_page(document, place.as_ref(), &documents, &refs),
+            document_page(document, place, &documents, &refs),
         );
     }
     pages
