@@ -576,6 +576,10 @@ impl ReadModel {
             .map(QueryReport)
             .ok_or_else(|| InputError::UnknownQuery(id.into()))
     }
+    /// ほかの文書の`ガイドの印`を`ガイド`と同じ規則で読むもの（REQ-core-286）
+    pub fn guide_reader(&self) -> crate::guides::GuideReader<'_> {
+        crate::guides::GuideReader::new(&self.docs)
+    }
     pub fn validate_guide_paths<'a>(
         &self,
         paths: impl IntoIterator<Item = &'a str>,

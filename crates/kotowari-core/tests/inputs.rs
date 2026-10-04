@@ -487,3 +487,49 @@ fn two_additional_groups_with_one_name_are_invalid_input() {
         Err(InputError::InvalidInput(_))
     ));
 }
+
+// @kotowari[REQ-core-286]
+#[test]
+fn guide_marks_of_one_text_are_read_with_lines_and_staleness_without_the_overlap_stop() {
+    use kotowari_core::{FindingKind, ReadInputs, ReadModel};
+    let mut inputs = ReadInputs::default();
+    inputs.config.tests.files = vec!["notes/**".into()];
+    inputs.config.guides.files = vec!["notes/**".into()];
+    inputs.ir = Some(vec![SourceText::new(
+        "docs/ir/topic.md",
+        "# Topic\n\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- verification: review\n- how_to_verify: read\n\nBody.\n",
+    )
+    .unwrap()]);
+    inputs.records = Some(vec![]);
+    inputs.adr = Some(vec![]);
+    inputs.tests = Some(vec![]);
+    let model = ReadModel::build(inputs).unwrap();
+    let report = model.query("REQ-001").unwrap();
+    let kotowari_core::ListItem::Requirement(requirement) = report.items()[0].item() else {
+        panic!("REQ-001 is a requirement");
+    };
+    let current = requirement.fingerprint().to_string();
+    let text = format!(
+        "# Guide\n\n## Fresh\n<!-- @kotowari[REQ-001:{current}] -->\n\n## Old\n<!-- @kotowari[REQ-001:00000000] -->\n\n## Broken\n<!-- @kotowari[REQ-001] -->\n"
+    );
+    let reader = model.guide_reader();
+    let marks = reader.read("notes/x.md", &text);
+    let summary: Vec<(usize, &str, bool)> = marks
+        .marks()
+        .iter()
+        .map(|mark| (mark.line(), mark.id(), mark.stale()))
+        .collect();
+    assert_eq!(summary, [(4, "REQ-001", false), (7, "REQ-001", true)]);
+    let findings: Vec<(&str, Option<usize>, FindingKind)> = marks
+        .findings()
+        .iter()
+        .map(|finding| (finding.path(), finding.line(), finding.kind()))
+        .collect();
+    assert_eq!(
+        findings,
+        [
+            ("notes/x.md", Some(7), FindingKind::GuideStale),
+            ("notes/x.md", Some(10), FindingKind::InvalidMarker),
+        ]
+    );
+}

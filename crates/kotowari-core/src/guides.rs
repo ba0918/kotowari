@@ -49,6 +49,88 @@ fn fingerprints_by_id(docs: &[IrDocument]) -> BTreeMap<&str, Vec<String>> {
     by_id
 }
 
+/// 1つの文書から読んだ形の正しい`ガイドの印`の1件と、その古さ（REQ-core-204）
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GuideMark {
+    line: usize,
+    id: String,
+    fingerprint: String,
+    stale: bool,
+}
+impl GuideMark {
+    /// その`ガイドの印`の始まりの行
+    pub fn line(&self) -> usize {
+        self.line
+    }
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+    /// 1件に書かれた`指紋`
+    pub fn fingerprint(&self) -> &str {
+        &self.fingerprint
+    }
+    /// guide_stale を受けるか
+    pub fn stale(&self) -> bool {
+        self.stale
+    }
+}
+
+/// 1つの文書の`ガイドの印`を読んだ結果。印と、その文書の invalid_marker と guide_stale
+#[derive(Debug, Clone)]
+pub struct GuideMarks {
+    marks: Vec<GuideMark>,
+    findings: Vec<Finding>,
+}
+impl GuideMarks {
+    pub fn marks(&self) -> &[GuideMark] {
+        &self.marks
+    }
+    pub fn findings(&self) -> &[Finding] {
+        &self.findings
+    }
+    pub fn into_findings(self) -> Vec<Finding> {
+        self.findings
+    }
+}
+
+/// `ガイド`と同じ規則で、ほかの文書の`ガイドの印`を1つずつ読む（REQ-core-200〜REQ-core-204）。
+/// 置き場の重なりの`停止`（REQ-core-199）は読む側が決めるので、ここでは見ない。
+/// `項目`と`シナリオ`の`指紋`は作るときに1回だけ求める
+pub struct GuideReader<'a> {
+    fingerprints: BTreeMap<&'a str, Vec<String>>,
+}
+impl<'a> GuideReader<'a> {
+    pub(crate) fn new(docs: &'a [IrDocument]) -> Self {
+        Self {
+            fingerprints: fingerprints_by_id(docs),
+        }
+    }
+    /// path を指摘の "path" にして1つの文書を読む
+    pub fn read(&self, path: &str, text: &str) -> GuideMarks {
+        let mut entries = Vec::new();
+        let mut findings = Vec::new();
+        read_marks(path, text, &mut entries, &mut findings);
+        check_stale(&entries, &self.fingerprints, &mut findings);
+        crate::sort_findings(&mut findings);
+        let marks = entries
+            .into_iter()
+            .map(|entry| GuideMark {
+                stale: !is_current(&entry, &self.fingerprints),
+                line: entry.line,
+                id: entry.id,
+                fingerprint: entry.fingerprint,
+            })
+            .collect();
+        GuideMarks { marks, findings }
+    }
+}
+
+fn is_current(entry: &GuideEntry, fingerprints: &BTreeMap<&str, Vec<String>>) -> bool {
+    fingerprints
+        .get(entry.id.as_str())
+        .is_some_and(|all| all.contains(&entry.fingerprint))
+}
+
 pub fn check_entries<'a>(
     files: impl IntoIterator<Item = (&'a str, &'a str)>,
     test_files: &[String],
@@ -93,10 +175,10 @@ fn check_stale(
     findings: &mut Vec<Finding>,
 ) {
     for entry in entries {
-        let current = fingerprints.get(entry.id.as_str());
-        if current.is_some_and(|all| all.contains(&entry.fingerprint)) {
+        if is_current(entry, fingerprints) {
             continue;
         }
+        let current = fingerprints.get(entry.id.as_str());
         let first = current
             .and_then(|all| all.first())
             .map_or("-", String::as_str);
