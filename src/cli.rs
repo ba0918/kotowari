@@ -101,6 +101,16 @@ pub enum Cli {
         format: Format,
         config_path: Option<PathBuf>,
     },
+    /// 全体像を ".kotowari/cache/overview/" の下に書く（REQ-core-293）
+    OverviewBuild {
+        format: Format,
+        config_path: Option<PathBuf>,
+    },
+    /// 全体像を書いて手元で配る（REQ-core-297）
+    OverviewServe {
+        port: u16,
+        config_path: Option<PathBuf>,
+    },
     /// 計画書の形を検査する（REQ-core-190）
     Plan {
         format: Format,
@@ -114,9 +124,24 @@ pub enum Cli {
 }
 
 /// REQ-core-001: 1つ目の位置引数として受けるコマンド
-const COMMANDS: [&str; 7] = [
-    "changes", "check", "list", "mutants", "plan", "query", "status",
+const COMMANDS: [&str; 8] = [
+    "changes", "check", "list", "mutants", "overview", "plan", "query", "status",
 ];
+
+/// serve の既定のポート（REQ-core-297）
+const DEFAULT_PORT: u16 = 4590;
+
+/// REQ-core-304: "--port" の値は1から65535までの10進の整数
+fn parse_port(value: &str) -> Result<u16, StopReason> {
+    let invalid = || StopReason::ArgumentError(format!("invalid port: {value}"));
+    if value.is_empty() || !value.bytes().all(|byte| byte.is_ascii_digit()) {
+        return Err(invalid());
+    }
+    match value.parse::<u16>() {
+        Ok(port) if port >= 1 => Ok(port),
+        _ => Err(invalid()),
+    }
+}
 
 /// 引数を解析する（REQ-core-002, REQ-core-004, REQ-core-107, REQ-core-149, REQ-core-157, REQ-core-190）
 pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
@@ -138,6 +163,8 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     let mut saw_format = false;
     let mut saw_config = false;
     let mut saw_tool = false;
+    let mut saw_port = false;
+    let mut port: Option<String> = None;
     let mut change_options = BTreeMap::new();
     let mut staged = false;
     let mut i = 0;
@@ -171,6 +198,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                 "--format" => &mut saw_format,
                 "--config" => &mut saw_config,
                 "--tool" => &mut saw_tool,
+                "--port" => &mut saw_port,
                 _ => {
                     return Err(StopReason::ArgumentError(format!("unknown option: {arg}")));
                 }
@@ -186,6 +214,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
             match arg.as_str() {
                 "--format" => format_str = Some(args[i].clone()),
                 "--config" => config_path = Some(PathBuf::from(&args[i])),
+                "--port" => port = Some(args[i].clone()),
                 _ => tool = Some(args[i].clone()),
             }
         } else if command.is_none() {
@@ -203,7 +232,8 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
 
     let Some(command) = command else {
         return Err(StopReason::ArgumentError(
-            "expected command: check, changes, list, mutants, plan, query or status".to_string(),
+            "expected command: check, changes, list, mutants, overview, plan, query or status"
+                .to_string(),
         ));
     };
 
@@ -251,6 +281,13 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
             "unexpected change option for {command}"
         )));
     }
+    // REQ-core-004: "--port" は "overview serve" だけが受ける
+    let serve = command == "overview" && positionals.first().map(String::as_str) == Some("serve");
+    if port.is_some() && !serve {
+        return Err(StopReason::ArgumentError(format!(
+            "unexpected option for {command}: --port"
+        )));
+    }
     // REQ-core-190: plan は設定を読まないので "--config" を受けない。指す先を見る前に止める
     if command == "plan" && saw_config {
         return Err(StopReason::ArgumentError(
@@ -268,6 +305,12 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         )));
     }
 
+    // REQ-core-004: "overview serve" は "--format" を受けない
+    if serve && format_str.is_some() {
+        return Err(StopReason::ArgumentError(
+            "unexpected option for overview serve: --format".to_string(),
+        ));
+    }
     let format = Format::parse(format_str.as_deref().unwrap_or("json"))
         .map_err(StopReason::ArgumentError)?;
 
@@ -279,6 +322,26 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
             return Err(StopReason::ArgumentError(format!(
                 "unexpected option for {command}: --tool"
             )));
+        }
+        // REQ-core-304: "overview" の後の位置引数は "build" か "serve" のちょうど1つ
+        if command == "overview" {
+            return match positionals.as_slice() {
+                [sub] if sub == "build" => Ok(Cli::OverviewBuild {
+                    format,
+                    config_path,
+                }),
+                [sub] if sub == "serve" => Ok(Cli::OverviewServe {
+                    port: port.as_deref().map_or(Ok(DEFAULT_PORT), parse_port)?,
+                    config_path,
+                }),
+                [sub] => Err(StopReason::ArgumentError(format!(
+                    "unknown overview command: {sub}"
+                ))),
+                _ => Err(StopReason::ArgumentError(format!(
+                    "overview expects exactly one of build or serve, got {}",
+                    positionals.len()
+                ))),
+            };
         }
         // REQ-core-190: "plan" の位置引数は計画書のファイルのパスがちょうど1つ
         if command == "plan" {
@@ -449,6 +512,18 @@ pub fn run(args: &[String]) -> u8 {
             print_mutants(&result, format);
             Ok(exit_code_for(result.findings()))
         }),
+        // REQ-core-293、REQ-core-295: 書き終えたら書いたファイルと消したファイルを出す
+        Cli::OverviewBuild {
+            format,
+            config_path,
+        } => with_cwd(|cwd| {
+            let result = project(cwd, config_path.as_deref())?.overview_build()?;
+            print_overview_build(&result, format);
+            Ok(0)
+        }),
+        Cli::OverviewServe { .. } => stop(&StopReason::ArgumentError(
+            "overview serve is not available".to_string(),
+        )),
         // REQ-core-196: 設定を読まず、計画書のファイルだけを読む
         Cli::Plan { format, path } => with_cwd(|cwd| {
             let result = run_plan(cwd, &path)?;
@@ -526,6 +601,21 @@ fn print_mutants(result: &MutantsReport, format: Format) {
     }
 }
 
+/// "kotowari overview build" の結果を出す（REQ-core-295）
+fn print_overview_build(result: &kotowari::OverviewBuild, format: Format) {
+    match format {
+        Format::Json => println!("{}", output::overview_build(result)),
+        Format::Text => {
+            for path in result.written() {
+                println!("written {}", one_line(path));
+            }
+            for path in result.removed() {
+                println!("removed {}", one_line(path));
+            }
+        }
+    }
+}
+
 /// "kotowari plan" の結果を出す（REQ-core-194、REQ-core-025）
 fn print_plan(result: &PlanReport, format: Format) {
     match format {
@@ -563,6 +653,7 @@ fn print_help() {
     println!("  check      Check IR documents and test markers");
     println!("  list       List IR items and the tests marked for them");
     println!("  mutants    Read a mutation testing result file and report survivors");
+    println!("  overview   build: write the overview pages; serve: write and show them locally");
     println!("  plan       Check the form of one plan file against the bundled schema");
     println!("  query      Show one item or scenario with its body and back references");
     println!("  status     Summarise the IR and tell whether it is complete");
@@ -572,6 +663,7 @@ fn print_help() {
     println!("  --format <FORMAT>  Output format: json (default) or text");
     println!("  --config <PATH>    Path to configuration file");
     println!("  --tool <TOOL>      Mutation testing tool of the result file: cargo-mutants");
+    println!("  --port <PORT>      Port of overview serve on 127.0.0.1 (default 4590)");
     println!("  --help             Show this help message");
     println!("  --version          Show version");
 }
