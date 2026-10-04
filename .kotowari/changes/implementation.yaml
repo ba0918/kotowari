@@ -14,12 +14,17 @@
         {
           "path": ".github/workflows/mutants-run.yml",
           "before": "sha256:9a06df8256ad96e16b427641850692d7ff98b415c550fbea4183fe96a55a0086",
-          "after": "sha256:e15466326535f80ab73d2ea616963c55ca897175691b1c7ef6d4687776807ca9"
+          "after": "sha256:e2ef5c47dc9a86a3cf0065244639b53719dd7f721317e26069778bab13cde263"
+        },
+        {
+          "path": ".github/workflows/mutants-scheduled.yml",
+          "before": null,
+          "after": "sha256:dec61fae52fe73e7d55dab1d197baaf3bde0e5e3db3c0a5a829b68aef75ab48f"
         },
         {
           "path": ".github/workflows/mutants.yml",
           "before": "sha256:324dba36e0c729ee3f5cf4e702d51c13eb0591c74280423fadb36761b43396d8",
-          "after": "sha256:156acd9730521e45d3d04d0c67e2548dd5a4aad06c142bcccfe5ba0cf3105c2f"
+          "after": "sha256:bb697d82229d0ee86fd3f5085d75a5e759be54891316cbb79d58ab6a21c6461c"
         },
         {
           "path": ".github/workflows/release.yml",
@@ -29,7 +34,7 @@
         {
           "path": ".kotowari/equivalents.yaml",
           "before": "sha256:600a50641b47eb8ea419406df2e3c1da19917e24dfb0ac243e4d3805c9e75a7d",
-          "after": "sha256:efa41ca63a4be84598cbd41ddd0ac74a07338919e3cc6598a939f6e4841e4cfd"
+          "after": "sha256:c2be438808ff25aed2005190d3ce1c37d73ef21e99d8075bf0b3a03b64af7370"
         },
         {
           "path": ".kotowari/schemas/context.yaml",
@@ -69,7 +74,7 @@
         {
           "path": "PROJECT.md",
           "before": "sha256:1c3cf6d5e653e8d7969828777a1d61504916db73af7c750fd825e36c440094e0",
-          "after": "sha256:dddf9b526229b77bcc7765780d85c0a184ca673257360b6f5b7cb052f448f4e6"
+          "after": "sha256:a709dc8099ac238ec07e789ebb9acf94f53f4de2c1c548132d6c4ed2c7e01e03"
         },
         {
           "path": "agent/skills/kotowari-brainstorm/SKILL.md",
@@ -1019,7 +1024,7 @@
         {
           "path": "scripts/mutants.sh",
           "before": "sha256:daae2ef9759d01b2152c620d6cd4142a7dfbc0d1712761c36d8058fb6356379c",
-          "after": "sha256:0997334dd55fc8214f0163220c3c0e28cd2e042137c6ec8c02094a967b4f0674"
+          "after": "sha256:e4b93f9e4baa640dec36e0a8354aa7a2f0227e4d3feedfda75c9e8dccefa2c68"
         },
         {
           "path": "scripts/release.sh",
@@ -1315,7 +1320,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "The seven-package restructuring implements the approved synchronous and optional Tokio contracts while retaining both CLI contracts. Core admits configuration and enabled groups, retains original source identity and text, and computes read and check results through shared private phases. Logical SourceText remains canonical; native acquisition carries lossless PathBuf provenance separately from producer display/rule spellings, preserving the BASE-supported display collisions, counts and matching. Opaque preparation parses each IR file before later acquisition and checks guide overlap after enumeration but before guide bodies and surface acquisition. Public changes inspection validates consumed configuration while fact-only evaluation stays independent. Results remain read-only, CLI conversion remains CLI-owned, and useful facade aliases retain lower-type identity. List/query member order is restored without changing values, nulls or arrays. Canonical version fixtures retain intentional mismatches, transformations and real production rollback; inherited change-record diagnostic assertions are unchanged. The previously authorized two schema verification references and newly authorized three acquisition verification references preserve requirement meaning. The linked stop guide was reviewed and only its related fingerprint refreshed. Chronological repair RED, GREEN and REFACTOR evidence, current workspace/CLI/source-consumer checks and exact baseline differences are retained separately. The earlier broader constructor TDD deviation is not relabeled. Final sealed-head shipped-artifact and full mutation gates remain deferred pending parent-owned review; historical archives and raw mutation misses do not prove this candidate. This implementer record does not claim independent approval or integration readiness. Legacy collected-file acquisition preserves the BASE lossy absolute read selection and ordering for tests, guides, surfaces and change records while retaining distinct lossless enumeration identities. Original IR and decision-source PathBuf reads remain unchanged. Text consistency compares actually acquired source by enumeration identity, without inode discovery, merging legacy read aliases or weakening public admission. The byte-filename-only stop and byte-name-plus-replacement multiplicity are covered by chronological producer-grounded regressions, and the approved backslash collision remains an exact BASE output match. Planning A14 records this preservation adjudication without any further IR edit. The user-authorized mutation repair enables all features only in the mutation lane and preserves ordinary default tests and the existing selection, resource, checksum and policy gates. Producer-grounded public-observation assertions cover retained IR/native paths, references, preparation configuration, required guides and acquired-analysis text, public surface evaluation, schema open/relax extraction, loaded document content, reachable error Display and facade error classification. No original product defect was established or production Rust edited; passing original-code tests and bounded mutant sensitivity are not relabeled as test-first RED. Only the three independently challenged ParseError substitutions are registered under A16's locked producer/serialization proof and explicit manual invalidation conditions, without implying automatic dependency staleness or independent approval of these new entries. The failed 680-outcome sealed mutation run is historical evidence, not a pass or replaced by probes. Parent-owned reviewer grounds remain untouched and stale; final shipped-artifact/full mutation awaits independent review and a new seal. On top of that restructuring, the branch implements the approved overview specification inside its requirements and the 2026-10-04 placement decisions: kotowari-markdown-view renders the render input into pages and publishes the eight part schemas without touching files; kotowari-overview checks overview data from texts and an already read ReadModel and builds the reference table, stale sections and render input; core gains only the overview finding kinds, the overview.files key, a generic named finding group, guide-mark reading of one text, and read-only access to read documents and source targets; the kotowari library reads overview data, checks overlaps and passes the overview group, and offers overview_prepare and overview_build writing only under .kotowari/cache/overview; kotowari-cli adds overview build and serve (tiny_http, ctrlc). Later fixes follow decisions A9 to A12 of the 2026-10-04 record and REQ-core-324: build and serve stop with cache error and write nothing when .kotowari, .kotowari/cache or .kotowari/cache/overview is a symbolic link or not a directory; parts after the lead and before the first section are drawn after the lead; every frontmatter violation has the detail \"frontmatter\" while a valid ir list is still matched against the IR; HTML comments in Markdown text are replaced by a sentinel before parsing and the sentinel is removed after rendering, so comments neither show nor change the block structure. Guides and the public crate guides follow the overview commands and the nine packages. Following A13 and A14, the four status badges are drawn so that they can be told apart, serve stops with port error when accepting a connection fails while serving, and serve returns files in the cache whose names contain a backslash. Following 2026-10-04-mutants-in-ci.md A9 to A12, the pull request mutation tests run on the diff from the last commit that passed, with a 20-second test timeout, inside a memory-limited systemd scope, split into 16 shards with a prebuilt cargo-mutants. Skill texts add the approval steps and the overview reference. Every behaviour is covered by marked tests or the review requirements REQ-core-287, REQ-core-300 to REQ-core-303, REQ-core-306 and REQ-core-307.",
+      "reason": "The seven-package restructuring implements the approved synchronous and optional Tokio contracts while retaining both CLI contracts. Core admits configuration and enabled groups, retains original source identity and text, and computes read and check results through shared private phases. Logical SourceText remains canonical; native acquisition carries lossless PathBuf provenance separately from producer display/rule spellings, preserving the BASE-supported display collisions, counts and matching. Opaque preparation parses each IR file before later acquisition and checks guide overlap after enumeration but before guide bodies and surface acquisition. Public changes inspection validates consumed configuration while fact-only evaluation stays independent. Results remain read-only, CLI conversion remains CLI-owned, and useful facade aliases retain lower-type identity. List/query member order is restored without changing values, nulls or arrays. Canonical version fixtures retain intentional mismatches, transformations and real production rollback; inherited change-record diagnostic assertions are unchanged. The previously authorized two schema verification references and newly authorized three acquisition verification references preserve requirement meaning. The linked stop guide was reviewed and only its related fingerprint refreshed. Chronological repair RED, GREEN and REFACTOR evidence, current workspace/CLI/source-consumer checks and exact baseline differences are retained separately. The earlier broader constructor TDD deviation is not relabeled. Final sealed-head shipped-artifact and full mutation gates remain deferred pending parent-owned review; historical archives and raw mutation misses do not prove this candidate. This implementer record does not claim independent approval or integration readiness. Legacy collected-file acquisition preserves the BASE lossy absolute read selection and ordering for tests, guides, surfaces and change records while retaining distinct lossless enumeration identities. Original IR and decision-source PathBuf reads remain unchanged. Text consistency compares actually acquired source by enumeration identity, without inode discovery, merging legacy read aliases or weakening public admission. The byte-filename-only stop and byte-name-plus-replacement multiplicity are covered by chronological producer-grounded regressions, and the approved backslash collision remains an exact BASE output match. Planning A14 records this preservation adjudication without any further IR edit. The user-authorized mutation repair enables all features only in the mutation lane and preserves ordinary default tests and the existing selection, resource, checksum and policy gates. Producer-grounded public-observation assertions cover retained IR/native paths, references, preparation configuration, required guides and acquired-analysis text, public surface evaluation, schema open/relax extraction, loaded document content, reachable error Display and facade error classification. No original product defect was established or production Rust edited; passing original-code tests and bounded mutant sensitivity are not relabeled as test-first RED. Only the three independently challenged ParseError substitutions are registered under A16's locked producer/serialization proof and explicit manual invalidation conditions, without implying automatic dependency staleness or independent approval of these new entries. The failed 680-outcome sealed mutation run is historical evidence, not a pass or replaced by probes. Parent-owned reviewer grounds remain untouched and stale; final shipped-artifact/full mutation awaits independent review and a new seal. On top of that restructuring, the branch implements the approved overview specification inside its requirements and the 2026-10-04 placement decisions: kotowari-markdown-view renders the render input into pages and publishes the eight part schemas without touching files; kotowari-overview checks overview data from texts and an already read ReadModel and builds the reference table, stale sections and render input; core gains only the overview finding kinds, the overview.files key, a generic named finding group, guide-mark reading of one text, and read-only access to read documents and source targets; the kotowari library reads overview data, checks overlaps and passes the overview group, and offers overview_prepare and overview_build writing only under .kotowari/cache/overview; kotowari-cli adds overview build and serve (tiny_http, ctrlc). Later fixes follow decisions A9 to A12 of the 2026-10-04 record and REQ-core-324: build and serve stop with cache error and write nothing when .kotowari, .kotowari/cache or .kotowari/cache/overview is a symbolic link or not a directory; parts after the lead and before the first section are drawn after the lead; every frontmatter violation has the detail \"frontmatter\" while a valid ir list is still matched against the IR; HTML comments in Markdown text are replaced by a sentinel before parsing and the sentinel is removed after rendering, so comments neither show nor change the block structure. Guides and the public crate guides follow the overview commands and the nine packages. Following A13 and A14, the four status badges are drawn so that they can be told apart, serve stops with port error when accepting a connection fails while serving, and serve returns files in the cache whose names contain a backslash. Following 2026-10-04-mutants-in-ci.md A9 to A12, the mutation tests in CI (2026-10-04-mutants-in-ci.md A1 to A18) run on the diff from the merge base of a pull request, with a per-mutant timeout derived from a measured baseline, inside a systemd scope with memory and CPU caps and lowered priority that records the limits it ran under, built with the pinned nightly-2026-10-03 toolchain and CARGO_BUILD_FINGERPRINT=content, split into 16 shards with a prebuilt cargo-mutants; a diff with no candidate mutants is proven empty with --list, and a weekly scheduled whole run opens an issue on misses. Skill texts add the approval steps and the overview reference. Every behaviour is covered by marked tests or the review requirements REQ-core-287, REQ-core-300 to REQ-core-303, REQ-core-306 and REQ-core-307.",
       "requirements": [
         "REQ-core-001",
         "REQ-core-002",
@@ -1431,6 +1436,18 @@
         "docs/decision/records/2026-10-03-public-crate-api-plan.md#A14",
         "docs/decision/records/2026-10-03-public-crate-api-plan.md#A15",
         "docs/decision/records/2026-10-03-public-crate-api-plan.md#A16",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A1",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A2",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A3",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A4",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A5",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A6",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A7",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A8",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A9",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A10",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A11",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A12",
         "docs/decision/records/2026-10-04-overview-on-public-api.md#A1",
         "docs/decision/records/2026-10-04-overview-on-public-api.md#A2",
         "docs/decision/records/2026-10-04-overview-on-public-api.md#A3",
@@ -1445,18 +1462,12 @@
         "docs/decision/records/2026-10-04-overview-on-public-api.md#A12",
         "docs/decision/records/2026-10-04-overview-on-public-api.md#A13",
         "docs/decision/records/2026-10-04-overview-on-public-api.md#A14",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A1",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A2",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A3",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A4",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A5",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A6",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A7",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A8",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A9",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A10",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A11",
-        "docs/decision/records/2026-10-04-mutants-in-ci.md#A12",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A13",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A14",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A15",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A16",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A17",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A18",
         "docs/decision/records/2026-10-02-whole-picture.md#A22",
         "docs/decision/records/2026-10-02-whole-picture.md#A25",
         "docs/decision/records/2026-10-02-whole-picture.md#A27",
