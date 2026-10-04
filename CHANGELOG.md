@@ -11,6 +11,8 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 
 ### Added
 
+- 仕様・判断の記録・テストのつながりと、機械検査の範囲を説明する日英の紹介ページを追加した。
+
 - `kotowari overview build`と`kotowari overview serve`を追加した。設定の`overview.files`に当たる全体像の元データ（frontmatterの`ir`、題名、冒頭の`lead`の部品、節と部品を持つMarkdown）を検査し、誤りが無ければ`.kotowari/cache/overview/`の下に一覧と全体像ごとのHTMLのページを書く。serveはそれを`http://127.0.0.1:<port>/`（既定4590、`--port`で変更）で配り、Ctrl-Cで終わる。元データに誤りがあれば何も書かずに`overview error`で、ポートを使えないか配っている間に接続を受け付けられなければ`port error`で止まる。`.kotowari`、`.kotowari/cache`、`.kotowari/cache/overview`のどれかがシンボリックリンクかディレクトリでなければ何も書かず消さずに、置き場の作成、書き込み、削除に失敗したときもそこで、`cache error`で止まる。
 - 設定に`overview`の鍵を書くと、`kotowari check`と`kotowari status`が全体像の元データを読み、形、部品の中身、冒頭の`lead`、扱うIRの文書、部品の中の参照、ページの名前の重なりの誤り（`overview_form_invalid`、`overview_part_unknown`、`overview_part_invalid`、`overview_lead_missing`、`overview_ir_missing`、`overview_ir_shared`、`overview_ref_unresolved`、`overview_name_conflict`）と、元データの節のガイドの印の古さを報告する。checkのJSONとstatusにはいつも`overview`の群（`files`と`marks`）が入り、鍵が無ければ両方0。
 - 全体像の一覧を目次で描く。設定の`overview`には目次のYAMLファイルを指す`overview.toc`も必須になり、一覧は目次の題名を見出しに、目次の群（`title`、省いてよい一行の`note`、`items`）を書かれた順と入れ子で、畳める形で描く。カードには見直していない節・未決・予定の数、群の見出しにはページ数と見直していない節・未決の合計を添える。各ページには目次の中の位置と、同じ群のほかのページへのリンクが付く。目次の形の誤り、目次に無いページ、元データの無い名前、2回目以降の名前、空の群は`kotowari check`と`kotowari status`の誤り（`overview_toc_invalid`、`overview_toc_page_missing`、`overview_toc_page_unknown`、`overview_toc_page_duplicate`、`overview_toc_group_empty`）になり、buildとserveを止める。目次のファイルが無いか読めなければ止まり、`overview.files`、`guides.files`、`tests.files`の走査で読むファイルに当たれば設定の誤りで止まる。全体像の元データが1つも無いと通る目次は書けないので、`overview`の鍵は最初の全体像の元データと目次と一緒に書く。
