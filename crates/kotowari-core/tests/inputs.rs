@@ -452,6 +452,8 @@ fn an_additional_group_is_sorted_counted_and_reported_with_its_numbers() {
     );
     assert_eq!(check.counts().get("overview_lead_missing"), Some(&1));
     assert_eq!(check.counts().get("guide_stale"), Some(&1));
+    let names: Vec<&str> = check.groups().iter().map(|group| group.name()).collect();
+    assert_eq!(names, ["overview"]);
     let tally = check.group("overview").expect("group tally");
     assert_eq!(
         (tally.name(), tally.files(), tally.marks()),
@@ -461,6 +463,8 @@ fn an_additional_group_is_sorted_counted_and_reported_with_its_numbers() {
     assert_eq!(status.findings().error(), 2);
     assert_eq!(status.findings().notice(), 1);
     assert!(!status.complete());
+    let names: Vec<&str> = status.groups().iter().map(|group| group.name()).collect();
+    assert_eq!(names, ["overview"]);
     let tally = status.group("overview").expect("status group tally");
     assert_eq!((tally.files(), tally.marks()), (2, 5));
 }
@@ -514,12 +518,18 @@ fn guide_marks_of_one_text_are_read_with_lines_and_staleness_without_the_overlap
     );
     let reader = model.guide_reader();
     let marks = reader.read("notes/x.md", &text);
-    let summary: Vec<(usize, &str, bool)> = marks
+    let summary: Vec<(usize, &str, &str, bool)> = marks
         .marks()
         .iter()
-        .map(|mark| (mark.line(), mark.id(), mark.stale()))
+        .map(|mark| (mark.line(), mark.id(), mark.fingerprint(), mark.stale()))
         .collect();
-    assert_eq!(summary, [(4, "REQ-001", false), (7, "REQ-001", true)]);
+    assert_eq!(
+        summary,
+        [
+            (4, "REQ-001", current.as_str(), false),
+            (7, "REQ-001", "00000000", true)
+        ]
+    );
     let findings: Vec<(&str, Option<usize>, FindingKind)> = marks
         .findings()
         .iter()

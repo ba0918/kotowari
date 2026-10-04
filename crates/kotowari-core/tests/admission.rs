@@ -221,3 +221,22 @@ fn repeated_original_test_identity_cannot_be_evaded_by_display_spelling() {
     ];
     assert!(ReadModel::build_repository(input).is_err());
 }
+
+// @kotowari[REQ-core-199, REQ-core-315]
+#[test]
+fn a_guide_path_that_is_also_a_test_file_stops_the_native_inspection() {
+    let mut config = Config::default();
+    config.tests.files = vec!["notes/**".into()];
+    config.guides.files = vec!["notes/**".into()];
+    let mut input = inputs(config);
+    input.tests = vec![test("notes/x.md", "notes/x.md", "text")];
+    let preparation = ReadModel::build_repository(input)
+        .unwrap()
+        .prepare_repository_inspection();
+    assert!(preparation.validate_guide_paths(["notes/y.md"]).is_ok());
+    let stop = preparation
+        .validate_guide_paths(["notes/x.md"])
+        .unwrap_err()
+        .to_string();
+    assert!(stop.starts_with("config error: notes/x.md"), "{stop}");
+}
