@@ -17,7 +17,7 @@
 
 ## 種類の一覧
 
-<!-- @kotowari[TBL-core-008:de1c4457, TBL-core-009:e42a4a68, TBL-core-019:508f1afa, REQ-core-027:d02224c9] -->
+<!-- @kotowari[TBL-core-008:4eb267cb, TBL-core-009:e42a4a68, TBL-core-019:508f1afa, REQ-core-027:d02224c9] -->
 
 「行」の列は、指摘の `line` が指す行です。
 「なし」は文書全体への指摘で、`line` は null、text では `-` になります。
