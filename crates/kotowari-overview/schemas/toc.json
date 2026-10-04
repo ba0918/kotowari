@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "toc",
+  "description": "The table of contents of the overview pages: one group at the top (TBL-core-043)",
+  "$ref": "#/$defs/group",
+  "$defs": {
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "items"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "note": {
+          "type": "string",
+          "pattern": "^[^\\n\\r]*$",
+          "description": "One line without a line break"
+        },
+        "items": {
+          "type": "array",
+          "description": "Page names and groups in the written order",
+          "items": {
+            "if": {
+              "type": "string"
+            },
+            "then": {
+              "minLength": 1
+            },
+            "else": {
+              "$ref": "#/$defs/group"
+            }
+          }
+        }
+      }
+    }
+  }
+}

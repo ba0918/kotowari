@@ -8,12 +8,11 @@ mod document;
 mod form;
 mod parts;
 mod references;
+mod toc;
 
 use kotowari_core::{DocKind, Finding, FindingGroup, FindingKind, ReadModel, SourceText};
 pub use kotowari_markdown_view::Page;
-use kotowari_markdown_view::{
-    Block, Document, Part, Reference, RenderInput, Section, TocGroup, TocItem,
-};
+use kotowari_markdown_view::{Block, Document, Part, Reference, RenderInput, Section};
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -66,8 +65,8 @@ impl Overview {
     }
 }
 
-/// 元データを検査する。files の path は基準のディレクトリからの相対パスである
-pub fn inspect(read: &ReadModel, files: &[SourceText]) -> Overview {
+/// 元データと目次を検査する。files と toc の path は基準のディレクトリからの相対パスである
+pub fn inspect(read: &ReadModel, files: &[SourceText], toc: &SourceText) -> Overview {
     let mut files: Vec<&SourceText> = files.iter().collect();
     files.sort_by(|left, right| left.path().as_bytes().cmp(right.path().as_bytes()));
     let mut inspection = Inspection::new(read);
@@ -75,33 +74,33 @@ pub fn inspect(read: &ReadModel, files: &[SourceText]) -> Overview {
         inspection.file(file);
     }
     let mut findings = inspection.findings;
+    let names = files
+        .iter()
+        .map(|file| stem(file_name(file.path())).to_string())
+        .collect();
+    let checked = toc::check(toc.text(), &names);
+    findings.extend(
+        checked
+            .findings
+            .into_iter()
+            .map(|(kind, detail)| Finding::new(kind, toc.path().to_string(), None, detail)),
+    );
     kotowari_core::sort_findings(&mut findings);
     Overview {
         findings,
         files: files.len(),
         marks: inspection.marks,
         input: RenderInput {
-            toc: name_order(&inspection.documents),
+            toc: checked.toc.unwrap_or_default(),
             documents: inspection.documents,
             references: inspection.references.into_values().collect(),
         },
     }
 }
 
-/// 文書の名前のバイト順に並べた1段の目次
-fn name_order(documents: &[Document]) -> TocGroup {
-    let names: BTreeSet<&str> = documents
-        .iter()
-        .map(|document| document.name.as_str())
-        .collect();
-    TocGroup {
-        title: "Overview".into(),
-        note: None,
-        items: names
-            .into_iter()
-            .map(|name| TocItem::Document(name.into()))
-            .collect(),
-    }
+/// ファイル名から ".md" を除いた名前
+fn stem(name: &str) -> &str {
+    name.strip_suffix(".md").unwrap_or(name)
 }
 
 /// パスの最後の成分
@@ -157,7 +156,7 @@ impl<'a> Inspection<'a> {
     fn file(&mut self, file: &SourceText) {
         let (path, text) = (file.path(), file.text());
         let name = file_name(path);
-        let stem = name.strip_suffix(".md").unwrap_or(name).to_string();
+        let stem = stem(name).to_string();
         // REQ-core-305: パスのバイト順で2つ目以降の重なりと、"index" と "style"
         if stem == "index" || stem == "style" || !self.names.insert(stem.clone()) {
             self.error(FindingKind::OverviewNameConflict, path, None, stem.clone());

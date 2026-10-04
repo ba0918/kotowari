@@ -51,12 +51,36 @@ fn fingerprint(model: &ReadModel, id: &str) -> String {
     }
 }
 
+const TOC: &str = ".kotowari/toc.yaml";
+
+/// 元データのすべての名前を1回ずつ並べた目次で検査する
 fn run(model: &ReadModel, files: &[(&str, &str)]) -> Overview {
+    let mut names: Vec<&str> = files
+        .iter()
+        .map(|(path, _)| {
+            let name = path.rsplit('/').next().unwrap();
+            name.strip_suffix(".md").unwrap_or(name)
+        })
+        .collect();
+    names.sort();
+    names.dedup();
+    let items: Vec<String> = names
+        .iter()
+        .map(|name| serde_json::to_string(name).unwrap())
+        .collect();
+    run_with_toc(
+        model,
+        files,
+        &format!("title: 目次\nitems: [{}]\n", items.join(", ")),
+    )
+}
+
+fn run_with_toc(model: &ReadModel, files: &[(&str, &str)], toc: &str) -> Overview {
     let sources: Vec<SourceText> = files
         .iter()
         .map(|(path, text)| SourceText::new(*path, *text).unwrap())
         .collect();
-    inspect(model, &sources)
+    inspect(model, &sources, &SourceText::new(TOC, toc).unwrap())
 }
 
 const FRONT: &str = "---\nir:\n  - docs/ir/core/cli.md\n---\n";
@@ -812,4 +836,231 @@ fn req_core_288_the_number_of_files_counts_every_overview_data_file() {
     let b = format!("---\nir:\n  - docs/ir/core/other.md\n---\n\n# b\n\n{LEAD}");
     assert_eq!(run(&model, &[]).files(), 0);
     assert_eq!(run(&model, &[(A, &a), (B, &b)]).files(), 2);
+}
+
+/// 名前の元データを、ほかに指摘の出ない形で並べる
+fn named(names: &[&'static str]) -> Vec<(String, String)> {
+    names
+        .iter()
+        .map(|name| {
+            (
+                format!(".kotowari/overview/{name}.md"),
+                data(&format!("題名{name}"), ""),
+            )
+        })
+        .collect()
+}
+
+fn run_named(names: &[&'static str], toc: &str) -> Overview {
+    let files = named(names);
+    let files: Vec<(&str, &str)> = files
+        .iter()
+        .map(|(path, text)| (path.as_str(), text.as_str()))
+        .collect();
+    // 元データは別の IR の文書を持たないので、2つ目以降は overview_ir_shared になる。目次の指摘だけを見る
+    run_with_toc(&model(), &files, toc)
+}
+
+/// 目次の指摘だけの、種類と detail
+fn toc_findings(overview: &Overview) -> Vec<(String, String)> {
+    found(overview)
+        .into_iter()
+        .filter(|(_, _, kind, _)| kind.starts_with("overview_toc_"))
+        .map(|(path, line, kind, detail)| {
+            assert_eq!(path, TOC);
+            assert_eq!(line, None, "{kind} {detail}");
+            (kind, detail)
+        })
+        .collect()
+}
+
+fn pairs(expected: &[(&str, &str)]) -> Vec<(String, String)> {
+    expected
+        .iter()
+        .map(|(kind, detail)| (kind.to_string(), detail.to_string()))
+        .collect()
+}
+
+// @kotowari[EX-core-507, REQ-core-327, REQ-core-331, TBL-core-043, REQ-core-027]
+#[test]
+fn ex_core_507_an_unknown_key_in_a_group_is_a_form_error_and_stops_the_comparison() {
+    let overview = run_named(
+        &["a"],
+        "title: 目次\nitems:\n  - title: 群\n    items: [x]\n    color: red\n",
+    );
+    assert_eq!(
+        toc_findings(&overview),
+        pairs(&[("overview_toc_invalid", "/items/0/color")])
+    );
+}
+
+// @kotowari[REQ-core-327, TBL-core-043, REQ-core-027]
+#[test]
+fn tbl_core_043_each_form_violation_names_its_place() {
+    for (toc, places) in [
+        ("items: [a]\n", vec!["/title"]),
+        ("title: 目次\n", vec!["/items"]),
+        ("title: ''\nitems: [a]\n", vec!["/title"]),
+        (
+            "title: 目次\nnote: \"一行目\\n二行目\"\nitems: [a]\n",
+            vec!["/note"],
+        ),
+        ("title: 目次\nitems: [a, '']\n", vec!["/items/1"]),
+        ("title: 目次\nitems: a\n", vec!["/items"]),
+        ("title: 目次\nitems: [a, 3]\n", vec!["/items/1"]),
+        (
+            "title: 目次\nitems: [a, {items: [b]}]\n",
+            vec!["/items/1/title"],
+        ),
+        ("title: [目次\nitems: [a\n", vec!["(yaml)"]),
+        ("- a\n- b\n", vec!["(root)"]),
+        ("", vec!["(root)"]),
+        (
+            "title: 目次\nitems: [a]\nextra: 1\nmore: 2\n",
+            vec!["/extra", "/more"],
+        ),
+    ] {
+        let overview = run_named(&["a"], toc);
+        let mut found: Vec<String> = toc_findings(&overview)
+            .into_iter()
+            .map(|(kind, detail)| {
+                assert_eq!(kind, "overview_toc_invalid", "{toc:?}");
+                detail
+            })
+            .collect();
+        found.sort();
+        assert_eq!(found, places, "{toc:?}");
+    }
+}
+
+// @kotowari[REQ-core-327, TBL-core-043]
+#[test]
+fn tbl_core_043_a_well_formed_toc_with_a_note_and_nested_groups_has_no_finding() {
+    let overview = run_named(
+        &["a", "b"],
+        "title: 目次\nnote: 一行の説明\nitems:\n  - a\n  - title: 群\n    note: ''\n    items: [b]\n",
+    );
+    assert_eq!(toc_findings(&overview), pairs(&[]));
+}
+
+// @kotowari[REQ-core-327, TBL-core-043]
+#[test]
+fn tbl_core_043_the_same_place_is_reported_once() {
+    let overview = run_named(&["a"], "title: 目次\nitems: [a]\ncolor: 1\n");
+    let overview_twice = run_named(&["a"], "title: 3\nitems: [a]\n");
+    assert_eq!(
+        toc_findings(&overview),
+        pairs(&[("overview_toc_invalid", "/color")])
+    );
+    assert_eq!(
+        toc_findings(&overview_twice),
+        pairs(&[("overview_toc_invalid", "/title")])
+    );
+}
+
+// @kotowari[EX-core-508, REQ-core-328, REQ-core-329, REQ-core-027]
+#[test]
+fn ex_core_508_missing_unknown_and_repeated_names_are_errors() {
+    let overview = run_named(&["a", "b", "c"], "title: 目次\nitems: [a, z, a]\n");
+    let mut findings = toc_findings(&overview);
+    findings.sort();
+    assert_eq!(
+        findings,
+        pairs(&[
+            ("overview_toc_page_duplicate", "/items/2"),
+            ("overview_toc_page_missing", "b"),
+            ("overview_toc_page_missing", "c"),
+            ("overview_toc_page_unknown", "/items/1"),
+        ])
+    );
+}
+
+// @kotowari[REQ-core-329]
+#[test]
+fn req_core_329_an_unknown_name_repeated_is_only_unknown_each_time() {
+    let overview = run_named(
+        &["a"],
+        "title: 目次\nitems: [a, z, {title: 群, items: [z]}]\n",
+    );
+    let mut findings = toc_findings(&overview);
+    findings.sort();
+    assert_eq!(
+        findings,
+        pairs(&[
+            ("overview_toc_page_unknown", "/items/1"),
+            ("overview_toc_page_unknown", "/items/2/items/0"),
+        ])
+    );
+}
+
+// @kotowari[REQ-core-329]
+#[test]
+fn req_core_329_the_second_place_is_found_depth_first_in_written_order() {
+    let overview = run_named(
+        &["a"],
+        "title: 目次\nitems:\n  - title: 前\n    items: [{title: 内, items: [a]}]\n  - a\n",
+    );
+    assert_eq!(
+        toc_findings(&overview),
+        pairs(&[("overview_toc_page_duplicate", "/items/1")])
+    );
+}
+
+// @kotowari[EX-core-509, REQ-core-330, REQ-core-027]
+#[test]
+fn ex_core_509_a_group_without_items_is_an_error() {
+    let overview = run_named(&["a"], "title: 目次\nitems: [a, {title: 空, items: []}]\n");
+    assert_eq!(
+        toc_findings(&overview),
+        pairs(&[("overview_toc_group_empty", "/items/1")])
+    );
+}
+
+// @kotowari[REQ-core-330, REQ-core-328]
+#[test]
+fn req_core_330_an_empty_outermost_group_is_reported_at_the_root() {
+    let overview = run_named(&["a"], "title: 目次\nitems: []\n");
+    let mut findings = toc_findings(&overview);
+    findings.sort();
+    assert_eq!(
+        findings,
+        pairs(&[
+            ("overview_toc_group_empty", "(root)"),
+            ("overview_toc_page_missing", "a"),
+        ])
+    );
+}
+
+// @kotowari[REQ-core-332]
+#[test]
+fn req_core_332_the_render_input_carries_the_toc_as_written() {
+    use kotowari_markdown_view::{TocGroup, TocItem};
+    let overview = run_named(
+        &["a", "b", "c"],
+        "title: 目次\nnote: 説明\nitems:\n  - c\n  - title: 群\n    items: [b]\n  - a\n",
+    );
+    assert_eq!(
+        overview.render_input().toc,
+        TocGroup {
+            title: "目次".into(),
+            note: Some("説明".into()),
+            items: vec![
+                TocItem::Document("c".into()),
+                TocItem::Group(TocGroup {
+                    title: "群".into(),
+                    note: None,
+                    items: vec![TocItem::Document("b".into())],
+                }),
+                TocItem::Document("a".into()),
+            ],
+        }
+    );
+}
+
+// @kotowari[REQ-core-294, REQ-core-328]
+#[test]
+fn req_core_294_toc_errors_count_as_errors_and_block_the_pages() {
+    let overview = run_named(&["a"], "title: 目次\nitems: [z]\n");
+    assert!(overview.errors() >= 2);
+    assert_eq!(overview.pages(), Err(overview.errors()));
 }

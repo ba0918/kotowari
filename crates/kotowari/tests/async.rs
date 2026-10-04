@@ -127,12 +127,18 @@ fn overview_prepare_and_build_return_what_the_sync_operations_return() {
             "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
         )
         .unwrap();
-        std::fs::write(dir.path().join("docs/ir/topic.md"), "# Topic\n\nScope.\n").unwrap();
-        std::fs::write(
-            dir.path().join(".kotowari/overview/a.md"),
-            "---\nir:\n  - docs/ir/topic.md\n---\n\n# a\n\n```view lead\nconclusion: c\n```\n",
-        )
-        .unwrap();
+        for name in ["a", "b"] {
+            std::fs::write(
+                dir.path().join(format!(".kotowari/overview/{name}.md")),
+                format!("---\nir:\n  - docs/ir/{name}.md\n---\n\n# {name}\n\n```view lead\nconclusion: c\n```\n"),
+            )
+            .unwrap();
+            std::fs::write(
+                dir.path().join(format!("docs/ir/{name}.md")),
+                "# Topic\n\nScope.\n",
+            )
+            .unwrap();
+        }
         dir
     };
     let (sync_dir, async_dir) = (make(), make());

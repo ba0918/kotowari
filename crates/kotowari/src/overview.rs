@@ -62,9 +62,29 @@ fn validate_overlap<'a>(
 /// check と status に加える "overview" の群。鍵が無ければ数は両方 0（REQ-core-288）
 pub(crate) fn group(read: &ReadModel, texts: Option<Vec<SourceText>>) -> FindingGroup {
     match texts {
-        Some(texts) => kotowari_overview::inspect(read, &texts).into_group(),
+        Some(texts) => kotowari_overview::inspect(read, &texts, &name_order(&texts)).into_group(),
         None => FindingGroup::new(kotowari_overview::GROUP, 0, 0, Vec::new()),
     }
+}
+
+/// 元データの名前を名前の順に1段に並べた目次
+pub(crate) fn name_order(texts: &[SourceText]) -> SourceText {
+    let names: BTreeSet<&str> = texts
+        .iter()
+        .map(|text| {
+            let name = text.path().rsplit('/').next().unwrap_or_default();
+            name.strip_suffix(".md").unwrap_or(name)
+        })
+        .collect();
+    let items: String = names
+        .iter()
+        .map(|name| format!("  - '{}'\n", name.replace('\'', "''")))
+        .collect();
+    SourceText::new(
+        ".kotowari/toc.yaml",
+        format!("title: Overview\nitems:\n{items}"),
+    )
+    .expect("a relative path")
 }
 
 /// 置き場。`基準のディレクトリ`の下に固定し、設定で変えられない（REQ-core-296）
