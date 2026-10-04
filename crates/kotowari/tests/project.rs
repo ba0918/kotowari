@@ -162,3 +162,36 @@ fn public_admission_errors_keep_distinct_facade_classifications_and_details() {
         assert!(facade.to_string().contains(&detail));
     }
 }
+
+// @kotowari[REQ-core-290, REQ-core-310, TBL-core-041]
+#[test]
+fn project_check_status_and_inspect_include_the_overview_group() {
+    let dir = project();
+    std::fs::write(
+        dir.path().join(".kotowari/config.yaml"),
+        "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(dir.path().join(".kotowari/overview")).unwrap();
+    std::fs::write(
+        dir.path().join(".kotowari/overview/a.md"),
+        "---\nir:\n  - docs/ir/topic.md\n---\n\n# a\n\n## no lead\n",
+    )
+    .unwrap();
+    let project = Project::new(ProjectOptions::new(dir.path())).unwrap();
+    let lead_missing = |findings: &[kotowari::Finding]| {
+        findings
+            .iter()
+            .filter(|finding| finding.kind() == kotowari::FindingKind::OverviewLeadMissing)
+            .count()
+    };
+    let check = project.check().unwrap();
+    assert_eq!(lead_missing(check.findings()), 1);
+    let group = check.group(kotowari::OVERVIEW_GROUP).unwrap();
+    assert_eq!((group.files(), group.marks()), (1, 0));
+    let status = project.status().unwrap();
+    assert!(!status.complete());
+    assert_eq!(status.group(kotowari::OVERVIEW_GROUP).unwrap().files(), 1);
+    let inspection = project.inspect().unwrap();
+    assert_eq!(lead_missing(inspection.check().findings()), 1);
+}

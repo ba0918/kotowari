@@ -50,6 +50,12 @@ review_with_how_to_verify={} review_without_how_to_verify={} without_examples={}
         result.guides().files(),
         result.guides().marks()
     );
+    let overview = result.group(kotowari::OVERVIEW_GROUP);
+    println!(
+        "overview files={} marks={}",
+        overview.map_or(0, |group| group.files()),
+        overview.map_or(0, |group| group.marks())
+    );
     let surface = result.surface();
     println!(
         "surface total={} specified={} unspecified={}",

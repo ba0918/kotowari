@@ -1,4 +1,6 @@
-use crate::{change_records, guides, ir, sources, surface, test_files as tests_discovery};
+use crate::{
+    change_records, guides, ir, overview, sources, surface, test_files as tests_discovery,
+};
 use kotowari_core::*;
 use std::{
     collections::BTreeMap,
@@ -190,6 +192,14 @@ pub fn load_config(
 /// `ガイド`はここでは読まない。list と query は`ガイド`を読まない（REQ-core-152、REQ-core-158）ので、
 /// check と status だけが `read_guides` を続けて呼ぶ
 pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<ReadModel, StopReason> {
+    load_read(cwd, config_path).map(|(read, _)| read)
+}
+
+/// `load_all` と、読んだ`テストのファイル`の`基準のディレクトリ`からの相対パス
+fn load_read(
+    cwd: &Path,
+    config_path: Option<&Path>,
+) -> Result<(ReadModel, Vec<String>), StopReason> {
     let base = find_base(cwd);
     let cfg = load_config(cwd, &base, config_path)?;
 
@@ -216,20 +226,33 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<ReadModel, Sto
     let preparation = ir::prepare(&base, &cfg)?;
     let (records, adr) = sources::read_texts(&base, &cfg)?;
     let tests = tests_discovery::analyze(&base, &cfg)?;
-    preparation.finish(records, adr, tests)
+    let test_paths = tests
+        .iter()
+        .map(|test| test.source.path().to_string())
+        .collect();
+    Ok((preparation.finish(records, adr, tests)?, test_paths))
 }
 
-/// check と status の読み取り: `load_all` に続けて`ガイド`と`面`を読み、その`指摘`を足す
-/// （REQ-core-198、REQ-core-162、REQ-core-229）
+/// check と status の読み取り: `load_all` に続けて`ガイド`と`全体像の元データ`と`面`を読み、その`指摘`を足す
+/// （REQ-core-198、REQ-core-162、REQ-core-229、REQ-core-278、REQ-core-290）
 pub fn load_with_guides(cwd: &Path, config_path: Option<&Path>) -> Result<Inspection, StopReason> {
-    let read = load_all(cwd, config_path)?;
+    let (read, tests) = load_read(cwd, config_path)?;
     let base = find_base(cwd);
+    let changes = change_records::read_texts(&base, read.config())?;
+    // REQ-core-280: ガイドとテストの重なり（REQ-core-199）を先に判定する
+    let guides = guides::read_texts(&base, &read)?;
+    let guide_paths: Vec<&str> = guides
+        .iter()
+        .flatten()
+        .map(kotowari_core::NativeSourceText::path)
+        .collect();
+    let overview_texts = overview::read_texts(&base, read.config(), &guide_paths, &tests)?;
+    let overview = overview::group(&read, overview_texts);
     let mut preparation = read.prepare_repository_inspection();
-    let changes = change_records::read_texts(&base, preparation.config())?;
     preparation.changes(changes)?;
-    let guides = guides::read_texts(&base, &preparation)?;
     preparation.guides(guides)?;
     let (surface, unspecified) = surface::analyze(&base, preparation.config())?;
     preparation.surface(surface, unspecified)?;
+    preparation.group(overview)?;
     preparation.finish()
 }

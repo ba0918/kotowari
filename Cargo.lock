@@ -823,6 +823,7 @@ dependencies = [
  "assert_cmd",
  "globset",
  "kotowari-core",
+ "kotowari-overview",
  "kotowari-source-analysis",
  "serde_json",
  "tempfile",

@@ -81,8 +81,12 @@ fn file_tallies(values: &std::collections::BTreeMap<String, kotowari::TestFileTa
             .collect(),
     )
 }
+/// REQ-core-288、REQ-core-289: "overview" の群。群が無ければ両方 0
+fn overview(group: Option<&kotowari::GroupTally>) -> Value {
+    json!({"files":group.map_or(0, |group| group.files()),"marks":group.map_or(0, |group| group.marks())})
+}
 pub fn check(value: &CheckReport) -> Value {
-    let mut result = json!({"files":value.files(),"lines":value.lines(),"findings":findings(value.findings()),"counts":value.counts(),"tests":file_tallies(value.tests()),"guides":{"files":value.guides().files(),"marks":value.guides().marks()}});
+    let mut result = json!({"files":value.files(),"lines":value.lines(),"findings":findings(value.findings()),"counts":value.counts(),"tests":file_tallies(value.tests()),"guides":{"files":value.guides().files(),"marks":value.guides().marks()},"overview":overview(value.group(kotowari::OVERVIEW_GROUP))});
     if let Some(surface) = value.surface() {
         result["surface"] = json!({"unspecified":surface.unspecified()});
     }
@@ -97,7 +101,7 @@ pub fn status(value: &StatusReport) -> Value {
     let g = value.guides();
     let u = value.surface();
     let f = value.findings();
-    json!({"documents":{"files":d.files(),"lines":d.lines()},"items":{"requirement":i.requirement(),"table":i.table(),"property":i.property(),"scenario":i.scenario(),"flag":i.flag()},"requirements":{"unit":r.unit(),"property":r.property(),"proof":r.proof(),"review":r.review(),"with_tests":r.with_tests(),"without_tests":r.without_tests(),"review_with_how_to_verify":r.review_with_how_to_verify(),"review_without_how_to_verify":r.review_without_how_to_verify(),"without_examples":r.without_examples(),"deferred":r.deferred()},"scenarios":{"with_tests":s.with_tests(),"without_tests":s.without_tests(),"deferred":s.deferred()},"tests":{"marks":t.marks(),"files":file_tallies(t.files())},"guides":{"files":g.files(),"marks":g.marks()},"surface":{"total":u.total(),"specified":u.specified(),"unspecified":u.unspecified()},"findings":{"error":f.error(),"notice":f.notice()},"complete":value.complete()})
+    json!({"documents":{"files":d.files(),"lines":d.lines()},"items":{"requirement":i.requirement(),"table":i.table(),"property":i.property(),"scenario":i.scenario(),"flag":i.flag()},"requirements":{"unit":r.unit(),"property":r.property(),"proof":r.proof(),"review":r.review(),"with_tests":r.with_tests(),"without_tests":r.without_tests(),"review_with_how_to_verify":r.review_with_how_to_verify(),"review_without_how_to_verify":r.review_without_how_to_verify(),"without_examples":r.without_examples(),"deferred":r.deferred()},"scenarios":{"with_tests":s.with_tests(),"without_tests":s.without_tests(),"deferred":s.deferred()},"tests":{"marks":t.marks(),"files":file_tallies(t.files())},"guides":{"files":g.files(),"marks":g.marks()},"overview":overview(value.group(kotowari::OVERVIEW_GROUP)),"surface":{"total":u.total(),"specified":u.specified(),"unspecified":u.unspecified()},"findings":{"error":f.error(),"notice":f.notice()},"complete":value.complete()})
 }
 pub fn plan(value: &PlanReport) -> Value {
     json!({"findings":findings(value.findings()),"counts":value.counts()})

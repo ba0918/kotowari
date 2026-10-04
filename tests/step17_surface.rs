@@ -944,7 +944,7 @@ fn req_229_status_counts_surfaces_and_a_surface_error_makes_it_incomplete() {
     let lines: Vec<&str> = text.lines().collect();
     let guides = lines.iter().position(|l| l.starts_with("guides ")).unwrap();
     assert_eq!(
-        lines[guides + 1],
+        lines[guides + 2],
         "surface total=4 specified=2 unspecified=1",
         "{text}"
     );

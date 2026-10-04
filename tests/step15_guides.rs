@@ -801,5 +801,6 @@ fn req_162_status_carries_the_guides_group() {
     let lines: Vec<&str> = text.lines().collect();
     let tests = lines.iter().position(|l| l.starts_with("tests ")).unwrap();
     assert_eq!(lines[tests + 1], "guides files=1 marks=1", "{text}");
-    assert!(lines[tests + 2].starts_with("surface "), "{text}");
+    assert!(lines[tests + 2].starts_with("overview "), "{text}");
+    assert!(lines[tests + 3].starts_with("surface "), "{text}");
 }

@@ -2,14 +2,14 @@ use kotowari_core::{StopReason, config::Config};
 use std::path::Path;
 pub fn read_texts(
     base: &Path,
-    preparation: &kotowari_core::RepositoryInspectionPreparation,
+    read: &kotowari_core::ReadModel,
 ) -> Result<Option<Vec<kotowari_core::NativeSourceText>>, StopReason> {
-    let cfg: &Config = preparation.config();
+    let cfg: &Config = read.config();
     if cfg.guides.files.is_empty() {
         return Ok(None);
     }
     let files = crate::test_files::collect_files(base, &cfg.guides.files)?;
-    preparation.validate_guide_paths(files.iter().map(|(path, _)| path.as_str()))?;
+    read.validate_guide_paths(files.iter().map(|(path, _)| path.as_str()))?;
     files
         .into_iter()
         .map(|(path, absolute)| {
