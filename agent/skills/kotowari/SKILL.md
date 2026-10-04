@@ -20,8 +20,9 @@ Not IR, in every station:
 - CI and workflow definitions, hooks, and the gates they enforce;
 - the release procedure and the build configuration;
 - the repository's own data being in some state (its IR, records, and documents that do not ship);
-- the project's own tests, checks, and fixtures: what verifies the product is not the product (a
-  check the product ships to its users is product);
+- rules about the project's own tests, checks, and fixtures: what verifies the product is not the
+  product (a check the product ships to its users is product, and a test of product behavior still
+  carries the mark of the requirement it verifies);
 - the development process.
 
 A decision about these goes in the decision record, and the rule is written where contributors
@@ -32,7 +33,9 @@ example), not with a test written for it.
 When unsure, the default is not IR: record the decision as not IR with its reason, and show it to
 the person at the next point they see the work. Never add a rule to the IR to make a test count
 as evidence or to give a change record something to point at. What the IR may hold is settled
-here first; whether an oracle meets the evidence conditions is asked only after that.
+here first; whether an oracle meets the evidence conditions is asked only after that. Approved IR
+written before this definition stays as it is until the person decides: never delete or move it
+on your own.
 
 First run `kotowari --version` to confirm the tool is there.
 
