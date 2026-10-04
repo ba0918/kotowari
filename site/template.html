@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{{ copy.description }}">
+    <meta name="theme-color" content="#183d35">
+    <title>{{ copy.pageTitle }}</title>
+    <link rel="stylesheet" href="style.css">
+    <script defer src="messages.js"></script>
+    <script defer src="language-preference.js"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main" data-i18n="skip">{{ copy.skip }}</a>
+    <header class="header wrap">
+      <a class="brand" href="#main" aria-label="kotowari"><span class="brand-mark" aria-hidden="true">∴</span>kotowari</a>
+      <nav class="navigation">
+        <a href="#connections" data-i18n="navFlow">{{ copy.navFlow }}</a>
+        <a href="#scope" data-i18n="navScope">{{ copy.navScope }}</a>
+        <a href="#start" data-i18n="navStart">{{ copy.navStart }}</a>
+      </nav>
+      <div class="languages" aria-label="Language / 言語">
+        <button type="button" data-language="en" aria-pressed="true" lang="en">EN</button>
+        <button type="button" data-language="ja" aria-pressed="false" lang="ja">日本語</button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero wrap">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span><span data-i18n="eyebrow">{{ copy.eyebrow }}</span></p>
+          <h1><span data-i18n="hero1">{{ copy.hero1 }}</span><span class="accent" data-i18n="hero2">{{ copy.hero2 }}</span></h1>
+          <p class="hero-description" data-i18n="heroBody">{{ copy.heroBody }}</p>
+          <div class="actions">
+            <a class="button primary" href="https://github.com/ba0918/kotowari/blob/kotowari-v0.3.0/docs/guides/index.md"><span data-i18n="primary">{{ copy.primary }}</span><span aria-hidden="true">↗</span><small lang="en">Japanese</small></a>
+            <a class="text-link" href="#connections"><span data-i18n="secondary">{{ copy.secondary }}</span><span aria-hidden="true">↓</span></a>
+          </div>
+          <div class="hero-meta">
+            <span data-i18n="release">{{ copy.release }}</span><span data-i18n="license">{{ copy.license }}</span>
+          </div>
+        </div>
+
+        <figure class="trace-diagram">
+          <figcaption><strong data-i18n="diagramTitle">{{ copy.diagramTitle }}</strong><span data-i18n="sample">{{ copy.sample }}</span>
+          </figcaption>
+          <ol class="trace-steps">
+            <li class="trace-card decision-card">
+              <div class="card-label">
+                <span data-i18n="decision">{{ copy.decision }}</span><span aria-hidden="true">↘</span>
+              </div>
+              <h2 data-i18n="decisionTitle">{{ copy.decisionTitle }}</h2>
+              <p data-i18n="decisionBody">{{ copy.decisionBody }}</p>
+              <code>docs/decision/records/login.md#A1</code>
+            </li>
+            <li class="trace-card requirement-card">
+              <div class="card-label">
+                <span data-i18n="requirement">{{ copy.requirement }}</span><span aria-hidden="true">↘</span>
+              </div>
+              <h2 data-i18n="requirementTitle">{{ copy.requirementTitle }}</h2>
+              <p data-i18n="requirementBody">{{ copy.requirementBody }}</p>
+              <div class="reference-tag" data-i18n="sourceLabel">
+                {{ copy.sourceLabel }}
+              </div>
+            </li>
+            <li class="trace-card test-card">
+              <div class="card-label">
+                <span data-i18n="test">{{ copy.test }}</span><span aria-hidden="true">↗</span>
+              </div>
+              <h2 data-i18n="testTitle">{{ copy.testTitle }}</h2>
+              <code>// @kotowari[REQ-001]<br>#[test]<br>fn locks_after_five_failures() { … }</code>
+              <p data-i18n="testBody">{{ copy.testBody }}</p>
+            </li>
+          </ol>
+          <p class="diagram-note" data-i18n="diagramNote">{{ copy.diagramNote }}</p>
+        </figure>
+      </section>
+
+      <div class="feature-strip">
+        <div class="wrap">
+          <span data-i18n="strip1">{{ copy.strip1 }}</span><span aria-hidden="true">/</span><span data-i18n="strip2">{{ copy.strip2 }}</span><span aria-hidden="true">/</span><span data-i18n="strip3">{{ copy.strip3 }}</span><span aria-hidden="true">/</span><span data-i18n="strip4">{{ copy.strip4 }}</span>
+        </div>
+      </div>
+
+      <section id="connections" class="section wrap">
+        <p class="eyebrow" data-i18n="flowKicker">{{ copy.flowKicker }}</p>
+        <div class="section-intro">
+          <h2 data-i18n="flowTitle">{{ copy.flowTitle }}</h2>
+          <p data-i18n="flowIntro">{{ copy.flowIntro }}</p>
+        </div>
+        <div class="flow-grid">
+          <article>
+            <span class="step-number">01</span>
+            <h3 data-i18n="flow1Title">{{ copy.flow1Title }}</h3>
+            <p data-i18n="flow1Body">{{ copy.flow1Body }}</p><code>decision → #A1</code>
+          </article>
+          <article>
+            <span class="step-number">02</span>
+            <h3 data-i18n="flow2Title">{{ copy.flow2Title }}</h3>
+            <p data-i18n="flow2Body">{{ copy.flow2Body }}</p><code>REQ-001 → source</code>
+          </article>
+          <article>
+            <span class="step-number">03</span>
+            <h3 data-i18n="flow3Title">{{ copy.flow3Title }}</h3>
+            <p data-i18n="flow3Body">{{ copy.flow3Body }}</p><code>@kotowari[REQ-001]</code>
+          </article>
+        </div>
+      </section>
+
+      <section id="scope" class="scope-section">
+        <div class="wrap section">
+          <p class="eyebrow" data-i18n="scopeKicker">{{ copy.scopeKicker }}</p>
+          <div class="section-intro">
+            <h2 data-i18n="scopeTitle">{{ copy.scopeTitle }}</h2>
+            <p data-i18n="scopeIntro">{{ copy.scopeIntro }}</p>
+          </div>
+          <div class="scope-grid">
+            <article>
+              <span class="scope-icon" aria-hidden="true">[ ]</span>
+              <h3 data-i18n="machineTitle">{{ copy.machineTitle }}</h3>
+              <ul>
+                <li data-i18n="machine1">
+                  {{ copy.machine1 }}
+                </li>
+                <li data-i18n="machine2">
+                  {{ copy.machine2 }}
+                </li>
+                <li data-i18n="machine3">
+                  {{ copy.machine3 }}
+                </li>
+              </ul>
+            </article>
+            <article>
+              <span class="scope-icon" aria-hidden="true">↗</span>
+              <h3 data-i18n="humanTitle">{{ copy.humanTitle }}</h3>
+              <ul>
+                <li data-i18n="human1">
+                  {{ copy.human1 }}
+                </li>
+                <li data-i18n="human2">
+                  {{ copy.human2 }}
+                </li>
+                <li data-i18n="human3">
+                  {{ copy.human3 }}
+                </li>
+              </ul>
+            </article>
+          </div>
+          <p class="scope-note" data-i18n="scopeNote">{{ copy.scopeNote }}</p>
+        </div>
+      </section>
+
+      <section class="section wrap tools-section">
+        <div>
+          <p class="eyebrow" data-i18n="toolsKicker">{{ copy.toolsKicker }}</p>
+          <h2 data-i18n="toolsTitle">{{ copy.toolsTitle }}</h2>
+          <p class="tools-foot" data-i18n="toolsFoot">{{ copy.toolsFoot }}</p>
+        </div>
+        <div class="commands">
+          <a href="https://github.com/ba0918/kotowari/blob/kotowari-v0.3.0/docs/guides/commands/check.md"><code>kotowari check</code><span data-i18n="cmdCheck">{{ copy.cmdCheck }}</span><small lang="en">Guide · Japanese ↗</small></a>
+          <a href="https://github.com/ba0918/kotowari/blob/kotowari-v0.3.0/docs/guides/commands/query.md"><code>kotowari query REQ-001</code><span data-i18n="cmdQuery">{{ copy.cmdQuery }}</span><small lang="en">Guide · Japanese ↗</small></a>
+          <a href="https://github.com/ba0918/kotowari/blob/kotowari-v0.3.0/docs/guides/commands/changes.md"><code>kotowari changes</code><span data-i18n="cmdChanges">{{ copy.cmdChanges }}</span><small lang="en">Guide · Japanese ↗</small></a>
+        </div>
+      </section>
+
+      <aside class="main-notice wrap">
+        <span class="notice-symbol" aria-hidden="true">＋</span>
+        <div>
+          <p class="eyebrow" data-i18n="mainBadge">{{ copy.mainBadge }}</p>
+          <h2 data-i18n="mainTitle">{{ copy.mainTitle }}</h2>
+          <p data-i18n="mainBody">{{ copy.mainBody }}</p><a class="text-link" href="https://github.com/ba0918/kotowari/blob/bc21216/docs/guides/public-crate-api.md" data-i18n="mainLink">{{ copy.mainLink }}</a>
+        </div>
+      </aside>
+
+      <section id="start" class="section wrap start-section">
+        <div>
+          <p class="eyebrow" data-i18n="startKicker">{{ copy.startKicker }}</p>
+          <h2 data-i18n="startTitle">{{ copy.startTitle }}</h2>
+          <p data-i18n="startBody">{{ copy.startBody }}</p>
+        </div>
+        <div class="start-actions">
+          <p class="install-label" data-i18n="installLabel">{{ copy.installLabel }}</p>
+          <pre class="install"><code>mise use -g 'github:ba0918/kotowari[version_prefix=kotowari-v]@0.3.0'</code></pre>
+          <p class="install-note" data-i18n="installNote">{{ copy.installNote }}</p>
+          <div class="actions">
+            <a class="button primary" href="https://github.com/ba0918/kotowari/releases/tag/kotowari-v0.3.0"><span data-i18n="download">{{ copy.download }}</span><span aria-hidden="true">↗</span></a><a class="text-link" href="https://github.com/ba0918/kotowari/blob/kotowari-v0.3.0/docs/guides/index.md" data-i18n="guide">{{ copy.guide }}</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="wrap footer">
+      <div>
+        <a class="brand" href="#main"><span class="brand-mark" aria-hidden="true">∴</span>kotowari</a>
+        <p data-i18n="footer">{{ copy.footer }}</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/ba0918/kotowari/blob/kotowari-v0.3.0/README.md" data-i18n="readme">{{ copy.readme }}</a><a href="https://github.com/ba0918/kotowari" data-i18n="source">{{ copy.source }}</a>
+      </div>
+      <div class="footer-meta">
+        <span data-i18n="snapshot">{{ copy.snapshot }}</span><span data-i18n="preview">{{ copy.preview }}</span>
+      </div>
+    </footer>
+  </body>
+</html>
