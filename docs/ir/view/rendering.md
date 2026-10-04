@@ -7,10 +7,10 @@ view が`描画の入力`を受け取り、`ページ`の並びを返すまで�
 ### REQ-view-001: 描画の入力
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A25, docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-02-whole-picture.md#A68, docs/decision/records/2026-10-02-whole-picture.md#A65, docs/decision/records/2026-10-02-whole-picture.md#A81, docs/decision/records/2026-10-02-whole-picture.md#A82
+- source: docs/decision/records/2026-10-02-whole-picture.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A25, docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-02-whole-picture.md#A68, docs/decision/records/2026-10-02-whole-picture.md#A65, docs/decision/records/2026-10-02-whole-picture.md#A81, docs/decision/records/2026-10-02-whole-picture.md#A82, docs/decision/records/2026-10-04-overview-on-public-api.md#A10
 - verification: unit
 
-view は常に、`描画の入力`として`文書`の並びと`参照の表`を受け取る。`文書`は名前、題名、冒頭の lead の`部品`、`節`の並びを持ち、`節`は見出しの文字、古いかどうかの真偽、`ブロック`の並びを持つ。`参照の表`の1件は`参照`の文字列、表示名、本文、状態（"current"、"superseded"、"deferred" のいずれか）を持つ。
+view は常に、`描画の入力`として`文書`の並びと`参照の表`を受け取る。`文書`は名前、題名、冒頭の lead の`部品`、lead に続く冒頭の`部品`の並び、`節`の並びを持ち、`節`は見出しの文字、古いかどうかの真偽、`ブロック`の並びを持つ。`参照の表`の1件は`参照`の文字列、表示名、本文、状態（"current"、"superseded"、"deferred" のいずれか）を持つ。
 
 ### REQ-view-002: ページの並びを返す
 
@@ -47,10 +47,10 @@ view は常に、一覧の`ページ`に、すべての`文書`の題名と冒�
 ### REQ-view-006: 冒頭の結論
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A7, docs/decision/records/2026-10-02-whole-picture.md#A38
+- source: docs/decision/records/2026-10-02-whole-picture.md#A7, docs/decision/records/2026-10-02-whole-picture.md#A38, docs/decision/records/2026-10-04-overview-on-public-api.md#A10
 - verification: unit
 
-view は常に、`文書`の`ページ`の題名の直後に、冒頭の lead の`部品`を描き、その後に`節`を並びの順に描く。
+view は常に、`文書`の`ページ`の題名の直後に、冒頭の lead の`部品`を描き、続けて lead に続く冒頭の`部品`を並びの順に描き、その後に`節`を並びの順に描く。
 
 ### REQ-view-007: Markdown の文章
 

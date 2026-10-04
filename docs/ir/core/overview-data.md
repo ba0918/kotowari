@@ -88,9 +88,9 @@ kotowari は常に、`全体像の元データ`の解析と検査を kotowari-ov
 
 ### TBL-core-038: 元データの形
 
-- source: docs/decision/records/2026-10-02-whole-picture.md#A44, docs/decision/records/2026-10-02-whole-picture.md#A54, docs/decision/records/2026-10-02-whole-picture.md#A55, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A77, docs/decision/records/2026-10-02-whole-picture.md#A74, docs/decision/records/2026-10-02-whole-picture.md#A85, docs/decision/records/2026-10-04-overview-on-public-api.md#A5
+- source: docs/decision/records/2026-10-02-whole-picture.md#A44, docs/decision/records/2026-10-02-whole-picture.md#A54, docs/decision/records/2026-10-02-whole-picture.md#A55, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A77, docs/decision/records/2026-10-02-whole-picture.md#A74, docs/decision/records/2026-10-02-whole-picture.md#A85, docs/decision/records/2026-10-04-overview-on-public-api.md#A5, docs/decision/records/2026-10-04-overview-on-public-api.md#A11
 
-形はスキーマ（kotowari-overview のパッケージの中の "crates/kotowari-overview/schemas/overview.yaml" をコンパイル時に取り込む）で宣言し、Markdown としての形の検査は kotowari-markdown-schema が行う。形に合わない所ごとに、"line" をその行（文書全体にかかるものは null）、detail を kotowari-markdown-schema の`指摘`の種類の名前にして overview_form_invalid の`誤り`を出す。
+形はスキーマ（kotowari-overview のパッケージの中の "crates/kotowari-overview/schemas/overview.yaml" をコンパイル時に取り込む）で宣言し、Markdown としての形の検査は kotowari-markdown-schema が行う。形に合わない所ごとに、"line" をその行（文書全体にかかるものは null）、detail を kotowari-markdown-schema の`指摘`の種類の名前にして overview_form_invalid の`誤り`を出す。frontmatter の行の違反だけは、detail を "frontmatter" にする。
 
 | 部分 | 形 |
 |---|---|

@@ -85,6 +85,14 @@ kotowari は、"kotowari overview serve" で、".kotowari/cache/overview/" の�
 
 `全体像の元データ`のファイル名から ".md" を除いた名前が、ほかの`全体像の元データ`と同じとき、または "index" か "style" のとき、kotowari は "kotowari check" と "kotowari status" で、パスのバイト順で2つ目以降の重なった`全体像の元データ`と、名前が "index" か "style" の`全体像の元データ`に、"line" を null、detail をその名前にして overview_name_conflict の`誤り`を出す。
 
+### REQ-core-324: 置き場が使えないとき
+
+- kind: event_driven
+- source: docs/decision/records/2026-10-04-overview-on-public-api.md#A9
+- verification: unit
+
+"kotowari overview build" か "kotowari overview serve" で、`基準のディレクトリ`の ".kotowari"、".kotowari/cache"、".kotowari/cache/overview" のどれかがシンボリックリンクか、ディレクトリでも無いことでもないとき、kotowari はファイルを1つも書かず消さずに、置き場の誤りを理由に`停止`し、詳細をそのパスにする。その置き場の作成、ファイルの書き込み、削除に失敗したときも、置き場の誤りを理由に`停止`し、詳細をそのパスと OS の誤りの文にする。
+
 ## Decision tables
 
 ### TBL-core-039: 参照の表の1件
@@ -138,4 +146,10 @@ Scenario: 使用中のポートでは止まる
   Given "127.0.0.1:4592" をほかのプロセスが使っている
   When "kotowari overview serve --port 4592" を実行する
   Then 終了コードは 2 で、標準エラーの1行目は "port error: 127.0.0.1:4592" で始まる
+
+@id=EX-core-504 @about=REQ-core-324,REQ-core-296 @source=docs/decision/records/2026-10-04-overview-on-public-api.md#A9
+Scenario: 置き場がシンボリックリンクなら外に書かずに止まる
+  Given 正しい`全体像の元データ`があり、".kotowari/cache/overview" が`基準のディレクトリ`の外のファイル "keep" を持つディレクトリへのシンボリックリンクである
+  When "kotowari overview build" を実行する
+  Then 終了コードは 2 で、標準エラーの1行目は "cache error: .kotowari/cache/overview" で始まり、外のディレクトリの中身は "keep" だけで変わらない
 ```
