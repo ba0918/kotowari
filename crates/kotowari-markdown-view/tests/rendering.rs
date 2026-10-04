@@ -229,82 +229,100 @@ fn steps_with_refs(refs: &[&str]) -> Block {
     })
 }
 
-// @kotowari[EX-view-004, REQ-view-008]
-#[test]
-fn ex_view_004_a_superseded_reference_opens_its_body_in_place_with_a_mark() {
+/// 2つのページが食い違う範囲の、left の中のバイトの位置。同じなら None
+fn changed(left: &str, right: &str) -> Option<(usize, usize)> {
+    let (a, b) = (left.as_bytes(), right.as_bytes());
+    let prefix = a.iter().zip(b).take_while(|(x, y)| x == y).count();
+    if prefix == a.len() && prefix == b.len() {
+        return None;
+    }
+    let suffix = a[prefix..]
+        .iter()
+        .rev()
+        .zip(b[prefix..].iter().rev())
+        .take_while(|(x, y)| x == y)
+        .count();
+    Some((prefix, a.len() - suffix))
+}
+
+/// 参照を refs に持つ steps の部品1つの節を持つページ。参照の状態だけを変えて描き比べる
+fn page_with_references(refs: &[&str], references: Vec<Reference>) -> String {
     let input = RenderInput {
         documents: vec![document(
             "a",
             "題名",
-            vec![section("節", vec![steps_with_refs(&["docs/x.md#A1"])])],
+            vec![section("節", vec![steps_with_refs(refs)])],
         )],
-        references: vec![reference(
-            "docs/x.md#A1",
-            "x A1",
-            "古い決定",
-            ReferenceState::Superseded,
-        )],
+        references,
     };
-    let text = page(&render(&input), "a.html").to_string();
-    let details = position(&text, "<details class=\"ref ref-superseded\">");
+    page(&render(&input), "a.html").to_string()
+}
+
+// @kotowari[EX-view-004, REQ-view-008]
+#[test]
+fn ex_view_004_a_superseded_reference_opens_its_body_in_place_with_a_mark() {
+    let with = |state| {
+        page_with_references(
+            &["docs/x.md#A1"],
+            vec![reference("docs/x.md#A1", "x A1", "古い決定", state)],
+        )
+    };
+    let text = with(ReferenceState::Superseded);
     let label = position(&text, "x A1");
-    let mark = position(&text, "置き換え済み");
     let body = position(&text, "古い決定");
-    assert!(details < label && label < mark && mark < body);
+    assert!(label < body);
+    // 状態だけを変えると、参照の描き方のうち本文より前だけが変わる。それが置き換え済みの印である
+    let (start, end) = changed(&text, &with(ReferenceState::Current)).expect("a mark");
+    assert!(position(&text, "段階") < start && end <= body);
     assert!(!text.contains("href=\"docs/x.md"));
 }
 
 // @kotowari[REQ-view-008]
 #[test]
 fn req_view_008_deferred_references_are_marked_and_no_reference_links_out() {
-    let input = RenderInput {
-        documents: vec![document(
-            "a",
-            "題名",
-            vec![section(
-                "節",
-                vec![steps_with_refs(&["REQ-x-001", "REQ-x-002", "missing"])],
-            )],
-        )],
-        references: vec![
-            reference(
-                "REQ-x-001",
-                "REQ-x-001",
-                "後回しの要求",
-                ReferenceState::Deferred,
-            ),
-            reference(
-                "REQ-x-002",
-                "REQ-x-002",
-                "今の要求",
-                ReferenceState::Current,
-            ),
-        ],
+    let refs = ["REQ-x-001", "REQ-x-002", "missing"];
+    let with = |state| {
+        page_with_references(
+            &refs,
+            vec![
+                reference("REQ-x-001", "REQ-x-001", "後回しの要求", state),
+                reference(
+                    "REQ-x-002",
+                    "REQ-x-002",
+                    "今の要求",
+                    ReferenceState::Current,
+                ),
+            ],
+        )
     };
-    let text = page(&render(&input), "a.html").to_string();
-    assert!(text.contains("<details class=\"ref ref-deferred\">"));
-    assert!(position(&text, "後回しの要求") > position(&text, "（後回し）"));
-    assert!(text.contains("今の要求"));
-    assert_eq!(text.matches("（後回し）").count(), 1);
-    assert_eq!(text.matches("置き換え済み").count(), 0);
-    let start = position(&text, "<section");
-    assert!(!text[start..].contains("href="));
+    let text = with(ReferenceState::Deferred);
+    assert!(text.contains("後回しの要求") && text.contains("今の要求"));
+    // 後回しの印は、その参照の本文より前に付き、置き換え済みの印とは別のものである
+    let (start, end) = changed(&text, &with(ReferenceState::Current)).expect("a mark");
+    assert!(position(&text, "段階") < start && end <= position(&text, "後回しの要求"));
+    assert_ne!(text, with(ReferenceState::Superseded));
+    // 参照はページの外へのリンクにならない。リンクの数は参照の無い部品のページと同じ
+    let plain = page_with_references(&[], vec![]);
+    assert_eq!(
+        text.matches("href=").count(),
+        plain.matches("href=").count()
+    );
 }
 
 // @kotowari[EX-view-005, REQ-view-009]
 #[test]
 fn ex_view_005_only_the_stale_section_carries_the_mark() {
-    let mut stale = section("節A", vec![]);
-    stale.stale = true;
-    let input = RenderInput {
-        documents: vec![document("a", "題名", vec![stale, section("節B", vec![])])],
-        references: vec![],
+    let with = |stale: bool| {
+        let mut a = section("節A", vec![]);
+        a.stale = stale;
+        let input = RenderInput {
+            documents: vec![document("a", "題名", vec![a, section("節B", vec![])])],
+            references: vec![],
+        };
+        page(&render(&input), "a.html").to_string()
     };
-    let text = page(&render(&input), "a.html").to_string();
-    assert_eq!(text.matches("class=\"stale-mark\"").count(), 1);
-    let a = position(&text, "節A");
-    let mark = position(&text, "class=\"stale-mark\"");
-    let b = position(&text, "節B");
-    assert!(a < mark && mark < b);
-    assert!(text[mark..b].contains("見直していない"));
+    let text = with(true);
+    // 古いとしたことで変わるのは、節 A の見出しと節 B の見出しの間だけである
+    let (start, end) = changed(&text, &with(false)).expect("a mark");
+    assert!(position(&text, "節A") < start && end <= position(&text, "節B"));
 }

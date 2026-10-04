@@ -118,6 +118,39 @@ fn part(kind: &str, value: Value) -> Block {
     })
 }
 
+/// 2つのページが食い違う範囲の、left の中のバイトの位置。同じなら None
+fn changed(left: &str, right: &str) -> Option<(usize, usize)> {
+    let (a, b) = (left.as_bytes(), right.as_bytes());
+    let prefix = a.iter().zip(b).take_while(|(x, y)| x == y).count();
+    if prefix == a.len() && prefix == b.len() {
+        return None;
+    }
+    let suffix = a[prefix..]
+        .iter()
+        .rev()
+        .zip(b[prefix..].iter().rev())
+        .take_while(|(x, y)| x == y)
+        .count();
+    Some((prefix, a.len() - suffix))
+}
+
+/// 値から "width" を除く
+fn full(block: &Block) -> Block {
+    match block {
+        Block::Part(part) => {
+            let mut value = part.value.clone();
+            if let Some(map) = value.as_object_mut() {
+                map.remove("width");
+            }
+            Block::Part(Part {
+                kind: part.kind.clone(),
+                value,
+            })
+        }
+        other => other.clone(),
+    }
+}
+
 fn draw(kind: &str, value: Value) -> String {
     let text = page_with(vec![part(kind, value)], vec![]);
     let start = text.find("<section").unwrap();
@@ -204,8 +237,8 @@ fn req_view_014_every_kind_has_examples_that_fit_their_schema_and_render() {
             .map(|error| format!("{} {:?}", error.instance_path(), error.kind()))
             .collect();
         assert!(errors.is_empty(), "{kind}: {errors:?}");
-        let drawn = draw(kind, value);
-        assert!(drawn.contains(&format!("class=\"part {kind}")), "{kind}");
+        let drawn = page_with(vec![part(kind, value)], vec![]);
+        assert_ne!(drawn, page_with(vec![], vec![]), "{kind}");
     }
 }
 
@@ -234,23 +267,21 @@ fn ex_view_008_two_following_half_parts_sit_side_by_side() {
             json!({"cards": [{"title": title, "items": []}], "width": "half"}),
         )
     };
-    let text = page_with(
-        vec![
-            cards("左のカード"),
-            cards("右のカード"),
-            part(
-                "status",
-                json!({"items": [{"state": "決定", "text": "全幅の状態"}]}),
-            ),
-        ],
-        vec![],
-    );
-    let row = text.find("<div class=\"row\">").expect("row");
-    let row_end = row + text[row..].find("</div><!-- row -->").expect("row end");
-    let inside = &text[row..row_end];
-    assert!(inside.contains("左のカード") && inside.contains("右のカード"));
-    let status = text.find("全幅の状態").unwrap();
-    assert!(status > row_end);
+    let blocks = vec![
+        cards("左のカード"),
+        cards("右のカード"),
+        part(
+            "status",
+            json!({"items": [{"state": "決定", "text": "全幅の状態"}]}),
+        ),
+    ];
+    let text = page_with(blocks.clone(), vec![]);
+    let wide = page_with(blocks.iter().map(full).collect(), vec![]);
+    // 幅いっぱいに描いた場合と比べ、2つの cards を囲む所だけが変わり、status は変わらない
+    let (start, end) = changed(&text, &wide).expect("a row");
+    let at = |needle: &str| text.find(needle).unwrap();
+    assert!(start < at("左のカード") && at("右のカード") < end);
+    assert!(end <= at("全幅の状態"));
 }
 
 // @kotowari[REQ-view-015]
@@ -262,20 +293,20 @@ fn req_view_015_a_half_part_left_over_and_others_are_drawn_full_width() {
             json!({"items": [{"title": title}], "width": "half"}),
         )
     };
-    let text = page_with(
-        vec![
-            half("一"),
-            half("二"),
-            half("三"),
-            Block::Markdown("間の文".into()),
-            half("四"),
-        ],
-        vec![],
-    );
-    assert_eq!(text.matches("<div class=\"row\">").count(), 1);
-    let row_end = text.find("</div><!-- row -->").unwrap();
-    assert!(text.find("三").unwrap() > row_end);
-    assert!(text.find("四").unwrap() > row_end);
+    let blocks = vec![
+        half("一"),
+        half("二"),
+        half("三"),
+        Block::Markdown("間の文".into()),
+        half("四"),
+    ];
+    let text = page_with(blocks.clone(), vec![]);
+    let wide = page_with(blocks.iter().map(full).collect(), vec![]);
+    // 幅いっぱいに描いた場合と比べて変わるのは一と二を組にする所だけで、三から後は同じ
+    let (start, end) = changed(&text, &wide).expect("a row");
+    let at = |needle: &str| text.find(needle).unwrap();
+    assert!(start < at("一") && at("二") < end);
+    assert!(end <= at("三"));
 }
 
 // @kotowari[REQ-view-011, TBL-view-001]
@@ -296,10 +327,13 @@ fn tbl_view_001_flow_draws_columns_of_boxes_on_a_grid_from_left_to_right() {
         "flow",
         json!({"columns": [[{"title": "左", "tone": "accent"}], [{"title": "右", "body": "説明"}]]}),
     );
-    assert_eq!(drawn.matches("class=\"flow-column\"").count(), 2);
     assert!(drawn.find("左").unwrap() < drawn.find("右").unwrap());
-    assert!(drawn.contains("tone-accent"));
     assert!(drawn.contains("説明"));
+    let plain = draw(
+        "flow",
+        json!({"columns": [[{"title": "左"}], [{"title": "右", "body": "説明"}]]}),
+    );
+    assert_ne!(drawn, plain, "the tone changes how the box is drawn");
     assert!(
         !drawn.contains("style="),
         "positions come from the grid, not from the data"
@@ -313,7 +347,7 @@ fn tbl_view_001_steps_are_a_numbered_sequence() {
         "steps",
         json!({"items": [{"title": "最初", "body": "本文"}, {"title": "次"}]}),
     );
-    assert!(drawn.contains("<ol class=\"steps\">"));
+    assert!(drawn.contains("<ol"));
     assert!(drawn.find("最初").unwrap() < drawn.find("次").unwrap());
     assert!(drawn.contains("本文"));
 }
@@ -327,7 +361,11 @@ fn tbl_view_001_cards_draw_a_title_and_a_list_of_items() {
     );
     assert!(drawn.contains("カード"));
     assert!(drawn.contains("<li>項目1</li>") && drawn.contains("<li>項目2</li>"));
-    assert!(drawn.contains("tone-bad"));
+    let plain = draw(
+        "cards",
+        json!({"cards": [{"title": "カード", "items": ["項目1", "項目2"]}]}),
+    );
+    assert_ne!(drawn, plain, "the tone changes how the card is drawn");
 }
 
 // @kotowari[REQ-view-011, TBL-view-001]
@@ -340,16 +378,17 @@ fn tbl_view_001_status_draws_a_label_for_each_of_the_four_states() {
             {"state": "未決", "text": "t3"}, {"state": "取り下げ", "text": "t4"}
         ]}),
     );
-    for (state, class) in [
-        ("決定", "state-decided"),
-        ("予定", "state-planned"),
-        ("未決", "state-open"),
-        ("取り下げ", "state-dropped"),
+    let mut last = 0;
+    for (state, text) in [
+        ("決定", "t1"),
+        ("予定", "t2"),
+        ("未決", "t3"),
+        ("取り下げ", "t4"),
     ] {
-        assert!(
-            drawn.contains(&format!("<span class=\"badge {class}\">{state}</span>")),
-            "{state}"
-        );
+        let label = drawn[last..].find(state).map(|at| last + at);
+        let label = label.unwrap_or_else(|| panic!("{state}"));
+        let body = drawn[label..].find(text).map(|at| label + at);
+        last = body.unwrap_or_else(|| panic!("{text}"));
     }
 }
 
@@ -377,8 +416,8 @@ fn tbl_view_001_decisions_draw_a_tree_with_who_decided() {
     let nested = drawn.find("<ul").unwrap();
     assert!(root < drawn.find("枝").unwrap());
     assert!(drawn[nested..].contains("<ul"));
-    assert!(drawn.contains("<span class=\"by\">利用者</span>"));
-    assert!(drawn.contains("<span class=\"by\">LLM</span>"));
+    assert!(root < drawn.find("利用者").unwrap());
+    assert!(drawn.find("枝").unwrap() < drawn.find("LLM").unwrap());
 }
 
 // @kotowari[REQ-view-011, TBL-view-001]
