@@ -41,7 +41,7 @@
 
 ### TBL-core-042: 入力群の内容と必須条件
 
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A39, docs/decision/records/2026-10-03-public-crate-api.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A50, docs/decision/records/2026-10-03-public-crate-api.md#A53
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A39, docs/decision/records/2026-10-03-public-crate-api.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A50, docs/decision/records/2026-10-03-public-crate-api.md#A53, docs/decision/records/2026-10-04-overview-on-public-api.md#A2
 
 | 入力群 | 内容 | ReadInputsで必須 | CheckInputsで必須 |
 |---|---|---|---|
@@ -53,6 +53,7 @@
 | 面の解析結果 | 対象ファイルのSourceText、言語・問い合わせの有無、発見結果、解析時の指摘 | 不要 | surface.rulesが空でない |
 | 未記載の面の一覧 | 設定された一覧のパスと内容 | 不要 | surface.rulesが空でなくsurface.unspecifiedが指定されている |
 | 照合記録 | パスと内容 | 不要 | changesが設定されている |
+| 追加の指摘の群 | 群の名前、読んだファイルの数、印の数、指摘。coreは意味を知らず、ほかの指摘と合わせて並べて数え、群の数を結果に持たせる | 不要 | 不要（渡したときだけ加える） |
 
 ## Examples
 

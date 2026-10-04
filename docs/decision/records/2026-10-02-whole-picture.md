@@ -232,7 +232,7 @@ Position: 利用者が kemi で承認した（2026-10-02、コメントなし）
   - why: 全体像は core の責務ではない（A21）。スキーマを書き写さず正を view の1つに保つ（A45、A47）
   - rejected: core の中のモジュールにする
   - decided_by: 利用者（推奨を採用）
-  - superseded_by: [A33: 検査結果の統合先だけをkotowariライブラリへ変更](./2026-10-03-public-crate-api.md#A33)
+  - superseded_by: [A33: 検査結果の統合先だけをkotowariライブラリへ変更](./2026-10-03-public-crate-api.md#A33)、[A1: 読み書きと serve の置き場](./2026-10-04-overview-on-public-api.md#A1)
 - A50 全体像の指摘も core の指摘の並び順の決まり（finding-order.md）に従う。core はその並び順を公開の関数としてバイナリから使えるようにする。
   - why: 出力の順番の仕様を2つに分けない
   - decided_by: 利用者（推奨を採用）
@@ -330,6 +330,7 @@ Position: 利用者が kemi で承認した（2026-10-02、コメントなし）
   - why: A1〜A73 から導けるが、仕様に書いた値や文言が記録のどこにも無かった（照合レビュー1回目の指摘）
   - decided_by: LLM（照合レビューの指摘から導いた細部。承認の時に利用者に示す）
 - A77 元データの形の細部: 形のスキーマは ".kotowari/schemas/overview.yaml" をコンパイル時に取り込む。frontmatter が無い、"ir" が無いか空、題名の "# " がちょうど1つでない、は形の違反にする。冒頭の lead の判定では HTML のコメントと空行を飛ばす。参照はスキーマに合う部品の中だけから、入れ子の深さを問わず集める。ガイドの印はそれだけの行として置く。
+  - superseded_by: [A5（全体像を公開クレートの構成に載せる）](./2026-10-04-overview-on-public-api.md#A5)（スキーマの置き場だけ）
   - why: A1〜A73 から導けるが、仕様に書いた値や文言が記録のどこにも無かった（照合レビュー1回目の指摘）
   - decided_by: LLM（照合レビューの指摘から導いた細部。承認の時に利用者に示す）
 - A78 出力の細部: "overview" の鍵が無いときも check の "overview" の群は両方 0 で出す。status の終了コードは complete に従う。build の text は "written <パス>" と "removed <パス>" の行を、それぞれパスのバイト順に出す。build が受けるオプションは "--format"、"--config"、"--help"、"--version"。引数が無いときの文言は "expected command: check, changes, list, mutants, overview, plan, query or status"。

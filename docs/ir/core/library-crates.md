@@ -7,7 +7,7 @@
 ### REQ-core-306: 用途ごとのパッケージ
 
 - kind: algorithm
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A14, docs/decision/records/2026-10-03-public-crate-api.md#A25, docs/decision/records/2026-10-03-public-crate-api.md#A34, docs/decision/records/2026-10-03-public-crate-api.md#A35
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A14, docs/decision/records/2026-10-03-public-crate-api.md#A25, docs/decision/records/2026-10-03-public-crate-api.md#A34, docs/decision/records/2026-10-03-public-crate-api.md#A35, docs/decision/records/2026-10-04-overview-on-public-api.md#A4
 - definition: TBL-core-040
 - verification: review
 - how_to_verify: Cargoのパッケージ一覧・通常依存グラフ・各公開入口の外部利用例を表と比較する。
@@ -15,11 +15,11 @@
 ### REQ-core-307: 計算側に環境操作を置かない
 
 - kind: prohibition
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A11, docs/decision/records/2026-10-03-public-crate-api.md#A25, docs/decision/records/2026-10-03-public-crate-api.md#A35
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A11, docs/decision/records/2026-10-03-public-crate-api.md#A25, docs/decision/records/2026-10-03-public-crate-api.md#A35, docs/decision/records/2026-10-04-overview-on-public-api.md#A1
 - verification: review
-- how_to_verify: coreとsource-analysisの通常依存、公開入口からの呼出経路、ファイル・環境変数・プロセス・端末・ネットワーク操作の所在を確認する。
+- how_to_verify: coreとsource-analysisとoverviewの通常依存、公開入口からの呼出経路、ファイル・環境変数・プロセス・端末・ネットワーク操作の所在を確認する。
 
-"kotowari-core" と "kotowari-source-analysis" は、入力をファイル・環境変数・Git・HTTPから取得せず、標準出力・標準エラーへ書かず、TokioとCLI用依存を持たない。coreはIR解析・出典・テスト対応・変異結果・変更照合・計画書・読み取り結果を責務別モジュールに分ける。
+"kotowari-core"、"kotowari-source-analysis"、"kotowari-overview" は、入力をファイル・環境変数・Git・HTTPから取得せず、標準出力・標準エラーへ書かず、TokioとCLI用依存を持たない。coreはIR解析・出典・テスト対応・変異結果・変更照合・計画書・読み取り結果を責務別モジュールに分ける。
 
 ### REQ-core-308: 解析と判定の依存方向
 
@@ -42,16 +42,18 @@ coreのテスト対応判定は発見済みのテスト・印を受け取り、�
 
 ### TBL-core-040: パッケージと通常依存
 
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A34, docs/decision/records/2026-10-03-public-crate-api.md#A35, docs/decision/records/2026-10-03-public-crate-api.md#A36, docs/decision/records/2026-10-03-public-crate-api.md#A41, docs/decision/records/2026-10-03-public-crate-api.md#A42, docs/decision/records/2026-10-03-public-crate-api.md#A44
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A34, docs/decision/records/2026-10-03-public-crate-api.md#A35, docs/decision/records/2026-10-03-public-crate-api.md#A36, docs/decision/records/2026-10-03-public-crate-api.md#A41, docs/decision/records/2026-10-03-public-crate-api.md#A42, docs/decision/records/2026-10-03-public-crate-api.md#A44, docs/decision/records/2026-10-04-overview-on-public-api.md#A1, docs/decision/records/2026-10-04-overview-on-public-api.md#A4
 
 | パッケージ | 使う目的 | workspace内の通常依存 |
 |---|---|---|
-| kotowari | プロジェクトを読み、型付きの操作を呼ぶ | kotowari-core、kotowari-source-analysis |
+| kotowari | プロジェクトを読み、型付きの操作を呼ぶ | kotowari-core、kotowari-source-analysis、kotowari-overview |
 | kotowari-core | メモリ上のIR解析・検査・結果の組立て | kotowari-markdown-schema |
 | kotowari-source-analysis | メモリ上のソースからテスト・印・面を発見する | kotowari-core |
-| kotowari-cli | kotowariコマンドの引数・表示・終了コード | kotowari |
+| kotowari-overview | メモリ上の全体像の元データを検査し、参照の表・古い節・描画の入力を作る | kotowari-core、kotowari-markdown-schema、kotowari-markdown-view |
+| kotowari-cli | kotowariコマンドの引数・表示・終了コード、全体像を配る serve | kotowari |
 | kotowari-markdown-schema | メモリ上のMarkdownスキーマ検証・抽出 | なし |
 | kotowari-markdown-schema-io | 文書・スキーマの読込と検査・抽出 | kotowari-markdown-schema |
+| kotowari-markdown-view | メモリ上の描画の入力から全体像のページを作る | なし |
 | kotowari-mds | kotowari-mdsコマンドの引数・表示・終了コード | kotowari-markdown-schema-io、kotowari-markdown-schema |
 
 ## Examples

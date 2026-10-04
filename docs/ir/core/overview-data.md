@@ -78,19 +78,19 @@ kotowari は常に、`全体像の元データ`の中の`ガイドの印`を`ガ
 ### REQ-core-287: 元データの検査は kotowari-overview が行う
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A21, docs/decision/records/2026-10-02-whole-picture.md#A48, docs/decision/records/2026-10-02-whole-picture.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A33
+- source: docs/decision/records/2026-10-02-whole-picture.md#A21, docs/decision/records/2026-10-02-whole-picture.md#A48, docs/decision/records/2026-10-02-whole-picture.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A33, docs/decision/records/2026-10-04-overview-on-public-api.md#A1, docs/decision/records/2026-10-04-overview-on-public-api.md#A2
 - verification: review
-- how_to_verify: overviewを実装する別計画で、検査がkotowari-overviewにあり、同クレートがcoreとmarkdown-viewに依存し、coreが両者に依存しないことを確認する。checkへの結果統合はkotowariライブラリで行う。
+- how_to_verify: 解析と検査がkotowari-overviewにあり、同クレートがcoreとmarkdown-schemaとmarkdown-viewに依存してファイル・ネットワーク・環境変数を操作せず、coreがoverviewとviewに依存しないことを確認する。元データの読み込みとcacheへの書き込みがkotowariライブラリに、serveがkotowari-cliにあり、checkへの結果の統合がcoreの追加の指摘の群を通ることを確認する。
 
-kotowari は常に、`全体像の元データ`の読み取りと検査を kotowari-overview のクレートで行い、kotowari-core はそれを知らない。検査結果をcheckへ統合するのはkotowariライブラリとする。
+kotowari は常に、`全体像の元データ`の解析と検査を kotowari-overview のクレートで行い、kotowari-core はそれを知らない。元データのファイルの読み込みと`全体像`のファイルの書き込みは kotowari ライブラリが、HTTP で配る serve は kotowari-cli が行う。検査結果を check へ統合するのは kotowari ライブラリで、core の追加の指摘の群として渡す。
 
 ## Decision tables
 
 ### TBL-core-038: 元データの形
 
-- source: docs/decision/records/2026-10-02-whole-picture.md#A44, docs/decision/records/2026-10-02-whole-picture.md#A54, docs/decision/records/2026-10-02-whole-picture.md#A55, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A77, docs/decision/records/2026-10-02-whole-picture.md#A74, docs/decision/records/2026-10-02-whole-picture.md#A85
+- source: docs/decision/records/2026-10-02-whole-picture.md#A44, docs/decision/records/2026-10-02-whole-picture.md#A54, docs/decision/records/2026-10-02-whole-picture.md#A55, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A77, docs/decision/records/2026-10-02-whole-picture.md#A74, docs/decision/records/2026-10-02-whole-picture.md#A85, docs/decision/records/2026-10-04-overview-on-public-api.md#A5
 
-形はスキーマ（".kotowari/schemas/overview.yaml" をコンパイル時に取り込む）で宣言し、Markdown としての形の検査は kotowari-markdown-schema が行う。形に合わない所ごとに、"line" をその行（文書全体にかかるものは null）、detail を kotowari-markdown-schema の`指摘`の種類の名前にして overview_form_invalid の`誤り`を出す。
+形はスキーマ（kotowari-overview のパッケージの中の "crates/kotowari-overview/schemas/overview.yaml" をコンパイル時に取り込む）で宣言し、Markdown としての形の検査は kotowari-markdown-schema が行う。形に合わない所ごとに、"line" をその行（文書全体にかかるものは null）、detail を kotowari-markdown-schema の`指摘`の種類の名前にして overview_form_invalid の`誤り`を出す。
 
 | 部分 | 形 |
 |---|---|

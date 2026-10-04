@@ -39,17 +39,19 @@
 
 ### TBL-core-041: Projectの操作
 
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A10, docs/decision/records/2026-10-03-public-crate-api.md#A36, docs/decision/records/2026-10-03-public-crate-api.md#A41, docs/decision/records/2026-10-03-public-crate-api.md#A55
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A10, docs/decision/records/2026-10-03-public-crate-api.md#A36, docs/decision/records/2026-10-03-public-crate-api.md#A41, docs/decision/records/2026-10-03-public-crate-api.md#A55, docs/decision/records/2026-10-04-overview-on-public-api.md#A3, docs/decision/records/2026-10-04-overview-on-public-api.md#A7
 
 | メソッド | 入力と操作 | 結果 |
 |---|---|---|
-| check | 設定に従ってプロジェクトを検査する | 指摘と集計 |
+| check | 設定に従ってプロジェクトを検査する。`全体像の元データ`の指摘と "overview" の群を含める | 指摘と集計 |
 | list | 読み取れた項目を一覧にする | 型付き一覧 |
 | query | 指定したIDを問い合わせる | 本文・逆参照を含む型付き結果 |
 | status | checkと同じ範囲を検査する | 集計と完了状態 |
 | plan | 指定した計画書を検査し、IRの読込は要求しない | 指摘と集計 |
 | mutants | 指定した変異結果と等価情報を検査し、IRの読込は要求しない | 指摘と変異の集計 |
 | changes | 比較元・対象・段階を指定してGitの比較情報と照合記録を検査する | 型付きの変更照合結果 |
+| overview_prepare | `全体像の元データ`を検査して描画し、ファイルを書かない | 書く前の描画の結果。書く操作を持つ |
+| overview_build | overview_prepare に続けて、その結果を ".kotowari/cache/overview/" の下へ書く（REQ-core-293） | 書いたファイル・消したファイルの一覧と書かなかったファイルの数 |
 
 ## Examples
 
