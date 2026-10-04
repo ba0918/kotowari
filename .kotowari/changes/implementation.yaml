@@ -2,8 +2,8 @@
   "version": 1,
   "entries": [
     {
-      "id": "public-crate-api-implementation",
-      "base": "b22c1ba6c7d657e91b0da9d9cbe36a46ad48a046",
+      "id": "overview-and-public-crate-implementation",
+      "base": "4bb9e6e5421ce06858d6ec05dd2792b6fe2df369",
       "role": "implementer",
       "files": [
         {
@@ -13,8 +13,8 @@
         },
         {
           "path": ".github/workflows/release.yml",
-          "before": "sha256:8fa8d97e5286df9108876e7cf5133f84b19c12a2548958b98a0b76a4f0cdd1ac",
-          "after": "sha256:699f5384bd9b6a9995b445f1c22907e5fffa8ba42f55b6533b58c7a3deac33bd"
+          "before": "sha256:2391e6eae7ce1cdc4a9b997abbdfa6116b190e71ce3d8cac975666d0852933e5",
+          "after": "sha256:aeeff0493095ec8b690dff1a8b3ab2ec0b58fc3e3d808f7a1226df6525897096"
         },
         {
           "path": ".kotowari/equivalents.yaml",
@@ -44,22 +44,52 @@
         {
           "path": "CHANGELOG.md",
           "before": "sha256:65c67a93142998d772c61992aad13bd4325d2471270e6a3750ccaaec73d3aefc",
-          "after": "sha256:82f56b37b8b06d1e115ffb0d8f0b5449eebf7a4fa0fa7ddb4232f112f80c3545"
+          "after": "sha256:51661566650b3cc27a2dafc05648a077fbb01d5d102c9e18ec3e416bc709d485"
         },
         {
           "path": "Cargo.lock",
           "before": "sha256:5467e58291ef066ca491309f9b602305c746b18ae1a7157a9508d316cbdfd1f5",
-          "after": "sha256:f500026613a437b7d4ba200ff2c7e19a96ab91e6a1f802dd7e1aa2cea2d09614"
+          "after": "sha256:8b27624b45bdb7a95b8f9605c4c9755e20e4768ee0cb57a0ff6bae6e37b295b3"
         },
         {
           "path": "Cargo.toml",
           "before": "sha256:90259385e11911ab2f9e440017f0386fbbc88fe6888e403f546cfaabdb011e07",
-          "after": "sha256:8c7c9431f18f89b287fa98a50bd4b52e601e3313be25996227b10eac5913d4c6"
+          "after": "sha256:d3535c3f5290bc78f514a607d8db5b4958ea46a77e00a8021b1462b570bb164c"
         },
         {
           "path": "PROJECT.md",
-          "before": "sha256:aa8b4c6b51be483bec0aacb73643d0b434184490ec39328ec76d5388eedea50a",
-          "after": "sha256:1b109b91fc455535d1123d45a445940be3c02fe59caf6e0394f33bd64761d727"
+          "before": "sha256:1c3cf6d5e653e8d7969828777a1d61504916db73af7c750fd825e36c440094e0",
+          "after": "sha256:35ca643d23ca0391f030eb78a559f201886edbf0c082cfe99ad9ac49f9d8b7a1"
+        },
+        {
+          "path": "agent/skills/kotowari-brainstorm/SKILL.md",
+          "before": "sha256:77a96434780052613e064a6019be6a2d819afcb335c72e97a23a75f40824c94f",
+          "after": "sha256:d76363b6e394622aee71d945a25c7131d3f9f96e0213d7f2871de9156a289f04"
+        },
+        {
+          "path": "agent/skills/kotowari-cycle/SKILL.md",
+          "before": "sha256:2041e574b1ff179846dd71436b0bc881ba15c1f27db010c50a3db29d2f2393e4",
+          "after": "sha256:47930e452881cd191dbc1397e4ec00ad751d97d2893d78d866ef61f85df00320"
+        },
+        {
+          "path": "agent/skills/kotowari-implement/SKILL.md",
+          "before": "sha256:37541622de32fe8ca91490f8306301771bb7d913f2f966718f03ef1ed31af3cf",
+          "after": "sha256:53c663aa988a669a2131b3173a33dc5569a1ec5754c982a5618538a3b8016e99"
+        },
+        {
+          "path": "agent/skills/kotowari/SKILL.md",
+          "before": "sha256:d3fb7a71f2d973f388222a0b5ccf7286201aec1f0860d043abcfa46bdb3c7a8a",
+          "after": "sha256:bcd39f8d551793561b626551ddb1602fc94ed684de075230b8121954072c433d"
+        },
+        {
+          "path": "agent/skills/kotowari/references/findings.md",
+          "before": "sha256:f411f31785863466c9382dec5e41c99ea8bc01cca0fca300cf977745075b0a3c",
+          "after": "sha256:f4ce65c7a01c1b7ba91f6502c7c950dbe19f6312fb04d53c2248600bd2938183"
+        },
+        {
+          "path": "agent/skills/kotowari/references/overview.md",
+          "before": null,
+          "after": "sha256:650f8ca04cfd1e72f1e7f52d26a4153f3d529ae569a70ef73bc7ed60dd60c2fb"
         },
         {
           "path": "crates/kotowari-core/Cargo.toml",
@@ -154,7 +184,7 @@
         {
           "path": "crates/kotowari-core/src/config.rs",
           "before": "sha256:25016e6b49e75d0111fa647bbfb65d23890800513089bed592b82486e37cd701",
-          "after": "sha256:c54170c4edc9531c8591fa64600036efeedc85856d427be0498d6d1cd8a9dc78"
+          "after": "sha256:8bb754bd3fa532bed3c41394d75f4f5920493d3b142228f9d82d6ee0db8b4d6f"
         },
         {
           "path": "crates/kotowari-core/src/equivalents.rs",
@@ -174,12 +204,12 @@
         {
           "path": "crates/kotowari-core/src/guides.rs",
           "before": "sha256:e9e6d640604b22a2f4a3f2071519872cbee25f5445b3b5f01b2f653f4079e919",
-          "after": "sha256:5ba9a0f226cb65eadd7c06d936ffb86a4e60f0a3b2ad0cdc94c229a286a5e71e"
+          "after": "sha256:8c9116b2da572ee10fc2a5d945a55b10e93a85c71330de1caaeb2f15aa1324da"
         },
         {
           "path": "crates/kotowari-core/src/inputs.rs",
           "before": null,
-          "after": "sha256:73369f38e5e48ced175324fb0e318685331aa623bc56cfa0cda44843b815b0de"
+          "after": "sha256:106b80825f5e67bf1d7a0d361a1d58961c95d69c6c4c048ef44b288f2975fd43"
         },
         {
           "path": "crates/kotowari-core/src/ir.rs",
@@ -189,7 +219,7 @@
         {
           "path": "crates/kotowari-core/src/lib.rs",
           "before": "sha256:cdba93b8e9309d8e9b349ec390872af9205cdb5ba00956a3ad0632b82bdb8e91",
-          "after": "sha256:676e2ff828bb7476d7718f0b97164063f08afc7b9fe2a5deedd1069998defd99"
+          "after": "sha256:e5fee97872a5b5bee4a655af7872e7d36a3525f76c3d308a3a5f7eaa90075d00"
         },
         {
           "path": "crates/kotowari-core/src/list.rs",
@@ -224,12 +254,12 @@
         {
           "path": "crates/kotowari-core/src/sources.rs",
           "before": "sha256:c38195dd2557f43e46cf59a6e2c7e241d38998f805501125dd933f2c4ea007c5",
-          "after": "sha256:4e3bca167ec992ece773e1e5a9b302928435cd20f1322bcb183cd96c878af487"
+          "after": "sha256:a1b2e5a4e4f039d4922388f8fcfe49b96ae902f9d17bacc35965b2dcede17546"
         },
         {
           "path": "crates/kotowari-core/src/status.rs",
           "before": "sha256:e8b18b0ff12a2e24ce931e916b7fbf9ac8b48353aded7a9efc6ec6ed3e54255b",
-          "after": "sha256:e1450d1bf796a787008cdc16f19d4f90c19bdb41f40954f51d8b11028856da66"
+          "after": "sha256:5e76e9e79c6270f708139d09916d2e3c9a889688303e9c83954ab5c4a10d5d4f"
         },
         {
           "path": "crates/kotowari-core/src/surface.rs",
@@ -274,7 +304,7 @@
         {
           "path": "crates/kotowari-core/tests/inputs.rs",
           "before": null,
-          "after": "sha256:0693a7371424cc189a2c9153ec2e9ce612865e0730d94caac288cb0c005a5fa6"
+          "after": "sha256:59eae3a9fa62ef07c4d67871cf20c28955c2c033ea04b0f4f5b0353bd1d5a3b1"
         },
         {
           "path": "crates/kotowari-core/tests/ir.rs",
@@ -349,7 +379,7 @@
         {
           "path": "crates/kotowari-markdown-schema/CHANGELOG.md",
           "before": null,
-          "after": "sha256:b91992aa68294bf0c78d5b0c9e53d70850e00fe06cb7d6a2aa8acf97638d054d"
+          "after": "sha256:93a7320c3a7e1d8460d35759f8d18878936bb06ad12d1fefda9220e3c3911908"
         },
         {
           "path": "crates/kotowari-markdown-schema/Cargo.toml",
@@ -462,6 +492,111 @@
           "after": null
         },
         {
+          "path": "crates/kotowari-markdown-view/Cargo.toml",
+          "before": null,
+          "after": "sha256:03af2aa12add82e65d795a1f6b78aee1d3c56ecb9b297dd86113b56561d53295"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/LICENSE-APACHE",
+          "before": null,
+          "after": "sha256:759f9ba3dead8247a3cd4c2eabe512c04135dd07d15fa91293adb0bf4c654849"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/LICENSE-MIT",
+          "before": null,
+          "after": "sha256:1ef6314e318eb58d36a7e295dbfc2eb835b4df2b78a23a5217a5c5055454e264"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/README.md",
+          "before": null,
+          "after": "sha256:6efb56ecebd57a7f8c549b27a894a8096bf1ca5a184a37c96526ad65f6e60daf"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/examples/render.rs",
+          "before": null,
+          "after": "sha256:c2cbceb8e9d5b9b59527c678fbe9c6bc3121c2d88877feaa5ec57798ce9ab495"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/schemas/cards.json",
+          "before": null,
+          "after": "sha256:2fbee11fb67212f3ca7cdac0b99e6ee1f0ddba53595d51f6cba1a34ce26fa960"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/schemas/compare.json",
+          "before": null,
+          "after": "sha256:ca2ce0ef1b42eea5f1a52869694a84f860e68ce6d54c1018299e39822e4a2d20"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/schemas/decisions.json",
+          "before": null,
+          "after": "sha256:078129d730472453f964085064d48f79cedad967d2c4e2e2cfc52e620c917e27"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/schemas/flow.json",
+          "before": null,
+          "after": "sha256:9ef9fcd8b8dbda26685ee6d7bdf58e52da945c0aa99ad648f6f8dc00ad12fdbd"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/schemas/lead.json",
+          "before": null,
+          "after": "sha256:a260255fabe59fd549c97ea5d8d8edcb655cf2c425d2ebc82db29219703d3699"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/schemas/quiz.json",
+          "before": null,
+          "after": "sha256:8d88a6ac3bf364778a2ab725685279e5288a927b4b527f4cfa17bdacd15d2e45"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/schemas/status.json",
+          "before": null,
+          "after": "sha256:da806f13c37d6117f916f649547194b6b53a9fa546d83d5a6f30fff82add7ac4"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/schemas/steps.json",
+          "before": null,
+          "after": "sha256:51725a4421fe4f5c718001d4bd05b7d6fd532ea8545f623e3baa39ed23baec1d"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/src/html.rs",
+          "before": null,
+          "after": "sha256:607fb53d25f54a3a614a6def6097c6acca04038eba12df00d9a5e53fbf6340fb"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/src/lib.rs",
+          "before": null,
+          "after": "sha256:240b1b976d21c799901ed7dd834ac2aeaefa20ed155f4c93ef8f54dc4acdc823"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/src/parts.rs",
+          "before": null,
+          "after": "sha256:2b0199dcbc58596164230940790fa817582eafcd3c562ae60696c8917daafe56"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/src/style.css",
+          "before": null,
+          "after": "sha256:d26280ca012d9e7b7ad57096daab6ebc2d91992de38b9596791e277abb627bca"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/src/text.rs",
+          "before": null,
+          "after": "sha256:63956a0ba5ada734eb5ad417fb36bd2082dacfe92f380ad7033bcec14c236888"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/tests/determinism.rs",
+          "before": null,
+          "after": "sha256:7c7fdb5430e0b4580bf0f87f13f0921bc4038197873357e9e826da95b6864a3d"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/tests/parts.rs",
+          "before": null,
+          "after": "sha256:dc66787462e5a3d44946d79cbe6f771ee38ac3c9550ba8adb6596844914d3fc3"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/tests/rendering.rs",
+          "before": null,
+          "after": "sha256:08ff3cfe4b95993ec157c6f7a25b4631cec10cc9200fd256a3ca2db142b9c881"
+        },
+        {
           "path": "crates/kotowari-mds/Cargo.toml",
           "before": null,
           "after": "sha256:2740ec3308e6a04595a8b01530035c60cfb43f0d9bd4b1973f9c0e0aed79cc91"
@@ -525,6 +660,66 @@
           "path": "crates/kotowari-mds/tests/url_schema.rs",
           "before": null,
           "after": "sha256:5264e0f6b40ae68dcce97125f57ff998cf211cb34b880b5aa5b45e95474d2c35"
+        },
+        {
+          "path": "crates/kotowari-overview/Cargo.toml",
+          "before": null,
+          "after": "sha256:bbb8a66428f2a7210d2cbb72f1387f2d9dffe7ffb5162d8505baeeaee0a30cbe"
+        },
+        {
+          "path": "crates/kotowari-overview/LICENSE-APACHE",
+          "before": null,
+          "after": "sha256:759f9ba3dead8247a3cd4c2eabe512c04135dd07d15fa91293adb0bf4c654849"
+        },
+        {
+          "path": "crates/kotowari-overview/LICENSE-MIT",
+          "before": null,
+          "after": "sha256:1ef6314e318eb58d36a7e295dbfc2eb835b4df2b78a23a5217a5c5055454e264"
+        },
+        {
+          "path": "crates/kotowari-overview/README.md",
+          "before": null,
+          "after": "sha256:c1c94abe4855a6a4806d46b069c1f0621005195858899630566ec661614ae37b"
+        },
+        {
+          "path": "crates/kotowari-overview/examples/overview.rs",
+          "before": null,
+          "after": "sha256:aa8a2ac54ace3b4d3ac6380db9b23a9bf33b27f4dcee4547cd72d6f53da687f0"
+        },
+        {
+          "path": "crates/kotowari-overview/schemas/overview.yaml",
+          "before": null,
+          "after": "sha256:b1cb6001612ff579e5f4ef1876d6e9fd215d965c43d313279cc707ea6a90bf97"
+        },
+        {
+          "path": "crates/kotowari-overview/src/document.rs",
+          "before": null,
+          "after": "sha256:ed38baa0712238dfe526c66d0890311cbdd9142a25ced79e99372c922c9c9897"
+        },
+        {
+          "path": "crates/kotowari-overview/src/form.rs",
+          "before": null,
+          "after": "sha256:1f7c7de2b048e0d495e2cdaf93af837f08ce51c4a5453e956f2afe1e8b290f65"
+        },
+        {
+          "path": "crates/kotowari-overview/src/lib.rs",
+          "before": null,
+          "after": "sha256:380cfb700392a6288bb8d32f3864f7e55d0e4839abaf2d55fcee19ddbc9621a0"
+        },
+        {
+          "path": "crates/kotowari-overview/src/parts.rs",
+          "before": null,
+          "after": "sha256:71819ef8c134d0346f5faaa7272477718b8335a53c90f7794a53bcf8beff0866"
+        },
+        {
+          "path": "crates/kotowari-overview/src/references.rs",
+          "before": null,
+          "after": "sha256:2f1636d684d8626fdf42a579b747be78a7d4f419875676368eef17ee6ae3beec"
+        },
+        {
+          "path": "crates/kotowari-overview/tests/overview.rs",
+          "before": null,
+          "after": "sha256:4fb2abfb75434e7dd1a113d09d8674b75600e95bfb0cea7c13dcfc6915c1e075"
         },
         {
           "path": "crates/kotowari-source-analysis/Cargo.toml",
@@ -609,7 +804,7 @@
         {
           "path": "crates/kotowari/Cargo.toml",
           "before": null,
-          "after": "sha256:adf9bcd583e308d9bd3d6753b8b97c168d8794dde05c4e9d52d205f534ee0952"
+          "after": "sha256:cf43d93b2eb02f18ff9e0f05f9f1d1fc81bf0a9e4cdb4b4b3d0dd051f016730c"
         },
         {
           "path": "crates/kotowari/LICENSE-APACHE",
@@ -639,7 +834,7 @@
         {
           "path": "crates/kotowari/src/acquisition.rs",
           "before": null,
-          "after": "sha256:ea329db222ec7a23ec2e3791b2f66ebd7627aa2d88d1ecb9b460e0d907063f9e"
+          "after": "sha256:e64cea2f63688ad4eea3953c2efe669360b6f6f1989acc8ea25ca3e402561fd4"
         },
         {
           "path": "crates/kotowari/src/async_tests.rs",
@@ -649,12 +844,12 @@
         {
           "path": "crates/kotowari/src/asynchronous.rs",
           "before": null,
-          "after": "sha256:f3b55eba48635147cc81146760f33739acd56f487b5abab0d3f11b5d7af16f31"
+          "after": "sha256:ba5542445193b9797c19392ee3ad313804bf76c1eda1e69165e3813ecf7ba359"
         },
         {
           "path": "crates/kotowari/src/change_records.rs",
           "before": null,
-          "after": "sha256:0ed20a35464a087bd05b177c41ce42ea2ab11f4d1513a6bbf3d2f410cb853893"
+          "after": "sha256:4c94c033e16e7b2dbfc511ce40c583d87ba0977f19a8fe0357114828c67a7714"
         },
         {
           "path": "crates/kotowari/src/change_service.rs",
@@ -674,7 +869,7 @@
         {
           "path": "crates/kotowari/src/guides.rs",
           "before": null,
-          "after": "sha256:86fafcca567ac029ea95684ba75f40ba94e387698917a8c028c562cc6ab0a178"
+          "after": "sha256:ac7ea07e981eb972e551f1b629b231d566e1332dc3fe1b02bb4bd9086b2ec2b9"
         },
         {
           "path": "crates/kotowari/src/ir.rs",
@@ -689,7 +884,12 @@
         {
           "path": "crates/kotowari/src/lib.rs",
           "before": null,
-          "after": "sha256:0ab21c91c3e782ab5f8a0dd2a00678b4009355c3a7b24f7f671b8d45f6b3339c"
+          "after": "sha256:128996baf8f7f1c911f38f3a70a6efcd95de70f05a9486016fc3f52e7619ec74"
+        },
+        {
+          "path": "crates/kotowari/src/overview.rs",
+          "before": null,
+          "after": "sha256:fd0856d09c443a489fa3014af3263109577365bc7d9a367035fb45a4872560d7"
         },
         {
           "path": "crates/kotowari/src/sources.rs",
@@ -704,12 +904,12 @@
         {
           "path": "crates/kotowari/src/test_files.rs",
           "before": null,
-          "after": "sha256:963b844157dec9ec6cfc3d80b152e8e00a0c4f7fae06015cda074b1e3563aa42"
+          "after": "sha256:6009718c8cd59d6aac6ea2e769a19e27bc639e00803cfca87e55233c326d8274"
         },
         {
           "path": "crates/kotowari/tests/async.rs",
           "before": null,
-          "after": "sha256:782fdc4e46d66020701f14387f4033ec9f87d159165ee1ad20c62ece5853f6da"
+          "after": "sha256:c0c0a59c4b35f642c558db947e587bdff587ed5d1f7de0e0abfeb6ef9de3da18"
         },
         {
           "path": "crates/kotowari/tests/change_records.rs",
@@ -719,7 +919,7 @@
         {
           "path": "crates/kotowari/tests/project.rs",
           "before": null,
-          "after": "sha256:6cd3ea93cdb55949b5202a78fdf3c5b1171f3a128cac4b9faf589cd405d4f9d8"
+          "after": "sha256:212e5e83975708e5d429ba676f6657165153b9edd7fb6f2a0adfeb88be9ada16"
         },
         {
           "path": "docs/guides/cli.md",
@@ -743,28 +943,28 @@
         },
         {
           "path": "lefthook.yml",
-          "before": "sha256:2837e92c840e335d40b7e9f1f3a77dcf397a56bb36974ffebe57955f8b8810ac",
-          "after": "sha256:dbdc660f3acb1722b0d9f58ca699824f6e7117fa2755ba351c821c89450b2ff2"
+          "before": "sha256:4c10f27d3c64f9957151f0ab4e5bd0bc8e7b7c21c30195064d8c2aac981ef79a",
+          "after": "sha256:f70504a006ac6c52b18e2c58822eb4f931147543461fc3e9c1bbabd38569bb99"
         },
         {
           "path": "scripts/check-packages.py",
           "before": null,
-          "after": "sha256:4620eb5b6b829fb4a342c685bdd135b40e0b48887d420ad165771c1917d5ab69"
+          "after": "sha256:c86f5ccf610b9fd6c5924565fe70f29a712c1046cf25f3718d4c62522d681394"
         },
         {
           "path": "scripts/check-versions.sh",
           "before": "sha256:8e1ce20aca0334fabbd7a7c34987664466f81e2c61939cf2bbd7039ceb39df5a",
-          "after": "sha256:be58d25c8d4d0c776684ec3faf7cecb0d0bf2decc8dc5cb90da1f440b492df4e"
+          "after": "sha256:8b3fdfd7b8668c173b6362b0bc79d32a48545867626769e8ae480f72cdcaedc4"
         },
         {
           "path": "scripts/mutants.sh",
-          "before": "sha256:a179e696ae83b3792c42d03997cf5eae8634c831e1552fcfb1bb92ed9883fc66",
-          "after": "sha256:773a0e3c7888aa512995f6d6583fb035c94dd182bf004b091d6a9b3f54ee271b"
+          "before": "sha256:daae2ef9759d01b2152c620d6cd4142a7dfbc0d1712761c36d8058fb6356379c",
+          "after": "sha256:59eada4317aa42f5b0427aa6926d3d9e70500cfd6efbaa5aaa8c7fcf74639717"
         },
         {
           "path": "scripts/release.sh",
-          "before": "sha256:2eab50b8c7c7080b740ead4492721c17f5adfd458f0ee9552f34e867cec5100c",
-          "after": "sha256:f9ab915af5faa779d3e20896574a505c36184f2b23b116f1ca628c3a48a4a1c1"
+          "before": "sha256:dc2245a5518d068b7283e4bb740390e87ce6d34e30846fdea9b2a4746e7a8523",
+          "after": "sha256:72b0bcd3ceca9b0a54a9bb4426c66859f4a0ece5d2ea7305da5d77e9aa5aede9"
         },
         {
           "path": "scripts/tests/test_public_crate_packaging.py",
@@ -774,12 +974,12 @@
         {
           "path": "scripts/tests/test_public_crate_versions.py",
           "before": null,
-          "after": "sha256:26f118961376441b5a6f48962b4e3dd6bb669259080daa5fc092ddc3926ac6ec"
+          "after": "sha256:6847b359733c3b20ea922e277a717f9fafa265026f118ab3396356b22f5dbe39"
         },
         {
           "path": "src/cli.rs",
           "before": null,
-          "after": "sha256:5156d3219720a941e23afa0bdb30b9cea79cd9d0e8ae6232b8795a16024eb141"
+          "after": "sha256:c367ae199b519eb84df5491d7158c4d2c14851b14ac8682aba0594d307468590"
         },
         {
           "path": "src/cli/list.rs",
@@ -789,7 +989,7 @@
         {
           "path": "src/cli/output.rs",
           "before": null,
-          "after": "sha256:3d77d0d280c9382cfc84c91a1617c1da16ccfd786cb81eeb3ec3acf22fe59d0e"
+          "after": "sha256:a834dd02c13bc4017d60eea81bd0bca4bb4f7804432e5ba01781916f590f1dab"
         },
         {
           "path": "src/cli/query.rs",
@@ -797,14 +997,19 @@
           "after": "sha256:f298920357c3082c1b3ab4625e63c643f56faf7e73832f85a9af39690aeac6ba"
         },
         {
+          "path": "src/cli/serve.rs",
+          "before": null,
+          "after": "sha256:0407f185f0c2e00bc88452f4455b3cce851e11c5cd8362e72fe405fcb0ad355e"
+        },
+        {
           "path": "src/cli/status.rs",
           "before": null,
-          "after": "sha256:ecbbb6c216f9a940a523504ef5efc9fcf5b9151a49b15db3c7fe78e87c05d49b"
+          "after": "sha256:b5bea5b932fce6b1fc760457d424921b2c7bddbf9a27dde7d59787f2cdff54d9"
         },
         {
           "path": "src/cli/tests.rs",
           "before": null,
-          "after": "sha256:549f8e7ed081bde8fbb7c1e20843c244af9db78cd3f01714ec03589cdab0db87"
+          "after": "sha256:bd9f05e120b679b1067cce131203b5d8fce5a49cf57c1286faaee997d30d2cfe"
         },
         {
           "path": "src/main.rs",
@@ -837,6 +1042,11 @@
           "after": "sha256:a533711c2b95f176f94c9db28c2c9041097fcfd49f54e53b4fef6e741caa3e27"
         },
         {
+          "path": "tests/step12_status.rs",
+          "before": "sha256:c156bbd482fa7ca7ee123f19847e5732bfa098a0922ae39900d7ef872a25d254",
+          "after": "sha256:5d38e2a3a95359e950de74047dc7c75a51fe2cdbe2a181eb27ed25e17b0b86fb"
+        },
+        {
           "path": "tests/step14_plan.rs",
           "before": "sha256:12a5e0d4381c8a893a58a5b4f783197dc1f7a3ef65ba3bf0dfd038506cebffd1",
           "after": "sha256:5f3813e192a47e83cbf0497efffd45dc631cfd59793ae956585a9f0eaa654037"
@@ -844,12 +1054,37 @@
         {
           "path": "tests/step15_guides.rs",
           "before": "sha256:8c6e2226d9a84fe38ea01381af882e72027f4f6eac9f2e17d6d2d0d8c91c5551",
-          "after": "sha256:4c89dae04497138b999a4db1d78ed7ccf12f9c2ec07b4c2670ed3fd5d7a464b1"
+          "after": "sha256:273aeba86785d07211321ccc0db5cb1ebd293db8c5d0b55b84ff1a16da642439"
         },
         {
           "path": "tests/step17_surface.rs",
           "before": "sha256:28b3cf1a2c37fceb8bf4d075ce4dc27cf4fdd7ff72c61996d5343dac04d0e5cb",
-          "after": "sha256:aad7fa2702783540688df039480357e6acd7f1c6b001791a859c8313ec46ab27"
+          "after": "sha256:3bbf0a159231186121e78705465cded3c3eed8c36bfb8d3ebc773793d94f0d81"
+        },
+        {
+          "path": "tests/step18_overview.rs",
+          "before": null,
+          "after": "sha256:1124ea10741c785df2725cb52c89c8f16d463b95b4453b12dc8b6519829ec913"
+        },
+        {
+          "path": "tests/step19_overview_build.rs",
+          "before": null,
+          "after": "sha256:e55b7a12a710d6247f54e20eea3b874f674218105372c6834216fb8c1860c517"
+        },
+        {
+          "path": "tests/step1_cli.rs",
+          "before": "sha256:461b584d46eb72b93c19977e55cd041559dd6ea3f66755999b1f4d7aede184b8",
+          "after": "sha256:ece7a3b792b1f352166a9dcf70b47ecf8395224c5108180baae72d0c126d2c72"
+        },
+        {
+          "path": "tests/step1_config.rs",
+          "before": "sha256:accea6bea283548a3f71437efb4b291f1f025ac0df5a745c3fec85db4003f13c",
+          "after": "sha256:839b0396f279fe6b899f6ed0866d4128a544b473b79556b05562dd6e614d8a1e"
+        },
+        {
+          "path": "tests/step20_overview_serve.rs",
+          "before": null,
+          "after": "sha256:eb814d98b58d8ced24e4fa7461bffad87be3fddb4f843b5e3be417f6e26e84f3"
         },
         {
           "path": "tests/step2_ir.rs",
@@ -870,9 +1105,18 @@
           "path": "tests/step5_findings.rs",
           "before": "sha256:1febf30b98618b7529d2aea6b6f1cd4357ae6333a22213cca7fb87ff2e181265",
           "after": "sha256:e6a35d3d42acb505e7c28ae5651b0e77fef19ccf850edc352db22e1b250f5654"
+        },
+        {
+          "path": "tests/step7_skill_references.rs",
+          "before": "sha256:d1a1395baa019c903f0b32440b97fdb06653a8445768f51dc4a28899fc8ec836",
+          "after": "sha256:2b0b7be6fb560f872eae789c3701cce03d3b9657fded00bf8aa1fd5e530c912b"
         }
       ],
       "ir": [
+        {
+          "path": "docs/ir/core/CONTEXT.md",
+          "sha256": "sha256:f34726495b24f7495632dd4b0bef563e22493b4da6171455ea0a639c6bcae3d5"
+        },
         {
           "path": "docs/ir/core/cli-environment.md",
           "sha256": "sha256:961b628f610e172e64497d476f2b9e50e80d7a242decda2be884121e828c6712"
@@ -882,8 +1126,20 @@
           "sha256": "sha256:829853663b9221e93ca213f85606e27ee0f0b7b12cfa82141f449db39a50e4e3"
         },
         {
+          "path": "docs/ir/core/cli.md",
+          "sha256": "sha256:db7764ac54c02fad301fa543fba3d97d36d945a9abe6165c2ae0d8703a54f7f7"
+        },
+        {
+          "path": "docs/ir/core/config.md",
+          "sha256": "sha256:7f1b328673e969a637d2626a54a4e9b27b3cf46dc4bfa8a9c5cfb413dc29f69b"
+        },
+        {
           "path": "docs/ir/core/decision-records.md",
           "sha256": "sha256:462f1442d1c1b3120239dcd3860dbfe02feab7db4c605df627dddcac7f8d3d0b"
+        },
+        {
+          "path": "docs/ir/core/finding-order.md",
+          "sha256": "sha256:d67870436799092ee966648cb2992b8ea6b4302cce79acf1d1689602b7188aec"
         },
         {
           "path": "docs/ir/core/form-contract.md",
@@ -903,7 +1159,7 @@
         },
         {
           "path": "docs/ir/core/library-api.md",
-          "sha256": "sha256:49b738c68c92cbfa746f7c3fd17346d0dedeedc008e61238db5ae263a3fec931"
+          "sha256": "sha256:b89445372549a73b9cbf3c38bd7550a1f581bd1d8b88dc6b2202b110ac528ba2"
         },
         {
           "path": "docs/ir/core/library-async.md",
@@ -911,15 +1167,47 @@
         },
         {
           "path": "docs/ir/core/library-crates.md",
-          "sha256": "sha256:3cd5559271f625cf7132cfe9c72e4d8f370859d461659b3c984b40f48561f811"
+          "sha256": "sha256:cf1050591af8f8972aa07a7e744719ab6ff97820837bfd9dfc05cdb1a1aabd12"
         },
         {
           "path": "docs/ir/core/library-inputs.md",
-          "sha256": "sha256:60eee46c7d14163ef4ba302b430931c391708e2bb4f288ff0115b98cc82669bb"
+          "sha256": "sha256:677f856eff65e377a2037af461ecfda37942e766f424d248286c83d7810c51c6"
         },
         {
           "path": "docs/ir/core/library-paths.md",
           "sha256": "sha256:127677141e649520f5b95778af8dc38462c734a2ab1a709c656a2b42edf6769a"
+        },
+        {
+          "path": "docs/ir/core/list.md",
+          "sha256": "sha256:63ca4b012168beb0f557b5cf45855e5228dd3a28f567d566e97c4d678de82ad2"
+        },
+        {
+          "path": "docs/ir/core/overview-commands.md",
+          "sha256": "sha256:4ed81cdee315adffa4e8607ec5d5e2a29c80bf8b4fc80f0725481de0c36203f2"
+        },
+        {
+          "path": "docs/ir/core/overview-data.md",
+          "sha256": "sha256:0e32df10808a1c9634bfe5d746741d25f24d503a382c84b97043612f94b1fbcd"
+        },
+        {
+          "path": "docs/ir/core/overview-output.md",
+          "sha256": "sha256:c4cacb6d55b900915849007a9dacb7f3f0d77745ea54879529383fd0d9d2d57b"
+        },
+        {
+          "path": "docs/ir/core/overview-workflow.md",
+          "sha256": "sha256:cd1f435883492d2ac6350f7af137fa34fb12f6bcd2f8d78438475ada2689b931"
+        },
+        {
+          "path": "docs/ir/core/query.md",
+          "sha256": "sha256:3808dfa0f1d8f77dfb0e1c5600b93d62c9d143340d0326ee7b8683e95776ba11"
+        },
+        {
+          "path": "docs/ir/core/skill-references.md",
+          "sha256": "sha256:3d2b78288e4ad1a94af60e0f6390a34dc19ba33e6fdc1eed2ceb64d5fb970211"
+        },
+        {
+          "path": "docs/ir/core/status.md",
+          "sha256": "sha256:8355f73b0327c432e649374eb6f12a80495c4be27a4c614fb8cd1adfedc422fe"
         },
         {
           "path": "docs/ir/core/surface.md",
@@ -944,20 +1232,74 @@
         {
           "path": "docs/ir/schema/schema-resolution.md",
           "sha256": "sha256:d428d3c11dd0bf38c0cc6859a9ef11703be781f29b5225270f137ff9a74d8fbf"
+        },
+        {
+          "path": "docs/ir/view/CONTEXT.md",
+          "sha256": "sha256:6ef3d025e7d99f695d5c102bbd937139237934f1ef94360577d4adeac4766ebf"
+        },
+        {
+          "path": "docs/ir/view/parts.md",
+          "sha256": "sha256:ece45673ae200fe07e0bea8edcc798e10ac8a9b3221ae171ab85db8350a5e44e"
+        },
+        {
+          "path": "docs/ir/view/rendering.md",
+          "sha256": "sha256:f0b61e15ad3669ba7becf082dd012b355c824e519ffcef6109027556072788a9"
         }
       ],
       "conclusion": "existing",
-      "reason": "The seven-package restructuring implements the approved synchronous and optional Tokio contracts while retaining both CLI contracts. Core admits configuration and enabled groups, retains original source identity and text, and computes read and check results through shared private phases. Logical SourceText remains canonical; native acquisition carries lossless PathBuf provenance separately from producer display/rule spellings, preserving the BASE-supported display collisions, counts and matching. Opaque preparation parses each IR file before later acquisition and checks guide overlap after enumeration but before guide bodies and surface acquisition. Public changes inspection validates consumed configuration while fact-only evaluation stays independent. Results remain read-only, CLI conversion remains CLI-owned, and useful facade aliases retain lower-type identity. List/query member order is restored without changing values, nulls or arrays. Canonical version fixtures retain intentional mismatches, transformations and real production rollback; inherited change-record diagnostic assertions are unchanged. The previously authorized two schema verification references and newly authorized three acquisition verification references preserve requirement meaning. The linked stop guide was reviewed and only its related fingerprint refreshed. Chronological repair RED, GREEN and REFACTOR evidence, current workspace/CLI/source-consumer checks and exact baseline differences are retained separately. The earlier broader constructor TDD deviation is not relabeled. Final sealed-head shipped-artifact and full mutation gates remain deferred pending parent-owned review; historical archives and raw mutation misses do not prove this candidate. This implementer record does not claim independent approval or integration readiness. Legacy collected-file acquisition preserves the BASE lossy absolute read selection and ordering for tests, guides, surfaces and change records while retaining distinct lossless enumeration identities. Original IR and decision-source PathBuf reads remain unchanged. Text consistency compares actually acquired source by enumeration identity, without inode discovery, merging legacy read aliases or weakening public admission. The byte-filename-only stop and byte-name-plus-replacement multiplicity are covered by chronological producer-grounded regressions, and the approved backslash collision remains an exact BASE output match. Planning A14 records this preservation adjudication without any further IR edit. The user-authorized mutation repair enables all features only in the mutation lane and preserves ordinary default tests and the existing selection, resource, checksum and policy gates. Producer-grounded public-observation assertions cover retained IR/native paths, references, preparation configuration, required guides and acquired-analysis text, public surface evaluation, schema open/relax extraction, loaded document content, reachable error Display and facade error classification. No original product defect was established or production Rust edited; passing original-code tests and bounded mutant sensitivity are not relabeled as test-first RED. Only the three independently challenged ParseError substitutions are registered under A16's locked producer/serialization proof and explicit manual invalidation conditions, without implying automatic dependency staleness or independent approval of these new entries. The failed 680-outcome sealed mutation run is historical evidence, not a pass or replaced by probes. Parent-owned reviewer grounds remain untouched and stale; final shipped-artifact/full mutation awaits independent review and a new seal.",
+      "reason": "The seven-package restructuring implements the approved synchronous and optional Tokio contracts while retaining both CLI contracts. Core admits configuration and enabled groups, retains original source identity and text, and computes read and check results through shared private phases. Logical SourceText remains canonical; native acquisition carries lossless PathBuf provenance separately from producer display/rule spellings, preserving the BASE-supported display collisions, counts and matching. Opaque preparation parses each IR file before later acquisition and checks guide overlap after enumeration but before guide bodies and surface acquisition. Public changes inspection validates consumed configuration while fact-only evaluation stays independent. Results remain read-only, CLI conversion remains CLI-owned, and useful facade aliases retain lower-type identity. List/query member order is restored without changing values, nulls or arrays. Canonical version fixtures retain intentional mismatches, transformations and real production rollback; inherited change-record diagnostic assertions are unchanged. The previously authorized two schema verification references and newly authorized three acquisition verification references preserve requirement meaning. The linked stop guide was reviewed and only its related fingerprint refreshed. Chronological repair RED, GREEN and REFACTOR evidence, current workspace/CLI/source-consumer checks and exact baseline differences are retained separately. The earlier broader constructor TDD deviation is not relabeled. Final sealed-head shipped-artifact and full mutation gates remain deferred pending parent-owned review; historical archives and raw mutation misses do not prove this candidate. This implementer record does not claim independent approval or integration readiness. Legacy collected-file acquisition preserves the BASE lossy absolute read selection and ordering for tests, guides, surfaces and change records while retaining distinct lossless enumeration identities. Original IR and decision-source PathBuf reads remain unchanged. Text consistency compares actually acquired source by enumeration identity, without inode discovery, merging legacy read aliases or weakening public admission. The byte-filename-only stop and byte-name-plus-replacement multiplicity are covered by chronological producer-grounded regressions, and the approved backslash collision remains an exact BASE output match. Planning A14 records this preservation adjudication without any further IR edit. The user-authorized mutation repair enables all features only in the mutation lane and preserves ordinary default tests and the existing selection, resource, checksum and policy gates. Producer-grounded public-observation assertions cover retained IR/native paths, references, preparation configuration, required guides and acquired-analysis text, public surface evaluation, schema open/relax extraction, loaded document content, reachable error Display and facade error classification. No original product defect was established or production Rust edited; passing original-code tests and bounded mutant sensitivity are not relabeled as test-first RED. Only the three independently challenged ParseError substitutions are registered under A16's locked producer/serialization proof and explicit manual invalidation conditions, without implying automatic dependency staleness or independent approval of these new entries. The failed 680-outcome sealed mutation run is historical evidence, not a pass or replaced by probes. Parent-owned reviewer grounds remain untouched and stale; final shipped-artifact/full mutation awaits independent review and a new seal. On top of that restructuring, the branch implements the approved overview specification inside its requirements and the 2026-10-04 placement decisions: kotowari-markdown-view renders the render input into pages and publishes the eight part schemas without touching files; kotowari-overview checks overview data from texts and an already read ReadModel and builds the reference table, stale sections and render input; core gains only the overview finding kinds, the overview.files key, a generic named finding group, guide-mark reading of one text, and read-only access to read documents and source targets; the kotowari library reads overview data, checks overlaps and passes the overview group, and offers overview_prepare and overview_build writing only under .kotowari/cache/overview; kotowari-cli adds overview build and serve (tiny_http, ctrlc). Skill texts add the approval steps and the overview reference. Every behaviour is covered by marked tests or the review requirements REQ-core-287, REQ-core-300 to REQ-core-303, REQ-core-306 and REQ-core-307.",
       "requirements": [
+        "REQ-core-001",
+        "REQ-core-002",
+        "REQ-core-004",
+        "REQ-core-008",
+        "REQ-core-014",
+        "REQ-core-018",
+        "REQ-core-019",
+        "REQ-core-027",
         "REQ-core-041",
         "REQ-core-054",
         "REQ-core-092",
+        "REQ-core-102",
         "REQ-core-105",
         "REQ-core-109",
         "REQ-core-120",
+        "REQ-core-125",
+        "REQ-core-127",
+        "REQ-core-152",
+        "REQ-core-158",
+        "REQ-core-162",
         "REQ-core-179",
         "REQ-core-199",
         "REQ-core-228",
+        "REQ-core-278",
+        "REQ-core-279",
+        "REQ-core-280",
+        "REQ-core-281",
+        "REQ-core-282",
+        "REQ-core-283",
+        "REQ-core-284",
+        "REQ-core-285",
+        "REQ-core-286",
+        "REQ-core-287",
+        "REQ-core-288",
+        "REQ-core-289",
+        "REQ-core-290",
+        "REQ-core-291",
+        "REQ-core-292",
+        "REQ-core-293",
+        "REQ-core-294",
+        "REQ-core-295",
+        "REQ-core-296",
+        "REQ-core-297",
+        "REQ-core-298",
+        "REQ-core-299",
+        "REQ-core-300",
+        "REQ-core-301",
+        "REQ-core-302",
+        "REQ-core-303",
+        "REQ-core-304",
+        "REQ-core-305",
         "REQ-core-306",
         "REQ-core-307",
         "REQ-core-308",
@@ -988,7 +1330,22 @@
         "REQ-schema-072",
         "REQ-schema-073",
         "REQ-schema-074",
-        "REQ-schema-075"
+        "REQ-schema-075",
+        "REQ-view-001",
+        "REQ-view-002",
+        "REQ-view-003",
+        "REQ-view-004",
+        "REQ-view-005",
+        "REQ-view-006",
+        "REQ-view-007",
+        "REQ-view-008",
+        "REQ-view-009",
+        "REQ-view-010",
+        "REQ-view-011",
+        "REQ-view-012",
+        "REQ-view-013",
+        "REQ-view-014",
+        "REQ-view-015"
       ],
       "decisions": [
         "docs/decision/records/2026-10-03-public-crate-api.md#D1",
@@ -1002,7 +1359,57 @@
         "docs/decision/records/2026-10-03-public-crate-api-plan.md#A13",
         "docs/decision/records/2026-10-03-public-crate-api-plan.md#A14",
         "docs/decision/records/2026-10-03-public-crate-api-plan.md#A15",
-        "docs/decision/records/2026-10-03-public-crate-api-plan.md#A16"
+        "docs/decision/records/2026-10-03-public-crate-api-plan.md#A16",
+        "docs/decision/records/2026-10-04-overview-on-public-api.md#A1",
+        "docs/decision/records/2026-10-04-overview-on-public-api.md#A2",
+        "docs/decision/records/2026-10-04-overview-on-public-api.md#A3",
+        "docs/decision/records/2026-10-04-overview-on-public-api.md#A4",
+        "docs/decision/records/2026-10-04-overview-on-public-api.md#A5",
+        "docs/decision/records/2026-10-04-overview-on-public-api.md#A6",
+        "docs/decision/records/2026-10-04-overview-on-public-api.md#A7",
+        "docs/decision/records/2026-10-04-overview-on-public-api.md#A8",
+        "docs/decision/records/2026-10-02-whole-picture.md#A22",
+        "docs/decision/records/2026-10-02-whole-picture.md#A25",
+        "docs/decision/records/2026-10-02-whole-picture.md#A27",
+        "docs/decision/records/2026-10-02-whole-picture.md#A28",
+        "docs/decision/records/2026-10-02-whole-picture.md#A29",
+        "docs/decision/records/2026-10-02-whole-picture.md#A33",
+        "docs/decision/records/2026-10-02-whole-picture.md#A37",
+        "docs/decision/records/2026-10-02-whole-picture.md#A40",
+        "docs/decision/records/2026-10-02-whole-picture.md#A41",
+        "docs/decision/records/2026-10-02-whole-picture.md#A42",
+        "docs/decision/records/2026-10-02-whole-picture.md#A45",
+        "docs/decision/records/2026-10-02-whole-picture.md#A46",
+        "docs/decision/records/2026-10-02-whole-picture.md#A49",
+        "docs/decision/records/2026-10-02-whole-picture.md#A53",
+        "docs/decision/records/2026-10-02-whole-picture.md#A54",
+        "docs/decision/records/2026-10-02-whole-picture.md#A58",
+        "docs/decision/records/2026-10-02-whole-picture.md#A59",
+        "docs/decision/records/2026-10-02-whole-picture.md#A61",
+        "docs/decision/records/2026-10-02-whole-picture.md#A62",
+        "docs/decision/records/2026-10-02-whole-picture.md#A63",
+        "docs/decision/records/2026-10-02-whole-picture.md#A64",
+        "docs/decision/records/2026-10-02-whole-picture.md#A65",
+        "docs/decision/records/2026-10-02-whole-picture.md#A66",
+        "docs/decision/records/2026-10-02-whole-picture.md#A67",
+        "docs/decision/records/2026-10-02-whole-picture.md#A68",
+        "docs/decision/records/2026-10-02-whole-picture.md#A69",
+        "docs/decision/records/2026-10-02-whole-picture.md#A71",
+        "docs/decision/records/2026-10-02-whole-picture.md#A72",
+        "docs/decision/records/2026-10-02-whole-picture.md#A73",
+        "docs/decision/records/2026-10-02-whole-picture.md#A74",
+        "docs/decision/records/2026-10-02-whole-picture.md#A75",
+        "docs/decision/records/2026-10-02-whole-picture.md#A76",
+        "docs/decision/records/2026-10-02-whole-picture.md#A77",
+        "docs/decision/records/2026-10-02-whole-picture.md#A78",
+        "docs/decision/records/2026-10-02-whole-picture.md#A79",
+        "docs/decision/records/2026-10-02-whole-picture.md#A80",
+        "docs/decision/records/2026-10-02-whole-picture.md#A81",
+        "docs/decision/records/2026-10-02-whole-picture.md#A82",
+        "docs/decision/records/2026-10-02-whole-picture.md#A83",
+        "docs/decision/records/2026-10-02-whole-picture.md#A84",
+        "docs/decision/records/2026-10-02-whole-picture.md#A85",
+        "docs/decision/records/2026-10-02-whole-picture.md#A86"
       ],
       "handoff": null,
       "gaps": []
