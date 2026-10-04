@@ -17,7 +17,7 @@
 
 ## 種類の一覧
 
-<!-- @kotowari[TBL-core-008:4eb267cb, TBL-core-009:e42a4a68, TBL-core-019:508f1afa, REQ-core-027:d02224c9] -->
+<!-- @kotowari[TBL-core-008:88b0f60c, TBL-core-009:e42a4a68, TBL-core-019:508f1afa, REQ-core-027:f49770f5] -->
 
 「行」の列は、指摘の `line` が指す行です。
 「なし」は文書全体への指摘で、`line` は null、text では `-` になります。
@@ -79,6 +79,11 @@
 | `overview_ir_shared` | 誤り | 2つ以上の全体像の元データの `ir` にある IR の文書のパス | なし | [全体像の元データ](../ir/core/overview-data.md) |
 | `overview_ref_unresolved` | 誤り | 参照の文字 | 部品のフェンスの開始の行 | [全体像の元データ](../ir/core/overview-data.md) |
 | `overview_name_conflict` | 誤り | `.md` を除いたファイル名 | なし | [全体像の元データ](../ir/core/overview-data.md) |
+| `overview_toc_invalid` | 誤り | 目次の合わなかった場所（`overview_part_invalid` と同じ書き方。値の全体は `(root)`、YAML として読めないときは `(yaml)`） | なし | [目次の検査](../ir/core/overview-toc.md) |
+| `overview_toc_page_missing` | 誤り | 目次に無い全体像の元データの名前（`.md` を除いたファイル名） | なし | [目次の検査](../ir/core/overview-toc.md) |
+| `overview_toc_page_unknown` | 誤り | 全体像の元データの無い名前の項目の JSON Pointer（例 `/items/1`） | なし | [目次の検査](../ir/core/overview-toc.md) |
+| `overview_toc_page_duplicate` | 誤り | 同じ名前の2つ目以降の項目の JSON Pointer | なし | [目次の検査](../ir/core/overview-toc.md) |
+| `overview_toc_group_empty` | 誤り | `items` が空の群の JSON Pointer。いちばん外側なら `(root)` | なし | [目次の検査](../ir/core/overview-toc.md) |
 | `too_many_lines` | 注意 | 行数 | なし | [文書の大きさ](#文書の大きさ) |
 | `too_many_requirements` | 注意 | 要求の数 | なし | [文書の大きさ](#文書の大きさ) |
 | `mutant_timeout` | 注意 | 変更の説明 | 変異の結果の行 | [mutants と plan](#mutants-と-plan) |

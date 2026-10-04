@@ -141,18 +141,18 @@ CI では終了コードだけで「直す必要があるか」を判定でき�
 
 ### 停止の理由
 
-<!-- @kotowari[TBL-core-018:f0f06a36, TBL-core-020:62dce3a2, TBL-core-001:9dd79638] -->
+<!-- @kotowari[TBL-core-018:f0f06a36, TBL-core-020:62dce3a2, TBL-core-001:f4c46b26] -->
 
 | 1行目の文言 | 理由 | 詳細 | 主な場面 |
 |---|---|---|---|
 | `argument error` | 引数の誤り | 説明の文と問題の引数 | 知らないオプション、`--format` の知らない値、値の無いオプション、同じオプションの2回目、余分な位置引数、`--config` の先が無いかディレクトリ、`overview` の後が `build` か `serve` の1つでない、`--port` の値が1から65535の整数でない |
-| `config error` | 設定の誤り | 設定ファイルの相対パスと誤りの説明（`tests.rules` と `surface.rules` のルールのファイル、等価の一覧、未記載の面の一覧の誤りではそのファイルの相対パス。置き場の重なりでは重なったファイルと `: matched by both ...`。`overview` の鍵が無いまま `overview build` か `serve` を実行したときは `overview is not configured` だけ） | 設定ファイルが YAML として読めない、知らないキー、同じキーの2回目、型の違う値、glob として読めない要素、`surface.files` と `surface.rules` の片方だけ、`tests.rules` か `surface.rules` のルールのファイルが無いか読めない、未記載の面の一覧が YAML として読めないか最上位が並びでない、`overview.files` がガイドかテストの置き場と重なる、`overview` の鍵が無いまま `overview build` か `serve` を実行した |
-| `unreadable file` | 読めないファイル | 相対パスと OS の誤りの文 | 置き場のディレクトリが無い、ファイルやディレクトリが読めない、`surface.unspecified` の指す先が無い |
+| `config error` | 設定の誤り | 設定ファイルの相対パスと誤りの説明（`tests.rules` と `surface.rules` のルールのファイル、等価の一覧、未記載の面の一覧の誤りではそのファイルの相対パス。置き場の重なりでは重なったファイルと `: matched by both ...`。`overview` の鍵が無いまま `overview build` か `serve` を実行したときは `overview is not configured` だけ） | 設定ファイルが YAML として読めない、知らないキー、同じキーの2回目、型の違う値、glob として読めない要素、`surface.files` と `surface.rules` の片方だけ、`tests.rules` か `surface.rules` のルールのファイルが無いか読めない、未記載の面の一覧が YAML として読めないか最上位が並びでない、`overview.files` がガイドかテストの置き場と重なる、`overview` に `toc` が無い、目次のファイルが `overview.files`、`guides.files`、`tests.files` のどれかの走査で読むファイルに入る、`overview` の鍵が無いまま `overview build` か `serve` を実行した |
+| `unreadable file` | 読めないファイル | 相対パスと OS の誤りの文 | 置き場のディレクトリが無い、ファイルやディレクトリが読めない、`surface.unspecified` か `overview.toc` の指す先が無い |
 | `non-UTF-8 file` | UTF-8 でないファイル | 相対パス | 読むファイルのどれかが UTF-8 でない（面のファイルは面の規則の言語のものだけを読む） |
 | `results error` | 結果の誤り | 結果のファイルの相対パスと誤りの説明 | `mutants` の結果のファイルの形が壊れている |
 | `git error` | Git の読み取り停止 | 読めない履歴・対象・index の説明 | Git が無い、REV が commit に解決できない、設定が対象に無い、競合した index、不対応の対象 |
 | `mapping error` | 写しの誤り | 写せなかった指摘の種類か値の説明 | kotowari の内部の不整合。利用者の入力では起きない想定 |
-| `overview error` | 元データの誤り | 誤りの件数と ` errors in overview data; run kotowari check` | `overview build` か `serve` で全体像の元データに誤りがある。何も書かない |
+| `overview error` | 元データの誤り | 誤りの件数と ` errors in overview data; run kotowari check` | `overview build` か `serve` で全体像の元データか目次に誤りがある。何も書かない |
 | `port error` | ポートの誤り | `127.0.0.1:<ポート>: ` と OS の誤りの文 | `overview serve` で指定のポートを使えない（ほかのポートは試さない）か、配っている間に接続の受け付けに失敗した |
 | `cache error` | 置き場の誤り | 問題のパスの相対パスと、OS の誤りがあれば `: ` と OS の誤りの文 | `overview build` か `serve` で `.kotowari`、`.kotowari/cache`、`.kotowari/cache/overview` のどれかがシンボリックリンクかディレクトリでないファイル（何も書かず消さない）、または置き場の作成・書き込み・削除に失敗した |
 

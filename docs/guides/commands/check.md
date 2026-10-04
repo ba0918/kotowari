@@ -31,7 +31,7 @@ kotowari check [--format json|text] [--config <path>]
 
 ## 読むもの
 
-<!-- @kotowari[TBL-core-004:c1821ec9] -->
+<!-- @kotowari[TBL-core-004:647c5bdd, REQ-core-325:05c0afbf] -->
 
 `check` は、設定ファイルが指す置き場から、次のものを読みます。
 
@@ -45,6 +45,7 @@ kotowari check [--format json|text] [--config <path>]
 | 面のファイルと面の規則のファイル | `surface.files`、`surface.rules` | 空（読まない） |
 | 未記載の面の一覧 | `surface.unspecified` | 無し（0件） |
 | 全体像の元データ | `overview.files` | 無し（`overview` の鍵が無ければ読まない） |
+| 全体像の目次 | `overview.toc` | 無し（`overview` の鍵が無ければ読まない。鍵があれば必須で、指す先が無いか読めなければ止まる） |
 
 面の3つは `surface.rules` が空の一覧でないときだけ読みます（[面の検査](../surface.md)）。
 キーの全部は [config.md](../config.md) にあります。
@@ -156,13 +157,13 @@ glob を書き間違えても指摘は出ないので、ここで確かめます
 
 ### 指摘の並びと行
 
-<!-- @kotowari[TBL-core-007:d8427397, REQ-core-027:d02224c9, TBL-core-019:508f1afa] -->
+<!-- @kotowari[TBL-core-007:d8427397, REQ-core-027:f49770f5, TBL-core-019:508f1afa] -->
 
 指摘は `path`、`line`（null が先）、`kind`、`detail` の順に並びます（[cli.md](../cli.md#指摘の並び)）。
 同じ行の指摘は、種類の名前の順に並びます。
 
 `line` は種類ごとに決まっています。
-文書全体への指摘（`missing_title`、`missing_scope`、`too_many_lines` など）と、未記載の面の一覧の1件への指摘、全体像の元データの `overview_lead_missing`、`overview_ir_missing`、`overview_ir_shared`、`overview_name_conflict` は null、項目への指摘は項目の見出しの行、シナリオへの指摘はタグの行、`surface_without_spec` は面の節の最初の行です。
+文書全体への指摘（`missing_title`、`missing_scope`、`too_many_lines` など）と、未記載の面の一覧の1件への指摘、全体像の元データの `overview_lead_missing`、`overview_ir_missing`、`overview_ir_shared`、`overview_name_conflict` と、目次の `overview_toc_invalid`、`overview_toc_page_missing`、`overview_toc_page_unknown`、`overview_toc_page_duplicate`、`overview_toc_group_empty` は null、項目への指摘は項目の見出しの行、シナリオへの指摘はタグの行、`surface_without_spec` は面の節の最初の行です。
 `overview_form_invalid` は形に合わない行（文書全体にかかるものは null）、`overview_part_unknown`、`overview_part_invalid`、`overview_ref_unresolved` は部品のフェンスの開始の行です。
 種類ごとの行は [findings.md](../findings.md#種類の一覧) の表にあります。
 

@@ -157,7 +157,7 @@ docs/ir/greet/greet.md:15 [notice] deferred_with_test REQ-greet-003
 
 ## 宣言の誤り
 
-<!-- @kotowari[REQ-core-209:9672da47, REQ-core-210:3ab477dc, REQ-core-115:16c7309b, TBL-core-008:4eb267cb, TBL-core-019:508f1afa] -->
+<!-- @kotowari[REQ-core-209:9672da47, REQ-core-210:3ab477dc, REQ-core-115:16c7309b, TBL-core-008:88b0f60c, TBL-core-019:508f1afa] -->
 
 `- deferred:` の値は `- source:` と同じ規則で検査します。
 誤りの行は、その `- deferred:` の行です。
