@@ -2,22 +2,73 @@
   "version": 1,
   "entries": [
     {
-      "id": "macos-15-release-implementation",
-      "base": "9f615b756a55589ab38a663e713c79e3959dca96",
+      "id": "mutants-in-ci-implementation",
+      "base": "d0646650ba983c4ae951d0f0eb6b66074963d6cf",
       "role": "implementer",
       "files": [
         {
+          "path": ".github/workflows/mutants-run.yml",
+          "before": null,
+          "after": "sha256:9a06df8256ad96e16b427641850692d7ff98b415c550fbea4183fe96a55a0086"
+        },
+        {
+          "path": ".github/workflows/mutants.yml",
+          "before": null,
+          "after": "sha256:324dba36e0c729ee3f5cf4e702d51c13eb0591c74280423fadb36761b43396d8"
+        },
+        {
           "path": ".github/workflows/release.yml",
-          "before": "sha256:8fa8d97e5286df9108876e7cf5133f84b19c12a2548958b98a0b76a4f0cdd1ac",
-          "after": "sha256:81a0f1f63a2465e1e644877703ef84786dab3298f9c5c40c12ae1f18c5edd21e"
+          "before": "sha256:81a0f1f63a2465e1e644877703ef84786dab3298f9c5c40c12ae1f18c5edd21e",
+          "after": "sha256:2391e6eae7ce1cdc4a9b997abbdfa6116b190e71ce3d8cac975666d0852933e5"
+        },
+        {
+          "path": "PROJECT.md",
+          "before": "sha256:aa8b4c6b51be483bec0aacb73643d0b434184490ec39328ec76d5388eedea50a",
+          "after": "sha256:1c3cf6d5e653e8d7969828777a1d61504916db73af7c750fd825e36c440094e0"
+        },
+        {
+          "path": "agent/skills/kotowari-cycle/SKILL.md",
+          "before": "sha256:934957edd6f100e9a64f40f5efd9bb3266b7003249dadf98baf076ee75ec271c",
+          "after": "sha256:2041e574b1ff179846dd71436b0bc881ba15c1f27db010c50a3db29d2f2393e4"
+        },
+        {
+          "path": "agent/skills/kotowari-implement/SKILL.md",
+          "before": "sha256:d5c4e0027e2376c9bac2035c1e71c15454fbe077aa62208dff8d09d6055083a9",
+          "after": "sha256:37541622de32fe8ca91490f8306301771bb7d913f2f966718f03ef1ed31af3cf"
+        },
+        {
+          "path": "agent/skills/kotowari/references/mutants.md",
+          "before": "sha256:9eb99d1855674312ad97432ca2d5e50af2b2e821b29cdc54aa0a6bf3a2b00dae",
+          "after": "sha256:1cc3d1f319f3f10d1a5b30ae45c6b025b549556943498c495bcd851eed2ddd3e"
+        },
+        {
+          "path": "lefthook.yml",
+          "before": "sha256:2837e92c840e335d40b7e9f1f3a77dcf397a56bb36974ffebe57955f8b8810ac",
+          "after": "sha256:4c10f27d3c64f9957151f0ab4e5bd0bc8e7b7c21c30195064d8c2aac981ef79a"
+        },
+        {
+          "path": "scripts/mutants.sh",
+          "before": "sha256:a179e696ae83b3792c42d03997cf5eae8634c831e1552fcfb1bb92ed9883fc66",
+          "after": "sha256:daae2ef9759d01b2152c620d6cd4142a7dfbc0d1712761c36d8058fb6356379c"
+        },
+        {
+          "path": "scripts/release.sh",
+          "before": "sha256:2eab50b8c7c7080b740ead4492721c17f5adfd458f0ee9552f34e867cec5100c",
+          "after": "sha256:dc2245a5518d068b7283e4bb740390e87ce6d34e30846fdea9b2a4746e7a8523"
         }
       ],
       "ir": [],
       "conclusion": "new",
-      "reason": "macos-14 の提供終了に備え、A7 に従って ARM64 runner を macos-15 へ移す。Linux x86_64 と macOS ARM64 の配布先、製品別パッケージ、deployment target、公開条件は変えない。",
+      "reason": "変異テストを pre-push から外し、PR（マージ基準からの差分）とリリース（同じ製品の1つ前のタグからの差分、無ければ全体）の GitHub Actions で8分割して回す。見逃しの判定は従来どおり scripts/mutants.sh が kotowari mutants に読ませて行い、等価の一覧と mutants::skip の検査、設定を読まない実行は変えない。手元の既定の同時実行数は測定の結果1のまま。関門の設定は IR に書かない決まり（A8）なので IR は変えない。 pre-push のテストの前に GIT_ で始まる環境変数を外す。worktree からの push で git がフックに渡す GIT_DIR がテストに引き継がれ、本物のリポジトリを書き換えたため（使い捨てのリポジトリを GIT_DIR に指して再現し、外すと書き換わらないことを確かめた）。",
       "requirements": [],
       "decisions": [
-        "docs/decision/records/2026-09-26-release-flow.md#A7"
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A1",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A2",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A3",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A4",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A5",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A6",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A8"
       ],
       "handoff": null,
       "gaps": []

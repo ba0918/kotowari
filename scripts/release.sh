@@ -171,14 +171,19 @@ done_ok=1
 
 cat <<EOF
 
-${tag} を作った（まだ push していない）。公開するには次を打つ:
+${tag} を作った（まだ push していない）。main は必須のチェックが通った commit しか受け付けないので、
+まずリリースの commit をブランチに push して PR を作り、チェックを通す:
+
+  git push origin HEAD:refs/heads/release/${tag}
+  gh pr create --base main --head release/${tag} --fill
+
+PR のチェックが通ったら、同じ commit の main とタグを push する:
 
   git push origin main && git push origin ${tag}
 
 main の push が通ってからタグを push する（main が拒まれたらタグは出さない）。
-
-タグの push では pre-push のフックが前のリリースのタグとの差分の変異テストを回すので時間がかかる（前のタグが無ければ全体）。
-通れば GitHub Actions がバイナリを付けた GitHub Release を作る。
+タグの push で GitHub Actions が前のリリースのタグとの差分の変異テストを回し（前のタグが無ければ全体）、
+通ればバイナリを付けた GitHub Release を作る。
 
 push が拒まれたら、まず同名のタグが origin にあるかを確かめる:
 

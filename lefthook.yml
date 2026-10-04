@@ -9,13 +9,10 @@
 #   停止（終了コード2）は止める。
 #   ステージした Rust のファイルは rustfmt にかけ直してステージし直す。放っておくと整形が崩れていくため。
 #   edition は Cargo.toml と同じ 2024 を渡す（rustfmt を直に呼ぶと cargo の edition を読まない）。
-# pre-push: テスト全件と、テスト側の指摘も含めた check の終了コード0、
-#   そして差分に入る変異の見逃し0件（判断の記録 docs/decision/records/2026-09-17-mutation-tests.md
-#   の A25、A26、A27）。時間がかかるので push 側に置く。テストの無い要求は push で止まる。
-#   mutants は cargo-test と kotowari-check の後に直列で走る（名前の順）。
-#   push される参照にタグがあれば同じ製品の1つ前のリリースのタグとの差分（前のタグが無ければ全体）、
-#   無ければ origin/main との差分だけを走らせる（docs/decision/records/2026-09-27-release-mutants-scope.md の A1）。
-#   その判定にフックの標準入力の行が要るので use_stdin を立てる。
+# pre-push: テスト全件と、テスト側の指摘も含めた check の終了コード0。テストの無い要求は push で止まる。
+#   変異テストはここでは回さない。push のたびに1〜2時間止まっていたため、見逃し0件の関門は
+#   PR の CI（.github/workflows/mutants.yml）とリリースの CI（release.yml）に移した
+#   （判断の記録 docs/decision/records/2026-10-04-mutants-in-ci.md の A1〜A4）。
 pre-commit:
   commands:
     rustfmt:
@@ -38,9 +35,10 @@ pre-commit:
 pre-push:
   commands:
     cargo-test:
-      run: CARGO_BUILD_JOBS=4 cargo test
+      # git はフックに GIT_DIR などを渡す（worktree からの push で実測）。残したままだと、テストが
+      # 一時ディレクトリに作るつもりのリポジトリへの git の操作が、push している本物のリポジトリに向かう
+      run: |
+        for v in $(env | sed -n 's/^\(GIT_[A-Za-z0-9_]*\)=.*/\1/p'); do unset "$v"; done
+        CARGO_BUILD_JOBS=4 cargo test
     kotowari-check:
       run: CARGO_BUILD_JOBS=4 cargo run -q -- check --format text
-    mutants:
-      run: scripts/mutants.sh hook
-      use_stdin: true

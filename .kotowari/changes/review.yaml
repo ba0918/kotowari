@@ -2,22 +2,73 @@
   "version": 1,
   "entries": [
     {
-      "id": "macos-15-release-independent-review",
-      "base": "9f615b756a55589ab38a663e713c79e3959dca96",
+      "id": "mutants-in-ci-independent-review",
+      "base": "d0646650ba983c4ae951d0f0eb6b66074963d6cf",
       "role": "reviewer",
       "files": [
         {
+          "path": ".github/workflows/mutants-run.yml",
+          "before": null,
+          "after": "sha256:9a06df8256ad96e16b427641850692d7ff98b415c550fbea4183fe96a55a0086"
+        },
+        {
+          "path": ".github/workflows/mutants.yml",
+          "before": null,
+          "after": "sha256:324dba36e0c729ee3f5cf4e702d51c13eb0591c74280423fadb36761b43396d8"
+        },
+        {
           "path": ".github/workflows/release.yml",
-          "before": "sha256:8fa8d97e5286df9108876e7cf5133f84b19c12a2548958b98a0b76a4f0cdd1ac",
-          "after": "sha256:81a0f1f63a2465e1e644877703ef84786dab3298f9c5c40c12ae1f18c5edd21e"
+          "before": "sha256:81a0f1f63a2465e1e644877703ef84786dab3298f9c5c40c12ae1f18c5edd21e",
+          "after": "sha256:2391e6eae7ce1cdc4a9b997abbdfa6116b190e71ce3d8cac975666d0852933e5"
+        },
+        {
+          "path": "PROJECT.md",
+          "before": "sha256:aa8b4c6b51be483bec0aacb73643d0b434184490ec39328ec76d5388eedea50a",
+          "after": "sha256:1c3cf6d5e653e8d7969828777a1d61504916db73af7c750fd825e36c440094e0"
+        },
+        {
+          "path": "agent/skills/kotowari-cycle/SKILL.md",
+          "before": "sha256:934957edd6f100e9a64f40f5efd9bb3266b7003249dadf98baf076ee75ec271c",
+          "after": "sha256:2041e574b1ff179846dd71436b0bc881ba15c1f27db010c50a3db29d2f2393e4"
+        },
+        {
+          "path": "agent/skills/kotowari-implement/SKILL.md",
+          "before": "sha256:d5c4e0027e2376c9bac2035c1e71c15454fbe077aa62208dff8d09d6055083a9",
+          "after": "sha256:37541622de32fe8ca91490f8306301771bb7d913f2f966718f03ef1ed31af3cf"
+        },
+        {
+          "path": "agent/skills/kotowari/references/mutants.md",
+          "before": "sha256:9eb99d1855674312ad97432ca2d5e50af2b2e821b29cdc54aa0a6bf3a2b00dae",
+          "after": "sha256:1cc3d1f319f3f10d1a5b30ae45c6b025b549556943498c495bcd851eed2ddd3e"
+        },
+        {
+          "path": "lefthook.yml",
+          "before": "sha256:2837e92c840e335d40b7e9f1f3a77dcf397a56bb36974ffebe57955f8b8810ac",
+          "after": "sha256:4c10f27d3c64f9957151f0ab4e5bd0bc8e7b7c21c30195064d8c2aac981ef79a"
+        },
+        {
+          "path": "scripts/mutants.sh",
+          "before": "sha256:a179e696ae83b3792c42d03997cf5eae8634c831e1552fcfb1bb92ed9883fc66",
+          "after": "sha256:daae2ef9759d01b2152c620d6cd4142a7dfbc0d1712761c36d8058fb6356379c"
+        },
+        {
+          "path": "scripts/release.sh",
+          "before": "sha256:2eab50b8c7c7080b740ead4492721c17f5adfd458f0ee9552f34e867cec5100c",
+          "after": "sha256:dc2245a5518d068b7283e4bb740390e87ce6d34e30846fdea9b2a4746e7a8523"
         }
       ],
       "ir": [],
       "conclusion": "new",
-      "reason": "Independent review confirms the only workflow change is the ARM64 runner label from macos-14 to macos-15, matching the approved A7 update. The official retirement notice https://github.com/actions/runner-images/issues/13518 recommends macos-15, and https://github.com/actions/runner-images/blob/main/README.md lists that label as ARM64. The Linux and macOS target triples, Rust setup and build arguments, deployment-target configuration, product selection, archive and checksum steps, triggers, permissions and publication steps remain byte-for-byte unchanged. PROJECT.md places release policy outside the IR, so no IR reconciliation is required. No blocking finding in this diff. Actual macOS build, packaged binary compatibility and release execution were not tested by this review; this record does not claim those runtime outcomes or completion of the final integration gates.",
+      "reason": "Independent review of the move of the mutation-testing gate from the lefthook pre-push hook to GitHub Actions. Read the full diff from d0646650 to HEAD and the resulting scripts/mutants.sh, mutants-run.yml, mutants.yml and release.yml. Verified: actionlint 1.7.12 reports no error on all workflows; bash -n passes on scripts/mutants.sh; the reusable call's with: uses inputs/github contexts, not env; shards 0..7 with --shard k/8 match cargo-mutants' zero-based indexing; the PR scope is diff from git merge-base of the event base and head SHAs, both reachable after a fetch-depth 0 checkout; the aggregate mutants job fails unless both the scope and run jobs succeeded, including skipped or cancelled cases; scripts/mutants.sh plan run on the local tags yields diff kotowari-v0.2.0 for v0.3.0, diff kotowari-v0.1.0 for v0.2.0 and full for v0.1.0, matching the release scope of the 2026-09-27 record; build now needs mutants so a miss stops the Release; the none service mode keeps --no-config, the mutants::skip guard, the exit-code filter and the kotowari mutants verdict, and equivalent_stale depends on the source text, not on which shard ran; MUTANTS_JOBS is validated before the run and defaults to 1; no remaining caller of the removed hook subcommand exists; kotowari check shows only notices and kotowari changes --phase implementation passes; the decision record, superseded marks, PROJECT.md, release.sh guidance and the three distributed skill texts agree, and the skills name kotowari's CI only as this repository's instance of a project gate. Not run: any actual GitHub Actions execution, branch-protection configuration, cargo-mutants itself, or a release PR round trip; this record does not claim those runtime outcomes. Follow-up review of 12e4113: the pre-push cargo-test command now unsets every environment variable whose name starts with GIT_ before running cargo test, so the GIT_DIR that git passes to hooks during a push from a worktree no longer redirects the git commands of the tests/change_cli.rs fixtures to the real repository. Simulated the exact loop under dash (the sh lefthook runs commands with): GIT_DIR, GIT_WORK_TREE and GIT_INDEX_FILE are removed and an unrelated variable is kept; the sed pattern only yields valid shell names, so it cannot unset anything outside GIT_*. Re-verified the lefthook.yml after-hash at HEAD. Did not run an actual push through lefthook or the test suite under a hook environment.",
       "requirements": [],
       "decisions": [
-        "docs/decision/records/2026-09-26-release-flow.md#A7"
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A1",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A2",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A3",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A4",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A5",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A6",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A8"
       ],
       "handoff": null,
       "gaps": []
