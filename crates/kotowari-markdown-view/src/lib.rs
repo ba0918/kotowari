@@ -115,7 +115,11 @@ pub fn render(input: &RenderInput) -> Vec<Page> {
     pages.insert(INDEX.into(), index::page(&input.toc, &documents));
     pages.insert("style.css".into(), STYLE.into());
     for document in documents.values() {
-        pages.insert(page_name(document), document_page(document, &refs));
+        let place = index::place(&input.toc, &document.name);
+        pages.insert(
+            page_name(document),
+            document_page(document, place.as_ref(), &documents, &refs),
+        );
     }
     pages
         .into_iter()
@@ -127,10 +131,17 @@ fn page_name(document: &Document) -> String {
     format!("{}.html", document.name)
 }
 
-/// 文書のページ。題名、冒頭の lead、lead に続く冒頭の部品、節の順に描く（REQ-view-006）
-fn document_page(document: &Document, refs: &parts::Refs) -> String {
+/// 文書のページ。目次の中の位置、題名、冒頭の lead、lead に続く冒頭の部品、節、同じ目次の群の文書の
+/// 順に描く（REQ-view-006、REQ-view-019、REQ-view-020）
+fn document_page(
+    document: &Document,
+    place: Option<&index::Place>,
+    documents: &index::Documents,
+    refs: &parts::Refs,
+) -> String {
     let mut body = format!(
-        "<nav class=\"crumbs\"><a href=\"{INDEX}\">Overview</a></nav>\n<main class=\"page\">\n<h1>{}</h1>\n",
+        "{}<main class=\"page\">\n<h1>{}</h1>\n",
+        crumbs(place),
         html::escape(&document.title)
     );
     body.push_str(&parts::part(&document.lead, refs));
@@ -147,8 +158,53 @@ fn document_page(document: &Document, refs: &parts::Refs) -> String {
         body.push_str(&blocks(&section.blocks, refs));
         body.push_str("</section>\n");
     }
+    if let Some(place) = place {
+        body.push_str(&siblings(&document.name, place.group, documents));
+    }
     body.push_str("</main>\n");
     html::shell(&document.title, &body)
+}
+
+/// 目次の中の位置。目次に名前が無ければ一覧へのリンクだけ（REQ-view-019）
+fn crumbs(place: Option<&index::Place>) -> String {
+    let links = match place {
+        Some(place) => place
+            .chain
+            .iter()
+            .map(|(title, anchor)| {
+                format!("<a href=\"{INDEX}#{anchor}\">{}</a>", html::escape(title))
+            })
+            .collect::<Vec<_>>()
+            .join("<span class=\"crumb-separator\">/</span>"),
+        None => format!("<a href=\"{INDEX}\">Overview</a>"),
+    };
+    format!("<nav class=\"crumbs\">{links}</nav>\n")
+}
+
+/// 同じ目次の群の直下の、ほかの名前の文書へのリンク（REQ-view-020）
+fn siblings(name: &str, group: &TocGroup, documents: &index::Documents) -> String {
+    let links: String = group
+        .items
+        .iter()
+        .filter_map(|item| match item {
+            TocItem::Document(other) if other != name => documents.get(other.as_str()),
+            _ => None,
+        })
+        .map(|other| {
+            format!(
+                "<li><a href=\"{}\">{}</a></li>",
+                html::href(&page_name(other)),
+                html::escape(&other.title)
+            )
+        })
+        .collect();
+    if links.is_empty() {
+        return links;
+    }
+    format!(
+        "<nav class=\"siblings\">\n<p class=\"siblings-title\">{}</p>\n<ul>{links}</ul>\n</nav>\n",
+        html::escape(&group.title)
+    )
 }
 
 /// 節の中身を描く。続く半分の幅の部品は先頭から2つずつ組にして左右に並べ、

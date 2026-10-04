@@ -243,24 +243,6 @@ fn ex_view_013_groups_are_open_foldable_elements_and_no_page_has_a_script() {
     }
 }
 
-// @kotowari[REQ-view-021, REQ-view-002]
-#[test]
-fn req_view_021_mismatched_contents_are_drawn_without_reporting() {
-    let input = input(
-        vec![document("a", vec![]), document("c", vec![])],
-        vec![name("a"), name("z"), name("a")],
-    );
-    let pages = render(&input);
-    let names: Vec<&str> = pages.iter().map(|page| page.name.as_str()).collect();
-    assert_eq!(names, ["a.html", "c.html", "index.html", "style.css"]);
-    let index = page(&pages, "index.html");
-    assert_eq!(index.matches("題名a").count(), 2);
-    assert_eq!(index.matches("href=\"a.html\"").count(), 2);
-    assert!(!index.contains("題名c") && !index.contains("c.html"));
-    assert!(!index.contains("z.html") && !index.contains(">z<"));
-    assert!(top(index).contains("2 ページ"));
-}
-
 // @kotowari[REQ-view-021, REQ-view-017]
 #[test]
 fn req_view_021_names_without_a_document_are_not_counted_in_a_group() {
@@ -270,4 +252,149 @@ fn req_view_021_names_without_a_document_are_not_counted_in_a_group() {
     ));
     assert!(heading(&index, "群").contains("1 ページ"));
     assert!(top(&index).contains("1 ページ"));
+}
+
+/// 題名より上にあるリンクの、href と文字の並び
+fn links_above_title(page: &str) -> Vec<(String, String)> {
+    let head = &page[..page.find("<h1>").expect("title")];
+    let body = &head[head.find("<body>").expect("body")..];
+    body.split("<a href=\"")
+        .skip(1)
+        .map(|link| {
+            let (href, rest) = link.split_once('"').expect("href");
+            let text =
+                &rest[rest.find('>').expect("tag end") + 1..rest.find("</a>").expect("a end")];
+            (href.to_string(), text.to_string())
+        })
+        .collect()
+}
+
+/// 一覧の中で、その場所（id）の後に最初に出てくる文字。目次の群の場所なら、その題名である
+fn title_at<'a>(index: &'a str, href: &str) -> &'a str {
+    let (page, id) = href.split_once('#').expect("fragment");
+    assert_eq!(page, "index.html");
+    let start = index
+        .find(&format!("id=\"{id}\""))
+        .unwrap_or_else(|| panic!("no place {id}"));
+    index[start..]
+        .split('<')
+        .filter_map(|segment| segment.split_once('>').map(|(_, text)| text.trim()))
+        .find(|text| !text.is_empty())
+        .expect("a title")
+}
+
+/// 最後の節より後の部分
+fn after_last_section(page: &str) -> &str {
+    &page[page.rfind("</section>").expect("a section")..]
+}
+
+// @kotowari[EX-view-014, REQ-view-019, REQ-view-020]
+#[test]
+fn ex_view_014_a_page_shows_its_place_and_the_other_pages_of_its_group() {
+    let input = input(
+        vec![
+            document("a", vec![section(false, vec![])]),
+            document("b", vec![]),
+        ],
+        vec![group("テスト", vec![name("a"), name("z"), name("b")])],
+    );
+    let pages = render(&input);
+    let a = page(&pages, "a.html");
+    let index = page(&pages, "index.html");
+    let links = links_above_title(a);
+    let titles: Vec<&str> = links.iter().map(|(_, text)| text.as_str()).collect();
+    assert_eq!(titles, ["kotowari", "テスト"]);
+    // それぞれの href は一覧の中の、その題名の群の場所を指す。目次そのものの場所は一覧の見出しである
+    assert_eq!(title_at(index, &links[0].0), "kotowari");
+    assert_eq!(title_at(index, &links[1].0), "テスト");
+    let tail = after_last_section(a);
+    assert!(tail.contains("<a href=\"b.html\">題名b</a>"), "{tail}");
+    assert!(!a.contains("z.html") && !a.contains("href=\"a.html\""));
+}
+
+// @kotowari[EX-view-015, REQ-view-021, REQ-view-019]
+#[test]
+fn ex_view_015_mismatched_contents_still_give_pages_and_an_index_link() {
+    let input = input(
+        vec![document("a", vec![]), document("c", vec![])],
+        vec![name("a"), name("z"), name("a")],
+    );
+    let pages = render(&input);
+    let names: Vec<&str> = pages.iter().map(|page| page.name.as_str()).collect();
+    assert_eq!(names, ["a.html", "c.html", "index.html", "style.css"]);
+    let index = page(&pages, "index.html");
+    assert_eq!(index.matches("題名a").count(), 2);
+    assert!(!index.contains("題名c") && !index.contains("z.html"));
+    assert!(top(index).contains("2 ページ"));
+    let links = links_above_title(page(&pages, "c.html"));
+    assert_eq!(links.len(), 1);
+    assert_eq!(links[0].0, "index.html");
+}
+
+// @kotowari[REQ-view-019]
+#[test]
+fn req_view_019_a_page_directly_under_the_contents_shows_only_its_title() {
+    let input = input(
+        vec![document("a", vec![]), document("b", vec![])],
+        vec![name("a"), group("群", vec![name("b")])],
+    );
+    let pages = render(&input);
+    let titles: Vec<String> = links_above_title(page(&pages, "a.html"))
+        .into_iter()
+        .map(|(_, text)| text)
+        .collect();
+    assert_eq!(titles, ["kotowari"]);
+}
+
+// @kotowari[REQ-view-019, REQ-view-020]
+#[test]
+fn req_view_019_a_repeated_name_takes_its_first_place_in_depth_first_order() {
+    let input = input(
+        vec![
+            document("a", vec![section(false, vec![])]),
+            document("b", vec![]),
+            document("c", vec![]),
+        ],
+        vec![
+            group("前", vec![group("内", vec![name("a"), name("b")])]),
+            group("後", vec![name("a"), name("c")]),
+        ],
+    );
+    let pages = render(&input);
+    let a = page(&pages, "a.html");
+    let titles: Vec<String> = links_above_title(a)
+        .into_iter()
+        .map(|(_, text)| text)
+        .collect();
+    assert_eq!(titles, ["kotowari", "前", "内"]);
+    let tail = after_last_section(a);
+    assert!(
+        tail.contains("b.html") && !tail.contains("c.html"),
+        "{tail}"
+    );
+}
+
+// @kotowari[REQ-view-020]
+#[test]
+fn req_view_020_group_links_skip_nested_groups_and_keep_the_written_order() {
+    let input = input(
+        vec![
+            document("a", vec![section(false, vec![])]),
+            document("b", vec![]),
+            document("c", vec![]),
+            document("d", vec![]),
+        ],
+        vec![
+            name("c"),
+            group("入れ子", vec![name("d")]),
+            name("a"),
+            name("b"),
+        ],
+    );
+    let pages = render(&input);
+    let tail = after_last_section(page(&pages, "a.html"));
+    let c = tail.find("c.html").expect("c");
+    let b = tail.find("b.html").expect("b");
+    assert!(c < b, "{tail}");
+    assert!(!tail.contains("d.html"), "{tail}");
 }

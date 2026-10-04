@@ -163,3 +163,40 @@ fn items(items: &[TocItem], documents: &Documents, path: &mut Vec<usize>) -> (St
     out.push_str("</ul>\n");
     (out, total)
 }
+
+/// 文書の目次の中の位置。たどる目次の群（外側から、題名と一覧の中の場所）と、項目が直接属する群
+pub(crate) struct Place<'a> {
+    pub(crate) chain: Vec<(&'a str, String)>,
+    pub(crate) group: &'a TocGroup,
+}
+
+/// 目次を書かれた順に深さ優先でたどって、最初に出てくるその名前の項目の位置（REQ-view-019）
+pub(crate) fn place<'a>(toc: &'a TocGroup, name: &str) -> Option<Place<'a>> {
+    let mut chain = vec![(toc.title.as_str(), anchor(&[]))];
+    let group = find(toc, name, &mut Vec::new(), &mut chain)?;
+    Some(Place { chain, group })
+}
+
+fn find<'a>(
+    group: &'a TocGroup,
+    name: &str,
+    path: &mut Vec<usize>,
+    chain: &mut Vec<(&'a str, String)>,
+) -> Option<&'a TocGroup> {
+    for (index, item) in group.items.iter().enumerate() {
+        match item {
+            TocItem::Document(item) if item == name => return Some(group),
+            TocItem::Document(_) => {}
+            TocItem::Group(inner) => {
+                path.push(index);
+                chain.push((inner.title.as_str(), anchor(path)));
+                if let Some(found) = find(inner, name, path, chain) {
+                    return Some(found);
+                }
+                chain.pop();
+                path.pop();
+            }
+        }
+    }
+    None
+}

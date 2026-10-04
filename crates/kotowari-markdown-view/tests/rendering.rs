@@ -139,7 +139,7 @@ fn req_view_002_pages_refer_to_the_shared_style_and_to_each_other_relatively() {
     for name in ["index.html", "changes.html"] {
         assert!(page(&pages, name).contains("href=\"style.css\""), "{name}");
     }
-    assert!(page(&pages, "changes.html").contains("href=\"index.html\""));
+    assert!(page(&pages, "changes.html").contains("href=\"index.html"));
     assert!(!page(&pages, "style.css").is_empty());
 }
 

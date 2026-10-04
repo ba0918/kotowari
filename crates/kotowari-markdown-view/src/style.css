@@ -46,6 +46,10 @@ body {
 
 .page { max-width: 1040px; margin: 0 auto; padding: 24px 20px 64px; }
 .crumbs { max-width: 1040px; margin: 0 auto; padding: 16px 20px 0; font-size: 0.9em; }
+.crumb-separator { color: var(--muted); margin: 0 8px; }
+.siblings { border-top: 1px solid var(--line); margin-top: 32px; padding-top: 12px; }
+.siblings-title { font-weight: 700; margin: 0 0 6px; }
+.siblings ul { margin: 0; padding-left: 1.2em; }
 a { color: var(--accent); }
 h1 { font-size: 1.9em; line-height: 1.3; margin: 0.4em 0 0.6em; }
 h2 { font-size: 1.35em; margin: 0 0 0.6em; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
