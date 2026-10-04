@@ -179,6 +179,24 @@ fn ex_view_003_raw_html_is_text_and_comments_are_dropped() {
 
 // @kotowari[REQ-view-007]
 #[test]
+fn req_view_007_text_after_a_comment_on_its_line_is_drawn_as_without_the_comment() {
+    let plain = one_section_page(vec![Block::Markdown("text\n".into())]);
+    for source in [
+        "<!-- c -->text\n",
+        "  <!-- c -->  text\n",
+        "<!-- a --> <!-- b -->\ttext\n",
+        "<!--\nc\n-->     text\n",
+    ] {
+        assert_eq!(
+            one_section_page(vec![Block::Markdown(source.into())]).replace('\n', ""),
+            plain.replace('\n', ""),
+            "{source:?}"
+        );
+    }
+}
+
+// @kotowari[REQ-view-007]
+#[test]
 fn req_view_007_markdown_text_follows_commonmark_and_gfm_tables() {
     let text = one_section_page(vec![Block::Markdown(
         "### 小見出し\n\n- 項目\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n`code` と **強調**\n".into(),

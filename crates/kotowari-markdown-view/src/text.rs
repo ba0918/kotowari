@@ -27,7 +27,8 @@ pub(crate) fn to_html(source: &str) -> String {
     markdown::to_html_with_options(&without_comments(source), &options).unwrap_or_default()
 }
 
-/// HTML の節の中の "<!--" から "-->" までを、行の区切りを残して空白に置き換える。
+/// HTML の節の中の "<!--" から "-->" までを、行の区切りだけを残して取り除く。行の初めから空白と
+/// コメントだけが続いた後の空白も取り除き、コメントの後の文字が字下げのコードブロックにならないようにする。
 /// コードブロックとコードスパンの中は HTML の節にならないので残る
 fn without_comments(source: &str) -> String {
     let Ok(root) = markdown::to_mdast(source, &parse_options()) else {
@@ -35,7 +36,8 @@ fn without_comments(source: &str) -> String {
     };
     let mut ranges = Vec::new();
     collect_html(&root, &mut ranges);
-    let mut bytes = source.as_bytes().to_vec();
+    let mut out = String::with_capacity(source.len());
+    let mut copied = 0;
     for (start, end) in ranges {
         let mut from = start;
         while let Some(open) = source[from..end].find("<!--") {
@@ -43,16 +45,25 @@ fn without_comments(source: &str) -> String {
             let close = source[open + 4..end]
                 .find("-->")
                 .map_or(end, |close| open + 4 + close + 3);
-            for byte in &mut bytes[open..close] {
-                if *byte != b'\n' && *byte != b'\r' {
-                    *byte = b' ';
-                }
+            out.push_str(&source[copied..open]);
+            out.extend(
+                source[open..close]
+                    .chars()
+                    .filter(|c| matches!(c, '\n' | '\r')),
+            );
+            copied = close;
+            let line = out.rsplit(['\n', '\r']).next().unwrap_or("");
+            if line.chars().all(|c| c == ' ' || c == '\t') {
+                copied += source[close..]
+                    .find(|c| c != ' ' && c != '\t')
+                    .unwrap_or(source.len() - close);
             }
-            from = close;
+            from = copied.min(end).max(close);
         }
     }
-    // 範囲の両端は ASCII の "<!--" と "-->" か節の終わりなので、文字を途中で切らない
-    String::from_utf8(bytes).unwrap_or_else(|_| source.to_string())
+    // 切る位置は ASCII の "<!--"、"-->"、空白か節の終わりなので、文字を途中で切らない
+    out.push_str(&source[copied..]);
+    out
 }
 
 fn collect_html(node: &Node, ranges: &mut Vec<(usize, usize)>) {
