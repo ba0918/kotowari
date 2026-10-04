@@ -784,3 +784,32 @@ fn the_findings_and_numbers_become_the_overview_group() {
         errors
     );
 }
+
+// @kotowari[REQ-core-283, REQ-core-281]
+#[test]
+fn req_core_283_a_second_title_before_the_lead_is_the_first_block_after_the_title() {
+    let model = model();
+    let text = format!("{FRONT}\n# a\n\n# b\n\n{LEAD}\n## 節\n\n文。\n");
+    let overview = run(&model, &[(A, &text)]);
+    assert_eq!(of_kind(&overview, "overview_lead_missing").len(), 1);
+}
+
+// @kotowari[REQ-core-284]
+#[test]
+fn req_core_284_one_file_listing_a_document_twice_does_not_share_it() {
+    let model = model();
+    let text =
+        format!("---\nir:\n  - docs/ir/core/cli.md\n  - docs/ir/core/cli.md\n---\n\n# a\n\n{LEAD}");
+    let overview = run(&model, &[(A, &text)]);
+    assert_eq!(of_kind(&overview, "overview_ir_shared"), []);
+}
+
+// @kotowari[REQ-core-288, TBL-core-042]
+#[test]
+fn req_core_288_the_number_of_files_counts_every_overview_data_file() {
+    let model = model();
+    let a = data("a", "## 節\n\n文。\n");
+    let b = format!("---\nir:\n  - docs/ir/core/other.md\n---\n\n# b\n\n{LEAD}");
+    assert_eq!(run(&model, &[]).files(), 0);
+    assert_eq!(run(&model, &[(A, &a), (B, &b)]).files(), 2);
+}
