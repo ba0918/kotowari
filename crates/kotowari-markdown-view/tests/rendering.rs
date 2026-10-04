@@ -1,5 +1,6 @@
 use kotowari_markdown_view::{
-    Block, Document, Page, Part, Reference, ReferenceState, RenderInput, Section, render,
+    Block, Document, Page, Part, Reference, ReferenceState, RenderInput, Section, TocGroup,
+    TocItem, render,
 };
 use serde_json::json;
 
@@ -41,15 +42,16 @@ fn position(text: &str, needle: &str) -> usize {
         .unwrap_or_else(|| panic!("{needle} not in page"))
 }
 
-// @kotowari[EX-view-001, REQ-view-002, REQ-view-005]
+// @kotowari[EX-view-001, REQ-view-002]
 #[test]
-fn ex_view_001_two_documents_give_four_pages_and_an_ordered_index() {
+fn ex_view_001_two_documents_give_four_pages() {
     let input = RenderInput {
         documents: vec![
             document("guides", "ガイドの印", vec![]),
             document("changes", "変更照合", vec![]),
         ],
         references: vec![],
+        toc: contents(&["guides", "changes"]),
     };
     let pages = render(&input);
     let names: Vec<&str> = pages.iter().map(|page| page.name.as_str()).collect();
@@ -57,11 +59,71 @@ fn ex_view_001_two_documents_give_four_pages_and_an_ordered_index() {
         names,
         ["changes.html", "guides.html", "index.html", "style.css"]
     );
+}
+
+/// 文書の名前を1段に並べた目次
+fn contents(names: &[&str]) -> TocGroup {
+    TocGroup {
+        title: "目次".into(),
+        note: None,
+        items: names
+            .iter()
+            .map(|name| TocItem::Document((*name).into()))
+            .collect(),
+    }
+}
+
+// @kotowari[EX-view-010, REQ-view-005]
+#[test]
+fn ex_view_010_the_index_follows_the_contents_order_and_nesting() {
+    let input = RenderInput {
+        documents: vec![
+            document("a", "題名A", vec![]),
+            document("b", "題名B", vec![]),
+        ],
+        references: vec![],
+        toc: TocGroup {
+            title: "kotowari".into(),
+            note: None,
+            items: vec![
+                TocItem::Group(TocGroup {
+                    title: "テスト".into(),
+                    note: Some("テストとの対応".into()),
+                    items: vec![TocItem::Document("b".into())],
+                }),
+                TocItem::Document("a".into()),
+            ],
+        },
+    };
+    let pages = render(&input);
     let index = page(&pages, "index.html");
-    assert!(position(index, "変更照合") < position(index, "ガイドの印"));
-    assert!(position(index, "変更照合の結論") < position(index, "ガイドの印の結論"));
-    assert!(index.contains("href=\"changes.html\""));
-    assert!(index.contains("href=\"guides.html\""));
+    assert!(index.contains("<h1>kotowari</h1>"));
+    // "テスト" の群は、その見出しから群の終わりまでに b を持ち、a はその後にある
+    let group = position(index, ">テスト<");
+    let end = group + position(&index[group..], "</details>");
+    let b = position(index, "題名B");
+    let b_conclusion = position(index, "題名Bの結論");
+    let note = position(index, "テストとの対応");
+    assert!(group < note && note < b && b < b_conclusion && b_conclusion < end);
+    assert!(end < position(index, "題名A") && end < position(index, "題名Aの結論"));
+    assert!(index.contains("<a href=\"b.html\"><span class=\"title\">題名B</span></a>"));
+    assert!(index.contains("<a href=\"a.html\"><span class=\"title\">題名A</span></a>"));
+}
+
+// @kotowari[REQ-view-005]
+#[test]
+fn req_view_005_the_note_of_the_contents_is_drawn_under_the_index_heading() {
+    let mut toc = contents(&["a"]);
+    toc.note = Some("製品の地図".into());
+    let input = RenderInput {
+        documents: vec![document("a", "題名A", vec![])],
+        references: vec![],
+        toc,
+    };
+    let index = page(&render(&input), "index.html").to_string();
+    let heading = position(&index, "<h1>目次</h1>");
+    let note = position(&index, "製品の地図");
+    assert!(heading < note && note < position(&index, "題名A"));
 }
 
 // @kotowari[REQ-view-002]
@@ -70,8 +132,10 @@ fn req_view_002_pages_refer_to_the_shared_style_and_to_each_other_relatively() {
     let input = RenderInput {
         documents: vec![document("changes", "変更照合", vec![])],
         references: vec![],
+        toc: contents(&["changes"]),
     };
     let pages = render(&input);
+    assert!(page(&pages, "index.html").contains("href=\"changes.html\""));
     for name in ["index.html", "changes.html"] {
         assert!(page(&pages, name).contains("href=\"style.css\""), "{name}");
     }
@@ -89,7 +153,7 @@ fn req_view_002_no_documents_still_give_the_index_and_the_style() {
 
 // @kotowari[REQ-view-001]
 #[test]
-fn req_view_001_the_input_carries_documents_sections_and_the_reference_table() {
+fn req_view_001_the_input_carries_documents_sections_the_reference_table_and_the_contents() {
     let input = RenderInput {
         documents: vec![document(
             "a",
@@ -105,10 +169,24 @@ fn req_view_001_the_input_carries_documents_sections_and_the_reference_table() {
             body: "要求の文".into(),
             state: ReferenceState::Current,
         }],
+        toc: TocGroup {
+            title: "目次の題名".into(),
+            note: Some("目次の説明".into()),
+            items: vec![TocItem::Group(TocGroup {
+                title: "群の題名".into(),
+                note: None,
+                items: vec![TocItem::Document("a".into())],
+            })],
+        },
     };
-    let text = page(&render(&input), "a.html").to_string();
+    let pages = render(&input);
+    let text = page(&pages, "a.html");
     for needle in ["題名A", "題名Aの結論", "節の見出し", "段落の文"] {
         assert!(text.contains(needle), "{needle}");
+    }
+    let index = page(&pages, "index.html");
+    for needle in ["目次の題名", "目次の説明", "群の題名", "題名A"] {
+        assert!(index.contains(needle), "{needle}");
     }
 }
 
@@ -125,6 +203,7 @@ fn req_view_006_the_lead_follows_the_title_and_sections_keep_their_order() {
             ],
         )],
         references: vec![],
+        toc: TocGroup::default(),
     };
     let text = page(&render(&input), "a.html").to_string();
     let title = position(&text, "<h1>題名A</h1>");
@@ -146,6 +225,7 @@ fn req_view_006_preamble_parts_follow_the_lead_in_order_before_the_sections() {
     let input = RenderInput {
         documents: vec![a],
         references: vec![],
+        toc: TocGroup::default(),
     };
     let text = page(&render(&input), "a.html").to_string();
     let lead = position(&text, "題名Aの結論");
@@ -159,6 +239,7 @@ fn one_section_page(blocks: Vec<Block>) -> String {
     let input = RenderInput {
         documents: vec![document("a", "題名", vec![section("節", blocks)])],
         references: vec![],
+        toc: TocGroup::default(),
     };
     page(&render(&input), "a.html").to_string()
 }
@@ -281,6 +362,7 @@ fn page_with_references(refs: &[&str], references: Vec<Reference>) -> String {
             vec![section("節", vec![steps_with_refs(refs)])],
         )],
         references,
+        toc: TocGroup::default(),
     };
     page(&render(&input), "a.html").to_string()
 }
@@ -345,6 +427,7 @@ fn ex_view_005_only_the_stale_section_carries_the_mark() {
         let input = RenderInput {
             documents: vec![document("a", "題名", vec![a, section("節B", vec![])])],
             references: vec![],
+            toc: TocGroup::default(),
         };
         page(&render(&input), "a.html").to_string()
     };

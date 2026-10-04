@@ -1,5 +1,5 @@
 use kotowari_markdown_view::{
-    Block, Document, PART_KINDS, Part, Reference, ReferenceState, RenderInput, Section,
+    Block, Document, PART_KINDS, Part, Reference, ReferenceState, RenderInput, Section, TocGroup,
     part_schema, render,
 };
 use serde_json::{Value, json};
@@ -103,6 +103,7 @@ fn page_with(blocks: Vec<Block>, references: Vec<Reference>) -> String {
             }],
         }],
         references,
+        toc: TocGroup::default(),
     };
     render(&input)
         .into_iter()
@@ -477,6 +478,7 @@ fn ex_view_006_pages_with_every_kind_load_nothing_from_outside() {
             }],
         }],
         references,
+        toc: TocGroup::default(),
     };
     for page in render(&input) {
         let text = page.content.to_lowercase();

@@ -1,5 +1,6 @@
 use kotowari_markdown_view::{
-    Block, Document, Part, Reference, ReferenceState, RenderInput, Section, render,
+    Block, Document, Part, Reference, ReferenceState, RenderInput, Section, TocGroup, TocItem,
+    render,
 };
 use proptest::prelude::*;
 use serde_json::json;
@@ -100,14 +101,33 @@ fn document() -> impl Strategy<Value = Document> {
         })
 }
 
+fn group(items: impl Strategy<Value = Vec<TocItem>>) -> impl Strategy<Value = TocGroup> {
+    (".{0,12}", prop::option::of(".{0,12}"), items).prop_map(|(title, note, items)| TocGroup {
+        title,
+        note,
+        items,
+    })
+}
+
+/// 目次。名前は文書の名前と同じ形で作るので、文書のある名前も無い名前も重なった名前も出る
+fn toc() -> impl Strategy<Value = TocGroup> {
+    let name = "[a-z0-9-]{1,8}".prop_map(TocItem::Document);
+    let item = name.prop_recursive(3, 12, 4, |inner| {
+        group(prop::collection::vec(inner, 0..4)).prop_map(TocItem::Group)
+    });
+    group(prop::collection::vec(item, 0..5))
+}
+
 fn input() -> impl Strategy<Value = RenderInput> {
     (
         prop::collection::vec(document(), 0..4),
         prop::collection::vec(reference(), 0..5),
+        toc(),
     )
-        .prop_map(|(documents, references)| RenderInput {
+        .prop_map(|(documents, references, toc)| RenderInput {
             documents,
             references,
+            toc,
         })
 }
 

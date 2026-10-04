@@ -1,9 +1,10 @@
-//! 描画の入力（文書の並びと参照の表）からページの並びを作る描画のエンジン。
+//! 描画の入力（文書の並び、参照の表、目次）からページの並びを作る描画のエンジン。
 //!
 //! このクレートの仕様は `docs/ir/view/` の IR である。ファイル、ネットワーク、環境変数に触れず、
 //! 入力の形も検査しない（REQ-view-003）。
 
 mod html;
+mod index;
 mod parts;
 mod text;
 
@@ -14,6 +15,26 @@ use std::collections::BTreeMap;
 pub struct RenderInput {
     pub documents: Vec<Document>,
     pub references: Vec<Reference>,
+    /// 一覧の見出しと、文書を並べる入れ子と順番
+    pub toc: TocGroup,
+}
+
+/// 目次の群。目次そのものも1つの目次の群である（REQ-view-001）
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct TocGroup {
+    pub title: String,
+    /// 省いてよい一行の説明
+    pub note: Option<String>,
+    /// 書かれた順の項目
+    pub items: Vec<TocItem>,
+}
+
+/// 目次の群の項目
+#[derive(Debug, Clone, PartialEq)]
+pub enum TocItem {
+    /// 文書の名前
+    Document(String),
+    Group(TocGroup),
 }
 
 /// 1つのページの元。ファイルではない（REQ-view-001）
@@ -85,12 +106,15 @@ const STALE_MARK: &str = "<span class=\"stale-mark\">IR が変わった後、ま
 /// 描画の入力からページの並びを返す。ページは名前のバイト順に並ぶ（REQ-view-002）
 pub fn render(input: &RenderInput) -> Vec<Page> {
     let refs = parts::Refs::new(&input.references);
-    let mut documents: Vec<&Document> = input.documents.iter().collect();
-    documents.sort_by(|left, right| left.name.as_bytes().cmp(right.name.as_bytes()));
+    let documents: index::Documents = input
+        .documents
+        .iter()
+        .map(|document| (document.name.as_str(), document))
+        .collect();
     let mut pages: BTreeMap<String, String> = BTreeMap::new();
-    pages.insert(INDEX.into(), index(&documents));
+    pages.insert(INDEX.into(), index::page(&input.toc, &documents));
     pages.insert("style.css".into(), STYLE.into());
-    for document in documents {
+    for document in documents.values() {
         pages.insert(page_name(document), document_page(document, &refs));
     }
     pages
@@ -101,21 +125,6 @@ pub fn render(input: &RenderInput) -> Vec<Page> {
 
 fn page_name(document: &Document) -> String {
     format!("{}.html", document.name)
-}
-
-/// 一覧のページ（REQ-view-005）
-fn index(documents: &[&Document]) -> String {
-    let mut body = String::from("<main class=\"page index\">\n<ul class=\"documents\">\n");
-    for document in documents {
-        body.push_str(&format!(
-            "<li><a href=\"{}\"><span class=\"title\">{}</span></a><p class=\"conclusion\">{}</p></li>\n",
-            html::href(&page_name(document)),
-            html::escape(&document.title),
-            html::escape(parts::conclusion(&document.lead)),
-        ));
-    }
-    body.push_str("</ul>\n</main>\n");
-    html::shell("Overview", &body)
 }
 
 /// 文書のページ。題名、冒頭の lead、lead に続く冒頭の部品、節の順に描く（REQ-view-006）

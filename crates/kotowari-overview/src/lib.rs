@@ -11,7 +11,9 @@ mod references;
 
 use kotowari_core::{DocKind, Finding, FindingGroup, FindingKind, ReadModel, SourceText};
 pub use kotowari_markdown_view::Page;
-use kotowari_markdown_view::{Block, Document, Part, Reference, RenderInput, Section};
+use kotowari_markdown_view::{
+    Block, Document, Part, Reference, RenderInput, Section, TocGroup, TocItem,
+};
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -79,9 +81,26 @@ pub fn inspect(read: &ReadModel, files: &[SourceText]) -> Overview {
         files: files.len(),
         marks: inspection.marks,
         input: RenderInput {
+            toc: name_order(&inspection.documents),
             documents: inspection.documents,
             references: inspection.references.into_values().collect(),
         },
+    }
+}
+
+/// 文書の名前のバイト順に並べた1段の目次
+fn name_order(documents: &[Document]) -> TocGroup {
+    let names: BTreeSet<&str> = documents
+        .iter()
+        .map(|document| document.name.as_str())
+        .collect();
+    TocGroup {
+        title: "Overview".into(),
+        note: None,
+        items: names
+            .into_iter()
+            .map(|name| TocItem::Document(name.into()))
+            .collect(),
     }
 }
 

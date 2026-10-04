@@ -1,6 +1,6 @@
 use kotowari_markdown_view::{
-    Block, Document, PART_KINDS, Part, Reference, ReferenceState, RenderInput, Section,
-    part_schema, render,
+    Block, Document, PART_KINDS, Part, Reference, ReferenceState, RenderInput, Section, TocGroup,
+    TocItem, part_schema, render,
 };
 fn main() {
     assert!(PART_KINDS.iter().all(|kind| part_schema(kind).is_some()));
@@ -31,6 +31,11 @@ fn main() {
             body: "The body opened in place".into(),
             state: ReferenceState::Current,
         }],
+        toc: TocGroup {
+            title: "Example".into(),
+            note: Some("One group holding the one document".into()),
+            items: vec![TocItem::Document("example".into())],
+        },
     };
     let pages = render(&input);
     let names: Vec<&str> = pages.iter().map(|page| page.name.as_str()).collect();
