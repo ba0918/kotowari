@@ -43,7 +43,7 @@ impl Counts {
         self.pages += other.pages;
         self.stale += other.stale;
         self.open += other.open;
-        self.planned += other.planned;
+        // 予定は群の見出しに出さない（REQ-view-017）ので足し合わせない
     }
 
     /// 文書の項目に添える数。どれも 0 なら何も描かない（REQ-view-016）
