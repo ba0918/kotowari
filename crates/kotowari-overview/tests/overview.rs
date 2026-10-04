@@ -730,6 +730,27 @@ fn valid_data_renders_into_the_pages_the_view_returns_for_its_input() {
     );
 }
 
+// @kotowari[REQ-view-001, REQ-view-006, TBL-core-038]
+#[test]
+fn parts_after_the_lead_and_before_the_first_section_reach_the_page_in_order() {
+    let model = model();
+    let text = data(
+        "a",
+        "<!-- c -->\n```view steps\nitems:\n  - title: 冒頭の一つ目\n```\n\n```view cards\ncards:\n  - title: 冒頭の二つ目\n    items: []\n```\n\n## 最初の節の見出し\n\n文。\n",
+    );
+    let overview = run(&model, &[(A, &text)]);
+    let pages = overview.pages().expect("no errors");
+    let page = &pages
+        .iter()
+        .find(|page| page.name == "a.html")
+        .unwrap()
+        .content;
+    let at = |needle: &str| page.find(needle).unwrap_or_else(|| panic!("{needle}"));
+    assert!(at("結論") < at("冒頭の一つ目"));
+    assert!(at("冒頭の一つ目") < at("冒頭の二つ目"));
+    assert!(at("冒頭の二つ目") < at("最初の節の見出し"));
+}
+
 // @kotowari[REQ-core-294]
 #[test]
 fn data_with_errors_gives_no_pages_and_the_error_count() {

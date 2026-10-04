@@ -169,6 +169,16 @@ impl<'a> Inspection<'a> {
         let lead = raw.lead.and_then(|index| values[index].clone());
         if let (Some(title), Some(lead)) = (raw.title.clone(), lead) {
             let sections = sections(&raw, &values, &stale_lines);
+            let preamble = raw
+                .preamble
+                .iter()
+                .filter_map(|index| {
+                    values[*index].clone().map(|value| Part {
+                        kind: raw.parts[*index].kind.clone(),
+                        value,
+                    })
+                })
+                .collect();
             self.documents.push(Document {
                 name: stem,
                 title,
@@ -176,6 +186,7 @@ impl<'a> Inspection<'a> {
                     kind: "lead".into(),
                     value: lead,
                 },
+                preamble,
                 sections,
             });
         }

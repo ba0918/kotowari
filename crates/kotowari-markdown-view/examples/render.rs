@@ -12,6 +12,7 @@ fn main() {
                 kind: "lead".into(),
                 value: serde_json::json!({"conclusion": "Pages are rendered in memory"}),
             },
+            preamble: vec![],
             sections: vec![Section {
                 heading: "Flow".into(),
                 stale: false,

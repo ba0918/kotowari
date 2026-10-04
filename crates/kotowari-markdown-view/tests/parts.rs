@@ -95,6 +95,7 @@ fn page_with(blocks: Vec<Block>, references: Vec<Reference>) -> String {
             name: "a".into(),
             title: "題名".into(),
             lead: lead(),
+            preamble: vec![],
             sections: vec![Section {
                 heading: "節".into(),
                 stale: false,
@@ -426,6 +427,7 @@ fn ex_view_006_pages_with_every_kind_load_nothing_from_outside() {
             name: "a".into(),
             title: "題名".into(),
             lead: lead(),
+            preamble: vec![],
             sections: vec![Section {
                 heading: "節".into(),
                 stale: true,

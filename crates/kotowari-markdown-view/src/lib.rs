@@ -24,6 +24,8 @@ pub struct Document {
     pub title: String,
     /// 冒頭に置く lead の部品
     pub lead: Part,
+    /// lead に続き、最初の節より前に置く部品の並び（REQ-view-006）
+    pub preamble: Vec<Part>,
     pub sections: Vec<Section>,
 }
 
@@ -116,13 +118,16 @@ fn index(documents: &[&Document]) -> String {
     html::shell("Overview", &body)
 }
 
-/// 文書のページ。題名、冒頭の lead、節の順に描く（REQ-view-006）
+/// 文書のページ。題名、冒頭の lead、lead に続く冒頭の部品、節の順に描く（REQ-view-006）
 fn document_page(document: &Document, refs: &parts::Refs) -> String {
     let mut body = format!(
         "<nav class=\"crumbs\"><a href=\"{INDEX}\">Overview</a></nav>\n<main class=\"page\">\n<h1>{}</h1>\n",
         html::escape(&document.title)
     );
     body.push_str(&parts::part(&document.lead, refs));
+    for part in &document.preamble {
+        body.push_str(&parts::part(part, refs));
+    }
     for section in &document.sections {
         // REQ-view-009: 古い節の見出しの隣に、まだ見直していないことを示す印を描く
         let mark = if section.stale { STALE_MARK } else { "" };

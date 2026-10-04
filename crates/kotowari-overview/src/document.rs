@@ -33,6 +33,8 @@ pub(crate) struct RawDocument {
     pub(crate) title: Option<String>,
     /// 題名の後で最初の、HTML のコメントでも空行でもないブロックが lead の部品なら、その添字（REQ-core-283）
     pub(crate) lead: Option<usize>,
+    /// 題名の後、最初の "## " より前の、lead でない部品の添字（REQ-view-006）
+    pub(crate) preamble: Vec<usize>,
     pub(crate) parts: Vec<RawPart>,
     pub(crate) sections: Vec<RawSection>,
 }
@@ -167,8 +169,14 @@ pub(crate) fn parse(text: &str) -> RawDocument {
             looking_for_lead = false;
             document.lead = part.filter(|index| document.parts[*index].kind == "lead");
         }
-        // 最初の "## " より前の部品は lead のほかに描く置き場が無い。検査だけを行う
+        // 題名の後、最初の "## " より前の lead でない部品は、lead に続けて描く
         let Some(section) = document.sections.last_mut() else {
+            if let Some(index) = part
+                && document.title.is_some()
+                && document.lead != Some(index)
+            {
+                document.preamble.push(index);
+            }
             continue;
         };
         match part {

@@ -15,6 +15,7 @@ fn document(name: &str, title: &str, sections: Vec<Section>) -> Document {
         name: name.into(),
         title: title.into(),
         lead: lead(&format!("{title}の結論")),
+        preamble: vec![],
         sections,
     }
 }
@@ -131,6 +132,27 @@ fn req_view_006_the_lead_follows_the_title_and_sections_keep_their_order() {
     let first = position(&text, "二番目ではない最初の節");
     let second = position(&text, "後の節");
     assert!(title < lead && lead < first && first < second);
+}
+
+// @kotowari[REQ-view-006, REQ-view-001]
+#[test]
+fn req_view_006_preamble_parts_follow_the_lead_in_order_before_the_sections() {
+    let steps = |title: &str| Part {
+        kind: "steps".into(),
+        value: json!({"items": [{"title": title}]}),
+    };
+    let mut a = document("a", "題名A", vec![section("最初の節", vec![])]);
+    a.preamble = vec![steps("冒頭の一つ目"), steps("冒頭の二つ目")];
+    let input = RenderInput {
+        documents: vec![a],
+        references: vec![],
+    };
+    let text = page(&render(&input), "a.html").to_string();
+    let lead = position(&text, "題名Aの結論");
+    let first = position(&text, "冒頭の一つ目");
+    let second = position(&text, "冒頭の二つ目");
+    let section = position(&text, "最初の節");
+    assert!(lead < first && first < second && second < section);
 }
 
 fn one_section_page(blocks: Vec<Block>) -> String {

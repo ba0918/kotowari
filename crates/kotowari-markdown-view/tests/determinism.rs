@@ -88,12 +88,14 @@ fn document() -> impl Strategy<Value = Document> {
         "[a-z0-9-]{1,8}",
         ".{0,12}",
         part(),
+        prop::collection::vec(part(), 0..3),
         prop::collection::vec(section(), 0..4),
     )
-        .prop_map(|(name, title, lead, sections)| Document {
+        .prop_map(|(name, title, lead, preamble, sections)| Document {
             name,
             title,
             lead,
+            preamble,
             sections,
         })
 }

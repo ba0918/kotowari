@@ -60,7 +60,7 @@ columns:
 |---|---|
 | Frontmatter | YAML at the top with exactly one key, `ir`: a list of one or more paths of topic documents, relative to the base directory |
 | Title | Exactly one `# ` heading |
-| After the title | Before the first `## ` heading, only parts and HTML comments. The first block that is neither a comment nor a blank line must be a `lead` part |
+| After the title | Before the first `## ` heading, only parts and HTML comments. The first block that is neither a comment nor a blank line must be a `lead` part. Parts after the lead are drawn after it, in order, before the first section |
 | Sections | `## ` headings, with any Markdown text below: paragraphs, bullet lists (nested too), numbered lists, tables, code blocks, HTML comments and `### ` headings. Raw HTML is shown as text and HTML comments are not shown |
 | Parts | A fenced code block whose info string is `view`, one or more spaces and the kind, holding YAML |
 
