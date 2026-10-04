@@ -199,10 +199,14 @@ impl OverviewPrepared {
     pub fn pages(&self) -> &[Page] {
         &self.pages
     }
+    /// 書く先の置き場。`基準のディレクトリ`の ".kotowari/cache/overview/"（REQ-core-296）
+    pub fn directory(&self) -> PathBuf {
+        self.base.join(overview::CACHE)
+    }
     /// `基準のディレクトリ`の ".kotowari/cache/overview/" の下へ書く。同じ名前で同じバイト列の
     /// ファイルは書かず、今回返さなかったファイルを消す（REQ-core-293）
     pub fn write(&self) -> Result<OverviewBuild, Error> {
-        let cache = self.base.join(overview::CACHE);
+        let cache = self.directory();
         let write_error = |path: &str, error: std::io::Error| Error {
             kind: ErrorKind::ReadFailure,
             detail: kotowari_core::StopReason::UnreadableFile(format!(

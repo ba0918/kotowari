@@ -51,10 +51,27 @@ fn req_127_findings_reference_stop_wordings_match_the_code() {
     let in_code: std::collections::BTreeSet<String> = kotowari_core::StopReason::WORDINGS
         .iter()
         .chain(kotowari::Error::WORDINGS)
+        .chain(StopReason::WORDINGS)
         .map(|wording| wording.to_string())
         .collect();
     assert_eq!(
         in_reference, in_code,
         "the stop wordings in references/findings.md should be exactly the wordings the code prints"
+    );
+}
+
+// @kotowari[REQ-core-297]
+#[test]
+fn req_core_297_serve_uses_port_4590_unless_given() {
+    assert_eq!(DEFAULT_PORT, 4590);
+    let parsed = parse_args(&args(&["overview", "serve"]));
+    assert!(
+        matches!(parsed, Ok(Cli::OverviewServe { port: 4590, .. })),
+        "{parsed:?}"
+    );
+    let parsed = parse_args(&args(&["overview", "serve", "--port", "65535"]));
+    assert!(
+        matches!(parsed, Ok(Cli::OverviewServe { port: 65535, .. })),
+        "{parsed:?}"
     );
 }

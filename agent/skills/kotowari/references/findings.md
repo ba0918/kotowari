@@ -109,4 +109,5 @@ Adding an exclusion or loosening a rule is a change to the specification, so do 
 | results error | Return to the person. The results file does not match the form of the mutation-testing tool. Report the path and the description in the details |
 | git error | Git history, target or index cannot be read | Repair the input or fetch the required history; do not supplement with working tree files | caller |
 | overview error | Run `kotowari check` and fix the overview data findings it reports (overview.md), then build again. Nothing was written or removed |
+| port error | Return to the person. `kotowari overview serve` could not use the port on 127.0.0.1 (details are the address and the OS error). Run it again with a free `--port`, or use the pages `kotowari overview build` wrote |
 | mapping error | Return to the person. A finding returned by the schema side could not be mapped to a kotowari finding. Report the kind and name in the details |

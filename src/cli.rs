@@ -9,6 +9,7 @@ use std::{
 mod list;
 mod output;
 mod query;
+mod serve;
 mod status;
 #[cfg(test)]
 mod tests;
@@ -16,13 +17,22 @@ mod tests;
 pub enum StopReason {
     ArgumentError(String),
     UnreadableFile(String),
+    /// serve がポートを使えない（REQ-core-298）
+    PortError(String),
     Library(kotowari::Error),
+}
+/// ポートの誤りの文言（TBL-core-018）。serve を持つ CLI だけが出す
+const PORT_ERROR: &str = "port error";
+impl StopReason {
+    /// core とライブラリに無い、CLI の停止の文言のすべて
+    pub const WORDINGS: &'static [&'static str] = &[PORT_ERROR];
 }
 impl std::fmt::Display for StopReason {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::ArgumentError(detail) => write!(f, "argument error: {detail}"),
             Self::UnreadableFile(detail) => write!(f, "unreadable file: {detail}"),
+            Self::PortError(detail) => write!(f, "{PORT_ERROR}: {detail}"),
             Self::Library(error) => error.fmt(f),
         }
     }
@@ -521,9 +531,10 @@ pub fn run(args: &[String]) -> u8 {
             print_overview_build(&result, format);
             Ok(0)
         }),
-        Cli::OverviewServe { .. } => stop(&StopReason::ArgumentError(
-            "overview serve is not available".to_string(),
-        )),
+        // REQ-core-297: 検査、ポートの確保、書き込みの順に行い、割り込みで終了コード0
+        Cli::OverviewServe { port, config_path } => {
+            with_cwd(|cwd| serve::run(&project(cwd, config_path.as_deref())?, port))
+        }
         // REQ-core-196: 設定を読まず、計画書のファイルだけを読む
         Cli::Plan { format, path } => with_cwd(|cwd| {
             let result = run_plan(cwd, &path)?;
