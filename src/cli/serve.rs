@@ -30,12 +30,26 @@ pub fn run(project: &kotowari::Project, port: u16) -> Result<u8, StopReason> {
     use std::io::Write;
     // 標準出力が管でも、URL の1行をすぐ読めるようにする
     let _ = std::io::stdout().flush();
+    serve_requests(
+        || server.recv(),
+        &stopping,
+        |request| respond(&cache, request),
+        port,
+    )
+}
+
+/// 要求を受けては答え、割り込みで 0 を返す。割り込みのほかの誤りは受け付けの失敗である。
+/// HTTP のクレートは受け付けに一度失敗すると受け付けを再開しないので、配り続けられない（REQ-core-298）
+fn serve_requests<R>(
+    mut next: impl FnMut() -> std::io::Result<R>,
+    stopping: &AtomicBool,
+    mut handle: impl FnMut(R),
+    port: u16,
+) -> Result<u8, StopReason> {
     loop {
-        match server.recv() {
-            Ok(request) => respond(&cache, request),
+        match next() {
+            Ok(request) => handle(request),
             Err(_) if stopping.load(Ordering::SeqCst) => return Ok(0),
-            // 割り込みのほかの誤りは、受け付けの失敗である。HTTP のクレートは受け付けに一度
-            // 失敗すると受け付けを再開しないので、配り続けられない（REQ-core-298）
             Err(error) => {
                 return Err(StopReason::PortError(format!("127.0.0.1:{port}: {error}")));
             }
@@ -119,6 +133,33 @@ fn resolve(cache: &Path, url: &str) -> Option<(PathBuf, Vec<u8>)> {
 
 #[cfg(test)]
 mod tests {
+    // @kotowari[REQ-core-298]
+    #[test]
+    fn a_failure_to_accept_while_serving_stops_with_a_port_error() {
+        let stopping = AtomicBool::new(false);
+        let mut served = 0;
+        let mut results = vec![Err(std::io::Error::other("too many open files")), Ok(())];
+        let stop = serve_requests(|| results.pop().unwrap(), &stopping, |()| served += 1, 4590);
+        assert_eq!(served, 1);
+        let Err(StopReason::PortError(detail)) = stop else {
+            panic!("{stop:?}");
+        };
+        assert_eq!(detail, "127.0.0.1:4590: too many open files");
+    }
+
+    // @kotowari[REQ-core-297]
+    #[test]
+    fn an_interrupt_ends_serving_with_exit_code_zero() {
+        let stopping = AtomicBool::new(true);
+        let stop = serve_requests(
+            || Err::<(), _>(std::io::Error::other("unblocked")),
+            &stopping,
+            |()| {},
+            4590,
+        );
+        assert_eq!(stop.ok(), Some(0));
+    }
+
     use super::*;
 
     // @kotowari[REQ-core-299]
