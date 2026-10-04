@@ -445,6 +445,11 @@ impl ReadPreparation {
             &mut findings,
         );
         crate::deferred_notices::check(&docs, &config.ir, &discovered.markers, &mut findings);
+        let source_texts = records
+            .iter()
+            .chain(&adr)
+            .map(|source| (source.path.clone(), source.text.clone()))
+            .collect();
         ReadModel {
             policy: self.policy,
             originals: self.originals,
@@ -452,6 +457,7 @@ impl ReadPreparation {
             findings,
             discovered,
             context,
+            source_texts,
         }
     }
 }
@@ -507,6 +513,8 @@ pub struct ReadModel {
     pub(crate) findings: Vec<crate::Finding>,
     pub(crate) discovered: crate::tests_discovery::DiscoveredTests,
     pub(crate) context: crate::sources::SourceContext,
+    /// 判断の記録の置き場と ADR の置き場から読んだ文書の中身。出典の指す先の中身を引く
+    source_texts: BTreeMap<String, Arc<str>>,
 }
 pub struct ReadList(crate::list::ListResult);
 pub struct QueryReport(crate::query::QueryResult);
@@ -575,6 +583,17 @@ impl ReadModel {
         crate::query::build(&self.docs, &self.config().ir, &self.discovered.markers, id)
             .map(QueryReport)
             .ok_or_else(|| InputError::UnknownQuery(id.into()))
+    }
+    /// 読んだ`IR`の文書。パスのバイト順に並ぶ
+    pub fn documents(&self) -> &[crate::ir::IrDocument] {
+        &self.docs
+    }
+    /// 出典が指す判断の記録の決定か、判断の記録でない Markdown の見出しの節（TBL-core-012）。
+    /// 指す先が無ければ None
+    pub fn source_target(&self, source: &str) -> Option<crate::sources::SourceTarget> {
+        let resolved = self.context.resolve(source)?;
+        let text = self.source_texts.get(&resolved.path)?;
+        crate::sources::SourceTarget::read(resolved, text)
     }
     /// ほかの文書の`ガイドの印`を`ガイド`と同じ規則で読むもの（REQ-core-286）
     pub fn guide_reader(&self) -> crate::guides::GuideReader<'_> {

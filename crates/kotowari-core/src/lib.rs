@@ -35,6 +35,7 @@ pub mod config;
 mod deferred;
 mod deferred_notices;
 mod doc_kind;
+pub use doc_kind::DocKind;
 pub mod equivalents;
 mod finding_map;
 mod fingerprint;

@@ -533,3 +533,103 @@ fn guide_marks_of_one_text_are_read_with_lines_and_staleness_without_the_overlap
         ]
     );
 }
+
+fn model_with_records() -> kotowari_core::ReadModel {
+    use kotowari_core::{ReadInputs, ReadModel};
+    let mut inputs = ReadInputs::default();
+    inputs.config.tests.files.clear();
+    inputs.ir = Some(vec![SourceText::new(
+        "docs/ir/core/topic.md",
+        "# Topic\n\nScope.\n\n## Requirements\n\n### REQ-core-001: Name\n\n- kind: ubiquitous\n- source: docs/decision/records/2026-01-01-x.md#A1\n- verification: review\n- how_to_verify: read\n\nBody.\n",
+    )
+    .unwrap()]);
+    inputs.records = Some(vec![
+        SourceText::new(
+            "docs/decision/records/2026-01-01-x.md",
+            "# X\n\n## Context\n\nc\n\n## Agreements\n\n- A1 古い決定の文\n  - why: w\n  - superseded_by: [A2](#A2)\n- A2 新しい決定\n  - why: w\n  - superseded_by:\n",
+        )
+        .unwrap(),
+        SourceText::new(
+            "docs/decision/records/notes.md",
+            "# Notes\n\n## 背景\n\n一行目\n\n二行目\n\n## 次\n\n別の節\n",
+        )
+        .unwrap(),
+    ]);
+    inputs.adr = Some(vec![
+        SourceText::new(
+            "docs/decision/adr/0001-a.md",
+            "# ADR\n\n## Decision\n\n決めたこと\n```\n## 中\n```\n",
+        )
+        .unwrap(),
+    ]);
+    ReadModel::build(inputs).unwrap()
+}
+
+// @kotowari[REQ-core-291, TBL-core-039]
+#[test]
+fn a_source_resolves_to_the_decision_line_or_the_heading_section_it_points_at() {
+    use kotowari_core::sources::SourceTarget;
+    let model = model_with_records();
+    let Some(SourceTarget::Decision {
+        path,
+        number,
+        text,
+        superseded,
+    }) = model.source_target("docs/decision/records/2026-01-01-x.md#A1")
+    else {
+        panic!("A1 is a decision");
+    };
+    assert_eq!(
+        (path.as_str(), number.as_str(), text.as_str(), superseded),
+        (
+            "docs/decision/records/2026-01-01-x.md",
+            "A1",
+            "古い決定の文",
+            true
+        )
+    );
+    let Some(SourceTarget::Decision { superseded, .. }) =
+        model.source_target("docs/decision/records/2026-01-01-x.md#A2")
+    else {
+        panic!("A2 is a decision");
+    };
+    assert!(!superseded, "an empty superseded_by line counts as absent");
+    let Some(SourceTarget::Heading { heading, lines, .. }) =
+        model.source_target("docs/decision/records/notes.md#背景")
+    else {
+        panic!("a heading of a file that is not a decision record");
+    };
+    assert_eq!(
+        (heading.as_str(), lines),
+        ("背景", vec!["一行目".to_string(), "二行目".to_string()])
+    );
+    let Some(SourceTarget::Heading { lines, .. }) =
+        model.source_target("docs/decision/adr/0001-a.md#Decision")
+    else {
+        panic!("an ADR heading");
+    };
+    assert_eq!(lines, ["決めたこと", "```", "## 中", "```"]);
+    for missing in [
+        "docs/decision/records/2026-01-01-x.md#A9",
+        "docs/decision/adr/0001-a.md#中",
+        "docs/other.md#A1",
+        "REQ-core-001",
+    ] {
+        assert!(model.source_target(missing).is_none(), "{missing}");
+    }
+}
+
+// @kotowari[REQ-core-284]
+#[test]
+fn the_read_documents_expose_their_place_relative_paths_and_kinds() {
+    let model = model_with_records();
+    let documents: Vec<(&str, kotowari_core::DocKind)> = model
+        .documents()
+        .iter()
+        .map(|document| (document.relative_path(), document.kind()))
+        .collect();
+    assert_eq!(
+        documents,
+        [("core/topic.md", kotowari_core::DocKind::Topic)]
+    );
+}

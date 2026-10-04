@@ -27,6 +27,8 @@ pub struct FieldLine {
 pub struct NumberedLine {
     /// 決定の番号（"A26" など）
     pub number: String,
+    /// 決定の番号より後の文字（前後の空白を除く）
+    pub text: String,
     /// 1始まりの行番号
     pub line: usize,
     /// この行に付く `補足の行`
@@ -234,6 +236,7 @@ pub fn parse_records_file(rel_path: &str, content: &str) -> RecordsFile {
         if let Some(number) = number_of_line(rest) {
             sections[section].numbered_lines.push(NumberedLine {
                 number: number.to_string(),
+                text: rest[number.len()..].trim().to_string(),
                 line: line_number,
                 fields: Vec::new(),
             });
@@ -336,13 +339,27 @@ pub struct SourceContext {
 impl SourceContext {
     /// 出典1つを検査する
     pub fn check_source(&self, source: &str) -> Result<(), String> {
-        let (raw_path, anchor) = split_source(source).ok_or_else(|| source.to_string())?;
+        self.resolve(source)
+            .map(|_| ())
+            .ok_or_else(|| source.to_string())
+    }
+
+    /// 出典が指す先（TBL-core-012）。指す先が無ければ None
+    pub fn resolve(&self, source: &str) -> Option<ResolvedSource> {
+        let (raw_path, anchor) = split_source(source)?;
         // 絶対パスは出典として不正
         if raw_path.starts_with('/') || raw_path.starts_with('\\') {
-            return Err(source.to_string());
+            return None;
         }
         let path_normalized = crate::normalize_path(raw_path);
         let path = path_normalized.as_str();
+        let found = |decision| {
+            Some(ResolvedSource {
+                path: path.to_string(),
+                anchor: anchor.to_string(),
+                decision,
+            })
+        };
 
         // パスが records の中か adr の中かを判定（置き場が空 = 基準の直下なら何でも中。REQ-core-110）
         // 両方に当たるときは長い置き場を採る（"." の置き場の下に別の置き場があるとき）
@@ -358,10 +375,6 @@ impl SourceContext {
             (in_records_raw, in_adr_raw)
         };
 
-        if !in_records && !in_adr {
-            return Err(source.to_string());
-        }
-
         if in_records {
             // records 内のファイルを探す
             if let Some(rf) = self.records_files.iter().find(|rf| {
@@ -372,9 +385,9 @@ impl SourceContext {
                 if rf.is_records {
                     // 判断の記録: 印は決定の番号
                     if is_decision_number(anchor) && rf.has_decision_number(anchor) {
-                        return Ok(());
+                        return found(true);
                     }
-                    return Err(source.to_string());
+                    return None;
                 }
             }
 
@@ -384,12 +397,10 @@ impl SourceContext {
                 full_path == path
             }) {
                 if of.headings.iter().any(|h| h == anchor) {
-                    return Ok(());
+                    return found(false);
                 }
-                return Err(source.to_string());
             }
-
-            return Err(source.to_string());
+            return None;
         }
 
         if in_adr {
@@ -397,17 +408,97 @@ impl SourceContext {
             if let Some(of) = self.adr_files.iter().find(|of| {
                 let full_path = crate::join_display_path(&self.adr_path, &of.rel_path);
                 full_path == path
-            }) {
-                if of.headings.iter().any(|h| h == anchor) {
-                    return Ok(());
-                }
-                return Err(source.to_string());
+            }) && of.headings.iter().any(|h| h == anchor)
+            {
+                return found(false);
             }
-            return Err(source.to_string());
         }
-
-        Err(source.to_string())
+        None
     }
+}
+
+/// 出典が指す先の場所（TBL-core-012）
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResolvedSource {
+    /// 基準のディレクトリからの相対パス（正規化したもの）
+    pub path: String,
+    /// "#" の後
+    pub anchor: String,
+    /// 判断の記録の決定の番号を指すか。偽なら判断の記録でない Markdown の見出しを指す
+    pub decision: bool,
+}
+
+/// 出典が指す先とその中身（TBL-core-039 の本文と状態の元）
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SourceTarget {
+    /// 判断の記録の決定の`番号の行`
+    Decision {
+        path: String,
+        number: String,
+        /// `決定の番号`より後の文字
+        text: String,
+        /// 値の空でない "- superseded_by:" の行を持つか（REQ-core-133 と同じく空の値は無いものと数える）
+        superseded: bool,
+    },
+    /// 判断の記録でない Markdown のファイルの "## " の見出し
+    Heading {
+        path: String,
+        heading: String,
+        /// その見出しから次の "## " の見出しまでの空でない行（コードブロックの中を含む）
+        lines: Vec<String>,
+    },
+}
+
+impl SourceTarget {
+    pub(crate) fn read(resolved: ResolvedSource, text: &str) -> Option<Self> {
+        if resolved.decision {
+            let file = parse_records_file(&resolved.path, text);
+            let line = file
+                .sections
+                .iter()
+                .filter(|section| DECISION_SECTIONS.contains(&section.name.as_str()))
+                .flat_map(|section| &section.numbered_lines)
+                .find(|line| line.number == resolved.anchor)?;
+            Some(Self::Decision {
+                path: resolved.path,
+                number: resolved.anchor,
+                text: line.text.clone(),
+                superseded: line
+                    .fields
+                    .iter()
+                    .any(|field| field.name == "superseded_by" && !field.value.is_empty()),
+            })
+        } else {
+            Some(Self::Heading {
+                lines: heading_lines(text, &resolved.anchor),
+                path: resolved.path,
+                heading: resolved.anchor,
+            })
+        }
+    }
+}
+
+/// "## " の見出しの節の空でない行。見出しはコードブロックの外のものだけを数える（A47）
+fn heading_lines(content: &str, heading: &str) -> Vec<String> {
+    let mut lines = Vec::new();
+    let mut inside = false;
+    let mut fence: Option<crate::ir::CodeFence> = None;
+    for line in crate::ir::split_lines(content) {
+        if let Some(open) = &fence {
+            if crate::ir::is_closing_fence(line, open) {
+                fence = None;
+            }
+        } else if let Some(open) = crate::ir::parse_opening_fence(line) {
+            fence = Some(open);
+        } else if let Some(text) = line.trim().strip_prefix("## ") {
+            inside = text.trim() == heading;
+            continue;
+        }
+        if inside && !line.trim().is_empty() {
+            lines.push(line.trim_end().to_string());
+        }
+    }
+    lines
 }
 
 /// パスが置き場の下にあるか。置き場が空（"." を正規化したもの）なら基準の直下なので常に真
