@@ -700,13 +700,53 @@ fn req_014_invalid_glob_stops() {
 #[test]
 fn req_014_overview_files_is_read_as_a_glob_list() {
     let cfg = kotowari_core::config::Config::parse(
-        "overview:\n  files:\n    - \".kotowari/overview/*.md\"\n",
+        "overview:\n  files:\n    - \".kotowari/overview/*.md\"\n  toc: .kotowari/overview/toc.yaml\n",
     )
     .expect("overview.files should parse");
     assert_eq!(
         cfg.overview.map(|overview| overview.files),
         Some(vec![".kotowari/overview/*.md".to_string()])
     );
+}
+
+// @kotowari[REQ-core-013, TBL-core-004]
+#[test]
+fn tbl_core_004_overview_toc_is_read_as_one_path() {
+    let cfg = kotowari_core::config::Config::parse(
+        "overview:\n  files: [\"o/*.md\"]\n  toc: o/toc.yaml\n",
+    )
+    .expect("overview.toc should parse");
+    assert_eq!(
+        cfg.overview.map(|overview| overview.toc),
+        Some("o/toc.yaml".into())
+    );
+}
+
+// @kotowari[REQ-core-014, TBL-core-004]
+#[test]
+fn req_014_overview_without_toc_stops_with_a_config_error() {
+    let result = kotowari_core::config::Config::parse("overview:\n  files: [\"o/*.md\"]\n");
+    match result {
+        Err(kotowari_core::StopReason::ConfigError(detail)) => {
+            assert!(detail.contains("overview.toc"), "{detail}");
+        }
+        other => panic!("expected a config error, got {other:?}"),
+    }
+}
+
+// @kotowari[REQ-core-014]
+#[test]
+fn req_014_a_null_absolute_or_non_string_overview_toc_stops() {
+    for toc in ["", " /abs/toc.yaml", " [a, b]", " {a: 1}"] {
+        let yaml = format!("overview:\n  files: [\"o/*.md\"]\n  toc:{toc}\n");
+        assert!(
+            matches!(
+                kotowari_core::config::Config::parse(&yaml),
+                Err(kotowari_core::StopReason::ConfigError(_))
+            ),
+            "{yaml:?} should stop"
+        );
+    }
 }
 
 // @kotowari[REQ-core-013, TBL-core-004]
@@ -720,7 +760,9 @@ fn tbl_core_004_without_the_overview_key_no_overview_data_is_configured() {
 // @kotowari[REQ-core-014]
 #[test]
 fn req_014_invalid_overview_glob_stops() {
-    let result = kotowari_core::config::Config::parse("overview:\n  files:\n    - \"[invalid\"\n");
+    let result = kotowari_core::config::Config::parse(
+        "overview:\n  files:\n    - \"[invalid\"\n  toc: toc.yaml\n",
+    );
     assert!(
         result.is_err(),
         "invalid glob in overview.files should stop"
@@ -734,7 +776,8 @@ fn req_014_overview_without_files_or_with_null_stops() {
         "overview:\n",
         "overview: {}\n",
         "overview:\n  files:\n",
-        "overview:\n  files: []\n  extra: 1\n",
+        "overview:\n  files: []\n  toc: toc.yaml\n  extra: 1\n",
+        "overview:\n  toc: toc.yaml\n",
     ] {
         assert!(
             kotowari_core::config::Config::parse(yaml).is_err(),
@@ -750,7 +793,7 @@ fn req_014_an_invalid_overview_glob_stops_check_with_a_config_error() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "overview:\n  files:\n    - \"[invalid\"\n",
+        "overview:\n  files:\n    - \"[invalid\"\n  toc: toc.yaml\n",
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();

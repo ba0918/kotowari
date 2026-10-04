@@ -48,7 +48,8 @@ fn json(stdout: &str) -> serde_json::Value {
     serde_json::from_str(stdout).unwrap_or_else(|e| panic!("{e}: {stdout}"))
 }
 
-const OVERVIEW: &str = "overview:\n  files:\n    - \".kotowari/overview/*.md\"\n";
+const OVERVIEW: &str =
+    "overview:\n  files:\n    - \".kotowari/overview/*.md\"\n  toc: .kotowari/toc.yaml\n";
 
 /// 正しい全体像の元データ
 fn valid(title: &str) -> String {
@@ -95,7 +96,10 @@ fn ex_core_464_overview_data_in_a_named_hidden_directory_is_read() {
 #[test]
 fn req_core_019_a_broad_glob_does_not_enter_hidden_directories_it_does_not_name() {
     let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), "overview:\n  files:\n    - \"**/*.md\"\n");
+    make_project(
+        tmp.path(),
+        "overview:\n  files:\n    - \"**/*.md\"\n  toc: .kotowari/toc.yaml\n",
+    );
     write(
         tmp.path(),
         ".kotowari/overview/a.md",
@@ -110,7 +114,7 @@ fn req_core_019_a_broad_glob_does_not_enter_hidden_directories_it_does_not_name(
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
-        "overview:\n  files:\n    - \".kotowari/overview/**/*.md\"\n",
+        "overview:\n  files:\n    - \".kotowari/overview/**/*.md\"\n  toc: .kotowari/toc.yaml\n",
     );
     write(tmp.path(), ".kotowari/overview/a.md", &valid("a"));
     write(tmp.path(), ".kotowari/overview/sub/b.md", &valid("b"));
@@ -129,7 +133,10 @@ fn req_core_019_a_broad_glob_does_not_enter_hidden_directories_it_does_not_name(
 #[test]
 fn req_core_278_only_files_with_a_lowercase_md_extension_are_read() {
     let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), "overview:\n  files:\n    - \"notes/*\"\n");
+    make_project(
+        tmp.path(),
+        "overview:\n  files:\n    - \"notes/*\"\n  toc: .kotowari/toc.yaml\n",
+    );
     write(tmp.path(), "notes/a.md", &valid("a"));
     write(tmp.path(), "notes/b.MD", "broken");
     write(tmp.path(), "notes/c.txt", "broken");
@@ -178,7 +185,7 @@ fn ex_core_465_overview_data_matched_by_guides_is_a_config_error() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
-        "overview:\n  files: ['docs/a.md']\nguides:\n  files: ['docs/a.md']\n",
+        "overview:\n  files: ['docs/a.md']\n  toc: .kotowari/toc.yaml\nguides:\n  files: ['docs/a.md']\n",
     );
     write(tmp.path(), "docs/a.md", &valid("a"));
     let (code, stdout, stderr) = run(tmp.path(), &["check"]);
@@ -194,12 +201,15 @@ fn ex_core_465_overview_data_matched_by_guides_is_a_config_error() {
 #[test]
 fn req_core_280_the_first_overlap_in_byte_order_is_reported_and_tests_overlap_too() {
     let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), "overview:\n  files: ['tests/**']\n");
+    make_project(
+        tmp.path(),
+        "overview:\n  files: ['tests/**']\n  toc: .kotowari/toc.yaml\n",
+    );
     write(tmp.path(), "tests/b.md", &valid("b"));
     write(tmp.path(), "tests/a.md", &valid("a"));
     std::fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "tests:\n  files: ['tests/**']\noverview:\n  files: ['tests/**']\n",
+        "tests:\n  files: ['tests/**']\noverview:\n  files: ['tests/**']\n  toc: .kotowari/toc.yaml\n",
     )
     .unwrap();
     let (code, _, stderr) = run(tmp.path(), &["status"]);
@@ -218,7 +228,7 @@ fn req_core_280_the_guides_and_tests_overlap_is_judged_first_and_guides_win_when
     write(tmp.path(), "tests/a.md", &valid("a"));
     std::fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "tests:\n  files: ['tests/**']\nguides:\n  files: ['tests/**']\noverview:\n  files: ['tests/**']\n",
+        "tests:\n  files: ['tests/**']\nguides:\n  files: ['tests/**']\noverview:\n  files: ['tests/**']\n  toc: .kotowari/toc.yaml\n",
     )
     .unwrap();
     let (_, _, stderr) = run(tmp.path(), &["check"]);
@@ -263,7 +273,7 @@ fn req_core_290_overview_findings_are_sorted_with_the_other_findings() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
-        "overview:\n  files: ['docs/a.md', 'docs/z.md']\n",
+        "overview:\n  files: ['docs/a.md', 'docs/z.md']\n  toc: .kotowari/toc.yaml\n",
     );
     write(tmp.path(), "docs/a.md", &without_lead("docs/ir/cli.md"));
     // docs/ir/ の IR の誤りより docs/a.md が先、docs/z.md は後に並ぶ
@@ -358,7 +368,7 @@ fn req_core_152_list_and_query_neither_read_overview_data_nor_stop_on_it() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
-        "overview:\n  files: ['docs/notes/**']\nguides:\n  files: ['docs/notes/**']\n",
+        "overview:\n  files: ['docs/notes/**']\n  toc: .kotowari/toc.yaml\nguides:\n  files: ['docs/notes/**']\n",
     );
     std::fs::create_dir_all(tmp.path().join("docs/notes")).unwrap();
     std::fs::write(tmp.path().join("docs/notes/a.md"), [0xff]).unwrap();

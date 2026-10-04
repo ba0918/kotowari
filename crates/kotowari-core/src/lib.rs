@@ -194,6 +194,12 @@ finding_kinds! {
     OverviewIrShared => "overview_ir_shared",
     OverviewRefUnresolved => "overview_ref_unresolved",
     OverviewNameConflict => "overview_name_conflict",
+    // 目次の指摘（TBL-core-008）。全体像の元データの指摘と同じく kotowari-overview が作る
+    OverviewTocInvalid => "overview_toc_invalid",
+    OverviewTocPageMissing => "overview_toc_page_missing",
+    OverviewTocPageUnknown => "overview_toc_page_unknown",
+    OverviewTocPageDuplicate => "overview_toc_page_duplicate",
+    OverviewTocGroupEmpty => "overview_toc_group_empty",
 }
 
 impl FindingKind {

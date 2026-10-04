@@ -44,7 +44,8 @@ fn make_project(config: &str, lead: bool) -> TempDir {
     tmp
 }
 
-const OVERVIEW: &str = "overview:\n  files: ['.kotowari/overview/*.md']\n";
+const OVERVIEW: &str =
+    "overview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n";
 
 /// 空いているポート。OS に選ばせてすぐ離す
 fn free_port() -> u16 {
@@ -276,7 +277,7 @@ fn req_core_279_serve_without_the_overview_key_is_a_config_error() {
 #[test]
 fn req_core_280_serve_stops_on_an_overlap_with_the_guides() {
     let tmp = make_project(
-        "overview:\n  files: ['notes/*.md']\nguides:\n  files: ['notes/*.md']\n",
+        "overview:\n  files: ['notes/*.md']\n  toc: .kotowari/toc.yaml\nguides:\n  files: ['notes/*.md']\n",
         true,
     );
     std::fs::create_dir_all(tmp.path().join("notes")).unwrap();

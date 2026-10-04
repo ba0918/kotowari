@@ -124,7 +124,7 @@ fn overview_prepare_and_build_return_what_the_sync_operations_return() {
         }
         std::fs::write(
             dir.path().join(".kotowari/config.yaml"),
-            "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n",
+            "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
         )
         .unwrap();
         std::fs::write(dir.path().join("docs/ir/topic.md"), "# Topic\n\nScope.\n").unwrap();

@@ -5,7 +5,8 @@ use tempfile::TempDir;
 
 const IR: &str = "# CLI\n\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: review\n- how_to_verify: read\n\nBody.\n";
 
-const OVERVIEW: &str = "overview:\n  files:\n    - \".kotowari/overview/*.md\"\n";
+const OVERVIEW: &str =
+    "overview:\n  files:\n    - \".kotowari/overview/*.md\"\n  toc: .kotowari/toc.yaml\n";
 
 fn make_project(tmp: &Path, config: &str) {
     for dir in [".kotowari", "docs/decision/adr", "tests"] {
@@ -256,10 +257,13 @@ fn ex_core_463_build_without_the_overview_key_is_a_config_error() {
 #[test]
 fn req_core_280_build_stops_on_an_overlap_with_the_test_files() {
     let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), "overview:\n  files: ['tests/**/*.md']\n");
+    make_project(
+        tmp.path(),
+        "overview:\n  files: ['tests/**/*.md']\n  toc: .kotowari/toc.yaml\n",
+    );
     std::fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "tests:\n  files: ['tests/**']\noverview:\n  files: ['tests/**/*.md']\n",
+        "tests:\n  files: ['tests/**']\noverview:\n  files: ['tests/**/*.md']\n  toc: .kotowari/toc.yaml\n",
     )
     .unwrap();
     write(tmp.path(), "tests/a.md", &data("docs/ir/cli.md", "A", "a"));

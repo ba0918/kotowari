@@ -22,6 +22,8 @@ pub struct Config {
 pub struct OverviewConfig {
     /// `全体像の元データ`に当たる glob の一覧。"overview" を書くときは必須
     pub files: Vec<String>,
+    /// `目次`のファイルのパス（基準のディレクトリからの相対）。"overview" を書くときは必須
+    pub toc: String,
 }
 
 /// `面`の検査の設定（TBL-core-004、docs/ir/core/surface.md）
@@ -142,6 +144,8 @@ struct RawConfig {
 struct RawOverview {
     #[serde(default, deserialize_with = "deserialize_nullable")]
     files: Option<Option<Vec<String>>>,
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    toc: Option<Option<String>>,
 }
 
 #[derive(serde::Deserialize)]
@@ -386,6 +390,7 @@ impl Config {
             overview: self.overview.as_ref().map(|overview| {
                 Some(RawOverview {
                     files: Some(Some(overview.files.clone())),
+                    toc: Some(Some(overview.toc.clone())),
                 })
             }),
             limits: Some(Some(RawLimits {
@@ -505,14 +510,22 @@ impl Config {
             }
         }
 
-        // TBL-core-004: "overview" を書くときは "overview.files" が必須。glob は REQ-core-014 のとおり検査する
+        // TBL-core-004: "overview" を書くときは "overview.files" と "overview.toc" が必須。glob と
+        // パスは REQ-core-014 のとおり検査する
         let overview = match non_null(raw.overview, "overview")? {
             Some(o) => {
                 let files = non_null(o.files, "overview.files")?.ok_or_else(|| {
                     StopReason::ConfigError("overview.files is required".to_string())
                 })?;
                 check_globs(&files)?;
-                Some(OverviewConfig { files })
+                let toc = non_null(o.toc, "overview.toc")?.ok_or_else(|| {
+                    StopReason::ConfigError("overview.toc is required".to_string())
+                })?;
+                check_not_absolute(&toc, "overview.toc")?;
+                Some(OverviewConfig {
+                    files,
+                    toc: crate::normalize_path(&toc),
+                })
             }
             None => None,
         };
