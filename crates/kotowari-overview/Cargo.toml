@@ -1,0 +1,17 @@
+[package]
+name = "kotowari-overview"
+version = "0.3.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/ba0918/kotowari"
+description = "Check in-memory overview data against kotowari specifications and build its render input"
+
+[dependencies]
+kotowari-core = { path = "../kotowari-core", version = "0.3.0" }
+kotowari-markdown-schema = { path = "../kotowari-markdown-schema", version = "0.1.0" }
+kotowari-markdown-view = { path = "../kotowari-markdown-view", version = "0.1.0" }
+jsonschema = { version = "0.58.4", default-features = false }
+markdown = "1"
+serde_json = "1"
+serde-saphyr = "1"

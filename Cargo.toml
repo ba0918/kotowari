@@ -23,6 +23,6 @@ tempfile = "3"
 serde-saphyr = "1"
 
 [workspace]
-members = ["crates/kotowari", "crates/kotowari-core", "crates/kotowari-source-analysis", "crates/kotowari-markdown-schema", "crates/kotowari-markdown-schema-io", "crates/kotowari-markdown-view", "crates/kotowari-mds"]
+members = ["crates/kotowari", "crates/kotowari-core", "crates/kotowari-source-analysis", "crates/kotowari-markdown-schema", "crates/kotowari-markdown-schema-io", "crates/kotowari-markdown-view", "crates/kotowari-overview", "crates/kotowari-mds"]
 exclude = ["experiments"]
 resolver = "3"

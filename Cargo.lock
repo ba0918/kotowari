@@ -910,6 +910,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "kotowari-overview"
+version = "0.3.0"
+dependencies = [
+ "jsonschema",
+ "kotowari-core",
+ "kotowari-markdown-schema",
+ "kotowari-markdown-view",
+ "markdown",
+ "serde-saphyr",
+ "serde_json",
+]
+
+[[package]]
 name = "kotowari-source-analysis"
 version = "0.3.0"
 dependencies = [
