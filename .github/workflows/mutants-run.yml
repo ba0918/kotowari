@@ -1,4 +1,4 @@
-# 変異テストを8つに分けて並列に回す、呼び出し専用のワークフロー（判断の記録
+# 変異テストを16に分けて並列に回す、呼び出し専用のワークフロー（判断の記録
 # docs/decision/records/2026-10-04-mutants-in-ci.md の A3）。PR（mutants.yml）とリリース（release.yml）が使う。
 #
 # 分担ごとに scripts/mutants.sh が自分の結果を kotowari mutants に読ませ、等価の一覧の分を除いた
@@ -29,19 +29,19 @@ env:
   MUTANTS_JOBS: "1"
   # 手元の scripts/mutants.sh と同じ版（出力の終了コードの扱いがこの版に合わせてある）
   CARGO_MUTANTS_VERSION: "27.1.0"
-  SHARDS: "8"
+  SHARDS: "16"
   # 変異1件のテストの時間切れの秒数（同じ記録の A10）
   MUTANTS_TIMEOUT: "20"
 
 jobs:
   shard:
-    name: 変異テスト（${{ matrix.shard }}/8）
+    name: 変異テスト（${{ matrix.shard }}/16）
     runs-on: ubuntu-latest
     timeout-minutes: 180
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -53,7 +53,10 @@ jobs:
           rustup toolchain install stable --profile minimal
           rustup toolchain install nightly --profile minimal
           rustup default stable
-          cargo install cargo-mutants --version "$CARGO_MUTANTS_VERSION" --locked
+      # ビルド済みの cargo-mutants を入れる。分担ごとにソースから入れると1分かかる
+      - uses: taiki-e/install-action@e407f7bafb71fd004bc5c2da3032e5470cbb6ef0 # v2.87.24
+        with:
+          tool: cargo-mutants@${{ env.CARGO_MUTANTS_VERSION }}
       - name: 変異テスト
         env:
           SCOPE: ${{ inputs.scope }}

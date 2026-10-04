@@ -43,7 +43,7 @@ The minimum supported Rust version is declared per crate, not once for the works
 and `pre-push` runs the full test suite and `kotowari check` with no exemptions. The mutation
 tests do not run in the hooks; they blocked every push for one to two hours.
 
-The mutation tests run in GitHub Actions, split into eight parallel shards
+The mutation tests run in GitHub Actions, split into sixteen parallel shards
 (`.github/workflows/mutants-run.yml`), each inside a systemd scope capped at 12G of memory and
 with a 20-second test timeout per mutant. Every pull request runs the mutants in the diff from
 the newest commit of the same pull request whose `mutants` check passed, or from its merge base
