@@ -205,6 +205,11 @@ fn req_core_299_a_percent_encoded_page_name_is_decoded_to_the_file_in_the_cache(
     let (status, _, body) = get(port, &format!("/{encoded}"));
     assert!(status.contains(" 200 "), "{encoded}: {status}");
     assert_eq!(body, std::fs::read(cache.join("変更 a.html")).unwrap());
+    // Unix ではバックスラッシュも名前の1文字で、置き場の中のファイルである
+    std::fs::write(cache.join("b\\c.html"), "bc").unwrap();
+    let (status, _, body) = get(port, "/b%5Cc.html");
+    assert!(status.contains(" 200 "), "{status}");
+    assert_eq!(body, std::fs::read(cache.join("b\\c.html")).unwrap());
     interrupt(&child);
     assert_eq!(child.wait().unwrap().code(), Some(0));
 }

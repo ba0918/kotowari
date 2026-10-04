@@ -95,9 +95,8 @@ fn resolve(cache: &Path, url: &str) -> Option<(PathBuf, Vec<u8>)> {
     } else {
         relative
     };
-    if relative.contains('\\') || relative.contains('\0') {
-        return None;
-    }
+    // バックスラッシュは Unix では名前の1文字なので、置き場の中のその名前のファイルを返す。
+    // NUL を含む道は下の canonicalize が失敗して None になる
     let candidate = Path::new(relative);
     if !candidate
         .components()
