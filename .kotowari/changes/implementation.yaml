@@ -44,7 +44,7 @@
         {
           "path": "CHANGELOG.md",
           "before": "sha256:65c67a93142998d772c61992aad13bd4325d2471270e6a3750ccaaec73d3aefc",
-          "after": "sha256:51661566650b3cc27a2dafc05648a077fbb01d5d102c9e18ec3e416bc709d485"
+          "after": "sha256:b8814afa08f7f6be2c22c443e1b6219dcf09bf6e6c998490c80ac728af072224"
         },
         {
           "path": "Cargo.lock",
@@ -84,12 +84,12 @@
         {
           "path": "agent/skills/kotowari/references/findings.md",
           "before": "sha256:f411f31785863466c9382dec5e41c99ea8bc01cca0fca300cf977745075b0a3c",
-          "after": "sha256:f4ce65c7a01c1b7ba91f6502c7c950dbe19f6312fb04d53c2248600bd2938183"
+          "after": "sha256:c03fb87d96a6a736789c357409e134767b6fa080ed8d3d3a28d0e1205d11ae26"
         },
         {
           "path": "agent/skills/kotowari/references/overview.md",
           "before": null,
-          "after": "sha256:650f8ca04cfd1e72f1e7f52d26a4153f3d529ae569a70ef73bc7ed60dd60c2fb"
+          "after": "sha256:8254dfdc3afe61a25cc94aea535606d7969a433fdcfc60d9d2c44e9422dfd75e"
         },
         {
           "path": "crates/kotowari-core/Cargo.toml",
@@ -514,7 +514,7 @@
         {
           "path": "crates/kotowari-markdown-view/examples/render.rs",
           "before": null,
-          "after": "sha256:c2cbceb8e9d5b9b59527c678fbe9c6bc3121c2d88877feaa5ec57798ce9ab495"
+          "after": "sha256:64b67a03bcb38fcdb92ba279e7b349793f50f271a047a4ebc9aead1e8b303766"
         },
         {
           "path": "crates/kotowari-markdown-view/schemas/cards.json",
@@ -564,7 +564,7 @@
         {
           "path": "crates/kotowari-markdown-view/src/lib.rs",
           "before": null,
-          "after": "sha256:240b1b976d21c799901ed7dd834ac2aeaefa20ed155f4c93ef8f54dc4acdc823"
+          "after": "sha256:dfadeed4f91e1f3562a168f102a1ef5359a56a47a0dbc1bf77fa316f1c2a78a2"
         },
         {
           "path": "crates/kotowari-markdown-view/src/parts.rs",
@@ -579,22 +579,22 @@
         {
           "path": "crates/kotowari-markdown-view/src/text.rs",
           "before": null,
-          "after": "sha256:63956a0ba5ada734eb5ad417fb36bd2082dacfe92f380ad7033bcec14c236888"
+          "after": "sha256:957b9ac2d5204b22c5b922de982e5871136567876bd97990bef677dcececfb8f"
         },
         {
           "path": "crates/kotowari-markdown-view/tests/determinism.rs",
           "before": null,
-          "after": "sha256:7c7fdb5430e0b4580bf0f87f13f0921bc4038197873357e9e826da95b6864a3d"
+          "after": "sha256:34a05a551dac14c3986feec8bc85470bf0b9e81829e1fd6a899a55ed26c960f7"
         },
         {
           "path": "crates/kotowari-markdown-view/tests/parts.rs",
           "before": null,
-          "after": "sha256:dc66787462e5a3d44946d79cbe6f771ee38ac3c9550ba8adb6596844914d3fc3"
+          "after": "sha256:931ea49d470fba6063b22eb8040104dd907f9d3f350a7bbf07d231344d9627c0"
         },
         {
           "path": "crates/kotowari-markdown-view/tests/rendering.rs",
           "before": null,
-          "after": "sha256:08ff3cfe4b95993ec157c6f7a25b4631cec10cc9200fd256a3ca2db142b9c881"
+          "after": "sha256:aaa67efdc63d7a4459050db478dced8084bb0d1b84f58cc0a2f84088feab9d70"
         },
         {
           "path": "crates/kotowari-mds/Cargo.toml",
@@ -694,17 +694,17 @@
         {
           "path": "crates/kotowari-overview/src/document.rs",
           "before": null,
-          "after": "sha256:ed38baa0712238dfe526c66d0890311cbdd9142a25ced79e99372c922c9c9897"
+          "after": "sha256:c76cb7cd087735bde4a20f1f27954cc39008bbff524453e6515c21df17923f74"
         },
         {
           "path": "crates/kotowari-overview/src/form.rs",
           "before": null,
-          "after": "sha256:1f7c7de2b048e0d495e2cdaf93af837f08ce51c4a5453e956f2afe1e8b290f65"
+          "after": "sha256:ae7e78ecd0d094ff2447055c507c47390080d57289f28204ad3d05d8e8d9a5cc"
         },
         {
           "path": "crates/kotowari-overview/src/lib.rs",
           "before": null,
-          "after": "sha256:380cfb700392a6288bb8d32f3864f7e55d0e4839abaf2d55fcee19ddbc9621a0"
+          "after": "sha256:49d4dee514e1accafe6b9ae4c1e02b1f7b8774bd010193493ec750613d1e977b"
         },
         {
           "path": "crates/kotowari-overview/src/parts.rs",
@@ -719,7 +719,7 @@
         {
           "path": "crates/kotowari-overview/tests/overview.rs",
           "before": null,
-          "after": "sha256:4fb2abfb75434e7dd1a113d09d8674b75600e95bfb0cea7c13dcfc6915c1e075"
+          "after": "sha256:cd7a044f8d5c0e58429a91e29eedb34f429622bb60040db05a57a1a4c938c463"
         },
         {
           "path": "crates/kotowari-source-analysis/Cargo.toml",
@@ -884,7 +884,7 @@
         {
           "path": "crates/kotowari/src/lib.rs",
           "before": null,
-          "after": "sha256:128996baf8f7f1c911f38f3a70a6efcd95de70f05a9486016fc3f52e7619ec74"
+          "after": "sha256:60570f578a3767e3c41e3c60a67982efd495b104b0ccb856da8540fd790fa1a9"
         },
         {
           "path": "crates/kotowari/src/overview.rs",
@@ -919,27 +919,77 @@
         {
           "path": "crates/kotowari/tests/project.rs",
           "before": null,
-          "after": "sha256:212e5e83975708e5d429ba676f6657165153b9edd7fb6f2a0adfeb88be9ada16"
+          "after": "sha256:574d514553c38c86e7640c08270be3d4487e49d4b91bf54c4cf97739fb88982d"
         },
         {
           "path": "docs/guides/cli.md",
           "before": "sha256:ccde0fb4011b0f72639ca8a460a3179cbd8df9bd2e7110f73b8f0b9d16ca6fab",
-          "after": "sha256:e36f933d872417283ec62c469ce9a04deca403e74ed9954956934a17845c0eba"
+          "after": "sha256:4fb448d1ea49440668fc4520152461b04f4c5e35f7d9b88fb8f121aef15f93f0"
+        },
+        {
+          "path": "docs/guides/commands/check.md",
+          "before": "sha256:884c669fe8b721cd550f86d03a2d68d1e71c793dfba1ca77faec56dc676fb4c5",
+          "after": "sha256:1e702a174c04f7d628f4746e2ead94db909c8e75379e06ed7d962dbc09fe85b0"
+        },
+        {
+          "path": "docs/guides/commands/list.md",
+          "before": "sha256:390418e84d8685c1792068d1804d9932f080079233d8e2f18f1fde0b59a41e7f",
+          "after": "sha256:9980996cac5fb3c75d8d7fa0a56ed52615c702581a590bff9fe98f689559b93e"
+        },
+        {
+          "path": "docs/guides/commands/mutants.md",
+          "before": "sha256:fa3128be89f20b65f8207d2bcfb7e6043d9c7b532d5110e0d722ca571a86bfd2",
+          "after": "sha256:dd5b63daab5d0613918c5b9d3173c9bb9d872da107faaca8aaf5b9cc6489d1fd"
+        },
+        {
+          "path": "docs/guides/commands/plan.md",
+          "before": "sha256:caa03c438475cb71a61a3d58b7550cbfa35c94602937d39eae985325bef335c8",
+          "after": "sha256:544455010a156025406affcc4da9a05f8079bcd8c46ba58f022422c403426858"
+        },
+        {
+          "path": "docs/guides/commands/query.md",
+          "before": "sha256:78c0226108a3b5535c015ae71ac12b0584a9a1edc72b1e8a492b0d0abb60b542",
+          "after": "sha256:ed21c5005d4a75aed61f0292b6b2da9330a8601255c4699e36b67401b0073707"
+        },
+        {
+          "path": "docs/guides/commands/status.md",
+          "before": "sha256:cb429226fb41fb9ad6929a4536641ea36d4bfaf8891bf316819c41c5b13d573e",
+          "after": "sha256:272afb599044a5af08496432414d3e35e07400b67f760f61564cdcfb8032043f"
+        },
+        {
+          "path": "docs/guides/config.md",
+          "before": "sha256:bc01d6cce1f028194105e681b2a87c4b859ca8c55b96dc0b4bf9732f8f985699",
+          "after": "sha256:bd944721bb87e92608f49ecad646c342af692a92bfa1e3f1d83148e22093ed67"
+        },
+        {
+          "path": "docs/guides/deferred.md",
+          "before": "sha256:2f13ebeec8cfa2b2f02e536a01811ad5f6dc6edd3d56c75883490e82a343dd52",
+          "after": "sha256:75997df48e521eb85ca3584521efe618574a6038b5c12c4b08c15a83c9d4ff48"
+        },
+        {
+          "path": "docs/guides/findings.md",
+          "before": "sha256:f23ee48cbc2f2e9230cfbd7e86b0dd22236c78b4abd377b45bdf555e4f4654e8",
+          "after": "sha256:705a392cfa30893ebea07c53cc248c6404f9c4adf7d215ef6c4f34672be2a20f"
         },
         {
           "path": "docs/guides/index.md",
           "before": "sha256:40c6d002816f8217c8af9776167c92f95682d4ed6147d45b4f3b993f9bc571f1",
-          "after": "sha256:732ef4e41b09728649fcdcb8d598c179db819a83a1dd46432f5cf65ec392176c"
+          "after": "sha256:3b438880b0fee606810d432806d612ac4584ee013b848029090b1e3a1b6ad7a1"
         },
         {
           "path": "docs/guides/package-validation.md",
           "before": null,
-          "after": "sha256:1620cee21b43d7946b52e81f6f8dd82960142c92c643e8871da2bddf9f3a1138"
+          "after": "sha256:97c21826d26d6f7308a491df2e96f1095a40c8e4eea3654e6d10606744a0e145"
         },
         {
           "path": "docs/guides/public-crate-api.md",
           "before": null,
-          "after": "sha256:a24a76e41a389d239cb591b070bf0e675179f3400bf2c359f5455224234ca9a4"
+          "after": "sha256:6d37324bc7ab19a3f3d8caaee8a91f9bd8792f6eb5c583fa273721b40061c460"
+        },
+        {
+          "path": "docs/guides/surface.md",
+          "before": "sha256:61498b955216fac34b16fabb2fa5ce46fc01a05bcf74da1af41df11cab416362",
+          "after": "sha256:1ca81514101ae1e067701a56c09bac903504f0fa16b3bd53b155617ff15ac701"
         },
         {
           "path": "lefthook.yml",
@@ -1069,7 +1119,7 @@
         {
           "path": "tests/step19_overview_build.rs",
           "before": null,
-          "after": "sha256:e55b7a12a710d6247f54e20eea3b874f674218105372c6834216fb8c1860c517"
+          "after": "sha256:335a3052ad38f5a31e28670a58dd7e8a1b4f5a01aaf0929fd77352ab995e1455"
         },
         {
           "path": "tests/step1_cli.rs",
@@ -1119,7 +1169,7 @@
         },
         {
           "path": "docs/ir/core/cli-environment.md",
-          "sha256": "sha256:961b628f610e172e64497d476f2b9e50e80d7a242decda2be884121e828c6712"
+          "sha256": "sha256:2799ea6eca03cc1730789da54b5e5484b6f28e7fa84cb33843007a646696f500"
         },
         {
           "path": "docs/ir/core/cli-scope.md",
@@ -1127,7 +1177,7 @@
         },
         {
           "path": "docs/ir/core/cli.md",
-          "sha256": "sha256:db7764ac54c02fad301fa543fba3d97d36d945a9abe6165c2ae0d8703a54f7f7"
+          "sha256": "sha256:a9be3bb536cd4de8a2eadfaec635d05d6e3db5f99b86a5a03f38b84ee55944c0"
         },
         {
           "path": "docs/ir/core/config.md",
@@ -1140,6 +1190,10 @@
         {
           "path": "docs/ir/core/finding-order.md",
           "sha256": "sha256:d67870436799092ee966648cb2992b8ea6b4302cce79acf1d1689602b7188aec"
+        },
+        {
+          "path": "docs/ir/core/findings.md",
+          "sha256": "sha256:849fff70a68217b934d51f0c4eeafdac61e3a6cbb16ee7dd023a414fe014aa2c"
         },
         {
           "path": "docs/ir/core/form-contract.md",
@@ -1183,11 +1237,11 @@
         },
         {
           "path": "docs/ir/core/overview-commands.md",
-          "sha256": "sha256:4ed81cdee315adffa4e8607ec5d5e2a29c80bf8b4fc80f0725481de0c36203f2"
+          "sha256": "sha256:412bca5657b821e97516b42a4ebd8a49ac205c4b0a6f09b02ddd57c6945bd29b"
         },
         {
           "path": "docs/ir/core/overview-data.md",
-          "sha256": "sha256:0e32df10808a1c9634bfe5d746741d25f24d503a382c84b97043612f94b1fbcd"
+          "sha256": "sha256:47c36638f2f93c407eb6f7ec736b6d5737456cb6bc78c226aeb6886f5113cc77"
         },
         {
           "path": "docs/ir/core/overview-output.md",
@@ -1235,7 +1289,7 @@
         },
         {
           "path": "docs/ir/view/CONTEXT.md",
-          "sha256": "sha256:6ef3d025e7d99f695d5c102bbd937139237934f1ef94360577d4adeac4766ebf"
+          "sha256": "sha256:9fd12f5e2a119d163f48e1e6073878ee27f3249400338bb45aca8535d82909d7"
         },
         {
           "path": "docs/ir/view/parts.md",
@@ -1243,15 +1297,17 @@
         },
         {
           "path": "docs/ir/view/rendering.md",
-          "sha256": "sha256:f0b61e15ad3669ba7becf082dd012b355c824e519ffcef6109027556072788a9"
+          "sha256": "sha256:ff848d07beb9e7e814d1cb7dee966d5f71757d22886c682e84af6ae1aeb4d53c"
         }
       ],
       "conclusion": "existing",
-      "reason": "The seven-package restructuring implements the approved synchronous and optional Tokio contracts while retaining both CLI contracts. Core admits configuration and enabled groups, retains original source identity and text, and computes read and check results through shared private phases. Logical SourceText remains canonical; native acquisition carries lossless PathBuf provenance separately from producer display/rule spellings, preserving the BASE-supported display collisions, counts and matching. Opaque preparation parses each IR file before later acquisition and checks guide overlap after enumeration but before guide bodies and surface acquisition. Public changes inspection validates consumed configuration while fact-only evaluation stays independent. Results remain read-only, CLI conversion remains CLI-owned, and useful facade aliases retain lower-type identity. List/query member order is restored without changing values, nulls or arrays. Canonical version fixtures retain intentional mismatches, transformations and real production rollback; inherited change-record diagnostic assertions are unchanged. The previously authorized two schema verification references and newly authorized three acquisition verification references preserve requirement meaning. The linked stop guide was reviewed and only its related fingerprint refreshed. Chronological repair RED, GREEN and REFACTOR evidence, current workspace/CLI/source-consumer checks and exact baseline differences are retained separately. The earlier broader constructor TDD deviation is not relabeled. Final sealed-head shipped-artifact and full mutation gates remain deferred pending parent-owned review; historical archives and raw mutation misses do not prove this candidate. This implementer record does not claim independent approval or integration readiness. Legacy collected-file acquisition preserves the BASE lossy absolute read selection and ordering for tests, guides, surfaces and change records while retaining distinct lossless enumeration identities. Original IR and decision-source PathBuf reads remain unchanged. Text consistency compares actually acquired source by enumeration identity, without inode discovery, merging legacy read aliases or weakening public admission. The byte-filename-only stop and byte-name-plus-replacement multiplicity are covered by chronological producer-grounded regressions, and the approved backslash collision remains an exact BASE output match. Planning A14 records this preservation adjudication without any further IR edit. The user-authorized mutation repair enables all features only in the mutation lane and preserves ordinary default tests and the existing selection, resource, checksum and policy gates. Producer-grounded public-observation assertions cover retained IR/native paths, references, preparation configuration, required guides and acquired-analysis text, public surface evaluation, schema open/relax extraction, loaded document content, reachable error Display and facade error classification. No original product defect was established or production Rust edited; passing original-code tests and bounded mutant sensitivity are not relabeled as test-first RED. Only the three independently challenged ParseError substitutions are registered under A16's locked producer/serialization proof and explicit manual invalidation conditions, without implying automatic dependency staleness or independent approval of these new entries. The failed 680-outcome sealed mutation run is historical evidence, not a pass or replaced by probes. Parent-owned reviewer grounds remain untouched and stale; final shipped-artifact/full mutation awaits independent review and a new seal. On top of that restructuring, the branch implements the approved overview specification inside its requirements and the 2026-10-04 placement decisions: kotowari-markdown-view renders the render input into pages and publishes the eight part schemas without touching files; kotowari-overview checks overview data from texts and an already read ReadModel and builds the reference table, stale sections and render input; core gains only the overview finding kinds, the overview.files key, a generic named finding group, guide-mark reading of one text, and read-only access to read documents and source targets; the kotowari library reads overview data, checks overlaps and passes the overview group, and offers overview_prepare and overview_build writing only under .kotowari/cache/overview; kotowari-cli adds overview build and serve (tiny_http, ctrlc). Skill texts add the approval steps and the overview reference. Every behaviour is covered by marked tests or the review requirements REQ-core-287, REQ-core-300 to REQ-core-303, REQ-core-306 and REQ-core-307.",
+      "reason": "The seven-package restructuring implements the approved synchronous and optional Tokio contracts while retaining both CLI contracts. Core admits configuration and enabled groups, retains original source identity and text, and computes read and check results through shared private phases. Logical SourceText remains canonical; native acquisition carries lossless PathBuf provenance separately from producer display/rule spellings, preserving the BASE-supported display collisions, counts and matching. Opaque preparation parses each IR file before later acquisition and checks guide overlap after enumeration but before guide bodies and surface acquisition. Public changes inspection validates consumed configuration while fact-only evaluation stays independent. Results remain read-only, CLI conversion remains CLI-owned, and useful facade aliases retain lower-type identity. List/query member order is restored without changing values, nulls or arrays. Canonical version fixtures retain intentional mismatches, transformations and real production rollback; inherited change-record diagnostic assertions are unchanged. The previously authorized two schema verification references and newly authorized three acquisition verification references preserve requirement meaning. The linked stop guide was reviewed and only its related fingerprint refreshed. Chronological repair RED, GREEN and REFACTOR evidence, current workspace/CLI/source-consumer checks and exact baseline differences are retained separately. The earlier broader constructor TDD deviation is not relabeled. Final sealed-head shipped-artifact and full mutation gates remain deferred pending parent-owned review; historical archives and raw mutation misses do not prove this candidate. This implementer record does not claim independent approval or integration readiness. Legacy collected-file acquisition preserves the BASE lossy absolute read selection and ordering for tests, guides, surfaces and change records while retaining distinct lossless enumeration identities. Original IR and decision-source PathBuf reads remain unchanged. Text consistency compares actually acquired source by enumeration identity, without inode discovery, merging legacy read aliases or weakening public admission. The byte-filename-only stop and byte-name-plus-replacement multiplicity are covered by chronological producer-grounded regressions, and the approved backslash collision remains an exact BASE output match. Planning A14 records this preservation adjudication without any further IR edit. The user-authorized mutation repair enables all features only in the mutation lane and preserves ordinary default tests and the existing selection, resource, checksum and policy gates. Producer-grounded public-observation assertions cover retained IR/native paths, references, preparation configuration, required guides and acquired-analysis text, public surface evaluation, schema open/relax extraction, loaded document content, reachable error Display and facade error classification. No original product defect was established or production Rust edited; passing original-code tests and bounded mutant sensitivity are not relabeled as test-first RED. Only the three independently challenged ParseError substitutions are registered under A16's locked producer/serialization proof and explicit manual invalidation conditions, without implying automatic dependency staleness or independent approval of these new entries. The failed 680-outcome sealed mutation run is historical evidence, not a pass or replaced by probes. Parent-owned reviewer grounds remain untouched and stale; final shipped-artifact/full mutation awaits independent review and a new seal. On top of that restructuring, the branch implements the approved overview specification inside its requirements and the 2026-10-04 placement decisions: kotowari-markdown-view renders the render input into pages and publishes the eight part schemas without touching files; kotowari-overview checks overview data from texts and an already read ReadModel and builds the reference table, stale sections and render input; core gains only the overview finding kinds, the overview.files key, a generic named finding group, guide-mark reading of one text, and read-only access to read documents and source targets; the kotowari library reads overview data, checks overlaps and passes the overview group, and offers overview_prepare and overview_build writing only under .kotowari/cache/overview; kotowari-cli adds overview build and serve (tiny_http, ctrlc). Later fixes follow decisions A9 to A12 of the 2026-10-04 record and REQ-core-324: build and serve stop with cache error and write nothing when .kotowari, .kotowari/cache or .kotowari/cache/overview is a symbolic link or not a directory; parts after the lead and before the first section are drawn after the lead; every frontmatter violation has the detail \"frontmatter\" while a valid ir list is still matched against the IR; HTML comments in Markdown text are replaced by a sentinel before parsing and the sentinel is removed after rendering, so comments neither show nor change the block structure. Guides and the public crate guides follow the overview commands and the nine packages. Skill texts add the approval steps and the overview reference. Every behaviour is covered by marked tests or the review requirements REQ-core-287, REQ-core-300 to REQ-core-303, REQ-core-306 and REQ-core-307.",
       "requirements": [
         "REQ-core-001",
         "REQ-core-002",
         "REQ-core-004",
+        "REQ-core-005",
+        "REQ-core-006",
         "REQ-core-008",
         "REQ-core-014",
         "REQ-core-018",
@@ -1318,6 +1374,7 @@
         "REQ-core-321",
         "REQ-core-322",
         "REQ-core-323",
+        "REQ-core-324",
         "REQ-schema-014",
         "REQ-schema-044",
         "REQ-schema-049",
@@ -1368,6 +1425,10 @@
         "docs/decision/records/2026-10-04-overview-on-public-api.md#A6",
         "docs/decision/records/2026-10-04-overview-on-public-api.md#A7",
         "docs/decision/records/2026-10-04-overview-on-public-api.md#A8",
+        "docs/decision/records/2026-10-04-overview-on-public-api.md#A9",
+        "docs/decision/records/2026-10-04-overview-on-public-api.md#A10",
+        "docs/decision/records/2026-10-04-overview-on-public-api.md#A11",
+        "docs/decision/records/2026-10-04-overview-on-public-api.md#A12",
         "docs/decision/records/2026-10-02-whole-picture.md#A22",
         "docs/decision/records/2026-10-02-whole-picture.md#A25",
         "docs/decision/records/2026-10-02-whole-picture.md#A27",
