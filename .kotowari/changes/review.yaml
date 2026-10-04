@@ -12,6 +12,16 @@
           "after": "sha256:495ff203347c97232e56d67140d3d24bd10b4be1b5538cf2ab7da4e6849b87d3"
         },
         {
+          "path": ".github/workflows/mutants-run.yml",
+          "before": "sha256:9a06df8256ad96e16b427641850692d7ff98b415c550fbea4183fe96a55a0086",
+          "after": "sha256:e15466326535f80ab73d2ea616963c55ca897175691b1c7ef6d4687776807ca9"
+        },
+        {
+          "path": ".github/workflows/mutants.yml",
+          "before": "sha256:324dba36e0c729ee3f5cf4e702d51c13eb0591c74280423fadb36761b43396d8",
+          "after": "sha256:156acd9730521e45d3d04d0c67e2548dd5a4aad06c142bcccfe5ba0cf3105c2f"
+        },
+        {
           "path": ".github/workflows/release.yml",
           "before": "sha256:2391e6eae7ce1cdc4a9b997abbdfa6116b190e71ce3d8cac975666d0852933e5",
           "after": "sha256:aeeff0493095ec8b690dff1a8b3ab2ec0b58fc3e3d808f7a1226df6525897096"
@@ -19,7 +29,7 @@
         {
           "path": ".kotowari/equivalents.yaml",
           "before": "sha256:600a50641b47eb8ea419406df2e3c1da19917e24dfb0ac243e4d3805c9e75a7d",
-          "after": "sha256:d434bdbb4f0ba2762cd959753b1ee6856735070a634da2c0445b2974b6ddc359"
+          "after": "sha256:efa41ca63a4be84598cbd41ddd0ac74a07338919e3cc6598a939f6e4841e4cfd"
         },
         {
           "path": ".kotowari/schemas/context.yaml",
@@ -44,7 +54,7 @@
         {
           "path": "CHANGELOG.md",
           "before": "sha256:65c67a93142998d772c61992aad13bd4325d2471270e6a3750ccaaec73d3aefc",
-          "after": "sha256:b8814afa08f7f6be2c22c443e1b6219dcf09bf6e6c998490c80ac728af072224"
+          "after": "sha256:d71601128715f1cd577a828a8866785f4a16a638583a0dfd50d223ec82327c47"
         },
         {
           "path": "Cargo.lock",
@@ -59,7 +69,7 @@
         {
           "path": "PROJECT.md",
           "before": "sha256:1c3cf6d5e653e8d7969828777a1d61504916db73af7c750fd825e36c440094e0",
-          "after": "sha256:35ca643d23ca0391f030eb78a559f201886edbf0c082cfe99ad9ac49f9d8b7a1"
+          "after": "sha256:dddf9b526229b77bcc7765780d85c0a184ca673257360b6f5b7cb052f448f4e6"
         },
         {
           "path": "agent/skills/kotowari-brainstorm/SKILL.md",
@@ -84,12 +94,12 @@
         {
           "path": "agent/skills/kotowari/references/findings.md",
           "before": "sha256:f411f31785863466c9382dec5e41c99ea8bc01cca0fca300cf977745075b0a3c",
-          "after": "sha256:c03fb87d96a6a736789c357409e134767b6fa080ed8d3d3a28d0e1205d11ae26"
+          "after": "sha256:a146c56aece5b5be9db22c6cad0f2d2009a3e26ba30d2ed5624bdb37f98841c1"
         },
         {
           "path": "agent/skills/kotowari/references/overview.md",
           "before": null,
-          "after": "sha256:8254dfdc3afe61a25cc94aea535606d7969a433fdcfc60d9d2c44e9422dfd75e"
+          "after": "sha256:b9529911f16ffc8ff1154e576dfe5339c2018daaca334a3ee2c27cb2b13ad63b"
         },
         {
           "path": "crates/kotowari-core/Cargo.toml",
@@ -284,7 +294,7 @@
         {
           "path": "crates/kotowari-core/tests/admission.rs",
           "before": null,
-          "after": "sha256:13cfcefe7c4b37b5668f493ebc86ac0543d4bbd6745c63a01d34f657a6476190"
+          "after": "sha256:4f6c157a59dc069f63718009f7e7f647253ee43d70fa1f7c3a545b7c3ad17726"
         },
         {
           "path": "crates/kotowari-core/tests/change_matching.rs",
@@ -304,7 +314,7 @@
         {
           "path": "crates/kotowari-core/tests/inputs.rs",
           "before": null,
-          "after": "sha256:59eae3a9fa62ef07c4d67871cf20c28955c2c033ea04b0f4f5b0353bd1d5a3b1"
+          "after": "sha256:f0734f5069dd0ab681fbe81f4d983d1b0cbd2bea49ccf5fc965d692eb85064c9"
         },
         {
           "path": "crates/kotowari-core/tests/ir.rs",
@@ -579,7 +589,7 @@
         {
           "path": "crates/kotowari-markdown-view/src/text.rs",
           "before": null,
-          "after": "sha256:957b9ac2d5204b22c5b922de982e5871136567876bd97990bef677dcececfb8f"
+          "after": "sha256:40d17fe942e372f20cfb5893fb702d49b836cef0d409fb65f5811b6bb7a6aca2"
         },
         {
           "path": "crates/kotowari-markdown-view/tests/determinism.rs",
@@ -589,7 +599,7 @@
         {
           "path": "crates/kotowari-markdown-view/tests/parts.rs",
           "before": null,
-          "after": "sha256:931ea49d470fba6063b22eb8040104dd907f9d3f350a7bbf07d231344d9627c0"
+          "after": "sha256:a60e1b42d56ff436b1687076344654b7351d9b220f57d281d85d52b40f9cef89"
         },
         {
           "path": "crates/kotowari-markdown-view/tests/rendering.rs",
@@ -694,7 +704,7 @@
         {
           "path": "crates/kotowari-overview/src/document.rs",
           "before": null,
-          "after": "sha256:c76cb7cd087735bde4a20f1f27954cc39008bbff524453e6515c21df17923f74"
+          "after": "sha256:26334facafd9979ac3bbe0ef72bd1ba3fb2c282b214a8657f6824da01fbc1668"
         },
         {
           "path": "crates/kotowari-overview/src/form.rs",
@@ -719,7 +729,7 @@
         {
           "path": "crates/kotowari-overview/tests/overview.rs",
           "before": null,
-          "after": "sha256:cd7a044f8d5c0e58429a91e29eedb34f429622bb60040db05a57a1a4c938c463"
+          "after": "sha256:0b8690baa2be3df2e3c248675b56b5d10bd3cd5b2554b358bb490d5d5eac662e"
         },
         {
           "path": "crates/kotowari-source-analysis/Cargo.toml",
@@ -919,12 +929,12 @@
         {
           "path": "crates/kotowari/tests/project.rs",
           "before": null,
-          "after": "sha256:574d514553c38c86e7640c08270be3d4487e49d4b91bf54c4cf97739fb88982d"
+          "after": "sha256:f220a9c1704f34367488a5788de489a9b6a39c09fd74c237f5e950f01a0a2cdb"
         },
         {
           "path": "docs/guides/cli.md",
           "before": "sha256:ccde0fb4011b0f72639ca8a460a3179cbd8df9bd2e7110f73b8f0b9d16ca6fab",
-          "after": "sha256:4fb448d1ea49440668fc4520152461b04f4c5e35f7d9b88fb8f121aef15f93f0"
+          "after": "sha256:c82f8724c71f2277f0f04db6391096a23091e0449b16e1bee1f3de306e39ea36"
         },
         {
           "path": "docs/guides/commands/check.md",
@@ -1009,7 +1019,7 @@
         {
           "path": "scripts/mutants.sh",
           "before": "sha256:daae2ef9759d01b2152c620d6cd4142a7dfbc0d1712761c36d8058fb6356379c",
-          "after": "sha256:59eada4317aa42f5b0427aa6926d3d9e70500cfd6efbaa5aaa8c7fcf74639717"
+          "after": "sha256:0997334dd55fc8214f0163220c3c0e28cd2e042137c6ec8c02094a967b4f0674"
         },
         {
           "path": "scripts/release.sh",
@@ -1049,7 +1059,7 @@
         {
           "path": "src/cli/serve.rs",
           "before": null,
-          "after": "sha256:0407f185f0c2e00bc88452f4455b3cce851e11c5cd8362e72fe405fcb0ad355e"
+          "after": "sha256:a00614ff27d272a2a4581f1e76ff6023a312a0b9e6caea16b4073f6d098cb274"
         },
         {
           "path": "src/cli/status.rs",
@@ -1119,7 +1129,7 @@
         {
           "path": "tests/step19_overview_build.rs",
           "before": null,
-          "after": "sha256:335a3052ad38f5a31e28670a58dd7e8a1b4f5a01aaf0929fd77352ab995e1455"
+          "after": "sha256:d5d51b11aa657038ceb639658fa2704d0b49f2a0583375bc9e9be036b7d48091"
         },
         {
           "path": "tests/step1_cli.rs",
@@ -1134,7 +1144,7 @@
         {
           "path": "tests/step20_overview_serve.rs",
           "before": null,
-          "after": "sha256:eb814d98b58d8ced24e4fa7461bffad87be3fddb4f843b5e3be417f6e26e84f3"
+          "after": "sha256:a46cefb5c3a5522f1c9863c1458a5827ba920330ef2c1d444dca7c3460bcfaa3"
         },
         {
           "path": "tests/step2_ir.rs",
@@ -1317,7 +1327,7 @@
         },
         {
           "path": "docs/ir/core/overview-commands.md",
-          "sha256": "sha256:412bca5657b821e97516b42a4ebd8a49ac205c4b0a6f09b02ddd57c6945bd29b"
+          "sha256": "sha256:24874e72ed90cd8773975920ed3511c1565ffb4cef05906ba66f5f3d2d93a74c"
         },
         {
           "path": "docs/ir/core/overview-data.md",
@@ -1445,7 +1455,7 @@
         },
         {
           "path": "docs/ir/view/parts.md",
-          "sha256": "sha256:ece45673ae200fe07e0bea8edcc798e10ac8a9b3221ae171ab85db8350a5e44e"
+          "sha256": "sha256:e5399bf2e1881dd873594e2dfaf2c03f4fefb884c85dc266c19963470ffe3dee"
         },
         {
           "path": "docs/ir/view/rendering.md",
@@ -1453,7 +1463,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "I independently judge the branch-wide comparison from 4bb9e6e5421ce06858d6ec05dd2792b6fe2df369 (merge-base with origin/main) to 9ac10b60f409fee06231ba41743ec22dc41073dc against the approved public-crate API, whole-picture and overview-placement requirements. The implementer record supplies the comparison scope only. I recomputed all 231 mode-plus-NUL/blob identities and every IR hash from the repository; they equal the implementer's, and this record's 72 IR documents are a superset of the implementer's 34. I added docs/ir/core/output.md, whose TBL-core-005 gained the \"overview\" key that REQ-core-288 implements; the implementer IR list omits it.\n\nPublic-crate split. 135 changed files are byte-identical, before and after, to the 878b42f independent review over b22c1ba; I reuse its grounds for them: validated schema extraction and read-only results, shared admission and retained originals in core, BASE-preserving native acquisition (A13, A14), the async adapters, the seven-package dependency direction, the A15 all-feature mutation lane and the three A16 bounded equivalents. That review's caveats about historical sealed runs and pending probes belong to its own head and are not carried over as evidence here. Moving the base to 4bb9e6e shifts no before identity of those files. The merge 191360f resolved conflicts in lefthook.yml and scripts/mutants.sh; I read the remerge diff: both keep main's changes (mutants removed from pre-push, GIT_ variables unset, the JOBS/SERVICE runner) and add the branch's --workspace --all-features and the -p kotowari-cli check invocation. Nothing from either side is lost. The other 38 changed files and 58 new files are judged below as overview work.\n\nOverview. The decision records 2026-10-02-whole-picture and 2026-10-04-overview-on-public-api A1 to A12 place calculation in kotowari-overview (no file, network or environment access), file reading and cache writing in the kotowari library, and serve in kotowari-cli. Core gains only a named finding group, and kotowari-markdown-view depends on no workspace package. The manifests match TBL-core-040 and A4 (view on the markdown-schema version series, overview on the kotowari series, ctrlc and tiny_http only in the CLI). I spot-checked the central code against the IR:\n- OverviewPrepared::write first walks .kotowari, .kotowari/cache and .kotowari/cache/overview with symlink_metadata. It stops with cache error and the path, writing nothing, when one of them is a link or exists as a non-directory. Create, write and delete failures map to cache error with the path and OS text, as REQ-core-324, REQ-core-296 and A9 require. Page links are removed before writing, and existing files are walked without following links. Only changed bytes are written and stale files are removed (REQ-core-293).\n- serve runs prepare (check and render), then binds 127.0.0.1 without retrying another port, then writes, matching REQ-core-297, REQ-core-298 and A7. Request paths are percent-decoded, restricted to normal components, canonicalised and required to stay under the canonical cache, and must be regular files (REQ-core-299).\n- The view draws the lead, then the preamble parts in order, then the sections (REQ-view-001, REQ-view-006, A10). HTML comments are replaced by a one-line private-use sentinel before parsing and the escaped sentinel is removed after rendering. Comments are therefore neither shown nor allowed to change block structure, and raw HTML stays text (REQ-view-007).\n- Every frontmatter violation yields the detail \"frontmatter\". A valid ir list is still returned alongside other violations, so REQ-core-284 still runs (TBL-core-038, A11).\n- check and status read overview data and pass an \"overview\" group through core. The new status line and JSON key sit between guides and surface, as TBL-core-005 and TBL-core-028 now state (REQ-core-288 to REQ-core-290).\n\nRequirement-marked test changes. Changed expectations only insert the overview group line or key into status and check outputs, and change the command count from seven to eight, consistent with REQ-core-001 and A12. The REQ-core-127 test moved from tests/step7_skill_references.rs to src/cli/tests.rs. It now compares the reference against the union of core, library and CLI stop wordings, which is a stronger form of the same expectation. Commit 1bc652a, after the cycle's last reviewed head 569bd5e, only drops a frame-extracting helper so the comment tests compare whole pages. That keeps the oracle and removes dependence on markup the IR does not declare. I found no deleted assertion that weakens a requirement.\n\nGaps. The cycle's three missing_spec findings were closed by person-decided corrections and IR before this head: the unusable cache place (A9, REQ-core-324), the frontmatter detail (A11, TBL-core-038) and the preamble parts (A10, REQ-view-001 and REQ-view-006). Each was fixed in the implementation (2833944, ce3ec76, 23ed619, ef847fe). A5 to A8 and A12 are LLM-derived details inside the delegated planning scope that change no approved requirement. Open record_only items are not specification gaps:\n- Item 10: the reference table is keyed by the reference string, so per-occurrence entries of equal strings would be identical and nothing observable differs from REQ-core-291.\n- Item 20: a listing failure under the cache is a read and stops with the existing unreadable-file reason.\n- Items 11 to 17 and 19 are informational.\n\nEvidence I ran at this head: cargo test --workspace --all-features passed 1543 tests with 0 failures; kotowari check exited 0 with only notices; kotowari changes --phase implementation covered 231 of 231 files with no findings. I did not build package archives (scripts/check-packages.py), run mutation tests, exercise a real Ctrl-C on serve, or confirm that the person saw the LLM-decided A5 to A8 and A12. Those remain for the integration gates. The existing conclusion means the reviewed changes implement approved requirements and grounded delegated choices with no unresolved gap. It is not release authorization.\n",
+      "reason": "I independently judge the branch-wide comparison from 4bb9e6e5421ce06858d6ec05dd2792b6fe2df369 (merge-base with origin/main) to d31978be87e5aa05dc9170f6717aff723773e3bd against the approved public-crate API, whole-picture and overview-placement requirements. The implementer record supplies the comparison scope only. I recomputed all 233 mode-plus-NUL/blob identities and every IR hash from the repository; they equal the implementer's, and this record's 72 IR documents are a superset of the implementer's 35.\n\nPublic-crate split. 135 changed files are byte-identical, before and after, to the 878b42f independent review over b22c1ba; I reuse its grounds for them: validated schema extraction and read-only results, shared admission and retained originals in core, BASE-preserving native acquisition (A13, A14), the async adapters, the seven-package dependency direction, the A15 all-feature mutation lane and the three A16 bounded equivalents. That review's caveats about historical sealed runs and pending probes belong to its own head and are not carried over as evidence here. Moving the base to 4bb9e6e shifts no before identity of those files. My earlier judgment of this comparison at 9ac10b6 is extended here by an independent review of d2045d7..d31978b. The merge 191360f resolved conflicts in lefthook.yml and scripts/mutants.sh; I read the remerge diff: both keep main's changes (mutants removed from pre-push, GIT_ variables unset, the JOBS/SERVICE runner) and add the branch's --workspace --all-features and the -p kotowari-cli check invocation. Nothing from either side is lost. The remaining changed and new files are judged below as overview and CI work.\n\nOverview. The decision records 2026-10-02-whole-picture and 2026-10-04-overview-on-public-api A1 to A12 place calculation in kotowari-overview (no file, network or environment access), file reading and cache writing in the kotowari library, and serve in kotowari-cli. Core gains only a named finding group, and kotowari-markdown-view depends on no workspace package. The manifests match TBL-core-040 and A4 (view on the markdown-schema version series, overview on the kotowari series, ctrlc and tiny_http only in the CLI). I spot-checked the central code against the IR:\n- OverviewPrepared::write first walks .kotowari, .kotowari/cache and .kotowari/cache/overview with symlink_metadata. It stops with cache error and the path, writing nothing, when one of them is a link or exists as a non-directory. Create, write and delete failures map to cache error with the path and OS text, as REQ-core-324, REQ-core-296 and A9 require. Page links are removed before writing, and existing files are walked without following links. Only changed bytes are written and stale files are removed (REQ-core-293).\n- serve runs prepare (check and render), then binds 127.0.0.1 without retrying another port, then writes, matching REQ-core-297, REQ-core-298 and A7. Request paths are percent-decoded, restricted to normal components, canonicalised and required to stay under the canonical cache, and must be regular files (REQ-core-299).\n- The view draws the lead, then the preamble parts in order, then the sections (REQ-view-001, REQ-view-006, A10). HTML comments are replaced by a one-line private-use sentinel before parsing and the escaped sentinel is removed after rendering. Comments are therefore neither shown nor allowed to change block structure, and raw HTML stays text (REQ-view-007).\n- Every frontmatter violation yields the detail \"frontmatter\". A valid ir list is still returned alongside other violations, so REQ-core-284 still runs (TBL-core-038, A11).\n- check and status read overview data and pass an \"overview\" group through core. The new status line and JSON key sit between guides and surface, as TBL-core-005 and TBL-core-028 now state (REQ-core-288 to REQ-core-290).\n\nRequirement-marked test changes. Changed expectations only insert the overview group line or key into status and check outputs, and change the command count from seven to eight, consistent with REQ-core-001 and A12. The REQ-core-127 test moved from tests/step7_skill_references.rs to src/cli/tests.rs. It now compares the reference against the union of core, library and CLI stop wordings, which is a stronger form of the same expectation. Commit 1bc652a, after the cycle's last reviewed head 569bd5e, only drops a frame-extracting helper so the comment tests compare whole pages. That keeps the oracle and removes dependence on markup the IR does not declare. I found no deleted assertion that weakens a requirement.\n\nDelta d2045d7..d31978b, which I reviewed in full:\n- Serve accept failure (A14, REQ-core-298). In tiny_http 0.12, recv returns Err only for an accept failure, after which the accept thread breaks and never resumes, or for unblock. Mapping every non-interrupt error to port error, with the address and the OS text, is therefore correct and avoids a live server that serves nothing. The ulimit -n 16 test exhausts descriptors through held connections. It passed five repeated runs. If accept never failed it would hang rather than fail, because it has no timeout.\n- Backslash names in serve. Dropping the backslash rejection keeps containment for REQ-core-299. Candidates must still consist only of Normal components, so .., root and Windows prefixes are rejected, and the target must canonicalise under the canonical cache and be a regular file. A NUL fails canonicalisation. On Unix a backslash is an ordinary name byte, so REQ-core-297 requires serving such a page.\n- Status badges (A13, TBL-view-001). The new test checks that the four badges differ beyond their label and that each difference is styled in style.css.\n- Refactors in text.rs and document.rs. The loop guard is redundant because HTML nodes are visited in document order without overlap, so from never passes end. CompileOptions::gfm() already defaults allow_dangerous_html and allow_dangerous_protocol to false (markdown 1.0.0 derives Default). markdown-rs recognises frontmatter only at the document start, so the removed condition was always true.\n- Changed test expectations add assertions: group names, mark fingerprints, and the path count in the build test. Nothing is weakened.\n- CI (mutants-in-ci A9 to A12). A9: the PR scope walks git rev-list from merge-base to head, newest first, and takes the first ancestor whose mutants check run succeeded, otherwise the merge-base. A gh failure aborts the step under bash -e, so it fails closed. A10: a 20-second timeout per mutant. A11: a sudo systemd-run scope with MemoryMax=12G, MemorySwapMax=0 and OOMPolicy=continue, running as the invoking uid and gid with PATH, HOME and TMPDIR passed again. A12: sixteen shards with a prebuilt cargo-mutants pinned by commit. These match the user-adopted decisions; A12 is LLM-decided and is to be shown in the report. A known limit of A9, accepted by that decision: a later commit that only weakens tests does not re-mutate code first verified at an earlier passing commit.\n- Equivalents entry bfae2de (references.rs without_date, > to >=). The two differ only for a decision-record file named exactly \"YYYY-MM-DD-.md\". For that name the mutant yields an empty label, which is what TBL-core-039 literally prescribes, while the original keeps the date. The entry is therefore not strictly an equivalence: it is a divergence on an input nothing produces, since decision records always carry a topic. I accept registering it, but report that its wording overstates equivalence.\n\nGaps. The cycle's three missing_spec findings were closed by person-decided corrections and IR before this head: the unusable cache place (A9, REQ-core-324), the frontmatter detail (A11, TBL-core-038) and the preamble parts (A10, REQ-view-001 and REQ-view-006). Each was fixed in the implementation (2833944, ce3ec76, 23ed619, ef847fe). A5 to A8 and A12 are LLM-derived details inside the delegated planning scope that change no approved requirement. Open record_only items are not specification gaps:\n- Item 10: the reference table is keyed by the reference string, so per-occurrence entries of equal strings would be identical and nothing observable differs from REQ-core-291.\n- Item 20: a listing failure under the cache is a read and stops with the existing unreadable-file reason.\n- Items 11 to 17 and 19 are informational.\n\nEvidence I ran at this head: cargo test --workspace --all-features passed 1552 tests with 0 failures; kotowari check exited 0 with only notices; kotowari changes --phase implementation covered 233 of 233 files with no findings. I did not build package archives (scripts/check-packages.py), run mutation tests or the changed GitHub workflows (including sudo systemd-run on a runner, and an empty incremental diff), exercise a real Ctrl-C on serve, or confirm that the person saw the LLM-decided A5 to A8 and A12. Those remain for the integration gates. The existing conclusion means the reviewed changes implement approved requirements and grounded delegated choices with no unresolved gap. It is not release authorization.\n",
       "requirements": [
         "REQ-core-001",
         "REQ-core-002",
@@ -1817,7 +1827,21 @@
         "docs/decision/records/2026-10-02-whole-picture.md#A83",
         "docs/decision/records/2026-10-02-whole-picture.md#A84",
         "docs/decision/records/2026-10-02-whole-picture.md#A85",
-        "docs/decision/records/2026-10-02-whole-picture.md#A86"
+        "docs/decision/records/2026-10-02-whole-picture.md#A86",
+        "docs/decision/records/2026-10-04-overview-on-public-api.md#A13",
+        "docs/decision/records/2026-10-04-overview-on-public-api.md#A14",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A1",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A2",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A3",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A4",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A5",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A6",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A7",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A8",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A9",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A10",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A11",
+        "docs/decision/records/2026-10-04-mutants-in-ci.md#A12"
       ],
       "handoff": null,
       "gaps": [
