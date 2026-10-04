@@ -67,8 +67,8 @@ When deciding how concepts relate, present concrete scenarios — normal and edg
 whose prerequisites are settled go into a round. Counter-examples found this way become the
 counter-examples attached to requirements.
 
-A rule that does not change what a user of the product observes (release automation, licensing,
-CI) is not IR: the kotowari skill's **What the IR holds** says what is left out and where it goes
+A rule that does not change what a user of the product observes (release automation, build
+configuration, CI) is not IR: the kotowari skill's **What the IR holds** says what is left out and where it goes
 instead. Record it in the decision record as not IR, with the reason, and say so in the round;
 never add it to the IR, silently or otherwise.
 
