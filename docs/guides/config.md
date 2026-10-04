@@ -5,7 +5,7 @@ kotowari が読む場所（IR、判断の記録、テスト、ガイド、面の
 
 ## 書式
 
-<!-- @kotowari[REQ-core-013:f8877aec, REQ-core-017:471b53f5, TBL-core-004:c1821ec9] -->
+<!-- @kotowari[REQ-core-013:f8877aec, REQ-core-017:471b53f5, TBL-core-004:647c5bdd] -->
 
 すべてのキーを既定の値で書くと次のようになります。
 キーは入れ子の形で書きます（`decisions:` の下に `records:`）。
@@ -34,6 +34,7 @@ surface:
 # overview:                                     # 既定は「無し」。overview build と serve を使うときは書く
 #   files:
 #     - ".kotowari/overview/*.md"
+#   toc: .kotowari/overview-toc.yaml            # 全体像の目次。overview を書くときは必須
 limits:
   lines: 200
   requirements: 10
@@ -46,7 +47,7 @@ vague_words: [適切に, 必要に応じて, 通常は, など]
 
 ## キーの一覧
 
-<!-- @kotowari[TBL-core-004:c1821ec9] -->
+<!-- @kotowari[TBL-core-004:647c5bdd, REQ-core-325:05c0afbf] -->
 
 | キー | 値の型 | 既定 | 説明 |
 |---|---|---|---|
@@ -63,6 +64,7 @@ vague_words: [適切に, 必要に応じて, 通常は, など]
 | `surface.rules` | パスの一覧 | 空 | 面を取り出す ast-grep のルールの YAML ファイル。glob は使えない。空の一覧でなければ面の検査をする |
 | `surface.unspecified` | パス（文字列） | 無し | 未記載の面の一覧のファイル。無ければ一覧は0件 |
 | `overview.files` | glob の一覧 | `overview` の省略可。記載時は必須 | 全体像の元データの置き場。`overview` が無ければ全体像の元データを読まず、`overview build` と `serve` は止まる |
+| `overview.toc` | パス（文字列） | `overview` の省略可。記載時は必須 | 全体像の目次のファイル。一覧のページの入れ子と順番を決める。`overview` があれば `check`、`status`、`overview build`、`overview serve` が読み、指す先が無いか読めなければ止まる |
 | `changes.files` | 相対 glob の文字列一覧 | `changes` の省略可。記載時は必須・空不可 | 変更を照合する対象 |
 | `changes.exclude` | 相対 glob の文字列一覧 | 空 | 変更の対象から外すファイル |
 | `changes.records` | 相対 glob の文字列一覧 | 記載時は必須・空不可 | YAML 照合記録 |
@@ -325,7 +327,7 @@ $ echo $?
 
 ## 設定の誤り
 
-<!-- @kotowari[REQ-core-014:cb85cf22, EX-core-003:6f823b5e, EX-core-383:53b1ffc1, REQ-core-225:77439286, REQ-core-280:4d0ff3ef] -->
+<!-- @kotowari[REQ-core-014:cb85cf22, EX-core-003:6f823b5e, EX-core-383:53b1ffc1, REQ-core-225:77439286, REQ-core-280:4d0ff3ef, TBL-core-004:647c5bdd, REQ-core-326:4b380183] -->
 
 次のどれかがあると、kotowari は検査を行わずに止まります（終了コード 2）。
 標準エラーの1行目は `config error: ` で始まり、設定ファイルのパスと理由が続きます。
@@ -345,6 +347,8 @@ $ echo $?
 | `surface.files` と `surface.rules` の片方だけ、または `surface.rules` の無い `surface.unspecified` | [`surface.*`](#surfacefilessurfacerulessurfaceunspecified) |
 | ガイドとテストの置き場の重なり | [つまずき](#ガイドとテストの置き場が重なって止まる) |
 | 全体像の元データの置き場とガイドかテストの置き場の重なり | `config error: docs/a.md: matched by both overview.files and guides.files`（テストなら `tests.files`） |
+| `overview` に `toc` が無い | `config error: .kotowari/config.yaml: overview.toc is required` |
+| 目次のファイルが `overview.files`、`guides.files`、`tests.files` のどれかの走査で読むファイルに入る | `config error: .kotowari/overview/toc.md: matched by both overview.toc and overview.files`（当たった鍵のうち、この順で最初のもの。目次を `.yaml` にするなど glob の外に置く） |
 
 空の一覧（`files: []`）は誤りではありません。
 

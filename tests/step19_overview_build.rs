@@ -5,7 +5,8 @@ use tempfile::TempDir;
 
 const IR: &str = "# CLI\n\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: review\n- how_to_verify: read\n\nBody.\n";
 
-const OVERVIEW: &str = "overview:\n  files:\n    - \".kotowari/overview/*.md\"\n";
+const OVERVIEW: &str =
+    "overview:\n  files:\n    - \".kotowari/overview/*.md\"\n  toc: .kotowari/toc.yaml\n";
 
 fn make_project(tmp: &Path, config: &str) {
     for dir in [".kotowari", "docs/decision/adr", "tests"] {
@@ -69,6 +70,7 @@ fn two_documents() -> TempDir {
         ".kotowari/overview/b.md",
         &data("docs/ir/other.md", "B", "b の文"),
     );
+    write(tmp.path(), TOC, "title: 目次\nitems: [a, b]\n");
     tmp
 }
 
@@ -166,6 +168,7 @@ fn ex_core_476_the_page_of_removed_overview_data_is_removed() {
     let tmp = two_documents();
     assert_eq!(run(tmp.path(), &["overview", "build"]).0, Some(0));
     std::fs::remove_file(tmp.path().join(".kotowari/overview/b.md")).unwrap();
+    write(tmp.path(), TOC, "title: 目次\nitems: [a]\n");
     let (code, stdout, _) = run(tmp.path(), &["overview", "build", "--format", "json"]);
     assert_eq!(code, Some(0));
     let value = json(&stdout);
@@ -174,10 +177,13 @@ fn ex_core_476_the_page_of_removed_overview_data_is_removed() {
         [".kotowari/cache/overview/b.html"]
     );
     assert!(!tmp.path().join(CACHE).join("b.html").exists());
-    // 一覧は b を並べなくなったので書き直される
+    // 一覧は b を並べなくなり、a のページは同じ目次の群の b へのリンクを失うので書き直される
     assert_eq!(
         strings(&value["written"]),
-        [".kotowari/cache/overview/index.html"]
+        [
+            ".kotowari/cache/overview/a.html",
+            ".kotowari/cache/overview/index.html"
+        ]
     );
 }
 
@@ -256,10 +262,13 @@ fn ex_core_463_build_without_the_overview_key_is_a_config_error() {
 #[test]
 fn req_core_280_build_stops_on_an_overlap_with_the_test_files() {
     let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), "overview:\n  files: ['tests/**/*.md']\n");
+    make_project(
+        tmp.path(),
+        "overview:\n  files: ['tests/**/*.md']\n  toc: .kotowari/toc.yaml\n",
+    );
     std::fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "tests:\n  files: ['tests/**']\noverview:\n  files: ['tests/**/*.md']\n",
+        "tests:\n  files: ['tests/**']\noverview:\n  files: ['tests/**/*.md']\n  toc: .kotowari/toc.yaml\n",
     )
     .unwrap();
     write(tmp.path(), "tests/a.md", &data("docs/ir/cli.md", "A", "a"));
@@ -491,9 +500,24 @@ fn ex_core_504_a_linked_cache_place_stops_without_writing_outside() {
 fn req_core_324_a_link_above_the_cache_place_also_stops() {
     for linked in [".kotowari/cache", ".kotowari"] {
         let tmp = two_documents();
+        // 元データの走査はリンクした隠しディレクトリに入らないので、元データと目次はリンクの外に置く
+        std::fs::create_dir_all(tmp.path().join("notes")).unwrap();
+        for name in ["a.md", "b.md"] {
+            std::fs::rename(
+                tmp.path().join(".kotowari/overview").join(name),
+                tmp.path().join("notes").join(name),
+            )
+            .unwrap();
+        }
+        std::fs::rename(tmp.path().join(TOC), tmp.path().join("notes/toc.yaml")).unwrap();
+        write(
+            tmp.path(),
+            ".kotowari/config.yaml",
+            "tests:\n  files: []\noverview:\n  files: ['notes/*.md']\n  toc: notes/toc.yaml\n",
+        );
         let outside = TempDir::new().unwrap();
         if linked == ".kotowari" {
-            // 設定と元データはリンク先から読める。書き込みだけが外に届く
+            // 設定はリンク先から読める。書き込みだけが外に届く
             std::fs::rename(tmp.path().join(".kotowari"), outside.path().join("k")).unwrap();
             std::os::unix::fs::symlink(outside.path().join("k"), tmp.path().join(linked)).unwrap();
         } else {
@@ -513,4 +537,69 @@ fn req_core_324_a_link_above_the_cache_place_also_stops() {
             "{linked}"
         );
     }
+}
+
+const TOC: &str = ".kotowari/toc.yaml";
+
+// @kotowari[EX-core-505, REQ-core-013, REQ-core-325, TBL-core-001]
+#[test]
+fn ex_core_505_build_stops_without_the_toc_key_or_the_toc_file() {
+    let tmp = two_documents();
+    std::fs::remove_file(tmp.path().join(TOC)).unwrap();
+    let (code, stdout, stderr) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(2));
+    assert!(stdout.is_empty());
+    assert!(
+        stderr.starts_with(&format!("unreadable file: {TOC}: ")),
+        "{stderr}"
+    );
+    write(
+        tmp.path(),
+        ".kotowari/config.yaml",
+        "overview:\n  files: ['.kotowari/overview/*.md']\n",
+    );
+    let (code, stdout, stderr) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(2));
+    assert!(stdout.is_empty());
+    assert!(stderr.starts_with("config error: "), "{stderr}");
+    assert!(!tmp.path().join(".kotowari/cache").exists());
+}
+
+// @kotowari[EX-core-508, REQ-core-294, TBL-core-001]
+#[test]
+fn ex_core_508_build_on_toc_errors_writes_nothing() {
+    let tmp = two_documents();
+    write(
+        tmp.path(),
+        "docs/ir/third.md",
+        &IR.replace("REQ-001", "REQ-003"),
+    );
+    write(
+        tmp.path(),
+        ".kotowari/overview/c.md",
+        &data("docs/ir/third.md", "C", "c の文"),
+    );
+    write(tmp.path(), TOC, "title: 目次\nitems: [a, z, a]\n");
+    let (code, stdout, stderr) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(2));
+    assert!(stdout.is_empty());
+    assert_eq!(
+        stderr.lines().next(),
+        Some("overview error: 4 errors in overview data; run kotowari check")
+    );
+    assert!(!tmp.path().join(".kotowari/cache").exists());
+}
+
+// @kotowari[EX-core-510, REQ-core-332]
+#[test]
+fn ex_core_510_the_index_follows_the_toc_order() {
+    let tmp = two_documents();
+    write(tmp.path(), TOC, "title: kotowari\nitems: [b, a]\n");
+    let (code, _, stderr) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(0), "{stderr}");
+    let index = std::fs::read_to_string(tmp.path().join(CACHE).join("index.html")).unwrap();
+    assert!(index.contains("<h1>kotowari</h1>"), "{index}");
+    let b = index.find(">B<").expect("B");
+    let a = index.find(">A<").expect("A");
+    assert!(b < a, "{index}");
 }

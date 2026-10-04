@@ -64,7 +64,7 @@ fn escape(key: &str) -> String {
 }
 
 /// 合わなかった場所。知らない鍵と欠けた鍵はその鍵の名前を "/" で足し、値の全体は "(root)"
-fn places_of(error: &jsonschema::ValidationError) -> Vec<String> {
+pub(crate) fn places_of(error: &jsonschema::ValidationError) -> Vec<String> {
     use jsonschema::error::ValidationErrorKind;
     let base = error.instance_path().to_string();
     let keys: Vec<String> = match error.kind() {

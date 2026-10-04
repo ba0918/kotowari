@@ -169,13 +169,18 @@ fn project_check_status_and_inspect_include_the_overview_group() {
     let dir = project();
     std::fs::write(
         dir.path().join(".kotowari/config.yaml"),
-        "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n",
+        "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
     )
     .unwrap();
     std::fs::create_dir_all(dir.path().join(".kotowari/overview")).unwrap();
     std::fs::write(
         dir.path().join(".kotowari/overview/a.md"),
         "---\nir:\n  - docs/ir/topic.md\n---\n\n# a\n\n## no lead\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.path().join(".kotowari/toc.yaml"),
+        "title: t\nitems: [a]\n",
     )
     .unwrap();
     let project = Project::new(ProjectOptions::new(dir.path())).unwrap();
@@ -200,7 +205,7 @@ fn overview_project(lead: bool) -> tempfile::TempDir {
     let dir = project();
     std::fs::write(
         dir.path().join(".kotowari/config.yaml"),
-        "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n",
+        "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
     )
     .unwrap();
     std::fs::create_dir_all(dir.path().join(".kotowari/overview")).unwrap();
@@ -212,6 +217,11 @@ fn overview_project(lead: bool) -> tempfile::TempDir {
     std::fs::write(
         dir.path().join(".kotowari/overview/a.md"),
         format!("---\nir:\n  - docs/ir/topic.md\n---\n\n# a\n\n{lead}\n## s\n\ntext\n"),
+    )
+    .unwrap();
+    std::fs::write(
+        dir.path().join(".kotowari/toc.yaml"),
+        "title: t\nitems: [a]\n",
     )
     .unwrap();
     dir

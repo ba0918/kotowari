@@ -145,7 +145,7 @@ src/lib.rs:2 [error] test_without_id req_001_locks_after_five_failures
 | [`kotowari status`](docs/guides/commands/status.md) | 揃っているかを集計し、最後の行に`complete true`か`complete false`を出力する |
 | [`kotowari mutants --tool cargo-mutants <結果のファイル>`](docs/guides/commands/mutants.md) | 変異テスト（cargo-mutants）の結果から見逃しを報告する |
 | [`kotowari plan <計画のファイル>`](docs/guides/commands/plan.md) | 同梱のスキーマに従って、実装計画のファイルが決まった形式で書かれているかを検査する |
-| `kotowari overview build` | 設定の`overview.files`に当たる全体像の元データを検査し、誤りが無ければ`.kotowari/cache/overview/`の下に一覧と全体像ごとのHTMLのページを書く。変わったファイルだけを書き、もう作らないページは消す。設定に`overview`を記述した場合のみ使える |
+| `kotowari overview build` | 設定の`overview.files`に当たる全体像の元データと`overview.toc`の指す目次を検査し、誤りが無ければ`.kotowari/cache/overview/`の下に、目次の順と入れ子で並べた一覧と全体像ごとのHTMLのページを書く。変わったファイルだけを書き、もう作らないページは消す。設定に`overview`を記述した場合のみ使える |
 | `kotowari overview serve [--port <PORT>]` | buildと同じページを書いてから`http://127.0.0.1:<PORT>/`（既定4590）で配り、Ctrl-Cまで続ける |
 | [`kotowari changes --base <REV> (--head <REV> \| --staged) --phase <implementation\|review>`](docs/guides/commands/changes.md) | Gitの比較元と対象の差分を照合記録と突き合わせ、照合が漏れている箇所や記録が古くなっている箇所を報告する。設定に`changes`を記述した場合のみ使える。 |
 

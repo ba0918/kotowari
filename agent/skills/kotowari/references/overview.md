@@ -1,18 +1,19 @@
-Based on the kotowari specification (revised 2026-10-04; the version of kotowari itself is not pinned)
+Based on the kotowari specification (revised 2026-10-05; the version of kotowari itself is not pinned)
 
 An overview is a set of rendered pages, one per product topic, that lets the person who brainstormed see the whole picture: what the product looks like to its user and how the decisions lead to one another, as it stands now, including what is planned or deferred. It exists because a brainstorm settles decisions one question at a time, and with tens or hundreds of decisions nobody can say afterwards what was built and why. The person reads only the rendered pages. The overview data behind them is written by an LLM in a fixed form, is never read by people, and is kept in the repository and revised at each brainstorm approval. kotowari checks the data and renders it; it never writes the data.
 
 ## Where overview data is
 
-Overview data is enabled by the `overview` key of the configuration, whose `files` is a required list of globs:
+Overview data is enabled by the `overview` key of the configuration, whose `files` is a required list of globs and whose `toc` is the required path of the table of contents (below):
 
 ```yaml
 overview:
   files:
     - ".kotowari/overview/*.md"
+  toc: ".kotowari/overview-toc.yaml"
 ```
 
-Without the key nothing here applies: check and status read no overview data, and `kotowari overview build` and `serve` stop with `config error: overview is not configured`. Only files with the lowercase extension `.md` are read. The globs are read and walked like `guides.files`, except that a hidden directory named by a component of a glob (`.kotowari` above) is entered, as with `changes.records`; a broad `**` alone does not enter hidden directories. A file matched by both `overview.files` and `guides.files` or `tests.files` stops check, status, build and serve with a config error whose detail is that file followed by `: matched by both overview.files and guides.files` (or `tests.files`). Overview data is never read as a guide as well.
+Without the key nothing here applies: check and status read no overview data, and `kotowari overview build` and `serve` stop with `config error: overview is not configured`. Only files with the lowercase extension `.md` are read. The globs are read and walked like `guides.files`, except that a hidden directory named by a component of a glob (`.kotowari` above) is entered, as with `changes.records`; a broad `**` alone does not enter hidden directories. A file matched by both `overview.files` and `guides.files` or `tests.files` stops check, status, build and serve with a config error whose detail is that file followed by `: matched by both overview.files and guides.files` (or `tests.files`). Overview data is never read as a guide as well. After that, a table of contents that is one of the files the `overview.files`, `guides.files` or `tests.files` walks read (for `overview.files`, only `.md` files are read) stops them with a config error whose detail is its path followed by `: matched by both overview.toc and ` and the first of those keys in that order; keep it out of those globs, for example as a `.yaml` file. A missing or unreadable table of contents stops them as an unreadable file, and one that is not UTF-8 as a non-UTF-8 file.
 
 `kotowari check` and `kotowari status` read overview data; `kotowari list` and `kotowari query` do not. The findings join check's findings, and the JSON of check and status always has an `overview` group with `files` (the overview data files read) and `marks` (the entries of well-formed guide marks in them), both 0 without the key.
 
@@ -23,6 +24,39 @@ Without the key nothing here applies: check and status read no overview data, an
 - When a brainstorm changes a topic document that no overview's `ir` lists, propose either adding it to an existing overview or starting a new one, and let the person decide. The first time overviews are made, propose the units and let the person decide.
 - Once decided, keep the units. Split or merge overviews only when a brainstorm decides to.
 - Do not make overviews for topics the brainstorm did not touch. Existing topics get an overview the first time a brainstorm touches their IR, not all at once.
+- Add the `overview` key to the configuration only together with the first overview data and its contents file. With the key and no overview data, no contents file passes check: a missing file stops, an empty outermost group is `overview_toc_group_empty`, and any name is `overview_toc_page_unknown`.
+
+## The table of contents
+
+The index page is drawn from the table of contents: one YAML file that declares how the pages are grouped and ordered. It is data for the index, not a document people read. The outermost level is itself a group, whose title is the heading of the index:
+
+```yaml
+title: kotowari
+note: What the product is, one line
+items:
+  - workflow
+  - title: Tests
+    note: How tests are tied to the specification
+    items:
+      - marks
+      - title: Mutation tests
+        items:
+          - mutants
+          - equivalents
+  - overview
+```
+
+| Part | Form |
+|---|---|
+| Group | A mapping with only `title` (required, a non-empty string), `note` (optional, one line without a line break) and `items` (required, a list of page names and groups; an empty list is the error overview_toc_group_empty, not a form error) |
+| Page name | The name of an overview data file: its file name without `.md`, as a non-empty string |
+
+- Every page is in the table of contents exactly once. A page missing from it, a name with no overview data, a name written twice and a group without items are errors.
+- Within a level, put the pages and groups in the order a reader needs them: the order of use, or the order of the workflow. The order is shown as written; nothing is sorted.
+- Nesting has no depth limit. Start with one level, and split a group into smaller groups only once it has grown too large to scan; a small product can stay at one level.
+- Placing a new page, and adding or splitting a group, is decided at the brainstorm approval by the LLM writing the overview, without asking the person. The table of contents is not part of what the person approves; if a placement looks wrong when they see it, they say so and it is moved.
+
+The index shows each group with its page count and the totals of sections not yet reviewed and undecided statements; each page card shows its own counts of sections not yet reviewed and of `未決` and `予定` statements. Each page shows its place in the table of contents above its title and links to the other pages of its group after its last section.
 
 ## The form of overview data
 
@@ -94,19 +128,22 @@ Write it at the brainstorm approval, in the steps of kotowari-brainstorm, only i
 5. Show the current state together with what is planned, deferred or undecided (status), so the page stays true right after the brainstorm.
 6. Put references to the IR items and decisions each part rests on in its `refs` and `ref` fields.
 7. Give each `## ` section a guide mark on the line right after its heading, on a line of its own, with an entry per IR item the section explains and the fingerprint from `kotowari query ID | jq -r '.items[0].fingerprint'` (guides.md).
-8. Run `kotowari overview build` and fix every error until it exits 0; the errors are listed by `kotowari check`.
+8. Revise the table of contents: place each new overview where a reader would look for it, keeping the order of each level meaningful, and split a group only once it has grown large. Do not ask the person.
+9. Run `kotowari overview build` and fix every error until it exits 0; the errors are listed by `kotowari check`.
 
 ## Commands
 
-`kotowari overview build` checks the overview data, renders every page in memory, and writes under `.kotowari/cache/overview/` of the base directory: `index.html` (every overview's title and conclusion), `<name>.html` per overview data file (its file name with `.html` for `.md`) and `style.css`. Only pages whose bytes changed are written, and files no longer produced are removed. Nothing else is written, and the place cannot be changed. It takes `--format` (`json`, the default, or `text`) and `--config`. The JSON has exactly `written` and `removed` (paths relative to the base directory, in byte order) and `unchanged` (the number of pages not rewritten); text writes one `written <path>` line per written file, then one `removed <path>` line per removed file. Do not commit the pages: they are rebuilt from the data whenever needed.
+`kotowari overview build` checks the overview data, renders every page in memory, and writes under `.kotowari/cache/overview/` of the base directory: `index.html` (every overview's title and conclusion, nested and ordered as the table of contents says), `<name>.html` per overview data file (its file name with `.html` for `.md`) and `style.css`. Only pages whose bytes changed are written, and files no longer produced are removed. Nothing else is written, and the place cannot be changed. It takes `--format` (`json`, the default, or `text`) and `--config`. The JSON has exactly `written` and `removed` (paths relative to the base directory, in byte order) and `unchanged` (the number of pages not rewritten); text writes one `written <path>` line per written file, then one `removed <path>` line per removed file. Do not commit the pages: they are rebuilt from the data whenever needed.
 
 `kotowari overview serve` does the same check, then takes the port `--port` (default 4590) on 127.0.0.1, writes the pages, prints one line `http://127.0.0.1:<port>/` and serves the files under `.kotowari/cache/overview/` until interrupted with Ctrl-C, which ends it with exit code 0. `/` is `index.html`. A path leaving that place (`..`, an absolute path, a symbolic link leading outside) and a directory get 404. It takes `--port` and `--config`, not `--format`, and prints nothing per request.
 
-Both stop with exit code 2 and write nothing when the data has errors: the first line of standard error is `overview error: N errors in overview data; run kotowari check`. Run `kotowari check`, fix the overview findings it reports, and build again. serve stops with `port error: 127.0.0.1:<port>: <OS error>` when the port cannot be used, without trying another one, and with the same error when it fails to accept a connection while serving. Both stop with `cache error: <path>` and write or remove nothing when `.kotowari`, `.kotowari/cache` or `.kotowari/cache/overview` is a symbolic link or not a directory, and with `cache error: <path>: <OS error>` when creating that place, writing a page or removing a file fails.
+Both stop with exit code 2 and write nothing when the data or the table of contents has errors: the first line of standard error is `overview error: N errors in overview data; run kotowari check`. Run `kotowari check`, fix the overview findings it reports, and build again. serve stops with `port error: 127.0.0.1:<port>: <OS error>` when the port cannot be used, without trying another one, and with the same error when it fails to accept a connection while serving. Both stop with `cache error: <path>` and write or remove nothing when `.kotowari`, `.kotowari/cache` or `.kotowari/cache/overview` is a symbolic link or not a directory, and with `cache error: <path>: <OS error>` when creating that place, writing a page or removing a file fails.
 
 ## Findings on overview data
 
 The findings are in the kinds table of findings.md: overview_form_invalid, overview_part_unknown, overview_part_invalid, overview_lead_missing, overview_ir_missing, overview_ir_shared, overview_ref_unresolved and overview_name_conflict, plus invalid_marker and guide_stale on the guide marks of overview data, with `path` the overview data file. A file named `index.md` or `style.md`, or two files with the same name in different directories, give overview_name_conflict, because the page names would collide.
+
+The table of contents has its own kinds, with `path` the table of contents and a null line: overview_toc_invalid when it cannot be read as YAML or does not have the form above (detail is the place, written as for overview_part_invalid), and, only when its form is correct, overview_toc_page_missing (detail is the page name), overview_toc_page_unknown, overview_toc_page_duplicate (the second and later places, in written order depth first) and overview_toc_group_empty (detail is the JSON Pointer of the item or group, `(root)` for the outermost group).
 
 ## guide_stale on overview data
 

@@ -279,5 +279,8 @@ pub fn load_overview(
     let guide_paths: Vec<&str> = guides.iter().map(|(path, _)| path.as_str()).collect();
     let texts = overview::read_texts(&base, read.config(), &guide_paths, &tests)?
         .ok_or_else(overview::not_configured)?;
-    Ok((base, kotowari_overview::inspect(&read, &texts)))
+    Ok((
+        base,
+        kotowari_overview::inspect(&read, &texts.data, &texts.toc),
+    ))
 }

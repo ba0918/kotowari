@@ -17,7 +17,8 @@ fn main() {
         "---\nir:\n  - docs/ir/topic.md\n---\n\n# Topic\n\n```view lead\nconclusion: One requirement\n```\n\n## Steps\n\n```view steps\nitems:\n  - title: Read\n    refs: [REQ-001]\n```\n",
     )
     .unwrap();
-    let overview = kotowari_overview::inspect(&read, &[data]);
+    let toc = SourceText::new(".kotowari/toc.yaml", "title: Example\nitems: [topic]\n").unwrap();
+    let overview = kotowari_overview::inspect(&read, &[data], &toc);
     assert!(overview.findings().is_empty());
     let pages = overview.pages().unwrap();
     for page in &pages {

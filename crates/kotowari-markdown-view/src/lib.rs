@@ -1,9 +1,10 @@
-//! 描画の入力（文書の並びと参照の表）からページの並びを作る描画のエンジン。
+//! 描画の入力（文書の並び、参照の表、目次）からページの並びを作る描画のエンジン。
 //!
 //! このクレートの仕様は `docs/ir/view/` の IR である。ファイル、ネットワーク、環境変数に触れず、
 //! 入力の形も検査しない（REQ-view-003）。
 
 mod html;
+mod index;
 mod parts;
 mod text;
 
@@ -14,6 +15,26 @@ use std::collections::BTreeMap;
 pub struct RenderInput {
     pub documents: Vec<Document>,
     pub references: Vec<Reference>,
+    /// 一覧の見出しと、文書を並べる入れ子と順番
+    pub toc: TocGroup,
+}
+
+/// 目次の群。目次そのものも1つの目次の群である（REQ-view-001）
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct TocGroup {
+    pub title: String,
+    /// 省いてよい一行の説明
+    pub note: Option<String>,
+    /// 書かれた順の項目
+    pub items: Vec<TocItem>,
+}
+
+/// 目次の群の項目
+#[derive(Debug, Clone, PartialEq)]
+pub enum TocItem {
+    /// 文書の名前
+    Document(String),
+    Group(TocGroup),
 }
 
 /// 1つのページの元。ファイルではない（REQ-view-001）
@@ -85,13 +106,21 @@ const STALE_MARK: &str = "<span class=\"stale-mark\">IR が変わった後、ま
 /// 描画の入力からページの並びを返す。ページは名前のバイト順に並ぶ（REQ-view-002）
 pub fn render(input: &RenderInput) -> Vec<Page> {
     let refs = parts::Refs::new(&input.references);
-    let mut documents: Vec<&Document> = input.documents.iter().collect();
-    documents.sort_by(|left, right| left.name.as_bytes().cmp(right.name.as_bytes()));
+    let documents: index::Documents = input
+        .documents
+        .iter()
+        .map(|document| (document.name.as_str(), document))
+        .collect();
     let mut pages: BTreeMap<String, String> = BTreeMap::new();
-    pages.insert(INDEX.into(), index(&documents));
+    pages.insert(INDEX.into(), index::page(&input.toc, &documents));
     pages.insert("style.css".into(), STYLE.into());
-    for document in documents {
-        pages.insert(page_name(document), document_page(document, &refs));
+    let places = index::places(&input.toc);
+    for document in documents.values() {
+        let place = places.get(document.name.as_str());
+        pages.insert(
+            page_name(document),
+            document_page(document, place, &documents, &refs),
+        );
     }
     pages
         .into_iter()
@@ -103,25 +132,17 @@ fn page_name(document: &Document) -> String {
     format!("{}.html", document.name)
 }
 
-/// 一覧のページ（REQ-view-005）
-fn index(documents: &[&Document]) -> String {
-    let mut body = String::from("<main class=\"page index\">\n<ul class=\"documents\">\n");
-    for document in documents {
-        body.push_str(&format!(
-            "<li><a href=\"{}\"><span class=\"title\">{}</span></a><p class=\"conclusion\">{}</p></li>\n",
-            html::href(&page_name(document)),
-            html::escape(&document.title),
-            html::escape(parts::conclusion(&document.lead)),
-        ));
-    }
-    body.push_str("</ul>\n</main>\n");
-    html::shell("Overview", &body)
-}
-
-/// 文書のページ。題名、冒頭の lead、lead に続く冒頭の部品、節の順に描く（REQ-view-006）
-fn document_page(document: &Document, refs: &parts::Refs) -> String {
+/// 文書のページ。目次の中の位置、題名、冒頭の lead、lead に続く冒頭の部品、節、同じ目次の群の文書の
+/// 順に描く（REQ-view-006、REQ-view-019、REQ-view-020）
+fn document_page(
+    document: &Document,
+    place: Option<&index::Place>,
+    documents: &index::Documents,
+    refs: &parts::Refs,
+) -> String {
     let mut body = format!(
-        "<nav class=\"crumbs\"><a href=\"{INDEX}\">Overview</a></nav>\n<main class=\"page\">\n<h1>{}</h1>\n",
+        "{}<main class=\"page\">\n<h1>{}</h1>\n",
+        crumbs(place),
         html::escape(&document.title)
     );
     body.push_str(&parts::part(&document.lead, refs));
@@ -138,8 +159,53 @@ fn document_page(document: &Document, refs: &parts::Refs) -> String {
         body.push_str(&blocks(&section.blocks, refs));
         body.push_str("</section>\n");
     }
+    if let Some(place) = place {
+        body.push_str(&siblings(&document.name, place.group, documents));
+    }
     body.push_str("</main>\n");
     html::shell(&document.title, &body)
+}
+
+/// 目次の中の位置。目次に名前が無ければ一覧へのリンクだけ（REQ-view-019）
+fn crumbs(place: Option<&index::Place>) -> String {
+    let links = match place {
+        Some(place) => place
+            .chain
+            .iter()
+            .map(|(title, anchor)| {
+                format!("<a href=\"{INDEX}#{anchor}\">{}</a>", html::escape(title))
+            })
+            .collect::<Vec<_>>()
+            .join("<span class=\"crumb-separator\">/</span>"),
+        None => format!("<a href=\"{INDEX}\">Overview</a>"),
+    };
+    format!("<nav class=\"crumbs\">{links}</nav>\n")
+}
+
+/// 同じ目次の群の直下の、ほかの名前の文書へのリンク（REQ-view-020）
+fn siblings(name: &str, group: &TocGroup, documents: &index::Documents) -> String {
+    let links: String = group
+        .items
+        .iter()
+        .filter_map(|item| match item {
+            TocItem::Document(other) if other != name => documents.get(other.as_str()),
+            _ => None,
+        })
+        .map(|other| {
+            format!(
+                "<li><a href=\"{}\">{}</a></li>",
+                html::href(&page_name(other)),
+                html::escape(&other.title)
+            )
+        })
+        .collect();
+    if links.is_empty() {
+        return links;
+    }
+    format!(
+        "<nav class=\"siblings\">\n<p class=\"siblings-title\">{}</p>\n<ul>{links}</ul>\n</nav>\n",
+        html::escape(&group.title)
+    )
 }
 
 /// 節の中身を描く。続く半分の幅の部品は先頭から2つずつ組にして左右に並べ、

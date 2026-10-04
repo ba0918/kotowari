@@ -87,7 +87,7 @@ kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`�
 
 ### TBL-core-004: キーと既定の値
 
-- source: docs/decision/records/2026-10-01-change-details.md#A2, docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/records.md#A62, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-notice.md#A5, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A9, docs/decision/records/2026-09-24-multi-language-tests.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A4, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A3, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71
+- source: docs/decision/records/2026-10-01-change-details.md#A2, docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/records.md#A62, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-notice.md#A5, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A9, docs/decision/records/2026-09-24-multi-language-tests.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A4, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A3, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-05-overview-index.md#A10, docs/decision/records/2026-10-05-overview-index.md#A11
 
 | キー | 値 | 既定 |
 |---|---|---|
@@ -110,6 +110,7 @@ kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`�
 | changes.exclude | 変更照合の対象から外す相対 glob 一覧 | 空の一覧 |
 | changes.records | 照合記録の相対 glob 一覧。changes を書くときは必須で空不可 | changes の省略時は照合記録検査なし |
 | overview.files | glob の一覧。`全体像の元データ`の置き場（overview-data.md）。overview を書くときは必須 | overview の省略時は`全体像の元データ`を読まない |
+| overview.toc | ファイルのパス（1つの文字列）。`目次`を指す（overview-toc.md）。overview を書くときは必須 | overview の省略時は`目次`を読まない |
 
 ## Examples
 

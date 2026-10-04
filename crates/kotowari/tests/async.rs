@@ -124,13 +124,24 @@ fn overview_prepare_and_build_return_what_the_sync_operations_return() {
         }
         std::fs::write(
             dir.path().join(".kotowari/config.yaml"),
-            "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n",
+            "tests:\n  files: []\noverview:\n  files: ['.kotowari/overview/*.md']\n  toc: .kotowari/toc.yaml\n",
         )
         .unwrap();
-        std::fs::write(dir.path().join("docs/ir/topic.md"), "# Topic\n\nScope.\n").unwrap();
+        for name in ["a", "b"] {
+            std::fs::write(
+                dir.path().join(format!(".kotowari/overview/{name}.md")),
+                format!("---\nir:\n  - docs/ir/{name}.md\n---\n\n# {name}\n\n```view lead\nconclusion: c\n```\n"),
+            )
+            .unwrap();
+            std::fs::write(
+                dir.path().join(format!("docs/ir/{name}.md")),
+                "# Topic\n\nScope.\n",
+            )
+            .unwrap();
+        }
         std::fs::write(
-            dir.path().join(".kotowari/overview/a.md"),
-            "---\nir:\n  - docs/ir/topic.md\n---\n\n# a\n\n```view lead\nconclusion: c\n```\n",
+            dir.path().join(".kotowari/toc.yaml"),
+            "title: t\nitems: [a, b]\n",
         )
         .unwrap();
         dir
@@ -155,9 +166,28 @@ fn overview_prepare_and_build_return_what_the_sync_operations_return() {
         );
         std::fs::remove_file(sync_dir.path().join(".kotowari/overview/a.md")).unwrap();
         std::fs::remove_file(async_dir.path().join(".kotowari/overview/a.md")).unwrap();
+        for dir in [&sync_dir, &async_dir] {
+            std::fs::write(
+                dir.path().join(".kotowari/toc.yaml"),
+                "title: t\nitems: [b]\n",
+            )
+            .unwrap();
+        }
         assert_eq!(
             send(adapter.overview_build()).await.unwrap(),
             sync.overview_build().unwrap()
         );
+        // 目次の誤りも同期と同じ誤りで止まる
+        for dir in [&sync_dir, &async_dir] {
+            std::fs::write(
+                dir.path().join(".kotowari/toc.yaml"),
+                "title: t\nitems: [z]\n",
+            )
+            .unwrap();
+        }
+        let error = send(adapter.overview_prepare()).await.unwrap_err();
+        let expected = sync.overview_prepare().unwrap_err();
+        assert_eq!(error.kind(), expected.kind());
+        assert_eq!(error.detail(), expected.detail());
     });
 }

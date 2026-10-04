@@ -163,8 +163,11 @@ Source: `ba0918-verification`, agentic-rules v0.8.0.
          lists, propose adding it to an existing overview or starting a new one, and let the person
          decide.
       2. Create or revise that overview data.
-      3. Run `kotowari overview build` and fix the errors until it exits 0.
-      4. Start `kotowari overview serve` in the background and give its URL as a reference; whether
+      3. Revise the table of contents: place each new overview in it, and add or split a group
+         when needed. Decide this yourself without asking the person; the table of contents is not
+         part of what is approved.
+      4. Run `kotowari overview build` and fix the errors until it exits 0.
+      5. Start `kotowari overview serve` in the background and give its URL as a reference; whether
          to look is the person's choice. Where nothing can run in the background, give the command
          instead.
    4. Stage the IR documents, the glossary, the problem record, and the decision record. Show the
@@ -172,8 +175,8 @@ Source: `ba0918-verification`, agentic-rules v0.8.0.
       output (the count of test-side findings, and each document whose notice was kept, with the
       reason), the collation result, and the paths approved with a content identifier for each —
       never the full text, never the IR's diff as something they must read, and never a summary as
-      the thing approved. Overview data revised in step 3 is committed with them, but is not part
-      of what is shown for approval. The person commits or says to.
+      the thing approved. Overview data and the table of contents revised in step 3 are committed
+      with them, but are not part of what is shown for approval. The person commits or says to.
 
 ## Decisions carried into change conformance
 

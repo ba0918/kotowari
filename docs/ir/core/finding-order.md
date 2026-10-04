@@ -14,10 +14,10 @@
 ### REQ-core-027: 文書全体への指摘
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A83, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A112, docs/decision/records/records.md#A144, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A15, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A69, docs/decision/records/2026-10-02-whole-picture.md#A74
+- source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A83, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A112, docs/decision/records/records.md#A144, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A15, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A69, docs/decision/records/2026-10-02-whole-picture.md#A74, docs/decision/records/2026-10-05-overview-index.md#A16
 - verification: unit
 
-kotowari は常に、種類が missing_title、multiple_titles、missing_scope、too_many_lines、too_many_requirements、unparsable_file、glossary_invalid、equivalent_stale、equivalent_invalid、surface_unspecified_invalid、surface_unspecified_stale、overview_lead_missing、overview_ir_missing、overview_ir_shared、overview_name_conflict の`指摘`の "line" を null にし、ほかの種類の "line" を TBL-core-019 のとおりにする。
+kotowari は常に、種類が missing_title、multiple_titles、missing_scope、too_many_lines、too_many_requirements、unparsable_file、glossary_invalid、equivalent_stale、equivalent_invalid、surface_unspecified_invalid、surface_unspecified_stale、overview_lead_missing、overview_ir_missing、overview_ir_shared、overview_name_conflict、overview_toc_invalid、overview_toc_page_missing、overview_toc_page_unknown、overview_toc_page_duplicate、overview_toc_group_empty の`指摘`の "line" を null にし、ほかの種類の "line" を TBL-core-019 のとおりにする。
 
 ### REQ-core-028: 行は1始まり
 
