@@ -81,6 +81,73 @@ pub fn collect_files(
     Ok(files)
 }
 
+/// glob の一覧に当たるファイルを集める。隠しディレクトリは、glob がパスの成分で名指ししたものだけに入る
+/// （REQ-core-019 の "changes.records" と "overview.files" の例外）。ほかは `collect_files` と同じ走査で、
+/// (`基準のディレクトリ`からの相対パス, 絶対パス) を相対パスのバイト順に並べて返す
+pub fn collect_named_hidden(
+    base: &std::path::Path,
+    patterns: &[String],
+) -> Result<Vec<(String, std::path::PathBuf)>, kotowari_core::StopReason> {
+    let records = kotowari_core::change_records::glob(patterns);
+    let hidden_prefixes: Vec<String> = patterns
+        .iter()
+        .flat_map(|pattern| {
+            let components: Vec<_> = pattern.split('/').collect();
+            components
+                .iter()
+                .enumerate()
+                .filter(|(_, component)| component.starts_with('.') && **component != ".")
+                .map(|(index, _)| components[..=index].join("/"))
+                .collect::<Vec<_>>()
+        })
+        .collect();
+    let named_hidden = kotowari_core::change_records::glob(&hidden_prefixes);
+    let relative = |path: &std::path::Path| {
+        path.strip_prefix(base)
+            .unwrap_or(path)
+            .to_string_lossy()
+            .replace('\\', "/")
+    };
+    let mut files = vec![];
+    for entry in walkdir::WalkDir::new(base)
+        .follow_links(false)
+        .into_iter()
+        .filter_entry(|entry| {
+            if entry.depth() == 0 {
+                return true;
+            }
+            if entry.file_type().is_symlink() {
+                return !std::fs::metadata(entry.path()).is_ok_and(|meta| meta.is_dir());
+            }
+            !entry.file_type().is_dir()
+                || !entry.file_name().to_string_lossy().starts_with('.')
+                || named_hidden.is_match(relative(entry.path()))
+        })
+    {
+        let entry = entry.map_err(|error| {
+            let path = error.path().map(relative).unwrap_or_default();
+            kotowari_core::StopReason::UnreadableFile(format!("{path}: {error}"))
+        })?;
+        let path = relative(entry.path());
+        let is_file = if entry.file_type().is_symlink() {
+            std::fs::metadata(entry.path())
+                .map_err(|error| {
+                    kotowari_core::StopReason::UnreadableFile(format!("{path}: {error}"))
+                })?
+                .is_file()
+        } else {
+            entry.file_type().is_file()
+        };
+        if is_file && records.is_match(&path) {
+            files.push((path, entry.path().to_path_buf()));
+        }
+    }
+    files.sort_by_cached_key(|(display, original)| {
+        (display.clone(), original.to_string_lossy().into_owned())
+    });
+    Ok(files)
+}
+
 pub(crate) fn read_collected_text(
     original: &Path,
     display: &str,
