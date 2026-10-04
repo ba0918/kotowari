@@ -428,3 +428,31 @@ fn req_core_002_build_takes_format_and_config_before_or_after_the_command() {
     assert_eq!(code, Some(0), "{stderr}");
     assert!(stdout.starts_with("written "), "{stdout}");
 }
+
+// @kotowari[REQ-core-296]
+#[cfg(unix)]
+#[test]
+fn req_core_296_a_symbolic_link_in_the_cache_is_replaced_not_written_through() {
+    let tmp = two_documents();
+    std::fs::create_dir_all(tmp.path().join(CACHE)).unwrap();
+    write(tmp.path(), "outside.css", "outside");
+    std::os::unix::fs::symlink(
+        tmp.path().join("outside.css"),
+        tmp.path().join(CACHE).join("style.css"),
+    )
+    .unwrap();
+    let (code, stdout, _) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(0));
+    assert_eq!(
+        std::fs::read_to_string(tmp.path().join("outside.css")).unwrap(),
+        "outside"
+    );
+    let style = tmp.path().join(CACHE).join("style.css");
+    assert!(
+        !std::fs::symlink_metadata(&style)
+            .unwrap()
+            .file_type()
+            .is_symlink()
+    );
+    assert!(strings(&json(&stdout)["written"]).contains(&".kotowari/cache/overview/style.css"));
+}

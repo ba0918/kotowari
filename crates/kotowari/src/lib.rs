@@ -216,7 +216,12 @@ impl OverviewPrepared {
         let mut build = OverviewBuild::default();
         for page in &self.pages {
             let path = cache.join(&page.name);
-            if std::fs::read(&path).is_ok_and(|bytes| bytes == page.content.as_bytes()) {
+            // シンボリックリンクを辿って置き場の外に書かないよう、リンクは消してからファイルを書く（REQ-core-296）
+            let link =
+                std::fs::symlink_metadata(&path).is_ok_and(|meta| meta.file_type().is_symlink());
+            if link {
+                std::fs::remove_file(&path).map_err(|error| write_error(&page.name, error))?;
+            } else if std::fs::read(&path).is_ok_and(|bytes| bytes == page.content.as_bytes()) {
                 build.unchanged += 1;
                 continue;
             }
