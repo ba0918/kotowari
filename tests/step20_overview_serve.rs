@@ -181,6 +181,34 @@ fn req_core_299_links_out_of_the_cache_directories_and_absolute_paths_are_404() 
     assert_eq!(child.wait().unwrap().code(), Some(0));
 }
 
+// @kotowari[REQ-core-299, REQ-core-297]
+#[cfg(unix)]
+#[test]
+fn req_core_299_a_percent_encoded_page_name_is_decoded_to_the_file_in_the_cache() {
+    let tmp = make_project(OVERVIEW, true);
+    let data = tmp.path().join(".kotowari/overview");
+    std::fs::rename(data.join("a.md"), data.join("変更 a.md")).unwrap();
+    let port = free_port();
+    let (mut child, _stdout, _) = serve(tmp.path(), port);
+    let cache = tmp.path().join(".kotowari/cache/overview");
+    // 一覧のページのリンクは、名前の UTF-8 のバイトをパーセント符号にした相対パスである
+    let encoded: String = "変更 a.html"
+        .bytes()
+        .map(|byte| {
+            if byte.is_ascii_alphanumeric() || byte == b'.' {
+                (byte as char).to_string()
+            } else {
+                format!("%{byte:02X}")
+            }
+        })
+        .collect();
+    let (status, _, body) = get(port, &format!("/{encoded}"));
+    assert!(status.contains(" 200 "), "{encoded}: {status}");
+    assert_eq!(body, std::fs::read(cache.join("変更 a.html")).unwrap());
+    interrupt(&child);
+    assert_eq!(child.wait().unwrap().code(), Some(0));
+}
+
 fn stopped(tmp: &Path, port: u16) -> (Option<i32>, String, String) {
     let output = kotowari()
         .args(["overview", "serve", "--port", &port.to_string()])
