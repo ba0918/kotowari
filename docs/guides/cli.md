@@ -1,22 +1,24 @@
 # kotowari の CLI（全コマンド共通）
 
-<!-- @kotowari[REQ-core-001:c1c19656] -->
+<!-- @kotowari[REQ-core-001:67e34470] -->
 
-kotowari の7つのコマンドに共通する決まりをまとめたページです。
+kotowari の8つのコマンドに共通する決まりをまとめたページです。
 書式、共通のオプション、指摘の出し方、終了コード、止まったときの標準エラー、パスの基準を扱います。
 コマンドごとの細部は、それぞれのページを見てください。
 
 ## 書式
 
-<!-- @kotowari[REQ-core-001:c1c19656, REQ-core-002:06abb59d, EX-core-380:3c688038] -->
+<!-- @kotowari[REQ-core-001:67e34470, REQ-core-002:410b78a4, EX-core-380:3c688038] -->
 
 ```sh
 kotowari <command> [--format json|text] [--config <path>] [argument]
+kotowari overview build [--format json|text] [--config <path>]
+kotowari overview serve [--port <port>] [--config <path>]
 kotowari --help
 kotowari --version
 ```
 
-コマンドは次の7つだけです。
+コマンドは次の8つだけです。
 
 | コマンド | 何をするか | ページ |
 |---|---|---|
@@ -27,6 +29,7 @@ kotowari --version
 | `status` | IR とテストが揃っているかを、数と1つの真偽で答える | [commands/status.md](commands/status.md) |
 | `mutants` | 変異テストの結果のファイルを読み、見逃しを指摘する | [commands/mutants.md](commands/mutants.md) |
 | `plan` | 計画書のファイル1つの形を、同梱のスキーマで検査する | [commands/plan.md](commands/plan.md) |
+| `overview` | 下位のコマンド `build` で全体像のページを `.kotowari/cache/overview/` の下に書き、`serve` で書いて 127.0.0.1 で配る | [仕様](../ir/core/overview-commands.md) |
 
 オプションはコマンドの前にも後にも書けます。
 `kotowari --format text check` と `kotowari check --format text` は同じです。
@@ -34,15 +37,16 @@ kotowari --version
 
 ## 共通のオプション
 
-<!-- @kotowari[REQ-core-002:06abb59d, REQ-core-021:14bd7b25, REQ-core-003:7fb82a37, REQ-core-107:b0d16f0b] -->
+<!-- @kotowari[REQ-core-002:410b78a4, REQ-core-021:14bd7b25, REQ-core-003:7fb82a37, REQ-core-107:b0d16f0b, REQ-core-297:d58585f9] -->
 
 | 名前 | 値 | 既定 | 説明 | 受けるコマンド |
 |---|---|---|---|---|
-| `--format` | `json` か `text` | `json` | 出力の形 | すべて |
-| `--config` | 設定ファイルのパス | 基準のディレクトリの `.kotowari/config.yaml` | 読む設定ファイルを変える。通常は**カレントディレクトリ**からの相対。`changes` は Git ルートからの相対で、対象 snapshot の設定を読む | `check`、`list`、`query`、`status`、`mutants`、`changes` |
+| `--format` | `json` か `text` | `json` | 出力の形 | `overview serve` 以外のすべて |
+| `--config` | 設定ファイルのパス | 基準のディレクトリの `.kotowari/config.yaml` | 読む設定ファイルを変える。通常は**カレントディレクトリ**からの相対。`changes` は Git ルートからの相対で、対象 snapshot の設定を読む | `check`、`list`、`query`、`status`、`mutants`、`changes`、`overview build`、`overview serve` |
 | `--help` | なし | — | 使い方を標準出力に出して終了コード0で終わる | すべて |
 | `--version` | なし | — | 版を標準出力に出して終了コード0で終わる | すべて |
 | `--tool` | `cargo-mutants` | なし（必須） | 結果のファイルを出した道具 | `mutants` だけ |
+| `--port` | 1から65535までの10進の整数 | `4590` | 配る 127.0.0.1 のポート | `overview serve` だけ |
 
 `--help` と `--version` は、ほかの引数より優先されます。
 これらがあると、ほかの引数に誤りがあっても見ずに表示し、検査もしません。
@@ -137,29 +141,34 @@ CI では終了コードだけで「直す必要があるか」を判定でき�
 
 ### 停止の理由
 
-<!-- @kotowari[TBL-core-018:6994583a, TBL-core-020:f2eb9b57, TBL-core-001:d6482e1a] -->
+<!-- @kotowari[TBL-core-018:f0f06a36, TBL-core-020:62dce3a2, TBL-core-001:9dd79638] -->
 
 | 1行目の文言 | 理由 | 詳細 | 主な場面 |
 |---|---|---|---|
-| `argument error` | 引数の誤り | 説明の文と問題の引数 | 知らないオプション、`--format` の知らない値、値の無いオプション、同じオプションの2回目、余分な位置引数、`--config` の先が無いかディレクトリ |
-| `config error` | 設定の誤り | 設定ファイルの相対パスと誤りの説明（`tests.rules` と `surface.rules` のルールのファイル、等価の一覧、未記載の面の一覧の誤りではそのファイルの相対パス） | 設定ファイルが YAML として読めない、知らないキー、同じキーの2回目、型の違う値、glob として読めない要素、`surface.files` と `surface.rules` の片方だけ、`tests.rules` か `surface.rules` のルールのファイルが無いか読めない、未記載の面の一覧が YAML として読めないか最上位が並びでない |
+| `argument error` | 引数の誤り | 説明の文と問題の引数 | 知らないオプション、`--format` の知らない値、値の無いオプション、同じオプションの2回目、余分な位置引数、`--config` の先が無いかディレクトリ、`overview` の後が `build` か `serve` の1つでない、`--port` の値が1から65535の整数でない |
+| `config error` | 設定の誤り | 設定ファイルの相対パスと誤りの説明（`tests.rules` と `surface.rules` のルールのファイル、等価の一覧、未記載の面の一覧の誤りではそのファイルの相対パス。置き場の重なりでは重なったファイルと `: matched by both ...`。`overview` の鍵が無いまま `overview build` か `serve` を実行したときは `overview is not configured` だけ） | 設定ファイルが YAML として読めない、知らないキー、同じキーの2回目、型の違う値、glob として読めない要素、`surface.files` と `surface.rules` の片方だけ、`tests.rules` か `surface.rules` のルールのファイルが無いか読めない、未記載の面の一覧が YAML として読めないか最上位が並びでない、`overview.files` がガイドかテストの置き場と重なる、`overview` の鍵が無いまま `overview build` か `serve` を実行した |
 | `unreadable file` | 読めないファイル | 相対パスと OS の誤りの文 | 置き場のディレクトリが無い、ファイルやディレクトリが読めない、`surface.unspecified` の指す先が無い |
 | `non-UTF-8 file` | UTF-8 でないファイル | 相対パス | 読むファイルのどれかが UTF-8 でない（面のファイルは面の規則の言語のものだけを読む） |
 | `results error` | 結果の誤り | 結果のファイルの相対パスと誤りの説明 | `mutants` の結果のファイルの形が壊れている |
 | `git error` | Git の読み取り停止 | 読めない履歴・対象・index の説明 | Git が無い、REV が commit に解決できない、設定が対象に無い、競合した index、不対応の対象 |
 | `mapping error` | 写しの誤り | 写せなかった指摘の種類か値の説明 | kotowari の内部の不整合。利用者の入力では起きない想定 |
+| `overview error` | 元データの誤り | 誤りの件数と ` errors in overview data; run kotowari check` | `overview build` か `serve` で全体像の元データに誤りがある。何も書かない |
+| `port error` | ポートの誤り | `127.0.0.1:<ポート>: ` と OS の誤りの文 | `overview serve` で指定のポートを使えない。ほかのポートは試さない |
+| `cache error` | 置き場の誤り | 問題のパスの相対パスと、OS の誤りがあれば `: ` と OS の誤りの文 | `overview build` か `serve` で `.kotowari`、`.kotowari/cache`、`.kotowari/cache/overview` のどれかがシンボリックリンクかディレクトリでないファイル（何も書かず消さない）、または置き場の作成・書き込み・削除に失敗した |
 
 場面の全部は [cli.md の TBL-core-001](../ir/core/cli.md) と [cli-environment.md の TBL-core-020](../ir/core/cli-environment.md) にあります。
 
 ### 引数の誤り
 
-<!-- @kotowari[REQ-core-004:7735d4c3, EX-core-219:888fcd62, EX-core-241:16825b8f] -->
+<!-- @kotowari[REQ-core-004:6c8139b3, EX-core-219:e635b323, EX-core-241:732148bf, REQ-core-304:ee3e3dd9] -->
 
 次のどれかに当たると `argument error` で止まります（`--help` か `--version` があるときを除く）。
 
 - 引数が1つも無い、またはオプションだけで、コマンドが無い
-- 1つ目の位置引数が7つのコマンドのどれでもない
-- 知らないオプション、または `mutants` でないコマンドに付けた `--tool`
+- 1つ目の位置引数が8つのコマンドのどれでもない
+- 知らないオプション、`mutants` でないコマンドに付けた `--tool`、`overview serve` でないコマンドに付けた `--port`、または `overview serve` に付けた `--format`
+- `overview` の後の位置引数がちょうど1つでないか、`build` か `serve` でない
+- `--port` の値が1から65535までの10進の整数でない
 - `check`、`list`、`status` の後の位置引数
 - `--format` の知らない値、値の無いオプション、同じオプションの2回目
 - `--config` の指す先が無いか、ディレクトリ
@@ -224,28 +233,32 @@ $ kotowari --help
 Usage: kotowari [OPTIONS] <COMMAND> [ARGUMENT]
 
 Commands:
+  changes    Check change records against a Git base and target snapshot
   check      Check IR documents and test markers
   list       List IR items and the tests marked for them
   mutants    Read a mutation testing result file and report survivors
+  overview   build: write the overview pages; serve: write and show them locally
   plan       Check the form of one plan file against the bundled schema
   query      Show one item or scenario with its body and back references
   status     Summarise the IR and tell whether it is complete
 
+Changes: --base <REV> (--head <REV> | --staged) --phase <implementation|review>
 Options:
   --format <FORMAT>  Output format: json (default) or text
   --config <PATH>    Path to configuration file
   --tool <TOOL>      Mutation testing tool of the result file: cargo-mutants
+  --port <PORT>      Port of overview serve on 127.0.0.1 (default 4590)
   --help             Show this help message
   --version          Show version
 ```
 
 ### 引数を間違えて止まる
 
-<!-- @kotowari[REQ-core-004:7735d4c3, REQ-core-005:948bc7d9, EX-core-219:888fcd62] -->
+<!-- @kotowari[REQ-core-004:6c8139b3, REQ-core-005:948bc7d9, EX-core-219:e635b323] -->
 
 ```console
 $ kotowari
-argument error: expected command: check, changes, list, mutants, plan, query or status
+argument error: expected command: check, changes, list, mutants, overview, plan, query or status
 $ kotowari check --verbose
 argument error: unknown option: --verbose
 $ kotowari check --format xml
@@ -264,7 +277,7 @@ $ echo $?
 
 ### ファイルと設定の問題で止まる
 
-<!-- @kotowari[TBL-core-018:6994583a, TBL-core-020:f2eb9b57] -->
+<!-- @kotowari[TBL-core-018:f0f06a36, TBL-core-020:62dce3a2] -->
 
 ```console
 $ kotowari check --format text      # docs/decision/adr が無い
@@ -272,12 +285,12 @@ unreadable file: docs/decision/adr: No such file or directory (os error 2)
 $ kotowari check --format text      # docs/ir/greet/bad.md が UTF-8 でない
 non-UTF-8 file: docs/ir/greet/bad.md
 $ kotowari check --config bad.yaml  # limits を limit と書き間違えた
-config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, vague_words
+config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words
  --> <input>:2:1
   |
 1 | ir: docs/ir
 2 | limit:
-  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, vague_words
+  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words
 3 |   lines: 20
   |
 $ kotowari check --format text      # rules/c.yml の language が cobol
@@ -311,7 +324,7 @@ tests/greet.rs:6 [error] test_without_id rejects_empty_name
 $ kotowari check --config .kotowari/config.yaml
 argument error: config file not found: .kotowari/config.yaml
 $ kotowari --format text check --config ../bad.yaml
-config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, vague_words
+config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words
 …
 ```
 
@@ -321,7 +334,7 @@ config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected 
 
 ### 終了コードが2で、標準出力に何も出ない
 
-<!-- @kotowari[REQ-core-005:948bc7d9, TBL-core-018:6994583a] -->
+<!-- @kotowari[REQ-core-005:948bc7d9, TBL-core-018:f0f06a36] -->
 
 検査を始める前に止まっています。
 標準出力ではなく、標準エラーの1行目を見てください。

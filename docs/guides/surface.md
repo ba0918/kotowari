@@ -171,7 +171,7 @@ surface: unspecified=1
 
 ## 外した数を見る
 
-<!-- @kotowari[REQ-core-228:59fca9bf, REQ-core-229:34b4f0ca, TBL-core-028:43f83e8c] -->
+<!-- @kotowari[REQ-core-228:59fca9bf, REQ-core-229:34b4f0ca, TBL-core-028:669e5402] -->
 
 一覧は借りで、置き場ではありません。
 借りた量が毎回見えるように、`surface.rules` を書いたプロジェクトでは、`check` が一覧で外した面の数を出します。

@@ -7,7 +7,7 @@
 
 ## 書式
 
-<!-- @kotowari[REQ-core-002:06abb59d, REQ-core-157:f0e9d719, EX-core-380:3c688038] -->
+<!-- @kotowari[REQ-core-002:410b78a4, REQ-core-157:f0e9d719, EX-core-380:3c688038] -->
 
 ```sh
 kotowari query [--format json|text] [--config <path>] <ID>
@@ -99,7 +99,7 @@ ID 検証 名前 パス:行 tests=数
 
 ## 終了コード
 
-<!-- @kotowari[REQ-core-156:31e36c67, REQ-core-157:f0e9d719, REQ-core-158:d6240218] -->
+<!-- @kotowari[REQ-core-156:31e36c67, REQ-core-157:f0e9d719, REQ-core-158:6cac9588] -->
 
 | コード | 意味 |
 |---|---|
@@ -108,7 +108,7 @@ ID 検証 名前 パス:行 tests=数
 
 `query` は 1 を返しません。
 IR の誤りの有無で終了コードを変えるのは `check` と `status` です。
-`query` はガイド、面のファイル、面の規則のファイル、未記載の面の一覧を読まないので、それらによる停止はしません。
+`query` はガイド、面のファイル、面の規則のファイル、未記載の面の一覧、全体像の元データを読まないので、それらによる停止はしません。
 
 ## 例
 

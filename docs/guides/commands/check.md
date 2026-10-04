@@ -1,6 +1,6 @@
 # kotowari check
 
-<!-- @kotowari[REQ-core-001:c1c19656] -->
+<!-- @kotowari[REQ-core-001:67e34470] -->
 
 IR（仕様）の書き方の誤りと、IR とテストの対応の抜けを、1件ずつの指摘として挙げるコマンドです。
 IR やテストを書いたら実行し、指摘を直して、誤りが0件になるまで繰り返します。
@@ -8,7 +8,7 @@ IR の形の検査とテストとの対応の検査は、この1つのコマン�
 
 ## 書式
 
-<!-- @kotowari[REQ-core-002:06abb59d] -->
+<!-- @kotowari[REQ-core-002:410b78a4] -->
 
 ```sh
 kotowari check [--format json|text] [--config <path>]
@@ -18,7 +18,7 @@ kotowari check [--format json|text] [--config <path>]
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-002:06abb59d, REQ-core-021:14bd7b25, REQ-core-003:7fb82a37] -->
+<!-- @kotowari[REQ-core-002:410b78a4, REQ-core-021:14bd7b25, REQ-core-003:7fb82a37] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
@@ -31,7 +31,7 @@ kotowari check [--format json|text] [--config <path>]
 
 ## 読むもの
 
-<!-- @kotowari[TBL-core-004:014841a3] -->
+<!-- @kotowari[TBL-core-004:c1821ec9] -->
 
 `check` は、設定ファイルが指す置き場から、次のものを読みます。
 
@@ -44,6 +44,7 @@ kotowari check [--format json|text] [--config <path>]
 | ガイド | `guides.files` | 空（読まない） |
 | 面のファイルと面の規則のファイル | `surface.files`、`surface.rules` | 空（読まない） |
 | 未記載の面の一覧 | `surface.unspecified` | 無し（0件） |
+| 全体像の元データ | `overview.files` | 無し（`overview` の鍵が無ければ読まない） |
 
 面の3つは `surface.rules` が空の一覧でないときだけ読みます（[面の検査](../surface.md)）。
 キーの全部は [config.md](../config.md) にあります。
@@ -60,17 +61,17 @@ kotowari check [--format json|text] [--config <path>]
 
 ### 置き場が無いとき
 
-<!-- @kotowari[REQ-core-018:64a197f1, REQ-core-019:bf607913] -->
+<!-- @kotowari[REQ-core-018:21dc9fba, REQ-core-019:d2cefae9] -->
 
 `ir`、`decisions.records`、`decisions.adr` の3つは、既定のままでもディレクトリが存在している必要があります。
 どれかが無い、ディレクトリでない、読めないときは、`unreadable file` で停止します。
 使わない置き場でも、空のディレクトリを作っておいてください。
 
-`tests.files`、`guides.files`、`surface.files` は glob の一覧です。
+`tests.files`、`guides.files`、`surface.files`、`overview.files` は glob の一覧です。
 何にも当たらない glob は誤りになりません。
 `**` は再帰として読みます。
 隠しディレクトリは glob が名指ししても含めず、ディレクトリのシンボリックリンクは辿りません。
-照合記録の `changes.records` は例外として、パス成分で明示した隠しディレクトリを読みます。名指ししない隠し配下は広い `**` でも除外します。
+照合記録の `changes.records` と全体像の元データの `overview.files` は例外として、パス成分で明示した隠しディレクトリ（`.kotowari/overview/*.md` など）を読みます。名指ししない隠し配下は広い `**` でも除外します。
 
 走査でディレクトリが読めないときと、先の無いシンボリックリンクに出会ったときは、`unreadable file` で停止します。
 
@@ -108,14 +109,14 @@ docs/ir/greet/greet.md:- [notice] too_many_lines 30
 | 種類 | 指摘の種類。意味と直し方は [findings.md](../findings.md) |
 | 詳細 | 種類ごとに決まった短い文字列 |
 
-text には、下の JSON の `files`、`lines`、`tests`、`guides` は出ません。
+text には、下の JSON の `files`、`lines`、`tests`、`guides`、`overview` は出ません。
 
 設定の `surface.rules` が空の一覧でないときは、指摘の行の後の最後の1行に、未記載の面の一覧で外した面の数を `surface: unspecified=数` の形で出します。
 指摘が0件でも、数が0でも出します（[面の検査](../surface.md#外した数を見る)）。
 
 ### JSON
 
-<!-- @kotowari[REQ-core-022:e6e6163f, TBL-core-005:c0473587, PROP-core-002:2b264d92, REQ-core-228:59fca9bf] -->
+<!-- @kotowari[REQ-core-022:e6e6163f, TBL-core-005:8f232386, PROP-core-002:2b264d92, REQ-core-228:59fca9bf, REQ-core-288:3ddb99ef] -->
 
 既定の出力です。
 標準出力に JSON のオブジェクトを1つ出します。
@@ -129,6 +130,7 @@ text には、下の JSON の `files`、`lines`、`tests`、`guides` は出ま�
 | `tests` | オブジェクト | 読んだテストのファイルの、拡張子ごとの数（下の節） |
 | `guides` | オブジェクト | 読んだガイドの数と、ガイドの印の数（下の節） |
 | `surface` | オブジェクト | `unspecified`（未記載の面の一覧で外した面の、種類と名前の組の数）の鍵1つ。`surface.rules` が空の一覧のときは鍵ごと出ない |
+| `overview` | オブジェクト | `files`（読んだ全体像の元データの数）と `marks`（その中の形の正しいガイドの印の1件の数）。数え方は `guides` と同じで、設定に `overview` の鍵が無くても両方0で出る |
 
 `counts` の値は、いつも `findings` の中のその種類の件数と一致します。
 
@@ -154,13 +156,14 @@ glob を書き間違えても指摘は出ないので、ここで確かめます
 
 ### 指摘の並びと行
 
-<!-- @kotowari[TBL-core-007:d8427397, REQ-core-027:6e77baf3, TBL-core-019:126b34ea] -->
+<!-- @kotowari[TBL-core-007:d8427397, REQ-core-027:d02224c9, TBL-core-019:508f1afa] -->
 
 指摘は `path`、`line`（null が先）、`kind`、`detail` の順に並びます（[cli.md](../cli.md#指摘の並び)）。
 同じ行の指摘は、種類の名前の順に並びます。
 
 `line` は種類ごとに決まっています。
-文書全体への指摘（`missing_title`、`missing_scope`、`too_many_lines` など）と、未記載の面の一覧の1件への指摘は null、項目への指摘は項目の見出しの行、シナリオへの指摘はタグの行、`surface_without_spec` は面の節の最初の行です。
+文書全体への指摘（`missing_title`、`missing_scope`、`too_many_lines` など）と、未記載の面の一覧の1件への指摘、全体像の元データの `overview_lead_missing`、`overview_ir_missing`、`overview_ir_shared`、`overview_name_conflict` は null、項目への指摘は項目の見出しの行、シナリオへの指摘はタグの行、`surface_without_spec` は面の節の最初の行です。
+`overview_form_invalid` は形に合わない行（文書全体にかかるものは null）、`overview_part_unknown`、`overview_part_invalid`、`overview_ref_unresolved` は部品のフェンスの開始の行です。
 種類ごとの行は [findings.md](../findings.md#種類の一覧) の表にあります。
 
 ## 終了コード
@@ -320,7 +323,7 @@ $ echo $?
 
 ### 設定ファイルを置いていないのに `unreadable file` で止まる
 
-<!-- @kotowari[REQ-core-018:64a197f1, REQ-core-012:c9ab4bdd] -->
+<!-- @kotowari[REQ-core-018:21dc9fba, REQ-core-012:c9ab4bdd] -->
 
 ```console
 $ kotowari check --format text

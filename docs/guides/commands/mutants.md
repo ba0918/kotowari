@@ -6,7 +6,7 @@
 
 ## 書式
 
-<!-- @kotowari[REQ-core-149:4b49b3c0, REQ-core-002:06abb59d, EX-core-244:ce4a0a06] -->
+<!-- @kotowari[REQ-core-149:4b49b3c0, REQ-core-002:410b78a4, EX-core-244:ce4a0a06] -->
 
 ```sh
 kotowari mutants --tool cargo-mutants [--format json|text] [--config <path>] <結果のファイル>
