@@ -4,19 +4,21 @@
 
 ## クレートを選ぶ
 
-<!-- @kotowari[REQ-core-306:12ba818e, REQ-core-308:3cb3e06d] -->
+<!-- @kotowari[REQ-core-306:12ba818e, REQ-core-308:3cb3e06d, TBL-core-040:d398d029] -->
 
 リポジトリの操作には`kotowari`、メモリだけの計算には`kotowari-core`を使います。
 `kotowari-source-analysis`は文字列からテストや面を発見し、元の文字列と診断を含むcoreの型を返します。ファイル取得やIRとの対応づけは行いません。
+`kotowari-overview`はメモリ上の全体像の元データを検査し、参照の表・古い節・描画の入力を作ります。`kotowari-markdown-view`は描画の入力から全体像のページをメモリ上に作り、workspaceのほかのパッケージに依存しません。
 スキーマの計算には`kotowari-markdown-schema`、取得には`kotowari-markdown-schema-io`を使います。
-CLIのパッケージは`kotowari-cli`と`kotowari-mds`です。
+CLIのパッケージは`kotowari-cli`と`kotowari-mds`です。全体像を配る`serve`は`kotowari-cli`にあり、ライブラリにはありません。
 
 ## 読込みと結果の寿命
 
-<!-- @kotowari[REQ-core-310:ba432526, REQ-core-316:a7ac5b52] -->
+<!-- @kotowari[REQ-core-310:ba432526, REQ-core-316:a7ac5b52, TBL-core-041:0dbc6ef0] -->
 
 `Project::new(ProjectOptions::new(absolute_start))`で開始点を明示します。
-`check`、`list`、`query`、`status`、`plan`、`mutants`、`changes`は型付きの結果を返します。
+`check`、`list`、`query`、`status`、`plan`、`mutants`、`changes`は型付きの結果を返します。`check`と`status`は全体像の元データの指摘と`overview`の群を含みます。
+`overview_prepare`は全体像の元データを検査して描画し、ファイルを書きません。返った結果の`write()`で`.kotowari/cache/overview/`の下へ書きます。`overview_build`はこの2つを続けて行い、書いたファイル・消したファイルの一覧と書かなかったファイルの数を返します。`AsyncProject`にも同じ2つがあります。
 完了した指摘は結果の`findings()`で読み、読めないファイルや設定の誤りは`Error`と`ErrorKind`で区別します。
 `read()`と`inspect()`の結果は保持して再利用でき、後からファイルが変わっても自動更新されません。読み直す場合はProjectを再度呼びます。
 `plan`や`mutants`はIRを読みません。

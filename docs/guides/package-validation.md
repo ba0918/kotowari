@@ -13,7 +13,7 @@ python3 scripts/check-packages.py --output "$ABSOLUTE_NEW_SCRATCH_DIRECTORY"
 ```
 
 出力先はリポジトリ外の新しい絶対パスです。既存ディレクトリは上書きしません。
-ヘルパーはロック済みの外部依存をvendorした後、ソース置換を使わないオフラインのCargo workspace stagingで7個のアーカイブを作ります。
+ヘルパーはロック済みの外部依存をvendorした後、ソース置換を使わないオフラインのCargo workspace stagingで9個のアーカイブを作ります。
 その後、元のアーカイブを安全に展開し、チェックサム付きの独立したdirectory sourceで各パッケージをビルド・テストします。
 Tokioの有効・無効、別クレートからの呼出、再公開した型の同一性、両CLIの互換テストも確かめます。
 アーカイブや出荷したmanifestを書き換えず、作業ツリーへのpath依存やpatchは使いません。
@@ -21,15 +21,17 @@ Tokioの有効・無効、別クレートからの呼出、再公開した型の
 
 ## 将来の公開順
 
+<!-- @kotowari[TBL-core-040:d398d029] -->
+
 公開を行う人は、検証と独立レビューが済んだ同じ変更について、各製品の版を上げてから実行します。
 依存される側を先に公開します。
 
-1. `kotowari-markdown-schema`
+1. `kotowari-markdown-schema`と`kotowari-markdown-view`
 2. `kotowari-core`と`kotowari-markdown-schema-io`
-3. `kotowari-source-analysis`と`kotowari-mds`
+3. `kotowari-source-analysis`、`kotowari-mds`、`kotowari-overview`
 4. `kotowari`
 5. `kotowari-cli`
 
 同じ段の独立したクレートの順番は任意です。これは将来の人による公開手順であり、検証ヘルパーはアップロードしません。
-kotowari系の版の基準は根の`Cargo.toml`、スキーマ系は`crates/kotowari-markdown-schema/Cargo.toml`です。
-スキーマ系の版変更時はcoreから入る依存宣言も更新します。既存の2製品のタグ、バイナリ名、配布アーカイブ名を変更する手順ではありません。
+kotowari系の版の基準は根の`Cargo.toml`、スキーマ系は`crates/kotowari-markdown-schema/Cargo.toml`です。`kotowari-overview`はkotowari系、`kotowari-markdown-view`はスキーマ系の版に従います。
+スキーマ系の版変更時はcoreとoverviewから入る依存宣言も更新します。既存の2製品のタグ、バイナリ名、配布アーカイブ名を変更する手順ではありません。
