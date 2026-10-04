@@ -45,16 +45,19 @@ tests do not run in the hooks; they blocked every push for one to two hours.
 
 The mutation tests run in GitHub Actions, split into sixteen parallel shards
 (`.github/workflows/mutants-run.yml`), each inside a systemd scope capped at 12G of memory and
-with a 20-second test timeout per mutant. Every pull request runs the mutants in the diff from
-the newest commit of the same pull request whose `mutants` check passed, or from its merge base
-when none passed yet (`.github/workflows/mutants.yml`), so a push that only adds a fix does not
-rerun mutants already checked. Branch protection on `main` requires that
-workflow's `mutants` job, for administrators too, so `main` only takes commits that passed it.
+300% CPU, with cargo-mutants on the pinned `nightly-2026-10-03` and a per-mutant timeout derived
+from the baseline run. Every pull request runs the mutants in the diff from its merge base
+(`.github/workflows/mutants.yml`), and branch protection on `main` requires that workflow's
+`mutants` job, for administrators too, so `main` only takes commits that passed it. A weekly
+run over the whole code base on `main` (`.github/workflows/mutants-scheduled.yml`) opens an
+issue when it finds survivors; it is not a gate.
 A release runs the mutants in the diff from the product's previous release tag (the whole
 workspace only when there is no previous tag) before building binaries. A miss in code that did
 not change — one created by deleting or weakening the test that caught a mutant there — is not
-caught by either. Run the whole workspace by hand with `scripts/mutants.sh full` when that
-matters. `MUTANTS_JOBS` sets how many mutants run at once; keep the default of 1 locally, since 3
+caught by either gate; the weekly whole run finds it. On a workstation, run only the files whose
+tests are being written (`scripts/mutants.sh full -- -f <path>`), in the background; it needs the
+pinned nightly (`rustup toolchain install nightly-2026-10-03`) and runs inside a user service
+capped at 12G and 400% CPU at the lowest priority. `MUTANTS_JOBS` sets how many mutants run at once; keep the default of 1 locally, since 3
 and 4 were slower on 2026-10-04 and produced a false timeout.
 
 The mutation tests run the whole workspace's test suite once per mutant, so the suite's wall

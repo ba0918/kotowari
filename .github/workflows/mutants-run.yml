@@ -24,20 +24,24 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   CARGO_BUILD_JOBS: "4"
-  # メモリ上限つきのスコープで回す（判断の記録 2026-10-04-mutants-in-ci.md の A11）
+  # メモリと CPU に上限をかけたスコープで回す（判断の記録 2026-10-04-mutants-in-ci.md の A11、A15）。
+  # 4コアのランナーに 300% を渡し、ビルドの並列数をそれに合わせる
   MUTANTS_SERVICE: scope
+  MUTANTS_CPU_QUOTA: "300%"
+  MUTANTS_BUILD_JOBS: "3"
+  # 日付で固定した nightly（A16）
+  MUTANTS_TOOLCHAIN: nightly-2026-10-03
   MUTANTS_JOBS: "1"
   # 手元の scripts/mutants.sh と同じ版（出力の終了コードの扱いがこの版に合わせてある）
   CARGO_MUTANTS_VERSION: "27.1.0"
   SHARDS: "16"
-  # 変異1件のテストの時間切れの秒数（同じ記録の A10）
-  MUTANTS_TIMEOUT: "20"
 
 jobs:
   shard:
     name: 変異テスト（${{ matrix.shard }}/16）
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    # 分担あたりの変異（全体の約1800件を16で割って約115件）×（ビルド約12秒 + テスト約8秒）に余裕を持たせる
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -51,7 +55,7 @@ jobs:
       - name: Rust を用意する
         run: |
           rustup toolchain install stable --profile minimal
-          rustup toolchain install nightly --profile minimal
+          rustup toolchain install "$MUTANTS_TOOLCHAIN" --profile minimal
           rustup default stable
       # ビルド済みの cargo-mutants を入れる。分担ごとにソースから入れると1分かかる
       - uses: taiki-e/install-action@e407f7bafb71fd004bc5c2da3032e5470cbb6ef0 # v2.87.24
@@ -64,7 +68,7 @@ jobs:
         run: |
           read -r mode base <<<"$SCOPE"
           case "$mode" in
-          diff) scripts/mutants.sh diff "$base" -- --shard "$SHARD/$SHARDS" --timeout "$MUTANTS_TIMEOUT" ;;
-          full) scripts/mutants.sh full -- --shard "$SHARD/$SHARDS" --timeout "$MUTANTS_TIMEOUT" ;;
+          diff) scripts/mutants.sh diff "$base" -- --shard "$SHARD/$SHARDS" ;;
+          full) scripts/mutants.sh full -- --shard "$SHARD/$SHARDS" ;;
           *) echo "unknown scope: $SCOPE" >&2; exit 1 ;;
           esac

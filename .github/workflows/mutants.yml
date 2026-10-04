@@ -1,5 +1,5 @@
-# PR ごとに、同じ PR で mutants のチェックが成功した一番新しい commit（無ければ PR の基準との merge-base）
-# からの差分に入る変異を回す（判断の記録 docs/decision/records/2026-10-04-mutants-in-ci.md の A2、A3、A9）。
+# PR ごとに、PR の基準との merge-base からの差分に入る変異を回す（判断の記録
+# docs/decision/records/2026-10-04-mutants-in-ci.md の A2、A3、A13）。
 #
 # main のブランチ保護で必須にするのは最後の "mutants" のジョブだけ。分担の数を変えても保護を直さなくてよい。
 # 合成のマージの commit ではなく、PR の先頭の commit を回す。
@@ -10,7 +10,6 @@ on:
 
 permissions:
   contents: read
-  checks: read
 
 concurrency:
   group: mutants-${{ github.event.pull_request.number }}
@@ -32,22 +31,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - id: base
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPOSITORY: ${{ github.repository }}
-        run: |
-          base="$(git merge-base "$EVENT_BASE" "$EVENT_HEAD")"
-          # 新しい順に、mutants のチェックが成功した commit を探す。PR の先頭の祖先だけを見る
-          for sha in $(git rev-list "$base..$EVENT_HEAD"); do
-            passed="$(gh api "repos/$REPOSITORY/commits/$sha/check-runs?check_name=mutants" \
-              --jq '[.check_runs[] | select(.conclusion == "success")] | length')"
-            if [ "$passed" -gt 0 ]; then
-              base="$sha"
-              break
-            fi
-          done
-          echo "base: $base"
-          printf 'scope=diff %s\n' "$base" >>"$GITHUB_OUTPUT"
+        run: printf 'scope=diff %s\n' "$(git merge-base "$EVENT_BASE" "$EVENT_HEAD")" >>"$GITHUB_OUTPUT"
 
   run:
     needs: scope

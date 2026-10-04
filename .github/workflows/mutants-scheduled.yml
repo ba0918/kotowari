@@ -1,0 +1,46 @@
+# main の全体の変異テストを週に1回と手動で回し、見逃しがあれば issue を作る（判断の記録
+# docs/decision/records/2026-10-04-mutants-in-ci.md の A18）。関門にはしない。
+#
+# 差分の関門（mutants.yml）は、変えていないコードの見逃し（テストを消したり弱めたりして生まれるもの）を
+# 見つけられないので、全体をここで回す。
+name: Mutants (scheduled)
+
+on:
+  schedule:
+    - cron: "0 18 * * 6"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mutants-scheduled
+  cancel-in-progress: false
+
+jobs:
+  run:
+    uses: ./.github/workflows/mutants-run.yml
+    with:
+      ref: ${{ github.sha }}
+      scope: full
+
+  report:
+    name: 見逃しを issue にする
+    needs: run
+    if: needs.run.result == 'failure'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          gh issue create --repo "$REPOSITORY" \
+            --title "全体の変異テストで見逃しか未完了の分担がある（${COMMIT:0:7}）" \
+            --body "定期の全体の変異テストが失敗した。分担ごとのログで見逃し（mutant_survived）か未完了の理由を確かめる。
+
+          - commit: $COMMIT
+          - run: $RUN_URL"
