@@ -2,64 +2,23 @@
   "version": 1,
   "entries": [
     {
-      "id": "serve-host-implementation",
+      "id": "scaffold-routing-implementation",
+      "base": "ccb5084fb0e42ece625d0c1f2ff9d425fc25ab59",
+      "role": "implementer",
       "files": [
         {
-          "path": "src/cli/serve.rs",
-          "before": "sha256:48b68ad503a8d2bfe6ef772e558082597f23586f6e9bdedf120fe2329f5261ee",
-          "after": "sha256:6b3558ba79b9f1400cda398394c724632d5f710a4842fa462e33c4b8bcf1c115"
-        },
-        {
-          "path": "tests/step20_overview_serve.rs",
-          "before": "sha256:db72c603b6a99ca00ec68c424460c36dc8570cc9dc5fe98fde9b88f1aed8dd75",
-          "after": "sha256:2dfd8013e0b743ec4980feff1f7a784baafa62cec05f03e2db8a73ba85d703ee"
+          "path": "PROJECT.md",
+          "before": "sha256:a709dc8099ac238ec07e789ebb9acf94f53f4de2c1c548132d6c4ed2c7e01e03",
+          "after": "sha256:6f7c3009a77488f6514818bba076c5e6ab857f446336c12b5e4d7484d1d290a3"
         }
       ],
-      "reason": "The Host restriction is HTTP serving boundary policy and remains in the CLI adapter. A1/A2 and REQ-core-356 require only 127.0.0.1:<served-port> and localhost:<served-port>, ignoring ASCII name case; all other or missing Host values receive an empty 403 before filesystem resolution with no per-request output. respond delegates the pure exact-value comparison to host_allowed before resolve. EX-core-543 tests both accepted names, an external name, the wrong port and missing Host, the returned bodies and silent stdout. Existing serve requests now carry the served port in Host. The comparison against the integrated main retains these implementation and test bytes unchanged; PR19 changes only the distributed skill policy and does not alter the product requirement or serving boundary.",
-      "base": "71e7ba9d64f1b46ca8ff03ca2a8b1b715d87369a",
-      "role": "implementer",
-      "ir": [
-        {
-          "path": "docs/ir/core/overview-commands.md",
-          "sha256": "sha256:0456618297b9bdaa4ed3cb4ddce384216cb6eb0a88a21c3e98da61ff33dcaa18"
-        }
-      ],
+      "ir": [],
       "conclusion": "new",
-      "requirements": [
-        "REQ-core-356"
-      ],
+      "reason": "PROJECT.md now says, in the Specification section, to read the kotowari skill before writing or revising an IR document and before acting on a kotowari check finding, and to decide where a new request starts with kotowari-using-workflow rather than ba0918-using-workflow. These were the two hand-written kotowari rows of the AGENTS.md routing table, which is now regenerated from the installed skills' ba0918-routing metadata without the gui row (A1) and carries no project-specific rows (A2). This is contributor instruction, not product behavior, so no IR changes.",
+      "requirements": [],
       "decisions": [
-        "docs/decision/records/2026-10-05-serve-host.md#A1",
-        "docs/decision/records/2026-10-05-serve-host.md#A2"
-      ],
-      "handoff": null,
-      "gaps": []
-    },
-    {
-      "id": "serve-host-changelog-implementation",
-      "files": [
-        {
-          "path": "CHANGELOG.md",
-          "before": "sha256:b0007970ea61e137efa91668a821ea9d412a29626440f697b944834bc5e0a162",
-          "after": "sha256:cc0e48cc70513b30db5f991a8f3746af82cc5f3c1aa0e62295a5234dc0545f07"
-        }
-      ],
-      "reason": "The Unreleased Fixed entry explains the new empty 403 for nonlocal or missing Host and its DNS rebinding motivation, consistent with A1/A2 and REQ-core-356. The integrated changelog preserves the main branch entries describing the distributed skills and IR scope; this comparison adds only the Host restriction entry.",
-      "base": "71e7ba9d64f1b46ca8ff03ca2a8b1b715d87369a",
-      "role": "implementer",
-      "ir": [
-        {
-          "path": "docs/ir/core/overview-commands.md",
-          "sha256": "sha256:0456618297b9bdaa4ed3cb4ddce384216cb6eb0a88a21c3e98da61ff33dcaa18"
-        }
-      ],
-      "conclusion": "new",
-      "requirements": [
-        "REQ-core-356"
-      ],
-      "decisions": [
-        "docs/decision/records/2026-10-05-serve-host.md#A1",
-        "docs/decision/records/2026-10-05-serve-host.md#A2"
+        "docs/decision/records/2026-10-06-agent-instructions.md#A1",
+        "docs/decision/records/2026-10-06-agent-instructions.md#A2"
       ],
       "handoff": null,
       "gaps": []
