@@ -35,9 +35,19 @@ Run cargo from the repository root; it covers the whole workspace.
 `CARGO_BUILD_JOBS=4` caps the parallel build jobs for memory reasons; `lefthook.yml` runs cargo
 the same way in both hooks.
 
-The minimum supported Rust version is declared per crate, not once for the workspace:
-`crates/kotowari-markdown-schema` declares `rust-version = "1.89"`, and neither `kotowari` nor
-`kotowari-core` declares one. Schema I/O, mds and `kotowari-markdown-view` declare Rust 1.89. All nine use `edition = "2024"`.
+`rust-toolchain.toml` pins the toolchain (Rust 1.99.0). The root `Cargo.toml` declares the
+edition (2024), the minimum supported Rust version (1.99, the same as the pin) and the lint
+configuration once under `[workspace.package]` and `[workspace.lints]`, and all nine packages
+inherit them. The pin applies only when cargo runs through rustup: a version manager that sets
+`RUSTUP_TOOLCHAIN` or puts its own cargo first on `PATH` overrides it, and an older toolchain then
+fails on `rust-version`.
+
+`scripts/gates.sh` runs the Rust gates — `cargo fmt --all --check`, clippy over all targets with
+warnings as errors (default features and all features) and the whole test suite, all `--locked`.
+The CI workflow (`.github/workflows/ci.yml`) runs it on every pull request and on `main`; its
+"Rust gates" job is the check to require. Lints are suppressed only with
+`#[expect(..., reason = "...")]`; integration-test and example files carry one
+`#![expect(clippy::unwrap_used, ...)]` for their helpers.
 
 `lefthook.yml` defines the local gates: `pre-commit` runs the secret scan and `kotowari check`,
 and `pre-push` runs the full test suite and `kotowari check` with no exemptions. The mutation
