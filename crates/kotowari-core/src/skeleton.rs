@@ -453,29 +453,70 @@ fn flags(text: &str) -> Vec<Element> {
     out
 }
 
-/// `目次の群`の入れ子と、名前の項目の並びと、各`目次の群`の "note" の有無。行は持たない
-fn toc(text: &str) -> Vec<Element> {
-    fn group(value: &Value, out: &mut Vec<Element>) {
-        out.push(element(
-            format!("group note={}", value.get("note").is_some()),
-            None,
-        ));
-        for item in value
-            .get("items")
-            .and_then(Value::as_array)
-            .into_iter()
-            .flatten()
-        {
-            match item {
-                Value::String(name) => out.push(element(format!("name {name}"), None)),
-                other => group(other, out),
+/// `目次`の1つの項目。名前か`目次の群`
+enum TocNode {
+    Name(String),
+    Group {
+        note: bool,
+        items: Vec<serde_saphyr::Spanned<TocNode>>,
+    },
+}
+
+impl<'de> serde::Deserialize<'de> for TocNode {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        struct Visitor;
+        impl<'de> serde::de::Visitor<'de> for Visitor {
+            type Value = TocNode;
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("a page name or a group")
+            }
+            fn visit_str<E: serde::de::Error>(self, name: &str) -> Result<TocNode, E> {
+                Ok(TocNode::Name(name.to_string()))
+            }
+            fn visit_map<A: serde::de::MapAccess<'de>>(
+                self,
+                mut map: A,
+            ) -> Result<TocNode, A::Error> {
+                let (mut note, mut items) = (false, Vec::new());
+                while let Some(key) = map.next_key::<String>()? {
+                    match key.as_str() {
+                        "note" => {
+                            note = true;
+                            map.next_value::<serde::de::IgnoredAny>()?;
+                        }
+                        "items" => items = map.next_value()?,
+                        _ => {
+                            map.next_value::<serde::de::IgnoredAny>()?;
+                        }
+                    }
+                }
+                Ok(TocNode::Group { note, items })
             }
         }
-        out.push(element("end", None));
+        deserializer.deserialize_any(Visitor)
+    }
+}
+
+/// `目次の群`の入れ子と、名前の項目の並びと、各`目次の群`の "note" の有無。行はその項目の行
+fn toc(text: &str) -> Vec<Element> {
+    fn walk(node: &serde_saphyr::Spanned<TocNode>, out: &mut Vec<Element>) {
+        let line = usize::try_from(node.referenced.line())
+            .ok()
+            .filter(|line| *line > 0);
+        match &node.value {
+            TocNode::Name(name) => out.push(element(format!("name {name}"), line)),
+            TocNode::Group { note, items } => {
+                out.push(element(format!("group note={note}"), line));
+                for item in items {
+                    walk(item, out);
+                }
+                out.push(element("end", None));
+            }
+        }
     }
     let mut out = Vec::new();
-    if let Ok(value) = serde_saphyr::from_str::<Value>(text) {
-        group(&value, &mut out);
+    if let Ok(root) = serde_saphyr::from_str::<serde_saphyr::Spanned<TocNode>>(text) {
+        walk(&root, &mut out);
     }
     out
 }

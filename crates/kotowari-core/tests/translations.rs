@@ -346,16 +346,23 @@ fn tbl_core_044_contents_compare_nesting_names_and_whether_a_note_is_present() {
         CONTENTS,
         &sentences,
         &[
-            (&CONTENTS.replace("note: N\n", ""), "toc", None),
-            (&CONTENTS.replace("- b", "- c"), "toc", None),
+            (&CONTENTS.replace("note: N\n", ""), "toc", Some(1)),
+            (&CONTENTS.replace("- b", "- c"), "toc", Some(7)),
             (
                 &CONTENTS.replace(
                     "    items:\n      - b\n",
                     "    note: x\n    items:\n      - b\n",
                 ),
                 "toc",
-                None,
+                Some(5),
             ),
+            // 名前の項目が無いことは null
+            (
+                &CONTENTS.replace("      - b\n", "      - b\n      - c\n"),
+                "toc",
+                Some(8),
+            ),
+            (&CONTENTS.replace("  - a\n", ""), "toc", None),
         ],
     );
 }
