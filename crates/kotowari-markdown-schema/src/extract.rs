@@ -1172,6 +1172,22 @@ document:
         );
     }
 
+    // @kotowari[REQ-schema-063]
+    #[test]
+    fn a_crlf_document_gives_the_same_values_as_the_lf_document() {
+        // CRLF も1つの行区切り。値の行は元の行を改行1つでつなぐので、改行の形に依らず
+        // LF の文書と同じ値になる。この規則は読み方に依らない（REQ-schema-063）
+        let schema = "document:\n  sections:\n    - name: 理由\n      statement:\n        repeat: { min: 0 }\n        extract: lines\n      fields:\n        - name: タグ\n          required: false\n          separator: \",\"\n          extract: tags\n      bullets:\n        repeat: { min: 0 }\n        extract: reasons\n        children:\n          bullets:\n            repeat: { min: 0 }\n";
+        let doc = "# 題名\n\n## 理由\n\n一行目\n二行目\n\n- 親\n  - 子\n- 続く\n\n  継続の段落\n- タグ: a,b\n折り返し,c\n";
+        for reading in ["paragraph", "line"] {
+            let schema = format!("reading: {reading}\n{schema}");
+            let lf = values(&schema, doc);
+            assert_eq!(lf["reasons"][0], json!("- 親\n  - 子"), "{reading}: {lf}");
+            let crlf = values(&schema, &doc.replace('\n', "\r\n"));
+            assert_eq!(crlf, lf, "{reading}");
+        }
+    }
+
     // @kotowari[REQ-schema-029, REQ-schema-035]
     #[test]
     fn wrapped_line_is_part_of_value_and_subject_to_separator_split() {
