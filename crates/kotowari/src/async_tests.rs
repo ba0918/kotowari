@@ -1,16 +1,12 @@
 use super::*;
 use std::{
     future::Future,
-    sync::{Arc, mpsc},
-    task::{Context, Poll, Wake, Waker},
+    sync::mpsc,
+    task::{Context, Poll, Waker},
 };
 
-struct Noop;
-impl Wake for Noop {
-    fn wake(self: Arc<Self>) {}
-}
 fn poll<F: Future>(future: std::pin::Pin<&mut F>) -> Poll<F::Output> {
-    future.poll(&mut Context::from_waker(&Waker::from(Arc::new(Noop))))
+    future.poll(&mut Context::from_waker(Waker::noop()))
 }
 
 // @kotowari[REQ-core-319, REQ-core-320, REQ-schema-075, EX-core-493, EX-core-494, EX-schema-092]

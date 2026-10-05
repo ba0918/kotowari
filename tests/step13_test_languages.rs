@@ -1,4 +1,8 @@
 //! Rust 以外の言語の`問い合わせ`（TS/JS、Python、PHP）と、"tests.rules" で足すルールの検査
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 
 use assert_cmd::Command;
 use std::fs;

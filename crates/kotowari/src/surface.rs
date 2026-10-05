@@ -1,15 +1,12 @@
 use kotowari_core::{Finding, SourceText, StopReason, config::Config};
 use std::path::Path;
-pub fn analyze(
-    base: &Path,
-    cfg: &Config,
-) -> Result<
-    (
-        Option<Vec<kotowari_core::NativeSurfaceAnalysis>>,
-        Option<Vec<kotowari_core::NativeSourceText>>,
-    ),
-    StopReason,
-> {
+/// 面の解析の結果と、その元にしたファイル。面の規則が無いときはどちらも None
+type SurfaceInputs = (
+    Option<Vec<kotowari_core::NativeSurfaceAnalysis>>,
+    Option<Vec<kotowari_core::NativeSourceText>>,
+);
+
+pub fn analyze(base: &Path, cfg: &Config) -> Result<SurfaceInputs, StopReason> {
     if cfg.surface.rules.is_empty() {
         return Ok((None, None));
     }

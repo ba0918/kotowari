@@ -3,6 +3,7 @@
 //!
 //! このクレートの仕様は `docs/ir/view/` の IR である。ファイル、ネットワーク、環境変数に触れず、
 //! 入力の形も検査しない（REQ-view-003）。
+#![deny(clippy::print_stdout, clippy::print_stderr)]
 
 mod html;
 mod index;
@@ -321,7 +322,7 @@ fn siblings(name: &str, group: &TocGroup, documents: &index::Documents) -> Strin
         .iter()
         .filter_map(|item| match item {
             TocItem::Document(other) if other != name => documents.get(other.as_str()),
-            _ => None,
+            TocItem::Document(_) | TocItem::Group(_) => None,
         })
         .map(|other| {
             format!(

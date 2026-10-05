@@ -1,3 +1,7 @@
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 use kotowari_markdown_view::{
     Block, Document, PART_KINDS, Part, Reference, ReferenceState, RenderInput, Section, TocGroup,
     part_schema, render,
@@ -176,6 +180,10 @@ fn ex_view_007_schemas_exist_for_the_eight_kinds_and_not_for_others() {
 }
 
 /// 型が object の部分スキーマのうち "additionalProperties": false を宣言しないものの場所
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "serde_json::Value is a foreign enum: the remaining JSON kinds are deliberately handled alike"
+)]
 fn open_objects(schema: &Value, at: &str, found: &mut Vec<String>) {
     match schema {
         Value::Object(map) => {

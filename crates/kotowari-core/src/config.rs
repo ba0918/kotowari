@@ -104,8 +104,8 @@ impl Default for Config {
             changes: None,
             overview: None,
             limits: LimitsConfig {
-                lines: NonZeroU64::new(200).unwrap(),
-                requirements: NonZeroU64::new(10).unwrap(),
+                lines: NonZeroU64::new(200).expect("200 is non-zero"),
+                requirements: NonZeroU64::new(10).expect("10 is non-zero"),
             },
             vague_words: vec![
                 "適切に".to_string(),
@@ -291,6 +291,10 @@ pub fn is_blank_yaml(text: &str) -> bool {
 /// 一覧のファイル（`等価の一覧`と`未記載の面の一覧`）の中身を、最上位の並びの要素として読む。
 /// 空（0バイトか注釈だけ）なら0件。YAML として読めないか最上位が並びでないときは、
 /// 一覧のファイルの相対パス `display` を詳細にして設定の誤りで`停止`する（REQ-core-148、REQ-core-231）
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "serde_json::Value is a foreign enum: the remaining JSON kinds are deliberately handled alike"
+)]
 pub(crate) fn read_yaml_sequence(
     text: &str,
     display: &str,
@@ -310,7 +314,11 @@ pub(crate) fn read_yaml_sequence(
 
 /// YAML のライブラリの誤りを設定の誤りにする。キーの重複はライブラリの文言と抜粋を出さず、
 /// "duplicate key: キー" の1行にする（REQ-core-014）
-fn yaml_error(e: serde_saphyr::Error) -> StopReason {
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "serde_saphyr::Error is a foreign enum: every other error deliberately keeps the library's own message"
+)]
+fn yaml_error(e: &serde_saphyr::Error) -> StopReason {
     match e.without_snippet() {
         serde_saphyr::Error::DuplicateMappingKey { key: Some(key), .. } => {
             StopReason::ConfigError(format!("duplicate key: {key}"))
@@ -367,7 +375,7 @@ impl Config {
             return Ok(Config::default());
         }
 
-        let raw: RawConfig = serde_saphyr::from_str(yaml).map_err(yaml_error)?;
+        let raw: RawConfig = serde_saphyr::from_str(yaml).map_err(|e| yaml_error(&e))?;
         Self::from_raw(raw)
     }
 

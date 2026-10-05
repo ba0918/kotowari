@@ -21,6 +21,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 env:
   CARGO_TERM_COLOR: always
   CARGO_BUILD_JOBS: "4"
@@ -39,7 +43,7 @@ env:
 jobs:
   shard:
     name: 変異テスト（${{ matrix.shard }}/16）
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # 分担あたりの変異（全体の約1800件を16で割って約115件）×（ビルド約12秒 + テスト約8秒）に余裕を持たせる
     timeout-minutes: 90
     strategy:
@@ -47,28 +51,24 @@ jobs:
       matrix:
         shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: 回す commit を取り出す
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
           persist-credentials: false
       - name: Rust を用意する
+        # rust-toolchain.toml の版と、cargo-mutants を動かす日付つきの nightly
         run: |
-          rustup toolchain install stable --profile minimal
+          rustup toolchain install
           rustup toolchain install "$MUTANTS_TOOLCHAIN" --profile minimal
-          rustup default stable
       # ビルド済みの cargo-mutants を入れる。分担ごとにソースから入れると1分かかる
-      - uses: taiki-e/install-action@e407f7bafb71fd004bc5c2da3032e5470cbb6ef0 # v2.87.24
+      - name: cargo-mutants を入れる
+        uses: taiki-e/install-action@e407f7bafb71fd004bc5c2da3032e5470cbb6ef0 # v2.87.24
         with:
           tool: cargo-mutants@${{ env.CARGO_MUTANTS_VERSION }}
       - name: 変異テスト
         env:
           SCOPE: ${{ inputs.scope }}
           SHARD: ${{ matrix.shard }}
-        run: |
-          read -r mode base <<<"$SCOPE"
-          case "$mode" in
-          diff) scripts/mutants.sh diff "$base" -- --shard "$SHARD/$SHARDS" ;;
-          full) scripts/mutants.sh full -- --shard "$SHARD/$SHARDS" ;;
-          *) echo "unknown scope: $SCOPE" >&2; exit 1 ;;
-          esac
+        run: scripts/mutants-shard.sh "$SCOPE" "$SHARD" "$SHARDS"

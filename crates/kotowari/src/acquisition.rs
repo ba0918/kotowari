@@ -23,6 +23,10 @@ fn lexically_normalize(path: &Path) -> PathBuf {
     use std::path::Component;
     let mut result = PathBuf::new();
     for component in path.components() {
+        #[expect(
+            clippy::wildcard_enum_match_arm,
+            reason = "std::path::Component is a foreign enum: the remaining components are deliberately pushed unchanged"
+        )]
         match component {
             Component::ParentDir => {
                 result.pop();
@@ -184,7 +188,12 @@ pub fn load_config(
     let text = read_utf8_file(&path, &display)?;
     config::Config::parse(&text).map_err(|e| match e {
         StopReason::ConfigError(msg) => StopReason::ConfigError(format!("{display}: {msg}")),
-        other => other,
+        other @ (StopReason::ArgumentError(_)
+        | StopReason::UnreadableFile(_)
+        | StopReason::NonUtf8File(_)
+        | StopReason::ResultsError(_)
+        | StopReason::MappingError(_)
+        | StopReason::GitError(_)) => other,
     })
 }
 

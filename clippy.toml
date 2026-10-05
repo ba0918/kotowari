@@ -1,0 +1,2 @@
+# テストの関数の中の unwrap は許す（lint の unwrap_used はほかで警告する）
+allow-unwrap-in-tests = true

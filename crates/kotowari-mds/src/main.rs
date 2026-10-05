@@ -96,6 +96,10 @@ fn main() -> ExitCode {
     let cli = match Cli::try_parse() {
         Ok(cli) => cli,
         Err(error) => {
+            #[expect(
+                clippy::wildcard_enum_match_arm,
+                reason = "clap::error::ErrorKind is a foreign enum: every other parse error is deliberately reported as an argument error"
+            )]
             match error.kind() {
                 clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayVersion => {
                     let _ = error.print();
@@ -160,7 +164,10 @@ fn run(cli: Cli) -> Result<u8, Stop> {
                     detail: format!("{}: {error}", file.display()),
                 })?
             };
-            println!("{}", serde_json::to_string_pretty(&json).unwrap());
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&json).expect("a JSON value always serializes")
+            );
             Ok(0)
         }
         Command::Values { file, format } => {
@@ -169,7 +176,8 @@ fn run(cli: Cli) -> Result<u8, Stop> {
             match format.as_str() {
                 "json" => println!(
                     "{}",
-                    serde_json::to_string_pretty(partial.values()).unwrap()
+                    serde_json::to_string_pretty(partial.values())
+                        .expect("a JSON value always serializes")
                 ),
                 "text" => print!("{}", render_values_text(partial.values())),
                 _ => unreachable!("clap restricts format"),
@@ -240,7 +248,8 @@ fn emit_check(files: &[(PathBuf, &[Finding])], format: &str) {
                 .collect();
             println!(
                 "{}",
-                serde_json::to_string_pretty(&serde_json::json!({"files": files_json})).unwrap()
+                serde_json::to_string_pretty(&serde_json::json!({"files": files_json}))
+                    .expect("a JSON value always serializes")
             );
         }
         _ => unreachable!("clap restricts format"),
@@ -253,6 +262,10 @@ fn render_values_text(value: &serde_json::Value) -> String {
     out
 }
 
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "serde_json::Value is a foreign enum: the remaining JSON kinds are deliberately handled alike"
+)]
 fn render_text(value: &serde_json::Value, out: &mut String, indent: usize) {
     match value {
         serde_json::Value::Object(map) => {

@@ -34,11 +34,13 @@ fn item(value: &ListItem) -> Value {
     let (path, line) = value.location();
     let mut result =
         json!({"id":value.id(),"kind":value.kind(),"name":variant["name"],"path":path,"line":line});
-    let object = result.as_object_mut().unwrap();
+    let object = result
+        .as_object_mut()
+        .expect("the result is built as a JSON object literal");
     object.extend(
         variant
             .as_object()
-            .unwrap()
+            .expect("every variant is built as a JSON object literal")
             .iter()
             .filter(|(key, _)| key.as_str() != "name")
             .map(|(key, value)| (key.clone(), value.clone())),

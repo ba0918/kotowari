@@ -8,7 +8,7 @@ use std::path::Path;
 pub fn run(
     cwd: &Path,
     base: &str,
-    target: Target,
+    target: &Target,
     phase: Phase,
     config_path: Option<&Path>,
 ) -> Result<ChangeResult, StopReason> {

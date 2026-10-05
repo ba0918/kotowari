@@ -1,3 +1,7 @@
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 fn project(record: &str) -> tempfile::TempDir {
     let dir = tempfile::tempdir().unwrap();
     for path in [

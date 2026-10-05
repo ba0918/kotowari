@@ -8,7 +8,7 @@ pub struct AsyncOptions {
 impl Default for AsyncOptions {
     fn default() -> Self {
         Self {
-            max_concurrency: NonZeroUsize::new(1).unwrap(),
+            max_concurrency: NonZeroUsize::MIN,
         }
     }
 }

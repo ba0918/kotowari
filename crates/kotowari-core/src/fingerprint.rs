@@ -23,7 +23,11 @@ pub fn fingerprint_of(doc: &IrDocument, item: &Item, lines: &[&str]) -> String {
 fn fingerprint_lines(item: &Item, lines: &[&str]) -> Vec<String> {
     match item {
         Item::Scenario { steps, .. } => steps.iter().map(|(_, step)| step.clone()).collect(),
-        _ => {
+        Item::Requirement { .. }
+        | Item::DecisionTable { .. }
+        | Item::Property { .. }
+        | Item::FlagEntry { .. }
+        | Item::GlossaryTerm { .. } => {
             let source_line = source_line_of(item);
             body_lines(item, lines)
                 .into_iter()
@@ -68,7 +72,11 @@ fn body_lines<'a>(item: &Item, lines: &[&'a str]) -> Vec<(usize, &'a str)> {
             tag_line.unwrap_or(*line),
             steps.last().map_or(*line, |(step_line, _)| *step_line),
         ),
-        _ => (
+        Item::Requirement { .. }
+        | Item::DecisionTable { .. }
+        | Item::Property { .. }
+        | Item::FlagEntry { .. }
+        | Item::GlossaryTerm { .. } => (
             item.item_line() + 1,
             item.end_line().unwrap_or(item.item_line()).min(lines.len()),
         ),

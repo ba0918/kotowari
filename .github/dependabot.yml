@@ -1,0 +1,10 @@
+# ワークフローの外部のアクションの固定（commit hash）を新しい版に保つ（判断の記録
+# docs/decision/records/2026-10-06-ci-rust-gates.md）。公開から7日たった版だけを提案する。
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7

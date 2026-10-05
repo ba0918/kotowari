@@ -3,6 +3,7 @@
 //! 仕様は `docs/ir/core/overview-data.md` と `docs/ir/core/overview-commands.md` にある。
 //! このクレートはファイル、ネットワーク、環境変数に触れない。元データの文字列と、kotowari-core で
 //! 読み込み済みの IR と判断の記録だけから計算する（REQ-core-287）。
+#![deny(clippy::print_stdout, clippy::print_stderr)]
 
 mod document;
 mod form;

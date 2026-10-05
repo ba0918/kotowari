@@ -172,7 +172,11 @@ fn req_040_code_blocks_are_skipped_except_gherkin() {
     // 通常のコードブロック内の ### は項目として読まれない
     let items_with_bad = doc.items.iter().any(|i| match i {
         Item::Requirement { id, .. } => id == "BAD-001",
-        _ => false,
+        Item::DecisionTable { .. }
+        | Item::Property { .. }
+        | Item::Scenario { .. }
+        | Item::FlagEntry { .. }
+        | Item::GlossaryTerm { .. } => false,
     });
     assert!(!items_with_bad, "code block content should be skipped");
 
@@ -246,7 +250,12 @@ Scenario: Test scenario
             Item::DecisionTable { id, .. } if id == "TBL-001" => has_tbl = true,
             Item::Property { id, .. } if id == "PROP-001" => has_prop = true,
             Item::Scenario { id: Some(id), .. } if id == "EX-001" => has_scenario = true,
-            _ => {}
+            Item::Requirement { .. }
+            | Item::DecisionTable { .. }
+            | Item::Property { .. }
+            | Item::Scenario { .. }
+            | Item::FlagEntry { .. }
+            | Item::GlossaryTerm { .. } => {}
         }
     }
 

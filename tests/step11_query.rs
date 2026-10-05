@@ -1,4 +1,8 @@
 //! "kotowari query" の1件の組み立てと出力（REQ-core-156〜REQ-core-161、TBL-core-027）
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 
 use std::path::Path;
 use tempfile::TempDir;

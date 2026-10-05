@@ -25,6 +25,10 @@ pub struct LineMap<'s> {
 }
 
 /// 挟んでよい行になる節の種類（TBL-core-035）
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "ast-grep's SupportLang is a foreign enum: the other languages deliberately allow no interleaved lines"
+)]
 fn allowed_kinds(lang: SupportLang) -> &'static [&'static str] {
     match lang {
         SupportLang::Rust => &["attribute_item"],

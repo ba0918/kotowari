@@ -303,7 +303,13 @@ impl Table {
         };
         Selection::Only(blocks.into_iter().find_map(|block| match block {
             Block::Table { header, line, .. } if header == expected => Some(*line),
-            _ => None,
+            Block::Field { .. }
+            | Block::Bullet { .. }
+            | Block::OrderedList { .. }
+            | Block::Statement { .. }
+            | Block::Table { .. }
+            | Block::Code { .. }
+            | Block::Other { .. } => None,
         }))
     }
 }

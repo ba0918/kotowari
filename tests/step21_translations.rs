@@ -1,5 +1,9 @@
 //! 対の読み方、一致の記録、骨組み、切り替えの行、リンク（docs/ir/core/translation-pairs.md、
 //! docs/ir/core/translation-structure.md）
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 
 use serde_json::Value;
 use std::path::Path;

@@ -55,7 +55,11 @@ pub fn check(
                     id
                 }
                 // `ID` の無い`シナリオ`は参照元の `ID` を持たない（query の逆引きにも出ない）
-                _ => continue,
+                Item::Requirement { .. }
+                | Item::DecisionTable { .. }
+                | Item::Scenario { .. }
+                | Item::FlagEntry { .. }
+                | Item::GlossaryTerm { .. } => continue,
             };
             for reference in item_references(item) {
                 if requirements.is_deferred(reference.id) {

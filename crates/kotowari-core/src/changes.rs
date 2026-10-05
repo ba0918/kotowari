@@ -160,11 +160,11 @@ pub fn evaluate(snapshot: &Comparison, entries: &[LocatedEntry], phase: Phase) -
         .map(|entry| {
             let mut fresh = true;
             for file in &entry.entry.files {
-                if let Some(actual) = snapshot.files.iter().find(|f| f.path == file.path) {
-                    if actual != file {
-                        findings.push(finding(entry, FindingKind::ChangeStale, &file.path));
-                        fresh = false;
-                    }
+                if let Some(actual) = snapshot.files.iter().find(|f| f.path == file.path)
+                    && actual != file
+                {
+                    findings.push(finding(entry, FindingKind::ChangeStale, &file.path));
+                    fresh = false;
                 }
             }
             for ir in &entry.entry.ir {

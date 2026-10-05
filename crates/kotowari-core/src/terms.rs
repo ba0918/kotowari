@@ -191,7 +191,10 @@ fn find_doc_refs(
         let boundary_ok = if name_start == 0 {
             true
         } else {
-            let prev_char = text[..name_start].chars().next_back().unwrap();
+            let prev_char = text[..name_start]
+                .chars()
+                .next_back()
+                .expect("name_start is above zero, so the text before it is not empty");
             !prev_char.is_ascii_alphanumeric() && !matches!(prev_char, '_' | '-' | '/' | '.' | '`')
         };
 
@@ -249,7 +252,9 @@ pub fn check_terms_and_vague_words_with_duplicates(
                 }
                 | Item::Scenario { steps: lines, .. } => lines,
                 // 用語集の意味の列、問題の記録の本文は対象外
-                _ => continue,
+                Item::DecisionTable { .. } | Item::FlagEntry { .. } | Item::GlossaryTerm { .. } => {
+                    continue;
+                }
             };
             for (line, text) in lines {
                 check_unknown_terms(text, *line, &glossary, known_ids, &path, findings);

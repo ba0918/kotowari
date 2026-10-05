@@ -103,6 +103,10 @@ impl Comparison<'_> {
             self.findings
                 .push((FindingKind::OverviewTocGroupEmpty, place.to_string()));
         }
+        #[expect(
+            clippy::wildcard_enum_match_arm,
+            reason = "serde_json::Value is a foreign enum: the remaining JSON kinds are deliberately handled alike"
+        )]
         let items = items
             .iter()
             .enumerate()

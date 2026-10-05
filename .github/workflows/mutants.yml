@@ -15,22 +15,29 @@ concurrency:
   group: mutants-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   scope:
     name: 範囲を決める
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     outputs:
       scope: ${{ steps.base.outputs.scope }}
     env:
       EVENT_BASE: ${{ github.event.pull_request.base.sha }}
       EVENT_HEAD: ${{ github.event.pull_request.head.sha }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: PR の先頭を取り出す
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - id: base
+      - name: merge-base を範囲にする
+        id: base
         run: printf 'scope=diff %s\n' "$(git merge-base "$EVENT_BASE" "$EVENT_HEAD")" >>"$GITHUB_OUTPUT"
 
   run:
@@ -44,7 +51,8 @@ jobs:
     name: mutants
     needs: [scope, run]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
       - name: 全部の分担が通ったか
         env:

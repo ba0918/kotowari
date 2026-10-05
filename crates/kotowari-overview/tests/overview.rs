@@ -1,3 +1,7 @@
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 use kotowari_core::{Finding, ReadInputs, ReadModel, SourceText};
 use kotowari_markdown_view::ReferenceState;
 use kotowari_overview::{Overview, inspect};
@@ -47,7 +51,9 @@ fn fingerprint(model: &ReadModel, id: &str) -> String {
     let report = model.query(id).unwrap();
     match report.items()[0].item() {
         kotowari_core::ListItem::Requirement(item) => item.fingerprint().to_string(),
-        _ => panic!("{id} is a requirement"),
+        kotowari_core::ListItem::WithExamples(_)
+        | kotowari_core::ListItem::Scenario(_)
+        | kotowari_core::ListItem::Flag(_) => panic!("{id} is a requirement"),
     }
 }
 
@@ -697,9 +703,7 @@ fn tbl_core_039_headings_of_other_markdown_files_show_their_section() {
 fn req_core_291_one_entry_per_distinct_reference_across_all_overviews() {
     let model = model();
     let a = with_refs("REQ-core-001, REQ-core-001");
-    let b = format!(
-        "---\nir:\n  - docs/ir/core/other.md\n---\n\n# b\n\n```view quiz\nitems:\n  - q: q\n    a: a\n    refs: [REQ-core-001, REQ-core-010]\n```\n"
-    );
+    let b = "---\nir:\n  - docs/ir/core/other.md\n---\n\n# b\n\n```view quiz\nitems:\n  - q: q\n    a: a\n    refs: [REQ-core-001, REQ-core-010]\n```\n".to_string();
     let overview = run(&model, &[(A, &a), (B, &b)]);
     let keys: Vec<&str> = overview
         .render_input()
