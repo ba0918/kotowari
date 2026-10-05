@@ -555,8 +555,6 @@ fn ex_core_511_an_unreadable_yaml_part_points_at_the_line_of_the_yaml_error() {
         "    items: [x",
         "```",
     ];
-    assert_eq!(lines[9], "```view cards");
-    assert_eq!(lines[12], "    items: [x");
     write(
         tmp.path(),
         ".kotowari/overview/a.md",
