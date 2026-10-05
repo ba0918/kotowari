@@ -340,22 +340,30 @@ pub fn check_entries<'a>(
         entries.extend(parsed);
         findings.extend(errors);
     }
-    let requirements = docs
-        .iter()
-        .flat_map(|doc| {
-            doc.items.iter().filter_map(|item| match item {
-                ir::Item::Requirement { id, .. } => Some((
-                    id.clone(),
-                    crate::join_display_path(&cfg.ir, &doc.relative_path),
-                )),
-                ir::Item::DecisionTable { .. }
-                | ir::Item::Property { .. }
-                | ir::Item::Scenario { .. }
-                | ir::Item::FlagEntry { .. }
-                | ir::Item::GlossaryTerm { .. } => None,
-            })
+    // 重複した ID はパスのバイト順で先の文書が定義する（REQ-core-032）。changes と同じ規則
+    let mut requirements = BTreeMap::new();
+    for (id, path) in docs.iter().flat_map(|doc| {
+        doc.items.iter().filter_map(|item| match item {
+            ir::Item::Requirement { id, .. } => Some((
+                id.clone(),
+                crate::join_display_path(&cfg.ir, &doc.relative_path),
+            )),
+            ir::Item::DecisionTable { .. }
+            | ir::Item::Property { .. }
+            | ir::Item::Scenario { .. }
+            | ir::Item::FlagEntry { .. }
+            | ir::Item::GlossaryTerm { .. } => None,
         })
-        .collect();
+    }) {
+        requirements
+            .entry(id)
+            .and_modify(|first: &mut String| {
+                if path < *first {
+                    *first = path.clone();
+                }
+            })
+            .or_insert(path);
+    }
     let ir_paths = docs
         .iter()
         .map(|doc| crate::join_display_path(&cfg.ir, &doc.relative_path))

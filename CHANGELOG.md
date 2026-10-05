@@ -39,6 +39,7 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 - `kotowari overview build`のページで、GFM の脚注の記法（`[^1]`）を脚注として描かないようにした。描くと日本語のページにも英語の見出し「Footnotes」と戻りリンクの文字が入っていた。
 - `kotowari overview build`で、見出しと題名から HTML のコメントだけを除くようにした。これまでは`Vec<String>`の`<String>`のように行の中の HTML と読まれる部分も消え、見出しが「Vec」になっていた。
 - `kotowari changes`で、IR と判断の記録の置き場の下にある隠しディレクトリ（`docs/ir/.drafts/`など）を`kotowari check`と同じく読まないようにした。これまではそこにある IR を引く変更記録を有効と判定し、同じ記録が`check`では`change_record_invalid`になっていた。
+- `kotowari check`で、同じ要求の ID が2つの IR にあるとき、変更記録の定義の IR をパスの順で先の文書とするようにした（`kotowari changes`と同じ）。これまでは後の文書を求め、先の文書を引く記録を`change_record_invalid`にしていた。
 
 
 ## [0.3.0] - 2026-10-01

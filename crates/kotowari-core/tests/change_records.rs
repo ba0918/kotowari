@@ -184,3 +184,48 @@ fn current_record_accepts_no_state_and_rejects_legacy_state() {
         assert!(!invalids(&record).is_empty());
     }
 }
+
+// @kotowari[REQ-core-032, REQ-core-268]
+#[test]
+fn a_duplicated_requirement_is_defined_by_the_first_document_in_path_order() {
+    // 重複した ID の1つ目はパスのバイト順で先の文書。その文書を引く記録は定義の IR を持つ
+    let config =
+        Config::parse("changes:\n  files: ['src/**']\n  records: ['docs/changes/**']\n").unwrap();
+    let ir = "# A\n\nScope.\n\n## Requirements\n\n### REQ-core-001: Name\n\n- kind: ubiquitous\n- source: docs/decision/records/test.md#A1\n- verification: unit\n\nStatement.\n";
+    let doc = |name: &str| kotowari_core::ir::parse_document(name, ir).unwrap();
+    let context = kotowari_core::sources::SourceContext {
+        records_path: config.decisions.records.clone(),
+        adr_path: config.decisions.adr.clone(),
+        records_files: vec![kotowari_core::sources::parse_records_file(
+            "test.md",
+            "# 判断\n\n## Context\n\nテスト\n\n## Agreements\n\n- A1 選択\n  - why: 根拠\n",
+        )],
+        records_other_files: vec![],
+        adr_files: vec![],
+    };
+    let record = entry()
+        .replace(
+            "ir: []",
+            &format!(
+                "ir: [{{path: docs/ir/a.md, sha256: 'sha256:{}'}}]",
+                "b".repeat(64)
+            ),
+        )
+        .replace("conclusion: new", "conclusion: existing")
+        .replace("requirements: []", "requirements: [REQ-core-001]");
+    // 渡す順に依らず、パスの順で決める
+    for docs in [
+        vec![doc("a.md"), doc("b.md")],
+        vec![doc("b.md"), doc("a.md")],
+    ] {
+        let mut findings = Vec::new();
+        kotowari_core::change_records::check_entries(
+            [("docs/changes/test.yaml", record.as_str())],
+            &config,
+            &docs,
+            &context,
+            &mut findings,
+        );
+        assert!(findings.is_empty(), "{findings:?}");
+    }
+}
