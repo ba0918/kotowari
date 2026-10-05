@@ -7,6 +7,10 @@ use kotowari_markdown_view::{
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
 
+#[expect(
+    dead_code,
+    reason = "this file reads only the links of the shared page helpers"
+)]
 mod common;
 
 /// TBL-view-002 の鍵と、数を入れるか
