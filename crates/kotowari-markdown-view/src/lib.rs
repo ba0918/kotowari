@@ -178,7 +178,7 @@ fn document_page(
 
 /// 節の場所。節の並びの中の位置から作るので、同じ見出しの節が2つあっても重ならない（REQ-view-022）
 fn section_anchor(index: usize) -> String {
-    format!("section-{}", index + 1)
+    format!("section-{index}")
 }
 
 /// 節の見出しを並べ、それぞれをその節へのリンクにしたアウトライン。節が無ければ何も描かない
