@@ -285,7 +285,8 @@ pub fn load_with_guides(cwd: &Path, config_path: Option<&Path>) -> Result<Inspec
 
 /// build と serve の読み取り: check と同じ設定と置き場から IR と判断の記録と`テストのファイル`を読み、
 /// `全体像の元データ`を読んで検査し描画の入力を作る（REQ-core-278、REQ-core-280）。
-/// "overview" の鍵が無ければ設定の誤りで止まる（REQ-core-279）。ガイドの中身と面と照合記録は読まない
+/// "overview" の鍵が無ければ設定の誤りで止まる（REQ-core-279）。ガイドは`対`を集めるためだけに読み、
+/// その検査と面と照合記録は読まない
 pub fn load_overview(
     cwd: &Path,
     config_path: Option<&Path>,
@@ -301,6 +302,8 @@ pub fn load_overview(
     } else {
         tests_discovery::collect_files(&base, &read.config().guides.files)?
     };
+    // TBL-core-044: `ガイド`の`対`も集め、元データのリンクの行き先を`先頭の言語`の`側`に読み替えられるようにする
+    let guides = assembly.place(kotowari_core::translations::Place::Guide, guides, true)?;
     read.validate_guide_paths(guides.iter().map(|(path, _)| path.as_str()))?;
     let guide_paths: Vec<&str> = guides.iter().map(|(path, _)| path.as_str()).collect();
     let texts = overview::read_texts(&base, read.config(), &guide_paths, &tests, &mut assembly)?

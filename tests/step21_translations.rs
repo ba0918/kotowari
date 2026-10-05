@@ -1093,3 +1093,51 @@ fn req_core_336_a_guide_glob_over_the_record_places_does_not_pair_the_records() 
         .collect();
     assert_eq!(paired, ["docs/guides/g.md"], "{list}");
 }
+
+// @kotowari[REQ-core-294, TBL-core-044]
+#[test]
+fn req_core_294_overview_links_to_the_matching_guide_sides_do_not_stop_the_build() {
+    let tmp = TempDir::new().unwrap();
+    overview_pairs(tmp.path());
+    let config = std::fs::read_to_string(tmp.path().join(".kotowari/config.yaml")).unwrap();
+    write(
+        tmp.path(),
+        ".kotowari/config.yaml",
+        &format!("{config}{GUIDES}"),
+    );
+    let linking = |title: &str, guide: &str| {
+        format!("{}\nSee [g](../../guides/{guide}).\n", overview_data(title))
+    };
+    write(
+        tmp.path(),
+        ".kotowari/overview/a.md",
+        &linking("題名", "g.md"),
+    );
+    write(
+        tmp.path(),
+        ".kotowari/overview/a.en.md",
+        &linking("Title", "g.en.md"),
+    );
+    write(
+        tmp.path(),
+        "guides/g.md",
+        "# G\n\n日本語 | [English](g.en.md)\n\n本文。\n",
+    );
+    write(
+        tmp.path(),
+        "guides/g.en.md",
+        "# G\n\n[日本語](g.md) | English\n\nText.\n",
+    );
+    let report = check(tmp.path());
+    assert!(
+        findings(&report, "translation_structure_mismatch").is_empty(),
+        "{report}"
+    );
+    let (code, stdout) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(0), "{stdout}");
+    assert!(
+        tmp.path()
+            .join(".kotowari/cache/overview/en/a.html")
+            .is_file()
+    );
+}
