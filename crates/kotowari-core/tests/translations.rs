@@ -113,6 +113,15 @@ fn req_core_335_invalid_tags_stop_even_with_complete_labels() {
 // @kotowari[TBL-core-044]
 #[test]
 fn tbl_core_044_table_cells_preserve_escaped_pipes_and_source_boundaries() {
+    let bordered = "| A | B |\n|---|---|\n| a | b |\n";
+    let unbordered = "A | B\n---|---\nx | y\n";
+    for kind in [Kind::Topic, Kind::Guide, Kind::OverviewData] {
+        assert_eq!(mismatch(kind, bordered, unbordered), None);
+        assert_eq!(
+            mismatch(kind, bordered, "A | B | C\n---|---|---\nx | y | z\n"),
+            Some(("table", Some(1)))
+        );
+    }
     let glossary = "| Term | Meaning | Source |\n|---|---|---|\n| a | b | r.md#A1 |\n";
     assert_eq!(
         mismatch(
