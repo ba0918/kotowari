@@ -413,3 +413,27 @@ fn ex_view_023_a_reference_without_a_body_is_its_label_and_opens_nothing() {
     assert!(a.contains("x A1"), "{a}");
     assert!(!a.contains("<details"), "{a}");
 }
+
+// @kotowari[REQ-view-008, REQ-view-030]
+#[test]
+fn a_reference_missing_from_the_table_is_its_key_as_text_and_opens_nothing() {
+    // 表に無い参照は開く本文を持たないので、本文の無い参照と同じく選んでも何も開かない
+    let steps = part(
+        "steps",
+        json!({"items": [{"title": "段階", "refs": ["docs/x.md#A1"]}]}),
+    );
+    let input = input(
+        vec![document(
+            "a",
+            vec![section(false, vec![Block::Part(steps)])],
+        )],
+        marked_ui(),
+    );
+    let pages = render(&input);
+    let a = page(&pages, "a.html");
+    assert!(
+        a.contains("<span class=\"ref ref-plain\">docs/x.md#A1</span>"),
+        "{a}"
+    );
+    assert!(!a.contains("<details"), "{a}");
+}
