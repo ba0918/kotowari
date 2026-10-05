@@ -569,6 +569,7 @@ fn validate_declared_bullet(
     findings: &mut Vec<Finding>,
 ) {
     bullet_lines.push(line);
+    let text = marker_line_part(text);
     if when_allows(bullets.when.as_ref(), fields, sibling_blocks)
         && let Some(pattern) = &bullets.pattern
         && !pattern.is_match(text)
@@ -584,6 +585,12 @@ fn validate_declared_bullet(
     }
     // when は required / pattern / enum にだけ効く。子の照合は常に行う（REQ-schema-020）。
     validate_children(block, bullets.children.as_ref(), findings);
+}
+
+/// lead のうちマーカーの行にある部分。段落の読み方では遅延継続の行も lead 段落に
+/// 入るが、箇条書きの照合はマーカーの行だけに当てる（REQ-schema-054）
+fn marker_line_part(lead: &str) -> &str {
+    lead.lines().next().unwrap_or_default().trim_end()
 }
 
 /// 箇条書きの子の行を undeclared_line にする。子がさらに子を持つときも再帰する。
@@ -1157,6 +1164,35 @@ document:
         let doc = "## 理由\n\n- 親\n\n  続きの段落\n";
         let findings = validate_src(schema, doc, false);
         assert!(kinds(&findings).contains(&FindingKind::MissingStatement));
+    }
+
+    // @kotowari[REQ-schema-054]
+    #[test]
+    fn bullet_pattern_is_matched_only_on_the_marker_line_not_on_a_lazy_continuation_line() {
+        // 段落の読み方では遅延継続の行も lead 段落に入るが、照合はマーカーの行だけに当てる。
+        // 行の読み方と同じ結果になる
+        let schema = |reading: &str| {
+            format!(
+                "reading: {reading}\ndocument:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: {{ min: 0 }}\n        pattern: \"^親$\"\n"
+            )
+        };
+        let doc = "## 理由\n\n- 親\n続き\n";
+        for reading in ["paragraph", "line"] {
+            let findings = validate_src(&schema(reading), doc, true);
+            assert!(
+                !kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
+                "{reading}: {findings:?}"
+            );
+        }
+        let findings = validate_src(&schema("paragraph"), "## 理由\n\n- 子\n続き\n", true);
+        let mismatch = findings
+            .iter()
+            .find(|f| f.kind == FindingKind::BulletPatternMismatch)
+            .expect("マーカーの行が pattern に合わなければ指摘する");
+        assert!(
+            mismatch.detail.contains("bullet \"子\" does"),
+            "{mismatch:?}"
+        );
     }
 
     // @kotowari[REQ-schema-030]
