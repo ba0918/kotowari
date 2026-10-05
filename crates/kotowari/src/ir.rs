@@ -1,6 +1,9 @@
 use crate::acquisition::read_utf8_file;
+#[cfg(test)]
+use kotowari_core::Finding;
+use kotowari_core::config::Config;
+#[cfg(test)]
 use kotowari_core::ir::*;
-use kotowari_core::{Finding, config::Config};
 use std::path::Path;
 /// IR のディレクトリからすべての文書を読んで検査する
 #[cfg(test)]

@@ -25,6 +25,7 @@ pub enum StopReason {
 const PORT_ERROR: &str = "port error";
 impl StopReason {
     /// core とライブラリに無い、CLI の停止の文言のすべて
+    #[cfg(test)]
     pub const WORDINGS: &'static [&'static str] = &[PORT_ERROR];
 }
 impl std::fmt::Display for StopReason {
