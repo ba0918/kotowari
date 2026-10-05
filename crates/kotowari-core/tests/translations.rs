@@ -102,10 +102,17 @@ fn req_core_335_an_empty_malformed_or_repeated_tag_stops() {
 #[test]
 fn req_core_352_unknown_keys_and_a_doubled_number_placeholder_stop() {
     let ja = complete_labels("ja", "J");
+    // labels.ja は完全なので、止まる理由はそれぞれの誤りだけ
+    assert!(
+        Config::parse(&format!(
+            "languages: [ja, en]\nlabels:\n{ja}  en:\n    open_items: \"{{n}} left\"\n"
+        ))
+        .is_ok()
+    );
     for labels in [
         format!("labels:\n{ja}    extra: \"x\"\n"),
-        "labels:\n  en:\n    unknown: \"x\"\n".to_string(),
-        "labels:\n  en:\n    open_items: \"{n} of {n}\"\n".to_string(),
+        format!("labels:\n{ja}  en:\n    unknown: \"x\"\n"),
+        format!("labels:\n{ja}  en:\n    open_items: \"{{n}} of {{n}}\"\n"),
     ] {
         assert!(
             matches!(
