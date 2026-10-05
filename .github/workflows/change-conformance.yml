@@ -1,31 +1,48 @@
+# PR の比較元との merge-base から先頭までの変更を、照合記録と突き合わせる（判断の記録
+# docs/decision/records/2026-10-01-change-conformance.md）。テスト全件は CI（ci.yml）の "Rust gates" が回す。
 name: Change conformance
+
 on:
   pull_request:
+
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   check:
-    runs-on: ubuntu-latest
+    name: Change conformance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     env:
       CARGO_BUILD_JOBS: '4'
       EVENT_BASE: ${{ github.event.pull_request.base.sha }}
       EVENT_HEAD: ${{ github.event.pull_request.head.sha }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out the pull request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+          persist-credentials: false
+      - name: Install the pinned toolchain
+        run: rustup toolchain install
       - name: Fetch event histories
         run: git fetch --no-tags origin "$EVENT_BASE" "$EVENT_HEAD"
       - name: Derive branch comparison
         id: comparison
         run: printf 'base=%s\nhead=%s\n' "$(git merge-base "$EVENT_BASE" "$EVENT_HEAD")" "$EVENT_HEAD" >> "$GITHUB_OUTPUT"
-      - name: Test
-        run: cargo test --workspace
       - name: Check records and specification
-        run: cargo run -q -p kotowari-cli --bin kotowari -- check --format json
+        run: cargo run -q --locked -p kotowari-cli --bin kotowari -- check --format json
       - name: Check independent change conformance
         env:
           COMPARISON_BASE: ${{ steps.comparison.outputs.base }}
           COMPARISON_HEAD: ${{ steps.comparison.outputs.head }}
-        run: cargo run -q -p kotowari-cli --bin kotowari -- changes --base "$COMPARISON_BASE" --head "$COMPARISON_HEAD" --phase review --format json
+        run: cargo run -q --locked -p kotowari-cli --bin kotowari -- changes --base "$COMPARISON_BASE" --head "$COMPARISON_HEAD" --phase review --format json
