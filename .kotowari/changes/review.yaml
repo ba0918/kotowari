@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "serve-host-review",
+      "base": "71e7ba9d64f1b46ca8ff03ca2a8b1b715d87369a",
+      "role": "reviewer",
+      "files": [
+        {
+          "path": "src/cli/serve.rs",
+          "before": "sha256:48b68ad503a8d2bfe6ef772e558082597f23586f6e9bdedf120fe2329f5261ee",
+          "after": "sha256:6b3558ba79b9f1400cda398394c724632d5f710a4842fa462e33c4b8bcf1c115"
+        },
+        {
+          "path": "tests/step20_overview_serve.rs",
+          "before": "sha256:db72c603b6a99ca00ec68c424460c36dc8570cc9dc5fe98fde9b88f1aed8dd75",
+          "after": "sha256:2dfd8013e0b743ec4980feff1f7a784baafa62cec05f03e2db8a73ba85d703ee"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/overview-commands.md",
+          "sha256": "sha256:0456618297b9bdaa4ed3cb4ddce384216cb6eb0a88a21c3e98da61ff33dcaa18"
+        }
+      ],
+      "conclusion": "new",
+      "reason": "Independently read the complete branch diff against the integrated main. The CLI HTTP adapter checks Host before resolve accesses the filesystem; the pure exact-value allowlist accepts 127.0.0.1 or localhost with the served port, ignoring ASCII case, and rejects missing or other Host values with an empty 403 and no per-request output. A1/A2, REQ-core-356 and EX-core-543 agree on both language sides. The integration retains the previously reviewed implementation, tests, decision and IR bytes unchanged from cbcb17fab8c753c4d2373dc4e564555c13622509, whose nine serve regression tests I independently ran successfully with Rust 1.98.0. EX-core-543 observes real HTTP input and product output, so it remains product-behavior evidence under the integrated What the IR holds policy; that policy and all distributed skills are unchanged from the comparison base. Independently recomputed the Git mode-plus-blob identities and IR blob hash and verified the implementation record matches. No blocking conformance defect found; final aggregate checks remain the integration gate.",
+      "requirements": [
+        "REQ-core-356"
+      ],
+      "decisions": [
+        "docs/decision/records/2026-10-05-serve-host.md#A1",
+        "docs/decision/records/2026-10-05-serve-host.md#A2"
+      ],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "serve-host-changelog-review",
+      "base": "71e7ba9d64f1b46ca8ff03ca2a8b1b715d87369a",
+      "role": "reviewer",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "before": "sha256:b0007970ea61e137efa91668a821ea9d412a29626440f697b944834bc5e0a162",
+          "after": "sha256:cc0e48cc70513b30db5f991a8f3746af82cc5f3c1aa0e62295a5234dc0545f07"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/overview-commands.md",
+          "sha256": "sha256:0456618297b9bdaa4ed3cb4ddce384216cb6eb0a88a21c3e98da61ff33dcaa18"
+        }
+      ],
+      "conclusion": "new",
+      "reason": "Independently compared CHANGELOG.md with the integrated main. Only the Unreleased Fixed entry for the local Host allowlist, empty 403 for other or missing Host values, and DNS rebinding motivation is added. Both main entries about distributed skills, IR scope and decision-only conformance records remain intact. The Host entry agrees with A1/A2 and REQ-core-356; its before and after identities were independently recomputed from Git mode and blob bytes.",
+      "requirements": [
+        "REQ-core-356"
+      ],
+      "decisions": [
+        "docs/decision/records/2026-10-05-serve-host.md#A1",
+        "docs/decision/records/2026-10-05-serve-host.md#A2"
+      ],
+      "handoff": null,
+      "gaps": []
+    }
+  ]
+}
