@@ -9,7 +9,7 @@
         {
           "path": "crates/kotowari-markdown-view/src/lib.rs",
           "before": "sha256:622254e5e79a4d191444bba1753e3445748da8c28c4b405c3284aad84656140b",
-          "after": "sha256:2e3b1b3e028bd293c100341ba528e754f5e15b304721bd62c3e09df9fa5323d7"
+          "after": "sha256:663c510d4d895afef4f840f3e862f86b08691386a5d5c5c8d201e10723d0056b"
         },
         {
           "path": "crates/kotowari-markdown-view/src/style.css",
@@ -17,19 +17,24 @@
           "after": "sha256:dc17642abd7f1efc7a6684b52c04e42dcbd7836c636c98b4fd417a94d58a17c8"
         },
         {
+          "path": "crates/kotowari-markdown-view/tests/common/mod.rs",
+          "before": "sha256:712fd1b2adc6fddec5869242700affb93fc92b22bdb0214c37491e6683260f91",
+          "after": "sha256:5dfcfc6f92e01a8f16f9fae15c46dc1078a2a75c205b230d9f80ef5b282017a9"
+        },
+        {
           "path": "crates/kotowari-markdown-view/tests/navigation.rs",
           "before": "sha256:e938873c36313fafda0d8efc5be9af37fe79166db679119ce3ad236d89dbb7bd",
-          "after": "sha256:2c4f5f6235d2d63259b306f4caa744840d441d626e82cd55387169f8807b365d"
+          "after": "sha256:c3e82a13397d0203d6d2c9b43f8c62657a63c0f9acf0a9d3e033eb4796dec0ca"
         },
         {
           "path": "crates/kotowari-markdown-view/tests/rendering.rs",
           "before": "sha256:e65b50d73d54c356c330b294a7ad2ebcc9202351dd15194f8e8e2a394af101b3",
-          "after": "sha256:1fbb85ad143673097efce33ba0df99e4d33b17dd0e9645380ef996ff9e4a4c38"
+          "after": "sha256:57f0ea078b9dcbf00941e5bf0bdd90684d291c5e2644b0cf73e8970c4efa1dfa"
         },
         {
           "path": "crates/kotowari-overview/tests/overview.rs",
           "before": "sha256:bce3a359052d54bf845b5cd4db751f06cb709a1fb513ad0790ae86006369abb4",
-          "after": "sha256:49b93a55548d1fc3a9bd937b219e958428fb3a130057ba783d9576e9c7dd6e14"
+          "after": "sha256:a8b580264d9c60f70bceb436c64007768de9788a30e2e37d947214f2e3fd9eab"
         }
       ],
       "ir": [
@@ -51,11 +56,11 @@
         },
         {
           "path": "docs/ir/view/rendering.md",
-          "sha256": "sha256:164a070914f93254c3e9db1539c9625e3f6474fb843b5c7bd1e71c18f07634f9"
+          "sha256": "sha256:6dfef6cabcee3431520d353466153555c758e496b85c2e37516ff6a1ea5fbd8f"
         }
       ],
       "conclusion": "existing",
-      "reason": "crates/kotowari-markdown-view/src/lib.rs draws, on a document page that has at least one section, an outline (a nav element with a list) after the title and before the lead: one item per section in the order of the sections, its text the heading text, linking to the section on the same page, and a short mark (見直していない) after the link of a stale section that means the same as the REQ-view-009 mark next to its heading (REQ-view-022, A5, A14, A17). The outline holds no item for the lead or preamble, no deeper heading and no link to another page; a document without sections and the index page get none. Each section gains the id section-<n> from its position in the section list, so two sections with the same heading get different places and the same render input gives the same ids (D1, REQ-view-004). crates/kotowari-markdown-view/src/style.css keeps the outline in a left column with position sticky from 1100px up and leaves it under the title, not following the scroll, below that (REQ-view-023, D2); it draws each flow column as one enclosure with the arrow only between columns and, below 720px, stacks the columns with a downward arrow (REQ-view-024, REQ-view-025, D2). No script is added to any page (REQ-view-018). New tests ex_view_016 and ex_view_017 in crates/kotowari-markdown-view/tests/navigation.rs verify REQ-view-022, EX-view-016 and EX-view-017 by link targets and visible text. Three tests in tests/rendering.rs (REQ-view-006, EX-view-005) and one in crates/kotowari-overview/tests/overview.rs (REQ-view-006) located a heading by its first occurrence, which is now in the outline; they now look past the outline and their expectations are unchanged. REQ-view-023, REQ-view-024 and REQ-view-025 are review requirements checked on rendered pages; the whole workspace test suite passes.",
+      "reason": "crates/kotowari-markdown-view/src/lib.rs draws, on a document page that has at least one section, an outline (a nav element with a list) after the title and before the lead, the order REQ-view-006 now states as revised by A19: one item per section in the order of the sections, its text the heading text, linking to the section on the same page, and a short mark (見直していない) after the link of a stale section that means the same as the REQ-view-009 mark next to its heading (REQ-view-022, A5, A14, A17). The outline holds no item for the lead or preamble, no deeper heading and no link to another page; a document without sections and the index page get none. Each section gains the id section-<index>, its zero-based position in the section list, so two sections with the same heading get different places and the same render input gives the same ids (D1, REQ-view-004). crates/kotowari-markdown-view/src/style.css keeps the outline in a left column with position sticky from 1100px up and leaves it under the title, not following the scroll, below that (REQ-view-023, D2); it draws each flow column as one enclosure with the arrow only between columns and, below 720px, stacks the columns with a downward arrow (REQ-view-024, REQ-view-025, D2). No script is added to any page (REQ-view-018). New tests ex_view_016 and ex_view_017 in crates/kotowari-markdown-view/tests/navigation.rs verify REQ-view-022, EX-view-016 and EX-view-017 by link targets and visible text; they find the outline by its in-page links (links whose target is a place on the same page), through new helpers in crates/kotowari-markdown-view/tests/common/mod.rs, not by its markup. Three tests in tests/rendering.rs (REQ-view-006, EX-view-005) and one in crates/kotowari-overview/tests/overview.rs (REQ-view-006) located a heading by its first occurrence, which is now in the outline; they now check the order on the rendered page itself: the title, then the outline (found by its in-page links), then the lead, the preamble parts and the sections reached through those links (REQ-view-006 as revised by A19), and EX-view-005 compares the pages from the first section on, so the heading mark still changes only between the two section headings. REQ-view-023, REQ-view-024 and REQ-view-025 are review requirements checked on rendered pages; the whole workspace test suite passes.",
       "requirements": [
         "REQ-view-004",
         "REQ-view-006",
@@ -78,6 +83,7 @@
         "docs/decision/records/2026-10-05-overview-page-reading.md#A13",
         "docs/decision/records/2026-10-05-overview-page-reading.md#A14",
         "docs/decision/records/2026-10-05-overview-page-reading.md#A17",
+        "docs/decision/records/2026-10-05-overview-page-reading.md#A19",
         "docs/decision/records/2026-10-05-overview-page-reading.md#D1",
         "docs/decision/records/2026-10-05-overview-page-reading.md#D2"
       ],
@@ -117,7 +123,7 @@
         {
           "path": "tests/step18_overview.rs",
           "before": "sha256:9d3ebdf0be576291ea40f278755ea4f8d8fb47875730937f636bc35a544b00ec",
-          "after": "sha256:d3f9e360462538ea5d911af269a383bed224040130d71487b4001fb07678a2c9"
+          "after": "sha256:c4ab02751f49b1e7b5364c0649895433ca9c1b77f2492e9cfcd24f7f3902d31b"
         }
       ],
       "ir": [
@@ -131,7 +137,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "crates/kotowari-overview/src/parts.rs no longer discards the serde_saphyr error of a part whose content cannot be read as YAML: it returns the line of the error's location within the content when the reader gives one, and crates/kotowari-overview/src/lib.rs reports overview_part_invalid with detail \"<kind> (yaml)\" at the opening fence line plus that line, which is the line of the overview data file because the content starts on the line after the fence; without a location the line stays the opening fence line (REQ-core-282 as revised by A10). Schema mismatches keep their places and the fence line. The new process-level test ex_core_511 in tests/step18_overview.rs runs kotowari check --format json on data whose cards fence is on line 10 with an unclosed bracket on line 13 and expects one overview_part_invalid at line 13 with detail \"cards (yaml)\" (EX-core-511); it failed with line 10 before the change. The existing REQ-core-282 tests, including the one for EX-core-466, pass unchanged. agent/skills/kotowari/references/findings.md says the same line rule in the overview_part_invalid row, and the findings reference test (REQ-core-125) passes; the user guides docs/guides/findings.md (the line column of the overview_part_invalid row) and docs/guides/commands/check.md (the sentence on the line of part findings) say it too; their guide marks do not cover REQ-core-282 and check reports no guide finding on them.",
+      "reason": "crates/kotowari-overview/src/parts.rs no longer discards the serde_saphyr error of a part whose content cannot be read as YAML: it returns the line of the error's location within the content when the reader gives one, and crates/kotowari-overview/src/lib.rs reports overview_part_invalid with detail \"<kind> (yaml)\" at the opening fence line plus that line, which is the line of the overview data file because the content starts on the line after the fence; without a location the line stays the opening fence line (REQ-core-282 as revised by A10). Schema mismatches keep their places and the fence line. The new process-level test ex_core_511 in tests/step18_overview.rs runs kotowari check --format json on data whose cards fence is on line 10 with an unclosed bracket on line 13 and expects one overview_part_invalid at line 13 with detail \"cards (yaml)\" (EX-core-511); it failed with line 10 before the change. The test does not assert facts about its own fixture text; it checks only the finding. The existing REQ-core-282 tests, including the one for EX-core-466, pass unchanged. agent/skills/kotowari/references/findings.md says the same line rule in the overview_part_invalid row, and the findings reference test (REQ-core-125) passes; the user guides docs/guides/findings.md (the line column of the overview_part_invalid row) and docs/guides/commands/check.md (the sentence on the line of part findings) say it too; their guide marks do not cover REQ-core-282 and check reports no guide finding on them.",
       "requirements": [
         "REQ-core-125",
         "REQ-core-282"
