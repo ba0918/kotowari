@@ -4,6 +4,8 @@
   --ink: #1f2328;
   --muted: #5b6370;
   --line: #d9d6cc;
+  --line-soft: #ecebe5;
+  --band: #f2f1ec;
   --accent: #2f5fb3;
   --accent-soft: #e6eefb;
   --good: #1f7a4d;
@@ -23,6 +25,8 @@
     --ink: #e6e8eb;
     --muted: #9aa3ae;
     --line: #343943;
+    --line-soft: #2a2e36;
+    --band: #252930;
     --accent: #8fb3ff;
     --accent-soft: #23304a;
     --good: #6fd19c;
@@ -124,16 +128,54 @@ details.ref .ref-body { white-space: pre-wrap; background: var(--bg); border: 1p
 .ref-superseded > summary { text-decoration: line-through; color: var(--muted); }
 .ref-mark { font-size: 0.85em; margin-left: 4px; text-decoration: none; display: inline-block; }
 
-.index .toc-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; }
-.index .toc-head h1 { margin-bottom: 0.2em; }
-.index .note { margin: 0 0 12px; color: var(--muted); }
-.index .entries { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
-.index .entry { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 18px; }
-.index .group > details > .entries { padding-left: 18px; border-left: 2px solid var(--line); margin-left: 6px; }
-.index summary { cursor: pointer; display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; padding: 4px 0; }
-.index .group-title { font-size: 1.2em; font-weight: 700; }
-.index .group .note { flex-basis: 100%; margin: 0 0 6px; font-weight: normal; }
-.index .title { font-size: 1.15em; font-weight: 700; }
-.index .conclusion { margin: 4px 0 0; color: var(--muted); }
+.index .toc-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; padding-bottom: 18px; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
+.index .toc-head h1 { margin: 0; flex-basis: 100%; }
+.index .toc-head .note { flex-basis: 100%; margin: 0; color: var(--muted); }
+.index .toc-head .counts { margin: 4px 0 0; }
+.index .entries { list-style: none; padding: 0; margin: 0; display: grid; gap: 20px; }
+.index .entry { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 20px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 20px; }
+.index .entry > a { flex: 0 0 200px; color: var(--ink); text-decoration: none; }
+.index .entry > a:hover { color: var(--accent); }
+.index .title { font-weight: 700; }
+.index .conclusion { flex: 1 1 320px; margin: 0; color: var(--muted); font-size: 0.93em; }
+.index .entry > .counts { margin: 0 0 0 auto; justify-content: flex-end; }
+
+/* 群の見出し。開閉の四角、題名、説明、数 */
+.index summary { cursor: pointer; list-style: none; display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; column-gap: 14px; padding: 0 0 12px; }
+.index summary::-webkit-details-marker { display: none; }
+.index summary::before { content: "\25B8"; grid-row: 1 / span 2; width: 32px; height: 32px; border-radius: 8px; background: var(--ink); color: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 13px; transition: transform 0.15s; }
+.index details[open] > summary::before { transform: rotate(90deg); }
+.index .group-title { grid-column: 2; font-size: 1.25em; font-weight: 700; line-height: 1.35; }
+.index summary .counts { grid-column: 3; justify-self: end; margin: 0; }
+.index summary .note { grid-column: 2 / span 2; color: var(--muted); font-size: 0.87em; line-height: 1.4; }
+
+/* 群の中身は1つの箱に行で並べる */
+.index .group > details > .entries { gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.index .group .entry { border: 0; border-radius: 0; border-top: 1px solid var(--line-soft); }
+.index .group .entries > li:first-child { border-top: 0; }
+
+/* 箱の中の入れ子の群は灰色の帯にして、中の行を字下げする */
+.index .group .group { border-top: 1px solid var(--line-soft); }
+.index .group .group > details > summary { padding: 8px 20px; background: var(--band); column-gap: 12px; }
+.index .group .group > details > summary::before { grid-row: auto; width: 22px; height: 22px; border-radius: 6px; background: transparent; color: var(--ink); border: 1.5px solid var(--ink); font-size: 10px; }
+.index .group .group .group-title { font-size: 1em; }
+.index .group .group > details > .entries { background: transparent; border: 0; border-radius: 0; }
+.index .group .group .entry { padding-left: 54px; }
+.index .group .group .entry > a { flex-basis: 166px; }
+.index .group .group .group .entry { padding-left: 88px; }
+.index .group .group .group .entry > a { flex-basis: 132px; }
+.index .group .group .group > details > summary { padding-left: 54px; }
+
+/* 狭い画面では、群の数を題名の下に回し、字下げを浅くする */
+@media (max-width: 600px) {
+  .index summary .counts { grid-column: 2 / span 2; grid-row: 3; justify-self: start; margin-top: 4px; }
+  .index .entry > .counts { margin-left: 0; justify-content: flex-start; }
+  .index .group .group .entry, .index .group .group .group .entry { padding-left: 36px; }
+  .index .group .group .group > details > summary { padding-left: 36px; }
+}
+
 .counts { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0; }
-.count { font-size: 0.8em; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; }
+.count { font-size: 0.8em; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 0 8px; }
+.count-stale { color: var(--bad); background: var(--bad-soft); border-color: transparent; }
+.count-open { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+.count-planned { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
