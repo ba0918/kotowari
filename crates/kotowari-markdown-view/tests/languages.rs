@@ -172,7 +172,7 @@ fn strings(value: &Value, out: &mut Vec<String>) {
     }
 }
 
-// @kotowari[REQ-view-027, EX-view-019]
+// @kotowari[REQ-view-027, EX-view-019, TBL-view-002]
 #[test]
 fn ex_view_019_every_text_the_view_writes_comes_from_the_ui_text() {
     let refs = json!(["REQ-x-001", "docs/x.md#A1"]);
