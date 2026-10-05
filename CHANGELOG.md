@@ -7,6 +7,8 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 
 ### Changed
 
+- `kotowari` スキルで、ガイドは製品を使う人向けの使い方、全体像は製品を作る人向けの決定・理由・予定・未決事項を説明するよう書き分ける指針を明確にした。全体像では振る舞いを判断の結果として短く示し、コマンドや設定、使い方の手順はガイドに置く。
+
 - **BREAKING（Rust API・パッケージ構成）** 根を`kotowari-cli`に変更し、`kotowari`を明示した開始点から操作するライブラリに分離した。メモリ計算は`kotowari-core`、ソース解析は`kotowari-source-analysis`を使う。旧coreのCLI・取得APIを呼ぶコードは移行が必要。バイナリのコマンド、出力、終了コードは変わらない。
 
 ### Added

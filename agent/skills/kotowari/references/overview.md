@@ -1,6 +1,14 @@
 Based on the kotowari specification (revised 2026-10-05; the version of kotowari itself is not pinned)
 
-An overview is a set of rendered pages, one per product topic, that lets the person who brainstormed see the whole picture: what the product looks like to its user and how the decisions lead to one another, as it stands now, including what is planned or deferred. It exists because a brainstorm settles decisions one question at a time, and with tens or hundreds of decisions nobody can say afterwards what was built and why. The person reads only the rendered pages. The overview data behind them is written by an LLM in a fixed form, is never read by people, and is kept in the repository and revised at each brainstorm approval. kotowari checks the data and renders it; it never writes the data.
+An overview is a set of rendered pages, one per product topic, that lets the people who build the product — the person who brainstormed, the implementer and the reviewer — see the whole picture: what has been decided and why, how the decisions lead to one another, and how the product behaves as their result, as it stands now, including what is planned or deferred. It exists because a brainstorm settles decisions one question at a time, and with tens or hundreds of decisions nobody can say afterwards what was built and why. People read only the rendered pages. The overview data behind them is written by an LLM in a fixed form, is never read by people, and is kept in the repository and revised at each brainstorm approval. kotowari checks the data and renders it; it never writes the data.
+
+## What an overview says, and what a guide says
+
+An overview is read by the people who build the product; a guide (guides.md) is read by the people who use it. Both may cover the same feature, so write each for its own question and do not keep the same explanation in both.
+
+- An overview says what has been decided and why, what is planned, deferred or undecided, and how the decisions lead to one another. It shows how the product behaves only briefly, as the result of those decisions.
+- An overview does not say how to use the product: no commands, options, configuration examples or step-by-step usage. It names the feature; the guide shows how to use it.
+- The boundary, by example: a flow part in which the implementer writes its change record, the reviewer writes its record and `kotowari changes` passes belongs in the overview; the command `kotowari changes --base <id> --head <id> --phase review` and its options belong in a guide.
 
 ## Where overview data is
 
@@ -124,7 +132,7 @@ Write it at the brainstorm approval, in the steps of kotowari-brainstorm, only i
 1. Find the overviews whose `ir` lists a topic document this brainstorm changed. For a changed topic document no overview lists, propose adding it to an existing overview or starting a new one, and let the person decide (the unit rules above).
 2. Revise the previous overview data; do not write it again from nothing. Start from the file as it is, keep what still holds, and change what the brainstorm changed. A new overview starts from an empty file.
 3. Put a `lead` part right after the title: the conclusion first, then its points.
-4. Choose the parts and their order to suit the subject; there is no fixed layout. Use figures, tables and decorations rather than paragraphs of explanation. Show both what the product looks like to its user (flow, steps, cards, compare) and how the decisions lead to one another (decisions).
+4. Choose the parts and their order to suit the subject; there is no fixed layout. Use figures, tables and decorations rather than paragraphs of explanation. Show both how the product behaves as the result of the decisions, briefly (flow, steps, cards, compare), and how the decisions lead to one another (decisions). Leave usage to the guides (above).
 5. Show the current state together with what is planned, deferred or undecided (status), so the page stays true right after the brainstorm.
 6. Put references to the IR items and decisions each part rests on in its `refs` and `ref` fields.
 7. Give each `## ` section a guide mark on the line right after its heading, on a line of its own, with an entry per IR item the section explains and the fingerprint from `kotowari query ID | jq -r '.items[0].fingerprint'` (guides.md).

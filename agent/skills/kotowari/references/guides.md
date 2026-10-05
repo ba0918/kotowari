@@ -1,6 +1,6 @@
-Based on the kotowari specification (revised 2026-09-25; the version of kotowari itself is not pinned)
+Based on the kotowari specification (revised 2026-10-05; the version of kotowari itself is not pinned)
 
-A guide is a user-facing document on how to use the product, written by a person or an LLM who has read the IR. It is not generated from the IR. Each section of a guide carries guide marks naming the IR items it explains, together with each item's fingerprint at the time the section was written. `kotowari check` compares those fingerprints with the IR as it is now, so the sections that may have fallen behind can be found at any time, not only right after the IR changed. kotowari never writes to a guide; the fingerprints are copied in by hand.
+A guide is a user-facing document on how to use the product, written by a person or an LLM who has read the IR. It is not generated from the IR. Its readers are the people who use the product, so it says how to use it: commands, configuration, how to read the output, procedures and examples. It does not say why something was decided or what is planned or undecided; that belongs in an overview, which is read by the people who build the product (overview.md). Each section of a guide carries guide marks naming the IR items it explains, together with each item's fingerprint at the time the section was written. `kotowari check` compares those fingerprints with the IR as it is now, so the sections that may have fallen behind can be found at any time, not only right after the IR changed. kotowari never writes to a guide; the fingerprints are copied in by hand.
 
 ## Where guides are
 
