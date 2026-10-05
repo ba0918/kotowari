@@ -408,6 +408,66 @@ fn ja_en() -> (Config, Vec<String>) {
 }
 
 /// 種類ごとの "line"
+// @kotowari[REQ-core-344, REQ-core-345, REQ-core-347, TBL-core-044]
+#[test]
+fn reference_links_preserve_the_order_of_their_resolved_destinations() {
+    use crate::translations::{Pairs, Place};
+    let (config, languages) = ja_en();
+    for usage in ["[first][one] [second][two]", "![first][one] ![second][two]"] {
+        let first = format!("# Guide\n\n{usage}\n\n[one]: x.md\n[two]: y.md\n");
+        let swapped = usage
+            .replace("[one]", "[swap]")
+            .replace("[two]", "[one]")
+            .replace("[swap]", "[two]");
+        let other = format!("# Guide\n\n{swapped}\n\n[one]: x.md\n[two]: y.md\n");
+        let mut pairs = Pairs::default();
+        pairs.insert(pair_of(
+            Place::Guide,
+            "g/a.md",
+            &languages,
+            &[("g/a.md", &first), ("g/a.en.md", &other)],
+        ));
+        let findings = pairs.findings(&config);
+        let mismatch: Vec<_> = findings
+            .iter()
+            .filter(|finding| finding.kind() == "translation_structure_mismatch")
+            .collect();
+        assert_eq!(mismatch.len(), 1, "{findings:?}");
+        assert_eq!(mismatch[0].line(), Some(3));
+        assert_eq!(mismatch[0].detail(), "link");
+    }
+}
+
+// @kotowari[REQ-core-347, REQ-core-348]
+#[test]
+fn reference_links_and_images_are_checked_at_the_usage_and_definition_lines() {
+    use crate::translations::{Pairs, Place};
+    let (config, languages) = ja_en();
+    let mut pairs = Pairs::default();
+    pairs.insert(pair_of(
+        Place::Guide,
+        "g/b.md",
+        &languages,
+        &[("g/b.md", "# B\n"), ("g/b.en.md", "# B\n")],
+    ));
+    pairs.insert(pair_of(
+        Place::Guide,
+        "g/a.md",
+        &languages,
+        &[
+            ("g/a.md", "# A\n"),
+            (
+                "g/a.en.md",
+                "# A\n\n[ONE]\n\n![one][]\n\n[one]: b.md\n[ONE]: b.en.md\n",
+            ),
+        ],
+    ));
+    assert_eq!(
+        lines_of(&pairs.findings(&config), "link_language_mismatch"),
+        [Some(3), Some(5), Some(7)]
+    );
+}
+
 fn lines_of(findings: &[crate::Finding], kind: &str) -> Vec<Option<usize>> {
     findings
         .iter()

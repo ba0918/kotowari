@@ -494,12 +494,29 @@ struct Link {
 }
 
 fn links(text: &str) -> Vec<Link> {
-    fn walk(node: &markdown::mdast::Node, out: &mut Vec<Link>) {
+    fn definitions<'a>(
+        node: &'a markdown::mdast::Node,
+        out: &mut std::collections::BTreeMap<&'a str, &'a String>,
+    ) {
+        if let markdown::mdast::Node::Definition(definition) = node {
+            out.entry(&definition.identifier).or_insert(&definition.url);
+        }
+        for child in node.children().into_iter().flatten() {
+            definitions(child, out);
+        }
+    }
+    fn walk(
+        node: &markdown::mdast::Node,
+        definitions: &std::collections::BTreeMap<&str, &String>,
+        out: &mut Vec<Link>,
+    ) {
         use markdown::mdast::Node;
         let destination = match node {
             Node::Link(link) => Some(&link.url),
             Node::Image(image) => Some(&image.url),
             Node::Definition(definition) => Some(&definition.url),
+            Node::LinkReference(link) => definitions.get(link.identifier.as_str()).copied(),
+            Node::ImageReference(image) => definitions.get(image.identifier.as_str()).copied(),
             _ => None,
         };
         if let (Some(destination), Some(position)) = (destination, node.position()) {
@@ -509,12 +526,14 @@ fn links(text: &str) -> Vec<Link> {
             });
         }
         for child in node.children().into_iter().flatten() {
-            walk(child, out);
+            walk(child, definitions, out);
         }
     }
     let mut out = Vec::new();
     if let Ok(root) = crate::markdown::parse(text) {
-        walk(&root, &mut out);
+        let mut targets = std::collections::BTreeMap::new();
+        definitions(&root, &mut targets);
+        walk(&root, &targets, &mut out);
     }
     out
 }
