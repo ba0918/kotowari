@@ -294,7 +294,8 @@ docs/ir/shop/cart.md:- [notice] too_many_requirements 5
 docs/ir/greet/greet.md:15 [error] requirement_without_test REQ-greet-002
 docs/ir/greet/greet.md:26 [error] scenario_without_test EX-greet-001
 tests/greet.rs:6 [error] test_without_id rejects_empty_name
-tests/cart.rs:5 [error] invalid_marker // @kotowari[tests/cart.rs:9 [error] invalid_marker // @kotowari[]
+tests/cart.rs:5 [error] invalid_marker // @kotowari[
+tests/cart.rs:9 [error] invalid_marker // @kotowari[]
 tests/broken.rs:- [error] unparsable_file tests/broken.rs
 ```
 
@@ -494,7 +495,8 @@ guides/cart.md:3 [notice] guide_stale REQ-shop-404 12345678 -
 guides/cart.md:7 [error] invalid_marker <!-- @kotowari[REQ-shop-002] -->
 tests/broken.rs:- [error] unparsable_file tests/broken.rs
 tests/cart.rs:1 [error] unresolved_reference REQ-shop-077
-tests/cart.rs:5 [error] invalid_marker // @kotowari[tests/cart.rs:7 [error] test_without_id broken_mark
+tests/cart.rs:5 [error] invalid_marker // @kotowari[
+tests/cart.rs:7 [error] test_without_id broken_mark
 tests/cart.rs:9 [error] invalid_marker // @kotowari[]
 tests/cart.rs:11 [error] test_without_id empty_mark
 $ echo $?

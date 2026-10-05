@@ -55,7 +55,7 @@ Even when already-read results are provided, the input for list/query does not r
 | Surface analysis results | The SourceText of target files, the language and whether it has a query, discovery results, and findings from parsing | Not required | When surface.rules is not empty |
 | List of unspecified surfaces | The path and contents of the configured list | Not required | When surface.rules is not empty and surface.unspecified is specified |
 | Change records | Paths and contents | Not required | When changes is configured |
-| Additional finding groups | The name of the group, the number of files read, the number of marks, and the findings. core does not know their meaning, orders and counts them together with the other findings, and gives the result the number of groups | Not required | Not required (added only when passed) |
+| Additional finding groups | The name of the group, the number of files read, the number of marks, and the findings. core does not know their meaning, orders and counts them together with the other findings, and includes each group's counts in the result | Not required | Not required (added only when passed) |
 
 ## Examples
 

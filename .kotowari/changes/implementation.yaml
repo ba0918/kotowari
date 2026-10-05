@@ -174,17 +174,17 @@
         {
           "path": "docs/guides/findings.i18n.yaml",
           "before": null,
-          "after": "sha256:bd8f45516217d7e7f7a5aaf95503913f26e8a5f0328079b220ccaac33072180d"
+          "after": "sha256:fb9744e4946bb1fa980e8570b9d93795bc5009bc40089c0f10dcf0aff03bd323"
         },
         {
           "path": "docs/guides/findings.ja.md",
           "before": null,
-          "after": "sha256:8b0d3da1f45bc5a0bf005fa5ab4ede808ff087064e5e6028feaddc6c9775e4db"
+          "after": "sha256:d370ba5e2a0975a958538e7adf6d499402ba7d3b77602aa6fff3654c67ef8bc9"
         },
         {
           "path": "docs/guides/findings.md",
           "before": "sha256:5af30526a728604db1b733d06d0fd21914adaffa6160fce08f0a0ee1619378fe",
-          "after": "sha256:9f4300b0fb3a86c3b425e4ebfb42929a52693525aa5c78c7e47524152b4fc9d0"
+          "after": "sha256:83a7b8cbf57e2894bab7f1a66a9373948728790c08650b878f6f9202cbbbc74a"
         },
         {
           "path": "docs/guides/index.i18n.yaml",
@@ -293,10 +293,14 @@
         {
           "path": "docs/ir/core/guides.md",
           "sha256": "sha256:acbc8680cc0433c74b3b7dbdd6d043049436ede0cb6d34759c9403443c51ff84"
+        },
+        {
+          "path": "docs/ir/core/library-inputs.md",
+          "sha256": "sha256:b6499af160101c7776958131190139fe3f52457a132bfb2dd2de9adaeb831681"
         }
       ],
       "conclusion": "existing",
-      "reason": "The configuration now lists languages [en, ja] with every labels.ja key (localization A16, A40; REQ-core-334, REQ-core-351), so the guides are pairs (REQ-core-336, REQ-core-343): each English side keeps the file name without a suffix and the former Japanese text moved to the .ja.md side in the same directory (A15, REQ-core-337), and every side has a consistency record with both blob hashes copied from kotowari list (REQ-core-339, REQ-core-340). The English sides are translations: headings, guide marks, code blocks, table shapes and link destinations are identical on both sides (REQ-core-344), each side starts with the switcher line (A33, A36, REQ-core-346), and links on each side point at the same language. The sections that explained why the tool is built as it is were removed from both sides, because they consisted of links to decision records, which a paired document may not hold (A14, REQ-core-349), and a guide does not carry decision history (guide-overview-roles A3). Because the IR's items and fingerprints are now read from the English side, every guide mark's fingerprint was copied from kotowari list; the sections were translated, not changed in meaning, so no section fell behind its items (REQ-core-203, REQ-core-204). kotowari check reports no error and status is complete.",
+      "reason": "The configuration now lists languages [en, ja] with every labels.ja key (localization A16, A40; REQ-core-334, REQ-core-351), so the guides are pairs (REQ-core-336, REQ-core-343): each English side keeps the file name without a suffix and the former Japanese text moved to the .ja.md side in the same directory (A15, REQ-core-337), and every side has a consistency record with both blob hashes copied from kotowari list (REQ-core-339, REQ-core-340). The English sides are translations: headings, guide marks, code blocks, table shapes and link destinations are identical on both sides (REQ-core-344), each side starts with the switcher line (A33, A36, REQ-core-346), and links on each side point at the same language. The sections that explained why the tool is built as it is were removed from both sides, because they consisted of links to decision records, which a paired document may not hold (A14, REQ-core-349), and a guide does not carry decision history (guide-overview-roles A3). Because the IR's items and fingerprints are now read from the English side, every guide mark's fingerprint was copied from kotowari list; the sections were translated, not changed in meaning, so no section fell behind its items (REQ-core-203, REQ-core-204). kotowari check reports no error and status is complete. Restored the separate invalid_marker and test_without_id console lines in both findings guides so diagnostic boundaries match the documented text output. Clarified the library-inputs table in both languages: additional finding groups contribute per-group counts to the result, not a count of groups, consistent with REQ-core-288 and REQ-core-289. Refreshed both consistency records from kotowari list after reading the paired content.",
       "requirements": [
         "REQ-core-334",
         "REQ-core-336",

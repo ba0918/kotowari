@@ -174,17 +174,17 @@
         {
           "path": "docs/guides/findings.i18n.yaml",
           "before": null,
-          "after": "sha256:bd8f45516217d7e7f7a5aaf95503913f26e8a5f0328079b220ccaac33072180d"
+          "after": "sha256:fb9744e4946bb1fa980e8570b9d93795bc5009bc40089c0f10dcf0aff03bd323"
         },
         {
           "path": "docs/guides/findings.ja.md",
           "before": null,
-          "after": "sha256:8b0d3da1f45bc5a0bf005fa5ab4ede808ff087064e5e6028feaddc6c9775e4db"
+          "after": "sha256:d370ba5e2a0975a958538e7adf6d499402ba7d3b77602aa6fff3654c67ef8bc9"
         },
         {
           "path": "docs/guides/findings.md",
           "before": "sha256:5af30526a728604db1b733d06d0fd21914adaffa6160fce08f0a0ee1619378fe",
-          "after": "sha256:9f4300b0fb3a86c3b425e4ebfb42929a52693525aa5c78c7e47524152b4fc9d0"
+          "after": "sha256:83a7b8cbf57e2894bab7f1a66a9373948728790c08650b878f6f9202cbbbc74a"
         },
         {
           "path": "docs/guides/index.i18n.yaml",
@@ -293,10 +293,14 @@
         {
           "path": "docs/ir/core/guides.md",
           "sha256": "sha256:acbc8680cc0433c74b3b7dbdd6d043049436ede0cb6d34759c9403443c51ff84"
+        },
+        {
+          "path": "docs/ir/core/library-inputs.md",
+          "sha256": "sha256:b6499af160101c7776958131190139fe3f52457a132bfb2dd2de9adaeb831681"
         }
       ],
       "conclusion": "existing",
-      "reason": "Ran kotowari check (only notices, no errors) and kotowari changes for the implementation phase (no findings). Compared English and Japanese sides for meaning: docs/ir/core/plan.md (REQ-core-190 to 193, including the full REQ-core-192 form rules), docs/ir/schema/closed-world.md (REQ-schema-001 to 004, 055, PROP-schema-001), docs/ir/view/rendering.md (REQ-view-001 to 004), docs/ir/view/navigation.md (REQ-view-016, 017), docs/ir/core/changes-results.md (REQ-core-272 to 274 and EX-core-450 to 454), docs/ir/core/CONTEXT.md vs CONTEXT.ja.md (about 28 rows), docs/guides/change-conformance.md, docs/guides/cli.md and docs/guides/config.md. No dropped conditions or added claims found; the only addition is a gloss in config.md explaining the Japanese comments left inside a code block. Mechanically compared the sets of REQ/EX/PROP/TBL IDs for every pair: identical except the placeholder EX-name-001 in findings.md, which is a translated example name. Confirmed the removed why-sections are gone from the guides.",
+      "reason": "Ran kotowari check (only notices, no errors) and kotowari changes for the implementation phase (no findings). Compared English and Japanese sides for meaning: docs/ir/core/plan.md (REQ-core-190 to 193, including the full REQ-core-192 form rules), docs/ir/schema/closed-world.md (REQ-schema-001 to 004, 055, PROP-schema-001), docs/ir/view/rendering.md (REQ-view-001 to 004), docs/ir/view/navigation.md (REQ-view-016, 017), docs/ir/core/changes-results.md (REQ-core-272 to 274 and EX-core-450 to 454), docs/ir/core/CONTEXT.md vs CONTEXT.ja.md (about 28 rows), docs/guides/change-conformance.md, docs/guides/cli.md and docs/guides/config.md. No dropped conditions or added claims found; the only addition is a gloss in config.md explaining the Japanese comments left inside a code block. Mechanically compared the sets of REQ/EX/PROP/TBL IDs for every pair: identical except the placeholder EX-name-001 in findings.md, which is a translated example name. Confirmed the removed why-sections are gone from the guides. Independent follow-up review covered all 18 guide pairs and README, comparing the original Japanese guides with the new Japanese sides and reviewing English usage prose and translated guide-heading links. The removed rationale sections leave the operational instructions in the usage sections, consistent with guide-overview-roles A3. Restored separate diagnostic lines in both findings guides were inspected against the original examples: invalid_marker detail no longer absorbs the next invalid_marker or test_without_id finding. Reviewed both library-inputs sides: each additional finding group retains its own files and marks counts, consistent with REQ-core-288/289 and GroupTally, rather than reporting the number of groups. The six-file correction diff and refreshed pair records were independently inspected; aggregate execution checks remain the integration gate.",
       "requirements": [
         "REQ-core-334",
         "REQ-core-336",
