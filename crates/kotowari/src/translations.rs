@@ -11,6 +11,8 @@ use std::path::{Path, PathBuf};
 pub(crate) struct Assembly {
     base: PathBuf,
     languages: Vec<String>,
+    /// "decisions.records" と "decisions.adr" の置き場。そこのファイルは`対`にしない（REQ-core-336）
+    records: [String; 2],
     pairs: Pairs,
 }
 
@@ -22,6 +24,10 @@ impl Assembly {
         Self {
             base: base.to_path_buf(),
             languages: config.languages(),
+            records: [
+                kotowari_core::normalize_path(&config.decisions.records),
+                kotowari_core::normalize_path(&config.decisions.adr),
+            ],
             pairs: Pairs::default(),
         }
     }
@@ -33,7 +39,7 @@ impl Assembly {
 
     /// 置き場で集めたファイルを`対`に入れ、ほかの検査が読むファイルを返す。返すのは、ある
     /// `先頭の言語`の`側`と、with_sides なら`先頭の言語`の`側`のある`対`のほかの言語の`側`である。
-    /// 言語が1つなら集めたファイルをそのまま返す
+    /// 判断の記録の置き場のファイルは`対`にせずそのまま返す。言語が1つなら集めたファイルをそのまま返す
     pub(crate) fn place(
         &mut self,
         place: Place,
@@ -43,6 +49,11 @@ impl Assembly {
         if !self.enabled() {
             return Ok(files);
         }
+        let (mut kept, files): (Files, Files) = files.into_iter().partition(|(path, _)| {
+            self.records
+                .iter()
+                .any(|place| kotowari_core::sources::is_under_place(path, place))
+        });
         let mut firsts = BTreeSet::new();
         for (path, _) in &files {
             let (directory, name) = path.rsplit_once('/').unwrap_or(("", path));
@@ -55,7 +66,6 @@ impl Assembly {
             };
             firsts.insert(first);
         }
-        let mut kept: Files = Vec::new();
         for first in firsts {
             if !self.pairs.contains(&first) {
                 let pair = self.read(place, &first)?;

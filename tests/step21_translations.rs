@@ -1043,3 +1043,53 @@ fn req_core_294_a_missing_side_stops_the_build_without_writing() {
     assert_eq!(code, Some(2));
     assert!(!tmp.path().join(".kotowari/cache/overview").exists());
 }
+
+// @kotowari[REQ-core-336, EX-core-517]
+#[test]
+fn req_core_336_a_guide_glob_over_the_record_places_does_not_pair_the_records() {
+    let tmp = TempDir::new().unwrap();
+    make_project(
+        tmp.path(),
+        JA_EN,
+        "guides:\n  files:\n    - \"docs/**/*.md\"\n",
+    );
+    write(
+        tmp.path(),
+        "docs/decision/adr/0001-a.md",
+        "# ADR\n\nText.\n",
+    );
+    write(
+        tmp.path(),
+        "docs/guides/g.md",
+        "# G\n\n日本語 | [English](g.en.md)\n\n本文。\n",
+    );
+    write(
+        tmp.path(),
+        "docs/guides/g.en.md",
+        "# G\n\n[日本語](g.md) | English\n\nText.\n",
+    );
+    let report = check(tmp.path());
+    let on_records: Vec<&Value> = report["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|finding| {
+            let kind = finding["kind"].as_str().unwrap();
+            (kind.starts_with("translation_") || kind.starts_with("link_"))
+                && finding["path"]
+                    .as_str()
+                    .unwrap()
+                    .starts_with("docs/decision/")
+        })
+        .collect();
+    assert!(on_records.is_empty(), "{report}");
+    let (_, list) = run(tmp.path(), &["list"]);
+    let list: Value = serde_json::from_str(&list).unwrap();
+    let paired: Vec<&str> = list["translations"]
+        .as_array()
+        .unwrap_or_else(|| panic!("{list}"))
+        .iter()
+        .map(|translation| translation["path"].as_str().unwrap())
+        .collect();
+    assert_eq!(paired, ["docs/guides/g.md"], "{list}");
+}
