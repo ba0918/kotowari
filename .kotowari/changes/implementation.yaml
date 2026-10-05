@@ -76,12 +76,12 @@
         {
           "path": "crates/kotowari-core/src/translations.rs",
           "before": null,
-          "after": "sha256:7e82a6523e4b35984310a6eb332f50ecf36815e64c7ae9ea410ed95a5e1167df"
+          "after": "sha256:7a459c694a9898f587d9ed890b83ed982a6c0237ac64a39063b149aa81d8bb1a"
         },
         {
           "path": "crates/kotowari-core/src/skeleton.rs",
           "before": null,
-          "after": "sha256:be7ad497fdce0def86b492de43562ef7dc59468d506c66ab77be5f72138b9cc9"
+          "after": "sha256:01df14fceaf55b3a78f1d928577788197e7c25b78a5e51155b1249900fac71a5"
         },
         {
           "path": "crates/kotowari-core/src/inputs.rs",
@@ -101,12 +101,12 @@
         {
           "path": "crates/kotowari-core/tests/translations.rs",
           "before": null,
-          "after": "sha256:36ee99e2519704a50b9c711a993af32e3804986298e7384288a9709c2a5ad2aa"
+          "after": "sha256:f2e265411290119117d60be9e88caf8707bbb8a7a64e874ddf466a33677a1f41"
         },
         {
           "path": "crates/kotowari/src/translations.rs",
           "before": null,
-          "after": "sha256:e3184a8f477a3b8ab71b9e1d7cdeb17718240f77af96e4511280e8115733845c"
+          "after": "sha256:cdea35ca1b3d5a34c5e17022a4f6fd0799f88bf9bc728d504a507488dfe952f2"
         },
         {
           "path": "crates/kotowari/src/acquisition.rs",
@@ -131,7 +131,7 @@
         {
           "path": "crates/kotowari/src/overview.rs",
           "before": "sha256:2ef700bb1560d62b687005c8d750fbccd95f2efdaa9a382d5714dc1ba8a306b5",
-          "after": "sha256:773b19ad67fd3663da0514331adda8349515fd114bd318e320e36c2c3b930d8c"
+          "after": "sha256:af77478ddf980a1cbe8f7f8dcfd3f469ec0fa838516ca321ab4876c0977fb62d"
         },
         {
           "path": "src/cli/list.rs",
@@ -151,7 +151,7 @@
         {
           "path": "tests/step21_translations.rs",
           "before": null,
-          "after": "sha256:3183c1b359ca814a97a52b4e8b3a81635d2e14bea3b7b582f5626f8f3269fc01"
+          "after": "sha256:5fce6ba7fd6ed371ec6f4395d6cb948aadf0c34b5ce240112353bec241c2e776"
         },
         {
           "path": "crates/kotowari-overview/src/lib.rs",
@@ -195,8 +195,16 @@
           "sha256": "sha256:78f0491bf74dfab5aa9be37bc2fb79c3f610478ab7e7fdd4081c5ed9e169f4e8"
         },
         {
+          "path": "docs/ir/core/overview-data.md",
+          "sha256": "sha256:5f3c0c7da46279fd542fa056101cbda092b306f12aaaf72d5036999f8966a7e5"
+        },
+        {
           "path": "docs/ir/core/overview-languages.md",
           "sha256": "sha256:c84053e6bb7040e2b23ca76430a079569bb2ceb84066d6bd2d82e12956d45da6"
+        },
+        {
+          "path": "docs/ir/core/overview-output.md",
+          "sha256": "sha256:c4cacb6d55b900915849007a9dacb7f3f0d77745ea54879529383fd0d9d2d57b"
         },
         {
           "path": "docs/ir/core/overview-toc.md",
@@ -212,8 +220,25 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "kotowari-core gains the sha1 crate (0.10, the RustCrypto line of the sha2 0.10 already used) for the git blob hash of REQ-core-340, and a translations module that decides everything from in-memory names and texts: classify reads a file name as the first-language side, another language's side (the tag before the extension is a non-first language in the list) or a <stem>.i18n.yaml record that is no side (REQ-core-337, A31, A39); side and record paths are derived in the same directory; Pairs dedupes by first-language path so a pair read from two places reports once. Pair findings follow REQ-core-338 (translation_missing per missing side on the first side, or on an orphan side whose first side is missing, which no other check then reads), REQ-core-339 (translation_record_invalid with missing, yaml, keys or value in that order; a record that is not UTF-8 cannot be read as YAML and reports yaml) and REQ-core-341 (translation_stale per side with the recorded and current hashes, not raised while the record is invalid), all with a null line (REQ-core-027, TBL-core-019). The skeleton module compares the TBL-core-044 parts per document kind in table order and reports the first mismatching part with the other side's line of the first differing element, null for a count difference or an absent element; overview part values drop the TBL-core-045 sentence fields while keeping keys and list lengths; table-of-contents elements take their lines from the YAML reader's spans (REQ-core-344, REQ-core-345). IR and guide sides need the switcher line of REQ-core-346 built from each language's language_name; only an exactly equal line is the switcher, and it is blanked before the IR parse, the skeleton and the link scan so it is neither scope nor checked text, while missing_scope still fires when it is the only scope line. Links, images and reference definitions are read with the markdown crate's mdast and its positions (no regular expression); destinations without a scheme or # are resolved from the side's directory without # and ? and reported as link_language_mismatch or link_to_record on their line (REQ-core-347 to REQ-core-349); the guide and overview link parts compare destinations read as the first-language side. The kotowari library (crates/kotowari/src/translations.rs) finds the sides and records by name beside each first-language side found by the existing collectors, whether or not a glob matches them (REQ-core-337), reads raw bytes for the hash and the BOM-stripped text, and keeps only first-language IR sides for the IR reader; with two or more languages a *.i18n.yaml file is not a side and is therefore not read as a guide either, and every guide side is read as a guide (REQ-core-343). Core runs only the REQ-core-342 checks on other IR sides, parsed with the first side's document kind: terms against the CONTEXT.<tag>.md chain, vague words from the one vague_words list, document-name references, unclosed backticks, and the glossary-form kinds glossary_invalid, invalid_glossary_row, glossary_title_invalid and duplicate_term; files and lines of check and status count every side, and items, IDs, sources, fingerprints, list and query come from the first side only. kotowari-overview checks the form, parts, lead, references and guide marks of every overview side and the form of every table-of-contents side, but ir entries, name conflicts and the table-of-contents comparison only on the first side (REQ-core-305, REQ-core-328, REQ-core-329); its group's files counts every side read, which no requirement fixes. list with two or more languages also walks the guide, overview and table-of-contents places with check's stop rules and prints translations in JSON and as one text line per pair (REQ-core-152, REQ-core-155); with one language the top level stays items only. overview build and serve render one input per language from that language's sides with its tag, UI text and the other languages in list order (root to tag/, tag to ../, tag to ../other/), take IR bodies from that language's sides and leave record, ADR and other Markdown references without a body on other languages' pages, write other languages under <tag>/ (a <tag> entry that is a symbolic link or not a directory is a cache error, as REQ-core-324 treats the place itself), and stop without writing on translation_missing or translation_structure_mismatch of IR, overview data or table-of-contents pairs (REQ-core-353 to REQ-core-355, REQ-core-291, REQ-core-293, REQ-core-294). The layering of REQ-core-307 and REQ-core-308 is kept: core decides, the library reads files, the CLI only formats. Every scenario EX-core-512 to EX-core-542 has a process test in tests/step21_translations.rs or tests/step10_list.rs and was seen failing before its code; core tests in crates/kotowari-core/tests/translations.rs cover REQ-core-340, every TBL-core-044 part, the link parts, the switcher exclusion and the lines of the new kinds. The overview crate's existing tests only adapt to optional reference bodies. With no languages key this repository's kotowari check reports no new kind. Later fixes in the same comparison stay inside these requirements: decision records under decisions.records and decisions.adr are never paired even when a guides.files glob covers them and are read only as guides (REQ-core-336, EX-core-517, process test req_core_336_a_guide_glob_over_the_record_places_does_not_pair_the_records); overview build and serve collect guide pairs as check does, so a link from an overview data side to the matching guide side is read as the first-language side and does not stop the build (REQ-core-294, TBL-core-044, process test req_core_294_overview_links_to_the_matching_guide_sides_do_not_stop_the_build); the skeleton's table rows split on | only when it is not escaped by a backslash, as GFM reads a table, so an escaped \\| inside a cell does not shift the columns (TBL-core-044, core tests on glossary and guide tables); every <tag>/ place is checked before the first page is written, so a symbolic link or non-directory there stops with a cache error having written nothing (REQ-core-353, REQ-core-324); and the REQ-core-352 core test gives a complete labels.ja so each broken en label stops for its own error, and a correct form is seen to pass.",
+      "reason": "kotowari-core gains the sha1 crate (0.10, the RustCrypto line of the sha2 0.10 already used) for the git blob hash of REQ-core-340, and a translations module that decides everything from in-memory names and texts: classify reads a file name as the first-language side, another language's side (the tag before the extension is a non-first language in the list) or a <stem>.i18n.yaml record that is no side (REQ-core-337, A31, A39); side and record paths are derived in the same directory; Pairs dedupes by first-language path so a pair read from two places reports once. Pair findings follow REQ-core-338 (translation_missing per missing side on the first side, or on an orphan side whose first side is missing, which no other check then reads), REQ-core-339 (translation_record_invalid with missing, yaml, keys or value in that order; a record that is not UTF-8 cannot be read as YAML and reports yaml) and REQ-core-341 (translation_stale per side with the recorded and current hashes, not raised while the record is invalid), all with a null line (REQ-core-027, TBL-core-019). The skeleton module compares the TBL-core-044 parts per document kind in table order and reports the first mismatching part with the other side's line of the first differing element, null for a count difference or an absent element; overview part values drop the TBL-core-045 sentence fields while keeping keys and list lengths; table-of-contents elements take their lines from the YAML reader's spans (REQ-core-344, REQ-core-345). IR and guide sides need the switcher line of REQ-core-346 built from each language's language_name; only an exactly equal line is the switcher, and it is blanked before the IR parse, the skeleton and the link scan so it is neither scope nor checked text, while missing_scope still fires when it is the only scope line. Links, images and reference definitions are read with the markdown crate's mdast and its positions (no regular expression); destinations without a scheme or # are resolved from the side's directory without # and ? and reported as link_language_mismatch or link_to_record on their line (REQ-core-347 to REQ-core-349); the guide and overview link parts compare destinations read as the first-language side. The kotowari library (crates/kotowari/src/translations.rs) finds the sides and records by name beside each first-language side found by the existing collectors, whether or not a glob matches them (REQ-core-337), reads raw bytes for the hash and the BOM-stripped text, and keeps only first-language IR sides for the IR reader; with two or more languages a *.i18n.yaml file is not a side and is therefore not read as a guide either, and every guide side is read as a guide (REQ-core-343). Core runs only the REQ-core-342 checks on other IR sides, parsed with the first side's document kind: terms against the CONTEXT.<tag>.md chain, vague words from the one vague_words list, document-name references, unclosed backticks, and the glossary-form kinds glossary_invalid, invalid_glossary_row, glossary_title_invalid and duplicate_term; files and lines of check and status count every side, and items, IDs, sources, fingerprints, list and query come from the first side only. kotowari-overview checks the form, parts, lead, references and guide marks of every overview side and the form of every table-of-contents side, but ir entries, name conflicts and the table-of-contents comparison only on the first side (REQ-core-305, REQ-core-328, REQ-core-329); its group's files counts every side read, which no requirement fixes. list with two or more languages also walks the guide, overview and table-of-contents places with check's stop rules and prints translations in JSON and as one text line per pair (REQ-core-152, REQ-core-155); with one language the top level stays items only. overview build and serve render one input per language from that language's sides with its tag, UI text and the other languages in list order (root to tag/, tag to ../, tag to ../other/), take IR bodies from that language's sides and leave record, ADR and other Markdown references without a body on other languages' pages, write other languages under <tag>/ (a <tag> entry that is a symbolic link or not a directory is a cache error, as REQ-core-324 treats the place itself), and stop without writing on translation_missing or translation_structure_mismatch of IR, overview data or table-of-contents pairs (REQ-core-353 to REQ-core-355, REQ-core-291, REQ-core-293, REQ-core-294). The layering of REQ-core-307 and REQ-core-308 is kept: core decides, the library reads files, the CLI only formats. Every scenario EX-core-512 to EX-core-542 has a process test in tests/step21_translations.rs or tests/step10_list.rs and was seen failing before its code; core tests in crates/kotowari-core/tests/translations.rs cover REQ-core-340, every TBL-core-044 part, the link parts, the switcher exclusion and the lines of the new kinds. The overview crate's existing tests only adapt to optional reference bodies. With no languages key this repository's kotowari check reports no new kind. Later fixes in the same comparison stay inside these requirements: decision records under decisions.records and decisions.adr are never paired even when a guides.files glob covers them and are read only as guides (REQ-core-336, EX-core-517, process test req_core_336_a_guide_glob_over_the_record_places_does_not_pair_the_records); overview build and serve collect guide pairs as check does, so a link from an overview data side to the matching guide side is read as the first-language side and does not stop the build (REQ-core-294, TBL-core-044, process test req_core_294_overview_links_to_the_matching_guide_sides_do_not_stop_the_build); the skeleton's table rows split on | only when it is not escaped by a backslash, as GFM reads a table, so an escaped \\| inside a cell does not shift the columns (TBL-core-044, core tests on glossary and guide tables); every <tag>/ place is checked before the first page is written, so a symbolic link or non-directory there stops with a cache error having written nothing (REQ-core-353, REQ-core-324); and the REQ-core-352 core test gives a complete labels.ja so each broken en label stops for its own error, and a correct form is seen to pass. Reference-style links and images now resolve their normalized identifiers against the first matching CommonMark definition, retaining both use and definition locations in source order. Regression tests observe swapped destinations as a link skeleton mismatch and wrong-language shortcut/collapsed references at both use lines plus the definition (REQ-core-344, REQ-core-345, REQ-core-347, REQ-core-348, TBL-core-044). Overview overlap checks now run on all glob-matched paths before pairing filters translated sides or reads the contents, preserving REQ-core-280 and REQ-core-326. A process regression checks that a translated overview file matching the test glob stops check, status and build with the specified configuration error. These tests failed before the fixes and passed after them; no approved requirements or decisions change. Further specification-based regressions cover complete-label invalid language configurations, Markdown image and reference destinations including query colons, TOC link exclusion, escaped table separators and cell boundaries, absent headings, overview sentence fields versus structural values, EOF switchers, third-language scope exclusion, distinct three-language rendering and cache reuse, linked output directories and inaccessible language caches. Pairs::contains was removed in favor of the existing get operation, listing uses the public SideText::blob getter, and the direct serde-saphyr span conversion no longer redundantly filters positive line numbers; these simplify unobservable branches without changing the contract.",
       "requirements": [
+        "REQ-core-027",
+        "REQ-core-033",
+        "REQ-core-152",
+        "REQ-core-155",
+        "REQ-core-280",
+        "REQ-core-288",
+        "REQ-core-291",
+        "REQ-core-293",
+        "REQ-core-294",
+        "REQ-core-296",
+        "REQ-core-305",
+        "REQ-core-307",
+        "REQ-core-308",
+        "REQ-core-324",
+        "REQ-core-326",
+        "REQ-core-328",
+        "REQ-core-329",
         "REQ-core-334",
         "REQ-core-336",
         "REQ-core-337",
@@ -229,22 +254,10 @@
         "REQ-core-347",
         "REQ-core-348",
         "REQ-core-349",
-        "REQ-core-027",
-        "REQ-core-033",
-        "REQ-core-305",
-        "REQ-core-328",
-        "REQ-core-329",
-        "REQ-core-152",
-        "REQ-core-155",
         "REQ-core-351",
         "REQ-core-353",
         "REQ-core-354",
-        "REQ-core-355",
-        "REQ-core-291",
-        "REQ-core-293",
-        "REQ-core-294",
-        "REQ-core-307",
-        "REQ-core-308"
+        "REQ-core-355"
       ],
       "decisions": [
         "docs/decision/records/2026-10-05-localization.md#A11",
@@ -462,7 +475,7 @@
         {
           "path": "CHANGELOG.md",
           "before": "sha256:4d3b91ab4eb2ee6ee701d40fc073a878111f44546cb14f3d785486c0429aa0b3",
-          "after": "sha256:c60c5f9d6748bfb2e6ccc5e2c0b6216138a16aed1940be8a556092b36e640378"
+          "after": "sha256:95afa5ad3430f530efb897bde2adba3ca41f2d9713a8849c469eedd824e05cef"
         }
       ],
       "ir": [
@@ -492,7 +505,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "The user guides describe languages and labels with the UI text keys and their English text (docs/guides/config.md), the pair layout and consistency record, the seven new finding kinds with their detail and line (docs/guides/findings.md, docs/guides/commands/check.md), translations in list JSON and text and list's walk of the guide and overview places with two or more languages (docs/guides/commands/list.md), and per-language overview pages and the build stop on missing sides and skeleton mismatches (docs/guides/cli.md); the guide marks on TBL-core-004, TBL-core-008, TBL-core-019, REQ-core-027, REQ-core-152 and REQ-core-155 are reread against the changed IR and carry the current fingerprints, and new sections carry marks for the requirements they describe, so check reports no guide_stale or invalid_marker. The kotowari skill gets the scene translate and references/translations.md with the procedure of REQ-core-350's how_to_verify: change every side of a pair in the same change, take the previous text from git by the recorded blob hash and translate only the difference, translate from the whole text when the hash cannot be taken, rewrite the consistency record from kotowari list's translations, and write labels.<tag> when adding a non-English language; references/config.md, findings.md (the seven Kind rows, which the REQ-core-125 test compares with the code) and overview.md (English status states, per-language pages) follow. CHANGELOG.md has one Unreleased entry under Added. This repository's own documents are not translated and its configuration gets no languages key (A13). The skill's references/config.md lists the seventeen UI text keys of TBL-core-046 with where each is used, its English text, the keys that take exactly one {n}, and the conditions that are config errors (REQ-core-351, REQ-core-352), and translations.md points at that list for writing labels.<tag>; references/findings.md, references/overview.md and docs/guides/cli.md describe the cache error for a language's .kotowari/cache/overview/<tag> place with two or more languages (REQ-core-353).",
+      "reason": "The user guides describe languages and labels with the UI text keys and their English text (docs/guides/config.md), the pair layout and consistency record, the seven new finding kinds with their detail and line (docs/guides/findings.md, docs/guides/commands/check.md), translations in list JSON and text and list's walk of the guide and overview places with two or more languages (docs/guides/commands/list.md), and per-language overview pages and the build stop on missing sides and skeleton mismatches (docs/guides/cli.md); the guide marks on TBL-core-004, TBL-core-008, TBL-core-019, REQ-core-027, REQ-core-152 and REQ-core-155 are reread against the changed IR and carry the current fingerprints, and new sections carry marks for the requirements they describe, so check reports no guide_stale or invalid_marker. The kotowari skill gets the scene translate and references/translations.md with the procedure of REQ-core-350's how_to_verify: change every side of a pair in the same change, take the previous text from git by the recorded blob hash and translate only the difference, translate from the whole text when the hash cannot be taken, rewrite the consistency record from kotowari list's translations, and write labels.<tag> when adding a non-English language; references/config.md, findings.md (the seven Kind rows, which the REQ-core-125 test compares with the code) and overview.md (English status states, per-language pages) follow. CHANGELOG.md has one Unreleased entry under Added. This repository's own documents are not translated and its configuration gets no languages key (A13). The skill's references/config.md lists the seventeen UI text keys of TBL-core-046 with where each is used, its English text, the keys that take exactly one {n}, and the conditions that are config errors (REQ-core-351, REQ-core-352), and translations.md points at that list for writing labels.<tag>; references/findings.md, references/overview.md and docs/guides/cli.md describe the cache error for a language's .kotowari/cache/overview/<tag> place with two or more languages (REQ-core-353). The Unreleased Fixed entry also describes reference-style translation link validation and translated overview placement conflict detection.",
       "requirements": [
         "REQ-core-350",
         "REQ-core-155",
@@ -507,6 +520,33 @@
         "docs/decision/records/2026-10-05-localization.md#A40",
         "docs/decision/records/2026-10-05-localization.md#A13"
       ],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "localization-equivalent-implementation",
+      "base": "25008aed476ffedb4f43711ac7b54e682376e164",
+      "role": "implementer",
+      "files": [
+        {
+          "path": ".kotowari/equivalents.yaml",
+          "before": "sha256:c2be438808ff25aed2005190d3ce1c37d73ef21e99d8075bf0b3a03b64af7370",
+          "after": "sha256:77b5d5b7867bee91f7099c5fa7106ba810c4d92402c049e58c01e5ba5b91db07"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/equivalents.md",
+          "sha256": "sha256:4257454b86d5fbc112a460b1667ce74a0c0fddd1676312070c4b0f19543c55c6"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "Register the exact TocNode Visitor::expecting formatter mutation after an independent reviewer attempted empty input, invalid YAML types and alias paths. skeleton::toc discards every deserialization Err and returns an empty skeleton; overview TOC validation supplies separate diagnostics. The changed formatter output and formatter result cannot reach CLI stdout, stderr or exit status. The entry identifies the exact file, change and source line and records the unsuccessful counterexample search; no test exclusion or requirement change is introduced.",
+      "requirements": [
+        "REQ-core-141",
+        "REQ-core-143"
+      ],
+      "decisions": [],
       "handoff": null,
       "gaps": []
     }

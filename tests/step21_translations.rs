@@ -522,6 +522,169 @@ fn overview_pairs(tmp: &Path) {
     );
 }
 
+// @kotowari[REQ-core-280, REQ-core-337]
+#[test]
+fn translated_overview_files_cannot_also_be_test_files() {
+    let tmp = TempDir::new().unwrap();
+    overview_pairs(tmp.path());
+    write(
+        tmp.path(),
+        ".kotowari/config.yaml",
+        &format!(
+            "{}tests:\n  files: ['overview/*.en.md']\noverview:\n  files: ['overview/*.md']\n  toc: .kotowari/toc.yaml\n",
+            language_config(JA_EN)
+        ),
+    );
+    write(tmp.path(), "overview/a.md", &overview_data("題名"));
+    write(tmp.path(), "overview/a.en.md", &overview_data("Title"));
+    for args in [vec!["check"], vec!["status"], vec!["overview", "build"]] {
+        let output = assert_cmd::Command::cargo_bin("kotowari")
+            .unwrap()
+            .args(args)
+            .current_dir(tmp.path())
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(2), "{output:?}");
+        assert_eq!(
+            String::from_utf8_lossy(&output.stderr).lines().next(),
+            Some("config error: overview/a.en.md: matched by both overview.files and tests.files"),
+            "{output:?}"
+        );
+    }
+    assert!(!tmp.path().join(".kotowari/cache/overview").exists());
+}
+
+// @kotowari[REQ-core-288, REQ-core-293, REQ-core-353, REQ-core-355]
+#[test]
+fn three_languages_keep_their_own_html_language_and_contents() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some(&["en", "ja", "fr"]), OVERVIEW);
+    for (suffix, title) in [("", "Contents"), (".ja", "目次"), (".fr", "Sommaire")] {
+        write(
+            tmp.path(),
+            &format!("docs/ir/a{suffix}.md"),
+            &topic("REQ-001", "Body."),
+        );
+        write(
+            tmp.path(),
+            &format!(".kotowari/overview/a{suffix}.md"),
+            &overview_data(title),
+        );
+        write(
+            tmp.path(),
+            &format!(".kotowari/toc{suffix}.yaml"),
+            &format!("title: {title}\nitems:\n  - a\n"),
+        );
+    }
+    assert_eq!(check(tmp.path())["overview"]["files"], 3);
+    let (code, output) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(0), "{output}");
+    for (place, language, title) in [
+        ("", "en", "Contents"),
+        ("ja/", "ja", "目次"),
+        ("fr/", "fr", "Sommaire"),
+    ] {
+        let index = built(tmp.path(), &format!("{place}index.html"));
+        assert!(
+            index.contains(&format!("<html lang=\"{language}\">")),
+            "{index}"
+        );
+        assert!(index.contains(&format!("<h1>{title}</h1>")), "{index}");
+        assert!(
+            links(&index).iter().any(|(path, _)| path == "a.html"),
+            "{index}"
+        );
+    }
+    assert!(
+        links(&built(tmp.path(), "fr/a.html"))
+            .iter()
+            .any(|(path, _)| path == "../ja/a.html")
+    );
+    let (code, output) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(0), "{output}");
+    let report: Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(report["unchanged"], 9);
+    assert_eq!(report["written"], serde_json::json!([]));
+}
+
+// @kotowari[REQ-core-296, REQ-core-324, REQ-core-353]
+#[cfg(unix)]
+#[test]
+fn a_linked_language_directory_stops_before_any_page_is_written() {
+    let tmp = TempDir::new().unwrap();
+    overview_pairs(tmp.path());
+    let outside = TempDir::new().unwrap();
+    write(tmp.path(), ".kotowari/cache/overview/a.html", "old");
+    write(outside.path(), "keep", "outside");
+    std::os::unix::fs::symlink(
+        outside.path(),
+        tmp.path().join(".kotowari/cache/overview/en"),
+    )
+    .unwrap();
+    let output = assert_cmd::Command::cargo_bin("kotowari")
+        .unwrap()
+        .args(["overview", "build"])
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    assert!(
+        String::from_utf8_lossy(&output.stderr)
+            .starts_with("cache error: .kotowari/cache/overview/en"),
+        "{output:?}"
+    );
+    assert_eq!(built(tmp.path(), "a.html"), "old");
+    assert!(
+        !tmp.path()
+            .join(".kotowari/cache/overview/index.html")
+            .exists()
+    );
+    assert_eq!(
+        std::fs::read_to_string(outside.path().join("keep")).unwrap(),
+        "outside"
+    );
+    assert_eq!(std::fs::read_dir(outside.path()).unwrap().count(), 1);
+}
+
+// @kotowari[REQ-core-324, REQ-core-353]
+#[cfg(unix)]
+#[test]
+fn an_inaccessible_language_cache_reports_a_cache_error() {
+    use std::os::unix::fs::PermissionsExt;
+    let tmp = TempDir::new().unwrap();
+    overview_pairs(tmp.path());
+    write(
+        tmp.path(),
+        ".kotowari/config.yaml",
+        &format!(
+            "{}tests:\n  files: []\noverview:\n  files: ['notes/*.md']\n  toc: .kotowari/toc.yaml\n",
+            language_config(JA_EN)
+        ),
+    );
+    write(tmp.path(), "notes/a.md", &overview_data("題名"));
+    write(tmp.path(), "notes/a.en.md", &overview_data("Title"));
+    let cache = tmp.path().join(".kotowari/cache/overview");
+    std::fs::create_dir_all(cache.join("en")).unwrap();
+    std::fs::set_permissions(&cache, std::fs::Permissions::from_mode(0o000)).unwrap();
+    let denied = std::fs::symlink_metadata(cache.join("en")).is_err();
+    let output = assert_cmd::Command::cargo_bin("kotowari")
+        .unwrap()
+        .args(["overview", "build"])
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    std::fs::set_permissions(&cache, std::fs::Permissions::from_mode(0o700)).unwrap();
+    if denied {
+        assert_eq!(output.status.code(), Some(2), "{output:?}");
+        assert!(
+            String::from_utf8_lossy(&output.stderr)
+                .starts_with("cache error: .kotowari/cache/overview/en"),
+            "{output:?}"
+        );
+        assert!(!cache.join("index.html").exists());
+    }
+}
+
 // @kotowari[EX-core-525]
 #[test]
 fn ex_core_525_the_english_overview_side_is_not_another_page() {
@@ -1140,36 +1303,4 @@ fn req_core_294_overview_links_to_the_matching_guide_sides_do_not_stop_the_build
             .join(".kotowari/cache/overview/en/a.html")
             .is_file()
     );
-}
-
-// @kotowari[REQ-core-280, REQ-core-337]
-#[test]
-fn translated_overview_files_cannot_also_be_test_files() {
-    let tmp = TempDir::new().unwrap();
-    overview_pairs(tmp.path());
-    write(
-        tmp.path(),
-        ".kotowari/config.yaml",
-        &format!(
-            "{}tests:\n  files: ['overview/*.en.md']\noverview:\n  files: ['overview/*.md']\n  toc: .kotowari/toc.yaml\n",
-            language_config(JA_EN)
-        ),
-    );
-    write(tmp.path(), "overview/a.md", &overview_data("題名"));
-    write(tmp.path(), "overview/a.en.md", &overview_data("Title"));
-    for args in [vec!["check"], vec!["status"], vec!["overview", "build"]] {
-        let output = assert_cmd::Command::cargo_bin("kotowari")
-            .unwrap()
-            .args(args)
-            .current_dir(tmp.path())
-            .output()
-            .unwrap();
-        assert_eq!(output.status.code(), Some(2), "{output:?}");
-        assert_eq!(
-            String::from_utf8_lossy(&output.stderr).lines().next(),
-            Some("config error: overview/a.en.md: matched by both overview.files and tests.files"),
-            "{output:?}"
-        );
-    }
-    assert!(!tmp.path().join(".kotowari/cache/overview").exists());
 }

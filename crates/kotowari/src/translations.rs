@@ -67,7 +67,7 @@ impl Assembly {
             firsts.insert(first);
         }
         for first in firsts {
-            if !self.pairs.contains(&first) {
+            if self.pairs.get(&first).is_none() {
                 let pair = self.read(place, &first)?;
                 self.pairs.insert(pair);
             }

@@ -523,9 +523,7 @@ impl<'de> serde::Deserialize<'de> for TocNode {
 /// `目次の群`の入れ子と、名前の項目の並びと、各`目次の群`の "note" の有無。行はその項目の行
 fn toc(text: &str) -> Vec<Element> {
     fn walk(node: &serde_saphyr::Spanned<TocNode>, out: &mut Vec<Element>) {
-        let line = usize::try_from(node.referenced.line())
-            .ok()
-            .filter(|line| *line > 0);
+        let line = usize::try_from(node.referenced.line()).ok();
         match &node.value {
             TocNode::Name(name) => out.push(element(format!("name {name}"), line)),
             TocNode::Group { note, items } => {

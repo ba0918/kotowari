@@ -76,12 +76,12 @@
         {
           "path": "crates/kotowari-core/src/translations.rs",
           "before": null,
-          "after": "sha256:7e82a6523e4b35984310a6eb332f50ecf36815e64c7ae9ea410ed95a5e1167df"
+          "after": "sha256:7a459c694a9898f587d9ed890b83ed982a6c0237ac64a39063b149aa81d8bb1a"
         },
         {
           "path": "crates/kotowari-core/src/skeleton.rs",
           "before": null,
-          "after": "sha256:be7ad497fdce0def86b492de43562ef7dc59468d506c66ab77be5f72138b9cc9"
+          "after": "sha256:01df14fceaf55b3a78f1d928577788197e7c25b78a5e51155b1249900fac71a5"
         },
         {
           "path": "crates/kotowari-core/src/inputs.rs",
@@ -101,12 +101,12 @@
         {
           "path": "crates/kotowari-core/tests/translations.rs",
           "before": null,
-          "after": "sha256:36ee99e2519704a50b9c711a993af32e3804986298e7384288a9709c2a5ad2aa"
+          "after": "sha256:f2e265411290119117d60be9e88caf8707bbb8a7a64e874ddf466a33677a1f41"
         },
         {
           "path": "crates/kotowari/src/translations.rs",
           "before": null,
-          "after": "sha256:e3184a8f477a3b8ab71b9e1d7cdeb17718240f77af96e4511280e8115733845c"
+          "after": "sha256:cdea35ca1b3d5a34c5e17022a4f6fd0799f88bf9bc728d504a507488dfe952f2"
         },
         {
           "path": "crates/kotowari/src/acquisition.rs",
@@ -131,7 +131,7 @@
         {
           "path": "crates/kotowari/src/overview.rs",
           "before": "sha256:2ef700bb1560d62b687005c8d750fbccd95f2efdaa9a382d5714dc1ba8a306b5",
-          "after": "sha256:773b19ad67fd3663da0514331adda8349515fd114bd318e320e36c2c3b930d8c"
+          "after": "sha256:af77478ddf980a1cbe8f7f8dcfd3f469ec0fa838516ca321ab4876c0977fb62d"
         },
         {
           "path": "src/cli/list.rs",
@@ -151,7 +151,7 @@
         {
           "path": "tests/step21_translations.rs",
           "before": null,
-          "after": "sha256:3183c1b359ca814a97a52b4e8b3a81635d2e14bea3b7b582f5626f8f3269fc01"
+          "after": "sha256:5fce6ba7fd6ed371ec6f4395d6cb948aadf0c34b5ce240112353bec241c2e776"
         },
         {
           "path": "crates/kotowari-overview/src/lib.rs",
@@ -195,8 +195,16 @@
           "sha256": "sha256:78f0491bf74dfab5aa9be37bc2fb79c3f610478ab7e7fdd4081c5ed9e169f4e8"
         },
         {
+          "path": "docs/ir/core/overview-data.md",
+          "sha256": "sha256:5f3c0c7da46279fd542fa056101cbda092b306f12aaaf72d5036999f8966a7e5"
+        },
+        {
           "path": "docs/ir/core/overview-languages.md",
           "sha256": "sha256:c84053e6bb7040e2b23ca76430a079569bb2ceb84066d6bd2d82e12956d45da6"
+        },
+        {
+          "path": "docs/ir/core/overview-output.md",
+          "sha256": "sha256:c4cacb6d55b900915849007a9dacb7f3f0d77745ea54879529383fd0d9d2d57b"
         },
         {
           "path": "docs/ir/core/overview-toc.md",
@@ -212,7 +220,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "独立に確認した。translations.rs と skeleton.rs が、側の見分け（先頭の言語の接尾辞と一覧に無いタグは名前の一部、i18n.yaml は側でない。A31、A39）、欠けた側、一致の記録の形（missing、yaml、keys、value の順）、git の blob hash、古い側（記録が不正なら出さない）、TBL-core-044 の骨組みの比較、切り替えの行、リンクの検査を決め、REQ-core-334 から REQ-core-349 と REQ-core-342、343 の分担（項目や ID は先頭の言語の側だけ、文の検査は全部の側）と一致する。kotowari クレートは名前で側を探し、list は言語が2つ以上のときだけ translations を出し（A29、A37）、overview build と serve は欠けた側と骨組みの食い違いで1つも書かずに止まる（D2）。tests/step21_translations.rs と crates/kotowari-core/tests/translations.rs と tests/step10_list.rs の期待を EX-core-512 から 535 と REQ-core-334 から 349 に照らして確かめ、既存の overview のテストは参照の本文が任意になった型の変更に追従しただけで期待は変えていない。後の修正（判断の記録を対にしない、ガイドの対へのリンク、GFM の逃がした | 、言語タグの置き場がリンクの場合）は D2 と D3 の範囲内。IR の追加は委任の範囲で、承認済みの要求は変えていない。仕様の穴と食い違いは無い。",
+      "reason": "Independently reconciled the complete 22-file localization-pairs entry against the branch-wide base and staged content. Acquisition remains in kotowari, while core computes pair classification, blob hashes, skeletons and findings from memory. Primary IR supplies identities and fingerprints; translated IR supplies prose checks and reference bodies. The list ordering, side naming, record validation, skeleton parts, switchers and language-specific overview behavior follow the associated localization IR and decisions. The repair resolves reference links and images through parser-normalized identifiers with first-definition-wins and preserves both usage and definition locations in source order (REQ-core-344 through REQ-core-348). Observed the original link regressions fail before the repair and pass afterward. Overview overlap validation now checks collected translated paths before pair filtering and precedes TOC reads, preserving REQ-core-280 and REQ-core-326. Observed the overlap regression fail before and pass after, and the final 39-test translation integration suite pass. The added regressions cover user-produced invalid tags, escaped table cells, missing and changed headings, translatable part fields, terminal switchers, three languages, images, TOC text exclusions, colons in relative queries, and linked or inaccessible cache directories. Assertions concern declared behavior; the exact overlap diagnostic is specified by REQ-core-280. The redundant contains wrapper removal and listing through the blob accessor preserve values. Removing the positive-line filter preserves direct Spanned YAML deserialization, where successful nodes retain positive source locations; this path does not use generic serde adapters that discard spans. Reviewed all associated IR, including overview data, output, commands and TOC rules. No new product requirement or unresolved specification conflict was found. Full-workspace and CI results remain separate integration evidence.",
       "requirements": [
         "REQ-core-334",
         "REQ-core-336",
@@ -244,7 +252,12 @@
         "REQ-core-293",
         "REQ-core-294",
         "REQ-core-307",
-        "REQ-core-308"
+        "REQ-core-308",
+        "REQ-core-280",
+        "REQ-core-326",
+        "REQ-core-288",
+        "REQ-core-296",
+        "REQ-core-324"
       ],
       "decisions": [
         "docs/decision/records/2026-10-05-localization.md#A11",
@@ -462,7 +475,7 @@
         {
           "path": "CHANGELOG.md",
           "before": "sha256:4d3b91ab4eb2ee6ee701d40fc073a878111f44546cb14f3d785486c0429aa0b3",
-          "after": "sha256:c60c5f9d6748bfb2e6ccc5e2c0b6216138a16aed1940be8a556092b36e640378"
+          "after": "sha256:95afa5ad3430f530efb897bde2adba3ca41f2d9713a8849c469eedd824e05cef"
         }
       ],
       "ir": [
@@ -492,7 +505,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "独立に確認した。ガイド、スキル、CHANGELOG は IR の実際の振る舞いを写している（languages と labels と17鍵、対の置き方と一致の記録、7つの新しい指摘、list の translations と置き場の辿り、言語ごとの全体像と cache の置き場の誤り）。REQ-core-350 の how_to_verify の4点（同じ変更で全部の側を直す、記録の hash から前の文を取り出して差分だけ訳し取り出せなければ全文から訳す、list の translations で記録を書き直す、英語以外の言語を足すときは labels.<タグ> を書く）は references/translations.md の手順に書かれている。このリポジトリ自身の文書は訳さず languages も設定しないのは A13 のとおり。ガイドの印は check が guide_stale と invalid_marker を出さないことで確認した。仕様の穴と食い違いは無い。",
+      "reason": "独立に確認した。ガイド、スキル、CHANGELOG は IR の実際の振る舞いを写している（languages と labels と17鍵、対の置き方と一致の記録、7つの新しい指摘、list の translations と置き場の辿り、言語ごとの全体像と cache の置き場の誤り）。REQ-core-350 の how_to_verify の4点（同じ変更で全部の側を直す、記録の hash から前の文を取り出して差分だけ訳し取り出せなければ全文から訳す、list の translations で記録を書き直す、英語以外の言語を足すときは labels.<タグ> を書く）は references/translations.md の手順に書かれている。このリポジトリ自身の文書は訳さず languages も設定しないのは A13 のとおり。ガイドの印は check が guide_stale と invalid_marker を出さないことで確認した。仕様の穴と食い違いは無い。 Independently checked the final changelog addition against the repaired behavior: reference-link and image usage checks, destination-order comparison, and translated-overview/test glob overlap rejection. Reconciled all files and IR in this entry against base and staged Git identities; the other documentation is unchanged by this repair.",
       "requirements": [
         "REQ-core-350",
         "REQ-core-155",
@@ -507,6 +520,33 @@
         "docs/decision/records/2026-10-05-localization.md#A40",
         "docs/decision/records/2026-10-05-localization.md#A13"
       ],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "localization-equivalence-review",
+      "base": "25008aed476ffedb4f43711ac7b54e682376e164",
+      "role": "reviewer",
+      "files": [
+        {
+          "path": ".kotowari/equivalents.yaml",
+          "before": "sha256:c2be438808ff25aed2005190d3ce1c37d73ef21e99d8075bf0b3a03b64af7370",
+          "after": "sha256:77b5d5b7867bee91f7099c5fa7106ba810c4d92402c049e58c01e5ba5b91db07"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/equivalents.md",
+          "sha256": "sha256:4257454b86d5fbc112a460b1667ce74a0c0fddd1676312070c4b0f19543c55c6"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "Independently challenged the single new equivalence entry. Replacing TocNode Visitor::expecting with an empty successful formatter changes only a serde diagnostic. skeleton::toc discards every deserialization error and yields an empty skeleton; a separate overview TOC parser produces user-visible YAML/schema findings. Examined empty input, wrong YAML types and alias paths for an observable diagnostic route and found none. This mutation cannot change command findings, stdout, stderr or exit code, and a test of the discarded private wording would not measure specified behavior. The entry matches the exact file, mutation description and current source text and contains the five required string fields with a nonblank rationale (REQ-core-141 and REQ-core-143). This judgment does not cover other surviving mutations.",
+      "requirements": [
+        "REQ-core-141",
+        "REQ-core-143"
+      ],
+      "decisions": [],
       "handoff": null,
       "gaps": []
     }

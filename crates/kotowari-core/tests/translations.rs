@@ -98,6 +98,147 @@ fn req_core_335_an_empty_malformed_or_repeated_tag_stops() {
     );
 }
 
+// @kotowari[REQ-core-335, REQ-core-352]
+#[test]
+fn req_core_335_invalid_tags_stop_even_with_complete_labels() {
+    for tag in ["\"\"", "en_us", "\"e n\""] {
+        let yaml = format!("languages: [{tag}]\nlabels:\n{}", complete_labels(tag, "X"));
+        assert!(
+            matches!(Config::parse(&yaml), Err(crate::StopReason::ConfigError(_))),
+            "{yaml}"
+        );
+    }
+}
+
+// @kotowari[TBL-core-044]
+#[test]
+fn tbl_core_044_table_cells_preserve_escaped_pipes_and_source_boundaries() {
+    let glossary = "| Term | Meaning | Source |\n|---|---|---|\n| a | b | r.md#A1 |\n";
+    assert_eq!(
+        mismatch(
+            Kind::Glossary,
+            glossary,
+            &glossary.replace("| a | b |", "a | b |")
+        ),
+        None
+    );
+    assert_eq!(
+        mismatch(
+            Kind::Glossary,
+            glossary,
+            &glossary.replace("| r.md", "|r.md")
+        ),
+        None
+    );
+    for source in [r"r.md#A1\|", r"r.md#A1\\", r"r.md#A1\\\|"] {
+        let with_border =
+            format!("| Term | Meaning | Source |\n|---|---|---|\n| a | b | {source}|\n");
+        let without_border =
+            format!("| Term | Meaning | Source |\n|---|---|---|\n| x | y | {source}\n");
+        assert_eq!(
+            mismatch(Kind::Glossary, &with_border, &without_border),
+            None,
+            "{source}"
+        );
+        assert_eq!(
+            mismatch(
+                Kind::Glossary,
+                &with_border,
+                &without_border.replace("A1", "A2")
+            ),
+            Some(("glossary", Some(3)))
+        );
+    }
+}
+
+// @kotowari[REQ-core-345, TBL-core-044]
+#[test]
+fn req_core_345_absent_headings_have_no_line_but_changed_headings_have_their_line() {
+    let first = "# Guide\n\n## One\n\n### Two\n\n#### Three\n";
+    assert_eq!(
+        mismatch(Kind::Guide, first, "# Guide\n\n### Two\n\n#### Three\n"),
+        Some(("heading", None))
+    );
+    assert_eq!(
+        mismatch(Kind::Guide, first, "# Guide\n\n##### Other\n\n#### Three\n"),
+        Some(("heading", Some(3)))
+    );
+    assert_eq!(
+        mismatch(
+            Kind::Guide,
+            first,
+            "# Guide\n\n### Other\n\n### Two\n\n#### Three\n"
+        ),
+        Some(("heading", Some(3)))
+    );
+}
+
+// @kotowari[TBL-core-044, TBL-core-045]
+#[test]
+fn tbl_core_045_overview_sentences_translate_but_keys_values_and_lengths_remain() {
+    for (kind, yaml, sentence_fields) in [
+        (
+            "cards",
+            "cards:\n  - title: sentence\n    items: [sentence]\n    refs: [REQ-001]\n",
+            &["title", "items"][..],
+        ),
+        (
+            "compare",
+            "items:\n  - before: sentence\n    after: sentence\n    why: sentence\n    refs: [REQ-001]\n",
+            &["before", "after", "why"][..],
+        ),
+        (
+            "decisions",
+            "items:\n  - text: sentence\n    by: sentence\n    refs: [REQ-001]\n",
+            &["text", "by"][..],
+        ),
+        (
+            "quiz",
+            "items:\n  - q: sentence\n    a: sentence\n    refs: [REQ-001]\n",
+            &["q", "a"][..],
+        ),
+    ] {
+        let first = format!("# Overview\n\n```view {kind}\n{yaml}```\n");
+        assert_eq!(
+            mismatch(
+                Kind::OverviewData,
+                &first,
+                &first.replace("sentence", "translated")
+            ),
+            None,
+            "{kind}"
+        );
+        for other in [
+            first.replace("REQ-001", "REQ-002"),
+            first.replace("[REQ-001]", "[REQ-001, REQ-002]"),
+        ] {
+            assert_eq!(
+                mismatch(Kind::OverviewData, &first, &other),
+                Some(("part", Some(3))),
+                "{kind}"
+            );
+        }
+        for field in sentence_fields {
+            let other = first.replace(&format!("{field}:"), "other:");
+            assert_eq!(
+                mismatch(Kind::OverviewData, &first, &other),
+                Some(("part", Some(3))),
+                "{kind}.{field}"
+            );
+        }
+        if kind == "cards" {
+            assert_eq!(
+                mismatch(
+                    Kind::OverviewData,
+                    &first,
+                    &first.replace("[sentence]", "[sentence, translated]")
+                ),
+                Some(("part", Some(3)))
+            );
+        }
+    }
+}
+
 // @kotowari[REQ-core-352]
 #[test]
 fn req_core_352_unknown_keys_and_a_doubled_number_placeholder_stop() {
@@ -407,7 +548,6 @@ fn ja_en() -> (Config, Vec<String>) {
     (config, languages)
 }
 
-/// 種類ごとの "line"
 // @kotowari[REQ-core-344, REQ-core-345, REQ-core-347, TBL-core-044]
 #[test]
 fn reference_links_preserve_the_order_of_their_resolved_destinations() {
@@ -468,6 +608,7 @@ fn reference_links_and_images_are_checked_at_the_usage_and_definition_lines() {
     );
 }
 
+/// 種類ごとの "line"
 fn lines_of(findings: &[crate::Finding], kind: &str) -> Vec<Option<usize>> {
     findings
         .iter()
@@ -609,5 +750,152 @@ fn tbl_core_044_the_switcher_line_is_not_in_the_skeleton() {
     assert!(
         lines_of(&findings, "translation_switcher_invalid").is_empty(),
         "{findings:?}"
+    );
+}
+
+// @kotowari[REQ-core-346, TBL-core-044]
+#[test]
+fn req_core_346_a_switcher_at_end_of_file_needs_no_final_newline() {
+    use crate::translations::{Pairs, Place};
+    let (config, languages) = ja_en();
+    let mut pairs = Pairs::default();
+    pairs.insert(pair_of(
+        Place::Guide,
+        "g/a.md",
+        &languages,
+        &[
+            ("g/a.md", "# A\n\nJlanguage_name | [English](a.en.md)"),
+            ("g/a.en.md", "# A\n\n[Jlanguage_name](a.md) | English"),
+        ],
+    ));
+    let findings = pairs.findings(&config);
+    for kind in [
+        "translation_switcher_invalid",
+        "translation_structure_mismatch",
+        "link_language_mismatch",
+    ] {
+        assert!(lines_of(&findings, kind).is_empty(), "{findings:?}");
+    }
+}
+
+// @kotowari[REQ-core-346]
+#[test]
+fn req_core_346_three_language_switchers_do_not_count_as_document_scope() {
+    use crate::{CheckInputs, Inspection, SourceText, translations::Place};
+    let config = Config::parse(&format!(
+        "languages: [ja, en, fr]\nlabels:\n{}{}",
+        complete_labels("ja", "J"),
+        complete_labels("fr", "F")
+    ))
+    .unwrap();
+    let texts = [
+        (
+            "docs/ir/a.md",
+            "# Topic\n\nJlanguage_name | [English](a.en.md) | [Flanguage_name](a.fr.md)\n\nScope.\n",
+        ),
+        (
+            "docs/ir/a.en.md",
+            "# Topic\n\n[Jlanguage_name](a.md) | English | [Flanguage_name](a.fr.md)\n\nScope.\n",
+        ),
+        (
+            "docs/ir/a.fr.md",
+            "# Topic\n\n[Jlanguage_name](a.md) | [English](a.en.md) | Flanguage_name\n\nScope.\n",
+        ),
+    ];
+    for omit_scope in [false, true] {
+        let mut inputs = CheckInputs::default();
+        inputs.read.config = config.clone();
+        inputs.read.config.tests.files.clear();
+        let first = if omit_scope {
+            texts[0].1.replace("Scope.", "")
+        } else {
+            texts[0].1.to_string()
+        };
+        inputs.read.ir = Some(vec![SourceText::new(texts[0].0, &first).unwrap()]);
+        inputs.read.records = Some(vec![]);
+        inputs.read.adr = Some(vec![]);
+        inputs
+            .translations
+            .insert(pair_of(Place::Ir, texts[0].0, &config.languages(), &texts));
+        let inspection = Inspection::build(inputs).unwrap();
+        let lines = lines_of(inspection.check().findings(), "missing_scope");
+        let expected = if omit_scope { vec![None] } else { vec![] };
+        assert_eq!(lines, expected, "{:?}", inspection.check().findings());
+    }
+}
+
+// @kotowari[REQ-core-347, REQ-core-348, REQ-core-349, TBL-core-044]
+#[test]
+fn req_core_347_inline_images_have_checked_and_compared_destinations() {
+    use crate::translations::{Pairs, Place};
+    let (config, languages) = ja_en();
+    let mut pairs = Pairs::default();
+    pairs.insert(pair_of(
+        Place::Guide,
+        "g/b.md",
+        &languages,
+        &[("g/b.md", "# B\n"), ("g/b.en.md", "# B\n")],
+    ));
+    pairs.insert(pair_of(
+        Place::Guide,
+        "g/a.md",
+        &languages,
+        &[
+            ("g/a.md", "# A\n\n![one](b.md)\n"),
+            (
+                "g/a.en.md",
+                "# A\n\n![one](b.md)\n\n![two](../docs/decision/records/r.md)\n",
+            ),
+        ],
+    ));
+    let findings = pairs.findings(&config);
+    assert_eq!(lines_of(&findings, "link_language_mismatch"), [Some(3)]);
+    assert_eq!(lines_of(&findings, "link_to_record"), [Some(5)]);
+    assert_eq!(
+        lines_of(&findings, "translation_structure_mismatch"),
+        [None]
+    );
+}
+
+// @kotowari[REQ-core-347]
+#[test]
+fn req_core_347_toc_titles_are_not_scanned_as_markdown_links() {
+    use crate::translations::{Pairs, Place};
+    let (config, languages) = ja_en();
+    let mut pairs = Pairs::default();
+    let text = "title: \"[r](../docs/decision/records/r.md)\"\nitems: [a]\n";
+    pairs.insert(pair_of(
+        Place::Toc,
+        "g/toc.yaml",
+        &languages,
+        &[("g/toc.yaml", text), ("g/toc.en.yaml", text)],
+    ));
+    assert!(lines_of(&pairs.findings(&config), "link_to_record").is_empty());
+}
+
+// @kotowari[REQ-core-347, REQ-core-349]
+#[test]
+fn req_core_347_a_colon_in_a_relative_link_query_is_not_a_uri_scheme() {
+    use crate::translations::{Pairs, Place};
+    let (config, languages) = ja_en();
+    let mut pairs = Pairs::default();
+    pairs.insert(pair_of(
+        Place::Guide,
+        "a.md",
+        &languages,
+        &[
+            ("a.md", "# A\n\n[r](docs/decision/records/r.md?mode=a:b)\n"),
+            ("a.en.md", "# A\n"),
+        ],
+    ));
+    let findings = pairs.findings(&config);
+    assert_eq!(lines_of(&findings, "link_to_record"), [Some(3)]);
+    assert_eq!(
+        findings
+            .iter()
+            .find(|finding| finding.kind() == "link_to_record")
+            .unwrap()
+            .detail(),
+        "docs/decision/records/r.md?mode=a:b"
     );
 }

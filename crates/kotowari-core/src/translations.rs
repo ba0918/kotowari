@@ -611,9 +611,6 @@ impl Pairs {
     pub fn insert(&mut self, pair: Pair) {
         self.0.entry(pair.path().to_string()).or_insert(pair);
     }
-    pub fn contains(&self, first: &str) -> bool {
-        self.0.contains_key(first)
-    }
     pub fn get(&self, first: &str) -> Option<&Pair> {
         self.0.get(first)
     }
@@ -637,7 +634,10 @@ impl Pairs {
                     .map(|side| TranslationSide {
                         language: side.language.clone(),
                         path: side.path.clone(),
-                        blob: side.content.as_ref().map(|content| content.blob.clone()),
+                        blob: side
+                            .content
+                            .as_ref()
+                            .map(|content| content.blob().to_string()),
                     })
                     .collect(),
             })
