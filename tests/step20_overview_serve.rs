@@ -69,19 +69,36 @@ fn kotowari() -> Command {
     Command::new(assert_cmd::cargo::cargo_bin("kotowari"))
 }
 
-/// serve を起動し、標準出力の1行目（URL）を読む
-fn serve(tmp: &Path, port: u16) -> (Child, BufReader<std::process::ChildStdout>, String) {
-    let mut child = kotowari()
-        .args(["overview", "serve", "--port", &port.to_string()])
-        .current_dir(tmp)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap();
-    let mut stdout = BufReader::new(child.stdout.take().unwrap());
-    let mut line = String::new();
-    stdout.read_line(&mut line).unwrap();
-    (child, stdout, line)
+/// 空いているポートで serve を起動し、標準出力の1行目（URL）とポートを返す。
+/// 空いているポートを離してから serve が取るまでの間に、並行するテストの接続が同じポートを
+/// 使うことがある。そのときは port error で止まるので、別のポートで起動し直す
+fn serve(tmp: &Path) -> (Child, BufReader<std::process::ChildStdout>, String, u16) {
+    for _ in 0..5 {
+        let port = free_port();
+        let mut child = kotowari()
+            .args(["overview", "serve", "--port", &port.to_string()])
+            .current_dir(tmp)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let mut stdout = BufReader::new(child.stdout.take().unwrap());
+        let mut line = String::new();
+        stdout.read_line(&mut line).unwrap();
+        if !line.is_empty() {
+            return (child, stdout, line, port);
+        }
+        let mut stderr = String::new();
+        child
+            .stderr
+            .take()
+            .unwrap()
+            .read_to_string(&mut stderr)
+            .unwrap();
+        child.wait().unwrap();
+        assert!(stderr.starts_with("port error: "), "{stderr}");
+    }
+    panic!("no free port for serve");
 }
 
 /// 生の道で要求を送り、状態の行と頭と本体を返す
@@ -133,8 +150,7 @@ fn content_type(head: &str) -> Option<String> {
 #[test]
 fn ex_core_478_serve_gives_only_the_files_in_the_cache_and_ends_with_0_on_interrupt() {
     let tmp = make_project(OVERVIEW, true);
-    let port = free_port();
-    let (mut child, mut stdout, line) = serve(tmp.path(), port);
+    let (mut child, mut stdout, line, port) = serve(tmp.path());
     assert_eq!(line, format!("http://127.0.0.1:{port}/\n"));
     let cache = tmp.path().join(".kotowari/cache/overview");
     let (status, head, body) = get(port, "/");
@@ -173,8 +189,7 @@ fn ex_core_478_serve_gives_only_the_files_in_the_cache_and_ends_with_0_on_interr
 #[test]
 fn req_core_299_links_out_of_the_cache_directories_and_absolute_paths_are_404() {
     let tmp = make_project(OVERVIEW, true);
-    let port = free_port();
-    let (mut child, _stdout, _) = serve(tmp.path(), port);
+    let (mut child, _stdout, _, port) = serve(tmp.path());
     let cache = tmp.path().join(".kotowari/cache/overview");
     std::os::unix::fs::symlink(
         tmp.path().join(".kotowari/config.yaml"),
@@ -211,8 +226,7 @@ fn req_core_299_a_percent_encoded_page_name_is_decoded_to_the_file_in_the_cache(
         ".kotowari/toc.yaml",
         "title: 目次\nitems: ['変更 a']\n",
     );
-    let port = free_port();
-    let (mut child, _stdout, _) = serve(tmp.path(), port);
+    let (mut child, _stdout, _, port) = serve(tmp.path());
     let cache = tmp.path().join(".kotowari/cache/overview");
     // 一覧のページのリンクは、名前の UTF-8 のバイトをパーセント符号にした相対パスである
     let encoded: String = "変更 a.html"
@@ -342,8 +356,7 @@ fn req_core_294_serve_on_toc_errors_stops_before_binding() {
 #[test]
 fn ex_core_543_serve_answers_only_local_hosts() {
     let tmp = make_project(OVERVIEW, true);
-    let port = free_port();
-    let (mut child, mut stdout, _) = serve(tmp.path(), port);
+    let (mut child, mut stdout, _, port) = serve(tmp.path());
     let index = std::fs::read(tmp.path().join(".kotowari/cache/overview/index.html")).unwrap();
     for host in [format!("127.0.0.1:{port}"), format!("LOCALHOST:{port}")] {
         let (status, _, body) = get_with_host(port, "/", Some(&host));
