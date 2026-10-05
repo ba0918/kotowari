@@ -236,12 +236,35 @@ impl<'a> Markdown<'a> {
     }
 }
 
-/// 表の行を、先頭と末尾の "|" を除いて "|" で分けたセル
+/// 表の行を、先頭と末尾の "|" を除いて "|" で分けたセル。GFM のとおり、"\" に続く文字は
+/// 分ける "|" にならない（"\|" はセルの中の "|"）
 fn split_row(line: &str) -> Vec<&str> {
     let trimmed = line.trim();
     let trimmed = trimmed.strip_prefix('|').unwrap_or(trimmed);
-    let trimmed = trimmed.strip_suffix('|').unwrap_or(trimmed);
-    trimmed.split('|').collect()
+    let trimmed = match trimmed.strip_suffix('|') {
+        Some(rest) if !ends_with_escape(rest) => rest,
+        _ => trimmed,
+    };
+    let mut cells = Vec::new();
+    let mut start = 0;
+    let mut escaped = false;
+    for (index, c) in trimmed.char_indices() {
+        if escaped {
+            escaped = false;
+        } else if c == '\\' {
+            escaped = true;
+        } else if c == '|' {
+            cells.push(&trimmed[start..index]);
+            start = index + 1;
+        }
+    }
+    cells.push(&trimmed[start..]);
+    cells
+}
+
+/// 末尾が対になっていない "\" か（そのあとの文字は逃がされる）
+fn ends_with_escape(text: &str) -> bool {
+    text.bytes().rev().take_while(|b| *b == b'\\').count() % 2 == 1
 }
 
 /// TBL-core-045: 部品の種類ごとの文の欄

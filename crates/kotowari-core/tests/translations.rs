@@ -210,7 +210,8 @@ const GLOSSARY: &str = "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|
 // @kotowari[TBL-core-044]
 #[test]
 fn tbl_core_044_glossaries_compare_the_rows_and_their_sources() {
-    let sentences = GLOSSARY.replace("| a | m |", "| x | y |");
+    // GFM の "\|" はセルの中の文字で、列を分けない
+    let sentences = GLOSSARY.replace("| a | m |", "| x | y \\| z |");
     assert_parts(
         Kind::Glossary,
         GLOSSARY,
@@ -253,7 +254,7 @@ fn tbl_core_044_guides_compare_headings_marks_code_and_tables() {
     let sentences = GUIDE
         .replace("Text.", "Other text.")
         .replace("## Use", "## Usage")
-        .replace("| c | d |", "| e | f |");
+        .replace("| c | d |", "| e \\| x | f |");
     assert_parts(
         Kind::Guide,
         GUIDE,
