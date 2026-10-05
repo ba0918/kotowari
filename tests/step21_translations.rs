@@ -377,3 +377,201 @@ fn req_core_337_a_pair_read_from_two_places_is_reported_once_and_sides_are_found
         ["guides/a.en.md"]
     );
 }
+
+/// 用語 "term" を持つか持たない用語集
+fn glossary(with_term: bool) -> String {
+    let mut text = "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n".to_string();
+    if with_term {
+        text.push_str("| term | meaning | docs/decision/records/r.md#A1 |\n");
+    }
+    text
+}
+
+/// EX-core-522 の文書。英語の側だけが用語 "term" を使う
+fn ir_pair_with_term(tmp: &Path, term_in_english: bool) {
+    make_project(tmp, JA_EN, "");
+    write(tmp, "docs/ir/a.md", &topic("REQ-001", "文。"));
+    write(tmp, "docs/ir/a.en.md", &topic("REQ-001", "Uses `term`."));
+    write(tmp, "docs/ir/CONTEXT.md", &glossary(!term_in_english));
+    write(tmp, "docs/ir/CONTEXT.en.md", &glossary(term_in_english));
+}
+
+// @kotowari[REQ-core-342, EX-core-522]
+#[test]
+fn ex_core_522_the_english_side_is_not_counted_and_takes_terms_from_the_english_glossary() {
+    let tmp = TempDir::new().unwrap();
+    ir_pair_with_term(tmp.path(), true);
+    let report = check(tmp.path());
+    assert!(findings(&report, "duplicate_id").is_empty(), "{report}");
+    assert!(findings(&report, "unknown_term").is_empty(), "{report}");
+    let (_, list) = run(tmp.path(), &["list"]);
+    let list: Value = serde_json::from_str(&list).unwrap();
+    let items: Vec<(&str, &str)> = list["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| (item["id"].as_str().unwrap(), item["path"].as_str().unwrap()))
+        .collect();
+    assert_eq!(items, [("REQ-001", "docs/ir/a.md")]);
+    // "files" と "lines" にはすべての側を数える
+    let lines = |name: &str| {
+        std::fs::read_to_string(tmp.path().join("docs/ir").join(name))
+            .unwrap()
+            .lines()
+            .count()
+    };
+    let total: usize = ["a.md", "a.en.md", "CONTEXT.md", "CONTEXT.en.md"]
+        .into_iter()
+        .map(lines)
+        .sum();
+    assert_eq!(report["files"], 4);
+    assert_eq!(report["lines"], total);
+    let (_, status) = run(tmp.path(), &["status", "--format", "json"]);
+    let status: Value = serde_json::from_str(&status).unwrap();
+    assert_eq!(status["documents"]["files"], 4);
+    assert_eq!(status["documents"]["lines"], total);
+}
+
+// @kotowari[EX-core-523]
+#[test]
+fn ex_core_523_a_term_only_in_the_japanese_glossary_is_unknown_on_the_english_side() {
+    let tmp = TempDir::new().unwrap();
+    ir_pair_with_term(tmp.path(), false);
+    let report = check(tmp.path());
+    assert_eq!(
+        paths_and_details(&report, "unknown_term"),
+        [pair("docs/ir/a.en.md", "term")]
+    );
+}
+
+// @kotowari[REQ-core-342]
+#[test]
+fn req_core_342_text_and_glossary_checks_run_on_the_english_side_but_item_checks_do_not() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), JA_EN, "");
+    write(tmp.path(), "docs/ir/a.md", &topic("REQ-001", "文。"));
+    // 閉じないバッククォートと曖昧語は英語の側にも出る。ID の参照（unresolved_reference）は出ない
+    write(
+        tmp.path(),
+        "docs/ir/a.en.md",
+        &topic("REQ-001", "Uses `term and など and `REQ-999`."),
+    );
+    write(tmp.path(), "docs/ir/CONTEXT.md", &glossary(false));
+    // 英語の用語集の題名と崩れた行
+    write(
+        tmp.path(),
+        "docs/ir/CONTEXT.en.md",
+        "# Terms\n\n| Term | Meaning | Source |\n|---|---|---|\n| broken |\n",
+    );
+    let report = check(tmp.path());
+    let on = |kind: &str| {
+        findings(&report, kind)
+            .into_iter()
+            .map(|(path, _, _)| path)
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(on("unclosed_backtick"), ["docs/ir/a.en.md"]);
+    assert_eq!(on("vague_word"), ["docs/ir/a.en.md"]);
+    assert_eq!(on("glossary_title_invalid"), ["docs/ir/CONTEXT.en.md"]);
+    assert_eq!(on("invalid_glossary_row"), ["docs/ir/CONTEXT.en.md"]);
+    assert!(on("unresolved_reference").is_empty(), "{report}");
+}
+
+// @kotowari[REQ-core-343, EX-core-524]
+#[test]
+fn ex_core_524_a_stale_guide_mark_is_reported_on_every_side() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), JA_EN, GUIDES);
+    write(tmp.path(), "docs/ir/a.md", &topic("REQ-001", "文。"));
+    write(tmp.path(), "docs/ir/a.en.md", &topic("REQ-001", "Text."));
+    let guide = "# G\n\n<!-- @kotowari[REQ-001:00000000] -->\n";
+    write(tmp.path(), "guides/a.md", guide);
+    write(tmp.path(), "guides/a.en.md", guide);
+    let report = check(tmp.path());
+    assert_eq!(
+        findings(&report, "guide_stale")
+            .into_iter()
+            .map(|(path, _, _)| path)
+            .collect::<Vec<_>>(),
+        ["guides/a.en.md", "guides/a.md"]
+    );
+}
+
+const OVERVIEW: &str =
+    "overview:\n  files:\n    - \".kotowari/overview/*.md\"\n  toc: .kotowari/toc.yaml\n";
+
+/// 正しい全体像の元データ
+fn overview_data(title: &str) -> String {
+    format!(
+        "---\nir:\n  - docs/ir/a.md\n---\n\n# {title}\n\n```view lead\nconclusion: {title}\n```\n\n## {title}\n\n{title}\n"
+    )
+}
+
+/// IR の対と、全体像の元データの対と目次の対
+fn overview_pairs(tmp: &Path) {
+    make_project(tmp, JA_EN, OVERVIEW);
+    write(tmp, "docs/ir/a.md", &topic("REQ-001", "文。"));
+    write(tmp, "docs/ir/a.en.md", &topic("REQ-001", "Text."));
+    write(tmp, ".kotowari/overview/a.md", &overview_data("題名"));
+    write(tmp, ".kotowari/overview/a.en.md", &overview_data("Title"));
+    write(tmp, ".kotowari/toc.yaml", "title: 目次\nitems:\n  - a\n");
+    write(
+        tmp,
+        ".kotowari/toc.en.yaml",
+        "title: Contents\nitems:\n  - a\n",
+    );
+}
+
+// @kotowari[EX-core-525]
+#[test]
+fn ex_core_525_the_english_overview_side_is_not_another_page() {
+    let tmp = TempDir::new().unwrap();
+    overview_pairs(tmp.path());
+    let report = check(tmp.path());
+    for kind in [
+        "overview_name_conflict",
+        "overview_toc_page_missing",
+        "overview_ir_shared",
+    ] {
+        assert!(findings(&report, kind).is_empty(), "{kind}: {report}");
+    }
+}
+
+// @kotowari[REQ-core-343]
+#[test]
+fn req_core_343_overview_and_contents_forms_are_checked_on_every_side() {
+    let tmp = TempDir::new().unwrap();
+    overview_pairs(tmp.path());
+    write(
+        tmp.path(),
+        ".kotowari/overview/a.en.md",
+        "---\nir:\n  - docs/ir/a.md\n---\n\n# Title\n\n## Title\n\nText.\n",
+    );
+    write(tmp.path(), ".kotowari/toc.en.yaml", "items: []\n");
+    let report = check(tmp.path());
+    assert_eq!(
+        paths_and_details(&report, "overview_lead_missing"),
+        [pair(".kotowari/overview/a.en.md", "a.en.md")]
+    );
+    assert!(
+        findings(&report, "overview_toc_invalid")
+            .iter()
+            .all(|(path, _, _)| path == ".kotowari/toc.en.yaml"),
+        "{report}"
+    );
+    assert!(
+        !findings(&report, "overview_toc_invalid").is_empty(),
+        "{report}"
+    );
+    // 目次の空の群は目次の形の検査（REQ-core-330）で、目次のどの側にも出る
+    write(
+        tmp.path(),
+        ".kotowari/toc.en.yaml",
+        "title: Contents\nitems: []\n",
+    );
+    let report = check(tmp.path());
+    assert_eq!(
+        paths_and_details(&report, "overview_toc_group_empty"),
+        [pair(".kotowari/toc.en.yaml", "(root)")]
+    );
+}

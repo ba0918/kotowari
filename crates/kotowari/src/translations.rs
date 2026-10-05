@@ -100,6 +100,16 @@ impl Assembly {
         )
     }
 
+    /// `先頭の言語`の`側`のパスの`対`
+    pub(crate) fn pair(&self, first: &str) -> Option<&Pair> {
+        self.pairs.get(first)
+    }
+
+    /// `先頭の言語`でない言語
+    pub(crate) fn others(&self) -> &[String] {
+        &self.languages[1..]
+    }
+
     pub(crate) fn into_pairs(self) -> Pairs {
         self.pairs
     }

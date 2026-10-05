@@ -9,6 +9,8 @@ use std::path::Path;
 pub(crate) struct Texts {
     pub(crate) data: Vec<SourceText>,
     pub(crate) toc: SourceText,
+    /// `先頭の言語`でない言語ごとの`側`（REQ-core-343）
+    pub(crate) translations: Vec<kotowari_overview::Translation>,
 }
 
 /// "overview" の鍵があれば、"overview.files" に当たり拡張子が小文字の ".md" のファイルと、"overview.toc"
@@ -54,7 +56,49 @@ pub(crate) fn read_texts(
     let text = crate::acquisition::read_utf8_file(&base.join(&overview.toc), &overview.toc)?;
     let toc = SourceText::new(overview.toc.as_str(), text)
         .map_err(|error| StopReason::MappingError(error.to_string()))?;
-    Ok(Some(Texts { data, toc }))
+    let translations = translations(assembly, &data, &toc)?;
+    Ok(Some(Texts {
+        data,
+        toc,
+        translations,
+    }))
+}
+
+/// `先頭の言語`でない言語ごとに、元データと`目次`の`対`のその言語の`側`のうちファイルのあるもの
+fn translations(
+    assembly: &crate::translations::Assembly,
+    data: &[SourceText],
+    toc: &SourceText,
+) -> Result<Vec<kotowari_overview::Translation>, StopReason> {
+    let side = |first: &str, language: &str| -> Result<Option<SourceText>, StopReason> {
+        let Some(pair) = assembly.pair(first) else {
+            return Ok(None);
+        };
+        let Some(side) = pair.sides().iter().find(|side| side.language() == language) else {
+            return Ok(None);
+        };
+        side.content()
+            .map(|content| {
+                SourceText::new(side.path(), content.text())
+                    .map_err(|error| StopReason::MappingError(error.to_string()))
+            })
+            .transpose()
+    };
+    assembly
+        .others()
+        .iter()
+        .map(|language| {
+            let mut files = Vec::new();
+            for file in data {
+                files.extend(side(file.path(), language)?);
+            }
+            Ok(kotowari_overview::Translation {
+                language: language.clone(),
+                files,
+                toc: side(toc.path(), language)?,
+            })
+        })
+        .collect()
 }
 
 /// REQ-core-326: `目次`のファイルが、元データ、ガイド、テストの走査で読むファイルのどれかに入るか。
@@ -109,7 +153,13 @@ fn validate_overlap<'a>(
 /// check と status に加える "overview" の群。鍵が無ければ数は両方 0（REQ-core-288）
 pub(crate) fn group(read: &ReadModel, texts: Option<Texts>) -> FindingGroup {
     match texts {
-        Some(texts) => kotowari_overview::inspect(read, &texts.data, &texts.toc).into_group(),
+        Some(texts) => kotowari_overview::inspect_translations(
+            read,
+            &texts.data,
+            &texts.toc,
+            &texts.translations,
+        )
+        .into_group(),
         None => FindingGroup::new(kotowari_overview::GROUP, 0, 0, Vec::new()),
     }
 }

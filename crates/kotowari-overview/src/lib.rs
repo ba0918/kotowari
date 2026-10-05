@@ -65,13 +65,45 @@ impl Overview {
     }
 }
 
+/// `先頭の言語`でない1つの言語の、`全体像の元データ`と`目次`の`側`（REQ-core-343）
+#[derive(Debug, Clone, Default)]
+pub struct Translation {
+    /// 言語タグ
+    pub language: String,
+    /// その言語の`側`の`全体像の元データ`。path はその`側`の基準のディレクトリからの相対パス
+    pub files: Vec<SourceText>,
+    /// その言語の`目次`の`側`。無ければ None
+    pub toc: Option<SourceText>,
+}
+
 /// 元データと目次を検査する。files と toc の path は基準のディレクトリからの相対パスである
 pub fn inspect(read: &ReadModel, files: &[SourceText], toc: &SourceText) -> Overview {
+    inspect_translations(read, files, toc, &[])
+}
+
+/// files と toc を`先頭の言語`の`側`とし、translations をほかの言語の`側`として検査する。
+/// `全体像の元データ`の形、`部品`、lead、参照、`ガイドの印`と`目次`の形はどの`側`にも、扱う IR の文書、
+/// ページの名前の重なり、`目次`との照合は`先頭の言語`の`側`だけに行う（REQ-core-343）
+pub fn inspect_translations(
+    read: &ReadModel,
+    files: &[SourceText],
+    toc: &SourceText,
+    translations: &[Translation],
+) -> Overview {
     let mut files: Vec<&SourceText> = files.iter().collect();
     files.sort_by(|left, right| left.path().as_bytes().cmp(right.path().as_bytes()));
     let mut inspection = Inspection::new(read);
+    let mut read_files = files.len();
     for file in &files {
-        inspection.file(file);
+        if let Some(document) = inspection.file(file, true) {
+            inspection.documents.push(document);
+        }
+    }
+    for translation in translations {
+        read_files += translation.files.len();
+        for file in &translation.files {
+            inspection.file(file, false);
+        }
     }
     let mut findings = inspection.findings;
     let names = files
@@ -85,10 +117,29 @@ pub fn inspect(read: &ReadModel, files: &[SourceText], toc: &SourceText) -> Over
             .into_iter()
             .map(|(kind, detail)| Finding::new(kind, toc.path().to_string(), None, detail)),
     );
+    for toc in translations
+        .iter()
+        .filter_map(|translation| translation.toc.as_ref())
+    {
+        let form = toc::check(toc.text(), &names)
+            .findings
+            .into_iter()
+            .filter(|(kind, _)| {
+                !matches!(
+                    kind,
+                    FindingKind::OverviewTocPageMissing
+                        | FindingKind::OverviewTocPageUnknown
+                        | FindingKind::OverviewTocPageDuplicate
+                )
+            });
+        findings.extend(
+            form.map(|(kind, detail)| Finding::new(kind, toc.path().to_string(), None, detail)),
+        );
+    }
     kotowari_core::sort_findings(&mut findings);
     Overview {
         findings,
-        files: files.len(),
+        files: read_files,
         marks: inspection.marks,
         input: RenderInput {
             toc: checked.toc.unwrap_or_default(),
@@ -153,12 +204,14 @@ impl<'a> Inspection<'a> {
             .push(Finding::new(kind, path.to_string(), line, detail));
     }
 
-    fn file(&mut self, file: &SourceText) {
+    /// 1つの元データを検査し、描ける文書を返す。first でなければ`先頭の言語`でない言語の`側`で、
+    /// 扱う IR の文書とページの名前の重なりを検査しない（REQ-core-343）
+    fn file(&mut self, file: &SourceText, first: bool) -> Option<Document> {
         let (path, text) = (file.path(), file.text());
         let name = file_name(path);
         let stem = stem(name).to_string();
         // REQ-core-305: パスのバイト順で2つ目以降の重なりと、"index" と "style"
-        if stem == "index" || stem == "style" || !self.names.insert(stem.clone()) {
+        if first && (stem == "index" || stem == "style" || !self.names.insert(stem.clone())) {
             self.error(FindingKind::OverviewNameConflict, path, None, stem.clone());
         }
         let raw = document::parse(text);
@@ -167,8 +220,10 @@ impl<'a> Inspection<'a> {
         for (line, detail) in form {
             self.error(FindingKind::OverviewFormInvalid, path, line, detail.into());
         }
-        for entry in ir.unwrap_or_default() {
-            self.ir_entry(path, &entry);
+        if first {
+            for entry in ir.unwrap_or_default() {
+                self.ir_entry(path, &entry);
+            }
         }
         if raw.lead.is_none() {
             self.error(FindingKind::OverviewLeadMissing, path, None, name.into());
@@ -185,29 +240,30 @@ impl<'a> Inspection<'a> {
             .collect();
         self.findings.extend(marks.into_findings());
         let lead = raw.lead.and_then(|index| values[index].clone());
-        if let (Some(title), Some(lead)) = (raw.title.clone(), lead) {
-            let sections = sections(&raw, &values, &stale_lines);
-            let preamble = raw
-                .preamble
-                .iter()
-                .filter_map(|index| {
-                    values[*index].clone().map(|value| Part {
-                        kind: raw.parts[*index].kind.clone(),
-                        value,
-                    })
+        let (Some(title), Some(lead)) = (raw.title.clone(), lead) else {
+            return None;
+        };
+        let sections = sections(&raw, &values, &stale_lines);
+        let preamble = raw
+            .preamble
+            .iter()
+            .filter_map(|index| {
+                values[*index].clone().map(|value| Part {
+                    kind: raw.parts[*index].kind.clone(),
+                    value,
                 })
-                .collect();
-            self.documents.push(Document {
-                name: stem,
-                title,
-                lead: Part {
-                    kind: "lead".into(),
-                    value: lead,
-                },
-                preamble,
-                sections,
-            });
-        }
+            })
+            .collect();
+        Some(Document {
+            name: stem,
+            title,
+            lead: Part {
+                kind: "lead".into(),
+                value: lead,
+            },
+            preamble,
+            sections,
+        })
     }
 
     /// REQ-core-284: "ir" の1件が話題ごとの文書か、ほかの元データの "ir" に無いか

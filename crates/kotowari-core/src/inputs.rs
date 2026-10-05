@@ -710,8 +710,24 @@ impl CheckPreparation {
         }
         Ok(())
     }
-    fn finish(mut self) -> Inspection {
+    fn finish(mut self) -> Result<Inspection, crate::StopReason> {
         self.findings.extend(self.translations.findings());
+        // REQ-core-342: ほかの言語の`側`の文の検査と、"files" と "lines" に数えるすべての`側`
+        let sides = crate::translations::ir_sides(&self.translations, &self.read.config().ir)?;
+        let (mut side_files, mut side_lines) = (0, 0);
+        for documents in sides.values() {
+            crate::translations::side_findings(
+                documents,
+                &self.read.docs,
+                self.read.config(),
+                &mut self.findings,
+            );
+            side_files += documents.len();
+            side_lines += documents
+                .iter()
+                .map(|document| document.line_count)
+                .sum::<usize>();
+        }
         crate::sort_findings(&mut self.findings);
         let mut status = crate::status::build(
             &self.read.docs,
@@ -723,10 +739,18 @@ impl CheckPreparation {
             &self.findings,
         );
         status.groups = self.groups.clone();
+        status.documents.files += side_files;
+        status.documents.lines += side_lines;
         let status = StatusReport(status);
         let check = CheckReport(crate::CheckResult {
-            files: self.read.docs.len(),
-            lines: self.read.docs.iter().map(|doc| doc.line_count).sum(),
+            files: self.read.docs.len() + side_files,
+            lines: self
+                .read
+                .docs
+                .iter()
+                .map(|doc| doc.line_count)
+                .sum::<usize>()
+                + side_lines,
             counts: crate::count_findings(&self.findings),
             findings: self.findings,
             tests: self.read.discovered.tally.clone(),
@@ -736,11 +760,11 @@ impl CheckPreparation {
             }),
             groups: self.groups,
         });
-        Inspection {
+        Ok(Inspection {
             read: self.read,
             check,
             status,
-        }
+        })
     }
 }
 
@@ -852,7 +876,7 @@ impl RepositoryInspectionPreparation {
     }
     pub fn finish(self) -> Result<Inspection, crate::StopReason> {
         self.at_phase(InspectionPhase::Complete)?;
-        Ok(self.inner.finish())
+        self.inner.finish()
     }
 }
 
@@ -898,7 +922,7 @@ impl Inspection {
             preparation.group(group)?;
         }
         preparation.translations(translations);
-        Ok(preparation.finish())
+        preparation.finish().map_err(input_stop)
     }
     pub fn into_check(self) -> CheckReport {
         self.check
