@@ -43,6 +43,7 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 - ライブラリのメモリの入口（`ReadModel::build`、`Inspection::build`）に BOM で始まる文書を渡したとき、題名と言語の切り替えの行を見つけられず、切り替えの行を`translation_switcher_invalid`にし、文書が扱う範囲の行にも数えていたのを直した。ファイルから読む`kotowari check`は前から BOM を読み飛ばしている。
 - `kotowari changes`で、対象の設定ファイルの誤りの詳細を`kotowari check`と同じく設定ファイルの相対パスで始めるようにした（`config error: .kotowari/config.yaml: ...`）。
 - `kotowari changes`に`--port`を付けると、ほかのコマンドと同じく引数の誤りで止まるようにした。これまでは黙って無視して検査していた。
+- `changes.records`か`overview.files`に、区切りの`/`をまたぐ波括弧の glob（`{docs/.changes,docs/changes}/*.yaml`など）を書くと、ライブラリの中で panic していたのを直した。
 
 
 ## [0.3.0] - 2026-10-01

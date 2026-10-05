@@ -294,3 +294,29 @@ fn a_record_reached_through_a_file_symlink_is_checked() {
         result.findings()
     );
 }
+
+// @kotowari[REQ-core-019]
+#[test]
+fn a_records_glob_with_a_brace_across_a_slash_does_not_panic() {
+    // 波括弧の中の "/" で切った前置きは glob にならない。設定の glob は有効なので、
+    // 取得は panic せずに記録を読む
+    let dir = project("version: 2\nentries: []\n");
+    std::fs::write(
+        dir.path().join(".kotowari/config.yaml"),
+        "changes:\n  files: ['src/**']\n  records: ['{docs/.changes,docs/changes}/*.yaml']\n",
+    )
+    .unwrap();
+    let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
+        .unwrap()
+        .check()
+        .unwrap();
+    assert!(
+        result
+            .findings()
+            .iter()
+            .any(|f| f.path() == "docs/changes/test.yaml"
+                && f.kind().as_str() == "change_record_invalid"),
+        "{:?}",
+        result.findings()
+    );
+}
