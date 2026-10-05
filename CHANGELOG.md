@@ -38,6 +38,7 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 - `kotowari` スキルのセットアップ手順に、判断の記録用ディレクトリへの `.gitkeep` 作成とコミット対象に含める指示を追加した。空ディレクトリが clone／worktree で失われ、`kotowari check` がエラーになるのを防ぐ。
 - `kotowari overview build`のページで、GFM の脚注の記法（`[^1]`）を脚注として描かないようにした。描くと日本語のページにも英語の見出し「Footnotes」と戻りリンクの文字が入っていた。
 - `kotowari overview build`で、見出しと題名から HTML のコメントだけを除くようにした。これまでは`Vec<String>`の`<String>`のように行の中の HTML と読まれる部分も消え、見出しが「Vec」になっていた。
+- `kotowari changes`で、IR と判断の記録の置き場の下にある隠しディレクトリ（`docs/ir/.drafts/`など）を`kotowari check`と同じく読まないようにした。これまではそこにある IR を引く変更記録を有効と判定し、同じ記録が`check`では`change_record_invalid`になっていた。
 
 
 ## [0.3.0] - 2026-10-01

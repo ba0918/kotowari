@@ -74,13 +74,16 @@ pub fn inspect(snapshot: &Comparison, phase: Phase) -> Result<ChangeResult, crat
         records_other_files: vec![],
     };
     for path in snapshot.blobs.keys().filter(|path| path.ends_with(".md")) {
+        // check と同じく、置き場の下の隠しディレクトリは辿らない（REQ-core-033 の除外）
+        let read_under =
+            |place: &str| sources::is_under_place(path, place) && !in_hidden_directory(path, place);
         // REQ-core-342: `対`の`項目`は`先頭の言語`の`側`からだけ読む
         let name = path.rsplit('/').next().unwrap_or(path);
         let first_side = matches!(
             crate::translations::classify(name, &config.languages),
             crate::translations::Classified::First
         );
-        if first_side && sources::is_under_place(path, &config.ir) {
+        if first_side && read_under(&config.ir) {
             ir_paths.insert(path.clone());
             let doc = ir::parse_document(
                 path.strip_prefix(&format!("{}/", config.ir))
@@ -95,7 +98,7 @@ pub fn inspect(snapshot: &Comparison, phase: Phase) -> Result<ChangeResult, crat
                 }
             }
         }
-        if sources::is_under_place(path, &config.decisions.records) {
+        if read_under(&config.decisions.records) {
             let rel = path
                 .strip_prefix(&format!("{}/", config.decisions.records))
                 .unwrap_or(path);
@@ -109,7 +112,7 @@ pub fn inspect(snapshot: &Comparison, phase: Phase) -> Result<ChangeResult, crat
                 });
             }
         }
-        if sources::is_under_place(path, &config.decisions.adr) {
+        if read_under(&config.decisions.adr) {
             let rel = path
                 .strip_prefix(&format!("{}/", config.decisions.adr))
                 .unwrap_or(path);
@@ -143,6 +146,18 @@ fn finding(entry: &LocatedEntry, kind: FindingKind, path: &str) -> Finding {
         format!("{}: {path}", entry.entry.id),
     )
 }
+/// 置き場より下のディレクトリに "." で始まるものがあるか
+fn in_hidden_directory(path: &str, place: &str) -> bool {
+    let below = if place.is_empty() {
+        path
+    } else {
+        &path[place.len() + 1..]
+    };
+    below
+        .rsplit_once('/')
+        .is_some_and(|(directories, _)| directories.split('/').any(|name| name.starts_with('.')))
+}
+
 pub fn evaluate(snapshot: &Comparison, entries: &[LocatedEntry], phase: Phase) -> ChangeResult {
     let applicable: Vec<_> = entries
         .iter()

@@ -219,3 +219,55 @@ fn a_requirement_of_an_ir_pair_is_defined_by_the_first_language_side() {
         result.findings
     );
 }
+
+// @kotowari[REQ-core-033, REQ-core-265]
+#[test]
+fn ir_and_decision_records_under_hidden_directories_are_not_read() {
+    // check と同じく、置き場の下の隠しディレクトリは辿らない。そこにある IR と判断の記録を
+    // 引く変更記録は、参照先が無いことになる
+    let ir = "# A\n\nScope.\n\n## Requirements\n\n### REQ-core-001: Name\n\n- kind: ubiquitous\n- source: docs/decision/records/test.md#A1\n- verification: unit\n\nStatement.\n";
+    let decisions = "# R\n\n## 決定\n\n- A1 決めた\n  - why: w\n";
+    let blob = |bytes: &[u8]| Blob {
+        mode: "100644".into(),
+        bytes: bytes.to_vec(),
+    };
+    let result = |ir_path: &str, records_dir: &str| {
+        let record = format!(
+            "version: 1\nentries:\n- id: impl\n  base: '{}'\n  role: implementer\n  files: [{{path: src/a, before: null, after: '{}'}}]\n  ir: [{{path: {ir_path}, sha256: '{}'}}]\n  conclusion: existing\n  reason: reason\n  requirements: [REQ-core-001]\n  decisions: ['{records_dir}r.md#A1']\n  handoff: null\n  gaps: []\n",
+            "0".repeat(40),
+            blob(b"new").identity(),
+            ir_identity(ir.as_bytes())
+        );
+        let s = Snapshot {
+            base: "0".repeat(40),
+            target: "1".repeat(40),
+            config: Config::parse(
+                "changes:\n  files: ['src/**']\n  records: ['docs/changes/**']\n",
+            )
+            .unwrap(),
+            files: vec![change_records::FileChange {
+                path: "src/a".into(),
+                before: None,
+                after: Some(blob(b"new").identity()),
+            }],
+            blobs: BTreeMap::from([
+                ("src/a".into(), blob(b"new")),
+                (ir_path.into(), blob(ir.as_bytes())),
+                (format!("{records_dir}r.md"), blob(decisions.as_bytes())),
+                ("docs/changes/test.yaml".into(), blob(record.as_bytes())),
+            ]),
+        };
+        let result = kotowari_core::changes::inspect(&s, Phase::Implementation).unwrap();
+        format!("{:?}", result.findings)
+    };
+    let visible = result("docs/ir/a.md", "docs/decision/records/");
+    assert!(!visible.contains("change_record_invalid"), "{visible}");
+    let hidden = result("docs/ir/.drafts/a.md", "docs/decision/records/.old/");
+    for needle in [
+        "missing IR docs/ir/.drafts/a.md",
+        "REQ-core-001",
+        "invalid decision docs/decision/records/.old/r.md#A1",
+    ] {
+        assert!(hidden.contains(needle), "{needle}: {hidden}");
+    }
+}
