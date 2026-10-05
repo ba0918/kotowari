@@ -2,423 +2,64 @@
   "version": 1,
   "entries": [
     {
-      "id": "translate-en-ja-review",
-      "base": "110ba00b23ef3755351204a46882bbcfe6d3049b",
+      "id": "serve-host-review",
+      "base": "6fc2e51981b7f8c36f3d3254a2bf484a4e20c2fd",
       "role": "reviewer",
       "files": [
         {
-          "path": "docs/guides/change-conformance.i18n.yaml",
-          "before": null,
-          "after": "sha256:9955bf9fc56e9494fa94d575fc464c16576775300d372eb2bc1a91d3670400ba"
+          "path": "src/cli/serve.rs",
+          "before": "sha256:48b68ad503a8d2bfe6ef772e558082597f23586f6e9bdedf120fe2329f5261ee",
+          "after": "sha256:6b3558ba79b9f1400cda398394c724632d5f710a4842fa462e33c4b8bcf1c115"
         },
         {
-          "path": "docs/guides/change-conformance.ja.md",
-          "before": null,
-          "after": "sha256:84e4db6a4c7accb57788980ddb6d8d5db380e1e2dba5e29f44f2b8f7d15810ef"
-        },
-        {
-          "path": "docs/guides/change-conformance.md",
-          "before": "sha256:0c2f44b3e13eb3cb0079489de796128c7038a02a3d611d641709417749e497a2",
-          "after": "sha256:9dcacfc8ea05ec73f0e7905c7c6c38a7690e6418ff1f82a8722450bb595af533"
-        },
-        {
-          "path": "docs/guides/cli.i18n.yaml",
-          "before": null,
-          "after": "sha256:386b9bc73ee186b026f19fb204466fc2affdd0b0b34dc9c7ee68085429a74352"
-        },
-        {
-          "path": "docs/guides/cli.ja.md",
-          "before": null,
-          "after": "sha256:986579ca96a5fc03edc4da16fe87dbf4f80e4add389307e01b69e200d1747284"
-        },
-        {
-          "path": "docs/guides/cli.md",
-          "before": "sha256:ac699a26bd5b7e35d7642b430ac7a8225b3e1bf11629bc124d4a2583a91e7e18",
-          "after": "sha256:6628e7f5700ba0590142f6e1e44a783193bad01f17c12db4a4f3f93866eefca6"
-        },
-        {
-          "path": "docs/guides/commands/changes.i18n.yaml",
-          "before": null,
-          "after": "sha256:1bb46b6e0556bdd773efc785c30778a7e2b1ef402c4ab5ac913e2ce4c327cb8b"
-        },
-        {
-          "path": "docs/guides/commands/changes.ja.md",
-          "before": null,
-          "after": "sha256:c03b55157e143f8f0ea865f4f3553a1b9cfbe580167d54e29afe0f99e2059ea2"
-        },
-        {
-          "path": "docs/guides/commands/changes.md",
-          "before": "sha256:a48f3910945f0a126b4e8a1bbb884b781ea520a73308772b26b683dc73e113cd",
-          "after": "sha256:c087ff8dae3387b8d0874aec7778f44a35bcf4b03f3602c750b18f594dd6c17f"
-        },
-        {
-          "path": "docs/guides/commands/check.i18n.yaml",
-          "before": null,
-          "after": "sha256:376c28552067a584bba111b8cb1321e5f1e9b4f0ac8a0ba9d7eeeea1c86cf7bd"
-        },
-        {
-          "path": "docs/guides/commands/check.ja.md",
-          "before": null,
-          "after": "sha256:b774d7bbcd4113c5d4aa3ba4dcfdfa7110947c1fbe8e99531fb4d4ad5378bbf4"
-        },
-        {
-          "path": "docs/guides/commands/check.md",
-          "before": "sha256:c29eeea412384b1f2be0212bf59d06b295ac7f2fe3798dda3563af94fd31e7fb",
-          "after": "sha256:ff489fa57bc7e22cd81083c6afa0cdb1a6f95431cfe1151fd0dbb24a3ee3e782"
-        },
-        {
-          "path": "docs/guides/commands/list.i18n.yaml",
-          "before": null,
-          "after": "sha256:e57b646e9ea95f2ff05da9005d25222cdaf628fdcdd765f36221d2ffed06c58f"
-        },
-        {
-          "path": "docs/guides/commands/list.ja.md",
-          "before": null,
-          "after": "sha256:ce091681c3d8310474cf8b810f2bf5f8da044155518def621f117477627c0976"
-        },
-        {
-          "path": "docs/guides/commands/list.md",
-          "before": "sha256:9a2d5f63e6092df8d09e884df6f60cb4cb209ee023ee1966665e23612fa00b04",
-          "after": "sha256:16deac71f0594e34cb809d4f2c0be69a441a4d788aeb86403953ecb564243eaf"
-        },
-        {
-          "path": "docs/guides/commands/mutants.i18n.yaml",
-          "before": null,
-          "after": "sha256:c3be37bf2f1494ccb64108c1069341d71df283f0b4f1a5b508510ed6ba4741ba"
-        },
-        {
-          "path": "docs/guides/commands/mutants.ja.md",
-          "before": null,
-          "after": "sha256:36e8e589acad8ce1470b91bed252b400c7d52983c093262af029fdb9b06a39a6"
-        },
-        {
-          "path": "docs/guides/commands/mutants.md",
-          "before": "sha256:dd5b63daab5d0613918c5b9d3173c9bb9d872da107faaca8aaf5b9cc6489d1fd",
-          "after": "sha256:ffe411c546281462265282135559f0dd8ebcb3d21ee20b78721351cd6a060db2"
-        },
-        {
-          "path": "docs/guides/commands/plan.i18n.yaml",
-          "before": null,
-          "after": "sha256:4ee345046b6e684c0d2f7ec5af03fa027bd8d64657911818c94cae13d2b75f79"
-        },
-        {
-          "path": "docs/guides/commands/plan.ja.md",
-          "before": null,
-          "after": "sha256:bd83165a208be7d96d8b68369f4563981e6523eef23ff5d8ea313914dd5d6d45"
-        },
-        {
-          "path": "docs/guides/commands/plan.md",
-          "before": "sha256:544455010a156025406affcc4da9a05f8079bcd8c46ba58f022422c403426858",
-          "after": "sha256:5967439517e4a40152409f3ad5de4d64a071e950b10fe383286525c3d7a8d49d"
-        },
-        {
-          "path": "docs/guides/commands/query.i18n.yaml",
-          "before": null,
-          "after": "sha256:80aa01872982529bce6f4db4c653facb20bea0b0f4830dda6bf5084cf567c120"
-        },
-        {
-          "path": "docs/guides/commands/query.ja.md",
-          "before": null,
-          "after": "sha256:b817bd064c68b74c06a48850b76f74070af5cdce97986f22508063dba38e0ed0"
-        },
-        {
-          "path": "docs/guides/commands/query.md",
-          "before": "sha256:ed21c5005d4a75aed61f0292b6b2da9330a8601255c4699e36b67401b0073707",
-          "after": "sha256:fca8eac051953c6abc7f365e4a279db53b32cf9825572dc9b32b0ba3ba22ca02"
-        },
-        {
-          "path": "docs/guides/commands/status.i18n.yaml",
-          "before": null,
-          "after": "sha256:a43a3e97b7f6262fce369602198d19d10e662b8a9d3488c72222ece9584ee811"
-        },
-        {
-          "path": "docs/guides/commands/status.ja.md",
-          "before": null,
-          "after": "sha256:71ac4cee7f4e5b8c5eae7de8a0c0285be1e65a84474dea1211790e5e3e996539"
-        },
-        {
-          "path": "docs/guides/commands/status.md",
-          "before": "sha256:272afb599044a5af08496432414d3e35e07400b67f760f61564cdcfb8032043f",
-          "after": "sha256:e75be09a343350ae1a750d54afbfb8e2ac3424150e5b38ea6fde9519b47a0fad"
-        },
-        {
-          "path": "docs/guides/config.i18n.yaml",
-          "before": null,
-          "after": "sha256:d6c33c7ce518d1b49f227f972d29aaf2fc78d31a16a0e5816f2b61b81be6e3a2"
-        },
-        {
-          "path": "docs/guides/config.ja.md",
-          "before": null,
-          "after": "sha256:c423c3fea861d7d2db73a53d6f9d044fd4077253013e7078216e5d4f30739ef1"
-        },
-        {
-          "path": "docs/guides/config.md",
-          "before": "sha256:7b2b39e2eeb3e06926b5c64d8504f34c2f746b5da3553a9a18a896e8970386a6",
-          "after": "sha256:985418786fa5d4f857c3b562b959283af48f996ceddfdaea50343b3444ff2d21"
-        },
-        {
-          "path": "docs/guides/deferred.i18n.yaml",
-          "before": null,
-          "after": "sha256:e42205de5895dbdde42de7b119e7922dd0dfca15116dff67d98c9df46bd6660d"
-        },
-        {
-          "path": "docs/guides/deferred.ja.md",
-          "before": null,
-          "after": "sha256:d257d34d10153fcdb33d4fc7ab2aaa9952ad94bd62ce3d2c23dbc1b487dd4904"
-        },
-        {
-          "path": "docs/guides/deferred.md",
-          "before": "sha256:35999d37230d564961aea77f0aa017a2a8be45062c43f7eb25f07117f3cda7c8",
-          "after": "sha256:0761833e529830cad62e42bd6388da27a36ad1a4be4dfcc6b00fc971f527fcb4"
-        },
-        {
-          "path": "docs/guides/findings.i18n.yaml",
-          "before": null,
-          "after": "sha256:fb9744e4946bb1fa980e8570b9d93795bc5009bc40089c0f10dcf0aff03bd323"
-        },
-        {
-          "path": "docs/guides/findings.ja.md",
-          "before": null,
-          "after": "sha256:d370ba5e2a0975a958538e7adf6d499402ba7d3b77602aa6fff3654c67ef8bc9"
-        },
-        {
-          "path": "docs/guides/findings.md",
-          "before": "sha256:5af30526a728604db1b733d06d0fd21914adaffa6160fce08f0a0ee1619378fe",
-          "after": "sha256:83a7b8cbf57e2894bab7f1a66a9373948728790c08650b878f6f9202cbbbc74a"
-        },
-        {
-          "path": "docs/guides/index.i18n.yaml",
-          "before": null,
-          "after": "sha256:e1463c8861fe473a195a32840ec6ece9c8e88ee09949e85678ffabaa44eb0e3f"
-        },
-        {
-          "path": "docs/guides/index.ja.md",
-          "before": null,
-          "after": "sha256:55ac61fc75affec83e170bf0cc18853f2479ae27c0e895045cd2f1118724f3cd"
-        },
-        {
-          "path": "docs/guides/index.md",
-          "before": "sha256:3b438880b0fee606810d432806d612ac4584ee013b848029090b1e3a1b6ad7a1",
-          "after": "sha256:8a4a981faaebd6c6e1c6dac98839736e98960b84b056b008bee13b337743571a"
-        },
-        {
-          "path": "docs/guides/marks.i18n.yaml",
-          "before": null,
-          "after": "sha256:923d931ad087bffac428df149688e1d8ca1f6269a55d27e4106349e494eb40fd"
-        },
-        {
-          "path": "docs/guides/marks.ja.md",
-          "before": null,
-          "after": "sha256:4713cbc7f52a8ee21e7650a702e364266bc8c0e645166f8521f6cdbf676d5644"
-        },
-        {
-          "path": "docs/guides/marks.md",
-          "before": "sha256:cc31fa638fced70c8a3238eface76e04b8c815885ef7c014888b1f82c152ace9",
-          "after": "sha256:efea3afa06dc685f7a490c73e40d4585033d6c9ef9fd53c9b64363cd8b1daa53"
-        },
-        {
-          "path": "docs/guides/package-validation.i18n.yaml",
-          "before": null,
-          "after": "sha256:ab11d795155524f3e1c11909b849aa0308d290f3b43a3ecac44ed23098616a14"
-        },
-        {
-          "path": "docs/guides/package-validation.ja.md",
-          "before": null,
-          "after": "sha256:652553d9ba3f9bada49158f104bf124ffe4e55aa2fdf76ee93c5b3046a47cdd7"
-        },
-        {
-          "path": "docs/guides/package-validation.md",
-          "before": "sha256:97c21826d26d6f7308a491df2e96f1095a40c8e4eea3654e6d10606744a0e145",
-          "after": "sha256:c1ae9e878dfbca29e38117c21255dbd8bda07a0e6eceda0ecd35fe16f2620cdf"
-        },
-        {
-          "path": "docs/guides/public-crate-api.i18n.yaml",
-          "before": null,
-          "after": "sha256:0869eaedda19fdea6d40821df8eafeb292162abd33c82c8a60f2bcee3ffa45a1"
-        },
-        {
-          "path": "docs/guides/public-crate-api.ja.md",
-          "before": null,
-          "after": "sha256:dacbd1896e39b1515558a5e4ef96396fbc817ea26ed324fa346cacf63a63357b"
-        },
-        {
-          "path": "docs/guides/public-crate-api.md",
-          "before": "sha256:6d37324bc7ab19a3f3d8caaee8a91f9bd8792f6eb5c583fa273721b40061c460",
-          "after": "sha256:df9ce64c2c6798fe2319bdd30dafce5bc339c38db75848b7abe86280e70f98bd"
-        },
-        {
-          "path": "docs/guides/surface.i18n.yaml",
-          "before": null,
-          "after": "sha256:93c83cb393268c148f4b845d4aa5f70f66e80dcc3c9c8d33fe82cae56e0fcc4d"
-        },
-        {
-          "path": "docs/guides/surface.ja.md",
-          "before": null,
-          "after": "sha256:8cbebeb73cc2ce6274ea7870bb7059979f80780b81ee2d6c2db0a790a3525c33"
-        },
-        {
-          "path": "docs/guides/surface.md",
-          "before": "sha256:1ca81514101ae1e067701a56c09bac903504f0fa16b3bd53b155617ff15ac701",
-          "after": "sha256:c8a081edfd22e26104c7d631dfebc8cd919f2d9e1e107c8552bea96d10a17051"
-        },
-        {
-          "path": "docs/guides/writing-guides.i18n.yaml",
-          "before": null,
-          "after": "sha256:22377e71e486a6eb04e82928cd667bc766d56a4a5930eb1caf96801ec395d6d6"
-        },
-        {
-          "path": "docs/guides/writing-guides.ja.md",
-          "before": null,
-          "after": "sha256:124541337d97f60f4685cb321e56e751d4f665e5f9adeff1bbb6516f2dff2266"
-        },
-        {
-          "path": "docs/guides/writing-guides.md",
-          "before": "sha256:92fae6599e967193d2317a53c4b98882400d2a363ad49671f126bbadeb9762a0",
-          "after": "sha256:45c7e1ef44efb159d60e16590c43ce2bf73e3e8f140efe4034d63e37906fc406"
+          "path": "tests/step20_overview_serve.rs",
+          "before": "sha256:db72c603b6a99ca00ec68c424460c36dc8570cc9dc5fe98fde9b88f1aed8dd75",
+          "after": "sha256:2dfd8013e0b743ec4980feff1f7a784baafa62cec05f03e2db8a73ba85d703ee"
         }
       ],
       "ir": [
         {
-          "path": "docs/ir/core/translation-pairs.md",
-          "sha256": "sha256:65586c68c5f7c1438e688031996cd542e4da0de959cd698a44de7b142aa737ad"
-        },
-        {
-          "path": "docs/ir/core/translation-structure.md",
-          "sha256": "sha256:97f5a1e1b02a6d5ca825600e75a67751c1f0b8ef71827f141128e586813eaa42"
-        },
-        {
-          "path": "docs/ir/core/overview-languages.md",
-          "sha256": "sha256:72a927dad0e02e119d8ed68076dc069d3ebe4bebe8da7f2bf9f3e2cb78eded24"
-        },
-        {
-          "path": "docs/ir/core/guides.md",
-          "sha256": "sha256:acbc8680cc0433c74b3b7dbdd6d043049436ede0cb6d34759c9403443c51ff84"
-        },
-        {
-          "path": "docs/ir/core/library-inputs.md",
-          "sha256": "sha256:b6499af160101c7776958131190139fe3f52457a132bfb2dd2de9adaeb831681"
+          "path": "docs/ir/core/overview-commands.md",
+          "sha256": "sha256:0456618297b9bdaa4ed3cb4ddce384216cb6eb0a88a21c3e98da61ff33dcaa18"
         }
       ],
-      "conclusion": "existing",
-      "reason": "Ran kotowari check (only notices, no errors) and kotowari changes for the implementation phase (no findings). Compared English and Japanese sides for meaning: docs/ir/core/plan.md (REQ-core-190 to 193, including the full REQ-core-192 form rules), docs/ir/schema/closed-world.md (REQ-schema-001 to 004, 055, PROP-schema-001), docs/ir/view/rendering.md (REQ-view-001 to 004), docs/ir/view/navigation.md (REQ-view-016, 017), docs/ir/core/changes-results.md (REQ-core-272 to 274 and EX-core-450 to 454), docs/ir/core/CONTEXT.md vs CONTEXT.ja.md (about 28 rows), docs/guides/change-conformance.md, docs/guides/cli.md and docs/guides/config.md. No dropped conditions or added claims found; the only addition is a gloss in config.md explaining the Japanese comments left inside a code block. Mechanically compared the sets of REQ/EX/PROP/TBL IDs for every pair: identical except the placeholder EX-name-001 in findings.md, which is a translated example name. Confirmed the removed why-sections are gone from the guides. Independent follow-up review covered all 18 guide pairs and README, comparing the original Japanese guides with the new Japanese sides and reviewing English usage prose and translated guide-heading links. The removed rationale sections leave the operational instructions in the usage sections, consistent with guide-overview-roles A3. Restored separate diagnostic lines in both findings guides were inspected against the original examples: invalid_marker detail no longer absorbs the next invalid_marker or test_without_id finding. Reviewed both library-inputs sides: each additional finding group retains its own files and marks counts, consistent with REQ-core-288/289 and GroupTally, rather than reporting the number of groups. The six-file correction diff and refreshed pair records were independently inspected; aggregate execution checks remain the integration gate.",
+      "conclusion": "new",
+      "reason": "Verified host_allowed accepts only 127.0.0.1:<port> and localhost:<port> (ASCII-lowercased, so name case is ignored; header name matched case-insensitively), rejects a missing Host, and respond returns an empty 403 before resolve touches the filesystem with no output. Port suffix, trailing dot, other IPv6 forms and extra text all fail the exact match, closing DNS rebinding for a 127.0.0.1-only server. English and Japanese REQ-core-356 and EX-core-543 agree with each other, with A1/A2 and with the code. The test covers all five EX hosts, checks empty bodies and silent stdout, and would fail without the change (200 instead of 403). Serve tests, check and changes pass.",
       "requirements": [
-        "REQ-core-334",
-        "REQ-core-336",
-        "REQ-core-337",
-        "REQ-core-339",
-        "REQ-core-340",
-        "REQ-core-343",
-        "REQ-core-344",
-        "REQ-core-346",
-        "REQ-core-349",
-        "REQ-core-351",
-        "REQ-core-203",
-        "REQ-core-204"
+        "REQ-core-356"
       ],
       "decisions": [
-        "docs/decision/records/2026-10-05-localization.md#A13",
-        "docs/decision/records/2026-10-05-localization.md#A14",
-        "docs/decision/records/2026-10-05-localization.md#A15",
-        "docs/decision/records/2026-10-05-localization.md#A16",
-        "docs/decision/records/2026-10-05-localization.md#A17",
-        "docs/decision/records/2026-10-05-localization.md#A33",
-        "docs/decision/records/2026-10-05-localization.md#A36",
-        "docs/decision/records/2026-10-05-localization.md#A40",
-        "docs/decision/records/2026-10-05-guide-overview-roles.md#A3"
+        "docs/decision/records/2026-10-05-serve-host.md#A1",
+        "docs/decision/records/2026-10-05-serve-host.md#A2"
       ],
       "handoff": null,
       "gaps": []
     },
     {
-      "id": "changes-pair-sides-review",
-      "base": "110ba00b23ef3755351204a46882bbcfe6d3049b",
-      "role": "reviewer",
-      "files": [
-        {
-          "path": "crates/kotowari-core/src/changes.rs",
-          "before": "sha256:c2362fa63bcfc04e40fddc2b60ef1af866405f11be3951363895f1afcf2e0ae1",
-          "after": "sha256:aac6ac3c0b4a89aeb3840acf888672d8947e64ff3f8843720e5b1be05cf1c417"
-        },
-        {
-          "path": "crates/kotowari-core/tests/change_matching.rs",
-          "before": "sha256:06b1430c142bc2312245219676925413dd7507b26cf9433a9c5b2d05f9ee93e5",
-          "after": "sha256:33d958343087a4ec54e8e12684012239dd94856b9edc6ee15561b2726d4ce3d4"
-        }
-      ],
-      "ir": [
-        {
-          "path": "docs/ir/core/translation-pairs.md",
-          "sha256": "sha256:65586c68c5f7c1438e688031996cd542e4da0de959cd698a44de7b142aa737ad"
-        }
-      ],
-      "conclusion": "existing",
-      "reason": "Read commit c8f783f against REQ-core-342 and REQ-core-337: inspect() now reads requirements and IR paths only from files that translations::classify reports as the first-language side, so a requirement of a pair is defined by the first side and a record naming the first side validates. The change is minimal (one condition) and the decision-record and ADR branches are untouched. Reasoned that the new test a_requirement_of_an_ir_pair_is_defined_by_the_first_language_side fails without the fix: docs/ir/a.fr.md sorts before docs/ir/a.md in the BTreeMap, so REQ-core-001 would be located in a.fr.md and the record's ir path docs/ir/a.md would be rejected with change_record_invalid. Ran the kotowari-core tests and they pass; kotowari changes over the branch reports nothing.",
-      "requirements": [
-        "REQ-core-342"
-      ],
-      "decisions": [
-        "docs/decision/records/2026-10-05-localization.md#A22"
-      ],
-      "handoff": null,
-      "gaps": []
-    },
-    {
-      "id": "translate-en-ja-changelog-review",
-      "base": "110ba00b23ef3755351204a46882bbcfe6d3049b",
+      "id": "serve-host-changelog-review",
+      "base": "6fc2e51981b7f8c36f3d3254a2bf484a4e20c2fd",
       "role": "reviewer",
       "files": [
         {
           "path": "CHANGELOG.md",
-          "before": "sha256:7f681ebf7a9ece3cc10f8112b07c7bab7051b027f10c229e47bb4b6370c6e313",
-          "after": "sha256:0fe8c8023cb48510d0634eceb2e4b6f4231c3d02fa271daae8bdd2500b6b1de0"
+          "before": "sha256:0fe8c8023cb48510d0634eceb2e4b6f4231c3d02fa271daae8bdd2500b6b1de0",
+          "after": "sha256:f82b978cfc590518c0754fb446747d413bdca38c7b790066b568ec0052612144"
         }
       ],
       "ir": [
         {
-          "path": "docs/ir/core/translation-pairs.md",
-          "sha256": "sha256:65586c68c5f7c1438e688031996cd542e4da0de959cd698a44de7b142aa737ad"
-        },
-        {
-          "path": "docs/ir/core/translation-structure.md",
-          "sha256": "sha256:97f5a1e1b02a6d5ca825600e75a67751c1f0b8ef71827f141128e586813eaa42"
-        },
-        {
-          "path": "docs/ir/core/overview-languages.md",
-          "sha256": "sha256:72a927dad0e02e119d8ed68076dc069d3ebe4bebe8da7f2bf9f3e2cb78eded24"
-        },
-        {
-          "path": "docs/ir/core/guides.md",
-          "sha256": "sha256:acbc8680cc0433c74b3b7dbdd6d043049436ede0cb6d34759c9403443c51ff84"
+          "path": "docs/ir/core/overview-commands.md",
+          "sha256": "sha256:0456618297b9bdaa4ed3cb4ddce384216cb6eb0a88a21c3e98da61ff33dcaa18"
         }
       ],
-      "conclusion": "existing",
-      "reason": "Read the two CHANGELOG.md entries added by the branch: the Changed entry (README, guides and IR as English/Japanese pairs, switcher line, removal of the why-sections from the guides) and the Fixed entry (changes read other-language sides as IR and raised change_record_invalid when the record named the first side). Both match the diff (git diff 110ba00 HEAD -- CHANGELOG.md, the file list and commit c8f783f) and REQ-core-342. The check command reports no errors for the file.",
+      "conclusion": "new",
+      "reason": "Verified the Fixed entry states the new empty 403 for non-local or missing Host and the DNS rebinding reason, consistent with A1, A2 and REQ-core-356.",
       "requirements": [
-        "REQ-core-334",
-        "REQ-core-336",
-        "REQ-core-337",
-        "REQ-core-339",
-        "REQ-core-340",
-        "REQ-core-343",
-        "REQ-core-344",
-        "REQ-core-346",
-        "REQ-core-349",
-        "REQ-core-351",
-        "REQ-core-203",
-        "REQ-core-204",
-        "REQ-core-342"
+        "REQ-core-356"
       ],
       "decisions": [
-        "docs/decision/records/2026-10-05-localization.md#A13",
-        "docs/decision/records/2026-10-05-localization.md#A14",
-        "docs/decision/records/2026-10-05-localization.md#A15",
-        "docs/decision/records/2026-10-05-localization.md#A16",
-        "docs/decision/records/2026-10-05-localization.md#A17",
-        "docs/decision/records/2026-10-05-localization.md#A33",
-        "docs/decision/records/2026-10-05-localization.md#A36",
-        "docs/decision/records/2026-10-05-localization.md#A40",
-        "docs/decision/records/2026-10-05-guide-overview-roles.md#A3",
-        "docs/decision/records/2026-10-05-localization.md#A22"
+        "docs/decision/records/2026-10-05-serve-host.md#A1",
+        "docs/decision/records/2026-10-05-serve-host.md#A2"
       ],
       "handoff": null,
       "gaps": []
