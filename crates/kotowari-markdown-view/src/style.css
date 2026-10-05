@@ -91,10 +91,16 @@ th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; ver
 .lead .conclusion { font-size: 1.2em; font-weight: 700; margin: 0 0 6px; }
 .lead .points { margin: 0; padding-left: 1.2em; }
 
-.flow { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 28px; }
-.flow-column { display: grid; gap: 10px; align-content: start; position: relative; }
-.flow-column + .flow-column::before { content: "→"; position: absolute; left: -22px; top: 8px; color: var(--muted); font-weight: 700; }
-.box { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--bg); }
+/* flow は左から右への流れ。1つの列の箱は同じ段階に並ぶもので、列を1つの囲みにし、矢印は列と列の間にだけ置く。
+   狭い画面では列を上から下に積み、矢印を下に向ける */
+.flow { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 34px; }
+.flow-column { display: grid; gap: 10px; align-content: start; position: relative; border: 1px solid var(--line); border-radius: var(--radius); background: var(--band); padding: 10px; }
+.flow-column + .flow-column::before { content: "\2192"; position: absolute; left: -29px; top: 50%; transform: translateY(-50%); width: 24px; text-align: center; color: var(--muted); font-size: 1.25em; font-weight: 700; line-height: 1; }
+@media (max-width: 720px) {
+  .flow { grid-auto-flow: row; grid-auto-columns: auto; grid-template-columns: minmax(0, 1fr); gap: 34px; }
+  .flow-column + .flow-column::before { content: "\2193"; left: 50%; top: -29px; transform: translateX(-50%); }
+}
+.box { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--surface); overflow-wrap: anywhere; }
 .box .box-title { font-weight: 700; }
 .box .box-body { color: var(--muted); font-size: 0.92em; white-space: pre-wrap; }
 
