@@ -68,6 +68,14 @@ impl LineReader {
         if !is_thematic_break(text)
             && let Some(marker) = ListMarker::parse(text)
         {
+            // マーカーの後でフェンスを開く項目は、段落の読み方と同じく中身がコードブロックの
+            // 項目として読む。一覧の行として読むと、閉じの行を次のフェンスの開始と取り違える
+            if let Some(mut fence) = Fence::open(&marker.content) {
+                fence.indent = marker.content_column;
+                let (block, next) = fence.read(lines, index);
+                self.attach(block, marker.indent);
+                return next;
+            }
             self.list_line(text, line, &marker);
             return index + 1;
         }

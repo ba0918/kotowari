@@ -1234,6 +1234,31 @@ document:
         );
     }
 
+    // @kotowari[TBL-schema-011]
+    #[test]
+    fn a_fence_opened_on_a_list_marker_line_closes_at_its_closing_line_in_both_readings() {
+        // フェンスで囲んだブロックは字下げの深さに依らずどちらの読み方でもコードブロック。
+        // マーカーの行で開いたフェンスの閉じの行を開始と取り違えると、後ろの見出しまで
+        // コードブロックに吸い込み、節 B を読めなくなる
+        let schema = |reading: &str| {
+            format!(
+                "reading: {reading}\ndocument:\n  sections:\n    - name: A\n      codeblock:\n        required: false\n        lang: python\n        extract: code\n    - name: B\n      statement:\n        extract: b\n"
+            )
+        };
+        let doc = "## A\n\n- ```python\n  x = 1\n  ```\n\n## B\n\n本文\n";
+        for reading in ["paragraph", "line"] {
+            let schema = parse_schema(&schema(reading)).unwrap();
+            let document = Document::parse(doc).unwrap();
+            let findings = validate(&schema, &document, false);
+            assert_eq!(kinds(&findings), vec![], "{reading}: {findings:?}");
+            assert_eq!(
+                crate::extract::extract_values(&schema, &document),
+                serde_json::json!({ "code": "x = 1", "b": "本文" }),
+                "{reading}"
+            );
+        }
+    }
+
     // @kotowari[REQ-schema-001, REQ-schema-031]
     #[test]
     fn table_as_first_child_of_list_item_is_undeclared_in_closed_world() {
