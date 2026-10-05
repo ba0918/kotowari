@@ -1,4 +1,5 @@
 use crate::StopReason;
+use std::collections::BTreeMap;
 use std::num::NonZeroU64;
 
 /// 設定ファイルの構造（TBL-core-004）
@@ -15,6 +16,10 @@ pub struct Config {
     pub overview: Option<OverviewConfig>,
     pub limits: LimitsConfig,
     pub vague_words: Vec<String>,
+    /// "languages" に書いた言語タグ。鍵が無ければ空（`言語の一覧`は "en" だけ。REQ-core-334）
+    pub languages: Vec<String>,
+    /// "labels" の言語タグから、`UI の文字`の鍵から文字列への対応（TBL-core-046）
+    pub labels: BTreeMap<String, BTreeMap<String, String>>,
 }
 
 /// `全体像の元データ`の置き場（TBL-core-004）
@@ -108,6 +113,8 @@ impl Default for Config {
                 "通常は".to_string(),
                 "など".to_string(),
             ],
+            languages: Vec::new(),
+            labels: BTreeMap::new(),
         }
     }
 }
@@ -137,6 +144,10 @@ struct RawConfig {
     overview: Option<Option<RawOverview>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     vague_words: Option<Option<Vec<String>>>,
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    languages: Option<Option<Vec<String>>>,
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    labels: Option<Option<BTreeMap<String, BTreeMap<String, String>>>>,
 }
 
 #[derive(serde::Deserialize)]
@@ -398,6 +409,8 @@ impl Config {
                 requirements: Some(Some(self.limits.requirements)),
             })),
             vague_words: Some(Some(self.vague_words.clone())),
+            languages: Some(Some(self.languages.clone())),
+            labels: Some(Some(self.labels.clone())),
         })
     }
 
@@ -572,6 +585,12 @@ impl Config {
             }
         }
 
+        let languages = non_null_or_default(raw.languages, "languages", Vec::new())?;
+        check_languages(&languages)?;
+        let labels = non_null_or_default(raw.labels, "labels", BTreeMap::new())?;
+        crate::ui_text::check_labels(&language_list(&languages), &labels)
+            .map_err(StopReason::ConfigError)?;
+
         Ok(Config {
             ir,
             decisions,
@@ -584,8 +603,50 @@ impl Config {
             limits,
             // REQ-core-015: 一覧は既定を置き換える
             vague_words,
+            languages,
+            labels,
         })
     }
+
+    /// `言語の一覧`。"languages" が無いか空なら "en" だけ（REQ-core-334）
+    pub fn languages(&self) -> Vec<String> {
+        language_list(&self.languages)
+    }
+
+    /// その言語の`UI の文字`（REQ-core-351、TBL-core-046）
+    pub fn ui_text(&self, tag: &str) -> crate::ui_text::UiText {
+        crate::ui_text::UiText::resolve(tag, self.labels.get(tag))
+    }
+}
+
+fn language_list(languages: &[String]) -> Vec<String> {
+    if languages.is_empty() {
+        vec![crate::ui_text::ENGLISH.to_string()]
+    } else {
+        languages.to_vec()
+    }
+}
+
+/// REQ-core-335: 空の文字列、小文字の英字と数字と "-" のほかの文字を含む言語タグ、重なった言語タグ
+fn check_languages(languages: &[String]) -> Result<(), StopReason> {
+    let mut seen = std::collections::BTreeSet::new();
+    for tag in languages {
+        let well_formed = !tag.is_empty()
+            && tag
+                .bytes()
+                .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-');
+        if !well_formed {
+            return Err(StopReason::ConfigError(format!(
+                "invalid language tag: {tag:?}"
+            )));
+        }
+        if !seen.insert(tag) {
+            return Err(StopReason::ConfigError(format!(
+                "duplicate language: {tag}"
+            )));
+        }
+    }
+    Ok(())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize)]

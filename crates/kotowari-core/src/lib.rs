@@ -30,6 +30,9 @@ mod record_contract_tests;
 #[cfg(test)]
 #[path = "../tests/surface.rs"]
 mod surface_contract_tests;
+#[cfg(test)]
+#[path = "../tests/translations.rs"]
+mod translation_contract_tests;
 pub use comparison::Comparison;
 pub mod config;
 mod deferred;
@@ -65,6 +68,7 @@ pub mod surface;
 pub mod terms;
 mod test_markers;
 pub mod tests_discovery;
+pub mod ui_text;
 
 use std::collections::BTreeMap;
 
