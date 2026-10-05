@@ -240,24 +240,32 @@ impl OverviewPrepared {
                 Err(error) => return Err(Error::cache(&place, Some(error))),
             }
         }
+        // REQ-core-353: ほかの言語のページを書く "<言語タグ>/" も、1つも書く前に確かめる
+        let directories: std::collections::BTreeSet<&str> = self
+            .pages
+            .iter()
+            .filter_map(|page| page.name.rsplit_once('/').map(|(directory, _)| directory))
+            .collect();
+        for directory in &directories {
+            let place = format!("{}/{directory}", overview::CACHE);
+            match std::fs::symlink_metadata(cache.join(directory)) {
+                Ok(meta) if meta.file_type().is_dir() => {}
+                Ok(_) => return Err(Error::cache(&place, None)),
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                Err(error) => return Err(Error::cache(&place, Some(error))),
+            }
+        }
         std::fs::create_dir_all(&cache)
             .map_err(|error| Error::cache(overview::CACHE, Some(error)))?;
         let existing = overview::existing(&cache)?;
         let mut build = OverviewBuild::default();
         for page in &self.pages {
             let path = cache.join(&page.name);
-            // REQ-core-353: ほかの言語のページは "<言語タグ>/" の下に書く。その置き場がリンクなら書かない
+            // REQ-core-353: ほかの言語のページは "<言語タグ>/" の下に書く。置き場は上で確かめてある
             if let Some((directory, _)) = page.name.rsplit_once('/') {
-                let place = format!("{}/{directory}", overview::CACHE);
-                match std::fs::symlink_metadata(cache.join(directory)) {
-                    Ok(meta) if meta.file_type().is_dir() => {}
-                    Ok(_) => return Err(Error::cache(&place, None)),
-                    Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-                        std::fs::create_dir_all(cache.join(directory))
-                            .map_err(|error| Error::cache(&place, Some(error)))?;
-                    }
-                    Err(error) => return Err(Error::cache(&place, Some(error))),
-                }
+                std::fs::create_dir_all(cache.join(directory)).map_err(|error| {
+                    Error::cache(&format!("{}/{directory}", overview::CACHE), Some(error))
+                })?;
             }
             // シンボリックリンクを辿って置き場の外に書かないよう、リンクは消してからファイルを書く（REQ-core-296）
             let link =
