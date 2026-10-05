@@ -208,20 +208,24 @@ impl SchemaLoader {
         source: &str,
         reference: &SchemaRef,
     ) -> Result<LoadedDocument, Error> {
+        let schema = self.load_schema(absolute, display, reference)?;
+        let document = parse_document(display, source)?;
+        Ok(LoadedDocument { schema, document })
+    }
+
+    fn load_schema(
+        &self,
+        absolute: &Path,
+        display: &Path,
+        reference: &SchemaRef,
+    ) -> Result<Schema, Error> {
         let yaml = self.schema_yaml(absolute, display, reference)?;
-        let schema = Schema::parse(&yaml).map_err(|e| {
+        Schema::parse(&yaml).map_err(|e| {
             Error::new(
                 ErrorKind::SchemaInvalid,
                 format!("{}: {}", display.display(), e.0),
             )
-        })?;
-        let document = Document::parse(source).map_err(|e| {
-            Error::new(
-                ErrorKind::UnreadableFile,
-                format!("{}: {e}", display.display()),
-            )
-        })?;
-        Ok(LoadedDocument { schema, document })
+        })
     }
 
     fn schema_yaml(
@@ -272,6 +276,8 @@ impl SchemaLoader {
             });
         }
         let mut files = Vec::new();
+        // 同じスキーマを指す文書が並ぶので、読んだスキーマはこの走査の間だけ使い回す
+        let mut schemas: Vec<(ResolvedSchema, Schema)> = Vec::new();
         let walker = walkdir::WalkDir::new(&absolute)
             .follow_links(false)
             .sort_by_file_name()
@@ -310,14 +316,32 @@ impl SchemaLoader {
             let Some(reference) = schema_ref(&display, &source)? else {
                 continue;
             };
-            let pair = self.load_from(entry.path(), &display, &source, &reference)?;
+            let resolved = kotowari_markdown_schema::resolve_schema(entry.path(), &reference);
+            let index = match schemas.iter().position(|(known, _)| *known == resolved) {
+                Some(index) => index,
+                None => {
+                    let schema = self.load_schema(entry.path(), &display, &reference)?;
+                    schemas.push((resolved, schema));
+                    schemas.len() - 1
+                }
+            };
+            let document = parse_document(&display, &source)?;
             files.push(FileResult {
+                findings: kotowari_markdown_schema::validate(&schemas[index].1, &document, options),
                 path: display,
-                findings: pair.validate(options),
             });
         }
         Ok(CheckResult { files })
     }
+}
+
+fn parse_document(display: &Path, source: &str) -> Result<Document, Error> {
+    Document::parse(source).map_err(|e| {
+        Error::new(
+            ErrorKind::UnreadableFile,
+            format!("{}: {e}", display.display()),
+        )
+    })
 }
 
 fn schema_ref(path: &Path, source: &str) -> Result<Option<SchemaRef>, Error> {
