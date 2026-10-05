@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "unused-warnings-review",
+      "base": "def0dfd3d9ee2a53c9d5b5656ed4e7078b46ab55",
+      "role": "reviewer",
+      "files": [
+        {
+          "path": "crates/kotowari-core/src/finding_map.rs",
+          "before": "sha256:a169bbec0fb2abc50b368b5626d0284d82046e305de0ff28ac9af9505d3343f9",
+          "after": "sha256:605a08c172efd3516348e3138c34a5b9db3c830ebf8762e7d64e0b1755116624"
+        },
+        {
+          "path": "crates/kotowari/src/ir.rs",
+          "before": "sha256:c0e4cd0185e25dbd0e58939e598d7ed888b92ed1bd04adb0a8e9addf037b0ac1",
+          "after": "sha256:a8b01ca4030a422872bf80d3b24652c3f9dc6e27345a8ce6e9d52bbc7a3d2144"
+        },
+        {
+          "path": "src/cli.rs",
+          "before": "sha256:918c3423cb587f014e14ad6a6fe54f6bdecf0e736ac04711c77d9e821bd40ada",
+          "after": "sha256:4726207134a541169afcb5e90a289da413afe683a6099d06b4d5050c904dc36e"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/finding-map.md",
+          "sha256": "sha256:5a3f028963a5fa099fee82bc97592a12974e7ae38004ec73167e6510e16e298b"
+        },
+        {
+          "path": "docs/ir/core/ir-document.md",
+          "sha256": "sha256:781a8dfc8bd87aed5eb850980968e9a14f0f39208970416bf46c4ee27a6c3d58"
+        },
+        {
+          "path": "docs/ir/core/skill-references.md",
+          "sha256": "sha256:3d2b78288e4ad1a94af60e0f6390a34dc19ba33e6fdc1eed2ceb64d5fb970211"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "Checked that dropping MapContext.title changes no behavior: the struct lives in the private finding_map module, no mapping rule of the finding map table reads the extracted title (REQ-core-171), and the multiple_titles detail is built from the raw line. Checked that the imports in the IR reading module and StopReason::WORDINGS are now test-only and that their only users are cfg(test) helpers and the stop wording test (REQ-core-033, REQ-core-127), while Display still uses the constant directly; the touched modules are private, so no public API changes. A rebuild of the whole workspace printed no warning, and the full workspace test run with all features had no failing test. The recorded file and IR identities match the current tree.",
+      "requirements": [
+        "REQ-core-033",
+        "REQ-core-127",
+        "REQ-core-171"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    }
+  ]
+}
