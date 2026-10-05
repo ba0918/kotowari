@@ -1,13 +1,15 @@
 # kotowari query
 
-<!-- @kotowari[REQ-core-156:31e36c67] -->
+English | [日本語](query.ja.md)
 
-`kotowari query` は、ID を1つ受けて、その項目かシナリオを本文と逆引き（その ID を指している項目）つきで出すコマンドです。
-1つの要求を IR の文書を開かずに読みたいときや、ガイドの印に写す指紋を取りたいときに使います。
+<!-- @kotowari[REQ-core-156:f3320502] -->
 
-## 書式
+`kotowari query` takes one ID and prints that item or scenario together with its body and its reverse references (the items that point at that ID).
+Use it when you want to read a single requirement without opening the IR document, or to get the fingerprint to copy into a guide mark.
 
-<!-- @kotowari[REQ-core-002:410b78a4, REQ-core-157:f0e9d719, EX-core-380:3c688038] -->
+## Synopsis
+
+<!-- @kotowari[REQ-core-002:d9acbe9c, REQ-core-157:7f12b67c, EX-core-380:f7f73b4e] -->
 
 ```sh
 kotowari query [--format json|text] [--config <path>] <ID>
@@ -15,34 +17,34 @@ kotowari query --help
 kotowari query --version
 ```
 
-位置引数はちょうど1つの ID です。
-オプションはコマンドの前に書いても、ID の後に書いても受けます（`kotowari query REQ-001 --format text` も同じ意味です）。
+The positional argument is exactly one ID.
+Options are accepted before the command or after the ID (`kotowari query REQ-001 --format text` means the same thing).
 
-## オプションと引数
+## Options and arguments
 
-<!-- @kotowari[REQ-core-161:bf9675f4, REQ-core-157:f0e9d719, REQ-core-003:7fb82a37, REQ-core-011:549c5c91] -->
+<!-- @kotowari[REQ-core-161:4580b6c0, REQ-core-157:7f12b67c, REQ-core-003:b4f59e48, REQ-core-011:0b7f52a9] -->
 
-| 名前 | 値 | 既定 | 説明 |
+| Name | Value | Default | Description |
 |---|---|---|---|
-| `<ID>` | ID（`REQ-core-001` のような形） | なし（必須） | 読む項目かシナリオの ID。大文字小文字を区別します |
-| `--format` | `json` か `text` | `json` | 出力の形 |
-| `--config` | 設定ファイルのパス | 基準のディレクトリの `.kotowari/config.yaml` | 読む設定ファイル。パスはカレントディレクトリからの相対で読みます |
-| `--help` | なし | — | 使い方を出して終わります |
-| `--version` | なし | — | 版を出して終わります |
+| `<ID>` | An ID (of the form `REQ-core-001`) | None (required) | The ID of the item or scenario to read. Case-sensitive |
+| `--format` | `json` or `text` | `json` | The output format |
+| `--config` | Path to a configuration file | `.kotowari/config.yaml` in the base directory | The configuration file to read. The path is read relative to the current directory |
+| `--help` | None | — | Prints usage and exits |
+| `--version` | None | — | Prints the version and exits |
 
-共通のオプションと基準のディレクトリの詳細は [CLI の共通事項](../cli.md) にあります。
+Details on the shared options and the base directory are in [CLI common rules](../cli.md).
 
-## 出力
+## Output
 
-何を読むかは `kotowari check` と同じです（同じ設定、同じ置き場の IR の文書とテストのファイル）。
-ただしガイドは読みません。
-同じ ID を持つ項目やシナリオが複数あれば、全部出します。
+What it reads is the same as `kotowari check` (the same configuration, and the IR documents and test files in the same locations).
+However, it does not read guides.
+If several items or scenarios have the same ID, all of them are printed.
 
 ### text
 
-<!-- @kotowari[REQ-core-161:bf9675f4, EX-core-254:01d21c93] -->
+<!-- @kotowari[REQ-core-161:4580b6c0, EX-core-254:cae8bffc] -->
 
-1件ごとに、[`kotowari list`](./list.md) の text と同じ1行目とテストの行に、本文と逆引きの行を続けます。
+For each entry, the body lines and the reverse reference lines follow the same first line and test lines as the text output of [`kotowari list`](./list.md).
 
 ```text
 ID 検証 名前 パス:行 tests=数
@@ -53,71 +55,71 @@ ID 検証 名前 パス:行 tests=数
   <- 指している ID via パス:行
 ```
 
-| 行 | 中身 |
+| Line | Content |
 |---|---|
-| 1行目とテストの行 | `kotowari list --format text` と同じ |
-| 本文の行 | `body` の各行を2つの半角空白で字下げしたもの。空の行は空白2つだけの行になります |
-| `<-` の行 | `referenced_by` の1件ごとに `  <- ID via パス:行`。`via` は下の表の値 |
+| First line and test lines | Same as `kotowari list --format text` |
+| Body lines | Each line of `body`, indented by two half-width spaces. A blank line becomes a line of just two spaces |
+| `<-` lines | One per entry in `referenced_by`: `  <- ID via path:line`. `via` takes a value from the table below |
 
 ### JSON
 
-<!-- @kotowari[TBL-core-027:62b02eff, REQ-core-159:4b71c072] -->
+<!-- @kotowari[TBL-core-027:24f0de66, REQ-core-159:4b71c072] -->
 
-最上位は `items` だけのオブジェクトで、`list` と同じ形です。
-1件は [`kotowari list` の1件の鍵](./list.md#json)（`id`、`kind`、`name`、`path`、`line`、`type`、`verification`、`definition`、`examples`、`how_to_verify`、`relations`、`sources`、`tests`、`fingerprint`、`deferred`）をすべて持ち、次の2つの鍵が増えます。
+The top level is an object with only `items`, the same shape as `list`.
+Each entry has all of [the keys of a `kotowari list` entry](./list.md#json) (`id`, `kind`, `name`, `path`, `line`, `type`, `verification`, `definition`, `examples`, `how_to_verify`, `relations`, `sources`, `tests`, `fingerprint`, `deferred`), plus the following two keys.
 
-| 鍵 | 型 | 説明 |
+| Key | Type | Description |
 |---|---|---|
-| `body` | 文字列の並び | 本文の行。先頭と末尾の空の行は含めず、行の文字はそのまま |
-| `referenced_by` | オブジェクトの並び | その ID を指している項目とシナリオ。1件は `id`、`kind`、`path`、`line`、`via` |
+| `body` | array of strings | The body lines. Leading and trailing blank lines are excluded; the text of each line is kept as is |
+| `referenced_by` | array of objects | The items and scenarios that point at this ID. Each has `id`, `kind`, `path`, `line` and `via` |
 
-`body` の範囲は種類で違います。
+The extent of `body` depends on the kind.
 
-| 種類 | `body` の範囲 |
+| Kind | Extent of `body` |
 |---|---|
-| 項目（要求、決定表、性質、問題の記録） | 見出しの次の行から、同じ深さかそれより浅い次の見出しの前の行まで。コードブロックの中の見出しの形の行では切りません |
-| シナリオ | `@id` のタグの行から最後のステップの行まで |
+| Item (requirement, decision table, property, flag record) | From the line after the heading up to the line before the next heading of the same or shallower depth. Lines inside code blocks that look like headings do not end it |
+| Scenario | From the `@id` tag line to the last step line |
 
-`via` は、どこから指しているかを表します。
+`via` tells where the reference comes from.
 
-| `via` | 指している場所 |
+| `via` | Where it points from |
 |---|---|
-| `definition` | `- definition:` の行 |
-| `relations` | `- related:` の行 |
-| `about` | シナリオの `@about` のタグ |
-| `text` | 要求の文、性質の文、シナリオのステップの中で、バッククォートで囲んだ ID（二重引用符の外のもの） |
+| `definition` | A `- definition:` line |
+| `relations` | A `- related:` line |
+| `about` | A scenario's `@about` tag |
+| `text` | An ID enclosed in backquotes (outside double quotes) in a requirement's statement, a property's statement, or a scenario's step |
 
-1つの項目が同じ ID を同じ `via` で何度指しても、`referenced_by` には1件だけ出ます。
-細かい定義は [query の IR](../../ir/core/query.md) の TBL-core-027 にあります。
+Even if one item points at the same ID several times with the same `via`, it appears only once in `referenced_by`.
+The detailed definition is in TBL-core-027 in [the query IR](../../ir/core/query.md).
 
-### 並び順
+### Ordering
 
-<!-- @kotowari[REQ-core-160:aad6e692] -->
+<!-- @kotowari[REQ-core-160:897f0db4] -->
 
-`items` は `list` と同じ順（`path` の昇順、同じ `path` の中は `line` の昇順）です。
-`referenced_by` も `path`、`line` の順に並びます。
+`items` is in the same order as `list` (ascending `path`, and within the same `path`, ascending `line`).
+`referenced_by` is also ordered by `path`, then `line`.
 
-## 終了コード
+## Exit codes
 
-<!-- @kotowari[REQ-core-156:31e36c67, REQ-core-157:f0e9d719, REQ-core-158:6cac9588] -->
+<!-- @kotowari[REQ-core-156:f3320502, REQ-core-157:7f12b67c, REQ-core-158:dbb850b2] -->
 
-| コード | 意味 |
+| Code | Meaning |
 |---|---|
-| 0 | 読めた（IR に誤りがあっても 0）。`--help` か `--version` で終わったときも 0 |
-| 2 | 停止した（ID が無い、ID の形でない、引数の数が違う、設定の誤り、読めないファイルなど。理由は標準エラーに出ます） |
+| 0 | Read successfully (0 even if the IR has errors). Also 0 when it exits after `--help` or `--version` |
+| 2 | Stopped (the ID does not exist, the argument is not of ID form, the wrong number of arguments, a configuration error, an unreadable file, and so on; the reason is printed to standard error) |
 
-`query` は 1 を返しません。
-IR の誤りの有無で終了コードを変えるのは `check` と `status` です。
-`query` はガイド、面のファイル、面の規則のファイル、未記載の面の一覧、全体像の元データを読まないので、それらによる停止はしません。
+`query` never returns 1.
+The commands whose exit code depends on whether the IR has errors are `check` and `status`.
+`query` does not read guides, surface files, surface rule files, the list of unspecified surfaces or overview data, so it never stops because of them.
 
-## 例
+## Example
 
-<!-- @kotowari[EX-core-250:3f505f2e, EX-core-254:01d21c93, EX-core-255:f2fb4c9e] -->
+<!-- @kotowari[EX-core-250:b09de293, EX-core-254:cae8bffc, EX-core-255:4af0f3d9] -->
 
-[`kotowari list` の例](./list.md#例)と同じ小さな IR とテストで実行した結果です（2026-09-24 に実行）。
+These are results of running it on the same small IR and tests as in [the `kotowari list` example](./list.md#example) (run on 2026-09-24).
 
-要求を text で読みます。
-本文の後の `<-` の行から、シナリオ EX-001 がこの要求を `@about` で指していると分かります。
+Read a requirement as text.
+The `<-` line after the body shows that scenario EX-001 points at this requirement through `@about`.
 
 ```console
 $ kotowari query REQ-001 --format text
@@ -131,7 +133,7 @@ REQ-001 unit 名前つきの挨拶 docs/ir/greet.md:7 tests=1
   <- EX-001 about docs/ir/greet.md:28
 ```
 
-JSON では、`list` の1件に `body` と `referenced_by` が増えます。増えた2つだけを示します。
+In JSON, an entry of `list` gains `body` and `referenced_by`. Only those two added keys are shown.
 
 ```console
 $ kotowari query REQ-001 | jq '.items[0] | {body, referenced_by}'
@@ -155,7 +157,7 @@ $ kotowari query REQ-001 | jq '.items[0] | {body, referenced_by}'
 }
 ```
 
-シナリオの本文は、`@id` のタグの行から始まります。
+A scenario's body starts at the `@id` tag line.
 
 ```console
 $ kotowari query EX-001 --format text
@@ -168,27 +170,27 @@ EX-001 - 名前を受けて挨拶する docs/ir/greet.md:28 tests=1
     Then "こんにちは、花子" が返る
 ```
 
-### ガイドの印に写す指紋を取る
+### Getting the fingerprint to copy into a guide mark
 
-<!-- @kotowari[TBL-core-026:05d8938e, REQ-core-203:e195dec1] -->
+<!-- @kotowari[TBL-core-026:382b0b95, REQ-core-203:1fdc0443] -->
 
-ガイドの印に書く指紋は、`fingerprint` の値をそのまま写します。手で計算しません。
+The fingerprint you write in a guide mark is the `fingerprint` value, copied as is. Do not compute it by hand.
 
 ```console
 $ kotowari query REQ-001 | jq -r '.items[0].fingerprint'
 ec0d8b1c
 ```
 
-書き方は [ガイドを書く](../writing-guides.md) にあります。
+How to write guides is described in [Writing guides](../writing-guides.md).
 
-## よくあるつまずき
+## Common pitfalls
 
-### `argument error: unknown id: ...` で止まる
+### It stops with `argument error: unknown id: ...`
 
-<!-- @kotowari[REQ-core-157:f0e9d719, EX-core-251:0b347986] -->
+<!-- @kotowari[REQ-core-157:7f12b67c, EX-core-251:9c9ef8a2] -->
 
-その ID を持つ項目もシナリオも IR にありません。
-空の結果を返さずに止まるので、ID の打ち間違いにすぐ気づけます。
+Neither an item nor a scenario with that ID exists in the IR.
+Because it stops instead of returning an empty result, you notice a mistyped ID right away.
 
 ```console
 $ kotowari query REQ-999
@@ -197,26 +199,26 @@ $ echo $?
 2
 ```
 
-ID がうろ覚えなら、`kotowari list --format text` で探します。
+If you are not sure of the ID, look for it with `kotowari list --format text`.
 
-### `argument error: not an id: ...` で止まる
+### It stops with `argument error: not an id: ...`
 
-<!-- @kotowari[REQ-core-157:f0e9d719] -->
+<!-- @kotowari[REQ-core-157:7f12b67c] -->
 
-位置引数が ID の形ではありません。
-ID は大文字小文字を区別するので、小文字で書いても止まります。
+The positional argument is not of ID form.
+IDs are case-sensitive, so writing one in lowercase also makes it stop.
 
 ```console
 $ kotowari query req-001
 argument error: not an id: req-001
 ```
 
-### `argument error: query expects exactly one id, got N` で止まる
+### It stops with `argument error: query expects exactly one id, got N`
 
-<!-- @kotowari[REQ-core-157:f0e9d719, EX-core-252:fe70e3eb] -->
+<!-- @kotowari[REQ-core-157:7f12b67c, EX-core-252:9d3e3cb6] -->
 
-ID を渡していないか、2つ以上渡しています。
-`query` は1回に1つの ID だけを読みます。複数を見たいときは1つずつ実行するか、`kotowari list` の JSON を `jq` で絞ります。
+You passed no ID, or two or more.
+`query` reads only one ID at a time. To look at several, run it once per ID, or filter the JSON of `kotowari list` with `jq`.
 
 ```console
 $ kotowari query REQ-001 REQ-002
@@ -225,12 +227,12 @@ $ kotowari query
 argument error: query expects exactly one id, got 0
 ```
 
-### 同じ ID で2件出てくる
+### Two entries come out for the same ID
 
-<!-- @kotowari[REQ-core-156:31e36c67, EX-core-253:a0ac53a2] -->
+<!-- @kotowari[REQ-core-156:f3320502, EX-core-253:b80999a5] -->
 
-IR に同じ ID の項目が2つあります（`check` では duplicate_id の誤り）。
-`query` は重複を隠さず、全部出して 0 で終わります。
+The IR has two items with the same ID (a duplicate_id error in `check`).
+`query` does not hide duplicates; it prints all of them and exits with 0.
 
 ```console
 $ kotowari query REQ-001 --format text
@@ -254,41 +256,21 @@ $ kotowari check --format text
 docs/ir/greet.md:7 [error] duplicate_id REQ-001
 ```
 
-どちらかの ID を付け直してください。
+Give one of them a new ID.
 
-### 文の中で ID に触れているのに `referenced_by` に出ない
+### An ID mentioned in a statement does not appear in `referenced_by`
 
-<!-- @kotowari[TBL-core-027:62b02eff, EX-core-257:373de661] -->
+<!-- @kotowari[TBL-core-027:24f0de66, EX-core-257:c84b3d33] -->
 
-`via` が `text` の逆引きに数えるのは、バッククォートで囲んだ ID だけです。
-二重引用符の中の ID や、囲んでいない ID は数えません。
-逆引きに載せたい参照は `` `REQ-001` `` のように書きます。
+Only IDs enclosed in backquotes count as reverse references with `via` `text`.
+IDs inside double quotes, or IDs not enclosed at all, are not counted.
+Write a reference you want listed as a reverse reference like `` `REQ-001` ``.
 
-## なぜこういう作りか
+## Related
 
-- **list の1件に `body` を足した形にしている。**
-  LLM が1件を読むときに IR の文書を開き直さなくて済むからです。それが list に無い query の値打ちです。
-  最上位も list と同じ `items` なので、鍵の説明が二重になりません。
-  （[決定の記録 A2](../../decision/records/2026-09-20-query-status.md#A2)、[A4](../../decision/records/2026-09-20-query-status.md#A4)）
-- **逆引きは query だけが持つ。**
-  list は定義の逆向きの鍵を持たず、逆引きは query で行うと決めています。拾う場所は check が参照の検査のために ID を読んでいる場所と同じです。
-  （[A3](../../decision/records/2026-09-20-query-status.md#A3)）
-- **無い ID は空の結果でなく停止にする。**
-  LLM が読むとき、空の `items` と終了コード 0 より、0 でない終了コードと理由が出るほうが取り違えないからです。
-  一方で重複は check の指摘なので、query は隠さず全部出します。
-  （[A6](../../decision/records/2026-09-20-query-status.md#A6)）
-- **text は list の text の上に足す形。**
-  読み方が1つ増えないようにしています。本文は IR の生の行なので、字下げだけで区別できます。
-  （[A7](../../decision/records/2026-09-20-query-status.md#A7)）
-- **`<-` や `via` の値など、kotowari が決める文言は英語。**
-  停止の文言と JSON の鍵が英語なので揃えています。IR やテストから写す文字はそのままです。
-  （[A13](../../decision/records/2026-09-20-query-status.md#A13)）
-
-## 関連
-
-- 仕様: [query の IR](../../ir/core/query.md)
-- 全項目を一覧で見る: [`kotowari list`](./list.md)
-- 全体の数と揃っているかを見る: [`kotowari status`](./status.md)
-- 指摘を1件ずつ見る: [`kotowari check`](./check.md)
-- ガイドの印と指紋: [ガイドを書く](../writing-guides.md)
-- 共通のオプション、停止、基準のディレクトリ: [CLI の共通事項](../cli.md)
+- Specification: [the query IR](../../ir/core/query.md)
+- See all items as a list: [`kotowari list`](./list.md)
+- See overall counts and whether everything is in place: [`kotowari status`](./status.md)
+- See findings one by one: [`kotowari check`](./check.md)
+- Guide marks and fingerprints: [Writing guides](../writing-guides.md)
+- Shared options, stopping, the base directory: [CLI common rules](../cli.md)

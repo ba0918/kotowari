@@ -1,99 +1,101 @@
-# 変更の照合記録と仕様の穴の処理先
+# Change records and the dispositions of specification gaps
 
-照合記録の持つ情報、通常の check の静的検査、仕様の穴の処理先と、機械検査の保証の限界を扱う。保存形式は change-record-format.md、現在状態の検査は changes-results.md に定める。
+English | [日本語](change-records.ja.md)
+
+Covers the information a change record holds, the static inspection of the ordinary check, the dispositions of a specification gap, and the limits of what mechanical inspection guarantees. The storage format is defined in change-record-format.md, and the inspection of the current state in changes-results.md.
 
 ## Requirements
 
-### REQ-core-248: 照合記録の情報
+### REQ-core-248: Information in a change record
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-conformance.md#A4, docs/decision/records/2026-10-01-change-conformance.md#A5, docs/decision/records/2026-10-01-change-conformance.md#A11
 - verification: unit
 
-照合記録は常に、比較元、対象ファイル、対象内容の識別値、関連する`IR`とその内容の識別値、結論、理由、結論に応じた`判断の記録`への参照、照合した役を持つ。複数ファイルを変更意図ごとに1件へまとめられる。
+A change record always holds the comparison base, the target files, the identifiers of the target contents, the related `IR` and the identifiers of its contents, the conclusion, the reason, references to the `decision record` according to the conclusion, and the role that did the conformance check. Several files can be put together into one entry per change intent.
 
-### REQ-core-249: 通常の check の静的検査
+### REQ-core-249: Static inspection by the ordinary check
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-current-change-records.md#A5, docs/decision/records/2026-10-01-current-change-records.md#A8
 - verification: unit
 
-kotowari は常に、"kotowari check" で、設定された照合記録すべての形式と、各件の`IR`・`判断の記録`・保留先への参照を検査し、必須情報や参照の欠落を出す。changes.records がパス成分で明示した隠しディレクトリ内の記録も読み、未指定の隠し配下は読まない。この静的検査のために Git の比較元を要求しない。
+kotowari always, in "kotowari check", inspects the format of every configured change record and each entry's references to the `IR`, to the `decision record` and to the deferral target, and reports missing required information and missing references. It also reads records inside a hidden directory that changes.records names explicitly in a path component, and does not read under hidden directories not named. This static inspection does not require a Git comparison base.
 
-### REQ-core-250: 既存仕様の範囲という結論
+### REQ-core-250: The conclusion "within the existing specification"
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-conformance.md#A5
 - verification: unit
 
-照合記録は常に、結論が既存仕様の範囲である件に、対応する`要求`への参照と、その範囲に収まる理由を持つ。
+A change record always holds, for an entry whose conclusion is within the existing specification, references to the corresponding `requirement` and the reason the change falls within that range.
 
-### REQ-core-251: 新しい判断という結論
+### REQ-core-251: The conclusion "a new decision"
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-conformance.md#A1, docs/decision/records/2026-10-01-change-conformance.md#A5
 - verification: unit
 
-照合記録は常に、結論が新しい判断である件に、選択と根拠を記した`判断の記録`への参照を持つ。振る舞い・制約の仕様を変える選択は、変更後の`IR`とも対応する。
+A change record always holds, for an entry whose conclusion is a new decision, a reference to the `decision record` stating the choice and its grounds. A choice that changes the specification of behavior or constraints also corresponds to the `IR` after the change.
 
-### REQ-core-252: 保留という結論
+### REQ-core-252: The conclusion "deferred"
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-conformance.md#A5, docs/decision/records/2026-10-01-change-conformance.md#A10
 - verification: unit
 
-照合記録は常に、結論が保留である件に、理由と引き継ぎ先を持つ。仕様の穴を保留するときは、`判断の記録`にその保留を明示する。
+A change record always holds, for an entry whose conclusion is deferred, the reason and the handoff target. When a specification gap is deferred, the deferral is stated explicitly in the `decision record`.
 
-### REQ-core-253: 記録は呼び出し側が書く
+### REQ-core-253: The caller writes the records
 
 - kind: prohibition
 - source: docs/decision/records/2026-10-01-current-change-records.md#A1
 - verification: unit
 
-kotowari は、照合記録や仕様の穴の処理先を、標準出力と標準エラーのほかへ書き出してはならない。これらは cycle または別の呼び出し側が共通の形式で書き、現在の変更に必要な照合記録だけをリポジトリに残す。更新で不要な過去記録は削除し、過去の証拠は Git 履歴から確認する。
+kotowari must not write change records or the dispositions of specification gaps anywhere other than standard output and standard error. They are written by cycle or another caller in the common format, and only the change records needed for the current change are kept in the repository. Past records no longer needed are deleted on update, and past evidence is checked from the Git history.
 
-### REQ-core-254: 機械検査の意味の限界
+### REQ-core-254: Limits of the meaning of mechanical inspection
 
 - kind: prohibition
 - source: docs/decision/records/2026-10-01-change-conformance.md#A6, docs/decision/records/2026-10-01-change-conformance.md#P1
 - verification: unit
 
-kotowari は、照合記録の形式・対応・鮮度が検査を通ったことを、根拠が選択を支えること、仕様と実装の意味の一致、委譲範囲内であることを機械が証明した結果として出してはならない。
+kotowari must not present the passing of the inspection of a change record's format, correspondence and freshness as a machine proof that the grounds support the choice, that the specification and the implementation agree in meaning, or that the change is within the delegated scope.
 
-### REQ-core-255: 仕様の穴の分類と処理先
+### REQ-core-255: Classification and dispositions of specification gaps
 
 - kind: prohibition
 - source: docs/decision/records/2026-10-01-change-conformance.md#A10, docs/decision/records/2026-10-01-change-conformance.md#A11
 - verification: unit
 
-仕様の穴の記録は常に、指摘の重要度・修正アクションとは別の分類と、`判断の記録`と`IR`への反映、仕様に合わせたコードの修正、`判断の記録`での明示的な保留のいずれかの処理先を持つ。"info" や "record_only" という扱いだけを処理済みの証拠にしてはならない。
+A record of a specification gap always holds a classification separate from a finding's severity and fix action, and one of these dispositions: reflection in the `decision record` and the `IR`, a fix of the code to match the specification, or an explicit deferral in the `decision record`. A treatment of "info" or "record_only" alone must not be taken as evidence that the gap was handled.
 
 ## Examples
 
 ```gherkin
 @id=EX-core-437 @about=REQ-core-249,REQ-core-250 @source=docs/decision/records/2026-10-01-change-conformance.md#A2,docs/decision/records/2026-10-01-change-conformance.md#A5,docs/decision/records/2026-10-01-change-conformance.md#A6
-Scenario: 既存仕様の参照がない
-  Given 設定された照合記録の結論が既存仕様の範囲で、理由はあるが対応する`要求`への参照がない
-  When "kotowari check" を実行する
-  Then 参照の欠落が検出されて出る
+Scenario: No reference to the existing specification
+  Given the conclusion of a configured change record is within the existing specification, and it has a reason but no reference to the corresponding `requirement`
+  When "kotowari check" is run
+  Then the missing reference is detected and reported
 
 @id=EX-core-438 @about=REQ-core-249,REQ-core-251 @source=docs/decision/records/2026-10-01-change-conformance.md#A1,docs/decision/records/2026-10-01-change-conformance.md#A2,docs/decision/records/2026-10-01-change-conformance.md#A5,docs/decision/records/2026-10-01-change-conformance.md#A6
-Scenario: 新判断の根拠を指す記録がない
-  Given 設定された照合記録の結論が新しい判断で、`判断の記録`への参照がない
-  When "kotowari check" を実行する
-  Then 参照の欠落が検出されて出る
+Scenario: No record points to the grounds of a new decision
+  Given the conclusion of a configured change record is a new decision, and it has no reference to a `decision record`
+  When "kotowari check" is run
+  Then the missing reference is detected and reported
 
 @id=EX-core-439 @about=REQ-core-249 @source=docs/decision/records/2026-10-01-change-conformance.md#A2
-Scenario: Git の比較元なしで静的検査する
-  Given 設定された照合記録の形式と参照が検査でき、Git の比較元を指定していない
-  When "kotowari check" を実行する
-  Then Git の比較元を要求せず、照合記録の形式と参照を検査する
+Scenario: Static inspection without a Git comparison base
+  Given the format and references of the configured change records can be inspected, and no Git comparison base is specified
+  When "kotowari check" is run
+  Then it does not require a Git comparison base, and inspects the format and references of the change records
 
 @id=EX-core-440 @about=REQ-core-249,REQ-core-252 @source=docs/decision/records/2026-10-01-change-conformance.md#A2,docs/decision/records/2026-10-01-change-conformance.md#A5,docs/decision/records/2026-10-01-change-conformance.md#A6
-Scenario: 保留先の欠落
-  Given 設定された照合記録の結論が保留で、理由はあるが引き継ぎ先がない
-  When "kotowari check" を実行する
-  Then 参照の欠落が検出されて出る
+Scenario: Missing deferral target
+  Given the conclusion of a configured change record is deferred, and it has a reason but no handoff target
+  When "kotowari check" is run
+  Then the missing reference is detected and reported
 
 ```
 
@@ -101,11 +103,11 @@ Scenario: 保留先の欠落
 
 ```gherkin
 @id=EX-core-457 @about=REQ-core-249,REQ-core-019 @source=docs/decision/records/2026-10-01-current-change-records.md#A8
-Scenario: 名指しした隠し記録を静的検査する
-  Given changes.records が .kotowari/changes/*.yaml を指定する
-  And その配下に不正な形式または参照切れの記録がある
-  When check と status を実行する
-  Then 両方で change_record_invalid が出る
-  And 未指定の .hidden 配下は検査しない
+Scenario: Hidden records named explicitly are inspected statically
+  Given changes.records specifies .kotowari/changes/*.yaml
+  And under it is a record with an invalid format or a broken reference
+  When check and status are run
+  Then change_record_invalid is raised in both
+  And the unnamed .hidden directory is not inspected
 
 ```

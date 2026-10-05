@@ -1,127 +1,129 @@
-# スキーマの解決
+# Schema resolution
 
-この文書は、文書の frontmatter が指すスキーマをどう見つけ、取得し、キャッシュするかを扱う。
+English | [日本語](schema-resolution.ja.md)
+
+This document covers how the schema that a document's frontmatter points at is found, fetched and cached.
 
 ## Requirements
 
-### REQ-schema-011: スキーマの指定の解決
+### REQ-schema-011: Resolving the schema reference
 
 - kind: algorithm
 - source: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A20, docs/decision/records/2026-09-23-mutants-gaps.md#A7
 - definition: TBL-schema-003
 - verification: unit
 
-### REQ-schema-012: 相対パスの基準
+### REQ-schema-012: Base of relative paths
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A14
 - verification: unit
 
-mds は常に、`frontmatter`に書いた相対パスを、`文書`の置かれた位置を基準に解決する。`基準のディレクトリ`は相対パスの解決には使わない。
+mds always resolves a relative path written in the `frontmatter` against the location of the `document`. The `base directory` is not used to resolve relative paths.
 
-### REQ-schema-013: URL のスキーマのキャッシュ
+### REQ-schema-013: Caching a URL schema
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A20, docs/decision/records/2026-09-23-mutants-gaps.md#A9, docs/decision/records/2026-09-24-kotowari-dir.md#A3
 - verification: unit
 
-`frontmatter`が URL の`スキーマ`を指したとき、mds は取得した内容を SHA-256 の名前でキャッシュに置き、次からはキャッシュを読む。キャッシュが壊れていれば取得し直して回復する。キャッシュは`基準のディレクトリ`の ".kotowari/cache/schemas/" に置き、`基準のディレクトリ`が無ければカレントディレクトリの ".kotowari/cache/schemas/" に置く。
+When the `frontmatter` points at a `schema` by URL, mds places the fetched content in the cache under its SHA-256 name and reads the cache from then on. If the cache is corrupt, it fetches again and recovers. The cache is placed in ".kotowari/cache/schemas/" of the `base directory`, and if there is no `base directory`, in ".kotowari/cache/schemas/" of the current directory.
 
-### REQ-schema-014: スキーマを指していない文書
+### REQ-schema-014: A document that does not point at a schema
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#P1
 - verification: unit
 
-`frontmatter`が YAML のマッピングでないとき、"$schema" の値が空か空白だけのとき、または "$schema" の値が文字列でないとき、mds は`停止`する。
+When the `frontmatter` is not a YAML mapping, when the value of "$schema" is empty or only whitespace, or when the value of "$schema" is not a string, mds performs a `stop`.
 
-### REQ-schema-015: frontmatter の余分なキー
+### REQ-schema-015: Extra keys in the frontmatter
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A1
 - verification: unit
 
-mds は常に、`frontmatter`の "$schema" 以外のキーを読まず、`指摘`にもしない。
+mds always ignores keys of the `frontmatter` other than "$schema", and does not make them a `finding` either.
 
-### REQ-schema-052: URL の認証情報を伏せる
+### REQ-schema-052: Masking credentials in a URL
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A25
 - verification: unit
 
-`停止`の説明に URL を載せるとき、mds はその authority にある認証情報を伏せる。
+When putting a URL in the explanation of a `stop`, mds masks the credentials in its authority.
 
 ## Decision tables
 
-### TBL-schema-003: スキーマの指定の解決
+### TBL-schema-003: Resolving the schema reference
 
 - source: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A27, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-23-mutants-gaps.md#A7
 
-| 順 | "$schema" の値 | 解決 |
+| Order | Value of "$schema" | Resolution |
 |---|---|---|
-| 1 | 無い（ファイルを対象に指定したとき。ディレクトリのときは REQ-schema-010）、空、空白だけ、文字列でない、`frontmatter`がマッピングでない | `停止` |
-| 2 | "http://" か "https://" で始まる | 取得してキャッシュに置く。取得できないとき、応答が 4MiB を超えたとき、または取得全体が10秒を超えたときは`停止` |
-| 3 | それ以外 | `文書`の位置からの相対パスとして読む。読めなければ`停止` |
+| 1 | Absent (when a file is given as the target; for a directory see REQ-schema-010), empty, only whitespace, not a string, or the `frontmatter` is not a mapping | `stop` |
+| 2 | Starts with "http://" or "https://" | Fetch it and place it in the cache. A `stop` when it cannot be fetched, when the response exceeds 4MiB, or when the whole fetch exceeds 10 seconds |
+| 3 | Anything else | Read it as a path relative to the location of the `document`. A `stop` if it cannot be read |
 
 ## Properties
 
-### PROP-schema-003: コマンドによって解決先が変わらない
+### PROP-schema-003: The resolution does not change with the command
 
 - source: docs/decision/records/2026-09-21-mds-spec.md#A14
 
-同じ`文書`の "$schema" は、検査、`抽出`、素の構文木のどのコマンドから読んでも同じ`スキーマ`に解決する。
+The "$schema" of the same `document` resolves to the same `schema` whether it is read by the check, `extraction` or bare-syntax-tree command.
 
 ## Examples
 
 ```gherkin
 @id=EX-schema-005 @about=REQ-schema-012 @source=docs/decision/records/2026-09-21-mds-spec.md#A14
-Scenario: 相対パスは文書の位置から解決する
-  Given `文書`から離れた位置の`スキーマ`を相対パスで指した`文書`がある
-  When "kotowari-mds check" を実行する
-  Then `スキーマ`は`文書`の位置から解決される
-  And 終了コードは 0 である
+Scenario: A relative path is resolved from the location of the document
+  Given a `document` that points by relative path at a `schema` located away from the `document`
+  When "kotowari-mds check" is run
+  Then the `schema` is resolved from the location of the `document`
+  And the exit code is 0
 
 @id=EX-schema-017 @about=REQ-schema-052 @source=docs/decision/records/2026-09-21-mds-spec.md#A25
-Scenario: 認証情報を含む URL は伏せて出す
-  Given 認証情報を含む URL の`スキーマ`を指した`文書`があり、取得に失敗する
-  When "kotowari-mds check" を実行する
-  Then 標準エラーに認証情報は出ない
-  And URL は伏せた形で出る
+Scenario: A URL containing credentials is output masked
+  Given a `document` that points at a `schema` by a URL containing credentials, and the fetch fails
+  When "kotowari-mds check" is run
+  Then no credentials appear on standard error
+  And the URL appears in masked form
 
 @id=EX-schema-006 @about=REQ-schema-013 @source=docs/decision/records/2026-09-21-mds-spec.md#A14,docs/decision/records/2026-09-21-mds-spec.md#A15
-Scenario: 壊れたキャッシュは取得し直して回復する
-  Given URL の`スキーマ`を指し、その`スキーマ`をすべて満たす`文書`と、壊れたキャッシュがある
-  When "kotowari-mds check" を実行する
-  Then `スキーマ`を取得し直す
-  And 終了コードは 0 である
+Scenario: A corrupt cache is fetched again and recovered
+  Given a `document` that points at a URL `schema` and fully satisfies that `schema`, and a corrupt cache
+  When "kotowari-mds check" is run
+  Then the `schema` is fetched again
+  And the exit code is 0
 
 @id=EX-schema-066 @about=TBL-schema-003,REQ-schema-011 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A7
-Scenario: 4MiB を超える URL のスキーマは停止する
-  Given 4MiB を超える応答を返す URL の`スキーマ`を指した`文書`がある
-  When "kotowari-mds check" を実行する
-  Then 終了コードは 2 である
+Scenario: A URL schema exceeding 4MiB stops
+  Given a `document` that points at a `schema` by a URL that returns a response exceeding 4MiB
+  When "kotowari-mds check" is run
+  Then the exit code is 2
 
 @id=EX-schema-067 @about=TBL-schema-003,REQ-schema-011 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A7
-Scenario: 取得全体が10秒を超える URL のスキーマは停止する
-  Given 10秒を超えても応答を終えない URL の`スキーマ`を指した`文書`がある
-  When "kotowari-mds check" を実行する
-  Then 終了コードは 2 である
+Scenario: A URL schema whose whole fetch exceeds 10 seconds stops
+  Given a `document` that points at a `schema` by a URL that has not finished responding after 10 seconds
+  When "kotowari-mds check" is run
+  Then the exit code is 2
 
 @id=EX-schema-068 @about=TBL-schema-003,REQ-schema-011 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A7,docs/decision/records/2026-09-21-mds-spec.md#A15
-Scenario: 上限の内で取得できた URL のスキーマは停止しない
-  Given 4MiB 以下の応答を10秒以内に返す URL の`スキーマ`を指し、その`スキーマ`をすべて満たす`文書`がある
-  When "kotowari-mds check" を実行する
-  Then 終了コードは 0 である
+Scenario: A URL schema fetched within the limits does not stop
+  Given a `document` that points at a `schema` by a URL that returns a response of 4MiB or less within 10 seconds, and fully satisfies that `schema`
+  When "kotowari-mds check" is run
+  Then the exit code is 0
 
 @id=EX-schema-069 @about=REQ-schema-013 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A9,docs/decision/records/2026-09-24-kotowari-dir.md#A1,docs/decision/records/2026-09-24-kotowari-dir.md#A3
-Scenario: URL のスキーマのキャッシュは基準のディレクトリの下に置く
-  Given ".kotowari/" のあるディレクトリの下のサブディレクトリがカレントディレクトリで、URL の`スキーマ`を指した`文書`がある
-  When "kotowari-mds check" を実行する
-  Then キャッシュは ".kotowari/" のあるディレクトリの ".kotowari/cache/schemas/" に置かれ、カレントディレクトリの下には置かれない
+Scenario: The cache of a URL schema is placed under the base directory
+  Given the current directory is a subdirectory under a directory that has ".kotowari/", and there is a `document` that points at a URL `schema`
+  When "kotowari-mds check" is run
+  Then the cache is placed in ".kotowari/cache/schemas/" of the directory that has ".kotowari/", and not under the current directory
 
 @id=EX-schema-070 @about=REQ-schema-013 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A9,docs/decision/records/2026-09-24-kotowari-dir.md#A1,docs/decision/records/2026-09-24-kotowari-dir.md#A3
-Scenario: 基準のディレクトリが無ければキャッシュはカレントディレクトリの下に置く
-  Given カレントディレクトリから上のどこにも ".kotowari/" が無く、URL の`スキーマ`を指した`文書`がある
-  When "kotowari-mds check" を実行する
-  Then キャッシュはカレントディレクトリの ".kotowari/cache/schemas/" に置かれる
+Scenario: Without a base directory the cache is placed under the current directory
+  Given there is no ".kotowari/" anywhere from the current directory upward, and there is a `document` that points at a URL `schema`
+  When "kotowari-mds check" is run
+  Then the cache is placed in ".kotowari/cache/schemas/" of the current directory
 ```

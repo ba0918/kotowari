@@ -1,74 +1,76 @@
-# 判断の記録の補足の行の検査
+# Checking the supplementary lines of decision records
 
-判断の記録の番号の行と補足の行の読み方（すべての判断の記録に適用）と、"## Context" の見出しを持つ判断の記録での補足の行の有無と名前の検査を扱う。superseded_by のリンクの検査は revision-link.md が扱う。
+English | [日本語](record-form.ja.md)
+
+Covers how the numbered lines and supplementary lines of a decision record are read (applied to every decision record), and, in decision records that have a "## Context" heading, the check of the presence and names of supplementary lines. The check of superseded_by links is covered by revision-link.md.
 
 ## Requirements
 
-### REQ-core-129: 形の検査の対象
+### REQ-core-129: What the form check applies to
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-17-record-form.md#A1, docs/decision/records/2026-09-17-record-form.md#A22, docs/decision/records/2026-09-17-record-form.md#A26, docs/decision/records/2026-09-17-record-form.md#A27, docs/decision/records/2026-09-17-record-form.md#A39, docs/decision/records/2026-09-17-record-form.md#A41, docs/decision/records/2026-09-17-decision-log.md#A6, docs/decision/records/records.md#A134
 - verification: unit
 
-kotowari は常に、"## " の後を前後の空白を除いて "Context" と完全一致で比べた見出しを持つ`判断の記録`だけに REQ-core-130 と REQ-core-131 を適用し、持たない`判断の記録`には適用しない。REQ-core-132 は "## Context" の有無にかかわらず、すべての`判断の記録`に適用する。`決定の節`の見出しを持たないファイルは`判断の記録`でなく、どちらの検査も受けない。
+kotowari always applies REQ-core-130 and REQ-core-131 only to a `decision record` that has a heading whose text after "## ", with surrounding whitespace removed, exactly matches "Context", and does not apply them to a `decision record` without one. REQ-core-132 is applied to every `decision record`, whether or not it has "## Context". A file without a heading of a `decision section` is not a `decision record` and undergoes neither check.
 
-### REQ-core-130: 必須の補足の行
+### REQ-core-130: Required supplementary lines
 
 - kind: algorithm
 - source: docs/decision/records/2026-09-17-record-form.md#A2, docs/decision/records/2026-09-17-record-form.md#A6, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A13, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-decision-log.md#A1, docs/decision/records/2026-09-17-decision-log.md#A12
 - definition: TBL-core-022
 - verification: unit
 
-### REQ-core-131: 知らない名前の補足の行
+### REQ-core-131: Supplementary lines with unknown names
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-17-record-form.md#A1, docs/decision/records/2026-09-17-record-form.md#A6, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A14, docs/decision/records/2026-09-17-record-form.md#A27
 - verification: unit
 
-TBL-core-022 の節にある`番号の行`の`補足の行`の名前が TBL-core-022 の認める名前のどれでもないとき、kotowari は "line" をその行にし detail をその名前にして record_field_unknown の`誤り`を出す。
+When the name of a `supplementary line` of a `numbered line` in a section of TBL-core-022 is none of the names TBL-core-022 allows, kotowari raises an `error` of record_field_unknown with "line" set to that line and detail set to that name.
 
-### REQ-core-133: 補足の行の名前と値
+### REQ-core-133: Names and values of supplementary lines
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-17-record-form.md#A23, docs/decision/records/2026-09-17-record-form.md#A27, docs/decision/records/2026-09-17-record-form.md#A33, docs/decision/records/2026-09-17-record-form.md#A37, docs/decision/records/2026-09-17-decision-log.md#A2, docs/decision/records/2026-09-17-record-form.md#A1, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A35
 - verification: unit
 
-kotowari は常に、`補足の行`の名前を "- " の直後から最初の ":" までの文字、値を最初の ":" の後から行末までの前後の空白を除いた文字として読む。名前は1文字以上で空白と ":" を含まず、当たらない行は`補足の行`でない。値が空の`補足の行`は TBL-core-022 の判定で無いものとして数え、名前の検査（REQ-core-131）は値が空でも受ける。値が空の superseded_by の行は TBL-core-023 の判定の対象にしない。"## Context" を持たない`判断の記録`では、値が空の superseded_by の行はどの`指摘`も受けない（REQ-core-132 のほかの判定はすべての`判断の記録`で受ける）。名前の形に当たらない行は`除外`で、その名前は有るものと数えない。値が "not recorded" の行は有るものとして数える。
+kotowari always reads the name of a `supplementary line` as the characters from just after "- " up to the first ":", and the value as the characters from after the first ":" to the end of the line, with surrounding whitespace removed. The name is at least one character long and contains neither whitespace nor ":"; a line that does not match is not a `supplementary line`. A `supplementary line` with an empty value is counted as absent in the judgement of TBL-core-022, while the name check (REQ-core-131) applies even when the value is empty. A superseded_by line with an empty value is not subject to the judgement of TBL-core-023. In a `decision record` without "## Context", a superseded_by line with an empty value receives no `finding` (the other judgements of REQ-core-132 apply in every `decision record`). A line that does not match the form of a name is an `exclusion`, and its name is not counted as present. A line whose value is "not recorded" is counted as present.
 
-### REQ-core-134: 補足の行の数を見ない
+### REQ-core-134: The number of supplementary lines is not looked at
 
 - kind: prohibition
 - source: docs/decision/records/2026-09-17-record-form.md#A15
 - verification: unit
 
-kotowari は、同じ名前の`補足の行`が1つの`番号の行`の下に2つ以上あることを`指摘`してはならない。
+kotowari must not raise a `finding` because two or more `supplementary line` entries with the same name are under one `numbered line`.
 
-### REQ-core-135: 判断の記録で読まない行
+### REQ-core-135: Lines not read in decision records
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-17-record-form.md#A14, docs/decision/records/2026-09-17-record-form.md#A24, docs/decision/records/2026-09-17-record-form.md#A27, docs/decision/records/2026-09-17-record-form.md#A34, docs/decision/records/2026-09-17-record-form.md#A35, docs/decision/records/records.md#A115, docs/decision/records/2026-09-17-record-form.md#A45
 - verification: unit
 
-kotowari は常に、`判断の記録`の TBL-core-022 の表に無い節（Revisions と "## Context" を含む）にある`番号の行`の形の行と`補足の行`の形の行、節の最初の`番号の行`より前にある`補足の行`の形の行、`番号の行`でも`補足の行`でも見出しでもない行（箇条でない本文の行と、最初の "## " の見出しより前の行を含む）、`コードブロック`の中（gherkin を含む。中の "## " の見出しも数えない。閉じられずに文書が終わるときは文書の終わりまでが中で、`指摘`は出さない）を、`除外`として読まない。見出しは節の切り分けと "## Context" の判定のために読み、`指摘`の対象にしない。節の一覧は TBL-core-022 の表の「節」の列で、REQ-core-130 の適用範囲とは別にすべての`判断の記録`で使う。
+kotowari always leaves unread, as an `exclusion`, the following in a `decision record`: lines of the `numbered line` form and lines of the `supplementary line` form in sections not in the table of TBL-core-022 (including Revisions and "## Context"); lines of the `supplementary line` form before the first `numbered line` of a section; lines that are neither a `numbered line`, a `supplementary line` nor a heading (including non-bullet body lines and lines before the first "## " heading); and the inside of a `code block` (gherkin included; "## " headings inside are not counted either; when it is left unclosed until the document ends, everything up to the end of the document is inside, and no `finding` is raised). Headings are read to divide the sections and to judge "## Context", and are not subject to any `finding`. The list of sections is the "Section" column of the table of TBL-core-022, and it is used in every `decision record`, apart from the scope to which REQ-core-130 applies.
 
-### REQ-core-136: 記録の読み取りは1つの関数
+### REQ-core-136: Reading the records is one function
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-17-record-form.md#A10, docs/decision/records/2026-09-17-record-form.md#A11, docs/decision/records/2026-09-17-record-form.md#A16
 - verification: review
-- how_to_verify: 判断の記録を読む関数が1つで（`crates/kotowari-core/src/sources.rs` の parse_records_file、または記録の読み取りのモジュール）、形の検査と出典の判定がその返す構造だけを読むことを確認。`rg "lines\(\)" crates/kotowari-core/src/sources.rs` で、記録のファイルの行を直接読む箇所が読み取り関数の外に無いことを確認
+- how_to_verify: Confirm that there is one function that reads decision records (parse_records_file in `crates/kotowari-core/src/sources.rs`, or the module that reads the records), and that the form check and the judgement of sources read only the structure it returns. With `rg "lines\(\)" crates/kotowari-core/src/sources.rs`, confirm that no place outside the reading function reads the lines of a record file directly
 
-kotowari は常に、`判断の記録`の読み取り（節、`番号の行`、`補足の行`、リンク）を1つの関数で行い、形の検査と`出典`の判定はその関数が返す構造だけを読む。
+kotowari always reads a `decision record` (sections, `numbered line` entries, `supplementary line` entries, links) in one function, and the form check and the judgement of a `source` read only the structure that function returns.
 
 ## Decision tables
 
-### TBL-core-022: 節ごとの必須の補足の行
+### TBL-core-022: Required supplementary lines by section
 
 - source: docs/decision/records/2026-09-17-record-form.md#A2, docs/decision/records/2026-09-17-record-form.md#A6, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A13, docs/decision/records/2026-09-17-record-form.md#A14, docs/decision/records/2026-09-17-record-form.md#A27, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A33, docs/decision/records/2026-09-17-decision-log.md#A1, docs/decision/records/records.md#A115
 
-認める名前は "why"、"rejected"、"decided_by"、"superseded_by"、"decides"、"related" の6つ。`番号の行`の判定を`補足の行`より先に行い、`番号の行`は`補足の行`と見ない。節の`番号の行`に必須の名前の`補足の行`が無いとき、"line" をその`番号の行`にし detail をその名前にして record_field_missing の`誤り`を出す。表に無い節の行は読まない。節は "## " の見出しで始まり次の "## " の見出しで終わり、"### " の見出しは節を終えない。
+The allowed names are the six "why", "rejected", "decided_by", "superseded_by", "decides" and "related". The judgement of a `numbered line` is made before that of a `supplementary line`, and a `numbered line` is not taken as a `supplementary line`. When a `numbered line` of a section lacks a `supplementary line` with a required name, an `error` of record_field_missing is raised with "line" set to that `numbered line` and detail set to that name. Lines of sections not in the table are not read. A section starts at a "## " heading and ends at the next "## " heading; a "### " heading does not end a section.
 
-| 節 | 必須の名前 |
+| Section | Required name |
 |---|---|
 | Agreements | why |
 | Prohibitions | why |
@@ -81,68 +83,68 @@ kotowari は常に、`判断の記録`の読み取り（節、`番号の行`、`
 
 ```gherkin
 @id=EX-core-101 @about=REQ-core-130 @source=docs/decision/records/2026-09-17-record-form.md#A1,docs/decision/records/2026-09-17-record-form.md#A2,docs/decision/records/2026-09-17-record-form.md#A7,docs/decision/records/2026-09-17-record-form.md#A27,docs/decision/records/2026-09-17-record-form.md#A32
-Scenario: Context を持つ記録で why の無い決定は誤りになる
-  Given "## Context" の見出しを持つ判断の記録の Agreements の節に、"- A1 " で始まる行があり、その下に "- why:" の行が無い
-  When "kotowari check" を実行する
-  Then "line" が "- A1 " の行で detail が "why" の record_field_missing の誤りが出る
+Scenario: In a record with Context, a decision without why is an error
+  Given in the Agreements section of a decision record with a "## Context" heading there is a line starting with "- A1 ", and under it there is no "- why:" line
+  When "kotowari check" is run
+  Then an error of record_field_missing is raised whose "line" is the "- A1 " line and whose detail is "why"
 
 @id=EX-core-102 @about=REQ-core-129 @source=docs/decision/records/2026-09-17-record-form.md#A1,docs/decision/records/2026-09-17-record-form.md#A22,docs/decision/records/2026-09-17-record-form.md#A27
-Scenario: Context を持たない記録は形の検査を受けない
-  Given "## Context" の見出しを持たない判断の記録の Agreements の節に、"- A1 " で始まる行があり、その下に "- why:" の行が無い
-  When "kotowari check" を実行する
-  Then その記録を指す record_field_missing と record_field_unknown の誤りは出ない
+Scenario: A record without Context does not undergo the form check
+  Given in the Agreements section of a decision record without a "## Context" heading there is a line starting with "- A1 ", and under it there is no "- why:" line
+  When "kotowari check" is run
+  Then no error of record_field_missing or record_field_unknown pointing at that record is raised
 
 @id=EX-core-103 @about=REQ-core-133 @source=docs/decision/records/2026-09-17-record-form.md#A1,docs/decision/records/2026-09-17-record-form.md#A7,docs/decision/records/2026-09-17-record-form.md#A23,docs/decision/records/2026-09-17-record-form.md#A27,docs/decision/records/2026-09-17-record-form.md#A32,docs/decision/records/2026-09-17-record-form.md#A33,docs/decision/records/2026-09-17-decision-log.md#A2,docs/decision/records/2026-09-17-record-form.md#A2
-Scenario: not recorded は通り、空白だけの値は無いと数える
-  Given "## Context" の見出しを持つ判断の記録の Agreements の節に、"- A1 " の行の下に "- why: not recorded" があり、"- A2 " の行の下に "- why:   " の行がある
-  When "kotowari check" を実行する
-  Then "- A1 " の行を指す record_field_missing は出ず、"- A2 " の行を指す detail が "why" の record_field_missing の誤りが出る
+Scenario: not recorded passes, and a value of only whitespace counts as absent
+  Given in the Agreements section of a decision record with a "## Context" heading, under the "- A1 " line there is "- why: not recorded", and under the "- A2 " line there is the line "- why:   "
+  When "kotowari check" is run
+  Then no record_field_missing pointing at the "- A1 " line is raised, and an error of record_field_missing pointing at the "- A2 " line with detail "why" is raised
 
 @id=EX-core-104 @about=REQ-core-131 @source=docs/decision/records/2026-09-17-record-form.md#A1,docs/decision/records/2026-09-17-record-form.md#A12,docs/decision/records/2026-09-17-record-form.md#A27,docs/decision/records/2026-09-17-record-form.md#A2
-Scenario: 知らない名前の補足の行は誤りになる
-  Given "## Context" の見出しを持つ判断の記録の Agreements の節に、"- A1 " の行の下に "- why: x" と "- reason: x" の行がある
-  When "kotowari check" を実行する
-  Then "line" が "- reason: x" の行で detail が "reason" の record_field_unknown の誤りが出て、"- A1 " の行を指す誤りは出ない
+Scenario: A supplementary line with an unknown name is an error
+  Given in the Agreements section of a decision record with a "## Context" heading, under the "- A1 " line there are the lines "- why: x" and "- reason: x"
+  When "kotowari check" is run
+  Then an error of record_field_unknown is raised whose "line" is the "- reason: x" line and whose detail is "reason", and no error pointing at the "- A1 " line is raised
 
 @id=EX-core-105 @about=REQ-core-130 @source=docs/decision/records/2026-09-17-record-form.md#A1,docs/decision/records/2026-09-17-record-form.md#A2,docs/decision/records/2026-09-17-record-form.md#A7,docs/decision/records/2026-09-17-record-form.md#A13,docs/decision/records/2026-09-17-record-form.md#A27,docs/decision/records/2026-09-17-record-form.md#A32
-Scenario: Superseded の行に superseded_by が無ければ誤りになる
-  Given "## Context" の見出しを持つ判断の記録の Superseded の節に、"- A3 " の行があり、その下に "- why: x" だけがある
-  When "kotowari check" を実行する
-  Then "line" が "- A3 " の行で detail が "superseded_by" の record_field_missing の誤りが出る
+Scenario: A Superseded line without superseded_by is an error
+  Given in the Superseded section of a decision record with a "## Context" heading there is a "- A3 " line, and under it there is only "- why: x"
+  When "kotowari check" is run
+  Then an error of record_field_missing is raised whose "line" is the "- A3 " line and whose detail is "superseded_by"
 
 @id=EX-core-110 @about=REQ-core-135 @source=docs/decision/records/2026-09-17-record-form.md#A1,docs/decision/records/2026-09-17-record-form.md#A14,docs/decision/records/2026-09-17-record-form.md#A24,docs/decision/records/2026-09-17-record-form.md#A27,docs/decision/records/2026-09-17-record-form.md#A35,docs/decision/records/2026-09-17-record-form.md#A33,docs/decision/records/2026-09-17-record-form.md#A2
-Scenario: 表に無い節の番号の行と親の無い補足の行と別の形の行は読まれない
-  Given "## Context" の見出しを持つ判断の記録の Revisions の節に "- A21 は A5 を置き換える" の行があり、Agreements の節の最初の "- A1 " の行より前に "- why: x" の行があり、"- A1 " の行の下に "- why: x" と "- (i) x" と "- why : x" と "（なし）" の行がある
-  When "kotowari check" を実行する
-  Then どの行を指す誤りも出ない
+Scenario: Numbered lines of sections not in the table, supplementary lines without a parent, and lines of other forms are not read
+  Given in a decision record with a "## Context" heading, the Revisions section has the line "- A21 は A5 を置き換える", the Agreements section has a "- why: x" line before its first "- A1 " line, and under the "- A1 " line there are the lines "- why: x", "- (i) x", "- why : x" and "（なし）"
+  When "kotowari check" is run
+  Then no error pointing at any line is raised
 
 @id=EX-core-111 @about=REQ-core-134 @source=docs/decision/records/2026-09-17-record-form.md#A1,docs/decision/records/2026-09-17-record-form.md#A12,docs/decision/records/2026-09-17-record-form.md#A15,docs/decision/records/2026-09-17-record-form.md#A27
-Scenario: 同じ名前の補足の行が2つあっても通る
-  Given "## Context" の見出しを持つ判断の記録の Agreements の節の "- A1 " の行の下に "- why: x" の行が2つある
-  When "kotowari check" を実行する
-  Then "- A1 " の行とその下の行を指す誤りは出ない
+Scenario: Two supplementary lines with the same name pass
+  Given in the Agreements section of a decision record with a "## Context" heading, under the "- A1 " line there are two "- why: x" lines
+  When "kotowari check" is run
+  Then no error pointing at the "- A1 " line or the lines under it is raised
 
 @id=EX-core-113 @about=REQ-core-135 @source=docs/decision/records/2026-09-17-record-form.md#A1,docs/decision/records/2026-09-17-record-form.md#A27,docs/decision/records/2026-09-17-record-form.md#A34,docs/decision/records/2026-09-17-record-form.md#A2
-Scenario: コードブロックの中の番号の行は読まれない
-  Given "## Context" の見出しを持つ判断の記録 "docs/decision/records/x.md" の Agreements の節に、"- A1 " の行とその下の "- why: x" があり、その後のコードブロックの中に "- A9 x" の行がある
-  When "kotowari check" を実行する
-  Then "- A9 x" の行を指す誤りは出ず、"- A1 " の行を指す record_field_missing も出ない
+Scenario: Numbered lines inside a code block are not read
+  Given in the Agreements section of a decision record "docs/decision/records/x.md" with a "## Context" heading there are a "- A1 " line and "- why: x" under it, and in a code block after them there is the line "- A9 x"
+  When "kotowari check" is run
+  Then no error pointing at the "- A9 x" line is raised, and no record_field_missing pointing at the "- A1 " line is raised either
 
 @id=EX-core-118 @about=REQ-core-058 @source=docs/decision/records/2026-09-17-record-form.md#A34,docs/decision/records/records.md#A38,docs/decision/records/ir-form.md#検査の種類
-Scenario: コードブロックの中の番号は出典の先にならない
-  Given "decisions.records" が "docs/decision/records" で、判断の記録 "docs/decision/records/x.md" の Agreements の節のコードブロックの中にだけ "- A9 x" の行があり、IR の要求が出典 "docs/decision/records/x.md#A9" を書いている
-  When "kotowari check" を実行する
-  Then detail が "docs/decision/records/x.md#A9" の source_invalid の誤りが出る
+Scenario: A number inside a code block is not the target of a source
+  Given "decisions.records" is "docs/decision/records", the line "- A9 x" is only inside a code block in the Agreements section of the decision record "docs/decision/records/x.md", and a requirement of the IR writes the source "docs/decision/records/x.md#A9"
+  When "kotowari check" is run
+  Then an error of source_invalid with detail "docs/decision/records/x.md#A9" is raised
 
 @id=EX-core-114 @about=REQ-core-130 @source=docs/decision/records/2026-09-17-record-form.md#A1,docs/decision/records/2026-09-17-record-form.md#A5,docs/decision/records/2026-09-17-record-form.md#A27,docs/decision/records/2026-09-17-record-form.md#A33,docs/decision/records/2026-09-17-record-form.md#A2
-Scenario: 字下げしていない補足の行も決定に付く
-  Given "## Context" の見出しを持つ判断の記録の Agreements の節に、"- A1 " の行の次の行に字下げ無しの "- why: x" がある
-  When "kotowari check" を実行する
-  Then "- A1 " の行を指す record_field_missing は出ない
+Scenario: An unindented supplementary line belongs to the decision too
+  Given in the Agreements section of a decision record with a "## Context" heading, on the line after the "- A1 " line there is "- why: x" without indentation
+  When "kotowari check" is run
+  Then no record_field_missing pointing at the "- A1 " line is raised
 
 @id=EX-core-115 @about=REQ-core-130 @source=docs/decision/records/2026-09-17-record-form.md#A1,docs/decision/records/2026-09-17-record-form.md#A27,docs/decision/records/2026-09-17-record-form.md#A33,docs/decision/records/2026-09-17-record-form.md#A2
-Scenario: 本文にコロンを含む決定の行は補足の行と見ない
-  Given "## Context" の見出しを持つ判断の記録の Agreements の節に、"- A1 定義を機械的にする: 節にある行" の行とその下の "- why: x" がある
-  When "kotowari check" を実行する
-  Then "- A1 " の行を指す誤りは出ない
+Scenario: A decision line whose text contains a colon is not taken as a supplementary line
+  Given in the Agreements section of a decision record with a "## Context" heading there are the line "- A1 定義を機械的にする: 節にある行" and "- why: x" under it
+  When "kotowari check" is run
+  Then no error pointing at the "- A1 " line is raised
 ```

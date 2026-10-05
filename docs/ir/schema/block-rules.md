@@ -1,243 +1,245 @@
-# 見出しの下の行の規則
+# Rules for the lines under a heading
 
-この文書は、見出しや前置部の下に並ぶ行を、フィールド行、文、箇条書き、表、コードブロックのどれとして読むかを扱う。
+English | [日本語](block-rules.ja.md)
+
+This document covers how the lines under a heading or the preamble are read: as a field line, a statement, a bullet, a table, or a code block.
 
 ## Requirements
 
-### REQ-schema-028: 一覧の行の読み分け
+### REQ-schema-028: Telling list lines apart
 
 - kind: algorithm
 - source: docs/decision/records/2026-09-21-mds-spec.md#A10
 - definition: TBL-schema-007
 - verification: property
 
-### REQ-schema-029: フィールド行の値の制約
+### REQ-schema-029: Constraints on field line values
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A29
 - verification: unit
 
-mds は常に、`フィールド行`の値に正規表現と許可リストを課し、区切り文字を宣言したときは区切った要素ごとに課す。
+mds always applies a regular expression and an allow list to the value of a `field line`, and, when a separator is declared, applies them to each separated element.
 
-### REQ-schema-054: 文と箇条書きの値の制約
+### REQ-schema-054: Constraints on statement and bullet values
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A31, docs/decision/records/2026-09-21-mds-spec.md#A32
 - verification: unit
 
-mds は常に、`文`と`箇条書き`の行に正規表現を課し、`文`には許可リストも課す。`箇条書き`の照合は元のマーカーの行のマーカーを除いた部分にだけ行い、`継続段落`には行わない。
+mds always applies a regular expression to the lines of a `statement` and a `bullet`, and also applies an allow list to a `statement`. A `bullet` is matched only on the part of the original marker line without the marker, never on a `continuation paragraph`.
 
-### REQ-schema-030: 継続段落はその行の一部
+### REQ-schema-030: A continuation paragraph is part of its line
 
 - kind: state_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A11, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13
 - verification: unit
 
-`読み方`が "paragraph" である間、mds は`継続段落`を直前の一覧の行の一部として読み、`文`には数えず、`閉じた世界`でも`指摘`にしない。`読み方`が "line" の間は`継続段落`を作らない（TBL-schema-011）。
+While the `reading mode` is "paragraph", mds reads a `continuation paragraph` as part of the preceding list line, does not count it as a `statement`, and does not make it a `finding` even in the `closed world`. While the `reading mode` is "line", no `continuation paragraph` is created (TBL-schema-011).
 
-### REQ-schema-031: 箇条書きの入れ子
+### REQ-schema-031: Nested bullets
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A34, docs/decision/records/2026-09-21-mds-spec.md#A67
 - verification: unit
 
-`箇条書き`に子の一覧があるとき、mds は`スキーマ`が宣言した子の規則に照らし、宣言が無ければ子の行を`指摘`にする。子の規則には`フィールド行`と`箇条書き`を宣言でき、子の`箇条書き`はさらに子の規則を持てる。子の行の読み分けは TBL-schema-007 と同じで、特定の名前を特別扱いしない。子の`箇条書き`に`抽出`を宣言した`スキーマ`は`停止`にする。
+When a `bullet` has a child list, mds checks it against the child rules the `schema` declared, and, if none are declared, makes the child lines a `finding`. Child rules can declare a `field line` and a `bullet`, and a child `bullet` can in turn have child rules. Child lines are told apart the same way as in TBL-schema-007, with no name treated specially. A `schema` that declares an `extraction` on a child `bullet` is a `stop`.
 
-### REQ-schema-032: 文の数え方
+### REQ-schema-032: How statements are counted
 
 - kind: state_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A30, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A33
 - verification: unit
 
-`読み方`が "paragraph" である間、mds は空行で区切った段落を1つの`文`として数え、引用、水平線、HTML、画像だけの行は`文`に数えず、`閉じた世界`でも`指摘`にしない。`読み方`が "line" の間の数え方は TBL-schema-011 のとおりである。
+While the `reading mode` is "paragraph", mds counts a paragraph delimited by blank lines as one `statement`, and does not count quotes, thematic breaks, HTML, or image-only lines as a `statement` nor make them a `finding` even in the `closed world`. How lines are counted while the `reading mode` is "line" is as in TBL-schema-011.
 
-### REQ-schema-058: 読み方ごとの行の読み分け
+### REQ-schema-058: Telling lines apart per reading mode
 
 - kind: algorithm
 - source: docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20, docs/decision/records/2026-09-23-ir-engine-gaps.md#A21, docs/decision/records/2026-09-23-ir-engine-gaps.md#A22, docs/decision/records/2026-09-23-ir-engine-gaps.md#A26, docs/decision/records/2026-09-23-ir-engine-gaps.md#A1, docs/decision/records/2026-09-23-ir-engine-gaps.md#A2, docs/decision/records/2026-09-23-ir-engine-gaps.md#A5
 - definition: TBL-schema-011
 - verification: unit
 
-### REQ-schema-033: 表の検査
+### REQ-schema-033: Checking tables
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A16, docs/decision/records/2026-09-23-ir-engine-gaps.md#A46
 - verification: unit
 
-mds は常に、`表`のヘッダのセル列を宣言したときだけヘッダと列数を照合し、宣言しないときは`表`の有無と`出現回数`だけを見る。列数の照合では、セルが`文書`のヘッダ行より少ないデータ行を`指摘`にする。セルが`文書`のヘッダ行より多いデータ行は、ヘッダのセル列の宣言に依らず、余ったセルを捨てて`指摘`にしない。
+mds always matches the header and the number of columns of a `table` only when the header cells are declared, and when they are not declared, looks only at whether the `table` exists and at its `cardinality`. When matching the number of columns, a data row with fewer cells than the header row of the `document` is made a `finding`. A data row with more cells than the header row of the `document` has its extra cells dropped and is not made a `finding`, regardless of whether the header cells are declared.
 
-### REQ-schema-059: 表の選び方
+### REQ-schema-059: Selecting a table
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-23-ir-engine-gaps.md#A27, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-23-ir-engine-gaps.md#A42
 - verification: unit
 
-`表`の規則が "header" と一緒に "select: first" を宣言したとき、mds はその規則を置いた`ノード`の中で、ヘッダが宣言と合う最初の`表`だけをその規則の`表`として検査と`抽出`に使い、ほかの`表`はヘッダが合っても合わなくても宣言していない`表`として扱う。"select" を書かない`表`の規則は、ヘッダの合わない`表`を形の違反の`指摘`にする。"header" なしで "select" を書いた`スキーマ`は`停止`にする。"select" の値は "first" だけを受け、ほかの値の`スキーマ`は`停止`にする。
+When a `table` rule declares "select: first" together with "header", mds uses, within the `node` where the rule is placed, only the first `table` whose header matches the declaration as that rule's `table` for checking and `extraction`, and treats every other `table` as an undeclared `table`, whether or not its header matches. A `table` rule without "select" makes a `table` whose header does not match a `finding` of a shape violation. A `schema` that writes "select" without "header" is a `stop`. "select" accepts only the value "first"; a `schema` with any other value is a `stop`.
 
-### REQ-schema-034: コードブロックの検査
+### REQ-schema-034: Checking code blocks
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A12, docs/decision/records/2026-09-21-mds-spec.md#A35
 - verification: unit
 
-mds は常に、`コードブロック`の言語を宣言したときだけ言語を照合し、行ごとの正規表現を宣言したときは、行頭の空白を除いた空でない行だけを照合する。
+mds always matches the language of a `code block` only when the language is declared, and, when a per-line regular expression is declared, matches only the non-empty lines with their leading whitespace removed.
 
-### REQ-schema-041: フィールド行の並び順
+### REQ-schema-041: Order of field lines
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A36
 - verification: unit
 
-`フィールド行`の一覧に並び順の強制を宣言したとき、mds は`スキーマ`に書いた順で現れない`フィールド行`を`指摘`にする。宣言しないときの並びは順不同である。
+When a list of `field line` declarations declares that its order is enforced, mds makes a `field line` that does not appear in the order written in the `schema` a `finding`. When this is not declared, the order is free.
 
 ## Decision tables
 
-### TBL-schema-007: 一覧の行の読み分け
+### TBL-schema-007: Telling list lines apart
 
 - source: docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A33, docs/decision/records/2026-09-24-review3-gaps.md#A2
 
-| 順 | 行の形 | 読み方 |
+| Order | Shape of the line | Read as |
 |---|---|---|
-| 1 | マーカーに「名前と値」が続き、名前が`スキーマ`の宣言と一致する | `フィールド行` |
-| 2 | マーカーに続くが、1 に当たらない | `箇条書き` |
-| 3 | 数字と "." か ")" の区切りで始まる | どの規則種別にも属さず、`閉じた世界`では`指摘` |
+| 1 | The marker is followed by "name and value", and the name matches a declaration of the `schema` | `field line` |
+| 2 | Follows a marker but does not match 1 | `bullet` |
+| 3 | Starts with a number and a "." or ")" delimiter | Belongs to no rule kind; a `finding` in the `closed world` |
 
-### TBL-schema-011: 読み方ごとの行の読み分け
+### TBL-schema-011: Telling lines apart per reading mode
 
 - source: docs/decision/records/2026-09-23-ir-engine-gaps.md#A1, docs/decision/records/2026-09-23-ir-engine-gaps.md#A2, docs/decision/records/2026-09-23-ir-engine-gaps.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A21, docs/decision/records/2026-09-23-ir-engine-gaps.md#A22, docs/decision/records/2026-09-23-ir-engine-gaps.md#A26, docs/decision/records/2026-09-21-mds-spec.md#A11, docs/decision/records/2026-09-21-mds-spec.md#A30, docs/decision/records/2026-09-23-ir-engine-gaps.md#A29, docs/decision/records/2026-09-23-ir-engine-gaps.md#A35, docs/decision/records/2026-09-23-ir-engine-gaps.md#A33, docs/decision/records/2026-09-23-ir-engine-gaps.md#A38, docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-23-ir-engine-gaps.md#A43, docs/decision/records/2026-09-23-ir-engine-gaps.md#A44, docs/decision/records/2026-09-23-indented-fence.md#A1
 
-見出しと`前置部`の下の行を、`読み方`ごとにどう読むかを決める。どちらの`読み方`でも、一覧の行そのものの読み分けは TBL-schema-007、子の一覧は REQ-schema-031 のとおりである。
+Decides how the lines under a heading and the `preamble` are read in each `reading mode`. In either `reading mode`, list lines themselves are told apart as in TBL-schema-007, and child lists are as in REQ-schema-031.
 
-| 行の形 | "paragraph" | "line" |
+| Shape of the line | "paragraph" | "line" |
 |---|---|---|
-| CommonMark の ATX 見出しの行（行頭の空白は3つまで、"#" は1〜6個、その後が空白か行末。"#" だけの行を含む） | 見出し | 見出し |
-| それ以外の "#" で始まる行（"#foo"、7つ以上の "#" の行） | `文` | `文` |
-| `文`の次の、"===" か "---" だけの行 | 前の行とあわせて1つの見出し | 前の行も、その行も`文` |
-| 空行で区切らずに続く、一覧でも`表`でもない複数の行 | まとめて1つの`文` | 1行ずつ`文` |
-| 一覧の行の直後に空行なしで続く、一覧の行でない行 | 直前の一覧の行の一部（`フィールド行`なら値に入る） | `文` |
-| 一覧の行の後に空行を挟み、字下げして続く、一覧の行でない行 | `継続段落` | `文` |
-| 一覧の行の後に字下げして続く一覧の行 | 一覧の行 | 一覧の行 |
-| 引用、水平線、HTML、画像の行 | `文`に数えず、`指摘`にもしない | `文` |
-| 一覧の行の後でない所で、空行の後に4つ以上の空白で字下げした行 | 字下げの`コードブロック` | `文`（フェンスの開始の行は次の行のとおり） |
-| "```" か "~~~" のフェンスで囲んだブロック | `コードブロック` | `コードブロック`（開始の行の字下げの深さを問わない） |
-| GFM の表（見出しの行と区切りの行を持つ並び。縦棒で始まらなくてもよい。終わりは GFM のとおり） | `表` | `表` |
-| 区切りの行を持たず`表`にならない、縦棒で始まる行 | `文` | `文` |
+| A CommonMark ATX heading line (up to three leading spaces, one to six "#", then whitespace or the end of the line; includes a line of only "#") | Heading | Heading |
+| Any other line starting with "#" ("#foo", a line of seven or more "#") | `statement` | `statement` |
+| A line of only "===" or "---" following a `statement` | One heading together with the previous line | Both the previous line and that line are a `statement` |
+| Several consecutive lines, not separated by blank lines, that are neither a list nor a `table` | Together one `statement` | Each line one `statement` |
+| A non-list line directly following a list line with no blank line between | Part of the preceding list line (for a `field line`, it goes into the value) | `statement` |
+| An indented non-list line following a list line after a blank line | `continuation paragraph` | `statement` |
+| An indented list line following a list line | List line | List line |
+| A quote, thematic break, HTML, or image line | Not counted as a `statement`, and not made a `finding` | `statement` |
+| A line indented by four or more spaces after a blank line, not following a list line | Indented `code block` | `statement` (a line opening a fence is as in the next row) |
+| A block enclosed in a "```" or "~~~" fence | `code block` | `code block` (whatever the indentation depth of the opening line) |
+| A GFM table (a run with a header row and a delimiter row; it need not start with a vertical bar; it ends as GFM specifies) | `table` | `table` |
+| A line starting with a vertical bar that has no delimiter row and does not form a `table` | `statement` | `statement` |
 
 ## Properties
 
-### PROP-schema-006: マーカーの種類は読み分けを変えない
+### PROP-schema-006: The marker kind does not change how lines are told apart
 
 - source: docs/decision/records/2026-09-21-mds-spec.md#A10
 
-一覧のマーカーが "-"、"*"、"+" のどれであっても、同じ行は同じ`規則種別`として読まれる。
+Whether the list marker is "-", "*", or "+", the same line is read as the same `rule kind`.
 
 ## Examples
 
 ```gherkin
 @id=EX-schema-011 @about=REQ-schema-028 @source=docs/decision/records/2026-09-21-mds-spec.md#A10
-Scenario: 宣言していない名前の行は箇条書きとして読む
-  Given `フィールド行`の名前を宣言した`スキーマ`がある
-  When 宣言していない名前の「名前と値」の行を持つ`文書`を検査する
-  Then その行は`箇条書き`として読まれる
+Scenario: A line with an undeclared name is read as a bullet
+  Given a `schema` that declares the names of its `field line` rules
+  When a `document` with a "name and value" line whose name is not declared is checked
+  Then that line is read as a `bullet`
 
 @id=EX-schema-012 @about=REQ-schema-033 @source=docs/decision/records/2026-09-21-mds-spec.md#A13
-Scenario: ヘッダを宣言しない表はどのヘッダでも通る
-  Given ヘッダのセル列を宣言しない`表`の規則を持つ`スキーマ`がある
-  When 任意のヘッダを持つ`表`の`文書`で "kotowari-mds check" を実行する
-  Then ヘッダの`指摘`は出ない
+Scenario: A table with no declared header passes with any header
+  Given a `schema` with a `table` rule that does not declare header cells
+  When "kotowari-mds check" is run on a `document` with a `table` that has an arbitrary header
+  Then no header `finding` is reported
 
 @id=EX-schema-031 @about=REQ-schema-058,TBL-schema-011 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A1,docs/decision/records/2026-09-23-ir-engine-gaps.md#A13
-Scenario: 行で読むとフィールド行の直後の行は文になる
-  Given "reading: line" を宣言し、`項目`に`フィールド行`と`文`の`抽出`を宣言した`スキーマ`がある
-  And `フィールド行`の次の行に空行を挟まずに一覧でない行を持つ`項目`の`文書`がある
-  When "kotowari-mds values --format json" を実行する
-  Then `フィールド行`の値はその行の値だけで、次の行を含まない
-  And 次の行は`文`の要素として出る
+Scenario: Read by line, the line right after a field line becomes a statement
+  Given a `schema` that declares "reading: line" and declares, on an `item`, an `extraction` for a `field line` and for a `statement`
+  And a `document` with an `item` that has a non-list line right after a `field line`, with no blank line between
+  When "kotowari-mds values --format json" is run
+  Then the value of the `field line` is only the value of its own line and does not include the next line
+  And the next line appears as an element of the `statement`
 
 @id=EX-schema-032 @about=REQ-schema-058,TBL-schema-011 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A2,docs/decision/records/2026-09-23-ir-engine-gaps.md#A5,docs/decision/records/2026-09-23-ir-engine-gaps.md#A13
-Scenario: 行で読むと空行の後の字下げした行と引用の行は文になる
-  Given "reading: line" を宣言し、`文`を宣言しない`項目`を持つ`スキーマ`がある
-  And その`項目`に、一覧の行の後に空行を挟んで字下げした行と、引用の行と、HTML の行と、画像だけの行を持つ`文書`がある
-  When "kotowari-mds check --format json" を実行する
-  Then 4つの行のそれぞれに、宣言していない行の種別が`文`の`指摘`が1件ずつ出る
+Scenario: Read by line, an indented line after a blank line and a quote line become statements
+  Given a `schema` that declares "reading: line" and has an `item` that declares no `statement`
+  And a `document` whose `item` has, after a list line and a blank line, an indented line, a quote line, an HTML line, and an image-only line
+  When "kotowari-mds check --format json" is run
+  Then one `finding` whose undeclared line kind is `statement` is reported for each of the four lines
 
 @id=EX-schema-033 @about=REQ-schema-058,TBL-schema-011 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A21,docs/decision/records/2026-09-23-ir-engine-gaps.md#A22
-Scenario: 行で読むと下線の見出しと字下げのコードブロックは作らない
-  Given "reading: line" を宣言し、`項目`の`文`に行番号の`導かれる値`を宣言した`スキーマ`がある
-  And `項目`に、`文`の次の "---" だけの行と、空行の後に4つの空白で字下げした行を持つ`文書`がある
-  When "kotowari-mds values --format json" を実行する
-  Then "---" の行とその前の行と字下げした行は、どれも`文`の要素として出る
-  And 見出しと`コードブロック`の`指摘`は出ない
+Scenario: Read by line, no setext heading and no indented code block are created
+  Given a `schema` that declares "reading: line" and declares a line-number `derived value` on the `statement` of an `item`
+  And a `document` whose `item` has a line of only "---" following a `statement`, and a line indented by four spaces after a blank line
+  When "kotowari-mds values --format json" is run
+  Then the "---" line, the line before it, and the indented line all appear as elements of the `statement`
+  And no heading or `code block` `finding` is reported
 
 @id=EX-schema-034 @about=REQ-schema-058,TBL-schema-011 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A26
-Scenario: 表にならない縦棒の行はどちらの読み方でも文になる
-  Given `文`を宣言しない`項目`を持つ`スキーマ`を、"reading: paragraph" と "reading: line" の2通り用意する
-  And その`項目`に、区切りの行を持たない "| a | b |" の行を持つ`文書`がある
-  When それぞれの`スキーマ`で "kotowari-mds check --format json" を実行する
-  Then どちらでも、その行に宣言していない行の種別が`文`の`指摘`が1件出る
+Scenario: A vertical-bar line that does not form a table is a statement in either reading mode
+  Given two variants, "reading: paragraph" and "reading: line", of a `schema` with an `item` that declares no `statement`
+  And a `document` whose `item` has a "| a | b |" line with no delimiter row
+  When "kotowari-mds check --format json" is run with each `schema`
+  Then in both, one `finding` whose undeclared line kind is `statement` is reported for that line
 
 @id=EX-schema-071 @about=REQ-schema-058,TBL-schema-011 @source=docs/decision/records/2026-09-23-indented-fence.md#A1
-Scenario: 行で読むと4つ以上字下げしたフェンスもコードブロックになる
-  Given "reading: line" を宣言し、`項目`の`文`に行番号の`導かれる値`を宣言した`スキーマ`がある
-  And `項目`に、`文`の後に空行を挟んで、4つの空白で字下げした "```" の行で囲んだブロックを持つ`文書`がある
-  When "kotowari-mds values --format json" を実行する
-  Then `文`の要素はその前の`文`の1つだけで、フェンスの行とその中の行は`文`の要素として出ない
+Scenario: Read by line, a fence indented by four or more spaces is also a code block
+  Given a `schema` that declares "reading: line" and declares a line-number `derived value` on the `statement` of an `item`
+  And a `document` whose `item` has, after a `statement` and a blank line, a block enclosed in "```" lines indented by four spaces
+  When "kotowari-mds values --format json" is run
+  Then the only element of the `statement` is the preceding `statement`, and neither the fence lines nor the lines inside appear as elements of the `statement`
 
 @id=EX-schema-035 @about=REQ-schema-030,REQ-schema-032 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A12,docs/decision/records/2026-09-21-mds-spec.md#A11,docs/decision/records/2026-09-21-mds-spec.md#A30
-Scenario: 段落で読むと続く行は一覧の行に入り、引用の行は文に数えない
-  Given "reading" を書かず、`文`を宣言しない`項目`を持つ`スキーマ`がある
-  And その`項目`に、`フィールド行`の次に空行を挟まず続く行と、空行を挟んで字下げした`継続段落`と、引用の行を持つ`文書`がある
-  When "kotowari-mds check --format json" を実行する
-  Then `指摘`は1件も出ない
+Scenario: Read by paragraph, a following line joins the list line and a quote line is not counted as a statement
+  Given a `schema` that does not write "reading" and has an `item` that declares no `statement`
+  And a `document` whose `item` has a line following a `field line` with no blank line between, an indented `continuation paragraph` after a blank line, and a quote line
+  When "kotowari-mds check --format json" is run
+  Then no `finding` is reported
 
 @id=EX-schema-036 @about=REQ-schema-059 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A27,docs/decision/records/2026-09-23-ir-engine-gaps.md#A28
-Scenario: select first はヘッダの合う最初の表だけを使う
-  Given `前置部`の`表`に "header" と "select: first" と`抽出`を宣言した`スキーマ`がある
-  And ヘッダの合わない`表`、ヘッダの合う`表`、ヘッダの合う2つ目の`表`を、それぞれ空行を挟んでこの順に`前置部`に持つ`文書`がある
-  When "kotowari-mds check --format json" と "kotowari-mds values --format json" を実行する
-  Then `抽出`の値は2つ目に現れた`表`のデータ行だけになる
-  And 1つ目と3つ目の`表`には、宣言していない行の種別が`表`の`指摘`が出て、ヘッダの形の違反の`指摘`は出ない
+Scenario: select first uses only the first table whose header matches
+  Given a `schema` that declares "header", "select: first", and an `extraction` on a `table` of the `preamble`
+  And a `document` whose `preamble` has, in this order and separated by blank lines, a `table` whose header does not match, a `table` whose header matches, and a second `table` whose header matches
+  When "kotowari-mds check --format json" and "kotowari-mds values --format json" are run
+  Then the value of the `extraction` is only the data rows of the second `table` to appear
+  And the first and third `table` each get a `finding` whose undeclared line kind is `table`, and no header shape-violation `finding` is reported
 
 @id=EX-schema-037 @about=REQ-schema-059 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A27,docs/decision/records/2026-09-23-ir-engine-gaps.md#A28
-Scenario: select を書かない表の規則はヘッダの合わない表を指摘にする
-  Given `前置部`の`表`に "header" だけを宣言した`スキーマ`と、"header" を書かずに "select: first" を宣言した`スキーマ`がある
-  And ヘッダの合わない`表`を`前置部`に持つ`文書`がある
-  When それぞれの`スキーマ`で "kotowari-mds check" を実行する
-  Then 前者ではヘッダの形の違反の`指摘`が出る
-  And 後者では終了コードは 2 である
+Scenario: A table rule without select makes a table whose header does not match a finding
+  Given a `schema` that declares only "header" on a `table` of the `preamble`, and a `schema` that declares "select: first" without writing "header"
+  And a `document` whose `preamble` has a `table` whose header does not match
+  When "kotowari-mds check" is run with each `schema`
+  Then with the former, a header shape-violation `finding` is reported
+  And with the latter, the exit code is 2
 
 @id=EX-schema-050 @about=REQ-schema-059,TBL-schema-009 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A42
-Scenario: select に first 以外の値を書いたスキーマは停止する
-  Given `前置部`の`表`に "header" と "select: last" を宣言した`スキーマ`がある
-  When その`スキーマ`で "kotowari-mds check" を実行する
-  Then 終了コードは 2 である
+Scenario: A schema that writes a value other than first for select stops
+  Given a `schema` that declares "header" and "select: last" on a `table` of the `preamble`
+  When "kotowari-mds check" is run with that `schema`
+  Then the exit code is 2
 
 @id=EX-schema-038 @about=REQ-schema-033 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A16
-Scenario: ヘッダより多いセルは捨て、少ないセルは指摘にする
-  Given 3つのセルのヘッダを宣言した`表`の規則を持つ`スキーマ`がある
-  And 4つのセルのデータ行と、2つのセルのデータ行を持つ`表`の`文書`がある
-  When "kotowari-mds check --format json" と "kotowari-mds values --format json" を実行する
-  Then 4つのセルの行には`指摘`が出ず、その行の`抽出`の値は先頭の3つのセルだけを持つ
-  And 2つのセルの行には`指摘`が1件出る
+Scenario: Cells beyond the header are dropped, and missing cells are a finding
+  Given a `schema` with a `table` rule that declares a header of three cells
+  And a `document` with a `table` that has a data row of four cells and a data row of two cells
+  When "kotowari-mds check --format json" and "kotowari-mds values --format json" are run
+  Then no `finding` is reported for the four-cell row, and the `extraction` value of that row has only its first three cells
+  And one `finding` is reported for the two-cell row
 
 @id=EX-schema-039 @about=REQ-schema-058,TBL-schema-011 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A13,docs/decision/records/2026-09-23-ir-engine-gaps.md#A35
-Scenario: 行で読んでも字下げした一覧の行は一覧の行のまま
-  Given "reading: line" を宣言し、`項目`に`フィールド行`だけを宣言した`スキーマ`がある
-  And `フィールド行`の次の行に、字下げした "  - b" の行を持つ`項目`の`文書`がある
-  When "kotowari-mds check --format json" を実行する
-  Then その行には、宣言していない行の種別が`箇条書き`の`指摘`が出て、種別が`文`の`指摘`は出ない
+Scenario: Read by line, an indented list line stays a list line
+  Given a `schema` that declares "reading: line" and declares only a `field line` on an `item`
+  And a `document` whose `item` has an indented "  - b" line right after a `field line`
+  When "kotowari-mds check --format json" is run
+  Then that line gets a `finding` whose undeclared line kind is `bullet`, and no `finding` whose kind is `statement`
 
 @id=EX-schema-051 @about=REQ-schema-058,TBL-schema-011 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A43
-Scenario: 見出しはどちらの読み方でも CommonMark の ATX 見出し
-  Given 見出しを宣言しない`スキーマ`を "reading: paragraph" と "reading: line" の2通り用意する
-  And `前置部`に、行頭に空白が2つある "  ## x" の行、"####### y" の行、"#z" の行を持つ`文書`がある
-  When それぞれの`スキーマ`で "kotowari-mds check --format json" を実行する
-  Then どちらでも "  ## x" の行は見出しとして`指摘`になり、"####### y" と "#z" の行は`文`として`指摘`になり、2つの出力は一致する
+Scenario: In either reading mode a heading is a CommonMark ATX heading
+  Given two variants, "reading: paragraph" and "reading: line", of a `schema` that declares no heading
+  And a `document` whose `preamble` has a "  ## x" line with two leading spaces, a "####### y" line, and a "#z" line
+  When "kotowari-mds check --format json" is run with each `schema`
+  Then in both, the "  ## x" line is a `finding` as a heading, the "####### y" and "#z" lines are a `finding` as a `statement`, and the two outputs are identical
 
 @id=EX-schema-052 @about=REQ-schema-058,TBL-schema-011 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A44
-Scenario: 行で読んでも縦棒で始まらない GFM の表は表になる
-  Given `前置部`の`表`に`抽出`を宣言し、"reading: line" を書いた`スキーマ`がある
-  And `前置部`に "a | b" の行と "--- | ---" の行と "1 | 2" の行が続く`文書`がある
-  When "kotowari-mds values --format json" を実行する
-  Then `表`の行が1つ抽出され、その値は "1" と "2" である
+Scenario: Read by line, a GFM table that does not start with a vertical bar is still a table
+  Given a `schema` that declares an `extraction` on a `table` of the `preamble` and writes "reading: line"
+  And a `document` whose `preamble` has an "a | b" line, a "--- | ---" line, and a "1 | 2" line in a row
+  When "kotowari-mds values --format json" is run
+  Then one `table` row is extracted, and its values are "1" and "2"
 ```

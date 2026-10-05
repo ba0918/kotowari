@@ -1,292 +1,294 @@
-# CLI と結果の出し方
+# The CLI and how results are output
 
-この文書は、mds が持つコマンド、終了コード、出力の形、指摘の形、検査を行えないときの振る舞いを扱う。
+English | [日本語](cli.ja.md)
+
+This document covers the commands mds has, its exit codes, its output formats, the shape of a finding, and its behavior when a check cannot be performed.
 
 ## Requirements
 
-### REQ-schema-005: コマンドの一覧
+### REQ-schema-005: The list of commands
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A26, docs/decision/records/2026-09-23-versions-and-cli-name.md#A4, docs/decision/records/2026-09-24-ast-schema-output.md#A1
 - verification: unit
 
-mds は常に、"kotowari-mds" の名前のコマンドとして、検査の "check"、構文木の "ast"（"--schema" を付けたときは REQ-schema-067 の型付きの値）、抽出の "values"、版の "--version" の4つを受ける。
+mds always accepts, as a command named "kotowari-mds", these four: "check" for checking, "ast" for the syntax tree (with "--schema", the typed values of REQ-schema-067), "values" for extraction, and "--version" for the version.
 
-### REQ-schema-006: 終了コードの決め方
+### REQ-schema-006: How the exit code is decided
 
 - kind: algorithm
 - source: docs/decision/records/2026-09-21-mds-spec.md#A15
 - definition: TBL-schema-001
 - verification: unit
 
-### REQ-schema-007: 出力の形
+### REQ-schema-007: Output formats
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A44
 - verification: unit
 
-mds は常に、出力の形を "--format" で受け、人間向けの "text" と機械向けの "json" の2つから選ばせる。ただし "ast" は "json" だけを受け、"text" を与えたときは`停止`する。
+mds always takes the output format through "--format" and lets the caller choose between two: "text" for humans and "json" for machines. However, "ast" accepts only "json", and when given "text" it is a `stop`.
 
-### REQ-schema-066: values の text 出力の字下げ
+### REQ-schema-066: Indentation of the text output of values
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-23-mutants-gaps.md#A8
 - verification: unit
 
-mds は常に、"values" の "text" の出力で、入れ子が1段深くなるごとに空白2つで字下げし、配列の要素には1から始まる番号と "." を付ける。
+mds always, in the "text" output of "values", indents by two spaces for each level of nesting, and prefixes each array element with a number starting at 1 followed by ".".
 
-### REQ-schema-008: 指摘の形
+### REQ-schema-008: The shape of a finding
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A17, docs/decision/records/2026-09-21-mds-spec.md#A45, docs/decision/records/2026-09-21-mds-spec.md#A61, docs/decision/records/2026-09-22-ir-engine.md#A74, docs/decision/records/2026-09-22-ir-engine.md#A25, docs/decision/records/2026-09-22-ir-engine.md#A27, docs/decision/records/2026-09-22-ir-engine.md#A29, docs/decision/records/2026-09-22-ir-engine.md#A86, docs/decision/records/2026-09-23-ir-engine-gaps.md#A8
 - verification: unit
 
-mds は常に、1件の`指摘`を、種類、深刻度、`文書`のパス、行番号、`ノードの名前`、`生の行`、種別、詳細の8つで表し、行を持たない`指摘`では行番号を省く。行番号は、違反した`ノード`があるならその`ノード`の開始行、`ノード`の欠落ならそれを含む`ノード`の開始行にし、含む`ノード`に行が無いときは省く。`表`のデータ行のように`ノード`の中の要素が違反したときは、その要素の行にする。`ノードの名前`は宣言上の名前を持つ`ノード`の`指摘`にだけ付け、宣言上の名前を持つのは`節`と`フィールド行`だけであり、種別は undeclared_line の`指摘`には宣言していない行をどう読んだか（REQ-schema-055）を、`出現回数`の下限と上限の`指摘`には数えた`ノード`の`規則種別`（REQ-schema-057）を付け、ほかの`指摘`には付けない。`生の行`は行番号を持つ`指摘`にだけ付ける。
+mds always represents one `finding` by eight parts: kind, severity, path of the `document`, line number, `node name`, `raw line`, line kind, and detail; a `finding` that has no line omits the line number. The line number is the start line of the violating `node` if there is one, or, for a missing `node`, the start line of the `node` that contains it, and it is omitted when the containing `node` has no line. When an element inside a `node` violates, such as a data row of a `table`, it is the line of that element. The `node name` is given only to a `finding` on a `node` that has a declared name, and only a `section` and a `field line` have a declared name. The line kind is given to an undeclared_line `finding` as how the undeclared line was read (REQ-schema-055), and to a `finding` on the lower or upper bound of the `cardinality` as the `rule kind` of the counted `node` (REQ-schema-057), and to no other `finding`. The `raw line` is given only to a `finding` that has a line number.
 
-### REQ-schema-009: 検査を行えないときは停止する
+### REQ-schema-009: Stop when a check cannot be performed
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A42, docs/decision/records/2026-09-21-mds-spec.md#A62, docs/decision/records/2026-09-21-mds-spec.md#P1
 - verification: unit
 
-TBL-schema-009 の`停止`の理由のいずれかに当たったとき、mds は部分的な結果を出さずに`停止`する。
+When any of the `stop` reasons in TBL-schema-009 applies, mds comes to a `stop` without outputting partial results.
 
-### REQ-schema-010: ディレクトリの検査
+### REQ-schema-010: Checking a directory
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A1, docs/decision/records/2026-09-21-mds-spec.md#A27, docs/decision/records/2026-09-21-mds-spec.md#A60
 - verification: unit
 
-検査の対象がディレクトリのとき、mds はその下の`スキーマ`を宣言した`文書`だけを集めて検査する。"$schema" を持たない`文書`は対象外にし、"$schema" はあるが値が空か空白だけの`文書`は宣言と見なさず`停止`する。
+When the target of a check is a directory, mds collects and checks only each `document` under it that declares a `schema`. A `document` without "$schema" is out of scope, and a `document` that has "$schema" but whose value is empty or whitespace only is not taken as a declaration and is a `stop`.
 
-### REQ-schema-042: 停止の理由
+### REQ-schema-042: Reasons to stop
 
 - kind: algorithm
 - source: docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-23-ir-engine-gaps.md#A11, docs/decision/records/2026-09-23-ir-engine-gaps.md#A19
 - definition: TBL-schema-009
 - verification: unit
 
-### REQ-schema-043: 停止の知らせ方
+### REQ-schema-043: How a stop is reported
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A42
 - verification: unit
 
-mds が`停止`するとき、理由の名前と説明を並べた1行だけを標準エラーに出し、`指摘`は1件も出さない。
+When mds comes to a `stop`, it writes to standard error only one line giving the name of the reason and an explanation, and outputs no `finding` at all.
 
-### REQ-schema-065: 値の型や語が違うときの停止の説明
+### REQ-schema-065: The explanation of a stop on a wrong value type or word
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-23-mutants-gaps.md#A6
 - verification: unit
 
-`スキーマ`か`frontmatter`の値の型や語が違って mds が`停止`するとき、mds はその説明に、問題のあった欄の名前と、期待した型か受け付ける語の一覧を含める。
+When mds comes to a `stop` because a value in the `schema` or the `frontmatter` has the wrong type or word, mds includes in the explanation the name of the field at fault and the expected type or the list of accepted words.
 
-### REQ-schema-053: ディレクトリ検査の途中の停止
+### REQ-schema-053: A stop in the middle of a directory check
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A42
 - verification: unit
 
-ディレクトリの検査の途中で`停止`の理由に当たったとき、mds は全体を`停止`し、それまでに集めた`指摘`を1件も出さない。
+When a reason to `stop` applies in the middle of a directory check, mds brings the whole check to a `stop` and outputs not a single `finding` collected so far.
 
-### REQ-schema-044: ディレクトリ検査で辿らないもの
+### REQ-schema-044: What a directory check does not traverse
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A21
 - verification: unit
 
-mds は常に、ディレクトリの検査で、名前が "." で始まるディレクトリ、`スキーマ`とキャッシュの置き場、シンボリックリンク、拡張子が ".md" でないファイルを辿らない。
+mds always, in a directory check, does not traverse directories whose names start with ".", the locations of the `schema` files and the cache, symbolic links, or files whose extension is not ".md".
 
-### REQ-schema-067: "ast --schema" の出力
+### REQ-schema-067: The output of "ast --schema"
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A46, docs/decision/records/2026-09-21-mds-spec.md#A56, docs/decision/records/2026-09-24-ast-schema-output.md#A1, docs/decision/records/2026-09-24-ast-schema-output.md#A2
 - verification: unit
 
-"kotowari-mds ast" に "--schema" を付けたとき、mds は`文書`が宣言した`スキーマ`で "kotowari-mds values --format json" と同じ値を組み立て、`スキーマ`が最上位の "name" を宣言していれば根の "type" の鍵にその値を置いて、JSON で出す。"name" を宣言しないときは "type" を置かない。"name" は "ast --schema" の "type" にだけ使い、"check" と "values" の結果を変えない。
+When "--schema" is given to "kotowari-mds ast", mds builds, with the `schema` the `document` declares, the same values as "kotowari-mds values --format json", and, if the `schema` declares a top-level "name", puts that value under the root "type" key, and outputs the result as JSON. When "name" is not declared, it does not put "type". "name" is used only for the "type" of "ast --schema" and does not change the results of "check" and "values".
 
 ## Decision tables
 
-### TBL-schema-001: 終了コード
+### TBL-schema-001: Exit codes
 
 - source: docs/decision/records/2026-09-21-mds-spec.md#A15
 
-| 順 | 条件 | 終了コード |
+| Order | Condition | Exit code |
 |---|---|---|
-| 1 | 検査を行えなかった（TBL-schema-009 の`停止`の理由のいずれかに当たった） | 2 |
-| 2 | 1 に当たらず、`指摘`が1件以上ある | 1 |
-| 3 | 1 にも 2 にも当たらない | 0 |
+| 1 | The check could not be performed (one of the `stop` reasons in TBL-schema-009 applied) | 2 |
+| 2 | 1 does not apply, and there is at least one `finding` | 1 |
+| 3 | Neither 1 nor 2 applies | 0 |
 
-### TBL-schema-009: 停止の理由
+### TBL-schema-009: Reasons to stop
 
 - source: docs/decision/records/2026-09-21-mds-spec.md#A8, docs/decision/records/2026-09-21-mds-spec.md#A15, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-21-mds-spec.md#A16, docs/decision/records/2026-09-21-mds-spec.md#A25, docs/decision/records/2026-09-21-mds-spec.md#A43, docs/decision/records/2026-09-21-mds-spec.md#A44, docs/decision/records/2026-09-21-mds-spec.md#A62, docs/decision/records/2026-09-22-ir-engine.md#A56, docs/decision/records/2026-09-23-ir-engine-gaps.md#A11, docs/decision/records/2026-09-23-ir-engine-gaps.md#A19, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20, docs/decision/records/2026-09-23-ir-engine-gaps.md#A28, docs/decision/records/2026-09-23-ir-engine-gaps.md#A30, docs/decision/records/2026-09-23-ir-engine-gaps.md#A42, docs/decision/records/2026-09-23-mutants-gaps.md#A11, docs/decision/records/2026-09-24-review2-gaps.md#A2, docs/decision/records/2026-09-24-review4-gaps.md#A3, docs/decision/records/2026-09-24-review4-gaps.md#A4, docs/decision/records/2026-09-24-review4-gaps.md#A5, docs/decision/records/2026-09-24-review7-gaps.md#A4
 
-| 理由 | いつ |
+| Reason | When |
 |---|---|
-| スキーマが見つからない | 参照先の`スキーマ`が無い、URL の取得に失敗した（応答が 4MiB を超えたとき、取得全体が10秒を超えたときを含む）、または "$schema" の無い`文書`を対象に指定した |
-| スキーマが形に合わない | `スキーマ`の YAML が読めない、`規則種別`の形に反する、`配置パス`が衝突する（同じ置き場の中で同じパスか、一方が他方の手前の段にあたるもの。要素オブジェクトの中と、`節`の直下などの要素オブジェクトの外のどちらでも判定し、要素オブジェクトの "value" と "of" の鍵も同じ置き場のパスとして数え、"a.b" と "a.c" のように途中まで同じで先が分かれるものは衝突でない）、"reading" の値が "paragraph" と "line" のどちらでもない、`表`の規則に "header" なしで "select" を書いた、"select" の値が "first" でない、"name" を宣言した`スキーマ`で要素オブジェクトの外の`配置パス`が "type" か "type." で始まる（"ast --schema" が "name" を置く鍵と衝突する）、同じ置き場に同じ名前の`節`か`フィールド行`を2度宣言した、`表`のヘッダに同じ列の名前を2度書いた、または`配置パス`のドットで区切った名前に空のものがある |
-| frontmatter が壊れている | `frontmatter`が壊れた YAML である、YAML のマッピングでない、"$schema" の値が空か空白だけである、または "$schema" の値が文字列でない |
-| 文書が読めない | `文書`のファイルを読めない |
-| 引数の誤り | 受けない "--format" の値、知らないフラグ、同じオプションを2回渡した、または "ast" に "--format text" を与えた |
+| Schema not found | The referenced `schema` does not exist, fetching the URL failed (including when the response exceeds 4MiB and when the whole fetch exceeds 10 seconds), or a `document` without "$schema" was given as the target |
+| Schema does not fit its shape | The YAML of the `schema` cannot be read; it violates the shape of a `rule kind`; `placement path` values collide (the same path within the same placement, or one being a level before the other; this is judged both inside an element object and outside one, such as directly under a `section`, the "value" and "of" keys of an element object also count as paths of the same placement, and paths that share a prefix and then diverge, like "a.b" and "a.c", do not collide); the value of "reading" is neither "paragraph" nor "line"; a `table` rule writes "select" without "header"; the value of "select" is not "first"; in a `schema` that declares "name", a `placement path` outside an element object starts with "type" or "type." (it collides with the key where "ast --schema" puts "name"); a `section` or `field line` with the same name is declared twice in the same placement; the same column name is written twice in the header of a `table`; or a dot-separated name in a `placement path` is empty |
+| Frontmatter is broken | The `frontmatter` is broken YAML, is not a YAML mapping, the value of "$schema" is empty or whitespace only, or the value of "$schema" is not a string |
+| Document cannot be read | The file of the `document` cannot be read |
+| Wrong arguments | An unaccepted "--format" value, an unknown flag, the same option passed twice, or "--format text" given to "ast" |
 
-### TBL-schema-002: 指摘の分類
+### TBL-schema-002: Categories of findings
 
 - source: docs/decision/records/2026-09-21-mds-spec.md#A17, docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A41, docs/decision/records/2026-09-21-mds-spec.md#A40
 
-| 分類 | 何を見つけるか |
+| Category | What it finds |
 |---|---|
-| 題名 | `題名`が無い、2つ以上ある、正規表現に合わない |
-| 欠落 | 必須の`ノード`が無い |
-| 形の違反 | 値が正規表現や許可リストに合わない、見出しの深さが合わない、`項目`の `ID` の形が合わない、`フィールド行`の並び順が合わない、`表`のヘッダが合わない、`コードブロック`の言語が合わない |
-| 出現回数 | `出現回数`の下限を下回る、上限を超える |
-| 閉じた世界 | 宣言していない見出しと行がある |
+| Title | The `title` is missing, there are two or more, or it does not match the regular expression |
+| Missing | A required `node` is missing |
+| Shape violation | A value does not match the regular expression or the allow list, the depth of a heading does not match, the shape of the `ID` of an `item` does not match, the order of `field line` entries does not match, the header of a `table` does not match, or the language of a `code block` does not match |
+| Cardinality | Below the lower bound of the `cardinality`, or above its upper bound |
+| Closed world | There are undeclared headings and lines |
 
 ## Properties
 
-### PROP-schema-002: 抽出は検査の合否から独立している
+### PROP-schema-002: Extraction is independent of whether the check passes
 
 - source: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A56
 
-`抽出`の結果は、同じ`文書`と同じ`スキーマ`であれば、検査で`指摘`が出たかどうかによって変わらない。
+For the same `document` and the same `schema`, the result of `extraction` does not change depending on whether the check reported a `finding`.
 
 ## Examples
 
 ```gherkin
 @id=EX-schema-082 @about=REQ-schema-067 @source=docs/decision/records/2026-09-24-ast-schema-output.md#A1
-Scenario: name を宣言したスキーマでは ast --schema が type を添える
-  Given "name" を "adr" と宣言し、`題名`を`抽出`する`スキーマ`を指した`文書`がある
-  When "kotowari-mds ast --schema" を実行する
-  Then 出力は "values --format json" の値に、根の "type" が "adr" の鍵を足したものである
+Scenario: With a schema that declares name, ast --schema adds type
+  Given a `document` that points at a `schema` which declares "name" as "adr" and extracts the `title` as an `extraction`
+  When "kotowari-mds ast --schema" is run
+  Then the output is the values of "values --format json" plus a root "type" key whose value is "adr"
 
 @id=EX-schema-083 @about=REQ-schema-067 @source=docs/decision/records/2026-09-24-ast-schema-output.md#A1,docs/decision/records/2026-09-24-ast-schema-output.md#A2
-Scenario: name を宣言しないスキーマでは ast --schema は values と同じ
-  Given "name" を宣言せず、`題名`を`抽出`する`スキーマ`を指した`文書`がある
-  When "kotowari-mds ast --schema" と "kotowari-mds values --format json" を実行する
-  Then 2つの出力は同じ値で、"type" の鍵を持たない
+Scenario: With a schema that does not declare name, ast --schema is the same as values
+  Given a `document` that points at a `schema` which does not declare "name" and extracts the `title` as an `extraction`
+  When "kotowari-mds ast --schema" and "kotowari-mds values --format json" are run
+  Then the two outputs have the same values and no "type" key
 
 @id=EX-schema-081 @about=TBL-schema-009 @source=docs/decision/records/2026-09-24-review7-gaps.md#A4
-Scenario: 同じオプションを2回渡すと停止する
-  When "kotowari-mds check" に "--format" を2回渡して実行する
-  Then 終了コードは 2 である
+Scenario: Passing the same option twice stops
+  When "kotowari-mds check" is run with "--format" passed twice
+  Then the exit code is 2
 
 @id=EX-schema-076 @about=TBL-schema-009 @source=docs/decision/records/2026-09-24-review4-gaps.md#A3
-Scenario: 同じ名前の節やフィールド行を2度宣言したスキーマは停止する
-  Given 同じ名前の`節`を2つ宣言した`スキーマ`と、`前置部`に同じ名前の`フィールド行`を2つ宣言した`スキーマ`がある
-  When それぞれの`スキーマ`で "kotowari-mds check" を実行する
-  Then どちらも終了コードは 2 である
+Scenario: A schema that declares a section or field line with the same name twice stops
+  Given a `schema` that declares two `section` rules with the same name, and a `schema` that declares two `field line` rules with the same name in the `preamble`
+  When "kotowari-mds check" is run with each `schema`
+  Then the exit code is 2 for both
 
 @id=EX-schema-078 @about=TBL-schema-009 @source=docs/decision/records/2026-09-24-review4-gaps.md#A5
-Scenario: 表のヘッダに同じ列の名前を2度書いたスキーマは停止する
-  Given `表`のヘッダに同じ列の名前を2つ書いた`スキーマ`がある
-  When その`スキーマ`で "kotowari-mds check" を実行する
-  Then 終了コードは 2 である
+Scenario: A schema that writes the same column name twice in a table header stops
+  Given a `schema` that writes the same column name twice in the header of a `table`
+  When "kotowari-mds check" is run with that `schema`
+  Then the exit code is 2
 
 @id=EX-schema-077 @about=REQ-schema-036,TBL-schema-009 @source=docs/decision/records/2026-09-24-review4-gaps.md#A4
-Scenario: 空の名前を含む配置パスは停止する
-  Given `題名`の`配置パス`を "a..b" にした`スキーマ`がある
-  When その`スキーマ`で "kotowari-mds values" を実行する
-  Then 終了コードは 2 である
+Scenario: A placement path that contains an empty name stops
+  Given a `schema` whose `placement path` for the `title` is "a..b"
+  When "kotowari-mds values" is run with that `schema`
+  Then the exit code is 2
 
 @id=EX-schema-073 @about=TBL-schema-009 @source=docs/decision/records/2026-09-24-review2-gaps.md#A2
-Scenario: name を宣言したスキーマで type に値を置くと停止する
-  Given "name" を宣言し、`題名`の`抽出`の`配置パス`を "type" にした`スキーマ`がある
-  When その`スキーマ`で "kotowari-mds values --format json" を実行する
-  Then 終了コードは 2 である
-  And "name" を宣言しない同じ`スキーマ`では停止せず、"type" に`題名`の値を置く
+Scenario: Putting a value at type in a schema that declares name stops
+  Given a `schema` that declares "name" and whose `placement path` for the `extraction` of the `title` is "type"
+  When "kotowari-mds values --format json" is run with that `schema`
+  Then the exit code is 2
+  And the same `schema` without "name" does not stop and puts the value of the `title` at "type"
 
 @id=EX-schema-003 @about=REQ-schema-006 @source=docs/decision/records/2026-09-21-mds-spec.md#A15
-Scenario: 指摘の無い文書は終了コード 0 で終わる
-  Given `スキーマ`をすべて満たす`文書`がある
-  When "kotowari-mds check" を実行する
-  Then 終了コードは 0 である
-  And 何も出力しない
+Scenario: A document with no finding ends with exit code 0
+  Given a `document` that satisfies the whole `schema`
+  When "kotowari-mds check" is run
+  Then the exit code is 0
+  And nothing is output
 
 @id=EX-schema-004 @about=REQ-schema-009 @source=docs/decision/records/2026-09-21-mds-spec.md#A8
-Scenario: frontmatter が壊れていれば停止する
-  Given `frontmatter`が YAML のマッピングでない`文書`がある
-  When "kotowari-mds check" を実行する
-  Then 終了コードは 2 である
-  And `指摘`は出力しない
+Scenario: A broken frontmatter stops
+  Given a `document` whose `frontmatter` is not a YAML mapping
+  When "kotowari-mds check" is run
+  Then the exit code is 2
+  And no `finding` is output
 
 @id=EX-schema-026 @about=REQ-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A21,docs/decision/records/2026-09-22-ir-engine.md#A25
-Scenario: 指摘の行は違反したノードか、それを含むノードの開始行になる
-  Given 必須の`フィールド行`を落とした`項目`と、宣言した形に合わない値の`フィールド行`を持つ`項目`と、列の足りない`表`を持つ`文書`がある
-  When "kotowari-mds check --format json" を実行する
-  Then 欠落の`指摘`の行はその`項目`の見出しの行である
-  And 形に合わない`フィールド行`の`指摘`の行はその`フィールド行`の行である
-  And 列の足りない`表`の`指摘`の行はその行である
+Scenario: The line of a finding is the start line of the violating node or of the node containing it
+  Given a `document` with an `item` that lacks a required `field line`, an `item` with a `field line` whose value does not fit the declared shape, and a `table` with a row that lacks columns
+  When "kotowari-mds check --format json" is run
+  Then the line of the missing `finding` is the heading line of that `item`
+  And the line of the `finding` on the ill-shaped `field line` is the line of that `field line`
+  And the line of the `finding` on the `table` row that lacks columns is that row
 
 @id=EX-schema-027 @about=REQ-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A27
-Scenario: 指摘は宣言されたノードの名前を持つ
-  Given 必須の`フィールド行`を落とした`項目`と、宣言した形に合わない`題名`を持つ`文書`がある
-  When "kotowari-mds check --format json" を実行する
-  Then `フィールド行`の`指摘`の`ノードの名前`はスキーマが宣言した名前である
-  And `題名`の`指摘`は`ノードの名前`を持たない
+Scenario: A finding carries the declared node name
+  Given a `document` with an `item` that lacks a required `field line`, and a `title` that does not fit the declared shape
+  When "kotowari-mds check --format json" is run
+  Then the `node name` of the `finding` on the `field line` is the name the schema declared
+  And the `finding` on the `title` has no `node name`
 
 @id=EX-schema-028 @about=REQ-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A29
-Scenario: 行を持つ指摘は生の行をそのまま持つ
-  Given 宣言した形に合わない ID の見出しを持つ`項目`の`文書`がある
-  When "kotowari-mds check --format json" を実行する
-  Then その`指摘`の`生の行`は`文書`のその行と一文字も違わない
+Scenario: A finding with a line carries the raw line as it is
+  Given a `document` with an `item` whose heading has an ID that does not fit the declared shape
+  When "kotowari-mds check --format json" is run
+  Then the `raw line` of that `finding` does not differ by a single character from that line of the `document`
 
 @id=EX-schema-029 @about=REQ-schema-042,TBL-schema-009 @source=docs/decision/records/2026-09-22-ir-engine.md#A56
-Scenario: 要素オブジェクトの中で鍵が重なるスキーマは停止する
-  Given 内側の`フィールド行`の`配置パス`と外側の`導かれる値`の鍵が重なる`スキーマ`がある
-  When "kotowari-mds values" を実行する
-  Then 終了コードは 2 である
-  And 標準エラーは`スキーマ`が形に合わないことを知らせる
-  And `文書`を読まずに`停止`する
+Scenario: A schema whose keys overlap inside an element object stops
+  Given a `schema` in which the `placement path` of an inner `field line` overlaps the key of an outer `derived value`
+  When "kotowari-mds values" is run
+  Then the exit code is 2
+  And standard error reports that the `schema` does not fit its shape
+  And it comes to a `stop` without reading the `document`
 
 @id=EX-schema-030 @about=REQ-schema-042,TBL-schema-009 @source=docs/decision/records/2026-09-22-ir-engine.md#A65
-Scenario: ドットの上の段を共有するだけの配置パスは重複でない
-  Given "a.b" と "a.c" を並べた`スキーマ`と、"a" と "a.b" を並べた`スキーマ`がある
-  When それぞれに "kotowari-mds values" を実行する
-  Then 前者は`停止`せず、後者は終了コード 2 で終わる
+Scenario: Placement paths that only share the level above a dot are not duplicates
+  Given a `schema` that lists "a.b" and "a.c", and a `schema` that lists "a" and "a.b"
+  When "kotowari-mds values" is run on each
+  Then the former does not `stop`, and the latter ends with exit code 2
 
 @id=EX-schema-047 @about=REQ-schema-042,TBL-schema-009 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A11,docs/decision/records/2026-09-23-ir-engine-gaps.md#A19
-Scenario: 要素オブジェクトの外で配置パスが衝突するスキーマは停止する
-  Given 2つの`節`の直下の`文`に同じ`配置パス`の`抽出`を宣言した`スキーマ`と、"a" と "a.b" を2つの`節`に分けて宣言した`スキーマ`がある
-  When それぞれに "kotowari-mds values" を実行する
-  Then どちらも終了コードは 2 で、標準エラーは`スキーマ`が形に合わないことを知らせる
+Scenario: A schema whose placement paths collide outside an element object stops
+  Given a `schema` that declares an `extraction` with the same `placement path` on the `statement` directly under two `section` rules, and a `schema` that declares "a" and "a.b" split across two `section` rules
+  When "kotowari-mds values" is run on each
+  Then both exit with code 2, and standard error reports that the `schema` does not fit its shape
 
 @id=EX-schema-048 @about=REQ-schema-042,TBL-schema-009 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A19
-Scenario: 要素オブジェクトの外でも先が分かれる配置パスは衝突でない
-  Given "a.b" と "a.c" を2つの`節`に分けて宣言した`スキーマ`がある
-  When "kotowari-mds values" を実行する
-  Then `停止`しない
+Scenario: Placement paths that diverge are not a collision even outside an element object
+  Given a `schema` that declares "a.b" and "a.c" split across two `section` rules
+  When "kotowari-mds values" is run
+  Then it does not `stop`
 
 @id=EX-schema-049 @about=REQ-schema-008 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A8,docs/decision/records/2026-09-22-ir-engine.md#A86
-Scenario: 出現回数の指摘は数えたノードの規則種別を持つ
-  Given `項目`の`文`に`出現回数`の下限1を宣言した`スキーマ`がある
-  And `文`の無い`項目`を持つ`文書`がある
-  When "kotowari-mds check --format json" を実行する
-  Then 下限を割った`指摘`の種別は`文`である
+Scenario: A cardinality finding carries the rule kind of the counted node
+  Given a `schema` that declares a lower bound of 1 in the `cardinality` of the `statement` of an `item`
+  And a `document` with an `item` that has no `statement`
+  When "kotowari-mds check --format json" is run
+  Then the line kind of the `finding` below the lower bound is `statement`
 
 @id=EX-schema-062 @about=REQ-schema-065 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A6
-Scenario: 型の違う frontmatter の値の停止は欄の名前と期待した型を知らせる
-  Given "$schema" の値が数値の`frontmatter`を持つ`文書`がある
-  When "kotowari-mds check" を実行する
-  Then 終了コードは 2 である
-  And 標準エラーの説明は "$schema" と、期待した型を含む
+Scenario: A stop on a frontmatter value of the wrong type reports the field name and the expected type
+  Given a `document` with a `frontmatter` whose "$schema" value is a number
+  When "kotowari-mds check" is run
+  Then the exit code is 2
+  And the explanation on standard error includes "$schema" and the expected type
 
 @id=EX-schema-063 @about=REQ-schema-065 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A6,docs/decision/records/2026-09-23-ir-engine-gaps.md#A20,docs/decision/records/2026-09-23-ir-engine-gaps.md#A30,docs/decision/records/2026-09-21-mds-spec.md#A15,docs/decision/records/2026-09-21-mds-spec.md#A42
-Scenario: 受けない語のスキーマの停止は欄の名前と受け付ける語の一覧を知らせる
-  Given "reading" の値が "foo" の`スキーマ`を指した`文書`がある
-  When "kotowari-mds check" を実行する
-  Then 終了コードは 2 である
-  And 標準エラーの説明は "reading" と、"paragraph" と "line" を含む
+Scenario: A stop on a schema with an unaccepted word reports the field name and the list of accepted words
+  Given a `document` that points at a `schema` whose "reading" value is "foo"
+  When "kotowari-mds check" is run
+  Then the exit code is 2
+  And the explanation on standard error includes "reading", "paragraph", and "line"
 
 @id=EX-schema-064 @about=REQ-schema-066 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A8
-Scenario: values の text 出力は入れ子ごとに空白2つで字下げする
-  Given `配置パス`に "a.b" を宣言した`スキーマ`と、その値を持つ`文書`がある
-  When "kotowari-mds values --format text" を実行する
-  Then "b" の行は "a" の行より空白2つ深く字下げされる
+Scenario: The text output of values indents by two spaces per level of nesting
+  Given a `schema` that declares "a.b" as a `placement path`, and a `document` that has that value
+  When "kotowari-mds values --format text" is run
+  Then the "b" line is indented two spaces deeper than the "a" line
 
 @id=EX-schema-065 @about=REQ-schema-066 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A8
-Scenario: values の text 出力は配列の要素に1から始まる番号を付ける
-  Given 2つのデータ行を持つ`表`の`文書`と、その`表`を "header" を宣言せずに`抽出`する`スキーマ`がある
-  When "kotowari-mds values --format text" を実行する
-  Then 外側の配列の要素は "1." と "2." で始まり、要素の中の配列の要素も "1." から始まる
-  And 配列の要素の行は、その配列の鍵の行より空白2つ深く字下げされる
+Scenario: The text output of values numbers array elements starting at 1
+  Given a `document` with a `table` that has two data rows, and a `schema` that extracts that `table` without declaring "header"
+  When "kotowari-mds values --format text" is run
+  Then the elements of the outer array start with "1." and "2.", and the elements of an array inside an element also start from "1."
+  And the lines of the array elements are indented two spaces deeper than the line of the array's key
 ```

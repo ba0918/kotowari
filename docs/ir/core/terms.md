@@ -1,172 +1,174 @@
-# 用語と曖昧語と文書名の参照
+# Terms, vague words and document-name references
 
-バッククォートで囲んだ語、曖昧語、文書名の参照の検査を扱う。
+English | [日本語](terms.ja.md)
+
+Covers the checks of words enclosed in backquotes, of vague words and of document-name references.
 
 ## Requirements
 
-### REQ-core-063: 対象の行
+### REQ-core-063: Target lines
 
 - kind: algorithm
 - source: docs/decision/records/records.md#A42, docs/decision/records/records.md#A53, docs/decision/records/records.md#A56
 - definition: TBL-core-013
 - verification: unit
 
-### REQ-core-064: 用語集に無い語
+### REQ-core-064: Words not in the glossary
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A31, docs/decision/records/records.md#A42, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A63, docs/decision/records/records.md#A116, docs/decision/records/records.md#A145, docs/decision/records/2026-09-24-review5-gaps.md#A1
 - verification: unit
 
-`対象の行`の二重引用符の外のバッククォートを行の左から順に対にし、対の間の文字（二重引用符を含んでよい。前後の空白を除いた文字）が`用語`でも`ID`でもないとき、kotowari は、それがパスかコード片であっても、除いた後の文字を detail にして unknown_term の`誤り`を出す。中身が空の囲みは detail を "``" にする。
+kotowari pairs the backquotes outside double quotes in a `target line` in order from the left of the line, and when the text between a pair (which may contain double quotes; the text with surrounding whitespace removed) is neither a `term` nor an `ID`, kotowari raises an unknown_term `error` with the text after removal as detail, even when it is a path or a code fragment. For an enclosure with empty contents the detail is "``".
 
-### REQ-core-065: 用語集が無いとき
+### REQ-core-065: When there is no glossary
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A56, docs/decision/records/records.md#A63, docs/decision/records/records.md#A53, docs/decision/records/2026-09-16-ir-tree.md#A3
 - verification: unit
 
-文書の`連鎖`に`用語集`が1つも無いとき、kotowari は`対象の行`でバッククォートで囲んだもののうち、`ID`でないものをすべて unknown_term の`誤り`にする。
+When the `chain` of a document has no `glossary` at all, kotowari makes every string enclosed in backquotes in a `target line` that is not an `ID` an unknown_term `error`.
 
-### REQ-core-066: 曖昧語
+### REQ-core-066: Vague words
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A21, docs/decision/records/records.md#A41, docs/decision/records/records.md#A42, docs/decision/records/records.md#A53, docs/decision/records/ir-form.md#検査の種類
 - verification: unit
 
-`対象の行`に`曖昧語`が部分一致で含まれるとき、kotowari は vague_word の`誤り`を出す。
+When a `target line` contains a `vague word` as a substring match, kotowari raises a vague_word `error`.
 
-### REQ-core-067: 出現ごとに1件
+### REQ-core-067: One per occurrence
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A53, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A117, docs/decision/records/records.md#A142
 - verification: unit
 
-kotowari は常に、unknown_term と vague_word の`指摘`を出現ごとに1件出し、`曖昧語`の出現は行の左から最長一致で重ならない形で数える。
+kotowari always raises one unknown_term or vague_word `finding` per occurrence, and counts the occurrences of a `vague word` from the left of the line by longest match, without overlap.
 
-### REQ-core-068: 囲み忘れを検出しない
+### REQ-core-068: Forgotten enclosures are not detected
 
 - kind: prohibition
 - source: docs/decision/records/records.md#A31, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4
 - verification: unit
 
-kotowari は、`用語`をバッククォートで囲み忘れたことを検出してはならない。
+kotowari must not detect that a `term` was not enclosed in backquotes.
 
-### REQ-core-069: 文書名の参照の見つけ方
+### REQ-core-069: How document-name references are found
 
 - kind: algorithm
 - source: docs/decision/records/records.md#A42, docs/decision/records/records.md#A47, docs/decision/records/2026-09-16-ir-tree.md#A21, docs/decision/records/2026-09-22-ir-engine.md#A72
 - definition: TBL-core-014
 - verification: unit
 
-### REQ-core-070: 参照された文書が無い
+### REQ-core-070: The referenced document does not exist
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A17, docs/decision/records/2026-09-16-ir-tree.md#A18, docs/decision/records/ir-form.md#検査の種類
 - verification: unit
 
-`文書名の参照`が "/" を含まないときにその名前の文書が参照を書いた文書と同じディレクトリに無いとき、"/" を含むときにその`IR`の置き場からの相対パスの文書が無いとき、または並びに "." か ".." の要素を含むとき、kotowari は参照の文字列を detail にして missing_document の`誤り`を出す。文書の有無は読んだ`IR`の文書の中に有るかで見る（ディレクトリのシンボリックリンクの下にあって読まない文書は無いものとする）。同じディレクトリに無い文書を上のディレクトリへ辿って探さない。
+When a `document-name reference` contains no "/" and no document of that name is in the same directory as the document that wrote the reference, when it contains "/" and there is no document at that relative path from the location of the `IR`, or when the sequence contains a "." or ".." element, kotowari raises a missing_document `error` with the reference string as detail. Whether a document exists is judged by whether it is among the documents of the `IR` that were read (a document under a symbolic link to a directory, which is not read, counts as not existing). A document not in the same directory is not searched for by going up to parent directories.
 
 ## Decision tables
 
-### TBL-core-013: 用語と曖昧語の検査の対象
+### TBL-core-013: What the term and vague word checks cover
 
 - source: docs/decision/records/records.md#A42, docs/decision/records/records.md#A53, docs/decision/records/records.md#A56, docs/decision/records/records.md#A133
 
-| 行 | 検査 |
+| Line | Check |
 |---|---|
-| 要求の文 | 対象 |
-| 性質の文 | 対象 |
-| Gherkin の Given、When、Then、And、But の行 | 対象 |
-| Gherkin の Scenario の行 | 対象外 |
-| "- " の行 | 対象外 |
-| タグの行 | 対象外 |
-| 用語集の意味の列 | 対象外 |
-| 問題の記録の本文 | 対象外 |
+| Statement of a requirement | Covered |
+| Statement of a property | Covered |
+| Gherkin Given, When, Then, And and But lines | Covered |
+| Gherkin Scenario line | Not covered |
+| "- " line | Not covered |
+| Tag line | Not covered |
+| Meaning column of a glossary | Not covered |
+| Body of a flag record | Not covered |
 
-### TBL-core-014: 文書名の参照の条件
+### TBL-core-014: Conditions of a document-name reference
 
 - source: docs/decision/records/records.md#A47, docs/decision/records/ir-form.md#文書名の参照, docs/decision/records/records.md#A73, docs/decision/records/records.md#A118, docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A12, docs/decision/records/2026-09-16-ir-tree.md#A14, docs/decision/records/2026-09-16-ir-tree.md#A17, docs/decision/records/2026-09-16-ir-tree.md#A21, docs/decision/records/2026-09-22-ir-engine.md#A72
 
-| 順 | 条件 |
+| Order | Condition |
 |---|---|
-| 1 | `文`（`文書が扱う範囲`の行と`問題の記録`の本文の行を含む）の中にある。`題名`と見出しの行、"- " で始まる一覧の行、表の行、`コードブロック`の中（gherkin のブロックを含む）は対象にしない |
-| 2 | 並びの先頭の直前が、英数字、"_"、"-"、"/"、"."、バッククォートのいずれでもない（行頭を含む。空白、句読点、日本語の文字は境界になる）。並びの中に出る文字（英小文字、数字、ハイフン、"."、"/"）が直前にあるときは境界にならないので、並びの途中から参照を拾うことはない |
-| 3 | 要素（英小文字と数字とハイフンの並び、"."、".." のいずれか）を "/" で区切って1つ以上並べ、最後の要素が英小文字と数字とハイフンの並びで ".md" が続き、".md" の直後が英数字、"_"、"-"、"#"、"/" のいずれでもない |
-| 4 | 二重引用符の中にない。行の中の二重引用符が奇数のときは、最後の引用符から行末までを引用符の中と見なす |
+| 1 | It is inside a `statement` (including the lines of a `scope` and the body lines of a `flag record`). The `title` and heading lines, list lines starting with "- ", table lines and the inside of a `code block` (including gherkin blocks) are not covered |
+| 2 | The character just before the start of the sequence is none of an alphanumeric character, "_", "-", "/", "." or a backquote (the line start included; whitespace, punctuation and Japanese characters are boundaries). A character that occurs inside the sequence (lowercase English letters, digits, hyphen, "." and "/") just before it is not a boundary, so a reference is never picked up from the middle of a sequence |
+| 3 | One or more elements (each one of a run of lowercase English letters, digits and hyphens, ".", or "..") are separated by "/", the last element is a run of lowercase English letters, digits and hyphens followed by ".md", and the character just after ".md" is none of an alphanumeric character, "_", "-", "#" or "/" |
+| 4 | It is not inside double quotes. When the double quotes in a line are odd in number, the part from the last quote to the end of the line counts as inside quotes |
 
 ## Examples
 
 ```gherkin
 @id=EX-core-284 @about=REQ-core-064 @source=docs/decision/records/2026-09-24-review5-gaps.md#A1
-Scenario: 二重引用符を中に持つ囲みは崩れない
-  Given `用語`でない語の間に二重引用符で囲んだ文字を挟んだ囲みと、その後に`用語`でない語の囲みを持つ`文`がある
-  When "kotowari check" を実行する
-  Then 1つ目の囲みの中身全体と、2つ目の囲みの中身を detail にした unknown_term が1件ずつ出る
-  And 2つの囲みの間の文字は unknown_term にならない
+Scenario: An enclosure with double quotes inside does not break
+  Given a `statement` has an enclosure in which text enclosed in double quotes sits between words that are not a `term`, followed by an enclosure of a word that is not a `term`
+  When "kotowari check" is run
+  Then one unknown_term is raised with the whole contents of the first enclosure as detail, and one with the contents of the second enclosure as detail
+  And the text between the two enclosures does not become an unknown_term
 
 @id=EX-core-013 @about=REQ-core-064 @source=docs/decision/records/records.md#A42,docs/decision/records/records.md#A56,docs/decision/records/ir-form.md#検査の種類
-Scenario: 囲んだパスは誤りになる
-  Given `要求`の`文`に "src/main.rs" をバッククォートで囲んで書いている
-  When "kotowari check" を実行する
-  Then detail が "src/main.rs" の unknown_term の誤りが出る
+Scenario: An enclosed path is an error
+  Given a `statement` of a `requirement` writes "src/main.rs" enclosed in backquotes
+  When "kotowari check" is run
+  Then an unknown_term error whose detail is "src/main.rs" is raised
 
 @id=EX-core-014 @about=REQ-core-069,REQ-core-070 @source=docs/decision/records/2026-09-16-ir-tree.md#A5,docs/decision/records/2026-09-16-ir-tree.md#A15,docs/decision/records/2026-09-16-ir-tree.md#A21,docs/decision/records/2026-09-22-ir-engine.md#A72
-Scenario: 置き場の外のパスは引用符で囲む
-  Given 文書の範囲の行に "docs/decision/adr/0001-test-marker.md" と引用符なしで書いている
-  When "kotowari check" を実行する
-  Then "0001-test-marker.md" だけを指す参照にはならず、"docs/decision/adr/0001-test-marker.md" の missing_document の誤りが出る
+Scenario: A path outside the location is enclosed in quotes
+  Given a scope line of a document writes "docs/decision/adr/0001-test-marker.md" without quotes
+  When "kotowari check" is run
+  Then it does not become a reference pointing only at "0001-test-marker.md", and a missing_document error for "docs/decision/adr/0001-test-marker.md" is raised
 
 @id=EX-core-022 @about=REQ-core-069 @source=docs/decision/records/2026-09-16-ir-tree.md#A14
-Scenario: 出典の形は参照にならない
-  Given 文書の範囲の行に "docs/decision/records/records.md#A12" と引用符なしで書いている
-  When "kotowari check" を実行する
-  Then missing_document の誤りは出ない
+Scenario: The form of a source is not a reference
+  Given a scope line of a document writes "docs/decision/records/records.md#A12" without quotes
+  When "kotowari check" is run
+  Then no missing_document error is raised
 
 @id=EX-core-023 @about=REQ-core-070 @source=docs/decision/records/2026-09-16-ir-tree.md#A5,docs/decision/records/2026-09-22-ir-engine.md#A72
-Scenario: 素の名前は同じディレクトリだけを見る
-  Given "docs/ir/network/dns/a.md" の文書の範囲の行に "b.md" と書き、"docs/ir/network/b.md" はあるが "docs/ir/network/dns/b.md" は無い
-  When "kotowari check" を実行する
-  Then "b.md" の missing_document の誤りが出る
+Scenario: A bare name looks only in the same directory
+  Given a scope line of the document "docs/ir/network/dns/a.md" writes "b.md", and "docs/ir/network/b.md" exists but "docs/ir/network/dns/b.md" does not
+  When "kotowari check" is run
+  Then a missing_document error for "b.md" is raised
 
 @id=EX-core-024 @about=REQ-core-070 @source=docs/decision/records/2026-09-16-ir-tree.md#A5,docs/decision/records/2026-09-22-ir-engine.md#A72
-Scenario: スラッシュを含む名前は置き場からの相対で探す
-  Given "docs/ir/network/dns/a.md" の文書の範囲の行に "network/publish/c.md" と書き、"docs/ir/network/publish/c.md" がある
-  When "kotowari check" を実行する
-  Then missing_document の誤りは出ない
+Scenario: A name containing a slash is looked up relative to the location
+  Given a scope line of the document "docs/ir/network/dns/a.md" writes "network/publish/c.md", and "docs/ir/network/publish/c.md" exists
+  When "kotowari check" is run
+  Then no missing_document error is raised
 
 @id=EX-core-025 @about=REQ-core-070 @source=docs/decision/records/2026-09-16-ir-tree.md#A17,docs/decision/records/2026-09-22-ir-engine.md#A72
-Scenario: "." と ".." の要素を含む並びは解決しない
-  Given "docs/ir/network/dns/a.md" の文書の範囲の行に "../b.md" と "./c.md" と書き、"docs/ir/network/b.md" と "docs/ir/network/dns/c.md" がある
-  When "kotowari check" を実行する
-  Then "../b.md" と "./c.md" の missing_document の誤りが1件ずつ出る
+Scenario: A sequence containing "." and ".." elements is not resolved
+  Given a scope line of the document "docs/ir/network/dns/a.md" writes "../b.md" and "./c.md", and "docs/ir/network/b.md" and "docs/ir/network/dns/c.md" exist
+  When "kotowari check" is run
+  Then one missing_document error is raised for "../b.md" and one for "./c.md"
 
 @id=EX-core-031 @about=REQ-core-069 @source=docs/decision/records/2026-09-16-ir-tree.md#A17,docs/decision/records/2026-09-16-ir-tree.md#A21,docs/decision/records/2026-09-22-ir-engine.md#A72
-Scenario: ".md" の後に "/" が続く並びは参照にならない
-  Given 文書の範囲の行に "a.md/b.md" と引用符なしで書き、"a.md" も "b.md" も "md/b.md" も無い
-  When "kotowari check" を実行する
-  Then missing_document の誤りは出ない
+Scenario: A sequence where ".md" is followed by "/" is not a reference
+  Given a scope line of a document writes "a.md/b.md" without quotes, and none of "a.md", "b.md" and "md/b.md" exists
+  When "kotowari check" is run
+  Then no missing_document error is raised
 
 @id=EX-core-033 @about=REQ-core-069 @source=docs/decision/records/2026-09-16-ir-tree.md#A21,docs/decision/records/2026-09-22-ir-engine.md#A72
-Scenario: 日本語の文字に直接つなげた参照も拾う
-  Given 文書の範囲の行に "設定の形はtimeout-config.mdで定める" と書き、"timeout-config.md" が同じディレクトリに無い
-  When "kotowari check" を実行する
-  Then "timeout-config.md" の missing_document の誤りが出る
+Scenario: A reference joined directly to Japanese characters is picked up too
+  Given a scope line of a document writes "設定の形はtimeout-config.mdで定める", and "timeout-config.md" is not in the same directory
+  When "kotowari check" is run
+  Then a missing_document error for "timeout-config.md" is raised
 
 @id=EX-core-034 @about=REQ-core-069 @source=docs/decision/records/2026-09-16-ir-tree.md#A21
-Scenario: バッククォートで囲んだパスは参照にならない
-  Given 文書の`文`に "`a.md`" と書き、"a.md" は無く、`用語集`にも無い
-  When "kotowari check" を実行する
-  Then "a.md" の unknown_term の誤りが出て、missing_document の誤りは出ない
+Scenario: A path enclosed in backquotes is not a reference
+  Given a `statement` of a document writes "`a.md`", "a.md" does not exist, and it is not in the `glossary` either
+  When "kotowari check" is run
+  Then an unknown_term error for "a.md" is raised, and no missing_document error is raised
 
 @id=EX-core-032 @about=REQ-core-070 @source=docs/decision/records/2026-09-16-ir-tree.md#A18,docs/decision/records/2026-09-22-ir-engine.md#A72
-Scenario: 読まない場所の文書への参照は無いものとして扱う
-  Given "docs/ir/link" が置き場の外のディレクトリを指すシンボリックリンクで、その下に "d.md" があり、"docs/ir/a.md" の文書の範囲の行に "link/d.md" と書いている
-  When "kotowari check" を実行する
-  Then "link/d.md" の missing_document の誤りが出る
+Scenario: A reference to a document in a place that is not read is treated as not existing
+  Given "docs/ir/link" is a symbolic link pointing at a directory outside the location, "d.md" is under it, and a scope line of "docs/ir/a.md" writes "link/d.md"
+  When "kotowari check" is run
+  Then a missing_document error for "link/d.md" is raised
 
 @id=EX-core-026 @about=REQ-core-065 @source=docs/decision/records/2026-09-16-ir-tree.md#A3
-Scenario: 連鎖に用語集が無い文書は囲んだ語がすべて誤りになる
-  Given "docs/ir/CONTEXT.md" は無く "docs/ir/network/CONTEXT.md" に`用語`があり、"docs/ir/a.md" の`文`にその`用語`を囲んで書いている
-  When "kotowari check" を実行する
-  Then "docs/ir/a.md" に unknown_term の誤りが出て、"docs/ir/network/" の文書には出ない
+Scenario: In a document whose chain has no glossary every enclosed word is an error
+  Given "docs/ir/CONTEXT.md" does not exist, "docs/ir/network/CONTEXT.md" has a `term`, and a `statement` of "docs/ir/a.md" writes that `term` enclosed
+  When "kotowari check" is run
+  Then unknown_term errors are raised on "docs/ir/a.md", and none on the documents of "docs/ir/network/"
 ```

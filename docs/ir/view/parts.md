@@ -1,100 +1,102 @@
-# 部品
+# Parts
 
-view が描ける`部品`の種類、`部品のスキーマ`の公開、部品の幅を扱う。`部品`の中身の形の正は`部品のスキーマ`で、view は形を検査しない。
+English | [日本語](parts.ja.md)
+
+This covers the kinds of `part` view can draw, publishing the `part schema`, and the width of parts. The authority on the shape of the contents of a `part` is the `part schema`; view does not check the shape.
 
 ## Requirements
 
-### REQ-view-011: 部品の種類
+### REQ-view-011: Kinds of part
 
 - kind: algorithm
 - source: docs/decision/records/2026-10-02-whole-picture.md#A13, docs/decision/records/2026-10-02-whole-picture.md#A36
 - definition: TBL-view-001
 - verification: unit
 
-### REQ-view-012: 部品のスキーマを公開する
+### REQ-view-012: Publishing the part schema
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A45, docs/decision/records/2026-10-02-whole-picture.md#A46, docs/decision/records/2026-10-02-whole-picture.md#A47, docs/decision/records/2026-10-02-whole-picture.md#A49, docs/decision/records/2026-10-02-whole-picture.md#A82
 - verification: unit
 
-view は常に、TBL-view-001 の種類の名前のそれぞれから、その種類の`部品のスキーマ`（JSON Schema の文字列）を返す公開の関数を持ち、`部品のスキーマ`を view の中に埋め込む。TBL-view-001 に無い名前には何も返さない。
+view always has a public function that returns, for each kind name of TBL-view-001, the `part schema` of that kind (a JSON Schema string), and embeds the `part schema` inside view. For a name not in TBL-view-001 it returns nothing.
 
-### REQ-view-013: 部品のスキーマは閉じている
+### REQ-view-013: The part schema is closed
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A46
 - verification: unit
 
-このリポジトリのテストは常に、すべての`部品のスキーマ`の中の、型が object の部分スキーマが "additionalProperties": false を宣言していることを確かめる。
+The tests of this repository always confirm that every subschema of type object inside every `part schema` declares "additionalProperties": false.
 
-### REQ-view-014: スキーマに合う部品は描ける
+### REQ-view-014: A part that fits the schema can be drawn
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A45
 - verification: unit
 
-このリポジトリのテストは常に、TBL-view-001 の種類ごとに、`部品のスキーマ`に合う`部品`の例を1つ以上持ち、すべての例が`部品のスキーマ`に合うことと、view がそれを描いて失敗しないことを確かめる。
+The tests of this repository always hold, for each kind of TBL-view-001, one or more examples of a `part` that fits the `part schema`, and confirm that every example fits the `part schema` and that view draws it without failing.
 
-### REQ-view-015: 部品の幅
+### REQ-view-015: Width of parts
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A12, docs/decision/records/2026-10-02-whole-picture.md#A54, docs/decision/records/2026-10-02-whole-picture.md#A73
 - verification: unit
 
-view は常に、同じ`節`の中で続く、値に "width": "half" を持つ`部品`の並びを、先頭から2つずつ組にして左右に並べ、組にならずに残った1つと、それ以外の`部品`を`節`の幅いっぱいに描く。どの`部品のスキーマ`も "width" の値として "half" だけを許す。
+view always pairs up, two at a time from the start, a consecutive run of `part` entries within the same `section` whose value has "width": "half", and places each pair side by side; the one left over without a pair, and every other `part`, are drawn at the full width of the `section`. Every `part schema` allows only "half" as the value of "width".
 
-### REQ-view-024: flow の列と並列
+### REQ-view-024: Columns and parallelism in flow
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-05-overview-page-reading.md#A8, docs/decision/records/2026-10-05-overview-page-reading.md#D2
 - verification: review
-- how_to_verify: 列を2つ以上持ち、1つの列に箱を2つ以上縦に並べた flow の`部品`を描いてブラウザで開き、1つの列の箱が1つの囲みの中にあり、矢印が列と列の間にだけあって同じ列の箱の間に無いことを人が見て確かめる
+- how_to_verify: Render a flow `part` that has two or more columns with two or more boxes stacked vertically in one column, open it in a browser, and have a person confirm that the boxes of one column are inside one enclosure, and that arrows appear only between columns and not between boxes of the same column
 
-view は常に、flow の`部品`の列ごとにその列の箱を1つの囲みの中に描き、左から右への流れを示す矢印を列と列の間にだけ描いて、同じ列の箱の間には描かない。
+view always draws, for each column of a flow `part`, the boxes of that column inside one enclosure, and draws the arrows that show the left-to-right flow only between columns, not between boxes of the same column.
 
-### REQ-view-025: 狭い画面の flow
+### REQ-view-025: flow on a narrow screen
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-05-overview-page-reading.md#A9, docs/decision/records/2026-10-05-overview-page-reading.md#A15, docs/decision/records/2026-10-05-overview-page-reading.md#D2
 - verification: review
-- how_to_verify: 列を2つ以上持つ flow の`部品`を描いてブラウザで開き、狭い幅で列が上から下に積まれ、列と列の間の矢印が下を向き、箱が重ならないことを人が見て確かめる
+- how_to_verify: Render a flow `part` that has two or more columns, open it in a browser, and have a person confirm that at a narrow width the columns are stacked from top to bottom, the arrows between columns point down, and the boxes do not overlap
 
-view は常に、狭い画面では flow の`部品`の列を上から下に積み、列と列の間の矢印を下向きに描いて、箱を重ねない。
+view always, on a narrow screen, stacks the columns of a flow `part` from top to bottom, draws the arrows between columns pointing down, and does not overlap the boxes.
 
 ## Decision tables
 
-### TBL-view-001: 部品の種類
+### TBL-view-001: Kinds of part
 
 - source: docs/decision/records/2026-10-02-whole-picture.md#A36, docs/decision/records/2026-10-02-whole-picture.md#A66, docs/decision/records/2026-10-02-whole-picture.md#A31, docs/decision/records/2026-10-02-whole-picture.md#A83, docs/decision/records/2026-10-02-whole-picture.md#A7, docs/decision/records/2026-10-02-whole-picture.md#A38, docs/decision/records/2026-10-02-whole-picture.md#A85, docs/decision/records/2026-10-04-overview-on-public-api.md#A13, docs/decision/records/2026-10-05-localization.md#A3, docs/decision/records/2026-10-05-localization.md#A5, docs/decision/records/2026-10-05-localization.md#D1
 
-| 種類の名前 | 描くもの | 主な欄 |
+| Kind name | What it draws | Main fields |
 |---|---|---|
-| lead | 結論と要点。`文書`の冒頭に置く | conclusion、points |
-| flow | 左から右へ流れる列の箱の並び。箱は格子に並べ、文字の位置を手で決めない | columns（列の並び。列は箱の並び。箱は title、body、tone） |
-| steps | 番号付きの段階の並び | items（title、body、refs） |
-| cards | 見出しと項目の一覧を持つカードの並び | cards（title、items、tone） |
-| status | 状態の札と文の並び。札は "decided"、"planned"、"open"、"dropped" で、それぞれ`UI の文字`の "state_decided"、"state_planned"、"state_open"、"state_dropped" の文字で、4つを互いに見分けられる見た目で描く | items（state、text、refs） |
-| compare | 前と後と理由の組の並び。前は取り消し線で描き、列の見出しは`UI の文字`の "compare_before"、"compare_after"、"compare_why" の文字にする | items（before、after、why、refs） |
-| decisions | 根の判断とその下の判断の木。判断した者の札を付ける | roots（ref、text、by、children） |
-| quiz | 問いと、選ぶと開く答えの並び | items（q、a、refs） |
+| lead | The conclusion and the key points. Placed at the start of a `document` | conclusion, points |
+| flow | A sequence of columns of boxes flowing from left to right. The boxes are laid out on a grid, and the position of text is not decided by hand | columns (a sequence of columns; a column is a sequence of boxes; a box has title, body, tone) |
+| steps | A sequence of numbered stages | items (title, body, refs) |
+| cards | A sequence of cards, each with a heading and a list of entries | cards (title, items, tone) |
+| status | A sequence of status tags and sentences. The tags are "decided", "planned", "open" and "dropped", drawn with the texts "state_decided", "state_planned", "state_open" and "state_dropped" of the `UI text` respectively, and with appearances that tell the four apart | items (state, text, refs) |
+| compare | A sequence of before, after and reason sets. The before is drawn struck through, and the column headings are the texts "compare_before", "compare_after" and "compare_why" of the `UI text` | items (before, after, why, refs) |
+| decisions | A tree of root decisions and the decisions under them, tagged with who decided | roots (ref, text, by, children) |
+| quiz | A sequence of questions and answers that open when selected | items (q, a, refs) |
 
 ## Examples
 
 ```gherkin
 @id=EX-view-007 @about=REQ-view-012,REQ-view-011 @source=docs/decision/records/2026-10-02-whole-picture.md#A47,docs/decision/records/2026-10-02-whole-picture.md#A36,docs/decision/records/2026-10-02-whole-picture.md#A46,docs/decision/records/2026-10-02-whole-picture.md#A82
-Scenario: 8種のスキーマを返し、知らない名前には返さない
-  When view の部品のスキーマを返す関数を TBL-view-001 の8つの名前と "chart" で呼ぶ
-  Then 8つの名前には JSON Schema の文字列が返り、"chart" には何も返らない
+Scenario: Return the eight schemas and nothing for an unknown name
+  When the function of view that returns the part schema is called with the eight names of TBL-view-001 and "chart"
+  Then a JSON Schema string is returned for the eight names, and nothing is returned for "chart"
 
 @id=EX-view-008 @about=REQ-view-015 @source=docs/decision/records/2026-10-02-whole-picture.md#A12,docs/decision/records/2026-10-02-whole-picture.md#A54
-Scenario: 続く2つの半分の部品は左右に並ぶ
-  Given 1つの節に、"width": "half" の cards の部品が2つ続き、その後に width の無い status の部品がある
-  When view で描画する
-  Then 2つの cards は1つの横並びの中に描かれ、status はその外に節の幅いっぱいに描かれる
+Scenario: Two consecutive half parts are placed side by side
+  Given one section has two consecutive cards parts with "width": "half", followed by a status part with no width
+  When it is rendered with view
+  Then the two cards are drawn inside one side-by-side row, and the status is drawn outside it at the full width of the section
 
 @id=EX-view-009 @about=REQ-view-013,REQ-view-014 @source=docs/decision/records/2026-10-02-whole-picture.md#A45,docs/decision/records/2026-10-02-whole-picture.md#A46
-Scenario: スキーマの閉じ方と例の描画をテストが確かめる
-  Given 部品のスキーマの1つに "additionalProperties" の無い object の部分スキーマがある
-  When このリポジトリのテストを実行する
-  Then そのテストが失敗する
+Scenario: Tests confirm the closedness of the schemas and the drawing of the examples
+  Given one of the part schemas has an object subschema with no "additionalProperties"
+  When the tests of this repository are run
+  Then that test fails
 ```

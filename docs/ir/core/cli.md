@@ -1,165 +1,167 @@
-# コマンドと終了
+# Commands and exit
 
-kotowari のコマンド、受ける引数、停止と終了コードを扱う。
+English | [日本語](cli.ja.md)
+
+Covers kotowari's commands, the arguments they accept, stopping, and exit codes.
 
 ## Requirements
 
-### REQ-core-001: コマンドは8つ
+### REQ-core-001: Eight commands
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A19, docs/decision/records/2026-09-17-mutation-tests.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-19-read-commands.md#A1, docs/decision/records/2026-09-19-read-commands.md#A10, docs/decision/records/2026-09-20-query-status.md#A1, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-02-whole-picture.md#A23, docs/decision/records/2026-10-02-whole-picture.md#A27
 - verification: unit
 
-kotowari は常に、"kotowari check"、"kotowari list"、"kotowari mutants"、"kotowari plan"、"kotowari query"、"kotowari status"、"kotowari changes"、"kotowari overview" の8つのコマンドだけを持ち、"kotowari check" の1つのコマンドで`IR`の検査と`テスト`との対応の検査を両方行う。変更に対する照合の欠落と古さの検査は "kotowari changes" が行う（REQ-core-240）。"kotowari overview" は "build" と "serve" の2つの下位のコマンドを持つ（REQ-core-293、REQ-core-297）。
+kotowari always has only the eight commands "kotowari check", "kotowari list", "kotowari mutants", "kotowari plan", "kotowari query", "kotowari status", "kotowari changes" and "kotowari overview", and the single command "kotowari check" performs both the check of the `IR` and the check of its correspondence with the `test`. The check for missing and stale conformance records against changes is done by "kotowari changes" (REQ-core-240). "kotowari overview" has two subcommands, "build" and "serve" (REQ-core-293, REQ-core-297).
 
-### REQ-core-002: 受けるオプション
+### REQ-core-002: Accepted options
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A19, docs/decision/records/records.md#A103, docs/decision/records/2026-09-17-mutation-tests.md#A14, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A58, docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-09-24-plan-schema.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A3, docs/decision/records/2026-10-02-whole-picture.md#A62, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-02-whole-picture.md#A78
 - verification: unit
 
-kotowari は常に、"check"、"list"、"query"、"status" ではオプションとして "--format"、"--config"、"--help"、"--version" だけを受け、"mutants" ではそれに加えて "--tool" を受け、"plan" では "--format"、"--help"、"--version" だけを受け、"overview build" では "--format"、"--config"、"--help"、"--version" だけを受け、"overview serve" では "--port"、"--config"、"--help"、"--version" だけを受け、どのコマンドでも、オプションをコマンドの前後どちらに書いても受け、位置引数とオプションの順を問わない。
+kotowari always accepts only "--format", "--config", "--help" and "--version" as options for "check", "list", "query" and "status"; accepts "--tool" in addition to those for "mutants"; accepts only "--format", "--help" and "--version" for "plan"; accepts only "--format", "--config", "--help" and "--version" for "overview build"; accepts only "--port", "--config", "--help" and "--version" for "overview serve"; and, for every command, accepts an option written either before or after the command, regardless of the order of positional arguments and options.
 
-### REQ-core-003: 設定のパスの基準
+### REQ-core-003: Base of the configuration path
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-details.md#A3, docs/decision/records/records.md#A60
 - verification: unit
 
-kotowari は常に、"--config" に与えたパスを、changes 以外ではカレントディレクトリからの相対パスとして読む。 "changes" は対象の snapshot 内の設定を Git のルートからの相対パスで読む（REQ-core-265）。
+kotowari always reads the path given to "--config" as a path relative to the current directory, except for changes. "changes" reads the configuration inside the target snapshot by a path relative to the Git root (REQ-core-265).
 
-### REQ-core-004: 引数の誤り
+### REQ-core-004: Argument errors
 
 - kind: event_driven
 - source: docs/decision/records/2026-10-01-change-details.md#A3, docs/decision/records/records.md#A60, docs/decision/records/records.md#A103, docs/decision/records/records.md#A136, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-02-whole-picture.md#A27, docs/decision/records/2026-10-02-whole-picture.md#A63
 - verification: unit
 
-"--help" も "--version" も無いときに、知らないオプション、"mutants" でないコマンドに付けた "--tool"、"overview serve" でないコマンドに付けた "--port"、"overview serve" に付けた "--format"、"check"、"list"、"mutants"、"plan"、"query"、"status"、"changes"、"overview" のいずれでもない1つ目の位置引数、"check"、"list"、"status" の後の位置引数、"--format" の知らない値、値の無いオプション、同じオプションの2回目のいずれかを受けたとき、引数が1つも無いとき、オプションだけがあって1つ目の位置引数が無いとき、または "changes" 以外で "--config" の指す先が無いかディレクトリのとき、kotowari は引数の誤りを理由に`停止`する。
+When neither "--help" nor "--version" is given and kotowari receives any of the following: an unknown option, "--tool" on a command other than "mutants", "--port" on a command other than "overview serve", "--format" on "overview serve", a first positional argument that is none of "check", "list", "mutants", "plan", "query", "status", "changes" and "overview", a positional argument after "check", "list" or "status", an unknown value of "--format", an option without a value, or a second occurrence of the same option; or when there are no arguments at all; or when there are only options and no first positional argument; or when, other than for "changes", the target of "--config" does not exist or is a directory, kotowari will `stop` on the grounds of an argument error.
 
-### REQ-core-149: mutants の引数
+### REQ-core-149: Arguments of mutants
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-17-mutation-tests.md#A14, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A41
 - verification: unit
 
-"--help" も "--version" も無い "kotowari mutants" で、"--tool" が無いとき、"--tool" の値が "cargo-mutants" でないとき、または "mutants" の後の位置引数がちょうど1つでないとき、kotowari は引数の誤りを理由に`停止`する。位置引数は結果のファイルのパスで、カレントディレクトリからの相対パスとして読む。
+In "kotowari mutants" with neither "--help" nor "--version", when "--tool" is absent, when the value of "--tool" is not "cargo-mutants", or when there is not exactly one positional argument after "mutants", kotowari will `stop` on the grounds of an argument error. The positional argument is the path of the outcomes file, read as a path relative to the current directory.
 
-### REQ-core-304: overview の引数
+### REQ-core-304: Arguments of overview
 
 - kind: event_driven
 - source: docs/decision/records/2026-10-02-whole-picture.md#A27, docs/decision/records/2026-10-02-whole-picture.md#A57, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-02-whole-picture.md#A72
 - verification: unit
 
-"--help" も "--version" も無い "kotowari overview" で、"overview" の後の位置引数がちょうど1つでないとき、それが "build" か "serve" でないとき、または "--port" の値が1から65535までの10進の整数でないとき、kotowari は引数の誤りを理由に`停止`する。
+In "kotowari overview" with neither "--help" nor "--version", when there is not exactly one positional argument after "overview", when it is neither "build" nor "serve", or when the value of "--port" is not a decimal integer from 1 to 65535, kotowari will `stop` on the grounds of an argument error.
 
-### REQ-core-005: 停止の出力
+### REQ-core-005: Output on stop
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A40, docs/decision/records/records.md#A104, docs/decision/records/records.md#A137
 - verification: unit
 
-`停止`するとき、kotowari は標準出力に何も出さず、停止の理由を標準エラーに出す。標準エラーの1行目は TBL-core-018 の文言に ": " と詳細を続けた形で、詳細は TBL-core-020 のとおりで、パスを含めるときは`基準のディレクトリ`からの相対パスにし、文言は英語で書く。
+When it will `stop`, kotowari writes nothing to standard output and writes the reason for the stop to standard error. The first line of standard error is the wording of TBL-core-018 followed by ": " and the detail; the detail is as in TBL-core-020, any path it contains is relative to the `base directory`, and the wording is written in English.
 
-### REQ-core-006: 停止の理由
+### REQ-core-006: Reasons for stopping
 
 - kind: algorithm
 - source: docs/decision/records/records.md#A44, docs/decision/records/records.md#A48, docs/decision/records/records.md#A60, docs/decision/records/records.md#A104
 - definition: TBL-core-001, TBL-core-018, TBL-core-020
 - verification: unit
 
-### REQ-core-007: 終了コード
+### REQ-core-007: Exit codes
 
 - kind: algorithm
 - source: docs/decision/records/records.md#A20, docs/decision/records/records.md#A29
 - definition: TBL-core-002
 - verification: unit
 
-### REQ-core-008: 作らないコマンド
+### REQ-core-008: Commands not built
 
 - kind: prohibition
 - source: docs/decision/records/records.md#P1, docs/decision/records/records.md#A99, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4, docs/decision/records/2026-09-17-check-reach.md#A23, docs/decision/records/2026-09-19-read-commands.md#A2, docs/decision/records/2026-09-20-query-status.md#A1, docs/decision/records/2026-10-02-whole-picture.md#A60, docs/decision/records/2026-10-02-whole-picture.md#A73
 - verification: unit
 
-kotowari は、`IR`から構成と中身を写した人間向けの文書を生成してはならない。`全体像`は LLM が書いた`全体像の元データ`を描くもので、`部品`の参照が指す`項目`の本文をその場で開いて見せること（REQ-core-291）は、これに当たらない。
+kotowari shall not generate human-facing documents that copy their structure and content from the `IR`. The `overview` renders `overview data` written by an LLM, and opening and showing on the spot the body of the `item` a `part`'s reference points to (REQ-core-291) does not count as this.
 
 ## Decision tables
 
-### TBL-core-001: 停止の理由
+### TBL-core-001: Reasons for stopping
 
 - source: docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A48, docs/decision/records/records.md#A60, docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A66, docs/decision/records/records.md#A95, docs/decision/records/records.md#A96, docs/decision/records/records.md#A93, docs/decision/records/records.md#A103, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A136, docs/decision/records/records.md#A146, docs/decision/records/records.md#A160, docs/decision/records/2026-09-16-ir-tree.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A32, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A48, docs/decision/records/2026-09-22-ir-engine.md#A73, docs/decision/records/2026-09-24-plan-schema.md#A16, docs/decision/records/2026-09-24-doc-marks.md#A15, docs/decision/records/2026-09-24-doc-marks.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A2, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-09-27-surface-check.md#A24, docs/decision/records/2026-09-27-surface-check.md#A29, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A57, docs/decision/records/2026-10-02-whole-picture.md#A58, docs/decision/records/2026-10-02-whole-picture.md#A61, docs/decision/records/2026-10-02-whole-picture.md#A72, docs/decision/records/2026-10-02-whole-picture.md#A76, docs/decision/records/2026-10-04-overview-on-public-api.md#A9, docs/decision/records/2026-10-05-overview-index.md#A11, docs/decision/records/2026-10-05-overview-index.md#A17, docs/decision/records/2026-10-05-overview-index.md#A32
 
-| 理由 | 場面 |
+| Reason | Situation |
 |---|---|
-| 設定の誤り | REQ-core-014 の場面と、REQ-core-189 の "tests.rules" の誤りの場面と、REQ-core-225 の面の設定と "surface.rules" の誤りの場面と、REQ-core-231 の未記載の面の一覧が YAML として読めないか最上位が並びでない場面と、REQ-core-148 の等価の一覧が YAML として読めないか最上位が並びでない場面と、REQ-core-199 のガイドとテストの置き場が重なる場面と、REQ-core-279 と REQ-core-280 の`全体像の元データ`の場面と、"overview" の鍵に "overview.toc" が無い場面と、REQ-core-326 の`目次`の場面 |
-| 引数の誤り | REQ-core-004、REQ-core-149、REQ-core-190、REQ-core-304 の場面 |
-| 読めないファイル | "kotowari plan" の`計画書`のファイルが無いか、ディレクトリか、読めない（REQ-core-197）、読むファイルを読めない（"kotowari mutants" で変異の結果か等価の一覧の1件が指すファイルは除く。REQ-core-141、REQ-core-142）、結果のファイルが無いか読めない、"mutants.equivalents" の指す先が無いか読めない、"kotowari check" か "kotowari status" で "surface.unspecified" の指す先が無いか読めない、"overview.toc" の指す先が無いか読めない（REQ-core-325）、"kotowari check"、"kotowari overview build"、"kotowari overview serve" で"ir"、"decisions.records"、"decisions.adr" の指すディレクトリが無いか読めない、"ir"、"decisions.records"、"decisions.adr" の下のディレクトリが読めない、または "tests.files"、"guides.files"、"surface.files"、"overview.files" のいずれかの走査でディレクトリが読めない、または走査で先の無いシンボリックリンクに出会った、またはカレントディレクトリを取得できない |
-| UTF-8 でないファイル | IR の文書、テストのファイル、ガイド、面のファイル（REQ-core-236 が読むもの）、未記載の面の一覧、設定ファイル、判断の記録、ADR、結果のファイル、等価の一覧、計画書、`全体像の元データ`、`目次`のいずれかが UTF-8 でない |
-| 結果の誤り | REQ-core-144 の場面 |
-| 写しの誤り | REQ-core-175 の場面 |
-| 元データの誤り | REQ-core-294 の場面 |
-| ポートの誤り | REQ-core-298 の場面 |
-| 置き場の誤り | REQ-core-324 の場面 |
+| Configuration error | The situation of REQ-core-014; the situation of an error in "tests.rules" in REQ-core-189; the situation of an error in the surface configuration and "surface.rules" in REQ-core-225; the situation in REQ-core-231 where the list of unspecified surfaces cannot be read as YAML or its top level is not a sequence; the situation in REQ-core-148 where the list of equivalents cannot be read as YAML or its top level is not a sequence; the situation in REQ-core-199 where the locations of guides and tests overlap; the situations of the `overview data` in REQ-core-279 and REQ-core-280; the situation where the "overview" key has no "overview.toc"; and the situation of the `table of contents` in REQ-core-326 |
+| Argument error | The situations of REQ-core-004, REQ-core-149, REQ-core-190 and REQ-core-304 |
+| Unreadable file | The `plan` file of "kotowari plan" does not exist, is a directory, or cannot be read (REQ-core-197); a file to be read cannot be read (excluding, in "kotowari mutants", a file pointed to by one entry of the mutation outcomes or of the list of equivalents; REQ-core-141, REQ-core-142); the outcomes file does not exist or cannot be read; the target of "mutants.equivalents" does not exist or cannot be read; in "kotowari check" or "kotowari status", the target of "surface.unspecified" does not exist or cannot be read; the target of "overview.toc" does not exist or cannot be read (REQ-core-325); in "kotowari check", "kotowari overview build" or "kotowari overview serve", a directory pointed to by "ir", "decisions.records" or "decisions.adr" does not exist or cannot be read; a directory under "ir", "decisions.records" or "decisions.adr" cannot be read; a directory cannot be read while scanning any of "tests.files", "guides.files", "surface.files" or "overview.files"; a scan meets a symbolic link with no target; or the current directory cannot be obtained |
+| File that is not UTF-8 | Any of an IR document, a test file, a guide, a surface file (what REQ-core-236 reads), the list of unspecified surfaces, the configuration file, a decision record, an ADR, the outcomes file, the list of equivalents, a plan, the `overview data` or the `table of contents` is not UTF-8 |
+| Outcome error | The situation of REQ-core-144 |
+| Copy error | The situation of REQ-core-175 |
+| Source data error | The situation of REQ-core-294 |
+| Port error | The situation of REQ-core-298 |
+| Location error | The situation of REQ-core-324 |
 
-### TBL-core-002: 終了コード
+### TBL-core-002: Exit codes
 
 - source: docs/decision/records/records.md#A20, docs/decision/records/records.md#A29, docs/decision/records/records.md#A103, docs/decision/records/2026-09-16-notice.md#A2
 
-| 終了コード | 場面 |
+| Exit code | Situation |
 |---|---|
-| 0 | 誤りが無い（注意だけのときを含む）、または "--help" か "--version" で終わった |
-| 1 | 誤りが1件以上ある |
-| 2 | 停止した |
+| 0 | There are no errors (including when there are only notices), or the run ended with "--help" or "--version" |
+| 1 | There is one or more errors |
+| 2 | The run stopped |
 
 ## Examples
 
 ```gherkin
 @id=EX-core-001 @about=REQ-core-004,REQ-core-005 @source=docs/decision/records/records.md#A60,docs/decision/records/records.md#A40
-Scenario: 知らないオプションで停止する
-  Given 検査できる IR がある
-  When "kotowari check --verbose" を実行する
-  Then 終了コードは 2 である
-  And 標準出力には何も出ない
-  And 標準エラーに停止の理由が出る
+Scenario: An unknown option stops the run
+  Given there is an IR that can be checked
+  When "kotowari check --verbose" is run
+  Then the exit code is 2
+  And nothing is written to standard output
+  And the reason for the stop is written to standard error
 
 @id=EX-core-218 @about=REQ-core-149 @source=docs/decision/records/2026-09-17-mutation-tests.md#A14,docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A41
-Scenario: 道具の指定が無い mutants は停止する
-  Given 読める結果のファイル "outcomes.json" がある
-  When "kotowari mutants outcomes.json" を実行する
-  Then 終了コードは 2 である
-  And 標準エラーの1行目は "argument error: " で始まる
+Scenario: mutants without a tool specified stops
+  Given there is a readable outcomes file "outcomes.json"
+  When "kotowari mutants outcomes.json" is run
+  Then the exit code is 2
+  And the first line of standard error starts with "argument error: "
 
 @id=EX-core-219 @about=REQ-core-004,TBL-core-020 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-19-read-commands.md#A10,docs/decision/records/2026-09-19-read-commands.md#A20,docs/decision/records/2026-09-20-query-status.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A10,docs/decision/records/2026-09-24-plan-schema.md#A30,docs/decision/records/2026-10-01-change-conformance.md#A2
-Scenario: 引数が無いときはコマンドを挙げる
-  When "kotowari" を引数なしで実行する
-  Then 終了コードは 2 である
-  And 標準エラーの理由には REQ-core-001 の8つのコマンド名が挙げられる
+Scenario: With no arguments the commands are listed
+  When "kotowari" is run without arguments
+  Then the exit code is 2
+  And the reason on standard error lists the eight command names of REQ-core-001
 
 @id=EX-core-240 @about=REQ-core-149 @source=docs/decision/records/2026-09-17-mutation-tests.md#A14,docs/decision/records/2026-09-17-mutation-tests.md#A39
-Scenario: 知らない道具の名前は停止する
-  Given 読める結果のファイル "a.json" がある
-  When "kotowari mutants --tool stryker a.json" を実行する
-  Then 終了コードは 2 で、標準エラーの1行目は "argument error: " で始まる
+Scenario: An unknown tool name stops the run
+  Given there is a readable outcomes file "a.json"
+  When "kotowari mutants --tool stryker a.json" is run
+  Then the exit code is 2 and the first line of standard error starts with "argument error: "
 
 @id=EX-core-242 @about=REQ-core-149 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A41
-Scenario: 結果のファイルを2つ渡すと停止する
-  Given 読める結果のファイル "a.json" と "b.json" がある
-  When "kotowari mutants --tool cargo-mutants a.json b.json" を実行する
-  Then 終了コードは 2 で、標準エラーの1行目は "argument error: " で始まる
+Scenario: Passing two outcomes files stops the run
+  Given there are readable outcomes files "a.json" and "b.json"
+  When "kotowari mutants --tool cargo-mutants a.json b.json" is run
+  Then the exit code is 2 and the first line of standard error starts with "argument error: "
 
 @id=EX-core-241 @about=REQ-core-004,TBL-core-020 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A55,docs/decision/records/2026-09-19-read-commands.md#A10,docs/decision/records/2026-09-19-read-commands.md#A20,docs/decision/records/2026-09-20-query-status.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A10,docs/decision/records/2026-09-24-plan-schema.md#A30,docs/decision/records/2026-10-01-change-conformance.md#A2
-Scenario: オプションだけの実行はコマンドを挙げて停止する
-  When "kotowari --format text" を実行する
-  Then 終了コードは 2 である
-  And 標準エラーの理由には REQ-core-001 の8つのコマンド名が挙げられる
+Scenario: A run with only options lists the commands and stops
+  When "kotowari --format text" is run
+  Then the exit code is 2
+  And the reason on standard error lists the eight command names of REQ-core-001
 
 @id=EX-core-244 @about=REQ-core-002 @source=docs/decision/records/2026-09-17-mutation-tests.md#A41,docs/decision/records/2026-09-17-mutation-tests.md#A58
-Scenario: mutants のオプションはコマンドの前にも結果のパスの後にも書ける
-  Given 結果のファイル "outcomes.json" に "summary" が "CaughtMutant" の1件がある
-  When "kotowari --tool cargo-mutants mutants outcomes.json --format text" を実行する
-  Then 終了コードは 0 である
+Scenario: The options of mutants can be written before the command or after the outcomes path
+  Given the outcomes file "outcomes.json" has one entry whose "summary" is "CaughtMutant"
+  When "kotowari --tool cargo-mutants mutants outcomes.json --format text" is run
+  Then the exit code is 0
 @id=EX-core-380 @about=REQ-core-002 @source=docs/decision/records/2026-09-24-guide-gaps.md#A3,docs/decision/records/ir-form.md#出力,docs/decision/records/2026-09-20-query-status.md#A7
-Scenario: query の ID の後ろにオプションを書ける
-  Given `IR`に "REQ-001" がある
-  When "kotowari query REQ-001 --format text" を実行する
-  Then 終了コードは 0 である
+Scenario: Options can be written after the ID in query
+  Given the `IR` has "REQ-001"
+  When "kotowari query REQ-001 --format text" is run
+  Then the exit code is 0
 ```

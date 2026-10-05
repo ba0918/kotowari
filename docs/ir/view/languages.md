@@ -1,111 +1,113 @@
-# 言語
+# Languages
 
-view がページの言語を示すこと、view が書く文字を`UI の文字`から取ること、`ほかの言語`の同じ`ページ`へのリンク、本文の無い`参照`を扱う。view はどの言語の文字も中に持たず、言語ごとに1回ずつ描かれる。
+English | [日本語](languages.ja.md)
+
+This covers view indicating the language of a page, view taking the text it writes from the `UI text`, links to the same `page` in the `other languages`, and a `reference` with no body. view holds no text of any language inside itself, and is drawn once per language.
 
 ## Requirements
 
-### REQ-view-026: ページの言語
+### REQ-view-026: Language of the page
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-05-localization.md#A5, docs/decision/records/2026-10-05-localization.md#A9
 - verification: unit
 
-view は常に、HTML の`ページ`の "html" の要素の lang の属性を、`描画の入力`の言語タグにする。
+view always sets the lang attribute of the "html" element of an HTML `page` to the language tag of the `render input`.
 
-### REQ-view-027: 文字を中に持たない
+### REQ-view-027: No text held inside
 
 - kind: prohibition
 - source: docs/decision/records/2026-10-05-localization.md#A9
 - verification: unit
 
-view は、`ページ`に書く文字のうち、`文書`、`参照の表`、`目次`、`ほかの言語`から来ないものを、`UI の文字`のほかから取ってはならない。
+view must not take, from anywhere other than the `UI text`, any text it writes into a `page` that does not come from the `document`, the `reference table`, the `table of contents` or the `other languages`.
 
-### REQ-view-028: 数を入れる文字
+### REQ-view-028: Text that takes a number
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-05-localization.md#A8
 - verification: unit
 
-view は常に、TBL-view-002 で数を入れる鍵の`UI の文字`を描くとき、その中の "{n}" をその数の10進に置き換える。
+When drawing the `UI text` of a key that takes a number in TBL-view-002, view always replaces the "{n}" in it with that number in decimal.
 
-### REQ-view-029: ほかの言語へのリンク
+### REQ-view-029: Links to other languages
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-05-localization.md#A20, docs/decision/records/2026-10-05-localization.md#A32
 - verification: unit
 
-view は常に、HTML のすべての`ページ`に、`ほかの言語`の1件ごとに、その名前を文字とし、その置き場への相対パスに同じ`ページ`の名前を続けた先へのリンクを、`ほかの言語`の順に描く。`ほかの言語`が空のときはリンクを描かない。どの`ページ`にもスクリプトを入れず、選んだ言語を残さない。
+view always draws on every HTML `page`, for each entry of the `other languages` and in the order of the `other languages`, a link whose text is the name of that entry and whose target is the relative path to its place followed by the name of the same `page`. When the `other languages` is empty, it draws no link. It puts no script on any `page` and does not remember the chosen language.
 
-### REQ-view-030: 本文の無い参照
+### REQ-view-030: A reference with no body
 
 - kind: event_driven
 - source: docs/decision/records/2026-10-05-localization.md#A34
 - verification: unit
 
-`参照の表`の1件が本文を持たないとき、view はその`参照`を表示名だけで描き、選んでも何も開かないようにする。
+When an entry of the `reference table` has no body, view draws that `reference` with its display name only, so that selecting it opens nothing.
 
 ## Decision tables
 
-### TBL-view-002: UI の文字の鍵
+### TBL-view-002: Keys of the UI text
 
 - source: docs/decision/records/2026-10-05-localization.md#A5, docs/decision/records/2026-10-05-localization.md#A8, docs/decision/records/2026-10-05-localization.md#A32, docs/decision/records/2026-10-05-localization.md#D1
 
-| 鍵 | 使う所 | 数を入れる |
+| Key | Where it is used | Takes a number |
 |---|---|---|
-| language_name | 使わない（`ほかの言語`の名前は view の外で決まる） | いいえ |
-| index_link | REQ-view-019 の一覧へのリンク | いいえ |
-| pages | REQ-view-017 の数 | はい |
-| stale_sections | REQ-view-016 と REQ-view-017 の数 | はい |
-| open_items | REQ-view-016 と REQ-view-017 の数 | はい |
-| planned_items | REQ-view-016 の数 | はい |
-| stale_mark | REQ-view-009 の印 | いいえ |
-| outline_stale | REQ-view-022 の印 | いいえ |
-| superseded | REQ-view-008 の置き換え済みの印 | いいえ |
-| deferred | REQ-view-008 の後回しの印 | いいえ |
-| compare_before | compare の`部品`の前の列の見出し | いいえ |
-| compare_after | compare の`部品`の後の列の見出し | いいえ |
-| compare_why | compare の`部品`の理由の列の見出し | いいえ |
-| state_decided | status の札 "decided" | いいえ |
-| state_planned | status の札 "planned" | いいえ |
-| state_open | status の札 "open" | いいえ |
-| state_dropped | status の札 "dropped" | いいえ |
+| language_name | Not used (the names of the `other languages` are decided outside view) | No |
+| index_link | The link to the listing in REQ-view-019 | No |
+| pages | The count in REQ-view-017 | Yes |
+| stale_sections | The counts in REQ-view-016 and REQ-view-017 | Yes |
+| open_items | The counts in REQ-view-016 and REQ-view-017 | Yes |
+| planned_items | The count in REQ-view-016 | Yes |
+| stale_mark | The mark in REQ-view-009 | No |
+| outline_stale | The mark in REQ-view-022 | No |
+| superseded | The superseded mark in REQ-view-008 | No |
+| deferred | The deferred mark in REQ-view-008 | No |
+| compare_before | The heading of the before column of the compare `part` | No |
+| compare_after | The heading of the after column of the compare `part` | No |
+| compare_why | The heading of the reason column of the compare `part` | No |
+| state_decided | The status tag "decided" | No |
+| state_planned | The status tag "planned" | No |
+| state_open | The status tag "open" | No |
+| state_dropped | The status tag "dropped" | No |
 
 ## Examples
 
 ```gherkin
 @id=EX-view-018 @about=REQ-view-026,REQ-view-027 @source=docs/decision/records/2026-10-05-localization.md#A5,docs/decision/records/2026-10-05-localization.md#A9,docs/decision/records/2026-10-05-localization.md#D1
-Scenario: ページの言語と文字は入力のとおりになる
-  Given 言語タグが "fr" で、UI の文字の "stale_mark" が "Pas encore relu" で、古いとされた節を持つ文書がある
-  When view で描画する
-  Then どの HTML のページの html の要素も lang の属性が "fr" で、古い節の近くに "Pas encore relu" がある
+Scenario: The language and the text of the page follow the input
+  Given the language tag is "fr", the "stale_mark" of the UI text is "Pas encore relu", and there is a document with a section marked stale
+  When it is rendered with view
+  Then the html element of every HTML page has the lang attribute "fr", and "Pas encore relu" is near the stale section
 
 @id=EX-view-019 @about=REQ-view-027 @source=docs/decision/records/2026-10-05-localization.md#A9
-Scenario: UI の文字を変えると view が書く文字が全部変わる
-  Given 8種の部品をすべて使い、古い節と置き換え済みと後回しの参照を持つ文書があり、UI の文字の値がすべて "X" の後に鍵の名前を続けたもの（数を入れる鍵では末尾に " {n}"）である
-  When view で描画する
-  Then ページの文字のうち、文書、参照の表、目次、ほかの言語から来ないものは、すべて "X" で始まる UI の文字か、その "{n}" を数に置き換えたものである
+Scenario: Changing the UI text changes all the text view writes
+  Given there is a document that uses all eight kinds of part and has a stale section and superseded and deferred references, and every value of the UI text is "X" followed by the name of the key (with " {n}" at the end for keys that take a number)
+  When it is rendered with view
+  Then every text of the pages that does not come from the document, the reference table, the table of contents or the other languages is UI text starting with "X", or such text with its "{n}" replaced by a number
 
 @id=EX-view-020 @about=REQ-view-028 @source=docs/decision/records/2026-10-05-localization.md#A8,docs/decision/records/2026-10-05-localization.md#D1
-Scenario: 数は語順の決まった文字に入る
-  Given UI の文字の "pages" が "全{n}件" で、目次の群の下に文書が3つある
-  When view で描画する
-  Then その目次の群の見出しに "全3件" がある
+Scenario: A number goes into text with a fixed word order
+  Given the "pages" of the UI text is "全{n}件", and there are three documents under a contents group
+  When it is rendered with view
+  Then the heading of that contents group has "全3件"
 
 @id=EX-view-021 @about=REQ-view-029 @source=docs/decision/records/2026-10-05-localization.md#A20,docs/decision/records/2026-10-05-localization.md#A32
-Scenario: ほかの言語の同じページへリンクする
-  Given ほかの言語が名前 "English" と置き場 "en/" の1件で、文書 "a" がある
-  When view で描画する
-  Then "a.html" に "en/a.html" への "English" のリンクがあり、"index.html" に "en/index.html" への "English" のリンクがあり、どのページにも script の要素は無い
+Scenario: Link to the same page in other languages
+  Given the other languages is one entry with the name "English" and the place "en/", and there is a document "a"
+  When it is rendered with view
+  Then "a.html" has an "English" link to "en/a.html", "index.html" has an "English" link to "en/index.html", and no page has a script element
 
 @id=EX-view-022 @about=REQ-view-029 @source=docs/decision/records/2026-10-05-localization.md#A20
-Scenario: ほかの言語が無ければリンクは無い
-  Given ほかの言語が空で、文書 "a" がある
-  When view で描画する
-  Then "a.html" と "index.html" に、ほかの言語のページへのリンクは無い
+Scenario: No other languages means no links
+  Given the other languages is empty, and there is a document "a"
+  When it is rendered with view
+  Then "a.html" and "index.html" have no link to a page in another language
 
 @id=EX-view-023 @about=REQ-view-030 @source=docs/decision/records/2026-10-05-localization.md#A34
-Scenario: 本文の無い参照は表示名だけで開かない
-  Given 参照の表に、参照 "docs/x.md#A1" が表示名 "x A1"、本文なし、状態 "current" である1件があり、それを refs に持つ部品がある
-  When view で描画する
-  Then ページには表示名 "x A1" があり、選ぶと開く要素は無い
+Scenario: A reference with no body shows only its display name and does not open
+  Given the reference table has one entry where the reference "docs/x.md#A1" has the display name "x A1", no body and the status "current", and there is a part that has it in refs
+  When it is rendered with view
+  Then the page has the display name "x A1", and there is no element that opens when selected
 ```

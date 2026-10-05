@@ -1,21 +1,23 @@
-# 文字コードとコードブロックの境界
+# Character encoding and code block boundaries
 
-読むファイルの先頭の BOM と、閉じないコードブロックの扱いを扱う。
+English | [日本語](ir-input.ja.md)
+
+Covers a BOM at the start of a file that is read, and the handling of an unclosed code block.
 
 ## Requirements
 
-### REQ-core-111: 先頭の BOM
+### REQ-core-111: A BOM at the start
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A107
 - verification: unit
 
-読むファイルの先頭に UTF-8 の BOM があるとき、kotowari はそれを読み飛ばし、UTF-8 でないファイルとして`停止`しない。
+When a file that is read has a UTF-8 BOM at its start, kotowari skips it and does not `stop` treating the file as not UTF-8.
 
-### REQ-core-112: 閉じないコードブロック
+### REQ-core-112: An unclosed code block
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A108
 - verification: unit
 
-`コードブロック`が閉じられずに文書が終わるとき、kotowari は開始の行を "line"、開始の行の文字を detail にして unclosed_code_block の`誤り`を出し、開始から文書の終わりまでを検査の対象から外す。
+When a document ends without a `code block` being closed, kotowari raises an unclosed_code_block `error` with the start line as "line" and the characters of the start line as the detail, and removes the part from the start to the end of the document from what it checks.

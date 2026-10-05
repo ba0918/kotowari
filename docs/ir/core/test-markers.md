@@ -1,189 +1,191 @@
-# テストの印
+# Marks in tests
 
-テストに書く印の構文と、印をテストに結び付ける規則を扱う。
+English | [日本語](test-markers.ja.md)
+
+Covers the syntax of the marks written in tests, and the rules that tie marks to tests.
 
 ## Requirements
 
-### REQ-core-071: 印の構文
+### REQ-core-071: The syntax of a mark
 
 - kind: algorithm
 - source: docs/decision/records/records.md#A14, docs/decision/records/records.md#A57
 - definition: TBL-core-015
 - verification: unit
 
-### REQ-core-072: 形の誤った印
+### REQ-core-072: Malformed marks
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A57, docs/decision/records/records.md#A67, docs/decision/records/records.md#A39, docs/decision/records/records.md#A121, docs/decision/records/records.md#A111, docs/decision/records/2026-09-24-multi-language-tests.md#A15
 - verification: unit
 
-`問い合わせのある言語`でどの`テスト`の`直前のコメントの塊`にも無いものを除く`印`について、その中が空か区切りだけのとき、またはその`印`に同じ行の閉じ括弧が無いとき、kotowari は行の文字を detail にして invalid_marker の`誤り`を出す。
+For a `mark` other than one in a `language with a query` that is in no `test`'s `preceding comment block`, when its contents are empty or only separators, or when that `mark` has no closing bracket on the same line, kotowari raises an invalid_marker `error` with the line's text as detail.
 
-### REQ-core-073: 1行に複数の印
+### REQ-core-073: Several marks on one line
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A57
 - verification: unit
 
-kotowari は常に、1行の中の`印`をすべて拾う。
+kotowari always picks up every `mark` in a line.
 
-### REQ-core-074: コメント記号を見ない
+### REQ-core-074: Comment symbols are not looked at
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A14
 - verification: unit
 
-kotowari は常に、`印`を行のどの位置からも拾い、コメント記号を見ない。
+kotowari always picks up a `mark` from any position in a line, and does not look at comment symbols.
 
-### REQ-core-075: 印の結び付け
+### REQ-core-075: Tying marks
 
 - kind: algorithm
 - source: docs/decision/records/records.md#A26, docs/decision/records/records.md#A34, docs/decision/records/records.md#A39, docs/decision/records/records.md#A57, docs/decision/records/2026-09-24-multi-language-tests.md#A15, docs/decision/records/2026-09-24-multi-language-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A17, docs/decision/records/2026-09-24-multi-language-tests.md#A26, docs/decision/records/2026-09-24-multi-language-tests.md#A39, docs/decision/records/2026-09-24-multi-language-tests.md#A40, docs/decision/records/2026-09-24-multi-language-tests.md#A41, docs/decision/records/2026-09-24-multi-language-tests.md#A50, docs/decision/records/2026-09-24-multi-language-tests.md#A51, docs/decision/records/2026-09-24-multi-language-tests.md#A52
 - definition: TBL-core-016, TBL-core-035
 - verification: unit
 
-### REQ-core-076: 問い合わせの無い言語の印
+### REQ-core-076: Marks in a language without a query
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A39, docs/decision/records/records.md#A57
 - verification: unit
 
-`問い合わせの無い言語`の`テストのファイル`を読むとき、kotowari はコメントかどうかを問わず、ファイルの文字の中の`印`をすべて拾う。
+When reading a `test file` of a `language without a query`, kotowari picks up every `mark` in the text of the file, whether or not it is in a comment.
 
-### REQ-core-077: 存在しない ID だけを指す印
+### REQ-core-077: A mark that points only at nonexistent IDs
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A57, docs/decision/records/records.md#A89
 - verification: unit
 
-`印`が存在しない`ID`だけを指すとき、kotowari はその`印`の結び付いた`テスト`を`印`のあるものと数える。`印`の角括弧の中の`ID`の形でない要素（"REQ001" のように区切りの無いもの）は、存在しない`ID`を指したものとして unresolved_reference の`誤り`を出す。
+When a `mark` points only at nonexistent `ID` values, kotowari counts the `test` that `mark` is tied to as one that has a `mark`. An element inside the square brackets of a `mark` that is not of the form of an `ID` (one without separators, such as "REQ001") is treated as pointing at a nonexistent `ID` and raises an unresolved_reference `error`.
 
-### REQ-core-078: review の要求を指す印
+### REQ-core-078: A mark that points at a review requirement
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A39
 - verification: unit
 
-`印`が検証の値 "review" の`要求`を指すとき、kotowari はそれを`誤り`にしない。
+When a `mark` points at a `requirement` whose verification value is "review", kotowari does not make it an `error`.
 
-### REQ-core-118: 印の指摘の行
+### REQ-core-118: The line of findings from marks
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A121
 - verification: unit
 
-kotowari は常に、`印`から出す unresolved_reference と invalid_marker の "line" を`印`のある行（行をまたぐ`印`なら "@kotowari[" のある行）にする。
+kotowari always sets the "line" of an unresolved_reference or invalid_marker raised from a `mark` to the line with the `mark` (for a `mark` spanning lines, the line with "@kotowari[").
 
 ## Decision tables
 
-### TBL-core-015: 印の構文
+### TBL-core-015: The syntax of a mark
 
 - source: docs/decision/records/records.md#A14, docs/decision/records/records.md#A57
 
-| 部分 | 形 |
+| Part | Form |
 |---|---|
-| 始まり | @kotowari[ |
-| 中身 | ID をコンマで区切って並べる。コンマの前後に空白を置いてよい |
-| 終わり | ] |
+| Start | @kotowari[ |
+| Contents | IDs separated by commas. Whitespace may be placed before and after a comma |
+| End | ] |
 
-### TBL-core-016: 印の結び付け（問い合わせのある言語）
+### TBL-core-016: Tying marks (languages with a query)
 
 - source: docs/decision/records/records.md#A26, docs/decision/records/records.md#A34, docs/decision/records/records.md#A39, docs/decision/records/records.md#A57, docs/decision/records/records.md#A67, docs/decision/records/records.md#A121, docs/decision/records/2026-09-24-multi-language-tests.md#A15, docs/decision/records/2026-09-24-multi-language-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A26, docs/decision/records/2026-09-24-multi-language-tests.md#A41, docs/decision/records/2026-09-24-multi-language-tests.md#A49, docs/decision/records/2026-09-24-multi-language-tests.md#A52
 
-| 印の位置 | 扱い |
+| Position of the mark | Handling |
 |---|---|
-| テストの直前のコメントの塊 | そのテストに結び付ける。最初の行が同じテストが2つ以上あるときは、その行で最初に始まるテストにだけ結び付ける |
-| テストの節の中（関数の本体の先頭のコメントを含む）。ただし節の中にある別のテストの直前のコメントの塊は除き、1行目のとおりその別のテストに結び付ける | 無視し、invalid_marker も unresolved_reference も出さない |
-| どのテストの直前のコメントの塊にも無い | 無視し、invalid_marker も unresolved_reference も出さない |
-| "tests.rust.macros" のマクロの中の関数 | 上と同じ規則を適用する |
+| The preceding comment block of a test | Tied to that test. When two or more tests have the same first line, tied only to the test that starts first on that line |
+| Inside the node of a test (including the comment at the start of a function body). Except a preceding comment block of another test inside the node, which is tied to that other test as in the first row | Ignored; neither invalid_marker nor unresolved_reference is raised |
+| In no test's preceding comment block | Ignored; neither invalid_marker nor unresolved_reference is raised |
+| A function inside a macro of "tests.rust.macros" | The same rules as above apply |
 
-### TBL-core-035: コメントの塊とテストの間に挟んでよい行
+### TBL-core-035: Lines allowed between the comment block and the test
 
 - source: docs/decision/records/2026-09-24-multi-language-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A17, docs/decision/records/records.md#A39, docs/decision/records/2026-09-24-multi-language-tests.md#A39, docs/decision/records/2026-09-24-multi-language-tests.md#A40, docs/decision/records/2026-09-24-multi-language-tests.md#A50, docs/decision/records/2026-09-24-multi-language-tests.md#A51, docs/decision/records/2026-09-24-review10-gaps.md#A1
 
-直前のコメントの塊は、テストの節の最初の行の直前から上に向かって、空行が来るまで続く、コメントだけの行とこの表の挟んでよい行の塊。コメントだけの行は、前後の空白（Unicode の空白。全角空白と NBSP を含む）を除いた行の文字がすべてコメント（tree-sitter の extra の節）の文字である行で、複数行のコメントの途中の行を含み、コードと同じ行にあるコメントの行は含まない。コメントだけの行と挟んでよい行は空行なしで混ざってよく、複数行にわたる属性とデコレータはその全部の行を挟んでよい行とする。複数行のコメント、属性、デコレータの途中にある空白だけの行は塊を切らない。塊の行のうち、印を読むのはコメントの文字だけで、属性やデコレータの本体にある印は読まない。
+The preceding comment block is the block of comment-only lines and of the allowed lines of this table that goes upward from just above the first line of a test node until a blank line comes. A comment-only line is a line whose characters, after removing the surrounding whitespace (Unicode whitespace, including the full-width space and NBSP), are all characters of comments (tree-sitter extra nodes); it includes the lines in the middle of a multi-line comment, and does not include a comment line that is on the same line as code. Comment-only lines and allowed lines may mix without blank lines, and for attributes and decorators spanning several lines all their lines are allowed lines. A whitespace-only line in the middle of a multi-line comment, attribute or decorator does not break the block. Among the lines of the block, marks are read only from the characters of comments; marks in the body of an attribute or decorator are not read.
 
-| 言語 | 挟んでよい行 |
+| Language | Allowed lines |
 |---|---|
-| Rust | 属性（"#[...]"）の行 |
-| Python | デコレータ（"@..."）の行 |
-| そのほかの言語 | 無し |
+| Rust | Attribute ("#[...]") lines |
+| Python | Decorator ("@...") lines |
+| Other languages | None |
 
 ## Examples
 
 ```gherkin
 @id=EX-core-015 @about=REQ-core-073 @source=docs/decision/records/records.md#A57,docs/decision/records/records.md#A26,docs/decision/records/records.md#A39
-Scenario: 1行の2つの印を両方拾う
-  Given `テスト`の直前のコメントに "@kotowari[REQ-001] @kotowari[TBL-002]" がある
-  When "kotowari check" を実行する
-  Then その`テスト`は "REQ-001" と "TBL-002" に結び付く
+Scenario: Both marks on one line are picked up
+  Given the comment just before a `test` has "@kotowari[REQ-001] @kotowari[TBL-002]"
+  When "kotowari check" is run
+  Then that `test` is tied to "REQ-001" and "TBL-002"
 
 @id=EX-core-016 @about=REQ-core-075 @source=docs/decision/records/records.md#A39,docs/decision/records/records.md#A47,docs/decision/records/ir-form.md#検査の種類,docs/decision/records/records.md#A26,docs/decision/records/records.md#A49
-Scenario: 空行を挟んだコメントの印は結び付かない
-  Given "@kotowari[REQ-001]" のコメントと "#[test]" の関数の間に空行がある
-  When "kotowari check" を実行する
-  Then その関数に test_without_id の誤りが出る
+Scenario: A mark in a comment separated by a blank line is not tied
+  Given there is a blank line between the comment with "@kotowari[REQ-001]" and the "#[test]" function
+  When "kotowari check" is run
+  Then a test_without_id error is raised on that function
 
 @id=EX-core-306 @about=REQ-core-075 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A15
-Scenario: 関数の本体の先頭の印は結び付かない
-  Given "#[test]" の付いた関数の本体の最初の行が "// @kotowari[REQ-001]" で、関数の直前にコメントが無い
-  When "kotowari check" を実行する
-  Then その関数に test_without_id の誤りが出る
+Scenario: A mark at the start of a function body is not tied
+  Given the first line of the body of a function with "#[test]" is "// @kotowari[REQ-001]", and there is no comment just before the function
+  When "kotowari check" is run
+  Then a test_without_id error is raised on that function
 
 @id=EX-core-307 @about=REQ-core-075 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A16,docs/decision/records/2026-09-24-multi-language-tests.md#A17,docs/decision/records/2026-09-24-multi-language-tests.md#A19
-Scenario: デコレータを挟んだ印は結び付く
-  Given "tests.files" が "tests/**/*.py" を含み、"tests/test_a.py" に "# @kotowari[REQ-001]" の行、"@pytest.mark.parametrize('a', [1])" の行、"def test_x(a):" の行が空行なしで続く
-  When "kotowari check" を実行する
-  Then test_without_id の誤りは出ず、"test_x" は "REQ-001" に結び付く
+Scenario: A mark with a decorator in between is tied
+  Given "tests.files" contains "tests/**/*.py", and "tests/test_a.py" has a "# @kotowari[REQ-001]" line, a "@pytest.mark.parametrize('a', [1])" line and a "def test_x(a):" line in a row without blank lines
+  When "kotowari check" is run
+  Then no test_without_id error is raised, and "test_x" is tied to "REQ-001"
 
 @id=EX-core-308 @about=REQ-core-075 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A16,docs/decision/records/2026-09-24-multi-language-tests.md#A19
-Scenario: クラスの中のメソッドの直前のコメントも結び付く
-  Given "tests.files" が "tests/**/*.py" を含み、"tests/test_a.py" の "class TestBar:" の中に "# @kotowari[REQ-001]" の行と "def test_baz(self):" の行が空行なしで続く
-  When "kotowari check" を実行する
-  Then test_without_id の誤りは出ず、"test_baz" は "REQ-001" に結び付く
+Scenario: The comment just before a method in a class is tied too
+  Given "tests.files" contains "tests/**/*.py", and inside "class TestBar:" in "tests/test_a.py" a "# @kotowari[REQ-001]" line and a "def test_baz(self):" line follow in a row without blank lines
+  When "kotowari check" is run
+  Then no test_without_id error is raised, and "test_baz" is tied to "REQ-001"
 
 @id=EX-core-309 @about=REQ-core-075 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A16,docs/decision/records/2026-09-24-multi-language-tests.md#A17,docs/decision/records/2026-09-24-multi-language-tests.md#A18,docs/decision/records/2026-09-24-multi-language-tests.md#A13
-Scenario: 挟んでよい行の無い言語でコードの行を挟むと切れる
-  Given "tests.files" が "tests/**/*.ts" を含み、"tests/a.test.ts" に "// @kotowari[REQ-001]" の行、"const n = 1;" の行、"it('x', () => {});" の行が空行なしで続く
-  When "kotowari check" を実行する
-  Then detail が "x" の test_without_id の誤りが出る
+Scenario: In a language without allowed lines a code line in between breaks the block
+  Given "tests.files" contains "tests/**/*.ts", and "tests/a.test.ts" has a "// @kotowari[REQ-001]" line, a "const n = 1;" line and an "it('x', () => {});" line in a row without blank lines
+  When "kotowari check" is run
+  Then a test_without_id error with detail "x" is raised
 @id=EX-core-318 @about=REQ-core-075 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A40,docs/decision/records/2026-09-24-multi-language-tests.md#A17,docs/decision/records/2026-09-24-multi-language-tests.md#A19
-Scenario: 複数行のデコレータを挟んでも結び付く
-  Given "tests.files" が "tests/**/*.py" を含み、"tests/test_a.py" に "# @kotowari[REQ-001]" の行、3行にわたる "@pytest.mark.parametrize(" のデコレータ、"# note" の行、"def test_x(a):" の行が空行なしで続く
-  When "kotowari check" を実行する
-  Then test_without_id の誤りは出ず、"test_x" は "REQ-001" に結び付く
+Scenario: A mark with a multi-line decorator in between is tied
+  Given "tests.files" contains "tests/**/*.py", and "tests/test_a.py" has a "# @kotowari[REQ-001]" line, a "@pytest.mark.parametrize(" decorator spanning three lines, a "# note" line and a "def test_x(a):" line in a row without blank lines
+  When "kotowari check" is run
+  Then no test_without_id error is raised, and "test_x" is tied to "REQ-001"
 
 @id=EX-core-319 @about=REQ-core-075 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A41,docs/decision/records/2026-09-24-multi-language-tests.md#A27,docs/decision/records/2026-09-24-multi-language-tests.md#A18
-Scenario: 入れ子のテストの直前の印は内側に結び付く
-  Given "tests.files" が "tests/**/*.ts" を含み、"tests/a.test.ts" の "it('outer', ...)" の直前に "// @kotowari[REQ-001]" があり、その中の "it('inner', ...)" の直前に "// @kotowari[REQ-002]" がある
-  When "kotowari check" を実行する
-  Then test_without_id の誤りは出ず、"outer" は "REQ-001" に、"inner" は "REQ-002" に結び付く
+Scenario: A mark just before a nested test is tied to the inner one
+  Given "tests.files" contains "tests/**/*.ts", "tests/a.test.ts" has "// @kotowari[REQ-001]" just before "it('outer', ...)", and "// @kotowari[REQ-002]" just before "it('inner', ...)" inside it
+  When "kotowari check" is run
+  Then no test_without_id error is raised, "outer" is tied to "REQ-001", and "inner" is tied to "REQ-002"
 
 @id=EX-core-320 @about=REQ-core-075 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A39,docs/decision/records/2026-09-24-multi-language-tests.md#A18,docs/decision/records/2026-09-24-multi-language-tests.md#A13,docs/decision/records/2026-09-24-multi-language-tests.md#A16,docs/decision/records/2026-09-24-multi-language-tests.md#A17
-Scenario: コードと同じ行のコメントは塊を切る
-  Given "tests.files" が "tests/**/*.ts" を含み、"tests/a.test.ts" に "// @kotowari[REQ-001]" の行、"setup(); // prepare" の行、"it('x', () => {});" の行が空行なしで続く
-  When "kotowari check" を実行する
-  Then detail が "x" の test_without_id の誤りが出る
+Scenario: A comment on the same line as code breaks the block
+  Given "tests.files" contains "tests/**/*.ts", and "tests/a.test.ts" has a "// @kotowari[REQ-001]" line, a "setup(); // prepare" line and an "it('x', () => {});" line in a row without blank lines
+  When "kotowari check" is run
+  Then a test_without_id error with detail "x" is raised
 @id=EX-core-323 @about=REQ-core-075 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A50,docs/decision/records/2026-09-24-multi-language-tests.md#A40
-Scenario: 複数行のデコレータの途中の空行では塊が切れない
-  Given "tests.files" が "tests/**/*.py" を含み、"tests/test_a.py" に "# @kotowari[REQ-001]" の行、途中に空白だけの行を含む3行以上の "@pytest.mark.parametrize(" のデコレータ、"def test_x(a):" の行が続き、デコレータの外に空行は無い
-  When "kotowari check" を実行する
-  Then test_without_id の誤りは出ず、"test_x" は "REQ-001" に結び付く
+Scenario: A blank line in the middle of a multi-line decorator does not break the block
+  Given "tests.files" contains "tests/**/*.py", "tests/test_a.py" has a "# @kotowari[REQ-001]" line, a "@pytest.mark.parametrize(" decorator of three or more lines containing a whitespace-only line in the middle, and a "def test_x(a):" line in a row, and there is no blank line outside the decorator
+  When "kotowari check" is run
+  Then no test_without_id error is raised, and "test_x" is tied to "REQ-001"
 
 @id=EX-core-324 @about=REQ-core-075 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A51
-Scenario: 属性の本体の印は読まない
-  Given 文字列の値に "@kotowari[REQ-999]" を持つ "#[doc = ...]" の属性の行の直後に "#[test]" の付いた関数があり、その直前にコメントは無く、"REQ-999" は存在しない
-  When "kotowari check" を実行する
-  Then unresolved_reference の誤りは出ず、その関数に test_without_id の誤りが出る
+Scenario: A mark in the body of an attribute is not read
+  Given right after the line of a "#[doc = ...]" attribute whose string value has "@kotowari[REQ-999]" there is a function with "#[test]", there is no comment just before it, and "REQ-999" does not exist
+  When "kotowari check" is run
+  Then no unresolved_reference error is raised, and a test_without_id error is raised on that function
 
 @id=EX-core-325 @about=REQ-core-075 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A52
-Scenario: 同じ行に始まるテストは最初のものだけに結び付く
-  Given "// @kotowari[REQ-001]" の行の直後の行が "#[test] fn a() {} #[test] fn b() {}" である
-  When "kotowari check" を実行する
-  Then "a" は "REQ-001" に結び付き、detail が "b" の test_without_id の誤りが1件出る
+Scenario: Of the tests starting on the same line only the first is tied
+  Given the line right after the "// @kotowari[REQ-001]" line is "#[test] fn a() {} #[test] fn b() {}"
+  When "kotowari check" is run
+  Then "a" is tied to "REQ-001", and one test_without_id error with detail "b" is raised
 @id=EX-core-327 @about=REQ-core-075 @source=docs/decision/records/2026-09-24-review10-gaps.md#A1,docs/decision/records/2026-09-24-multi-language-tests.md#A16,docs/decision/records/2026-09-24-multi-language-tests.md#A18
-Scenario: 全角空白の後のコメントも塊に入る
-  Given "tests.files" が "tests/**/*.ts" を含み、"tests/a.test.ts" に全角空白で始まる "// @kotowari[REQ-001]" の行と "it('x', () => {});" の行が空行なしで続く
-  When "kotowari check" を実行する
-  Then test_without_id の誤りは出ず、"x" は "REQ-001" に結び付く
+Scenario: A comment after a full-width space also belongs to the block
+  Given "tests.files" contains "tests/**/*.ts", and "tests/a.test.ts" has a "// @kotowari[REQ-001]" line starting with a full-width space and an "it('x', () => {});" line in a row without blank lines
+  When "kotowari check" is run
+  Then no test_without_id error is raised, and "x" is tied to "REQ-001"
 ```

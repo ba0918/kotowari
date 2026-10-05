@@ -1,15 +1,17 @@
 # kotowari status
 
-<!-- @kotowari[REQ-core-162:d19588cc] -->
+English | [日本語](status.ja.md)
 
-`kotowari status` は、IR（仕様）とテストが「いま揃っているか」を、数と一つの真偽で答えるコマンドです。
-CI に一行足すだけで、仕様の抜けやテストの無い要求が紛れ込んだ変更を止められます。
+<!-- @kotowari[REQ-core-162:896047ff] -->
 
-## 3 つの読み取りコマンドの中での位置
+`kotowari status` answers whether the IR (the specification) and the tests are "in place right now", with counts and a single true/false.
+Add one line to your CI, and it stops changes that slip in specification gaps or requirements without tests.
 
-<!-- @kotowari[REQ-core-162:d19588cc] -->
+## Where it sits among the three read commands
 
-kotowari には、IR を読む道具が段になって並んでいます。
+<!-- @kotowari[REQ-core-162:896047ff] -->
+
+kotowari's tools for reading the IR are arranged in tiers.
 
 ```mermaid
 flowchart BT
@@ -17,16 +19,16 @@ flowchart BT
   list --> status["status<br/>全体の数と真偽"]
 ```
 
-- 何が悪いのかを直すときは [`check`](./check.md)
-- どの要求にどのテストが付いているかを見るときは [`list`](./list.md)
-- 全体として出してよい状態かを知りたいときは `status`
+- To fix what is wrong, use [`check`](./check.md)
+- To see which tests are attached to which requirements, use [`list`](./list.md)
+- To know whether the whole is in a shippable state, use `status`
 
-`status` は独自の判定を持たず、`check` と同じ設定・同じ検査の結果を集計しているだけです。
-そのため `check` と `status` の答えが食い違うことはありません。
+`status` has no judgment of its own; it only aggregates the results of the same configuration and the same checks as `check`.
+So `check` and `status` never disagree.
 
-## 書式
+## Synopsis
 
-<!-- @kotowari[REQ-core-002:410b78a4, REQ-core-004:6c8139b3] -->
+<!-- @kotowari[REQ-core-002:d9acbe9c, REQ-core-004:125eb94d] -->
 
 ```sh
 kotowari status [--format json|text] [--config <path>]
@@ -34,114 +36,114 @@ kotowari status --help
 kotowari status --version
 ```
 
-オプションはコマンドの前にも後ろにも書けます。
-位置引数は受けません。
+Options may come before or after the command.
+It takes no positional arguments.
 
-## オプションと引数
+## Options and arguments
 
-<!-- @kotowari[REQ-core-166:5789e852, REQ-core-003:7fb82a37, REQ-core-011:549c5c91] -->
+<!-- @kotowari[REQ-core-166:68151ef8, REQ-core-003:b4f59e48, REQ-core-011:0b7f52a9] -->
 
-| 名前 | 値 | 既定 | 説明 |
+| Name | Value | Default | Description |
 |---|---|---|---|
-| `--format` | `json` か `text` | `json` | 出力の形 |
-| `--config` | 設定ファイルのパス | 基準のディレクトリの `.kotowari/config.yaml` | 読む設定ファイル。パスはカレントディレクトリからの相対で読みます |
-| `--help` | なし | — | 使い方を出して終わります |
-| `--version` | なし | — | 版を出して終わります |
+| `--format` | `json` or `text` | `json` | The output form |
+| `--config` | Path to a configuration file | `.kotowari/config.yaml` in the base directory | The configuration file to read. The path is read relative to the current directory |
+| `--help` | none | — | Prints usage and exits |
+| `--version` | none | — | Prints the version and exits |
 
-共通のオプションと基準のディレクトリの詳細は [CLI の共通事項](../cli.md) にあります。
+Details of the common options and the base directory are in [CLI basics](../cli.md).
 
-## 出力
+## Output
 
-`status` は `check` と同じ設定と置き場から、IR の文書、テストのファイル、ガイド、全体像の元データを読み、`surface.rules` が空の一覧でなければ面のファイルと面の規則のファイルと未記載の面の一覧も読んで、`check` と同じ検査を行います。
-指摘そのものは出さず、数と `complete` だけを出します。
+From the same configuration and locations as `check`, `status` reads the IR documents, test files, guides and overview data, and — when `surface.rules` is not an empty list — the surface files, the surface rule files and the list of unspecified surfaces, then runs the same checks as `check`.
+It does not print the findings themselves, only counts and `complete`.
 
 ### text
 
-<!-- @kotowari[REQ-core-166:5789e852, EX-core-261:a208b1bc] -->
+<!-- @kotowari[REQ-core-166:68151ef8, EX-core-261:249bdc79] -->
 
-1つの群を1行にして、`群名 鍵=値 鍵=値 …` の形で出します。
-鍵の語は JSON と同じで、値は1つの半角空白で区切り、桁揃えはしません。
-群の順は下の表の順で、最後の行は `complete true` か `complete false` です。
+Each group is printed on one line in the form `group key=value key=value …`.
+The key words are the same as in JSON; values are separated by single spaces with no column alignment.
+Groups come in the order of the table below, and the last line is `complete true` or `complete false`.
 
-`tests` の行だけは、JSON の `files` を開いて `拡張子=ファイルの数` を並べます（例: `tests marks=2042 rs=55`）。
+Only the `tests` line expands JSON's `files` into `extension=number-of-files` pairs (for example, `tests marks=2042 rs=55`).
 
 ### JSON
 
-<!-- @kotowari[TBL-core-028:669e5402, REQ-core-164:c48d77e2, EX-core-398:6a32dbad] -->
+<!-- @kotowari[TBL-core-028:9645c008, REQ-core-164:c48d77e2, EX-core-398:4b7f4c92] -->
 
-最上位は次の群の鍵だけのオブジェクトで、`complete` が最後です。
-全部の鍵の定義は [status の IR](../../ir/core/status.md) の TBL-core-028 にあります。
+The top level is an object with only the following group keys, with `complete` last.
+All keys are defined in TBL-core-028 of the [status IR](../../ir/core/status.md).
 
-| 群 | 鍵 | 型 | 説明 |
+| Group | Keys | Type | Description |
 |---|---|---|---|
-| `documents` | `files`、`lines` | 数 | 読んだ IR の文書の数と、行数の合計 |
-| `items` | `requirement`、`table`、`property`、`scenario`、`flag` | 数 | ID を持つ項目とシナリオの、種類ごとの数 |
-| `requirements` | `unit`、`property`、`proof`、`review` | 数 | `- verification:` の値ごとの要求の数。行の無い要求はどれにも数えない |
-| `requirements` | `with_tests`、`without_tests` | 数 | 検証が review でなく[後回し](../deferred.md)でない要求のうち、テストがあるものと無いものの数 |
-| `requirements` | `review_with_how_to_verify`、`review_without_how_to_verify` | 数 | 検証が review の要求のうち、`- how_to_verify:` の行があるものと無いものの数 |
-| `requirements` | `without_examples` | 数 | その ID を `@about` に持つシナリオが無い要求の数。後回しの要求も数える |
-| `requirements` | `deferred` | 数 | 後回しの要求の数 |
-| `scenarios` | `with_tests`、`without_tests` | 数 | 後回しのシナリオでないシナリオのうち、印の付いたテストがあるものと無いものの数 |
-| `scenarios` | `deferred` | 数 | 後回しのシナリオの数 |
-| `tests` | `marks` | 数 | 印の出現の数。1つの印に ID が複数あれば ID ごとに1つ |
-| `tests` | `files` | オブジェクト | `check` の JSON の `tests` と同じ。鍵は拡張子、値は `files`（ファイルの数）と `query`（問い合わせのある言語か） |
-| `guides` | `files`、`marks` | 数 | 読んだガイドの数と、ガイドの印の数（`check` の `guides` と同じ） |
-| `overview` | `files`、`marks` | 数 | 読んだ全体像の元データの数と、その中のガイドの印の数（`check` の `overview` と同じ）。設定に `overview` の鍵が無ければ両方 0 |
-| `surface` | `total`、`specified`、`unspecified` | 数 | 面の種類と名前の組の数、そのうち IR にあるものの数、IR になく未記載の面の一覧で外したものの数（[面の検査](../surface.md)）。`surface.rules` が空の一覧なら3つとも 0 |
-| `findings` | `error`、`notice` | 数 | `check` の誤りと注意の数 |
-| `complete` | （値だけ） | 真偽 | 揃っているか。条件は次の節 |
+| `documents` | `files`, `lines` | number | The number of IR documents read, and their total line count |
+| `items` | `requirement`, `table`, `property`, `scenario`, `flag` | number | The number of items and scenarios with IDs, per kind |
+| `requirements` | `unit`, `property`, `proof`, `review` | number | The number of requirements per `- verification:` value. Requirements without the line are not counted in any of them |
+| `requirements` | `with_tests`, `without_tests` | number | Among requirements whose verification is not review and that are not [deferred](../deferred.md), the number with tests and without |
+| `requirements` | `review_with_how_to_verify`, `review_without_how_to_verify` | number | Among requirements whose verification is review, the number with a `- how_to_verify:` line and without |
+| `requirements` | `without_examples` | number | The number of requirements with no scenario naming their ID in `@about`. Deferred requirements are counted too |
+| `requirements` | `deferred` | number | The number of deferred requirements |
+| `scenarios` | `with_tests`, `without_tests` | number | Among scenarios that are not deferred scenarios, the number with a marked test and without |
+| `scenarios` | `deferred` | number | The number of deferred scenarios |
+| `tests` | `marks` | number | The number of mark occurrences. A mark with several IDs counts once per ID |
+| `tests` | `files` | object | The same as `tests` in the JSON of `check`. Keys are extensions; values are `files` (the number of files) and `query` (whether it is a language with a query) |
+| `guides` | `files`, `marks` | number | The number of guides read and the number of guide marks (the same as `guides` in `check`) |
+| `overview` | `files`, `marks` | number | The number of overview data files read and the number of guide marks in them (the same as `overview` in `check`). Both are 0 if the configuration has no `overview` key |
+| `surface` | `total`, `specified`, `unspecified` | number | The number of surface kind-and-name pairs, how many of them are in the IR, and how many are not in the IR but excluded by the list of unspecified surfaces ([Surface checks](../surface.md)). All three are 0 if `surface.rules` is an empty list |
+| `findings` | `error`, `notice` | number | The number of errors and notices from `check` |
+| `complete` | (value only) | boolean | Whether everything is in place. The conditions are in the next section |
 
-### よく見る数
+### Numbers to watch
 
-<!-- @kotowari[TBL-core-028:669e5402] -->
+<!-- @kotowari[TBL-core-028:9645c008] -->
 
-特によく見る数だけ挙げます。
+Here are just the numbers you will look at most often.
 
-| 行 | 見るところ | こういうときに気にする |
+| Line | Where to look | When to worry |
 |---|---|---|
-| `requirements` | `without_tests` | 0 でなければ、テストが一つも付いていない要求がある |
-| `requirements` | `review_without_how_to_verify` | 0 でなければ、人か LLM が目で確かめる要求なのに、確かめ方が書かれていない |
-| `requirements` | `without_examples` | 具体例（シナリオ）の無い要求の数。欠陥ではないが、仕様が薄い所の目安になる |
-| `requirements`、`scenarios` | `deferred` | 今は作らないと宣言した要求とシナリオの数。`without_tests` には入らないので、増えても `complete` は変わらない |
-| `items` | `flag` | 「仕様として書ききれていない」と自分で記録した箇所の数 |
-| `guides` | `files` / `marks` | 読んだガイドの数と、ガイドの印の数。設定の glob を書き間違えると 0 になる |
-| `surface` | `unspecified` | IR に書かないまま未記載の面の一覧で外している面の数。導入の残りの量の目安で、0 に近づけていく |
-| `findings` | `error` / `notice` | `check` の指摘の数。`notice` は注意で、揃っているかの判定には効かない |
+| `requirements` | `without_tests` | If not 0, some requirement has no test attached at all |
+| `requirements` | `review_without_how_to_verify` | If not 0, a requirement meant to be checked by a person or an LLM has no description of how to check it |
+| `requirements` | `without_examples` | The number of requirements without concrete examples (scenarios). Not a defect, but a hint at where the specification is thin |
+| `requirements`, `scenarios` | `deferred` | The number of requirements and scenarios declared as not being built for now. They are not included in `without_tests`, so `complete` does not change as they grow |
+| `items` | `flag` | The number of places you yourself recorded as "not fully written as a specification" |
+| `guides` | `files` / `marks` | The number of guides read and the number of guide marks. A mistyped glob in the configuration makes these 0 |
+| `surface` | `unspecified` | The number of surfaces excluded by the list of unspecified surfaces without being written in the IR. A measure of how much adoption work remains; bring it toward 0 |
+| `findings` | `error` / `notice` | The number of findings from `check`. `notice` means notices, which do not affect whether everything is in place |
 
-### `complete` が true になる条件
+### When `complete` is true
 
-<!-- @kotowari[REQ-core-165:04b69a41, EX-core-259:f70360a4, EX-core-260:f146f36c] -->
+<!-- @kotowari[REQ-core-165:1c91b003, EX-core-259:6583a1e7, EX-core-260:73c20b9a] -->
 
-`complete` が true になるのは、次の 2 つが両方成り立つときだけです。
+`complete` is true only when both of the following hold.
 
-1. `check` の誤り（`error`）が 0 件
-2. 問題の記録（`FLAGS.md`）の項目が 0 件
+1. `check` has 0 errors (`error`)
+2. The flag records (`FLAGS.md`) have 0 items
 
-注意（`notice`）がいくつあっても、`complete` は妨げません。
-注意は直す価値のある手がかりですが、出荷を止める理由にはしない、という区別です。
+No matter how many notices (`notice`) there are, they do not prevent `complete`.
+The distinction is that notices are clues worth fixing, but not a reason to hold back a release.
 
-## 終了コード
+## Exit codes
 
-<!-- @kotowari[REQ-core-165:04b69a41, REQ-core-163:b640be93, EX-core-262:547c3880] -->
+<!-- @kotowari[REQ-core-165:1c91b003, REQ-core-163:9cf2f990, EX-core-262:c1a7983a] -->
 
-終了コードは `complete` の答えをそのまま映します。
+The exit code mirrors the `complete` answer directly.
 
-| コード | 意味 |
+| Code | Meaning |
 |---|---|
-| 0 | 揃っている（`complete true`）。`--help` か `--version` で終わったときも 0 |
-| 1 | 揃っていない（`complete false`） |
-| 2 | 停止した（設定が読めないなど、集計できなかった。理由は標準エラーに出ます） |
+| 0 | In place (`complete true`). Also 0 when it exits via `--help` or `--version` |
+| 1 | Not in place (`complete false`) |
+| 2 | Stopped (it could not aggregate, for example because the configuration could not be read. The reason goes to standard error) |
 
-停止の理由と文言は `check` と同じです（[CLI の共通事項](../cli.md)）。
+The reasons and messages for stopping are the same as for `check` ([CLI basics](../cli.md)).
 
-## 例
+## Examples
 
-### 使ってみる
+### Trying it out
 
-<!-- @kotowari[REQ-core-166:5789e852, EX-core-261:a208b1bc] -->
+<!-- @kotowari[REQ-core-166:68151ef8, EX-core-261:249bdc79] -->
 
-リポジトリの根で実行します。
-人が読むなら `--format text` が便利です。
+Run it at the repository root.
+For reading it yourself, `--format text` is handy.
 
 ```console
 $ kotowari status --format text
@@ -156,24 +158,24 @@ findings error=0 notice=8
 complete true
 ```
 
-これは kotowari 自身のリポジトリで 2026-09-27 に実行した結果です。
-全体像の元データを読む今の版では、`guides` の行の後に `overview files=… marks=…` の行も出ます（設定に `overview` の鍵が無ければ両方 0）。
-最後の `complete true` が答えで、それより上の行はその内訳です。
-`notice` があっても `complete true` になっている点に注目してください。
+This is the result of running it on kotowari's own repository on 2026-09-27.
+In the current version, which reads overview data, an `overview files=… marks=…` line also appears after the `guides` line (both 0 if the configuration has no `overview` key).
+The final `complete true` is the answer; the lines above it are its breakdown.
+Note that `complete` is true even though there are notices.
 
-既定の出力は JSON で、鍵の名前は text と同じです。
-スクリプトやエージェントに読ませるときはこちらを使います。
+The default output is JSON, with the same key names as text.
+Use it when a script or an agent reads the output.
 
 ```console
 $ kotowari status | jq .complete
 true
 ```
 
-### CI で使う
+### Using it in CI
 
-<!-- @kotowari[REQ-core-165:04b69a41] -->
+<!-- @kotowari[REQ-core-165:1c91b003] -->
 
-終了コードが判定そのものなので、ジョブの一段として置くだけで足ります。
+The exit code is the verdict itself, so adding it as one step of a job is all you need.
 
 ```yaml
 # GitHub Actions の例（kotowari の導入手順は省略）
@@ -181,81 +183,60 @@ true
   run: kotowari status --format text
 ```
 
-揃っていなければジョブが落ち、ログにはどの数が崩れたかが残ります。
-詳しい理由は、同じ手元で `kotowari check --format text` を実行すると 1 件ずつ出ます。
+If things are not in place, the job fails, and the log shows which numbers went wrong.
+For the detailed reasons, run `kotowari check --format text` in the same checkout to see them one by one.
 
-## よくあるつまずき
+## Common pitfalls
 
-### `without_tests` が 0 でない
+### `without_tests` is not 0
 
-<!-- @kotowari[TBL-core-028:669e5402, TBL-core-026:05d8938e, EX-core-263:93a87c06] -->
+<!-- @kotowari[TBL-core-028:9645c008, TBL-core-026:382b0b95, EX-core-263:f86b1e4a] -->
 
-テストに印（`@kotowari[REQ-...]`）が付いていない要求があります。
-`kotowari list --format text | grep 'tests=0$'` で、印の付いたテストが無い項目を探せます。
-後回しの項目は行の末尾が ` deferred` なので、この grep には当たりません。
-ただし要求は、直接印が無くても、その要求を `@about` に持つシナリオにテストが付いていれば「テストあり」に数えられます。
-一覧で `tests=0` の要求を見つけたら、そのシナリオ側も確かめてください。
-今は作らないと決めた要求なら、テストの代わりに[後回し](../deferred.md)にすると `without_tests` から外れます。
+Some requirements have no marks (`@kotowari[REQ-...]`) on their tests.
+`kotowari list --format text | grep 'tests=0$'` finds items with no marked tests.
+Deferred items end their line with ` deferred`, so this grep does not match them.
+Note, however, that a requirement counts as "having tests" even without a direct mark if a scenario naming it in `@about` has a test.
+When you find a requirement with `tests=0` in the list, also check its scenarios.
+If you decided not to build the requirement for now, making it [deferred](../deferred.md) instead of adding a test removes it from `without_tests`.
 
-### `review_without_how_to_verify` が 0 でない
+### `review_without_how_to_verify` is not 0
 
-<!-- @kotowari[REQ-core-098:0ccd2409, EX-core-259:f70360a4] -->
+<!-- @kotowari[REQ-core-098:1e550dfe, EX-core-259:6583a1e7] -->
 
-テストでは確かめられない要求（`verification: review`）に、`- how_to_verify:` の行がありません。
-手順が無いと、人でも LLM でも確かめようがないため、`check` はこれを誤りにします。
+A requirement that cannot be checked by tests (`verification: review`) has no `- how_to_verify:` line.
+Without a procedure, neither a person nor an LLM can check it, so `check` treats this as an error.
 
-### `flag` が 0 でない
+### `flag` is not 0
 
-<!-- @kotowari[REQ-core-165:04b69a41, EX-core-260:f146f36c] -->
+<!-- @kotowari[REQ-core-165:1c91b003, EX-core-260:73c20b9a] -->
 
-`FLAGS.md` に書かれた未解決の箇所が残っています。
-仕様を書き足して記録を消すまで、`complete` にはなりません。
+Unresolved points written in `FLAGS.md` remain.
+`complete` will not be true until you fill in the specification and remove the record.
 
-### `unit`、`property`、`proof`、`review` の合計が `requirement` より少ない
+### The sum of `unit`, `property`, `proof` and `review` is less than `requirement`
 
-<!-- @kotowari[TBL-core-028:669e5402] -->
+<!-- @kotowari[TBL-core-028:9645c008] -->
 
-`- verification:` の行の無い要求があります。そうした要求は検証の種類ごとの数のどれにも入りません。
-この要求は `check` の誤りでもあるので、`complete` は false になります。
-`kotowari check --format text` で場所が分かります。
+Some requirements have no `- verification:` line. Such requirements are not counted in any per-verification count.
+This is also an error in `check`, so `complete` is false.
+`kotowari check --format text` shows where they are.
 
-### `config error: ...: matched by both guides.files and tests.files` で止まる
+### Stopping with `config error: ...: matched by both guides.files and tests.files`
 
-<!-- @kotowari[REQ-core-163:b640be93, REQ-core-199:38cf396d] -->
+<!-- @kotowari[REQ-core-163:9cf2f990, REQ-core-199:55922b15] -->
 
-`status` は `check` と同じくガイドも読むので、設定の `guides.files` と `tests.files` の glob が同じファイルに当たると停止します。
-`list` と `query` はガイドを読まないのでこの停止をしません。そのため「list は動くのに status は止まる」ことがあります。
-2つの glob が重ならないように直してください（[設定](../config.md)）。
+Like `check`, `status` also reads guides, so it stops when the `guides.files` and `tests.files` globs in the configuration match the same file.
+`list` and `query` do not read guides and do not stop this way, which is why you may see "list works but status stops".
+Fix the two globs so they do not overlap ([Configuration](../config.md)).
 
-## なぜこういう作りか
+## Related
 
-- **判定を `check` に一本化している。**
-  判定の規則が 2 か所にあると、いずれ食い違うからです。
-  `check` が誤りにしないもの（具体例の無い要求など）は、`status` も揃っていないとは言いません。
-  基準を足したいなら `check` に足します。
-  （[決定の記録 A9](../../decision/records/2026-09-20-query-status.md#A9)）
-- **終了コードに判定を映す。**
-  `list` と違い `status` は判定を持つので、CI で `kotowari status` 1つで揃っているかを決められるようにしています。
-  （[A11](../../decision/records/2026-09-20-query-status.md#A11)）
-- **テストの無い要求の数から review の要求を外している。**
-  review の要求はそもそもテストを求めないので、分母に入れると常に「テスト不足」に見えてしまいます。
-  （[A12](../../decision/records/2026-09-20-query-status.md#A12)）
-- **後回しは `with_tests` と `without_tests` の外に数える。**
-  後回しを `without_tests` に数えると、その数が本物の未完を表さなくなります。
-  件数は `deferred` に出すので、後回しが黙って増え続けることもありません。
-  （[2026-09-25-deferred-items.md A8](../../decision/records/2026-09-25-deferred-items.md#A8)）
-- **text の行は JSON の鍵をそのまま並べ、桁揃えをしない。**
-  text と JSON の対応を覚えなくて済み、値の桁で見た目が変わらないので出力を契約として固定できます。
-  （[A14](../../decision/records/2026-09-20-query-status.md#A14)）
+- Specification: [status IR](../../ir/core/status.md)
+- Seeing findings one by one: [`kotowari check`](./check.md)
+- Seeing items and tests one by one: [`kotowari list`](./list.md)
+- Seeing one item with its body and reverse references: [`kotowari query`](./query.md)
+- Kinds of findings: [Findings](../findings.md)
+- Common options, stopping and the base directory: [CLI basics](../cli.md)
+- Configuration file: [Configuration](../config.md)
 
-## 関連
-
-- 仕様: [status の IR](../../ir/core/status.md)
-- 1 件ずつの指摘を見る: [`kotowari check`](./check.md)
-- 1 件ずつの項目とテストを見る: [`kotowari list`](./list.md)
-- 1 件を本文と逆引きつきで見る: [`kotowari query`](./query.md)
-- 指摘の種類: [指摘の一覧](../findings.md)
-- 共通のオプション、停止、基準のディレクトリ: [CLI の共通事項](../cli.md)
-- 設定ファイル: [設定](../config.md)
-
-`complete` は今回の Git 差分の照合を保証しません。取り込み前は check と、比較元からブランチ全体の `changes --phase review` を両方成功させます。
+`complete` does not guarantee that the current Git diff has been checked for change conformance. Before merging, make both `check` and `changes --phase review` over the whole branch from the comparison base succeed.

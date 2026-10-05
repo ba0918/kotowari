@@ -1,139 +1,141 @@
-# 文書の読み方と文書全体の検査
+# Reading documents and whole-document checks
 
-IR の文書の選び方、題名と範囲の行、行の数え方、行数と要求の数の注意を扱う。
+English | [日本語](ir-document.ja.md)
+
+Covers how documents of the IR are chosen, the title and scope lines, how lines are counted, and the notices on the number of lines and of requirements.
 
 ## Requirements
 
-### REQ-core-033: 読む文書
+### REQ-core-033: Documents that are read
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A32, docs/decision/records/records.md#A102, docs/decision/records/records.md#A165, docs/decision/records/2026-09-16-ir-tree.md#A1, docs/decision/records/2026-09-16-ir-tree.md#A8, docs/decision/records/2026-09-16-ir-tree.md#A13, docs/decision/records/2026-10-05-localization.md#A22, docs/decision/records/2026-10-05-localization.md#A11, docs/decision/records/2026-10-05-localization.md#A15, docs/decision/records/2026-10-05-localization.md#A21
 - verification: unit
 
-kotowari は常に、`IR`の置き場の下のディレクトリを深さに制限なく辿り、拡張子が小文字の ".md" のファイルだけを読み、".MD" の文書、ディレクトリでも通常のファイルでもないもの（ソケット、名前付きパイプ、デバイス）を読まない（`除外`）。隠しディレクトリとディレクトリのシンボリックリンクはどの深さでも辿らず（`除外`）、空のディレクトリには`指摘`を出さない。どのディレクトリでも "CONTEXT.md" は`用語集`、"FLAGS.md" は`問題の記録`であり、`言語の一覧`の言語が2つ以上のときはその`対`の`側`（"CONTEXT.<言語タグ>.md"、"FLAGS.<言語タグ>.md"）もそれぞれその言語の`用語集`と`問題の記録`である（REQ-core-337）。ファイルのシンボリックリンクは読む。種類を取れない要素があるときは読めないファイルを理由に`停止`する。
+kotowari always traverses the directories under the `IR` location with no limit on depth, reads only files whose extension is a lowercase ".md", and does not read ".MD" documents or entries that are neither directories nor regular files (sockets, named pipes, devices) (`exclusion`). It does not traverse hidden directories or symbolic links to directories at any depth (`exclusion`), and raises no `finding` for an empty directory. In every directory, "CONTEXT.md" is a `glossary` and "FLAGS.md" is a `flag record`, and when the `language list` has two or more languages, each `side` of that `pair` ("CONTEXT.<tag>.md", "FLAGS.<tag>.md") is likewise the `glossary` and the `flag record` of that language (REQ-core-337). Symbolic links to files are read. When there is an entry whose type cannot be obtained, kotowari does a `stop` on the grounds of an unreadable file.
 
-### REQ-core-034: 題名が無い
+### REQ-core-034: No title
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A42, docs/decision/records/records.md#A56
 - verification: unit
 
-`IR`の文書に`題名`が無いとき、kotowari は missing_title の`誤り`を出す。
+When a document of the `IR` has no `title`, kotowari raises a missing_title `error`.
 
-### REQ-core-035: 題名が複数
+### REQ-core-035: More than one title
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A42, docs/decision/records/2026-09-23-ir-engine-gaps.md#A7, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17
 - verification: unit
 
-`IR`の文書に`題名`が2つ以上あるとき、kotowari は2つ目以降の`題名`ごとに1件の multiple_titles の`誤り`を出す。
+When a document of the `IR` has two or more of each `title`, kotowari raises one multiple_titles `error` for each `title` from the second on.
 
-### REQ-core-036: 範囲の行が無い
+### REQ-core-036: No scope lines
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A30, docs/decision/records/records.md#A41, docs/decision/records/records.md#A55, docs/decision/records/records.md#A56, docs/decision/records/ir-form.md#検査の種類
 - verification: unit
 
-`話題ごとの文書`に`文書が扱う範囲`の行が1行も無いとき、kotowari は missing_scope の`誤り`を出す。
+When a `topic document` has not a single line of its `scope`, kotowari raises a missing_scope `error`.
 
-### REQ-core-037: 行の数え方
+### REQ-core-037: How lines are counted
 
 - kind: algorithm
 - source: docs/decision/records/records.md#A33, docs/decision/records/2026-09-23-mutants-gaps.md#A1
 - definition: TBL-core-010
 - verification: unit
 
-### REQ-core-038: 行数の上限
+### REQ-core-038: Upper limit on lines
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A17, docs/decision/records/records.md#A29, docs/decision/records/records.md#A41, docs/decision/records/records.md#A56, docs/decision/records/records.md#A47, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2
 - verification: unit
 
-`IR`の文書の行数が "limits.lines" を超えるとき、kotowari は too_many_lines の`注意`を出す。
+When the number of lines of a document of the `IR` exceeds "limits.lines", kotowari raises a too_many_lines `notice`.
 
-### REQ-core-039: 要求の数の上限
+### REQ-core-039: Upper limit on requirements
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A17, docs/decision/records/records.md#A29, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2
 - verification: unit
 
-`話題ごとの文書`の`要求`の数が "limits.requirements" を超えるとき、kotowari は too_many_requirements の`注意`を出す。
+When the number of each `requirement` of a `topic document` exceeds "limits.requirements", kotowari raises a too_many_requirements `notice`.
 
-### REQ-core-040: コードブロックの中
+### REQ-core-040: Inside code blocks
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A52, docs/decision/records/records.md#A88, docs/decision/records/records.md#A108, docs/decision/records/records.md#A140
 - verification: unit
 
-kotowari は常に、`コードブロック`の中を検査の対象から外す（`除外`）。閉じていない`コードブロック`は gherkin でも対象から外す。閉じた gherkin のブロックの中の行は、`シナリオ`のタグと`用語`と曖昧語の検査の対象にし、文書名の参照の検査では対象にしない。
+kotowari always removes the inside of a `code block` from what it checks (`exclusion`). An unclosed `code block` is removed even when it is gherkin. The lines inside a closed gherkin block are subject to the checks of `scenario` tags, of each `term` and of vague words, and are not subject to the check of document-name references.
 
-### REQ-core-041: 範囲の中身と責務の分離を見ない
+### REQ-core-041: Does not look at the contents of the scope or the separation of responsibilities
 
 - kind: prohibition
 - source: docs/decision/records/records.md#A17, docs/decision/records/records.md#A30, docs/decision/records/2026-09-24-kotowari-dir.md#A2
 - verification: review
-- how_to_verify: `crates/kotowari-core/schemas/ir.yaml` が範囲の文に出現回数の下限だけを宣言していることと、`crates/kotowari-core/src/ir.rs` の `check_documents` が scope_lines の中身と行数を検査しないことを確認
+- how_to_verify: Confirm that "crates/kotowari-core/schemas/ir.yaml" declares only a lower bound on the number of occurrences for the scope statements, and that "check_documents" in "crates/kotowari-core/src/ir.rs" does not check the contents or the number of lines of scope_lines
 
-kotowari は、`文書が扱う範囲`の中身と行数を検査すること、文書の責務の分離を判定することをしてはならない。
+kotowari must not check the contents or the number of lines of the `scope`, nor judge the separation of responsibilities of a document.
 
 ## Decision tables
 
-### TBL-core-010: 行の数え方
+### TBL-core-010: How lines are counted
 
 - source: docs/decision/records/records.md#A33, docs/decision/records/records.md#A129, docs/decision/records/2026-09-23-mutants-gaps.md#A1, docs/decision/records/2026-09-24-review3-gaps.md#A3
 
-この数え方は、`IR`の文書だけでなく、kotowari が行番号を出すファイルのすべて（`判断の記録`、ADR、`テストのファイル`、`変異の結果`のソース）に使う。
+This way of counting is used not only for documents of the `IR` but for every file for which kotowari outputs line numbers (each `decision record`, ADRs, each `test file`, and the sources of each `mutation outcome`).
 
-| 場面 | 数え方 |
+| Case | How it is counted |
 |---|---|
-| "\n" | 1つの行の終わり |
-| "\r\n" | 1つの行の終わり（1行に数える） |
-| 単独の "\r" | 1つの行の終わり |
-| 最後の行に改行が無い | その行も1行に数える |
-| 中身が空の文書 | 0行に数える（題名が無いので missing_title を出す） |
+| "\n" | The end of one line |
+| "\r\n" | The end of one line (counted as one line) |
+| A lone "\r" | The end of one line |
+| The last line has no line break | That line is counted as one line too |
+| A document with empty contents | Counted as 0 lines (it has no title, so missing_title is raised) |
 
 ## Examples
 
 ```gherkin
 @id=EX-core-006 @about=REQ-core-036 @source=docs/decision/records/records.md#A41,docs/decision/records/ir-form.md#検査の種類
-Scenario: 用語集は範囲の行が無くてもよい
-  Given `用語集`に`題名`と表だけがある
-  When "kotowari check" を実行する
-  Then `用語集`に missing_scope の誤りは出ない
+Scenario: A glossary may have no scope lines
+  Given a `glossary` has only a `title` and a table
+  When "kotowari check" is run
+  Then no missing_scope error is raised for the `glossary`
 
 @id=EX-core-007 @about=REQ-core-037 @source=docs/decision/records/records.md#A33
-Scenario: 改行の違いで行数は変わらない
-  Given "a\r\nb" と書いた文書がある
-  When その文書の行数を数える
-  Then 行数は 2 である
+Scenario: Differences in line breaks do not change the number of lines
+  Given there is a document written as "a\r\nb"
+  When the lines of that document are counted
+  Then the number of lines is 2
 
 @id=EX-core-281 @about=REQ-core-037 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A1,docs/decision/records/records.md#A33
-Scenario: 単独の CR も1つの行の終わりに数える
-  Given "a\rb" と書いた文書と、"a\rb\r\nc" と書いた文書がある
-  When それぞれの文書の行数を数える
-  Then 前者の行数は 2、後者の行数は 3 である
+Scenario: A lone CR is also counted as the end of one line
+  Given there are a document written as "a\rb" and a document written as "a\rb\r\nc"
+  When the lines of each document are counted
+  Then the former has 2 lines and the latter has 3 lines
 
 @id=EX-core-282 @about=REQ-core-037 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A1
-Scenario: 単独の CR の後の行の指摘は区切った後の行番号を持つ
-  Given 1行目の`題名`、2行目の範囲の行、3行目の "## Requirements"、4行目の "### foo" を単独の "\r" で区切った文書がある
-  When "kotowari check" を実行する
-  Then その文書に line が 4 の unknown_heading の誤りが出る
+Scenario: A finding on a line after a lone CR has the line number after the split
+  Given there is a document whose `title` on line 1, scope line on line 2, "## Requirements" on line 3 and "### foo" on line 4 are separated by lone "\r"
+  When "kotowari check" is run
+  Then an unknown_heading error with line 4 is raised for that document
 
 @id=EX-core-020 @about=REQ-core-033 @source=docs/decision/records/2026-09-16-ir-tree.md#A1,docs/decision/records/2026-09-16-ir-tree.md#A13,docs/decision/records/records.md#A21
-Scenario: 深いディレクトリの文書も読む
-  Given "docs/ir/network/dns/timeout.md" に検証が "unit" で`印`の無い`要求`が1つあり、"docs/ir/network/empty/" は空のディレクトリである
-  When "kotowari check" を実行する
-  Then path が "docs/ir/network/dns/timeout.md" の requirement_without_test の誤りが出て、空のディレクトリに`指摘`は出ない
+Scenario: Documents in deep directories are read too
+  Given "docs/ir/network/dns/timeout.md" has one `requirement` whose verification is "unit" and that has no `mark`, and "docs/ir/network/empty/" is an empty directory
+  When "kotowari check" is run
+  Then a requirement_without_test error whose path is "docs/ir/network/dns/timeout.md" is raised, and no `finding` is raised for the empty directory
 
 @id=EX-core-030 @about=REQ-core-033 @source=docs/decision/records/2026-09-16-ir-tree.md#A13
-Scenario: 深いディレクトリの中でも隠しディレクトリとディレクトリのシンボリックリンクは辿らない
-  Given "docs/ir/network/.draft/a.md" と、"docs/ir/network/link" が "docs/ir/" を指すディレクトリのシンボリックリンクである
-  When "kotowari check" を実行する
-  Then "docs/ir/network/.draft/a.md" と "docs/ir/network/link/" の下の文書は読まれず、`指摘`も`停止`も出ない
+Scenario: Even inside deep directories, hidden directories and symbolic links to directories are not traversed
+  Given there is "docs/ir/network/.draft/a.md", and "docs/ir/network/link" is a symbolic link to a directory pointing at "docs/ir/"
+  When "kotowari check" is run
+  Then "docs/ir/network/.draft/a.md" and the documents under "docs/ir/network/link/" are not read, and neither a `finding` nor a `stop` occurs
 
 @id=EX-core-021 @about=REQ-core-033 @source=docs/decision/records/2026-09-16-ir-tree.md#A8,docs/decision/records/records.md#A41,docs/decision/records/records.md#A56
-Scenario: サブディレクトリの CONTEXT.md と FLAGS.md も用語集と問題の記録になる
-  Given "docs/ir/network/CONTEXT.md" と "docs/ir/network/FLAGS.md" がある
-  When "kotowari check" を実行する
-  Then どちらにも missing_scope の誤りは出ない
+Scenario: CONTEXT.md and FLAGS.md in subdirectories are also a glossary and a flag record
+  Given there are "docs/ir/network/CONTEXT.md" and "docs/ir/network/FLAGS.md"
+  When "kotowari check" is run
+  Then no missing_scope error is raised for either
 ```

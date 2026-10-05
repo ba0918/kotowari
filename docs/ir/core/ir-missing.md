@@ -1,29 +1,31 @@
-# 項目の欠けた行と表
+# Missing lines and tables of items
 
-項目に必須の行と表が無いときの検査と、gherkin のブロックの外にある Scenario: の行を扱う。
+English | [日本語](ir-missing.ja.md)
+
+Covers the checks when an item lacks a required line or table, and "Scenario:" lines outside a gherkin block.
 
 ## Requirements
 
-### REQ-core-098: 必須の行が無い
+### REQ-core-098: A required line is missing
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A68, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A92, docs/decision/records/records.md#A157, docs/decision/records/2026-09-22-ir-engine.md#A75, docs/decision/records/2026-09-19-read-commands.md#A23, docs/decision/records/2026-09-20-query-status.md#A10, docs/decision/records/2026-09-20-query-status.md#A17, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 - verification: unit
 
-`要求`に "- kind:" の行が無いとき、"- verification:" が review の`要求`に "- how_to_verify:" の行が無いとき、または`問題の記録`の`項目`に "- kind:" か "- related:" の行が無いとき、kotowari は無い行の名前を detail にして missing_field の`誤り`を出す。"- verification:" の行が無いときは verification_missing だけ、"- source:" の行が無いときは missing_source だけを出し、missing_field は出さない。"- kind:"、"- verification:"、"- definition:"、"- related:"、"- how_to_verify:" の値が空の行は、行が在るものとして扱い、行が無いことによる`指摘`を出さない。値に許可リストのある "- kind:" と "- verification:" では、空の値を値の誤りの`指摘`にする。
+When a `requirement` has no "- kind:" line, when a `requirement` whose "- verification:" is review has no "- how_to_verify:" line, or when the `item` of a `flag record` has no "- kind:" or "- related:" line, kotowari raises a missing_field `error` with the name of the missing line as the detail. When the "- verification:" line is missing it raises only verification_missing, and when the "- source:" line is missing only missing_source, and does not raise missing_field. A "- kind:", "- verification:", "- definition:", "- related:" or "- how_to_verify:" line whose value is empty is treated as a line that is present, and no `finding` for a missing line is raised. For "- kind:" and "- verification:", whose values have an allow list, an empty value is made a `finding` of an invalid value.
 
-### REQ-core-099: 決定表に表が無い
+### REQ-core-099: A decision table has no table
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A68, docs/decision/records/ir-form.md#検査の種類
 - verification: unit
 
-`決定表`に Markdown の表が無いとき、kotowari はその`決定表`の`ID`を detail にして missing_table の`誤り`を出す。
+When a `decision table` has no Markdown table, kotowari raises a missing_table `error` with the `ID` of that `decision table` as the detail.
 
-### REQ-core-100: gherkin のブロックの外の Scenario
+### REQ-core-100: Scenario outside a gherkin block
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A68, docs/decision/records/ir-form.md#項目
 - verification: unit
 
-kotowari は常に、gherkin のコードブロックの外にある "Scenario:" の行を`シナリオ`と見なさずに無視する。
+kotowari always ignores a "Scenario:" line outside a gherkin code block, without regarding it as a `scenario`.

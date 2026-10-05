@@ -1,50 +1,52 @@
-# 全体像を作る工程
+# The workflow that makes the overview
 
-"agent/skills/" の下の kotowari のスキルが、壁打ちの承認で`全体像`を作るか直して見せるまでの手順を扱う。スキルの文面を人か LLM が読んで確かめる要求だけを持ち、kotowari 本体の振る舞いは overview-data.md と overview-commands.md が扱う。
+English | [日本語](overview-workflow.ja.md)
+
+Covers the steps by which the kotowari skills under "agent/skills/" make or revise an `overview` at a brainstorm approval and show it. This document holds only requirements that a person or an LLM verifies by reading the text of the skills; the behaviour of kotowari itself is covered by overview-data.md and overview-commands.md.
 
 ## Requirements
 
-### REQ-core-300: 承認で全体像を作って示す
+### REQ-core-300: Making and showing the overview at approval
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A2, docs/decision/records/2026-10-02-whole-picture.md#A8, docs/decision/records/2026-10-02-whole-picture.md#A34, docs/decision/records/2026-10-02-whole-picture.md#A52, docs/decision/records/2026-10-02-whole-picture.md#A84, docs/decision/records/2026-10-05-overview-index.md#A19
 - verification: review
-- how_to_verify: "agent/skills/kotowari-brainstorm/SKILL.md" の承認の手順を読み、check と照合レビューの後に、関わる`全体像`を "ir" の一覧で決めること、`全体像の元データ`を作るか直すこと、`目次`を直すこと、"kotowari overview build" を走らせて誤りを直すこと、serve を起動して URL を参考として示し裏で起動できなければコマンドを示すことが、この順で書いてあり、承認の対象と承認の材料を変えていないことを確かめる
+- how_to_verify: Read the approval steps of "agent/skills/kotowari-brainstorm/SKILL.md" and confirm that, after check and the collation review, they say in this order: decide the `overview` entries involved by the "ir" lists; make or revise the `overview data`; revise the `table of contents`; run "kotowari overview build" and fix the errors; start serve and show the URL for reference, or show the command if it cannot be started in the background; and confirm that they do not change what is approved or the material for the approval
 
-kotowari-brainstorm は常に、"overview" の鍵を持つプロジェクトの承認で、今の check と照合レビューの後に、変えた`IR`の`話題ごとの文書`から関わる`全体像`を`全体像の元データ`の "ir" の一覧で決め、その`全体像の元データ`を作るか直し、`目次`を直し、"kotowari overview build" を走らせて誤りを直し、"kotowari overview serve" を起動して URL を参考として示す。`全体像`は承認の対象にせず、見るかどうかは人に委ねる。
+kotowari-brainstorm always, at the approval in a project that has the "overview" key, after the current check and the collation review, decides from each `topic document` of the `IR` that was changed the `overview` entries involved, by the "ir" list of the `overview data`, makes or revises that `overview data`, revises the `table of contents`, runs "kotowari overview build" and fixes the errors, starts "kotowari overview serve" and shows the URL for reference. The `overview` is not made something to approve, and whether to look at it is left to the person.
 
-### REQ-core-301: 全体像の単位を決める
+### REQ-core-301: Deciding the unit of an overview
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A18, docs/decision/records/2026-10-02-whole-picture.md#A20, docs/decision/records/2026-10-02-whole-picture.md#A35
 - verification: review
-- how_to_verify: "agent/skills/kotowari-brainstorm/SKILL.md" か kotowari のスキルの references を読み、どの`全体像の元データ`の "ir" にも無い`話題ごとの文書`を変えたときに、既存の`全体像`に足すか新しく作るかの案を出して人に決めてもらうこと、単位の目安が使う人が1つの機能として名前で呼べるもので横断的なものを単独にしないこと、決めた単位を壁打ちで決めない限り変えないこと、触れていない話題の`全体像`をまとめて作らないことが書いてあることを確かめる
+- how_to_verify: Read "agent/skills/kotowari-brainstorm/SKILL.md" or the references of the kotowari skills and confirm that they say: when a `topic document` that is in no "ir" of any `overview data` is changed, propose either adding it to an existing `overview` or making a new one, and let the person decide; the guide for the unit is something the user can call by name as one feature, and something cross-cutting is not made one on its own; a decided unit is not changed unless a brainstorm decides to; and an `overview` for topics not touched is not made all at once
 
-kotowari のスキルは常に、どの`全体像の元データ`の "ir" にも無い`話題ごとの文書`を壁打ちで変えたとき、既存の`全体像`に足すか新しく作るかの案を出して人に決めてもらい、単位を使う人が1つの機能として名前で呼べるものにし、決めた単位は壁打ちで決めない限り変えず、壁打ちが触れていない話題の`全体像`を作らない。
+The kotowari skills always, when a brainstorm changes a `topic document` that is in no "ir" of any `overview data`, propose either adding it to an existing `overview` or making a new one and let the person decide, make the unit something the user can call by name as one feature, do not change a decided unit unless a brainstorm decides to, and do not make an `overview` for topics the brainstorm did not touch.
 
-### REQ-core-302: 元データの書き方
+### REQ-core-302: How to write the data
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A1, docs/decision/records/2026-10-02-whole-picture.md#A6, docs/decision/records/2026-10-02-whole-picture.md#A7, docs/decision/records/2026-10-02-whole-picture.md#A8, docs/decision/records/2026-10-02-whole-picture.md#A9, docs/decision/records/2026-10-02-whole-picture.md#A14, docs/decision/records/2026-10-02-whole-picture.md#A15, docs/decision/records/2026-10-02-whole-picture.md#A54, docs/decision/records/2026-10-02-whole-picture.md#A38, docs/decision/records/2026-10-02-whole-picture.md#A66, docs/decision/records/2026-10-02-whole-picture.md#A53, docs/decision/records/2026-10-05-guide-overview-roles.md#A4
 - verification: review
-- how_to_verify: kotowari のスキルの references に`全体像の元データ`を書く場面があり、冒頭に結論と要約の lead を置くこと、`部品`の種類と並べ方を題材に合わせて選ぶこと、出来上がるものの姿と判断のつながりの両方を表すこと、今の状態と`後回し`の予定を表すこと、前回の`全体像の元データ`を直して書くこと、節の見出しの隣に`ガイドの印`を付けること、`部品`の参照を "refs" か "ref" の欄に書くことが書いてあることを確かめる
+- how_to_verify: Confirm that the references of the kotowari skills have a scene for writing the `overview data`, and that it says: put a lead with the conclusion and a summary at the opening; choose the kinds and order of each `part` to fit the subject; show both what the result looks like and how the decisions connect; show the current state and what is planned under `deferral`; write by revising the previous `overview data`; put a `guide mark` next to each section heading; and write the references of a `part` in the "refs" or "ref" field
 
-kotowari のスキルは常に、`全体像の元データ`を書く場面を持ち、その場面で、冒頭に結論と要約を置き、図・表・装飾の`部品`を題材に合わせて選んで並べ、出来上がるものの姿と判断のつながりの両方と、今の状態と予定を表し、前回の`全体像の元データ`を直して書き、節ごとに`ガイドの印`を付けることを求める。
+The kotowari skills always have a scene for writing the `overview data`, and in that scene require putting the conclusion and a summary at the opening, choosing and ordering each `part` of diagrams, tables and decoration to fit the subject, showing both what the result looks like and how the decisions connect, as well as the current state and the plans, writing by revising the previous `overview data`, and putting a `guide mark` on each section.
 
-### REQ-core-303: cycle は全体像を直さない
+### REQ-core-303: cycle does not revise the overview
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A39
 - verification: review
-- how_to_verify: "agent/skills/kotowari-cycle/" と "agent/skills/kotowari-implement/" を読み、`全体像の元データ`を直す手順が無いこと、`全体像の元データ`の guide_stale を次にその話題に触れた壁打ちが直すと kotowari のスキルの references に書いてあることを確かめる
+- how_to_verify: Read "agent/skills/kotowari-cycle/" and "agent/skills/kotowari-implement/" and confirm that there is no step that revises the `overview data`, and that the references of the kotowari skills say that guide_stale on the `overview data` is fixed by the next brainstorm that touches that topic
 
-kotowari のスキルは常に、cycle と実装の工程で`全体像の元データ`を直さず、`全体像の元データ`の guide_stale を次にその話題に触れた壁打ちで直す。
+The kotowari skills always leave the `overview data` unrevised in the cycle and implementation stations, and fix guide_stale on the `overview data` in the next brainstorm that touches that topic.
 
-### REQ-core-333: 目次の置き方
+### REQ-core-333: How the table of contents is arranged
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-05-overview-index.md#A4, docs/decision/records/2026-10-05-overview-index.md#A6, docs/decision/records/2026-10-05-overview-index.md#A19
 - verification: review
-- how_to_verify: kotowari のスキルの references を読み、承認のときに新しい`全体像`を`目次`のどこに置くかと、`目次の群`を分けるか新しく作るかを LLM が決めて`目次`を直し人に聞かないこと、`目次`を承認の対象にしないこと、`目次の群`を分けるのはその群が大きくなってからにすること、同じ階層の中を読む人に意味のある順（使う順や工程の順）に並べることが書いてあることを確かめる
+- how_to_verify: Read the references of the kotowari skills and confirm that they say: at approval, the LLM decides where in the `table of contents` to place a new `overview` and whether to split a `contents group` or make a new one, and revises the `table of contents` without asking the person; the `table of contents` is not something to approve; a `contents group` is split only once it has grown large; and within one level, entries are ordered in an order meaningful to the reader (the order of use or of the workflow)
 
-kotowari のスキルは常に、承認のときに新しい`全体像`を`目次`のどこに置くかと、`目次の群`を分けるか新しく作るかを LLM が決めて`目次`を直すことを求め、`目次`を承認の対象にせず、`目次の群`を分けるのをその群が大きくなってからにし、同じ階層の中を読む人に意味のある順に並べることを求める。
+The kotowari skills always require that, at approval, the LLM decides where in the `table of contents` to place a new `overview` and whether to split a `contents group` or make a new one, and revises the `table of contents`; they do not make the `table of contents` something to approve, split a `contents group` only once it has grown large, and require ordering within one level in an order meaningful to the reader.

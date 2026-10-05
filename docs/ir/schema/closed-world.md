@@ -1,69 +1,71 @@
-# 閉じた世界と開いた世界
+# Closed world and open world
 
-この文書は、宣言していない見出しと行をどう扱うか、どこまで緩められるかを扱う。
+English | [日本語](closed-world.ja.md)
+
+This document covers how undeclared headings and lines are handled, and how far that can be relaxed.
 
 ## Requirements
 
-### REQ-schema-001: 閉じた世界が既定
+### REQ-schema-001: The closed world is the default
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A2
 - verification: unit
 
-mds は常に、`スキーマ`に宣言していない見出しと行を`指摘`にする。
+mds always makes headings and lines not declared in the `schema` a `finding`.
 
-### REQ-schema-002: 開いた世界に緩める
+### REQ-schema-002: Relaxing to the open world
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A2
 - verification: unit
 
-`スキーマ`が "open: true" を宣言したとき、または検査に "--open" を付けたとき、mds は宣言していない構造と、その内側のすべての行を許す。
+When the `schema` declares "open: true", or when "--open" is given to the check, mds allows undeclared structures and all the lines inside them.
 
-### REQ-schema-003: 宣言済みの構造の中は緩めない
-
-- kind: prohibition
-- source: docs/decision/records/2026-09-21-mds-spec.md#A2
-- verification: unit
-
-mds は、`開いた世界`でも、宣言済みの`前置部`、`節`、`項目`の中に足された未宣言の構造と行を許さない。
-
-### REQ-schema-004: 欠落と形の違反は緩めない
+### REQ-schema-003: The inside of declared structures is not relaxed
 
 - kind: prohibition
 - source: docs/decision/records/2026-09-21-mds-spec.md#A2
 - verification: unit
 
-mds は、`開いた世界`でも、必須の`ノード`の欠落と、`出現回数`や形の違反を許さない。
+mds does not allow, even in the `open world`, undeclared structures and lines added inside a declared `preamble`, `section`, or `item`.
 
-### REQ-schema-055: 宣言の外の行の種別
+### REQ-schema-004: Missing nodes and shape violations are not relaxed
+
+- kind: prohibition
+- source: docs/decision/records/2026-09-21-mds-spec.md#A2
+- verification: unit
+
+mds does not allow, even in the `open world`, a missing required `node`, or a violation of the `cardinality` or of a shape.
+
+### REQ-schema-055: The kind of a line outside the declarations
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-22-ir-engine.md#A74
 - verification: unit
 
-mds は常に、宣言していない行の`指摘`に、その行を名前と値の形の一覧の行、`箇条書き`、順序付きリスト、`文`、`表`、`コードブロック`のどれとして読んだかを持たせる。呼ぶ側が`生の行`の文字を読み直して種別を決めずに済むようにする。
+mds always gives a `finding` on an undeclared line the kind it read that line as: a list line in name-and-value form, a `bullet`, an ordered list, a `statement`, a `table`, or a `code block`. This spares the caller from re-reading the characters of the `raw line` to decide the kind.
 
 ## Properties
 
-### PROP-schema-001: 緩める方向にしか働かない
+### PROP-schema-001: It only ever relaxes
 
 - source: docs/decision/records/2026-09-21-mds-spec.md#A2
 
-`開いた世界`で出る`指摘`の集まりは、同じ`文書`を`閉じた世界`で検査したときに出る`指摘`の集まりに含まれる。
+Every `finding` reported in the `open world` is also among those reported when the same `document` is checked in the `closed world`; the former set is contained in the latter.
 
 ## Examples
 
 ```gherkin
 @id=EX-schema-001 @about=REQ-schema-002 @source=docs/decision/records/2026-09-21-mds-spec.md#A2
-Scenario: 開いた世界では未宣言の節を許す
-  Given `スキーマ`に宣言していない`節`を持つ`文書`がある
-  When "kotowari-mds check --open" を実行する
-  Then その`節`の`指摘`は出ない
+Scenario: The open world allows an undeclared section
+  Given a `document` with a `section` not declared in the `schema`
+  When "kotowari-mds check --open" is run
+  Then no `finding` is reported for that `section`
 
 @id=EX-schema-002 @about=REQ-schema-003 @source=docs/decision/records/2026-09-21-mds-spec.md#A2
-Scenario: 開いた世界でも宣言済みの節の中の未宣言の行は誤りになる
-  Given 宣言済みの`節`の中に、宣言していない行を持つ`文書`がある
-  When "kotowari-mds check --open" を実行する
-  Then その行の`指摘`が出る
+Scenario: Even in the open world, an undeclared line inside a declared section is an error
+  Given a `document` with an undeclared line inside a declared `section`
+  When "kotowari-mds check --open" is run
+  Then a `finding` is reported for that line
 ```

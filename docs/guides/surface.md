@@ -1,17 +1,19 @@
-# 面の検査
+# Surface check
 
-<!-- @kotowari[REQ-core-223:f39a7164, REQ-core-227:136a7242] -->
+English | [日本語](surface.ja.md)
 
-IR に書かないまま作った機能を見つけるための検査です。
-利用者から見える振る舞い（CLI のサブコマンドやフラグ、設定の鍵、HTTP のルートなど）を、設定に書いた ast-grep の規則でコードから取り出します。
-取り出した1つを「面」と呼びます。
-面の名前が IR に引用されて出てこなければ、`kotowari check` が `surface_without_spec` の誤りにします。
+<!-- @kotowari[REQ-core-223:418e5055, REQ-core-227:9203538c] -->
 
-面の規則を書かないプロジェクトでは、この検査は何もしません。
+This check finds features that were built without being written into the IR.
+It takes user-visible behaviour (CLI subcommands and flags, configuration keys, HTTP routes and so on) out of the code using ast-grep rules you write in the configuration.
+Each piece taken out is called a "surface".
+If a surface's name does not appear quoted in the IR, `kotowari check` reports it as a `surface_without_spec` error.
 
-## 設定
+In a project that writes no surface rules, this check does nothing.
 
-<!-- @kotowari[REQ-core-224:89c8931f, REQ-core-225:77439286] -->
+## Configuration
+
+<!-- @kotowari[REQ-core-224:f13b971e, REQ-core-225:be4cdd0b] -->
 
 ```yaml
 surface:
@@ -22,34 +24,34 @@ surface:
   unspecified: "docs/surface-unspecified.yaml"   # 書かなくてもよい
 ```
 
-| キー | 中身 |
+| Key | Contents |
 |---|---|
-| `surface.files` | 面を探すファイル（面のファイル）の glob。読み方と走査は `tests.files` と同じ。読むのは面の規則の言語のファイルだけで、それが読めないか UTF-8 でないときはテストのファイルと同じく止まる |
-| `surface.rules` | 面の規則（ast-grep のルールの YAML ファイル）のパス。空の一覧でなければ検査する |
-| `surface.unspecified` | 未記載の面の一覧のファイル（[下の節](#未記載の面の一覧)） |
+| `surface.files` | Globs of the files to search for surfaces (surface files). Read and walked the same way as `tests.files`. Only files in a surface rule's language are read; if one cannot be read or is not UTF-8, kotowari stops, just as for test files |
+| `surface.rules` | Paths of the surface rules (ast-grep rule YAML files). The check runs when this is not an empty list |
+| `surface.unspecified` | The file of the list of unspecified surfaces ([section below](#list-of-unspecified-surfaces)) |
 
-`surface.files` と `surface.rules` は組で書きます。
-片方だけのとき、`surface.rules` が空なのに `surface.unspecified` を書いたときは、設定を読むどのコマンドでも設定の誤りで止まります。
-検査しているつもりで何もしていない状態を作らないためです。
-キーの全部は [設定ファイル](config.md) にあります。
+Write `surface.files` and `surface.rules` as a set.
+If only one of them is written, or if `surface.unspecified` is written while `surface.rules` is empty, every command that reads the configuration stops with a configuration error.
+This prevents a state where you think the check runs but it does nothing.
+All keys are listed in [the configuration file](config.md).
 
-## 面の規則を書く
+## Writing surface rules
 
-<!-- @kotowari[REQ-core-223:f39a7164, REQ-core-224:89c8931f, REQ-core-236:a75a21eb] -->
+<!-- @kotowari[REQ-core-223:418e5055, REQ-core-224:f13b971e, REQ-core-236:45fa5c5f] -->
 
-面の規則は、テストを見つける `tests.rules` と同じ ast-grep のルールです（[テストに印を付ける](marks.md)）。
-ただしテストの問い合わせには加わらず、別に当てます。
+Surface rules are the same kind of ast-grep rule as `tests.rules`, which finds tests ([marking tests](marks.md)).
+However, they are not added to the queries for tests; they are applied separately.
 
-- 規則が当たった節1つが面1つです。面の種類は規則の `id`、名前は `$NAME` で捕まえた文字です。`$NAME` を捕まえない当たりは面になりません。
-- 名前の前後が同じ引用符（`'`、`"`、バッククォート）なら、1組だけ外します。それ以外は変えません。`--` を足したり、大文字小文字を変えたりはしません。
-- `language` は大文字小文字を区別せず、ast-grep の別名（`ts`、`py`）も受けます。規則の言語の拡張子のファイルにだけ当てます。
-- `files` と `ignores` は当てるファイルを絞ります。`severity` は見ないので、`severity: off` の規則も当てます。
-- 規則の言語のファイルだけを読んで構文木にします。構文の誤りがあれば `unparsable_file` になり、そのファイルは飛ばします。ほかのファイルは読まないので、読めなくても UTF-8 でなくても止まりません。`src/**` のように広く書いて画像などに当たってもかまいません。
-- 規則のファイルが無い、読めない、壊れている、同じパスが2回あるときは、`check` と `status` が設定の誤りで止まります。
-- kotowari は面の規則を同梱しません。
+- One node matched by a rule is one surface. The surface's kind is the rule's `id`, and its name is the text captured by `$NAME`. A match that does not capture `$NAME` is not a surface.
+- If the name begins and ends with the same quote (`'`, `"` or a backquote), one pair is removed. Nothing else is changed: no `--` is added and case is not changed.
+- `language` is case-insensitive and also accepts ast-grep aliases (`ts`, `py`). A rule is applied only to files with its language's extensions.
+- `files` and `ignores` narrow down the files a rule is applied to. `severity` is not looked at, so rules with `severity: off` are applied too.
+- Only files in a rule's language are read and parsed into a syntax tree. If there is a syntax error, `unparsable_file` is reported and the file is skipped. Other files are not read, so kotowari does not stop even if they are unreadable or not UTF-8. A broad glob such as `src/**` that also matches images and the like is fine.
+- If a rule file is missing, unreadable or broken, or the same path appears twice, `check` and `status` stop with a configuration error.
+- kotowari bundles no surface rules.
 
-clap の builder API で書いた CLI のフラグとサブコマンドを取り出す例です。
-コードは `src/main.rs`、規則は `rules/surface.yml` に置きます。
+Here is an example that takes out the flags and subcommands of a CLI written with clap's builder API.
+The code is in `src/main.rs` and the rules in `rules/surface.yml`.
 
 ```rust
 use clap::{Arg, ArgAction, Command};
@@ -80,35 +82,35 @@ rule:
       pattern: $PARENT.subcommand($$$)
 ```
 
-`flag verbose`、`flag format`、`subcommand check`、`subcommand list` の4つが面になります。
-根の `Command::new("tool")` は `subcommand` の呼び出しの中に無いので取り出しません。
-フラグの名前は `format` で、`--format` ではありません。
-IR には取り出した名前のとおりに `"format"` と書くか、`--format` の形で捕まえる規則を書きます。
+This yields four surfaces: `flag verbose`, `flag format`, `subcommand check` and `subcommand list`.
+The root `Command::new("tool")` is not inside a `subcommand` call, so it is not taken out.
+The flag's name is `format`, not `--format`.
+In the IR, either write `"format"` exactly as the name is taken out, or write a rule that captures it in the `--format` form.
 
-規則は `ast-grep scan -r rules/surface.yml src/main.rs` で当たりを確かめてから設定に足すと早く済みます。
+Checking a rule's matches with `ast-grep scan -r rules/surface.yml src/main.rs` before adding it to the configuration saves time.
 
-## IR にあるとする場所
+## Where a surface counts as being in the IR
 
-<!-- @kotowari[REQ-core-226:de75f4da, EX-core-410:0f9d8b37, EX-core-411:33aa75c3, EX-core-429:137246c2] -->
+<!-- @kotowari[REQ-core-226:86d88ed4, EX-core-410:d4987877, EX-core-411:0e1012fa, EX-core-429:1a617a65] -->
 
-面の名前が、話題ごとの文書の次のどこかに、二重引用符の対かバッククォートの対で囲んだ中身として出てくれば、その面は IR にあります。
+A surface is in the IR if its name appears, as the contents of a pair of double quotes or a pair of backquotes, in any of the following places in a topic document.
 
-- 要求の文（後回しの要求の文も数える）
-- 決定表の表のセル（見出しの行のセルも数える）
-- シナリオのステップの行
+- A requirement's statements (statements of deferred requirements count too)
+- The cells of a decision table (cells of the header row count too)
+- The step lines of a scenario
 
-囲んだ中身が名前と前後の空白まで同じときだけ数えます。
-`"--verbose true"` や `" --verbose"` は、面 `--verbose` を含みません。
-二重引用符は行の左から順に対にし、バッククォートは二重引用符の外のものだけを対にします。
-バッククォートで囲むと用語の検査も受けるので、用語集に無い名前は二重引用符で囲みます。
+It counts only when the enclosed contents are identical to the name, including leading and trailing whitespace.
+`"--verbose true"` and `" --verbose"` do not contain the surface `--verbose`.
+Double quotes are paired from left to right in the line, and only backquotes outside double quotes are paired.
+Backquoted text is also subject to the term check, so enclose names that are not in the glossary in double quotes.
 
-性質の文、文書が扱う範囲の行、項目の見出しの下の `- ` で始まる行（`- how_to_verify:` を含む）、問題の記録（`FLAGS.md`）、用語集には、名前があっても数えません。
+A name does not count if it appears in a property's statements, in the scope lines of a document, in lines starting with `- ` under an item's heading (including `- how_to_verify:`), in a problem record (`FLAGS.md`), or in a glossary.
 
-## 指摘
+## Findings
 
-<!-- @kotowari[REQ-core-227:136a7242, EX-core-408:f8528345, EX-core-409:cabe833d] -->
+<!-- @kotowari[REQ-core-227:9203538c, EX-core-408:eaffb4f4, EX-core-409:4eb051b9] -->
 
-上の例の CLI に、`"check"` と `"--format"` を要求の文に書いた IR を合わせた結果です。
+This is the result of combining the CLI from the example above with an IR whose requirement statements contain `"check"` and `"--format"`.
 
 ```console
 $ kotowari check --format text
@@ -120,22 +122,22 @@ $ echo $?
 1
 ```
 
-`surface_without_spec` の detail は `種類 名前` です。
-同じ種類と名前の面が何か所にあっても、パスのバイト順、行の順で最初の1か所に1件だけ出ます。
-`flag format` は、IR が `"--format"` と書いていて名前の `format` と一致しないので出ています。
+The detail of `surface_without_spec` is `kind name`.
+However many places a surface with the same kind and name appears in, only one finding is reported, at the first place in byte order of path and then line order.
+`flag format` is reported because the IR writes `"--format"`, which does not match the name `format`.
 
-直し方は2つです。
+There are two ways to fix it.
 
-- その面を決める要求に、名前を引用して書く。面が IR に無いのは仕様の抜けなので、壁打ちで要求を決めます。
-- 今は仕様にしないなら、理由を付けて未記載の面の一覧に載せる。一覧に足すのも仕様の判断なので、壁打ちか導入のときだけにします。実装の途中で一覧に足して誤りを消してはいけません。IR に無い面は壁打ちに戻します。
+- Quote the name in the requirement that defines that surface. A surface missing from the IR is a gap in the specification, so decide the requirement in brainstorming.
+- If it is not going into the specification now, add it with a reason to the list of unspecified surfaces. Adding to the list is also a specification decision, so do it only during brainstorming or adoption. Do not add to the list midway through implementation to make the error go away; take any surface missing from the IR back to brainstorming.
 
-## 未記載の面の一覧
+## List of unspecified surfaces
 
-<!-- @kotowari[REQ-core-231:eee7a748, REQ-core-232:e9c46168, REQ-core-233:2469b632, REQ-core-234:a4232959] -->
+<!-- @kotowari[REQ-core-231:d03e71cc, REQ-core-232:3989b803, REQ-core-233:f788681d, REQ-core-234:8a2d9f6e] -->
 
-`surface.unspecified` が指す YAML のファイルです。
-1件は `kind`、`name`、`why` のちょうど3つの鍵を持ち、値はどれも文字列で、`why` は空にできません。
-`kind` と `name` が面の種類と名前に前後の空白まで同じ文字列で一致すると、その面は IR に無くても誤りになりません。
+This is the YAML file that `surface.unspecified` points at.
+Each entry has exactly the three keys `kind`, `name` and `why`; every value is a string, and `why` cannot be empty.
+When `kind` and `name` match a surface's kind and name as identical strings (including leading and trailing whitespace), that surface is not an error even though it is missing from the IR.
 
 ```yaml
 - kind: "flag"
@@ -158,52 +160,52 @@ src/main.rs:7 [error] surface_without_spec subcommand list
 surface: unspecified=1
 ```
 
-| 指摘 | 起きること | 直し方 |
+| Finding | What happens | How to fix |
 |---|---|---|
-| `surface_unspecified_invalid`（誤り） | 1件の形が違う（鍵が足りない、余計な鍵、文字列でない値、空白だけの `why`）。その1件はどの面も外さない | 形を直す |
-| `surface_unspecified_stale`（注意） | 1件に一致する面がコードに無いか、一致する面が IR に書かれた | その1件を消す。名前を変えたなら `name` を直す |
+| `surface_unspecified_invalid` (error) | An entry has the wrong form (missing keys, extra keys, a non-string value, a whitespace-only `why`). That entry excludes no surface | Fix the form |
+| `surface_unspecified_stale` (notice) | No surface in the code matches the entry, or the matching surface has been written into the IR | Delete the entry. If you renamed the surface, fix `name` |
 
-一覧の指摘の `line` はいつも null です。
-同じ内容の1件が2つあることは検査しません。
+The `line` of findings about the list is always null.
+Two entries with the same content are not checked for.
 
-鍵が無いか、ファイルが空（0バイトか注釈だけ）なら、一覧は0件です。
-指す先が無いか読めないときは `unreadable file`、UTF-8 でないときは `non-UTF-8 file`、YAML として読めないか最上位が並びでないときは一覧のパスを付けた `config error` で止まります。
+If the key is absent, or the file is empty (zero bytes or only comments), the list has zero entries.
+If the target does not exist or cannot be read, kotowari stops with `unreadable file`; if it is not UTF-8, with `non-UTF-8 file`; and if it cannot be read as YAML or its top level is not a sequence, with a `config error` naming the list's path.
 
-## 外した数を見る
+## Seeing how many are excluded
 
-<!-- @kotowari[REQ-core-228:59fca9bf, REQ-core-229:34b4f0ca, TBL-core-028:669e5402] -->
+<!-- @kotowari[REQ-core-228:095b2109, REQ-core-229:7909d808, TBL-core-028:9645c008] -->
 
-一覧は借りで、置き場ではありません。
-借りた量が毎回見えるように、`surface.rules` を書いたプロジェクトでは、`check` が一覧で外した面の数を出します。
+The list is a debt, not a storage place.
+So that the amount borrowed is visible every time, in a project that sets `surface.rules`, `check` reports how many surfaces the list excluded.
 
-- `--format text` では、指摘の行の後の最後の1行に `surface: unspecified=数`。指摘が0件でも、数が0でも出ます。
-- JSON では、最上位の `surface` に `unspecified` の鍵1つ。
+- With `--format text`, the last line after the finding lines is `surface: unspecified=N`. It appears even when there are no findings and even when the number is 0.
+- In JSON, a top-level `surface` with a single key, `unspecified`.
 
-数えるのは種類と名前の組で、IR にある面は一覧に載っていても数えません。
+What is counted is kind-and-name pairs; a surface that is in the IR is not counted even if it is in the list.
 
-`status` は `surface` の群に3つの数を出します。
-`surface.rules` が空の一覧なら3つとも 0 です。
+`status` reports three numbers in its `surface` group.
+If `surface.rules` is an empty list, all three are 0.
 
 ```console
 $ kotowari status --format text | grep '^surface'
 surface total=4 specified=1 unspecified=1
 ```
 
-| 鍵 | 数 |
+| Key | Number |
 |---|---|
-| `total` | 面の種類と名前の組の数 |
-| `specified` | そのうち IR にあるもの |
-| `unspecified` | IR になく、一覧で外したもの |
+| `total` | Number of surface kind-and-name pairs |
+| `specified` | Of those, the ones in the IR |
+| `unspecified` | Those not in the IR and excluded by the list |
 
-`surface_without_spec` は誤りなので、残っていれば `status` の `complete` は false です。
+`surface_without_spec` is an error, so while any remain, `complete` in `status` is false.
 
-面のファイル、面の規則のファイル、未記載の面の一覧を読むのは `check` と `status` だけです。
-`list`、`query`、`plan`、`mutants` はそれらを読まず、それらによる停止もしません。
+Only `check` and `status` read surface files, surface rule files and the list of unspecified surfaces.
+`list`, `query`, `plan` and `mutants` do not read them and never stop because of them.
 
-## 既存のプロジェクトに入れる
+## Bringing it into an existing project
 
-<!-- @kotowari[REQ-core-228:59fca9bf] -->
+<!-- @kotowari[REQ-core-228:095b2109] -->
 
-面の規則を初めて書くと、まだ IR に書いていない面がまとめて `surface_without_spec` になります。
-そのときは、出た面をすべて理由付きで未記載の面の一覧に載せ、話題ごとに要求を書くたびに一覧から外していきます。
-`kotowari status` の `unspecified` が、残りの量です。
+When you first write surface rules, every surface not yet written into the IR shows up as `surface_without_spec` at once.
+In that case, put all the reported surfaces in the list of unspecified surfaces with reasons, and remove them from the list as you write the requirements for each topic.
+`unspecified` in `kotowari status` shows how much is left.

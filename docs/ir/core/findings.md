@@ -1,165 +1,167 @@
-# 検査の種類
+# Kinds of checks
 
-指摘の種類ごとの重大度と detail の中身を扱う。種類ごとの条件は右の列の要求が決める。
+English | [日本語](findings.ja.md)
+
+Covers the severity and the content of the detail for each finding kind. The conditions for each kind are set by the requirement in the right-hand column.
 
 ## Requirements
 
-### REQ-core-029: 誤りの種類
+### REQ-core-029: Error kinds
 
 - kind: algorithm
 - source: docs/decision/records/records.md#A21, docs/decision/records/records.md#A29, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-24-plan-schema.md#A11
 - definition: TBL-core-008
 - verification: unit
 
-### REQ-core-030: 注意の種類
+### REQ-core-030: Notice kinds
 
 - kind: algorithm
 - source: docs/decision/records/records.md#A29, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2
 - definition: TBL-core-009
 - verification: unit
 
-### REQ-core-031: 注意は8つだけ
+### REQ-core-031: Only eight notices
 
 - kind: invariant
 - source: docs/decision/records/records.md#A29, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2, docs/decision/records/2026-09-17-mutation-tests.md#A11, docs/decision/records/2026-09-17-mutation-tests.md#A20, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-24-doc-marks.md#A8, docs/decision/records/2026-09-25-deferred-items.md#A11, docs/decision/records/2026-09-25-deferred-items.md#A12, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A15
 - verification: unit
 
-種類が too_many_lines、too_many_requirements、mutant_timeout、equivalent_stale、guide_stale、deferred_with_test、depends_on_deferred、surface_unspecified_stale の`指摘`だけが`注意`で、ほかの種類の`指摘`はすべて`誤り`である関係が常に成り立つ。
+The relation always holds that only a `finding` whose kind is too_many_lines, too_many_requirements, mutant_timeout, equivalent_stale, guide_stale, deferred_with_test, depends_on_deferred or surface_unspecified_stale is a `notice`, and every `finding` of any other kind is an `error`.
 
-### REQ-core-032: ID の重複
+### REQ-core-032: Duplicate IDs
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A47, docs/decision/records/records.md#A61, docs/decision/records/records.md#A72, docs/decision/records/records.md#A113
 - verification: unit
 
-同じ`ID`が2か所以上にあるとき、kotowari は2つ目以降の場所ごとに、その見出しの行（`シナリオ`は "Scenario:" の行）を "line" にして duplicate_id の`誤り`を出す。1つ目はパスのバイト順で先の文書、同じ文書の中では行の小さいものである。
+When the same `ID` is in two or more places, kotowari emits, for each place from the second on, a duplicate_id `error` whose "line" is its heading line (for a `scenario`, the "Scenario:" line). The first is the one in the document that comes first in byte order of path, and within the same document, the one with the smaller line.
 
-### REQ-core-174: 宣言の外の行とコードブロックと用語集の題名
+### REQ-core-174: Lines outside the declarations, code blocks, and the glossary title
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A35, docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A82, docs/decision/records/records.md#A102, docs/decision/records/ir-form.md#文書, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/2026-09-23-ir-engine-gaps.md#A27, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-24-guide-gaps.md#A1, docs/decision/records/2026-09-24-guide-gaps.md#A6, docs/decision/records/2026-09-24-guide-gaps.md#A10, docs/decision/records/2026-09-22-ir-engine.md#A89
 - verification: unit
 
-"## " の見出しの直下で最初の "### " より前に、`コードブロック`の外にあって一覧でも表でもない空でない行があるとき、またはスキーマが宣言していない表（`用語集`の文書の中の表は除く。REQ-core-117）かコードブロックがあるとき、kotowari は unknown_line の`誤り`を、"## Examples" の見出しの下に gherkin でない`コードブロック`があるとき unknown_code_block の`誤り`を、`用語集`の`題名`が "# Glossary" でないとき glossary_title_invalid の`誤り`を出す。gherkin でない`コードブロック`の中の行には invalid_gherkin_line を出さない（REQ-core-113）。detail は TBL-core-008、"line" は TBL-core-019 のとおりにする。
+When, directly under a "## " heading and before the first "### ", there is a non-empty line outside any `code block` that is neither a list nor a table, or when there is a table not declared by the schema (excluding a table inside a `glossary` document; REQ-core-117) or a code block, kotowari emits an unknown_line `error`; when there is a non-gherkin `code block` under the "## Examples" heading, it emits an unknown_code_block `error`; and when the `title` of a `glossary` is not "# Glossary", it emits a glossary_title_invalid `error`. It does not emit invalid_gherkin_line for lines inside a non-gherkin `code block` (REQ-core-113). The detail is as in TBL-core-008 and "line" is as in TBL-core-019.
 
 ## Decision tables
 
-### TBL-core-008: 誤りの種類と detail
+### TBL-core-008: Error kinds and details
 
 - source: docs/decision/records/2026-09-22-ir-engine.md#A33, docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/records.md#A142, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A68, docs/decision/records/records.md#A108, docs/decision/records/records.md#A109, docs/decision/records/records.md#A110, docs/decision/records/records.md#A112, docs/decision/records/records.md#A116, docs/decision/records/records.md#A111, docs/decision/records/records.md#A150, docs/decision/records/records.md#A153, docs/decision/records/records.md#A154, docs/decision/records/2026-09-16-ir-tree.md#A5, docs/decision/records/2026-09-16-ir-tree.md#A19, docs/decision/records/2026-09-17-record-form.md#A7, docs/decision/records/2026-09-17-record-form.md#A12, docs/decision/records/2026-09-17-record-form.md#A32, docs/decision/records/2026-09-17-record-form.md#A25, docs/decision/records/2026-09-17-scenario-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A57, docs/decision/records/2026-09-22-id-namespace.md#A4, docs/decision/records/2026-09-23-ir-engine-gaps.md#A7, docs/decision/records/2026-09-23-ir-engine-gaps.md#A17, docs/decision/records/2026-09-23-ir-engine-gaps.md#A40, docs/decision/records/2026-09-24-multi-language-tests.md#A31, docs/decision/records/2026-09-24-multi-language-tests.md#A42, docs/decision/records/2026-09-24-plan-schema.md#A18, docs/decision/records/2026-09-24-doc-marks.md#A10, docs/decision/records/2026-09-24-doc-marks.md#A31, docs/decision/records/2026-09-24-guide-gaps.md#A10, docs/decision/records/2026-09-25-deferred-items.md#A2, docs/decision/records/2026-09-25-deferred-items.md#A19, docs/decision/records/2026-09-27-surface-check.md#A3, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A7, docs/decision/records/2026-09-27-surface-check.md#A15, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-09-27-surface-check.md#A23, docs/decision/records/2026-10-02-whole-picture.md#A69, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A74, docs/decision/records/2026-10-04-overview-on-public-api.md#A11, docs/decision/records/2026-10-05-overview-index.md#A16, docs/decision/records/2026-10-05-overview-index.md#A34, docs/decision/records/2026-10-05-localization.md#A27, docs/decision/records/2026-10-05-localization.md#D1, docs/decision/records/2026-10-05-localization.md#A33, docs/decision/records/2026-10-05-localization.md#D3
 
-detail が「行の文字」「見出しの文字」「Scenario: の行の文字」の種類では、読んだ行の文字そのまま（字下げと末尾の空白を含み、再構成しない）を入れる。
+For kinds whose detail is "the text of the line", "the text of the heading" or "the text of the Scenario: line", the detail is the text of the line read, as is (including indentation and trailing whitespace, not reconstructed).
 
-| 種類 | detail | 条件を定める要求 |
+| Kind | detail | Requirement setting the conditions |
 |---|---|---|
-| missing_title | 文書名（ディレクトリを除いたファイル名） | REQ-core-034 |
-| multiple_titles | その件の題名（2つ目以降の題名の、"# " を除き前後の空白を除いた文字） | REQ-core-035 |
-| missing_scope | 文書名（ディレクトリを除いたファイル名） | REQ-core-036 |
-| unknown_heading | 見出しの文字 | REQ-core-043 |
-| unknown_field | 行の文字 | REQ-core-044 |
-| missing_field | 行の名前 | REQ-core-098 |
-| missing_table | 決定表の ID | REQ-core-099 |
-| duplicate_field | 行の名前 | REQ-core-045、REQ-core-209 |
-| missing_source | 項目の ID か用語。値の空の "- deferred:" の行では "deferred" | REQ-core-059、REQ-core-210 |
-| source_invalid | 出典の文字列 | REQ-core-058 |
-| unknown_term | 囲んだ文字列 | REQ-core-064、REQ-core-065 |
-| missing_document | 文書名の参照の文字列 | REQ-core-070 |
-| missing_statement | 項目の ID | REQ-core-047 |
-| verification_missing | 要求の ID | REQ-core-048 |
-| verification_invalid | 値 | REQ-core-049 |
-| unknown_kind | 値 | REQ-core-050 |
-| duplicate_id | ID | REQ-core-032 |
-| unresolved_reference | ID | REQ-core-054 |
-| algorithm_without_definition | 要求の ID | REQ-core-051 |
-| missing_tag | 無いタグの名前 | REQ-core-053 |
-| unknown_tag | タグの名前 | REQ-core-052 |
-| vague_word | 語 | REQ-core-066 |
-| requirement_without_test | 要求の ID | REQ-core-085 |
-| scenario_without_test | シナリオの ID | REQ-core-137 |
-| test_without_id | テストの名前。名前が null ならテストの節の最初の行の全体の文字から前後の空白を除いたもの | REQ-core-086 |
-| invalid_marker | 行の文字 | REQ-core-072、REQ-core-202 |
-| unparsable_file | ファイルのパス | REQ-core-083、REQ-core-236 |
-| unclosed_code_block | 開始の行の文字 | REQ-core-112 |
-| invalid_gherkin_line | 行の文字 | REQ-core-113 |
-| invalid_id | 値 | REQ-core-114 |
-| id_domain_mismatch | ID | REQ-core-167 |
-| glossary_invalid | 文書名（ディレクトリを除いたファイル名） | REQ-core-117 |
-| unclosed_backtick | 行の文字 | REQ-core-116 |
-| invalid_glossary_row | 行の文字 | REQ-core-122 |
-| duplicate_term | 用語 | REQ-core-123 |
-| record_field_missing | 無い補足の行の名前 | REQ-core-130 |
-| record_field_unknown | 補足の行の名前 | REQ-core-131 |
-| revision_link_invalid | リンクの href。リンクが無ければ superseded_by の行の値 | REQ-core-132 |
-| mutant_survived | 変更の説明 | REQ-core-139 |
-| equivalent_invalid | 等価の一覧の1件に書かれたままの "file" と "change" を ": " でつないだ文字列 | REQ-core-143 |
-| unknown_line | 行の文字 | REQ-core-174 |
-| invalid_plan | スキーマの側の種類と詳細を ": " でつないだ文字列 | REQ-core-193 |
-| unknown_code_block | 開始の行の文字 | REQ-core-174 |
-| glossary_title_invalid | 題名の行の文字 | REQ-core-174 |
-| surface_without_spec | 面の種類と名前を1つの半角空白で区切った文字列 | REQ-core-227 |
-| surface_unspecified_invalid | 未記載の面の一覧の1件に書かれたままの "kind" と "name" を1つの半角空白で区切った文字列 | REQ-core-233 |
-| overview_form_invalid | kotowari-markdown-schema の`指摘`の種類の名前。frontmatter の行の違反では "frontmatter" | REQ-core-281 |
-| overview_part_unknown | `部品`の種類の名前 | REQ-core-282 |
-| overview_part_invalid | `部品`の種類の名前、1つの半角空白、合わなかった場所（REQ-core-282。値の全体は "(root)"、YAML として読めないときは "(yaml)"） | REQ-core-282 |
-| overview_lead_missing | 文書名（ディレクトリを除いたファイル名） | REQ-core-283 |
-| overview_ir_missing | "ir" の1件の文字 | REQ-core-284 |
-| overview_ir_shared | 2つ以上の`全体像の元データ`の "ir" にある`話題ごとの文書`のパス | REQ-core-284 |
-| overview_ref_unresolved | 参照の文字 | REQ-core-285 |
-| overview_name_conflict | ".md" を除いたファイル名 | REQ-core-305 |
-| overview_toc_invalid | 合わなかった場所（TBL-core-043） | REQ-core-327 |
-| overview_toc_page_missing | `目次`に無い名前 | REQ-core-328 |
-| overview_toc_page_unknown | その項目の JSON Pointer | REQ-core-329 |
-| overview_toc_page_duplicate | その項目の JSON Pointer | REQ-core-329 |
-| overview_toc_group_empty | その`目次の群`の JSON Pointer か "(root)" | REQ-core-330 |
-| translation_missing | 無い`側`の基準のディレクトリからの相対パス | REQ-core-338 |
-| translation_record_invalid | "missing"、"yaml"、"keys"、"value" のいずれか | REQ-core-339 |
-| translation_stale | `一致の記録`の値と今の blob hash を1つの半角空白で区切った文字列 | REQ-core-341 |
-| translation_structure_mismatch | 最初に食い違った部分の名前（TBL-core-044） | REQ-core-345 |
-| translation_switcher_invalid | あるべき`切り替えの行` | REQ-core-346 |
-| link_language_mismatch | 書かれた行き先 | REQ-core-348 |
-| link_to_record | 書かれた行き先 | REQ-core-349 |
+| missing_title | The document name (the file name without the directory) | REQ-core-034 |
+| multiple_titles | The title of that occurrence (the text of a second or later title with "# " removed and leading and trailing whitespace removed) | REQ-core-035 |
+| missing_scope | The document name (the file name without the directory) | REQ-core-036 |
+| unknown_heading | The text of the heading | REQ-core-043 |
+| unknown_field | The text of the line | REQ-core-044 |
+| missing_field | The name of the line | REQ-core-098 |
+| missing_table | The ID of the decision table | REQ-core-099 |
+| duplicate_field | The name of the line | REQ-core-045, REQ-core-209 |
+| missing_source | The ID of the item, or the term. For a "- deferred:" line with an empty value, "deferred" | REQ-core-059, REQ-core-210 |
+| source_invalid | The source string | REQ-core-058 |
+| unknown_term | The enclosed string | REQ-core-064, REQ-core-065 |
+| missing_document | The string of the document-name reference | REQ-core-070 |
+| missing_statement | The ID of the item | REQ-core-047 |
+| verification_missing | The ID of the requirement | REQ-core-048 |
+| verification_invalid | The value | REQ-core-049 |
+| unknown_kind | The value | REQ-core-050 |
+| duplicate_id | The ID | REQ-core-032 |
+| unresolved_reference | The ID | REQ-core-054 |
+| algorithm_without_definition | The ID of the requirement | REQ-core-051 |
+| missing_tag | The name of the missing tag | REQ-core-053 |
+| unknown_tag | The name of the tag | REQ-core-052 |
+| vague_word | The word | REQ-core-066 |
+| requirement_without_test | The ID of the requirement | REQ-core-085 |
+| scenario_without_test | The ID of the scenario | REQ-core-137 |
+| test_without_id | The name of the test. If the name is null, the whole text of the first line of the test's node with leading and trailing whitespace removed | REQ-core-086 |
+| invalid_marker | The text of the line | REQ-core-072, REQ-core-202 |
+| unparsable_file | The path of the file | REQ-core-083, REQ-core-236 |
+| unclosed_code_block | The text of the opening line | REQ-core-112 |
+| invalid_gherkin_line | The text of the line | REQ-core-113 |
+| invalid_id | The value | REQ-core-114 |
+| id_domain_mismatch | The ID | REQ-core-167 |
+| glossary_invalid | The document name (the file name without the directory) | REQ-core-117 |
+| unclosed_backtick | The text of the line | REQ-core-116 |
+| invalid_glossary_row | The text of the line | REQ-core-122 |
+| duplicate_term | The term | REQ-core-123 |
+| record_field_missing | The name of the missing supplementary line | REQ-core-130 |
+| record_field_unknown | The name of the supplementary line | REQ-core-131 |
+| revision_link_invalid | The href of the link. If there is no link, the value of the superseded_by line | REQ-core-132 |
+| mutant_survived | The change description | REQ-core-139 |
+| equivalent_invalid | The string of "file" and "change", exactly as written in the entry of the list of equivalents, joined by ": " | REQ-core-143 |
+| unknown_line | The text of the line | REQ-core-174 |
+| invalid_plan | The string of the schema-side kind and the detail joined by ": " | REQ-core-193 |
+| unknown_code_block | The text of the opening line | REQ-core-174 |
+| glossary_title_invalid | The text of the title line | REQ-core-174 |
+| surface_without_spec | The string of the surface's kind and name separated by one half-width space | REQ-core-227 |
+| surface_unspecified_invalid | The string of "kind" and "name", exactly as written in the entry of the list of unspecified surfaces, separated by one half-width space | REQ-core-233 |
+| overview_form_invalid | The name of the kind of the kotowari-markdown-schema `finding`. For a violation in a frontmatter line, "frontmatter" | REQ-core-281 |
+| overview_part_unknown | The name of the kind of the `part` | REQ-core-282 |
+| overview_part_invalid | The name of the kind of the `part`, one half-width space, and the place that did not match (REQ-core-282; "(root)" for the whole value, "(yaml)" when it cannot be read as YAML) | REQ-core-282 |
+| overview_lead_missing | The document name (the file name without the directory) | REQ-core-283 |
+| overview_ir_missing | The text of the "ir" entry | REQ-core-284 |
+| overview_ir_shared | The path of the `topic document` that is in the "ir" of two or more `overview data` files | REQ-core-284 |
+| overview_ref_unresolved | The text of the reference | REQ-core-285 |
+| overview_name_conflict | The file name without ".md" | REQ-core-305 |
+| overview_toc_invalid | The place that did not match (TBL-core-043) | REQ-core-327 |
+| overview_toc_page_missing | The name missing from the `table of contents` | REQ-core-328 |
+| overview_toc_page_unknown | The JSON Pointer of that entry | REQ-core-329 |
+| overview_toc_page_duplicate | The JSON Pointer of that entry | REQ-core-329 |
+| overview_toc_group_empty | The JSON Pointer of that `contents group`, or "(root)" | REQ-core-330 |
+| translation_missing | The path of the missing `side`, relative to the base directory | REQ-core-338 |
+| translation_record_invalid | One of "missing", "yaml", "keys" and "value" | REQ-core-339 |
+| translation_stale | The string of the value of the `consistency record` and the current blob hash separated by one half-width space | REQ-core-341 |
+| translation_structure_mismatch | The name of the first part that differs (TBL-core-044) | REQ-core-345 |
+| translation_switcher_invalid | The `switcher line` that should be there | REQ-core-346 |
+| link_language_mismatch | The destination as written | REQ-core-348 |
+| link_to_record | The destination as written | REQ-core-349 |
 
-### TBL-core-009: 注意の種類と detail
+### TBL-core-009: Notice kinds and details
 
 - source: docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-16-notice.md#A2, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A57, docs/decision/records/2026-09-24-doc-marks.md#A8, docs/decision/records/2026-09-24-doc-marks.md#A14, docs/decision/records/2026-09-25-deferred-items.md#A11, docs/decision/records/2026-09-25-deferred-items.md#A12, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A15, docs/decision/records/2026-09-27-surface-check.md#A22
 
-| 種類 | detail | 条件を定める要求 |
+| Kind | detail | Requirement setting the conditions |
 |---|---|---|
-| too_many_lines | 行数 | REQ-core-038 |
-| too_many_requirements | 要求の数 | REQ-core-039 |
-| mutant_timeout | 変更の説明 | REQ-core-140 |
-| equivalent_stale | 等価の一覧の1件に書かれたままの "file" と "change" を ": " でつないだ文字列 | REQ-core-142 |
-| guide_stale | `ID`、`ガイドの印`の1件に書かれた`指紋`、今の`指紋`を1つの半角空白で区切った文字列 | REQ-core-204 |
-| deferred_with_test | `後回し`の`要求`か`後回しのシナリオ`の`ID` | REQ-core-211 |
-| depends_on_deferred | 参照元の`ID`と参照先の`ID`を1つの半角空白で区切った文字列 | REQ-core-212 |
-| surface_unspecified_stale | 未記載の面の一覧の1件に書かれたままの "kind" と "name" を1つの半角空白で区切った文字列 | REQ-core-234 |
+| too_many_lines | The number of lines | REQ-core-038 |
+| too_many_requirements | The number of requirements | REQ-core-039 |
+| mutant_timeout | The change description | REQ-core-140 |
+| equivalent_stale | The string of "file" and "change", exactly as written in the entry of the list of equivalents, joined by ": " | REQ-core-142 |
+| guide_stale | The string of the `ID`, the `fingerprint` written in the entry of the `guide mark`, and the current `fingerprint`, separated by one half-width space | REQ-core-204 |
+| deferred_with_test | The `ID` of the `requirement` under `deferral` or of the `deferred scenario` | REQ-core-211 |
+| depends_on_deferred | The string of the referring `ID` and the referenced `ID` separated by one half-width space | REQ-core-212 |
+| surface_unspecified_stale | The string of "kind" and "name", exactly as written in the entry of the list of unspecified surfaces, separated by one half-width space | REQ-core-234 |
 
 ## Examples
 
 ```gherkin
 @id=EX-core-005 @about=REQ-core-032 @source=docs/decision/records/records.md#A61,docs/decision/records/records.md#A47
-Scenario: 3か所にある ID は2件の重複になる
-  Given "REQ-001" の見出しが3か所にある
-  When "kotowari check" を実行する
-  Then duplicate_id の誤りが2件出る
-  And 1つ目の見出しの行には duplicate_id が出ない
+Scenario: An ID in three places gives two duplicates
+  Given the heading "REQ-001" is in three places
+  When "kotowari check" is run
+  Then two duplicate_id errors are emitted
+  And no duplicate_id is emitted on the first heading line
 
 @id=EX-core-266 @about=REQ-core-174 @source=docs/decision/records/2026-09-22-ir-engine.md#A33,docs/decision/records/2026-09-22-ir-engine.md#A35,docs/decision/records/records.md#A102,docs/decision/records/ir-form.md#文書,docs/decision/records/2026-09-23-ir-english-tokens.md#A2
-Scenario: 宣言の外の3つの場面はそれぞれ誤りになる
-  Given "## " の見出しの直下に`コードブロック`の外の空でない行を持つ`話題ごとの文書`と、"## Examples" の見出しの下に gherkin でない`コードブロック`を持つ`話題ごとの文書`と、`題名`がスキーマの宣言した形でない`用語集`がある
-  When "kotowari check --format json" を実行する
-  Then unknown_line と unknown_code_block と glossary_title_invalid の`誤り`が1件ずつ出る
-  And それぞれの detail は TBL-core-008、"line" は TBL-core-019 のとおりである
+Scenario: Each of the three situations outside the declarations is an error
+  Given there are a `topic document` with a non-empty line outside any `code block` directly under a "## " heading, a `topic document` with a non-gherkin `code block` under the "## Examples" heading, and a `glossary` whose `title` is not in the form the schema declares
+  When "kotowari check --format json" is run
+  Then one `error` each of unknown_line, unknown_code_block and glossary_title_invalid is emitted
+  And each detail is as in TBL-core-008 and each "line" is as in TBL-core-019
 
 @id=EX-core-376 @about=REQ-core-174,REQ-core-113 @source=docs/decision/records/2026-09-24-guide-gaps.md#A1,docs/decision/records/2026-09-22-ir-engine.md#A89,docs/decision/records/ir-form.md#出力
-Scenario: gherkin でないブロックの中の行は gherkin として読まない
-  Given `話題ごとの文書`の "## Examples" の下に、"```text" で始まり中に "メモ" の行を持つ`コードブロック`がある
-  When "kotowari check --format text" を実行する
-  Then unknown_code_block の`誤り`が出て、"メモ" の行に invalid_gherkin_line は出ない
+Scenario: Lines inside a non-gherkin block are not read as gherkin
+  Given under "## Examples" of a `topic document` there is a `code block` that starts with "```text" and contains the line "メモ"
+  When "kotowari check --format text" is run
+  Then an unknown_code_block `error` is emitted, and invalid_gherkin_line is not emitted on the line "メモ"
 
 @id=EX-core-377 @about=REQ-core-174 @source=docs/decision/records/2026-09-24-guide-gaps.md#A6,docs/decision/records/2026-09-24-guide-gaps.md#A10,docs/decision/records/2026-09-22-ir-engine.md#A89,docs/decision/records/ir-form.md#出力
-Scenario: 用語集の題名は Glossary でなければならない
-  Given `用語集`の`題名`が "# 用語集" である
-  When "kotowari check --format text" を実行する
-  Then glossary_title_invalid の`誤り`が出る
+Scenario: The title of a glossary must be Glossary
+  Given the `title` of a `glossary` is "# 用語集"
+  When "kotowari check --format text" is run
+  Then a glossary_title_invalid `error` is emitted
 ```

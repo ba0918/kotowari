@@ -1,76 +1,78 @@
-# 用語の書き方と用語集の表
+# How terms are written and the glossary table
 
-二重引用符とバッククォートの書き分け、閉じないバッククォート、用語集の表の範囲を扱う。
+English | [日本語](terms-form.ja.md)
+
+Covers when to use double quotes and when to use backquotes, unclosed backquotes, and the extent of the glossary table.
 
 ## Requirements
 
-### REQ-core-104: 具体的な値は二重引用符で書く
+### REQ-core-104: Concrete values are written in double quotes
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A31
 - verification: unit
 
-`IR`の`文`は常に、具体的な値を二重引用符で書き、バッククォートでは`用語`と`ID`だけを囲む。
+A `statement` of the `IR` always writes concrete values in double quotes, and encloses only `term` and `ID` in backquotes.
 
-### REQ-core-116: 閉じないバッククォート
+### REQ-core-116: Unclosed backquotes
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A116, docs/decision/records/records.md#A138, docs/decision/records/records.md#A145
 - verification: unit
 
-`対象の行`の二重引用符の外のバッククォートの数が奇数のとき、kotowari は行の文字を detail にして unclosed_backtick の`誤り`を出し、その行では`用語`と`ID`の参照の検査を行わず、`曖昧語`の検査は行う。
+When the number of backquotes outside double quotes in a `target line` is odd, kotowari raises an unclosed_backtick `error` with the line's text as detail, does not perform the reference check of `term` and `ID` on that line, and does perform the `vague word` check.
 
-### REQ-core-117: 用語集の表の範囲
+### REQ-core-117: The extent of the glossary table
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A112, docs/decision/records/records.md#A141, docs/decision/records/records.md#A148, docs/decision/records/2026-09-16-ir-tree.md#A3, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/2026-09-23-ir-engine-gaps.md#A27, docs/decision/records/2026-09-23-ir-engine-gaps.md#A39, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 - verification: unit
 
-`用語集`の表は、各セルの前後の空白を除いて "Term"、"Meaning"、"Source" の3列と一致するヘッダの行と、各セルが3つ以上の "-"（前後に ":" があってもよい）の区切りの行から始まる表のうち、`用語集`の文書の題名の後、最初の "## " の見出しより前で最初に現れるものであり、空行か表でない行で終わる。それより前にあるヘッダの合わない表も、後にある表も、ヘッダが合うかどうかに依らず`用語`にも`指摘`にもしない（`除外`）。表の外の "|" で始まる行は`用語`にしない。`用語集`の文書があるのにこの形のヘッダと区切りの行が無いとき、kotowari は文書名を detail にして glossary_invalid の`誤り`を出し、その`用語集`の`用語`を0語として扱い、`連鎖`のほかの`用語集`の`用語`は見えたままで検査を続ける。ヘッダと区切りの行があれば、`用語`の行が0でも表はあるものとして扱う。
+The table of a `glossary` is, among the tables that start with a header row that matches the three columns "Term", "Meaning" and "Source" once the surrounding whitespace of each cell is removed, followed by a delimiter row whose every cell is three or more "-" (optionally with ":" before or after), the first one that appears after the title of the `glossary` document and before the first "## " heading; it ends at a blank line or a line that is not part of a table. Neither a table with a non-matching header before it nor any table after it, whether or not its header matches, is made into a `term` or a `finding` (`exclusion`). A line starting with "|" outside the table is not made into a `term`. When a `glossary` document exists but has no header and delimiter rows of this form, kotowari raises a glossary_invalid `error` with the document name as detail, treats that `glossary` as having zero `term` entries, and continues the check with the `term` entries of the other `glossary` files in the `chain` still visible. When the header and delimiter rows exist, the table is treated as present even with zero `term` rows.
 
-### REQ-core-122: 用語集の表の崩れた行
+### REQ-core-122: Broken rows of the glossary table
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A153, docs/decision/records/records.md#A163, docs/decision/records/2026-09-23-ir-engine-gaps.md#A6, docs/decision/records/2026-09-23-ir-engine-gaps.md#A16
 - verification: unit
 
-`用語集`の表の中に、セル（行の先頭と末尾の "|" を除いて "|" で分けたもの）が3つ未満の行か`用語`のセルが空の行があるとき、kotowari は行の文字を detail にして invalid_glossary_row の`誤り`を出し、その行を`用語`にしない。セルが4つ以上の行は崩れた行とせず、先頭の3つのセルで`用語`にし、残りのセルを捨てる。
+When the table of a `glossary` has a row with fewer than three cells (the parts split by "|" after removing the "|" at the start and end of the row) or a row whose `term` cell is empty, kotowari raises an invalid_glossary_row `error` with the row's text as detail, and does not make that row into a `term`. A row with four or more cells is not a broken row; it is made into a `term` from its first three cells, and the remaining cells are discarded.
 
-### REQ-core-123: 用語の重複
+### REQ-core-123: Duplicate terms
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A154, docs/decision/records/records.md#A162, docs/decision/records/2026-09-16-ir-tree.md#A4
 - verification: unit
 
-`用語集`の表の行の`用語`が、同じ`用語集`の前の行か、その`用語集`の`連鎖`の根に近い側の`用語集`にあるとき、kotowari はその行ごとに`用語`を detail にして duplicate_term の`誤り`を出し、重複した行は`用語`の定義に数えない。その語は根に近い側の1つ目の定義によって`用語`として見えたままで、新しい種類の`指摘`は作らない。重複した行は`項目`として扱わず、`出典`の検査（missing_source、source_invalid）も受けない。
+When the `term` of a row of the table of a `glossary` is in an earlier row of the same `glossary`, or in a `glossary` on the side nearer the root of that `glossary`'s `chain`, kotowari raises a duplicate_term `error` for each such row with the `term` as detail, and does not count the duplicate row as a definition of a `term`. The word stays visible as a `term` through the first definition on the side nearer the root, and no new kind of `finding` is created. A duplicate row is not treated as an `item`, and does not undergo the `source` checks (missing_source, source_invalid) either.
 
 ## Examples
 
 ```gherkin
 @id=EX-core-027 @about=REQ-core-123 @source=docs/decision/records/2026-09-16-ir-tree.md#A4
-Scenario: 連鎖の上と下で同じ用語を定義したら下の行に出る
-  Given "docs/ir/CONTEXT.md" と "docs/ir/network/CONTEXT.md" の両方に "宛先" の行がある
-  When "kotowari check" を実行する
-  Then "docs/ir/network/CONTEXT.md" の行に duplicate_term の誤りが1件出て、"docs/ir/CONTEXT.md" には出ず、"docs/ir/network/" の文書で "宛先" を囲んでも unknown_term は出ない
+Scenario: Defining the same term above and below in the chain raises it on the lower row
+  Given both "docs/ir/CONTEXT.md" and "docs/ir/network/CONTEXT.md" have a row for "宛先"
+  When "kotowari check" is run
+  Then one duplicate_term error is raised on the row of "docs/ir/network/CONTEXT.md" and none on "docs/ir/CONTEXT.md", and enclosing "宛先" in a document of "docs/ir/network/" raises no unknown_term
 
 @id=EX-core-270 @about=REQ-core-117,REQ-core-174 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A25,docs/decision/records/2026-09-23-ir-engine-gaps.md#A27
-Scenario: ヘッダの合う最初の表を用語集の表にする
-  Given "CONTEXT.md" に、ヘッダが "a"、"b"、"c" の表と、"宛先" の行を持つヘッダの合う表と、"経路" の行を持つヘッダの合う2つ目の表が、それぞれ空行を挟んでこの順にある
-  And 別の文書の`要求`の`文`でバッククォートで囲んだ "宛先" と "経路" がある
-  When "kotowari check --format json" を実行する
-  Then "CONTEXT.md" には glossary_invalid も invalid_glossary_row も unknown_line も出ない
-  And "宛先" には unknown_term が出ず、"経路" には unknown_term が出る
+Scenario: The first table with a matching header is the glossary table
+  Given "CONTEXT.md" has, in this order and each separated by a blank line, a table whose header is "a", "b", "c", a table with a matching header that has a row for "宛先", and a second table with a matching header that has a row for "経路"
+  And a `statement` of a `requirement` in another document has "宛先" and "経路" enclosed in backquotes
+  When "kotowari check --format json" is run
+  Then "CONTEXT.md" raises neither glossary_invalid, invalid_glossary_row nor unknown_line
+  And "宛先" raises no unknown_term, and "経路" raises unknown_term
 
 @id=EX-core-271 @about=REQ-core-117 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A25
-Scenario: ヘッダの合う表が1つも無ければ用語集は無効になる
-  Given "CONTEXT.md" に、ヘッダが "a"、"b"、"c" の表だけがある
-  When "kotowari check --format json" を実行する
-  Then "CONTEXT.md" に glossary_invalid の誤りが1件出る
+Scenario: Without a single table with a matching header the glossary is invalid
+  Given "CONTEXT.md" has only a table whose header is "a", "b", "c"
+  When "kotowari check --format json" is run
+  Then one glossary_invalid error is raised on "CONTEXT.md"
 
 @id=EX-core-272 @about=REQ-core-122 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A6,docs/decision/records/2026-09-23-ir-engine-gaps.md#A16
-Scenario: 4列の行は先頭の3列で用語になる
-  Given "CONTEXT.md" の`用語集`の表に、`用語`のセルが "宛先" で正しい出典のセルの後に4つ目のセルを持つ行と、セルが2つの行がある
-  When "kotowari check --format json" を実行する
-  Then 4つのセルの行には`指摘`が出ず、"宛先" は`用語`として見える
-  And セルが2つの行に invalid_glossary_row の誤りが1件出る
+Scenario: A four-column row becomes a term from its first three columns
+  Given the table of the `glossary` of "CONTEXT.md" has a row whose `term` cell is "宛先" and that has a fourth cell after a correct source cell, and a row with two cells
+  When "kotowari check --format json" is run
+  Then no `finding` is raised for the four-cell row, and "宛先" is visible as a `term`
+  And one invalid_glossary_row error is raised on the two-cell row
 ```

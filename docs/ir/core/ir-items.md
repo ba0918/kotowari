@@ -1,161 +1,163 @@
-# 項目の形
+# The form of items
 
-要求、決定表、性質、シナリオ、問題の記録の形と、見出しの下の行の検査を扱う。
+English | [日本語](ir-items.ja.md)
+
+Covers the form of requirements, decision tables, properties, scenarios and flag records, and the checks of the lines under a heading.
 
 ## Requirements
 
-### REQ-core-042: 項目の形
+### REQ-core-042: The form of items
 
 - kind: algorithm
 - source: docs/decision/records/records.md#A27, docs/decision/records/records.md#A28, docs/decision/records/records.md#A42, docs/decision/records/records.md#A52
 - definition: TBL-core-011
 - verification: unit
 
-### REQ-core-043: 形に合わない見出し
+### REQ-core-043: A heading that does not fit the form
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A52, docs/decision/records/records.md#A82, docs/decision/records/records.md#A111, docs/decision/records/2026-09-22-ir-engine.md#A84, docs/decision/records/2026-09-24-review8-gaps.md#A2
 - verification: unit
 
-"### " の見出しが、REQ、TBL、PROP、FLAG のいずれかの`ID`に名前を続けた "### ID: 名前" の形でないとき（":" の後に名前が無いときを含む）、kotowari は unknown_heading の`誤り`を出す。EX の`ID`を見出しに使ったとき、および "#### " より深い見出しのときも同じである。形に合わない見出しの下の行も`項目`の規則で読み、当てはまる`指摘`を出す。
+When a "### " heading is not of the form "### ID: name", an `ID` of REQ, TBL, PROP or FLAG followed by a name (including when there is no name after ":"), kotowari raises an unknown_heading `error`. The same applies when an `ID` of EX is used in a heading, and to headings deeper than "#### ". The lines under a heading that does not fit the form are also read by the rules of an `item`, and the applicable findings are raised.
 
-### REQ-core-044: 知らない行
+### REQ-core-044: Unknown lines
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A42, docs/decision/records/records.md#A52, docs/decision/records/records.md#A81, docs/decision/records/ir-form.md#項目, docs/decision/records/records.md#A87, docs/decision/records/records.md#A111, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-24-review3-gaps.md#A2
 - verification: unit
 
-見出しの下に知らない "- xxx:" の行、または "xxx:" の形でない一覧の行（"- "、"* "、"+ "、数字と "." か ")" で始まる行、および "-" だけの行）があるとき、kotowari は読んだ行の文字をそのまま detail にして unknown_field の`誤り`を出す。知らない行の中身は読まない（`ID` が書かれていても参照にしない）。知っている行は`項目`の種類ごとに TBL-core-011 の「持つ行」の列にあるものだけで、`性質`なら "- source:" だけである。
+When there is an unknown "- xxx:" line under a heading, or a list line not of the "xxx:" form (a line starting with "- ", "* ", "+ ", or digits followed by "." or ")", and a line of only "-"), kotowari raises an unknown_field `error` with the characters of the line as read as the detail. It does not read the contents of an unknown line (even if an `ID` is written there, it is not taken as a reference). The known lines are, for each kind of `item`, only those in the "lines it has" column of TBL-core-011; for a `property`, only "- source:".
 
-### REQ-core-045: 同じ行の重複
+### REQ-core-045: Duplicates of the same line
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A52, docs/decision/records/records.md#A113, docs/decision/records/2026-09-22-ir-engine.md#A75, docs/decision/records/2026-09-24-review8-gaps.md#A3
 - verification: unit
 
-見出しの下に同じ知っている "- xxx:" の行が2つ以上あるとき、kotowari は2つ目の行に1件の duplicate_field の`誤り`を出す。3本以上あっても1件である。読むのは1つ目の行の値で、2つ目以降の行の値は読まない。知らない行は重複しても unknown_field だけを出す。
+When there are two or more of the same known "- xxx:" line under a heading, kotowari raises one duplicate_field `error` on the second line. Even with three or more it is one. The value read is that of the first line; the values of the second and later lines are not read. Unknown lines raise only unknown_field even when duplicated.
 
-### REQ-core-046: 見出しの下の行の読み方
+### REQ-core-046: How the lines under a heading are read
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A42, docs/decision/records/records.md#A52, docs/decision/records/ir-form.md#項目, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-25-deferred-items.md#A2
 - verification: unit
 
-kotowari は常に、見出しの下の "- " の行を順不同で読み、行の間の空行を許し、"- definition:"、"- related:"、"- source:"、"- deferred:" の値をコンマで区切って読む。
+kotowari always reads the "- " lines under a heading in any order, allows blank lines between them, and reads the values of "- definition:", "- related:", "- source:" and "- deferred:" separated by commas.
 
-### REQ-core-178: 文を1行ずつ読む
+### REQ-core-178: Statements are read one line at a time
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-23-ir-engine-gaps.md#A1, docs/decision/records/2026-09-23-ir-engine-gaps.md#A2, docs/decision/records/2026-09-23-ir-engine-gaps.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A21, docs/decision/records/2026-09-23-ir-engine-gaps.md#A22, docs/decision/records/2026-09-23-ir-engine-gaps.md#A26, docs/decision/records/2026-09-23-ir-engine-gaps.md#A35, docs/decision/records/2026-09-23-ir-engine-gaps.md#A38, docs/decision/records/2026-09-23-ir-engine-gaps.md#A43
 - verification: unit
 
-kotowari は常に、取り込んだスキーマの宣言（REQ-core-179）によって、見出しの下の、一覧の行でも表の行でもない空でない行を1行ずつ`文`として読む。"- 名前:" の行とほかの一覧の行は1行で終わり、その直後に空行なしで続く行も、空行の後に字下げして続く一覧でない行も`文`として読み、一覧の行の値に含めない。字下げした一覧の行は一覧の行として読む。引用、水平線、HTML、画像の行と、区切りの行を持たず表にならない "|" で始まる行も`文`として読む。見出しは CommonMark の ATX 見出しの行（行頭の空白は3つまで、"#" は1〜6個、その後が空白か行末）だけで、"---" か "===" だけの行はその前の行とともに`文`である。`コードブロック`は囲みの行で始まるものだけで、空行の後に4つ以上の空白で字下げした行は`文`である。
+kotowari always, by the declarations of the embedded schemas (REQ-core-179), reads each non-blank line under a heading that is neither a list line nor a table line as a `statement`, one line at a time. A "- name:" line and other list lines end at one line; a line that follows directly after one without a blank line, and an indented non-list line that follows after a blank line, are also read as a `statement` and are not included in the value of the list line. An indented list line is read as a list line. Quote, horizontal rule, HTML and image lines, and lines starting with "|" that have no delimiter row and do not form a table, are also read as a `statement`. Headings are only CommonMark ATX heading lines (at most three spaces at the line head, one to six "#", followed by whitespace or the end of the line); a line of only "---" or "===" is a `statement` together with the line before it. A `code block` is only one that starts with a fence line; a line indented by four or more spaces after a blank line is a `statement`.
 
-### REQ-core-047: 文が無い
+### REQ-core-047: No statement
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A131, docs/decision/records/2026-09-22-ir-engine.md#A75, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 - verification: unit
 
-種類が "algorithm" 以外の`要求`（"- kind:" の行が無い`要求`を含む）、`性質`、または`問題の記録`の`項目`に`文`が無いとき、kotowari は missing_statement の`誤り`を出す。
+When a `requirement` whose kind is other than "algorithm" (including a `requirement` with no "- kind:" line), a `property`, or the `item` of a `flag record` has no `statement`, kotowari raises a missing_statement `error`.
 
-### REQ-core-048: 検証の行が無い
+### REQ-core-048: No verification line
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A21, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 - verification: unit
 
-`要求`に "- verification:" の行が無いとき、kotowari は verification_missing の`誤り`を出す。
+When a `requirement` has no "- verification:" line, kotowari raises a verification_missing `error`.
 
-### REQ-core-049: 検証の値の誤り
+### REQ-core-049: An invalid verification value
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A21, docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#検査の種類
 - verification: unit
 
-`要求`の検証の値が "unit"、"property"、"proof"、"review" のいずれでもないとき、kotowari は verification_invalid の`誤り`を出す。
+When the verification value of a `requirement` is none of "unit", "property", "proof" and "review", kotowari raises a verification_invalid `error`.
 
-### REQ-core-050: 種類の値の誤り
+### REQ-core-050: An invalid kind value
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A28, docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#検査の種類
 - verification: unit
 
-`要求`か`問題の記録`の`項目`の種類が TBL-core-011 で決めた値でないとき、kotowari は unknown_kind の`誤り`を出す。
+When the kind of a `requirement` or of the `item` of a `flag record` is not a value decided in TBL-core-011, kotowari raises an unknown_kind `error`.
 
-### REQ-core-051: 定義の無い algorithm
+### REQ-core-051: An algorithm without a definition
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A21, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-22-ir-engine.md#A71, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 - verification: unit
 
-種類が "algorithm" の`要求`に、`決定表`か`性質`を指す "- definition:" の行が無いとき（行そのものが無いときを含む）、kotowari は algorithm_without_definition の`誤り`を出す。
+When a `requirement` whose kind is "algorithm" has no "- definition:" line pointing at a `decision table` or a `property` (including when the line itself is missing), kotowari raises an algorithm_without_definition `error`.
 
 ## Decision tables
 
-### TBL-core-011: 項目の形
+### TBL-core-011: The form of items
 
 - source: docs/decision/records/records.md#A27, docs/decision/records/records.md#A28, docs/decision/records/records.md#A42, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#文書, docs/decision/records/2026-09-19-read-commands.md#A5, docs/decision/records/2026-09-19-read-commands.md#A11, docs/decision/records/2026-09-20-query-status.md#A10, docs/decision/records/2026-09-23-ir-engine-gaps.md#A4, docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-24-review8-gaps.md#A1, docs/decision/records/2026-09-25-deferred-items.md#A1, docs/decision/records/2026-09-25-deferred-items.md#A2
 
-| 項目 | 置く場所 | 見出し | 持つ行 | 文 |
+| Item | Where it is placed | Heading | Lines it has | Statements |
 |---|---|---|---|---|
-| 要求 | ## Requirements の下 | ### REQ-nnn: 名前 | - kind:（event_driven、state_driven、ubiquitous、prohibition、invariant、algorithm）、- source:、- verification:（unit、property、proof、review）、- definition:（algorithm では持ち、ほかはあってもよい）、- how_to_verify:（"- verification:" が review なら持つ。ほかはあってもよい。人か LLM が確かめる手順の自由文）、- deferred:（`後回し`にするときだけ持つ。出典のコンマ区切り） | algorithm 以外は持つ。algorithm は持たなくてよく、持ってもよい |
-| 決定表 | ## Decision tables の下 | ### TBL-nnn: 名前 | - source: と Markdown の表 | 持たなくてよく、持ってもよい（表を持つ） |
-| 性質 | ## Properties の下 | ### PROP-nnn: 名前 | - source: | 持つ |
-| シナリオ | ## Examples の下の gherkin のコードブロック | Scenario: の行 | 直前の行のタグ @id=EX-nnn、@about=ID,...、@source=出典,... | なし（ステップの行を持つ） |
-| 問題の記録 | 問題の記録の文書の ## Flags の下か、節を挟まずに文書の直下（同じ文書に両方があってもよい） | ### FLAG-nnn: 名前 | - kind:（contradiction、gap、ambiguity）、- related:（ID のコンマ区切り）、- source: | 本文を持つ |
-| 用語 | 用語集の文書 | Term、Meaning、Source の3列のヘッダを持つ最初の表の行（REQ-core-117） | なし | なし（意味の列を持つ） |
+| Requirement | Under ## Requirements | ### REQ-nnn: name | - kind: (event_driven, state_driven, ubiquitous, prohibition, invariant, algorithm), - source:, - verification: (unit, property, proof, review), - definition: (present for algorithm; others may have it), - how_to_verify: (present when "- verification:" is review; others may have it; free text of the procedure a person or an LLM follows to confirm), - deferred: (present only when put under `deferral`; sources separated by commas) | Present except for algorithm. An algorithm need not have them, and may have them |
+| Decision table | Under ## Decision tables | ### TBL-nnn: name | - source: and a Markdown table | Need not have them, and may have them (it has a table) |
+| Property | Under ## Properties | ### PROP-nnn: name | - source: | Present |
+| Scenario | In a gherkin code block under ## Examples | The Scenario: line | The tags on the line just before: @id=EX-nnn, @about=ID,..., @source=source,... | None (it has step lines) |
+| Flag record | Under ## Flags of a flag record document, or directly under the document with no section in between (the same document may have both) | ### FLAG-nnn: name | - kind: (contradiction, gap, ambiguity), - related: (IDs separated by commas), - source: | Has a body |
+| Term | A glossary document | A row of the first table with a three-column header of Term, Meaning and Source (REQ-core-117) | None | None (it has the meaning column) |
 
 ## Examples
 
 ```gherkin
 @id=EX-core-290 @about=REQ-core-043 @source=docs/decision/records/2026-09-24-review8-gaps.md#A2
-Scenario: 名前の無い見出しは形に合わない
-  Given "### REQ-001:" の見出しの下に、必要な行と文を持つ`要求`がある
-  When "kotowari check" を実行する
-  Then その見出しの行に unknown_heading が出て、"REQ-001" は定義に数えない
+Scenario: A heading without a name does not fit the form
+  Given under the heading "### REQ-001:" there is a `requirement` with the required lines and a statement
+  When "kotowari check" is run
+  Then unknown_heading is raised on that heading line, and "REQ-001" is not counted as defined
 
 @id=EX-core-291 @about=TBL-core-011 @source=docs/decision/records/2026-09-24-review8-gaps.md#A1
-Scenario: algorithm の要求と決定表は文を持ってもよい
-  Given 文を持つ algorithm の`要求`と、表の前に文を持つ`決定表`がある
-  When "kotowari check" を実行する
-  Then 形の`指摘`は出ない
+Scenario: An algorithm requirement and a decision table may have statements
+  Given there are an algorithm `requirement` with a statement and a `decision table` with a statement before its table
+  When "kotowari check" is run
+  Then no `finding` on the form is raised
 
 @id=EX-core-292 @about=REQ-core-045 @source=docs/decision/records/2026-09-24-review8-gaps.md#A3
-Scenario: 同じ行が2つあるときは1つ目の値を読む
-  Given "- kind: algorithm" の後に "- kind: ubiquitous" を持ち、文も定義も無い`要求`がある
-  When "kotowari check" を実行する
-  Then duplicate_field と algorithm_without_definition が出て、missing_statement は出ない
+Scenario: When the same line appears twice, the value of the first is read
+  Given there is a `requirement` that has "- kind: algorithm" followed by "- kind: ubiquitous", and has neither a statement nor a definition
+  When "kotowari check" is run
+  Then duplicate_field and algorithm_without_definition are raised, and missing_statement is not raised
 
 @id=EX-core-008 @about=REQ-core-044 @source=docs/decision/records/records.md#A42
-Scenario: 知らない行は誤りになる
-  Given `要求`の見出しの下に "- 優先度: 高" の行がある
-  When "kotowari check" を実行する
-  Then unknown_field の誤りが1件出る
+Scenario: An unknown line is an error
+  Given there is a line "- 優先度: 高" under the heading of a `requirement`
+  When "kotowari check" is run
+  Then one unknown_field error is raised
 
 @id=EX-core-273 @about=REQ-core-178 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A1,docs/decision/records/2026-09-23-ir-engine-gaps.md#A13,docs/decision/records/2026-09-23-ir-english-tokens.md#A2,docs/decision/records/ir-form.md#検査の種類
-Scenario: 行の直後に続く文は行の値に入らない
-  Given 検証が "review" の`要求`で、"- how_to_verify: 見る" の次の行に空行を挟まずに`文`があり、"- verification: review" の次の行にも空行を挟まずに`文`がある
-  When "kotowari check --format json" を実行する
-  Then その`要求`に missing_statement も verification_invalid も requirement_without_test も出ない
+Scenario: A statement directly after a line is not part of the line's value
+  Given in a `requirement` whose verification is "review", a `statement` is on the line after "- how_to_verify: 見る" with no blank line between, and a `statement` is also on the line after "- verification: review" with no blank line between
+  When "kotowari check --format json" is run
+  Then none of missing_statement, verification_invalid and requirement_without_test is raised for that `requirement`
 
 @id=EX-core-274 @about=REQ-core-178 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A2,docs/decision/records/2026-09-23-ir-engine-gaps.md#A5,docs/decision/records/2026-09-23-ir-engine-gaps.md#A13,docs/decision/records/2026-09-23-ir-english-tokens.md#A2
-Scenario: 字下げした行と引用と HTML の行の閉じないバッククォートは誤りになる
-  Given `要求`の "- source:" の行の後に空行を挟んで字下げした行があり、その下に引用の行と HTML の行があり、3つの行にはどれも閉じないバッククォートがある
-  When "kotowari check --format json" を実行する
-  Then 3つの行のそれぞれに unclosed_backtick の誤りが1件ずつ出る
+Scenario: An unclosed backquote in an indented line, a quote and an HTML line is an error
+  Given after the "- source:" line of a `requirement` there is, after a blank line, an indented line, below it a quote line and an HTML line, and each of the three lines has an unclosed backquote
+  When "kotowari check --format json" is run
+  Then one unclosed_backtick error is raised on each of the three lines
 
 @id=EX-core-275 @about=REQ-core-178 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A26
-Scenario: 表にならない縦棒の行は文として検査を受ける
-  Given `要求`の下に、区切りの行を持たず閉じないバッククォートを含む "| a |" で始まる行がある
-  When "kotowari check --format json" を実行する
-  Then その行に unclosed_backtick の誤りが1件出て、unknown_line は出ない
+Scenario: A vertical-bar line that does not form a table is checked as a statement
+  Given under a `requirement` there is a line starting with "| a |" that has no delimiter row and contains an unclosed backquote
+  When "kotowari check --format json" is run
+  Then one unclosed_backtick error is raised on that line, and unknown_line is not raised
 
 @id=EX-core-276 @about=REQ-core-042,TBL-core-011 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A4,docs/decision/records/2026-09-23-ir-engine-gaps.md#A15,docs/decision/records/2026-09-23-ir-english-tokens.md#A2
-Scenario: 節の無い問題の記録の項目も読む
-  Given "FLAGS.md" に "## Flags" の節が無く、`題名`の後に "### FLAG-001: 例" の`項目`と、その "- kind:"、"- related:"、"- source:" の行と本文がある
-  And 別の "FLAGS.md" に、節の無い "### FLAG-002: 例" と、"## Flags" の下の "### FLAG-003: 例" がある
-  When "kotowari check --format json" を実行する
-  Then unknown_heading も unknown_field も unknown_line も出ない
-  And "kotowari status" の問題の記録の項目の数は3である
+Scenario: The items of a flag record without a section are read too
+  Given "FLAGS.md" has no "## Flags" section, and after the `title` there is the `item` "### FLAG-001: 例" with its "- kind:", "- related:" and "- source:" lines and a body
+  And another "FLAGS.md" has "### FLAG-002: 例" with no section and "### FLAG-003: 例" under "## Flags"
+  When "kotowari check --format json" is run
+  Then none of unknown_heading, unknown_field and unknown_line is raised
+  And the number of flag record items in "kotowari status" is 3
 ```

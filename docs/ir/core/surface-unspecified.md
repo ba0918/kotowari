@@ -1,84 +1,86 @@
-# 未記載の面の一覧
+# List of unspecified surfaces
 
-`未記載の面の一覧`の置き場と形、`面`との一致の取り方、一覧の1件への`指摘`を扱う。
+English | [日本語](surface-unspecified.ja.md)
+
+Covers the place and form of the `list of unspecified surfaces`, how its entries are matched with a `surface`, and the `finding` entries on one entry of the list.
 
 ## Requirements
 
-### REQ-core-231: 一覧の置き場
+### REQ-core-231: The place of the list
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-27-surface-check.md#A4, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-09-27-surface-check.md#A24
 - verification: unit
 
-"kotowari check" か "kotowari status" で "surface.rules" が空の一覧でなく、設定に "surface.unspecified" の鍵が無いとき、または指す先が空（0バイトか注釈だけ）のとき、kotowari は`未記載の面の一覧`を0件として続ける。鍵の指す先が無いか読めないとき、kotowari は読めないファイルを理由に`停止`する。指す先が UTF-8 でないとき、kotowari は UTF-8 でないファイルを理由に`停止`する。指す先が YAML として読めないとき、または最上位が並びでないとき、kotowari は設定の誤りを理由に`停止`し、詳細に`未記載の面の一覧`のファイルの相対パスを出す。"surface.rules" が空の一覧で "surface.unspecified" の鍵があるときは REQ-core-225 のとおり`停止`する。
+In "kotowari check" or "kotowari status", when "surface.rules" is not an empty list and the configuration has no "surface.unspecified" key, or when what it points at is empty (0 bytes or only comments), kotowari continues with the `list of unspecified surfaces` as zero entries. When what the key points at is missing or cannot be read, kotowari makes a `stop` with an unreadable file as the reason. When what it points at is not UTF-8, kotowari makes a `stop` with a non-UTF-8 file as the reason. When what it points at cannot be read as YAML, or when its top level is not a sequence, kotowari makes a `stop` with a configuration error as the reason, and outputs in the detail the relative path of the file of the `list of unspecified surfaces`. When "surface.rules" is an empty list and there is a "surface.unspecified" key, it makes a `stop` as in REQ-core-225.
 
-### REQ-core-232: 一覧の1件との一致
+### REQ-core-232: Matching an entry of the list
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-27-surface-check.md#A4, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A22
 - verification: unit
 
-kotowari は常に、形の正しい`未記載の面の一覧`の1件を、"kind" が`面`の種類と、"name" が`面`の名前と、前後の空白を除かずにどちらも同じ文字列のときにその`面`に一致とし、一致した`面`が`IR`になくても surface_without_spec の`誤り`を出さない。同じ内容の1件が2つ以上あること自体は検査しない。
+kotowari always takes a well-formed entry of the `list of unspecified surfaces` to match a `surface` when "kind" and the kind of the `surface`, and "name" and the name of the `surface`, are both the same strings without removing surrounding whitespace, and does not raise an `error` of surface_without_spec for a matched `surface` even when it is not in the `IR`. Two or more entries with the same content are not in themselves checked.
 
-### REQ-core-233: 形の誤った1件
+### REQ-core-233: A malformed entry
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-27-surface-check.md#A4, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A14, docs/decision/records/2026-09-27-surface-check.md#A15, docs/decision/records/2026-09-27-surface-check.md#A22
 - verification: unit
 
-"kotowari check" か "kotowari status" で、`未記載の面の一覧`の1件が鍵と値の組でないとき、"kind"、"name"、"why" のいずれかの鍵が無いとき、この3つ以外の鍵を持つとき、値が文字列でないとき、または "why" が前後の半角空白とタブを除いて空のとき、kotowari は "path" を`未記載の面の一覧`のファイル、"line" を null、detail を一覧に書かれたままの "kind" と "name" を1つの半角空白で区切った文字列にして surface_unspecified_invalid の`誤り`を1件ごとに出し、その1件をどの`面`とも一致させない。detail の "kind" と "name" は、無いか文字列でなければ空の文字列にする。
+In "kotowari check" or "kotowari status", when an entry of the `list of unspecified surfaces` is not a set of key-value pairs, when any of the keys "kind", "name" and "why" is missing, when it has a key other than these three, when a value is not a string, or when "why" is empty after removing leading and trailing half-width spaces and tabs, kotowari raises, per entry, an `error` of surface_unspecified_invalid with "path" set to the file of the `list of unspecified surfaces`, "line" set to null, and detail set to the "kind" and "name" as written in the list, separated by one half-width space, and does not let that entry match any `surface`. The "kind" and "name" of the detail are empty strings when missing or not a string.
 
-### REQ-core-234: 要らなくなった1件
+### REQ-core-234: An entry no longer needed
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A14, docs/decision/records/2026-09-27-surface-check.md#A15, docs/decision/records/2026-09-27-surface-check.md#A22
 - verification: unit
 
-"kotowari check" か "kotowari status" で、形の正しい`未記載の面の一覧`の1件に一致する`面`が1つも無いとき、または一致する`面`が`IR`にあるとき、kotowari は "path" を`未記載の面の一覧`のファイル、"line" を null、detail を一覧に書かれたままの "kind" と "name" を1つの半角空白で区切った文字列にして surface_unspecified_stale の`注意`を1件ごとに出す。形の誤った1件には出さない。
+In "kotowari check" or "kotowari status", when no `surface` matches a well-formed entry of the `list of unspecified surfaces`, or when the matching `surface` is in the `IR`, kotowari raises, per entry, a `notice` of surface_unspecified_stale with "path" set to the file of the `list of unspecified surfaces`, "line" set to null, and detail set to the "kind" and "name" as written in the list, separated by one half-width space. It is not raised for a malformed entry.
 
 ## Examples
 
 ```gherkin
 @id=EX-core-419 @about=REQ-core-232,REQ-core-228 @source=docs/decision/records/2026-09-27-surface-check.md#A4,docs/decision/records/2026-09-27-surface-check.md#A6,docs/decision/records/2026-09-27-surface-check.md#A15,docs/decision/records/2026-09-27-surface-check.md#A16,docs/decision/records/2026-09-27-surface-check.md#A22
-Scenario: 一覧に載った面は誤りにならず、外した件数に数える
-  Given EX-core-408 の場面で、`未記載の面の一覧`に "kind" が "flag"、"name" が "--verbose"、"why" が空でない1件がある
-  When "kotowari check --format json" を実行する
-  Then surface_without_spec の誤りは出ず、JSON の "surface" の "unspecified" は 1 で、終了コードは 0 である
+Scenario: A surface in the list is not an error and is counted among those set aside
+  Given in the scene of EX-core-408, the `list of unspecified surfaces` has one entry whose "kind" is "flag", whose "name" is "--verbose", and whose "why" is not empty
+  When "kotowari check --format json" is run
+  Then no error of surface_without_spec is raised, "unspecified" of "surface" in the JSON is 1, and the exit code is 0
 
 @id=EX-core-420 @about=REQ-core-232 @source=docs/decision/records/2026-09-27-surface-check.md#A6,docs/decision/records/2026-09-27-surface-check.md#A15,docs/decision/records/2026-09-27-surface-check.md#A22
-Scenario: 種類の違う1件は一致しない
-  Given EX-core-419 の場面で、`未記載の面の一覧`の1件の "kind" が "subcommand" である
-  When "kotowari check --format json" を実行する
-  Then detail が "flag --verbose" の surface_without_spec の誤りが出る
+Scenario: An entry of a different kind does not match
+  Given in the scene of EX-core-419, the "kind" of the entry of the `list of unspecified surfaces` is "subcommand"
+  When "kotowari check --format json" is run
+  Then an error of surface_without_spec with detail "flag --verbose" is raised
 
 @id=EX-core-421 @about=REQ-core-233 @source=docs/decision/records/2026-09-27-surface-check.md#A4,docs/decision/records/2026-09-27-surface-check.md#A6,docs/decision/records/2026-09-27-surface-check.md#A15,docs/decision/records/2026-09-27-surface-check.md#A22
-Scenario: 理由が空白だけの1件は誤りで、面を外さない
-  Given EX-core-419 の場面で、`未記載の面の一覧`の1件の "why" が半角空白だけである
-  When "kotowari check --format json" を実行する
-  Then "line" が null で detail が "flag --verbose" の surface_unspecified_invalid の誤りと、detail が "flag --verbose" の surface_without_spec の誤りが出る
-  And surface_unspecified_stale の注意は出ない
+Scenario: An entry whose reason is only whitespace is an error and does not set the surface aside
+  Given in the scene of EX-core-419, the "why" of the entry of the `list of unspecified surfaces` is only half-width spaces
+  When "kotowari check --format json" is run
+  Then an error of surface_unspecified_invalid whose "line" is null and whose detail is "flag --verbose", and an error of surface_without_spec with detail "flag --verbose" are raised
+  And no notice of surface_unspecified_stale is raised
 
 @id=EX-core-422 @about=REQ-core-234 @source=docs/decision/records/2026-09-27-surface-check.md#A6,docs/decision/records/2026-09-27-surface-check.md#A15,docs/decision/records/2026-09-27-surface-check.md#A22
-Scenario: コードから消えた面の1件は注意になる
-  Given `未記載の面の一覧`に "kind" が "flag"、"name" が "--old" の形の正しい1件があり、どの`面のファイル`にも名前が "--old" の`面`が無い
-  When "kotowari check --format json" を実行する
-  Then "line" が null で detail が "flag --old" の surface_unspecified_stale の注意が出る
+Scenario: An entry for a surface gone from the code is a notice
+  Given the `list of unspecified surfaces` has a well-formed entry whose "kind" is "flag" and whose "name" is "--old", and no `surface file` has a `surface` named "--old"
+  When "kotowari check --format json" is run
+  Then a notice of surface_unspecified_stale whose "line" is null and whose detail is "flag --old" is raised
 
 @id=EX-core-423 @about=REQ-core-234 @source=docs/decision/records/2026-09-27-surface-check.md#A6,docs/decision/records/2026-09-27-surface-check.md#A15,docs/decision/records/2026-09-27-surface-check.md#A16,docs/decision/records/2026-09-27-surface-check.md#A22
-Scenario: IR に書いた面の1件は注意になる
-  Given EX-core-419 の場面で、`要求`の`文`に "--verbose" を二重引用符で囲んで書き足した
-  When "kotowari check --format json" を実行する
-  Then detail が "flag --verbose" の surface_unspecified_stale の注意が出て、JSON の "surface" の "unspecified" は 0 である
+Scenario: An entry for a surface written into the IR is a notice
+  Given in the scene of EX-core-419, "--verbose" enclosed in double quotes has been added to a `statement` of a `requirement`
+  When "kotowari check --format json" is run
+  Then a notice of surface_unspecified_stale with detail "flag --verbose" is raised, and "unspecified" of "surface" in the JSON is 0
 
 @id=EX-core-424 @about=REQ-core-231 @source=docs/decision/records/2026-09-27-surface-check.md#A6,docs/decision/records/2026-09-27-surface-check.md#A22
-Scenario: 一覧の指す先が無いと停止する
-  Given EX-core-407 の場面で、設定の "surface.unspecified" が "docs/surface.yaml" で、そのファイルが無い
-  When "kotowari check" を実行する
-  Then 終了コードは 2 で、標準エラーの1行目は "unreadable file: " で始まる
+Scenario: When what the list points at is missing, it stops
+  Given in the scene of EX-core-407, "surface.unspecified" of the configuration is "docs/surface.yaml", and that file does not exist
+  When "kotowari check" is run
+  Then the exit code is 2 and the first line of standard error starts with "unreadable file: "
 
 @id=EX-core-425 @about=REQ-core-231 @source=docs/decision/records/2026-09-27-surface-check.md#A6,docs/decision/records/2026-09-27-surface-check.md#A22
-Scenario: 最上位が並びでない一覧は一覧のパスを出して停止する
-  Given EX-core-407 の場面で、設定の "surface.unspecified" が "docs/surface.yaml" で、その中身が "kind: flag" の1行である
-  When "kotowari check" を実行する
-  Then 終了コードは 2 で、標準エラーの1行目は "config error: docs/surface.yaml" で始まる
+Scenario: A list whose top level is not a sequence stops, showing the list's path
+  Given in the scene of EX-core-407, "surface.unspecified" of the configuration is "docs/surface.yaml", and its content is the one line "kind: flag"
+  When "kotowari check" is run
+  Then the exit code is 2 and the first line of standard error starts with "config error: docs/surface.yaml"
 ```

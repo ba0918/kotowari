@@ -1,94 +1,96 @@
-# 要求とテストの対応
+# Correspondence between requirements and tests
 
-要求と具体例に印のあるテストがあるか、テストに印があるかの検査を扱う。
+English | [日本語](coverage.ja.md)
+
+Covers the check of whether requirements and examples have tests with marks, and whether tests have marks.
 
 ## Requirements
 
-### REQ-core-085: テストのない要求
+### REQ-core-085: Requirements without tests
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A21, docs/decision/records/records.md#A39, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A120, docs/decision/records/2026-09-17-scenario-tests.md#A4, docs/decision/records/2026-09-17-scenario-tests.md#A9, docs/decision/records/2026-09-17-scenario-tests.md#A15, docs/decision/records/2026-09-17-scenario-tests.md#A16, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-25-deferred-items.md#A4
 - verification: unit
 
-検証が "review" 以外の`後回し`でない`要求`で、その`ID`を含む`印`も、"@about" にその`ID`を持つ`シナリオ`の`ID`を含む`印`も1つも無いとき、kotowari は requirement_without_test の`誤り`を出す。同じ`ID`の`シナリオ`が2か所以上にあるときの "@about" は REQ-core-032 の1つ目の`シナリオ`のもの。"- verification:" の行が無い`要求`には verification_missing だけを出し、requirement_without_test は出さない。`後回し`の`要求`には出さない。
+When a `requirement` whose verification is other than "review" and which is not under `deferral` has neither a `mark` containing its `ID` nor a `mark` containing the `ID` of a `scenario` whose "@about" has that `ID`, kotowari emits a requirement_without_test `error`. When a `scenario` with the same `ID` is in two or more places, the "@about" is that of the first `scenario` per REQ-core-032. For a `requirement` with no "- verification:" line, kotowari emits only verification_missing and does not emit requirement_without_test. It is not emitted for a `requirement` under `deferral`.
 
-### REQ-core-086: 印の無いテスト
+### REQ-core-086: Tests without marks
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A21, docs/decision/records/records.md#A24, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-24-multi-language-tests.md#A31, docs/decision/records/2026-09-24-multi-language-tests.md#A42
 - verification: unit
 
-`問い合わせのある言語`の`テスト`に`印`が無いとき、kotowari はその`テスト`の名前を detail にして test_without_id の`誤り`を出す。名前が null なら、`テスト`の節の最初の行の全体の文字から前後の空白を除いたものを detail にする。
+When a `test` in a `language with a query` has no `mark`, kotowari emits a test_without_id `error` with the name of that `test` as the detail. If the name is null, the detail is the whole text of the first line of the `test`'s node with leading and trailing whitespace removed.
 
-### REQ-core-087: 問い合わせの無い言語の対応
+### REQ-core-087: Correspondence for languages without a query
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A24, docs/decision/records/records.md#A39, docs/decision/adr/0002-tree-sitter.md#結果, docs/decision/records/records.md#A51, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-17-scenario-tests.md#A10
 - verification: unit
 
-`問い合わせの無い言語`の`テストのファイル`を読むとき、kotowari は拾った`印`を requirement_without_test と scenario_without_test を消す側に数え、test_without_id を出さない。
+When reading a `test file` of a `language without a query`, kotowari counts each `mark` it picks up toward clearing requirement_without_test and scenario_without_test, and does not emit test_without_id.
 
-### REQ-core-137: テストのない具体例
+### REQ-core-137: Examples without tests
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-17-scenario-tests.md#A2, docs/decision/records/2026-09-17-scenario-tests.md#A3, docs/decision/records/2026-09-17-scenario-tests.md#A6, docs/decision/records/2026-09-17-scenario-tests.md#A8, docs/decision/records/2026-09-17-scenario-tests.md#A11, docs/decision/records/2026-09-17-scenario-tests.md#A14, docs/decision/records/2026-09-17-scenario-tests.md#A15, docs/decision/records/2026-09-17-scenario-tests.md#A16, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-25-deferred-items.md#A3, docs/decision/records/2026-09-25-deferred-items.md#A4
 - verification: unit
 
-"@about" の`ID`のうち`要求`として解決できたものの中に検証の値が "review" 以外で`後回し`でないものが1つでもある`シナリオ`で、その`ID`を含む`印`が1つも無いとき、kotowari は detail をその`ID`にして scenario_without_test の`誤り`を出す。"@about" に`要求`が無い`シナリオ`と、"@about" の`要求`がすべて "review" か`後回し`の`シナリオ`には出さない。"- verification:" の行が無い`要求`と検証の値が4つ以外の`要求`は数えない。"@id" が無い`シナリオ`と invalid_id の`シナリオ`には出さない。同じ`ID`の`シナリオ`が2か所以上にあるときは、REQ-core-032 の1つ目の`シナリオ`の "@about" を使い、`誤り`は1つ目の`シナリオ`のタグの行に1件だけ出す。同じ`ID`を複数の`印`が挙げても、1つの`印`が複数の`ID`を挙げても数は見ない。
+For a `scenario` where, among the "@about" entries whose `ID` resolves as a `requirement`, at least one has a verification value other than "review" and is not under `deferral`, when there is no `mark` containing that `scenario`'s `ID`, kotowari emits a scenario_without_test `error` with that `ID` as the detail. It is not emitted for a `scenario` whose "@about" has no `requirement`, nor for a `scenario` in which every `requirement` of "@about" is "review" or under `deferral`. A `requirement` with no "- verification:" line and a `requirement` whose verification value is not one of the four are not counted. It is not emitted for a `scenario` without "@id" nor for an invalid_id `scenario`. When a `scenario` with the same `ID` is in two or more places, the "@about" of the first `scenario` per REQ-core-032 is used, and the `error` is emitted only once, on the tag line of the first `scenario`. Counts are not considered: it does not matter whether the same `ID` is named by more than one `mark` or one `mark` names more than one `ID`.
 
-### REQ-core-088: IR に文書が無いとき
+### REQ-core-088: When the IR has no documents
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A41, docs/decision/records/records.md#A51
 - verification: unit
 
-`IR`に文書が無いとき、kotowari は`IR`の検査の`指摘`を0件にし、`テスト`との対応の検査を行う。
+When the `IR` has no documents, kotowari reports 0 `finding` items for the check of the `IR` and performs the check of correspondence with each `test`.
 
 ## Examples
 
 ```gherkin
 @id=EX-core-019 @about=REQ-core-088 @source=docs/decision/records/records.md#A51,docs/decision/records/records.md#A29,docs/decision/records/records.md#A26
-Scenario: IR が空でも印の無いテストは挙がる
-  Given `IR`の置き場に文書が無い
-  And "#[test]" の付いた関数が1つあり、`印`が無い
-  When "kotowari check" を実行する
-  Then test_without_id の誤りが1件出る
-  And requirement_without_test の誤りは出ない
-  And 終了コードは 1 である
+Scenario: Even with an empty IR, tests without marks are reported
+  Given there are no documents in the location of the `IR`
+  And there is one function with "#[test]" and no `mark`
+  When "kotowari check" is run
+  Then one test_without_id error is emitted
+  And no requirement_without_test error is emitted
+  And the exit code is 1
 
 @id=EX-core-121 @about=REQ-core-137 @source=docs/decision/records/2026-09-17-scenario-tests.md#A2,docs/decision/records/2026-09-17-scenario-tests.md#A3,docs/decision/records/2026-09-17-scenario-tests.md#A6,docs/decision/records/2026-09-17-scenario-tests.md#A4
-Scenario: 印に挙がっていない具体例は誤りになる
-  Given "docs/ir/a.md" に検証が "unit" の "REQ-001" と "@id=EX-201 @about=REQ-001" のシナリオがあり、"@kotowari[REQ-001]" の印を持つテストはあるが、"EX-201" を含む印がどのテストにも無い
-  When "kotowari check" を実行する
-  Then "line" がそのタグの行で detail が "EX-201" の scenario_without_test の誤りが出る
+Scenario: An example not named by any mark is an error
+  Given "docs/ir/a.md" has "REQ-001" with verification "unit" and the scenario "@id=EX-201 @about=REQ-001", there is a test with the mark "@kotowari[REQ-001]", but no test has a mark containing "EX-201"
+  When "kotowari check" is run
+  Then a scenario_without_test error is emitted whose "line" is that tag line and whose detail is "EX-201"
 
 @id=EX-core-122 @about=REQ-core-085,REQ-core-137 @source=docs/decision/records/2026-09-17-scenario-tests.md#A4,docs/decision/records/2026-09-17-scenario-tests.md#A9,docs/decision/records/2026-09-17-scenario-tests.md#A2,docs/decision/records/2026-09-17-scenario-tests.md#A6,docs/decision/records/records.md#A26
-Scenario: 具体例の印は要求の分も満たす
-  Given "docs/ir/a.md" に検証が "unit" の "REQ-001" と "@id=EX-201 @about=REQ-001" のシナリオがあり、"#[test]" の付いた関数に印 "@kotowari[EX-201]" があり、"REQ-001" を含む印は無い
-  When "kotowari check" を実行する
-  Then "REQ-001" を detail にする requirement_without_test の誤りは出ず、"EX-201" を detail にする scenario_without_test の誤りも出ない
+Scenario: The mark of an example also covers the requirement
+  Given "docs/ir/a.md" has "REQ-001" with verification "unit" and the scenario "@id=EX-201 @about=REQ-001", a function with "#[test]" has the mark "@kotowari[EX-201]", and there is no mark containing "REQ-001"
+  When "kotowari check" is run
+  Then no requirement_without_test error with detail "REQ-001" is emitted, and no scenario_without_test error with detail "EX-201" is emitted either
 
 @id=EX-core-123 @about=REQ-core-137 @source=docs/decision/records/2026-09-17-scenario-tests.md#A3,docs/decision/records/2026-09-17-scenario-tests.md#A8
-Scenario: review の要求だけの具体例には求めない
-  Given "REQ-002" の検証が "review" で、"@id=EX-202 @about=REQ-002" のシナリオがあり、"EX-202" を含む印がどのテストにも無い
-  When "kotowari check" を実行する
-  Then scenario_without_test の誤りは出ない
+Scenario: An example of only review requirements is not required to have a test
+  Given the verification of "REQ-002" is "review", there is the scenario "@id=EX-202 @about=REQ-002", and no test has a mark containing "EX-202"
+  When "kotowari check" is run
+  Then no scenario_without_test error is emitted
 
 @id=EX-core-124 @about=REQ-core-087 @source=docs/decision/records/2026-09-17-scenario-tests.md#A10,docs/decision/records/2026-09-17-scenario-tests.md#A6,docs/decision/records/records.md#A24,docs/decision/records/records.md#A39,docs/decision/records/records.md#A36,docs/decision/records/records.md#A47,docs/decision/records/2026-09-24-multi-language-tests.md#A7,docs/decision/records/2026-09-24-multi-language-tests.md#A8
-Scenario: 問い合わせの無い言語のファイルの具体例の印も数える
-  Given "tests.files" が "tests/**/*.go" を含み、"docs/ir/a.md" に検証が "unit" の "REQ-001" と "@id=EX-201 @about=REQ-001" のシナリオがあり、"tests/a.go" が "@kotowari[EX-201]" を含み、".go" の`問い合わせ`は無く、Rust のテストには "EX-201" を含む印が無い
-  When "kotowari check" を実行する
-  Then "EX-201" を detail にする scenario_without_test の誤りは出ない
+Scenario: Marks of examples in files of languages without a query are counted too
+  Given "tests.files" includes "tests/**/*.go", "docs/ir/a.md" has "REQ-001" with verification "unit" and the scenario "@id=EX-201 @about=REQ-001", "tests/a.go" contains "@kotowari[EX-201]", there is no `query` for ".go", and no Rust test has a mark containing "EX-201"
+  When "kotowari check" is run
+  Then no scenario_without_test error with detail "EX-201" is emitted
 
 @id=EX-core-125 @about=REQ-core-137 @source=docs/decision/records/2026-09-17-scenario-tests.md#A8,docs/decision/records/2026-09-17-scenario-tests.md#A14
-Scenario: 要求を挙げない具体例には求めない
-  Given "docs/ir/a.md" に "TBL-001" の決定表と "@id=EX-203 @about=TBL-001" のシナリオがあり、"EX-203" を含む印がどのテストにも無い
-  When "kotowari check" を実行する
-  Then scenario_without_test の誤りは出ない
+Scenario: An example that names no requirement is not required to have a test
+  Given "docs/ir/a.md" has the decision table "TBL-001" and the scenario "@id=EX-203 @about=TBL-001", and no test has a mark containing "EX-203"
+  When "kotowari check" is run
+  Then no scenario_without_test error is emitted
 
 @id=EX-core-310 @about=REQ-core-086 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A31,docs/decision/records/2026-09-24-multi-language-tests.md#A13
-Scenario: 名前の無いテストは最初の行を detail にする
-  Given "tests.files" が "tests/**/*.ts" を含み、"tests.rules" の "language: typescript" のルールが "bench($$$)" に当たり "$NAME" を捕まえず、"tests/a.test.ts" に印の無い "  bench(caseName, () => {" で始まる呼び出しがある
-  When "kotowari check" を実行する
-  Then detail が "bench(caseName, () => {" の test_without_id の誤りが1件出る
+Scenario: A test without a name uses its first line as the detail
+  Given "tests.files" includes "tests/**/*.ts", a rule with "language: typescript" in "tests.rules" matches "bench($$$)" and does not capture "$NAME", and "tests/a.test.ts" has an unmarked call starting with "  bench(caseName, () => {"
+  When "kotowari check" is run
+  Then one test_without_id error with detail "bench(caseName, () => {" is emitted
 ```

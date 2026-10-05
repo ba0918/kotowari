@@ -1,139 +1,141 @@
-# テストの見つけ方
+# How tests are found
 
-テストのファイルの選び方と、拡張子から言語を決め、その言語の問い合わせでテストとその名前を見つける規則を扱う。言語ごとに同梱する問い合わせの中身は test-queries.md、設定で足す問い合わせは query-rules.md が扱う。
+English | [日本語](test-discovery.ja.md)
+
+Covers how test files are chosen, and the rules that determine the language from the extension and find tests and their names with that language's queries. The contents of the queries bundled for each language are covered by test-queries.md, and the queries added through the configuration by query-rules.md.
 
 ## Requirements
 
-### REQ-core-079: テストのファイル
+### REQ-core-079: Test files
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A36, docs/decision/records/records.md#A47, docs/decision/records/records.md#A94, docs/decision/records/records.md#A102, docs/decision/records/records.md#A146, docs/decision/records/records.md#A159, docs/decision/records/records.md#A165
 - verification: unit
 
-kotowari は常に、"tests.files" の glob に当たるファイルを`テストのファイル`として読む。ディレクトリでも通常のファイルでもないもの（ソケット、名前付きパイプ、デバイス）は glob に当たっても読まない（`除外`）。走査は`基準のディレクトリ`の全体（隠しディレクトリを除く）を歩いてから glob で選ぶので、glob に当たらない場所でも読めないディレクトリと先の無いシンボリックリンクで`停止`する。走査ではディレクトリのシンボリックリンクを辿らず、ファイルのシンボリックリンクは読み、先の無いシンボリックリンクでは読めないファイルを理由に`停止`する。
+kotowari always reads the files matched by the globs of "tests.files" as a `test file`. Entries that are neither directories nor regular files (sockets, named pipes, devices) are not read even when a glob matches them (`exclusion`). The walk goes through the whole `base directory` (except hidden directories) and then selects with the globs, so it comes to a `stop` on an unreadable directory or a dangling symbolic link even in a place no glob matches. The walk does not follow symbolic links to directories, reads symbolic links to files, and on a dangling symbolic link comes to a `stop` with an unreadable file as the reason.
 
-### REQ-core-080: tree-sitter で読む
+### REQ-core-080: Reading with tree-sitter
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A24, docs/decision/records/records.md#A58, docs/decision/records/2026-09-24-multi-language-tests.md#A1, docs/decision/records/2026-09-24-multi-language-tests.md#A7
 - verification: unit
 
-kotowari は常に、`問い合わせのある言語`の`テストのファイル`を tree-sitter で読み、その言語の`問い合わせ`をすべて当てて`テスト`を見つける。`問い合わせの無い言語`の`テストのファイル`は tree-sitter で読まない。
+kotowari always reads a `test file` of a `language with a query` with tree-sitter, and finds each `test` by applying every `query` of that language. A `test file` of a `language without a query` is not read with tree-sitter.
 
-### REQ-core-081: 拡張子と言語の対応
+### REQ-core-081: Mapping of extensions to languages
 
 - kind: algorithm
 - source: docs/decision/records/records.md#A39, docs/decision/records/records.md#A58, docs/decision/records/records.md#A24, docs/decision/records/records.md#A123, docs/decision/records/2026-09-24-multi-language-tests.md#A3, docs/decision/records/2026-09-24-multi-language-tests.md#A6, docs/decision/records/2026-09-24-multi-language-tests.md#A21
 - definition: TBL-core-031
 - verification: unit
 
-### REQ-core-083: 読めないテストのファイル
+### REQ-core-083: Unreadable test files
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A58, docs/decision/records/records.md#A120, docs/decision/records/records.md#A149, docs/decision/records/2026-09-24-multi-language-tests.md#A23
 - verification: unit
 
-tree-sitter で読めない`問い合わせのある言語`の`テストのファイル`（構文の誤りが1つでもあるファイル）があるとき、kotowari は unparsable_file の`誤り`を出してそのファイルを飛ばし、`停止`しない。"tests.rust.macros" のマクロの中身を読み直したときの構文の誤りはこれに含めず、読めた最上位の関数だけを数える。
+When there is a `test file` of a `language with a query` that tree-sitter cannot read (a file with even one syntax error), kotowari raises an unparsable_file `error`, skips that file, and does not come to a `stop`. Syntax errors when re-reading the contents of a macro of "tests.rust.macros" are not included in this; only the top-level functions that could be read are counted.
 
-### REQ-core-084: 正規表現でテストを見つけない
+### REQ-core-084: Tests are not found with regular expressions
 
 - kind: prohibition
 - source: docs/decision/records/records.md#R3, docs/decision/records/2026-09-24-multi-language-tests.md#A2
 - verification: review
-- how_to_verify: テストを見つけるコードが、テストのファイルの行に正規表現を当てて定義の行を探していないことを確認。設定から来る正規表現は ast-grep のルールの中で構文木の節に当てるものだけ
+- how_to_verify: Confirm that the code that finds tests does not look for definition lines by applying regular expressions to the lines of test files. The only regular expressions that come from the configuration are those applied to syntax-tree nodes inside ast-grep rules
 
-kotowari は、`設定ファイル`に書く正規表現でテストの定義の行を見つけてはならない。
+kotowari must not find the definition lines of tests with regular expressions written in the `configuration file`.
 
-### REQ-core-180: テストの節と名前
+### REQ-core-180: The node and name of a test
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-24-multi-language-tests.md#A10, docs/decision/records/2026-09-24-multi-language-tests.md#A13, docs/decision/records/2026-09-24-multi-language-tests.md#A25, docs/decision/records/2026-09-24-multi-language-tests.md#A36
 - verification: unit
 
-kotowari は常に、`問い合わせ`が当たった構文木の節を1つの`テスト`とし、メタ変数 "$NAME" に入った節の文字を`テスト`の名前にする。その文字の最初と最後が同じ引用符（一重引用符、二重引用符、バッククォートのいずれか）なら、その1文字ずつを外し、それ以外の形はそのまま名前にする。`問い合わせ`が "$NAME" を捕まえないとき、`テスト`の名前は null にする。
+kotowari always takes one syntax-tree node matched by a `query` as one `test`, and takes the text of the node captured by the metavariable "$NAME" as the name of the `test`. When that text starts and ends with the same quote character (one of the single quote, the double quote and the backquote), one character is removed from each end; any other form becomes the name as is. When the `query` does not capture "$NAME", the name of the `test` is null.
 
-### REQ-core-181: 重なった当たり
+### REQ-core-181: Overlapping matches
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-24-multi-language-tests.md#A27, docs/decision/records/2026-09-24-review10-gaps.md#A2
 - verification: unit
 
-kotowari は常に、同じ節に複数の`問い合わせ`が当たったときその節を1つの`テスト`と数え、`テスト`の節の中でさらに当たった節は別の`テスト`として数える。同じ節に当たった`問い合わせ`の名前は、"$NAME" を捕まえた`問い合わせ`のうち、同梱の`問い合わせ`、"tests.rules" の並びの順で最初のものの名前にする。
+kotowari always counts a node as one `test` when several `query` entries match the same node, and counts a node matched further inside the node of a `test` as a separate `test`. The name for a node matched by several `query` entries is the name from the first, in the order of the bundled `query` entries and then the order of "tests.rules", among the `query` entries that captured "$NAME".
 
 ## Decision tables
 
-### TBL-core-031: 拡張子と言語の対応
+### TBL-core-031: Mapping of extensions to languages
 
 - source: docs/decision/records/2026-09-24-multi-language-tests.md#A3, docs/decision/records/2026-09-24-multi-language-tests.md#A6, docs/decision/records/2026-09-24-multi-language-tests.md#A21, docs/decision/records/records.md#A123, docs/decision/records/2026-09-24-multi-language-tests.md#A7, docs/decision/records/2026-09-17-check-reach.md#A19, docs/decision/records/2026-09-24-multi-language-tests.md#A46, docs/decision/records/2026-09-24-multi-language-tests.md#A47
 
-拡張子はファイル名の最後の "." より後ろの文字で、大文字小文字を区別する。表に無い拡張子のファイルは言語が決まらず、問い合わせの無い言語として扱う。
+The extension is the text after the last "." of the file name, and is case-sensitive. A file whose extension is not in the table has no determined language and is treated as a language without a query.
 
-| 言語 | 拡張子 |
+| Language | Extensions |
 |---|---|
-| Bash | bash、bats、cgi、command、env、fcgi、ksh、sh、tmux、tool、zsh |
-| C | c、h |
-| Cpp | cc、hpp、cpp、c++、hh、cxx、cu、ino |
+| Bash | bash, bats, cgi, command, env, fcgi, ksh, sh, tmux, tool, zsh |
+| C | c, h |
+| Cpp | cc, hpp, cpp, c++, hh, cxx, cu, ino |
 | CSharp | cs |
-| Css | css、scss |
+| Css | css, scss |
 | Dart | dart |
-| Elixir | ex、exs |
+| Elixir | ex, exs |
 | Go | go |
 | Haskell | hs |
-| Hcl | hcl、nomad、tf、tfvars、workflow |
-| Html | html、htm、xhtml |
+| Hcl | hcl, nomad, tf, tfvars, workflow |
+| Html | html, htm, xhtml |
 | Java | java |
-| JavaScript | cjs、js、mjs、jsx |
+| JavaScript | cjs, js, mjs, jsx |
 | Json | json |
-| Kotlin | kt、ktm、kts |
+| Kotlin | kt, ktm, kts |
 | Lua | lua |
-| Markdown | markdown、md |
+| Markdown | markdown, md |
 | Nix | nix |
 | Php | php |
-| Python | py、py3、pyi、bzl、bazel |
-| Ruby | rb、rbw、gemspec |
+| Python | py, py3, pyi, bzl, bazel |
+| Ruby | rb, rbw, gemspec |
 | Rust | rs |
-| Scala | scala、sc、sbt |
+| Scala | scala, sc, sbt |
 | Solidity | sol |
 | Swift | swift |
-| TypeScript | ts、cts、mts |
+| TypeScript | ts, cts, mts |
 | Tsx | tsx |
-| Yaml | yaml、yml |
+| Yaml | yaml, yml |
 
 ## Examples
 
 ```gherkin
 @id=EX-core-293 @about=REQ-core-080 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A7,docs/decision/records/2026-09-24-multi-language-tests.md#A23
-Scenario: 問い合わせの無い言語のファイルは構文木を読まない
-  Given "tests.files" が "tests/**/*.go" を含み、"tests/a.go" に構文の誤りがあり、".go" の`問い合わせ`は無い
-  When "kotowari check" を実行する
-  Then unparsable_file の誤りは出ない
+Scenario: A file of a language without a query is not read into a syntax tree
+  Given "tests.files" contains "tests/**/*.go", "tests/a.go" has a syntax error, and there is no `query` for ".go"
+  When "kotowari check" is run
+  Then no unparsable_file error is raised
 
 @id=EX-core-294 @about=REQ-core-083 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A23,docs/decision/records/2026-09-24-multi-language-tests.md#A8,docs/decision/records/2026-09-24-multi-language-tests.md#A21
-Scenario: 問い合わせのある言語のファイルの構文の誤り
-  Given "tests.files" が "tests/**/*.ts" を含み、"tests/a.test.ts" が "it('x', () => {" で終わる
-  When "kotowari check" を実行する
-  Then "tests/a.test.ts" の unparsable_file の誤りが1件出る
+Scenario: A syntax error in a file of a language with a query
+  Given "tests.files" contains "tests/**/*.ts", and "tests/a.test.ts" ends with "it('x', () => {"
+  When "kotowari check" is run
+  Then one unparsable_file error for "tests/a.test.ts" is raised
 
 @id=EX-core-295 @about=REQ-core-081 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A21,docs/decision/records/2026-09-24-multi-language-tests.md#A6,docs/decision/records/records.md#A123
-Scenario: 大文字の拡張子は言語が決まらない
-  Given "tests.files" が "tests/**/*" を含み、"tests/A.PY" に印の無い "def test_x():" がある
-  When "kotowari check" を実行する
-  Then test_without_id の誤りは出ない
+Scenario: An uppercase extension determines no language
+  Given "tests.files" contains "tests/**/*", and "tests/A.PY" has "def test_x():" with no mark
+  When "kotowari check" is run
+  Then no test_without_id error is raised
 
 @id=EX-core-296 @about=REQ-core-180 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A13,docs/decision/records/2026-09-24-multi-language-tests.md#A25,docs/decision/records/2026-09-24-multi-language-tests.md#A18,docs/decision/records/2026-09-24-multi-language-tests.md#A15,docs/decision/records/2026-09-24-multi-language-tests.md#A16
-Scenario: 文字列の名前は引用符を外す
-  Given "tests.files" が "tests/**/*.ts" を含み、"tests/a.test.ts" の "describe('d', ...)" の中の 3 行目の印 "@kotowari[REQ-001]" の直後に "it('does x', () => {})" がある
-  When "kotowari list" を実行する
-  Then "REQ-001" の "tests" の "name" は "does x" である
+Scenario: A string name has its quotes removed
+  Given "tests.files" contains "tests/**/*.ts", and in "tests/a.test.ts", inside "describe('d', ...)", "it('does x', () => {})" comes right after the mark "@kotowari[REQ-001]" on line 3
+  When "kotowari list" is run
+  Then the "name" in the "tests" of "REQ-001" is "does x"
 
 @id=EX-core-297 @about=REQ-core-181 @source=docs/decision/records/2026-09-24-multi-language-tests.md#A27,docs/decision/records/2026-09-24-multi-language-tests.md#A18,docs/decision/records/2026-09-24-multi-language-tests.md#A13
-Scenario: テストの中のテストは別に数える
-  Given "tests.files" が "tests/**/*.ts" を含み、"tests/a.test.ts" に印の無い "it('outer', ...)" があり、その中に印の無い "it('inner', ...)" がある
-  When "kotowari check" を実行する
-  Then detail が "outer" と "inner" の test_without_id の誤りが1件ずつ出る
+Scenario: A test inside a test is counted separately
+  Given "tests.files" contains "tests/**/*.ts", and "tests/a.test.ts" has "it('outer', ...)" with no mark, with "it('inner', ...)" with no mark inside it
+  When "kotowari check" is run
+  Then one test_without_id error is raised with detail "outer" and one with detail "inner"
 @id=EX-core-328 @about=REQ-core-181 @source=docs/decision/records/2026-09-24-review10-gaps.md#A2,docs/decision/records/2026-09-24-multi-language-tests.md#A9
-Scenario: 名前を捕まえた問い合わせの名前を採る
-  Given "tests.files" が "tests/**/*.ts" を含み、"tests.rules" が "language: typescript" で "bench($$$)" に当たるルールのファイル、"bench($NAME, $$$)" に当たるルールのファイルの順に並び、"tests/a.test.ts" に印の無い "bench('chosen', () => {})" がある
-  When "kotowari check" を実行する
-  Then detail が "chosen" の test_without_id の誤りが1件出る
+Scenario: The name of the query that captured a name is taken
+  Given "tests.files" contains "tests/**/*.ts", "tests.rules" lists, in this order, a rule file with "language: typescript" that matches "bench($$$)" and a rule file that matches "bench($NAME, $$$)", and "tests/a.test.ts" has "bench('chosen', () => {})" with no mark
+  When "kotowari check" is run
+  Then one test_without_id error with detail "chosen" is raised
 ```

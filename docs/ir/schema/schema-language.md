@@ -1,133 +1,135 @@
-# スキーマ言語の骨格
+# Skeleton of the schema language
 
-この文書は、スキーマがどの規則種別を持つか、出現回数と条件付き規則をどう書くかを扱う。
+English | [日本語](schema-language.ja.md)
+
+This document covers which rule kinds a schema has, and how to write cardinality and conditional rules.
 
 ## Requirements
 
-### REQ-schema-016: スキーマの形
+### REQ-schema-016: Shape of the schema
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A3, docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A23
 - verification: unit
 
-mds は常に、`スキーマ`を YAML のマッピングとして読み、`題名`、`前置部`、`節`、文書の直下の`項目`の4つを根の`ノード`として受ける。文書の直下の`項目`は "document.item" に、`節`の下の "item" と同じ形で宣言する。
+mds always reads a `schema` as a YAML mapping, and accepts four root `node` kinds: the `title`, the `preamble`, the `section`, and the `item` directly under the document. An `item` directly under the document is declared in "document.item", in the same shape as "item" under a `section`.
 
-### REQ-schema-017: 規則種別の一覧
+### REQ-schema-017: List of rule kinds
 
 - kind: algorithm
 - source: docs/decision/records/2026-09-21-mds-spec.md#A3, docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A68
 - definition: TBL-schema-004
 - verification: review
-- how_to_verify: `crates/kotowari-markdown-schema/src/schema.rs` の公開する構造体と TBL-schema-004 の行が1対1で対応し、表に無い規則種別が存在しないこと、各構造体が置ける場所が表の「置ける場所」の列と一致することを読んで確認する。表に無い規則種別が足されても検査は通ってしまうため、機械では見られない
+- how_to_verify: Read and confirm that the public structs of `crates/kotowari-markdown-schema/src/schema.rs` correspond one to one with the rows of TBL-schema-004, that no rule kind outside the table exists, and that where each struct can be placed matches the "Where it can be placed" column of the table. A rule kind added outside the table would still pass the check, so a machine cannot see this
 
-### REQ-schema-060: 読み方の宣言
+### REQ-schema-060: Declaring the reading mode
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20, docs/decision/records/2026-09-23-ir-engine-gaps.md#A30
 - verification: unit
 
-mds は常に、`スキーマ`の最上位の "reading" の鍵を`読み方`の宣言として受け、値に "paragraph" と "line" の2つだけを受け、鍵を書かないときは "paragraph" として読む。"paragraph" と "line" のどちらでもない値の`スキーマ`は`停止`にする。
+mds always accepts the top-level "reading" key of a `schema` as the declaration of the `reading mode`, accepts only the two values "paragraph" and "line", and reads as "paragraph" when the key is not written. A `schema` whose value is neither "paragraph" nor "line" is a `stop`.
 
-### REQ-schema-018: 知らないキー
+### REQ-schema-018: Unknown keys
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#P1
 - verification: unit
 
-`スキーマ`に規則種別が受けないキーがあるとき、mds は検査を行わずに`停止`する。
+When a `schema` has a key that the rule kind does not accept, mds performs a `stop` without checking.
 
-### REQ-schema-019: 出現回数の書き方
+### REQ-schema-019: How to write cardinality
 
 - kind: algorithm
 - source: docs/decision/records/2026-09-21-mds-spec.md#A40
 - definition: TBL-schema-005
 - verification: unit
 
-### REQ-schema-020: 条件付き規則
+### REQ-schema-020: Conditional rules
 
 - kind: state_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A28
 - verification: unit
 
-`条件付き規則`の条件が真である間、mds はそれを添えた制約を適用し、偽である間は適用しない。
+While the condition of a `conditional rule` is true, mds applies the constraint it is attached to, and while it is false, mds does not apply it.
 
-### REQ-schema-021: 条件が参照するフィールド行の探索
+### REQ-schema-021: Finding the field line a condition refers to
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A28
 - verification: unit
 
-mds は常に、`条件付き規則`が参照する`フィールド行`を同じ`ノード`の下だけから探し、見つからないときは等しい条件を偽、等しくない条件を真として扱う。
+mds always looks for the `field line` that a `conditional rule` refers to only under the same `node`, and when it is not found, treats an equality condition as false and an inequality condition as true.
 
 ## Decision tables
 
-### TBL-schema-004: 規則種別
+### TBL-schema-004: Rule kinds
 
 - source: docs/decision/records/2026-09-21-mds-spec.md#A3, docs/decision/records/2026-09-21-mds-spec.md#A5, docs/decision/records/2026-09-21-mds-spec.md#A12, docs/decision/records/2026-09-21-mds-spec.md#A34, docs/decision/records/2026-09-21-mds-spec.md#A38, docs/decision/records/2026-09-21-mds-spec.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A68, docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A23
 
-| 規則種別 | 何を検証するか | 置ける場所 |
+| Rule kind | What it validates | Where it can be placed |
 |---|---|---|
-| `題名` | 深さ1の見出し | `スキーマ`の根 |
-| `前置部` | `題名`の後、最初の`節`より前の部分。文書の直下の`項目`を宣言したときは、最初の`節`か`項目`より前の部分 | `スキーマ`の根 |
-| `節` | 深さ2の見出し | `スキーマ`の根 |
-| `項目` | 深さ3の見出し | `節`の下、`スキーマ`の根（文書の直下の`項目`） |
-| `フィールド行` | 名前と値の形の一覧の行 | `前置部`、`節`、`項目`、`箇条書き`の子 |
-| `文` | 一覧でも`表`でもない空でない行 | `前置部`、`節`、`項目` |
-| `箇条書き` | `フィールド行`でない一覧の行 | `前置部`、`節`、`項目`、`箇条書き`の子 |
-| `表` | Markdown の表 | `前置部`、`節`、`項目` |
-| `コードブロック` | フェンスで囲んだブロック | `前置部`、`節`、`項目` |
+| `title` | The depth-1 heading | The root of the `schema` |
+| `preamble` | The part after the `title` and before the first `section`. When an `item` directly under the document is declared, the part before the first `section` or `item` | The root of the `schema` |
+| `section` | A depth-2 heading | The root of the `schema` |
+| `item` | A depth-3 heading | Under a `section`; the root of the `schema` (an `item` directly under the document) |
+| `field line` | A list line of the name-and-value form | `preamble`, `section`, `item`, child of a `bullet` |
+| `statement` | A non-blank line that is neither a list nor a `table` | `preamble`, `section`, `item` |
+| `bullet` | A list line that is not a `field line` | `preamble`, `section`, `item`, child of a `bullet` |
+| `table` | A Markdown table | `preamble`, `section`, `item` |
+| `code block` | A block enclosed by a fence | `preamble`, `section`, `item` |
 
-### TBL-schema-005: 出現回数の書き方
+### TBL-schema-005: How to write cardinality
 
 - source: docs/decision/records/2026-09-21-mds-spec.md#A40
 
-| 書き方 | 意味 |
+| How it is written | Meaning |
 |---|---|
-| 既定（何も書かない） | ちょうど1個 |
-| 必須の宣言を偽にする | 0個か1個 |
-| 下限だけを書く | その数以上 |
-| 上限だけを書く | 0個からその数まで |
-| 下限と上限を書く | その範囲 |
+| Default (nothing written) | Exactly one |
+| The required declaration set to false | Zero or one |
+| Only the lower bound written | That number or more |
+| Only the upper bound written | From zero up to that number |
+| Both lower and upper bounds written | That range |
 
 ## Properties
 
-### PROP-schema-004: 出現回数の宣言が抽出の形を決める
+### PROP-schema-004: The cardinality declaration decides the shape of extraction
 
 - source: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A49, docs/decision/records/2026-09-21-mds-spec.md#A50, docs/decision/records/2026-09-21-mds-spec.md#A55
 
-`出現回数`の範囲を宣言した`ノード`の`抽出`は、値が1件でも配列になる。範囲を宣言しない`ノード`の`抽出`は単一の値になる。この対応が当たるのは、区切り文字を宣言しない`フィールド行`、`文`、`節`、`項目`、`題名`、`コードブロック`である。`箇条書き`と`表`は`出現回数`の宣言に関わらず常に配列になり、区切り文字を宣言した`フィールド行`の値も常に配列になる。
+The `extraction` of a `node` that declares a range of `cardinality` is an array even when there is only one value. The `extraction` of a `node` that declares no range is a single value. This correspondence applies to a `field line` that declares no delimiter, and to `statement`, `section`, `item`, `title` and `code block`. A `bullet` and a `table` are always arrays regardless of the `cardinality` declaration, and the value of a `field line` that declares a delimiter is also always an array.
 
-### PROP-schema-008: 既定の読み方は段落
+### PROP-schema-008: The default reading mode is paragraph
 
 - source: docs/decision/records/2026-09-23-ir-engine-gaps.md#A12, docs/decision/records/2026-09-23-ir-engine-gaps.md#A20
 
-同じ`文書`に対して、"reading" を書かない`スキーマ`と、それに "reading: paragraph" だけを足した`スキーマ`は、同じ`指摘`の並びと同じ`抽出`の値を返す。
+For the same `document`, a `schema` that does not write "reading" and the same `schema` with only "reading: paragraph" added return the same sequence of `finding` entries and the same `extraction` values.
 
 ## Examples
 
 ```gherkin
 @id=EX-schema-007 @about=REQ-schema-020 @source=docs/decision/records/2026-09-21-mds-spec.md#A28
-Scenario: 条件が真のときだけ必須になる
-  Given 別の`フィールド行`の値が特定の値のときだけ必須になる`フィールド行`を宣言した`スキーマ`がある
-  When 条件を満たす`文書`から、その`フィールド行`を消して "kotowari-mds check" を実行する
-  Then 欠落の`指摘`が出る
+Scenario: Required only while the condition is true
+  Given a `schema` that declares a `field line` that is required only when the value of another `field line` is a particular value
+  When that `field line` is removed from a `document` that meets the condition and "kotowari-mds check" is run
+  Then a `finding` for the missing line is reported
 
 @id=EX-schema-008 @about=REQ-schema-018 @source=docs/decision/records/2026-09-21-mds-spec.md#P1
-Scenario: 知らないキーのあるスキーマは停止する
-  Given 規則種別が受けないキーを書いた`スキーマ`がある
-  When "kotowari-mds check" を実行する
-  Then 終了コードは 2 である
+Scenario: A schema with an unknown key stops
+  Given a `schema` that writes a key the rule kind does not accept
+  When "kotowari-mds check" is run
+  Then the exit code is 2
 
 @id=EX-schema-040 @about=REQ-schema-060,PROP-schema-008 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A12,docs/decision/records/2026-09-23-ir-engine-gaps.md#A20,docs/decision/records/2026-09-21-mds-spec.md#A30
-Scenario: reading を書かないスキーマは段落で読む
-  Given "reading" を書かない`スキーマ`と、"reading: paragraph" を書いた`スキーマ`があり、どちらも`項目`の`文`に`出現回数`の上限1を宣言している
-  And 空行を挟まずに続く2行の段落を持つ`項目`の`文書`がある
-  When それぞれの`スキーマ`で "kotowari-mds check --format json" と "kotowari-mds values --format json" を実行する
-  Then どちらでも`指摘`は出ず（2行の段落を1つの`文`と数える）、"kotowari-mds check" の出力どうしと "kotowari-mds values" の出力どうしはそれぞれ一致する
+Scenario: A schema that does not write reading reads by paragraph
+  Given a `schema` that does not write "reading" and a `schema` that writes "reading: paragraph", both declaring a `cardinality` upper bound of 1 on the `statement` of an `item`
+  And a `document` with an `item` that has a two-line paragraph with no blank line between the lines
+  When "kotowari-mds check --format json" and "kotowari-mds values --format json" are run with each `schema`
+  Then no `finding` is reported with either (the two-line paragraph counts as one `statement`), and the outputs of "kotowari-mds check" match each other and the outputs of "kotowari-mds values" match each other
 
 @id=EX-schema-041 @about=REQ-schema-060 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A20,docs/decision/records/2026-09-23-ir-engine-gaps.md#A30
-Scenario: 受けない値の reading は停止する
-  Given "reading: word" を書いた`スキーマ`がある
-  When "kotowari-mds check" を実行する
-  Then 終了コードは 2 である
+Scenario: A reading with an unaccepted value stops
+  Given a `schema` that writes "reading: word"
+  When "kotowari-mds check" is run
+  Then the exit code is 2
 ```

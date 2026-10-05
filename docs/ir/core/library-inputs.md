@@ -1,104 +1,106 @@
-# メモリ入力と読み込み済みの結果
+# In-memory input and already-read results
 
-部分的なIRの解析、検査に必要な入力群、不変の読込結果の寿命と再利用を扱う。
+English | [日本語](library-inputs.ja.md)
+
+Covers the parsing of partial IR, the groups of input needed for checks, and the lifetime and reuse of immutable read results.
 
 ## Requirements
 
-### REQ-core-314: 部分解析の読み取り
+### REQ-core-314: Reading partial parses
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-03-public-crate-api.md#A12, docs/decision/records/2026-10-03-public-crate-api.md#A38, docs/decision/records/2026-10-03-public-crate-api.md#A51, docs/decision/records/2026-10-03-public-crate-api.md#A54
 - verification: unit
 
-"ir::parse" は "SourceText" の論理パスと文字列、およびIRの置き場を指定する "IrOptions" から "IrDocument" を作る。置き場の既定は "docs/ir" とし、SourceTextはその配下のパスを持つ。取得できた項目・参照・指摘を読み取り専用で返す。IDが欠落または不正でも取得できた項目を除かず、元の文書の1始まりの行と存在する場合の終端行を返す。存在しないIDと位置は補わず、list/queryの既存の掲載条件は変更しない。
+"ir::parse" builds an "IrDocument" from the logical path and string of a "SourceText" and from "IrOptions", which specifies the IR location. The default location is "docs/ir", and a SourceText has a path under it. It returns, read-only, the items, references and findings it could obtain. Even when an ID is missing or invalid, it does not drop the items it could obtain, and returns their 1-based line in the original document and their end line when there is one. It does not fill in IDs or positions that do not exist, and does not change the existing listing conditions of list/query.
 
-### REQ-core-315: 未提供と空集合
+### REQ-core-315: Not provided and empty sets
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-03-public-crate-api.md#A6, docs/decision/records/2026-10-03-public-crate-api.md#A29, docs/decision/records/2026-10-03-public-crate-api.md#A39, docs/decision/records/2026-10-03-public-crate-api.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A50
 - definition: TBL-core-042
 - verification: unit
 
-"ReadModel::build" と "Inspection::build" は設定と TBL-core-042 の入力を受ける。必須の群が未提供なら "InputMissing" を返し、提供済みの空集合は通常の規則で検査する。条件が偽の群は未提供でもよく、提供されても判定に使わない。解析時の指摘とファイル一覧を保持し、既存の指摘重複抑制・件数・置き場の重なり検査を再現する。個別ファイルの網羅性は呼出側が担い、InputMissingは未提供の群を検出する。メモリ入力からファイルを自動取得しない。
+"ReadModel::build" and "Inspection::build" receive the configuration and the input of TBL-core-042. When a required group is not provided they return "InputMissing", and an empty set that was provided is checked by the ordinary rules. A group whose condition is false may be left unprovided, and is not used for judgement even if provided. They keep the findings from parsing and the file lists, and reproduce the existing suppression of duplicate findings, counts and the check of overlapping locations. Completeness of individual files is the caller's responsibility, and InputMissing detects groups that are not provided. Files are not fetched automatically from in-memory input.
 
-### REQ-core-316: 読み込み済み結果の再利用
+### REQ-core-316: Reuse of already-read results
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-03-public-crate-api.md#A18, docs/decision/records/2026-10-03-public-crate-api.md#A19, docs/decision/records/2026-10-03-public-crate-api.md#A37
 - verification: unit
 
-"Project::read" は不変の "ReadModel" を、"Project::inspect" は不変の "Inspection" を返す。前者のlist/queryと後者のcheck/statusおよび読み取り結果への参照は追加I/Oを行わない。所有値は利用者が破棄するまで保持され、保存や自動監視はしない。変更を反映するには再読込する。簡便なProjectの7操作は呼出ごとに必要な入力を新しく読む。ファイル群の読込中の同時点性は保証しない。
+"Project::read" returns an immutable "ReadModel", and "Project::inspect" an immutable "Inspection". list/query of the former, check/status of the latter, and references to the read results do no additional I/O. Owned values are kept until the user drops them, and are neither saved nor watched automatically. To reflect changes, read again. The seven convenience operations of Project read the needed input anew on each call. Consistency at a single point in time while a set of files is being read is not guaranteed.
 
-### REQ-core-317: 操作ごとの読込範囲
+### REQ-core-317: Read scope by operation
 
 - kind: invariant
 - source: docs/decision/records/2026-10-03-public-crate-api.md#A19, docs/decision/records/2026-10-03-public-crate-api.md#A29, docs/decision/records/2026-10-03-public-crate-api.md#A37, docs/decision/records/2026-10-03-public-crate-api.md#A39
 - verification: unit
 
-読み込み済み結果を提供するときも、list/query用の入力にはcheck/statusだけが使うガイド・面・照合記録を要求しない。IRだけの解析は他の入力群を要求しない。
+Even when already-read results are provided, the input for list/query does not require the guides, surfaces and change records that only check/status use. Parsing only the IR does not require the other groups of input.
 
 ## Decision tables
 
-### TBL-core-042: 入力群の内容と必須条件
+### TBL-core-042: Contents and required conditions of input groups
 
 - source: docs/decision/records/2026-10-03-public-crate-api.md#A39, docs/decision/records/2026-10-03-public-crate-api.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A50, docs/decision/records/2026-10-03-public-crate-api.md#A53, docs/decision/records/2026-10-04-overview-on-public-api.md#A2
 
-| 入力群 | 内容 | ReadInputsで必須 | CheckInputsで必須 |
+| Input group | Contents | Required in ReadInputs | Required in CheckInputs |
 |---|---|---|---|
-| IR | 論理パスと文書内容 | 常に | 常に |
-| 判断の記録の置き場 | 判断の記録と出典対象の通常Markdownのパス・内容 | 参照の有無によらず常に | 同左 |
-| ADR | パスと内容 | 参照の有無によらず常に | 同左 |
-| テスト情報 | 対象ファイルのSourceText、言語・問い合わせの有無、発見済みテスト・印、解析時の指摘 | tests.filesが空でない | 同左 |
-| ガイド | パスと内容 | 不要 | guides.filesが空でない |
-| 面の解析結果 | 対象ファイルのSourceText、言語・問い合わせの有無、発見結果、解析時の指摘 | 不要 | surface.rulesが空でない |
-| 未記載の面の一覧 | 設定された一覧のパスと内容 | 不要 | surface.rulesが空でなくsurface.unspecifiedが指定されている |
-| 照合記録 | パスと内容 | 不要 | changesが設定されている |
-| 追加の指摘の群 | 群の名前、読んだファイルの数、印の数、指摘。coreは意味を知らず、ほかの指摘と合わせて並べて数え、群の数を結果に持たせる | 不要 | 不要（渡したときだけ加える） |
+| IR | Logical paths and document contents | Always | Always |
+| Decision record location | Paths and contents of the decision records and of the ordinary Markdown that sources point at | Always, whether or not referenced | Same as left |
+| ADR | Paths and contents | Always, whether or not referenced | Same as left |
+| Test information | The SourceText of target files, the language and whether it has a query, already-discovered tests and marks, and findings from parsing | When tests.files is not empty | Same as left |
+| Guides | Paths and contents | Not required | When guides.files is not empty |
+| Surface analysis results | The SourceText of target files, the language and whether it has a query, discovery results, and findings from parsing | Not required | When surface.rules is not empty |
+| List of unspecified surfaces | The path and contents of the configured list | Not required | When surface.rules is not empty and surface.unspecified is specified |
+| Change records | Paths and contents | Not required | When changes is configured |
+| Additional finding groups | The name of the group, the number of files read, the number of marks, and the findings. core does not know their meaning, orders and counts them together with the other findings, and gives the result the number of groups | Not required | Not required (added only when passed) |
 
 ## Examples
 
 ```gherkin
 @id=EX-core-487 @about=REQ-core-314,REQ-core-317 @source=docs/decision/records/2026-10-03-public-crate-api.md#A12,docs/decision/records/2026-10-03-public-crate-api.md#A29,docs/decision/records/2026-10-03-public-crate-api.md#A38
-Scenario: IDがない解析項目を参照できる
-  Given IR文字列にIDが欠けた取得可能な項目がある
-  When 他の入力を渡さずir::parseを呼ぶ
-  Then その項目と元の行と指摘を参照できる
-  And IDを補ったり項目を一覧の掲載条件で除いたりしない
+Scenario: A parsed item without an ID can be referred to
+  Given the IR string has an obtainable item lacking an ID
+  When ir::parse is called without passing other input
+  Then that item, its original line and the findings can be referred to
+  And no ID is filled in, and the item is not dropped by the listing conditions
 
 @id=EX-core-488 @about=REQ-core-315 @source=docs/decision/records/2026-10-03-public-crate-api.md#A29,docs/decision/records/2026-10-03-public-crate-api.md#A39
-Scenario: 必須の入力が未提供なら検査完了にしない
-  Given 設定で必要なテスト情報の群が未提供である
-  When メモリ入力から検査結果を構築する
-  Then InputMissingを返し完了した検査結果を返さない
+Scenario: When required input is not provided, the check is not completed
+  Given the group of test information required by the configuration is not provided
+  When a check result is built from in-memory input
+  Then InputMissing is returned, and no completed check result is returned
 
 @id=EX-core-489 @about=REQ-core-315 @source=docs/decision/records/2026-10-03-public-crate-api.md#A29,docs/decision/records/2026-10-03-public-crate-api.md#A39
-Scenario: 明示的な空のテスト情報は検査する
-  Given 必須入力が提供されテスト情報は提供済みの空集合である
-  When テストを必要とする要求を検査する
-  Then InputMissingではなく通常のテスト対応の指摘を含む結果を返す
+Scenario: Explicitly empty test information is checked
+  Given the required input is provided, and the test information is a provided empty set
+  When a requirement that needs tests is checked
+  Then a result containing the ordinary test correspondence findings is returned, not InputMissing
 
 @id=EX-core-490 @about=REQ-core-316 @source=docs/decision/records/2026-10-03-public-crate-api.md#A18,docs/decision/records/2026-10-03-public-crate-api.md#A37
-Scenario: 読込後のファイル変更は保持した結果を変えない
-  Given ReadModelを取得した後に元のファイルを変更した
-  When 同じReadModelに一覧と問い合わせを求める
-  Then 読込時の内容から結果を返す
-  And 明示的にProjectから再読込した結果だけが変更を反映する
+Scenario: Changes to files after reading do not change the kept result
+  Given the original files were changed after the ReadModel was obtained
+  When the same ReadModel is asked for a list and a query
+  Then it returns results from the contents at the time of reading
+  And only a result read again explicitly from Project reflects the changes
 
 @id=EX-core-491 @about=REQ-core-317 @source=docs/decision/records/2026-10-03-public-crate-api.md#A19,docs/decision/records/2026-10-03-public-crate-api.md#A37,docs/decision/records/2026-10-03-public-crate-api.md#A39
-Scenario: ガイドの読込失敗で一覧を止めない
-  Given listに必要な入力は読めるがガイドは読めない
-  When Projectのreadから一覧を取得する
-  Then ガイドを読まず一覧を返す
+Scenario: A failure to read guides does not stop the list
+  Given the input needed for list can be read, but the guides cannot be read
+  When a list is obtained from read of Project
+  Then it returns the list without reading the guides
 
 @id=EX-core-496 @about=REQ-core-315 @source=docs/decision/records/2026-10-03-public-crate-api.md#A49,docs/decision/records/2026-10-03-public-crate-api.md#A50
-Scenario: 解析失敗の空の発見結果を成功と混同しない
-  Given 必須のテスト情報に解析失敗の指摘と空の発見結果がある
-  When メモリ入力を検査する
-  Then 解析失敗の指摘を結果に引き継ぐ
+Scenario: An empty discovery result from a failed parse is not mistaken for success
+  Given the required test information has a finding of a failed parse and an empty discovery result
+  When the in-memory input is checked
+  Then the finding of the failed parse is carried over into the result
 
 @id=EX-core-497 @about=REQ-core-315 @source=docs/decision/records/2026-10-03-public-crate-api.md#A50
-Scenario: 対象を設定しない入力群は要求しない
-  Given tests.filesが空で他の必須入力は提供されている
-  When テスト情報を未提供のままReadModelを構築する
-  Then テスト情報のInputMissingを返さない
+Scenario: Input groups with no configured targets are not required
+  Given tests.files is empty and the other required input is provided
+  When a ReadModel is built with the test information left unprovided
+  Then InputMissing for the test information is not returned
 ```

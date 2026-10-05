@@ -1,132 +1,134 @@
-# 描画
+# Rendering
 
-view が`描画の入力`を受け取り、`ページ`の並びを返すまでを扱う。`部品`の種類とそのスキーマは parts.md が、一覧の`ページ`に添える数と`ページ`の間の移動は navigation.md が扱う。view は kotowari の IR も判断の記録も知らない。
+English | [日本語](rendering.ja.md)
+
+This covers view from receiving the `render input` to returning the sequence of `page` entries. The kinds of `part` and their schemas are covered by parts.md, and the counts added to the listing `page` and moving between `page` entries by navigation.md. view knows neither the kotowari IR nor the decision records.
 
 ## Requirements
 
-### REQ-view-001: 描画の入力
+### REQ-view-001: Render input
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A25, docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-02-whole-picture.md#A68, docs/decision/records/2026-10-02-whole-picture.md#A65, docs/decision/records/2026-10-02-whole-picture.md#A81, docs/decision/records/2026-10-02-whole-picture.md#A82, docs/decision/records/2026-10-04-overview-on-public-api.md#A10, docs/decision/records/2026-10-05-overview-index.md#A7, docs/decision/records/2026-10-05-overview-index.md#A10, docs/decision/records/2026-10-05-overview-index.md#A15, docs/decision/records/2026-10-05-overview-index.md#A33, docs/decision/records/2026-10-05-localization.md#A9, docs/decision/records/2026-10-05-localization.md#A34, docs/decision/records/2026-10-05-localization.md#A20, docs/decision/records/2026-10-05-localization.md#A32
 - verification: unit
 
-view は常に、`描画の入力`として`文書`の並びと`参照の表`と`目次`と言語タグと`UI の文字`と`ほかの言語`を受け取る。`文書`は名前、題名、冒頭の lead の`部品`、lead に続く冒頭の`部品`の並び、`節`の並びを持ち、`節`は見出しの文字、古いかどうかの真偽、`ブロック`の並びを持つ。`参照の表`の1件は`参照`の文字列、表示名、省いてよい本文、状態（"current"、"superseded"、"deferred" のいずれか）を持つ。`目次`は1つの`目次の群`で、`目次の群`は題名、省いてよい一行の説明、項目の並びを持ち、項目は`文書`の名前か`目次の群`のどちらかである。
+view always receives, as the `render input`, a sequence of `document` entries, the `reference table`, the `table of contents`, a language tag, the `UI text` and the `other languages`. A `document` has a name, a title, the opening lead `part`, the sequence of opening `part` entries that follow the lead, and the sequence of `section` entries; a `section` has the heading text, a true-or-false value telling whether it is stale, and the sequence of `block` entries. An entry of the `reference table` has the string of the `reference`, a display name, an optional body, and a status (one of "current", "superseded" and "deferred"). The `table of contents` is one `contents group`; a `contents group` has a title, an optional one-line description, and a sequence of entries, each of which is either the name of a `document` or a `contents group`.
 
-### REQ-view-002: ページの並びを返す
+### REQ-view-002: Return the sequence of pages
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A24, docs/decision/records/2026-10-02-whole-picture.md#A26, docs/decision/records/2026-10-02-whole-picture.md#A56, docs/decision/records/2026-10-05-overview-index.md#A18
 - verification: unit
 
-view は常に、1回の描画で、一覧の`ページ` "index.html"、`文書`ごとの`ページ` "<名前>.html"、共通のスタイルの`ページ` "style.css" を返し、それ以外の`ページ`を返さない。`文書`ごとの`ページ`と一覧の`ページ`は "style.css" を相対パスで参照し、互いに相対パスでリンクする。ただし一覧の`ページ`から`文書`の`ページ`へのリンクは、`目次`に名前のある`文書`に限る（REQ-view-021）。
+view always returns, in one rendering, the listing `page` "index.html", a `page` "<name>.html" per `document`, and the shared style `page` "style.css", and returns no other `page`. The per-`document` `page` entries and the listing `page` refer to "style.css" by relative path and link to each other by relative path. However, links from the listing `page` to the `page` of a `document` are limited to `document` entries whose name is in the `table of contents` (REQ-view-021).
 
-### REQ-view-003: ファイルを書かない
+### REQ-view-003: Write no files
 
 - kind: prohibition
 - source: docs/decision/records/2026-10-02-whole-picture.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A25, docs/decision/records/2026-10-02-whole-picture.md#A43, docs/decision/records/2026-10-02-whole-picture.md#A45, docs/decision/records/2026-10-02-whole-picture.md#A47
 - verification: unit
 
-view は、ファイルの読み書き、ネットワークへの接続、`描画の入力`の検査と誤りの報告をしてはならない。
+view must not read or write files, connect to a network, or check the `render input` and report errors.
 
-### REQ-view-004: 同じ入力から同じページ
+### REQ-view-004: The same pages from the same input
 
 - kind: invariant
 - source: docs/decision/records/2026-10-02-whole-picture.md#A10, docs/decision/records/2026-10-02-whole-picture.md#A29
 - verification: property
 
-view は常に、同じ`描画の入力`から、名前と中身のバイト列がすべて同じ`ページ`の並びを返す。時刻、乱数、環境変数を`ページ`に入れない。
+view always returns, from the same `render input`, a sequence of `page` entries whose names and content bytes are all the same. It puts no time, random numbers or environment variables into a `page`.
 
-### REQ-view-005: 一覧のページ
+### REQ-view-005: The listing page
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A24, docs/decision/records/2026-10-02-whole-picture.md#A7, docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-05-overview-index.md#A2, docs/decision/records/2026-10-05-overview-index.md#A4, docs/decision/records/2026-10-05-overview-index.md#A6, docs/decision/records/2026-10-05-overview-index.md#A8, docs/decision/records/2026-10-05-overview-index.md#A15, docs/decision/records/2026-10-05-overview-index.md#A26
 - verification: unit
 
-view は常に、一覧の`ページ`に、`目次`の題名を見出しとして描き、`目次`に説明があればその下に描き、その下に`目次`の項目を書かれた順に描く。項目が`目次の群`なら、その題名と説明を見出しにして、その中にその`目次の群`の項目を書かれた順に入れ子で描く。項目が`文書`の名前なら、その`文書`の題名と冒頭の lead の結論を描き、その`文書`の`ページ`へ相対パスでリンクする。
+view always draws on the listing `page` the title of the `table of contents` as a heading, its description below it if the `table of contents` has one, and below that the entries of the `table of contents` in written order. If an entry is a `contents group`, it uses its title and description as a heading and draws the entries of that `contents group` nested inside it in written order. If an entry is the name of a `document`, it draws the title of that `document` and the conclusion of its opening lead, and links to the `page` of that `document` by relative path.
 
-### REQ-view-006: 冒頭の結論
+### REQ-view-006: The opening conclusion
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A7, docs/decision/records/2026-10-02-whole-picture.md#A38, docs/decision/records/2026-10-04-overview-on-public-api.md#A10, docs/decision/records/2026-10-05-overview-page-reading.md#A17, docs/decision/records/2026-10-05-overview-page-reading.md#A19
 - verification: unit
 
-view は常に、`文書`の`ページ`の題名の後に、REQ-view-022 で`アウトライン`を描くときはその`アウトライン`を描き、その後に冒頭の lead の`部品`を描き、続けて lead に続く冒頭の`部品`を並びの順に描き、その後に`節`を並びの順に描く。
+view always draws, after the title of the `page` of a `document`, the `outline` when REQ-view-022 draws one, then the opening lead `part`, then the opening `part` entries that follow the lead in sequence order, and then the `section` entries in sequence order.
 
-### REQ-view-007: Markdown の文章
+### REQ-view-007: Markdown text
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A36, docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-02-whole-picture.md#A70, docs/decision/records/2026-10-02-whole-picture.md#A82
 - verification: unit
 
-view は常に、Markdown の文章の塊の`ブロック`を CommonMark と GFM の表として HTML にする。文章の中の生の HTML は解釈せず文字として出し、HTML のコメントは出さない。
+view always turns a `block` that is a chunk of Markdown text into HTML as CommonMark with GFM tables. Raw HTML in the text is not interpreted but output as text, and HTML comments are not output.
 
-### REQ-view-008: 参照を開いて見せる
+### REQ-view-008: Opening and showing a reference
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A65, docs/decision/records/2026-10-02-whole-picture.md#A67, docs/decision/records/2026-10-02-whole-picture.md#A31, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-05-localization.md#A5, docs/decision/records/2026-10-05-localization.md#A34, docs/decision/records/2026-10-05-localization.md#D1
 - verification: unit
 
-view は常に、`参照`を`参照の表`の表示名で描き、それを選ぶとページを移らずにその`参照`の本文を開いて見せる。状態が "superseded" の`参照`には置き換え済みの印として`UI の文字`の "superseded" を、"deferred" の`参照`には後回しの印として "deferred" を付ける。本文の無い`参照`は REQ-view-030 のとおりに描く。view はどの`参照`もページの外へのリンクにしない。
+view always draws a `reference` by its display name in the `reference table`, and when it is selected, opens and shows the body of that `reference` without leaving the page. A `reference` whose status is "superseded" gets the "superseded" of the `UI text` as the superseded mark, and a `reference` whose status is "deferred" gets "deferred" as the deferred mark. A `reference` with no body is drawn as in REQ-view-030. view makes no `reference` a link outside the page.
 
-### REQ-view-009: 古い節の印
+### REQ-view-009: Mark of a stale section
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A39, docs/decision/records/2026-10-02-whole-picture.md#A68, docs/decision/records/2026-10-05-localization.md#A5, docs/decision/records/2026-10-05-localization.md#D1
 - verification: unit
 
-view は常に、古いとされた`節`の見出しの近くに、IR が変わった後にまだ見直していない`節`であることを示す印として`UI の文字`の "stale_mark" を描く。
+view always draws, near the heading of a `section` marked stale, the "stale_mark" of the `UI text` as a mark showing that the `section` has not yet been reviewed since the IR changed.
 
-### REQ-view-010: 外から読み込まない
+### REQ-view-010: Load nothing from outside
 
 - kind: prohibition
 - source: docs/decision/records/2026-10-02-whole-picture.md#A37, docs/decision/records/2026-10-02-whole-picture.md#A16, docs/decision/records/2026-10-02-whole-picture.md#A82
 - verification: unit
 
-view は、`ページ`の中で、フォント、スクリプト、スタイル、画像を、view が返す`ページ`の外から読み込ませてはならない。
+view must not make a `page` load fonts, scripts, styles or images from outside the `page` entries view returns.
 
 ## Examples
 
 ```gherkin
 @id=EX-view-001 @about=REQ-view-002 @source=docs/decision/records/2026-10-02-whole-picture.md#A24,docs/decision/records/2026-10-02-whole-picture.md#A56,docs/decision/records/2026-10-02-whole-picture.md#A42,docs/decision/records/2026-10-02-whole-picture.md#A26,docs/decision/records/2026-10-02-whole-picture.md#A82
-Scenario: 2つの文書から4つのページが返る
-  Given 名前が "changes" と "guides" の2つの文書を持つ描画の入力がある
-  When view で描画する
-  Then 返るページの名前は "changes.html"、"guides.html"、"index.html"、"style.css" の4つだけである
+Scenario: Two documents return four pages
+  Given a render input with two documents named "changes" and "guides"
+  When it is rendered with view
+  Then the names of the returned pages are only the four "changes.html", "guides.html", "index.html" and "style.css"
 
 @id=EX-view-002 @about=REQ-view-004 @source=docs/decision/records/2026-10-02-whole-picture.md#A10,docs/decision/records/2026-10-02-whole-picture.md#A29
-Scenario: 同じ入力を2回描くと同じバイト列になる
-  Given 任意の描画の入力がある
-  When view で2回描画する
-  Then 2回の結果のページの名前と中身のバイト列がすべて等しい
+Scenario: Rendering the same input twice gives the same bytes
+  Given any render input
+  When it is rendered twice with view
+  Then the names and content bytes of the pages of the two results are all equal
 
 @id=EX-view-003 @about=REQ-view-007 @source=docs/decision/records/2026-10-02-whole-picture.md#A70
-Scenario: 文章の中の生の HTML は文字として出る
-  Given 節の Markdown の文章に "<script>x</script>" の行と "<!-- @kotowari[REQ-core-001:00000000] -->" の行がある
-  When view で描画する
-  Then その文書のページに "<script>" の要素は無く、"&lt;script&gt;" の文字があり、"@kotowari[" の文字は無い
+Scenario: Raw HTML in the text is output as text
+  Given the Markdown text of a section has a line "<script>x</script>" and a line "<!-- @kotowari[REQ-core-001:00000000] -->"
+  When it is rendered with view
+  Then the page of that document has no "<script>" element, has the text "&lt;script&gt;", and does not have the text "@kotowari["
 
 @id=EX-view-004 @about=REQ-view-008 @source=docs/decision/records/2026-10-02-whole-picture.md#A65,docs/decision/records/2026-10-02-whole-picture.md#A67
-Scenario: 置き換え済みの参照は本文と印付きで描かれ外へリンクしない
-  Given 参照の表に、参照 "docs/x.md#A1" が表示名 "x A1"、本文 "古い決定"、状態 "superseded" である1件があり、それを refs に持つ部品がある
-  When view で描画する
-  Then ページには表示名 "x A1" と置き換え済みの印と、選ぶと開く本文 "古い決定" があり、"docs/x.md" への href は無い
+Scenario: A superseded reference is drawn with its body and mark and does not link outside
+  Given the reference table has one entry where the reference "docs/x.md#A1" has the display name "x A1", the body "古い決定" and the status "superseded", and there is a part that has it in refs
+  When it is rendered with view
+  Then the page has the display name "x A1", the superseded mark, and the body "古い決定" that opens when selected, and there is no href to "docs/x.md"
 
 @id=EX-view-005 @about=REQ-view-009 @source=docs/decision/records/2026-10-02-whole-picture.md#A39,docs/decision/records/2026-10-02-whole-picture.md#A68
-Scenario: 古い節にだけ印が付く
-  Given 古いとされた節 "A" と古くない節 "B" を持つ文書がある
-  When view で描画する
-  Then 節 "A" の見出しの近くにだけ見直していない節の印がある
+Scenario: Only a stale section gets the mark
+  Given a document with a section "A" marked stale and a non-stale section "B"
+  When it is rendered with view
+  Then only near the heading of section "A" is there the mark of a section not yet reviewed
 
 @id=EX-view-006 @about=REQ-view-010,REQ-view-003 @source=docs/decision/records/2026-10-02-whole-picture.md#A37,docs/decision/records/2026-10-02-whole-picture.md#A22,docs/decision/records/2026-10-02-whole-picture.md#A82,docs/decision/records/2026-10-02-whole-picture.md#A65,docs/decision/records/2026-10-02-whole-picture.md#A73
-Scenario: ページは外のものを読み込まない
-  Given 8種の部品をすべて使う文書を持つ描画の入力がある
-  When view で描画する
-  Then どのページにも "http://" か "https://" で始まる src、href、"@import"、"url(" の参照は無い
+Scenario: Pages load nothing from outside
+  Given a render input with a document that uses all eight kinds of part
+  When it is rendered with view
+  Then no page has a src, href, "@import" or "url(" reference starting with "http://" or "https://"
 
 @id=EX-view-010 @about=REQ-view-005 @source=docs/decision/records/2026-10-05-overview-index.md#A4,docs/decision/records/2026-10-05-overview-index.md#A6,docs/decision/records/2026-10-05-overview-index.md#A15
-Scenario: 一覧は目次に書いた順と入れ子で描かれる
-  Given 名前が "a" と "b" の2つの文書があり、目次の題名が "kotowari" で、項目が題名 "テスト" と説明 "テストとの対応" の目次の群（項目は "b"）と、"a" の順である
-  When view で描画する
-  Then "index.html" の見出しは "kotowari" で、"テスト" の目次の群の中に "b" の題名と lead の結論があり、その後に "a" の題名と lead の結論がある
-  And "b" の題名は "b.html" へ、"a" の題名は "a.html" へ相対リンクする
+Scenario: The listing is drawn in the order and nesting written in the table of contents
+  Given there are two documents named "a" and "b", the title of the table of contents is "kotowari", and its entries are, in order, a contents group with the title "テスト" and the description "テストとの対応" (entry "b") and "a"
+  When it is rendered with view
+  Then the heading of "index.html" is "kotowari"; inside the contents group "テスト" are the title of "b" and the conclusion of its lead; and after that are the title of "a" and the conclusion of its lead
+  And the title of "b" links relatively to "b.html", and the title of "a" to "a.html"
 ```
