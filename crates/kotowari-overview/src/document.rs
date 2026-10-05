@@ -76,14 +76,16 @@ fn is_comment(node: &Node) -> bool {
     rest.is_empty()
 }
 
-/// 見出しの文字。HTML のコメント（行の中の HTML）を除く
+/// 見出しの文字。HTML のコメントだけを除き、ほかの行の中の HTML（`Vec<String>` の `<String>` など）は
+/// 文字として残す
 #[expect(
     clippy::wildcard_enum_match_arm,
     reason = "markdown::mdast::Node is a foreign enum: the remaining node kinds are deliberately handled alike"
 )]
 fn plain_text(node: &Node, out: &mut String) {
     match node {
-        Node::Html(_) => {}
+        Node::Html(html) if html.value.starts_with("<!--") => {}
+        Node::Html(html) => out.push_str(&html.value),
         Node::Text(text) => out.push_str(&text.value),
         Node::InlineCode(code) => out.push_str(&code.value),
         other => {
