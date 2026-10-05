@@ -102,6 +102,8 @@ pub struct Page {
 const STYLE: &str = include_str!("style.css");
 const INDEX: &str = "index.html";
 const STALE_MARK: &str = "<span class=\"stale-mark\">IR が変わった後、まだ見直していない節</span>";
+/// アウトラインの項目に付ける、STALE_MARK と同じ意味の短い印（REQ-view-022）
+const OUTLINE_STALE_MARK: &str = "<span class=\"outline-stale\">見直していない</span>";
 
 /// 描画の入力からページの並びを返す。ページは名前のバイト順に並ぶ（REQ-view-002）
 pub fn render(input: &RenderInput) -> Vec<Page> {
@@ -132,16 +134,23 @@ fn page_name(document: &Document) -> String {
     format!("{}.html", document.name)
 }
 
-/// 文書のページ。目次の中の位置、題名、冒頭の lead、lead に続く冒頭の部品、節、同じ目次の群の文書の
-/// 順に描く（REQ-view-006、REQ-view-019、REQ-view-020）
+/// 文書のページ。目次の中の位置、題名、節のアウトライン、冒頭の lead、lead に続く冒頭の部品、節、
+/// 同じ目次の群の文書の順に描く（REQ-view-006、REQ-view-019、REQ-view-020、REQ-view-022）
 fn document_page(
     document: &Document,
     place: Option<&index::Place>,
     documents: &index::Documents,
     refs: &parts::Refs,
 ) -> String {
+    let outline = outline(&document.sections);
+    // アウトラインのあるページは、広い画面でアウトラインを本文の左に置く（REQ-view-023）
+    let class = if outline.is_empty() {
+        "page"
+    } else {
+        "page with-outline"
+    };
     let mut body = format!(
-        "{}<main class=\"page\">\n<h1>{}</h1>\n",
+        "{}<main class=\"{class}\">\n<h1>{}</h1>\n{outline}<div class=\"content\">\n",
         crumbs(place),
         html::escape(&document.title)
     );
@@ -149,11 +158,12 @@ fn document_page(
     for part in &document.preamble {
         body.push_str(&parts::part(part, refs));
     }
-    for section in &document.sections {
+    for (index, section) in document.sections.iter().enumerate() {
         // REQ-view-009: 古い節の見出しの隣に、まだ見直していないことを示す印を描く
         let mark = if section.stale { STALE_MARK } else { "" };
         body.push_str(&format!(
-            "<section class=\"section\">\n<h2>{}{mark}</h2>\n",
+            "<section class=\"section\" id=\"{}\">\n<h2>{}{mark}</h2>\n",
+            section_anchor(index),
             html::escape(&section.heading)
         ));
         body.push_str(&blocks(&section.blocks, refs));
@@ -162,8 +172,38 @@ fn document_page(
     if let Some(place) = place {
         body.push_str(&siblings(&document.name, place.group, documents));
     }
-    body.push_str("</main>\n");
+    body.push_str("</div>\n</main>\n");
     html::shell(&document.title, &body)
+}
+
+/// 節の場所。節の並びの中の位置から作るので、同じ見出しの節が2つあっても重ならない（REQ-view-022）
+fn section_anchor(index: usize) -> String {
+    format!("section-{}", index + 1)
+}
+
+/// 節の見出しを並べ、それぞれをその節へのリンクにしたアウトライン。節が無ければ何も描かない
+/// （REQ-view-022）
+fn outline(sections: &[Section]) -> String {
+    if sections.is_empty() {
+        return String::new();
+    }
+    let items: String = sections
+        .iter()
+        .enumerate()
+        .map(|(index, section)| {
+            let mark = if section.stale {
+                OUTLINE_STALE_MARK
+            } else {
+                ""
+            };
+            format!(
+                "<li><a href=\"#{}\">{}</a>{mark}</li>\n",
+                section_anchor(index),
+                html::escape(&section.heading)
+            )
+        })
+        .collect();
+    format!("<nav class=\"outline\">\n<ul>\n{items}</ul>\n</nav>\n")
 }
 
 /// 目次の中の位置。目次に名前が無ければ一覧へのリンクだけ（REQ-view-019）

@@ -772,7 +772,9 @@ fn parts_after_the_lead_and_before_the_first_section_reach_the_page_in_order() {
     let at = |needle: &str| page.find(needle).unwrap_or_else(|| panic!("{needle}"));
     assert!(at("結論") < at("冒頭の一つ目"));
     assert!(at("冒頭の一つ目") < at("冒頭の二つ目"));
-    assert!(at("冒頭の二つ目") < at("最初の節の見出し"));
+    // 節の見出しはアウトラインにも出るので、本文の節の見出しである最後の出現と比べる
+    let heading = page.rfind("最初の節の見出し").expect("heading");
+    assert!(at("冒頭の二つ目") < heading);
 }
 
 // @kotowari[REQ-core-294]

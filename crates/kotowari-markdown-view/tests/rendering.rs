@@ -39,6 +39,15 @@ fn page<'a>(pages: &'a [Page], name: &str) -> &'a str {
         .content
 }
 
+/// アウトライン（節の見出しを並べたもの）を除いたページ。本文の中の順と印を見るときに使う
+fn without_outline(text: &str) -> String {
+    let Some(start) = text.find("<nav class=\"outline\"") else {
+        return text.to_string();
+    };
+    let end = start + text[start..].find("</nav>").expect("outline end") + "</nav>".len();
+    format!("{}{}", &text[..start], &text[end..])
+}
+
 fn position(text: &str, needle: &str) -> usize {
     text.find(needle)
         .unwrap_or_else(|| panic!("{needle} not in page"))
@@ -240,7 +249,7 @@ fn req_view_006_the_lead_follows_the_title_and_sections_keep_their_order() {
         references: vec![],
         toc: TocGroup::default(),
     };
-    let text = page(&render(&input), "a.html").to_string();
+    let text = without_outline(page(&render(&input), "a.html"));
     let title = position(&text, "<h1>題名A</h1>");
     let lead = position(&text, "題名Aの結論");
     let first = position(&text, "二番目ではない最初の節");
@@ -262,7 +271,7 @@ fn req_view_006_preamble_parts_follow_the_lead_in_order_before_the_sections() {
         references: vec![],
         toc: TocGroup::default(),
     };
-    let text = page(&render(&input), "a.html").to_string();
+    let text = without_outline(page(&render(&input), "a.html"));
     let lead = position(&text, "題名Aの結論");
     let first = position(&text, "冒頭の一つ目");
     let second = position(&text, "冒頭の二つ目");
@@ -464,7 +473,7 @@ fn ex_view_005_only_the_stale_section_carries_the_mark() {
             references: vec![],
             toc: TocGroup::default(),
         };
-        page(&render(&input), "a.html").to_string()
+        without_outline(page(&render(&input), "a.html"))
     };
     let text = with(true);
     // 古いとしたことで変わるのは、節 A の見出しと節 B の見出しの間だけである
