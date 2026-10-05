@@ -23,6 +23,15 @@ on:
 permissions:
   contents: read
 
+# リリースは途中で止めず、同時に1つずつ作る
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
 env:
   TAG: ${{ inputs.tag || github.ref_name }}
   CARGO_TERM_COLOR: always
@@ -30,7 +39,8 @@ env:
 jobs:
   meta:
     name: タグを読み、リリースノートを切り出す
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     outputs:
       product: ${{ steps.product.outputs.product }}
       version: ${{ steps.product.outputs.version }}
@@ -38,61 +48,21 @@ jobs:
       bin: ${{ steps.product.outputs.bin }}
       readme: ${{ steps.product.outputs.readme }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: タグを取り出す
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: refs/tags/${{ env.TAG }}
           persist-credentials: false
       - id: product
         name: タグから製品を引く
-        run: |
-          if [[ "$TAG" =~ ^(kotowari|kotowari-mds)-v([0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?)$ ]]; then
-            product="${BASH_REMATCH[1]}"
-            version="${BASH_REMATCH[2]}"
-          else
-            echo "::error::タグの形が違う: $TAG"
-            exit 1
-          fi
-          case "$product" in
-            kotowari)
-              package=kotowari-cli
-              bin=kotowari
-              changelog=CHANGELOG.md
-              readme=README.md
-              ;;
-            kotowari-mds)
-              package=kotowari-mds
-              bin=kotowari-mds
-              changelog=crates/kotowari-markdown-schema/CHANGELOG.md
-              readme=crates/kotowari-markdown-schema/README.md
-              ;;
-          esac
-          {
-            echo "product=$product"
-            echo "version=$version"
-            echo "package=$package"
-            echo "bin=$bin"
-            echo "changelog=$changelog"
-            echo "readme=$readme"
-          } >> "$GITHUB_OUTPUT"
+        run: scripts/release-meta.sh "$TAG" | tee -a "$GITHUB_OUTPUT"
       - name: 変更履歴からその版の節を切り出す
         env:
           VERSION: ${{ steps.product.outputs.version }}
           CHANGELOG: ${{ steps.product.outputs.changelog }}
-        run: |
-          if [ ! -f "$CHANGELOG" ]; then
-            echo "::error::変更履歴 $CHANGELOG が無い"
-            exit 1
-          fi
-          awk -v version="$VERSION" '
-            index($0, "## [" version "]") == 1 { inside = 1; next }
-            inside && (/^## / || /^\[[^]]+\]: /) { exit }
-            inside { print }
-          ' "$CHANGELOG" > release-notes.md
-          if ! grep -q '[^[:space:]]' release-notes.md; then
-            echo "::error::$CHANGELOG に $VERSION の節が無いか、空"
-            exit 1
-          fi
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        run: scripts/release-notes.sh "$VERSION" "$CHANGELOG" release-notes.md
+      - name: リリースノートを渡す
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-notes
           path: release-notes.md
@@ -100,18 +70,19 @@ jobs:
   check:
     name: チェック
     needs: meta
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: タグを取り出す
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: refs/tags/${{ env.TAG }}
           persist-credentials: false
       - name: Rust を用意する
-        run: |
-          rustup toolchain install stable --profile minimal
-          rustup default stable
-      - name: テスト全件
-        run: cargo test --workspace --locked
+        # rust-toolchain.toml の版を入れる
+        run: rustup toolchain install
+      - name: Rust の関門（整形、lint、テスト全件）
+        run: scripts/gates.sh
       - name: kotowari check
         run: cargo run -q --locked -p kotowari-cli --bin kotowari -- check --format text
       - name: 版のずれの検査
@@ -123,16 +94,19 @@ jobs:
   mutants-scope:
     name: 変異テストの範囲を決める
     needs: meta
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     outputs:
       scope: ${{ steps.plan.outputs.scope }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: タグを履歴ごと取り出す
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: refs/tags/${{ env.TAG }}
           fetch-depth: 0
           persist-credentials: false
       - id: plan
+        name: 範囲を選ぶ
         run: |
           scope="$(printf 'refs/tags/%s %s refs/tags/%s 0\n' "$TAG" "$(git rev-parse "refs/tags/${TAG}^{commit}")" "$TAG" | scripts/mutants.sh plan)"
           echo "scope: $scope"
@@ -151,11 +125,12 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
           - os: macos-15
             target: aarch64-apple-darwin
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     env:
       TARGET: ${{ matrix.target }}
       PRODUCT: ${{ needs.meta.outputs.product }}
@@ -164,28 +139,22 @@ jobs:
       BIN: ${{ needs.meta.outputs.bin }}
       README: ${{ needs.meta.outputs.readme }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: タグを取り出す
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: refs/tags/${{ env.TAG }}
           persist-credentials: false
       - name: Rust を用意する
+        # rust-toolchain.toml の版を入れ、その版にターゲットを足す
         run: |
-          rustup toolchain install stable --profile minimal
-          rustup default stable
+          rustup toolchain install
           rustup target add "$TARGET"
       - name: ビルド
         run: cargo build --release --locked -p "$PACKAGE" --bin "$BIN" --target "$TARGET"
       - name: 固める
-        run: |
-          name="${PRODUCT}-v${VERSION}-${TARGET}"
-          mkdir -p "dist/$name"
-          cp "target/$TARGET/release/$BIN" "dist/$name/"
-          cp "$README" "dist/$name/README.md"
-          cp LICENSE-MIT LICENSE-APACHE "dist/$name/"
-          cd dist
-          tar -czf "$name.tar.gz" "$name"
-          shasum -a 256 "$name.tar.gz" > "$name.tar.gz.sha256"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        run: scripts/package-release.sh "$PRODUCT" "$VERSION" "$TARGET" "$BIN" "$README"
+      - name: 配るファイルを渡す
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: dist-${{ matrix.target }}
           path: |
@@ -195,16 +164,20 @@ jobs:
   release:
     name: Release を作る
     needs: [meta, build]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
+      # Release を作り、配るファイルを載せるため
       contents: write
     steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - name: 配るファイルを受け取る
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: dist-*
           path: dist
           merge-multiple: true
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - name: リリースノートを受け取る
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: release-notes
       - name: Release を作る
