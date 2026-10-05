@@ -88,7 +88,7 @@ $ echo $?
 
 ## status と list と query
 
-<!-- @kotowari[TBL-core-028:669e5402, TBL-core-026:05d8938e, REQ-core-155:fbd06b39, TBL-core-027:62b02eff, REQ-core-161:bf9675f4] -->
+<!-- @kotowari[TBL-core-028:669e5402, TBL-core-026:05d8938e, REQ-core-155:ec783479, TBL-core-027:62b02eff, REQ-core-161:bf9675f4] -->
 
 `status` は、後回しの要求の数を `requirements` の `deferred` に、後回しのシナリオの数を `scenarios` の `deferred` に出します。
 後回しは `with_tests` にも `without_tests` にも数えないので、`without_tests` は本物の未完の数になります。
@@ -157,7 +157,7 @@ docs/ir/greet/greet.md:15 [notice] deferred_with_test REQ-greet-003
 
 ## 宣言の誤り
 
-<!-- @kotowari[REQ-core-209:9672da47, REQ-core-210:3ab477dc, REQ-core-115:16c7309b, TBL-core-008:88b0f60c, TBL-core-019:508f1afa] -->
+<!-- @kotowari[REQ-core-209:9672da47, REQ-core-210:3ab477dc, REQ-core-115:16c7309b, TBL-core-008:11d73b51, TBL-core-019:67506434] -->
 
 `- deferred:` の値は `- source:` と同じ規則で検査します。
 誤りの行は、その `- deferred:` の行です。

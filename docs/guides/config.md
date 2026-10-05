@@ -5,7 +5,7 @@ kotowari が読む場所（IR、判断の記録、テスト、ガイド、面の
 
 ## 書式
 
-<!-- @kotowari[REQ-core-013:f8877aec, REQ-core-017:471b53f5, TBL-core-004:647c5bdd] -->
+<!-- @kotowari[REQ-core-013:f8877aec, REQ-core-017:471b53f5, TBL-core-004:bec85c0f] -->
 
 すべてのキーを既定の値で書くと次のようになります。
 キーは入れ子の形で書きます（`decisions:` の下に `records:`）。
@@ -35,19 +35,24 @@ surface:
 #   files:
 #     - ".kotowari/overview/*.md"
 #   toc: .kotowari/overview-toc.yaml            # 全体像の目次。overview を書くときは必須
+# languages: [ja, en]                           # 既定は「無し」（英語だけ）。2つ以上なら文書を言語ごとの対で持つ
+# labels:                                       # 既定は「無し」。英語でない言語の UI の文字（鍵はすべて書く）
+#   ja:
+#     language_name: 日本語
+#     pages: "{n} ページ"
 limits:
   lines: 200
   requirements: 10
 vague_words: [適切に, 必要に応じて, 通常は, など]
 ```
 
-`changes`、`mutants.equivalents`、`surface.unspecified`、`overview` は既定が「鍵が無い」状態です。
+`changes`、`mutants.equivalents`、`surface.unspecified`、`overview`、`languages`、`labels` は既定が「鍵が無い」状態です。
 上の例の値は書き方を示すためのもので、既定ではありません。
 `surface.unspecified` は `surface.rules` が空の一覧のまま書くと止まるので、例では `#` で外しています（[`surface.*`](#surfacefilessurfacerulessurfaceunspecified)）。
 
 ## キーの一覧
 
-<!-- @kotowari[TBL-core-004:647c5bdd, REQ-core-325:05c0afbf] -->
+<!-- @kotowari[TBL-core-004:bec85c0f, REQ-core-325:05c0afbf] -->
 
 | キー | 値の型 | 既定 | 説明 |
 |---|---|---|---|
@@ -71,9 +76,56 @@ vague_words: [適切に, 必要に応じて, 通常は, など]
 | `limits.lines` | 正の整数 | `200` | IR の文書の行数の上限。超えると `too_many_lines` の注意 |
 | `limits.requirements` | 正の整数 | `10` | 1つの文書の要求の数の上限。超えると `too_many_requirements` の注意 |
 | `vague_words` | 語の一覧 | `適切に`、`必要に応じて`、`通常は`、`など` | 曖昧語。IR の文に含まれると `vague_word` の誤り |
+| `languages` | 言語タグの一覧 | 無し（英語 `en` だけ） | 言語の一覧。最初の言語が接尾辞の無いファイルの言語。2つ以上なら IR、ガイド、全体像の元データ、目次を言語ごとの対で持つ（[言語と対](#言語と対--languages-と-labels)） |
+| `labels` | 言語タグから、UI の文字の鍵から文字列への対応 | 無し（英語の文字は kotowari が持つ） | 言語ごとの UI の文字。英語でない言語はすべての鍵を書く |
 
 パスはすべて基準のディレクトリからの相対パスで書きます（[基準のディレクトリ](#基準のディレクトリ)）。
 全部の定義は [config の IR](../ir/core/config.md) の TBL-core-004 にあります。
+
+## 言語と対 — `languages` と `labels`
+
+<!-- @kotowari[REQ-core-334:d1092d18, REQ-core-335:68e227b5, REQ-core-336:e062e0cf, REQ-core-337:2b3445bd, REQ-core-339:726dd6bf, REQ-core-351:bfccf5f2, REQ-core-352:832d22c9, TBL-core-046:0ad6c4e8] -->
+
+`languages` は言語タグの並びです（例 `[ja, en]`）。
+言語タグは小文字の英字、数字、`-` だけからなり、空の文字列、ほかの文字を含む言語タグ、同じ言語タグの2回目は設定の誤りで止まります。
+鍵が無いか空の一覧なら英語 `en` だけとみなします。
+最初の言語を「先頭の言語」と呼び、そのファイルは接尾辞の無い名前（`foo.md`）を持ちます。
+
+言語が2つ以上のとき、IR の置き場の文書（`CONTEXT.md` と `FLAGS.md` を含む）、ガイド、全体像の元データ、目次を、言語ごとのファイルの組（対）として読みます。
+判断の記録と ADR の置き場のファイルは対にしません。
+
+- ほかの言語のファイルは同じディレクトリに、拡張子の前に言語タグを入れた名前で置きます（`foo.en.md`、`toc.en.yaml`）。`guides.files` や `overview.files` の glob に当たるかを問わず、名前で探します
+- 先頭の言語の言語タグの付いた `foo.ja.md` や、一覧に無い言語の `foo.fr.md` は、ただの文書 `foo.ja.md` として読みます
+- 先頭の言語のファイルの横に一致の記録 `foo.i18n.yaml` を置きます。中身は各言語のファイル名（ディレクトリを除く）を鍵、最後に同じ内容だと確かめたときのそのファイルの git の blob hash（`git hash-object` と同じ40文字の16進の小文字）を値にした対応表です。値は `kotowari list` の `translations` から写します（[list](commands/list.md)）
+- 欠けた側、一致の記録の誤り、記録と違う hash、文以外の骨組みの食い違い、切り替えの行の誤り、ほかの言語の側や判断の記録へのリンクは、それぞれ誤りになります（[指摘](findings.md)）
+
+```yaml
+# docs/ir/a.i18n.yaml（値は kotowari list の translations から写す。ここでは例）
+a.md: 78981922613b2afb6025042ff6bd878ac1994e85
+a.en.md: 0c3b7c0b5b2f3a4d1e8f6a9b2c4d5e6f7a8b9c0d
+```
+
+`labels` は言語ごとの UI の文字です。
+UI の文字は、全体像のページと切り替えの行に kotowari が書く、元データにも IR にも無い文字です。
+英語 `en` の UI の文字は kotowari が持ち、`labels.en` に書いた鍵だけを置き換えます。
+英語でない言語は、`labels.<言語タグ>` に次のすべての鍵を書きます。
+欠けた鍵、知らない鍵、`languages` に無い言語タグ、数を入れる鍵で `{n}` をちょうど1つ含まない値は設定の誤りで止まります。
+全体像を使わないプロジェクトでも、`language_name` は切り替えの行に使うので、英語でない言語の `labels` は要ります。
+
+| 鍵 | 使う所 | 数を入れる | 英語の文字 |
+|---|---|---|---|
+| `language_name` | 切り替えの行と、全体像のほかの言語へのリンクに書くその言語の名前 | いいえ | `English` |
+| `index_link` | 目次に名前の無いページから一覧へのリンク | いいえ | `Overview` |
+| `pages` | 一覧の目次の群のページの数 | はい | `{n} pages` |
+| `stale_sections` | 一覧の古い節の数 | はい | `{n} sections to review` |
+| `open_items` | 一覧の札が `open` の項目の数 | はい | `{n} open` |
+| `planned_items` | 一覧の札が `planned` の項目の数 | はい | `{n} planned` |
+| `stale_mark` | 古い節の見出しの近くの印 | いいえ | `Not reviewed since the IR changed` |
+| `outline_stale` | アウトラインの古い節の印 | いいえ | `not reviewed` |
+| `superseded` | 置き換え済みの参照の印 | いいえ | `(superseded)` |
+| `deferred` | 後回しの参照の印 | いいえ | `(deferred)` |
+| `compare_before`、`compare_after`、`compare_why` | compare の部品の列の見出し | いいえ | `Before`、`After`、`Why` |
+| `state_decided`、`state_planned`、`state_open`、`state_dropped` | status の部品の札 `decided`、`planned`、`open`、`dropped` の表示 | いいえ | `Decided`、`Planned`、`Open`、`Dropped` |
 
 ## 設定ファイルの場所
 
@@ -327,7 +379,7 @@ $ echo $?
 
 ## 設定の誤り
 
-<!-- @kotowari[REQ-core-014:cb85cf22, EX-core-003:6f823b5e, EX-core-383:53b1ffc1, REQ-core-225:77439286, REQ-core-280:4d0ff3ef, TBL-core-004:647c5bdd, REQ-core-326:4b380183] -->
+<!-- @kotowari[REQ-core-014:cb85cf22, EX-core-003:6f823b5e, EX-core-383:53b1ffc1, REQ-core-225:77439286, REQ-core-280:4d0ff3ef, TBL-core-004:bec85c0f, REQ-core-326:4b380183, REQ-core-335:68e227b5, REQ-core-352:832d22c9] -->
 
 次のどれかがあると、kotowari は検査を行わずに止まります（終了コード 2）。
 標準エラーの1行目は `config error: ` で始まり、設定ファイルのパスと理由が続きます。
@@ -349,6 +401,8 @@ $ echo $?
 | 全体像の元データの置き場とガイドかテストの置き場の重なり | `config error: docs/a.md: matched by both overview.files and guides.files`（テストなら `tests.files`） |
 | `overview` に `toc` が無い | `config error: .kotowari/config.yaml: overview.toc is required` |
 | 目次のファイルが `overview.files`、`guides.files`、`tests.files` のどれかの走査で読むファイルに入る | `config error: .kotowari/overview/toc.md: matched by both overview.toc and overview.files`（当たった鍵のうち、この順で最初のもの。目次を `.yaml` にするなど glob の外に置く） |
+| `languages` の空の文字列、小文字の英字と数字と `-` のほかの文字を含む言語タグ、同じ言語タグの2回目 | `config error: .kotowari/config.yaml: invalid language tag: "EN"` |
+| `labels` の誤り（`languages` に無い言語タグ、知らない鍵、英語でない言語の欠けた鍵、`{n}` をちょうど1つ含まない数の文字） | `config error: .kotowari/config.yaml: labels.ja.stale_mark: missing` |
 
 空の一覧（`files: []`）は誤りではありません。
 
@@ -430,12 +484,12 @@ ir: docs/ir
 limit:
   lines: 100
 $ kotowari check --format text
-config error: .kotowari/config.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words
+config error: .kotowari/config.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words, languages, labels
  --> <input>:2:1
   |
 1 | ir: docs/ir
 2 | limit:
-  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words
+  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words, languages, labels
 3 |   lines: 100
   |
 $ echo $?

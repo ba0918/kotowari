@@ -17,7 +17,7 @@
 
 ## 種類の一覧
 
-<!-- @kotowari[TBL-core-008:88b0f60c, TBL-core-009:e42a4a68, TBL-core-019:508f1afa, REQ-core-027:f49770f5] -->
+<!-- @kotowari[TBL-core-008:11d73b51, TBL-core-009:e42a4a68, TBL-core-019:67506434, REQ-core-027:7f4780ac] -->
 
 「行」の列は、指摘の `line` が指す行です。
 「なし」は文書全体への指摘で、`line` は null、text では `-` になります。
@@ -84,6 +84,13 @@
 | `overview_toc_page_unknown` | 誤り | 全体像の元データの無い名前の項目の JSON Pointer（例 `/items/1`） | なし | [目次の検査](../ir/core/overview-toc.md) |
 | `overview_toc_page_duplicate` | 誤り | 同じ名前の2つ目以降の項目の JSON Pointer | なし | [目次の検査](../ir/core/overview-toc.md) |
 | `overview_toc_group_empty` | 誤り | `items` が空の群の JSON Pointer。いちばん外側なら `(root)` | なし | [目次の検査](../ir/core/overview-toc.md) |
+| `translation_missing` | 誤り | 無い側のパス | なし | [対](#対) |
+| `translation_record_invalid` | 誤り | `missing`、`yaml`、`keys`、`value` のどれか | なし | [対](#対) |
+| `translation_stale` | 誤り | `記録の hash 今の hash` | なし | [対](#対) |
+| `translation_structure_mismatch` | 誤り | 最初に食い違った部分の名前（`heading`、`field`、`table`、`gherkin`、`code`、`glossary`、`flag`、`mark`、`link`、`frontmatter`、`part`、`toc`） | 最初に食い違った要素の行。数の違いか、要素がその側に無いときはなし | [対](#対) |
+| `translation_switcher_invalid` | 誤り | あるべき切り替えの行 | 題名の後の最初の空でない行。無ければ題名の行、題名も無ければなし | [対](#対) |
+| `link_language_mismatch` | 誤り | 書かれたリンク先 | リンクの行 | [対](#対) |
+| `link_to_record` | 誤り | 書かれたリンク先 | リンクの行 | [対](#対) |
 | `too_many_lines` | 注意 | 行数 | なし | [文書の大きさ](#文書の大きさ) |
 | `too_many_requirements` | 注意 | 要求の数 | なし | [文書の大きさ](#文書の大きさ) |
 | `mutant_timeout` | 注意 | 変更の説明 | 変異の結果の行 | [mutants と plan](#mutants-と-plan) |
@@ -376,6 +383,37 @@ docs/decision/records/2026-09-24-shop.md:17 [error] revision_link_invalid #A9
 | `record_field_missing` | 決定の行の下に、節ごとに必須の補足の行が無い（Agreements、Prohibitions、Delegated、Rejected は `why`、Undecided は `decides`、Superseded は `superseded_by`） | `  - why: 理由` のように補足の行を足す |
 | `record_field_unknown` | 補足の行の名前が `why`、`rejected`、`decided_by`、`superseded_by`、`decides`、`related` のどれでもない | 6つのどれかに直す |
 | `revision_link_invalid` | `superseded_by` の値にリンクが無い。リンクの先の記録か決定の番号が無い | `[A9](#A9)` や `[A3](./other.md#A3)` の形で、実在する決定を指す |
+
+### 対
+
+<!-- @kotowari[REQ-core-338:a190a3f8, REQ-core-339:726dd6bf, REQ-core-341:779f601b, REQ-core-345:031507d3, REQ-core-346:cd9ad349, REQ-core-347:7e67aa6b, REQ-core-348:038b6606, REQ-core-349:c5034509, REQ-core-342:56f127fe, REQ-core-343:f6bcc00a] -->
+
+設定の `languages` に2つ以上の言語を書いたプロジェクトでだけ出ます（[言語と対](config.md#言語と対--languages-と-labels)）。
+IR、ガイド、全体像の元データ、目次の対ごとに、1つの対には1回だけ出ます。
+
+```text
+docs/ir/a.md:- [error] translation_missing docs/ir/a.en.md
+docs/ir/a.i18n.yaml:- [error] translation_record_invalid keys
+guides/a.md:- [error] translation_stale 78981922613b2afb6025042ff6bd878ac1994e85 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+docs/ir/b.en.md:9 [error] translation_structure_mismatch field
+guides/b.md:3 [error] translation_switcher_invalid 日本語 | [English](b.en.md)
+guides/g.en.md:5 [error] link_language_mismatch ../docs/ir/a.md#REQ-001
+guides/g.md:3 [error] link_to_record ../docs/decision/records/r.md#A1
+```
+
+| 種類 | よくある原因 | 直し方 |
+|---|---|---|
+| `translation_missing` | 対のどれかの言語の側が無い。先頭の言語の側が無く、ほかの言語の側だけがあるときは、その側に出て、その側はほかの検査で読まない | 無い側を、ある側の訳として書く。不要な側なら消す |
+| `translation_record_invalid` | 一致の記録 `<幹>.i18n.yaml` が無い、YAML として読めない、鍵が各言語のファイル名とちょうど同じでない、値が40文字の16進の小文字でない。これが出ている間は `translation_stale` を出さない | `kotowari list` の `translations` の hash で記録を書く |
+| `translation_stale` | ある側の今の git の blob hash が記録と違う。片方だけを直した | ほかの側を同じ内容に直してから、記録の hash を `kotowari list` の値に書き直す |
+| `translation_structure_mismatch` | 文以外の骨組み（見出し、項目の欄と出典、表の形と ID、シナリオのタグとステップの語、コードブロック、用語集の出典、ガイドの印、リンク先、全体像の部品の文でない欄、目次の入れ子と名前）が先頭の言語の側と違う | 先頭の言語の側と同じ骨組みにし、文だけを訳す。意味が同じかはレビューで確かめる |
+| `translation_switcher_invalid` | IR とガイドの側の、題名の後の最初の空でない行が切り替えの行でない。切り替えの行は、`languages` の順に各言語の `language_name` を ` \| ` で区切り、自分の言語は文字だけ、ほかの言語は `[名前](その側のファイル名)` にした行 | detail の行をそのまま題名の次に書く |
+| `link_language_mismatch` | 対の側の中のリンクが、ほかの言語の側を指す。スキームで始まる URL と `#` だけのリンク、切り替えの行のリンクは検査しない | 同じ言語の側を指す |
+| `link_to_record` | 対の側の中のリンクが、判断の記録か ADR の置き場のファイルを指す | リンクを外す。経緯は IR の出典から辿れる |
+
+ほかの言語の IR の側には、用語（その言語の用語集 `CONTEXT.<言語タグ>.md` の連鎖から引く）、曖昧語、文書名の参照、閉じないバッククォート、用語集の形の検査だけを行います。
+項目、ID、出典、テストの印との照合、指紋、`list` と `query` の出力は先頭の言語の側だけで決まります。
+ガイドの印の `guide_stale` は、ガイドのどの側にも出ます。
 
 ### mutants と plan
 

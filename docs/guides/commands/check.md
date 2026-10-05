@@ -31,7 +31,7 @@ kotowari check [--format json|text] [--config <path>]
 
 ## 読むもの
 
-<!-- @kotowari[TBL-core-004:647c5bdd, REQ-core-325:05c0afbf] -->
+<!-- @kotowari[TBL-core-004:bec85c0f, REQ-core-325:05c0afbf, REQ-core-336:e062e0cf, REQ-core-337:2b3445bd] -->
 
 `check` は、設定ファイルが指す置き場から、次のものを読みます。
 
@@ -48,6 +48,7 @@ kotowari check [--format json|text] [--config <path>]
 | 全体像の目次 | `overview.toc` | 無し（`overview` の鍵が無ければ読まない。鍵があれば必須で、指す先が無いか読めなければ止まる） |
 
 面の3つは `surface.rules` が空の一覧でないときだけ読みます（[面の検査](../surface.md)）。
+`languages` に2つ以上の言語を書いたときは、IR、ガイド、全体像の元データ、目次のほかの言語の側（`foo.en.md`）と一致の記録（`foo.i18n.yaml`）を、先頭の言語の側と同じディレクトリで名前で探して読みます（[言語と対](../config.md#言語と対--languages-と-labels)）。
 キーの全部は [config.md](../config.md) にあります。
 
 ### 設定ファイル
@@ -124,8 +125,8 @@ text には、下の JSON の `files`、`lines`、`tests`、`guides`、`overview
 
 | 鍵 | 型 | 説明 |
 |---|---|---|
-| `files` | 数 | 読んだ IR の文書の数（用語集と問題の記録を含む） |
-| `lines` | 数 | IR の文書の行数の合計（用語集と問題の記録を含む） |
+| `files` | 数 | 読んだ IR の文書の数（用語集と問題の記録を含む。対ならほかの言語の側も数える） |
+| `lines` | 数 | IR の文書の行数の合計（用語集と問題の記録を含む。対ならほかの言語の側も数える） |
 | `findings` | 配列 | 指摘の一覧。1件の鍵は `kind`、`severity`、`path`、`line`、`detail`（[cli.md](../cli.md#json-の指摘)） |
 | `counts` | オブジェクト | 種類ごとの指摘の数。0件の種類は鍵ごと出ない |
 | `tests` | オブジェクト | 読んだテストのファイルの、拡張子ごとの数（下の節） |
@@ -157,15 +158,16 @@ glob を書き間違えても指摘は出ないので、ここで確かめます
 
 ### 指摘の並びと行
 
-<!-- @kotowari[TBL-core-007:d8427397, REQ-core-027:f49770f5, TBL-core-019:508f1afa] -->
+<!-- @kotowari[TBL-core-007:d8427397, REQ-core-027:7f4780ac, TBL-core-019:67506434] -->
 
 指摘は `path`、`line`（null が先）、`kind`、`detail` の順に並びます（[cli.md](../cli.md#指摘の並び)）。
 同じ行の指摘は、種類の名前の順に並びます。
 
 `line` は種類ごとに決まっています。
-文書全体への指摘（`missing_title`、`missing_scope`、`too_many_lines` など）と、未記載の面の一覧の1件への指摘、全体像の元データの `overview_lead_missing`、`overview_ir_missing`、`overview_ir_shared`、`overview_name_conflict` と、目次の `overview_toc_invalid`、`overview_toc_page_missing`、`overview_toc_page_unknown`、`overview_toc_page_duplicate`、`overview_toc_group_empty` は null、項目への指摘は項目の見出しの行、シナリオへの指摘はタグの行、`surface_without_spec` は面の節の最初の行です。
+文書全体への指摘（`missing_title`、`missing_scope`、`too_many_lines` など）と、未記載の面の一覧の1件への指摘、全体像の元データの `overview_lead_missing`、`overview_ir_missing`、`overview_ir_shared`、`overview_name_conflict` と、目次の `overview_toc_invalid`、`overview_toc_page_missing`、`overview_toc_page_unknown`、`overview_toc_page_duplicate`、`overview_toc_group_empty` と、対の `translation_missing`、`translation_record_invalid`、`translation_stale` は null、項目への指摘は項目の見出しの行、シナリオへの指摘はタグの行、`surface_without_spec` は面の節の最初の行です。
 `overview_form_invalid` は形に合わない行（文書全体にかかるものは null）、`overview_part_unknown`、`overview_part_invalid`、`overview_ref_unresolved` は部品のフェンスの開始の行です。
 ただし部品の中身が YAML として読めない `overview_part_invalid` は、YAML の読み取りが誤りの位置を返せばその行（全体像の元データのファイルの行に直したもの）です。
+`translation_structure_mismatch` は最初に食い違った要素の行（数の違いか、要素がその側に無いときは null）、`translation_switcher_invalid` は題名の後の最初の空でない行（無ければ題名の行、題名も無ければ null）、`link_language_mismatch` と `link_to_record` はリンクの行です。
 種類ごとの行は [findings.md](../findings.md#種類の一覧) の表にあります。
 
 ## 終了コード
