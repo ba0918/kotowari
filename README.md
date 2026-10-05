@@ -1,42 +1,44 @@
 # kotowari
 
-kotowariは、決まった形式でMarkdownに書いた仕様を検査するCLIツール。文書の形式に加え、仕様・判断・テストのつながりも機械的に検査する。
+English | [日本語](README.ja.md)
 
-LLMに仕様を書かせて実装させると、次のようなずれが起きやすい。
+kotowari is a CLI tool that checks specifications written in Markdown in a fixed format. Beyond the format of the documents, it also mechanically checks the links between specifications, decisions and tests.
 
-- 仕様に根拠のない決定が含まれる
-- 要求にテストがない
-- テストがどの要求を確かめているのか分からない
+When you have an LLM write a specification and then implement it, gaps like these tend to creep in:
 
-kotowariでは、仕様を「IR」と呼ぶ正規化したMarkdownで記述する。`kotowari check`を実行すると、次の3点を確かめられる。
+- The specification contains decisions with no basis
+- Requirements have no tests
+- It is unclear which requirement a test is checking
 
-- 各要求に、その根拠となる決定が判断の記録のどこにあるかが書かれているか
-- その決定が実在するか
-- どのテストがその要求を確かめているか
+With kotowari, you write the specification in normalized Markdown called the "IR". Running `kotowari check` confirms three things:
 
-LLMが使うことを第一に想定しており、既定ではJSONで結果を出力する。人が読む場合は、`--format text`でテキスト形式に切り替える。
+- Each requirement states where in the decision records the decision behind it is
+- That decision actually exists
+- Which tests check that requirement
 
-## インストール
+kotowari is designed first and foremost for LLMs, so it outputs results as JSON by default. For people, switch to text output with `--format text`.
 
-リリースのタグは`kotowari-v0.1.0`の形式になっている。  
-以下のコマンド例ではバージョン`0.1.0`を指定しているので、インストールしたいバージョンに置き換えて使う。
+## Installation
+
+Release tags have the form `kotowari-v0.1.0`.  
+The commands below use version `0.1.0`; replace it with the version you want to install.
 
 ### mise
 
-[mise](https://mise.jdx.dev/)を使う場合は、`github:`でGitHub Releaseのバイナリをインストールできる。
-`version_prefix=kotowari-v`を指定するとタグの先頭の`kotowari-v`が除かれ、バージョンを`0.1.0`のように指定できる。
+With [mise](https://mise.jdx.dev/), you can install the binary from the GitHub Release using `github:`.
+Specifying `version_prefix=kotowari-v` strips the leading `kotowari-v` from the tag, so you can give the version as just `0.1.0`.
 
 ```console
 $ mise use -g 'github:ba0918/kotowari[version_prefix=kotowari-v]@0.1.0'
 $ kotowari --version
 ```
 
-### ビルド済みのバイナリ
+### Prebuilt binaries
 
-[GitHub Release](https://github.com/ba0918/kotowari/releases)で、Linux x86_64とmacOS arm64向けのビルド済みバイナリを配布している。
+Prebuilt binaries for Linux x86_64 and macOS arm64 are available on [GitHub Releases](https://github.com/ba0918/kotowari/releases).
 
-配布ファイルの名前は`kotowari-v<版>-<ターゲット>.tar.gz`で、`<ターゲット>`にはLinuxの場合は`x86_64-unknown-linux-gnu`、macOSの場合は`aarch64-apple-darwin`が入る。
-アーカイブには`kotowari`のバイナリ、README、ライセンスが含まれる。各アーカイブには、SHA256のチェックサムを記録した`.sha256`ファイルも付けている。
+The archives are named `kotowari-v<version>-<target>.tar.gz`, where `<target>` is `x86_64-unknown-linux-gnu` for Linux and `aarch64-apple-darwin` for macOS.
+Each archive contains the `kotowari` binary, the README and the licenses, and comes with a `.sha256` file holding its SHA256 checksum.
 
 ```console
 $ curl -LO https://github.com/ba0918/kotowari/releases/download/kotowari-v0.1.0/kotowari-v0.1.0-x86_64-unknown-linux-gnu.tar.gz
@@ -47,72 +49,72 @@ $ install kotowari-v0.1.0-x86_64-unknown-linux-gnu/kotowari ~/.local/bin/
 $ kotowari --version
 ```
 
-インストール先は`~/.local/bin/`に限らず、`PATH`に含まれる任意のディレクトリに変更できる。
+You don't have to install into `~/.local/bin/`; any directory on your `PATH` will do.
 
-### ソースからビルドする
+### Building from source
 
-Rustのツールチェーンがあれば、`cargo install`でソースからビルドしてインストールできる。`--tag`でリリースのタグを指定すると、バージョンを固定できる。手元でビルドするため、インストールには時間がかかる。
+If you have a Rust toolchain, you can build and install from source with `cargo install`. Pass a release tag with `--tag` to pin the version. Since it builds locally, installation takes a while.
 
 ```console
 $ cargo install --git https://github.com/ba0918/kotowari --tag kotowari-v0.1.0 kotowari
 $ kotowari --version
 ```
 
-## 最小の例
-現在のソースツリーでは、CLIパッケージは`kotowari-cli`と`kotowari-mds`です。
-チェックアウトから入れる場合は`cargo install --path . --bin kotowari`と`cargo install --path crates/kotowari-mds --bin kotowari-mds`を使います。
-上の旧タグの例は、そのタグにある旧パッケージ名を使っています。
-Rustからの呼出は[公開クレートAPI](docs/guides/public-crate-api.md)を参照してください。実行ファイルのコマンド、出力、終了コードは変わりません。
+## A minimal example
+In the current source tree, the CLI packages are `kotowari-cli` and `kotowari-mds`.
+To install from a checkout, use `cargo install --path . --bin kotowari` and `cargo install --path crates/kotowari-mds --bin kotowari-mds`.
+The old-tag example above uses the old package name found at that tag.
+To call kotowari from Rust, see the [public crate API](docs/guides/public-crate-api.md). The executable's commands, output and exit codes are unchanged.
 
 
-既定では、設定や仕様、判断の記録を次の場所に置く。
+By default, the configuration, the specification and the decision records live here:
 
 ```
-.kotowari/config.yaml        設定（空でも無くてもよい。既定の値で動く）
-docs/ir/                     IR（仕様）
-docs/ir/CONTEXT.md           用語集
-docs/decision/records/       判断の記録
-docs/decision/adr/           ADR（空でよい）
+.kotowari/config.yaml        configuration (may be empty or absent; defaults apply)
+docs/ir/                     IR (the specification)
+docs/ir/CONTEXT.md           glossary
+docs/decision/records/       decision records
+docs/decision/adr/           ADRs (may be empty)
 ```
 
-要求の文に「適切に」「必要に応じて」「通常は」「など」が含まれると、曖昧語として指摘される。
-この4語を既定の検査対象としているが、`.kotowari/config.yaml`の`vague_words`で変更できる。
+If a requirement's text contains 「適切に」 (appropriately), 「必要に応じて」 (as needed), 「通常は」 (usually) or 「など」 (etc.), it is reported as a vague word.
+These four words are checked by default; you can change them with `vague_words` in `.kotowari/config.yaml`.
 
-まず、決めたことを判断の記録に書く。1行につき1つの決定を記載し、ここでは`docs/decision/records/2026-01-01-login.md`に保存する。
+First, write what you decided in a decision record, one decision per line. Here it is saved as `docs/decision/records/2026-01-01-login.md`.
 
 ```markdown
-# 壁打ちの記録: ログイン
+# Brainstorm record: login
 
 ## Context
 
-ログインの失敗をどう扱うかを決める。
+Decide how to handle failed logins.
 
 ## Agreements
 
-- A1 パスワードを5回続けて間違えたアカウントは15分ロックする
-  - why: 総当たりを遅らせる
-  - decided_by: 利用者
+- A1 Lock an account for 15 minutes after five consecutive wrong passwords
+  - why: slow down brute-force attacks
+  - decided_by: user
 ```
 
-次に、`docs/ir/login.md`に要求を書く。出典には、先ほど記録した決定を指定する。
+Next, write the requirement in `docs/ir/login.md`. For its source, point at the decision you just recorded.
 
 ```markdown
-# ログイン
+# Login
 
-ログインの失敗の扱いを扱う。
+Covers how failed logins are handled.
 
 ## Requirements
 
-### REQ-001: 連続失敗でロックする
+### REQ-001: Lock after consecutive failures
 
 - kind: event_driven
 - source: docs/decision/records/2026-01-01-login.md#A1
 - verification: unit
 
-パスワードを5回続けて間違えたとき、システムはそのアカウントを15分ロックする。
+When the password is entered wrongly five times in a row, the system locks that account for 15 minutes.
 ```
 
-最後に、要求を確かめるテストに`@kotowari[ID]`の印を付ける。
+Finally, put an `@kotowari[ID]` mark on the test that checks the requirement.
 
 ```rust
 // @kotowari[REQ-001]
@@ -120,8 +122,8 @@ docs/decision/adr/           ADR（空でよい）
 fn req_001_locks_after_five_failures() { /* ... */ }
 ```
 
-ここまで記述して`kotowari check`を実行すると、何も出力せずに終了コード0で終了する。
-テストの印を外して実行すると、次の2件が報告される。
+With all of this in place, `kotowari check` prints nothing and exits with code 0.
+Remove the mark from the test and run it again, and it reports these two findings:
 
 ```console
 $ kotowari check --format text
@@ -129,42 +131,42 @@ docs/ir/login.md:7 [error] requirement_without_test REQ-001
 src/lib.rs:2 [error] test_without_id req_001_locks_after_five_failures
 ```
 
-出典の決定番号を消したり書き間違えたりしても、同じように指摘が出る。
+Deleting or mistyping the decision number in the source produces a finding in the same way.
 
-## リファレンス
+## Reference
 
-詳しい使い方は[リファレンスの目次](docs/guides/index.md)から調べられる。[設定ファイル](docs/guides/config.md)、[テストの印の付け方](docs/guides/marks.md)、[指摘の種類と直し方](docs/guides/findings.md)のほか、各コマンドの説明をまとめている。
+For detailed usage, start from the [reference index](docs/guides/index.md). It covers the [configuration file](docs/guides/config.md), [how to mark tests](docs/guides/marks.md), [finding kinds and how to fix them](docs/guides/findings.md), and each command.
 
-## コマンド
+## Commands
 
-| コマンド | 役目 |
+| Command | What it does |
 |---|---|
-| [`kotowari check`](docs/guides/commands/check.md) | IRの形式、出典の実在、テストの印を検査する。終了コード0は指摘なし、1は誤りあり、2は検査を開始できなかったことを示す |
-| [`kotowari list`](docs/guides/commands/list.md) | IRの項目と、印の付いたテストの一覧 |
-| [`kotowari query <ID>`](docs/guides/commands/query.md) | 1件の本文、テスト、逆引き |
-| [`kotowari status`](docs/guides/commands/status.md) | 揃っているかを集計し、最後の行に`complete true`か`complete false`を出力する |
-| [`kotowari mutants --tool cargo-mutants <結果のファイル>`](docs/guides/commands/mutants.md) | 変異テスト（cargo-mutants）の結果から見逃しを報告する |
-| [`kotowari plan <計画のファイル>`](docs/guides/commands/plan.md) | 同梱のスキーマに従って、実装計画のファイルが決まった形式で書かれているかを検査する |
-| `kotowari overview build` | 設定の`overview.files`に当たる全体像の元データと`overview.toc`の指す目次を検査し、誤りが無ければ`.kotowari/cache/overview/`の下に、目次の順と入れ子で並べた一覧と全体像ごとのHTMLのページを書く。変わったファイルだけを書き、もう作らないページは消す。設定に`overview`を記述した場合のみ使える |
-| `kotowari overview serve [--port <PORT>]` | buildと同じページを書いてから`http://127.0.0.1:<PORT>/`（既定4590）で配り、Ctrl-Cまで続ける |
-| [`kotowari changes --base <REV> (--head <REV> \| --staged) --phase <implementation\|review>`](docs/guides/commands/changes.md) | Gitの比較元と対象の差分を照合記録と突き合わせ、照合が漏れている箇所や記録が古くなっている箇所を報告する。設定に`changes`を記述した場合のみ使える。 |
+| [`kotowari check`](docs/guides/commands/check.md) | Checks the IR's format, that sources exist, and the marks on tests. Exit code 0 means no findings, 1 means there are errors, and 2 means the check could not start |
+| [`kotowari list`](docs/guides/commands/list.md) | Lists the IR items and the marked tests |
+| [`kotowari query <ID>`](docs/guides/commands/query.md) | Shows one item's text, its tests, and what refers to it |
+| [`kotowari status`](docs/guides/commands/status.md) | Tallies how complete things are and prints `complete true` or `complete false` on the last line |
+| [`kotowari mutants --tool cargo-mutants <results-file>`](docs/guides/commands/mutants.md) | Reports misses from the results of mutation testing (cargo-mutants) |
+| [`kotowari plan <plan-file>`](docs/guides/commands/plan.md) | Checks, against the bundled schema, that an implementation plan file is written in the fixed format |
+| `kotowari overview build` | Checks the overview data matched by the configuration's `overview.files` and the table of contents that `overview.toc` points at, and if there are no errors, writes under `.kotowari/cache/overview/` an index ordered and nested as in the table of contents, plus one HTML page per overview. Only changed files are written, and pages no longer produced are deleted. Available only when `overview` is set in the configuration |
+| `kotowari overview serve [--port <PORT>]` | Writes the same pages as build, then serves them at `http://127.0.0.1:<PORT>/` (default 4590) until Ctrl-C |
+| [`kotowari changes --base <REV> (--head <REV> \| --staged) --phase <implementation\|review>`](docs/guides/commands/changes.md) | Compares the Git diff between the base and the target against the change records, and reports changes that were not reconciled and records that have gone stale. Available only when `changes` is set in the configuration. |
 
-現在、テストの印を読み取れるのはRustのみ。ただし、IRの検査はほかの言語を使うプロジェクトでも利用できる。
+Currently, marks on tests can be read only from Rust. The IR checks, however, work in projects that use other languages too.
 
-## LLMと一緒に使う
+## Using it with an LLM
 
-LLMと一緒に使うためのClaude Code用スキルを`agent/skills/`に用意している。
+`agent/skills/` provides Claude Code skills for using kotowari together with an LLM.
 
-- `kotowari`は、IRと判断の記録の書き方、指摘の直し方、印の置き方をLLMに教える
-- `kotowari-*`は、kotowariを使って壁打ちから計画、実装、レビューまでの工程を進めるためのスキルで、利用は任意
+- `kotowari` teaches the LLM how to write the IR and decision records, how to fix findings, and where to put marks
+- `kotowari-*` are optional skills that use kotowari to drive the workflow from brainstorming through planning, implementation and review
 
-インストール方法は[agent/skills/README.md](agent/skills/README.md)に記載している。
+Installation instructions are in [agent/skills/README.md](agent/skills/README.md).
 
-## 同梱ツール
+## Bundled tool
 
-`crates/kotowari-mds`には、Markdown文書をYAMLのスキーマで検査する汎用CLIツール`kotowari-mds`がある。
-kotowariはこの仕組みでIRを読み取っているが、`kotowari-mds`は単独でも利用できる。詳しくは[README](crates/kotowari-markdown-schema/README.md)を参照。
+`crates/kotowari-mds` contains `kotowari-mds`, a general-purpose CLI that checks Markdown documents against a YAML schema.
+kotowari reads the IR through this mechanism, but `kotowari-mds` can also be used on its own. See its [README](crates/kotowari-markdown-schema/README.md) for details.
 
-## ライセンス
+## License
 
-[MIT](LICENSE-MIT)または[Apache-2.0](LICENSE-APACHE)のいずれかを選んで利用できる。
+Licensed under either [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
