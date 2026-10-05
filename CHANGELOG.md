@@ -27,6 +27,7 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 
 ### Fixed
 
+- `kotowari overview serve`が、Hostヘッダーが`127.0.0.1:<port>`か`localhost:<port>`でないリクエスト（Hostの無いものを含む）に、本文の無い403を返すようにした。外のサイトが自分の名前を127.0.0.1に向け直して（DNSリバインディング）、ブラウザ経由で全体像のページを読み出せていた。
 - `languages`に2つ以上の言語を書いたリポジトリで、`kotowari changes`がほかの言語の側（`foo.ja.md`など）もIRとして読み、照合記録に先頭の言語の側を書くと`change_record_invalid`にしていた。`kotowari check`と同じく先頭の言語の側だけをIRとして読む。
 - 多言語の対で、参照形式のリンクと画像も利用箇所の行で検査し、リンク先の並びの食い違いを検出する。全体像の翻訳側だけがテストの glob と重なる場合も設定の誤りで止める。
 - `kotowari` スキルのセットアップ手順に、判断の記録用ディレクトリへの `.gitkeep` 作成とコミット対象に含める指示を追加した。空ディレクトリが clone／worktree で失われ、`kotowari check` がエラーになるのを防ぐ。
