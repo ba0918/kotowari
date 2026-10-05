@@ -2,31 +2,37 @@
   "version": 1,
   "entries": [
     {
-      "id": "localization-config-review",
-      "base": "25008aed476ffedb4f43711ac7b54e682376e164",
+      "id": "localization-tidy-review",
+      "base": "668b29921987731f3fc815417505a308c6fa0009",
       "role": "reviewer",
       "files": [
         {
-          "path": "crates/kotowari-core/src/config.rs",
-          "before": "sha256:368b39a1d3f1e3a47d3104c9b764d5bd29ce5b3074585cd6bcbd871880a2c526",
-          "after": "sha256:ce96006c399ec96b223f1c5bed7d8cca27cab206aa3c69746c9f109b48b13c67"
+          "path": "CHANGELOG.md",
+          "before": "sha256:95afa5ad3430f530efb897bde2adba3ca41f2d9713a8849c469eedd824e05cef",
+          "after": "sha256:4662cfa9c81363f9b0416d3e6a1b45b49a7ade3e78d63f0bc6f6fda40901f390"
         },
         {
-          "path": "crates/kotowari-core/src/ui_text.rs",
-          "before": null,
-          "after": "sha256:debac6a7e9349e9efbc9f29a12237f4942ffc3f591dff3722b38cf78ac3fd066"
+          "path": "crates/kotowari-core/src/lib.rs",
+          "before": "sha256:a0029a297786a5a90592af2a2d2e8dd26204621aa0151f183aaf55a9839919b9",
+          "after": "sha256:91d8a865e43380b83bd168bdaf0b8385d75f2b11911faa5f7249984d46f8e2d9"
         },
         {
-          "path": "tests/step1_config.rs",
-          "before": "sha256:53e40b67541749826953620e1988d61dab9aa836e34cc25a2e8339f5818e9060",
-          "after": "sha256:fb04b14eefbc8122f9bbc51cea998270cb6bcea80d7379dd953eff4223094ad7"
+          "path": "crates/kotowari-core/src/skeleton.rs",
+          "before": "sha256:01df14fceaf55b3a78f1d928577788197e7c25b78a5e51155b1249900fac71a5",
+          "after": "sha256:d36b7d30f4d232b2299d824837accd5eb6b1a3713c905e405fd2d35d461058d0"
+        },
+        {
+          "path": "crates/kotowari-overview/README.md",
+          "before": "sha256:7f215c21eb15a10f5f0cfa6ff1439eece9f4da1b292cb9ab0d72a53f654a910a",
+          "after": "sha256:0b5a0dd71657d791e94902fd39aa05d367afd8eee97a3e285a0984ff9bfb5685"
+        },
+        {
+          "path": "docs/guides/findings.md",
+          "before": "sha256:7437fb87346a3fa6923eec3cf0465a892379ae366bb57a9d8307bc2fa7208c03",
+          "after": "sha256:5af30526a728604db1b733d06d0fd21914adaffa6160fce08f0a0ee1619378fe"
         }
       ],
       "ir": [
-        {
-          "path": "docs/ir/core/config.md",
-          "sha256": "sha256:7e5bf9c5cde474007a83a5f5e0d197e742596e705c8582af28642f3d1b6324b9"
-        },
         {
           "path": "docs/ir/core/overview-languages.md",
           "sha256": "sha256:c84053e6bb7040e2b23ca76430a079569bb2ceb84066d6bd2d82e12956d45da6"
@@ -34,519 +40,33 @@
         {
           "path": "docs/ir/core/translation-pairs.md",
           "sha256": "sha256:b83e4cc3eda43bc67219efc77e017ad3d624a8970f77794a8e6b5c562563380c"
-        }
-      ],
-      "conclusion": "existing",
-      "reason": "独立に確認した。config.rs が languages と labels を読み、空タグ、小文字英字と数字と - 以外、重複を設定の誤りで止める（REQ-core-335）。ui_text.rs の17鍵と英語の文字と数を入れる4鍵は TBL-core-046 と一致し、en は英語の表に labels.en を重ね、ほかの言語は labels.<tag> そのもの、言語の一覧に無い鍵、知らない鍵、欠けた鍵、{n} が1つでない値で止まる（REQ-core-351、REQ-core-352、A8、A21、A40）。tests/step1_config.rs の EX-core-513、537、538、539 は直した設定で終了コード0、壊した設定で終了コード2と config error を確かめ、IR の Then と一致する。詳細の文言は D1 の委任の範囲で、テストは固定していない。範囲の逸脱と仕様との食い違いは無い。",
-      "requirements": [
-        "REQ-core-334",
-        "REQ-core-335",
-        "REQ-core-351",
-        "REQ-core-352"
-      ],
-      "decisions": [
-        "docs/decision/records/2026-10-05-localization.md#A8",
-        "docs/decision/records/2026-10-05-localization.md#A16",
-        "docs/decision/records/2026-10-05-localization.md#A40",
-        "docs/decision/records/2026-10-05-localization.md#D3"
-      ],
-      "handoff": null,
-      "gaps": []
-    },
-    {
-      "id": "localization-pairs-review",
-      "base": "25008aed476ffedb4f43711ac7b54e682376e164",
-      "role": "reviewer",
-      "files": [
-        {
-          "path": "crates/kotowari-core/Cargo.toml",
-          "before": "sha256:fb7e6e647cc4da18fee947358234025e38bbca16548c12bf0e0e4f47fbf8951e",
-          "after": "sha256:deb1e619ea805ab0ae12dec52149ecba330b1ff9bc215d31a40027a929022e9c"
         },
         {
-          "path": "Cargo.lock",
-          "before": "sha256:8b27624b45bdb7a95b8f9605c4c9755e20e4768ee0cb57a0ff6bae6e37b295b3",
-          "after": "sha256:e53037cfa6dcbe329106b4e6bafe59bc7d6946f669954b631abea8cffd3f0909"
-        },
-        {
-          "path": "crates/kotowari-core/src/lib.rs",
-          "before": "sha256:b588d0f26149d26e850fb003be9ba9b2f391305affc68b5655f9a124c847f9d5",
-          "after": "sha256:a0029a297786a5a90592af2a2d2e8dd26204621aa0151f183aaf55a9839919b9"
-        },
-        {
-          "path": "crates/kotowari-core/src/translations.rs",
-          "before": null,
-          "after": "sha256:7a459c694a9898f587d9ed890b83ed982a6c0237ac64a39063b149aa81d8bb1a"
-        },
-        {
-          "path": "crates/kotowari-core/src/skeleton.rs",
-          "before": null,
-          "after": "sha256:01df14fceaf55b3a78f1d928577788197e7c25b78a5e51155b1249900fac71a5"
-        },
-        {
-          "path": "crates/kotowari-core/src/inputs.rs",
-          "before": "sha256:106b80825f5e67bf1d7a0d361a1d58961c95d69c6c4c048ef44b288f2975fd43",
-          "after": "sha256:5b79b93f4e5568d352d21055a982e3c636a805d42bf345fcf0e42d8966988042"
-        },
-        {
-          "path": "crates/kotowari-core/src/ir.rs",
-          "before": "sha256:010ee0c22acec8f3d87156a65462f78a68b789908b2c205a2dd3f6da8d53c673",
-          "after": "sha256:d785d07b9d9f3477a13531145ca4c565bec973fc9a24bca0d8887b31f5a5a2b4"
-        },
-        {
-          "path": "crates/kotowari-core/src/guides.rs",
-          "before": "sha256:8c9116b2da572ee10fc2a5d945a55b10e93a85c71330de1caaeb2f15aa1324da",
-          "after": "sha256:6fbc3f1cb5a5eee44833c0cf29336383fc713f049678e2d9b4e4578e4c7c9353"
-        },
-        {
-          "path": "crates/kotowari-core/tests/translations.rs",
-          "before": null,
-          "after": "sha256:c87587b465214c2a0fe01866ac0917cf2e110b4cb4eb7c786a0a69f84788c20c"
-        },
-        {
-          "path": "crates/kotowari/src/translations.rs",
-          "before": null,
-          "after": "sha256:cdea35ca1b3d5a34c5e17022a4f6fd0799f88bf9bc728d504a507488dfe952f2"
-        },
-        {
-          "path": "crates/kotowari/src/acquisition.rs",
-          "before": "sha256:07527e8070e054e9bbb1955f6c76323e69c413dd1dc4eaa7d46444cc486c9807",
-          "after": "sha256:e1141d112437a8b8f1daea69bf27c5af4890e32d7fd32c8a59d1c0a6197c7eaf"
-        },
-        {
-          "path": "crates/kotowari/src/guides.rs",
-          "before": "sha256:ac7ea07e981eb972e551f1b629b231d566e1332dc3fe1b02bb4bd9086b2ec2b9",
-          "after": "sha256:5240055f7851b645d35ae1377260235cba50af28a95b5265390a1ca310a6b293"
-        },
-        {
-          "path": "crates/kotowari/src/ir.rs",
-          "before": "sha256:a8b01ca4030a422872bf80d3b24652c3f9dc6e27345a8ce6e9d52bbc7a3d2144",
-          "after": "sha256:1df65e07cb7b3d186c52fac542bde237c83f5f088088742a5211b39826e8fdb5"
-        },
-        {
-          "path": "crates/kotowari/src/lib.rs",
-          "before": "sha256:60570f578a3767e3c41e3c60a67982efd495b104b0ccb856da8540fd790fa1a9",
-          "after": "sha256:16565e7057510340b995ef3d674d912f78efb891de46de0e4bd32e81745aa5c9"
-        },
-        {
-          "path": "crates/kotowari/src/overview.rs",
-          "before": "sha256:2ef700bb1560d62b687005c8d750fbccd95f2efdaa9a382d5714dc1ba8a306b5",
-          "after": "sha256:af77478ddf980a1cbe8f7f8dcfd3f469ec0fa838516ca321ab4876c0977fb62d"
-        },
-        {
-          "path": "src/cli/list.rs",
-          "before": "sha256:474dbe1450e4fc7a47fd7e81e1fbb7c13fb1e5ca3ecbf27c86ea868df828a065",
-          "after": "sha256:a10c85e431660a2808aa0f4b87cee22347be028e7a3d12c6a950a465ebd28789"
-        },
-        {
-          "path": "src/cli/output.rs",
-          "before": "sha256:a834dd02c13bc4017d60eea81bd0bca4bb4f7804432e5ba01781916f590f1dab",
-          "after": "sha256:564d138ed9a4eeaa018b68fbf29102d0458cfdb0f07f372cbef1c0efe35253b6"
-        },
-        {
-          "path": "tests/step10_list.rs",
-          "before": "sha256:0609ddb760df5d7583e70e58b7092a756d336ad808c1c4023295f1110f103a23",
-          "after": "sha256:85cd3e6c74696c3bd773f0122fd03d8c1e5cbf39cd720473a081a0335bd6ca58"
-        },
-        {
-          "path": "tests/step21_translations.rs",
-          "before": null,
-          "after": "sha256:5fce6ba7fd6ed371ec6f4395d6cb948aadf0c34b5ce240112353bec241c2e776"
-        },
-        {
-          "path": "crates/kotowari-overview/src/lib.rs",
-          "before": "sha256:10f0091e46db9a6ee7c24a6fde51c1041dfb76289b12d901d81176cda899a341",
-          "after": "sha256:cdc62e5fc3db919312638caee169917ee01806ee4e1fc7a02f588514545227e4"
-        },
-        {
-          "path": "crates/kotowari-overview/src/references.rs",
-          "before": "sha256:2f1636d684d8626fdf42a579b747be78a7d4f419875676368eef17ee6ae3beec",
-          "after": "sha256:5995798222a09869d9120ded1b8616abad56e01d7afd93888baa48aecf398bf0"
-        },
-        {
-          "path": "crates/kotowari-overview/tests/overview.rs",
-          "before": "sha256:a8b580264d9c60f70bceb436c64007768de9788a30e2e37d947214f2e3fd9eab",
-          "after": "sha256:3a75ad1b948d82340b7f640dcf7decfe771af318184a6b915f55c2fd09d9a285"
-        }
-      ],
-      "ir": [
-        {
-          "path": "docs/ir/core/finding-order.md",
-          "sha256": "sha256:a14b3491321605550456b04e50ed9bef3cfb872e0b95cc07ae7fbccb6479cfa1"
-        },
-        {
-          "path": "docs/ir/core/findings.md",
-          "sha256": "sha256:d9350a2d9175aedb62e28a9d465b1b63fc689fe9ee784a7c9e37446085230564"
-        },
-        {
-          "path": "docs/ir/core/ir-document.md",
-          "sha256": "sha256:750ac81344015d70e85ec5266214a0a855809ad37719b2b4b29cb638bfa687e8"
-        },
-        {
-          "path": "docs/ir/core/library-crates.md",
-          "sha256": "sha256:cf1050591af8f8972aa07a7e744719ab6ff97820837bfd9dfc05cdb1a1aabd12"
-        },
-        {
-          "path": "docs/ir/core/list.md",
-          "sha256": "sha256:104af3dc97c42d6c9db90b24aa338ea9d914e2e7c6caa60d7e8b9aa5c1c7bee6"
+          "path": "docs/ir/core/translation-structure.md",
+          "sha256": "sha256:20c2fc78bc21d1ebc7fde823322563546d8be07822b8790f43c1257161576ef3"
         },
         {
           "path": "docs/ir/core/overview-commands.md",
           "sha256": "sha256:78f0491bf74dfab5aa9be37bc2fb79c3f610478ab7e7fdd4081c5ed9e169f4e8"
-        },
-        {
-          "path": "docs/ir/core/overview-data.md",
-          "sha256": "sha256:5f3c0c7da46279fd542fa056101cbda092b306f12aaaf72d5036999f8966a7e5"
-        },
-        {
-          "path": "docs/ir/core/overview-languages.md",
-          "sha256": "sha256:c84053e6bb7040e2b23ca76430a079569bb2ceb84066d6bd2d82e12956d45da6"
-        },
-        {
-          "path": "docs/ir/core/overview-output.md",
-          "sha256": "sha256:c4cacb6d55b900915849007a9dacb7f3f0d77745ea54879529383fd0d9d2d57b"
-        },
-        {
-          "path": "docs/ir/core/overview-toc.md",
-          "sha256": "sha256:a5348332655cf7e2793fae042cc731eb97b29f08013422e80213bb171d44baaf"
-        },
-        {
-          "path": "docs/ir/core/translation-pairs.md",
-          "sha256": "sha256:b83e4cc3eda43bc67219efc77e017ad3d624a8970f77794a8e6b5c562563380c"
-        },
-        {
-          "path": "docs/ir/core/translation-structure.md",
-          "sha256": "sha256:20c2fc78bc21d1ebc7fde823322563546d8be07822b8790f43c1257161576ef3"
         }
       ],
       "conclusion": "existing",
-      "reason": "Independently reconciled the complete 22-file localization-pairs entry against the branch-wide base and staged content. Acquisition remains in kotowari, while core computes pair classification, blob hashes, skeletons and findings from memory. Primary IR supplies identities and fingerprints; translated IR supplies prose checks and reference bodies. The list ordering, side naming, record validation, skeleton parts, switchers and language-specific overview behavior follow the associated localization IR and decisions. The repair resolves reference links and images through parser-normalized identifiers with first-definition-wins and preserves both usage and definition locations in source order (REQ-core-344 through REQ-core-348). Observed the original link regressions fail before the repair and pass afterward. Overview overlap validation now checks collected translated paths before pair filtering and precedes TOC reads, preserving REQ-core-280 and REQ-core-326. Observed the overlap regression fail before and pass after, and the final 39-test translation integration suite pass. The added regressions cover user-produced invalid tags, escaped table cells, missing and changed headings, translatable part fields, terminal switchers, three languages, images, TOC text exclusions, colons in relative queries, and linked or inaccessible cache directories. Assertions concern declared behavior; the exact overlap diagnostic is specified by REQ-core-280. The redundant contains wrapper removal and listing through the blob accessor preserve values. Removing the positive-line filter preserves direct Spanned YAML deserialization, where successful nodes retain positive source locations; this path does not use generic serde adapters that discard spans. Reviewed all associated IR, including overview data, output, commands and TOC rules. No new product requirement or unresolved specification conflict was found. Full-workspace and CI results remain separate integration evidence. Independently reviewed the final table-border regression against TBL-core-044: optional outer GFM pipes preserve table shape for topics, guides and overview data, while a real third column changes the header row. Observed both residual mutations fail the new equality assertion and the unchanged production implementation pass. This adds a declared table-shape observation rather than an assertion about the splitting helper; no production behavior or equivalence classification changes.",
+      "reason": "Independent review of the same changed bytes. CHANGELOG.md, docs/guides/findings.md and crates/kotowari-overview/README.md were read against REQ-core-294, 337, 338, 341, 342, 343, 353 and found to state the specified behavior: other-language IR sides get unclosed-backtick and glossary-form checks (REQ-core-342); only IR, overview-data and table-of-contents pairs stop the overview build (REQ-core-294); a pair read from two places raises one finding while translation_missing and translation_stale are per side (REQ-core-337, 338, 341); inspect_translations checks every side and builds one render input per language, with other-language pages under <language tag>/ (REQ-core-343, 353). The skeleton module is now pub(crate) and skeleton::mismatch is cfg(test) only; no other crate references skeleton, in-crate tests still use it, and cargo test --workspace --all-features --locked passes, so behavior is unchanged (REQ-core-344, TBL-core-044). The decision record Position line is consistent with the recorded approval and implementation. No defect or contradiction of the specification was found.",
       "requirements": [
-        "REQ-core-334",
-        "REQ-core-336",
+        "REQ-core-294",
         "REQ-core-337",
         "REQ-core-338",
-        "REQ-core-339",
-        "REQ-core-340",
         "REQ-core-341",
         "REQ-core-342",
         "REQ-core-343",
         "REQ-core-344",
-        "REQ-core-345",
-        "REQ-core-346",
-        "REQ-core-347",
-        "REQ-core-348",
-        "REQ-core-349",
-        "REQ-core-027",
-        "REQ-core-033",
-        "REQ-core-305",
-        "REQ-core-328",
-        "REQ-core-329",
-        "REQ-core-152",
-        "REQ-core-155",
-        "REQ-core-351",
-        "REQ-core-353",
-        "REQ-core-354",
-        "REQ-core-355",
-        "REQ-core-291",
-        "REQ-core-293",
-        "REQ-core-294",
-        "REQ-core-307",
-        "REQ-core-308",
-        "REQ-core-280",
-        "REQ-core-326",
-        "REQ-core-288",
-        "REQ-core-296",
-        "REQ-core-324"
-      ],
-      "decisions": [
-        "docs/decision/records/2026-10-05-localization.md#A11",
-        "docs/decision/records/2026-10-05-localization.md#A12",
-        "docs/decision/records/2026-10-05-localization.md#A14",
-        "docs/decision/records/2026-10-05-localization.md#A15",
-        "docs/decision/records/2026-10-05-localization.md#A17",
-        "docs/decision/records/2026-10-05-localization.md#A18",
-        "docs/decision/records/2026-10-05-localization.md#A19",
-        "docs/decision/records/2026-10-05-localization.md#A20",
-        "docs/decision/records/2026-10-05-localization.md#A22",
-        "docs/decision/records/2026-10-05-localization.md#A24",
-        "docs/decision/records/2026-10-05-localization.md#A26",
-        "docs/decision/records/2026-10-05-localization.md#A27",
-        "docs/decision/records/2026-10-05-localization.md#A28",
-        "docs/decision/records/2026-10-05-localization.md#A29",
-        "docs/decision/records/2026-10-05-localization.md#A30",
-        "docs/decision/records/2026-10-05-localization.md#A31",
-        "docs/decision/records/2026-10-05-localization.md#A33",
-        "docs/decision/records/2026-10-05-localization.md#A34",
-        "docs/decision/records/2026-10-05-localization.md#A36",
-        "docs/decision/records/2026-10-05-localization.md#A37",
-        "docs/decision/records/2026-10-05-localization.md#A38",
-        "docs/decision/records/2026-10-05-localization.md#A39",
-        "docs/decision/records/2026-10-05-localization.md#D2",
-        "docs/decision/records/2026-10-05-localization.md#D3"
-      ],
-      "handoff": null,
-      "gaps": []
-    },
-    {
-      "id": "localization-view-review",
-      "base": "25008aed476ffedb4f43711ac7b54e682376e164",
-      "role": "reviewer",
-      "files": [
-        {
-          "path": "crates/kotowari-markdown-view/README.md",
-          "before": "sha256:0f7700d8ddcecb7a2dc596216f7b43f42303bae7bb6108cd420db4660684566a",
-          "after": "sha256:26d59329a3d36d385579dd61882e237bb2f9604fa15ac92419ba41a0b18fc515"
-        },
-        {
-          "path": "crates/kotowari-markdown-view/examples/render.rs",
-          "before": "sha256:f4c625b36f33b9db7478e0655291f721b2eb759fcc409cf68df8ef5de65764c1",
-          "after": "sha256:a84e5456f755159c89d72cdab5e90123fbe650da14e24d4f40c5157efc213f59"
-        },
-        {
-          "path": "crates/kotowari-markdown-view/schemas/status.json",
-          "before": "sha256:da806f13c37d6117f916f649547194b6b53a9fa546d83d5a6f30fff82add7ac4",
-          "after": "sha256:e96a2a43b1f75ff47744576242a0aef0cc4f7cec9fcd530e6f14d0384b3a5424"
-        },
-        {
-          "path": "crates/kotowari-markdown-view/src/html.rs",
-          "before": "sha256:607fb53d25f54a3a614a6def6097c6acca04038eba12df00d9a5e53fbf6340fb",
-          "after": "sha256:44a06603b5c0a509b48360b5d26f06b1cbe4d74aa1f128443e8279909e6f9e26"
-        },
-        {
-          "path": "crates/kotowari-markdown-view/src/index.rs",
-          "before": "sha256:7eeb8ebc581ca184400491884737eabc920b1cde90fa704ba05c328cc33e06ee",
-          "after": "sha256:cad22257430d33ce04874168ae5d18b67f895ef7b43c57a3961006ca39b07ef6"
-        },
-        {
-          "path": "crates/kotowari-markdown-view/src/lib.rs",
-          "before": "sha256:663c510d4d895afef4f840f3e862f86b08691386a5d5c5c8d201e10723d0056b",
-          "after": "sha256:08bcd86a34acdce2d825604f5e5eb43e124ad16bd25cc2dc23c39975517e71b7"
-        },
-        {
-          "path": "crates/kotowari-markdown-view/src/parts.rs",
-          "before": "sha256:2b0199dcbc58596164230940790fa817582eafcd3c562ae60696c8917daafe56",
-          "after": "sha256:588e29bd81c3675a62b9164f010235579f8d9476401cd7da8b1f0cf89a8d06c1"
-        },
-        {
-          "path": "crates/kotowari-markdown-view/src/style.css",
-          "before": "sha256:dc17642abd7f1efc7a6684b52c04e42dcbd7836c636c98b4fd417a94d58a17c8",
-          "after": "sha256:d9a8d5bf335bffee7d11105ce5e908461581fd88a333ec17932ae12adb7d7006"
-        },
-        {
-          "path": "crates/kotowari-markdown-view/tests/common/ui.rs",
-          "before": null,
-          "after": "sha256:1aa798cc15fb445e3964444820303c9903f37a0a69c039c4ad14043fb8f549af"
-        },
-        {
-          "path": "crates/kotowari-markdown-view/tests/determinism.rs",
-          "before": "sha256:837020a424e79654135c0f3ebdd86636b0ecb898d6ab0db91c63aadafdecb69c",
-          "after": "sha256:ce6c6f2c8a04db605092b493f0fe919f093bf59877f240b76b40f20d87d0488e"
-        },
-        {
-          "path": "crates/kotowari-markdown-view/tests/languages.rs",
-          "before": null,
-          "after": "sha256:d5bd7bd3ae73f3d53d23494f87dba89991398ec4964440b07ce5cf203b029bf5"
-        },
-        {
-          "path": "crates/kotowari-markdown-view/tests/navigation.rs",
-          "before": "sha256:c3e82a13397d0203d6d2c9b43f8c62657a63c0f9acf0a9d3e033eb4796dec0ca",
-          "after": "sha256:1a727139d8e7f391e67d85138952648be0a52de2647d976c221ecfa21e1b68e8"
-        },
-        {
-          "path": "crates/kotowari-markdown-view/tests/parts.rs",
-          "before": "sha256:fc8a1361ade74a1346cc3d297ffb8f1ff40cb5fcaef045952c24e778f2f5af41",
-          "after": "sha256:b29a5b2428c891efc02e67631a0875df51e82eb40b1216b95ba40c3ebbd2a1af"
-        },
-        {
-          "path": "crates/kotowari-markdown-view/tests/rendering.rs",
-          "before": "sha256:57f0ea078b9dcbf00941e5bf0bdd90684d291c5e2644b0cf73e8970c4efa1dfa",
-          "after": "sha256:9c26deef48d2cfb71397eaf2b7d8e3d945c6ed98b649e3c45081d4f8e98151fe"
-        }
-      ],
-      "ir": [
-        {
-          "path": "docs/ir/view/languages.md",
-          "sha256": "sha256:6fd34083c8d2b807e5d45f2ce61ff968db181cca57a38e8a0cfcb38870ff1dc3"
-        },
-        {
-          "path": "docs/ir/view/navigation.md",
-          "sha256": "sha256:1c50fe4ca4e4a44cecc44fd1269bbc06dc40e18671ec35daf259555fbbd9f62d"
-        },
-        {
-          "path": "docs/ir/view/parts.md",
-          "sha256": "sha256:060de1f2f2e8d67a3c5794a7d1f0d8921cefdac6f34ac13a385cdba299c3d8ed"
-        },
-        {
-          "path": "docs/ir/view/rendering.md",
-          "sha256": "sha256:97d23400d009f4e8a835df2b6310b98718abd0a60e60eadb488aefbcd2e6bb41"
-        }
-      ],
-      "conclusion": "existing",
-      "reason": "独立に確認した。RenderInput に言語タグ、UI の文字、ほかの言語が入り、view が書く文字は UI の文字の鍵から取る（index_link、数の札、stale_mark、outline_stale、superseded、deferred、compare の見出し、状態の札。A5、A9）。html の lang は入力から、ほかの言語へのリンクは入力の順に place と名前で書かれ、スクリプトは無い（REQ-view-018、026、029）。本文の無い参照は表示名だけで開かない要素になる（REQ-view-030、A34）。status の状態語は decided、planned、open、dropped になり（A3）、数える対象も同じ語に変わった。パンくずの区切りは共通のスタイルが描き、ページの文字に日本語や英語の語は残らない（REQ-view-027）。変わった既存のテスト（determinism、navigation、parts、rendering）の期待の変更は、状態語と UI の文字を入力に渡す追従だけで、各シナリオの意味を変えていない。languages.rs は EX-view-018 から 023 と TBL-view-002 を属性、リンク先、文字で確かめ、IR と一致する。仕様の穴と食い違いは無い。",
-      "requirements": [
-        "REQ-view-026",
-        "REQ-view-027",
-        "REQ-view-028",
-        "REQ-view-029",
-        "REQ-view-030",
-        "REQ-view-001",
-        "REQ-view-008",
-        "REQ-view-009",
-        "REQ-view-016",
-        "REQ-view-017",
-        "REQ-view-019",
-        "REQ-view-022",
-        "REQ-view-018"
-      ],
-      "decisions": [
-        "docs/decision/records/2026-10-05-localization.md#A3",
-        "docs/decision/records/2026-10-05-localization.md#A5",
-        "docs/decision/records/2026-10-05-localization.md#A8",
-        "docs/decision/records/2026-10-05-localization.md#A9",
-        "docs/decision/records/2026-10-05-localization.md#A20",
-        "docs/decision/records/2026-10-05-localization.md#A32",
-        "docs/decision/records/2026-10-05-localization.md#A34",
-        "docs/decision/records/2026-10-05-localization.md#D1"
-      ],
-      "handoff": null,
-      "gaps": []
-    },
-    {
-      "id": "localization-texts-review",
-      "base": "25008aed476ffedb4f43711ac7b54e682376e164",
-      "role": "reviewer",
-      "files": [
-        {
-          "path": "docs/guides/cli.md",
-          "before": "sha256:6296edacdd23fe812df8b665ed06b50db1d3cecb7f44abd8091e386e3d1e232b",
-          "after": "sha256:ac699a26bd5b7e35d7642b430ac7a8225b3e1bf11629bc124d4a2583a91e7e18"
-        },
-        {
-          "path": "docs/guides/commands/check.md",
-          "before": "sha256:7a42cfc45238a3cf81524b20cbab49e255ea6873103fb9fcb66fd89262705423",
-          "after": "sha256:c29eeea412384b1f2be0212bf59d06b295ac7f2fe3798dda3563af94fd31e7fb"
-        },
-        {
-          "path": "docs/guides/commands/list.md",
-          "before": "sha256:9980996cac5fb3c75d8d7fa0a56ed52615c702581a590bff9fe98f689559b93e",
-          "after": "sha256:9a2d5f63e6092df8d09e884df6f60cb4cb209ee023ee1966665e23612fa00b04"
-        },
-        {
-          "path": "docs/guides/config.md",
-          "before": "sha256:2d73c78b853b5c375827f5f1d865e950a781ebb74d49f54e68251e088e6f10c4",
-          "after": "sha256:7b2b39e2eeb3e06926b5c64d8504f34c2f746b5da3553a9a18a896e8970386a6"
-        },
-        {
-          "path": "docs/guides/deferred.md",
-          "before": "sha256:b43308e1c33b7199a0a835bca914309b7600187418328885ef83f522e722e6f3",
-          "after": "sha256:35999d37230d564961aea77f0aa017a2a8be45062c43f7eb25f07117f3cda7c8"
-        },
-        {
-          "path": "docs/guides/findings.md",
-          "before": "sha256:5334e062ba339d161bf6e550a64e20d32e4d43df0ca46d76964f14612efc20e0",
-          "after": "sha256:7437fb87346a3fa6923eec3cf0465a892379ae366bb57a9d8307bc2fa7208c03"
-        },
-        {
-          "path": "agent/skills/kotowari/SKILL.md",
-          "before": "sha256:bcd39f8d551793561b626551ddb1602fc94ed684de075230b8121954072c433d",
-          "after": "sha256:6028a24a5d5dc0c54b8c4c491096c836c44dd7774355e7e5480d4307583cecc2"
-        },
-        {
-          "path": "agent/skills/kotowari/references/config.md",
-          "before": "sha256:66d7786a31853e6513558dd848045bb87f3892ab947a5d029b77328b4f641e92",
-          "after": "sha256:2a7634b76f243b05bf7fed71600e71a7f30fc216900a0dbbb042ba4b2212fcf8"
-        },
-        {
-          "path": "agent/skills/kotowari/references/findings.md",
-          "before": "sha256:100071d8657b497d54fc6fb6db431df30419dd2c0b9b2f96f881414b43632705",
-          "after": "sha256:8b4b3b394e8a96cb18db39c33d5cb3ade22e6cf4600f69873c0f36ff7b780e80"
-        },
-        {
-          "path": "agent/skills/kotowari/references/overview.md",
-          "before": "sha256:fd6aea4fdf4082a5ea1785f3a41f7cd4bd064fa8587365a0c61c8189125edfe7",
-          "after": "sha256:2a89fba6de2627cb9f6473b151fbd606de39dbaa4f94b2b056fba94bc0f59c7e"
-        },
-        {
-          "path": "agent/skills/kotowari/references/translations.md",
-          "before": null,
-          "after": "sha256:7c50bd62af5c3cee8fa07b2ec0149e800052d71bfc98a99cc8a477dea6a564f9"
-        },
-        {
-          "path": "CHANGELOG.md",
-          "before": "sha256:4d3b91ab4eb2ee6ee701d40fc073a878111f44546cb14f3d785486c0429aa0b3",
-          "after": "sha256:95afa5ad3430f530efb897bde2adba3ca41f2d9713a8849c469eedd824e05cef"
-        }
-      ],
-      "ir": [
-        {
-          "path": "docs/ir/core/config.md",
-          "sha256": "sha256:7e5bf9c5cde474007a83a5f5e0d197e742596e705c8582af28642f3d1b6324b9"
-        },
-        {
-          "path": "docs/ir/core/findings.md",
-          "sha256": "sha256:d9350a2d9175aedb62e28a9d465b1b63fc689fe9ee784a7c9e37446085230564"
-        },
-        {
-          "path": "docs/ir/core/list.md",
-          "sha256": "sha256:104af3dc97c42d6c9db90b24aa338ea9d914e2e7c6caa60d7e8b9aa5c1c7bee6"
-        },
-        {
-          "path": "docs/ir/core/overview-languages.md",
-          "sha256": "sha256:c84053e6bb7040e2b23ca76430a079569bb2ceb84066d6bd2d82e12956d45da6"
-        },
-        {
-          "path": "docs/ir/core/skill-references.md",
-          "sha256": "sha256:3d2b78288e4ad1a94af60e0f6390a34dc19ba33e6fdc1eed2ceb64d5fb970211"
-        },
-        {
-          "path": "docs/ir/core/translation-structure.md",
-          "sha256": "sha256:20c2fc78bc21d1ebc7fde823322563546d8be07822b8790f43c1257161576ef3"
-        }
-      ],
-      "conclusion": "existing",
-      "reason": "独立に確認した。ガイド、スキル、CHANGELOG は IR の実際の振る舞いを写している（languages と labels と17鍵、対の置き方と一致の記録、7つの新しい指摘、list の translations と置き場の辿り、言語ごとの全体像と cache の置き場の誤り）。REQ-core-350 の how_to_verify の4点（同じ変更で全部の側を直す、記録の hash から前の文を取り出して差分だけ訳し取り出せなければ全文から訳す、list の translations で記録を書き直す、英語以外の言語を足すときは labels.<タグ> を書く）は references/translations.md の手順に書かれている。このリポジトリ自身の文書は訳さず languages も設定しないのは A13 のとおり。ガイドの印は check が guide_stale と invalid_marker を出さないことで確認した。仕様の穴と食い違いは無い。 Independently checked the final changelog addition against the repaired behavior: reference-link and image usage checks, destination-order comparison, and translated-overview/test glob overlap rejection. Reconciled all files and IR in this entry against base and staged Git identities; the other documentation is unchanged by this repair.",
-      "requirements": [
-        "REQ-core-350",
-        "REQ-core-155",
-        "REQ-core-125",
-        "REQ-core-351",
-        "REQ-core-352",
         "REQ-core-353"
       ],
       "decisions": [
-        "docs/decision/records/2026-10-05-localization.md#A25",
-        "docs/decision/records/2026-10-05-localization.md#A35",
-        "docs/decision/records/2026-10-05-localization.md#A40",
-        "docs/decision/records/2026-10-05-localization.md#A13"
+        "docs/decision/records/2026-10-05-localization.md#A22",
+        "docs/decision/records/2026-10-05-localization.md#A27",
+        "docs/decision/records/2026-10-05-localization.md#D2"
       ],
-      "handoff": null,
-      "gaps": []
-    },
-    {
-      "id": "localization-equivalence-review",
-      "base": "25008aed476ffedb4f43711ac7b54e682376e164",
-      "role": "reviewer",
-      "files": [
-        {
-          "path": ".kotowari/equivalents.yaml",
-          "before": "sha256:c2be438808ff25aed2005190d3ce1c37d73ef21e99d8075bf0b3a03b64af7370",
-          "after": "sha256:77b5d5b7867bee91f7099c5fa7106ba810c4d92402c049e58c01e5ba5b91db07"
-        }
-      ],
-      "ir": [
-        {
-          "path": "docs/ir/core/equivalents.md",
-          "sha256": "sha256:4257454b86d5fbc112a460b1667ce74a0c0fddd1676312070c4b0f19543c55c6"
-        }
-      ],
-      "conclusion": "existing",
-      "reason": "Independently challenged the single new equivalence entry. Replacing TocNode Visitor::expecting with an empty successful formatter changes only a serde diagnostic. skeleton::toc discards every deserialization error and yields an empty skeleton; a separate overview TOC parser produces user-visible YAML/schema findings. Examined empty input, wrong YAML types and alias paths for an observable diagnostic route and found none. This mutation cannot change command findings, stdout, stderr or exit code, and a test of the discarded private wording would not measure specified behavior. The entry matches the exact file, mutation description and current source text and contains the five required string fields with a nonblank rationale (REQ-core-141 and REQ-core-143). This judgment does not cover other surviving mutations.",
-      "requirements": [
-        "REQ-core-141",
-        "REQ-core-143"
-      ],
-      "decisions": [],
       "handoff": null,
       "gaps": []
     }
