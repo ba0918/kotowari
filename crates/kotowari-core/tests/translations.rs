@@ -833,6 +833,39 @@ fn req_core_346_three_language_switchers_do_not_count_as_document_scope() {
     }
 }
 
+// @kotowari[REQ-core-346, REQ-core-111]
+#[test]
+fn req_core_346_a_switcher_after_a_byte_order_mark_does_not_count_as_document_scope() {
+    // 先頭の BOM は読み飛ばす。メモリの入口で BOM 付きの本文を渡しても、題名と切り替えの行を見つける
+    use crate::{CheckInputs, Inspection, SourceText, translations::Place};
+    let (config, languages) = ja_en();
+    let texts = [
+        (
+            "docs/ir/a.md",
+            "\u{FEFF}# Topic\n\nJlanguage_name | [English](a.en.md)\n",
+        ),
+        (
+            "docs/ir/a.en.md",
+            "# Topic\n\n[Jlanguage_name](a.md) | English\n",
+        ),
+    ];
+    let mut inputs = CheckInputs::default();
+    inputs.read.config = config.clone();
+    inputs.read.config.tests.files.clear();
+    inputs.read.ir = Some(vec![SourceText::new(texts[0].0, texts[0].1).unwrap()]);
+    inputs.read.records = Some(vec![]);
+    inputs.read.adr = Some(vec![]);
+    inputs
+        .translations
+        .insert(pair_of(Place::Ir, texts[0].0, &languages, &texts));
+    let inspection = Inspection::build(inputs).unwrap();
+    let findings = inspection.check().findings();
+    assert_eq!(lines_of(findings, "missing_scope"), [None], "{findings:?}");
+    for kind in ["translation_switcher_invalid", "link_language_mismatch"] {
+        assert!(lines_of(findings, kind).is_empty(), "{findings:?}");
+    }
+}
+
 // @kotowari[REQ-core-347, REQ-core-348, REQ-core-349, TBL-core-044]
 #[test]
 fn req_core_347_inline_images_have_checked_and_compared_destinations() {
