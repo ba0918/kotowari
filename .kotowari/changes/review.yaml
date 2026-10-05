@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "overview-index-style-review",
+      "base": "8ed18b744e2fe731b55cbe2f448b69fdb24d73a5",
+      "role": "reviewer",
+      "files": [
+        {
+          "path": "crates/kotowari-markdown-view/src/index.rs",
+          "before": "sha256:e94df62a8becba6bfaecf6ed2d79cc3d03aeeacbaabc01845979d0aab6798efb",
+          "after": "sha256:7eeb8ebc581ca184400491884737eabc920b1cde90fa704ba05c328cc33e06ee"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/src/style.css",
+          "before": "sha256:099b8a41edecbcaf77623ab56344ecda3b6a386be675235a4d831c490ae01fc7",
+          "after": "sha256:aee2a3f121959f9e60d600aae864251a31f0bf6289f130cf0801183db27e42d3"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/view/navigation.md",
+          "sha256": "sha256:9bed6adfa7fa42c78ad6ca33d928f2132c4861df720b1880b2a74156926841d3"
+        },
+        {
+          "path": "docs/ir/view/rendering.md",
+          "sha256": "sha256:164a070914f93254c3e9db1539c9625e3f6474fb843b5c7bd1e71c18f07634f9"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "Checked the overview index restyle against REQ-view-005, REQ-view-016, REQ-view-017, REQ-view-018 and D1 of the overview-index decision record. The Rust change only adds a kind class to each count badge (count-pages, count-stale, count-open, count-planned) and moves the outermost note, still a p.note, into the header between the title and the group counts; no drawn text, count rule, ordering or nesting changed, and the outermost title and note stay the heading. Nested groups are still details open elements with no script, and the summary still holds the group title, the counts and the note, so all three stay visible when folded. In the stylesheet, the two new variables (line-soft, band) are defined in both the light and the dark scheme, and every other variable used (bad, bad-soft, warn, warn-soft, accent, accent-soft, surface, bg, ink, line) already exists in both. All new selectors are scoped under .index except the three kind classes, which no other page uses; the shared .counts and .count rules are used only by the index markup, and only the pill radius changed there, so non-index pages are unaffected. The full workspace test run with all features passed with zero failures and no warning lines. File hashes (before and after) and the two IR hashes were recomputed and match the current tree.",
+      "requirements": [
+        "REQ-view-005",
+        "REQ-view-016",
+        "REQ-view-017",
+        "REQ-view-018"
+      ],
+      "decisions": [
+        "docs/decision/records/2026-10-05-overview-index.md#D1"
+      ],
+      "handoff": null,
+      "gaps": []
+    }
+  ]
+}
