@@ -7,9 +7,6 @@ const SURFACE_SRC: &str =
 const FLAG_RULE: &str =
     "id: flag\nlanguage: rust\nrule:\n  kind: string_literal\n  regex: '^\"--'\n  pattern: $NAME\n";
 
-const SURFACE_RS: &str =
-    "surface:\n  files:\n    - \"src/**/*.rs\"\n  rules:\n    - \"rules/surface.yml\"\n";
-
 /// 置き場と設定を作る。`surface` の行をそのまま設定に足す
 fn make_project(tmp: &Path, surface: &str) {
     for dir in [

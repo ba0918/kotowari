@@ -1,5 +1,4 @@
 use assert_cmd::Command;
-use kotowari_core::config::Config;
 use std::fs;
 use tempfile::TempDir;
 

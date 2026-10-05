@@ -8,10 +8,6 @@ fn cmd() -> Command {
     Command::cargo_bin("kotowari").unwrap()
 }
 
-fn args(list: &[&str]) -> Vec<String> {
-    list.iter().map(|s| s.to_string()).collect()
-}
-
 /// 標準エラーの1行目
 fn first_stderr_line(output: &std::process::Output) -> String {
     String::from_utf8_lossy(&output.stderr)

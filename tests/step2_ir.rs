@@ -1,19 +1,3 @@
-use kotowari_core::Finding;
-use kotowari_core::config::Config;
-use kotowari_core::ir::{self, IrDocument, Item};
-
-fn default_config() -> Config {
-    Config::default()
-}
-
-fn check(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
-    ir::check_documents(docs, config)
-}
-
-fn find_by_kind<'a>(findings: &'a [Finding], kind: &str) -> Vec<&'a Finding> {
-    findings.iter().filter(|f| f.kind() == kind).collect()
-}
-
 // --- REQ-core-034: 題名が無い ---
 
 // --- REQ-core-035: 題名が複数 ---

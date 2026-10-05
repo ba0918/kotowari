@@ -81,8 +81,6 @@ pub struct MapContext {
     pub filename: String,
     /// どのスキーマで検証したか（TBL-core-029 の「ノードの名前」の列）
     pub doc_kind: DocKind,
-    /// `抽出`の`題名`
-    pub title: Option<String>,
     /// `抽出`の`項目`。見出しの行の昇順
     pub items: Vec<ExtractedItem>,
     /// `用語集`の表のデータ行の行番号
@@ -99,10 +97,6 @@ impl MapContext {
             path: path.to_string(),
             filename: filename.to_string(),
             doc_kind,
-            title: values
-                .get("title")
-                .and_then(Value::as_str)
-                .map(str::to_string),
             items,
             glossary_rows: row_lines(values.get(GLOSSARY_ROWS)),
         }

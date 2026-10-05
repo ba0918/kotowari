@@ -1,6 +1,5 @@
 //! ガイドの印（REQ-core-198〜REQ-core-206、TBL-core-036）と、その設定の鍵 "guides.files"
 
-use kotowari_core::config::Config;
 use std::path::Path;
 use tempfile::TempDir;
 

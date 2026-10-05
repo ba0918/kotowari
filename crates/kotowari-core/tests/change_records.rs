@@ -60,16 +60,6 @@ fn invalids(record: &str) -> Vec<kotowari_core::Finding> {
     findings
 }
 
-fn with_ir(record: &str, path: &str) -> String {
-    record.replace(
-        "ir: []",
-        &format!(
-            "ir: [{{path: {path}, sha256: 'sha256:{}'}}]",
-            "a".repeat(64)
-        ),
-    )
-}
-
 // @kotowari[REQ-core-268, REQ-core-249, EX-core-446]
 #[test]
 fn unknown_record_version_is_a_static_finding() {
