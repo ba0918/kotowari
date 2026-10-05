@@ -36,14 +36,16 @@ pub use kotowari_core::{
     Documents, ExampleItem, Findings, FlagItem, Items, ListItem, QueryItem, Reference,
     RequirementItem, Requirements, ScenarioItem, Scenarios, TestRef, Tests,
 };
-pub use kotowari_overview::GROUP as OVERVIEW_GROUP;
 /// check と status の結果の中の、全体像の元データの群の名前（REQ-core-288）
+pub use kotowari_overview::GROUP as OVERVIEW_GROUP;
 pub use kotowari_overview::Page;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone)]
 pub struct ProjectOptions {
     pub start: PathBuf,
+    /// 設定ファイルのパス。相対パスの基準は操作で異なる。check などの読む操作は開始位置から
+    /// 解き（REQ-core-323）、changes は Git の根から解いて絶対パスを受けない（REQ-core-265）
     pub config: Option<PathBuf>,
 }
 impl ProjectOptions {
