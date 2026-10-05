@@ -1,3 +1,7 @@
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 use assert_cmd::Command;
 use sha2::{Digest, Sha256};
 use std::io::{Read, Write};

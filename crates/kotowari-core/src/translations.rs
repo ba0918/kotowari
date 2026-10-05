@@ -511,6 +511,10 @@ fn links(text: &str) -> Vec<Link> {
         out: &mut Vec<Link>,
     ) {
         use markdown::mdast::Node;
+        #[expect(
+            clippy::wildcard_enum_match_arm,
+            reason = "markdown::mdast::Node is a foreign enum: the remaining node kinds are deliberately handled alike"
+        )]
         let destination = match node {
             Node::Link(link) => Some(&link.url),
             Node::Image(image) => Some(&image.url),

@@ -1,3 +1,7 @@
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 use kotowari_core::config::Config;
 use std::path::Path;
 use tempfile::TempDir;
@@ -36,8 +40,13 @@ fn write(tmp: &Path, rel: &str, content: &str) {
     std::fs::write(path, content).unwrap();
 }
 
-/// 設定を読んで面を取り出す。(面の (種類, 名前, パス, 行) の並び, 指摘の (種類, パス) の並び)
-fn extract(tmp: &Path) -> (Vec<(String, String, String, usize)>, Vec<(String, String)>) {
+/// 面の (種類, 名前, パス, 行) の並び
+type Surfaces = Vec<(String, String, String, usize)>;
+/// 指摘の (種類, パス) の並び
+type FindingPlaces = Vec<(String, String)>;
+
+/// 設定を読んで面を取り出す。(面の並び, 指摘の並び)
+fn extract(tmp: &Path) -> (Surfaces, FindingPlaces) {
     let config =
         Config::parse(&std::fs::read_to_string(tmp.join(".kotowari/config.yaml")).unwrap())
             .unwrap();

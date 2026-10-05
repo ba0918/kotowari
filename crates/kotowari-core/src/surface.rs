@@ -223,7 +223,10 @@ fn quoted_in_ir(docs: &[IrDocument]) -> BTreeSet<String> {
                     statements.iter().for_each(|(_, text)| collect(text));
                 }
                 Item::Scenario { steps, .. } => steps.iter().for_each(|(_, text)| collect(text)),
-                _ => {}
+                Item::DecisionTable { .. }
+                | Item::Property { .. }
+                | Item::FlagEntry { .. }
+                | Item::GlossaryTerm { .. } => {}
             }
         }
         for cell in decision_table_cells(doc) {
@@ -240,7 +243,11 @@ fn decision_table_cells(doc: &IrDocument) -> Vec<String> {
         .iter()
         .filter_map(|item| match item {
             Item::DecisionTable { line, end, .. } => Some((*line, *end)),
-            _ => None,
+            Item::Requirement { .. }
+            | Item::Property { .. }
+            | Item::Scenario { .. }
+            | Item::FlagEntry { .. }
+            | Item::GlossaryTerm { .. } => None,
         })
         .collect();
     if ranges.is_empty() {

@@ -1,7 +1,8 @@
 [package]
 name = "kotowari-source-analysis"
 version = "0.3.0"
-edition = "2024"
+edition.workspace = true
+rust-version.workspace = true
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/ba0918/kotowari"
@@ -21,3 +22,6 @@ tempfile = "3"
 serde_json = "1"
 globset = "0.4"
 walkdir = "2"
+
+[lints]
+workspace = true

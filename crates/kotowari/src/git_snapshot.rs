@@ -107,7 +107,7 @@ fn blobs(root: &Path, entries: &[&TreeEntry]) -> Result<BTreeMap<String, Vec<u8>
         .stderr(Stdio::piped())
         .spawn()
         .map_err(|e| error(e.to_string()))?;
-    let mut stdin = child.stdin.take().unwrap();
+    let mut stdin = child.stdin.take().expect("stdin was configured as piped");
     let writer = std::thread::spawn(move || stdin.write_all(input.as_bytes()));
     let out = child.wait_with_output().map_err(|e| error(e.to_string()))?;
     writer
@@ -172,7 +172,7 @@ fn byte_path(bytes: &[u8]) -> PathBuf {
 pub fn read(
     cwd: &Path,
     base: &str,
-    target: Target,
+    target: &Target,
     config_path: Option<&Path>,
 ) -> Result<Snapshot, StopReason> {
     let root_response = String::from_utf8(git(cwd, &["rev-parse", "--show-toplevel"])?)
@@ -180,14 +180,14 @@ pub fn read(
     // Whitespace is part of a valid path; only Git's output newline is removed.
     let root = PathBuf::from(root_response.strip_suffix('\n').unwrap_or(&root_response));
     let base = resolve(&root, base)?;
-    let target_oid = match &target {
+    let target_oid = match target {
         Target::Index => "index".into(),
         Target::Commit(rev) => resolve(&root, rev)?,
     };
     let old = tree(&root, Some(&base))?;
     let new = tree(
         &root,
-        match &target {
+        match target {
             Target::Index => None,
             Target::Commit(_) => Some(&target_oid),
         },

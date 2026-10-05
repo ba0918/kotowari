@@ -1,6 +1,10 @@
 //! スキル kotowari の references に写した本体の値が、本体のコードと一致することの検査
 //! （REQ-core-125、REQ-core-126。REQ-core-127 は src/cli/tests.rs）と、例の計画書が同梱のスキーマを通ること（REQ-core-195）。
 //! 突き合わせる相手は本体のコードが持つ値で、IR の表ではない。
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};

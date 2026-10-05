@@ -395,10 +395,9 @@ impl SourceContext {
             if let Some(of) = self.records_other_files.iter().find(|of| {
                 let full_path = crate::join_display_path(&self.records_path, &of.rel_path);
                 full_path == path
-            }) {
-                if of.headings.iter().any(|h| h == anchor) {
-                    return found(false);
-                }
+            }) && of.headings.iter().any(|h| h == anchor)
+            {
+                return found(false);
             }
             return None;
         }

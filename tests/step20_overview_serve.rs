@@ -1,5 +1,9 @@
 //! "kotowari overview serve"（docs/ir/core/overview-commands.md の REQ-core-297〜REQ-core-299）。
 //! サーバは URL の1行を読んでから要求を送り、時間を待たない
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};

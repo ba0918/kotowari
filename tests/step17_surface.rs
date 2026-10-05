@@ -1,4 +1,8 @@
 //! 面の検査（docs/ir/core/surface.md、surface-unspecified.md）と、その設定の鍵 "surface"
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 
 use std::path::Path;
 use tempfile::TempDir;
@@ -364,7 +368,7 @@ fn ex_core_408_a_surface_absent_from_the_ir_is_an_error_at_its_first_place() {
 fn req_227_the_first_place_is_by_path_bytes_then_line() {
     let tmp = TempDir::new().unwrap();
     ex_407_project(tmp.path());
-    let mut a = vec!["let _ = 0;"; 9];
+    let mut a = ["let _ = 0;"; 9];
     a[8] = "fn a() { let _ = \"--verbose\"; }";
     write(tmp.path(), "src/a.rs", &(a.join("\n") + "\n"));
     write(
@@ -804,7 +808,7 @@ fn ex_core_407_a_surface_quoted_in_a_requirement_is_not_an_error() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_RS);
     write(tmp.path(), "rules/surface.yml", FLAG_RULE);
-    let mut lines = vec!["let _ = 0;"; 4];
+    let mut lines = ["let _ = 0;"; 4];
     lines[0] = "fn main() {";
     lines[2] = "    let _ = \"--format\";";
     lines[3] = "}";

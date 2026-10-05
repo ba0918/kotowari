@@ -77,6 +77,10 @@ fn is_comment(node: &Node) -> bool {
 }
 
 /// 見出しの文字。HTML のコメント（行の中の HTML）を除く
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "markdown::mdast::Node is a foreign enum: the remaining node kinds are deliberately handled alike"
+)]
 fn plain_text(node: &Node, out: &mut String) {
     match node {
         Node::Html(_) => {}

@@ -1,3 +1,7 @@
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 use kotowari_source_analysis::{Analyzer, SourceText};
 fn main() {
     let analyzer = Analyzer::new(Default::default(), vec![], vec![]).unwrap();

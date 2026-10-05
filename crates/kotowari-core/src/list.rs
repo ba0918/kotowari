@@ -179,7 +179,10 @@ pub fn build(docs: &[IrDocument], ir_path: &str, markers: &[TestMarker]) -> List
             let deferred = match item {
                 Item::Requirement { .. } => requirements.is_deferred(id),
                 Item::Scenario { .. } => scenarios.get(id).is_some_and(|s| s.deferred),
-                _ => false,
+                Item::DecisionTable { .. }
+                | Item::Property { .. }
+                | Item::FlagEntry { .. }
+                | Item::GlossaryTerm { .. } => false,
             };
             let id = id.to_string();
             let path = path.clone();

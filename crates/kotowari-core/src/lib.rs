@@ -1,3 +1,4 @@
+#![deny(clippy::print_stdout, clippy::print_stderr)]
 pub mod cargo_mutants;
 macro_rules! readonly {
     (copy $($name:ident : $type:ty),* $(,)?) => {
@@ -228,7 +229,78 @@ impl FindingKind {
             | FindingKind::SurfaceUnspecifiedStale
             | FindingKind::DeferredWithTest
             | FindingKind::DependsOnDeferred => "notice",
-            _ => "error",
+            FindingKind::ChangeStale
+            | FindingKind::ChangeIrStale
+            | FindingKind::ChangeUncovered
+            | FindingKind::ChangeDeferred
+            | FindingKind::ChangeConclusionConflict
+            | FindingKind::ChangeRecordInvalid
+            | FindingKind::AlgorithmWithoutDefinition
+            | FindingKind::DuplicateField
+            | FindingKind::DuplicateId
+            | FindingKind::DuplicateTerm
+            | FindingKind::EquivalentInvalid
+            | FindingKind::IdDomainMismatch
+            | FindingKind::InvalidGlossaryRow
+            | FindingKind::InvalidMarker
+            | FindingKind::MissingDocument
+            | FindingKind::MissingField
+            | FindingKind::MissingScope
+            | FindingKind::MissingSource
+            | FindingKind::MissingStatement
+            | FindingKind::MissingTable
+            | FindingKind::MissingTag
+            | FindingKind::MissingTitle
+            | FindingKind::MultipleTitles
+            | FindingKind::MutantSurvived
+            | FindingKind::RecordFieldMissing
+            | FindingKind::RecordFieldUnknown
+            | FindingKind::RequirementWithoutTest
+            | FindingKind::RevisionLinkInvalid
+            | FindingKind::ScenarioWithoutTest
+            | FindingKind::SourceInvalid
+            | FindingKind::SurfaceUnspecifiedInvalid
+            | FindingKind::SurfaceWithoutSpec
+            | FindingKind::TestWithoutId
+            | FindingKind::UnclosedBacktick
+            | FindingKind::UnclosedCodeBlock
+            | FindingKind::UnknownCodeBlock
+            | FindingKind::UnknownField
+            | FindingKind::UnknownHeading
+            | FindingKind::UnknownKind
+            | FindingKind::UnknownLine
+            | FindingKind::UnknownTag
+            | FindingKind::UnknownTerm
+            | FindingKind::UnparsableFile
+            | FindingKind::InvalidGherkinLine
+            | FindingKind::InvalidId
+            | FindingKind::InvalidPlan
+            | FindingKind::GlossaryInvalid
+            | FindingKind::GlossaryTitleInvalid
+            | FindingKind::UnresolvedReference
+            | FindingKind::VagueWord
+            | FindingKind::VerificationInvalid
+            | FindingKind::VerificationMissing
+            | FindingKind::OverviewFormInvalid
+            | FindingKind::OverviewPartUnknown
+            | FindingKind::OverviewPartInvalid
+            | FindingKind::OverviewLeadMissing
+            | FindingKind::OverviewIrMissing
+            | FindingKind::OverviewIrShared
+            | FindingKind::OverviewRefUnresolved
+            | FindingKind::OverviewNameConflict
+            | FindingKind::OverviewTocInvalid
+            | FindingKind::OverviewTocPageMissing
+            | FindingKind::OverviewTocPageUnknown
+            | FindingKind::OverviewTocPageDuplicate
+            | FindingKind::OverviewTocGroupEmpty
+            | FindingKind::TranslationMissing
+            | FindingKind::TranslationRecordInvalid
+            | FindingKind::TranslationStale
+            | FindingKind::TranslationStructureMismatch
+            | FindingKind::TranslationSwitcherInvalid
+            | FindingKind::LinkLanguageMismatch
+            | FindingKind::LinkToRecord => "error",
         }
     }
 }
@@ -301,7 +373,7 @@ impl Finding {
     }
 }
 
-/// 出力の形式
+// 出力の形式
 
 /// 停止の理由と、標準エラーの1行目で詳細の前に出る文言（TBL-core-018）。
 /// この呼び出しの一覧が変種の唯一の在り処で、列挙体・`WORDINGS`・`Display` はここから作る。
@@ -419,7 +491,9 @@ pub fn extract_backtick_contents_outside_quotes(text: &str) -> Vec<&str> {
         })
         .collect();
     backticks
-        .chunks_exact(2)
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|pair| &text[pair[0] + 1..pair[1]])
         .collect()
 }
@@ -428,7 +502,9 @@ pub fn extract_backtick_contents_outside_quotes(text: &str) -> Vec<&str> {
 pub fn double_quoted_contents(line: &str) -> Vec<&str> {
     let quotes: Vec<usize> = line.match_indices('"').map(|(i, _)| i).collect();
     quotes
-        .chunks_exact(2)
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|pair| &line[pair[0] + 1..pair[1]])
         .collect()
 }
@@ -497,7 +573,7 @@ pub fn count_findings(findings: &[Finding]) -> BTreeMap<String, usize> {
     counts
 }
 
-/// check、list、query、status が共有する読み取りの結果
-/// （REQ-core-151、REQ-core-156、REQ-core-162: どれも check と同じ読み取りを使う）
+// check、list、query、status が共有する読み取りの結果
+// （REQ-core-151、REQ-core-156、REQ-core-162: どれも check と同じ読み取りを使う）
 
 impl std::error::Error for StopReason {}

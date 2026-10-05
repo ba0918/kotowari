@@ -6,14 +6,9 @@ use kotowari::{
 use std::{
     future::Future,
     path::Path,
-    sync::Arc,
-    task::{Context, Poll, Wake, Waker},
+    task::{Context, Poll, Waker},
 };
 
-struct Noop;
-impl Wake for Noop {
-    fn wake(self: Arc<Self>) {}
-}
 fn send<T: Send>(value: T) -> T {
     value
 }
@@ -42,8 +37,8 @@ fn every_operation_is_send_and_reuses_sync_results_and_failure_kinds() {
     let sync = Project::new(options.clone()).unwrap();
     let adapter = AsyncProject::new(options, AsyncOptions::default()).unwrap();
     let mut future = Box::pin(send(adapter.check()));
-    let waker = Waker::from(Arc::new(Noop));
-    let Poll::Ready(Err(error)) = future.as_mut().poll(&mut Context::from_waker(&waker)) else {
+    let waker = Waker::noop();
+    let Poll::Ready(Err(error)) = future.as_mut().poll(&mut Context::from_waker(waker)) else {
         panic!("expected runtime failure")
     };
     assert_eq!(error.kind(), ErrorKind::RuntimeUnavailable);

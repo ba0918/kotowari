@@ -120,6 +120,10 @@ pub fn resolve_schema(doc_path: &Path, schema_ref: &SchemaRef) -> ResolvedSchema
 fn normalize(path: &Path) -> PathBuf {
     let mut out = PathBuf::new();
     for component in path.components() {
+        #[expect(
+            clippy::wildcard_enum_match_arm,
+            reason = "std::path::Component is a foreign enum: the remaining components are deliberately pushed unchanged"
+        )]
         match component {
             Component::CurDir => {}
             Component::ParentDir => {

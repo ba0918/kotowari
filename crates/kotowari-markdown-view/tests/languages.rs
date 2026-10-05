@@ -163,6 +163,10 @@ fn text_nodes(html: &str) -> Vec<String> {
 }
 
 /// 値の中のすべての文字列
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "serde_json::Value is a foreign enum: the remaining JSON kinds are deliberately handled alike"
+)]
 fn strings(value: &Value, out: &mut Vec<String>) {
     match value {
         Value::String(text) => out.push(text.clone()),

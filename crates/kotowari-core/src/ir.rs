@@ -197,7 +197,11 @@ impl IrDocument {
             .flat_map(|doc| &doc.items)
             .filter_map(|item| match item {
                 Item::GlossaryTerm { term, .. } => Some(term.as_str()),
-                _ => None,
+                Item::Requirement { .. }
+                | Item::DecisionTable { .. }
+                | Item::Property { .. }
+                | Item::Scenario { .. }
+                | Item::FlagEntry { .. } => None,
             })
             .collect();
         self.items
@@ -206,7 +210,12 @@ impl IrDocument {
                 Item::GlossaryTerm { term, line, .. } if ancestors.contains(term.as_str()) => {
                     Some(*line)
                 }
-                _ => None,
+                Item::Requirement { .. }
+                | Item::DecisionTable { .. }
+                | Item::Property { .. }
+                | Item::Scenario { .. }
+                | Item::FlagEntry { .. }
+                | Item::GlossaryTerm { .. } => None,
             })
             .collect()
     }
@@ -603,6 +612,10 @@ impl ParsedIrDocument {
     }
 }
 
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "public API: changing the parameter type breaks callers"
+)]
 pub fn parse(
     source: &crate::SourceText,
     options: IrOptions,
@@ -620,7 +633,10 @@ pub fn parse(
                 )
             })?
     };
-    let filename = relative.rsplit('/').next().unwrap();
+    let filename = relative
+        .rsplit('/')
+        .next()
+        .expect("rsplit always yields at least one piece");
     let mut document = parse_document_mode(filename, DocKind::of(filename), source.text(), true)
         .map_err(|error| crate::InputError::InvalidInput(error.to_string()))?;
     document.relative_path = source.path().to_owned();
@@ -1181,7 +1197,11 @@ pub fn check_documents_with_duplicates(
                     if name != domain {
                         let line = match item {
                             Item::Scenario { tag_line, line, .. } => tag_line.unwrap_or(*line),
-                            _ => item.item_line(),
+                            Item::Requirement { .. }
+                            | Item::DecisionTable { .. }
+                            | Item::Property { .. }
+                            | Item::FlagEntry { .. }
+                            | Item::GlossaryTerm { .. } => item.item_line(),
                         };
                         findings.push(Finding::new(
                             FindingKind::IdDomainMismatch,
@@ -1522,7 +1542,7 @@ pub fn item_references<'a>(item: &'a Item) -> Vec<ItemReference<'a>> {
                 })
                 .collect()
         }
-        _ => Vec::new(),
+        Item::DecisionTable { .. } | Item::GlossaryTerm { .. } => Vec::new(),
     }
 }
 
