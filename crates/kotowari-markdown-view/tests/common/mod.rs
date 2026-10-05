@@ -15,6 +15,25 @@ pub fn links(html: &str) -> Vec<(String, String)> {
         .collect()
 }
 
+/// ページの中の場所へのリンク（リンク先が "#" で始まるもの）の、ページの中の位置、場所の名前、見える文字。
+/// 文書のページでは、アウトラインの項目がこのリンクになる（REQ-view-022）
+pub fn in_page_links(html: &str) -> Vec<(usize, String, String)> {
+    html.match_indices("<a ")
+        .filter_map(|(at, _)| {
+            let (href, text) = links(&html[at..]).into_iter().next()?;
+            let id = href.strip_prefix('#')?.to_string();
+            Some((at, id, text))
+        })
+        .collect()
+}
+
+/// ページの中の、その名前の場所の位置。場所はページの中に1つだけある
+pub fn place(html: &str, id: &str) -> usize {
+    let attribute = format!("id=\"{id}\"");
+    assert_eq!(html.matches(&attribute).count(), 1, "place {id}");
+    html.find(&attribute).expect("place")
+}
+
 /// 要素の印を除いた文字
 fn text(html: &str) -> String {
     let mut out = String::new();

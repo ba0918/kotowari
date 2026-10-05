@@ -403,13 +403,6 @@ fn titled(heading: &str, stale: bool, blocks: Vec<Block>) -> Section {
     }
 }
 
-/// 文書のページのアウトライン。無ければ None
-fn outline(page: &str) -> Option<&str> {
-    let start = page.find("<nav class=\"outline\"")?;
-    let end = start + page[start..].find("</nav>").expect("outline end");
-    Some(&page[start..end])
-}
-
 /// 要素の印を除いた文字
 fn plain(html: &str) -> String {
     html.split('<')
@@ -419,13 +412,7 @@ fn plain(html: &str) -> String {
 
 /// ページの中で、その場所（id）の後に最初に出てくる文字
 fn text_at<'a>(page: &'a str, id: &str) -> &'a str {
-    assert_eq!(
-        page.matches(&format!("id=\"{id}\"")).count(),
-        1,
-        "place {id}"
-    );
-    let start = page.find(&format!("id=\"{id}\"")).expect("place");
-    page[start..]
+    page[common::place(page, id)..]
         .split('<')
         .filter_map(|segment| segment.split_once('>').map(|(_, text)| text.trim()))
         .find(|text| !text.is_empty())
@@ -449,32 +436,34 @@ fn ex_view_016_the_outline_lists_sections_in_order_and_marks_the_stale_one() {
     );
     let pages = render(&input(vec![a], vec![name("a")]));
     let page = page(&pages, "a.html");
-    let outline = outline(page).expect("an outline");
-    let links = common::links(outline);
-    let titles: Vec<&str> = links.iter().map(|(_, text)| text.as_str()).collect();
+    // アウトラインの項目は、ページの中の節へのリンクである。lead や "### " の見出しへの項目は無い
+    let links = common::in_page_links(page);
+    let titles: Vec<&str> = links.iter().map(|(_, _, text)| text.as_str()).collect();
     assert_eq!(titles, ["読む", "書く", "読む"]);
     let mut ids = Vec::new();
-    for (href, title) in &links {
-        let id = href.strip_prefix('#').expect("a place in the page");
-        assert_eq!(text_at(page, id), title, "{href}");
+    for (_, id, title) in &links {
+        assert_eq!(text_at(page, id), title, "{id}");
         ids.push(id);
     }
     ids.sort();
     ids.dedup();
-    assert_eq!(ids.len(), 3, "{outline}");
-    // 項目ごとに、リンクの後に続く文字。古い節の項目にだけ印がある
-    let tails: Vec<String> = outline
-        .split("</a>")
-        .skip(1)
-        .map(|rest| plain(&rest[..rest.find("<a ").unwrap_or(rest.len())]))
+    assert_eq!(ids.len(), 3, "{page}");
+    // アウトラインは lead の前で終わる（REQ-view-006）
+    let lead = page.find("aの結論").expect("lead");
+    assert!(links[2].0 < lead, "{page}");
+    assert!(!page[links[0].0..lead].contains("細部"), "{page}");
+    // 項目ごとに、リンクの後に続く文字（最後の項目は lead まで）。古い節の項目にだけ印がある
+    let ends = links.iter().skip(1).map(|(at, _, _)| *at).chain([lead]);
+    let tails: Vec<String> = links
+        .iter()
+        .zip(ends)
+        .map(|((at, _, _), end)| {
+            let item = &page[*at..end];
+            plain(&item[item.find("</a>").expect("a end")..])
+        })
         .collect();
-    assert_eq!(tails.len(), 3);
-    assert!(tails[1].contains("見直していない"), "{outline}");
+    assert!(tails[1].contains("見直していない"), "{tails:?}");
     assert!(!tails[0].contains("見直していない") && !tails[2].contains("見直していない"));
-    assert!(
-        !outline.contains("細部") && !outline.contains("aの結論"),
-        "{outline}"
-    );
     assert!(!page.contains("<script"));
 }
 
@@ -486,9 +475,8 @@ fn ex_view_017_documents_without_sections_and_the_index_have_no_outline() {
         vec![document("a", vec![]), b],
         vec![name("a"), name("b")],
     ));
-    assert!(outline(page(&pages, "b.html")).is_some());
-    assert!(outline(page(&pages, "a.html")).is_none());
-    assert!(outline(page(&pages, "index.html")).is_none());
-    assert!(!page(&pages, "a.html").contains("outline"));
-    assert!(!page(&pages, "index.html").contains("class=\"outline"));
+    // アウトラインの項目は、ページの中の節へのリンクである
+    assert!(!common::in_page_links(page(&pages, "b.html")).is_empty());
+    assert!(common::in_page_links(page(&pages, "a.html")).is_empty());
+    assert!(common::in_page_links(page(&pages, "index.html")).is_empty());
 }
