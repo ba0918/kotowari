@@ -83,7 +83,8 @@ brainstorm produced — and `check` never reads it, because `.kotowari/config.ya
 
 Terms are defined in the `CONTEXT.md` of each IR directory, and rules the IR does not yet carry
 are recorded in its `FLAGS.md`. Read the `kotowari` skill before writing or revising an IR
-document.
+document and before acting on a `kotowari check` finding. To decide where a new request starts,
+use the `kotowari-using-workflow` skill, not `ba0918-using-workflow`.
 
 ## Decisions
 
