@@ -1,157 +1,159 @@
-# 等価の一覧
+# List of equivalents
 
-`等価の一覧`の置き場と形、`変異の結果`との一致の取り方、一覧の1件への`指摘`を扱う。
+English | [日本語](equivalents.ja.md)
+
+Covers the location and form of the `list of equivalents`, how it is matched against each `mutation outcome`, and the `finding` emitted for an entry of the list.
 
 ## Requirements
 
-### REQ-core-141: 一覧の1件との一致
+### REQ-core-141: Matching an entry of the list
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-17-mutation-tests.md#A9, docs/decision/records/2026-09-17-mutation-tests.md#A15, docs/decision/records/2026-09-17-mutation-tests.md#A33, docs/decision/records/2026-09-17-mutation-tests.md#A37, docs/decision/records/2026-09-17-mutation-tests.md#A48, docs/decision/records/2026-09-17-mutation-tests.md#A51, docs/decision/records/2026-09-17-mutation-tests.md#A52, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A44
 - verification: unit
 
-kotowari は常に、結果が「見逃した」の`変異の結果`と形の正しい`等価の一覧`の1件を、REQ-core-110 の正規化を掛けた "file" が`変異の結果`のファイルと同じ文字列で、"change" が変更の説明と同じ文字列で、"text" が`変異の結果`のファイルの今の内容のその行の文面と、どちらも前後の半角空白とタブを除いて同じ文字列のときに一致とする。行は TBL-core-010 のとおりに区切り、行の終わりの "\r\n" の "\r" は文面に含めない。`変異の結果`のファイルが無い、読めない、UTF-8 でない、または行がそのファイルの行数を超えるとき、kotowari は`停止`せず、その`変異の結果`はどの1件にも一致しない。同じ文面の行が複数あるファイルでは、1件がそのどの行の`変異の結果`にも一致する。
+kotowari always treats a `mutation outcome` whose result is "missed" and a well-formed entry of the `list of equivalents` as matching when "file", after the normalisation of REQ-core-110, is the same string as the file of the `mutation outcome`, "change" is the same string as the change description, and "text" is the same string as the wording of that line in the current content of the file of the `mutation outcome`, both with leading and trailing half-width spaces and tabs removed. Lines are split as in TBL-core-010, and the "\r" of a "\r\n" at the end of a line is not included in the wording. When the file of the `mutation outcome` does not exist, cannot be read, is not UTF-8, or the line exceeds the number of lines in that file, kotowari does not `stop`, and that `mutation outcome` matches no entry. In a file with several lines of the same wording, one entry matches the `mutation outcome` of any of those lines.
 
-### REQ-core-142: 文面の無くなった1件
+### REQ-core-142: An entry whose wording is gone
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-17-mutation-tests.md#A20, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A48, docs/decision/records/2026-09-17-mutation-tests.md#A52, docs/decision/records/2026-09-17-mutation-tests.md#A53, docs/decision/records/2026-09-17-mutation-tests.md#A57
 - verification: unit
 
-"kotowari mutants" で、形の正しい`等価の一覧`の1件の "text" と、どちらも前後の半角空白とタブを除いて同じ文面の行が "file" のファイルに1つも無いとき（ファイルが無い、読めない、UTF-8 でないときを含む）、kotowari は "path" を`等価の一覧`のファイル、"line" を null、detail を一覧に書かれたままの "file" と "change" を ": " でつないだ文字列にして equivalent_stale の`注意`を1件ごとに出す。結果のファイルにその`変異`が現れるかは見ない。形の誤った1件には出さない。
+In "kotowari mutants", when the file of "file" has no line whose wording is the same as the "text" of a well-formed entry of the `list of equivalents`, both with leading and trailing half-width spaces and tabs removed (including when the file does not exist, cannot be read, or is not UTF-8), kotowari emits, for each such entry, an equivalent_stale `notice` whose "path" is the file of the `list of equivalents`, whose "line" is null, and whose detail is "file" and "change", exactly as written in the list, joined by ": ". Whether that `mutation` appears in the outcomes file is not looked at. It is not emitted for a malformed entry.
 
-### REQ-core-143: 形の誤った1件
+### REQ-core-143: A malformed entry
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A17, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A37, docs/decision/records/2026-09-17-mutation-tests.md#A40, docs/decision/records/2026-09-17-mutation-tests.md#A44, docs/decision/records/2026-09-17-mutation-tests.md#A51, docs/decision/records/2026-09-17-mutation-tests.md#A53, docs/decision/records/2026-09-17-mutation-tests.md#A57
 - verification: unit
 
-"kotowari mutants" で、`等価の一覧`の1件が鍵と値の組でないとき、"file"、"change"、"text"、"class"、"why" のいずれかの鍵が無いとき、この5つ以外の鍵を持つとき、値が文字列でないとき、"why" が前後の半角空白とタブを除いて空のとき、"class" が "equivalent" でないとき、または "file" が絶対パスか ".." の要素を含むとき、kotowari は "path" を`等価の一覧`のファイル、"line" を null、detail を一覧に書かれたままの "file" と "change" を ": " でつないだ文字列にして equivalent_invalid の`誤り`を1件ごとに出し、その1件をどの`変異の結果`とも一致させない。detail の "file" と "change" は、無いか文字列でなければ空の文字列にする。同じ内容の1件が2つ以上あること自体は検査しない。
+In "kotowari mutants", when an entry of the `list of equivalents` is not a mapping of keys and values, lacks any of the keys "file", "change", "text", "class" and "why", has a key other than these five, has a value that is not a string, has a "why" that is empty after removing leading and trailing half-width spaces and tabs, has a "class" that is not "equivalent", or has a "file" that is an absolute path or contains a ".." element, kotowari emits, for each such entry, an equivalent_invalid `error` whose "path" is the file of the `list of equivalents`, whose "line" is null, and whose detail is "file" and "change", exactly as written in the list, joined by ": ", and that entry matches no `mutation outcome`. In the detail, "file" or "change" is the empty string if it is absent or not a string. Two or more entries with the same content are not in themselves checked.
 
-### REQ-core-148: 一覧の置き場
+### REQ-core-148: Location of the list
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A34, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A44, docs/decision/records/2026-09-17-mutation-tests.md#A45, docs/decision/records/2026-09-17-mutation-tests.md#A49, docs/decision/records/2026-09-17-mutation-tests.md#A55
 - verification: unit
 
-設定に "mutants.equivalents" の鍵が無いとき、または指す先が空（0バイトか注釈だけ）のとき、kotowari は`等価の一覧`を0件として "kotowari mutants" を続ける。鍵の指す先が無いか読めないとき、kotowari は読めないファイルを理由に`停止`する。指す先が UTF-8 でないとき、kotowari は UTF-8 でないファイルを理由に`停止`する。指す先が YAML として読めないとき、または最上位が並びでないとき、kotowari は設定の誤りを理由に`停止`し、詳細に`等価の一覧`のファイルの相対パスを出す。"kotowari check" は鍵の値を REQ-core-014 のとおりに検査するだけで、指す先を読まず、有無も見ない。
+When the configuration has no "mutants.equivalents" key, or its target is empty (0 bytes or only comments), kotowari continues "kotowari mutants" with a `list of equivalents` of 0 entries. When the target of the key does not exist or cannot be read, kotowari will `stop` on the grounds of an unreadable file. When the target is not UTF-8, kotowari will `stop` on the grounds of a file that is not UTF-8. When the target cannot be read as YAML, or its top level is not a sequence, kotowari will `stop` on the grounds of a configuration error and puts the relative path of the file of the `list of equivalents` in the detail. "kotowari check" only checks the value of the key as in REQ-core-014; it does not read the target and does not look at whether it exists.
 
 ## Examples
 
 ```gherkin
 @id=EX-core-211 @about=REQ-core-139,REQ-core-141,REQ-core-145 @source=docs/decision/records/2026-09-17-mutation-tests.md#A9,docs/decision/records/2026-09-17-mutation-tests.md#A11,docs/decision/records/2026-09-17-mutation-tests.md#A15,docs/decision/records/2026-09-17-mutation-tests.md#A31,docs/decision/records/2026-09-17-mutation-tests.md#A37,docs/decision/records/2026-09-17-mutation-tests.md#A38,docs/decision/records/2026-09-17-mutation-tests.md#A52
-Scenario: 一覧に載った見逃しは指摘にならず equivalent に数える
-  Given "src/a.rs" の3行目が "    if a == b {" で、結果のファイルに "src/a.rs" の3行目の変更の説明が "replace == with != in f" の`見逃し`がある
-  And `等価の一覧`に "file" が "src/a.rs"、"change" が "replace == with != in f"、"text" が "if a == b {"、"class" が "equivalent"、"why" が空でない1件がある
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then mutant_survived の誤りは出ず、"mutants" の "survived" は 0、"equivalent" は 1 になる
-  And 終了コードは 0 である
+Scenario: A miss on the list is not a finding and counts as equivalent
+  Given line 3 of "src/a.rs" is "    if a == b {", and the outcomes file has a `miss` on line 3 of "src/a.rs" whose change description is "replace == with != in f"
+  And the `list of equivalents` has an entry whose "file" is "src/a.rs", "change" is "replace == with != in f", "text" is "if a == b {", "class" is "equivalent", and "why" is not empty
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then no mutant_survived error is emitted, and "survived" of "mutants" is 0 and "equivalent" is 1
+  And the exit code is 0
 
 @id=EX-core-212 @about=REQ-core-141 @source=docs/decision/records/2026-09-17-mutation-tests.md#A11,docs/decision/records/2026-09-17-mutation-tests.md#A15,docs/decision/records/2026-09-17-mutation-tests.md#A31
-Scenario: 行が動いただけなら一致したまま
-  Given EX-core-211 の`等価の一覧`があり、"src/a.rs" の "    if a == b {" の行が7行目に動き、結果のファイルの`見逃し`の行も 7 である
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then mutant_survived の誤りは出ない
+Scenario: If the line only moved, it still matches
+  Given there is the `list of equivalents` of EX-core-211, the line "    if a == b {" of "src/a.rs" has moved to line 7, and the line of the `miss` in the outcomes file is also 7
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then no mutant_survived error is emitted
 
 @id=EX-core-213 @about=REQ-core-141,REQ-core-142 @source=docs/decision/records/2026-09-17-mutation-tests.md#A11,docs/decision/records/2026-09-17-mutation-tests.md#A15,docs/decision/records/2026-09-17-mutation-tests.md#A20,docs/decision/records/2026-09-17-mutation-tests.md#A31,docs/decision/records/2026-09-17-mutation-tests.md#A40
-Scenario: 行を書き換えると一致せず、1件は古くなる
-  Given EX-core-211 の`等価の一覧`があり、"src/a.rs" の3行目が "    if a == c {" に変わり、"if a == b {" の行はどこにも無く、結果のファイルに3行目の同じ変更の説明の`見逃し`がある
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then "src/a.rs" の3行目に mutant_survived の誤りが出る
-  And "path" が`等価の一覧`のファイルで "line" が null、detail が "src/a.rs: replace == with != in f" の equivalent_stale の注意が出る
+Scenario: If the line is rewritten, it does not match and the entry becomes stale
+  Given there is the `list of equivalents` of EX-core-211, line 3 of "src/a.rs" has changed to "    if a == c {", there is no line "if a == b {" anywhere, and the outcomes file has a `miss` on line 3 with the same change description
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then a mutant_survived error is emitted on line 3 of "src/a.rs"
+  And an equivalent_stale notice is emitted whose "path" is the file of the `list of equivalents`, whose "line" is null, and whose detail is "src/a.rs: replace == with != in f"
 
 @id=EX-core-214 @about=REQ-core-141 @source=docs/decision/records/2026-09-17-mutation-tests.md#A11,docs/decision/records/2026-09-17-mutation-tests.md#A31,docs/decision/records/2026-09-17-mutation-tests.md#A33,docs/decision/records/2026-09-17-mutation-tests.md#A40
-Scenario: 行がファイルの行数を超える見逃しは一致せずに指摘になる
-  Given "src/a.rs" が5行で、結果のファイルに "src/a.rs" の9行目の`見逃し`がある
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then "line" が 9 の mutant_survived の誤りが出る
-  And 終了コードは 1 である
+Scenario: A miss whose line exceeds the file's line count does not match and becomes a finding
+  Given "src/a.rs" has 5 lines, and the outcomes file has a `miss` on line 9 of "src/a.rs"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then a mutant_survived error whose "line" is 9 is emitted
+  And the exit code is 1
 
 @id=EX-core-215 @about=REQ-core-143 @source=docs/decision/records/2026-09-17-mutation-tests.md#A11,docs/decision/records/2026-09-17-mutation-tests.md#A16,docs/decision/records/2026-09-17-mutation-tests.md#A31,docs/decision/records/2026-09-17-mutation-tests.md#A34,docs/decision/records/2026-09-17-mutation-tests.md#A40,docs/decision/records/2026-09-17-mutation-tests.md#A53
-Scenario: 理由が空白だけの1件は誤りで、見逃しを外さない
-  Given EX-core-211 の場面で、`等価の一覧`の1件の "why" が半角空白だけである
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then detail が "src/a.rs: replace == with != in f" の equivalent_invalid の誤りが出る
-  And "src/a.rs" の3行目に mutant_survived の誤りが出る
-  And equivalent_stale の注意は出ない
+Scenario: An entry whose reason is only whitespace is an error and does not remove the miss
+  Given in the situation of EX-core-211, the "why" of the entry of the `list of equivalents` is only half-width spaces
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then an equivalent_invalid error with detail "src/a.rs: replace == with != in f" is emitted
+  And a mutant_survived error is emitted on line 3 of "src/a.rs"
+  And no equivalent_stale notice is emitted
 
 @id=EX-core-216 @about=REQ-core-143 @source=docs/decision/records/2026-09-17-mutation-tests.md#A17,docs/decision/records/2026-09-17-mutation-tests.md#A31,docs/decision/records/2026-09-17-mutation-tests.md#A34
-Scenario: 等価でない分類は書けない
-  Given `等価の一覧`の1件の "class" が "untested" である
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then equivalent_invalid の誤りが出る
+Scenario: A class other than equivalent cannot be written
+  Given the "class" of an entry of the `list of equivalents` is "untested"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then an equivalent_invalid error is emitted
 
 @id=EX-core-217 @about=REQ-core-148 @source=docs/decision/records/2026-09-17-mutation-tests.md#A34,docs/decision/records/2026-09-17-mutation-tests.md#A36
-Scenario: 一覧の指す先が無いと停止する
-  Given 設定の "mutants.equivalents" が "docs/equivalents.yaml" で、そのファイルが無い
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then 終了コードは 2 である
-  And 標準エラーの1行目は "unreadable file: " で始まる
+Scenario: The run stops when the target of the list does not exist
+  Given "mutants.equivalents" in the configuration is "docs/equivalents.yaml", and that file does not exist
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then the exit code is 2
+  And the first line of standard error starts with "unreadable file: "
 
 @id=EX-core-220 @about=REQ-core-143 @source=docs/decision/records/2026-09-17-mutation-tests.md#A31,docs/decision/records/2026-09-17-mutation-tests.md#A44
-Scenario: file の無い1件は detail の前半が空になる
-  Given `等価の一覧`の1件に "file" の鍵が無く、"change" が "replace f with ()" である
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then detail が ": replace f with ()" の equivalent_invalid の誤りが出る
+Scenario: For an entry without file, the first half of the detail is empty
+  Given an entry of the `list of equivalents` has no "file" key, and its "change" is "replace f with ()"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then an equivalent_invalid error with detail ": replace f with ()" is emitted
 
 @id=EX-core-221 @about=REQ-core-148 @source=docs/decision/records/2026-09-17-mutation-tests.md#A45
-Scenario: check は一覧の指す先が無くても止まらない
-  Given 設定の "mutants.equivalents" が "docs/equivalents.yaml" で、そのファイルが無い
-  When "kotowari check" を実行する
-  Then 終了コードは 2 でない
+Scenario: check does not stop even if the target of the list does not exist
+  Given "mutants.equivalents" in the configuration is "docs/equivalents.yaml", and that file does not exist
+  When "kotowari check" is run
+  Then the exit code is not 2
 
 @id=EX-core-232 @about=REQ-core-141 @source=docs/decision/records/2026-09-17-mutation-tests.md#A11,docs/decision/records/2026-09-17-mutation-tests.md#A15,docs/decision/records/2026-09-17-mutation-tests.md#A31,docs/decision/records/2026-09-17-mutation-tests.md#A38
-Scenario: 同じ文面の行が2つあれば1件がどちらにも効く
-  Given "src/a.rs" の3行目と8行目がどちらも "    if a == b {" で、結果のファイルに両方の行の同じ変更の説明の`見逃し`があり、EX-core-211 の`等価の一覧`がある
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then mutant_survived の誤りは出ず、"mutants" の "equivalent" は 2 になる
+Scenario: If two lines have the same wording, one entry applies to both
+  Given lines 3 and 8 of "src/a.rs" are both "    if a == b {", the outcomes file has a `miss` with the same change description on both lines, and there is the `list of equivalents` of EX-core-211
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then no mutant_survived error is emitted, and "equivalent" of "mutants" is 2
 
 @id=EX-core-233 @about=REQ-core-141 @source=docs/decision/records/2026-09-17-mutation-tests.md#A11,docs/decision/records/2026-09-17-mutation-tests.md#A15,docs/decision/records/2026-09-17-mutation-tests.md#A31,docs/decision/records/2026-09-17-mutation-tests.md#A37
-Scenario: file の違う1件は一致しない
-  Given EX-core-211 の場面で、`等価の一覧`の1件の "file" が "src/b.rs" である
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then "src/a.rs" の3行目に mutant_survived の誤りが出る
+Scenario: An entry with a different file does not match
+  Given in the situation of EX-core-211, the "file" of the entry of the `list of equivalents` is "src/b.rs"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then a mutant_survived error is emitted on line 3 of "src/a.rs"
 
 @id=EX-core-234 @about=REQ-core-141 @source=docs/decision/records/2026-09-17-mutation-tests.md#A15,docs/decision/records/2026-09-17-mutation-tests.md#A51,docs/decision/records/2026-09-17-mutation-tests.md#A52
-Scenario: 書き方の違うパスとタブの字下げでも一致する
-  Given EX-core-211 の場面で、`等価の一覧`の1件の "file" が "./src/a.rs" で、"src/a.rs" の3行目の字下げがタブで行の終わりが "\r\n" である
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then mutant_survived の誤りは出ない
+Scenario: A path written differently and tab indentation still match
+  Given in the situation of EX-core-211, the "file" of the entry of the `list of equivalents` is "./src/a.rs", and line 3 of "src/a.rs" is indented with a tab and ends with "\r\n"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then no mutant_survived error is emitted
 
 @id=EX-core-235 @about=REQ-core-141,REQ-core-142 @source=docs/decision/records/2026-09-17-mutation-tests.md#A11,docs/decision/records/2026-09-17-mutation-tests.md#A20,docs/decision/records/2026-09-17-mutation-tests.md#A31,docs/decision/records/2026-09-17-mutation-tests.md#A48
-Scenario: UTF-8 でないソースでは停止せず、一致しない側に倒れる
-  Given EX-core-211 の場面で、"src/a.rs" が UTF-8 でない
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then 終了コードは 1 で、mutant_survived の誤りと equivalent_stale の注意が出る
+Scenario: A source that is not UTF-8 does not stop the run and falls on the non-matching side
+  Given in the situation of EX-core-211, "src/a.rs" is not UTF-8
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then the exit code is 1, and a mutant_survived error and an equivalent_stale notice are emitted
 
 @id=EX-core-236 @about=REQ-core-143 @source=docs/decision/records/2026-09-17-mutation-tests.md#A31,docs/decision/records/2026-09-17-mutation-tests.md#A51
-Scenario: 基準のディレクトリの外を指す1件は誤りになる
-  Given `等価の一覧`の1件の "file" が "../x/src/a.rs" である
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then equivalent_invalid の誤りが出る
+Scenario: An entry pointing outside the base directory is an error
+  Given the "file" of an entry of the `list of equivalents` is "../x/src/a.rs"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then an equivalent_invalid error is emitted
 
 @id=EX-core-237 @about=REQ-core-143 @source=docs/decision/records/2026-09-17-mutation-tests.md#A31,docs/decision/records/2026-09-17-mutation-tests.md#A34,docs/decision/records/2026-09-17-mutation-tests.md#A53
-Scenario: 形の誤った同じ内容の1件が2つあれば誤りも2件出る
-  Given `等価の一覧`に、"why" が空で内容の同じ1件が2つある
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then equivalent_invalid の誤りが2件出る
+Scenario: Two malformed entries with the same content give two errors
+  Given the `list of equivalents` has two entries with the same content and an empty "why"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then two equivalent_invalid errors are emitted
 
 @id=EX-core-238 @about=REQ-core-148 @source=docs/decision/records/2026-09-17-mutation-tests.md#A16,docs/decision/records/2026-09-17-mutation-tests.md#A36,docs/decision/records/2026-09-17-mutation-tests.md#A49
-Scenario: 空の一覧は0件として続ける
-  Given 設定の "mutants.equivalents" の指す先が0バイトで、結果のファイルに "summary" が "CaughtMutant" の1件がある
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then 終了コードは 0 である
+Scenario: An empty list continues as 0 entries
+  Given the target of "mutants.equivalents" in the configuration is 0 bytes, and the outcomes file has one entry whose "summary" is "CaughtMutant"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then the exit code is 0
 
 @id=EX-core-239 @about=REQ-core-148 @source=docs/decision/records/2026-09-17-mutation-tests.md#A34,docs/decision/records/2026-09-17-mutation-tests.md#A44,docs/decision/records/2026-09-17-mutation-tests.md#A49
-Scenario: 最上位が並びでない一覧は一覧のパスを出して停止する
-  Given 設定の "mutants.equivalents" が "docs/equivalents.yaml" で、その中身が "file: src/a.rs" の1行である
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then 終了コードは 2 である
-  And 標準エラーの1行目は "config error: docs/equivalents.yaml" で始まる
+Scenario: A list whose top level is not a sequence stops the run with the list's path
+  Given "mutants.equivalents" in the configuration is "docs/equivalents.yaml", and its content is the single line "file: src/a.rs"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then the exit code is 2
+  And the first line of standard error starts with "config error: docs/equivalents.yaml"
 
 @id=EX-core-243 @about=REQ-core-142 @source=docs/decision/records/2026-09-17-mutation-tests.md#A20,docs/decision/records/2026-09-17-mutation-tests.md#A31,docs/decision/records/2026-09-17-mutation-tests.md#A40,docs/decision/records/2026-09-17-mutation-tests.md#A57
-Scenario: 古い1件の detail は書かれたままのパスで出る
-  Given `等価の一覧`に "file" が "./src/a.rs"、"change" が "replace f with ()" の形の正しい1件があり、その "text" の行は "src/a.rs" に無い
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then detail が "./src/a.rs: replace f with ()" の equivalent_stale の注意が出る
+Scenario: The detail of a stale entry uses the path as written
+  Given the `list of equivalents` has a well-formed entry whose "file" is "./src/a.rs" and "change" is "replace f with ()", and the line of its "text" is not in "src/a.rs"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then an equivalent_stale notice with detail "./src/a.rs: replace f with ()" is emitted
 ```

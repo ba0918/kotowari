@@ -1,41 +1,43 @@
-# 使い手と作り
+# Users and construction
 
-kotowari を使う者、書き出す先、コードの置き場を扱う。
+English | [日本語](cli-scope.ja.md)
+
+Covers who uses kotowari, where it writes, and where its code lives.
 
 ## Requirements
 
-### REQ-core-101: 使い手
+### REQ-core-101: Users
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A1, docs/decision/records/records.md#A98
 - verification: review
-- how_to_verify: CLI の出力は JSON/text で LLM が読みやすい形。`src/main.rs` を確認
+- how_to_verify: The CLI output is JSON/text in a form an LLM reads easily. Check `src/main.rs`
 
-kotowari は常に、第一に LLM が使う CLI であり、人間が確認のために実行することもある。使う場は、仕様駆動の流れ（brainstorm、`判断の記録`、`IR`、実装）を回す開発者のリポジトリである。
+kotowari is always, first of all, a CLI used by an LLM, which a human may also run to check things. It is used in the repository of a developer who runs a specification-driven flow (brainstorm, `decision record`, `IR`, implementation).
 
-### REQ-core-102: 状態を保存しない
+### REQ-core-102: No saved state
 
 - kind: prohibition
 - source: docs/decision/records/records.md#A75, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4, docs/decision/records/2026-09-17-check-reach.md#A21, docs/decision/records/2026-10-02-whole-picture.md#A28, docs/decision/records/2026-10-02-whole-picture.md#A80, docs/decision/records/2026-10-02-whole-picture.md#A72
 - verification: unit
 
-kotowari は、状態を保存すること、標準出力と標準エラーのほかに書き出すことをしてはならない。ただし "kotowari overview build" と "kotowari overview serve" が`基準のディレクトリ`の ".kotowari/cache/overview/" の下に書き、その下のファイルを消すことだけは除く（REQ-core-296）。
+kotowari shall not save state, nor write anywhere other than standard output and standard error. The only exception is that "kotowari overview build" and "kotowari overview serve" write under ".kotowari/cache/overview/" of the `base directory` and delete files under it (REQ-core-296).
 
-### REQ-core-105: crate と CLI の置き場
+### REQ-core-105: Where the crates and the CLI live
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A8, docs/decision/records/2026-10-03-public-crate-api.md#A14, docs/decision/records/2026-10-03-public-crate-api.md#A34, docs/decision/records/2026-10-03-public-crate-api.md#A35
 - verification: review
-- how_to_verify: ルートのkotowari-cliパッケージがsrc/main.rsでkotowariバイナリを提供し、ライブラリがTBL-core-040の責務と依存に従ってcrates配下に分かれていることを確認する。
+- how_to_verify: Confirm that the root kotowari-cli package provides the kotowari binary in src/main.rs, and that the library is split under crates according to the responsibilities and dependencies of TBL-core-040.
 
-kotowari のコードは常に、層が増えるたびに crate を足し、CLI を直下の "src/" で管理する。
+kotowari's code always adds a crate each time a layer is added, and manages the CLI in "src/" directly under the root.
 
 ## Examples
 
 ```gherkin
 @id=EX-core-042 @about=REQ-core-102 @source=docs/decision/records/2026-09-17-check-reach.md#A21,docs/decision/records/2026-09-17-check-reach.md#A28
-Scenario: ホームと一時ディレクトリにも書き出さない
-  Given 環境変数 "HOME" と "TMPDIR" が空の一時ディレクトリを指す
-  When "kotowari check" を実行する
-  Then その一時ディレクトリと`基準のディレクトリ`の全ファイルの一覧と中身が、実行の前後で等しい
+Scenario: Nothing is written to the home or temporary directory either
+  Given the environment variables "HOME" and "TMPDIR" point to an empty temporary directory
+  When "kotowari check" is run
+  Then the list and contents of all files in that temporary directory and in the `base directory` are equal before and after the run
 ```

@@ -1,46 +1,48 @@
 # kotowari plan
 
-計画書（実装の手順を書いた Markdown の文書）を1つ読み、kotowari の本体に同梱したスキーマで形を検査します。
-kotowari-plan の工程で計画書を書き終えたとき、承認を求める前に使います。
+English | [日本語](plan.ja.md)
 
-## 書式
+Reads one plan (a Markdown document of implementation steps) and checks its form against the schema bundled in the kotowari binary.
+Use it in the kotowari-plan station when you have finished writing a plan, before asking for approval.
 
-<!-- @kotowari[REQ-core-190:41d0464a, REQ-core-002:410b78a4] -->
+## Synopsis
+
+<!-- @kotowari[REQ-core-190:b4b9f2e6, REQ-core-002:d9acbe9c] -->
 
 ```sh
 kotowari plan [--format json|text] <計画書のファイル>
 ```
 
-オプションはコマンドの前にも、ファイルの後にも書けます。
-`--config` は受けません（付けると引数の誤りで止まります）。
+Options may appear before the command or after the file.
+`--config` is not accepted (passing it stops with an argument error).
 
-## オプションと引数
+## Options and arguments
 
-<!-- @kotowari[REQ-core-190:41d0464a, REQ-core-002:410b78a4, REQ-core-021:14bd7b25] -->
+<!-- @kotowari[REQ-core-190:b4b9f2e6, REQ-core-002:d9acbe9c, REQ-core-021:ccedd28b] -->
 
-| 名前 | 値 | 既定 | 説明 |
+| Name | Value | Default | Description |
 |---|---|---|---|
-| `<計画書のファイル>` | パス | なし（必須） | 検査する計画書。ちょうど1つ。カレントディレクトリからの相対パスとして読む |
-| `--format` | `json` か `text` | `json` | 出力の形 |
-| `--help` / `--version` | なし | | 使い方か版を出して終わる |
+| `<計画書のファイル>` (plan file) | path | none (required) | The plan to check. Exactly one. Read as a path relative to the current directory |
+| `--format` | `json` or `text` | `json` | The output format |
+| `--help` / `--version` | none | | Print the usage or the version and exit |
 
-## 読むもの
+## What it reads
 
-<!-- @kotowari[REQ-core-196:6e220642, REQ-core-191:3fe34518, EX-core-359:b12cfe5e, EX-core-345:39c267d9] -->
+<!-- @kotowari[REQ-core-196:283ed4cd, REQ-core-191:162de9ae, EX-core-359:67cce6be, EX-core-345:bdb6abae] -->
 
-`plan` が読むのは、渡した計画書のファイルだけです。
-設定ファイル、IR、判断の記録、テストのファイルは読みません。
-そのため、設定ファイルが壊れていても `plan` は止まりません。
+`plan` reads only the plan file you pass.
+It does not read the configuration file, the IR, decision records or test files.
+So `plan` does not stop even if the configuration file is broken.
 
-形の決まり（スキーマ）はコンパイル時に本体へ取り込んだもので、実行時にスキーマのファイルを読みません。
-計画書の先頭の frontmatter は、中身を問わず読まずに飛ばします。
-frontmatter の `$schema` でスキーマを指しても使われず、指摘にも停止にもなりません。
+The rules for the form (the schema) are compiled into the binary; no schema file is read at run time.
+A frontmatter block at the top of the plan is skipped without being read, whatever it contains.
+Pointing at a schema with `$schema` in the frontmatter has no effect, and causes neither a finding nor a stop.
 
-## 計画書の形
+## The form of a plan
 
-<!-- @kotowari[REQ-core-192:ff54af7f, EX-core-337:272e98db] -->
+<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-337:5f0d07c9] -->
 
-計画書は1行ずつ読まれ、次の形を満たすときだけ誤りがありません。
+A plan is read line by line, and has no errors only when it has the following form.
 
 ```markdown
 # <題名>                       ← ちょうど1つ。題名と最初の ## の間は空行だけ
@@ -68,113 +70,114 @@ frontmatter の `$schema` でスキーマを指しても使われず、指摘に
 - Stop and hand back if: ...
 ```
 
-`## Test command` を除く10の節はちょうど1つずつ必要で、ほかの `## ` の節は置けません。
-全体の例は [例](#例) にあります。
+In the block above, the title (`# <題名>`) must appear exactly once, with only blank lines between it and the first `##`; each step heading names what that step produces.
+The ten sections other than `## Test command` must each appear exactly once (`## Test command` may appear zero times or once), and no other `## ` section is allowed.
+A complete example is in [Example](#example).
 
-### 計画全体の節
+### Plan-wide sections
 
-<!-- @kotowari[REQ-core-192:ff54af7f, EX-core-339:ffd23a32, EX-core-353:f165c721, EX-core-348:a1543ac3] -->
+<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-339:c1d921ec, EX-core-353:6b1ad7b6, EX-core-348:33e00663] -->
 
-`## Steps` 以外の節の下に置けるもの・置けないものです。
+What may and may not go under the sections other than `## Steps`:
 
-| 置ける | 置けない |
+| Allowed | Not allowed |
 |---|---|
-| 文 | 番号付きの一覧（`1. ...`） |
-| 番号の無い一覧（`-`）とその子の一覧 | `### ` とそれより深い見出し |
-| 表 | |
-| コードブロック | |
+| Sentences | Numbered lists (`1. ...`) |
+| Unnumbered lists (`-`) and their child lists | `### ` and deeper headings |
+| Tables | |
+| Code blocks | |
 
-### ステップ
+### Steps
 
-<!-- @kotowari[REQ-core-192:ff54af7f, EX-core-333:ccbaae6f, EX-core-334:ed506d95, EX-core-340:e7576368] -->
+<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-333:7fc19aa4, EX-core-334:37e6d2a2, EX-core-340:bd7dd866] -->
 
-`## Steps` の節の決まりです。
+The rules for the `## Steps` section:
 
-| 決まり | 内容 |
+| Rule | Details |
 |---|---|
-| ステップの見出し | `### S` と1桁以上の数字の後に `:` がある（`### S1: 入力を読む`）。1つ以上必要 |
-| 最初のステップより前 | 空でない行もほかの見出しも置けない |
-| 欄 | `Purpose`、`Specification`、`Prerequisites`、`May change`、`Done when`、`Shown by`、`Left to the implementer`、`Stop and hand back if` を、`- 名前: 値` の一覧の行でこの順に1回ずつ書く。一覧の記号は `-`、`*`、`+` のどれでもよい |
-| 欄のほかの行 | ステップの下には、8つの欄の行のほかに空でない行を置けない。値は1行に書く |
-| `Shown by` の値 | `test`、`check`、`artifact`、`external` のどれかの語で始まり、その語の後は空白か値の終わり |
+| Step heading | `### S`, then one or more digits, then `:` (`### S1: read the input`). At least one is required |
+| Before the first step | No non-blank lines and no other headings |
+| Fields | `Purpose`, `Specification`, `Prerequisites`, `May change`, `Done when`, `Shown by`, `Left to the implementer` and `Stop and hand back if`, each written once, in this order, as a list line of the form `- Name: value`. The list marker may be `-`, `*` or `+` |
+| Other lines in a step | Under a step, no non-blank lines other than the eight field lines are allowed. Write each value on one line |
+| Value of `Shown by` | Starts with one of the words `test`, `check`, `artifact` or `external`, followed by whitespace or the end of the value |
 
-### 検査しないこと
+### What is not checked
 
-<!-- @kotowari[REQ-core-192:ff54af7f, EX-core-341:6481aa47] -->
+<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-341:274e4805] -->
 
-次のことは検査しません。
+The following are not checked:
 
-- 節の並び順
-- ステップの番号が連番か、同じ番号のステップが2つあるか
-- ステップの見出しの `:` の後の名前
-- 欄の中身（要求の ID が実在するか、`Done when` が観測できる条件か、など）
+- The order of the sections
+- Whether step numbers are consecutive, or whether two steps share a number
+- The name after the `:` in a step heading
+- The contents of the fields (whether requirement IDs exist, whether `Done when` is an observable condition, and so on)
 
-要求の ID の実在は `kotowari query` で確かめます。
+Use `kotowari query` to confirm that requirement IDs exist.
 
-## 出力
+## Output
 
 ### text
 
-<!-- @kotowari[REQ-core-193:ae035033, REQ-core-207:0285f5b9, REQ-core-025:b4d331d2, EX-core-381:8fc95ec2, EX-core-382:6ec8630a] -->
+<!-- @kotowari[REQ-core-193:ee3eed54, REQ-core-207:1f5ede36, REQ-core-025:58025379, EX-core-381:a4b8c124, EX-core-382:a36d81e7] -->
 
-指摘を1件1行で `パス:行 [error] invalid_plan 詳細` の形で出し、ほかの行は出しません。
-指摘が0件のときは何も出しません（集計の行はありません）。
+Prints one finding per line in the form `path:line [error] invalid_plan detail`, and nothing else.
+When there are no findings, nothing is printed (there is no tally line).
 
 ```text
 docs/plans/broken.md:69 [error] invalid_plan field_pattern_mismatch: value "manual — read the output" does not match pattern "^(test|check|artifact|external)(\s|$)"
 ```
 
-ステップに必須の欄が無いときは、そのステップの見出しの行を指します。
-次は、45行目の `### S1: 入力を読む` のステップに `- Done when:` の行が無い計画書の出力です。
+When a step is missing a required field, the finding points at that step's heading line.
+The following is the output for a plan whose step `### S1: read the input` on line 45 has no `- Done when:` line.
 
 ```text
 docs/plans/a.md:45 [error] invalid_plan missing_required_field: field "Done when" is required but missing
 ```
 
-| 部分 | 中身 |
+| Part | Contents |
 |---|---|
-| パス | 計画書のファイルの、基準のディレクトリからの相対パス。正規化し、基準の外なら `../` を含む |
-| 行 | スキーマの側が出した行。ステップに必須の欄が無いときはそのステップの見出しの行。行が無ければ `-` |
-| 詳細 | スキーマの側の種類と詳細を `: ` でつないだもの（`field_pattern_mismatch: ...`） |
+| path | The path of the plan file relative to the base directory. Normalized; contains `../` if the file is outside the base directory |
+| line | The line reported by the schema side. When a step is missing a required field, the line of that step's heading. `-` if there is no line |
+| detail | The schema side's kind and detail joined by `: ` (`field_pattern_mismatch: ...`) |
 
-指摘の種類は `invalid_plan` の1つだけで、重さは誤りです。
-何が悪いかは詳細の前半（スキーマの側の種類）で見分けます。
+There is only one finding kind, `invalid_plan`, and its severity is error.
+Tell what is wrong from the first half of the detail (the schema side's kind).
 
 ### JSON
 
-<!-- @kotowari[REQ-core-194:dc199944, EX-core-346:58412a34] -->
+<!-- @kotowari[REQ-core-194:beb92c09, EX-core-346:ecaa0604] -->
 
-最上位は `findings` と `counts` の2つの鍵だけです。
-`check` の `files`、`lines`、`tests`、`guides` はありません。
+The top level has exactly two keys: `findings` and `counts`.
+The `files`, `lines`, `tests` and `guides` keys of `check` are not present.
 
-| 鍵 | 型 | 説明 |
+| Key | Type | Description |
 |---|---|---|
-| `findings` | 配列 | 指摘の一覧。1件の鍵は `kind`、`severity`、`path`、`line`、`detail`（`check` と同じ）。`line` は行が無ければ null |
-| `counts` | オブジェクト | 種類ごとの指摘の数（`{"invalid_plan": 4}`）。0件なら `{}` |
+| `findings` | array | The list of findings. Each one has the keys `kind`, `severity`, `path`, `line` and `detail` (same as `check`). `line` is null when there is no line |
+| `counts` | object | The number of findings per kind (`{"invalid_plan": 4}`). `{}` when there are none |
 
-## 終了コード
+## Exit codes
 
-<!-- @kotowari[TBL-core-002:46c482a8, REQ-core-193:ae035033] -->
+<!-- @kotowari[TBL-core-002:14c565f2, REQ-core-193:ee3eed54] -->
 
-| コード | 意味 |
+| Code | Meaning |
 |---|---|
-| 0 | 計画書の形に誤りが無い |
-| 1 | `invalid_plan` が1件以上ある |
-| 2 | 停止した（引数の誤り、計画書が無い・ディレクトリ・読めない、UTF-8 でない） |
+| 0 | The plan's form has no errors |
+| 1 | One or more `invalid_plan` |
+| 2 | Stopped (argument error; the plan does not exist, is a directory or cannot be read; not UTF-8) |
 
-停止したときは標準出力に何も出さず、標準エラーの1行目に理由を出します。
+On a stop, nothing is written to standard output and the reason is written on the first line of standard error.
 
-| 場面 | 標準エラーの1行目の始まり |
+| Situation | Start of the first line of standard error |
 |---|---|
-| 計画書を渡さない・2つ以上渡す・`--config` を付けた | `argument error: ` |
-| 計画書が無い・ディレクトリ・読めない | `unreadable file: ` |
-| 計画書が UTF-8 でない | `non-UTF-8 file: ` |
+| No plan passed, two or more passed, or `--config` given | `argument error: ` |
+| The plan does not exist, is a directory or cannot be read | `unreadable file: ` |
+| The plan is not UTF-8 | `non-UTF-8 file: ` |
 
-## 例
+## Example
 
-<!-- @kotowari[EX-core-332:f4ae8334, EX-core-333:ccbaae6f, EX-core-334:ed506d95, EX-core-348:a1543ac3] -->
+<!-- @kotowari[EX-core-332:680b57dc, EX-core-333:7fc19aa4, EX-core-334:37e6d2a2, EX-core-348:33e00663] -->
 
-形の揃った計画書です（kotowari-plan の skill の [例の計画書](../../../agent/skills/kotowari-plan/references/plan-example.md) と同じもの）。
+A plan in the correct form (the same as the [example plan](../../../agent/skills/kotowari-plan/references/plan-example.md) in the kotowari-plan skill).
 
 ````markdown
 # Plan: report the words a document uses too often
@@ -265,11 +268,11 @@ $ kotowari plan docs/plans/word-limit.md
 {"findings":[],"counts":{}}
 ```
 
-この計画書を3か所壊した `broken.md` を読ませます。
+Now feed it `broken.md`, which breaks this plan in three places:
 
-- `## Out of scope` の前に `## Notes` の節と1行の文を足した
-- S1 の `Shown by` を `manual — read the output` にした
-- S2 の `Done when` の行を消した
+- Added a `## Notes` section with one sentence before `## Out of scope`
+- Changed S1's `Shown by` to `manual — read the output`
+- Deleted S2's `Done when` line
 
 ```console
 $ kotowari plan docs/plans/broken.md --format text
@@ -281,9 +284,9 @@ $ echo $?
 1
 ```
 
-欄が欠けたときの行（73）は、そのステップの見出し `### S2: ...` の行を指しています。
+The line for the missing field (73) points at the line of that step's heading, `### S2: ...`.
 
-同じ入力の JSON です。
+Here is the JSON for the same input.
 
 ```console
 $ kotowari plan docs/plans/broken.md | jq .
@@ -324,15 +327,15 @@ $ kotowari plan docs/plans/broken.md | jq .
 }
 ```
 
-## よくあるつまずき
+## Common pitfalls
 
-### 欄の値を2行に折り返したら `undeclared_line` が出る
+### Wrapping a field value onto two lines gives `undeclared_line`
 
-<!-- @kotowari[REQ-core-192:ff54af7f, EX-core-340:e7576368] -->
+<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-340:bd7dd866] -->
 
-計画書は1行ずつ読まれるので、欄の値の続きの行は欄の一部になりません。
-ステップの下に置けない行として誤りになります。
-値は、コマンドを含めて1行に書きます。
+A plan is read line by line, so a continuation line of a field value does not become part of the field.
+It is an error as a line that is not allowed under a step.
+Write each value on one line, including any commands.
 
 ```console
 $ kotowari plan docs/plans/wrapped.md --format text
@@ -340,22 +343,22 @@ docs/plans/wrapped.md:28 [error] invalid_plan undeclared_line: undeclared ordere
 docs/plans/wrapped.md:66 [error] invalid_plan undeclared_line: undeclared statement "one test per rule of REQ-core-011"
 ```
 
-（66行目は `- Shown by: test — EX-core-030,` の次の行に字下げして続けた `one test per rule of REQ-core-011`）
+(Line 66 is `one test per rule of REQ-core-011`, indented and continued on the line after `- Shown by: test — EX-core-030,`.)
 
-### 番号付きの一覧が `undeclared ordered list` になる
+### A numbered list becomes `undeclared ordered list`
 
-<!-- @kotowari[REQ-core-192:ff54af7f, EX-core-353:f165c721] -->
+<!-- @kotowari[REQ-core-192:e10bf1b8, EX-core-353:6b1ad7b6] -->
 
-計画全体の節には番号付きの一覧を置けません（上の例の28行目は `1. S1 before S2: ...`）。
-`-` の箇条書きか文に書き換えます。
-順序を表したいときは `## Step order and prerequisites` に文で書きます。
+Numbered lists are not allowed in the plan-wide sections (line 28 in the example above is `1. S1 before S2: ...`).
+Rewrite it as a `-` bullet list or as sentences.
+To express an order, write it as sentences in `## Step order and prerequisites`.
 
 ### `argument error: unexpected option for plan: --config`
 
-<!-- @kotowari[REQ-core-190:41d0464a, EX-core-343:8b20d278] -->
+<!-- @kotowari[REQ-core-190:b4b9f2e6, EX-core-343:af29bce2] -->
 
-`plan` は設定を読まないので、`--config` を受けません。
-付けていたら外します。
+`plan` does not read the configuration, so it does not accept `--config`.
+If you passed it, remove it.
 
 ```console
 $ kotowari plan docs/plans/word-limit.md --config .kotowari/config.yaml
@@ -364,10 +367,10 @@ argument error: unexpected option for plan: --config
 
 ### `argument error: plan expects exactly one plan file path`
 
-<!-- @kotowari[REQ-core-190:41d0464a, EX-core-342:73c99c30, EX-core-357:6bdefa54] -->
+<!-- @kotowari[REQ-core-190:b4b9f2e6, EX-core-342:7e4f1631, EX-core-357:d71d499d] -->
 
-計画書は1回に1つだけ渡せます。
-複数を検査するときは、1つずつ実行します。
+You can pass only one plan at a time.
+To check several, run the command once for each.
 
 ```console
 $ kotowari plan
@@ -378,56 +381,28 @@ argument error: plan expects exactly one plan file path, got 2
 
 ### `unreadable file: ...`
 
-<!-- @kotowari[REQ-core-197:64c1f5d8, EX-core-344:b02acd20] -->
+<!-- @kotowari[REQ-core-197:2fbfa51a, EX-core-344:9b05eb1b] -->
 
-パスはカレントディレクトリからの相対で読みます。
-基準のディレクトリ（`.kotowari/` のあるディレクトリ）からではありません。
+The path is read relative to the current directory,
+not relative to the base directory (the directory that contains `.kotowari/`).
 
 ```console
 $ kotowari plan docs/plans/none.md
 unreadable file: docs/plans/none.md: No such file or directory (os error 2)
 ```
 
-一方、出力の `path` は基準のディレクトリからの相対です。
-サブディレクトリから実行しても、`path` は同じ形で出ます。
+The `path` in the output, on the other hand, is relative to the base directory.
+Even when you run the command from a subdirectory, `path` comes out in the same form.
 
 ```console
 $ cd docs && kotowari plan plans/broken.md --format text | head -1
 docs/plans/broken.md:52 [error] invalid_plan undeclared_heading: undeclared section heading "Notes"
 ```
 
-## なぜこういう作りか
+## Related
 
-- **スキーマを本体に同梱し、計画書からは指さない。**
-  本体は IR などのスキーマを既に同梱していて、工程は `kotowari query` を使うので本体がある前提にできます。
-  スキーマをプロジェクトへ写して `$schema` で指す案は、写す手順とコミットするファイルが増えるので棄てました。
-  （[決定の記録 2026-09-24 plan-schema A9](../../decision/records/2026-09-24-plan-schema.md#A9)、[A12](../../decision/records/2026-09-24-plan-schema.md#A12)）
-- **`check` に混ぜず、別のコマンドにしている。**
-  計画書の指摘が `status` の完了の判定に響き、広がりすぎるからです。ファイルを1つ受けて読むコマンドには `mutants` の前例があります。
-  （[A10](../../decision/records/2026-09-24-plan-schema.md#A10)）
-- **`--config` を受けない。**
-  `plan` は設定を読みません。受けて黙って無視すると、付けた人が効いていると誤解します。
-  （[A15](../../decision/records/2026-09-24-plan-schema.md#A15)）
-- **指摘の種類は `invalid_plan` の1つだけ。**
-  スキーマの側の種類をそのまま並べると、指摘の種類の表と、それを本体と突き合わせるテストの対象が増えます。計画書を直すのは LLM で、詳細を読めれば足ります。
-  （[A11](../../decision/records/2026-09-24-plan-schema.md#A11)、[A18](../../decision/records/2026-09-24-plan-schema.md#A18)）
-- **検査するのは形だけ。**
-  中身の良し悪し（`Done when` が他人に観測できるか、など）は機械で決まらず、ID の実在は既に `kotowari query` が確かめています。
-  （[A3](../../decision/records/2026-09-24-plan-schema.md#A3)）
-- **並び順と番号の飛びは検査しない。**
-  並び順を検査する仕組みがスキーマのエンジン（mds）に無く、そのためにエンジンを広げません。番号の飛びは中身の問題です。
-  （[A7](../../decision/records/2026-09-24-plan-schema.md#A7)、[A21](../../decision/records/2026-09-24-plan-schema.md#A21)）
-- **ステップの下には8つの欄だけ、値は1行。**
-  ステップは実装役が読む契約なので形を固めます。1行ずつ読まないと、欄の直後の行が値に吸われ、ステップの下にほかの行を置かない決まりが成り立ちません。
-  （[A19](../../decision/records/2026-09-24-plan-schema.md#A19)、[A23](../../decision/records/2026-09-24-plan-schema.md#A23)）
-- **計画全体の節に番号付きの一覧を置けない。**
-  スキーマのエンジンに番号付きの一覧の規則が無く、宣言できないからです。
-  （[A25](../../decision/records/2026-09-24-plan-schema.md#A25)）
-
-## 関連
-
-- 仕様: [計画書の検査（plan の IR）](../../ir/core/plan.md)、[引数](../../ir/core/cli.md#REQ-core-190)
-- 共通の書式と停止: [cli.md](../cli.md)
-- 指摘の種類の一覧: [findings.md](../findings.md)
-- 計画書の書き方: kotowari-plan の skill の [step-template.md](../../../agent/skills/kotowari-plan/references/step-template.md)
-- 要求の ID を確かめる: [kotowari query](query.md)
+- Specification: [Checking plans (the plan IR)](../../ir/core/plan.md), [Arguments](../../ir/core/cli.md#REQ-core-190)
+- Common format and stops: [cli.md](../cli.md)
+- The list of finding kinds: [findings.md](../findings.md)
+- How to write a plan: [step-template.md](../../../agent/skills/kotowari-plan/references/step-template.md) in the kotowari-plan skill
+- Confirming requirement IDs: [kotowari query](query.md)

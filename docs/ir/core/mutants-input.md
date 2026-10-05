@@ -1,98 +1,100 @@
-# 変異テストの結果の読み取り
+# Reading the results of mutation tests
 
-"kotowari mutants" が変異テストの道具の結果のファイルを`変異の結果`に写すところと、写せない結果のファイルでの`停止`を扱う。`指摘`と集計は mutants.md で扱う。
+English | [日本語](mutants-input.ja.md)
+
+Covers how "kotowari mutants" maps the results file of a mutation-testing tool onto each `mutation outcome`, and the `stop` on a results file that cannot be mapped. Each `finding` and the counts are covered in mutants.md.
 
 ## Requirements
 
-### REQ-core-138: 道具の結果を変異の結果に写す
+### REQ-core-138: Mapping the tool's results onto mutation outcomes
 
 - kind: algorithm
 - source: docs/decision/records/2026-09-17-mutation-tests.md#A1, docs/decision/records/2026-09-17-mutation-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A13, docs/decision/records/2026-09-17-mutation-tests.md#A14, docs/decision/records/2026-09-17-mutation-tests.md#A42, docs/decision/records/2026-09-17-mutation-tests.md#A50, docs/decision/records/2026-09-17-mutation-tests.md#A51, docs/decision/records/2026-09-17-mutation-tests.md#A56
 - definition: TBL-core-024
 - verification: unit
 
-### REQ-core-144: 結果の誤り
+### REQ-core-144: Results errors
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-17-mutation-tests.md#A32, docs/decision/records/2026-09-17-mutation-tests.md#A39, docs/decision/records/2026-09-17-mutation-tests.md#A42, docs/decision/records/2026-09-17-mutation-tests.md#A50, docs/decision/records/2026-09-17-mutation-tests.md#A51
 - verification: unit
 
-結果のファイルが JSON として読めないとき、TBL-core-024 の写す元の鍵が無いか型が違うとき、1件の結果が TBL-core-024 のどの行にも当たらないとき、基準の実行の結果が TBL-core-024 の「基準の実行の成功」でないとき、行が1未満のとき、変更の説明の前置きが TBL-core-024 の形でないとき、またはファイルが絶対パスか ".." の要素を含むとき、kotowari は結果の誤りを理由に`停止`する。基準の実行が1件も無い結果のファイルでは`停止`しない。TBL-core-024 に挙げていない鍵は見ない。結果のファイルが無い、読めない、UTF-8 でないときは、読めないファイルか UTF-8 でないファイルを理由に`停止`する。
+When the results file cannot be read as JSON, when a key that TBL-core-024 maps from is missing or has the wrong type, when one result matches no row of TBL-core-024, when the result of the baseline run is not "baseline run succeeded" of TBL-core-024, when a line is less than 1, when the prefix of the change description is not in the form of TBL-core-024, or when a file is an absolute path or contains a ".." component, kotowari makes a `stop` with a results error as the reason. It does not make a `stop` for a results file that has no baseline run at all. It does not look at keys not listed in TBL-core-024. When the results file is missing, unreadable or not UTF-8, it makes a `stop` with an unreadable file or a non-UTF-8 file as the reason.
 
 ## Decision tables
 
-### TBL-core-024: cargo-mutants の結果からの写し方
+### TBL-core-024: How the results of cargo-mutants are mapped
 
 - source: docs/decision/records/2026-09-17-mutation-tests.md#A6, docs/decision/records/2026-09-17-mutation-tests.md#A13, docs/decision/records/2026-09-17-mutation-tests.md#A33, docs/decision/records/2026-09-17-mutation-tests.md#A42, docs/decision/records/2026-09-17-mutation-tests.md#A50, docs/decision/records/2026-09-17-mutation-tests.md#A51, docs/decision/records/2026-09-17-mutation-tests.md#A56
 
-"--tool" が "cargo-mutants" のとき、結果のファイルは最上位の "outcomes" の鍵に並びを持つ JSON で、並びの1件ごとに次のとおりに写す。"scenario" が文字列 "Baseline" の1件は基準の実行で、変異の結果にしない。それ以外の1件は "scenario" の下の "Mutant" に変異を持つ。
+When "--tool" is "cargo-mutants", the results file is JSON with a list under the top-level key "outcomes", and each entry of the list is mapped as follows. An entry whose "scenario" is the string "Baseline" is the baseline run and does not become a mutation outcome. Every other entry has the mutation in "Mutant" under "scenario".
 
-| 変異の結果の項目 | 写す元 |
+| Field of the mutation outcome | Mapped from |
 |---|---|
-| ファイル | "scenario.Mutant.file"（文字列）。基準のディレクトリからの相対パスとして読み、REQ-core-110 の正規化を掛ける |
-| 行 | "scenario.Mutant.span.start.line"（数） |
-| 変更の説明 | "scenario.Mutant.name"（文字列）の先頭から、"scenario.Mutant.file" の値、":"、"span.start.line" の値、":"、"span.start.column" の値、": " をこの順につないだ前置きを除いた残り |
-| 結果「捕まえた」 | "summary" が "CaughtMutant" |
-| 結果「見逃した」 | "summary" が "MissedMutant" |
-| 結果「時間切れ」 | "summary" が "Timeout" |
-| 結果「ビルド不能」 | "summary" が "Unviable" |
-| 基準の実行の成功 | 基準の実行の1件の "summary" が "Success" |
+| file | "scenario.Mutant.file" (a string). Read as a path relative to the base directory, with the normalization of REQ-core-110 applied |
+| line | "scenario.Mutant.span.start.line" (a number) |
+| change description | the rest of "scenario.Mutant.name" (a string) after removing from its start the prefix made by joining, in this order, the value of "scenario.Mutant.file", ":", the value of "span.start.line", ":", the value of "span.start.column" and ": " |
+| outcome caught | "summary" is "CaughtMutant" |
+| outcome missed | "summary" is "MissedMutant" |
+| outcome timed out | "summary" is "Timeout" |
+| outcome unviable | "summary" is "Unviable" |
+| baseline run succeeded | the "summary" of the baseline run entry is "Success" |
 
 ## Examples
 
 ```gherkin
 @id=EX-core-207 @about=REQ-core-144 @source=docs/decision/records/2026-09-17-mutation-tests.md#A32,docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A42
-Scenario: 知らない結果の値で停止する
-  Given 結果のファイルに "summary" が "Flaky" の1件がある
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then 終了コードは 2 である
-  And 標準エラーの1行目は "results error: " で始まる
+Scenario: An unknown result value stops it
+  Given the results file has an entry whose "summary" is "Flaky"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then the exit code is 2
+  And the first line of standard error starts with "results error: "
 
 @id=EX-core-208 @about=REQ-core-144 @source=docs/decision/records/2026-09-17-mutation-tests.md#A32,docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A42
-Scenario: 基準の実行が失敗した結果で停止する
-  Given 結果のファイルの "scenario" が "Baseline" の1件の "summary" が "Failure" である
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then 終了コードは 2 である
-  And 標準エラーの1行目は "results error: " で始まる
+Scenario: Results whose baseline run failed stop it
+  Given in the results file, the "summary" of the entry whose "scenario" is "Baseline" is "Failure"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then the exit code is 2
+  And the first line of standard error starts with "results error: "
 
 @id=EX-core-222 @about=REQ-core-144 @source=docs/decision/records/2026-09-17-mutation-tests.md#A32,docs/decision/records/2026-09-17-mutation-tests.md#A39
-Scenario: JSON として読めない結果で停止する
-  Given 結果のファイルの中身が "{" だけである
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then 終了コードは 2 である
-  And 標準エラーの1行目は "results error: " で始まる
+Scenario: Results that cannot be read as JSON stop it
+  Given the content of the results file is only "{"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then the exit code is 2
+  And the first line of standard error starts with "results error: "
 
 @id=EX-core-223 @about=REQ-core-144,TBL-core-024 @source=docs/decision/records/2026-09-17-mutation-tests.md#A32,docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A50
-Scenario: 要る鍵の型が違う結果で停止する
-  Given 結果のファイルの変異の1件の "span.start.line" が文字列 "3" である
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then 終了コードは 2 である
-  And 標準エラーの1行目は "results error: " で始まる
+Scenario: Results where a required key has the wrong type stop it
+  Given in the results file, the "span.start.line" of one mutation entry is the string "3"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then the exit code is 2
+  And the first line of standard error starts with "results error: "
 
 @id=EX-core-224 @about=REQ-core-144,TBL-core-024 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A50
-Scenario: 名前の前置きが形に合わない結果で停止する
-  Given 結果のファイルの変異の1件の "file" が "src/a.rs"、"span.start" の "line" が 3 で "column" が 5、"name" が "replace f with ()" である
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then 終了コードは 2 である
-  And 標準エラーの1行目は "results error: " で始まる
+Scenario: Results whose name prefix does not fit the form stop it
+  Given in the results file, one mutation entry has "file" "src/a.rs", "line" 3 and "column" 5 in "span.start", and "name" "replace f with ()"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then the exit code is 2
+  And the first line of standard error starts with "results error: "
 
 @id=EX-core-225 @about=REQ-core-144 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A50
-Scenario: 行が0の結果で停止する
-  Given 結果のファイルの変異の1件の "span.start.line" が 0 である
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then 終了コードは 2 である
-  And 標準エラーの1行目は "results error: " で始まる
+Scenario: Results with line 0 stop it
+  Given in the results file, the "span.start.line" of one mutation entry is 0
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then the exit code is 2
+  And the first line of standard error starts with "results error: "
 
 @id=EX-core-226 @about=REQ-core-144 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A51
-Scenario: 基準のディレクトリの外を指す結果で停止する
-  Given 結果のファイルの変異の1件の "file" が "../x/src/a.rs" である
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then 終了コードは 2 である
-  And 標準エラーの1行目は "results error: " で始まる
+Scenario: Results pointing outside the base directory stop it
+  Given in the results file, the "file" of one mutation entry is "../x/src/a.rs"
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then the exit code is 2
+  And the first line of standard error starts with "results error: "
 
 @id=EX-core-227 @about=REQ-core-144 @source=docs/decision/records/2026-09-17-mutation-tests.md#A35,docs/decision/records/2026-09-17-mutation-tests.md#A38,docs/decision/records/2026-09-17-mutation-tests.md#A50
-Scenario: 基準の実行が無く知らない鍵のある結果も読める
-  Given 結果のファイルの "outcomes" に基準の実行が無く、"summary" が "CaughtMutant" の1件に TBL-core-024 に無い鍵 "extra" がある
-  When "kotowari mutants --tool cargo-mutants outcomes.json" を実行する
-  Then 終了コードは 0 で、"mutants" の "caught" は 1 になる
+Scenario: Results without a baseline run and with an unknown key can still be read
+  Given the "outcomes" of the results file has no baseline run, and an entry whose "summary" is "CaughtMutant" has a key "extra" not in TBL-core-024
+  When "kotowari mutants --tool cargo-mutants outcomes.json" is run
+  Then the exit code is 0, and the "caught" of "mutants" is 1
 ```

@@ -1,38 +1,40 @@
-# kotowari changes — 変更と照合記録の検査
+# kotowari changes — checking changes against change records
 
-変更を Git から独立して列挙し、呼び出し側が書いた YAML 記録との対応と鮮度を確かめます。根拠の妥当性、意味の一致、review の独立性は別の review で確認します。
+English | [日本語](changes.ja.md)
 
-## 比較対象と段階
+Enumerates the changes independently from Git and checks that they correspond to the YAML records the caller wrote, and that those records are fresh. Whether the reasons are valid, whether the meaning matches, and whether the review was independent are confirmed in a separate review.
 
-<!-- @kotowari[REQ-core-263:ec4ff4c1, REQ-core-265:1c472ad0] -->
+## What is compared, and phases
+
+<!-- @kotowari[REQ-core-263:316e333f, REQ-core-265:5cd15a3c] -->
 
 ```sh
 kotowari changes --base HEAD --staged --phase implementation
 kotowari changes --base <base-sha> --head <head-sha> --phase review --format json
 ```
 
-base、head または staged、phase はすべて必須で既定を持ちません。staged は base HEAD と implementation の組み合わせだけです。commit の REV は完全な object ID に解決されます。index と commit は設定・記録・IR も同じ snapshot から読み、未ステージ・未追跡の内容で補いません。
+base, head or staged, and phase are all required and have no defaults. staged can only be combined with base HEAD and implementation. A commit REV is resolved to the full object ID. For the index and for commits, the configuration, the records and the IR are also read from the same snapshot; unstaged or untracked content is never used to fill gaps.
 
-## 記録
+## Records
 
-<!-- @kotowari[REQ-core-268:6d4f5042, REQ-core-270:d878aaf0] -->
+<!-- @kotowari[REQ-core-268:26f876d5, REQ-core-270:66112bc2] -->
 
-設定は [config.md](../config.md) の `changes` に書き、呼び出し側が `changes.records` の glob に当たる YAML を作成します。kotowari は記録を書きません。具体的な保存形式は [change-record-format.md](../../ir/core/change-record-format.md)、運用手順は [変更照合](../../../agent/skills/kotowari/references/changes.md) を見てください。
+The settings go under `changes` in [config.md](../config.md), and the caller creates YAML files matched by the `changes.records` glob. kotowari does not write records. For the exact storage format, see [change-record-format.md](../../ir/core/change-record-format.md); for the operating procedure, see [change conformance](../../../agent/skills/kotowari/references/changes.md).
 
-1ファイルに version: 1 と entries を置き、各件は id、base、role、files、ir、conclusion、reason、requirements、decisions、handoff、gaps を持ちます。role は implementer/reviewer、conclusion は existing/new/deferred です。件の id と両役のファイルのまとめ方は一致しなくても構いません。
+A file holds version: 1 and entries; each entry has id, base, role, files, ir, conclusion, reason, requirements, decisions, handoff and gaps. role is implementer/reviewer, and conclusion is existing/new/deferred. The entry ids, and how files are grouped into entries, need not match between the two roles.
 
-files の path、before、after は比較元と対象の識別値を記します。追加は before:null、削除は after:null。識別値は Git の6文字 mode、NUL、blob の全バイトの SHA-256 で、`sha256:` と64桁の小文字16進を使います。ir の path と sha256 は IR 全バイトの SHA-256 です。ファイルと IR の一覧内でパスを重複させません。
+The path, before and after of files record the identifiers of the comparison base and the target. An addition has before:null, and a deletion has after:null. The identifier is the SHA-256 of Git's six-character mode, a NUL, and all bytes of the blob, written as `sha256:` followed by 64 lowercase hexadecimal digits. The path and sha256 of ir are the SHA-256 of all bytes of the IR. Do not repeat a path within the file list or the IR list.
 
-existing は対応する要求とその定義 IR を、new は判断への参照を、deferred は判断への参照と handoff を持ちます。判断はリポジトリ相対の `path#A1` のような参照です。gaps は missing_spec/spec_conflict/premise_conflict と recorded/fixed/deferred と refs を持ち、処理先を記録します。
+existing has the corresponding requirements and the IR that defines them; new has references to decisions; deferred has references to decisions and handoff. A decision is a repository-relative reference such as `path#A1`. gaps has missing_spec/spec_conflict/premise_conflict, recorded/fixed/deferred, and refs, recording where each gap is handled.
 
-## 合否と出力
+## Pass or fail, and output
 
-<!-- @kotowari[REQ-core-272:32f1f5d8, REQ-core-273:870d0970, REQ-core-274:5071dd96] -->
+<!-- @kotowari[REQ-core-272:af645e8c, REQ-core-273:aeb58924, REQ-core-274:5a370ca0] -->
 
-implementation は各ファイルの実装側の記録を要求します。review は両役の記録を要求し、reviewer は対応する implementer の関連 IR をすべて含めます。件の対象内ファイルまたは IR が古いと、その件の全ファイルの coverage が無効になります。review の deferred と結論の衝突は誤りです。設定に当たる記録はすべて形式と現在の参照を検査し、別の base は鮮度と coverage に使いません。
+implementation requires an implementer-side record for each file. review requires records from both roles, and the reviewer must include all related IR of the corresponding implementer. If any target file or IR of an entry is stale, coverage is invalid for all files of that entry. In review, deferred conflicting with the conclusion is an error. Every record matched by the configuration is checked for form and current references; records with a different base are not used for freshness or coverage.
 
-JSON は base、target、phase、files、covered、findings の6鍵です。target は commit ID または index、files と covered はファイル数です。findings と text の1件の表記は check と共通で、誤りなしは終了0、誤りありは1、入力や実行の停止は2です。Git 読み取りの停止理由は `git error` です。
+The JSON has six keys: base, target, phase, files, covered and findings. target is a commit ID or index, and files and covered are numbers of files. The notation of findings, and of each entry in text, is shared with check; with no errors the exit code is 0, with errors it is 1, and a stop due to input or execution gives 2. The stop reason for Git read failures is `git error`.
 
-記録はブランチ全体の比較元を base にして実装側と独立 reviewer が別々に作ります。`--staged` はコミット前の任意の自己検査で、途中のコミットに記録は要りません。現在の比較だけを固定ファイルに置きます。履歴は Git に残し、過去の比較はその commit の設定と記録から再検証します。変更・IR・判断の意味の修正、rebase、cherry-pick、並行変更の取り込みで無効になった両役の記録を消し、件全体を独立再照合して書き直し、check と changes を再実行します。check/status の成功だけでは今回の変更が照合済みとは言えません。
+The records use the comparison base of the whole branch as base, and the implementer and an independent reviewer each create theirs separately. `--staged` is an optional self-check before committing; intermediate commits need no records. Only the current comparison is kept in fixed files. History stays in Git, and a past comparison is re-verified from that commit's configuration and records. When a fix to the meaning of the change, IR or decisions, a rebase, a cherry-pick, or merging in a parallel change invalidates the records of both roles, delete them, reconcile the whole entry again independently, rewrite them, and rerun check and changes. A successful check/status alone does not mean the current change has been reconciled.
 
-開発中の version: 1 から `state` を除去しました。旧 `state` 付き記録は未知キーとして拒否し、自動変換しません。旧形式の過去 commit は当時のツール版で再検証してください。新版形式を持つ過去 commit は新版でもその snapshot から読めます。
+`state` was removed from version: 1 while it was in development. Old records with `state` are rejected as having an unknown key and are not converted automatically. Re-verify past commits in the old format with the tool version of that time. Past commits that carry the new format can be read from their snapshot by the new version as well.

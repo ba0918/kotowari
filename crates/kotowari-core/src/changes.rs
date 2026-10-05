@@ -74,7 +74,13 @@ pub fn inspect(snapshot: &Comparison, phase: Phase) -> Result<ChangeResult, crat
         records_other_files: vec![],
     };
     for path in snapshot.blobs.keys().filter(|path| path.ends_with(".md")) {
-        if sources::is_under_place(path, &config.ir) {
+        // REQ-core-342: `対`の`項目`は`先頭の言語`の`側`からだけ読む
+        let name = path.rsplit('/').next().unwrap_or(path);
+        let first_side = matches!(
+            crate::translations::classify(name, &config.languages),
+            crate::translations::Classified::First
+        );
+        if first_side && sources::is_under_place(path, &config.ir) {
             ir_paths.insert(path.clone());
             let doc = ir::parse_document(
                 path.strip_prefix(&format!("{}/", config.ir))

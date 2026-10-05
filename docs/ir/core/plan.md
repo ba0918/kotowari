@@ -1,263 +1,265 @@
-# 計画書の検査
+# Checking a plan
 
-"kotowari plan" が`計画書`を1つ読み、本体に同梱したスキーマで形を検査するところを扱う。
+English | [日本語](plan.ja.md)
+
+Covers how "kotowari plan" reads one `plan` and checks its form against the schema bundled in the binary.
 
 ## Requirements
 
-### REQ-core-190: plan の引数
+### REQ-core-190: Arguments of plan
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-09-24-plan-schema.md#A16
 - verification: unit
 
-"--help" も "--version" も無い "kotowari plan" で、"plan" の後の位置引数がちょうど1つでないとき、または "--config" を受けたとき、kotowari は引数の誤りを理由に`停止`する。位置引数は`計画書`のファイルのパスで、カレントディレクトリからの相対パスとして読む。
+When "kotowari plan" has neither "--help" nor "--version" and the positional arguments after "plan" are not exactly one, or when it receives "--config", kotowari makes a `stop` with an argument error as the reason. The positional argument is the path of the `plan` file, read as a path relative to the current directory.
 
-### REQ-core-196: plan が読むもの
+### REQ-core-196: What plan reads
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-24-plan-schema.md#A9, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-09-24-plan-schema.md#A32
 - verification: unit
 
-kotowari は常に、"kotowari plan" で`計画書`のファイルだけを読み、`設定ファイル`、`IR`、`判断の記録`、`テストのファイル`を読まない。
+In "kotowari plan", kotowari always reads only the `plan` file, and reads neither the `configuration file`, the `IR`, any `decision record` nor any `test file`.
 
-### REQ-core-197: 計画書を読めないとき
+### REQ-core-197: When the plan cannot be read
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-24-plan-schema.md#A16
 - verification: unit
 
-"kotowari plan" で`計画書`のファイルが無いか、ディレクトリか、読めないとき、kotowari は読めないファイルを理由に`停止`し、`計画書`が UTF-8 でないとき、UTF-8 でないファイルを理由に`停止`する。
+In "kotowari plan", when the `plan` file is missing, is a directory, or cannot be read, kotowari makes a `stop` with an unreadable file as the reason, and when the `plan` is not UTF-8, it makes a `stop` with a non-UTF-8 file as the reason.
 
-### REQ-core-191: 同梱のスキーマで読む
+### REQ-core-191: Reading with the bundled schema
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-24-plan-schema.md#A9, docs/decision/records/2026-09-24-plan-schema.md#A12, docs/decision/records/2026-09-24-plan-schema.md#A14, docs/decision/records/2026-09-24-plan-schema.md#A27
 - verification: unit
 
-kotowari は常に、"kotowari plan" で`計画書`をコンパイル時に取り込んだ`計画書`のスキーマで読み、実行時にスキーマのファイルを読まず、`計画書`の先頭の frontmatter を中身を問わず読まずに飛ばし、形の宣言として使わず、`指摘`にも`停止`にもしない。
+In "kotowari plan", kotowari always reads the `plan` with the schema of the `plan` taken in at compile time, does not read a schema file at run time, and skips the frontmatter at the top of the `plan` unread whatever its content, neither using it as a declaration of form nor turning it into a `finding` or a `stop`.
 
-### REQ-core-192: 計画書の形
+### REQ-core-192: The form of a plan
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-24-plan-schema.md#A3, docs/decision/records/2026-09-24-plan-schema.md#A7, docs/decision/records/2026-09-24-plan-schema.md#A19, docs/decision/records/2026-09-24-plan-schema.md#A20, docs/decision/records/2026-09-24-plan-schema.md#A21, docs/decision/records/2026-09-24-plan-schema.md#A22, docs/decision/records/2026-09-24-plan-schema.md#A23, docs/decision/records/2026-09-24-plan-schema.md#A24, docs/decision/records/2026-09-24-plan-schema.md#A25, docs/decision/records/2026-09-24-plan-schema.md#A28, docs/decision/records/2026-09-24-plan-schema.md#A29, docs/decision/records/2026-09-24-plan-schema.md#A31, docs/decision/records/2026-09-24-plan-schema.md#A11, docs/decision/records/2026-09-24-plan-schema.md#A10
 - verification: unit
 
-kotowari は常に、"kotowari plan" で`計画書`を1行ずつ読み、次の形を満たす`計画書`だけを`誤り`の無いものとする。`題名`がちょうど1つあり、`題名`と最初の "## " の見出しの間に空でない行が無い。"## Goal"、"## Specification"、"## Approach and why"、"## Scope of change"、"## Step order and prerequisites"、"## Verification map"、"## Left to the implementer"、"## Stop conditions"、"## Out of scope"、"## Steps" の節がちょうど1つずつあり、"## Test command" の節は0個か1個あり、ほかの "## " の節は無い。"## Steps" の節には、"### S" と1桁以上の数字の後に ":" がある見出しのステップが1つ以上あり、最初のステップより前に空でない行もほかの見出しも無い。各ステップの下には、名前が "Purpose"、"Specification"、"Prerequisites"、"May change"、"Done when"、"Shown by"、"Left to the implementer"、"Stop and hand back if" の名前と値の形の一覧の行がこの順で1回ずつあり、ほかの空でない行は無い。一覧の記号は "-"、"*"、"+" のどれでもよい。"Shown by" の値は "test"、"check"、"artifact"、"external" のいずれかの語で始まり、その語の後は空白か値の終わりである。"## Steps" 以外の節の下には、文、番号の無い一覧とその子の一覧、表、コードブロックを置いてよく、番号付きの一覧と "### " 以下の見出しは置けない。節の並び順、ステップの番号が連番か、同じ番号のステップが2つあるか、見出しの ":" の後の名前は検査しない。
+In "kotowari plan", kotowari always reads the `plan` line by line, and treats as free of any `error` only a `plan` that satisfies the following form. There is exactly one `title`, and there is no non-blank line between the `title` and the first "## " heading. There is exactly one section each of "## Goal", "## Specification", "## Approach and why", "## Scope of change", "## Step order and prerequisites", "## Verification map", "## Left to the implementer", "## Stop conditions", "## Out of scope" and "## Steps", zero or one "## Test command" section, and no other "## " section. The "## Steps" section has one or more steps, each with a heading that is "### S" followed by one or more digits and then ":", and before the first step there is neither a non-blank line nor any other heading. Under each step there are list lines of the name-and-value form named "Purpose", "Specification", "Prerequisites", "May change", "Done when", "Shown by", "Left to the implementer" and "Stop and hand back if", once each in this order, and no other non-blank line. The list marker may be any of "-", "*" and "+". The value of "Shown by" starts with one of the words "test", "check", "artifact" and "external", and after that word comes whitespace or the end of the value. Under sections other than "## Steps", statements, unnumbered lists and their child lists, tables and code blocks may be placed, while numbered lists and headings of "### " and below may not. The order of the sections, whether the step numbers are consecutive, whether two steps have the same number, and the name after the ":" of a heading are not checked.
 
-### REQ-core-193: 形の指摘
+### REQ-core-193: Findings on the form
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-24-plan-schema.md#A11, docs/decision/records/2026-09-24-plan-schema.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A26, docs/decision/records/2026-09-24-plan-schema.md#A33, docs/decision/records/2026-09-24-guide-gaps.md#A4
 - verification: unit
 
-"kotowari plan" で`計画書`が REQ-core-192 の形から外れるとき、kotowari はスキーマの側の`指摘`を TBL-core-030 で写さず、1件ごとに、"path" を`計画書`のファイルの`基準のディレクトリ`からの相対パス（正規化し、基準の外なら "../" を含める）、"line" をスキーマの側が出した行（ステップに必須の欄が無いときはそのステップの見出しの行。行が無ければ null）、detail をスキーマの側の種類と詳細を ": " でつないだ文字列にして invalid_plan の`誤り`を出す。
+In "kotowari plan", when the `plan` departs from the form of REQ-core-192, kotowari does not map the schema side's `finding` entries through TBL-core-030, and for each one raises an `error` of invalid_plan whose "path" is the path of the `plan` file relative to the `base directory` (normalized, and including "../" when outside the base), whose "line" is the line the schema side reported (when a step lacks a required field, the line of that step's heading; null when there is no line), and whose detail is the schema side's kind and detail joined by ": ".
 
-### REQ-core-194: plan の JSON
+### REQ-core-194: JSON of plan
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-24-plan-schema.md#A17, docs/decision/records/2026-09-24-plan-schema.md#A33
 - verification: unit
 
-"kotowari plan" で "--format" が "json" のとき、kotowari は最上位に "findings" と "counts" の2つの鍵だけを持つ JSON を出す。"findings" の`指摘`の鍵と "counts" の中身は "kotowari check" と同じである。
+In "kotowari plan", when "--format" is "json", kotowari outputs JSON whose top level has only the two keys "findings" and "counts". The keys of a `finding` in "findings" and the content of "counts" are the same as in "kotowari check".
 
-### REQ-core-207: plan の text
+### REQ-core-207: text of plan
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-24-guide-gaps.md#A4
 - verification: unit
 
-"kotowari plan" で "--format" が "text" のとき、kotowari は`指摘`を REQ-core-025 の形で1件1行に出し、ほかの行を出さない。`指摘`が0件なら何も出さない。
+In "kotowari plan", when "--format" is "text", kotowari outputs each `finding` on one line in the form of REQ-core-025 and outputs no other line. When there are zero `finding` entries, it outputs nothing.
 
 ## Examples
 
 ```gherkin
 @id=EX-core-332 @about=REQ-core-192,REQ-core-193 @source=docs/decision/records/2026-09-24-plan-schema.md#A7,docs/decision/records/2026-09-24-plan-schema.md#A20,docs/decision/records/2026-09-24-plan-schema.md#A11
-Scenario: 形の揃った計画書には指摘が出ない
-  Given 必須の節がそろい、"## Steps" の下に8つの欄を順に持つステップ "### S1: 入力を読む" がある`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 0 で、`指摘`は出ない
+Scenario: A plan of the right form raises no finding
+  Given there is a `plan` "docs/plans/a.md" with all the required sections and, under "## Steps", a step "### S1: 入力を読む" with the eight fields in order
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 0 and no `finding` is raised
 
 @id=EX-core-333 @about=REQ-core-192,REQ-core-193 @source=docs/decision/records/2026-09-24-plan-schema.md#A7,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A26
-Scenario: 欄の欠けたステップは誤りになる
-  Given カレントディレクトリが`基準のディレクトリ`で、ステップ "### S1: 入力を読む" に "- Done when:" の行が無い`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 1 で、invalid_plan の`誤り`が出て、その "path" は "docs/plans/a.md"、detail はスキーマの側の種類に ": " が続く形である
+Scenario: A step missing a field is an error
+  Given the current directory is the `base directory`, and there is a `plan` "docs/plans/a.md" whose step "### S1: 入力を読む" has no "- Done when:" line
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 1, an `error` of invalid_plan is raised, its "path" is "docs/plans/a.md", and its detail has the form of the schema side's kind followed by ": "
 
 @id=EX-core-334 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A7,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18
-Scenario: 4つの語で始まらない Shown by は誤りになる
-  Given ステップの "- Shown by:" の値が "manual — 目で見る" の`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 1 で、invalid_plan の`誤り`が出る
+Scenario: A Shown by that does not start with one of the four words is an error
+  Given there is a `plan` "docs/plans/a.md" in which the value of a step's "- Shown by:" is "manual — 目で見る"
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 1 and an `error` of invalid_plan is raised
 
 @id=EX-core-335 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A7,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18
-Scenario: 語の続きがある Shown by は誤りになる
-  Given ステップの "- Shown by:" の値が "tests — 名前" の`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 1 で、invalid_plan の`誤り`が出る
+Scenario: A Shown by whose word continues is an error
+  Given there is a `plan` "docs/plans/a.md" in which the value of a step's "- Shown by:" is "tests — 名前"
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 1 and an `error` of invalid_plan is raised
 
 @id=EX-core-336 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A20,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18
-Scenario: ステップが1つも無い計画書は誤りになる
-  Given "## Steps" の節に見出しが1つも無い`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 1 で、invalid_plan の`誤り`が出る
+Scenario: A plan with no step at all is an error
+  Given there is a `plan` "docs/plans/a.md" whose "## Steps" section has no heading at all
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 1 and an `error` of invalid_plan is raised
 
 @id=EX-core-337 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A20,docs/decision/records/2026-09-24-plan-schema.md#A11
-Scenario: Test command の節は無くてもよい
-  Given "## Test command" の節が無く、ほかは形の揃った`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 0 である
+Scenario: The Test command section may be absent
+  Given there is a `plan` "docs/plans/a.md" that has no "## Test command" section and is otherwise of the right form
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 0
 
 @id=EX-core-338 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A20,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18
-Scenario: 必須の節が2つある計画書は誤りになる
-  Given "## Goal" の節が2つある`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 1 で、invalid_plan の`誤り`が出る
+Scenario: A plan with a required section twice is an error
+  Given there is a `plan` "docs/plans/a.md" with two "## Goal" sections
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 1 and an `error` of invalid_plan is raised
 
 @id=EX-core-339 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A19,docs/decision/records/2026-09-24-plan-schema.md#A11
-Scenario: 計画全体の節には表を置ける
-  Given "## Verification map" の節に表を置き、ほかは形の揃った`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 0 である
+Scenario: A table can be placed in a section of the whole plan
+  Given there is a `plan` "docs/plans/a.md" with a table in the "## Verification map" section and otherwise of the right form
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 0
 
 @id=EX-core-340 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A19,docs/decision/records/2026-09-24-plan-schema.md#A23,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18
-Scenario: ステップの下の地の文は誤りになる
-  Given ステップ "### S1: 入力を読む" の "- Done when:" の行の直後に、空行を挟まず空でない地の文の行がある`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 1 で、invalid_plan の`誤り`が出る
+Scenario: Body text under a step is an error
+  Given there is a `plan` "docs/plans/a.md" in which, right after the "- Done when:" line of step "### S1: 入力を読む" and with no blank line between, there is a non-blank line of body text
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 1 and an `error` of invalid_plan is raised
 
 @id=EX-core-341 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A7,docs/decision/records/2026-09-24-plan-schema.md#A21,docs/decision/records/2026-09-24-plan-schema.md#A11
-Scenario: 並び順と番号の飛びは検査しない
-  Given "## Goal" の節が "## Out of scope" の節の後にあり、ステップが "### S1: 入力を読む" と "### S3: 結果を出す" の`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 0 である
+Scenario: The order and gaps in numbering are not checked
+  Given there is a `plan` "docs/plans/a.md" in which the "## Goal" section comes after the "## Out of scope" section and the steps are "### S1: 入力を読む" and "### S3: 結果を出す"
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 0
 
 @id=EX-core-342 @about=REQ-core-190 @source=docs/decision/records/2026-09-24-plan-schema.md#A16,docs/decision/records/records.md#A20,docs/decision/records/records.md#A104
-Scenario: 計画書を2つ渡すと停止する
-  Given 形の揃った`計画書` "a.md" と "b.md" がある
-  When "kotowari plan a.md b.md" を実行する
-  Then 終了コードは 2 で、標準エラーの1行目は "argument error: " で始まる
+Scenario: Passing two plans stops
+  Given there are `plan` files "a.md" and "b.md" of the right form
+  When "kotowari plan a.md b.md" is run
+  Then the exit code is 2 and the first line of standard error starts with "argument error: "
 
 @id=EX-core-343 @about=REQ-core-190 @source=docs/decision/records/2026-09-24-plan-schema.md#A15,docs/decision/records/records.md#A20,docs/decision/records/records.md#A104
-Scenario: plan に設定ファイルを渡すと停止する
-  Given 形の揃った`計画書` "a.md" と`設定ファイル` ".kotowari/config.yaml" がある
-  When "kotowari plan --config .kotowari/config.yaml a.md" を実行する
-  Then 終了コードは 2 で、標準エラーの1行目は "argument error: " で始まる
+Scenario: Passing a configuration file to plan stops
+  Given there are a `plan` "a.md" of the right form and a `configuration file` ".kotowari/config.yaml"
+  When "kotowari plan --config .kotowari/config.yaml a.md" is run
+  Then the exit code is 2 and the first line of standard error starts with "argument error: "
 
 @id=EX-core-344 @about=REQ-core-197 @source=docs/decision/records/2026-09-24-plan-schema.md#A16,docs/decision/records/records.md#A20,docs/decision/records/records.md#A104
-Scenario: 無い計画書は読めないファイルで停止する
-  Given "docs/plans/none.md" が無い
-  When "kotowari plan docs/plans/none.md" を実行する
-  Then 終了コードは 2 で、標準エラーの1行目は "unreadable file: " で始まる
+Scenario: A missing plan stops as an unreadable file
+  Given "docs/plans/none.md" does not exist
+  When "kotowari plan docs/plans/none.md" is run
+  Then the exit code is 2 and the first line of standard error starts with "unreadable file: "
 
 @id=EX-core-345 @about=REQ-core-191 @source=docs/decision/records/2026-09-24-plan-schema.md#A9,docs/decision/records/2026-09-24-plan-schema.md#A12,docs/decision/records/2026-09-24-plan-schema.md#A27,docs/decision/records/2026-09-24-plan-schema.md#A11
-Scenario: frontmatter のスキーマの宣言は使わない
-  Given 先頭の frontmatter に "$schema: missing.yaml" を書き、ほかは形の揃った`計画書` "docs/plans/a.md" があり、"docs/plans/missing.yaml" は無い
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 0 である
+Scenario: A schema declaration in the frontmatter is not used
+  Given there is a `plan` "docs/plans/a.md" that has "$schema: missing.yaml" written in its leading frontmatter and is otherwise of the right form, and "docs/plans/missing.yaml" does not exist
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 0
 
 @id=EX-core-346 @about=REQ-core-194 @source=docs/decision/records/2026-09-24-plan-schema.md#A17,docs/decision/records/2026-09-24-plan-schema.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A33,docs/decision/records/2026-09-24-plan-schema.md#A20,docs/decision/records/records.md#A40,docs/decision/records/2026-09-24-plan-schema.md#A10,docs/decision/records/2026-09-24-plan-schema.md#A15
-Scenario: plan の JSON は findings と counts だけを持つ
-  Given ステップ "### S1: 入力を読む" に "- Done when:" の行が無い`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md --format json" を実行する
-  Then JSON の最上位の鍵は "findings" と "counts" の2つだけで、"counts" の "invalid_plan" は "findings" の invalid_plan の数に等しい
+Scenario: The JSON of plan has only findings and counts
+  Given there is a `plan` "docs/plans/a.md" whose step "### S1: 入力を読む" has no "- Done when:" line
+  When "kotowari plan docs/plans/a.md --format json" is run
+  Then the top-level keys of the JSON are only the two "findings" and "counts", and "invalid_plan" in "counts" equals the number of invalid_plan entries in "findings"
 
 @id=EX-core-347 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A20,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18
-Scenario: 必須の節が欠けた計画書は誤りになる
-  Given "## Stop conditions" の節が無い`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 1 で、invalid_plan の`誤り`が出る
+Scenario: A plan missing a required section is an error
+  Given there is a `plan` "docs/plans/a.md" with no "## Stop conditions" section
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 1 and an `error` of invalid_plan is raised
 
 @id=EX-core-348 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A7,docs/decision/records/2026-09-24-plan-schema.md#A20,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A31
-Scenario: 知らない節のある計画書は誤りになる
-  Given "## Notes" の節がある`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 1 で、invalid_plan の`誤り`が出る
+Scenario: A plan with an unknown section is an error
+  Given there is a `plan` "docs/plans/a.md" with a "## Notes" section
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 1 and an `error` of invalid_plan is raised
 
 @id=EX-core-349 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A7,docs/decision/records/2026-09-24-plan-schema.md#A20,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18
-Scenario: 欄の順が違うステップは誤りになる
-  Given ステップの "- Done when:" の行が "- Purpose:" の行より前にある`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 1 で、invalid_plan の`誤り`が出る
+Scenario: A step whose fields are out of order is an error
+  Given there is a `plan` "docs/plans/a.md" in which a step's "- Done when:" line comes before its "- Purpose:" line
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 1 and an `error` of invalid_plan is raised
 
 @id=EX-core-350 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A20,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18
-Scenario: 欄が2回あるステップは誤りになる
-  Given ステップに "- Purpose:" の行が2つある`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 1 で、invalid_plan の`誤り`が出る
+Scenario: A step with a field twice is an error
+  Given there is a `plan` "docs/plans/a.md" in which a step has two "- Purpose:" lines
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 1 and an `error` of invalid_plan is raised
 
 @id=EX-core-351 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A22,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18
-Scenario: 最初のステップより前の行は誤りになる
-  Given "## Steps" の見出しと "### S1: 入力を読む" の見出しの間に空でない地の文の行がある`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 1 で、invalid_plan の`誤り`が出る
+Scenario: A line before the first step is an error
+  Given there is a `plan` "docs/plans/a.md" with a non-blank line of body text between the "## Steps" heading and the "### S1: 入力を読む" heading
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 1 and an `error` of invalid_plan is raised
 
 @id=EX-core-352 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A7,docs/decision/records/2026-09-24-plan-schema.md#A24,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18
-Scenario: S と数字で始まらないステップの見出しは誤りになる
-  Given "## Steps" の下の見出しが "### Step 1: 入力を読む" の`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 1 で、invalid_plan の`誤り`が出る
+Scenario: A step heading that does not start with S and digits is an error
+  Given there is a `plan` "docs/plans/a.md" whose heading under "## Steps" is "### Step 1: 入力を読む"
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 1 and an `error` of invalid_plan is raised
 
 @id=EX-core-353 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A25,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18
-Scenario: 計画全体の節の番号付きの一覧は誤りになる
-  Given "## Step order and prerequisites" の節に "1. S1 を先に行う" の行がある`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 1 で、invalid_plan の`誤り`が出る
+Scenario: A numbered list in a section of the whole plan is an error
+  Given there is a `plan` "docs/plans/a.md" with the line "1. S1 を先に行う" in the "## Step order and prerequisites" section
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 1 and an `error` of invalid_plan is raised
 
 @id=EX-core-354 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A25,docs/decision/records/2026-09-24-plan-schema.md#A11
-Scenario: 計画全体の節には子の一覧を置ける
-  Given "## Scope of change" の節に字下げした子の一覧を持つ箇条書きがあり、ほかは形の揃った`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 0 である
+Scenario: A child list can be placed in a section of the whole plan
+  Given there is a `plan` "docs/plans/a.md" with a bulleted list that has an indented child list in the "## Scope of change" section, and otherwise of the right form
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 0
 
 @id=EX-core-355 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A25,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18
-Scenario: 題名と最初の節の間の行は誤りになる
-  Given `題名`と "## Goal" の間に空でない地の文の行がある`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 1 で、invalid_plan の`誤り`が出る
+Scenario: A line between the title and the first section is an error
+  Given there is a `plan` "docs/plans/a.md" with a non-blank line of body text between the `title` and "## Goal"
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 1 and an `error` of invalid_plan is raised
 
 @id=EX-core-356 @about=REQ-core-192 @source=docs/decision/records/2026-09-24-plan-schema.md#A28,docs/decision/records/2026-09-24-plan-schema.md#A11
-Scenario: 欄の一覧の記号はアスタリスクでもよい
-  Given ステップの欄の行を "* Purpose:" のように "*" で書き、ほかは形の揃った`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 0 である
+Scenario: The list marker of the fields may be an asterisk
+  Given there is a `plan` "docs/plans/a.md" whose step field lines are written with "*", as in "* Purpose:", and otherwise of the right form
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 0
 
 @id=EX-core-357 @about=REQ-core-190 @source=docs/decision/records/2026-09-24-plan-schema.md#A16,docs/decision/records/records.md#A20,docs/decision/records/records.md#A104
-Scenario: 計画書を渡さない plan は停止する
-  When "kotowari plan" を実行する
-  Then 終了コードは 2 で、標準エラーの1行目は "argument error: " で始まる
+Scenario: plan without a plan stops
+  When "kotowari plan" is run
+  Then the exit code is 2 and the first line of standard error starts with "argument error: "
 
 @id=EX-core-358 @about=REQ-core-197 @source=docs/decision/records/2026-09-24-plan-schema.md#A16,docs/decision/records/records.md#A20,docs/decision/records/records.md#A104
-Scenario: UTF-8 でない計画書は停止する
-  Given UTF-8 でないバイトを含む`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 2 で、標準エラーの1行目は "non-UTF-8 file: " で始まる
+Scenario: A plan that is not UTF-8 stops
+  Given there is a `plan` "docs/plans/a.md" containing bytes that are not UTF-8
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 2 and the first line of standard error starts with "non-UTF-8 file: "
 
 @id=EX-core-359 @about=REQ-core-196 @source=docs/decision/records/2026-09-24-plan-schema.md#A15,docs/decision/records/2026-09-24-plan-schema.md#A11
-Scenario: 壊れた設定ファイルがあっても plan は停止しない
-  Given YAML として読めない`設定ファイル` ".kotowari/config.yaml" と、形の揃った`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 0 である
+Scenario: plan does not stop even with a broken configuration file
+  Given there are a `configuration file` ".kotowari/config.yaml" that cannot be read as YAML and a `plan` "docs/plans/a.md" of the right form
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 0
 
 @id=EX-core-360 @about=REQ-core-193 @source=docs/decision/records/2026-09-24-plan-schema.md#A26
-Scenario: 基準の外の計画書の path は "../" を含む
-  Given `基準のディレクトリ` "work" の外に、"- Done when:" の行が無いステップを持つ`計画書` "plans/a.md" があり、カレントディレクトリは "work" である
-  When "kotowari plan ../plans/a.md" を実行する
-  Then invalid_plan の`誤り`の "path" は "../plans/a.md" である
+Scenario: The path of a plan outside the base includes "../"
+  Given outside the `base directory` "work" there is a `plan` "plans/a.md" with a step that has no "- Done when:" line, and the current directory is "work"
+  When "kotowari plan ../plans/a.md" is run
+  Then the "path" of the `error` of invalid_plan is "../plans/a.md"
 
 @id=EX-core-361 @about=REQ-core-191 @source=docs/decision/records/2026-09-24-plan-schema.md#A27,docs/decision/records/2026-09-24-plan-schema.md#A11
-Scenario: 壊れた frontmatter も読まずに飛ばす
-  Given 先頭の frontmatter が YAML として読めず、ほかは形の揃った`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md" を実行する
-  Then 終了コードは 0 である
+Scenario: A broken frontmatter is skipped unread too
+  Given there is a `plan` "docs/plans/a.md" whose leading frontmatter cannot be read as YAML and that is otherwise of the right form
+  When "kotowari plan docs/plans/a.md" is run
+  Then the exit code is 0
 @id=EX-core-381 @about=REQ-core-193,REQ-core-207 @source=docs/decision/records/2026-09-24-guide-gaps.md#A4,docs/decision/records/ir-form.md#出力,docs/decision/records/2026-09-24-plan-schema.md#A11,docs/decision/records/2026-09-24-plan-schema.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A3
-Scenario: 欄の欠けたステップは見出しの行を指す
-  Given ほかは形の揃った`計画書` "docs/plans/a.md" の "### S1: 作る" のステップに "- Done when:" の行が無い
-  When "kotowari plan docs/plans/a.md --format text" を実行する
-  Then 終了コードは 1 で、標準出力は "docs/plans/a.md:" に "### S1: 作る" の行の番号と " [error] invalid_plan " を続けた形で始まる行だけである
+Scenario: A step missing a field points at the heading line
+  Given in a `plan` "docs/plans/a.md" otherwise of the right form, the step "### S1: 作る" has no "- Done when:" line
+  When "kotowari plan docs/plans/a.md --format text" is run
+  Then the exit code is 1, and standard output is only a line that starts with "docs/plans/a.md:" followed by the line number of "### S1: 作る" and " [error] invalid_plan "
 
 @id=EX-core-382 @about=REQ-core-207 @source=docs/decision/records/2026-09-24-guide-gaps.md#A4,docs/decision/records/ir-form.md#出力
-Scenario: 指摘の無い計画書の text は何も出さない
-  Given 形の揃った`計画書` "docs/plans/a.md" がある
-  When "kotowari plan docs/plans/a.md --format text" を実行する
-  Then 終了コードは 0 で、標準出力は空である
+Scenario: The text of a plan without findings outputs nothing
+  Given there is a `plan` "docs/plans/a.md" of the right form
+  When "kotowari plan docs/plans/a.md --format text" is run
+  Then the exit code is 0 and standard output is empty
 ```

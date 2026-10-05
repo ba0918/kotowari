@@ -1,275 +1,277 @@
-# 抽出と素の構文木
+# Extraction and the bare syntax tree
 
-この文書は、スキーマが宣言した抽出規則から値を組み立てる振る舞いと、検査と別に素の構文木を出す振る舞いを扱う。
+English | [日本語](extraction.ja.md)
+
+This document covers the behaviour of assembling values from the extraction rules a schema declares, and the behaviour of outputting the bare syntax tree separately from checking.
 
 ## Requirements
 
-### REQ-schema-035: 抽出の書式
+### REQ-schema-035: Format of extraction
 
 - kind: algorithm
 - source: docs/decision/records/2026-09-21-mds-spec.md#A4
 - definition: TBL-schema-008
 - verification: unit
 
-### REQ-schema-036: 配置パス
+### REQ-schema-036: Placement path
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A46, docs/decision/records/2026-09-24-review4-gaps.md#A4
 - verification: unit
 
-mds は常に、`抽出`した値を`配置パス`のドット区切りの名前に沿って入れ子にして置く。区切った名前はどれも空でない。
+mds always places an extracted value (`extraction`) nested along the dot-separated names of its `placement path`. None of the separated names is empty.
 
-### REQ-schema-037: 値の型は文字列
+### REQ-schema-037: Values are strings
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A23
 - verification: property
 
-mds は常に、`文書`から取り出した`抽出`の値を文字列として出し、日付や数値への型変換をしない。エンジンが導く位置情報はこの規則の対象外である。
+mds always outputs the values of an `extraction` taken from a `document` as strings, and does not convert them to dates or numbers. Position information the engine derives is outside the scope of this rule.
 
-### REQ-schema-038: 欠けた値はキーを出さない
+### REQ-schema-038: A missing value outputs no key
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A47
 - verification: unit
 
-`抽出`の対象の`ノード`が`文書`に無いとき、mds はその`配置パス`のキーを出力に出さない。
+When the `node` targeted by an `extraction` is absent from the `document`, mds does not output the key of its `placement path`.
 
-### REQ-schema-039: 置き場の無い内側の抽出
+### REQ-schema-039: Inner extraction with no place to go
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A22, docs/decision/records/2026-09-21-mds-spec.md#A48, docs/decision/records/2026-09-21-mds-spec.md#A68
 - verification: unit
 
-`項目`の内側の`フィールド行`、`文`、`箇条書き`、`表`、`コードブロック`が`抽出`を宣言し、その`項目`自身が`抽出`を宣言していないとき、mds は`停止`する。`箇条書き`の子の`フィールド行`も`項目`の内側に数える。
+When a `field line`, `statement`, `bullet`, `table` or `code block` inside an `item` declares an `extraction` and that `item` itself declares no `extraction`, mds performs a `stop`. A `field line` that is a child of a `bullet` also counts as inside the `item`.
 
-### REQ-schema-047: 項目のオブジェクトの形
+### REQ-schema-047: Shape of the item object
 
 - kind: state_driven
 - source: docs/decision/records/2026-09-21-mds-spec.md#A22, docs/decision/records/2026-09-22-ir-engine.md#A52, docs/decision/records/2026-09-22-ir-engine.md#A60, docs/decision/records/2026-09-22-ir-engine.md#A69
 - verification: unit
 
-`項目`の内側の`ノード`が`抽出`を宣言している間、または`項目`の`抽出`が`要素の値`の置き場か`導かれる値`を宣言している間、mds は`項目`ごとに1つのオブジェクトを組み立て、内側の`配置パス`をそのオブジェクトの中の相対パスとして解決する。どれでもない間は、オブジェクトを組み立てず TBL-schema-008 の略記の形にする。
+While a `node` inside an `item` declares an `extraction`, or while the `extraction` of the `item` declares a place for the `element value` or a `derived value`, mds assembles one object per `item` and resolves the inner `placement path` as a relative path within that object. While none of these holds, it assembles no object and uses the shorthand shape of TBL-schema-008.
 
-### REQ-schema-048: 導かれる値
+### REQ-schema-048: Derived values
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A22, docs/decision/records/2026-09-21-mds-spec.md#A23, docs/decision/records/2026-09-21-mds-spec.md#A54, docs/decision/records/2026-09-21-mds-spec.md#A64, docs/decision/records/2026-09-21-mds-spec.md#P1, docs/decision/records/2026-09-22-ir-engine.md#A45, docs/decision/records/2026-09-22-ir-engine.md#A49, docs/decision/records/2026-09-22-ir-engine.md#A52, docs/decision/records/2026-09-22-ir-engine.md#A53, docs/decision/records/2026-09-22-ir-engine.md#A56, docs/decision/records/2026-09-22-ir-engine.md#A58, docs/decision/records/2026-09-22-ir-engine.md#A69, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24
 - verification: unit
 
-mds は常に、`ノード`の`抽出`の宣言を1つの入れ子として受け、"path" に`配置パス`をちょうど1つ、"value" に`要素の値`の置き場を、"of" に`導かれる値`を取る。"group" の名前付きキャプチャは`題名`にだけ宣言でき、ほかの`ノード`に宣言した`スキーマ`と、`題名`に正規表現が無いか指定の名前付きキャプチャを含まない`スキーマ`は`停止`にする。`導かれる値`は行番号、`項目`の見出しの ID、`項目`の見出しの名前、`生の行`、要素の最後の行（"end"。REQ-schema-062）の5つで、行番号と要素の最後の行は数値で出し、ほかの語は`停止`にする。`項目`の見出しの ID と名前は`項目`にだけ宣言でき、`項目`の外の`ノード`に宣言した`スキーマ`は`停止`にする。要素の最後の行は`項目`と`節`にだけ宣言でき、ほかの`ノード`に宣言した`スキーマ`は`停止`にする。`ノード`が "value" か`導かれる値`を宣言したときは、その`ノード`の要素ごとに1つのオブジェクトを組み立て、"value" と "of" の鍵と内側の`ノード`の`配置パス`を、そのオブジェクトの中の相対パスとして解く。
+mds always accepts the declaration of the `extraction` of a `node` as one nested mapping, taking exactly one `placement path` in "path", the place for the `element value` in "value", and `derived value` entries in "of". A "group" named capture can be declared only on the `title`; a `schema` that declares it on any other `node`, and a `schema` whose `title` has no regular expression or whose regular expression does not contain the named capture, are a `stop`. The `derived value` entries are five: the line number, the ID of the `item` heading, the name of the `item` heading, the `raw line`, and the last line of the element ("end"; REQ-schema-062). The line number and the last line of the element are output as numbers, and any other word is a `stop`. The ID and the name of the `item` heading can be declared only on an `item`; a `schema` that declares them on a `node` outside an `item` is a `stop`. The last line of the element can be declared only on an `item` and a `section`; a `schema` that declares it on any other `node` is a `stop`. When a `node` declares "value" or a `derived value`, mds assembles one object per element of that `node` and resolves the keys of "value" and "of" and the `placement path` of the inner `node` entries as relative paths within that object.
 
-### REQ-schema-062: 要素の最後の行
+### REQ-schema-062: Last line of the element
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-23-ir-engine-gaps.md#A18, docs/decision/records/2026-09-23-ir-engine-gaps.md#A24
 - verification: unit
 
-mds は常に、`項目`と`節`の`導かれる値`の "end" を、その見出しの後で次に現れる同じ深さかそれより浅い見出しの手前の行の行番号にし、そのような見出しが無ければ`文書`の最後の行の行番号にする。範囲の末尾の空行も最後の行に含める。
+mds always sets the "end" `derived value` of an `item` and a `section` to the line number of the line just before the next heading, after its own heading, that is of the same depth or shallower; if there is no such heading, to the line number of the last line of the `document`. Blank lines at the end of the range are included in the last line.
 
-### REQ-schema-040: 素の構文木
+### REQ-schema-040: Bare syntax tree
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A19
 - verification: review
-- how_to_verify: "kotowari-mds ast" の出力を mdast（unist）の仕様と突き合わせ、ノードの "type" の名前、"children" の入れ子、インライン要素の種別が準拠していることを確認する。準拠は外部の仕様との一致なので、自分のテストでは見られない
+- how_to_verify: Compare the output of "kotowari-mds ast" against the mdast (unist) specification and confirm that the names of the nodes' "type", the nesting of "children", and the kinds of inline elements conform. Conformance means agreement with an external specification, so our own tests cannot observe it
 
-mds は常に、素の構文木を mdast に沿った JSON で出し、インライン要素まで含め、位置情報は含めない。
+mds always outputs the bare syntax tree as JSON that follows mdast, including inline elements and excluding position information.
 
-### REQ-schema-045: 区切り文字を宣言したフィールド行の抽出
+### REQ-schema-045: Extraction of a field line that declares a delimiter
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A10, docs/decision/records/2026-09-21-mds-spec.md#A50
 - verification: unit
 
-mds は常に、区切り文字を宣言した`フィールド行`を`出現回数`の宣言に関わらず配列へ`抽出`し、`出現回数`の範囲も宣言したときは配列の配列にする。`要素の値`の置き場か`導かれる値`も宣言したときは、この配列を`要素の値`の鍵の下に置く。
+mds always extracts (`extraction`) a `field line` that declares a delimiter into an array regardless of its `cardinality` declaration, and when a range of `cardinality` is also declared, into an array of arrays. When a place for the `element value` or a `derived value` is also declared, it places this array under the key of the `element value`.
 
-### REQ-schema-046: 区切りと継続段落の順序
+### REQ-schema-046: Order of splitting and continuation paragraphs
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A11, docs/decision/records/2026-09-21-mds-spec.md#A50, docs/decision/records/2026-09-23-extract-original-lines.md#A7
 - verification: unit
 
-mds は常に、区切り文字による分割を`継続段落`を含めない値だけに対して行い、`継続段落`は分割した末尾の要素に REQ-schema-063 のつなぎ方で付ける。
+mds always splits by the delimiter only the value that does not include a `continuation paragraph`, and attaches the `continuation paragraph` to the last element of the split, joined as in REQ-schema-063.
 
-### REQ-schema-063: 値の行は元の行のまま
+### REQ-schema-063: Value lines stay as the original lines
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-21-mds-spec.md#A11, docs/decision/records/2026-09-23-extract-original-lines.md#A1, docs/decision/records/2026-09-23-extract-original-lines.md#A2, docs/decision/records/2026-09-23-extract-original-lines.md#A3, docs/decision/records/2026-09-23-extract-original-lines.md#A4, docs/decision/records/2026-09-23-extract-original-lines.md#A5, docs/decision/records/2026-09-23-extract-original-lines.md#A6
 - verification: unit
 
-mds は常に、`要素の値`に入る行を`文書`の元の行のまま使い、字下げと途中の行の末尾の空白を残し、値の末尾の空白と空行を除く。値は`箇条書き`ではマーカーから、`フィールド行`では名前の後のコロンと空白の後から、`文`では段落の最初の空白でない文字から始める。複数の部分から成る値は、含める部分の間に元の`文書`で空行があれば空行1つで、無ければ改行1つでつなぎ、含めない部分の行を抜いた跡と続いた空行は空行1つにまとめ、空白だけの行は空行として扱う。この規則は`読み方`に依らない。`導かれる値`を宣言して行ごとに分けた`文`の`要素の値`は、この規則の対象外で TBL-schema-008 のとおりにする。
+mds always uses the lines that go into an `element value` as the original lines of the `document`, keeping indentation and the trailing whitespace of lines in the middle, and removing the trailing whitespace and blank lines at the end of the value. The value starts at the marker for a `bullet`, after the colon and whitespace following the name for a `field line`, and at the first non-whitespace character of the paragraph for a `statement`. A value made of several parts joins the included parts with one blank line if there was a blank line between them in the original `document`, and with one newline if not; the gap left by removing the lines of an excluded part, together with the blank lines next to it, is collapsed into one blank line; a line of only whitespace is treated as a blank line. This rule does not depend on the `reading mode`. The `element value` of a `statement` split into lines by declaring a `derived value` is outside the scope of this rule and follows TBL-schema-008.
 
-### REQ-schema-064: 見出しの名前とセルの値のインラインの記法
+### REQ-schema-064: Inline markup in heading names and cell values
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-23-mutants-gaps.md#A4
 - verification: unit
 
-mds は常に、見出しの名前と`表`のセルの値を、インラインの記法の記号を外した文字で読む。強調、太字、リンク、参照リンクは中の文字をつなげ、インラインコードは中身を残す。
+mds always reads heading names and the cell values of a `table` as the text with the inline markup symbols removed. Emphasis, strong emphasis, links and reference links join the text inside them, and inline code keeps its contents.
 
 ## Decision tables
 
-### TBL-schema-008: 抽出の形
+### TBL-schema-008: Shape of extraction
 
 - source: docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A13, docs/decision/records/2026-09-21-mds-spec.md#A65, docs/decision/records/2026-09-21-mds-spec.md#A66, docs/decision/records/2026-09-21-mds-spec.md#A50, docs/decision/records/2026-09-21-mds-spec.md#A51, docs/decision/records/2026-09-21-mds-spec.md#A52, docs/decision/records/2026-09-21-mds-spec.md#A53, docs/decision/records/2026-09-21-mds-spec.md#A55, docs/decision/records/2026-09-22-ir-engine.md#A43, docs/decision/records/2026-09-22-ir-engine.md#A44, docs/decision/records/2026-09-22-ir-engine.md#A48, docs/decision/records/2026-09-22-ir-engine.md#A53, docs/decision/records/2026-09-22-ir-engine.md#A57, docs/decision/records/2026-09-22-ir-engine.md#A59, docs/decision/records/2026-09-22-ir-engine.md#A64, docs/decision/records/2026-09-22-ir-engine.md#A69, docs/decision/records/2026-09-22-ir-engine.md#A70, docs/decision/records/2026-09-23-ir-engine-gaps.md#A16, docs/decision/records/2026-09-23-extract-original-lines.md#A3, docs/decision/records/2026-09-23-mutants-gaps.md#A5, docs/decision/records/2026-09-23-mutants-gaps.md#A10
 
-どの`ノード`でも、"value" も`導かれる値`も宣言しなければ下の「略記の形」をそのまま出し、どちらかを宣言すれば要素ごとにオブジェクトを組み立てて、`要素の値`を "value" の鍵に、`導かれる値`を "of" の鍵に置く。
+For any `node`, if neither "value" nor a `derived value` is declared, the "shorthand shape" below is output as is; if either is declared, an object is assembled per element, with the `element value` under the "value" key and the `derived value` entries under the "of" key.
 
-| `ノード` | 要素の単位 | `要素の値` | `生の行`が指す行 | 略記の形 |
+| `node` | Unit of element | `element value` | Line the `raw line` points at | Shorthand shape |
 |---|---|---|---|---|
-| `題名` | 分けない | 見出しの文字列。"group" を宣言したときは名前付きキャプチャが捕まえた文字 | `題名`の見出しの行 | 見出しの文字列。"group" を宣言したときは正規表現の名前付きキャプチャ |
-| `フィールド行` | 分けない | 値の文字列（REQ-schema-063）。区切り文字を宣言したときは区切った文字列の配列（REQ-schema-045） | その`フィールド行`の行 | 値の文字列。区切り文字を宣言したときは区切った文字列の配列（REQ-schema-045） |
-| `文` | `導かれる値`を宣言したときだけ行、宣言しなければ分けない | 行に分けたときは前後の空白を取り除いた行の文字、分けないときは本文の文字列（REQ-schema-063） | その行 | 本文の文字列（REQ-schema-063） |
-| `節` | 分けない | `文`と`箇条書き`の行だけをつないだ本文の文字列（REQ-schema-063）。`フィールド行`、`表`、`コードブロック`、`項目`は含めない | `節`の見出しの行 | `文`と`箇条書き`の行だけをつないだ本文の文字列（REQ-schema-063）。`フィールド行`、`表`、`コードブロック`、`項目`は含めない |
-| `項目` | `項目` | 見出しと本文を改行でつないだ文字列。見出しは `ID` と名前だけにし、本文に`フィールド行`・`文`・`箇条書き`を含め、`表`と`コードブロック`は含めない。宣言した`フィールド行`はその行と`継続段落`を入れて子の`箇条書き`を入れず、宣言していない行は子の行まで入れる。本文は REQ-schema-063 のとおりにつなぐ | `項目`の見出しの行 | 内側の`配置パス`をキーにしたオブジェクト（REQ-schema-047）。オブジェクトを組み立てないときは見出しと本文を改行でつないだ文字列。見出しは `ID` と名前だけにし、本文に`フィールド行`・`文`・`箇条書き`を含め、`表`と`コードブロック`は含めない。宣言した`フィールド行`はその行と`継続段落`を入れて子の`箇条書き`を入れず、宣言していない行は子の行まで入れる。本文は REQ-schema-063 のとおりにつなぐ |
-| `箇条書き` | 行 | 元の行（`継続段落`と子の`箇条書き`の行を含む。REQ-schema-063） | その行のマーカーの行 | 元の行を保った文字列の配列（REQ-schema-063） |
-| `表` | データ行 | データ行の値。`文書`のヘッダ行より多いセルは捨てる（REQ-schema-033）。鍵は "header" を宣言すればその名前、宣言しなければ列の位置（配列）。`要素の値`の置き場か`導かれる値`を宣言した`表`に`出現回数`の範囲も宣言したときは`配置パス`の直下に`表`ごとの段を作り、それ以外は同じ置き場の`表`のデータ行を現れた順に1つの配列へつなぐ | そのデータ行の行 | 行の配列。行の鍵は "header" を宣言すればその名前、宣言しなければ列の位置（配列）にし、`文書`のヘッダ行の文字は鍵に使わない |
-| `コードブロック` | ブロック | ブロック全体の文字列 | フェンスの開始行 | ブロック全体の文字列 |
+| `title` | Not split | The heading text. When "group" is declared, the text captured by the named capture | The heading line of the `title` | The heading text. When "group" is declared, the named capture of the regular expression |
+| `field line` | Not split | The value string (REQ-schema-063). When a delimiter is declared, the array of split strings (REQ-schema-045) | The line of that `field line` | The value string. When a delimiter is declared, the array of split strings (REQ-schema-045) |
+| `statement` | Lines only when a `derived value` is declared; not split otherwise | When split into lines, the text of the line with leading and trailing whitespace removed; when not split, the body string (REQ-schema-063) | That line | The body string (REQ-schema-063) |
+| `section` | Not split | The body string joining only the lines of `statement` and `bullet` entries (REQ-schema-063). `field line`, `table`, `code block` and `item` entries are not included | The heading line of the `section` | The body string joining only the lines of `statement` and `bullet` entries (REQ-schema-063). `field line`, `table`, `code block` and `item` entries are not included |
+| `item` | `item` | The string joining the heading and the body with a newline. The heading is reduced to the `ID` and the name; the body includes `field line`, `statement` and `bullet` entries and excludes `table` and `code block` entries. A declared `field line` contributes its line and its `continuation paragraph` but not its child `bullet` entries; an undeclared line contributes its child lines as well. The body is joined as in REQ-schema-063 | The heading line of the `item` | An object keyed by the inner `placement path` entries (REQ-schema-047). When no object is assembled, the string joining the heading and the body with a newline. The heading is reduced to the `ID` and the name; the body includes `field line`, `statement` and `bullet` entries and excludes `table` and `code block` entries. A declared `field line` contributes its line and its `continuation paragraph` but not its child `bullet` entries; an undeclared line contributes its child lines as well. The body is joined as in REQ-schema-063 |
+| `bullet` | Line | The original lines (including the lines of the `continuation paragraph` and of child `bullet` entries; REQ-schema-063) | The marker line of that line | An array of strings that keep the original lines (REQ-schema-063) |
+| `table` | Data row | The values of the data row. Cells beyond the header row of the `document` are discarded (REQ-schema-033). The keys are the declared names if "header" is declared, otherwise the column positions (an array). When a `table` that declares a place for the `element value` or a `derived value` also declares a range of `cardinality`, a level per `table` is made directly under the `placement path`; otherwise the data rows of the `table` entries with the same place are joined, in order of appearance, into one array | The line of that data row | An array of rows. The keys of a row are the declared names if "header" is declared, otherwise the column positions (an array); the text of the header row of the `document` is not used as keys |
+| `code block` | Block | The string of the whole block | The opening line of the fence | The string of the whole block |
 
 ## Properties
 
-### PROP-schema-007: 抽出は閉じた世界の設定に依らない
+### PROP-schema-007: Extraction does not depend on the closed-world setting
 
 - source: docs/decision/records/2026-09-21-mds-spec.md#A2, docs/decision/records/2026-09-21-mds-spec.md#A4, docs/decision/records/2026-09-21-mds-spec.md#A56, docs/decision/records/2026-09-21-mds-spec.md#A59
 
-同じ`文書`と同じ`スキーマ`であれば、`抽出`の結果は`閉じた世界`と`開いた世界`のどちらで検査しても変わらない。
+For the same `document` and the same `schema`, the result of `extraction` is the same whether checked in the `closed world` or the `open world`.
 
 ## Examples
 
 ```gherkin
 @id=EX-schema-013 @about=REQ-schema-036 @source=docs/decision/records/2026-09-21-mds-spec.md#A4
-Scenario: 配置パスに沿って入れ子の JSON を出す
-  Given ドットを含む`配置パス`を宣言した`スキーマ`がある
-  When "kotowari-mds values --format json" を実行する
-  Then 値はドットで区切った名前の入れ子として出る
+Scenario: Output nested JSON along the placement path
+  Given a `schema` declares a `placement path` that contains dots
+  When "kotowari-mds values --format json" is run
+  Then the values are output nested by the dot-separated names
 
 @id=EX-schema-014 @about=REQ-schema-039 @source=docs/decision/records/2026-09-21-mds-spec.md#A12,docs/decision/records/2026-09-21-mds-spec.md#A48
-Scenario: 項目の内側の抽出は停止する
-  Given `項目`自身は`抽出`を宣言せず、`項目`の中の`表`にだけ`抽出`を宣言した`スキーマ`がある
-  When "kotowari-mds check" を実行する
-  Then 終了コードは 2 である
+Scenario: Extraction inside an item stops
+  Given a `schema` in which the `item` itself declares no `extraction` and only a `table` inside the `item` declares an `extraction`
+  When "kotowari-mds check" is run
+  Then the exit code is 2
 
 @id=EX-schema-018 @about=TBL-schema-008,REQ-schema-035 @source=docs/decision/records/2026-09-22-ir-engine.md#A43,docs/decision/records/2026-09-22-ir-engine.md#A44,docs/decision/records/2026-09-22-ir-engine.md#A48
-Scenario: 表の行の鍵はスキーマの宣言か列の位置から取る
-  Given ヘッダのセルが空の`表`と、同じ名前の列が2つある`表`を持つ`文書`がある
-  When "kotowari-mds values --format json" を実行する
-  Then "header" を宣言した`表`の行は、宣言した名前を鍵にしたオブジェクトになる
-  And "header" を宣言しない`表`の行は列の位置の配列になる
-  And どちらの`表`でも列の値は1つも失われない
+Scenario: Keys of table rows come from the schema declaration or the column positions
+  Given a `document` that has a `table` with an empty header cell and a `table` with two columns of the same name
+  When "kotowari-mds values --format json" is run
+  Then the rows of the `table` that declares "header" become objects keyed by the declared names
+  And the rows of the `table` that does not declare "header" become arrays by column position
+  And in neither `table` is any column value lost
 
 @id=EX-schema-019 @about=TBL-schema-008,REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A13,docs/decision/records/2026-09-22-ir-engine.md#A59
-Scenario: 導かれる値を宣言した表の行番号はデータ行を指す
-  Given ヘッダとデータ3行を持つ`表`が2つあり、その`表`に`出現回数`と`導かれる値`を宣言した`スキーマ`がある
-  When "kotowari-mds values --format json" を実行する
-  Then 行ごとの行番号はその`表`のデータ行の行番号と一致する
-  And `配置パス`の直下は`表`ごとの段になる
+Scenario: The line numbers of a table that declares derived values point at the data rows
+  Given there are two `table` entries each with a header and three data rows, and a `schema` that declares a `cardinality` and a `derived value` on that `table`
+  When "kotowari-mds values --format json" is run
+  Then the line number of each row matches the line number of that data row of the `table`
+  And directly under the `placement path` there is a level per `table`
 
 @id=EX-schema-020 @about=REQ-schema-048,TBL-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A37,docs/decision/records/2026-09-22-ir-engine.md#A57,docs/decision/records/2026-09-22-ir-engine.md#A66
-Scenario: 導かれる値を宣言した文は行ごとの要素になる
-  Given 3行の`文`と空行を挟んで続く段落を持つ`項目`があり、`文`に`導かれる値`を宣言した`スキーマ`がある
-  When "kotowari-mds values --format json" を実行する
-  Then 行の数と同じ数の要素が出る
-  And 字下げのある行の`要素の値`は前後の空白を取り除いた文字になる
-  And 同じ行の`生の行`は字下げと末尾の空白を含む文字になる
-  And 一覧の行の`継続段落`は要素に入らない
+Scenario: A statement that declares derived values becomes one element per line
+  Given there is an `item` with a three-line `statement` and a paragraph that follows after a blank line, and a `schema` that declares a `derived value` on the `statement`
+  When "kotowari-mds values --format json" is run
+  Then as many elements as lines are output
+  And the `element value` of an indented line is the text with leading and trailing whitespace removed
+  And the `raw line` of the same line is the text including indentation and trailing whitespace
+  And the `continuation paragraph` of a list line does not go into the elements
 
 @id=EX-schema-021 @about=TBL-schema-008,REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A55,docs/decision/records/2026-09-22-ir-engine.md#A63
-Scenario: 略記の抽出は要素に分けない
-  Given "extract: text" と "extract: rows" の略記だけを宣言した`スキーマ`がある
-  When "kotowari-mds values --format json" を実行する
-  Then `文`の値は1つの文字列になり、`表`の値は行の並びになる
-  And 要素ごとのオブジェクトは作らない
+Scenario: Shorthand extraction does not split into elements
+  Given a `schema` that declares only the shorthands "extract: text" and "extract: rows"
+  When "kotowari-mds values --format json" is run
+  Then the value of the `statement` is one string, and the value of the `table` is a sequence of rows
+  And no per-element objects are made
 
 @id=EX-schema-022 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A45,docs/decision/records/2026-09-22-ir-engine.md#A52,docs/decision/records/2026-09-21-mds-spec.md#A15,docs/decision/records/2026-09-21-mds-spec.md#P1
-Scenario: 配置パスの無い抽出は停止する
-  Given "path" を書かない`抽出`を宣言した`スキーマ`がある
-  When "kotowari-mds values" を実行する
-  Then 終了コードは 2 である
+Scenario: Extraction with no placement path stops
+  Given a `schema` that declares an `extraction` without writing "path"
+  When "kotowari-mds values" is run
+  Then the exit code is 2
 
 @id=EX-schema-023 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A60,docs/decision/records/2026-09-22-ir-engine.md#A56
-Scenario: value を省くと要素は導かれる値の鍵だけを持つ
-  Given "value" を書かず "of" だけを書いた`抽出`を宣言した`スキーマ`がある
-  When "kotowari-mds values --format json" を実行する
-  Then 要素のオブジェクトは`導かれる値`の鍵と、内側の`ノード`が宣言した`配置パス`だけを持つ
+Scenario: Omitting value leaves an element with only the keys of the derived values
+  Given a `schema` that declares an `extraction` writing only "of" and no "value"
+  When "kotowari-mds values --format json" is run
+  Then the object of an element has only the keys of the `derived value` entries and the `placement path` entries declared by the inner `node` entries
 
 @id=EX-schema-024 @about=REQ-schema-048 @source=docs/decision/records/2026-09-22-ir-engine.md#A17,docs/decision/records/2026-09-22-ir-engine.md#A49,docs/decision/records/2026-09-21-mds-spec.md#A23,docs/decision/records/2026-09-21-mds-spec.md#A15,docs/decision/records/2026-09-21-mds-spec.md#P1,docs/decision/records/2026-09-23-ir-engine-gaps.md#A18,docs/decision/records/2026-09-23-ir-engine-gaps.md#A24
-Scenario: 受けない語の導かれる値は停止する
-  Given `導かれる値`に5つのどれでもない語を宣言した`スキーマ`がある
-  When "kotowari-mds values" を実行する
-  Then 終了コードは 2 である
+Scenario: A derived value with an unaccepted word stops
+  Given a `schema` that declares as a `derived value` a word that is none of the five
+  When "kotowari-mds values" is run
+  Then the exit code is 2
 
 @id=EX-schema-025 @about=REQ-schema-048,TBL-schema-008 @source=docs/decision/records/2026-09-22-ir-engine.md#A49,docs/decision/records/2026-09-22-ir-engine.md#A50,docs/decision/records/2026-09-22-ir-engine.md#A54
-Scenario: 生の行はどのノードにも宣言できる
-  Given `題名`と`表`の行に`生の行`と行番号を宣言した`スキーマ`がある
-  When "kotowari-mds values --format json" を実行する
-  Then `題名`は見出しの行、`表`の行はそのデータ行をそのまま出す
+Scenario: The raw line can be declared on any node
+  Given a `schema` that declares the `raw line` and the line number on the `title` and on the rows of a `table`
+  When "kotowari-mds values --format json" is run
+  Then the `title` outputs its heading line, and a row of the `table` outputs that data row, as is
 
 @id=EX-schema-045 @about=REQ-schema-062,REQ-schema-048 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A18,docs/decision/records/2026-09-23-ir-engine-gaps.md#A24
-Scenario: 要素の最後の行は次の同じ深さか浅い見出しの手前になる
-  Given `項目`と`節`に行番号と "end" の`導かれる値`を宣言した`スキーマ`がある
-  And 1つ目の`節`に2つの`項目`を持ち、2つ目の`項目`の後に空行を挟んで2つ目の`節`が続き、2つ目の`節`が`文書`の最後まで続く`文書`がある
-  When "kotowari-mds values --format json" を実行する
-  Then 1つ目の`項目`の "end" は2つ目の`項目`の見出しの前の行である
-  And 2つ目の`項目`と1つ目の`節`の "end" は2つ目の`節`の見出しの前の空行である
-  And 2つ目の`節`の "end" は`文書`の最後の行である
+Scenario: The last line of an element is just before the next heading of the same depth or shallower
+  Given a `schema` that declares the line number and the "end" `derived value` on `item` and `section`
+  And a `document` whose first `section` has two `item` entries, where the second `section` follows the second `item` after a blank line and continues to the end of the `document`
+  When "kotowari-mds values --format json" is run
+  Then the "end" of the first `item` is the line before the heading of the second `item`
+  And the "end" of the second `item` and of the first `section` is the blank line before the heading of the second `section`
+  And the "end" of the second `section` is the last line of the `document`
 
 @id=EX-schema-046 @about=REQ-schema-048 @source=docs/decision/records/2026-09-23-ir-engine-gaps.md#A24,docs/decision/records/2026-09-21-mds-spec.md#P1
-Scenario: 項目と節の外の要素の最後の行は停止する
-  Given `表`の`抽出`に "end" の`導かれる値`を宣言した`スキーマ`がある
-  When "kotowari-mds values" を実行する
-  Then 終了コードは 2 である
+Scenario: The last line of an element outside item and section stops
+  Given a `schema` that declares the "end" `derived value` in the `extraction` of a `table`
+  When "kotowari-mds values" is run
+  Then the exit code is 2
 
 @id=EX-schema-054 @about=REQ-schema-063,TBL-schema-008 @source=docs/decision/records/2026-09-23-extract-original-lines.md#A1,docs/decision/records/2026-09-23-extract-original-lines.md#A3,docs/decision/records/2026-09-23-extract-original-lines.md#A4
-Scenario: 箇条書きの値は字下げと空行を元の行のまま持つ
-  Given 2行の lead 段落と、空行を挟んだ`継続段落`と、空行を挟んだ子の`箇条書き`を持つ`箇条書き`と、マーカーだけの行の後に lead 段落と`継続段落`を持つ`箇条書き`の`文書`がある
-  When "kotowari-mds values --format json" を実行する
-  Then どちらの`箇条書き`の値も、マーカーの後の行を字下げを含む元の行のまま持つ
-  And lead 段落と`継続段落`の間と、`継続段落`と子の`箇条書き`の間に空行が1つずつ入る
+Scenario: The value of a bullet keeps indentation and blank lines as the original lines
+  Given a `document` with a `bullet` that has a two-line lead paragraph, a `continuation paragraph` after a blank line, and child `bullet` entries after a blank line, and a `bullet` that has a lead paragraph and a `continuation paragraph` after a line with only the marker
+  When "kotowari-mds values --format json" is run
+  Then the value of each `bullet` holds the lines after the marker as the original lines, including indentation
+  And one blank line each goes between the lead paragraph and the `continuation paragraph`, and between the `continuation paragraph` and the child `bullet` entries
 
 @id=EX-schema-055 @about=REQ-schema-063,REQ-schema-046 @source=docs/decision/records/2026-09-23-extract-original-lines.md#A1,docs/decision/records/2026-09-23-extract-original-lines.md#A2,docs/decision/records/2026-09-23-extract-original-lines.md#A3,docs/decision/records/2026-09-23-extract-original-lines.md#A7
-Scenario: フィールド行の値は名前の後から始まり継続段落を空行で付ける
-  Given 2行にわたる値と空行を挟んだ`継続段落`を持つ`フィールド行`と、区切り文字を宣言した同じ形の`フィールド行`の`文書`がある
-  When "kotowari-mds values --format json" を実行する
-  Then 値は名前の後の空白の後から始まり、2行目の字下げを残す
-  And `継続段落`は空行を挟んで値か区切った末尾の要素に付く
+Scenario: The value of a field line starts after the name and attaches the continuation paragraph with a blank line
+  Given a `document` with a `field line` that has a value spanning two lines and a `continuation paragraph` after a blank line, and a `field line` of the same shape that declares a delimiter
+  When "kotowari-mds values --format json" is run
+  Then the value starts after the whitespace following the name and keeps the indentation of the second line
+  And the `continuation paragraph` is attached, after a blank line, to the value or to the last element of the split
 
 @id=EX-schema-056 @about=REQ-schema-063,TBL-schema-008 @source=docs/decision/records/2026-09-23-extract-original-lines.md#A3,docs/decision/records/2026-09-21-mds-spec.md#A51
-Scenario: 節の本文は含めない部分を抜いて空行を1つにまとめる
-  Given `文`、空行、`フィールド行`、空行、`箇条書き`の順に並び、`文`と`箇条書き`の間に空行を挟まない別の並びも持つ`節`の`文書`がある
-  When "kotowari-mds values --format json" を実行する
-  Then `フィールド行`を抜いた跡の空行は1つにまとまる
-  And 空行を挟まない`文`と`箇条書き`は改行1つでつながる
+Scenario: The body of a section removes the excluded parts and collapses blank lines into one
+  Given a `document` with a `section` laid out as `statement`, blank line, `field line`, blank line, `bullet`, which also has another sequence with no blank line between a `statement` and a `bullet`
+  When "kotowari-mds values --format json" is run
+  Then the blank lines left by removing the `field line` collapse into one
+  And the `statement` and the `bullet` with no blank line between them are joined by one newline
 
 @id=EX-schema-057 @about=REQ-schema-063 @source=docs/decision/records/2026-09-23-extract-original-lines.md#A6
-Scenario: 行で読んでも文の行の間に空行を足さない
-  Given "reading: line" を宣言し、`文`の`抽出`に`導かれる値`を宣言しない`スキーマ`がある
-  And 空行を挟まない2行の`文`と、空行を挟んだ3行目の`文`を持つ`文書`がある
-  When "kotowari-mds values --format json" を実行する
-  Then 1行目と2行目は改行1つで、2行目と3行目は空行1つでつながる
+Scenario: Reading by line does not add blank lines between the lines of a statement
+  Given a `schema` that declares "reading: line" and declares no `derived value` in the `extraction` of the `statement`
+  And a `document` that has a `statement` of two lines with no blank line between them and a third `statement` line after a blank line
+  When "kotowari-mds values --format json" is run
+  Then lines 1 and 2 are joined by one newline, and lines 2 and 3 by one blank line
 
 @id=EX-schema-058 @about=REQ-schema-064 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A4
-Scenario: 見出しの名前とセルの値はインラインの記法の記号を外した文字になる
-  Given 名前に太字、リンク、参照リンク、インラインコード、強調を含む`項目`の見出しと、セルに太字、参照リンク、インラインコードを含む`表`を持つ`文書`がある
-  And `項目`に見出しの名前の`導かれる値`を、`表`に`抽出`を宣言した`スキーマ`がある
-  When "kotowari-mds values --format json" を実行する
-  Then 見出しの名前とセルの値は、記号を外して中の文字をつなげた文字になり、インラインコードは中身を残す
+Scenario: Heading names and cell values become the text with inline markup symbols removed
+  Given a `document` that has an `item` heading whose name contains strong emphasis, a link, a reference link, inline code and emphasis, and a `table` whose cells contain strong emphasis, a reference link and inline code
+  And a `schema` that declares the heading-name `derived value` on the `item` and an `extraction` on the `table`
+  When "kotowari-mds values --format json" is run
+  Then the heading name and the cell values become the text with the symbols removed and the inner text joined, and inline code keeps its contents
 
 @id=EX-schema-059 @about=REQ-schema-064 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A4,docs/decision/records/2026-09-21-mds-spec.md#A2
-Scenario: 記号を外した文字が宣言した名前と違う見出しは指摘になる
-  Given `節`の名前を "Req" と宣言した`スキーマ`と、"## **Req** x" の見出しを持つ`文書`がある
-  When "kotowari-mds check" を実行する
-  Then その見出しは "Req x" と読まれ、宣言していない見出しとして`指摘`になる
+Scenario: A heading whose text without symbols differs from the declared name is a finding
+  Given a `schema` that declares the name of a `section` as "Req", and a `document` with the heading "## **Req** x"
+  When "kotowari-mds check" is run
+  Then the heading is read as "Req x" and becomes a `finding` as an undeclared heading
 
 @id=EX-schema-060 @about=TBL-schema-008,REQ-schema-035 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A5,docs/decision/records/2026-09-23-mutants-gaps.md#A10
-Scenario: 項目の本文は宣言したフィールド行の子の行を含めない
-  Given 子の`箇条書き`を持つ宣言した`フィールド行`を持つ`項目`の`文書`と、`項目`に略記の`抽出`を宣言した`スキーマ`がある
-  When "kotowari-mds values --format json" を実行する
-  Then `項目`の本文はその`フィールド行`の行を含み、子の`箇条書き`の行を含まない
+Scenario: The body of an item does not include the child lines of a declared field line
+  Given a `document` with an `item` that has a declared `field line` with child `bullet` entries, and a `schema` that declares a shorthand `extraction` on the `item`
+  When "kotowari-mds values --format json" is run
+  Then the body of the `item` includes the line of that `field line` and does not include the lines of the child `bullet` entries
 
 @id=EX-schema-061 @about=TBL-schema-008,REQ-schema-035 @source=docs/decision/records/2026-09-23-mutants-gaps.md#A5,docs/decision/records/2026-09-23-mutants-gaps.md#A10
-Scenario: 項目の本文は宣言していない行の子の行を含める
-  Given 子の`箇条書き`を持つ、`スキーマ`に宣言していない名前の一覧の行を持つ`項目`の`文書`と、`項目`に略記の`抽出`を宣言した`スキーマ`がある
-  When "kotowari-mds values --format json" を実行する
-  Then `項目`の本文はその行と子の`箇条書き`の行を含む
+Scenario: The body of an item includes the child lines of an undeclared line
+  Given a `document` with an `item` that has a list line, with child `bullet` entries, whose name is not declared in the `schema`, and a `schema` that declares a shorthand `extraction` on the `item`
+  When "kotowari-mds values --format json" is run
+  Then the body of the `item` includes that line and the lines of the child `bullet` entries
 ```

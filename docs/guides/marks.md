@@ -1,34 +1,36 @@
-# テストに印を付ける — `@kotowari[...]`
+# Marking tests — `@kotowari[...]`
 
-印（`@kotowari[REQ-001]`）は、IR の項目とテストを結ぶ唯一の線です。
-テストの直前のコメントに ID を書くと、kotowari はそのテストをその項目の裏付けとして数えます。
-IR を書き終えたら既存のテストに印を付けていくと、どの要求がテストで守られているかが `check` と `status` に現れます。
+English | [日本語](marks.ja.md)
 
-## 書式
+A mark (`@kotowari[REQ-001]`) is the only link between an IR item and a test.
+Write an ID in the comment just before a test, and kotowari counts that test as backing that item.
+Once you have written the IR, add marks to your existing tests, and `check` and `status` will show which requirements are protected by tests.
 
-<!-- @kotowari[REQ-core-071:2eb26299, TBL-core-015:48c1da34, REQ-core-073:9d4ed7ba, REQ-core-074:1085a5de] -->
+## Format
+
+<!-- @kotowari[REQ-core-071:2eb26299, TBL-core-015:3a4c51ae, REQ-core-073:2133d014, REQ-core-074:e7275c62] -->
 
 ```rust
 // @kotowari[REQ-001, EX-001]
 ```
 
-| 部分 | 形 |
+| Part | Form |
 |---|---|
-| 始まり | `@kotowari[` |
-| 中身 | ID をコンマで区切って並べる。コンマの前後に空白を置いてよい |
-| 終わり | `]`（始まりと同じ行） |
+| Start | `@kotowari[` |
+| Contents | IDs separated by commas. Whitespace is allowed before and after a comma |
+| End | `]` (on the same line as the start) |
 
-- 1つの印に ID をいくつ並べてもかまいません。要求、決定表、性質、シナリオの ID を混ぜてよいです。
-- 1行に印を2つ書いても、両方拾われます（`// @kotowari[REQ-001] @kotowari[EX-001]`）。
-- コメント記号は見ません。`//` でも `#` でも `///` でも同じです。
+- A single mark may list any number of IDs. You may mix IDs of requirements, decision tables, properties and scenarios.
+- If you write two marks on one line, both are picked up (`// @kotowari[REQ-001] @kotowari[EX-001]`).
+- The comment syntax is not inspected. `//`, `#` and `///` all work the same.
 
-ガイドに書く印（`<!-- @kotowari[ID:指紋] -->`）は別の規則で読みます。[ガイドを書く](writing-guides.md) を見てください。
+Marks written in guides (`<!-- @kotowari[ID:指紋] -->`) are read under different rules. See [Writing guides](writing-guides.md).
 
-## まず1本付けてみる
+## Try marking one test
 
-<!-- @kotowari[REQ-core-075:c5389c2a, TBL-core-026:05d8938e] -->
+<!-- @kotowari[REQ-core-075:c5389c2a, TBL-core-026:382b0b95] -->
 
-例として、要求2つとシナリオ1つだけの小さな IR を用意しました。
+As an example, here is a small IR with just two requirements and one scenario.
 
 ```markdown
 ### REQ-001: 会員の割引
@@ -43,9 +45,9 @@ IR を書き終えたら既存のテストに印を付けていくと、どの�
 Scenario: 1000円の注文は900円になる
 ```
 
-（抜粋です。`kind` と `source` の行は省いています。）
+(This is an excerpt; the `kind` and `source` lines are omitted.)
 
-テストの関数の真上に、コメントで印を書きます。
+Write the mark as a comment directly above the test function.
 
 ```rust
 // @kotowari[REQ-001, EX-001]
@@ -57,8 +59,8 @@ fn member_gets_ten_percent_off() {}
 fn non_member_pays_full_price() {}
 ```
 
-`check` が何も言わずに終了コード 0 で終われば、結び付いています。
-どのテストがどの項目に結び付いたかは `list` で見えます。
+If `check` finishes silently with exit code 0, the tests are linked.
+`list` shows which test is linked to which item.
 
 ```console
 $ kotowari check --format text
@@ -73,9 +75,9 @@ EX-001 - 1000円の注文は900円になる docs/ir/discount.md:27 tests=1
   tests/discount.rs:1 member_gets_ten_percent_off
 ```
 
-`tests/discount.rs:1` の `1` は、テストの行ではなく印のある行です。
+The `1` in `tests/discount.rs:1` is the line of the mark, not the line of the test.
 
-このリポジトリ自身のテストでは、たとえば次のように書いています（`tests/step11_query.rs` から）。
+This repository's own tests are written like this, for example (from `tests/step11_query.rs`):
 
 ```rust
 // @kotowari[REQ-core-156, REQ-core-159, TBL-core-027, EX-core-250]
@@ -83,40 +85,40 @@ EX-001 - 1000円の注文は900円になる docs/ir/discount.md:27 tests=1
 fn req_156_item_has_body_and_referenced_by() {
 ```
 
-テストの名前を ID で始めるのはこのリポジトリの慣習で、kotowari は名前を見ません。
+Starting a test name with an ID is just this repository's convention; kotowari does not look at test names.
 
-## 印を置く場所
+## Where to put marks
 
-<!-- @kotowari[REQ-core-075:c5389c2a, TBL-core-016:fcf775b8, TBL-core-035:06109c14] -->
+<!-- @kotowari[REQ-core-075:c5389c2a, TBL-core-016:d4d7ced2, TBL-core-035:e8943c7c] -->
 
-印が結び付くのは、テストの**直前のコメントの塊**にあるものだけです。
-塊は、テストの最初の行のすぐ上から上に向かって、空行が来るまで続くコメントの行です。
+A mark is linked to a test only when it is in the test's **preceding comment block**.
+The block is the run of comment lines going upward from just above the test's first line until a blank line.
 
-| 印の位置 | 扱い |
+| Where the mark is | What happens |
 |---|---|
-| テストの直前のコメントの塊 | そのテストに結び付く |
-| テストの中（関数の本体の先頭のコメントを含む） | 無視する。誤りも出さない |
-| どのテストの直前にも無い | 無視する。誤りも出さない |
+| In the test's preceding comment block | Linked to that test |
+| Inside the test (including a comment at the start of the function body) | Ignored, with no error |
+| Not just before any test | Ignored, with no error |
 
-塊の途中に挟んでよい行は言語で決まっています。
+Which lines may sit in the middle of a block depends on the language.
 
-| 言語 | 挟んでよい行 |
+| Language | Lines allowed in between |
 |---|---|
-| Rust | 属性（`#[...]`）の行。複数行の属性も全部の行 |
-| Python | デコレータ（`@...`）の行。複数行のデコレータも全部の行 |
-| そのほか | 無し（コメントの行だけ） |
+| Rust | Attribute lines (`#[...]`), including every line of a multi-line attribute |
+| Python | Decorator lines (`@...`), including every line of a multi-line decorator |
+| Others | None (comment lines only) |
 
-- 空行、コードの行、コードと同じ行にあるコメント（`setup(); // note`）は、そこで塊を切ります。
-- 属性やデコレータの本体（`#[doc = "..."]` の文字列）にある印は読みません。
-- 最初の行が同じテストが2つ以上あるときは、その行で最初に始まるテストにだけ結び付きます。
+- A blank line, a line of code, or a comment on the same line as code (`setup(); // note`) ends the block there.
+- Marks inside the body of an attribute or decorator (the string in `#[doc = "..."]`) are not read.
+- When two or more tests share the same first line, the mark is linked only to the test that starts first on that line.
 
-全部の規則は [TBL-core-016](../ir/core/test-markers.md#TBL-core-016) と [TBL-core-035](../ir/core/test-markers.md#TBL-core-035) にあります。
+The full rules are in [TBL-core-016](../ir/core/test-markers.md#TBL-core-016) and [TBL-core-035](../ir/core/test-markers.md#TBL-core-035).
 
-### Python と TypeScript の例
+### Python and TypeScript examples
 
-<!-- @kotowari[EX-core-307:6372dbc5, REQ-core-180:169116c9, EX-core-296:ffeb6c9d] -->
+<!-- @kotowari[EX-core-307:eb880f50, REQ-core-180:c597decc, EX-core-296:c2f1fd62] -->
 
-Python では、印とテストの関数の間にデコレータがあっても結び付きます。
+In Python, the mark is linked even when decorators sit between it and the test function.
 
 ```python
 # @kotowari[REQ-001, EX-001]
@@ -125,7 +127,7 @@ def test_member_gets_ten_percent_off(total):
     pass
 ```
 
-TypeScript では `describe` の中の `it` の直前に書きます。
+In TypeScript, write it just before the `it` inside a `describe`.
 
 ```ts
 describe('discount', () => {
@@ -144,14 +146,14 @@ EX-001 - 1000円の注文は900円になる docs/ir/discount.md:27 tests=1
   tests/test_discount.py:3 test_member_gets_ten_percent_off
 ```
 
-テストの名前は、Python では関数の名前、TypeScript では `it` の最初の引数から引用符を外したものです。
+The test name is the function name in Python, and in TypeScript the first argument of `it` with its quotes removed.
 
-### マクロの中のテスト
+### Tests inside macros
 
-<!-- @kotowari[TBL-core-017:5e521eb1, EX-core-018:1cd64885] -->
+<!-- @kotowari[TBL-core-017:aff9f804, EX-core-018:0b4c0d06] -->
 
-`proptest!` のようなマクロの中でも、置き方は同じです。
-次はこのリポジトリの例で、説明の `///` と印の `//` がどちらもコメントの行として1つの塊になっています（`crates/kotowari-markdown-schema/tests/properties.rs` から）。
+Inside a macro such as `proptest!`, marks are placed the same way.
+The following example is from this repository: the explanatory `///` and the mark's `//` are both comment lines and form a single block (from `crates/kotowari-markdown-schema/tests/properties.rs`).
 
 ```rust
 proptest! {
@@ -161,23 +163,23 @@ proptest! {
     fn markers_do_not_change_how_list_lines_are_read(
 ```
 
-マクロの中を読ませるには、設定の `tests.rust.macros` にマクロの名前が要ります（[つまずき](#マクロの中のテストが数えられない)）。
+For kotowari to read inside a macro, the macro's name must be in the `tests.rust.macros` setting ([pitfalls](#tests-inside-a-macro-are-not-counted)).
 
-## 要求に付けるか、シナリオに付けるか
+## Marking the requirement or the scenario
 
-<!-- @kotowari[REQ-core-085:9c02a2ea, REQ-core-137:192fc62f, EX-core-121:7af1d762, EX-core-122:580060f8] -->
+<!-- @kotowari[REQ-core-085:288046ea, REQ-core-137:cb66f5a8, EX-core-121:252c9340, EX-core-122:7a95532e] -->
 
-印に書く ID は、要求（`REQ-`）でもシナリオ（`EX-`）でもかまいません。
-`check` は2段で見ています。
+The ID in a mark may be either a requirement (`REQ-`) or a scenario (`EX-`).
+`check` looks at this in two steps.
 
-| 対象 | 誤りになる条件 | 指摘 |
+| Target | Condition for an error | Finding |
 |---|---|---|
-| 要求 | その要求の ID を含む印も、その要求を `@about` に持つシナリオの ID を含む印も無い | `requirement_without_test` |
-| シナリオ | その ID を含む印が無い | `scenario_without_test` |
+| Requirement | There is no mark containing the requirement's ID, and no mark containing the ID of a scenario whose `@about` names that requirement | `requirement_without_test` |
+| Scenario | There is no mark containing its ID | `scenario_without_test` |
 
-つまり、シナリオの印は `@about` の要求の分も満たしますが、逆はありません。
+In other words, a scenario's mark also covers the requirement named in its `@about`, but not the other way round.
 
-シナリオの ID だけを書いた場合（`// @kotowari[EX-001]`）:
+With only the scenario's ID written (`// @kotowari[EX-001]`):
 
 ```console
 $ kotowari check --format text
@@ -185,34 +187,34 @@ $ echo $?
 0
 ```
 
-要求の ID だけを書いた場合（`// @kotowari[REQ-001]`）:
+With only the requirement's ID written (`// @kotowari[REQ-001]`):
 
 ```console
 $ kotowari check --format text
 docs/ir/discount.md:26 [error] scenario_without_test EX-001
 ```
 
-シナリオのある要求なら、シナリオの ID を書くのが近道です。
-シナリオの無い要求（例の REQ-002）には、要求の ID を直接書きます。
+For a requirement that has scenarios, writing the scenario's ID is the shortcut.
+For a requirement without scenarios (REQ-002 in the example), write the requirement's ID directly.
 
-[後回し](deferred.md)の要求は、どちらの誤りにもなりません。
-後回しの要求だけ（と review の要求）を `@about` に持つシナリオも同じです。
-後回しの ID を印に書くと、`deferred_with_test` の注意が出ます。
+A [deferred](deferred.md) requirement produces neither error.
+The same goes for a scenario whose `@about` names only deferred requirements (and review requirements).
+If you write a deferred ID in a mark, you get a `deferred_with_test` notice.
 
-### 検証が review の要求
+### Requirements verified by review
 
-<!-- @kotowari[REQ-core-078:56b1ab82, EX-core-123:8f683517] -->
+<!-- @kotowari[REQ-core-078:aec849b3, EX-core-123:18e5541b] -->
 
-検証が `review` の要求（人か LLM が目で確かめる要求）にはテストは求められません。
-印で指しても誤りにはなりませんが、付けなくてもかまいません。
-`review` の要求だけを `@about` に持つシナリオにも、テストは求められません。
+A requirement whose verification is `review` (one that a person or an LLM checks by reading) does not require a test.
+Pointing at it from a mark is not an error, but you do not need to.
+A scenario whose `@about` names only `review` requirements does not require a test either.
 
-### `list` の `tests=0` は「テストが無い」とは限らない
+### `tests=0` in `list` does not always mean "no tests"
 
-<!-- @kotowari[TBL-core-026:05d8938e, EX-core-122:580060f8] -->
+<!-- @kotowari[TBL-core-026:382b0b95, EX-core-122:7a95532e] -->
 
-`list` の `tests` は、その ID を**直接**書いた印だけを並べます。
-シナリオの ID だけを書いたとき、`list` では要求が `tests=0` に見えますが、`check` と `status` はテストありと数えます。
+The `tests` in `list` shows only the marks that write that ID **directly**.
+If you write only the scenario's ID, the requirement appears as `tests=0` in `list`, but `check` and `status` count it as having tests.
 
 ```console
 $ kotowari list --format text
@@ -225,54 +227,54 @@ $ kotowari status --format text | grep requirements
 requirements unit=2 property=0 proof=0 review=0 with_tests=2 without_tests=0 review_with_how_to_verify=0 review_without_how_to_verify=0 without_examples=1 deferred=0
 ```
 
-テストの無い要求を探すときは、`tests=0` の要求のシナリオ側も確かめてください。
+When you look for requirements without tests, also check the scenarios of the `tests=0` requirements.
 
-## どのテストが見つかるか
+## Which tests are found
 
-<!-- @kotowari[REQ-core-079:0976730b, REQ-core-080:e275e129, REQ-core-081:d861bda1, TBL-core-031:683fed7e] -->
+<!-- @kotowari[REQ-core-079:589c548b, REQ-core-080:35cc39ab, REQ-core-081:d861bda1, TBL-core-031:aab33120] -->
 
-kotowari は次の順でテストを見つけます。
+kotowari finds tests in this order.
 
-1. 設定の `tests.files` の glob に当たるファイルを読む（[設定ファイル](config.md#glob-の読み方)）。
-2. 拡張子から言語を決める。大文字と小文字は区別します（`.py` は Python、`.PY` は決まらない）。
-3. その言語に問い合わせ（テストを見つける ast-grep のルール）があれば、構文木を読んでテストを見つける。
+1. Read the files matched by the globs in the `tests.files` setting ([Configuration file](config.md#how-globs-are-read)).
+2. Decide the language from the extension. Case matters (`.py` is Python; `.PY` maps to no language).
+3. If the language has a query (an ast-grep rule that finds tests), read the syntax tree and find the tests.
 
-拡張子と言語の対応の全部は [TBL-core-031](../ir/core/test-discovery.md#TBL-core-031) にあります。
+The full mapping from extensions to languages is in [TBL-core-031](../ir/core/test-discovery.md#TBL-core-031).
 
-### 同梱の問い合わせのある言語
+### Languages with a bundled query
 
-<!-- @kotowari[REQ-core-182:acc22ae5, TBL-core-017:5e521eb1, TBL-core-032:fb659f2b, TBL-core-033:f60d396f, TBL-core-034:5276b9bb, REQ-core-181:76c35d7b] -->
+<!-- @kotowari[REQ-core-182:8ad61d2f, TBL-core-017:aff9f804, TBL-core-032:93a48eea, TBL-core-033:091add60, TBL-core-034:bf49690a, REQ-core-181:5c809bd5] -->
 
-| 言語 | テストと数えるもの | 全部の規則 |
+| Language | What counts as a test | Full rules |
 |---|---|---|
-| Rust（`.rs`） | 属性のパスの末尾が `test` の関数（`#[test]`、`#[tokio::test]`） | [TBL-core-017](../ir/core/test-queries.md#TBL-core-017) |
-| TypeScript、Tsx、JavaScript | `it(...)`、`test(...)` と、`it.skip(...)`、`it.each(表)(...)` などの形。`describe` は数えない | [TBL-core-032](../ir/core/test-queries.md#TBL-core-032) |
-| Python | 名前が `test` で始まる最上位の関数とクラスのメソッド。関数の中の関数は数えない | [TBL-core-033](../ir/core/test-queries.md#TBL-core-033) |
-| Php | 名前が `test` で始まるメソッド、`#[Test]` の付いたメソッド、`@test` の docblock のメソッド、Pest の `test(...)` | [TBL-core-034](../ir/core/test-queries.md#TBL-core-034) |
+| Rust (`.rs`) | Functions whose attribute path ends in `test` (`#[test]`, `#[tokio::test]`) | [TBL-core-017](../ir/core/test-queries.md#TBL-core-017) |
+| TypeScript, Tsx, JavaScript | `it(...)`, `test(...)`, and forms such as `it.skip(...)` and `it.each(table)(...)`. `describe` is not counted | [TBL-core-032](../ir/core/test-queries.md#TBL-core-032) |
+| Python | Top-level functions and class methods whose names start with `test`. Functions nested inside functions are not counted | [TBL-core-033](../ir/core/test-queries.md#TBL-core-033) |
+| Php | Methods whose names start with `test`, methods with `#[Test]`, methods with an `@test` docblock, and Pest's `test(...)` | [TBL-core-034](../ir/core/test-queries.md#TBL-core-034) |
 
-`it.skip(...)` のように実行しないテストも数えます。
-テストの中にあるテスト（`it` の中の `it`）は別のテストとして数えます。
+Tests that are not run, such as `it.skip(...)`, are counted too.
+A test inside a test (an `it` inside an `it`) is counted as a separate test.
 
-### 足りないときは設定で足す
+### Adding more through the configuration
 
-<!-- @kotowari[REQ-core-121:a1d26f02, REQ-core-186:9ee851c1] -->
+<!-- @kotowari[REQ-core-121:6502b5d5, REQ-core-186:cfb141ec] -->
 
-| 足したいもの | 設定のキー |
+| What to add | Configuration key |
 |---|---|
-| Rust の別の属性（`#[kani::proof]`） | `tests.rust.attributes` |
-| Rust のマクロの中のテスト（`proptest!`） | `tests.rust.macros` |
-| それ以外の形や言語 | `tests.rules` に ast-grep のルールのファイルを並べる |
+| Other Rust attributes (`#[kani::proof]`) | `tests.rust.attributes` |
+| Tests inside Rust macros (`proptest!`) | `tests.rust.macros` |
+| Any other form or language | List ast-grep rule files under `tests.rules` |
 
-同梱の問い合わせは外せず、設定の分は足されるだけです。
-書き方は [設定ファイル](config.md#testsrules) を見てください。
+The bundled queries cannot be removed; configured ones are only added to them.
+For how to write them, see [Configuration file](config.md#testsrules).
 
-### 問い合わせの無い言語
+### Languages without a query
 
-<!-- @kotowari[REQ-core-076:cbd56987, REQ-core-087:64fd574c, EX-core-124:8278cb29] -->
+<!-- @kotowari[REQ-core-076:9413bda6, REQ-core-087:2c99751b, EX-core-124:5c88c586] -->
 
-Go や Java のように問い合わせの無い言語（拡張子の決まらないファイルを含む）では、kotowari は構文木を読みません。
-ファイルの中の印を、コメントかどうかも、どのテストの前かも問わずに全部拾い、要求とシナリオの「テストあり」に数えます。
-その代わり、印の無いテストを見つけることはできず、`test_without_id` は出ません。
+For languages without a query, such as Go or Java (including files whose extension maps to no language), kotowari does not read the syntax tree.
+It picks up every mark in the file, regardless of whether it is in a comment or before which test, and counts the requirements and scenarios as "having tests".
+In exchange, it cannot find tests without marks, and `test_without_id` is never reported.
 
 ```go
 func TestMember(t *testing.T) {
@@ -287,33 +289,33 @@ $ kotowari check --format text
 docs/ir/discount.md:15 [error] requirement_without_test REQ-002
 ```
 
-本体の中の印でも REQ-001 と EX-001 は満たされ、印の無い `TestNonMember` には何も言われません。
-テストが正しく付いているかは、人が確かめることになります。
+Even a mark inside the function body satisfies REQ-001 and EX-001, and nothing is said about the unmarked `TestNonMember`.
+Whether the tests are marked correctly is left for a person to check.
 
-## 印に関わる指摘
+## Findings about marks
 
-<!-- @kotowari[REQ-core-086:190ec5a3, REQ-core-072:51247600, REQ-core-077:4f3f71d8, REQ-core-083:9db1b29c, REQ-core-118:6749a6bb] -->
+<!-- @kotowari[REQ-core-086:8035b3f8, REQ-core-072:0d066a71, REQ-core-077:082e5fe4, REQ-core-083:c11fae0c, REQ-core-118:2e6e1171] -->
 
-| 指摘 | 重さ | 出る場面 | 行 | detail |
+| Finding | Severity | When it appears | Line | detail |
 |---|---|---|---|---|
-| `test_without_id` | 誤り | 問い合わせのある言語のテストに印が無い | テストの節の最初の行（Rust では `fn` の行） | テストの名前（名前が無ければテストの最初の行） |
-| `requirement_without_test` | 誤り | 要求にテストが無い（[上の表](#要求に付けるかシナリオに付けるか)） | 要求の見出し | 要求の ID |
-| `scenario_without_test` | 誤り | シナリオにテストが無い | シナリオのタグの行 | シナリオの ID |
-| `unresolved_reference` | 誤り | 印の ID が存在しないか、ID の形でない | 印の行 | その ID |
-| `invalid_marker` | 誤り | 印の中が空か区切りだけ、または同じ行に `]` が無い | 印の行 | 印のある行の全体 |
-| `unparsable_file` | 誤り | 問い合わせのある言語のテストのファイルに構文の誤りがある。そのファイルは飛ばす | 無し（`-`） | ファイルのパス |
+| `test_without_id` | error | A test in a language with a query has no mark | The first line of the test's node (in Rust, the `fn` line) | The test name (the test's first line if it has no name) |
+| `requirement_without_test` | error | A requirement has no tests ([table above](#marking-the-requirement-or-the-scenario)) | The requirement's heading | The requirement's ID |
+| `scenario_without_test` | error | A scenario has no tests | The scenario's tag line | The scenario's ID |
+| `unresolved_reference` | error | An ID in a mark does not exist, or is not in ID form | The mark's line | That ID |
+| `invalid_marker` | error | The mark is empty or only separators, or has no `]` on the same line | The mark's line | The whole line containing the mark |
+| `unparsable_file` | error | A test file in a language with a query has a syntax error. That file is skipped | None (`-`) | The file path |
 
-存在しない ID だけを指す印でも、テストの側は「印あり」と数えます。
-どのテストの直前にも無い印は、`invalid_marker` も `unresolved_reference` も出しません。
-指摘の全体は [指摘の一覧](findings.md) にあります。
+Even a mark pointing only at IDs that do not exist counts the test as "marked".
+A mark that is not just before any test produces neither `invalid_marker` nor `unresolved_reference`.
+All findings are listed in [Findings](findings.md).
 
-## よくあるつまずき
+## Common pitfalls
 
-以下は、[まず1本付けてみる](#まず1本付けてみる) の例を1か所ずつ壊して実行した結果です。
+The following are results of breaking the example in [Try marking one test](#try-marking-one-test) in one place at a time and running it.
 
-### 印とテストの間に空行がある
+### A blank line between the mark and the test
 
-<!-- @kotowari[EX-core-016:46211931, REQ-core-086:190ec5a3] -->
+<!-- @kotowari[EX-core-016:e63e6fd1, REQ-core-086:8035b3f8] -->
 
 ```rust
 // @kotowari[REQ-001, EX-001]
@@ -329,13 +331,13 @@ docs/ir/discount.md:26 [error] scenario_without_test EX-001
 tests/discount.rs:4 [error] test_without_id member_gets_ten_percent_off
 ```
 
-空行で塊が切れ、印はどのテストにも付かないので黙って無視されます。
-その結果、テストには「印が無い」、要求とシナリオには「テストが無い」が出ます。
-空行を消せば直ります。
+The blank line ends the block, so the mark attaches to no test and is silently ignored.
+As a result, the test is reported as "no mark", and the requirement and scenario as "no tests".
+Removing the blank line fixes it.
 
-### 関数の本体の中に書いた
+### Written inside the function body
 
-<!-- @kotowari[EX-core-306:80831f60, TBL-core-016:fcf775b8] -->
+<!-- @kotowari[EX-core-306:e057840d, TBL-core-016:d4d7ced2] -->
 
 ```rust
 #[test]
@@ -351,11 +353,11 @@ docs/ir/discount.md:26 [error] scenario_without_test EX-001
 tests/discount.rs:2 [error] test_without_id member_gets_ten_percent_off
 ```
 
-空行のときと同じ3件です。印を `#[test]` の上に移します。
+The same three findings as with the blank line. Move the mark above `#[test]`.
 
-### 印とテストの間にコードの行がある
+### A line of code between the mark and the test
 
-<!-- @kotowari[EX-core-309:3b68d952, TBL-core-035:06109c14] -->
+<!-- @kotowari[EX-core-309:549f0665, TBL-core-035:e8943c7c] -->
 
 ```ts
 describe('discount', () => {
@@ -371,12 +373,12 @@ docs/ir/discount.md:15 [error] requirement_without_test REQ-002
 tests/discount.test.ts:4 [error] test_without_id non-member pays full price
 ```
 
-挟んでよいのは Rust の属性と Python のデコレータだけです。
-TypeScript ではコメントの行以外が挟まると切れます。
+Only Rust attributes and Python decorators may sit in between.
+In TypeScript, any line other than a comment line ends the block.
 
-### `describe` の上に書いた
+### Written above `describe`
 
-<!-- @kotowari[TBL-core-032:fb659f2b, TBL-core-016:fcf775b8] -->
+<!-- @kotowari[TBL-core-032:93a48eea, TBL-core-016:d4d7ced2] -->
 
 ```ts
 // @kotowari[REQ-002]
@@ -391,12 +393,12 @@ docs/ir/discount.md:15 [error] requirement_without_test REQ-002
 tests/discount.test.ts:3 [error] test_without_id non-member pays full price
 ```
 
-`describe` はテストと数えないので、その上の印はどのテストの直前にも無いことになります。
-印を `it` の直前に移します。
+`describe` is not counted as a test, so a mark above it is not just before any test.
+Move the mark to just before the `it`.
 
-### ID を書き間違えた
+### A mistyped ID
 
-<!-- @kotowari[REQ-core-077:4f3f71d8, REQ-core-118:6749a6bb] -->
+<!-- @kotowari[REQ-core-077:082e5fe4, REQ-core-118:2e6e1171] -->
 
 ```rust
 // @kotowari[REQ-010, EX-001]
@@ -415,13 +417,13 @@ tests/discount.rs:1 [error] unresolved_reference REQ-010
 tests/discount.rs:5 [error] unresolved_reference REQ002
 ```
 
-存在しない ID（`REQ-010`）も、ID の形でないもの（`REQ002`）も `unresolved_reference` になります。
-このときテストの側は「印あり」と数えられるので、`test_without_id` は出ません。
-直すべきは印の中の ID です。
+Both an ID that does not exist (`REQ-010`) and one not in ID form (`REQ002`) give `unresolved_reference`.
+In this case the test still counts as "marked", so `test_without_id` is not reported.
+What needs fixing is the ID inside the mark.
 
-### 印が閉じていない、中が空
+### An unclosed or empty mark
 
-<!-- @kotowari[REQ-core-072:51247600, TBL-core-015:48c1da34] -->
+<!-- @kotowari[REQ-core-072:0d066a71, TBL-core-015:3a4c51ae] -->
 
 ```rust
 // @kotowari[REQ-001, EX-001
@@ -443,14 +445,14 @@ tests/discount.rs:3 [error] test_without_id member_gets_ten_percent_off
 tests/discount.rs:5 [error] invalid_marker // @kotowari[]
 ```
 
-`invalid_marker` の detail には、印のある行がそのまま出ます。
-印は1行の中で閉じます。`]` を次の行に送ると、閉じていない印になります。
+The detail of `invalid_marker` shows the line containing the mark as is.
+A mark must close within one line. If you push the `]` to the next line, the mark is unclosed.
 
-### マクロの中のテストが数えられない
+### Tests inside a macro are not counted
 
-<!-- @kotowari[REQ-core-082:2cab52bb, EX-core-018:1cd64885] -->
+<!-- @kotowari[REQ-core-082:2cab52bb, EX-core-018:0b4c0d06] -->
 
-`proptest!` の中に印を付けても、設定が無ければマクロの中は読まれません。
+Even if you mark a test inside `proptest!`, the inside of the macro is not read without configuration.
 
 ```rust
 proptest! {
@@ -465,7 +467,7 @@ $ kotowari check --format text
 docs/ir/discount.md:15 [error] requirement_without_test REQ-002
 ```
 
-設定にマクロの名前（`!` を除く）を足すと消えます。
+Adding the macro name (without the `!`) to the configuration makes the error go away.
 
 ```yaml
 tests:
@@ -475,11 +477,11 @@ tests:
     macros: [proptest]
 ```
 
-### テストのファイルが `tests.files` に入っていない
+### The test file is not covered by `tests.files`
 
-<!-- @kotowari[REQ-core-079:0976730b] -->
+<!-- @kotowari[REQ-core-079:589c548b] -->
 
-テストを `spec/` に置いたまま、`tests.files` が `tests/**/*` だけのとき:
+When the tests live in `spec/` but `tests.files` is only `tests/**/*`:
 
 ```console
 $ kotowari check --format text
@@ -488,13 +490,13 @@ docs/ir/discount.md:15 [error] requirement_without_test REQ-002
 docs/ir/discount.md:26 [error] scenario_without_test EX-001
 ```
 
-印はあるのに全部「テストが無い」と言われたら、まず glob を疑ってください。
+If everything is reported as "no tests" even though the marks are there, suspect the glob first.
 
-### 拡張子が大文字で、テストが見逃される
+### An uppercase extension makes tests slip through
 
-<!-- @kotowari[REQ-core-081:d861bda1, EX-core-295:de5afc4b] -->
+<!-- @kotowari[REQ-core-081:d861bda1, EX-core-295:ac47cbef] -->
 
-`test_discount.PY` に印の無い `def test_forgotten():` を足しても、何も言われません。
+Adding an unmarked `def test_forgotten():` to `test_discount.PY` produces no finding.
 
 ```console
 $ kotowari check --format text
@@ -502,51 +504,22 @@ $ kotowari status --format text | grep '^tests'
 tests marks=3 PY=1 ts=1
 ```
 
-`.PY` は Python と見なされず、問い合わせの無い言語として印を拾うだけになるからです。
-同じファイルを `test_discount.py` にすると、今度は見つかります。
+This is because `.PY` is not taken as Python, so the file is treated as a language without a query and only its marks are picked up.
+Rename the same file to `test_discount.py`, and the test is found this time.
 
 ```console
 $ kotowari check --format text
 tests/test_discount.py:8 [error] test_without_id test_forgotten
 ```
 
-誤りが出ないからといって安心できない例です。
-`status` の `tests` の行で、拡張子ごとのファイル数を確かめてください。
+This is an example of why the absence of errors is not a reason to relax.
+Check the number of files per extension in the `tests` line of `status`.
 
-## なぜこういう作りか
+## Related
 
-- **印の名前は `@kotowari`。**
-  `@spec` のような名前はほかの道具とかぶる可能性があるからです。
-  （[records A14](../decision/records/records.md#A14)）
-- **関数の本体の先頭の印は結び付けない。**
-  本体の先頭がどこかは言語ごとに決め方が違い（PHP の次の行の `{`、Python のコメントが入る位置のクセ）、共通に決めるのが難しいからです。
-  切り替えた時点で、kotowari 自身の 1124 個の印のうち本体の先頭にあったのは1個でした。
-  結び付かない印のテストには `test_without_id` が出るので、黙って消えることはありません。
-  （[multi-language-tests A15](../decision/records/2026-09-24-multi-language-tests.md#A15)）
-- **塊を構文木ではなく行で決める。**
-  Python のようにコメントが構文木のどこに入るかが言語で違っても、行で決めれば同じ結果になります。
-  挟んでよい行が Rust の属性と Python のデコレータだけなのは、Java や PHP ではアノテーションや属性がテストの節の中に入り、外に出るのがこの2つだからです。
-  （[multi-language-tests A16](../decision/records/2026-09-24-multi-language-tests.md#A16)、[A17](../decision/records/2026-09-24-multi-language-tests.md#A17)）
-- **既定で数えるのは確実なものだけで、残りは設定で足す。**
-  何をテストと数えるかは使っているテストのライブラリで変わり、`#[test]` 以外は断言できないからです。
-  （[records A26](../decision/records/records.md#A26)、[multi-language-tests A2](../decision/records/2026-09-24-multi-language-tests.md#A2)）
-- **テストは正規表現ではなく構文木で見つける。**
-  行を正規表現で探すと万能でなく、意図しないものに当たるからです。
-  （[records R3](../decision/records/records.md#R3)）
-- **ルールの無い言語は、文法を持っていても構文木を読まない。**
-  文法を入れただけで振る舞いが変わると、たとえば `.md` を glob に入れている人に構文の誤りが急に出るからです。
-  （[multi-language-tests A7](../decision/records/2026-09-24-multi-language-tests.md#A7)）
-- **シナリオの印は要求の分も満たす。**
-  シナリオは要求の場面なので、場面をテストしたなら要求もテストしたと言えます。
-  要求とシナリオの ID を二重に書かずに済みます。
-  一方で要求にシナリオが無いこともあるので、要求とシナリオの2段で見ます。
-  （[scenario-tests A2](../decision/records/2026-09-17-scenario-tests.md#A2)、[A4](../decision/records/2026-09-17-scenario-tests.md#A4)）
-
-## 関連
-
-- 仕様: [テストの印](../ir/core/test-markers.md)、[テストの見つけ方](../ir/core/test-discovery.md)、[同梱の問い合わせ](../ir/core/test-queries.md)、[要求とテストの対応](../ir/core/coverage.md)、[設定で足す問い合わせ](../ir/core/query-rules.md)
-- 用語: [用語集](../ir/core/CONTEXT.md)（印、テスト、直前のコメントの塊、問い合わせのある言語）
-- 設定のキー: [設定ファイル](config.md)
-- 項目とテストの一覧を見る: [kotowari list](commands/list.md)
-- 全体が揃っているかを見る: [kotowari status](commands/status.md)
-- 指摘の種類: [指摘の一覧](findings.md)
+- Specification: [Test marks](../ir/core/test-markers.md), [Test discovery](../ir/core/test-discovery.md), [Bundled queries](../ir/core/test-queries.md), [Requirement–test coverage](../ir/core/coverage.md), [Queries added by configuration](../ir/core/query-rules.md)
+- Terms: [Glossary](../ir/core/CONTEXT.md) (mark, test, preceding comment block, language with a query)
+- Configuration keys: [Configuration file](config.md)
+- Listing items and tests: [kotowari list](commands/list.md)
+- Checking whether everything is in place: [kotowari status](commands/status.md)
+- Kinds of findings: [Findings](findings.md)

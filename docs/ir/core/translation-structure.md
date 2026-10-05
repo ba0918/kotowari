@@ -1,172 +1,174 @@
-# 対の骨組みと切り替えの行とリンク
+# The skeleton of pairs, the switcher line and links
 
-`対`の`側`どうしで一致しなければならない`骨組み`、`IR`と`ガイド`の`側`に置く`切り替えの行`、`対`の`側`の中のリンクの検査、`対`を揃える LLM の手順を扱う。`対`の読み方と`一致の記録`は translation-pairs.md が扱う。
+English | [日本語](translation-structure.ja.md)
+
+Covers the `skeleton` that must match between the `side` files of a `pair`, the `switcher line` placed on each `side` of the `IR` and of a `guide`, the checks of links inside the `side` files of a `pair`, and the LLM's procedure for keeping a `pair` in step. How a `pair` is read and the `consistency record` are covered by translation-pairs.md.
 
 ## Requirements
 
-### REQ-core-344: 骨組みの一致
+### REQ-core-344: Matching the skeleton
 
 - kind: algorithm
 - source: docs/decision/records/2026-10-05-localization.md#A19, docs/decision/records/2026-10-05-localization.md#A26, docs/decision/records/2026-10-05-localization.md#A30, docs/decision/records/2026-10-05-localization.md#A33, docs/decision/records/2026-10-05-localization.md#D3
 - definition: TBL-core-044, TBL-core-045
 - verification: unit
 
-### REQ-core-345: 骨組みの食い違い
+### REQ-core-345: Skeleton mismatches
 
 - kind: event_driven
 - source: docs/decision/records/2026-10-05-localization.md#A19, docs/decision/records/2026-10-05-localization.md#A27, docs/decision/records/2026-10-05-localization.md#D1, docs/decision/records/2026-10-05-localization.md#D2, docs/decision/records/2026-10-05-localization.md#D3
 - verification: unit
 
-`先頭の言語`でない言語の`側`の`骨組み`が、`先頭の言語`の`側`の`骨組み`と TBL-core-044 のどれかの部分で一致しないとき、kotowari は "path" をその`側`、detail をその文書の種類の TBL-core-044 の行の順で最初に一致しない部分の名前にして、translation_structure_mismatch の`誤り`を`側`ごとに1件出す。"line" は、その部分の中で`先頭の言語`の`側`の行の順に比べて最初に食い違った要素のその`側`の行とし、食い違いが数の違いか、その要素がその`側`に無いことなら null とする。行の番号そのものは比べない。意味が同じかは検査しない。
+When the `skeleton` of the `side` of a language other than the `first language` does not match the `skeleton` of the `side` of the `first language` in any of the parts of TBL-core-044, kotowari raises one translation_structure_mismatch `error` for each such `side`, with "path" set to that `side` and detail to the name of the first non-matching part in the order of the rows of TBL-core-044 for that kind of document. "line" is the line, on that `side`, of the first element within that part that differs when compared in the order of the lines of the `side` of the `first language`; when the difference is a difference in count, or that element is absent from that `side`, it is null. Line numbers themselves are not compared. Whether the meaning is the same is not checked.
 
-### REQ-core-346: 切り替えの行
+### REQ-core-346: The switcher line
 
 - kind: event_driven
 - source: docs/decision/records/2026-10-05-localization.md#A27, docs/decision/records/2026-10-05-localization.md#A33, docs/decision/records/2026-10-05-localization.md#A36, docs/decision/records/2026-10-05-localization.md#A40, docs/decision/records/2026-10-05-localization.md#D1, docs/decision/records/2026-10-05-localization.md#D2, docs/decision/records/2026-10-05-localization.md#D3
 - verification: unit
 
-`IR`と`ガイド`の`対`の各`側`で、`題名`の後の最初の空でない行（`題名`が無ければファイルの最初の空でない行）が、`言語の一覧`の順に各言語の`UI の文字`の "language_name" を " | " で区切って並べ、その`側`の言語のものは文字だけ、ほかの言語のものは "[<名前>](<その言語の側のファイル名>)" の形にした行と同じでないとき、kotowari は "path" をその`側`、"line" をその行（その行が無ければ`題名`の行、`題名`も無ければ null）、detail をあるべき行にして translation_switcher_invalid の`誤り`を出す。あるべき行と同じ行だけを`切り替えの行`とし、`切り替えの行`は`文書が扱う範囲`の行に数えず、`用語`、`曖昧語`、`文書名の参照`の検査を受けない。`全体像の元データ`と`目次`の`対`は`切り替えの行`を持たない。
+On each `side` of a `pair` of the `IR` and of a `guide`, when the first non-blank line after the `title` (the first non-blank line of the file if there is no `title`) is not the same as the line that lists the "language_name" of the `UI text` of each language in the order of the `language list`, separated by " | ", with the one for that `side`'s language as plain text and the ones for other languages in the form "[<name>](<file name of that language's side>)", kotowari raises a translation_switcher_invalid `error` with "path" set to that `side`, "line" to that line (the `title` line if that line does not exist, and null if there is no `title` either), and detail to the line that should be there. Only a line that is the same as the line that should be there is a `switcher line`; a `switcher line` is not counted as a line of the `scope`, and does not undergo the `term`, `vague word` and `document-name reference` checks. A `pair` of the `overview data` or of the `table of contents` has no `switcher line`.
 
-### REQ-core-347: 検査するリンク
+### REQ-core-347: Links that are checked
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-05-localization.md#A14, docs/decision/records/2026-10-05-localization.md#A30, docs/decision/records/2026-10-05-localization.md#A33, docs/decision/records/2026-10-05-localization.md#D3
 - verification: unit
 
-kotowari は常に、`IR`、`ガイド`、`全体像の元データ`の`対`の各`側`で、`切り替えの行`の外にある CommonMark のリンクと画像の行き先、リンクの参照の定義の行き先のうち、スキーム（英字で始まり ":" が続く並び）で始まらず "#" で始まらないものを検査するリンクとし、その行き先の "#" と "?" より前を、その`側`のあるディレクトリから辿ったパスとして読む。
+kotowari always, on each `side` of a `pair` of the `IR`, of a `guide` and of the `overview data`, takes as the links to check those destinations of CommonMark links and images and of link reference definitions outside the `switcher line` that do not start with a scheme (a sequence that starts with an English letter and is followed by ":") and do not start with "#", and reads the part of each destination before "#" and "?" as a path followed from the directory containing that `side`.
 
-### REQ-core-348: ほかの言語の側へのリンク
+### REQ-core-348: Links to the side of another language
 
 - kind: event_driven
 - source: docs/decision/records/2026-10-05-localization.md#A14, docs/decision/records/2026-10-05-localization.md#A27, docs/decision/records/2026-10-05-localization.md#A30, docs/decision/records/2026-10-05-localization.md#D1, docs/decision/records/2026-10-05-localization.md#D3
 - verification: unit
 
-検査するリンクの行き先が、ある`対`の`側`で、その言語がリンクのある`側`の言語と違うとき、kotowari は "path" をリンクのある`側`、"line" をリンクの行、detail を書かれた行き先にして link_language_mismatch の`誤り`を出す。
+When the destination of a link that is checked is a `side` of some `pair` and its language differs from the language of the `side` that has the link, kotowari raises a link_language_mismatch `error` with "path" set to the `side` that has the link, "line" to the line of the link, and detail to the destination as written.
 
-### REQ-core-349: 判断の記録へのリンク
+### REQ-core-349: Links to decision records
 
 - kind: event_driven
 - source: docs/decision/records/2026-10-05-localization.md#A14, docs/decision/records/2026-10-05-localization.md#A27, docs/decision/records/2026-10-05-localization.md#A38, docs/decision/records/2026-10-05-localization.md#D1, docs/decision/records/2026-10-05-localization.md#D3
 - verification: unit
 
-検査するリンクの行き先が "decisions.records" か "decisions.adr" の置き場の下のファイルのとき、kotowari は "path" をリンクのある`側`、"line" をリンクの行、detail を書かれた行き先にして link_to_record の`誤り`を出す。
+When the destination of a link that is checked is a file under the "decisions.records" or "decisions.adr" location, kotowari raises a link_to_record `error` with "path" set to the `side` that has the link, "line" to the line of the link, and detail to the destination as written.
 
-### REQ-core-350: 対を揃える手順
+### REQ-core-350: The procedure for keeping pairs in step
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-05-localization.md#A25, docs/decision/records/2026-10-05-localization.md#A35, docs/decision/records/2026-10-05-localization.md#A40
 - verification: review
-- how_to_verify: "agent/skills/kotowari/" の skill を読み、`対`のどれかの`側`を直したら同じ変更でほかのすべての`側`を直すこと、直すときは`一致の記録`の blob hash から前の文を git で取り出して差分だけを訳し、取り出せなければ全文から訳し直すこと、直した後に "kotowari list" の "translations" の値で`一致の記録`を書き直すこと、"languages" に英語でない言語を足すときは "labels.<言語タグ>" を書くことが、それぞれ手順として書かれていることを確かめる
+- how_to_verify: Read the skill in "agent/skills/kotowari/" and confirm that each of the following is written as a procedure: when any `side` of a `pair` is edited, every other `side` is edited in the same change; when editing, the previous text is taken out with git from the blob hash of the `consistency record` and only the difference is translated, and if it cannot be taken out, the whole text is translated again; after editing, the `consistency record` is rewritten with the values of "translations" of "kotowari list"; and when a language other than English is added to "languages", "labels.<tag>" is written
 
-kotowari の skill は常に、`対`を揃える手順を持つ。
+The skill of kotowari always has the procedure for keeping a `pair` in step.
 
 ## Decision tables
 
-### TBL-core-044: 骨組み
+### TBL-core-044: Skeleton
 
 - source: docs/decision/records/2026-10-05-localization.md#A19, docs/decision/records/2026-10-05-localization.md#A26, docs/decision/records/2026-10-05-localization.md#A30, docs/decision/records/2026-10-05-localization.md#D1, docs/decision/records/2026-10-05-localization.md#D2, docs/decision/records/2026-10-05-localization.md#A33, docs/decision/records/2026-10-05-localization.md#D3
 
-どの文書でも、`切り替えの行`と自然言語の文は`骨組み`に入らない。リンクの行き先は、ほかの言語の`対`の`側`を指すものをその`対`の`先頭の言語`の`側`に読み替え、"#" より前だけを比べる。
+In every document, the `switcher line` and natural-language sentences are not part of the `skeleton`. For link destinations, one pointing at a `side` of another language of a `pair` is read as the `side` of the `first language` of that `pair`, and only the part before "#" is compared.
 
-| 文書 | 部分の名前 | 一致しなければならないもの |
+| Document | Part name | What must match |
 |---|---|---|
-| `話題ごとの文書` | heading | "## " と "### " の見出しの深さと並び。"### " の見出しでは`ID`も |
-| `話題ごとの文書` | field | `項目`の下と文書単位の "- " の行のうち、"- kind:"、"- source:"、"- verification:"、"- definition:"、"- deferred:"、"- related:" の名前と値と並び、"- how_to_verify:" の行の有無 |
-| `話題ごとの文書` | table | 表の数と、各表の行の数と列の数と、各セルの中の`ID`の並び |
-| `話題ごとの文書` | gherkin | gherkin のコードブロックの中のタグの行の中身と、タグの行、"Scenario:" の行、ステップの行の始まりの語（Given、When、Then、And、But）の並び |
-| `話題ごとの文書` | code | gherkin でないコードブロックの情報文字列と中身 |
-| `用語集` | glossary | `用語集`の表の行の数と、各行の出典の列 |
-| `問題の記録` | flag | "### FLAG-" の見出しの`ID`と並び、"- kind:"、"- related:"、"- source:" の値 |
-| `ガイド` | heading | 見出しの深さと並び |
-| `ガイド` | mark | `ガイドの印`の中身と並び |
-| `ガイド` | code | コードブロックの情報文字列と中身 |
-| `ガイド` | table | 表の数と、各表の行の数と列の数 |
-| `ガイド` | link | 検査するリンクの行き先の並び |
-| `全体像の元データ` | frontmatter | frontmatter の中身 |
-| `全体像の元データ` | heading | 見出しの深さと並び |
-| `全体像の元データ` | part | `部品`の種類と並びと、`部品`の値から TBL-core-045 の文の欄の文字列を除いたもの（並びの長さ、鍵、文でない値） |
-| `全体像の元データ` | mark | `ガイドの印`の中身と並び |
-| `全体像の元データ` | table | 表の数と、各表の行の数と列の数 |
-| `全体像の元データ` | link | 検査するリンクの行き先の並び |
-| `目次` | toc | `目次の群`の入れ子と、名前の項目の並びと、各`目次の群`の "note" の有無 |
+| `topic document` | heading | The depth and order of the "## " and "### " headings. For "### " headings, the `ID` too |
+| `topic document` | field | Among the "- " lines under each `item` and at document level, the names, values and order of "- kind:", "- source:", "- verification:", "- definition:", "- deferred:" and "- related:", and the presence of the "- how_to_verify:" line |
+| `topic document` | table | The number of tables, the number of rows and columns of each table, and the sequence of `ID` values in each cell |
+| `topic document` | gherkin | The contents of the tag lines inside gherkin code blocks, and the sequence of tag lines, "Scenario:" lines and the starting words of step lines (Given, When, Then, And, But) |
+| `topic document` | code | The info string and contents of code blocks that are not gherkin |
+| `glossary` | glossary | The number of rows of the table of the `glossary`, and the source column of each row |
+| `flag record` | flag | The `ID` and order of the "### FLAG-" headings, and the values of "- kind:", "- related:" and "- source:" |
+| `guide` | heading | The depth and order of the headings |
+| `guide` | mark | The contents and order of each `guide mark` |
+| `guide` | code | The info string and contents of code blocks |
+| `guide` | table | The number of tables, and the number of rows and columns of each table |
+| `guide` | link | The sequence of destinations of the links that are checked |
+| `overview data` | frontmatter | The contents of the frontmatter |
+| `overview data` | heading | The depth and order of the headings |
+| `overview data` | part | The kind and order of each `part`, and the values of each `part` with the strings of the sentence fields of TBL-core-045 removed (the lengths of sequences, the keys, and the values that are not sentences) |
+| `overview data` | mark | The contents and order of each `guide mark` |
+| `overview data` | table | The number of tables, and the number of rows and columns of each table |
+| `overview data` | link | The sequence of destinations of the links that are checked |
+| `table of contents` | toc | The nesting of each `contents group`, the order of the name items, and the presence of "note" in each `contents group` |
 
-### TBL-core-045: 全体像の部品の文の欄
+### TBL-core-045: Sentence fields of overview parts
 
 - source: docs/decision/records/2026-10-05-localization.md#A19, docs/decision/records/2026-10-05-localization.md#A3
 
-ここに無い欄（"tone"、"state"、"refs"、"ref"、"width" と、並びや入れ子の形）は文でなく、`骨組み`に入る。
+Fields not listed here ("tone", "state", "refs", "ref", "width", and the shapes of sequences and nesting) are not sentences, and are part of the `skeleton`.
 
-| `部品`の種類 | 文の欄 |
+| Kind of `part` | Sentence fields |
 |---|---|
-| lead | conclusion、points の各要素 |
-| flow | 箱の title、body |
-| steps | title、body |
-| cards | title、items の各要素 |
+| lead | conclusion, each element of points |
+| flow | title and body of a box |
+| steps | title, body |
+| cards | title, each element of items |
 | status | text |
-| compare | before、after、why |
-| decisions | text、by |
-| quiz | q、a |
+| compare | before, after, why |
+| decisions | text, by |
+| quiz | q, a |
 
 ## Examples
 
 ```gherkin
 @id=EX-core-526 @about=REQ-core-344,REQ-core-345 @source=docs/decision/records/2026-10-05-localization.md#A19,docs/decision/records/2026-10-05-localization.md#A27
-Scenario: 文だけが違えば骨組みは一致する
-  Given 設定の "languages" が "[ja, en]" で、`IR`の "a.md" と "a.en.md" が同じ見出しと "- " の行とシナリオのタグを持ち、文とステップの行の文字だけが違う
-  When "kotowari check --format json" を実行する
-  Then translation_structure_mismatch の`指摘`は出ない
+Scenario: When only the sentences differ the skeleton matches
+  Given "languages" of the configuration is "[ja, en]", "a.md" and "a.en.md" of the `IR` have the same headings, "- " lines and scenario tags, and differ only in the text of sentences and step lines
+  When "kotowari check --format json" is run
+  Then no translation_structure_mismatch `finding` is raised
 
 @id=EX-core-527 @about=REQ-core-345 @source=docs/decision/records/2026-10-05-localization.md#A19,docs/decision/records/2026-10-05-localization.md#A27,docs/decision/records/2026-10-05-localization.md#D1,docs/decision/records/2026-10-05-localization.md#D3
-Scenario: 出典が違えば最初に食い違った行に誤りが出る
-  Given EX-core-526 の文書があり、"a.en.md" の 9 行目の "- source:" の行の値だけが "a.md" と違う
-  When "kotowari check --format json" を実行する
-  Then "path" が "docs/ir/a.en.md"、"line" が 9、detail が "field" の translation_structure_mismatch の`誤り`が1件出る
+Scenario: A differing source raises an error on the first differing line
+  Given the documents of EX-core-526 exist, and only the value of the "- source:" line on line 9 of "a.en.md" differs from "a.md"
+  When "kotowari check --format json" is run
+  Then one translation_structure_mismatch `error` is raised with "path" "docs/ir/a.en.md", "line" 9 and detail "field"
 
 @id=EX-core-528 @about=REQ-core-344 @source=docs/decision/records/2026-10-05-localization.md#A19,docs/decision/records/2026-10-05-localization.md#A27,docs/decision/records/2026-10-05-localization.md#D1,docs/decision/records/2026-10-05-localization.md#D3
-Scenario: 全体像の部品の文でない欄が違えば誤りになる
-  Given 設定の "languages" が "[ja, en]" で、`全体像の元データ` ".kotowari/overview/a.md" と ".kotowari/overview/a.en.md" の status の`部品`の "state" が "open" と "decided" で違い、"text" も違う
-  When "kotowari check --format json" を実行する
-  Then "path" が ".kotowari/overview/a.en.md"、detail が "part" の translation_structure_mismatch の`誤り`が出る
+Scenario: A differing non-sentence field of an overview part is an error
+  Given "languages" of the configuration is "[ja, en]", and in the `overview data` ".kotowari/overview/a.md" and ".kotowari/overview/a.en.md" the "state" of the status `part` differs, "open" and "decided", and "text" differs too
+  When "kotowari check --format json" is run
+  Then a translation_structure_mismatch `error` is raised with "path" ".kotowari/overview/a.en.md" and detail "part"
 
 @id=EX-core-529 @about=REQ-core-344 @source=docs/decision/records/2026-10-05-localization.md#A26,docs/decision/records/2026-10-05-localization.md#A27,docs/decision/records/2026-10-05-localization.md#D3
-Scenario: 目次の題名だけが違えば一致する
-  Given 設定の "languages" が "[ja, en]" で、`目次` "toc.yaml" と "toc.en.yaml" の入れ子と名前の項目が同じで、"title" と "note" の文字だけが違う
-  When "kotowari check --format json" を実行する
-  Then translation_structure_mismatch の`指摘`は出ない
+Scenario: When only the titles of the table of contents differ it matches
+  Given "languages" of the configuration is "[ja, en]", and the `table of contents` "toc.yaml" and "toc.en.yaml" have the same nesting and name items, and differ only in the text of "title" and "note"
+  When "kotowari check --format json" is run
+  Then no translation_structure_mismatch `finding` is raised
 
 @id=EX-core-530 @about=REQ-core-346 @source=docs/decision/records/2026-10-05-localization.md#A33,docs/decision/records/2026-10-05-localization.md#A40,docs/decision/records/2026-10-05-localization.md#D1,docs/decision/records/2026-10-05-localization.md#D3
-Scenario: 切り替えの行が正しければ何も出ない
-  Given 設定の "languages" が "[ja, en]" で "labels.ja.language_name" が "日本語" であり、"guides/a.md" の`題名`の次の空でない行が "日本語 | [English](a.en.md)"、"guides/a.en.md" の行が "[日本語](a.md) | English" である
-  When "kotowari check --format json" を実行する
-  Then translation_switcher_invalid の`指摘`は出ない
+Scenario: A correct switcher line raises nothing
+  Given "languages" of the configuration is "[ja, en]", "labels.ja.language_name" is "日本語", the next non-blank line after the `title` of "guides/a.md" is "日本語 | [English](a.en.md)", and that line of "guides/a.en.md" is "[日本語](a.md) | English"
+  When "kotowari check --format json" is run
+  Then no translation_switcher_invalid `finding` is raised
 
 @id=EX-core-531 @about=REQ-core-346 @source=docs/decision/records/2026-10-05-localization.md#A33,docs/decision/records/2026-10-05-localization.md#D1,docs/decision/records/2026-10-05-localization.md#D3
-Scenario: 切り替えの行が無ければあるべき行を出す
-  Given EX-core-530 の設定があり、"guides/b.md" の`題名`の次の空でない行が "本文。" である
-  When "kotowari check --format json" を実行する
-  Then "path" が "guides/b.md"、detail が "日本語 | [English](b.en.md)" の translation_switcher_invalid の`誤り`が出る
+Scenario: Without a switcher line the line that should be there is raised
+  Given the configuration of EX-core-530 exists, and the next non-blank line after the `title` of "guides/b.md" is "本文。"
+  When "kotowari check --format json" is run
+  Then a translation_switcher_invalid `error` is raised with "path" "guides/b.md" and detail "日本語 | [English](b.en.md)"
 
 @id=EX-core-532 @about=REQ-core-346 @source=docs/decision/records/2026-10-05-localization.md#A36,docs/decision/records/2026-10-05-localization.md#A33
-Scenario: 全体像の元データは切り替えの行を持たない
-  Given 設定の "languages" が "[ja, en]" で、`全体像の元データ` "a.md" の`題名`の次が lead の`部品`である
-  When "kotowari check --format json" を実行する
-  Then "a.md" に translation_switcher_invalid の`指摘`は出ない
+Scenario: Overview data has no switcher line
+  Given "languages" of the configuration is "[ja, en]", and in the `overview data` "a.md" a lead `part` comes right after the `title`
+  When "kotowari check --format json" is run
+  Then no translation_switcher_invalid `finding` is raised on "a.md"
 
 @id=EX-core-533 @about=REQ-core-347,REQ-core-348 @source=docs/decision/records/2026-10-05-localization.md#A14,docs/decision/records/2026-10-05-localization.md#A30,docs/decision/records/2026-10-05-localization.md#A27,docs/decision/records/2026-10-05-localization.md#D1,docs/decision/records/2026-10-05-localization.md#D3
-Scenario: 英語のガイドが日本語の IR を指せば誤りになる
-  Given 設定の "languages" が "[ja, en]" で、`IR`の "docs/ir/a.md" と "docs/ir/a.en.md" があり、"guides/g.en.md" の 5 行目に "../docs/ir/a.md#REQ-001" へのリンクがある
-  When "kotowari check --format json" を実行する
-  Then "path" が "guides/g.en.md"、"line" が 5、detail が "../docs/ir/a.md#REQ-001" の link_language_mismatch の`誤り`が出る
+Scenario: An English guide pointing at the Japanese IR is an error
+  Given "languages" of the configuration is "[ja, en]", "docs/ir/a.md" and "docs/ir/a.en.md" of the `IR` exist, and line 5 of "guides/g.en.md" has a link to "../docs/ir/a.md#REQ-001"
+  When "kotowari check --format json" is run
+  Then a link_language_mismatch `error` is raised with "path" "guides/g.en.md", "line" 5 and detail "../docs/ir/a.md#REQ-001"
 
 @id=EX-core-534 @about=REQ-core-347,REQ-core-348 @source=docs/decision/records/2026-10-05-localization.md#A14,docs/decision/records/2026-10-05-localization.md#A30,docs/decision/records/2026-10-05-localization.md#A27
-Scenario: 同じ言語の側と外の URL へのリンクは誤りにしない
-  Given EX-core-533 の`IR`があり、"guides/g.en.md" に "../docs/ir/a.en.md#other" と "https://example.com/a.md" と "#top" へのリンクがある
-  When "kotowari check --format json" を実行する
-  Then "guides/g.en.md" に link_language_mismatch の`指摘`は出ない
+Scenario: Links to a side of the same language and to outside URLs are not errors
+  Given the `IR` of EX-core-533 exists, and "guides/g.en.md" has links to "../docs/ir/a.en.md#other", "https://example.com/a.md" and "#top"
+  When "kotowari check --format json" is run
+  Then no link_language_mismatch `finding` is raised on "guides/g.en.md"
 
 @id=EX-core-535 @about=REQ-core-349 @source=docs/decision/records/2026-10-05-localization.md#A14,docs/decision/records/2026-10-05-localization.md#A38,docs/decision/records/2026-10-05-localization.md#D1,docs/decision/records/2026-10-05-localization.md#D3
-Scenario: 対の文書から判断の記録へリンクすれば誤りになる
-  Given 設定の "languages" が "[ja, en]" で、"guides/g.md" の 3 行目に "../docs/decision/records/r.md#A1" へのリンクがある
-  When "kotowari check --format json" を実行する
-  Then "path" が "guides/g.md"、"line" が 3 の link_to_record の`誤り`が出る
+Scenario: A link from a paired document to a decision record is an error
+  Given "languages" of the configuration is "[ja, en]", and line 3 of "guides/g.md" has a link to "../docs/decision/records/r.md#A1"
+  When "kotowari check --format json" is run
+  Then a link_to_record `error` is raised with "path" "guides/g.md" and "line" 3
 ```

@@ -56,3 +56,25 @@ changes:
     - "site/__pycache__/**"
   records:
     - ".kotowari/changes/*.yaml"
+
+# 文書を英語と日本語の対で持つ。接尾辞の無いファイルが英語、"*.ja.md" が日本語（docs/ir/core/translation-pairs.md）
+languages: [en, ja]
+labels:
+  ja:
+    language_name: 日本語
+    index_link: 全体像
+    pages: "{n} ページ"
+    stale_sections: "見直す節 {n}"
+    open_items: "未決 {n}"
+    planned_items: "予定 {n}"
+    stale_mark: IR が変わってから見直していない
+    outline_stale: 未見直し
+    superseded: （置き換え済み）
+    deferred: （後回し）
+    compare_before: 前
+    compare_after: 後
+    compare_why: 理由
+    state_decided: 決定
+    state_planned: 予定
+    state_open: 未決
+    state_dropped: 取り下げ

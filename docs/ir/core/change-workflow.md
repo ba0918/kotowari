@@ -1,113 +1,115 @@
-# 変更の照合を回すスキルとフック・CI
+# Skills, hooks and CI that run change conformance
 
-実装中の記録、独立した review、途中のコミットと取り込み前の完了条件、人への確認、フックと CI の分担を扱う。これは配布するスキルと導入手順の契約であり、CLI が意味を判定する要求ではない。
+English | [日本語](change-workflow.ja.md)
+
+Covers recording during implementation, the independent review, the completion conditions for intermediate commits and before integration, confirmation with the person, and the division of work between hooks and CI. This is a contract on the distributed skills and the setup procedure, not a requirement whose meaning the CLI judges.
 
 ## Requirements
 
-### REQ-core-256: 実装中に生まれた判断を残す
+### REQ-core-256: Keep the decisions made during implementation
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-conformance.md#A1, docs/decision/records/2026-10-01-change-conformance.md#A9
 - verification: review
-- how_to_verify: 計画・実装・cycle のスキルを読み、記録する条件と情報、IR に反映する条件が A1 と A9 に一致することを確認する。
+- how_to_verify: Read the plan, implement and cycle skills, and confirm that the conditions and information for recording, and the conditions for reflecting into the IR, match A1 and A9.
 
-kotowari のスキルは常に、実装や計画で新しい判断をした役に、選択と根拠と判断した役を`判断の記録`へ残し、振る舞い・制約の仕様を変える場合は`IR`にも反映する手順を持つ。
+The kotowari skills always have a procedure by which the role that made a new decision during implementation or planning keeps the choice, the grounds and the deciding role in the `decision record`, and also reflects it into the `IR` when it changes the specification of behavior or constraints.
 
-### REQ-core-257: 実装側とは別の review
+### REQ-core-257: A review separate from the implementing side
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-conformance.md#A6, docs/decision/records/2026-10-01-conformance-at-integration.md#A1
 - verification: review
-- how_to_verify: cycle と review のスキルを読み、実装側の申告だけで最終の照合済みにしないことと、確認する3点が A6 と照合を取り込み前だけで要求する判断の A1 に一致することを確認する。
+- how_to_verify: Read the cycle and review skills, and confirm that the final conformance is not settled on the implementing side's claim alone, and that the three points checked match A6 and A1 of the decision that requires conformance only before integration.
 
-kotowari のスキルは常に、最終の照合で、実装側とは別の review が根拠の妥当性、仕様と実装の意味の一致、委譲範囲を確認し、照合対象と結果を記録する手順を持つ。
+The kotowari skills always have a procedure by which, in the final conformance check, a review separate from the implementing side confirms the validity of the grounds, the agreement in meaning between the specification and the implementation, and the delegated scope, and records what was checked and the result.
 
-### REQ-core-258: 途中のコミットの完了条件
+### REQ-core-258: Completion conditions for intermediate commits
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-conformance-at-integration.md#A1, docs/decision/records/2026-10-01-conformance-at-integration.md#A2
 - verification: review
-- how_to_verify: 導入手順、フックの設定、実装と cycle のスキルを読み、途中のコミットに照合記録と変更照合の合格を要求する手順やフックが無く、"--staged" が任意の自己検査として扱われていることを確認する。
+- how_to_verify: Read the setup procedure, the hook configuration, and the implement and cycle skills, and confirm that no procedure or hook requires a change record and a passing change conformance check for an intermediate commit, and that "--staged" is treated as an optional self-check.
 
-kotowari の導入手順とスキルは常に、途中のコミットに照合記録と変更照合の合格を要求せず、pre-commit に変更照合を置かない。"--staged" による実装側の自己検査は任意とする。
+The kotowari setup procedure and skills always require neither a change record nor a passing change conformance check for an intermediate commit, and do not put change conformance in pre-commit. A self-check by the implementing side with "--staged" is optional.
 
-### REQ-core-259: 取り込み前の完了条件
+### REQ-core-259: Completion conditions before integration
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-01-change-conformance.md#A12, docs/decision/records/2026-10-01-conformance-at-integration.md#A1
 - verification: review
-- how_to_verify: 導入手順と cycle のスキルを読み、対象がブランチ全体であり、両コマンドを必須にし、check だけで完了としないことが A2・A12 と照合を取り込み前だけで要求する判断の A1 に一致することを確認する。
+- how_to_verify: Read the setup procedure and the cycle skill, and confirm that the target is the whole branch, that both commands are required, and that check alone does not mean completion, matching A2, A12 and A1 of the decision that requires conformance only before integration.
 
-kotowari の導入手順とスキルは常に、cycle の最終検査と CI に、ブランチ全体について review の照合までを要求する機械検査を置き、取り込み前に check と changes の両方を必須にする。check の成功だけを今回の変更が照合済みである証拠にしない。
+The kotowari setup procedure and skills always put, in cycle's final inspection and in CI, a mechanical inspection that requires the whole branch to be checked up to the review's conformance, and require both check and changes before integration. The success of check alone is not taken as evidence that the current change has passed conformance.
 
-### REQ-core-260: 人への確認の境界
+### REQ-core-260: Boundary of confirmation with the person
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-conformance.md#A9
 - verification: review
-- how_to_verify: 実装・cycle・review のスキルを読み、自律更新の条件と人へ戻す条件が A9 に一致し、承認済みの制約変更を記録作業の権限で許していないことを確認する。
+- how_to_verify: Read the implement, cycle and review skills, and confirm that the conditions for autonomous updates and for returning to the person match A9, and that a change to an approved constraint is not allowed under the authority of recording work.
 
-kotowari のスキルは常に、記録の欠落だけで人へ戻さず、委譲範囲内で根拠のある判断と記録の更新を自律的に行う手順を持つ。委譲範囲を超える変更、根拠から選択を決められない場合、不可逆・危険・外部公開の操作は人へ戻す。
+The kotowari skills always have a procedure that does not return to the person merely because a record is missing, and makes grounded decisions and record updates autonomously within the delegated scope. A change beyond the delegated scope, a case where the choice cannot be decided from the grounds, and an irreversible, dangerous or externally visible operation are returned to the person.
 
-### REQ-core-261: CI が比較対象を決める
+### REQ-core-261: CI decides what is compared
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-conformance.md#A12
 - verification: review
-- how_to_verify: CI の導入例を読み、イベントに対応する対象を明示し、記録内の比較元だけに依存せず、changes を同じエンジンで実行することが A12 に一致することを確認する。
+- how_to_verify: Read the CI setup example, and confirm that it states the target corresponding to the event explicitly, does not depend only on the comparison base inside the records, and runs changes with the same engine, matching A12.
 
-kotowari の導入手順は常に、CI のイベントから比較元と対象を呼び出し側が決め、照合記録の自己申告だけから比較対象を採らず、ローカルと同じ機械検査エンジンを実行する手順を持つ。
+The kotowari setup procedure always has a procedure in which the caller decides the comparison base and the target from the CI event, does not take what is compared only from the change record's self-report, and runs the same mechanical inspection engine as locally.
 
-### REQ-core-262: 仕様の穴を記録だけで終えない
+### REQ-core-262: A specification gap is not closed by recording alone
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-conformance.md#A10, docs/decision/records/2026-10-01-change-conformance.md#A11
 - verification: review
-- how_to_verify: review と cycle のスキルを読み、分類と3種類の処理先が A10 と A11 に一致し、記録だけの扱いで処理先の記録が不要にならないことを確認する。
+- how_to_verify: Read the review and cycle skills, and confirm that the classification and the three kinds of disposition match A10 and A11, and that a record-only treatment does not make recording the disposition unnecessary.
 
-kotowari の review と cycle のスキルは常に、仕様の穴を重要度・修正アクションとは別に分類し、共通の形式で処理先を残す手順を持つ。"info" や "record_only" だけで仕様の穴を処理済みにしない。
+The kotowari review and cycle skills always have a procedure that classifies a specification gap separately from severity and fix action, and leaves its disposition in the common format. A specification gap is not treated as handled by "info" or "record_only" alone.
 
-### REQ-core-275: 自律的な仕様の追記の境界
+### REQ-core-275: Boundary of autonomous additions to the specification
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-details.md#A13
 - verification: review
-- how_to_verify: 配布スキルと導入例を読み、出典 A13 の入力・責任境界・再実行条件を満たすことを確認する。
+- how_to_verify: Read the distributed skills and the setup examples, and confirm that they satisfy the inputs, responsibility boundaries and re-run conditions of source A13.
 
-kotowari のスキルと導入手順は常に、次の契約を満たす。implement と fixer は、承認済み要求の制約を変えない委譲範囲内の具体化に限り、根拠と判断者を記録して IR に追加できる。承認済み要求を変更・削除する判断、既存の選択と矛盾する追加、根拠から決められない判断は人へ戻す。cycle 自身は実装や意味の判断を行わず、実装側へ記録を委譲し別の review で確認する。実装側の IR 追加後は check と、その追加を含む仕様・実装の照合を必ず再実行する。review の findings JSON は継続して内部用とし、実装側と review 側は共通の YAML 照合記録を別々に作成する。
+The kotowari skills and setup procedure always satisfy the following contract. implement and fixer may add to the IR, recording the grounds and the decider, only a concretization within the delegated scope that does not change the constraints of an approved requirement. A decision that changes or deletes an approved requirement, an addition that contradicts an existing choice, and a decision that cannot be made from the grounds are returned to the person. cycle itself makes no implementation or meaning decision; it delegates the recording to the implementing side and has a separate review confirm it. After the implementing side adds to the IR, check and the conformance check of the specification and implementation including that addition are always re-run. The review's findings JSON stays internal, and the implementing side and the review side each create a separate change record in the common YAML.
 
-### REQ-core-276: 導入と再照合
+### REQ-core-276: Setup and re-checking conformance
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-details.md#A14, docs/decision/records/2026-10-01-current-change-records.md#A2, docs/decision/records/2026-10-01-conformance-at-integration.md#A3, docs/decision/records/2026-10-01-current-change-records.md#A6, docs/decision/records/2026-10-01-current-change-records.md#A7, docs/decision/records/2026-10-01-current-change-records.md#A11
 - verification: review
-- how_to_verify: 配布スキルと導入例を読み、出典 A14 の入力・責任境界・再実行条件を満たすことを確認する。
+- how_to_verify: Read the distributed skills and the setup examples, and confirm that they satisfy the inputs, responsibility boundaries and re-run conditions of source A14.
 
-kotowari のスキルと導入手順は常に、次の契約を満たす。導入例では changes.files に製品コード・テスト・配布スキル・ビルドとフックと CI の設定を列挙し、changes.records は ".kotowari/changes/*.yaml" とし、固定の implementation.yaml・review.yaml を役別に使う。この固定配置は導入規約であり、コアの必須パスにはしない。生成物は明示した exclude だけで外す。CI は pull_request の比較元を base SHA と head SHA の merge-base、対象を head SHA とし、両履歴を取得して "changes --base <比較元> --head <対象> --phase review" と check を行う。merge 用の SHA は対象に使わない。push の導入例はイベントの before と after の比較とし、before が全0の新規ブランチは停止して比較元を明示する。最終検査用にはブランチの比較元を base とした実装側の件と review 側の件を作り直す。新しいコード・関連 IR・関連判断の変更が最終照合を無効にするなら両最終記録を削除し再照合する。rebase の比較元変更、cherry-pick、並行統合では記録の連結・一方の採用だけで完了とせず、統合後の比較について再照合する。関連判断の意味の変更は機械の参照存在検査では検出できず、スキルと独立 review が確認する。再照合は変更のある件の全ファイルと関連 IR を確認する。通常の文書探索では .kotowari/changes/ を除外し、必要な件だけ読む。判断の原本は decisions、仕様は IR とし、reason は対応説明に絞る。過去の記録は必要時に Git 履歴から読む。
+The kotowari skills and setup procedure always satisfy the following contract. In the setup example, changes.files lists the product code, the tests, the distributed skills, and the build, hook and CI configuration, changes.records is ".kotowari/changes/*.yaml", and the fixed files implementation.yaml and review.yaml are used per role. This fixed layout is a setup convention and is not made a required path of the core. Generated files are left out only by an explicit exclude. In CI, for pull_request, the comparison base is the merge-base of the base SHA and the head SHA and the target is the head SHA; both histories are fetched and "changes --base <base> --head <target> --phase review" and check are run. The SHA for merging is not used as the target. The push setup example compares the event's before and after, and for a new branch whose before is all zeros, it stops and has the comparison base stated explicitly. For the final inspection, the implementing side's entry and the review side's entry are recreated with the branch's comparison base as base. If changes to new code, related IR or related decisions invalidate the final conformance, both final records are deleted and conformance is checked again. In a rebase that changes the comparison base, a cherry-pick, or a parallel integration, concatenating records or adopting one side alone does not complete the work; conformance is checked again for the comparison after integration. A change in the meaning of a related decision cannot be detected by the mechanical check that references exist, and is confirmed by the skills and the independent review. Re-checking conformance covers all files of the changed entries and the related IR. Ordinary document search excludes .kotowari/changes/ and reads only the needed entries. The original of a decision is in decisions and the specification is in the IR, and reason is limited to explaining the correspondence. Past records are read from the Git history when needed.
 
 
-### REQ-core-277: 優先して再照合するテストの変更
+### REQ-core-277: Test changes to re-check first
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-conformance.md#A7
 - verification: review
-- how_to_verify: review のスキルと照合結果を読み、要求 ID のあるテストの追加・期待値変更・削除を優先して確認し、製品コードだけの変更も対象に残すことを確認する。
+- how_to_verify: Read the review skill and the conformance results, and confirm that the addition, expected-value change and deletion of tests with a requirement ID are checked first, and that changes to product code alone also stay in the target.
 
-kotowari の review のスキルは常に、要求 ID のあるテストの追加・期待値変更・削除を優先して再照合し、その期待値が変わらないことだけを理由に製品コードや補助関数の変更を対象から外さない手順を持つ。
+The kotowari review skill always has a procedure that re-checks first the addition, expected-value change and deletion of tests with a requirement ID, and does not drop changes to product code or helper functions from the target merely because those expected values do not change.
 
 ## Examples
 
 ```gherkin
 @id=EX-core-461 @about=REQ-core-276 @source=docs/decision/records/2026-10-01-current-change-records.md#A6
-Scenario: 関連判断の意味の変更を再照合する
-  Given 関連判断の参照は存在するが選択の意味が変わっている
-  When 実装側と独立 review が現在の変更を照合する
-  Then 最終照合への影響を確認し、無効な両最終記録を削除して再照合する
+Scenario: A change in the meaning of a related decision is re-checked
+  Given the reference to a related decision exists, but the meaning of the choice has changed
+  When the implementing side and the independent review check the current change for conformance
+  Then they confirm the effect on the final conformance, delete both invalidated final records, and check conformance again
 
 @id=EX-core-462 @about=REQ-core-276 @source=docs/decision/records/2026-10-01-current-change-records.md#A6
-Scenario: 並行ブランチ統合後に記録を作り直す
-  Given 並行ブランチの固定記録が競合または別々の比較に対応する
-  When ブランチを統合する
-  Then 記録の連結や一方の採用だけで完了とせず、統合後の比較で両役が再照合する
+Scenario: Records are recreated after integrating parallel branches
+  Given the fixed records of parallel branches conflict or correspond to different comparisons
+  When the branches are integrated
+  Then concatenating the records or adopting one side alone does not complete the work, and both roles check conformance again for the comparison after integration
 
 ```

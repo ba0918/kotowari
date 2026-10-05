@@ -1,101 +1,103 @@
 # kotowari check
 
-<!-- @kotowari[REQ-core-001:67e34470] -->
+English | [日本語](check.ja.md)
 
-IR（仕様）の書き方の誤りと、IR とテストの対応の抜けを、1件ずつの指摘として挙げるコマンドです。
-IR やテストを書いたら実行し、指摘を直して、誤りが0件になるまで繰り返します。
-IR の形の検査とテストとの対応の検査は、この1つのコマンドで両方行います。
+<!-- @kotowari[REQ-core-001:f6b868d0] -->
 
-## 書式
+This command reports errors in how the IR (the specification) is written, and gaps in the correspondence between the IR and the tests, as one finding each.
+Run it after writing IR or tests, fix the findings, and repeat until there are zero errors.
+This single command does both: it checks the form of the IR and checks its correspondence with the tests.
 
-<!-- @kotowari[REQ-core-002:410b78a4] -->
+## Synopsis
+
+<!-- @kotowari[REQ-core-002:d9acbe9c] -->
 
 ```sh
 kotowari check [--format json|text] [--config <path>]
 ```
 
-位置引数は受けません。
+It takes no positional arguments.
 
-## オプションと引数
+## Options and arguments
 
-<!-- @kotowari[REQ-core-002:410b78a4, REQ-core-021:14bd7b25, REQ-core-003:7fb82a37] -->
+<!-- @kotowari[REQ-core-002:d9acbe9c, REQ-core-021:ccedd28b, REQ-core-003:b4f59e48] -->
 
-| 名前 | 値 | 既定 | 説明 |
+| Name | Value | Default | Description |
 |---|---|---|---|
-| `--format` | `json` か `text` | `json` | 出力の形 |
-| `--config` | 設定ファイルのパス | 基準のディレクトリの `.kotowari/config.yaml` | 読む設定ファイル。カレントディレクトリからの相対で読む |
-| `--help` | なし | — | 使い方を出して終了コード0で終わる |
-| `--version` | なし | — | 版を出して終了コード0で終わる |
+| `--format` | `json` or `text` | `json` | The output format |
+| `--config` | Path to a configuration file | `.kotowari/config.yaml` in the base directory | The configuration file to read. The path is read relative to the current directory |
+| `--help` | None | — | Prints usage and exits with code 0 |
+| `--version` | None | — | Prints the version and exits with code 0 |
 
-オプションの共通の決まり（コマンドの前後どちらにも書ける、など）は [cli.md](../cli.md#共通のオプション) にあります。
+The rules shared by all options (for example, that they can be written before or after the command) are in [cli.md](../cli.md#common-options).
 
-## 読むもの
+## What it reads
 
-<!-- @kotowari[TBL-core-004:bec85c0f, REQ-core-325:05c0afbf, REQ-core-336:e062e0cf, REQ-core-337:2b3445bd] -->
+<!-- @kotowari[TBL-core-004:322d11b1, REQ-core-325:ba483356, REQ-core-336:03710aae, REQ-core-337:40375497] -->
 
-`check` は、設定ファイルが指す置き場から、次のものを読みます。
+`check` reads the following from the locations the configuration file points to.
 
-| 読むもの | 置き場を決める設定のキー | 既定 |
+| What it reads | Configuration key that sets the location | Default |
 |---|---|---|
-| IR の文書（用語集 `CONTEXT.md` と問題の記録 `FLAGS.md` を含む） | `ir` | `docs/ir` |
-| 判断の記録（出典の先） | `decisions.records` | `docs/decision/records` |
-| ADR（出典の先） | `decisions.adr` | `docs/decision/adr` |
-| テストのファイル | `tests.files` | `src/**/*.rs`、`tests/**/*.rs` |
-| ガイド | `guides.files` | 空（読まない） |
-| 面のファイルと面の規則のファイル | `surface.files`、`surface.rules` | 空（読まない） |
-| 未記載の面の一覧 | `surface.unspecified` | 無し（0件） |
-| 全体像の元データ | `overview.files` | 無し（`overview` の鍵が無ければ読まない） |
-| 全体像の目次 | `overview.toc` | 無し（`overview` の鍵が無ければ読まない。鍵があれば必須で、指す先が無いか読めなければ止まる） |
+| IR documents (including the glossary `CONTEXT.md` and the flag record `FLAGS.md`) | `ir` | `docs/ir` |
+| Decision records (targets of sources) | `decisions.records` | `docs/decision/records` |
+| ADRs (targets of sources) | `decisions.adr` | `docs/decision/adr` |
+| Test files | `tests.files` | `src/**/*.rs`, `tests/**/*.rs` |
+| Guides | `guides.files` | Empty (not read) |
+| Surface files and surface rule files | `surface.files`, `surface.rules` | Empty (not read) |
+| List of unspecified surfaces | `surface.unspecified` | None (zero entries) |
+| Overview data | `overview.files` | None (not read when there is no `overview` key) |
+| Overview table of contents | `overview.toc` | None (not read when there is no `overview` key; when the key exists it is required, and kotowari stops if the target is missing or unreadable) |
 
-面の3つは `surface.rules` が空の一覧でないときだけ読みます（[面の検査](../surface.md)）。
-`languages` に2つ以上の言語を書いたときは、IR、ガイド、全体像の元データ、目次のほかの言語の側（`foo.en.md`）と一致の記録（`foo.i18n.yaml`）を、先頭の言語の側と同じディレクトリで名前で探して読みます（[言語と対](../config.md#言語と対--languages-と-labels)）。
-キーの全部は [config.md](../config.md) にあります。
+The three surface inputs are read only when `surface.rules` is not an empty list ([Surface checks](../surface.md)).
+When `languages` lists two or more languages, kotowari also reads, for the IR, guides, overview data and table of contents, the other-language sides (`foo.en.md`) and the consistency records (`foo.i18n.yaml`), finding them by name in the same directory as the first-language side ([Languages and pairs](../config.md#languages-and-pairs--languages-and-labels)).
+All the keys are in [config.md](../config.md).
 
-### 設定ファイル
+### The configuration file
 
-<!-- @kotowari[REQ-core-011:549c5c91, REQ-core-012:c9ab4bdd] -->
+<!-- @kotowari[REQ-core-011:0b7f52a9, REQ-core-012:50c68e4b] -->
 
-- `--config` が無ければ、基準のディレクトリの `.kotowari/config.yaml` を読みます。
-- そのファイルが無ければ、すべて既定の値で検査します。
-- 設定ファイルが空（0バイトか注釈だけ）なら、`--config` で指したものでも既定の値で検査します。
+- Without `--config`, kotowari reads `.kotowari/config.yaml` in the base directory.
+- If that file does not exist, everything is checked with default values.
+- If the configuration file is empty (zero bytes, or comments only), default values are used, even for a file named with `--config`.
 
-基準のディレクトリの決め方は [cli.md](../cli.md#基準のディレクトリ) にあります。
+How the base directory is determined is described in [cli.md](../cli.md#the-base-directory).
 
-### 置き場が無いとき
+### When a location is missing
 
-<!-- @kotowari[REQ-core-018:21dc9fba, REQ-core-019:d2cefae9] -->
+<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-019:52c32b58] -->
 
-`ir`、`decisions.records`、`decisions.adr` の3つは、既定のままでもディレクトリが存在している必要があります。
-どれかが無い、ディレクトリでない、読めないときは、`unreadable file` で停止します。
-使わない置き場でも、空のディレクトリを作っておいてください。
+The three locations `ir`, `decisions.records` and `decisions.adr` must exist as directories, even when left at their defaults.
+If any of them is missing, is not a directory, or cannot be read, kotowari stops with `unreadable file`.
+Create an empty directory even for a location you do not use.
 
-`tests.files`、`guides.files`、`surface.files`、`overview.files` は glob の一覧です。
-何にも当たらない glob は誤りになりません。
-`**` は再帰として読みます。
-隠しディレクトリは glob が名指ししても含めず、ディレクトリのシンボリックリンクは辿りません。
-照合記録の `changes.records` と全体像の元データの `overview.files` は例外として、パス成分で明示した隠しディレクトリ（`.kotowari/overview/*.md` など）を読みます。名指ししない隠し配下は広い `**` でも除外します。
+`tests.files`, `guides.files`, `surface.files` and `overview.files` are lists of globs.
+A glob that matches nothing is not an error.
+`**` is read as recursive.
+Hidden directories are not included even when a glob names them, and symbolic links to directories are not followed.
+As exceptions, `changes.records` for change records and `overview.files` for overview data do read hidden directories named explicitly in a path component (such as `.kotowari/overview/*.md`). Hidden directories that are not named are excluded even by a broad `**`.
 
-走査でディレクトリが読めないときと、先の無いシンボリックリンクに出会ったときは、`unreadable file` で停止します。
+If a directory cannot be read during the scan, or a dangling symbolic link is encountered, kotowari stops with `unreadable file`.
 
-### 文字コードと閉じないコードブロック
+### Encoding and unclosed code blocks
 
-<!-- @kotowari[REQ-core-111:2c762a2c, REQ-core-112:204f8368] -->
+<!-- @kotowari[REQ-core-111:a41af8e5, REQ-core-112:2fc914d5] -->
 
-読むファイルは UTF-8 である必要があります。
-先頭の BOM は読み飛ばすので、BOM 付きの UTF-8 でも止まりません。
-UTF-8 でないファイルがあると `non-UTF-8 file` で停止します。
+Files that are read must be UTF-8.
+A leading BOM is skipped, so UTF-8 with a BOM does not cause a stop.
+If there is a file that is not UTF-8, kotowari stops with `non-UTF-8 file`.
 
-IR の文書のコードブロックが閉じられずに文書が終わると、開始の行に `unclosed_code_block` の誤りが出ます。
-そのときは、開始から文書の終わりまでを検査しません。
+If a code block in an IR document is never closed before the document ends, an `unclosed_code_block` error is reported on its opening line.
+In that case, the part from the opening line to the end of the document is not checked.
 
-## 出力
+## Output
 
 ### text
 
-<!-- @kotowari[REQ-core-025:b4d331d2, REQ-core-026:70f612a2] -->
+<!-- @kotowari[REQ-core-025:58025379, REQ-core-026:530a64e3] -->
 
-1行が1件の指摘です。
-誤りも注意も無ければ、何も出しません。
+Each line is one finding.
+If there are no errors and no notices, nothing is printed.
 
 ```text
 パス:行 [error] 種類 詳細
@@ -103,89 +105,89 @@ docs/ir/greet/greet.md:18 [error] source_invalid docs/decision/records/2026-09-2
 docs/ir/greet/greet.md:- [notice] too_many_lines 30
 ```
 
-| 部分 | 中身 |
+| Part | Content |
 |---|---|
-| パス | 基準のディレクトリからの相対パス |
-| 行 | 1始まりの行。文書全体への指摘では `-` |
-| `[error]` / `[notice]` | 誤りか注意か |
-| 種類 | 指摘の種類。意味と直し方は [findings.md](../findings.md) |
-| 詳細 | 種類ごとに決まった短い文字列 |
+| Path (パス) | Path relative to the base directory |
+| Line (行) | 1-based line number. `-` for a finding about the whole document |
+| `[error]` / `[notice]` | Whether it is an error or a notice |
+| Kind (種類) | The kind of finding. Its meaning and how to fix it are in [findings.md](../findings.md) |
+| Detail (詳細) | A short string whose content is fixed per kind |
 
-text には、下の JSON の `files`、`lines`、`tests`、`guides`、`overview` は出ません。
+The text output does not include `files`, `lines`, `tests`, `guides` or `overview` from the JSON below.
 
-設定の `surface.rules` が空の一覧でないときは、指摘の行の後の最後の1行に、未記載の面の一覧で外した面の数を `surface: unspecified=数` の形で出します。
-指摘が0件でも、数が0でも出します（[面の検査](../surface.md#外した数を見る)）。
+When the configuration's `surface.rules` is not an empty list, a final line after the finding lines gives the number of surfaces excluded by the list of unspecified surfaces, in the form `surface: unspecified=数` (数 being the count).
+It is printed even when there are zero findings and even when the count is 0 ([Surface checks](../surface.md#seeing-how-many-are-excluded)).
 
 ### JSON
 
-<!-- @kotowari[REQ-core-022:e6e6163f, TBL-core-005:8f232386, PROP-core-002:2b264d92, REQ-core-228:59fca9bf, REQ-core-288:3ddb99ef] -->
+<!-- @kotowari[REQ-core-022:8e221eee, TBL-core-005:73d0910b, PROP-core-002:35724b25, REQ-core-228:095b2109, REQ-core-288:0f3318d5] -->
 
-既定の出力です。
-標準出力に JSON のオブジェクトを1つ出します。
+This is the default output.
+It prints a single JSON object to standard output.
 
-| 鍵 | 型 | 説明 |
+| Key | Type | Description |
 |---|---|---|
-| `files` | 数 | 読んだ IR の文書の数（用語集と問題の記録を含む。対ならほかの言語の側も数える） |
-| `lines` | 数 | IR の文書の行数の合計（用語集と問題の記録を含む。対ならほかの言語の側も数える） |
-| `findings` | 配列 | 指摘の一覧。1件の鍵は `kind`、`severity`、`path`、`line`、`detail`（[cli.md](../cli.md#json-の指摘)） |
-| `counts` | オブジェクト | 種類ごとの指摘の数。0件の種類は鍵ごと出ない |
-| `tests` | オブジェクト | 読んだテストのファイルの、拡張子ごとの数（下の節） |
-| `guides` | オブジェクト | 読んだガイドの数と、ガイドの印の数（下の節） |
-| `surface` | オブジェクト | `unspecified`（未記載の面の一覧で外した面の、種類と名前の組の数）の鍵1つ。`surface.rules` が空の一覧のときは鍵ごと出ない |
-| `overview` | オブジェクト | `files`（読んだ全体像の元データの数）と `marks`（その中の形の正しいガイドの印の1件の数）。数え方は `guides` と同じで、設定に `overview` の鍵が無くても両方0で出る |
+| `files` | number | The number of IR documents read (including glossaries and flag records; for a pair, other-language sides are counted too) |
+| `lines` | number | The total number of lines in the IR documents (including glossaries and flag records; for a pair, other-language sides are counted too) |
+| `findings` | array | The list of findings. Each one has the keys `kind`, `severity`, `path`, `line` and `detail` ([cli.md](../cli.md#findings-in-json)) |
+| `counts` | object | The number of findings per kind. Kinds with zero findings are omitted entirely |
+| `tests` | object | The number of test files read, per extension (see the section below) |
+| `guides` | object | The number of guides read and the number of guide marks (see the section below) |
+| `surface` | object | A single key, `unspecified` (the number of kind-and-name pairs of surfaces excluded by the list of unspecified surfaces). Omitted entirely when `surface.rules` is an empty list |
+| `overview` | object | `files` (the number of overview data files read) and `marks` (the number of individual well-formed guide marks in them). Counted the same way as `guides`; both are output as 0 even when the configuration has no `overview` key |
 
-`counts` の値は、いつも `findings` の中のその種類の件数と一致します。
+The values in `counts` always match the number of findings of that kind in `findings`.
 
-### JSON の `tests` と `guides`
+### `tests` and `guides` in the JSON
 
-<!-- @kotowari[REQ-core-128:fff622e0, TBL-core-021:f3d23680, REQ-core-206:461185b6] -->
+<!-- @kotowari[REQ-core-128:e6139f2c, TBL-core-021:d85afd29, REQ-core-206:e2f3dc5c] -->
 
-`tests` と `guides` は、設定の glob が思った所に当たっているかを確かめるための数です。
-glob を書き間違えても指摘は出ないので、ここで確かめます。
+`tests` and `guides` are counts for confirming that the globs in your configuration match where you expect.
+A mistyped glob produces no finding, so check it here.
 
-| 鍵 | 型 | 説明 |
+| Key | Type | Description |
 |---|---|---|
-| `tests.<拡張子>.files` | 数 | その拡張子の、読んだテストのファイルの数。読めずに `unparsable_file` になったファイルも数える |
-| `tests.<拡張子>.query` | 真偽 | その拡張子の言語でテストを見つける問い合わせがあるか。false の言語では、テストの関数を見分けずに印だけを拾う |
-| `guides.files` | 数 | 読んだガイドの数 |
-| `guides.marks` | 数 | 形の正しいガイドの印の1件（`ID:指紋` の1つ）の数 |
+| `tests.<extension>.files` | number | The number of test files read with that extension. Files that could not be parsed and became `unparsable_file` are counted too |
+| `tests.<extension>.query` | boolean | Whether the language for that extension has a query for finding tests. For languages where it is false, only marks are picked up, without identifying test functions |
+| `guides.files` | number | The number of guides read |
+| `guides.marks` | number | The number of individual well-formed guide marks (each `ID:fingerprint` entry) |
 
-- 拡張子の鍵は `.` を含めません（`rs`、`ts`）。拡張子の無いファイルの鍵は空文字列です。
-- テストのファイルが0件なら `tests` は `{}`、ガイドが0件なら `guides` は `{"files":0,"marks":0}` です。
-- ファイルはパスごとに1回数えます。複数の glob に当たっても1回です。
+- Extension keys do not include the `.` (`rs`, `ts`). The key for files without an extension is the empty string.
+- With zero test files, `tests` is `{}`; with zero guides, `guides` is `{"files":0,"marks":0}`.
+- Each file is counted once per path, even if it matches several globs.
 
-拡張子ごとの細部は [output.md の TBL-core-021](../../ir/core/output.md) にあります。
+Per-extension details are in [TBL-core-021 in output.md](../../ir/core/output.md).
 
-### 指摘の並びと行
+### Finding order and lines
 
-<!-- @kotowari[TBL-core-007:d8427397, REQ-core-027:7f4780ac, TBL-core-019:67506434] -->
+<!-- @kotowari[TBL-core-007:15954989, REQ-core-027:a594c5e0, TBL-core-019:d5c9adce] -->
 
-指摘は `path`、`line`（null が先）、`kind`、`detail` の順に並びます（[cli.md](../cli.md#指摘の並び)）。
-同じ行の指摘は、種類の名前の順に並びます。
+Findings are ordered by `path`, `line` (null first), `kind` and `detail` ([cli.md](../cli.md#order-of-findings)).
+Findings on the same line are ordered by the name of their kind.
 
-`line` は種類ごとに決まっています。
-文書全体への指摘（`missing_title`、`missing_scope`、`too_many_lines` など）と、未記載の面の一覧の1件への指摘、全体像の元データの `overview_lead_missing`、`overview_ir_missing`、`overview_ir_shared`、`overview_name_conflict` と、目次の `overview_toc_invalid`、`overview_toc_page_missing`、`overview_toc_page_unknown`、`overview_toc_page_duplicate`、`overview_toc_group_empty` と、対の `translation_missing`、`translation_record_invalid`、`translation_stale` は null、項目への指摘は項目の見出しの行、シナリオへの指摘はタグの行、`surface_without_spec` は面の節の最初の行です。
-`overview_form_invalid` は形に合わない行（文書全体にかかるものは null）、`overview_part_unknown`、`overview_part_invalid`、`overview_ref_unresolved` は部品のフェンスの開始の行です。
-ただし部品の中身が YAML として読めない `overview_part_invalid` は、YAML の読み取りが誤りの位置を返せばその行（全体像の元データのファイルの行に直したもの）です。
-`translation_structure_mismatch` は最初に食い違った要素の行（数の違いか、要素がその側に無いときは null）、`translation_switcher_invalid` は題名の後の最初の空でない行（無ければ題名の行、題名も無ければ null）、`link_language_mismatch` と `link_to_record` はリンクの行です。
-種類ごとの行は [findings.md](../findings.md#種類の一覧) の表にあります。
+`line` is fixed per kind.
+It is null for findings about a whole document (`missing_title`, `missing_scope`, `too_many_lines` and so on), for findings about an entry in the list of unspecified surfaces, for the overview data findings `overview_lead_missing`, `overview_ir_missing`, `overview_ir_shared` and `overview_name_conflict`, for the table of contents findings `overview_toc_invalid`, `overview_toc_page_missing`, `overview_toc_page_unknown`, `overview_toc_page_duplicate` and `overview_toc_group_empty`, and for the pair findings `translation_missing`, `translation_record_invalid` and `translation_stale`. For findings about an item it is the line of the item's heading, for findings about a scenario the line of its tags, and for `surface_without_spec` the first line of the surface's section.
+`overview_form_invalid` uses the line that does not fit the form (null when it concerns the whole document), and `overview_part_unknown`, `overview_part_invalid` and `overview_ref_unresolved` use the opening line of the part's fence.
+However, for an `overview_part_invalid` whose part content cannot be read as YAML, if the YAML reader returns the position of the error, that line is used (converted to a line in the overview data file).
+`translation_structure_mismatch` uses the line of the first element that differs (null when the counts differ or the element does not exist on that side), `translation_switcher_invalid` uses the first non-blank line after the title (the title line if there is none, or null if there is no title either), and `link_language_mismatch` and `link_to_record` use the line of the link.
+The line for each kind is in the table in [findings.md](../findings.md#list-of-kinds).
 
-## 終了コード
+## Exit codes
 
-<!-- @kotowari[TBL-core-002:46c482a8] -->
+<!-- @kotowari[TBL-core-002:14c565f2] -->
 
-| コード | 意味 |
+| Code | Meaning |
 |---|---|
-| 0 | 誤りが無い（注意だけのときを含む） |
-| 1 | 誤りが1件以上ある |
-| 2 | 停止した（設定が読めない、置き場が無いなど） |
+| 0 | No errors (including when there are only notices) |
+| 1 | One or more errors |
+| 2 | Stopped (the configuration could not be read, a location is missing, and so on) |
 
-停止したときは標準出力に何も出さず、理由を標準エラーに出します（[cli.md](../cli.md#停止)）。
+When kotowari stops, it prints nothing to standard output and prints the reason to standard error ([cli.md](../cli.md#stopping)).
 
-## 例
+## Example
 
-挨拶を返すだけの小さなコマンドの IR を書いた場面です。
-置いたのは、次の5つのファイルと1つの空のディレクトリです。
+This is a scenario where you have written the IR for a small command that just returns a greeting.
+You have placed the following five files and one empty directory.
 
 ```text
 .kotowari/config.yaml                     設定（tests.files に "tests/**/*.rs"）
@@ -196,11 +198,13 @@ docs/ir/greet/greet.md                    IR の本体
 tests/greet.rs                            テスト2本
 ```
 
-### 書いたばかりの IR を検査する
+(In order: the configuration with `"tests/**/*.rs"` in `tests.files`; a decision record with two decisions, A1 and A2; an empty directory; a glossary containing only "挨拶文" (greeting text); the main IR document; and two tests.)
 
-<!-- @kotowari[REQ-core-085:9c02a2ea, REQ-core-086:190ec5a3, REQ-core-137:192fc62f] -->
+### Checking freshly written IR
 
-IR の本体（`docs/ir/greet/greet.md`）とテストは次のとおりです。
+<!-- @kotowari[REQ-core-085:288046ea, REQ-core-086:8035b3f8, REQ-core-137:cb66f5a8] -->
+
+The main IR document (`docs/ir/greet/greet.md`) and the tests are as follows.
 
 ````markdown
 # 挨拶
@@ -264,13 +268,13 @@ $ kotowari check | jq '.findings[0]'
 }
 ```
 
-### テストの印を直す
+### Fixing the test marks
 
-<!-- @kotowari[REQ-core-085:9c02a2ea, REQ-core-137:192fc62f] -->
+<!-- @kotowari[REQ-core-085:288046ea, REQ-core-137:cb66f5a8] -->
 
-`rejects_empty_name` に印を足し、`greets_with_name` の印をシナリオの ID に替えます。
-シナリオの印は、そのシナリオの `@about` の要求の分も満たします。
-今は作らないと決めた要求なら、印の代わりに[後回し](../deferred.md)を宣言してもこの誤りは消えます。
+Add a mark to `rejects_empty_name`, and change the mark on `greets_with_name` to the scenario's ID.
+A scenario mark also covers the requirement named in that scenario's `@about`.
+If you have decided not to build a requirement for now, declaring a [deferral](../deferred.md) instead of adding a mark also clears this error.
 
 ```rust
 // @kotowari[EX-greet-001]
@@ -289,11 +293,11 @@ docs/ir/greet/greet.md:21 [error] unknown_term 停止
 docs/ir/greet/greet.md:21 [error] vague_word 必要に応じて
 ```
 
-### IR を直して0件にする
+### Fixing the IR down to zero findings
 
-<!-- @kotowari[REQ-core-058:0012abf7, REQ-core-064:8b495194, REQ-core-066:5abc2374] -->
+<!-- @kotowari[REQ-core-058:0012abf7, REQ-core-064:75e8708a, REQ-core-066:79261ab9] -->
 
-出典を実在する `#A2` に直し、用語集に「停止」を足し、「必要に応じて」を具体的な文に書き替えます。
+Change the source to `#A2`, which exists; add "停止" (stop) to the glossary; and rewrite "必要に応じて" (as needed) as a concrete statement.
 
 ```markdown
 名前が空のとき、コマンドは`停止`し、理由を標準エラーに出す。
@@ -307,14 +311,14 @@ $ kotowari check | jq -c .
 {"files":2,"lines":36,"findings":[],"counts":{},"tests":{"rs":{"files":1,"query":true}},"guides":{"files":0,"marks":0}}
 ```
 
-各指摘の直し方は [findings.md](../findings.md) にあります。
+How to fix each finding is described in [findings.md](../findings.md).
 
-### 注意だけが出る
+### Only notices
 
-<!-- @kotowari[REQ-core-038:4dafbd6a, TBL-core-002:46c482a8] -->
+<!-- @kotowari[REQ-core-038:170fdd3e, TBL-core-002:14c565f2] -->
 
-`limits.lines` を20に下げた設定で試すと、行数の注意が出ます。
-注意だけなので終了コードは0です。
+If you try a configuration with `limits.lines` lowered to 20, a notice about the line count appears.
+Since there are only notices, the exit code is 0.
 
 ```console
 $ kotowari check --config notice.yaml --format text
@@ -323,43 +327,43 @@ $ echo $?
 0
 ```
 
-## よくあるつまずき
+## Common pitfalls
 
-### 設定ファイルを置いていないのに `unreadable file` で止まる
+### It stops with `unreadable file` even though there is no configuration file
 
-<!-- @kotowari[REQ-core-018:21dc9fba, REQ-core-012:c9ab4bdd] -->
+<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-012:50c68e4b] -->
 
 ```console
 $ kotowari check --format text
 unreadable file: docs/decision/adr: No such file or directory (os error 2)
 ```
 
-設定ファイルが無くても、既定の置き場（`docs/ir`、`docs/decision/records`、`docs/decision/adr`）は存在している必要があります。
-ADR を使わないなら、空の `docs/decision/adr/` を作るか、設定の `decisions.adr` で別のディレクトリを指してください。
+Even without a configuration file, the default locations (`docs/ir`, `docs/decision/records`, `docs/decision/adr`) must exist.
+If you do not use ADRs, create an empty `docs/decision/adr/`, or point the configuration's `decisions.adr` at another directory.
 
-### テストを書いたのに `tests` が `{}` のまま
+### `tests` stays `{}` even though tests are written
 
-<!-- @kotowari[REQ-core-128:fff622e0, TBL-core-021:f3d23680, REQ-core-015:0e28306b] -->
+<!-- @kotowari[REQ-core-128:e6139f2c, TBL-core-021:d85afd29, REQ-core-015:44b9e418] -->
 
-`tests.files` の glob がテストのファイルに当たっていません。
-既定は `src/**/*.rs` と `tests/**/*.rs` だけです。
-Rust 以外のテストや、別の場所のテストは、設定の `tests.files` に glob を書いてください。
-書いた一覧は既定を置き換えるので、既定の2つも要るなら並べて書きます。
+The globs in `tests.files` do not match your test files.
+The defaults are only `src/**/*.rs` and `tests/**/*.rs`.
+For tests in languages other than Rust, or tests in other places, write globs in the configuration's `tests.files`.
+The list you write replaces the defaults, so if you still need the two defaults, list them as well.
 
-### ガイドを書いたのに `guides.files` が0
+### `guides.files` is 0 even though guides are written
 
-<!-- @kotowari[REQ-core-206:461185b6] -->
+<!-- @kotowari[REQ-core-206:e2f3dc5c] -->
 
-`guides.files` の既定は空の一覧なので、設定に書くまでガイドは読まれません。
-設定に glob を書いてください（[writing-guides.md](../writing-guides.md)）。
+The default for `guides.files` is an empty list, so no guides are read until you set it in the configuration.
+Write globs in the configuration ([writing-guides.md](../writing-guides.md)).
 
-### 印を書いたのに `test_without_id` が消えない
+### `test_without_id` does not go away even though a mark is written
 
-<!-- @kotowari[REQ-core-086:190ec5a3] -->
+<!-- @kotowari[REQ-core-086:8035b3f8] -->
 
-印の位置が違う可能性があります。
-印はテストの直前のコメントの塊に書きます。
-関数の本体の中や、空行で切り離したコメントの印は、指摘も出さずに無視されます。
+The mark may be in the wrong place.
+A mark goes in the comment block immediately before the test.
+A mark inside the function body, or in a comment separated by a blank line, is ignored without any finding.
 
 ```console
 $ kotowari check --format text      # 印を関数の本体の中に書いた
@@ -367,33 +371,17 @@ docs/ir/greet/greet.md:15 [error] requirement_without_test REQ-greet-002
 tests/greet.rs:6 [error] test_without_id rejects_empty_name
 ```
 
-詳しくは [marks.md](../marks.md) にあります。
+(The comment on the first line means "the mark was written inside the function body".)
 
-## なぜこういう作りか
+Details are in [marks.md](../marks.md).
 
-- **注意は終了コードを変えない。**
-  行数や要求の数の超過を「対応必須」と読むと、責務が同じ内容を行数で切ってしまうことが実際に起きました。
-  責務の分離は意味の判断なので、CLI は目安を示すだけにしています。
-  （[records.md A17](../../decision/records/records.md#A17)、[2026-09-16-notice.md A1](../../decision/records/2026-09-16-notice.md#A1)）
-- **`tests` と `guides` の数を JSON に出す。**
-  glob の誤りでファイルが0件になっても、指摘としては何も出ません。
-  数を出しておけば、黙って何も検査していない状態に気付けます。
-  （[2026-09-17-check-reach.md A8](../../decision/records/2026-09-17-check-reach.md#A8)、[2026-09-24-doc-marks.md A17](../../decision/records/2026-09-24-doc-marks.md#A17)）
-- **text に `tests` と `guides` を出さない。**
-  text の1指摘1行の形を崩さないためです。
-  （[2026-09-17-check-reach.md A8](../../decision/records/2026-09-17-check-reach.md#A8)）
-- **置き場が無ければ止まる。**
-  読めない入力を黙って飛ばさない、という全体の方針に従っています。
-  置き場を書き間違えたまま「誤り0件」と答えることがありません。
-  （[records.md A41](../../decision/records/records.md#A41)、[A100](../../decision/records/records.md#A100)）
+## Related
 
-## 関連
+- Specification: [Output format](../../ir/core/output.md), [Finding order and lines](../../ir/core/finding-order.md), [Configuration](../../ir/core/config.md), [Encoding and code block boundaries](../../ir/core/ir-input.md)
+- Rules shared by all commands: [cli.md](../cli.md)
+- Finding kinds and how to fix them: [findings.md](../findings.md)
+- Configuration keys: [config.md](../config.md)
+- See whether everything is in place as a whole: [status](status.md)
+- See items and tests one by one: [list](list.md)
 
-- 仕様: [出力の形](../../ir/core/output.md)、[指摘の並べ方と行](../../ir/core/finding-order.md)、[設定](../../ir/core/config.md)、[文字コードとコードブロックの境界](../../ir/core/ir-input.md)
-- 全コマンド共通の決まり: [cli.md](../cli.md)
-- 指摘の種類と直し方: [findings.md](../findings.md)
-- 設定のキー: [config.md](../config.md)
-- 全体として揃っているかを見る: [status](status.md)
-- 1件ずつの項目とテストを見る: [list](list.md)
-
-`changes.records` を設定すると照合記録の形式と現在の参照を全件検査します。別 base の件でも参照切れは誤りです。`changes.records` のパス成分で名指した隠しディレクトリは読み、名指していない隠しディレクトリは広い `**` でも読みません。通常の tests/guides の隠し除外は変わりません。Git の比較元は不要で、内容の鮮度と変更の coverage は [changes](changes.md) で検査します。
+When `changes.records` is configured, kotowari checks the format and current references of every change record. A broken reference is an error even for records with a different base. Hidden directories named in a path component of `changes.records` are read; hidden directories not named are not read even by a broad `**`. The usual hidden-directory exclusion for tests and guides does not change. No Git comparison base is needed; content freshness and change coverage are checked by [changes](changes.md).

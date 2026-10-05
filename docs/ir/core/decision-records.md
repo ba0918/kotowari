@@ -1,68 +1,70 @@
-# 判断の記録と ADR
+# Decision records and ADRs
 
-出典の先になる判断の記録と ADR の持ち方を扱う。
+English | [日本語](decision-records.ja.md)
+
+Covers how the decision records and ADRs that sources point to are kept.
 
 ## Requirements
 
-### REQ-core-092: 両方を残す
+### REQ-core-092: Keep both
 
 - kind: invariant
 - source: docs/decision/records/records.md#A22, docs/decision/records/2026-09-17-decision-log.md#A5
 - verification: review
-- how_to_verify: 判断の記録と ADR の両方のディレクトリを読むことを `crates/kotowari/src/sources.rs` の `read_texts` で確認
+- how_to_verify: Confirm in `read_texts` of `crates/kotowari/src/sources.rs` that the directories of both the decision records and the ADRs are read
 
-`判断の記録`と、書かれた`ADR`が残る関係が常に成り立つ。`ADR`が1本も無いリポジトリでも成り立つ。
+The relation in which the `decision record` and the `ADR` files that have been written are kept always holds. It holds even in a repository with no `ADR` at all.
 
-### REQ-core-093: 判断の記録は検討のまとまりごと
+### REQ-core-093: A decision record per unit of deliberation
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A22, docs/decision/records/2026-10-01-change-conformance.md#A13
 - verification: review
-- how_to_verify: 判断の記録を読むスキルと記録を確認し、brainstorm の起動なしでも検討ごとに日付と題を付けて保存し、決定の本文の変更を追加の決定と改訂の参照で追えることを確認する
+- how_to_verify: Check the skills and records that read decision records, and confirm that, even without starting brainstorm, each deliberation is saved with a date and a title, and that changes to the body of a decision can be traced through added decisions and revision references
 
-`判断の記録`は常に、brainstorm の起動の有無を問わず、判断を行った検討のまとまりごとに日付と題を付けた別のファイルで残す。既存の決定の行を別の決定で上書きせず、変更は追加の決定と改訂の参照で残す。
+A `decision record` is always kept as a separate file, with a date and a title, for each unit of deliberation in which decisions were made, whether or not brainstorm was started. An existing decision line is not overwritten by another decision; a change is kept as an added decision and a revision reference.
 
-### REQ-core-094: ADR の節
+### REQ-core-094: Sections of an ADR
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A43, docs/decision/records/records.md#A50
 - verification: review
-- how_to_verify: ADR の節の検査は出典のための見出し照合のみ。5節の構造検査はしない
+- how_to_verify: The only check of ADR sections is the heading match for sources. The structure of the five sections is not checked
 
-`ADR`は常に、「状況」「決定」「理由」「却下した案」「結果」の5つの節を持つ。
+An `ADR` always has the five sections 「状況」 (context), 「決定」 (decision), 「理由」 (reasons), 「却下した案」 (rejected options) and 「結果」 (consequences).
 
-### REQ-core-095: ADR の決定の節
+### REQ-core-095: The decision section of an ADR
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A22, docs/decision/records/records.md#A43
 - verification: review
-- how_to_verify: ADR の決定の節の検査は出典のための見出し照合のみ
+- how_to_verify: The only check of an ADR's decision section is the heading match for sources
 
-`ADR`の「決定」の節は常に、`判断の記録`の`決定の番号`を指し、振る舞いの文を繰り返さない。
+The 「決定」 section of an `ADR` always points to the `decision number` of a `decision record` and does not repeat the behaviour statements.
 
-### REQ-core-096: ADR だけにしない
+### REQ-core-096: Not ADRs alone
 
 - kind: prohibition
 - source: docs/decision/records/records.md#R1
 - verification: review
-- how_to_verify: kotowari は ADR だけの運用を禁止する検査をしない（設定に両方のパスが必要）
+- how_to_verify: kotowari has no check that forbids running with ADRs only (the configuration requires both paths)
 
-記録の運用は、`ADR`だけにして判断1件ごとに`ADR`を切ることをしてはならない。
+The record-keeping practice shall not use `ADR` files alone, cutting one `ADR` per decision.
 
-### REQ-core-097: 既存の ADR を消さない
+### REQ-core-097: Existing ADRs are not deleted
 
 - kind: prohibition
 - source: docs/decision/records/2026-09-17-decision-log.md#A5, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
 - verification: review
-- how_to_verify: `- source:` の行、`@source=` のタグ、用語集の出典の列に現れる `docs/decision/adr/` のファイルを列挙し（`rg -o 'docs/decision/adr/[^ ,|]+' docs/ir` の出典の行だけ）、そのファイルがすべて存在することを確認。2026-09-17 時点で 0002 と 0003
+- how_to_verify: List the files under `docs/decision/adr/` that appear in `- source:` lines, `@source=` tags, and the source column of glossaries (only the source lines from `rg -o 'docs/decision/adr/[^ ,|]+' docs/ir`), and confirm that all of those files exist. As of 2026-09-17 these are 0002 and 0003
 
-記録の運用は、既存の`ADR`を消すことをしてはならない。
+The record-keeping practice shall not delete an existing `ADR`.
 
-### REQ-core-103: ADR のファイル名
+### REQ-core-103: ADR file names
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A3, docs/decision/records/records.md#A23
 - verification: review
-- how_to_verify: ADR のファイル名形式は出典の検査時に見るが、形式自体は検査しない
+- how_to_verify: The ADR file name format is looked at when checking sources, but the format itself is not checked
 
-`ADR`のファイル名は常に、"0001-<slug>.md" の形である。
+The file name of an `ADR` is always of the form "0001-<slug>.md".

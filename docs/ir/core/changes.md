@@ -1,118 +1,120 @@
-# 変更に対する照合の検査
+# Conformance inspection of changes
 
-変更照合の専用コマンドが、指定された Git の変更と照合記録の対応・鮮度を検査する責務を扱う。具体的な引数と対象は changes-inputs.md、指摘の出力は changes-results.md に定める。
+English | [日本語](changes.ja.md)
+
+Covers the responsibility of the change conformance command to inspect the correspondence and freshness between the given Git changes and the change records. The concrete arguments and targets are defined in changes-inputs.md, and the output of findings in changes-results.md.
 
 ## Requirements
 
-### REQ-core-240: 専用コマンド
+### REQ-core-240: Dedicated command
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-conformance.md#A2
 - verification: unit
 
-kotowari は常に、変更に対する照合の欠落と古さを検査する専用コマンド "kotowari changes" を持つ。
+kotowari always has a dedicated command "kotowari changes" that inspects changes for missing and stale conformance.
 
-### REQ-core-241: 変更の独立した列挙
+### REQ-core-241: Independent enumeration of changes
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-conformance.md#A3
 - verification: unit
 
-変更照合の専用コマンドは常に、呼び出し元が指定した比較元と対象から Git の変更を取り出し、設定された検査対象ファイルの追加・変更・削除をファイル単位で列挙する。照合記録の対象ファイル一覧だけから検査対象を作ってはならない。
+The change conformance command always takes the Git changes from the comparison base and the target given by the caller, and enumerates, per file, the additions, modifications and deletions of the configured files to inspect. It must not build the set of files to inspect only from the list of target files in the change records.
 
-### REQ-core-242: 対象変更の照合漏れ
+### REQ-core-242: Target changes missing conformance
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-conformance.md#A3, docs/decision/records/2026-10-01-change-conformance.md#A4, docs/decision/records/2026-10-01-change-conformance.md#A6
 - verification: unit
 
-変更照合の専用コマンドは常に、列挙した対象変更のうち照合記録のどの件にも対応しないものを、照合の欠落として検出して出す。複数ファイルを1件で照合しても、対応するファイルの変更をすべて照合対象として明示する。
+The change conformance command always detects and reports, as missing conformance, each enumerated target change that corresponds to no entry of any change record. Even when several files are checked in one entry, the changes of every corresponding file are stated explicitly as conformance targets.
 
-### REQ-core-243: コードとテストの鮮度
-
-- kind: ubiquitous
-- source: docs/decision/records/2026-10-01-change-conformance.md#A4, docs/decision/records/2026-10-01-change-conformance.md#A6
-- verification: unit
-
-変更照合の専用コマンドは常に、照合記録にある対象内容の識別値と検査対象の内容の識別値が一致しない件を、再照合が必要な件として検出して出す。
-
-### REQ-core-244: 関連仕様の鮮度
+### REQ-core-243: Freshness of code and tests
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-change-conformance.md#A4, docs/decision/records/2026-10-01-change-conformance.md#A6
 - verification: unit
 
-変更照合の専用コマンドは常に、照合記録にある関連する`IR`の内容の識別値と検査対象の`IR`の内容の識別値が一致しない件を、再照合が必要な件として検出して出す。
+The change conformance command always detects and reports, as an entry that needs conformance checked again, an entry whose identifier of the target contents in the change record does not match the identifier of the inspected contents.
 
-### REQ-core-245: テスト差分だけで対象を狭めない
+### REQ-core-244: Freshness of the related specification
+
+- kind: ubiquitous
+- source: docs/decision/records/2026-10-01-change-conformance.md#A4, docs/decision/records/2026-10-01-change-conformance.md#A6
+- verification: unit
+
+The change conformance command always detects and reports, as an entry that needs conformance checked again, an entry whose identifier of the contents of the related `IR` in the change record does not match the identifier of the contents of the inspected `IR`.
+
+### REQ-core-245: The target is not narrowed by test differences alone
 
 - kind: prohibition
 - source: docs/decision/records/2026-10-01-change-conformance.md#A7
 - verification: unit
 
-変更照合の専用コマンドは、`テスト`の期待値に変更が無いことだけを理由に、設定された検査対象ファイルに含まれる製品コードや補助関数の変更を検査対象から外してはならない。
+The change conformance command must not drop changes to product code or helper functions included in the configured files to inspect from the inspection merely because the expected values of a `test` did not change.
 
-### REQ-core-246: ステージされた対象
+### REQ-core-246: Staged target
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-conformance-at-integration.md#A2
 - verification: unit
 
-変更照合の専用コマンドは常に、"--staged" の検査では HEAD とステージ済みの内容を比較し、ステージされていない作業ツリーの変更をコミット対象として数えない。
+The change conformance command always, in a "--staged" inspection, compares HEAD with the staged contents, and does not count unstaged changes in the working tree as part of the commit.
 
-### REQ-core-247: 最終検査の対象
+### REQ-core-247: Target of the final inspection
 
 - kind: prohibition
 - source: docs/decision/records/2026-10-01-conformance-at-integration.md#A1, docs/decision/records/2026-10-01-change-conformance.md#A12
 - verification: unit
 
-変更照合の専用コマンドは常に、cycle の最終検査と CI では、呼び出し元が指定した比較元から対象ブランチ全体の変更を検査する。直前の1コミットだけを最終検査の対象にしてはならない。
+The change conformance command always, in cycle's final inspection and in CI, inspects the changes of the whole target branch from the comparison base given by the caller. It must not make only the last single commit the target of the final inspection.
 
 ## Examples
 
 ```gherkin
 @id=EX-core-430 @about=REQ-core-241,REQ-core-242 @source=docs/decision/records/2026-10-01-change-conformance.md#A3,docs/decision/records/2026-10-01-change-conformance.md#A6
-Scenario: 申告されない変更を拾う
-  Given 設定された対象ファイル2つに変更があり、照合記録は片方だけを対象にしている
-  When 変更照合の専用コマンドでその比較元と対象を検査する
-  Then 記録されていない変更について照合の欠落が検出されて出る
+Scenario: Changes not declared are picked up
+  Given two configured target files have changes, and the change record targets only one of them
+  When the change conformance command inspects that comparison base and target
+  Then missing conformance is detected and reported for the unrecorded change
 
 @id=EX-core-431 @about=REQ-core-242 @source=docs/decision/records/2026-10-01-change-conformance.md#A3,docs/decision/records/2026-10-01-change-conformance.md#A4
-Scenario: 複数ファイルを意図ごとにまとめる
-  Given 対象変更2つが、同じ変更意図の照合記録1件にどちらも明示されている
-  When 変更照合の専用コマンドでその比較元と対象を検査する
-  Then この2つについて照合の欠落は出ない
+Scenario: Several files are grouped per intent
+  Given two target changes are both stated explicitly in one change record entry for the same change intent
+  When the change conformance command inspects that comparison base and target
+  Then no missing conformance is reported for these two
 
 @id=EX-core-432 @about=REQ-core-243 @source=docs/decision/records/2026-10-01-change-conformance.md#A4,docs/decision/records/2026-10-01-change-conformance.md#A6
-Scenario: 照合後にコードが変わる
-  Given 照合記録が対象ファイルの以前の内容の識別値を持つ
-  And 検査対象の内容は照合後に変わっている
-  When 変更照合の専用コマンドでその対象を検査する
-  Then その件について再照合が必要な件として検出されて出る
+Scenario: The code changes after the conformance check
+  Given a change record holds the identifier of a target file's previous contents
+  And the inspected contents changed after the conformance check
+  When the change conformance command inspects that target
+  Then that entry is detected and reported as an entry that needs conformance checked again
 
 @id=EX-core-433 @about=REQ-core-244 @source=docs/decision/records/2026-10-01-change-conformance.md#A4,docs/decision/records/2026-10-01-change-conformance.md#A6
-Scenario: コードが同じでも仕様が変わる
-  Given 対象ファイルは照合時と同じで、関連する`IR`の内容が照合後に変わっている
-  When 変更照合の専用コマンドでその対象を検査する
-  Then その件について再照合が必要な件として検出されて出る
+Scenario: The specification changes while the code stays the same
+  Given the target file is the same as at the conformance check, and the contents of the related `IR` changed after it
+  When the change conformance command inspects that target
+  Then that entry is detected and reported as an entry that needs conformance checked again
 
 @id=EX-core-434 @about=REQ-core-241,REQ-core-245 @source=docs/decision/records/2026-10-01-change-conformance.md#A3,docs/decision/records/2026-10-01-change-conformance.md#A7
-Scenario: テストを変えない製品コードの変更
-  Given 設定された対象の製品コードが変わり、`テスト`の期待値は変わっていない
-  When 変更照合の専用コマンドでその比較元と対象を検査する
-  Then 製品コードの変更は照合対象に含まれる
+Scenario: A product code change that does not change tests
+  Given configured product code changed, and the expected values of the `test` did not change
+  When the change conformance command inspects that comparison base and target
+  Then the product code change is included in the conformance targets
 
 @id=EX-core-435 @about=REQ-core-246 @source=docs/decision/records/2026-10-01-conformance-at-integration.md#A2
-Scenario: コミット対象と作業ツリーを分ける
-  Given ファイルにステージ済みの変更と、追加のステージされていない変更がある
-  When "--staged" で変更照合を実行する
-  Then ステージ済みの内容を対象に検査し、追加の変更をコミット対象として数えない
+Scenario: What is committed is separated from the working tree
+  Given a file has staged changes and additional unstaged changes
+  When change conformance is run with "--staged"
+  Then the staged contents are inspected, and the additional changes are not counted as part of the commit
 
 @id=EX-core-436 @about=REQ-core-247,REQ-core-242 @source=docs/decision/records/2026-10-01-change-conformance.md#A3,docs/decision/records/2026-10-01-change-conformance.md#A6,docs/decision/records/2026-10-01-change-conformance.md#A12,docs/decision/records/2026-10-01-conformance-at-integration.md#A1
-Scenario: 以前のコミットにある未照合変更
-  Given ブランチの以前のコミットに照合されていない対象変更があり、直前のコミットには照合記録だけがある
-  When 指定された比較元からブランチ全体を最終検査する
-  Then 以前のコミットの未照合変更について照合の欠落が検出されて出る
+Scenario: Unchecked changes in an earlier commit
+  Given an earlier commit of the branch has a target change not checked for conformance, and the last commit has only change records
+  When the whole branch is given the final inspection from the given comparison base
+  Then missing conformance is detected and reported for the unchecked change of the earlier commit
 
 ```
 

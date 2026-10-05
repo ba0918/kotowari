@@ -1,130 +1,132 @@
-# 設定
+# Configuration
 
-設定ファイルの場所、キーと既定の値、設定の誤りを扱う。
+English | [日本語](config.ja.md)
+
+Covers the location of the configuration file, its keys and default values, and configuration errors.
 
 ## Requirements
 
-### REQ-core-011: 設定ファイルの場所
+### REQ-core-011: Location of the configuration file
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A2, docs/decision/records/records.md#A37, docs/decision/records/2026-09-24-plan-schema.md#A15
 - verification: unit
 
-"kotowari plan" でないコマンドで "--config" を受けないとき、kotowari は`基準のディレクトリ`の ".kotowari/config.yaml" を`設定ファイル`として読む。
+When a command other than "kotowari plan" does not receive "--config", kotowari reads ".kotowari/config.yaml" in the `base directory` as the `configuration file`.
 
-### REQ-core-012: 設定ファイルが無いとき
+### REQ-core-012: When there is no configuration file
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A60, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135
 - verification: unit
 
-"--config" を受けずに`設定ファイル`が無いとき、kotowari は既定の値で検査を行う。`設定ファイル`が空（0バイトか注釈だけ）のときは、"--config" で指したものでも既定の値で検査を行う。
+When "--config" is not received and there is no `configuration file`, kotowari checks with the default values. When the `configuration file` is empty (0 bytes or only comments), kotowari checks with the default values, even if it is the one pointed to by "--config".
 
-### REQ-core-013: キーと既定の値
+### REQ-core-013: Keys and default values
 
 - kind: algorithm
 - source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/2026-09-16-notice.md#A5, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A6
 - definition: TBL-core-004
 - verification: unit
 
-### REQ-core-014: 設定の誤り
+### REQ-core-014: Configuration errors
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A93, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A161, docs/decision/records/2026-09-24-doc-marks.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A7, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-02-whole-picture.md#A76
 - verification: unit
 
-`設定ファイル`が YAML として読めないとき、または`設定ファイル`に知らないキー、同じキーの2回目、値が null のキー（"ir:" だけの行。空の一覧は REQ-core-016 のとおり受ける）、型の違う値、負の数、0、絶対パスの値（先頭が "/" のもの）、"vague_words" の空の文字列の要素か同じ語の2回目、"tests.files"、"guides.files"、"surface.files"、"overview.files" のいずれかの glob として読めない要素のいずれかがあるとき、kotowari は設定の誤りを理由に`停止`する。
+When the `configuration file` cannot be read as YAML, or when the `configuration file` contains any of the following: an unknown key, a second occurrence of the same key, a key whose value is null (a line with only "ir:"; an empty list is accepted as in REQ-core-016), a value of the wrong type, a negative number, 0, an absolute-path value (one starting with "/"), an empty-string element or a second occurrence of the same word in "vague_words", or an element of any of "tests.files", "guides.files", "surface.files" or "overview.files" that cannot be read as a glob, kotowari will `stop` on the grounds of a configuration error.
 
-### REQ-core-015: 一覧は既定を置き換える
+### REQ-core-015: A list replaces the default
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A41
 - verification: unit
 
-kotowari は常に、一覧のキーに一覧だけを受け、書かれた一覧で既定の一覧を置き換える。
+kotowari always accepts only a list for a list key, and replaces the default list with the list written.
 
-### REQ-core-016: 空の一覧
+### REQ-core-016: Empty lists
 
 - kind: event_driven
 - source: docs/decision/records/2026-10-01-change-details.md#A2, docs/decision/records/records.md#A59
 - verification: unit
 
-一覧のキーに空の一覧が書かれているとき、kotowari はそのキーを要素の無い一覧として扱う。ただし changes.files と changes.records の空の一覧は設定の誤りで停止する。
+When an empty list is written for a list key, kotowari treats that key as a list with no elements. However, an empty list for changes.files or changes.records stops the run as a configuration error.
 
-### REQ-core-017: 入れ子のキー
+### REQ-core-017: Nested keys
 
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A59
 - verification: unit
 
-kotowari は常に、`設定ファイル`のキーを入れ子の形（"decisions:" の下の "records:"）で読む。
+kotowari always reads the keys of the `configuration file` in nested form ("records:" under "decisions:").
 
-### REQ-core-018: 置き場が無いとき
+### REQ-core-018: When a location is missing
 
 - kind: event_driven
 - source: docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A66, docs/decision/records/records.md#A95, docs/decision/records/records.md#A96, docs/decision/records/records.md#A124, docs/decision/records/records.md#A146, docs/decision/records/2026-09-16-ir-tree.md#A16, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-24-doc-marks.md#A16, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-02-whole-picture.md#A76
 - verification: unit
 
-"kotowari check" で、"ir"、"decisions.records"、"decisions.adr" の指す先が無いとき、ディレクトリでないとき、または読めないとき、kotowari は読めないファイルを理由に`停止`する。"ir"、"decisions.records"、"decisions.adr" の下のディレクトリが読めないとき、"tests.files"、"guides.files"、"surface.files"、"overview.files" の走査でディレクトリが読めないとき、および走査で先の無いシンボリックリンクに出会ったときも同じ理由で`停止`する。
+In "kotowari check", when the target of "ir", "decisions.records" or "decisions.adr" does not exist, is not a directory, or cannot be read, kotowari will `stop` on the grounds of an unreadable file. It will also `stop` for the same reason when a directory under "ir", "decisions.records" or "decisions.adr" cannot be read, when a directory cannot be read while scanning "tests.files", "guides.files", "surface.files" or "overview.files", and when a scan meets a symbolic link with no target.
 
-### REQ-core-019: glob の読み方
+### REQ-core-019: How globs are read
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-01-current-change-records.md#A8, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71
 - verification: unit
 
-kotowari は常に、glob の "**" を再帰として読む。changes の Git 対象列挙と、check/status の changes.records がパス成分で明示した隠し配下の照合記録探索と、overview.files がパス成分で明示した隠し配下の`全体像の元データ`の探索を除き、隠しディレクトリを glob が名指ししても含めない。広い "**" だけでは未指定の隠し配下へ入らない。隠しファイルは glob が当てれば読み、ディレクトリのシンボリックリンクを辿らない。
+kotowari always reads "**" in a glob as recursion. Except for the enumeration of Git targets in changes, the search for conformance records under hidden directories that changes.records names explicitly by a path component in check/status, and the search for `overview data` under hidden directories that overview.files names explicitly by a path component, it does not include hidden directories even when a glob names them. A broad "**" alone does not enter hidden directories that are not specified. It reads hidden files when a glob matches them, and does not follow symbolic links to directories.
 
-### REQ-core-020: 直下の kotowari.toml を読まない
+### REQ-core-020: kotowari.toml at the root is not read
 
 - kind: prohibition
 - source: docs/decision/records/records.md#R6, docs/decision/records/2026-09-17-check-reach.md#A3, docs/decision/records/2026-09-17-check-reach.md#A4
 - verification: unit
 
-kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`として読んではならない。
+kotowari shall not read "kotowari.toml" directly under the repository root as the `configuration file`.
 
 ## Decision tables
 
-### TBL-core-004: キーと既定の値
+### TBL-core-004: Keys and default values
 
 - source: docs/decision/records/2026-10-01-change-details.md#A2, docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/records.md#A62, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-notice.md#A5, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A9, docs/decision/records/2026-09-24-multi-language-tests.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A4, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A3, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-05-overview-index.md#A10, docs/decision/records/2026-10-05-overview-index.md#A11, docs/decision/records/2026-10-05-localization.md#A16, docs/decision/records/2026-10-05-localization.md#A40, docs/decision/records/2026-10-05-localization.md#A21, docs/decision/records/2026-10-05-localization.md#A7
 
-| キー | 値 | 既定 |
+| Key | Value | Default |
 |---|---|---|
-| ir | ディレクトリのパス（1つの文字列） | docs/ir |
-| decisions.records | ディレクトリのパス（1つの文字列）。その下のファイルの決定を出典に指せる。判断の記録でない Markdown（形の契約、補足の文書）も置ける | docs/decision/records |
-| decisions.adr | ディレクトリのパス（1つの文字列） | docs/decision/adr |
-| tests.files | glob の一覧 | src/\*\*/\*.rs、tests/\*\*/\*.rs |
-| guides.files | glob の一覧。`ガイド`の置き場（guides.md） | 空の一覧 |
-| tests.rust.attributes | "#[test]" に足す属性のパスの一覧 | 空の一覧 |
-| tests.rust.macros | マクロの名前の一覧 | 空の一覧 |
-| tests.rules | ast-grep のルールの YAML ファイルのパスの一覧。基準のディレクトリからの相対パスで、glob は使えない（query-rules.md） | 空の一覧 |
-| mutants.equivalents | ファイルのパス（1つの文字列）。等価の一覧を指す | 無し（鍵が無ければ等価の一覧は0件） |
-| surface.files | glob の一覧。`面のファイル`の置き場（surface.md） | 空の一覧 |
-| surface.rules | ast-grep のルールの YAML ファイルのパスの一覧。基準のディレクトリからの相対パスで、glob は使えない。空の一覧でなければ面の検査を行う（surface.md） | 空の一覧 |
-| surface.unspecified | ファイルのパス（1つの文字列）。未記載の面の一覧を指す（surface-unspecified.md） | 無し（鍵が無ければ未記載の面の一覧は0件） |
-| limits.lines | 数（負の数と0は不可） | 200 |
-| limits.requirements | 数（負の数と0は不可） | 10 |
-| vague_words | 語の一覧 | 「適切に」「必要に応じて」「通常は」「など」の4語 |
-| changes.files | 変更照合の対象の相対 glob 一覧。changes を書くときは必須で空不可 | changes の省略時は照合記録検査なし |
-| changes.exclude | 変更照合の対象から外す相対 glob 一覧 | 空の一覧 |
-| changes.records | 照合記録の相対 glob 一覧。changes を書くときは必須で空不可 | changes の省略時は照合記録検査なし |
-| overview.files | glob の一覧。`全体像の元データ`の置き場（overview-data.md）。overview を書くときは必須 | overview の省略時は`全体像の元データ`を読まない |
-| overview.toc | ファイルのパス（1つの文字列）。`目次`を指す（overview-toc.md）。overview を書くときは必須 | overview の省略時は`目次`を読まない |
-| languages | 言語タグの一覧。`言語の一覧`（translation-pairs.md） | 無し（"en" だけの`言語の一覧`とみなす） |
-| labels | 言語タグから、`UI の文字`の鍵から文字列への対応表への対応表（overview-languages.md） | 無し（英語の`UI の文字`は kotowari が持つ） |
+| ir | A directory path (one string) | docs/ir |
+| decisions.records | A directory path (one string). Decisions in the files under it can be cited as sources. Markdown that is not a decision record (form contracts, supplementary documents) can also be placed there | docs/decision/records |
+| decisions.adr | A directory path (one string) | docs/decision/adr |
+| tests.files | A list of globs | src/\*\*/\*.rs, tests/\*\*/\*.rs |
+| guides.files | A list of globs. The location of the `guide` files (guides.md) | An empty list |
+| tests.rust.attributes | A list of attribute paths added to "#[test]" | An empty list |
+| tests.rust.macros | A list of macro names | An empty list |
+| tests.rules | A list of paths of ast-grep rule YAML files. Relative to the base directory; globs cannot be used (query-rules.md) | An empty list |
+| mutants.equivalents | A file path (one string). Points to the list of equivalents | None (without the key the list of equivalents has 0 entries) |
+| surface.files | A list of globs. The location of each `surface file` (surface.md) | An empty list |
+| surface.rules | A list of paths of ast-grep rule YAML files. Relative to the base directory; globs cannot be used. If not an empty list, the surface check is performed (surface.md) | An empty list |
+| surface.unspecified | A file path (one string). Points to the list of unspecified surfaces (surface-unspecified.md) | None (without the key the list of unspecified surfaces has 0 entries) |
+| limits.lines | A number (negative numbers and 0 are not allowed) | 200 |
+| limits.requirements | A number (negative numbers and 0 are not allowed) | 10 |
+| vague_words | A list of words | The four words 「適切に」「必要に応じて」「通常は」「など」 |
+| changes.files | A list of relative globs for the targets of change conformance. Required and non-empty when changes is written | When changes is omitted, there is no check of conformance records |
+| changes.exclude | A list of relative globs removed from the targets of change conformance | An empty list |
+| changes.records | A list of relative globs for conformance records. Required and non-empty when changes is written | When changes is omitted, there is no check of conformance records |
+| overview.files | A list of globs. The location of the `overview data` (overview-data.md). Required when overview is written | When overview is omitted, the `overview data` is not read |
+| overview.toc | A file path (one string). Points to the `table of contents` (overview-toc.md). Required when overview is written | When overview is omitted, the `table of contents` is not read |
+| languages | A list of language tags. The `language list` (translation-pairs.md) | None (treated as a `language list` of only "en") |
+| labels | A map from language tags to maps from `UI text` keys to strings (overview-languages.md) | None (kotowari holds the English `UI text`) |
 
 ## Examples
 
 ```gherkin
 @id=EX-core-003 @about=REQ-core-014 @source=docs/decision/records/records.md#A12,docs/decision/records/records.md#A20,docs/decision/records/records.md#A41
-Scenario: 知らないキーで停止する
-  Given 設定ファイルに "limit:" という知らないキーがある
-  When "kotowari check" を実行する
-  Then 終了コードは 2 である
+Scenario: An unknown key stops the run
+  Given the configuration file has an unknown key "limit:"
+  When "kotowari check" is run
+  Then the exit code is 2
 @id=EX-core-383 @about=REQ-core-014 @source=docs/decision/records/2026-09-24-guide-gaps.md#A7,docs/decision/records/ir-form.md#出力
-Scenario: 重複したキーで止まるとき、そのキーを1行で示す
-  Given `設定ファイル`に "ir: docs/ir" の行が2回ある
-  When "kotowari check" を実行する
-  Then 終了コードは 2 で、標準エラーは "config error: " で始まり "duplicate key: ir" を含む1行である
+Scenario: When a duplicate key stops the run, that key is shown in one line
+  Given the `configuration file` has the line "ir: docs/ir" twice
+  When "kotowari check" is run
+  Then the exit code is 2 and standard error is one line that starts with "config error: " and contains "duplicate key: ir"
 ```

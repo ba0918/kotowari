@@ -157,3 +157,65 @@ fn different_file_groupings_cover_the_same_changes() {
     let value = serde_json::to_value(result).unwrap();
     assert_eq!(value.as_object().unwrap().len(), 6);
 }
+// @kotowari[REQ-core-342]
+#[test]
+fn a_requirement_of_an_ir_pair_is_defined_by_the_first_language_side() {
+    let keys = [
+        "language_name",
+        "index_link",
+        "pages {n}",
+        "stale_sections {n}",
+        "open_items {n}",
+        "planned_items {n}",
+        "stale_mark",
+        "outline_stale",
+        "superseded",
+        "deferred",
+        "compare_before",
+        "compare_after",
+        "compare_why",
+        "state_decided",
+        "state_planned",
+        "state_open",
+        "state_dropped",
+    ];
+    let mut yaml = String::from("languages: [en, fr]\nlabels:\n  fr:\n");
+    for key in keys {
+        let name = key.split(' ').next().unwrap();
+        yaml.push_str(&format!("    {name}: \"fr {key}\"\n"));
+    }
+    yaml.push_str("changes:\n  files: ['src/**']\n  records: ['docs/changes/**']\n");
+    let ir = "# A\n\nScope.\n\n## Requirements\n\n### REQ-core-001: Name\n\n- kind: ubiquitous\n- source: docs/decision/records/test.md#A1\n- verification: unit\n\nStatement.\n";
+    let blob = |bytes: &[u8]| Blob {
+        mode: "100644".into(),
+        bytes: bytes.to_vec(),
+    };
+    let record = format!(
+        "version: 1\nentries:\n- id: impl\n  base: '{}'\n  role: implementer\n  files: [{{path: src/a, before: null, after: '{}'}}]\n  ir: [{{path: docs/ir/a.md, sha256: '{}'}}]\n  conclusion: existing\n  reason: reason\n  requirements: [REQ-core-001]\n  decisions: []\n  handoff: null\n  gaps: []\n",
+        "0".repeat(40),
+        blob(b"new").identity(),
+        ir_identity(ir.as_bytes())
+    );
+    let s = Snapshot {
+        base: "0".repeat(40),
+        target: "1".repeat(40),
+        config: Config::parse(&yaml).unwrap(),
+        files: vec![change_records::FileChange {
+            path: "src/a".into(),
+            before: None,
+            after: Some(blob(b"new").identity()),
+        }],
+        blobs: BTreeMap::from([
+            ("src/a".into(), blob(b"new")),
+            ("docs/ir/a.md".into(), blob(ir.as_bytes())),
+            ("docs/ir/a.fr.md".into(), blob(ir.as_bytes())),
+            ("docs/changes/test.yaml".into(), blob(record.as_bytes())),
+        ]),
+    };
+    let result = kotowari_core::changes::inspect(&s, Phase::Implementation).unwrap();
+    assert!(
+        !has(&result, "change_record_invalid"),
+        "{:?}",
+        result.findings
+    );
+}

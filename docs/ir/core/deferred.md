@@ -1,142 +1,144 @@
-# 後回し
+# Deferral
 
-`要求`を`後回し`にする宣言の書き方と読み方、`後回し`と`テスト`の`印`や参照の食い違いで出す`注意`、`後回し`の扱いをスキルに書くことを扱う。テストの無さの検査から外すところは coverage.md が、数え方は status.md と list.md が扱う。
+English | [日本語](deferred.ja.md)
+
+Covers how a declaration that puts a `requirement` under `deferral` is written and read, the `notice` findings emitted for mismatches between a `deferral` and the `mark` of a `test` or a reference, and writing the handling of `deferral` into the skills. Exclusion from the check for missing tests is covered by coverage.md, and counting by status.md and list.md.
 
 ## Requirements
 
-### REQ-core-208: 後回しの宣言
+### REQ-core-208: Declaring a deferral
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-25-deferred-items.md#A1, docs/decision/records/2026-09-25-deferred-items.md#A10, docs/decision/records/2026-09-25-deferred-items.md#A18, docs/decision/records/2026-09-25-deferred-items.md#A24, docs/decision/records/2026-09-25-deferred-items.md#A25
 - verification: unit
 
-kotowari は常に、見出しの下に "- deferred:" の行を持つ`要求`と、`題名`の後で最初の "## " か "### " より前に "- deferred:" の行（文書単位の宣言）を持つ`話題ごとの文書`のすべての`要求`を`後回し`として扱う。同じ`ID`の`要求`が2か所以上にあるときは、REQ-core-032 の1つ目の`要求`で`後回し`かどうかを決める。"- deferred:" の行の値が空でも`出典`として誤りでも`後回し`として扱い、両方の行があっても`指摘`を出さない。
+kotowari always treats as under `deferral` a `requirement` that has a "- deferred:" line under its heading, and every `requirement` of a `topic document` that has a "- deferred:" line (a document-level declaration) after the `title` and before the first "## " or "### ". When a `requirement` with the same `ID` is in two or more places, whether it is under `deferral` is decided by the first `requirement` per REQ-core-032. It is treated as under `deferral` even if the value of the "- deferred:" line is empty or wrong as a `source`, and no `finding` is emitted even if both lines are present.
 
-### REQ-core-209: 文書単位の宣言の行
+### REQ-core-209: The document-level declaration line
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-25-deferred-items.md#A1, docs/decision/records/2026-09-25-deferred-items.md#A10, docs/decision/records/2026-09-25-deferred-items.md#A19, docs/decision/records/2026-09-25-deferred-items.md#A24, docs/decision/records/2026-09-25-deferred-items.md#A26
 - verification: unit
 
-kotowari は常に、`話題ごとの文書`の`題名`の後で最初の "## " か "### " より前にある "- deferred:" の行を文書単位の宣言として読み、`文書が扱う範囲`の行に数えない。文書単位の "- deferred:" の行が2つ以上あれば2つ目の行に duplicate_field の`誤り`を1件出し、1つ目の行の値だけを読む。`要求`の無い文書の文書単位の宣言にも、要求が無いことを理由とする`指摘`は出さず、出典の検査（REQ-core-210）と duplicate_field は`要求`のある文書と同じに行う。`用語集`と`問題の記録`の文書の同じ位置の "- deferred:" の行には、今までどおり unknown_field の`誤り`を出す。
+kotowari always reads a "- deferred:" line located after the `title` of a `topic document` and before the first "## " or "### " as a document-level declaration, and does not count it as a line of the `scope`. If there are two or more document-level "- deferred:" lines, it emits one duplicate_field `error` on the second line and reads only the value of the first line. For a document-level declaration in a document with no `requirement`, it emits no `finding` on the grounds that there are no requirements, and performs the source check (REQ-core-210) and duplicate_field the same as for a document with a `requirement`. For a "- deferred:" line in the same position in a `glossary` or `flag record` document, it emits an unknown_field `error` as before.
 
-### REQ-core-210: 後回しの出典
+### REQ-core-210: Sources of a deferral
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-25-deferred-items.md#A2, docs/decision/records/2026-09-25-deferred-items.md#A23
 - verification: unit
 
-kotowari は常に、"- deferred:" の行の値をコンマで区切った`出典`の並びとして読み、"- source:" の行と同じ規則（REQ-core-057、REQ-core-058）で検査する。値が空の "- deferred:" の行には、その行を "line" にし detail を "deferred" にした missing_source の`誤り`を出す。
+kotowari always reads the value of a "- deferred:" line as a comma-separated sequence of `source` entries, and checks it by the same rules as the "- source:" line (REQ-core-057, REQ-core-058). For a "- deferred:" line with an empty value, it emits a missing_source `error` with that line as "line" and "deferred" as the detail.
 
-### REQ-core-211: 後回しなのにテストの印がある
+### REQ-core-211: A test mark despite deferral
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-25-deferred-items.md#A11, docs/decision/records/2026-09-25-deferred-items.md#A15, docs/decision/records/2026-09-25-deferred-items.md#A23, docs/decision/records/2026-09-25-deferred-items.md#A24
 - verification: unit
 
-`後回し`の`要求`の`ID`か`後回しのシナリオ`の`ID`を含む`印`が1つ以上あるとき、kotowari は "line" をその`要求`の見出しの行（`シナリオ`はタグの行。同じ`ID`が2か所以上にあるときは REQ-core-032 の1つ目のもの）にし detail をその`ID`にした deferred_with_test の`注意`を、その`ID`につき1件出す。`問い合わせの無い言語`の`テストのファイル`から拾った`印`も数える。
+When at least one `mark` contains the `ID` of a `requirement` under `deferral` or the `ID` of a `deferred scenario`, kotowari emits, once per such `ID`, a deferred_with_test `notice` whose "line" is the heading line of that `requirement` (for a `scenario`, its tag line; when the same `ID` is in two or more places, the first one per REQ-core-032) and whose detail is that `ID`. A `mark` picked up from a `test file` of a `language without a query` is counted too.
 
-### REQ-core-212: 後回しへの依存
+### REQ-core-212: Depending on a deferral
 
 - kind: event_driven
 - source: docs/decision/records/2026-09-25-deferred-items.md#A12, docs/decision/records/2026-09-25-deferred-items.md#A15, docs/decision/records/2026-09-25-deferred-items.md#A17, docs/decision/records/2026-09-25-deferred-items.md#A21, docs/decision/records/2026-09-25-deferred-items.md#A22, docs/decision/records/2026-09-25-deferred-items.md#A23
 - verification: unit
 
-`後回し`でない`要求`か`性質`が "- definition:" の行か`文`の中のバッククォートで囲んだ`ID`で`後回し`の`要求`を指すとき、および`後回しのシナリオ`でない`シナリオ`が "@about" のタグかステップの中のバッククォートで囲んだ`ID`で`後回し`の`要求`を指すとき、kotowari は参照1件ごとに、"line" を参照の書かれた行にし detail を「参照元の`ID`と参照先の`ID`を1つの半角空白で区切った文字列」にした depends_on_deferred の`注意`を出す。`後回し`の`要求`と`後回しのシナリオ`からの参照と、`後回しのシナリオ`への参照には出さない。バッククォートで囲んだ`ID`の判定は REQ-core-054 と同じである。
+When a `requirement` or `property` not under `deferral` points to a `requirement` under `deferral` through its "- definition:" line or through a backticked `ID` in a `statement`, and when a `scenario` that is not a `deferred scenario` points to a `requirement` under `deferral` through its "@about" tag or through a backticked `ID` in a step, kotowari emits, for each reference, a depends_on_deferred `notice` whose "line" is the line where the reference is written and whose detail is the referring `ID` and the referenced `ID` separated by one half-width space. It is not emitted for references from a `requirement` under `deferral` or from a `deferred scenario`, nor for references to a `deferred scenario`. A backticked `ID` is determined the same way as in REQ-core-054.
 
-### REQ-core-213: スキルの後回しの扱い
+### REQ-core-213: Handling of deferral in the skills
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-25-deferred-items.md#A13, docs/decision/records/2026-09-25-deferred-items.md#A23
 - verification: review
-- how_to_verify: "agent/skills/" の下のスキルを読み、kotowari スキルの references の ir-form.md に "- deferred:" の行（要求ごとと文書単位）が、findings.md に deferred_with_test と depends_on_deferred が載っていること、kotowari-plan が`後回し`の`要求`の`ID`を計画に含めないと書いていること、kotowari-cycle と kotowari-review がテストの側の`指摘`を0件にする対象に`後回し`を含めないと書いていること、kotowari-brainstorm が`後回し`にするときに理由の決定を`判断の記録`に書いてそれを出典にすると書いていることを確かめる
+- how_to_verify: Read the skills under "agent/skills/" and confirm that ir-form.md in the kotowari skill's references lists the "- deferred:" line (per requirement and document-level) and findings.md lists deferred_with_test and depends_on_deferred; that kotowari-plan says it does not include the `ID` of a `requirement` under `deferral` in the plan; that kotowari-cycle and kotowari-review say they do not include `deferral` among the targets whose test-side `finding` count must reach 0; and that kotowari-brainstorm says that when deferring, it writes the decision giving the reason into the `decision record` and cites it as the source
 
-"agent/skills/" の下の kotowari のスキルは常に、`後回し`の書き方と、計画、実装のループ、レビュー、壁打ちでの`後回し`の扱いを書いている。
+The kotowari skills under "agent/skills/" always describe how to write a `deferral` and how a `deferral` is handled in planning, the implementation loop, review, and brainstorming.
 
 ## Examples
 
 ```gherkin
 @id=EX-core-384 @about=REQ-core-208,REQ-core-210 @source=docs/decision/records/2026-09-25-deferred-items.md#A1,docs/decision/records/2026-09-25-deferred-items.md#A2,docs/decision/records/2026-09-25-deferred-items.md#A4
-Scenario: 要求ごとの宣言でテストの無さが消える
-  Given "docs/ir/a.md" に検証が "unit" の要求 "REQ-001" があり、その見出しの下に "- deferred: docs/decision/records/r.md#A1" の行があり、"r.md" に決定 "A1" があり、"REQ-001" を含む印はどのテストにも無い
-  When "kotowari check" を実行する
-  Then "REQ-001" を detail にする requirement_without_test は出ず、source_invalid も出ない
+Scenario: A per-requirement declaration removes the missing-test error
+  Given "docs/ir/a.md" has a requirement "REQ-001" with verification "unit", with the line "- deferred: docs/decision/records/r.md#A1" under its heading, "r.md" has the decision "A1", and no test has a mark containing "REQ-001"
+  When "kotowari check" is run
+  Then no requirement_without_test with detail "REQ-001" is emitted, and no source_invalid either
 
 @id=EX-core-385 @about=REQ-core-208,REQ-core-209 @source=docs/decision/records/2026-09-25-deferred-items.md#A1,docs/decision/records/2026-09-25-deferred-items.md#A3,docs/decision/records/2026-09-25-deferred-items.md#A19,docs/decision/records/2026-09-25-deferred-items.md#A4
-Scenario: 文書単位の宣言は文書のすべての要求を後回しにする
-  Given "docs/ir/a.md" の題名の後に範囲の行と "- deferred: docs/decision/records/r.md#A1" の行があり、検証が "unit" の要求 "REQ-001" と "REQ-002" と "@id=EX-001 @about=REQ-001" のシナリオがあり、どれの ID を含む印も無い
-  When "kotowari check" を実行する
-  Then requirement_without_test も scenario_without_test も unknown_field も missing_scope も出ない
+Scenario: A document-level declaration defers every requirement of the document
+  Given "docs/ir/a.md" has, after its title, a scope line and the line "- deferred: docs/decision/records/r.md#A1", requirements "REQ-001" and "REQ-002" with verification "unit", and the scenario "@id=EX-001 @about=REQ-001", and there is no mark containing any of their IDs
+  When "kotowari check" is run
+  Then none of requirement_without_test, scenario_without_test, unknown_field and missing_scope is emitted
 
 @id=EX-core-386 @about=REQ-core-209 @source=docs/decision/records/2026-09-25-deferred-items.md#A19
-Scenario: 宣言の行だけでは範囲にならない
-  Given "docs/ir/a.md" の題名と最初の "## " の間に "- deferred: docs/decision/records/r.md#A1" の行だけがある
-  When "kotowari check" を実行する
-  Then missing_scope の誤りが出る
+Scenario: A declaration line alone is not a scope
+  Given "docs/ir/a.md" has only the line "- deferred: docs/decision/records/r.md#A1" between its title and the first "## "
+  When "kotowari check" is run
+  Then a missing_scope error is emitted
 
 @id=EX-core-387 @about=REQ-core-209 @source=docs/decision/records/2026-09-25-deferred-items.md#A19,docs/decision/records/2026-09-25-deferred-items.md#A26
-Scenario: 文書単位の宣言の重なりは誤り
-  Given "docs/ir/a.md" の範囲の行の間に "- deferred:" の行が2つある
-  When "kotowari check" を実行する
-  Then 2つ目の行に detail が "deferred" の duplicate_field の誤りが1件出る
+Scenario: Duplicate document-level declarations are an error
+  Given "docs/ir/a.md" has two "- deferred:" lines among its scope lines
+  When "kotowari check" is run
+  Then one duplicate_field error with detail "deferred" is emitted on the second line
 
 @id=EX-core-388 @about=REQ-core-209 @source=docs/decision/records/2026-09-25-deferred-items.md#A10
-Scenario: 用語集の宣言は知らない行
-  Given "docs/ir/CONTEXT.md" の題名の後に "- deferred: docs/decision/records/r.md#A1" の行がある
-  When "kotowari check" を実行する
-  Then その行に unknown_field の誤りが出る
+Scenario: A declaration in a glossary is an unknown line
+  Given "docs/ir/CONTEXT.md" has the line "- deferred: docs/decision/records/r.md#A1" after its title
+  When "kotowari check" is run
+  Then an unknown_field error is emitted on that line
 
 @id=EX-core-389 @about=REQ-core-210,REQ-core-208 @source=docs/decision/records/2026-09-25-deferred-items.md#A2,docs/decision/records/2026-09-25-deferred-items.md#A18,docs/decision/records/2026-09-25-deferred-items.md#A23,docs/decision/records/2026-09-25-deferred-items.md#A4
-Scenario: 値の空の宣言は出典の誤りで、要求は後回しのまま
-  Given 検証が "unit" の要求 "REQ-001" の見出しの下に値の空の "- deferred:" の行があり、"REQ-001" を含む印は無い
-  When "kotowari check" を実行する
-  Then その行に detail が "deferred" の missing_source の誤りが出て、requirement_without_test は出ない
+Scenario: A declaration with an empty value is a source error, and the requirement stays deferred
+  Given there is a "- deferred:" line with an empty value under the heading of the requirement "REQ-001" with verification "unit", and there is no mark containing "REQ-001"
+  When "kotowari check" is run
+  Then a missing_source error with detail "deferred" is emitted on that line, and requirement_without_test is not emitted
 
 @id=EX-core-390 @about=REQ-core-210 @source=docs/decision/records/2026-09-25-deferred-items.md#A2,docs/decision/records/2026-09-25-deferred-items.md#A24
-Scenario: 宣言の出典の先が無ければ誤り
-  Given 要求 "REQ-001" の見出しの下に "- deferred: docs/decision/records/r.md#A9" の行があり、"r.md" に決定 "A9" が無い
-  When "kotowari check" を実行する
-  Then その行に source_invalid の誤りが出る
+Scenario: A declaration whose source target does not exist is an error
+  Given there is the line "- deferred: docs/decision/records/r.md#A9" under the heading of the requirement "REQ-001", and "r.md" has no decision "A9"
+  When "kotowari check" is run
+  Then a source_invalid error is emitted on that line
 
 @id=EX-core-391 @about=REQ-core-208 @source=docs/decision/records/2026-09-25-deferred-items.md#A1,docs/decision/records/2026-09-25-deferred-items.md#A18,docs/decision/records/2026-09-25-deferred-items.md#A25
-Scenario: 形の誤りと ID の重なりは後回しでも誤り
-  Given 文書単位の宣言を持つ "docs/ir/a.md" に "- verification:" の行の無い要求 "REQ-001" があり、"docs/ir/b.md" にも "REQ-001" がある
-  When "kotowari check" を実行する
-  Then verification_missing と duplicate_id の誤りが出る
+Scenario: Form errors and duplicate IDs are errors even under deferral
+  Given "docs/ir/a.md", which has a document-level declaration, has a requirement "REQ-001" without a "- verification:" line, and "docs/ir/b.md" also has "REQ-001"
+  When "kotowari check" is run
+  Then verification_missing and duplicate_id errors are emitted
 
 @id=EX-core-392 @about=REQ-core-211 @source=docs/decision/records/2026-09-25-deferred-items.md#A11
-Scenario: 後回しの要求を指す印は注意
-  Given 後回しの要求 "REQ-001" と、"@kotowari[REQ-001]" の印を持つテストがある
-  When "kotowari check" を実行する
-  Then "REQ-001" の見出しの行に detail が "REQ-001" の deferred_with_test の注意が1件出る
+Scenario: A mark pointing to a deferred requirement is a notice
+  Given there are a deferred requirement "REQ-001" and a test with the mark "@kotowari[REQ-001]"
+  When "kotowari check" is run
+  Then one deferred_with_test notice with detail "REQ-001" is emitted on the heading line of "REQ-001"
 
 @id=EX-core-393 @about=REQ-core-211 @source=docs/decision/records/2026-09-25-deferred-items.md#A11,docs/decision/records/2026-09-25-deferred-items.md#A15
-Scenario: 後回しのシナリオを指す印は注意
-  Given 後回しの要求 "REQ-001" と "@id=EX-001 @about=REQ-001" のシナリオがあり、"@kotowari[EX-001]" の印を持つテストがある
-  When "kotowari check" を実行する
-  Then そのタグの行に detail が "EX-001" の deferred_with_test の注意が1件出る
+Scenario: A mark pointing to a deferred scenario is a notice
+  Given there are a deferred requirement "REQ-001" and the scenario "@id=EX-001 @about=REQ-001", and a test with the mark "@kotowari[EX-001]"
+  When "kotowari check" is run
+  Then one deferred_with_test notice with detail "EX-001" is emitted on that tag line
 
 @id=EX-core-394 @about=REQ-core-212 @source=docs/decision/records/2026-09-25-deferred-items.md#A12,docs/decision/records/2026-09-25-deferred-items.md#A21
-Scenario: 後回しでない要求の文が後回しの要求を指すと注意
-  Given 後回しの要求 "REQ-001" と、`文`の中でバッククォートで囲んだ "REQ-001" を指す後回しでない要求 "REQ-002" がある
-  When "kotowari check" を実行する
-  Then その`文`の行に detail が "REQ-002 REQ-001" の depends_on_deferred の注意が1件出る
+Scenario: A statement of a non-deferred requirement pointing to a deferred requirement is a notice
+  Given there are a deferred requirement "REQ-001" and a non-deferred requirement "REQ-002" that points to "REQ-001" in backticks within a `statement`
+  When "kotowari check" is run
+  Then one depends_on_deferred notice with detail "REQ-002 REQ-001" is emitted on the line of that `statement`
 
 @id=EX-core-395 @about=REQ-core-212 @source=docs/decision/records/2026-09-25-deferred-items.md#A12,docs/decision/records/2026-09-25-deferred-items.md#A15,docs/decision/records/2026-09-25-deferred-items.md#A21,docs/decision/records/2026-09-17-scenario-tests.md#A2,docs/decision/records/2026-09-17-scenario-tests.md#A6
-Scenario: 後回しと後回しでない要求を両方指すシナリオは注意とテストの誤り
-  Given 後回しの要求 "REQ-001" と検証が "unit" の後回しでない要求 "REQ-002" と "@id=EX-001 @about=REQ-001,REQ-002" のシナリオがあり、"EX-001" を含む印は無い
-  When "kotowari check" を実行する
-  Then そのタグの行に detail が "EX-001 REQ-001" の depends_on_deferred の注意が出て、detail が "EX-001" の scenario_without_test の誤りも出る
+Scenario: A scenario pointing to both deferred and non-deferred requirements gets a notice and a test error
+  Given there are a deferred requirement "REQ-001", a non-deferred requirement "REQ-002" with verification "unit", and the scenario "@id=EX-001 @about=REQ-001,REQ-002", and there is no mark containing "EX-001"
+  When "kotowari check" is run
+  Then a depends_on_deferred notice with detail "EX-001 REQ-001" is emitted on that tag line, and a scenario_without_test error with detail "EX-001" is emitted as well
 
 @id=EX-core-396 @about=REQ-core-212 @source=docs/decision/records/2026-09-25-deferred-items.md#A12,docs/decision/records/2026-09-25-deferred-items.md#A22
-Scenario: 後回しの側からの参照には出さない
-  Given 後回しの要求 "REQ-001" の`文`がバッククォートで囲んだ後回しでない要求 "REQ-002" を指し、後回しの要求 "REQ-003" の`文`がバッククォートで囲んだ "REQ-001" を指す
-  When "kotowari check" を実行する
-  Then depends_on_deferred の注意は出ない
+Scenario: References from the deferred side are not reported
+  Given a `statement` of the deferred requirement "REQ-001" points to the non-deferred requirement "REQ-002" in backticks, and a `statement` of the deferred requirement "REQ-003" points to "REQ-001" in backticks
+  When "kotowari check" is run
+  Then no depends_on_deferred notice is emitted
 
 @id=EX-core-397 @about=REQ-core-212 @source=docs/decision/records/2026-09-25-deferred-items.md#A17,docs/decision/records/2026-09-25-deferred-items.md#A21,docs/decision/records/2026-09-25-deferred-items.md#A12,docs/decision/records/2026-09-25-deferred-items.md#A23
-Scenario: 後回しでないシナリオのステップの参照も注意
-  Given 後回しの要求 "REQ-001" と、"@about=REQ-002" の後回しでないシナリオ "EX-002" があり、そのステップの1行がバッククォートで囲んだ "REQ-001" を2つ含む
-  When "kotowari check" を実行する
-  Then そのステップの行に detail が "EX-002 REQ-001" の depends_on_deferred の注意が2件出る
+Scenario: References in steps of a non-deferred scenario are notices too
+  Given there are a deferred requirement "REQ-001" and a non-deferred scenario "EX-002" with "@about=REQ-002", and one line of its steps contains "REQ-001" in backticks twice
+  When "kotowari check" is run
+  Then two depends_on_deferred notices with detail "EX-002 REQ-001" are emitted on that step line
 ```

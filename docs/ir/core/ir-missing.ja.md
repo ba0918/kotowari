@@ -1,0 +1,31 @@
+# 項目の欠けた行と表
+
+[English](ir-missing.md) | 日本語
+
+項目に必須の行と表が無いときの検査と、gherkin のブロックの外にある Scenario: の行を扱う。
+
+## Requirements
+
+### REQ-core-098: 必須の行が無い
+
+- kind: event_driven
+- source: docs/decision/records/records.md#A68, docs/decision/records/ir-form.md#項目, docs/decision/records/ir-form.md#検査の種類, docs/decision/records/records.md#A92, docs/decision/records/records.md#A157, docs/decision/records/2026-09-22-ir-engine.md#A75, docs/decision/records/2026-09-19-read-commands.md#A23, docs/decision/records/2026-09-20-query-status.md#A10, docs/decision/records/2026-09-20-query-status.md#A17, docs/decision/records/2026-09-23-ir-english-tokens.md#A2
+- verification: unit
+
+`要求`に "- kind:" の行が無いとき、"- verification:" が review の`要求`に "- how_to_verify:" の行が無いとき、または`問題の記録`の`項目`に "- kind:" か "- related:" の行が無いとき、kotowari は無い行の名前を detail にして missing_field の`誤り`を出す。"- verification:" の行が無いときは verification_missing だけ、"- source:" の行が無いときは missing_source だけを出し、missing_field は出さない。"- kind:"、"- verification:"、"- definition:"、"- related:"、"- how_to_verify:" の値が空の行は、行が在るものとして扱い、行が無いことによる`指摘`を出さない。値に許可リストのある "- kind:" と "- verification:" では、空の値を値の誤りの`指摘`にする。
+
+### REQ-core-099: 決定表に表が無い
+
+- kind: event_driven
+- source: docs/decision/records/records.md#A68, docs/decision/records/ir-form.md#検査の種類
+- verification: unit
+
+`決定表`に Markdown の表が無いとき、kotowari はその`決定表`の`ID`を detail にして missing_table の`誤り`を出す。
+
+### REQ-core-100: gherkin のブロックの外の Scenario
+
+- kind: ubiquitous
+- source: docs/decision/records/records.md#A68, docs/decision/records/ir-form.md#項目
+- verification: unit
+
+kotowari は常に、gherkin のコードブロックの外にある "Scenario:" の行を`シナリオ`と見なさずに無視する。

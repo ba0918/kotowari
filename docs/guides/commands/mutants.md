@@ -1,38 +1,40 @@
 # kotowari mutants
 
-変異テストの道具（今は cargo-mutants）が書いた結果のファイルを読み、テストが気づかなかった変更（見逃し）を指摘として出します。
-`kotowari check` が「要求にテストが付いているか」を見るのに対して、こちらは「そのテストが本当に実装を縛っているか」を見ます。
-変異テストを走らせた後、結果を判定するときに使います。
+English | [日本語](mutants.ja.md)
 
-## 書式
+Reads the results file written by a mutation testing tool (currently cargo-mutants) and reports, as findings, the changes the tests did not notice (misses).
+Where `kotowari check` asks "does each requirement have a test?", this command asks "do those tests actually constrain the implementation?".
+Use it after a mutation test run, to judge the results.
 
-<!-- @kotowari[REQ-core-149:4b49b3c0, REQ-core-002:410b78a4, EX-core-244:ce4a0a06] -->
+## Synopsis
+
+<!-- @kotowari[REQ-core-149:1ac13c99, REQ-core-002:d9acbe9c, EX-core-244:e4a4c37f] -->
 
 ```sh
 kotowari mutants --tool cargo-mutants [--format json|text] [--config <path>] <結果のファイル>
 ```
 
-`--tool` は省略できません。
-オプションはコマンドの前にも、結果のファイルの後にも書けます（`kotowari --tool cargo-mutants mutants outcomes.json --format text` も同じ意味です）。
+`--tool` cannot be omitted.
+Options may appear before the command or after the results file (`kotowari --tool cargo-mutants mutants outcomes.json --format text` means the same thing).
 
-## オプションと引数
+## Options and arguments
 
-<!-- @kotowari[REQ-core-149:4b49b3c0, REQ-core-021:14bd7b25, REQ-core-011:549c5c91, REQ-core-003:7fb82a37] -->
+<!-- @kotowari[REQ-core-149:1ac13c99, REQ-core-021:ccedd28b, REQ-core-011:0b7f52a9, REQ-core-003:b4f59e48] -->
 
-| 名前 | 値 | 既定 | 説明 |
+| Name | Value | Default | Description |
 |---|---|---|---|
-| `<結果のファイル>` | パス | なし（必須） | 変異テストの道具が書いた結果のファイル。ちょうど1つ。カレントディレクトリからの相対パスとして読む。cargo-mutants なら `mutants.out/outcomes.json` |
-| `--tool` | `cargo-mutants` | なし（必須） | 結果のファイルを書いた道具。今受ける値は `cargo-mutants` だけ |
-| `--format` | `json` か `text` | `json` | 出力の形 |
-| `--config` | パス | 基準のディレクトリの `.kotowari/config.yaml` | 設定ファイル。カレントディレクトリからの相対パスとして読む。`mutants.equivalents`（等価の一覧の置き場）を読むために使う |
-| `--help` / `--version` | なし | | 使い方か版を出して終わる |
+| `<結果のファイル>` (results file) | path | none (required) | The results file the mutation testing tool wrote. Exactly one. Read as a path relative to the current directory. For cargo-mutants, this is `mutants.out/outcomes.json` |
+| `--tool` | `cargo-mutants` | none (required) | The tool that wrote the results file. The only value accepted today is `cargo-mutants` |
+| `--format` | `json` or `text` | `json` | The output format |
+| `--config` | path | `.kotowari/config.yaml` in the base directory | The configuration file. Read as a path relative to the current directory. Used to read `mutants.equivalents` (where the list of equivalents lives) |
+| `--help` / `--version` | none | | Print the usage or the version and exit |
 
-## 読むもの
+## What it reads
 
-<!-- @kotowari[REQ-core-147:c13d9675, EX-core-210:3f96c3d3] -->
+<!-- @kotowari[REQ-core-147:7559338c, EX-core-210:e791ccb1] -->
 
-変異テストの実行そのものは kotowari の外にあります。
-kotowari は、道具が書き終えた結果のファイルを読むだけです。
+Running the mutation tests happens outside kotowari.
+kotowari only reads the results file once the tool has finished writing it.
 
 ```mermaid
 flowchart LR
@@ -41,54 +43,54 @@ flowchart LR
   eq["等価の一覧<br/>（mutants.equivalents）"] --> km
 ```
 
-読むのは次のファイルだけです。
+It reads only these files:
 
-- 設定ファイル
-- 結果のファイル
-- 等価の一覧（設定の `mutants.equivalents` が指すもの）
-- 変異の結果が指すソースのファイルと、等価の一覧の1件の `file` が指すファイル
+- The configuration file
+- The results file
+- The list of equivalents (the file the configuration's `mutants.equivalents` points at)
+- The source files that the mutation outcomes point at, and the files that the `file` of each entry in the list of equivalents points at
 
-IR、テストのファイル、判断の記録は読まず、`check` の検査もしません。
-設定の `ir` や `decisions.records` の指す先が無くても止まりません。
-そのため、見逃しは要求には結び付かず、ソースの場所（ファイルと行）と変更の説明で出ます。
-要求へ戻るのは、見逃しを調べる人か LLM の仕事です（[見逃しが出たら](#見逃しが出たら)）。
+It does not read the IR, test files or decision records, and it does not run any of `check`'s checks.
+It does not stop even if the paths that the configuration's `ir` or `decisions.records` point at do not exist.
+As a result, misses are not tied to requirements; they are reported by source location (file and line) and the description of the change.
+Tracing a miss back to a requirement is the job of the person or LLM investigating it ([When misses appear](#when-misses-appear)).
 
-## 結果のファイル
+## The results file
 
-<!-- @kotowari[TBL-core-024:9973f94b, REQ-core-138:7c91c1d5] -->
+<!-- @kotowari[TBL-core-024:17ed4a06, REQ-core-138:7c91c1d5] -->
 
-`--tool cargo-mutants` では、最上位の `outcomes` に並びを持つ JSON を読みます。
-`scenario` が文字列 `"Baseline"` の1件は、変異を入れない基準の実行で、数に入れません。
-それ以外の1件は、次のように1件の変異の結果に写します。
+With `--tool cargo-mutants`, kotowari reads a JSON document whose top level has an `outcomes` array.
+An entry whose `scenario` is the string `"Baseline"` is the baseline run, made without any mutation, and is not counted.
+Every other entry is mapped to one mutation outcome as follows.
 
-| 変異の結果の項目 | 写す元 |
+| Field of the mutation outcome | Taken from |
 |---|---|
-| ファイル | `scenario.Mutant.file` |
-| 行 | `scenario.Mutant.span.start.line` |
-| 変更の説明 | `scenario.Mutant.name` から、先頭の `ファイル:行:桁: ` を除いた残り |
-| 結果 | `summary` が `CaughtMutant`（捕まえた）、`MissedMutant`（見逃した）、`Timeout`（時間切れ）、`Unviable`（ビルド不能） |
+| File | `scenario.Mutant.file` |
+| Line | `scenario.Mutant.span.start.line` |
+| Description of the change | `scenario.Mutant.name`, with the leading `file:line:column: ` removed |
+| Outcome | `summary`: `CaughtMutant` (caught), `MissedMutant` (missed), `Timeout` (timed out), `Unviable` (unviable) |
 
-ここに無い鍵は見ません。
-細かい条件は [TBL-core-024](../../ir/core/mutants-input.md#TBL-core-024) にあります。
+Keys not listed here are ignored.
+The detailed conditions are in [TBL-core-024](../../ir/core/mutants-input.md#TBL-core-024).
 
-変異1件の結果の4つの値の意味は次のとおりです。
+The four possible outcomes of one mutation mean the following.
 
-| 結果 | 意味 | kotowari の扱い |
+| Outcome | Meaning | How kotowari treats it |
 |---|---|---|
-| 捕まえた | 変異を入れるとテストが落ちた | 数えるだけ |
-| 見逃した | 変異を入れてもテストが全部通った | 誤り（等価の一覧に一致すれば外す） |
-| 時間切れ | 変異を入れるとテストが時間内に終わらなかった | 注意 |
-| ビルド不能 | 変異を入れるとビルドできなかった | 数えるだけ |
+| Caught | With the mutation in, a test failed | Only counted |
+| Missed | With the mutation in, all the tests still passed | Error (removed if it matches the list of equivalents) |
+| Timed out | With the mutation in, the tests did not finish in time | Notice |
+| Unviable | With the mutation in, the code did not build | Only counted |
 
-## 出力
+## Output
 
 ### text
 
-<!-- @kotowari[REQ-core-146:b62b02e2, REQ-core-026:70f612a2, EX-core-230:43f5ccf3, EX-core-209:25cf4798] -->
+<!-- @kotowari[REQ-core-146:5accc94e, REQ-core-026:530a64e3, EX-core-230:c8e82733, EX-core-209:a0577005] -->
 
-指摘を1件1行で出し、最後の1行に集計を出します。
-指摘の行の形は `check` と同じ `パス:行 [error|notice] 種類 詳細` です。
-等価の一覧への指摘は行を持たないので、行の位置に `-` が出ます。
+Prints one finding per line, followed by a final line with the tally.
+Finding lines have the same form as in `check`: `path:line [error|notice] kind detail`.
+Findings about the list of equivalents have no line, so `-` appears in the line position.
 
 ```text
 .kotowari/equivalents.yaml:- [notice] equivalent_stale src/price.rs: replace - with + in discount
@@ -97,64 +99,64 @@ src/price.rs:18 [notice] mutant_timeout replace += with *= in count_up
 mutants: caught=4 survived=1 timeout=1 unviable=1 equivalent=1
 ```
 
-集計の行は `mutants: caught=数 survived=数 timeout=数 unviable=数 equivalent=数` の形で、指摘が0件でも必ず出ます。
+The tally line has the form `mutants: caught=N survived=N timeout=N unviable=N equivalent=N` and is always printed, even when there are no findings.
 
-### 指摘の種類
+### Finding kinds
 
-<!-- @kotowari[REQ-core-139:0cb2c43f, REQ-core-140:062bb90d, REQ-core-142:8341bf8d, REQ-core-143:71734415] -->
+<!-- @kotowari[REQ-core-139:5736cb73, REQ-core-140:49dd0d6f, REQ-core-142:3cafdd68, REQ-core-143:de58796f] -->
 
-| 種類 | 重さ | path | line | detail |
+| Kind | Severity | path | line | detail |
 |---|---|---|---|---|
-| `mutant_survived` | 誤り | 変異の結果のファイル | 変異の行 | 変更の説明 |
-| `mutant_timeout` | 注意 | 変異の結果のファイル | 変異の行 | 変更の説明 |
-| `equivalent_stale` | 注意 | 等価の一覧のファイル | null | 一覧に書かれたままの `file` と `change` を `: ` でつないだもの |
-| `equivalent_invalid` | 誤り | 等価の一覧のファイル | null | 一覧に書かれたままの `file` と `change` を `: ` でつないだもの |
+| `mutant_survived` | error | The file of the mutation outcome | The line of the mutation | The description of the change |
+| `mutant_timeout` | notice | The file of the mutation outcome | The line of the mutation | The description of the change |
+| `equivalent_stale` | notice | The list-of-equivalents file | null | The entry's `file` and `change`, exactly as written in the list, joined by `: ` |
+| `equivalent_invalid` | error | The list-of-equivalents file | null | The entry's `file` and `change`, exactly as written in the list, joined by `: ` |
 
-変更の説明は道具が出した文のままです。
-`replace >= with > in total` は「`total` 関数の `>=` を `>` に替えてもテストが通った」という意味です。
-同じ内容の見逃しが2件あっても畳まず、1件ごとに出ます。
+The description of the change is the tool's text, unchanged.
+`replace >= with > in total` means "the tests still passed after `>=` in the function `total` was replaced with `>`".
+Two misses with identical content are not merged; each is reported separately.
 
 ### JSON
 
-<!-- @kotowari[TBL-core-025:7e38776e, PROP-core-005:0bce4aa2, REQ-core-145:38dec30f] -->
+<!-- @kotowari[TBL-core-025:68fca5c5, PROP-core-005:80d67bc3, REQ-core-145:38dec30f] -->
 
-最上位は `findings`、`counts`、`mutants` の3つの鍵だけです。
+The top level has exactly three keys: `findings`, `counts` and `mutants`.
 
-| 鍵 | 型 | 説明 |
+| Key | Type | Description |
 |---|---|---|
-| `findings` | 配列 | 指摘の一覧。1件の鍵は `kind`、`severity`、`path`、`line`、`detail`（`check` と同じ） |
-| `counts` | オブジェクト | 種類ごとの指摘の数。1件も無い種類は鍵ごと出ない |
-| `mutants` | オブジェクト | 下の5つの数 |
-| `mutants.caught` | 数 | 捕まえた変異 |
-| `mutants.survived` | 数 | 見逃しのうち、等価の一覧のどれにも一致しないもの（= `mutant_survived` の数） |
-| `mutants.timeout` | 数 | 時間切れの変異（= `mutant_timeout` の数） |
-| `mutants.unviable` | 数 | ビルド不能の変異 |
-| `mutants.equivalent` | 数 | 見逃しのうち、等価の一覧に一致して指摘から外したもの |
+| `findings` | array | The list of findings. Each one has the keys `kind`, `severity`, `path`, `line` and `detail` (same as `check`) |
+| `counts` | object | The number of findings per kind. A kind with no findings is omitted entirely |
+| `mutants` | object | The five counts below |
+| `mutants.caught` | number | Caught mutations |
+| `mutants.survived` | number | Misses that match no entry in the list of equivalents (= the number of `mutant_survived`) |
+| `mutants.timeout` | number | Mutations that timed out (= the number of `mutant_timeout`) |
+| `mutants.unviable` | number | Unviable mutations |
+| `mutants.equivalent` | number | Misses that matched the list of equivalents and were removed from the findings |
 
-5つの数の合計は、結果のファイルにあった変異の数（基準の実行を除く）に等しくなります。
-`equivalent` は「一覧に頼って外した量」です。
-0 でなくても誤りではありませんが、急に増えたら一覧の中身を疑う合図になります。
+The five counts add up to the number of mutations in the results file (excluding the baseline run).
+`equivalent` is "how much was removed by relying on the list".
+A nonzero value is not an error, but a sudden increase is a signal to question what is in the list.
 
-## 終了コード
+## Exit codes
 
-<!-- @kotowari[TBL-core-002:46c482a8, REQ-core-139:0cb2c43f, REQ-core-140:062bb90d] -->
+<!-- @kotowari[TBL-core-002:14c565f2, REQ-core-139:5736cb73, REQ-core-140:49dd0d6f] -->
 
-| コード | 意味 |
+| Code | Meaning |
 |---|---|
-| 0 | 誤りが無い。`mutant_timeout` や `equivalent_stale` の注意だけのときも 0 |
-| 1 | `mutant_survived` か `equivalent_invalid` が1件以上ある |
-| 2 | 停止した（引数の誤り、結果のファイルが読めない、結果の誤り、等価の一覧が読めないなど） |
+| 0 | No errors. Also 0 when there are only `mutant_timeout` or `equivalent_stale` notices |
+| 1 | One or more `mutant_survived` or `equivalent_invalid` |
+| 2 | Stopped (argument error, unreadable results file, results error, unreadable list of equivalents, and so on) |
 
-停止したときは標準出力に何も出さず、標準エラーの1行目に理由を出します。
+On a stop, nothing is written to standard output and the reason is written on the first line of standard error.
 
-## 等価の一覧
+## The list of equivalents
 
-<!-- @kotowari[REQ-core-148:9c499a9d, REQ-core-143:71734415] -->
+<!-- @kotowari[REQ-core-148:9dc7ec0a, REQ-core-143:de58796f] -->
 
-等価の一覧は、見逃しのうち「変異を入れても観測できる振る舞いが変わらない」と判断したものを、理由と一緒に並べる YAML のファイルです。
-一覧に一致した見逃しは指摘にならず、集計の `equivalent` に数えられます。
+The list of equivalents is a YAML file listing the misses you have judged to be "mutations that do not change any observable behaviour", each with its reason.
+A miss that matches the list does not become a finding; it is counted under `equivalent` in the tally.
 
-置き場は設定の `mutants.equivalents` で指します。既定の置き場はありません。
+Point to it with the configuration's `mutants.equivalents`. There is no default location.
 
 ```yaml
 # .kotowari/config.yaml
@@ -162,16 +164,16 @@ mutants:
   equivalents: .kotowari/equivalents.yaml
 ```
 
-| 一覧の状態 | 動き |
+| State of the list | Behaviour |
 |---|---|
-| 鍵が無い / 指す先が空（0バイトか注釈だけ） | 一覧を0件として続ける |
-| 指す先が無い・読めない | 停止（`unreadable file`） |
-| 指す先が UTF-8 でない | 停止（`non-UTF-8 file`） |
-| YAML として読めない / 最上位が並びでない | 停止（`config error`、詳細は一覧のファイルのパス） |
+| No key / the target is empty (0 bytes or comments only) | Continues with an empty list |
+| The target does not exist or cannot be read | Stops (`unreadable file`) |
+| The target is not UTF-8 | Stops (`non-UTF-8 file`) |
+| Not valid YAML / the top level is not a sequence | Stops (`config error`, with the path of the list file as the detail) |
 
-`kotowari check` はこの鍵の値の形だけを検査し、指す先を読みません。
+`kotowari check` checks only the shape of this key's value and does not read the file it points at.
 
-一覧の1件は、次の5つの鍵をちょうど持ちます。
+Each entry in the list has exactly these five keys.
 
 ```yaml
 - file: src/price.rs
@@ -183,40 +185,40 @@ mutants:
     落とすテストの試み: i と len を 0..50 の全組で元と変異を突き合わせ、違いは無かった。
 ```
 
-| 鍵 | 書くもの |
+| Key | What to write |
 |---|---|
-| `file` | ソースのパス（基準のディレクトリからの相対。絶対パスと `..` は書けない） |
-| `change` | 変更の説明。`mutant_survived` の detail をそのまま写す |
-| `text` | 変異が入る行の、今の文面 |
-| `class` | `equivalent` だけが書ける |
-| `why` | 理由。空白だけは誤り |
+| `file` | The source path (relative to the base directory; absolute paths and `..` are not allowed) |
+| `change` | The description of the change. Copy the detail of `mutant_survived` as is |
+| `text` | The current text of the line the mutation goes into |
+| `class` | Only `equivalent` is allowed |
+| `why` | The reason. Whitespace only is an error |
 
-鍵が欠けている、ほかの鍵がある、値が文字列でない、`why` が空、`class` が `equivalent` でない、`file` が絶対パスか `..` を含む、のどれかに当たる1件は `equivalent_invalid` の誤りになり、どの見逃しも外しません。
+An entry that is missing a key, has any other key, has a non-string value, has an empty `why`, has a `class` other than `equivalent`, or has a `file` that is absolute or contains `..` is an `equivalent_invalid` error, and it removes no misses.
 
-### 一致の取り方
+### How matching works
 
-<!-- @kotowari[REQ-core-141:4b1a04ba, EX-core-212:cebe1fec, EX-core-213:20798911] -->
+<!-- @kotowari[REQ-core-141:07d68190, EX-core-212:cf501da6, EX-core-213:4f4e6142] -->
 
-見逃しと一覧の1件は、次の3つがすべて同じときに一致します。
+A miss and an entry in the list match when all three of the following are the same:
 
-1. `file`（正規化した後）と、見逃しのファイル
-2. `change` と、見逃しの変更の説明
-3. `text` と、見逃しの行番号が指すソースの今の行の文面（どちらも前後の半角空白とタブを除く）
+1. `file` (after normalization) and the miss's file
+2. `change` and the miss's description of the change
+3. `text` and the current text of the source line at the miss's line number (both with leading and trailing half-width spaces and tabs removed)
 
-行番号ではなく行の文面で合わせるので、上に行を足して行が動いただけなら一致したままです。
-その行そのものを書き換えると一致が外れて、見逃しがまた出ます。
-同じ文面の行が同じファイルに複数あれば、1件がそのどれにも効きます。
+Because matching uses the text of the line rather than the line number, the entry still matches if the line merely moved because lines were added above it.
+If you rewrite that line itself, the match breaks and the miss appears again.
+If the same file has several lines with the same text, one entry applies to any of them.
 
-ソースのファイルが無い、読めない、UTF-8 でない、行がファイルの行数を超える、のどれかのときは停止せず、一致しない側に倒れます（見逃しが出ます）。
+If the source file does not exist, cannot be read, is not UTF-8, or the line is beyond the end of the file, kotowari does not stop; it treats the entry as not matching (the miss is reported).
 
-一覧で外せるのは見逃しだけです。時間切れは一覧に書いても外れません。
+The list can remove only misses. Writing a timeout in the list does not remove it.
 
-## 例
+## Example
 
-<!-- @kotowari[REQ-core-139:0cb2c43f, REQ-core-141:4b1a04ba, REQ-core-142:8341bf8d, EX-core-206:52d2253e] -->
+<!-- @kotowari[REQ-core-139:5736cb73, REQ-core-141:07d68190, REQ-core-142:3cafdd68, EX-core-206:1d66c66f] -->
 
-次のソース `src/price.rs` に対する結果のファイルを、cargo-mutants の形（[TBL-core-024](../../ir/core/mutants-input.md#TBL-core-024)）に沿って手で8件作り、読ませた例です。
-cargo mutants は実行していません。出力はこの入力で実際に `kotowari mutants` を実行したものです。
+This example feeds kotowari a results file for the source `src/price.rs` below, with 8 entries written by hand following the cargo-mutants format ([TBL-core-024](../../ir/core/mutants-input.md#TBL-core-024)).
+cargo mutants was not run. The output is what `kotowari mutants` actually printed for this input.
 
 ```rust
 pub fn total(price: u32, qty: u32) -> u32 {
@@ -242,7 +244,7 @@ pub fn count_up(n: u32) -> u32 {
 }
 ```
 
-結果のファイルの1件は次の形です（`outcomes.json` の抜粋）。
+One entry of the results file looks like this (an excerpt of `outcomes.json`).
 
 ```json
 {
@@ -257,7 +259,7 @@ pub fn count_up(n: u32) -> u32 {
 }
 ```
 
-設定は `mutants.equivalents: .kotowari/equivalents.yaml` で、一覧には [等価の一覧](#等価の一覧) の `clamp_index` の1件と、もう無い関数 `discount` の行を指す1件（`text: "price - price / 10"`）があります。
+The configuration is `mutants.equivalents: .kotowari/equivalents.yaml`, and the list holds the `clamp_index` entry from [The list of equivalents](#the-list-of-equivalents) plus one entry pointing at a line of `discount`, a function that no longer exists (`text: "price - price / 10"`).
 
 ```console
 $ kotowari mutants --tool cargo-mutants --format text outcomes.json
@@ -269,49 +271,49 @@ $ echo $?
 1
 ```
 
-- `total` の `>=` を `>` に替えた見逃しは、一覧に無いので誤りです。`subtotal` がちょうど 10000 の場合を確かめるテストが無いと、この形の見逃しが残ります
-- `clamp_index` の12行目の見逃しは一覧の1件に一致したので、指摘にならず `equivalent=1` に数えられています
-- `count_up` の時間切れは注意です
-- `discount` の1件は、`text` の文面がソースのどこにも無いので `equivalent_stale` の注意になります
+- The miss from replacing `>=` with `>` in `total` is not in the list, so it is an error. Without a test that checks the case where `subtotal` is exactly 10000, a miss of this kind remains
+- The miss on line 12 of `clamp_index` matched an entry in the list, so it is not a finding and is counted in `equivalent=1`
+- The timeout in `count_up` is a notice
+- The `discount` entry's `text` appears nowhere in the source, so it becomes an `equivalent_stale` notice
 
-集計は 4+1+1+1+1 = 8 で、作った変異の数と合います。
+The tally is 4+1+1+1+1 = 8, matching the number of mutations created.
 
-同じ入力の JSON です。
+Here is the JSON for the same input.
 
 ```console
 $ kotowari mutants --tool cargo-mutants outcomes.json
 {"findings":[{"kind":"equivalent_stale","severity":"notice","path":".kotowari/equivalents.yaml","line":null,"detail":"src/price.rs: replace - with + in discount"},{"kind":"mutant_survived","severity":"error","path":"src/price.rs","line":3,"detail":"replace >= with > in total"},{"kind":"mutant_timeout","severity":"notice","path":"src/price.rs","line":18,"detail":"replace += with *= in count_up"}],"counts":{"equivalent_stale":1,"mutant_survived":1,"mutant_timeout":1},"mutants":{"caught":4,"survived":1,"timeout":1,"unviable":1,"equivalent":1}}
 ```
 
-## 見逃しが出たら
+## When misses appear
 
-見逃しは、1件ずつ次の3つのどれかに分けて扱います。
-これは kotowari の機能ではなく、見逃しを調べる側の手順です。
+Sort each miss into one of the following three classes.
+This is not a kotowari feature; it is the procedure for whoever investigates the misses.
 
-| 分類 | 意味 | 次にやること |
+| Class | Meaning | What to do next |
 |---|---|---|
-| 未検査 | 振る舞いは変わるのに、見ているテストが無い | 要求がその変異を区別できるほど具体的かを先に確かめる。曖昧なら IR を直し、具体的ならその要求か具体例の印を付けたテストを足す |
-| 欠陥の疑い | 元のコードの方がおかしい | コードを直す |
-| 等価 | 変異を入れても観測できる振る舞いが変わらない | 下の順に進める |
+| Untested | The behaviour changes, but no test looks at it | First check whether the requirement is specific enough to tell that mutation apart. If it is vague, fix the IR; if it is specific, add a test marked with that requirement or example |
+| Suspected defect | The original code is what is wrong | Fix the code |
+| Equivalent | The mutation does not change any observable behaviour | Follow the steps below |
 
-未検査のときにテストを先に足すと、曖昧な要求を「今の実装の振る舞い」で固めてしまいます。
-見逃しを要求に結び付けるのは、この段です。
+If you add a test first for an untested miss, you lock a vague requirement into "whatever the current implementation does".
+This is the stage where a miss gets tied back to a requirement.
 
-等価だと思ったら、すぐ一覧に書かず、次の順に進めます。
+When you think a miss is equivalent, do not add it to the list right away; go through these steps in order:
 
-1. コードを単純にして、変異そのものを無くせないかを見る（届かない分岐や使われない値を消す）
-2. 別の文脈の LLM に、その変異で落ちるテストを書かせてみる。書けたらそのテストを採用する（等価ではなかった）
-3. 書けなかったら、何を試して落とせなかったかを `why` に書いて、等価の一覧に1件足す
+1. See whether simplifying the code can make the mutation itself go away (remove unreachable branches or unused values)
+2. Ask an LLM in a separate context to write a test that fails with that mutation. If it can, adopt that test (it was not equivalent after all)
+3. If it cannot, write in `why` what was tried that failed to catch it, and add one entry to the list of equivalents
 
-## よくあるつまずき
+## Common pitfalls
 
 ### `argument error: mutants requires the option: --tool`
 
-<!-- @kotowari[REQ-core-149:4b49b3c0, EX-core-218:8f4dec76, EX-core-240:8dcf2b3d] -->
+<!-- @kotowari[REQ-core-149:1ac13c99, EX-core-218:a0656f36, EX-core-240:3f1d22d5] -->
 
-`--tool` を付け忘れています。
-結果のファイルの形は道具ごとに違うので、既定値はありません。
-`cargo-mutants` 以外の値も同じく引数の誤りです。
+You forgot `--tool`.
+The format of the results file differs from tool to tool, so there is no default.
+Any value other than `cargo-mutants` is also an argument error.
 
 ```console
 $ kotowari mutants --format text outcomes.json
@@ -322,11 +324,11 @@ argument error: unknown tool: stryker
 
 ### `results error: ...`
 
-<!-- @kotowari[REQ-core-144:f36001f0, EX-core-207:3ee276f6, EX-core-208:7d8a1649] -->
+<!-- @kotowari[REQ-core-144:ad1689f2, EX-core-207:34357194, EX-core-208:e5d0458a] -->
 
-結果のファイルが読めない形です。
-JSON として壊れている、要る鍵が無いか型が違う、知らない `summary` の値がある、基準の実行が失敗している、行が1未満、`name` の前置きが形に合わない、ファイルが絶対パスか `..` を含む、のどれかで止まります（全部の条件は [REQ-core-144](../../ir/core/mutants-input.md#REQ-core-144)）。
-基準の実行が1件も無い結果のファイルは止まりません。
+The results file is in a form kotowari cannot read.
+It stops if any of the following holds: the JSON is broken, a required key is missing or has the wrong type, there is an unknown `summary` value, the baseline run failed, a line is less than 1, the prefix of `name` does not fit the expected form, or a file path is absolute or contains `..` (the full set of conditions is in [REQ-core-144](../../ir/core/mutants-input.md#REQ-core-144)).
+A results file with no baseline run at all does not stop it.
 
 ```console
 $ kotowari mutants --tool cargo-mutants --format text broken-baseline.json
@@ -335,15 +337,15 @@ $ kotowari mutants --tool cargo-mutants --format text unknown-summary.json
 results error: unknown-summary.json: unknown outcome: Flaky
 ```
 
-基準の実行が失敗しているなら、変異を入れる前からテストが落ちています。
-先にテストを通してから、変異テストをやり直してください。
+If the baseline run failed, the tests were already failing before any mutation went in.
+Get the tests passing first, then run the mutation tests again.
 
-### `equivalent_invalid` が出て、外していた見逃しが戻ってきた
+### `equivalent_invalid` appears and misses that were removed come back
 
-<!-- @kotowari[REQ-core-143:71734415, EX-core-215:7374be8a] -->
+<!-- @kotowari[REQ-core-143:de58796f, EX-core-215:60ee255d] -->
 
-一覧の1件の形がおかしく、その1件はどの見逃しも外しません。
-上の例の一覧で、`clamp_index` の1件の `why` を `" "` にしたときの出力です。
+An entry in the list is malformed, and that entry removes no misses.
+Here is the output when the `why` of the `clamp_index` entry in the example list above is set to `" "`.
 
 ```console
 $ kotowari mutants --tool cargo-mutants --format text outcomes.json
@@ -355,74 +357,38 @@ src/price.rs:18 [notice] mutant_timeout replace += with *= in count_up
 mutants: caught=4 survived=2 timeout=1 unviable=1 equivalent=0
 ```
 
-detail の `file: change` で、どの1件かを見分けます。
+Use the `file: change` in the detail to tell which entry it is.
 
-### `equivalent_stale` が出る
+### `equivalent_stale` appears
 
-<!-- @kotowari[REQ-core-142:8341bf8d, EX-core-213:20798911] -->
+<!-- @kotowari[REQ-core-142:3cafdd68, EX-core-213:4f4e6142] -->
 
-一覧の1件の `text` と同じ文面の行が、`file` のどこにも無くなっています。
-コードを書き換えたか、関数ごと消したときに出ます。
-その変異がまだ見逃しとして出ているなら判断をし直し、出ていないなら一覧から消します。
-結果のファイルにその変異が現れるかどうかは見ないので、差分だけを走らせた結果でも、誤って古いとは言われません。
+No line in `file` has the same text as the entry's `text` any more.
+This happens when you rewrite the code or delete the whole function.
+If the mutation is still reported as a miss, redo the judgement; if it no longer appears, remove the entry from the list.
+kotowari does not look at whether the mutation appears in the results file, so even results from a run over only the diff will not wrongly call an entry stale.
 
-### 等価の一覧に書いたのに時間切れが消えない
+### A timeout does not go away even though it is in the list of equivalents
 
-<!-- @kotowari[REQ-core-140:062bb90d, EX-core-206:52d2253e] -->
+<!-- @kotowari[REQ-core-140:49dd0d6f, EX-core-206:1d66c66f] -->
 
-仕様どおりです。
-一覧で外せるのは見逃しだけで、時間切れは一覧との一致を見ません。
-時間切れは注意なので、終了コードは変わりません。
+This is as specified.
+The list can remove only misses; timeouts are never matched against the list.
+A timeout is a notice, so it does not change the exit code.
 
-### 等価の一覧のパスが無くて止まる
+### It stops because the path to the list of equivalents does not exist
 
-<!-- @kotowari[REQ-core-148:9c499a9d, EX-core-217:c20611fb, EX-core-239:001b2db3] -->
+<!-- @kotowari[REQ-core-148:9dc7ec0a, EX-core-217:41f2375e, EX-core-239:069fe928] -->
 
-設定の `mutants.equivalents` が指すファイルが無いと、`unreadable file` で止まります。
-一覧を使わないなら鍵ごと消すか、空のファイルを置きます。
-中身が並びでない（`- file: ...` で始まらない）ときは `config error:` の後に一覧のファイルのパスが出ます。
+If the file that the configuration's `mutants.equivalents` points at does not exist, kotowari stops with `unreadable file`.
+If you do not use a list, remove the key entirely or put an empty file there.
+If the content is not a sequence (it does not start with `- file: ...`), the path of the list file appears after `config error:`.
 
-## なぜこういう作りか
+## Related
 
-- **`check` に混ぜず、別のコマンドにしている。**
-  `check` は push の前に毎回0件を求められますが、変異テストは十数分かかり毎回は回せません。
-  古い結果を `check` が読むと、ずれた行を指したまま push を止めてしまいます。
-  結果のファイルを引数で受ければ、どの結果を読んだかがはっきりします。
-  （[決定の記録 2026-09-17 mutation-tests A8](../../decision/records/2026-09-17-mutation-tests.md#A8)）
-- **見逃しを要求に結び付けない。**
-  見逃しは落ちたテストが0本なので、テストの印から要求へ辿る道がありません。
-  関数と要求の対応表のような仕組みは、人が維持する新しい対応になり、ずれても検査できません。
-  （[A2](../../decision/records/2026-09-17-mutation-tests.md#A2)、[A7](../../decision/records/2026-09-17-mutation-tests.md#A7)）
-- **`--tool` に既定値を置かない。**
-  既定値を cargo-mutants にすると Rust の前提が焼き付きます。中身から道具を判別すると、道具が増えたときに誤判定の場面が生まれます。
-  （[A14](../../decision/records/2026-09-17-mutation-tests.md#A14)）
-- **道具に固有の語を使わない。**
-  指摘の種類は `mutant_survived` のように変異テストの分野の一般の語で、cargo-mutants の `missed` は使いません。結果を作る道具は替わりうるからです。
-  （[A12](../../decision/records/2026-09-17-mutation-tests.md#A12)、[A31](../../decision/records/2026-09-17-mutation-tests.md#A31)）
-- **一覧に書けるのは「等価」だけ。**
-  「未検査」や「欠陥の疑い」を一覧で黙らせられると、直すべきものの先送りの置き場になります。
-  （[A17](../../decision/records/2026-09-17-mutation-tests.md#A17)）
-  仕様が決まっていないせいでテストを書けない見逃しも、一覧には載せず、IR に規則を足して片づけます。
-  （[決定の記録 2026-09-23 mutants-gaps A3](../../decision/records/2026-09-23-mutants-gaps.md#A3)）
-- **一覧の1件は行番号でなく行の文面で変異を指す。**
-  行番号は直すたびにずれ、行番号を外した名前は重なります（実測で804件のうち382件）。
-  文面なら、行が動いただけでは外れず、その行を書き換えたときだけ外れて判断のし直しに倒れます。
-  （[A15](../../decision/records/2026-09-17-mutation-tests.md#A15)）
-- **古い1件はソースに対して判定する。**
-  差分だけを走らせた結果には変異の一部しか入らないので、結果に対して判定すると一覧のほとんどが古いと言われてしまいます。
-  （[A20](../../decision/records/2026-09-17-mutation-tests.md#A20)）
-- **等価として外した数を毎回出し、上限は置かない。**
-  等価が本当かは機械では判定できません。頼った量が毎回見えれば、増え方の異常に気づけます。上限の数字には根拠を持てません。
-  （[A28](../../decision/records/2026-09-17-mutation-tests.md#A28)）
-- **見逃しの3分類と、等価を一覧に書く前の手順は、kotowari の機能ではなく手順にしている。**
-  テストを先に足すと曖昧な要求を今の実装で固めてしまい、一覧が育たなければ手入れも減ります。
-  （[A5](../../decision/records/2026-09-17-mutation-tests.md#A5)、[A22](../../decision/records/2026-09-17-mutation-tests.md#A22)）
-
-## 関連
-
-- 仕様: [指摘と集計](../../ir/core/mutants.md)、[結果のファイルの読み取り](../../ir/core/mutants-input.md)、[等価の一覧](../../ir/core/equivalents.md)、[引数](../../ir/core/cli.md#REQ-core-149)
-- 共通の書式と停止: [cli.md](../cli.md)
-- 設定のキー `mutants.equivalents`: [config.md](../config.md)
-- 指摘の種類の一覧: [findings.md](../findings.md)
-- 要求にテストが付いているかを見る: [kotowari check](check.md)
-- 実行から判定までを1本にまとめた例: このリポジトリの [scripts/mutants.sh](../../../scripts/mutants.sh)
+- Specification: [Findings and tally](../../ir/core/mutants.md), [Reading the results file](../../ir/core/mutants-input.md), [The list of equivalents](../../ir/core/equivalents.md), [Arguments](../../ir/core/cli.md#REQ-core-149)
+- Common format and stops: [cli.md](../cli.md)
+- The configuration key `mutants.equivalents`: [config.md](../config.md)
+- The list of finding kinds: [findings.md](../findings.md)
+- Checking whether requirements have tests: [kotowari check](check.md)
+- An example that runs everything from execution to judgement in one go: this repository's [scripts/mutants.sh](../../../scripts/mutants.sh)

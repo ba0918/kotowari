@@ -1,37 +1,39 @@
-# 配布パッケージを検証する
+# Validating distribution packages
 
-クレートを公開せずに、実際のアーカイブと独立した利用側を検証する手順です。
+English | [日本語](package-validation.ja.md)
 
-## ローカルの検証
+This is the procedure for validating the real archives and independent consumers without publishing the crates.
 
-<!-- @kotowari[REQ-core-309:06cb6202, REQ-schema-051:eb9c1f03] -->
+## Local validation
 
-Cargo 1.98以降と安全なtar展開を提供するPython 3.11以降を使い、変更をコミットした清潔な作業ツリーで実行します。
+<!-- @kotowari[REQ-core-309:96174f95, REQ-schema-051:9546b439] -->
+
+Use Cargo 1.98 or later and Python 3.11 or later (which provides safe tar extraction), and run it in a clean working tree with your changes committed.
 
 ```sh
 python3 scripts/check-packages.py --output "$ABSOLUTE_NEW_SCRATCH_DIRECTORY"
 ```
 
-出力先はリポジトリ外の新しい絶対パスです。既存ディレクトリは上書きしません。
-ヘルパーはロック済みの外部依存をvendorした後、ソース置換を使わないオフラインのCargo workspace stagingで9個のアーカイブを作ります。
-その後、元のアーカイブを安全に展開し、チェックサム付きの独立したdirectory sourceで各パッケージをビルド・テストします。
-Tokioの有効・無効、別クレートからの呼出、再公開した型の同一性、両CLIの互換テストも確かめます。
-アーカイブや出荷したmanifestを書き換えず、作業ツリーへのpath依存やpatchは使いません。
-出力にはコマンドと終了コード、manifest・ロック・依存グラフ、アーカイブのハッシュ、利用側の実行結果を残します。`result.json`のPASSはローカル検証の成功であり、公開済みという意味ではありません。
+The output location is a new absolute path outside the repository. An existing directory is not overwritten.
+The helper vendors the locked external dependencies, then builds 9 archives through offline Cargo workspace staging without source replacement.
+It then extracts the original archives safely and builds and tests each package from an independent, checksummed directory source.
+It also checks Tokio enabled and disabled, calls from a separate crate, the identity of re-exported types, and the compatibility tests of both CLIs.
+It never rewrites the archives or the shipped manifests, and uses no path dependencies or patches pointing at the working tree.
+The output keeps the commands and exit codes, the manifests, locks and dependency graphs, the archive hashes, and the consumers' run results. PASS in `result.json` means the local validation succeeded, not that anything has been published.
 
-## 将来の公開順
+## Future publishing order
 
-<!-- @kotowari[TBL-core-040:d398d029] -->
+<!-- @kotowari[TBL-core-040:4f46993e] -->
 
-公開を行う人は、検証と独立レビューが済んだ同じ変更について、各製品の版を上げてから実行します。
-依存される側を先に公開します。
+Whoever publishes runs this on the same change that has passed validation and independent review, after bumping the version of each product.
+Crates that others depend on are published first.
 
-1. `kotowari-markdown-schema`と`kotowari-markdown-view`
-2. `kotowari-core`と`kotowari-markdown-schema-io`
-3. `kotowari-source-analysis`、`kotowari-mds`、`kotowari-overview`
+1. `kotowari-markdown-schema` and `kotowari-markdown-view`
+2. `kotowari-core` and `kotowari-markdown-schema-io`
+3. `kotowari-source-analysis`, `kotowari-mds`, `kotowari-overview`
 4. `kotowari`
 5. `kotowari-cli`
 
-同じ段の独立したクレートの順番は任意です。これは将来の人による公開手順であり、検証ヘルパーはアップロードしません。
-kotowari系の版の基準は根の`Cargo.toml`、スキーマ系は`crates/kotowari-markdown-schema/Cargo.toml`です。`kotowari-overview`はkotowari系、`kotowari-markdown-view`はスキーマ系の版に従います。
-スキーマ系の版変更時はcoreとoverviewから入る依存宣言も更新します。既存の2製品のタグ、バイナリ名、配布アーカイブ名を変更する手順ではありません。
+Independent crates in the same stage can go in any order. This is a procedure for a future publish by a person; the validation helper does not upload anything.
+The version of the kotowari family is set in the root `Cargo.toml`, and that of the schema family in `crates/kotowari-markdown-schema/Cargo.toml`. `kotowari-overview` follows the kotowari family's version, and `kotowari-markdown-view` the schema family's.
+When the schema family's version changes, also update the dependency declarations coming in from core and overview. This is not a procedure for changing the tags, binary names or distribution archive names of the two existing products.

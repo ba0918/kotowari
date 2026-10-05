@@ -1,37 +1,39 @@
-# スキルの references と本体の一致
+# The skill references agreeing with the binary
 
-"agent/skills/" の下のスキルの references（"agent/skills/kotowari/references/" と "agent/skills/kotowari-plan/references/" の文書）に写した本体の値や形が本体と一致することの検査を扱う。この検査は kotowari の振る舞いではなく、このリポジトリのテストが行う。突き合わせる相手は本体のコードが持つ値であり、IR の表ではない。
+English | [日本語](skill-references.ja.md)
+
+Covers the check that the values and forms of the binary copied into the references of the skills under "agent/skills/" (the documents of "agent/skills/kotowari/references/" and "agent/skills/kotowari-plan/references/") agree with the binary. This check is not a behaviour of kotowari; the tests of this repository perform it. What they are compared with is the values held by the binary's code, not the tables of the IR.
 
 ## Requirements
 
-### REQ-core-125: 指摘の種類の一致
+### REQ-core-125: Agreement of the finding kinds
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-17-check-reach.md#A6, docs/decision/records/2026-09-17-check-reach.md#A7, docs/decision/records/2026-09-23-ir-english-tokens.md#A6, docs/decision/records/2026-09-23-skill-distribution.md#A1
 - verification: unit
 
-このリポジトリのテストは常に、"agent/skills/kotowari/references/findings.md" のヘッダの1列目が「Kind」の表について、ヘッダと区切りの行を除いた1列目の集合が、本体のコードが出す`指摘`の種類の集合と等しいことを確かめる。
+The tests of this repository always confirm, for the table in "agent/skills/kotowari/references/findings.md" whose header's first column is "Kind", that the set of first columns excluding the header and separator rows equals the set of kinds of `finding` the binary's code raises.
 
-### REQ-core-126: 既定の一致
+### REQ-core-126: Agreement of the defaults
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-17-check-reach.md#A6, docs/decision/records/2026-09-17-check-reach.md#A7, docs/decision/records/2026-09-17-check-reach.md#A11, docs/decision/records/2026-09-17-check-reach.md#A27, docs/decision/records/2026-09-17-mutation-tests.md#A59, docs/decision/records/2026-09-23-skill-distribution.md#A1
 - verification: unit
 
-このリポジトリのテストは常に、"agent/skills/kotowari/references/config.md" の setup の手順1にある YAML のコードブロックに `TBL-core-004` の既定のある鍵がすべて書かれていて、そのブロックを`設定ファイル`として本体のコードで読んだ結果が本体のコードが持つ設定の既定の値と等しいことを確かめる。
+The tests of this repository always confirm that the YAML code block in step 1 of setup in "agent/skills/kotowari/references/config.md" contains every key of `TBL-core-004` that has a default, and that the result of reading that block with the binary's code as a `configuration file` equals the default values of the configuration held by the binary's code.
 
-### REQ-core-127: 停止の文言の一致
+### REQ-core-127: Agreement of the stop wording
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-17-check-reach.md#A6, docs/decision/records/2026-09-17-check-reach.md#A7, docs/decision/records/2026-09-17-check-reach.md#A12, docs/decision/records/2026-09-23-ir-english-tokens.md#A6, docs/decision/records/2026-09-23-skill-distribution.md#A1
 - verification: unit
 
-このリポジトリのテストは常に、"agent/skills/kotowari/references/findings.md" のヘッダの1列目が「Message」の表について、ヘッダと区切りの行を除いた1列目の集合が、本体のコードが`停止`の理由として標準エラーの1行目に出す文言の集合と等しいことを確かめる。
+The tests of this repository always confirm, for the table in "agent/skills/kotowari/references/findings.md" whose header's first column is "Message", that the set of first columns excluding the header and separator rows equals the set of wordings the binary's code writes on the first line of standard error as the reason of a `stop`.
 
-### REQ-core-195: 例の計画書の一致
+### REQ-core-195: Agreement of the example plan
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-09-24-plan-schema.md#A13, docs/decision/records/2026-09-23-skill-distribution.md#A1, docs/decision/records/2026-09-24-plan-schema.md#A34
 - verification: unit
 
-このリポジトリのテストは常に、"agent/skills/kotowari-plan/references/plan-example.md" を本体のコードで`計画書`として読んだとき、`指摘`が1件も出ないことを確かめる。
+The tests of this repository always confirm that when "agent/skills/kotowari-plan/references/plan-example.md" is read with the binary's code as a `plan`, not a single `finding` is raised.

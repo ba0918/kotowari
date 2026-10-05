@@ -1,166 +1,168 @@
-# 全体像の元データの検査
+# Checking overview data
 
-`全体像の元データ`の置き場と読み方、形、`部品`の中身、冒頭の lead、扱う`IR`の文書の一覧、`部品`の中の参照、`ガイドの印`の検査を扱う。この検査は kotowari-overview が行い、"kotowari check" と "kotowari status" の`指摘`に加わる（overview-output.md）。
+English | [日本語](overview-data.ja.md)
+
+Covers the location and reading of the `overview data`, its form, the content of each `part`, the opening lead, the list of `IR` documents it covers, the references inside each `part`, and the check of each `guide mark`. This check is performed by kotowari-overview, and its results join the `finding` entries of "kotowari check" and "kotowari status" (overview-output.md).
 
 ## Requirements
 
-### REQ-core-278: 元データの置き場
+### REQ-core-278: The location of the data
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A15, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A49, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A76
 - verification: unit
 
-kotowari は常に、"kotowari check"、"kotowari status"、"kotowari overview build"、"kotowari overview serve" で、設定の "overview.files" の glob に当たり拡張子が小文字の ".md" のファイルを`全体像の元データ`として読み、それ以外のファイルを読まない（`除外`）。"kotowari overview build" と "kotowari overview serve" は、参照を解くために "kotowari check" と同じ設定と置き場から`IR`と`判断の記録`と ADR を読み、その置き場の`停止`（REQ-core-018）も check と同じにする。glob の読み方、走査、`除外`、読めないファイルと UTF-8 でないファイルと先の無いシンボリックリンクでの`停止`は "guides.files" と`ガイド`のとおりにし、隠しディレクトリは "changes.records" と同じく glob がパスの成分で名指ししたものだけを読む。
+kotowari always, on "kotowari check", "kotowari status", "kotowari overview build" and "kotowari overview serve", reads as `overview data` the files matched by the globs of "overview.files" in the configuration whose extension is lowercase ".md", and does not read other files (an `exclusion`). "kotowari overview build" and "kotowari overview serve" read the `IR`, each `decision record` and the ADRs from the same configuration and locations as "kotowari check" in order to resolve references, and make the `stop` for those locations (REQ-core-018) the same way as check. How the globs are read, the walk, the `exclusion`, and the `stop` on an unreadable file, a non-UTF-8 file and a symbolic link without a target follow "guides.files" and the `guide`; of hidden directories, only those that a glob names by a path component are read, as with "changes.records".
 
-### REQ-core-279: 元データの鍵が無いとき
+### REQ-core-279: When there is no key for the data
 
 - kind: event_driven
 - source: docs/decision/records/2026-10-02-whole-picture.md#A32
 - verification: unit
 
-`設定ファイル`に "overview" の鍵が無いとき、kotowari は "kotowari check" と "kotowari status" で`全体像の元データ`を1つも読まず、"kotowari overview build" と "kotowari overview serve" では設定の誤りを理由に`停止`する。
+When the `configuration file` has no "overview" key, kotowari reads no `overview data` on "kotowari check" and "kotowari status", and makes a `stop` with a configuration error as the reason on "kotowari overview build" and "kotowari overview serve".
 
-### REQ-core-280: ガイドとテストとの重なり
+### REQ-core-280: Overlap with guides and tests
 
 - kind: event_driven
 - source: docs/decision/records/2026-10-02-whole-picture.md#A58, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A75
 - verification: unit
 
-"kotowari check"、"kotowari status"、"kotowari overview build"、"kotowari overview serve" で、1つのファイルが "overview.files" の glob と、"guides.files" か "tests.files" の glob の両方に当たるとき、kotowari は設定の誤りを理由に`停止`し、詳細に、重なったファイルのうちパスのバイト順で最初の1つの`基準のディレクトリ`からの相対パスに ": matched by both overview.files and guides.files" か ": matched by both overview.files and tests.files" を続けた文字列を出す。REQ-core-199 の重なりがあればそれを先に判定し、1つのファイルが3つすべてに当たるときは ": matched by both overview.files and guides.files" を出す。
+When, on "kotowari check", "kotowari status", "kotowari overview build" or "kotowari overview serve", one file is matched both by the globs of "overview.files" and by the globs of "guides.files" or "tests.files", kotowari makes a `stop` with a configuration error as the reason, and outputs as the detail the path, relative to the `base directory`, of the first overlapping file in the byte order of the path, followed by ": matched by both overview.files and guides.files" or ": matched by both overview.files and tests.files". If there is an overlap of REQ-core-199, that is judged first, and when one file is matched by all three, it outputs ": matched by both overview.files and guides.files".
 
-### REQ-core-281: 元データの形
+### REQ-core-281: The form of the data
 
 - kind: algorithm
 - source: docs/decision/records/2026-10-02-whole-picture.md#A44, docs/decision/records/2026-10-02-whole-picture.md#A54, docs/decision/records/2026-10-02-whole-picture.md#A55, docs/decision/records/2026-10-02-whole-picture.md#A69, docs/decision/records/2026-10-02-whole-picture.md#A71
 - definition: TBL-core-038
 - verification: unit
 
-### REQ-core-282: 部品の中身
+### REQ-core-282: The content of a part
 
 - kind: event_driven
 - source: docs/decision/records/2026-10-02-whole-picture.md#A43, docs/decision/records/2026-10-02-whole-picture.md#A46, docs/decision/records/2026-10-02-whole-picture.md#A47, docs/decision/records/2026-10-02-whole-picture.md#A48, docs/decision/records/2026-10-02-whole-picture.md#A54, docs/decision/records/2026-10-02-whole-picture.md#A69, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A74, docs/decision/records/2026-10-02-whole-picture.md#A85, docs/decision/records/2026-10-02-whole-picture.md#A86, docs/decision/records/2026-10-05-overview-page-reading.md#A10
 - verification: unit
 
-`全体像の元データ`の情報文字列が "view" と1つ以上の空白と種類の名前であるフェンスのコードブロックについて、種類の名前が描画のエンジンの`部品`の種類に無いとき、kotowari は "line" をフェンスの開始の行、detail を種類の名前にして overview_part_unknown の`誤り`を出す。中身が YAML として読めないとき、または描画のエンジンが公開するその種類のスキーマに合わないとき、kotowari は "line" をフェンスの開始の行、detail を種類の名前と1つの半角空白と合わなかった場所にして overview_part_invalid の`誤り`を出す。ただし YAML として読めないときに YAML の読み取りが誤りの位置を返したら、"line" はその位置の行を`全体像の元データ`のファイルの行に直したものにする。合わなかった場所は、合わなかった値の JSON Pointer に、知らない鍵（"additionalProperties"）と欠けた鍵（"required"）ではその鍵の名前を "/" で足したもので、値の全体なら "(root)"、YAML として読めないときは "(yaml)" と書く。同じ "line" と detail の`誤り`は1件にまとめる。detail に検査のライブラリが作る文を入れない。
+For a fenced code block of the `overview data` whose info string is "view", one or more spaces and a kind name, when the kind name is not a kind of `part` of the rendering engine, kotowari outputs an overview_part_unknown `error` with "line" set to the line where the fence opens and detail to the kind name. When the content cannot be read as YAML, or does not fit the schema for that kind that the rendering engine publishes, kotowari outputs an overview_part_invalid `error` with "line" set to the line where the fence opens and detail to the kind name, one space and the place that did not fit. However, when the content cannot be read as YAML and the YAML reader returns the position of the error, "line" is the line of that position converted to a line of the `overview data` file. The place that did not fit is the JSON Pointer of the value that did not fit, with the name of the key appended with "/" for an unknown key ("additionalProperties") and a missing key ("required"); it is written "(root)" for the whole value and "(yaml)" when the content cannot be read as YAML. `error` entries with the same "line" and detail are merged into one. The detail does not include text produced by the validation library.
 
-### REQ-core-283: 冒頭の lead
+### REQ-core-283: The opening lead
 
 - kind: event_driven
 - source: docs/decision/records/2026-10-02-whole-picture.md#A7, docs/decision/records/2026-10-02-whole-picture.md#A38, docs/decision/records/2026-10-02-whole-picture.md#A69, docs/decision/records/2026-10-02-whole-picture.md#A74, docs/decision/records/2026-10-02-whole-picture.md#A77
 - verification: unit
 
-`全体像の元データ`の`題名`の後で最初の、HTML のコメントでも空行でもないブロックが、種類の名前が "lead" の`部品`でないとき、kotowari は "line" を null、detail を文書名にして overview_lead_missing の`誤り`を出す。
+When the first block after the `title` of the `overview data` that is neither an HTML comment nor a blank line is not a `part` whose kind name is "lead", kotowari outputs an overview_lead_missing `error` with "line" null and detail the document name.
 
-### REQ-core-284: 扱う IR の文書
+### REQ-core-284: The IR documents covered
 
 - kind: event_driven
 - source: docs/decision/records/2026-10-02-whole-picture.md#A19, docs/decision/records/2026-10-02-whole-picture.md#A55, docs/decision/records/2026-10-02-whole-picture.md#A69, docs/decision/records/2026-10-02-whole-picture.md#A74
 - verification: unit
 
-`全体像の元データ`の frontmatter の "ir" の1件が、`基準のディレクトリ`からの相対パスで読んだ`IR`の`話題ごとの文書`のどれでもないとき、kotowari は "line" を null、detail をその1件の文字にして overview_ir_missing の`誤り`を出す。1つの`話題ごとの文書`が2つ以上の`全体像の元データ`の "ir" にあるとき、kotowari はパスのバイト順で2つ目以降の`全体像の元データ`ごとに、"line" を null、detail をその`話題ごとの文書`のパスにして overview_ir_shared の`誤り`を出す。
+When an entry of "ir" in the frontmatter of the `overview data` is, as a path relative to the `base directory`, none of the `topic document` files of the `IR` read, kotowari outputs an overview_ir_missing `error` with "line" null and detail the text of that entry. When one `topic document` is in the "ir" of two or more `overview data` files, kotowari outputs, for each such `overview data` file from the second on in the byte order of the path, an overview_ir_shared `error` with "line" null and detail the path of that `topic document`.
 
-### REQ-core-285: 部品の中の参照
+### REQ-core-285: References inside a part
 
 - kind: event_driven
 - source: docs/decision/records/2026-10-02-whole-picture.md#A33, docs/decision/records/2026-10-02-whole-picture.md#A66, docs/decision/records/2026-10-02-whole-picture.md#A69, docs/decision/records/2026-10-02-whole-picture.md#A74, docs/decision/records/2026-10-02-whole-picture.md#A77
 - verification: unit
 
-スキーマに合う`部品`の値の中の、名前が "refs" の欄の文字列の1件と名前が "ref" の欄の文字列（入れ子の深さを問わない）を参照とし、参照が`ID`の形でその`ID`の`項目`か`シナリオ`が`IR`に無いとき、または参照が "#" を含み`出典`の規則でその先が無いとき、または参照がそのどちらの形でもないとき、kotowari は "line" を`部品`のフェンスの開始の行、detail を参照の文字にして overview_ref_unresolved の`誤り`を1件ごとに出す。
+Taking as references each string entry of a field named "refs" and each string of a field named "ref" in the value of a `part` that fits the schema (at any nesting depth), when a reference is in the form of an `ID` and the `IR` has no `item` or `scenario` with that `ID`, or a reference contains "#" and its target does not exist under the rules of the `source`, or a reference is in neither of these forms, kotowari outputs one overview_ref_unresolved `error` for each, with "line" set to the line where the fence of the `part` opens and detail to the text of the reference.
 
-### REQ-core-286: 元データのガイドの印
+### REQ-core-286: Guide marks in the data
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A31, docs/decision/records/2026-10-02-whole-picture.md#A39, docs/decision/records/2026-10-02-whole-picture.md#A54, docs/decision/records/2026-10-02-whole-picture.md#A58, docs/decision/records/2026-10-02-whole-picture.md#A69, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A77
 - verification: unit
 
-kotowari は常に、`全体像の元データ`の中の`ガイドの印`を`ガイド`と同じ規則（REQ-core-200、REQ-core-201、REQ-core-202、REQ-core-203、REQ-core-204）で読んで照合し、invalid_marker の`誤り`と guide_stale の`注意`を、"path" を`全体像の元データ`にして出す。`全体像の元データ`は`ガイド`として二重に読まない。節の`ガイドの印`は、その節の "## " の見出しの次の行に、それだけの行として置く。
+kotowari always reads and matches each `guide mark` in the `overview data` by the same rules as a `guide` (REQ-core-200, REQ-core-201, REQ-core-202, REQ-core-203, REQ-core-204), and outputs the invalid_marker `error` and the guide_stale `notice` with "path" set to the `overview data`. The `overview data` is not read a second time as a `guide`. The `guide mark` of a section is placed on the line after the "## " heading of that section, as a line of its own.
 
-### REQ-core-287: 元データの検査は kotowari-overview が行う
+### REQ-core-287: kotowari-overview checks the data
 
 - kind: ubiquitous
 - source: docs/decision/records/2026-10-02-whole-picture.md#A21, docs/decision/records/2026-10-02-whole-picture.md#A48, docs/decision/records/2026-10-02-whole-picture.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A33, docs/decision/records/2026-10-04-overview-on-public-api.md#A1, docs/decision/records/2026-10-04-overview-on-public-api.md#A2
 - verification: review
-- how_to_verify: 解析と検査がkotowari-overviewにあり、同クレートがcoreとmarkdown-schemaとmarkdown-viewに依存してファイル・ネットワーク・環境変数を操作せず、coreがoverviewとviewに依存しないことを確認する。元データの読み込みとcacheへの書き込みがkotowariライブラリに、serveがkotowari-cliにあり、checkへの結果の統合がcoreの追加の指摘の群を通ることを確認する。
+- how_to_verify: Confirm that parsing and checking are in kotowari-overview, that this crate depends on core, markdown-schema and markdown-view and does not touch files, the network or environment variables, and that core does not depend on overview or view. Confirm that reading the data and writing to the cache are in the kotowari library and serve is in kotowari-cli, and that merging the results into check goes through core's group of additional findings.
 
-kotowari は常に、`全体像の元データ`の解析と検査を kotowari-overview のクレートで行い、kotowari-core はそれを知らない。元データのファイルの読み込みと`全体像`のファイルの書き込みは kotowari ライブラリが、HTTP で配る serve は kotowari-cli が行う。検査結果を check へ統合するのは kotowari ライブラリで、core の追加の指摘の群として渡す。
+kotowari always parses and checks the `overview data` in the kotowari-overview crate, and kotowari-core does not know about it. The kotowari library reads the data files and writes the files of the `overview`, and kotowari-cli performs serve, which serves over HTTP. The kotowari library merges the check results into check, passing them as core's group of additional findings.
 
 ## Decision tables
 
-### TBL-core-038: 元データの形
+### TBL-core-038: The form of the data
 
 - source: docs/decision/records/2026-10-02-whole-picture.md#A44, docs/decision/records/2026-10-02-whole-picture.md#A54, docs/decision/records/2026-10-02-whole-picture.md#A55, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A77, docs/decision/records/2026-10-02-whole-picture.md#A74, docs/decision/records/2026-10-02-whole-picture.md#A85, docs/decision/records/2026-10-04-overview-on-public-api.md#A5, docs/decision/records/2026-10-04-overview-on-public-api.md#A11
 
-形はスキーマ（kotowari-overview のパッケージの中の "crates/kotowari-overview/schemas/overview.yaml" をコンパイル時に取り込む）で宣言し、Markdown としての形の検査は kotowari-markdown-schema が行う。形に合わない所ごとに、"line" をその行（文書全体にかかるものは null）、detail を kotowari-markdown-schema の`指摘`の種類の名前にして overview_form_invalid の`誤り`を出す。frontmatter の行の違反だけは、detail を "frontmatter" にする。
+The form is declared in a schema ("crates/kotowari-overview/schemas/overview.yaml" in the kotowari-overview package, included at compile time), and kotowari-markdown-schema checks the form as Markdown. For each place that does not fit the form, kotowari outputs an overview_form_invalid `error` with "line" set to that line (null for one that concerns the whole document) and detail to the name of the kind of the `finding` of kotowari-markdown-schema. Only for a violation in the frontmatter lines is the detail "frontmatter".
 
-| 部分 | 形 |
+| Part | Form |
 |---|---|
-| frontmatter | 文書の先頭の YAML。鍵は "ir" だけで、値は1件以上の文字列の一覧。無い、読めない、知らない鍵、"ir" が無いか空か文字列の一覧でない、は形の違反 |
-| 題名 | "# " の見出しがちょうど1つ |
-| 題名の後 | 最初の "## " の見出しより前に、`部品`と HTML のコメントだけを置ける（最初の`部品`が lead であることは REQ-core-283 が検査する） |
-| 節 | "## " の見出し。下に文、箇条書き（入れ子を含む）、番号付きの一覧、表、コードブロック、HTML のコメント、"### " の見出しを置ける |
-| 部品 | 情報文字列が "view" と1つ以上の空白と種類の名前であるフェンスのコードブロック。中身は REQ-core-282 が検査する |
+| frontmatter | YAML at the start of the document. The only key is "ir", whose value is a list of one or more strings. Missing, unreadable, an unknown key, or "ir" missing, empty or not a list of strings is a violation of the form |
+| title | exactly one "# " heading |
+| after the title | before the first "## " heading, only each `part` and HTML comments may be placed (that the first `part` is a lead is checked by REQ-core-283) |
+| section | a "## " heading. Under it, sentences, bulleted lists (including nested ones), numbered lists, tables, code blocks, HTML comments and "### " headings may be placed |
+| part | a fenced code block whose info string is "view", one or more spaces and a kind name. Its content is checked by REQ-core-282 |
 
 ## Examples
 
 ```gherkin
 @id=EX-core-463 @about=REQ-core-279 @source=docs/decision/records/2026-10-02-whole-picture.md#A32,docs/decision/records/2026-10-02-whole-picture.md#A64,docs/decision/records/2026-10-02-whole-picture.md#A78
-Scenario: overview の鍵が無ければ check は元データを読まず build は止まる
-  Given `設定ファイル`に "overview" の鍵が無く、".kotowari/overview/x.md" に形の崩れたファイルがある
-  When "kotowari check --format json" と "kotowari overview build" を実行する
-  Then check の "overview" の "files" は 0 で、そのファイルを指す`指摘`は無い
-  And build の終了コードは 2 で、標準エラーの1行目は "config error: " で始まる
+Scenario: Without the overview key, check does not read the data and build stops
+  Given the `configuration file` has no "overview" key, and ".kotowari/overview/x.md" is a malformed file
+  When "kotowari check --format json" and "kotowari overview build" are run
+  Then the "files" of "overview" in check is 0, and there is no `finding` pointing at that file
+  And the exit code of build is 2, and the first line of standard error starts with "config error: "
 
 @id=EX-core-464 @about=REQ-core-278 @source=docs/decision/records/2026-10-02-whole-picture.md#A17,docs/decision/records/2026-10-02-whole-picture.md#A32,docs/decision/records/2026-10-02-whole-picture.md#A64
-Scenario: 名指しした隠しディレクトリの元データを読む
-  Given "overview.files" が ".kotowari/overview/*.md" で、".kotowari/overview/changes.md" に正しい`全体像の元データ`がある
-  When "kotowari check --format json" を実行する
-  Then "overview" の "files" は 1 である
+Scenario: Data in a hidden directory named by the glob is read
+  Given "overview.files" is ".kotowari/overview/*.md", and ".kotowari/overview/changes.md" has correct `overview data`
+  When "kotowari check --format json" is run
+  Then the "files" of "overview" is 1
 
 @id=EX-core-465 @about=REQ-core-280 @source=docs/decision/records/2026-10-02-whole-picture.md#A58,docs/decision/records/2026-10-02-whole-picture.md#A75
-Scenario: ガイドと重なる元データは設定の誤りになる
-  Given "overview.files" と "guides.files" の両方が "docs/a.md" に当たる
-  When "kotowari check" を実行する
-  Then 終了コードは 2 で、標準エラーの1行目は "config error: docs/a.md: matched by both overview.files and guides.files" である
+Scenario: Data that overlaps a guide is a configuration error
+  Given both "overview.files" and "guides.files" match "docs/a.md"
+  When "kotowari check" is run
+  Then the exit code is 2, and the first line of standard error is "config error: docs/a.md: matched by both overview.files and guides.files"
 
 @id=EX-core-466 @about=REQ-core-282 @source=docs/decision/records/2026-10-02-whole-picture.md#A46,docs/decision/records/2026-10-02-whole-picture.md#A69,docs/decision/records/2026-10-02-whole-picture.md#A73,docs/decision/records/2026-10-02-whole-picture.md#A74
-Scenario: 知らない部品とスキーマに合わない部品は誤りになる
-  Given `全体像の元データ`に "```view chart" のフェンスと、中身に知らない鍵 "color" を持つ "```view cards" のフェンスがある
-  When "kotowari check --format json" を実行する
-  Then detail が "chart" の overview_part_unknown と、detail が "cards" と半角空白と、"color" の鍵を持つ値の JSON Pointer に "/color" を足したものである overview_part_invalid の`誤り`が出る
+Scenario: An unknown part and a part that does not fit the schema are errors
+  Given the `overview data` has a "```view chart" fence, and a "```view cards" fence whose content has an unknown key "color"
+  When "kotowari check --format json" is run
+  Then an overview_part_unknown `error` with detail "chart" is output, and an overview_part_invalid `error` whose detail is "cards", a space, and the JSON Pointer of the value that has the "color" key with "/color" appended
 
 @id=EX-core-511 @about=REQ-core-282 @source=docs/decision/records/2026-10-05-overview-page-reading.md#A10
-Scenario: YAML として読めない部品は誤りの行を指す
-  Given `全体像の元データ`の10行目に "```view cards" のフェンスがあり、その中の13行目が YAML として読めない行である
-  When "kotowari check --format json" を実行する
-  Then "line" が 13、detail が "cards (yaml)" の overview_part_invalid の`誤り`が1件出る
+Scenario: A part that cannot be read as YAML points at the line of the error
+  Given line 10 of the `overview data` has a "```view cards" fence, and line 13 inside it cannot be read as YAML
+  When "kotowari check --format json" is run
+  Then one overview_part_invalid `error` is output with "line" 13 and detail "cards (yaml)"
 
 @id=EX-core-467 @about=REQ-core-283 @source=docs/decision/records/2026-10-02-whole-picture.md#A38,docs/decision/records/2026-10-02-whole-picture.md#A69,docs/decision/records/2026-10-02-whole-picture.md#A74
-Scenario: 冒頭が lead でなければ誤りになる
-  Given `題名`の直後の最初の`部品`が "```view steps" の`全体像の元データ` "x.md" がある
-  When "kotowari check --format json" を実行する
-  Then "line" が null で detail が "x.md" の overview_lead_missing の`誤り`が出る
+Scenario: An opening that is not a lead is an error
+  Given there is `overview data` "x.md" whose first `part` right after the `title` is "```view steps"
+  When "kotowari check --format json" is run
+  Then an overview_lead_missing `error` is output with "line" null and detail "x.md"
 
 @id=EX-core-468 @about=REQ-core-284 @source=docs/decision/records/2026-10-02-whole-picture.md#A19,docs/decision/records/2026-10-02-whole-picture.md#A69,docs/decision/records/2026-10-02-whole-picture.md#A74
-Scenario: 無い IR の文書と2つの全体像に属する IR の文書は誤りになる
-  Given "a.md" と "b.md" の2つの`全体像の元データ`の "ir" が両方 "docs/ir/core/cli.md" を持ち、"a.md" の "ir" が "docs/ir/core/none.md" も持つ
-  When "kotowari check --format json" を実行する
-  Then "a.md" に detail が "docs/ir/core/none.md" の overview_ir_missing が出て、"b.md" に detail が "docs/ir/core/cli.md" の overview_ir_shared が出る
+Scenario: A missing IR document and an IR document belonging to two overviews are errors
+  Given the "ir" of both `overview data` files "a.md" and "b.md" has "docs/ir/core/cli.md", and the "ir" of "a.md" also has "docs/ir/core/none.md"
+  When "kotowari check --format json" is run
+  Then overview_ir_missing with detail "docs/ir/core/none.md" is output on "a.md", and overview_ir_shared with detail "docs/ir/core/cli.md" is output on "b.md"
 
 @id=EX-core-469 @about=REQ-core-285 @source=docs/decision/records/2026-10-02-whole-picture.md#A66,docs/decision/records/2026-10-02-whole-picture.md#A33,docs/decision/records/2026-10-02-whole-picture.md#A69,docs/decision/records/2026-10-02-whole-picture.md#A74
-Scenario: 解決できない参照は誤りになる
-  Given steps の`部品`の "refs" に "REQ-core-001"、"REQ-core-999"、"docs/decision/records/records.md#A9999"、"foo" がある
-  When "kotowari check --format json" を実行する
-  Then detail が "REQ-core-999"、"docs/decision/records/records.md#A9999"、"foo" の overview_ref_unresolved の`誤り`が1件ずつ出て、"REQ-core-001" には出ない
+Scenario: A reference that cannot be resolved is an error
+  Given the "refs" of a steps `part` has "REQ-core-001", "REQ-core-999", "docs/decision/records/records.md#A9999" and "foo"
+  When "kotowari check --format json" is run
+  Then one overview_ref_unresolved `error` each is output with detail "REQ-core-999", "docs/decision/records/records.md#A9999" and "foo", and none for "REQ-core-001"
 
 @id=EX-core-470 @about=REQ-core-286 @source=docs/decision/records/2026-10-02-whole-picture.md#A39,docs/decision/records/2026-10-02-whole-picture.md#A58,docs/decision/records/2026-10-02-whole-picture.md#A32,docs/decision/records/2026-10-02-whole-picture.md#A69,docs/decision/records/2026-10-02-whole-picture.md#A73,docs/decision/records/2026-10-02-whole-picture.md#A77
-Scenario: 元データの古いガイドの印は guide_stale になる
-  Given `全体像の元データ`の節の "## " の見出しの次の行に、今の`指紋`と違う`指紋`を書いた`ガイドの印`がある
-  When "kotowari check --format json" を実行する
-  Then "path" がその`全体像の元データ`の guide_stale の`注意`が1件出る
+Scenario: A stale guide mark in the data becomes guide_stale
+  Given on the line after the "## " heading of a section of the `overview data` there is a `guide mark` with a `fingerprint` different from the current `fingerprint`
+  When "kotowari check --format json" is run
+  Then one guide_stale `notice` is output whose "path" is that `overview data`
 
 @id=EX-core-471 @about=REQ-core-281 @source=docs/decision/records/2026-10-02-whole-picture.md#A55,docs/decision/records/2026-10-02-whole-picture.md#A69,docs/decision/records/2026-10-02-whole-picture.md#A71
-Scenario: frontmatter に知らない鍵があれば形の誤りになる
-  Given frontmatter に "ir" と "title" の鍵を持つ`全体像の元データ`がある
-  When "kotowari check --format json" を実行する
-  Then overview_form_invalid の`誤り`が出る
+Scenario: An unknown key in the frontmatter is a form error
+  Given there is `overview data` whose frontmatter has the keys "ir" and "title"
+  When "kotowari check --format json" is run
+  Then an overview_form_invalid `error` is output
 ```

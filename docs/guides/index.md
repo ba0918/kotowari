@@ -1,51 +1,53 @@
-# kotowari ガイド
+# kotowari guide
 
-<!-- @kotowari[REQ-core-001:67e34470] -->
+English | [日本語](index.ja.md)
 
-kotowari は、Markdown で書いた仕様（IR）を機械的に検査する CLI です。
-要求・決定表・シナリオを決まった形で書き、それぞれが決定の記録に出典を持ち、テストに結び付いているかを `kotowari check` が確かめます。
+<!-- @kotowari[REQ-core-001:f6b868d0] -->
 
-このガイドは、kotowari を使う開発者のためのリファレンスです。
-仕様そのものは [IR](../ir/core/) にあり、ガイドと IR が食い違うときは IR が正です。
+kotowari is a CLI that mechanically checks a specification (the IR) written in Markdown.
+You write requirements, decision tables and scenarios in a fixed form, and `kotowari check` confirms that each one has a source in a decision record and is tied to tests.
 
-## はじめに読む
+This guide is a reference for developers who use kotowari.
+The specification itself is in the [IR](../ir/core/); when the guide and the IR disagree, the IR is right.
 
-| やりたいこと | 読むページ |
+## Start here
+
+| What you want to do | Page to read |
 |---|---|
-| コマンドの共通の書式、終了コード、止まったときの読み方を知る | [CLI（全コマンド共通）](cli.md) |
-| Rustから型付きAPIを呼ぶ | [公開クレートAPI](public-crate-api.md) |
-| 独立した配布アーカイブを検証する | [パッケージ検証](package-validation.md) |
-| 置き場やテストのファイルの場所を設定する | [設定ファイル](config.md) |
-| 仕様を検査して、指摘を直す | [kotowari check](commands/check.md) と [指摘の種類](findings.md) |
-| テストと要求を結び付ける | [テストに印を付ける](marks.md) |
-| 今は作らない要求をテストの検査から外す | [要求を後回しにする](deferred.md) |
-| IR に書かないまま作った機能をコードから見つける | [面の検査](surface.md) |
+| Learn the common command syntax, the exit codes, and how to read a stop | [CLI (common to all commands)](cli.md) |
+| Call the typed API from Rust | [Public crate API](public-crate-api.md) |
+| Validate standalone distribution archives | [Package validation](package-validation.md) |
+| Configure where the IR, records and test files are | [Configuration file](config.md) |
+| Check the specification and fix findings | [kotowari check](commands/check.md) and [Finding kinds](findings.md) |
+| Tie tests to requirements | [Marking tests](marks.md) |
+| Leave requirements you are not building now out of the test checks | [Deferring requirements](deferred.md) |
+| Find, from the code, features built without being written in the IR | [Surface check](surface.md) |
 
-## コマンド
+## Commands
 
-| コマンド | 何をするか |
+| Command | What it does |
 |---|---|
-| [changes](commands/changes.md) | 変更の照合漏れと鮮度を Git snapshot で検査する |
-| [check](commands/check.md) | IR とテストの印を検査し、指摘を出す |
-| [list](commands/list.md) | 項目とシナリオを、印の付いたテストと一緒に一覧にする |
-| [query](commands/query.md) | 1件の項目の本文と、それを指す項目を出す |
-| [status](commands/status.md) | 揃っているかを数と1つの真偽で答える |
-| [mutants](commands/mutants.md) | 変異テストの結果を読み、見逃しを指摘にする |
-| [plan](commands/plan.md) | 実装計画の形を、同梱のスキーマで検査する |
-| [overview](../ir/core/overview-commands.md) | 全体像の元データから全体像のページを `build` で書き、`serve` で書いて手元で配る |
+| [changes](commands/changes.md) | Checks for unreconciled changes and freshness with Git snapshots |
+| [check](commands/check.md) | Checks the IR and the marks in tests, and reports findings |
+| [list](commands/list.md) | Lists items and scenarios together with their marked tests |
+| [query](commands/query.md) | Prints the body of one item and the items that point at it |
+| [status](commands/status.md) | Answers whether everything lines up, with counts and one boolean |
+| [mutants](commands/mutants.md) | Reads mutation testing results and turns misses into findings |
+| [plan](commands/plan.md) | Checks the form of an implementation plan with the bundled schema |
+| [overview](../ir/core/overview-commands.md) | Writes overview pages from overview data with `build`, and with `serve` writes them and serves them locally |
 
-## リファレンス
+## Reference
 
-- [CLI（全コマンド共通）](cli.md) — 書式、共通のオプション、終了コード、停止の理由
-- [設定ファイル](config.md) — `.kotowari/config.yaml` の全キー
-- [指摘の種類](findings.md) — 誤りと注意の一覧、detail、直し方
-- [テストに印を付ける](marks.md) — `@kotowari[...]` の書き方と、見つかるテスト
-- [要求を後回しにする](deferred.md) — `- deferred:` の書き方、効き目、食い違いの注意
-- [面の検査](surface.md) — 面の規則の書き方、IR にあるとする場所、未記載の面の一覧
-- [ガイドを書く](writing-guides.md) — このガイドのような利用者向けの文書に印と指紋を付け、IR の変更に追従させる
+- [CLI (common to all commands)](cli.md) — syntax, common options, exit codes, reasons for stopping
+- [Configuration file](config.md) — every key of `.kotowari/config.yaml`
+- [Finding kinds](findings.md) — the list of errors and notices, their detail, and how to fix them
+- [Marking tests](marks.md) — how to write `@kotowari[...]`, and which tests are found
+- [Deferring requirements](deferred.md) — how to write `- deferred:`, what it does, and the mismatch notices
+- [Surface check](surface.md) — how to write surface rules, where a surface counts as being in the IR, and the list of unspecified surfaces
+- [Writing guides](writing-guides.md) — put marks and fingerprints in user-facing documents like this guide so they keep up with IR changes
 
-## このガイドの保ち方
+## How this guide is kept up to date
 
-各節の見出しの下には、その節が説明している IR の項目と指紋が HTML コメントで書かれています（描画したページには出ません）。
-IR が変わると `kotowari check` が古くなった節に guide_stale の注意を出すので、その節だけを見直します。
-やり方は [ガイドを書く](writing-guides.md) にあります。
+Under each section heading, an HTML comment holds the IR items that section explains, with their fingerprints (it does not appear on the rendered page).
+When the IR changes, `kotowari check` raises a guide_stale notice for the sections that went stale, so you only review those sections.
+How to do this is in [Writing guides](writing-guides.md).
