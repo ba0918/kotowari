@@ -15,10 +15,10 @@ kotowari は常に、"kotowari list" で "kotowari check" と同じ設定と置�
 ### REQ-core-152: list の停止
 
 - kind: event_driven
-- source: docs/decision/records/2026-09-19-read-commands.md#A9, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-24-doc-marks.md#A22, docs/decision/records/2026-09-27-surface-check.md#A14, docs/decision/records/2026-09-27-surface-check.md#A24, docs/decision/records/2026-10-02-whole-picture.md#A73
+- source: docs/decision/records/2026-09-19-read-commands.md#A9, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-24-doc-marks.md#A22, docs/decision/records/2026-09-27-surface-check.md#A14, docs/decision/records/2026-09-27-surface-check.md#A24, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-05-localization.md#A37, docs/decision/records/2026-10-05-localization.md#A21
 - verification: unit
 
-"kotowari list" で、"kotowari check" が`停止`する条件（設定の誤り、読めないファイル、引数の誤り）が成り立つとき、kotowari は check と同じ理由と文言で`停止`する。 ただし "kotowari list" は`ガイド`を読まず、`ガイド`の置き場と読み込みによる`停止`（REQ-core-198、REQ-core-199）はしない。`面のファイル`と`面の規則`のファイルと`未記載の面の一覧`も読まず、その読み込みによる`停止`（REQ-core-229）はしない。`全体像の元データ`も読まず、その置き場と読み込みによる`停止`（REQ-core-278、REQ-core-280）はしない。
+"kotowari list" で、"kotowari check" が`停止`する条件（設定の誤り、読めないファイル、引数の誤り）が成り立つとき、kotowari は check と同じ理由と文言で`停止`する。 ただし "kotowari list" は`ガイド`を読まず、`ガイド`の置き場と読み込みによる`停止`（REQ-core-198、REQ-core-199）はしない。`面のファイル`と`面の規則`のファイルと`未記載の面の一覧`も読まず、その読み込みによる`停止`（REQ-core-229）はしない。`全体像の元データ`も読まず、その置き場と読み込みによる`停止`（REQ-core-278、REQ-core-280）はしない。ただし`言語の一覧`の言語が2つ以上のときは、"translations" を出すために`ガイド`、`全体像の元データ`、`目次`の置き場を check と同じに辿り、その置き場と読み込みによる`停止`を check と同じにして、中身を検査しない。
 
 ### REQ-core-153: 項目の形
 
@@ -38,10 +38,10 @@ kotowari は常に、"items" の1件を "path" の昇順、同じ "path" の中�
 ### REQ-core-155: 出力の形
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A8, docs/decision/records/2026-09-19-read-commands.md#A12, docs/decision/records/2026-09-19-read-commands.md#A19, docs/decision/records/2026-09-19-read-commands.md#A25, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-25-deferred-items.md#A9
+- source: docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A8, docs/decision/records/2026-09-19-read-commands.md#A12, docs/decision/records/2026-09-19-read-commands.md#A19, docs/decision/records/2026-09-19-read-commands.md#A25, docs/decision/records/2026-09-23-ir-english-tokens.md#A2, docs/decision/records/2026-09-25-deferred-items.md#A9, docs/decision/records/2026-10-05-localization.md#A29, docs/decision/records/2026-10-05-localization.md#D2, docs/decision/records/2026-10-05-localization.md#A21, docs/decision/records/2026-10-05-localization.md#D1, docs/decision/records/2026-10-05-localization.md#D3
 - verification: unit
 
-kotowari は常に、"kotowari list" の "--format" の値として "json" と "text" の2つだけを受け、既定を "json" にし、絞り込みのオプションを持たない。"json" では最上位が "items" だけの JSON を1つ出し、"items" は`TBL-core-026` の鍵を持つ1件の並びである。"text" では "items" の1件を1行で "ID 検証 名前 パス:行 tests=数" の形で出し（"検証" は要求以外と、"- verification:" の行の無い要求では "-"）、"deferred" が true の1件ではその行の末尾に " deferred" を付け、その直後に "tests" の1件ごとに2つの半角空白で字下げした "パス:行 名前" の行を続ける（"名前" が null のときは "-"）。
+kotowari は常に、"kotowari list" の "--format" の値として "json" と "text" の2つだけを受け、既定を "json" にし、絞り込みのオプションを持たない。"json" では最上位が "items" と、`言語の一覧`の言語が2つ以上のときだけ "translations" を持つ JSON を1つ出し、"items" は`TBL-core-026` の鍵を持つ1件の並びである。"translations" は`対`ごとの1件（`先頭の言語`の`側`の無い`対`も1件）の並びで、1件は "path"（`先頭の言語`の`側`の基準のディレクトリからの相対パス）と "sides"（`言語の一覧`の順に、"language"（言語タグ）、"path"（その`側`の基準のディレクトリからの相対パス）、"blob"（その`側`の blob hash。`側`が無ければ null）を持つ並び）を持ち、"path" の昇順に並ぶ。"text" では "items" の行の後に、"translations" の1件ごとに1行で、"path" に続けて "sides" の1件ごとに1つの半角空白と "言語タグ=blob hash"（無い`側`は "言語タグ=-"）を並べる。"text" では "items" の1件を1行で "ID 検証 名前 パス:行 tests=数" の形で出し（"検証" は要求以外と、"- verification:" の行の無い要求では "-"）、"deferred" が true の1件ではその行の末尾に " deferred" を付け、その直後に "tests" の1件ごとに2つの半角空白で字下げした "パス:行 名前" の行を続ける（"名前" が null のときは "-"）。
 
 ## Decision tables
 

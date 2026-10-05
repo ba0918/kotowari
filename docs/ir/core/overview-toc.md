@@ -30,18 +30,18 @@
 ### REQ-core-328: 目次に無いページ
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-05-overview-index.md#A12, docs/decision/records/2026-10-05-overview-index.md#A16, docs/decision/records/2026-10-05-overview-index.md#A21
+- source: docs/decision/records/2026-10-05-overview-index.md#A12, docs/decision/records/2026-10-05-overview-index.md#A16, docs/decision/records/2026-10-05-overview-index.md#A21, docs/decision/records/2026-10-05-localization.md#A31, docs/decision/records/2026-10-05-localization.md#A26, docs/decision/records/2026-10-05-localization.md#A39, docs/decision/records/2026-10-05-localization.md#A22, docs/decision/records/2026-10-05-localization.md#D3
 - verification: unit
 
-形の正しい`目次`のどこにも、ある`全体像の元データ`のファイル名から ".md" を除いた名前の項目が無いとき、kotowari は "path" を`目次`のファイル、"line" を null、detail をその名前にして overview_toc_page_missing の`誤り`を出す。
+形の正しい`目次`（`対`なら`先頭の言語`の`側`）のどこにも、ある`先頭の言語`の`側`の`全体像の元データ`のファイル名から ".md" を除いた名前の項目が無いとき、kotowari は "path" を`目次`のファイル、"line" を null、detail をその名前にして overview_toc_page_missing の`誤り`を出す。
 
 ### REQ-core-329: 元データの無い名前と重なった名前
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-05-overview-index.md#A12, docs/decision/records/2026-10-05-overview-index.md#A16, docs/decision/records/2026-10-05-overview-index.md#A29, docs/decision/records/2026-10-05-overview-index.md#A21, docs/decision/records/2026-10-05-overview-index.md#A34
+- source: docs/decision/records/2026-10-05-overview-index.md#A12, docs/decision/records/2026-10-05-overview-index.md#A16, docs/decision/records/2026-10-05-overview-index.md#A29, docs/decision/records/2026-10-05-overview-index.md#A21, docs/decision/records/2026-10-05-overview-index.md#A34, docs/decision/records/2026-10-05-localization.md#A31, docs/decision/records/2026-10-05-localization.md#A26, docs/decision/records/2026-10-05-localization.md#A39, docs/decision/records/2026-10-05-localization.md#A22, docs/decision/records/2026-10-05-localization.md#D3
 - verification: unit
 
-形の正しい`目次`の名前の項目が、どの`全体像の元データ`のファイル名から ".md" を除いた名前とも同じでないとき、kotowari は "path" を`目次`のファイル、"line" を null、detail をその項目の JSON Pointer にして overview_toc_page_unknown の`誤り`を出す。`全体像の元データ`のある名前の項目が2つ以上あるとき、kotowari は`目次`を書かれた順に深さ優先でたどって2つ目以降の項目ごとに、"path" を`目次`のファイル、"line" を null、detail をその項目の JSON Pointer にして overview_toc_page_duplicate の`誤り`を出す。
+形の正しい`目次`（`対`なら`先頭の言語`の`側`）の名前の項目が、どの`先頭の言語`の`側`の`全体像の元データ`のファイル名から ".md" を除いた名前とも同じでないとき、kotowari は "path" を`目次`のファイル、"line" を null、detail をその項目の JSON Pointer にして overview_toc_page_unknown の`誤り`を出す。`全体像の元データ`のある名前の項目が2つ以上あるとき、kotowari は`目次`を書かれた順に深さ優先でたどって2つ目以降の項目ごとに、"path" を`目次`のファイル、"line" を null、detail をその項目の JSON Pointer にして overview_toc_page_duplicate の`誤り`を出す。
 
 ### REQ-core-330: 空の目次の群
 

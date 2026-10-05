@@ -4,7 +4,7 @@ kotowari-markdown-view（view）の仕様 IR で使う用語を置く。view は
 
 | Term | Meaning | Source |
 |---|---|---|
-| 描画の入力 | view が1回の描画で受け取るものの全体。`文書`の並びと`参照の表`と`目次`からなる | docs/decision/records/2026-10-02-whole-picture.md#A25, docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-05-overview-index.md#A10, docs/decision/records/2026-10-05-overview-index.md#A33 |
+| 描画の入力 | view が1回の描画で受け取るものの全体。`文書`の並びと`参照の表`と`目次`と言語タグと`UI の文字`と`ほかの言語`からなる | docs/decision/records/2026-10-02-whole-picture.md#A25, docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-05-overview-index.md#A10, docs/decision/records/2026-10-05-overview-index.md#A33, docs/decision/records/2026-10-05-localization.md#A9, docs/decision/records/2026-10-05-localization.md#A20, docs/decision/records/2026-10-05-localization.md#A32 |
 | 文書 | `描画の入力`の中の1つの`ページ`の元。名前、題名、冒頭の lead の`部品`、lead に続く冒頭の`部品`の並び、`節`の並びを持つ。ファイルではない | docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-02-whole-picture.md#A68, docs/decision/records/2026-10-02-whole-picture.md#A82, docs/decision/records/2026-10-04-overview-on-public-api.md#A10 |
 | 節 | `文書`の中の "## " の見出し1つとその下の`ブロック`の並び。古いかどうかの真偽を持つ | docs/decision/records/2026-10-02-whole-picture.md#A39, docs/decision/records/2026-10-02-whole-picture.md#A68 |
 | ブロック | `節`の中身の単位。Markdown の文章の塊か`部品`のどちらか | docs/decision/records/2026-10-02-whole-picture.md#A42 |
@@ -16,3 +16,5 @@ kotowari-markdown-view（view）の仕様 IR で使う用語を置く。view は
 | 目次 | `描画の入力`の一部で、一覧の`ページ`の並びと入れ子を決める、いちばん外側の`目次の群`。地図・索引とは言わない | docs/decision/records/2026-10-05-overview-index.md#A7, docs/decision/records/2026-10-05-overview-index.md#A9, docs/decision/records/2026-10-05-overview-index.md#A15, docs/decision/records/2026-10-05-overview-index.md#A33 |
 | 目次の群 | `目次`の中の束。題名、省いてよい一行の説明、`文書`の名前と`目次の群`を順に並べた項目を持つ。カテゴリ・フォルダとは言わない | docs/decision/records/2026-10-05-overview-index.md#A4, docs/decision/records/2026-10-05-overview-index.md#A9, docs/decision/records/2026-10-05-overview-index.md#A10 |
 | アウトライン | `文書`の`ページ`に描く、その`ページ`の`節`の見出しの並び。各項目はその`節`へのリンクになる。`目次`とは言わない | docs/decision/records/2026-10-05-overview-page-reading.md#A1, docs/decision/records/2026-10-05-overview-page-reading.md#A2, docs/decision/records/2026-10-05-overview-page-reading.md#A12, docs/decision/records/2026-10-05-overview-page-reading.md#A18, docs/decision/records/2026-10-05-overview-page-reading.md#D1 |
+| UI の文字 | `描画の入力`の一部で、鍵から文字列への対応。view がページに書く文字のうち、`描画の入力`のほかの部分から来ないものはすべてここから取る。ラベル・翻訳とは言わない | docs/decision/records/2026-10-05-localization.md#A5, docs/decision/records/2026-10-05-localization.md#A9 |
+| ほかの言語 | `描画の入力`の一部で、同じ`ページ`をほかの言語で描いた置き場の並び。1件は言語の名前と、その置き場へのこの`ページ`の並びの置き場からの相対パスを持つ | docs/decision/records/2026-10-05-localization.md#A20, docs/decision/records/2026-10-05-localization.md#A32 |

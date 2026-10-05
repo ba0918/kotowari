@@ -7,11 +7,11 @@
 ### REQ-core-291: 参照の表を作る
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A25, docs/decision/records/2026-10-02-whole-picture.md#A65, docs/decision/records/2026-10-02-whole-picture.md#A66, docs/decision/records/2026-10-02-whole-picture.md#A67, docs/decision/records/2026-10-02-whole-picture.md#A72, docs/decision/records/2026-10-02-whole-picture.md#A73
+- source: docs/decision/records/2026-10-02-whole-picture.md#A25, docs/decision/records/2026-10-02-whole-picture.md#A65, docs/decision/records/2026-10-02-whole-picture.md#A66, docs/decision/records/2026-10-02-whole-picture.md#A67, docs/decision/records/2026-10-02-whole-picture.md#A72, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-05-localization.md#A34
 - definition: TBL-core-039
 - verification: unit
 
-kotowari は常に、"kotowari overview build" で、すべての`全体像の元データ`の`部品`の中の参照（REQ-core-285）の1つずつについて、TBL-core-039 の表示名、本文、状態を持つ`参照の表`の1件を作って描画のエンジンに渡す。
+kotowari は常に、"kotowari overview build" で、すべての`全体像の元データ`の`部品`の中の参照（REQ-core-285）の1つずつについて、TBL-core-039 の表示名、本文、状態を持つ`参照の表`の1件を作って描画のエンジンに渡す。言語ごとのページの本文は REQ-core-354 のとおりに取る。
 
 ### REQ-core-292: 古い節を求める
 
@@ -24,18 +24,18 @@ kotowari は常に、"kotowari overview build" で、`全体像の元データ`�
 ### REQ-core-293: 全体像を書く
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A16, docs/decision/records/2026-10-02-whole-picture.md#A26, docs/decision/records/2026-10-02-whole-picture.md#A29, docs/decision/records/2026-10-02-whole-picture.md#A56
+- source: docs/decision/records/2026-10-02-whole-picture.md#A16, docs/decision/records/2026-10-02-whole-picture.md#A26, docs/decision/records/2026-10-02-whole-picture.md#A29, docs/decision/records/2026-10-02-whole-picture.md#A56, docs/decision/records/2026-10-05-localization.md#A20
 - verification: unit
 
-kotowari は常に、"kotowari overview build" で、すべての`全体像の元データ`を毎回描画し、描画のエンジンが返した`全体像`のファイルのうち、`基準のディレクトリ`の ".kotowari/cache/overview/" の下に同じ名前で同じバイト列のファイルが無いものだけを書き、その置き場の下にあって今回返されなかったファイルを消す。ファイルの名前は、一覧が "index.html"、`全体像`ごとに`全体像の元データ`のファイル名の ".md" を ".html" にしたもの、スタイルが "style.css" である。
+kotowari は常に、"kotowari overview build" で、すべての`全体像の元データ`を毎回描画し、描画のエンジンが返した`全体像`のファイルのうち、`基準のディレクトリ`の ".kotowari/cache/overview/" の下に同じ名前で同じバイト列のファイルが無いものだけを書き、その置き場の下にあって今回返されなかったファイルを消す。ファイルの名前は、一覧が "index.html"、`全体像`ごとに`先頭の言語`の`側`の`全体像の元データ`のファイル名の ".md" を ".html" にしたもの、スタイルが "style.css" であり、`先頭の言語`でない言語のページは "<言語タグ>/" の下に同じ名前で書く（REQ-core-353）。
 
 ### REQ-core-294: 元データに誤りがあれば書かない
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-02-whole-picture.md#A33, docs/decision/records/2026-10-02-whole-picture.md#A61, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-02-whole-picture.md#A79, docs/decision/records/2026-10-05-overview-index.md#A12
+- source: docs/decision/records/2026-10-02-whole-picture.md#A33, docs/decision/records/2026-10-02-whole-picture.md#A61, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-02-whole-picture.md#A79, docs/decision/records/2026-10-05-overview-index.md#A12, docs/decision/records/2026-10-05-localization.md#A17, docs/decision/records/2026-10-05-localization.md#D2
 - verification: unit
 
-"kotowari overview build" か "kotowari overview serve" で、`全体像の元データ`か`目次`に REQ-core-278 から REQ-core-286 と REQ-core-305 と REQ-core-327 から REQ-core-330 の`誤り`が1件以上あるとき、kotowari はファイルを1つも書かず消さずに、元データの誤りを理由に`停止`し、詳細を`誤り`の件数と "errors in overview data; run kotowari check" にする。
+"kotowari overview build" か "kotowari overview serve" で、`全体像の元データ`か`目次`に REQ-core-278 から REQ-core-286 と REQ-core-305 と REQ-core-327 から REQ-core-330 の`誤り`か、`IR`、`全体像の元データ`、`目次`の`対`に translation_missing か translation_structure_mismatch の`誤り`（REQ-core-338、REQ-core-345）が1件以上あるとき、kotowari はファイルを1つも書かず消さずに、元データの誤りを理由に`停止`し、詳細を`誤り`の件数と "errors in overview data; run kotowari check" にする。
 
 ### REQ-core-295: build の出力
 
@@ -80,10 +80,10 @@ kotowari は、"kotowari overview serve" で、".kotowari/cache/overview/" の�
 ### REQ-core-305: ページの名前の重なり
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-02-whole-picture.md#A56, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A74
+- source: docs/decision/records/2026-10-02-whole-picture.md#A56, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A74, docs/decision/records/2026-10-05-localization.md#A31
 - verification: unit
 
-`全体像の元データ`のファイル名から ".md" を除いた名前が、ほかの`全体像の元データ`と同じとき、または "index" か "style" のとき、kotowari は "kotowari check" と "kotowari status" で、パスのバイト順で2つ目以降の重なった`全体像の元データ`と、名前が "index" か "style" の`全体像の元データ`に、"line" を null、detail をその名前にして overview_name_conflict の`誤り`を出す。
+`先頭の言語`の`側`の`全体像の元データ`のファイル名から ".md" を除いた名前が、ほかの`先頭の言語`の`側`の`全体像の元データ`と同じとき、または "index" か "style" のとき、kotowari は "kotowari check" と "kotowari status" で、パスのバイト順で2つ目以降の重なった`全体像の元データ`と、名前が "index" か "style" の`全体像の元データ`に、"line" を null、detail をその名前にして overview_name_conflict の`誤り`を出す。
 
 ### REQ-core-324: 置き場が使えないとき
 
