@@ -240,6 +240,28 @@ fn configuration_comes_from_target_and_git_root_from_nested_directory() {
     );
     assert_eq!(out.status.code(), Some(2));
     assert!(String::from_utf8_lossy(&out.stderr).starts_with("config error"));
+    // 設定の誤りの詳細は設定ファイルの相対パスで始まる（TBL-core-020）
+    for config in ["{}\n", "unknown: 1\n"] {
+        fs::write(d.path().join(".kotowari/config.yaml"), config).unwrap();
+        git(d.path(), &["add", ".kotowari/config.yaml"]);
+        let out = run(
+            d.path(),
+            &[
+                "changes",
+                "--base",
+                "HEAD",
+                "--staged",
+                "--phase",
+                "implementation",
+            ],
+        );
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        assert_eq!(out.status.code(), Some(2), "{stderr}");
+        assert!(
+            stderr.starts_with("config error: .kotowari/config.yaml: "),
+            "{config:?}: {stderr}"
+        );
+    }
 }
 // @kotowari[REQ-core-247, REQ-core-242, EX-core-436]
 #[test]

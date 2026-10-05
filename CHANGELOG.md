@@ -41,6 +41,7 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 - `kotowari changes`で、IR と判断の記録の置き場の下にある隠しディレクトリ（`docs/ir/.drafts/`など）を`kotowari check`と同じく読まないようにした。これまではそこにある IR を引く変更記録を有効と判定し、同じ記録が`check`では`change_record_invalid`になっていた。
 - `kotowari check`で、同じ要求の ID が2つの IR にあるとき、変更記録の定義の IR をパスの順で先の文書とするようにした（`kotowari changes`と同じ）。これまでは後の文書を求め、先の文書を引く記録を`change_record_invalid`にしていた。
 - ライブラリのメモリの入口（`ReadModel::build`、`Inspection::build`）に BOM で始まる文書を渡したとき、題名と言語の切り替えの行を見つけられず、切り替えの行を`translation_switcher_invalid`にし、文書が扱う範囲の行にも数えていたのを直した。ファイルから読む`kotowari check`は前から BOM を読み飛ばしている。
+- `kotowari changes`で、対象の設定ファイルの誤りの詳細を`kotowari check`と同じく設定ファイルの相対パスで始めるようにした（`config error: .kotowari/config.yaml: ...`）。
 
 
 ## [0.3.0] - 2026-10-01
