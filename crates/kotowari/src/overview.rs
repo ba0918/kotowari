@@ -56,7 +56,7 @@ pub(crate) fn read_texts(
     let text = crate::acquisition::read_utf8_file(&base.join(&overview.toc), &overview.toc)?;
     let toc = SourceText::new(overview.toc.as_str(), text)
         .map_err(|error| StopReason::MappingError(error.to_string()))?;
-    let translations = translations(assembly, &data, &toc)?;
+    let translations = translations(assembly, config, &data, &toc)?;
     Ok(Some(Texts {
         data,
         toc,
@@ -67,6 +67,7 @@ pub(crate) fn read_texts(
 /// `先頭の言語`でない言語ごとに、元データと`目次`の`対`のその言語の`側`のうちファイルのあるもの
 fn translations(
     assembly: &crate::translations::Assembly,
+    config: &Config,
     data: &[SourceText],
     toc: &SourceText,
 ) -> Result<Vec<kotowari_overview::Translation>, StopReason> {
@@ -96,6 +97,12 @@ fn translations(
                 language: language.clone(),
                 files,
                 toc: side(toc.path(), language)?,
+                // REQ-core-354: その言語のページの`IR`の本文はその言語の`側`から取る
+                ir: kotowari_core::translations::side_documents(
+                    assembly.pairs(),
+                    config,
+                    language,
+                )?,
             })
         })
         .collect()

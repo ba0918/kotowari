@@ -246,6 +246,19 @@ impl OverviewPrepared {
         let mut build = OverviewBuild::default();
         for page in &self.pages {
             let path = cache.join(&page.name);
+            // REQ-core-353: ほかの言語のページは "<言語タグ>/" の下に書く。その置き場がリンクなら書かない
+            if let Some((directory, _)) = page.name.rsplit_once('/') {
+                let place = format!("{}/{directory}", overview::CACHE);
+                match std::fs::symlink_metadata(cache.join(directory)) {
+                    Ok(meta) if meta.file_type().is_dir() => {}
+                    Ok(_) => return Err(Error::cache(&place, None)),
+                    Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                        std::fs::create_dir_all(cache.join(directory))
+                            .map_err(|error| Error::cache(&place, Some(error)))?;
+                    }
+                    Err(error) => return Err(Error::cache(&place, Some(error))),
+                }
+            }
             // シンボリックリンクを辿って置き場の外に書かないよう、リンクは消してからファイルを書く（REQ-core-296）
             let link =
                 std::fs::symlink_metadata(&path).is_ok_and(|meta| meta.file_type().is_symlink());
@@ -355,8 +368,12 @@ impl Project {
     /// 全体像の元データを検査して描画し、何も書かない（TBL-core-041）。元データに誤りがあれば
     /// OverviewData の失敗を返す（REQ-core-294）
     pub fn overview_prepare(&self) -> Result<OverviewPrepared, Error> {
-        let (base, overview) =
+        let (base, overview, blockers) =
             acquisition::load_overview(&self.options.start, self.options.config.as_deref())?;
+        let errors = overview.errors() + blockers;
+        if errors > 0 {
+            return Err(Error::overview_data(errors));
+        }
         let pages = overview.pages().map_err(Error::overview_data)?;
         Ok(OverviewPrepared { base, pages })
     }

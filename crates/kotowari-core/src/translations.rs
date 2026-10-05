@@ -624,6 +624,29 @@ impl Pairs {
             })
             .collect()
     }
+    /// 全体像を書かずに止める`誤り`の数。`IR`、`全体像の元データ`、`目次`の`対`の translation_missing と
+    /// translation_structure_mismatch（REQ-core-294）
+    pub fn overview_blockers(&self, config: &crate::config::Config) -> usize {
+        let places: std::collections::BTreeMap<&str, Place> = self
+            .iter()
+            .flat_map(|pair| {
+                pair.sides
+                    .iter()
+                    .map(move |side| (side.path.as_str(), pair.place))
+            })
+            .collect();
+        self.findings(config)
+            .iter()
+            .filter(|finding| {
+                matches!(
+                    finding.kind,
+                    FindingKind::TranslationMissing | FindingKind::TranslationStructureMismatch
+                ) && places
+                    .get(finding.path.as_str())
+                    .is_some_and(|place| *place != Place::Guide)
+            })
+            .count()
+    }
     /// すべての`対`の`指摘`
     pub(crate) fn findings(&self, config: &crate::config::Config) -> Vec<Finding> {
         let context = Context::new(self, config);
@@ -779,4 +802,15 @@ impl TranslationSide {
     pub fn blob(&self) -> Option<&str> {
         self.blob.as_deref()
     }
+}
+
+/// その言語の`IR`の`側`の文書。`先頭の言語`の`側`のある`対`の、ファイルのある`側`だけ。パスのバイト順
+pub fn side_documents(
+    pairs: &Pairs,
+    config: &crate::config::Config,
+    language: &str,
+) -> Result<Vec<crate::ir::IrDocument>, crate::StopReason> {
+    Ok(ir_sides(pairs, config)?
+        .remove(language)
+        .unwrap_or_default())
 }

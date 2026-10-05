@@ -866,3 +866,180 @@ fn ex_core_535_a_link_to_a_decision_record_is_an_error() {
         [("guides/g.md".to_string(), Value::from(3))]
     );
 }
+
+/// 参照を持つ steps の部品を持つ全体像の元データ
+fn overview_with_refs(title: &str, refs: &str) -> String {
+    format!(
+        "---\nir:\n  - docs/ir/a.md\n---\n\n# {title}\n\n```view lead\nconclusion: {title}\n```\n\n## {title}\n\n```view steps\nitems:\n  - title: {title}\n    refs: [{refs}]\n```\n"
+    )
+}
+
+/// 全体像のページ。build が書いたファイルの中身
+fn built(tmp: &Path, name: &str) -> String {
+    std::fs::read_to_string(tmp.join(".kotowari/cache/overview").join(name))
+        .unwrap_or_else(|error| panic!("{name}: {error}"))
+}
+
+/// HTML の中のリンクの (リンク先, 文字)
+fn links(html: &str) -> Vec<(String, String)> {
+    html.split("<a ")
+        .skip(1)
+        .map(|link| {
+            let (tag, rest) = link.split_once('>').unwrap();
+            let href = tag
+                .split_once("href=\"")
+                .and_then(|(_, value)| value.split_once('"'))
+                .map(|(value, _)| value.to_string())
+                .unwrap_or_default();
+            let text = &rest[..rest.find("</a>").unwrap()];
+            (href, text.to_string())
+        })
+        .collect()
+}
+
+// @kotowari[REQ-core-351, EX-core-536]
+#[test]
+fn ex_core_536_english_is_the_built_in_text_with_the_labels_on_top() {
+    let tmp = TempDir::new().unwrap();
+    make_project(
+        tmp.path(),
+        None,
+        &format!("{OVERVIEW}labels:\n  en:\n    pages: \"{{n}} docs\"\n"),
+    );
+    write(tmp.path(), "docs/ir/a.md", &topic("REQ-001", "Text."));
+    write(
+        tmp.path(),
+        ".kotowari/overview/a.md",
+        &overview_with_status("Title", "open", "Open text"),
+    );
+    write(
+        tmp.path(),
+        ".kotowari/toc.yaml",
+        "title: Contents\nitems:\n  - a\n",
+    );
+    let (code, stdout) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(0), "{stdout}");
+    let index = built(tmp.path(), "index.html");
+    assert!(index.contains("1 docs"), "{index}");
+    assert!(!index.contains("1 pages"), "{index}");
+    assert!(index.contains("1 open"), "{index}");
+    assert!(built(tmp.path(), "a.html").contains(">Open<"));
+}
+
+// @kotowari[REQ-core-353, REQ-core-355, EX-core-540]
+#[test]
+fn ex_core_540_english_pages_are_written_under_en_and_link_each_other() {
+    let tmp = TempDir::new().unwrap();
+    overview_pairs(tmp.path());
+    let (code, stdout) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(0), "{stdout}");
+    let root = built(tmp.path(), "a.html");
+    let english = built(tmp.path(), "en/a.html");
+    assert!(
+        links(&root).contains(&("en/a.html".into(), "English".into())),
+        "{root}"
+    );
+    assert!(
+        links(&english).contains(&("../a.html".into(), "日本語".into())),
+        "{english}"
+    );
+    assert!(
+        english.contains("Title") && !english.contains("題名"),
+        "{english}"
+    );
+    assert!(root.contains("題名"), "{root}");
+    assert!(
+        links(&built(tmp.path(), "en/index.html"))
+            .contains(&("../index.html".into(), "日本語".into()))
+    );
+}
+
+// @kotowari[EX-core-541]
+#[test]
+fn ex_core_541_one_language_writes_no_language_directory() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some(&["ja"]), OVERVIEW);
+    write(tmp.path(), "docs/ir/a.md", &topic("REQ-001", "文。"));
+    write(
+        tmp.path(),
+        ".kotowari/overview/a.md",
+        &overview_data("題名"),
+    );
+    write(
+        tmp.path(),
+        ".kotowari/toc.yaml",
+        "title: 目次\nitems:\n  - a\n",
+    );
+    let (code, stdout) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(0), "{stdout}");
+    assert!(!tmp.path().join(".kotowari/cache/overview/ja").exists());
+    let index = built(tmp.path(), "index.html");
+    // 一覧は日本語の UI の文字で描かれる
+    assert!(index.contains("1 ページ"), "{index}");
+}
+
+// @kotowari[REQ-core-354, EX-core-542]
+#[test]
+fn ex_core_542_english_pages_take_ir_bodies_from_the_english_side_and_no_record_bodies() {
+    let tmp = TempDir::new().unwrap();
+    overview_pairs(tmp.path());
+    let refs = "REQ-001, docs/decision/records/r.md#A1";
+    write(
+        tmp.path(),
+        ".kotowari/overview/a.md",
+        &overview_with_refs("題名", refs),
+    );
+    write(
+        tmp.path(),
+        ".kotowari/overview/a.en.md",
+        &overview_with_refs("Title", refs),
+    );
+    let (code, stdout) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(0), "{stdout}");
+    let root = built(tmp.path(), "a.html");
+    let english = built(tmp.path(), "en/a.html");
+    assert!(
+        english.contains("Text.") && !english.contains("文。"),
+        "{english}"
+    );
+    assert!(
+        english.contains("r A1") && !english.contains("Agreement"),
+        "{english}"
+    );
+    assert!(root.contains("文。") && !root.contains("Text."), "{root}");
+    assert!(
+        root.contains("r A1") && root.contains("Agreement"),
+        "{root}"
+    );
+}
+
+// @kotowari[REQ-core-294]
+#[test]
+fn req_core_294_a_missing_side_stops_the_build_without_writing() {
+    let tmp = TempDir::new().unwrap();
+    overview_pairs(tmp.path());
+    std::fs::remove_file(tmp.path().join("docs/ir/a.en.md")).unwrap();
+    let output = assert_cmd::Command::cargo_bin("kotowari")
+        .unwrap()
+        .args(["overview", "build"])
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    assert!(
+        String::from_utf8_lossy(&output.stderr)
+            .contains("errors in overview data; run kotowari check"),
+        "{output:?}"
+    );
+    assert!(!tmp.path().join(".kotowari/cache/overview").exists());
+    // 骨組みの食い違いでも止まる
+    overview_pairs(tmp.path());
+    write(
+        tmp.path(),
+        ".kotowari/toc.en.yaml",
+        "title: Contents\nitems:\n  - title: G\n    items:\n      - a\n",
+    );
+    let (code, _) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(2));
+    assert!(!tmp.path().join(".kotowari/cache/overview").exists());
+}

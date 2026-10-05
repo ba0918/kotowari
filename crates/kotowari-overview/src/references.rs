@@ -11,13 +11,32 @@ pub(crate) struct Resolver<'a> {
     read: &'a ReadModel,
     items: BTreeMap<&'a str, &'a Item>,
     deferred: BTreeMap<String, bool>,
+    /// 判断の記録、ADR、判断の記録でない Markdown を指す参照に本文を付けるか。`先頭の言語`のページだけ
+    /// 付ける（REQ-core-354）
+    source_bodies: bool,
 }
 
 impl<'a> Resolver<'a> {
     pub(crate) fn new(read: &'a ReadModel) -> Self {
+        Self::with_documents(read, read.documents(), true)
+    }
+
+    /// `先頭の言語`でない言語のページの参照。`IR`の本文はその言語の`側`の文書から取る（REQ-core-354）
+    pub(crate) fn for_language(
+        read: &'a ReadModel,
+        documents: &'a [kotowari_core::ir::IrDocument],
+    ) -> Self {
+        Self::with_documents(read, documents, false)
+    }
+
+    fn with_documents(
+        read: &'a ReadModel,
+        documents: &'a [kotowari_core::ir::IrDocument],
+        source_bodies: bool,
+    ) -> Self {
         let mut items = BTreeMap::new();
         // 文書はパスのバイト順、文書の中の項目は行の順に並んでいる
-        for document in read.documents() {
+        for document in documents {
             for item in document.items() {
                 if let Some(id) = item.id()
                     && !matches!(item, Item::GlossaryTerm { .. })
@@ -40,6 +59,7 @@ impl<'a> Resolver<'a> {
             read,
             items,
             deferred,
+            source_bodies,
         }
     }
 
@@ -49,10 +69,13 @@ impl<'a> Resolver<'a> {
             return self.item(key);
         }
         if key.contains('#') {
-            return self
-                .read
-                .source_target(key)
-                .map(|target| source(key, target));
+            return self.read.source_target(key).map(|target| {
+                let mut reference = source(key, target);
+                if !self.source_bodies {
+                    reference.body = None;
+                }
+                reference
+            });
         }
         None
     }

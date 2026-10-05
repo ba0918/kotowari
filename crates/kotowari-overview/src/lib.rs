@@ -12,7 +12,9 @@ mod toc;
 
 use kotowari_core::{DocKind, Finding, FindingGroup, FindingKind, ReadModel, SourceText};
 pub use kotowari_markdown_view::Page;
-use kotowari_markdown_view::{Block, Document, Part, Reference, RenderInput, Section};
+use kotowari_markdown_view::{
+    Block, Document, OtherLanguage, Part, Reference, RenderInput, Section,
+};
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -25,7 +27,8 @@ pub struct Overview {
     findings: Vec<Finding>,
     files: usize,
     marks: usize,
-    input: RenderInput,
+    /// `言語の一覧`の順の、ページの置き場（`先頭の言語`は空、ほかは "<言語タグ>/"）と描画の入力
+    inputs: Vec<(String, RenderInput)>,
 }
 
 impl Overview {
@@ -48,14 +51,27 @@ impl Overview {
             .filter(|finding| finding.severity() == "error")
             .count()
     }
-    /// 描画のエンジンに渡す入力。誤りがあるときは描ける文書だけを持つ
+    /// `先頭の言語`のページの描画の入力。誤りがあるときは描ける文書だけを持つ
     pub fn render_input(&self) -> &RenderInput {
-        &self.input
+        &self.inputs[0].1
     }
-    /// 誤りが無ければ描画のエンジンが返すページの並び、あれば誤りの件数（REQ-core-294）
+    /// 誤りが無ければ描画のエンジンが返すページの並び、あれば誤りの件数（REQ-core-294）。
+    /// `先頭の言語`のページは置き場の直下に、ほかの言語のページは "<言語タグ>/" の下に同じ名前で
+    /// 置く（REQ-core-353）
     pub fn pages(&self) -> Result<Vec<Page>, usize> {
         match self.errors() {
-            0 => Ok(kotowari_markdown_view::render(&self.input)),
+            0 => Ok(self
+                .inputs
+                .iter()
+                .flat_map(|(place, input)| {
+                    kotowari_markdown_view::render(input)
+                        .into_iter()
+                        .map(move |page| Page {
+                            name: format!("{place}{}", page.name),
+                            content: page.content,
+                        })
+                })
+                .collect()),
             errors => Err(errors),
         }
     }
@@ -65,8 +81,8 @@ impl Overview {
     }
 }
 
-/// `先頭の言語`でない1つの言語の、`全体像の元データ`と`目次`の`側`（REQ-core-343）
-#[derive(Debug, Clone, Default)]
+/// `先頭の言語`でない1つの言語の、`全体像の元データ`と`目次`と`IR`の`側`（REQ-core-343、REQ-core-354）
+#[derive(Debug, Default)]
 pub struct Translation {
     /// 言語タグ
     pub language: String,
@@ -74,6 +90,8 @@ pub struct Translation {
     pub files: Vec<SourceText>,
     /// その言語の`目次`の`側`。無ければ None
     pub toc: Option<SourceText>,
+    /// その言語の`IR`の`側`の文書。参照の本文をここから取る
+    pub ir: Vec<kotowari_core::ir::IrDocument>,
 }
 
 /// 元データと目次を検査する。files と toc の path は基準のディレクトリからの相対パスである
@@ -83,7 +101,8 @@ pub fn inspect(read: &ReadModel, files: &[SourceText], toc: &SourceText) -> Over
 
 /// files と toc を`先頭の言語`の`側`とし、translations をほかの言語の`側`として検査する。
 /// `全体像の元データ`の形、`部品`、lead、参照、`ガイドの印`と`目次`の形はどの`側`にも、扱う IR の文書、
-/// ページの名前の重なり、`目次`との照合は`先頭の言語`の`側`だけに行う（REQ-core-343）
+/// ページの名前の重なり、`目次`との照合は`先頭の言語`の`側`だけに行う（REQ-core-343）。
+/// 描画の入力は言語ごとに作る（REQ-core-353〜REQ-core-355）
 pub fn inspect_translations(
     read: &ReadModel,
     files: &[SourceText],
@@ -99,13 +118,25 @@ pub fn inspect_translations(
             inspection.documents.push(document);
         }
     }
+    let mut translated = Vec::new();
     for translation in translations {
         read_files += translation.files.len();
-        for file in &translation.files {
-            inspection.file(file, false);
-        }
+        let suffix = format!(".{}", translation.language);
+        let documents: Vec<Document> = translation
+            .files
+            .iter()
+            .filter_map(|file| inspection.file(file, false))
+            .map(|mut document| {
+                // ページの名前は`先頭の言語`の`側`の名前と同じにする（REQ-core-293）
+                if let Some(name) = document.name.strip_suffix(&suffix) {
+                    document.name = name.to_string();
+                }
+                document
+            })
+            .collect();
+        translated.push(documents);
     }
-    let mut findings = inspection.findings;
+    let mut findings = std::mem::take(&mut inspection.findings);
     let names = files
         .iter()
         .map(|file| stem(file_name(file.path())).to_string())
@@ -117,43 +148,140 @@ pub fn inspect_translations(
             .into_iter()
             .map(|(kind, detail)| Finding::new(kind, toc.path().to_string(), None, detail)),
     );
-    for toc in translations
-        .iter()
-        .filter_map(|translation| translation.toc.as_ref())
-    {
-        let form = toc::check(toc.text(), &names)
-            .findings
-            .into_iter()
-            .filter(|(kind, _)| {
-                !matches!(
-                    kind,
-                    FindingKind::OverviewTocPageMissing
-                        | FindingKind::OverviewTocPageUnknown
-                        | FindingKind::OverviewTocPageDuplicate
-                )
-            });
+    let mut tocs = Vec::new();
+    for translation in translations {
+        let Some(toc) = &translation.toc else {
+            tocs.push(None);
+            continue;
+        };
+        let checked = toc::check(toc.text(), &names);
+        let form = checked.findings.into_iter().filter(|(kind, _)| {
+            !matches!(
+                kind,
+                FindingKind::OverviewTocPageMissing
+                    | FindingKind::OverviewTocPageUnknown
+                    | FindingKind::OverviewTocPageDuplicate
+            )
+        });
         findings.extend(
             form.map(|(kind, detail)| Finding::new(kind, toc.path().to_string(), None, detail)),
         );
+        tocs.push(checked.toc);
     }
     kotowari_core::sort_findings(&mut findings);
+    let languages = Languages::new(read);
+    let mut inputs = vec![(
+        String::new(),
+        RenderInput {
+            toc: checked.toc.unwrap_or_default(),
+            documents: std::mem::take(&mut inspection.documents),
+            references: std::mem::take(&mut inspection.references)
+                .into_values()
+                .collect(),
+            ..languages.input(0)
+        },
+    )];
+    for ((translation, documents), toc) in translations.iter().zip(translated).zip(tocs) {
+        let Some(index) = languages.index(&translation.language) else {
+            continue;
+        };
+        let resolver = references::Resolver::for_language(read, &translation.ir);
+        let references = references_of(&documents, &resolver);
+        inputs.push((
+            format!("{}/", translation.language),
+            RenderInput {
+                toc: toc.unwrap_or_default(),
+                documents,
+                references,
+                ..languages.input(index)
+            },
+        ));
+    }
     Overview {
         findings,
         files: read_files,
         marks: inspection.marks,
-        input: RenderInput {
-            toc: checked.toc.unwrap_or_default(),
-            documents: inspection.documents,
-            references: inspection.references.into_values().collect(),
-            language: kotowari_core::ui_text::ENGLISH.into(),
-            ui: read
-                .config()
-                .ui_text(kotowari_core::ui_text::ENGLISH)
-                .entries()
-                .clone(),
-            others: Vec::new(),
-        },
+        inputs,
     }
+}
+
+/// `言語の一覧`と各言語の`UI の文字`（REQ-core-351、REQ-core-355）
+struct Languages {
+    tags: Vec<String>,
+    ui: Vec<BTreeMap<String, String>>,
+}
+
+impl Languages {
+    fn new(read: &ReadModel) -> Self {
+        let tags = read.config().languages();
+        let ui = tags
+            .iter()
+            .map(|tag| read.config().ui_text(tag).entries().clone())
+            .collect();
+        Self { tags, ui }
+    }
+
+    fn index(&self, tag: &str) -> Option<usize> {
+        self.tags.iter().position(|other| other == tag)
+    }
+
+    /// その言語のページの置き場から、ほかの言語のページの置き場への相対パス
+    fn place(from: usize, to: usize, tag: &str) -> String {
+        match (from, to) {
+            (0, _) => format!("{tag}/"),
+            (_, 0) => "../".to_string(),
+            _ => format!("../{tag}/"),
+        }
+    }
+
+    /// その言語の描画の入力のうち、言語タグ、`UI の文字`、ほかの言語（`言語の一覧`の順）
+    fn input(&self, index: usize) -> RenderInput {
+        let others = self
+            .tags
+            .iter()
+            .enumerate()
+            .filter(|(other, _)| *other != index)
+            .map(|(other, tag)| OtherLanguage {
+                name: self.ui[other]
+                    .get("language_name")
+                    .cloned()
+                    .unwrap_or_default(),
+                place: Self::place(index, other, tag),
+            })
+            .collect();
+        RenderInput {
+            language: self.tags[index].clone(),
+            ui: self.ui[index].clone(),
+            others,
+            ..RenderInput::default()
+        }
+    }
+}
+
+/// 文書の部品の中の参照の、参照の表（REQ-core-354）
+fn references_of(documents: &[Document], resolver: &references::Resolver) -> Vec<Reference> {
+    let mut keys = Vec::new();
+    for document in documents {
+        let blocks = document.sections.iter().flat_map(|section| &section.blocks);
+        let parts = std::iter::once(&document.lead)
+            .chain(&document.preamble)
+            .chain(blocks.filter_map(|block| match block {
+                Block::Part(part) => Some(part),
+                Block::Markdown(_) => None,
+            }));
+        for part in parts {
+            parts::references(&part.value, &mut keys);
+        }
+    }
+    let mut table = BTreeMap::new();
+    for key in keys {
+        if !table.contains_key(&key)
+            && let Some(reference) = resolver.resolve(&key)
+        {
+            table.insert(key, reference);
+        }
+    }
+    table.into_values().collect()
 }
 
 /// ファイル名から ".md" を除いた名前

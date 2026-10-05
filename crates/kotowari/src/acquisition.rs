@@ -289,7 +289,7 @@ pub fn load_with_guides(cwd: &Path, config_path: Option<&Path>) -> Result<Inspec
 pub fn load_overview(
     cwd: &Path,
     config_path: Option<&Path>,
-) -> Result<(PathBuf, kotowari_overview::Overview), StopReason> {
+) -> Result<(PathBuf, kotowari_overview::Overview, usize), StopReason> {
     let base = find_base(cwd);
     if load_config(cwd, &base, config_path)?.overview.is_none() {
         return Err(overview::not_configured());
@@ -305,8 +305,13 @@ pub fn load_overview(
     let guide_paths: Vec<&str> = guides.iter().map(|(path, _)| path.as_str()).collect();
     let texts = overview::read_texts(&base, read.config(), &guide_paths, &tests, &mut assembly)?
         .ok_or_else(overview::not_configured)?;
-    Ok((
-        base,
-        kotowari_overview::inspect(&read, &texts.data, &texts.toc),
-    ))
+    let overview = kotowari_overview::inspect_translations(
+        &read,
+        &texts.data,
+        &texts.toc,
+        &texts.translations,
+    );
+    // REQ-core-294: `IR`、`全体像の元データ`、`目次`の`対`の欠けた側と骨組みの食い違いでも書かない
+    let blockers = assembly.into_pairs().overview_blockers(read.config());
+    Ok((base, overview, blockers))
 }

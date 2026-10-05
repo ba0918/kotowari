@@ -105,6 +105,11 @@ impl Assembly {
         self.pairs.get(first)
     }
 
+    /// 集めた`対`
+    pub(crate) fn pairs(&self) -> &Pairs {
+        &self.pairs
+    }
+
     /// `先頭の言語`でない言語
     pub(crate) fn others(&self) -> &[String] {
         &self.languages[1..]
