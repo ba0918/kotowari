@@ -1,6 +1,5 @@
 //! 面の検査（docs/ir/core/surface.md、surface-unspecified.md）と、その設定の鍵 "surface"
 
-use kotowari_core::config::Config;
 use std::path::Path;
 use tempfile::TempDir;
 
@@ -114,10 +113,6 @@ const SURFACE_SRC: &str =
 /// 文字列のリテラルのうち "--" で始まるものを種類 "flag" の`面`にする`面の規則`
 const FLAG_RULE: &str =
     "id: flag\nlanguage: rust\nrule:\n  kind: string_literal\n  regex: '^\"--'\n  pattern: $NAME\n";
-
-fn surface(kind: &str, name: &str, path: &str, line: usize) -> (String, String, String, usize) {
-    (kind.to_string(), name.to_string(), path.to_string(), line)
-}
 
 // @kotowari[REQ-core-224]
 #[test]

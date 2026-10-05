@@ -1,6 +1,4 @@
 use kotowari_core::{config::Config, tests_discovery::DiscoveredTest};
-use std::fs;
-use tempfile::TempDir;
 /// `kotowari check` と同じ入口（`TestQueries::load` と `discover_tests`）で、Rust のファイルの
 /// `テスト`を発見する。"tests.rules" は空なので、基準のディレクトリは読まない
 fn discover_in_rust_file(

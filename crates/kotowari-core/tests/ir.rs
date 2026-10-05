@@ -14,46 +14,6 @@ fn check(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
     ir::check_documents(docs, config)
 }
 
-/// 指定した文書の指定した行を指す指摘を集める
-fn findings_on_line(v: &serde_json::Value, path: &str, line: u64) -> Vec<serde_json::Value> {
-    v["findings"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|f| f["path"] == path && f["line"] == line)
-        .cloned()
-        .collect()
-}
-
-/// JSON の findings から種類で絞る
-fn find_kind_in_json(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value> {
-    v["findings"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|f| f["kind"] == kind)
-        .cloned()
-        .collect()
-}
-
-/// 要求を1つ持つ話題の文書。`fields` は "- kind:" と "- source:" の後に続く行
-fn topic_with_requirement(fields: &str) -> String {
-    format!(
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n{fields}"
-    )
-}
-
-/// 指定した種類の指摘のうち、指定した文書を指すもの
-fn kinds_on(v: &serde_json::Value, path: &str) -> Vec<String> {
-    v["findings"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|f| f["path"] == path)
-        .map(|f| f["kind"].as_str().unwrap().to_string())
-        .collect()
-}
-
 // @kotowari[REQ-core-034]
 #[test]
 fn req_034_missing_title() {

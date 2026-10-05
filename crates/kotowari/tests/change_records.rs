@@ -1,5 +1,3 @@
-use kotowari_core::config::Config;
-
 fn project(record: &str) -> tempfile::TempDir {
     let dir = tempfile::tempdir().unwrap();
     for path in [
@@ -31,20 +29,6 @@ fn entry() -> String {
         "0".repeat(40),
         "a".repeat(64)
     )
-}
-
-fn invalids(record: &str) -> Vec<kotowari_core::Finding> {
-    let dir = project(record);
-    let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
-        .unwrap()
-        .check()
-        .unwrap();
-    result
-        .findings()
-        .iter()
-        .filter(|f| f.kind().as_str() == "change_record_invalid")
-        .cloned()
-        .collect()
 }
 
 // @kotowari[REQ-core-249, REQ-core-254, EX-core-439]
