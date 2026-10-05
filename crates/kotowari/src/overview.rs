@@ -32,18 +32,18 @@ pub(crate) fn read_texts(
             .into_iter()
             .filter(|(path, _)| Path::new(path).extension().is_some_and(|ext| ext == "md"))
             .collect();
-    let files = assembly.place(Place::OverviewData, files, false)?;
-    assembly.place(
-        Place::Toc,
-        vec![(overview.toc.clone(), base.join(&overview.toc))],
-        false,
-    )?;
     validate_overlap(files.iter().map(|(path, _)| path.as_str()), guides, tests)?;
     validate_toc_overlap(
         &overview.toc,
         files.iter().map(|(path, _)| path.as_str()),
         guides,
         tests,
+    )?;
+    let files = assembly.place(Place::OverviewData, files, false)?;
+    assembly.place(
+        Place::Toc,
+        vec![(overview.toc.clone(), base.join(&overview.toc))],
+        false,
     )?;
     let data = files
         .into_iter()

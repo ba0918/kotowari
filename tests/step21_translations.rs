@@ -1141,3 +1141,35 @@ fn req_core_294_overview_links_to_the_matching_guide_sides_do_not_stop_the_build
             .is_file()
     );
 }
+
+// @kotowari[REQ-core-280, REQ-core-337]
+#[test]
+fn translated_overview_files_cannot_also_be_test_files() {
+    let tmp = TempDir::new().unwrap();
+    overview_pairs(tmp.path());
+    write(
+        tmp.path(),
+        ".kotowari/config.yaml",
+        &format!(
+            "{}tests:\n  files: ['overview/*.en.md']\noverview:\n  files: ['overview/*.md']\n  toc: .kotowari/toc.yaml\n",
+            language_config(JA_EN)
+        ),
+    );
+    write(tmp.path(), "overview/a.md", &overview_data("題名"));
+    write(tmp.path(), "overview/a.en.md", &overview_data("Title"));
+    for args in [vec!["check"], vec!["status"], vec!["overview", "build"]] {
+        let output = assert_cmd::Command::cargo_bin("kotowari")
+            .unwrap()
+            .args(args)
+            .current_dir(tmp.path())
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(2), "{output:?}");
+        assert_eq!(
+            String::from_utf8_lossy(&output.stderr).lines().next(),
+            Some("config error: overview/a.en.md: matched by both overview.files and tests.files"),
+            "{output:?}"
+        );
+    }
+    assert!(!tmp.path().join(".kotowari/cache/overview").exists());
+}
