@@ -79,6 +79,14 @@ kotowari は常に、"kotowari overview serve" で、`全体像の元データ`�
 
 kotowari は、"kotowari overview serve" で、".kotowari/cache/overview/" の外を指すリクエストの道（".." の成分、絶対パス、シンボリックリンクを辿った先が外になるもの）に、その置き場の外のファイルの中身を返してはならず、404 を返す。ディレクトリの一覧を返してはならない。道が "/" のときは "index.html" を返す。
 
+### REQ-core-356: serve が答える Host
+
+- kind: event_driven
+- source: docs/decision/records/2026-10-05-serve-host.md#A1, docs/decision/records/2026-10-05-serve-host.md#A2
+- verification: unit
+
+"kotowari overview serve" で、リクエストの Host ヘッダーの値が、配っているポートの "127.0.0.1:<ポート>" でも "localhost:<ポート>" でもない（名前の英字の大小は問わない）とき、またはリクエストに Host ヘッダーが無いとき、kotowari はリクエストの道を調べる前に本文の無い 403 を返し、そのリクエストについて何も出力しない。
+
 ### REQ-core-305: ページの名前の重なり
 
 - kind: event_driven
@@ -142,6 +150,12 @@ Scenario: serve は置き場の中だけを配る
   Given 正しい`全体像の元データ`があり、ポート "4591" が空いている
   When "kotowari overview serve --port 4591" を起動し、"/"、"/style.css"、"/../config.yaml"、"/%2e%2e/config.yaml" を要求する
   Then 標準出力は "http://127.0.0.1:4591/" の1行で、"/" には "index.html" の中身、"/style.css" にはその中身が返り、残りの2つには 404 が返る
+
+@id=EX-core-543 @about=REQ-core-356 @source=docs/decision/records/2026-10-05-serve-host.md#A1,docs/decision/records/2026-10-05-serve-host.md#A2
+Scenario: serve は手元の Host にだけ答える
+  Given 正しい`全体像の元データ`があり、ポート "4593" が空いている
+  When "kotowari overview serve --port 4593" を起動し、Host ヘッダーを "127.0.0.1:4593"、"LOCALHOST:4593"、"evil.example:4593"、"127.0.0.1:4594" にして、また Host ヘッダー無しで "/" を要求する
+  Then 前の2つには "index.html" の中身が返り、残りの3つには本文の無い 403 が返る
 
 @id=EX-core-479 @about=REQ-core-298 @source=docs/decision/records/2026-10-02-whole-picture.md#A57,docs/decision/records/2026-10-02-whole-picture.md#A72
 Scenario: 使用中のポートでは止まる

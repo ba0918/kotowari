@@ -79,6 +79,14 @@ When, on "kotowari overview serve", the given port on "127.0.0.1" cannot be used
 
 kotowari shall not, on "kotowari overview serve", return the content of a file outside ".kotowari/cache/overview/" for a request path that points outside that location (a ".." component, an absolute path, or one whose target after following symbolic links is outside); it returns 404. It shall not return a directory listing. When the path is "/", it returns "index.html".
 
+### REQ-core-356: Hosts that serve answers
+
+- kind: event_driven
+- source: docs/decision/records/2026-10-05-serve-host.md#A1, docs/decision/records/2026-10-05-serve-host.md#A2
+- verification: unit
+
+When, on "kotowari overview serve", the value of the Host header of a request is neither "127.0.0.1:<port>" nor "localhost:<port>" with the port being served (the letter case of the name does not matter), or the request has no Host header, kotowari returns 403 with an empty body before it looks up the request path, and outputs nothing for that request.
+
 ### REQ-core-305: Overlapping page names
 
 - kind: event_driven
@@ -142,6 +150,12 @@ Scenario: serve serves only what is in the location
   Given there is correct `overview data`, and port "4591" is free
   When "kotowari overview serve --port 4591" is started, and "/", "/style.css", "/../config.yaml" and "/%2e%2e/config.yaml" are requested
   Then standard output is the one line "http://127.0.0.1:4591/", "/" returns the content of "index.html", "/style.css" returns its content, and the remaining two return 404
+
+@id=EX-core-543 @about=REQ-core-356 @source=docs/decision/records/2026-10-05-serve-host.md#A1,docs/decision/records/2026-10-05-serve-host.md#A2
+Scenario: serve answers only local hosts
+  Given there is correct `overview data`, and port "4593" is free
+  When "kotowari overview serve --port 4593" is started, and "/" is requested with the Host header "127.0.0.1:4593", "LOCALHOST:4593", "evil.example:4593", "127.0.0.1:4594" and with no Host header
+  Then the first two return the content of "index.html", and the other three return 403 with an empty body
 
 @id=EX-core-479 @about=REQ-core-298 @source=docs/decision/records/2026-10-02-whole-picture.md#A57,docs/decision/records/2026-10-02-whole-picture.md#A72
 Scenario: It stops on a port in use

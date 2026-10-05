@@ -82,10 +82,18 @@ fn serve(tmp: &Path, port: u16) -> (Child, BufReader<std::process::ChildStdout>,
 
 /// 生の道で要求を送り、状態の行と頭と本体を返す
 fn get(port: u16, path: &str) -> (String, String, Vec<u8>) {
+    get_with_host(port, path, Some(&format!("127.0.0.1:{port}")))
+}
+
+/// Host ヘッダーを選んで（None なら付けずに）要求を送る
+fn get_with_host(port: u16, path: &str, host: Option<&str>) -> (String, String, Vec<u8>) {
     let mut stream = TcpStream::connect(("127.0.0.1", port)).unwrap();
+    let host = host
+        .map(|host| format!("Host: {host}\r\n"))
+        .unwrap_or_default();
     write!(
         stream,
-        "GET {path} HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n"
+        "GET {path} HTTP/1.1\r\n{host}Connection: close\r\n\r\n"
     )
     .unwrap();
     let mut response = Vec::new();
@@ -323,4 +331,31 @@ fn req_core_294_serve_on_toc_errors_stops_before_binding() {
         Some("overview error: 2 errors in overview data; run kotowari check")
     );
     assert!(!tmp.path().join(".kotowari/cache").exists());
+}
+
+// @kotowari[EX-core-543, REQ-core-356]
+#[cfg(unix)]
+#[test]
+fn ex_core_543_serve_answers_only_local_hosts() {
+    let tmp = make_project(OVERVIEW, true);
+    let port = free_port();
+    let (mut child, mut stdout, _) = serve(tmp.path(), port);
+    let index = std::fs::read(tmp.path().join(".kotowari/cache/overview/index.html")).unwrap();
+    for host in [format!("127.0.0.1:{port}"), format!("LOCALHOST:{port}")] {
+        let (status, _, body) = get_with_host(port, "/", Some(&host));
+        assert!(status.contains(" 200 "), "{host}: {status}");
+        assert_eq!(body, index, "{host}");
+    }
+    let other_port = format!("127.0.0.1:{}", port.wrapping_add(1));
+    let evil = format!("evil.example:{port}");
+    for host in [Some(evil.as_str()), Some(other_port.as_str()), None] {
+        let (status, _, body) = get_with_host(port, "/", host);
+        assert!(status.contains(" 403 "), "{host:?}: {status}");
+        assert!(body.is_empty(), "{host:?}");
+    }
+    interrupt(&child);
+    assert_eq!(child.wait().unwrap().code(), Some(0));
+    let mut rest = String::new();
+    stdout.read_to_string(&mut rest).unwrap();
+    assert_eq!(rest, "", "nothing is written per request");
 }
