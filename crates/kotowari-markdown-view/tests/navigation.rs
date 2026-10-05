@@ -394,3 +394,89 @@ fn req_view_020_group_links_skip_nested_groups_and_keep_the_written_order() {
     assert!(c < b, "{tail}");
     assert!(!tail.contains("d.html"), "{tail}");
 }
+
+fn titled(heading: &str, stale: bool, blocks: Vec<Block>) -> Section {
+    Section {
+        heading: heading.into(),
+        stale,
+        blocks,
+    }
+}
+
+/// 要素の印を除いた文字
+fn plain(html: &str) -> String {
+    html.split('<')
+        .map(|segment| segment.split_once('>').map_or(segment, |(_, text)| text))
+        .collect()
+}
+
+/// ページの中で、その場所（id）の後に最初に出てくる文字
+fn text_at<'a>(page: &'a str, id: &str) -> &'a str {
+    page[common::place(page, id)..]
+        .split('<')
+        .filter_map(|segment| segment.split_once('>').map(|(_, text)| text.trim()))
+        .find(|text| !text.is_empty())
+        .expect("a text")
+}
+
+// @kotowari[REQ-view-022, EX-view-016]
+#[test]
+fn ex_view_016_the_outline_lists_sections_in_order_and_marks_the_stale_one() {
+    let a = document(
+        "a",
+        vec![
+            titled("読む", false, vec![]),
+            titled(
+                "書く",
+                true,
+                vec![Block::Markdown("### 細部\n\n本文".into())],
+            ),
+            titled("読む", false, vec![]),
+        ],
+    );
+    let pages = render(&input(vec![a], vec![name("a")]));
+    let page = page(&pages, "a.html");
+    // アウトラインの項目は、ページの中の節へのリンクである。lead や "### " の見出しへの項目は無い
+    let links = common::in_page_links(page);
+    let titles: Vec<&str> = links.iter().map(|(_, _, text)| text.as_str()).collect();
+    assert_eq!(titles, ["読む", "書く", "読む"]);
+    let mut ids = Vec::new();
+    for (_, id, title) in &links {
+        assert_eq!(text_at(page, id), title, "{id}");
+        ids.push(id);
+    }
+    ids.sort();
+    ids.dedup();
+    assert_eq!(ids.len(), 3, "{page}");
+    // アウトラインは lead の前で終わる（REQ-view-006）
+    let lead = page.find("aの結論").expect("lead");
+    assert!(links[2].0 < lead, "{page}");
+    assert!(!page[links[0].0..lead].contains("細部"), "{page}");
+    // 項目ごとに、リンクの後に続く文字（最後の項目は lead まで）。古い節の項目にだけ印がある
+    let ends = links.iter().skip(1).map(|(at, _, _)| *at).chain([lead]);
+    let tails: Vec<String> = links
+        .iter()
+        .zip(ends)
+        .map(|((at, _, _), end)| {
+            let item = &page[*at..end];
+            plain(&item[item.find("</a>").expect("a end")..])
+        })
+        .collect();
+    assert!(tails[1].contains("見直していない"), "{tails:?}");
+    assert!(!tails[0].contains("見直していない") && !tails[2].contains("見直していない"));
+    assert!(!page.contains("<script"));
+}
+
+// @kotowari[REQ-view-022, EX-view-017]
+#[test]
+fn ex_view_017_documents_without_sections_and_the_index_have_no_outline() {
+    let b = document("b", vec![titled("読む", false, vec![])]);
+    let pages = render(&input(
+        vec![document("a", vec![]), b],
+        vec![name("a"), name("b")],
+    ));
+    // アウトラインの項目は、ページの中の節へのリンクである
+    assert!(!common::in_page_links(page(&pages, "b.html")).is_empty());
+    assert!(common::in_page_links(page(&pages, "a.html")).is_empty());
+    assert!(common::in_page_links(page(&pages, "index.html")).is_empty());
+}

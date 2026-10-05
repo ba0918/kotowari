@@ -73,7 +73,7 @@
 | `surface_unspecified_invalid` | 誤り | 一覧に書かれたままの `kind` と `name` を半角空白1つで区切ったもの | なし | [面の検査](#面の検査) |
 | `overview_form_invalid` | 誤り | kotowari-markdown-schema の指摘の種類の名前。frontmatter の違反では `frontmatter` | その行。文書全体にかかるものはなし | [全体像の元データ](../ir/core/overview-data.md) |
 | `overview_part_unknown` | 誤り | 部品の種類の名前 | 部品のフェンスの開始の行 | [全体像の元データ](../ir/core/overview-data.md) |
-| `overview_part_invalid` | 誤り | 部品の種類の名前、半角空白1つ、合わなかった場所（値の全体は `(root)`、YAML として読めないときは `(yaml)`） | 部品のフェンスの開始の行 | [全体像の元データ](../ir/core/overview-data.md) |
+| `overview_part_invalid` | 誤り | 部品の種類の名前、半角空白1つ、合わなかった場所（値の全体は `(root)`、YAML として読めないときは `(yaml)`） | 部品のフェンスの開始の行。YAML として読めないときは、YAML の読み取りが返した誤りの行（返らなければフェンスの開始の行） | [全体像の元データ](../ir/core/overview-data.md) |
 | `overview_lead_missing` | 誤り | 文書名（ディレクトリを除いたファイル名） | なし | [全体像の元データ](../ir/core/overview-data.md) |
 | `overview_ir_missing` | 誤り | `ir` の1件の文字 | なし | [全体像の元データ](../ir/core/overview-data.md) |
 | `overview_ir_shared` | 誤り | 2つ以上の全体像の元データの `ir` にある IR の文書のパス | なし | [全体像の元データ](../ir/core/overview-data.md) |

@@ -770,9 +770,16 @@ fn parts_after_the_lead_and_before_the_first_section_reach_the_page_in_order() {
         .unwrap()
         .content;
     let at = |needle: &str| page.find(needle).unwrap_or_else(|| panic!("{needle}"));
+    // アウトラインの項目は、ページの中の節へのリンクで、lead の前にある。節の見出しはリンク先の場所の後にある
+    let link = at("href=\"#");
+    let place = &page[link + "href=\"#".len()..];
+    let id = &place[..place.find('"').expect("link end")];
+    let section = at(&format!("id=\"{id}\""));
+    let heading = section + page[section..].find("最初の節の見出し").expect("heading");
+    assert!(link < at("結論"));
     assert!(at("結論") < at("冒頭の一つ目"));
     assert!(at("冒頭の一つ目") < at("冒頭の二つ目"));
-    assert!(at("冒頭の二つ目") < at("最初の節の見出し"));
+    assert!(at("冒頭の二つ目") < heading);
 }
 
 // @kotowari[REQ-core-294]

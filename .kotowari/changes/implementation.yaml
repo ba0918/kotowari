@@ -2,41 +2,148 @@
   "version": 1,
   "entries": [
     {
-      "id": "overview-index-style-implementation",
-      "base": "8ed18b744e2fe731b55cbe2f448b69fdb24d73a5",
+      "id": "overview-page-reading-view-implementation",
+      "base": "ed9cc5be7392b730083d66ddfde8c6ed71eb03ab",
       "role": "implementer",
       "files": [
         {
-          "path": "crates/kotowari-markdown-view/src/index.rs",
-          "before": "sha256:e94df62a8becba6bfaecf6ed2d79cc3d03aeeacbaabc01845979d0aab6798efb",
-          "after": "sha256:7eeb8ebc581ca184400491884737eabc920b1cde90fa704ba05c328cc33e06ee"
+          "path": "crates/kotowari-markdown-view/src/lib.rs",
+          "before": "sha256:622254e5e79a4d191444bba1753e3445748da8c28c4b405c3284aad84656140b",
+          "after": "sha256:663c510d4d895afef4f840f3e862f86b08691386a5d5c5c8d201e10723d0056b"
         },
         {
           "path": "crates/kotowari-markdown-view/src/style.css",
-          "before": "sha256:099b8a41edecbcaf77623ab56344ecda3b6a386be675235a4d831c490ae01fc7",
-          "after": "sha256:aee2a3f121959f9e60d600aae864251a31f0bf6289f130cf0801183db27e42d3"
+          "before": "sha256:aee2a3f121959f9e60d600aae864251a31f0bf6289f130cf0801183db27e42d3",
+          "after": "sha256:dc17642abd7f1efc7a6684b52c04e42dcbd7836c636c98b4fd417a94d58a17c8"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/tests/common/mod.rs",
+          "before": "sha256:712fd1b2adc6fddec5869242700affb93fc92b22bdb0214c37491e6683260f91",
+          "after": "sha256:5dfcfc6f92e01a8f16f9fae15c46dc1078a2a75c205b230d9f80ef5b282017a9"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/tests/navigation.rs",
+          "before": "sha256:e938873c36313fafda0d8efc5be9af37fe79166db679119ce3ad236d89dbb7bd",
+          "after": "sha256:c3e82a13397d0203d6d2c9b43f8c62657a63c0f9acf0a9d3e033eb4796dec0ca"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/tests/rendering.rs",
+          "before": "sha256:e65b50d73d54c356c330b294a7ad2ebcc9202351dd15194f8e8e2a394af101b3",
+          "after": "sha256:57f0ea078b9dcbf00941e5bf0bdd90684d291c5e2644b0cf73e8970c4efa1dfa"
+        },
+        {
+          "path": "crates/kotowari-overview/tests/overview.rs",
+          "before": "sha256:bce3a359052d54bf845b5cd4db751f06cb709a1fb513ad0790ae86006369abb4",
+          "after": "sha256:a8b580264d9c60f70bceb436c64007768de9788a30e2e37d947214f2e3fd9eab"
         }
       ],
       "ir": [
         {
+          "path": "docs/ir/core/overview-data.md",
+          "sha256": "sha256:5f3c0c7da46279fd542fa056101cbda092b306f12aaaf72d5036999f8966a7e5"
+        },
+        {
+          "path": "docs/ir/view/CONTEXT.md",
+          "sha256": "sha256:4fc6c95f74fe5f6b002b23443a903a5c8ce1529a688ba39b5426ff25c24fc7f8"
+        },
+        {
           "path": "docs/ir/view/navigation.md",
-          "sha256": "sha256:9bed6adfa7fa42c78ad6ca33d928f2132c4861df720b1880b2a74156926841d3"
+          "sha256": "sha256:769509a8346f9f9fbe7be963b9baad644f050ba701f2041b6e43298d3cd85040"
+        },
+        {
+          "path": "docs/ir/view/parts.md",
+          "sha256": "sha256:47f5e3d4fe34ada3bc72efe752feae5e05c15d84faf6627b1c463950a7dee15a"
         },
         {
           "path": "docs/ir/view/rendering.md",
-          "sha256": "sha256:164a070914f93254c3e9db1539c9625e3f6474fb843b5c7bd1e71c18f07634f9"
+          "sha256": "sha256:6dfef6cabcee3431520d353466153555c758e496b85c2e37516ff6a1ea5fbd8f"
         }
       ],
       "conclusion": "existing",
-      "reason": "The branch changes only how the overview index looks, inside the markup and style that docs/decision/records/2026-10-05-overview-index.md D1 leaves to the implementer. In crates/kotowari-markdown-view/src/index.rs each count badge gains a class naming its kind (count-pages, count-stale, count-open, count-planned) so that the style can colour them, and the note of the outermost group moves inside the index header after the title; the drawn texts, their order, which counts are shown (non-zero stale, 未決 and 予定 on a card; pages, stale and 未決 on a group heading, REQ-view-016, REQ-view-017) and the title and note as the heading (REQ-view-005) are unchanged. crates/kotowari-markdown-view/src/style.css lays the contents of a group out as rows of one box with the title, conclusion and counts in columns, draws a square open and close marker on each group summary while groups stay open details elements without any script (REQ-view-018), shows a nested group as a band inside its parent box, colours the count badges by kind, defines the two new colour variables for both light and dark schemes, and moves group counts under the title below 600px. No test pins the markup, as the existing tests compare texts; the whole workspace test suite passes without warnings, and the page was checked by eye in light and dark schemes and at 375px width.",
+      "reason": "crates/kotowari-markdown-view/src/lib.rs draws, on a document page that has at least one section, an outline (a nav element with a list) after the title and before the lead, the order REQ-view-006 now states as revised by A19: one item per section in the order of the sections, its text the heading text, linking to the section on the same page, and a short mark (見直していない) after the link of a stale section that means the same as the REQ-view-009 mark next to its heading (REQ-view-022, A5, A14, A17). The outline holds no item for the lead or preamble, no deeper heading and no link to another page; a document without sections and the index page get none. Each section gains the id section-<index>, its zero-based position in the section list, so two sections with the same heading get different places and the same render input gives the same ids (D1, REQ-view-004). crates/kotowari-markdown-view/src/style.css keeps the outline in a left column with position sticky from 1100px up and leaves it under the title, not following the scroll, below that (REQ-view-023, D2); it draws each flow column as one enclosure with the arrow only between columns and, below 720px, stacks the columns with a downward arrow (REQ-view-024, REQ-view-025, D2). No script is added to any page (REQ-view-018). New tests ex_view_016 and ex_view_017 in crates/kotowari-markdown-view/tests/navigation.rs verify REQ-view-022, EX-view-016 and EX-view-017 by link targets and visible text; they find the outline by its in-page links (links whose target is a place on the same page), through new helpers in crates/kotowari-markdown-view/tests/common/mod.rs, not by its markup. Three tests in tests/rendering.rs (REQ-view-006, EX-view-005) and one in crates/kotowari-overview/tests/overview.rs (REQ-view-006) located a heading by its first occurrence, which is now in the outline; they now check the order on the rendered page itself: the title, then the outline (found by its in-page links), then the lead, the preamble parts and the sections reached through those links (REQ-view-006 as revised by A19), and EX-view-005 compares the pages from the first section on, so the heading mark still changes only between the two section headings. REQ-view-023, REQ-view-024 and REQ-view-025 are review requirements checked on rendered pages; the whole workspace test suite passes.",
       "requirements": [
-        "REQ-view-005",
-        "REQ-view-016",
-        "REQ-view-017",
-        "REQ-view-018"
+        "REQ-view-004",
+        "REQ-view-006",
+        "REQ-view-009",
+        "REQ-view-018",
+        "REQ-view-022",
+        "REQ-view-023",
+        "REQ-view-024",
+        "REQ-view-025"
       ],
       "decisions": [
-        "docs/decision/records/2026-10-05-overview-index.md#D1"
+        "docs/decision/records/2026-10-05-overview-page-reading.md#A1",
+        "docs/decision/records/2026-10-05-overview-page-reading.md#A2",
+        "docs/decision/records/2026-10-05-overview-page-reading.md#A3",
+        "docs/decision/records/2026-10-05-overview-page-reading.md#A4",
+        "docs/decision/records/2026-10-05-overview-page-reading.md#A5",
+        "docs/decision/records/2026-10-05-overview-page-reading.md#A8",
+        "docs/decision/records/2026-10-05-overview-page-reading.md#A9",
+        "docs/decision/records/2026-10-05-overview-page-reading.md#A12",
+        "docs/decision/records/2026-10-05-overview-page-reading.md#A13",
+        "docs/decision/records/2026-10-05-overview-page-reading.md#A14",
+        "docs/decision/records/2026-10-05-overview-page-reading.md#A17",
+        "docs/decision/records/2026-10-05-overview-page-reading.md#A19",
+        "docs/decision/records/2026-10-05-overview-page-reading.md#D1",
+        "docs/decision/records/2026-10-05-overview-page-reading.md#D2"
+      ],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "overview-part-yaml-line-implementation",
+      "base": "ed9cc5be7392b730083d66ddfde8c6ed71eb03ab",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "agent/skills/kotowari/references/findings.md",
+          "before": "sha256:174d856ae00379d120a5eaeef3da2b1f762552d9d093c2de1c64cf3c3b10bc40",
+          "after": "sha256:100071d8657b497d54fc6fb6db431df30419dd2c0b9b2f96f881414b43632705"
+        },
+        {
+          "path": "crates/kotowari-overview/src/lib.rs",
+          "before": "sha256:e58774bd1e64356e7e190063f366ea433433df03cf0b2cbcac3ff64a725a746a",
+          "after": "sha256:10f0091e46db9a6ee7c24a6fde51c1041dfb76289b12d901d81176cda899a341"
+        },
+        {
+          "path": "docs/guides/commands/check.md",
+          "before": "sha256:411bf30272d254fc6c4d232f3f33b121d95a813e596e2104e70baf180da37ebd",
+          "after": "sha256:7a42cfc45238a3cf81524b20cbab49e255ea6873103fb9fcb66fd89262705423"
+        },
+        {
+          "path": "docs/guides/findings.md",
+          "before": "sha256:648092a355ce3bb58e22f4d2765e8aee9f5b79864382c60016bf751d610bfdc0",
+          "after": "sha256:5334e062ba339d161bf6e550a64e20d32e4d43df0ca46d76964f14612efc20e0"
+        },
+        {
+          "path": "crates/kotowari-overview/src/parts.rs",
+          "before": "sha256:2d7a3c019287b5cb19d069e6d58f0331fbe0b1d18ddbf188a37a98256297548d",
+          "after": "sha256:18c00e12e9d331594aee0bc1034ebc4727e612e0278f7b8261b2620b4d5c5db2"
+        },
+        {
+          "path": "tests/step18_overview.rs",
+          "before": "sha256:9d3ebdf0be576291ea40f278755ea4f8d8fb47875730937f636bc35a544b00ec",
+          "after": "sha256:c4ab02751f49b1e7b5364c0649895433ca9c1b77f2492e9cfcd24f7f3902d31b"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/overview-data.md",
+          "sha256": "sha256:5f3c0c7da46279fd542fa056101cbda092b306f12aaaf72d5036999f8966a7e5"
+        },
+        {
+          "path": "docs/ir/core/skill-references.md",
+          "sha256": "sha256:3d2b78288e4ad1a94af60e0f6390a34dc19ba33e6fdc1eed2ceb64d5fb970211"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "crates/kotowari-overview/src/parts.rs no longer discards the serde_saphyr error of a part whose content cannot be read as YAML: it returns the line of the error's location within the content when the reader gives one, and crates/kotowari-overview/src/lib.rs reports overview_part_invalid with detail \"<kind> (yaml)\" at the opening fence line plus that line, which is the line of the overview data file because the content starts on the line after the fence; without a location the line stays the opening fence line (REQ-core-282 as revised by A10). Schema mismatches keep their places and the fence line. The new process-level test ex_core_511 in tests/step18_overview.rs runs kotowari check --format json on data whose cards fence is on line 10 with an unclosed bracket on line 13 and expects one overview_part_invalid at line 13 with detail \"cards (yaml)\" (EX-core-511); it failed with line 10 before the change. The test does not assert facts about its own fixture text; it checks only the finding. The existing REQ-core-282 tests, including the one for EX-core-466, pass unchanged. agent/skills/kotowari/references/findings.md says the same line rule in the overview_part_invalid row, and the findings reference test (REQ-core-125) passes; the user guides docs/guides/findings.md (the line column of the overview_part_invalid row) and docs/guides/commands/check.md (the sentence on the line of part findings) say it too; their guide marks do not cover REQ-core-282 and check reports no guide finding on them.",
+      "requirements": [
+        "REQ-core-125",
+        "REQ-core-282"
+      ],
+      "decisions": [
+        "docs/decision/records/2026-10-05-overview-page-reading.md#A10"
       ],
       "handoff": null,
       "gaps": []

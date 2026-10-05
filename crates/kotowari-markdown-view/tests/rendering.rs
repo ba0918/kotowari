@@ -39,6 +39,22 @@ fn page<'a>(pages: &'a [Page], name: &str) -> &'a str {
         .content
 }
 
+/// アウトラインの項目（ページの中の節へのリンク）の、最初の項目と最後の項目の位置と、
+/// 項目のリンク先の節の見出しの位置。見出しはリンク先の場所の後に最初に出てくるもの
+fn outline_and_headings(text: &str) -> (usize, usize, Vec<usize>) {
+    let links = common::in_page_links(text);
+    let first = links.first().expect("an outline").0;
+    let last = links.last().expect("an outline").0;
+    let headings = links
+        .iter()
+        .map(|(_, id, heading)| {
+            let place = common::place(text, id);
+            place + position(&text[place..], heading)
+        })
+        .collect();
+    (first, last, headings)
+}
+
 fn position(text: &str, needle: &str) -> usize {
     text.find(needle)
         .unwrap_or_else(|| panic!("{needle} not in page"))
@@ -240,12 +256,15 @@ fn req_view_006_the_lead_follows_the_title_and_sections_keep_their_order() {
         references: vec![],
         toc: TocGroup::default(),
     };
-    let text = page(&render(&input), "a.html").to_string();
-    let title = position(&text, "<h1>題名A</h1>");
-    let lead = position(&text, "題名Aの結論");
-    let first = position(&text, "二番目ではない最初の節");
-    let second = position(&text, "後の節");
-    assert!(title < lead && lead < first && first < second);
+    let pages = render(&input);
+    let text = page(&pages, "a.html");
+    let title = position(text, "<h1>題名A</h1>");
+    let (outline, outline_end, headings) = outline_and_headings(text);
+    let lead = position(text, "題名Aの結論");
+    let [first, second] = headings[..] else {
+        panic!("{headings:?}")
+    };
+    assert!(title < outline && outline_end < lead && lead < first && first < second);
 }
 
 // @kotowari[REQ-view-006, REQ-view-001]
@@ -262,11 +281,17 @@ fn req_view_006_preamble_parts_follow_the_lead_in_order_before_the_sections() {
         references: vec![],
         toc: TocGroup::default(),
     };
-    let text = page(&render(&input), "a.html").to_string();
-    let lead = position(&text, "題名Aの結論");
-    let first = position(&text, "冒頭の一つ目");
-    let second = position(&text, "冒頭の二つ目");
-    let section = position(&text, "最初の節");
+    let pages = render(&input);
+    let text = page(&pages, "a.html");
+    let title = position(text, "<h1>題名A</h1>");
+    let (outline, outline_end, headings) = outline_and_headings(text);
+    let lead = position(text, "題名Aの結論");
+    let first = position(text, "冒頭の一つ目");
+    let second = position(text, "冒頭の二つ目");
+    let [section] = headings[..] else {
+        panic!("{headings:?}")
+    };
+    assert!(title < outline && outline_end < lead);
     assert!(lead < first && first < second && second < section);
 }
 
@@ -464,10 +489,14 @@ fn ex_view_005_only_the_stale_section_carries_the_mark() {
             references: vec![],
             toc: TocGroup::default(),
         };
-        page(&render(&input), "a.html").to_string()
+        let text = page(&render(&input), "a.html").to_string();
+        // 節の並びの始まり。アウトラインの最初の項目のリンク先である
+        let (_, first, _) = &common::in_page_links(&text)[0];
+        let sections = common::place(&text, first);
+        text[sections..].to_string()
     };
     let text = with(true);
-    // 古いとしたことで変わるのは、節 A の見出しと節 B の見出しの間だけである
+    // 節の並びの中で、古いとしたことで変わるのは、節 A の見出しと節 B の見出しの間だけである
     let (start, end) = changed(&text, &with(false)).expect("a mark");
     assert!(position(&text, "節A") < start && end <= position(&text, "節B"));
 }

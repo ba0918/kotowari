@@ -14,6 +14,8 @@ pub(crate) enum Checked {
     Unknown,
     /// 合わなかった場所の並び。同じ場所は1つにまとめてある
     Invalid(Vec<String>),
+    /// YAML として読めない。読み取りが誤りの位置を返したら、中身の中のその行（1から数える）
+    Unreadable(Option<usize>),
     Valid(Value),
 }
 
@@ -39,7 +41,13 @@ impl Parts {
         } else {
             match serde_saphyr::from_str::<Value>(content) {
                 Ok(value) => value,
-                Err(_) => return Checked::Invalid(vec!["(yaml)".into()]),
+                Err(error) => {
+                    return Checked::Unreadable(
+                        error
+                            .location()
+                            .and_then(|place| usize::try_from(place.line()).ok()),
+                    );
+                }
             }
         };
         let mut places: Vec<String> = Vec::new();

@@ -533,3 +533,45 @@ fn req_core_326_the_overview_data_overlap_is_judged_before_the_toc_overlap() {
         Some("config error: notes/a.md: matched by both overview.files and guides.files")
     );
 }
+
+// @kotowari[EX-core-511]
+#[test]
+fn ex_core_511_an_unreadable_yaml_part_points_at_the_line_of_the_yaml_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), OVERVIEW);
+    let lines = [
+        "---",
+        "ir:",
+        "  - docs/ir/cli.md",
+        "---",
+        "# 題名",
+        "```view lead",
+        "conclusion: 結論",
+        "```",
+        "## 節",
+        "```view cards",
+        "cards:",
+        "  - title: a",
+        "    items: [x",
+        "```",
+    ];
+    write(
+        tmp.path(),
+        ".kotowari/overview/a.md",
+        &format!("{}\n", lines.join("\n")),
+    );
+    write_toc(tmp.path(), &["a"]);
+    let (code, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
+    assert_eq!(code, Some(1));
+    let value = json(&stdout);
+    let invalid: Vec<&serde_json::Value> = value["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|finding| finding["kind"] == "overview_part_invalid")
+        .collect();
+    assert_eq!(invalid.len(), 1, "{stdout}");
+    assert_eq!(invalid[0]["path"], ".kotowari/overview/a.md");
+    assert_eq!(invalid[0]["line"], 13);
+    assert_eq!(invalid[0]["detail"], "cards (yaml)");
+}
