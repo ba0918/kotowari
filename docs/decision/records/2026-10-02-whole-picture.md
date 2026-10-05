@@ -24,6 +24,7 @@ Position: 利用者が kemi で承認した（2026-10-02、コメントなし）
 - A3 読み手は壁打ちをした本人（承認の時の本人と、後から読み返す本人）とする。チームの他の人やレビュアー向けにはしない。
   - why: kotowari は一人の利用者が LLM と使う前提である
   - decided_by: 利用者（推奨を採用）
+  - superseded_by: [ガイドと全体像の役目 A2](./2026-10-05-guide-overview-roles.md#A2)
 - A4 まず kotowari-brainstorm の文面と、必要なら kotowari スキルの references だけを変える。kotowari 本体（IR とコード）の変更は、成果物の形が決まって必要になったときに改めて決める。
   - why: 判断の記録の補足の行は名前が6つに固定されていて（TBL-core-022）、前提の行を足すだけでも IR とコードの変更になる。形が決まる前に本体を変えない
   - decided_by: 利用者（推奨を採用）

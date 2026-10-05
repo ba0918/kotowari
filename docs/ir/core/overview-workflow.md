@@ -25,7 +25,7 @@ kotowari のスキルは常に、どの`全体像の元データ`の "ir" にも
 ### REQ-core-302: 元データの書き方
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A1, docs/decision/records/2026-10-02-whole-picture.md#A6, docs/decision/records/2026-10-02-whole-picture.md#A7, docs/decision/records/2026-10-02-whole-picture.md#A8, docs/decision/records/2026-10-02-whole-picture.md#A9, docs/decision/records/2026-10-02-whole-picture.md#A14, docs/decision/records/2026-10-02-whole-picture.md#A15, docs/decision/records/2026-10-02-whole-picture.md#A54
+- source: docs/decision/records/2026-10-02-whole-picture.md#A1, docs/decision/records/2026-10-02-whole-picture.md#A6, docs/decision/records/2026-10-02-whole-picture.md#A7, docs/decision/records/2026-10-02-whole-picture.md#A8, docs/decision/records/2026-10-02-whole-picture.md#A9, docs/decision/records/2026-10-02-whole-picture.md#A14, docs/decision/records/2026-10-02-whole-picture.md#A15, docs/decision/records/2026-10-02-whole-picture.md#A54, docs/decision/records/2026-10-02-whole-picture.md#A38, docs/decision/records/2026-10-02-whole-picture.md#A66, docs/decision/records/2026-10-02-whole-picture.md#A53, docs/decision/records/2026-10-05-guide-overview-roles.md#A4
 - verification: review
 - how_to_verify: kotowari のスキルの references に`全体像の元データ`を書く場面があり、冒頭に結論と要約の lead を置くこと、`部品`の種類と並べ方を題材に合わせて選ぶこと、出来上がるものの姿と判断のつながりの両方を表すこと、今の状態と`後回し`の予定を表すこと、前回の`全体像の元データ`を直して書くこと、節の見出しの隣に`ガイドの印`を付けること、`部品`の参照を "refs" か "ref" の欄に書くことが書いてあることを確かめる
 
