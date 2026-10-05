@@ -49,9 +49,9 @@ impl Counts {
     /// 文書の項目に添える数。どれも 0 なら何も描かない（REQ-view-016）
     fn card(&self) -> String {
         let badges = badges(&[
-            ("見直していない節", self.stale),
-            ("未決", self.open),
-            ("予定", self.planned),
+            ("見直していない節", "stale", self.stale),
+            ("未決", "open", self.open),
+            ("予定", "planned", self.planned),
         ]);
         if badges.is_empty() {
             return badges;
@@ -62,19 +62,24 @@ impl Counts {
     /// 目次の群の見出しに添える数。ページの数は常に出す（REQ-view-017）
     fn group(&self) -> String {
         format!(
-            "<span class=\"counts\"><span class=\"count\">{} ページ</span>{}</span>",
+            "<span class=\"counts\"><span class=\"count count-pages\">{} ページ</span>{}</span>",
             self.pages,
-            badges(&[("見直していない節", self.stale), ("未決", self.open)])
+            badges(&[
+                ("見直していない節", "stale", self.stale),
+                ("未決", "open", self.open)
+            ])
         )
     }
 }
 
-/// 0 でない数の札
-fn badges(words: &[(&str, usize)]) -> String {
+/// 0 でない数の札。種類ごとの class で色を分ける
+fn badges(words: &[(&str, &str, usize)]) -> String {
     words
         .iter()
-        .filter(|(_, count)| *count != 0)
-        .map(|(word, count)| format!("<span class=\"count\">{word} {count}</span>"))
+        .filter(|(_, _, count)| *count != 0)
+        .map(|(word, kind, count)| {
+            format!("<span class=\"count count-{kind}\">{word} {count}</span>")
+        })
         .collect()
 }
 
@@ -105,12 +110,12 @@ pub(crate) fn anchor(path: &[usize]) -> String {
 pub(crate) fn page(toc: &TocGroup, documents: &Documents) -> String {
     let (items, counts) = items(&toc.items, documents, &mut Vec::new());
     let mut body = format!(
-        "<main class=\"page index\">\n<header class=\"toc-head\" id=\"{}\">\n<h1>{}</h1>\n{}\n</header>\n",
+        "<main class=\"page index\">\n<header class=\"toc-head\" id=\"{}\">\n<h1>{}</h1>\n{}{}\n</header>\n",
         anchor(&[]),
         html::escape(&toc.title),
+        note(toc),
         counts.group()
     );
-    body.push_str(&note(toc));
     body.push_str(&items);
     body.push_str("</main>\n");
     html::shell(&toc.title, &body)
