@@ -36,6 +36,37 @@
       ],
       "handoff": null,
       "gaps": []
+    },
+    {
+      "id": "guide-overview-roles-changelog-review",
+      "base": "36c808bfc332a59c32a5dd280e2d35786dbd23a7",
+      "role": "reviewer",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "before": "sha256:4662cfa9c81363f9b0416d3e6a1b45b49a7ade3e78d63f0bc6f6fda40901f390",
+          "after": "sha256:7f681ebf7a9ece3cc10f8112b07c7bab7051b027f10c229e47bb4b6370c6e313"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/overview-workflow.md",
+          "sha256": "sha256:12ecb962f48da9af753b1c39711dafa8ac89be5f1bf19bd302dd66a2b2516904"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "Independently compared the Unreleased entry with the distributed guides.md and overview.md guidance and guide-overview-roles A2, A3, A4 and A6. The entry accurately identifies users as guide readers and builders as overview readers, separates usage instructions from decisions, reasons and planned or undecided state, and keeps brief behavior descriptions in overviews as results of decisions. It describes skill guidance, adds no requirement, and leaves the writing scene required by REQ-core-302 unchanged. This satisfies the PROJECT.md changelog rule within the authorized correction. Independently recomputed the mode-and-blob identities and the related IR hash; they match the implementer record. No historical approval status is asserted or changed.",
+      "requirements": [
+        "REQ-core-302"
+      ],
+      "decisions": [
+        "docs/decision/records/2026-10-05-guide-overview-roles.md#A2",
+        "docs/decision/records/2026-10-05-guide-overview-roles.md#A3",
+        "docs/decision/records/2026-10-05-guide-overview-roles.md#A4",
+        "docs/decision/records/2026-10-05-guide-overview-roles.md#A6"
+      ],
+      "handoff": null,
+      "gaps": []
     }
   ]
 }

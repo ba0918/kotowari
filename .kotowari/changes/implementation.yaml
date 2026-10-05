@@ -36,6 +36,36 @@
       ],
       "handoff": null,
       "gaps": []
+    },
+    {
+      "id": "guide-overview-roles-changelog-implementation",
+      "base": "36c808bfc332a59c32a5dd280e2d35786dbd23a7",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "before": "sha256:4662cfa9c81363f9b0416d3e6a1b45b49a7ade3e78d63f0bc6f6fda40901f390",
+          "after": "sha256:7f681ebf7a9ece3cc10f8112b07c7bab7051b027f10c229e47bb4b6370c6e313"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/overview-workflow.md",
+          "sha256": "sha256:12ecb962f48da9af753b1c39711dafa8ac89be5f1bf19bd302dd66a2b2516904"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "The Unreleased entry reports the distributed skill guidance already implemented by this branch: guides address product users and explain usage; overviews address product builders and explain decisions, reasons, plans and undecided matters. Behavior appears briefly as the result of decisions, while commands, configuration and usage steps belong in guides. This matches guide-overview-roles A2, A3 and A4 and preserves REQ-core-302; it adds no behavior or requirement. PROJECT.md requires user-visible skill changes in the product changelog on the same branch.",
+      "requirements": [
+        "REQ-core-302"
+      ],
+      "decisions": [
+        "docs/decision/records/2026-10-05-guide-overview-roles.md#A2",
+        "docs/decision/records/2026-10-05-guide-overview-roles.md#A3",
+        "docs/decision/records/2026-10-05-guide-overview-roles.md#A4"
+      ],
+      "handoff": null,
+      "gaps": []
     }
   ]
 }
