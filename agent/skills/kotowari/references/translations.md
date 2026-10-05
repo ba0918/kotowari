@@ -54,7 +54,7 @@ Inside a side, a link (or image, or link reference definition) that does not sta
 2. To bring another side up to date, take the text the record last confirmed from git with the recorded blob hash of the side you changed (`git cat-file -p <hash>`), compare it with the current text, and translate only that difference into the other sides. If git cannot give that text (the hash was never committed), translate the other sides again from the whole current text.
 3. Keep the skeleton identical and translate only the sentences; check the meaning by reading, since kotowari does not compare meanings.
 4. After the sides say the same thing, run `kotowari list` and copy each side's `blob` from its `translations` entry into `<stem>.i18n.yaml`. Never compute or invent the hashes.
-5. When a language other than English is added to `languages`, write `labels.<tag>` in the configuration with every UI text key (config.md), write every pair's new side with its switcher line, and add the new file name to every consistency record.
+5. When a language other than English is added to `languages`, write `labels.<tag>` in the configuration with every UI text key (config.md, "UI text keys": all 17 keys, and exactly one `{n}` in the keys that take a number), write every pair's new side with its switcher line, and add the new file name to every consistency record.
 
 ## Findings
 
