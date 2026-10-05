@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "unused-warnings-review",
+      "base": "def0dfd3d9ee2a53c9d5b5656ed4e7078b46ab55",
+      "role": "reviewer",
+      "files": [
+        {
+          "path": "crates/kotowari-core/src/finding_map.rs",
+          "before": "sha256:a169bbec0fb2abc50b368b5626d0284d82046e305de0ff28ac9af9505d3343f9",
+          "after": "sha256:605a08c172efd3516348e3138c34a5b9db3c830ebf8762e7d64e0b1755116624"
+        },
+        {
+          "path": "crates/kotowari-core/tests/change_records.rs",
+          "before": "sha256:da125d0b38427a376cf513d747f8e128a32eaa5391e72409b4a35ea1a683220d",
+          "after": "sha256:d444da54e0ab9ea7e9df903c247ead437051a6a2c1858995ca92fd632a0c80f6"
+        },
+        {
+          "path": "crates/kotowari-core/tests/ir.rs",
+          "before": "sha256:802e34989a466e7c68d5ec6cec89c6404b4f21d16d6d3289b96415a258bd252b",
+          "after": "sha256:1f1baeb9b201c7def78105c7ff2ba47599efdb5b016d63c7e68f682cdcd6cb68"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/tests/discovery.rs",
+          "before": "sha256:4d1eaf63b8d87fa31b22481126685bb2329826dc7804b409eeffc2fabf78ac24",
+          "after": "sha256:cd74c76cd5437c949695b454a49bada8b2f92863d0a865ce225f950ac178ef08"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/tests/surface.rs",
+          "before": "sha256:4d9fd7a631278fd9d2ca2d1332616ac774a41c241f50a928fd48f11ab650d82e",
+          "after": "sha256:ad75a4953a475201f073964a3bdec2ce8fe0b220a8ed0cf328ed3295893bd902"
+        },
+        {
+          "path": "crates/kotowari/src/ir.rs",
+          "before": "sha256:c0e4cd0185e25dbd0e58939e598d7ed888b92ed1bd04adb0a8e9addf037b0ac1",
+          "after": "sha256:a8b01ca4030a422872bf80d3b24652c3f9dc6e27345a8ce6e9d52bbc7a3d2144"
+        },
+        {
+          "path": "crates/kotowari/tests/change_records.rs",
+          "before": "sha256:5b872ae4845cc5dddd61ae72fa5b800830cffd50628b663fd9465362626ce756",
+          "after": "sha256:9256752c1d6c1aa5f355ed84b18c9e00229fa3aae0d947d7620c629051490870"
+        },
+        {
+          "path": "src/cli.rs",
+          "before": "sha256:918c3423cb587f014e14ad6a6fe54f6bdecf0e736ac04711c77d9e821bd40ada",
+          "after": "sha256:4726207134a541169afcb5e90a289da413afe683a6099d06b4d5050c904dc36e"
+        },
+        {
+          "path": "tests/step14_plan.rs",
+          "before": "sha256:5f3813e192a47e83cbf0497efffd45dc631cfd59793ae956585a9f0eaa654037",
+          "after": "sha256:806dd3c8b867e037e06c07234fb1f91a053af5d71de2d5066d42fbab4d9fa782"
+        },
+        {
+          "path": "tests/step15_guides.rs",
+          "before": "sha256:273aeba86785d07211321ccc0db5cb1ebd293db8c5d0b55b84ff1a16da642439",
+          "after": "sha256:1eb4c8d82cdd1eab36768bb1caf0e74ab82a35820bc762c2a9198801cb911d1b"
+        },
+        {
+          "path": "tests/step17_surface.rs",
+          "before": "sha256:3bbf0a159231186121e78705465cded3c3eed8c36bfb8d3ebc773793d94f0d81",
+          "after": "sha256:2bdc2d56279828cd61aa622e4f562b96d27309ce487a4271ae3d531fc47b4ed9"
+        },
+        {
+          "path": "tests/step2_ir.rs",
+          "before": "sha256:2ccd5022d469ae1ab020a38d0939aa3e3c3593869cbe11f57adf2b0816489bf1",
+          "after": "sha256:e757496e15cbcb3cee1c677aededc79628c899002a1ba8b51dae74e60b723895"
+        },
+        {
+          "path": "tests/step4_test_discovery.rs",
+          "before": "sha256:dac6fd318621a6a97b52349360bad22cad27fa3b72381da17b8d4a9a8d0a6031",
+          "after": "sha256:092f74ca6aac754f3602db94dd308a5c6ce83daaf169a8a3e6b0c5b6ff5419fe"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/finding-map.md",
+          "sha256": "sha256:5a3f028963a5fa099fee82bc97592a12974e7ae38004ec73167e6510e16e298b"
+        },
+        {
+          "path": "docs/ir/core/ir-document.md",
+          "sha256": "sha256:781a8dfc8bd87aed5eb850980968e9a14f0f39208970416bf46c4ee27a6c3d58"
+        },
+        {
+          "path": "docs/ir/core/skill-references.md",
+          "sha256": "sha256:3d2b78288e4ad1a94af60e0f6390a34dc19ba33e6fdc1eed2ceb64d5fb970211"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "I checked the non-test change against the finding map, IR document and skill reference requirements. MapContext.title in the private finding_map module had no reader, so dropping it changes no mapping rule or output. The imports in the CLI library ir module and StopReason::WORDINGS are used only by test-only code, so gating them with cfg(test) leaves the non-test build identical, and no public API changes because the touched modules are private. In the test files I confirmed from the diff that only uncalled helper functions, one unused constant and unused imports were removed, with no test function and no requirement mark line added, removed or changed; the two core test files that are also included into the library by path still compile. A forced rebuild of the workspace and of its tests with all features printed no warning lines, and every test passed. The recorded file and IR identities match the current tree and the base.",
+      "requirements": [
+        "REQ-core-033",
+        "REQ-core-127",
+        "REQ-core-171"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    }
+  ]
+}
