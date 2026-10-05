@@ -2,70 +2,37 @@
   "version": 1,
   "entries": [
     {
-      "id": "localization-tidy-review",
-      "base": "668b29921987731f3fc815417505a308c6fa0009",
+      "id": "guide-overview-roles-review",
+      "base": "36c808bfc332a59c32a5dd280e2d35786dbd23a7",
       "role": "reviewer",
       "files": [
         {
-          "path": "CHANGELOG.md",
-          "before": "sha256:95afa5ad3430f530efb897bde2adba3ca41f2d9713a8849c469eedd824e05cef",
-          "after": "sha256:4662cfa9c81363f9b0416d3e6a1b45b49a7ade3e78d63f0bc6f6fda40901f390"
+          "path": "agent/skills/kotowari/references/guides.md",
+          "before": "sha256:1e836aaafc5edbbf9b52776f4f5fbb728b66384f6e96a1f753dd9cba303c4550",
+          "after": "sha256:d225cc3529dd846de9d50682c012ad22266dac585d9c452839651468c48e1a49"
         },
         {
-          "path": "crates/kotowari-core/src/lib.rs",
-          "before": "sha256:a0029a297786a5a90592af2a2d2e8dd26204621aa0151f183aaf55a9839919b9",
-          "after": "sha256:91d8a865e43380b83bd168bdaf0b8385d75f2b11911faa5f7249984d46f8e2d9"
-        },
-        {
-          "path": "crates/kotowari-core/src/skeleton.rs",
-          "before": "sha256:01df14fceaf55b3a78f1d928577788197e7c25b78a5e51155b1249900fac71a5",
-          "after": "sha256:d36b7d30f4d232b2299d824837accd5eb6b1a3713c905e405fd2d35d461058d0"
-        },
-        {
-          "path": "crates/kotowari-overview/README.md",
-          "before": "sha256:7f215c21eb15a10f5f0cfa6ff1439eece9f4da1b292cb9ab0d72a53f654a910a",
-          "after": "sha256:0b5a0dd71657d791e94902fd39aa05d367afd8eee97a3e285a0984ff9bfb5685"
-        },
-        {
-          "path": "docs/guides/findings.md",
-          "before": "sha256:7437fb87346a3fa6923eec3cf0465a892379ae366bb57a9d8307bc2fa7208c03",
-          "after": "sha256:5af30526a728604db1b733d06d0fd21914adaffa6160fce08f0a0ee1619378fe"
+          "path": "agent/skills/kotowari/references/overview.md",
+          "before": "sha256:2a89fba6de2627cb9f6473b151fbd606de39dbaa4f94b2b056fba94bc0f59c7e",
+          "after": "sha256:4aa91b933691b4d4cbcfdf1cb1f9f25e83d431ae67d7ace0d9360f3843de08b6"
         }
       ],
       "ir": [
         {
-          "path": "docs/ir/core/overview-languages.md",
-          "sha256": "sha256:c84053e6bb7040e2b23ca76430a079569bb2ceb84066d6bd2d82e12956d45da6"
-        },
-        {
-          "path": "docs/ir/core/translation-pairs.md",
-          "sha256": "sha256:b83e4cc3eda43bc67219efc77e017ad3d624a8970f77794a8e6b5c562563380c"
-        },
-        {
-          "path": "docs/ir/core/translation-structure.md",
-          "sha256": "sha256:20c2fc78bc21d1ebc7fde823322563546d8be07822b8790f43c1257161576ef3"
-        },
-        {
-          "path": "docs/ir/core/overview-commands.md",
-          "sha256": "sha256:78f0491bf74dfab5aa9be37bc2fb79c3f610478ab7e7fdd4081c5ed9e169f4e8"
+          "path": "docs/ir/core/overview-workflow.md",
+          "sha256": "sha256:12ecb962f48da9af753b1c39711dafa8ac89be5f1bf19bd302dd66a2b2516904"
         }
       ],
       "conclusion": "existing",
-      "reason": "Independent review of the same changed bytes. CHANGELOG.md, docs/guides/findings.md and crates/kotowari-overview/README.md were read against REQ-core-294, 337, 338, 341, 342, 343, 353 and found to state the specified behavior: other-language IR sides get unclosed-backtick and glossary-form checks (REQ-core-342); only IR, overview-data and table-of-contents pairs stop the overview build (REQ-core-294); a pair read from two places raises one finding while translation_missing and translation_stale are per side (REQ-core-337, 338, 341); inspect_translations checks every side and builds one render input per language, with other-language pages under <language tag>/ (REQ-core-343, 353). The skeleton module is now pub(crate) and skeleton::mismatch is cfg(test) only; no other crate references skeleton, in-crate tests still use it, and cargo test --workspace --all-features --locked passes, so behavior is unchanged (REQ-core-344, TBL-core-044). The decision record Position line is consistent with the recorded approval and implementation. No defect or contradiction of the specification was found.",
+      "reason": "Independently read the approved record (A2, A3, A4, A6) and REQ-core-302 against both skill texts. overview.md names the builders (the person who brainstormed, the implementer, the reviewer) as readers and guides.md names the users (A2); overview.md says an overview covers what is decided and why, plans, deferrals, undecided items and how decisions connect, shows behavior only briefly as their result, and leaves commands, options, configuration and usage steps to guides, while guides.md keeps decision history and planned or undecided state out (A3); the boundary example puts the change-record flow in the overview and the `kotowari changes` command line in a guide (A6). Both stay guidance in the skill references with no check or IR requirement added (A4). Step 4 of the writing scene still asks for both the product's behavior and the connections between decisions, so REQ-core-302 holds. No contradiction or departure from the record found; the changed bytes and IR match the implementer entry.",
       "requirements": [
-        "REQ-core-294",
-        "REQ-core-337",
-        "REQ-core-338",
-        "REQ-core-341",
-        "REQ-core-342",
-        "REQ-core-343",
-        "REQ-core-344",
-        "REQ-core-353"
+        "REQ-core-302"
       ],
       "decisions": [
-        "docs/decision/records/2026-10-05-localization.md#A22",
-        "docs/decision/records/2026-10-05-localization.md#A27",
-        "docs/decision/records/2026-10-05-localization.md#D2"
+        "docs/decision/records/2026-10-05-guide-overview-roles.md#A2",
+        "docs/decision/records/2026-10-05-guide-overview-roles.md#A3",
+        "docs/decision/records/2026-10-05-guide-overview-roles.md#A4",
+        "docs/decision/records/2026-10-05-guide-overview-roles.md#A6"
       ],
       "handoff": null,
       "gaps": []
