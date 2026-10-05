@@ -513,3 +513,14 @@ fn ex_view_005_only_the_stale_section_carries_the_mark() {
     let (start, end) = changed(&text, &with(false)).expect("a mark");
     assert!(position(&text, "節A") < start && end <= position(&text, "節B"));
 }
+
+// @kotowari[REQ-view-007, REQ-view-027]
+#[test]
+fn req_view_007_footnote_syntax_is_not_drawn_as_footnotes() {
+    // 脚注は GFM の表ではなく、描くと UI の文字に無い英語の見出しと戻りリンクの文字が入る
+    let text = one_section_page(vec![Block::Markdown("本文[^1]\n\n[^1]: 注\n".into())]);
+    for needle in ["Footnotes", "Back to content", "data-footnotes", "footnote"] {
+        assert!(!text.contains(needle), "{needle}");
+    }
+    assert!(text.contains("本文"), "{text}");
+}

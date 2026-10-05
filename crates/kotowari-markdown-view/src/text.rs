@@ -7,6 +7,9 @@ fn parse_options() -> markdown::ParseOptions {
         constructs: markdown::Constructs {
             // 画像はページの外から読み込ませる（REQ-view-010）ので、"![...](...)" はリンクとして読む
             label_start_image: false,
+            // 脚注は描くと UI の文字に無い英語の見出しと戻りリンクの文字が入る（REQ-view-027）ので読まない
+            gfm_footnote_definition: false,
+            gfm_label_start_footnote: false,
             ..markdown::Constructs::gfm()
         },
         ..markdown::ParseOptions::gfm()
