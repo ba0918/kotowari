@@ -326,6 +326,39 @@
       "gaps": []
     },
     {
+      "id": "changes-pair-sides-implementation",
+      "base": "110ba00b23ef3755351204a46882bbcfe6d3049b",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "crates/kotowari-core/src/changes.rs",
+          "before": "sha256:c2362fa63bcfc04e40fddc2b60ef1af866405f11be3951363895f1afcf2e0ae1",
+          "after": "sha256:aac6ac3c0b4a89aeb3840acf888672d8947e64ff3f8843720e5b1be05cf1c417"
+        },
+        {
+          "path": "crates/kotowari-core/tests/change_matching.rs",
+          "before": "sha256:06b1430c142bc2312245219676925413dd7507b26cf9433a9c5b2d05f9ee93e5",
+          "after": "sha256:33d958343087a4ec54e8e12684012239dd94856b9edc6ee15561b2726d4ce3d4"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/translation-pairs.md",
+          "sha256": "sha256:65586c68c5f7c1438e688031996cd542e4da0de959cd698a44de7b142aa737ad"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "kotowari changes read every .md under the IR place, including other-language sides such as foo.ja.md, and mapped each requirement to whichever side sorted first, so a change record listing the first-language side failed changes while one listing the other side failed check. REQ-core-342 says the items of an IR pair are read from the first-language side only; changes now skips other-language sides when it reads requirements and IR paths, using the same side classification as check (REQ-core-337). The new test builds a snapshot with languages [en, fr], a pair a.md / a.fr.md and a record naming only a.md, and fails without the fix with missing definition IR docs/ir/a.fr.md. The whole workspace test suite passes.",
+      "requirements": [
+        "REQ-core-342"
+      ],
+      "decisions": [
+        "docs/decision/records/2026-10-05-localization.md#A22"
+      ],
+      "handoff": null,
+      "gaps": []
+    },
+    {
       "id": "translate-en-ja-changelog-implementation",
       "base": "110ba00b23ef3755351204a46882bbcfe6d3049b",
       "role": "implementer",
@@ -333,7 +366,7 @@
         {
           "path": "CHANGELOG.md",
           "before": "sha256:7f681ebf7a9ece3cc10f8112b07c7bab7051b027f10c229e47bb4b6370c6e313",
-          "after": "sha256:d3f2b2dba813ec251a83d13ef5e0f7412eb0a1e3aeb9fbfbe53eefb7485f58c3"
+          "after": "sha256:0fe8c8023cb48510d0634eceb2e4b6f4231c3d02fa271daae8bdd2500b6b1de0"
         }
       ],
       "ir": [
@@ -355,7 +388,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "The Unreleased Changed section tells users that the README, guides and IR are now English and Japanese pairs, how the files are named and switched, and that the why sections were removed from the guides, matching the pair requirements and decisions this branch applies (localization A13, A15, A33; guide-overview-roles A3).",
+      "reason": "The Unreleased section tells users that the README, guides and IR are now English and Japanese pairs, how the files are named and switched, and that the why sections were removed from the guides (localization A13, A15, A33; guide-overview-roles A3), and, under Fixed, that kotowari changes now reads only the first-language side of an IR pair as IR, as check does (REQ-core-342).",
       "requirements": [
         "REQ-core-334",
         "REQ-core-336",
@@ -368,7 +401,8 @@
         "REQ-core-349",
         "REQ-core-351",
         "REQ-core-203",
-        "REQ-core-204"
+        "REQ-core-204",
+        "REQ-core-342"
       ],
       "decisions": [
         "docs/decision/records/2026-10-05-localization.md#A13",
@@ -379,7 +413,8 @@
         "docs/decision/records/2026-10-05-localization.md#A33",
         "docs/decision/records/2026-10-05-localization.md#A36",
         "docs/decision/records/2026-10-05-localization.md#A40",
-        "docs/decision/records/2026-10-05-guide-overview-roles.md#A3"
+        "docs/decision/records/2026-10-05-guide-overview-roles.md#A3",
+        "docs/decision/records/2026-10-05-localization.md#A22"
       ],
       "handoff": null,
       "gaps": []
