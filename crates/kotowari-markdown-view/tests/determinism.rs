@@ -5,6 +5,9 @@ use kotowari_markdown_view::{
 use proptest::prelude::*;
 use serde_json::json;
 
+#[path = "common/ui.rs"]
+mod ui;
+
 fn state() -> impl Strategy<Value = ReferenceState> {
     prop_oneof![
         Just(ReferenceState::Current),
@@ -14,14 +17,18 @@ fn state() -> impl Strategy<Value = ReferenceState> {
 }
 
 fn reference() -> impl Strategy<Value = Reference> {
-    ("[a-zA-Z0-9#./-]{1,12}", ".{0,12}", ".{0,24}", state()).prop_map(
-        |(key, label, body, state)| Reference {
+    (
+        "[a-zA-Z0-9#./-]{1,12}",
+        ".{0,12}",
+        prop::option::of(".{0,24}"),
+        state(),
+    )
+        .prop_map(|(key, label, body, state)| Reference {
             key,
             label,
             body,
             state,
-        },
-    )
+        })
 }
 
 fn part() -> impl Strategy<Value = Part> {
@@ -37,7 +44,7 @@ fn part() -> impl Strategy<Value = Part> {
                 1 => json!({"columns": [[{"title": text, "tone": "good"}], [{"title": text}]]}),
                 2 => json!({"items": [{"title": text, "refs": refs}]}),
                 3 => json!({"cards": [{"title": text, "items": [text]}]}),
-                4 => json!({"items": [{"state": "未決", "text": text, "refs": refs}]}),
+                4 => json!({"items": [{"state": "open", "text": text, "refs": refs}]}),
                 5 => json!({"items": [{"before": text, "after": text, "why": text, "refs": refs}]}),
                 6 => json!({"roots": [{"ref": refs.first().cloned().unwrap_or_default(), "text": text, "by": "LLM"}]}),
                 7 => json!({"items": [{"q": text, "a": text, "refs": refs}]}),
@@ -128,6 +135,7 @@ fn input() -> impl Strategy<Value = RenderInput> {
             documents,
             references,
             toc,
+            ..ui::japanese()
         })
 }
 

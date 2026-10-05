@@ -98,7 +98,7 @@ impl<'a> Resolver<'a> {
         Some(Reference {
             key: id.to_string(),
             label: id.to_string(),
-            body,
+            body: Some(body),
             state: if may_defer && deferred {
                 ReferenceState::Deferred
             } else {
@@ -139,7 +139,7 @@ fn source(key: &str, target: SourceTarget) -> Reference {
         } => Reference {
             key: key.to_string(),
             label: format!("{} {number}", without_date(stem(&path))),
-            body: text,
+            body: Some(text),
             state: if superseded {
                 ReferenceState::Superseded
             } else {
@@ -153,7 +153,7 @@ fn source(key: &str, target: SourceTarget) -> Reference {
         } => Reference {
             key: key.to_string(),
             label: format!("{} {heading}", stem(&path)),
-            body: lines.join("\n"),
+            body: Some(lines.join("\n")),
             state: ReferenceState::Current,
         },
     }

@@ -4,6 +4,9 @@ use kotowari_markdown_view::{
 };
 use serde_json::{Value, json};
 
+#[path = "common/ui.rs"]
+mod ui;
+
 /// TBL-view-001 の種類の名前
 const KINDS: [&str; 8] = [
     "lead",
@@ -48,10 +51,10 @@ fn examples() -> Vec<(&'static str, Value)> {
         (
             "status",
             json!({"items": [
-                {"state": "決定", "text": "build を作る", "refs": ["docs/x.md#A1"]},
-                {"state": "予定", "text": "serve"},
-                {"state": "未決", "text": "hot reload"},
-                {"state": "取り下げ", "text": "render"}
+                {"state": "decided", "text": "build を作る", "refs": ["docs/x.md#A1"]},
+                {"state": "planned", "text": "serve"},
+                {"state": "open", "text": "hot reload"},
+                {"state": "dropped", "text": "render"}
             ]}),
         ),
         (
@@ -104,6 +107,7 @@ fn page_with(blocks: Vec<Block>, references: Vec<Reference>) -> String {
         }],
         references,
         toc: TocGroup::default(),
+        ..ui::japanese()
     };
     render(&input)
         .into_iter()
@@ -273,7 +277,7 @@ fn ex_view_008_two_following_half_parts_sit_side_by_side() {
         cards("右のカード"),
         part(
             "status",
-            json!({"items": [{"state": "決定", "text": "全幅の状態"}]}),
+            json!({"items": [{"state": "decided", "text": "全幅の状態"}]}),
         ),
     ];
     let text = page_with(blocks.clone(), vec![]);
@@ -378,8 +382,8 @@ fn tbl_view_001_status_draws_a_label_for_each_of_the_four_states() {
     let drawn = draw(
         "status",
         json!({"items": [
-            {"state": "決定", "text": "t1"}, {"state": "予定", "text": "t2"},
-            {"state": "未決", "text": "t3"}, {"state": "取り下げ", "text": "t4"}
+            {"state": "decided", "text": "t1"}, {"state": "planned", "text": "t2"},
+            {"state": "open", "text": "t3"}, {"state": "dropped", "text": "t4"}
         ]}),
     );
     let mut last = 0;
@@ -445,7 +449,7 @@ fn req_view_003_a_value_that_does_not_fit_is_drawn_without_reporting() {
         vec![Reference {
             key: "k".into(),
             label: "k".into(),
-            body: String::new(),
+            body: Some(String::new()),
             state: ReferenceState::Current,
         }],
     );
@@ -462,7 +466,7 @@ fn ex_view_006_pages_with_every_kind_load_nothing_from_outside() {
     let references = vec![Reference {
         key: "REQ-x-001".into(),
         label: "REQ-x-001".into(),
-        body: "本文".into(),
+        body: Some("本文".into()),
         state: ReferenceState::Current,
     }];
     let input = RenderInput {
@@ -479,6 +483,7 @@ fn ex_view_006_pages_with_every_kind_load_nothing_from_outside() {
         }],
         references,
         toc: TocGroup::default(),
+        ..ui::japanese()
     };
     for page in render(&input) {
         let text = page.content.to_lowercase();
@@ -538,12 +543,18 @@ fn req_view_003_the_characters_of_field_values_are_drawn_as_text_not_markup() {
 // @kotowari[REQ-view-011, TBL-view-001]
 #[test]
 fn tbl_view_001_the_four_status_badges_are_drawn_distinguishably() {
-    let states = ["決定", "予定", "未決", "取り下げ"];
+    // 札と、UI の文字の札の表示
+    let states = [
+        ("decided", "決定"),
+        ("planned", "予定"),
+        ("open", "未決"),
+        ("dropped", "取り下げ"),
+    ];
     // 札の文字を除いても残る違いが、見た目の違いである
     let drawn: Vec<String> = states
         .iter()
-        .map(|state| {
-            draw("status", json!({"items": [{"state": state, "text": "文"}]})).replace(state, "")
+        .map(|(state, label)| {
+            draw("status", json!({"items": [{"state": state, "text": "文"}]})).replace(label, "")
         })
         .collect();
     let first = drawn[0].as_bytes();
@@ -573,12 +584,12 @@ fn tbl_view_001_the_four_status_badges_are_drawn_distinguishably() {
         .unwrap()
         .content;
     for (index, difference) in differences.iter().enumerate() {
-        assert!(!difference.is_empty(), "{}", states[index]);
+        assert!(!difference.is_empty(), "{}", states[index].0);
         // 違いはページが使う共通のスタイルが見た目を与えるものである
         assert!(
             style.contains(difference),
             "{}: {difference}",
-            states[index]
+            states[index].0
         );
         for other in &differences[index + 1..] {
             assert_ne!(difference, other);

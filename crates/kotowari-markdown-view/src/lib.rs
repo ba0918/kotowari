@@ -1,4 +1,5 @@
-//! 描画の入力（文書の並び、参照の表、目次）からページの並びを作る描画のエンジン。
+//! 描画の入力（文書の並び、参照の表、目次、言語タグ、UI の文字、ほかの言語）からページの並びを作る
+//! 描画のエンジン。どの言語の文字も中に持たない（REQ-view-027）。
 //!
 //! このクレートの仕様は `docs/ir/view/` の IR である。ファイル、ネットワーク、環境変数に触れず、
 //! 入力の形も検査しない（REQ-view-003）。
@@ -17,6 +18,21 @@ pub struct RenderInput {
     pub references: Vec<Reference>,
     /// 一覧の見出しと、文書を並べる入れ子と順番
     pub toc: TocGroup,
+    /// ページの言語タグ。"html" の要素の lang の属性になる（REQ-view-026）
+    pub language: String,
+    /// UI の文字。鍵から文字列への対応（TBL-view-002）。view が書く文字はすべてここから取る
+    pub ui: BTreeMap<String, String>,
+    /// 同じページをほかの言語で描いた置き場の並び（REQ-view-029）
+    pub others: Vec<OtherLanguage>,
+}
+
+/// ほかの言語の1件（REQ-view-029）
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct OtherLanguage {
+    /// その言語の名前。リンクの文字になる
+    pub name: String,
+    /// この描画のページの置き場から、その言語のページの置き場への相対パス（"en/"、"../" など）
+    pub place: String,
 }
 
 /// 目次の群。目次そのものも1つの目次の群である（REQ-view-001）
@@ -80,7 +96,8 @@ pub struct Reference {
     /// 部品の "refs" か "ref" の欄に書かれた文字列
     pub key: String,
     pub label: String,
-    pub body: String,
+    /// 選ぶと開く本文。無ければ表示名だけで描く（REQ-view-030）
+    pub body: Option<String>,
     pub state: ReferenceState,
 }
 
@@ -101,27 +118,88 @@ pub struct Page {
 
 const STYLE: &str = include_str!("style.css");
 const INDEX: &str = "index.html";
-const STALE_MARK: &str = "<span class=\"stale-mark\">IR が変わった後、まだ見直していない節</span>";
-/// アウトラインの項目に付ける、STALE_MARK と同じ意味の短い印（REQ-view-022）
-const OUTLINE_STALE_MARK: &str = "<span class=\"outline-stale\">見直していない</span>";
+
+/// UI の文字を引く。無い鍵は空の文字にする（入力の形は検査しない。REQ-view-003）
+#[derive(Clone, Copy)]
+pub(crate) struct Ui<'a>(&'a BTreeMap<String, String>);
+
+impl Ui<'_> {
+    /// 鍵の文字を逃がしたもの
+    pub(crate) fn text(&self, key: &str) -> String {
+        html::escape(self.0.get(key).map_or("", String::as_str))
+    }
+    /// 数を入れる鍵の文字の "{n}" をその数の10進に置き換えて逃がしたもの（REQ-view-028）
+    pub(crate) fn count(&self, key: &str, number: usize) -> String {
+        html::escape(
+            &self
+                .0
+                .get(key)
+                .map_or("", String::as_str)
+                .replace("{n}", &number.to_string()),
+        )
+    }
+}
+
+/// 1つのページの外側。言語タグと、ほかの言語の同じページへのリンク
+pub(crate) struct Frame<'a> {
+    language: &'a str,
+    others: &'a [OtherLanguage],
+}
+
+impl Frame<'_> {
+    /// ほかの言語の同じページへのリンク。ほかの言語が無ければ何も描かない（REQ-view-029）
+    fn languages(&self, page: &str) -> String {
+        if self.others.is_empty() {
+            return String::new();
+        }
+        let links: String = self
+            .others
+            .iter()
+            .map(|other| {
+                format!(
+                    "<li><a href=\"{}{}\">{}</a></li>",
+                    html::escape(&other.place),
+                    html::href(page),
+                    html::escape(&other.name)
+                )
+            })
+            .collect();
+        format!("<nav class=\"languages\"><ul>{links}</ul></nav>\n")
+    }
+    pub(crate) fn page(&self, name: &str, title: &str, body: &str) -> String {
+        html::shell(
+            self.language,
+            title,
+            &format!("{}{body}", self.languages(name)),
+        )
+    }
+}
 
 /// 描画の入力からページの並びを返す。ページは名前のバイト順に並ぶ（REQ-view-002）
 pub fn render(input: &RenderInput) -> Vec<Page> {
-    let refs = parts::Refs::new(&input.references);
+    let ui = Ui(&input.ui);
+    let frame = Frame {
+        language: &input.language,
+        others: &input.others,
+    };
+    let refs = parts::Refs::new(&input.references, ui);
     let documents: index::Documents = input
         .documents
         .iter()
         .map(|document| (document.name.as_str(), document))
         .collect();
     let mut pages: BTreeMap<String, String> = BTreeMap::new();
-    pages.insert(INDEX.into(), index::page(&input.toc, &documents));
+    pages.insert(
+        INDEX.into(),
+        index::page(&input.toc, &documents, ui, &frame),
+    );
     pages.insert("style.css".into(), STYLE.into());
     let places = index::places(&input.toc);
     for document in documents.values() {
         let place = places.get(document.name.as_str());
         pages.insert(
             page_name(document),
-            document_page(document, place, &documents, &refs),
+            document_page(document, place, &documents, &refs, ui, &frame),
         );
     }
     pages
@@ -141,8 +219,10 @@ fn document_page(
     place: Option<&index::Place>,
     documents: &index::Documents,
     refs: &parts::Refs,
+    ui: Ui,
+    frame: &Frame,
 ) -> String {
-    let outline = outline(&document.sections);
+    let outline = outline(&document.sections, ui);
     // アウトラインのあるページは、広い画面でアウトラインを本文の左に置く（REQ-view-023）
     let class = if outline.is_empty() {
         "page"
@@ -151,7 +231,7 @@ fn document_page(
     };
     let mut body = format!(
         "{}<main class=\"{class}\">\n<h1>{}</h1>\n{outline}<div class=\"content\">\n",
-        crumbs(place),
+        crumbs(place, ui),
         html::escape(&document.title)
     );
     body.push_str(&parts::part(&document.lead, refs));
@@ -160,7 +240,14 @@ fn document_page(
     }
     for (index, section) in document.sections.iter().enumerate() {
         // REQ-view-009: 古い節の見出しの隣に、まだ見直していないことを示す印を描く
-        let mark = if section.stale { STALE_MARK } else { "" };
+        let mark = if section.stale {
+            format!(
+                "<span class=\"stale-mark\">{}</span>",
+                ui.text("stale_mark")
+            )
+        } else {
+            String::new()
+        };
         body.push_str(&format!(
             "<section class=\"section\" id=\"{}\">\n<h2>{}{mark}</h2>\n",
             section_anchor(index),
@@ -173,7 +260,7 @@ fn document_page(
         body.push_str(&siblings(&document.name, place.group, documents));
     }
     body.push_str("</div>\n</main>\n");
-    html::shell(&document.title, &body)
+    frame.page(&page_name(document), &document.title, &body)
 }
 
 /// 節の場所。節の並びの中の位置から作るので、同じ見出しの節が2つあっても重ならない（REQ-view-022）
@@ -183,7 +270,7 @@ fn section_anchor(index: usize) -> String {
 
 /// 節の見出しを並べ、それぞれをその節へのリンクにしたアウトライン。節が無ければ何も描かない
 /// （REQ-view-022）
-fn outline(sections: &[Section]) -> String {
+fn outline(sections: &[Section], ui: Ui) -> String {
     if sections.is_empty() {
         return String::new();
     }
@@ -191,10 +278,14 @@ fn outline(sections: &[Section]) -> String {
         .iter()
         .enumerate()
         .map(|(index, section)| {
+            // REQ-view-022: REQ-view-009 の印と同じ意味の短い印
             let mark = if section.stale {
-                OUTLINE_STALE_MARK
+                format!(
+                    "<span class=\"outline-stale\">{}</span>",
+                    ui.text("outline_stale")
+                )
             } else {
-                ""
+                String::new()
             };
             format!(
                 "<li><a href=\"#{}\">{}</a>{mark}</li>\n",
@@ -207,8 +298,9 @@ fn outline(sections: &[Section]) -> String {
 }
 
 /// 目次の中の位置。目次に名前が無ければ一覧へのリンクだけ（REQ-view-019）
-fn crumbs(place: Option<&index::Place>) -> String {
+fn crumbs(place: Option<&index::Place>, ui: Ui) -> String {
     let links = match place {
+        // 区切りの印は共通のスタイルが描き、ページの文字には書かない（REQ-view-027）
         Some(place) => place
             .chain
             .iter()
@@ -216,8 +308,8 @@ fn crumbs(place: Option<&index::Place>) -> String {
                 format!("<a href=\"{INDEX}#{anchor}\">{}</a>", html::escape(title))
             })
             .collect::<Vec<_>>()
-            .join("<span class=\"crumb-separator\">/</span>"),
-        None => format!("<a href=\"{INDEX}\">Overview</a>"),
+            .join("<span class=\"crumb-separator\"></span>"),
+        None => format!("<a href=\"{INDEX}\">{}</a>", ui.text("index_link")),
     };
     format!("<nav class=\"crumbs\">{links}</nav>\n")
 }

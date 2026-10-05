@@ -145,6 +145,13 @@ pub fn inspect_translations(
             toc: checked.toc.unwrap_or_default(),
             documents: inspection.documents,
             references: inspection.references.into_values().collect(),
+            language: kotowari_core::ui_text::ENGLISH.into(),
+            ui: read
+                .config()
+                .ui_text(kotowari_core::ui_text::ENGLISH)
+                .entries()
+                .clone(),
+            others: Vec::new(),
         },
     }
 }

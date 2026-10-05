@@ -575,15 +575,15 @@ fn tbl_core_039_requirements_show_their_statements_or_their_definition() {
     let overview = run(&model, &[(A, &with_refs("REQ-core-001, REQ-core-002"))]);
     let plain = reference(&overview, "REQ-core-001");
     assert_eq!(
-        (plain.body.as_str(), plain.state),
+        (plain.body.as_deref().unwrap(), plain.state),
         (
             "The first statement.\nThe second statement.",
             ReferenceState::Current
         )
     );
     assert_eq!(
-        reference(&overview, "REQ-core-002").body,
-        "Algorithm\nTBL-core-001"
+        reference(&overview, "REQ-core-002").body.as_deref(),
+        Some("Algorithm\nTBL-core-001")
     );
 }
 
@@ -594,12 +594,16 @@ fn tbl_core_039_tables_show_their_name_and_properties_their_statements() {
     let overview = run(&model, &[(A, &with_refs("TBL-core-001, PROP-core-001"))]);
     let table = reference(&overview, "TBL-core-001");
     assert_eq!(
-        (table.label.as_str(), table.body.as_str(), table.state),
+        (
+            table.label.as_str(),
+            table.body.as_deref().unwrap(),
+            table.state
+        ),
         ("TBL-core-001", "Table name", ReferenceState::Current)
     );
     assert_eq!(
-        reference(&overview, "PROP-core-001").body,
-        "Property statement."
+        reference(&overview, "PROP-core-001").body.as_deref(),
+        Some("Property statement.")
     );
 }
 
@@ -610,7 +614,7 @@ fn tbl_core_039_scenarios_show_the_scenario_line_and_steps_and_their_deferral() 
     let overview = run(&model, &[(A, &with_refs("EX-core-001, EX-core-002"))]);
     let scenario = reference(&overview, "EX-core-001");
     assert_eq!(
-        (scenario.body.as_str(), scenario.state),
+        (scenario.body.as_deref().unwrap(), scenario.state),
         (
             "Scenario: a scenario\n  Given g\n  When w\n  Then t",
             ReferenceState::Current
@@ -637,7 +641,7 @@ fn tbl_core_039_decisions_show_the_text_after_the_number() {
     assert_eq!(
         (
             decision.label.as_str(),
-            decision.body.as_str(),
+            decision.body.as_deref().unwrap(),
             decision.state
         ),
         ("x A2", "新しい決定", ReferenceState::Current)
@@ -651,7 +655,11 @@ fn tbl_core_039_flag_items_show_their_body_lines() {
     let overview = run(&model, &[(A, &with_refs("FLAG-core-001"))]);
     let flag = reference(&overview, "FLAG-core-001");
     assert_eq!(
-        (flag.label.as_str(), flag.body.as_str(), flag.state),
+        (
+            flag.label.as_str(),
+            flag.body.as_deref().unwrap(),
+            flag.state
+        ),
         ("FLAG-core-001", "本文の行。", ReferenceState::Current)
     );
 }
@@ -671,7 +679,11 @@ fn tbl_core_039_headings_of_other_markdown_files_show_their_section() {
     );
     let note = reference(&overview, "docs/decision/records/notes.md#背景");
     assert_eq!(
-        (note.label.as_str(), note.body.as_str(), note.state),
+        (
+            note.label.as_str(),
+            note.body.as_deref().unwrap(),
+            note.state
+        ),
         ("notes 背景", "一行目\n二行目", ReferenceState::Current)
     );
     assert_eq!(

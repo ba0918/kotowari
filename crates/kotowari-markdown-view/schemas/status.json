@@ -21,10 +21,10 @@
         "properties": {
           "state": {
             "enum": [
-              "決定",
-              "予定",
-              "未決",
-              "取り下げ"
+              "decided",
+              "planned",
+              "open",
+              "dropped"
             ]
           },
           "text": {
