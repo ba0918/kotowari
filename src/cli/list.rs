@@ -5,6 +5,15 @@ pub fn print_text(result: &ReadList) {
     for item in result.items() {
         print_item_text(item);
     }
+    // REQ-core-155: "translations" の1件を1行で、無い側は "言語タグ=-"
+    for translation in result.translations().into_iter().flatten() {
+        let sides: String = translation
+            .sides()
+            .iter()
+            .map(|side| format!(" {}={}", side.language(), side.blob().unwrap_or("-")))
+            .collect();
+        println!("{}{sides}", translation.path());
+    }
 }
 
 /// REQ-core-155: 1つの項目の1行と、その "tests" の1件ごとの行。

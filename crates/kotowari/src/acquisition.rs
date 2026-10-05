@@ -239,6 +239,24 @@ fn load_read(
     ))
 }
 
+/// list の読み取り: `load_all` に続けて、`言語の一覧`の言語が2つ以上なら blob hash を出すために
+/// `ガイド`、`全体像の元データ`、`目次`の置き場を check と同じに辿る（REQ-core-152）
+pub fn load_list(cwd: &Path, config_path: Option<&Path>) -> Result<ReadList, StopReason> {
+    let (read, tests, mut assembly) = load_read(cwd, config_path)?;
+    if !assembly.enabled() {
+        return Ok(read.list());
+    }
+    let base = find_base(cwd);
+    let guides = guides::read_texts(&base, &read, &mut assembly)?;
+    let guide_paths: Vec<&str> = guides
+        .iter()
+        .flatten()
+        .map(kotowari_core::NativeSourceText::path)
+        .collect();
+    overview::read_texts(&base, read.config(), &guide_paths, &tests, &mut assembly)?;
+    Ok(read.list_with(&assembly.into_pairs()))
+}
+
 /// check と status の読み取り: `load_all` に続けて`ガイド`と`全体像の元データ`と`面`を読み、その`指摘`を足す
 /// （REQ-core-198、REQ-core-162、REQ-core-229、REQ-core-278、REQ-core-290）
 pub fn load_with_guides(cwd: &Path, config_path: Option<&Path>) -> Result<Inspection, StopReason> {

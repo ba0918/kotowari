@@ -25,6 +25,7 @@ pub use kotowari_core::guides::GuideTally;
 pub use kotowari_core::ir::is_valid_id;
 pub use kotowari_core::mutants::MutantCounts;
 pub use kotowari_core::surface::{SurfaceTally, Unlisted};
+pub use kotowari_core::translations::{Translation, TranslationSide};
 pub use kotowari_core::{
     CheckInputs, CheckReport, Comparison, Finding, FindingGroup, FindingKind, GroupTally,
     InputError, Inspection, IrDocument, IrOptions, ParsedItem, QueryReport, ReadInputs, ReadList,
@@ -326,7 +327,10 @@ impl Project {
         self.inspect().map(Inspection::into_check)
     }
     pub fn list(&self) -> Result<ReadList, Error> {
-        Ok(self.read()?.list())
+        Ok(acquisition::load_list(
+            &self.options.start,
+            self.options.config.as_deref(),
+        )?)
     }
     pub fn query(&self, id: &str) -> Result<QueryReport, Error> {
         Ok(self.read()?.query(id)?)

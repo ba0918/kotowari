@@ -528,11 +528,18 @@ pub struct ReadModel {
     /// 判断の記録の置き場と ADR の置き場から読んだ文書の中身。出典の指す先の中身を引く
     source_texts: BTreeMap<String, Arc<str>>,
 }
-pub struct ReadList(crate::list::ListResult);
+pub struct ReadList(
+    crate::list::ListResult,
+    Option<Vec<crate::translations::Translation>>,
+);
 pub struct QueryReport(crate::query::QueryResult);
 impl ReadList {
     pub fn items(&self) -> &[crate::list::ListItem] {
         &self.0.items
+    }
+    /// `対`ごとの blob hash。`言語の一覧`の言語が2つ以上のときだけ持つ（REQ-core-155）
+    pub fn translations(&self) -> Option<&[crate::translations::Translation]> {
+        self.1.as_deref()
     }
 }
 impl QueryReport {
@@ -585,11 +592,13 @@ impl ReadModel {
         &self.policy.config
     }
     pub fn list(&self) -> ReadList {
-        ReadList(crate::list::build(
-            &self.docs,
-            &self.config().ir,
-            &self.discovered.markers,
-        ))
+        self.list_with(&crate::translations::Pairs::default())
+    }
+    /// "items" と、`言語の一覧`の言語が2つ以上なら pairs の "translations"（REQ-core-155）
+    pub fn list_with(&self, pairs: &crate::translations::Pairs) -> ReadList {
+        let items = crate::list::build(&self.docs, &self.config().ir, &self.discovered.markers);
+        let translations = self.policy.translations().then(|| pairs.listing());
+        ReadList(items, translations)
     }
     pub fn query(&self, id: &str) -> Result<QueryReport, InputError> {
         crate::query::build(&self.docs, &self.config().ir, &self.discovered.markers, id)

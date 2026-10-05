@@ -607,6 +607,23 @@ impl Pairs {
             self.insert(pair);
         }
     }
+    /// "kotowari list" の "translations"。`先頭の言語`の`側`のパスの昇順（REQ-core-155）
+    pub fn listing(&self) -> Vec<Translation> {
+        self.iter()
+            .map(|pair| Translation {
+                path: pair.path().to_string(),
+                sides: pair
+                    .sides
+                    .iter()
+                    .map(|side| TranslationSide {
+                        language: side.language.clone(),
+                        path: side.path.clone(),
+                        blob: side.content.as_ref().map(|content| content.blob.clone()),
+                    })
+                    .collect(),
+            })
+            .collect()
+    }
     /// すべての`対`の`指摘`
     pub(crate) fn findings(&self, config: &crate::config::Config) -> Vec<Finding> {
         let context = Context::new(self, config);
@@ -722,5 +739,44 @@ pub(crate) fn side_findings(
                 ));
             }
         }
+    }
+}
+
+/// "kotowari list" の "translations" の1件（REQ-core-155）
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Translation {
+    path: String,
+    sides: Vec<TranslationSide>,
+}
+
+impl Translation {
+    /// `先頭の言語`の`側`の`基準のディレクトリ`からの相対パス
+    pub fn path(&self) -> &str {
+        &self.path
+    }
+    /// `言語の一覧`の順の`側`
+    pub fn sides(&self) -> &[TranslationSide] {
+        &self.sides
+    }
+}
+
+/// "translations" の1件の1つの`側`
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TranslationSide {
+    language: String,
+    path: String,
+    blob: Option<String>,
+}
+
+impl TranslationSide {
+    pub fn language(&self) -> &str {
+        &self.language
+    }
+    pub fn path(&self) -> &str {
+        &self.path
+    }
+    /// その`側`の blob hash。`側`が無ければ None
+    pub fn blob(&self) -> Option<&str> {
+        self.blob.as_deref()
     }
 }
