@@ -38,10 +38,10 @@ kotowari は常に、"kotowari check"、"kotowari status"、"kotowari overview b
 ### REQ-core-282: 部品の中身
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-02-whole-picture.md#A43, docs/decision/records/2026-10-02-whole-picture.md#A46, docs/decision/records/2026-10-02-whole-picture.md#A47, docs/decision/records/2026-10-02-whole-picture.md#A48, docs/decision/records/2026-10-02-whole-picture.md#A54, docs/decision/records/2026-10-02-whole-picture.md#A69, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A74, docs/decision/records/2026-10-02-whole-picture.md#A85, docs/decision/records/2026-10-02-whole-picture.md#A86
+- source: docs/decision/records/2026-10-02-whole-picture.md#A43, docs/decision/records/2026-10-02-whole-picture.md#A46, docs/decision/records/2026-10-02-whole-picture.md#A47, docs/decision/records/2026-10-02-whole-picture.md#A48, docs/decision/records/2026-10-02-whole-picture.md#A54, docs/decision/records/2026-10-02-whole-picture.md#A69, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A74, docs/decision/records/2026-10-02-whole-picture.md#A85, docs/decision/records/2026-10-02-whole-picture.md#A86, docs/decision/records/2026-10-05-overview-page-reading.md#A10
 - verification: unit
 
-`全体像の元データ`の情報文字列が "view" と1つ以上の空白と種類の名前であるフェンスのコードブロックについて、種類の名前が描画のエンジンの`部品`の種類に無いとき、kotowari は "line" をフェンスの開始の行、detail を種類の名前にして overview_part_unknown の`誤り`を出す。中身が YAML として読めないとき、または描画のエンジンが公開するその種類のスキーマに合わないとき、kotowari は "line" をフェンスの開始の行、detail を種類の名前と1つの半角空白と合わなかった場所にして overview_part_invalid の`誤り`を出す。合わなかった場所は、合わなかった値の JSON Pointer に、知らない鍵（"additionalProperties"）と欠けた鍵（"required"）ではその鍵の名前を "/" で足したもので、値の全体なら "(root)"、YAML として読めないときは "(yaml)" と書く。同じ "line" と detail の`誤り`は1件にまとめる。detail に検査のライブラリが作る文を入れない。
+`全体像の元データ`の情報文字列が "view" と1つ以上の空白と種類の名前であるフェンスのコードブロックについて、種類の名前が描画のエンジンの`部品`の種類に無いとき、kotowari は "line" をフェンスの開始の行、detail を種類の名前にして overview_part_unknown の`誤り`を出す。中身が YAML として読めないとき、または描画のエンジンが公開するその種類のスキーマに合わないとき、kotowari は "line" をフェンスの開始の行、detail を種類の名前と1つの半角空白と合わなかった場所にして overview_part_invalid の`誤り`を出す。ただし YAML として読めないときに YAML の読み取りが誤りの位置を返したら、"line" はその位置の行を`全体像の元データ`のファイルの行に直したものにする。合わなかった場所は、合わなかった値の JSON Pointer に、知らない鍵（"additionalProperties"）と欠けた鍵（"required"）ではその鍵の名前を "/" で足したもので、値の全体なら "(root)"、YAML として読めないときは "(yaml)" と書く。同じ "line" と detail の`誤り`は1件にまとめる。detail に検査のライブラリが作る文を入れない。
 
 ### REQ-core-283: 冒頭の lead
 
@@ -127,6 +127,12 @@ Scenario: 知らない部品とスキーマに合わない部品は誤りにな�
   Given `全体像の元データ`に "```view chart" のフェンスと、中身に知らない鍵 "color" を持つ "```view cards" のフェンスがある
   When "kotowari check --format json" を実行する
   Then detail が "chart" の overview_part_unknown と、detail が "cards" と半角空白と、"color" の鍵を持つ値の JSON Pointer に "/color" を足したものである overview_part_invalid の`誤り`が出る
+
+@id=EX-core-511 @about=REQ-core-282 @source=docs/decision/records/2026-10-05-overview-page-reading.md#A10
+Scenario: YAML として読めない部品は誤りの行を指す
+  Given `全体像の元データ`の10行目に "```view cards" のフェンスがあり、その中の13行目が YAML として読めない行である
+  When "kotowari check --format json" を実行する
+  Then "line" が 13、detail が "cards (yaml)" の overview_part_invalid の`誤り`が1件出る
 
 @id=EX-core-467 @about=REQ-core-283 @source=docs/decision/records/2026-10-02-whole-picture.md#A38,docs/decision/records/2026-10-02-whole-picture.md#A69,docs/decision/records/2026-10-02-whole-picture.md#A74
 Scenario: 冒頭が lead でなければ誤りになる

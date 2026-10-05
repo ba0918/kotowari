@@ -1,6 +1,6 @@
 # 一覧と移動
 
-一覧の`ページ`に添える状態の数と`目次の群`の描き方と、`文書`の`ページ`から`目次`の中のほかの場所へどう移るかを扱う。`目次`が`文書`と食い違うときも、view は検査せずに決まった形で描く。
+一覧の`ページ`に添える状態の数と`目次の群`の描き方と、`文書`の`ページ`から`目次`の中のほかの場所へどう移るかと、`文書`の`ページ`の中で`アウトライン`から`節`へどう移るかを扱う。`目次`が`文書`と食い違うときも、view は検査せずに決まった形で描く。
 
 ## Requirements
 
@@ -52,6 +52,23 @@ view は常に、`目次`に名前がある`文書`の`ページ`の最後の`�
 
 view は常に、`目次`にあって`描画の入力`に`文書`の無い名前を、一覧の`ページ`に描かず数にも入れない。`目次`に名前の無い`文書`は、その`ページ`を返すが一覧の`ページ`には描かない。`目次`に2回以上出てくる名前は、出てくるたびに描いて数に入れる。view はこれらを誤りとして報告しない。
 
+### REQ-view-022: 節のアウトライン
+
+- kind: ubiquitous
+- source: docs/decision/records/2026-10-05-overview-page-reading.md#A1, docs/decision/records/2026-10-05-overview-page-reading.md#A2, docs/decision/records/2026-10-05-overview-page-reading.md#A3, docs/decision/records/2026-10-05-overview-page-reading.md#A4, docs/decision/records/2026-10-05-overview-page-reading.md#A5, docs/decision/records/2026-10-05-overview-page-reading.md#A6, docs/decision/records/2026-10-05-overview-page-reading.md#A7, docs/decision/records/2026-10-05-overview-page-reading.md#A14, docs/decision/records/2026-10-05-overview-page-reading.md#A17, docs/decision/records/2026-10-05-overview-page-reading.md#D1
+- verification: unit
+
+view は常に、`節`を1つ以上持つ`文書`の`ページ`に`アウトライン`を描き、`節`の見出しの文字を`節`の並びの順に並べ、それぞれをその`ページ`の中のその`節`へのリンクにする。古いとされた`節`の項目には、見出しの文字の後に REQ-view-009 の印と同じ意味の印を付ける。`アウトライン`には lead と lead に続く冒頭の`部品`への項目、`節`の中の "### " 以下の見出し、ほかの`ページ`へのリンクを入れない。節へのリンクの場所は1つの`ページ`の中で重ならず、同じ見出しの`節`が2つあっても別の場所にする。一覧の`ページ`と、`節`の無い`文書`の`ページ`には`アウトライン`を描かない。
+
+### REQ-view-023: アウトラインの置き場所
+
+- kind: ubiquitous
+- source: docs/decision/records/2026-10-05-overview-page-reading.md#A12, docs/decision/records/2026-10-05-overview-page-reading.md#A13, docs/decision/records/2026-10-05-overview-page-reading.md#A15, docs/decision/records/2026-10-05-overview-page-reading.md#D2
+- verification: review
+- how_to_verify: `節`を十分に持つ`文書`の`ページ`を描いてブラウザで開き、広い幅では`アウトライン`が本文の左にあって本文をスクロールしても見え続けること、狭い幅では`アウトライン`が題名の下で lead より上にあってスクロールに追従しないことを人が見て確かめる
+
+view は常に、広い画面では`アウトライン`を本文の左に置いて本文をスクロールしても見え続けるように描き、狭い画面では`アウトライン`を題名の下、lead より上に置いてスクロールに追従させない。
+
 ## Examples
 
 ```gherkin
@@ -86,4 +103,17 @@ Scenario: 目次と食い違う入力も誤りにせず描く
   When view で描画する
   Then 返るページに "a.html" と "c.html" があり、"index.html" には "a" の題名が2回あり、"c" の題名と "z" は無く、目次の見出しに "2 ページ" がある
   And "c.html" の題名より上には "index.html" へのリンクだけがある
+
+@id=EX-view-016 @about=REQ-view-022 @source=docs/decision/records/2026-10-05-overview-page-reading.md#A1,docs/decision/records/2026-10-05-overview-page-reading.md#A4,docs/decision/records/2026-10-05-overview-page-reading.md#A2,docs/decision/records/2026-10-05-overview-page-reading.md#A3,docs/decision/records/2026-10-05-overview-page-reading.md#A5,docs/decision/records/2026-10-05-overview-page-reading.md#A14,docs/decision/records/2026-10-05-overview-page-reading.md#A17,docs/decision/records/2026-10-05-overview-page-reading.md#D1
+Scenario: アウトラインは節を順に並べ、古い節に印を付ける
+  Given 文書 "a" に、古くない節 "読む"、古いとされた節 "書く"、古くない節 "読む" がこの順にあり、節 "書く" の中に "### 細部" の見出しがある
+  When view で描画する
+  Then "a.html" のアウトラインに "読む"、"書く"、"読む" がこの順にあり、"書く" の文字の後にだけ見直していない節の印がある
+  And 3つの項目は "a.html" の中の互いに違う場所へリンクし、それぞれの場所はその節であり、アウトラインに "細部" と lead の結論は無い
+
+@id=EX-view-017 @about=REQ-view-022 @source=docs/decision/records/2026-10-05-overview-page-reading.md#A1,docs/decision/records/2026-10-05-overview-page-reading.md#A4
+Scenario: 節の無い文書と一覧にはアウトラインが無い
+  Given 節を持たない文書 "a" と、節を1つ持つ文書 "b" がある
+  When view で描画する
+  Then "b.html" にはアウトラインがあり、"a.html" と "index.html" にはアウトラインが無い
 ```

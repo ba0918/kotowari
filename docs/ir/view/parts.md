@@ -43,6 +43,24 @@ view は常に、TBL-view-001 の種類の名前のそれぞれから、その�
 
 view は常に、同じ`節`の中で続く、値に "width": "half" を持つ`部品`の並びを、先頭から2つずつ組にして左右に並べ、組にならずに残った1つと、それ以外の`部品`を`節`の幅いっぱいに描く。どの`部品のスキーマ`も "width" の値として "half" だけを許す。
 
+### REQ-view-024: flow の列と並列
+
+- kind: ubiquitous
+- source: docs/decision/records/2026-10-05-overview-page-reading.md#A8, docs/decision/records/2026-10-05-overview-page-reading.md#D2
+- verification: review
+- how_to_verify: 列を2つ以上持ち、1つの列に箱を2つ以上縦に並べた flow の`部品`を描いてブラウザで開き、1つの列の箱が1つの囲みの中にあり、矢印が列と列の間にだけあって同じ列の箱の間に無いことを人が見て確かめる
+
+view は常に、flow の`部品`の列ごとにその列の箱を1つの囲みの中に描き、左から右への流れを示す矢印を列と列の間にだけ描いて、同じ列の箱の間には描かない。
+
+### REQ-view-025: 狭い画面の flow
+
+- kind: ubiquitous
+- source: docs/decision/records/2026-10-05-overview-page-reading.md#A9, docs/decision/records/2026-10-05-overview-page-reading.md#A15, docs/decision/records/2026-10-05-overview-page-reading.md#D2
+- verification: review
+- how_to_verify: 列を2つ以上持つ flow の`部品`を描いてブラウザで開き、狭い幅で列が上から下に積まれ、列と列の間の矢印が下を向き、箱が重ならないことを人が見て確かめる
+
+view は常に、狭い画面では flow の`部品`の列を上から下に積み、列と列の間の矢印を下向きに描いて、箱を重ねない。
+
 ## Decision tables
 
 ### TBL-view-001: 部品の種類
