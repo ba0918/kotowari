@@ -389,7 +389,7 @@ docs/decision/records/2026-09-24-shop.md:17 [error] revision_link_invalid #A9
 <!-- @kotowari[REQ-core-338:a190a3f8, REQ-core-339:726dd6bf, REQ-core-341:779f601b, REQ-core-345:031507d3, REQ-core-346:cd9ad349, REQ-core-347:7e67aa6b, REQ-core-348:038b6606, REQ-core-349:c5034509, REQ-core-342:56f127fe, REQ-core-343:f6bcc00a] -->
 
 設定の `languages` に2つ以上の言語を書いたプロジェクトでだけ出ます（[言語と対](config.md#言語と対--languages-と-labels)）。
-IR、ガイド、全体像の元データ、目次の対ごとに、1つの対には1回だけ出ます。
+1つの対がIRとガイドのように2つの置き場から読まれても、同じ指摘は1回だけ出ます。translation_missing と translation_stale は側ごとに出ます。
 
 ```text
 docs/ir/a.md:- [error] translation_missing docs/ir/a.en.md
