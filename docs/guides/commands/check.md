@@ -165,6 +165,7 @@ glob を書き間違えても指摘は出ないので、ここで確かめます
 `line` は種類ごとに決まっています。
 文書全体への指摘（`missing_title`、`missing_scope`、`too_many_lines` など）と、未記載の面の一覧の1件への指摘、全体像の元データの `overview_lead_missing`、`overview_ir_missing`、`overview_ir_shared`、`overview_name_conflict` と、目次の `overview_toc_invalid`、`overview_toc_page_missing`、`overview_toc_page_unknown`、`overview_toc_page_duplicate`、`overview_toc_group_empty` は null、項目への指摘は項目の見出しの行、シナリオへの指摘はタグの行、`surface_without_spec` は面の節の最初の行です。
 `overview_form_invalid` は形に合わない行（文書全体にかかるものは null）、`overview_part_unknown`、`overview_part_invalid`、`overview_ref_unresolved` は部品のフェンスの開始の行です。
+ただし部品の中身が YAML として読めない `overview_part_invalid` は、YAML の読み取りが誤りの位置を返せばその行（全体像の元データのファイルの行に直したもの）です。
 種類ごとの行は [findings.md](../findings.md#種類の一覧) の表にあります。
 
 ## 終了コード
