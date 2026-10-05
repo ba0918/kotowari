@@ -61,6 +61,7 @@ mod query;
 pub use query::{QueryItem, Reference};
 mod record_form;
 mod schema;
+pub mod skeleton;
 pub mod sources;
 mod status;
 pub use status::{Documents, Findings, Items, Requirements, Scenarios, Tests};
@@ -209,6 +210,7 @@ finding_kinds! {
     TranslationMissing => "translation_missing",
     TranslationRecordInvalid => "translation_record_invalid",
     TranslationStale => "translation_stale",
+    TranslationStructureMismatch => "translation_structure_mismatch",
 }
 
 impl FindingKind {

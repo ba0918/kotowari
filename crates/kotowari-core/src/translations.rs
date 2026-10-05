@@ -266,6 +266,7 @@ fn pair_findings(pair: &Pair, findings: &mut Vec<Finding>) {
     for side in pair.others().iter().filter(|side| side.content.is_none()) {
         findings.push(missing(&first.path, &side.path));
     }
+    structure_findings(pair, findings);
     match read_record(pair) {
         Err(detail) => findings.push(Finding::new(
             FindingKind::TranslationRecordInvalid,
@@ -288,6 +289,44 @@ fn pair_findings(pair: &Pair, findings: &mut Vec<Finding>) {
                     ));
                 }
             }
+        }
+    }
+}
+
+/// `対`の文書の種類（TBL-core-044）
+fn skeleton_kind(pair: &Pair) -> crate::skeleton::Kind {
+    use crate::skeleton::Kind;
+    match pair.place {
+        Place::Ir => match crate::DocKind::of(file_name(pair.path())) {
+            crate::DocKind::Topic => Kind::Topic,
+            crate::DocKind::Glossary => Kind::Glossary,
+            crate::DocKind::Flags => Kind::Flags,
+        },
+        Place::Guide => Kind::Guide,
+        Place::OverviewData => Kind::OverviewData,
+        Place::Toc => Kind::Toc,
+    }
+}
+
+/// REQ-core-345: ほかの言語の`側`の`骨組み`が`先頭の言語`の`側`と食い違えば、`側`ごとに1件
+fn structure_findings(pair: &Pair, findings: &mut Vec<Finding>) {
+    let Some(first) = &pair.first().content else {
+        return;
+    };
+    let kind = skeleton_kind(pair);
+    let expected = crate::skeleton::skeleton(kind, first.text());
+    for side in pair.others() {
+        let Some(content) = &side.content else {
+            continue;
+        };
+        let actual = crate::skeleton::skeleton(kind, content.text());
+        if let Some((part, line)) = crate::skeleton::compare(&expected, &actual) {
+            findings.push(Finding::new(
+                FindingKind::TranslationStructureMismatch,
+                side.path.clone(),
+                line,
+                part.to_string(),
+            ));
         }
     }
 }

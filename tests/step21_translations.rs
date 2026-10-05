@@ -575,3 +575,132 @@ fn req_core_343_overview_and_contents_forms_are_checked_on_every_side() {
         [pair(".kotowari/toc.en.yaml", "(root)")]
     );
 }
+
+/// 要求と具体例を持つ話題ごとの文書。"- source:" は9行目にある
+fn topic_with_example(source: &str, statement: &str, step: &str) -> String {
+    format!(
+        "# A\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- source: {source}\n- verification: review\n- how_to_verify: read\n\n{statement}\n\n## Examples\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/r.md#A1\nScenario: {step}\n  Given {step}\n```\n"
+    )
+}
+
+const RECORD_A1: &str = "docs/decision/records/r.md#A1";
+
+// @kotowari[REQ-core-344, EX-core-526]
+#[test]
+fn ex_core_526_sides_that_differ_only_in_sentences_match() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), JA_EN, "");
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &topic_with_example(RECORD_A1, "文。", "例"),
+    );
+    write(
+        tmp.path(),
+        "docs/ir/a.en.md",
+        &topic_with_example(RECORD_A1, "Text.", "example"),
+    );
+    let report = check(tmp.path());
+    assert!(
+        findings(&report, "translation_structure_mismatch").is_empty(),
+        "{report}"
+    );
+}
+
+// @kotowari[REQ-core-345, EX-core-527]
+#[test]
+fn ex_core_527_a_different_source_is_reported_on_its_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), JA_EN, "");
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &topic_with_example(RECORD_A1, "文。", "例"),
+    );
+    write(
+        tmp.path(),
+        "docs/ir/a.en.md",
+        &topic_with_example("docs/decision/records/r.md#A2", "Text.", "example"),
+    );
+    let report = check(tmp.path());
+    assert_eq!(
+        findings(&report, "translation_structure_mismatch"),
+        [(
+            "docs/ir/a.en.md".to_string(),
+            Value::from(9),
+            "field".to_string()
+        )]
+    );
+}
+
+/// status の部品を持つ全体像の元データ
+fn overview_with_status(title: &str, state: &str, text: &str) -> String {
+    format!(
+        "---\nir:\n  - docs/ir/a.md\n---\n\n# {title}\n\n```view lead\nconclusion: {title}\n```\n\n## {title}\n\n```view status\nitems:\n  - state: {state}\n    text: {text}\n```\n"
+    )
+}
+
+// @kotowari[TBL-core-045, EX-core-528]
+#[test]
+fn ex_core_528_a_part_field_that_is_not_a_sentence_must_match() {
+    let tmp = TempDir::new().unwrap();
+    overview_pairs(tmp.path());
+    write(
+        tmp.path(),
+        ".kotowari/overview/a.md",
+        &overview_with_status("題名", "open", "未決の文"),
+    );
+    write(
+        tmp.path(),
+        ".kotowari/overview/a.en.md",
+        &overview_with_status("Title", "open", "Open text"),
+    );
+    let report = check(tmp.path());
+    assert!(
+        findings(&report, "translation_structure_mismatch").is_empty(),
+        "{report}"
+    );
+    write(
+        tmp.path(),
+        ".kotowari/overview/a.en.md",
+        &overview_with_status("Title", "decided", "Decided text"),
+    );
+    let report = check(tmp.path());
+    assert_eq!(
+        paths_and_details(&report, "translation_structure_mismatch"),
+        [pair(".kotowari/overview/a.en.md", "part")]
+    );
+}
+
+// @kotowari[EX-core-529]
+#[test]
+fn ex_core_529_contents_that_differ_only_in_titles_and_notes_match() {
+    let tmp = TempDir::new().unwrap();
+    overview_pairs(tmp.path());
+    write(
+        tmp.path(),
+        ".kotowari/toc.yaml",
+        "title: 目次\nnote: 説明\nitems:\n  - title: 群\n    items:\n      - a\n",
+    );
+    write(
+        tmp.path(),
+        ".kotowari/toc.en.yaml",
+        "title: Contents\nnote: About\nitems:\n  - title: Group\n    items:\n      - a\n",
+    );
+    let report = check(tmp.path());
+    assert!(
+        findings(&report, "translation_structure_mismatch").is_empty(),
+        "{report}"
+    );
+    // 名前の項目の入れ子が違えば食い違う
+    write(
+        tmp.path(),
+        ".kotowari/toc.en.yaml",
+        "title: Contents\nnote: About\nitems:\n  - a\n",
+    );
+    let report = check(tmp.path());
+    assert_eq!(
+        paths_and_details(&report, "translation_structure_mismatch"),
+        [pair(".kotowari/toc.en.yaml", "toc")]
+    );
+}
