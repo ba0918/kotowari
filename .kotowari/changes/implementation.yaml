@@ -12,14 +12,64 @@
           "after": "sha256:605a08c172efd3516348e3138c34a5b9db3c830ebf8762e7d64e0b1755116624"
         },
         {
+          "path": "crates/kotowari-core/tests/change_records.rs",
+          "before": "sha256:da125d0b38427a376cf513d747f8e128a32eaa5391e72409b4a35ea1a683220d",
+          "after": "sha256:d444da54e0ab9ea7e9df903c247ead437051a6a2c1858995ca92fd632a0c80f6"
+        },
+        {
+          "path": "crates/kotowari-core/tests/ir.rs",
+          "before": "sha256:802e34989a466e7c68d5ec6cec89c6404b4f21d16d6d3289b96415a258bd252b",
+          "after": "sha256:1f1baeb9b201c7def78105c7ff2ba47599efdb5b016d63c7e68f682cdcd6cb68"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/tests/discovery.rs",
+          "before": "sha256:4d1eaf63b8d87fa31b22481126685bb2329826dc7804b409eeffc2fabf78ac24",
+          "after": "sha256:cd74c76cd5437c949695b454a49bada8b2f92863d0a865ce225f950ac178ef08"
+        },
+        {
+          "path": "crates/kotowari-source-analysis/tests/surface.rs",
+          "before": "sha256:4d9fd7a631278fd9d2ca2d1332616ac774a41c241f50a928fd48f11ab650d82e",
+          "after": "sha256:ad75a4953a475201f073964a3bdec2ce8fe0b220a8ed0cf328ed3295893bd902"
+        },
+        {
           "path": "crates/kotowari/src/ir.rs",
           "before": "sha256:c0e4cd0185e25dbd0e58939e598d7ed888b92ed1bd04adb0a8e9addf037b0ac1",
           "after": "sha256:a8b01ca4030a422872bf80d3b24652c3f9dc6e27345a8ce6e9d52bbc7a3d2144"
         },
         {
+          "path": "crates/kotowari/tests/change_records.rs",
+          "before": "sha256:5b872ae4845cc5dddd61ae72fa5b800830cffd50628b663fd9465362626ce756",
+          "after": "sha256:9256752c1d6c1aa5f355ed84b18c9e00229fa3aae0d947d7620c629051490870"
+        },
+        {
           "path": "src/cli.rs",
           "before": "sha256:918c3423cb587f014e14ad6a6fe54f6bdecf0e736ac04711c77d9e821bd40ada",
           "after": "sha256:4726207134a541169afcb5e90a289da413afe683a6099d06b4d5050c904dc36e"
+        },
+        {
+          "path": "tests/step14_plan.rs",
+          "before": "sha256:5f3813e192a47e83cbf0497efffd45dc631cfd59793ae956585a9f0eaa654037",
+          "after": "sha256:806dd3c8b867e037e06c07234fb1f91a053af5d71de2d5066d42fbab4d9fa782"
+        },
+        {
+          "path": "tests/step15_guides.rs",
+          "before": "sha256:273aeba86785d07211321ccc0db5cb1ebd293db8c5d0b55b84ff1a16da642439",
+          "after": "sha256:1eb4c8d82cdd1eab36768bb1caf0e74ab82a35820bc762c2a9198801cb911d1b"
+        },
+        {
+          "path": "tests/step17_surface.rs",
+          "before": "sha256:3bbf0a159231186121e78705465cded3c3eed8c36bfb8d3ebc773793d94f0d81",
+          "after": "sha256:2bdc2d56279828cd61aa622e4f562b96d27309ce487a4271ae3d531fc47b4ed9"
+        },
+        {
+          "path": "tests/step2_ir.rs",
+          "before": "sha256:2ccd5022d469ae1ab020a38d0939aa3e3c3593869cbe11f57adf2b0816489bf1",
+          "after": "sha256:e757496e15cbcb3cee1c677aededc79628c899002a1ba8b51dae74e60b723895"
+        },
+        {
+          "path": "tests/step4_test_discovery.rs",
+          "before": "sha256:dac6fd318621a6a97b52349360bad22cad27fa3b72381da17b8d4a9a8d0a6031",
+          "after": "sha256:092f74ca6aac754f3602db94dd308a5c6ce83daaf169a8a3e6b0c5b6ff5419fe"
         }
       ],
       "ir": [
@@ -37,7 +87,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "The branch removes the unused warnings of the non-test build without changing behavior. MapContext in crates/kotowari-core/src/finding_map.rs (a private module) no longer keeps the extracted title, because no mapping rule of the finding map table reads it (REQ-core-171); titles in findings still come from the raw line, as in multiple_titles. In crates/kotowari/src/ir.rs the imports of kotowari_core::ir and Finding are limited to test builds, because only load_and_check and load_and_check_with_duplicates, themselves cfg(test) helpers for the IR reading tests (REQ-core-033), use them. StopReason::WORDINGS in src/cli.rs is limited to test builds, because its only reader is req_127_findings_reference_stop_wordings_match_the_code (REQ-core-127); Display still prints PORT_ERROR directly. Both modules are private, so no public API changes. cargo build --workspace reports no warning, and the whole workspace test suite passes.",
+      "reason": "The branch removes the unused warnings of the non-test build without changing behavior. MapContext in crates/kotowari-core/src/finding_map.rs (a private module) no longer keeps the extracted title, because no mapping rule of the finding map table reads it (REQ-core-171); titles in findings still come from the raw line, as in multiple_titles. In crates/kotowari/src/ir.rs the imports of kotowari_core::ir and Finding are limited to test builds, because only load_and_check and load_and_check_with_duplicates, themselves cfg(test) helpers for the IR reading tests (REQ-core-033), use them. StopReason::WORDINGS in src/cli.rs is limited to test builds, because its only reader is req_127_findings_reference_stop_wordings_match_the_code (REQ-core-127); Display still prints PORT_ERROR directly. Both modules are private, so no public API changes. cargo build --workspace reports no warning, and the whole workspace test suite passes.\nThe branch also removes the unused warnings of the test builds: helper functions and a constant that no test calls any more (findings_on_line, find_kind_in_json, topic_with_requirement and kinds_on in crates/kotowari-core/tests/ir.rs, with_ir in crates/kotowari-core/tests/change_records.rs, invalids in crates/kotowari/tests/change_records.rs, default_config, check and find_by_kind in tests/step2_ir.rs, args in tests/step14_plan.rs, surface in tests/step17_surface.rs, SURFACE_RS in crates/kotowari-source-analysis/tests/surface.rs) and the imports that only they used or that nothing used. No test function and no requirement mark is removed or changed, so what the tests verify is unchanged; cargo test --workspace --all-features builds without a warning and passes.",
       "requirements": [
         "REQ-core-033",
         "REQ-core-127",
