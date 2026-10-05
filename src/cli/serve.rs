@@ -1,4 +1,4 @@
-//! "kotowari overview serve"（REQ-core-297〜REQ-core-299）。全体像の置き場の下のファイルだけを
+//! "kotowari overview serve"（REQ-core-297〜REQ-core-299、REQ-core-356）。全体像の置き場の下のファイルだけを
 //! 127.0.0.1 で配り、割り込みまで続ける
 
 use super::StopReason;
@@ -33,7 +33,7 @@ pub fn run(project: &kotowari::Project, port: u16) -> Result<u8, StopReason> {
     serve_requests(
         || server.recv(),
         &stopping,
-        |request| respond(&cache, request),
+        |request| respond(&cache, port, request),
         port,
     )
 }
@@ -58,7 +58,17 @@ fn serve_requests<R>(
 }
 
 /// 1つの要求に答える。要求ごとに何も出力しない
-fn respond(cache: &Path, request: tiny_http::Request) {
+fn respond(cache: &Path, port: u16, request: tiny_http::Request) {
+    let host = request
+        .headers()
+        .iter()
+        .find(|header| header.field.equiv("Host"))
+        .map(|header| header.value.as_str());
+    if !host_allowed(host, port) {
+        // REQ-core-356: 道を調べる前に、本文の無い 403 を返す
+        let _ = request.respond(tiny_http::Response::empty(403));
+        return;
+    }
     let response = match resolve(cache, request.url()) {
         Some((path, bytes)) => {
             let mut response = tiny_http::Response::from_data(bytes);
@@ -73,6 +83,15 @@ fn respond(cache: &Path, request: tiny_http::Request) {
     };
     // 相手が先に切っても、配り続ける
     let _ = request.respond(response);
+}
+
+/// Host が手元の名前と配っているポートか。名前の英字の大小は問わない（REQ-core-356）
+fn host_allowed(host: Option<&str>, port: u16) -> bool {
+    let Some(host) = host else {
+        return false;
+    };
+    let host = host.to_ascii_lowercase();
+    host == format!("127.0.0.1:{port}") || host == format!("localhost:{port}")
 }
 
 /// ".html" と ".css" の Content-Type（REQ-core-297）

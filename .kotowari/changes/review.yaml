@@ -2,67 +2,64 @@
   "version": 1,
   "entries": [
     {
-      "id": "ir-scope-review",
-      "base": "6fc2e51981b7f8c36f3d3254a2bf484a4e20c2fd",
+      "id": "serve-host-review",
+      "base": "71e7ba9d64f1b46ca8ff03ca2a8b1b715d87369a",
+      "role": "reviewer",
+      "files": [
+        {
+          "path": "src/cli/serve.rs",
+          "before": "sha256:48b68ad503a8d2bfe6ef772e558082597f23586f6e9bdedf120fe2329f5261ee",
+          "after": "sha256:6b3558ba79b9f1400cda398394c724632d5f710a4842fa462e33c4b8bcf1c115"
+        },
+        {
+          "path": "tests/step20_overview_serve.rs",
+          "before": "sha256:db72c603b6a99ca00ec68c424460c36dc8570cc9dc5fe98fde9b88f1aed8dd75",
+          "after": "sha256:2dfd8013e0b743ec4980feff1f7a784baafa62cec05f03e2db8a73ba85d703ee"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/overview-commands.md",
+          "sha256": "sha256:0456618297b9bdaa4ed3cb4ddce384216cb6eb0a88a21c3e98da61ff33dcaa18"
+        }
+      ],
+      "conclusion": "new",
+      "reason": "Independently read the complete branch diff against the integrated main. The CLI HTTP adapter checks Host before resolve accesses the filesystem; the pure exact-value allowlist accepts 127.0.0.1 or localhost with the served port, ignoring ASCII case, and rejects missing or other Host values with an empty 403 and no per-request output. A1/A2, REQ-core-356 and EX-core-543 agree on both language sides. The integration retains the previously reviewed implementation, tests, decision and IR bytes unchanged from cbcb17fab8c753c4d2373dc4e564555c13622509, whose nine serve regression tests I independently ran successfully with Rust 1.98.0. EX-core-543 observes real HTTP input and product output, so it remains product-behavior evidence under the integrated What the IR holds policy; that policy and all distributed skills are unchanged from the comparison base. Independently recomputed the Git mode-plus-blob identities and IR blob hash and verified the implementation record matches. No blocking conformance defect found; final aggregate checks remain the integration gate.",
+      "requirements": [
+        "REQ-core-356"
+      ],
+      "decisions": [
+        "docs/decision/records/2026-10-05-serve-host.md#A1",
+        "docs/decision/records/2026-10-05-serve-host.md#A2"
+      ],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "serve-host-changelog-review",
+      "base": "71e7ba9d64f1b46ca8ff03ca2a8b1b715d87369a",
       "role": "reviewer",
       "files": [
         {
           "path": "CHANGELOG.md",
-          "before": "sha256:0fe8c8023cb48510d0634eceb2e4b6f4231c3d02fa271daae8bdd2500b6b1de0",
-          "after": "sha256:b0007970ea61e137efa91668a821ea9d412a29626440f697b944834bc5e0a162"
-        },
-        {
-          "path": "agent/skills/kotowari-brainstorm/SKILL.md",
-          "before": "sha256:45dc6f0e3b40227086a5f1f71023c1e37e06c845bc2d81310ae848523ba277db",
-          "after": "sha256:b7c931e4da96d4d028fbc667d2cbcc9a4686f77893abda75cc495267abdea850"
-        },
-        {
-          "path": "agent/skills/kotowari-cycle/SKILL.md",
-          "before": "sha256:47930e452881cd191dbc1397e4ec00ad751d97d2893d78d866ef61f85df00320",
-          "after": "sha256:2687340dc30f352265b23e6d6285343cd4e6d2a207389d931b34e1c80178e18e"
-        },
-        {
-          "path": "agent/skills/kotowari-implement/SKILL.md",
-          "before": "sha256:53c663aa988a669a2131b3173a33dc5569a1ec5754c982a5618538a3b8016e99",
-          "after": "sha256:f44b29bd13ebd73d5ba0b3bae711884aa0c03e2262cdea99d3c974d1cfb2861f"
-        },
-        {
-          "path": "agent/skills/kotowari-iterate/SKILL.md",
-          "before": "sha256:67a3ed15f25a2b82160c93df9394b28332b9c557a8fd157b7d3eb295d240e74c",
-          "after": "sha256:af51b5ae10369c922d4958c041b0c3a7785b59b09c7bf3128e91ba295805a516"
-        },
-        {
-          "path": "agent/skills/kotowari-plan/SKILL.md",
-          "before": "sha256:a93b92821708ce697793b4453a1cfcadbd8044d765579e9d7c79229ae15a46d3",
-          "after": "sha256:f35bfd4973439c1b30a90b8e50877d7c557b61c7d20bd6d5b04490c92f94d00b"
-        },
-        {
-          "path": "agent/skills/kotowari-review/SKILL.md",
-          "before": "sha256:1f4f5b3895d285371cb2f539c0edff9da084e3844a331ec4493bb701f5a06b37",
-          "after": "sha256:0c46299bc599229008ad94a3c9ebd9725240474d8e90a4234ac3302852bed66f"
-        },
-        {
-          "path": "agent/skills/kotowari/SKILL.md",
-          "before": "sha256:6028a24a5d5dc0c54b8c4c491096c836c44dd7774355e7e5480d4307583cecc2",
-          "after": "sha256:8770fca6c65e1d85c3713098f2e804152ae54b7c048e08b00c0a32f631dc56ab"
-        },
-        {
-          "path": "agent/skills/kotowari/references/changes.md",
-          "before": "sha256:286b1cf323144e1d169561e6ffd32e56c25a0df42243fe53583753da3e630737",
-          "after": "sha256:f557825d6f0d64561771d97c24ed1f2ac4e47626066769ca7a36dbaba373fb4d"
+          "before": "sha256:b0007970ea61e137efa91668a821ea9d412a29626440f697b944834bc5e0a162",
+          "after": "sha256:cc0e48cc70513b30db5f991a8f3746af82cc5f3c1aa0e62295a5234dc0545f07"
         }
       ],
-      "ir": [],
+      "ir": [
+        {
+          "path": "docs/ir/core/overview-commands.md",
+          "sha256": "sha256:0456618297b9bdaa4ed3cb4ddce384216cb6eb0a88a21c3e98da61ff33dcaa18"
+        }
+      ],
       "conclusion": "new",
-      "reason": "Read the diff of the five commits against the decision record A1-A5 and A7. The new What the IR holds section in the kotowari skill carries the observable-behavior test, the not-IR list, the decision-record placement, the default of not IR, the ban on adding IR to make tests count, and the A7 keep-until-the-person-decides rule. The brainstorm, plan, implement, cycle, review and iterate skills and the changes reference point at it; the brainstorm sentence replaces the old ask-where-it-belongs sentence and the cycle bullet merges cleanly with the adjacent Overview data bullet, with no duplicated or conflicting sentences found. The CHANGELOG bullets are accurate and sit in the Unreleased Changed section. kotowari check shows notices only and kotowari changes for the implementation phase reports nothing.",
-      "requirements": [],
+      "reason": "Independently compared CHANGELOG.md with the integrated main. Only the Unreleased Fixed entry for the local Host allowlist, empty 403 for other or missing Host values, and DNS rebinding motivation is added. Both main entries about distributed skills, IR scope and decision-only conformance records remain intact. The Host entry agrees with A1/A2 and REQ-core-356; its before and after identities were independently recomputed from Git mode and blob bytes.",
+      "requirements": [
+        "REQ-core-356"
+      ],
       "decisions": [
-        "docs/decision/records/2026-10-04-ir-scope.md#A1",
-        "docs/decision/records/2026-10-04-ir-scope.md#A2",
-        "docs/decision/records/2026-10-04-ir-scope.md#A3",
-        "docs/decision/records/2026-10-04-ir-scope.md#A4",
-        "docs/decision/records/2026-10-04-ir-scope.md#A5",
-        "docs/decision/records/2026-10-04-ir-scope.md#A7"
+        "docs/decision/records/2026-10-05-serve-host.md#A1",
+        "docs/decision/records/2026-10-05-serve-host.md#A2"
       ],
       "handoff": null,
       "gaps": []

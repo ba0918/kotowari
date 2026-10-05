@@ -2,67 +2,64 @@
   "version": 1,
   "entries": [
     {
-      "id": "ir-scope-implementation",
-      "base": "6fc2e51981b7f8c36f3d3254a2bf484a4e20c2fd",
+      "id": "serve-host-implementation",
+      "files": [
+        {
+          "path": "src/cli/serve.rs",
+          "before": "sha256:48b68ad503a8d2bfe6ef772e558082597f23586f6e9bdedf120fe2329f5261ee",
+          "after": "sha256:6b3558ba79b9f1400cda398394c724632d5f710a4842fa462e33c4b8bcf1c115"
+        },
+        {
+          "path": "tests/step20_overview_serve.rs",
+          "before": "sha256:db72c603b6a99ca00ec68c424460c36dc8570cc9dc5fe98fde9b88f1aed8dd75",
+          "after": "sha256:2dfd8013e0b743ec4980feff1f7a784baafa62cec05f03e2db8a73ba85d703ee"
+        }
+      ],
+      "reason": "The Host restriction is HTTP serving boundary policy and remains in the CLI adapter. A1/A2 and REQ-core-356 require only 127.0.0.1:<served-port> and localhost:<served-port>, ignoring ASCII name case; all other or missing Host values receive an empty 403 before filesystem resolution with no per-request output. respond delegates the pure exact-value comparison to host_allowed before resolve. EX-core-543 tests both accepted names, an external name, the wrong port and missing Host, the returned bodies and silent stdout. Existing serve requests now carry the served port in Host. The comparison against the integrated main retains these implementation and test bytes unchanged; PR19 changes only the distributed skill policy and does not alter the product requirement or serving boundary.",
+      "base": "71e7ba9d64f1b46ca8ff03ca2a8b1b715d87369a",
       "role": "implementer",
+      "ir": [
+        {
+          "path": "docs/ir/core/overview-commands.md",
+          "sha256": "sha256:0456618297b9bdaa4ed3cb4ddce384216cb6eb0a88a21c3e98da61ff33dcaa18"
+        }
+      ],
+      "conclusion": "new",
+      "requirements": [
+        "REQ-core-356"
+      ],
+      "decisions": [
+        "docs/decision/records/2026-10-05-serve-host.md#A1",
+        "docs/decision/records/2026-10-05-serve-host.md#A2"
+      ],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "serve-host-changelog-implementation",
       "files": [
         {
           "path": "CHANGELOG.md",
-          "before": "sha256:0fe8c8023cb48510d0634eceb2e4b6f4231c3d02fa271daae8bdd2500b6b1de0",
-          "after": "sha256:b0007970ea61e137efa91668a821ea9d412a29626440f697b944834bc5e0a162"
-        },
-        {
-          "path": "agent/skills/kotowari-brainstorm/SKILL.md",
-          "before": "sha256:45dc6f0e3b40227086a5f1f71023c1e37e06c845bc2d81310ae848523ba277db",
-          "after": "sha256:b7c931e4da96d4d028fbc667d2cbcc9a4686f77893abda75cc495267abdea850"
-        },
-        {
-          "path": "agent/skills/kotowari-cycle/SKILL.md",
-          "before": "sha256:47930e452881cd191dbc1397e4ec00ad751d97d2893d78d866ef61f85df00320",
-          "after": "sha256:2687340dc30f352265b23e6d6285343cd4e6d2a207389d931b34e1c80178e18e"
-        },
-        {
-          "path": "agent/skills/kotowari-implement/SKILL.md",
-          "before": "sha256:53c663aa988a669a2131b3173a33dc5569a1ec5754c982a5618538a3b8016e99",
-          "after": "sha256:f44b29bd13ebd73d5ba0b3bae711884aa0c03e2262cdea99d3c974d1cfb2861f"
-        },
-        {
-          "path": "agent/skills/kotowari-iterate/SKILL.md",
-          "before": "sha256:67a3ed15f25a2b82160c93df9394b28332b9c557a8fd157b7d3eb295d240e74c",
-          "after": "sha256:af51b5ae10369c922d4958c041b0c3a7785b59b09c7bf3128e91ba295805a516"
-        },
-        {
-          "path": "agent/skills/kotowari-plan/SKILL.md",
-          "before": "sha256:a93b92821708ce697793b4453a1cfcadbd8044d765579e9d7c79229ae15a46d3",
-          "after": "sha256:f35bfd4973439c1b30a90b8e50877d7c557b61c7d20bd6d5b04490c92f94d00b"
-        },
-        {
-          "path": "agent/skills/kotowari-review/SKILL.md",
-          "before": "sha256:1f4f5b3895d285371cb2f539c0edff9da084e3844a331ec4493bb701f5a06b37",
-          "after": "sha256:0c46299bc599229008ad94a3c9ebd9725240474d8e90a4234ac3302852bed66f"
-        },
-        {
-          "path": "agent/skills/kotowari/SKILL.md",
-          "before": "sha256:6028a24a5d5dc0c54b8c4c491096c836c44dd7774355e7e5480d4307583cecc2",
-          "after": "sha256:8770fca6c65e1d85c3713098f2e804152ae54b7c048e08b00c0a32f631dc56ab"
-        },
-        {
-          "path": "agent/skills/kotowari/references/changes.md",
-          "before": "sha256:286b1cf323144e1d169561e6ffd32e56c25a0df42243fe53583753da3e630737",
-          "after": "sha256:f557825d6f0d64561771d97c24ed1f2ac4e47626066769ca7a36dbaba373fb4d"
+          "before": "sha256:b0007970ea61e137efa91668a821ea9d412a29626440f697b944834bc5e0a162",
+          "after": "sha256:cc0e48cc70513b30db5f991a8f3746af82cc5f3c1aa0e62295a5234dc0545f07"
         }
       ],
-      "ir": [],
+      "reason": "The Unreleased Fixed entry explains the new empty 403 for nonlocal or missing Host and its DNS rebinding motivation, consistent with A1/A2 and REQ-core-356. The integrated changelog preserves the main branch entries describing the distributed skills and IR scope; this comparison adds only the Host restriction entry.",
+      "base": "71e7ba9d64f1b46ca8ff03ca2a8b1b715d87369a",
+      "role": "implementer",
+      "ir": [
+        {
+          "path": "docs/ir/core/overview-commands.md",
+          "sha256": "sha256:0456618297b9bdaa4ed3cb4ddce384216cb6eb0a88a21c3e98da61ff33dcaa18"
+        }
+      ],
       "conclusion": "new",
-      "reason": "Only the wording of the distributed skills changes. The kotowari skill gains the section What the IR holds, which limits the IR to behavior a user of the product can observe and lists what stays outside it: CI and workflows, hooks and their gates, release and build configuration, the repository's own data, and rules about the project's own tests and checks (A1, A2, A3). Tests of product behavior still carry the marks of their requirements, and IR approved earlier stays until the person decides (A7, approved by the person on 2026-10-05). The brainstorm, plan, implement, cycle, review and iterate skills and the change-conformance reference point at that definition, and changes only to CI, hooks, release or build configuration are reconciled as new with empty ir and requirements (A4, A5). The section sits after Scope so that the version check stays under Scope. The rule itself is not IR (A5), so no IR changes. The Unreleased section of CHANGELOG tells users about it.",
-      "requirements": [],
+      "requirements": [
+        "REQ-core-356"
+      ],
       "decisions": [
-        "docs/decision/records/2026-10-04-ir-scope.md#A1",
-        "docs/decision/records/2026-10-04-ir-scope.md#A2",
-        "docs/decision/records/2026-10-04-ir-scope.md#A3",
-        "docs/decision/records/2026-10-04-ir-scope.md#A4",
-        "docs/decision/records/2026-10-04-ir-scope.md#A5",
-        "docs/decision/records/2026-10-04-ir-scope.md#A7"
+        "docs/decision/records/2026-10-05-serve-host.md#A1",
+        "docs/decision/records/2026-10-05-serve-host.md#A2"
       ],
       "handoff": null,
       "gaps": []
