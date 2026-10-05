@@ -1,6 +1,6 @@
 ---
 name: kotowari
-description: "Read, scene by scene, how to write kotowari's IR and decision records, how to use check, and how to place marks. Trigger words: kotowari, IR, docs/ir, @kotowari, marks, mutants, mutation tests, guides, guide_stale, overview, overview build, overview serve, surface, surface_without_spec, changes, change_stale, change_record_invalid. 日本語キーワード: 印 変異テスト ガイド 全体像 面 変更照合"
+description: "Read, scene by scene, how to write kotowari's IR and decision records, how to use check, and how to place marks. Trigger words: kotowari, IR, docs/ir, @kotowari, marks, mutants, mutation tests, guides, guide_stale, overview, overview build, overview serve, surface, surface_without_spec, changes, change_stale, change_record_invalid, languages, labels, translation, i18n.yaml, translation_stale. 日本語キーワード: 印 変異テスト ガイド 全体像 面 変更照合 対 翻訳 多言語"
 ---
 
 ## Scope
@@ -29,6 +29,7 @@ Choosing the scene: if the person names one, follow it. Otherwise choose from th
 | surface | Writing surface rules (`surface.rules`) and the list of unspecified surfaces, or fixing surface_without_spec, surface_unspecified_invalid or surface_unspecified_stale | surface.md |
 | overview | Writing or revising overview data at a brainstorm approval, choosing the unit of an overview, running `kotowari overview build` or `serve`, or reading an overview finding or guide_stale on overview data | overview.md |
 | guide | Writing a guide (a user-facing document listed in `guides.files`) and placing its guide marks, or reviewing a guide after `kotowari check` raised guide_stale | guides.md |
+| translate | A project with two or more `languages`: writing or changing any side of a pair, adding a language, or reading a translation_*, link_language_mismatch or link_to_record finding | translations.md |
 
 Before the approval in write, also read collate.md.
 
@@ -42,3 +43,4 @@ Which work uses each scene:
 - surface — when first writing surface rules for a project (adopt), and when `kotowari check` raises a surface finding
 - overview — brainstorm (at approval, only in a project whose configuration has the `overview` key); never cycle or implement
 - guide — when writing or revising a guide, and when `kotowari check` raises guide_stale
+- translate — whenever a side of a pair changes, in any work, so that every side changes in the same change

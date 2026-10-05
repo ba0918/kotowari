@@ -1,4 +1,4 @@
-Based on the kotowari specification (revised 2026-09-27; the version of kotowari itself is not pinned)
+Based on the kotowari specification (revised 2026-10-05; the version of kotowari itself is not pinned)
 
 The configuration file is `.kotowari/config.yaml`, directly under the base directory. An empty configuration file (0 bytes, or comments only) checks with the default values. When there is no configuration file, the default values are used too.
 
@@ -19,8 +19,12 @@ The configuration file is `.kotowari/config.yaml`, directly under the base direc
 | limits.lines | Number (negative numbers and 0 are not allowed) | 200 |
 | limits.requirements | Number (negative numbers and 0 are not allowed) | 10 |
 | vague_words | List of words | The four words 「適切に」「必要に応じて」「通常は」「など」 |
+| languages | List of language tags (lowercase letters, digits and `-`; no duplicates). The first is the first language, whose files have no suffix. With two or more, the IR, guides, overview data and table of contents are kept as pairs (translations.md) | None (English `en` only) |
+| labels | Map from a language tag in `languages` to a map from UI text keys to strings. English has built-in text and `labels.en` overrides only the keys written; every other language in `languages` needs all keys (translations.md) | None |
 
 The default column copies the defaults of kotowari itself, and `setup` writes to the configuration file only the keys that have a default. `mutants.equivalents` has no default, and without the key the list of equivalents behaves as empty, so it is not written in the YAML of step 1. Add it when you decide to keep a list of equivalents. `surface.unspecified` has no default for the same reason. `surface.files` and `surface.rules` must be written together: one without the other, or `surface.unspecified` without `surface.rules`, stops every command that reads the configuration with a config error. The guidance for writing the IR is held as kinds of findings, not as numbers (ir-form.md, "Limits and the unit of splitting").
+
+`languages` and `labels` have no default and are not written in step 1. Add them only when the project keeps its documents in more than one language, or wants the overview pages in a language other than English; follow translations.md. Whenever a language other than `en` is in `languages`, write `labels.<tag>` with every key, or every command that reads the configuration stops with a config error.
 
 A list written for a list key replaces the default list. An empty list is treated as a list with no elements. Nested keys are written in YAML's nested form.
 
