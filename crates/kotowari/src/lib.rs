@@ -16,6 +16,7 @@ mod overview;
 mod sources;
 mod surface;
 mod test_files;
+mod translations;
 
 pub use git_snapshot::Target;
 pub use kotowari_core::changes::Phase;

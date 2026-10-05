@@ -68,6 +68,7 @@ pub mod surface;
 pub mod terms;
 mod test_markers;
 pub mod tests_discovery;
+pub mod translations;
 pub mod ui_text;
 
 use std::collections::BTreeMap;
@@ -204,6 +205,10 @@ finding_kinds! {
     OverviewTocPageUnknown => "overview_toc_page_unknown",
     OverviewTocPageDuplicate => "overview_toc_page_duplicate",
     OverviewTocGroupEmpty => "overview_toc_group_empty",
+    // 対の指摘（TBL-core-008）
+    TranslationMissing => "translation_missing",
+    TranslationRecordInvalid => "translation_record_invalid",
+    TranslationStale => "translation_stale",
 }
 
 impl FindingKind {

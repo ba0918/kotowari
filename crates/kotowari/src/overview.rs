@@ -1,5 +1,6 @@
 //! 全体像の元データの読み込みと、置き場の重なりの検査（REQ-core-278、REQ-core-280）
 
+use kotowari_core::translations::Place;
 use kotowari_core::{FindingGroup, ReadModel, SourceText, StopReason, config::Config};
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -19,6 +20,7 @@ pub(crate) fn read_texts(
     config: &Config,
     guides: &[&str],
     tests: &[String],
+    assembly: &mut crate::translations::Assembly,
 ) -> Result<Option<Texts>, StopReason> {
     let Some(overview) = &config.overview else {
         return Ok(None);
@@ -28,6 +30,12 @@ pub(crate) fn read_texts(
             .into_iter()
             .filter(|(path, _)| Path::new(path).extension().is_some_and(|ext| ext == "md"))
             .collect();
+    let files = assembly.place(Place::OverviewData, files, false)?;
+    assembly.place(
+        Place::Toc,
+        vec![(overview.toc.clone(), base.join(&overview.toc))],
+        false,
+    )?;
     validate_overlap(files.iter().map(|(path, _)| path.as_str()), guides, tests)?;
     validate_toc_overlap(
         &overview.toc,

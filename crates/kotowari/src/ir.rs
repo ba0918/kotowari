@@ -73,9 +73,25 @@ fn collect_ir_paths(
 pub fn prepare(
     base: &Path,
     config: &Config,
+    assembly: &mut crate::translations::Assembly,
 ) -> Result<kotowari_core::RepositoryReadPreparation, kotowari_core::StopReason> {
     let mut entries = Vec::new();
     collect_ir_paths(&base.join(&config.ir), "", &config.ir, &mut entries)?;
+    // REQ-core-342: `対`の`先頭の言語`の`側`だけを`IR`の文書として読む
+    let from_base = entries
+        .into_iter()
+        .map(|(path, absolute)| {
+            (
+                kotowari_core::join_display_path(&config.ir, &path),
+                absolute,
+            )
+        })
+        .collect();
+    let mut entries: Vec<(String, std::path::PathBuf)> = assembly
+        .place(kotowari_core::translations::Place::Ir, from_base, false)?
+        .into_iter()
+        .map(|(path, absolute)| (ir_relative(&config.ir, &path), absolute))
+        .collect();
     entries.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
     let mut preparation = kotowari_core::RepositoryReadPreparation::new(config.clone())?;
     for (path, absolute) in entries {
@@ -86,4 +102,15 @@ pub fn prepare(
         preparation.push_ir(kotowari_core::NativeSourceText::new(absolute, path, text))?;
     }
     Ok(preparation)
+}
+
+/// `基準のディレクトリ`からの相対パスを、`IR`の置き場からの相対パスにする
+fn ir_relative(place: &str, path: &str) -> String {
+    if place.is_empty() {
+        return path.to_string();
+    }
+    path.strip_prefix(place)
+        .and_then(|rest| rest.strip_prefix('/'))
+        .unwrap_or(path)
+        .to_string()
 }

@@ -142,6 +142,8 @@ pub struct CheckInputs {
     pub changes: Option<Vec<SourceText>>,
     /// 追加の指摘の群。渡したものだけを加える（TBL-core-042）
     pub groups: Vec<FindingGroup>,
+    /// `対`。`言語の一覧`の言語が2つ以上のときだけ読む（REQ-core-334、REQ-core-336）
+    pub translations: crate::translations::Pairs,
 }
 
 /// 名前を付けた追加の指摘の群（TBL-core-042）。core は群の意味を知らず、指摘をほかの指摘と
@@ -210,6 +212,8 @@ pub struct RepositoryCheckInputs {
     pub changes: Option<Vec<NativeSourceText>>,
     pub surface: Option<Vec<NativeSurfaceAnalysis>>,
     pub unspecified: Option<Vec<NativeSourceText>>,
+    /// `対`。`言語の一覧`の言語が2つ以上のときだけ読む（REQ-core-334、REQ-core-336）
+    pub translations: crate::translations::Pairs,
 }
 
 struct Policy {
@@ -235,6 +239,10 @@ impl Policy {
     }
     fn changes(&self) -> bool {
         self.config.changes.is_some()
+    }
+    /// REQ-core-334: 言語が1つなら`対`を読まない
+    fn translations(&self) -> bool {
+        self.config.languages().len() > 1
     }
 }
 fn selected<T>(input: Option<Vec<T>>, enabled: bool, name: &str) -> Result<Vec<T>, InputError> {
@@ -622,6 +630,7 @@ impl ReadModel {
         preparation.changes(input.changes)?;
         preparation.guides(input.guides)?;
         preparation.surface(input.surface, input.unspecified)?;
+        preparation.translations(input.translations);
         preparation.finish()
     }
 }
@@ -632,6 +641,7 @@ struct CheckPreparation {
     guides: crate::guides::GuideTally,
     surface: Option<crate::surface::SurfaceTally>,
     groups: Vec<GroupTally>,
+    translations: crate::translations::Pairs,
 }
 impl CheckPreparation {
     fn new(read: ReadModel) -> Self {
@@ -642,6 +652,12 @@ impl CheckPreparation {
             guides: Default::default(),
             surface: None,
             groups: Vec::new(),
+            translations: Default::default(),
+        }
+    }
+    fn translations(&mut self, pairs: crate::translations::Pairs) {
+        if self.read.policy.translations() {
+            self.translations.extend(pairs);
         }
     }
     fn group(&mut self, group: FindingGroup) -> Result<(), InputError> {
@@ -695,6 +711,7 @@ impl CheckPreparation {
         Ok(())
     }
     fn finish(mut self) -> Inspection {
+        self.findings.extend(self.translations.findings());
         crate::sort_findings(&mut self.findings);
         let mut status = crate::status::build(
             &self.read.docs,
@@ -829,6 +846,10 @@ impl RepositoryInspectionPreparation {
     pub fn group(&mut self, group: FindingGroup) -> Result<(), crate::StopReason> {
         self.inner.group(group).map_err(native_error)
     }
+    /// `対`を加える。同じ`先頭の言語`の`側`の`対`は1つにする（REQ-core-337）。どの段の間でも加えられる
+    pub fn translations(&mut self, pairs: crate::translations::Pairs) {
+        self.inner.translations(pairs);
+    }
     pub fn finish(self) -> Result<Inspection, crate::StopReason> {
         self.at_phase(InspectionPhase::Complete)?;
         Ok(self.inner.finish())
@@ -860,6 +881,7 @@ impl Inspection {
             "change records",
         )?);
         let groups = inputs.groups;
+        let translations = inputs.translations;
         let mut read = logical_read(inputs.read, policy)?;
         read.originals.admit(&guides)?;
         read.originals
@@ -875,6 +897,7 @@ impl Inspection {
         for group in groups {
             preparation.group(group)?;
         }
+        preparation.translations(translations);
         Ok(preparation.finish())
     }
     pub fn into_check(self) -> CheckReport {

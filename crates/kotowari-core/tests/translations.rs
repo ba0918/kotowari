@@ -116,3 +116,16 @@ fn req_core_352_unknown_keys_and_a_doubled_number_placeholder_stop() {
         );
     }
 }
+
+// @kotowari[REQ-core-340]
+#[test]
+fn req_core_340_the_blob_hash_is_the_git_blob_hash() {
+    assert_eq!(
+        crate::translations::blob_hash(b"a\n"),
+        "78981922613b2afb6025042ff6bd878ac1994e85"
+    );
+    assert_eq!(
+        crate::translations::blob_hash(b""),
+        "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    );
+}
