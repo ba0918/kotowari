@@ -67,8 +67,10 @@ When deciding how concepts relate, present concrete scenarios — normal and edg
 whose prerequisites are settled go into a round. Counter-examples found this way become the
 counter-examples attached to requirements.
 
-When a requirement does not change observable product behavior (release automation, licensing,
-CI), ask whether it belongs here, in a separate specification, or is not built. Never add it silently.
+A rule that does not change what a user of the product observes (release automation, build
+configuration, CI) is not IR: the kotowari skill's **What the IR holds** says what is left out and where it goes
+instead. Record it in the decision record as not IR, with the reason, and say so in the round;
+never add it to the IR, silently or otherwise.
 
 Whoever notices an ambiguous term or a boundary that disagrees with the code asks it there, records
 what becomes clear, and hands it back here. Change the glossary and specification after the person

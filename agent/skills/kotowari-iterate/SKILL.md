@@ -27,7 +27,9 @@ A **small task** meets all four; file count is irrelevant.
 
 1. One reading: the implementer writes the diff without choosing one.
 2. No specification decision: no new input kind, acceptance boundary, or error handling is
-   decided for the first time by this task.
+   decided for the first time by this task. A change only to what the IR does not hold (CI, hooks,
+   release, build configuration; the kotowari skill's **What the IR holds**) makes no
+   specification decision.
 3. If a specification exists, no contradiction with it.
 4. The impact is readable: the judgment enumerates every file to change (files to be created included;
    for code, the tests the implementer adds test-first are among them) in a closed list — no "there

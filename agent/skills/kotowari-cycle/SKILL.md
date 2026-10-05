@@ -187,7 +187,7 @@ only such findings or problem records that were already committed.
 - Overview data (the files in the configuration's `overview.files`) is not changed by the run, and
   its findings and guide_stale notices are never delegated: the next brainstorm that touches the
   topic revises it (the kotowari skill's `references/overview.md`). Count them in the terminal report.
-- Cycle does not fix IR itself. Delegate justified concrete additions within the approved constraints to the implementer/fixer, then rerun check and separate conformance review. Approved-requirement changes, contradictions and unsupported consequential meaning go back to the person.
+- Cycle does not fix IR itself. Delegate justified concrete additions within the approved constraints, and only what the IR holds (the kotowari skill's **What the IR holds**), to the implementer/fixer, then rerun check and separate conformance review. Approved-requirement changes, contradictions and unsupported consequential meaning go back to the person.
 - Missed mutations: the project's mutation gate (in kotowari itself, the pull request CI) runs mutations on the diff. A miss is fixed by the fixer or
   the implementer, like a test-side finding; how to investigate one is in the kotowari skill's
   `references/mutants.md`.
