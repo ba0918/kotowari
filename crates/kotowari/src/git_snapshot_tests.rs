@@ -42,7 +42,7 @@ fn index_snapshot_uses_staged_bytes_and_configuration() {
     git(d.path(), &["add", "src/a"]);
     fs::write(d.path().join("src/a"), b"unstaged").unwrap();
     fs::write(d.path().join(".kotowari/config.yaml"), "invalid config").unwrap();
-    let snapshot = read(d.path(), "HEAD", Target::Index, None).unwrap();
+    let snapshot = read(d.path(), "HEAD", &Target::Index, None).unwrap();
     assert_eq!(snapshot.files.len(), 1);
     assert_eq!(snapshot.blobs["src/a"].bytes, b"staged\0bytes");
     assert_eq!(snapshot.target, "index");
@@ -55,7 +55,7 @@ fn commit_snapshot_reports_move_as_delete_and_add() {
     let d = repository();
     git(d.path(), &["mv", "src/a", "src/b"]);
     git(d.path(), &["commit", "-qm", "move"]);
-    let s = read(d.path(), "HEAD~1", Target::Commit("HEAD".into()), None).unwrap();
+    let s = read(d.path(), "HEAD~1", &Target::Commit("HEAD".into()), None).unwrap();
     assert_eq!(s.files.len(), 2);
     assert_eq!(s.files[0].path, "src/a");
     assert!(s.files[0].after.is_none());
@@ -77,7 +77,7 @@ fn records_ir_decisions_and_config_are_excluded() {
         fs::write(d.path().join(path), "content").unwrap();
         git(d.path(), &["add", path]);
     }
-    let s = read(d.path(), "HEAD", Target::Index, None).unwrap();
+    let s = read(d.path(), "HEAD", &Target::Index, None).unwrap();
     assert!(s.files.is_empty());
 }
 
@@ -86,7 +86,7 @@ fn records_ir_decisions_and_config_are_excluded() {
 fn executable_mode_participates_in_full_byte_identity() {
     let d = repository();
     git(d.path(), &["update-index", "--chmod=+x", "src/a"]);
-    let s = read(d.path(), "HEAD", Target::Index, None).unwrap();
+    let s = read(d.path(), "HEAD", &Target::Index, None).unwrap();
     assert_eq!(s.files.len(), 1);
     assert_ne!(s.files[0].before, s.files[0].after);
     assert_eq!(s.blobs["src/a"].mode, "100755");
@@ -96,7 +96,7 @@ fn executable_mode_participates_in_full_byte_identity() {
 #[test]
 fn conflict_index_and_unreadable_revision_stop() {
     let d = repository();
-    assert!(read(d.path(), "missing", Target::Index, None).is_err());
+    assert!(read(d.path(), "missing", &Target::Index, None).is_err());
     git(d.path(), &["checkout", "-qb", "other"]);
     fs::write(d.path().join("src/a"), "other").unwrap();
     git(d.path(), &["commit", "-qam", "other"]);
@@ -110,7 +110,7 @@ fn conflict_index_and_unreadable_revision_stop() {
         .args(["merge", "other"])
         .output()
         .unwrap();
-    assert!(read(d.path(), "HEAD", Target::Index, None).is_err());
+    assert!(read(d.path(), "HEAD", &Target::Index, None).is_err());
 }
 
 // @kotowari[REQ-core-266]
@@ -119,14 +119,14 @@ fn selected_symlink_stops_but_excluded_symlink_does_not() {
     let d = repository();
     std::os::unix::fs::symlink("a", d.path().join("src/link")).unwrap();
     git(d.path(), &["add", "src/link"]);
-    assert!(read(d.path(), "HEAD", Target::Index, None).is_err());
+    assert!(read(d.path(), "HEAD", &Target::Index, None).is_err());
     fs::write(
         d.path().join(".kotowari/config.yaml"),
         "changes:\n  files: ['**']\n  exclude: ['src/link']\n  records: ['docs/changes/**']\n",
     )
     .unwrap();
     git(d.path(), &["add", ".kotowari/config.yaml"]);
-    assert!(read(d.path(), "HEAD", Target::Index, None).is_ok());
+    assert!(read(d.path(), "HEAD", &Target::Index, None).is_ok());
 }
 
 // @kotowari[REQ-core-266]
@@ -136,5 +136,5 @@ fn unchanged_symlink_is_not_a_selected_change() {
     std::os::unix::fs::symlink("a", d.path().join("src/link")).unwrap();
     git(d.path(), &["add", "src/link"]);
     git(d.path(), &["commit", "-qm", "link"]);
-    assert!(read(d.path(), "HEAD", Target::Commit("HEAD".into()), None).is_ok());
+    assert!(read(d.path(), "HEAD", &Target::Commit("HEAD".into()), None).is_ok());
 }

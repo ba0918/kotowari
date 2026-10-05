@@ -209,6 +209,10 @@ impl<'a> Markdown<'a> {
     }
 
     /// frontmatter の中身
+    #[expect(
+        clippy::wildcard_enum_match_arm,
+        reason = "markdown::mdast::Node is a foreign enum: the remaining node kinds are deliberately handled alike"
+    )]
     fn frontmatter(&self) -> Vec<Element> {
         self.nodes(|node| matches!(node, Node::Yaml(_)))
             .into_iter()
@@ -287,6 +291,10 @@ fn sentence_fields(kind: &str) -> &'static [&'static str] {
 }
 
 /// 文の欄の文字列を null にする。並びの長さと鍵は残す
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "serde_json::Value is a foreign enum: the remaining JSON kinds are deliberately handled alike"
+)]
 fn without_sentences(kind: &str, value: &mut Value) {
     let fields = sentence_fields(kind);
     match value {
@@ -309,6 +317,10 @@ fn without_sentences(kind: &str, value: &mut Value) {
 }
 
 /// 文の欄の値。文字列は null に、並びは各要素の文字列を null にする
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "serde_json::Value is a foreign enum: the remaining JSON kinds are deliberately handled alike"
+)]
 fn blank(value: &mut Value) {
     match value {
         Value::String(_) => *value = Value::Null,

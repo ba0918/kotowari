@@ -75,6 +75,10 @@ fn escape(key: &str) -> String {
 pub(crate) fn places_of(error: &jsonschema::ValidationError) -> Vec<String> {
     use jsonschema::error::ValidationErrorKind;
     let base = error.instance_path().to_string();
+    #[expect(
+        clippy::wildcard_enum_match_arm,
+        reason = "jsonschema's ValidationErrorKind is a foreign enum: the other kinds deliberately point at the value as a whole"
+    )]
     let keys: Vec<String> = match error.kind() {
         ValidationErrorKind::AdditionalProperties { unexpected } => {
             unexpected.iter().map(|key| escape(key)).collect()
@@ -96,6 +100,10 @@ pub(crate) fn places_of(error: &jsonschema::ValidationError) -> Vec<String> {
 }
 
 /// スキーマに合う部品の値の中の、名前が "refs" の欄の文字列の1件と "ref" の欄の文字列（入れ子の深さを問わない）
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "serde_json::Value is a foreign enum: the remaining JSON kinds are deliberately handled alike"
+)]
 pub(crate) fn references(value: &Value, found: &mut Vec<String>) {
     match value {
         Value::Object(map) => {

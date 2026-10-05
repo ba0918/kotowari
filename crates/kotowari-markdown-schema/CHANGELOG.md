@@ -4,6 +4,7 @@
 
 ### Changed
 
+- 最小対応 Rust バージョン（`rust-version`）を 1.89 から 1.99 に上げた（`kotowari-markdown-schema`、`kotowari-markdown-schema-io`、`kotowari-markdown-view`、`kotowari-mds`）。
 - **BREAKING（Rust API・パッケージ構成）** `Schema`の未検証の構築・変更を非公開にし、`Schema::parse`で意味検証を行う。`extract_validated`は検証に成功した値、`extract_partial`は途中まで得た値と指摘を返す。旧呼出コードは移行が必要。
 - 取得を`kotowari-markdown-schema-io`、実行ファイルを`kotowari-mds`パッケージに分離した。バイナリのコマンド、出力、終了コードは変わらない。
 

@@ -1,4 +1,8 @@
 //! 判断の記録の形の検査（REQ-core-129〜REQ-core-135、TBL-core-022、REQ-core-132、TBL-core-023）
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 
 use assert_cmd::Command;
 use std::fs;

@@ -1,4 +1,8 @@
 //! "kotowari mutants" が結果のファイルを読み、指摘と集計を出すところの検査。
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 
 use assert_cmd::Command;
 use std::path::Path;

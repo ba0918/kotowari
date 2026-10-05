@@ -1,3 +1,7 @@
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 use assert_cmd::Command;
 use std::{fs, path::Path, process::Command as Git};
 fn git(root: &Path, args: &[&str]) -> String {

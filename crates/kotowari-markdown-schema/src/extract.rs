@@ -277,7 +277,12 @@ fn extract_statement(
             .iter()
             .flat_map(|b| match b {
                 Block::Statement { raw_lines, .. } => raw_lines.as_slice(),
-                _ => &[],
+                Block::Field { .. }
+                | Block::Bullet { .. }
+                | Block::OrderedList { .. }
+                | Block::Table { .. }
+                | Block::Code { .. }
+                | Block::Other { .. } => &[],
             })
             .map(|raw| {
                 element_value(
@@ -506,7 +511,12 @@ fn list_item_pieces(block: &Block, children: Option<&Children>, doc: &Document) 
             Block::Field { name, .. } if !declared.contains(&name.as_str()) => {
                 pieces.extend(list_item_pieces(child, child_rule, doc))
             }
-            _ => {}
+            Block::Field { .. }
+            | Block::OrderedList { .. }
+            | Block::Statement { .. }
+            | Block::Table { .. }
+            | Block::Code { .. }
+            | Block::Other { .. } => {}
         }
     }
     pieces
@@ -655,7 +665,12 @@ fn extract_codeblock(
         .map(|b| {
             let value = match b {
                 Block::Code { value, .. } => Value::String(value.clone()),
-                _ => Value::Null,
+                Block::Field { .. }
+                | Block::Bullet { .. }
+                | Block::OrderedList { .. }
+                | Block::Statement { .. }
+                | Block::Table { .. }
+                | Block::Other { .. } => Value::Null,
             };
             element_value(extract, doc, value, &Derived::at(b.line()))
         })
@@ -759,7 +774,11 @@ fn body_from_blocks(
         Block::Field { name, .. } if include_fields || !is_declared_field(fields, name) => {
             list_item_pieces(block, children, doc)
         }
-        _ => Vec::new(),
+        Block::Field { .. }
+        | Block::OrderedList { .. }
+        | Block::Table { .. }
+        | Block::Code { .. }
+        | Block::Other { .. } => Vec::new(),
     });
     render(pieces, doc)
 }
@@ -855,7 +874,9 @@ fn place(root: &mut Map<String, Value>, path: &str, value: Value) {
         if !entry.is_object() {
             *entry = Value::Object(Map::new());
         }
-        current = entry.as_object_mut().unwrap();
+        current = entry
+            .as_object_mut()
+            .expect("the entry was made an object just above");
     }
     current.insert(keys[keys.len() - 1].to_string(), value);
 }

@@ -109,6 +109,10 @@ impl MapContext {
 }
 
 /// `抽出`の木から`項目`を拾う。`ID`と行番号の両方を持つオブジェクトが`項目`。
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "serde_json::Value is a foreign enum: the remaining JSON kinds are deliberately handled alike"
+)]
 fn collect_items(value: &Value, out: &mut Vec<ExtractedItem>) {
     match value {
         Value::Object(map) => {
@@ -141,6 +145,10 @@ fn collect_items(value: &Value, out: &mut Vec<ExtractedItem>) {
 /// 表の行の並びから行番号を拾う。繰り返す表では表ごとの段を跨いで拾う。
 fn row_lines(value: Option<&Value>) -> Vec<usize> {
     let mut lines = Vec::new();
+    #[expect(
+        clippy::wildcard_enum_match_arm,
+        reason = "serde_json::Value is a foreign enum: the remaining JSON kinds are deliberately handled alike"
+    )]
     fn walk(value: &Value, lines: &mut Vec<usize>) {
         match value {
             Value::Object(map) => {
@@ -260,7 +268,8 @@ fn map_finding(ctx: &MapContext, engine: &EngineFinding) -> Result<Option<Findin
             RuleKind::Statement | RuleKind::Table | RuleKind::CodeBlock => {
                 make(FindingKind::UnknownLine, engine.line, raw_of(engine)?)
             }
-            _ => Err(no_row(engine)),
+            // RuleKind と EngineKind は別クレートの #[non_exhaustive]。既知の変種を並べたうえで _ が要る
+            RuleKind::Section | RuleKind::Item | _ => Err(no_row(engine)),
         },
         EngineKind::MissingRequiredField => {
             let node = node_of(engine)?;
@@ -340,9 +349,31 @@ fn map_finding(ctx: &MapContext, engine: &EngineFinding) -> Result<Option<Findin
                 engine.line,
                 node_of(engine)?.to_string(),
             ),
-            _ => Err(no_row(engine)),
+            // RuleKind と EngineKind は別クレートの #[non_exhaustive]。既知の変種を並べたうえで _ が要る
+            RuleKind::Section
+            | RuleKind::Item
+            | RuleKind::Bullets
+            | RuleKind::OrderedList
+            | RuleKind::Statement
+            | RuleKind::Table
+            | RuleKind::CodeBlock
+            | _ => Err(no_row(engine)),
         },
-        _ => Err(no_row(engine)),
+        // RuleKind と EngineKind は別クレートの #[non_exhaustive]。既知の変種を並べたうえで _ が要る
+        EngineKind::TitlePatternMismatch
+        | EngineKind::MissingRequiredSection
+        | EngineKind::MissingStatement
+        | EngineKind::MissingBullets
+        | EngineKind::MissingTable
+        | EngineKind::MissingCodeblock
+        | EngineKind::FieldPatternMismatch
+        | EngineKind::StatementPatternMismatch
+        | EngineKind::StatementEnumInvalid
+        | EngineKind::BulletPatternMismatch
+        | EngineKind::FieldOrderMismatch
+        | EngineKind::TableHeaderMismatch
+        | EngineKind::CodeblockLineMismatch
+        | _ => Err(no_row(engine)),
     }
 }
 
@@ -395,14 +426,14 @@ mod tests {
         EngineFinding::maybe_at(kind, line, "detail".to_string())
     }
 
-    fn mapped(f: EngineFinding) -> Finding {
-        map_finding(&ctx(DocKind::Topic), &f)
+    fn mapped(f: &EngineFinding) -> Finding {
+        map_finding(&ctx(DocKind::Topic), f)
             .expect("写せるはず")
             .expect("捨てずに写すはず")
     }
 
-    fn stopped(doc_kind: DocKind, f: EngineFinding) -> String {
-        map_finding(&ctx(doc_kind), &f)
+    fn stopped(doc_kind: DocKind, f: &EngineFinding) -> String {
+        map_finding(&ctx(doc_kind), f)
             .expect_err("停止するはず")
             .to_string()
     }
@@ -412,7 +443,7 @@ mod tests {
     // @kotowari[REQ-core-171]
     #[test]
     fn missing_title_becomes_missing_title_with_the_document_name() {
-        let f = mapped(engine(EngineKind::MissingTitle, None));
+        let f = mapped(&engine(EngineKind::MissingTitle, None));
         assert_eq!(f.kind, FindingKind::MissingTitle);
         assert_eq!(f.line, None);
         assert_eq!(f.detail, "a.md");
@@ -424,7 +455,7 @@ mod tests {
     fn multiple_titles_becomes_multiple_titles_with_that_title() {
         let mut e = engine(EngineKind::MultipleTitles, Some(3));
         e.raw = Some("#  二つ目の題名  ".to_string());
-        let f = mapped(e);
+        let f = mapped(&e);
         assert_eq!(f.kind, FindingKind::MultipleTitles);
         assert_eq!(f.line, None);
         assert_eq!(
@@ -454,7 +485,7 @@ mod tests {
         ] {
             let mut e = engine(kind, Some(7));
             e.raw = Some("## 余計な節".to_string());
-            let f = mapped(e);
+            let f = mapped(&e);
             assert_eq!(f.kind, FindingKind::UnknownHeading, "{kind:?}");
             assert_eq!(f.line, Some(7));
             assert_eq!(f.detail, "## 余計な節");
@@ -468,7 +499,7 @@ mod tests {
             let mut e = engine(EngineKind::UndeclaredLine, Some(12));
             e.raw = Some("- 余計: 値".to_string());
             e.rule_kind = Some(rule);
-            let f = mapped(e);
+            let f = mapped(&e);
             assert_eq!(f.kind, FindingKind::UnknownField, "{rule:?}");
             assert_eq!(f.line, Some(12));
             assert_eq!(f.detail, "- 余計: 値");
@@ -482,7 +513,7 @@ mod tests {
             let mut e = engine(EngineKind::UndeclaredLine, Some(13));
             e.raw = Some("余計な文".to_string());
             e.rule_kind = Some(rule);
-            let f = mapped(e);
+            let f = mapped(&e);
             assert_eq!(f.kind, FindingKind::UnknownLine, "{rule:?}");
             assert_eq!(f.line, Some(13));
             assert_eq!(f.detail, "余計な文");
@@ -510,7 +541,7 @@ mod tests {
         ];
         for (node, kind, detail) in cases {
             let e = engine(EngineKind::MissingRequiredField, Some(10)).of_node(node);
-            let f = mapped(e);
+            let f = mapped(&e);
             assert_eq!(f.kind, kind, "{node}");
             assert_eq!(f.line, Some(10), "{node}");
             assert_eq!(f.detail, detail, "{node}");
@@ -521,13 +552,13 @@ mod tests {
     #[test]
     fn a_field_value_outside_the_allowed_list_is_repointed_at_the_item_heading() {
         let e = engine(EngineKind::FieldEnumInvalid, Some(22)).of_node("kind");
-        let f = mapped(e);
+        let f = mapped(&e);
         assert_eq!(f.kind, FindingKind::UnknownKind);
         assert_eq!(f.line, Some(20), "項目の見出しの行に付け直す");
         assert_eq!(f.detail, "bogus", "detail は抽出の項目の該当の値");
 
         let e = engine(EngineKind::FieldEnumInvalid, Some(23)).of_node("verification");
-        let f = mapped(e);
+        let f = mapped(&e);
         assert_eq!(f.kind, FindingKind::VerificationInvalid);
         assert_eq!(f.line, Some(20));
         assert_eq!(f.detail, "nope");
@@ -551,7 +582,7 @@ mod tests {
         let mut e = engine(EngineKind::TableHeaderMismatch, Some(4));
         e.raw = Some("| Term | Meaning |".to_string());
         assert!(
-            stopped(DocKind::Glossary, e).contains("no mapping for table_header_mismatch"),
+            stopped(DocKind::Glossary, &e).contains("no mapping for table_header_mismatch"),
             "発生しない行の指摘は停止する"
         );
     }
@@ -566,7 +597,7 @@ mod tests {
             map_finding(&ctx(DocKind::Glossary), &e).unwrap().is_none(),
             "用語集の表にならなかった表は捨てる"
         );
-        assert_eq!(mapped(e).kind, FindingKind::UnknownLine);
+        assert_eq!(mapped(&e).kind, FindingKind::UnknownLine);
     }
 
     // @kotowari[REQ-core-171]
@@ -574,7 +605,7 @@ mod tests {
     fn a_code_block_with_the_wrong_language_becomes_unknown_code_block() {
         let mut e = engine(EngineKind::CodeblockLangMismatch, Some(30));
         e.raw = Some("```python".to_string());
-        let f = mapped(e);
+        let f = mapped(&e);
         assert_eq!(f.kind, FindingKind::UnknownCodeBlock);
         assert_eq!(f.line, Some(30));
         assert_eq!(f.detail, "```python");
@@ -585,14 +616,14 @@ mod tests {
     fn a_statement_below_its_minimum_splits_by_whether_the_finding_has_a_line() {
         let mut e = engine(EngineKind::RepeatMinNotMet, None);
         e.rule_kind = Some(RuleKind::Statement);
-        let f = mapped(e);
+        let f = mapped(&e);
         assert_eq!(f.kind, FindingKind::MissingScope);
         assert_eq!(f.line, None);
         assert_eq!(f.detail, "a.md");
 
         let mut e = engine(EngineKind::RepeatMinNotMet, Some(20));
         e.rule_kind = Some(RuleKind::Statement);
-        let f = mapped(e);
+        let f = mapped(&e);
         assert_eq!(f.kind, FindingKind::MissingStatement);
         assert_eq!(f.line, Some(20));
         assert_eq!(f.detail, "REQ-core-002");
@@ -603,14 +634,14 @@ mod tests {
     fn a_table_below_its_minimum_splits_by_whether_the_finding_has_a_line() {
         let mut e = engine(EngineKind::RepeatMinNotMet, None);
         e.rule_kind = Some(RuleKind::Table);
-        let f = mapped(e);
+        let f = mapped(&e);
         assert_eq!(f.kind, FindingKind::GlossaryInvalid);
         assert_eq!(f.line, None);
         assert_eq!(f.detail, "a.md");
 
         let mut e = engine(EngineKind::RepeatMinNotMet, Some(10));
         e.rule_kind = Some(RuleKind::Table);
-        let f = mapped(e);
+        let f = mapped(&e);
         assert_eq!(f.kind, FindingKind::MissingTable);
         assert_eq!(f.line, Some(10));
         assert_eq!(f.detail, "REQ-core-001");
@@ -621,7 +652,7 @@ mod tests {
     fn a_field_line_above_its_maximum_becomes_duplicate_field_with_the_field_name() {
         let mut e = engine(EngineKind::RepeatMaxExceeded, Some(11)).of_node("source");
         e.rule_kind = Some(RuleKind::Field);
-        let f = mapped(e);
+        let f = mapped(&e);
         assert_eq!(f.kind, FindingKind::DuplicateField);
         assert_eq!(f.line, Some(11));
         assert_eq!(f.detail, "source");
@@ -650,7 +681,7 @@ mod tests {
         for (kind, rule) in rows {
             let mut e = engine(*kind, Some(4));
             e.rule_kind = *rule;
-            let detail = stopped(DocKind::Topic, e);
+            let detail = stopped(DocKind::Topic, &e);
             assert!(
                 detail.starts_with("mapping error: no mapping for"),
                 "{kind:?} は停止する: {detail}"
@@ -664,15 +695,15 @@ mod tests {
         // 用語集のスキーマ以外に題名のパターンは無いので、対応表に行が無い
         let mut e = engine(EngineKind::TitlePatternMismatch, Some(1));
         e.raw = Some("# 題名".to_string());
-        assert!(stopped(DocKind::Topic, e).contains("no mapping for title_pattern_mismatch"));
+        assert!(stopped(DocKind::Topic, &e).contains("no mapping for title_pattern_mismatch"));
 
         // 表のヘッダの食い違いの行は用語集にしか無い
         let mut e = engine(EngineKind::TableHeaderMismatch, Some(4));
         e.raw = Some("| a | b |".to_string());
-        assert!(stopped(DocKind::Topic, e).contains("no mapping for table_header_mismatch"));
+        assert!(stopped(DocKind::Topic, &e).contains("no mapping for table_header_mismatch"));
 
         let e = engine(EngineKind::MissingRequiredField, Some(10)).of_node("知らない名前");
-        let detail = stopped(DocKind::Topic, e);
+        let detail = stopped(DocKind::Topic, &e);
         assert!(
             detail.contains("no mapping for missing_required_field 知らない名前"),
             "停止の詳細は写せなかった種類とノードの名前を持つ: {detail}"
@@ -687,7 +718,7 @@ mod tests {
         for doc_kind in [DocKind::Topic, DocKind::Flags] {
             let mut e = engine(EngineKind::TableHeaderMismatch, Some(5));
             e.raw = Some("| a |".to_string());
-            let detail = stopped(doc_kind, e);
+            let detail = stopped(doc_kind, &e);
             assert!(
                 detail.contains("no mapping for table_header_mismatch"),
                 "{doc_kind:?}: {detail}"
@@ -702,7 +733,7 @@ mod tests {
     fn a_value_that_cannot_be_mapped_stops_with_the_mapping_error_wording() {
         // 生の行を要る写しに生の行が無い
         let e = engine(EngineKind::UndeclaredHeading, Some(7));
-        let detail = stopped(DocKind::Topic, e);
+        let detail = stopped(DocKind::Topic, &e);
         assert!(
             detail.starts_with("mapping error: "),
             "停止の1行目の文言は mapping error: {detail}"
@@ -712,11 +743,11 @@ mod tests {
         // 規則種別を要る写しに規則種別が無い
         let mut e = engine(EngineKind::UndeclaredLine, Some(7));
         e.raw = Some("行".to_string());
-        assert!(stopped(DocKind::Topic, e).contains("carries no rule kind"));
+        assert!(stopped(DocKind::Topic, &e).contains("carries no rule kind"));
 
         // 項目の値を要る写しに、その行を含む項目が無い
         let e = engine(EngineKind::MissingRequiredField, Some(2)).of_node("source");
-        assert!(stopped(DocKind::Topic, e).contains("has no item to read"));
+        assert!(stopped(DocKind::Topic, &e).contains("has no item to read"));
     }
 
     // @kotowari[REQ-core-171]

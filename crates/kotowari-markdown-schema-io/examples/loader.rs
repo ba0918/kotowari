@@ -1,3 +1,7 @@
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 use kotowari_markdown_schema_io::{LoaderOptions, SchemaLoader};
 fn main() {
     let root = std::env::current_dir()

@@ -146,8 +146,8 @@ fn bundled_rules(config: &Config) -> Result<Vec<RuleConfig<SupportLang>>, StopRe
     Ok(rules)
 }
 
-/// ルールのファイルを1つ読む。無い、ファイルでない、読めない、UTF-8 でない、
-/// ルールとして読めないときは設定の誤りで、詳細は `key` とそのパス（REQ-core-189、REQ-core-225）
+// ルールのファイルを1つ読む。無い、ファイルでない、読めない、UTF-8 でない、
+// ルールとして読めないときは設定の誤りで、詳細は `key` とそのパス（REQ-core-189、REQ-core-225）
 
 /// ルールの "language" の値だけを読むための形。ほかのキーは読み捨てる
 #[derive(serde::Deserialize)]

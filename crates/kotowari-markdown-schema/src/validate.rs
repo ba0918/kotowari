@@ -393,13 +393,15 @@ fn validate_bullet(
     let (text, line) = match block {
         Block::Bullet { text, line, .. } => (text.as_str(), *line),
         Block::Field { text, line, .. } => (text.as_str(), *line),
-        _ => return,
+        Block::OrderedList { .. }
+        | Block::Statement { .. }
+        | Block::Table { .. }
+        | Block::Code { .. }
+        | Block::Other { .. } => return,
     };
     match rules.bullets {
         Some(bullets) => validate_declared_bullet(
-            block,
-            text,
-            line,
+            BulletLine { block, text, line },
             bullets,
             rules.fields,
             blocks,
@@ -465,7 +467,11 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
             }
             // 文・順序付きリスト・コードブロック・表などの子。children に規則が
             // 無いので undeclared_line（閉じた世界の対象外の行種別は無視）
-            other => {
+            other @ (Block::OrderedList { .. }
+            | Block::Statement { .. }
+            | Block::Table { .. }
+            | Block::Code { .. }
+            | Block::Other { .. }) => {
                 push_undeclared_line(findings, other);
                 push_undeclared_children(findings, other);
             }
@@ -531,12 +537,14 @@ fn validate_child_bullet(
     let (text, line) = match block {
         Block::Bullet { text, line, .. } => (text.as_str(), *line),
         Block::Field { text, line, .. } => (text.as_str(), *line),
-        _ => return,
+        Block::OrderedList { .. }
+        | Block::Statement { .. }
+        | Block::Table { .. }
+        | Block::Code { .. }
+        | Block::Other { .. } => return,
     };
     validate_declared_bullet(
-        block,
-        text,
-        line,
+        BulletLine { block, text, line },
         bullets,
         &children.fields,
         sibling_blocks,
@@ -545,10 +553,15 @@ fn validate_child_bullet(
     );
 }
 
-fn validate_declared_bullet(
-    block: &Block,
-    text: &str,
+/// 検証する箇条書きの1本。ブロックと、そこから取り出した本文と行番号
+struct BulletLine<'a> {
+    block: &'a Block,
+    text: &'a str,
     line: usize,
+}
+
+fn validate_declared_bullet(
+    BulletLine { block, text, line }: BulletLine<'_>,
     bullets: &Bullets,
     fields: &[Field],
     sibling_blocks: &[Block],
@@ -956,7 +969,13 @@ fn when_allows(when: Option<&When>, fields: &[Field], blocks: &[Block]) -> bool 
         {
             Some(value.as_str())
         }
-        _ => None,
+        Block::Field { .. }
+        | Block::Bullet { .. }
+        | Block::OrderedList { .. }
+        | Block::Statement { .. }
+        | Block::Table { .. }
+        | Block::Code { .. }
+        | Block::Other { .. } => None,
     });
     match value {
         Some(value) => match (&when.eq, &when.ne) {

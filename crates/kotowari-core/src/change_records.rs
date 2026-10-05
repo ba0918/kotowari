@@ -195,15 +195,14 @@ pub fn parse(path: &str, content: &str) -> (Vec<LocatedEntry>, Vec<Finding>) {
                 errors.push("invalid IR identity");
             }
         }
-        if entry.conclusion == Conclusion::Existing
+        if (entry.conclusion == Conclusion::Existing
             || entry
                 .gaps
                 .iter()
-                .any(|g| g.disposition == Disposition::Fixed)
+                .any(|g| g.disposition == Disposition::Fixed))
+            && (entry.requirements.is_empty() || entry.ir.is_empty())
         {
-            if entry.requirements.is_empty() || entry.ir.is_empty() {
-                errors.push("requirements and definition IR required");
-            }
+            errors.push("requirements and definition IR required");
         }
         if entry.conclusion != Conclusion::Existing && entry.decisions.is_empty() {
             errors.push("decision required");
@@ -349,7 +348,11 @@ pub fn check_entries<'a>(
                     id.clone(),
                     crate::join_display_path(&cfg.ir, &doc.relative_path),
                 )),
-                _ => None,
+                ir::Item::DecisionTable { .. }
+                | ir::Item::Property { .. }
+                | ir::Item::Scenario { .. }
+                | ir::Item::FlagEntry { .. }
+                | ir::Item::GlossaryTerm { .. } => None,
             })
         })
         .collect();

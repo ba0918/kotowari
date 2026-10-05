@@ -222,6 +222,10 @@ impl Document {
 
         for child in root.children {
             let line = child.position().map(|p| p.start.line).unwrap_or(1);
+            #[expect(
+                clippy::wildcard_enum_match_arm,
+                reason = "markdown::mdast::Node is a foreign enum: the remaining node kinds are deliberately handled alike"
+            )]
             match child {
                 Node::Yaml(_) | Node::Toml(_) => {
                     frontmatter_lines = child.position().map(|p| p.end.line).unwrap_or(0);
@@ -382,6 +386,10 @@ fn raw_lines_of(lines: &[String], node: &Node) -> Vec<RawLine> {
         .collect()
 }
 
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "markdown::mdast::Node is a foreign enum: the remaining node kinds are deliberately handled alike"
+)]
 fn blocks_from_node(node: &Node, src: &str, lines: &[String]) -> Vec<Block> {
     let line = start_line(node);
     match node {
@@ -464,6 +472,10 @@ fn blocks_from_list_item(
     let mut lead_block: Option<Block> = None;
     let mut extra: Vec<Block> = Vec::new();
     for (i, child) in item.children.iter().enumerate() {
+        #[expect(
+            clippy::wildcard_enum_match_arm,
+            reason = "markdown::mdast::Node is a foreign enum: the remaining node kinds are deliberately handled alike"
+        )]
         match child {
             // 先頭の段落だけがフィールド行・箇条書き・順序付き項目の lead になる。
             // 続く段落は継続段落として lead に付く（REQ-schema-030）。
@@ -576,6 +588,10 @@ fn blocks_from_list_item(
 }
 
 /// 段落が画像ノードだけで構成されているか。画像だけの行は文として数えない。
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "markdown::mdast::Node is a foreign enum: the remaining node kinds are deliberately handled alike"
+)]
 fn is_image_only_paragraph(node: &Node) -> bool {
     match node {
         Node::Paragraph(p) => !p.children.is_empty() && p.children.iter().all(is_image),
@@ -647,7 +663,11 @@ impl Block {
     pub fn children(&self) -> &[Block] {
         match self {
             Block::Field { children, .. } | Block::Bullet { children, .. } => children,
-            _ => &[],
+            Block::OrderedList { .. }
+            | Block::Statement { .. }
+            | Block::Table { .. }
+            | Block::Code { .. }
+            | Block::Other { .. } => &[],
         }
     }
 }
@@ -678,6 +698,10 @@ fn split_item_heading(text: &str) -> (String, String, bool) {
 pub(crate) fn inline_text(children: &[Node]) -> String {
     let mut out = String::new();
     for child in children {
+        #[expect(
+            clippy::wildcard_enum_match_arm,
+            reason = "markdown::mdast::Node is a foreign enum: the remaining node kinds are deliberately handled alike"
+        )]
         match child {
             Node::Text(t) => out.push_str(&t.value),
             Node::InlineCode(c) => out.push_str(&c.value),

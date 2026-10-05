@@ -1,3 +1,4 @@
+#![deny(clippy::print_stdout, clippy::print_stderr)]
 mod comment_block;
 mod discovery;
 mod test_queries;
@@ -37,6 +38,10 @@ impl Analyzer {
     pub fn supports_surfaces(&self, path: &str) -> bool {
         test_queries::language_of(path).is_some_and(|lang| self.surfaces.has_language(lang))
     }
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "public API: changing the parameter type breaks callers"
+    )]
     pub fn new(
         config: Config,
         test_rules: Vec<SourceText>,

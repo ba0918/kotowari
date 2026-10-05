@@ -1,3 +1,7 @@
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 // --- REQ-core-034: 題名が無い ---
 
 // --- REQ-core-035: 題名が複数 ---

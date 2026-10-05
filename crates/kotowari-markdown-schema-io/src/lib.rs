@@ -1,4 +1,5 @@
 //! Explicitly rooted acquisition for Markdown schema operations.
+#![deny(clippy::print_stdout, clippy::print_stderr)]
 
 use kotowari_markdown_schema::finding::Finding;
 use kotowari_markdown_schema::frontmatter::{ResolvedSchema, SchemaRef};
@@ -299,7 +300,12 @@ impl SchemaLoader {
             {
                 continue;
             }
-            let display = path.join(entry.path().strip_prefix(&absolute).unwrap());
+            let display = path.join(
+                entry
+                    .path()
+                    .strip_prefix(&absolute)
+                    .expect("the walker yields only entries under the walk root"),
+            );
             let source = read_document(entry.path(), &display)?;
             let Some(reference) = schema_ref(&display, &source)? else {
                 continue;

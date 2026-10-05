@@ -1,4 +1,8 @@
 //! 性質テスト。例を並べても網羅にならない要求を、生成した入力で確かめる。
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 
 use kotowari_markdown_schema::{Document, Schema, ValidationOptions};
 fn extract_values(schema: &Schema, document: &Document) -> serde_json::Value {
@@ -147,6 +151,10 @@ document:
 "#;
 
 /// JSON の葉がすべて文字列であることを確かめる。
+#[expect(
+    clippy::wildcard_enum_match_arm,
+    reason = "serde_json::Value is a foreign enum: the remaining JSON kinds are deliberately handled alike"
+)]
 fn every_leaf_is_a_string(value: &Value) -> bool {
     match value {
         Value::String(_) => true,

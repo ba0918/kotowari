@@ -1,4 +1,8 @@
 //! 要求を後回しにする宣言（docs/ir/core/deferred.md）と、それが検査・集計に与える影響
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 
 use serde_json::Value;
 use std::path::Path;

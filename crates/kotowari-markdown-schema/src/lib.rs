@@ -5,6 +5,7 @@
 //! （`REQ-schema-nnn`・`TBL-schema-nnn`・`EX-schema-nnn`・`PROP-schema-nnn`）を書く。
 //! `docs/spec/` は IR から起こした人間向けのビューなので、その節番号（`R<n>`）は
 //! 参照しない。節番号は文書を書き直すたびに指す先が変わる。
+#![deny(clippy::print_stdout, clippy::print_stderr)]
 
 pub mod ast;
 mod document;

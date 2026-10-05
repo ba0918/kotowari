@@ -1,3 +1,4 @@
+#![deny(clippy::print_stdout, clippy::print_stderr)]
 mod acquisition;
 #[cfg(feature = "tokio")]
 mod asynchronous;
@@ -393,7 +394,7 @@ impl Project {
         Ok(ChangesReport(change_service::run(
             &self.options.start,
             &options.base,
-            options.target.clone(),
+            &options.target,
             options.phase,
             self.options.config.as_deref(),
         )?))

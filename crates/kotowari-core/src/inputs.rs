@@ -87,13 +87,18 @@ impl std::fmt::Display for InputError {
     }
 }
 impl std::error::Error for InputError {}
-fn native_error(error: InputError) -> crate::StopReason {
+fn native_error(error: &InputError) -> crate::StopReason {
     crate::StopReason::ConfigError(error.to_string())
 }
 fn input_stop(error: crate::StopReason) -> InputError {
     match error {
         crate::StopReason::ConfigError(detail) => InputError::ConfigError(detail),
-        other => InputError::InvalidInput(other.to_string()),
+        other @ (crate::StopReason::ArgumentError(_)
+        | crate::StopReason::UnreadableFile(_)
+        | crate::StopReason::NonUtf8File(_)
+        | crate::StopReason::ResultsError(_)
+        | crate::StopReason::MappingError(_)
+        | crate::StopReason::GitError(_)) => InputError::InvalidInput(other.to_string()),
     }
 }
 
@@ -220,7 +225,7 @@ struct Policy {
     config: crate::config::Config,
 }
 impl Policy {
-    fn new(config: crate::config::Config) -> Result<Self, crate::StopReason> {
+    fn new(config: &crate::config::Config) -> Result<Self, crate::StopReason> {
         Ok(Self {
             config: config.validated()?,
         })
@@ -406,17 +411,17 @@ impl ReadPreparation {
     }
     fn finish(
         mut self,
-        records: Vec<Text>,
-        adr: Vec<Text>,
-        tests: Vec<Test>,
+        records: &[Text],
+        adr: &[Text],
+        tests: &[Test],
     ) -> Result<ReadModel, InputError> {
-        self.originals.admit(&records)?;
-        self.originals.admit(&adr)?;
+        self.originals.admit(records)?;
+        self.originals.admit(adr)?;
         self.originals
             .admit(tests.iter().map(|file| &file.source))?;
         Ok(self.calculate(records, adr, tests))
     }
-    fn calculate(self, records: Vec<Text>, adr: Vec<Text>, tests: Vec<Test>) -> ReadModel {
+    fn calculate(self, records: &[Text], adr: &[Text], tests: &[Test]) -> ReadModel {
         let config = &self.policy.config;
         let mut docs = self.docs;
         docs.sort_by(|left, right| {
@@ -426,8 +431,7 @@ impl ReadPreparation {
         });
         let duplicates = crate::ir::GlossaryDuplicates::new(&docs);
         let mut findings = crate::ir::check_documents_with_duplicates(&docs, config, &duplicates);
-        let context =
-            crate::sources::context_from_entries(config, entries(&records), entries(&adr));
+        let context = crate::sources::context_from_entries(config, entries(records), entries(adr));
         crate::sources::check_sources_with_duplicates(
             &docs,
             &context,
@@ -459,7 +463,7 @@ impl ReadPreparation {
         crate::deferred_notices::check(&docs, &config.ir, &discovered.markers, &mut findings);
         let source_texts = records
             .iter()
-            .chain(&adr)
+            .chain(adr)
             .map(|source| (source.path.clone(), source.text.clone()))
             .collect();
         ReadModel {
@@ -480,9 +484,13 @@ pub struct RepositoryReadPreparation {
     ir_identities: BTreeSet<Identity>,
 }
 impl RepositoryReadPreparation {
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "public API: changing the parameter type breaks callers"
+    )]
     pub fn new(config: crate::config::Config) -> Result<Self, crate::StopReason> {
         Ok(Self {
-            inner: ReadPreparation::new(Policy::new(config)?),
+            inner: ReadPreparation::new(Policy::new(&config)?),
             ir_identities: BTreeSet::new(),
         })
     }
@@ -492,7 +500,7 @@ impl RepositoryReadPreparation {
     pub fn push_ir(&mut self, source: NativeSourceText) -> Result<(), crate::StopReason> {
         let source: Text = source.into();
         if !self.ir_identities.insert(source.identity.clone()) {
-            return Err(native_error(InputError::InvalidInput(format!(
+            return Err(native_error(&InputError::InvalidInput(format!(
                 "duplicate source identity: {}",
                 source.path
             ))));
@@ -500,7 +508,7 @@ impl RepositoryReadPreparation {
         self.inner
             .originals
             .admit([&source])
-            .map_err(native_error)?;
+            .map_err(|error| native_error(&error))?;
         self.inner.parse_ir(&source, &source.path)
     }
     pub fn finish(
@@ -511,10 +519,10 @@ impl RepositoryReadPreparation {
     ) -> Result<ReadModel, crate::StopReason> {
         let tests = selected(Some(tests), self.inner.policy.tests(), "test information")
             .and_then(native_tests)
-            .map_err(native_error)?;
+            .map_err(|error| native_error(&error))?;
         self.inner
-            .finish(texts(records), texts(adr), tests)
-            .map_err(native_error)
+            .finish(&texts(records), &texts(adr), &tests)
+            .map_err(|error| native_error(&error))
     }
 }
 
@@ -574,11 +582,11 @@ fn logical_read(inputs: ReadInputs, policy: Policy) -> Result<ReadModel, InputEr
         };
         preparation.parse_ir(source, relative).map_err(input_stop)?;
     }
-    Ok(preparation.calculate(records, adr, tests))
+    Ok(preparation.calculate(&records, &adr, &tests))
 }
 impl ReadModel {
     pub fn build(inputs: ReadInputs) -> Result<Self, InputError> {
-        let policy = Policy::new(inputs.config.clone()).map_err(input_stop)?;
+        let policy = Policy::new(&inputs.config).map_err(input_stop)?;
         logical_read(inputs, policy)
     }
     pub fn build_repository(input: RepositoryReadInputs) -> Result<Self, crate::StopReason> {
@@ -783,7 +791,7 @@ impl CheckPreparation {
 }
 
 /// Results cannot be assembled until all acquisition phases have been admitted.
-#[derive(PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum InspectionPhase {
     Changes,
     Guides,
@@ -797,7 +805,7 @@ pub struct RepositoryInspectionPreparation {
 impl RepositoryInspectionPreparation {
     fn at_phase(&self, phase: InspectionPhase) -> Result<(), crate::StopReason> {
         if self.phase != phase {
-            return Err(native_error(InputError::InvalidInput(
+            return Err(native_error(&InputError::InvalidInput(
                 "inspection phase out of order".into(),
             )));
         }
@@ -819,13 +827,13 @@ impl RepositoryInspectionPreparation {
         self.at_phase(InspectionPhase::Changes)?;
         let files = texts(
             selected(input, self.inner.read.policy.changes(), "change records")
-                .map_err(native_error)?,
+                .map_err(|error| native_error(&error))?,
         );
         self.inner
             .read
             .originals
             .admit(&files)
-            .map_err(native_error)?;
+            .map_err(|error| native_error(&error))?;
         self.inner.changes(&files);
         self.phase = InspectionPhase::Guides;
         Ok(())
@@ -836,13 +844,14 @@ impl RepositoryInspectionPreparation {
     ) -> Result<(), crate::StopReason> {
         self.at_phase(InspectionPhase::Guides)?;
         let files = texts(
-            selected(input, self.inner.read.policy.guides(), "guides").map_err(native_error)?,
+            selected(input, self.inner.read.policy.guides(), "guides")
+                .map_err(|error| native_error(&error))?,
         );
         self.inner
             .read
             .originals
             .admit(&files)
-            .map_err(native_error)?;
+            .map_err(|error| native_error(&error))?;
         self.inner.guides(&files)?;
         self.phase = InspectionPhase::Surface;
         Ok(())
@@ -855,34 +864,36 @@ impl RepositoryInspectionPreparation {
         self.at_phase(InspectionPhase::Surface)?;
         let files = native_surfaces(
             selected(input, self.inner.read.policy.surface(), "surface analysis")
-                .map_err(native_error)?,
+                .map_err(|error| native_error(&error))?,
         )
-        .map_err(native_error)?;
+        .map_err(|error| native_error(&error))?;
         let unspecified = texts(
             selected(
                 unspecified,
                 self.inner.read.policy.unspecified(),
                 "unspecified surfaces",
             )
-            .map_err(native_error)?,
+            .map_err(|error| native_error(&error))?,
         );
         self.inner
             .read
             .originals
             .admit(files.iter().map(|file| &file.source))
-            .map_err(native_error)?;
+            .map_err(|error| native_error(&error))?;
         self.inner
             .read
             .originals
             .admit(&unspecified)
-            .map_err(native_error)?;
+            .map_err(|error| native_error(&error))?;
         self.inner.surface(&files, &unspecified)?;
         self.phase = InspectionPhase::Complete;
         Ok(())
     }
     /// 追加の指摘の群を加える（TBL-core-042）。どの段の間でも加えられる
     pub fn group(&mut self, group: FindingGroup) -> Result<(), crate::StopReason> {
-        self.inner.group(group).map_err(native_error)
+        self.inner
+            .group(group)
+            .map_err(|error| native_error(&error))
     }
     /// `対`を加える。同じ`先頭の言語`の`側`の`対`は1つにする（REQ-core-337）。どの段の間でも加えられる
     pub fn translations(&mut self, pairs: crate::translations::Pairs) {
@@ -901,7 +912,7 @@ pub struct Inspection {
 }
 impl Inspection {
     pub fn build(inputs: CheckInputs) -> Result<Self, InputError> {
-        let policy = Policy::new(inputs.read.config.clone()).map_err(input_stop)?;
+        let policy = Policy::new(&inputs.read.config).map_err(input_stop)?;
         let guides = texts(selected(inputs.guides, policy.guides(), "guides")?);
         let surface = logical_surfaces(selected(
             inputs.surface,

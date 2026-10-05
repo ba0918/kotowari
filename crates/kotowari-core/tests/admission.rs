@@ -1,3 +1,7 @@
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 use kotowari_core::{
     Comparison, NativeSourceText, NativeSurfaceAnalysis, NativeTestAnalysis, ReadModel,
     RepositoryCheckInputs, RepositoryReadInputs, SourceText, TestAnalysis,
@@ -67,12 +71,14 @@ fn native_original_text_is_retained_across_read_and_check() {
 // @kotowari[REQ-core-312, EX-core-484]
 #[test]
 fn malformed_comparison_globs_return_a_configuration_error() {
-    let mut config = Config::default();
-    config.changes = Some(ChangesConfig {
-        files: vec!["src/**".into()],
-        records: vec!["[".into()],
-        exclude: vec![],
-    });
+    let config = Config {
+        changes: Some(ChangesConfig {
+            files: vec!["src/**".into()],
+            records: vec!["[".into()],
+            exclude: vec![],
+        }),
+        ..Config::default()
+    };
     let snapshot = Comparison {
         base: "base".into(),
         target: "head".into(),
@@ -175,8 +181,10 @@ fn native_display_collisions_do_not_merge_original_files() {
 // @kotowari[REQ-core-311, REQ-core-315, REQ-core-317, EX-core-483, EX-core-491]
 #[test]
 fn native_read_preparation_retains_the_configured_ir_and_disabled_tests() {
-    let mut config = Config::default();
-    config.ir = "specifications".into();
+    let mut config = Config {
+        ir: "specifications".into(),
+        ..Config::default()
+    };
     config.tests.files.clear();
     config.guides.files = vec!["notes/**".into()];
     let mut preparation = kotowari_core::RepositoryReadPreparation::new(config).unwrap();

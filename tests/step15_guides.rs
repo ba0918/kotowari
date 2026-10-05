@@ -1,4 +1,8 @@
 //! ガイドの印（REQ-core-198〜REQ-core-206、TBL-core-036）と、その設定の鍵 "guides.files"
+#![expect(
+    clippy::unwrap_used,
+    reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
+)]
 
 use std::path::Path;
 use tempfile::TempDir;
