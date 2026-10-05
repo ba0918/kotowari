@@ -46,7 +46,24 @@ fn item(value: &ListItem) -> Value {
     result
 }
 pub fn list(value: &ReadList) -> Value {
-    json!({"items":value.items().iter().map(item).collect::<Vec<_>>()})
+    let mut out = json!({"items":value.items().iter().map(item).collect::<Vec<_>>()});
+    // REQ-core-155: "translations" は言語が2つ以上のときだけ出す
+    if let Some(translations) = value.translations() {
+        out["translations"] = json!(
+            translations
+                .iter()
+                .map(|translation| json!({
+                    "path": translation.path(),
+                    "sides": translation
+                        .sides()
+                        .iter()
+                        .map(|side| json!({"language":side.language(),"path":side.path(),"blob":side.blob()}))
+                        .collect::<Vec<_>>()
+                }))
+                .collect::<Vec<_>>()
+        );
+    }
+    out
 }
 pub fn query(value: &QueryReport) -> Value {
     let items = value

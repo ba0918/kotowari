@@ -19,9 +19,11 @@ kotowari の利用者に見える変更を書く。形は [Keep a Changelog](htt
 - `Project`と`AsyncProject`に、何も書かない`overview_prepare`と、続けて書く`overview_build`を追加した。`check`、`status`、`inspect`は全体像の元データの指摘と`overview`の群を含む。全体像の検査を行う`kotowari-overview`クレートを追加した。
 - 同期`Project`、保持して再利用する`ReadModel`・`Inspection`と、既定で無効な`tokio` featureの`AsyncProject`を追加した。
 - 9クレートの実際の配布アーカイブを独立したオフライン環境で検証する手順を追加した。版の番号と2製品の配布名は変更していない。
+- IR、ガイド、全体像を多言語の対で持てるようにした。設定の`languages`（言語タグの並び）に2つ以上の言語を書くと、IR（用語集と問題の記録を含む）、ガイド、全体像の元データ、目次を、同じディレクトリの`foo.md`と`foo.<言語タグ>.md`の対で持ち、横の`foo.i18n.yaml`に各側のgitのblob hashを記録する。`kotowari check`と`kotowari status`は、欠けた側（`translation_missing`）、一致の記録の誤り（`translation_record_invalid`）、記録と違うhash（`translation_stale`）、文以外の骨組みの食い違い（`translation_structure_mismatch`）、題名の後の切り替えの行の誤り（`translation_switcher_invalid`）、ほかの言語の側へのリンク（`link_language_mismatch`）、判断の記録へのリンク（`link_to_record`）を誤りにし、ほかの言語のIRの側には用語、曖昧語、文書名の参照の検査だけをその言語の用語集で行う。`kotowari list`は最上位の`translations`に対ごとの各側のblob hashを出す。全体像は言語ごとに描き、先頭以外の言語のページを`.kotowari/cache/overview/<言語タグ>/`の下に書いて互いにリンクし、対に欠けた側か骨組みの食い違いがあれば書かずに止まる。全体像のUIの文字は英語を本体が持ち、ほかの言語は設定の`labels`に書き（形の誤りは設定の誤りで止まる）、`status`の部品の札は`decided`、`planned`、`open`、`dropped`にした。`kotowari`スキルに対を揃える手順を追加した。`languages`が無ければ今までどおり英語だけで、対を読まない。
 
 ### Fixed
 
+- 多言語の対で、参照形式のリンクと画像も利用箇所の行で検査し、リンク先の並びの食い違いを検出する。全体像の翻訳側だけがテストの glob と重なる場合も設定の誤りで止める。
 - `kotowari` スキルのセットアップ手順に、判断の記録用ディレクトリへの `.gitkeep` 作成とコミット対象に含める指示を追加した。空ディレクトリが clone／worktree で失われ、`kotowari check` がエラーになるのを防ぐ。
 
 ## [0.3.0] - 2026-10-01

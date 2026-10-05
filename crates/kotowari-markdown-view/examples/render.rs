@@ -28,7 +28,7 @@ fn main() {
         references: vec![Reference {
             key: "R1".into(),
             label: "R1".into(),
-            body: "The body opened in place".into(),
+            body: Some("The body opened in place".into()),
             state: ReferenceState::Current,
         }],
         toc: TocGroup {
@@ -36,6 +36,19 @@ fn main() {
             note: Some("One group holding the one document".into()),
             items: vec![TocItem::Document("example".into())],
         },
+        language: "en".into(),
+        // view は文字を中に持たないので、描く文字はすべて呼び出し側が渡す
+        ui: [
+            ("pages", "{n} pages"),
+            ("stale_sections", "{n} sections to review"),
+            ("open_items", "{n} open"),
+            ("planned_items", "{n} planned"),
+            ("index_link", "Overview"),
+        ]
+        .into_iter()
+        .map(|(key, text)| (key.to_string(), text.to_string()))
+        .collect(),
+        others: vec![],
     };
     let pages = render(&input);
     let names: Vec<&str> = pages.iter().map(|page| page.name.as_str()).collect();

@@ -51,6 +51,8 @@ body {
 .page { max-width: 1040px; margin: 0 auto; padding: 24px 20px 64px; }
 .crumbs { max-width: 1040px; margin: 0 auto; padding: 16px 20px 0; font-size: 0.9em; }
 .crumb-separator { color: var(--muted); margin: 0 8px; }
+.crumb-separator::before { content: "/"; }
+.languages ul { list-style: none; margin: 0; padding: 12px 20px 0; display: flex; gap: 12px; justify-content: flex-end; font-size: 0.9em; }
 .siblings { border-top: 1px solid var(--line); margin-top: 32px; padding-top: 12px; }
 .siblings-title { font-weight: 700; margin: 0 0 6px; }
 .siblings ul { margin: 0; padding-left: 1.2em; }

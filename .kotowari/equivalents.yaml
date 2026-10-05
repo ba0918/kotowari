@@ -2,6 +2,17 @@
 # 載せる前に、別の文脈でその変異を落とすテストを書けないか試している。
 # why には、なぜ観測できないかと、何を試して落とせなかったかを書く。
 
+- file: crates/kotowari-core/src/skeleton.rs
+  change: "replace <impl serde::Deserialize<'de> for TocNode>::deserialize::<impl serde::de::Visitor<'de> for Visitor>::expecting -> std::fmt::Result with Ok(Default::default())"
+  text: 'formatter.write_str("a page name or a group")'
+  class: equivalent
+  why: >-
+    骨組みの読み取りで型が合わないときの serde の診断文だけが変わる。
+    skeleton::toc は from_str が返す Err を捨てて空の骨組みを返し、診断文を外へ渡さない。
+    目次の形の指摘は別の overview::toc の検査が作るので、この文の有無は標準出力、標準エラー、
+    終了コードを変えない。別の文脈のレビューが、空の入力、型の違う YAML、別名参照を使って
+    診断文を外に出す経路を探したが、いずれも Err がこの場所で捨てられるため見つからなかった。
+
 - file: crates/kotowari-core/src/sources.rs
   change: "replace + with * in parse_links"
   text: "i = href_end + 1;"

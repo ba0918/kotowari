@@ -7,10 +7,10 @@ view が`描画の入力`を受け取り、`ページ`の並びを返すまで�
 ### REQ-view-001: 描画の入力
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A25, docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-02-whole-picture.md#A68, docs/decision/records/2026-10-02-whole-picture.md#A65, docs/decision/records/2026-10-02-whole-picture.md#A81, docs/decision/records/2026-10-02-whole-picture.md#A82, docs/decision/records/2026-10-04-overview-on-public-api.md#A10, docs/decision/records/2026-10-05-overview-index.md#A7, docs/decision/records/2026-10-05-overview-index.md#A10, docs/decision/records/2026-10-05-overview-index.md#A15, docs/decision/records/2026-10-05-overview-index.md#A33
+- source: docs/decision/records/2026-10-02-whole-picture.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A25, docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-02-whole-picture.md#A68, docs/decision/records/2026-10-02-whole-picture.md#A65, docs/decision/records/2026-10-02-whole-picture.md#A81, docs/decision/records/2026-10-02-whole-picture.md#A82, docs/decision/records/2026-10-04-overview-on-public-api.md#A10, docs/decision/records/2026-10-05-overview-index.md#A7, docs/decision/records/2026-10-05-overview-index.md#A10, docs/decision/records/2026-10-05-overview-index.md#A15, docs/decision/records/2026-10-05-overview-index.md#A33, docs/decision/records/2026-10-05-localization.md#A9, docs/decision/records/2026-10-05-localization.md#A34, docs/decision/records/2026-10-05-localization.md#A20, docs/decision/records/2026-10-05-localization.md#A32
 - verification: unit
 
-view は常に、`描画の入力`として`文書`の並びと`参照の表`と`目次`を受け取る。`文書`は名前、題名、冒頭の lead の`部品`、lead に続く冒頭の`部品`の並び、`節`の並びを持ち、`節`は見出しの文字、古いかどうかの真偽、`ブロック`の並びを持つ。`参照の表`の1件は`参照`の文字列、表示名、本文、状態（"current"、"superseded"、"deferred" のいずれか）を持つ。`目次`は1つの`目次の群`で、`目次の群`は題名、省いてよい一行の説明、項目の並びを持ち、項目は`文書`の名前か`目次の群`のどちらかである。
+view は常に、`描画の入力`として`文書`の並びと`参照の表`と`目次`と言語タグと`UI の文字`と`ほかの言語`を受け取る。`文書`は名前、題名、冒頭の lead の`部品`、lead に続く冒頭の`部品`の並び、`節`の並びを持ち、`節`は見出しの文字、古いかどうかの真偽、`ブロック`の並びを持つ。`参照の表`の1件は`参照`の文字列、表示名、省いてよい本文、状態（"current"、"superseded"、"deferred" のいずれか）を持つ。`目次`は1つの`目次の群`で、`目次の群`は題名、省いてよい一行の説明、項目の並びを持ち、項目は`文書`の名前か`目次の群`のどちらかである。
 
 ### REQ-view-002: ページの並びを返す
 
@@ -63,18 +63,18 @@ view は常に、Markdown の文章の塊の`ブロック`を CommonMark と GFM
 ### REQ-view-008: 参照を開いて見せる
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A65, docs/decision/records/2026-10-02-whole-picture.md#A67, docs/decision/records/2026-10-02-whole-picture.md#A31, docs/decision/records/2026-10-02-whole-picture.md#A73
+- source: docs/decision/records/2026-10-02-whole-picture.md#A65, docs/decision/records/2026-10-02-whole-picture.md#A67, docs/decision/records/2026-10-02-whole-picture.md#A31, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-05-localization.md#A5, docs/decision/records/2026-10-05-localization.md#A34, docs/decision/records/2026-10-05-localization.md#D1
 - verification: unit
 
-view は常に、`参照`を`参照の表`の表示名で描き、それを選ぶとページを移らずにその`参照`の本文を開いて見せる。状態が "superseded" の`参照`には置き換え済みの印を、"deferred" の`参照`には後回しの印を付ける。view はどの`参照`もページの外へのリンクにしない。
+view は常に、`参照`を`参照の表`の表示名で描き、それを選ぶとページを移らずにその`参照`の本文を開いて見せる。状態が "superseded" の`参照`には置き換え済みの印として`UI の文字`の "superseded" を、"deferred" の`参照`には後回しの印として "deferred" を付ける。本文の無い`参照`は REQ-view-030 のとおりに描く。view はどの`参照`もページの外へのリンクにしない。
 
 ### REQ-view-009: 古い節の印
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A39, docs/decision/records/2026-10-02-whole-picture.md#A68
+- source: docs/decision/records/2026-10-02-whole-picture.md#A39, docs/decision/records/2026-10-02-whole-picture.md#A68, docs/decision/records/2026-10-05-localization.md#A5, docs/decision/records/2026-10-05-localization.md#D1
 - verification: unit
 
-view は常に、古いとされた`節`の見出しの近くに、IR が変わった後にまだ見直していない`節`であることを示す印を描く。
+view は常に、古いとされた`節`の見出しの近くに、IR が変わった後にまだ見直していない`節`であることを示す印として`UI の文字`の "stale_mark" を描く。
 
 ### REQ-view-010: 外から読み込まない
 

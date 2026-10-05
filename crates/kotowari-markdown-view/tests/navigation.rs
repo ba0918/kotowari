@@ -4,6 +4,8 @@ use kotowari_markdown_view::{
 use serde_json::json;
 
 mod common;
+#[path = "common/ui.rs"]
+mod ui;
 
 fn lead(conclusion: &str) -> Part {
     Part {
@@ -62,6 +64,7 @@ fn input(documents: Vec<Document>, items: Vec<TocItem>) -> RenderInput {
             note: None,
             items,
         },
+        ..ui::japanese()
     }
 }
 
@@ -108,7 +111,7 @@ fn ex_view_011_only_nonzero_state_counts_are_added_to_the_card() {
     let a = document(
         "a",
         vec![
-            section(true, vec![Block::Part(status(&["未決", "決定"]))]),
+            section(true, vec![Block::Part(status(&["open", "decided"]))]),
             section(true, vec![]),
             section(false, vec![]),
         ],
@@ -126,17 +129,17 @@ fn req_view_016_labels_are_counted_in_the_preamble_and_in_every_section_but_not_
     let mut a = document(
         "a",
         vec![
-            section(false, vec![Block::Part(status(&["予定", "未決"]))]),
+            section(false, vec![Block::Part(status(&["planned", "open"]))]),
             section(
                 false,
                 vec![
                     Block::Markdown("未決 予定".into()),
-                    Block::Part(status(&["予定"])),
+                    Block::Part(status(&["planned"])),
                 ],
             ),
         ],
     );
-    a.preamble = vec![status(&["予定"])];
+    a.preamble = vec![status(&["planned"])];
     a.lead = lead("結論");
     let index = index(&input(vec![a], vec![name("a")]));
     let card = entry(&index, "a");
@@ -150,7 +153,7 @@ fn req_view_016_labels_are_counted_in_the_preamble_and_in_every_section_but_not_
 fn req_view_016_a_document_with_nothing_to_review_has_no_counts() {
     let a = document(
         "a",
-        vec![section(false, vec![Block::Part(status(&["決定"]))])],
+        vec![section(false, vec![Block::Part(status(&["decided"]))])],
     );
     let index = index(&input(vec![a], vec![name("a")]));
     let card = entry(&index, "a");
@@ -164,7 +167,7 @@ fn req_view_016_a_document_with_nothing_to_review_has_no_counts() {
 fn ex_view_012_group_counts_include_every_descendant_document() {
     let b = document(
         "b",
-        vec![section(false, vec![Block::Part(status(&["未決", "未決"]))])],
+        vec![section(false, vec![Block::Part(status(&["open", "open"]))])],
     );
     let documents = vec![document("a", vec![]), b, document("c", vec![])];
     let index = index(&input(
@@ -193,7 +196,7 @@ fn req_view_017_the_outermost_heading_counts_pages_and_sums_but_not_planned() {
     let a = document(
         "a",
         vec![
-            section(true, vec![Block::Part(status(&["未決", "予定"]))]),
+            section(true, vec![Block::Part(status(&["open", "planned"]))]),
             section(true, vec![]),
         ],
     );

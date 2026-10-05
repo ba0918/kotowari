@@ -7,18 +7,18 @@
 ### REQ-view-016: 文書の状態の数
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-05-overview-index.md#A2, docs/decision/records/2026-10-05-overview-index.md#A13, docs/decision/records/2026-10-05-overview-index.md#A24, docs/decision/records/2026-10-05-overview-index.md#A35
+- source: docs/decision/records/2026-10-05-overview-index.md#A2, docs/decision/records/2026-10-05-overview-index.md#A13, docs/decision/records/2026-10-05-overview-index.md#A24, docs/decision/records/2026-10-05-overview-index.md#A35, docs/decision/records/2026-10-05-localization.md#A5, docs/decision/records/2026-10-05-localization.md#A3, docs/decision/records/2026-10-05-localization.md#D1, docs/decision/records/2026-10-05-localization.md#A8
 - verification: unit
 
-view は常に、一覧の`ページ`の`文書`の項目に、古いとされた`節`の数を "見直していない節 <数>"、status の`部品`の項目のうち札が "未決" のものの数を "未決 <数>"、札が "予定" のものの数を "予定 <数>" として、それぞれ数が0でないときだけ添える。札を数えるのは、その`文書`の lead に続く冒頭の`部品`と、`節`の`ブロック`の中のすべての status の`部品`である。
+view は常に、一覧の`ページ`の`文書`の項目に、古いとされた`節`の数を`UI の文字`の "stale_sections"、status の`部品`の項目のうち札が "open" のものの数を "open_items"、札が "planned" のものの数を "planned_items" の "{n}" をその数に置き換えた文字として、それぞれ数が0でないときだけ添える。札を数えるのは、その`文書`の lead に続く冒頭の`部品`と、`節`の`ブロック`の中のすべての status の`部品`である。
 
 ### REQ-view-017: 目次の群の数
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-05-overview-index.md#A13, docs/decision/records/2026-10-05-overview-index.md#A15, docs/decision/records/2026-10-05-overview-index.md#A20, docs/decision/records/2026-10-05-overview-index.md#A24, docs/decision/records/2026-10-05-overview-index.md#A35
+- source: docs/decision/records/2026-10-05-overview-index.md#A13, docs/decision/records/2026-10-05-overview-index.md#A15, docs/decision/records/2026-10-05-overview-index.md#A20, docs/decision/records/2026-10-05-overview-index.md#A24, docs/decision/records/2026-10-05-overview-index.md#A35, docs/decision/records/2026-10-05-localization.md#A5, docs/decision/records/2026-10-05-localization.md#D1, docs/decision/records/2026-10-05-localization.md#A8, docs/decision/records/2026-10-05-localization.md#A3
 - verification: unit
 
-view は常に、一覧の`ページ`の`目次の群`（`目次`そのものを含む）の見出しに、その`目次の群`の下に入れ子の深さを問わず描かれる`文書`の項目の数を "<数> ページ" として添え、それらの`文書`の古い`節`の数の合計を "見直していない節 <数>"、札が "未決" のものの数の合計を "未決 <数>" として、合計が0でないときだけ添える。
+view は常に、一覧の`ページ`の`目次の群`（`目次`そのものを含む）の見出しに、その`目次の群`の下に入れ子の深さを問わず描かれる`文書`の項目の数を`UI の文字`の "pages" の "{n}" をその数に置き換えた文字として添え、それらの`文書`の古い`節`の数の合計を "stale_sections"、札が "open" のものの数の合計を "open_items" の "{n}" をその数に置き換えた文字として、合計が0でないときだけ添える。
 
 ### REQ-view-018: 目次の群を畳む
 
@@ -31,10 +31,10 @@ view は常に、一覧の`ページ`の`目次`の中のすべての`目次の�
 ### REQ-view-019: 目次の中の位置
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-05-overview-index.md#A14, docs/decision/records/2026-10-05-overview-index.md#A18, docs/decision/records/2026-10-05-overview-index.md#A25
+- source: docs/decision/records/2026-10-05-overview-index.md#A14, docs/decision/records/2026-10-05-overview-index.md#A18, docs/decision/records/2026-10-05-overview-index.md#A25, docs/decision/records/2026-10-05-localization.md#A5, docs/decision/records/2026-10-05-localization.md#D1
 - verification: unit
 
-view は常に、`目次`に名前がある`文書`の`ページ`の題名より上に、`目次`からその名前の項目までにたどる`目次の群`の題名を外側から順に描き、それぞれを一覧の`ページ`の中のその`目次の群`の場所へリンクする。`目次`に2回以上出てくる名前では、`目次`を書かれた順に深さ優先でたどって最初に出てくる項目までをたどる。`目次`に名前の無い`文書`の`ページ`には、一覧の`ページ`へのリンクだけを描く。
+view は常に、`目次`に名前がある`文書`の`ページ`の題名より上に、`目次`からその名前の項目までにたどる`目次の群`の題名を外側から順に描き、それぞれを一覧の`ページ`の中のその`目次の群`の場所へリンクする。`目次`に2回以上出てくる名前では、`目次`を書かれた順に深さ優先でたどって最初に出てくる項目までをたどる。`目次`に名前の無い`文書`の`ページ`には、一覧の`ページ`へのリンクだけを、`UI の文字`の "index_link" の文字で描く。
 
 ### REQ-view-020: 同じ目次の群の文書へのリンク
 
@@ -55,10 +55,10 @@ view は常に、`目次`にあって`描画の入力`に`文書`の無い名前
 ### REQ-view-022: 節のアウトライン
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-05-overview-page-reading.md#A1, docs/decision/records/2026-10-05-overview-page-reading.md#A2, docs/decision/records/2026-10-05-overview-page-reading.md#A3, docs/decision/records/2026-10-05-overview-page-reading.md#A4, docs/decision/records/2026-10-05-overview-page-reading.md#A5, docs/decision/records/2026-10-05-overview-page-reading.md#A6, docs/decision/records/2026-10-05-overview-page-reading.md#A7, docs/decision/records/2026-10-05-overview-page-reading.md#A14, docs/decision/records/2026-10-05-overview-page-reading.md#A17, docs/decision/records/2026-10-05-overview-page-reading.md#D1
+- source: docs/decision/records/2026-10-05-overview-page-reading.md#A1, docs/decision/records/2026-10-05-overview-page-reading.md#A2, docs/decision/records/2026-10-05-overview-page-reading.md#A3, docs/decision/records/2026-10-05-overview-page-reading.md#A4, docs/decision/records/2026-10-05-overview-page-reading.md#A5, docs/decision/records/2026-10-05-overview-page-reading.md#A6, docs/decision/records/2026-10-05-overview-page-reading.md#A7, docs/decision/records/2026-10-05-overview-page-reading.md#A14, docs/decision/records/2026-10-05-overview-page-reading.md#A17, docs/decision/records/2026-10-05-overview-page-reading.md#D1, docs/decision/records/2026-10-05-localization.md#A5, docs/decision/records/2026-10-05-localization.md#D1
 - verification: unit
 
-view は常に、`節`を1つ以上持つ`文書`の`ページ`に`アウトライン`を描き、`節`の見出しの文字を`節`の並びの順に並べ、それぞれをその`ページ`の中のその`節`へのリンクにする。古いとされた`節`の項目には、見出しの文字の後に REQ-view-009 の印と同じ意味の印を付ける。`アウトライン`には lead と lead に続く冒頭の`部品`への項目、`節`の中の "### " 以下の見出し、ほかの`ページ`へのリンクを入れない。節へのリンクの場所は1つの`ページ`の中で重ならず、同じ見出しの`節`が2つあっても別の場所にする。一覧の`ページ`と、`節`の無い`文書`の`ページ`には`アウトライン`を描かない。
+view は常に、`節`を1つ以上持つ`文書`の`ページ`に`アウトライン`を描き、`節`の見出しの文字を`節`の並びの順に並べ、それぞれをその`ページ`の中のその`節`へのリンクにする。古いとされた`節`の項目には、見出しの文字の後に REQ-view-009 の印と同じ意味の印として`UI の文字`の "outline_stale" を付ける。`アウトライン`には lead と lead に続く冒頭の`部品`への項目、`節`の中の "### " 以下の見出し、ほかの`ページ`へのリンクを入れない。節へのリンクの場所は1つの`ページ`の中で重ならず、同じ見出しの`節`が2つあっても別の場所にする。一覧の`ページ`と、`節`の無い`文書`の`ページ`には`アウトライン`を描かない。
 
 ### REQ-view-023: アウトラインの置き場所
 
@@ -72,15 +72,17 @@ view は常に、広い画面では`アウトライン`を本文の左に置い�
 ## Examples
 
 ```gherkin
-@id=EX-view-011 @about=REQ-view-016 @source=docs/decision/records/2026-10-05-overview-index.md#A13
+@id=EX-view-011 @about=REQ-view-016 @source=docs/decision/records/2026-10-05-overview-index.md#A13,docs/decision/records/2026-10-05-localization.md#A5,docs/decision/records/2026-10-05-localization.md#D1,docs/decision/records/2026-10-05-localization.md#A8,docs/decision/records/2026-10-05-localization.md#A3
 Scenario: 0でない状態の数だけがカードに添えられる
-  Given 古い節が2つあり、status の部品に札 "未決" の項目が1つあり、札 "予定" の項目が無い文書 "a" がある
+  Given UI の文字の "stale_sections" が "見直していない節 {n}"、"open_items" が "未決 {n}"、"planned_items" が "予定 {n}" である
+  And 古い節が2つあり、status の部品に札 "open" の項目が1つあり、札 "planned" の項目が無い文書 "a" がある
   When view で描画する
   Then "index.html" の "a" の項目に "見直していない節 2" と "未決 1" があり、"予定" の文字は無い
 
-@id=EX-view-012 @about=REQ-view-017 @source=docs/decision/records/2026-10-05-overview-index.md#A13,docs/decision/records/2026-10-05-overview-index.md#A20,docs/decision/records/2026-10-05-overview-index.md#A35,docs/decision/records/2026-10-05-overview-index.md#A24
+@id=EX-view-012 @about=REQ-view-017 @source=docs/decision/records/2026-10-05-overview-index.md#A13,docs/decision/records/2026-10-05-overview-index.md#A20,docs/decision/records/2026-10-05-overview-index.md#A35,docs/decision/records/2026-10-05-overview-index.md#A24,docs/decision/records/2026-10-05-localization.md#A5,docs/decision/records/2026-10-05-localization.md#D1,docs/decision/records/2026-10-05-localization.md#A8,docs/decision/records/2026-10-05-localization.md#A3
 Scenario: 目次の群の数は子孫の文書をすべて数える
-  Given 目次の群 "テスト" の項目が "a" と、"b" と "c" を持つ目次の群 "変異テスト" で、"b" に札 "未決" の項目が2つあり、古い節はどの文書にも無い
+  Given UI の文字の "pages" が "{n} ページ"、"open_items" が "未決 {n}"、"stale_sections" が "見直していない節 {n}" である
+  And 目次の群 "テスト" の項目が "a" と、"b" と "c" を持つ目次の群 "変異テスト" で、"b" に札 "open" の項目が2つあり、古い節はどの文書にも無い
   When view で描画する
   Then "テスト" の見出しに "3 ページ" と "未決 2" があり、"変異テスト" の見出しに "2 ページ" と "未決 2" があり、どちらにも "見直していない節" の文字は無い
 
@@ -97,9 +99,9 @@ Scenario: 文書のページに目次の中の位置と同じ群の文書が出�
   Then "a.html" の題名より上に "kotowari" と "テスト" がこの順にあり、それぞれ "index.html" の中のその目次の群の場所へリンクする
   And "a.html" の最後の節の後に "b" の題名の "b.html" へのリンクがあり、"z" と "a" 自身へのリンクは無い
 
-@id=EX-view-015 @about=REQ-view-021,REQ-view-019 @source=docs/decision/records/2026-10-05-overview-index.md#A18,docs/decision/records/2026-10-05-overview-index.md#A25,docs/decision/records/2026-10-05-overview-index.md#A35,docs/decision/records/2026-10-05-overview-index.md#A24,docs/decision/records/2026-10-05-overview-index.md#A13,docs/decision/records/2026-10-05-overview-index.md#A36
+@id=EX-view-015 @about=REQ-view-021,REQ-view-019 @source=docs/decision/records/2026-10-05-overview-index.md#A18,docs/decision/records/2026-10-05-overview-index.md#A25,docs/decision/records/2026-10-05-overview-index.md#A35,docs/decision/records/2026-10-05-overview-index.md#A24,docs/decision/records/2026-10-05-overview-index.md#A13,docs/decision/records/2026-10-05-overview-index.md#A36,docs/decision/records/2026-10-05-localization.md#A5,docs/decision/records/2026-10-05-localization.md#D1,docs/decision/records/2026-10-05-localization.md#A8
 Scenario: 目次と食い違う入力も誤りにせず描く
-  Given 目次の項目が "a"、"z"、"a" の順で、文書は "a" と "c" である
+  Given UI の文字の "pages" が "{n} ページ" で、目次の項目が "a"、"z"、"a" の順で、文書は "a" と "c" である
   When view で描画する
   Then 返るページに "a.html" と "c.html" があり、"index.html" には "a" の題名が2回あり、"c" の題名と "z" は無く、目次の見出しに "2 ページ" がある
   And "c.html" の題名より上には "index.html" へのリンクだけがある

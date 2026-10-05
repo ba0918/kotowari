@@ -7,10 +7,10 @@ IR の文書の選び方、題名と範囲の行、行の数え方、行数と�
 ### REQ-core-033: 読む文書
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A32, docs/decision/records/records.md#A102, docs/decision/records/records.md#A165, docs/decision/records/2026-09-16-ir-tree.md#A1, docs/decision/records/2026-09-16-ir-tree.md#A8, docs/decision/records/2026-09-16-ir-tree.md#A13
+- source: docs/decision/records/records.md#A32, docs/decision/records/records.md#A102, docs/decision/records/records.md#A165, docs/decision/records/2026-09-16-ir-tree.md#A1, docs/decision/records/2026-09-16-ir-tree.md#A8, docs/decision/records/2026-09-16-ir-tree.md#A13, docs/decision/records/2026-10-05-localization.md#A22, docs/decision/records/2026-10-05-localization.md#A11, docs/decision/records/2026-10-05-localization.md#A15, docs/decision/records/2026-10-05-localization.md#A21
 - verification: unit
 
-kotowari は常に、`IR`の置き場の下のディレクトリを深さに制限なく辿り、拡張子が小文字の ".md" のファイルだけを読み、".MD" の文書、ディレクトリでも通常のファイルでもないもの（ソケット、名前付きパイプ、デバイス）を読まない（`除外`）。隠しディレクトリとディレクトリのシンボリックリンクはどの深さでも辿らず（`除外`）、空のディレクトリには`指摘`を出さない。どのディレクトリでも "CONTEXT.md" は`用語集`、"FLAGS.md" は`問題の記録`である。ファイルのシンボリックリンクは読む。種類を取れない要素があるときは読めないファイルを理由に`停止`する。
+kotowari は常に、`IR`の置き場の下のディレクトリを深さに制限なく辿り、拡張子が小文字の ".md" のファイルだけを読み、".MD" の文書、ディレクトリでも通常のファイルでもないもの（ソケット、名前付きパイプ、デバイス）を読まない（`除外`）。隠しディレクトリとディレクトリのシンボリックリンクはどの深さでも辿らず（`除外`）、空のディレクトリには`指摘`を出さない。どのディレクトリでも "CONTEXT.md" は`用語集`、"FLAGS.md" は`問題の記録`であり、`言語の一覧`の言語が2つ以上のときはその`対`の`側`（"CONTEXT.<言語タグ>.md"、"FLAGS.<言語タグ>.md"）もそれぞれその言語の`用語集`と`問題の記録`である（REQ-core-337）。ファイルのシンボリックリンクは読む。種類を取れない要素があるときは読めないファイルを理由に`停止`する。
 
 ### REQ-core-034: 題名が無い
 

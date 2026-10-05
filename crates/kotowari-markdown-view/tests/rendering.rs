@@ -5,6 +5,8 @@ use kotowari_markdown_view::{
 use serde_json::json;
 
 mod common;
+#[path = "common/ui.rs"]
+mod ui;
 
 fn lead(conclusion: &str) -> Part {
     Part {
@@ -70,6 +72,7 @@ fn ex_view_001_two_documents_give_four_pages() {
         ],
         references: vec![],
         toc: contents(&["guides", "changes"]),
+        ..ui::japanese()
     };
     let pages = render(&input);
     let names: Vec<&str> = pages.iter().map(|page| page.name.as_str()).collect();
@@ -112,6 +115,7 @@ fn ex_view_010_the_index_follows_the_contents_order_and_nesting() {
                 TocItem::Document("a".into()),
             ],
         },
+        ..ui::japanese()
     };
     let pages = render(&input);
     let index = page(&pages, "index.html");
@@ -144,6 +148,7 @@ fn req_view_005_the_note_of_the_contents_is_drawn_under_the_index_heading() {
         documents: vec![document("a", "題名A", vec![])],
         references: vec![],
         toc,
+        ..ui::japanese()
     };
     let index = page(&render(&input), "index.html").to_string();
     let heading = position(&index, "<h1>目次</h1>");
@@ -166,6 +171,7 @@ fn req_view_005_the_note_of_a_nested_group_is_part_of_the_group_heading() {
                 items: vec![TocItem::Document("a".into())],
             })],
         },
+        ..ui::japanese()
     };
     let index = page(&render(&input), "index.html").to_string();
     // 畳んでも見える見出しは <summary> の中。群の題名と説明はその中にある（REQ-view-018）
@@ -184,6 +190,7 @@ fn req_view_002_pages_refer_to_the_shared_style_and_to_each_other_relatively() {
         documents: vec![document("changes", "変更照合", vec![])],
         references: vec![],
         toc: contents(&["changes"]),
+        ..ui::japanese()
     };
     let pages = render(&input);
     assert!(page(&pages, "index.html").contains("href=\"changes.html\""));
@@ -217,7 +224,7 @@ fn req_view_001_the_input_carries_documents_sections_the_reference_table_and_the
         references: vec![Reference {
             key: "REQ-x-001".into(),
             label: "REQ-x-001".into(),
-            body: "要求の文".into(),
+            body: Some("要求の文".into()),
             state: ReferenceState::Current,
         }],
         toc: TocGroup {
@@ -229,6 +236,7 @@ fn req_view_001_the_input_carries_documents_sections_the_reference_table_and_the
                 items: vec![TocItem::Document("a".into())],
             })],
         },
+        ..ui::japanese()
     };
     let pages = render(&input);
     let text = page(&pages, "a.html");
@@ -255,6 +263,7 @@ fn req_view_006_the_lead_follows_the_title_and_sections_keep_their_order() {
         )],
         references: vec![],
         toc: TocGroup::default(),
+        ..ui::japanese()
     };
     let pages = render(&input);
     let text = page(&pages, "a.html");
@@ -280,6 +289,7 @@ fn req_view_006_preamble_parts_follow_the_lead_in_order_before_the_sections() {
         documents: vec![a],
         references: vec![],
         toc: TocGroup::default(),
+        ..ui::japanese()
     };
     let pages = render(&input);
     let text = page(&pages, "a.html");
@@ -300,6 +310,7 @@ fn one_section_page(blocks: Vec<Block>) -> String {
         documents: vec![document("a", "題名", vec![section("節", blocks)])],
         references: vec![],
         toc: TocGroup::default(),
+        ..ui::japanese()
     };
     page(&render(&input), "a.html").to_string()
 }
@@ -385,7 +396,7 @@ fn reference(key: &str, label: &str, body: &str, state: ReferenceState) -> Refer
     Reference {
         key: key.into(),
         label: label.into(),
-        body: body.into(),
+        body: Some(body.into()),
         state,
     }
 }
@@ -423,6 +434,7 @@ fn page_with_references(refs: &[&str], references: Vec<Reference>) -> String {
         )],
         references,
         toc: TocGroup::default(),
+        ..ui::japanese()
     };
     page(&render(&input), "a.html").to_string()
 }
@@ -488,6 +500,7 @@ fn ex_view_005_only_the_stale_section_carries_the_mark() {
             documents: vec![document("a", "題名", vec![a, section("節B", vec![])])],
             references: vec![],
             toc: TocGroup::default(),
+            ..ui::japanese()
         };
         let text = page(&render(&input), "a.html").to_string();
         // 節の並びの始まり。アウトラインの最初の項目のリンク先である

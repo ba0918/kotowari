@@ -21,7 +21,7 @@ kotowari list --version
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-155:fbd06b39, REQ-core-003:7fb82a37, REQ-core-011:549c5c91] -->
+<!-- @kotowari[REQ-core-155:ec783479, REQ-core-003:7fb82a37, REQ-core-011:549c5c91] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
@@ -38,10 +38,12 @@ kotowari list --version
 
 何を読むかは `kotowari check` と同じです（同じ設定、同じ置き場の IR の文書とテストのファイル）。
 ただしガイドと全体像の元データは読みません。
+`languages` に2つ以上の言語を書いたときだけは、`translations` の hash を出すためにガイド、全体像の元データ、目次の置き場も辿ります（中身は検査しません）。
+項目は対の先頭の言語の側だけから出ます。
 
 ### text
 
-<!-- @kotowari[REQ-core-155:fbd06b39, EX-core-248:7651c98a, EX-core-399:bcb01e70] -->
+<!-- @kotowari[REQ-core-155:ec783479, EX-core-248:7651c98a, EX-core-399:bcb01e70] -->
 
 1件を1行で出し、その下に印の付いたテストを1件ずつ字下げして続けます。
 
@@ -63,11 +65,18 @@ REQ-001 unit 例 docs/ir/a.md:7 tests=0 deferred
 | tests=数 | その ID を印に含むテストの数 |
 | テストの行 | 2つの半角空白で字下げした `パス:行 名前`。パスと行は印の位置。名前が取れないときは `-` |
 
+`languages` に2つ以上の言語を書いたときは、項目の行の後に、対ごとに1行で、先頭の言語の側のパスに続けて言語ごとに半角空白1つと `言語タグ=blob hash` を並べます。
+無い側は `言語タグ=-` です。
+
+```text
+docs/ir/a.md ja=78981922613b2afb6025042ff6bd878ac1994e85 en=-
+```
+
 ### JSON
 
-<!-- @kotowari[TBL-core-026:05d8938e, REQ-core-153:513617dc, EX-core-288:30fa9a16] -->
+<!-- @kotowari[TBL-core-026:05d8938e, REQ-core-153:513617dc, EX-core-288:30fa9a16, REQ-core-155:ec783479] -->
 
-最上位は `items` だけのオブジェクトです。
+最上位は `items` と、`languages` に2つ以上の言語を書いたときだけ `translations` を持つオブジェクトです。
 `items` は1件ずつのオブジェクトの並びで、種類によって持つ鍵が違います。持たない鍵は出ません。
 
 | 鍵 | 型 | 持つ種類 | 説明 |
@@ -92,6 +101,16 @@ REQ-001 unit 例 docs/ir/a.md:7 tests=0 deferred
 同じ ID のシナリオが2つあるときは、`examples` には1つ目だけを数えます。
 細かい定義は [list の IR](../../ir/core/list.md) の TBL-core-026 にあります。
 
+`translations` は対ごとの1件の並びで、`path` の昇順です。
+先頭の言語の側が無い対も1件になります。
+1件は `path`（先頭の言語の側の基準のディレクトリからの相対パス）と `sides` を持ちます。
+`sides` は `languages` の順の側の並びで、1つの側は `language`（言語タグ）、`path`、`blob`（その側の git の blob hash。側が無ければ null）を持ちます。
+`blob` を一致の記録 `<幹>.i18n.yaml` に写します（[言語と対](../config.md#言語と対--languages-と-labels)）。
+
+```json
+{"path":"docs/ir/a.md","sides":[{"language":"ja","path":"docs/ir/a.md","blob":"78981922613b2afb6025042ff6bd878ac1994e85"},{"language":"en","path":"docs/ir/a.en.md","blob":null}]}
+```
+
 ### 並び順
 
 <!-- @kotowari[REQ-core-154:f5509315] -->
@@ -101,7 +120,7 @@ REQ-001 unit 例 docs/ir/a.md:7 tests=0 deferred
 
 ## 終了コード
 
-<!-- @kotowari[REQ-core-151:4e40b186, REQ-core-152:ec925e06] -->
+<!-- @kotowari[REQ-core-151:4e40b186, REQ-core-152:6864f2f5] -->
 
 | コード | 意味 |
 |---|---|
@@ -233,9 +252,10 @@ CI で誤りを止めたいなら `kotowari check` か [`kotowari status`](./sta
 
 ### check や status は設定の誤りで止まるのに、list は動く
 
-<!-- @kotowari[REQ-core-152:ec925e06, REQ-core-198:ec0e5ea4, REQ-core-199:38cf396d] -->
+<!-- @kotowari[REQ-core-152:6864f2f5, REQ-core-198:ec0e5ea4, REQ-core-199:38cf396d] -->
 
 `list` はガイドを読まないので、ガイドの置き場に関わる停止（`guides.files` と `tests.files` の重なりなど）はしません。
+ただし `languages` に2つ以上の言語を書いたときは、ガイド、全体像の元データ、目次の置き場を辿るので、その置き場と読み込みによる停止は `check` と同じにします。
 面のファイル、面の規則のファイル、未記載の面の一覧も読まないので、それらが無い、読めない、壊れているときの停止もしません。
 全体像の元データも読まないので、その置き場と読み込みによる停止（`overview.files` とガイドかテストの置き場の重なりなど）もしません。
 ただし `surface.files` と `surface.rules` の片方だけを書いたときなど、設定の鍵の組み合わせの誤りでは `list` も止まります（[設定](../config.md)）。

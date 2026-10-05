@@ -1,5 +1,6 @@
 use crate::{
     change_records, guides, ir, overview, sources, surface, test_files as tests_discovery,
+    translations,
 };
 use kotowari_core::*;
 use std::{
@@ -192,14 +193,14 @@ pub fn load_config(
 /// `ガイド`はここでは読まない。list と query は`ガイド`を読まない（REQ-core-152、REQ-core-158）ので、
 /// check と status だけが `read_guides` を続けて呼ぶ
 pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<ReadModel, StopReason> {
-    load_read(cwd, config_path).map(|(read, _)| read)
+    load_read(cwd, config_path).map(|(read, _, _)| read)
 }
 
-/// `load_all` と、読んだ`テストのファイル`の`基準のディレクトリ`からの相対パス
+/// `load_all` と、読んだ`テストのファイル`の`基準のディレクトリ`からの相対パスと、`IR`の`対`
 fn load_read(
     cwd: &Path,
     config_path: Option<&Path>,
-) -> Result<(ReadModel, Vec<String>), StopReason> {
+) -> Result<(ReadModel, Vec<String>, translations::Assembly), StopReason> {
     let base = find_base(cwd);
     let cfg = load_config(cwd, &base, config_path)?;
 
@@ -223,30 +224,54 @@ fn load_read(
         }
     }
 
-    let preparation = ir::prepare(&base, &cfg)?;
+    let mut assembly = translations::Assembly::new(&base, &cfg);
+    let preparation = ir::prepare(&base, &cfg, &mut assembly)?;
     let (records, adr) = sources::read_texts(&base, &cfg)?;
     let tests = tests_discovery::analyze(&base, &cfg)?;
     let test_paths = tests
         .iter()
         .map(|test| test.source.path().to_string())
         .collect();
-    Ok((preparation.finish(records, adr, tests)?, test_paths))
+    Ok((
+        preparation.finish(records, adr, tests)?,
+        test_paths,
+        assembly,
+    ))
 }
 
-/// check と status の読み取り: `load_all` に続けて`ガイド`と`全体像の元データ`と`面`を読み、その`指摘`を足す
-/// （REQ-core-198、REQ-core-162、REQ-core-229、REQ-core-278、REQ-core-290）
-pub fn load_with_guides(cwd: &Path, config_path: Option<&Path>) -> Result<Inspection, StopReason> {
-    let (read, tests) = load_read(cwd, config_path)?;
+/// list の読み取り: `load_all` に続けて、`言語の一覧`の言語が2つ以上なら blob hash を出すために
+/// `ガイド`、`全体像の元データ`、`目次`の置き場を check と同じに辿る（REQ-core-152）
+pub fn load_list(cwd: &Path, config_path: Option<&Path>) -> Result<ReadList, StopReason> {
+    let (read, tests, mut assembly) = load_read(cwd, config_path)?;
+    if !assembly.enabled() {
+        return Ok(read.list());
+    }
     let base = find_base(cwd);
-    let changes = change_records::read_texts(&base, read.config())?;
-    // REQ-core-280: ガイドとテストの重なり（REQ-core-199）を先に判定する
-    let guides = guides::read_texts(&base, &read)?;
+    let guides = guides::read_texts(&base, &read, &mut assembly)?;
     let guide_paths: Vec<&str> = guides
         .iter()
         .flatten()
         .map(kotowari_core::NativeSourceText::path)
         .collect();
-    let overview_texts = overview::read_texts(&base, read.config(), &guide_paths, &tests)?;
+    overview::read_texts(&base, read.config(), &guide_paths, &tests, &mut assembly)?;
+    Ok(read.list_with(&assembly.into_pairs()))
+}
+
+/// check と status の読み取り: `load_all` に続けて`ガイド`と`全体像の元データ`と`面`を読み、その`指摘`を足す
+/// （REQ-core-198、REQ-core-162、REQ-core-229、REQ-core-278、REQ-core-290）
+pub fn load_with_guides(cwd: &Path, config_path: Option<&Path>) -> Result<Inspection, StopReason> {
+    let (read, tests, mut assembly) = load_read(cwd, config_path)?;
+    let base = find_base(cwd);
+    let changes = change_records::read_texts(&base, read.config())?;
+    // REQ-core-280: ガイドとテストの重なり（REQ-core-199）を先に判定する
+    let guides = guides::read_texts(&base, &read, &mut assembly)?;
+    let guide_paths: Vec<&str> = guides
+        .iter()
+        .flatten()
+        .map(kotowari_core::NativeSourceText::path)
+        .collect();
+    let overview_texts =
+        overview::read_texts(&base, read.config(), &guide_paths, &tests, &mut assembly)?;
     let overview = overview::group(&read, overview_texts);
     let mut preparation = read.prepare_repository_inspection();
     preparation.changes(changes)?;
@@ -254,33 +279,42 @@ pub fn load_with_guides(cwd: &Path, config_path: Option<&Path>) -> Result<Inspec
     let (surface, unspecified) = surface::analyze(&base, preparation.config())?;
     preparation.surface(surface, unspecified)?;
     preparation.group(overview)?;
+    preparation.translations(assembly.into_pairs());
     preparation.finish()
 }
 
 /// build と serve の読み取り: check と同じ設定と置き場から IR と判断の記録と`テストのファイル`を読み、
 /// `全体像の元データ`を読んで検査し描画の入力を作る（REQ-core-278、REQ-core-280）。
-/// "overview" の鍵が無ければ設定の誤りで止まる（REQ-core-279）。ガイドの中身と面と照合記録は読まない
+/// "overview" の鍵が無ければ設定の誤りで止まる（REQ-core-279）。ガイドは`対`を集めるためだけに読み、
+/// その検査と面と照合記録は読まない
 pub fn load_overview(
     cwd: &Path,
     config_path: Option<&Path>,
-) -> Result<(PathBuf, kotowari_overview::Overview), StopReason> {
+) -> Result<(PathBuf, kotowari_overview::Overview, usize), StopReason> {
     let base = find_base(cwd);
     if load_config(cwd, &base, config_path)?.overview.is_none() {
         return Err(overview::not_configured());
     }
-    let (read, tests) = load_read(cwd, config_path)?;
+    let (read, tests, mut assembly) = load_read(cwd, config_path)?;
     // REQ-core-280: ガイドとテストの重なり（REQ-core-199）を先に判定する
     let guides = if read.config().guides.files.is_empty() {
         Vec::new()
     } else {
         tests_discovery::collect_files(&base, &read.config().guides.files)?
     };
+    // TBL-core-044: `ガイド`の`対`も集め、元データのリンクの行き先を`先頭の言語`の`側`に読み替えられるようにする
+    let guides = assembly.place(kotowari_core::translations::Place::Guide, guides, true)?;
     read.validate_guide_paths(guides.iter().map(|(path, _)| path.as_str()))?;
     let guide_paths: Vec<&str> = guides.iter().map(|(path, _)| path.as_str()).collect();
-    let texts = overview::read_texts(&base, read.config(), &guide_paths, &tests)?
+    let texts = overview::read_texts(&base, read.config(), &guide_paths, &tests, &mut assembly)?
         .ok_or_else(overview::not_configured)?;
-    Ok((
-        base,
-        kotowari_overview::inspect(&read, &texts.data, &texts.toc),
-    ))
+    let overview = kotowari_overview::inspect_translations(
+        &read,
+        &texts.data,
+        &texts.toc,
+        &texts.translations,
+    );
+    // REQ-core-294: `IR`、`全体像の元データ`、`目次`の`対`の欠けた側と骨組みの食い違いでも書かない
+    let blockers = assembly.into_pairs().overview_blockers(read.config());
+    Ok((base, overview, blockers))
 }

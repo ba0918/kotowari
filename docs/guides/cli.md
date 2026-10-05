@@ -29,7 +29,7 @@ kotowari --version
 | `status` | IR とテストが揃っているかを、数と1つの真偽で答える | [commands/status.md](commands/status.md) |
 | `mutants` | 変異テストの結果のファイルを読み、見逃しを指摘する | [commands/mutants.md](commands/mutants.md) |
 | `plan` | 計画書のファイル1つの形を、同梱のスキーマで検査する | [commands/plan.md](commands/plan.md) |
-| `overview` | 下位のコマンド `build` で全体像のページを `.kotowari/cache/overview/` の下に書き、`serve` で書いて 127.0.0.1 で配る | [仕様](../ir/core/overview-commands.md) |
+| `overview` | 下位のコマンド `build` で全体像のページを `.kotowari/cache/overview/` の下に書き、`serve` で書いて 127.0.0.1 で配る。`languages` に2つ以上の言語があれば、先頭以外の言語のページを `<言語タグ>/` の下に書く | [仕様](../ir/core/overview-commands.md) |
 
 オプションはコマンドの前にも後にも書けます。
 `kotowari --format text check` と `kotowari check --format text` は同じです。
@@ -152,9 +152,9 @@ CI では終了コードだけで「直す必要があるか」を判定でき�
 | `results error` | 結果の誤り | 結果のファイルの相対パスと誤りの説明 | `mutants` の結果のファイルの形が壊れている |
 | `git error` | Git の読み取り停止 | 読めない履歴・対象・index の説明 | Git が無い、REV が commit に解決できない、設定が対象に無い、競合した index、不対応の対象 |
 | `mapping error` | 写しの誤り | 写せなかった指摘の種類か値の説明 | kotowari の内部の不整合。利用者の入力では起きない想定 |
-| `overview error` | 元データの誤り | 誤りの件数と ` errors in overview data; run kotowari check` | `overview build` か `serve` で全体像の元データか目次に誤りがある。何も書かない |
+| `overview error` | 元データの誤り | 誤りの件数と ` errors in overview data; run kotowari check` | `overview build` か `serve` で全体像の元データか目次に誤りがある、または IR、全体像の元データ、目次の対に `translation_missing` か `translation_structure_mismatch` がある。何も書かない |
 | `port error` | ポートの誤り | `127.0.0.1:<ポート>: ` と OS の誤りの文 | `overview serve` で指定のポートを使えない（ほかのポートは試さない）か、配っている間に接続の受け付けに失敗した |
-| `cache error` | 置き場の誤り | 問題のパスの相対パスと、OS の誤りがあれば `: ` と OS の誤りの文 | `overview build` か `serve` で `.kotowari`、`.kotowari/cache`、`.kotowari/cache/overview` のどれかがシンボリックリンクかディレクトリでないファイル（何も書かず消さない）、または置き場の作成・書き込み・削除に失敗した |
+| `cache error` | 置き場の誤り | 問題のパスの相対パスと、OS の誤りがあれば `: ` と OS の誤りの文 | `overview build` か `serve` で `.kotowari`、`.kotowari/cache`、`.kotowari/cache/overview`、言語が2つ以上のときのほかの言語の `.kotowari/cache/overview/<言語タグ>` のどれかがシンボリックリンクかディレクトリでないファイル（何も書かず消さない）、または置き場の作成・書き込み・削除に失敗した |
 
 場面の全部は [cli.md の TBL-core-001](../ir/core/cli.md) と [cli-environment.md の TBL-core-020](../ir/core/cli-environment.md) にあります。
 
@@ -285,12 +285,12 @@ unreadable file: docs/decision/adr: No such file or directory (os error 2)
 $ kotowari check --format text      # docs/ir/greet/bad.md が UTF-8 でない
 non-UTF-8 file: docs/ir/greet/bad.md
 $ kotowari check --config bad.yaml  # limits を limit と書き間違えた
-config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words
+config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words, languages, labels
  --> <input>:2:1
   |
 1 | ir: docs/ir
 2 | limit:
-  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words
+  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words, languages, labels
 3 |   lines: 20
   |
 $ kotowari check --format text      # rules/c.yml の language が cobol
@@ -324,7 +324,7 @@ tests/greet.rs:6 [error] test_without_id rejects_empty_name
 $ kotowari check --config .kotowari/config.yaml
 argument error: config file not found: .kotowari/config.yaml
 $ kotowari --format text check --config ../bad.yaml
-config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words
+config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words, languages, labels
 …
 ```
 

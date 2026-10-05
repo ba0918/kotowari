@@ -1,7 +1,7 @@
 //! 一覧のページ。目次のとおりに入れ子と順番で描き、状態の数を添える（REQ-view-005、REQ-view-016〜018、
 //! REQ-view-021）
 
-use crate::{Block, Document, Part, TocGroup, TocItem, html, parts};
+use crate::{Block, Document, Frame, Part, TocGroup, TocItem, Ui, html, parts};
 use std::collections::BTreeMap;
 
 /// 名前から文書を引く表。目次の名前のうち文書の無いものは描かない（REQ-view-021）
@@ -34,8 +34,8 @@ impl Counts {
         Self {
             pages: 1,
             stale: document.sections.iter().filter(|s| s.stale).count(),
-            open: labels.iter().filter(|label| **label == "未決").count(),
-            planned: labels.iter().filter(|label| **label == "予定").count(),
+            open: labels.iter().filter(|label| **label == "open").count(),
+            planned: labels.iter().filter(|label| **label == "planned").count(),
         }
     }
 
@@ -47,12 +47,15 @@ impl Counts {
     }
 
     /// 文書の項目に添える数。どれも 0 なら何も描かない（REQ-view-016）
-    fn card(&self) -> String {
-        let badges = badges(&[
-            ("見直していない節", "stale", self.stale),
-            ("未決", "open", self.open),
-            ("予定", "planned", self.planned),
-        ]);
+    fn card(&self, ui: Ui) -> String {
+        let badges = badges(
+            ui,
+            &[
+                ("stale_sections", "stale", self.stale),
+                ("open_items", "open", self.open),
+                ("planned_items", "planned", self.planned),
+            ],
+        );
         if badges.is_empty() {
             return badges;
         }
@@ -60,25 +63,31 @@ impl Counts {
     }
 
     /// 目次の群の見出しに添える数。ページの数は常に出す（REQ-view-017）
-    fn group(&self) -> String {
+    fn group(&self, ui: Ui) -> String {
         format!(
-            "<span class=\"counts\"><span class=\"count count-pages\">{} ページ</span>{}</span>",
-            self.pages,
-            badges(&[
-                ("見直していない節", "stale", self.stale),
-                ("未決", "open", self.open)
-            ])
+            "<span class=\"counts\"><span class=\"count count-pages\">{}</span>{}</span>",
+            ui.count("pages", self.pages),
+            badges(
+                ui,
+                &[
+                    ("stale_sections", "stale", self.stale),
+                    ("open_items", "open", self.open)
+                ]
+            )
         )
     }
 }
 
-/// 0 でない数の札。種類ごとの class で色を分ける
-fn badges(words: &[(&str, &str, usize)]) -> String {
+/// 0 でない数の札。UI の文字の鍵の文字に数を入れ、種類ごとの class で色を分ける
+fn badges(ui: Ui, words: &[(&str, &str, usize)]) -> String {
     words
         .iter()
         .filter(|(_, _, count)| *count != 0)
-        .map(|(word, kind, count)| {
-            format!("<span class=\"count count-{kind}\">{word} {count}</span>")
+        .map(|(key, kind, count)| {
+            format!(
+                "<span class=\"count count-{kind}\">{}</span>",
+                ui.count(key, *count)
+            )
         })
         .collect()
 }
@@ -107,18 +116,18 @@ pub(crate) fn anchor(path: &[usize]) -> String {
 }
 
 /// 一覧のページ（REQ-view-005）
-pub(crate) fn page(toc: &TocGroup, documents: &Documents) -> String {
-    let (items, counts) = items(&toc.items, documents, &mut Vec::new());
+pub(crate) fn page(toc: &TocGroup, documents: &Documents, ui: Ui, frame: &Frame) -> String {
+    let (items, counts) = items(&toc.items, documents, &mut Vec::new(), ui);
     let mut body = format!(
         "<main class=\"page index\">\n<header class=\"toc-head\" id=\"{}\">\n<h1>{}</h1>\n{}{}\n</header>\n",
         anchor(&[]),
         html::escape(&toc.title),
         note(toc),
-        counts.group()
+        counts.group(ui)
     );
     body.push_str(&items);
     body.push_str("</main>\n");
-    html::shell(&toc.title, &body)
+    frame.page(crate::INDEX, &toc.title, &body)
 }
 
 fn note(group: &TocGroup) -> String {
@@ -139,7 +148,12 @@ fn group_note(group: &TocGroup) -> String {
 }
 
 /// 項目を書かれた順に描き、その下の数を合わせる（REQ-view-017、REQ-view-021）
-fn items(items: &[TocItem], documents: &Documents, path: &mut Vec<usize>) -> (String, Counts) {
+fn items(
+    items: &[TocItem],
+    documents: &Documents,
+    path: &mut Vec<usize>,
+    ui: Ui,
+) -> (String, Counts) {
     let mut out = String::from("<ul class=\"entries\">\n");
     let mut total = Counts::default();
     for (index, item) in items.iter().enumerate() {
@@ -155,12 +169,12 @@ fn items(items: &[TocItem], documents: &Documents, path: &mut Vec<usize>) -> (St
                     html::href(&format!("{name}.html")),
                     html::escape(&document.title),
                     html::escape(parts::conclusion(&document.lead)),
-                    counts.card()
+                    counts.card(ui)
                 ));
             }
             TocItem::Group(group) => {
                 path.push(index);
-                let (inner, counts) = self::items(&group.items, documents, path);
+                let (inner, counts) = self::items(&group.items, documents, path, ui);
                 total.add(counts);
                 // REQ-view-018: 開いた状態で描き、見出しを選ぶと畳める。スクリプトは使わない。
                 // REQ-view-005: 群の説明は見出しの一部なので、畳んでも見える <summary> の中に描く
@@ -168,7 +182,7 @@ fn items(items: &[TocItem], documents: &Documents, path: &mut Vec<usize>) -> (St
                     "<li class=\"group\" id=\"{}\"><details open>\n<summary><span class=\"group-title\">{}</span>{}{}</summary>\n{inner}</details></li>\n",
                     anchor(path),
                     html::escape(&group.title),
-                    counts.group(),
+                    counts.group(ui),
                     group_note(group)
                 ));
                 path.pop();

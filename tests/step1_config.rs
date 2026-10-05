@@ -1323,3 +1323,92 @@ fn req_014_mutants_equivalents_that_is_not_a_string_stops() {
     let result = kotowari_core::config::Config::parse("mutants:\n  equivalents:\n    - a\n");
     assert!(result.is_err(), "a value that is not a string should stop");
 }
+
+// --- REQ-core-335、REQ-core-352: 言語の一覧と UI の文字の誤り ---
+
+/// 設定の本文を書いて check を走らせる
+fn check_with_config(config: &str) -> std::process::Output {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(tmp.path().join(".kotowari/config.yaml"), config).unwrap();
+    cmd().arg("check").current_dir(tmp.path()).output().unwrap()
+}
+
+/// 直した設定では止まらず、誤った設定では設定の誤りで止まることを確かめる
+fn assert_config_error(valid: &str, invalid: &str) {
+    let output = check_with_config(valid);
+    assert_eq!(output.status.code(), Some(0), "{valid}: {output:?}");
+    let output = check_with_config(invalid);
+    assert_eq!(output.status.code(), Some(2), "{invalid}");
+    assert!(output.stdout.is_empty(), "{invalid}");
+    assert!(
+        String::from_utf8_lossy(&output.stderr).starts_with("config error: "),
+        "{invalid}"
+    );
+}
+
+/// "labels.<tag>" の17の鍵のうち、skip を除いたもの
+fn labels_without(tag: &str, skip: &str) -> String {
+    let keys = [
+        ("language_name", "日本語"),
+        ("index_link", "一覧"),
+        ("pages", "{n} ページ"),
+        ("stale_sections", "見直していない節 {n}"),
+        ("open_items", "未決 {n}"),
+        ("planned_items", "予定 {n}"),
+        ("stale_mark", "見直していない節"),
+        ("outline_stale", "見直していない"),
+        ("superseded", "（置き換え済み）"),
+        ("deferred", "（後回し）"),
+        ("compare_before", "前"),
+        ("compare_after", "後"),
+        ("compare_why", "理由"),
+        ("state_decided", "決定"),
+        ("state_planned", "予定"),
+        ("state_open", "未決"),
+        ("state_dropped", "取り下げ"),
+    ];
+    let mut out = format!("labels:\n  {tag}:\n");
+    for (key, value) in keys {
+        if key != skip {
+            out.push_str(&format!("    {key}: \"{value}\"\n"));
+        }
+    }
+    out
+}
+
+// @kotowari[EX-core-513]
+#[test]
+fn ex_core_513_a_language_tag_with_an_upper_case_letter_stops() {
+    assert_config_error(
+        &format!("languages: [ja, en]\n{}", labels_without("ja", "")),
+        &format!("languages: [ja, EN]\n{}", labels_without("ja", "")),
+    );
+}
+
+// @kotowari[REQ-core-352, EX-core-537]
+#[test]
+fn ex_core_537_labels_of_a_language_other_than_english_missing_a_key_stops() {
+    assert_config_error(
+        &format!("languages: [ja]\n{}", labels_without("ja", "")),
+        &format!("languages: [ja]\n{}", labels_without("ja", "stale_mark")),
+    );
+}
+
+// @kotowari[EX-core-538]
+#[test]
+fn ex_core_538_a_counted_text_without_the_number_placeholder_stops() {
+    assert_config_error(
+        "labels:\n  en:\n    pages: \"{n} pages\"\n",
+        "labels:\n  en:\n    pages: \"pages\"\n",
+    );
+}
+
+// @kotowari[EX-core-539]
+#[test]
+fn ex_core_539_labels_of_a_language_not_in_the_list_stops() {
+    assert_config_error(
+        &format!("languages: [ja]\n{}", labels_without("ja", "")),
+        &labels_without("ja", ""),
+    );
+}

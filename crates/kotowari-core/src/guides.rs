@@ -193,6 +193,13 @@ fn check_stale(
 
 const MARK_START: &str = "@kotowari[";
 
+/// 1つの文書の形の正しい`ガイドの印`の1件の並び。path は空にする
+pub(crate) fn mark_entries(content: &str) -> Vec<GuideEntry> {
+    let mut entries = Vec::new();
+    read_marks("", content, &mut entries, &mut Vec::new());
+    entries
+}
+
 /// 1つの`ガイド`から`ガイドの印`を読む。形の正しい印の1件を entries に、形の誤った印ごとに
 /// invalid_marker を findings に積む（REQ-core-200、REQ-core-202）
 fn read_marks(

@@ -603,3 +603,150 @@ fn req_155_text_writes_dash_for_a_requirement_without_a_verification_line() {
         "REQ-001 - 例 docs/ir/a.md:7 tests=0\n"
     );
 }
+
+// --- REQ-core-152、REQ-core-155: 対の blob hash ---
+
+/// "languages: [ja, en]" と日本語の`UI の文字`のすべての鍵を書いた設定に、extra を足す
+fn make_bilingual_project(tmp: &Path, extra: &str) {
+    make_project(tmp, &[]);
+    let mut config = std::fs::read_to_string(tmp.join(".kotowari/config.yaml")).unwrap();
+    config.push_str("languages: [ja, en]\nlabels:\n  ja:\n");
+    for key in [
+        "language_name",
+        "index_link",
+        "stale_mark",
+        "outline_stale",
+        "superseded",
+        "deferred",
+        "compare_before",
+        "compare_after",
+        "compare_why",
+        "state_decided",
+        "state_planned",
+        "state_open",
+        "state_dropped",
+    ] {
+        config.push_str(&format!("    {key}: \"{key}\"\n"));
+    }
+    for key in ["pages", "stale_sections", "open_items", "planned_items"] {
+        config.push_str(&format!("    {key}: \"{key} {{n}}\"\n"));
+    }
+    config.push_str(extra);
+    std::fs::write(tmp.join(".kotowari/config.yaml"), config).unwrap();
+}
+
+fn blob(text: &str) -> String {
+    kotowari_core::translations::blob_hash(text.as_bytes())
+}
+
+// @kotowari[REQ-core-152, REQ-core-155]
+#[test]
+fn req_155_translations_list_every_pair_with_the_blob_hash_of_each_side() {
+    let tmp = TempDir::new().unwrap();
+    make_bilingual_project(
+        tmp.path(),
+        "guides:\n  files:\n    - \"guides/*.md\"\noverview:\n  files:\n    - \".kotowari/overview/*.md\"\n  toc: .kotowari/toc.yaml\n",
+    );
+    let doc = format!(
+        "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
+        requirement("REQ-001", "例", "review")
+    );
+    write(tmp.path(), "docs/ir/a.md", &doc);
+    write(tmp.path(), "docs/ir/a.en.md", &doc);
+    write(tmp.path(), "docs/ir/b.en.md", "x\n");
+    write(tmp.path(), "guides/g.md", "a\n");
+    write(tmp.path(), ".kotowari/overview/o.md", "# O\n");
+    write(tmp.path(), ".kotowari/toc.yaml", "title: T\n");
+    let v = run_list(tmp.path());
+    let side = |language: &str, path: &str, blob: Option<String>| serde_json::json!({"language": language, "path": path, "blob": blob});
+    let entry = |path: &str, sides: Vec<serde_json::Value>| serde_json::json!({"path": path, "sides": sides});
+    assert_eq!(
+        v["translations"],
+        serde_json::json!([
+            entry(
+                ".kotowari/overview/o.md",
+                vec![
+                    side("ja", ".kotowari/overview/o.md", Some(blob("# O\n"))),
+                    side("en", ".kotowari/overview/o.en.md", None),
+                ]
+            ),
+            entry(
+                ".kotowari/toc.yaml",
+                vec![
+                    side("ja", ".kotowari/toc.yaml", Some(blob("title: T\n"))),
+                    side("en", ".kotowari/toc.en.yaml", None),
+                ]
+            ),
+            entry(
+                "docs/ir/a.md",
+                vec![
+                    side("ja", "docs/ir/a.md", Some(blob(&doc))),
+                    side("en", "docs/ir/a.en.md", Some(blob(&doc))),
+                ]
+            ),
+            entry(
+                "docs/ir/b.md",
+                vec![
+                    side("ja", "docs/ir/b.md", None),
+                    side("en", "docs/ir/b.en.md", Some(blob("x\n"))),
+                ]
+            ),
+            entry(
+                "guides/g.md",
+                vec![
+                    side("ja", "guides/g.md", Some(blob("a\n"))),
+                    side("en", "guides/g.en.md", None),
+                ]
+            ),
+        ])
+    );
+    // "items" は先頭の言語の側だけ
+    assert_eq!(v["items"].as_array().unwrap().len(), 1);
+    let (code, text, _) = run_list_raw(tmp.path(), &["--format", "text"]);
+    assert_eq!(code, Some(0));
+    let lines: Vec<&str> = text.lines().collect();
+    assert_eq!(
+        &lines[lines.len() - 5..],
+        [
+            format!(".kotowari/overview/o.md ja={} en=-", blob("# O\n")),
+            format!(".kotowari/toc.yaml ja={} en=-", blob("title: T\n")),
+            format!("docs/ir/a.md ja={} en={}", blob(&doc), blob(&doc)),
+            format!("docs/ir/b.md ja=- en={}", blob("x\n")),
+            format!("guides/g.md ja={} en=-", blob("a\n")),
+        ]
+    );
+}
+
+// @kotowari[REQ-core-152]
+#[test]
+fn req_152_with_two_languages_list_stops_on_the_guide_places_as_check_does() {
+    let overlap =
+        "tests:\n  files:\n    - \"guides/*.md\"\nguides:\n  files:\n    - \"guides/*.md\"\n";
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), &[]);
+    write(tmp.path(), "guides/g.md", "a\n");
+    let mut config = std::fs::read_to_string(tmp.path().join(".kotowari/config.yaml")).unwrap();
+    config.push_str(overlap);
+    std::fs::write(tmp.path().join(".kotowari/config.yaml"), &config).unwrap();
+    // 言語が1つなら list はガイドを読まない
+    assert_eq!(run_list_raw(tmp.path(), &[]).0, Some(0));
+    let tmp = TempDir::new().unwrap();
+    make_bilingual_project(tmp.path(), overlap);
+    write(tmp.path(), "guides/g.md", "a\n");
+    let (code, stdout, stderr) = run_list_raw(tmp.path(), &[]);
+    assert_eq!(code, Some(2), "{stdout}");
+    let (_, _, check) = assert_cmd::Command::cargo_bin("kotowari")
+        .unwrap()
+        .arg("check")
+        .current_dir(tmp.path())
+        .output()
+        .map(|output| {
+            (
+                output.status.code(),
+                (),
+                String::from_utf8_lossy(&output.stderr).to_string(),
+            )
+        })
+        .unwrap();
+    assert_eq!(stderr, check);
+}

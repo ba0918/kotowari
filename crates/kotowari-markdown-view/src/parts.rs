@@ -1,48 +1,54 @@
 //! 部品を HTML にする（TBL-view-001）。値はスキーマに合うものとして読み、合わない欄は描かない
 
 use crate::html::escape;
-use crate::{Part, Reference, ReferenceState};
+use crate::{Part, Reference, ReferenceState, Ui};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-/// 参照の文字列から参照の表の1件を引く
-pub(crate) struct Refs<'a>(BTreeMap<&'a str, &'a Reference>);
+/// 参照の文字列から参照の表の1件を引く。部品の描き方に要る UI の文字も持つ
+pub(crate) struct Refs<'a> {
+    table: BTreeMap<&'a str, &'a Reference>,
+    pub(crate) ui: Ui<'a>,
+}
 
 impl<'a> Refs<'a> {
-    pub(crate) fn new(references: &'a [Reference]) -> Self {
-        Self(
-            references
+    pub(crate) fn new(references: &'a [Reference], ui: Ui<'a>) -> Self {
+        Self {
+            table: references
                 .iter()
                 .map(|reference| (reference.key.as_str(), reference))
                 .collect(),
-        )
+            ui,
+        }
     }
 
     /// 参照を表示名で描き、選ぶとページを移らずに本文を開く。どの参照もページの外へリンクしない
     /// （REQ-view-008）。表に無い参照は文字のまま描く
     fn draw(&self, key: &str) -> String {
-        let Some(reference) = self.0.get(key) else {
+        let Some(reference) = self.table.get(key) else {
             return format!(
                 "<details class=\"ref\"><summary>{}</summary></details>",
                 escape(key)
             );
         };
+        let mark = |key: &str| format!("<span class=\"ref-mark\">{}</span>", self.ui.text(key));
         let (class, mark) = match reference.state {
-            ReferenceState::Current => ("ref", ""),
-            ReferenceState::Superseded => (
-                "ref ref-superseded",
-                "<span class=\"ref-mark\">（置き換え済み）</span>",
-            ),
-            ReferenceState::Deferred => (
-                "ref ref-deferred",
-                "<span class=\"ref-mark\">（後回し）</span>",
-            ),
+            ReferenceState::Current => ("ref", String::new()),
+            ReferenceState::Superseded => ("ref ref-superseded", mark("superseded")),
+            ReferenceState::Deferred => ("ref ref-deferred", mark("deferred")),
         };
-        format!(
-            "<details class=\"{class}\"><summary>{}{mark}</summary><div class=\"ref-body\">{}</div></details>",
-            escape(&reference.label),
-            escape(&reference.body)
-        )
+        match &reference.body {
+            Some(body) => format!(
+                "<details class=\"{class}\"><summary>{}{mark}</summary><div class=\"ref-body\">{}</div></details>",
+                escape(&reference.label),
+                escape(body)
+            ),
+            // REQ-view-030: 本文の無い参照は表示名だけで描き、選んでも何も開かない
+            None => format!(
+                "<span class=\"{class} ref-plain\">{}{mark}</span>",
+                escape(&reference.label)
+            ),
+        }
     }
 
     /// "refs" の欄の参照の並び
@@ -187,14 +193,15 @@ fn cards(value: &Value) -> String {
     out
 }
 
-/// 状態の札の class。スキーマが許す4つの状態のほかは札の色を付けない
-fn state_class(state: &str) -> &'static str {
+/// 状態の札の class と、札に描く UI の文字の鍵。スキーマが許す4つの状態のほかは札の色を付けない
+/// （TBL-view-001）
+fn state_class(state: &str) -> Option<(&'static str, &'static str)> {
     match state {
-        "決定" => "state-decided",
-        "予定" => "state-planned",
-        "未決" => "state-open",
-        "取り下げ" => "state-dropped",
-        _ => "state-unknown",
+        "decided" => Some(("state-decided", "state_decided")),
+        "planned" => Some(("state-planned", "state_planned")),
+        "open" => Some(("state-open", "state_open")),
+        "dropped" => Some(("state-dropped", "state_dropped")),
+        _ => None,
     }
 }
 
@@ -202,10 +209,12 @@ fn status(value: &Value, refs: &Refs) -> String {
     let mut out = String::from("<ul class=\"status\">");
     for item in list(value, "items") {
         let state = text(item, "state");
+        let (class, label) = match state_class(state) {
+            Some((class, key)) => (class, refs.ui.text(key)),
+            None => ("state-unknown", escape(state)),
+        };
         out.push_str(&format!(
-            "<li><span class=\"badge {}\">{}</span><span class=\"text\">{}</span>{}</li>",
-            state_class(state),
-            escape(state),
+            "<li><span class=\"badge {class}\">{label}</span><span class=\"text\">{}</span>{}</li>",
             escape(text(item, "text")),
             refs.draw_all(item)
         ));
@@ -215,8 +224,12 @@ fn status(value: &Value, refs: &Refs) -> String {
 }
 
 fn compare(value: &Value, refs: &Refs) -> String {
-    let mut out =
-        String::from("<table><thead><tr><th>前</th><th>後</th><th>理由</th></tr></thead><tbody>");
+    let mut out = format!(
+        "<table><thead><tr><th>{}</th><th>{}</th><th>{}</th></tr></thead><tbody>",
+        refs.ui.text("compare_before"),
+        refs.ui.text("compare_after"),
+        refs.ui.text("compare_why")
+    );
     for item in list(value, "items") {
         out.push_str(&format!(
             "<tr><td><del>{}</del></td><td>{}</td><td class=\"why\">{}{}</td></tr>",

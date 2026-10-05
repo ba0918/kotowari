@@ -30,11 +30,12 @@ pub(crate) fn href(name: &str) -> String {
 }
 
 /// 共通のスタイルを相対パスで参照するページの骨格（REQ-view-002）
-pub(crate) fn shell(title: &str, body: &str) -> String {
+pub(crate) fn shell(language: &str, title: &str, body: &str) -> String {
     format!(
-        "<!DOCTYPE html>\n<html lang=\"ja\">\n<head>\n<meta charset=\"utf-8\">\n\
+        "<!DOCTYPE html>\n<html lang=\"{}\">\n<head>\n<meta charset=\"utf-8\">\n\
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
 <title>{}</title>\n<link rel=\"stylesheet\" href=\"style.css\">\n</head>\n<body>\n{body}</body>\n</html>\n",
+        escape(language),
         escape(title)
     )
 }

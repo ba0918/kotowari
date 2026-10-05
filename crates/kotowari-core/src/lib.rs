@@ -30,6 +30,9 @@ mod record_contract_tests;
 #[cfg(test)]
 #[path = "../tests/surface.rs"]
 mod surface_contract_tests;
+#[cfg(test)]
+#[path = "../tests/translations.rs"]
+mod translation_contract_tests;
 pub use comparison::Comparison;
 pub mod config;
 mod deferred;
@@ -58,6 +61,7 @@ mod query;
 pub use query::{QueryItem, Reference};
 mod record_form;
 mod schema;
+pub mod skeleton;
 pub mod sources;
 mod status;
 pub use status::{Documents, Findings, Items, Requirements, Scenarios, Tests};
@@ -65,6 +69,8 @@ pub mod surface;
 pub mod terms;
 mod test_markers;
 pub mod tests_discovery;
+pub mod translations;
+pub mod ui_text;
 
 use std::collections::BTreeMap;
 
@@ -200,6 +206,14 @@ finding_kinds! {
     OverviewTocPageUnknown => "overview_toc_page_unknown",
     OverviewTocPageDuplicate => "overview_toc_page_duplicate",
     OverviewTocGroupEmpty => "overview_toc_group_empty",
+    // 対の指摘（TBL-core-008）
+    TranslationMissing => "translation_missing",
+    TranslationRecordInvalid => "translation_record_invalid",
+    TranslationStale => "translation_stale",
+    TranslationStructureMismatch => "translation_structure_mismatch",
+    TranslationSwitcherInvalid => "translation_switcher_invalid",
+    LinkLanguageMismatch => "link_language_mismatch",
+    LinkToRecord => "link_to_record",
 }
 
 impl FindingKind {

@@ -269,20 +269,34 @@ pub fn split_lines(content: &str) -> Vec<&str> {
 /// （REQ-core-172、REQ-core-175）
 pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopReason> {
     let (directory, name) = filename.rsplit_once('/').unwrap_or(("", filename));
-    let mut document = parse_document_mode(name, content, false)?;
+    let mut document = parse_document_mode(name, DocKind::of(name), content, false)?;
     document.relative_path = filename.into();
+    document.directory = directory.into();
+    Ok(document)
+}
+
+/// `先頭の言語`でない言語の`側`を読む。文書の種類はその`対`の`先頭の言語`の`側`の名前で決まる
+/// （REQ-core-033）。path は`IR`の置き場からの相対パス
+pub(crate) fn parse_side(
+    path: &str,
+    kind: DocKind,
+    content: &str,
+) -> Result<IrDocument, StopReason> {
+    let (directory, name) = path.rsplit_once('/').unwrap_or(("", path));
+    let mut document = parse_document_mode(name, kind, content, false)?;
+    document.relative_path = path.into();
     document.directory = directory.into();
     Ok(document)
 }
 
 fn parse_document_mode(
     filename: &str,
+    kind: DocKind,
     content: &str,
     partial: bool,
 ) -> Result<IrDocument, StopReason> {
     // BOM の読み飛ばし（read_utf8_file でも除去するが、直接呼ばれた場合にも対応）
     let content = content.strip_prefix('\u{FEFF}').unwrap_or(content);
-    let kind = DocKind::of(filename);
     let (values, mut findings) = read_document(filename, kind, content)?;
     let mut items = extract_items(kind, &values, &mut findings, partial)?;
     diagnose_nameless_items(&items, &mut findings, content);
@@ -607,7 +621,7 @@ pub fn parse(
             })?
     };
     let filename = relative.rsplit('/').next().unwrap();
-    let mut document = parse_document_mode(filename, source.text(), true)
+    let mut document = parse_document_mode(filename, DocKind::of(filename), source.text(), true)
         .map_err(|error| crate::InputError::InvalidInput(error.to_string()))?;
     document.relative_path = source.path().to_owned();
     document.directory = relative
