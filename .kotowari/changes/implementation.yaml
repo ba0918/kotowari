@@ -3,8 +3,6 @@
   "entries": [
     {
       "id": "serve-host-implementation",
-      "base": "6fc2e51981b7f8c36f3d3254a2bf484a4e20c2fd",
-      "role": "implementer",
       "files": [
         {
           "path": "src/cli/serve.rs",
@@ -17,6 +15,9 @@
           "after": "sha256:2dfd8013e0b743ec4980feff1f7a784baafa62cec05f03e2db8a73ba85d703ee"
         }
       ],
+      "reason": "The Host restriction is HTTP serving boundary policy and remains in the CLI adapter. A1/A2 and REQ-core-356 require only 127.0.0.1:<served-port> and localhost:<served-port>, ignoring ASCII name case; all other or missing Host values receive an empty 403 before filesystem resolution with no per-request output. respond delegates the pure exact-value comparison to host_allowed before resolve. EX-core-543 tests both accepted names, an external name, the wrong port and missing Host, the returned bodies and silent stdout. Existing serve requests now carry the served port in Host. The comparison against the integrated main retains these implementation and test bytes unchanged; PR19 changes only the distributed skill policy and does not alter the product requirement or serving boundary.",
+      "base": "71e7ba9d64f1b46ca8ff03ca2a8b1b715d87369a",
+      "role": "implementer",
       "ir": [
         {
           "path": "docs/ir/core/overview-commands.md",
@@ -24,7 +25,6 @@
         }
       ],
       "conclusion": "new",
-      "reason": "overview serve listened only on 127.0.0.1 but did not check the Host header, so a site that rebinds its own name to 127.0.0.1 could read the overview pages through the browser. The new decision (A1, A2) and REQ-core-356 with EX-core-543 on both sides of the overview-commands pair say serve answers only Host values 127.0.0.1:<port> and localhost:<port> for the served port, letter case of the name ignored, and returns 403 with an empty body before looking up the path otherwise, including when Host is missing. respond now checks the header with host_allowed before resolve. The new integration test sends the five Host variants of EX-core-543 and failed before the change (200 instead of 403); the test client now sends a Host header with the port. The whole workspace suite passes.",
       "requirements": [
         "REQ-core-356"
       ],
@@ -37,15 +37,16 @@
     },
     {
       "id": "serve-host-changelog-implementation",
-      "base": "6fc2e51981b7f8c36f3d3254a2bf484a4e20c2fd",
-      "role": "implementer",
       "files": [
         {
           "path": "CHANGELOG.md",
-          "before": "sha256:0fe8c8023cb48510d0634eceb2e4b6f4231c3d02fa271daae8bdd2500b6b1de0",
-          "after": "sha256:f82b978cfc590518c0754fb446747d413bdca38c7b790066b568ec0052612144"
+          "before": "sha256:b0007970ea61e137efa91668a821ea9d412a29626440f697b944834bc5e0a162",
+          "after": "sha256:cc0e48cc70513b30db5f991a8f3746af82cc5f3c1aa0e62295a5234dc0545f07"
         }
       ],
+      "reason": "The Unreleased Fixed entry explains the new empty 403 for nonlocal or missing Host and its DNS rebinding motivation, consistent with A1/A2 and REQ-core-356. The integrated changelog preserves the main branch entries describing the distributed skills and IR scope; this comparison adds only the Host restriction entry.",
+      "base": "71e7ba9d64f1b46ca8ff03ca2a8b1b715d87369a",
+      "role": "implementer",
       "ir": [
         {
           "path": "docs/ir/core/overview-commands.md",
@@ -53,7 +54,6 @@
         }
       ],
       "conclusion": "new",
-      "reason": "The Unreleased Fixed section tells users that overview serve now returns an empty 403 to requests whose Host is not 127.0.0.1:<port> or localhost:<port>, including requests without Host, and why (DNS rebinding), as decided in A1 and A2 and specified by REQ-core-356.",
       "requirements": [
         "REQ-core-356"
       ],

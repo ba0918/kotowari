@@ -49,7 +49,10 @@ get them and is never handed the whole list. A request that touches no IR item c
 file. A deferred requirement or deferred scenario (the `- deferred:` line; `deferred` true in the
 list) is specified but not built now: a missing test or implementation for it is not a finding,
 no finding demands one, and the test-side findings a review asks to bring to zero never include
-it.
+it. A changed file the IR does not hold (CI, hooks, release, build configuration; the kotowari
+skill's **What the IR holds**) has no IR counterpart: a missing
+requirement or test for it is not a finding, and no finding asks to add one to the IR. Its
+counterpart is the decision record.
 
 ## Reviewer setup
 
@@ -115,7 +118,8 @@ perspective; no optional seat is attached to conformance. The quality and confor
 - Conformance runs both ways: report required behavior missing from the target and anything in
   the target that cannot be traced to a counterpart heading whose behavior it would break.
   For verification added or changed by the diff, including prose-shaped scenarios and CI checks,
-  apply **Evidence conditions**; if it fails, propose deletion with `auto_fix` and use all existing
+  apply **Evidence conditions** (for a CI or hook gate, the rule it enforces is stated by its
+  decision record, not by the IR); if it fails, propose deletion with `auto_fix` and use all existing
   checks passing after deletion as its oracle. Treat untraceable rules or sections in skill text and
   documents as `human_judgment` because deleting prose requires a judgment about meaning, and flag
   them for the terminal report as absent from the specification.
