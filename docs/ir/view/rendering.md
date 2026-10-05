@@ -47,10 +47,10 @@ view は常に、一覧の`ページ`に、`目次`の題名を見出しとし�
 ### REQ-view-006: 冒頭の結論
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A7, docs/decision/records/2026-10-02-whole-picture.md#A38, docs/decision/records/2026-10-04-overview-on-public-api.md#A10
+- source: docs/decision/records/2026-10-02-whole-picture.md#A7, docs/decision/records/2026-10-02-whole-picture.md#A38, docs/decision/records/2026-10-04-overview-on-public-api.md#A10, docs/decision/records/2026-10-05-overview-page-reading.md#A19
 - verification: unit
 
-view は常に、`文書`の`ページ`の題名の直後に、冒頭の lead の`部品`を描き、続けて lead に続く冒頭の`部品`を並びの順に描き、その後に`節`を並びの順に描く。
+view は常に、`文書`の`ページ`の題名の後に、REQ-view-022 で`アウトライン`を描くときはその`アウトライン`を描き、その後に冒頭の lead の`部品`を描き、続けて lead に続く冒頭の`部品`を並びの順に描き、その後に`節`を並びの順に描く。
 
 ### REQ-view-007: Markdown の文章
 
