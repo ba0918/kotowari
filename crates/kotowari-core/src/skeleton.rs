@@ -103,7 +103,12 @@ pub(crate) fn compare(first: &Skeleton, other: &Skeleton) -> Option<(&'static st
 }
 
 /// 2つの文書の`骨組み`を比べる
-pub fn mismatch(kind: Kind, first: &str, other: &str) -> Option<(&'static str, Option<usize>)> {
+#[cfg(test)]
+pub(crate) fn mismatch(
+    kind: Kind,
+    first: &str,
+    other: &str,
+) -> Option<(&'static str, Option<usize>)> {
     compare(&skeleton(kind, first), &skeleton(kind, other))
 }
 

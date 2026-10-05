@@ -61,7 +61,7 @@ mod query;
 pub use query::{QueryItem, Reference};
 mod record_form;
 mod schema;
-pub mod skeleton;
+pub(crate) mod skeleton;
 pub mod sources;
 mod status;
 pub use status::{Documents, Findings, Items, Requirements, Scenarios, Tests};
