@@ -1,27 +1,4 @@
 {
   "version": 1,
-  "entries": [
-    {
-      "id": "scaffold-routing-review",
-      "base": "821bc845ba7f96dc9a22eacbaec444742d47c905",
-      "role": "reviewer",
-      "files": [
-        {
-          "path": "PROJECT.md",
-          "before": "sha256:8561275328460db3e47b510d5b258063a9298af57db92ea4c083bb8f9778223e",
-          "after": "sha256:f48e7787f1e9d3fa02d305b0873e8d36f2c256bfb4336cbbc8524a66a6803e35"
-        }
-      ],
-      "ir": [],
-      "conclusion": "new",
-      "reason": "Verified against git diff origin/main HEAD: only AGENTS.md, PROJECT.md, the decision record and the change records differ; PROJECT.md Build and test section equals origin/main. AGENTS.md rows match every installed ba0918-routing value (always, ci, commit, delegate, design, diff-review, document, implement, mutation, release, review, rust, worktree) with the gui row omitted per A1. The PROJECT.md sentence preserves the meaning of the two removed kotowari rows (kotowari skill for IR docs and check findings; kotowari-using-workflow instead of ba0918-using-workflow). kotowari check shows notices only; the implementation-phase changes check reports nothing.",
-      "requirements": [],
-      "decisions": [
-        "docs/decision/records/2026-10-06-agent-instructions.md#A1",
-        "docs/decision/records/2026-10-06-agent-instructions.md#A2"
-      ],
-      "handoff": null,
-      "gaps": []
-    }
-  ]
+  "entries": []
 }
