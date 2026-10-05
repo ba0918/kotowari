@@ -24,7 +24,7 @@ pub enum Kind {
 
 /// 部分の1つの要素。value が同じなら一致する
 #[derive(Debug, Clone)]
-pub(crate) struct Element {
+pub struct Element {
     pub(crate) value: String,
     pub(crate) line: Option<usize>,
 }

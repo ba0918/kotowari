@@ -704,3 +704,165 @@ fn ex_core_529_contents_that_differ_only_in_titles_and_notes_match() {
         [pair(".kotowari/toc.en.yaml", "toc")]
     );
 }
+
+// @kotowari[REQ-core-346, EX-core-530]
+#[test]
+fn ex_core_530_correct_switcher_lines_raise_nothing() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), JA_EN, GUIDES);
+    write(
+        tmp.path(),
+        "guides/a.md",
+        "# A\n\n日本語 | [English](a.en.md)\n\n本文。\n",
+    );
+    write(
+        tmp.path(),
+        "guides/a.en.md",
+        "# A\n\n[日本語](a.md) | English\n\nText.\n",
+    );
+    let report = check(tmp.path());
+    assert!(
+        findings(&report, "translation_switcher_invalid").is_empty(),
+        "{report}"
+    );
+}
+
+// @kotowari[EX-core-531]
+#[test]
+fn ex_core_531_a_missing_switcher_line_reports_the_line_it_should_be() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), JA_EN, GUIDES);
+    write(tmp.path(), "guides/b.md", "# B\n\n本文。\n");
+    write(
+        tmp.path(),
+        "guides/b.en.md",
+        "# B\n\n[日本語](b.md) | English\n",
+    );
+    let report = check(tmp.path());
+    assert_eq!(
+        findings(&report, "translation_switcher_invalid"),
+        [(
+            "guides/b.md".to_string(),
+            Value::from(3),
+            "日本語 | [English](b.en.md)".to_string()
+        )]
+    );
+}
+
+// @kotowari[EX-core-532]
+#[test]
+fn ex_core_532_overview_data_has_no_switcher_line() {
+    let tmp = TempDir::new().unwrap();
+    overview_pairs(tmp.path());
+    let report = check(tmp.path());
+    assert!(
+        findings(&report, "translation_switcher_invalid")
+            .iter()
+            .all(|(path, _, _)| !path.starts_with(".kotowari/")),
+        "{report}"
+    );
+}
+
+// @kotowari[REQ-core-346]
+#[test]
+fn req_core_346_a_switcher_line_is_not_the_scope_of_an_ir_document() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), JA_EN, "");
+    let with = |switcher: &str, scope: &str| {
+        topic("REQ-001", "文。").replace("# A\n\nScope.\n", &format!("# A\n\n{switcher}\n{scope}"))
+    };
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &with("日本語 | [English](a.en.md)", "\n範囲。\n"),
+    );
+    write(
+        tmp.path(),
+        "docs/ir/a.en.md",
+        &with("[日本語](a.md) | English", "\nScope.\n"),
+    );
+    let report = check(tmp.path());
+    assert!(findings(&report, "missing_scope").is_empty(), "{report}");
+    assert!(
+        findings(&report, "translation_switcher_invalid").is_empty(),
+        "{report}"
+    );
+    // 切り替えの行だけでは文書が扱う範囲にならない
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        &with("日本語 | [English](a.en.md)", ""),
+    );
+    let report = check(tmp.path());
+    assert_eq!(
+        paths_and_details(&report, "missing_scope"),
+        [pair("docs/ir/a.md", "a.md")]
+    );
+}
+
+/// EX-core-533 の IR の対と、英語のガイド
+fn guide_linking(tmp: &Path, english: &str) {
+    make_project(tmp, JA_EN, GUIDES);
+    write(tmp, "docs/ir/a.md", &topic("REQ-001", "文。"));
+    write(tmp, "docs/ir/a.en.md", &topic("REQ-001", "Text."));
+    write(
+        tmp,
+        "guides/g.md",
+        "# G\n\n日本語 | [English](g.en.md)\n\n本文。\n",
+    );
+    write(tmp, "guides/g.en.md", english);
+}
+
+// @kotowari[REQ-core-347, REQ-core-348, EX-core-533]
+#[test]
+fn ex_core_533_an_english_guide_linking_the_japanese_ir_is_an_error() {
+    let tmp = TempDir::new().unwrap();
+    guide_linking(
+        tmp.path(),
+        "# G\n\n[日本語](g.md) | English\n\nSee [a](../docs/ir/a.md#REQ-001).\n",
+    );
+    let report = check(tmp.path());
+    assert_eq!(
+        findings(&report, "link_language_mismatch"),
+        [(
+            "guides/g.en.md".to_string(),
+            Value::from(5),
+            "../docs/ir/a.md#REQ-001".to_string()
+        )]
+    );
+}
+
+// @kotowari[EX-core-534]
+#[test]
+fn ex_core_534_links_to_the_same_language_outside_or_inside_the_page_are_not_errors() {
+    let tmp = TempDir::new().unwrap();
+    guide_linking(
+        tmp.path(),
+        "# G\n\n[日本語](g.md) | English\n\nSee [a](../docs/ir/a.en.md#other), [b](https://example.com/a.md) and [c](#top).\n",
+    );
+    let report = check(tmp.path());
+    assert!(
+        findings(&report, "link_language_mismatch").is_empty(),
+        "{report}"
+    );
+}
+
+// @kotowari[REQ-core-349, EX-core-535]
+#[test]
+fn ex_core_535_a_link_to_a_decision_record_is_an_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), JA_EN, GUIDES);
+    write(
+        tmp.path(),
+        "guides/g.md",
+        "# G\n\n[r](../docs/decision/records/r.md#A1)\n",
+    );
+    let report = check(tmp.path());
+    assert_eq!(
+        findings(&report, "link_to_record")
+            .into_iter()
+            .map(|(path, line, _)| (path, line))
+            .collect::<Vec<_>>(),
+        [("guides/g.md".to_string(), Value::from(3))]
+    );
+}

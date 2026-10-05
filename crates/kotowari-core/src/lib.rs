@@ -211,6 +211,9 @@ finding_kinds! {
     TranslationRecordInvalid => "translation_record_invalid",
     TranslationStale => "translation_stale",
     TranslationStructureMismatch => "translation_structure_mismatch",
+    TranslationSwitcherInvalid => "translation_switcher_invalid",
+    LinkLanguageMismatch => "link_language_mismatch",
+    LinkToRecord => "link_to_record",
 }
 
 impl FindingKind {

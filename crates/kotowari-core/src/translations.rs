@@ -247,7 +247,7 @@ fn read_record(pair: &Pair) -> Result<std::collections::BTreeMap<String, String>
 }
 
 /// 欠けた側、`一致の記録`、古い側の`指摘`（REQ-core-338、REQ-core-339、REQ-core-341）
-fn pair_findings(pair: &Pair, findings: &mut Vec<Finding>) {
+fn pair_findings(pair: &Pair, context: &Context, findings: &mut Vec<Finding>) {
     let missing = |path: &str, detail: &str| {
         Finding::new(
             FindingKind::TranslationMissing,
@@ -266,7 +266,7 @@ fn pair_findings(pair: &Pair, findings: &mut Vec<Finding>) {
     for side in pair.others().iter().filter(|side| side.content.is_none()) {
         findings.push(missing(&first.path, &side.path));
     }
-    structure_findings(pair, findings);
+    structure_findings(pair, context, findings);
     match read_record(pair) {
         Err(detail) => findings.push(Finding::new(
             FindingKind::TranslationRecordInvalid,
@@ -308,18 +308,270 @@ fn skeleton_kind(pair: &Pair) -> crate::skeleton::Kind {
     }
 }
 
-/// REQ-core-345: ほかの言語の`側`の`骨組み`が`先頭の言語`の`側`と食い違えば、`側`ごとに1件
-fn structure_findings(pair: &Pair, findings: &mut Vec<Finding>) {
-    let Some(first) = &pair.first().content else {
-        return;
-    };
-    let kind = skeleton_kind(pair);
-    let expected = crate::skeleton::skeleton(kind, first.text());
-    for side in pair.others() {
-        let Some(content) = &side.content else {
-            continue;
+/// 検査に要る設定と、すべての`対`の`側`のパスからその言語と`先頭の言語`の`側`のパスへの対応
+pub(crate) struct Context {
+    languages: Vec<String>,
+    /// `言語の一覧`の順の、各言語の`UI の文字`の "language_name"
+    names: Vec<String>,
+    records: String,
+    adr: String,
+    sides: std::collections::BTreeMap<String, (String, String)>,
+}
+
+impl Context {
+    pub(crate) fn new(pairs: &Pairs, config: &crate::config::Config) -> Self {
+        let languages = config.languages();
+        let names = languages
+            .iter()
+            .map(|language| {
+                config
+                    .ui_text(language)
+                    .get("language_name")
+                    .unwrap_or("")
+                    .to_string()
+            })
+            .collect();
+        let sides = pairs
+            .iter()
+            .flat_map(|pair| {
+                pair.sides.iter().map(|side| {
+                    (
+                        side.path.clone(),
+                        (side.language.clone(), pair.path().to_string()),
+                    )
+                })
+            })
+            .collect();
+        Self {
+            languages,
+            names,
+            records: config.decisions.records.clone(),
+            adr: config.decisions.adr.clone(),
+            sides,
+        }
+    }
+
+    /// その`側`のあるべき`切り替えの行`（REQ-core-346）
+    pub(crate) fn switcher(&self, first: &str, language: &str) -> String {
+        self.languages
+            .iter()
+            .zip(&self.names)
+            .map(|(other, name)| {
+                if other == language {
+                    name.clone()
+                } else {
+                    let target = side_path(first, other, &self.languages);
+                    format!("[{name}]({})", file_name(&target))
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" | ")
+    }
+}
+
+/// `題名`の行と、`題名`の後の最初の空でない行（`題名`が無ければファイルの最初の空でない行）
+fn switcher_candidate(text: &str) -> (Option<usize>, Option<(usize, &str)>) {
+    let lines = crate::ir::split_lines(text);
+    let title = lines.iter().position(|line| line.starts_with("# "));
+    let from = title.map_or(0, |title| title + 1);
+    let candidate = lines
+        .iter()
+        .enumerate()
+        .skip(from)
+        .find(|(_, line)| !line.trim().is_empty())
+        .map(|(index, line)| (index + 1, *line));
+    (title.map(|title| title + 1), candidate)
+}
+
+/// `切り替えの行`と同じ行を空にした文。行の番号は変わらない。言語が1つなら文のまま（REQ-core-346）
+pub(crate) fn without_switcher(
+    config: &crate::config::Config,
+    first: &str,
+    language: &str,
+    text: &str,
+) -> Option<String> {
+    if config.languages().len() < 2 {
+        return None;
+    }
+    let expected = Context::new(&Pairs::default(), config).switcher(first, language);
+    switcher_line(text, &expected).map(|line| blank_line(text, line))
+}
+
+/// あるべき`切り替えの行`と同じ行。無ければ None
+pub(crate) fn switcher_line(text: &str, expected: &str) -> Option<usize> {
+    match switcher_candidate(text).1 {
+        Some((line, found)) if found == expected => Some(line),
+        _ => None,
+    }
+}
+
+/// その行を空にした文。行の番号は変わらない
+pub(crate) fn blank_line(text: &str, line: usize) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    let mut number = 1;
+    loop {
+        let end = rest.find(['\n', '\r']).unwrap_or(rest.len());
+        if number != line {
+            out.push_str(&rest[..end]);
+        }
+        let ending = if rest[end..].starts_with("\r\n") {
+            2
+        } else {
+            (end < rest.len()) as usize
         };
-        let actual = crate::skeleton::skeleton(kind, content.text());
+        out.push_str(&rest[end..end + ending]);
+        rest = &rest[end + ending..];
+        number += 1;
+        if rest.is_empty() {
+            return out;
+        }
+    }
+}
+
+/// `切り替えの行`を持つ`対`か（REQ-core-346、`全体像の元データ`と`目次`は持たない）
+fn has_switcher(place: Place) -> bool {
+    matches!(place, Place::Ir | Place::Guide)
+}
+
+/// リンクを検査する`対`か（REQ-core-347）
+fn has_links(place: Place) -> bool {
+    !matches!(place, Place::Toc)
+}
+
+/// 1つの`側`を検査し、`切り替えの行`を空にした文を返す（REQ-core-346〜REQ-core-349）
+fn side_text(pair: &Pair, side: &Side, context: &Context, findings: &mut Vec<Finding>) -> String {
+    let text = side.content.as_ref().map_or("", |content| content.text());
+    let mut checked = text.to_string();
+    if has_switcher(pair.place) {
+        let expected = context.switcher(pair.path(), &side.language);
+        match switcher_line(text, &expected) {
+            Some(line) => checked = blank_line(text, line),
+            None => {
+                let (title, candidate) = switcher_candidate(text);
+                findings.push(Finding::new(
+                    FindingKind::TranslationSwitcherInvalid,
+                    side.path.clone(),
+                    candidate.map(|(line, _)| line).or(title),
+                    expected,
+                ));
+            }
+        }
+    }
+    if has_links(pair.place) {
+        for link in links(&checked) {
+            let Some(target) = target(&side.path, &link.destination) else {
+                continue;
+            };
+            if let Some((language, _)) = context.sides.get(&target)
+                && *language != side.language
+            {
+                findings.push(Finding::new(
+                    FindingKind::LinkLanguageMismatch,
+                    side.path.clone(),
+                    Some(link.line),
+                    link.destination.clone(),
+                ));
+            }
+            let record = |place: &str| crate::sources::is_under_place(&target, place);
+            if record(&context.records) || record(&context.adr) {
+                findings.push(Finding::new(
+                    FindingKind::LinkToRecord,
+                    side.path.clone(),
+                    Some(link.line),
+                    link.destination,
+                ));
+            }
+        }
+    }
+    checked
+}
+
+/// CommonMark のリンクと画像の行き先と、リンクの参照の定義の行き先
+struct Link {
+    destination: String,
+    line: usize,
+}
+
+fn links(text: &str) -> Vec<Link> {
+    fn walk(node: &markdown::mdast::Node, out: &mut Vec<Link>) {
+        use markdown::mdast::Node;
+        let destination = match node {
+            Node::Link(link) => Some(&link.url),
+            Node::Image(image) => Some(&image.url),
+            Node::Definition(definition) => Some(&definition.url),
+            _ => None,
+        };
+        if let (Some(destination), Some(position)) = (destination, node.position()) {
+            out.push(Link {
+                destination: destination.clone(),
+                line: position.start.line,
+            });
+        }
+        for child in node.children().into_iter().flatten() {
+            walk(child, out);
+        }
+    }
+    let mut out = Vec::new();
+    if let Ok(root) = crate::markdown::parse(text) {
+        walk(&root, &mut out);
+    }
+    out
+}
+
+/// 検査するリンクの行き先を、その`側`のあるディレクトリから辿った`基準のディレクトリ`からの相対パスに
+/// する。スキームか "#" で始まる行き先は検査しないので None（REQ-core-347）
+fn target(side: &str, destination: &str) -> Option<String> {
+    let mut chars = destination.chars();
+    let scheme = chars.next().is_some_and(|c| c.is_ascii_alphabetic())
+        && chars
+            .take_while(|c| *c != ':')
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '+' | '.' | '-'))
+        && destination.contains(':');
+    if scheme || destination.starts_with('#') {
+        return None;
+    }
+    let path = destination.split(['#', '?']).next().unwrap_or(destination);
+    let (directory, _) = split_directory(side);
+    Some(crate::normalize_path(&format!("{directory}{path}")))
+}
+
+/// `骨組み`の link の部分。ほかの言語の`側`を指す行き先はその`対`の`先頭の言語`の`側`に読み替える
+/// （TBL-core-044）
+fn link_part(path: &str, text: &str, context: &Context) -> Vec<crate::skeleton::Element> {
+    links(text)
+        .into_iter()
+        .filter_map(|link| {
+            let target = target(path, &link.destination)?;
+            let target = context
+                .sides
+                .get(&target)
+                .map_or(target, |(_, first)| first.clone());
+            Some(crate::skeleton::Element {
+                value: target,
+                line: Some(link.line),
+            })
+        })
+        .collect()
+}
+
+/// REQ-core-345: ほかの言語の`側`の`骨組み`が`先頭の言語`の`側`と食い違えば、`側`ごとに1件
+fn structure_findings(pair: &Pair, context: &Context, findings: &mut Vec<Finding>) {
+    let kind = skeleton_kind(pair);
+    let skeleton = |side: &Side, findings: &mut Vec<Finding>| {
+        let text = side_text(pair, side, context, findings);
+        let mut skeleton = crate::skeleton::skeleton(kind, &text);
+        if matches!(pair.place, Place::Guide | Place::OverviewData) {
+            skeleton.push(("link", link_part(&side.path, &text, context)));
+        }
+        skeleton
+    };
+    let expected = skeleton(pair.first(), findings);
+    for side in pair.others() {
+        if side.content.is_none() {
+            continue;
+        }
+        let actual = skeleton(side, findings);
         if let Some((part, line)) = crate::skeleton::compare(&expected, &actual) {
             findings.push(Finding::new(
                 FindingKind::TranslationStructureMismatch,
@@ -356,10 +608,11 @@ impl Pairs {
         }
     }
     /// すべての`対`の`指摘`
-    pub(crate) fn findings(&self) -> Vec<Finding> {
+    pub(crate) fn findings(&self, config: &crate::config::Config) -> Vec<Finding> {
+        let context = Context::new(self, config);
         let mut findings = Vec::new();
         for pair in self.iter() {
-            pair_findings(pair, &mut findings);
+            pair_findings(pair, &context, &mut findings);
         }
         findings
     }
@@ -380,8 +633,9 @@ fn ir_relative(place: &str, path: &str) -> String {
 /// 文書の種類は`先頭の言語`の`側`の名前で決まり（REQ-core-033）、文書はパスのバイト順に並ぶ
 pub(crate) fn ir_sides(
     pairs: &Pairs,
-    place: &str,
+    config: &crate::config::Config,
 ) -> Result<std::collections::BTreeMap<String, Vec<crate::ir::IrDocument>>, crate::StopReason> {
+    let place = config.ir.as_str();
     let mut sides: std::collections::BTreeMap<String, Vec<crate::ir::IrDocument>> =
         std::collections::BTreeMap::new();
     for pair in pairs.iter().filter(|pair| pair.place == Place::Ir) {
@@ -394,7 +648,9 @@ pub(crate) fn ir_sides(
                 continue;
             };
             let path = ir_relative(place, &side.path);
-            let document = crate::ir::parse_side(&path, kind, content.text())?;
+            let text = without_switcher(config, pair.path(), &side.language, content.text());
+            let text = text.as_deref().unwrap_or(content.text());
+            let document = crate::ir::parse_side(&path, kind, text)?;
             sides
                 .entry(side.language.clone())
                 .or_default()

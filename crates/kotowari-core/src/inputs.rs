@@ -394,7 +394,11 @@ impl ReadPreparation {
     }
     fn parse_ir(&mut self, source: &Text, relative: &str) -> Result<(), crate::StopReason> {
         let (directory, filename) = relative.rsplit_once('/').unwrap_or(("", relative));
-        let mut doc = crate::ir::parse_document(filename, &source.text)?;
+        // REQ-core-346: `切り替えの行`は`文書が扱う範囲`の行に数えず、文の検査も受けない
+        let config = &self.policy.config;
+        let first = config.languages().remove(0);
+        let text = crate::translations::without_switcher(config, relative, &first, &source.text);
+        let mut doc = crate::ir::parse_document(filename, text.as_deref().unwrap_or(&source.text))?;
         doc.relative_path = relative.into();
         doc.directory = directory.into();
         self.docs.push(doc);
@@ -711,9 +715,10 @@ impl CheckPreparation {
         Ok(())
     }
     fn finish(mut self) -> Result<Inspection, crate::StopReason> {
-        self.findings.extend(self.translations.findings());
+        self.findings
+            .extend(self.translations.findings(self.read.config()));
         // REQ-core-342: ほかの言語の`側`の文の検査と、"files" と "lines" に数えるすべての`側`
-        let sides = crate::translations::ir_sides(&self.translations, &self.read.config().ir)?;
+        let sides = crate::translations::ir_sides(&self.translations, self.read.config())?;
         let (mut side_files, mut side_lines) = (0, 0);
         for documents in sides.values() {
             crate::translations::side_findings(

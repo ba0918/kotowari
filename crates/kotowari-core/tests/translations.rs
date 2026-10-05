@@ -359,3 +359,180 @@ fn tbl_core_044_contents_compare_nesting_names_and_whether_a_note_is_present() {
         ],
     );
 }
+
+/// texts のパスと中身から`対`を作る。`一致の記録`は無い
+fn pair_of(
+    place: crate::translations::Place,
+    first: &str,
+    languages: &[String],
+    texts: &[(&str, &str)],
+) -> crate::translations::Pair {
+    crate::translations::Pair::read::<()>(
+        place,
+        first,
+        languages,
+        |path| {
+            Ok(texts
+                .iter()
+                .find(|(name, _)| *name == path)
+                .map(|(_, text)| crate::translations::SideText::new(text.as_bytes(), *text)))
+        },
+        None,
+    )
+    .unwrap()
+}
+
+fn ja_en() -> (Config, Vec<String>) {
+    let config = Config::parse(&format!(
+        "languages: [ja, en]\nlabels:\n{}",
+        complete_labels("ja", "J")
+    ))
+    .unwrap();
+    let languages = config.languages();
+    (config, languages)
+}
+
+/// 種類ごとの "line"
+fn lines_of(findings: &[crate::Finding], kind: &str) -> Vec<Option<usize>> {
+    findings
+        .iter()
+        .filter(|finding| finding.kind() == kind)
+        .map(crate::Finding::line)
+        .collect()
+}
+
+// @kotowari[REQ-core-027, TBL-core-019]
+#[test]
+fn req_core_027_lines_of_the_pair_findings() {
+    use crate::translations::{Pairs, Place};
+    let (config, languages) = ja_en();
+    let mut pairs = Pairs::default();
+    // 欠けた側と一致の記録: null
+    pairs.insert(pair_of(
+        Place::Guide,
+        "g/a.md",
+        &languages,
+        &[("g/a.md", "# A\n")],
+    ));
+    // 切り替えの行: その行、題名の行、null
+    pairs.insert(pair_of(
+        Place::Guide,
+        "g/b.md",
+        &languages,
+        &[("g/b.md", "# B\n\nText.\n"), ("g/b.en.md", "# B\n")],
+    ));
+    pairs.insert(pair_of(
+        Place::Guide,
+        "g/c.md",
+        &languages,
+        &[("g/c.md", "")],
+    ));
+    // 骨組みとリンク: 食い違った要素とリンクの行
+    pairs.insert(pair_of(
+        Place::Guide,
+        "g/d.md",
+        &languages,
+        &[
+            ("g/d.md", "# D\n\nJdlanguage_name | [English](d.en.md)\n\n## X\n\n[r](../docs/decision/records/r.md)\n"),
+            ("g/d.en.md", "# D\n\n[Jlanguage_name](d.md) | English\n\n### X\n\n[a](a.md)\n"),
+        ],
+    ));
+    let findings = pairs.findings(&config);
+    assert_eq!(lines_of(&findings, "translation_missing"), [None, None]);
+    assert!(
+        lines_of(&findings, "translation_record_invalid")
+            .iter()
+            .all(Option::is_none)
+    );
+    assert_eq!(
+        lines_of(&findings, "translation_switcher_invalid"),
+        [Some(1), Some(3), Some(1), None, Some(3)]
+    );
+    assert_eq!(
+        lines_of(&findings, "translation_structure_mismatch"),
+        [Some(5)]
+    );
+    assert_eq!(lines_of(&findings, "link_to_record"), [Some(7)]);
+    // d.md の3行目は切り替えの行と同じでないので、そのリンクも検査する
+    assert_eq!(
+        lines_of(&findings, "link_language_mismatch"),
+        [Some(3), Some(7)]
+    );
+}
+
+// @kotowari[TBL-core-044]
+#[test]
+fn tbl_core_044_link_parts_compare_destinations_read_as_the_first_language_side() {
+    use crate::translations::{Pairs, Place};
+    let (config, languages) = ja_en();
+    for place in [Place::Guide, Place::OverviewData] {
+        let mut pairs = Pairs::default();
+        let first = "# A\n\n[x](b.md#one) [y](https://example.com)\n";
+        pairs.insert(pair_of(
+            place,
+            "g/b.md",
+            &languages,
+            &[("g/b.md", "# B\n"), ("g/b.en.md", "# B\n")],
+        ));
+        for (other, mismatch) in [
+            ("# A\n\n[x](b.en.md#two) [y](https://example.org)\n", false),
+            ("# A\n\n[x](c.md)\n", true),
+        ] {
+            let mut pairs = pairs.clone();
+            pairs.insert(pair_of(
+                place,
+                "g/a.md",
+                &languages,
+                &[("g/a.md", first), ("g/a.en.md", other)],
+            ));
+            let found: Vec<_> = pairs
+                .findings(&config)
+                .into_iter()
+                .filter(|finding| {
+                    finding.kind() == "translation_structure_mismatch"
+                        && finding.path() == "g/a.en.md"
+                })
+                .map(|finding| finding.detail().to_string())
+                .collect();
+            let expected: &[&str] = if mismatch { &["link"] } else { &[] };
+            assert_eq!(found, expected, "{place:?} {other}");
+        }
+    }
+}
+
+// @kotowari[TBL-core-044]
+#[test]
+fn tbl_core_044_the_switcher_line_is_not_in_the_skeleton() {
+    use crate::translations::{Pairs, Place};
+    let (config, languages) = ja_en();
+    let mut pairs = Pairs::default();
+    // 英語の側の切り替えの行のリンクは、先頭の言語の側のリンクと数が合わなくても食い違わない
+    pairs.insert(pair_of(
+        Place::Guide,
+        "g/a.md",
+        &languages,
+        &[
+            (
+                "g/a.md",
+                "# A\n\nJlanguage_name | [English](a.en.md)\n\n[x](x.md)\n",
+            ),
+            (
+                "g/a.en.md",
+                "# A\n\n[Jlanguage_name](a.md) | English\n\n[x](x.md)\n",
+            ),
+        ],
+    ));
+    let findings = pairs.findings(&config);
+    assert!(
+        lines_of(&findings, "translation_structure_mismatch").is_empty(),
+        "{findings:?}"
+    );
+    assert!(
+        lines_of(&findings, "link_language_mismatch").is_empty(),
+        "{findings:?}"
+    );
+    assert!(
+        lines_of(&findings, "translation_switcher_invalid").is_empty(),
+        "{findings:?}"
+    );
+}
