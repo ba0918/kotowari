@@ -1,8 +1,8 @@
 [package]
 name = "kotowari-markdown-schema"
 version = "0.1.0"
-edition = "2024"
-rust-version = "1.89"
+edition.workspace = true
+rust-version.workspace = true
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/ba0918/kotowari"
 readme = "README.md"
@@ -27,3 +27,6 @@ serde_path_to_error = "0.1"
 proptest = "1"
 assert_cmd = "2"
 tempfile = "3"
+
+[lints]
+workspace = true
