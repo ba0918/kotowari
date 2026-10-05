@@ -248,6 +248,13 @@ impl<'a> Inspection<'a> {
                 }
                 None
             }
+            parts::Checked::Unreadable(at) => {
+                // 中身の1行目はフェンスの開始の次の行なので、中身の行をそのまま足すとファイルの行になる
+                let line = at.map_or(line, |at| Some(part.line + at));
+                let detail = format!("{} (yaml)", part.kind);
+                self.error(FindingKind::OverviewPartInvalid, path, line, detail);
+                None
+            }
             parts::Checked::Valid(value) => {
                 let mut keys = Vec::new();
                 parts::references(&value, &mut keys);
