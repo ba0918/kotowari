@@ -2,7 +2,7 @@
 
 English | [日本語](index.ja.md)
 
-<!-- @kotowari[REQ-core-001:f6b868d0] -->
+<!-- @kotowari[REQ-core-001:4ea3a019] -->
 
 kotowari is a CLI that mechanically checks a specification (the IR) written in Markdown.
 You write requirements, decision tables and scenarios in a fixed form, and `kotowari check` confirms that each one has a source in a decision record and is tied to tests.

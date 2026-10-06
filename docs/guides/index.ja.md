@@ -2,7 +2,7 @@
 
 [English](index.md) | 日本語
 
-<!-- @kotowari[REQ-core-001:f6b868d0] -->
+<!-- @kotowari[REQ-core-001:4ea3a019] -->
 
 kotowari は、Markdown で書いた仕様（IR）を機械的に検査する CLI です。
 要求・決定表・シナリオを決まった形で書き、それぞれが決定の記録に出典を持ち、テストに結び付いているかを `kotowari check` が確かめます。

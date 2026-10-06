@@ -28,7 +28,7 @@ So `check` and `status` never disagree.
 
 ## Synopsis
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-004:2d3401d1] -->
+<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-004:7719a0bd] -->
 
 ```sh
 kotowari status [--format json|text] [--config <path>]
@@ -41,7 +41,7 @@ It takes no positional arguments.
 
 ## Options and arguments
 
-<!-- @kotowari[REQ-core-166:68151ef8, REQ-core-003:b4f59e48, REQ-core-011:0b7f52a9] -->
+<!-- @kotowari[REQ-core-166:68151ef8, REQ-core-003:8ac6759c, REQ-core-011:0b7f52a9] -->
 
 | Name | Value | Default | Description |
 |---|---|---|---|
@@ -238,5 +238,3 @@ Fix the two globs so they do not overlap ([Configuration](../config.md)).
 - Kinds of findings: [Findings](../findings.md)
 - Common options, stopping and the base directory: [CLI basics](../cli.md)
 - Configuration file: [Configuration](../config.md)
-
-`complete` does not guarantee that the current Git diff has been checked for change conformance. Before merging, make both `check` and `changes --phase review` over the whole branch from the comparison base succeed.

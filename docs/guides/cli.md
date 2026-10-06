@@ -2,15 +2,15 @@
 
 English | [日本語](cli.ja.md)
 
-<!-- @kotowari[REQ-core-001:f6b868d0] -->
+<!-- @kotowari[REQ-core-001:4ea3a019] -->
 
-This page collects the rules shared by kotowari's eight commands.
+This page collects the rules shared by kotowari's seven commands.
 It covers the syntax, the common options, how findings are printed, the exit codes, the standard error output when kotowari stops, and the base for paths.
 For the details of each command, see its own page.
 
 ## Syntax
 
-<!-- @kotowari[REQ-core-001:f6b868d0, REQ-core-002:f86e2efd, EX-core-380:f7f73b4e] -->
+<!-- @kotowari[REQ-core-001:4ea3a019, REQ-core-002:f86e2efd, EX-core-380:f7f73b4e] -->
 
 ```sh
 kotowari <command> [--format json|text] [--config <path>] [argument]
@@ -20,7 +20,7 @@ kotowari --help
 kotowari --version
 ```
 
-There are exactly these eight commands.
+There are exactly these seven commands.
 
 | Command | What it does | Page |
 |---|---|---|
@@ -38,12 +38,12 @@ The order of positional arguments and options does not matter for any command ei
 
 ## Common options
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:b4f59e48, REQ-core-107:7c6198ca, REQ-core-297:481b26d5] -->
+<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:8ac6759c, REQ-core-107:7c6198ca, REQ-core-297:481b26d5] -->
 
 | Name | Value | Default | Description | Accepted by |
 |---|---|---|---|---|
 | `--format` | `json` or `text` | `json` | The output format | Everything except `overview serve` |
-| `--config` | Path to a configuration file | `.kotowari/config.yaml` in the base directory | Changes which configuration file is read. Normally relative to the **current directory**. For `changes` it is relative to the Git root, and the configuration of the target snapshot is read | `check`, `list`, `query`, `status`, `mutants`, `changes`, `overview build`, `overview serve` |
+| `--config` | Path to a configuration file | `.kotowari/config.yaml` in the base directory | Changes which configuration file is read. Relative to the **current directory** | `check`, `list`, `query`, `status`, `mutants`, `overview build`, `overview serve` |
 | `--help` | None | — | Prints usage to standard output and exits with code 0 | All |
 | `--version` | None | — | Prints the version to standard output and exits with code 0 | All |
 | `--tool` | `cargo-mutants` | None (required) | The tool that produced the result file | `mutants` only |
@@ -59,7 +59,7 @@ The configuration keys are in [config.md](config.md).
 
 ## How findings are printed
 
-`check`, `mutants`, `plan` and `changes` print each problem they find as one "finding".
+`check`, `mutants` and `plan` print each problem they find as one "finding".
 Findings have the same form in all of these commands.
 What each kind means and how to fix it is in [findings.md](findings.md).
 
@@ -145,7 +145,7 @@ Anything that breaks the premise of reading a file or the configuration as a who
 
 ### Reasons for stopping
 
-<!-- @kotowari[TBL-core-018:c435229b, TBL-core-020:d87686da, TBL-core-001:0d8e4c30] -->
+<!-- @kotowari[TBL-core-018:c435229b, TBL-core-020:52850b57, TBL-core-001:0d8e4c30] -->
 
 | Text on the first line | Reason | Detail | Typical situations |
 |---|---|---|---|
@@ -154,7 +154,6 @@ Anything that breaks the premise of reading a file or the configuration as a who
 | `unreadable file` | Unreadable file | The relative path and the OS error message | A location directory does not exist, a file or directory cannot be read, the target of `surface.unspecified` or `overview.toc` does not exist |
 | `non-UTF-8 file` | File not in UTF-8 | The relative path | One of the files read is not UTF-8 (of the surface files, only those in a surface rule's language are read) |
 | `results error` | Results error | The relative path of the result file and a description of the error | The result file for `mutants` is malformed |
-| `git error` | Git read stopped | A description of the history, target or index that could not be read | Git is missing, REV does not resolve to a commit, the configuration is not in the target, a conflicted index, an unsupported target |
 | `mapping error` | Mapping error | A description of the finding kind or value that could not be mapped | An internal inconsistency in kotowari. Not expected to happen from user input |
 | `overview error` | Overview data error | The number of errors and ` errors in overview data; run kotowari check` | In `overview build` or `serve`, the overview data or the table of contents has errors, or a pair of the IR, the overview data or the table of contents has `translation_missing` or `translation_structure_mismatch`. Nothing is written |
 | `port error` | Port error | `127.0.0.1:<port>: ` and the OS error message | In `overview serve`, the given port cannot be used (no other port is tried), or accepting a connection failed while serving |
@@ -164,12 +163,12 @@ All the situations are in [TBL-core-001 of cli.md](../ir/core/cli.md) and [TBL-c
 
 ### Argument errors
 
-<!-- @kotowari[REQ-core-004:2d3401d1, EX-core-219:f3123493, EX-core-241:38290f77, REQ-core-304:e9cd623d] -->
+<!-- @kotowari[REQ-core-004:7719a0bd, EX-core-219:f17bce41, EX-core-241:6a451e97, REQ-core-304:e9cd623d] -->
 
 kotowari stops with `argument error` when any of the following applies (unless `--help` or `--version` is present).
 
 - There are no arguments at all, or only options and no command
-- The first positional argument is not one of the eight commands
+- The first positional argument is not one of the seven commands
 - An unknown option, `--tool` on a command other than `mutants`, `--port` on a command other than `overview serve`, `--format` on `overview serve`, or `--allow-test-findings` on a command other than `check`
 - After `overview` there is not exactly one positional argument, or it is not `build` or `serve`
 - The value of `--port` is not a decimal integer from 1 to 65535
@@ -237,7 +236,6 @@ $ kotowari --help
 Usage: kotowari [OPTIONS] <COMMAND> [ARGUMENT]
 
 Commands:
-  changes    Check change records against a Git base and target snapshot
   check      Check IR documents and test markers
   list       List IR items and the tests marked for them
   mutants    Read a mutation testing result file and report survivors
@@ -246,7 +244,6 @@ Commands:
   query      Show one item or scenario with its body and back references
   status     Summarise the IR and tell whether it is complete
 
-Changes: --base <REV> (--head <REV> | --staged) --phase <implementation|review>
 Options:
   --format <FORMAT>      Output format: json (default) or text
   --config <PATH>        Path to configuration file
@@ -259,11 +256,11 @@ Options:
 
 ### Stopping on a wrong argument
 
-<!-- @kotowari[REQ-core-004:2d3401d1, REQ-core-005:fee48254, EX-core-219:f3123493] -->
+<!-- @kotowari[REQ-core-004:7719a0bd, REQ-core-005:fee48254, EX-core-219:f17bce41] -->
 
 ```console
 $ kotowari
-argument error: expected command: check, changes, list, mutants, overview, plan, query or status
+argument error: expected command: check, list, mutants, overview, plan, query or status
 $ kotowari check --verbose
 argument error: unknown option: --verbose
 $ kotowari check --format xml
@@ -284,7 +281,7 @@ $ echo $?
 
 ### Stopping on file and configuration problems
 
-<!-- @kotowari[TBL-core-018:c435229b, TBL-core-020:d87686da] -->
+<!-- @kotowari[TBL-core-018:c435229b, TBL-core-020:52850b57] -->
 
 In the example below, the comments mean, in order: `docs/decision/adr` does not exist; `docs/ir/greet/bad.md` is not UTF-8; `limits` was mistyped as `limit`; the `language` of `rules/c.yml` is `cobol`.
 
@@ -294,12 +291,12 @@ unreadable file: docs/decision/adr: No such file or directory (os error 2)
 $ kotowari check --format text      # docs/ir/greet/bad.md が UTF-8 でない
 non-UTF-8 file: docs/ir/greet/bad.md
 $ kotowari check --config bad.yaml  # limits を limit と書き間違えた
-config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words, languages, labels
+config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
  --> <input>:2:1
   |
 1 | ir: docs/ir
 2 | limit:
-  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words, languages, labels
+  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
 3 |   lines: 20
   |
 $ kotowari check --format text      # rules/c.yml の language が cobol
@@ -313,7 +310,7 @@ Only the form of the first line is fixed.
 
 ### Running from a subdirectory
 
-<!-- @kotowari[TBL-core-003:603e9601, PROP-core-001:9be33697, REQ-core-003:b4f59e48] -->
+<!-- @kotowari[TBL-core-003:603e9601, PROP-core-001:9be33697, REQ-core-003:8ac6759c] -->
 
 Even when you run it in `tests/` below the directory that has `.kotowari/`, the base is the directory above that has `.kotowari/`.
 Paths in the output are relative to the base, not to `tests/`.
@@ -333,7 +330,7 @@ To point at the base's configuration file from `tests/`, you need `../`.
 $ kotowari check --config .kotowari/config.yaml
 argument error: config file not found: .kotowari/config.yaml
 $ kotowari --format text check --config ../bad.yaml
-config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words, languages, labels
+config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
 …
 ```
 
@@ -352,7 +349,7 @@ When you pipe the JSON into `jq`, `jq` gets empty input and prints nothing, whic
 
 ### `config file not found` even though you passed `--config`
 
-<!-- @kotowari[REQ-core-003:b4f59e48, PROP-core-001:9be33697] -->
+<!-- @kotowari[REQ-core-003:8ac6759c, PROP-core-001:9be33697] -->
 
 The `--config` path is read relative to the current directory, not the base directory.
 If you are running in a subdirectory, add `../` or use an absolute path.

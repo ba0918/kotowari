@@ -3,11 +3,11 @@
 [English](config.md) | 日本語
 
 kotowari が読む場所（IR、判断の記録、テスト、ガイド、面のファイル、全体像の元データ）と、検査に使う値を書く YAML のファイルです。
-`changes` 以外はファイルが無ければ既定の値で動くので、既定から変えたいキーだけを書きます。
+ファイルが無ければ既定の値で動くので、既定から変えたいキーだけを書きます。
 
 ## 書式
 
-<!-- @kotowari[REQ-core-013:f8877aec, REQ-core-017:4a231543, TBL-core-004:322d11b1] -->
+<!-- @kotowari[REQ-core-013:f8877aec, REQ-core-017:4a231543, TBL-core-004:3b95b98e] -->
 
 すべてのキーを既定の値で書くと次のようになります。
 キーは入れ子の形で書きます（`decisions:` の下に `records:`）。
@@ -48,13 +48,13 @@ limits:
 vague_words: [適切に, 必要に応じて, 通常は, など]
 ```
 
-`changes`、`mutants.equivalents`、`surface.unspecified`、`overview`、`languages`、`labels` は既定が「鍵が無い」状態です。
+`mutants.equivalents`、`surface.unspecified`、`overview`、`languages`、`labels` は既定が「鍵が無い」状態です。
 上の例の値は書き方を示すためのもので、既定ではありません。
 `surface.unspecified` は `surface.rules` が空の一覧のまま書くと止まるので、例では `#` で外しています（[`surface.*`](#surfacefilessurfacerulessurfaceunspecified)）。
 
 ## キーの一覧
 
-<!-- @kotowari[TBL-core-004:322d11b1, REQ-core-325:ba483356] -->
+<!-- @kotowari[TBL-core-004:3b95b98e, REQ-core-325:ba483356] -->
 
 | キー | 値の型 | 既定 | 説明 |
 |---|---|---|---|
@@ -72,9 +72,6 @@ vague_words: [適切に, 必要に応じて, 通常は, など]
 | `surface.unspecified` | パス（文字列） | 無し | 未記載の面の一覧のファイル。無ければ一覧は0件 |
 | `overview.files` | glob の一覧 | `overview` の省略可。記載時は必須 | 全体像の元データの置き場。`overview` が無ければ全体像の元データを読まず、`overview build` と `serve` は止まる |
 | `overview.toc` | パス（文字列） | `overview` の省略可。記載時は必須 | 全体像の目次のファイル。一覧のページの入れ子と順番を決める。`overview` があれば `check`、`status`、`overview build`、`overview serve` が読み、指す先が無いか読めなければ止まる |
-| `changes.files` | 相対 glob の文字列一覧 | `changes` の省略可。記載時は必須・空不可 | 変更を照合する対象 |
-| `changes.exclude` | 相対 glob の文字列一覧 | 空 | 変更の対象から外すファイル |
-| `changes.records` | 相対 glob の文字列一覧 | 記載時は必須・空不可 | YAML 照合記録 |
 | `limits.lines` | 正の整数 | `200` | IR の文書の行数の上限。超えると `too_many_lines` の注意 |
 | `limits.requirements` | 正の整数 | `10` | 1つの文書の要求の数の上限。超えると `too_many_requirements` の注意 |
 | `vague_words` | 語の一覧 | `適切に`、`必要に応じて`、`通常は`、`など` | 曖昧語。IR の文に含まれると `vague_word` の誤り |
@@ -131,7 +128,7 @@ UI の文字は、全体像のページと切り替えの行に kotowari が書�
 
 ## 設定ファイルの場所
 
-<!-- @kotowari[REQ-core-011:0b7f52a9, REQ-core-003:b4f59e48, REQ-core-020:2b67aa66] -->
+<!-- @kotowari[REQ-core-011:0b7f52a9, REQ-core-003:8ac6759c, REQ-core-020:2b67aa66] -->
 
 | 指定 | 読むファイル |
 |---|---|
@@ -199,7 +196,7 @@ EX-001 - 1000円の注文は900円になる docs/ir/discount.md:27 tests=1
 
 ## 一覧のキー
 
-<!-- @kotowari[REQ-core-015:44b9e418, REQ-core-016:e918e282] -->
+<!-- @kotowari[REQ-core-015:44b9e418, REQ-core-016:cca736db] -->
 
 一覧のキー（`tests.files`、`guides.files`、`vague_words` など）には一覧だけを書きます。
 書いた一覧は既定の一覧に足されるのではなく、**置き換え**ます。
@@ -214,7 +211,7 @@ tests:
 
 ## glob の読み方
 
-<!-- @kotowari[REQ-core-019:178b0f0c, REQ-core-079:589c548b] -->
+<!-- @kotowari[REQ-core-019:10278003, REQ-core-079:589c548b] -->
 
 `tests.files`、`guides.files`、`surface.files`、`overview.files` の glob は次のように読みます。
 
@@ -227,7 +224,7 @@ tests:
 | ファイルのシンボリックリンク | 読む。先が無ければ止まる |
 | ソケット、名前付きパイプ、デバイス | 読まない |
 
-照合記録の `changes.records` と全体像の元データの `overview.files` は例外として、パス成分で明示した隠しディレクトリ（`.kotowari/overview/*.md` の `.kotowari` など）を読みます。名指ししない隠し配下は広い `**` でも除外します。
+全体像の元データの `overview.files` は例外として、パス成分で明示した隠しディレクトリ（`.kotowari/overview/*.md` の `.kotowari` など）を読みます。名指ししない隠し配下は広い `**` でも除外し、波括弧の中だけで名指しした隠しディレクトリ（`{.overview,other}/*.md`）は名指しに数えません。
 
 走査は基準のディレクトリの全体（隠しディレクトリを除く）を歩いてから glob で選びます。
 そのため、glob に当たらない場所にある読めないディレクトリでも止まります。
@@ -381,7 +378,7 @@ $ echo $?
 
 ## 設定の誤り
 
-<!-- @kotowari[REQ-core-014:4f851c96, EX-core-003:a69bc60c, EX-core-383:dac73d9d, REQ-core-225:be4cdd0b, REQ-core-280:1b9f50df, TBL-core-004:322d11b1, REQ-core-326:fb819a40, REQ-core-335:b51997f0, REQ-core-352:7b5a3a7f] -->
+<!-- @kotowari[REQ-core-014:4f851c96, EX-core-003:a69bc60c, EX-core-383:dac73d9d, REQ-core-225:be4cdd0b, REQ-core-280:1b9f50df, TBL-core-004:3b95b98e, REQ-core-326:fb819a40, REQ-core-335:b51997f0, REQ-core-352:7b5a3a7f] -->
 
 次のどれかがあると、kotowari は検査を行わずに止まります（終了コード 2）。
 標準エラーの1行目は `config error: ` で始まり、設定ファイルのパスと理由が続きます。
@@ -486,12 +483,12 @@ ir: docs/ir
 limit:
   lines: 100
 $ kotowari check --format text
-config error: .kotowari/config.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words, languages, labels
+config error: .kotowari/config.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
  --> <input>:2:1
   |
 1 | ir: docs/ir
 2 | limit:
-  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words, languages, labels
+  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
 3 |   lines: 100
   |
 $ echo $?
@@ -557,18 +554,3 @@ $ echo $?
 - テストの見つけ方と印: [テストに印を付ける](marks.ja.md)
 - ガイドの置き場と印: [ガイドを書く](writing-guides.ja.md)
 - 指摘の種類: [指摘の一覧](findings.ja.md)
-
-## 変更照合の設定
-
-`changes` を省略すると check/status は照合記録を読まず、changes コマンドは設定の誤りで停止します。`changes.files` と `changes.records` は明示して空でない一覧にします。各 glob は基準からの相対で、未知の鍵・null・空文字・不正な glob は停止します。
-
-```yaml
-changes:
-  files: ["src/**", "crates/**", "tests/**", "agent/skills/**", "Cargo.toml", "Cargo.lock", "lefthook.yml", ".github/workflows/**", "scripts/**"]
-  exclude: []
-  records: [".kotowari/changes/*.yaml"]
-```
-
-changes は Git ルートを基準に対象 snapshot の設定を読みます。`--config` も Git ルートからの相対です。Git に含まれる隠しディレクトリも glob が当たれば含めます。IR・判断の記録・使用する設定と照合記録自身は差分の対象から外し、参照として検査します。対象に選ばれた symlink、submodule、UTF-8 でないパスは停止します。通常の check/status は作業ツリーを読みます。
-
-`changes.records` は明示した隠しディレクトリ（例 `.kotowari/changes`）を check/status でも読みます。名指していない隠しディレクトリは広い `**` では読みません。この導入例の固定 `implementation.yaml`・`review.yaml` は運用の約束で、別の配置も設定できます。

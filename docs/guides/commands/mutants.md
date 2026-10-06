@@ -19,7 +19,7 @@ Options may appear before the command or after the results file (`kotowari --too
 
 ## Options and arguments
 
-<!-- @kotowari[REQ-core-149:1ac13c99, REQ-core-021:ccedd28b, REQ-core-011:0b7f52a9, REQ-core-003:b4f59e48] -->
+<!-- @kotowari[REQ-core-149:1ac13c99, REQ-core-021:ccedd28b, REQ-core-011:0b7f52a9, REQ-core-003:8ac6759c] -->
 
 | Name | Value | Default | Description |
 |---|---|---|---|
