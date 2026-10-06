@@ -10,8 +10,6 @@ who gets which section; everything below this paragraph is pasted as written.
 - Artifact: leave it judgeable by an independent review and pass its format check.
 - Deletion: completion is all existing checks passing after the deletion; no failing test is
   needed.
-- In conditions 3 and 4, the specification means the project's specification, or its public
-  user-facing documentation when none exists; supported environments are those it declares.
 - Stop and ask before an irreversible or privileged operation, a dangerous target, or an accident
   that would spread.
 - One concern per commit; stage with `git add <path>` only; never disable hooks; never name a

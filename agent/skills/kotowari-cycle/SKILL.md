@@ -82,8 +82,8 @@ Every prompt is self-contained; never assume a delegate loaded a skill or read t
 
 Paste `references/editing-contract.md` as written: its **Editing contract** to the fixer and the
 consistency phase, its **Fixer only** to the fixer alone. Immediately below the contract, paste
-the first paragraph from the kotowari-review skill's `references/oracle-evidence.md`. Keep no copy
-of either in this file.
+the **Conditions** section of the kotowari-review skill's `references/oracle-evidence.md`. Keep no
+copy of either in this file.
 
 When implement or the fixer returns a commit a hook stopped on an IR-side finding, run the
 consistency phase as in step 2, the blocked change in the worktree included in its range, then
