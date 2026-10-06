@@ -140,22 +140,12 @@ fn assert_argument_error(list: &[&str]) {
 fn req_core_004_allow_test_findings_on_a_command_other_than_check_stops() {
     for list in [
         &[
-            "changes",
-            "--base",
-            "HEAD",
-            "--head",
-            "HEAD",
-            "--phase",
-            "review",
-            "--allow-test-findings",
-        ][..],
-        &[
             "--allow-test-findings",
             "mutants",
             "--tool",
             "cargo-mutants",
             "outcomes.json",
-        ],
+        ][..],
         &["plan", "a.md", "--allow-test-findings"],
         &["list", "--allow-test-findings"],
         &["query", "REQ-001", "--allow-test-findings"],

@@ -1,6 +1,5 @@
 use kotowari::{
-    ChangesReport, CheckReport, Finding, ListItem, MutantsReport, PlanReport, QueryReport,
-    ReadList, StatusReport,
+    CheckReport, Finding, ListItem, MutantsReport, PlanReport, QueryReport, ReadList, StatusReport,
 };
 use serde_json::{Value, json};
 
@@ -132,38 +131,4 @@ pub fn plan(value: &PlanReport) -> Value {
 pub fn mutants(value: &MutantsReport) -> Value {
     let m = value.mutants();
     json!({"findings":findings(value.findings()),"counts":value.counts(),"mutants":{"caught":m.caught(),"survived":m.survived(),"timeout":m.timeout(),"unviable":m.unviable(),"equivalent":m.equivalent()}})
-}
-pub fn changes(value: &ChangesReport) -> Value {
-    json!({"base":value.base(),"target":value.target(),"phase":value.phase(),"files":value.files(),"covered":value.covered(),"findings":findings(value.findings())})
-}
-
-#[cfg(test)]
-mod tests {
-    // @kotowari[REQ-core-249, REQ-core-254, EX-core-439]
-    #[test]
-    fn status_json_has_no_change_record_tally() {
-        let dir = tempfile::tempdir().unwrap();
-        std::fs::create_dir_all(dir.path().join(".kotowari")).unwrap();
-        std::fs::create_dir_all(dir.path().join("docs/ir")).unwrap();
-        std::fs::create_dir_all(dir.path().join("docs/changes")).unwrap();
-        std::fs::create_dir_all(dir.path().join("docs/decision/records")).unwrap();
-        std::fs::create_dir_all(dir.path().join("docs/decision/adr")).unwrap();
-        std::fs::write(
-            dir.path().join(".kotowari/config.yaml"),
-            "changes:\n  files: ['src/**']\n  records: ['docs/changes/**']\n",
-        )
-        .unwrap();
-        std::fs::write(
-            dir.path().join("docs/changes/test.yaml"),
-            "version: 2\nentries: []\n",
-        )
-        .unwrap();
-        let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
-            .unwrap()
-            .status()
-            .unwrap();
-        assert!(result.findings().error() > 0);
-        let value = super::status(&result);
-        assert!(value.get("changes").is_none());
-    }
 }

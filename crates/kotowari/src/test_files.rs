@@ -82,13 +82,13 @@ pub fn collect_files(
 }
 
 /// glob の一覧に当たるファイルを集める。隠しディレクトリは、glob がパスの成分で名指ししたものだけに入る
-/// （REQ-core-019 の "changes.records" と "overview.files" の例外）。ほかは `collect_files` と同じ走査で、
+/// （REQ-core-019 の "overview.files" の例外）。ほかは `collect_files` と同じ走査で、
 /// (`基準のディレクトリ`からの相対パス, 絶対パス) を相対パスのバイト順に並べて返す
 pub fn collect_named_hidden(
     base: &std::path::Path,
     patterns: &[String],
 ) -> Result<Vec<(String, std::path::PathBuf)>, kotowari_core::StopReason> {
-    let records = kotowari_core::change_records::glob(patterns);
+    let wanted = kotowari_core::config::glob_set(patterns);
     let hidden_prefixes: Vec<String> = patterns
         .iter()
         .flat_map(|pattern| {
@@ -103,7 +103,7 @@ pub fn collect_named_hidden(
                 .collect::<Vec<_>>()
         })
         .collect();
-    let named_hidden = kotowari_core::change_records::glob(&hidden_prefixes);
+    let named_hidden = kotowari_core::config::glob_set(&hidden_prefixes);
     let relative = |path: &std::path::Path| {
         path.strip_prefix(base)
             .unwrap_or(path)
@@ -140,7 +140,7 @@ pub fn collect_named_hidden(
         } else {
             entry.file_type().is_file()
         };
-        if is_file && records.is_match(&path) {
+        if is_file && wanted.is_match(&path) {
             files.push((path, entry.path().to_path_buf()));
         }
     }

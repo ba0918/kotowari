@@ -1,11 +1,8 @@
 use kotowari::{
-    ChangesReport, CheckReport, Finding, MutantsReport, Phase, PlanReport, Project, ProjectOptions,
-    QueryReport, ReadList, StatusReport, Target, Tool,
+    CheckReport, Finding, MutantsReport, PlanReport, Project, ProjectOptions, QueryReport,
+    ReadList, StatusReport, Tool,
 };
-use std::{
-    collections::BTreeMap,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 mod list;
 mod output;
 mod query;
@@ -77,13 +74,6 @@ impl Format {
 /// 引数の解析結果
 #[derive(Debug)]
 pub enum Cli {
-    Changes {
-        format: Format,
-        config_path: Option<PathBuf>,
-        base: String,
-        target: Target,
-        phase: Phase,
-    },
     /// 検査を行う
     Check {
         format: Format,
@@ -137,8 +127,8 @@ pub enum Cli {
 }
 
 /// REQ-core-001: 1つ目の位置引数として受けるコマンド
-const COMMANDS: [&str; 8] = [
-    "changes", "check", "list", "mutants", "overview", "plan", "query", "status",
+const COMMANDS: [&str; 7] = [
+    "check", "list", "mutants", "overview", "plan", "query", "status",
 ];
 
 /// serve の既定のポート（REQ-core-297）
@@ -178,7 +168,6 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     let mut saw_tool = false;
     let mut saw_port = false;
     let mut port: Option<String> = None;
-    let mut change_options = BTreeMap::new();
     let mut allow_test_findings = false;
     let mut i = 0;
 
@@ -191,18 +180,6 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                 ));
             }
             allow_test_findings = true;
-            i += 1;
-            continue;
-        }
-        if ["--base", "--head", "--phase"].contains(&arg.as_str()) {
-            if change_options.contains_key(arg) {
-                return Err(StopReason::ArgumentError(format!("repeated option: {arg}")));
-            }
-            i += 1;
-            let value = args
-                .get(i)
-                .ok_or_else(|| StopReason::ArgumentError(format!("{arg} requires a value")))?;
-            change_options.insert(arg.clone(), value.clone());
             i += 1;
             continue;
         }
@@ -245,8 +222,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
 
     let Some(command) = command else {
         return Err(StopReason::ArgumentError(
-            "expected command: check, changes, list, mutants, overview, plan, query or status"
-                .to_string(),
+            "expected command: check, list, mutants, overview, plan, query or status".to_string(),
         ));
     };
 
@@ -261,48 +237,6 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     if allow_test_findings && command != "check" {
         return Err(StopReason::ArgumentError(format!(
             "unexpected option for {command}: --allow-test-findings"
-        )));
-    }
-    if command == "changes" {
-        if tool.is_some() || !positionals.is_empty() {
-            return Err(StopReason::ArgumentError(
-                "unexpected changes argument".into(),
-            ));
-        }
-        let base = change_options
-            .remove("--base")
-            .ok_or_else(|| StopReason::ArgumentError("changes requires --base".into()))?;
-        let phase = Phase::parse(
-            &change_options
-                .remove("--phase")
-                .ok_or_else(|| StopReason::ArgumentError("changes requires --phase".into()))?,
-        )
-        .map_err(|error| {
-            StopReason::ArgumentError(
-                error
-                    .to_string()
-                    .strip_prefix("argument error: ")
-                    .unwrap_or(&error.to_string())
-                    .to_owned(),
-            )
-        })?;
-        let head = change_options.remove("--head");
-        let target = Target::Commit(
-            head.ok_or_else(|| StopReason::ArgumentError("changes requires --head".into()))?,
-        );
-        let format = Format::parse(format_str.as_deref().unwrap_or("json"))
-            .map_err(StopReason::ArgumentError)?;
-        return Ok(Cli::Changes {
-            format,
-            config_path,
-            base,
-            target,
-            phase,
-        });
-    }
-    if !change_options.is_empty() {
-        return Err(StopReason::ArgumentError(format!(
-            "unexpected change option for {command}"
         )));
     }
     // REQ-core-190: plan は設定を読まないので "--config" を受けない。指す先を見る前に止める
@@ -455,22 +389,6 @@ pub fn run(args: &[String]) -> u8 {
     };
 
     match cli {
-        Cli::Changes {
-            format,
-            config_path,
-            base,
-            target,
-            phase,
-        } => with_cwd(|cwd| {
-            let result = run_changes(cwd, &base, target, phase, config_path.as_deref())?;
-            match format {
-                Format::Json => {
-                    println!("{}", output::changes(&result))
-                }
-                Format::Text => print_findings_as_text(result.findings()),
-            }
-            Ok(exit_code_for(result.findings()))
-        }),
         // REQ-core-107: 検査を行わず、使い方か版を出して終了コード0
         Cli::Help => {
             print_help();
@@ -679,7 +597,6 @@ fn print_help() {
     println!("Usage: kotowari [OPTIONS] <COMMAND> [ARGUMENT]");
     println!();
     println!("Commands:");
-    println!("  changes    Check change records against a Git base and target snapshot");
     println!("  check      Check IR documents and test markers");
     println!("  list       List IR items and the tests marked for them");
     println!("  mutants    Read a mutation testing result file and report survivors");
@@ -688,7 +605,6 @@ fn print_help() {
     println!("  query      Show one item or scenario with its body and back references");
     println!("  status     Summarise the IR and tell whether it is complete");
     println!();
-    println!("Changes: --base <REV> --head <REV> --phase <implementation|review>");
     println!("Options:");
     println!("  --format <FORMAT>      Output format: json (default) or text");
     println!("  --config <PATH>        Path to configuration file");
@@ -732,18 +648,5 @@ fn run_mutants(
     Ok(project(cwd, config)?.mutants(&kotowari::MutantsOptions {
         tool,
         results: results.into(),
-    })?)
-}
-fn run_changes(
-    cwd: &Path,
-    base: &str,
-    target: Target,
-    phase: Phase,
-    config: Option<&Path>,
-) -> Result<ChangesReport, StopReason> {
-    Ok(project(cwd, config)?.changes(&kotowari::ChangesOptions {
-        base: base.into(),
-        target,
-        phase,
     })?)
 }

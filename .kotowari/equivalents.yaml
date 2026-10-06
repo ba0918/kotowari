@@ -69,39 +69,6 @@
     落とすテストの試み: 主セッションが、マクロの開き括弧と同じ行と、閉じ括弧と同じ行に普通のテストを置く配置を考え、
     外のテストの始まりが中の関数の鍵とその1前の間に入れないことをソースで確かめた（2026-09-24）。
 
-- file: crates/kotowari/src/git_snapshot.rs
-  change: "replace || with && in blobs"
-  text: "if fields.len() != 3 || fields[0] != expected || fields[1] != \"blob\" {"
-  class: equivalent
-  why: >-
-    git cat-file --batch の見出しの検査。git が返す見出しは、読めた blob なら「要求した ID、blob、大きさ」の3つ、
-    無い・曖昧な ID なら「ID、missing（ambiguous）」の2つだけで、入力の順に返る。
-    どちらの || を && にしても、3つの見出しでは ID と blob が一致するので通り、2つの見出しでは
-    fields[1] が blob でないので誤りになり、元と同じ結果になる。ID が食い違う3つの見出しや blob 以外の種類は、
-    blob の ID だけを入力の順に渡すこの呼び出しには git が作らない。
-    落とすテストの試み: 主セッションが、存在しない blob を求めたときの git の出力（2つの見出し）で両方の変異の
-    分岐を追い、元と同じく git error になることを確かめた（2026-10-01）。
-
-- file: crates/kotowari/src/git_snapshot.rs
-  change: "replace || with && in blobs"
-  text: "if remaining.len() <= size || remaining[size] != b'\\n' {"
-  class: equivalent
-  why: >-
-    blob の中身の直後に改行があるかの検査。git cat-file --batch は中身の全バイトと改行を書いてから次へ進み、
-    途中で終われば終了状態が失敗になる。終了状態はこの解析の前に確かめて git error で止めるので、
-    成功した出力が途中で切れることも、中身の直後が改行でないことも起きない。
-    落とすテストの試み: 主セッションが、終了状態の検査がこの解析より前にあることをソースで確かめ、
-    成功した git の出力ではこの条件が常に偽になることを確かめた（2026-10-01）。
-
-- file: crates/kotowari/src/git_snapshot.rs
-  change: "replace byte_path -> PathBuf with Default::default()"
-  text: "PathBuf::from(String::from_utf8_lossy(bytes).as_ref())"
-  class: equivalent
-  why: >-
-    #[cfg(not(unix))] の版の byte_path で、変異テストを回す Linux ではコンパイルされず、どの出力も変わらない。
-    unix の版は別の行にあり、変異はそちらで検査される。
-    落とすテストの試み: Linux のビルドにこの関数が含まれないことを cfg の属性で確かめた（2026-10-01）。
-
 - file: crates/kotowari-markdown-schema/src/ast.rs
   change: 'replace ParseError::detail -> &str with ""'
   text: '&self.0'

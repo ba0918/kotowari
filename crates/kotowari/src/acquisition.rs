@@ -1,7 +1,4 @@
-use crate::{
-    change_records, guides, ir, overview, sources, surface, test_files as tests_discovery,
-    translations,
-};
+use crate::{guides, ir, overview, sources, surface, test_files as tests_discovery, translations};
 use kotowari_core::*;
 use std::{
     collections::BTreeMap,
@@ -192,8 +189,7 @@ pub fn load_config(
         | StopReason::UnreadableFile(_)
         | StopReason::NonUtf8File(_)
         | StopReason::ResultsError(_)
-        | StopReason::MappingError(_)
-        | StopReason::GitError(_)) => other,
+        | StopReason::MappingError(_)) => other,
     })
 }
 
@@ -271,7 +267,6 @@ pub fn load_list(cwd: &Path, config_path: Option<&Path>) -> Result<ReadList, Sto
 pub fn load_with_guides(cwd: &Path, config_path: Option<&Path>) -> Result<Inspection, StopReason> {
     let (read, tests, mut assembly) = load_read(cwd, config_path)?;
     let base = find_base(cwd);
-    let changes = change_records::read_texts(&base, read.config())?;
     // REQ-core-280: ガイドとテストの重なり（REQ-core-199）を先に判定する
     let guides = guides::read_texts(&base, &read, &mut assembly)?;
     let guide_paths: Vec<&str> = guides
@@ -283,7 +278,6 @@ pub fn load_with_guides(cwd: &Path, config_path: Option<&Path>) -> Result<Inspec
         overview::read_texts(&base, read.config(), &guide_paths, &tests, &mut assembly)?;
     let overview = overview::group(&read, overview_texts);
     let mut preparation = read.prepare_repository_inspection();
-    preparation.changes(changes)?;
     preparation.guides(guides)?;
     let (surface, unspecified) = surface::analyze(&base, preparation.config())?;
     preparation.surface(surface, unspecified)?;
@@ -295,7 +289,7 @@ pub fn load_with_guides(cwd: &Path, config_path: Option<&Path>) -> Result<Inspec
 /// build と serve の読み取り: check と同じ設定と置き場から IR と判断の記録と`テストのファイル`を読み、
 /// `全体像の元データ`を読んで検査し描画の入力を作る（REQ-core-278、REQ-core-280）。
 /// "overview" の鍵が無ければ設定の誤りで止まる（REQ-core-279）。ガイドは`対`を集めるためだけに読み、
-/// その検査と面と照合記録は読まない
+/// その検査と面は読まない
 pub fn load_overview(
     cwd: &Path,
     config_path: Option<&Path>,

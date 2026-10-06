@@ -19,13 +19,7 @@ fn condition(kind: FindingKind) -> Condition {
         | FindingKind::TestWithoutId => Condition::Always,
         FindingKind::InvalidMarker | FindingKind::UnresolvedReference => Condition::InTestFile,
         FindingKind::UnparsableFile => Condition::InTestFileNotSurface,
-        FindingKind::ChangeStale
-        | FindingKind::ChangeIrStale
-        | FindingKind::ChangeUncovered
-        | FindingKind::ChangeDeferred
-        | FindingKind::ChangeConclusionConflict
-        | FindingKind::ChangeRecordInvalid
-        | FindingKind::AlgorithmWithoutDefinition
+        FindingKind::AlgorithmWithoutDefinition
         | FindingKind::DeferredWithTest
         | FindingKind::DependsOnDeferred
         | FindingKind::DuplicateField
@@ -108,7 +102,7 @@ impl TestSideFiles {
     /// `面のファイル`は "surface.files" の glob に当たるファイルで、`面の規則`の言語に限らない。
     /// 面の走査と除外は "tests.files" と同じなので、テストのファイルのパスを glob に当てれば足りる
     pub(crate) fn new(tests: &[String], surface_files: &[String]) -> Self {
-        let surface = crate::change_records::glob(surface_files);
+        let surface = crate::config::glob_set(surface_files);
         Self {
             surfaces: tests
                 .iter()

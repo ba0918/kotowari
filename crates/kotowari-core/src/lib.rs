@@ -10,9 +10,10 @@ macro_rules! readonly {
 }
 #[cfg(test)]
 extern crate self as kotowari_core;
-pub mod change_records;
-pub mod changes;
-pub mod comparison;
+pub mod config;
+mod deferred;
+mod deferred_notices;
+mod doc_kind;
 #[cfg(test)]
 #[path = "../tests/test_facts.rs"]
 mod fact_contract_tests;
@@ -23,22 +24,11 @@ mod guide_contract_tests;
 #[path = "../tests/ir.rs"]
 mod ir_contract_tests;
 #[cfg(test)]
-#[path = "../tests/change_matching.rs"]
-mod matching_contract_tests;
-#[cfg(test)]
-#[path = "../tests/change_records.rs"]
-mod record_contract_tests;
-#[cfg(test)]
 #[path = "../tests/surface.rs"]
 mod surface_contract_tests;
 #[cfg(test)]
 #[path = "../tests/translations.rs"]
 mod translation_contract_tests;
-pub use comparison::Comparison;
-pub mod config;
-mod deferred;
-mod deferred_notices;
-mod doc_kind;
 pub use doc_kind::DocKind;
 pub mod equivalents;
 mod finding_map;
@@ -136,12 +126,6 @@ macro_rules! finding_kinds {
 }
 
 finding_kinds! {
-    ChangeStale => "change_stale",
-    ChangeIrStale => "change_ir_stale",
-    ChangeUncovered => "change_uncovered",
-    ChangeDeferred => "change_deferred",
-    ChangeConclusionConflict => "change_conclusion_conflict",
-    ChangeRecordInvalid => "change_record_invalid",
     AlgorithmWithoutDefinition => "algorithm_without_definition",
     DeferredWithTest => "deferred_with_test",
     DependsOnDeferred => "depends_on_deferred",
@@ -233,13 +217,7 @@ impl FindingKind {
             | FindingKind::SurfaceUnspecifiedStale
             | FindingKind::DeferredWithTest
             | FindingKind::DependsOnDeferred => "notice",
-            FindingKind::ChangeStale
-            | FindingKind::ChangeIrStale
-            | FindingKind::ChangeUncovered
-            | FindingKind::ChangeDeferred
-            | FindingKind::ChangeConclusionConflict
-            | FindingKind::ChangeRecordInvalid
-            | FindingKind::AlgorithmWithoutDefinition
+            FindingKind::AlgorithmWithoutDefinition
             | FindingKind::DuplicateField
             | FindingKind::DuplicateId
             | FindingKind::DuplicateTerm
@@ -417,7 +395,6 @@ stop_reasons! {
     NonUtf8File => "non-UTF-8 file",
     ResultsError => "results error",
     MappingError => "mapping error",
-    GitError => "git error",
 }
 
 /// 結果のファイルを作った変異テストの道具（REQ-core-149）
