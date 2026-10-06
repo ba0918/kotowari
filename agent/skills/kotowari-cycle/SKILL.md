@@ -132,11 +132,11 @@ and pause. Adopt any proposal that matched none of these checks unchanged. Never
 of `human_judgment` without asking the person. Append numbered verdicts and update state; after every
 fix record its reported commits.
 `no_longer_visible` → closed (`fixed`); accepted by the person at the end → closed (`accepted`). If
-reviewers disagree, one `still_present` means still present. A full review, and a phase run's new
-findings, carry no IDs: match by
-evidence location and oracle — a match with an open finding reuses its ID and appends
-`still_present`; a match with a closed finding is "same cause returned" below and reopens it unless
-it was closed `accepted`. Reviewers only evaluate; the fixer only reports commits; the consistency
+reviewers disagree, one `still_present` means still present. New findings carry no IDs, whether a
+full review, a diff review, or a phase run raised them: match each by evidence location and
+oracle — a match with an open finding reuses its ID and appends `still_present`; a match with a
+closed finding is "same cause returned" under **Endings** and reopens it unless it was closed
+`accepted`. Reviewers only evaluate; the fixer only reports commits; the consistency
 phase does both for its own findings.
 
 ## Stopping inside the loop
@@ -153,7 +153,7 @@ phase does both for its own findings.
 1. Converged: the last review returned no visible finding, or the diff loop after it cleared them,
    and the consistency phase after it ended its step or was skipped.
 2. The person's round-trip limit was reached.
-3. No progress: a finding is `still_present` in two consecutive rounds that evaluated it (the
+3. No progress: a visible finding is `still_present` in two consecutive rounds that evaluated it (the
    second after a changed approach); a closed finding's cause returns; or a review still cannot
    succeed after one re-delegation; or two
    consecutive post-fix diff reviews have at least as many
