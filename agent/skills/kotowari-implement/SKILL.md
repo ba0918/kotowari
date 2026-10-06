@@ -25,7 +25,9 @@ Hand back (stop, state the reason, do not guess) when:
 - the plan step asks for confirmation before an irreversible operation, a privileged operation,
   or a dangerous target (production data, configuration, external effects) → ask, then continue;
 - continuing would spread damage (secret exposure, unintended publication, data loss) → stop;
-- after diagnosing and changing approach once there is still no progress → stop;
+- after diagnosing and changing approach once there is still no progress → question the premise
+  once, as kotowari-cycle's `references/premise-step.md` says under **In implement**; hand back to
+  cycle with the premise ladder only when that brings no progress either;
 - a hook stops your commit on an IR-side finding → back to cycle, as **Requirements and kotowari
   check** says;
 - no test command can be determined (see below) → back to plan before writing product code.
