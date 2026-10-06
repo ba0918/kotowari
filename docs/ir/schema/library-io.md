@@ -9,10 +9,10 @@ Covers the entry points of a separate crate that obtains schemas and documents f
 ### REQ-schema-072: Entry points for loading
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A17, docs/decision/records/2026-10-03-public-crate-api.md#A34, docs/decision/records/2026-10-03-public-crate-api.md#A44, docs/decision/records/2026-10-03-public-crate-api.md#A52
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A17, docs/decision/records/2026-10-03-public-crate-api.md#A34, docs/decision/records/2026-10-03-public-crate-api.md#A44, docs/decision/records/2026-10-03-public-crate-api.md#A52, docs/decision/records/2026-10-06-todo-zero.md#A9
 - verification: unit
 
-"kotowari-markdown-schema-io" takes, through "SchemaLoader::new" and "LoaderOptions", an absolute path as the starting location of the work and an optional cache base. The contract for locations follows REQ-core-323. "load" returns a reusable schema and document, "check" returns the result for a single file or a directory, and "extract_validated" and "extract_partial" return their respective extraction results.
+"kotowari-markdown-schema-io" takes, through "SchemaLoader::new" and "LoaderOptions", an absolute path as the starting location of the work and an optional cache base. The contract for locations follows REQ-core-323. "load" returns a reusable schema and document, "check" returns the result for a single file or a directory, and "extract_validated" and "extract_partial" return their respective extraction results. "read_document" returns a document, read the same way as "load" with a leading UTF-8 BOM removed, as a string without resolving a schema.
 
 ### REQ-schema-073: Responsibilities for I/O and display
 

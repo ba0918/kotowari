@@ -1,86 +1,87 @@
-# 変更履歴
+# Changelog
 
-kotowari の利用者に見える変更を書く。形は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に、版の付け方は [Semantic Versioning](https://semver.org/lang/ja/) に従う。
-`agent/skills/` の skill は kotowari と同じタグで出すので、skill の変更もここに書く。同梱の `kotowari-mds` の変更はここに書かない。
+Changes to kotowari that its users can notice. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
+The skills in `agent/skills/` ship under the same tags as kotowari, so changes to the skills are written here too. Changes to the bundled `kotowari-mds` are not written here.
 
 ## [Unreleased]
 
 ### Changed
 
-- すべてのクレートの最小対応 Rust バージョン（`rust-version`）を 1.99 にした。これまで 1.89 を宣言していたクレートは下限が上がり、宣言の無かった `kotowari`、`kotowari-core`、`kotowari-source-analysis`、`kotowari-overview` と `kotowari-cli` も 1.99 を宣言する。
+- The minimum supported Rust version (`rust-version`) of every crate is now 1.99. Crates that declared 1.89 have a higher floor, and `kotowari`, `kotowari-core`, `kotowari-source-analysis`, `kotowari-overview` and `kotowari-cli`, which declared none, now declare 1.99.
 
-- README、ガイド、IR を英語と日本語の対にした。接尾辞の無い `README.md` や `docs/guides/*.md` が英語、`*.ja.md` が日本語で、各ページの題名の下の行で切り替えられる。ガイドからは決定の経緯を説明していた「なぜこういう作りか」の節を除いた（経緯は判断の記録にある）。
+- The README, the guides and the IR are now pairs of English and Japanese. `README.md` and `docs/guides/*.md` without a suffix are English, `*.ja.md` is Japanese, and the line under each page's title switches between them. The guides no longer have the "why it is built this way" sections that explained the history of decisions (the history is in the decision records).
 
-- `kotowari` スキルで、ガイドは製品を使う人向けの使い方、全体像は製品を作る人向けの決定・理由・予定・未決事項を説明するよう書き分ける指針を明確にした。全体像では振る舞いを判断の結果として短く示し、コマンドや設定、使い方の手順はガイドに置く。
+- The `kotowari` skill now states more clearly how guides and overviews divide the work: a guide explains usage to the people who use the product, and an overview explains decisions, reasons, plans and open questions to the people who build it. An overview shows behaviour briefly as the result of a decision, and commands, configuration and usage steps go in the guides.
 
-- **BREAKING（Rust API・パッケージ構成）** 根を`kotowari-cli`に変更し、`kotowari`を明示した開始点から操作するライブラリに分離した。メモリ計算は`kotowari-core`、ソース解析は`kotowari-source-analysis`を使う。旧coreのCLI・取得APIを呼ぶコードは移行が必要。バイナリのコマンド、出力、終了コードは変わらない。
+- **BREAKING (Rust API and package layout)** The root package is now `kotowari-cli`, and `kotowari` is split out as a library operated from an explicit starting point. In-memory computation uses `kotowari-core`, and source analysis uses `kotowari-source-analysis`. Code that called the old core's CLI or acquisition API needs to migrate. The binary's commands, output and exit codes are unchanged.
 
-- `kotowari` スキルに「What the IR holds」を足し、IR に書くのは製品の利用者が観測できる振る舞いだけと定めた。CI とワークフロー、フック、リリース手順、ビルド設定、リポジトリ自身のデータ、プロジェクト自身のテストと検査は IR に書かず、判断の記録に書いて要求もテストも持たせない。迷ったら書かない側に倒し、テストを正当にするために IR に書き足すことは禁じた。壁打ち、計画、実装、cycle、review、iterate はこの定義を参照する。
-- 変更照合の reference で、CI・フック・リリース・ビルド設定だけの変更は、決定を引いた `new` で `ir` と `requirements` を空にし、`missing_spec` の穴にしないと明記した。
+- The `kotowari` skill has a new "What the IR holds" section stating that the IR holds only behaviour a user of the product can observe. CI and workflows, hooks, release steps, build configuration, the repository's own data, and the project's own tests and checks are not written in the IR; they go in the decision records and carry neither requirements nor tests. When in doubt, leave it out, and adding to the IR to justify a test is forbidden. Brainstorm, plan, implement, cycle, review and iterate refer to this definition.
+- The change conformance reference now states that a change to CI, hooks, release or build configuration alone is recorded as a `new` entry citing a decision, with `ir` and `requirements` empty, and is not a `missing_spec` gap.
+- An element of `tests.files`, `guides.files`, `surface.files` or `overview.files` that starts with `/` now stops with a configuration error, as an absolute-path value. Such an element never matched anything, since globs are matched against paths relative to the base directory.
 
 ### Added
 
-- 仕様・判断の記録・テストのつながりと、機械検査の範囲を説明する日英の紹介ページを追加した。
+- An introduction page, in English and Japanese, explaining how specifications, decision records and tests connect and what the mechanical checks cover.
 
-- `kotowari overview build`と`kotowari overview serve`を追加した。設定の`overview.files`に当たる全体像の元データ（frontmatterの`ir`、題名、冒頭の`lead`の部品、節と部品を持つMarkdown）を検査し、誤りが無ければ`.kotowari/cache/overview/`の下に一覧と全体像ごとのHTMLのページを書く。serveはそれを`http://127.0.0.1:<port>/`（既定4590、`--port`で変更）で配り、Ctrl-Cで終わる。元データに誤りがあれば何も書かずに`overview error`で、ポートを使えないか配っている間に接続を受け付けられなければ`port error`で止まる。`.kotowari`、`.kotowari/cache`、`.kotowari/cache/overview`のどれかがシンボリックリンクかディレクトリでなければ何も書かず消さずに、置き場の作成、書き込み、削除に失敗したときもそこで、`cache error`で止まる。
-- 設定に`overview`の鍵を書くと、`kotowari check`と`kotowari status`が全体像の元データを読み、形、部品の中身、冒頭の`lead`、扱うIRの文書、部品の中の参照、ページの名前の重なりの誤り（`overview_form_invalid`、`overview_part_unknown`、`overview_part_invalid`、`overview_lead_missing`、`overview_ir_missing`、`overview_ir_shared`、`overview_ref_unresolved`、`overview_name_conflict`）と、元データの節のガイドの印の古さを報告する。checkのJSONとstatusにはいつも`overview`の群（`files`と`marks`）が入り、鍵が無ければ両方0。
-- 全体像の一覧を目次で描く。設定の`overview`には目次のYAMLファイルを指す`overview.toc`も必須になり、一覧は目次の題名を見出しに、目次の群（`title`、省いてよい一行の`note`、`items`）を書かれた順と入れ子で、畳める形で描く。カードには見直していない節・未決・予定の数、群の見出しにはページ数と見直していない節・未決の合計を添える。各ページには目次の中の位置と、同じ群のほかのページへのリンクが付く。目次の形の誤り、目次に無いページ、元データの無い名前、2回目以降の名前、空の群は`kotowari check`と`kotowari status`の誤り（`overview_toc_invalid`、`overview_toc_page_missing`、`overview_toc_page_unknown`、`overview_toc_page_duplicate`、`overview_toc_group_empty`）になり、buildとserveを止める。目次のファイルが無いか読めなければ止まり、`overview.files`、`guides.files`、`tests.files`の走査で読むファイルに当たれば設定の誤りで止まる。全体像の元データが1つも無いと通る目次は書けないので、`overview`の鍵は最初の全体像の元データと目次と一緒に書く。
-- `Project`と`AsyncProject`に、何も書かない`overview_prepare`と、続けて書く`overview_build`を追加した。`check`、`status`、`inspect`は全体像の元データの指摘と`overview`の群を含む。全体像の検査を行う`kotowari-overview`クレートを追加した。
-- 同期`Project`、保持して再利用する`ReadModel`・`Inspection`と、既定で無効な`tokio` featureの`AsyncProject`を追加した。
-- 9クレートの実際の配布アーカイブを独立したオフライン環境で検証する手順を追加した。版の番号と2製品の配布名は変更していない。
-- IR、ガイド、全体像を多言語の対で持てるようにした。設定の`languages`（言語タグの並び）に2つ以上の言語を書くと、IR（用語集と問題の記録を含む）、ガイド、全体像の元データ、目次を、同じディレクトリの`foo.md`と`foo.<言語タグ>.md`の対で持ち、横の`foo.i18n.yaml`に各側のgitのblob hashを記録する。`kotowari check`と`kotowari status`は、欠けた側（`translation_missing`）、一致の記録の誤り（`translation_record_invalid`）、記録と違うhash（`translation_stale`）、文以外の骨組みの食い違い（`translation_structure_mismatch`）、題名の後の切り替えの行の誤り（`translation_switcher_invalid`）、ほかの言語の側へのリンク（`link_language_mismatch`）、判断の記録へのリンク（`link_to_record`）を誤りにする。ほかの言語のIRの側には、用語、曖昧語、文書名の参照、閉じないバッククォート、用語集の形の検査をその言語の用語集で行う。`kotowari list`は最上位の`translations`に対ごとの各側のblob hashを出す。全体像は言語ごとに描き、先頭以外の言語のページを`.kotowari/cache/overview/<言語タグ>/`の下に書いて互いにリンクし、IR、全体像の元データ、目次の対に欠けた側か骨組みの食い違いがあれば書かずに止まる。全体像のUIの文字は英語を本体が持ち、ほかの言語は設定の`labels`に書き（形の誤りは設定の誤りで止まる）、`status`の部品の札は`decided`、`planned`、`open`、`dropped`にした。`kotowari`スキルに対を揃える手順を追加した。`languages`が無ければ今までどおり英語だけで、対を読まない。
+- `kotowari overview build` and `kotowari overview serve`. They check the overview data matched by `overview.files` in the configuration (frontmatter `ir`, a title, a leading `lead` part, and Markdown with sections and parts), and when there are no errors write an index and one HTML page per overview under `.kotowari/cache/overview/`. serve serves them at `http://127.0.0.1:<port>/` (4590 by default, changed with `--port`) and ends on Ctrl-C. Errors in the overview data stop with `overview error` without writing anything; a port that cannot be used, or a failure to accept connections while serving, stops with `port error`. When `.kotowari`, `.kotowari/cache` or `.kotowari/cache/overview` is a symbolic link or not a directory, they stop with `cache error` without writing or deleting anything, and so does a failure to create, write or delete in that location.
+- With the `overview` key in the configuration, `kotowari check` and `kotowari status` read the overview data and report errors in its form, part contents, leading `lead`, IR documents covered, references inside parts and overlapping page names (`overview_form_invalid`, `overview_part_unknown`, `overview_part_invalid`, `overview_lead_missing`, `overview_ir_missing`, `overview_ir_shared`, `overview_ref_unresolved`, `overview_name_conflict`), along with stale guide marks in sections of the overview data. The JSON of check and status always has the `overview` group (`files` and `marks`), both 0 without the key.
+- The overview index is drawn from a table of contents. `overview` in the configuration now also requires `overview.toc`, pointing at the table of contents YAML file. The index uses the table of contents' title as its heading and draws its groups (`title`, an optional one-line `note`, and `items`) in the written order and nesting, as collapsible blocks. Cards show the number of unreviewed sections, open questions and plans, and group headings show the page count and the totals of unreviewed sections and open questions. Every page gets its position in the table of contents and links to the other pages in the same group. Errors in the table of contents' form, pages missing from it, names without overview data, second and later occurrences of a name, and empty groups are `kotowari check` and `kotowari status` errors (`overview_toc_invalid`, `overview_toc_page_missing`, `overview_toc_page_unknown`, `overview_toc_page_duplicate`, `overview_toc_group_empty`) and stop build and serve. A missing or unreadable table of contents stops, and a table of contents matched by the scan of `overview.files`, `guides.files` or `tests.files` stops with a configuration error. With no overview data at all, no table of contents can pass, so write the `overview` key together with the first overview data and the table of contents.
+- `overview_prepare`, which writes nothing, and `overview_build`, which then writes, on `Project` and `AsyncProject`. `check`, `status` and `inspect` include the findings on the overview data and the `overview` group. A new `kotowari-overview` crate performs the overview checks.
+- A synchronous `Project`, `ReadModel` and `Inspection` that are kept and reused, and `AsyncProject` behind the `tokio` feature, disabled by default.
+- A procedure for verifying the actual release archives of the nine crates in an independent offline environment. The version numbers and the release names of the two products are unchanged.
+- IR, guides and overviews can be kept as multilingual pairs. Listing two or more language tags in `languages` in the configuration keeps the IR (glossaries and flag records included), guides, overview data and tables of contents as pairs `foo.md` and `foo.<language tag>.md` in the same directory, with the git blob hash of each side recorded in `foo.i18n.yaml` beside them. `kotowari check` and `kotowari status` report a missing side (`translation_missing`), an error in the consistency record (`translation_record_invalid`), a hash differing from the record (`translation_stale`), a mismatch in the non-sentence skeleton (`translation_structure_mismatch`), an error in the switcher line after the title (`translation_switcher_invalid`), a link to another language's side (`link_language_mismatch`) and a link to a decision record (`link_to_record`) as errors. The other language sides of the IR are checked for terms, vague words, document name references, unclosed backticks and the glossary's form against that language's glossary. `kotowari list` outputs the blob hash of every side of each pair in the top-level `translations`. Overviews are drawn per language: pages of languages other than the first are written under `.kotowari/cache/overview/<language tag>/` and link to each other, and a missing side or a skeleton mismatch in a pair of IR, overview data or table of contents stops without writing. The overview UI text is held in English by kotowari itself and written for other languages in `labels` in the configuration (an error in its form stops with a configuration error), and the labels of the `status` part are now `decided`, `planned`, `open` and `dropped`. The `kotowari` skill has a new procedure for keeping pairs aligned. Without `languages`, everything stays English only, as before, and no pairs are read.
 
 ### Fixed
 
-- `kotowari overview serve`が、Hostヘッダーが`127.0.0.1:<port>`か`localhost:<port>`でないリクエスト（Hostの無いものを含む）に、本文の無い403を返すようにした。外のサイトが自分の名前を127.0.0.1に向け直して（DNSリバインディング）、ブラウザ経由で全体像のページを読み出せていた。
-- `languages`に2つ以上の言語を書いたリポジトリで、`kotowari changes`がほかの言語の側（`foo.ja.md`など）もIRとして読み、照合記録に先頭の言語の側を書くと`change_record_invalid`にしていた。`kotowari check`と同じく先頭の言語の側だけをIRとして読む。
-- 多言語の対で、参照形式のリンクと画像も利用箇所の行で検査し、リンク先の並びの食い違いを検出する。全体像の翻訳側だけがテストの glob と重なる場合も設定の誤りで止める。
-- `kotowari` スキルのセットアップ手順に、判断の記録用ディレクトリへの `.gitkeep` 作成とコミット対象に含める指示を追加した。空ディレクトリが clone／worktree で失われ、`kotowari check` がエラーになるのを防ぐ。
-- `kotowari overview build`のページで、GFM の脚注の記法（`[^1]`）を脚注として描かないようにした。描くと日本語のページにも英語の見出し「Footnotes」と戻りリンクの文字が入っていた。
-- `kotowari overview build`で、見出しと題名から HTML のコメントだけを除くようにした。これまでは`Vec<String>`の`<String>`のように行の中の HTML と読まれる部分も消え、見出しが「Vec」になっていた。
-- `kotowari changes`で、IR と判断の記録の置き場の下にある隠しディレクトリ（`docs/ir/.drafts/`など）を`kotowari check`と同じく読まないようにした。これまではそこにある IR を引く変更記録を有効と判定し、同じ記録が`check`では`change_record_invalid`になっていた。
-- `kotowari check`で、同じ要求の ID が2つの IR にあるとき、変更記録の定義の IR をパスの順で先の文書とするようにした（`kotowari changes`と同じ）。これまでは後の文書を求め、先の文書を引く記録を`change_record_invalid`にしていた。
-- ライブラリのメモリの入口（`ReadModel::build`、`Inspection::build`）に BOM で始まる文書を渡したとき、題名と言語の切り替えの行を見つけられず、切り替えの行を`translation_switcher_invalid`にし、文書が扱う範囲の行にも数えていたのを直した。ファイルから読む`kotowari check`は前から BOM を読み飛ばしている。
-- `kotowari changes`で、対象の設定ファイルの誤りの詳細を`kotowari check`と同じく設定ファイルの相対パスで始めるようにした（`config error: .kotowari/config.yaml: ...`）。
-- `kotowari changes`に`--port`を付けると、ほかのコマンドと同じく引数の誤りで止まるようにした。これまでは黙って無視して検査していた。
-- `changes.records`か`overview.files`に、区切りの`/`をまたぐ波括弧の glob（`{docs/.changes,docs/changes}/*.yaml`など）を書くと、ライブラリの中で panic していたのを直した。
-
+- `kotowari overview serve` returns a 403 with no body to requests whose Host header is not `127.0.0.1:<port>` or `localhost:<port>` (including requests without Host). An outside site could point its own name at 127.0.0.1 (DNS rebinding) and read the overview pages through the browser.
+- In a repository with two or more languages in `languages`, `kotowari changes` also read the other language sides (`foo.ja.md` and the like) as IR, and treated a record naming the first language's side as `change_record_invalid`. It now reads only the first language's side as IR, the same as `kotowari check`.
+- In multilingual pairs, reference-style links and images are also checked on the line where they are used, and a mismatch in the sequence of link destinations is detected. A configuration where only the translated side of an overview overlaps the test glob also stops with a configuration error.
+- The setup steps of the `kotowari` skill now say to create a `.gitkeep` in the directory for decision records and include it in the commit. Otherwise the empty directory is lost in a clone or worktree and `kotowari check` fails.
+- Pages from `kotowari overview build` no longer draw GFM footnote syntax (`[^1]`) as footnotes. Drawing them put the English heading "Footnotes" and back-link characters even on Japanese pages.
+- `kotowari overview build` now removes only HTML comments from headings and titles. Before, parts of a line read as HTML, such as `<String>` in `Vec<String>`, were removed too, and the heading became "Vec".
+- `kotowari changes` no longer reads hidden directories under the places for the IR and decision records (such as `docs/ir/.drafts/`), the same as `kotowari check`. Before, it judged a change record citing IR there as valid, while `check` reported the same record as `change_record_invalid`.
+- When the same requirement ID is in two IR documents, `kotowari check` now takes the document earlier in path order as the IR defining it for change records (the same as `kotowari changes`). Before, it took the later document and reported records citing the earlier one as `change_record_invalid`.
+- Fixed the library's in-memory entry points (`ReadModel::build`, `Inspection::build`) failing to find the title and the language switcher line of a document starting with a BOM, which reported the switcher line as `translation_switcher_invalid` and also counted it as a scope line of the document. `kotowari check`, which reads from files, has always skipped the BOM.
+- `kotowari changes` now starts the detail of an error in the target configuration file with the configuration file's relative path, the same as `kotowari check` (`config error: .kotowari/config.yaml: ...`).
+- `kotowari changes` with `--port` now stops with an argument error, like the other commands. Before, it silently ignored it and ran the check.
+- Fixed a panic inside the library when `changes.records` or `overview.files` had a brace glob spanning the `/` separator (such as `{docs/.changes,docs/changes}/*.yaml`).
+- `kotowari overview build` and `kotowari overview serve` now stop with `cache error` when they cannot enumerate the files under `.kotowari/cache/overview`, like the other failures in that location. Before, they stopped with `unreadable file`.
 
 ## [0.3.0] - 2026-10-01
 
 ### Added
 
-- 配布スキルに、判断の記録への書き戻しと両役の YAML 照合記録、独立 review 後のブランチ全体検査、仕様の穴の処理先を追加した。承認済み要求を保つ委譲範囲の具体的な IR 追加を認め、変更・削除や根拠の無い意味の判断は人へ戻す。
-- `kotowari changes` で指定した Git 比較元と commit または index の変更を列挙し、実装・review の照合記録と内容の鮮度を検査できる。設定の `changes` は省略可能で、導入した場合は check/status でも記録の形式と有効な参照を検査する。
+- The distributed skills now write back to the decision records, keep YAML conformance records for both roles, check the whole branch after an independent review, and say where gaps in the specification go. Delegated work may add concrete IR within the scope that keeps approved requirements; changes, deletions and judgments of meaning without grounds go back to a person.
+- `kotowari changes` enumerates the changes between a given Git base and a commit or the index, and checks the implementation and review conformance records and the freshness of their contents. `changes` in the configuration is optional; once adopted, check and status also check the records' form and valid references.
 
 ## [0.2.0] - 2026-09-27
 
 ### Added
 
-- README の入れ方に mise の `github:` で入れる方法（`mise use -g 'github:ba0918/kotowari[version_prefix=kotowari-v]@0.1.0'`）を足した。
-- 面の検査。設定の `surface.files` と `surface.rules`（ast-grep の規則）でコードから利用者に見える面（CLI のサブコマンドやフラグなど）を取り出し、名前が IR の要求の文、決定表のセル、シナリオのステップに引用されていなければ `kotowari check` が `surface_without_spec` の誤りにする。面のファイルのうち読むのは規則の言語のものだけで、`src/**` のように広く書いて画像などに当たっても止まらない。規則を書かなければ何も起きない。
-- まだ IR にしない面は、`surface.unspecified` が指す一覧に理由付きで載せると外せる。形の誤った1件は `surface_unspecified_invalid` の誤り、要らなくなった1件は `surface_unspecified_stale` の注意になる。外した数は `check` の最後の行 `surface: unspecified=数`（JSON は `surface`）に、面の数は `status` の `surface` の行に出る。
-- `kotowari` skill に面の検査の reference `surface.md` を足し、`kotowari-adopt` に一覧の減らし方を書いた。一覧に足すのは `kotowari-brainstorm` と `kotowari-adopt` だけで、実装役は IR に無い面を壁打ちに戻す。
+- The README's installation section has a way to install with mise's `github:` backend (`mise use -g 'github:ba0918/kotowari[version_prefix=kotowari-v]@0.1.0'`).
+- Surface checks. `surface.files` and `surface.rules` (ast-grep rules) in the configuration pick out the surfaces of the code that users see (CLI subcommands, flags and the like), and `kotowari check` reports a `surface_without_spec` error when a name is not quoted in a requirement's statement, a decision table cell or a scenario step of the IR. Only files in the rules' languages are read among the surface files, so a broad `src/**` matching images and the like does not stop. Without rules, nothing happens.
+- A surface not yet in the IR can be excluded by listing it, with a reason, in the list `surface.unspecified` points at. A malformed entry is a `surface_unspecified_invalid` error, and an entry no longer needed is a `surface_unspecified_stale` notice. The number excluded appears on the last line of `check` as `surface: unspecified=<n>` (`surface` in JSON), and the number of surfaces on the `surface` line of `status`.
+- The `kotowari` skill has a new reference `surface.md` for surface checks, and `kotowari-adopt` explains how to shrink the list. Only `kotowari-brainstorm` and `kotowari-adopt` add to the list; the implementer sends a surface missing from the IR back to the brainstorm.
 
 ### Changed
 
-- `kotowari-adopt` は範囲の確認で話題の利用者の入口（コマンドや画面の操作）も確かめ、その入口から観測できる振る舞いだけを一覧の行にする。範囲の外で見つけた振る舞いは件数と次の話題の候補だけを見せる。1行は要求1つの候補で、値や文言だけが違うものは1行にまとめて決定表の候補にし、候補が `limits.requirements` を超えたら入口が混ざっていないかを見直す。
-- `kotowari status` の出力に `surface` の群（`total`、`specified`、`unspecified`）がいつも入る。面の規則を書いていなければ3つとも 0。
+- `kotowari-adopt` also confirms the topic's user entry points (commands and screen operations) when confirming the scope, and lists only behaviour observable from those entry points. Behaviour found outside the scope is shown only as a count and candidates for the next topic. One row is one candidate requirement; rows differing only in values or wording are merged into one row as a candidate decision table, and when the candidates exceed `limits.requirements`, it checks whether entry points are mixed.
+- The output of `kotowari status` always has the `surface` group (`total`, `specified`, `unspecified`). Without surface rules, all three are 0.
 
 ## [0.1.0] - 2026-09-26
 
 ### Added
 
-- 仕様を「IR」と呼ぶ決まった形の Markdown に書き、機械で検査する CLI `kotowari`。出力は既定で JSON で、人が読むときは `--format text` を付ける。
-- `kotowari check`：IR の形、要求の出典にした判断の記録が実在するか、どのテストがどの要求を確かめているかを検査し、指摘を出す。終了コードは 0 が指摘なし、1 が誤りあり、2 が検査に入れなかった。利用者向けのガイドに付けた印が今の IR と食い違っていないかも見る。
-- `kotowari list`：IR の項目とシナリオを、印の付いたテストと一緒に一覧にする。
-- `kotowari query <ID>`：1件の本文と、それを確かめるテスト、それを指す項目を出す。
-- `kotowari status`：揃っているかを数で集計し、最後の行の `complete true` か `complete false` で答える。
-- `kotowari plan <ファイル>`：実装の計画のファイルの形を、同梱のスキーマで検査する。
-- `kotowari mutants --tool cargo-mutants <結果のファイル>`：変異テスト（cargo-mutants）の結果を読み、見逃しを指摘にする。
-- テストの印 `@kotowari[ID]` は、Rust、TypeScript、JavaScript、Python、PHP のテストなら同梱の規則で読む。ほかの言語でも、ast-grep（tree-sitter）が扱える言語なら、設定の `tests.rules` に規則を書けば読める。
-- Claude Code の skill を `agent/skills/` に10個。`kotowari` は IR と判断の記録の書き方、指摘の直し方、印の置き方を教える。`kotowari-` で始まる9個は、壁打ちから計画、実装、レビューまでの工程を kotowari の上で回す（任意）。
-- 入れ方は2通り。GitHub Release のビルド済みのバイナリ（Linux x86_64、macOS arm64。SHA256 付き）と、タグで版を固定した `cargo install --git https://github.com/ba0918/kotowari --tag kotowari-v0.1.0 kotowari`。skill は `gh skill install` の `--pin` にタグを渡すと版を固定して入れられる。
+- `kotowari`, a CLI for writing a specification as Markdown in a fixed form called the "IR" and checking it mechanically. Output is JSON by default; add `--format text` for people to read.
+- `kotowari check`: checks the IR's form, whether the decision records cited as sources of requirements exist, and which tests verify which requirements, and reports findings. The exit code is 0 for no findings, 1 for errors, and 2 when the check could not start. It also checks whether the marks placed in user guides disagree with the current IR.
+- `kotowari list`: lists the IR's items and scenarios together with the marked tests.
+- `kotowari query <ID>`: outputs the body of one item, the tests verifying it, and the items pointing at it.
+- `kotowari status`: counts whether everything is in place and answers with `complete true` or `complete false` on the last line.
+- `kotowari plan <file>`: checks the form of an implementation plan file against the bundled schema.
+- `kotowari mutants --tool cargo-mutants <results file>`: reads mutation test (cargo-mutants) results and reports missed mutants as findings.
+- Test marks `@kotowari[ID]` are read with bundled rules in Rust, TypeScript, JavaScript, Python and PHP tests. Other languages that ast-grep (tree-sitter) handles can be read by writing rules in `tests.rules` in the configuration.
+- Ten Claude Code skills in `agent/skills/`. `kotowari` teaches how to write the IR and decision records, fix findings and place marks. The nine starting with `kotowari-` run the workflow from brainstorm through plan, implementation and review on top of kotowari (optional).
+- Two ways to install: prebuilt binaries on GitHub Releases (Linux x86_64 and macOS arm64, with SHA256), and `cargo install --git https://github.com/ba0918/kotowari --tag kotowari-v0.1.0 kotowari` with the version pinned by tag. Passing the tag to `--pin` of `gh skill install` installs the skills at a pinned version.
 
 [Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.3.0...HEAD
 [0.3.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.2.0...kotowari-v0.3.0

@@ -320,3 +320,33 @@ fn a_records_glob_with_a_brace_across_a_slash_does_not_panic() {
         result.findings()
     );
 }
+
+// @kotowari[EX-core-545, REQ-core-019]
+#[test]
+fn ex_core_545_a_hidden_directory_named_only_inside_braces_is_not_entered() {
+    let dir = project("version: 2\nentries: []\n");
+    std::fs::write(
+        dir.path().join(".kotowari/config.yaml"),
+        "changes:\n  files: ['src/**']\n  records: ['{.records,docs/changes}/*.yaml']\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(dir.path().join(".records")).unwrap();
+    std::fs::write(
+        dir.path().join(".records/a.yaml"),
+        "version: 2\nentries: []\n",
+    )
+    .unwrap();
+    let result = kotowari::Project::new(kotowari::ProjectOptions::new(dir.path()))
+        .unwrap()
+        .check()
+        .unwrap();
+    let paths: Vec<&str> = result
+        .findings()
+        .iter()
+        .filter(|f| f.kind().as_str() == "change_record_invalid")
+        .map(|f| f.path())
+        .collect();
+    // 同じ中身の記録は、波括弧の外の置き場では読まれて誤りになる
+    assert!(paths.contains(&"docs/changes/test.yaml"), "{paths:?}");
+    assert!(!paths.contains(&".records/a.yaml"), "{paths:?}");
+}

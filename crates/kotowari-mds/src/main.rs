@@ -150,16 +150,8 @@ fn run(cli: Cli) -> Result<u8, Stop> {
                     .values()
                     .clone()
             } else {
-                let bytes = std::fs::read(&file).map_err(|error| Stop {
-                    kind: "unreadable_file",
-                    detail: format!("{}: {error}", file.display()),
-                })?;
-                let bytes = bytes.strip_prefix(&[0xEF, 0xBB, 0xBF]).unwrap_or(&bytes);
-                let source = std::str::from_utf8(bytes).map_err(|error| Stop {
-                    kind: "unreadable_file",
-                    detail: format!("{}: {error}", file.display()),
-                })?;
-                kotowari_markdown_schema::ast_json(source).map_err(|error| Stop {
+                let source = loader.read_document(&file)?;
+                kotowari_markdown_schema::ast_json(&source).map_err(|error| Stop {
                     kind: "unreadable_file",
                     detail: format!("{}: {error}", file.display()),
                 })?

@@ -31,8 +31,7 @@ document:
         path: text
         value: value
         of: { line: line, raw: raw }
-  title:
-    extract: title
+  title: {}
   preamble:
     statement:
       repeat: { min: 0 }

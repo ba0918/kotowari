@@ -57,10 +57,10 @@ view は常に、`文書`の`ページ`の題名の後に、REQ-view-022 で`ア
 ### REQ-view-007: Markdown の文章
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A36, docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-02-whole-picture.md#A70, docs/decision/records/2026-10-02-whole-picture.md#A82
+- source: docs/decision/records/2026-10-02-whole-picture.md#A36, docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-02-whole-picture.md#A70, docs/decision/records/2026-10-02-whole-picture.md#A82, docs/decision/records/2026-10-06-todo-zero.md#A2
 - verification: unit
 
-view は常に、Markdown の文章の塊の`ブロック`を CommonMark と GFM の表として HTML にする。文章の中の生の HTML は解釈せず文字として出し、HTML のコメントは出さない。
+view は常に、Markdown の文章の塊の`ブロック`を CommonMark と GFM の表として HTML にする。文章の中の生の HTML は解釈せず文字として出し、HTML のコメントは出さない。文章の中の参照リンクは同じ`ブロック`の中の参照の定義だけで解決し、定義が別の`ブロック`にある参照は文字のまま出す。
 
 ### REQ-view-008: 参照を開いて見せる
 
@@ -131,4 +131,11 @@ Scenario: 一覧は目次に書いた順と入れ子で描かれる
   When view で描画する
   Then "index.html" の見出しは "kotowari" で、"テスト" の目次の群の中に "b" の題名と lead の結論があり、その後に "a" の題名と lead の結論がある
   And "b" の題名は "b.html" へ、"a" の題名は "a.html" へ相対リンクする
+
+@id=EX-view-024 @about=REQ-view-007 @source=docs/decision/records/2026-10-06-todo-zero.md#A2
+Scenario: 参照リンクは自分のブロックの中だけで解決する
+  Given `節`に、"[a][x]" の行と定義 "[x]: https://example.com" のある Markdown の`ブロック`、`部品`、"[b][x]" の行のある Markdown の`ブロック`がこの順にある
+  When view で描画する
+  Then "a" は "https://example.com" へリンクする
+  And "[b][x]" は文字のまま出る
 ```

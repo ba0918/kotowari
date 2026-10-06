@@ -98,10 +98,10 @@ When the file name of the `overview data` of the `side` in the `first language`,
 ### REQ-core-324: When the location cannot be used
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-04-overview-on-public-api.md#A9
+- source: docs/decision/records/2026-10-04-overview-on-public-api.md#A9, docs/decision/records/2026-10-06-todo-zero.md#A5
 - verification: unit
 
-When, on "kotowari overview build" or "kotowari overview serve", any of ".kotowari", ".kotowari/cache" or ".kotowari/cache/overview" of the `base directory` is a symbolic link, or is neither a directory nor absent, kotowari writes no file and deletes none, makes a `stop` with a location error as the reason, and sets the detail to that path. When creating that location, writing a file or deleting one fails, it likewise makes a `stop` with a location error as the reason, and sets the detail to that path and the OS error text.
+When, on "kotowari overview build" or "kotowari overview serve", any of ".kotowari", ".kotowari/cache" or ".kotowari/cache/overview" of the `base directory` is a symbolic link, or is neither a directory nor absent, kotowari writes no file and deletes none, makes a `stop` with a location error as the reason, and sets the detail to that path. When creating that location, enumerating the files under it, writing a file or deleting one fails, it likewise makes a `stop` with a location error as the reason, and sets the detail to that path and the OS error text.
 
 ## Decision tables
 
@@ -168,4 +168,10 @@ Scenario: When the location is a symbolic link it stops without writing outside
   Given there is correct `overview data`, and ".kotowari/cache/overview" is a symbolic link to a directory outside the `base directory` that has the file "keep"
   When "kotowari overview build" is run
   Then the exit code is 2, the first line of standard error starts with "cache error: .kotowari/cache/overview", and the content of the outside directory is only "keep", unchanged
+
+@id=EX-core-546 @about=REQ-core-324 @source=docs/decision/records/2026-10-06-todo-zero.md#A5,docs/decision/records/2026-10-04-overview-on-public-api.md#A9,docs/decision/records/records.md#A20,docs/decision/records/ir-form.md#出力
+Scenario: A location whose files cannot be enumerated stops with a location error
+  Given a directory under ".kotowari/cache/overview" cannot be read
+  When "kotowari overview build" is run
+  Then the exit code is 2 and the first line of standard error starts with "cache error: .kotowari/cache/overview"
 ```

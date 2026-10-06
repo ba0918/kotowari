@@ -528,3 +528,19 @@ fn req_view_007_footnote_syntax_is_not_drawn_as_footnotes() {
         "{text}"
     );
 }
+
+// @kotowari[EX-view-024, REQ-view-007]
+#[test]
+fn ex_view_024_a_reference_link_is_resolved_only_within_its_own_block() {
+    let text = one_section_page(vec![
+        Block::Markdown("[a][x]\n\n[x]: https://example.com\n".into()),
+        Block::Part(lead("間の部品")),
+        Block::Markdown("[b][x]\n".into()),
+    ]);
+    assert!(
+        text.contains(r#"<a href="https://example.com">a</a>"#),
+        "{text}"
+    );
+    assert!(text.contains("[b][x]"), "{text}");
+    assert_eq!(text.matches("https://example.com").count(), 1, "{text}");
+}

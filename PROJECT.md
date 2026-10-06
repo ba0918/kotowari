@@ -129,7 +129,7 @@ A change a user of the product can notice — a command, an option, a finding, a
 instructions, the install procedure, what a release contains — is written under
 `## [Unreleased]` of that product's changelog, in Keep a Changelog form, on the same branch as the
 change. Nothing checks this mechanically. The entry says what changed for someone who installed
-the product, not how it was built.
+the product, not how it was built. Both changelogs are written in English.
 
 To release:
 

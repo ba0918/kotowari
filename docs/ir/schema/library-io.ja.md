@@ -9,10 +9,10 @@
 ### REQ-schema-072: 読み込みの入口
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A17, docs/decision/records/2026-10-03-public-crate-api.md#A34, docs/decision/records/2026-10-03-public-crate-api.md#A44, docs/decision/records/2026-10-03-public-crate-api.md#A52
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A17, docs/decision/records/2026-10-03-public-crate-api.md#A34, docs/decision/records/2026-10-03-public-crate-api.md#A44, docs/decision/records/2026-10-03-public-crate-api.md#A52, docs/decision/records/2026-10-06-todo-zero.md#A9
 - verification: unit
 
-"kotowari-markdown-schema-io" は "SchemaLoader::new" と "LoaderOptions" で絶対パスの作業開始位置と任意のキャッシュ基準を受ける。位置の契約は REQ-core-323 に従う。"load" は再利用可能なスキーマと文書、"check" は単一ファイルまたはディレクトリの結果、"extract_validated" と "extract_partial" はそれぞれの抽出結果を返す。
+"kotowari-markdown-schema-io" は "SchemaLoader::new" と "LoaderOptions" で絶対パスの作業開始位置と任意のキャッシュ基準を受ける。位置の契約は REQ-core-323 に従う。"load" は再利用可能なスキーマと文書、"check" は単一ファイルまたはディレクトリの結果、"extract_validated" と "extract_partial" はそれぞれの抽出結果を返す。"read_document" は文書を "load" と同じ読み方で先頭の UTF-8 の BOM を除いて読み、スキーマを解かずに文字列として返す。
 
 ### REQ-schema-073: I/Oと表示の責務
 

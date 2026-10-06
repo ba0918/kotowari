@@ -56,10 +56,10 @@ When there is a depth-3 heading inside a `section` that declares no `item`, mds 
 ### REQ-schema-061: Items directly under the document
 
 - kind: event_driven
-- source: docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A23, docs/decision/records/2026-09-23-ir-engine-gaps.md#A41, docs/decision/records/2026-09-23-ir-engine-gaps.md#A45
+- source: docs/decision/records/2026-09-23-ir-engine-gaps.md#A15, docs/decision/records/2026-09-23-ir-engine-gaps.md#A23, docs/decision/records/2026-09-23-ir-engine-gaps.md#A41, docs/decision/records/2026-09-23-ir-engine-gaps.md#A45, docs/decision/records/2026-10-06-todo-zero.md#A6
 - verification: unit
 
-When the `schema` declares an `item` directly under the document, mds reads a depth-3 heading before the first `section` as that `item`, and ends the `preamble` before the first `section` or `item`. The same `document` may have both an `item` under a `section` and an `item` directly under the document. In a `schema` that declares no `item` directly under the document, when the `preamble` is declared or in the `closed world`, a depth-3 heading before the first `section` and the lines inside it are made a `finding`. In the `open world` with no `preamble` declared, they are allowed as an undeclared structure (REQ-schema-002, REQ-schema-003).
+When the `schema` declares an `item` directly under the document, mds reads a depth-3 heading before the first `section` as that `item`, and ends the `preamble` before the first `section` or `item`. The same `document` may have both an `item` under a `section` and an `item` directly under the document. In a `schema` that declares no `item` directly under the document, when the `preamble` is declared or in the `closed world`, a depth-3 heading before the first `section` and the lines inside it are made a `finding`. In the `open world` with no `preamble` declared, they are allowed as an undeclared structure (REQ-schema-002, REQ-schema-003). In a `schema` that declares no `item` directly under the document, a depth-3 heading before the `title`, including every one in a `document` with no `title`, is outside the `preamble`: in the `open world` it and the lines inside it are allowed as an undeclared structure even when the `preamble` is declared.
 
 ### REQ-schema-056: A missing required item
 
@@ -176,4 +176,11 @@ Scenario: In the open world with no preamble declared, a depth-3 heading before 
   And a `document` with a "### X-1: a" heading and lines under it before the first `section`
   When "kotowari-mds check --format json" is run
   Then no `finding` is reported on that heading or on the lines under it
+
+@id=EX-schema-094 @about=REQ-schema-061 @source=docs/decision/records/2026-10-06-todo-zero.md#A6
+Scenario: In a document with no title, a depth-3 heading is outside the declared preamble
+  Given a `schema` with "open: true" that declares a `title` and a `preamble` and no `item` directly under the document
+  And a `document` with no `title` that has a "### a" heading and a line under it before the first `section`
+  When "kotowari-mds check --format json" is run
+  Then the only `finding` is the one for the missing `title`
 ```

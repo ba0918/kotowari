@@ -32,10 +32,10 @@
 ### REQ-core-014: 設定の誤り
 
 - kind: event_driven
-- source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A93, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A161, docs/decision/records/2026-09-24-doc-marks.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A7, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-02-whole-picture.md#A76
+- source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A93, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A161, docs/decision/records/2026-09-24-doc-marks.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A7, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-02-whole-picture.md#A76, docs/decision/records/2026-10-06-todo-zero.md#A3
 - verification: unit
 
-`設定ファイル`が YAML として読めないとき、または`設定ファイル`に知らないキー、同じキーの2回目、値が null のキー（"ir:" だけの行。空の一覧は REQ-core-016 のとおり受ける）、型の違う値、負の数、0、絶対パスの値（先頭が "/" のもの）、"vague_words" の空の文字列の要素か同じ語の2回目、"tests.files"、"guides.files"、"surface.files"、"overview.files" のいずれかの glob として読めない要素のいずれかがあるとき、kotowari は設定の誤りを理由に`停止`する。
+`設定ファイル`が YAML として読めないとき、または`設定ファイル`に知らないキー、同じキーの2回目、値が null のキー（"ir:" だけの行。空の一覧は REQ-core-016 のとおり受ける）、型の違う値、負の数、0、絶対パスの値（先頭が "/" のもの。"tests.files"、"guides.files"、"surface.files"、"overview.files" の要素を含む）、"vague_words" の空の文字列の要素か同じ語の2回目、"tests.files"、"guides.files"、"surface.files"、"overview.files" のいずれかの glob として読めない要素のいずれかがあるとき、kotowari は設定の誤りを理由に`停止`する。
 
 ### REQ-core-015: 一覧は既定を置き換える
 
@@ -72,10 +72,10 @@ kotowari は常に、`設定ファイル`のキーを入れ子の形（"decision
 ### REQ-core-019: glob の読み方
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-current-change-records.md#A8, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71
+- source: docs/decision/records/2026-10-01-current-change-records.md#A8, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-06-todo-zero.md#A4, docs/decision/records/records.md#A59, docs/decision/records/records.md#A102, docs/decision/records/2026-10-01-change-details.md#A4
 - verification: unit
 
-kotowari は常に、glob の "**" を再帰として読む。changes の Git 対象列挙と、check/status の changes.records がパス成分で明示した隠し配下の照合記録探索と、overview.files がパス成分で明示した隠し配下の`全体像の元データ`の探索を除き、隠しディレクトリを glob が名指ししても含めない。広い "**" だけでは未指定の隠し配下へ入らない。隠しファイルは glob が当てれば読み、ディレクトリのシンボリックリンクを辿らない。
+kotowari は常に、glob の "**" を再帰として読む。changes の Git 対象列挙と、check/status の changes.records がパス成分で明示した隠し配下の照合記録探索と、overview.files がパス成分で明示した隠し配下の`全体像の元データ`の探索を除き、隠しディレクトリを glob が名指ししても含めない。広い "**" だけでは未指定の隠し配下へ入らない。隠しファイルは glob が当てれば読み、ディレクトリのシンボリックリンクを辿らない。波括弧の中だけで名指しした隠しディレクトリ（"{.kotowari/changes,other}/*.yaml" のようなもの）は、パス成分による名指しに数えない。
 
 ### REQ-core-020: 直下の kotowari.toml を読まない
 
@@ -129,4 +129,16 @@ Scenario: 重複したキーで止まるとき、そのキーを1行で示す
   Given `設定ファイル`に "ir: docs/ir" の行が2回ある
   When "kotowari check" を実行する
   Then 終了コードは 2 で、標準エラーは "config error: " で始まり "duplicate key: ir" を含む1行である
+
+@id=EX-core-544 @about=REQ-core-014 @source=docs/decision/records/2026-10-06-todo-zero.md#A3,docs/decision/records/records.md#A20,docs/decision/records/ir-form.md#出力
+Scenario: "/" で始まる glob の要素は設定の誤りで止まる
+  Given `設定ファイル`の "tests.files" に "/tests/**/*.rs" の要素がある
+  When "kotowari check" を実行する
+  Then 終了コードは 2 で、標準エラーは "config error: " で始まる
+
+@id=EX-core-545 @about=REQ-core-019 @source=docs/decision/records/2026-10-06-todo-zero.md#A4
+Scenario: 波括弧の中だけで名指しした隠しディレクトリには入らない
+  Given "changes.records" が "{.records,other}/*.yaml" で、".records/a.yaml" がある
+  When "kotowari check" を実行する
+  Then ".records/a.yaml" は照合記録として読まれない
 ```

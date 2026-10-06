@@ -24,10 +24,10 @@ mds は常に、`frontmatter`に書いた相対パスを、`文書`の置かれ�
 ### REQ-schema-013: URL のスキーマのキャッシュ
 
 - kind: event_driven
-- source: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A20, docs/decision/records/2026-09-23-mutants-gaps.md#A9, docs/decision/records/2026-09-24-kotowari-dir.md#A3
+- source: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A20, docs/decision/records/2026-09-23-mutants-gaps.md#A9, docs/decision/records/2026-09-24-kotowari-dir.md#A3, docs/decision/records/2026-10-06-todo-zero.md#A1
 - verification: unit
 
-`frontmatter`が URL の`スキーマ`を指したとき、mds は取得した内容を SHA-256 の名前でキャッシュに置き、次からはキャッシュを読む。キャッシュが壊れていれば取得し直して回復する。キャッシュは`基準のディレクトリ`の ".kotowari/cache/schemas/" に置き、`基準のディレクトリ`が無ければカレントディレクトリの ".kotowari/cache/schemas/" に置く。
+`frontmatter`が URL の`スキーマ`を指したとき、mds は取得した内容を SHA-256 の名前でキャッシュに置き、次からはキャッシュを読む。キャッシュが壊れていれば取得し直して回復する。キャッシュは`基準のディレクトリ`の ".kotowari/cache/schemas/" に置き、`基準のディレクトリ`が無ければカレントディレクトリの ".kotowari/cache/schemas/" に置く。キャッシュのディレクトリを作れないときやキャッシュに書けないとき、mds は誤りにも`指摘`にもせず、取得した内容で続ける。
 
 ### REQ-schema-014: スキーマを指していない文書
 
@@ -126,4 +126,11 @@ Scenario: 基準のディレクトリが無ければキャッシュはカレン�
   Given カレントディレクトリから上のどこにも ".kotowari/" が無く、URL の`スキーマ`を指した`文書`がある
   When "kotowari-mds check" を実行する
   Then キャッシュはカレントディレクトリの ".kotowari/cache/schemas/" に置かれる
+
+@id=EX-schema-093 @about=REQ-schema-013 @source=docs/decision/records/2026-10-06-todo-zero.md#A1,docs/decision/records/2026-09-21-mds-spec.md#A15
+Scenario: キャッシュに書けなくても検査は止まらない
+  Given URL の`スキーマ`を指し、その`スキーマ`をすべて満たす`文書`があり、キャッシュに書けない
+  When "kotowari-mds check" を実行する
+  Then 取得した`スキーマ`を使う
+  And 終了コードは 0 である
 ```

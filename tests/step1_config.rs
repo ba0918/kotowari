@@ -1416,3 +1416,45 @@ fn ex_core_539_labels_of_a_language_not_in_the_list_stops() {
         &labels_without("ja", ""),
     );
 }
+
+// @kotowari[EX-core-544, REQ-core-014]
+#[test]
+fn ex_core_544_a_glob_element_starting_with_a_slash_stops_as_a_config_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "tests:\n  files: ['/tests/**/*.rs']\n",
+    )
+    .unwrap();
+    let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.starts_with("config error: "), "{stderr}");
+}
+
+// @kotowari[REQ-core-014]
+#[test]
+fn req_014_every_files_key_rejects_a_glob_element_starting_with_a_slash() {
+    for (key, yaml) in [
+        ("tests.files", "tests:\n  files: ['/a/*.rs']\n"),
+        ("guides.files", "guides:\n  files: ['/a/*.md']\n"),
+        (
+            "surface.files",
+            "surface:\n  files: ['/a/*.rs']\n  rules: [rules]\n",
+        ),
+        (
+            "overview.files",
+            "overview:\n  files: ['/a/*.md']\n  toc: toc.yaml\n",
+        ),
+    ] {
+        let result = kotowari_core::config::Config::parse(&format!("ir: docs/ir\n{yaml}"));
+        match result {
+            Err(kotowari_core::StopReason::ConfigError(detail)) => assert!(
+                detail.contains(&format!("absolute path not allowed for {key}: /a/")),
+                "{key}: {detail}"
+            ),
+            other => panic!("{key}: {other:?}"),
+        }
+    }
+}

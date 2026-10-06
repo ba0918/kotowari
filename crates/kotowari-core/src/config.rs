@@ -266,9 +266,11 @@ fn check_not_absolute(path: &str, key: &str) -> Result<(), StopReason> {
     Ok(())
 }
 
-/// REQ-core-014: glob として読めない要素があれば設定の誤りで停止する（"tests.files"、"guides.files"、"surface.files"）
-fn check_globs(patterns: &[String]) -> Result<(), StopReason> {
+/// REQ-core-014: glob として読めない要素か "/" で始まる要素があれば設定の誤りで停止する
+/// （"tests.files"、"guides.files"、"surface.files"、"overview.files"、changes の glob）
+fn check_globs(patterns: &[String], key: &str) -> Result<(), StopReason> {
     for pattern in patterns {
+        check_not_absolute(pattern, key)?;
         if globset::Glob::new(pattern).is_err() {
             return Err(StopReason::ConfigError(format!(
                 "invalid glob pattern: {pattern}"
@@ -331,7 +333,7 @@ fn yaml_error(e: &serde_saphyr::Error) -> StopReason {
 /// 鍵の組み合わせの誤り（REQ-core-225）は設定の誤りで停止する
 fn read_surface(raw: RawSurface) -> Result<SurfaceConfig, StopReason> {
     let files = non_null_or_default(raw.files, "surface.files", Vec::new())?;
-    check_globs(&files)?;
+    check_globs(&files, "surface.files")?;
     let rules = non_null_or_default(raw.rules, "surface.rules", Vec::new())?;
     for rule in &rules {
         check_not_absolute(rule, "surface.rules")?;
@@ -469,7 +471,7 @@ impl Config {
                     None => defaults.tests.rust,
                 };
                 let files = non_null_or_default(t.files, "tests.files", defaults.tests.files)?;
-                check_globs(&files)?;
+                check_globs(&files, "tests.files")?;
                 let rules = non_null_or_default(t.rules, "tests.rules", defaults.tests.rules)?;
                 for rule in &rules {
                     check_not_absolute(rule, "tests.rules")?;
@@ -492,7 +494,7 @@ impl Config {
         let guides = match non_null(raw.guides, "guides")? {
             Some(g) => {
                 let files = non_null_or_default(g.files, "guides.files", defaults.guides.files)?;
-                check_globs(&files)?;
+                check_globs(&files, "guides.files")?;
                 GuidesConfig { files }
             }
             None => defaults.guides,
@@ -521,9 +523,8 @@ impl Config {
                 ));
             }
             for patterns in [&c.files, &c.exclude, &c.records] {
-                check_globs(patterns)?;
+                check_globs(patterns, "changes")?;
                 for pattern in patterns {
-                    check_not_absolute(pattern, "changes")?;
                     if pattern.is_empty() {
                         return Err(StopReason::ConfigError("empty changes glob".into()));
                     }
@@ -538,7 +539,7 @@ impl Config {
                 let files = non_null(o.files, "overview.files")?.ok_or_else(|| {
                     StopReason::ConfigError("overview.files is required".to_string())
                 })?;
-                check_globs(&files)?;
+                check_globs(&files, "overview.files")?;
                 let toc = non_null(o.toc, "overview.toc")?.ok_or_else(|| {
                     StopReason::ConfigError("overview.toc is required".to_string())
                 })?;

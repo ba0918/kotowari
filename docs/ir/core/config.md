@@ -32,10 +32,10 @@ When "--config" is not received and there is no `configuration file`, kotowari c
 ### REQ-core-014: Configuration errors
 
 - kind: event_driven
-- source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A93, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A161, docs/decision/records/2026-09-24-doc-marks.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A7, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-02-whole-picture.md#A76
+- source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A41, docs/decision/records/records.md#A20, docs/decision/records/records.md#A44, docs/decision/records/records.md#A93, docs/decision/records/records.md#A105, docs/decision/records/records.md#A135, docs/decision/records/records.md#A161, docs/decision/records/2026-09-24-doc-marks.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A7, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-02-whole-picture.md#A76, docs/decision/records/2026-10-06-todo-zero.md#A3
 - verification: unit
 
-When the `configuration file` cannot be read as YAML, or when the `configuration file` contains any of the following: an unknown key, a second occurrence of the same key, a key whose value is null (a line with only "ir:"; an empty list is accepted as in REQ-core-016), a value of the wrong type, a negative number, 0, an absolute-path value (one starting with "/"), an empty-string element or a second occurrence of the same word in "vague_words", or an element of any of "tests.files", "guides.files", "surface.files" or "overview.files" that cannot be read as a glob, kotowari will `stop` on the grounds of a configuration error.
+When the `configuration file` cannot be read as YAML, or when the `configuration file` contains any of the following: an unknown key, a second occurrence of the same key, a key whose value is null (a line with only "ir:"; an empty list is accepted as in REQ-core-016), a value of the wrong type, a negative number, 0, an absolute-path value (one starting with "/", including an element of "tests.files", "guides.files", "surface.files" or "overview.files"), an empty-string element or a second occurrence of the same word in "vague_words", or an element of any of "tests.files", "guides.files", "surface.files" or "overview.files" that cannot be read as a glob, kotowari will `stop` on the grounds of a configuration error.
 
 ### REQ-core-015: A list replaces the default
 
@@ -72,10 +72,10 @@ In "kotowari check", when the target of "ir", "decisions.records" or "decisions.
 ### REQ-core-019: How globs are read
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-current-change-records.md#A8, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71
+- source: docs/decision/records/2026-10-01-current-change-records.md#A8, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-06-todo-zero.md#A4, docs/decision/records/records.md#A59, docs/decision/records/records.md#A102, docs/decision/records/2026-10-01-change-details.md#A4
 - verification: unit
 
-kotowari always reads "**" in a glob as recursion. Except for the enumeration of Git targets in changes, the search for conformance records under hidden directories that changes.records names explicitly by a path component in check/status, and the search for `overview data` under hidden directories that overview.files names explicitly by a path component, it does not include hidden directories even when a glob names them. A broad "**" alone does not enter hidden directories that are not specified. It reads hidden files when a glob matches them, and does not follow symbolic links to directories.
+kotowari always reads "**" in a glob as recursion. Except for the enumeration of Git targets in changes, the search for conformance records under hidden directories that changes.records names explicitly by a path component in check/status, and the search for `overview data` under hidden directories that overview.files names explicitly by a path component, it does not include hidden directories even when a glob names them. A broad "**" alone does not enter hidden directories that are not specified. It reads hidden files when a glob matches them, and does not follow symbolic links to directories. A hidden directory named only inside braces (as in "{.kotowari/changes,other}/*.yaml") is not counted as named by a path component.
 
 ### REQ-core-020: kotowari.toml at the root is not read
 
@@ -129,4 +129,16 @@ Scenario: When a duplicate key stops the run, that key is shown in one line
   Given the `configuration file` has the line "ir: docs/ir" twice
   When "kotowari check" is run
   Then the exit code is 2 and standard error is one line that starts with "config error: " and contains "duplicate key: ir"
+
+@id=EX-core-544 @about=REQ-core-014 @source=docs/decision/records/2026-10-06-todo-zero.md#A3,docs/decision/records/records.md#A20,docs/decision/records/ir-form.md#出力
+Scenario: A glob element starting with "/" stops as a configuration error
+  Given the "tests.files" of the `configuration file` has the element "/tests/**/*.rs"
+  When "kotowari check" is run
+  Then the exit code is 2 and standard error starts with "config error: "
+
+@id=EX-core-545 @about=REQ-core-019 @source=docs/decision/records/2026-10-06-todo-zero.md#A4
+Scenario: A hidden directory named only inside braces is not entered
+  Given "changes.records" is "{.records,other}/*.yaml", and ".records/a.yaml" exists
+  When "kotowari check" is run
+  Then ".records/a.yaml" is not read as a conformance record
 ```

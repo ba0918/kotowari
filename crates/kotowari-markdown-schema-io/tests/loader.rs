@@ -156,3 +156,16 @@ fn later_current_directory_changes_do_not_change_the_load_base() {
         String::from_utf8_lossy(&output.stderr)
     );
 }
+
+// @kotowari[REQ-schema-072]
+#[test]
+fn read_document_strips_the_bom_and_rejects_non_utf8_with_the_given_path() {
+    let root = tempfile::tempdir().unwrap();
+    std::fs::write(root.path().join("bom.md"), b"\xEF\xBB\xBF# a\n").unwrap();
+    std::fs::write(root.path().join("bad.md"), b"# \xFF\n").unwrap();
+    let loader = SchemaLoader::new(LoaderOptions::new(root.path().to_path_buf())).unwrap();
+    assert_eq!(loader.read_document(Path::new("bom.md")).unwrap(), "# a\n");
+    let error = loader.read_document(Path::new("bad.md")).unwrap_err();
+    assert_eq!(error.kind().as_str(), "unreadable_file");
+    assert!(error.detail().starts_with("bad.md: "), "{}", error.detail());
+}

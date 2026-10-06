@@ -57,10 +57,10 @@ view always draws, after the title of the `page` of a `document`, the `outline` 
 ### REQ-view-007: Markdown text
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A36, docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-02-whole-picture.md#A70, docs/decision/records/2026-10-02-whole-picture.md#A82
+- source: docs/decision/records/2026-10-02-whole-picture.md#A36, docs/decision/records/2026-10-02-whole-picture.md#A42, docs/decision/records/2026-10-02-whole-picture.md#A70, docs/decision/records/2026-10-02-whole-picture.md#A82, docs/decision/records/2026-10-06-todo-zero.md#A2
 - verification: unit
 
-view always turns a `block` that is a chunk of Markdown text into HTML as CommonMark with GFM tables. Raw HTML in the text is not interpreted but output as text, and HTML comments are not output.
+view always turns a `block` that is a chunk of Markdown text into HTML as CommonMark with GFM tables. Raw HTML in the text is not interpreted but output as text, and HTML comments are not output. A reference link in the text is resolved only by a reference definition in the same `block`; a reference whose definition is in another `block` is output as text.
 
 ### REQ-view-008: Opening and showing a reference
 
@@ -131,4 +131,11 @@ Scenario: The listing is drawn in the order and nesting written in the table of 
   When it is rendered with view
   Then the heading of "index.html" is "kotowari"; inside the contents group "テスト" are the title of "b" and the conclusion of its lead; and after that are the title of "a" and the conclusion of its lead
   And the title of "b" links relatively to "b.html", and the title of "a" to "a.html"
+
+@id=EX-view-024 @about=REQ-view-007 @source=docs/decision/records/2026-10-06-todo-zero.md#A2
+Scenario: A reference link is resolved only within its own block
+  Given a `section` has a Markdown `block` with the line "[a][x]" and the definition "[x]: https://example.com", then a `part`, then a Markdown `block` with the line "[b][x]"
+  When it is rendered with view
+  Then "a" links to "https://example.com"
+  And "[b][x]" is output as text
 ```

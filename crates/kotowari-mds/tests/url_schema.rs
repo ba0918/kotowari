@@ -398,3 +398,42 @@ fn a_directory_check_fetches_a_shared_url_schema_once_even_when_the_cache_cannot
     );
     assert_eq!(counter.load(Ordering::SeqCst), 1);
 }
+
+// @kotowari[EX-schema-093, REQ-schema-013]
+#[test]
+fn ex_schema_093_a_cache_that_cannot_be_written_does_not_stop_the_check() {
+    // ディレクトリを作れないときと、ディレクトリはあってもファイルを書けないとき
+    for directory_blocked in [true, false] {
+        let (url, counter) = serve_schema();
+        let dir = tempfile::tempdir().unwrap();
+        if directory_blocked {
+            // ".kotowari/cache" がファイルなので、キャッシュのディレクトリを作れない
+            write_file(dir.path(), ".kotowari/cache", "not a directory");
+        } else {
+            // キャッシュのファイルの名前がディレクトリなので、書けない
+            std::fs::create_dir_all(cache_path(&url, dir.path())).unwrap();
+        }
+        unwritable_cache_check(&url, dir.path(), directory_blocked);
+        assert_eq!(counter.load(Ordering::SeqCst), 1, "取得した内容を使う");
+        assert!(!cache_path(&url, dir.path()).is_file());
+    }
+}
+
+fn unwritable_cache_check(url: &str, dir: &Path, case: bool) {
+    let doc = write_file(
+        dir,
+        "doc.md",
+        &format!("---\n$schema: {url}\n---\n# T-1234: 例\n"),
+    );
+    let output = mds()
+        .current_dir(dir)
+        .args(["check", doc.to_str().unwrap()])
+        .output()
+        .unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "{case}: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
