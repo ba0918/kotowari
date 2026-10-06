@@ -75,9 +75,11 @@ resolved here as below.
   grounds.
 - A question of meaning that no experiment can settle: choose a default that does not contradict
   the IR, make the IR and the code agree on it, and continue. Leave it in the flag record
-  (`FLAGS.md`) as awaiting a person, and return the default with the one word that reverses it.
-- Only what still needs a judgment after the grounds and measurements are exhausted goes back to a
-  person: hand it back with its reason.
+  (`FLAGS.md`) and return it as a finding with the action `human_judgment`: its claim states the
+  default and the one word that reverses it, and its `oracle.note` the grounds and measurements
+  tried and why they could not settle it. It stays open for the final report; the phase never stops
+  to hand it to a person. A person's judgment is the last resort, kept to as few findings as
+  possible: only what the grounds and measurements cannot settle.
 - On agreement with the specification, this phase's decision takes precedence over the quality
   review's fixes.
 
@@ -115,5 +117,4 @@ whether the grounds recorded for each choice support it. A run returns:
   `consistency`; the claim says whether it is a gap, a disagreement, or a gap or contradiction within
   the IR; the evidence is the file and line or the ID; the oracle is the measurement or check that
   decided it; `commits` are the commits that resolved it;
-- the path of the decision record it wrote, if it decided anything;
-- anything handed back to a person, with its reason.
+- the path of the decision record it wrote, if it decided anything.

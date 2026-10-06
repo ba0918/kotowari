@@ -93,8 +93,8 @@ or its marks carry), or, for a topic with no IR, the approved specification docu
 The phase receives what the kotowari-cycle skill's **Consistency phase** lists under what it
 carries, with the fixer contract and Evidence conditions from that skill's **Delegations**. This
 session keeps the phase's findings, numbering them as cycle does, reruns as that section says, and
-stops by cycle's ending 3 or a hand-back, reporting it to the person with the choice to run more or
-accept the rest.
+stops by cycle's ending 3, reporting it with the choice to run more or accept the rest. The final
+report gives each open `human_judgment` finding with its default and the word that reverses it.
 
 ## Exceptions
 

@@ -94,7 +94,7 @@ included) or one consistency phase run. The limit, when the person set one, coun
   `no_longer_visible` and new findings.
 - **consistency phase:** carry what **Consistency phase** below lists. It returns a verdict on each
   earlier finding it was given, its new findings with their commits, and the decision record it
-  wrote, or a hand-back.
+  wrote.
 - **fixer:** carry visible findings, plan path, branch, worktree path, and the contract below. It
   returns commits and which finding each addresses, or a hand-back. A commit a hook stopped on an
   IR-side finding is handled as for implement: a phase run at this step, then the same delegation. For a finding that is
@@ -163,7 +163,7 @@ the quality review, and resolves the gaps and disagreements it finds. Its instru
   run in the findings file as it records a diff review — new findings get IDs, verdicts and commits
   are appended — and stops it by the same endings. Cycle never fixes the phase's findings. On
   agreement with the specification the phase's decision takes precedence over the quality review's
-  fixes. A hand-back to a person is ending 4.
+  fixes.
 
 ## Judgment stays here
 
@@ -207,8 +207,7 @@ phase does both for its own findings.
    consecutive post-fix diff reviews have at least as many
    finalized new visible findings as visible findings marked `no_longer_visible`; full reviews
    are excluded from this comparison.
-4. A delegate handed back to brainstorm or plan, or the consistency phase handed a judgment back to
-   the person.
+4. A delegate handed back to brainstorm or plan.
 
 Endings 2–4 add to the terminal report the choice "run more or accept the rest and finish" and
 any hand-back reason. "Run more" continues the same run (streaks kept), findings still open, at
@@ -255,8 +254,8 @@ only such findings or problem records that were already committed.
 Always: artifacts and commits, verification results from the implement report, the
 `kotowari check` and `kotowari status` output, how to view the diff. When present: fixed findings, forwarded observations, reasoned out-of-plan changes, open
 findings needing the person, and rules or sections identified as absent from the specification.
-From the consistency phase: its commits and decision records, each default it left awaiting a
-person with the word that reverses it, and the one-line reason for each skipped run.
+From the consistency phase: its commits and decision records, each open `human_judgment` finding
+with its default and the word that reverses it, and the one-line reason for each skipped run.
 When a full review ran optional seats: which attended and which were absent, each absence with
 its reason.
 This is the person's one check; merging is theirs. Cycle never merges, publishes, deletes branches
