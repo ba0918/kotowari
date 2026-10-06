@@ -93,8 +93,9 @@ read before the first review) and its consistency phase included; "cycle" there 
 | "names an ID the plan covers" in **kotowari check before the terminal report** | names an ID the request's enumeration covers; with none, only the files the branch changed count |
 | any other plan word meaning the plan (one plan at once, out-of-plan changes) | the request (out-of-request changes); plan as a skill name, a destination, stays; sentences about plan steps (do not interpret its steps, if steps remain) do not apply — there is no plan |
 
-The **implementer** receives cycle's **Editing contract** with its Evidence conditions and
-**Fixer only** rules in full, the request replacing the visible findings; the implement skill is
+The **implementer** receives what the fixer receives — kotowari-cycle's
+`references/editing-contract.md` whole, with the Evidence conditions — the request replacing the
+visible findings; the implement skill is
 not used. Where the reason did not name delegated implementation,
 this session implements under that same contract, the rest of the loop unchanged. It returns
 commits, evidence per completion kind, out-of-request changes with reasons — or a hand-back and why.

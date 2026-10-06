@@ -22,7 +22,8 @@ decide; a person is involved only as a last resort.
   raises again, since they stay open for the final report; and the path of the kotowari-review
   skill's `references/finding-schema.md` (the shape of a finding).
 - The kotowari skill's reference directory and its **What the IR holds** section pasted in full;
-  cycle's **Editing contract** with Evidence conditions. Read `findings.md` to interpret check;
+  the **Editing contract** of the kotowari-cycle skill's `references/editing-contract.md`, with
+  the Evidence conditions. Read `findings.md` to interpret check;
   read `records.md` when recording a decision, `ir-form.md` when editing IR, `translations.md`
   when changing a language pair, and `mark.md` when writing tests. References are read on demand,
   not as a prerequisite to inspecting the diff.
@@ -84,7 +85,7 @@ resolved here as below.
 ## Fixing and recording
 
 - The phase fixes and commits the IR, decision record, flag record and code itself under the supplied
-  **Editing contract**. The fixer's instruction to leave IR alone and return on a hook's IR-side
+  Editing contract. The fixer's instruction to leave IR alone and return on a hook's IR-side
   finding does not apply: fixing IR is this phase's job. Resolve missing meaning by **How a finding
   is resolved**, not a hand-back. Check commands come from the project's instructions, then the
   ecosystem's standard tool; tests carry marks as `mark.md` says.

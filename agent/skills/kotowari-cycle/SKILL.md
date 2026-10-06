@@ -78,56 +78,33 @@ included) or one consistency phase run. The limit, when the person set one, coun
 
 ## Delegations
 
+Every prompt is self-contained; never assume a delegate loaded a skill or read the conversation.
+
 - **implement:** carry the plan path, branch, and worktree path. It returns commits, per-step
-  verification evidence, and out-of-plan changes, or a hand-back with its reason. When the hand-back
-  is a commit a hook stopped on an IR-side finding, run the consistency phase as in step 2 (the
-  blocked change in the worktree included in its range), then delegate the
-  remaining steps again; step 2 still runs after implementation.
+  verification evidence, and out-of-plan changes, or a hand-back with its reason.
 - **review (full):** carry the base and head, worktree path, known findings, and the review items
   and Evidence conditions named above. It returns findings JSON.
 - **review (diff):** carry the diff since the last review, worktree path, open findings with IDs,
   and the same review items and Evidence conditions. It returns per-finding `still_present` or
   `no_longer_visible` and new findings.
 - **consistency phase:** use **Consistency phase** below.
-- **fixer:** carry visible findings, plan path, branch, worktree path, and the contract below. It
-  returns commits and which finding each addresses, or a hand-back. A commit a hook stopped on an
-  IR-side finding is handled as for implement: a phase run at this step, then the same delegation. For a finding that is
-  `still_present` after a fix, also carry that fix's commits, and require the fixer, before
-  changing code, to report the one-sentence premise that fix assumed and the output of a command
-  it ran to test that premise. The next fix starts from that result; another fix resting on the
-  same premise is not the changed approach ending 3 waits for.
+- **fixer:** carry the visible findings, plan path, branch, worktree path, the path of the kotowari
+  skill's `references/mark.md`, and the contract below; for a finding that is `still_present`
+  after a fix, also that fix's commits.
+
+Paste `references/editing-contract.md` as written: its **Editing contract** to the fixer and the
+consistency phase, its **Fixer only** to the fixer alone. Immediately below the contract, paste
+the first paragraph from the kotowari-review skill's `references/oracle-evidence.md`. Keep no copy
+of either in this file.
+
+When implement or the fixer returns a commit a hook stopped on an IR-side finding, run the
+consistency phase as in step 2, the blocked change in the worktree included in its range, then
+repeat the same delegation; after implement, step 2 still runs.
 
 A review's counterpart follows the review skill's **Inputs**. Only the consistency phase gets
 the specification path with the plan's IDs: for IR, narrow `kotowari list` to those IDs
 (select by `.id`; see kotowari-plan's **Reading the requirements**) and pass the result as a file,
 never the whole list. For a topic with no IR, pass the plan's specification path and no ID file.
-
-Give implement and fixer agents the path to the kotowari skill's `references/mark.md`, with the
-instruction to read it before writing tests or changing their marks. They read that reference directly;
-artifact-only work needs no marker manual.
-
-### Editing contract
-
-Paste this contract into fixer and consistency-phase prompts: for code, RED → GREEN → REFACTOR
-with a test run at every transition; any failing test it writes must satisfy the Evidence conditions
-pasted below. For an artifact, leave it judgeable by an independent review and pass its format check.
-In conditions 3 and 4, the specification means the project's specification, or its public
-user-facing documentation when none exists; supported environments are those it declares.
-For a deletion, completion is all existing checks passing after deletion; no failing test is needed.
-Stop and ask before an irreversible or privileged operation, a dangerous target, or a spreading
-accident. One concern per commit; `git add <path>` only; never disable hooks; never name a station or finding ID in a commit
-message. A question a throwaway run can answer is a fact: run it, keep it out of the commits, and
-report the command and output.
-
-Immediately below that contract, paste the first paragraph from the kotowari-review skill's
-`references/oracle-evidence.md`; do not keep a copy in this skill.
-Every prompt is self-contained; never assume a delegate loaded a skill or read the conversation.
-
-**Fixer only:** it has no skill of its own. Also pass these rules: for a check oracle, run the
-plan's commands in order, unedited. Hand back missing design decisions. If a hook stops a commit
-on an IR-side finding, never edit the IR: leave the change uncommitted and return the finding.
-The consistency phase instead uses its reference's resolution rules and project check commands;
-the fixer's prohibition on IR edits does not apply to it.
 
 ## Consistency phase
 
@@ -145,8 +122,7 @@ review. Its agent instructions and input contract live in `references/consistenc
 - **Who.** A delegate in a context separate from the implementer, never the implement agent or the
   fixer. A model different from the implementer's is preferred, not required.
 - **What it carries.** Paste the reference in full and supply its **Inputs**, using the specification
-  path and IDs prepared above. Include the **Editing contract** with its Evidence conditions;
-  for `still_present` after a fix, also include the premise requirement from **Delegations**.
+  path and IDs prepared above, and the contract as **Delegations** says.
 - **What cycle does with the result.** The phase fixes and commits by itself; cycle only records the
   run in the findings file under **Judgment stays here**, and applies the same **Endings**.
   Cycle never fixes the phase's findings.
