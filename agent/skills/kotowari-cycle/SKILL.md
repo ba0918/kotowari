@@ -169,7 +169,8 @@ the quality review, and resolves the gaps and disagreements it finds. Its instru
 
 Cycle alone writes the findings file (shape: the review skill's `finding-schema.md`, with `base`,
 `last_reviewed_head` and `first_review_head`), creating it at the first phase run or review. Each
-time step 3 runs it sets `first_review_head` to the head it reviews. After every review or phase run
+time step 3 runs it sets `first_review_head` to the head it reviews; that head is the only state
+kept for the phase. After every review or phase run
 it overwrites the file: sets `last_reviewed_head` after a review, assigns
 IDs to new findings, merges reviewers and groups same-cause findings, finalizes each proposed action
 before classifying visible findings. For each non-`security` finding, in order: force `info` to
