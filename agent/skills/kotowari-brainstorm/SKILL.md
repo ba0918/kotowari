@@ -78,10 +78,23 @@ decides.
 
 ## Records
 
-Six kinds, kept in the decision record and defined in `references/records.md`: agreement, prohibition,
-undecided (with who decides), delegated (with reason), rejected (with reason), revision (what replaced
-what). Never merge undecided with delegated. When meaning changes, record the revision instead of
-rewriting the decision; resume from the record.
+The decision record holds six kinds of item from the first round on; its form (`## Context`, the
+section headings, the lines each item carries, links across documents) is the kotowari skill's
+`references/records.md`. Keep its Position line on where the tree stands and what the next round
+covers, and resume from the record.
+
+| Kind | Holds | Goes to |
+|---|---|---|
+| agreement | what was decided, in the person's words when possible | `## Agreements`; the IR items built on it cite it as their source |
+| prohibition | what will not be built | `## Prohibitions` |
+| undecided | the open question and **who decides it** (the person, or a later brainstorm — never the implementer) | `## Undecided` |
+| delegated | a choice the person agreed to leave to implementation, and **why** every option keeps approved behavior — never filed before they answer | `## Delegated` |
+| rejected | the alternative and **why** it lost | `## Rejected`, one line each, no mechanism description |
+| revision | what replaced what, and why | `## Revisions`, and the replaced decision's link to its replacement |
+
+Undecided has no answerer yet; delegated has one. Never file one as the other. A recommended answer
+the person did not answer is undecided, not an agreement. When meaning changes, record the revision
+instead of rewriting the decision.
 
 ## Writing the specification
 
