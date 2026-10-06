@@ -23,27 +23,18 @@ before cycle starts; the branch name contains the plan name.
 Optional: round-trip limit (default none: loop until convergence), review strength (the
 person's choice, default `standard`), comparison base (default: merge-base with the branch's
 parent), profiles (default: chosen from changed paths by the review skill's path mapping),
-optional seats (the person's word, such as "one seat this time"; default: the list in their
-user-scope instructions, as the review skill's **Optional seats** says).
+optional seats (the person's word for this run; otherwise as the review skill's **Optional
+seats** says).
 
-Cycle runs only what the caller's one-line reason named. Nothing here is assumed: whether a review
-launches a reviewer is the review skill's gate, and a second full review
-happens only under step 5's condition. Delegating more than the reason asked for is a
-counter-example. Optional seats are the person's own standing choice (their list, or their word
-for this run), so launching them is not delegating more than asked. The consistency phase is not a
-station the reason names: cycle decides it by its own measure (**Consistency phase**).
+Cycle runs only what the caller's one-line reason named; delegating more is a counter-example.
+Whether a review launches a reviewer is the review skill's gate, and a second full review happens
+only under step 5's condition. Optional seats are the person's standing choice, not an addition,
+and the consistency phase is decided by cycle's own measure (**Consistency phase**), not by the
+reason.
 
 Read the plan only to find the specification path it names — the IR store path and the IDs of
 the requirements it covers, or, for a topic with no IR, the path of its committed specification;
-do not interpret its steps.
-The findings file is `.agents/artifacts/reviews/<branch>.json` (a `/` in the branch name is a
-directory). If it already exists this is a resume: keep its findings, continue round numbers from
-the inherited maximum, and count both of ending 3's streaks from this start only (a returning closed cause
-counts across starts). Either way, infer from the plan and `git log` which steps are done; skip
-step 1 only when every step left a git trace. Otherwise delegate step 1: implement resumes by
-inference and redoes untraced steps, and step 2 follows. When step 1 is skipped, go on at step 2
-while `first_review_head` is null, else at step 4 while a visible quality finding is open, else at
-step 6. Whether to skip a phase run is decided again by its measure.
+do not interpret its steps. Where to start is in **Resuming and running more**.
 
 Before the first review, read the kotowari-review skill (`SKILL.md`, `references/profiles.md`,
 `references/finding-schema.md`, `references/oracle-evidence.md`). Its **Reviewer setup** owns
@@ -53,21 +44,18 @@ the self-contained reviewer prompt; use that contract for both full and diff rev
 
 1. Delegate the plan path, branch, and worktree path to an implement agent, all remaining steps
    in one delegation.
-2. Consistency phase over base..head, as **Consistency phase** below says.
+2. Consistency phase (**Consistency phase**).
 3. Full review: base..head, profiles, strength, counterpart, plus the **known findings** (open
    `record_only` / `human_judgment`, closed `accepted`), never visible or fixed ones; a match is not raised again.
-   Cycle itself, as the caller, then launches the optional seats as the review skill's **Optional
-   seats** says, using the seat choice the person gave at the start of the run; no review
-   delegation carries the seat choice or that section.
+   Then launch the optional seats yourself, as the review skill's **Optional seats** says.
 4. Diff loop: delegate the **visible findings** to a fixer; then diff review (changes since the
    last review, the open findings with IDs, profiles, strength, counterpart). Repeat until
-   no visible finding remains. A diff review gets no optional seat.
+   no visible finding remains.
 5. A second full review only when a fix could spread beyond where it was made; name that reason
    before running it; it gets the optional seats as in step 3. Its visible findings → one more
    diff loop until none remain.
    With no such reason, the diff loop clearing every visible finding ends the quality review.
-6. Consistency phase once more, over the diff of all the quality review's fixes (from the head step
-   3 reviewed, `first_review_head`, to the current head); then converged.
+6. Consistency phase once more (**Consistency phase**); then converged.
 
 Visible findings = open findings whose final action is `auto_fix` or `fix_and_verify`. Findings with
 `human_judgment` or `record_only` stay open for the terminal report. A `consistency` finding goes
@@ -111,8 +99,9 @@ never the whole list. For a topic with no IR, pass the plan's specification path
 The consistency phase owns agreement between code and specification, separately from quality
 review. Its agent instructions and input contract live in `references/consistency-phase.md`.
 
-- **When.** Once after implementation (step 2) and once after the quality review's fixes converge,
-  over the diff of all those fixes (step 6). One delegation is one run. After a run that returned a
+- **When.** Once after implementation (step 2), over base..head, and once after the quality
+  review's fixes converge (step 6), over the diff of all those fixes: from the head step 3 reviewed
+  (`first_review_head`) to the current head. One delegation is one run. After a run that returned a
   new finding or a visible one `still_present`, cycle delegates a rerun with the same base and the head moved to
   the current head; the step ends at a run that returns neither.
 - **Whether.** Cycle decides. Skip a run only when its diff neither adds nor changes behavior a user
@@ -166,16 +155,37 @@ phase does both for its own findings.
 2. The person's round-trip limit was reached.
 3. No progress: a finding is `still_present` in two consecutive rounds that evaluated it (the
    second after a changed approach); a closed finding's cause returns; or a review still cannot
-   succeed after one re-delegation (an absent optional seat is not a failed review); or two
+   succeed after one re-delegation; or two
    consecutive post-fix diff reviews have at least as many
    finalized new visible findings as visible findings marked `no_longer_visible`; full reviews
    are excluded from this comparison.
 4. A delegate handed back to brainstorm or plan.
 
 Endings 2–4 add to the terminal report the choice "run more or accept the rest and finish" and
-any hand-back reason. "Run more" continues the same run (streaks kept), findings still open, at
-step 1 if untraced plan steps remain; else at the step that raised the ending: a phase rerun in
-step 2 (then on to step 3) or step 6, otherwise step 4. A new limit, if any, is the person's to set.
+any hand-back reason.
+
+## Resuming and running more
+
+The findings file is `.agents/artifacts/reviews/<branch>.json` (a `/` in the branch name is a
+directory). If it exists when cycle starts, this is a resume: keep its findings and continue round
+numbers from its maximum. Ending 3's two streaks (`still_present` twice running; new visible
+findings not shrinking) count from this start only; a closed cause returning counts across
+starts. "Run more" after endings 2–4 continues the same run: streaks kept, findings still open, a
+new limit only if the person sets one.
+
+Either way, infer from the plan and `git log` which steps are done, and go on at the first row
+that holds:
+
+| Situation | Go on at |
+|---|---|
+| a plan step left no git trace | step 1 (implement resumes by inference and redoes untraced steps), then step 2 |
+| "run more" after an ending a phase rerun raised | that step: 2 (then on to 3) or 6 |
+| "run more" otherwise | step 4 |
+| resume, `first_review_head` null | step 2 |
+| resume, a visible quality finding open | step 4 |
+| resume otherwise | step 6 |
+
+Whether to skip a phase run is decided again by its measure.
 
 ## kotowari check before the terminal report
 
@@ -192,8 +202,7 @@ it in the terminal report by kind, and never delegate it — fixing what the run
 spends a loop on work nobody asked for. The same holds for a `complete false` whose reason is
 only such findings or problem records that were already committed.
 
-- This run's test-side findings (requirement_without_test, scenario_without_test,
-  test_without_id, invalid_marker, unparsable_file, and unresolved_reference from a mark) are
+- This run's test-side findings (defined in the kotowari skill's `references/findings.md`) are
   findings for the fixer: make them visible and run the diff loop. If they do not go away, end as
   ending 3 (no progress).
 - Deferred requirements and deferred scenarios (`deferred` true in `kotowari list`) are not
@@ -219,8 +228,8 @@ Always: artifacts and commits, verification results from the implement report, t
 findings needing the person, and rules or sections identified as absent from the specification.
 From the consistency phase: its commits and decision records, each open `human_judgment` finding
 with its default and the word that reverses it, and the one-line reason for each skipped run.
-When a full review ran optional seats: which attended and which were absent, each absence with
-its reason.
+When a full review ran optional seats: their attendance, as the review skill's **Optional seats**
+says under **Merging and reporting**.
 This is the person's one check; merging is theirs. Cycle never merges, publishes, deletes branches
 or worktrees, edits the specification itself (the consistency phase does, as its reference says),
 manages issues, or runs two plans at once.
