@@ -22,6 +22,9 @@ fills those.
       "sent_to": "fixer"
     }
   ],
+  "fixes": [
+    {"findings": [5], "commits": ["<hash>"], "reviewed_in": 3}
+  ],
   "findings": [
     {
       "id": 7,
@@ -56,6 +59,7 @@ fills those.
 | `status.state` | `open` / `closed`; `closed_reason` is `fixed` or `accepted` |
 | `commits` | commit hashes the fixer, or for a `consistency` finding the phase, reported for this finding |
 | `premise_attempts` | written by cycle only, one entry per attempt of the kotowari-cycle skill's premise step, appended before the attempt's delegation; `[]` until one runs |
+| `fixes` | written by cycle only, one entry per fix in order: the findings it reported (`[]` when none) and their commits; `reviewed_in` is the round of the next review (not a consistency phase run), `null` until it runs; a consistency phase's own fixes get no entry |
 | `clause` | the ending 3 clause that fired: `still_present_twice` / `cause_returned` / `not_shrinking` / `overlap_after_fix` |
 | `lives_in` | `implementation` / `ir_or_record` |
 | `sent_to` | `fixer` / `consistency_phase` / `person` |

@@ -118,7 +118,7 @@ review. Its agent instructions and input contract live in `references/consistenc
 ## Judgment stays here
 
 Cycle alone writes the findings file (shape: the review skill's `finding-schema.md`, with `base`,
-`last_reviewed_head`, `first_review_head` and `premise_attempts`), creating it at the first phase run or review. Each
+`last_reviewed_head`, `first_review_head`, `premise_attempts` and `fixes`), creating it at the first phase run or review. Each
 time step 3 runs it sets `first_review_head` to the head it reviews; that head is the only state
 kept for the phase. After every review or phase run
 it overwrites the file: sets `last_reviewed_head` after a review, assigns
@@ -129,7 +129,8 @@ new test or fixture without showing it qualifies, keep its action but replace it
 existing checks passing; replace a `warn` oracle even when it qualifies. Leave `security` untouched
 and pause. Adopt any proposal that matched none of these checks unchanged. Never move a finding out
 of `human_judgment` without asking the person. Append numbered verdicts and update state; after every
-fix record its reported commits.
+fix record its reported commits on each finding and append one entry to `fixes`; after every review
+(not a consistency phase run), set its round as `reviewed_in` on each entry that has none.
 `no_longer_visible` → closed (`fixed`); accepted by the person at the end → closed (`accepted`). If
 reviewers disagree, one `still_present` means still present. New findings carry no IDs, whether a
 full review, a diff review, or a phase run raised them: match each by evidence location and
@@ -138,15 +139,13 @@ closed finding is "same cause returned" under **Endings** and reopens it unless 
 `accepted`. Reviewers only evaluate; the fixer only reports commits; the consistency phase does
 both for its own findings. Record each premise attempt as `references/premise-step.md` says.
 
-**Overlap after a fix** is read from the findings file alone. A fix addressed the findings whose
-`commits` hold the commits it reported. The review right after it is the first round that evaluated or
-raised a `quality` finding after the last round in which those findings were `still_present` (a
-consistency phase run touches only `consistency` findings), and the findings it raised are the
-`quality` findings whose first evaluation is that round. Two evidence entries overlap when they name the same file with
-overlapping line ranges; an entry without a line range, or a finding with no evidence, takes no
-part. A fix breaks the run of two when it reported no finding, when a finding it addressed holds a
-later fix's commits after its own (it did not clear that finding for good, which ending 3's other
-clauses catch), or when its next review raised no overlapping visible finding.
+**Overlap after a fix** is read from the findings file alone, one `fixes` entry after another. The
+review right after a fix is round `reviewed_in`, and the findings it raised are the visible
+`quality` findings whose first evaluation is that round. Two evidence entries overlap when they
+name the same file with overlapping line ranges; an entry without a line range, or a finding with
+no evidence, takes no part. A fix breaks the run of two when it reported no finding, when a finding
+it addressed is `still_present` at `reviewed_in` (it did not clear that finding, which ending 3's
+other clauses catch), or when that review raised no finding overlapping one the fix addressed.
 
 ## Stopping inside the loop
 
