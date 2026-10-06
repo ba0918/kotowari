@@ -1,6 +1,6 @@
 ---
 name: kotowari-iterate
-description: "Entry point beside the kotowari workflow for a task too small to need a specification or a plan: this session judges whether the request is a small task, delegating a read-only judge only when it cannot close the impact enumeration, then the cycle loop runs implementation, review, and fixing on it, adding only the stations the caller's one-line reason named; anything bigger is turned away with the next skill to call. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to iterate, for one more fix, to fix this bit, to add this too, or to polish it a little more. 日本語キーワード: iterate ちょっと直して これも足して もう少し磨いて 小さいタスク"
+description: "Entry point beside the kotowari workflow for a task too small to need a specification or a plan: judge whether the request is small and run the cycle loop on it; anything bigger is turned away with the next skill to call. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to iterate, for one more fix, to fix this bit, to add this too, or to polish it a little more. 日本語キーワード: iterate ちょっと直して これも足して もう少し磨いて 小さいタスク"
 ---
 
 # Iterate

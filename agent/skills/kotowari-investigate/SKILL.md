@@ -1,6 +1,6 @@
 ---
 name: kotowari-investigate
-description: "Read-only investigation, called by a person and outside the kotowari workflow stations: start from a symptom or a question, trace the direct and root cause, the impact, and whether tests cover it, then report fix options without changing a file. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to investigate something, to find why something happens, to look for a root cause, or to see the impact scope of a change. Not for checking a finished change — that is review's diagnosis. 日本語キーワード: 調べて 原因を調査して なぜ〜が起きる 影響範囲を見たい"
+description: "Read-only investigation a person calls outside the kotowari workflow stations, from a symptom or a question to a report of causes, impact, and fix options. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to investigate something, to find why something happens, to look for a root cause, or to see the impact scope of a change. Not for checking a finished change — that is review's diagnosis. 日本語キーワード: 調べて 原因を調査して なぜ〜が起きる 影響範囲を見たい"
 ---
 
 # Investigate

@@ -1,6 +1,6 @@
 ---
 name: kotowari-adopt
-description: "Workflow station of the kotowari workflow: bring one topic of an existing project into kotowari — sort its legacy documents, implementation, and tests against each other, write the IR, the glossary, the problem record, and one decision record, get approval, and hand the person one request text for the test work that follows. Use in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`) or is about to adopt it. Use when asked to bring an existing specification or existing code into the IR, to adopt kotowari into a project midway, or when it is unclear whether the IR matches the implementation. 日本語キーワード: 導入 取り込み 既存プロジェクト 途中から 旧資料 現状追認 仕分け IRと実装の突き合わせ"
+description: "Workflow station of the kotowari workflow: bring one topic of an existing project into kotowari by sorting its legacy documents, implementation, and tests into the IR and its records. Use in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`) or is about to adopt it. Use when asked to bring an existing specification or existing code into the IR, to adopt kotowari into a project midway, or when it is unclear whether the IR matches the implementation. 日本語キーワード: 導入 取り込み 既存プロジェクト 途中から 旧資料 現状追認 仕分け IRと実装の突き合わせ"
 ---
 
 # Adopt

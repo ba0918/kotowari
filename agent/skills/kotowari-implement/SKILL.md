@@ -1,6 +1,6 @@
 ---
 name: kotowari-implement
-description: "Workflow station of the kotowari workflow: execute an approved plan step by step, test-first for code, committing one concern at a time, and hand back instead of guessing when a design decision is missing. Invoked by kotowari-cycle with a plan path, a branch, and a worktree path. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when cycle delegates implementation of a kotowari plan. 日本語キーワード: 実装 手順書を実行 TDD 実装計画"
+description: "Workflow station of the kotowari workflow: carry out the steps of an approved plan on a branch, delegated by kotowari-cycle. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when cycle delegates implementation of a kotowari plan. 日本語キーワード: 実装 手順書を実行 TDD 実装計画"
 ---
 
 # Implement
