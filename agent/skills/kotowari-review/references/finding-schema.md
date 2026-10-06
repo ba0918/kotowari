@@ -59,6 +59,6 @@ fills those.
 | `clause` | the ending 3 clause that fired: `still_present_twice` / `cause_returned` / `not_shrinking` / `overlap_after_fix` |
 | `lives_in` | `implementation` / `ir_or_record` |
 | `sent_to` | `fixer` / `consistency_phase` / `person` |
-| `evaluations` | one per review or consistency phase run that evaluated this finding, with the round-trip number: `{"round": n, "verdict": "still_present" \| "no_longer_visible"}`; a full-review match appends `still_present` |
+| `evaluations` | one per review or consistency phase run that evaluated this finding, with the round-trip number: `{"round": n, "verdict": "still_present" \| "no_longer_visible"}`; a new finding's first entry is `still_present` with the round that raised it; a full-review match appends `still_present` |
 
 Diff-review return shape: `{"verdicts": [{"id": 7, "verdict": "still_present"}], "new": [ ...findings... ]}`.
