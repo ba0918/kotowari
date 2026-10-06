@@ -202,6 +202,37 @@ fn tbl_core_047_an_unreadable_test_file_matched_by_surface_files_in_no_rule_lang
     );
 }
 
+// @kotowari[TBL-core-047]
+#[test]
+fn tbl_core_047_errors_only_in_test_files_pass_with_the_option() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), "");
+    write(
+        tmp.path(),
+        "tests/a.rs",
+        "// @kotowari[REQ-greet-999]\n#[test]\nfn a() {}\n\n// @kotowari[]\n#[test]\nfn b() {}\n",
+    );
+    write(tmp.path(), "tests/b.rs", "fn f( {\n");
+    write(
+        tmp.path(),
+        "docs/ir/greet/greet.md",
+        &ir_with_requirement("review\n- how_to_verify: read it", UNTESTED),
+    );
+    let (code, stdout, stderr) = run(tmp.path(), &["check", "--allow-test-findings"]);
+    assert_eq!(code, Some(0), "{stdout}{stderr}");
+    let found = findings(&stdout);
+    for (kind, path) in [
+        ("unresolved_reference", "tests/a.rs"),
+        ("invalid_marker", "tests/a.rs"),
+        ("unparsable_file", "tests/b.rs"),
+    ] {
+        assert!(
+            found.contains(&(kind.to_string(), "error".to_string(), path.to_string())),
+            "{stdout}"
+        );
+    }
+}
+
 // @kotowari[EX-core-551]
 #[test]
 fn ex_core_551_a_malformed_guide_mark_stops_even_with_the_option() {
