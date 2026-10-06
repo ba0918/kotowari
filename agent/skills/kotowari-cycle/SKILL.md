@@ -105,8 +105,8 @@ included). The limit, when the person set one, counts round trips.
   it ran to test that premise. The next fix starts from that result; another fix resting on the
   same premise is not the changed approach ending 3 waits for.
 
-A review's counterpart is the review skill's **Inputs**: none for code and skill text, and the
-specification path for a plan or another document in the diff, read on quality. A review gets no
+A review's counterpart is the review skill's **Inputs**: none for code and skill text, and, for a
+document in the diff, what its **Counterpart by target** names for that kind, read on quality. A review gets no
 file of IDs. The specification path with the file of IDs goes to the consistency phase. When the
 plan's specification is the kotowari IR, the path is the IR store path, and the IDs the plan covers
 go along as a file: narrow `kotowari list` with `jq` to those IDs (select by `.id`; the kotowari-plan
