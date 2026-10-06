@@ -14,7 +14,7 @@ decide; a person is involved only as a last resort.
 - The range: the base and head of the diff to read.
 - The counterpart: the IR store path and a file listing the IDs the plan covers. For a topic with no
   IR, the approved specification document, or the request when there is none.
-- The findings it reported on its previous run over this range, if any.
+- The findings the previous run with the same base returned, if any.
 - The paths of the kotowari skill's references it follows when it writes: `ir-form.md` and
   `records.md` (the IR and decision records), `translations.md` (language pairs),
   `findings.md` (reading `kotowari check`) and `mark.md` (marks on tests); and cycle's fixer contract
@@ -82,16 +82,18 @@ resolved here as below.
 
 ## Running again and ending
 
-- After a fix, the phase runs again over the same range, now including its own commits, and also
-  reads whether the grounds it recorded support each choice.
-- A run that raises no new finding is convergence.
-- The same finding in two consecutive runs is no progress: cycle ends the loop by its ending for no
-  progress.
+- One delegation is one run. After a run that fixed something, cycle delegates another run with the
+  same base and the head moved to the current head, so the range includes the fixes; that run also
+  reads whether the grounds recorded for each choice support it.
+- Each finding a rerun returns is marked `new`, or `repeat` when it is the same gap or disagreement
+  at the same place as a finding of the previous run it was given.
+- A run that raises no new finding is convergence. A `repeat` is no progress, the same finding twice
+  in a row: cycle ends the loop by its ending for no progress.
 
 ## What it returns
 
 - Each finding of this run: what it is (gap, disagreement, or a gap or contradiction within the IR),
-  where (file and line, or ID), how it was resolved, and its commits.
+  where (file and line, or ID), `new` or `repeat`, how it was resolved, and its commits.
 - The path of the decision record it wrote, if it decided anything.
 - Each default left awaiting a person: the flag ID, the default, and the word that reverses it.
 - Anything handed back to a person, with its reason.

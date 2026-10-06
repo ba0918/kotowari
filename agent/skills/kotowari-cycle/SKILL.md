@@ -55,8 +55,8 @@ rules, paste the Evidence conditions from
 
 1. Delegate the plan path, branch, and worktree path to an implement agent, all remaining steps
    in one delegation.
-2. Consistency phase over base..head, as **Consistency phase** below says, run again until it
-   raises no new finding.
+2. Consistency phase over base..head, as **Consistency phase** below says, rerun until a run
+   converges.
 3. Full review: base..head, profiles, strength, specification path, plus the **known findings** (open
    `record_only` / `human_judgment`, closed `accepted`), never visible or fixed ones; a match is not raised again.
    Cycle itself, as the caller, then launches the optional seats as the review skill's **Optional
@@ -70,7 +70,7 @@ rules, paste the Evidence conditions from
    diff loop until none remain.
    With no such reason, the diff loop clearing every visible finding ends the quality review.
 6. Consistency phase once more, over the diff of all the quality review's fixes (from the head step
-   3 reviewed to the current head), run again until it raises no new finding; then converged.
+   3 reviewed to the current head), rerun until a run converges; then converged.
 
 Visible findings = open findings whose final action is `auto_fix` or `fix_and_verify`. Findings with
 `human_judgment` or `record_only` stay open for the terminal report. When
@@ -132,8 +132,9 @@ the quality review, and resolves the gaps and disagreements it finds. Its instru
 `references/consistency-phase.md`.
 
 - **When.** Once after implementation (step 2) and once after the quality review's fixes converge,
-  over the diff of all those fixes (step 6). After its own fixes it runs again until a run raises no
-  new finding.
+  over the diff of all those fixes (step 6). One delegation is one run. After a run that fixed
+  something, cycle delegates a rerun: the same base, the head moved to the current head, and the
+  previous run's findings. A run that raises no new finding converges.
 - **Whether.** Cycle decides. Skip a run only when its diff neither adds nor changes behavior a user
   can observe: documents such as guides only, tests only, or a refactoring that keeps behavior.
   Skill text is behavior, never skipped as a document. When in doubt, run it. A skipped run writes a
@@ -142,14 +143,14 @@ the quality review, and resolves the gaps and disagreements it finds. Its instru
   fixer. A model different from the implementer's is preferred, not required.
 - **What it carries.** `references/consistency-phase.md` pasted in full; the worktree path and branch;
   the range (base and head); the specification path and the file of IDs the plan covers, as the
-  reviews get them; the findings the previous run over the same range returned, if any; the paths of
+  reviews get them; the findings the previous run with the same base returned, if any; the paths of
   the kotowari skill's `references/ir-form.md`, `references/records.md`,
   `references/translations.md`, `references/findings.md` and `references/mark.md`; and the fixer
   contract below with its Evidence conditions.
 - **What cycle does with the result.** The phase fixes and commits by itself; cycle only records
   its commits and reports them. Cycle does not turn the phase's findings into review findings, fix
-  them, or judge them. When a run reports a finding the previous run over the same range also
-  reported, end as ending 3 (no progress). On agreement with the specification the phase's decision
+  them, or judge them. When a run returns a finding marked `repeat` (the same as one the previous
+  run returned), end as ending 3 (no progress). On agreement with the specification the phase's decision
   takes precedence over the quality review's fixes. A hand-back to a person is ending 4.
 
 ## Judgment stays here
@@ -189,8 +190,8 @@ it was closed `accepted`. Reviewers only evaluate; the fixer only reports commit
    succeed after one re-delegation (an absent optional seat is not a failed review); or two
    consecutive post-fix diff reviews have at least as many
    finalized new visible findings as visible findings marked `no_longer_visible`; full reviews
-   are excluded from this comparison; or the consistency phase reports the same finding in two
-   consecutive runs.
+   are excluded from this comparison; or a consistency phase run returns a finding marked
+   `repeat`.
 4. A delegate handed back to brainstorm or plan, or the consistency phase handed a judgment back to
    the person.
 
