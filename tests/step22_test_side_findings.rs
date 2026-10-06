@@ -215,7 +215,7 @@ fn ex_core_551_a_malformed_guide_mark_stops_even_with_the_option() {
     write(
         tmp.path(),
         "guides/a.md",
-        "# Guide\n\n<!-- @kotowari[ , ] -->\n",
+        "# Guide\n\n<!-- @kotowari[] -->\n",
     );
     let (code, stdout, stderr) = run(tmp.path(), &["check", "--allow-test-findings"]);
     assert_eq!(code, Some(1), "{stdout}{stderr}");
