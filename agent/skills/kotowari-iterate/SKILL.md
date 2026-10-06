@@ -53,13 +53,9 @@ cannot be closed — condition 4 in doubt — and say so; a judge over a closed 
 counter-example. When delegated, the prompt is self-contained: the request; the worktree
 path; the specification path if given, else the duty to search the specification home the project's
 instructions name and report one covering the files to change; the four conditions verbatim; the return
-shape (the files and their changes, plus a verdict with grounds per condition); and, in full, these
-restrictions: no editing, creating, overwriting, deleting, moving, or renaming any file, notebooks
-included; allowed — the only commands run — are reading files, listing paths, searching, read-only
-commands (a test only when known to update nothing, in the repo or outside), and following references;
-forbidden, as examples (refuse anything else that changes state): `rm` `rmdir` `mv` `cp` `chmod` `chown`
-`touch` `mkdir` `tee`, output redirection, in-place rewriting, state-changing git; secrets reported as
-existing, never by value; the judge writes no file and never delegates further. Take `git status`
+shape (the files and their changes, plus a verdict with grounds per condition); and, in full, the
+restrictions kotowari-investigate's **Delegate exploration** puts into a subagent prompt (the judge
+writes no file and never delegates further). Take `git status`
 yourself before and after; a difference is a spreading accident: stop, show the person, ask; never
 revert it. A found specification counts as given — for condition 3, review, and the guidance table's "if
 a specification exists"; none found, go on without; passing condition 3 unsearched is a counter-example.
