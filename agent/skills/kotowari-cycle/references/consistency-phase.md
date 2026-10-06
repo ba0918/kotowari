@@ -81,7 +81,11 @@ resolved here as below.
 
 - The phase itself fixes the IR, the decision record, the flag record and the code, and commits
   them. A change to code follows the fixer contract it was given, and a test it writes carries marks
-  as `mark.md` says.
+  as `mark.md` says. Of that contract, these apply: test-first for code, with a failing test
+  meeting the Evidence conditions; the artifact and deletion rules; commit hygiene; and stopping
+  before an irreversible or privileged operation. Its rule to hand back a missing design decision
+  does not: **How a finding is resolved** replaces it. There is no plan, so its check commands come
+  from the project's instructions, then the ecosystem's standard tool.
 - What it decided is written to a new decision record for this run (`records.md` gives its place and
   form). Each decision names the consistency phase as the decider (`decided_by`), with the choice,
   the reason and pointers to the grounds: the measuring commands and their results, files and lines.
