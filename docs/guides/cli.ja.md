@@ -247,13 +247,13 @@ Commands:
 
 Changes: --base <REV> (--head <REV> | --staged) --phase <implementation|review>
 Options:
-  --format <FORMAT>  Output format: json (default) or text
-  --config <PATH>    Path to configuration file
-  --tool <TOOL>      Mutation testing tool of the result file: cargo-mutants
-  --port <PORT>      Port of overview serve on 127.0.0.1 (default 4590)
+  --format <FORMAT>      Output format: json (default) or text
+  --config <PATH>        Path to configuration file
+  --tool <TOOL>          Mutation testing tool of the result file: cargo-mutants
+  --port <PORT>          Port of overview serve on 127.0.0.1 (default 4590)
   --allow-test-findings  check: exit 0 when every error is a test-side finding
-  --help             Show this help message
-  --version          Show version
+  --help                 Show this help message
+  --version              Show version
 ```
 
 ### 引数を間違えて止まる

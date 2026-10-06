@@ -703,13 +703,13 @@ fn print_help() {
     println!();
     println!("Changes: --base <REV> (--head <REV> | --staged) --phase <implementation|review>");
     println!("Options:");
-    println!("  --format <FORMAT>  Output format: json (default) or text");
-    println!("  --config <PATH>    Path to configuration file");
-    println!("  --tool <TOOL>      Mutation testing tool of the result file: cargo-mutants");
-    println!("  --port <PORT>      Port of overview serve on 127.0.0.1 (default 4590)");
+    println!("  --format <FORMAT>      Output format: json (default) or text");
+    println!("  --config <PATH>        Path to configuration file");
+    println!("  --tool <TOOL>          Mutation testing tool of the result file: cargo-mutants");
+    println!("  --port <PORT>          Port of overview serve on 127.0.0.1 (default 4590)");
     println!("  --allow-test-findings  check: exit 0 when every error is a test-side finding");
-    println!("  --help             Show this help message");
-    println!("  --version          Show version");
+    println!("  --help                 Show this help message");
+    println!("  --version              Show version");
 }
 
 fn project(cwd: &Path, config: Option<&Path>) -> Result<Project, StopReason> {
