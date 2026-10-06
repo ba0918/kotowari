@@ -1,26 +1,25 @@
-# 変更履歴
+# Changelog
 
 ## [Unreleased]
 
 ### Changed
 
-- 最小対応 Rust バージョン（`rust-version`）を 1.89 から 1.99 に上げた（`kotowari-markdown-schema`、`kotowari-markdown-schema-io`、`kotowari-markdown-view`、`kotowari-mds`）。
-- **BREAKING（Rust API・パッケージ構成）** `Schema`の未検証の構築・変更を非公開にし、`Schema::parse`で意味検証を行う。`extract_validated`は検証に成功した値、`extract_partial`は途中まで得た値と指摘を返す。旧呼出コードは移行が必要。
-- 取得を`kotowari-markdown-schema-io`、実行ファイルを`kotowari-mds`パッケージに分離した。バイナリのコマンド、出力、終了コードは変わらない。
+- The minimum supported Rust version (`rust-version`) is raised from 1.89 to 1.99 (`kotowari-markdown-schema`, `kotowari-markdown-schema-io`, `kotowari-markdown-view`, `kotowari-mds`).
+- **BREAKING (Rust API and package layout)** Unvalidated construction and modification of `Schema` are now private, and `Schema::parse` performs semantic validation. `extract_validated` returns the values of a successful validation, and `extract_partial` returns the values obtained so far together with the findings. Calling code written against the old API needs to migrate.
+- Fetching is split into the `kotowari-markdown-schema-io` package and the executable into the `kotowari-mds` package. The binary's commands, output and exit codes are unchanged.
 
 ### Added
 
-- 再利用する読込み結果を返す`SchemaLoader`と、既定で無効な`tokio` featureの`AsyncSchemaLoader`を追加した。
-- Markdownの文章と種類の決まった部品からなる文書を、メモリの中で静的なHTMLのページにする`kotowari-markdown-view`クレートを追加した。8種の部品のJSON Schemaを`part_schema`で返す。ファイルを読み書きせず、ページは外から何も読み込まない。
+- `SchemaLoader`, which returns load results for reuse, and `AsyncSchemaLoader` behind the `tokio` feature, disabled by default.
+- The `kotowari-markdown-view` crate, which turns documents made of Markdown text and parts of fixed kinds into static HTML pages in memory. `part_schema` returns the JSON Schema of the eight part kinds. It reads and writes no files, and the pages load nothing from outside.
+- `SchemaLoader::read_document`, which reads a document as a UTF-8 string with a leading BOM removed, the same way `load` does, without resolving a schema.
 
 ### Fixed
 
-- スキーマの`extract`の`value`と`of`の鍵で、ドットで区切った名前が空のもの（`""`や`a..b`）を`path`と同じく`schema_invalid`で止めるようにした。これまでは通り、抽出の値に空文字列の鍵ができていた。
-- 段落の読み方で、箇条書きの`pattern`をマーカーの行だけに当てるようにした。これまでは遅延継続の行（字下げせずに続けた行）も含めて照合し、行の読み方と結果が食い違っていた。
-- CRLF の文書で、段落の読み方の箇条書き・フィールド行の値に`\r`が混ざらないようにした。値の行は LF の文書と同じく改行1つでつなぐ。これまでは子の行や折り返し行との間が`\r\n`になり、行の読み方とも値が食い違っていた。
-- 行の読み方で、一覧のマーカーの後でフェンスを開く項目（`- ```python`）を段落の読み方と同じく中身がコードブロックの項目として読むようにした。これまでは閉じの行を新しいフェンスの開始と取り違え、文書の最後まで後ろの見出しごとコードブロックに吸い込んでいた。
-- `kotowari-markdown-view`で、GFM の脚注の記法（`[^1]`）を脚注として描かないようにした。描くと UI の文字に無い英語の見出し「Footnotes」と戻りリンクの文字がページに入っていた。脚注の記法は CommonMark のとおりに読む。
-- `kotowari-mds check`にディレクトリを渡したとき、同じスキーマを文書ごとに読み直さないようにした。URL のスキーマは1回の check で1度だけ取りに行く。これまではキャッシュに書けない場合、同じ URL を指す文書の数だけ取得していた。
-- `kotowari-markdown-view`で、参照の表に無い参照を、本文の無い参照と同じく選んでも何も開かない文字として描くようにした。これまでは開いても中身の無い開閉の要素を描いていた。
-
-版の基準はこのクレートの`Cargo.toml`にある。この変更にはリリース、タグ、公開を含めない。
+- A dot-separated name that is empty (`""` or `a..b`) in the `value` and `of` keys of a schema's `extract` now stops with `schema_invalid`, the same as `path`. Before, it passed, and the extracted values got an empty-string key.
+- In paragraph reading, the `pattern` of a list now applies only to the marker line. Before, it was matched including lazy continuation lines (lines continued without indentation), and the result disagreed with line reading.
+- In a CRLF document, `\r` no longer gets into the values of list and field lines in paragraph reading. Value lines are joined with one newline, the same as in an LF document. Before, child lines and wrapped lines were joined with `\r\n`, and the values disagreed with line reading too.
+- In line reading, an item that opens a fence after a list marker (`- ```python`) is now read as an item whose content is a code block, the same as in paragraph reading. Before, the closing line was mistaken for the start of a new fence, and everything up to the end of the document, later headings included, was swallowed into the code block.
+- `kotowari-markdown-view` no longer draws GFM footnote syntax (`[^1]`) as footnotes. Drawing them put an English heading "Footnotes", which is not in the UI text, and back-link characters into the page. Footnote syntax is read as CommonMark reads it.
+- `kotowari-mds check` given a directory no longer reads the same schema again for each document. A URL schema is fetched only once per check. Before, when the cache could not be written, the same URL was fetched once per document pointing at it.
+- `kotowari-markdown-view` now draws a reference missing from the reference table as text that opens nothing when chosen, the same as a reference without a body. Before, it drew an open-and-close element with nothing inside.
