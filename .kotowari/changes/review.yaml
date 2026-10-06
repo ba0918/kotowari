@@ -600,6 +600,177 @@
       "decisions": [],
       "handoff": null,
       "gaps": []
+    },
+    {
+      "id": "rework-root-changelog-review",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "reviewer",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "before": "sha256:1f73e8c04b4724f2fc7a6d1db79fb8c151c9fb92333e3a4cb1732141e306af5d",
+          "after": "sha256:c7a8247e0f633f3315d0d1c455e2b9b9cce8b77a8fa1385a0a62d1a1dc06ef2f"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/change-record-format.md",
+          "sha256": "sha256:733e2f8d430746e2b13fff0677a47e07348cb1c3b79a1c6c30c03f0ed6afd262"
+        },
+        {
+          "path": "docs/ir/core/changes-inputs.md",
+          "sha256": "sha256:ad0d0553a709e8891361ed04dd9e047d19e1e0186b621e0a42e16b6a3a0df15b"
+        },
+        {
+          "path": "docs/ir/core/cli-environment.md",
+          "sha256": "sha256:0e983d819fb30e8af806b5933ca5edecbbe1fb2d1e2b657eeb70ed7ff5669928"
+        },
+        {
+          "path": "docs/ir/core/cli.md",
+          "sha256": "sha256:849f698dbe2eabe12e7f810dbc5e0d185303d84c72774469b553d8a28860c542"
+        },
+        {
+          "path": "docs/ir/core/config.md",
+          "sha256": "sha256:8e6c8146beffb94dcd7f8e19273f8dcae92f426b53c51b071f9f26a06270798e"
+        },
+        {
+          "path": "docs/ir/core/findings.md",
+          "sha256": "sha256:1ed515281d09deb0d5cbe20e0e2cc14d73bc4ba61056f1753ba9bc5fea466298"
+        },
+        {
+          "path": "docs/ir/core/ir-document.md",
+          "sha256": "sha256:de660d815988839dcc374e678e8bfa781a3440de962b92bef42cd36b3bbb0bf2"
+        },
+        {
+          "path": "docs/ir/core/ir-input.md",
+          "sha256": "sha256:010bc24dc95ff1f6a817437f1b13c4eeb79951207d992b87134db4db6f9b9493"
+        },
+        {
+          "path": "docs/ir/core/overview-commands.md",
+          "sha256": "sha256:0456618297b9bdaa4ed3cb4ddce384216cb6eb0a88a21c3e98da61ff33dcaa18"
+        },
+        {
+          "path": "docs/ir/core/translation-structure.md",
+          "sha256": "sha256:97f5a1e1b02a6d5ca825600e75a67751c1f0b8ef71827f141128e586813eaa42"
+        },
+        {
+          "path": "docs/ir/view/languages.md",
+          "sha256": "sha256:34a8f3a9e19eece3e814152e559059ed8f5f30311d57e929436c9d6a2650a823"
+        },
+        {
+          "path": "docs/ir/view/rendering.md",
+          "sha256": "sha256:1d7a614e57d06504a56d156556bac3cd38101340581762e56f892d473f48f28e"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "Coverage entry for CHANGELOG.md, which eight fix commits edit. Compared the branch-wide diff from the base: the eight added Fixed lines describe, one each, the footnote, heading HTML comment, hidden directory, first definition, BOM switcher, configuration error path, --port and brace glob fixes, and each line matches the behavior verified in the per-commit review entries against the IR listed here. No other line changes. Minor: an extra blank line is left before the 0.3.0 heading, which does not change the content.",
+      "requirements": [
+        "REQ-core-004",
+        "REQ-core-019",
+        "REQ-core-032",
+        "REQ-core-033",
+        "REQ-core-111",
+        "REQ-core-263",
+        "REQ-core-265",
+        "REQ-core-268",
+        "REQ-core-292",
+        "REQ-core-346",
+        "REQ-view-007",
+        "REQ-view-027"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-schema-changelog-review",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "reviewer",
+      "files": [
+        {
+          "path": "crates/kotowari-markdown-schema/CHANGELOG.md",
+          "before": "sha256:eb76783604a5f1ea7f40010a7325effbea9693eddcacd9ae13562ec2becf2807",
+          "after": "sha256:81a1e833dee88a3618582100822d6854468c318e7225d009ee0b21b1c91502f6"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/schema/block-rules.md",
+          "sha256": "sha256:ff691527594663e7881f3d63bef90d7dd61bd0b2dc09bbe81022e3a1c2792474"
+        },
+        {
+          "path": "docs/ir/schema/cli.md",
+          "sha256": "sha256:a1174619a0619ad403f72cb3ed3fdcb34e85360d46e8fa9322a13ab654487b4f"
+        },
+        {
+          "path": "docs/ir/schema/extraction.md",
+          "sha256": "sha256:0eb1f040a6a57bb784310143cc9e25cbbfecccc6480e37b50433daac4bdfd835"
+        },
+        {
+          "path": "docs/ir/schema/schema-resolution.md",
+          "sha256": "sha256:93bae7c99d2a4925374e6dc93d38a44422f3057d49f9b516aeee819a8d9c50bc"
+        },
+        {
+          "path": "docs/ir/view/languages.md",
+          "sha256": "sha256:34a8f3a9e19eece3e814152e559059ed8f5f30311d57e929436c9d6a2650a823"
+        },
+        {
+          "path": "docs/ir/view/rendering.md",
+          "sha256": "sha256:1d7a614e57d06504a56d156556bac3cd38101340581762e56f892d473f48f28e"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "Coverage entry for crates/kotowari-markdown-schema/CHANGELOG.md, which seven fix commits edit. Compared the branch-wide diff from the base: a new Fixed section with seven lines, one each for the empty extract names, bullet pattern on the marker line, CRLF value lines, fence on the marker line, footnotes in markdown-view, schema reuse in a directory check and the unknown reference drawn as text. Each line matches the behavior verified in the per-commit review entries against the IR listed here, and no other line changes.",
+      "requirements": [
+        "REQ-schema-013",
+        "REQ-schema-036",
+        "REQ-schema-054",
+        "REQ-schema-058",
+        "REQ-schema-063",
+        "REQ-view-007",
+        "REQ-view-008",
+        "REQ-view-027",
+        "REQ-view-030"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-change-cli-test-review",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "reviewer",
+      "files": [
+        {
+          "path": "tests/change_cli.rs",
+          "before": "sha256:746536289cc479d3add93f05b1bdcf74f9ed39aa22e1903cce5fc91c7d8b9d05",
+          "after": "sha256:b078b392e0befb3e13dc8030adb8cb6ec4f03fb641d52d24957f135aceb48663"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/changes-inputs.md",
+          "sha256": "sha256:ad0d0553a709e8891361ed04dd9e047d19e1e0186b621e0a42e16b6a3a0df15b"
+        },
+        {
+          "path": "docs/ir/core/cli-environment.md",
+          "sha256": "sha256:0e983d819fb30e8af806b5933ca5edecbbe1fb2d1e2b657eeb70ed7ff5669928"
+        },
+        {
+          "path": "docs/ir/core/cli.md",
+          "sha256": "sha256:849f698dbe2eabe12e7f810dbc5e0d185303d84c72774469b553d8a28860c542"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "Coverage entry for tests/change_cli.rs, which two fix commits edit. Compared the branch-wide diff from the base: 1da7238 adds assertions that a configuration error of the target starts with \"config error: .kotowari/config.yaml: \" (TBL-core-020, REQ-core-265), and 45ebbca adds changes_rejects_the_port_option expecting exit 2 and the --port argument error (REQ-core-004, REQ-core-263). Both are test-only additions tied to the verified fixes. Ran tests/change_cli.rs: all pass.",
+      "requirements": [
+        "REQ-core-004",
+        "REQ-core-263",
+        "REQ-core-265"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
     }
   ]
 }
