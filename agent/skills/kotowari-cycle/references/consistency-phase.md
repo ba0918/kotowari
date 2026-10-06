@@ -95,8 +95,9 @@ resolved here as below.
   the reason and pointers to the grounds: the measuring commands and their results, files and lines.
 - When it fixes the IR, it keeps the language pairs and their consistency records aligned
   (`translations.md`).
-- Every run ends by passing `kotowari check`, with none of the range's findings left: an IR item it
-  adds gets a mark on an existing test or a test it writes, as `mark.md` says.
+- Every run ends with no IR-side finding of `kotowari check` left in its range. Test-side findings
+  (such as an item the implementation has not reached yet) and findings outside the range do not
+  count: they are the implementer's and the fixer's, or not this run's.
 - One concern per commit; `git add <path>` only; never disable hooks; never name a station or a
   finding ID in a commit message.
 

@@ -243,9 +243,8 @@ only such findings or problem records that were already committed.
   its findings and guide_stale notices are never delegated: the next brainstorm that touches the
   topic revises it (the kotowari skill's `references/overview.md`). Count them in the terminal report.
 - IR-side findings among this run's findings are the consistency phase's. Every phase run starts
-  by taking them from `kotowari check` and ends by passing it, so one left here means a run was
-  skipped or did not converge:
-  run the phase over the branch's diff. Cycle never fixes the IR itself and never hands it to the
+  by taking them from `kotowari check` and ends with none left in its range, so one left here means
+  a run was skipped or did not converge: run the phase over the branch's diff. Cycle never fixes the IR itself and never hands it to the
   implementer or the fixer.
 - Missed mutations: the project's mutation gate (in kotowari itself, the pull request CI) runs mutations on the diff. A miss is fixed by the fixer or
   the implementer, like a test-side finding; how to investigate one is in the kotowari skill's
