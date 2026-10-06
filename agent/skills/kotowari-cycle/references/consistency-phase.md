@@ -8,7 +8,7 @@ the IR itself has a gap or a contradiction, and resolves every finding into a st
 the code agree. It reads the code itself, never a record about the code. Grounds and measurements
 decide; a person is involved only as a last resort.
 
-## What it is given
+## Inputs
 
 - The worktree path and the branch.
 - The range: the base and head of the diff to read. When a hook stopped the implementer's (or, on
@@ -21,10 +21,11 @@ decide; a person is involved only as a last resort.
   awaiting a person's judgment (`human_judgment`) as known findings, which it neither evaluates nor
   raises again, since they stay open for the final report; and the path of the kotowari-review
   skill's `references/finding-schema.md` (the shape of a finding).
-- The paths of the kotowari skill's references it follows when it writes: `ir-form.md` and
-  `records.md` (the IR and decision records), `translations.md` (language pairs),
-  `findings.md` (reading `kotowari check`) and `mark.md` (marks on tests); the kotowari skill's
-  **What the IR holds** section; and cycle's fixer contract for changes to code.
+- The kotowari skill's reference directory and its **What the IR holds** section pasted in full;
+  cycle's **Editing contract** with Evidence conditions. Read `findings.md` to interpret check;
+  read `records.md` when recording a decision, `ir-form.md` when editing IR, `translations.md`
+  when changing a language pair, and `mark.md` when writing tests. References are read on demand,
+  not as a prerequisite to inspecting the diff.
 
 ## What it reads
 
@@ -36,8 +37,6 @@ decide; a person is involved only as a last resort.
   whose ID a mark the diff adds carries.
 - Around those items: the terms they use (the glossary), the relations between items (definition
   tables, `@about`, references), and the decision records that the items and terms in range cite.
-- For a topic with no IR, the counterpart is the approved specification document, or the request
-  when there is none.
 
 Nothing outside that range. A comparison of the whole code base with the whole IR runs only when
 asked for separately.
@@ -53,11 +52,8 @@ range changed or that name an ID in range are findings of this run, beside what 
   the definition of a term or a table is a disagreement, not a concretisation.
 - **Within the IR**: a gap or a contradiction among the items in range.
 
-The IR holds only what a user of the product can observe (the kotowari skill's **What the IR
-holds**, which the phase is given). CI and workflow definitions, hooks, the release procedure, the
-build configuration, rules about the project's own tests and checks, and the development process
-are not IR: behavior there that no IR states is not a gap. A decision about it goes to the decision
-record, never to an IR item.
+Apply the supplied **What the IR holds** definition before calling an absence a gap: a rule
+outside that scope belongs in a decision record, never in an IR item.
 
 ## How a finding is resolved
 
@@ -87,14 +83,11 @@ resolved here as below.
 
 ## Fixing and recording
 
-- The phase itself fixes the IR, the decision record, the flag record and the code, and commits
-  them. A change to code follows the fixer contract it was given, and a test it writes carries marks
-  as `mark.md` says. Of that contract, these apply: test-first for code, with a failing test
-  meeting the Evidence conditions; the artifact and deletion rules; commit hygiene; and stopping
-  before an irreversible or privileged operation. Its rule to hand back a missing design decision
-  does not: **How a finding is resolved** replaces it. Nor does its rule to leave the IR alone and
-  return when a hook stops a commit on an IR-side finding: fixing the IR is this phase's job. There is no plan, so its check commands come
-  from the project's instructions, then the ecosystem's standard tool.
+- The phase fixes and commits the IR, decision record, flag record and code itself under the supplied
+  **Editing contract**. The fixer's instruction to leave IR alone and return on a hook's IR-side
+  finding does not apply: fixing IR is this phase's job. Resolve missing meaning by **How a finding
+  is resolved**, not a hand-back. Check commands come from the project's instructions, then the
+  ecosystem's standard tool; tests carry marks as `mark.md` says.
 - What it decided is written to a new decision record for this run (`records.md` gives its place and
   form). Each decision names the consistency phase as the decider (`decided_by`), with the choice,
   the reason and pointers to the grounds: the measuring commands and their results, files and lines.
@@ -103,8 +96,6 @@ resolved here as below.
 - Every run ends with no IR-side finding of `kotowari check` left in its range. Test-side findings
   (such as an item the implementation has not reached yet) and findings outside the range do not
   count: they are the implementer's and the fixer's, or not this run's.
-- One concern per commit; `git add <path>` only; never disable hooks; never name a station or a
-  finding ID in a commit message.
 
 ## Running again and what it returns
 

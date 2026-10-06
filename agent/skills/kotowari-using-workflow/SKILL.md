@@ -79,22 +79,19 @@ which names the next entry.
 ## The consistency phase on a direct edit
 
 kotowari-cycle, and kotowari-iterate through it, run the consistency phase themselves. When this
-session edits directly (the first row), it decides by the same measure: when the diff adds or
-changes behavior a user can observe — skill text counts as behavior — launch the phase in a
-separate context. Skip it only for documents such as guides only, tests only, or a
-refactoring that keeps behavior; when in doubt, run it; a skip puts a one-line reason in the final
-report. The measure decides this, not the line above, so it is not a station the line adds.
+session edits directly (the first row), use cycle's **Consistency phase**: its behavior-based
+run/skip measure (skill text is behavior), separate context, delegation and rerun rules apply.
+The measure decides this, not the line above, so it is not a station the line adds.
 
-Note `HEAD` before the first edit and commit the edits first; the range is that commit to `HEAD`.
+Save `HEAD` as the base before the first edit, then commit the edits; the range is that saved
+base to the current `HEAD`.
 If the hook stops that commit on an IR-side finding, leave the change uncommitted: the reference's
 rule for a blocked change applies, and the edits are committed after the phase's last run.
 The counterpart is the IR store path with no ID file (the items in range are those the diff touches
 or its marks carry), or, for a topic with no IR, the approved specification document or the request.
-The phase receives what the kotowari-cycle skill's **Consistency phase** lists under what it
-carries, with the fixer contract and Evidence conditions from that skill's **Delegations**. This
-session keeps the phase's findings, numbering them as cycle does, reruns as that section says, and
-stops by cycle's ending 3, reporting it with the choice to run more or accept the rest. The final
-report gives each open `human_judgment` finding with its default and the word that reverses it.
+This session owns the findings file using cycle's **Judgment stays here**, **Stopping inside the
+loop** and **Endings**. Report the phase's results as cycle's **Terminal report** requires,
+including skipped-run reasons and unresolved defaults with the word that reverses each.
 
 ## Exceptions
 

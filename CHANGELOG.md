@@ -18,6 +18,7 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 - `kotowari-review` launches reviewers with the quality perspective only. There is no conformance reviewer comparing code with the specification any more; that is the consistency phase's. Whether a plan or a document contradicts the specification is still read within the quality perspective.
 - The skills no longer write or ask for change records. The implementer and the fixer leave IR-side findings to the consistency phase instead of adding IR themselves.
+- Workflow skills share the editing and review hand-off rules instead of repeating conflicting fixer instructions in the consistency phase. Delegates read writing and marker references only when needed, and direct edits use the same finding and stopping rules as cycle.
 
 ## [0.4.0] - 2026-10-06
 
