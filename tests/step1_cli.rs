@@ -15,7 +15,7 @@ fn valid_project_dir() -> &'static Path {
         .leak()
 }
 
-// --- REQ-core-001: コマンドは8つ ---
+// --- REQ-core-001: コマンドは7つ ---
 
 // @kotowari[REQ-core-001]
 #[test]
