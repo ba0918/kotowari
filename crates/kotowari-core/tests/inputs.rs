@@ -6,6 +6,8 @@ use kotowari_core::{SourceText, ir};
 
 #[path = "admission.rs"]
 mod admission;
+#[path = "test_side_findings.rs"]
+mod test_side_findings;
 
 // @kotowari[REQ-core-314, REQ-core-043, EX-core-290]
 #[test]
