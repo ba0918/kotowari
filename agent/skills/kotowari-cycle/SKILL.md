@@ -41,7 +41,11 @@ directory). If it already exists this is a resume: keep its findings, continue r
 the inherited maximum, and count both of ending 3's streaks from this start only (a returning closed cause
 counts across starts). Either way, infer from the plan and `git log` which steps are done; skip
 step 1 only when every step left a git trace. Otherwise delegate step 1: implement resumes by
-inference and redoes untraced steps.
+inference and redoes untraced steps, and step 2 follows. When step 1 is skipped, the file's
+`consistency_phase` says where the phase stood. When its last run did not converge, rerun that
+step's phase: base kept, head the current head, that run's findings as the previous ones. When step 2 has converged
+and `review_head` is null, go on at step 3. When no visible finding is open, `last_reviewed_head`
+is the current head, and no converged step-6 run ends at it, run step 6 from `review_head`.
 
 Before the first review, read the kotowari-review skill (`SKILL.md`, `references/profiles.md`,
 `references/finding-schema.md`, `references/oracle-evidence.md`). Every review prompt carries the
@@ -70,7 +74,7 @@ rules, paste the Evidence conditions from
    diff loop until none remain.
    With no such reason, the diff loop clearing every visible finding ends the quality review.
 6. Consistency phase once more, over the diff of all the quality review's fixes (from the head step
-   3 reviewed to the current head), rerun until a run converges; then converged.
+   3 reviewed, `consistency_phase.review_head`, to the current head), rerun until a run converges; then converged.
 
 Visible findings = open findings whose final action is `auto_fix` or `fix_and_verify`. Findings with
 `human_judgment` or `record_only` stay open for the terminal report. When
@@ -158,8 +162,10 @@ the quality review, and resolves the gaps and disagreements it finds. Its instru
 
 ## Judgment stays here
 
-Cycle alone writes the findings file (shape: the review skill's `finding-schema.md`, plus `base` and
-`last_reviewed_head`). After every review it overwrites the file: sets `last_reviewed_head`, assigns
+Cycle alone writes the findings file (shape: the review skill's `finding-schema.md`, with `base`,
+`last_reviewed_head` and `consistency_phase`), creating it at the first phase run or review. After
+every phase run it appends the run to `consistency_phase.runs`; step 3 sets
+`consistency_phase.review_head` once. After every review it overwrites the file: sets `last_reviewed_head`, assigns
 IDs to new findings, merges reviewers and groups same-cause findings, finalizes each proposed action
 before classifying visible findings. For each non-`security` finding, in order: force `info` to
 `record_only`; force a claim stating no defect to `warn` and `record_only`; for a defect demanding a

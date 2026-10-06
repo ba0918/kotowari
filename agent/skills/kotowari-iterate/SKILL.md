@@ -107,7 +107,9 @@ quality reviewer only, and the consistency phase reads the code against the requ
 
 Same branch right after a cycle or a run of this skill: reuse it, never re-cut; findings JSON still
 there is cycle's resume — keep the findings (deleting or ignoring it is a counter-example) and
-continue rounds from the inherited max (the first review is max+1). Unless the person gave a
+continue rounds from the inherited max (the first review is max+1). Its `consistency_phase` runs
+belong to the earlier run: at a start of this skill, set `review_head` to null and resume from none
+of them. Unless the person gave a
 comparison base, it is the branch tip at start (already checked); inherited open findings are
 evaluated in the diff review even outside it. Both of ending 3's streaks (`still_present` two rounds
 running; new visible findings not shrinking) reset at a start of this skill (inherited evaluations
