@@ -1,7 +1,7 @@
 # kotowari
 
 `Project` reads a repository from an explicit absolute start path without changing the current directory.
-Its typed operations are `check`, `list`, `query`, `status`, `plan`, `mutants` and `changes`.
+Its typed operations are `check`, `list`, `query`, `status`, `plan` and `mutants`.
 Use `read` or `inspect` to retain loaded values; those values do not refresh when files change.
 Call the project again to read current files.
 Completed findings belong to reports, while execution failures return `Error` with `ErrorKind`.
