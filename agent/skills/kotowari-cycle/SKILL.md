@@ -152,8 +152,9 @@ the quality review, and resolves the gaps and disagreements it finds. Its instru
   fixer. A model different from the implementer's is preferred, not required.
 - **What it carries.** `references/consistency-phase.md` pasted in full; the worktree path and branch;
   the range (base and head); the specification path and the file of IDs the plan covers, as
-  **Delegations** above says; the open visible `consistency` findings with IDs and commits (a `human_judgment` one is not
-  re-evaluated: it stays open for the terminal report), and for one
+  **Delegations** above says; the open visible `consistency` findings with IDs and commits; the open `human_judgment` ones as
+  known findings, neither re-evaluated nor raised again (they stay open for the terminal report);
+  and for one
   `still_present` after a fix the fixer's premise requirement (**Delegations**); the review skill's
   `references/finding-schema.md` path; the paths of
   the kotowari skill's `references/ir-form.md`, `references/records.md`,

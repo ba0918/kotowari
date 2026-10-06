@@ -17,7 +17,9 @@ decide; a person is involved only as a last resort.
   in place and leaves it uncommitted for whoever made it.
 - The counterpart: the IR store path and a file listing the IDs the plan covers. For a topic with no
   IR, the approved specification document, or the request when there is none.
-- The open findings of earlier runs, with their IDs and commits, and the path of the kotowari-review
+- The open findings of earlier runs that await a fix, with their IDs and commits; the open ones
+  awaiting a person's judgment (`human_judgment`) as known findings, which it neither evaluates nor
+  raises again, since they stay open for the final report; and the path of the kotowari-review
   skill's `references/finding-schema.md` (the shape of a finding).
 - The paths of the kotowari skill's references it follows when it writes: `ir-form.md` and
   `records.md` (the IR and decision records), `translations.md` (language pairs),
