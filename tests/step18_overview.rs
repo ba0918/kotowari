@@ -84,10 +84,10 @@ fn ex_core_464_overview_data_in_a_named_hidden_directory_is_read() {
     make_project(tmp.path(), OVERVIEW);
     write(
         tmp.path(),
-        ".kotowari/overview/changes.md",
-        &valid("変更照合"),
+        ".kotowari/overview/mutants.md",
+        &valid("変異テスト"),
     );
-    write_toc(tmp.path(), &["changes"]);
+    write_toc(tmp.path(), &["mutants"]);
     let (code, stdout, stderr) = run(tmp.path(), &["check", "--format", "json"]);
     assert_eq!(code, Some(0), "{stderr}{stdout}");
     let value = json(&stdout);
