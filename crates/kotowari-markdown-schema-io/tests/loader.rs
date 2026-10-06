@@ -157,6 +157,7 @@ fn later_current_directory_changes_do_not_change_the_load_base() {
     );
 }
 
+// @kotowari[REQ-schema-072]
 #[test]
 fn read_document_strips_the_bom_and_rejects_non_utf8_with_the_given_path() {
     let root = tempfile::tempdir().unwrap();
