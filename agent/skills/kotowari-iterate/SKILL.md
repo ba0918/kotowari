@@ -87,7 +87,7 @@ read before the first review) and its consistency phase included; "cycle" there 
 | the implement delegation (plan path, branch, worktree path) | the implementer delegation (request, the judgment's enumeration, the specification path if any, branch, worktree path), with hand-back reasons added to the contract: a file outside the enumeration; a contradiction with the specification; or a request that reads two ways |
 | the plan path in the fixer delegation | the request, and the specification path if any, with a hand-back reason added to the contract: a contradiction with the specification |
 | the fixer contract's "the plan's commands in order, unedited" | check commands come from the project's instructions, then the ecosystem's standard tool |
-| "run more" re-entering at step 1 when steps remain | always the diff loop |
+| "run more" re-entering at step 1 when steps remain | at step 2 or step 6 when the ending was raised there, as in cycle; else the diff loop |
 | the specification path and the file of IDs in the consistency phase delegation | the specification path and the request, both; the file of IDs only when the request touches IR items; neither path nor file when there is no specification, and the request is the consistency phase's counterpart |
 | ending 4 (a hand-back to brainstorm or plan) and its "run more or accept the rest" choice | the destination is one of the guidance table's three; the choice is not offered — the report (as in Out above) adds the hand-back reason and the guidance, and the person restarts with a new request holding their answer |
 | "names an ID the plan covers" in **kotowari check before the terminal report** | names an ID the request's enumeration covers; with none, only the files the branch changed count |

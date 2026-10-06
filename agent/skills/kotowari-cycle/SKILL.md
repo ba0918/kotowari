@@ -206,7 +206,9 @@ it was closed `accepted`. Reviewers only evaluate; the fixer only reports commit
 
 Endings 2–4 add to the terminal report the choice "run more or accept the rest and finish" and
 any hand-back reason. "Run more" continues the same run (streaks kept), findings still open, at
-step 1 if untraced plan steps remain, else at step 4; a new limit, if any, is the person's to set.
+step 1 if untraced plan steps remain; else, when the ending was raised in step 2 or step 6, at that
+step with a rerun as **Consistency phase** says, step 2 then going on to step 3 before any diff
+loop; else at step 4. A new limit, if any, is the person's to set.
 
 ## kotowari check before the terminal report
 
