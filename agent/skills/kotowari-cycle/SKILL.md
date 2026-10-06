@@ -141,7 +141,9 @@ both for its own findings. Record each premise attempt as `references/premise-st
 
 **Overlap after a fix** is read from the findings file alone, one `fixes` entry after another. The
 review right after a fix is round `reviewed_in`, and the findings it raised are the visible
-`quality` findings whose first evaluation is that round. Two evidence entries overlap when they
+`quality` findings whose first evaluation is that round. Visible here is by final action alone
+(`auto_fix` or `fix_and_verify`), open or closed: the findings a fix cleared are closed at its
+`reviewed_in`, and those that review raised close at the next. Two evidence entries overlap when they
 name the same file with overlapping line ranges; an entry without a line range, or a finding with
 no evidence, takes no part. A fix breaks the run of two when it reported no finding, when a finding
 it addressed is `still_present` at `reviewed_in` (it did not clear that finding, which ending 3's
