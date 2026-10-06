@@ -248,6 +248,13 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         ));
     };
 
+    // REQ-core-004: "--port" は "overview serve" だけが受ける
+    let serve = command == "overview" && positionals.first().map(String::as_str) == Some("serve");
+    if port.is_some() && !serve {
+        return Err(StopReason::ArgumentError(format!(
+            "unexpected option for {command}: --port"
+        )));
+    }
     if command == "changes" {
         if tool.is_some() || !positionals.is_empty() {
             return Err(StopReason::ArgumentError(
@@ -290,13 +297,6 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     if staged || !change_options.is_empty() {
         return Err(StopReason::ArgumentError(format!(
             "unexpected change option for {command}"
-        )));
-    }
-    // REQ-core-004: "--port" は "overview serve" だけが受ける
-    let serve = command == "overview" && positionals.first().map(String::as_str) == Some("serve");
-    if port.is_some() && !serve {
-        return Err(StopReason::ArgumentError(format!(
-            "unexpected option for {command}: --port"
         )));
     }
     // REQ-core-190: plan は設定を読まないので "--config" を受けない。指す先を見る前に止める

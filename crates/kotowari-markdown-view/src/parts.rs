@@ -23,13 +23,10 @@ impl<'a> Refs<'a> {
     }
 
     /// 参照を表示名で描き、選ぶとページを移らずに本文を開く。どの参照もページの外へリンクしない
-    /// （REQ-view-008）。表に無い参照は文字のまま描く
+    /// （REQ-view-008）。表に無い参照は開く本文を持たないので、本文の無い参照と同じく文字のまま描く
     fn draw(&self, key: &str) -> String {
         let Some(reference) = self.table.get(key) else {
-            return format!(
-                "<details class=\"ref\"><summary>{}</summary></details>",
-                escape(key)
-            );
+            return format!("<span class=\"ref ref-plain\">{}</span>", escape(key));
         };
         let mark = |key: &str| format!("<span class=\"ref-mark\">{}</span>", self.ui.text(key));
         let (class, mark) = match reference.state {

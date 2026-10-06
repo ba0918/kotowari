@@ -569,6 +569,7 @@ fn validate_declared_bullet(
     findings: &mut Vec<Finding>,
 ) {
     bullet_lines.push(line);
+    let text = marker_line_part(text);
     if when_allows(bullets.when.as_ref(), fields, sibling_blocks)
         && let Some(pattern) = &bullets.pattern
         && !pattern.is_match(text)
@@ -584,6 +585,12 @@ fn validate_declared_bullet(
     }
     // when は required / pattern / enum にだけ効く。子の照合は常に行う（REQ-schema-020）。
     validate_children(block, bullets.children.as_ref(), findings);
+}
+
+/// lead のうちマーカーの行にある部分。段落の読み方では遅延継続の行も lead 段落に
+/// 入るが、箇条書きの照合はマーカーの行だけに当てる（REQ-schema-054）
+fn marker_line_part(lead: &str) -> &str {
+    lead.lines().next().unwrap_or_default().trim_end()
 }
 
 /// 箇条書きの子の行を undeclared_line にする。子がさらに子を持つときも再帰する。
@@ -1159,6 +1166,35 @@ document:
         assert!(kinds(&findings).contains(&FindingKind::MissingStatement));
     }
 
+    // @kotowari[REQ-schema-054]
+    #[test]
+    fn bullet_pattern_is_matched_only_on_the_marker_line_not_on_a_lazy_continuation_line() {
+        // 段落の読み方では遅延継続の行も lead 段落に入るが、照合はマーカーの行だけに当てる。
+        // 行の読み方と同じ結果になる
+        let schema = |reading: &str| {
+            format!(
+                "reading: {reading}\ndocument:\n  sections:\n    - name: 理由\n      bullets:\n        repeat: {{ min: 0 }}\n        pattern: \"^親$\"\n"
+            )
+        };
+        let doc = "## 理由\n\n- 親\n続き\n";
+        for reading in ["paragraph", "line"] {
+            let findings = validate_src(&schema(reading), doc, true);
+            assert!(
+                !kinds(&findings).contains(&FindingKind::BulletPatternMismatch),
+                "{reading}: {findings:?}"
+            );
+        }
+        let findings = validate_src(&schema("paragraph"), "## 理由\n\n- 子\n続き\n", true);
+        let mismatch = findings
+            .iter()
+            .find(|f| f.kind == FindingKind::BulletPatternMismatch)
+            .expect("マーカーの行が pattern に合わなければ指摘する");
+        assert!(
+            mismatch.detail.contains("bullet \"子\" does"),
+            "{mismatch:?}"
+        );
+    }
+
     // @kotowari[REQ-schema-030]
     #[test]
     fn bullet_pattern_is_not_applied_to_continuation_paragraphs() {
@@ -1196,6 +1232,31 @@ document:
             "先頭がコードブロックのリスト項目は undeclared_line になる: {:?}",
             kinds(&findings)
         );
+    }
+
+    // @kotowari[TBL-schema-011]
+    #[test]
+    fn a_fence_opened_on_a_list_marker_line_closes_at_its_closing_line_in_both_readings() {
+        // フェンスで囲んだブロックは字下げの深さに依らずどちらの読み方でもコードブロック。
+        // マーカーの行で開いたフェンスの閉じの行を開始と取り違えると、後ろの見出しまで
+        // コードブロックに吸い込み、節 B を読めなくなる
+        let schema = |reading: &str| {
+            format!(
+                "reading: {reading}\ndocument:\n  sections:\n    - name: A\n      codeblock:\n        required: false\n        lang: python\n        extract: code\n    - name: B\n      statement:\n        extract: b\n"
+            )
+        };
+        let doc = "## A\n\n- ```python\n  x = 1\n  ```\n\n## B\n\n本文\n";
+        for reading in ["paragraph", "line"] {
+            let schema = parse_schema(&schema(reading)).unwrap();
+            let document = Document::parse(doc).unwrap();
+            let findings = validate(&schema, &document, false);
+            assert_eq!(kinds(&findings), vec![], "{reading}: {findings:?}");
+            assert_eq!(
+                crate::extract::extract_values(&schema, &document),
+                serde_json::json!({ "code": "x = 1", "b": "本文" }),
+                "{reading}"
+            );
+        }
     }
 
     // @kotowari[REQ-schema-001, REQ-schema-031]

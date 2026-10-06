@@ -214,11 +214,21 @@ pub fn read(
         .ok_or_else(|| error(format!("unreadable target configuration {config_path}")))?;
     let content = std::str::from_utf8(&config_blob.bytes)
         .map_err(|_| StopReason::NonUtf8File(config_path.into()))?;
-    let config = Config::parse(content)?;
+    // 設定の誤りの詳細は設定ファイルの相対パスで始める（TBL-core-020）
+    let config_error = |detail: &str| StopReason::ConfigError(format!("{config_path}: {detail}"));
+    let config = Config::parse(content).map_err(|stop| match stop {
+        StopReason::ConfigError(detail) => config_error(&detail),
+        other @ (StopReason::ArgumentError(_)
+        | StopReason::UnreadableFile(_)
+        | StopReason::NonUtf8File(_)
+        | StopReason::ResultsError(_)
+        | StopReason::MappingError(_)
+        | StopReason::GitError(_)) => other,
+    })?;
     let changes = config
         .changes
         .as_ref()
-        .ok_or_else(|| StopReason::ConfigError("changes configuration is required".into()))?;
+        .ok_or_else(|| config_error("changes configuration is required"))?;
     let included = change_records::glob(&changes.files);
     let excluded = change_records::glob(&changes.exclude);
     let records = change_records::glob(&changes.records);

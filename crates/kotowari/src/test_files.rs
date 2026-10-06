@@ -98,6 +98,8 @@ pub fn collect_named_hidden(
                 .enumerate()
                 .filter(|(_, component)| component.starts_with('.') && **component != ".")
                 .map(|(index, _)| components[..=index].join("/"))
+                // 波括弧の中の "/" で切った前置きは glob にならない。その成分は名指しに数えない
+                .filter(|prefix| globset::Glob::new(prefix).is_ok())
                 .collect::<Vec<_>>()
         })
         .collect();

@@ -369,3 +369,32 @@ fn userinfo_in_a_schema_url_does_not_reach_the_error_output() {
         "伏せた形で URL を出す: {stderr}"
     );
 }
+
+// @kotowari[REQ-schema-013]
+#[test]
+fn a_directory_check_fetches_a_shared_url_schema_once_even_when_the_cache_cannot_be_written() {
+    // 1回の check の間は、読んだスキーマを文書ごとに読み直さない。キャッシュに書けなくても
+    // 同じ URL を指す文書の数だけ取りに行かない
+    let (url, counter) = serve_schema();
+    let dir = tempfile::tempdir().unwrap();
+    write_file(dir.path(), ".kotowari/cache", "a file, not a directory");
+    for name in ["docs/a.md", "docs/b.md"] {
+        write_file(
+            dir.path(),
+            name,
+            &format!("---\n$schema: {url}\n---\n# T-1234: 例\n"),
+        );
+    }
+    let output = mds()
+        .current_dir(dir.path())
+        .args(["check", "docs"])
+        .output()
+        .unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(counter.load(Ordering::SeqCst), 1);
+}

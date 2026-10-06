@@ -617,12 +617,16 @@ fn original_item_line(
     let offset = item.position.as_ref().map(|p| p.start.offset).unwrap_or(0);
     let line_start = if preserve_indent {
         // マーカー行の行頭まで遡って、子のインデントを含む行を取る
-        src[..offset].rfind('\n').map(|i| i + 1).unwrap_or(0)
+        src[..offset]
+            .rfind(['\n', '\r'])
+            .map(|i| i + 1)
+            .unwrap_or(0)
     } else {
         offset
     };
+    // 行の区切りは split_lines と同じく LF・CRLF・単独の CR
     let end = src[offset..]
-        .find('\n')
+        .find(['\n', '\r'])
         .map(|i| offset + i)
         .unwrap_or(src.len());
     if preserve_indent {
@@ -741,7 +745,12 @@ fn line_at(position: Option<&markdown::unist::Position>) -> usize {
 
 fn slice_at(src: &str, position: Option<&markdown::unist::Position>) -> String {
     match position {
-        Some(pos) => src[pos.start.offset..pos.end.offset].trim().to_string(),
+        // 複数行にまたがる範囲は、行を改行1つでつなぎ直す。CRLF と単独の CR も
+        // split_lines と同じく1つの行区切りとして扱う（REQ-schema-063）
+        Some(pos) => src[pos.start.offset..pos.end.offset]
+            .trim()
+            .replace("\r\n", "\n")
+            .replace('\r', "\n"),
         None => String::new(),
     }
 }

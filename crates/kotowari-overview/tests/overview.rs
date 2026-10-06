@@ -735,6 +735,21 @@ fn req_core_292_a_section_is_stale_only_when_a_mark_in_it_is_stale() {
     );
 }
 
+// @kotowari[REQ-core-292]
+#[test]
+fn req_core_292_only_html_comments_are_removed_from_heading_text() {
+    // 型引数のような山括弧は行の中の HTML として読まれるが、消すのはコメントだけ
+    let model = model();
+    let text = data(
+        "Option<T> の扱い",
+        "## Vec<String> の扱い <!-- note -->\n\n文。\n",
+    );
+    let overview = run(&model, &[(A, &text)]);
+    let document = &overview.render_input().documents[0];
+    assert_eq!(document.title, "Option<T> の扱い");
+    assert_eq!(document.sections[0].heading, "Vec<String> の扱い");
+}
+
 // @kotowari[REQ-core-291, REQ-core-292, REQ-view-001]
 #[test]
 fn valid_data_renders_into_the_pages_the_view_returns_for_its_input() {

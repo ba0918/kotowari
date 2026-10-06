@@ -2,24 +2,602 @@
   "version": 1,
   "entries": [
     {
-      "id": "scaffold-routing-implementation",
-      "base": "821bc845ba7f96dc9a22eacbaec444742d47c905",
+      "id": "rework-empty-names-in-value-and-of-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
       "role": "implementer",
       "files": [
         {
-          "path": "PROJECT.md",
-          "before": "sha256:8561275328460db3e47b510d5b258063a9298af57db92ea4c083bb8f9778223e",
-          "after": "sha256:f48e7787f1e9d3fa02d305b0873e8d36f2c256bfb4336cbbc8524a66a6803e35"
+          "path": "crates/kotowari-markdown-schema/CHANGELOG.md",
+          "before": "sha256:eb76783604a5f1ea7f40010a7325effbea9693eddcacd9ae13562ec2becf2807",
+          "after": "sha256:81a1e833dee88a3618582100822d6854468c318e7225d009ee0b21b1c91502f6"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/src/schema.rs",
+          "before": "sha256:6a75bbe455b228c8152bbaf5e065fd1bf501346648adf0802237cec6f6b276ec",
+          "after": "sha256:4cb24edb9113a5914bb8b87239a52d31df2931281562b38dccf0482c8db941e9"
         }
       ],
-      "ir": [],
-      "conclusion": "new",
-      "reason": "PROJECT.md now says, in the Specification section, to read the kotowari skill before writing or revising an IR document and before acting on a kotowari check finding, and to decide where a new request starts with kotowari-using-workflow rather than ba0918-using-workflow. These were the two hand-written kotowari rows of the AGENTS.md routing table, which is now regenerated from the installed skills' ba0918-routing metadata without the gui row (A1) and carries no project-specific rows (A2). This is contributor instruction, not product behavior, so no IR changes.",
-      "requirements": [],
-      "decisions": [
-        "docs/decision/records/2026-10-06-agent-instructions.md#A1",
-        "docs/decision/records/2026-10-06-agent-instructions.md#A2"
+      "ir": [
+        {
+          "path": "docs/ir/schema/cli.md",
+          "sha256": "sha256:a1174619a0619ad403f72cb3ed3fdcb34e85360d46e8fa9322a13ab654487b4f"
+        },
+        {
+          "path": "docs/ir/schema/extraction.md",
+          "sha256": "sha256:0eb1f040a6a57bb784310143cc9e25cbbfecccc6480e37b50433daac4bdfd835"
+        }
       ],
+      "conclusion": "existing",
+      "reason": "Schema::parse now applies the empty-name check of placement paths to the value and the keys of of in an element-object extract, as TBL-schema-009 counts them as placement paths of the same placement and REQ-schema-036 forbids empty dot-separated names. Before, value: \"\" or an of key \"a..b\" passed and produced an empty JSON key. Spec test added first and seen failing.",
+      "requirements": [
+        "REQ-schema-036"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-bullet-pattern-on-marker-line-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "crates/kotowari-markdown-schema/CHANGELOG.md",
+          "before": "sha256:eb76783604a5f1ea7f40010a7325effbea9693eddcacd9ae13562ec2becf2807",
+          "after": "sha256:81a1e833dee88a3618582100822d6854468c318e7225d009ee0b21b1c91502f6"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/src/validate.rs",
+          "before": "sha256:94983d45712069e6b32c88044c375f690c60ce39a8b7a6401bdaf15357140035",
+          "after": "sha256:9e67391244c9c889a8d631fadc6f768b20f78f96bce464c08796979ea6b71a8e"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/schema/block-rules.md",
+          "sha256": "sha256:ff691527594663e7881f3d63bef90d7dd61bd0b2dc09bbe81022e3a1c2792474"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "In paragraph reading the bullet pattern is now matched only on the marker line of the lead, as REQ-schema-054 says, instead of the whole lead paragraph including lazy continuation lines; line reading already did this. Spec test covers both readings and was seen failing before the fix.",
+      "requirements": [
+        "REQ-schema-054"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-crlf-value-lines-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "crates/kotowari-markdown-schema/CHANGELOG.md",
+          "before": "sha256:eb76783604a5f1ea7f40010a7325effbea9693eddcacd9ae13562ec2becf2807",
+          "after": "sha256:81a1e833dee88a3618582100822d6854468c318e7225d009ee0b21b1c91502f6"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/src/document.rs",
+          "before": "sha256:ee52604c489bc6773303c5cc501feb6a636810b840ca13cd4bfaa59adef284b7",
+          "after": "sha256:0c4f4ec1199232c492d0e2d429dcf035cec619c0abde3ed851def03e5ec1f9ef"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/src/extract.rs",
+          "before": "sha256:ee73eeff026b6582ffd19229e39c2632734e505338977e8e2cab25eda8987728",
+          "after": "sha256:776a0d7e29aec56480353e119983213ad704339e7439097d9812cb1341ecc450"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/schema/extraction.md",
+          "sha256": "sha256:0eb1f040a6a57bb784310143cc9e25cbbfecccc6480e37b50433daac4bdfd835"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "Original list-item lines and lead slices now treat CRLF and lone CR as one line break like split_lines, so bullet and field-line values of a CRLF document no longer carry \\r and equal the LF document's values in both reading modes (REQ-schema-063 says the rule does not depend on the reading mode). Spec test compares LF and CRLF values in both modes and was seen failing.",
+      "requirements": [
+        "REQ-schema-063"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-fence-on-marker-line-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "crates/kotowari-markdown-schema/CHANGELOG.md",
+          "before": "sha256:eb76783604a5f1ea7f40010a7325effbea9693eddcacd9ae13562ec2becf2807",
+          "after": "sha256:81a1e833dee88a3618582100822d6854468c318e7225d009ee0b21b1c91502f6"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/src/line_reading.rs",
+          "before": "sha256:712c30158346f8819f447eb5ab65a5bbb19b8b3fd07d428bb86ecb11cc125e42",
+          "after": "sha256:d4a17a48eeaaee4aa804d44a769e2cba3bbd3d97e5f1530fcb8ad958591c4b91"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/src/validate.rs",
+          "before": "sha256:94983d45712069e6b32c88044c375f690c60ce39a8b7a6401bdaf15357140035",
+          "after": "sha256:9e67391244c9c889a8d631fadc6f768b20f78f96bce464c08796979ea6b71a8e"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/schema/block-rules.md",
+          "sha256": "sha256:ff691527594663e7881f3d63bef90d7dd61bd0b2dc09bbe81022e3a1c2792474"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "In line reading a list item whose content opens a fence (- ```python) is read as an item whose content is a code block, from the item's content column, as paragraph reading already does. Before, the indented closing fence was taken as a new opening fence and the rest of the document, later headings included, was swallowed. TBL-schema-011 makes a fenced block a code block in both readings whatever its indentation. Spec test was seen failing.",
+      "requirements": [
+        "REQ-schema-058"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-schema-reuse-in-directory-check-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "crates/kotowari-markdown-schema-io/src/lib.rs",
+          "before": "sha256:2ea00b314c7d8aca5e62dd23c613ec0dd0fcc0c8fb38a2be22541d8f3d027c58",
+          "after": "sha256:38125778f0f8320961a75bc5f764779266be9c64a2f0593e0019fbb423ffd18a"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/CHANGELOG.md",
+          "before": "sha256:eb76783604a5f1ea7f40010a7325effbea9693eddcacd9ae13562ec2becf2807",
+          "after": "sha256:81a1e833dee88a3618582100822d6854468c318e7225d009ee0b21b1c91502f6"
+        },
+        {
+          "path": "crates/kotowari-mds/tests/url_schema.rs",
+          "before": "sha256:10e2bd4c717f14e2a89c183fae9d61677dabb5798879c329b708bcc367e9a3b8",
+          "after": "sha256:3c4e54f8cb38a74a0b8999cea2bc7890a51bed948344f88fde44ce70deffd6c2"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/schema/schema-resolution.md",
+          "sha256": "sha256:93bae7c99d2a4925374e6dc93d38a44422f3057d49f9b516aeee819a8d9c50bc"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "A directory check in kotowari-markdown-schema-io keeps the schemas it parsed for the duration of that walk, keyed by the resolved file path or URL, instead of reading, parsing and compiling the same schema for every document. Findings are unchanged (output compared byte for byte); release wall time on 236 documents went from 0.40 s to 0.32 s. A URL schema is fetched once per check even when the cache cannot be written; the added test counts one fetch where the previous binary made two.",
+      "requirements": [
+        "REQ-schema-013"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-no-gfm-footnotes-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "before": "sha256:1f73e8c04b4724f2fc7a6d1db79fb8c151c9fb92333e3a4cb1732141e306af5d",
+          "after": "sha256:c7a8247e0f633f3315d0d1c455e2b9b9cce8b77a8fa1385a0a62d1a1dc06ef2f"
+        },
+        {
+          "path": "crates/kotowari-markdown-schema/CHANGELOG.md",
+          "before": "sha256:eb76783604a5f1ea7f40010a7325effbea9693eddcacd9ae13562ec2becf2807",
+          "after": "sha256:81a1e833dee88a3618582100822d6854468c318e7225d009ee0b21b1c91502f6"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/src/text.rs",
+          "before": "sha256:40d17fe942e372f20cfb5893fb702d49b836cef0d409fb65f5811b6bb7a6aca2",
+          "after": "sha256:2276679682711c728fe84dab4589cf3edf8dc73c77cb174f458c90c6c6baa3f4"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/tests/rendering.rs",
+          "before": "sha256:9c26deef48d2cfb71397eaf2b7d8e3d945c6ed98b649e3c45081d4f8e98151fe",
+          "after": "sha256:ad7cb6b21b3a05a0322dc4397fd7bf49c015528c7d55906fadea9ea41ccdb224"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/view/languages.md",
+          "sha256": "sha256:34a8f3a9e19eece3e814152e559059ed8f5f30311d57e929436c9d6a2650a823"
+        },
+        {
+          "path": "docs/ir/view/rendering.md",
+          "sha256": "sha256:1d7a614e57d06504a56d156556bac3cd38101340581762e56f892d473f48f28e"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "markdown-view no longer enables GFM footnotes. Rendering them inserted the markdown crate's English heading \"Footnotes\" and \"Back to content\", text not taken from the UI text (REQ-view-027), and REQ-view-007 reads CommonMark with GFM tables, not footnotes. The footnote syntax now reads as CommonMark. Spec test was seen failing. Only the footnote definition construct is turned off: without definitions \"[^1]\" never becomes a footnote call, so the call construct changed no output. The spec test now also pins that \"[^1]: 注\" is a CommonMark link reference definition and \"本文[^1]\" renders as <a href=\"%E6%B3%A8\">^1</a>; removing the definition setting fails it.",
+      "requirements": [
+        "REQ-view-007",
+        "REQ-view-027"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-heading-keeps-inline-html-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "before": "sha256:1f73e8c04b4724f2fc7a6d1db79fb8c151c9fb92333e3a4cb1732141e306af5d",
+          "after": "sha256:c7a8247e0f633f3315d0d1c455e2b9b9cce8b77a8fa1385a0a62d1a1dc06ef2f"
+        },
+        {
+          "path": "crates/kotowari-overview/src/document.rs",
+          "before": "sha256:d0181106cacc3ff7f73e8aec71ecf992695d1cdcf3084f15318541949457f695",
+          "after": "sha256:e795d1a0eeeb35448f48062f588546c7933223454060bae4ab8946e5190bf6a7"
+        },
+        {
+          "path": "crates/kotowari-overview/tests/overview.rs",
+          "before": "sha256:94588ba2af9c3841602ccde0c93b61daea9919481a51249bdad23cfefcff2d13",
+          "after": "sha256:1b162733268a3bcf9b02502dab59b1528495f14c063ecb89f5fc791fff2da553"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/overview-commands.md",
+          "sha256": "sha256:0456618297b9bdaa4ed3cb4ddce384216cb6eb0a88a21c3e98da61ff33dcaa18"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "The overview heading and title text now drop only HTML comments, as REQ-core-292 says, and keep other inline HTML as text; \"## Vec<String>\" used to become \"Vec\" because <String> parses as an inline HTML tag. The view escapes headings. Spec test was seen failing.",
+      "requirements": [
+        "REQ-core-292"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-changes-skips-hidden-directories-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "before": "sha256:1f73e8c04b4724f2fc7a6d1db79fb8c151c9fb92333e3a4cb1732141e306af5d",
+          "after": "sha256:c7a8247e0f633f3315d0d1c455e2b9b9cce8b77a8fa1385a0a62d1a1dc06ef2f"
+        },
+        {
+          "path": "crates/kotowari-core/src/changes.rs",
+          "before": "sha256:2eb6bf4195bb72fb615b1773a4a2545ce41ee412728b283f31087d8978ad545d",
+          "after": "sha256:8c51591bcd4ba8775f1983bc245f6356dcd0ba076a91e704e25f42f1a89f4f8b"
+        },
+        {
+          "path": "crates/kotowari-core/tests/change_matching.rs",
+          "before": "sha256:33d958343087a4ec54e8e12684012239dd94856b9edc6ee15561b2726d4ce3d4",
+          "after": "sha256:f78451bc64d9749135e57707ddb3aea5d64e57f081d6544f2484fe18b3709181"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/changes-inputs.md",
+          "sha256": "sha256:ad0d0553a709e8891361ed04dd9e047d19e1e0186b621e0a42e16b6a3a0df15b"
+        },
+        {
+          "path": "docs/ir/core/ir-document.md",
+          "sha256": "sha256:de660d815988839dcc374e678e8bfa781a3440de962b92bef42cd36b3bbb0bf2"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "changes no longer reads IR or decision records from hidden directories below their locations, matching check and REQ-core-033's exclusion. Before, a record citing an IR under docs/ir/.drafts/ was valid for changes and change_record_invalid for check. Spec test was seen failing. The part below the location is then taken by stripping the location and \"/\" as a prefix instead of slicing by length, because the length arithmetic produced equivalent mutants (same result, no behavior change).",
+      "requirements": [
+        "REQ-core-033",
+        "REQ-core-265"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-first-definition-in-check-entries-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "before": "sha256:1f73e8c04b4724f2fc7a6d1db79fb8c151c9fb92333e3a4cb1732141e306af5d",
+          "after": "sha256:c7a8247e0f633f3315d0d1c455e2b9b9cce8b77a8fa1385a0a62d1a1dc06ef2f"
+        },
+        {
+          "path": "crates/kotowari-core/src/change_records.rs",
+          "before": "sha256:9da8af7a8b7e2da7b8d21162ffb347daea8d8153cbe01cccdce5a93c71bb6461",
+          "after": "sha256:a0c2dcef5d028de50a810efe3b3970433be47bc55e1fd8324f6225d600ec6f28"
+        },
+        {
+          "path": "crates/kotowari-core/tests/change_records.rs",
+          "before": "sha256:d444da54e0ab9ea7e9df903c247ead437051a6a2c1858995ca92fd632a0c80f6",
+          "after": "sha256:66efee3698641e13fd12c8e759af0170b03b4f11a7149e961c910ae7efab1b8d"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/change-record-format.md",
+          "sha256": "sha256:733e2f8d430746e2b13fff0677a47e07348cb1c3b79a1c6c30c03f0ed6afd262"
+        },
+        {
+          "path": "docs/ir/core/findings.md",
+          "sha256": "sha256:1ed515281d09deb0d5cbe20e0e2cc14d73bc4ba61056f1753ba9bc5fea466298"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "check's change-record validation now maps a duplicated requirement ID to the first defining document in path byte order (REQ-core-032), as changes already does, instead of the last one collected. Spec test passes the documents in both orders and was seen failing. The selection was then rewritten to sort the documents by path and keep the first definition, because the earlier path comparison could not be told from <= by the mutation tests (same result, no behavior change).",
+      "requirements": [
+        "REQ-core-032",
+        "REQ-core-268"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-switcher-after-bom-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "before": "sha256:1f73e8c04b4724f2fc7a6d1db79fb8c151c9fb92333e3a4cb1732141e306af5d",
+          "after": "sha256:c7a8247e0f633f3315d0d1c455e2b9b9cce8b77a8fa1385a0a62d1a1dc06ef2f"
+        },
+        {
+          "path": "crates/kotowari-core/src/translations.rs",
+          "before": "sha256:eac18674648a54e07fd87d05e89d3092a6ac867620808a784eefec8c91093b92",
+          "after": "sha256:b988ff50fead397cebbdaffe238bdde78aa7be3706c5e9bd445e81a3d9e6624b"
+        },
+        {
+          "path": "crates/kotowari-core/tests/translations.rs",
+          "before": "sha256:c87587b465214c2a0fe01866ac0917cf2e110b4cb4eb7c786a0a69f84788c20c",
+          "after": "sha256:5e203729f9b40a9ed863904330aa5fba83e95a9ec981d7c3531b2d47a3e3d166"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/ir-input.md",
+          "sha256": "sha256:010bc24dc95ff1f6a817437f1b13c4eeb79951207d992b87134db4db6f9b9493"
+        },
+        {
+          "path": "docs/ir/core/translation-structure.md",
+          "sha256": "sha256:97f5a1e1b02a6d5ca825600e75a67751c1f0b8ef71827f141128e586813eaa42"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "The language switcher search skips a leading BOM (REQ-core-111), so an in-memory document starting with a BOM finds its title and switcher line; the switcher is no longer reported as translation_switcher_invalid nor counted as document scope (REQ-core-346). The file path already stripped the BOM when reading. Spec test was seen failing.",
+      "requirements": [
+        "REQ-core-346",
+        "REQ-core-111"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-changes-config-error-path-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "before": "sha256:1f73e8c04b4724f2fc7a6d1db79fb8c151c9fb92333e3a4cb1732141e306af5d",
+          "after": "sha256:c7a8247e0f633f3315d0d1c455e2b9b9cce8b77a8fa1385a0a62d1a1dc06ef2f"
+        },
+        {
+          "path": "crates/kotowari/src/git_snapshot.rs",
+          "before": "sha256:9f91101fa74644fd736868680625defddb0d3529f69a374b4a26200340201c1e",
+          "after": "sha256:9de00eeb60074126c7878a7b4f6e40eed0cb24ab611c922c1a180f0eb3e7e2a2"
+        },
+        {
+          "path": "tests/change_cli.rs",
+          "before": "sha256:746536289cc479d3add93f05b1bdcf74f9ed39aa22e1903cce5fc91c7d8b9d05",
+          "after": "sha256:b078b392e0befb3e13dc8030adb8cb6ec4f03fb641d52d24957f135aceb48663"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/changes-inputs.md",
+          "sha256": "sha256:ad0d0553a709e8891361ed04dd9e047d19e1e0186b621e0a42e16b6a3a0df15b"
+        },
+        {
+          "path": "docs/ir/core/cli-environment.md",
+          "sha256": "sha256:0e983d819fb30e8af806b5933ca5edecbbe1fb2d1e2b657eeb70ed7ff5669928"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "changes now prefixes configuration errors of the target configuration, including a missing changes key, with the configuration file's relative path, as TBL-core-020 requires and check already does. Spec assertions on the stderr prefix were seen failing.",
+      "requirements": [
+        "REQ-core-265"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-kotowari-public-docs-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "crates/kotowari/src/lib.rs",
+          "before": "sha256:07f26975395dd05e369860aa6b3dd77be172bba790dedcda1af1898c4e0582b6",
+          "after": "sha256:b9151d6b23525dd9f9d8fabb024d5e32256f74589aeab8e0872b6c8878be69f7"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/changes-inputs.md",
+          "sha256": "sha256:ad0d0553a709e8891361ed04dd9e047d19e1e0186b621e0a42e16b6a3a0df15b"
+        },
+        {
+          "path": "docs/ir/core/library-paths.md",
+          "sha256": "sha256:68dec4d042e8a60e26d1266815c1caccf9a98bc2630e70d91fce2b3e4d8387f3"
+        },
+        {
+          "path": "docs/ir/core/overview-output.md",
+          "sha256": "sha256:eddbf22083afbf6747ab8c878fe9c6837b05a067e2b2cf61a28ba8779bf920fa"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "Documentation only: the doc comment for the overview group name (REQ-core-288) is moved from Page onto OVERVIEW_GROUP where it belongs, and ProjectOptions.config now documents that a relative path is resolved from the start location for read operations (REQ-core-323) and from the Git root for changes (REQ-core-265). No behavior change.",
+      "requirements": [
+        "REQ-core-288",
+        "REQ-core-323",
+        "REQ-core-265"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-changes-rejects-port-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "before": "sha256:1f73e8c04b4724f2fc7a6d1db79fb8c151c9fb92333e3a4cb1732141e306af5d",
+          "after": "sha256:c7a8247e0f633f3315d0d1c455e2b9b9cce8b77a8fa1385a0a62d1a1dc06ef2f"
+        },
+        {
+          "path": "src/cli.rs",
+          "before": "sha256:4726207134a541169afcb5e90a289da413afe683a6099d06b4d5050c904dc36e",
+          "after": "sha256:35745a348bc5367632c5856a12f6491e3670e78b901412126e73ce83a8bc1847"
+        },
+        {
+          "path": "tests/change_cli.rs",
+          "before": "sha256:746536289cc479d3add93f05b1bdcf74f9ed39aa22e1903cce5fc91c7d8b9d05",
+          "after": "sha256:b078b392e0befb3e13dc8030adb8cb6ec4f03fb641d52d24957f135aceb48663"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/changes-inputs.md",
+          "sha256": "sha256:ad0d0553a709e8891361ed04dd9e047d19e1e0186b621e0a42e16b6a3a0df15b"
+        },
+        {
+          "path": "docs/ir/core/cli.md",
+          "sha256": "sha256:849f698dbe2eabe12e7f810dbc5e0d185303d84c72774469b553d8a28860c542"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "The --port check of REQ-core-004 now runs before the changes branch returns, so changes with --port stops with an argument error instead of silently ignoring it; REQ-core-263 keeps only --config, --format, --help and --version for changes. Spec test was seen failing (exit 0 before).",
+      "requirements": [
+        "REQ-core-004",
+        "REQ-core-263"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-brace-glob-hidden-prefix-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "before": "sha256:1f73e8c04b4724f2fc7a6d1db79fb8c151c9fb92333e3a4cb1732141e306af5d",
+          "after": "sha256:c7a8247e0f633f3315d0d1c455e2b9b9cce8b77a8fa1385a0a62d1a1dc06ef2f"
+        },
+        {
+          "path": "crates/kotowari/src/test_files.rs",
+          "before": "sha256:6009718c8cd59d6aac6ea2e769a19e27bc639e00803cfca87e55233c326d8274",
+          "after": "sha256:23b3dea03a93d755fab1b4727e16e2a01c26b4dfade5bdac7f28313c763d76d6"
+        },
+        {
+          "path": "crates/kotowari/tests/change_records.rs",
+          "before": "sha256:b798c1248d033199a51f1cb01832bdffad1f3f7dc8a1539eb32ccb9294bb69da",
+          "after": "sha256:ee9e21279b83f4d9484d96ac89d77445d8a755d08eb423a11344c29c7eadd6ed"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/config.md",
+          "sha256": "sha256:8e6c8146beffb94dcd7f8e19273f8dcae92f426b53c51b071f9f26a06270798e"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "Collecting files under explicitly named hidden directories (REQ-core-019) no longer panics when a glob's brace alternation spans a slash ({docs/.changes,docs/changes}/*.yaml): prefixes cut inside braces are not globs and are not counted as naming a hidden directory. Whether a hidden directory named inside braces should count is left to TODO.md. Spec test was seen panicking.",
+      "requirements": [
+        "REQ-core-019"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-unknown-reference-as-text-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "crates/kotowari-markdown-schema/CHANGELOG.md",
+          "before": "sha256:eb76783604a5f1ea7f40010a7325effbea9693eddcacd9ae13562ec2becf2807",
+          "after": "sha256:81a1e833dee88a3618582100822d6854468c318e7225d009ee0b21b1c91502f6"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/src/parts.rs",
+          "before": "sha256:588e29bd81c3675a62b9164f010235579f8d9476401cd7da8b1f0cf89a8d06c1",
+          "after": "sha256:be90e321ebef12b768e276bbce435a1359707de5822c73323dcb4993490380f3"
+        },
+        {
+          "path": "crates/kotowari-markdown-view/tests/languages.rs",
+          "before": "sha256:33e5a10a44002520d6bb1e4ba32c9bdc7fa6db5eb2b554cf25fb2a90ebbd80d1",
+          "after": "sha256:cfdbe92e8aeaa7e205cd466f60a636ef806808eecb314199c63218588cd40dac"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/view/languages.md",
+          "sha256": "sha256:34a8f3a9e19eece3e814152e559059ed8f5f30311d57e929436c9d6a2650a823"
+        },
+        {
+          "path": "docs/ir/view/rendering.md",
+          "sha256": "sha256:1d7a614e57d06504a56d156556bac3cd38101340581762e56f892d473f48f28e"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "A reference missing from the reference table is now drawn as plain text that opens nothing, like a reference without a body (REQ-view-030), matching the function's own doc comment, instead of an empty <details>. overview cannot produce this input (unresolved references stop the build), so only direct view callers see it. Spec test was seen failing.",
+      "requirements": [
+        "REQ-view-008",
+        "REQ-view-030"
+      ],
+      "decisions": [],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "rework-serve-test-port-race-implementation",
+      "base": "7bfedd8f68dab3b4fb88643222445a5cb77cba7e",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "tests/step20_overview_serve.rs",
+          "before": "sha256:64e60169951108b016e8ec022f6ec640d24b3a106124826c7f62ddb4180acea4",
+          "after": "sha256:ed8393bb207b2373b22f980171dbc9f6664be1c14dfbfddd70d902b7a46d305b"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/overview-commands.md",
+          "sha256": "sha256:0456618297b9bdaa4ed3cb4ddce384216cb6eb0a88a21c3e98da61ff33dcaa18"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "Test-only: the overview serve tests released an OS-chosen port before serve bound it, so a parallel test's connection could take it and serve stopped with a port error (observed once as an empty startup line). The helper now restarts on another port only when serve stops with a port error. No product change.",
+      "requirements": [
+        "REQ-core-297",
+        "REQ-core-298"
+      ],
+      "decisions": [],
       "handoff": null,
       "gaps": []
     }

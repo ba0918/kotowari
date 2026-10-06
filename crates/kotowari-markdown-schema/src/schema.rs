@@ -522,10 +522,15 @@ impl<'de> serde::de::Visitor<'de> for ExtractVisitor {
             return Err(M::Error::custom("extract requires \"path\""));
         };
         check_placement_path(&path).map_err(M::Error::custom)?;
+        // value と of の鍵も要素オブジェクトの中の配置パス（REQ-schema-048、TBL-schema-009）
+        let of = of.unwrap_or_default();
+        for relative in value.iter().chain(of.iter().map(|(key, _)| key)) {
+            check_placement_path(relative).map_err(M::Error::custom)?;
+        }
         Ok(Extract {
             path,
             value,
-            of: of.unwrap_or_default(),
+            of,
             group,
         })
     }
@@ -1208,6 +1213,31 @@ document:
             assert!(
                 parse_schema(yaml).is_err(),
                 "{node} に Capture 形の extract を宣言したのに schema_invalid にならない"
+            );
+        }
+    }
+
+    // @kotowari[REQ-schema-036, TBL-schema-009]
+    #[test]
+    fn an_empty_name_in_the_value_or_an_of_key_of_an_element_object_is_schema_invalid() {
+        // "value" と "of" の鍵も同じ置き場の配置パスに数える（TBL-schema-009）ので、
+        // ドットで区切った名前が空なら path と同じく schema_invalid にする
+        let schema = |extract: &str| {
+            format!(
+                "document:\n  sections:\n    - name: 用語集\n      table:\n        header: [a]\n        extract: {extract}\n"
+            )
+        };
+        assert!(parse_schema(&schema("{ path: g, value: v, of: { k: line } }")).is_ok());
+        for extract in [
+            "{ path: g, value: \"\" }",
+            "{ path: g, value: \"a..b\" }",
+            "{ path: g, of: { \"a..b\": line } }",
+            "{ path: g, of: { \".k\": line } }",
+        ] {
+            let error = parse_schema(&schema(extract)).expect_err(extract);
+            assert!(
+                error.to_string().contains("has an empty name"),
+                "{extract}: {error}"
             );
         }
     }
