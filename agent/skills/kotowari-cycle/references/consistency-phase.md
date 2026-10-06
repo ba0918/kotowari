@@ -87,7 +87,8 @@ resolved here as below.
   as `mark.md` says. Of that contract, these apply: test-first for code, with a failing test
   meeting the Evidence conditions; the artifact and deletion rules; commit hygiene; and stopping
   before an irreversible or privileged operation. Its rule to hand back a missing design decision
-  does not: **How a finding is resolved** replaces it. There is no plan, so its check commands come
+  does not: **How a finding is resolved** replaces it. Nor does its rule to leave the IR alone and
+  return when a hook stops a commit on an IR-side finding: fixing the IR is this phase's job. There is no plan, so its check commands come
   from the project's instructions, then the ecosystem's standard tool.
 - What it decided is written to a new decision record for this run (`records.md` gives its place and
   form). Each decision names the consistency phase as the decider (`decided_by`), with the choice,
