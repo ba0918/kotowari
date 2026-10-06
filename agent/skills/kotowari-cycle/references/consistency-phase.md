@@ -46,7 +46,9 @@ asked for separately.
 ## How a finding is resolved
 
 Every finding ends in a state where the IR and the code agree. When the IR has a hole and the code
-is right, never put the code back to match the IR.
+is right, never put the code back to match the IR. This replaces the cycle's former handling: the IR
+is no longer left to the fixer, and a contradiction is no longer returned to the person; both are
+resolved here as below.
 
 - What observation can settle is settled by measuring or reproducing it: run the command or a
   throwaway probe, keep it out of the commits, and decide by its output.
