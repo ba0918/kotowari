@@ -30,6 +30,9 @@ its own form of it (**In implement**).
    - otherwise (a question of meaning no grounds or measurement settle) → end as ending 3; the
      terminal report carries the ladder.
 
+   When the clause fired on a `consistency` finding, the first two both go to a consistency phase
+   run, which fixes code as well as the IR: a `consistency` finding never goes to the fixer.
+
 ## Once per firing
 
 A firing gets one attempt. After an attempt, the next time any clause that enters this step holds,
