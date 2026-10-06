@@ -3,10 +3,10 @@
 # pre-commit: 秘密情報の検査（lefthook の導入前から入っていたグローバルのフック。
 #   lefthook install が .git/hooks/pre-commit.old に退避したものをそのまま走らせる）と、
 #   kotowari 自身の IR の検査。check はリポジトリの今のコードで走らせる。
-#   テスト側の指摘（requirement_without_test、scenario_without_test、test_without_id、invalid_marker、
-#   unparsable_file、テストのファイルの unresolved_reference）はコミットでは止めない。
-#   仕様の承認のコミットは実装より先で、そのときテストはまだ無いため（A19）。
-#   停止（終了コード2）は止める。
+#   --allow-test-findings を付け、テスト側の指摘はコミットでは止めない。仕様の承認のコミットは
+#   実装より先で、そのときテストはまだ無いため（A19）。どの指摘がテスト側かは kotowari が決め、
+#   ここに種類を並べない（docs/decision/records/2026-10-06-spec-first-commit.md の A2、A8）。
+#   ほかの誤り（終了コード1）と停止（終了コード2）は止める。
 #   ステージした Rust のファイルは rustfmt にかけ直してステージし直す。放っておくと整形が崩れていくため。
 #   edition は Cargo.toml と同じ 2024 を渡す（rustfmt を直に呼ぶと cargo の edition を読まない）。
 # pre-push: テスト全件と、テスト側の指摘も含めた check の終了コード0。テストの無い要求は push で止まる。
@@ -22,16 +22,7 @@ pre-commit:
     secretlint:
       run: bash "$(git rev-parse --git-common-dir)/hooks/pre-commit.old"
     kotowari-check:
-      run: |
-        out=$(CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-cli --bin kotowari -- check --format json); code=$?
-        if [ "$code" -eq 2 ]; then exit 2; fi
-        rest=$(printf '%s' "$out" | jq -r '
-          [ .findings[]
-            | select(.severity == "error")
-            | select((.kind | IN("requirement_without_test", "scenario_without_test", "test_without_id", "invalid_marker", "unparsable_file")) | not)
-            | select((.kind == "unresolved_reference" and ((.path | startswith("docs/ir/")) | not)) | not)
-          ] | .[] | "\(.path):\(.line // "-") [\(.severity)] \(.kind) \(.detail)"')
-        if [ -n "$rest" ]; then printf '%s\n' "$rest"; exit 1; fi
+      run: CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-cli --bin kotowari -- check --format text --allow-test-findings
 pre-push:
   commands:
     cargo-test:

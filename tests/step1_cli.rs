@@ -695,6 +695,23 @@ fn req_002_query_and_status_options_before_or_after_the_command() {
     }
 }
 
+// @kotowari[REQ-core-002]
+#[test]
+fn req_002_check_runs_with_allow_test_findings() {
+    cmd()
+        .args(["check", "--allow-test-findings"])
+        .current_dir(valid_project_dir())
+        .assert()
+        .code(0);
+}
+
+// @kotowari[REQ-core-004, EX-core-552]
+#[test]
+fn ex_core_552_allow_test_findings_on_status_is_an_argument_error() {
+    let project = dir_with_one_requirement();
+    assert_argument_error(&["status", "--allow-test-findings"], project.path());
+}
+
 // @kotowari[REQ-core-002, EX-core-380]
 #[test]
 fn ex_core_380_query_takes_an_option_after_the_id() {

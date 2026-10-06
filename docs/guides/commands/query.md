@@ -9,7 +9,7 @@ Use it when you want to read a single requirement without opening the IR documen
 
 ## Synopsis
 
-<!-- @kotowari[REQ-core-002:d9acbe9c, REQ-core-157:7f12b67c, EX-core-380:f7f73b4e] -->
+<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-157:7f12b67c, EX-core-380:f7f73b4e] -->
 
 ```sh
 kotowari query [--format json|text] [--config <path>] <ID>

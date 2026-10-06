@@ -214,7 +214,7 @@ tests:
 
 ## glob の読み方
 
-<!-- @kotowari[REQ-core-019:52c32b58, REQ-core-079:589c548b] -->
+<!-- @kotowari[REQ-core-019:178b0f0c, REQ-core-079:589c548b] -->
 
 `tests.files`、`guides.files`、`surface.files`、`overview.files` の glob は次のように読みます。
 
@@ -381,7 +381,7 @@ $ echo $?
 
 ## 設定の誤り
 
-<!-- @kotowari[REQ-core-014:ddda325d, EX-core-003:a69bc60c, EX-core-383:dac73d9d, REQ-core-225:be4cdd0b, REQ-core-280:1b9f50df, TBL-core-004:322d11b1, REQ-core-326:fb819a40, REQ-core-335:b51997f0, REQ-core-352:7b5a3a7f] -->
+<!-- @kotowari[REQ-core-014:4f851c96, EX-core-003:a69bc60c, EX-core-383:dac73d9d, REQ-core-225:be4cdd0b, REQ-core-280:1b9f50df, TBL-core-004:322d11b1, REQ-core-326:fb819a40, REQ-core-335:b51997f0, REQ-core-352:7b5a3a7f] -->
 
 次のどれかがあると、kotowari は検査を行わずに止まります（終了コード 2）。
 標準エラーの1行目は `config error: ` で始まり、設定ファイルのパスと理由が続きます。
@@ -478,7 +478,7 @@ config error: invalid rule in tests.rules: rules/c.yml: unknown language: cobol
 
 ### 知らないキーで止まる
 
-<!-- @kotowari[REQ-core-014:ddda325d, EX-core-003:a69bc60c] -->
+<!-- @kotowari[REQ-core-014:4f851c96, EX-core-003:a69bc60c] -->
 
 ```console
 $ cat .kotowari/config.yaml

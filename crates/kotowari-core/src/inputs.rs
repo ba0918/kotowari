@@ -781,6 +781,10 @@ impl CheckPreparation {
                 unspecified: tally.unspecified,
             }),
             groups: self.groups,
+            test_side: crate::test_side::TestSideFiles::new(
+                &self.read.discovered.files,
+                &self.read.config().surface.files,
+            ),
         });
         Ok(Inspection {
             read: self.read,
@@ -1031,5 +1035,9 @@ impl CheckReport {
     }
     pub fn group(&self, name: &str) -> Option<&GroupTally> {
         find_group(&self.0.groups, name)
+    }
+    /// finding が`テスト側の指摘`か（TBL-core-047）。"--allow-test-findings" の終了コードの判断に使う
+    pub fn is_test_side_finding(&self, finding: &crate::Finding) -> bool {
+        self.0.test_side.contains(finding)
     }
 }

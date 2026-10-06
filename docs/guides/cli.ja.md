@@ -10,7 +10,7 @@ kotowari の8つのコマンドに共通する決まりをまとめたページ�
 
 ## 書式
 
-<!-- @kotowari[REQ-core-001:f6b868d0, REQ-core-002:d9acbe9c, EX-core-380:f7f73b4e] -->
+<!-- @kotowari[REQ-core-001:f6b868d0, REQ-core-002:f86e2efd, EX-core-380:f7f73b4e] -->
 
 ```sh
 kotowari <command> [--format json|text] [--config <path>] [argument]
@@ -39,7 +39,7 @@ kotowari --version
 
 ## 共通のオプション
 
-<!-- @kotowari[REQ-core-002:d9acbe9c, REQ-core-021:ccedd28b, REQ-core-003:b4f59e48, REQ-core-107:7c6198ca, REQ-core-297:481b26d5] -->
+<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:b4f59e48, REQ-core-107:7c6198ca, REQ-core-297:481b26d5] -->
 
 | 名前 | 値 | 既定 | 説明 | 受けるコマンド |
 |---|---|---|---|---|
@@ -49,6 +49,7 @@ kotowari --version
 | `--version` | なし | — | 版を標準出力に出して終了コード0で終わる | すべて |
 | `--tool` | `cargo-mutants` | なし（必須） | 結果のファイルを出した道具 | `mutants` だけ |
 | `--port` | 1から65535までの10進の整数 | `4590` | 配る 127.0.0.1 のポート | `overview serve` だけ |
+| `--allow-test-findings` | なし（値を取らない） | 付けない | テスト側の指摘を終了コードに数えない（[commands/check.md](commands/check.ja.md#テストより先に仕様をコミットする)） | `check` だけ |
 
 `--help` と `--version` は、ほかの引数より優先されます。
 これらがあると、ほかの引数に誤りがあっても見ずに表示し、検査もしません。
@@ -115,12 +116,12 @@ JSON の最上位の鍵はコマンドごとに違います。
 
 ## 終了コード
 
-<!-- @kotowari[REQ-core-007:0f08bddc, TBL-core-002:14c565f2] -->
+<!-- @kotowari[REQ-core-007:0f08bddc, TBL-core-002:36817bf5] -->
 
 | コード | 意味 |
 |---|---|
-| 0 | 誤りが無い（注意だけのときを含む）。または `--help` か `--version` で終わった |
-| 1 | 誤りが1件以上ある |
+| 0 | 誤りが無い（注意だけのときを含む）、`--allow-test-findings` を付けた `check` の誤りがどれもテスト側の指摘、または `--help` か `--version` で終わった |
+| 1 | 誤りが1件以上ある（`--allow-test-findings` を付けた `check` では、テスト側の指摘でない誤りが1件以上ある） |
 | 2 | 停止した（検査を始められなかった） |
 
 注意（`notice`）は終了コードを変えません。
@@ -162,13 +163,13 @@ CI では終了コードだけで「直す必要があるか」を判定でき�
 
 ### 引数の誤り
 
-<!-- @kotowari[REQ-core-004:125eb94d, EX-core-219:f3123493, EX-core-241:38290f77, REQ-core-304:e9cd623d] -->
+<!-- @kotowari[REQ-core-004:2d3401d1, EX-core-219:f3123493, EX-core-241:38290f77, REQ-core-304:e9cd623d] -->
 
 次のどれかに当たると `argument error` で止まります（`--help` か `--version` があるときを除く）。
 
 - 引数が1つも無い、またはオプションだけで、コマンドが無い
 - 1つ目の位置引数が8つのコマンドのどれでもない
-- 知らないオプション、`mutants` でないコマンドに付けた `--tool`、`overview serve` でないコマンドに付けた `--port`、または `overview serve` に付けた `--format`
+- 知らないオプション、`mutants` でないコマンドに付けた `--tool`、`overview serve` でないコマンドに付けた `--port`、`overview serve` に付けた `--format`、または `check` でないコマンドに付けた `--allow-test-findings`
 - `overview` の後の位置引数がちょうど1つでないか、`build` か `serve` でない
 - `--port` の値が1から65535までの10進の整数でない
 - `check`、`list`、`status` の後の位置引数
@@ -246,17 +247,18 @@ Commands:
 
 Changes: --base <REV> (--head <REV> | --staged) --phase <implementation|review>
 Options:
-  --format <FORMAT>  Output format: json (default) or text
-  --config <PATH>    Path to configuration file
-  --tool <TOOL>      Mutation testing tool of the result file: cargo-mutants
-  --port <PORT>      Port of overview serve on 127.0.0.1 (default 4590)
-  --help             Show this help message
-  --version          Show version
+  --format <FORMAT>      Output format: json (default) or text
+  --config <PATH>        Path to configuration file
+  --tool <TOOL>          Mutation testing tool of the result file: cargo-mutants
+  --port <PORT>          Port of overview serve on 127.0.0.1 (default 4590)
+  --allow-test-findings  check: exit 0 when every error is a test-side finding
+  --help                 Show this help message
+  --version              Show version
 ```
 
 ### 引数を間違えて止まる
 
-<!-- @kotowari[REQ-core-004:125eb94d, REQ-core-005:fee48254, EX-core-219:f3123493] -->
+<!-- @kotowari[REQ-core-004:2d3401d1, REQ-core-005:fee48254, EX-core-219:f3123493] -->
 
 ```console
 $ kotowari
@@ -269,6 +271,8 @@ $ kotowari check extra
 argument error: unexpected argument: extra
 $ kotowari check --format text --format json
 argument error: repeated option: --format
+$ kotowari status --allow-test-findings
+argument error: unexpected option for status: --allow-test-findings
 $ kotowari check --format
 argument error: --format requires a value
 $ kotowari check --config docs
@@ -360,7 +364,7 @@ JSON を `jq` に渡しているときは、`jq` が空の入力を受けて何�
 
 ### 注意（`[notice]`）が出ているのに終了コードが0
 
-<!-- @kotowari[TBL-core-002:14c565f2] -->
+<!-- @kotowari[TBL-core-002:36817bf5] -->
 
 仕様どおりです。
 注意は終了コードを変えません。

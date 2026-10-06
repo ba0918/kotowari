@@ -2,237 +2,287 @@
   "version": 1,
   "entries": [
     {
-      "id": "todo-zero-overview-enumeration-review",
-      "base": "0fc430814cbfa35f8d7b06ff138353e07b82982c",
+      "id": "review-allow-test-findings-option",
+      "base": "b98994b849f4af524113f6a82c085066258f3695",
       "role": "reviewer",
       "files": [
         {
-          "path": "crates/kotowari/src/lib.rs",
-          "before": "sha256:b9151d6b23525dd9f9d8fabb024d5e32256f74589aeab8e0872b6c8878be69f7",
-          "after": "sha256:d1c17b3bd9ddd735ca36d02009755bd29c3ec971e74560e93ad248f7552bd499"
+          "path": "crates/kotowari-core/src/inputs.rs",
+          "before": "sha256:c64479b8f47538d86e0f6e459ad7df0c2c83e152bbfea64da903de03a31a9b32",
+          "after": "sha256:88296e3ed5131923bea9de7d0bf951185e1059853e9597be15f61bde1e3470ce"
         },
         {
-          "path": "crates/kotowari/src/overview.rs",
-          "before": "sha256:af77478ddf980a1cbe8f7f8dcfd3f469ec0fa838516ca321ab4876c0977fb62d",
-          "after": "sha256:b4df339d78f5ae3b25b76bf126c9ff087f6a8971f394f5ea5d2ae57106156655"
+          "path": "crates/kotowari-core/src/lib.rs",
+          "before": "sha256:40fcc56665067189810f3fdf3f07f79859c7b7007731d2451f1d7eead5783ed4",
+          "after": "sha256:f0d93edbf198b722c0c5c35ccc1e9b1126a9dcdc9d88c1fc22c2601038b1fedb"
         },
         {
-          "path": "tests/step19_overview_build.rs",
-          "before": "sha256:cc69faa36fb0589210fb5e5bcb1f7c731aeeefe400d1fe1153e1d4ea01ffd038",
-          "after": "sha256:be8230ef82177a0f57d5bceb95396d7b04cc89f2da2253d1c09e58fb6fb1ec4c"
+          "path": "crates/kotowari-core/src/test_side.rs",
+          "before": null,
+          "after": "sha256:4f4707805507e018bdf390340a889bc58e362bceee9f352407825874609ca806"
+        },
+        {
+          "path": "crates/kotowari-core/tests/inputs.rs",
+          "before": "sha256:08531e239d7f83683311deeb14fa1ca3867a4a288e902538e9b40380e464d439",
+          "after": "sha256:ab83cf38460540a33c35f4688e002e17e6df4ce0180c459881cc2957db1b12b9"
+        },
+        {
+          "path": "crates/kotowari-core/tests/test_side_findings.rs",
+          "before": null,
+          "after": "sha256:67b7e2060d658d976d70796b468cd53327e77e2789dbcf911cfa2c8f63461ad4"
+        },
+        {
+          "path": "src/cli.rs",
+          "before": "sha256:35745a348bc5367632c5856a12f6491e3670e78b901412126e73ce83a8bc1847",
+          "after": "sha256:44d614e597af506823a9ecad3540f11972aae575060f51eaf043186b035cf10f"
+        },
+        {
+          "path": "src/cli/tests.rs",
+          "before": "sha256:bd9f05e120b679b1067cce131203b5d8fce5a49cf57c1286faaee997d30d2cfe",
+          "after": "sha256:363e72403666f500a6a316e04b5874dda2e4d890277d69a06fbecef779b5c1da"
+        },
+        {
+          "path": "tests/step1_cli.rs",
+          "before": "sha256:33bf6312af6e4b05007937addc8d8ee4ead14a301f3cfc717f79f28cc435dcb1",
+          "after": "sha256:7c0a32c4d7157fc23e9f577d955582e0f7097c7ae658709e74d877419665ecdd"
+        },
+        {
+          "path": "tests/step22_test_side_findings.rs",
+          "before": null,
+          "after": "sha256:6dea4837dbe243f9af1046b32e14b3644ec06fcd999286b4197631d497547aab"
         }
       ],
       "ir": [
         {
-          "path": "docs/ir/core/overview-commands.md",
-          "sha256": "sha256:21df9dbf6343aabc5eef8ce8aaba3d860c8b99a4ac83997ea4d1491fd0013cdc"
+          "path": "docs/ir/core/CONTEXT.md",
+          "sha256": "sha256:f9e6e48c1143fe4a663f2ea23af6dcb825809f2c38593c1ffe6a1593f7e796e0"
+        },
+        {
+          "path": "docs/ir/core/cli.md",
+          "sha256": "sha256:615acc3566eeaae41e2f8f5835863e341ab1f21d9ba9decf8a6beb6e3d36e078"
+        },
+        {
+          "path": "docs/ir/core/test-side-findings.md",
+          "sha256": "sha256:0b99a409b06324cc35581010eb2cb6a395460dd5411557ceb85cfd86699fe8e0"
         }
       ],
       "conclusion": "existing",
-      "reason": "overview::existing now returns the raw io error from the walkdir enumeration instead of building an UnreadableFile stop. Its only caller, in the write path, maps that error through Error::cache with the overview location. The detail is therefore 'cache error: .kotowari/cache/overview: <OS error>', which is the path and OS error text that REQ-core-324 now requires for enumeration, the same as for create, write and delete. The EX-core-546 test makes a directory under the location unreadable and asserts exit 2 and the 'cache error: .kotowari/cache/overview' prefix. The old behaviour produced 'unreadable file', so the test fails if it returns. Nothing beyond A5 changed.",
+      "reason": "Reviewed against REQ-core-002, REQ-core-004, REQ-core-357, TBL-core-047, TBL-core-002 and the glossary rows error and test-side finding. parse_args takes --allow-test-findings without a value on either side of the command, stops on a second occurrence and on every command other than check (before the early return for changes), as REQ-core-002 and REQ-core-004 state. test_side.rs maps every finding kind: the three untested kinds always, invalid_marker and unresolved_reference when the path is a test file read by the check, unparsable_file when it is such a file and does not match the surface.files globs (the glossary's surface file, matched with the same default globset as the walk), every other kind never; the severity is not consulted, which is sound because every kind in the table is an error. The CLI changes only the exit code: with the flag it is 1 when any error is not a test-side finding, otherwise the old computation; printing is untouched, so output stays identical (REQ-core-357, A4). The tests' expectations match their IDs: EX-core-547 to EX-core-552, the per-row core test of TBL-core-047, the no-rule-language surface case and the identical-output test for both formats. EX-core-551 now writes the guide mark as @kotowari[], a mark with nothing inside as the scenario says; the test expects invalid_marker on the guide and exit 1 with the flag, and passes. Outside the tests, the binary was run on a project whose only errors were an unparsable, an empty-marked and an unresolved-reference test file: exit 0 with the flag, 1 without. print_help now starts every option's description in one column, the width of --allow-test-findings plus two spaces; only spacing changed, and --help still exits 0 (TBL-core-002). tbl_core_047_errors_only_in_test_files_pass_with_the_option, marked TBL-core-047, writes a project whose only errors are an unresolved_reference and an invalid_marker in tests/a.rs and an unparsable_file in tests/b.rs (a test file and not a surface file); it expects exit 0 with --allow-test-findings and those three findings still output as errors with their paths, which is the TBL-core-047 rows for those kinds and REQ-core-357. It pins only kind, severity and path, which the specification states. Run on the same project without the flag, the binary exits 1, so the test separates the option from a project with no error; the test file passes.",
       "requirements": [
-        "REQ-core-324"
+        "REQ-core-002",
+        "REQ-core-004",
+        "REQ-core-357"
       ],
       "decisions": [
-        "docs/decision/records/2026-10-06-todo-zero.md#A5"
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A1",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A2",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A3",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A4",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A5",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A6",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A9",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A10",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A12"
       ],
       "handoff": null,
       "gaps": []
     },
     {
-      "id": "todo-zero-slash-glob-elements-review",
-      "base": "0fc430814cbfa35f8d7b06ff138353e07b82982c",
-      "role": "reviewer",
-      "files": [
-        {
-          "path": "crates/kotowari-core/src/config.rs",
-          "before": "sha256:7a27310597ad617e92269eada9ac6bde15b52e2259f39e2966aa9cb959d8a623",
-          "after": "sha256:6ae8b9783a6cb53ace129f37e9ff2b570b7c85a28b8871c473f724d051828644"
-        },
-        {
-          "path": "tests/step1_config.rs",
-          "before": "sha256:3d889dc92850a05e6ffe3f7cab4956ab0d2b4559fb314b36ea6609599b39e254",
-          "after": "sha256:b1762232c6f6491eb92a0ca070c4b2e4d45d9d5c4e9dc12e41fe6a1fac2ffce2"
-        }
-      ],
-      "ir": [
-        {
-          "path": "docs/ir/core/config.md",
-          "sha256": "sha256:51399793836e79f43d56529f90d6126a87c2feb5d3355764d2272249b1544cfa"
-        }
-      ],
-      "conclusion": "existing",
-      "reason": "check_globs now takes the key and runs check_not_absolute on each element before the glob parse. It is called for tests.files, guides.files, surface.files and overview.files, which REQ-core-014 now counts as absolute-path values. It is also called for the changes globs, which already rejected '/' under the same 'changes' key; for those only the order of the two checks changed. The EX-core-544 test asserts exit 2 and the 'config error: ' prefix for '/tests/**/*.rs', which was accepted before. The unit test checks all four keys by their key-specific 'absolute path not allowed' detail.",
-      "requirements": [
-        "REQ-core-014"
-      ],
-      "decisions": [
-        "docs/decision/records/2026-10-06-todo-zero.md#A3"
-      ],
-      "handoff": null,
-      "gaps": []
-    },
-    {
-      "id": "todo-zero-scenario-tests-review",
-      "base": "0fc430814cbfa35f8d7b06ff138353e07b82982c",
-      "role": "reviewer",
-      "files": [
-        {
-          "path": "crates/kotowari-markdown-view/tests/rendering.rs",
-          "before": "sha256:ad7cb6b21b3a05a0322dc4397fd7bf49c015528c7d55906fadea9ea41ccdb224",
-          "after": "sha256:013cb3219cb50e94ed780003b83e1ec8cf4280e92cd15bea7b946a67fac0aa68"
-        },
-        {
-          "path": "crates/kotowari-mds/tests/cli.rs",
-          "before": "sha256:cf15799d1bb8de0360dba4be74f9923e2ebe802f514479fa6742b97771661b22",
-          "after": "sha256:9cff47410212d0721d55750b957620bdbca773b952fffa98242738cf6fab3e2c"
-        },
-        {
-          "path": "crates/kotowari-mds/tests/url_schema.rs",
-          "before": "sha256:3c4e54f8cb38a74a0b8999cea2bc7890a51bed948344f88fde44ce70deffd6c2",
-          "after": "sha256:aa40325b021e6bde137a93718af20c9559ba8150637f2b8a0cf0ff4f6b5f09c0"
-        },
-        {
-          "path": "crates/kotowari/tests/change_records.rs",
-          "before": "sha256:ee9e21279b83f4d9484d96ac89d77445d8a755d08eb423a11344c29c7eadd6ed",
-          "after": "sha256:384b2494c22836227a545366b7a0a98c5566377e696ace0fc3dc87ed628bd5dc"
-        }
-      ],
-      "ir": [
-        {
-          "path": "docs/ir/view/rendering.md",
-          "sha256": "sha256:80517d7e926a09cccc38c15e3f033001dc929453045d9dfa6f6dd6cd8c61f138"
-        },
-        {
-          "path": "docs/ir/schema/document-structure.md",
-          "sha256": "sha256:4d2bdae95134110eda3e92f5d254f3c30fd0053edd3b16586030928c9f8e1c9b"
-        },
-        {
-          "path": "docs/ir/schema/schema-resolution.md",
-          "sha256": "sha256:a0de21a891f9899e33169f60bee11234f1852d45f60de382117aea044cb574d4"
-        },
-        {
-          "path": "docs/ir/core/config.md",
-          "sha256": "sha256:51399793836e79f43d56529f90d6126a87c2feb5d3355764d2272249b1544cfa"
-        }
-      ],
-      "conclusion": "existing",
-      "reason": "These are tests only. They pin existing behaviour that A1, A2, A4 and A6 now specify, and each would fail if that behaviour regressed. EX-view-024 asserts that the first block's link resolves, that '[b][x]' stays as text, and that the URL appears exactly once. EX-schema-094 uses an open schema that declares a preamble and no document-level item, with a title-less document that has a depth-3 heading; it asserts the only finding kind is missing_title, which matches the now-scoped REQ-schema-061 sentence. EX-schema-093 now covers both cache failures in A1. In the first case '.kotowari/cache' is a file, so create_dir_all fails. In the second the cache file path is a directory: the cache read fails, the schema is fetched, and std::fs::write fails. Each case asserts exit 0, exactly one fetch, and no cache file. EX-core-545 asserts that the non-hidden alternative docs/changes/test.yaml is read and flagged while .records/a.yaml, with the same content, is not. No product code changed.",
-      "requirements": [
-        "REQ-view-007",
-        "REQ-schema-061",
-        "REQ-schema-013",
-        "REQ-core-019"
-      ],
-      "decisions": [
-        "docs/decision/records/2026-10-06-todo-zero.md#A1",
-        "docs/decision/records/2026-10-06-todo-zero.md#A2",
-        "docs/decision/records/2026-10-06-todo-zero.md#A4",
-        "docs/decision/records/2026-10-06-todo-zero.md#A6"
-      ],
-      "handoff": null,
-      "gaps": []
-    },
-    {
-      "id": "todo-zero-unused-title-extract-review",
-      "base": "0fc430814cbfa35f8d7b06ff138353e07b82982c",
-      "role": "reviewer",
-      "files": [
-        {
-          "path": "crates/kotowari-core/schemas/context.yaml",
-          "before": "sha256:84ef425db1ab466685bdaba2fbb4efa9c10fd5d677cc29daf8411f61d8c29dd4",
-          "after": "sha256:cd5d3e1125c77674cee8c9a25ced4852a9f567898aef88d363248129da264cef"
-        },
-        {
-          "path": "crates/kotowari-core/schemas/flags.yaml",
-          "before": "sha256:b539af74e961ee20f1697811163e139afe1dadfc1652813ae5e0af860e8bb6d7",
-          "after": "sha256:3e1141c273a8f028fb9a9556878ccd34d195193eda3a4bf1f71b2a69cebc4842"
-        },
-        {
-          "path": "crates/kotowari-core/schemas/ir.yaml",
-          "before": "sha256:20d207326256dbdf80821c6f3f6329e233ebff0fc4b94e0506bca1ad504be238",
-          "after": "sha256:2c59dc6de9d07bd2dd92535dd8370925c9b44682543fb5d82a6efe0226c1f77f"
-        }
-      ],
-      "ir": [],
-      "conclusion": "new",
-      "reason": "Only 'extract: title' is removed. The title declarations stay: 'title: {}' in ir.yaml and flags.yaml, and the '^Glossary$' pattern in context.yaml. Searching kotowari-core/src and kotowari/src found nothing that reads an extracted title value. The only hits are the part field tables in skeleton.rs, the finding_map label, and the line-based title search in translations.rs. Validation results are therefore unchanged, as A8 states.",
-      "requirements": [],
-      "decisions": [
-        "docs/decision/records/2026-10-06-todo-zero.md#A8"
-      ],
-      "handoff": null,
-      "gaps": []
-    },
-    {
-      "id": "todo-zero-read-document-review",
-      "base": "0fc430814cbfa35f8d7b06ff138353e07b82982c",
-      "role": "reviewer",
-      "files": [
-        {
-          "path": "crates/kotowari-markdown-schema-io/src/lib.rs",
-          "before": "sha256:38125778f0f8320961a75bc5f764779266be9c64a2f0593e0019fbb423ffd18a",
-          "after": "sha256:9d414d32733755ee8e2bda475e72fcfd8b8592ab90444baa352ffa144a3a9e76"
-        },
-        {
-          "path": "crates/kotowari-markdown-schema-io/tests/loader.rs",
-          "before": "sha256:959c464689c4b65f7b35b576b2d78a2edae8fff733b230ec92124a538bfa8179",
-          "after": "sha256:7ec0cfcab674a5a831c23b3592d26ef6064a941be9750d1b92dc33473c0d8b6c"
-        },
-        {
-          "path": "crates/kotowari-mds/src/main.rs",
-          "before": "sha256:2bd434c2474c9d95e01ac8333e588abae153419ba6e5bbe7f59f75f242f93a38",
-          "after": "sha256:c748fa5dd6d6254652ecfe3c6addca029fb69dddbf5b58ad96594e4a4e76d27e"
-        }
-      ],
-      "ir": [
-        {
-          "path": "docs/ir/schema/library-io.md",
-          "sha256": "sha256:21205ef35a3bb28efebb4b3bb9482933d5c26f03efb8ec0142dcaac0a89dc99c"
-        }
-      ],
-      "conclusion": "new",
-      "reason": "SchemaLoader::read_document is a new public method, now listed in REQ-schema-072. It resolves the path against the loader start and calls the same private read_document that load uses: it strips the BOM, checks UTF-8, and returns UnreadableFile with the given path in the detail. mds ast without --schema now calls it instead of keeping its own copy of those rules. The From<io::Error> for Stop conversion keeps the kind and the detail, so the output and errors are unchanged. The loader test checks the BOM strip, the unreadable_file kind and the 'bad.md: ' detail prefix. This adds a public entry point without breaking anything, as A9 allows.",
-      "requirements": [
-        "REQ-schema-072"
-      ],
-      "decisions": [
-        "docs/decision/records/2026-10-06-todo-zero.md#A9"
-      ],
-      "handoff": null,
-      "gaps": []
-    },
-    {
-      "id": "todo-zero-changelog-english-review",
-      "base": "0fc430814cbfa35f8d7b06ff138353e07b82982c",
+      "id": "review-allow-test-findings-guides-skills",
+      "base": "b98994b849f4af524113f6a82c085066258f3695",
       "role": "reviewer",
       "files": [
         {
           "path": "CHANGELOG.md",
-          "before": "sha256:c7a8247e0f633f3315d0d1c455e2b9b9cce8b77a8fa1385a0a62d1a1dc06ef2f",
-          "after": "sha256:a59469273e9d1404db531b353282ee58d12b72137edf25307c5ceaa8a1d33630"
+          "before": "sha256:a59469273e9d1404db531b353282ee58d12b72137edf25307c5ceaa8a1d33630",
+          "after": "sha256:b100f05138e11e3ed9fbe4d24cdd18c32bc84c8a3230ffe44d38bb98415d5608"
         },
         {
-          "path": "crates/kotowari-markdown-schema/CHANGELOG.md",
-          "before": "sha256:81a1e833dee88a3618582100822d6854468c318e7225d009ee0b21b1c91502f6",
-          "after": "sha256:a8d48159727eb6afc624f0e09209d79dcffbc18c9117c396efabc3a7b97933e2"
+          "path": "agent/skills/kotowari-adopt/SKILL.md",
+          "before": "sha256:b74b1f1311be5536caec46a1eed2223bd1a8e587a5ae7fe76449e2b369319aeb",
+          "after": "sha256:377b238ead8feae7d2c1cad284f53c84082b3d1a2c720995d2b357606c7e9e72"
         },
         {
-          "path": "PROJECT.md",
-          "before": "sha256:f48e7787f1e9d3fa02d305b0873e8d36f2c256bfb4336cbbc8524a66a6803e35",
-          "after": "sha256:edabca61e6d32dba54dec8e17450e86a1bb880c94d7556859e0b1c66a886975a"
+          "path": "agent/skills/kotowari/SKILL.md",
+          "before": "sha256:8770fca6c65e1d85c3713098f2e804152ae54b7c048e08b00c0a32f631dc56ab",
+          "after": "sha256:06aa2b239995d3a819295952faf73c2a8345fc29722346bdad5ae94ec15eead8"
+        },
+        {
+          "path": "agent/skills/kotowari/references/findings.md",
+          "before": "sha256:8b4b3b394e8a96cb18db39c33d5cb3ade22e6cf4600f69873c0f36ff7b780e80",
+          "after": "sha256:f502b8587458b41071ce6d2aee63ed25a5c1e18c7acc9cdaa80d8cc699d84894"
+        },
+        {
+          "path": "docs/guides/cli.i18n.yaml",
+          "before": "sha256:386b9bc73ee186b026f19fb204466fc2affdd0b0b34dc9c7ee68085429a74352",
+          "after": "sha256:6c5f8b06e3b6dc01c425aa44c5c730949b97b312c6b5a77e645344ddababf4ea"
+        },
+        {
+          "path": "docs/guides/cli.ja.md",
+          "before": "sha256:986579ca96a5fc03edc4da16fe87dbf4f80e4add389307e01b69e200d1747284",
+          "after": "sha256:9247c81cfcf6f77d1914bec8ed5bc444088ba322853a2e2c62fdacde792ece2f"
+        },
+        {
+          "path": "docs/guides/cli.md",
+          "before": "sha256:6628e7f5700ba0590142f6e1e44a783193bad01f17c12db4a4f3f93866eefca6",
+          "after": "sha256:6ecb48126eb1dee9bc429229a8f25580a257175e0693321a3952671a76a91d5e"
+        },
+        {
+          "path": "docs/guides/commands/check.i18n.yaml",
+          "before": "sha256:376c28552067a584bba111b8cb1321e5f1e9b4f0ac8a0ba9d7eeeea1c86cf7bd",
+          "after": "sha256:59a647862d682addfbd59e7bd5f03961290cac75d699886011ff3ab819ab9151"
+        },
+        {
+          "path": "docs/guides/commands/check.ja.md",
+          "before": "sha256:b774d7bbcd4113c5d4aa3ba4dcfdfa7110947c1fbe8e99531fb4d4ad5378bbf4",
+          "after": "sha256:4d9cc21ee8f04ec712fc14ae4f9e7be489f40eb88aa62de75213c494d2cde7b7"
+        },
+        {
+          "path": "docs/guides/commands/check.md",
+          "before": "sha256:ff489fa57bc7e22cd81083c6afa0cdb1a6f95431cfe1151fd0dbb24a3ee3e782",
+          "after": "sha256:6c7b613ce4b3cb7682fe862e1d7178df58c054e28d7996ae8aee8ca67a4fb532"
+        },
+        {
+          "path": "docs/guides/commands/list.i18n.yaml",
+          "before": "sha256:e57b646e9ea95f2ff05da9005d25222cdaf628fdcdd765f36221d2ffed06c58f",
+          "after": "sha256:5113072f1b9bf79b1a369e49a8282b5dda578826b78ff83182a3d4890ec1034f"
+        },
+        {
+          "path": "docs/guides/commands/list.ja.md",
+          "before": "sha256:ce091681c3d8310474cf8b810f2bf5f8da044155518def621f117477627c0976",
+          "after": "sha256:ec92160ee2ce8b0c9d39182f3f382f0a184418145a2193c7617ebc73c22c5aff"
+        },
+        {
+          "path": "docs/guides/commands/list.md",
+          "before": "sha256:16deac71f0594e34cb809d4f2c0be69a441a4d788aeb86403953ecb564243eaf",
+          "after": "sha256:8dfba1912e35fe0df074f00c8dd759a057a5f440ce7633abb3ae93ae6ab7bdae"
+        },
+        {
+          "path": "docs/guides/commands/mutants.i18n.yaml",
+          "before": "sha256:c3be37bf2f1494ccb64108c1069341d71df283f0b4f1a5b508510ed6ba4741ba",
+          "after": "sha256:7947c07fa2c9e9416a963eb78a75b1f9bbec6311907e5b114e5539a229605d27"
+        },
+        {
+          "path": "docs/guides/commands/mutants.ja.md",
+          "before": "sha256:36e8e589acad8ce1470b91bed252b400c7d52983c093262af029fdb9b06a39a6",
+          "after": "sha256:5b136b8aa32e828512c00c5e6f315f81f430550848f2d5d24f6de923a711f585"
+        },
+        {
+          "path": "docs/guides/commands/mutants.md",
+          "before": "sha256:ffe411c546281462265282135559f0dd8ebcb3d21ee20b78721351cd6a060db2",
+          "after": "sha256:b40f70e7189418f99cd396dd10808271c9170adb44edc4898cfcf8516678df6f"
+        },
+        {
+          "path": "docs/guides/commands/plan.i18n.yaml",
+          "before": "sha256:4ee345046b6e684c0d2f7ec5af03fa027bd8d64657911818c94cae13d2b75f79",
+          "after": "sha256:d449fededcbe99ee1d034342f33dd4ac879af56ed683e8eb0eb9a5f5a347c22d"
+        },
+        {
+          "path": "docs/guides/commands/plan.ja.md",
+          "before": "sha256:bd83165a208be7d96d8b68369f4563981e6523eef23ff5d8ea313914dd5d6d45",
+          "after": "sha256:f92c0ac3457af4c1b8b9ac74da4b8368babdf53e478eedb97687a5461987e420"
+        },
+        {
+          "path": "docs/guides/commands/plan.md",
+          "before": "sha256:5967439517e4a40152409f3ad5de4d64a071e950b10fe383286525c3d7a8d49d",
+          "after": "sha256:ea8d7f9fcca9cd2df94bf9a80d8c7d616ae04e5b5a5138dc450c01b83f5e425c"
+        },
+        {
+          "path": "docs/guides/commands/query.i18n.yaml",
+          "before": "sha256:80aa01872982529bce6f4db4c653facb20bea0b0f4830dda6bf5084cf567c120",
+          "after": "sha256:7732d7a157a334fa5881c22683cc9970ad0b1fa9976d40108b79bb6198cbdc7b"
+        },
+        {
+          "path": "docs/guides/commands/query.ja.md",
+          "before": "sha256:b817bd064c68b74c06a48850b76f74070af5cdce97986f22508063dba38e0ed0",
+          "after": "sha256:a1a31bbe7bdc35ae78cfef4828e05c15a25234fae5943bd3961813f950917b8e"
+        },
+        {
+          "path": "docs/guides/commands/query.md",
+          "before": "sha256:fca8eac051953c6abc7f365e4a279db53b32cf9825572dc9b32b0ba3ba22ca02",
+          "after": "sha256:eaaf8dce7385d8de5da67c4b5d50313b9350a22410bfe6b82fd11913ccc3da41"
+        },
+        {
+          "path": "docs/guides/commands/status.i18n.yaml",
+          "before": "sha256:a43a3e97b7f6262fce369602198d19d10e662b8a9d3488c72222ece9584ee811",
+          "after": "sha256:7ebfe489ef015dc83a6fd42ea5d4799750240eaace6f866e13b79cf176b2a295"
+        },
+        {
+          "path": "docs/guides/commands/status.ja.md",
+          "before": "sha256:71ac4cee7f4e5b8c5eae7de8a0c0285be1e65a84474dea1211790e5e3e996539",
+          "after": "sha256:e7756d0e8d81d16e9e0f7fe878773c7e7bb0cbe500140d14a937150d4b43ee22"
+        },
+        {
+          "path": "docs/guides/commands/status.md",
+          "before": "sha256:e75be09a343350ae1a750d54afbfb8e2ac3424150e5b38ea6fde9519b47a0fad",
+          "after": "sha256:ad5b747ac9cdd2cc5273b309e0b620534bccfa4a4b493f6dd342492ba424bbbe"
+        },
+        {
+          "path": "docs/guides/config.i18n.yaml",
+          "before": "sha256:d6c33c7ce518d1b49f227f972d29aaf2fc78d31a16a0e5816f2b61b81be6e3a2",
+          "after": "sha256:9ee6b48572202a8a8ce3f90fc1d22dbfa53a086cbdc99008cf7cfe9f8716305a"
+        },
+        {
+          "path": "docs/guides/config.ja.md",
+          "before": "sha256:c423c3fea861d7d2db73a53d6f9d044fd4077253013e7078216e5d4f30739ef1",
+          "after": "sha256:b90077f140bd7d5ae295016d57f94969e7d99799051d06039c146b70c76e3efb"
+        },
+        {
+          "path": "docs/guides/config.md",
+          "before": "sha256:985418786fa5d4f857c3b562b959283af48f996ceddfdaea50343b3444ff2d21",
+          "after": "sha256:29444fd5bf95453e63bf7943dbf7d0e12e6658e1f5f6009b96e87a52caa1354d"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/cli.md",
+          "sha256": "sha256:615acc3566eeaae41e2f8f5835863e341ab1f21d9ba9decf8a6beb6e3d36e078"
+        },
+        {
+          "path": "docs/ir/core/config.md",
+          "sha256": "sha256:51399793836e79f43d56529f90d6126a87c2feb5d3355764d2272249b1544cfa"
+        },
+        {
+          "path": "docs/ir/core/test-side-findings.md",
+          "sha256": "sha256:0b99a409b06324cc35581010eb2cb6a395460dd5411557ceb85cfd86699fe8e0"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "REQ-core-358 holds by its how_to_verify: agent/skills/kotowari/references/findings.md, agent/skills/kotowari-adopt/SKILL.md and docs/guides/commands/check.md each say the pre-commit hook runs kotowari check with --allow-test-findings and the pre-push hook and CI run it without. The check guide's new section copies TBL-core-047 row for row and says only the exit code changes (REQ-core-357). The option rows, argument-error lists, exit-code tables, help output and stop example in cli.md and check.md follow REQ-core-002, REQ-core-004 and TBL-core-002; the help blocks in cli.md and cli.ja.md were compared with the real --help output after the column alignment and are identical, and cli.i18n.yaml carries both guides' current blob IDs. The other guide marks only take current fingerprints: those of REQ-core-002, REQ-core-004 and TBL-core-002 changed on this branch, and those of REQ-core-014 and REQ-core-019 were already stale at the base because the previous branch changed their text; the config guide's sections still agree with both (absolute glob elements fall under its absolute-path row, and the hidden-directory exception is stated by path component). Each Japanese guide carries the same change and its consistency record. The CHANGELOG entry under Added describes the flag as a user sees it. The kotowari skill's routing row for the check scene now also names putting kotowari check into hooks or CI and still routes to findings.md, which holds the REQ-core-358 guidance; nothing else in the skill changed.",
+      "requirements": [
+        "REQ-core-002",
+        "REQ-core-004",
+        "REQ-core-014",
+        "REQ-core-019",
+        "REQ-core-357",
+        "REQ-core-358"
+      ],
+      "decisions": [
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A2",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A5",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A7"
+      ],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "review-allow-test-findings-pre-commit",
+      "base": "b98994b849f4af524113f6a82c085066258f3695",
+      "role": "reviewer",
+      "files": [
+        {
+          "path": "lefthook.yml",
+          "before": "sha256:f70504a006ac6c52b18e2c58822eb4f931147543461fc3e9c1bbabd38569bb99",
+          "after": "sha256:765b508979ff5523b4ec30d5585e8b25915e6effd911b31feaba063ac0615462"
         }
       ],
       "ir": [],
       "conclusion": "new",
-      "reason": "Both changelogs are now in English, past versions included. I compared each entry with the Japanese original and they say the same things, including the schema changelog's trailing note about the version base and the absence of a release, tag or publication, which is now restored. 'notice' for surface_unspecified_stale matches the IR term. The blank line before '## [0.3.0]' is removed (A10). PROJECT.md's release section states that both changelogs are written in English. The new Unreleased entries match the code: '/' glob elements are configuration errors (A3), enumeration failures stop with cache error (A5), and SchemaLoader::read_document is added (A9). The behaviour behind A1, A2, A4, A6 and A8 did not change, and those decisions correctly have no entries.",
+      "reason": "The pre-commit kotowari-check runs check --format text --allow-test-findings and passes its exit code through, so other errors (1) and stops (2) still fail the commit; the jq filter with its list of kinds, which also let guide-mark and surface-file errors through, is gone, and pre-push is unchanged. Hook configuration is not held by the IR.",
       "requirements": [],
       "decisions": [
-        "docs/decision/records/2026-10-06-todo-zero.md#A17",
-        "docs/decision/records/2026-10-06-todo-zero.md#A10",
-        "docs/decision/records/2026-10-06-todo-zero.md#A3",
-        "docs/decision/records/2026-10-06-todo-zero.md#A5",
-        "docs/decision/records/2026-10-06-todo-zero.md#A9"
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A8",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A2"
       ],
       "handoff": null,
       "gaps": []

@@ -23,7 +23,7 @@ Choosing the scene: if the person names one, follow it. Otherwise choose from th
 | changes | Writing or reconciling change records; the optional self-check before a commit, independent final review and CI | changes.md |
 | setup | There is no place for the files yet; first use | config.md |
 | write | Writing the IR and decision records during a brainstorm | ir-form.md and records.md |
-| check | Reading the result of `kotowari check` or `kotowari plan`, or the output of `kotowari list`, `kotowari query` or `kotowari status` | findings.md |
+| check | Reading the result of `kotowari check` or `kotowari plan`, or the output of `kotowari list`, `kotowari query` or `kotowari status`; putting `kotowari check` into hooks or CI | findings.md |
 | mark | Placing marks while writing tests | mark.md |
 | mutants | Reading the result of `kotowari mutants`, investigating misses | mutants.md |
 | surface | Writing surface rules (`surface.rules`) and the list of unspecified surfaces, or fixing surface_without_spec, surface_unspecified_invalid or surface_unspecified_stale | surface.md |

@@ -69,6 +69,7 @@ pub use status::{Documents, Findings, Items, Requirements, Scenarios, Tests};
 pub mod surface;
 pub mod terms;
 mod test_markers;
+mod test_side;
 pub mod tests_discovery;
 pub mod translations;
 pub mod ui_text;
@@ -91,6 +92,9 @@ pub(crate) struct CheckResult {
     /// 追加の指摘の群の数（TBL-core-042）。出し方は呼び出し側が決める
     #[serde(skip)]
     pub(crate) groups: Vec<GroupTally>,
+    /// `テスト側の指摘`を見分けるためのファイルの集合（TBL-core-047）。出さない
+    #[serde(skip)]
+    pub(crate) test_side: test_side::TestSideFiles,
 }
 
 /// 読んだテストのファイルの、1つの拡張子の数と問い合わせの有無（TBL-core-021）

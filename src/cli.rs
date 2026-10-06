@@ -88,6 +88,8 @@ pub enum Cli {
     Check {
         format: Format,
         config_path: Option<PathBuf>,
+        /// テスト側の指摘を終了コードに数えない（REQ-core-357）
+        allow_test_findings: bool,
     },
     /// 項目とテストの一覧を出す
     List {
@@ -178,6 +180,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     let mut port: Option<String> = None;
     let mut change_options = BTreeMap::new();
     let mut staged = false;
+    let mut allow_test_findings = false;
     let mut i = 0;
 
     while i < args.len() {
@@ -189,6 +192,16 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                 ));
             }
             staged = true;
+            i += 1;
+            continue;
+        }
+        if arg == "--allow-test-findings" {
+            if allow_test_findings {
+                return Err(StopReason::ArgumentError(
+                    "repeated option: --allow-test-findings".into(),
+                ));
+            }
+            allow_test_findings = true;
             i += 1;
             continue;
         }
@@ -253,6 +266,12 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     if port.is_some() && !serve {
         return Err(StopReason::ArgumentError(format!(
             "unexpected option for {command}: --port"
+        )));
+    }
+    // REQ-core-004: "--allow-test-findings" は "check" だけが受ける
+    if allow_test_findings && command != "check" {
+        return Err(StopReason::ArgumentError(format!(
+            "unexpected option for {command}: --allow-test-findings"
         )));
     }
     if command == "changes" {
@@ -392,6 +411,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
             "check" => Cli::Check {
                 format,
                 config_path,
+                allow_test_findings,
             },
             "list" => Cli::List {
                 format,
@@ -476,10 +496,11 @@ pub fn run(args: &[String]) -> u8 {
         Cli::Check {
             format,
             config_path,
+            allow_test_findings,
         } => with_cwd(|cwd| {
             let (result, format) = run_check(cwd, format, config_path.as_deref())?;
             print_check(&result, format);
-            Ok(exit_code_for(result.findings()))
+            Ok(check_exit_code(&result, allow_test_findings))
         }),
         // REQ-core-151: check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
         Cli::List {
@@ -558,6 +579,19 @@ fn exit_code_for(findings: &[Finding]) -> u8 {
     } else {
         0
     }
+}
+
+/// TBL-core-002: "--allow-test-findings" があれば`テスト側の指摘`でない誤りだけを数える（REQ-core-357）
+fn check_exit_code(result: &CheckReport, allow_test_findings: bool) -> u8 {
+    if !allow_test_findings {
+        return exit_code_for(result.findings());
+    }
+    u8::from(
+        result
+            .findings()
+            .iter()
+            .any(|f| f.severity() == "error" && !result.is_test_side_finding(f)),
+    )
 }
 
 /// "kotowari check" の結果を出す（TBL-core-005, REQ-core-025, REQ-core-026）
@@ -669,12 +703,13 @@ fn print_help() {
     println!();
     println!("Changes: --base <REV> (--head <REV> | --staged) --phase <implementation|review>");
     println!("Options:");
-    println!("  --format <FORMAT>  Output format: json (default) or text");
-    println!("  --config <PATH>    Path to configuration file");
-    println!("  --tool <TOOL>      Mutation testing tool of the result file: cargo-mutants");
-    println!("  --port <PORT>      Port of overview serve on 127.0.0.1 (default 4590)");
-    println!("  --help             Show this help message");
-    println!("  --version          Show version");
+    println!("  --format <FORMAT>      Output format: json (default) or text");
+    println!("  --config <PATH>        Path to configuration file");
+    println!("  --tool <TOOL>          Mutation testing tool of the result file: cargo-mutants");
+    println!("  --port <PORT>          Port of overview serve on 127.0.0.1 (default 4590)");
+    println!("  --allow-test-findings  check: exit 0 when every error is a test-side finding");
+    println!("  --help                 Show this help message");
+    println!("  --version              Show version");
 }
 
 fn project(cwd: &Path, config: Option<&Path>) -> Result<Project, StopReason> {

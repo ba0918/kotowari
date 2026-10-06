@@ -10,7 +10,7 @@ It reports no findings. To see findings, use [`kotowari check`](./check.md).
 
 ## Synopsis
 
-<!-- @kotowari[REQ-core-002:d9acbe9c, REQ-core-004:125eb94d] -->
+<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-004:2d3401d1] -->
 
 ```sh
 kotowari list [--format json|text] [--config <path>]

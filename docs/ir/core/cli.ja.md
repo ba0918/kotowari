@@ -17,10 +17,10 @@ kotowari は常に、"kotowari check"、"kotowari list"、"kotowari mutants"、"
 ### REQ-core-002: 受けるオプション
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A19, docs/decision/records/records.md#A103, docs/decision/records/2026-09-17-mutation-tests.md#A14, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A58, docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-09-24-plan-schema.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A3, docs/decision/records/2026-10-02-whole-picture.md#A62, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-02-whole-picture.md#A78
+- source: docs/decision/records/records.md#A19, docs/decision/records/records.md#A103, docs/decision/records/2026-09-17-mutation-tests.md#A14, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A58, docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-09-24-plan-schema.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A3, docs/decision/records/2026-10-02-whole-picture.md#A62, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-02-whole-picture.md#A78, docs/decision/records/2026-10-06-spec-first-commit.md#A5, docs/decision/records/2026-10-06-spec-first-commit.md#A6, docs/decision/records/2026-10-06-spec-first-commit.md#A12
 - verification: unit
 
-kotowari は常に、"check"、"list"、"query"、"status" ではオプションとして "--format"、"--config"、"--help"、"--version" だけを受け、"mutants" ではそれに加えて "--tool" を受け、"plan" では "--format"、"--help"、"--version" だけを受け、"overview build" では "--format"、"--config"、"--help"、"--version" だけを受け、"overview serve" では "--port"、"--config"、"--help"、"--version" だけを受け、どのコマンドでも、オプションをコマンドの前後どちらに書いても受け、位置引数とオプションの順を問わない。
+kotowari は常に、"list"、"query"、"status" ではオプションとして "--format"、"--config"、"--help"、"--version" だけを受け、"check" ではそれに加えて値を取らない "--allow-test-findings" を受け、"mutants" ではそれに加えて "--tool" を受け、"plan" では "--format"、"--help"、"--version" だけを受け、"overview build" では "--format"、"--config"、"--help"、"--version" だけを受け、"overview serve" では "--port"、"--config"、"--help"、"--version" だけを受け、どのコマンドでも、オプションをコマンドの前後どちらに書いても受け、位置引数とオプションの順を問わない。
 
 ### REQ-core-003: 設定のパスの基準
 
@@ -33,10 +33,10 @@ kotowari は常に、"--config" に与えたパスを、changes 以外ではカ�
 ### REQ-core-004: 引数の誤り
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-01-change-details.md#A3, docs/decision/records/records.md#A60, docs/decision/records/records.md#A103, docs/decision/records/records.md#A136, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-02-whole-picture.md#A27, docs/decision/records/2026-10-02-whole-picture.md#A63
+- source: docs/decision/records/2026-10-01-change-details.md#A3, docs/decision/records/records.md#A60, docs/decision/records/records.md#A103, docs/decision/records/records.md#A136, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-02-whole-picture.md#A27, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-06-spec-first-commit.md#A5, docs/decision/records/2026-10-06-spec-first-commit.md#A12
 - verification: unit
 
-"--help" も "--version" も無いときに、知らないオプション、"mutants" でないコマンドに付けた "--tool"、"overview serve" でないコマンドに付けた "--port"、"overview serve" に付けた "--format"、"check"、"list"、"mutants"、"plan"、"query"、"status"、"changes"、"overview" のいずれでもない1つ目の位置引数、"check"、"list"、"status" の後の位置引数、"--format" の知らない値、値の無いオプション、同じオプションの2回目のいずれかを受けたとき、引数が1つも無いとき、オプションだけがあって1つ目の位置引数が無いとき、または "changes" 以外で "--config" の指す先が無いかディレクトリのとき、kotowari は引数の誤りを理由に`停止`する。
+"--help" も "--version" も無いときに、知らないオプション、"mutants" でないコマンドに付けた "--tool"、"overview serve" でないコマンドに付けた "--port"、"overview serve" に付けた "--format"、"check" でないコマンドに付けた "--allow-test-findings"、"check"、"list"、"mutants"、"plan"、"query"、"status"、"changes"、"overview" のいずれでもない1つ目の位置引数、"check"、"list"、"status" の後の位置引数、"--format" の知らない値、値の無いオプション、同じオプションの2回目のいずれかを受けたとき、引数が1つも無いとき、オプションだけがあって1つ目の位置引数が無いとき、または "changes" 以外で "--config" の指す先が無いかディレクトリのとき、kotowari は引数の誤りを理由に`停止`する。
 
 ### REQ-core-149: mutants の引数
 
@@ -104,12 +104,12 @@ kotowari は、`IR`から構成と中身を写した人間向けの文書を生�
 
 ### TBL-core-002: 終了コード
 
-- source: docs/decision/records/records.md#A20, docs/decision/records/records.md#A29, docs/decision/records/records.md#A103, docs/decision/records/2026-09-16-notice.md#A2
+- source: docs/decision/records/records.md#A20, docs/decision/records/records.md#A29, docs/decision/records/records.md#A103, docs/decision/records/2026-09-16-notice.md#A2, docs/decision/records/2026-10-06-spec-first-commit.md#A1, docs/decision/records/2026-10-06-spec-first-commit.md#A10
 
 | 終了コード | 場面 |
 |---|---|
-| 0 | 誤りが無い（注意だけのときを含む）、または "--help" か "--version" で終わった |
-| 1 | 誤りが1件以上ある |
+| 0 | 誤りが無い（注意だけのときを含む）、"--allow-test-findings" を付けた "check" で誤りがすべて`テスト側の指摘`である、または "--help" か "--version" で終わった |
+| 1 | 誤りが1件以上ある（"--allow-test-findings" を付けた "check" では、`テスト側の指摘`でない誤りが1件以上ある） |
 | 2 | 停止した |
 
 ## Examples

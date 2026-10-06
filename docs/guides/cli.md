@@ -10,7 +10,7 @@ For the details of each command, see its own page.
 
 ## Syntax
 
-<!-- @kotowari[REQ-core-001:f6b868d0, REQ-core-002:d9acbe9c, EX-core-380:f7f73b4e] -->
+<!-- @kotowari[REQ-core-001:f6b868d0, REQ-core-002:f86e2efd, EX-core-380:f7f73b4e] -->
 
 ```sh
 kotowari <command> [--format json|text] [--config <path>] [argument]
@@ -39,7 +39,7 @@ The order of positional arguments and options does not matter for any command ei
 
 ## Common options
 
-<!-- @kotowari[REQ-core-002:d9acbe9c, REQ-core-021:ccedd28b, REQ-core-003:b4f59e48, REQ-core-107:7c6198ca, REQ-core-297:481b26d5] -->
+<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:b4f59e48, REQ-core-107:7c6198ca, REQ-core-297:481b26d5] -->
 
 | Name | Value | Default | Description | Accepted by |
 |---|---|---|---|---|
@@ -49,6 +49,7 @@ The order of positional arguments and options does not matter for any command ei
 | `--version` | None | — | Prints the version to standard output and exits with code 0 | All |
 | `--tool` | `cargo-mutants` | None (required) | The tool that produced the result file | `mutants` only |
 | `--port` | A decimal integer from 1 to 65535 | `4590` | The port on 127.0.0.1 to serve on | `overview serve` only |
+| `--allow-test-findings` | None (takes no value) | Off | Leaves test-side findings out of the exit code ([commands/check.md](commands/check.md#committing-a-specification-before-its-tests)) | `check` only |
 
 `--help` and `--version` take precedence over all other arguments.
 When either is present, it is shown without looking at the other arguments, even if they contain mistakes, and no check is run.
@@ -117,12 +118,12 @@ You can diff it or compare it with the previous output.
 
 ## Exit codes
 
-<!-- @kotowari[REQ-core-007:0f08bddc, TBL-core-002:14c565f2] -->
+<!-- @kotowari[REQ-core-007:0f08bddc, TBL-core-002:36817bf5] -->
 
 | Code | Meaning |
 |---|---|
-| 0 | No errors (including when there are only notices), or it ended with `--help` or `--version` |
-| 1 | One or more errors |
+| 0 | No errors (including when there are only notices), every error of `check` with `--allow-test-findings` is a test-side finding, or it ended with `--help` or `--version` |
+| 1 | One or more errors (for `check` with `--allow-test-findings`, one or more errors that are not test-side findings) |
 | 2 | Stopped (the check could not start) |
 
 Notices (`notice`) do not change the exit code.
@@ -164,13 +165,13 @@ All the situations are in [TBL-core-001 of cli.md](../ir/core/cli.md) and [TBL-c
 
 ### Argument errors
 
-<!-- @kotowari[REQ-core-004:125eb94d, EX-core-219:f3123493, EX-core-241:38290f77, REQ-core-304:e9cd623d] -->
+<!-- @kotowari[REQ-core-004:2d3401d1, EX-core-219:f3123493, EX-core-241:38290f77, REQ-core-304:e9cd623d] -->
 
 kotowari stops with `argument error` when any of the following applies (unless `--help` or `--version` is present).
 
 - There are no arguments at all, or only options and no command
 - The first positional argument is not one of the eight commands
-- An unknown option, `--tool` on a command other than `mutants`, `--port` on a command other than `overview serve`, or `--format` on `overview serve`
+- An unknown option, `--tool` on a command other than `mutants`, `--port` on a command other than `overview serve`, `--format` on `overview serve`, or `--allow-test-findings` on a command other than `check`
 - After `overview` there is not exactly one positional argument, or it is not `build` or `serve`
 - The value of `--port` is not a decimal integer from 1 to 65535
 - A positional argument after `check`, `list` or `status`
@@ -248,17 +249,18 @@ Commands:
 
 Changes: --base <REV> (--head <REV> | --staged) --phase <implementation|review>
 Options:
-  --format <FORMAT>  Output format: json (default) or text
-  --config <PATH>    Path to configuration file
-  --tool <TOOL>      Mutation testing tool of the result file: cargo-mutants
-  --port <PORT>      Port of overview serve on 127.0.0.1 (default 4590)
-  --help             Show this help message
-  --version          Show version
+  --format <FORMAT>      Output format: json (default) or text
+  --config <PATH>        Path to configuration file
+  --tool <TOOL>          Mutation testing tool of the result file: cargo-mutants
+  --port <PORT>          Port of overview serve on 127.0.0.1 (default 4590)
+  --allow-test-findings  check: exit 0 when every error is a test-side finding
+  --help                 Show this help message
+  --version              Show version
 ```
 
 ### Stopping on a wrong argument
 
-<!-- @kotowari[REQ-core-004:125eb94d, REQ-core-005:fee48254, EX-core-219:f3123493] -->
+<!-- @kotowari[REQ-core-004:2d3401d1, REQ-core-005:fee48254, EX-core-219:f3123493] -->
 
 ```console
 $ kotowari
@@ -271,6 +273,8 @@ $ kotowari check extra
 argument error: unexpected argument: extra
 $ kotowari check --format text --format json
 argument error: repeated option: --format
+$ kotowari status --allow-test-findings
+argument error: unexpected option for status: --allow-test-findings
 $ kotowari check --format
 argument error: --format requires a value
 $ kotowari check --config docs
@@ -364,7 +368,7 @@ If the `path` in the output does not look the way you expect, check for a `.koto
 
 ### Notices (`[notice]`) appear but the exit code is 0
 
-<!-- @kotowari[TBL-core-002:14c565f2] -->
+<!-- @kotowari[TBL-core-002:36817bf5] -->
 
 This is as specified.
 Notices do not change the exit code.
