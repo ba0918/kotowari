@@ -23,3 +23,5 @@
 - `kotowari-markdown-view` no longer draws GFM footnote syntax (`[^1]`) as footnotes. Drawing them put an English heading "Footnotes", which is not in the UI text, and back-link characters into the page. Footnote syntax is read as CommonMark reads it.
 - `kotowari-mds check` given a directory no longer reads the same schema again for each document. A URL schema is fetched only once per check. Before, when the cache could not be written, the same URL was fetched once per document pointing at it.
 - `kotowari-markdown-view` now draws a reference missing from the reference table as text that opens nothing when chosen, the same as a reference without a body. Before, it drew an open-and-close element with nothing inside.
+
+The version is based on this crate's `Cargo.toml`. These changes do not include a release, a tag or publication.
