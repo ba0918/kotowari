@@ -36,9 +36,9 @@ Read the plan only to find the specification path it names — the IR store path
 the requirements it covers, or, for a topic with no IR, the path of its committed specification;
 do not interpret its steps. Where to start is in **Resuming and running more**.
 
-Before the first review, read the kotowari-review skill (`SKILL.md`, `references/profiles.md`,
-`references/finding-schema.md`, `references/oracle-evidence.md`). Its **Reviewer setup** owns
-the self-contained reviewer prompt; use that contract for both full and diff reviews.
+Before the first review, read the kotowari-review skill's `SKILL.md` and the references its
+**Reviewer setup** and **Optional seats** name. **Reviewer setup** owns the self-contained
+reviewer prompt; use that contract for both full and diff reviews.
 
 ## Loop
 
@@ -228,8 +228,8 @@ Always: artifacts and commits, verification results from the implement report, t
 findings needing the person, and rules or sections identified as absent from the specification.
 From the consistency phase: its commits and decision records, each open `human_judgment` finding
 with its default and the word that reverses it, and the one-line reason for each skipped run.
-When a full review ran optional seats: their attendance, as the review skill's **Optional seats**
-says under **Merging and reporting**.
+When a full review ran optional seats: their attendance, as the review skill's
+`references/optional-seats.md` says under **Merging and reporting**.
 This is the person's one check; merging is theirs. Cycle never merges, publishes, deletes branches
 or worktrees, edits the specification itself (the consistency phase does, as its reference says),
 manages issues, or runs two plans at once.
