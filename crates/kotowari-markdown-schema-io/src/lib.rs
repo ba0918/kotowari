@@ -186,6 +186,11 @@ impl SchemaLoader {
         self.start.join(path)
     }
 
+    /// 文書を、先頭の BOM を除いた UTF-8 の文字列として読む。`load` と同じ読み方で、スキーマは解かない
+    pub fn read_document(&self, path: &Path) -> Result<String, Error> {
+        read_document(&self.resolve(path), path)
+    }
+
     pub fn load(&self, path: &Path) -> Result<LoadedDocument, Error> {
         let absolute = self.resolve(path);
         let source = read_document(&absolute, path)?;
