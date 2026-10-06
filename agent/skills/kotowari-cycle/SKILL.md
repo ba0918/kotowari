@@ -159,7 +159,7 @@ the quality review, and resolves the gaps and disagreements it finds. Its instru
   `references/translations.md`, `references/findings.md` and `references/mark.md`; the kotowari
   skill's **What the IR holds** section pasted in full; and the fixer contract below with its
   Evidence conditions.
-- **What cycle does with the result.** The phase fixes and commits by itself; cycle records the
+- **What cycle does with the result.** The phase fixes and commits by itself; cycle only records the
   run in the findings file as it records a diff review — new findings get IDs, verdicts and commits
   are appended — and stops it by the same endings. Cycle never fixes the phase's findings. On
   agreement with the specification the phase's decision takes precedence over the quality review's
