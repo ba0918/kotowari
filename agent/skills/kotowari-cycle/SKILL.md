@@ -85,7 +85,10 @@ included). The limit, when the person set one, counts round trips.
 ## Delegations
 
 - **implement:** carry the plan path, branch, and worktree path. It returns commits, per-step
-  verification evidence, and out-of-plan changes, or a hand-back with its reason.
+  verification evidence, and out-of-plan changes, or a hand-back with its reason. When the hand-back
+  is a commit a hook stopped on an IR-side finding, run the consistency phase (a run of step 1, the
+  blocked change in the worktree included in its range) until it converges, then delegate the
+  remaining steps again; step 2 still runs after implementation.
 - **review (full):** carry the base and head, worktree path, known findings, and the review items
   and Evidence conditions named above. It returns findings JSON.
 - **review (diff):** carry the diff since the last review, worktree path, open findings with IDs,
@@ -95,7 +98,8 @@ included). The limit, when the person set one, counts round trips.
   how each was resolved, its commits, the decision record it wrote, the defaults it left awaiting a
   person, or a hand-back.
 - **fixer:** carry visible findings, plan path, branch, worktree path, and the contract below. It
-  returns commits and which finding each addresses, or a hand-back. For a finding that is
+  returns commits and which finding each addresses, or a hand-back. A commit a hook stopped on an
+  IR-side finding is handled as for implement: a phase run at this step, then the same delegation. For a finding that is
   `still_present` after a fix, also carry that fix's commits, and require the fixer, before
   changing code, to report the one-sentence premise that fix assumed and the output of a command
   it ran to test that premise. The next fix starts from that result; another fix resting on the
@@ -122,7 +126,8 @@ user-facing documentation when none exists; supported environments are those it 
 For a deletion, completion is all existing checks passing after deletion; no failing test is needed.
 For external work, hand back before anything unsafe, privileged, or irreversible. One concern per
 commit; `git add <path>` only; never disable hooks; never name a station or finding ID in a commit
-message. Missing design decisions are handed back, not guessed; a question a throwaway run in the
+message. A commit a hook stops on an IR-side finding: never edit the IR; leave the change
+uncommitted and return the finding. Missing design decisions are handed back, not guessed; a question a throwaway run in the
 worktree can answer is a fact, not a decision — run it, keep it out of the commits, and report the
 command and its output. Stop and ask before an irreversible
 or privileged operation, a dangerous target, or a spreading accident.

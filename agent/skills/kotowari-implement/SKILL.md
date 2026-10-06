@@ -26,6 +26,8 @@ Hand back (stop, state the reason, do not guess) when:
   or a dangerous target (production data, configuration, external effects) → ask, then continue;
 - continuing would spread damage (secret exposure, unintended publication, data loss) → stop;
 - after diagnosing and changing approach once there is still no progress → stop;
+- a hook stops your commit on an IR-side finding → back to cycle (see **Requirements and kotowari
+  check**);
 - no test command can be determined (see below) → back to plan before writing product code.
 
 Before handing back a missing decision, ask whether running something in the worktree would answer
@@ -72,7 +74,11 @@ or that name an ID the plan covers; list any others in the report without touchi
 - fix the test-side findings yourself (requirement_without_test, scenario_without_test,
   test_without_id, invalid_marker, unparsable_file, and unresolved_reference from a mark);
 - leave an IR-side finding alone and list it in the report: the cycle's consistency phase, which
-  reads the diff against the IR after you, resolves it and fixes the IR.
+  reads the diff against the IR after you, resolves it and fixes the IR. When the pre-commit hook
+  stops your commit on one, never edit the IR and never bypass the hook: stop, leave the blocked
+  change uncommitted in the worktree, and hand back the finding with the files it blocked. Cycle
+  runs the phase and then delegates the remaining steps to you again; resume from the working
+  diff as **Resuming** says.
 
 A deferred requirement or deferred scenario (`deferred` true in `kotowari query`) is not built
 now and raises no test-side finding: write no test for it and put its ID in no mark. If your mark
