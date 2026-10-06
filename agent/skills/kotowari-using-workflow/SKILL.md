@@ -76,6 +76,16 @@ the error message clearer" with no wording given reads two ways: kotowari-brains
 task. A defect sent to kotowari-investigate continues from its report's recommended next action,
 which names the next entry.
 
+## The consistency phase on a direct edit
+
+kotowari-cycle, and kotowari-iterate through it, run the consistency phase themselves. When this
+session edits directly (the first row), it decides by the same measure: when the diff adds or
+changes behavior a user can observe — skill text counts as behavior — launch the phase as the
+kotowari-cycle skill's **Consistency phase** says, in a separate context, with its
+`references/consistency-phase.md`. Skip it only for documents such as guides only, tests only, or a
+refactoring that keeps behavior; when in doubt, run it; a skip puts a one-line reason in the final
+report. The measure decides this, not the line above, so it is not a station the line adds.
+
 ## Exceptions
 
 Work with an approved plan or in-progress records is not rewound; it enters from where it left

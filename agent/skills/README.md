@@ -8,7 +8,7 @@ Claude Code の skill を10個置いている。
 | `kotowari-using-workflow` | 新しい依頼をどの工程から始めるかを決める入口 |
 | `kotowari-brainstorm` | 壁打ちで決めたことを IR と判断の記録に書き、承認を得る |
 | `kotowari-plan` | 承認済みの IR の要求から実装の計画を書く |
-| `kotowari-cycle` | 計画を実装・レビュー・修正の繰り返しで回し、終端で `kotowari check` と `kotowari status` を見る |
+| `kotowari-cycle` | 計画を実装・整合のフェーズ・レビュー・修正の繰り返しで回し、終端で `kotowari check` と `kotowari status` を見る。整合のフェーズは差分のコードを IR と読み合わせ、隙間と食い違いを根拠と実測で片付ける |
 | `kotowari-implement` | 計画の手順を実行する（cycle から呼ばれる） |
 | `kotowari-review` | 差分や文書を別の文脈でレビューする（cycle から呼ばれるか、人が直接呼ぶ） |
 | `kotowari-iterate` | 仕様も計画も要らない小さな作業を cycle の繰り返しで回す |

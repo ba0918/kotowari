@@ -76,7 +76,7 @@ specification (it cannot run without one) or offering "continue here anyway" is 
 ## The loop
 
 Read the kotowari-cycle skill body and run all of it as written, its Inputs included (the review skill
-read before the first review); "cycle" there means this run. Only these substitutions apply:
+read before the first review) and its consistency phase included; "cycle" there means this run. Only these substitutions apply:
 
 | In cycle's body | Read here as |
 |---|---|
@@ -88,7 +88,7 @@ read before the first review); "cycle" there means this run. Only these substitu
 | the plan path in the fixer delegation | the request, and the specification path if any, with a hand-back reason added to the contract: a contradiction with the specification |
 | the fixer contract's "the plan's commands in order, unedited" | check commands come from the project's instructions, then the ecosystem's standard tool |
 | "run more" re-entering at step 1 when steps remain | always the diff loop |
-| the specification path and the file of IDs to cover in review delegations | the specification path and the request, both; the file of IDs only when the request touches IR items; neither path nor file when there is no specification |
+| the specification path and the file of IDs to cover in review and consistency phase delegations | the specification path and the request, both; the file of IDs only when the request touches IR items; neither path nor file when there is no specification, and the request is the consistency phase's counterpart |
 | ending 4 (a hand-back to brainstorm or plan) and its "run more or accept the rest" choice | the destination is one of the guidance table's three; the choice is not offered — the report (as in Out above) adds the hand-back reason and the guidance, and the person restarts with a new request holding their answer |
 | "names an ID the plan covers" in **kotowari check before the terminal report** | names an ID the request's enumeration covers; with none, only the files the branch changed count |
 | any other plan word meaning the plan (one plan at once, out-of-plan changes) | the request (out-of-request changes); plan as a skill name, a destination, stays; sentences about plan steps (do not interpret its steps, if steps remain) do not apply — there is no plan |

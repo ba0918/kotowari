@@ -71,12 +71,14 @@ or that name an ID the plan covers; list any others in the report without touchi
 
 - fix the test-side findings yourself (requirement_without_test, scenario_without_test,
   test_without_id, invalid_marker, unparsable_file, and unresolved_reference from a mark);
-- for an IR-side finding, record and add only justified concrete IR within the delegated scope, and only what the IR holds (the kotowari skill's **What the IR holds**), while keeping approved requirements unchanged; rerun check and independent conformance review. Hand back consequential meaning or approved-requirement changes.
+- leave an IR-side finding alone and list it in the report: the cycle's consistency phase, which
+  reads the diff against the IR after you, resolves it and fixes the IR.
 
 A deferred requirement or deferred scenario (`deferred` true in `kotowari query`) is not built
 now and raises no test-side finding: write no test for it and put its ID in no mark. If your mark
-raised deferred_with_test, remove the mark; hand back any other deferred_with_test or
-depends_on_deferred notice on a file you changed or an ID the plan covers, as an IR-side finding.
+raised deferred_with_test, remove the mark; list any other deferred_with_test or
+depends_on_deferred notice on a file you changed or an ID the plan covers in the report, as an
+IR-side finding.
 
 Overview data (the files in the configuration's `overview.files`) is never edited here, not even
 to clear its findings or guide_stale notices: the next brainstorm that touches the topic revises

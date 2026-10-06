@@ -2,9 +2,9 @@
 name: kotowari-cycle
 description: >-
   Workflow station of the kotowari workflow: a small orchestrator that takes an approved plan and a
-  branch, delegates implementation, review, and fixing to separate-context agents, and loops full
-  review → diff loop until findings converge, adding a second full review only when a fix could
-  spread, then hands the result to the person once. Use only in a repository that uses
+  branch, delegates implementation, the consistency phase, review, and fixing to separate-context
+  agents, and loops full review → diff loop until findings converge, adding a second full review only
+  when a fix could spread, then hands the result to the person once. Use only in a repository that uses
   kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to run a kotowari cycle on a
   plan, or to resume one. 日本語キーワード:
   サイクル 実装ループ 改善ループ オーケストレータ 手順書を回す
@@ -12,8 +12,8 @@ description: >-
 
 # Cycle
 
-Run implement → review → fix on one plan until the visible findings are gone. Delegate
-everything; cycle itself never implements, reviews, or fixes. The person sees only the terminal
+Run implement → consistency phase → review → fix on one plan until the visible findings are gone.
+Delegate everything; cycle itself never implements, reviews, or fixes. The person sees only the terminal
 report; the loop does not stop for them except in the cases below.
 
 ## Inputs
@@ -28,9 +28,10 @@ user-scope instructions, as the review skill's **Optional seats** says).
 
 Cycle runs only what the caller's one-line reason named. Nothing here is assumed: how many
 reviewer perspectives a review launches is the review skill's gate, and a second full review
-happens only under step 4's condition. Delegating more than the reason asked for is a
+happens only under step 5's condition. Delegating more than the reason asked for is a
 counter-example. Optional seats are the person's own standing choice (their list, or their word
-for this run), so launching them is not delegating more than asked.
+for this run), so launching them is not delegating more than asked. The consistency phase is not a
+station the reason names: cycle decides it by its own measure (**Consistency phase**).
 
 Read the plan only to find the specification path it names — the IR store path and the IDs of
 the requirements it covers, or, for a topic with no IR, the path of its committed specification;
@@ -54,18 +55,22 @@ rules, paste the Evidence conditions from
 
 1. Delegate the plan path, branch, and worktree path to an implement agent, all remaining steps
    in one delegation.
-2. Full review: base..head, profiles, strength, specification path, plus the **known findings** (open
+2. Consistency phase over base..head, as **Consistency phase** below says, run again until it
+   raises no new finding.
+3. Full review: base..head, profiles, strength, specification path, plus the **known findings** (open
    `record_only` / `human_judgment`, closed `accepted`), never visible or fixed ones; a match is not raised again.
    Cycle itself, as the caller, then launches the optional seats as the review skill's **Optional
    seats** says, using the seat choice the person gave at the start of the run; no review
    delegation carries the seat choice or that section.
-3. Diff loop: delegate the **visible findings** to a fixer; then diff review (changes since the
+4. Diff loop: delegate the **visible findings** to a fixer; then diff review (changes since the
    last review, the open findings with IDs, profiles, strength, specification path). Repeat until
    no visible finding remains. A diff review gets no optional seat.
-4. A second full review only when a fix could spread beyond where it was made; name that reason
-   before running it; it gets the optional seats as in step 2. Its visible findings → one more
-   diff loop until none remain; then converged.
-   With no such reason, the diff loop clearing every visible finding is convergence.
+5. A second full review only when a fix could spread beyond where it was made; name that reason
+   before running it; it gets the optional seats as in step 3. Its visible findings → one more
+   diff loop until none remain.
+   With no such reason, the diff loop clearing every visible finding ends the quality review.
+6. Consistency phase once more, over the diff of all the quality review's fixes (from the head step
+   3 reviewed to the current head), run again until it raises no new finding; then converged.
 
 Visible findings = open findings whose final action is `auto_fix` or `fix_and_verify`. Findings with
 `human_judgment` or `record_only` stay open for the terminal report. When
@@ -82,6 +87,9 @@ included). The limit, when the person set one, counts round trips.
 - **review (diff):** carry the diff since the last review, worktree path, open findings with IDs,
   and the same review items and Evidence conditions. It returns per-finding `still_present` or
   `no_longer_visible` and new findings.
+- **consistency phase:** carry what **Consistency phase** below lists. It returns its findings with
+  how each was resolved, its commits, the decision record it wrote, the defaults it left awaiting a
+  person, or a hand-back.
 - **fixer:** carry visible findings, plan path, branch, worktree path, and the contract below. It
   returns commits and which finding each addresses, or a hand-back. For a finding that is
   `still_present` after a fix, also carry that fix's commits, and require the fixer, before
@@ -117,6 +125,33 @@ Immediately below that contract, paste the first paragraph from the kotowari-rev
 `references/oracle-evidence.md`; do not keep a copy in this skill.
 Every prompt is self-contained; never assume a delegate loaded a skill or read the conversation.
 
+## Consistency phase
+
+The consistency phase reads the code a diff changed against the IR, as a step of its own apart from
+the quality review, and resolves the gaps and disagreements it finds. Its instructions are
+`references/consistency-phase.md`.
+
+- **When.** Once after implementation (step 2) and once after the quality review's fixes converge,
+  over the diff of all those fixes (step 6). After its own fixes it runs again until a run raises no
+  new finding.
+- **Whether.** Cycle decides. Skip a run only when its diff neither adds nor changes behavior a user
+  can observe: documents such as guides only, tests only, or a refactoring that keeps behavior.
+  Skill text is behavior, never skipped as a document. When in doubt, run it. A skipped run writes a
+  one-line reason in the terminal report.
+- **Who.** A delegate in a context separate from the implementer, never the implement agent or the
+  fixer. A model different from the implementer's is preferred, not required.
+- **What it carries.** `references/consistency-phase.md` pasted in full; the worktree path and branch;
+  the range (base and head); the specification path and the file of IDs the plan covers, as the
+  reviews get them; the findings the previous run over the same range returned, if any; the paths of
+  the kotowari skill's `references/ir-form.md`, `references/records.md`,
+  `references/translations.md`, `references/findings.md` and `references/mark.md`; and the fixer
+  contract below with its Evidence conditions.
+- **What cycle does with the result.** The phase fixes and commits by itself; cycle only records
+  its commits and reports them. Cycle does not turn the phase's findings into review findings, fix
+  them, or judge them. When a run reports a finding the previous run over the same range also
+  reported, end as ending 3 (no progress). On agreement with the specification the phase's decision
+  takes precedence over the quality review's fixes. A hand-back to a person is ending 4.
+
 ## Judgment stays here
 
 Cycle alone writes the findings file (shape: the review skill's `finding-schema.md`, plus `base` and
@@ -146,19 +181,22 @@ it was closed `accepted`. Reviewers only evaluate; the fixer only reports commit
 
 ## Endings
 
-1. Converged: the last review returned no visible finding, or the diff loop after it cleared them.
+1. Converged: the last review returned no visible finding, or the diff loop after it cleared them,
+   and the consistency phase after it converged or was skipped.
 2. The person's round-trip limit was reached.
 3. No progress: a finding is `still_present` in two consecutive rounds that evaluated it (the
    second after a changed approach); a closed finding's cause returns; or a review still cannot
    succeed after one re-delegation (an absent optional seat is not a failed review); or two
    consecutive post-fix diff reviews have at least as many
    finalized new visible findings as visible findings marked `no_longer_visible`; full reviews
-   are excluded from this comparison.
-4. A delegate handed back to brainstorm or plan.
+   are excluded from this comparison; or the consistency phase reports the same finding in two
+   consecutive runs.
+4. A delegate handed back to brainstorm or plan, or the consistency phase handed a judgment back to
+   the person.
 
 Endings 2–4 add to the terminal report the choice "run more or accept the rest and finish" and
 any hand-back reason. "Run more" continues the same run (streaks kept), findings still open, at
-step 1 if untraced plan steps remain, else at step 3; a new limit, if any, is the person's to set.
+step 1 if untraced plan steps remain, else at step 4; a new limit, if any, is the person's to set.
 
 ## kotowari check before the terminal report
 
@@ -183,11 +221,14 @@ only such findings or problem records that were already committed.
   among what the run brings to zero: check raises no test-side finding for them, and the run
   writes no test for them. A deferred_with_test notice caused by a mark this run added is fixed
   by removing that mark; any other deferred_with_test or depends_on_deferred notice among this
-  run's findings is the person's judgment, like an IR-side finding.
+  run's findings goes to the consistency phase, like an IR-side finding.
 - Overview data (the files in the configuration's `overview.files`) is not changed by the run, and
   its findings and guide_stale notices are never delegated: the next brainstorm that touches the
   topic revises it (the kotowari skill's `references/overview.md`). Count them in the terminal report.
-- Cycle does not fix IR itself. Delegate justified concrete additions within the approved constraints, and only what the IR holds (the kotowari skill's **What the IR holds**), to the implementer/fixer, then rerun check and separate conformance review. Approved-requirement changes, contradictions and unsupported consequential meaning go back to the person.
+- IR-side findings among this run's findings are the consistency phase's. The phase passes
+  `kotowari check` before it ends, so one left here means a run was skipped or did not converge:
+  run the phase over the branch's diff. Cycle never fixes the IR itself and never hands it to the
+  implementer or the fixer.
 - Missed mutations: the project's mutation gate (in kotowari itself, the pull request CI) runs mutations on the diff. A miss is fixed by the fixer or
   the implementer, like a test-side finding; how to investigate one is in the kotowari skill's
   `references/mutants.md`.
@@ -197,7 +238,10 @@ only such findings or problem records that were already committed.
 Always: artifacts and commits, verification results from the implement report, the
 `kotowari check` and `kotowari status` output, how to view the diff. When present: fixed findings, forwarded observations, reasoned out-of-plan changes, open
 findings needing the person, and rules or sections identified as absent from the specification.
+From the consistency phase: its commits and decision records, each default it left awaiting a
+person with the word that reverses it, and the one-line reason for each skipped run.
 When a full review ran optional seats: which attended and which were absent, each absence with
 its reason.
 This is the person's one check; merging is theirs. Cycle never merges, publishes, deletes branches
-or worktrees, edits the specification, manages issues, or runs two plans at once.
+or worktrees, edits the specification itself (the consistency phase does, as its reference says),
+manages issues, or runs two plans at once.
