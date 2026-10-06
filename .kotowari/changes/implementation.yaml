@@ -9,7 +9,7 @@
         {
           "path": "crates/kotowari-core/src/inputs.rs",
           "before": "sha256:c64479b8f47538d86e0f6e459ad7df0c2c83e152bbfea64da903de03a31a9b32",
-          "after": "sha256:6dda6c691d426939f6446b793d3dc71e63a35466febf27c8233fd5a0e43ceca7"
+          "after": "sha256:88296e3ed5131923bea9de7d0bf951185e1059853e9597be15f61bde1e3470ce"
         },
         {
           "path": "crates/kotowari-core/src/lib.rs",
@@ -19,7 +19,7 @@
         {
           "path": "crates/kotowari-core/src/test_side.rs",
           "before": null,
-          "after": "sha256:c54e027b7c0cb2346f1bbcdb96ddbc0e2707a8da71b6e3d4ee1fd0528d0ebf63"
+          "after": "sha256:4f4707805507e018bdf390340a889bc58e362bceee9f352407825874609ca806"
         },
         {
           "path": "crates/kotowari-core/tests/inputs.rs",
@@ -49,7 +49,7 @@
         {
           "path": "tests/step22_test_side_findings.rs",
           "before": null,
-          "after": "sha256:8e24ed30547580a13775a01acb7dbb408a36921e54ec205b782c2198ed342295"
+          "after": "sha256:c1f95c42ec85aed0066a4f5a6810cdad4e5faf79c3cca5679023cb91e4185780"
         }
       ],
       "ir": [
@@ -63,7 +63,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "check now accepts --allow-test-findings, a flag without a value, and every other command stops on it with an argument error, as REQ-core-002 and REQ-core-004 now state; the rejection runs before the early return for changes, so changes and mutants reject it too. kotowari-core decides from TBL-core-047 whether an error is a test-side finding: the test files and surface files read during the check are kept in the check result, unserialised, because an unparsable_file on a file in both sets is merged into one finding and the finding alone cannot tell where it came from. With the flag the CLI computes the exit code from the errors that are not test-side findings and prints the same output, as REQ-core-357 and TBL-core-002 state. Real RED: the parse tests (Cli::Check had no allow_test_findings field), the TBL-core-047 core test (no method is_test_side_finding) and EX-core-547 (exit 1 instead of 0). EX-core-548 to EX-core-552 and the REQ-core-357 output test already held when written, because the flag was an unknown option or had no effect yet; they pin that the stops and the output stay.",
+      "reason": "check now accepts --allow-test-findings, a flag without a value, and every other command stops on it with an argument error, as REQ-core-002 and REQ-core-004 now state; the rejection runs before the early return for changes, so changes and mutants reject it too. kotowari-core decides from TBL-core-047 whether an error is a test-side finding: the test files read during the check, and which of them match the globs of surface.files, are kept in the check result, unserialised, because an unparsable_file on a file in both sets is merged into one finding and the finding alone cannot tell where it came from. A surface file is any file matched by surface.files (the glossary), not only one in a surface rule's language, and the surface walk and exclusion follow tests.files, so matching the test file paths against those globs is enough; when surface.rules is empty, surface.files is empty too (REQ-core-225). With the flag the CLI computes the exit code from the errors that are not test-side findings and prints the same output, as REQ-core-357 and TBL-core-002 state. Real RED: the parse tests (Cli::Check had no allow_test_findings field), the TBL-core-047 core test (no method is_test_side_finding) and EX-core-547 (exit 1 instead of 0), and later the process test of an unparsable test file matched by surface.files in a language no surface rule covers (exit 0 instead of 1, because only the analysed surface files were counted). EX-core-548 to EX-core-552 and the REQ-core-357 output test already held when written, because the flag was an unknown option or had no effect yet; they pin that the stops and the output stay.",
       "requirements": [
         "REQ-core-002",
         "REQ-core-004",
