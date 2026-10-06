@@ -1,0 +1,275 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "allow-test-findings-check-option-implementation",
+      "base": "b98994b849f4af524113f6a82c085066258f3695",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "crates/kotowari-core/src/inputs.rs",
+          "before": "sha256:c64479b8f47538d86e0f6e459ad7df0c2c83e152bbfea64da903de03a31a9b32",
+          "after": "sha256:6dda6c691d426939f6446b793d3dc71e63a35466febf27c8233fd5a0e43ceca7"
+        },
+        {
+          "path": "crates/kotowari-core/src/lib.rs",
+          "before": "sha256:40fcc56665067189810f3fdf3f07f79859c7b7007731d2451f1d7eead5783ed4",
+          "after": "sha256:f0d93edbf198b722c0c5c35ccc1e9b1126a9dcdc9d88c1fc22c2601038b1fedb"
+        },
+        {
+          "path": "crates/kotowari-core/src/test_side.rs",
+          "before": null,
+          "after": "sha256:c54e027b7c0cb2346f1bbcdb96ddbc0e2707a8da71b6e3d4ee1fd0528d0ebf63"
+        },
+        {
+          "path": "crates/kotowari-core/tests/inputs.rs",
+          "before": "sha256:08531e239d7f83683311deeb14fa1ca3867a4a288e902538e9b40380e464d439",
+          "after": "sha256:ab83cf38460540a33c35f4688e002e17e6df4ce0180c459881cc2957db1b12b9"
+        },
+        {
+          "path": "crates/kotowari-core/tests/test_side_findings.rs",
+          "before": null,
+          "after": "sha256:67b7e2060d658d976d70796b468cd53327e77e2789dbcf911cfa2c8f63461ad4"
+        },
+        {
+          "path": "src/cli.rs",
+          "before": "sha256:35745a348bc5367632c5856a12f6491e3670e78b901412126e73ce83a8bc1847",
+          "after": "sha256:816da6e1d3a43e7599cfa58c47786874fba5556b72f68a1bb76e6828ec89ed35"
+        },
+        {
+          "path": "src/cli/tests.rs",
+          "before": "sha256:bd9f05e120b679b1067cce131203b5d8fce5a49cf57c1286faaee997d30d2cfe",
+          "after": "sha256:363e72403666f500a6a316e04b5874dda2e4d890277d69a06fbecef779b5c1da"
+        },
+        {
+          "path": "tests/step1_cli.rs",
+          "before": "sha256:33bf6312af6e4b05007937addc8d8ee4ead14a301f3cfc717f79f28cc435dcb1",
+          "after": "sha256:7c0a32c4d7157fc23e9f577d955582e0f7097c7ae658709e74d877419665ecdd"
+        },
+        {
+          "path": "tests/step22_test_side_findings.rs",
+          "before": null,
+          "after": "sha256:8e24ed30547580a13775a01acb7dbb408a36921e54ec205b782c2198ed342295"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/cli.md",
+          "sha256": "sha256:615acc3566eeaae41e2f8f5835863e341ab1f21d9ba9decf8a6beb6e3d36e078"
+        },
+        {
+          "path": "docs/ir/core/test-side-findings.md",
+          "sha256": "sha256:0b99a409b06324cc35581010eb2cb6a395460dd5411557ceb85cfd86699fe8e0"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "check now accepts --allow-test-findings, a flag without a value, and every other command stops on it with an argument error, as REQ-core-002 and REQ-core-004 now state; the rejection runs before the early return for changes, so changes and mutants reject it too. kotowari-core decides from TBL-core-047 whether an error is a test-side finding: the test files and surface files read during the check are kept in the check result, unserialised, because an unparsable_file on a file in both sets is merged into one finding and the finding alone cannot tell where it came from. With the flag the CLI computes the exit code from the errors that are not test-side findings and prints the same output, as REQ-core-357 and TBL-core-002 state. Real RED: the parse tests (Cli::Check had no allow_test_findings field), the TBL-core-047 core test (no method is_test_side_finding) and EX-core-547 (exit 1 instead of 0). EX-core-548 to EX-core-552 and the REQ-core-357 output test already held when written, because the flag was an unknown option or had no effect yet; they pin that the stops and the output stay.",
+      "requirements": [
+        "REQ-core-002",
+        "REQ-core-004",
+        "REQ-core-357"
+      ],
+      "decisions": [
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A1",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A2",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A3",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A4",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A5",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A6",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A9",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A12"
+      ],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "allow-test-findings-guides-and-skills-implementation",
+      "base": "b98994b849f4af524113f6a82c085066258f3695",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "before": "sha256:a59469273e9d1404db531b353282ee58d12b72137edf25307c5ceaa8a1d33630",
+          "after": "sha256:b100f05138e11e3ed9fbe4d24cdd18c32bc84c8a3230ffe44d38bb98415d5608"
+        },
+        {
+          "path": "agent/skills/kotowari-adopt/SKILL.md",
+          "before": "sha256:b74b1f1311be5536caec46a1eed2223bd1a8e587a5ae7fe76449e2b369319aeb",
+          "after": "sha256:377b238ead8feae7d2c1cad284f53c84082b3d1a2c720995d2b357606c7e9e72"
+        },
+        {
+          "path": "agent/skills/kotowari/references/findings.md",
+          "before": "sha256:8b4b3b394e8a96cb18db39c33d5cb3ade22e6cf4600f69873c0f36ff7b780e80",
+          "after": "sha256:f502b8587458b41071ce6d2aee63ed25a5c1e18c7acc9cdaa80d8cc699d84894"
+        },
+        {
+          "path": "docs/guides/cli.i18n.yaml",
+          "before": "sha256:386b9bc73ee186b026f19fb204466fc2affdd0b0b34dc9c7ee68085429a74352",
+          "after": "sha256:5e6dc96f8b08a08ef57fa9625b3b00c0eeaaf3c0405390bb2536bdadf716a2f2"
+        },
+        {
+          "path": "docs/guides/cli.ja.md",
+          "before": "sha256:986579ca96a5fc03edc4da16fe87dbf4f80e4add389307e01b69e200d1747284",
+          "after": "sha256:af5722c14a50ec2c12239ed58fadb458d2de4a14a9661b91eb01bc0d1521ecd7"
+        },
+        {
+          "path": "docs/guides/cli.md",
+          "before": "sha256:6628e7f5700ba0590142f6e1e44a783193bad01f17c12db4a4f3f93866eefca6",
+          "after": "sha256:b1b4a1e8c716261e9ce7a27a6048c6b57dbc58dfeca1a6899649624c203f2aba"
+        },
+        {
+          "path": "docs/guides/commands/check.i18n.yaml",
+          "before": "sha256:376c28552067a584bba111b8cb1321e5f1e9b4f0ac8a0ba9d7eeeea1c86cf7bd",
+          "after": "sha256:59a647862d682addfbd59e7bd5f03961290cac75d699886011ff3ab819ab9151"
+        },
+        {
+          "path": "docs/guides/commands/check.ja.md",
+          "before": "sha256:b774d7bbcd4113c5d4aa3ba4dcfdfa7110947c1fbe8e99531fb4d4ad5378bbf4",
+          "after": "sha256:4d9cc21ee8f04ec712fc14ae4f9e7be489f40eb88aa62de75213c494d2cde7b7"
+        },
+        {
+          "path": "docs/guides/commands/check.md",
+          "before": "sha256:ff489fa57bc7e22cd81083c6afa0cdb1a6f95431cfe1151fd0dbb24a3ee3e782",
+          "after": "sha256:6c7b613ce4b3cb7682fe862e1d7178df58c054e28d7996ae8aee8ca67a4fb532"
+        },
+        {
+          "path": "docs/guides/commands/list.i18n.yaml",
+          "before": "sha256:e57b646e9ea95f2ff05da9005d25222cdaf628fdcdd765f36221d2ffed06c58f",
+          "after": "sha256:5113072f1b9bf79b1a369e49a8282b5dda578826b78ff83182a3d4890ec1034f"
+        },
+        {
+          "path": "docs/guides/commands/list.ja.md",
+          "before": "sha256:ce091681c3d8310474cf8b810f2bf5f8da044155518def621f117477627c0976",
+          "after": "sha256:ec92160ee2ce8b0c9d39182f3f382f0a184418145a2193c7617ebc73c22c5aff"
+        },
+        {
+          "path": "docs/guides/commands/list.md",
+          "before": "sha256:16deac71f0594e34cb809d4f2c0be69a441a4d788aeb86403953ecb564243eaf",
+          "after": "sha256:8dfba1912e35fe0df074f00c8dd759a057a5f440ce7633abb3ae93ae6ab7bdae"
+        },
+        {
+          "path": "docs/guides/commands/mutants.i18n.yaml",
+          "before": "sha256:c3be37bf2f1494ccb64108c1069341d71df283f0b4f1a5b508510ed6ba4741ba",
+          "after": "sha256:7947c07fa2c9e9416a963eb78a75b1f9bbec6311907e5b114e5539a229605d27"
+        },
+        {
+          "path": "docs/guides/commands/mutants.ja.md",
+          "before": "sha256:36e8e589acad8ce1470b91bed252b400c7d52983c093262af029fdb9b06a39a6",
+          "after": "sha256:5b136b8aa32e828512c00c5e6f315f81f430550848f2d5d24f6de923a711f585"
+        },
+        {
+          "path": "docs/guides/commands/mutants.md",
+          "before": "sha256:ffe411c546281462265282135559f0dd8ebcb3d21ee20b78721351cd6a060db2",
+          "after": "sha256:b40f70e7189418f99cd396dd10808271c9170adb44edc4898cfcf8516678df6f"
+        },
+        {
+          "path": "docs/guides/commands/plan.i18n.yaml",
+          "before": "sha256:4ee345046b6e684c0d2f7ec5af03fa027bd8d64657911818c94cae13d2b75f79",
+          "after": "sha256:d449fededcbe99ee1d034342f33dd4ac879af56ed683e8eb0eb9a5f5a347c22d"
+        },
+        {
+          "path": "docs/guides/commands/plan.ja.md",
+          "before": "sha256:bd83165a208be7d96d8b68369f4563981e6523eef23ff5d8ea313914dd5d6d45",
+          "after": "sha256:f92c0ac3457af4c1b8b9ac74da4b8368babdf53e478eedb97687a5461987e420"
+        },
+        {
+          "path": "docs/guides/commands/plan.md",
+          "before": "sha256:5967439517e4a40152409f3ad5de4d64a071e950b10fe383286525c3d7a8d49d",
+          "after": "sha256:ea8d7f9fcca9cd2df94bf9a80d8c7d616ae04e5b5a5138dc450c01b83f5e425c"
+        },
+        {
+          "path": "docs/guides/commands/query.i18n.yaml",
+          "before": "sha256:80aa01872982529bce6f4db4c653facb20bea0b0f4830dda6bf5084cf567c120",
+          "after": "sha256:7732d7a157a334fa5881c22683cc9970ad0b1fa9976d40108b79bb6198cbdc7b"
+        },
+        {
+          "path": "docs/guides/commands/query.ja.md",
+          "before": "sha256:b817bd064c68b74c06a48850b76f74070af5cdce97986f22508063dba38e0ed0",
+          "after": "sha256:a1a31bbe7bdc35ae78cfef4828e05c15a25234fae5943bd3961813f950917b8e"
+        },
+        {
+          "path": "docs/guides/commands/query.md",
+          "before": "sha256:fca8eac051953c6abc7f365e4a279db53b32cf9825572dc9b32b0ba3ba22ca02",
+          "after": "sha256:eaaf8dce7385d8de5da67c4b5d50313b9350a22410bfe6b82fd11913ccc3da41"
+        },
+        {
+          "path": "docs/guides/commands/status.i18n.yaml",
+          "before": "sha256:a43a3e97b7f6262fce369602198d19d10e662b8a9d3488c72222ece9584ee811",
+          "after": "sha256:7ebfe489ef015dc83a6fd42ea5d4799750240eaace6f866e13b79cf176b2a295"
+        },
+        {
+          "path": "docs/guides/commands/status.ja.md",
+          "before": "sha256:71ac4cee7f4e5b8c5eae7de8a0c0285be1e65a84474dea1211790e5e3e996539",
+          "after": "sha256:e7756d0e8d81d16e9e0f7fe878773c7e7bb0cbe500140d14a937150d4b43ee22"
+        },
+        {
+          "path": "docs/guides/commands/status.md",
+          "before": "sha256:e75be09a343350ae1a750d54afbfb8e2ac3424150e5b38ea6fde9519b47a0fad",
+          "after": "sha256:ad5b747ac9cdd2cc5273b309e0b620534bccfa4a4b493f6dd342492ba424bbbe"
+        },
+        {
+          "path": "docs/guides/config.i18n.yaml",
+          "before": "sha256:d6c33c7ce518d1b49f227f972d29aaf2fc78d31a16a0e5816f2b61b81be6e3a2",
+          "after": "sha256:9ee6b48572202a8a8ce3f90fc1d22dbfa53a086cbdc99008cf7cfe9f8716305a"
+        },
+        {
+          "path": "docs/guides/config.ja.md",
+          "before": "sha256:c423c3fea861d7d2db73a53d6f9d044fd4077253013e7078216e5d4f30739ef1",
+          "after": "sha256:b90077f140bd7d5ae295016d57f94969e7d99799051d06039c146b70c76e3efb"
+        },
+        {
+          "path": "docs/guides/config.md",
+          "before": "sha256:985418786fa5d4f857c3b562b959283af48f996ceddfdaea50343b3444ff2d21",
+          "after": "sha256:29444fd5bf95453e63bf7943dbf7d0e12e6658e1f5f6009b96e87a52caa1354d"
+        }
+      ],
+      "ir": [
+        {
+          "path": "docs/ir/core/cli.md",
+          "sha256": "sha256:615acc3566eeaae41e2f8f5835863e341ab1f21d9ba9decf8a6beb6e3d36e078"
+        },
+        {
+          "path": "docs/ir/core/test-side-findings.md",
+          "sha256": "sha256:0b99a409b06324cc35581010eb2cb6a395460dd5411557ceb85cfd86699fe8e0"
+        }
+      ],
+      "conclusion": "existing",
+      "reason": "The check guide gains a section on committing a specification before its tests: the range of test-side findings from TBL-core-047, that only the exit code changes, and that the pre-commit hook runs check with --allow-test-findings while the pre-push hook and CI run it without, as REQ-core-358 requires; the kotowari skill's findings reference and kotowari-adopt say the same. The option rows, argument-error lists, exit-code tables and help output in cli.md and check.md follow the changed REQ-core-002, REQ-core-004 and TBL-core-002. Every other guide section whose mark went stale (list, mutants, plan, query, status, config, including REQ-core-014 and REQ-core-019 whose fingerprints changed with the glossary) was reread against kotowari query and still matched, so only its fingerprint was updated. Each pair's Japanese side carries the same change and its consistency record was copied from kotowari list. CHANGELOG has one Unreleased entry under Added.",
+      "requirements": [
+        "REQ-core-002",
+        "REQ-core-004",
+        "REQ-core-357",
+        "REQ-core-358"
+      ],
+      "decisions": [
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A7",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A2",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A5"
+      ],
+      "handoff": null,
+      "gaps": []
+    },
+    {
+      "id": "allow-test-findings-pre-commit-hook-implementation",
+      "base": "b98994b849f4af524113f6a82c085066258f3695",
+      "role": "implementer",
+      "files": [
+        {
+          "path": "lefthook.yml",
+          "before": "sha256:f70504a006ac6c52b18e2c58822eb4f931147543461fc3e9c1bbabd38569bb99",
+          "after": "sha256:765b508979ff5523b4ec30d5585e8b25915e6effd911b31feaba063ac0615462"
+        }
+      ],
+      "ir": [],
+      "conclusion": "new",
+      "reason": "The pre-commit kotowari-check command now runs check --format text --allow-test-findings instead of filtering the JSON with jq through a list of finding kinds that was wider than the test-side findings kotowari decides. It still fails on exit code 1 and 2 because it passes the binary's exit code through. The pre-push commands are unchanged. Hook configuration is not held by the IR.",
+      "requirements": [],
+      "decisions": [
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A8",
+        "docs/decision/records/2026-10-06-spec-first-commit.md#A2"
+      ],
+      "handoff": null,
+      "gaps": []
+    }
+  ]
+}
