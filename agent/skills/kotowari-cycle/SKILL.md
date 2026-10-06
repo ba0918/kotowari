@@ -119,7 +119,7 @@ review. Its agent instructions and input contract live in `references/consistenc
 ## Judgment stays here
 
 Cycle alone writes the findings file (shape: the review skill's `finding-schema.md`, with `base`,
-`last_reviewed_head` and `first_review_head`), creating it at the first phase run or review. Each
+`last_reviewed_head`, `first_review_head` and `premise_attempts`), creating it at the first phase run or review. Each
 time step 3 runs it sets `first_review_head` to the head it reviews; that head is the only state
 kept for the phase. After every review or phase run
 it overwrites the file: sets `last_reviewed_head` after a review, assigns
@@ -181,8 +181,9 @@ any hand-back reason.
 ## Resuming and running more
 
 The findings file is `.agents/artifacts/reviews/<branch>.json` (a `/` in the branch name is a
-directory). If it exists when cycle starts, this is a resume: keep its findings and continue round
-numbers from its maximum. Ending 3's streaks (`still_present` twice running; new visible findings
+directory). If it exists when cycle starts, this is a resume: keep its findings, continue round
+numbers from its maximum, and read its `premise_attempts` as `references/premise-step.md` says, so
+that a firing already attempted is not attempted again. Ending 3's streaks (`still_present` twice running; new visible findings
 not shrinking; overlap after a fix) count from this start only; a closed cause returning counts
 across starts. "Run more" after endings 2–4 continues the same run: streaks kept, findings still open, a
 new limit only if the person sets one.
