@@ -43,6 +43,6 @@ fills those.
 | `oracle.measured` | `fails_now` / `not_run` (unsafe; reason in note) / `not_applicable` (info, human_judgment) |
 | `status.state` | `open` / `closed`; `closed_reason` is `fixed` or `accepted` |
 | `commits` | commit hashes the fixer, or for a `consistency` finding the phase, reported for this finding |
-| `evaluations` | one per review that evaluated this finding, with the round-trip number: `{"round": n, "verdict": "still_present" \| "no_longer_visible"}`; a full-review match appends `still_present` |
+| `evaluations` | one per review or consistency phase run that evaluated this finding, with the round-trip number: `{"round": n, "verdict": "still_present" \| "no_longer_visible"}`; a full-review match appends `still_present` |
 
 Diff-review return shape: `{"verdicts": [{"id": 7, "verdict": "still_present"}], "new": [ ...findings... ]}`.

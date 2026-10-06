@@ -114,7 +114,10 @@ whether the grounds recorded for each choice support it. A run returns:
 - for each earlier finding it was given, `still_present` or `no_longer_visible`, with the commits of
   any further fix;
 - each new finding in the finding shape, without `id`, `status` and `evaluations`: the perspective
-  `consistency`; the claim says whether it is a gap, a disagreement, or a gap or contradiction within
+  `consistency`; the action `fix_and_verify` for one it resolved (`human_judgment` only as above),
+  the severity `critical` when it changed what a user observes and `warn` otherwise, and the profile
+  from the file it concerns; `oracle.measured` `fails_now`, since the measurement showed it before
+  the fix; the claim says whether it is a gap, a disagreement, or a gap or contradiction within
   the IR; the evidence is the file and line or the ID; the oracle is the measurement or check that
   decided it; `commits` are the commits that resolved it;
 - the path of the decision record it wrote, if it decided anything.

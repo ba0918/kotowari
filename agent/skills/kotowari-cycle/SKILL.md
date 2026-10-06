@@ -152,7 +152,8 @@ the quality review, and resolves the gaps and disagreements it finds. Its instru
   fixer. A model different from the implementer's is preferred, not required.
 - **What it carries.** `references/consistency-phase.md` pasted in full; the worktree path and branch;
   the range (base and head); the specification path and the file of IDs the plan covers, as
-  **Delegations** above says; the open `consistency` findings with IDs and commits, and for one
+  **Delegations** above says; the open visible `consistency` findings with IDs and commits (a `human_judgment` one is not
+  re-evaluated: it stays open for the terminal report), and for one
   `still_present` after a fix the fixer's premise requirement (**Delegations**); the review skill's
   `references/finding-schema.md` path; the paths of
   the kotowari skill's `references/ir-form.md`, `references/records.md`,
@@ -244,7 +245,7 @@ only such findings or problem records that were already committed.
   topic revises it (the kotowari skill's `references/overview.md`). Count them in the terminal report.
 - IR-side findings among this run's findings are the consistency phase's. Every phase run starts
   by taking them from `kotowari check` and ends with none left in its range, so one left here means
-  a run was skipped or did not converge: run the phase over the branch's diff. Cycle never fixes the IR itself and never hands it to the
+  a run was skipped or its step did not end: run the phase over the branch's diff. Cycle never fixes the IR itself and never hands it to the
   implementer or the fixer.
 - Missed mutations: the project's mutation gate (in kotowari itself, the pull request CI) runs mutations on the diff. A miss is fixed by the fixer or
   the implementer, like a test-side finding; how to investigate one is in the kotowari skill's
