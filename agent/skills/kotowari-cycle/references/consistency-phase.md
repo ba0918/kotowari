@@ -5,8 +5,7 @@ that agent's prompt; the agent runs in a context separate from the implementer a
 
 The phase reads the code a diff changed against the IR, finds where the two do not agree and where
 the IR itself has a gap or a contradiction, and resolves every finding into a state where the IR and
-the code agree. It reads the code itself, never a record about the code. Grounds and measurements
-decide; a person is involved only as a last resort.
+the code agree. It reads the code itself, never a record about the code.
 
 ## Inputs
 
@@ -100,9 +99,9 @@ resolved here as below.
 
 ## Running again and what it returns
 
-Its findings go into cycle's findings file beside the review's, with the perspective `consistency`,
-and cycle reruns and stops the phase by the same rules as the review loop. One delegation is one run.
-A rerun has the head moved to the current head, so its range includes the fixes, and it also reads
+Cycle puts its findings in its findings file beside the review's, with the perspective
+`consistency`, and decides reruns and when to stop by its own rules; the phase keeps no state. A
+rerun has the head moved to the current head, so its range includes the fixes, and it also reads
 whether the grounds recorded for each choice support it. A run returns:
 
 - for each earlier finding it was given to evaluate (not a known one), `still_present` or `no_longer_visible`, with the commits of
