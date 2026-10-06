@@ -193,12 +193,12 @@
         {
           "path": "crates/kotowari-markdown-view/src/text.rs",
           "before": "sha256:40d17fe942e372f20cfb5893fb702d49b836cef0d409fb65f5811b6bb7a6aca2",
-          "after": "sha256:8129c91394939c1453f02934064e01aa0e0fc79b99f44f5c5e4058af93b483f2"
+          "after": "sha256:2276679682711c728fe84dab4589cf3edf8dc73c77cb174f458c90c6c6baa3f4"
         },
         {
           "path": "crates/kotowari-markdown-view/tests/rendering.rs",
           "before": "sha256:9c26deef48d2cfb71397eaf2b7d8e3d945c6ed98b649e3c45081d4f8e98151fe",
-          "after": "sha256:fb9cdc071eccd67558cdda455824492c49bf3d4432d1b7d6dc08b3a1b886851e"
+          "after": "sha256:ad7cb6b21b3a05a0322dc4397fd7bf49c015528c7d55906fadea9ea41ccdb224"
         }
       ],
       "ir": [
@@ -212,7 +212,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "markdown-view no longer enables GFM footnotes. Rendering them inserted the markdown crate's English heading \"Footnotes\" and \"Back to content\", text not taken from the UI text (REQ-view-027), and REQ-view-007 reads CommonMark with GFM tables, not footnotes. The footnote syntax now reads as CommonMark. Spec test was seen failing.",
+      "reason": "markdown-view no longer enables GFM footnotes. Rendering them inserted the markdown crate's English heading \"Footnotes\" and \"Back to content\", text not taken from the UI text (REQ-view-027), and REQ-view-007 reads CommonMark with GFM tables, not footnotes. The footnote syntax now reads as CommonMark. Spec test was seen failing. Only the footnote definition construct is turned off: without definitions \"[^1]\" never becomes a footnote call, so the call construct changed no output. The spec test now also pins that \"[^1]: 注\" is a CommonMark link reference definition and \"本文[^1]\" renders as <a href=\"%E6%B3%A8\">^1</a>; removing the definition setting fails it.",
       "requirements": [
         "REQ-view-007",
         "REQ-view-027"
@@ -270,7 +270,7 @@
         {
           "path": "crates/kotowari-core/src/changes.rs",
           "before": "sha256:2eb6bf4195bb72fb615b1773a4a2545ce41ee412728b283f31087d8978ad545d",
-          "after": "sha256:49ed674999bcfe0e401ace4c9a90d5e8258b18ce761fb04b2376f5af1a28c353"
+          "after": "sha256:8c51591bcd4ba8775f1983bc245f6356dcd0ba076a91e704e25f42f1a89f4f8b"
         },
         {
           "path": "crates/kotowari-core/tests/change_matching.rs",
@@ -289,7 +289,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "changes no longer reads IR or decision records from hidden directories below their locations, matching check and REQ-core-033's exclusion. Before, a record citing an IR under docs/ir/.drafts/ was valid for changes and change_record_invalid for check. Spec test was seen failing.",
+      "reason": "changes no longer reads IR or decision records from hidden directories below their locations, matching check and REQ-core-033's exclusion. Before, a record citing an IR under docs/ir/.drafts/ was valid for changes and change_record_invalid for check. Spec test was seen failing. The part below the location is then taken by stripping the location and \"/\" as a prefix instead of slicing by length, because the length arithmetic produced equivalent mutants (same result, no behavior change).",
       "requirements": [
         "REQ-core-033",
         "REQ-core-265"
@@ -311,7 +311,7 @@
         {
           "path": "crates/kotowari-core/src/change_records.rs",
           "before": "sha256:9da8af7a8b7e2da7b8d21162ffb347daea8d8153cbe01cccdce5a93c71bb6461",
-          "after": "sha256:42d8efcd12b42255eb2ccfceba16cf2a30c89d79385a5f5582f4e3573d94ce51"
+          "after": "sha256:a0c2dcef5d028de50a810efe3b3970433be47bc55e1fd8324f6225d600ec6f28"
         },
         {
           "path": "crates/kotowari-core/tests/change_records.rs",
@@ -330,7 +330,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "check's change-record validation now maps a duplicated requirement ID to the first defining document in path byte order (REQ-core-032), as changes already does, instead of the last one collected. Spec test passes the documents in both orders and was seen failing.",
+      "reason": "check's change-record validation now maps a duplicated requirement ID to the first defining document in path byte order (REQ-core-032), as changes already does, instead of the last one collected. Spec test passes the documents in both orders and was seen failing. The selection was then rewritten to sort the documents by path and keep the first definition, because the earlier path comparison could not be told from <= by the mutation tests (same result, no behavior change).",
       "requirements": [
         "REQ-core-032",
         "REQ-core-268"
