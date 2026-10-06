@@ -185,12 +185,12 @@ cat <<EOF
 ${tag} を作った（まだ push していない）。main は必須のチェックが通った commit しか受け付けないので、
 まずリリースの commit をブランチに push して PR を作り、チェックを通す:
 
-  git push origin HEAD:refs/heads/release/${tag}
+  git push --no-follow-tags origin HEAD:refs/heads/release/${tag}
   gh pr create --base main --head release/${tag} --fill
 
 PR のチェックが通ったら、同じ commit の main とタグを push する:
 
-  git push origin main && git push origin ${tag}
+  git push --no-follow-tags origin main && git push origin ${tag}
 
 main の push が通ってからタグを push する（main が拒まれたらタグは出さない）。
 タグの push で GitHub Actions が前のリリースのタグとの差分の変異テストを回し（前のタグが無ければ全体）、

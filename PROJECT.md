@@ -142,9 +142,11 @@ To release:
    the tag already exists locally or on `origin`, or when `origin` cannot be reached to tell. It
    never pushes.
 2. Push the release commit to a `release/<tag>` branch and open a pull request, as the script
-   prints, so that the required checks run on that commit. When they pass, push with
-   `git push origin main && git push origin kotowari-v<version>`: main first, and the tag only
-   when main was accepted. If the
+   prints, so that the required checks run on that commit. Push the branch with
+   `--no-follow-tags`, so that the annotated tag the script made stays local even when
+   `push.followTags` is set. When they pass, push with
+   `git push --no-follow-tags origin main && git push origin kotowari-v<version>`: main first, and
+   the tag only when main was accepted. If the
    push is rejected, first check whether the tag is already on the remote
    (`git ls-remote --tags origin kotowari-v<version>`). If it is not, nothing was published: delete
    the local tag (`git tag -d`), drop the release commit (`git reset --keep HEAD~1`), fix and
