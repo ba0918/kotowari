@@ -45,17 +45,12 @@ one exists. Code, and skill text, which is read as code, have no counterpart her
 with the specification is the consistency phase's. A counterpart is read within the quality
 perspective: whether a plan or a document contradicts the specification is a quality question.
 
-When the specification is the kotowari IR, the counterpart is the IR store path, and the reviewer
-reads every document in the store. The requirements and scenarios the diff should cover arrive as a
-file listing their IDs, narrowed by the caller from `kotowari list`; a reviewer runs no command to
-get them and is never handed the whole list. A request that touches no IR item comes without that
-file. A deferred requirement or deferred scenario (the `- deferred:` line; `deferred` true in the
-list) is specified but not built now: a missing test or implementation for it is not a finding,
-no finding demands one, and the test-side findings a review asks to bring to zero never include
-it. A changed file the IR does not hold (CI, hooks, release, build configuration; the kotowari
-skill's **What the IR holds**) has no IR counterpart: a missing
-requirement or test for it is not a finding, and no finding asks to add one to the IR. Its
-counterpart is the decision record.
+When the specification is the kotowari IR, a counterpart that is the specification is the IR store
+path. A review gets no list of IDs to cover. A deferred requirement or deferred scenario (the
+`- deferred:` line) is specified but not built now: no finding demands a test or an implementation
+for it. A changed file the IR does not hold (CI, hooks, release, build configuration; the kotowari
+skill's **What the IR holds**) is read against its decision record, never the IR: no finding asks
+to add it to the IR.
 
 ## Reviewer setup
 
@@ -88,8 +83,8 @@ concerns optional seats only.
 - **Launching.** The caller launches optional seats itself; a reviewer delegation never carries the
   list or this section. Seats may be launched in parallel. Hand each launch means the
   self-contained prompt the quality reviewer gets, rewritten for the seat's copy (below): the
-  copy's path wherever the worktree's path appears, and every file the prompt references (such as
-  the file listing requirement IDs) placed inside the copy or inlined. Run the launch means with the copy as its working
+  copy's path wherever the worktree's path appears, and every file the prompt references placed
+  inside the copy or inlined. Run the launch means with the copy as its working
   directory, and read what it returns as the JSON in **Output**.
 - **Throwaway copy.** Each seat runs inside its own copy of the worktree, created in a temporary
   directory outside it right before that seat is launched: the worktree's HEAD with its

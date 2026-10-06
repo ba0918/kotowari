@@ -57,13 +57,13 @@ rules, paste the Evidence conditions from
    in one delegation.
 2. Consistency phase over base..head, as **Consistency phase** below says, rerun until a run
    converges.
-3. Full review: base..head, profiles, strength, specification path, plus the **known findings** (open
+3. Full review: base..head, profiles, strength, counterpart, plus the **known findings** (open
    `record_only` / `human_judgment`, closed `accepted`), never visible or fixed ones; a match is not raised again.
    Cycle itself, as the caller, then launches the optional seats as the review skill's **Optional
    seats** says, using the seat choice the person gave at the start of the run; no review
    delegation carries the seat choice or that section.
 4. Diff loop: delegate the **visible findings** to a fixer; then diff review (changes since the
-   last review, the open findings with IDs, profiles, strength, specification path). Repeat until
+   last review, the open findings with IDs, profiles, strength, counterpart). Repeat until
    no visible finding remains. A diff review gets no optional seat.
 5. A second full review only when a fix could spread beyond where it was made; name that reason
    before running it; it gets the optional seats as in step 3. Its visible findings → one more
@@ -97,12 +97,14 @@ included). The limit, when the person set one, counts round trips.
   it ran to test that premise. The next fix starts from that result; another fix resting on the
   same premise is not the changed approach ending 3 waits for.
 
-When the plan's specification is the kotowari IR, the specification path in both reviews is the
-IR store path; the reviewer reads every document in the store. For a topic with no IR it is the
-path the plan names, and no ID file goes along. The requirements and scenarios the diff should cover go along as a file: narrow
-`kotowari list` with `jq` to the IDs the plan covers (select by `.id`; the kotowari-plan skill's
-**Reading the requirements** shows the `jq` style), write that output to a file, and pass its path. A reviewer is
-assumed unable to run commands; never pass the whole output.
+A review's counterpart is the review skill's **Inputs**: none for code and skill text, and the
+specification path for a plan or another document in the diff, read on quality. A review gets no
+file of IDs. The specification path with the file of IDs goes to the consistency phase. When the
+plan's specification is the kotowari IR, the path is the IR store path, and the IDs the plan covers
+go along as a file: narrow `kotowari list` with `jq` to those IDs (select by `.id`; the kotowari-plan
+skill's **Reading the requirements** shows the `jq` style), write that output to a file, and pass its
+path. For a topic with no IR it is the path the plan names, and no ID file goes along. Never pass the
+whole output.
 
 Paste the kotowari skill's `references/mark.md` into the implement and fixer prompts: a delegate
 does not read skills, and that is how it learns to mark its tests.
@@ -142,8 +144,8 @@ the quality review, and resolves the gaps and disagreements it finds. Its instru
 - **Who.** A delegate in a context separate from the implementer, never the implement agent or the
   fixer. A model different from the implementer's is preferred, not required.
 - **What it carries.** `references/consistency-phase.md` pasted in full; the worktree path and branch;
-  the range (base and head); the specification path and the file of IDs the plan covers, as the
-  reviews get them; the findings the previous run with the same base returned, if any; the paths of
+  the range (base and head); the specification path and the file of IDs the plan covers, as
+  **Delegations** above says; the findings the previous run with the same base returned, if any; the paths of
   the kotowari skill's `references/ir-form.md`, `references/records.md`,
   `references/translations.md`, `references/findings.md` and `references/mark.md`; the kotowari
   skill's **What the IR holds** section pasted in full; and the fixer contract below with its
