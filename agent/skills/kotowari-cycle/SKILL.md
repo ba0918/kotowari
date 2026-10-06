@@ -86,7 +86,9 @@ copy of either in this file.
 
 When implement or the fixer returns a commit a hook stopped on an IR-side finding, run the
 consistency phase as in step 2, the blocked change in the worktree included in its range, then
-repeat the same delegation; after implement, step 2 still runs.
+repeat the same delegation; after implement, step 2 still runs. A fixer return a hook stopped is
+not a fix of its own: the repeated delegation is the same fix, and its return gets the one `fixes`
+entry.
 
 A review's counterpart follows the review skill's **Inputs**. Only the consistency phase gets
 the specification path with the plan's IDs: for IR, narrow `kotowari list` to those IDs
