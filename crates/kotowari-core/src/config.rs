@@ -276,7 +276,8 @@ fn check_globs(patterns: &[String], key: &str) -> Result<(), StopReason> {
     Ok(())
 }
 
-/// 検査済みの glob の一覧を1つの集まりにする。`check_globs` を通った一覧だけを渡す
+/// glob として読めると確かめた一覧を1つの集まりにする。設定の glob は `check_globs` が確かめ、
+/// それ以外は呼び出し側が確かめてから渡す
 pub fn glob_set(patterns: &[String]) -> globset::GlobSet {
     let mut builder = globset::GlobSetBuilder::new();
     for pattern in patterns {
