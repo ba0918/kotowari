@@ -9,10 +9,10 @@
 ### REQ-core-322: 論理パスの基準と同一性
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A51, docs/decision/records/2026-10-03-public-crate-api.md#A53, docs/decision/records/2026-10-03-public-crate-api.md#A54
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A51, docs/decision/records/2026-10-03-public-crate-api.md#A53, docs/decision/records/2026-10-03-public-crate-api.md#A54, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-メモリ入力の論理パスはプロジェクト基準からの相対パスとし、既存の区切り文字・先頭の "./"・途中の "/./"・重複区切り・末尾区切りを正規化する。既存の規則が許す親相対パスと残る ".." 成分を保持し、照合記録・Git比較対象の固有のパス制約を通常のIR入力へ広げない。結果が空・絶対パスの場合、同じ群に正規化後の重複パスがある場合、または別の群の同一パスの元の本文が異なる場合は "InvalidInput" とする。テストと面の解析結果にも解析に用いたSourceTextの全文を保持して本文を比較する。同一内容の群間共有は既存の重なり規則で判定する。ファイルシステムで正規化せず、シンボリックリンクも解決しない。表示と出典照合は同じプロジェクト相対パスを使う。
+メモリ入力の論理パスはプロジェクト基準からの相対パスとし、既存の区切り文字・先頭の "./"・途中の "/./"・重複区切り・末尾区切りを正規化する。既存の規則が許す親相対パスと残る ".." 成分を保持する。結果が空・絶対パスの場合、同じ群に正規化後の重複パスがある場合、または別の群の同一パスの元の本文が異なる場合は "InvalidInput" とする。テストと面の解析結果にも解析に用いたSourceTextの全文を保持して本文を比較する。同一内容の群間共有は既存の重なり規則で判定する。ファイルシステムで正規化せず、シンボリックリンクも解決しない。表示と出典照合は同じプロジェクト相対パスを使う。
 
 ### REQ-core-323: I/Oの位置を固定する
 

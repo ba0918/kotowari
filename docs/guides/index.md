@@ -27,7 +27,6 @@ The specification itself is in the [IR](../ir/core/); when the guide and the IR 
 
 | Command | What it does |
 |---|---|
-| [changes](commands/changes.md) | Checks for unreconciled changes and freshness with Git snapshots |
 | [check](commands/check.md) | Checks the IR and the marks in tests, and reports findings |
 | [list](commands/list.md) | Lists items and scenarios together with their marked tests |
 | [query](commands/query.md) | Prints the body of one item and the items that point at it |

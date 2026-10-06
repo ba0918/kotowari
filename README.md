@@ -66,7 +66,6 @@ To install from a checkout, use `cargo install --path . --bin kotowari` and `car
 The old-tag example above uses the old package name found at that tag.
 To call kotowari from Rust, see the [public crate API](docs/guides/public-crate-api.md). The executable's commands, output and exit codes are unchanged.
 
-
 By default, the configuration, the specification and the decision records live here:
 
 ```
@@ -149,7 +148,6 @@ For detailed usage, start from the [reference index](docs/guides/index.md). It c
 | [`kotowari plan <plan-file>`](docs/guides/commands/plan.md) | Checks, against the bundled schema, that an implementation plan file is written in the fixed format |
 | `kotowari overview build` | Checks the overview data matched by the configuration's `overview.files` and the table of contents that `overview.toc` points at, and if there are no errors, writes under `.kotowari/cache/overview/` an index ordered and nested as in the table of contents, plus one HTML page per overview. Only changed files are written, and pages no longer produced are deleted. Available only when `overview` is set in the configuration |
 | `kotowari overview serve [--port <PORT>]` | Writes the same pages as build, then serves them at `http://127.0.0.1:<PORT>/` (default 4590) until Ctrl-C |
-| [`kotowari changes --base <REV> (--head <REV> \| --staged) --phase <implementation\|review>`](docs/guides/commands/changes.md) | Compares the Git diff between the base and the target against the change records, and reports changes that were not reconciled and records that have gone stale. Available only when `changes` is set in the configuration. |
 
 Currently, marks on tests can be read only from Rust. The IR checks, however, work in projects that use other languages too.
 

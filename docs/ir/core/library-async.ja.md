@@ -25,10 +25,10 @@ kotowariとMarkdownスキーマI/Oの高水準操作をTokioから待つ入口�
 ### REQ-core-320: キャンセルと実行枠の寿命
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A24, docs/decision/records/2026-10-03-public-crate-api.md#A32
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A24, docs/decision/records/2026-10-03-public-crate-api.md#A32, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-実行枠を待つ間にキャンセルされた処理は投入しない。投入後は呼出側が待機をやめても処理完了まで実行枠を保持する。開始済みのGit・HTTP・計算・キャッシュ書込みの停止は保証しない。
+実行枠を待つ間にキャンセルされた処理は投入しない。投入後は呼出側が待機をやめても処理完了まで実行枠を保持する。開始済みのHTTP・計算・キャッシュ書込みの停止は保証しない。
 
 ### REQ-core-321: ランタイムとスレッドの境界
 

@@ -9,10 +9,10 @@ Covers the logical paths of in-memory input, and the working start location and 
 ### REQ-core-322: The base and identity of logical paths
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A51, docs/decision/records/2026-10-03-public-crate-api.md#A53, docs/decision/records/2026-10-03-public-crate-api.md#A54
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A51, docs/decision/records/2026-10-03-public-crate-api.md#A53, docs/decision/records/2026-10-03-public-crate-api.md#A54, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-A logical path of in-memory input is a path relative to the project base, and the existing separator characters, a leading "./", an intermediate "/./", repeated separators and a trailing separator are normalized. Parent-relative paths that the existing rules allow and the ".." components that remain are kept, and the path constraints specific to change records and Git comparison targets are not extended to ordinary IR input. When the result is empty or an absolute path, when the same group has duplicate paths after normalization, or when the original bodies of the same path in different groups differ, it is "InvalidInput". The analysis results of tests and surfaces also keep the full text of the SourceText used for analysis, and the bodies are compared. Sharing of identical content between groups is judged by the existing overlap rules. Paths are not normalized through the file system, and symbolic links are not resolved. Display and source matching use the same project-relative path.
+A logical path of in-memory input is a path relative to the project base, and the existing separator characters, a leading "./", an intermediate "/./", repeated separators and a trailing separator are normalized. Parent-relative paths that the existing rules allow and the ".." components that remain are kept. When the result is empty or an absolute path, when the same group has duplicate paths after normalization, or when the original bodies of the same path in different groups differ, it is "InvalidInput". The analysis results of tests and surfaces also keep the full text of the SourceText used for analysis, and the bodies are compared. Sharing of identical content between groups is judged by the existing overlap rules. Paths are not normalized through the file system, and symbolic links are not resolved. Display and source matching use the same project-relative path.
 
 ### REQ-core-323: The I/O locations are fixed
 

@@ -24,7 +24,6 @@ There are exactly these eight commands.
 
 | Command | What it does | Page |
 |---|---|---|
-| `changes` | Checks, at the given phase, the correspondence and freshness between Git changes and change records | [commands/changes.md](commands/changes.md) |
 | `check` | Checks both how the IR is written and how the IR corresponds to the tests | [commands/check.md](commands/check.md) |
 | `list` | Lists the IR items one by one, next to the tests marked for them | [commands/list.md](commands/list.md) |
 | `query` | Prints the item or scenario of one ID, with its body and back references | [commands/query.md](commands/query.md) |
@@ -380,5 +379,3 @@ If you want notices to fail CI, look at `counts` in the JSON with `jq` and decid
 - Configuration keys: [config.md](config.md)
 - Finding kinds: [findings.md](findings.md)
 - Each command: [check](commands/check.md), [list](commands/list.md), [query](commands/query.md), [status](commands/status.md), [mutants](commands/mutants.md), [plan](commands/plan.md)
-
-The base for `changes` is the root of the Git working tree that contains the starting location. It reads the target's configuration, IR, decision records and change records together from the commit or the index, and does not fill anything in from the working tree. For the comparison and the required phase arguments, see [changes](commands/changes.md).

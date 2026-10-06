@@ -25,10 +25,10 @@ Covers the entry points for awaiting the high-level operations of kotowari and M
 ### REQ-core-320: Cancellation and the lifetime of execution slots
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A24, docs/decision/records/2026-10-03-public-crate-api.md#A32
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A24, docs/decision/records/2026-10-03-public-crate-api.md#A32, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-Processing cancelled while waiting for an execution slot is not submitted. Once submitted, it keeps its execution slot until the processing completes, even if the caller stops waiting. Stopping Git, HTTP, computation or cache writes that have already started is not guaranteed.
+Processing cancelled while waiting for an execution slot is not submitted. Once submitted, it keeps its execution slot until the processing completes, even if the caller stops waiting. Stopping HTTP, computation or cache writes that have already started is not guaranteed.
 
 ### REQ-core-321: Boundaries of runtime and threads
 

@@ -24,7 +24,6 @@ kotowari --version
 
 | コマンド | 何をするか | ページ |
 |---|---|---|
-| `changes` | Git の変更と記録の対応・鮮度を指定した段階で検査する | [commands/changes.md](commands/changes.ja.md) |
 | `check` | IR の書き方の検査と、IR とテストの対応の検査を両方行う | [commands/check.md](commands/check.ja.md) |
 | `list` | IR の項目を1件ずつ、付いているテストと並べる | [commands/list.md](commands/list.ja.md) |
 | `query` | 1つの ID の項目かシナリオを、本文と逆参照つきで出す | [commands/query.md](commands/query.ja.md) |
@@ -376,5 +375,3 @@ JSON を `jq` に渡しているときは、`jq` が空の入力を受けて何�
 - 設定ファイルのキー: [config.md](config.ja.md)
 - 指摘の種類: [findings.md](findings.ja.md)
 - 各コマンド: [check](commands/check.ja.md)、[list](commands/list.ja.md)、[query](commands/query.ja.md)、[status](commands/status.ja.md)、[mutants](commands/mutants.ja.md)、[plan](commands/plan.ja.md)
-
-`changes` の基準は起動位置を含む Git 作業ツリーのルートです。対象の設定・IR・判断の記録・照合記録を commit または index から一緒に読み、作業ツリーでは補いません。比較と段階の必須引数は [changes](commands/changes.ja.md) を見てください。

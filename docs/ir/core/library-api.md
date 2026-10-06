@@ -2,7 +2,7 @@
 
 English | [日本語](library-api.ja.md)
 
-Covers the entry points through which an external Rust application calls the seven existing operations, their results and failures, and CLI compatibility. Holding inputs is covered by library-inputs.md, and Tokio support by library-async.md.
+Covers the entry points through which an external Rust application calls the six existing operations, their results and failures, and CLI compatibility. Holding inputs is covered by library-inputs.md, and Tokio support by library-async.md.
 
 ## Requirements
 
@@ -24,10 +24,10 @@ Covers the entry points through which an external Rust application calls the sev
 ### REQ-core-312: Findings and execution failures are distinguished
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A7, docs/decision/records/2026-10-03-public-crate-api.md#A8, docs/decision/records/2026-10-03-public-crate-api.md#A40
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A7, docs/decision/records/2026-10-03-public-crate-api.md#A8, docs/decision/records/2026-10-03-public-crate-api.md#A40, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-A completed check returns a result holding the findings on the documents, and when it cannot be executed it returns the "Err" of "Result". The kind of a failure can be told apart, and failures implement "std::error::Error" and "Display". Missing input, invalid configuration or input format, an unknown ID in a query, read or Git failures, and internal inability to handle are distinguished. The result provides, read-only, the kind, severity and path of each finding and its line when there is one, and does not display anything.
+A completed check returns a result holding the findings on the documents, and when it cannot be executed it returns the "Err" of "Result". The kind of a failure can be told apart, and failures implement "std::error::Error" and "Display". Missing input, invalid configuration or input format, an unknown ID in a query, read failures, and internal inability to handle are distinguished. The result provides, read-only, the kind, severity and path of each finding and its line when there is one, and does not display anything.
 
 ### REQ-core-313: The CLI contract is kept
 
@@ -41,7 +41,7 @@ The restructuring keeps the meaning of the commands, arguments, exit codes, outp
 
 ### TBL-core-041: Operations of Project
 
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A10, docs/decision/records/2026-10-03-public-crate-api.md#A36, docs/decision/records/2026-10-03-public-crate-api.md#A41, docs/decision/records/2026-10-03-public-crate-api.md#A55, docs/decision/records/2026-10-04-overview-on-public-api.md#A3, docs/decision/records/2026-10-04-overview-on-public-api.md#A7
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A10, docs/decision/records/2026-10-03-public-crate-api.md#A36, docs/decision/records/2026-10-03-public-crate-api.md#A41, docs/decision/records/2026-10-03-public-crate-api.md#A55, docs/decision/records/2026-10-04-overview-on-public-api.md#A3, docs/decision/records/2026-10-04-overview-on-public-api.md#A7, docs/decision/records/2026-10-06-changes-rethink.md#A10
 
 | Method | Input and operation | Result |
 |---|---|---|
@@ -51,7 +51,6 @@ The restructuring keeps the meaning of the commands, arguments, exit codes, outp
 | status | Checks the same scope as check | Counts and the completion state |
 | plan | Checks the given plan, without requiring the IR to be read | Findings and counts |
 | mutants | Checks the given mutation outcomes and equivalence information, without requiring the IR to be read | Findings and mutation counts |
-| changes | Checks the Git comparison information and the change records, given the comparison base, the targets and the stage | A typed change conformance result |
 | overview_prepare | Checks and renders `overview data`, without writing files | The rendering result before writing. It has an operation to write |
 | overview_build | Following overview_prepare, writes its result under ".kotowari/cache/overview/" (REQ-core-293) | The lists of written and removed files, and the number of files not written |
 

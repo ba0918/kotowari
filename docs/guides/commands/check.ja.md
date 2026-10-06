@@ -416,5 +416,3 @@ tests/greet.rs:6 [error] test_without_id rejects_empty_name
 - 設定のキー: [config.md](../config.ja.md)
 - 全体として揃っているかを見る: [status](status.ja.md)
 - 1件ずつの項目とテストを見る: [list](list.ja.md)
-
-`changes.records` を設定すると照合記録の形式と現在の参照を全件検査します。別 base の件でも参照切れは誤りです。`changes.records` のパス成分で名指した隠しディレクトリは読み、名指していない隠しディレクトリは広い `**` でも読みません。通常の tests/guides の隠し除外は変わりません。Git の比較元は不要で、内容の鮮度と変更の coverage は [changes](changes.ja.md) で検査します。

@@ -179,22 +179,11 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     let mut saw_port = false;
     let mut port: Option<String> = None;
     let mut change_options = BTreeMap::new();
-    let mut staged = false;
     let mut allow_test_findings = false;
     let mut i = 0;
 
     while i < args.len() {
         let arg = &args[i];
-        if arg == "--staged" {
-            if staged {
-                return Err(StopReason::ArgumentError(
-                    "repeated option: --staged".into(),
-                ));
-            }
-            staged = true;
-            i += 1;
-            continue;
-        }
         if arg == "--allow-test-findings" {
             if allow_test_findings {
                 return Err(StopReason::ArgumentError(
@@ -298,11 +287,9 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
             )
         })?;
         let head = change_options.remove("--head");
-        let target = match (staged, head) {
-            (true, None) if base == "HEAD" && phase == Phase::Implementation => Target::Index,
-            (false, Some(head)) => Target::Commit(head),
-            _ => return Err(StopReason::ArgumentError("changes requires --head or --staged; --staged requires --base HEAD --phase implementation".into())),
-        };
+        let target = Target::Commit(
+            head.ok_or_else(|| StopReason::ArgumentError("changes requires --head".into()))?,
+        );
         let format = Format::parse(format_str.as_deref().unwrap_or("json"))
             .map_err(StopReason::ArgumentError)?;
         return Ok(Cli::Changes {
@@ -313,7 +300,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
             phase,
         });
     }
-    if staged || !change_options.is_empty() {
+    if !change_options.is_empty() {
         return Err(StopReason::ArgumentError(format!(
             "unexpected change option for {command}"
         )));
@@ -701,7 +688,7 @@ fn print_help() {
     println!("  query      Show one item or scenario with its body and back references");
     println!("  status     Summarise the IR and tell whether it is complete");
     println!();
-    println!("Changes: --base <REV> (--head <REV> | --staged) --phase <implementation|review>");
+    println!("Changes: --base <REV> --head <REV> --phase <implementation|review>");
     println!("Options:");
     println!("  --format <FORMAT>      Output format: json (default) or text");
     println!("  --config <PATH>        Path to configuration file");

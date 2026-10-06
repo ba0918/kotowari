@@ -17,19 +17,19 @@
 ### REQ-core-307: 計算側に環境操作を置かない
 
 - kind: prohibition
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A11, docs/decision/records/2026-10-03-public-crate-api.md#A25, docs/decision/records/2026-10-03-public-crate-api.md#A35, docs/decision/records/2026-10-04-overview-on-public-api.md#A1
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A11, docs/decision/records/2026-10-03-public-crate-api.md#A25, docs/decision/records/2026-10-03-public-crate-api.md#A35, docs/decision/records/2026-10-04-overview-on-public-api.md#A1, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: review
 - how_to_verify: coreとsource-analysisとoverviewの通常依存、公開入口からの呼出経路、ファイル・環境変数・プロセス・端末・ネットワーク操作の所在を確認する。
 
-"kotowari-core"、"kotowari-source-analysis"、"kotowari-overview" は、入力をファイル・環境変数・Git・HTTPから取得せず、標準出力・標準エラーへ書かず、TokioとCLI用依存を持たない。coreはIR解析・出典・テスト対応・変異結果・変更照合・計画書・読み取り結果を責務別モジュールに分ける。
+"kotowari-core"、"kotowari-source-analysis"、"kotowari-overview" は、入力をファイル・環境変数・Git・HTTPから取得せず、標準出力・標準エラーへ書かず、TokioとCLI用依存を持たない。coreはIR解析・出典・テスト対応・変異結果・計画書・読み取り結果を責務別モジュールに分ける。
 
 ### REQ-core-308: 解析と判定の依存方向
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A26, docs/decision/records/2026-10-03-public-crate-api.md#A41
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A26, docs/decision/records/2026-10-03-public-crate-api.md#A41, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-coreのテスト対応判定は発見済みのテスト・印を受け取り、ソース解析を呼ばない。変更照合の "Comparison" と識別値計算はcoreが持ち、Git取得側が同じ型を構築する。"Analyzer" は既存の組込み規則と文字列の追加規則でソース文字列を解析し、テスト・印・面と指摘を返す。規則と未対応言語の既存の意味を維持する。
+coreのテスト対応判定は発見済みのテスト・印を受け取り、ソース解析を呼ばない。"Analyzer" は既存の組込み規則と文字列の追加規則でソース文字列を解析し、テスト・印・面と指摘を返す。規則と未対応言語の既存の意味を維持する。
 
 ### REQ-core-309: 内部の型を公開契約に混ぜない
 

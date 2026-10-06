@@ -6,13 +6,13 @@ Covers kotowari's commands, the arguments they accept, stopping, and exit codes.
 
 ## Requirements
 
-### REQ-core-001: Eight commands
+### REQ-core-001: Seven commands
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A19, docs/decision/records/2026-09-17-mutation-tests.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-19-read-commands.md#A1, docs/decision/records/2026-09-19-read-commands.md#A10, docs/decision/records/2026-09-20-query-status.md#A1, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-02-whole-picture.md#A23, docs/decision/records/2026-10-02-whole-picture.md#A27
+- source: docs/decision/records/records.md#A19, docs/decision/records/2026-09-17-mutation-tests.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-19-read-commands.md#A1, docs/decision/records/2026-09-19-read-commands.md#A10, docs/decision/records/2026-09-20-query-status.md#A1, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-10-02-whole-picture.md#A23, docs/decision/records/2026-10-02-whole-picture.md#A27, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-kotowari always has only the eight commands "kotowari check", "kotowari list", "kotowari mutants", "kotowari plan", "kotowari query", "kotowari status", "kotowari changes" and "kotowari overview", and the single command "kotowari check" performs both the check of the `IR` and the check of its correspondence with the `test`. The check for missing and stale conformance records against changes is done by "kotowari changes" (REQ-core-240). "kotowari overview" has two subcommands, "build" and "serve" (REQ-core-293, REQ-core-297).
+kotowari always has only the seven commands "kotowari check", "kotowari list", "kotowari mutants", "kotowari plan", "kotowari query", "kotowari status" and "kotowari overview", and the single command "kotowari check" performs both the check of the `IR` and the check of its correspondence with the `test`. "kotowari overview" has two subcommands, "build" and "serve" (REQ-core-293, REQ-core-297).
 
 ### REQ-core-002: Accepted options
 
@@ -25,18 +25,18 @@ kotowari always accepts only "--format", "--config", "--help" and "--version" as
 ### REQ-core-003: Base of the configuration path
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-change-details.md#A3, docs/decision/records/records.md#A60
+- source: docs/decision/records/records.md#A60, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-kotowari always reads the path given to "--config" as a path relative to the current directory, except for changes. "changes" reads the configuration inside the target snapshot by a path relative to the Git root (REQ-core-265).
+kotowari always reads the path given to "--config" as a path relative to the current directory.
 
 ### REQ-core-004: Argument errors
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-01-change-details.md#A3, docs/decision/records/records.md#A60, docs/decision/records/records.md#A103, docs/decision/records/records.md#A136, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-02-whole-picture.md#A27, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-06-spec-first-commit.md#A5, docs/decision/records/2026-10-06-spec-first-commit.md#A12
+- source: docs/decision/records/records.md#A60, docs/decision/records/records.md#A103, docs/decision/records/records.md#A136, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-10-02-whole-picture.md#A27, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-06-spec-first-commit.md#A5, docs/decision/records/2026-10-06-spec-first-commit.md#A12, docs/decision/records/2026-10-06-changes-rethink.md#A10, docs/decision/records/2026-10-06-changes-rethink.md#A30
 - verification: unit
 
-When neither "--help" nor "--version" is given and kotowari receives any of the following: an unknown option, "--tool" on a command other than "mutants", "--port" on a command other than "overview serve", "--format" on "overview serve", "--allow-test-findings" on a command other than "check", a first positional argument that is none of "check", "list", "mutants", "plan", "query", "status", "changes" and "overview", a positional argument after "check", "list" or "status", an unknown value of "--format", an option without a value, or a second occurrence of the same option; or when there are no arguments at all; or when there are only options and no first positional argument; or when, other than for "changes", the target of "--config" does not exist or is a directory, kotowari will `stop` on the grounds of an argument error.
+When neither "--help" nor "--version" is given and kotowari receives any of the following: an unknown option, "--tool" on a command other than "mutants", "--port" on a command other than "overview serve", "--format" on "overview serve", "--allow-test-findings" on a command other than "check", a first positional argument that is none of "check", "list", "mutants", "plan", "query", "status" and "overview", a positional argument after "check", "list" or "status", an unknown value of "--format", an option without a value, or a second occurrence of the same option; or when there are no arguments at all; or when there are only options and no first positional argument; or when the target of "--config" does not exist or is a directory, kotowari will `stop` on the grounds of an argument error.
 
 ### REQ-core-149: Arguments of mutants
 
@@ -130,11 +130,11 @@ Scenario: mutants without a tool specified stops
   Then the exit code is 2
   And the first line of standard error starts with "argument error: "
 
-@id=EX-core-219 @about=REQ-core-004,TBL-core-020 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-19-read-commands.md#A10,docs/decision/records/2026-09-19-read-commands.md#A20,docs/decision/records/2026-09-20-query-status.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A10,docs/decision/records/2026-09-24-plan-schema.md#A30,docs/decision/records/2026-10-01-change-conformance.md#A2
+@id=EX-core-219 @about=REQ-core-004,TBL-core-020 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-19-read-commands.md#A10,docs/decision/records/2026-09-19-read-commands.md#A20,docs/decision/records/2026-09-20-query-status.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A10,docs/decision/records/2026-09-24-plan-schema.md#A30,docs/decision/records/2026-10-06-changes-rethink.md#A10,docs/decision/records/2026-10-06-changes-rethink.md#A23,docs/decision/records/records.md#A20,docs/decision/records/2026-10-06-changes-rethink.md#A30
 Scenario: With no arguments the commands are listed
   When "kotowari" is run without arguments
   Then the exit code is 2
-  And the reason on standard error lists the eight command names of REQ-core-001
+  And the reason on standard error lists the seven command names of REQ-core-001
 
 @id=EX-core-240 @about=REQ-core-149 @source=docs/decision/records/2026-09-17-mutation-tests.md#A14,docs/decision/records/2026-09-17-mutation-tests.md#A39
 Scenario: An unknown tool name stops the run
@@ -148,11 +148,11 @@ Scenario: Passing two outcomes files stops the run
   When "kotowari mutants --tool cargo-mutants a.json b.json" is run
   Then the exit code is 2 and the first line of standard error starts with "argument error: "
 
-@id=EX-core-241 @about=REQ-core-004,TBL-core-020 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A55,docs/decision/records/2026-09-19-read-commands.md#A10,docs/decision/records/2026-09-19-read-commands.md#A20,docs/decision/records/2026-09-20-query-status.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A10,docs/decision/records/2026-09-24-plan-schema.md#A30,docs/decision/records/2026-10-01-change-conformance.md#A2
+@id=EX-core-241 @about=REQ-core-004,TBL-core-020 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A55,docs/decision/records/2026-09-19-read-commands.md#A10,docs/decision/records/2026-09-19-read-commands.md#A20,docs/decision/records/2026-09-20-query-status.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A10,docs/decision/records/2026-09-24-plan-schema.md#A30,docs/decision/records/2026-10-06-changes-rethink.md#A10,docs/decision/records/2026-10-06-changes-rethink.md#A23,docs/decision/records/records.md#A20,docs/decision/records/2026-10-06-changes-rethink.md#A30
 Scenario: A run with only options lists the commands and stops
   When "kotowari --format text" is run
   Then the exit code is 2
-  And the reason on standard error lists the eight command names of REQ-core-001
+  And the reason on standard error lists the seven command names of REQ-core-001
 
 @id=EX-core-244 @about=REQ-core-002 @source=docs/decision/records/2026-09-17-mutation-tests.md#A41,docs/decision/records/2026-09-17-mutation-tests.md#A58
 Scenario: The options of mutants can be written before the command or after the outcomes path

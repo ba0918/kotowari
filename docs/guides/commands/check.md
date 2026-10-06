@@ -420,5 +420,3 @@ Details are in [marks.md](../marks.md).
 - Configuration keys: [config.md](../config.md)
 - See whether everything is in place as a whole: [status](status.md)
 - See items and tests one by one: [list](list.md)
-
-When `changes.records` is configured, kotowari checks the format and current references of every change record. A broken reference is an error even for records with a different base. Hidden directories named in a path component of `changes.records` are read; hidden directories not named are not read even by a broad `**`. The usual hidden-directory exclusion for tests and guides does not change. No Git comparison base is needed; content freshness and change coverage are checked by [changes](changes.md).

@@ -2,7 +2,7 @@
 
 [English](library-api.md) | 日本語
 
-既存7操作を外部のRustアプリから呼ぶ入口、結果と失敗、CLI互換性を扱う。入力の保持は library-inputs.md、Tokio対応は library-async.md で扱う。
+既存6操作を外部のRustアプリから呼ぶ入口、結果と失敗、CLI互換性を扱う。入力の保持は library-inputs.md、Tokio対応は library-async.md で扱う。
 
 ## Requirements
 
@@ -24,10 +24,10 @@
 ### REQ-core-312: 指摘と実行失敗を区別する
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A7, docs/decision/records/2026-10-03-public-crate-api.md#A8, docs/decision/records/2026-10-03-public-crate-api.md#A40
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A7, docs/decision/records/2026-10-03-public-crate-api.md#A8, docs/decision/records/2026-10-03-public-crate-api.md#A40, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-完了した検査は文書の指摘を持つ結果を返し、実行できない場合は "Result" の "Err" を返す。失敗は種類を判別でき、"std::error::Error" と "Display" を実装する。入力不足、設定・入力形式不正、未知の問い合わせID、読込・Git失敗、内部対応不能を区別する。結果は指摘の種類・重要度・パス・存在する場合の行を読み取り専用で提供し、表示を行わない。
+完了した検査は文書の指摘を持つ結果を返し、実行できない場合は "Result" の "Err" を返す。失敗は種類を判別でき、"std::error::Error" と "Display" を実装する。入力不足、設定・入力形式不正、未知の問い合わせID、読込失敗、内部対応不能を区別する。結果は指摘の種類・重要度・パス・存在する場合の行を読み取り専用で提供し、表示を行わない。
 
 ### REQ-core-313: CLI契約を保持する
 
@@ -41,7 +41,7 @@
 
 ### TBL-core-041: Projectの操作
 
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A10, docs/decision/records/2026-10-03-public-crate-api.md#A36, docs/decision/records/2026-10-03-public-crate-api.md#A41, docs/decision/records/2026-10-03-public-crate-api.md#A55, docs/decision/records/2026-10-04-overview-on-public-api.md#A3, docs/decision/records/2026-10-04-overview-on-public-api.md#A7
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A10, docs/decision/records/2026-10-03-public-crate-api.md#A36, docs/decision/records/2026-10-03-public-crate-api.md#A41, docs/decision/records/2026-10-03-public-crate-api.md#A55, docs/decision/records/2026-10-04-overview-on-public-api.md#A3, docs/decision/records/2026-10-04-overview-on-public-api.md#A7, docs/decision/records/2026-10-06-changes-rethink.md#A10
 
 | メソッド | 入力と操作 | 結果 |
 |---|---|---|
@@ -51,7 +51,6 @@
 | status | checkと同じ範囲を検査する | 集計と完了状態 |
 | plan | 指定した計画書を検査し、IRの読込は要求しない | 指摘と集計 |
 | mutants | 指定した変異結果と等価情報を検査し、IRの読込は要求しない | 指摘と変異の集計 |
-| changes | 比較元・対象・段階を指定してGitの比較情報と照合記録を検査する | 型付きの変更照合結果 |
 | overview_prepare | `全体像の元データ`を検査して描画し、ファイルを書かない | 書く前の描画の結果。書く操作を持つ |
 | overview_build | overview_prepare に続けて、その結果を ".kotowari/cache/overview/" の下へ書く（REQ-core-293） | 書いたファイル・消したファイルの一覧と書かなかったファイルの数 |
 

@@ -17,19 +17,19 @@ Covers the responsibilities of the published Rust libraries and the CLI, the dir
 ### REQ-core-307: No environment operations on the computation side
 
 - kind: prohibition
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A11, docs/decision/records/2026-10-03-public-crate-api.md#A25, docs/decision/records/2026-10-03-public-crate-api.md#A35, docs/decision/records/2026-10-04-overview-on-public-api.md#A1
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A11, docs/decision/records/2026-10-03-public-crate-api.md#A25, docs/decision/records/2026-10-03-public-crate-api.md#A35, docs/decision/records/2026-10-04-overview-on-public-api.md#A1, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: review
 - how_to_verify: Check the normal dependencies of core, source-analysis and overview, the call paths from the public entry points, and where file, environment variable, process, terminal and network operations are located.
 
-"kotowari-core", "kotowari-source-analysis" and "kotowari-overview" do not obtain input from files, environment variables, Git or HTTP, do not write to standard output or standard error, and have no Tokio or CLI dependencies. core divides IR parsing, sources, test correspondence, mutation outcomes, change conformance, plans and read results into modules by responsibility.
+"kotowari-core", "kotowari-source-analysis" and "kotowari-overview" do not obtain input from files, environment variables, Git or HTTP, do not write to standard output or standard error, and have no Tokio or CLI dependencies. core divides IR parsing, sources, test correspondence, mutation outcomes, plans and read results into modules by responsibility.
 
 ### REQ-core-308: Direction of dependency between analysis and judgement
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A26, docs/decision/records/2026-10-03-public-crate-api.md#A41
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A26, docs/decision/records/2026-10-03-public-crate-api.md#A41, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-The test correspondence judgement in core receives already-discovered tests and marks, and does not call source analysis. core holds the "Comparison" of change conformance and the computation of identifier values, and the Git retrieval side builds the same type. "Analyzer" analyses source strings with the existing built-in rules and additional rules given as strings, and returns tests, marks, surfaces and findings. The existing meaning of the rules and of unsupported languages is kept.
+The test correspondence judgement in core receives already-discovered tests and marks, and does not call source analysis. "Analyzer" analyses source strings with the existing built-in rules and additional rules given as strings, and returns tests, marks, surfaces and findings. The existing meaning of the rules and of unsupported languages is kept.
 
 ### REQ-core-309: Internal types are not mixed into the public contract
 
