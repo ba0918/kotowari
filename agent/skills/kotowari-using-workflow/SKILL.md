@@ -82,7 +82,3 @@ Work with an approved plan or in-progress records is not rewound; it enters from
 off, and its skill's resume rules own the records. "Implement it" with an approved plan is
 kotowari-cycle — implementing by hand there is a counter-example. A skill outside the table fires
 on its own description.
-
-## Change conformance routing
-
-For changes-enabled projects every implementation route keeps the integration gate (check and review-phase changes) from the kotowari skill's changes scene. A missing record alone is repaired within delegation; changing approved requirements or unsupported consequential meaning returns to brainstorm.

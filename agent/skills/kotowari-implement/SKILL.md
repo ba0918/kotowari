@@ -114,7 +114,3 @@ external checks) and approved-but-unexecuted human decisions are redone or re-as
 
 Commits made, verification evidence per step (test names run, check commands, artifact paths,
 external summaries), out-of-plan changes with reasons, anything handed back and why.
-
-## Change conformance records
-
-For changes-enabled projects read the kotowari skill's changes scene. Record each new choice with its grounds and deciding role, and add concrete IR only within the delegation as that scene describes. At delivery, author `implementation.yaml` against the branch-wide base the caller fixed; never author `review.yaml`. Intermediate commits need no records.

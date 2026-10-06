@@ -165,7 +165,7 @@ cannot run it safely, record why and mark it `not_run`.
 
 ## Output
 
-Reviewers return findings as the JSON in `references/finding-schema.md`. For change conformance they separately author the common YAML record described below; it is not an added findings JSON field. The caller assigns IDs (a
+Reviewers return findings as the JSON in `references/finding-schema.md`. The caller assigns IDs (a
 diff review keeps the IDs it was given), merges reviewers, dedupes, and is the one who writes
 the snapshot shape (`id`, `status`, `commits`, `evaluations`) — a direct call included.
 
@@ -175,7 +175,3 @@ Markdown report under `.agents/tmp/`, verifies each finding itself, and marks it
 the JSON is read by cycle, the fixer, and the next reviewer only.
 
 Profiles: `references/profiles.md`. Finding shape: `references/finding-schema.md`.
-
-## Change conformance review
-
-For changes-enabled projects read the kotowari skill's changes scene. Review independently of implementation against the caller-fixed base and head: confirm grounds, meaning and delegation, prioritise requirement-marked test additions, expectation changes and deletions without dropping product or helper changes, and classify specification gaps apart from severity and action. Author `review.yaml` only for the bytes and IR actually reviewed in this run, separately from the findings JSON; never modify the evaluation target or the implementer's records.

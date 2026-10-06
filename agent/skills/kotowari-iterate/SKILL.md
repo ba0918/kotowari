@@ -120,6 +120,3 @@ plus the guidance when not small or handed back. "Look into this" belongs to the
 "check that it works" and "verify this" to review's diagnosis; implementing from them is a boundary
 breach. "Fix it" or "add it" alone never starts this skill; ask for a reviewed loop.
 
-## Change conformance for small tasks
-
-For changes-enabled projects cycle's integration gate still applies without a plan; read the kotowari skill's changes scene. Needing to change or delete approved requirements, or to decide new consequential meaning, fails the small-task conditions.

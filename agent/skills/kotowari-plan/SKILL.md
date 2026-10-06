@@ -125,7 +125,3 @@ that were there before the plan, and a committed problem record can keep them fa
 
 Finished plans are deleted by the main session after the person accepts the result and
 merges the branch; the plan stays readable in git history. Do not delete it yourself.
-
-## Change conformance planning
-
-For changes-enabled projects read the kotowari skill's changes scene. Name the branch-wide base and head, records from the implementer and an independent review, and both `check` and review-phase `changes` as the integration gate. Record planning choices in decision records with grounds and deciding role.

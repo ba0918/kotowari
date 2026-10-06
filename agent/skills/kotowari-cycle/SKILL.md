@@ -68,7 +68,7 @@ rules, paste the Evidence conditions from
    With no such reason, the diff loop clearing every visible finding is convergence.
 
 Visible findings = open findings whose final action is `auto_fix` or `fix_and_verify`. Findings with
-`human_judgment` or `record_only` stay open for the terminal report. A specification gap also needs a separate disposition under Change conformance below; its action does not close that obligation. When
+`human_judgment` or `record_only` stay open for the terminal report. When
 it runs, the second full review cancels the taint a diff review carries from seeing prior findings.
 A **round trip** is one review invocation (any number of reviewers, full or diff, the first one
 included). The limit, when the person set one, counts round trips.
@@ -201,7 +201,3 @@ When a full review ran optional seats: which attended and which were absent, eac
 its reason.
 This is the person's one check; merging is theirs. Cycle never merges, publishes, deletes branches
 or worktrees, edits the specification, manages issues, or runs two plans at once.
-
-## Change conformance
-
-For changes-enabled projects read the kotowari skill's changes scene; it holds the record rules, gap dispositions and when to reconcile again. Cycle's part: fix the branch-wide base and candidate head, delegate `implementation.yaml` to the implementer and `review.yaml` to a separate review, and require both `kotowari check` and review-phase `changes` to exit 0 before integration. Cycle never authors either record or decides meaning itself. Intermediate commits need no records.
