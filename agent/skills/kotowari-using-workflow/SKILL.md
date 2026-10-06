@@ -35,8 +35,8 @@ outside reach · interdependent change sites · what would notice a mistake → 
 | review | several interdependent change sites, so the implementation can contradict itself |
 | the loop | a fix can spread beyond where it was made |
 
-Reviewers are one per perspective: one, or two when a specification must be matched and no
-machine check sees that match. A single site, independent changes, and mistakes a machine check
+A review launches one reviewer, on quality; agreement with the specification is the consistency
+phase's. A single site, independent changes, and mistakes a machine check
 catches all take zero.
 
 Three things are never traded away, and machine checks or the existing stop rules carry all
@@ -76,13 +76,26 @@ the error message clearer" with no wording given reads two ways: kotowari-brains
 task. A defect sent to kotowari-investigate continues from its report's recommended next action,
 which names the next entry.
 
+## The consistency phase on a direct edit
+
+kotowari-cycle, and kotowari-iterate through it, run the consistency phase themselves. When this
+session edits directly (the first row), use cycle's **Consistency phase**: its behavior-based
+run/skip measure (skill text is behavior), separate context, delegation and rerun rules apply.
+The measure decides this, not the line above, so it is not a station the line adds.
+
+Save `HEAD` as the base before the first edit, then commit the edits; the range is that saved
+base to the current `HEAD`.
+If the hook stops that commit on an IR-side finding, leave the change uncommitted: the reference's
+rule for a blocked change applies, and the edits are committed after the phase's last run.
+The counterpart is the IR store path with no ID file (the items in range are those the diff touches
+or its marks carry), or, for a topic with no IR, the approved specification document or the request.
+This session owns the findings file using cycle's **Judgment stays here**, **Stopping inside the
+loop** and **Endings**. Report the phase's results as cycle's **Terminal report** requires,
+including skipped-run reasons and unresolved defaults with the word that reverses each.
+
 ## Exceptions
 
 Work with an approved plan or in-progress records is not rewound; it enters from where it left
 off, and its skill's resume rules own the records. "Implement it" with an approved plan is
 kotowari-cycle — implementing by hand there is a counter-example. A skill outside the table fires
 on its own description.
-
-## Change conformance routing
-
-For changes-enabled projects every implementation route keeps the integration gate (check and review-phase changes) from the kotowari skill's changes scene. A missing record alone is repaired within delegation; changing approved requirements or unsupported consequential meaning returns to brainstorm.

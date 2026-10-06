@@ -97,8 +97,7 @@ fn input_stop(error: crate::StopReason) -> InputError {
         | crate::StopReason::UnreadableFile(_)
         | crate::StopReason::NonUtf8File(_)
         | crate::StopReason::ResultsError(_)
-        | crate::StopReason::MappingError(_)
-        | crate::StopReason::GitError(_)) => InputError::InvalidInput(other.to_string()),
+        | crate::StopReason::MappingError(_)) => InputError::InvalidInput(other.to_string()),
     }
 }
 
@@ -144,7 +143,6 @@ pub struct CheckInputs {
     pub guides: Option<Vec<SourceText>>,
     pub surface: Option<Vec<SurfaceAnalysis>>,
     pub unspecified: Option<Vec<SourceText>>,
-    pub changes: Option<Vec<SourceText>>,
     /// 追加の指摘の群。渡したものだけを加える（TBL-core-042）
     pub groups: Vec<FindingGroup>,
     /// `対`。`言語の一覧`の言語が2つ以上のときだけ読む（REQ-core-334、REQ-core-336）
@@ -214,7 +212,6 @@ pub struct RepositoryReadInputs {
 #[derive(Default)]
 pub struct RepositoryCheckInputs {
     pub guides: Option<Vec<NativeSourceText>>,
-    pub changes: Option<Vec<NativeSourceText>>,
     pub surface: Option<Vec<NativeSurfaceAnalysis>>,
     pub unspecified: Option<Vec<NativeSourceText>>,
     /// `対`。`言語の一覧`の言語が2つ以上のときだけ読む（REQ-core-334、REQ-core-336）
@@ -241,9 +238,6 @@ impl Policy {
     }
     fn unspecified(&self) -> bool {
         self.surface() && self.config.surface.unspecified.is_some()
-    }
-    fn changes(&self) -> bool {
-        self.config.changes.is_some()
     }
     /// REQ-core-334: 言語が1つなら`対`を読まない
     fn translations(&self) -> bool {
@@ -640,7 +634,7 @@ impl ReadModel {
     pub fn prepare_repository_inspection(self) -> RepositoryInspectionPreparation {
         RepositoryInspectionPreparation {
             inner: CheckPreparation::new(self),
-            phase: InspectionPhase::Changes,
+            phase: InspectionPhase::Guides,
         }
     }
     pub fn inspect_repository(
@@ -648,7 +642,6 @@ impl ReadModel {
         input: RepositoryCheckInputs,
     ) -> Result<Inspection, crate::StopReason> {
         let mut preparation = self.prepare_repository_inspection();
-        preparation.changes(input.changes)?;
         preparation.guides(input.guides)?;
         preparation.surface(input.surface, input.unspecified)?;
         preparation.translations(input.translations);
@@ -691,17 +684,6 @@ impl CheckPreparation {
         self.findings.extend(group.findings);
         self.groups.push(group.tally);
         Ok(())
-    }
-    fn changes(&mut self, files: &[Text]) {
-        if self.read.policy.changes() {
-            crate::change_records::check_entries(
-                entries(files),
-                self.read.config(),
-                &self.read.docs,
-                &self.read.context,
-                &mut self.findings,
-            );
-        }
     }
     fn guides(&mut self, files: &[Text]) -> Result<(), crate::StopReason> {
         self.read
@@ -797,7 +779,6 @@ impl CheckPreparation {
 /// Results cannot be assembled until all acquisition phases have been admitted.
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum InspectionPhase {
-    Changes,
     Guides,
     Surface,
     Complete,
@@ -823,24 +804,6 @@ impl RepositoryInspectionPreparation {
         paths: impl IntoIterator<Item = &'a str>,
     ) -> Result<(), crate::StopReason> {
         self.inner.read.validate_guide_paths(paths)
-    }
-    pub fn changes(
-        &mut self,
-        input: Option<Vec<NativeSourceText>>,
-    ) -> Result<(), crate::StopReason> {
-        self.at_phase(InspectionPhase::Changes)?;
-        let files = texts(
-            selected(input, self.inner.read.policy.changes(), "change records")
-                .map_err(|error| native_error(&error))?,
-        );
-        self.inner
-            .read
-            .originals
-            .admit(&files)
-            .map_err(|error| native_error(&error))?;
-        self.inner.changes(&files);
-        self.phase = InspectionPhase::Guides;
-        Ok(())
     }
     pub fn guides(
         &mut self,
@@ -928,11 +891,6 @@ impl Inspection {
             policy.unspecified(),
             "unspecified surfaces",
         )?);
-        let changes = texts(selected(
-            inputs.changes,
-            policy.changes(),
-            "change records",
-        )?);
         let groups = inputs.groups;
         let translations = inputs.translations;
         let mut read = logical_read(inputs.read, policy)?;
@@ -940,9 +898,7 @@ impl Inspection {
         read.originals
             .admit(surface.iter().map(|file| &file.source))?;
         read.originals.admit(&unspecified)?;
-        read.originals.admit(&changes)?;
         let mut preparation = CheckPreparation::new(read);
-        preparation.changes(&changes);
         preparation.guides(&guides).map_err(input_stop)?;
         preparation
             .surface(&surface, &unspecified)

@@ -26,24 +26,24 @@ Covers the parsing of partial IR, the groups of input needed for checks, and the
 ### REQ-core-316: Reuse of already-read results
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A18, docs/decision/records/2026-10-03-public-crate-api.md#A19, docs/decision/records/2026-10-03-public-crate-api.md#A37
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A18, docs/decision/records/2026-10-03-public-crate-api.md#A19, docs/decision/records/2026-10-03-public-crate-api.md#A37, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-"Project::read" returns an immutable "ReadModel", and "Project::inspect" an immutable "Inspection". list/query of the former, check/status of the latter, and references to the read results do no additional I/O. Owned values are kept until the user drops them, and are neither saved nor watched automatically. To reflect changes, read again. The seven convenience operations of Project read the needed input anew on each call. Consistency at a single point in time while a set of files is being read is not guaranteed.
+"Project::read" returns an immutable "ReadModel", and "Project::inspect" an immutable "Inspection". list/query of the former, check/status of the latter, and references to the read results do no additional I/O. Owned values are kept until the user drops them, and are neither saved nor watched automatically. To reflect changes, read again. The six convenience operations of Project read the needed input anew on each call. Consistency at a single point in time while a set of files is being read is not guaranteed.
 
 ### REQ-core-317: Read scope by operation
 
 - kind: invariant
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A19, docs/decision/records/2026-10-03-public-crate-api.md#A29, docs/decision/records/2026-10-03-public-crate-api.md#A37, docs/decision/records/2026-10-03-public-crate-api.md#A39
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A19, docs/decision/records/2026-10-03-public-crate-api.md#A29, docs/decision/records/2026-10-03-public-crate-api.md#A37, docs/decision/records/2026-10-03-public-crate-api.md#A39, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-Even when already-read results are provided, the input for list/query does not require the guides, surfaces and change records that only check/status use. Parsing only the IR does not require the other groups of input.
+Even when already-read results are provided, the input for list/query does not require the guides and surfaces that only check/status use. Parsing only the IR does not require the other groups of input.
 
 ## Decision tables
 
 ### TBL-core-042: Contents and required conditions of input groups
 
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A39, docs/decision/records/2026-10-03-public-crate-api.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A50, docs/decision/records/2026-10-03-public-crate-api.md#A53, docs/decision/records/2026-10-04-overview-on-public-api.md#A2
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A39, docs/decision/records/2026-10-03-public-crate-api.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A50, docs/decision/records/2026-10-03-public-crate-api.md#A53, docs/decision/records/2026-10-04-overview-on-public-api.md#A2, docs/decision/records/2026-10-06-changes-rethink.md#A10
 
 | Input group | Contents | Required in ReadInputs | Required in CheckInputs |
 |---|---|---|---|
@@ -54,7 +54,6 @@ Even when already-read results are provided, the input for list/query does not r
 | Guides | Paths and contents | Not required | When guides.files is not empty |
 | Surface analysis results | The SourceText of target files, the language and whether it has a query, discovery results, and findings from parsing | Not required | When surface.rules is not empty |
 | List of unspecified surfaces | The path and contents of the configured list | Not required | When surface.rules is not empty and surface.unspecified is specified |
-| Change records | Paths and contents | Not required | When changes is configured |
 | Additional finding groups | The name of the group, the number of files read, the number of marks, and the findings. core does not know their meaning, orders and counts them together with the other findings, and includes each group's counts in the result | Not required | Not required (added only when passed) |
 
 ## Examples

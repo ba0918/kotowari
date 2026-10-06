@@ -9,6 +9,7 @@ fills those.
 {
   "base": "<commit the full review diffs from>",
   "last_reviewed_head": "<branch head at the previous review>",
+  "first_review_head": "<head cycle's first full review read; null until it runs>",
   "findings": [
     {
       "id": 7,
@@ -38,10 +39,10 @@ fills those.
 | `severity` | `security` / `critical` / `warn` / `info`; the caller changes a finding that states no defect to `warn` |
 | `action` | `auto_fix` / `fix_and_verify` / `human_judgment` / `record_only` (reviewer proposal; caller decides) |
 | `profile` | `Code` / `Document` / `Skill` |
-| `perspective` | `quality` / `conformance` |
+| `perspective` | `quality` from reviewers; `consistency` on a finding cycle's consistency phase returned |
 | `oracle.measured` | `fails_now` / `not_run` (unsafe; reason in note) / `not_applicable` (info, human_judgment) |
 | `status.state` | `open` / `closed`; `closed_reason` is `fixed` or `accepted` |
-| `commits` | commit hashes the fixer reported for this finding |
-| `evaluations` | one per review that evaluated this finding, with the round-trip number: `{"round": n, "verdict": "still_present" \| "no_longer_visible"}`; a full-review match appends `still_present` |
+| `commits` | commit hashes the fixer, or for a `consistency` finding the phase, reported for this finding |
+| `evaluations` | one per review or consistency phase run that evaluated this finding, with the round-trip number: `{"round": n, "verdict": "still_present" \| "no_longer_visible"}`; a full-review match appends `still_present` |
 
 Diff-review return shape: `{"verdicts": [{"id": 7, "verdict": "still_present"}], "new": [ ...findings... ]}`.

@@ -11,7 +11,6 @@ pub struct Config {
     pub guides: GuidesConfig,
     pub mutants: MutantsConfig,
     pub surface: SurfaceConfig,
-    pub changes: Option<ChangesConfig>,
     /// `全体像の元データ`の置き場。鍵が無ければ None で、元データを読まない（TBL-core-004）
     pub overview: Option<OverviewConfig>,
     pub limits: LimitsConfig,
@@ -101,7 +100,6 @@ impl Default for Config {
             guides: GuidesConfig::default(),
             mutants: MutantsConfig { equivalents: None },
             surface: SurfaceConfig::default(),
-            changes: None,
             overview: None,
             limits: LimitsConfig {
                 lines: NonZeroU64::new(200).expect("200 is non-zero"),
@@ -138,8 +136,6 @@ struct RawConfig {
     surface: Option<Option<RawSurface>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     limits: Option<Option<RawLimits>>,
-    #[serde(default, deserialize_with = "deserialize_nullable")]
-    changes: Option<Option<ChangesConfig>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     overview: Option<Option<RawOverview>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
@@ -267,7 +263,7 @@ fn check_not_absolute(path: &str, key: &str) -> Result<(), StopReason> {
 }
 
 /// REQ-core-014: glob として読めない要素か "/" で始まる要素があれば設定の誤りで停止する
-/// （"tests.files"、"guides.files"、"surface.files"、"overview.files"、changes の glob）
+/// （"tests.files"、"guides.files"、"surface.files"、"overview.files" の glob）
 fn check_globs(patterns: &[String], key: &str) -> Result<(), StopReason> {
     for pattern in patterns {
         check_not_absolute(pattern, key)?;
@@ -278,6 +274,16 @@ fn check_globs(patterns: &[String], key: &str) -> Result<(), StopReason> {
         }
     }
     Ok(())
+}
+
+/// glob として読めると確かめた一覧を1つの集まりにする。設定の glob は `check_globs` が確かめ、
+/// それ以外は呼び出し側が確かめてから渡す
+pub fn glob_set(patterns: &[String]) -> globset::GlobSet {
+    let mut builder = globset::GlobSetBuilder::new();
+    for pattern in patterns {
+        builder.add(globset::Glob::new(pattern).expect("validated config glob"));
+    }
+    builder.build().expect("validated globs")
 }
 
 /// 中身が空（0バイトか注釈だけ）の YAML か（REQ-core-012 の設定ファイル、REQ-core-148 の等価の一覧）。
@@ -407,7 +413,6 @@ impl Config {
                 rules: Some(Some(self.surface.rules.clone())),
                 unspecified: self.surface.unspecified.clone().map(Some),
             })),
-            changes: self.changes.clone().map(Some),
             overview: self.overview.as_ref().map(|overview| {
                 Some(RawOverview {
                     files: Some(Some(overview.files.clone())),
@@ -515,23 +520,6 @@ impl Config {
             None => defaults.mutants,
         };
 
-        let changes = non_null(raw.changes, "changes")?;
-        if let Some(c) = &changes {
-            if c.files.is_empty() || c.records.is_empty() {
-                return Err(StopReason::ConfigError(
-                    "changes.files and changes.records must be nonempty".into(),
-                ));
-            }
-            for patterns in [&c.files, &c.exclude, &c.records] {
-                check_globs(patterns, "changes")?;
-                for pattern in patterns {
-                    if pattern.is_empty() {
-                        return Err(StopReason::ConfigError("empty changes glob".into()));
-                    }
-                }
-            }
-        }
-
         // TBL-core-004: "overview" を書くときは "overview.files" と "overview.toc" が必須。glob と
         // パスは REQ-core-014 のとおり検査する
         let overview = match non_null(raw.overview, "overview")? {
@@ -607,7 +595,6 @@ impl Config {
             guides,
             mutants,
             surface,
-            changes,
             overview,
             limits,
             // REQ-core-015: 一覧は既定を置き換える
@@ -656,19 +643,4 @@ fn check_languages(languages: &[String]) -> Result<(), StopReason> {
         }
     }
     Ok(())
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ChangesConfig {
-    #[serde(deserialize_with = "required_list")]
-    pub files: Vec<String>,
-    #[serde(deserialize_with = "required_list")]
-    pub records: Vec<String>,
-    #[serde(default, deserialize_with = "required_list")]
-    pub exclude: Vec<String>,
-}
-
-fn required_list<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Vec<String>, D::Error> {
-    Option::<Vec<String>>::deserialize(d)?.ok_or_else(|| serde::de::Error::custom("null list"))
 }

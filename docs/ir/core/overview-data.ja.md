@@ -9,10 +9,10 @@
 ### REQ-core-278: 元データの置き場
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A15, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A49, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A76
+- source: docs/decision/records/2026-10-02-whole-picture.md#A15, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A49, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A76, docs/decision/records/2026-10-06-changes-rethink.md#A30
 - verification: unit
 
-kotowari は常に、"kotowari check"、"kotowari status"、"kotowari overview build"、"kotowari overview serve" で、設定の "overview.files" の glob に当たり拡張子が小文字の ".md" のファイルを`全体像の元データ`として読み、それ以外のファイルを読まない（`除外`）。"kotowari overview build" と "kotowari overview serve" は、参照を解くために "kotowari check" と同じ設定と置き場から`IR`と`判断の記録`と ADR を読み、その置き場の`停止`（REQ-core-018）も check と同じにする。glob の読み方、走査、`除外`、読めないファイルと UTF-8 でないファイルと先の無いシンボリックリンクでの`停止`は "guides.files" と`ガイド`のとおりにし、隠しディレクトリは "changes.records" と同じく glob がパスの成分で名指ししたものだけを読む。
+kotowari は常に、"kotowari check"、"kotowari status"、"kotowari overview build"、"kotowari overview serve" で、設定の "overview.files" の glob に当たり拡張子が小文字の ".md" のファイルを`全体像の元データ`として読み、それ以外のファイルを読まない（`除外`）。"kotowari overview build" と "kotowari overview serve" は、参照を解くために "kotowari check" と同じ設定と置き場から`IR`と`判断の記録`と ADR を読み、その置き場の`停止`（REQ-core-018）も check と同じにする。glob の読み方、走査、`除外`、読めないファイルと UTF-8 でないファイルと先の無いシンボリックリンクでの`停止`は "guides.files" と`ガイド`のとおりにし、隠しディレクトリは glob がパスの成分で名指ししたものだけを読む。
 
 ### REQ-core-279: 元データの鍵が無いとき
 

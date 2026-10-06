@@ -4,11 +4,6 @@ mod acquisition;
 mod asynchronous;
 #[cfg(feature = "tokio")]
 pub use asynchronous::{AsyncOptions, AsyncProject};
-mod change_records;
-mod change_service;
-mod git_snapshot;
-#[cfg(test)]
-mod git_snapshot_tests;
 mod guides;
 mod ir;
 #[cfg(test)]
@@ -19,18 +14,16 @@ mod surface;
 mod test_files;
 mod translations;
 
-pub use git_snapshot::Target;
-pub use kotowari_core::changes::Phase;
-pub use kotowari_core::config::{ChangesConfig, Config};
+pub use kotowari_core::config::Config;
 pub use kotowari_core::guides::GuideTally;
 pub use kotowari_core::ir::is_valid_id;
 pub use kotowari_core::mutants::MutantCounts;
 pub use kotowari_core::surface::{SurfaceTally, Unlisted};
 pub use kotowari_core::translations::{Translation, TranslationSide};
 pub use kotowari_core::{
-    CheckInputs, CheckReport, Comparison, Finding, FindingGroup, FindingKind, GroupTally,
-    InputError, Inspection, IrDocument, IrOptions, ParsedItem, QueryReport, ReadInputs, ReadList,
-    ReadModel, SourceText, StatusReport, SurfaceAnalysis, TestAnalysis, TestFileTally, Tool,
+    CheckInputs, CheckReport, Finding, FindingGroup, FindingKind, GroupTally, InputError,
+    Inspection, IrDocument, IrOptions, ParsedItem, QueryReport, ReadInputs, ReadList, ReadModel,
+    SourceText, StatusReport, SurfaceAnalysis, TestAnalysis, TestFileTally, Tool,
 };
 pub use kotowari_core::{
     Documents, ExampleItem, Findings, FlagItem, Items, ListItem, QueryItem, Reference,
@@ -44,8 +37,7 @@ use std::path::{Path, PathBuf};
 #[derive(Debug, Clone)]
 pub struct ProjectOptions {
     pub start: PathBuf,
-    /// 設定ファイルのパス。相対パスの基準は操作で異なる。check などの読む操作は開始位置から
-    /// 解き（REQ-core-323）、changes は Git の根から解いて絶対パスを受けない（REQ-core-265）
+    /// 設定ファイルのパス。相対パスは開始位置から解く（REQ-core-323）
     pub config: Option<PathBuf>,
 }
 impl ProjectOptions {
@@ -69,7 +61,6 @@ pub enum ErrorKind {
     ConfigError,
     UnknownQuery,
     ReadFailure,
-    GitFailure,
     InternalMapping,
     RuntimeUnavailable,
     TaskFailure,
@@ -128,7 +119,6 @@ impl From<kotowari_core::StopReason> for Error {
             S::ConfigError(_) => ErrorKind::ConfigError,
             S::UnreadableFile(_) | S::NonUtf8File(_) => ErrorKind::ReadFailure,
             S::MappingError(_) => ErrorKind::InternalMapping,
-            S::GitError(_) => ErrorKind::GitFailure,
         };
         Self {
             kind,
@@ -157,12 +147,6 @@ pub struct MutantsOptions {
     pub tool: Tool,
     pub results: PathBuf,
 }
-#[derive(Debug, Clone)]
-pub struct ChangesOptions {
-    pub base: String,
-    pub target: Target,
-    pub phase: Phase,
-}
 
 pub struct PlanReport(kotowari_core::plan::PlanResult);
 impl PlanReport {
@@ -185,29 +169,6 @@ impl MutantsReport {
         self.0.counts()
     }
 }
-#[derive(Clone)]
-pub struct ChangesReport(kotowari_core::changes::ChangeResult);
-impl ChangesReport {
-    pub fn findings(&self) -> &[Finding] {
-        self.0.findings()
-    }
-    pub fn base(&self) -> &str {
-        self.0.base()
-    }
-    pub fn target(&self) -> &str {
-        self.0.target()
-    }
-    pub fn phase(&self) -> &str {
-        self.0.phase()
-    }
-    pub fn files(&self) -> usize {
-        self.0.files()
-    }
-    pub fn covered(&self) -> usize {
-        self.0.covered()
-    }
-}
-
 /// 検査と描画を済ませ、まだ何も書いていない全体像（TBL-core-041 の overview_prepare）
 #[derive(Debug, Clone)]
 pub struct OverviewPrepared {
@@ -392,14 +353,5 @@ impl Project {
     /// overview_prepare に続けて ".kotowari/cache/overview/" の下へ書く（TBL-core-041）
     pub fn overview_build(&self) -> Result<OverviewBuild, Error> {
         self.overview_prepare()?.write()
-    }
-    pub fn changes(&self, options: &ChangesOptions) -> Result<ChangesReport, Error> {
-        Ok(ChangesReport(change_service::run(
-            &self.options.start,
-            &options.base,
-            &options.target,
-            options.phase,
-            self.options.config.as_deref(),
-        )?))
     }
 }

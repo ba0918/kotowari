@@ -66,7 +66,6 @@ $ kotowari --version
 上の旧タグの例は、そのタグにある旧パッケージ名を使っています。
 Rustからの呼出は[公開クレートAPI](docs/guides/public-crate-api.ja.md)を参照してください。実行ファイルのコマンド、出力、終了コードは変わりません。
 
-
 既定では、設定や仕様、判断の記録を次の場所に置く。
 
 ```
@@ -149,7 +148,6 @@ src/lib.rs:2 [error] test_without_id req_001_locks_after_five_failures
 | [`kotowari plan <計画のファイル>`](docs/guides/commands/plan.ja.md) | 同梱のスキーマに従って、実装計画のファイルが決まった形式で書かれているかを検査する |
 | `kotowari overview build` | 設定の`overview.files`に当たる全体像の元データと`overview.toc`の指す目次を検査し、誤りが無ければ`.kotowari/cache/overview/`の下に、目次の順と入れ子で並べた一覧と全体像ごとのHTMLのページを書く。変わったファイルだけを書き、もう作らないページは消す。設定に`overview`を記述した場合のみ使える |
 | `kotowari overview serve [--port <PORT>]` | buildと同じページを書いてから`http://127.0.0.1:<PORT>/`（既定4590）で配り、Ctrl-Cまで続ける |
-| [`kotowari changes --base <REV> (--head <REV> \| --staged) --phase <implementation\|review>`](docs/guides/commands/changes.ja.md) | Gitの比較元と対象の差分を照合記録と突き合わせ、照合が漏れている箇所や記録が古くなっている箇所を報告する。設定に`changes`を記述した場合のみ使える。 |
 
 現在、テストの印を読み取れるのはRustのみ。ただし、IRの検査はほかの言語を使うプロジェクトでも利用できる。
 

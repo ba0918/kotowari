@@ -6,7 +6,7 @@
 
 ## クレートを選ぶ
 
-<!-- @kotowari[REQ-core-306:713197d2, REQ-core-308:b5d19f8b, TBL-core-040:4f46993e] -->
+<!-- @kotowari[REQ-core-306:713197d2, REQ-core-308:667de7a9, TBL-core-040:4f46993e] -->
 
 リポジトリの操作には`kotowari`、メモリだけの計算には`kotowari-core`を使います。
 `kotowari-source-analysis`は文字列からテストや面を発見し、元の文字列と診断を含むcoreの型を返します。ファイル取得やIRとの対応づけは行いません。
@@ -16,10 +16,10 @@ CLIのパッケージは`kotowari-cli`と`kotowari-mds`です。全体像を配�
 
 ## 読込みと結果の寿命
 
-<!-- @kotowari[REQ-core-310:ba432526, REQ-core-316:676d9736, TBL-core-041:3ffaa875] -->
+<!-- @kotowari[REQ-core-310:ba432526, REQ-core-316:f465729a, TBL-core-041:cd11e1e1] -->
 
 `Project::new(ProjectOptions::new(absolute_start))`で開始点を明示します。
-`check`、`list`、`query`、`status`、`plan`、`mutants`、`changes`は型付きの結果を返します。`check`と`status`は全体像の元データの指摘と`overview`の群を含みます。
+`check`、`list`、`query`、`status`、`plan`、`mutants`は型付きの結果を返します。`check`と`status`は全体像の元データの指摘と`overview`の群を含みます。
 `overview_prepare`は全体像の元データを検査して描画し、ファイルを書きません。返った結果の`write()`で`.kotowari/cache/overview/`の下へ書きます。`overview_build`はこの2つを続けて行い、書いたファイル・消したファイルの一覧と書かなかったファイルの数を返します。`AsyncProject`にも同じ2つがあります。
 完了した指摘は結果の`findings()`で読み、読めないファイルや設定の誤りは`Error`と`ErrorKind`で区別します。
 `read()`と`inspect()`の結果は保持して再利用でき、後からファイルが変わっても自動更新されません。読み直す場合はProjectを再度呼びます。
@@ -27,7 +27,7 @@ CLIのパッケージは`kotowari-cli`と`kotowari-mds`です。全体像を配�
 
 ## メモリ入力とパス
 
-<!-- @kotowari[REQ-core-314:baa022e4, REQ-core-315:6a916b03, REQ-core-322:747061bc, REQ-core-323:77b70fdf] -->
+<!-- @kotowari[REQ-core-314:baa022e4, REQ-core-315:6a916b03, REQ-core-322:dedf846a, REQ-core-323:77b70fdf] -->
 
 `SourceText`は相対の論理パスと元の文字列を保持します。区切りやドット成分を正規化し、絶対パスと空のパスを拒否します。入力群の構築では同一群の重複も拒否します。親相対パスは使えます。
 別の有効な入力群で同じパスを使う場合、文字列も一致させます。
@@ -47,11 +47,11 @@ SchemaLoaderの`load`はスキーマと文書の組を返し、再度取得せ�
 
 ## Tokioから待つ
 
-<!-- @kotowari[REQ-core-318:c7f6eb87, REQ-core-319:3c721e0f, REQ-core-320:1b7a7dfe, REQ-core-321:5a28ec39, REQ-schema-075:a82f0403] -->
+<!-- @kotowari[REQ-core-318:c7f6eb87, REQ-core-319:3c721e0f, REQ-core-320:e186fe7a, REQ-core-321:5a28ec39, REQ-schema-075:a82f0403] -->
 
 高水準の2ライブラリで、既定で無効な`tokio` featureを有効にすると`AsyncProject`と`AsyncSchemaLoader`を使えます。
 呼出側のTokioランタイムで待ち、内部ランタイムは作りません。ランタイム不在やタスクの失敗も型で返します。
 `AsyncOptions`は既定の上限1を持ち、`NonZeroUsize`で変更できます。複製したオブジェクトは枠を共有します。
-枠待ちのFutureを破棄すると、その処理は投入されません。投入済みの処理は待機をやめても完了まで枠を保持します。Git、HTTP、計算やキャッシュ書込みの中断は保証しません。
+枠待ちのFutureを破棄すると、その処理は投入されません。投入済みの処理は待機をやめても完了まで枠を保持します。HTTP、計算やキャッシュ書込みの中断は保証しません。
 
 各クレートの`examples/`に呼出例があります。配布物からの実行は[パッケージ検証](package-validation.ja.md)を参照してください。

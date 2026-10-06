@@ -6,13 +6,13 @@ kotowari のコマンド、受ける引数、停止と終了コードを扱う�
 
 ## Requirements
 
-### REQ-core-001: コマンドは8つ
+### REQ-core-001: コマンドは7つ
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A19, docs/decision/records/2026-09-17-mutation-tests.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-19-read-commands.md#A1, docs/decision/records/2026-09-19-read-commands.md#A10, docs/decision/records/2026-09-20-query-status.md#A1, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-02-whole-picture.md#A23, docs/decision/records/2026-10-02-whole-picture.md#A27
+- source: docs/decision/records/records.md#A19, docs/decision/records/2026-09-17-mutation-tests.md#A8, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-19-read-commands.md#A1, docs/decision/records/2026-09-19-read-commands.md#A10, docs/decision/records/2026-09-20-query-status.md#A1, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-10-02-whole-picture.md#A23, docs/decision/records/2026-10-02-whole-picture.md#A27, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-kotowari は常に、"kotowari check"、"kotowari list"、"kotowari mutants"、"kotowari plan"、"kotowari query"、"kotowari status"、"kotowari changes"、"kotowari overview" の8つのコマンドだけを持ち、"kotowari check" の1つのコマンドで`IR`の検査と`テスト`との対応の検査を両方行う。変更に対する照合の欠落と古さの検査は "kotowari changes" が行う（REQ-core-240）。"kotowari overview" は "build" と "serve" の2つの下位のコマンドを持つ（REQ-core-293、REQ-core-297）。
+kotowari は常に、"kotowari check"、"kotowari list"、"kotowari mutants"、"kotowari plan"、"kotowari query"、"kotowari status"、"kotowari overview" の7つのコマンドだけを持ち、"kotowari check" の1つのコマンドで`IR`の検査と`テスト`との対応の検査を両方行う。"kotowari overview" は "build" と "serve" の2つの下位のコマンドを持つ（REQ-core-293、REQ-core-297）。
 
 ### REQ-core-002: 受けるオプション
 
@@ -25,18 +25,18 @@ kotowari は常に、"list"、"query"、"status" ではオプションとして 
 ### REQ-core-003: 設定のパスの基準
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-change-details.md#A3, docs/decision/records/records.md#A60
+- source: docs/decision/records/records.md#A60, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-kotowari は常に、"--config" に与えたパスを、changes 以外ではカレントディレクトリからの相対パスとして読む。 "changes" は対象の snapshot 内の設定を Git のルートからの相対パスで読む（REQ-core-265）。
+kotowari は常に、"--config" に与えたパスを、カレントディレクトリからの相対パスとして読む。
 
 ### REQ-core-004: 引数の誤り
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-01-change-details.md#A3, docs/decision/records/records.md#A60, docs/decision/records/records.md#A103, docs/decision/records/records.md#A136, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-02-whole-picture.md#A27, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-06-spec-first-commit.md#A5, docs/decision/records/2026-10-06-spec-first-commit.md#A12
+- source: docs/decision/records/records.md#A60, docs/decision/records/records.md#A103, docs/decision/records/records.md#A136, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-10-02-whole-picture.md#A27, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-06-spec-first-commit.md#A5, docs/decision/records/2026-10-06-spec-first-commit.md#A12, docs/decision/records/2026-10-06-changes-rethink.md#A10, docs/decision/records/2026-10-06-changes-rethink.md#A30
 - verification: unit
 
-"--help" も "--version" も無いときに、知らないオプション、"mutants" でないコマンドに付けた "--tool"、"overview serve" でないコマンドに付けた "--port"、"overview serve" に付けた "--format"、"check" でないコマンドに付けた "--allow-test-findings"、"check"、"list"、"mutants"、"plan"、"query"、"status"、"changes"、"overview" のいずれでもない1つ目の位置引数、"check"、"list"、"status" の後の位置引数、"--format" の知らない値、値の無いオプション、同じオプションの2回目のいずれかを受けたとき、引数が1つも無いとき、オプションだけがあって1つ目の位置引数が無いとき、または "changes" 以外で "--config" の指す先が無いかディレクトリのとき、kotowari は引数の誤りを理由に`停止`する。
+"--help" も "--version" も無いときに、知らないオプション、"mutants" でないコマンドに付けた "--tool"、"overview serve" でないコマンドに付けた "--port"、"overview serve" に付けた "--format"、"check" でないコマンドに付けた "--allow-test-findings"、"check"、"list"、"mutants"、"plan"、"query"、"status"、"overview" のいずれでもない1つ目の位置引数、"check"、"list"、"status" の後の位置引数、"--format" の知らない値、値の無いオプション、同じオプションの2回目のいずれかを受けたとき、引数が1つも無いとき、オプションだけがあって1つ目の位置引数が無いとき、または "--config" の指す先が無いかディレクトリのとき、kotowari は引数の誤りを理由に`停止`する。
 
 ### REQ-core-149: mutants の引数
 
@@ -130,11 +130,11 @@ Scenario: 道具の指定が無い mutants は停止する
   Then 終了コードは 2 である
   And 標準エラーの1行目は "argument error: " で始まる
 
-@id=EX-core-219 @about=REQ-core-004,TBL-core-020 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-19-read-commands.md#A10,docs/decision/records/2026-09-19-read-commands.md#A20,docs/decision/records/2026-09-20-query-status.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A10,docs/decision/records/2026-09-24-plan-schema.md#A30,docs/decision/records/2026-10-01-change-conformance.md#A2
+@id=EX-core-219 @about=REQ-core-004,TBL-core-020 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-19-read-commands.md#A10,docs/decision/records/2026-09-19-read-commands.md#A20,docs/decision/records/2026-09-20-query-status.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A10,docs/decision/records/2026-09-24-plan-schema.md#A30,docs/decision/records/2026-10-06-changes-rethink.md#A10,docs/decision/records/2026-10-06-changes-rethink.md#A23,docs/decision/records/records.md#A20,docs/decision/records/2026-10-06-changes-rethink.md#A30
 Scenario: 引数が無いときはコマンドを挙げる
   When "kotowari" を引数なしで実行する
   Then 終了コードは 2 である
-  And 標準エラーの理由には REQ-core-001 の8つのコマンド名が挙げられる
+  And 標準エラーの理由には REQ-core-001 の7つのコマンド名が挙げられる
 
 @id=EX-core-240 @about=REQ-core-149 @source=docs/decision/records/2026-09-17-mutation-tests.md#A14,docs/decision/records/2026-09-17-mutation-tests.md#A39
 Scenario: 知らない道具の名前は停止する
@@ -148,11 +148,11 @@ Scenario: 結果のファイルを2つ渡すと停止する
   When "kotowari mutants --tool cargo-mutants a.json b.json" を実行する
   Then 終了コードは 2 で、標準エラーの1行目は "argument error: " で始まる
 
-@id=EX-core-241 @about=REQ-core-004,TBL-core-020 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A55,docs/decision/records/2026-09-19-read-commands.md#A10,docs/decision/records/2026-09-19-read-commands.md#A20,docs/decision/records/2026-09-20-query-status.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A10,docs/decision/records/2026-09-24-plan-schema.md#A30,docs/decision/records/2026-10-01-change-conformance.md#A2
+@id=EX-core-241 @about=REQ-core-004,TBL-core-020 @source=docs/decision/records/2026-09-17-mutation-tests.md#A39,docs/decision/records/2026-09-17-mutation-tests.md#A55,docs/decision/records/2026-09-19-read-commands.md#A10,docs/decision/records/2026-09-19-read-commands.md#A20,docs/decision/records/2026-09-20-query-status.md#A18,docs/decision/records/2026-09-24-plan-schema.md#A10,docs/decision/records/2026-09-24-plan-schema.md#A30,docs/decision/records/2026-10-06-changes-rethink.md#A10,docs/decision/records/2026-10-06-changes-rethink.md#A23,docs/decision/records/records.md#A20,docs/decision/records/2026-10-06-changes-rethink.md#A30
 Scenario: オプションだけの実行はコマンドを挙げて停止する
   When "kotowari --format text" を実行する
   Then 終了コードは 2 である
-  And 標準エラーの理由には REQ-core-001 の8つのコマンド名が挙げられる
+  And 標準エラーの理由には REQ-core-001 の7つのコマンド名が挙げられる
 
 @id=EX-core-244 @about=REQ-core-002 @source=docs/decision/records/2026-09-17-mutation-tests.md#A41,docs/decision/records/2026-09-17-mutation-tests.md#A58
 Scenario: mutants のオプションはコマンドの前にも結果のパスの後にも書ける

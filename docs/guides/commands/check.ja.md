@@ -2,7 +2,7 @@
 
 [English](check.md) | 日本語
 
-<!-- @kotowari[REQ-core-001:f6b868d0] -->
+<!-- @kotowari[REQ-core-001:4ea3a019] -->
 
 IR（仕様）の書き方の誤りと、IR とテストの対応の抜けを、1件ずつの指摘として挙げるコマンドです。
 IR やテストを書いたら実行し、指摘を直して、誤りが0件になるまで繰り返します。
@@ -20,7 +20,7 @@ kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:b4f59e48, REQ-core-004:2d3401d1] -->
+<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:8ac6759c, REQ-core-004:7719a0bd] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
@@ -34,7 +34,7 @@ kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 
 ## 読むもの
 
-<!-- @kotowari[TBL-core-004:322d11b1, REQ-core-325:ba483356, REQ-core-336:03710aae, REQ-core-337:40375497] -->
+<!-- @kotowari[TBL-core-004:3b95b98e, REQ-core-325:ba483356, REQ-core-336:03710aae, REQ-core-337:40375497] -->
 
 `check` は、設定ファイルが指す置き場から、次のものを読みます。
 
@@ -66,7 +66,7 @@ kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 
 ### 置き場が無いとき
 
-<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-019:178b0f0c] -->
+<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-019:10278003] -->
 
 `ir`、`decisions.records`、`decisions.adr` の3つは、既定のままでもディレクトリが存在している必要があります。
 どれかが無い、ディレクトリでない、読めないときは、`unreadable file` で停止します。
@@ -76,7 +76,7 @@ kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 何にも当たらない glob は誤りになりません。
 `**` は再帰として読みます。
 隠しディレクトリは glob が名指ししても含めず、ディレクトリのシンボリックリンクは辿りません。
-照合記録の `changes.records` と全体像の元データの `overview.files` は例外として、パス成分で明示した隠しディレクトリ（`.kotowari/overview/*.md` など）を読みます。名指ししない隠し配下は広い `**` でも除外します。
+全体像の元データの `overview.files` は例外として、パス成分で明示した隠しディレクトリ（`.kotowari/overview/*.md` など）を読みます。名指ししない隠し配下は広い `**` でも除外し、波括弧の中だけで名指しした隠しディレクトリ（`{.overview,other}/*.md`）は名指しに数えません。
 
 走査でディレクトリが読めないときと、先の無いシンボリックリンクに出会ったときは、`unreadable file` で停止します。
 
@@ -416,5 +416,3 @@ tests/greet.rs:6 [error] test_without_id rejects_empty_name
 - 設定のキー: [config.md](../config.ja.md)
 - 全体として揃っているかを見る: [status](status.ja.md)
 - 1件ずつの項目とテストを見る: [list](list.ja.md)
-
-`changes.records` を設定すると照合記録の形式と現在の参照を全件検査します。別 base の件でも参照切れは誤りです。`changes.records` のパス成分で名指した隠しディレクトリは読み、名指していない隠しディレクトリは広い `**` でも読みません。通常の tests/guides の隠し除外は変わりません。Git の比較元は不要で、内容の鮮度と変更の coverage は [changes](changes.ja.md) で検査します。

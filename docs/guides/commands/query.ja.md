@@ -22,7 +22,7 @@ kotowari query --version
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-161:4580b6c0, REQ-core-157:7f12b67c, REQ-core-003:b4f59e48, REQ-core-011:0b7f52a9] -->
+<!-- @kotowari[REQ-core-161:4580b6c0, REQ-core-157:7f12b67c, REQ-core-003:8ac6759c, REQ-core-011:0b7f52a9] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|

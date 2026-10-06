@@ -25,9 +25,6 @@ fn byte_filename_project(group: &str) -> tempfile::TempDir {
         "surface" => {
             "tests:\n  files: []\nsurface:\n  files: ['surface/**']\n  rules: ['rules/surface.yaml']\n"
         }
-        "records" => {
-            "tests:\n  files: []\nchanges:\n  files: ['src/**']\n  records: ['records/**']\n"
-        }
         _ => unreachable!(),
     };
     fs::write(project.path().join(".kotowari/config.yaml"), extra).unwrap();
@@ -57,12 +54,7 @@ fn native_check(project: &std::path::Path) -> std::process::Output {
 // @kotowari[REQ-core-313, REQ-core-018, REQ-core-198, REQ-core-224, EX-core-485]
 #[test]
 fn byte_named_files_without_legacy_read_aliases_keep_the_unreadable_stop() {
-    for (group, extension) in [
-        ("tests", "rs"),
-        ("guides", "md"),
-        ("surface", "rs"),
-        ("records", "yaml"),
-    ] {
+    for (group, extension) in [("tests", "rs"), ("guides", "md"), ("surface", "rs")] {
         let project = byte_filename_project(group);
         fs::write(
             byte_path(project.path(), group, extension),
@@ -108,15 +100,9 @@ fn distinct_byte_named_entries_keep_the_legacy_alias_text_and_multiplicity() {
             "fn original() {}\n",
             "fn replacement() {}\n",
         ),
-        ("records", "yaml", "original", "version: 1\nentries: []\n"),
     ] {
         let project = byte_filename_project(group);
-        let original_path = byte_path(project.path(), group, extension);
-        if group == "records" {
-            fs::write(original_path, [0xff]).unwrap();
-        } else {
-            fs::write(original_path, original).unwrap();
-        }
+        fs::write(byte_path(project.path(), group, extension), original).unwrap();
         fs::write(
             project.path().join(group).join(format!("a�.{extension}")),
             replacement,
@@ -159,7 +145,6 @@ fn distinct_byte_named_entries_keep_the_legacy_alias_text_and_multiplicity() {
                 assert_eq!(findings[0]["kind"], "surface_without_spec");
                 assert_eq!(findings[0]["detail"], "command replacement");
             }
-            "records" => assert!(value["findings"].as_array().unwrap().is_empty()),
             _ => unreachable!(),
         }
     }
@@ -269,11 +254,14 @@ fn acquired_diagnostic_paths_do_not_collapse_filename_components() {
         "docs/decision/adr",
         "guides",
         "tests",
-        "records",
     ] {
         fs::create_dir_all(project.path().join(dir)).unwrap();
     }
-    fs::write(project.path().join(".kotowari/config.yaml"), "tests:\n  files: ['tests/**']\nguides:\n  files: ['guides/**']\nchanges:\n  files: ['src/**']\n  records: ['records/**']\n").unwrap();
+    fs::write(
+        project.path().join(".kotowari/config.yaml"),
+        "tests:\n  files: ['tests/**']\nguides:\n  files: ['guides/**']\n",
+    )
+    .unwrap();
     fs::write(
         project.path().join("guides/a\\..\\b.md"),
         "<!-- @kotowari[REQ-001:12345678] -->\n",
@@ -282,11 +270,6 @@ fn acquired_diagnostic_paths_do_not_collapse_filename_components() {
     fs::write(
         project.path().join("tests/a\\..\\b.txt"),
         "@kotowari[REQ-001]\n",
-    )
-    .unwrap();
-    fs::write(
-        project.path().join("records/a\\..\\b.yaml"),
-        "[not: valid\n",
     )
     .unwrap();
     let output = Command::cargo_bin("kotowari")
@@ -305,7 +288,6 @@ fn acquired_diagnostic_paths_do_not_collapse_filename_components() {
     for (kind, path) in [
         ("guide_stale", "guides/a/../b.md"),
         ("unresolved_reference", "tests/a/../b.txt"),
-        ("change_record_invalid", "records/a/../b.yaml"),
     ] {
         let findings: Vec<_> = value["findings"]
             .as_array()

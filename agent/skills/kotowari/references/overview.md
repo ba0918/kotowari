@@ -1,4 +1,4 @@
-Based on the kotowari specification (revised 2026-10-05; the version of kotowari itself is not pinned)
+Based on the kotowari specification (revised 2026-10-06; the version of kotowari itself is not pinned)
 
 An overview is a set of rendered pages, one per product topic, that lets the people who build the product — the person who brainstormed, the implementer and the reviewer — see the whole picture: what has been decided and why, how the decisions lead to one another, and how the product behaves as their result, as it stands now, including what is planned or deferred. It exists because a brainstorm settles decisions one question at a time, and with tens or hundreds of decisions nobody can say afterwards what was built and why. People read only the rendered pages. The overview data behind them is written by an LLM in a fixed form, is never read by people, and is kept in the repository and revised at each brainstorm approval. kotowari checks the data and renders it; it never writes the data.
 
@@ -8,7 +8,7 @@ An overview is read by the people who build the product; a guide (guides.md) is 
 
 - An overview says what has been decided and why, what is planned, deferred or undecided, and how the decisions lead to one another. It shows how the product behaves only briefly, as the result of those decisions.
 - An overview does not say how to use the product: no commands, options, configuration examples or step-by-step usage. It names the feature; the guide shows how to use it.
-- The boundary, by example: a flow part in which the implementer writes its change record, the reviewer writes its record and `kotowari changes` passes belongs in the overview; the command `kotowari changes --base <id> --head <id> --phase review` and its options belong in a guide.
+- The boundary, by example: a flow part in which the mutation tests run outside kotowari, `kotowari mutants` reads their results and a miss becomes a finding belongs in the overview; the command `kotowari mutants --tool cargo-mutants <path>` and its options belong in a guide.
 
 ## Where overview data is
 
@@ -21,13 +21,13 @@ overview:
   toc: ".kotowari/overview-toc.yaml"
 ```
 
-Without the key nothing here applies: check and status read no overview data, and `kotowari overview build` and `serve` stop with `config error: overview is not configured`. Only files with the lowercase extension `.md` are read. The globs are read and walked like `guides.files`, except that a hidden directory named by a component of a glob (`.kotowari` above) is entered, as with `changes.records`; a broad `**` alone does not enter hidden directories. A file matched by both `overview.files` and `guides.files` or `tests.files` stops check, status, build and serve with a config error whose detail is that file followed by `: matched by both overview.files and guides.files` (or `tests.files`). Overview data is never read as a guide as well. After that, a table of contents that is one of the files the `overview.files`, `guides.files` or `tests.files` walks read (for `overview.files`, only `.md` files are read) stops them with a config error whose detail is its path followed by `: matched by both overview.toc and ` and the first of those keys in that order; keep it out of those globs, for example as a `.yaml` file. A missing or unreadable table of contents stops them as an unreadable file, and one that is not UTF-8 as a non-UTF-8 file.
+Without the key nothing here applies: check and status read no overview data, and `kotowari overview build` and `serve` stop with `config error: overview is not configured`. Only files with the lowercase extension `.md` are read. The globs are read and walked like `guides.files`, except that a hidden directory named by a component of a glob (`.kotowari` above) is entered; a broad `**` alone does not enter hidden directories. A file matched by both `overview.files` and `guides.files` or `tests.files` stops check, status, build and serve with a config error whose detail is that file followed by `: matched by both overview.files and guides.files` (or `tests.files`). Overview data is never read as a guide as well. After that, a table of contents that is one of the files the `overview.files`, `guides.files` or `tests.files` walks read (for `overview.files`, only `.md` files are read) stops them with a config error whose detail is its path followed by `: matched by both overview.toc and ` and the first of those keys in that order; keep it out of those globs, for example as a `.yaml` file. A missing or unreadable table of contents stops them as an unreadable file, and one that is not UTF-8 as a non-UTF-8 file.
 
 `kotowari check` and `kotowari status` read overview data; `kotowari list` and `kotowari query` do not. The findings join check's findings, and the JSON of check and status always has an `overview` group with `files` (the overview data files read) and `marks` (the entries of well-formed guide marks in them), both 0 without the key.
 
 ## The unit of an overview
 
-- One overview per product topic, a feature the user calls by one name (change records, guide marks, adoption, mutation tests). Something that cuts across features, such as the output format or the configuration, is not an overview of its own; mention it in the overview of each feature it touches.
+- One overview per product topic, a feature the user calls by one name (guide marks, adoption, mutation tests). Something that cuts across features, such as the output format or the configuration, is not an overview of its own; mention it in the overview of each feature it touches.
 - The frontmatter `ir` of each overview lists the topic documents of the IR it covers. One topic document belongs to at most one overview, so changing a topic document in a brainstorm decides mechanically which overview to revise.
 - When a brainstorm changes a topic document that no overview's `ir` lists, propose either adding it to an existing overview or starting a new one, and let the person decide. The first time overviews are made, propose the units and let the person decide.
 - Once decided, keep the units. Split or merge overviews only when a brainstorm decides to.
@@ -71,11 +71,11 @@ The index shows each group with its page count and the totals of sections not ye
 ````markdown
 ---
 ir:
-  - docs/ir/core/changes.md
-  - docs/ir/core/change-records.md
+  - docs/ir/core/mutants.md
+  - docs/ir/core/mutants-input.md
 ---
 
-# Change records
+# Mutation tests
 
 ```view lead
 conclusion: One sentence that says what this topic is now
@@ -84,16 +84,16 @@ points:
   - What is decided but not built yet
 ```
 
-## How a change is reconciled
-<!-- @kotowari[REQ-core-240:1a2b3c4d, EX-core-430:5e6f7a8b] -->
+## How a miss becomes a finding
+<!-- @kotowari[REQ-core-139:1a2b3c4d, EX-core-207:5e6f7a8b] -->
 
 Markdown text: paragraphs, lists, numbered lists, tables, code blocks and `### ` headings.
 
 ```view flow
 columns:
-  - - title: Implementer record
-      body: written before review
-  - - title: Reviewer record
+  - - title: Mutation run
+      body: outside kotowari
+  - - title: kotowari mutants
       tone: accent
 ```
 ````
@@ -123,7 +123,7 @@ The kinds of part are fixed; a new kind is a change to the specification, decide
 
 ## References
 
-Put references only in fields named `refs` (a list of strings) or `ref` (one string), at any depth of a part. A reference is either an ID of an item or scenario in the IR (`REQ-core-240`, `EX-core-430`, `FLAG-core-001`), or a source in the same form as `- source:` (`docs/decision/records/2026-10-01-change-conformance.md#A2`, or a heading of an ADR or another Markdown file in the place for records). On the page a reference shows its label and, when chosen, opens its body in place: the statements of a requirement, the `Scenario:` line and steps of a scenario, or the text of the decision line. A decision with a non-empty `- superseded_by:` line is marked superseded, and a deferred requirement or deferred scenario is marked deferred. No reference links out of the page.
+Put references only in fields named `refs` (a list of strings) or `ref` (one string), at any depth of a part. A reference is either an ID of an item or scenario in the IR (`REQ-core-139`, `EX-core-207`, `FLAG-core-001`), or a source in the same form as `- source:` (`docs/decision/records/2026-09-17-mutation-tests.md#A2`, or a heading of an ADR or another Markdown file in the place for records). On the page a reference shows its label and, when chosen, opens its body in place: the statements of a requirement, the `Scenario:` line and steps of a scenario, or the text of the decision line. A decision with a non-empty `- superseded_by:` line is marked superseded, and a deferred requirement or deferred scenario is marked deferred. No reference links out of the page.
 
 ## Scene: writing overview data
 

@@ -26,24 +26,24 @@
 ### REQ-core-316: 読み込み済み結果の再利用
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A18, docs/decision/records/2026-10-03-public-crate-api.md#A19, docs/decision/records/2026-10-03-public-crate-api.md#A37
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A18, docs/decision/records/2026-10-03-public-crate-api.md#A19, docs/decision/records/2026-10-03-public-crate-api.md#A37, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-"Project::read" は不変の "ReadModel" を、"Project::inspect" は不変の "Inspection" を返す。前者のlist/queryと後者のcheck/statusおよび読み取り結果への参照は追加I/Oを行わない。所有値は利用者が破棄するまで保持され、保存や自動監視はしない。変更を反映するには再読込する。簡便なProjectの7操作は呼出ごとに必要な入力を新しく読む。ファイル群の読込中の同時点性は保証しない。
+"Project::read" は不変の "ReadModel" を、"Project::inspect" は不変の "Inspection" を返す。前者のlist/queryと後者のcheck/statusおよび読み取り結果への参照は追加I/Oを行わない。所有値は利用者が破棄するまで保持され、保存や自動監視はしない。変更を反映するには再読込する。簡便なProjectの6操作は呼出ごとに必要な入力を新しく読む。ファイル群の読込中の同時点性は保証しない。
 
 ### REQ-core-317: 操作ごとの読込範囲
 
 - kind: invariant
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A19, docs/decision/records/2026-10-03-public-crate-api.md#A29, docs/decision/records/2026-10-03-public-crate-api.md#A37, docs/decision/records/2026-10-03-public-crate-api.md#A39
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A19, docs/decision/records/2026-10-03-public-crate-api.md#A29, docs/decision/records/2026-10-03-public-crate-api.md#A37, docs/decision/records/2026-10-03-public-crate-api.md#A39, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-読み込み済み結果を提供するときも、list/query用の入力にはcheck/statusだけが使うガイド・面・照合記録を要求しない。IRだけの解析は他の入力群を要求しない。
+読み込み済み結果を提供するときも、list/query用の入力にはcheck/statusだけが使うガイド・面を要求しない。IRだけの解析は他の入力群を要求しない。
 
 ## Decision tables
 
 ### TBL-core-042: 入力群の内容と必須条件
 
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A39, docs/decision/records/2026-10-03-public-crate-api.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A50, docs/decision/records/2026-10-03-public-crate-api.md#A53, docs/decision/records/2026-10-04-overview-on-public-api.md#A2
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A39, docs/decision/records/2026-10-03-public-crate-api.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A50, docs/decision/records/2026-10-03-public-crate-api.md#A53, docs/decision/records/2026-10-04-overview-on-public-api.md#A2, docs/decision/records/2026-10-06-changes-rethink.md#A10
 
 | 入力群 | 内容 | ReadInputsで必須 | CheckInputsで必須 |
 |---|---|---|---|
@@ -54,7 +54,6 @@
 | ガイド | パスと内容 | 不要 | guides.filesが空でない |
 | 面の解析結果 | 対象ファイルのSourceText、言語・問い合わせの有無、発見結果、解析時の指摘 | 不要 | surface.rulesが空でない |
 | 未記載の面の一覧 | 設定された一覧のパスと内容 | 不要 | surface.rulesが空でなくsurface.unspecifiedが指定されている |
-| 照合記録 | パスと内容 | 不要 | changesが設定されている |
 | 追加の指摘の群 | 群の名前、読んだファイルの数、印の数、指摘。coreは意味を知らず、ほかの指摘と合わせて並べて数え、群ごとの数を結果に持たせる | 不要 | 不要（渡したときだけ加える） |
 
 ## Examples

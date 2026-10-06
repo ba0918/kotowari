@@ -179,7 +179,3 @@ Source: `ba0918-verification`, agentic-rules v0.8.0.
       never the full text, never the IR's diff as something they must read, and never a summary as
       the thing approved. Overview data and the table of contents revised in step 3 are committed
       with them, but are not part of what is shown for approval. The person commits or says to.
-
-## Decisions carried into change conformance
-
-For changes-enabled projects read the kotowari skill's changes scene. Make delegated concrete choices and their limits explicit in the decision record and IR, so that implementation can record additions within them; changes to approved requirements come back here.

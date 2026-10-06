@@ -80,12 +80,7 @@ fn enabled_check_groups_must_be_provided_even_when_empty() {
     inputs.read.config.surface.rules = vec!["rules.yaml".into()];
     inputs.read.config.surface.files = vec!["src/**".into()];
     inputs.read.config.surface.unspecified = Some("unspecified.yaml".into());
-    inputs.read.config.changes = Some(kotowari_core::config::ChangesConfig {
-        files: vec!["src/**".into()],
-        records: vec!["changes/**".into()],
-        exclude: vec![],
-    });
-    for group in 0..4 {
+    for group in 0..3 {
         assert!(matches!(
             Inspection::build(inputs.clone()),
             Err(InputError::InputMissing(_))
@@ -93,8 +88,7 @@ fn enabled_check_groups_must_be_provided_even_when_empty() {
         match group {
             0 => inputs.guides = Some(vec![]),
             1 => inputs.surface = Some(vec![]),
-            2 => inputs.unspecified = Some(vec![]),
-            _ => inputs.changes = Some(vec![]),
+            _ => inputs.unspecified = Some(vec![]),
         }
     }
     assert!(Inspection::build(inputs).is_ok());
@@ -315,17 +309,11 @@ fn each_enabled_group_is_required_independently_and_empty_is_provided() {
     all.read.config.surface.files = vec!["src/**".into()];
     all.read.config.surface.rules = vec!["rules.yaml".into()];
     all.read.config.surface.unspecified = Some("unspecified.yaml".into());
-    all.read.config.changes = Some(kotowari_core::config::ChangesConfig {
-        files: vec!["src/**".into()],
-        records: vec!["changes/**".into()],
-        exclude: vec![],
-    });
     all.guides = Some(vec![]);
     all.surface = Some(vec![]);
     all.unspecified = Some(vec![]);
-    all.changes = Some(vec![]);
     assert!(Inspection::build(all.clone()).is_ok());
-    for index in 0..8 {
+    for index in 0..7 {
         let mut missing = all.clone();
         match index {
             0 => missing.read.ir = None,
@@ -334,8 +322,7 @@ fn each_enabled_group_is_required_independently_and_empty_is_provided() {
             3 => missing.read.tests = None,
             4 => missing.guides = None,
             5 => missing.surface = None,
-            6 => missing.unspecified = None,
-            _ => missing.changes = None,
+            _ => missing.unspecified = None,
         }
         assert!(matches!(
             Inspection::build(missing),

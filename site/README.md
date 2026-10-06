@@ -56,8 +56,8 @@ under Unreleased. The main-only panel labels this difference. Stable guide links
 the v0.3.0 tag. The API guide is pinned to the reviewed main commit.
 
 Sources: README, CHANGELOG, PROJECT, `docs/ir/core/{sources,coverage,test-discovery,
-test-queries,overview-commands,library-api}.md`, `docs/guides/commands/{check,query,changes}.md`,
-`docs/guides/{marks,change-conformance,public-crate-api}.md`, `src/cli.rs`, and tests.
+test-queries,overview-commands,library-api}.md`, `docs/guides/commands/{check,query,status}.md`,
+`docs/guides/{marks,public-crate-api}.md`, `src/cli.rs`, and tests.
 README's Rust-only sentence is stale: the IR, guides, implementation rules and v0.1.0
 changelog describe the additional bundled languages. The LP follows those sources.
 The command guide clarifies that exit 0 permits notices; the LP does not claim otherwise.
@@ -65,8 +65,7 @@ The command guide clarifies that exit 0 permits notices; the LP does not claim o
 The connection diagram is an illustrative, abbreviated login example, not a screenshot,
 CLI transcript or executable fixture. No product CLI was used to generate it. `check` links
 specifications and tests; it does not execute tests or prove the implementation correct.
-`changes` checks record coverage/freshness, while semantic validity and review independence
-remain review responsibilities. No source translation or product feature is added.
+Semantic validity and review independence remain review responsibilities. No source translation or product feature is added.
 
 Design/structure references: kakoi/site (current main, including the 5843305 refactor) and
 kemi/site. Visual design is separate: gray-green surfaces, sans-serif typography and a

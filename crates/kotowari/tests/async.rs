@@ -1,7 +1,6 @@
 #![cfg(feature = "tokio")]
 use kotowari::{
-    AsyncOptions, AsyncProject, ChangesOptions, ErrorKind, MutantsOptions, Phase, Project,
-    ProjectOptions, Target, Tool,
+    AsyncOptions, AsyncProject, ErrorKind, MutantsOptions, Project, ProjectOptions, Tool,
 };
 use std::{
     future::Future,
@@ -83,15 +82,6 @@ fn every_operation_is_send_and_reuses_sync_results_and_failure_kinds() {
                 .findings()
                 .len(),
             sync.mutants(&options).unwrap().findings().len()
-        );
-        let options = send(ChangesOptions {
-            base: "HEAD".into(),
-            target: Target::Index,
-            phase: Phase::Implementation,
-        });
-        assert_eq!(
-            send(adapter.changes(&options)).await.err().unwrap().kind(),
-            sync.changes(&options).err().unwrap().kind()
         );
         assert_eq!(
             send(adapter.plan(Path::new("missing.md")))

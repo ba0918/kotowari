@@ -3,10 +3,8 @@
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
 )]
 use kotowari_core::{
-    Comparison, NativeSourceText, NativeSurfaceAnalysis, NativeTestAnalysis, ReadModel,
-    RepositoryCheckInputs, RepositoryReadInputs, SourceText, TestAnalysis,
-    changes::{self, Phase},
-    config::{ChangesConfig, Config},
+    NativeSourceText, NativeSurfaceAnalysis, NativeTestAnalysis, ReadModel, RepositoryCheckInputs,
+    RepositoryReadInputs, SourceText, TestAnalysis, config::Config,
 };
 
 fn source(identity: &str, path: &str, text: &str) -> NativeSourceText {
@@ -65,34 +63,6 @@ fn native_original_text_is_retained_across_read_and_check() {
             ..Default::default()
         })
         .is_err()
-    );
-}
-
-// @kotowari[REQ-core-312, EX-core-484]
-#[test]
-fn malformed_comparison_globs_return_a_configuration_error() {
-    let config = Config {
-        changes: Some(ChangesConfig {
-            files: vec!["src/**".into()],
-            records: vec!["[".into()],
-            exclude: vec![],
-        }),
-        ..Config::default()
-    };
-    let snapshot = Comparison {
-        base: "base".into(),
-        target: "head".into(),
-        config,
-        files: vec![],
-        blobs: Default::default(),
-    };
-    assert!(matches!(
-        changes::inspect(&snapshot, Phase::Implementation),
-        Err(kotowari_core::StopReason::ConfigError(_))
-    ));
-    assert_eq!(
-        changes::evaluate(&snapshot, &[], Phase::Implementation).files(),
-        0
     );
 }
 
@@ -213,7 +183,6 @@ fn native_inspection_cannot_finish_without_its_required_guides() {
     };
     assert!(read().prepare_repository_inspection().finish().is_err());
     let mut preparation = read().prepare_repository_inspection();
-    preparation.changes(None).unwrap();
     preparation.guides(Some(vec![])).unwrap();
     preparation.surface(None, None).unwrap();
     assert_eq!(preparation.finish().unwrap().check().guides().files(), 0);

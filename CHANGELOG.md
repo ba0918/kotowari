@@ -5,6 +5,21 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+### Removed
+
+- **BREAKING** The `kotowari changes` command and change records are removed. kotowari now has seven commands. The `changes` section of the configuration (`changes.files`, `changes.exclude`, `changes.records`) is gone, and a configuration that still has it stops with a configuration error as an unknown key: delete the `changes` section from `.kotowari/config.yaml` and delete `.kotowari/changes/`. `check` and `status` no longer read change records, the finding kinds `change_uncovered`, `change_stale`, `change_ir_stale`, `change_conclusion_conflict`, `change_deferred` and `change_record_invalid` are gone, and so is the `git error` stop.
+- **BREAKING (Rust API)** The public API that served only `changes` is removed. From `kotowari`: `Project::changes`, `AsyncProject::changes`, `ChangesOptions`, `ChangesReport`, `Target`, `Phase`, `ChangesConfig`, `Comparison` and `ErrorKind::GitFailure`. From `kotowari-core`: the modules `changes`, `change_records` and `comparison` (with `Comparison`), `ChangesConfig` and the field `changes` of `Config`, `CheckInputs` and `RepositoryCheckInputs`, `RepositoryInspectionPreparation::changes`, the `FindingKind` variants `ChangeStale`, `ChangeIrStale`, `ChangeUncovered`, `ChangeDeferred`, `ChangeConclusionConflict` and `ChangeRecordInvalid`, and `StopReason::GitError`. A repository inspection now starts at the guides phase. The glob set builder that `check` still uses is `kotowari_core::config::glob_set`.
+
+### Added
+
+- The `kotowari-cycle` skill runs a consistency phase: once after implementation and once after the quality review's fixes converge, a separate agent reads the code the diff changed against the IR, finds behaviour the IR does not state, behaviour different from it and gaps or contradictions in the IR around it, and resolves each on grounds and measurements into a state where the IR and the code agree. It fixes and commits the IR, the decision record, the flag record and the code itself, and writes what it decided to a new decision record. Its findings go into the cycle's findings file beside the review's, with the perspective `consistency`, and the phase is rerun and stopped by the same rules as the review loop. A question of meaning the grounds cannot settle continues with a default and stays open for the final report with the word that reverses it; the phase never stops to hand it back to a person. A run is skipped only when the diff adds or changes no behaviour a user can observe (skill text counts as behaviour), with the reason in the final report. `kotowari-iterate` runs it through the cycle, and a direct fix in the main session runs it by the same measure.
+
+### Changed
+
+- `kotowari-review` launches reviewers with the quality perspective only. There is no conformance reviewer comparing code with the specification any more; that is the consistency phase's. Whether a plan or a document contradicts the specification is still read within the quality perspective.
+- The skills no longer write or ask for change records. The implementer and the fixer leave IR-side findings to the consistency phase instead of adding IR themselves.
+- Workflow skills share the editing and review hand-off rules instead of repeating conflicting fixer instructions in the consistency phase. Delegates read writing and marker references only when needed, and direct edits use the same finding and stopping rules as cycle.
+
 ## [0.4.0] - 2026-10-06
 
 ### Changed

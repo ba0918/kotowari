@@ -3,11 +3,11 @@
 English | [日本語](config.ja.md)
 
 This is the YAML file that states where kotowari reads from (the IR, decision records, tests, guides, surface files, overview data) and the values the checks use.
-Except for `changes`, kotowari runs with default values when the file is absent, so you write only the keys you want to change from the defaults.
+kotowari runs with default values when the file is absent, so you write only the keys you want to change from the defaults.
 
 ## Format
 
-<!-- @kotowari[REQ-core-013:f8877aec, REQ-core-017:4a231543, TBL-core-004:322d11b1] -->
+<!-- @kotowari[REQ-core-013:f8877aec, REQ-core-017:4a231543, TBL-core-004:3b95b98e] -->
 
 Written out with every key at its default value, it looks like this.
 Keys are written nested (`records:` under `decisions:`).
@@ -51,13 +51,13 @@ vague_words: [適切に, 必要に応じて, 通常は, など]
 The comments in the example say, in order: `mutants.equivalents` has no default and is read only when written; `surface.unspecified` has no default and cannot be written while `surface.rules` is an empty list; `overview` has no default and must be written to use `overview build` and `serve`; `overview.toc` is the overview's table of contents and is required when `overview` is written; `languages` has no default (English only), and with two or more languages documents are kept as pairs, one side per language; `labels` has no default and holds the UI text of non-English languages (all keys must be written).
 The default `vague_words` are Japanese words meaning "appropriately", "as needed", "usually" and "etc.".
 
-`changes`, `mutants.equivalents`, `surface.unspecified`, `overview`, `languages` and `labels` default to "key absent".
+`mutants.equivalents`, `surface.unspecified`, `overview`, `languages` and `labels` default to "key absent".
 The values in the example above show how to write them; they are not defaults.
 `surface.unspecified` stops kotowari if written while `surface.rules` is an empty list, so the example comments it out with `#` ([`surface.*`](#surfacefiles-surfacerules-surfaceunspecified)).
 
 ## Key list
 
-<!-- @kotowari[TBL-core-004:322d11b1, REQ-core-325:ba483356] -->
+<!-- @kotowari[TBL-core-004:3b95b98e, REQ-core-325:ba483356] -->
 
 | Key | Value type | Default | Description |
 |---|---|---|---|
@@ -75,9 +75,6 @@ The values in the example above show how to write them; they are not defaults.
 | `surface.unspecified` | Path (string) | None | The file of the list of unspecified surfaces. If absent, the list has 0 entries |
 | `overview.files` | List of globs | `overview` may be omitted; required when written | Where the overview data is. Without `overview`, no overview data is read, and `overview build` and `serve` stop |
 | `overview.toc` | Path (string) | `overview` may be omitted; required when written | The overview's table of contents file. It sets the nesting and order of the listing page. When `overview` is present, `check`, `status`, `overview build` and `overview serve` read it, and stop if its target is missing or unreadable |
-| `changes.files` | List of relative glob strings | `changes` may be omitted; required and non-empty when written | The targets whose changes are reconciled |
-| `changes.exclude` | List of relative glob strings | Empty | Files left out of the change targets |
-| `changes.records` | List of relative glob strings | Required and non-empty when written | YAML change records |
 | `limits.lines` | Positive integer | `200` | The maximum number of lines in an IR document. Exceeding it gives a `too_many_lines` notice |
 | `limits.requirements` | Positive integer | `10` | The maximum number of requirements in one document. Exceeding it gives a `too_many_requirements` notice |
 | `vague_words` | List of words | `適切に`, `必要に応じて`, `通常は`, `など` | Vague words. Their appearance in an IR statement gives a `vague_word` error |
@@ -136,7 +133,7 @@ Even a project that does not use overviews needs `labels` for non-English langua
 
 ## Where the configuration file is
 
-<!-- @kotowari[REQ-core-011:0b7f52a9, REQ-core-003:b4f59e48, REQ-core-020:2b67aa66] -->
+<!-- @kotowari[REQ-core-011:0b7f52a9, REQ-core-003:8ac6759c, REQ-core-020:2b67aa66] -->
 
 | What you specify | File read |
 |---|---|
@@ -204,7 +201,7 @@ Absolute paths starting with `/` cannot be written ([Configuration errors](#conf
 
 ## List keys
 
-<!-- @kotowari[REQ-core-015:44b9e418, REQ-core-016:e918e282] -->
+<!-- @kotowari[REQ-core-015:44b9e418, REQ-core-016:cca736db] -->
 
 List keys (`tests.files`, `guides.files`, `vague_words` and so on) take only lists.
 A list you write **replaces** the default list rather than being added to it.
@@ -221,7 +218,7 @@ With `vague_words: []`, the vague word check reports nothing.
 
 ## How globs are read
 
-<!-- @kotowari[REQ-core-019:178b0f0c, REQ-core-079:589c548b] -->
+<!-- @kotowari[REQ-core-019:10278003, REQ-core-079:589c548b] -->
 
 The globs of `tests.files`, `guides.files`, `surface.files` and `overview.files` are read as follows.
 
@@ -234,7 +231,7 @@ The globs of `tests.files`, `guides.files`, `surface.files` and `overview.files`
 | Symbolic links to files | Read. Stops if the target does not exist |
 | Sockets, named pipes, devices | Not read |
 
-As exceptions, `changes.records` for change records and `overview.files` for overview data read hidden directories named explicitly by a path component (such as `.kotowari` in `.kotowari/overview/*.md`). Hidden paths that are not named are excluded even by a broad `**`.
+As an exception, `overview.files` for overview data reads hidden directories named explicitly by a path component (such as `.kotowari` in `.kotowari/overview/*.md`). Hidden paths that are not named are excluded even by a broad `**`, and a hidden directory named only inside braces (`{.overview,other}/*.md`) does not count as named.
 
 The scan walks the whole base directory (except hidden directories) and then selects with the globs.
 So even an unreadable directory in a place no glob matches stops kotowari.
@@ -388,7 +385,7 @@ $ echo $?
 
 ## Configuration errors
 
-<!-- @kotowari[REQ-core-014:4f851c96, EX-core-003:a69bc60c, EX-core-383:dac73d9d, REQ-core-225:be4cdd0b, REQ-core-280:1b9f50df, TBL-core-004:322d11b1, REQ-core-326:fb819a40, REQ-core-335:b51997f0, REQ-core-352:7b5a3a7f] -->
+<!-- @kotowari[REQ-core-014:4f851c96, EX-core-003:a69bc60c, EX-core-383:dac73d9d, REQ-core-225:be4cdd0b, REQ-core-280:1b9f50df, TBL-core-004:3b95b98e, REQ-core-326:fb819a40, REQ-core-335:b51997f0, REQ-core-352:7b5a3a7f] -->
 
 If any of the following is present, kotowari stops without checking (exit code 2).
 The first line of standard error starts with `config error: `, followed by the configuration file's path and the reason.
@@ -493,12 +490,12 @@ ir: docs/ir
 limit:
   lines: 100
 $ kotowari check --format text
-config error: .kotowari/config.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words, languages, labels
+config error: .kotowari/config.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
  --> <input>:2:1
   |
 1 | ir: docs/ir
 2 | limit:
-  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words, languages, labels
+  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
 3 |   lines: 100
   |
 $ echo $?
@@ -564,18 +561,3 @@ A `kotowari.toml` at the top is not read even if its content has errors, and the
 - How tests are found, and marks: [Marking tests](marks.md)
 - Guide locations and marks: [Writing guides](writing-guides.md)
 - Finding kinds: [List of findings](findings.md)
-
-## Change conformance settings
-
-If `changes` is omitted, check/status do not read change records, and the changes command stops with a configuration error. Write `changes.files` and `changes.records` explicitly as non-empty lists. Each glob is relative to the base; an unknown key, null, an empty string or an invalid glob stops kotowari.
-
-```yaml
-changes:
-  files: ["src/**", "crates/**", "tests/**", "agent/skills/**", "Cargo.toml", "Cargo.lock", "lefthook.yml", ".github/workflows/**", "scripts/**"]
-  exclude: []
-  records: [".kotowari/changes/*.yaml"]
-```
-
-changes reads the configuration of the target snapshot, with the Git root as the base. `--config` is also relative to the Git root. Hidden directories included in Git are included too if a glob matches them. The IR, decision records, the configuration in use and the change records themselves are excluded from the diff targets and checked as references. A symlink, a submodule or a non-UTF-8 path selected as a target stops it. Ordinary check/status read the working tree.
-
-`changes.records` reads an explicitly named hidden directory (e.g. `.kotowari/changes`) in check/status as well. Hidden directories that are not named are not read by a broad `**`. The fixed `implementation.yaml` and `review.yaml` in this adoption example are an operating convention, and other layouts can be configured.

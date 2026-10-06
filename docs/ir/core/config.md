@@ -48,10 +48,10 @@ kotowari always accepts only a list for a list key, and replaces the default lis
 ### REQ-core-016: Empty lists
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-01-change-details.md#A2, docs/decision/records/records.md#A59
+- source: docs/decision/records/records.md#A59, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-When an empty list is written for a list key, kotowari treats that key as a list with no elements. However, an empty list for changes.files or changes.records stops the run as a configuration error.
+When an empty list is written for a list key, kotowari treats that key as a list with no elements.
 
 ### REQ-core-017: Nested keys
 
@@ -72,10 +72,10 @@ In "kotowari check", when the target of "ir", "decisions.records" or "decisions.
 ### REQ-core-019: How globs are read
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-current-change-records.md#A8, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-06-todo-zero.md#A4, docs/decision/records/records.md#A59, docs/decision/records/records.md#A102, docs/decision/records/2026-10-01-change-details.md#A4
+- source: docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-06-todo-zero.md#A4, docs/decision/records/records.md#A59, docs/decision/records/records.md#A102, docs/decision/records/2026-10-06-changes-rethink.md#A10, docs/decision/records/2026-10-06-changes-rethink.md#A23
 - verification: unit
 
-kotowari always reads "**" in a glob as recursion. Except for the enumeration of Git targets in changes, the search for conformance records under hidden directories that changes.records names explicitly by a path component in check/status, and the search for `overview data` under hidden directories that overview.files names explicitly by a path component, it does not include hidden directories even when a glob names them. A broad "**" alone does not enter hidden directories that are not specified. It reads hidden files when a glob matches them, and does not follow symbolic links to directories. A hidden directory named only inside braces (as in "{.kotowari/changes,other}/*.yaml") is not counted as named by a path component.
+kotowari always reads "**" in a glob as recursion. Except for the search for `overview data` under hidden directories that overview.files names explicitly by a path component, it does not include hidden directories even when a glob names them. A broad "**" alone does not enter hidden directories that are not specified. It reads hidden files when a glob matches them, and does not follow symbolic links to directories. A hidden directory named only inside braces is not counted as named by a path component.
 
 ### REQ-core-020: kotowari.toml at the root is not read
 
@@ -89,7 +89,7 @@ kotowari shall not read "kotowari.toml" directly under the repository root as th
 
 ### TBL-core-004: Keys and default values
 
-- source: docs/decision/records/2026-10-01-change-details.md#A2, docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/records.md#A62, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-notice.md#A5, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A9, docs/decision/records/2026-09-24-multi-language-tests.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A4, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A3, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-05-overview-index.md#A10, docs/decision/records/2026-10-05-overview-index.md#A11, docs/decision/records/2026-10-05-localization.md#A16, docs/decision/records/2026-10-05-localization.md#A40, docs/decision/records/2026-10-05-localization.md#A21, docs/decision/records/2026-10-05-localization.md#A7
+- source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/records.md#A62, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-notice.md#A5, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A9, docs/decision/records/2026-09-24-multi-language-tests.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A4, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A3, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-05-overview-index.md#A10, docs/decision/records/2026-10-05-overview-index.md#A11, docs/decision/records/2026-10-05-localization.md#A16, docs/decision/records/2026-10-05-localization.md#A40, docs/decision/records/2026-10-05-localization.md#A21, docs/decision/records/2026-10-05-localization.md#A7, docs/decision/records/2026-10-06-changes-rethink.md#A10, docs/decision/records/2026-10-06-changes-rethink.md#A30
 
 | Key | Value | Default |
 |---|---|---|
@@ -108,9 +108,6 @@ kotowari shall not read "kotowari.toml" directly under the repository root as th
 | limits.lines | A number (negative numbers and 0 are not allowed) | 200 |
 | limits.requirements | A number (negative numbers and 0 are not allowed) | 10 |
 | vague_words | A list of words | The four words 「適切に」「必要に応じて」「通常は」「など」 |
-| changes.files | A list of relative globs for the targets of change conformance. Required and non-empty when changes is written | When changes is omitted, there is no check of conformance records |
-| changes.exclude | A list of relative globs removed from the targets of change conformance | An empty list |
-| changes.records | A list of relative globs for conformance records. Required and non-empty when changes is written | When changes is omitted, there is no check of conformance records |
 | overview.files | A list of globs. The location of the `overview data` (overview-data.md). Required when overview is written | When overview is omitted, the `overview data` is not read |
 | overview.toc | A file path (one string). Points to the `table of contents` (overview-toc.md). Required when overview is written | When overview is omitted, the `table of contents` is not read |
 | languages | A list of language tags. The `language list` (translation-pairs.md) | None (treated as a `language list` of only "en") |
@@ -136,9 +133,9 @@ Scenario: A glob element starting with "/" stops as a configuration error
   When "kotowari check" is run
   Then the exit code is 2 and standard error starts with "config error: "
 
-@id=EX-core-545 @about=REQ-core-019 @source=docs/decision/records/2026-10-06-todo-zero.md#A4
+@id=EX-core-545 @about=REQ-core-019 @source=docs/decision/records/2026-10-06-todo-zero.md#A4,docs/decision/records/2026-10-06-changes-rethink.md#A23
 Scenario: A hidden directory named only inside braces is not entered
-  Given "changes.records" is "{.records,other}/*.yaml", and ".records/a.yaml" exists
+  Given "overview.files" is "{.overview,other}/*.md", and ".overview/a.md" exists
   When "kotowari check" is run
-  Then ".records/a.yaml" is not read as a conformance record
+  Then ".overview/a.md" is not read as `overview data`
 ```

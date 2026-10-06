@@ -32,12 +32,6 @@ A requirement whose verification is review needs a `- how_to_verify:` line. How 
 
 | Kind | Meaning | Action | Owner |
 |---|---|---|---|
-| change_uncovered | A changed file lacks the required role or related IR | Add or reconcile the needed caller record | caller |
-| change_stale | A current matching-base entry has different file identities | Reconcile the whole entry with the target snapshot | caller |
-| change_ir_stale | A current matching-base entry has different related IR bytes | Reconcile the whole entry with the target IR | caller |
-| change_conclusion_conflict | Active entries disagree for the same base and file identities | Resolve the conclusion before final review | caller |
-| change_deferred | A matching entry is deferred in review phase | Record an adopted decision and IR, then reconcile again | caller |
-| change_record_invalid | A change record has an invalid format, conclusion or reference | Repair the named file or entry; check and status validate all configured references without Git | caller |
 | missing_title | There is no title | Add a `# ` title | brainstorm |
 | multiple_titles | There are two or more titles (one per title after the first; detail is that title) | Keep one title | brainstorm |
 | missing_scope | A topic document has no scope line | Add, after the title, a line stating what the document covers | brainstorm |
@@ -123,7 +117,6 @@ Adding an exclusion or loosening a rule is a change to the specification, so do 
 | unreadable file | Return to the person. Report the path of the file that cannot be read |
 | non-UTF-8 file | Return to the person. Report the path of the file that is not UTF-8 |
 | results error | Return to the person. The results file does not match the form of the mutation-testing tool. Report the path and the description in the details |
-| git error | Git history, target or index cannot be read | Repair the input or fetch the required history; do not supplement with working tree files | caller |
 | overview error | Run `kotowari check` and fix the overview data findings it reports (overview.md), then build again. Nothing was written or removed |
 | port error | Return to the person. `kotowari overview serve` could not use the port on 127.0.0.1, or failed to accept a connection while serving (details are the address and the OS error). Run it again with a free `--port`, or use the pages `kotowari overview build` wrote |
 | cache error | Return to the person. `.kotowari`, `.kotowari/cache`, `.kotowari/cache/overview` or, with two or more languages, a language's `.kotowari/cache/overview/<tag>` is a symbolic link or not a directory, or creating that place, writing a page into it or removing a file from it failed (details are the path relative to the base directory, and the OS error when there is one). Nothing outside the cache place was touched. Replace the link or file with a real directory, or fix the cause of the OS error, then build again |

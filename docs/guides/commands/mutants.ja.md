@@ -19,7 +19,7 @@ kotowari mutants --tool cargo-mutants [--format json|text] [--config <path>] <�
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-149:1ac13c99, REQ-core-021:ccedd28b, REQ-core-011:0b7f52a9, REQ-core-003:b4f59e48] -->
+<!-- @kotowari[REQ-core-149:1ac13c99, REQ-core-021:ccedd28b, REQ-core-011:0b7f52a9, REQ-core-003:8ac6759c] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|

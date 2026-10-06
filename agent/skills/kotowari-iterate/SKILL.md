@@ -76,7 +76,7 @@ specification (it cannot run without one) or offering "continue here anyway" is 
 ## The loop
 
 Read the kotowari-cycle skill body and run all of it as written, its Inputs included (the review skill
-read before the first review); "cycle" there means this run. Only these substitutions apply:
+read before the first review) and its consistency phase included; "cycle" there means this run. Only these substitutions apply:
 
 | In cycle's body | Read here as |
 |---|---|
@@ -86,15 +86,16 @@ read before the first review); "cycle" there means this run. Only these substitu
 | inferring done steps from the plan and `git log`, then delegating the rest to implement | no inference: the request goes to the implementer in one delegation, after the judgment |
 | the implement delegation (plan path, branch, worktree path) | the implementer delegation (request, the judgment's enumeration, the specification path if any, branch, worktree path), with hand-back reasons added to the contract: a file outside the enumeration; a contradiction with the specification; or a request that reads two ways |
 | the plan path in the fixer delegation | the request, and the specification path if any, with a hand-back reason added to the contract: a contradiction with the specification |
-| the fixer contract's "the plan's commands in order, unedited" | check commands come from the project's instructions, then the ecosystem's standard tool |
-| "run more" re-entering at step 1 when steps remain | always the diff loop |
-| the specification path and the file of IDs to cover in review delegations | the specification path and the request, both; the file of IDs only when the request touches IR items; neither path nor file when there is no specification |
+| **Fixer only**'s "the plan's commands in order, unedited" | check commands come from the project's instructions, then the ecosystem's standard tool |
+| "run more" re-entering at step 1 when steps remain | at step 2 or step 6 when the ending was raised there, as in cycle; else the diff loop |
+| the specification path and the file of IDs in the consistency phase delegation | the specification path and the request, both; the file of IDs only when the request touches IR items; neither path nor file when there is no specification, and the request is the consistency phase's counterpart |
 | ending 4 (a hand-back to brainstorm or plan) and its "run more or accept the rest" choice | the destination is one of the guidance table's three; the choice is not offered — the report (as in Out above) adds the hand-back reason and the guidance, and the person restarts with a new request holding their answer |
 | "names an ID the plan covers" in **kotowari check before the terminal report** | names an ID the request's enumeration covers; with none, only the files the branch changed count |
 | any other plan word meaning the plan (one plan at once, out-of-plan changes) | the request (out-of-request changes); plan as a skill name, a destination, stays; sentences about plan steps (do not interpret its steps, if steps remain) do not apply — there is no plan |
 
-The **implementer** is cycle's fixer contract pasted in full, the request replacing the visible
-findings; the implement skill is not used. Where the reason did not name delegated implementation,
+The **implementer** receives cycle's **Editing contract** with its Evidence conditions and
+**Fixer only** rules in full, the request replacing the visible findings; the implement skill is
+not used. Where the reason did not name delegated implementation,
 this session implements under that same contract, the rest of the loop unchanged. It returns
 commits, evidence per completion kind, out-of-request changes with reasons — or a hand-back and why.
 The enumeration goes along as reading material, marked as not an order — handing it as steps is a
@@ -102,12 +103,13 @@ counter-example — yet it caps the files to touch (edit, create, delete, rename
 outside it — hand back, never touch or report it. In a listed file, changes the request did not name
 (import tidying, tests following) are out-of-request; an entry whose change differs is review's to
 catch. The cap binds only the implementer; the fixer follows findings into any file, reporting those
-outside as out-of-request. With no specification the request is the counterpart; review's own rule
-adds the conformance reviewer, never a default.
+outside as out-of-request. With no specification the request is the counterpart; review launches the
+quality reviewer only, and the consistency phase reads the code against the request.
 
 Same branch right after a cycle or a run of this skill: reuse it, never re-cut; findings JSON still
 there is cycle's resume — keep the findings (deleting or ignoring it is a counter-example) and
-continue rounds from the inherited max (the first review is max+1). Unless the person gave a
+continue rounds from the inherited max (the first round is max+1), and set `first_review_head` to
+null. Unless the person gave a
 comparison base, it is the branch tip at start (already checked); inherited open findings are
 evaluated in the diff review even outside it. Both of ending 3's streaks (`still_present` two rounds
 running; new visible findings not shrinking) reset at a start of this skill (inherited evaluations
@@ -119,7 +121,3 @@ Cycle's terminal report and "never" list apply, verification results from the im
 plus the guidance when not small or handed back. "Look into this" belongs to the investigate skill,
 "check that it works" and "verify this" to review's diagnosis; implementing from them is a boundary
 breach. "Fix it" or "add it" alone never starts this skill; ask for a reviewed loop.
-
-## Change conformance for small tasks
-
-For changes-enabled projects cycle's integration gate still applies without a plan; read the kotowari skill's changes scene. Needing to change or delete approved requirements, or to decide new consequential meaning, fails the small-task conditions.

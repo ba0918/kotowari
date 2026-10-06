@@ -48,10 +48,10 @@ kotowari は常に、一覧のキーに一覧だけを受け、書かれた一�
 ### REQ-core-016: 空の一覧
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-01-change-details.md#A2, docs/decision/records/records.md#A59
+- source: docs/decision/records/records.md#A59, docs/decision/records/2026-10-06-changes-rethink.md#A10
 - verification: unit
 
-一覧のキーに空の一覧が書かれているとき、kotowari はそのキーを要素の無い一覧として扱う。ただし changes.files と changes.records の空の一覧は設定の誤りで停止する。
+一覧のキーに空の一覧が書かれているとき、kotowari はそのキーを要素の無い一覧として扱う。
 
 ### REQ-core-017: 入れ子のキー
 
@@ -72,10 +72,10 @@ kotowari は常に、`設定ファイル`のキーを入れ子の形（"decision
 ### REQ-core-019: glob の読み方
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-01-current-change-records.md#A8, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-06-todo-zero.md#A4, docs/decision/records/records.md#A59, docs/decision/records/records.md#A102, docs/decision/records/2026-10-01-change-details.md#A4
+- source: docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-06-todo-zero.md#A4, docs/decision/records/records.md#A59, docs/decision/records/records.md#A102, docs/decision/records/2026-10-06-changes-rethink.md#A10, docs/decision/records/2026-10-06-changes-rethink.md#A23
 - verification: unit
 
-kotowari は常に、glob の "**" を再帰として読む。changes の Git 対象列挙と、check/status の changes.records がパス成分で明示した隠し配下の照合記録探索と、overview.files がパス成分で明示した隠し配下の`全体像の元データ`の探索を除き、隠しディレクトリを glob が名指ししても含めない。広い "**" だけでは未指定の隠し配下へ入らない。隠しファイルは glob が当てれば読み、ディレクトリのシンボリックリンクを辿らない。波括弧の中だけで名指しした隠しディレクトリ（"{.kotowari/changes,other}/*.yaml" のようなもの）は、パス成分による名指しに数えない。
+kotowari は常に、glob の "**" を再帰として読む。overview.files がパス成分で明示した隠し配下の`全体像の元データ`の探索を除き、隠しディレクトリを glob が名指ししても含めない。広い "**" だけでは未指定の隠し配下へ入らない。隠しファイルは glob が当てれば読み、ディレクトリのシンボリックリンクを辿らない。波括弧の中だけで名指しした隠しディレクトリは、パス成分による名指しに数えない。
 
 ### REQ-core-020: 直下の kotowari.toml を読まない
 
@@ -89,7 +89,7 @@ kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`�
 
 ### TBL-core-004: キーと既定の値
 
-- source: docs/decision/records/2026-10-01-change-details.md#A2, docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/records.md#A62, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-notice.md#A5, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A9, docs/decision/records/2026-09-24-multi-language-tests.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A4, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A3, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-05-overview-index.md#A10, docs/decision/records/2026-10-05-overview-index.md#A11, docs/decision/records/2026-10-05-localization.md#A16, docs/decision/records/2026-10-05-localization.md#A40, docs/decision/records/2026-10-05-localization.md#A21, docs/decision/records/2026-10-05-localization.md#A7
+- source: docs/decision/records/records.md#A12, docs/decision/records/records.md#A23, docs/decision/records/records.md#A36, docs/decision/records/records.md#A41, docs/decision/records/records.md#A47, docs/decision/records/records.md#A48, docs/decision/records/records.md#A49, docs/decision/records/records.md#A62, docs/decision/records/records.md#A69, docs/decision/records/2026-09-16-notice.md#A5, docs/decision/records/2026-09-17-mutation-tests.md#A36, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A9, docs/decision/records/2026-09-24-multi-language-tests.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A4, docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A3, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A20, docs/decision/records/2026-09-27-surface-check.md#A22, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A71, docs/decision/records/2026-10-05-overview-index.md#A10, docs/decision/records/2026-10-05-overview-index.md#A11, docs/decision/records/2026-10-05-localization.md#A16, docs/decision/records/2026-10-05-localization.md#A40, docs/decision/records/2026-10-05-localization.md#A21, docs/decision/records/2026-10-05-localization.md#A7, docs/decision/records/2026-10-06-changes-rethink.md#A10, docs/decision/records/2026-10-06-changes-rethink.md#A30
 
 | キー | 値 | 既定 |
 |---|---|---|
@@ -108,9 +108,6 @@ kotowari は、リポジトリ直下の "kotowari.toml" を`設定ファイル`�
 | limits.lines | 数（負の数と0は不可） | 200 |
 | limits.requirements | 数（負の数と0は不可） | 10 |
 | vague_words | 語の一覧 | 「適切に」「必要に応じて」「通常は」「など」の4語 |
-| changes.files | 変更照合の対象の相対 glob 一覧。changes を書くときは必須で空不可 | changes の省略時は照合記録検査なし |
-| changes.exclude | 変更照合の対象から外す相対 glob 一覧 | 空の一覧 |
-| changes.records | 照合記録の相対 glob 一覧。changes を書くときは必須で空不可 | changes の省略時は照合記録検査なし |
 | overview.files | glob の一覧。`全体像の元データ`の置き場（overview-data.md）。overview を書くときは必須 | overview の省略時は`全体像の元データ`を読まない |
 | overview.toc | ファイルのパス（1つの文字列）。`目次`を指す（overview-toc.md）。overview を書くときは必須 | overview の省略時は`目次`を読まない |
 | languages | 言語タグの一覧。`言語の一覧`（translation-pairs.md） | 無し（"en" だけの`言語の一覧`とみなす） |
@@ -136,9 +133,9 @@ Scenario: "/" で始まる glob の要素は設定の誤りで止まる
   When "kotowari check" を実行する
   Then 終了コードは 2 で、標準エラーは "config error: " で始まる
 
-@id=EX-core-545 @about=REQ-core-019 @source=docs/decision/records/2026-10-06-todo-zero.md#A4
+@id=EX-core-545 @about=REQ-core-019 @source=docs/decision/records/2026-10-06-todo-zero.md#A4,docs/decision/records/2026-10-06-changes-rethink.md#A23
 Scenario: 波括弧の中だけで名指しした隠しディレクトリには入らない
-  Given "changes.records" が "{.records,other}/*.yaml" で、".records/a.yaml" がある
+  Given "overview.files" が "{.overview,other}/*.md" で、".overview/a.md" がある
   When "kotowari check" を実行する
-  Then ".records/a.yaml" は照合記録として読まれない
+  Then ".overview/a.md" は`全体像の元データ`として読まれない
 ```

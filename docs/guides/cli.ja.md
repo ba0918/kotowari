@@ -2,15 +2,15 @@
 
 [English](cli.md) | 日本語
 
-<!-- @kotowari[REQ-core-001:f6b868d0] -->
+<!-- @kotowari[REQ-core-001:4ea3a019] -->
 
-kotowari の8つのコマンドに共通する決まりをまとめたページです。
+kotowari の7つのコマンドに共通する決まりをまとめたページです。
 書式、共通のオプション、指摘の出し方、終了コード、止まったときの標準エラー、パスの基準を扱います。
 コマンドごとの細部は、それぞれのページを見てください。
 
 ## 書式
 
-<!-- @kotowari[REQ-core-001:f6b868d0, REQ-core-002:f86e2efd, EX-core-380:f7f73b4e] -->
+<!-- @kotowari[REQ-core-001:4ea3a019, REQ-core-002:f86e2efd, EX-core-380:f7f73b4e] -->
 
 ```sh
 kotowari <command> [--format json|text] [--config <path>] [argument]
@@ -20,11 +20,10 @@ kotowari --help
 kotowari --version
 ```
 
-コマンドは次の8つだけです。
+コマンドは次の7つだけです。
 
 | コマンド | 何をするか | ページ |
 |---|---|---|
-| `changes` | Git の変更と記録の対応・鮮度を指定した段階で検査する | [commands/changes.md](commands/changes.ja.md) |
 | `check` | IR の書き方の検査と、IR とテストの対応の検査を両方行う | [commands/check.md](commands/check.ja.md) |
 | `list` | IR の項目を1件ずつ、付いているテストと並べる | [commands/list.md](commands/list.ja.md) |
 | `query` | 1つの ID の項目かシナリオを、本文と逆参照つきで出す | [commands/query.md](commands/query.ja.md) |
@@ -39,12 +38,12 @@ kotowari --version
 
 ## 共通のオプション
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:b4f59e48, REQ-core-107:7c6198ca, REQ-core-297:481b26d5] -->
+<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:8ac6759c, REQ-core-107:7c6198ca, REQ-core-297:481b26d5] -->
 
 | 名前 | 値 | 既定 | 説明 | 受けるコマンド |
 |---|---|---|---|---|
 | `--format` | `json` か `text` | `json` | 出力の形 | `overview serve` 以外のすべて |
-| `--config` | 設定ファイルのパス | 基準のディレクトリの `.kotowari/config.yaml` | 読む設定ファイルを変える。通常は**カレントディレクトリ**からの相対。`changes` は Git ルートからの相対で、対象 snapshot の設定を読む | `check`、`list`、`query`、`status`、`mutants`、`changes`、`overview build`、`overview serve` |
+| `--config` | 設定ファイルのパス | 基準のディレクトリの `.kotowari/config.yaml` | 読む設定ファイルを変える。**カレントディレクトリ**からの相対 | `check`、`list`、`query`、`status`、`mutants`、`overview build`、`overview serve` |
 | `--help` | なし | — | 使い方を標準出力に出して終了コード0で終わる | すべて |
 | `--version` | なし | — | 版を標準出力に出して終了コード0で終わる | すべて |
 | `--tool` | `cargo-mutants` | なし（必須） | 結果のファイルを出した道具 | `mutants` だけ |
@@ -60,7 +59,7 @@ kotowari --version
 
 ## 指摘の出し方
 
-`check`、`mutants`、`plan`、`changes` は、見つけた問題を「指摘」として1件ずつ出します。
+`check`、`mutants`、`plan` は、見つけた問題を「指摘」として1件ずつ出します。
 指摘の形はこれらのコマンドで同じです。
 種類ごとの意味と直し方は [findings.md](findings.ja.md) にあります。
 
@@ -144,7 +143,7 @@ CI では終了コードだけで「直す必要があるか」を判定でき�
 
 ### 停止の理由
 
-<!-- @kotowari[TBL-core-018:c435229b, TBL-core-020:d87686da, TBL-core-001:0d8e4c30] -->
+<!-- @kotowari[TBL-core-018:c435229b, TBL-core-020:52850b57, TBL-core-001:0d8e4c30] -->
 
 | 1行目の文言 | 理由 | 詳細 | 主な場面 |
 |---|---|---|---|
@@ -153,7 +152,6 @@ CI では終了コードだけで「直す必要があるか」を判定でき�
 | `unreadable file` | 読めないファイル | 相対パスと OS の誤りの文 | 置き場のディレクトリが無い、ファイルやディレクトリが読めない、`surface.unspecified` か `overview.toc` の指す先が無い |
 | `non-UTF-8 file` | UTF-8 でないファイル | 相対パス | 読むファイルのどれかが UTF-8 でない（面のファイルは面の規則の言語のものだけを読む） |
 | `results error` | 結果の誤り | 結果のファイルの相対パスと誤りの説明 | `mutants` の結果のファイルの形が壊れている |
-| `git error` | Git の読み取り停止 | 読めない履歴・対象・index の説明 | Git が無い、REV が commit に解決できない、設定が対象に無い、競合した index、不対応の対象 |
 | `mapping error` | 写しの誤り | 写せなかった指摘の種類か値の説明 | kotowari の内部の不整合。利用者の入力では起きない想定 |
 | `overview error` | 元データの誤り | 誤りの件数と ` errors in overview data; run kotowari check` | `overview build` か `serve` で全体像の元データか目次に誤りがある、または IR、全体像の元データ、目次の対に `translation_missing` か `translation_structure_mismatch` がある。何も書かない |
 | `port error` | ポートの誤り | `127.0.0.1:<ポート>: ` と OS の誤りの文 | `overview serve` で指定のポートを使えない（ほかのポートは試さない）か、配っている間に接続の受け付けに失敗した |
@@ -163,12 +161,12 @@ CI では終了コードだけで「直す必要があるか」を判定でき�
 
 ### 引数の誤り
 
-<!-- @kotowari[REQ-core-004:2d3401d1, EX-core-219:f3123493, EX-core-241:38290f77, REQ-core-304:e9cd623d] -->
+<!-- @kotowari[REQ-core-004:7719a0bd, EX-core-219:f17bce41, EX-core-241:6a451e97, REQ-core-304:e9cd623d] -->
 
 次のどれかに当たると `argument error` で止まります（`--help` か `--version` があるときを除く）。
 
 - 引数が1つも無い、またはオプションだけで、コマンドが無い
-- 1つ目の位置引数が8つのコマンドのどれでもない
+- 1つ目の位置引数が7つのコマンドのどれでもない
 - 知らないオプション、`mutants` でないコマンドに付けた `--tool`、`overview serve` でないコマンドに付けた `--port`、`overview serve` に付けた `--format`、または `check` でないコマンドに付けた `--allow-test-findings`
 - `overview` の後の位置引数がちょうど1つでないか、`build` か `serve` でない
 - `--port` の値が1から65535までの10進の整数でない
@@ -236,7 +234,6 @@ $ kotowari --help
 Usage: kotowari [OPTIONS] <COMMAND> [ARGUMENT]
 
 Commands:
-  changes    Check change records against a Git base and target snapshot
   check      Check IR documents and test markers
   list       List IR items and the tests marked for them
   mutants    Read a mutation testing result file and report survivors
@@ -245,7 +242,6 @@ Commands:
   query      Show one item or scenario with its body and back references
   status     Summarise the IR and tell whether it is complete
 
-Changes: --base <REV> (--head <REV> | --staged) --phase <implementation|review>
 Options:
   --format <FORMAT>      Output format: json (default) or text
   --config <PATH>        Path to configuration file
@@ -258,11 +254,11 @@ Options:
 
 ### 引数を間違えて止まる
 
-<!-- @kotowari[REQ-core-004:2d3401d1, REQ-core-005:fee48254, EX-core-219:f3123493] -->
+<!-- @kotowari[REQ-core-004:7719a0bd, REQ-core-005:fee48254, EX-core-219:f17bce41] -->
 
 ```console
 $ kotowari
-argument error: expected command: check, changes, list, mutants, overview, plan, query or status
+argument error: expected command: check, list, mutants, overview, plan, query or status
 $ kotowari check --verbose
 argument error: unknown option: --verbose
 $ kotowari check --format xml
@@ -283,7 +279,7 @@ $ echo $?
 
 ### ファイルと設定の問題で止まる
 
-<!-- @kotowari[TBL-core-018:c435229b, TBL-core-020:d87686da] -->
+<!-- @kotowari[TBL-core-018:c435229b, TBL-core-020:52850b57] -->
 
 ```console
 $ kotowari check --format text      # docs/decision/adr が無い
@@ -291,12 +287,12 @@ unreadable file: docs/decision/adr: No such file or directory (os error 2)
 $ kotowari check --format text      # docs/ir/greet/bad.md が UTF-8 でない
 non-UTF-8 file: docs/ir/greet/bad.md
 $ kotowari check --config bad.yaml  # limits を limit と書き間違えた
-config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words, languages, labels
+config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
  --> <input>:2:1
   |
 1 | ir: docs/ir
 2 | limit:
-  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words, languages, labels
+  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
 3 |   lines: 20
   |
 $ kotowari check --format text      # rules/c.yml の language が cobol
@@ -310,7 +306,7 @@ YAML の読み方に関わる設定の誤り（知らないキー、型の違い
 
 ### サブディレクトリから実行する
 
-<!-- @kotowari[TBL-core-003:603e9601, PROP-core-001:9be33697, REQ-core-003:b4f59e48] -->
+<!-- @kotowari[TBL-core-003:603e9601, PROP-core-001:9be33697, REQ-core-003:8ac6759c] -->
 
 `.kotowari/` のあるディレクトリの下の `tests/` で実行しても、基準は上の `.kotowari/` のあるディレクトリです。
 出力のパスは `tests/` からではなく、基準からの相対になります。
@@ -330,7 +326,7 @@ tests/greet.rs:6 [error] test_without_id rejects_empty_name
 $ kotowari check --config .kotowari/config.yaml
 argument error: config file not found: .kotowari/config.yaml
 $ kotowari --format text check --config ../bad.yaml
-config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, changes, overview, vague_words, languages, labels
+config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
 …
 ```
 
@@ -349,7 +345,7 @@ JSON を `jq` に渡しているときは、`jq` が空の入力を受けて何�
 
 ### `--config` を付けたのに `config file not found` になる
 
-<!-- @kotowari[REQ-core-003:b4f59e48, PROP-core-001:9be33697] -->
+<!-- @kotowari[REQ-core-003:8ac6759c, PROP-core-001:9be33697] -->
 
 `--config` のパスは、基準のディレクトリではなくカレントディレクトリからの相対で読みます。
 サブディレクトリで実行しているなら、`../` を付けるか絶対パスで指してください。
@@ -376,5 +372,3 @@ JSON を `jq` に渡しているときは、`jq` が空の入力を受けて何�
 - 設定ファイルのキー: [config.md](config.ja.md)
 - 指摘の種類: [findings.md](findings.ja.md)
 - 各コマンド: [check](commands/check.ja.md)、[list](commands/list.ja.md)、[query](commands/query.ja.md)、[status](commands/status.ja.md)、[mutants](commands/mutants.ja.md)、[plan](commands/plan.ja.md)
-
-`changes` の基準は起動位置を含む Git 作業ツリーのルートです。対象の設定・IR・判断の記録・照合記録を commit または index から一緒に読み、作業ツリーでは補いません。比較と段階の必須引数は [changes](commands/changes.ja.md) を見てください。

@@ -2,7 +2,7 @@
 
 English | [日本語](check.ja.md)
 
-<!-- @kotowari[REQ-core-001:f6b868d0] -->
+<!-- @kotowari[REQ-core-001:4ea3a019] -->
 
 This command reports errors in how the IR (the specification) is written, and gaps in the correspondence between the IR and the tests, as one finding each.
 Run it after writing IR or tests, fix the findings, and repeat until there are zero errors.
@@ -20,7 +20,7 @@ It takes no positional arguments.
 
 ## Options and arguments
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:b4f59e48, REQ-core-004:2d3401d1] -->
+<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:8ac6759c, REQ-core-004:7719a0bd] -->
 
 | Name | Value | Default | Description |
 |---|---|---|---|
@@ -34,7 +34,7 @@ The rules shared by all options (for example, that they can be written before or
 
 ## What it reads
 
-<!-- @kotowari[TBL-core-004:322d11b1, REQ-core-325:ba483356, REQ-core-336:03710aae, REQ-core-337:40375497] -->
+<!-- @kotowari[TBL-core-004:3b95b98e, REQ-core-325:ba483356, REQ-core-336:03710aae, REQ-core-337:40375497] -->
 
 `check` reads the following from the locations the configuration file points to.
 
@@ -66,7 +66,7 @@ How the base directory is determined is described in [cli.md](../cli.md#the-base
 
 ### When a location is missing
 
-<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-019:178b0f0c] -->
+<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-019:10278003] -->
 
 The three locations `ir`, `decisions.records` and `decisions.adr` must exist as directories, even when left at their defaults.
 If any of them is missing, is not a directory, or cannot be read, kotowari stops with `unreadable file`.
@@ -76,7 +76,7 @@ Create an empty directory even for a location you do not use.
 A glob that matches nothing is not an error.
 `**` is read as recursive.
 Hidden directories are not included even when a glob names them, and symbolic links to directories are not followed.
-As exceptions, `changes.records` for change records and `overview.files` for overview data do read hidden directories named explicitly in a path component (such as `.kotowari/overview/*.md`). Hidden directories that are not named are excluded even by a broad `**`.
+As an exception, `overview.files` for overview data does read hidden directories named explicitly in a path component (such as `.kotowari/overview/*.md`). Hidden directories that are not named are excluded even by a broad `**`, and a hidden directory named only inside braces (`{.overview,other}/*.md`) does not count as named.
 
 If a directory cannot be read during the scan, or a dangling symbolic link is encountered, kotowari stops with `unreadable file`.
 
@@ -420,5 +420,3 @@ Details are in [marks.md](../marks.md).
 - Configuration keys: [config.md](../config.md)
 - See whether everything is in place as a whole: [status](status.md)
 - See items and tests one by one: [list](list.md)
-
-When `changes.records` is configured, kotowari checks the format and current references of every change record. A broken reference is an error even for records with a different base. Hidden directories named in a path component of `changes.records` are read; hidden directories not named are not read even by a broad `**`. The usual hidden-directory exclusion for tests and guides does not change. No Git comparison base is needed; content freshness and change coverage are checked by [changes](changes.md).

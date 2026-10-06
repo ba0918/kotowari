@@ -2,7 +2,7 @@
 
 [English](index.md) | 日本語
 
-<!-- @kotowari[REQ-core-001:f6b868d0] -->
+<!-- @kotowari[REQ-core-001:4ea3a019] -->
 
 kotowari は、Markdown で書いた仕様（IR）を機械的に検査する CLI です。
 要求・決定表・シナリオを決まった形で書き、それぞれが決定の記録に出典を持ち、テストに結び付いているかを `kotowari check` が確かめます。
@@ -27,7 +27,6 @@ kotowari は、Markdown で書いた仕様（IR）を機械的に検査する CL
 
 | コマンド | 何をするか |
 |---|---|
-| [changes](commands/changes.ja.md) | 変更の照合漏れと鮮度を Git snapshot で検査する |
 | [check](commands/check.ja.md) | IR とテストの印を検査し、指摘を出す |
 | [list](commands/list.ja.md) | 項目とシナリオを、印の付いたテストと一緒に一覧にする |
 | [query](commands/query.ja.md) | 1件の項目の本文と、それを指す項目を出す |

@@ -26,6 +26,8 @@ Hand back (stop, state the reason, do not guess) when:
   or a dangerous target (production data, configuration, external effects) → ask, then continue;
 - continuing would spread damage (secret exposure, unintended publication, data loss) → stop;
 - after diagnosing and changing approach once there is still no progress → stop;
+- a hook stops your commit on an IR-side finding → back to cycle (see **Requirements and kotowari
+  check**);
 - no test command can be determined (see below) → back to plan before writing product code.
 
 Before handing back a missing decision, ask whether running something in the worktree would answer
@@ -71,12 +73,18 @@ or that name an ID the plan covers; list any others in the report without touchi
 
 - fix the test-side findings yourself (requirement_without_test, scenario_without_test,
   test_without_id, invalid_marker, unparsable_file, and unresolved_reference from a mark);
-- for an IR-side finding, record and add only justified concrete IR within the delegated scope, and only what the IR holds (the kotowari skill's **What the IR holds**), while keeping approved requirements unchanged; rerun check and independent conformance review. Hand back consequential meaning or approved-requirement changes.
+- leave an IR-side finding alone and list it in the report: the cycle's consistency phase, which
+  reads the diff against the IR after you, resolves it and fixes the IR. When the pre-commit hook
+  stops your commit on one, never edit the IR and never bypass the hook: stop, leave the blocked
+  change uncommitted in the worktree, and hand back the finding with the files it blocked. Cycle
+  runs the phase and then delegates the remaining steps to you again; resume from the working
+  diff as **Resuming** says.
 
 A deferred requirement or deferred scenario (`deferred` true in `kotowari query`) is not built
 now and raises no test-side finding: write no test for it and put its ID in no mark. If your mark
-raised deferred_with_test, remove the mark; hand back any other deferred_with_test or
-depends_on_deferred notice on a file you changed or an ID the plan covers, as an IR-side finding.
+raised deferred_with_test, remove the mark; list any other deferred_with_test or
+depends_on_deferred notice on a file you changed or an ID the plan covers in the report, as an
+IR-side finding.
 
 Overview data (the files in the configuration's `overview.files`) is never edited here, not even
 to clear its findings or guide_stale notices: the next brainstorm that touches the topic revises
@@ -114,7 +122,3 @@ external checks) and approved-but-unexecuted human decisions are redone or re-as
 
 Commits made, verification evidence per step (test names run, check commands, artifact paths,
 external summaries), out-of-plan changes with reasons, anything handed back and why.
-
-## Change conformance records
-
-For changes-enabled projects read the kotowari skill's changes scene. Record each new choice with its grounds and deciding role, and add concrete IR only within the delegation as that scene describes. At delivery, author `implementation.yaml` against the branch-wide base the caller fixed; never author `review.yaml`. Intermediate commits need no records.

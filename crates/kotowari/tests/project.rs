@@ -66,8 +66,8 @@ fn project_rejects_relative_roots_and_plan_does_not_require_ir() {
 
 // @kotowari[REQ-core-310, REQ-core-312, EX-core-484, EX-core-486]
 #[test]
-fn mutants_and_changes_have_typed_inputs_and_failures_without_ir_loading() {
-    use kotowari::{ChangesOptions, ErrorKind, MutantsOptions, Phase, Target, Tool};
+fn mutants_have_typed_inputs_and_failures_without_ir_loading() {
+    use kotowari::{MutantsOptions, Tool};
     let dir = tempfile::tempdir().unwrap();
     let project = Project::new(ProjectOptions::new(dir.path())).unwrap();
     std::fs::write(dir.path().join("outcomes.json"), "{\"outcomes\": []}").unwrap();
@@ -86,15 +86,6 @@ fn mutants_and_changes_have_typed_inputs_and_failures_without_ir_loading() {
             })
             .is_err()
     );
-    let error = project
-        .changes(&ChangesOptions {
-            base: "HEAD".into(),
-            target: Target::Index,
-            phase: Phase::Implementation,
-        })
-        .err()
-        .unwrap();
-    assert_eq!(error.kind(), ErrorKind::GitFailure);
 }
 
 // @kotowari[REQ-core-311, REQ-core-323, EX-core-483, EX-core-501]

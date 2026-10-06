@@ -10,7 +10,7 @@ It reports no findings. To see findings, use [`kotowari check`](./check.md).
 
 ## Synopsis
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-004:2d3401d1] -->
+<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-004:7719a0bd] -->
 
 ```sh
 kotowari list [--format json|text] [--config <path>]
@@ -23,7 +23,7 @@ It takes no positional arguments.
 
 ## Options and arguments
 
-<!-- @kotowari[REQ-core-155:586b389e, REQ-core-003:b4f59e48, REQ-core-011:0b7f52a9] -->
+<!-- @kotowari[REQ-core-155:586b389e, REQ-core-003:8ac6759c, REQ-core-011:0b7f52a9] -->
 
 | Name | Value | Default | Description |
 |---|---|---|---|

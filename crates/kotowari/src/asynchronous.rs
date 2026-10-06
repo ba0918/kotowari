@@ -112,14 +112,6 @@ impl AsyncProject {
         let project = self.project.clone();
         self.blocking.run(move || project.overview_build()).await
     }
-    pub async fn changes(
-        &self,
-        options: &crate::ChangesOptions,
-    ) -> Result<crate::ChangesReport, Error> {
-        let project = self.project.clone();
-        let options = options.clone();
-        self.blocking.run(move || project.changes(&options)).await
-    }
 }
 #[cfg(test)]
 #[path = "async_tests.rs"]

@@ -28,7 +28,7 @@ flowchart BT
 
 ## 書式
 
-<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-004:2d3401d1] -->
+<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-004:7719a0bd] -->
 
 ```sh
 kotowari status [--format json|text] [--config <path>]
@@ -41,7 +41,7 @@ kotowari status --version
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-166:68151ef8, REQ-core-003:b4f59e48, REQ-core-011:0b7f52a9] -->
+<!-- @kotowari[REQ-core-166:68151ef8, REQ-core-003:8ac6759c, REQ-core-011:0b7f52a9] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
@@ -238,5 +238,3 @@ true
 - 指摘の種類: [指摘の一覧](../findings.ja.md)
 - 共通のオプション、停止、基準のディレクトリ: [CLI の共通事項](../cli.ja.md)
 - 設定ファイル: [設定](../config.ja.md)
-
-`complete` は今回の Git 差分の照合を保証しません。取り込み前は check と、比較元からブランチ全体の `changes --phase review` を両方成功させます。
