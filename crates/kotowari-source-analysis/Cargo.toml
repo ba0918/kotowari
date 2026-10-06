@@ -1,6 +1,6 @@
 [package]
 name = "kotowari-source-analysis"
-version = "0.4.0"
+version = "0.5.0"
 edition.workspace = true
 rust-version.workspace = true
 license = "MIT OR Apache-2.0"
@@ -9,7 +9,7 @@ repository = "https://github.com/ba0918/kotowari"
 description = "In-memory source analysis producing core-owned specification facts"
 
 [dependencies]
-kotowari-core = { path = "../kotowari-core", version = "0.4.0" }
+kotowari-core = { path = "../kotowari-core", version = "0.5.0" }
 serde = { version = "1", features = ["derive"] }
 serde-saphyr = "1"
 regex = "1"

@@ -5,6 +5,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-06
+
 ### Removed
 
 - **BREAKING** The `kotowari changes` command and change records are removed. kotowari now has seven commands. The `changes` section of the configuration (`changes.files`, `changes.exclude`, `changes.records`) is gone, and a configuration that still has it stops with a configuration error as an unknown key: delete the `changes` section from `.kotowari/config.yaml` and delete `.kotowari/changes/`. `check` and `status` no longer read change records, the finding kinds `change_uncovered`, `change_stale`, `change_ir_stale`, `change_conclusion_conflict`, `change_deferred` and `change_record_invalid` are gone, and so is the `git error` stop.
@@ -102,7 +104,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 - Ten Claude Code skills in `agent/skills/`. `kotowari` teaches how to write the IR and decision records, fix findings and place marks. The nine starting with `kotowari-` run the workflow from brainstorm through plan, implementation and review on top of kotowari (optional).
 - Two ways to install: prebuilt binaries on GitHub Releases (Linux x86_64 and macOS arm64, with SHA256), and `cargo install --git https://github.com/ba0918/kotowari --tag kotowari-v0.1.0 kotowari` with the version pinned by tag. Passing the tag to `--pin` of `gh skill install` installs the skills at a pinned version.
 
-[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.4.0...HEAD
+[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.5.0...HEAD
+[0.5.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.4.0...kotowari-v0.5.0
 [0.4.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.3.0...kotowari-v0.4.0
 [0.3.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.2.0...kotowari-v0.3.0
 [0.2.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.1.0...kotowari-v0.2.0
