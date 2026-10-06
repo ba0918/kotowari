@@ -160,23 +160,5 @@ To release:
    creates the GitHub Release with that version's changelog section as its notes.
 
 A pushed tag is published: never move or re-create it. A published release is fixed by releasing
-a new version. The release workflow publishes releases; the change-conformance workflow checks pull requests.
+a new version. The release workflow publishes releases.
 The local hooks remain required gates.
-
-## Change conformance
-
-`.kotowari/config.yaml` enables change records under `.kotowari/changes/*.yaml` for code, tests,
-skills, build/hook/CI configuration and guides. Intermediate commits need no records; the hooks do not
-run `changes`. Before integration, the implementer writes `implementation.yaml` and an independent
-review writes `review.yaml`, both against the branch-wide comparison base. Keep only the current
-records; past evidence is read from Git history. Remove invalidated records and reconcile again after
-changes to related code, IR or decisions, or the comparison base. Normal document search excludes
-`.kotowari/changes/`; read only the needed entries while reconciling.
-
-Before integration, pin the full base and candidate head, run the workspace tests, then require
-both `kotowari check` and `kotowari changes --base <base> --head <head> --phase review` to exit 0.
-`status complete` is not evidence that the branch's changes have been reconciled.
-
-The pull-request workflow uses the merge-base of the event base and head as the comparison base and
-checks the head SHA after fetching both histories. Publishing workflow files requires approval.
-See `docs/guides/change-conformance.md`.

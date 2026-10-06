@@ -34,29 +34,6 @@ surface:
   rules:
     - ".kotowari/rules/surface.yml"
 
-changes:
-  files:
-    - "src/**"
-    - "crates/**"
-    - "tests/**"
-    - "agent/skills/**"
-    - "scripts/**"
-    - ".github/workflows/**"
-    - ".kotowari/**"
-    - "Cargo.toml"
-    - "Cargo.lock"
-    - "lefthook.yml"
-    - ".ignore"
-    - "PROJECT.md"
-    - "CHANGELOG.md"
-    - "docs/guides/**"
-    - "site/**"
-  exclude:
-    - "site/dist/**"
-    - "site/__pycache__/**"
-  records:
-    - ".kotowari/changes/*.yaml"
-
 # 文書を英語と日本語の対で持つ。接尾辞の無いファイルが英語、"*.ja.md" が日本語（docs/ir/core/translation-pairs.md）
 languages: [en, ja]
 labels:
