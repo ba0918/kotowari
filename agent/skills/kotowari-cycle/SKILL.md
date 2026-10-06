@@ -145,7 +145,7 @@ the quality review, and resolves the gaps and disagreements it finds. Its instru
 - **When.** Once after implementation (step 2) and once after the quality review's fixes converge,
   over the diff of all those fixes (step 6). One delegation is one run. After a run that fixed
   something, cycle delegates a rerun: the same base, the head moved to the current head, and the
-  previous run's findings. A run that raises no new finding converges.
+  previous run's findings. A run that raises no new finding and no `repeat` converges.
 - **Whether.** Cycle decides. Skip a run only when its diff neither adds nor changes behavior a user
   can observe: documents such as guides only, tests only, or a refactoring that keeps behavior.
   Skill text is behavior, never skipped as a document. When in doubt, run it. A skipped run writes a

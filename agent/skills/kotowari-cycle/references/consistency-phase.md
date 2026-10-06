@@ -106,8 +106,9 @@ resolved here as below.
   reads whether the grounds recorded for each choice support it.
 - Each finding a rerun returns is marked `new`, or `repeat` when it is the same gap or disagreement
   at the same place as a finding of the previous run it was given.
-- A run that raises no new finding is convergence. A `repeat` is no progress, the same finding twice
-  in a row: cycle ends the loop by its ending for no progress.
+- A `repeat` is no progress, the same finding twice in a row: cycle ends the loop by its ending for
+  no progress.
+- Otherwise, a run that raises no new finding is convergence.
 
 ## What it returns
 
