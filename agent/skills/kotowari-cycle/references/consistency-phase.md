@@ -17,7 +17,8 @@ decide; a person is involved only as a last resort.
   in place and leaves it uncommitted for whoever made it.
 - The counterpart: the IR store path and a file listing the IDs the plan covers. For a topic with no
   IR, the approved specification document, or the request when there is none.
-- The findings the previous run with the same base returned, if any.
+- The open findings of earlier runs, with their IDs and commits, and the path of the kotowari-review
+  skill's `references/finding-schema.md` (the shape of a finding).
 - The paths of the kotowari skill's references it follows when it writes: `ir-form.md` and
   `records.md` (the IR and decision records), `translations.md` (language pairs),
   `findings.md` (reading `kotowari check`) and `mark.md` (marks on tests); the kotowari skill's
@@ -101,21 +102,18 @@ resolved here as below.
 - One concern per commit; `git add <path>` only; never disable hooks; never name a station or a
   finding ID in a commit message.
 
-## Running again and ending
+## Running again and what it returns
 
-- One delegation is one run. After a run that fixed something, cycle delegates another run with the
-  same base and the head moved to the current head, so the range includes the fixes; that run also
-  reads whether the grounds recorded for each choice support it.
-- Each finding a rerun returns is marked `new`, or `repeat` when it is the same gap or disagreement
-  at the same place as a finding of the previous run it was given.
-- A `repeat` is no progress, the same finding twice in a row: cycle ends the loop by its ending for
-  no progress.
-- Otherwise, a run that raises no new finding is convergence.
+Its findings go into cycle's findings file beside the review's, with the perspective `consistency`,
+and cycle reruns and stops the phase by the same rules as the review loop. One delegation is one run.
+A rerun has the head moved to the current head, so its range includes the fixes, and it also reads
+whether the grounds recorded for each choice support it. A run returns:
 
-## What it returns
-
-- Each finding of this run: what it is (gap, disagreement, or a gap or contradiction within the IR),
-  where (file and line, or ID), `new` or `repeat`, how it was resolved, and its commits.
-- The path of the decision record it wrote, if it decided anything.
-- Each default left awaiting a person: the flag ID, the default, and the word that reverses it.
-- Anything handed back to a person, with its reason.
+- for each earlier finding it was given, `still_present` or `no_longer_visible`, with the commits of
+  any further fix;
+- each new finding in the finding shape, without `id`, `status` and `evaluations`: the perspective
+  `consistency`; the claim says whether it is a gap, a disagreement, or a gap or contradiction within
+  the IR; the evidence is the file and line or the ID; the oracle is the measurement or check that
+  decided it; `commits` are the commits that resolved it;
+- the path of the decision record it wrote, if it decided anything;
+- anything handed back to a person, with its reason.

@@ -41,11 +41,9 @@ directory). If it already exists this is a resume: keep its findings, continue r
 the inherited maximum, and count both of ending 3's streaks from this start only (a returning closed cause
 counts across starts). Either way, infer from the plan and `git log` which steps are done; skip
 step 1 only when every step left a git trace. Otherwise delegate step 1: implement resumes by
-inference and redoes untraced steps, and step 2 follows. When step 1 is skipped, the file's
-`consistency_phase` says where the phase stood. When its last run did not converge, rerun that
-step's phase: base kept, head the current head, that run's findings as the previous ones. When step 2 has converged
-and `review_head` is null, go on at step 3. When no visible finding is open, `last_reviewed_head`
-is the current head, and no converged step-6 run ends at it, run step 6 from `review_head`.
+inference and redoes untraced steps, and step 2 follows. When step 1 is skipped, go on at step 2
+while `first_review_head` is null, else at step 4 while a visible quality finding is open, else at
+step 6. Whether to skip a phase run is decided again by its measure.
 
 Before the first review, read the kotowari-review skill (`SKILL.md`, `references/profiles.md`,
 `references/finding-schema.md`, `references/oracle-evidence.md`). Every review prompt carries the
@@ -59,8 +57,7 @@ rules, paste the Evidence conditions from
 
 1. Delegate the plan path, branch, and worktree path to an implement agent, all remaining steps
    in one delegation.
-2. Consistency phase over base..head, as **Consistency phase** below says, rerun until a run
-   converges.
+2. Consistency phase over base..head, as **Consistency phase** below says.
 3. Full review: base..head, profiles, strength, counterpart, plus the **known findings** (open
    `record_only` / `human_judgment`, closed `accepted`), never visible or fixed ones; a match is not raised again.
    Cycle itself, as the caller, then launches the optional seats as the review skill's **Optional
@@ -74,29 +71,30 @@ rules, paste the Evidence conditions from
    diff loop until none remain.
    With no such reason, the diff loop clearing every visible finding ends the quality review.
 6. Consistency phase once more, over the diff of all the quality review's fixes (from the head step
-   3 reviewed, `consistency_phase.review_head`, to the current head), rerun until a run converges; then converged.
+   3 reviewed, `first_review_head`, to the current head); then converged.
 
 Visible findings = open findings whose final action is `auto_fix` or `fix_and_verify`. Findings with
-`human_judgment` or `record_only` stay open for the terminal report. When
+`human_judgment` or `record_only` stay open for the terminal report. A `consistency` finding goes
+only to the consistency phase, never to a fixer or a review. When
 it runs, the second full review cancels the taint a diff review carries from seeing prior findings.
 A **round trip** is one review invocation (any number of reviewers, full or diff, the first one
-included). The limit, when the person set one, counts round trips.
+included) or one consistency phase run. The limit, when the person set one, counts round trips.
 
 ## Delegations
 
 - **implement:** carry the plan path, branch, and worktree path. It returns commits, per-step
   verification evidence, and out-of-plan changes, or a hand-back with its reason. When the hand-back
-  is a commit a hook stopped on an IR-side finding, run the consistency phase (a run of step 1, the
-  blocked change in the worktree included in its range) until it converges, then delegate the
+  is a commit a hook stopped on an IR-side finding, run the consistency phase as in step 2 (the
+  blocked change in the worktree included in its range), then delegate the
   remaining steps again; step 2 still runs after implementation.
 - **review (full):** carry the base and head, worktree path, known findings, and the review items
   and Evidence conditions named above. It returns findings JSON.
 - **review (diff):** carry the diff since the last review, worktree path, open findings with IDs,
   and the same review items and Evidence conditions. It returns per-finding `still_present` or
   `no_longer_visible` and new findings.
-- **consistency phase:** carry what **Consistency phase** below lists. It returns its findings with
-  how each was resolved, its commits, the decision record it wrote, the defaults it left awaiting a
-  person, or a hand-back.
+- **consistency phase:** carry what **Consistency phase** below lists. It returns a verdict on each
+  earlier finding it was given, its new findings with their commits, and the decision record it
+  wrote, or a hand-back.
 - **fixer:** carry visible findings, plan path, branch, worktree path, and the contract below. It
   returns commits and which finding each addresses, or a hand-back. A commit a hook stopped on an
   IR-side finding is handled as for implement: a phase run at this step, then the same delegation. For a finding that is
@@ -143,9 +141,9 @@ the quality review, and resolves the gaps and disagreements it finds. Its instru
 `references/consistency-phase.md`.
 
 - **When.** Once after implementation (step 2) and once after the quality review's fixes converge,
-  over the diff of all those fixes (step 6). One delegation is one run. After a run that fixed
-  something, cycle delegates a rerun: the same base, the head moved to the current head, and the
-  previous run's findings. A run that raises no new finding and no `repeat` converges.
+  over the diff of all those fixes (step 6). One delegation is one run. After a run that returned a
+  new finding or a visible one `still_present`, cycle delegates a rerun with the same base and the head moved to
+  the current head; the step ends at a run that returns neither.
 - **Whether.** Cycle decides. Skip a run only when its diff neither adds nor changes behavior a user
   can observe: documents such as guides only, tests only, or a refactoring that keeps behavior.
   Skill text is behavior, never skipped as a document. When in doubt, run it. A skipped run writes a
@@ -154,23 +152,25 @@ the quality review, and resolves the gaps and disagreements it finds. Its instru
   fixer. A model different from the implementer's is preferred, not required.
 - **What it carries.** `references/consistency-phase.md` pasted in full; the worktree path and branch;
   the range (base and head); the specification path and the file of IDs the plan covers, as
-  **Delegations** above says; the findings the previous run with the same base returned, if any; the paths of
+  **Delegations** above says; the open `consistency` findings with IDs and commits, and for one
+  `still_present` after a fix the fixer's premise requirement (**Delegations**); the review skill's
+  `references/finding-schema.md` path; the paths of
   the kotowari skill's `references/ir-form.md`, `references/records.md`,
   `references/translations.md`, `references/findings.md` and `references/mark.md`; the kotowari
   skill's **What the IR holds** section pasted in full; and the fixer contract below with its
   Evidence conditions.
-- **What cycle does with the result.** The phase fixes and commits by itself; cycle only records
-  its commits and reports them. Cycle does not turn the phase's findings into review findings, fix
-  them, or judge them. When a run returns a finding marked `repeat` (the same as one the previous
-  run returned), end as ending 3 (no progress). On agreement with the specification the phase's decision
-  takes precedence over the quality review's fixes. A hand-back to a person is ending 4.
+- **What cycle does with the result.** The phase fixes and commits by itself; cycle records the
+  run in the findings file as it records a diff review — new findings get IDs, verdicts and commits
+  are appended — and stops it by the same endings. Cycle never fixes the phase's findings. On
+  agreement with the specification the phase's decision takes precedence over the quality review's
+  fixes. A hand-back to a person is ending 4.
 
 ## Judgment stays here
 
 Cycle alone writes the findings file (shape: the review skill's `finding-schema.md`, with `base`,
-`last_reviewed_head` and `consistency_phase`), creating it at the first phase run or review. After
-every phase run it appends the run to `consistency_phase.runs`; each time step 3 runs it sets
-`consistency_phase.review_head` to the head it reviews. After every review it overwrites the file: sets `last_reviewed_head`, assigns
+`last_reviewed_head` and `first_review_head`), creating it at the first phase run or review. Each
+time step 3 runs it sets `first_review_head` to the head it reviews. After every review or phase run
+it overwrites the file: sets `last_reviewed_head` after a review, assigns
 IDs to new findings, merges reviewers and groups same-cause findings, finalizes each proposed action
 before classifying visible findings. For each non-`security` finding, in order: force `info` to
 `record_only`; force a claim stating no defect to `warn` and `record_only`; for a defect demanding a
@@ -180,10 +180,12 @@ and pause. Adopt any proposal that matched none of these checks unchanged. Never
 of `human_judgment` without asking the person. Append numbered verdicts and update state; after every
 fix record its reported commits.
 `no_longer_visible` → closed (`fixed`); accepted by the person at the end → closed (`accepted`). If
-reviewers disagree, one `still_present` means still present. A full review returns no IDs: match by
+reviewers disagree, one `still_present` means still present. A full review, and a phase run's new
+findings, carry no IDs: match by
 evidence location and oracle — a match with an open finding reuses its ID and appends
 `still_present`; a match with a closed finding is "same cause returned" below and reopens it unless
-it was closed `accepted`. Reviewers only evaluate; the fixer only reports commits.
+it was closed `accepted`. Reviewers only evaluate; the fixer only reports commits; the consistency
+phase does both for its own findings.
 
 ## Stopping inside the loop
 
@@ -197,23 +199,21 @@ it was closed `accepted`. Reviewers only evaluate; the fixer only reports commit
 ## Endings
 
 1. Converged: the last review returned no visible finding, or the diff loop after it cleared them,
-   and the consistency phase after it converged or was skipped.
+   and the consistency phase after it ended its step or was skipped.
 2. The person's round-trip limit was reached.
 3. No progress: a finding is `still_present` in two consecutive rounds that evaluated it (the
    second after a changed approach); a closed finding's cause returns; or a review still cannot
    succeed after one re-delegation (an absent optional seat is not a failed review); or two
    consecutive post-fix diff reviews have at least as many
    finalized new visible findings as visible findings marked `no_longer_visible`; full reviews
-   are excluded from this comparison; or a consistency phase run returns a finding marked
-   `repeat`.
+   are excluded from this comparison.
 4. A delegate handed back to brainstorm or plan, or the consistency phase handed a judgment back to
    the person.
 
 Endings 2–4 add to the terminal report the choice "run more or accept the rest and finish" and
 any hand-back reason. "Run more" continues the same run (streaks kept), findings still open, at
-step 1 if untraced plan steps remain; else, when the ending was raised in step 2 or step 6, at that
-step with a rerun as **Consistency phase** says, step 2 then going on to step 3 before any diff
-loop; else at step 4. A new limit, if any, is the person's to set.
+step 1 if untraced plan steps remain; else at the step that raised the ending: a phase rerun in
+step 2 (then on to step 3) or step 6, otherwise step 4. A new limit, if any, is the person's to set.
 
 ## kotowari check before the terminal report
 

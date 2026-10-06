@@ -87,14 +87,14 @@ report. The measure decides this, not the line above, so it is not a station the
 
 Note `HEAD` before the first edit and commit the edits first; the range is that commit to `HEAD`.
 If the hook stops that commit on an IR-side finding, leave the change uncommitted: the reference's
-rule for a blocked change applies, and the edits are committed after the phase converges.
+rule for a blocked change applies, and the edits are committed after the phase's last run.
 The counterpart is the IR store path with no ID file (the items in range are those the diff touches
 or its marks carry), or, for a topic with no IR, the approved specification document or the request.
 The phase receives what the kotowari-cycle skill's **Consistency phase** lists under what it
-carries, with the fixer contract and Evidence conditions from that skill's **Delegations**. After a
-run that fixed something, launch a rerun as that section says. When a run returns a `repeat`, or
-hands something back, stop and report it to the person with its reason and the choice to run more
-or accept it; nothing loops further.
+carries, with the fixer contract and Evidence conditions from that skill's **Delegations**. This
+session keeps the phase's findings, numbering them as cycle does, reruns as that section says, and
+stops by cycle's ending 3 or a hand-back, reporting it to the person with the choice to run more or
+accept the rest.
 
 ## Exceptions
 
