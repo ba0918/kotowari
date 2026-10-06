@@ -522,5 +522,9 @@ fn req_view_007_footnote_syntax_is_not_drawn_as_footnotes() {
     for needle in ["Footnotes", "Back to content", "data-footnotes", "footnote"] {
         assert!(!text.contains(needle), "{needle}");
     }
-    assert!(text.contains("本文"), "{text}");
+    // 脚注として読まなければ、CommonMark のとおり "[^1]: 注" はリンクの参照の定義になる
+    assert!(
+        text.contains("<p>本文<a href=\"%E6%B3%A8\">^1</a></p>"),
+        "{text}"
+    );
 }
