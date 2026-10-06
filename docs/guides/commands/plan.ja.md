@@ -7,7 +7,7 @@ kotowari-plan の工程で計画書を書き終えたとき、承認を求める
 
 ## 書式
 
-<!-- @kotowari[REQ-core-190:b4b9f2e6, REQ-core-002:d9acbe9c] -->
+<!-- @kotowari[REQ-core-190:b4b9f2e6, REQ-core-002:f86e2efd] -->
 
 ```sh
 kotowari plan [--format json|text] <計画書のファイル>
@@ -18,7 +18,7 @@ kotowari plan [--format json|text] <計画書のファイル>
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-190:b4b9f2e6, REQ-core-002:d9acbe9c, REQ-core-021:ccedd28b] -->
+<!-- @kotowari[REQ-core-190:b4b9f2e6, REQ-core-002:f86e2efd, REQ-core-021:ccedd28b] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
@@ -156,7 +156,7 @@ docs/plans/a.md:45 [error] invalid_plan missing_required_field: field "Done when
 
 ## 終了コード
 
-<!-- @kotowari[TBL-core-002:14c565f2, REQ-core-193:ee3eed54] -->
+<!-- @kotowari[TBL-core-002:36817bf5, REQ-core-193:ee3eed54] -->
 
 | コード | 意味 |
 |---|---|

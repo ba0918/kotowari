@@ -8,7 +8,7 @@
 
 ## 書式
 
-<!-- @kotowari[REQ-core-149:1ac13c99, REQ-core-002:d9acbe9c, EX-core-244:e4a4c37f] -->
+<!-- @kotowari[REQ-core-149:1ac13c99, REQ-core-002:f86e2efd, EX-core-244:e4a4c37f] -->
 
 ```sh
 kotowari mutants --tool cargo-mutants [--format json|text] [--config <path>] <結果のファイル>
@@ -139,7 +139,7 @@ mutants: caught=4 survived=1 timeout=1 unviable=1 equivalent=1
 
 ## 終了コード
 
-<!-- @kotowari[TBL-core-002:14c565f2, REQ-core-139:5736cb73, REQ-core-140:49dd0d6f] -->
+<!-- @kotowari[TBL-core-002:36817bf5, REQ-core-139:5736cb73, REQ-core-140:49dd0d6f] -->
 
 | コード | 意味 |
 |---|---|

@@ -10,22 +10,23 @@ IR の形の検査とテストとの対応の検査は、この1つのコマン�
 
 ## 書式
 
-<!-- @kotowari[REQ-core-002:d9acbe9c] -->
+<!-- @kotowari[REQ-core-002:f86e2efd] -->
 
 ```sh
-kotowari check [--format json|text] [--config <path>]
+kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 ```
 
 位置引数は受けません。
 
 ## オプションと引数
 
-<!-- @kotowari[REQ-core-002:d9acbe9c, REQ-core-021:ccedd28b, REQ-core-003:b4f59e48] -->
+<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:b4f59e48, REQ-core-004:2d3401d1] -->
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
 | `--format` | `json` か `text` | `json` | 出力の形 |
 | `--config` | 設定ファイルのパス | 基準のディレクトリの `.kotowari/config.yaml` | 読む設定ファイル。カレントディレクトリからの相対で読む |
+| `--allow-test-findings` | なし（値を取らない） | 付けない | テスト側の指摘を終了コードに数えない（[テストより先に仕様をコミットする](#テストより先に仕様をコミットする)）。受けるのは `check` だけで、ほかのコマンドに付けると `argument error` で停止する |
 | `--help` | なし | — | 使い方を出して終了コード0で終わる |
 | `--version` | なし | — | 版を出して終了コード0で終わる |
 
@@ -65,7 +66,7 @@ kotowari check [--format json|text] [--config <path>]
 
 ### 置き場が無いとき
 
-<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-019:52c32b58] -->
+<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-019:178b0f0c] -->
 
 `ir`、`decisions.records`、`decisions.adr` の3つは、既定のままでもディレクトリが存在している必要があります。
 どれかが無い、ディレクトリでない、読めないときは、`unreadable file` で停止します。
@@ -174,15 +175,51 @@ glob を書き間違えても指摘は出ないので、ここで確かめます
 
 ## 終了コード
 
-<!-- @kotowari[TBL-core-002:14c565f2] -->
+<!-- @kotowari[TBL-core-002:36817bf5] -->
 
 | コード | 意味 |
 |---|---|
-| 0 | 誤りが無い（注意だけのときを含む） |
-| 1 | 誤りが1件以上ある |
+| 0 | 誤りが無い（注意だけのときを含む）。`--allow-test-findings` を付けたときは、誤りがどれもテスト側の指摘のときも |
+| 1 | 誤りが1件以上ある。`--allow-test-findings` を付けたときは、テスト側の指摘でない誤りが1件以上ある |
 | 2 | 停止した（設定が読めない、置き場が無いなど） |
 
 停止したときは標準出力に何も出さず、理由を標準エラーに出します（[cli.md](../cli.ja.md#停止)）。
+
+## テストより先に仕様をコミットする
+
+<!-- @kotowari[REQ-core-357:352c971a, TBL-core-047:0a2c3aa9] -->
+
+仕様はふつう、それを確かめるテストを書くより先に承認してコミットします。
+そのコミットの時点では新しい要求とシナリオにまだテストが無いので、`check` は `requirement_without_test` と `scenario_without_test` を出し、終了コード1で終わります。
+`--allow-test-findings` を付けると、`check` はこうしたテスト側の指摘を終了コードに数えません。
+
+どの誤りがテスト側の指摘かは、呼び出す側ではなく kotowari が決めます。
+
+| 種類 | テスト側の指摘になる条件 |
+|---|---|
+| `requirement_without_test` | いつも |
+| `scenario_without_test` | いつも |
+| `test_without_id` | いつも |
+| `invalid_marker` | パスがテストのファイルのとき |
+| `unresolved_reference` | パスがテストのファイルのとき |
+| `unparsable_file` | パスがテストのファイルで、面のファイルでないとき |
+
+ほかの誤りは、これまでどおり終了コードを1にします。IR の誤り、形の崩れたガイドの印、読めない面のファイルなどです。
+オプションが変えるのは終了コードだけです。指摘、その順序、JSON とテキストの出力はオプションが無いときと同じなので、テスト側の指摘も見えたままです。
+
+```console
+$ kotowari check --format text --allow-test-findings
+docs/ir/greet/greet.md:15 [error] requirement_without_test REQ-greet-002
+$ echo $?
+0
+```
+
+### フックのどこで使うか
+
+<!-- @kotowari[REQ-core-358:879777ff] -->
+
+- pre-commit のフックでは `kotowari check --allow-test-findings` を走らせます。仕様を承認するコミットが、テストより先だという理由で止まらないようにするためです。
+- pre-push のフックと CI では、オプションを付けずに `kotowari check` を走らせます。テストの無い要求やシナリオを残したまま共有のブランチに届けないためです。
 
 ## 例
 
@@ -313,7 +350,7 @@ $ kotowari check | jq -c .
 
 ### 注意だけが出る
 
-<!-- @kotowari[REQ-core-038:170fdd3e, TBL-core-002:14c565f2] -->
+<!-- @kotowari[REQ-core-038:170fdd3e, TBL-core-002:36817bf5] -->
 
 `limits.lines` を20に下げた設定で試すと、行数の注意が出ます。
 注意だけなので終了コードは0です。

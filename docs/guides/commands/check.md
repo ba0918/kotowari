@@ -10,22 +10,23 @@ This single command does both: it checks the form of the IR and checks its corre
 
 ## Synopsis
 
-<!-- @kotowari[REQ-core-002:d9acbe9c] -->
+<!-- @kotowari[REQ-core-002:f86e2efd] -->
 
 ```sh
-kotowari check [--format json|text] [--config <path>]
+kotowari check [--format json|text] [--config <path>] [--allow-test-findings]
 ```
 
 It takes no positional arguments.
 
 ## Options and arguments
 
-<!-- @kotowari[REQ-core-002:d9acbe9c, REQ-core-021:ccedd28b, REQ-core-003:b4f59e48] -->
+<!-- @kotowari[REQ-core-002:f86e2efd, REQ-core-021:ccedd28b, REQ-core-003:b4f59e48, REQ-core-004:2d3401d1] -->
 
 | Name | Value | Default | Description |
 |---|---|---|---|
 | `--format` | `json` or `text` | `json` | The output format |
 | `--config` | Path to a configuration file | `.kotowari/config.yaml` in the base directory | The configuration file to read. The path is read relative to the current directory |
+| `--allow-test-findings` | None (takes no value) | Off | Leaves test-side findings out of the exit code ([Committing a specification before its tests](#committing-a-specification-before-its-tests)). Only `check` takes it; on any other command it stops with `argument error` |
 | `--help` | None | — | Prints usage and exits with code 0 |
 | `--version` | None | — | Prints the version and exits with code 0 |
 
@@ -65,7 +66,7 @@ How the base directory is determined is described in [cli.md](../cli.md#the-base
 
 ### When a location is missing
 
-<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-019:52c32b58] -->
+<!-- @kotowari[REQ-core-018:6ea3e08f, REQ-core-019:178b0f0c] -->
 
 The three locations `ir`, `decisions.records` and `decisions.adr` must exist as directories, even when left at their defaults.
 If any of them is missing, is not a directory, or cannot be read, kotowari stops with `unreadable file`.
@@ -174,15 +175,51 @@ The line for each kind is in the table in [findings.md](../findings.md#list-of-k
 
 ## Exit codes
 
-<!-- @kotowari[TBL-core-002:14c565f2] -->
+<!-- @kotowari[TBL-core-002:36817bf5] -->
 
 | Code | Meaning |
 |---|---|
-| 0 | No errors (including when there are only notices) |
-| 1 | One or more errors |
+| 0 | No errors (including when there are only notices). With `--allow-test-findings`, also when every error is a test-side finding |
+| 1 | One or more errors. With `--allow-test-findings`, one or more errors that are not test-side findings |
 | 2 | Stopped (the configuration could not be read, a location is missing, and so on) |
 
 When kotowari stops, it prints nothing to standard output and prints the reason to standard error ([cli.md](../cli.md#stopping)).
+
+## Committing a specification before its tests
+
+<!-- @kotowari[REQ-core-357:352c971a, TBL-core-047:0a2c3aa9] -->
+
+A specification is usually approved and committed before the tests that cover it are written.
+At that commit every new requirement and scenario has no test yet, so `check` reports `requirement_without_test` and `scenario_without_test` and exits with 1.
+With `--allow-test-findings`, `check` leaves these test-side findings out of the exit code.
+
+Which errors are test-side findings is decided by kotowari, not by the caller:
+
+| Kind | When it is a test-side finding |
+|---|---|
+| `requirement_without_test` | Always |
+| `scenario_without_test` | Always |
+| `test_without_id` | Always |
+| `invalid_marker` | When its path is a test file |
+| `unresolved_reference` | When its path is a test file |
+| `unparsable_file` | When its path is a test file and not a surface file |
+
+Every other error still makes the exit code 1: an error in the IR, a malformed guide mark, an unreadable surface file.
+The option changes only the exit code. The findings, their order and the JSON and text output are the same as without it, so the test-side findings stay visible.
+
+```console
+$ kotowari check --format text --allow-test-findings
+docs/ir/greet/greet.md:15 [error] requirement_without_test REQ-greet-002
+$ echo $?
+0
+```
+
+### Where to use it in hooks
+
+<!-- @kotowari[REQ-core-358:879777ff] -->
+
+- In the pre-commit hook, run `kotowari check --allow-test-findings`, so that the commit approving a specification is not stopped before its tests exist.
+- In the pre-push hook and in CI, run `kotowari check` without the option, so that nothing reaches the shared branch with a requirement or scenario left untested.
 
 ## Example
 
@@ -315,7 +352,7 @@ How to fix each finding is described in [findings.md](../findings.md).
 
 ### Only notices
 
-<!-- @kotowari[REQ-core-038:170fdd3e, TBL-core-002:14c565f2] -->
+<!-- @kotowari[REQ-core-038:170fdd3e, TBL-core-002:36817bf5] -->
 
 If you try a configuration with `limits.lines` lowered to 20, a notice about the line count appears.
 Since there are only notices, the exit code is 0.

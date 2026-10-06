@@ -7,7 +7,7 @@ Use it in the kotowari-plan station when you have finished writing a plan, befor
 
 ## Synopsis
 
-<!-- @kotowari[REQ-core-190:b4b9f2e6, REQ-core-002:d9acbe9c] -->
+<!-- @kotowari[REQ-core-190:b4b9f2e6, REQ-core-002:f86e2efd] -->
 
 ```sh
 kotowari plan [--format json|text] <計画書のファイル>
@@ -18,7 +18,7 @@ Options may appear before the command or after the file.
 
 ## Options and arguments
 
-<!-- @kotowari[REQ-core-190:b4b9f2e6, REQ-core-002:d9acbe9c, REQ-core-021:ccedd28b] -->
+<!-- @kotowari[REQ-core-190:b4b9f2e6, REQ-core-002:f86e2efd, REQ-core-021:ccedd28b] -->
 
 | Name | Value | Default | Description |
 |---|---|---|---|
@@ -157,7 +157,7 @@ The `files`, `lines`, `tests` and `guides` keys of `check` are not present.
 
 ## Exit codes
 
-<!-- @kotowari[TBL-core-002:14c565f2, REQ-core-193:ee3eed54] -->
+<!-- @kotowari[TBL-core-002:36817bf5, REQ-core-193:ee3eed54] -->
 
 | Code | Meaning |
 |---|---|
