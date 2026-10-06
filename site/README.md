@@ -50,10 +50,8 @@ section anchors. These browser checks supplement `check.py`.
 
 ## Content boundary
 
-Reviewed main: `bc21216` on 2026-10-04; latest product release: `kotowari-v0.3.0`.
-PR #4 is merged (2026-10-04): overview HTML and public Rust APIs are on main, but remain
-under Unreleased. The main-only panel labels this difference. Stable guide links target
-the v0.3.0 tag. The API guide is pinned to the reviewed main commit.
+Latest product release: `kotowari-v0.5.0`. Guide, README and API guide links target the
+v0.5.0 tag; the guides are English with Japanese pairs.
 
 Sources: README, CHANGELOG, PROJECT, `docs/ir/core/{sources,coverage,test-discovery,
 test-queries,overview-commands,library-api}.md`, `docs/guides/commands/{check,query,status}.md`,
