@@ -145,8 +145,9 @@ the quality review, and resolves the gaps and disagreements it finds. Its instru
   the range (base and head); the specification path and the file of IDs the plan covers, as the
   reviews get them; the findings the previous run with the same base returned, if any; the paths of
   the kotowari skill's `references/ir-form.md`, `references/records.md`,
-  `references/translations.md`, `references/findings.md` and `references/mark.md`; and the fixer
-  contract below with its Evidence conditions.
+  `references/translations.md`, `references/findings.md` and `references/mark.md`; the kotowari
+  skill's **What the IR holds** section pasted in full; and the fixer contract below with its
+  Evidence conditions.
 - **What cycle does with the result.** The phase fixes and commits by itself; cycle only records
   its commits and reports them. Cycle does not turn the phase's findings into review findings, fix
   them, or judge them. When a run returns a finding marked `repeat` (the same as one the previous

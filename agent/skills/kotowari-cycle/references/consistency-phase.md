@@ -17,8 +17,8 @@ decide; a person is involved only as a last resort.
 - The findings the previous run with the same base returned, if any.
 - The paths of the kotowari skill's references it follows when it writes: `ir-form.md` and
   `records.md` (the IR and decision records), `translations.md` (language pairs),
-  `findings.md` (reading `kotowari check`) and `mark.md` (marks on tests); and cycle's fixer contract
-  for changes to code.
+  `findings.md` (reading `kotowari check`) and `mark.md` (marks on tests); the kotowari skill's
+  **What the IR holds** section; and cycle's fixer contract for changes to code.
 
 ## What it reads
 
@@ -46,6 +46,12 @@ range changed or that name an ID in range are findings of this run, beside what 
 - **Disagreement**: behavior different from what the IR states. A reading that widens or narrows
   the definition of a term or a table is a disagreement, not a concretisation.
 - **Within the IR**: a gap or a contradiction among the items in range.
+
+The IR holds only what a user of the product can observe (the kotowari skill's **What the IR
+holds**, which the phase is given). CI and workflow definitions, hooks, the release procedure, the
+build configuration, rules about the project's own tests and checks, and the development process
+are not IR: behavior there that no IR states is not a gap. A decision about it goes to the decision
+record, never to an IR item.
 
 ## How a finding is resolved
 
