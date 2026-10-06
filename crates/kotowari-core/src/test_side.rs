@@ -96,15 +96,28 @@ fn condition(kind: FindingKind) -> Condition {
     }
 }
 
-/// 検査で読んだ`テストのファイル`と`面のファイル`のパス。指摘だけからは、両方に当たるファイルの
-/// unparsable_file がどちらから出たかを見分けられないので、検査の間に集めて持つ
+/// 検査で読んだ`テストのファイル`と、そのうち`面のファイル`でもあるもののパス。指摘だけからは、
+/// 両方に当たるファイルの unparsable_file がどちらから出たかを見分けられないので、検査の間に集めて持つ
 #[derive(Clone, Default)]
 pub(crate) struct TestSideFiles {
-    pub(crate) tests: BTreeSet<String>,
-    pub(crate) surfaces: BTreeSet<String>,
+    tests: BTreeSet<String>,
+    surfaces: BTreeSet<String>,
 }
 
 impl TestSideFiles {
+    /// `面のファイル`は "surface.files" の glob に当たるファイルで、`面の規則`の言語に限らない。
+    /// 面の走査と除外は "tests.files" と同じなので、テストのファイルのパスを glob に当てれば足りる
+    pub(crate) fn new(tests: &[String], surface_files: &[String]) -> Self {
+        let surface = crate::change_records::glob(surface_files);
+        Self {
+            surfaces: tests
+                .iter()
+                .filter(|path| surface.is_match(path.as_str()))
+                .cloned()
+                .collect(),
+            tests: tests.iter().cloned().collect(),
+        }
+    }
     /// finding が TBL-core-047 の条件に当たるか。表の種類の重大度はどれも "error" なので、
     /// 重大度は見ない
     pub(crate) fn contains(&self, finding: &Finding) -> bool {

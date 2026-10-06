@@ -663,8 +663,6 @@ struct CheckPreparation {
     surface: Option<crate::surface::SurfaceTally>,
     groups: Vec<GroupTally>,
     translations: crate::translations::Pairs,
-    /// 読んだ`面のファイル`のパス（TBL-core-047）
-    surface_files: std::collections::BTreeSet<String>,
 }
 impl CheckPreparation {
     fn new(read: ReadModel) -> Self {
@@ -676,7 +674,6 @@ impl CheckPreparation {
             surface: None,
             groups: Vec::new(),
             translations: Default::default(),
-            surface_files: Default::default(),
         }
     }
     fn translations(&mut self, pairs: crate::translations::Pairs) {
@@ -725,7 +722,6 @@ impl CheckPreparation {
         unspecified: &[Text],
     ) -> Result<(), crate::StopReason> {
         if self.read.policy.surface() {
-            self.surface_files = files.iter().map(|file| file.source.path.clone()).collect();
             self.surface = Some(crate::surface::check_entries(
                 files.iter().map(|file| &file.analysis),
                 &self.read.docs,
@@ -785,10 +781,10 @@ impl CheckPreparation {
                 unspecified: tally.unspecified,
             }),
             groups: self.groups,
-            test_side: crate::test_side::TestSideFiles {
-                tests: self.read.discovered.files.iter().cloned().collect(),
-                surfaces: self.surface_files,
-            },
+            test_side: crate::test_side::TestSideFiles::new(
+                &self.read.discovered.files,
+                &self.read.config().surface.files,
+            ),
         });
         Ok(Inspection {
             read: self.read,

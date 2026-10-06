@@ -171,6 +171,37 @@ fn ex_core_550_an_unreadable_test_file_that_is_also_a_surface_file_stops() {
     );
 }
 
+// @kotowari[TBL-core-047]
+#[test]
+fn tbl_core_047_an_unreadable_test_file_matched_by_surface_files_in_no_rule_language_stops() {
+    let tmp = TempDir::new().unwrap();
+    make_project(
+        tmp.path(),
+        "    - \"src/**/*.py\"\nsurface:\n  files:\n    - \"src/**\"\n  rules:\n    - \"rules/surface.yml\"\n",
+    );
+    write(
+        tmp.path(),
+        "rules/surface.yml",
+        "id: flag\nlanguage: rust\nrule:\n  kind: string_literal\n  regex: '^\"--'\n  pattern: $NAME\n",
+    );
+    write(tmp.path(), "src/notes.py", "def f(:\n");
+    write(
+        tmp.path(),
+        "docs/ir/greet/greet.md",
+        &ir_with_requirement("review\n- how_to_verify: read it", UNTESTED),
+    );
+    let (code, stdout, stderr) = run(tmp.path(), &["check", "--allow-test-findings"]);
+    assert_eq!(code, Some(1), "{stdout}{stderr}");
+    assert!(
+        findings(&stdout).contains(&(
+            "unparsable_file".to_string(),
+            "error".to_string(),
+            "src/notes.py".to_string()
+        )),
+        "{stdout}"
+    );
+}
+
 // @kotowari[EX-core-551]
 #[test]
 fn ex_core_551_a_malformed_guide_mark_stops_even_with_the_option() {
