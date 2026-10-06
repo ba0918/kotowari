@@ -75,3 +75,100 @@ fn req_core_297_serve_uses_port_4590_unless_given() {
         "{parsed:?}"
     );
 }
+
+// @kotowari[REQ-core-002]
+#[test]
+fn req_core_002_check_takes_allow_test_findings_without_a_value() {
+    // 値を取らないので、すぐ後の語はコマンドやほかのオプションとして読まれる
+    for list in [
+        &["check", "--allow-test-findings"][..],
+        &["--allow-test-findings", "check"],
+        &["check", "--allow-test-findings", "--format", "text"],
+        &["--allow-test-findings", "--format", "text", "check"],
+    ] {
+        let parsed = parse_args(&args(list));
+        assert!(
+            matches!(
+                parsed,
+                Ok(Cli::Check {
+                    allow_test_findings: true,
+                    ..
+                })
+            ),
+            "{list:?}: {parsed:?}"
+        );
+    }
+    let parsed = parse_args(&args(&[
+        "check",
+        "--allow-test-findings",
+        "--format",
+        "text",
+    ]));
+    assert!(
+        matches!(
+            parsed,
+            Ok(Cli::Check {
+                format: Format::Text,
+                ..
+            })
+        ),
+        "{parsed:?}"
+    );
+    let parsed = parse_args(&args(&["check"]));
+    assert!(
+        matches!(
+            parsed,
+            Ok(Cli::Check {
+                allow_test_findings: false,
+                ..
+            })
+        ),
+        "{parsed:?}"
+    );
+}
+
+fn assert_argument_error(list: &[&str]) {
+    let parsed = parse_args(&args(list));
+    assert!(
+        matches!(parsed, Err(StopReason::ArgumentError(_))),
+        "{list:?}: {parsed:?}"
+    );
+}
+
+// @kotowari[REQ-core-004]
+#[test]
+fn req_core_004_allow_test_findings_on_a_command_other_than_check_stops() {
+    for list in [
+        &[
+            "changes",
+            "--base",
+            "HEAD",
+            "--head",
+            "HEAD",
+            "--phase",
+            "review",
+            "--allow-test-findings",
+        ][..],
+        &[
+            "--allow-test-findings",
+            "mutants",
+            "--tool",
+            "cargo-mutants",
+            "outcomes.json",
+        ],
+        &["plan", "a.md", "--allow-test-findings"],
+        &["list", "--allow-test-findings"],
+        &["query", "REQ-001", "--allow-test-findings"],
+        &["status", "--allow-test-findings"],
+        &["overview", "build", "--allow-test-findings"],
+        &["overview", "serve", "--allow-test-findings"],
+    ] {
+        assert_argument_error(list);
+    }
+}
+
+// @kotowari[REQ-core-004]
+#[test]
+fn req_core_004_allow_test_findings_twice_on_check_stops() {
+    assert_argument_error(&["check", "--allow-test-findings", "--allow-test-findings"]);
+}
