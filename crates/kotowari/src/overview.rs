@@ -180,7 +180,7 @@ pub(crate) fn not_configured() -> StopReason {
 }
 
 /// 置き場の下のファイルを、置き場からの相対パスで集める。ディレクトリのシンボリックリンクは辿らない
-pub(crate) fn existing(cache: &Path) -> Result<Vec<String>, StopReason> {
+pub(crate) fn existing(cache: &Path) -> Result<Vec<String>, std::io::Error> {
     if !cache.is_dir() {
         return Ok(Vec::new());
     }
@@ -189,8 +189,7 @@ pub(crate) fn existing(cache: &Path) -> Result<Vec<String>, StopReason> {
         .follow_links(false)
         .min_depth(1)
     {
-        let entry =
-            entry.map_err(|error| StopReason::UnreadableFile(format!("{CACHE}: {error}")))?;
+        let entry = entry?;
         if !entry.file_type().is_dir() {
             let relative = entry
                 .path()

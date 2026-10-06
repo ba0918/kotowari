@@ -260,7 +260,8 @@ impl OverviewPrepared {
         }
         std::fs::create_dir_all(&cache)
             .map_err(|error| Error::cache(overview::CACHE, Some(error)))?;
-        let existing = overview::existing(&cache)?;
+        let existing = overview::existing(&cache)
+            .map_err(|error| Error::cache(overview::CACHE, Some(error)))?;
         let mut build = OverviewBuild::default();
         for page in &self.pages {
             let path = cache.join(&page.name);

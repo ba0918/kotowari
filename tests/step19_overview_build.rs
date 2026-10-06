@@ -607,3 +607,36 @@ fn ex_core_510_the_index_follows_the_toc_order() {
     let a = index.find(">A<").expect("A");
     assert!(b < a, "{index}");
 }
+
+// @kotowari[EX-core-546, REQ-core-324]
+#[cfg(unix)]
+#[test]
+fn ex_core_546_a_cache_place_that_cannot_be_enumerated_stops_with_a_cache_error() {
+    use std::os::unix::fs::PermissionsExt;
+    let tmp = two_documents();
+    // 元データの走査が置き場に入らないよう、元データと目次は隠しディレクトリの外に置く
+    std::fs::create_dir_all(tmp.path().join("notes")).unwrap();
+    for name in ["a.md", "b.md"] {
+        std::fs::rename(
+            tmp.path().join(".kotowari/overview").join(name),
+            tmp.path().join("notes").join(name),
+        )
+        .unwrap();
+    }
+    std::fs::rename(tmp.path().join(TOC), tmp.path().join("notes/toc.yaml")).unwrap();
+    write(
+        tmp.path(),
+        ".kotowari/config.yaml",
+        "tests:\n  files: []\noverview:\n  files: ['notes/*.md']\n  toc: notes/toc.yaml\n",
+    );
+    let locked = tmp.path().join(CACHE).join("locked");
+    std::fs::create_dir_all(&locked).unwrap();
+    std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o000)).unwrap();
+    let (code, _, stderr) = run(tmp.path(), &["overview", "build"]);
+    std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o755)).unwrap();
+    assert_eq!(code, Some(2), "{stderr}");
+    assert!(
+        stderr.starts_with("cache error: .kotowari/cache/overview"),
+        "{stderr}"
+    );
+}
