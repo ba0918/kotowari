@@ -136,6 +136,29 @@ fn req_core_019_a_broad_glob_does_not_enter_hidden_directories_it_does_not_name(
     assert_eq!(value["overview"]["files"], 2);
 }
 
+// @kotowari[EX-core-545, REQ-core-019]
+#[test]
+fn ex_core_545_a_hidden_directory_named_only_inside_braces_is_not_entered() {
+    let tmp = TempDir::new().unwrap();
+    make_project(
+        tmp.path(),
+        "overview:\n  files:\n    - \"{.overview,other}/*.md\"\n  toc: .kotowari/toc.yaml\n",
+    );
+    write(
+        tmp.path(),
+        ".overview/a.md",
+        &without_lead("docs/ir/cli.md"),
+    );
+    // 同じ中身の元データは、波括弧の中の隠しディレクトリでない置き場では読まれて誤りになる
+    write(tmp.path(), "other/b.md", &without_lead("docs/ir/cli.md"));
+    write_toc(tmp.path(), &["b"]);
+    let (_, stdout, _) = run(tmp.path(), &["check", "--format", "json"]);
+    let value = json(&stdout);
+    assert!(!kinds_on(&value, "other/b.md").is_empty(), "{stdout}");
+    assert!(kinds_on(&value, ".overview/a.md").is_empty(), "{stdout}");
+    assert_eq!(value["overview"]["files"], 1);
+}
+
 // @kotowari[REQ-core-278]
 #[test]
 fn req_core_278_only_files_with_a_lowercase_md_extension_are_read() {
