@@ -11,10 +11,10 @@ decide; a person is involved only as a last resort.
 ## What it is given
 
 - The worktree path and the branch.
-- The range: the base and head of the diff to read. When a hook stopped the implementer's commit
-  on an IR-side finding, the change it left uncommitted in the worktree is in range too. The phase
+- The range: the base and head of the diff to read. When a hook stopped the implementer's (or, on
+  a direct edit, the main session's) commit on an IR-side finding, the change it left uncommitted in the worktree is in range too. The phase
   commits its own fixes only, never that change; when a resolution changes that code, it edits it
-  in place and leaves it uncommitted for the implementer.
+  in place and leaves it uncommitted for whoever made it.
 - The counterpart: the IR store path and a file listing the IDs the plan covers. For a topic with no
   IR, the approved specification document, or the request when there is none.
 - The findings the previous run with the same base returned, if any.

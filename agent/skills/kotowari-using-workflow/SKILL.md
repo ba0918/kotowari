@@ -86,6 +86,8 @@ refactoring that keeps behavior; when in doubt, run it; a skip puts a one-line r
 report. The measure decides this, not the line above, so it is not a station the line adds.
 
 Note `HEAD` before the first edit and commit the edits first; the range is that commit to `HEAD`.
+If the hook stops that commit on an IR-side finding, leave the change uncommitted: the reference's
+rule for a blocked change applies, and the edits are committed after the phase converges.
 The counterpart is the IR store path with no ID file (the items in range are those the diff touches
 or its marks carry), or, for a topic with no IR, the approved specification document or the request.
 The phase receives what the kotowari-cycle skill's **Consistency phase** lists under what it
