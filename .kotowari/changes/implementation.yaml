@@ -177,7 +177,7 @@
         {
           "path": "crates/kotowari-markdown-schema-io/tests/loader.rs",
           "before": "sha256:959c464689c4b65f7b35b576b2d78a2edae8fff733b230ec92124a538bfa8179",
-          "after": "sha256:b44c4f163499c432bab99c754c18a97bd245fa6c2774cb242fab063a857e3251"
+          "after": "sha256:7ec0cfcab674a5a831c23b3592d26ef6064a941be9750d1b92dc33473c0d8b6c"
         },
         {
           "path": "crates/kotowari-mds/src/main.rs",
@@ -185,10 +185,17 @@
           "after": "sha256:c748fa5dd6d6254652ecfe3c6addca029fb69dddbf5b58ad96594e4a4e76d27e"
         }
       ],
-      "ir": [],
+      "ir": [
+        {
+          "path": "docs/ir/schema/library-io.md",
+          "sha256": "sha256:21205ef35a3bb28efebb4b3bb9482933d5c26f03efb8ec0142dcaac0a89dc99c"
+        }
+      ],
       "conclusion": "new",
-      "reason": "SchemaLoader::read_document exposes the existing private read_document (BOM removal and UTF-8 decoding with the path in the error detail) resolved from the loader's start, and mds ast without --schema uses it instead of its own copy of the same rules. The loader test was written first and failed to compile on the missing method. mds ast output and errors are unchanged; the workspace suite passes.",
-      "requirements": [],
+      "reason": "SchemaLoader::read_document exposes the existing private read_document (BOM removal and UTF-8 decoding with the path in the error detail) resolved from the loader's start, and mds ast without --schema uses it instead of its own copy of the same rules. The loader test was written first and failed to compile on the missing method. mds ast output and errors are unchanged; the workspace suite passes. The new entry point is added to REQ-schema-072, which lists the loader's public entry points, and the loader test carries its mark.",
+      "requirements": [
+        "REQ-schema-072"
+      ],
       "decisions": [
         "docs/decision/records/2026-10-06-todo-zero.md#A9"
       ],
