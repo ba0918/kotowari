@@ -1,6 +1,6 @@
 [package]
 name = "kotowari-cli"
-version = "0.3.0"
+version = "0.4.0"
 edition.workspace = true
 rust-version.workspace = true
 license = "MIT OR Apache-2.0"
@@ -16,13 +16,13 @@ name = "kotowari"
 path = "src/main.rs"
 
 [dependencies]
-kotowari = { path = "crates/kotowari", version = "0.3.0" }
+kotowari = { path = "crates/kotowari", version = "0.4.0" }
 serde_json = "1"
 tiny_http = "0.12"
 ctrlc = "3.5"
 
 [dev-dependencies]
-kotowari-core = { path = "crates/kotowari-core", version = "0.3.0" }
+kotowari-core = { path = "crates/kotowari-core", version = "0.4.0" }
 assert_cmd = "2"
 proptest = "1"
 tempfile = "3"

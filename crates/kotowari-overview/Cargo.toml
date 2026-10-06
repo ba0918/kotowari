@@ -1,6 +1,6 @@
 [package]
 name = "kotowari-overview"
-version = "0.3.0"
+version = "0.4.0"
 edition.workspace = true
 rust-version.workspace = true
 license = "MIT OR Apache-2.0"
@@ -9,7 +9,7 @@ repository = "https://github.com/ba0918/kotowari"
 description = "Check in-memory overview data against kotowari specifications and build its render input"
 
 [dependencies]
-kotowari-core = { path = "../kotowari-core", version = "0.3.0" }
+kotowari-core = { path = "../kotowari-core", version = "0.4.0" }
 kotowari-markdown-schema = { path = "../kotowari-markdown-schema", version = "0.1.0" }
 kotowari-markdown-view = { path = "../kotowari-markdown-view", version = "0.1.0" }
 jsonschema = { version = "0.58.4", default-features = false }

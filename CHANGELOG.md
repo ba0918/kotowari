@@ -5,6 +5,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-06
+
 ### Changed
 
 - The minimum supported Rust version (`rust-version`) of every crate is now 1.99. Crates that declared 1.89 have a higher floor, and `kotowari`, `kotowari-core`, `kotowari-source-analysis`, `kotowari-overview` and `kotowari-cli`, which declared none, now declare 1.99.
@@ -85,7 +87,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 - Ten Claude Code skills in `agent/skills/`. `kotowari` teaches how to write the IR and decision records, fix findings and place marks. The nine starting with `kotowari-` run the workflow from brainstorm through plan, implementation and review on top of kotowari (optional).
 - Two ways to install: prebuilt binaries on GitHub Releases (Linux x86_64 and macOS arm64, with SHA256), and `cargo install --git https://github.com/ba0918/kotowari --tag kotowari-v0.1.0 kotowari` with the version pinned by tag. Passing the tag to `--pin` of `gh skill install` installs the skills at a pinned version.
 
-[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.3.0...HEAD
+[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.4.0...HEAD
+[0.4.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.3.0...kotowari-v0.4.0
 [0.3.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.2.0...kotowari-v0.3.0
 [0.2.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.1.0...kotowari-v0.2.0
 [0.1.0]: https://github.com/ba0918/kotowari/releases/tag/kotowari-v0.1.0
