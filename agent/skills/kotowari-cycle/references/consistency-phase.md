@@ -113,7 +113,7 @@ and cycle reruns and stops the phase by the same rules as the review loop. One d
 A rerun has the head moved to the current head, so its range includes the fixes, and it also reads
 whether the grounds recorded for each choice support it. A run returns:
 
-- for each earlier finding it was given, `still_present` or `no_longer_visible`, with the commits of
+- for each earlier finding it was given to evaluate (not a known one), `still_present` or `no_longer_visible`, with the commits of
   any further fix;
 - each new finding in the finding shape, without `id`, `status` and `evaluations`: the perspective
   `consistency`; the action `fix_and_verify` for one it resolved (`human_judgment` only as above),

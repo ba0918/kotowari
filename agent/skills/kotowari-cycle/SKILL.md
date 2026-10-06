@@ -93,7 +93,7 @@ included) or one consistency phase run. The limit, when the person set one, coun
   and the same review items and Evidence conditions. It returns per-finding `still_present` or
   `no_longer_visible` and new findings.
 - **consistency phase:** carry what **Consistency phase** below lists. It returns a verdict on each
-  earlier finding it was given, its new findings with their commits, and the decision record it
+  earlier finding it was given to evaluate, its new findings with their commits, and the decision record it
   wrote.
 - **fixer:** carry visible findings, plan path, branch, worktree path, and the contract below. It
   returns commits and which finding each addresses, or a hand-back. A commit a hook stopped on an
