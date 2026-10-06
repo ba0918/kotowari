@@ -140,8 +140,9 @@ both for its own findings. Record each premise attempt as `references/premise-st
 
 **Overlap after a fix** is read from the findings file alone. A fix addressed the findings whose
 `commits` hold the commits it reported. The review right after it is the first round after the last
-round in which those findings were `still_present`, and the findings it raised are those whose first
-evaluation is that round. Two evidence entries overlap when they name the same file with
+round in which those findings were `still_present` that evaluated or raised a `quality` finding (a
+consistency phase run touches only `consistency` findings), and the findings it raised are the
+`quality` findings whose first evaluation is that round. Two evidence entries overlap when they name the same file with
 overlapping line ranges; an entry without a line range, or a finding with no evidence, takes no
 part. A fix that reported no finding, or whose next review raised no overlapping visible finding,
 breaks the run of two.
