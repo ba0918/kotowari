@@ -496,11 +496,11 @@ pub fn run(args: &[String]) -> u8 {
         Cli::Check {
             format,
             config_path,
-            allow_test_findings: _,
+            allow_test_findings,
         } => with_cwd(|cwd| {
             let (result, format) = run_check(cwd, format, config_path.as_deref())?;
             print_check(&result, format);
-            Ok(exit_code_for(result.findings()))
+            Ok(check_exit_code(&result, allow_test_findings))
         }),
         // REQ-core-151: check と同じ読み取りを通し、指摘は出さず、読めれば終了コードは 0
         Cli::List {
@@ -579,6 +579,19 @@ fn exit_code_for(findings: &[Finding]) -> u8 {
     } else {
         0
     }
+}
+
+/// TBL-core-002: "--allow-test-findings" があれば`テスト側の指摘`でない誤りだけを数える（REQ-core-357）
+fn check_exit_code(result: &CheckReport, allow_test_findings: bool) -> u8 {
+    if !allow_test_findings {
+        return exit_code_for(result.findings());
+    }
+    u8::from(
+        result
+            .findings()
+            .iter()
+            .any(|f| f.severity() == "error" && !result.is_test_side_finding(f)),
+    )
 }
 
 /// "kotowari check" の結果を出す（TBL-core-005, REQ-core-025, REQ-core-026）
