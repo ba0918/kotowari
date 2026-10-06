@@ -148,11 +148,10 @@ fn finding(entry: &LocatedEntry, kind: FindingKind, path: &str) -> Finding {
 }
 /// 置き場より下のディレクトリに "." で始まるものがあるか
 fn in_hidden_directory(path: &str, place: &str) -> bool {
-    let below = if place.is_empty() {
-        path
-    } else {
-        &path[place.len() + 1..]
-    };
+    let below = path
+        .strip_prefix(place)
+        .and_then(|rest| rest.strip_prefix('/'))
+        .unwrap_or(path);
     below
         .rsplit_once('/')
         .is_some_and(|(directories, _)| directories.split('/').any(|name| name.starts_with('.')))
