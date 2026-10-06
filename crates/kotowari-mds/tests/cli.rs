@@ -2598,3 +2598,18 @@ fn req_schema_066_values_text_indents_the_later_lines_of_an_array_element_one_le
         "t:\n  list:\n    1. - x\n        - y\n    2. - z\n"
     );
 }
+
+// @kotowari[EX-schema-094, REQ-schema-061]
+#[test]
+fn ex_schema_094_a_level_three_heading_in_a_document_without_a_title_is_outside_the_declared_preamble()
+ {
+    let schema = "open: true\ndocument:\n  title: {}\n  preamble:\n    statement:\n      required: false\n  sections:\n    - name: 節\n";
+    let doc = "### a\n\n中の行\n\n## 節\n";
+    let (code, json, stderr) = mds_json(schema, doc, "check");
+    assert_eq!(code, Some(1), "stderr: {stderr} {json}");
+    let kinds: Vec<_> = all_findings(&json)
+        .iter()
+        .map(|f| f["kind"].clone())
+        .collect();
+    assert_eq!(kinds, ["missing_title"], "{json}");
+}

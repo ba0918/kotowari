@@ -398,3 +398,30 @@ fn a_directory_check_fetches_a_shared_url_schema_once_even_when_the_cache_cannot
     );
     assert_eq!(counter.load(Ordering::SeqCst), 1);
 }
+
+// @kotowari[EX-schema-093, REQ-schema-013]
+#[test]
+fn ex_schema_093_a_cache_that_cannot_be_written_does_not_stop_the_check() {
+    let (url, counter) = serve_schema();
+    let dir = tempfile::tempdir().unwrap();
+    // ".kotowari/cache" がファイルなので、キャッシュのディレクトリを作れない
+    write_file(dir.path(), ".kotowari/cache", "not a directory");
+    let doc = write_file(
+        dir.path(),
+        "doc.md",
+        &format!("---\n$schema: {url}\n---\n# T-1234: 例\n"),
+    );
+    let output = mds()
+        .current_dir(dir.path())
+        .args(["check", doc.to_str().unwrap()])
+        .output()
+        .unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(counter.load(Ordering::SeqCst), 1, "取得した内容を使う");
+    assert!(!cache_path(&url, dir.path()).exists());
+}
