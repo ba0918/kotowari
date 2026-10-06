@@ -18,3 +18,9 @@ Position: 整合のフェーズの1回の実行で決めた（2026-10-06）。
 - A2 フェーズの新しい指摘のうち human_judgment のものは、oracle.measured を not_applicable とする。
   - why: agent/skills/kotowari-review/references/finding-schema.md の表は human_judgment に not_applicable を求め、agent/skills/kotowari-cycle/references/consistency-phase.md は新しい指摘をすべて fails_now としていた。human_judgment の指摘は根拠と実測で決められなかったものなので、決めた実測が無い。REQ-core-363 はレビューの指摘と同じ形とする
   - decided_by: 整合のフェーズ（根拠: 上の二つのファイルの該当行。直しはコミット 50851ec）
+
+## Rejected
+
+- R1 人の判断を待つ指摘も毎回の実行で再評価する
+  - why: 開いたままなので still_present が続いて進まないときの終わり方で止まるか、no_longer_visible で閉じるかになり、[REQ-core-361](../../ir/core/consistency-phase.md#REQ-core-361) と両立しない（A1）
+  - decided_by: 整合のフェーズ
