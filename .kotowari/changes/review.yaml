@@ -34,7 +34,7 @@
         {
           "path": "src/cli.rs",
           "before": "sha256:35745a348bc5367632c5856a12f6491e3670e78b901412126e73ce83a8bc1847",
-          "after": "sha256:816da6e1d3a43e7599cfa58c47786874fba5556b72f68a1bb76e6828ec89ed35"
+          "after": "sha256:44d614e597af506823a9ecad3540f11972aae575060f51eaf043186b035cf10f"
         },
         {
           "path": "src/cli/tests.rs",
@@ -49,7 +49,7 @@
         {
           "path": "tests/step22_test_side_findings.rs",
           "before": null,
-          "after": "sha256:c1f95c42ec85aed0066a4f5a6810cdad4e5faf79c3cca5679023cb91e4185780"
+          "after": "sha256:c8d1e64e07a4ab7f1b020cb32d9bf7382989ed80ae8d2311542b431dc846fea5"
         }
       ],
       "ir": [
@@ -67,7 +67,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "Reviewed against REQ-core-002, REQ-core-004, REQ-core-357, TBL-core-047, TBL-core-002 and the glossary rows error and test-side finding. parse_args takes --allow-test-findings without a value on either side of the command, stops on a second occurrence and on every command other than check (before the early return for changes), as REQ-core-002 and REQ-core-004 state. test_side.rs maps every finding kind: the three untested kinds always, invalid_marker and unresolved_reference when the path is a test file read by the check, unparsable_file when it is such a file and does not match the surface.files globs (the glossary's surface file, matched with the same default globset as the walk), every other kind never; the severity is not consulted, which is sound because every kind in the table is an error. The CLI changes only the exit code: with the flag it is 1 when any error is not a test-side finding, otherwise the old computation; printing is untouched, so output stays identical (REQ-core-357, A4). The tests' expectations match their IDs: EX-core-547 to EX-core-552, the per-row core test of TBL-core-047, the no-rule-language surface case and the identical-output test for both formats. EX-core-551 writes the mark as [ , ] where the scenario says nothing inside; [] gives the same invalid_marker and exit 1, so the expectation holds. Outside the tests, the binary was run on a project whose only errors were an unparsable, an empty-marked and an unresolved-reference test file: exit 0 with the flag, 1 without.",
+      "reason": "Reviewed against REQ-core-002, REQ-core-004, REQ-core-357, TBL-core-047, TBL-core-002 and the glossary rows error and test-side finding. parse_args takes --allow-test-findings without a value on either side of the command, stops on a second occurrence and on every command other than check (before the early return for changes), as REQ-core-002 and REQ-core-004 state. test_side.rs maps every finding kind: the three untested kinds always, invalid_marker and unresolved_reference when the path is a test file read by the check, unparsable_file when it is such a file and does not match the surface.files globs (the glossary's surface file, matched with the same default globset as the walk), every other kind never; the severity is not consulted, which is sound because every kind in the table is an error. The CLI changes only the exit code: with the flag it is 1 when any error is not a test-side finding, otherwise the old computation; printing is untouched, so output stays identical (REQ-core-357, A4). The tests' expectations match their IDs: EX-core-547 to EX-core-552, the per-row core test of TBL-core-047, the no-rule-language surface case and the identical-output test for both formats. EX-core-551 now writes the guide mark as @kotowari[], a mark with nothing inside as the scenario says; the test expects invalid_marker on the guide and exit 1 with the flag, and passes. Outside the tests, the binary was run on a project whose only errors were an unparsable, an empty-marked and an unresolved-reference test file: exit 0 with the flag, 1 without. print_help now starts every option's description in one column, the width of --allow-test-findings plus two spaces; only spacing changed, and --help still exits 0 (TBL-core-002).",
       "requirements": [
         "REQ-core-002",
         "REQ-core-004",
@@ -103,6 +103,11 @@
           "after": "sha256:377b238ead8feae7d2c1cad284f53c84082b3d1a2c720995d2b357606c7e9e72"
         },
         {
+          "path": "agent/skills/kotowari/SKILL.md",
+          "before": "sha256:8770fca6c65e1d85c3713098f2e804152ae54b7c048e08b00c0a32f631dc56ab",
+          "after": "sha256:06aa2b239995d3a819295952faf73c2a8345fc29722346bdad5ae94ec15eead8"
+        },
+        {
           "path": "agent/skills/kotowari/references/findings.md",
           "before": "sha256:8b4b3b394e8a96cb18db39c33d5cb3ade22e6cf4600f69873c0f36ff7b780e80",
           "after": "sha256:f502b8587458b41071ce6d2aee63ed25a5c1e18c7acc9cdaa80d8cc699d84894"
@@ -110,17 +115,17 @@
         {
           "path": "docs/guides/cli.i18n.yaml",
           "before": "sha256:386b9bc73ee186b026f19fb204466fc2affdd0b0b34dc9c7ee68085429a74352",
-          "after": "sha256:5e6dc96f8b08a08ef57fa9625b3b00c0eeaaf3c0405390bb2536bdadf716a2f2"
+          "after": "sha256:6c5f8b06e3b6dc01c425aa44c5c730949b97b312c6b5a77e645344ddababf4ea"
         },
         {
           "path": "docs/guides/cli.ja.md",
           "before": "sha256:986579ca96a5fc03edc4da16fe87dbf4f80e4add389307e01b69e200d1747284",
-          "after": "sha256:af5722c14a50ec2c12239ed58fadb458d2de4a14a9661b91eb01bc0d1521ecd7"
+          "after": "sha256:9247c81cfcf6f77d1914bec8ed5bc444088ba322853a2e2c62fdacde792ece2f"
         },
         {
           "path": "docs/guides/cli.md",
           "before": "sha256:6628e7f5700ba0590142f6e1e44a783193bad01f17c12db4a4f3f93866eefca6",
-          "after": "sha256:b1b4a1e8c716261e9ce7a27a6048c6b57dbc58dfeca1a6899649624c203f2aba"
+          "after": "sha256:6ecb48126eb1dee9bc429229a8f25580a257175e0693321a3952671a76a91d5e"
         },
         {
           "path": "docs/guides/commands/check.i18n.yaml",
@@ -243,7 +248,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "REQ-core-358 holds by its how_to_verify: agent/skills/kotowari/references/findings.md, agent/skills/kotowari-adopt/SKILL.md and docs/guides/commands/check.md each say the pre-commit hook runs kotowari check with --allow-test-findings and the pre-push hook and CI run it without. The check guide's new section copies TBL-core-047 row for row and says only the exit code changes (REQ-core-357). The option rows, argument-error lists, exit-code tables, help output and stop example in cli.md and check.md follow REQ-core-002, REQ-core-004 and TBL-core-002; the help text matches print_help. The other guide marks only take current fingerprints: those of REQ-core-002, REQ-core-004 and TBL-core-002 changed on this branch, and those of REQ-core-014 and REQ-core-019 were already stale at the base because the previous branch changed their text; the config guide's sections still agree with both (absolute glob elements fall under its absolute-path row, and the hidden-directory exception is stated by path component). Each Japanese guide carries the same change and its consistency record. The CHANGELOG entry under Added describes the flag as a user sees it.",
+      "reason": "REQ-core-358 holds by its how_to_verify: agent/skills/kotowari/references/findings.md, agent/skills/kotowari-adopt/SKILL.md and docs/guides/commands/check.md each say the pre-commit hook runs kotowari check with --allow-test-findings and the pre-push hook and CI run it without. The check guide's new section copies TBL-core-047 row for row and says only the exit code changes (REQ-core-357). The option rows, argument-error lists, exit-code tables, help output and stop example in cli.md and check.md follow REQ-core-002, REQ-core-004 and TBL-core-002; the help blocks in cli.md and cli.ja.md were compared with the real --help output after the column alignment and are identical, and cli.i18n.yaml carries both guides' current blob IDs. The other guide marks only take current fingerprints: those of REQ-core-002, REQ-core-004 and TBL-core-002 changed on this branch, and those of REQ-core-014 and REQ-core-019 were already stale at the base because the previous branch changed their text; the config guide's sections still agree with both (absolute glob elements fall under its absolute-path row, and the hidden-directory exception is stated by path component). Each Japanese guide carries the same change and its consistency record. The CHANGELOG entry under Added describes the flag as a user sees it. The kotowari skill's routing row for the check scene now also names putting kotowari check into hooks or CI and still routes to findings.md, which holds the REQ-core-358 guidance; nothing else in the skill changed.",
       "requirements": [
         "REQ-core-002",
         "REQ-core-004",
