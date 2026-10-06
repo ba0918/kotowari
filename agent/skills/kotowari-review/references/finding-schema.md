@@ -31,7 +31,7 @@ fills those.
     }
   ],
   "consistency_phase": {
-    "review_head": "<head the cycle's first full review read; null until it runs>",
+    "review_head": "<head the cycle's step-3 full review last read; null until it runs>",
     "runs": [
       {
         "step": 2,
