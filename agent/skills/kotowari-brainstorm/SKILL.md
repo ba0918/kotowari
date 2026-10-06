@@ -90,9 +90,11 @@ related undecided items, and anything decided silently; any of these sends you b
 dialogue. Specification silence never means "implementer decides".
 
 Each requirement has an observable success condition and a counter-example, written as scenarios
-under the IR's `## Examples` (the kotowari skill's `references/records.md` says how). Test its verification against **Evidence conditions**. On failure, express a non-code requirement
-as human or platform inspection; drop a code behavior into an already reachable generic error path,
-recording it as rejected with its missing conditions. Agreements go into the IR documents, each item
+under the IR's `## Examples` (the kotowari skill's `references/records.md` says how). Test its
+verification against the Evidence conditions (the kotowari-review skill's
+`references/oracle-evidence.md`); a requirement that fails them is handled as its **A requirement
+no oracle can meet** says, and a code behavior dropped that way is recorded as rejected with its
+missing conditions. Agreements go into the IR documents, each item
 citing the decisions it rests on; prohibitions and rejected / undecided / delegated items stay in the
 decision record's own sections, since an IR document holds only requirements, decision tables,
 properties, and scenarios. Require
@@ -107,22 +109,6 @@ ID; it only stops check from asking for its tests. When the person decides to bu
 the line in the same way, with the decision recorded. A depends_on_deferred notice means an item
 that will be built relies on a deferred one; settle it with the person — defer that item too,
 bring the requirement back, or drop the reference.
-
-### Evidence conditions
-
-An oracle — a test, a check, or a fixture — counts as evidence only when the condition it
-produces has a named operational producer in a supported environment (untrusted input arriving
-at a boundary is one), its subject is the product or a check rather than the oracle itself, the
-rule it enforces is stated by the specification, and every wording, file layout, or internal
-name it pins is declared there as a contract. An oracle that fails any of these is a cost: do
-not add it, keep it in a change under review, or demand it.
-
-A requirement whose only oracle would fail these conditions is not mechanically verifiable:
-when it is not code, verify it by a human-run check or by the platform's own checker; when it
-is code, drop the requirement and let the failure join a generic error path a reachable
-failure already proves — never resolve it by having the implementer build the fixture.
-
-Source: `ba0918-verification`, agentic-rules v0.8.0.
 
 ## Finishing
 
