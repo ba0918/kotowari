@@ -139,8 +139,8 @@ closed finding is "same cause returned" under **Endings** and reopens it unless 
 both for its own findings. Record each premise attempt as `references/premise-step.md` says.
 
 **Overlap after a fix** is read from the findings file alone. A fix addressed the findings whose
-`commits` hold the commits it reported. The review right after it is the first round after the last
-round in which those findings were `still_present` that evaluated or raised a `quality` finding (a
+`commits` hold the commits it reported. The review right after it is the first round that evaluated or
+raised a `quality` finding after the last round in which those findings were `still_present` (a
 consistency phase run touches only `consistency` findings), and the findings it raised are the
 `quality` findings whose first evaluation is that round. Two evidence entries overlap when they name the same file with
 overlapping line ranges; an entry without a line range, or a finding with no evidence, takes no
