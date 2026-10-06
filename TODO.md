@@ -15,9 +15,7 @@ kotowari と mds（`crates/kotowari-markdown-schema`）の未解決事項の記�
 
 ## 後でやる
 
-### 紹介ページのガイドへのリンク（kotowari）
-
-- `site/template.html` のガイドへのリンクは `kotowari-v0.3.0` のタグを指し、「Japanese」と添えている。そのタグのガイドは日本語なので今は正しい。ガイドを英語と日本語の対にした後の最初のリリースで、新しいタグを指すようにし、「Japanese」の注記を外す
+なし。
 
 ## 記録のみ
 
