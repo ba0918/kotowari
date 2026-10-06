@@ -17,10 +17,10 @@ kotowari always has only the eight commands "kotowari check", "kotowari list", "
 ### REQ-core-002: Accepted options
 
 - kind: ubiquitous
-- source: docs/decision/records/records.md#A19, docs/decision/records/records.md#A103, docs/decision/records/2026-09-17-mutation-tests.md#A14, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A58, docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-09-24-plan-schema.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A3, docs/decision/records/2026-10-02-whole-picture.md#A62, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-02-whole-picture.md#A78
+- source: docs/decision/records/records.md#A19, docs/decision/records/records.md#A103, docs/decision/records/2026-09-17-mutation-tests.md#A14, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A58, docs/decision/records/2026-09-19-read-commands.md#A7, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-09-24-plan-schema.md#A16, docs/decision/records/2026-09-24-guide-gaps.md#A3, docs/decision/records/2026-10-02-whole-picture.md#A62, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-02-whole-picture.md#A78, docs/decision/records/2026-10-06-spec-first-commit.md#A5, docs/decision/records/2026-10-06-spec-first-commit.md#A6, docs/decision/records/2026-10-06-spec-first-commit.md#A12
 - verification: unit
 
-kotowari always accepts only "--format", "--config", "--help" and "--version" as options for "check", "list", "query" and "status"; accepts "--tool" in addition to those for "mutants"; accepts only "--format", "--help" and "--version" for "plan"; accepts only "--format", "--config", "--help" and "--version" for "overview build"; accepts only "--port", "--config", "--help" and "--version" for "overview serve"; and, for every command, accepts an option written either before or after the command, regardless of the order of positional arguments and options.
+kotowari always accepts only "--format", "--config", "--help" and "--version" as options for "list", "query" and "status"; accepts "--allow-test-findings", which takes no value, in addition to those for "check"; accepts "--tool" in addition to those for "mutants"; accepts only "--format", "--help" and "--version" for "plan"; accepts only "--format", "--config", "--help" and "--version" for "overview build"; accepts only "--port", "--config", "--help" and "--version" for "overview serve"; and, for every command, accepts an option written either before or after the command, regardless of the order of positional arguments and options.
 
 ### REQ-core-003: Base of the configuration path
 
@@ -33,10 +33,10 @@ kotowari always reads the path given to "--config" as a path relative to the cur
 ### REQ-core-004: Argument errors
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-01-change-details.md#A3, docs/decision/records/records.md#A60, docs/decision/records/records.md#A103, docs/decision/records/records.md#A136, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-02-whole-picture.md#A27, docs/decision/records/2026-10-02-whole-picture.md#A63
+- source: docs/decision/records/2026-10-01-change-details.md#A3, docs/decision/records/records.md#A60, docs/decision/records/records.md#A103, docs/decision/records/records.md#A136, docs/decision/records/2026-09-17-mutation-tests.md#A41, docs/decision/records/2026-09-17-mutation-tests.md#A43, docs/decision/records/2026-09-17-mutation-tests.md#A55, docs/decision/records/2026-09-19-read-commands.md#A20, docs/decision/records/2026-09-20-query-status.md#A5, docs/decision/records/2026-09-20-query-status.md#A18, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A15, docs/decision/records/2026-10-01-change-conformance.md#A2, docs/decision/records/2026-10-02-whole-picture.md#A27, docs/decision/records/2026-10-02-whole-picture.md#A63, docs/decision/records/2026-10-06-spec-first-commit.md#A5, docs/decision/records/2026-10-06-spec-first-commit.md#A12
 - verification: unit
 
-When neither "--help" nor "--version" is given and kotowari receives any of the following: an unknown option, "--tool" on a command other than "mutants", "--port" on a command other than "overview serve", "--format" on "overview serve", a first positional argument that is none of "check", "list", "mutants", "plan", "query", "status", "changes" and "overview", a positional argument after "check", "list" or "status", an unknown value of "--format", an option without a value, or a second occurrence of the same option; or when there are no arguments at all; or when there are only options and no first positional argument; or when, other than for "changes", the target of "--config" does not exist or is a directory, kotowari will `stop` on the grounds of an argument error.
+When neither "--help" nor "--version" is given and kotowari receives any of the following: an unknown option, "--tool" on a command other than "mutants", "--port" on a command other than "overview serve", "--format" on "overview serve", "--allow-test-findings" on a command other than "check", a first positional argument that is none of "check", "list", "mutants", "plan", "query", "status", "changes" and "overview", a positional argument after "check", "list" or "status", an unknown value of "--format", an option without a value, or a second occurrence of the same option; or when there are no arguments at all; or when there are only options and no first positional argument; or when, other than for "changes", the target of "--config" does not exist or is a directory, kotowari will `stop` on the grounds of an argument error.
 
 ### REQ-core-149: Arguments of mutants
 
@@ -104,12 +104,12 @@ kotowari shall not generate human-facing documents that copy their structure and
 
 ### TBL-core-002: Exit codes
 
-- source: docs/decision/records/records.md#A20, docs/decision/records/records.md#A29, docs/decision/records/records.md#A103, docs/decision/records/2026-09-16-notice.md#A2
+- source: docs/decision/records/records.md#A20, docs/decision/records/records.md#A29, docs/decision/records/records.md#A103, docs/decision/records/2026-09-16-notice.md#A2, docs/decision/records/2026-10-06-spec-first-commit.md#A1, docs/decision/records/2026-10-06-spec-first-commit.md#A10
 
 | Exit code | Situation |
 |---|---|
-| 0 | There are no errors (including when there are only notices), or the run ended with "--help" or "--version" |
-| 1 | There is one or more errors |
+| 0 | There are no errors (including when there are only notices), every error of "check" with "--allow-test-findings" is a `test-side finding`, or the run ended with "--help" or "--version" |
+| 1 | There is one or more errors (for "check" with "--allow-test-findings", one or more errors that are not a `test-side finding`) |
 | 2 | The run stopped |
 
 ## Examples

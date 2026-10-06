@@ -31,8 +31,9 @@
 | シナリオ | gherkin のコードブロックの中の "Scenario:" と、その直前の行のタグ | docs/decision/records/records.md#A27, docs/decision/records/ir-form.md#項目 |
 | ID | "REQ-"、"TBL-"、"PROP-"、"EX-"、"FLAG-" のいずれかに、省いてよい名前と "-" を続け、3桁以上の数字（4桁以上のときは先頭が "0" でない）を置いた、項目の識別子。名前は小文字の英字で始まり、2文字目からは小文字の英数字と "-" だけからなる | docs/decision/records/records.md#A52, docs/decision/records/2026-09-16-ir-tree.md#A6, docs/decision/records/2026-09-16-ir-tree.md#A11, docs/decision/records/2026-09-22-id-namespace.md#A1 |
 | 指摘 | 検査で見つけた1件。kind、severity、path、line、detail を持つ | docs/decision/records/records.md#A40 |
-| 誤り | 終了コードを1にする指摘 | docs/decision/records/records.md#A29 |
+| 誤り | severity が "error" の指摘。終了コードを1にする。ただし "--allow-test-findings" を付けた "kotowari check" では、テスト側の指摘は終了コードに数えない | docs/decision/records/records.md#A29, docs/decision/records/2026-10-06-spec-first-commit.md#A10 |
 | 注意 | 終了コードを変えない指摘。severity は "notice" | docs/decision/records/records.md#A17, docs/decision/records/records.md#A29, docs/decision/records/2026-09-16-notice.md#A1, docs/decision/records/2026-09-16-notice.md#A2 |
+| テスト側の指摘 | テストのファイルが原因の誤り。範囲は決定表 TBL-core-047 で定める | docs/decision/records/2026-10-06-spec-first-commit.md#A2, docs/decision/records/2026-10-06-spec-first-commit.md#A9, docs/decision/records/2026-10-06-spec-first-commit.md#A11 |
 | 停止 | 検査を行えずに終了コード2で終わること | docs/decision/records/records.md#A20, docs/decision/records/records.md#A40 |
 | 印 | テストに書く "@kotowari[ID, ...]" の並び | docs/decision/records/records.md#A14, docs/decision/records/records.md#A57 |
 | ガイド | 設定の "guides.files" に当たるファイル。読み手は製品を使う人で、利用者向けの使い方の文書を置く想定で、IR、判断の記録、実装計画、skill を置く場所ではないが、kotowari はそれを区別しない。"文書" だけで呼ばない | docs/decision/records/2026-09-24-doc-marks.md#A1, docs/decision/records/2026-09-24-doc-marks.md#A4, docs/decision/records/2026-09-24-doc-marks.md#A21, docs/decision/records/2026-09-24-doc-marks.md#A24, docs/decision/records/2026-10-05-guide-overview-roles.md#A2, docs/decision/records/2026-10-05-guide-overview-roles.md#A5 |
