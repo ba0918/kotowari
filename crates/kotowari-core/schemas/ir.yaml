@@ -3,8 +3,7 @@ name: ir
 open: false
 reading: line
 document:
-  title:
-    extract: title
+  title: {}
   preamble:
     fields:
       - name: deferred

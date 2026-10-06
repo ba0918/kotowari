@@ -5,7 +5,6 @@ reading: line
 document:
   title:
     pattern: "^Glossary$"
-    extract: title
   preamble:
     statement:
       repeat: { min: 0 }
