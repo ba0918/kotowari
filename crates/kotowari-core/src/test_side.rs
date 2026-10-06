@@ -105,11 +105,9 @@ pub(crate) struct TestSideFiles {
 }
 
 impl TestSideFiles {
-    /// finding が`誤り`で、TBL-core-047 の条件に当たるか
+    /// finding が TBL-core-047 の条件に当たるか。表の種類の重大度はどれも "error" なので、
+    /// 重大度は見ない
     pub(crate) fn contains(&self, finding: &Finding) -> bool {
-        if finding.severity() != "error" {
-            return false;
-        }
         let in_tests = self.tests.contains(finding.path());
         match condition(finding.kind()) {
             Condition::Always => true,
