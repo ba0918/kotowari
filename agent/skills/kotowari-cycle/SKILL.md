@@ -1,10 +1,9 @@
 ---
 name: kotowari-cycle
 description: >-
-  Workflow station of the kotowari workflow: a small orchestrator that takes an approved plan and a
-  branch, delegates implementation, the consistency phase, review, and fixing to separate-context
-  agents, and loops full review → diff loop until findings converge, adding a second full review only
-  when a fix could spread, then hands the result to the person once. Use only in a repository that uses
+  Workflow station of the kotowari workflow: the orchestrator that runs an approved plan on a branch
+  through implementation, the consistency phase, review, and fixing until the findings converge,
+  then hands the result to the person once. Use only in a repository that uses
   kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to run a kotowari cycle on a
   plan, or to resume one. 日本語キーワード:
   サイクル 実装ループ 改善ループ オーケストレータ 手順書を回す

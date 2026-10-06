@@ -1,6 +1,6 @@
 ---
 name: kotowari-review
-description: "Workflow station of the kotowari workflow: adversarial review of a diff or a document set by separate-context reviewers that return findings as JSON and never edit the evaluation target. Invoked by kotowari-cycle inside its loop, or directly by a person for a codebase diagnosis or a full review. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked for a kotowari review, a finding list, a full or diff review, or when cycle delegates a review. 日本語キーワード: レビュー 指摘 フルレビュー 差分レビュー 診断 敵対的レビュー 検証 動作確認 実装確認"
+description: "Workflow station of the kotowari workflow: adversarial review of a diff or a document set, called by kotowari-cycle inside its loop or directly by a person for a codebase diagnosis or a full review. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked for a kotowari review, a finding list, a full or diff review, or when cycle delegates a review. 日本語キーワード: レビュー 指摘 フルレビュー 差分レビュー 診断 敵対的レビュー 検証 動作確認 実装確認"
 ---
 
 # Review
