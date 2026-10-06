@@ -5,6 +5,14 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+### Added
+
+- When the improvement loop stops making progress, `kotowari-cycle` now questions the premise before it stops. If fixes keep raising new findings next to the ones they closed — or a finding stays present, a closed cause returns, or new findings do not shrink — the cycle writes down the premises its fixes shared, from the most specific up, replaces the top one and tries once more: through the fixer when the premise lies in the implementation, through the consistency phase when it lies in the IR or a decision record and grounds can settle it. Only a premise no grounds can settle goes to you, with the list of premises in the final report. A second firing after the attempt stops the loop as before. A new stop condition joins the others: a new finding overlapping, in the same file and lines, the finding the fix before it addressed, for two fixes in a row. Each attempt is recorded in the findings file (`premise_attempts`), so a resumed cycle does not try the same firing twice. `kotowari-iterate` and a direct fix in the main session take the same step, and `kotowari-implement` replaces its own premise once before handing back to the cycle.
+
+### Changed
+
+- The workflow skills are proofread: rules written in several places now live in one and are pointed to from the others, descriptions say only when to use each skill, and text a caller follows is kept apart from text pasted into a delegate's prompt. What you can notice: the contract the cycle pastes into its fixer and consistency phase is `kotowari-cycle/references/editing-contract.md`; the Evidence conditions live only in `kotowari-review/references/oracle-evidence.md`, with their four conditions numbered; how a caller launches optional seats is in `kotowari-review/references/optional-seats.md`; and `kotowari-brainstorm/references/records.md` is removed, its record kinds now in the skill's body. A finding raised by a diff review is now matched against closed findings like any other, and a finding kept only for the record no longer counts toward the "still present twice" stop.
+
 ## [0.5.0] - 2026-10-06
 
 ### Removed
