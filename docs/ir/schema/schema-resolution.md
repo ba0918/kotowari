@@ -24,10 +24,10 @@ mds always resolves a relative path written in the `frontmatter` against the loc
 ### REQ-schema-013: Caching a URL schema
 
 - kind: event_driven
-- source: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A20, docs/decision/records/2026-09-23-mutants-gaps.md#A9, docs/decision/records/2026-09-24-kotowari-dir.md#A3
+- source: docs/decision/records/2026-09-21-mds-spec.md#A14, docs/decision/records/2026-09-21-mds-spec.md#A20, docs/decision/records/2026-09-23-mutants-gaps.md#A9, docs/decision/records/2026-09-24-kotowari-dir.md#A3, docs/decision/records/2026-10-06-todo-zero.md#A1
 - verification: unit
 
-When the `frontmatter` points at a `schema` by URL, mds places the fetched content in the cache under its SHA-256 name and reads the cache from then on. If the cache is corrupt, it fetches again and recovers. The cache is placed in ".kotowari/cache/schemas/" of the `base directory`, and if there is no `base directory`, in ".kotowari/cache/schemas/" of the current directory.
+When the `frontmatter` points at a `schema` by URL, mds places the fetched content in the cache under its SHA-256 name and reads the cache from then on. If the cache is corrupt, it fetches again and recovers. The cache is placed in ".kotowari/cache/schemas/" of the `base directory`, and if there is no `base directory`, in ".kotowari/cache/schemas/" of the current directory. When the cache directory cannot be created or the cache cannot be written, mds raises neither an error nor a `finding` and continues with the fetched content.
 
 ### REQ-schema-014: A document that does not point at a schema
 
@@ -126,4 +126,11 @@ Scenario: Without a base directory the cache is placed under the current directo
   Given there is no ".kotowari/" anywhere from the current directory upward, and there is a `document` that points at a URL `schema`
   When "kotowari-mds check" is run
   Then the cache is placed in ".kotowari/cache/schemas/" of the current directory
+
+@id=EX-schema-093 @about=REQ-schema-013 @source=docs/decision/records/2026-10-06-todo-zero.md#A1,docs/decision/records/2026-09-21-mds-spec.md#A15
+Scenario: A cache that cannot be written does not stop the check
+  Given a `document` that points at a URL `schema` and fully satisfies that `schema`, and the cache cannot be written
+  When "kotowari-mds check" is run
+  Then the fetched `schema` is used
+  And the exit code is 0
 ```

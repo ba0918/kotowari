@@ -98,10 +98,10 @@ kotowari は、"kotowari overview serve" で、".kotowari/cache/overview/" の�
 ### REQ-core-324: 置き場が使えないとき
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-04-overview-on-public-api.md#A9
+- source: docs/decision/records/2026-10-04-overview-on-public-api.md#A9, docs/decision/records/2026-10-06-todo-zero.md#A5
 - verification: unit
 
-"kotowari overview build" か "kotowari overview serve" で、`基準のディレクトリ`の ".kotowari"、".kotowari/cache"、".kotowari/cache/overview" のどれかがシンボリックリンクか、ディレクトリでも無いことでもないとき、kotowari はファイルを1つも書かず消さずに、置き場の誤りを理由に`停止`し、詳細をそのパスにする。その置き場の作成、ファイルの書き込み、削除に失敗したときも、置き場の誤りを理由に`停止`し、詳細をそのパスと OS の誤りの文にする。
+"kotowari overview build" か "kotowari overview serve" で、`基準のディレクトリ`の ".kotowari"、".kotowari/cache"、".kotowari/cache/overview" のどれかがシンボリックリンクか、ディレクトリでも無いことでもないとき、kotowari はファイルを1つも書かず消さずに、置き場の誤りを理由に`停止`し、詳細をそのパスにする。その置き場の作成、その下のファイルの列挙、ファイルの書き込み、削除に失敗したときも、置き場の誤りを理由に`停止`し、詳細をそのパスと OS の誤りの文にする。
 
 ## Decision tables
 
@@ -168,4 +168,10 @@ Scenario: 置き場がシンボリックリンクなら外に書かずに止ま�
   Given 正しい`全体像の元データ`があり、".kotowari/cache/overview" が`基準のディレクトリ`の外のファイル "keep" を持つディレクトリへのシンボリックリンクである
   When "kotowari overview build" を実行する
   Then 終了コードは 2 で、標準エラーの1行目は "cache error: .kotowari/cache/overview" で始まり、外のディレクトリの中身は "keep" だけで変わらない
+
+@id=EX-core-546 @about=REQ-core-324 @source=docs/decision/records/2026-10-06-todo-zero.md#A5,docs/decision/records/2026-10-04-overview-on-public-api.md#A9,docs/decision/records/records.md#A20,docs/decision/records/ir-form.md#出力
+Scenario: 置き場のファイルを列挙できなければ置き場の誤りで止まる
+  Given ".kotowari/cache/overview" の下のディレクトリが読めない
+  When "kotowari overview build" を実行する
+  Then 終了コードは 2 で、標準エラーの1行目は "cache error: .kotowari/cache/overview" で始まる
 ```
