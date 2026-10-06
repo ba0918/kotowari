@@ -90,7 +90,7 @@
         {
           "path": "crates/kotowari-mds/tests/url_schema.rs",
           "before": "sha256:3c4e54f8cb38a74a0b8999cea2bc7890a51bed948344f88fde44ce70deffd6c2",
-          "after": "sha256:8ce8a3bd06007ca1eacc50bdc3e60bb0422ed3578e2dd4af2cb8d676148bd561"
+          "after": "sha256:aa40325b021e6bde137a93718af20c9559ba8150637f2b8a0cf0ff4f6b5f09c0"
         },
         {
           "path": "crates/kotowari/tests/change_records.rs",
@@ -105,7 +105,7 @@
         },
         {
           "path": "docs/ir/schema/document-structure.md",
-          "sha256": "sha256:0b10894a9bce2b4ac16633c960f889157fd5bdd5ff27a9c9470dba93997f3170"
+          "sha256": "sha256:4d2bdae95134110eda3e92f5d254f3c30fd0053edd3b16586030928c9f8e1c9b"
         },
         {
           "path": "docs/ir/schema/schema-resolution.md",
@@ -117,7 +117,7 @@
         }
       ],
       "conclusion": "existing",
-      "reason": "Tests only, for the four scenarios that write down behaviour the specification had been silent on: EX-view-024 (a reference link resolves only within its own block), EX-schema-094 (a depth-3 heading in a document without a title is outside the declared preamble in the open world), EX-schema-093 (a cache that cannot be written does not stop the check and the fetched schema is used), and EX-core-545 (a hidden directory named only inside braces is not entered, with a record in the non-hidden alternative as the positive control). No product code changed; each test passes against the existing behaviour.",
+      "reason": "Tests only, for the four scenarios that write down behaviour the specification had been silent on: EX-view-024 (a reference link resolves only within its own block), EX-schema-094 (a depth-3 heading in a document without a title is outside the declared preamble in the open world), EX-schema-093 (a cache whose directory cannot be created, and a cache file that cannot be written, do not stop the check and the fetched schema is used), and EX-core-545 (a hidden directory named only inside braces is not entered, with a record in the non-hidden alternative as the positive control). No product code changed; each test passes against the existing behaviour. REQ-schema-061 now scopes the before-title rule to schemas that declare no item directly under the document.",
       "requirements": [
         "REQ-view-007",
         "REQ-schema-061",
@@ -215,7 +215,7 @@
         {
           "path": "crates/kotowari-markdown-schema/CHANGELOG.md",
           "before": "sha256:81a1e833dee88a3618582100822d6854468c318e7225d009ee0b21b1c91502f6",
-          "after": "sha256:da604dceff66b199464a301467b501189ac330faceb48616d3deeb916110c5a8"
+          "after": "sha256:a8d48159727eb6afc624f0e09209d79dcffbc18c9117c396efabc3a7b97933e2"
         },
         {
           "path": "PROJECT.md",
@@ -225,7 +225,7 @@
       ],
       "ir": [],
       "conclusion": "new",
-      "reason": "Both changelogs are translated to English, past released sections included, and PROJECT.md states that both are written in English. The extra blank line before 0.3.0 is removed. Unreleased gains entries for this branch's user-visible changes: the cache error on enumeration, the '/' glob elements as configuration errors, and SchemaLoader::read_document. Release scripts match only '## [Unreleased]' and link lines, which are unchanged.",
+      "reason": "Both changelogs are translated to English, past released sections included, and PROJECT.md states that both are written in English. The extra blank line before 0.3.0 is removed. Unreleased gains entries for this branch's user-visible changes: the cache error on enumeration, the '/' glob elements as configuration errors, and SchemaLoader::read_document. Release scripts match only '## [Unreleased]' and link lines, which are unchanged. The trailing note of the mds changelog (the version lives in that crate's Cargo.toml; the changes include no release, tag or publication) is kept, translated.",
       "requirements": [],
       "decisions": [
         "docs/decision/records/2026-10-06-todo-zero.md#A17",
