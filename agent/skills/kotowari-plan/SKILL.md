@@ -31,20 +31,9 @@ never copies specification text: copies drift, and the implementer must read the
 anyway. What the plan adds is what only this plan
 knows — why this order, why these files, where to stop.
 
-Plan-level content: which requirements each step verifies; approach and its
-rationale; the file scope that may change; step order and prerequisites; choices left to the
-implementer; stop conditions.
-
-Per-step content (see `references/step-template.md`): purpose and the requirements it
-rests on; prerequisites; the files it may change; what "done" means and how it is shown (test /
-check / artifact / external); choices left open; when to stop and hand back.
-
-The form is fixed so that `kotowari plan` can check it against the schema bundled in kotowari
-(`references/step-template.md` states the rules; `references/plan-example.md` is a whole plan
-that passes). The plan-level content goes in its fixed `## ` sections, and the steps go under
-`## Steps` as `### S<number>: <name>` headings, each followed only by its eight field lines
-`- Name: value` in the template's order. Write each field's value on that one line. Put no
-frontmatter at the top of the plan: it names no schema, and the check uses its own.
+Its `## ` sections and each step's eight fields are fixed so that `kotowari plan` can check the
+form against the schema bundled in kotowari: `references/step-template.md` lists them with their
+form rules and what each holds, and `references/plan-example.md` is a whole plan that passes.
 
 ## Reading the requirements
 
