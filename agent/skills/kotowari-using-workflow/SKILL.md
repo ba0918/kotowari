@@ -35,8 +35,8 @@ outside reach · interdependent change sites · what would notice a mistake → 
 | review | several interdependent change sites, so the implementation can contradict itself |
 | the loop | a fix can spread beyond where it was made |
 
-Reviewers are one per perspective: one, or two when a specification must be matched and no
-machine check sees that match. A single site, independent changes, and mistakes a machine check
+A review launches one reviewer, on quality; agreement with the specification is the consistency
+phase's. A single site, independent changes, and mistakes a machine check
 catches all take zero.
 
 Three things are never traded away, and machine checks or the existing stop rules carry all

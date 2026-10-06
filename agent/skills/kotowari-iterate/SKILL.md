@@ -102,8 +102,8 @@ counter-example — yet it caps the files to touch (edit, create, delete, rename
 outside it — hand back, never touch or report it. In a listed file, changes the request did not name
 (import tidying, tests following) are out-of-request; an entry whose change differs is review's to
 catch. The cap binds only the implementer; the fixer follows findings into any file, reporting those
-outside as out-of-request. With no specification the request is the counterpart; review's own rule
-adds the conformance reviewer, never a default.
+outside as out-of-request. With no specification the request is the counterpart; review launches the
+quality reviewer only, and the consistency phase reads the code against the request.
 
 Same branch right after a cycle or a run of this skill: reuse it, never re-cut; findings JSON still
 there is cycle's resume — keep the findings (deleting or ignoring it is a counter-example) and
