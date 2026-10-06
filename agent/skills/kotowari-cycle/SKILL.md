@@ -136,8 +136,16 @@ reviewers disagree, one `still_present` means still present. New findings carry 
 full review, a diff review, or a phase run raised them: match each by evidence location and
 oracle — a match with an open finding reuses its ID and appends `still_present`; a match with a
 closed finding is "same cause returned" under **Endings** and reopens it unless it was closed
-`accepted`. Reviewers only evaluate; the fixer only reports commits; the consistency
-phase does both for its own findings.
+`accepted`. Reviewers only evaluate; the fixer only reports commits; the consistency phase does
+both for its own findings. Record each premise attempt as `references/premise-step.md` says.
+
+**Overlap after a fix** is read from the findings file alone. A fix addressed the findings whose
+`commits` hold the commits it reported. The review right after it is the first round after the last
+round in which those findings were `still_present`, and the findings it raised are those whose first
+evaluation is that round. Two evidence entries overlap when they name the same file with
+overlapping line ranges; an entry without a line range, or a finding with no evidence, takes no
+part. A fix that reported no finding, or whose next review raised no overlapping visible finding,
+breaks the run of two.
 
 ## Stopping inside the loop
 
@@ -153,12 +161,18 @@ phase does both for its own findings.
 1. Converged: the last review returned no visible finding, or the diff loop after it cleared them,
    and the consistency phase after it ended its step or was skipped.
 2. The person's round-trip limit was reached.
-3. No progress: a visible finding is `still_present` in two consecutive rounds that evaluated it (the
-   second after a changed approach); a closed finding's cause returns; or a review still cannot
-   succeed after one re-delegation; or two
-   consecutive post-fix diff reviews have at least as many
-   finalized new visible findings as visible findings marked `no_longer_visible`; full reviews
-   are excluded from this comparison.
+3. No progress, when one of these holds:
+   - a visible finding is `still_present` in two consecutive rounds that evaluated it (the second
+     after a changed approach);
+   - a closed finding's cause returns;
+   - two consecutive post-fix diff reviews have at least as many finalized new visible findings as
+     visible findings marked `no_longer_visible` (full reviews are excluded from this comparison);
+   - for two fixes in a row, the review right after the fix raised a new visible finding whose
+     evidence overlaps that of a visible finding the fix addressed (**Overlap after a fix**);
+   - a review still cannot succeed after one re-delegation.
+
+   Every clause but the last first enters the premise step (`references/premise-step.md`), and the
+   loop ends here only when that step says so. A review that cannot succeed ends the loop at once.
 4. A delegate handed back to brainstorm or plan.
 
 Endings 2–4 add to the terminal report the choice "run more or accept the rest and finish" and
@@ -168,9 +182,9 @@ any hand-back reason.
 
 The findings file is `.agents/artifacts/reviews/<branch>.json` (a `/` in the branch name is a
 directory). If it exists when cycle starts, this is a resume: keep its findings and continue round
-numbers from its maximum. Ending 3's two streaks (`still_present` twice running; new visible
-findings not shrinking) count from this start only; a closed cause returning counts across
-starts. "Run more" after endings 2–4 continues the same run: streaks kept, findings still open, a
+numbers from its maximum. Ending 3's streaks (`still_present` twice running; new visible findings
+not shrinking; overlap after a fix) count from this start only; a closed cause returning counts
+across starts. "Run more" after endings 2–4 continues the same run: streaks kept, findings still open, a
 new limit only if the person sets one.
 
 Either way, infer from the plan and `git log` which steps are done, and go on at the first row
@@ -228,7 +242,8 @@ Always: artifacts and commits, verification results from the implement report, t
 findings needing the person, and rules or sections identified as absent from the specification.
 From the consistency phase: its commits and decision records, each open `human_judgment` finding
 with its default and the word that reverses it, and the one-line reason for each skipped run.
-When a full review ran optional seats: their attendance, as the review skill's
+When a premise attempt ran or a premise went to the person: the premise ladder of each attempt in
+the findings file. When a full review ran optional seats: their attendance, as the review skill's
 `references/optional-seats.md` says under **Merging and reporting**.
 This is the person's one check; merging is theirs. Cycle never merges, publishes, deletes branches
 or worktrees, edits the specification itself (the consistency phase does, as its reference says),

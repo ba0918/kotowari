@@ -20,6 +20,8 @@ the code agree. It reads the code itself, never a record about the code.
   awaiting a person's judgment (`human_judgment`) as known findings, which it neither evaluates nor
   raises again, since they stay open for the final report; and the path of the kotowari-review
   skill's `references/finding-schema.md` (the shape of a finding).
+- When cycle sends a premise to replace: the premise ladder and the replaced premise, as one more
+  finding to resolve by **How a finding is resolved**.
 - The kotowari skill's reference directory and its **What the IR holds** section pasted in full;
   the **Editing contract** of the kotowari-cycle skill's `references/editing-contract.md`, with
   the Evidence conditions. Read `findings.md` to interpret check;

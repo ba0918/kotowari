@@ -110,7 +110,9 @@ Same branch right after a cycle or a run of this skill: reuse it, never re-cut. 
 still there is cycle's resume — keep it; deleting or ignoring it is a counter-example — with these
 differences: set `first_review_head` to null; unless the person gave a comparison base, it is the
 branch tip at start, and inherited open findings are evaluated in the diff review even outside it;
-ending 3's streaks reset at each start of this skill, inherited evaluations uncounted. No default
+ending 3's streaks reset at each start of this skill, inherited evaluations uncounted. Ending 3's
+clauses enter the premise step as in cycle (kotowari-cycle's `references/premise-step.md`), whose
+allowance of one attempt is renewed at each start of this skill too. No default
 round-trip limit; one the person sets counts this run's reviews from when it was set, not the
 round numbers. No counter of consecutive runs.
 

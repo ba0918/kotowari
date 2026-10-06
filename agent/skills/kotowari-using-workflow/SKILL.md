@@ -91,7 +91,8 @@ blocked change as part of its range (kotowari-cycle's `references/consistency-ph
 The counterpart is the IR store path with no ID file (the items in range are those the diff touches
 or its marks carry), or, for a topic with no IR, the approved specification document or the request.
 This session owns the findings file using cycle's **Judgment stays here**, **Stopping inside the
-loop** and **Endings**. Report the phase's results as cycle's **Terminal report** requires,
+loop** and **Endings**; when ending 3's clauses enter the premise step, run kotowari-cycle's
+`references/premise-step.md` with this session in the fixer's role. Report the phase's results as cycle's **Terminal report** requires,
 including skipped-run reasons and unresolved defaults with the word that reverses each.
 
 ## Exceptions

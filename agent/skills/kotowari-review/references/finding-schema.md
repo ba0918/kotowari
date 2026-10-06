@@ -10,6 +10,18 @@ fills those.
   "base": "<commit the full review diffs from>",
   "last_reviewed_head": "<branch head at the previous review>",
   "first_review_head": "<head cycle's first full review read; null until it runs>",
+  "premise_attempts": [
+    {
+      "fired_at_round": 3,
+      "clause": "overlap_after_fix",
+      "ladder": [
+        {"premise": "the most specific premise the fixes shared", "lives_in": "implementation"},
+        {"premise": "the premise the others rest on", "lives_in": "implementation"}
+      ],
+      "replaced": {"premise": "the premise replaced", "by": "what replaces it", "findings": [5, 7]},
+      "sent_to": "fixer"
+    }
+  ],
   "findings": [
     {
       "id": 7,
@@ -43,6 +55,10 @@ fills those.
 | `oracle.measured` | `fails_now` / `not_run` (unsafe; reason in note) / `not_applicable` (info, human_judgment) |
 | `status.state` | `open` / `closed`; `closed_reason` is `fixed` or `accepted` |
 | `commits` | commit hashes the fixer, or for a `consistency` finding the phase, reported for this finding |
+| `premise_attempts` | written by cycle only, one entry per attempt of the kotowari-cycle skill's premise step, appended before the attempt's delegation; `[]` until one runs |
+| `clause` | the ending 3 clause that fired: `still_present_twice` / `cause_returned` / `not_shrinking` / `overlap_after_fix` |
+| `lives_in` | `implementation` / `ir_or_record` |
+| `sent_to` | `fixer` / `consistency_phase` / `person` |
 | `evaluations` | one per review or consistency phase run that evaluated this finding, with the round-trip number: `{"round": n, "verdict": "still_present" \| "no_longer_visible"}`; a full-review match appends `still_present` |
 
 Diff-review return shape: `{"verdicts": [{"id": 7, "verdict": "still_present"}], "new": [ ...findings... ]}`.
