@@ -144,8 +144,9 @@ raised a `quality` finding after the last round in which those findings were `st
 consistency phase run touches only `consistency` findings), and the findings it raised are the
 `quality` findings whose first evaluation is that round. Two evidence entries overlap when they name the same file with
 overlapping line ranges; an entry without a line range, or a finding with no evidence, takes no
-part. A fix that reported no finding, or whose next review raised no overlapping visible finding,
-breaks the run of two.
+part. A fix breaks the run of two when it reported no finding, when a finding it addressed holds a
+later fix's commits after its own (it did not clear that finding for good, which ending 3's other
+clauses catch), or when its next review raised no overlapping visible finding.
 
 ## Stopping inside the loop
 
