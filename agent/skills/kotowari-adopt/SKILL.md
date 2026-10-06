@@ -200,6 +200,9 @@ Tell the person three things:
 - tests outside `tests.files` are outside kotowari: a test with no mark there is not an error;
 - a requirement with no grounds test keeps its requirement_without_test until its test is written, and
   a project whose push or CI requires `kotowari check` to pass stops on it — so run the adoption and the
-  test work that follows on one branch;
+  test work that follows on one branch. Commits on that branch pass when the pre-commit hook runs
+  `kotowari check --allow-test-findings`, which leaves test-side findings out of the exit code; the
+  pre-push hook and CI run `kotowari check` without the option, so the branch is stopped there until the
+  tests are written;
 - while FLAGs remain, `kotowari status` reports `complete` false. That is intended: it is the list of
   what awaits collection, not a breakage.
