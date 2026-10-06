@@ -26,8 +26,8 @@ Hand back (stop, state the reason, do not guess) when:
   or a dangerous target (production data, configuration, external effects) → ask, then continue;
 - continuing would spread damage (secret exposure, unintended publication, data loss) → stop;
 - after diagnosing and changing approach once there is still no progress → stop;
-- a hook stops your commit on an IR-side finding → back to cycle (see **Requirements and kotowari
-  check**);
+- a hook stops your commit on an IR-side finding → back to cycle, as **Requirements and kotowari
+  check** says;
 - no test command can be determined (see below) → back to plan before writing product code.
 
 Before handing back a missing decision, ask whether running something in the worktree would answer
@@ -42,17 +42,9 @@ Never ask for acceptance of the result step by step; that happens once, at the e
 
 ## Completing a step
 
-Each plan step says how its completion is shown. Four kinds; details in
-`references/completion.md`:
-
-- **Test**: RED → GREEN → REFACTOR, one small failing test per behavior, run in a shell at every
-  transition.
-- **Check**: run the check commands the plan lists, in order; done only when all succeed. Never
-  substitute a different command on the spot.
-- **Artifact**: a document such as a README or skill text; pass any format check that exists and
-  leave it in a state an independent review can judge.
-- **External**: real devices or measurements; hand back before running anything unsafe,
-  privileged, or irreversible. Keep the command and a decision-relevant summary, not full logs.
+Each plan step says how its completion is shown: test, check, artifact, or external. Before
+completing a step, read that kind's section in `references/completion.md`. An external step hands
+back before running anything unsafe, privileged, or irreversible.
 
 The test command comes from, in order: the plan, the project's own instructions, the standard
 tool for the ecosystem. If none decides it, hand back to plan.
@@ -68,31 +60,20 @@ When writing a test, read the kotowari skill's scene mark (`references/mark.md`)
 with the IDs it verifies. Run the `kotowari check` and `kotowari status` the plan lists as check
 commands; to read their output, read the kotowari skill's scene check (`references/findings.md`).
 
-When `kotowari check` exits with 1, work only on the findings whose `path` is a file you changed
-or that name an ID the plan covers; list any others in the report without touching them:
-
-- fix the test-side findings yourself (requirement_without_test, scenario_without_test,
-  test_without_id, invalid_marker, unparsable_file, and unresolved_reference from a mark);
-- leave an IR-side finding alone and list it in the report: the cycle's consistency phase, which
-  reads the diff against the IR after you, resolves it and fixes the IR. When the pre-commit hook
-  stops your commit on one, never edit the IR and never bypass the hook: stop, leave the blocked
-  change uncommitted in the worktree, and hand back the finding with the files it blocked. Cycle
-  runs the phase and then delegates the remaining steps to you again; resume from the working
-  diff as **Resuming** says.
+When `kotowari check` exits with 1, work only on this run's findings, as kotowari-cycle's
+**kotowari check before the terminal report** defines them and says where each kind goes. Fix
+yourself what it gives the fixer or the implementer (test-side findings, missed mutations, and a
+deferred_with_test your own mark raised, by removing that mark). List in your report, untouched,
+what it gives the consistency phase or only counts (IR-side findings, the other deferred notices,
+overview data), and every finding that is not this run's.
 
 A deferred requirement or deferred scenario (`deferred` true in `kotowari query`) is not built
-now and raises no test-side finding: write no test for it and put its ID in no mark. If your mark
-raised deferred_with_test, remove the mark; list any other deferred_with_test or
-depends_on_deferred notice on a file you changed or an ID the plan covers in the report, as an
-IR-side finding.
+now: write no test for it and put its ID in no mark.
 
-Overview data (the files in the configuration's `overview.files`) is never edited here, not even
-to clear its findings or guide_stale notices: the next brainstorm that touches the topic revises
-it (the kotowari skill's `references/overview.md`). List such findings in the report.
-
-Missed mutations: the project's mutation gate (in kotowari itself, the pull request CI) runs mutations on the diff. A miss is fixed by the fixer or
-the implementer, like a test-side finding; how to investigate one is in the kotowari skill's
-`references/mutants.md`.
+When the pre-commit hook stops your commit on an IR-side finding, follow the hook-stop rule in
+kotowari-cycle's `references/editing-contract.md` (**Fixer only**) and hand back. Cycle runs the
+consistency phase and then delegates the remaining steps to you again; resume from the working
+diff as **Resuming** says.
 
 ## Committing
 
