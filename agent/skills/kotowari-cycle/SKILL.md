@@ -86,9 +86,7 @@ copy of either in this file.
 
 When implement or the fixer returns a commit a hook stopped on an IR-side finding, run the
 consistency phase as in step 2, the blocked change in the worktree included in its range, then
-repeat the same delegation; after implement, step 2 still runs. A fixer return a hook stopped is
-not a fix of its own: the repeated delegation is the same fix, and its return gets the one `fixes`
-entry.
+repeat the same delegation; after implement, step 2 still runs.
 
 A review's counterpart follows the review skill's **Inputs**. Only the consistency phase gets
 the specification path with the plan's IDs: for IR, narrow `kotowari list` to those IDs
@@ -131,8 +129,9 @@ new test or fixture without showing it qualifies, keep its action but replace it
 existing checks passing; replace a `warn` oracle even when it qualifies. Leave `security` untouched
 and pause. Adopt any proposal that matched none of these checks unchanged. Never move a finding out
 of `human_judgment` without asking the person. Append numbered verdicts and update state; after every
-fix record its reported commits on each finding and append one entry to `fixes`; after every review
-(not a consistency phase run), set its round as `reviewed_in` on each entry that has none.
+fix record its reported commits on each finding and append to `fixes` the findings it addressed and
+its commits; the round of the review after it goes into that entry's `reviewed_in`. `fixes` is a
+record of facts for resuming and for the terminal report.
 `no_longer_visible` → closed (`fixed`); accepted by the person at the end → closed (`accepted`). If
 reviewers disagree, one `still_present` means still present. New findings carry no IDs, whether a
 full review, a diff review, or a phase run raised them: match each by evidence location and
@@ -141,15 +140,11 @@ closed finding is "same cause returned" under **Endings** and reopens it unless 
 `accepted`. Reviewers only evaluate; the fixer only reports commits; the consistency phase does
 both for its own findings. Record each premise attempt as `references/premise-step.md` says.
 
-**Overlap after a fix** is read from the findings file alone, one `fixes` entry after another. The
-review right after a fix is round `reviewed_in`, and the findings it raised are the visible
-`quality` findings whose first evaluation is that round. Visible here is by final action alone
-(`auto_fix` or `fix_and_verify`), open or closed: the findings a fix cleared are closed at its
-`reviewed_in`, and those that review raised close at the next. Two evidence entries overlap when they
-name the same file with overlapping line ranges; an entry without a line range, or a finding with
-no evidence, takes no part. A fix breaks the run of two when it reported no finding, when a finding
-it addressed is `still_present` at `reviewed_in` (it did not clear that finding, which ending 3's
-other clauses catch), or when that review raised no finding overlapping one the fix addressed.
+**Overlap after a fix** is cycle's judgment, read from the evidence locations (file and lines):
+did the review right after a fix raise a new visible finding next to where that fix was made — the
+evidence of the findings it addressed and the places its commits changed? Evidence naming the same
+file with overlapping line ranges is one example; judge what the locations show rather than
+computing it from the findings file.
 
 ## Stopping inside the loop
 
@@ -171,8 +166,8 @@ other clauses catch), or when that review raised no finding overlapping one the 
    - a closed finding's cause returns;
    - two consecutive post-fix diff reviews have at least as many finalized new visible findings as
      visible findings marked `no_longer_visible` (full reviews are excluded from this comparison);
-   - for two fixes in a row, the review right after the fix raised a new visible finding whose
-     evidence overlaps that of a visible finding the fix addressed (**Overlap after a fix**);
+   - for two fixes in a row, the review right after the fix raised a new visible finding next to
+     where the fix was made (**Overlap after a fix**);
    - a review still cannot succeed after one re-delegation.
 
    Every clause but the last first enters the premise step (`references/premise-step.md`), and the
