@@ -21,7 +21,7 @@ Required: the plan path and the branch with its worktree path. The main session 
 before cycle starts; the branch name contains the plan name.
 Optional: round-trip limit (default none: loop until convergence), review strength (the
 person's choice, default `standard`), comparison base (default: merge-base with the branch's
-parent), profiles (default: chosen from changed paths by the review skill's path mapping),
+parent), profiles (default: chosen from changed paths by the review skill's **Profiles from paths**),
 optional seats (the person's word for this run; otherwise as the review skill's **Optional
 seats** says), review items (what the person or the caller asks every review to look at, beyond
 the profiles).

@@ -38,7 +38,7 @@ site, independent changes, and mistakes an existing check catches need no review
 | Prior findings | the known findings only (open `record_only` / `human_judgment`, closed `accepted`); a match is not raised again | the open findings, with IDs | none |
 | Optional seats | as **Optional seats** says | none | as for a full review |
 
-Profiles from paths, when cycle is the caller and gave none: under a `skills/` directory at any
+**Profiles from paths.** When cycle is the caller and gave none: under a `skills/` directory at any
 depth → Skill; `docs/` and top-level explanatory documents → Document; other source and
 configuration → Code. Several kinds → every profile that applies; each finding records which one
 it came from.

@@ -85,7 +85,7 @@ there meaning this run, with only these differences:
 | the specification path read from the plan | the given path, or the specification the judgment found; requirement IDs only when the request touches IR items |
 | step 1's delegation of the remaining plan steps to implement | after the judgment, the request goes to the implementer below in one delegation |
 | the plan path in the fixer delegation | the request, and the specification path if any; the fixer also hands back a contradiction with the specification |
-| **Fixer only**'s "the plan's commands in order, unedited" (`references/editing-contract.md`) | check commands come from the project's instructions, then the ecosystem's standard tool |
+| **Fixer only**'s "the plan's commands in order, unedited" (kotowari-cycle's `references/editing-contract.md`) | check commands come from the project's instructions, then the ecosystem's standard tool |
 | the row "a plan step left no git trace" in **Resuming and running more** | does not apply: there are no plan steps |
 | the specification path and the file of IDs in the consistency phase delegation | the specification path and the request; the file of IDs only when the request touches IR items; with no specification, the request alone is the counterpart |
 | ending 4 and its "run more or accept the rest" choice | the destination is one of the guidance table's three; no choice is offered — the report adds the hand-back reason and the guidance, and the person restarts with a new request holding their answer |
