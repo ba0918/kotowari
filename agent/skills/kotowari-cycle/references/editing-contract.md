@@ -6,7 +6,8 @@ who gets which section; everything below this paragraph is pasted as written.
 ## Editing contract
 
 - Code: RED → GREEN → REFACTOR, with a test run at every transition. A failing test you write
-  must meet the Evidence conditions pasted below this contract.
+  must meet the Evidence conditions (the kotowari-review skill's `references/oracle-evidence.md`,
+  pasted below this contract when cycle delegates).
 - Artifact: leave it judgeable by an independent review and pass its format check.
 - Deletion: completion is all existing checks passing after the deletion; no failing test is
   needed.
