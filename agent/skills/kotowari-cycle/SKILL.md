@@ -36,8 +36,9 @@ the requirements it covers, or, for a topic with no IR, the path of its committe
 do not interpret its steps. Where to start is in **Resuming and running more**.
 
 Before the first review, read the kotowari-review skill's `SKILL.md` and the references its
-**Reviewer setup** and **Optional seats** name. **Reviewer setup** owns the self-contained
-reviewer prompt; use that contract for both full and diff reviews.
+**Reviewer setup** names; read the reference its **Optional seats** names only when this run has
+optional seats. **Reviewer setup** owns the self-contained reviewer prompt; use that contract for
+both full and diff reviews.
 
 ## Loop
 
