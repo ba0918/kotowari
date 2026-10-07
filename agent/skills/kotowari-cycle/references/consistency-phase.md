@@ -5,8 +5,7 @@ that agent's prompt; the agent runs in a context separate from the implementer a
 
 The phase reads the code a diff changed against the IR, finds where the two do not agree and where
 the IR itself has a gap or a contradiction, and resolves every finding into a state where the IR and
-the code agree. It reads the code itself, never a record about the code. Grounds and measurements
-decide; a person is involved only as a last resort.
+the code agree. It reads the code itself, never a record about the code.
 
 ## Inputs
 
@@ -21,8 +20,11 @@ decide; a person is involved only as a last resort.
   awaiting a person's judgment (`human_judgment`) as known findings, which it neither evaluates nor
   raises again, since they stay open for the final report; and the path of the kotowari-review
   skill's `references/finding-schema.md` (the shape of a finding).
+- When cycle sends a premise to replace: the premise ladder and the replaced premise, as one more
+  finding to resolve by **How a finding is resolved**.
 - The kotowari skill's reference directory and its **What the IR holds** section pasted in full;
-  cycle's **Editing contract** with Evidence conditions. Read `findings.md` to interpret check;
+  the **Editing contract** of the kotowari-cycle skill's `references/editing-contract.md`, with
+  the Evidence conditions. Read `findings.md` to interpret check;
   read `records.md` when recording a decision, `ir-form.md` when editing IR, `translations.md`
   when changing a language pair, and `mark.md` when writing tests. References are read on demand,
   not as a prerequisite to inspecting the diff.
@@ -84,7 +86,7 @@ resolved here as below.
 ## Fixing and recording
 
 - The phase fixes and commits the IR, decision record, flag record and code itself under the supplied
-  **Editing contract**. The fixer's instruction to leave IR alone and return on a hook's IR-side
+  Editing contract. The fixer's instruction to leave IR alone and return on a hook's IR-side
   finding does not apply: fixing IR is this phase's job. Resolve missing meaning by **How a finding
   is resolved**, not a hand-back. Check commands come from the project's instructions, then the
   ecosystem's standard tool; tests carry marks as `mark.md` says.
@@ -99,9 +101,9 @@ resolved here as below.
 
 ## Running again and what it returns
 
-Its findings go into cycle's findings file beside the review's, with the perspective `consistency`,
-and cycle reruns and stops the phase by the same rules as the review loop. One delegation is one run.
-A rerun has the head moved to the current head, so its range includes the fixes, and it also reads
+Cycle puts its findings in its findings file beside the review's, with the perspective
+`consistency`, and decides reruns and when to stop by its own rules; the phase keeps no state. A
+rerun has the head moved to the current head, so its range includes the fixes, and it also reads
 whether the grounds recorded for each choice support it. A run returns:
 
 - for each earlier finding it was given to evaluate (not a known one), `still_present` or `no_longer_visible`, with the commits of

@@ -1,12 +1,12 @@
 ---
 name: kotowari-using-workflow
-description: "Entry decider beside the kotowari workflow: given a new request, name the skill it starts from — direct editing, iterate, brainstorm, plan then cycle, adopt, or investigate — and how much of the workflow runs, without starting the work; questions and chat are answered directly, never routed. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked where to start, which skill to use, how much review a change needs, or to decide the entry point. 日本語キーワード: どこから始めるか 入口を決めて どの skill から 入口 使い分け ルーティング レビューは要るか 工程を減らす"
+description: "Entry decider beside the kotowari workflow: decides which skill a new request starts from — direct editing, iterate, brainstorm, plan then cycle, adopt, or investigate — and how much of the workflow runs. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked where to start, which skill to use, how much review a change needs, or to decide the entry point. 日本語キーワード: どこから始めるか 入口を決めて どの skill から 入口 使い分け ルーティング レビューは要るか 工程を減らす"
 ---
 
 # Using the workflow
 
-You are resident and read every turn; apply this to each new request before any other move.
-Decide the entry and how much of the workflow runs. Do not start the work itself.
+Apply this to each new request before any other move: decide the entry and how much of the
+workflow runs. Do not start the work itself.
 
 ## What gets routed
 
@@ -35,9 +35,8 @@ outside reach · interdependent change sites · what would notice a mistake → 
 | review | several interdependent change sites, so the implementation can contradict itself |
 | the loop | a fix can spread beyond where it was made |
 
-A review launches one reviewer, on quality; agreement with the specification is the consistency
-phase's. A single site, independent changes, and mistakes a machine check
-catches all take zero.
+A single site, independent changes, and mistakes a machine check catches take no reviewer; the
+review row is the kotowari-review skill's own gate (**When a review runs at all**).
 
 Three things are never traded away, and machine checks or the existing stop rules carry all
 three, so none adds a station: secrets and credentials, and publishing, distribution or version,
@@ -85,12 +84,15 @@ The measure decides this, not the line above, so it is not a station the line ad
 
 Save `HEAD` as the base before the first edit, then commit the edits; the range is that saved
 base to the current `HEAD`.
-If the hook stops that commit on an IR-side finding, leave the change uncommitted: the reference's
-rule for a blocked change applies, and the edits are committed after the phase's last run.
+If the hook stops that commit on an IR-side finding, keep the change uncommitted as the hook-stop
+rule in kotowari-cycle's `references/editing-contract.md` (**Fixer only**) says. The phase reads the
+blocked change as part of its range (kotowari-cycle's `references/consistency-phase.md`,
+**Inputs**), and the edits are committed after the phase's last run.
 The counterpart is the IR store path with no ID file (the items in range are those the diff touches
 or its marks carry), or, for a topic with no IR, the approved specification document or the request.
 This session owns the findings file using cycle's **Judgment stays here**, **Stopping inside the
-loop** and **Endings**. Report the phase's results as cycle's **Terminal report** requires,
+loop** and **Endings**; when ending 3's clauses enter the premise step, run kotowari-cycle's
+`references/premise-step.md` with this session in the fixer's role. Report the phase's results as cycle's **Terminal report** requires,
 including skipped-run reasons and unresolved defaults with the word that reverses each.
 
 ## Exceptions

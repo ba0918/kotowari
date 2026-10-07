@@ -1,6 +1,6 @@
 ---
 name: kotowari-brainstorm
-description: "Workflow station of the kotowari workflow: interview the person until shared understanding is complete and write the specification — decisions as a tree, questions in numbered rounds with recommended answers, term definitions and boundary scenarios on the spot, six kinds of record, adversarial review, then staged approval. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to brainstorm, define requirements, extract a specification, or resolve an ambiguity in one. 日本語キーワード: 壁打ち 要件定義 仕様抽出 ブレインストーム 質問ラウンド ドメインモデリング"
+description: "Workflow station of the kotowari workflow: interview the person until shared understanding is complete, then write the specification and get it approved. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to brainstorm, define requirements, extract a specification, or resolve an ambiguity in one. 日本語キーワード: 壁打ち 要件定義 仕様抽出 ブレインストーム 質問ラウンド ドメインモデリング"
 ---
 
 # Brainstorm
@@ -78,10 +78,24 @@ decides.
 
 ## Records
 
-Six kinds, kept in the decision record and defined in `references/records.md`: agreement, prohibition,
-undecided (with who decides), delegated (with reason), rejected (with reason), revision (what replaced
-what). Never merge undecided with delegated. When meaning changes, record the revision instead of
-rewriting the decision; resume from the record.
+The decision record holds six kinds of item from the first round on; its form (`## Context`, the
+section headings, the lines each item carries, links across documents) is the kotowari skill's
+`references/records.md`. Keep its Position line on where the tree stands and what the next round
+covers, and resume from the record.
+
+| Kind | Holds | Goes to |
+|---|---|---|
+| agreement | what was decided, in the person's words when possible | `## Agreements`; the IR items built on it cite it as their source |
+| prohibition | what will not be built | `## Prohibitions` |
+| undecided | the open question and **who decides it** (the person, or a later brainstorm — never the implementer) | `## Undecided` |
+| delegated | a choice the person agreed to leave to implementation, and **why** every option keeps approved behavior — never filed before they answer | `## Delegated` |
+| rejected | the alternative and **why** it lost | `## Rejected`, one line each, no mechanism description |
+| revision | what replaced what, and why | `## Revisions`, and the replaced decision's link to its replacement |
+
+Undecided is still open, waiting for the decider it names; delegated is closed by the person's
+consent to leave it to implementation. Never file one as the other. A recommended answer
+the person did not answer is undecided, not an agreement. When meaning changes, record the revision
+instead of rewriting the decision.
 
 ## Writing the specification
 
@@ -90,9 +104,11 @@ related undecided items, and anything decided silently; any of these sends you b
 dialogue. Specification silence never means "implementer decides".
 
 Each requirement has an observable success condition and a counter-example, written as scenarios
-under the IR's `## Examples` (the kotowari skill's `references/records.md` says how). Test its verification against **Evidence conditions**. On failure, express a non-code requirement
-as human or platform inspection; drop a code behavior into an already reachable generic error path,
-recording it as rejected with its missing conditions. Agreements go into the IR documents, each item
+under the IR's `## Examples` (the kotowari skill's `references/records.md` says how). Test its
+verification against the Evidence conditions (the kotowari-review skill's
+`references/oracle-evidence.md`); a requirement that fails them is handled as its **A requirement
+no oracle can meet** says, and a code behavior dropped that way is recorded as rejected with its
+missing conditions. Agreements go into the IR documents, each item
 citing the decisions it rests on; prohibitions and rejected / undecided / delegated items stay in the
 decision record's own sections, since an IR document holds only requirements, decision tables,
 properties, and scenarios. Require
@@ -107,22 +123,6 @@ ID; it only stops check from asking for its tests. When the person decides to bu
 the line in the same way, with the decision recorded. A depends_on_deferred notice means an item
 that will be built relies on a deferred one; settle it with the person — defer that item too,
 bring the requirement back, or drop the reference.
-
-### Evidence conditions
-
-An oracle — a test, a check, or a fixture — counts as evidence only when the condition it
-produces has a named operational producer in a supported environment (untrusted input arriving
-at a boundary is one), its subject is the product or a check rather than the oracle itself, the
-rule it enforces is stated by the specification, and every wording, file layout, or internal
-name it pins is declared there as a contract. An oracle that fails any of these is a cost: do
-not add it, keep it in a change under review, or demand it.
-
-A requirement whose only oracle would fail these conditions is not mechanically verifiable:
-when it is not code, verify it by a human-run check or by the platform's own checker; when it
-is code, drop the requirement and let the failure join a generic error path a reachable
-failure already proves — never resolve it by having the implementer build the fixture.
-
-Source: `ba0918-verification`, agentic-rules v0.8.0.
 
 ## Finishing
 
