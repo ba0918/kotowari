@@ -80,11 +80,10 @@ diff as **Resuming** says.
 
 ## Committing
 
-- One concern per commit. A test and the minimal code that makes it pass are one concern.
-- Stage with `git add <path>`; never `git add .` or `-A`. Never disable or bypass hooks.
-- Message: follow the repository's commit conventions; a body only when the *why* needs it.
-  Never name a workflow station (brainstorm / plan / cycle / implement / review), a finding ID,
-  or session chronology.
+- Commit, stage, hook and deletion rules: the **Editing contract** section of kotowari-cycle's
+  `references/editing-contract.md`. A test and the minimal code that makes it pass are one concern.
+- Message: follow the repository's commit conventions; a body only when the *why* needs it; never
+  name session chronology.
 - Fixes outside the plan that do not change its thrust: commit them with the reason recorded,
   and list them in the final report. Anything that changes the thrust is a hand-back.
 - Do not invent verification of verification: tests whose subject is a check or test helper itself,
@@ -92,8 +91,6 @@ diff as **Resuming** says.
   requires them. This does not bar unit tests of product helpers for behavior they support.
   A change to CI, hooks, release, or build configuration gets no test and no IR of its own; the
   kotowari skill's **What the IR holds** lists what the IR leaves out.
-- For a deletion finding, no failing test is needed. Completion evidence is all existing checks
-  passing after deletion.
 - Keeping secrets out of commits is your responsibility; nothing scans for you.
 
 ## Resuming
