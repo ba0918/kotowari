@@ -62,8 +62,9 @@ When writing a test, read the kotowari skill's scene mark (`references/mark.md`)
 with the IDs it verifies. Run the `kotowari check` and `kotowari status` the plan lists as check
 commands; to read their output, read the kotowari skill's scene check (`references/findings.md`).
 
-When `kotowari check` exits with 1, work only on this run's findings, as kotowari-cycle's
-**kotowari check before the terminal report** defines them and says where each kind goes. Fix
+When `kotowari check` exits with 1, work only on this run's findings: those whose `path` is a
+file you changed or that name an ID the plan covers. Where each kind goes is in kotowari-cycle's
+**kotowari check before the terminal report**. Fix
 yourself what it gives the fixer or the implementer (test-side findings, missed mutations, and a
 deferred_with_test your own mark raised, by removing that mark). List in your report, untouched,
 what it gives the consistency phase or only counts (IR-side findings, the other deferred notices,
