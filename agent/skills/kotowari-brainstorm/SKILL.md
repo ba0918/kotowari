@@ -92,7 +92,8 @@ covers, and resume from the record.
 | rejected | the alternative and **why** it lost | `## Rejected`, one line each, no mechanism description |
 | revision | what replaced what, and why | `## Revisions`, and the replaced decision's link to its replacement |
 
-Undecided has no answerer yet; delegated has one. Never file one as the other. A recommended answer
+Undecided is still open, waiting for the decider it names; delegated is closed by the person's
+consent to leave it to implementation. Never file one as the other. A recommended answer
 the person did not answer is undecided, not an agreement. When meaning changes, record the revision
 instead of rewriting the decision.
 
