@@ -11,6 +11,7 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ### Changed
 
+- `kotowari-cycle` takes optional review items: what the person or the caller asks every full and diff review to look at beyond the profiles. They are carried to the reviewers with the reviewer prompt.
 - The workflow skills are proofread: rules written in several places now live in one and are pointed to from the others, descriptions say only when to use each skill, and text a caller follows is kept apart from text pasted into a delegate's prompt. What you can notice: the contract the cycle pastes into its fixer and consistency phase is `kotowari-cycle/references/editing-contract.md`; the Evidence conditions live only in `kotowari-review/references/oracle-evidence.md`, with their four conditions numbered; how a caller launches optional seats is in `kotowari-review/references/optional-seats.md`; and `kotowari-brainstorm/references/records.md` is removed, its record kinds now in the skill's body. A finding raised by a diff review is now matched against closed findings like any other, and a finding kept only for the record no longer counts toward the "still present twice" stop.
 
 ## [0.5.0] - 2026-10-06
