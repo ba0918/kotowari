@@ -33,13 +33,13 @@ its own form of it (**In implement**).
    When the clause fired on a `consistency` finding, the first two both go to a consistency phase
    run, which fixes code as well as the IR: a `consistency` finding never goes to the fixer.
 
-## Once per firing
+## One attempt per run
 
-A firing gets one attempt. After an attempt, the next time any clause that enters this step holds,
-end as ending 3 without another attempt; the terminal report carries the ladder of every attempt in
-the findings file. On a resume or after "run more", read `premise_attempts` first: a firing that
-already has an attempt is not attempted again, and the allowance is not renewed. Only a new start of
-kotowari-iterate on the branch renews it, as that start also resets ending 3's streaks.
+A run gets one attempt. After it, the next time any clause that enters this step holds, end as
+ending 3 without another attempt; the terminal report carries the ladder of every attempt in the
+findings file. On a resume or after "run more", read `premise_attempts` first: the run already has
+its attempt when the list is not empty. Only a new start of kotowari-iterate on the branch renews
+the allowance, since that start is a new request.
 
 ## In implement
 
