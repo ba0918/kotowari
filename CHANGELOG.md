@@ -5,6 +5,10 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+### Fixed
+
+- A new `kotowari-iterate` request starts with implementation even when the branch already has findings from an earlier request; resuming the same request keeps its place in the loop.
+
 ### Added
 
 - When the improvement loop stops making progress, `kotowari-cycle` now questions the premise before it stops. If fixes keep raising new findings next to the ones they closed — or a finding stays present, a closed cause returns, or new findings do not shrink — the cycle writes down the premises its fixes shared, from the most specific up, replaces the top one and tries once more: through the fixer when the premise lies in the implementation, through the consistency phase when it lies in the IR or a decision record and grounds can settle it. Only a premise no grounds can settle goes to you, with the list of premises in the final report. A second firing after the attempt stops the loop as before. A new stop condition joins the others: for two fixes in a row, the review right after the fix raises a new finding next to where the fix was made, which the cycle judges from the findings' file and line locations (overlapping lines in the same file are one example). The findings file records each fix — the findings it addressed, its commits and the review after it (`fixes`) — for resuming and the final report. Each attempt is recorded in the findings file (`premise_attempts`), so a resumed cycle does not try the same firing twice. `kotowari-iterate` and a direct fix in the main session take the same step, and `kotowari-implement` replaces its own premise once before handing back to the cycle.
