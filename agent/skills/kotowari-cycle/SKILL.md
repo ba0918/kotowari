@@ -23,7 +23,8 @@ Optional: round-trip limit (default none: loop until convergence), review streng
 person's choice, default `standard`), comparison base (default: merge-base with the branch's
 parent), profiles (default: chosen from changed paths by the review skill's path mapping),
 optional seats (the person's word for this run; otherwise as the review skill's **Optional
-seats** says).
+seats** says), review items (what the person or the caller asks every review to look at, beyond
+the profiles).
 
 Cycle runs only what the caller's one-line reason named; delegating more is a counter-example.
 Whether a review launches a reviewer is the review skill's gate, and a second full review happens
@@ -70,10 +71,11 @@ Every prompt is self-contained; never assume a delegate loaded a skill or read t
 
 - **implement:** carry the plan path, branch, and worktree path. It returns commits, per-step
   verification evidence, and out-of-plan changes, or a hand-back with its reason.
-- **review (full):** carry the base and head, worktree path, known findings, and the review items
-  and Evidence conditions named above. It returns findings JSON.
+- **review (full):** carry the base and head, worktree path, known findings, the review items from
+  **Inputs** if any, and the reviewer prompt of the review skill's **Reviewer setup** (it carries the Evidence
+  conditions). It returns findings JSON.
 - **review (diff):** carry the diff since the last review, worktree path, open findings with IDs,
-  and the same review items and Evidence conditions. It returns per-finding `still_present` or
+  and the same review items and reviewer prompt. It returns per-finding `still_present` or
   `no_longer_visible` and new findings.
 - **consistency phase:** use **Consistency phase** below.
 - **fixer:** carry the visible findings, plan path, branch, worktree path, the path of the kotowari
