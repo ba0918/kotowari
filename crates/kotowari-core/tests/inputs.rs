@@ -67,6 +67,30 @@ fn read_models_list_and_query_without_check_only_inputs() {
     assert!(model.query("REQ-999").is_err());
 }
 
+// @kotowari[REQ-core-314]
+#[test]
+fn reading_takes_ir_sources_under_the_configured_place_only() {
+    use kotowari_core::{InputError, ReadInputs, ReadModel};
+    let text = "# Topic\n\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- verification: unit\n\nBody.\n";
+    let inputs = |ir: &str, path: &str| {
+        let mut inputs = ReadInputs::default();
+        inputs.config.ir = ir.into();
+        inputs.config.tests.files.clear();
+        inputs.ir = Some(vec![SourceText::new(path, text).unwrap()]);
+        inputs.records = Some(vec![]);
+        inputs.adr = Some(vec![]);
+        inputs
+    };
+    let model = ReadModel::build(inputs("spec", "spec/topic.md")).unwrap();
+    assert_eq!(model.documents()[0].relative_path(), "topic.md");
+    let model = ReadModel::build(inputs("", "topic.md")).unwrap();
+    assert_eq!(model.documents()[0].relative_path(), "topic.md");
+    assert!(matches!(
+        ReadModel::build(inputs("spec", "docs/ir/topic.md")),
+        Err(InputError::InvalidInput(_))
+    ));
+}
+
 // @kotowari[REQ-core-315, EX-core-488, EX-core-489]
 #[test]
 fn enabled_check_groups_must_be_provided_even_when_empty() {
