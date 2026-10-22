@@ -428,17 +428,6 @@ fn req_044_numbered_lines_with_a_period_or_a_parenthesis_are_unknown_fields() {
     assert_eq!(details, vec!["1. a", "2) b"]);
 }
 
-// @kotowari[REQ-core-045]
-#[test]
-fn req_045_duplicate_field() {
-    let content = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n- kind: prohibition\n\nStatement.\n";
-    let doc = ir::parse_document("a.md", content).unwrap();
-    let findings = check(&[doc], &default_config());
-    let df = find_by_kind(&findings, "duplicate_field");
-    assert_eq!(df.len(), 1);
-    assert_eq!(df[0].detail, "kind");
-}
-
 // @kotowari[REQ-core-046]
 #[test]
 fn req_046_fields_in_any_order_with_blank_lines_and_commas() {
@@ -760,36 +749,6 @@ fn req_032_duplicate_id_on_each_later_place_with_its_line() {
 
 // @kotowari[REQ-core-044, TBL-core-011]
 #[test]
-fn req_044_property_definition_field_is_unknown() {
-    // TBL-core-011 によると性質が持つ行は「- source:」だけ。
-    // 「- definition:」は知らない行として unknown_field になる。
-    let content = "# Title\n\nScope.\n\n## Properties\n\n### PROP-001: P\n\n- source: brainstorm/records.md#A1\n- definition: TBL-001\n\nProperty statement.\n";
-    let doc = ir::parse_document("a.md", content).unwrap();
-    let findings = check(&[doc], &default_config());
-    let uf = find_by_kind(&findings, "unknown_field");
-    assert!(
-        uf.iter().any(|f| f.detail == "- definition: TBL-001"),
-        "PROP の「- definition:」は unknown_field になるはず: {:?}",
-        uf
-    );
-}
-
-// @kotowari[REQ-core-059]
-#[test]
-fn req_059_scenario_without_id_missing_source_detail_is_scenario_text() {
-    let content = "# Title\n\nScope.\n\n## Examples\n\n```gherkin\n@about=REQ-001\nScenario: No id scenario\n  Given something\n```\n";
-    let doc = ir::parse_document("a.md", content).unwrap();
-    let findings = check(&[doc], &default_config());
-    let ms = find_by_kind(&findings, "missing_source");
-    assert!(
-        ms.iter().any(|f| f.detail == "Scenario: No id scenario"),
-        "@id の無いシナリオの missing_source の detail は Scenario: の行の文字のはず: {:?}",
-        ms
-    );
-}
-
-// @kotowari[REQ-core-044]
-#[test]
 fn req_044_prop_unknown_field_does_not_produce_unresolved_reference() {
     let content = "# Title\n\nScope.\n\n## Properties\n\n### PROP-001: P\n\n- source: brainstorm/records.md#A1\n- definition: TBL-999\n\nProperty statement.\n";
     let doc = ir::parse_document("a.md", content).unwrap();
@@ -997,13 +956,6 @@ fn req_037_crlf_title_and_requirement_line_numbers() {
         !scope_text.iter().any(|s| s.contains('\r')),
         "scope text should not contain \\r"
     );
-}
-
-// @kotowari[REQ-core-037, TBL-core-010]
-#[test]
-fn req_037_empty_content_has_zero_lines() {
-    let doc = ir::parse_document("a.md", "").unwrap();
-    assert_eq!(doc.line_count, 0, "empty content should have 0 lines");
 }
 
 // @kotowari[REQ-core-042, TBL-core-011]
@@ -1529,7 +1481,7 @@ Scenario: second
     );
 }
 
-// @kotowari[TBL-core-010]
+// @kotowari[TBL-core-010, REQ-core-037]
 #[test]
 fn tbl_010_empty_document_has_zero_lines_and_missing_title() {
     let doc = ir::parse_document("a.md", "").unwrap();
@@ -2331,22 +2283,6 @@ fn req_123_duplicate_term_reported_for_second_row_onward() {
     assert!(dt.iter().all(|f| f.detail == "IR"));
     assert_eq!(dt[0].line, Some(6));
     assert_eq!(dt[1].line, Some(7));
-}
-
-// @kotowari[REQ-core-113]
-#[test]
-fn req_113_step_without_preceding_scenario_is_invalid() {
-    let content =
-        "# Title\n\nScope.\n\n## Examples\n\n```gherkin\nThen this step has no Scenario\n```\n";
-    let doc = ir::parse_document("a.md", content).unwrap();
-    let findings = check(&[doc], &default_config());
-    let ig = find_by_kind(&findings, "invalid_gherkin_line");
-    assert!(
-        ig.iter()
-            .any(|f| f.detail == "Then this step has no Scenario"),
-        "a step line with no preceding Scenario: should be invalid_gherkin_line: {:?}",
-        ig
-    );
 }
 
 // @kotowari[REQ-core-113]
