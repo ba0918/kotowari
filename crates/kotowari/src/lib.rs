@@ -176,6 +176,16 @@ pub struct OverviewPrepared {
     pages: Vec<Page>,
 }
 impl OverviewPrepared {
+    /// `基準のディレクトリ`からの相対パスの place がディレクトリなら true、無ければ false。
+    /// ほかのもの（シンボリックリンクを含む）か、調べられなければ置き場の誤り（REQ-core-324）
+    fn directory_or_absent(&self, place: &str) -> Result<bool, Error> {
+        match std::fs::symlink_metadata(self.base.join(place)) {
+            Ok(meta) if meta.file_type().is_dir() => Ok(true),
+            Ok(_) => Err(Error::cache(place, None)),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
+            Err(error) => Err(Error::cache(place, Some(error))),
+        }
+    }
     /// 描画のエンジンが返したページ
     pub fn pages(&self) -> &[Page] {
         &self.pages
@@ -197,11 +207,8 @@ impl OverviewPrepared {
                 place.push('/');
             }
             place.push_str(component);
-            match std::fs::symlink_metadata(self.base.join(&place)) {
-                Ok(meta) if meta.file_type().is_dir() => {}
-                Ok(_) => return Err(Error::cache(&place, None)),
-                Err(error) if error.kind() == std::io::ErrorKind::NotFound => break,
-                Err(error) => return Err(Error::cache(&place, Some(error))),
+            if !self.directory_or_absent(&place)? {
+                break;
             }
         }
         // REQ-core-353: ほかの言語のページを書く "<言語タグ>/" も、1つも書く前に確かめる
@@ -211,13 +218,7 @@ impl OverviewPrepared {
             .filter_map(|page| page.name.rsplit_once('/').map(|(directory, _)| directory))
             .collect();
         for directory in &directories {
-            let place = format!("{}/{directory}", overview::CACHE);
-            match std::fs::symlink_metadata(cache.join(directory)) {
-                Ok(meta) if meta.file_type().is_dir() => {}
-                Ok(_) => return Err(Error::cache(&place, None)),
-                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-                Err(error) => return Err(Error::cache(&place, Some(error))),
-            }
+            self.directory_or_absent(&format!("{}/{directory}", overview::CACHE))?;
         }
         std::fs::create_dir_all(&cache)
             .map_err(|error| Error::cache(overview::CACHE, Some(error)))?;
