@@ -1,5 +1,5 @@
-use globset::{Glob, GlobSetBuilder};
-use std::path::Path;
+use globset::{Glob, GlobSet, GlobSetBuilder};
+use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 /// glob の一覧に当たるファイルを集める。`テストのファイル`（"tests.files"）と`ガイド`（"guides.files"）が
 /// 同じ走査と`除外`を使う（REQ-core-019、REQ-core-079、REQ-core-018、REQ-core-198）。
@@ -7,7 +7,7 @@ use walkdir::WalkDir;
 pub fn collect_files(
     base: &Path,
     patterns: &[String],
-) -> Result<Vec<(String, std::path::PathBuf)>, kotowari_core::StopReason> {
+) -> Result<Vec<(String, PathBuf)>, kotowari_core::StopReason> {
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
         // glob の構文は Config::parse で検証済み
@@ -19,75 +19,16 @@ pub fn collect_files(
     let globset = builder
         .build()
         .map_err(|e| kotowari_core::StopReason::ConfigError(format!("glob build error: {e}")))?;
-
-    let mut files = Vec::new();
-
-    for entry in WalkDir::new(base)
-        .follow_links(false)
-        .into_iter()
-        .filter_entry(|e| {
-            // 隠しディレクトリを除外（REQ-core-019）。ルートは除外しない
-            // ディレクトリのシンボリックリンクは辿らない（REQ-core-079, A102）
-            if e.depth() > 0 {
-                let ft = e.file_type();
-                if ft.is_symlink() {
-                    // シンボリックリンク: ファイルなら含める、ディレクトリなら除外
-                    // filter_entry ではディレクトリかどうかで判定
-                    // WalkDir は follow_links(false) なのでシンボリックリンクは展開されない
-                    // ここで辿って判定する
-                    if let Ok(meta) = std::fs::metadata(e.path())
-                        && meta.is_dir()
-                    {
-                        return false; // ディレクトリリンクは辿らない
-                    }
-                    return true; // ファイルリンクは含める
-                }
-                if ft.is_dir() {
-                    let name = e.file_name().to_string_lossy();
-                    return !name.starts_with('.');
-                }
-            }
-            true
-        })
-    {
-        // REQ-core-018（A96）: 走査でディレクトリが読めなければ停止する
-        let entry = entry.map_err(|e| {
-            let where_ = e.path().map(|p| relative_to(base, p)).unwrap_or_default();
-            kotowari_core::StopReason::UnreadableFile(format!("{where_}: {e}"))
-        })?;
-        // ファイルまたはファイルのシンボリックリンク
-        let is_file = if entry.file_type().is_symlink() {
-            // A146: 先の無いシンボリックリンクは読めないファイルとして停止する
-            std::fs::metadata(entry.path())
-                .map(|m| m.is_file())
-                .map_err(|e| {
-                    let rel = relative_to(base, entry.path());
-                    kotowari_core::StopReason::UnreadableFile(format!("{rel}: {e}"))
-                })?
-        } else {
-            entry.file_type().is_file()
-        };
-        if is_file {
-            let rel = relative_to(base, entry.path());
-            if globset.is_match(&rel) {
-                files.push((rel, entry.path().to_path_buf()));
-            }
-        }
-    }
-
-    files.sort_by_cached_key(|(display, original)| {
-        (display.clone(), original.to_string_lossy().into_owned())
-    });
-    Ok(files)
+    walk(base, &globset, &GlobSet::empty())
 }
 
 /// glob の一覧に当たるファイルを集める。隠しディレクトリは、glob がパスの成分で名指ししたものだけに入る
 /// （REQ-core-019 の "overview.files" の例外）。ほかは `collect_files` と同じ走査で、
 /// (`基準のディレクトリ`からの相対パス, 絶対パス) を相対パスのバイト順に並べて返す
 pub fn collect_named_hidden(
-    base: &std::path::Path,
+    base: &Path,
     patterns: &[String],
-) -> Result<Vec<(String, std::path::PathBuf)>, kotowari_core::StopReason> {
+) -> Result<Vec<(String, PathBuf)>, kotowari_core::StopReason> {
     let wanted = kotowari_core::config::glob_set(patterns);
     let hidden_prefixes: Vec<String> = patterns
         .iter()
@@ -104,14 +45,20 @@ pub fn collect_named_hidden(
         })
         .collect();
     let named_hidden = kotowari_core::config::glob_set(&hidden_prefixes);
-    let relative = |path: &std::path::Path| {
-        path.strip_prefix(base)
-            .unwrap_or(path)
-            .to_string_lossy()
-            .replace('\\', "/")
-    };
+    walk(base, &wanted, &named_hidden)
+}
+
+/// 基準のディレクトリを辿り、wanted に当たるファイルを集める。隠しディレクトリは named_hidden に
+/// 当たるものだけに入り（REQ-core-019）、ディレクトリのシンボリックリンクは辿らない（REQ-core-079、A102）。
+/// 辿る途中で読めないディレクトリと、先の無いシンボリックリンクは読めないファイルとして止める
+/// （REQ-core-018、A96、A146）
+fn walk(
+    base: &Path,
+    wanted: &GlobSet,
+    named_hidden: &GlobSet,
+) -> Result<Vec<(String, PathBuf)>, kotowari_core::StopReason> {
     let mut files = vec![];
-    for entry in walkdir::WalkDir::new(base)
+    for entry in WalkDir::new(base)
         .follow_links(false)
         .into_iter()
         .filter_entry(|entry| {
@@ -123,14 +70,17 @@ pub fn collect_named_hidden(
             }
             !entry.file_type().is_dir()
                 || !entry.file_name().to_string_lossy().starts_with('.')
-                || named_hidden.is_match(relative(entry.path()))
+                || named_hidden.is_match(relative_to(base, entry.path()))
         })
     {
         let entry = entry.map_err(|error| {
-            let path = error.path().map(relative).unwrap_or_default();
+            let path = error
+                .path()
+                .map(|path| relative_to(base, path))
+                .unwrap_or_default();
             kotowari_core::StopReason::UnreadableFile(format!("{path}: {error}"))
         })?;
-        let path = relative(entry.path());
+        let path = relative_to(base, entry.path());
         let is_file = if entry.file_type().is_symlink() {
             std::fs::metadata(entry.path())
                 .map_err(|error| {
