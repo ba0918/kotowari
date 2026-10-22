@@ -11,45 +11,22 @@ pub fn read_texts(
     ),
     kotowari_core::StopReason,
 > {
-    let records_dir = base.join(&config.decisions.records);
-    let adr_dir = base.join(&config.decisions.adr);
-
-    let mut records = Vec::new();
-    let mut adr = Vec::new();
-
-    // records ディレクトリを読む。判断の記録とそれ以外のファイルに分ける
-    if records_dir.is_dir() {
-        for_each_md(
-            &records_dir,
-            "",
-            &config.decisions.records,
-            &mut |path, rel, content| {
-                records.push(kotowari_core::NativeSourceText::new(
-                    path,
-                    kotowari_core::join_display_path(&config.decisions.records, &rel),
-                    content.to_owned(),
-                ));
-            },
-        )?;
-    }
-
-    // adr ディレクトリを読む
-    if adr_dir.is_dir() {
-        for_each_md(
-            &adr_dir,
-            "",
-            &config.decisions.adr,
-            &mut |path, rel, content| {
-                adr.push(kotowari_core::NativeSourceText::new(
-                    path,
-                    kotowari_core::join_display_path(&config.decisions.adr, &rel),
-                    content.to_owned(),
-                ));
-            },
-        )?;
-    }
-
-    Ok((records, adr))
+    // 置き場がディレクトリであることは呼ぶ側が確かめてある（REQ-core-018）
+    let read_place = |place: &str| {
+        let mut texts = Vec::new();
+        for_each_md(&base.join(place), "", place, &mut |path, rel, content| {
+            texts.push(kotowari_core::NativeSourceText::new(
+                path,
+                kotowari_core::join_display_path(place, &rel),
+                content.to_owned(),
+            ));
+        })?;
+        Ok(texts)
+    };
+    Ok((
+        read_place(&config.decisions.records)?,
+        read_place(&config.decisions.adr)?,
+    ))
 }
 
 /// 置き場の下の .md をファイル名の順に深さ優先で読み、置き場からの相対パスと中身を visit に渡す
