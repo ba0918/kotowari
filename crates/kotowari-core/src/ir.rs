@@ -578,8 +578,9 @@ impl Default for IrOptions {
 
 #[derive(Debug)]
 pub struct ParsedIrDocument {
-    document: IrDocument,
+    path: String,
     items: Vec<ParsedItem>,
+    findings: Vec<Finding>,
 }
 
 #[derive(Debug)]
@@ -602,13 +603,13 @@ impl ParsedItem {
 
 impl ParsedIrDocument {
     pub fn path(&self) -> &str {
-        &self.document.relative_path
+        &self.path
     }
     pub fn items(&self) -> &[ParsedItem] {
         &self.items
     }
     pub fn findings(&self) -> &[Finding] {
-        &self.document.parse_findings
+        &self.findings
     }
 }
 
@@ -637,19 +638,17 @@ pub fn parse(
         .rsplit('/')
         .next()
         .expect("rsplit always yields at least one piece");
-    let mut document = parse_document_mode(filename, DocKind::of(filename), source.text(), true)
+    let document = parse_document_mode(filename, DocKind::of(filename), source.text(), true)
         .map_err(|error| crate::InputError::InvalidInput(error.to_string()))?;
-    document.relative_path = source.path().to_owned();
-    document.directory = relative
-        .rsplit_once('/')
-        .map(|(dir, _)| dir)
-        .unwrap_or("")
-        .to_owned();
-    for finding in &mut document.parse_findings {
+    let mut findings = document.parse_findings;
+    for finding in &mut findings {
         finding.path = source.path().to_owned();
     }
-    let items = document.items.iter().cloned().map(ParsedItem).collect();
-    Ok(ParsedIrDocument { document, items })
+    Ok(ParsedIrDocument {
+        path: source.path().to_owned(),
+        items: document.items.into_iter().map(ParsedItem).collect(),
+        findings,
+    })
 }
 
 fn decision_table(obj: &Map<String, Value>, partial: bool) -> Result<Option<Item>, StopReason> {
