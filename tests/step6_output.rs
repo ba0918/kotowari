@@ -34,7 +34,7 @@ fn parse_json(output: &std::process::Output) -> serde_json::Value {
 
 // --- REQ-core-021: 出力の形の値 ---
 
-// @kotowari[REQ-core-021]
+// @kotowari[REQ-core-021, REQ-core-022]
 #[test]
 fn req_021_format_values_are_json_and_text() {
     let tmp = TempDir::new().unwrap();
@@ -47,7 +47,9 @@ fn req_021_format_values_are_json_and_text() {
         .unwrap();
     assert_eq!(output.status.code(), Some(0));
     let stdout = String::from_utf8_lossy(&output.stdout);
-    serde_json::from_str::<serde_json::Value>(&stdout).expect("should be valid JSON");
+    // REQ-core-022: 標準出力の全体が1つの JSON の値
+    let v: serde_json::Value = serde_json::from_str(&stdout).expect("should be valid JSON");
+    assert!(v.is_object());
 
     // --format text
     let output2 = cmd()
@@ -56,24 +58,11 @@ fn req_021_format_values_are_json_and_text() {
         .output()
         .unwrap();
     assert_eq!(output2.status.code(), Some(0));
-}
-
-// --- REQ-core-022: JSON を1つ出す ---
-
-// @kotowari[REQ-core-022]
-#[test]
-fn req_022_json_is_one_document() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    let output = cmd()
-        .args(["check", "--format", "json"])
-        .current_dir(tmp.path())
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    // 1つのJSONとしてパースできる
-    let v: serde_json::Value = serde_json::from_str(&stdout).unwrap();
-    assert!(v.is_object());
+    assert!(
+        !String::from_utf8_lossy(&output2.stdout)
+            .trim_start()
+            .starts_with('{')
+    );
 }
 
 // --- REQ-core-023: JSON の中身 ---
@@ -232,28 +221,6 @@ fn req_025_text_line_for_a_document_without_a_title() {
             .lines()
             .any(|l| l == "docs/ir/a.md:- [error] missing_title a.md"),
         "the finding without a line prints the path, a dash, the severity, the kind and the detail: {stdout}"
-    );
-}
-
-// --- REQ-core-026: 行の無い指摘の文字の出力 ---
-
-// @kotowari[REQ-core-026]
-#[test]
-fn req_026_null_line_prints_dash() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    // missing_title は line が null
-    fs::write(tmp.path().join("docs/ir/a.md"), "no title\n").unwrap();
-    let output = cmd()
-        .args(["check", "--format", "text"])
-        .current_dir(tmp.path())
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    // "パス:- [error] missing_title ..." の形
-    assert!(
-        stdout.contains(":- [error]") || stdout.contains(":- [notice]"),
-        "null line should print as '-': {stdout}"
     );
 }
 
