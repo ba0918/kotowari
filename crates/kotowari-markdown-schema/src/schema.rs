@@ -990,6 +990,19 @@ fn reject_of_words(
 mod tests {
     use super::*;
 
+    /// スキーマを読めず、その理由が reason を含むことを確かめる。別の理由で読めないスキーマを
+    /// 書き損じても通らないように、理由まで見る
+    fn assert_rejected(yaml: &str, reason: &str) {
+        match parse_schema(yaml) {
+            Ok(_) => panic!("the schema is accepted:\n{yaml}"),
+            Err(error) => assert!(
+                error.0.contains(reason),
+                "expected {reason:?} in {:?}",
+                error.0
+            ),
+        }
+    }
+
     const ADR_LIKE: &str = r#"
 name: adr
 open: false
@@ -1103,35 +1116,35 @@ document:
     #[test]
     fn unknown_key_is_an_error() {
         let yaml = "document:\n  bogus: 1\n";
-        assert!(parse_schema(yaml).is_err());
+        assert_rejected(yaml, "unknown field `bogus`");
     }
 
     // @kotowari[REQ-schema-018]
     #[test]
     fn type_violation_is_an_error() {
         let yaml = "open: not-a-bool\ndocument:\n  title:\n    pattern: x\n";
-        assert!(parse_schema(yaml).is_err());
+        assert_rejected(yaml, "invalid boolean");
     }
 
     // @kotowari[REQ-schema-019]
     #[test]
     fn min_greater_than_max_is_an_error() {
         let yaml = "document:\n  sections:\n    - name: x\n      repeat: { min: 3, max: 1 }\n";
-        assert!(parse_schema(yaml).is_err());
+        assert_rejected(yaml, "repeat min is greater than max");
     }
 
     // @kotowari[REQ-schema-019]
     #[test]
     fn negative_repeat_is_an_error() {
         let yaml = "document:\n  sections:\n    - name: x\n      repeat: { min: -1 }\n";
-        assert!(parse_schema(yaml).is_err());
+        assert_rejected(yaml, "invalid u64");
     }
 
     // @kotowari[REQ-schema-019]
     #[test]
     fn non_integer_repeat_is_an_error() {
         let yaml = "document:\n  sections:\n    - name: x\n      repeat: { min: 1.5 }\n";
-        assert!(parse_schema(yaml).is_err());
+        assert_rejected(yaml, "invalid u64");
     }
 
     // @kotowari[REQ-schema-020]
@@ -1144,7 +1157,7 @@ document:
       - name: 定義
         when: { field: 種類, eq: a, ne: b }
 "#;
-        assert!(parse_schema(yaml).is_err());
+        assert_rejected(yaml, "when must have exactly one of eq or ne");
     }
 
     // @kotowari[REQ-schema-020]
@@ -1157,21 +1170,21 @@ document:
       - name: 定義
         when: { field: 種類 }
 "#;
-        assert!(parse_schema(yaml).is_err());
+        assert_rejected(yaml, "when must have exactly one of eq or ne");
     }
 
     // @kotowari[REQ-schema-016]
     #[test]
     fn invalid_regex_pattern_is_an_error() {
         let yaml = "document:\n  title:\n    pattern: \"(\"\n";
-        assert!(parse_schema(yaml).is_err());
+        assert_rejected(yaml, "regex parse error");
     }
 
     // @kotowari[REQ-schema-016, REQ-schema-025]
     #[test]
     fn invalid_item_id_regex_is_an_error() {
         let yaml = "document:\n  sections:\n    - name: x\n      item:\n        id: \"(\"\n";
-        assert!(parse_schema(yaml).is_err());
+        assert_rejected(yaml, "regex parse error");
     }
 
     // @kotowari[REQ-schema-035]
@@ -1210,9 +1223,10 @@ document:
             ),
         ];
         for (node, yaml) in cases {
-            assert!(
-                parse_schema(yaml).is_err(),
-                "{node} に Capture 形の extract を宣言したのに schema_invalid にならない"
+            // node に Capture 形の extract を宣言したのに schema_invalid にならない
+            assert_rejected(
+                yaml,
+                &format!("{node} extract cannot use the named-group capture form"),
             );
         }
     }
@@ -1254,7 +1268,10 @@ document:
           - name: 種類
             extract: kind
 "#;
-        assert!(parse_schema(yaml).is_err());
+        assert_rejected(
+            yaml,
+            "item internals declare extract but the item itself does not",
+        );
     }
 
     // @kotowari[REQ-schema-039]
@@ -1274,9 +1291,10 @@ document:
               - name: superseded_by
                 extract: superseded_by
 "#;
-        assert!(
-            parse_schema(yaml).is_err(),
-            "item の bullets.children.fields に extract を宣言すると schema_invalid（REQ-schema-039）"
+        // item の bullets.children.fields に extract を宣言すると schema_invalid（REQ-schema-039）
+        assert_rejected(
+            yaml,
+            "item internals declare extract but the item itself does not",
         );
     }
 
@@ -1300,9 +1318,10 @@ document:
                   - name: 補足
                     extract: note
 "#;
-        assert!(
-            parse_schema(yaml).is_err(),
-            "item の入れ子の子フィールドに extract を宣言すると schema_invalid（REQ-schema-039）"
+        // item の入れ子の子フィールドに extract を宣言すると schema_invalid（REQ-schema-039）
+        assert_rejected(
+            yaml,
+            "item internals declare extract but the item itself does not",
         );
     }
 
@@ -1316,7 +1335,7 @@ document:
   title:
     extract: { path: id, group: id }
 "#;
-        assert!(parse_schema(yaml).is_err());
+        assert_rejected(yaml, "title capture extract requires a pattern");
     }
 
     // @kotowari[REQ-schema-035]
@@ -1329,13 +1348,17 @@ document:
     pattern: "^ADR-(?<other>\\d{4}):"
     extract: { path: id, group: id }
 "#;
-        assert!(parse_schema(yaml).is_err());
+        assert_rejected(
+            yaml,
+            "title pattern does not contain a named capture group \"id\"",
+        );
     }
 
     // @kotowari[REQ-schema-016]
     #[test]
     fn not_yaml_is_an_error() {
-        assert!(parse_schema("not: [valid: yaml").is_err());
+        // 鍵も値の型も正しく、YAML の構文だけが壊れている
+        assert_rejected("name: \"unterminated", "unclosed quote");
     }
 
     // @kotowari[REQ-schema-031]
@@ -1398,14 +1421,14 @@ document:
     #[test]
     fn unknown_key_under_bullets_is_an_error() {
         let yaml = "document:\n  sections:\n    - name: 理由\n      bullets:\n        bogus: 1\n";
-        assert!(parse_schema(yaml).is_err());
+        assert_rejected(yaml, "unknown field `bogus`");
     }
 
     // @kotowari[REQ-schema-018]
     #[test]
     fn type_violation_under_children_is_an_error() {
         let yaml = "document:\n  sections:\n    - name: 理由\n      bullets:\n        children: not-a-map\n";
-        assert!(parse_schema(yaml).is_err());
+        assert_rejected(yaml, "expected mapping");
     }
 
     // @kotowari[REQ-schema-035]
@@ -1420,10 +1443,8 @@ document:
           bullets:
             extract: nested
 "#;
-        assert!(
-            parse_schema(yaml).is_err(),
-            "children.bullets に extract を宣言すると schema_invalid（TBL-schema-008）"
-        );
+        // children.bullets に extract を宣言すると schema_invalid（TBL-schema-008）
+        assert_rejected(yaml, "children bullets cannot declare extract");
     }
 
     // @kotowari[REQ-schema-035]
@@ -1440,10 +1461,8 @@ document:
               bullets:
                 extract: nested
 "#;
-        assert!(
-            parse_schema(yaml).is_err(),
-            "再帰的な children.bullets にも extract を宣言できない（TBL-schema-008）"
-        );
+        // 再帰的な children.bullets にも extract を宣言できない（TBL-schema-008）
+        assert_rejected(yaml, "children bullets cannot declare extract");
     }
 
     // @kotowari[REQ-schema-035, REQ-schema-036]
@@ -1477,9 +1496,10 @@ document:
           header: [用語, 意味]
           extract: glossary
 "#;
-        assert!(
-            parse_schema(yaml).is_err(),
-            "項目が extract を持たないまま内部の表に宣言すると停止する（REQ-schema-039）"
+        // 項目が extract を持たないまま内部の表に宣言すると停止する（REQ-schema-039）
+        assert_rejected(
+            yaml,
+            "item internals declare extract but the item itself does not",
         );
     }
 
@@ -1495,9 +1515,10 @@ document:
           lang: gherkin
           extract: scenarios
 "#;
-        assert!(
-            parse_schema(yaml).is_err(),
-            "項目が extract を持たないまま内部のコードブロックに宣言すると停止する（REQ-schema-039）"
+        // 項目が extract を持たないまま内部のコードブロックに宣言すると停止する（REQ-schema-039）
+        assert_rejected(
+            yaml,
+            "item internals declare extract but the item itself does not",
         );
     }
 
@@ -1530,10 +1551,8 @@ document:
           header: [用語, 意味]
           repeat: { min: 2, max: 1 }
 "#;
-        assert!(
-            parse_schema(yaml).is_err(),
-            "項目の表の repeat も min > max なら停止する（REQ-schema-019）"
-        );
+        // 項目の表の repeat も min > max なら停止する（REQ-schema-019）
+        assert_rejected(yaml, "repeat min is greater than max");
     }
 
     // @kotowari[REQ-schema-019]
@@ -1548,10 +1567,8 @@ document:
           lang: gherkin
           repeat: { min: 2, max: 1 }
 "#;
-        assert!(
-            parse_schema(yaml).is_err(),
-            "項目のコードブロックの repeat も min > max なら停止する（REQ-schema-019）"
-        );
+        // 項目のコードブロックの repeat も min > max なら停止する（REQ-schema-019）
+        assert_rejected(yaml, "repeat min is greater than max");
     }
 
     // @kotowari[REQ-schema-035, REQ-schema-048]
@@ -1565,10 +1582,8 @@ document:
         - name: 状態
           extract: { path: id, of: { id: id } }
 "#;
-        assert!(
-            parse_schema(yaml).is_err(),
-            "of: id は項目にだけ宣言できる（REQ-schema-048）"
-        );
+        // of: id は項目にだけ宣言できる（REQ-schema-048）
+        assert_rejected(yaml, "field extract cannot use \"id\" in of");
     }
 
     // @kotowari[REQ-schema-035, REQ-schema-048]
@@ -1582,10 +1597,8 @@ document:
         - name: 状態
           extract: { path: x, of: { x: column } }
 "#;
-        assert!(
-            parse_schema(yaml).is_err(),
-            "of の知らない語は停止する（REQ-schema-048）"
-        );
+        // of の知らない語は停止する（REQ-schema-048）
+        assert_rejected(yaml, "unknown variant `column`");
     }
 
     // @kotowari[REQ-schema-039, REQ-schema-047]
@@ -1654,10 +1667,8 @@ document:
             - status
             - { path: status_line, of: { line: line } }
 "#;
-        assert!(
-            parse_schema(yaml).is_err(),
-            "旧来の書式の並びは schema_invalid の停止になる（REQ-schema-048）"
-        );
+        // 旧来の書式の並びは schema_invalid の停止になる（REQ-schema-048）
+        assert_rejected(yaml, "expected an extract path, or a mapping with \"path\"");
     }
 
     // @kotowari[REQ-schema-035]
@@ -1671,10 +1682,8 @@ document:
         - name: 状態
           extract: { of: { status_line: line } }
 "#;
-        assert!(
-            parse_schema(yaml).is_err(),
-            "配置パスの無い宣言は schema_invalid の停止になる（REQ-schema-048）"
-        );
+        // 配置パスの無い宣言は schema_invalid の停止になる（REQ-schema-048）
+        assert_rejected(yaml, "extract requires \"path\"");
     }
 
     // @kotowari[REQ-schema-042, REQ-schema-048]
@@ -1692,10 +1701,8 @@ document:
           - name: 状態
             extract: line
 "#;
-        assert!(
-            parse_schema(yaml).is_err(),
-            "要素オブジェクトの中で鍵が重複したら停止する（TBL-schema-009）"
-        );
+        // 要素オブジェクトの中で鍵が重複したら停止する（TBL-schema-009）
+        assert_rejected(yaml, "has the key \"line\" twice");
     }
 
     // @kotowari[REQ-schema-042, REQ-schema-048]
@@ -1709,10 +1716,8 @@ document:
         header: [a, b]
         extract: { path: glossary, value: cells, of: { cells: line } }
 "#;
-        assert!(
-            parse_schema(yaml).is_err(),
-            "要素の値の鍵と導かれる値の鍵が重複したら停止する（TBL-schema-009）"
-        );
+        // 要素の値の鍵と導かれる値の鍵が重複したら停止する（TBL-schema-009）
+        assert_rejected(yaml, "has the key \"cells\" twice");
     }
 
     // @kotowari[REQ-schema-042, REQ-schema-048]
@@ -1735,10 +1740,8 @@ document:
         header: [x]
         extract: { path: glossary, value: a.b, of: { "a.c": line } }
 "#;
-        assert!(
-            parse_schema(parent_and_child).is_err(),
-            "a と a.b は片方が他方の親なので重複（TBL-schema-009）"
-        );
+        // a と a.b は片方が他方の親なので重複（TBL-schema-009）
+        assert_rejected(parent_and_child, "has the key \"a\" twice");
         assert!(
             parse_schema(siblings).is_ok(),
             "a.b と a.c は入れ子を共有するだけの別の鍵（TBL-schema-009）"

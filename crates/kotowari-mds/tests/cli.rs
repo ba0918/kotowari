@@ -2010,6 +2010,10 @@ fn ex_schema_037_table_rule_without_select_reports_a_mismatched_header_and_selec
     let (code, _json, stderr) = mds_json(select_only, doc, "check");
     assert_eq!(code, Some(2), "stderr: {stderr}");
     assert!(stderr.contains("schema_invalid"), "stderr: {stderr}");
+    assert!(
+        stderr.contains("table select requires a header"),
+        "stderr: {stderr}"
+    );
 }
 
 // @kotowari[EX-schema-038]
@@ -2275,10 +2279,14 @@ fn ex_schema_076_the_same_name_declared_twice_in_one_place_stops() {
     let sections = "document:\n  title: {}\n  sections:\n    - name: S\n    - name: S\n";
     let fields =
         "document:\n  title: {}\n  preamble:\n    fields:\n      - name: X\n      - name: X\n";
-    for schema in [sections, fields] {
+    for (schema, twice) in [(sections, "section \"S\""), (fields, "field \"X\"")] {
         let (code, _, stderr) = mds_json(schema, "# T\n", "check");
         assert_eq!(code, Some(2), "schema: {schema} stderr: {stderr}");
         assert!(stderr.contains("schema_invalid"), "{stderr}");
+        assert!(
+            stderr.contains(&format!("{twice} is declared twice")),
+            "{stderr}"
+        );
     }
 }
 
@@ -2289,6 +2297,10 @@ fn ex_schema_078_a_table_header_naming_a_column_twice_stops() {
     let (code, _, stderr) = mds_json(schema, "# T\n", "check");
     assert_eq!(code, Some(2), "stderr: {stderr}");
     assert!(stderr.contains("schema_invalid"), "{stderr}");
+    assert!(
+        stderr.contains("table header column \"A\" is declared twice"),
+        "{stderr}"
+    );
 }
 
 // @kotowari[REQ-schema-036, EX-schema-077]
