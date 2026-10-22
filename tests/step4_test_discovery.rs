@@ -6,20 +6,6 @@ use assert_cmd::Command;
 use std::fs;
 use tempfile::TempDir;
 
-// --- REQ-core-082: マクロの中身の再パースでの行番号（token_tree の開始位置） ---
-
-// --- REQ-core-082, REQ-core-118, REQ-core-072: マクロの中の関数・印・不正な印の行番号 ---
-
-// --- REQ-core-082: 通常の関数の行番号 ---
-
-// --- REQ-core-082: 属性の末尾要素の判定 ---
-
-// --- REQ-core-082: has_attribute はブロックコメントも飛ばして #[test] を探す ---
-
-// --- REQ-core-082: has_configured_attribute はコメントを飛ばして設定された属性を探す ---
-
-// --- REQ-core-072: 関数の前の複数行コメントの中の印の行番号 ---
-
 // --- TBL-core-016: 関数本体の先頭のコメントの印は無視する ---
 
 fn cmd() -> Command {
@@ -346,8 +332,6 @@ fn req_083_unparsable_file_is_skipped() {
     );
 }
 
-// --- REQ-core-071: 印の構文 ---
-
 // --- REQ-core-072: 形の誤った印 ---
 
 // @kotowari[REQ-core-072]
@@ -472,8 +456,6 @@ fn req_073_both_markers_on_one_line_bind_to_the_test() {
         result
     );
 }
-
-// --- REQ-core-074: コメント記号を見ない ---
 
 // --- REQ-core-075: 印の結び付け ---
 

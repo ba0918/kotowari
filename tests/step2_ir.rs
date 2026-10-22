@@ -2,78 +2,6 @@
     clippy::unwrap_used,
     reason = "テストと例の補助関数は、準備の失敗をそのまま panic で知らせる"
 )]
-// --- REQ-core-034: 題名が無い ---
-
-// --- REQ-core-035: 題名が複数 ---
-
-// --- REQ-core-036: 範囲の行が無い ---
-
-// --- REQ-core-037: 行の数え方 ---
-
-// --- REQ-core-038: 行数の上限 ---
-
-// --- REQ-core-039: 要求の数の上限 ---
-
-// --- REQ-core-040: コードブロックの中はスキップ ---
-
-// --- REQ-core-042: すべての項目の形 ---
-
-// --- REQ-core-043: 形に合わない見出し ---
-
-// --- REQ-core-044: 知らない行 ---
-
-// --- REQ-core-045: 同じ行の重複 ---
-
-// --- REQ-core-046: 順不同、空行、コンマ ---
-
-// --- REQ-core-047: 文が無い ---
-
-// --- REQ-core-048: 検証の行が無い ---
-
-// --- REQ-core-049: 検証の値の誤り ---
-
-// --- REQ-core-050: 種類の値の誤り ---
-
-// --- REQ-core-051: 定義の無い algorithm ---
-
-// --- REQ-core-098: 必須の行が無い ---
-
-// --- REQ-core-099: 決定表に表がない ---
-
-// --- REQ-core-100: gherkin の外の Scenario は無視 ---
-
-// --- REQ-core-042, REQ-core-053: タグなし連続シナリオ ---
-
-// --- REQ-core-052: 知らないタグ ---
-
-// --- REQ-core-053: 無いタグ ---
-
-// --- REQ-core-054: 参照切れ ---
-
-// --- REQ-core-032: ID の重複 ---
-
-// --- REQ-core-044, TBL-core-011: 性質の知らない行 ---
-
-// --- REQ-core-047, REQ-core-048, REQ-core-049, REQ-core-050, REQ-core-051, REQ-core-098: フィールド検査の組み合わせ ---
-
-// --- split_lines: CRLF と空入力 ---
-
-// --- gherkin ステップ認識 ---
-
-// --- 用語集テーブルの解析 ---
-
-// --- FLAG の関係と出典のフィールド読み取り ---
-
-// --- build_scenario の @source ---
-
-// --- check_documents の行数境界値 ---
-
-// --- check_backtick_ids ---
-
-// --- check_references: Property の文中のバッククォート ID ---
-
-// --- TBL 出典が正しく読まれて missing_source にならない ---
-
 // --- Step 3: 文書の読み込み ---
 
 // @kotowari[REQ-core-033]
@@ -132,8 +60,6 @@ fn req_033_file_symlink_is_read() {
     assert_eq!(v["files"], 1, "symlinked file should be read");
 }
 
-// --- Step 4a: 項目の行の形 ---
-
 // --- Step 4b: gherkin の行の形と ID の定義 ---
 
 // @kotowari[REQ-core-033]
@@ -169,36 +95,6 @@ fn req_033_broken_symlink_in_ir_dir_stops() {
         output
     );
 }
-
-// --- 汎用化の実装レビューで見つかった食い違いの回帰テスト ---
-
-// --- TBL-core-010: split_lines の \r\n 処理 ---
-
-// --- REQ-core-117: 用語集の区切り行の判定 ---
-
-// --- REQ-core-043: "####" 系見出しの検査 ---
-
-// --- REQ-core-112: 閉じないコードブロックの前の指摘・項目は残る ---
-
-// --- REQ-core-098: 値が空でも「知らない行」は無いものとして扱わない ---
-
-// --- REQ-core-044: ". " を含む行の数字接頭辞の判定 ---
-
-// --- REQ-core-043: 形に合わない TBL-/PROP-/FLAG- の ID ---
-
-// --- TBL-core-011: 性質の "- source:" 行の読み方 ---
-
-// --- REQ-core-052: 結び付かないタグの行の行番号 ---
-
-// --- REQ-core-114: シナリオの id に使う @id の値の形 ---
-
-// --- REQ-core-059: @source タグが在るが値が使い物にならないとき ---
-
-// --- REQ-core-098: 問題の記録の必須の行 ---
-
-// --- TBL-core-019: 複数の行を持つ項目での参照切れの行番号 ---
-
-// --- REQ-core-054: 参照の解決 ---
 
 // --- REQ-core-055, REQ-core-056: 見ないもの ---
 
