@@ -870,12 +870,10 @@ dependencies = [
 name = "kotowari"
 version = "0.5.0"
 dependencies = [
- "assert_cmd",
  "globset",
  "kotowari-core",
  "kotowari-overview",
  "kotowari-source-analysis",
- "serde_json",
  "tempfile",
  "tokio",
  "walkdir",
@@ -903,7 +901,6 @@ dependencies = [
  "globset",
  "kotowari-markdown-schema",
  "markdown",
- "regex",
  "serde",
  "serde-saphyr",
  "serde_json",
@@ -915,7 +912,6 @@ dependencies = [
 name = "kotowari-markdown-schema"
 version = "0.1.0"
 dependencies = [
- "assert_cmd",
  "gray_matter",
  "markdown",
  "proptest",
@@ -924,7 +920,6 @@ dependencies = [
  "serde-saphyr",
  "serde_json",
  "serde_path_to_error",
- "tempfile",
 ]
 
 [[package]]
@@ -988,7 +983,6 @@ dependencies = [
  "regex",
  "serde",
  "serde-saphyr",
- "serde_json",
  "tempfile",
  "walkdir",
 ]
