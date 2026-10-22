@@ -1,9 +1,10 @@
 use kotowari_markdown_view::{
-    Block, Document, Page, Part, RenderInput, Section, TocGroup, TocItem, render,
+    Block, Document, Part, RenderInput, Section, TocGroup, TocItem, render,
 };
 use serde_json::json;
 
 mod common;
+use common::page;
 #[path = "common/ui.rs"]
 mod ui;
 
@@ -66,14 +67,6 @@ fn input(documents: Vec<Document>, items: Vec<TocItem>) -> RenderInput {
         },
         ..ui::japanese()
     }
-}
-
-fn page<'a>(pages: &'a [Page], name: &str) -> &'a str {
-    &pages
-        .iter()
-        .find(|page| page.name == name)
-        .unwrap_or_else(|| panic!("no page {name}"))
-        .content
 }
 
 fn index(input: &RenderInput) -> String {

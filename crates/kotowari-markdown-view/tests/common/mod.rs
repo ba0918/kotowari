@@ -1,3 +1,14 @@
+use kotowari_markdown_view::Page;
+
+/// その名前のページの中身。無ければ panic する
+pub fn page<'a>(pages: &'a [Page], name: &str) -> &'a str {
+    &pages
+        .iter()
+        .find(|page| page.name == name)
+        .unwrap_or_else(|| panic!("no page {name}"))
+        .content
+}
+
 /// 描いた HTML の中のリンクの、リンク先と見える文字の並び。属性の並びや文字を包む要素は問わない
 pub fn links(html: &str) -> Vec<(String, String)> {
     html.split("<a ")
