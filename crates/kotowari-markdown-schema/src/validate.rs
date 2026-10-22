@@ -86,14 +86,7 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
                         push_undeclared_line(&mut findings, block);
                     }
                     for item in &section.items {
-                        findings.push(Finding::at(
-                            FindingKind::UndeclaredHeading,
-                            item.line,
-                            format!("undeclared item heading \"{}\"", item.id),
-                        ));
-                        for block in &item.blocks {
-                            push_undeclared_line(&mut findings, block);
-                        }
+                        push_undeclared_item(&mut findings, item.line, &item.id, &item.blocks);
                     }
                 }
             }
@@ -140,14 +133,12 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
     {
         let in_declared_preamble = !stray.before_title && doc_rule.preamble.is_some();
         if in_declared_preamble || !open {
-            findings.push(Finding::at(
-                FindingKind::UndeclaredHeading,
+            push_undeclared_item(
+                &mut findings,
                 stray.heading.line,
-                format!("undeclared item heading \"{}\"", stray.heading.text),
-            ));
-            for block in &stray.blocks {
-                push_undeclared_line(&mut findings, block);
-            }
+                &stray.heading.text,
+                &stray.blocks,
+            );
         }
     }
 
@@ -206,14 +197,7 @@ fn validate_items(
     let Some(item_rule) = item_rule else {
         // 宣言済みの節の中に足された未宣言の項目。open でも見出しと内側の行を誤りにする（REQ-schema-003、REQ-schema-027）
         for item in items {
-            findings.push(Finding::at(
-                FindingKind::UndeclaredHeading,
-                item.line,
-                format!("undeclared item heading \"{}\"", item.id),
-            ));
-            for block in &item.blocks {
-                push_undeclared_line(findings, block);
-            }
+            push_undeclared_item(findings, item.line, &item.id, &item.blocks);
         }
         return;
     };
@@ -257,6 +241,18 @@ fn validate_items(
         FindingKind::MissingRequiredSection,
         findings,
     );
+}
+
+/// 宣言の無い項目の見出しと、その内側の行をすべて誤りにする（REQ-schema-001、REQ-schema-003）
+fn push_undeclared_item(findings: &mut Vec<Finding>, line: usize, name: &str, blocks: &[Block]) {
+    findings.push(Finding::at(
+        FindingKind::UndeclaredHeading,
+        line,
+        format!("undeclared item heading \"{name}\""),
+    ));
+    for block in blocks {
+        push_undeclared_line(findings, block);
+    }
 }
 
 fn validate_stray_heading(heading: &Heading, findings: &mut Vec<Finding>) {
@@ -381,18 +377,12 @@ fn validate_bullet(
     open: bool,
     findings: &mut Vec<Finding>,
 ) {
-    let (text, line) = match block {
-        Block::Bullet { text, line, .. } => (text.as_str(), *line),
-        Block::Field { text, line, .. } => (text.as_str(), *line),
-        Block::OrderedList { .. }
-        | Block::Statement { .. }
-        | Block::Table { .. }
-        | Block::Code { .. }
-        | Block::Other { .. } => return,
+    let Some(bullet) = BulletLine::of(block) else {
+        return;
     };
     match rules.bullets {
         Some(bullets) => validate_declared_bullet(
-            BulletLine { block, text, line },
+            bullet,
             bullets,
             rules.fields,
             blocks,
@@ -525,17 +515,11 @@ fn validate_child_bullet(
         push_undeclared_children(findings, block);
         return;
     };
-    let (text, line) = match block {
-        Block::Bullet { text, line, .. } => (text.as_str(), *line),
-        Block::Field { text, line, .. } => (text.as_str(), *line),
-        Block::OrderedList { .. }
-        | Block::Statement { .. }
-        | Block::Table { .. }
-        | Block::Code { .. }
-        | Block::Other { .. } => return,
+    let Some(bullet) = BulletLine::of(block) else {
+        return;
     };
     validate_declared_bullet(
-        BulletLine { block, text, line },
+        bullet,
         bullets,
         &children.fields,
         sibling_blocks,
@@ -549,6 +533,21 @@ struct BulletLine<'a> {
     block: &'a Block,
     text: &'a str,
     line: usize,
+}
+
+impl<'a> BulletLine<'a> {
+    /// 箇条書きとして検証する行（箇条書きか、箇条書きとして扱うフィールド行）。ほかのブロックは None
+    fn of(block: &'a Block) -> Option<Self> {
+        let (text, line) = match block {
+            Block::Bullet { text, line, .. } | Block::Field { text, line, .. } => (text, *line),
+            Block::OrderedList { .. }
+            | Block::Statement { .. }
+            | Block::Table { .. }
+            | Block::Code { .. }
+            | Block::Other { .. } => return None,
+        };
+        Some(Self { block, text, line })
+    }
 }
 
 fn validate_declared_bullet(
