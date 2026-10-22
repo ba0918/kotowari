@@ -45,6 +45,23 @@ fn repeated_native_source_is_rejected_within_a_group() {
     assert!(ReadModel::build_repository(input).is_err());
 }
 
+// @kotowari[REQ-core-315]
+#[test]
+fn native_source_without_an_identity_is_rejected() {
+    let mut input = inputs(Config::default());
+    input.config.tests.files.clear();
+    input.ir = vec![source("", "topic.md", "# Topic\n")];
+    let Err(error) = ReadModel::build_repository(input) else {
+        panic!("a native source needs its identity");
+    };
+    assert!(
+        error
+            .to_string()
+            .contains("native source identity must not be empty"),
+        "{error}"
+    );
+}
+
 // @kotowari[REQ-core-315, EX-core-490]
 #[test]
 fn native_original_text_is_retained_across_read_and_check() {

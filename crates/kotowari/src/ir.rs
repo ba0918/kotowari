@@ -1,42 +1,6 @@
 use crate::acquisition::read_utf8_file;
-#[cfg(test)]
-use kotowari_core::Finding;
 use kotowari_core::config::Config;
-#[cfg(test)]
-use kotowari_core::ir::*;
 use std::path::Path;
-/// IR のディレクトリからすべての文書を読んで検査する
-#[cfg(test)]
-pub fn load_and_check(
-    base: &Path,
-    config: &Config,
-) -> Result<(Vec<IrDocument>, Vec<Finding>), kotowari_core::StopReason> {
-    let (docs, findings, _) = load_and_check_with_duplicates(base, config)?;
-    Ok((docs, findings))
-}
-
-#[cfg(test)]
-pub fn load_and_check_with_duplicates(
-    base: &Path,
-    config: &Config,
-) -> Result<(Vec<IrDocument>, Vec<Finding>, GlossaryDuplicates), kotowari_core::StopReason> {
-    let ir_dir = base.join(&config.ir);
-    let mut entries = Vec::new();
-    collect_ir_paths(&ir_dir, "", &config.ir, &mut entries)?;
-    entries.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
-
-    let mut docs = Vec::new();
-    for (relative_path, path) in entries {
-        let display = kotowari_core::join_display_path(&config.ir, &relative_path);
-        let content = read_utf8_file(&path, &display)?;
-        let doc = parse_document(&relative_path, &content)?;
-        docs.push(doc);
-    }
-    let duplicates = GlossaryDuplicates::new(&docs);
-    let findings = check_documents_with_duplicates(&docs, config, &duplicates);
-    Ok((docs, findings, duplicates))
-}
-
 fn collect_ir_paths(
     dir: &Path,
     prefix: &str,

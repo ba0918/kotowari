@@ -170,6 +170,58 @@ fn req_003_config_path_is_relative_to_cwd() {
         .code(0);
 }
 
+// @kotowari[REQ-core-003, REQ-core-152, REQ-core-158, REQ-core-163]
+#[test]
+fn req_003_list_query_and_status_read_the_config_given_by_config() {
+    // 既定の場所の設定は IR の置き場を指さず、--config の設定だけが spec/ を指す。
+    // 読んだ設定が渡した方なら、どのコマンドも spec/ の項目を読む
+    let tmp = TempDir::new().unwrap();
+    for dir in [
+        ".kotowari",
+        "spec",
+        "docs/decision/records",
+        "docs/decision/adr",
+    ] {
+        fs::create_dir_all(tmp.path().join(dir)).unwrap();
+    }
+    fs::write(tmp.path().join(".kotowari/config.yaml"), "ir: missing\n").unwrap();
+    fs::write(
+        tmp.path().join("other.yaml"),
+        "ir: spec\ntests:\n  files: []\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("spec/a.md"),
+        "# A\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- verification: review\n- how_to_verify: read\n\nStatement.\n",
+    )
+    .unwrap();
+    for (args, read) in [
+        (
+            &["list", "--format", "text"][..],
+            "REQ-001 review R spec/a.md:7",
+        ),
+        (
+            &["query", "REQ-001", "--format", "text"],
+            "REQ-001 review R spec/a.md:7",
+        ),
+        (
+            &["status", "--format", "json"],
+            "\"documents\":{\"files\":1,",
+        ),
+    ] {
+        let output = cmd()
+            .args(args)
+            .args(["--config", "other.yaml"])
+            .current_dir(tmp.path())
+            .output()
+            .unwrap();
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_ne!(output.status.code(), Some(2), "{args:?}: {stderr}");
+        assert!(stdout.contains(read), "{args:?}: {stdout}");
+    }
+}
+
 // --- REQ-core-011: 既定の設定ファイルの場所 ---
 
 // @kotowari[REQ-core-011]
@@ -440,48 +492,21 @@ fn req_017_nested_keys() {
 
 // --- REQ-core-018: 置き場が無いとき停止 ---
 
-// @kotowari[REQ-core-018, TBL-core-001]
+// @kotowari[REQ-core-005, REQ-core-018, TBL-core-001, TBL-core-018, TBL-core-020]
 #[test]
-fn req_018_missing_ir_dir_stops() {
-    let tmp = TempDir::new().unwrap();
-    fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
-    fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
-    fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
-    // docs/ir を作らない
-    fs::write(
-        tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
-    )
-    .unwrap();
-    cmd()
-        .arg("check")
-        .current_dir(tmp.path())
-        .assert()
-        .code(2)
-        .stdout("");
-}
-
-// @kotowari[REQ-core-005, REQ-core-018, TBL-core-018, TBL-core-020]
-#[test]
-fn req_005_stderr_carries_the_stop_reason_text() {
-    // A137 で改めた: TBL-core-020 の形（相対パスと OS の誤りの文）
+fn req_018_missing_ir_dir_stops_with_its_relative_path_and_the_os_error() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::remove_dir_all(tmp.path().join("docs/ir")).unwrap();
+    // OS の誤りの文は環境で変わるので、同じ置き場を読んだときの文をここで作る
+    let os_error = fs::read_dir(tmp.path().join("docs/ir")).unwrap_err();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(output.status.code(), Some(2));
+    assert!(output.stdout.is_empty());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let first_line = stderr.lines().next().unwrap_or("");
-    // TBL-core-018: 「unreadable file」の文言で始まる
-    assert!(
-        first_line.starts_with("unreadable file: "),
-        "stderr should start with TBL-018 wording, got: {first_line:?}"
-    );
-    // TBL-core-020: 相対パスを含む（設定の ir の値）
-    assert!(
-        first_line.contains("docs/ir"),
-        "stderr should contain the relative path, got: {first_line:?}"
-    );
+    // 詳細は設定の値のままの相対パスで、絶対パスを含まない（TBL-core-020）
+    let expected = format!("unreadable file: docs/ir: {os_error}");
+    assert_eq!(stderr.lines().next(), Some(expected.as_str()));
 }
 
 // @kotowari[REQ-core-018, TBL-core-001]
@@ -524,18 +549,6 @@ fn req_018_missing_adr_dir_stops() {
         .assert()
         .code(2)
         .stdout("");
-}
-
-// --- REQ-core-019: glob の読み方 ---
-
-// @kotowari[REQ-core-019]
-#[test]
-fn req_019_glob_is_recursive_and_skips_hidden_dirs() {
-    // この機能はテストの発見（Step 4）で完全に検査するので、
-    // ここでは設定の glob が受理されることだけ確かめる
-    let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"src/**/*.rs\"\n";
-    let cfg = kotowari_core::config::Config::parse(yaml).unwrap();
-    assert_eq!(cfg.tests.files, vec!["src/**/*.rs"]);
 }
 
 // --- Step 2: 設定の誤りの拡張、パスの正規化 ---

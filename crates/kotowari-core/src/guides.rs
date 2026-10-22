@@ -109,7 +109,13 @@ impl<'a> GuideReader<'a> {
     pub fn read(&self, path: &str, text: &str) -> GuideMarks {
         let mut entries = Vec::new();
         let mut findings = Vec::new();
-        read_marks(path, text, &mut entries, &mut findings);
+        read_marks(
+            path,
+            text,
+            &parsed_comments(text),
+            &mut entries,
+            &mut findings,
+        );
         check_stale(&entries, &self.fingerprints, &mut findings);
         crate::sort_findings(&mut findings);
         let marks = entries
@@ -141,7 +147,7 @@ pub fn check_entries<'a>(
     validate_overlap(files.iter().map(|(path, _)| *path), test_files)?;
     let mut entries = Vec::new();
     for (path, text) in &files {
-        read_marks(path, text, &mut entries, findings);
+        read_marks(path, text, &parsed_comments(text), &mut entries, findings);
     }
     check_stale(&entries, &fingerprints_by_id(docs), findings);
     Ok(GuideTally {
@@ -193,10 +199,11 @@ fn check_stale(
 
 const MARK_START: &str = "@kotowari[";
 
-/// 1つの文書の形の正しい`ガイドの印`の1件の並び。path は空にする
-pub(crate) fn mark_entries(content: &str) -> Vec<GuideEntry> {
+/// 1つの文書の形の正しい`ガイドの印`の1件の並び。path は空にする。root は content を読んだ木
+pub(crate) fn mark_entries(content: &str, root: Option<&Node>) -> Vec<GuideEntry> {
     let mut entries = Vec::new();
-    read_marks("", content, &mut entries, &mut Vec::new());
+    let comments = root.map_or_else(Vec::new, |root| html_comments(content, root));
+    read_marks("", content, &comments, &mut entries, &mut Vec::new());
     entries
 }
 
@@ -205,11 +212,12 @@ pub(crate) fn mark_entries(content: &str) -> Vec<GuideEntry> {
 fn read_marks(
     path: &str,
     content: &str,
+    comments: &[Range<usize>],
     entries: &mut Vec<GuideEntry>,
     findings: &mut Vec<Finding>,
 ) {
     let lines = LineIndex::new(content);
-    for comment in html_comments(content) {
+    for comment in comments.iter().cloned() {
         let mut from = comment.start;
         while let Some(found) = content[from..comment.end].find(MARK_START) {
             let start = from + found;
@@ -264,18 +272,21 @@ fn is_fingerprint(text: &str) -> bool {
     text.len() == 8 && text.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
 }
 
+/// content を読んで HTML のコメントの範囲を取る。GFM と frontmatter の読み方は MDX の構文を
+/// 持たないので、解析が誤りを返すことはない
+fn parsed_comments(content: &str) -> Vec<Range<usize>> {
+    crate::markdown::parse(content)
+        .map_or_else(|_| Vec::new(), |root| html_comments(content, &root))
+}
+
 /// HTML のコメントの "<!--" と "-->" の間のバイトの範囲（REQ-core-200）。
 /// `ガイド`を CommonMark として読み、HTML の節（ブロックの形と段落の中の形）だけを見るので、
 /// コードブロック（字下げの形とフェンスの形）とコードスパンの中は入らない。
 /// 範囲は節の値ではなく元の文字から取る。リストの中などでは節の値から字下げが除かれるが、
 /// 行番号と detail の行の文字には元の行が要る。"-->" の無い "<!--" はコメントにしない
-fn html_comments(content: &str) -> Vec<Range<usize>> {
-    // GFM と frontmatter の読み方は MDX の構文を持たないので、parse_mdast が誤りを返すことはない
-    let Ok(root) = crate::markdown::parse(content) else {
-        return Vec::new();
-    };
+fn html_comments(content: &str, root: &Node) -> Vec<Range<usize>> {
     let mut html = Vec::new();
-    collect_html(&root, &mut html);
+    collect_html(root, &mut html);
     let mut comments = Vec::new();
     for node in html {
         let mut from = node.start;

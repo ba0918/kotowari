@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use kotowari_markdown_schema::finding::Finding;
 use kotowari_markdown_schema_io::{LoaderOptions, SchemaLoader};
 use serde::Serialize;
@@ -23,8 +23,8 @@ enum Command {
         /// File or directory to check
         path: PathBuf,
         /// Output format
-        #[arg(long, value_parser = ["json", "text"], default_value = "text")]
-        format: String,
+        #[arg(long, value_enum, default_value_t = Format::Text)]
+        format: Format,
         /// Allow undeclared headings and lines (overrides the schema's `open`)
         #[arg(long)]
         open: bool,
@@ -45,9 +45,15 @@ enum Command {
         /// Markdown file to extract from
         file: PathBuf,
         /// Output format
-        #[arg(long, value_parser = ["json", "text"], default_value = "text")]
-        format: String,
+        #[arg(long, value_enum, default_value_t = Format::Text)]
+        format: Format,
     },
+}
+
+#[derive(Clone, Copy, ValueEnum)]
+enum Format {
+    Json,
+    Text,
 }
 
 struct Stop {
@@ -165,14 +171,13 @@ fn run(cli: Cli) -> Result<u8, Stop> {
         Command::Values { file, format } => {
             let pair = loader.load(&file)?;
             let partial = pair.extract_partial(Default::default());
-            match format.as_str() {
-                "json" => println!(
+            match format {
+                Format::Json => println!(
                     "{}",
                     serde_json::to_string_pretty(partial.values())
                         .expect("a JSON value always serializes")
                 ),
-                "text" => print!("{}", render_values_text(partial.values())),
-                _ => unreachable!("clap restricts format"),
+                Format::Text => print!("{}", render_values_text(partial.values())),
             }
             Ok(0)
         }
@@ -186,7 +191,7 @@ fn run(cli: Cli) -> Result<u8, Stop> {
                 .iter()
                 .map(|file| (file.path().to_path_buf(), file.findings()))
                 .collect();
-            emit_check(&files, &format);
+            emit_check(&files, format);
             Ok(u8::from(
                 files.iter().any(|(_, findings)| !findings.is_empty()),
             ))
@@ -194,9 +199,9 @@ fn run(cli: Cli) -> Result<u8, Stop> {
     }
 }
 
-fn emit_check(files: &[(PathBuf, &[Finding])], format: &str) {
+fn emit_check(files: &[(PathBuf, &[Finding])], format: Format) {
     match format {
-        "text" => {
+        Format::Text => {
             for (path, findings) in files {
                 for finding in *findings {
                     match finding.line() {
@@ -216,7 +221,7 @@ fn emit_check(files: &[(PathBuf, &[Finding])], format: &str) {
                 }
             }
         }
-        "json" => {
+        Format::Json => {
             let files_json: Vec<_> = files
                 .iter()
                 .filter(|(_, findings)| !findings.is_empty())
@@ -244,7 +249,6 @@ fn emit_check(files: &[(PathBuf, &[Finding])], format: &str) {
                     .expect("a JSON value always serializes")
             );
         }
-        _ => unreachable!("clap restricts format"),
     }
 }
 

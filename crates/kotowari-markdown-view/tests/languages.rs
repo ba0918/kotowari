@@ -12,6 +12,7 @@ use std::collections::BTreeMap;
     reason = "this file reads only the links of the shared page helpers"
 )]
 mod common;
+use common::page;
 
 /// TBL-view-002 の鍵と、数を入れるか
 const KEYS: [(&str, bool); 17] = [
@@ -90,14 +91,6 @@ fn input(documents: Vec<Document>, ui: BTreeMap<String, String>) -> RenderInput 
         ui,
         others: vec![],
     }
-}
-
-fn page<'a>(pages: &'a [Page], name: &str) -> &'a str {
-    &pages
-        .iter()
-        .find(|page| page.name == name)
-        .unwrap_or_else(|| panic!("no page {name}"))
-        .content
 }
 
 fn html_pages(pages: &[Page]) -> impl Iterator<Item = &Page> {

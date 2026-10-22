@@ -2,6 +2,7 @@
 mod acquisition;
 #[cfg(feature = "tokio")]
 mod asynchronous;
+mod cache;
 #[cfg(feature = "tokio")]
 pub use asynchronous::{AsyncOptions, AsyncProject};
 mod guides;
@@ -182,82 +183,12 @@ impl OverviewPrepared {
     }
     /// 書く先の置き場。`基準のディレクトリ`の ".kotowari/cache/overview/"（REQ-core-296）
     pub fn directory(&self) -> PathBuf {
-        self.base.join(overview::CACHE)
+        self.base.join(cache::CACHE)
     }
     /// `基準のディレクトリ`の ".kotowari/cache/overview/" の下へ書く。同じ名前で同じバイト列の
     /// ファイルは書かず、今回返さなかったファイルを消す（REQ-core-293）
     pub fn write(&self) -> Result<OverviewBuild, Error> {
-        let cache = self.directory();
-        let write_error =
-            |path: &str, error| Error::cache(&format!("{}/{path}", overview::CACHE), Some(error));
-        // REQ-core-324: 置き場かその上がリンクかディレクトリでなければ、何も書かず消さずに止める
-        let mut place = String::new();
-        for component in overview::CACHE.split('/') {
-            if !place.is_empty() {
-                place.push('/');
-            }
-            place.push_str(component);
-            match std::fs::symlink_metadata(self.base.join(&place)) {
-                Ok(meta) if meta.file_type().is_dir() => {}
-                Ok(_) => return Err(Error::cache(&place, None)),
-                Err(error) if error.kind() == std::io::ErrorKind::NotFound => break,
-                Err(error) => return Err(Error::cache(&place, Some(error))),
-            }
-        }
-        // REQ-core-353: ほかの言語のページを書く "<言語タグ>/" も、1つも書く前に確かめる
-        let directories: std::collections::BTreeSet<&str> = self
-            .pages
-            .iter()
-            .filter_map(|page| page.name.rsplit_once('/').map(|(directory, _)| directory))
-            .collect();
-        for directory in &directories {
-            let place = format!("{}/{directory}", overview::CACHE);
-            match std::fs::symlink_metadata(cache.join(directory)) {
-                Ok(meta) if meta.file_type().is_dir() => {}
-                Ok(_) => return Err(Error::cache(&place, None)),
-                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-                Err(error) => return Err(Error::cache(&place, Some(error))),
-            }
-        }
-        std::fs::create_dir_all(&cache)
-            .map_err(|error| Error::cache(overview::CACHE, Some(error)))?;
-        let existing = overview::existing(&cache)
-            .map_err(|error| Error::cache(overview::CACHE, Some(error)))?;
-        let mut build = OverviewBuild::default();
-        for page in &self.pages {
-            let path = cache.join(&page.name);
-            // REQ-core-353: ほかの言語のページは "<言語タグ>/" の下に書く。置き場は上で確かめてある
-            if let Some((directory, _)) = page.name.rsplit_once('/') {
-                std::fs::create_dir_all(cache.join(directory)).map_err(|error| {
-                    Error::cache(&format!("{}/{directory}", overview::CACHE), Some(error))
-                })?;
-            }
-            // シンボリックリンクを辿って置き場の外に書かないよう、リンクは消してからファイルを書く（REQ-core-296）
-            let link =
-                std::fs::symlink_metadata(&path).is_ok_and(|meta| meta.file_type().is_symlink());
-            if link {
-                std::fs::remove_file(&path).map_err(|error| write_error(&page.name, error))?;
-            } else if std::fs::read(&path).is_ok_and(|bytes| bytes == page.content.as_bytes()) {
-                build.unchanged += 1;
-                continue;
-            }
-            std::fs::write(&path, &page.content).map_err(|error| write_error(&page.name, error))?;
-            build
-                .written
-                .push(format!("{}/{}", overview::CACHE, page.name));
-        }
-        let names: std::collections::BTreeSet<&str> =
-            self.pages.iter().map(|page| page.name.as_str()).collect();
-        for name in existing {
-            if names.contains(name.as_str()) {
-                continue;
-            }
-            std::fs::remove_file(cache.join(&name)).map_err(|error| write_error(&name, error))?;
-            build.removed.push(format!("{}/{name}", overview::CACHE));
-        }
-        build.written.sort_by(|a, b| a.as_bytes().cmp(b.as_bytes()));
-        build.removed.sort_by(|a, b| a.as_bytes().cmp(b.as_bytes()));
-        Ok(build)
+        cache::write(&self.base, &self.pages)
     }
 }
 

@@ -69,10 +69,22 @@ fn kotowari() -> Command {
     Command::new(assert_cmd::cargo::cargo_bin("kotowari"))
 }
 
+/// 起動した serve。止まるのを確かめる前にテストが panic しても、drop で止めて待つ。
+/// 変異テストでは assert が落ちるたびにサーバが残り、見張りが消すまで動き続けるため
+struct Serving(Child);
+
+impl Drop for Serving {
+    fn drop(&mut self) {
+        // 割り込みで止まったのを確かめ終えたあとなら、どちらも何もしない
+        let _ = self.0.kill();
+        let _ = self.0.wait();
+    }
+}
+
 /// 空いているポートで serve を起動し、標準出力の1行目（URL）とポートを返す。
 /// 空いているポートを離してから serve が取るまでの間に、並行するテストの接続が同じポートを
 /// 使うことがある。そのときは port error で止まるので、別のポートで起動し直す
-fn serve(tmp: &Path) -> (Child, BufReader<std::process::ChildStdout>, String, u16) {
+fn serve(tmp: &Path) -> (Serving, BufReader<std::process::ChildStdout>, String, u16) {
     for _ in 0..5 {
         let port = free_port();
         let mut child = kotowari()
@@ -86,7 +98,7 @@ fn serve(tmp: &Path) -> (Child, BufReader<std::process::ChildStdout>, String, u1
         let mut line = String::new();
         stdout.read_line(&mut line).unwrap();
         if !line.is_empty() {
-            return (child, stdout, line, port);
+            return (Serving(child), stdout, line, port);
         }
         let mut stderr = String::new();
         child
@@ -150,7 +162,7 @@ fn content_type(head: &str) -> Option<String> {
 #[test]
 fn ex_core_478_serve_gives_only_the_files_in_the_cache_and_ends_with_0_on_interrupt() {
     let tmp = make_project(OVERVIEW, true);
-    let (mut child, mut stdout, line, port) = serve(tmp.path());
+    let (mut server, mut stdout, line, port) = serve(tmp.path());
     assert_eq!(line, format!("http://127.0.0.1:{port}/\n"));
     let cache = tmp.path().join(".kotowari/cache/overview");
     let (status, head, body) = get(port, "/");
@@ -177,8 +189,8 @@ fn ex_core_478_serve_gives_only_the_files_in_the_cache_and_ends_with_0_on_interr
             "{path}"
         );
     }
-    interrupt(&child);
-    assert_eq!(child.wait().unwrap().code(), Some(0));
+    interrupt(&server.0);
+    assert_eq!(server.0.wait().unwrap().code(), Some(0));
     let mut rest = String::new();
     stdout.read_to_string(&mut rest).unwrap();
     assert_eq!(rest, "", "nothing is written per request");
@@ -189,7 +201,7 @@ fn ex_core_478_serve_gives_only_the_files_in_the_cache_and_ends_with_0_on_interr
 #[test]
 fn req_core_299_links_out_of_the_cache_directories_and_absolute_paths_are_404() {
     let tmp = make_project(OVERVIEW, true);
-    let (mut child, _stdout, _, port) = serve(tmp.path());
+    let (mut server, _stdout, _, port) = serve(tmp.path());
     let cache = tmp.path().join(".kotowari/cache/overview");
     std::os::unix::fs::symlink(
         tmp.path().join(".kotowari/config.yaml"),
@@ -210,8 +222,8 @@ fn req_core_299_links_out_of_the_cache_directories_and_absolute_paths_are_404() 
     }
     let (status, _, _) = get(port, "/in.html");
     assert!(status.contains(" 200 "), "{status}");
-    interrupt(&child);
-    assert_eq!(child.wait().unwrap().code(), Some(0));
+    interrupt(&server.0);
+    assert_eq!(server.0.wait().unwrap().code(), Some(0));
 }
 
 // @kotowari[REQ-core-299, REQ-core-297]
@@ -226,7 +238,7 @@ fn req_core_299_a_percent_encoded_page_name_is_decoded_to_the_file_in_the_cache(
         ".kotowari/toc.yaml",
         "title: 目次\nitems: ['変更 a']\n",
     );
-    let (mut child, _stdout, _, port) = serve(tmp.path());
+    let (mut server, _stdout, _, port) = serve(tmp.path());
     let cache = tmp.path().join(".kotowari/cache/overview");
     // 一覧のページのリンクは、名前の UTF-8 のバイトをパーセント符号にした相対パスである
     let encoded: String = "変更 a.html"
@@ -247,8 +259,8 @@ fn req_core_299_a_percent_encoded_page_name_is_decoded_to_the_file_in_the_cache(
     let (status, _, body) = get(port, "/b%5Cc.html");
     assert!(status.contains(" 200 "), "{status}");
     assert_eq!(body, std::fs::read(cache.join("b\\c.html")).unwrap());
-    interrupt(&child);
-    assert_eq!(child.wait().unwrap().code(), Some(0));
+    interrupt(&server.0);
+    assert_eq!(server.0.wait().unwrap().code(), Some(0));
 }
 
 fn stopped(tmp: &Path, port: u16) -> (Option<i32>, String, String) {
@@ -301,7 +313,10 @@ fn req_core_294_serve_on_data_with_errors_stops_before_binding() {
 #[test]
 fn req_core_279_serve_without_the_overview_key_is_a_config_error() {
     let tmp = make_project("", true);
-    let (code, _, stderr) = stopped(tmp.path(), free_port());
+    // 使用中のポートを渡す。検査を飛ばす誤りがあっても、配り始めずにすぐ止まる
+    let occupied = TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = occupied.local_addr().unwrap().port();
+    let (code, _, stderr) = stopped(tmp.path(), port);
     assert_eq!(code, Some(2));
     assert_eq!(
         stderr.lines().next(),
@@ -322,7 +337,10 @@ fn req_core_280_serve_stops_on_an_overlap_with_the_guides() {
         tmp.path().join("notes/a.md"),
     )
     .unwrap();
-    let (code, _, stderr) = stopped(tmp.path(), free_port());
+    // 使用中のポートを渡す。検査を飛ばす誤りがあっても、配り始めずにすぐ止まる
+    let occupied = TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = occupied.local_addr().unwrap().port();
+    let (code, _, stderr) = stopped(tmp.path(), port);
     assert_eq!(code, Some(2));
     assert_eq!(
         stderr.lines().next(),
@@ -356,7 +374,7 @@ fn req_core_294_serve_on_toc_errors_stops_before_binding() {
 #[test]
 fn ex_core_543_serve_answers_only_local_hosts() {
     let tmp = make_project(OVERVIEW, true);
-    let (mut child, mut stdout, _, port) = serve(tmp.path());
+    let (mut server, mut stdout, _, port) = serve(tmp.path());
     let index = std::fs::read(tmp.path().join(".kotowari/cache/overview/index.html")).unwrap();
     for host in [format!("127.0.0.1:{port}"), format!("LOCALHOST:{port}")] {
         let (status, _, body) = get_with_host(port, "/", Some(&host));
@@ -370,8 +388,8 @@ fn ex_core_543_serve_answers_only_local_hosts() {
         assert!(status.contains(" 403 "), "{host:?}: {status}");
         assert!(body.is_empty(), "{host:?}");
     }
-    interrupt(&child);
-    assert_eq!(child.wait().unwrap().code(), Some(0));
+    interrupt(&server.0);
+    assert_eq!(server.0.wait().unwrap().code(), Some(0));
     let mut rest = String::new();
     stdout.read_to_string(&mut rest).unwrap();
     assert_eq!(rest, "", "nothing is written per request");

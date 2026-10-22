@@ -67,6 +67,30 @@ fn read_models_list_and_query_without_check_only_inputs() {
     assert!(model.query("REQ-999").is_err());
 }
 
+// @kotowari[REQ-core-314]
+#[test]
+fn reading_takes_ir_sources_under_the_configured_place_only() {
+    use kotowari_core::{InputError, ReadInputs, ReadModel};
+    let text = "# Topic\n\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- verification: unit\n\nBody.\n";
+    let inputs = |ir: &str, path: &str| {
+        let mut inputs = ReadInputs::default();
+        inputs.config.ir = ir.into();
+        inputs.config.tests.files.clear();
+        inputs.ir = Some(vec![SourceText::new(path, text).unwrap()]);
+        inputs.records = Some(vec![]);
+        inputs.adr = Some(vec![]);
+        inputs
+    };
+    let model = ReadModel::build(inputs("spec", "spec/topic.md")).unwrap();
+    assert_eq!(model.documents()[0].relative_path(), "topic.md");
+    let model = ReadModel::build(inputs("", "topic.md")).unwrap();
+    assert_eq!(model.documents()[0].relative_path(), "topic.md");
+    assert!(matches!(
+        ReadModel::build(inputs("spec", "docs/ir/topic.md")),
+        Err(InputError::InvalidInput(_))
+    ));
+}
+
 // @kotowari[REQ-core-315, EX-core-488, EX-core-489]
 #[test]
 fn enabled_check_groups_must_be_provided_even_when_empty() {
@@ -226,6 +250,26 @@ fn partial_ir_retains_invalid_and_missing_ids_at_the_original_lines() {
     assert_eq!(document.items()[1].id(), None);
     assert_eq!(document.items()[1].line(), 11);
     assert!(!document.findings().is_empty());
+}
+
+// @kotowari[REQ-core-314]
+#[test]
+fn partial_parsing_reads_the_ir_place_from_the_options() {
+    let text = "# Flags\n\nScope.\n\n### FLAG-001: Open\n\n- kind: gap\n\nBody.\n";
+    let options = |ir: &str| ir::IrOptions { ir: ir.into() };
+    // 置き場からの相対パスで文書の種類が決まる。置き場の外のファイルは受けない
+    let source = SourceText::new("spec/sub/FLAGS.md", text).unwrap();
+    let document = ir::parse(&source, options("spec")).unwrap();
+    assert_eq!(document.path(), "spec/sub/FLAGS.md");
+    assert_eq!(document.items()[0].id(), Some("FLAG-001"));
+    let source = SourceText::new("FLAGS.md", text).unwrap();
+    let document = ir::parse(&source, options("")).unwrap();
+    assert_eq!(document.items()[0].id(), Some("FLAG-001"));
+    let source = SourceText::new("docs/ir/FLAGS.md", text).unwrap();
+    assert!(matches!(
+        ir::parse(&source, options("spec")),
+        Err(kotowari_core::InputError::InvalidInput(_))
+    ));
 }
 
 // @kotowari[REQ-core-314, REQ-core-322, EX-core-487, EX-core-498]

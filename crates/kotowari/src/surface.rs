@@ -1,4 +1,4 @@
-use kotowari_core::{Finding, SourceText, StopReason, config::Config};
+use kotowari_core::{SourceText, StopReason, config::Config};
 use std::path::Path;
 /// 面の解析の結果と、その元にしたファイル。面の規則が無いときはどちらも None
 type SurfaceInputs = (
@@ -26,15 +26,9 @@ pub fn analyze(base: &Path, cfg: &Config) -> Result<SurfaceInputs, StopReason> {
         let original = kotowari_core::NativeSourceText::new(absolute, path.clone(), text.clone());
         let source = SourceText::new(path.clone(), text)
             .map_err(|error| StopReason::MappingError(error.to_string()))?;
-        let mut file = analyzer
+        let file = analyzer
             .surfaces_at(source, &path)
             .map_err(|error| StopReason::ConfigError(error.detail().into()))?;
-        for surface in &mut file.surfaces {
-            surface.path = path.clone();
-        }
-        for finding in &mut file.findings {
-            *finding = Finding::new(finding.kind(), path.clone(), finding.line(), path.clone());
-        }
         analysis.push(kotowari_core::NativeSurfaceAnalysis {
             source: original,
             analysis: file,

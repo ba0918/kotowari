@@ -8,6 +8,9 @@ use kotowari_markdown_view::{
 };
 use serde_json::{Value, json};
 
+#[path = "common/diff.rs"]
+mod diff;
+use diff::changed;
 #[path = "common/ui.rs"]
 mod ui;
 
@@ -125,22 +128,6 @@ fn part(kind: &str, value: Value) -> Block {
         kind: kind.into(),
         value,
     })
-}
-
-/// 2つのページが食い違う範囲の、left の中のバイトの位置。同じなら None
-fn changed(left: &str, right: &str) -> Option<(usize, usize)> {
-    let (a, b) = (left.as_bytes(), right.as_bytes());
-    let prefix = a.iter().zip(b).take_while(|(x, y)| x == y).count();
-    if prefix == a.len() && prefix == b.len() {
-        return None;
-    }
-    let suffix = a[prefix..]
-        .iter()
-        .rev()
-        .zip(b[prefix..].iter().rev())
-        .take_while(|(x, y)| x == y)
-        .count();
-    Some((prefix, a.len() - suffix))
 }
 
 /// 値から "width" を除く

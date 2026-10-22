@@ -6,12 +6,37 @@
 //! どちらの読み方でも同じに読む。
 
 use crate::ast::parse_mdast;
-use crate::document::{
-    Block, Document, RawLine, TreeBuilder, inline_text, split_field, table_block_from_node,
-};
+use crate::document::{Block, Document, RawLine, TreeBuilder, inline_text, table_block_from_node};
+use crate::schema::Reading;
 use markdown::mdast::Node;
 
+/// スキーマの`読み方`で読んだ文書の木（TBL-schema-011）。検証と抽出は同じ木を読む
+pub(crate) enum ReadDocument<'a> {
+    /// "paragraph": 解析した木のまま
+    Parsed(&'a Document),
+    /// "line": 生の行から読み直した木
+    ByLine(Document),
+}
+
+impl std::ops::Deref for ReadDocument<'_> {
+    type Target = Document;
+    fn deref(&self) -> &Document {
+        match self {
+            Self::Parsed(document) => document,
+            Self::ByLine(document) => document,
+        }
+    }
+}
+
 impl Document {
+    /// その`読み方`で読んだ木
+    pub(crate) fn read_as(&self, reading: Reading) -> ReadDocument<'_> {
+        match reading {
+            Reading::Paragraph => ReadDocument::Parsed(self),
+            Reading::Line => ReadDocument::ByLine(self.read_by_line()),
+        }
+    }
+
     /// 同じ生の行を `読み方` "line" で読み直した木（TBL-schema-011）。
     pub(crate) fn read_by_line(&self) -> Document {
         let lines = &self.lines;
@@ -107,34 +132,13 @@ impl LineReader {
             // 順序付きの行は子を持たない。子にあたる行はその後ろの兄弟になる（TBL-schema-007）
             self.attach_here(Block::OrderedList {
                 text: content,
-                continuation: Vec::new(),
                 line,
             });
             return;
         }
-        let block = match split_field(&content) {
-            Some((name, value)) => Block::Field {
-                line_text,
-                text: content,
-                lead_end: line,
-                name,
-                value,
-                continuation: Vec::new(),
-                children: Vec::new(),
-                line,
-            },
-            None => Block::Bullet {
-                line_text,
-                text: content,
-                lead_end: line,
-                continuation: Vec::new(),
-                children: Vec::new(),
-                line,
-            },
-        };
         self.open.push(OpenItem {
             content_column: marker.content_column,
-            block,
+            block: Block::list_line(line_text, content, line, line),
         });
     }
 

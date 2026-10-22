@@ -47,7 +47,7 @@ fn findings_by_kind(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value>
 // @kotowari[REQ-core-025]
 #[test]
 fn req_025_finding_kind_displays_as_its_own_kind_word() {
-    // --format text の出力は "{kind}" を通して種類の語を書く（main.rs）。
+    // --format text の出力は "{kind}" を通して種類の語を書く（CLI の text の出力）。
     // その Display の実装が種類ごとの語を書くことを直接確かめる。
     assert_eq!(
         kotowari_core::FindingKind::MissingTitle.to_string(),
@@ -64,7 +64,7 @@ fn req_025_finding_kind_displays_as_its_own_kind_word() {
 
 // @kotowari[REQ-core-024]
 #[test]
-fn req_024_finding_kind_partial_eq_str_matches_only_its_own_kind_name() {
+fn req_024_a_finding_kind_equals_only_its_own_name() {
     // `==` に書いた文字列リテラルは `PartialEq<&str>` を通る（既存のテストで検査済み）。
     // ここでは `PartialEq<str>` 側の実装を `.eq()` で直接呼び、
     // 自分の種類の名前だけに真を返すことを確かめる。
@@ -114,7 +114,7 @@ fn req_030_notice_kinds_have_the_detail_of_the_table() {
     assert!(line_count > 200);
 }
 
-// --- REQ-core-031: 注意は7種類だけ ---
+// --- REQ-core-031: 注意は8種類だけ ---
 
 // @kotowari[REQ-core-031]
 #[test]
@@ -148,7 +148,7 @@ fn req_031_only_eight_kinds_are_notices() {
 
 // @kotowari[REQ-core-031]
 #[test]
-fn req_031_check_reports_no_notice_outside_the_four_kinds() {
+fn req_031_check_reports_notices_only_for_the_notice_kinds() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 行数超過（>200行）と要求数超過（>10件）を出す
@@ -174,14 +174,16 @@ fn req_031_check_reports_no_notice_outside_the_four_kinds() {
         !notices.is_empty(),
         "test should produce at least one notice"
     );
-    // 注意は4種類のどれかだけ
+    // 注意は、重大度が注意の種類のどれかだけ
+    let notice_kinds: std::collections::BTreeSet<&str> = kotowari_core::FindingKind::ALL
+        .iter()
+        .filter(|kind| kind.severity() == "notice")
+        .map(|kind| kind.as_str())
+        .collect();
     for w in &notices {
         let kind = w["kind"].as_str().unwrap();
         assert!(
-            matches!(
-                kind,
-                "too_many_lines" | "too_many_requirements" | "mutant_timeout" | "equivalent_stale"
-            ),
+            notice_kinds.contains(kind),
             "unexpected notice kind: {kind}"
         );
     }
@@ -299,21 +301,15 @@ fn req_024_sorted_by_path_line_kind_detail() {
 // @kotowari[PROP-core-003]
 #[test]
 fn prop_003_findings_are_sorted() {
-    use proptest::prelude::*;
-
     // run_check を通して、ライブラリが返す findings が
     // TBL-core-007（path → line → kind → detail）で並んでいることを検証する。
     //
     // IR 検査の指摘（後のファイル名の文書）とテスト発見の指摘（前のファイル
     // 名のテストファイル）が交互に追加されるため、ソートしないと壊れる。
-    let config = proptest::test_runner::Config {
-        cases: 8,
-        ..Default::default()
-    };
-    proptest!(config, |(
-        n_docs in 2..5usize,
-        n_items in 1..3usize,
-    )| {
+    // 文書の数と項目の数の組は6通りしかないので、乱択せずにすべて試す
+    for (n_docs, n_items) in
+        (2..5usize).flat_map(|n_docs| (1..3usize).map(move |n_items| (n_docs, n_items)))
+    {
         let tmp = tempfile::TempDir::new().unwrap();
         fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
         fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
@@ -323,11 +319,13 @@ fn prop_003_findings_are_sorted() {
         fs::write(
             tmp.path().join(".kotowari/config.yaml"),
             "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
-        ).unwrap();
+        )
+        .unwrap();
         fs::write(
             tmp.path().join("docs/decision/records/records.md"),
             "# Records\n\n## Agreements\n\n- A1 Agreement\n",
-        ).unwrap();
+        )
+        .unwrap();
         for i in 0..n_docs {
             let filename = format!("doc{i}.md");
             let mut content = format!("# Title {i}\n\nScope {i}.\n\n## Requirements\n\n");
@@ -347,14 +345,20 @@ fn prop_003_findings_are_sorted() {
         fs::write(
             tmp.path().join("tests/check.rs"),
             "#[test]\nfn unmarked() {}\n",
-        ).unwrap();
-        let result = kotowari::Project::new(kotowari::ProjectOptions::new(tmp.path())).unwrap().check().expect("run_check should succeed");
+        )
+        .unwrap();
+        let result = kotowari::Project::new(kotowari::ProjectOptions::new(tmp.path()))
+            .unwrap()
+            .check()
+            .expect("run_check should succeed");
         // findings が TBL-core-007 の順で並んでいることを検証する
         let findings = result.findings();
         for i in 1..findings.len() {
-            let a = &findings[i-1];
+            let a = &findings[i - 1];
             let b = &findings[i];
-            let cmp = a.path().cmp(b.path())
+            let cmp = a
+                .path()
+                .cmp(b.path())
                 .then_with(|| match (a.line(), b.line()) {
                     (None, None) => std::cmp::Ordering::Equal,
                     (None, Some(_)) => std::cmp::Ordering::Less,
@@ -363,11 +367,21 @@ fn prop_003_findings_are_sorted() {
                 })
                 .then_with(|| a.kind().as_str().cmp(b.kind().as_str()))
                 .then_with(|| a.detail().cmp(b.detail()));
-            prop_assert!(cmp != std::cmp::Ordering::Greater,
+            assert!(
+                cmp != std::cmp::Ordering::Greater,
                 "findings not sorted at index {}: prev=({},{:?},{},{}) curr=({},{:?},{},{})",
-                i, a.path(), a.line(), a.kind(), a.detail(), b.path(), b.line(), b.kind(), b.detail());
+                i,
+                a.path(),
+                a.line(),
+                a.kind(),
+                a.detail(),
+                b.path(),
+                b.line(),
+                b.kind(),
+                b.detail()
+            );
         }
-    });
+    }
 }
 
 // --- Step 7: 指摘の種類と行の表 ---

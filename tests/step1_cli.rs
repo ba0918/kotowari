@@ -19,7 +19,7 @@ fn valid_project_dir() -> &'static Path {
 
 // @kotowari[REQ-core-001]
 #[test]
-fn req_001_six_commands_only() {
+fn req_001_the_commands_run_and_other_words_are_not_commands() {
     // "kotowari check" は通る
     cmd()
         .arg("check")
@@ -67,23 +67,10 @@ fn req_001_six_commands_only() {
         .code(2);
 }
 
-// --- REQ-core-002: 受けるオプション ---
-
-// @kotowari[REQ-core-002]
-#[test]
-fn req_002_only_format_and_config_options() {
-    // --format json は通る
-    cmd()
-        .args(["check", "--format", "json"])
-        .current_dir(valid_project_dir())
-        .assert()
-        .code(0);
-}
-
 // --- REQ-core-004: 引数の誤り ---
 
 // REQ-core-008: 受けるオプションの集合を固定するのはこのテスト（否定側）
-// @kotowari[REQ-core-004, REQ-core-005, REQ-core-007, REQ-core-008, EX-core-001]
+// @kotowari[REQ-core-004, REQ-core-005, REQ-core-007, REQ-core-008, EX-core-001, TBL-core-018, TBL-core-020]
 #[test]
 fn req_004_unknown_option_stops() {
     let output = cmd()
@@ -94,9 +81,12 @@ fn req_004_unknown_option_stops() {
         .stdout("")
         .get_output()
         .clone();
-    // REQ-core-005: stderr に理由がある
+    // REQ-core-005: 標準エラーの1行目は理由の文言と詳細（TBL-core-018）
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(!stderr.is_empty(), "stderr should have a reason");
+    assert_eq!(
+        stderr.lines().next(),
+        Some("argument error: unknown option: --verbose")
+    );
 }
 
 // @kotowari[REQ-core-004, REQ-core-005]
@@ -157,11 +147,12 @@ fn req_004_unknown_command_before_check_has_the_unknown_command_wording() {
     );
 }
 
-// @kotowari[REQ-core-004, TBL-core-020, EX-core-219]
+// @kotowari[REQ-core-004, REQ-core-005, TBL-core-020, EX-core-219]
 #[test]
 fn req_004_no_arguments_names_all_seven_commands() {
     let output = cmd().current_dir(valid_project_dir()).output().unwrap();
     assert_eq!(output.status.code(), Some(2));
+    assert!(output.stdout.is_empty());
     let stderr = String::from_utf8_lossy(&output.stderr);
     let first_line = stderr.lines().next().unwrap_or("");
     assert_eq!(
@@ -187,40 +178,6 @@ fn req_004_options_without_a_command_names_all_seven_commands() {
         "argument error: expected command: check, list, mutants, overview, plan, query or status",
         "got: {first_line:?}"
     );
-}
-
-// --- REQ-core-005: 停止の出力（別のテストで既にカバー） ---
-
-// @kotowari[REQ-core-005]
-#[test]
-fn req_005_stop_writes_nothing_to_stdout_and_reason_to_stderr() {
-    let assert = cmd()
-        .args(["check", "--unknown"])
-        .current_dir(valid_project_dir())
-        .assert()
-        .code(2)
-        .stdout("");
-    let stderr = String::from_utf8_lossy(&assert.get_output().stderr);
-    assert!(!stderr.is_empty());
-}
-
-// --- REQ-core-007: 終了コード ---
-
-// @kotowari[REQ-core-007, TBL-core-002]
-#[test]
-fn req_007_exit_codes_zero_two() {
-    // 成功: 終了コード 0
-    cmd()
-        .arg("check")
-        .current_dir(valid_project_dir())
-        .assert()
-        .code(0);
-    // 停止: 終了コード 2
-    cmd()
-        .args(["check", "--bad"])
-        .current_dir(valid_project_dir())
-        .assert()
-        .code(2);
 }
 
 // --- REQ-core-107: --help と --version ---
@@ -265,16 +222,6 @@ fn req_107_help_wins_over_argument_errors() {
 }
 
 // --- REQ-core-004: 引数の誤り（追加） ---
-
-// @kotowari[REQ-core-004, REQ-core-005]
-#[test]
-fn req_004_no_arguments_stops() {
-    cmd()
-        .current_dir(valid_project_dir())
-        .assert()
-        .code(2)
-        .stdout("");
-}
 
 // @kotowari[REQ-core-004, REQ-core-005]
 #[test]
@@ -327,24 +274,6 @@ fn req_002_options_before_or_after_check() {
 
 // --- REQ-core-005: 停止の出力の形 ---
 
-// @kotowari[REQ-core-005, TBL-core-018, TBL-core-020]
-#[test]
-fn req_005_stderr_first_line_has_the_reason_wording() {
-    // 4つの文言を検査する
-    // 引数の誤り
-    let out = cmd()
-        .args(["check", "--bad"])
-        .current_dir(valid_project_dir())
-        .output()
-        .unwrap();
-    let stderr = String::from_utf8_lossy(&out.stderr);
-    let first_line = stderr.lines().next().unwrap_or("");
-    assert!(
-        first_line.starts_with("argument error: "),
-        "expected 'argument error: ...', got: {first_line:?}"
-    );
-}
-
 // @kotowari[REQ-core-005, TBL-core-020]
 #[test]
 fn req_005_config_error_detail_path_is_relative_to_base_not_to_cwd() {
@@ -375,32 +304,6 @@ fn req_005_config_error_detail_path_is_relative_to_base_not_to_cwd() {
     assert!(
         first_line.starts_with("config error: bad.yaml:"),
         "the --config detail path should be relative to the base directory (bad.yaml), not to the CWD (../bad.yaml): {first_line:?}"
-    );
-}
-
-// @kotowari[REQ-core-005, TBL-core-020]
-#[test]
-fn req_005_stderr_detail_path_is_relative() {
-    use tempfile::TempDir;
-    let tmp = TempDir::new().unwrap();
-    std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
-    std::fs::write(
-        tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
-    )
-    .unwrap();
-    // docs/ir を作らない → 読めないファイル
-    let out = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
-    let stderr = String::from_utf8_lossy(&out.stderr);
-    let first_line = stderr.lines().next().unwrap_or("");
-    assert!(
-        first_line.starts_with("unreadable file: "),
-        "expected 'unreadable file: ...', got: {first_line:?}"
-    );
-    // 絶対パスが含まれないことを確認
-    assert!(
-        !first_line.contains(tmp.path().to_str().unwrap()),
-        "detail should not contain absolute path, got: {first_line:?}"
     );
 }
 
@@ -598,35 +501,7 @@ fn req_002_list_options_can_come_before_or_after_the_command() {
 // @kotowari[REQ-core-152, EX-core-249]
 #[test]
 fn req_152_unreadable_config_stops_like_check() {
-    use tempfile::TempDir;
-    let tmp = TempDir::new().unwrap();
-    std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
-    // YAML として読めない設定
-    std::fs::write(tmp.path().join(".kotowari/config.yaml"), "ir: [unclosed\n").unwrap();
-
-    let first_line_of = |command: &str| {
-        let output = cmd().arg(command).current_dir(tmp.path()).output().unwrap();
-        assert_eq!(
-            output.status.code(),
-            Some(2),
-            "{command} should stop with exit code 2"
-        );
-        String::from_utf8_lossy(&output.stderr)
-            .lines()
-            .next()
-            .unwrap_or("")
-            .to_string()
-    };
-    let check_line = first_line_of("check");
-    let list_line = first_line_of("list");
-    assert!(
-        check_line.starts_with("config error: "),
-        "check should stop with a config error, got: {check_line:?}"
-    );
-    assert_eq!(
-        list_line, check_line,
-        "list should stop with the same wording as check"
-    );
+    assert_stops_like_check(&["list"]);
 }
 
 // --- REQ-core-008: 作らないコマンド ---

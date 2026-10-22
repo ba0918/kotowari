@@ -1,10 +1,14 @@
 use kotowari_markdown_view::{
-    Block, Document, Page, Part, Reference, ReferenceState, RenderInput, Section, TocGroup,
-    TocItem, render,
+    Block, Document, Part, Reference, ReferenceState, RenderInput, Section, TocGroup, TocItem,
+    render,
 };
 use serde_json::json;
 
 mod common;
+use common::page;
+#[path = "common/diff.rs"]
+mod diff;
+use diff::changed;
 #[path = "common/ui.rs"]
 mod ui;
 
@@ -31,14 +35,6 @@ fn section(heading: &str, blocks: Vec<Block>) -> Section {
         stale: false,
         blocks,
     }
-}
-
-fn page<'a>(pages: &'a [Page], name: &str) -> &'a str {
-    &pages
-        .iter()
-        .find(|page| page.name == name)
-        .unwrap_or_else(|| panic!("no page {name}"))
-        .content
 }
 
 /// アウトラインの項目（ページの中の節へのリンク）の、最初の項目と最後の項目の位置と、
@@ -406,22 +402,6 @@ fn steps_with_refs(refs: &[&str]) -> Block {
         kind: "steps".into(),
         value: json!({"items": [{"title": "段階", "refs": refs}]}),
     })
-}
-
-/// 2つのページが食い違う範囲の、left の中のバイトの位置。同じなら None
-fn changed(left: &str, right: &str) -> Option<(usize, usize)> {
-    let (a, b) = (left.as_bytes(), right.as_bytes());
-    let prefix = a.iter().zip(b).take_while(|(x, y)| x == y).count();
-    if prefix == a.len() && prefix == b.len() {
-        return None;
-    }
-    let suffix = a[prefix..]
-        .iter()
-        .rev()
-        .zip(b[prefix..].iter().rev())
-        .take_while(|(x, y)| x == y)
-        .count();
-    Some((prefix, a.len() - suffix))
 }
 
 /// 参照を refs に持つ steps の部品1つの節を持つページ。参照の状態だけを変えて描き比べる

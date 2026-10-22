@@ -26,13 +26,24 @@ pub fn validate(
     document: &Document,
     options: ValidationOptions,
 ) -> Vec<finding::Finding> {
-    validate::validate(schema, document, schema.open || options.relax)
+    validate::validate(
+        schema,
+        &document.read_as(schema.reading),
+        options.opens(schema),
+    )
 }
 
 /// Options for document validation. Relaxation never closes an open schema.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ValidationOptions {
     pub relax: bool,
+}
+
+impl ValidationOptions {
+    /// 閉じた世界を緩めるか。スキーマが開いていれば、緩めない選択肢でも閉じない
+    fn opens(self, schema: &Schema) -> bool {
+        schema.open || self.relax
+    }
 }
 
 /// Values obtained from a document without validation findings.
@@ -67,9 +78,10 @@ pub fn extract_partial(
     document: &Document,
     options: ValidationOptions,
 ) -> PartialExtraction {
+    let document = document.read_as(schema.reading);
     PartialExtraction {
-        values: extract::extract_values(schema, document),
-        findings: validate::validate(schema, document, schema.open || options.relax),
+        values: extract::extract_values(schema, &document),
+        findings: validate::validate(schema, &document, options.opens(schema)),
     }
 }
 
@@ -78,9 +90,10 @@ pub fn extract_typed_partial(
     document: &Document,
     options: ValidationOptions,
 ) -> PartialExtraction {
+    let document = document.read_as(schema.reading);
     PartialExtraction {
-        values: extract::extract_typed(schema, document),
-        findings: validate(schema, document, options),
+        values: extract::extract_typed(schema, &document),
+        findings: validate::validate(schema, &document, options.opens(schema)),
     }
 }
 
@@ -89,9 +102,10 @@ pub fn extract_validated(
     document: &Document,
     options: ValidationOptions,
 ) -> Result<ValidatedValues, Vec<finding::Finding>> {
-    let findings = validate::validate(schema, document, schema.open || options.relax);
+    let document = document.read_as(schema.reading);
+    let findings = validate::validate(schema, &document, options.opens(schema));
     if findings.is_empty() {
-        Ok(ValidatedValues(extract::extract_values(schema, document)))
+        Ok(ValidatedValues(extract::extract_values(schema, &document)))
     } else {
         Err(findings)
     }

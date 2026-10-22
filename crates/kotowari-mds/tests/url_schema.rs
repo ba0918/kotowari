@@ -196,28 +196,13 @@ fn corrupted_cache_is_refetched_and_recovers() {
 // @kotowari[REQ-schema-011, REQ-schema-009, EX-schema-066]
 #[test]
 fn schema_response_over_4mib_stops() {
-    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-    let port = listener.local_addr().unwrap().port();
-    let body = "x".repeat(4 * 1024 * 1024 + 1);
-    let body_len = body.len();
-    thread::spawn(move || {
-        if let Ok((mut stream, _)) = listener.accept() {
-            let mut buf = [0u8; 1024];
-            let _ = stream.read(&mut buf);
-            let response = format!(
-                "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
-                body_len, body
-            );
-            let _ = stream.write_all(response.as_bytes());
-            let _ = stream.flush();
-        }
-    });
+    let url = serve_body_once("x".repeat(4 * 1024 * 1024 + 1));
     let dir = tempfile::tempdir().unwrap();
     std::fs::create_dir_all(dir.path().join(".kotowari")).unwrap();
     let doc = write_file(
         dir.path(),
         "doc.md",
-        &format!("---\n$schema: http://127.0.0.1:{port}/schema.yaml\n---\n# T-1234: 例\n"),
+        &format!("---\n$schema: {url}\n---\n# T-1234: 例\n"),
     );
     let output = mds()
         .current_dir(dir.path())

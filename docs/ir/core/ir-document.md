@@ -74,7 +74,7 @@ kotowari always removes the inside of a `code block` from what it checks (`exclu
 - kind: prohibition
 - source: docs/decision/records/records.md#A17, docs/decision/records/records.md#A30, docs/decision/records/2026-09-24-kotowari-dir.md#A2
 - verification: review
-- how_to_verify: Confirm that "crates/kotowari-core/schemas/ir.yaml" declares only a lower bound on the number of occurrences for the scope statements, and that "check_documents" in "crates/kotowari-core/src/ir.rs" does not check the contents or the number of lines of scope_lines
+- how_to_verify: Confirm that "crates/kotowari-core/schemas/ir.yaml" declares only a lower bound on the number of occurrences for the scope statements, and that "check_documents" in "crates/kotowari-core/src/ir/check.rs" does not check the contents or the number of lines of scope_lines
 
 kotowari must not check the contents or the number of lines of the `scope`, nor judge the separation of responsibilities of a document.
 

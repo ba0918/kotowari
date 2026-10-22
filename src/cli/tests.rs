@@ -1,3 +1,4 @@
+use super::args::DEFAULT_PORT;
 use super::*;
 fn args(list: &[&str]) -> Vec<String> {
     list.iter().map(|s| s.to_string()).collect()
@@ -72,6 +73,16 @@ fn req_core_297_serve_uses_port_4590_unless_given() {
     let parsed = parse_args(&args(&["overview", "serve", "--port", "65535"]));
     assert!(
         matches!(parsed, Ok(Cli::OverviewServe { port: 65535, .. })),
+        "{parsed:?}"
+    );
+}
+
+// @kotowari[REQ-core-304]
+#[test]
+fn req_core_304_the_lowest_port_is_1() {
+    let parsed = parse_args(&args(&["overview", "serve", "--port", "1"]));
+    assert!(
+        matches!(parsed, Ok(Cli::OverviewServe { port: 1, .. })),
         "{parsed:?}"
     );
 }

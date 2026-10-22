@@ -11,25 +11,12 @@ const SURFACE_SRC: &str =
 const FLAG_RULE: &str =
     "id: flag\nlanguage: rust\nrule:\n  kind: string_literal\n  regex: '^\"--'\n  pattern: $NAME\n";
 
-/// 置き場と設定を作る。`surface` の行をそのまま設定に足す
+/// 設定を作る。`surface` の行をそのまま設定に足す。面の解析は設定と面のファイルのほかを読まない
 fn make_project(tmp: &Path, surface: &str) {
-    for dir in [
-        ".kotowari",
-        "docs/ir",
-        "docs/decision/records",
-        "docs/decision/adr",
-    ] {
-        std::fs::create_dir_all(tmp.join(dir)).unwrap();
-    }
-    std::fs::write(
-        tmp.join(".kotowari/config.yaml"),
-        format!("tests:\n  files:\n    - \"tests/**/*.rs\"\n{surface}"),
-    )
-    .unwrap();
     write(
         tmp,
-        "docs/decision/records/r.md",
-        "# Records\n\n## Agreements\n\n- A1 Agreement\n",
+        ".kotowari/config.yaml",
+        &format!("tests:\n  files:\n    - \"tests/**/*.rs\"\n{surface}"),
     );
 }
 

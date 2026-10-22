@@ -39,26 +39,27 @@ fn element(value: impl Into<String>, line: Option<usize>) -> Element {
 /// 名前の付いた部分の並び
 pub(crate) type Skeleton = Vec<(&'static str, Vec<Element>)>;
 
-/// 文書の種類ごとの`骨組み`
-pub(crate) fn skeleton(kind: Kind, text: &str) -> Skeleton {
+/// 文書の種類ごとの`骨組み`。root は text を CommonMark と GFM として読んだ木で、
+/// 呼ぶ側が`側`の検査のために読んだものを渡す
+pub(crate) fn skeleton(kind: Kind, text: &str, root: Option<&Node>) -> Skeleton {
     match kind {
-        Kind::Topic => topic(text),
-        Kind::Glossary => vec![("glossary", glossary(text))],
+        Kind::Topic => topic(text, root),
+        Kind::Glossary => vec![("glossary", glossary(text, root))],
         Kind::Flags => vec![("flag", flags(text))],
         Kind::Guide => {
-            let markdown = Markdown::new(text);
+            let markdown = Markdown { text, root };
             vec![
                 (
                     "heading",
                     markdown.headings(|depth, _| Some(depth.to_string())),
                 ),
-                ("mark", marks(text)),
+                ("mark", marks(text, root)),
                 ("code", markdown.code(|_| true)),
                 ("table", markdown.tables(|_| String::new())),
             ]
         }
         Kind::OverviewData => {
-            let markdown = Markdown::new(text);
+            let markdown = Markdown { text, root };
             vec![
                 ("frontmatter", markdown.frontmatter()),
                 (
@@ -66,7 +67,7 @@ pub(crate) fn skeleton(kind: Kind, text: &str) -> Skeleton {
                     markdown.headings(|depth, _| Some(depth.to_string())),
                 ),
                 ("part", markdown.parts()),
-                ("mark", marks(text)),
+                ("mark", marks(text, root)),
                 ("table", markdown.tables(|_| String::new())),
             ]
         }
@@ -109,13 +110,14 @@ pub(crate) fn mismatch(
     first: &str,
     other: &str,
 ) -> Option<(&'static str, Option<usize>)> {
-    compare(&skeleton(kind, first), &skeleton(kind, other))
+    let read = |text| skeleton(kind, text, crate::markdown::parse(text).ok().as_ref());
+    compare(&read(first), &read(other))
 }
 
 /// 文書を CommonMark と GFM として読んだもの
 struct Markdown<'a> {
     text: &'a str,
-    root: Option<Node>,
+    root: Option<&'a Node>,
 }
 
 fn start_line(node: &Node) -> Option<usize> {
@@ -133,16 +135,9 @@ fn collect<'n>(node: &'n Node, keep: &impl Fn(&Node) -> bool, out: &mut Vec<&'n 
 }
 
 impl<'a> Markdown<'a> {
-    fn new(text: &'a str) -> Self {
-        Self {
-            text,
-            root: crate::markdown::parse(text).ok(),
-        }
-    }
-
-    fn nodes(&self, keep: impl Fn(&Node) -> bool) -> Vec<&Node> {
+    fn nodes(&self, keep: impl Fn(&Node) -> bool) -> Vec<&'a Node> {
         let mut out = Vec::new();
-        if let Some(root) = &self.root {
+        if let Some(root) = self.root {
             collect(root, &keep, &mut out);
         }
         out
@@ -330,8 +325,8 @@ fn blank(value: &mut Value) {
 }
 
 /// 形の正しい`ガイドの印`の中身と並び
-fn marks(text: &str) -> Vec<Element> {
-    crate::guides::mark_entries(text)
+fn marks(text: &str, root: Option<&Node>) -> Vec<Element> {
+    crate::guides::mark_entries(text, root)
         .into_iter()
         .map(|entry| {
             element(
@@ -344,22 +339,12 @@ fn marks(text: &str) -> Vec<Element> {
 
 /// コードブロックの外の行。(行番号, 行)
 fn outside_code(text: &str) -> Vec<(usize, &str)> {
-    let mut out = Vec::new();
-    let mut fence: Option<crate::ir::CodeFence> = None;
-    for (index, line) in crate::ir::split_lines(text).into_iter().enumerate() {
-        match &fence {
-            Some(opening) => {
-                if crate::ir::is_closing_fence(line, opening) {
-                    fence = None;
-                }
-            }
-            None => match crate::ir::parse_opening_fence(line) {
-                Some(opening) => fence = Some(opening),
-                None => out.push((index + 1, line)),
-            },
-        }
-    }
-    out
+    crate::ir::fenced_lines(text)
+        .into_iter()
+        .enumerate()
+        .filter(|(_, (_, part))| *part == crate::ir::Fenced::Outside)
+        .map(|(index, (line, _))| (index + 1, line))
+        .collect()
 }
 
 /// "- 名前:" の行の値
@@ -381,8 +366,8 @@ fn heading_id(line: &str) -> String {
     }
 }
 
-fn topic(text: &str) -> Skeleton {
-    let markdown = Markdown::new(text);
+fn topic(text: &str, root: Option<&Node>) -> Skeleton {
+    let markdown = Markdown { text, root };
     let headings = markdown.headings(|depth, source| match depth {
         2 => Some("##".to_string()),
         3 => Some(format!("### {}", heading_id(source))),
@@ -455,8 +440,8 @@ fn gherkin_lines(value: &str, start: usize) -> Vec<Element> {
 }
 
 /// `用語集`の表の行ごとの出典の列
-fn glossary(text: &str) -> Vec<Element> {
-    let markdown = Markdown::new(text);
+fn glossary(text: &str, root: Option<&Node>) -> Vec<Element> {
+    let markdown = Markdown { text, root };
     let Some(table) = markdown
         .nodes(|node| matches!(node, Node::Table(_)))
         .into_iter()
