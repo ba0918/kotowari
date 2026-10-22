@@ -188,25 +188,16 @@ pub fn parse_records_file(rel_path: &str, content: &str) -> RecordsFile {
     let mut current: Option<usize> = None;
     let mut has_decision_section = false;
     let mut has_context = false;
-    let mut fence: Option<crate::ir::CodeFence> = None;
 
-    for (index, line) in crate::ir::split_lines(content).into_iter().enumerate() {
+    for (index, (line, part)) in crate::ir::fenced_lines(content).into_iter().enumerate() {
+        // コードブロックの中は読まない。閉じずに文書が終わればそこまでが中（A34、A45）。
+        // 判断の記録でないファイルの見出しも、コードブロックの外だけを数える（A47）
+        if part != crate::ir::Fenced::Outside {
+            continue;
+        }
         let line_number = index + 1;
         let trimmed = line.trim();
         let heading = trimmed.strip_prefix("## ").map(str::trim);
-
-        // コードブロックの中は読まない。閉じずに文書が終わればそこまでが中（A34、A45）。
-        // 判断の記録でないファイルの見出しも、コードブロックの外だけを数える（A47）
-        if let Some(open) = &fence {
-            if crate::ir::is_closing_fence(line, open) {
-                fence = None;
-            }
-            continue;
-        }
-        if let Some(open) = crate::ir::parse_opening_fence(line) {
-            fence = Some(open);
-            continue;
-        }
 
         if let Some(text) = heading {
             headings.push(text.to_string());
@@ -283,17 +274,9 @@ pub struct OtherFile {
 /// ADR やその他の Markdown ファイルを解析する
 pub fn parse_other_file(rel_path: &str, content: &str) -> OtherFile {
     let mut headings = Vec::new();
-    let mut fence: Option<crate::ir::CodeFence> = None;
-    for line in crate::ir::split_lines(content) {
+    for (line, part) in crate::ir::fenced_lines(content) {
         // コードブロックの中の見出しは数えない。閉じなければ文書の終わりまで（A47）
-        if let Some(open) = &fence {
-            if crate::ir::is_closing_fence(line, open) {
-                fence = None;
-            }
-            continue;
-        }
-        if let Some(open) = crate::ir::parse_opening_fence(line) {
-            fence = Some(open);
+        if part != crate::ir::Fenced::Outside {
             continue;
         }
         let trimmed = line.trim();
@@ -481,15 +464,10 @@ impl SourceTarget {
 fn heading_lines(content: &str, heading: &str) -> Vec<String> {
     let mut lines = Vec::new();
     let mut inside = false;
-    let mut fence: Option<crate::ir::CodeFence> = None;
-    for line in crate::ir::split_lines(content) {
-        if let Some(open) = &fence {
-            if crate::ir::is_closing_fence(line, open) {
-                fence = None;
-            }
-        } else if let Some(open) = crate::ir::parse_opening_fence(line) {
-            fence = Some(open);
-        } else if let Some(text) = line.trim().strip_prefix("## ") {
+    for (line, part) in crate::ir::fenced_lines(content) {
+        if part == crate::ir::Fenced::Outside
+            && let Some(text) = line.trim().strip_prefix("## ")
+        {
             inside = text.trim() == heading;
             continue;
         }

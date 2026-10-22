@@ -789,22 +789,15 @@ fn read_glossary(
 
 /// 閉じない`コードブロック`の開始の行と、その行の文字（REQ-core-112）
 fn unclosed_code_block(content: &str) -> Option<(usize, String)> {
-    let mut open: Option<(CodeFence, usize, &str)> = None;
-    for (idx, line) in split_lines(content).into_iter().enumerate() {
-        match &open {
-            Some((fence, _, _)) => {
-                if is_closing_fence(line, fence) {
-                    open = None;
-                }
-            }
-            None => {
-                if let Some(fence) = parse_opening_fence(line) {
-                    open = Some((fence, idx + 1, line));
-                }
-            }
+    let mut open = None;
+    for (idx, (line, part)) in fenced_lines(content).into_iter().enumerate() {
+        match part {
+            Fenced::Opening => open = Some((idx + 1, line)),
+            Fenced::Closing => open = None,
+            Fenced::Outside | Fenced::Inside => {}
         }
     }
-    open.map(|(_, line, raw)| (line, raw.to_string()))
+    open.map(|(line, raw)| (line, raw.to_string()))
 }
 
 /// 直前の行。ステップはシナリオ外の連続した行を一つの誤りに数えるためにも使う
@@ -1573,6 +1566,43 @@ pub struct CodeFence {
     pub fence_len: usize,
     /// 言語（あれば）
     pub lang: String,
+}
+
+/// 行がコードブロックの囲みのどこにあるか
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Fenced {
+    Outside,
+    /// 開きの囲みの行
+    Opening,
+    Inside,
+    /// 閉じの囲みの行
+    Closing,
+}
+
+/// 文書の行（TBL-core-010 の区切り）と、それぞれがコードブロックの囲みのどこにあるか。
+/// 閉じずに文書が終われば、開きより後はすべて囲みの中
+pub(crate) fn fenced_lines(content: &str) -> Vec<(&str, Fenced)> {
+    let mut open: Option<CodeFence> = None;
+    split_lines(content)
+        .into_iter()
+        .map(|line| {
+            let part = match &open {
+                Some(fence) if is_closing_fence(line, fence) => Fenced::Closing,
+                Some(_) => Fenced::Inside,
+                None => match parse_opening_fence(line) {
+                    Some(fence) => {
+                        open = Some(fence);
+                        Fenced::Opening
+                    }
+                    None => Fenced::Outside,
+                },
+            };
+            if part == Fenced::Closing {
+                open = None;
+            }
+            (line, part)
+        })
+        .collect()
 }
 
 /// 行がコードブロックの開始の囲みかどうかを判定する。

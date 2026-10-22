@@ -339,22 +339,12 @@ fn marks(text: &str, root: Option<&Node>) -> Vec<Element> {
 
 /// コードブロックの外の行。(行番号, 行)
 fn outside_code(text: &str) -> Vec<(usize, &str)> {
-    let mut out = Vec::new();
-    let mut fence: Option<crate::ir::CodeFence> = None;
-    for (index, line) in crate::ir::split_lines(text).into_iter().enumerate() {
-        match &fence {
-            Some(opening) => {
-                if crate::ir::is_closing_fence(line, opening) {
-                    fence = None;
-                }
-            }
-            None => match crate::ir::parse_opening_fence(line) {
-                Some(opening) => fence = Some(opening),
-                None => out.push((index + 1, line)),
-            },
-        }
-    }
-    out
+    crate::ir::fenced_lines(text)
+        .into_iter()
+        .enumerate()
+        .filter(|(_, (_, part))| *part == crate::ir::Fenced::Outside)
+        .map(|(index, (line, _))| (index + 1, line))
+        .collect()
 }
 
 /// "- 名前:" の行の値
