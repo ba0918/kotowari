@@ -440,8 +440,14 @@ fn has_links(place: Place) -> bool {
     !matches!(place, Place::Toc)
 }
 
-/// 1つの`側`を検査し、`切り替えの行`を空にした文を返す（REQ-core-346〜REQ-core-349）
-fn side_text(pair: &Pair, side: &Side, context: &Context, findings: &mut Vec<Finding>) -> String {
+/// 1つの`側`を検査し、`切り替えの行`を空にした文と、リンクを検査する`対`ならその文を
+/// CommonMark と GFM として読んだ木を返す（REQ-core-346〜REQ-core-349）
+fn side_text(
+    pair: &Pair,
+    side: &Side,
+    context: &Context,
+    findings: &mut Vec<Finding>,
+) -> (String, Option<markdown::mdast::Node>) {
     let text = side.content.as_ref().map_or("", |content| content.text());
     let mut checked = text.to_string();
     if has_switcher(pair.place) {
@@ -459,8 +465,11 @@ fn side_text(pair: &Pair, side: &Side, context: &Context, findings: &mut Vec<Fin
             }
         }
     }
-    if has_links(pair.place) {
-        for link in links(&checked) {
+    let root = has_links(pair.place)
+        .then(|| crate::markdown::parse(&checked).ok())
+        .flatten();
+    if let Some(root) = &root {
+        for link in links(root) {
             let Some(target) = target(&side.path, &link.destination) else {
                 continue;
             };
@@ -485,7 +494,7 @@ fn side_text(pair: &Pair, side: &Side, context: &Context, findings: &mut Vec<Fin
             }
         }
     }
-    checked
+    (checked, root)
 }
 
 /// CommonMark のリンクと画像の行き先と、リンクの参照の定義の行き先
@@ -494,7 +503,7 @@ struct Link {
     line: usize,
 }
 
-fn links(text: &str) -> Vec<Link> {
+fn links(root: &markdown::mdast::Node) -> Vec<Link> {
     fn definitions<'a>(
         node: &'a markdown::mdast::Node,
         out: &mut std::collections::BTreeMap<&'a str, &'a String>,
@@ -534,12 +543,10 @@ fn links(text: &str) -> Vec<Link> {
             walk(child, definitions, out);
         }
     }
+    let mut targets = std::collections::BTreeMap::new();
+    definitions(root, &mut targets);
     let mut out = Vec::new();
-    if let Ok(root) = crate::markdown::parse(text) {
-        let mut targets = std::collections::BTreeMap::new();
-        definitions(&root, &mut targets);
-        walk(&root, &targets, &mut out);
-    }
+    walk(root, &targets, &mut out);
     out
 }
 
@@ -562,8 +569,12 @@ fn target(side: &str, destination: &str) -> Option<String> {
 
 /// `骨組み`の link の部分。ほかの言語の`側`を指す行き先はその`対`の`先頭の言語`の`側`に読み替える
 /// （TBL-core-044）
-fn link_part(path: &str, text: &str, context: &Context) -> Vec<crate::skeleton::Element> {
-    links(text)
+fn link_part(
+    path: &str,
+    root: &markdown::mdast::Node,
+    context: &Context,
+) -> Vec<crate::skeleton::Element> {
+    links(root)
         .into_iter()
         .filter_map(|link| {
             let target = target(path, &link.destination)?;
@@ -583,10 +594,13 @@ fn link_part(path: &str, text: &str, context: &Context) -> Vec<crate::skeleton::
 fn structure_findings(pair: &Pair, context: &Context, findings: &mut Vec<Finding>) {
     let kind = skeleton_kind(pair);
     let skeleton = |side: &Side, findings: &mut Vec<Finding>| {
-        let text = side_text(pair, side, context, findings);
-        let mut skeleton = crate::skeleton::skeleton(kind, &text);
+        let (text, root) = side_text(pair, side, context, findings);
+        let mut skeleton = crate::skeleton::skeleton(kind, &text, root.as_ref());
         if matches!(pair.place, Place::Guide | Place::OverviewData) {
-            skeleton.push(("link", link_part(&side.path, &text, context)));
+            let links = root
+                .as_ref()
+                .map_or_else(Vec::new, |root| link_part(&side.path, root, context));
+            skeleton.push(("link", links));
         }
         skeleton
     };
