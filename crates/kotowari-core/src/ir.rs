@@ -761,12 +761,7 @@ fn read_glossary(
                 term,
             ));
         } else {
-            let sources = cell("Source")
-                .split(',')
-                .map(str::trim)
-                .filter(|s| !s.is_empty())
-                .map(str::to_string)
-                .collect();
+            let sources = comma_list(&cell("Source"));
             items.push(Item::GlossaryTerm {
                 term,
                 meaning: cell("Meaning"),
@@ -1046,6 +1041,15 @@ fn unknown_gherkin_tag<'a>(name: &'a str, value: &'a str) -> Option<&'a str> {
     }
 }
 
+/// "," で分けたタグの値の、空でない要素
+fn comma_list(value: &str) -> Vec<String> {
+    value
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect()
+}
+
 /// gherkin のシナリオを組み立てる
 fn build_scenario(
     tags: &[(String, String)],
@@ -1061,25 +1065,13 @@ fn build_scenario(
         match tag_name.as_str() {
             "@id" => {
                 // REQ-core-114: @id の値が EX の ID の形でないときは定義に数えない
-                if is_valid_id(tag_value) && id_prefix(tag_value) == Some(IdPrefix::Ex) {
+                if is_item_id(tag_value, IdPrefix::Ex) {
                     id = Some(tag_value.clone());
                 }
                 // 形に合わない値は check_item で invalid_id として報告
             }
-            "@about" => {
-                about = tag_value
-                    .split(',')
-                    .map(|s| s.trim().to_string())
-                    .filter(|s| !s.is_empty())
-                    .collect();
-            }
-            "@source" => {
-                sources = tag_value
-                    .split(',')
-                    .map(|s| s.trim().to_string())
-                    .filter(|s| !s.is_empty())
-                    .collect();
-            }
+            "@about" => about = comma_list(tag_value),
+            "@source" => sources = comma_list(tag_value),
             _ => {}
         }
     }
@@ -1352,11 +1344,7 @@ fn check_item(item: &Item, path: &str, findings: &mut Vec<Finding>) {
             // REQ-core-114: @id の値が EX の ID の形でないとき
             let malformed_id = tags
                 .iter()
-                .find(|(n, v)| {
-                    n == "@id"
-                        && !v.is_empty()
-                        && !(is_valid_id(v) && id_prefix(v) == Some(IdPrefix::Ex))
-                })
+                .find(|(n, v)| n == "@id" && !v.is_empty() && !is_item_id(v, IdPrefix::Ex))
                 .map(|(_, v)| v.clone());
             if let Some(malformed_value) = &malformed_id {
                 findings.push(Finding::new(
