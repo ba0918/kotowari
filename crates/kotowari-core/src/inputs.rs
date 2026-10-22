@@ -392,14 +392,11 @@ impl ReadPreparation {
         }
     }
     fn parse_ir(&mut self, source: &Text, relative: &str) -> Result<(), crate::StopReason> {
-        let (directory, filename) = relative.rsplit_once('/').unwrap_or(("", relative));
         // REQ-core-346: `切り替えの行`は`文書が扱う範囲`の行に数えず、文の検査も受けない
         let config = &self.policy.config;
         let first = config.languages().remove(0);
         let text = crate::translations::without_switcher(config, relative, &first, &source.text);
-        let mut doc = crate::ir::parse_document(filename, text.as_deref().unwrap_or(&source.text))?;
-        doc.relative_path = relative.into();
-        doc.directory = directory.into();
+        let doc = crate::ir::parse_document(relative, text.as_deref().unwrap_or(&source.text))?;
         self.docs.push(doc);
         Ok(())
     }

@@ -277,15 +277,12 @@ pub fn split_lines(content: &str) -> Vec<&str> {
 /// `項目`を組み立てる（REQ-core-169、REQ-core-170）。写せない`指摘`や値は`停止`になる
 /// （REQ-core-172、REQ-core-175）
 pub fn parse_document(filename: &str, content: &str) -> Result<IrDocument, StopReason> {
-    let (directory, name) = filename.rsplit_once('/').unwrap_or(("", filename));
-    let mut document = parse_document_mode(name, DocKind::of(name), content, false)?;
-    document.relative_path = filename.into();
-    document.directory = directory.into();
-    Ok(document)
+    let name = filename.rsplit('/').next().unwrap_or(filename);
+    parse_side(filename, DocKind::of(name), content)
 }
 
-/// `先頭の言語`でない言語の`側`を読む。文書の種類はその`対`の`先頭の言語`の`側`の名前で決まる
-/// （REQ-core-033）。path は`IR`の置き場からの相対パス
+/// 文書の種類を決めて文書1つを読む。`先頭の言語`でない言語の`側`の種類は、その`対`の
+/// `先頭の言語`の`側`の名前で決まる（REQ-core-033）。path は`IR`の置き場からの相対パス
 pub(crate) fn parse_side(
     path: &str,
     kind: DocKind,
