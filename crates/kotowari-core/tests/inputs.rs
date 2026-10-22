@@ -228,6 +228,26 @@ fn partial_ir_retains_invalid_and_missing_ids_at_the_original_lines() {
     assert!(!document.findings().is_empty());
 }
 
+// @kotowari[REQ-core-314]
+#[test]
+fn partial_parsing_reads_the_ir_place_from_the_options() {
+    let text = "# Flags\n\nScope.\n\n### FLAG-001: Open\n\n- kind: gap\n\nBody.\n";
+    let options = |ir: &str| ir::IrOptions { ir: ir.into() };
+    // 置き場からの相対パスで文書の種類が決まる。置き場の外のファイルは受けない
+    let source = SourceText::new("spec/sub/FLAGS.md", text).unwrap();
+    let document = ir::parse(&source, options("spec")).unwrap();
+    assert_eq!(document.path(), "spec/sub/FLAGS.md");
+    assert_eq!(document.items()[0].id(), Some("FLAG-001"));
+    let source = SourceText::new("FLAGS.md", text).unwrap();
+    let document = ir::parse(&source, options("")).unwrap();
+    assert_eq!(document.items()[0].id(), Some("FLAG-001"));
+    let source = SourceText::new("docs/ir/FLAGS.md", text).unwrap();
+    assert!(matches!(
+        ir::parse(&source, options("spec")),
+        Err(kotowari_core::InputError::InvalidInput(_))
+    ));
+}
+
 // @kotowari[REQ-core-314, REQ-core-322, EX-core-487, EX-core-498]
 #[test]
 fn nested_ir_paths_preserve_the_document_kind_of_the_filename() {
