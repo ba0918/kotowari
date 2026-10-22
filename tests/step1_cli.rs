@@ -19,7 +19,7 @@ fn valid_project_dir() -> &'static Path {
 
 // @kotowari[REQ-core-001]
 #[test]
-fn req_001_six_commands_only() {
+fn req_001_the_commands_run_and_other_words_are_not_commands() {
     // "kotowari check" は通る
     cmd()
         .arg("check")

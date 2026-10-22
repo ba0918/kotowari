@@ -64,7 +64,7 @@ fn req_025_finding_kind_displays_as_its_own_kind_word() {
 
 // @kotowari[REQ-core-024]
 #[test]
-fn req_024_finding_kind_partial_eq_str_matches_only_its_own_kind_name() {
+fn req_024_a_finding_kind_equals_only_its_own_name() {
     // `==` に書いた文字列リテラルは `PartialEq<&str>` を通る（既存のテストで検査済み）。
     // ここでは `PartialEq<str>` 側の実装を `.eq()` で直接呼び、
     // 自分の種類の名前だけに真を返すことを確かめる。

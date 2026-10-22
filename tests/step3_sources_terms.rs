@@ -978,11 +978,11 @@ fn req_040_gherkin_code_block_doc_ref_is_not_checked() {
     );
 }
 
-// --- is_decision_number ---
+// --- TBL-core-012: 判断の番号と出典の置き場 ---
 
 // @kotowari[REQ-core-058, TBL-core-012]
 #[test]
-fn tbl_012_is_decision_number_rejects_invalid_forms() {
+fn tbl_012_a_decision_number_is_an_uppercase_letter_followed_by_digits() {
     assert!(
         !kotowari_core::sources::is_decision_number("a1"),
         "lowercase letter should not be a decision number"
@@ -1011,7 +1011,7 @@ fn tbl_012_is_decision_number_rejects_invalid_forms() {
 
 // @kotowari[REQ-core-058, TBL-core-012]
 #[test]
-fn tbl_012_check_source_outside_records_and_adr_returns_err() {
+fn tbl_012_a_source_outside_the_records_and_adr_places_is_rejected() {
     let ctx = kotowari_core::sources::SourceContext {
         records_path: "docs/decision/records".to_string(),
         adr_path: "docs/decision/adr".to_string(),
@@ -1034,7 +1034,7 @@ fn tbl_012_check_source_outside_records_and_adr_returns_err() {
 
 // @kotowari[REQ-core-057]
 #[test]
-fn req_057_split_source_rejects_an_empty_path_or_empty_anchor() {
+fn req_057_a_source_needs_both_a_path_and_an_anchor() {
     assert_eq!(
         kotowari_core::sources::split_source("#anchor"),
         None,
