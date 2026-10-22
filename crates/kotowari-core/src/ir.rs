@@ -147,7 +147,6 @@ impl Item {
 /// ```
 #[derive(Debug)]
 pub struct IrDocument {
-    pub(crate) filename: String,
     pub(crate) relative_path: String,
     pub(crate) directory: String,
     pub(crate) kind: DocKind,
@@ -164,8 +163,12 @@ pub struct IrDocument {
 }
 
 impl IrDocument {
+    /// 相対パスの最後の段
     pub fn filename(&self) -> &str {
-        &self.filename
+        self.relative_path
+            .rsplit('/')
+            .next()
+            .unwrap_or(&self.relative_path)
     }
     pub fn relative_path(&self) -> &str {
         &self.relative_path
@@ -313,7 +316,6 @@ fn parse_document_mode(
     exclude_unclosed_code_block(&mut items, &mut findings, content);
 
     Ok(IrDocument {
-        filename: filename.to_string(),
         relative_path: filename.to_string(),
         directory: String::new(),
         kind,
