@@ -28,7 +28,7 @@ impl From<&kotowari_markdown_schema::finding::Finding> for EngineFinding {
 }
 #[cfg(test)]
 impl EngineFinding {
-    fn maybe_at(kind: EngineKind, line: Option<usize>, _detail: String) -> Self {
+    fn maybe_at(kind: EngineKind, line: Option<usize>) -> Self {
         Self {
             kind,
             line,
@@ -64,8 +64,6 @@ pub struct ExtractedItem {
 /// 写し先を決めるのに要る、文書ごとの手がかり。
 #[derive(Debug, Clone)]
 pub struct MapContext {
-    /// 指摘に付ける文書のパス
-    pub path: String,
     /// 文書名。detail の材料になる
     pub filename: String,
     /// どのスキーマで検証したか（TBL-core-029 の「ノードの名前」の列）
@@ -78,12 +76,11 @@ pub struct MapContext {
 
 impl MapContext {
     /// `抽出`の結果から手がかりを組み立てる。
-    pub fn new(path: &str, filename: &str, doc_kind: DocKind, values: &Value) -> Self {
+    pub fn new(filename: &str, doc_kind: DocKind, values: &Value) -> Self {
         let mut items = Vec::new();
         collect_items(values, &mut items);
         items.sort_by_key(|item| item.line);
         MapContext {
-            path: path.to_string(),
             filename: filename.to_string(),
             doc_kind,
             items,
@@ -229,7 +226,8 @@ fn item_at<'a>(
 /// 行の指摘は None を返して捨てる（REQ-core-172）。
 fn map_finding(ctx: &MapContext, engine: &EngineFinding) -> Result<Option<Finding>, StopReason> {
     let make = |kind: FindingKind, line: Option<usize>, detail: String| {
-        Ok(Some(Finding::new(kind, ctx.path.clone(), line, detail)))
+        // `指摘`のパスは空で、呼ぶ側が入れる
+        Ok(Some(Finding::new(kind, String::new(), line, detail)))
     };
     match engine.kind {
         EngineKind::MissingTitle => make(FindingKind::MissingTitle, None, ctx.filename.clone()),
@@ -382,7 +380,7 @@ pub fn read_document(
     let extraction =
         kotowari_markdown_schema::extract_partial(schema, &document, ValidationOptions::default());
     let values = extraction.values().clone();
-    let ctx = MapContext::new("", filename, doc_kind, &values);
+    let ctx = MapContext::new(filename, doc_kind, &values);
     let findings = extraction
         .findings()
         .iter()
@@ -399,7 +397,6 @@ mod tests {
 
     fn ctx(doc_kind: DocKind) -> MapContext {
         MapContext::new(
-            "docs/ir/core/a.md",
             "a.md",
             doc_kind,
             &json!({
@@ -417,7 +414,7 @@ mod tests {
     }
 
     fn engine(kind: EngineKind, line: Option<usize>) -> EngineFinding {
-        EngineFinding::maybe_at(kind, line, "detail".to_string())
+        EngineFinding::maybe_at(kind, line)
     }
 
     fn mapped(f: &EngineFinding) -> Finding {
@@ -441,7 +438,7 @@ mod tests {
         assert_eq!(f.kind, FindingKind::MissingTitle);
         assert_eq!(f.line, None);
         assert_eq!(f.detail, "a.md");
-        assert_eq!(f.path, "docs/ir/core/a.md");
+        assert_eq!(f.path, "");
     }
 
     // @kotowari[REQ-core-171]
