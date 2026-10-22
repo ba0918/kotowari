@@ -95,11 +95,9 @@ pub fn check_vague_words(
     if vague_words.is_empty() {
         return;
     }
-    let chars: Vec<char> = text.chars().collect();
-    let mut pos = 0;
-    while chars.get(pos).is_some() {
+    let mut remaining = text;
+    while let Some(first) = remaining.chars().next() {
         // 現在位置から始まる最長の曖昧語を探す
-        let remaining: String = chars[pos..].iter().collect();
         let best_word = vague_words
             .iter()
             .filter(|w| !w.is_empty() && remaining.starts_with(w.as_str()))
@@ -111,9 +109,9 @@ pub fn check_vague_words(
                 Some(line),
                 word.clone(),
             ));
-            pos += word.chars().count();
+            remaining = &remaining[word.len()..];
         } else {
-            pos += 1;
+            remaining = &remaining[first.len_utf8()..];
         }
     }
 }
