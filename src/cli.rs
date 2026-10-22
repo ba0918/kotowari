@@ -159,15 +159,11 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
     }
 
     let mut format_str: Option<String> = None;
-    let mut config_path: Option<PathBuf> = None;
+    let mut config: Option<String> = None;
     let mut tool: Option<String> = None;
+    let mut port: Option<String> = None;
     let mut command: Option<String> = None;
     let mut positionals: Vec<String> = Vec::new();
-    let mut saw_format = false;
-    let mut saw_config = false;
-    let mut saw_tool = false;
-    let mut saw_port = false;
-    let mut port: Option<String> = None;
     let mut allow_test_findings = false;
     let mut i = 0;
 
@@ -185,28 +181,22 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         }
         if arg.starts_with("--") {
             let slot = match arg.as_str() {
-                "--format" => &mut saw_format,
-                "--config" => &mut saw_config,
-                "--tool" => &mut saw_tool,
-                "--port" => &mut saw_port,
+                "--format" => &mut format_str,
+                "--config" => &mut config,
+                "--tool" => &mut tool,
+                "--port" => &mut port,
                 _ => {
                     return Err(StopReason::ArgumentError(format!("unknown option: {arg}")));
                 }
             };
-            if *slot {
+            if slot.is_some() {
                 return Err(StopReason::ArgumentError(format!("repeated option: {arg}")));
             }
-            *slot = true;
             i += 1;
-            if i >= args.len() {
+            let Some(value) = args.get(i) else {
                 return Err(StopReason::ArgumentError(format!("{arg} requires a value")));
-            }
-            match arg.as_str() {
-                "--format" => format_str = Some(args[i].clone()),
-                "--config" => config_path = Some(PathBuf::from(&args[i])),
-                "--port" => port = Some(args[i].clone()),
-                _ => tool = Some(args[i].clone()),
-            }
+            };
+            *slot = Some(value.clone());
         } else if command.is_none() {
             // REQ-core-001: 1つ目の位置引数は check、list、mutants、plan、query、status のどれか
             if COMMANDS.contains(&arg.as_str()) {
@@ -225,6 +215,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
             "expected command: check, list, mutants, overview, plan, query or status".to_string(),
         ));
     };
+    let config_path = config.map(PathBuf::from);
 
     // REQ-core-004: "--port" は "overview serve" だけが受ける
     let serve = command == "overview" && positionals.first().map(String::as_str) == Some("serve");
@@ -240,7 +231,7 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         )));
     }
     // REQ-core-190: plan は設定を読まないので "--config" を受けない。指す先を見る前に止める
-    if command == "plan" && saw_config {
+    if command == "plan" && config_path.is_some() {
         return Err(StopReason::ArgumentError(
             "unexpected option for plan: --config".to_string(),
         ));
@@ -403,7 +394,7 @@ pub fn run(args: &[String]) -> u8 {
             config_path,
             allow_test_findings,
         } => with_cwd(|cwd| {
-            let (result, format) = run_check(cwd, format, config_path.as_deref())?;
+            let result = project(cwd, config_path.as_deref())?.check()?;
             print_check(&result, format);
             Ok(check_exit_code(&result, allow_test_findings))
         }),
@@ -412,7 +403,7 @@ pub fn run(args: &[String]) -> u8 {
             format,
             config_path,
         } => with_cwd(|cwd| {
-            let result = run_list(cwd, config_path.as_deref())?;
+            let result = project(cwd, config_path.as_deref())?.list()?;
             print_list(&result, format);
             Ok(0)
         }),
@@ -422,7 +413,7 @@ pub fn run(args: &[String]) -> u8 {
             config_path,
             id,
         } => with_cwd(|cwd| {
-            let result = run_query(cwd, config_path.as_deref(), &id)?;
+            let result = project(cwd, config_path.as_deref())?.query(&id)?;
             print_query(&result, format);
             Ok(0)
         }),
@@ -431,7 +422,7 @@ pub fn run(args: &[String]) -> u8 {
             format,
             config_path,
         } => with_cwd(|cwd| {
-            let result = run_status(cwd, config_path.as_deref())?;
+            let result = project(cwd, config_path.as_deref())?.status()?;
             print_status(&result, format);
             // REQ-core-165: complete なら 0、そうでなければ 1
             Ok(u8::from(!result.complete()))
@@ -442,7 +433,8 @@ pub fn run(args: &[String]) -> u8 {
             tool,
             results,
         } => with_cwd(|cwd| {
-            let result = run_mutants(cwd, config_path.as_deref(), tool, &results)?;
+            let result = project(cwd, config_path.as_deref())?
+                .mutants(&kotowari::MutantsOptions { tool, results })?;
             print_mutants(&result, format);
             Ok(exit_code_for(result.findings()))
         }),
@@ -461,7 +453,7 @@ pub fn run(args: &[String]) -> u8 {
         }
         // REQ-core-196: 設定を読まず、計画書のファイルだけを読む
         Cli::Plan { format, path } => with_cwd(|cwd| {
-            let result = run_plan(cwd, &path)?;
+            let result = project(cwd, None)?.plan(&path)?;
             print_plan(&result, format);
             Ok(exit_code_for(result.findings()))
         }),
@@ -619,34 +611,4 @@ fn project(cwd: &Path, config: Option<&Path>) -> Result<Project, StopReason> {
     let mut options = ProjectOptions::new(cwd);
     options.config = config.map(Path::to_path_buf);
     Ok(Project::new(options)?)
-}
-fn run_check(
-    cwd: &Path,
-    format: Format,
-    config: Option<&Path>,
-) -> Result<(CheckReport, Format), StopReason> {
-    Ok((project(cwd, config)?.check()?, format))
-}
-fn run_list(cwd: &Path, config: Option<&Path>) -> Result<ReadList, StopReason> {
-    Ok(project(cwd, config)?.list()?)
-}
-fn run_query(cwd: &Path, config: Option<&Path>, id: &str) -> Result<QueryReport, StopReason> {
-    Ok(project(cwd, config)?.query(id)?)
-}
-fn run_status(cwd: &Path, config: Option<&Path>) -> Result<StatusReport, StopReason> {
-    Ok(project(cwd, config)?.status()?)
-}
-fn run_plan(cwd: &Path, path: &Path) -> Result<PlanReport, StopReason> {
-    Ok(project(cwd, None)?.plan(path)?)
-}
-fn run_mutants(
-    cwd: &Path,
-    config: Option<&Path>,
-    tool: Tool,
-    results: &Path,
-) -> Result<MutantsReport, StopReason> {
-    Ok(project(cwd, config)?.mutants(&kotowari::MutantsOptions {
-        tool,
-        results: results.into(),
-    })?)
 }
