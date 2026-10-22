@@ -77,6 +77,16 @@ fn req_core_297_serve_uses_port_4590_unless_given() {
     );
 }
 
+// @kotowari[REQ-core-304]
+#[test]
+fn req_core_304_the_lowest_port_is_1() {
+    let parsed = parse_args(&args(&["overview", "serve", "--port", "1"]));
+    assert!(
+        matches!(parsed, Ok(Cli::OverviewServe { port: 1, .. })),
+        "{parsed:?}"
+    );
+}
+
 // @kotowari[REQ-core-002]
 #[test]
 fn req_core_002_check_takes_allow_test_findings_without_a_value() {
