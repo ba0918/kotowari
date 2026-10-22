@@ -492,48 +492,21 @@ fn req_017_nested_keys() {
 
 // --- REQ-core-018: 置き場が無いとき停止 ---
 
-// @kotowari[REQ-core-018, TBL-core-001]
+// @kotowari[REQ-core-005, REQ-core-018, TBL-core-001, TBL-core-018, TBL-core-020]
 #[test]
-fn req_018_missing_ir_dir_stops() {
-    let tmp = TempDir::new().unwrap();
-    fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
-    fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
-    fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
-    // docs/ir を作らない
-    fs::write(
-        tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
-    )
-    .unwrap();
-    cmd()
-        .arg("check")
-        .current_dir(tmp.path())
-        .assert()
-        .code(2)
-        .stdout("");
-}
-
-// @kotowari[REQ-core-005, REQ-core-018, TBL-core-018, TBL-core-020]
-#[test]
-fn req_005_stderr_carries_the_stop_reason_text() {
-    // A137 で改めた: TBL-core-020 の形（相対パスと OS の誤りの文）
+fn req_018_missing_ir_dir_stops_with_its_relative_path_and_the_os_error() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::remove_dir_all(tmp.path().join("docs/ir")).unwrap();
+    // OS の誤りの文は環境で変わるので、同じ置き場を読んだときの文をここで作る
+    let os_error = fs::read_dir(tmp.path().join("docs/ir")).unwrap_err();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(output.status.code(), Some(2));
+    assert!(output.stdout.is_empty());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let first_line = stderr.lines().next().unwrap_or("");
-    // TBL-core-018: 「unreadable file」の文言で始まる
-    assert!(
-        first_line.starts_with("unreadable file: "),
-        "stderr should start with TBL-018 wording, got: {first_line:?}"
-    );
-    // TBL-core-020: 相対パスを含む（設定の ir の値）
-    assert!(
-        first_line.contains("docs/ir"),
-        "stderr should contain the relative path, got: {first_line:?}"
-    );
+    // 詳細は設定の値のままの相対パスで、絶対パスを含まない（TBL-core-020）
+    let expected = format!("unreadable file: docs/ir: {os_error}");
+    assert_eq!(stderr.lines().next(), Some(expected.as_str()));
 }
 
 // @kotowari[REQ-core-018, TBL-core-001]

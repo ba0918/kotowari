@@ -307,32 +307,6 @@ fn req_005_config_error_detail_path_is_relative_to_base_not_to_cwd() {
     );
 }
 
-// @kotowari[REQ-core-005, TBL-core-020]
-#[test]
-fn req_005_stderr_detail_path_is_relative() {
-    use tempfile::TempDir;
-    let tmp = TempDir::new().unwrap();
-    std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
-    std::fs::write(
-        tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
-    )
-    .unwrap();
-    // docs/ir を作らない → 読めないファイル
-    let out = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
-    let stderr = String::from_utf8_lossy(&out.stderr);
-    let first_line = stderr.lines().next().unwrap_or("");
-    assert!(
-        first_line.starts_with("unreadable file: "),
-        "expected 'unreadable file: ...', got: {first_line:?}"
-    );
-    // 絶対パスが含まれないことを確認
-    assert!(
-        !first_line.contains(tmp.path().to_str().unwrap()),
-        "detail should not contain absolute path, got: {first_line:?}"
-    );
-}
-
 // --- REQ-core-021: 既定は json ---
 
 // @kotowari[REQ-core-021]
