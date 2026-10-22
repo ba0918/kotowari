@@ -26,7 +26,11 @@ pub fn validate(
     document: &Document,
     options: ValidationOptions,
 ) -> Vec<finding::Finding> {
-    validate::validate(schema, document, schema.open || options.relax)
+    validate::validate(
+        schema,
+        &document.read_as(schema.reading),
+        schema.open || options.relax,
+    )
 }
 
 /// Options for document validation. Relaxation never closes an open schema.
@@ -67,9 +71,10 @@ pub fn extract_partial(
     document: &Document,
     options: ValidationOptions,
 ) -> PartialExtraction {
+    let document = document.read_as(schema.reading);
     PartialExtraction {
-        values: extract::extract_values(schema, document),
-        findings: validate::validate(schema, document, schema.open || options.relax),
+        values: extract::extract_values(schema, &document),
+        findings: validate::validate(schema, &document, schema.open || options.relax),
     }
 }
 
@@ -78,9 +83,10 @@ pub fn extract_typed_partial(
     document: &Document,
     options: ValidationOptions,
 ) -> PartialExtraction {
+    let document = document.read_as(schema.reading);
     PartialExtraction {
-        values: extract::extract_typed(schema, document),
-        findings: validate(schema, document, options),
+        values: extract::extract_typed(schema, &document),
+        findings: validate::validate(schema, &document, schema.open || options.relax),
     }
 }
 
@@ -89,9 +95,10 @@ pub fn extract_validated(
     document: &Document,
     options: ValidationOptions,
 ) -> Result<ValidatedValues, Vec<finding::Finding>> {
-    let findings = validate::validate(schema, document, schema.open || options.relax);
+    let document = document.read_as(schema.reading);
+    let findings = validate::validate(schema, &document, schema.open || options.relax);
     if findings.is_empty() {
-        Ok(ValidatedValues(extract::extract_values(schema, document)))
+        Ok(ValidatedValues(extract::extract_values(schema, &document)))
     } else {
         Err(findings)
     }

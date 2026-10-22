@@ -2,21 +2,13 @@
 
 use crate::document::{Block, Document, Item as DocItem, LineSpan, RawLine, Section as DocSection};
 use crate::schema::{
-    Bullets, Children, CodeBlock, Extract, Field, OfKind, Reading, Schema, Statement, Table,
+    Bullets, Children, CodeBlock, Extract, Field, OfKind, Schema, Statement, Table,
     is_declared_field, item_internals_declare_extract,
 };
 use serde_json::{Map, Value};
 
-/// `values` の出力。配置パスに沿った入れ子の JSON。
+/// `values` の出力。スキーマの`読み方`で読んだ文書の木から、配置パスに沿った入れ子の JSON を作る。
 pub fn extract_values(schema: &Schema, document: &Document) -> Value {
-    let by_line;
-    let document = match schema.reading {
-        Reading::Paragraph => document,
-        Reading::Line => {
-            by_line = document.read_by_line();
-            &by_line
-        }
-    };
     let mut root = Map::new();
     extract_title(schema, document, &mut root);
     if let Some(preamble) = &schema.document.preamble {
@@ -891,7 +883,7 @@ mod tests {
     fn values(schema_yaml: &str, doc: &str) -> serde_json::Value {
         let schema = parse_schema(schema_yaml).unwrap();
         let document = Document::parse(doc).unwrap();
-        extract_values(&schema, &document)
+        extract_values(&schema, &document.read_as(schema.reading))
     }
 
     const ADR: &str = r#"
@@ -1862,7 +1854,7 @@ document:
     fn typed(schema_yaml: &str, doc: &str) -> serde_json::Value {
         let schema = parse_schema(schema_yaml).unwrap();
         let document = Document::parse(doc).unwrap();
-        extract_typed(&schema, &document)
+        extract_typed(&schema, &document.read_as(schema.reading))
     }
 
     // @kotowari[REQ-schema-036]

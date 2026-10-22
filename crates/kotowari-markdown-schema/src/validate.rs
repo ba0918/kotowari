@@ -3,21 +3,14 @@
 use crate::document::{Block, Document, Heading, Item};
 use crate::finding::{Finding, FindingKind, RuleKind};
 use crate::schema::{
-    Bullets, Children, CodeBlock, Field, Item as ItemRule, Preamble, Reading, Repeat, Schema,
-    Section, Statement, Table, Title, When, is_declared_field,
+    Bullets, Children, CodeBlock, Field, Item as ItemRule, Preamble, Repeat, Schema, Section,
+    Statement, Table, Title, When, is_declared_field,
 };
 use std::collections::HashMap;
 
-/// スキーマと文書の木から指摘を集める。`open` は閉じた世界を緩めるか（スキーマの `open` と CLI の `--open` を合わせた値）。
+/// スキーマと、その`読み方`で読んだ文書の木から指摘を集める。`open` は閉じた世界を緩めるか
+/// （スキーマの `open` と CLI の `--open` を合わせた値）。
 pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding> {
-    let by_line;
-    let document = match schema.reading {
-        Reading::Paragraph => document,
-        Reading::Line => {
-            by_line = document.read_by_line();
-            &by_line
-        }
-    };
     let mut findings = Vec::new();
     let doc_rule = &schema.document;
 
@@ -1079,7 +1072,7 @@ mod tests {
     fn validate_src(schema_yaml: &str, doc: &str, open: bool) -> Vec<Finding> {
         let schema = parse_schema(schema_yaml).unwrap();
         let document = Document::parse(doc).unwrap();
-        validate(&schema, &document, open)
+        validate(&schema, &document.read_as(schema.reading), open)
     }
 
     fn kinds(findings: &[Finding]) -> Vec<FindingKind> {
