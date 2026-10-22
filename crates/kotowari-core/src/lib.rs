@@ -321,7 +321,7 @@ impl serde::Serialize for FindingKind {
 /// ```
 pub struct Finding {
     pub(crate) kind: FindingKind,
-    pub(crate) severity: String,
+    pub(crate) severity: &'static str,
     pub(crate) path: String,
     pub(crate) line: Option<usize>,
     pub(crate) detail: String,
@@ -332,7 +332,7 @@ impl Finding {
         self.kind
     }
     pub fn severity(&self) -> &str {
-        &self.severity
+        self.severity
     }
     pub fn path(&self) -> &str {
         &self.path
@@ -346,7 +346,7 @@ impl Finding {
     /// 指摘を作る。severity は kind から自動で決まる。
     pub fn new(kind: FindingKind, path: String, line: Option<usize>, detail: String) -> Self {
         Finding {
-            severity: kind.severity().to_string(),
+            severity: kind.severity(),
             kind,
             path,
             line,
