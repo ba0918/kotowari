@@ -114,7 +114,7 @@ fn req_030_notice_kinds_have_the_detail_of_the_table() {
     assert!(line_count > 200);
 }
 
-// --- REQ-core-031: 注意は7種類だけ ---
+// --- REQ-core-031: 注意は8種類だけ ---
 
 // @kotowari[REQ-core-031]
 #[test]
@@ -148,7 +148,7 @@ fn req_031_only_eight_kinds_are_notices() {
 
 // @kotowari[REQ-core-031]
 #[test]
-fn req_031_check_reports_no_notice_outside_the_four_kinds() {
+fn req_031_check_reports_notices_only_for_the_notice_kinds() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 行数超過（>200行）と要求数超過（>10件）を出す
@@ -174,14 +174,16 @@ fn req_031_check_reports_no_notice_outside_the_four_kinds() {
         !notices.is_empty(),
         "test should produce at least one notice"
     );
-    // 注意は4種類のどれかだけ
+    // 注意は、重大度が注意の種類のどれかだけ
+    let notice_kinds: std::collections::BTreeSet<&str> = kotowari_core::FindingKind::ALL
+        .iter()
+        .filter(|kind| kind.severity() == "notice")
+        .map(|kind| kind.as_str())
+        .collect();
     for w in &notices {
         let kind = w["kind"].as_str().unwrap();
         assert!(
-            matches!(
-                kind,
-                "too_many_lines" | "too_many_requirements" | "mutant_timeout" | "equivalent_stale"
-            ),
+            notice_kinds.contains(kind),
             "unexpected notice kind: {kind}"
         );
     }
