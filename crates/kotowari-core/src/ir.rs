@@ -619,18 +619,9 @@ pub fn parse(
     options: IrOptions,
 ) -> Result<ParsedIrDocument, crate::InputError> {
     let place = crate::normalize_path(&options.ir);
-    let relative = if place.is_empty() {
-        source.path()
-    } else {
-        source
-            .path()
-            .strip_prefix(&format!("{place}/"))
-            .ok_or_else(|| {
-                crate::InputError::InvalidInput(
-                    "IR source must be under its configured place".into(),
-                )
-            })?
-    };
+    let relative = crate::sources::relative_to_place(source.path(), &place).ok_or_else(|| {
+        crate::InputError::InvalidInput("IR source must be under its configured place".into())
+    })?;
     let filename = relative
         .rsplit('/')
         .next()

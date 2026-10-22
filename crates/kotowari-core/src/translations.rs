@@ -698,11 +698,7 @@ impl Pairs {
 
 /// `基準のディレクトリ`からの相対パスを、`IR`の置き場からの相対パスにする
 fn ir_relative(place: &str, path: &str) -> String {
-    if place.is_empty() {
-        return path.to_string();
-    }
-    path.strip_prefix(place)
-        .and_then(|rest| rest.strip_prefix('/'))
+    crate::sources::relative_to_place(path, place)
         .unwrap_or(path)
         .to_string()
 }

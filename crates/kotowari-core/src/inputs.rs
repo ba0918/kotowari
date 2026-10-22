@@ -561,16 +561,10 @@ fn logical_read(inputs: ReadInputs, policy: Policy) -> Result<ReadModel, InputEr
         .admit(tests.iter().map(|file| &file.source))?;
     let place = crate::normalize_path(&preparation.policy.config.ir);
     for source in &ir {
-        let relative = if place.is_empty() {
-            source.path.as_str()
-        } else {
-            source
-                .path
-                .strip_prefix(&format!("{place}/"))
-                .ok_or_else(|| {
-                    InputError::InvalidInput("IR source must be under its configured place".into())
-                })?
-        };
+        let relative =
+            crate::sources::relative_to_place(&source.path, &place).ok_or_else(|| {
+                InputError::InvalidInput("IR source must be under its configured place".into())
+            })?;
         preparation.parse_ir(source, relative).map_err(input_stop)?;
     }
     Ok(preparation.calculate(&records, &adr, &tests))

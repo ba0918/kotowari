@@ -479,6 +479,14 @@ fn heading_lines(content: &str, heading: &str) -> Vec<String> {
 }
 
 /// パスが置き場の下にあるか。置き場が空（"." を正規化したもの）なら基準の直下なので常に真
+/// 置き場（正規化したパス）からの path の相対パス。置き場の外なら None、置き場が空なら path のまま
+pub(crate) fn relative_to_place<'a>(path: &'a str, place: &str) -> Option<&'a str> {
+    if place.is_empty() {
+        return Some(path);
+    }
+    path.strip_prefix(place)?.strip_prefix('/')
+}
+
 pub fn is_under_place(path: &str, place: &str) -> bool {
     place.is_empty()
         || (path.starts_with(place)
