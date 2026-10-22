@@ -15,8 +15,8 @@ struct EngineFinding {
     raw: Option<String>,
     rule_kind: Option<RuleKind>,
 }
-impl From<kotowari_markdown_schema::finding::Finding> for EngineFinding {
-    fn from(value: kotowari_markdown_schema::finding::Finding) -> Self {
+impl From<&kotowari_markdown_schema::finding::Finding> for EngineFinding {
+    fn from(value: &kotowari_markdown_schema::finding::Finding) -> Self {
         Self {
             kind: value.kind(),
             line: value.line(),
@@ -42,18 +42,7 @@ impl EngineFinding {
         self
     }
 }
-use kotowari_markdown_schema::{Document, Schema, ValidationOptions};
-fn extract_values(schema: &Schema, document: &Document) -> Value {
-    kotowari_markdown_schema::extract_partial(schema, document, ValidationOptions::default())
-        .values()
-        .clone()
-}
-fn validate(schema: &Schema, document: &Document, relax: bool) -> Vec<EngineFinding> {
-    kotowari_markdown_schema::validate(schema, document, ValidationOptions { relax })
-        .into_iter()
-        .map(EngineFinding::from)
-        .collect()
-}
+use kotowari_markdown_schema::{Document, ValidationOptions};
 use serde_json::Value;
 
 /// 用語集の表の行を`抽出`が置く配置パス（`.kotowari/schemas/context.yaml`）。
@@ -389,11 +378,16 @@ pub fn read_document(
     let schema = schema_for(doc_kind).map_err(|e| stop(format!("{filename}: schema: {}", e.0)))?;
     let document =
         Document::parse(content).map_err(|e| stop(format!("{filename}: document: {e}")))?;
-    let values = extract_values(&schema, &document);
+    // 抽出は検証も済ませて返す。開いたスキーマを緩めるかはスキーマ自身が決めるので、既定の選択肢で足りる
+    let extraction =
+        kotowari_markdown_schema::extract_partial(&schema, &document, ValidationOptions::default());
+    let values = extraction.values().clone();
     let ctx = MapContext::new("", filename, doc_kind, &values);
-    let findings = validate(&schema, &document, schema.is_open())
+    let findings = extraction
+        .findings()
         .iter()
-        .filter_map(|engine| map_finding(&ctx, engine).transpose())
+        .map(EngineFinding::from)
+        .filter_map(|engine| map_finding(&ctx, &engine).transpose())
         .collect::<Result<Vec<Finding>, StopReason>>()?;
     Ok((values, findings))
 }
