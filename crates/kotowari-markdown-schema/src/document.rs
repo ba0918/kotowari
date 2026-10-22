@@ -487,26 +487,7 @@ fn blocks_from_list_item(
                             line: item_line,
                         }
                     } else {
-                        match split_field(&text) {
-                            Some((name, value)) => Block::Field {
-                                line_text,
-                                text,
-                                lead_end,
-                                name,
-                                value,
-                                continuation: Vec::new(),
-                                children: Vec::new(),
-                                line: item_line,
-                            },
-                            None => Block::Bullet {
-                                line_text,
-                                text,
-                                lead_end,
-                                continuation: Vec::new(),
-                                children: Vec::new(),
-                                line: item_line,
-                            },
-                        }
+                        Block::list_line(line_text, text, lead_end, item_line)
                     });
                 } else if lead_block.is_some() {
                     match &mut lead_block {
@@ -631,7 +612,7 @@ fn original_item_line(
 }
 
 /// `- 名前: 値` の形なら名前と値に分ける。形でなければ None。
-pub(crate) fn split_field(text: &str) -> Option<(String, String)> {
+fn split_field(text: &str) -> Option<(String, String)> {
     let idx = text.find(':')?;
     let name = text[..idx].trim();
     if name.is_empty() {
@@ -642,6 +623,37 @@ pub(crate) fn split_field(text: &str) -> Option<(String, String)> {
 }
 
 impl Block {
+    /// 一覧の行1つ。中身が "名前: 値" の形ならフィールド行、そうでなければ箇条書きにする。
+    /// 宣言と一致しないフィールド行を箇条書きとして扱うのは検証と抽出の側（TBL-schema-007）。
+    /// 継続段落と子は読み進めながら足す
+    pub(crate) fn list_line(
+        line_text: String,
+        text: String,
+        lead_end: usize,
+        line: usize,
+    ) -> Block {
+        match split_field(&text) {
+            Some((name, value)) => Block::Field {
+                line_text,
+                text,
+                lead_end,
+                name,
+                value,
+                continuation: Vec::new(),
+                children: Vec::new(),
+                line,
+            },
+            None => Block::Bullet {
+                line_text,
+                text,
+                lead_end,
+                continuation: Vec::new(),
+                children: Vec::new(),
+                line,
+            },
+        }
+    }
+
     /// ブロックが現れた行番号（1始まり）。導かれる値の `line` と `raw` の抽出に使う（REQ-schema-048）。
     pub fn line(&self) -> usize {
         match self {

@@ -6,9 +6,7 @@
 //! どちらの読み方でも同じに読む。
 
 use crate::ast::parse_mdast;
-use crate::document::{
-    Block, Document, RawLine, TreeBuilder, inline_text, split_field, table_block_from_node,
-};
+use crate::document::{Block, Document, RawLine, TreeBuilder, inline_text, table_block_from_node};
 use crate::schema::Reading;
 use markdown::mdast::Node;
 
@@ -138,29 +136,9 @@ impl LineReader {
             });
             return;
         }
-        let block = match split_field(&content) {
-            Some((name, value)) => Block::Field {
-                line_text,
-                text: content,
-                lead_end: line,
-                name,
-                value,
-                continuation: Vec::new(),
-                children: Vec::new(),
-                line,
-            },
-            None => Block::Bullet {
-                line_text,
-                text: content,
-                lead_end: line,
-                continuation: Vec::new(),
-                children: Vec::new(),
-                line,
-            },
-        };
         self.open.push(OpenItem {
             content_column: marker.content_column,
-            block,
+            block: Block::list_line(line_text, content, line, line),
         });
     }
 
