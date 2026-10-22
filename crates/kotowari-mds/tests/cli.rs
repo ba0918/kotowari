@@ -1423,6 +1423,9 @@ fn list_nesting_and_fences_read_the_same_in_both_readings() {
         "## 節\n\n~~~ a`b\nx\n~~~\n",
         // 字下げした囲みの中身は、囲みの字下げの分まで行頭の空白を除く
         "## 節\n\n  ```\n  x\n y\n  ```\n",
+        // 囲みは開きと同じ記号で、開き以上の長さの行でだけ閉じる
+        "## 節\n\n````\n```\nx\n```\n````\n",
+        "## 節\n\n```\n~~~\nx\n```\n",
     ];
     for doc in docs {
         let (code_p, check_p, stderr_p) = mds_json(&paragraph, doc, "check");
