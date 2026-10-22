@@ -655,8 +655,9 @@ struct CheckPreparation {
     translations: crate::translations::Pairs,
 }
 impl CheckPreparation {
-    fn new(read: ReadModel) -> Self {
-        let findings = read.findings.clone();
+    fn new(mut read: ReadModel) -> Self {
+        // 読み取りの指摘を読むのは検査だけなので、写さずに移す
+        let findings = std::mem::take(&mut read.findings);
         Self {
             read,
             findings,
