@@ -381,35 +381,15 @@ fn extract_child_fields(
     doc: &Document,
     root: &mut Map<String, Value>,
 ) {
-    for field in &children.fields {
-        if let Some(extract) = &field.extract {
-            let occurrences: Vec<&Block> = blocks
-                .iter()
-                .flat_map(|b| b.children().iter())
-                .filter(|c| matches!(c, Block::Field { name, .. } if name == &field.name))
-                .collect();
-            let elements: Vec<Value> = occurrences
-                .iter()
-                .map(|b| {
-                    element_value(
-                        extract,
-                        doc,
-                        field_single(field, b, doc),
-                        &Derived::at(b.line()),
-                    )
-                })
-                .collect();
-            place_occurrences(root, extract, elements, field.repeat.is_some());
-        }
-    }
+    let child_blocks: Vec<&Block> = blocks.iter().flat_map(|b| b.children().iter()).collect();
+    extract_fields(&children.fields, &child_blocks, doc, root);
     // 子の箇条書きの下の children に再帰する。子の箇条書きは Bullet か、この
     // レベルの宣言と一致しない `- 名前: 値` 行（箇条書きとして扱う行）である（TBL-schema-007）
     if let Some(child_bullets) = children.bullets.as_deref()
         && let Some(grandchildren) = &child_bullets.children
     {
-        let bullet_blocks: Vec<&Block> = blocks
-            .iter()
-            .flat_map(|b| b.children().iter())
+        let bullet_blocks: Vec<&Block> = child_blocks
+            .into_iter()
             .filter(|c| is_bullet_under(&children.fields, c))
             .collect();
         extract_child_fields(grandchildren, &bullet_blocks, doc, root);
