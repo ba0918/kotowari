@@ -204,6 +204,28 @@ fn req_025_a_line_break_in_a_file_name_stays_on_one_text_line() {
     }
 }
 
+// @kotowari[REQ-core-025]
+#[test]
+fn req_025_a_carriage_return_in_a_file_name_is_written_as_backslash_r() {
+    // "\r" だけでは行は分かれないので、行の全体を照合して、パスと詳細の両方で書き換えたことを見る
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    fs::write(tmp.path().join("docs/ir/a\rb.md"), "no title\n").unwrap();
+    let output = cmd()
+        .args(["check", "--format", "text"])
+        .current_dir(tmp.path())
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout
+            .lines()
+            .any(|line| line == "docs/ir/a\\rb.md:- [error] missing_title a\\rb.md"),
+        "{stdout:?}"
+    );
+    assert!(!stdout.contains('\r'), "{stdout:?}");
+}
+
 // @kotowari[REQ-core-025, REQ-core-026, EX-core-004]
 #[test]
 fn req_025_text_line_for_a_document_without_a_title() {
