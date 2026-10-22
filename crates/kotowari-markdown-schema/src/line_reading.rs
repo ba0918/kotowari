@@ -134,7 +134,6 @@ impl LineReader {
             // 順序付きの行は子を持たない。子にあたる行はその後ろの兄弟になる（TBL-schema-007）
             self.attach_here(Block::OrderedList {
                 text: content,
-                continuation: Vec::new(),
                 line,
             });
             return;

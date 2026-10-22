@@ -181,11 +181,7 @@ pub enum Block {
     },
     /// 順序付きリストの項目（`1. ` など）。箇条書きの対象外（TBL-schema-007）。
     /// 閉じた世界では undeclared_line になる。抽出では値に含めない。
-    OrderedList {
-        text: String,
-        continuation: Vec<String>,
-        line: usize,
-    },
+    OrderedList { text: String, line: usize },
     Statement {
         text: String,
         line: usize,
@@ -480,15 +476,14 @@ fn blocks_from_list_item(
             // 先頭の段落だけがフィールド行・箇条書き・順序付き項目の lead になる。
             // 続く段落は継続段落として lead に付く（REQ-schema-030）。
             Node::Paragraph(_) => {
-                let text = raw_slice(src, child);
                 if i == 0 {
+                    let text = raw_slice(src, child);
                     let lead_end = child.position().map_or(item_line, |p| p.end.line);
                     let line_text = original_item_line(item, src, preserve_indent);
                     lead_block = Some(if ordered {
                         // 順序付きリストは箇条書きの対象外。閉じた世界では undeclared_line（TBL-schema-007）
                         Block::OrderedList {
                             text,
-                            continuation: Vec::new(),
                             line: item_line,
                         }
                     } else {
@@ -519,7 +514,6 @@ fn blocks_from_list_item(
                         | Some(Block::Bullet { continuation, .. }) => {
                             continuation.push(span_of(child))
                         }
-                        Some(Block::OrderedList { continuation, .. }) => continuation.push(text),
                         _ => {}
                     }
                 } else {
@@ -565,7 +559,6 @@ fn blocks_from_list_item(
         lead_block = Some(if ordered {
             Block::OrderedList {
                 text: String::new(),
-                continuation: Vec::new(),
                 line: item_line,
             }
         } else {
@@ -992,10 +985,10 @@ mod tests {
         let doc = Document::parse("## 理由\n\n1. 順序付き\n\n   続きの段落\n").unwrap();
         let blocks = section_blocks(&doc);
         assert_eq!(blocks.len(), 1, "継続段落は文にならない: {blocks:?}");
-        let Block::OrderedList { continuation, .. } = &blocks[0] else {
-            panic!("順序付きの行になる: {blocks:?}");
-        };
-        assert_eq!(continuation, &vec!["続きの段落".to_string()]);
+        assert!(
+            matches!(blocks[0], Block::OrderedList { .. }),
+            "順序付きの行になる: {blocks:?}"
+        );
     }
 
     // @kotowari[REQ-schema-035]
