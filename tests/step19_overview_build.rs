@@ -363,6 +363,14 @@ fn req_core_102_check_and_status_with_overview_data_write_nothing() {
     assert_eq!(snapshot(tmp.path(), &tmp.path().join("none")), before);
 }
 
+/// "overview" の鍵の無い土台。serve の引数を見落とす変異があっても、serve は設定の誤りですぐ止まり、
+/// 配り始めて終わらなくなることがない
+fn without_overview() -> TempDir {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), "");
+    tmp
+}
+
 fn argument_error(tmp: &Path, args: &[&str]) {
     let (code, stdout, stderr) = run(tmp, args);
     assert_eq!(code, Some(2), "{args:?}");
@@ -373,7 +381,7 @@ fn argument_error(tmp: &Path, args: &[&str]) {
 // @kotowari[REQ-core-304, TBL-core-001]
 #[test]
 fn req_core_304_overview_takes_exactly_build_or_serve() {
-    let tmp = two_documents();
+    let tmp = without_overview();
     argument_error(tmp.path(), &["overview"]);
     argument_error(tmp.path(), &["overview", "render"]);
     argument_error(tmp.path(), &["overview", "build", "extra"]);
@@ -384,7 +392,7 @@ fn req_core_304_overview_takes_exactly_build_or_serve() {
 // @kotowari[REQ-core-304]
 #[test]
 fn req_core_304_the_port_is_a_decimal_integer_from_1_to_65535() {
-    let tmp = two_documents();
+    let tmp = without_overview();
     for port in [
         "0",
         "65536",
@@ -404,7 +412,7 @@ fn req_core_304_the_port_is_a_decimal_integer_from_1_to_65535() {
 // @kotowari[REQ-core-004, REQ-core-002]
 #[test]
 fn req_core_004_port_belongs_to_serve_and_format_does_not() {
-    let tmp = two_documents();
+    let tmp = without_overview();
     argument_error(tmp.path(), &["overview", "build", "--port", "4590"]);
     argument_error(tmp.path(), &["check", "--port", "4590"]);
     argument_error(tmp.path(), &["overview", "serve", "--format", "json"]);
