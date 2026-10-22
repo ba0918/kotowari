@@ -380,7 +380,7 @@ pub fn read_document(
         Document::parse(content).map_err(|e| stop(format!("{filename}: document: {e}")))?;
     // 抽出は検証も済ませて返す。開いたスキーマを緩めるかはスキーマ自身が決めるので、既定の選択肢で足りる
     let extraction =
-        kotowari_markdown_schema::extract_partial(&schema, &document, ValidationOptions::default());
+        kotowari_markdown_schema::extract_partial(schema, &document, ValidationOptions::default());
     let values = extraction.values().clone();
     let ctx = MapContext::new("", filename, doc_kind, &values);
     let findings = extraction

@@ -5,6 +5,7 @@
 
 use crate::doc_kind::DocKind;
 use kotowari_markdown_schema::{Schema, SchemaError};
+use std::sync::LazyLock;
 fn parse_schema(yaml: &str) -> Result<Schema, SchemaError> {
     Schema::parse(yaml)
 }
@@ -18,18 +19,21 @@ const FLAGS: &str = include_str!("../schemas/flags.yaml");
 /// 計画書のスキーマ（REQ-core-191）
 const PLAN: &str = include_str!("../schemas/plan.yaml");
 
-/// 文書の種類に応じた、取り込んだスキーマの YAML（REQ-core-168）。
-pub fn schema_source(kind: DocKind) -> &'static str {
+/// 文書の種類に応じたスキーマ（REQ-core-168）。取り込んだ YAML は実行中に変わらないので、
+/// 種類ごとに最初に要ったときに1回だけ読む
+pub fn schema_for(kind: DocKind) -> Result<&'static Schema, &'static SchemaError> {
+    static TOPIC_SCHEMA: LazyLock<Result<Schema, SchemaError>> =
+        LazyLock::new(|| parse_schema(TOPIC));
+    static GLOSSARY_SCHEMA: LazyLock<Result<Schema, SchemaError>> =
+        LazyLock::new(|| parse_schema(GLOSSARY));
+    static FLAGS_SCHEMA: LazyLock<Result<Schema, SchemaError>> =
+        LazyLock::new(|| parse_schema(FLAGS));
     match kind {
-        DocKind::Topic => TOPIC,
-        DocKind::Glossary => GLOSSARY,
-        DocKind::Flags => FLAGS,
+        DocKind::Topic => &TOPIC_SCHEMA,
+        DocKind::Glossary => &GLOSSARY_SCHEMA,
+        DocKind::Flags => &FLAGS_SCHEMA,
     }
-}
-
-/// 文書の種類に応じたスキーマを読む（REQ-core-168）。
-pub fn schema_for(kind: DocKind) -> Result<Schema, SchemaError> {
-    parse_schema(schema_source(kind))
+    .as_ref()
 }
 
 /// 計画書のスキーマを読む（REQ-core-191）。IR の文書の種類とは別に持つ。
