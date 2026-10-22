@@ -37,7 +37,7 @@ It always holds that for an unreadable input, a broken input, or an input that d
 - kind: prohibition
 - source: docs/decision/records/records.md#P2, docs/decision/records/records.md#A100
 - verification: review
-- how_to_verify: Confirm in `crates/kotowari-core/src/ir.rs` and `crates/kotowari/src/acquisition.rs` that no behavior not listed in the specification is decided silently. Confirm that the gherkin parsing of `GherkinBlock` makes any line other than the valid kinds invalid_gherkin_line, that `read_utf8_file` makes an unreadable file a stop, that `parse_document` makes findings and values it cannot map a stop, and that `check_documents` has no skipping that is not in the specification
+- how_to_verify: Confirm in the modules under `crates/kotowari-core/src/ir/` and in `crates/kotowari/src/acquisition.rs` that no behavior not listed in the specification is decided silently. Confirm that the gherkin parsing of `GherkinBlock` makes any line other than the valid kinds invalid_gherkin_line, that `read_utf8_file` makes an unreadable file a stop, that `parse_document` makes findings and values it cannot map a stop, and that `check_documents` has no skipping that is not in the specification
 
 kotowari must not skip an input not listed in the `exclusion` without making a `stop` or a `finding`.
 

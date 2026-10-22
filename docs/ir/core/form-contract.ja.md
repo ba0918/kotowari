@@ -11,7 +11,7 @@ IR の形をどこで決めるか、その形を誰が読むか、採らない�
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A25, docs/decision/records/records.md#A52, docs/decision/records/records.md#A98
 - verification: review
-- how_to_verify: `crates/kotowari-core/src/schema.rs` がコンパイル時に取り込んだスキーマで、`crates/kotowari-core/src/ir.rs` の `parse_document` が IR を読むことを確認
+- how_to_verify: `crates/kotowari-core/src/schema.rs` がコンパイル時に取り込んだスキーマで、`crates/kotowari-core/src/ir/extract.rs` の `parse_document` が IR を読むことを確認
 
 kotowari は常に、コードに固定した1つの形で`IR`を読む。
 
@@ -44,7 +44,7 @@ kotowari は常に、`IR`の形を宣言したスキーマをコンパイル時�
 - kind: prohibition
 - source: docs/decision/records/2026-09-22-ir-engine.md#A1, docs/decision/records/2026-09-22-ir-engine.md#A23, docs/decision/records/2026-09-22-ir-engine.md#A29, docs/decision/records/2026-09-22-ir-engine.md#A37, docs/decision/records/2026-09-23-ir-engine-gaps.md#A9, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18
 - verification: review
-- how_to_verify: `crates/kotowari-core/src/` の下のすべてのモジュール（`ir.rs` と `query.rs` を含む）の関数を見て、`IR`の文書の生の行を読む関数が gherkin の塊の中身と閉じない`コードブロック`の検出の2つに対応するものだけであり、見出し、"- 名前:" の行、Markdown の表、`題名`と`文書が扱う範囲`、`文`、`項目`の本文の範囲を生の行から決める関数が無いことを確認する。query の本文は、スキーマの側が返す`項目`の見出しの行と最後の行の間の行を切り出すだけであることを確認する
+- how_to_verify: `crates/kotowari-core/src/` の下のすべてのモジュール（`ir/` の下のモジュールと `query.rs` を含む）の関数を見て、`IR`の文書の生の行を読む関数が gherkin の塊の中身と閉じない`コードブロック`の検出の2つに対応するものだけであり、見出し、"- 名前:" の行、Markdown の表、`題名`と`文書が扱う範囲`、`文`、`項目`の本文の範囲を生の行から決める関数が無いことを確認する。query の本文は、スキーマの側が返す`項目`の見出しの行と最後の行の間の行を切り出すだけであることを確認する
 
 kotowari は、`IR`の文書の Markdown の構造を自前で読んではならない。生の行を読んでよいのは、gherkin の塊の中身と、閉じない`コードブロック`の検出の2つだけである。この禁止はモジュールを問わず、query が`項目`の本文の範囲を生の行の "### " と "## " から決めることも含む。
 

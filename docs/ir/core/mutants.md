@@ -50,7 +50,7 @@ kotowari always, on "kotowari mutants", reads only the `configuration file`, the
 - kind: prohibition
 - source: docs/decision/records/2026-09-17-mutation-tests.md#A12, docs/decision/records/2026-09-17-mutation-tests.md#A13, docs/decision/records/2026-09-17-mutation-tests.md#A31, docs/decision/records/2026-09-17-mutation-tests.md#A54
 - verification: review
-- how_to_verify: Confirm that the spellings of the tool's result values (CaughtMutant, MissedMutant) do not appear in crates/kotowari-core/src/mutants.rs and crates/kotowari-core/src/lib.rs, which build the finding kind names (mutant_survived, mutant_timeout, equivalent_stale, equivalent_invalid) and detail, by checking that rg -n 'CaughtMutant|MissedMutant' crates/kotowari-core/src/mutants.rs crates/kotowari-core/src/lib.rs prints nothing. crates/kotowari-core/src/cargo_mutants.rs, which maps the tool's values, is out of scope
+- how_to_verify: Confirm that the spellings of the tool's result values (CaughtMutant, MissedMutant) do not appear in crates/kotowari-core/src/mutants.rs and crates/kotowari-core/src/finding.rs, which build the finding kind names (mutant_survived, mutant_timeout, equivalent_stale, equivalent_invalid) and detail, by checking that rg -n 'CaughtMutant|MissedMutant' crates/kotowari-core/src/mutants.rs crates/kotowari-core/src/finding.rs prints nothing. crates/kotowari-core/src/cargo_mutants.rs, which maps the tool's values, is out of scope
 
 kotowari shall not use words specific to a mutation-testing tool in the kind or the form of the detail of a `finding`. The change description inside detail is the text as the tool produced it and is not subject to this.
 

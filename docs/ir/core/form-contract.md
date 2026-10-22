@@ -11,7 +11,7 @@ Covers where the form of the IR is decided, who reads that form, and how forms t
 - kind: ubiquitous
 - source: docs/decision/records/records.md#A25, docs/decision/records/records.md#A52, docs/decision/records/records.md#A98
 - verification: review
-- how_to_verify: Confirm that "parse_document" in "crates/kotowari-core/src/ir.rs" reads the IR with the schema that "crates/kotowari-core/src/schema.rs" took in at compile time
+- how_to_verify: Confirm that "parse_document" in "crates/kotowari-core/src/ir/extract.rs" reads the IR with the schema that "crates/kotowari-core/src/schema.rs" took in at compile time
 
 kotowari always reads the `IR` in one form fixed in code.
 
@@ -44,7 +44,7 @@ kotowari always holds the schemas that declare the form of the `IR`, taken in at
 - kind: prohibition
 - source: docs/decision/records/2026-09-22-ir-engine.md#A1, docs/decision/records/2026-09-22-ir-engine.md#A23, docs/decision/records/2026-09-22-ir-engine.md#A29, docs/decision/records/2026-09-22-ir-engine.md#A37, docs/decision/records/2026-09-23-ir-engine-gaps.md#A9, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A18
 - verification: review
-- how_to_verify: Look at the functions of every module under "crates/kotowari-core/src/" (including "ir.rs" and "query.rs"), and confirm that the only functions that read raw lines of a document of the `IR` are those for the two purposes of the contents of a gherkin block and the detection of an unclosed `code block`, and that there is no function that decides from raw lines the headings, the "- name:" lines, Markdown tables, the `title` and the `scope`, `statement` lines, or the range of the body of an `item`. Confirm that the body in query only cuts out the lines between the heading line of an `item` and the last line that the schema side returns
+- how_to_verify: Look at the functions of every module under "crates/kotowari-core/src/" (including those under "ir/" and "query.rs"), and confirm that the only functions that read raw lines of a document of the `IR` are those for the two purposes of the contents of a gherkin block and the detection of an unclosed `code block`, and that there is no function that decides from raw lines the headings, the "- name:" lines, Markdown tables, the `title` and the `scope`, `statement` lines, or the range of the body of an `item`. Confirm that the body in query only cuts out the lines between the heading line of an `item` and the last line that the schema side returns
 
 kotowari must not read the Markdown structure of a document of the `IR` by itself. It may read raw lines for only two purposes: the contents of a gherkin block, and the detection of an unclosed `code block`. This prohibition applies whatever the module, and includes query deciding the range of the body of an `item` from raw "### " and "## " lines.
 
