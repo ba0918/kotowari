@@ -47,7 +47,7 @@ fn findings_by_kind(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value>
 // @kotowari[REQ-core-025]
 #[test]
 fn req_025_finding_kind_displays_as_its_own_kind_word() {
-    // --format text の出力は "{kind}" を通して種類の語を書く（main.rs）。
+    // --format text の出力は "{kind}" を通して種類の語を書く（CLI の text の出力）。
     // その Display の実装が種類ごとの語を書くことを直接確かめる。
     assert_eq!(
         kotowari_core::FindingKind::MissingTitle.to_string(),
