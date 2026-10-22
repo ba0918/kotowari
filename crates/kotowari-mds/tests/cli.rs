@@ -15,6 +15,16 @@ document:
         required: false
 "#;
 
+/// T_SCHEMA に合う文書
+fn good_doc() -> &'static str {
+    "---\n$schema: ./schema.yaml\n---\n# T-1: 例\n\n## 状況\n\n本文。\n"
+}
+
+/// T_SCHEMA に宣言の無い節 "補足"（10行目）を足した文書
+fn bad_doc() -> &'static str {
+    "---\n$schema: ./schema.yaml\n---\n# T-1: 例\n\n## 状況\n\n本文。\n\n## 補足\n\n本文。\n"
+}
+
 fn write_file(dir: &Path, name: &str, content: &str) -> std::path::PathBuf {
     let path = dir.join(name);
     if let Some(parent) = path.parent() {
@@ -205,11 +215,7 @@ fn check_json_outputs_empty_files_array_for_clean_file() {
 fn check_json_outputs_empty_files_array_for_clean_directory() {
     let dir = tempfile::tempdir().unwrap();
     write_file(dir.path(), "schema.yaml", T_SCHEMA);
-    write_file(
-        dir.path(),
-        "doc.md",
-        "---\n$schema: ./schema.yaml\n---\n# T-1: 例\n\n## 状況\n\n本文。\n",
-    );
+    write_file(dir.path(), "doc.md", good_doc());
     let output = mds()
         .args(["check", dir.path().to_str().unwrap(), "--format", "json"])
         .output()
@@ -224,18 +230,16 @@ fn check_json_outputs_empty_files_array_for_clean_directory() {
 fn check_document_with_findings_exits_one_with_text() {
     let dir = tempfile::tempdir().unwrap();
     write_file(dir.path(), "schema.yaml", T_SCHEMA);
-    let doc = write_file(
-        dir.path(),
-        "doc.md",
-        "---\n$schema: ./schema.yaml\n---\n# T-1: 例\n\n## 状況\n\n本文。\n\n## 補足\n\n本文。\n",
-    );
+    let doc = write_file(dir.path(), "doc.md", bad_doc());
     let output = mds()
         .args(["check", doc.to_str().unwrap()])
         .output()
         .unwrap();
     assert_eq!(output.status.code(), Some(1));
+    // --format を付けなければ text で出す
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains(&format!("{}:10: undeclared_heading:", doc.display())));
+    assert!(!stdout.trim_start().starts_with('{'));
 }
 
 // @kotowari[REQ-schema-007, REQ-schema-008]
@@ -243,11 +247,7 @@ fn check_document_with_findings_exits_one_with_text() {
 fn check_json_output_has_files_with_findings() {
     let dir = tempfile::tempdir().unwrap();
     write_file(dir.path(), "schema.yaml", T_SCHEMA);
-    let doc = write_file(
-        dir.path(),
-        "doc.md",
-        "---\n$schema: ./schema.yaml\n---\n# T-1: 例\n\n## 状況\n\n本文。\n\n## 補足\n\n本文。\n",
-    );
+    let doc = write_file(dir.path(), "doc.md", bad_doc());
     let output = mds()
         .args(["check", doc.to_str().unwrap(), "--format", "json"])
         .output()
@@ -264,35 +264,12 @@ fn check_json_output_has_files_with_findings() {
     assert!(finding.get("detail").is_some());
 }
 
-// @kotowari[REQ-schema-007]
-#[test]
-fn check_format_defaults_to_text() {
-    let dir = tempfile::tempdir().unwrap();
-    write_file(dir.path(), "schema.yaml", T_SCHEMA);
-    let doc = write_file(
-        dir.path(),
-        "doc.md",
-        "---\n$schema: ./schema.yaml\n---\n# T-1: 例\n\n## 状況\n\n本文。\n\n## 補足\n\n本文。\n",
-    );
-    let output = mds()
-        .args(["check", doc.to_str().unwrap()])
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains(&format!("{}:10: undeclared_heading:", doc.display())));
-    assert!(!stdout.trim_start().starts_with('{'));
-}
-
 // @kotowari[REQ-schema-002, EX-schema-001]
 #[test]
 fn check_open_relaxes_undeclared_headings() {
     let dir = tempfile::tempdir().unwrap();
     write_file(dir.path(), "schema.yaml", T_SCHEMA);
-    let doc = write_file(
-        dir.path(),
-        "doc.md",
-        "---\n$schema: ./schema.yaml\n---\n# T-1: 例\n\n## 状況\n\n本文。\n\n## 補足\n\n本文。\n",
-    );
+    let doc = write_file(dir.path(), "doc.md", bad_doc());
     let closed = mds()
         .args(["check", doc.to_str().unwrap()])
         .output()
@@ -587,29 +564,11 @@ fn values_without_schema_stops_with_schema_not_found() {
     assert!(stderr.contains("schema_not_found"));
 }
 
-const DIR_SCHEMA: &str = r#"
-document:
-  title:
-    pattern: "^T-\\d+:"
-  sections:
-    - name: 状況
-      statement:
-        required: false
-"#;
-
-fn good_doc() -> &'static str {
-    "---\n$schema: ./schema.yaml\n---\n# T-1: 例\n\n## 状況\n\n本文。\n"
-}
-
-fn bad_doc() -> &'static str {
-    "---\n$schema: ./schema.yaml\n---\n# T-1: 例\n\n## 状況\n\n本文。\n\n## 補足\n\n本文。\n"
-}
-
 // @kotowari[REQ-schema-010]
 #[test]
 fn check_directory_reports_all_failing_documents() {
     let dir = tempfile::tempdir().unwrap();
-    write_file(dir.path(), "schema.yaml", DIR_SCHEMA);
+    write_file(dir.path(), "schema.yaml", T_SCHEMA);
     write_file(dir.path(), "good.md", good_doc());
     write_file(dir.path(), "bad.md", bad_doc());
     write_file(dir.path(), "noschema.md", "# スキーマなし\n");
@@ -652,7 +611,7 @@ fn check_directory_relaxes_a_schema_that_declares_open() {
 #[test]
 fn check_directory_skips_hidden_directories() {
     let dir = tempfile::tempdir().unwrap();
-    write_file(dir.path(), "schema.yaml", DIR_SCHEMA);
+    write_file(dir.path(), "schema.yaml", T_SCHEMA);
     write_file(dir.path(), "good.md", good_doc());
     write_file(dir.path(), ".hidden/bad.md", bad_doc());
     let output = mds()
@@ -669,7 +628,7 @@ fn check_directory_does_not_follow_symlinks() {
     let outside = tempfile::tempdir().unwrap();
     let external = write_file(outside.path(), "external.md", bad_doc());
     let dir = tempfile::tempdir().unwrap();
-    write_file(dir.path(), "schema.yaml", DIR_SCHEMA);
+    write_file(dir.path(), "schema.yaml", T_SCHEMA);
     write_file(dir.path(), "good.md", good_doc());
     std::os::unix::fs::symlink(&external, dir.path().join("link.md")).unwrap();
     let output = mds()
@@ -729,7 +688,7 @@ fn check_directory_stops_on_invalid_schema() {
 #[test]
 fn check_directory_stops_on_frontmatter_invalid_and_outputs_no_findings() {
     let dir = tempfile::tempdir().unwrap();
-    write_file(dir.path(), "schema.yaml", DIR_SCHEMA);
+    write_file(dir.path(), "schema.yaml", T_SCHEMA);
     write_file(dir.path(), "good.md", good_doc());
     write_file(
         dir.path(),
@@ -750,7 +709,7 @@ fn check_directory_stops_on_frontmatter_invalid_and_outputs_no_findings() {
 #[test]
 fn check_directory_stops_on_schema_not_found_and_outputs_no_findings() {
     let dir = tempfile::tempdir().unwrap();
-    write_file(dir.path(), "schema.yaml", DIR_SCHEMA);
+    write_file(dir.path(), "schema.yaml", T_SCHEMA);
     write_file(dir.path(), "good.md", good_doc());
     write_file(
         dir.path(),
