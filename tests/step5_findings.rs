@@ -301,21 +301,15 @@ fn req_024_sorted_by_path_line_kind_detail() {
 // @kotowari[PROP-core-003]
 #[test]
 fn prop_003_findings_are_sorted() {
-    use proptest::prelude::*;
-
     // run_check を通して、ライブラリが返す findings が
     // TBL-core-007（path → line → kind → detail）で並んでいることを検証する。
     //
     // IR 検査の指摘（後のファイル名の文書）とテスト発見の指摘（前のファイル
     // 名のテストファイル）が交互に追加されるため、ソートしないと壊れる。
-    let config = proptest::test_runner::Config {
-        cases: 8,
-        ..Default::default()
-    };
-    proptest!(config, |(
-        n_docs in 2..5usize,
-        n_items in 1..3usize,
-    )| {
+    // 文書の数と項目の数の組は6通りしかないので、乱択せずにすべて試す
+    for (n_docs, n_items) in
+        (2..5usize).flat_map(|n_docs| (1..3usize).map(move |n_items| (n_docs, n_items)))
+    {
         let tmp = tempfile::TempDir::new().unwrap();
         fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
         fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
@@ -325,11 +319,13 @@ fn prop_003_findings_are_sorted() {
         fs::write(
             tmp.path().join(".kotowari/config.yaml"),
             "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
-        ).unwrap();
+        )
+        .unwrap();
         fs::write(
             tmp.path().join("docs/decision/records/records.md"),
             "# Records\n\n## Agreements\n\n- A1 Agreement\n",
-        ).unwrap();
+        )
+        .unwrap();
         for i in 0..n_docs {
             let filename = format!("doc{i}.md");
             let mut content = format!("# Title {i}\n\nScope {i}.\n\n## Requirements\n\n");
@@ -349,14 +345,20 @@ fn prop_003_findings_are_sorted() {
         fs::write(
             tmp.path().join("tests/check.rs"),
             "#[test]\nfn unmarked() {}\n",
-        ).unwrap();
-        let result = kotowari::Project::new(kotowari::ProjectOptions::new(tmp.path())).unwrap().check().expect("run_check should succeed");
+        )
+        .unwrap();
+        let result = kotowari::Project::new(kotowari::ProjectOptions::new(tmp.path()))
+            .unwrap()
+            .check()
+            .expect("run_check should succeed");
         // findings が TBL-core-007 の順で並んでいることを検証する
         let findings = result.findings();
         for i in 1..findings.len() {
-            let a = &findings[i-1];
+            let a = &findings[i - 1];
             let b = &findings[i];
-            let cmp = a.path().cmp(b.path())
+            let cmp = a
+                .path()
+                .cmp(b.path())
                 .then_with(|| match (a.line(), b.line()) {
                     (None, None) => std::cmp::Ordering::Equal,
                     (None, Some(_)) => std::cmp::Ordering::Less,
@@ -365,11 +367,21 @@ fn prop_003_findings_are_sorted() {
                 })
                 .then_with(|| a.kind().as_str().cmp(b.kind().as_str()))
                 .then_with(|| a.detail().cmp(b.detail()));
-            prop_assert!(cmp != std::cmp::Ordering::Greater,
+            assert!(
+                cmp != std::cmp::Ordering::Greater,
                 "findings not sorted at index {}: prev=({},{:?},{},{}) curr=({},{:?},{},{})",
-                i, a.path(), a.line(), a.kind(), a.detail(), b.path(), b.line(), b.kind(), b.detail());
+                i,
+                a.path(),
+                a.line(),
+                a.kind(),
+                a.detail(),
+                b.path(),
+                b.line(),
+                b.kind(),
+                b.detail()
+            );
         }
-    });
+    }
 }
 
 // --- Step 7: 指摘の種類と行の表 ---

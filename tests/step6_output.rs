@@ -494,9 +494,12 @@ fn tbl_021_excluded_entries_are_not_counted() {
 fn prop_004_files_sum_equals_the_number_of_read_test_files() {
     use proptest::prelude::*;
 
-    // 1件ごとに CLI を起動するので試行回数を絞る
+    // 1件ごとに CLI を起動するので試行回数を絞る。変異テストで同じ変異が実行ごとに殺されたり
+    // 生き残ったりしないよう、乱数の種を固定し、縮める回数も抑える
     let config = proptest::test_runner::Config {
         cases: 8,
+        rng_seed: proptest::test_runner::RngSeed::Fixed(4),
+        max_shrink_iters: 16,
         ..Default::default()
     };
     proptest!(config, |(exts in proptest::collection::vec(0..4usize, 1..8usize))| {
