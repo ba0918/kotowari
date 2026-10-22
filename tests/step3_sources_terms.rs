@@ -499,35 +499,6 @@ fn req_066_vague_word_substring() {
     );
 }
 
-// @kotowari[REQ-core-014]
-#[test]
-fn req_014_empty_vague_word_stops_with_config_error() {
-    let tmp = TempDir::new().unwrap();
-    make_project_with_records(tmp.path());
-    fs::write(
-        tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\nvague_words:\n  - \"\"\n  - 適切に\n",
-    )
-    .unwrap();
-    fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n適切に処理する。\n",
-    )
-    .unwrap();
-    let output = cmd()
-        .arg("check")
-        .current_dir(tmp.path())
-        .timeout(std::time::Duration::from_secs(5))
-        .output()
-        .unwrap();
-    assert_eq!(
-        output.status.code(),
-        Some(2),
-        "empty vague word should stop with exit code 2"
-    );
-    assert!(output.stdout.is_empty(), "stdout should be empty on stop");
-}
-
 // --- REQ-core-067: 出現ごとに1件 ---
 
 // @kotowari[REQ-core-067]

@@ -526,18 +526,6 @@ fn req_018_missing_adr_dir_stops() {
         .stdout("");
 }
 
-// --- REQ-core-019: glob の読み方 ---
-
-// @kotowari[REQ-core-019]
-#[test]
-fn req_019_glob_is_recursive_and_skips_hidden_dirs() {
-    // この機能はテストの発見（Step 4）で完全に検査するので、
-    // ここでは設定の glob が受理されることだけ確かめる
-    let yaml = "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\ntests:\n  files:\n    - \"src/**/*.rs\"\n";
-    let cfg = kotowari_core::config::Config::parse(yaml).unwrap();
-    assert_eq!(cfg.tests.files, vec!["src/**/*.rs"]);
-}
-
 // --- Step 2: 設定の誤りの拡張、パスの正規化 ---
 
 // @kotowari[REQ-core-014]
