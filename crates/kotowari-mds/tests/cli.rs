@@ -2561,6 +2561,24 @@ fn ex_schema_065_values_text_numbers_array_elements_from_one() {
 
 // @kotowari[REQ-schema-066]
 #[test]
+fn req_schema_066_values_text_writes_a_derived_number_after_its_key() {
+    let schema = r#"
+document:
+  sections:
+    - name: 要求
+      item:
+        id: "^REQ-[0-9]+$"
+        extract: { path: requirements, of: { id: id, line: line } }
+"#;
+    let doc = "## 要求\n\n### REQ-001: 例\n";
+    assert_eq!(
+        values_text(schema, doc),
+        "requirements:\n  id: REQ-001\n  line: 6\n"
+    );
+}
+
+// @kotowari[REQ-schema-066]
+#[test]
 fn req_schema_066_values_text_indents_the_later_lines_of_an_array_element_one_level_deeper() {
     let schema = "document:\n  preamble:\n    bullets:\n      extract: t.list\n";
     let doc = "- x\n  - y\n- z\n";
