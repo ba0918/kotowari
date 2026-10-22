@@ -170,6 +170,58 @@ fn req_003_config_path_is_relative_to_cwd() {
         .code(0);
 }
 
+// @kotowari[REQ-core-003, REQ-core-152, REQ-core-158, REQ-core-163]
+#[test]
+fn req_003_list_query_and_status_read_the_config_given_by_config() {
+    // 既定の場所の設定は IR の置き場を指さず、--config の設定だけが spec/ を指す。
+    // 読んだ設定が渡した方なら、どのコマンドも spec/ の項目を読む
+    let tmp = TempDir::new().unwrap();
+    for dir in [
+        ".kotowari",
+        "spec",
+        "docs/decision/records",
+        "docs/decision/adr",
+    ] {
+        fs::create_dir_all(tmp.path().join(dir)).unwrap();
+    }
+    fs::write(tmp.path().join(".kotowari/config.yaml"), "ir: missing\n").unwrap();
+    fs::write(
+        tmp.path().join("other.yaml"),
+        "ir: spec\ntests:\n  files: []\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("spec/a.md"),
+        "# A\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- verification: review\n- how_to_verify: read\n\nStatement.\n",
+    )
+    .unwrap();
+    for (args, read) in [
+        (
+            &["list", "--format", "text"][..],
+            "REQ-001 review R spec/a.md:7",
+        ),
+        (
+            &["query", "REQ-001", "--format", "text"],
+            "REQ-001 review R spec/a.md:7",
+        ),
+        (
+            &["status", "--format", "json"],
+            "\"documents\":{\"files\":1,",
+        ),
+    ] {
+        let output = cmd()
+            .args(args)
+            .args(["--config", "other.yaml"])
+            .current_dir(tmp.path())
+            .output()
+            .unwrap();
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_ne!(output.status.code(), Some(2), "{args:?}: {stderr}");
+        assert!(stdout.contains(read), "{args:?}: {stdout}");
+    }
+}
+
 // --- REQ-core-011: 既定の設定ファイルの場所 ---
 
 // @kotowari[REQ-core-011]
