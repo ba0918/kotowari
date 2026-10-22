@@ -491,16 +491,14 @@ fn statement_piece(block: &Block) -> Option<Piece> {
 /// 表・コードブロックなどの子は含めない（A12）。`children` が無ければ子の一覧の行はすべて含める。
 fn list_item_pieces(block: &Block, children: Option<&Children>, doc: &Document) -> Vec<Piece> {
     let mut pieces = own_pieces(block, doc);
-    let declared: Vec<&str> = children
-        .map(|c| c.fields.iter().map(|f| f.name.as_str()).collect())
-        .unwrap_or_default();
+    let declared = children.map_or(&[][..], |c| c.fields.as_slice());
     let child_rule = children
         .and_then(|c| c.bullets.as_deref())
         .and_then(|b| b.children.as_ref());
     for child in block.children() {
         match child {
             Block::Bullet { .. } => pieces.extend(list_item_pieces(child, child_rule, doc)),
-            Block::Field { name, .. } if !declared.contains(&name.as_str()) => {
+            Block::Field { name, .. } if !is_declared_field(declared, name) => {
                 pieces.extend(list_item_pieces(child, child_rule, doc))
             }
             Block::Field { .. }
