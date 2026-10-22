@@ -18,7 +18,7 @@ pub struct Document {
     pub(crate) preamble: Vec<Block>,
     /// 深さ2の節
     pub(crate) sections: Vec<Section>,
-    /// 節の外に出た深さ3以上の見出し（深さ4以上は heading_level_mismatch の対象）
+    /// 深さ4以上の見出し。節の中かどうかを問わず heading_level_mismatch の対象
     pub(crate) stray_headings: Vec<Heading>,
     /// 前置部領域（最初の節より前）に出た深さ3の見出しとその内側の行。
     /// 題名より後の見出しは宣言済みの前置部の中の未宣言の構造として、open でも

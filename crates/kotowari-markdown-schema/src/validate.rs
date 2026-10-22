@@ -260,15 +260,13 @@ fn validate_items(
 }
 
 fn validate_stray_heading(heading: &Heading, findings: &mut Vec<Finding>) {
-    // 前置部領域の深さ3の見出しは stray_preamble_headings で扱い、ここには
-    // 深さ4以上の見出しだけが来る（REQ-schema-026）。深さ4以上は常に heading_level_mismatch。
-    if heading.depth >= 4 {
-        findings.push(Finding::at(
-            FindingKind::HeadingLevelMismatch,
-            heading.line,
-            format!("heading at depth {} is not allowed", heading.depth),
-        ));
-    }
+    // 文書の木は深さ1〜3の見出しをそれぞれの場所に置くので、ここには深さ4以上の見出しだけが来る
+    // （REQ-schema-026）。深さ4以上は常に heading_level_mismatch
+    findings.push(Finding::at(
+        FindingKind::HeadingLevelMismatch,
+        heading.line,
+        format!("heading at depth {} is not allowed", heading.depth),
+    ));
 }
 
 /// 1つの前置部・節・項目の中の行の規則。規則種別ごとの判定に使う。

@@ -855,11 +855,11 @@ fn place_derived(map: &mut Map<String, Value>, extract: &Extract, doc: &Document
 
 fn place(root: &mut Map<String, Value>, path: &str, value: Value) {
     let keys: Vec<&str> = path.split('.').collect();
-    if keys.is_empty() {
-        return;
-    }
+    let (last, parents) = keys
+        .split_last()
+        .expect("split always yields at least one piece");
     let mut current = root;
-    for key in &keys[..keys.len() - 1] {
+    for key in parents {
         let entry = current
             .entry(key.to_string())
             .or_insert_with(|| Value::Object(Map::new()));
@@ -870,7 +870,7 @@ fn place(root: &mut Map<String, Value>, path: &str, value: Value) {
             .as_object_mut()
             .expect("the entry was made an object just above");
     }
-    current.insert(keys[keys.len() - 1].to_string(), value);
+    current.insert((*last).to_string(), value);
 }
 
 #[cfg(test)]
