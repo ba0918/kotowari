@@ -1091,7 +1091,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-schema-029, REQ-schema-035]
+    // @kotowari[REQ-schema-029, REQ-schema-035, REQ-schema-037, REQ-schema-045]
     #[test]
     fn separator_trims_elements_and_keeps_empty_ones() {
         let schema = r#"
@@ -1176,21 +1176,6 @@ document:
             json!(["a", "b\n折り返し", "c"]),
             "空行なしの折り返し行は値の一部で、separator の分割対象になる（REQ-schema-045、REQ-schema-046）。継続段落のように末尾要素に付かない"
         );
-    }
-
-    // @kotowari[REQ-schema-029, REQ-schema-037, REQ-schema-045]
-    #[test]
-    fn separator_splits_value_into_string_elements() {
-        let schema = r#"
-document:
-  preamble:
-    fields:
-      - name: タグ
-        separator: ","
-        extract: tags
-"#;
-        let v = values(schema, "# 題名\n\n- タグ: a,b,c\n");
-        assert_eq!(v["tags"], json!(["a", "b", "c"]));
     }
 
     // @kotowari[REQ-schema-032, REQ-schema-035]
@@ -1298,26 +1283,6 @@ document:
             v["reasons"],
             json!(["* 親\n\n  続きの段落"]),
             "継続段落を付けるときも元のマーカーを保つ（TBL-schema-008）"
-        );
-    }
-
-    // @kotowari[REQ-schema-035]
-    #[test]
-    fn bullet_extract_preserves_whitespace_after_marker() {
-        let schema = r#"
-document:
-  sections:
-    - name: 理由
-      bullets:
-        repeat: { min: 0 }
-        extract: reasons
-"#;
-        let doc = "## 理由\n\n-  親\n";
-        let v = values(schema, doc);
-        assert_eq!(
-            v["reasons"],
-            json!(["-  親"]),
-            "抽出の1要素は元の行（マーカーとその直後の空白を含む）を使う（TBL-schema-008）"
         );
     }
 
@@ -1794,22 +1759,6 @@ document:
 "#;
         let v = values(schema, "## 用語集\n");
         assert!(v.get("glossary").is_none(), "表0件のときはキーを省略する");
-    }
-
-    // @kotowari[REQ-schema-033, REQ-schema-035]
-    #[test]
-    fn table_extract_keys_rows_by_header() {
-        let schema = r#"
-document:
-  sections:
-    - name: 用語集
-      table:
-        header: [a, b]
-        extract: glossary
-"#;
-        let doc = "## 用語集\n\n| a | b |\n|---|---|\n| 1 | 2 |\n";
-        let v = values(schema, doc);
-        assert_eq!(v["glossary"], json!([{ "a": "1", "b": "2" }]));
     }
 
     // @kotowari[REQ-schema-019, REQ-schema-035]

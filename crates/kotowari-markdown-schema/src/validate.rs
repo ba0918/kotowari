@@ -1097,14 +1097,6 @@ document:
         "# ADR-0001: 印\n\n- 状態: 承認済み\n\n## 状況\n\n背景。\n\n## 決定\n\n判断。\n"
     }
 
-    // @kotowari[REQ-schema-022]
-    #[test]
-    fn missing_title_is_found() {
-        let doc = "## 状況\n\n背景。\n\n## 決定\n\n判断。\n";
-        let findings = validate_src(SCHEMA, doc, false);
-        assert!(kinds(&findings).contains(&FindingKind::MissingTitle));
-    }
-
     // @kotowari[REQ-schema-022, EX-schema-010]
     #[test]
     fn multiple_titles_is_found() {
@@ -2519,23 +2511,6 @@ document:
 
     // @kotowari[REQ-schema-041]
     #[test]
-    fn field_order_mismatch_is_found() {
-        let schema = r#"
-document:
-  sections:
-    - name: 要求
-      ordered: true
-      fields:
-        - name: 種類
-        - name: 定義
-"#;
-        let doc = "## 要求\n\n- 定義: REQ-001\n- 種類: algorithm\n";
-        let findings = validate_src(schema, doc, false);
-        assert!(kinds(&findings).contains(&FindingKind::FieldOrderMismatch));
-    }
-
-    // @kotowari[REQ-schema-041]
-    #[test]
     fn a_repeated_field_in_a_row_is_still_in_declared_order() {
         let schema = r#"
 document:
@@ -2855,7 +2830,7 @@ document:
         );
     }
 
-    // @kotowari[REQ-schema-008]
+    // @kotowari[REQ-schema-022, REQ-schema-008]
     #[test]
     fn missing_title_has_neither_a_line_nor_a_node_name() {
         let doc = "## 状況\n\n背景。\n\n## 決定\n\n判断。\n";
@@ -2892,7 +2867,7 @@ document:
         assert_eq!(finding.line, None, "文書そのものには含むノードの行が無い");
     }
 
-    // @kotowari[REQ-schema-008]
+    // @kotowari[REQ-schema-041, REQ-schema-008]
     #[test]
     fn field_order_mismatch_carries_the_name_of_the_field_out_of_order() {
         let schema = "document:\n  sections:\n    - name: 要求\n      ordered: true\n      fields:\n        - name: 種類\n        - name: 定義\n";
