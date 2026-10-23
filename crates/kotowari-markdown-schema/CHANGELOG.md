@@ -15,6 +15,10 @@
 - The `kotowari-markdown-view` crate, which turns documents made of Markdown text and parts of fixed kinds into static HTML pages in memory. `part_schema` returns the JSON Schema of the eight part kinds. It reads and writes no files, and the pages load nothing from outside.
 - `SchemaLoader::read_document`, which reads a document as a UTF-8 string with a leading BOM removed, the same way `load` does, without resolving a schema.
 
+### Removed
+
+- **BREAKING (Rust API)** `finding::Finding::new`, `at`, `maybe_at`, `of_node` and `of_rule` are no longer public. A `Finding` is now made only by validation and extraction; outside the crate, read it through its accessors (`kind`, `line`, `node`, `raw`, `rule_kind`, `detail`).
+
 ### Fixed
 
 - A dot-separated name that is empty (`""` or `a..b`) in the `value` and `of` keys of a schema's `extract` now stops with `schema_invalid`, the same as `path`. Before, it passed, and the extracted values got an empty-string key.
