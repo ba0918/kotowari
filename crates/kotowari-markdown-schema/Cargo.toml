@@ -6,8 +6,8 @@ rust-version.workspace = true
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/ba0918/kotowari"
 readme = "README.md"
-keywords = ["markdown", "schema", "validation", "cli"]
-categories = ["command-line-utilities", "text-processing"]
+keywords = ["markdown", "schema", "validation"]
+categories = ["text-processing"]
 description = "Validate Markdown documents against a YAML schema declared in their frontmatter and extract structured values"
 
 [lib]
