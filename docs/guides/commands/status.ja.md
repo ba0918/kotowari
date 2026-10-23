@@ -223,7 +223,7 @@ true
 
 ### `config error: ...: matched by both guides.files and tests.files` で止まる
 
-<!-- @kotowari[REQ-core-163:9cf2f990, REQ-core-199:55922b15] -->
+<!-- @kotowari[REQ-core-163:9cf2f990, REQ-core-199:cdaa412b] -->
 
 `status` は `check` と同じくガイドも読むので、設定の `guides.files` と `tests.files` の glob が同じファイルに当たると停止します。
 `list` と `query` はガイドを読まないのでこの停止をしません。そのため「list は動くのに status は止まる」ことがあります。

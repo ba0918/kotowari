@@ -25,10 +25,10 @@ kotowari は常に、"kotowari check"、"kotowari status"、"kotowari overview b
 ### REQ-core-280: ガイドとテストとの重なり
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-02-whole-picture.md#A58, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A75, docs/decision/records/2026-10-23-overview-test-contents-consistency.md#A1
+- source: docs/decision/records/2026-10-02-whole-picture.md#A58, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A75, docs/decision/records/2026-10-23-overview-test-contents-consistency.md#A1, docs/decision/records/2026-10-23-guide-overlap-sides.md#A1
 - verification: unit
 
-"kotowari check"、"kotowari status"、"kotowari overview build"、"kotowari overview serve" で、1つのファイルが "overview.files" の glob と、"guides.files" か "tests.files" の glob の両方に当たるとき、kotowari は設定の誤りを理由に`停止`し、詳細に、重なったファイルのうちパスのバイト順で最初の1つの`基準のディレクトリ`からの相対パスに ": matched by both overview.files and guides.files" か ": matched by both overview.files and tests.files" を続けた文字列を出す。REQ-core-199 の重なりがあればそれを先に判定するので、1つのファイルが3つすべてに当たるときは REQ-core-199 の`停止`になり、詳細は ": matched by both guides.files and tests.files" で終わる。
+"kotowari check"、"kotowari status"、"kotowari overview build"、"kotowari overview serve" で、1つのファイルが "overview.files" の glob と、"guides.files" か "tests.files" の glob の両方に当たるとき、kotowari は設定の誤りを理由に`停止`し、詳細に、重なったファイルのうちパスのバイト順で最初の1つの`基準のディレクトリ`からの相対パスに ": matched by both overview.files and guides.files" か ": matched by both overview.files and tests.files" を続けた文字列を出す。REQ-core-199 の重なりがあればそれを先に判定するので、1つのファイルが3つすべてに当たるときは REQ-core-199 の`停止`になり、詳細は ": matched by both guides.files and tests.files" で終わる。"guides.files" の glob に当たるものとして数えるファイルは REQ-core-199 のとおりにする。
 
 ### REQ-core-281: 元データの形
 

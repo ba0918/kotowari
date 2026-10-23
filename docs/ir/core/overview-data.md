@@ -25,10 +25,10 @@ When the `configuration file` has no "overview" key, kotowari reads no `overview
 ### REQ-core-280: Overlap with guides and tests
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-02-whole-picture.md#A58, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A75, docs/decision/records/2026-10-23-overview-test-contents-consistency.md#A1
+- source: docs/decision/records/2026-10-02-whole-picture.md#A58, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A75, docs/decision/records/2026-10-23-overview-test-contents-consistency.md#A1, docs/decision/records/2026-10-23-guide-overlap-sides.md#A1
 - verification: unit
 
-When, on "kotowari check", "kotowari status", "kotowari overview build" or "kotowari overview serve", one file is matched both by the globs of "overview.files" and by the globs of "guides.files" or "tests.files", kotowari makes a `stop` with a configuration error as the reason, and outputs as the detail the path, relative to the `base directory`, of the first overlapping file in the byte order of the path, followed by ": matched by both overview.files and guides.files" or ": matched by both overview.files and tests.files". If there is an overlap of REQ-core-199, that is judged first, so when one file is matched by all three, kotowari makes the `stop` of REQ-core-199, whose detail ends with ": matched by both guides.files and tests.files".
+When, on "kotowari check", "kotowari status", "kotowari overview build" or "kotowari overview serve", one file is matched both by the globs of "overview.files" and by the globs of "guides.files" or "tests.files", kotowari makes a `stop` with a configuration error as the reason, and outputs as the detail the path, relative to the `base directory`, of the first overlapping file in the byte order of the path, followed by ": matched by both overview.files and guides.files" or ": matched by both overview.files and tests.files". If there is an overlap of REQ-core-199, that is judged first, so when one file is matched by all three, kotowari makes the `stop` of REQ-core-199, whose detail ends with ": matched by both guides.files and tests.files". Which files count as matched by the globs of "guides.files" follows REQ-core-199.
 
 ### REQ-core-281: The form of the data
 
