@@ -6,7 +6,6 @@ use ast_grep_config::{GlobalRules, RuleCollection, RuleConfig, Severity, from_ya
 use ast_grep_core::tree_sitter::StrDoc;
 use ast_grep_core::{Language, Node};
 use ast_grep_language::SupportLang;
-use kotowari_core::StopReason;
 use kotowari_core::config::Config;
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -41,7 +40,7 @@ pub struct RuleSet {
 
 impl RuleSet {
     /// `key` は誤りの詳細に出す設定の鍵の名前
-    fn build(mut rules: Vec<RuleConfig<SupportLang>>, key: &str) -> Result<Self, StopReason> {
+    fn build(mut rules: Vec<RuleConfig<SupportLang>>, key: &str) -> Result<Self, String> {
         let mut languages = Vec::new();
         for rule in &mut rules {
             if !languages.contains(&rule.language) {
@@ -56,12 +55,12 @@ impl RuleSet {
             .into_iter()
             .map(|rule| RuleCollection::try_new(vec![rule]))
             .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| config_error(format!("invalid glob in {key}: {e}")))?;
+            .map_err(|e| format!("invalid glob in {key}: {e}"))?;
         Ok(RuleSet { rules, languages })
     }
 
     /// 設定の鍵 `key` に並んだルールのファイルだけから集まりを作る（REQ-core-224）
-    pub fn from_texts(texts: &[kotowari_core::SourceText], key: &str) -> Result<Self, StopReason> {
+    pub fn from_texts(texts: &[kotowari_core::SourceText], key: &str) -> Result<Self, String> {
         Self::build(read_rule_texts(texts, key)?, key)
     }
 
@@ -90,7 +89,7 @@ impl TestQueries {
     pub fn from_texts(
         config: &Config,
         texts: &[kotowari_core::SourceText],
-    ) -> Result<Self, StopReason> {
+    ) -> Result<Self, String> {
         let mut rules = bundled_rules(config)?;
         rules.extend(read_rule_texts(texts, "tests.rules")?);
         Ok(TestQueries {
@@ -108,15 +107,15 @@ impl TestQueries {
 fn read_rule_texts(
     texts: &[kotowari_core::SourceText],
     key: &str,
-) -> Result<Vec<RuleConfig<SupportLang>>, StopReason> {
+) -> Result<Vec<RuleConfig<SupportLang>>, String> {
     let mut rules = Vec::new();
     let mut seen = BTreeSet::new();
     for source in texts {
         let path = source.path();
         if !seen.insert(path) {
-            return Err(config_error(format!("duplicate path in {key}: {path}")));
+            return Err(format!("duplicate path in {key}: {path}"));
         }
-        let invalid = |error| config_error(format!("invalid rule in {key}: {path}: {error}"));
+        let invalid = |error| format!("invalid rule in {key}: {path}: {error}");
         if let Some(language) = unknown_language(source.text()) {
             return Err(invalid(format!("unknown language: {language}")));
         }
@@ -125,23 +124,19 @@ fn read_rule_texts(
     Ok(rules)
 }
 
-fn config_error(detail: String) -> StopReason {
-    StopReason::ConfigError(detail)
-}
-
-fn bundled_rules(config: &Config) -> Result<Vec<RuleConfig<SupportLang>>, StopReason> {
+fn bundled_rules(config: &Config) -> Result<Vec<RuleConfig<SupportLang>>, String> {
     let mut rules = Vec::new();
     for yaml in BUNDLED_RULES {
-        rules.extend(parse_rules(yaml).map_err(config_error)?);
+        rules.extend(parse_rules(yaml)?);
     }
     for (yaml, languages) in BUNDLED_SHARED_RULES {
         for language in *languages {
             let yaml = format!("language: {language}\n{yaml}");
-            rules.extend(parse_rules(&yaml).map_err(config_error)?);
+            rules.extend(parse_rules(&yaml)?);
         }
     }
     for attribute in &config.tests.rust.attributes {
-        rules.extend(parse_rules(&configured_attribute_rule(attribute)).map_err(config_error)?);
+        rules.extend(parse_rules(&configured_attribute_rule(attribute))?);
     }
     Ok(rules)
 }
