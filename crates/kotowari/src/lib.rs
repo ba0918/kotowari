@@ -23,7 +23,7 @@ pub use kotowari_core::surface::{SurfaceTally, Unlisted};
 pub use kotowari_core::translations::{Translation, TranslationSide};
 pub use kotowari_core::{
     CheckReport, Finding, FindingGroup, FindingKind, GroupTally, InputError, Inspection,
-    IrDocument, ParsedItem, QueryReport, ReadList, ReadModel, StatusReport, TestFileTally,
+    IrDocument, QueryReport, ReadList, ReadModel, StatusReport, TestFileTally,
 };
 pub use kotowari_core::{
     Documents, ExampleItem, Findings, FlagItem, Items, ListItem, QueryItem, Reference,
