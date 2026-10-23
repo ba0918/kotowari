@@ -192,8 +192,10 @@ fn ex_core_554_a_configuration_file_that_is_a_directory_is_invalid_input_like_a_
 // @kotowari[REQ-core-312, EX-core-555]
 #[test]
 fn ex_core_555_a_directory_at_the_default_location_is_a_read_failure() {
-    let dir = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(dir.path().join(".kotowari/config.yaml")).unwrap();
+    let dir = project();
+    let config = dir.path().join(".kotowari/config.yaml");
+    std::fs::remove_file(&config).unwrap();
+    std::fs::create_dir(&config).unwrap();
     let error = Project::new(ProjectOptions::new(dir.path()))
         .unwrap()
         .check()
