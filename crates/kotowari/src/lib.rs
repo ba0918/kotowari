@@ -70,13 +70,26 @@ pub enum ErrorKind {
 pub struct Error {
     kind: ErrorKind,
     detail: String,
+    /// 種類が UnknownQuery のときだけ、問い合わせた知らない ID
+    unknown_id: Option<String>,
 }
 impl Error {
+    pub(crate) fn new(kind: ErrorKind, detail: impl Into<String>) -> Self {
+        Self {
+            kind,
+            detail: detail.into(),
+            unknown_id: None,
+        }
+    }
     pub fn kind(&self) -> ErrorKind {
         self.kind
     }
     pub fn detail(&self) -> &str {
         &self.detail
+    }
+    /// 種類が UnknownQuery のときの知らない ID。ほかの種類では None（REQ-core-312）
+    pub fn unknown_id(&self) -> Option<&str> {
+        self.unknown_id.as_deref()
     }
 }
 impl std::fmt::Display for Error {
@@ -98,18 +111,13 @@ impl Error {
             Some(error) => format!("{CACHE_ERROR}: {path}: {error}"),
             None => format!("{CACHE_ERROR}: {path}"),
         };
-        Self {
-            kind: ErrorKind::CacheFailure,
-            detail,
-        }
+        Self::new(ErrorKind::CacheFailure, detail)
     }
     fn overview_data(errors: usize) -> Self {
-        Self {
-            kind: ErrorKind::OverviewData,
-            detail: format!(
-                "{OVERVIEW_ERROR}: {errors} errors in overview data; run kotowari check"
-            ),
-        }
+        Self::new(
+            ErrorKind::OverviewData,
+            format!("{OVERVIEW_ERROR}: {errors} errors in overview data; run kotowari check"),
+        )
     }
 }
 impl From<kotowari_core::StopReason> for Error {
@@ -121,10 +129,7 @@ impl From<kotowari_core::StopReason> for Error {
             S::UnreadableFile(_) | S::NonUtf8File(_) => ErrorKind::ReadFailure,
             S::MappingError(_) => ErrorKind::InternalMapping,
         };
-        Self {
-            kind,
-            detail: reason.to_string(),
-        }
+        Self::new(kind, reason.to_string())
     }
 }
 impl From<InputError> for Error {
@@ -136,9 +141,13 @@ impl From<InputError> for Error {
             InputError::ConfigError(_) => ErrorKind::ConfigError,
             _ => ErrorKind::InternalMapping,
         };
+        let unknown_id = match &error {
+            InputError::UnknownQuery(id) => Some(id.clone()),
+            _ => None,
+        };
         Self {
-            kind,
-            detail: error.to_string(),
+            unknown_id,
+            ..Self::new(kind, error.to_string())
         }
     }
 }
@@ -221,10 +230,10 @@ pub struct Project {
 impl Project {
     pub fn new(options: ProjectOptions) -> Result<Self, Error> {
         if !options.start.is_absolute() {
-            return Err(Error {
-                kind: ErrorKind::InvalidInput,
-                detail: "invalid input: project start must be absolute".into(),
-            });
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "invalid input: project start must be absolute",
+            ));
         }
         Ok(Self { options })
     }
