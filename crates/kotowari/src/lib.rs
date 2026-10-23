@@ -17,13 +17,15 @@ mod translations;
 
 pub use kotowari_core::config::Config;
 pub use kotowari_core::guides::{GuideReader, GuideTally};
-pub use kotowari_core::ir::is_valid_id;
+/// `ReadModel::documents` が返す読み終えた`IR`の文書。`kotowari_core::IrDocument`（根の別名）は
+/// "ir::parse" の部分の解析の結果で、Project のどの操作からも届かない（REQ-core-309）
+pub use kotowari_core::ir::{IrDocument, is_valid_id};
 pub use kotowari_core::mutants::MutantCounts;
 pub use kotowari_core::surface::{SurfaceTally, Unlisted};
 pub use kotowari_core::translations::{Translation, TranslationSide};
 pub use kotowari_core::{
     CheckReport, Finding, FindingGroup, FindingKind, GroupTally, InputError, Inspection,
-    IrDocument, QueryReport, ReadList, ReadModel, StatusReport, TestFileTally,
+    QueryReport, ReadList, ReadModel, StatusReport, TestFileTally,
 };
 pub use kotowari_core::{
     Documents, ExampleItem, Findings, FlagItem, Items, ListItem, QueryItem, Reference,

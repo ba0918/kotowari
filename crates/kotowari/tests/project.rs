@@ -136,12 +136,16 @@ fn facade_names_are_the_same_lower_result_types() {
     fn same_guide_reader(model: &kotowari::ReadModel) -> kotowari::GuideReader<'_> {
         model.guide_reader()
     }
+    fn same_documents(model: &kotowari::ReadModel) -> &[kotowari::IrDocument] {
+        model.documents()
+    }
     let _ = (
         same_query,
         same_requirement,
         same_guides,
         same_mutants,
         same_guide_reader,
+        same_documents,
     );
 }
 
