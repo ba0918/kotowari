@@ -10,7 +10,7 @@ pub fn check_documents(docs: &[IrDocument], config: &Config) -> Vec<Finding> {
     check_documents_with_duplicates(docs, config, &duplicates)
 }
 
-pub fn check_documents_with_duplicates(
+pub(crate) fn check_documents_with_duplicates(
     docs: &[IrDocument],
     config: &Config,
     duplicates: &GlossaryDuplicates,

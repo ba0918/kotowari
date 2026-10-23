@@ -63,7 +63,6 @@ impl ReadPreparation {
         let known_ids = crate::collect_known_ids(&docs);
         crate::terms::check_terms_and_vague_words_with_duplicates(
             &docs,
-            &known_ids,
             &config.vague_words,
             &config.ir,
             &duplicates,

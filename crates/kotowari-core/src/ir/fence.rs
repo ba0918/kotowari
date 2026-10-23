@@ -17,13 +17,11 @@ pub(super) fn unclosed_code_block(content: &str) -> Option<(usize, String)> {
 
 /// コードブロックの囲みの情報
 #[derive(Debug, Clone)]
-pub struct CodeFence {
+struct CodeFence {
     /// 囲みの文字（'`' or '~'）
-    pub fence_char: char,
+    fence_char: char,
     /// 囲みの長さ（3以上）
-    pub fence_len: usize,
-    /// 言語（あれば）
-    pub lang: String,
+    fence_len: usize,
 }
 
 /// 行がコードブロックの囲みのどこにあるか
@@ -65,7 +63,7 @@ pub(crate) fn fenced_lines(content: &str) -> Vec<(&str, Fenced)> {
 
 /// 行がコードブロックの開始の囲みかどうかを判定する。
 /// 3つ以上の ` か ~ で始まる行が該当する。
-pub fn parse_opening_fence(line: &str) -> Option<CodeFence> {
+fn parse_opening_fence(line: &str) -> Option<CodeFence> {
     let bytes = line.as_bytes();
     if bytes.len() < 3 {
         return None;
@@ -78,16 +76,14 @@ pub fn parse_opening_fence(line: &str) -> Option<CodeFence> {
     if fence_len < 3 {
         return None;
     }
-    let lang = line[fence_len..].trim().to_string();
     Some(CodeFence {
         fence_char,
         fence_len,
-        lang,
     })
 }
 
 /// 行が開いている囲みを閉じるかどうかを判定する。
-pub fn is_closing_fence(line: &str, opening: &CodeFence) -> bool {
+fn is_closing_fence(line: &str, opening: &CodeFence) -> bool {
     let bytes = line.as_bytes();
     if bytes.is_empty() || bytes[0] as char != opening.fence_char {
         return false;

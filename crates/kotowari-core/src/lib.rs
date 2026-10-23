@@ -15,6 +15,9 @@ mod deferred;
 mod deferred_notices;
 mod doc_kind;
 #[cfg(test)]
+#[path = "../tests/document_references.rs"]
+mod document_reference_contract_tests;
+#[cfg(test)]
 #[path = "../tests/test_facts.rs"]
 mod fact_contract_tests;
 #[cfg(test)]
@@ -61,7 +64,7 @@ mod stop;
 pub use status::{Documents, Findings, Items, Requirements, Scenarios, Tests};
 pub use stop::StopReason;
 pub mod surface;
-pub mod terms;
+mod terms;
 mod test_markers;
 mod test_side;
 pub mod tests_discovery;

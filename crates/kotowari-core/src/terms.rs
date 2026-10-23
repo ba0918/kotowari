@@ -31,11 +31,10 @@ fn collect_glossary_terms_with_duplicates(
 }
 
 /// 対象の行からバッククォートで囲んだ語を検査する（REQ-core-064, REQ-core-065, REQ-core-116）
-pub fn check_unknown_terms(
+fn check_unknown_terms(
     text: &str,
     line: usize,
     glossary: &Option<BTreeSet<String>>,
-    _known_ids: &BTreeSet<String>,
     path: &str,
     findings: &mut Vec<Finding>,
 ) {
@@ -85,7 +84,7 @@ pub fn check_unknown_terms(
 
 /// 曖昧語の検査（REQ-core-066, REQ-core-067）
 /// 行の左から最長一致で重ならない形で数える（A142）
-pub fn check_vague_words(
+fn check_vague_words(
     text: &str,
     line: usize,
     vague_words: &[String],
@@ -117,7 +116,7 @@ pub fn check_vague_words(
 }
 
 /// 文書名の参照の検査（REQ-core-069, REQ-core-070, TBL-core-014）
-pub fn check_document_references(
+pub(crate) fn check_document_references(
     docs: &[IrDocument],
     ir_path: &str,
     ir_paths: &BTreeSet<String>,
@@ -229,9 +228,8 @@ fn is_reference_name(element: &str) -> bool {
 }
 
 /// IR 文書の対象の行（TBL-core-013）で用語と曖昧語を検査する
-pub fn check_terms_and_vague_words_with_duplicates(
+pub(crate) fn check_terms_and_vague_words_with_duplicates(
     docs: &[IrDocument],
-    known_ids: &BTreeSet<String>,
     vague_words: &[String],
     ir_path: &str,
     duplicates: &GlossaryDuplicates,
@@ -255,7 +253,7 @@ pub fn check_terms_and_vague_words_with_duplicates(
                 }
             };
             for (line, text) in lines {
-                check_unknown_terms(text, *line, &glossary, known_ids, &path, findings);
+                check_unknown_terms(text, *line, &glossary, &path, findings);
                 check_vague_words(text, *line, vague_words, &path, findings);
             }
         }
