@@ -4,26 +4,30 @@ use std::path::Path;
 /// テストのファイルと重なれば止める（REQ-core-199）。鍵が空なら None
 pub fn collect(
     base: &Path,
-    read: &kotowari_core::ReadModel,
+    cfg: &Config,
+    test_paths: &[String],
     assembly: &mut crate::translations::Assembly,
 ) -> Result<Option<crate::translations::Files>, StopReason> {
-    let cfg: &Config = read.config();
     if cfg.guides.files.is_empty() {
         return Ok(None);
     }
     let files = crate::test_files::collect_files(base, &cfg.guides.files)?;
     let files = assembly.place(kotowari_core::translations::Place::Guide, files, true)?;
-    read.validate_guide_paths(files.iter().map(|(path, _)| path.as_str()))?;
+    kotowari_core::guides::validate_overlap(
+        files.iter().map(|(path, _)| path.as_str()),
+        test_paths,
+    )?;
     Ok(Some(files))
 }
 
 /// `collect` で集めた`ガイド`を読む
 pub fn read_texts(
     base: &Path,
-    read: &kotowari_core::ReadModel,
+    cfg: &Config,
+    test_paths: &[String],
     assembly: &mut crate::translations::Assembly,
 ) -> Result<Option<Vec<kotowari_core::NativeSourceText>>, StopReason> {
-    let Some(files) = collect(base, read, assembly)? else {
+    let Some(files) = collect(base, cfg, test_paths, assembly)? else {
         return Ok(None);
     };
     files

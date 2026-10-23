@@ -303,6 +303,24 @@ fn req_core_280_build_judges_the_guides_and_tests_overlap_first() {
     );
 }
 
+// @kotowari[EX-core-553, REQ-core-278]
+#[test]
+fn ex_core_553_a_test_file_that_is_not_utf8_does_not_stop_the_build() {
+    let tmp = two_documents();
+    std::fs::write(tmp.path().join("tests/bad.rs"), b"\xff\xfe").unwrap();
+    let (code, stdout, stderr) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(0), "{stderr}");
+    assert_eq!(
+        strings(&json(&stdout)["written"]),
+        [
+            ".kotowari/cache/overview/a.html",
+            ".kotowari/cache/overview/b.html",
+            ".kotowari/cache/overview/index.html",
+            ".kotowari/cache/overview/style.css",
+        ]
+    );
+}
+
 // @kotowari[REQ-core-278, REQ-core-018]
 #[test]
 fn req_core_278_build_reads_the_ir_places_and_stops_like_check() {
