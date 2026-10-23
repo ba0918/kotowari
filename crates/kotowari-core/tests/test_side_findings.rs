@@ -16,7 +16,6 @@ const TEST_AND_SURFACE: &str = "src/both.rs";
 fn test_file(source: &SourceText) -> TestAnalysis {
     TestAnalysis {
         source: source.clone(),
-        language: Some("rust".into()),
         has_query: true,
         tests: vec![],
         line_markers: vec![],
@@ -27,7 +26,6 @@ fn test_file(source: &SourceText) -> TestAnalysis {
 fn surface_file(source: &SourceText) -> SurfaceAnalysis {
     SurfaceAnalysis {
         source: source.clone(),
-        language: Some("rust".into()),
         has_query: true,
         surfaces: vec![],
         findings: vec![],

@@ -31,6 +31,7 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 - **BREAKING (Rust API)** `kotowari` no longer re-exports `CheckInputs`, `ReadInputs`, `IrOptions`, `SourceText`, `TestAnalysis` and `SurfaceAnalysis`; no `Project` operation takes or returns them. Code that checks inputs in memory takes them from `kotowari-core` (for example `kotowari_core::ReadInputs`), and `kotowari-source-analysis` still re-exports the ones its `Analyzer` uses.
 - **BREAKING (Rust API)** `Tool` is removed from `kotowari-core`. It is now defined in `kotowari`, so `kotowari::Tool::CargoMutants` still names it.
 - **BREAKING (Rust API)** Intermediate parts of the checks are no longer public in `kotowari-core`: the `terms` module with `check_unknown_terms`, `check_vague_words`, `check_document_references` and `check_terms_and_vague_words_with_duplicates`; `ir::CodeFence`, `ir::parse_opening_fence` and `ir::is_closing_fence`; `ir::check_documents_with_duplicates` and `ir::GlossaryDuplicates`; and `sources::check_sources_with_duplicates`. Check documents with `ir::check_documents`, which stays public, or check inputs in memory through `ReadModel`.
+- **BREAKING (Rust API)** The `language` field of `kotowari_core::TestAnalysis` and `kotowari_core::SurfaceAnalysis` is removed, and `kotowari-source-analysis` no longer fills one. Nothing read it; whether a file's language has a query is still carried by `has_query`. Remove the field from code that builds these values.
 
 ## [0.5.0] - 2026-10-06
 

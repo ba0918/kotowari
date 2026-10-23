@@ -73,7 +73,6 @@ impl Analyzer {
         let language =
             test_queries::language_of(acquired_path).filter(|lang| self.tests.has_query(*lang));
         let mut result = TestAnalysis {
-            language: language.map(|lang| format!("{lang:?}")),
             has_query: language.is_some(),
             source,
             tests: vec![],
@@ -122,7 +121,6 @@ impl Analyzer {
         let language = test_queries::language_of(acquired_path)
             .filter(|lang| self.surfaces.has_language(*lang));
         let mut result = SurfaceAnalysis {
-            language: language.map(|lang| format!("{lang:?}")),
             has_query: language.is_some(),
             source,
             surfaces: vec![],
