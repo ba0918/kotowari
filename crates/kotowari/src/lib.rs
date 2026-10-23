@@ -134,16 +134,12 @@ impl From<kotowari_core::StopReason> for Error {
 }
 impl From<InputError> for Error {
     fn from(error: InputError) -> Self {
-        let kind = match &error {
-            InputError::InvalidInput(_) => ErrorKind::InvalidInput,
-            InputError::InputMissing(_) => ErrorKind::InputMissing,
-            InputError::UnknownQuery(_) => ErrorKind::UnknownQuery,
-            InputError::ConfigError(_) => ErrorKind::ConfigError,
-            _ => ErrorKind::InternalMapping,
-        };
-        let unknown_id = match &error {
-            InputError::UnknownQuery(id) => Some(id.clone()),
-            _ => None,
+        let (kind, unknown_id) = match &error {
+            InputError::InvalidInput(_) => (ErrorKind::InvalidInput, None),
+            InputError::InputMissing(_) => (ErrorKind::InputMissing, None),
+            InputError::UnknownQuery(id) => (ErrorKind::UnknownQuery, Some(id.clone())),
+            InputError::ConfigError(_) => (ErrorKind::ConfigError, None),
+            _ => (ErrorKind::InternalMapping, None),
         };
         Self {
             unknown_id,
