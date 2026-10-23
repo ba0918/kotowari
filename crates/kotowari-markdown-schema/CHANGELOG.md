@@ -7,6 +7,7 @@
 - The minimum supported Rust version (`rust-version`) is raised from 1.89 to 1.99 (`kotowari-markdown-schema`, `kotowari-markdown-schema-io`, `kotowari-markdown-view`, `kotowari-mds`).
 - **BREAKING (Rust API and package layout)** Unvalidated construction and modification of `Schema` are now private, and `Schema::parse` performs semantic validation. `extract_validated` returns the values of a successful validation, and `extract_partial` returns the values obtained so far together with the findings. Calling code written against the old API needs to migrate.
 - Fetching is split into the `kotowari-markdown-schema-io` package and the executable into the `kotowari-mds` package. The binary's commands, output and exit codes are unchanged.
+- A schema that declares `name` and places a root path on the `type` key now stops with `document has the key "<path>", which conflicts with "type", where typed extraction puts "name"`. The reason used to name the `ast --schema` subcommand, which a library user does not run.
 
 ### Added
 
