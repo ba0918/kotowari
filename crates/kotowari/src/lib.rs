@@ -19,7 +19,8 @@ pub use kotowari_core::config::Config;
 pub use kotowari_core::guides::{GuideReader, GuideTally};
 /// `ReadModel::documents` が返す読み終えた`IR`の文書。`kotowari_core::IrDocument`（根の別名）は
 /// "ir::parse" の部分の解析の結果で、Project のどの操作からも届かない（REQ-core-309）
-pub use kotowari_core::ir::{IrDocument, is_valid_id};
+pub use kotowari_core::ir::IrDocument;
+pub use kotowari_core::ir::is_valid_id;
 pub use kotowari_core::mutants::MutantCounts;
 pub use kotowari_core::surface::{SurfaceTally, Unlisted};
 pub use kotowari_core::translations::{Translation, TranslationSide};
