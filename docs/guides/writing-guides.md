@@ -73,7 +73,7 @@ $ kotowari check | jq -c .guides
 
 ## Configuring where guides live
 
-<!-- @kotowari[REQ-core-198:253e79fd, REQ-core-199:cdaa412b, EX-core-369:248c0ebf] -->
+<!-- @kotowari[REQ-core-198:253e79fd, REQ-core-199:f1e4cc8c, EX-core-369:248c0ebf] -->
 
 List the locations of guides as globs under `guides.files` in the configuration file.
 
@@ -287,7 +287,7 @@ Fix `invalid_marker` first, then look at `guide_stale`.
 
 ### Stopping because guide and test locations overlap
 
-<!-- @kotowari[REQ-core-199:cdaa412b, EX-core-368:d4ff36cf] -->
+<!-- @kotowari[REQ-core-199:f1e4cc8c, EX-core-368:d4ff36cf] -->
 
 `tests.files` is too broad (such as `**/*`) and also matches guides.
 Files in languages without a query have every `@kotowari[` picked up, so kotowari stops to prevent guide marks from being read as test marks.

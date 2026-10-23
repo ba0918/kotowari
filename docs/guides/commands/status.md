@@ -223,7 +223,7 @@ This is also an error in `check`, so `complete` is false.
 
 ### Stopping with `config error: ...: matched by both guides.files and tests.files`
 
-<!-- @kotowari[REQ-core-163:9cf2f990, REQ-core-199:cdaa412b] -->
+<!-- @kotowari[REQ-core-163:9cf2f990, REQ-core-199:f1e4cc8c] -->
 
 Like `check`, `status` also reads guides, so it stops when the `guides.files` and `tests.files` globs in the configuration match the same file.
 `list` and `query` do not read guides and do not stop this way, which is why you may see "list works but status stops".

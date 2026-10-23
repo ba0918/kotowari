@@ -323,7 +323,7 @@ You can try the rule file as is with `ast-grep scan -r rules/bench.yml`.
 
 ### `guides.files`
 
-<!-- @kotowari[REQ-core-198:253e79fd, REQ-core-199:cdaa412b] -->
+<!-- @kotowari[REQ-core-198:253e79fd, REQ-core-199:f1e4cc8c] -->
 
 Where the guides are. For how to write them, see [Writing guides](writing-guides.md).
 
@@ -529,7 +529,7 @@ If it says `marks=0` with no per-extension counts, the globs matched nothing.
 
 ### Stopping because the guide and test locations overlap
 
-<!-- @kotowari[REQ-core-199:cdaa412b, EX-core-368:d4ff36cf] -->
+<!-- @kotowari[REQ-core-199:f1e4cc8c, EX-core-368:d4ff36cf] -->
 
 ```console
 $ cat .kotowari/config.yaml

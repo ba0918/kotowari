@@ -316,7 +316,7 @@ tests/discount.bench.ts:4 [error] test_without_id non-member is fast
 
 ### `guides.files`
 
-<!-- @kotowari[REQ-core-198:253e79fd, REQ-core-199:cdaa412b] -->
+<!-- @kotowari[REQ-core-198:253e79fd, REQ-core-199:f1e4cc8c] -->
 
 ガイドの置き場です。書き方は [ガイドを書く](writing-guides.ja.md) を見てください。
 
@@ -522,7 +522,7 @@ tests marks=0
 
 ### ガイドとテストの置き場が重なって止まる
 
-<!-- @kotowari[REQ-core-199:cdaa412b, EX-core-368:d4ff36cf] -->
+<!-- @kotowari[REQ-core-199:f1e4cc8c, EX-core-368:d4ff36cf] -->
 
 ```console
 $ cat .kotowari/config.yaml

@@ -20,7 +20,7 @@ kotowari は常に、"kotowari check" と "kotowari status" で設定の "guides
 - source: docs/decision/records/2026-09-24-doc-marks.md#A15, docs/decision/records/2026-09-24-doc-marks.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A36, docs/decision/records/2026-10-23-guide-overlap-sides.md#A1
 - verification: unit
 
-"kotowari check" で、1つのファイルが "guides.files" の glob と "tests.files" の glob の両方に当たるとき、kotowari は設定の誤りを理由に`停止`し、詳細に、重なったファイルのうちパスのバイト順で最初の1つの`基準のディレクトリ`からの相対パスに ": matched by both guides.files and tests.files" を続けた文字列を出す。"guides.files" の glob に当たるファイルは REQ-core-338 が読まない`側`でも数え、名前で探して`ガイド`として読むほかの言語の`側`（REQ-core-337）は、どの glob にも当たらなくても "guides.files" の glob に当たるものとして数える。
+"kotowari check" で、1つのファイルが "guides.files" の glob と "tests.files" の glob の両方に当たるとき、kotowari は設定の誤りを理由に`停止`し、詳細に、重なったファイルのうちパスのバイト順で最初の1つの`基準のディレクトリ`からの相対パスに ": matched by both guides.files and tests.files" を続けた文字列を出す。"guides.files" の glob に当たるファイルは REQ-core-338 が読まない`側`でも数え、当たったファイルと同じ`対`にあるために`ガイド`として読む`側`（REQ-core-336、REQ-core-337）は、どの glob にも当たらなくても "guides.files" の glob に当たるものとして数える。
 
 ### REQ-core-200: ガイドの印を読む場所
 
