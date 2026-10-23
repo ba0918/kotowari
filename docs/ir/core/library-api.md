@@ -24,10 +24,14 @@ Covers the entry points through which an external Rust application calls the six
 ### REQ-core-312: Findings and execution failures are distinguished
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A7, docs/decision/records/2026-10-03-public-crate-api.md#A8, docs/decision/records/2026-10-03-public-crate-api.md#A40, docs/decision/records/2026-10-06-changes-rethink.md#A10
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A7, docs/decision/records/2026-10-03-public-crate-api.md#A8, docs/decision/records/2026-10-03-public-crate-api.md#A40, docs/decision/records/2026-10-06-changes-rethink.md#A10, docs/decision/records/2026-10-23-next-release-bundle.md#A2, docs/decision/records/2026-10-23-next-release-bundle.md#A4, docs/decision/records/2026-10-23-next-release-bundle.md#A7, docs/decision/records/2026-10-23-next-release-bundle.md#A15
 - verification: unit
 
 A completed check returns a result holding the findings on the documents, and when it cannot be executed it returns the "Err" of "Result". The kind of a failure can be told apart, and failures implement "std::error::Error" and "Display". Missing input, invalid configuration or input format, an unknown ID in a query, read failures, and internal inability to handle are distinguished. The result provides, read-only, the kind, severity and path of each finding and its line when there is one, and does not display anything.
+
+When the configuration file given through "ProjectOptions" does not exist or is a directory, the kind of the failure is invalid input ("InvalidInput"), not a read failure ("ReadFailure"). When "ProjectOptions" gives no configuration file and the default configuration file location is a directory, the kind is a read failure ("ReadFailure").
+
+A failure for an unknown ID in a query ("UnknownQuery") provides that ID, and a failure of any other kind provides no ID.
 
 ### REQ-core-313: The CLI contract is kept
 
@@ -81,4 +85,29 @@ Scenario: Checks of plans and mutation outcomes are available without IR
   Given the inputs needed for a plan or mutation outcomes exist, and there is no IR location
   When the corresponding plan or mutants operation is called
   Then it returns a result without requiring the IR to be read
+
+@id=EX-core-554 @about=REQ-core-312 @source=docs/decision/records/2026-10-23-next-release-bundle.md#A2
+Scenario: A configuration file that is a directory is invalid input, as when it does not exist
+  Given the configuration file given through "ProjectOptions" is the path of a directory
+  When check of Project is called
+  Then an Err of the "InvalidInput" kind is returned, the same kind as when the configuration file does not exist
+  And its kind is not "ReadFailure"
+
+@id=EX-core-555 @about=REQ-core-312 @source=docs/decision/records/2026-10-23-next-release-bundle.md#A15
+Scenario: A directory at the default location is a read failure
+  Given "ProjectOptions" gives no configuration file, and ".kotowari/config.yaml" under the `base directory` is a directory
+  When check of Project is called
+  Then an Err of the "ReadFailure" kind is returned
+
+@id=EX-core-556 @about=REQ-core-312 @source=docs/decision/records/2026-10-23-next-release-bundle.md#A4,docs/decision/records/2026-10-23-next-release-bundle.md#A7
+Scenario: The unknown ID can be taken from the failure of a query
+  Given no `item` and no `scenario` has the ID "REQ-core-999"
+  When query of Project is called with "REQ-core-999"
+  Then an Err of the "UnknownQuery" kind is returned, and "REQ-core-999" can be taken from it
+
+@id=EX-core-557 @about=REQ-core-312 @source=docs/decision/records/2026-10-23-next-release-bundle.md#A4,docs/decision/records/2026-10-23-next-release-bundle.md#A7,docs/decision/records/2026-10-03-public-crate-api.md#A40
+Scenario: A failure of another kind provides no unknown ID
+  Given a file needed for the check cannot be read
+  When check of Project is called
+  Then the returned Err provides no unknown ID
 ```

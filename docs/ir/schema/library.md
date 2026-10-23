@@ -24,7 +24,7 @@ Covers the public entry points of the pure "kotowari-markdown-schema" and its bo
 ### REQ-schema-051: Public contract and internal implementation
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A13, docs/decision/records/2026-10-03-public-crate-api.md#A16, docs/decision/records/2026-10-03-public-crate-api.md#A40, docs/decision/records/2026-10-03-public-crate-api.md#A42, docs/decision/records/2026-10-03-public-crate-api.md#A43
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A13, docs/decision/records/2026-10-03-public-crate-api.md#A16, docs/decision/records/2026-10-03-public-crate-api.md#A40, docs/decision/records/2026-10-03-public-crate-api.md#A42, docs/decision/records/2026-10-03-public-crate-api.md#A43, docs/decision/records/2026-10-23-next-release-bundle.md#A9
 - verification: review
 - how_to_verify: Check the public entry points and input and output types in rustdoc, and confirm that no unvalidated construction path and no internal type of a dependency is public. Exposing JSON values is allowed as the existing extraction contract.
 

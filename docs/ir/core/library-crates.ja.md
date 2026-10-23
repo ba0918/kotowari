@@ -34,11 +34,13 @@ coreのテスト対応判定は発見済みのテスト・印を受け取り、�
 ### REQ-core-309: 内部の型を公開契約に混ぜない
 
 - kind: prohibition
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A13, docs/decision/records/2026-10-03-public-crate-api.md#A16, docs/decision/records/2026-10-03-public-crate-api.md#A36, docs/decision/records/2026-10-03-public-crate-api.md#A40
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A13, docs/decision/records/2026-10-03-public-crate-api.md#A16, docs/decision/records/2026-10-03-public-crate-api.md#A36, docs/decision/records/2026-10-03-public-crate-api.md#A40, docs/decision/records/2026-10-23-next-release-bundle.md#A6, docs/decision/records/2026-10-23-next-release-bundle.md#A8, docs/decision/records/2026-10-23-next-release-bundle.md#A12
 - verification: review
-- how_to_verify: rustdocの公開署名と下位クレートの外部利用例を確認する。再公開した型が元の型と同じ型として受け渡せることをコンパイルで確認する。
+- how_to_verify: rustdocの公開署名と下位クレートの外部利用例を確認する。再公開した型が元の型と同じ型として受け渡せることをコンパイルで確認する。kotowariが再公開する型がどれも入口の入力か結果から届くことを確認する。
 
 公開署名はMarkdown解析とソース検索エンジンの内部型を含まない。公開する下位クレートのAPIも互換性管理の対象とし、実装詳細は非公開にする。"kotowari" は入口で使う下位の入力型・結果型を複製せず同じ型として再公開する。
+
+公開するクレートのAPIの要素を公開にするかは、ワークスペースで使われているかではなく、外部の利用者が契約として頼るかで決める。読み取り専用のつもりの結果型を外から作る関数、受け取って読まない引数と欄、外部の呼び手が要らない途中の部品は公開しない。"kotowari" は入口の入力と結果から届かない下位の型を再公開しない。
 
 ## Decision tables
 
@@ -78,5 +80,11 @@ Scenario: 発見済みのテストだけで対応を判定する
 Scenario: 内部依存を公開した候補は境界の検証に通らない
   Given coreがGitを実行するか公開署名が検索エンジンの内部型を返す候補がある
   When 依存方向と公開APIを確認する
+  Then その候補をクレート境界の適合とは判定しない
+
+@id=EX-core-558 @about=REQ-core-309 @source=docs/decision/records/2026-10-23-next-release-bundle.md#A6,docs/decision/records/2026-10-23-next-release-bundle.md#A12
+Scenario: 契約の外の公開の要素は境界の検証に通らない
+  Given kotowariが入口の入力と結果から届かない下位の型を再公開するか、下位のクレートが読み取り専用のつもりの結果型を作る関数を公開する候補がある
+  When 公開APIを確認する
   Then その候補をクレート境界の適合とは判定しない
 ```
