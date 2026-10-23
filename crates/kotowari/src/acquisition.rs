@@ -1,4 +1,6 @@
-use crate::{guides, ir, overview, sources, surface, test_files as tests_discovery, translations};
+use crate::{
+    Tool, guides, ir, overview, sources, surface, test_files as tests_discovery, translations,
+};
 use kotowari_core::*;
 use std::{
     collections::BTreeMap,
@@ -164,6 +166,13 @@ pub fn load_config(
             if !abs.exists() {
                 return Err(StopReason::ArgumentError(format!(
                     "config file not found: {}",
+                    cp.display()
+                )));
+            }
+            // REQ-core-312: 指定がディレクトリのときも、無いときと同じく引数の誤り
+            if abs.is_dir() {
+                return Err(StopReason::ArgumentError(format!(
+                    "config file is a directory: {}",
                     cp.display()
                 )));
             }

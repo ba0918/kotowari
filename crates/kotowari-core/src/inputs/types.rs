@@ -117,7 +117,6 @@ pub struct ReadInputs {
 #[derive(Debug, Clone)]
 pub struct TestAnalysis {
     pub source: SourceText,
-    pub language: Option<String>,
     pub has_query: bool,
     pub tests: Vec<crate::tests_discovery::DiscoveredTest>,
     pub line_markers: Vec<crate::tests_discovery::Marker>,
@@ -127,7 +126,6 @@ pub struct TestAnalysis {
 #[derive(Debug, Clone)]
 pub struct SurfaceAnalysis {
     pub source: SourceText,
-    pub language: Option<String>,
     pub has_query: bool,
     pub surfaces: Vec<crate::surface::Surface>,
     pub findings: Vec<crate::Finding>,

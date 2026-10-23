@@ -39,16 +39,9 @@ impl std::fmt::Display for StopReason {
 }
 impl From<kotowari::Error> for StopReason {
     fn from(error: kotowari::Error) -> Self {
-        if error.kind() == kotowari::ErrorKind::UnknownQuery {
-            Self::ArgumentError(format!(
-                "unknown id: {}",
-                error
-                    .detail()
-                    .strip_prefix("unknown query: ")
-                    .unwrap_or(error.detail())
-            ))
-        } else {
-            Self::Library(error)
+        match error.unknown_id() {
+            Some(id) => Self::ArgumentError(format!("unknown id: {id}")),
+            None => Self::Library(error),
         }
     }
 }

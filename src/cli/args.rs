@@ -190,16 +190,6 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
         ));
     }
 
-    // REQ-core-004: --config がディレクトリを指すとき
-    if let Some(ref cp) = config_path
-        && cp.is_dir()
-    {
-        return Err(StopReason::ArgumentError(format!(
-            "--config is a directory: {}",
-            cp.display()
-        )));
-    }
-
     // REQ-core-004: "overview serve" は "--format" を受けない
     if serve && format_str.is_some() {
         return Err(StopReason::ArgumentError(

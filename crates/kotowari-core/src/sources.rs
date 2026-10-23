@@ -537,7 +537,7 @@ pub fn context_from_entries<'a>(
 }
 
 /// 出典を検査して Finding に追加する
-pub fn check_sources_with_duplicates(
+pub(crate) fn check_sources_with_duplicates(
     docs: &[crate::ir::IrDocument],
     ctx: &SourceContext,
     ir_path: &str,

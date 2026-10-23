@@ -23,7 +23,7 @@ impl std::error::Error for AnalysisError {}
 impl AnalysisError {
     pub fn detail(&self) -> &str {
         match self {
-            Self::InvalidRules(detail) => detail.strip_prefix("config error: ").unwrap_or(detail),
+            Self::InvalidRules(detail) => detail,
         }
     }
 }
@@ -48,9 +48,9 @@ impl Analyzer {
         surface_rules: Vec<SourceText>,
     ) -> Result<Self, AnalysisError> {
         let tests = test_queries::TestQueries::from_texts(&config, &test_rules)
-            .map_err(|error| AnalysisError::InvalidRules(error.to_string()))?;
+            .map_err(AnalysisError::InvalidRules)?;
         let surfaces = test_queries::RuleSet::from_texts(&surface_rules, "surface.rules")
-            .map_err(|error| AnalysisError::InvalidRules(error.to_string()))?;
+            .map_err(AnalysisError::InvalidRules)?;
         Ok(Self {
             config,
             tests,
@@ -73,7 +73,6 @@ impl Analyzer {
         let language =
             test_queries::language_of(acquired_path).filter(|lang| self.tests.has_query(*lang));
         let mut result = TestAnalysis {
-            language: language.map(|lang| format!("{lang:?}")),
             has_query: language.is_some(),
             source,
             tests: vec![],
@@ -122,7 +121,6 @@ impl Analyzer {
         let language = test_queries::language_of(acquired_path)
             .filter(|lang| self.surfaces.has_language(*lang));
         let mut result = SurfaceAnalysis {
-            language: language.map(|lang| format!("{lang:?}")),
             has_query: language.is_some(),
             source,
             surfaces: vec![],

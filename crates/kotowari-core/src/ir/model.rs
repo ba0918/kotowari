@@ -221,10 +221,10 @@ impl IrDocument {
 }
 
 /// 文書群に対して一度求めた、親の用語集と重なる行。
-pub struct GlossaryDuplicates(Vec<BTreeSet<usize>>);
+pub(crate) struct GlossaryDuplicates(Vec<BTreeSet<usize>>);
 
 impl GlossaryDuplicates {
-    pub fn new(docs: &[IrDocument]) -> Self {
+    pub(crate) fn new(docs: &[IrDocument]) -> Self {
         Self(
             docs.iter()
                 .map(|doc| doc.duplicate_glossary_rows(docs))

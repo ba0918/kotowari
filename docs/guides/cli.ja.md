@@ -272,7 +272,7 @@ argument error: unexpected option for status: --allow-test-findings
 $ kotowari check --format
 argument error: --format requires a value
 $ kotowari check --config docs
-argument error: --config is a directory: docs
+argument error: config file is a directory: docs
 $ echo $?
 2
 ```

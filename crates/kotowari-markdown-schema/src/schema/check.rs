@@ -87,7 +87,7 @@ fn reject_root_paths_on_the_type_key(schema: &Schema) -> Result<(), SchemaError>
         .find(|path| path.as_str() == "type" || path.starts_with("type."))
     {
         Some(path) => Err(SchemaError(format!(
-            "document has the key \"{path}\", which conflicts with \"type\" that ast --schema sets from \"name\""
+            "document has the key \"{path}\", which conflicts with \"type\", where typed extraction puts \"name\""
         ))),
         None => Ok(()),
     }

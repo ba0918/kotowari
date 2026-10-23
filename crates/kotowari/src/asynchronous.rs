@@ -27,19 +27,14 @@ impl Blocking {
         &self,
         work: impl FnOnce() -> Result<T, Error> + Send + 'static,
     ) -> Result<T, Error> {
-        let runtime = tokio::runtime::Handle::try_current().map_err(|error| Error {
-            kind: ErrorKind::RuntimeUnavailable,
-            detail: error.to_string(),
-        })?;
+        let runtime = tokio::runtime::Handle::try_current()
+            .map_err(|error| Error::new(ErrorKind::RuntimeUnavailable, error.to_string()))?;
         let permit = self
             .slots
             .clone()
             .acquire_owned()
             .await
-            .map_err(|error| Error {
-                kind: ErrorKind::TaskFailure,
-                detail: error.to_string(),
-            })?;
+            .map_err(|error| Error::new(ErrorKind::TaskFailure, error.to_string()))?;
         runtime
             .spawn_blocking(move || {
                 // A detached worker must still own its slot until the synchronous operation finishes.
@@ -47,10 +42,7 @@ impl Blocking {
                 work()
             })
             .await
-            .map_err(|error| Error {
-                kind: ErrorKind::TaskFailure,
-                detail: error.to_string(),
-            })?
+            .map_err(|error| Error::new(ErrorKind::TaskFailure, error.to_string()))?
     }
 }
 

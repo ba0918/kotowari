@@ -24,10 +24,14 @@
 ### REQ-core-312: 指摘と実行失敗を区別する
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A7, docs/decision/records/2026-10-03-public-crate-api.md#A8, docs/decision/records/2026-10-03-public-crate-api.md#A40, docs/decision/records/2026-10-06-changes-rethink.md#A10
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A7, docs/decision/records/2026-10-03-public-crate-api.md#A8, docs/decision/records/2026-10-03-public-crate-api.md#A40, docs/decision/records/2026-10-06-changes-rethink.md#A10, docs/decision/records/2026-10-23-next-release-bundle.md#A2, docs/decision/records/2026-10-23-next-release-bundle.md#A4, docs/decision/records/2026-10-23-next-release-bundle.md#A7, docs/decision/records/2026-10-23-next-release-bundle.md#A15
 - verification: unit
 
 完了した検査は文書の指摘を持つ結果を返し、実行できない場合は "Result" の "Err" を返す。失敗は種類を判別でき、"std::error::Error" と "Display" を実装する。入力不足、設定・入力形式不正、未知の問い合わせID、読込失敗、内部対応不能を区別する。結果は指摘の種類・重要度・パス・存在する場合の行を読み取り専用で提供し、表示を行わない。
+
+"ProjectOptions" で渡した設定ファイルが無いとき、またはディレクトリのとき、失敗の種類は入力の誤り（"InvalidInput"）であり、読込失敗（"ReadFailure"）ではない。"ProjectOptions" が設定ファイルを渡さず、既定の設定ファイルの場所がディレクトリのときは、読込失敗（"ReadFailure"）である。
+
+未知の問い合わせID（"UnknownQuery"）の失敗はそのIDを提供し、ほかの種類の失敗はIDを提供しない。
 
 ### REQ-core-313: CLI契約を保持する
 
@@ -81,4 +85,29 @@ Scenario: IRがなくても計画書と変異結果の検査は利用できる
   Given 計画書または変異結果に必要な入力がありIRの置き場はない
   When 対応するplanまたはmutants操作を呼ぶ
   Then IRの読込を要求せず結果を返す
+
+@id=EX-core-554 @about=REQ-core-312 @source=docs/decision/records/2026-10-23-next-release-bundle.md#A2
+Scenario: ディレクトリの設定ファイルは無いときと同じく入力の誤り
+  Given "ProjectOptions" で渡した設定ファイルがディレクトリのパスである
+  When Projectのcheckを呼ぶ
+  Then 設定ファイルが無いときと同じ "InvalidInput" の種類のErrを返す
+  And その種類は "ReadFailure" ではない
+
+@id=EX-core-555 @about=REQ-core-312 @source=docs/decision/records/2026-10-23-next-release-bundle.md#A15
+Scenario: 既定の場所のディレクトリは読込失敗
+  Given "ProjectOptions" が設定ファイルを渡さず、`基準のディレクトリ`の ".kotowari/config.yaml" がディレクトリである
+  When Projectのcheckを呼ぶ
+  Then "ReadFailure" の種類のErrを返す
+
+@id=EX-core-556 @about=REQ-core-312 @source=docs/decision/records/2026-10-23-next-release-bundle.md#A4,docs/decision/records/2026-10-23-next-release-bundle.md#A7
+Scenario: 問い合わせの失敗から未知のIDを取り出せる
+  Given ID "REQ-core-999" を持つ`項目`も`シナリオ`も無い
+  When "REQ-core-999" でProjectのqueryを呼ぶ
+  Then "UnknownQuery" の種類のErrを返し、そこから "REQ-core-999" を取り出せる
+
+@id=EX-core-557 @about=REQ-core-312 @source=docs/decision/records/2026-10-23-next-release-bundle.md#A4,docs/decision/records/2026-10-23-next-release-bundle.md#A7,docs/decision/records/2026-10-03-public-crate-api.md#A40
+Scenario: ほかの種類の失敗は未知のIDを提供しない
+  Given 検査に必要なファイルが読めない
+  When Projectのcheckを呼ぶ
+  Then 返したErrは未知のIDを提供しない
 ```

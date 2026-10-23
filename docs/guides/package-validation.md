@@ -6,7 +6,7 @@ This is the procedure for validating the real archives and independent consumers
 
 ## Local validation
 
-<!-- @kotowari[REQ-core-309:96174f95, REQ-schema-051:9546b439] -->
+<!-- @kotowari[REQ-core-309:6d260573, REQ-schema-051:9546b439] -->
 
 Use Cargo 1.98 or later and Python 3.11 or later (which provides safe tar extraction), and run it in a clean working tree with your changes committed.
 

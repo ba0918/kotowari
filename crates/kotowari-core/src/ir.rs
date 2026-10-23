@@ -21,7 +21,7 @@ mod partial;
 mod references;
 pub use check::*;
 pub use extract::*;
-pub use fence::*;
+pub(crate) use fence::*;
 use gherkin::*;
 pub use id::*;
 pub use model::*;

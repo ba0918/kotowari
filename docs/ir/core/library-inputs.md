@@ -43,16 +43,16 @@ Even when already-read results are provided, the input for list/query does not r
 
 ### TBL-core-042: Contents and required conditions of input groups
 
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A39, docs/decision/records/2026-10-03-public-crate-api.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A50, docs/decision/records/2026-10-03-public-crate-api.md#A53, docs/decision/records/2026-10-04-overview-on-public-api.md#A2, docs/decision/records/2026-10-06-changes-rethink.md#A10
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A39, docs/decision/records/2026-10-03-public-crate-api.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A50, docs/decision/records/2026-10-03-public-crate-api.md#A53, docs/decision/records/2026-10-04-overview-on-public-api.md#A2, docs/decision/records/2026-10-06-changes-rethink.md#A10, docs/decision/records/2026-10-23-next-release-bundle.md#A10, docs/decision/records/2026-10-24-next-release-bundle-consistency.md#A1
 
 | Input group | Contents | Required in ReadInputs | Required in CheckInputs |
 |---|---|---|---|
 | IR | Logical paths and document contents | Always | Always |
 | Decision record location | Paths and contents of the decision records and of the ordinary Markdown that sources point at | Always, whether or not referenced | Same as left |
 | ADR | Paths and contents | Always, whether or not referenced | Same as left |
-| Test information | The SourceText of target files, the language and whether it has a query, already-discovered tests and marks, and findings from parsing | When tests.files is not empty | Same as left |
+| Test information | The SourceText of target files, whether their language has a query, already-discovered tests and marks, and findings from parsing | When tests.files is not empty | Same as left |
 | Guides | Paths and contents | Not required | When guides.files is not empty |
-| Surface analysis results | The SourceText of target files, the language and whether it has a query, discovery results, and findings from parsing | Not required | When surface.rules is not empty |
+| Surface analysis results | The SourceText of target files, whether their language has a query, discovery results, and findings from parsing | Not required | When surface.rules is not empty |
 | List of unspecified surfaces | The path and contents of the configured list | Not required | When surface.rules is not empty and surface.unspecified is specified |
 | Additional finding groups | The name of the group, the number of files read, the number of marks, and the findings. core does not know their meaning, orders and counts them together with the other findings, and includes each group's counts in the result | Not required | Not required (added only when passed) |
 

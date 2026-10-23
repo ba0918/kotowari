@@ -56,10 +56,8 @@ pub(crate) fn side_findings(
     findings: &mut Vec<Finding>,
 ) {
     let duplicates = crate::ir::GlossaryDuplicates::new(sides);
-    let known_ids = crate::collect_known_ids(firsts);
     crate::terms::check_terms_and_vague_words_with_duplicates(
         sides,
-        &known_ids,
         &config.vague_words,
         &config.ir,
         &duplicates,

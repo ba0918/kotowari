@@ -24,7 +24,6 @@ fn test(identity: &str, path: &str, text: &str) -> NativeTestAnalysis {
         source: source(identity, path, text),
         analysis: TestAnalysis {
             source: SourceText::new(path, text).unwrap(),
-            language: Some("rust".into()),
             has_query: true,
             tests: vec![],
             line_markers: vec![],
@@ -109,7 +108,6 @@ fn native_disabled_unspecified_list_does_not_hide_a_surface() {
             source: original,
             analysis: kotowari_core::SurfaceAnalysis {
                 source: SourceText::new("src/main.rs", "fn main() {}").unwrap(),
-                language: Some("rust".into()),
                 has_query: true,
                 surfaces: vec![kotowari_core::surface::Surface {
                     kind: "command".into(),

@@ -16,15 +16,17 @@ mod test_files;
 mod translations;
 
 pub use kotowari_core::config::Config;
-pub use kotowari_core::guides::GuideTally;
+pub use kotowari_core::guides::{GuideReader, GuideTally};
+/// `ReadModel::documents` が返す読み終えた`IR`の文書。`kotowari_core::IrDocument`（根の別名）は
+/// "ir::parse" の部分の解析の結果で、Project のどの操作からも届かない（REQ-core-309）
+pub use kotowari_core::ir::IrDocument;
 pub use kotowari_core::ir::is_valid_id;
 pub use kotowari_core::mutants::MutantCounts;
 pub use kotowari_core::surface::{SurfaceTally, Unlisted};
 pub use kotowari_core::translations::{Translation, TranslationSide};
 pub use kotowari_core::{
-    CheckInputs, CheckReport, Finding, FindingGroup, FindingKind, GroupTally, InputError,
-    Inspection, IrDocument, IrOptions, ParsedItem, QueryReport, ReadInputs, ReadList, ReadModel,
-    SourceText, StatusReport, SurfaceAnalysis, TestAnalysis, TestFileTally, Tool,
+    CheckReport, Finding, FindingGroup, FindingKind, GroupTally, InputError, Inspection,
+    QueryReport, ReadList, ReadModel, StatusReport, TestFileTally,
 };
 pub use kotowari_core::{
     Documents, ExampleItem, Findings, FlagItem, Items, ListItem, QueryItem, Reference,
@@ -70,13 +72,26 @@ pub enum ErrorKind {
 pub struct Error {
     kind: ErrorKind,
     detail: String,
+    /// 種類が UnknownQuery のときだけ、問い合わせた知らない ID
+    unknown_id: Option<String>,
 }
 impl Error {
+    pub(crate) fn new(kind: ErrorKind, detail: impl Into<String>) -> Self {
+        Self {
+            kind,
+            detail: detail.into(),
+            unknown_id: None,
+        }
+    }
     pub fn kind(&self) -> ErrorKind {
         self.kind
     }
     pub fn detail(&self) -> &str {
         &self.detail
+    }
+    /// 種類が UnknownQuery のときの知らない ID。ほかの種類では None（REQ-core-312）
+    pub fn unknown_id(&self) -> Option<&str> {
+        self.unknown_id.as_deref()
     }
 }
 impl std::fmt::Display for Error {
@@ -98,18 +113,13 @@ impl Error {
             Some(error) => format!("{CACHE_ERROR}: {path}: {error}"),
             None => format!("{CACHE_ERROR}: {path}"),
         };
-        Self {
-            kind: ErrorKind::CacheFailure,
-            detail,
-        }
+        Self::new(ErrorKind::CacheFailure, detail)
     }
     fn overview_data(errors: usize) -> Self {
-        Self {
-            kind: ErrorKind::OverviewData,
-            detail: format!(
-                "{OVERVIEW_ERROR}: {errors} errors in overview data; run kotowari check"
-            ),
-        }
+        Self::new(
+            ErrorKind::OverviewData,
+            format!("{OVERVIEW_ERROR}: {errors} errors in overview data; run kotowari check"),
+        )
     }
 }
 impl From<kotowari_core::StopReason> for Error {
@@ -121,26 +131,29 @@ impl From<kotowari_core::StopReason> for Error {
             S::UnreadableFile(_) | S::NonUtf8File(_) => ErrorKind::ReadFailure,
             S::MappingError(_) => ErrorKind::InternalMapping,
         };
-        Self {
-            kind,
-            detail: reason.to_string(),
-        }
+        Self::new(kind, reason.to_string())
     }
 }
 impl From<InputError> for Error {
     fn from(error: InputError) -> Self {
-        let kind = match &error {
-            InputError::InvalidInput(_) => ErrorKind::InvalidInput,
-            InputError::InputMissing(_) => ErrorKind::InputMissing,
-            InputError::UnknownQuery(_) => ErrorKind::UnknownQuery,
-            InputError::ConfigError(_) => ErrorKind::ConfigError,
-            _ => ErrorKind::InternalMapping,
+        let (kind, unknown_id) = match &error {
+            InputError::InvalidInput(_) => (ErrorKind::InvalidInput, None),
+            InputError::InputMissing(_) => (ErrorKind::InputMissing, None),
+            InputError::UnknownQuery(id) => (ErrorKind::UnknownQuery, Some(id.clone())),
+            InputError::ConfigError(_) => (ErrorKind::ConfigError, None),
+            _ => (ErrorKind::InternalMapping, None),
         };
         Self {
-            kind,
-            detail: error.to_string(),
+            unknown_id,
+            ..Self::new(kind, error.to_string())
         }
     }
+}
+
+/// 結果のファイルを作った変異テストの道具（REQ-core-149）
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Tool {
+    CargoMutants,
 }
 
 #[derive(Debug, Clone)]
@@ -221,10 +234,10 @@ pub struct Project {
 impl Project {
     pub fn new(options: ProjectOptions) -> Result<Self, Error> {
         if !options.start.is_absolute() {
-            return Err(Error {
-                kind: ErrorKind::InvalidInput,
-                detail: "invalid input: project start must be absolute".into(),
-            });
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "invalid input: project start must be absolute",
+            ));
         }
         Ok(Self { options })
     }

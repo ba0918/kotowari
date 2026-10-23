@@ -62,7 +62,6 @@ fn inspection_compares_original_test_and_surface_source_texts() {
     inputs.read.tests = Some(vec![TestAnalysis {
         line_markers: vec![],
         source: SourceText::new("src/memory.rs", "one").unwrap(),
-        language: Some("rust".into()),
         has_query: true,
         tests: vec![],
         findings: vec![],
@@ -71,7 +70,6 @@ fn inspection_compares_original_test_and_surface_source_texts() {
     inputs.read.config.surface.files = vec!["src/**".into()];
     inputs.surface = Some(vec![SurfaceAnalysis {
         source: SourceText::new("src/memory.rs", "two").unwrap(),
-        language: Some("rust".into()),
         has_query: true,
         surfaces: vec![],
         findings: vec![],

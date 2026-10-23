@@ -43,16 +43,16 @@
 
 ### TBL-core-042: 入力群の内容と必須条件
 
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A39, docs/decision/records/2026-10-03-public-crate-api.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A50, docs/decision/records/2026-10-03-public-crate-api.md#A53, docs/decision/records/2026-10-04-overview-on-public-api.md#A2, docs/decision/records/2026-10-06-changes-rethink.md#A10
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A39, docs/decision/records/2026-10-03-public-crate-api.md#A49, docs/decision/records/2026-10-03-public-crate-api.md#A50, docs/decision/records/2026-10-03-public-crate-api.md#A53, docs/decision/records/2026-10-04-overview-on-public-api.md#A2, docs/decision/records/2026-10-06-changes-rethink.md#A10, docs/decision/records/2026-10-23-next-release-bundle.md#A10, docs/decision/records/2026-10-24-next-release-bundle-consistency.md#A1
 
 | 入力群 | 内容 | ReadInputsで必須 | CheckInputsで必須 |
 |---|---|---|---|
 | IR | 論理パスと文書内容 | 常に | 常に |
 | 判断の記録の置き場 | 判断の記録と出典対象の通常Markdownのパス・内容 | 参照の有無によらず常に | 同左 |
 | ADR | パスと内容 | 参照の有無によらず常に | 同左 |
-| テスト情報 | 対象ファイルのSourceText、言語・問い合わせの有無、発見済みテスト・印、解析時の指摘 | tests.filesが空でない | 同左 |
+| テスト情報 | 対象ファイルのSourceText、その言語の問い合わせの有無、発見済みテスト・印、解析時の指摘 | tests.filesが空でない | 同左 |
 | ガイド | パスと内容 | 不要 | guides.filesが空でない |
-| 面の解析結果 | 対象ファイルのSourceText、言語・問い合わせの有無、発見結果、解析時の指摘 | 不要 | surface.rulesが空でない |
+| 面の解析結果 | 対象ファイルのSourceText、その言語の問い合わせの有無、発見結果、解析時の指摘 | 不要 | surface.rulesが空でない |
 | 未記載の面の一覧 | 設定された一覧のパスと内容 | 不要 | surface.rulesが空でなくsurface.unspecifiedが指定されている |
 | 追加の指摘の群 | 群の名前、読んだファイルの数、印の数、指摘。coreは意味を知らず、ほかの指摘と合わせて並べて数え、群ごとの数を結果に持たせる | 不要 | 不要（渡したときだけ加える） |
 

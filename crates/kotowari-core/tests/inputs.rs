@@ -138,7 +138,6 @@ fn supplied_analysis_preserves_diagnostics_counts_and_duplicate_suppression() {
     inputs.read.tests = Some(vec![TestAnalysis {
         line_markers: vec![],
         source: source.clone(),
-        language: Some("rust".into()),
         has_query: true,
         tests: vec![],
         findings: vec![diagnostic.clone()],
@@ -147,7 +146,6 @@ fn supplied_analysis_preserves_diagnostics_counts_and_duplicate_suppression() {
     inputs.read.config.surface.files = vec!["src/**".into()];
     inputs.surface = Some(vec![SurfaceAnalysis {
         source,
-        language: Some("rust".into()),
         has_query: true,
         surfaces: vec![],
         findings: vec![diagnostic],
@@ -182,7 +180,6 @@ fn disabled_groups_are_ignored_including_their_inconsistent_sources() {
     inputs.read.tests = Some(vec![TestAnalysis {
         line_markers: vec![],
         source: SourceText::new("docs/ir/memory.md", "different").unwrap(),
-        language: None,
         has_query: false,
         tests: vec![],
         findings: vec![],
@@ -211,7 +208,6 @@ fn enabled_guide_and_surface_inputs_are_evaluated_without_acquisition() {
     inputs.read.config.surface.files = vec!["src/**".into()];
     inputs.surface = Some(vec![SurfaceAnalysis {
         source: SourceText::new("src/memory.rs", "anything").unwrap(),
-        language: Some("rust".into()),
         has_query: true,
         surfaces: vec![kotowari_core::surface::Surface {
             kind: "command".into(),
@@ -320,7 +316,6 @@ fn non_query_marker_facts_are_consumed_without_source_discovery() {
     inputs.read.adr = Some(vec![]);
     inputs.read.tests = Some(vec![TestAnalysis {
         source: SourceText::new("checks/memory.txt", "@kotowari[REQ-001]\n").unwrap(),
-        language: None,
         has_query: false,
         tests: vec![],
         findings: vec![],
@@ -386,7 +381,6 @@ fn same_text_shared_between_guides_and_tests_uses_the_overlap_rule() {
     inputs.read.adr = Some(vec![]);
     inputs.read.tests = Some(vec![TestAnalysis {
         source: source.clone(),
-        language: None,
         has_query: false,
         tests: vec![],
         line_markers: vec![],

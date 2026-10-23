@@ -24,7 +24,7 @@
 ### REQ-schema-051: 公開契約と内部実装
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A13, docs/decision/records/2026-10-03-public-crate-api.md#A16, docs/decision/records/2026-10-03-public-crate-api.md#A40, docs/decision/records/2026-10-03-public-crate-api.md#A42, docs/decision/records/2026-10-03-public-crate-api.md#A43
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A13, docs/decision/records/2026-10-03-public-crate-api.md#A16, docs/decision/records/2026-10-03-public-crate-api.md#A40, docs/decision/records/2026-10-03-public-crate-api.md#A42, docs/decision/records/2026-10-03-public-crate-api.md#A43, docs/decision/records/2026-10-23-next-release-bundle.md#A9
 - verification: review
 - how_to_verify: rustdocの公開入口と入出力型を確認し、未検証の構築経路と依存先の内部型が公開されていないことを確認する。JSON値の公開は既存の抽出契約として許す。
 

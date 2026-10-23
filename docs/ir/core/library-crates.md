@@ -34,11 +34,13 @@ The test correspondence judgement in core receives already-discovered tests and 
 ### REQ-core-309: Internal types are not mixed into the public contract
 
 - kind: prohibition
-- source: docs/decision/records/2026-10-03-public-crate-api.md#A13, docs/decision/records/2026-10-03-public-crate-api.md#A16, docs/decision/records/2026-10-03-public-crate-api.md#A36, docs/decision/records/2026-10-03-public-crate-api.md#A40
+- source: docs/decision/records/2026-10-03-public-crate-api.md#A13, docs/decision/records/2026-10-03-public-crate-api.md#A16, docs/decision/records/2026-10-03-public-crate-api.md#A36, docs/decision/records/2026-10-03-public-crate-api.md#A40, docs/decision/records/2026-10-23-next-release-bundle.md#A6, docs/decision/records/2026-10-23-next-release-bundle.md#A8, docs/decision/records/2026-10-23-next-release-bundle.md#A12
 - verification: review
-- how_to_verify: Check the public signatures in rustdoc and external usage examples of the lower crates. Confirm by compiling that a re-exported type can be passed as the same type as the original.
+- how_to_verify: Check the public signatures in rustdoc and external usage examples of the lower crates. Confirm by compiling that a re-exported type can be passed as the same type as the original. Confirm that every type re-exported by kotowari can be reached from the inputs or results of an entry point.
 
 Public signatures do not contain internal types of the Markdown parser or of the source search engine. The APIs of the published lower crates are also subject to compatibility management, and implementation details are kept private. "kotowari" re-exports the lower input and result types it uses at its entry points as the same types, without duplicating them.
+
+Whether a part of the API of a published crate is public is decided by whether external users rely on it as part of the contract, not by whether the workspace uses it. Constructors of result types meant to be read-only, parameters and fields that are received but never read, and intermediate parts that external callers do not need are not public. "kotowari" does not re-export a lower type that cannot be reached from the inputs and results of its entry points.
 
 ## Decision tables
 
@@ -78,5 +80,11 @@ Scenario: Correspondence is judged from already-discovered tests alone
 Scenario: A candidate that exposes internal dependencies does not pass the boundary verification
   Given there is a candidate in which core runs Git or a public signature returns an internal type of the search engine
   When the direction of dependencies and the public API are checked
+  Then that candidate is not judged to conform to the crate boundaries
+
+@id=EX-core-558 @about=REQ-core-309 @source=docs/decision/records/2026-10-23-next-release-bundle.md#A6,docs/decision/records/2026-10-23-next-release-bundle.md#A12
+Scenario: A public part outside the contract does not pass the boundary verification
+  Given there is a candidate in which kotowari re-exports a lower type that cannot be reached from the inputs and results of its entry points, or a lower crate makes public a constructor of a result type meant to be read-only
+  When the public API is checked
   Then that candidate is not judged to conform to the crate boundaries
 ```

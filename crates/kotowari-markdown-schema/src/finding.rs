@@ -133,17 +133,17 @@ impl Finding {
         &self.detail
     }
     /// 行を持たない指摘。
-    pub fn new(kind: FindingKind, detail: String) -> Self {
+    pub(crate) fn new(kind: FindingKind, detail: String) -> Self {
         Finding::maybe_at(kind, None, detail)
     }
 
     /// 行を持つ指摘。
-    pub fn at(kind: FindingKind, line: usize, detail: String) -> Self {
+    pub(crate) fn at(kind: FindingKind, line: usize, detail: String) -> Self {
         Finding::maybe_at(kind, Some(line), detail)
     }
 
     /// 行を持つかどうかが呼ぶ側で決まる指摘。
-    pub fn maybe_at(kind: FindingKind, line: Option<usize>, detail: String) -> Self {
+    pub(crate) fn maybe_at(kind: FindingKind, line: Option<usize>, detail: String) -> Self {
         Finding {
             kind,
             line,
@@ -155,13 +155,13 @@ impl Finding {
     }
 
     /// 宣言上の名前を持つノードの指摘に、その名前を添える。
-    pub fn of_node(mut self, node: &str) -> Self {
+    pub(crate) fn of_node(mut self, node: &str) -> Self {
         self.node = Some(node.to_string());
         self
     }
 
     /// 規則種別を持つ指摘に、その種別を添える。
-    pub fn of_rule(mut self, rule_kind: RuleKind) -> Self {
+    pub(crate) fn of_rule(mut self, rule_kind: RuleKind) -> Self {
         self.rule_kind = Some(rule_kind);
         self
     }

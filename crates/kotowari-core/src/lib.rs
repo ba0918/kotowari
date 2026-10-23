@@ -15,6 +15,9 @@ mod deferred;
 mod deferred_notices;
 mod doc_kind;
 #[cfg(test)]
+#[path = "../tests/document_references.rs"]
+mod document_reference_contract_tests;
+#[cfg(test)]
 #[path = "../tests/test_facts.rs"]
 mod fact_contract_tests;
 #[cfg(test)]
@@ -61,7 +64,7 @@ mod stop;
 pub use status::{Documents, Findings, Items, Requirements, Scenarios, Tests};
 pub use stop::StopReason;
 pub mod surface;
-pub mod terms;
+mod terms;
 mod test_markers;
 mod test_side;
 pub mod tests_discovery;
@@ -102,12 +105,6 @@ pub struct TestFileTally {
 
 impl TestFileTally {
     readonly!(copy files: usize, query: bool);
-}
-
-/// 結果のファイルを作った変異テストの道具（REQ-core-149）
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Tool {
-    CargoMutants,
 }
 
 /// REQ-core-111: 読むファイルの先頭の UTF-8 BOM (U+FEFF) を読み飛ばす。

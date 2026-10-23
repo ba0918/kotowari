@@ -133,7 +133,20 @@ fn facade_names_are_the_same_lower_result_types() {
     fn same_mutants(value: &kotowari::MutantCounts) -> &kotowari_core::mutants::MutantCounts {
         value
     }
-    let _ = (same_query, same_requirement, same_guides, same_mutants);
+    fn same_guide_reader(model: &kotowari::ReadModel) -> kotowari::GuideReader<'_> {
+        model.guide_reader()
+    }
+    fn same_documents(model: &kotowari::ReadModel) -> &[kotowari::IrDocument] {
+        model.documents()
+    }
+    let _ = (
+        same_query,
+        same_requirement,
+        same_guides,
+        same_mutants,
+        same_guide_reader,
+        same_documents,
+    );
 }
 
 // @kotowari[REQ-core-312, REQ-core-315, REQ-core-322, EX-core-484, EX-core-488, EX-core-498]
@@ -156,6 +169,66 @@ fn public_admission_errors_keep_distinct_facade_classifications_and_details() {
         assert_eq!(facade.kind(), expected);
         assert!(facade.to_string().contains(&detail));
     }
+}
+
+fn check_with_config(dir: &std::path::Path, config: &str) -> kotowari::Error {
+    let mut options = ProjectOptions::new(dir);
+    options.config = Some(config.into());
+    Project::new(options).unwrap().check().err().unwrap()
+}
+
+// @kotowari[REQ-core-312, EX-core-554]
+#[test]
+fn ex_core_554_a_configuration_file_that_is_a_directory_is_invalid_input_like_a_missing_one() {
+    use kotowari::ErrorKind;
+    let dir = project();
+    let directory = check_with_config(dir.path(), ".kotowari");
+    let missing = check_with_config(dir.path(), "missing.yaml");
+    assert_eq!(missing.kind(), ErrorKind::InvalidInput);
+    assert_eq!(directory.kind(), missing.kind());
+    assert_ne!(directory.kind(), ErrorKind::ReadFailure);
+}
+
+// @kotowari[REQ-core-312, EX-core-555]
+#[test]
+fn ex_core_555_a_directory_at_the_default_location_is_a_read_failure() {
+    let dir = project();
+    let config = dir.path().join(".kotowari/config.yaml");
+    std::fs::remove_file(&config).unwrap();
+    std::fs::create_dir(&config).unwrap();
+    let error = Project::new(ProjectOptions::new(dir.path()))
+        .unwrap()
+        .check()
+        .err()
+        .unwrap();
+    assert_eq!(error.kind(), kotowari::ErrorKind::ReadFailure);
+}
+
+// @kotowari[REQ-core-312, EX-core-556]
+#[test]
+fn ex_core_556_the_unknown_id_can_be_taken_from_a_failed_query() {
+    let dir = project();
+    let error = Project::new(ProjectOptions::new(dir.path()))
+        .unwrap()
+        .query("REQ-core-999")
+        .err()
+        .unwrap();
+    assert_eq!(error.kind(), kotowari::ErrorKind::UnknownQuery);
+    assert_eq!(error.unknown_id(), Some("REQ-core-999"));
+}
+
+// @kotowari[REQ-core-312, EX-core-557]
+#[test]
+fn ex_core_557_a_failure_of_another_kind_provides_no_unknown_id() {
+    let dir = project();
+    std::fs::remove_dir_all(dir.path().join("docs/ir")).unwrap();
+    let error = Project::new(ProjectOptions::new(dir.path()))
+        .unwrap()
+        .check()
+        .err()
+        .unwrap();
+    assert_eq!(error.kind(), kotowari::ErrorKind::ReadFailure);
+    assert_eq!(error.unknown_id(), None);
 }
 
 // @kotowari[REQ-core-290, REQ-core-310, TBL-core-041]

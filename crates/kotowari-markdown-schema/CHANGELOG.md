@@ -7,12 +7,17 @@
 - The minimum supported Rust version (`rust-version`) is raised from 1.89 to 1.99 (`kotowari-markdown-schema`, `kotowari-markdown-schema-io`, `kotowari-markdown-view`, `kotowari-mds`).
 - **BREAKING (Rust API and package layout)** Unvalidated construction and modification of `Schema` are now private, and `Schema::parse` performs semantic validation. `extract_validated` returns the values of a successful validation, and `extract_partial` returns the values obtained so far together with the findings. Calling code written against the old API needs to migrate.
 - Fetching is split into the `kotowari-markdown-schema-io` package and the executable into the `kotowari-mds` package. The binary's commands, output and exit codes are unchanged.
+- A schema that declares `name` and places a root path on the `type` key now stops with `document has the key "<path>", which conflicts with "type", where typed extraction puts "name"`. The reason used to name the `ast --schema` subcommand, which a library user does not run.
 
 ### Added
 
 - `SchemaLoader`, which returns load results for reuse, and `AsyncSchemaLoader` behind the `tokio` feature, disabled by default.
 - The `kotowari-markdown-view` crate, which turns documents made of Markdown text and parts of fixed kinds into static HTML pages in memory. `part_schema` returns the JSON Schema of the eight part kinds. It reads and writes no files, and the pages load nothing from outside.
 - `SchemaLoader::read_document`, which reads a document as a UTF-8 string with a leading BOM removed, the same way `load` does, without resolving a schema.
+
+### Removed
+
+- **BREAKING (Rust API)** `finding::Finding::new`, `at`, `maybe_at`, `of_node` and `of_rule` are no longer public. A `Finding` is now made only by validation and extraction; outside the crate, read it through its accessors (`kind`, `line`, `node`, `raw`, `rule_kind`, `detail`).
 
 ### Fixed
 

@@ -6,7 +6,7 @@
 
 ## ローカルの検証
 
-<!-- @kotowari[REQ-core-309:96174f95, REQ-schema-051:9546b439] -->
+<!-- @kotowari[REQ-core-309:6d260573, REQ-schema-051:9546b439] -->
 
 Cargo 1.98以降と安全なtar展開を提供するPython 3.11以降を使い、変更をコミットした清潔な作業ツリーで実行します。
 
