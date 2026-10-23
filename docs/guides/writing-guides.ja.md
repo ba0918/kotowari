@@ -73,7 +73,7 @@ $ kotowari check | jq -c .guides
 
 ## 置き場の設定
 
-<!-- @kotowari[REQ-core-198:253e79fd, REQ-core-199:55922b15, EX-core-369:248c0ebf] -->
+<!-- @kotowari[REQ-core-198:253e79fd, REQ-core-199:f1e4cc8c, EX-core-369:248c0ebf] -->
 
 ガイドの置き場は、設定ファイルの `guides.files` に glob の一覧で書きます。
 
@@ -287,7 +287,7 @@ guides files=0 marks=0
 
 ### ガイドとテストの置き場が重なって止まる
 
-<!-- @kotowari[REQ-core-199:55922b15, EX-core-368:d4ff36cf] -->
+<!-- @kotowari[REQ-core-199:f1e4cc8c, EX-core-368:d4ff36cf] -->
 
 `tests.files` が広すぎて（`**/*` など）ガイドにも当たっています。
 問い合わせの無い言語のファイルでは `@kotowari[` を全部拾うので、ガイドの印がテストの印として読まれるのを防ぐために止まります。

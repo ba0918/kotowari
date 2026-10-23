@@ -9,10 +9,10 @@ Covers the location and reading of the `overview data`, its form, the content of
 ### REQ-core-278: The location of the data
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A15, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A49, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A76, docs/decision/records/2026-10-06-changes-rethink.md#A30
+- source: docs/decision/records/2026-10-02-whole-picture.md#A15, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A49, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A76, docs/decision/records/2026-10-06-changes-rethink.md#A30, docs/decision/records/2026-10-23-overview-test-contents.md#A1
 - verification: unit
 
-kotowari always, on "kotowari check", "kotowari status", "kotowari overview build" and "kotowari overview serve", reads as `overview data` the files matched by the globs of "overview.files" in the configuration whose extension is lowercase ".md", and does not read other files (an `exclusion`). "kotowari overview build" and "kotowari overview serve" read the `IR`, each `decision record` and the ADRs from the same configuration and locations as "kotowari check" in order to resolve references, and make the `stop` for those locations (REQ-core-018) the same way as check. How the globs are read, the walk, the `exclusion`, and the `stop` on an unreadable file, a non-UTF-8 file and a symbolic link without a target follow "guides.files" and the `guide`; of hidden directories, only those that a glob names by a path component are read.
+kotowari always, on "kotowari check", "kotowari status", "kotowari overview build" and "kotowari overview serve", reads as `overview data` the files matched by the globs of "overview.files" in the configuration whose extension is lowercase ".md", and does not read other files (an `exclusion`). "kotowari overview build" and "kotowari overview serve" read the `IR`, each `decision record` and the ADRs from the same configuration and locations as "kotowari check" in order to resolve references, and make the `stop` for those locations (REQ-core-018) the same way as check. How the globs are read, the walk, the `exclusion`, and the `stop` on an unreadable file, a non-UTF-8 file and a symbolic link without a target follow "guides.files" and the `guide`; of hidden directories, only those that a glob names by a path component are read. "kotowari overview build" and "kotowari overview serve" collect only the path of each `test file`, for the overlaps of REQ-core-199 and REQ-core-280, and read neither its contents nor "tests.rules"; the `stop` of the walk that collects the paths (REQ-core-018) stays the same.
 
 ### REQ-core-279: When there is no key for the data
 
@@ -25,10 +25,10 @@ When the `configuration file` has no "overview" key, kotowari reads no `overview
 ### REQ-core-280: Overlap with guides and tests
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-02-whole-picture.md#A58, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A75
+- source: docs/decision/records/2026-10-02-whole-picture.md#A58, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A75, docs/decision/records/2026-10-23-overview-test-contents-consistency.md#A1, docs/decision/records/2026-10-23-guide-overlap-sides.md#A1
 - verification: unit
 
-When, on "kotowari check", "kotowari status", "kotowari overview build" or "kotowari overview serve", one file is matched both by the globs of "overview.files" and by the globs of "guides.files" or "tests.files", kotowari makes a `stop` with a configuration error as the reason, and outputs as the detail the path, relative to the `base directory`, of the first overlapping file in the byte order of the path, followed by ": matched by both overview.files and guides.files" or ": matched by both overview.files and tests.files". If there is an overlap of REQ-core-199, that is judged first, and when one file is matched by all three, it outputs ": matched by both overview.files and guides.files".
+When, on "kotowari check", "kotowari status", "kotowari overview build" or "kotowari overview serve", one file is matched both by the globs of "overview.files" and by the globs of "guides.files" or "tests.files", kotowari makes a `stop` with a configuration error as the reason, and outputs as the detail the path, relative to the `base directory`, of the first overlapping file in the byte order of the path, followed by ": matched by both overview.files and guides.files" or ": matched by both overview.files and tests.files". If there is an overlap of REQ-core-199, that is judged first, so when one file is matched by all three, kotowari makes the `stop` of REQ-core-199, whose detail ends with ": matched by both guides.files and tests.files". Which files count as matched by the globs of "guides.files" follows REQ-core-199.
 
 ### REQ-core-281: The form of the data
 
@@ -117,6 +117,12 @@ Scenario: Data in a hidden directory named by the glob is read
   Given "overview.files" is ".kotowari/overview/*.md", and ".kotowari/overview/changes.md" has correct `overview data`
   When "kotowari check --format json" is run
   Then the "files" of "overview" is 1
+
+@id=EX-core-553 @about=REQ-core-278 @source=docs/decision/records/2026-10-23-overview-test-contents.md#A1
+Scenario: A test file that is not UTF-8 does not stop the build
+  Given "tests.files" matches "tests/bad.rs", which is not UTF-8, and the `overview data` is correct
+  When "kotowari overview build" is run
+  Then the exit code is 0, and the pages are written
 
 @id=EX-core-465 @about=REQ-core-280 @source=docs/decision/records/2026-10-02-whole-picture.md#A58,docs/decision/records/2026-10-02-whole-picture.md#A75
 Scenario: Data that overlaps a guide is a configuration error

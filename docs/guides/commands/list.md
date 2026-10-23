@@ -254,7 +254,7 @@ A requirement whose `deferred` is true is counted in neither `with_tests` nor `w
 
 ### check and status stop on a configuration error, but list runs
 
-<!-- @kotowari[REQ-core-152:04c37477, REQ-core-198:253e79fd, REQ-core-199:55922b15] -->
+<!-- @kotowari[REQ-core-152:04c37477, REQ-core-198:253e79fd, REQ-core-199:f1e4cc8c] -->
 
 `list` does not read guides, so it does not stop for reasons tied to the guide locations (such as `guides.files` overlapping `tests.files`).
 However, when `languages` lists two or more languages, it walks the locations of guides, overview data and the table of contents, so stops caused by those locations and by reading them behave the same as in `check`.

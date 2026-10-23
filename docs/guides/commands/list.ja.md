@@ -254,7 +254,7 @@ CI で誤りを止めたいなら `kotowari check` か [`kotowari status`](./sta
 
 ### check や status は設定の誤りで止まるのに、list は動く
 
-<!-- @kotowari[REQ-core-152:04c37477, REQ-core-198:253e79fd, REQ-core-199:55922b15] -->
+<!-- @kotowari[REQ-core-152:04c37477, REQ-core-198:253e79fd, REQ-core-199:f1e4cc8c] -->
 
 `list` はガイドを読まないので、ガイドの置き場に関わる停止（`guides.files` と `tests.files` の重なりなど）はしません。
 ただし `languages` に2つ以上の言語を書いたときは、ガイド、全体像の元データ、目次の置き場を辿るので、その置き場と読み込みによる停止は `check` と同じにします。

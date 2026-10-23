@@ -130,7 +130,8 @@ fn validate_toc_overlap<'a>(
     )))
 }
 
-/// REQ-core-280: パスのバイト順で最初の重なったファイル。3つすべてに当たれば guides の文言にする
+/// REQ-core-280: パスのバイト順で最初の重なったファイル。ガイドとテストの重なり（REQ-core-199）は
+/// 呼ぶ側が先に判定するので、3つすべてに当たるファイルはここまで来ない
 fn validate_overlap<'a>(
     overview: impl IntoIterator<Item = &'a str>,
     guides: &[&str],

@@ -205,7 +205,7 @@ pub fn load_all(cwd: &Path, config_path: Option<&Path>) -> Result<ReadModel, Sto
 struct Loaded {
     base: PathBuf,
     read: ReadModel,
-    /// 読んだ`テストのファイル`の`基準のディレクトリ`からの相対パス
+    /// 集めた`テストのファイル`の`基準のディレクトリ`からの相対パス
     test_paths: Vec<String>,
     /// `IR`の`対`
     assembly: translations::Assembly,
@@ -215,11 +215,24 @@ struct Loaded {
 fn load_read(cwd: &Path, config_path: Option<&Path>) -> Result<Loaded, StopReason> {
     let base = find_base(cwd);
     let cfg = load_config(cwd, &base, config_path)?;
-    load_configured(base, &cfg)
+    load_configured(base, &cfg, TestReading::Analyzed)
+}
+
+/// `テストのファイル`をどこまで読むか
+#[derive(Clone, Copy)]
+enum TestReading {
+    /// 中身を読んで解析する（check、list、query、status）
+    Analyzed,
+    /// パスだけを集める。build と serve はパスを重なりの判定にしか使わない（REQ-core-278）
+    PathsOnly,
 }
 
 /// 読んだ設定の置き場から、IR、判断の記録、テストのファイルを読む
-fn load_configured(base: PathBuf, cfg: &config::Config) -> Result<Loaded, StopReason> {
+fn load_configured(
+    base: PathBuf,
+    cfg: &config::Config,
+    reading: TestReading,
+) -> Result<Loaded, StopReason> {
     // 設定のパスは基準のディレクトリからの相対（REQ-core-010）
     let ir_dir = base.join(&cfg.ir);
     let records_dir = base.join(&cfg.decisions.records);
@@ -243,11 +256,23 @@ fn load_configured(base: PathBuf, cfg: &config::Config) -> Result<Loaded, StopRe
     let mut assembly = translations::Assembly::new(&base, cfg);
     let preparation = ir::prepare(&base, cfg, &mut assembly)?;
     let (records, adr) = sources::read_texts(&base, cfg)?;
-    let tests = tests_discovery::analyze(&base, cfg)?;
-    let test_paths = tests
-        .iter()
-        .map(|test| test.source.path().to_string())
-        .collect();
+    let (tests, test_paths) = match reading {
+        TestReading::Analyzed => {
+            let tests = tests_discovery::analyze(&base, cfg)?;
+            let paths = tests
+                .iter()
+                .map(|test| test.source.path().to_string())
+                .collect();
+            (tests, paths)
+        }
+        TestReading::PathsOnly => {
+            let paths = tests_discovery::collect_files(&base, &cfg.tests.files)?
+                .into_iter()
+                .map(|(path, _)| path)
+                .collect();
+            (vec![], paths)
+        }
+    };
     Ok(Loaded {
         read: preparation.finish(records, adr, tests)?,
         base,
@@ -261,11 +286,15 @@ fn load_configured(base: PathBuf, cfg: &config::Config) -> Result<Loaded, StopRe
 fn read_guides_and_overview(
     loaded: &mut Loaded,
 ) -> Result<(Option<Vec<NativeSourceText>>, Option<overview::Texts>), StopReason> {
-    let guides = guides::read_texts(&loaded.base, &loaded.read, &mut loaded.assembly)?;
+    let guides = guides::read_texts(
+        &loaded.base,
+        loaded.read.config(),
+        &loaded.test_paths,
+        &mut loaded.assembly,
+    )?;
     let guide_paths: Vec<&str> = guides
         .iter()
-        .flatten()
-        .map(NativeSourceText::path)
+        .flat_map(|guides| guides.overlap.iter().map(String::as_str))
         .collect();
     let overview = overview::read_texts(
         &loaded.base,
@@ -274,7 +303,7 @@ fn read_guides_and_overview(
         &loaded.test_paths,
         &mut loaded.assembly,
     )?;
-    Ok((guides, overview))
+    Ok((guides.map(|guides| guides.files), overview))
 }
 
 /// list の読み取り: `load_all` に続けて、`言語の一覧`の言語が2つ以上なら blob hash を出すために
@@ -309,8 +338,8 @@ pub fn load_with_guides(cwd: &Path, config_path: Option<&Path>) -> Result<Inspec
     preparation.finish()
 }
 
-/// build と serve の読み取り: check と同じ設定と置き場から IR と判断の記録と`テストのファイル`を読み、
-/// `全体像の元データ`を読んで検査し描画の入力を作る（REQ-core-278、REQ-core-280）。
+/// build と serve の読み取り: check と同じ設定と置き場から IR と判断の記録を読み、`テストのファイル`は
+/// パスだけを集め、`全体像の元データ`を読んで検査し描画の入力を作る（REQ-core-278、REQ-core-280）。
 /// "overview" の鍵が無ければ設定の誤りで止まる（REQ-core-279）。ガイドは`対`を集めるためだけに読み、
 /// その検査と面は読まない
 pub fn load_overview(
@@ -327,11 +356,14 @@ pub fn load_overview(
         read,
         test_paths,
         mut assembly,
-    } = load_configured(base, &cfg)?;
+    } = load_configured(base, &cfg, TestReading::PathsOnly)?;
     // REQ-core-280: ガイドとテストの重なり（REQ-core-199）を先に判定する。
     // TBL-core-044: `ガイド`の`対`も集め、元データのリンクの行き先を`先頭の言語`の`側`に読み替えられるようにする
-    let guides = guides::collect(&base, &read, &mut assembly)?.unwrap_or_default();
-    let guide_paths: Vec<&str> = guides.iter().map(|(path, _)| path.as_str()).collect();
+    let guides = guides::collect(&base, read.config(), &test_paths, &mut assembly)?;
+    let guide_paths: Vec<&str> = guides
+        .iter()
+        .flat_map(|guides| guides.overlap.iter().map(String::as_str))
+        .collect();
     let texts = overview::read_texts(
         &base,
         read.config(),

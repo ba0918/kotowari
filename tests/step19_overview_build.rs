@@ -284,6 +284,43 @@ fn req_core_280_build_stops_on_an_overlap_with_the_test_files() {
     );
 }
 
+// @kotowari[REQ-core-280, REQ-core-199]
+#[test]
+fn req_core_280_build_judges_the_guides_and_tests_overlap_first() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), "");
+    std::fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "tests:\n  files: ['tests/**']\nguides:\n  files: ['tests/**']\noverview:\n  files: ['tests/**']\n  toc: .kotowari/toc.yaml\n",
+    )
+    .unwrap();
+    write(tmp.path(), "tests/a.md", &data("docs/ir/cli.md", "A", "a"));
+    let (code, _, stderr) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(2));
+    assert_eq!(
+        stderr.lines().next(),
+        Some("config error: tests/a.md: matched by both guides.files and tests.files")
+    );
+}
+
+// @kotowari[EX-core-553, REQ-core-278]
+#[test]
+fn ex_core_553_a_test_file_that_is_not_utf8_does_not_stop_the_build() {
+    let tmp = two_documents();
+    std::fs::write(tmp.path().join("tests/bad.rs"), b"\xff\xfe").unwrap();
+    let (code, stdout, stderr) = run(tmp.path(), &["overview", "build"]);
+    assert_eq!(code, Some(0), "{stderr}");
+    assert_eq!(
+        strings(&json(&stdout)["written"]),
+        [
+            ".kotowari/cache/overview/a.html",
+            ".kotowari/cache/overview/b.html",
+            ".kotowari/cache/overview/index.html",
+            ".kotowari/cache/overview/style.css",
+        ]
+    );
+}
+
 // @kotowari[REQ-core-278, REQ-core-018]
 #[test]
 fn req_core_278_build_reads_the_ir_places_and_stops_like_check() {

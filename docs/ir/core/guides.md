@@ -17,10 +17,10 @@ kotowari always, in "kotowari check" and "kotowari status", reads the files matc
 ### REQ-core-199: Overlap of the guide and test locations
 
 - kind: event_driven
-- source: docs/decision/records/2026-09-24-doc-marks.md#A15, docs/decision/records/2026-09-24-doc-marks.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A36
+- source: docs/decision/records/2026-09-24-doc-marks.md#A15, docs/decision/records/2026-09-24-doc-marks.md#A28, docs/decision/records/2026-09-24-doc-marks.md#A36, docs/decision/records/2026-10-23-guide-overlap-sides.md#A1
 - verification: unit
 
-When, in "kotowari check", one file matches both a glob of "guides.files" and a glob of "tests.files", kotowari does a `stop` on the grounds of a configuration error, and outputs as the detail the string made of the path, relative to the `base directory`, of the first of the overlapping files in byte order of path, followed by ": matched by both guides.files and tests.files".
+When, in "kotowari check", one file matches both a glob of "guides.files" and a glob of "tests.files", kotowari does a `stop` on the grounds of a configuration error, and outputs as the detail the string made of the path, relative to the `base directory`, of the first of the overlapping files in byte order of path, followed by ": matched by both guides.files and tests.files". A file matched by a glob of "guides.files" counts even when it is a `side` that REQ-core-338 does not read, and a `side` that kotowari reads as a `guide` because it is in the same `pair` as a matched file (REQ-core-336, REQ-core-337) counts as matched by a glob of "guides.files" even when no glob matches it.
 
 ### REQ-core-200: Where guide marks are read
 

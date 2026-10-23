@@ -9,10 +9,10 @@
 ### REQ-core-278: 元データの置き場
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-02-whole-picture.md#A15, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A49, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A76, docs/decision/records/2026-10-06-changes-rethink.md#A30
+- source: docs/decision/records/2026-10-02-whole-picture.md#A15, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A32, docs/decision/records/2026-10-02-whole-picture.md#A49, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A76, docs/decision/records/2026-10-06-changes-rethink.md#A30, docs/decision/records/2026-10-23-overview-test-contents.md#A1
 - verification: unit
 
-kotowari は常に、"kotowari check"、"kotowari status"、"kotowari overview build"、"kotowari overview serve" で、設定の "overview.files" の glob に当たり拡張子が小文字の ".md" のファイルを`全体像の元データ`として読み、それ以外のファイルを読まない（`除外`）。"kotowari overview build" と "kotowari overview serve" は、参照を解くために "kotowari check" と同じ設定と置き場から`IR`と`判断の記録`と ADR を読み、その置き場の`停止`（REQ-core-018）も check と同じにする。glob の読み方、走査、`除外`、読めないファイルと UTF-8 でないファイルと先の無いシンボリックリンクでの`停止`は "guides.files" と`ガイド`のとおりにし、隠しディレクトリは glob がパスの成分で名指ししたものだけを読む。
+kotowari は常に、"kotowari check"、"kotowari status"、"kotowari overview build"、"kotowari overview serve" で、設定の "overview.files" の glob に当たり拡張子が小文字の ".md" のファイルを`全体像の元データ`として読み、それ以外のファイルを読まない（`除外`）。"kotowari overview build" と "kotowari overview serve" は、参照を解くために "kotowari check" と同じ設定と置き場から`IR`と`判断の記録`と ADR を読み、その置き場の`停止`（REQ-core-018）も check と同じにする。glob の読み方、走査、`除外`、読めないファイルと UTF-8 でないファイルと先の無いシンボリックリンクでの`停止`は "guides.files" と`ガイド`のとおりにし、隠しディレクトリは glob がパスの成分で名指ししたものだけを読む。"kotowari overview build" と "kotowari overview serve" は、REQ-core-199 と REQ-core-280 の重なりの判定のために`テストのファイル`のパスだけを集め、その中身と "tests.rules" を読まない。パスを集める走査の`停止`（REQ-core-018）は変わらない。
 
 ### REQ-core-279: 元データの鍵が無いとき
 
@@ -25,10 +25,10 @@ kotowari は常に、"kotowari check"、"kotowari status"、"kotowari overview b
 ### REQ-core-280: ガイドとテストとの重なり
 
 - kind: event_driven
-- source: docs/decision/records/2026-10-02-whole-picture.md#A58, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A75
+- source: docs/decision/records/2026-10-02-whole-picture.md#A58, docs/decision/records/2026-10-02-whole-picture.md#A73, docs/decision/records/2026-10-02-whole-picture.md#A75, docs/decision/records/2026-10-23-overview-test-contents-consistency.md#A1, docs/decision/records/2026-10-23-guide-overlap-sides.md#A1
 - verification: unit
 
-"kotowari check"、"kotowari status"、"kotowari overview build"、"kotowari overview serve" で、1つのファイルが "overview.files" の glob と、"guides.files" か "tests.files" の glob の両方に当たるとき、kotowari は設定の誤りを理由に`停止`し、詳細に、重なったファイルのうちパスのバイト順で最初の1つの`基準のディレクトリ`からの相対パスに ": matched by both overview.files and guides.files" か ": matched by both overview.files and tests.files" を続けた文字列を出す。REQ-core-199 の重なりがあればそれを先に判定し、1つのファイルが3つすべてに当たるときは ": matched by both overview.files and guides.files" を出す。
+"kotowari check"、"kotowari status"、"kotowari overview build"、"kotowari overview serve" で、1つのファイルが "overview.files" の glob と、"guides.files" か "tests.files" の glob の両方に当たるとき、kotowari は設定の誤りを理由に`停止`し、詳細に、重なったファイルのうちパスのバイト順で最初の1つの`基準のディレクトリ`からの相対パスに ": matched by both overview.files and guides.files" か ": matched by both overview.files and tests.files" を続けた文字列を出す。REQ-core-199 の重なりがあればそれを先に判定するので、1つのファイルが3つすべてに当たるときは REQ-core-199 の`停止`になり、詳細は ": matched by both guides.files and tests.files" で終わる。"guides.files" の glob に当たるものとして数えるファイルは REQ-core-199 のとおりにする。
 
 ### REQ-core-281: 元データの形
 
@@ -117,6 +117,12 @@ Scenario: 名指しした隠しディレクトリの元データを読む
   Given "overview.files" が ".kotowari/overview/*.md" で、".kotowari/overview/changes.md" に正しい`全体像の元データ`がある
   When "kotowari check --format json" を実行する
   Then "overview" の "files" は 1 である
+
+@id=EX-core-553 @about=REQ-core-278 @source=docs/decision/records/2026-10-23-overview-test-contents.md#A1
+Scenario: UTF-8 でないテストのファイルでは書き出しが止まらない
+  Given "tests.files" が UTF-8 でない "tests/bad.rs" に当たり、`全体像の元データ`は正しい
+  When "kotowari overview build" を実行する
+  Then 終了コードは 0 で、ページが書かれる
 
 @id=EX-core-465 @about=REQ-core-280 @source=docs/decision/records/2026-10-02-whole-picture.md#A58,docs/decision/records/2026-10-02-whole-picture.md#A75
 Scenario: ガイドと重なる元データは設定の誤りになる
