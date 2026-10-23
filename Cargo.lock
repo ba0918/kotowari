@@ -868,7 +868,7 @@ dependencies = [
 
 [[package]]
 name = "kotowari"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "globset",
  "kotowari-core",
@@ -881,7 +881,7 @@ dependencies = [
 
 [[package]]
 name = "kotowari-cli"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "assert_cmd",
  "ctrlc",
@@ -896,7 +896,7 @@ dependencies = [
 
 [[package]]
 name = "kotowari-core"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "globset",
  "kotowari-markdown-schema",
@@ -960,7 +960,7 @@ dependencies = [
 
 [[package]]
 name = "kotowari-overview"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "jsonschema",
  "kotowari-core",
@@ -973,7 +973,7 @@ dependencies = [
 
 [[package]]
 name = "kotowari-source-analysis"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "ast-grep-config",
  "ast-grep-core",

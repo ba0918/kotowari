@@ -5,6 +5,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-24
+
 ### Fixed
 
 - A new `kotowari-iterate` request starts with implementation even when the branch already has findings from an earlier request; resuming the same request keeps its place in the loop.
@@ -133,7 +135,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 - Ten Claude Code skills in `agent/skills/`. `kotowari` teaches how to write the IR and decision records, fix findings and place marks. The nine starting with `kotowari-` run the workflow from brainstorm through plan, implementation and review on top of kotowari (optional).
 - Two ways to install: prebuilt binaries on GitHub Releases (Linux x86_64 and macOS arm64, with SHA256), and `cargo install --git https://github.com/ba0918/kotowari --tag kotowari-v0.1.0 kotowari` with the version pinned by tag. Passing the tag to `--pin` of `gh skill install` installs the skills at a pinned version.
 
-[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.5.0...HEAD
+[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.6.0...HEAD
+[0.6.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.5.0...kotowari-v0.6.0
 [0.5.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.4.0...kotowari-v0.5.0
 [0.4.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.3.0...kotowari-v0.4.0
 [0.3.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.2.0...kotowari-v0.3.0
