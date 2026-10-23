@@ -10,8 +10,8 @@ description = "Check in-memory overview data against kotowari specifications and
 
 [dependencies]
 kotowari-core = { path = "../kotowari-core", version = "0.5.0" }
-kotowari-markdown-schema = { path = "../kotowari-markdown-schema", version = "0.1.0" }
-kotowari-markdown-view = { path = "../kotowari-markdown-view", version = "0.1.0" }
+kotowari-markdown-schema = { path = "../kotowari-markdown-schema", version = "0.2.0" }
+kotowari-markdown-view = { path = "../kotowari-markdown-view", version = "0.2.0" }
 jsonschema = { version = "0.58.4", default-features = false }
 markdown = "1"
 serde_json = "1"

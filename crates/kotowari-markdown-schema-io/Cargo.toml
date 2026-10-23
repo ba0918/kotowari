@@ -1,6 +1,6 @@
 [package]
 name = "kotowari-markdown-schema-io"
-version = "0.1.0"
+version = "0.2.0"
 edition.workspace = true
 rust-version.workspace = true
 license = "MIT OR Apache-2.0"
@@ -10,7 +10,7 @@ description = "Load Markdown schemas and documents from files and URLs"
 
 [dependencies]
 tokio = { version = "1.53.1", optional = true, features = ["rt", "sync"] }
-kotowari-markdown-schema = { path = "../kotowari-markdown-schema", version = "0.1.0" }
+kotowari-markdown-schema = { path = "../kotowari-markdown-schema", version = "0.2.0" }
 sha2 = "0.10"
 ureq = "3"
 walkdir = "2"

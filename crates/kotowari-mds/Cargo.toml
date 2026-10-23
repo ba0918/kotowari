@@ -1,6 +1,6 @@
 [package]
 name = "kotowari-mds"
-version = "0.1.0"
+version = "0.2.0"
 edition.workspace = true
 rust-version.workspace = true
 license = "MIT OR Apache-2.0"
@@ -15,8 +15,8 @@ name = "kotowari-mds"
 path = "src/main.rs"
 
 [dependencies]
-kotowari-markdown-schema = { path = "../kotowari-markdown-schema", version = "0.1.0" }
-kotowari-markdown-schema-io = { path = "../kotowari-markdown-schema-io", version = "0.1.0" }
+kotowari-markdown-schema = { path = "../kotowari-markdown-schema", version = "0.2.0" }
+kotowari-markdown-schema-io = { path = "../kotowari-markdown-schema-io", version = "0.2.0" }
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }

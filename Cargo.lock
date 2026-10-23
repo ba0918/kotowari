@@ -910,7 +910,7 @@ dependencies = [
 
 [[package]]
 name = "kotowari-markdown-schema"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "gray_matter",
  "markdown",
@@ -924,7 +924,7 @@ dependencies = [
 
 [[package]]
 name = "kotowari-markdown-schema-io"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "kotowari-markdown-schema",
  "sha2",
@@ -936,7 +936,7 @@ dependencies = [
 
 [[package]]
 name = "kotowari-markdown-view"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "jsonschema",
  "markdown",
@@ -946,7 +946,7 @@ dependencies = [
 
 [[package]]
 name = "kotowari-mds"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "assert_cmd",
  "clap",

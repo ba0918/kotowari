@@ -6,6 +6,8 @@ Entries are written for someone upgrading from one release to the next: what cha
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-24
+
 ### Changed
 
 - The minimum supported Rust version (`rust-version`) is raised from 1.89 to 1.99 (`kotowari-markdown-schema`, `kotowari-markdown-schema-io`, `kotowari-markdown-view`, `kotowari-mds`).
@@ -75,4 +77,6 @@ $ cargo install --git https://github.com/ba0918/mds
 
 Requires Rust 1.89 or newer.
 
+[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-mds-v0.2.0...HEAD
+[0.2.0]: https://github.com/ba0918/kotowari/releases/tag/kotowari-mds-v0.2.0
 [0.1.0]: https://github.com/ba0918/mds/releases/tag/v0.1.0

@@ -22,7 +22,7 @@ name = "paths"
 path = "tests/paths.rs"
 
 [dependencies]
-kotowari-markdown-schema = { path = "../kotowari-markdown-schema", version = "0.1.0" }
+kotowari-markdown-schema = { path = "../kotowari-markdown-schema", version = "0.2.0" }
 serde = { version = "1", features = ["derive"] }
 serde-saphyr = "1"
 globset = "0.4"
