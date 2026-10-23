@@ -133,7 +133,16 @@ fn facade_names_are_the_same_lower_result_types() {
     fn same_mutants(value: &kotowari::MutantCounts) -> &kotowari_core::mutants::MutantCounts {
         value
     }
-    let _ = (same_query, same_requirement, same_guides, same_mutants);
+    fn same_guide_reader(model: &kotowari::ReadModel) -> kotowari::GuideReader<'_> {
+        model.guide_reader()
+    }
+    let _ = (
+        same_query,
+        same_requirement,
+        same_guides,
+        same_mutants,
+        same_guide_reader,
+    );
 }
 
 // @kotowari[REQ-core-312, REQ-core-315, REQ-core-322, EX-core-484, EX-core-488, EX-core-498]

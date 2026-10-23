@@ -1,4 +1,6 @@
-use crate::{guides, ir, overview, sources, surface, test_files as tests_discovery, translations};
+use crate::{
+    Tool, guides, ir, overview, sources, surface, test_files as tests_discovery, translations,
+};
 use kotowari_core::*;
 use std::{
     collections::BTreeMap,

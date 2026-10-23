@@ -104,12 +104,6 @@ impl TestFileTally {
     readonly!(copy files: usize, query: bool);
 }
 
-/// 結果のファイルを作った変異テストの道具（REQ-core-149）
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Tool {
-    CargoMutants,
-}
-
 /// REQ-core-111: 読むファイルの先頭の UTF-8 BOM (U+FEFF) を読み飛ばす。
 /// 読むファイルはどれもここを通す（`read_utf8_file` と `read_source_lines`）。
 pub fn strip_bom(text: &str) -> &str {

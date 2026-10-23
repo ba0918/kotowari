@@ -15,6 +15,7 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 - When the improvement loop stops making progress, `kotowari-cycle` now questions the premise before it stops. If fixes keep raising new findings next to the ones they closed — or a finding stays present, a closed cause returns, or new findings do not shrink — the cycle writes down the premises its fixes shared, from the most specific up, replaces the top one and tries once more: through the fixer when the premise lies in the implementation, through the consistency phase when it lies in the IR or a decision record and grounds can settle it. Only a premise no grounds can settle goes to you, with the list of premises in the final report. A second firing after the attempt stops the loop as before. A new stop condition joins the others: for two fixes in a row, the review right after the fix raises a new finding next to where the fix was made, which the cycle judges from the findings' file and line locations (overlapping lines in the same file are one example). The findings file records each fix — the findings it addressed, its commits and the review after it (`fixes`) — for resuming and the final report. Each attempt is recorded in the findings file (`premise_attempts`), so a resumed cycle does not try the same firing twice. `kotowari-iterate` and a direct fix in the main session take the same step, and `kotowari-implement` replaces its own premise once before handing back to the cycle.
 - `kotowari::Error::unknown_id()` returns the ID a query did not find when the error's kind is `ErrorKind::UnknownQuery`, and `None` for every other kind, so the ID no longer has to be cut out of the error's text.
+- `kotowari::GuideReader`, the type `ReadModel::guide_reader` returns, is now re-exported from `kotowari`.
 
 ### Changed
 
@@ -24,6 +25,11 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 - A `--config` that points at a directory now stops with `argument error: config file is a directory: <path>` instead of `argument error: --config is a directory: <path>`, with the path as you gave it. The exit code is still 2 and standard output stays empty. The directory is now detected when the configuration is read, like a missing file, so when another argument error is present too, that other error is reported first.
 - **BREAKING (Rust API)** When the configuration file given through `ProjectOptions.config` is a directory, the `kotowari` library now fails with `ErrorKind::InvalidInput`, the same kind as when the file does not exist, instead of `ErrorKind::ReadFailure`. Its detail is `argument error: config file is a directory: <path>`. With no configuration file given, a directory at the default location `.kotowari/config.yaml` is still a `ReadFailure`.
 - The `Display` of `kotowari_source_analysis::AnalysisError::InvalidRules` is now `invalid rules: <detail>`, without the `config error: ` that used to sit between them. `AnalysisError::detail()` returns the same text as before.
+
+### Removed
+
+- **BREAKING (Rust API)** `kotowari` no longer re-exports `CheckInputs`, `ReadInputs`, `IrOptions`, `SourceText`, `TestAnalysis` and `SurfaceAnalysis`; no `Project` operation takes or returns them. Code that checks inputs in memory takes them from `kotowari-core` (for example `kotowari_core::ReadInputs`), and `kotowari-source-analysis` still re-exports the ones its `Analyzer` uses.
+- **BREAKING (Rust API)** `Tool` is removed from `kotowari-core`. It is now defined in `kotowari`, so `kotowari::Tool::CargoMutants` still names it.
 
 ## [0.5.0] - 2026-10-06
 

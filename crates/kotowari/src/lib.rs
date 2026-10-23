@@ -16,15 +16,14 @@ mod test_files;
 mod translations;
 
 pub use kotowari_core::config::Config;
-pub use kotowari_core::guides::GuideTally;
+pub use kotowari_core::guides::{GuideReader, GuideTally};
 pub use kotowari_core::ir::is_valid_id;
 pub use kotowari_core::mutants::MutantCounts;
 pub use kotowari_core::surface::{SurfaceTally, Unlisted};
 pub use kotowari_core::translations::{Translation, TranslationSide};
 pub use kotowari_core::{
-    CheckInputs, CheckReport, Finding, FindingGroup, FindingKind, GroupTally, InputError,
-    Inspection, IrDocument, IrOptions, ParsedItem, QueryReport, ReadInputs, ReadList, ReadModel,
-    SourceText, StatusReport, SurfaceAnalysis, TestAnalysis, TestFileTally, Tool,
+    CheckReport, Finding, FindingGroup, FindingKind, GroupTally, InputError, Inspection,
+    IrDocument, ParsedItem, QueryReport, ReadList, ReadModel, StatusReport, TestFileTally,
 };
 pub use kotowari_core::{
     Documents, ExampleItem, Findings, FlagItem, Items, ListItem, QueryItem, Reference,
@@ -146,6 +145,12 @@ impl From<InputError> for Error {
             ..Self::new(kind, error.to_string())
         }
     }
+}
+
+/// 結果のファイルを作った変異テストの道具（REQ-core-149）
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Tool {
+    CargoMutants,
 }
 
 #[derive(Debug, Clone)]
