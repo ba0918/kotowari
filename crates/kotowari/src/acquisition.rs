@@ -294,8 +294,7 @@ fn read_guides_and_overview(
     )?;
     let guide_paths: Vec<&str> = guides
         .iter()
-        .flatten()
-        .map(NativeSourceText::path)
+        .flat_map(|guides| guides.overlap.iter().map(String::as_str))
         .collect();
     let overview = overview::read_texts(
         &loaded.base,
@@ -304,7 +303,7 @@ fn read_guides_and_overview(
         &loaded.test_paths,
         &mut loaded.assembly,
     )?;
-    Ok((guides, overview))
+    Ok((guides.map(|guides| guides.files), overview))
 }
 
 /// list の読み取り: `load_all` に続けて、`言語の一覧`の言語が2つ以上なら blob hash を出すために
@@ -360,9 +359,11 @@ pub fn load_overview(
     } = load_configured(base, &cfg, TestReading::PathsOnly)?;
     // REQ-core-280: ガイドとテストの重なり（REQ-core-199）を先に判定する。
     // TBL-core-044: `ガイド`の`対`も集め、元データのリンクの行き先を`先頭の言語`の`側`に読み替えられるようにする
-    let guides =
-        guides::collect(&base, read.config(), &test_paths, &mut assembly)?.unwrap_or_default();
-    let guide_paths: Vec<&str> = guides.iter().map(|(path, _)| path.as_str()).collect();
+    let guides = guides::collect(&base, read.config(), &test_paths, &mut assembly)?;
+    let guide_paths: Vec<&str> = guides
+        .iter()
+        .flat_map(|guides| guides.overlap.iter().map(String::as_str))
+        .collect();
     let texts = overview::read_texts(
         &base,
         read.config(),

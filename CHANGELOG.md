@@ -9,6 +9,7 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 - A new `kotowari-iterate` request starts with implementation even when the branch already has findings from an earlier request; resuming the same request keeps its place in the loop.
 - `kotowari overview build` and `serve` no longer read the contents of test files or `tests.rules`. They only collect the paths `tests.files` matches, to check the overlaps with guides and overview data, so a test file that is not UTF-8 or cannot be read, or a broken `tests.rules`, no longer stops them. `kotowari check` still stops on these.
+- With two or more `languages`, a file that `guides.files` matches now counts in the overlap with `tests.files` and `overview.files` even when it is a side whose first-language side is missing, so that overlap stops with its configuration error instead of being skipped.
 
 ### Added
 

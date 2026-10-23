@@ -558,6 +558,102 @@ fn translated_overview_files_cannot_also_be_test_files() {
     assert!(!tmp.path().join(".kotowari/cache/overview").exists());
 }
 
+/// 言語の一覧を JA_EN にし、設定に extra を足して、各コマンドの (終了コード, 標準エラーの1行目) を返す
+fn stops(tmp: &Path, extra: &str, commands: &[&[&str]]) -> Vec<(Option<i32>, String)> {
+    write(
+        tmp,
+        ".kotowari/config.yaml",
+        &format!("{}{extra}", language_config(JA_EN)),
+    );
+    commands
+        .iter()
+        .map(|args| {
+            let output = assert_cmd::Command::cargo_bin("kotowari")
+                .unwrap()
+                .args(*args)
+                .current_dir(tmp)
+                .output()
+                .unwrap();
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            (
+                output.status.code(),
+                stderr.lines().next().unwrap_or("").to_string(),
+            )
+        })
+        .collect()
+}
+
+const CHECK_STATUS_BUILD: [&[&str]; 3] = [&["check"], &["status"], &["overview", "build"]];
+
+// @kotowari[REQ-core-280, REQ-core-199, REQ-core-338]
+#[test]
+fn req_core_280_a_side_without_its_first_side_matched_by_all_three_stops_on_the_guides_and_tests_overlap()
+ {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), JA_EN, "");
+    write(tmp.path(), "shared/a.en.md", &overview_data("Title"));
+    write(
+        tmp.path(),
+        ".kotowari/toc.yaml",
+        "title: 目次\nitems:\n  - a\n",
+    );
+    let stopped = stops(
+        tmp.path(),
+        "tests:\n  files: ['shared/**']\nguides:\n  files: ['shared/**']\noverview:\n  files: ['shared/**']\n  toc: .kotowari/toc.yaml\n",
+        &CHECK_STATUS_BUILD,
+    );
+    let expected = (
+        Some(2),
+        "config error: shared/a.en.md: matched by both guides.files and tests.files".to_string(),
+    );
+    assert_eq!(stopped, [expected.clone(), expected.clone(), expected]);
+}
+
+// @kotowari[REQ-core-280, REQ-core-338]
+#[test]
+fn req_core_280_a_side_without_its_first_side_matched_by_overview_and_guides_stops() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), JA_EN, "");
+    write(tmp.path(), "shared/a.en.md", &overview_data("Title"));
+    write(
+        tmp.path(),
+        ".kotowari/toc.yaml",
+        "title: 目次\nitems:\n  - a\n",
+    );
+    let stopped = stops(
+        tmp.path(),
+        "guides:\n  files: ['shared/**']\noverview:\n  files: ['shared/**']\n  toc: .kotowari/toc.yaml\n",
+        &CHECK_STATUS_BUILD,
+    );
+    let expected = (
+        Some(2),
+        "config error: shared/a.en.md: matched by both overview.files and guides.files".to_string(),
+    );
+    assert_eq!(stopped, [expected.clone(), expected.clone(), expected]);
+}
+
+// @kotowari[REQ-core-199, REQ-core-337]
+#[test]
+fn req_core_199_a_side_found_by_name_counts_as_a_guide_in_the_overlap() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), JA_EN, "");
+    write(tmp.path(), "guides/a.md", "a\n");
+    write(tmp.path(), "guides/a.en.md", "a\n");
+    let stopped = stops(
+        tmp.path(),
+        "tests:\n  files: ['guides/*.en.md']\nguides:\n  files: ['guides/a.md']\n",
+        &[&["check"]],
+    );
+    assert_eq!(
+        stopped,
+        [(
+            Some(2),
+            "config error: guides/a.en.md: matched by both guides.files and tests.files"
+                .to_string()
+        )]
+    );
+}
+
 // @kotowari[REQ-core-288, REQ-core-293, REQ-core-353, REQ-core-355]
 #[test]
 fn three_languages_keep_their_own_html_language_and_contents() {
