@@ -167,6 +167,13 @@ pub fn load_config(
                     cp.display()
                 )));
             }
+            // REQ-core-312: 指定がディレクトリのときも、無いときと同じく引数の誤り
+            if abs.is_dir() {
+                return Err(StopReason::ArgumentError(format!(
+                    "config file is a directory: {}",
+                    cp.display()
+                )));
+            }
             // TBL-core-020/A164: 詳細のパスは基準のディレクトリからの相対
             // （外にあれば "../" を含む。ファイルシステムには触れない）
             (abs, display_from_base(base, cwd, cp))

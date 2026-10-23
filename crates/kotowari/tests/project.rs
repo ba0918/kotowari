@@ -158,6 +158,37 @@ fn public_admission_errors_keep_distinct_facade_classifications_and_details() {
     }
 }
 
+fn check_with_config(dir: &std::path::Path, config: &str) -> kotowari::Error {
+    let mut options = ProjectOptions::new(dir);
+    options.config = Some(config.into());
+    Project::new(options).unwrap().check().err().unwrap()
+}
+
+// @kotowari[REQ-core-312, EX-core-554]
+#[test]
+fn ex_core_554_a_configuration_file_that_is_a_directory_is_invalid_input_like_a_missing_one() {
+    use kotowari::ErrorKind;
+    let dir = project();
+    let directory = check_with_config(dir.path(), ".kotowari");
+    let missing = check_with_config(dir.path(), "missing.yaml");
+    assert_eq!(missing.kind(), ErrorKind::InvalidInput);
+    assert_eq!(directory.kind(), missing.kind());
+    assert_ne!(directory.kind(), ErrorKind::ReadFailure);
+}
+
+// @kotowari[REQ-core-312, EX-core-555]
+#[test]
+fn ex_core_555_a_directory_at_the_default_location_is_a_read_failure() {
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::create_dir_all(dir.path().join(".kotowari/config.yaml")).unwrap();
+    let error = Project::new(ProjectOptions::new(dir.path()))
+        .unwrap()
+        .check()
+        .err()
+        .unwrap();
+    assert_eq!(error.kind(), kotowari::ErrorKind::ReadFailure);
+}
+
 // @kotowari[REQ-core-290, REQ-core-310, TBL-core-041]
 #[test]
 fn project_check_status_and_inspect_include_the_overview_group() {
