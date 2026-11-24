@@ -167,15 +167,25 @@ before classifying visible findings. For each non-`security` finding, in order: 
 new test or fixture without showing it qualifies, keep its action but replace its oracle with all
 existing checks passing; replace a `warn` oracle even when it qualifies; a replaced oracle keeps the
 `measured` the reviewer reported, and its note says that value was measured on the proposal that
-was replaced; force `human_judgment`
+was replaced, so a `fails_now` kept this way counts as shown by running; force `human_judgment`
 proposed for readability, a choice of structure, a deleted test, an added suppression of a check,
 or an added or changed dependency to `record_only`, since the implementer decides those; force an
-`auto_fix` or `fix_and_verify` whose `oracle.measured` is not `fails_now` to `record_only`. Only a
-mistake that running something shows keeps a run from converging; the stops of
-`references/merge.md` are apart from this. A gap from the intent that no run can show is a hole in
-the specification: `record_only`, reported among the rules absent from the specification, as
-rework for brainstorm. Leave `security` untouched
-and pause. Adopt any proposal that matched none of these checks unchanged. Never move a finding out
+`auto_fix` or `fix_and_verify` whose `oracle.measured` is not `fails_now` to `record_only`, except a
+proposal to delete verification the diff added because it does not meet the Evidence conditions
+(the review skill's **How a reviewer works**), which stays a fix without having been seen failing.
+
+Three kinds of review finding keep a run from converging: a mistake that running something shows,
+a `security` finding whose proposed action is a fix, and such a proposal to delete verification;
+the stops of `references/merge.md` are apart from this. A gap from the intent that no run can show
+is a hole in the specification: `record_only`, reported among the rules absent from the
+specification, as rework for brainstorm. A `security` finding keeps the action it proposes and
+never pauses the run: one proposing `auto_fix` or `fix_and_verify` is visible and goes to the fixer
+whether or not its oracle was seen failing, and when it cannot be fixed ending 3 hands it to the
+person; one proposing `human_judgment` stays open, which `references/merge.md` counts as a reason
+for a person to confirm; one proposing `record_only` stays recorded. For each `security` finding a
+fix closed, write a decision line: what was fixed, why (its claim), and the evidence (its commits).
+
+Adopt any proposal that matched none of these checks unchanged. Never move a finding out
 of `human_judgment` without asking the person. Append numbered verdicts and update state; after every
 fix record its reported commits on each finding and append to `fixes` the findings it addressed and
 its commits; the round of the review after it goes into that entry's `reviewed_in`. `fixes` is a
@@ -196,11 +206,6 @@ computing it from the findings file.
 
 ## Stopping inside the loop
 
-- A `security` finding, whatever its action: pause the whole loop before delegating anything
-  and hand its content to the person unchanged. Their answer says whether it is fixed now (it
-  becomes visible) or stays open for the terminal report: then set its action to `human_judgment`,
-  a finding the person chose to leave, for which `references/merge.md` withholds the request to
-  merge. Nothing closes it mid-loop.
 - A delegate stops on an irreversible operation, a privileged operation, a dangerous target, or a
   spreading accident: relay the question verbatim, then resume or re-delegate with the answer.
 - A delegate hands back a missing design decision: ending 4.
@@ -208,8 +213,8 @@ computing it from the findings file.
   or returns that a check command cannot succeed as written: ask the person, then re-delegate with
   the answer.
 
-Not a stop: a change that deletes a test, adds a suppression of a check, or adds or changes a
-dependency. Readability and choices of structure are the implementer's to decide; they neither stop
+Not a stop: a `security` finding (**Judgment stays here**), and a change that deletes a test, adds
+a suppression of a check, or adds or changes a dependency. Readability and choices of structure are the implementer's to decide; they neither stop
 the loop nor add a review seat.
 
 ## Endings
@@ -312,8 +317,9 @@ only such findings or problem records that were already committed.
 
 Always: artifacts and commits, verification results from the implement report, the
 `kotowari check` and `kotowari status` output, how to view the diff, and the decision lines: each
-decision implement or the fixer made by itself, a dependency it added included, one line each of
-what was decided, why, and the evidence, the same lines as the pull request body. When present: fixed findings, forwarded observations, changes beyond the requirements with their reasons, open
+decision implement or the fixer made by itself, a dependency it added included, and each
+`security` finding a fix closed, one line each of what was decided, why, and the evidence, the same
+lines as the pull request body. When present: fixed findings, forwarded observations, changes beyond the requirements with their reasons, open
 findings needing the person, and rules or sections identified as absent from the specification.
 From the consistency phase: its commits and decision records, each open `human_judgment` finding
 with its default and the word that reverses it, and the one-line reason for each skipped run.

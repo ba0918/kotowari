@@ -63,8 +63,8 @@ that a later change takes out of the diff is no longer a hit.
 Of the runs that converged, a person confirms the merge in these three cases only:
 
 - the line is hit;
-- a finding is still open as `human_judgment`, whatever raised it (the consistency phase, a review,
-  or a finding the person chose to leave);
+- a finding is still open as `human_judgment`, whatever raised it (the consistency phase or a
+  review);
 - the consistency phase revised an approved requirement after showing by a contradiction or a
   reproduction that it was wrong: a `consistency` finding in the findings file whose claim starts
   with `revised <ID>`. The phase finishes its work all the same; only the request to merge is
