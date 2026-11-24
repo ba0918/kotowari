@@ -49,6 +49,13 @@ The CI workflow (`.github/workflows/ci.yml`) runs it on every pull request and o
 `#[expect(..., reason = "...")]`; integration-test and example files carry one
 `#![expect(clippy::unwrap_used, ...)]` for their helpers.
 
+The same job then runs `scripts/deps.sh`, which checks the dependencies in `Cargo.lock` with
+cargo-deny: a licence outside the allow list, a known vulnerability or an unsound notice anywhere
+in the tree, or an unmaintained notice on a direct dependency fails it. `deny.toml` holds what
+fails. The check reads the advisory database as it is on the day of the run, so it can start
+failing on a branch that changed no dependency; a lock update usually clears it. Run it locally
+with cargo-deny installed; it is not part of `scripts/gates.sh` because it needs the network.
+
 `lefthook.yml` defines the local gates: `pre-commit` runs the secret scan and `kotowari check`,
 and `pre-push` runs the full test suite and `kotowari check` with no exemptions. The mutation
 tests do not run in the hooks; they blocked every push for one to two hours.

@@ -1,0 +1,26 @@
+# 依存のライセンスと既知の脆弱性の検査（cargo-deny）の設定。scripts/deps.sh が読む
+# （判断の記録 docs/decision/records/2026-11-24-unattended-merge.md の A18）。
+#
+# ここは検査の定義なので、.kotowari/confirm-paths に載せてある。変更は人が確認する。
+
+[graph]
+# feature を付けたときだけ入る依存（tokio など）も見る
+all-features = true
+
+[advisories]
+# 保守が止まったという通知は、ワークスペースが直に依存するクレートのぶんだけ落とす。
+# 間接の依存のぶんは、上流が乗り換えるまでこちらで直せず、依存を変えていない変更まで止めるため。
+# 脆弱性と、健全でない（unsound）という通知は、間接の依存でも落とす。
+unmaintained = "workspace"
+
+[licenses]
+# このワークスペース（MIT OR Apache-2.0）に取り込んで配ってよい、条件のゆるいライセンスだけを並べる。
+# ここに無いライセンスの依存が入ると落ちる。足すときは、配布物に求められる条件を確かめてから足す。
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "MIT-0",
+    "Unicode-3.0",
+    "Zlib",
+]

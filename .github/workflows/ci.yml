@@ -1,6 +1,8 @@
 # Rust の関門: 整形、lint、テストを PR と main で回す（判断の記録
 # docs/decision/records/2026-10-06-ci-rust-gates.md）。main のブランチ保護で必須にするのは "Rust gates" のジョブ。
 # ツールチェーンは rust-toolchain.toml の版を入れる。
+# 同じジョブで、依存のライセンスと既知の脆弱性も検査する（判断の記録
+# docs/decision/records/2026-11-24-unattended-merge.md の A18）。必須の検査を増やさずにマージを止める側に置くため。
 name: CI
 
 on:
@@ -22,6 +24,7 @@ defaults:
 env:
   CARGO_TERM_COLOR: always
   CARGO_BUILD_JOBS: "4"
+  CARGO_DENY_VERSION: "0.20.2"
 
 jobs:
   gates:
@@ -37,3 +40,10 @@ jobs:
         run: rustup toolchain install
       - name: Run the gates
         run: scripts/gates.sh
+      # ビルド済みの cargo-deny を入れる。ソースから入れると数分かかる
+      - name: Install cargo-deny
+        uses: taiki-e/install-action@c509219cf42fba86913069efd0ade2458c59337b # v2.90.1
+        with:
+          tool: cargo-deny@${{ env.CARGO_DENY_VERSION }}
+      - name: Check dependency licences and advisories
+        run: scripts/deps.sh

@@ -7,3 +7,4 @@ rust-toolchain.toml
 .kotowari/equivalents.yaml
 .kotowari/rules
 agent/skills/kotowari-cycle
+deny.toml
