@@ -14,9 +14,8 @@ the branch, stops, and shows the cause in the terminal report.
 The line separates a change a person confirms from one that merges without them. It is judged by
 git alone, never by an LLM and never by a kotowari command, and has two values only: hit or no hit.
 
-The merge target is the branch the pull request points at; before there is one, the branch decided
-for it, else the repository's default branch (`gh repo view --json defaultBranchRef`). Run this
-with `sh` in the worktree, with `TARGET` set to the merge target; it is POSIX shell only:
+The merge target is the one cycle received (cycle's **Inputs**), and the pull request points at
+it. Run this with `sh` in the worktree, with `TARGET` set to the merge target; it is POSIX shell only:
 
 ```sh
 set -eu

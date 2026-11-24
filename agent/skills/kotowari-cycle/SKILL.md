@@ -30,11 +30,18 @@ IDs again from the part of the branch's diff that lies in the place of the speci
 changes. Remove the IDs of deferred requirements (`deferred` true in `kotowari query`) before
 handing the IDs to the implementer; "the IDs cycle received" below means those that remain.
 Optional: round-trip limit (default none: loop until convergence), review strength (the
-person's choice, default `standard`), comparison base (default: merge-base with the branch's
-parent), profiles (default: chosen from changed paths by the review skill's **Profiles from paths**),
+person's choice, default `standard`), merge target (the branch the brainstorm or the person
+decided, else the repository's default branch, `gh repo view --json defaultBranchRef`),
+comparison base (default: the commit where the branch parted from the merge target,
+`git merge-base origin/<merge target> HEAD`), profiles (default: chosen from changed paths by the review skill's **Profiles from paths**),
 optional seats (the person's word for this run; otherwise as the review skill's **Optional
 seats** says), review items (what the person or the caller asks every review to look at, beyond
 the profiles).
+
+The first consistency phase run (step 2) and the first full review (step 3) read from the
+comparison base, and the line (`references/merge.md`) always from the commit where the branch
+parted from the merge target; the pull request points at the merge target. The later diff reviews
+and the phase run after the fixes keep the ranges **Loop** and **Consistency phase** give them.
 
 Cycle runs only what the caller's one-line reason named; delegating more is a counter-example.
 Whether a review launches a reviewer is the review skill's gate, and a second full review happens
