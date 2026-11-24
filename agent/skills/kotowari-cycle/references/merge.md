@@ -117,7 +117,7 @@ person.
 
 The watch ends when:
 
-- cycle sees the pull request merged (`gh pr view <pr> --json state` is `MERGED`);
+- cycle sees the pull request merged (`gh pr view <pr> --json state` is `MERGED`): **Cleanup**;
 - it hands the pull request to the person after failed checks;
 - the checks passed and the hosting service reports that it does not merge (the merge request is
   gone while the pull request is open, or `mergeStateStatus` is `DIRTY` or `BLOCKED`): hand the
@@ -133,7 +133,22 @@ whether merging by itself was asked for, the state of the checks, and whether it
 
 | The host shows | Go on at |
 |---|---|
-| merged | the watch has ended at the merge |
+| merged, and the findings file had no `ending` when cycle started | the watch has ended at the merge: **Cleanup** |
+| merged after an earlier run ended | the person merged it: record `merged`, clean up nothing |
 | closed without a merge | report it to the person |
 | open, merging asked for | **Watching** |
 | open, not asked for | step 1 of **Opening and asking**, the pull request already there |
+
+## Cleanup
+
+Only when cycle saw the merge itself. A run the person merges later is not cleaned up.
+
+1. Confirm that the findings file lies outside the worktree. If it does not, leave everything and
+   report.
+2. `git -C <worktree> status --porcelain --untracked-files=all`: when it lists anything other than
+   the implementer's working notes (`.agents/scratch/`), leave the worktree and the branch and
+   report what is left.
+3. From the main working tree, remove the worktree (`git worktree remove --force <worktree>`; the
+   force only discards the working notes) and the local branch (`git branch -D <branch>`).
+
+Delete nothing on the hosting service: not the remote branch, not the pull request.

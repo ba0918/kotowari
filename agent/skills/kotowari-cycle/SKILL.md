@@ -131,7 +131,12 @@ review. Its agent instructions and input contract live in `references/consistenc
 ## Judgment stays here
 
 Cycle alone writes the findings file (shape: the review skill's `finding-schema.md`, with `base`,
-`last_reviewed_head`, `first_review_head`, `premise_attempts` and `fixes`), creating it at the first phase run or review. Each
+`last_reviewed_head`, `first_review_head`, `premise_attempts`, `fixes`, `line`, `fix_of` and
+`ending`), creating it at the first phase run or review. It writes no other record file and
+records no cost. It sets `line` each time it judges the line (`references/merge.md`), with the
+paths that were hit; `fix_of` to the branch of the earlier request this request fixes, only when
+the request says it is a fix of an earlier one, else null; and `ending` when the run ends, with the
+ending reached and its reason, a hand-back and a stop for the person included. Each
 time step 3 runs it sets `first_review_head` to the head it reviews; that head is the only state
 kept for the phase. After every review or phase run
 it overwrites the file: sets `last_reviewed_head` after a review, assigns
@@ -206,7 +211,12 @@ choice "run more or accept the rest and finish" and any hand-back reason.
 ## Resuming and running more
 
 The findings file is `.agents/artifacts/reviews/<branch>.json` (a `/` in the branch name is a
-directory). If it exists when cycle starts, this is a resume: keep its findings, continue round
+directory) in the main working tree (the first entry of `git worktree list`), never in the run's
+worktree, so that **Cleanup** in `references/merge.md` does not remove it. It is never committed and
+never deleted by the workflow. A file whose `ending` is `merged` belongs to an earlier request on a
+branch of the same name and is not a resume: rename it beside itself to
+`<branch>.merged-<n>.json`, with the lowest free `n`, and start a new file. If another file exists
+when cycle starts, this is a resume: note its `ending`, then set it to null; keep its findings, continue round
 numbers from its maximum, and read its `premise_attempts` as `references/premise-step.md` says, so
 that a run that already made its attempt does not make another. Ending 3's streaks (`still_present` twice running; new visible findings
 not shrinking; overlap after a fix) count from this start only; a closed cause returning counts
@@ -277,5 +287,6 @@ After step 7: where the pull request is and whether the merge was asked for; for
 as `references/merge.md` shows it, with no summary of the change; when merging by itself is not
 available, that and why.
 Cycle never performs a merge (the hosting service merges what step 7 asks for), publishes, changes
-a repository setting, deletes branches or worktrees, edits the specification itself (the
+a repository setting, deletes anything on the hosting service, removes a local branch or worktree
+except as **Cleanup** in `references/merge.md` says, edits the specification itself (the
 consistency phase does, as its reference says), manages issues, or runs two requests at once.

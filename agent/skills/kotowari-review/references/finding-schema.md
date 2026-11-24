@@ -1,7 +1,10 @@
 # Finding shape
 
 One JSON file per branch holds the current state of every finding (a snapshot that is
-overwritten, never an append-only log). Only cycle writes it. Reviewers return arrays of
+overwritten, never an append-only log), and the record of the run: the line, the earlier request
+it fixes, and its ending. Cost is not recorded. Only cycle writes it; it is never committed, lives
+outside the worktree that cleanup removes, and is never deleted by the workflow (the kotowari-cycle
+skill's **Resuming and running more**). Reviewers return arrays of
 findings in the same shape, without `id`, `status`, `commits`, or `evaluations`; the caller
 fills those.
 
@@ -25,6 +28,9 @@ fills those.
   "fixes": [
     {"findings": [5], "commits": ["<hash>"], "reviewed_in": 3}
   ],
+  "line": {"hit": true, "paths": ["scripts/gates.sh"]},
+  "fix_of": null,
+  "ending": {"kind": "pr_open", "reason": "the line was hit: scripts/gates.sh"},
   "findings": [
     {
       "id": 7,
@@ -63,6 +69,10 @@ fills those.
 | `clause` | the ending 3 clause that fired: `still_present_twice` / `cause_returned` / `not_shrinking` / `overlap_after_fix` |
 | `lives_in` | `implementation` / `ir_or_record` |
 | `sent_to` | `fixer` / `consistency_phase` / `person` |
+| `line` | written by cycle only, each time it judges the line: `hit` (`true` / `false`) and `paths`, the paths that were hit (`[]` when not hit); `null` until first judged |
+| `fix_of` | written by cycle only: the branch name of the earlier request this request fixes, only when the request says it is a fix of an earlier one; `null` otherwise |
+| `ending` | written by cycle only, when the run ends: `kind` and `reason`; `null` until then |
+| `kind` | `merged` / `pr_open` (stopped at the pull request for the person) / `pushed` (no pull request could be created) / `limit` (round-trip limit) / `no_progress` / `hand_back` (to brainstorm or the person) |
 | `evaluations` | one per review or consistency phase run that evaluated this finding, with the round-trip number: `{"round": n, "verdict": "still_present" \| "no_longer_visible"}`; a new finding's first entry is `still_present` with the round that raised it; a full-review match appends `still_present` |
 
 Diff-review return shape: `{"verdicts": [{"id": 7, "verdict": "still_present"}], "new": [ ...findings... ]}`.
