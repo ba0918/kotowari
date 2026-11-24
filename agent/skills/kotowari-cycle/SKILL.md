@@ -24,7 +24,10 @@ Required: the place of the specification (the IR store path, or for a topic with
 of its committed specification), the IDs of the requirements the brainstorm added or changed, and
 the branch with its worktree path. The brainstorm hands over the place and the IDs as it goes on to
 cycle; the main session creates the branch, which carries the commit of the approved
-specification, and its worktree before cycle starts. When cycle starts later or resumes, count the
+specification, and its worktree before cycle starts. At its start cycle creates the findings file
+(**Resuming and running more**) and writes into it the IDs and the merge target it received
+(`ids`, an empty list included, and `merge_target`); a later request on the same branch adds its
+IDs to `ids`. A resume reads both from the file; only when the file has no `ids` does it count the
 IDs again from the part of the branch's diff that lies in the place of the specification
 (`git diff <comparison base> HEAD -- <place>`): the requirements whose text that diff adds or
 changes. Remove the IDs of deferred requirements (`deferred` true in `kotowari query`) before
@@ -137,10 +140,10 @@ review. Its agent instructions and input contract live in `references/consistenc
 
 ## Judgment stays here
 
-Cycle alone writes the findings file (shape: the review skill's `finding-schema.md`, with `base`,
-`last_reviewed_head`, `first_review_head`, `premise_attempts`, `fixes`, `line`, `fix_of` and
-`ending`), creating it at the first phase run or review. It writes no other record file and
-records no cost. It sets `line` each time it judges the line (`references/merge.md`), with the
+Cycle alone writes the findings file (shape: the review skill's `finding-schema.md`, with `ids`,
+`merge_target`, `base`, `last_reviewed_head`, `first_review_head`, `premise_attempts`, `fixes`,
+`line`, `fix_of` and `ending`), creating it at its start as **Inputs** says. It writes no other
+record file and records no cost. It sets `line` each time it judges the line (`references/merge.md`), with the
 paths that were hit; `fix_of` to the branch of the earlier request this request fixes, only when
 the request says it is a fix of an earlier one, else null; and `ending` when the run ends, with the
 ending reached and its reason, a hand-back and a stop for the person included. Each
@@ -227,14 +230,15 @@ worktree, so that **Cleanup** in `references/merge.md` does not remove it. It is
 never deleted by the workflow. A file whose `ending` is `merged` belongs to an earlier request on a
 branch of the same name and is not a resume: rename it beside itself to
 `<branch>.merged-<n>.json`, with the lowest free `n`, and start a new file. If another file exists
-when cycle starts, this is a resume: keep its findings, continue round
+when cycle starts, this is a resume (when this start received IDs, a later request on the same
+branch, first add them to `ids`): keep its findings, continue round
 numbers from its maximum, and read its `premise_attempts` as `references/premise-step.md` says, so
 that a run that already made its attempt does not make another. Ending 3's streaks (`still_present` twice running; new visible findings
 not shrinking; overlap after a fix) count from this start only; a closed cause returning counts
 across starts. "Run more" after endings 2–4 continues the same run: streaks kept, findings still open, a
 new limit only if the person sets one.
 
-Either way, go on at the first row that holds. Cycle keeps no other state for resuming. Before a
+Either way, go on at the first row that holds. Cycle creates no new file for resuming. Before a
 row that adds a commit to the branch, read from the hosting service whether the branch's pull
 request still carries a request to merge an earlier session made, and withdraw it, as
 **Withdrawing the request** in `references/merge.md` says.

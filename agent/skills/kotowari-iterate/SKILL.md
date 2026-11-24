@@ -110,7 +110,8 @@ never re-cut. A findings file still there is cycle's resume — keep it; deletin
 counter-example — unless its `ending` is `merged`, which cycle's **Resuming and running more**
 keeps apart. Before the first delegation, withdraw a request to merge the hosting service still
 shows on the branch's pull request (**Withdrawing the request** in kotowari-cycle's
-`references/merge.md`). This run sets `fix_of` when the request says it fixes an earlier request. Resume
+`references/merge.md`). This run adds to `ids` the requirement IDs its request touches, and sets
+`fix_of` when the request says it fixes an earlier request. Resume
 differences: set `first_review_head` to null; unless the person gave a comparison base, it is where
 the earlier run ended, the branch tip at this start, not the commit where the branch parted from
 the merge target (the line still reads from that commit), and inherited open findings are evaluated in the diff review even outside it;

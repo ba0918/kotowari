@@ -1,8 +1,8 @@
 # Finding shape
 
 One JSON file per branch holds the current state of every finding (a snapshot that is
-overwritten, never an append-only log), and the record of the run: the line, the earlier request
-it fixes, and its ending. Cost is not recorded. Only cycle writes it; it is never committed, lives
+overwritten, never an append-only log), and the record of the run: the IDs and the merge target
+it received, the line, the earlier request it fixes, and its ending. Cost is not recorded. Only cycle writes it; it is never committed, lives
 outside the worktree that cleanup removes, and is never deleted by the workflow (the kotowari-cycle
 skill's **Resuming and running more**). Reviewers return arrays of
 findings in the same shape, without `id`, `status`, `commits`, or `evaluations`; the caller
@@ -10,6 +10,8 @@ fills those.
 
 ```json
 {
+  "ids": ["REQ-core-364"],
+  "merge_target": "main",
   "base": "<commit the full review diffs from>",
   "last_reviewed_head": "<branch head at the previous review>",
   "first_review_head": "<head cycle's first full review read; null until it runs>",
@@ -69,6 +71,8 @@ fills those.
 | `clause` | the ending 3 clause that fired: `still_present_twice` / `cause_returned` / `not_shrinking` / `overlap_after_fix` |
 | `lives_in` | `implementation` / `ir_or_record` |
 | `sent_to` | `fixer` / `consistency_phase` / `person` |
+| `ids` | written by cycle only, at its start: the IDs of the requirements it received, `[]` when it received none; a later request on the same branch adds its IDs; a resume counts them again only when the key is absent |
+| `merge_target` | written by cycle only, at its start: the merge target it received, the repository's default branch when none was decided |
 | `line` | written by cycle only, each time it judges the line: `hit` (`true` / `false`) and `paths`, the paths that were hit (`[]` when not hit, and when the procedure failed, which is a hit with no paths, reported as a failure); `null` until first judged |
 | `fix_of` | written by cycle only: the branch name of the earlier request this request fixes, only when the request says it is a fix of an earlier one; `null` otherwise |
 | `ending` | written by cycle only, when the run ends: `kind` and `reason`; `null` until then |
