@@ -144,7 +144,9 @@ IDs to new findings, merges reviewers and groups same-cause findings, finalizes 
 before classifying visible findings. For each non-`security` finding, in order: force `info` to
 `record_only`; force a claim stating no defect to `warn` and `record_only`; for a defect demanding a
 new test or fixture without showing it qualifies, keep its action but replace its oracle with all
-existing checks passing; replace a `warn` oracle even when it qualifies; force `human_judgment`
+existing checks passing; replace a `warn` oracle even when it qualifies; a replaced oracle keeps the
+`measured` the reviewer reported, and its note says that value was measured on the proposal that
+was replaced; force `human_judgment`
 proposed for readability, a choice of structure, a deleted test, an added suppression of a check,
 or an added or changed dependency to `record_only`, since the implementer decides those; force an
 `auto_fix` or `fix_and_verify` whose `oracle.measured` is not `fails_now` to `record_only`. Only a
