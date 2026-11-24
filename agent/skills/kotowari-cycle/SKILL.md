@@ -26,18 +26,19 @@ the branch with its worktree path. The brainstorm hands over all of them, with t
 it goes on to cycle (its **Finishing**); for any other start the main session prepares the branch,
 which carries the commit of the approved specification, and its worktree first.
 
-A start that received the place of a specification, other than a resume, first confirms in the worktree that the specification is
-approved: `git status --porcelain -- <place> <decision records>` (where the kotowari skill's
-`references/records.md` puts decision records) prints nothing, and `kotowari check --format json`
-exits 0 or 1 and reports no error, other than a test-side finding (the kotowari skill's
-`references/findings.md`), whose `path` is a file the branch changed
-(`git diff --name-only <comparison base> HEAD`) or that names an ID cycle received. When either
-does not hold, say the specification is not approved and stop. A small task without a
-specification has no place to confirm.
+A start that received the place of a specification, other than a resume, first confirms in the
+worktree that the specification is approved. The place of the specification and the place of
+decision records (where the kotowari skill's `references/records.md` puts them) hold no uncommitted
+change: `git status --porcelain -- <place> <decision records>` prints nothing. And
+`kotowari check --format json` exits 0 or 1 with no error whose `path` is a file the branch changed
+(`git diff --name-only <comparison base> HEAD`) or that names an ID cycle received, test-side
+findings (the kotowari skill's `references/findings.md`) apart. When either does not hold, say the
+specification is not approved and stop. A small task without a specification has no place to
+confirm.
 
 At its start cycle creates the findings file (**Resuming and running more**) and writes into it the
-IDs and the merge target it received (`ids`, an empty list included, and `merge_target`); a later request on the same branch adds its
-IDs to `ids`. A resume reads both from the file; only when the file has no `ids` does it count the
+IDs and the merge target it received (`ids`, an empty list included, and `merge_target`); a later
+request on the same branch adds its IDs to `ids`. A resume reads both from the file; only when the file has no `ids` does it count the
 IDs again from the part of the branch's diff that lies in the place of the specification
 (`git diff <comparison base> HEAD -- <place>`): the requirements whose text that diff adds or
 changes. Remove the IDs of deferred requirements (`deferred` true in `kotowari query`) before
@@ -47,10 +48,10 @@ Optional: round-trip limit (default none: loop until convergence), review streng
 person's choice, default `standard`), merge target (the branch the brainstorm or the person
 decided, else the repository's default branch, `gh repo view --json defaultBranchRef`),
 comparison base (default: the commit where the branch parted from the merge target,
-`git merge-base origin/<merge target> HEAD`), profiles (default: chosen from changed paths by the review skill's **Profiles from paths**),
-optional seats (the person's word for this run; otherwise as the review skill's **Optional
-seats** says), review items (what the person or the caller asks every review to look at, beyond
-the profiles).
+`git merge-base origin/<merge target> HEAD`), profiles (default: chosen from changed paths by the
+review skill's **Profiles from paths**), optional seats (the person's word for this run; otherwise
+as the review skill's **Optional seats** says), review items (what the person or the caller asks
+every review to look at, beyond the profiles).
 
 The first consistency phase run (step 2) and the first full review (step 3) read from the
 comparison base, and the line (`references/merge.md`) always from the commit where the branch
@@ -154,8 +155,8 @@ review. Its agent instructions and input contract live in `references/consistenc
 Cycle alone writes the findings file (shape: the review skill's `finding-schema.md`, with `ids`,
 `merge_target`, `base`, `last_reviewed_head`, `first_review_head`, `premise_attempts`, `fixes`,
 `line`, `fix_of` and `ending`), creating it at its start as **Inputs** says. It writes no other
-record file and records no cost. It sets `line` each time it judges the line (`references/merge.md`), with the
-paths that were hit; `fix_of` to the branch of the earlier request this request fixes, only when
+record file and records no cost. It sets `line` each time it judges the line
+(`references/merge.md`), with the paths that were hit; `fix_of` to the branch of the earlier request this request fixes, only when
 the request says it is a fix of an earlier one, else null; and `ending` when the run ends, with the
 ending reached and its reason, a hand-back and a stop for the person included. Each
 time step 3 runs it sets `first_review_head` to the head it reviews; that head is the only state
