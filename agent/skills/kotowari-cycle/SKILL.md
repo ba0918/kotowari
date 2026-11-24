@@ -22,9 +22,9 @@ stop for them except in the cases below.
 
 Required: the place of the specification (the IR store path, or for a topic with no IR the path
 of its committed specification), the IDs of the requirements the brainstorm added or changed, and
-the branch with its worktree path. The brainstorm hands over the place and the IDs as it goes on to
-cycle; the main session creates the branch, which carries the commit of the approved
-specification, and its worktree before cycle starts.
+the branch with its worktree path. The brainstorm hands over all of them, with the merge target, as
+it goes on to cycle (its **Finishing**); for any other start the main session prepares the branch,
+which carries the commit of the approved specification, and its worktree first.
 
 A start that received the place of a specification, other than a resume, first confirms in the worktree that the specification is
 approved: `git status --porcelain -- <place> <decision records>` (where the kotowari skill's
