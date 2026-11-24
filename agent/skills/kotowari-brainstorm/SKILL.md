@@ -15,7 +15,9 @@ In: what the person wants to talk about; when revising, the existing IR document
 records. Before the first round, look for an uncommitted decision record under
 `docs/decision/records/` and resume from a matching one; otherwise start the record now as
 `docs/decision/records/YYYY-MM-DD-<name>.md`. Write the record there from the first round on; do
-not gather it at the end.
+not gather it at the end. Note the branch the main working tree is on when the brainstorm begins;
+**Finishing** puts it back there. A brainstorm that resumes after kotowari-cycle handed the work
+back writes in that run's worktree, on its branch, and cuts no branch.
 Out: IR documents in the IR store, one per topic (new, or appended to an existing one), the
 glossary `CONTEXT.md`, the problem record `FLAGS.md` when there is a contradiction, a gap, or an
 ambiguity to record, and the decision record — approved and committed. The decision record is
@@ -172,15 +174,27 @@ bring the requirement back, or drop the reference.
       5. Start `kotowari overview serve` in the background and give its URL as a reference; whether
          to look is the person's choice. Where nothing can run in the background, give the command
          instead.
-   4. Stage the IR documents, the glossary, the problem record, and the decision record. Show the
-      person the decision record's diff (one decision per line; this is what they read), the check
-      output (the count of test-side findings, and each document whose notice was kept, with the
-      reason), the collation result, and the paths approved with a content identifier for each —
-      never the full text, never the IR's diff as something they must read, and never a summary as
-      the thing approved. Overview data and the table of contents revised in step 3 are committed
-      with them, but are not part of what is shown for approval. The person commits or says to,
-      on the branch cycle will run on, not on the merge target.
-4. Once the person has committed the approved specification, or said it may be committed, go on
-   to kotowari-cycle in the same flow unless the person says to put it off. Hand it the IR store
-   path and the IDs of the requirements this brainstorm added or changed; the main session
-   prepares the worktree as cycle's **Inputs** say.
+   4. Stage the IR documents, the glossary, the problem record, the decision record, and the
+      overview data and table of contents revised in step 3. Show the person the decision
+      record's diff (one decision per line; this is what they read), the check output (the count
+      of test-side findings, and each document whose notice was kept, with the reason), the
+      collation result, and the paths approved with a content identifier for each — never the full
+      text, never the IR's diff as something they must read, and never a summary as the thing
+      approved. The overview files are not part of what is shown for approval. The person commits
+      the staged files or says they may be committed, on a new branch named for the topic, which
+      the brainstorm cuts in the main working tree from the head of the merge target (the branch
+      the person names, else the repository's default branch): `git fetch origin <target>` and
+      `git switch -c <branch> origin/<target>`, the staged files going with it.
+4. The commit comes before leaving the new branch: when the person said the staged files may be
+   committed rather than committing them, the brainstorm commits them there (`git commit`). Then
+   `git status --porcelain -- <the staged paths>` must print nothing and
+   `git diff --name-only origin/<target> HEAD -- <the staged paths>` must list every one of them;
+   until both hold, do not switch: tell the person which approved files are not committed on the
+   new branch, and stop. Then put the
+   main working tree back on the branch noted at the start (`git switch <that branch>`) and check
+   the new branch out in a worktree of its own (`git worktree add <path> <branch>`, where the
+   project's instructions place worktrees); a brainstorm resumed after a hand-back commits in its
+   worktree and already has both. When the main working tree cannot be switched, to cut the
+   branch or to go back, stop and tell the person. Then go on to kotowari-cycle in the same flow
+   unless the person says to put it off. Hand it the IR store path, the IDs of the requirements
+   this brainstorm added or changed, the merge target, and the branch with its worktree path.

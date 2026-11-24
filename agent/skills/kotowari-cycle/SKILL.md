@@ -22,19 +22,43 @@ stop for them except in the cases below.
 
 Required: the place of the specification (the IR store path, or for a topic with no IR the path
 of its committed specification), the IDs of the requirements the brainstorm added or changed, and
-the branch with its worktree path. The brainstorm hands over the place and the IDs as it goes on to
-cycle; the main session creates the branch, which carries the commit of the approved
-specification, and its worktree before cycle starts. When cycle starts later or resumes, count the
+the branch with its worktree path. The brainstorm hands over all of them, with the merge target, as
+it goes on to cycle (its **Finishing**); for any other start the main session prepares the branch,
+which carries the commit of the approved specification, and its worktree first.
+
+A start that brings a request with the place of a specification confirms in the worktree that
+the specification is approved, after the reads at the head of **Resuming and running more** and
+before it creates or changes the findings file. A resume, which brings no request, does not. The place of the specification and the place of
+decision records (where the kotowari skill's `references/records.md` puts them) hold no uncommitted
+change: `git status --porcelain -- <place> <decision records>` prints nothing. And
+`kotowari check --format json` exits 0 or 1 with no error whose `path` is a file the branch changed
+(`git diff --name-only <comparison base> HEAD`) or that names an ID cycle received, test-side
+findings (the kotowari skill's `references/findings.md`) apart. When either does not hold, say the
+specification is not approved and stop. A small task without a specification has no place to
+confirm.
+
+Then cycle creates the findings file (**Resuming and running more**) and writes into it the
+IDs and the merge target it received (`ids`, an empty list included, and `merge_target`); a later
+request on the same branch adds its IDs to `ids`. A resume reads both from the file; only when the file has no `ids` does it count the
 IDs again from the part of the branch's diff that lies in the place of the specification
 (`git diff <comparison base> HEAD -- <place>`): the requirements whose text that diff adds or
 changes. Remove the IDs of deferred requirements (`deferred` true in `kotowari query`) before
 handing the IDs to the implementer; "the IDs cycle received" below means those that remain.
+
 Optional: round-trip limit (default none: loop until convergence), review strength (the
-person's choice, default `standard`), comparison base (default: merge-base with the branch's
-parent), profiles (default: chosen from changed paths by the review skill's **Profiles from paths**),
-optional seats (the person's word for this run; otherwise as the review skill's **Optional
-seats** says), review items (what the person or the caller asks every review to look at, beyond
-the profiles).
+person's choice, default `standard`), merge target (the branch the brainstorm or the person
+decided, else the repository's default branch, `gh repo view --json defaultBranchRef`; when that
+read fails, ask the person for the merge target, never guess it),
+comparison base (default: the commit where the branch parted from the merge target,
+`git merge-base origin/<merge target> HEAD`), profiles (default: chosen from changed paths by the
+review skill's **Profiles from paths**), optional seats (the person's word for this run; otherwise
+as the review skill's **Optional seats** says), review items (what the person or the caller asks
+every review to look at, beyond the profiles).
+
+The first consistency phase run (step 2) and the first full review (step 3) read from the
+comparison base, and the line (`references/merge.md`) always from the commit where the branch
+parted from the merge target; the pull request points at the merge target. The later diff reviews
+and the phase run after the fixes keep the ranges **Loop** and **Consistency phase** give them.
 
 Cycle runs only what the caller's one-line reason named; delegating more is a counter-example.
 Whether a review launches a reviewer is the review skill's gate, and a second full review happens
@@ -130,11 +154,11 @@ review. Its agent instructions and input contract live in `references/consistenc
 
 ## Judgment stays here
 
-Cycle alone writes the findings file (shape: the review skill's `finding-schema.md`, with `base`,
-`last_reviewed_head`, `first_review_head`, `premise_attempts`, `fixes`, `line`, `fix_of` and
-`ending`), creating it at the first phase run or review. It writes no other record file and
-records no cost. It sets `line` each time it judges the line (`references/merge.md`), with the
-paths that were hit; `fix_of` to the branch of the earlier request this request fixes, only when
+Cycle alone writes the findings file (shape: the review skill's `finding-schema.md`, with `ids`,
+`merge_target`, `base`, `last_reviewed_head`, `first_review_head`, `premise_attempts`, `fixes`,
+`line`, `fix_of` and `ending`), creating it at its start as **Inputs** says. It writes no other
+record file and records no cost. It sets `line` each time it judges the line
+(`references/merge.md`), with the paths that were hit; `fix_of` to the branch of the earlier request this request fixes, only when
 the request says it is a fix of an earlier one, else null; and `ending` when the run ends, with the
 ending reached and its reason, a hand-back and a stop for the person included. Each
 time step 3 runs it sets `first_review_head` to the head it reviews; that head is the only state
@@ -146,15 +170,25 @@ before classifying visible findings. For each non-`security` finding, in order: 
 new test or fixture without showing it qualifies, keep its action but replace its oracle with all
 existing checks passing; replace a `warn` oracle even when it qualifies; a replaced oracle keeps the
 `measured` the reviewer reported, and its note says that value was measured on the proposal that
-was replaced; force `human_judgment`
+was replaced, so a `fails_now` kept this way counts as shown by running; force `human_judgment`
 proposed for readability, a choice of structure, a deleted test, an added suppression of a check,
 or an added or changed dependency to `record_only`, since the implementer decides those; force an
-`auto_fix` or `fix_and_verify` whose `oracle.measured` is not `fails_now` to `record_only`. Only a
-mistake that running something shows keeps a run from converging; the stops of
-`references/merge.md` are apart from this. A gap from the intent that no run can show is a hole in
-the specification: `record_only`, reported among the rules absent from the specification, as
-rework for brainstorm. Leave `security` untouched
-and pause. Adopt any proposal that matched none of these checks unchanged. Never move a finding out
+`auto_fix` or `fix_and_verify` whose `oracle.measured` is not `fails_now` to `record_only`, except a
+proposal to delete verification the diff added because it does not meet the Evidence conditions
+(the review skill's **How a reviewer works**), which stays a fix without having been seen failing.
+
+Three kinds of review finding keep a run from converging: a mistake that running something shows,
+a `security` finding whose proposed action is a fix, and such a proposal to delete verification;
+the stops of `references/merge.md` are apart from this. A gap from the intent that no run can show
+is a hole in the specification: `record_only`, reported among the rules absent from the
+specification, as rework for brainstorm. A `security` finding keeps the action it proposes and
+never pauses the run: one proposing `auto_fix` or `fix_and_verify` is visible and goes to the fixer
+whether or not its oracle was seen failing, and when it cannot be fixed ending 3 hands it to the
+person; one proposing `human_judgment` stays open, which `references/merge.md` counts as a reason
+for a person to confirm; one proposing `record_only` stays recorded. For each `security` finding a
+fix closed, write a decision line: what was fixed, why (its claim), and the evidence (its commits).
+
+Adopt any proposal that matched none of these checks unchanged. Never move a finding out
 of `human_judgment` without asking the person. Append numbered verdicts and update state; after every
 fix record its reported commits on each finding and append to `fixes` the findings it addressed and
 its commits; the round of the review after it goes into that entry's `reviewed_in`. `fixes` is a
@@ -175,19 +209,15 @@ computing it from the findings file.
 
 ## Stopping inside the loop
 
-- A `security` finding, whatever its action: pause the whole loop before delegating anything
-  and hand its content to the person unchanged. Their answer says whether it is fixed now (it
-  becomes visible) or stays open for the terminal report: then set its action to `human_judgment`,
-  a finding the person chose to leave, for which `references/merge.md` withholds the request to
-  merge. Nothing closes it mid-loop.
 - A delegate stops on an irreversible operation, a privileged operation, a dangerous target, or a
   spreading accident: relay the question verbatim, then resume or re-delegate with the answer.
 - A delegate hands back a missing design decision: ending 4.
-- Implement finds no test command in the project's instructions or the language's standard tool:
-  ask the person, then re-delegate with the answer.
+- Implement finds no test command in the project's instructions or the language's standard tool,
+  or returns that a check command cannot succeed as written: ask the person, then re-delegate with
+  the answer.
 
-Not a stop: a change that deletes a test, adds a suppression of a check, or adds or changes a
-dependency. Readability and choices of structure are the implementer's to decide; they neither stop
+Not a stop: a `security` finding (**Judgment stays here**), and a change that deletes a test, adds
+a suppression of a check, or adds or changes a dependency. Readability and choices of structure are the implementer's to decide; they neither stop
 the loop nor add a review seat.
 
 ## Endings
@@ -214,20 +244,36 @@ choice "run more or accept the rest and finish" and any hand-back reason.
 
 ## Resuming and running more
 
+A branch name is not used again after its request ended. Before anything else at a start or a
+resume, read the branch's pull requests from the hosting service
+(`gh pr list --head <branch> --state all --json number,state,headRefOid`). When a start that
+received a new request finds one merged or closed, stop and ask the person for a new branch name.
+When one is open and its head is not on the local branch
+(`git merge-base --is-ancestor <headRefOid> HEAD` fails), stop and tell the person. When the read
+fails (on a host the `gh` commands do not reach, for one), go on without these two checks and say in
+the terminal report that they could not be made. A failed read of a request to merge, below, is
+handled the same way: the commits stay local until the push of step 2 of **Opening and asking**,
+before which **Withdrawing the request** in `references/merge.md` reads it again, makes the two
+checks the start could not make, and does not push while the request cannot be read.
+
 The findings file is `.agents/artifacts/reviews/<branch>.json` (a `/` in the branch name is a
 directory) in the main working tree (the first entry of `git worktree list`), never in the run's
 worktree, so that **Cleanup** in `references/merge.md` does not remove it. It is never committed and
 never deleted by the workflow. A file whose `ending` is `merged` belongs to an earlier request on a
 branch of the same name and is not a resume: rename it beside itself to
-`<branch>.merged-<n>.json`, with the lowest free `n`, and start a new file. If another file exists
-when cycle starts, this is a resume: keep its findings, continue round
+`<branch>.merged-<n>.json`, with the lowest free `n`, and start a new file. A resume is a start
+that brings no request: cycle was asked only to go on. A start that brings a request (the place of
+a specification with its IDs, or a kotowari-iterate request) to a branch whose findings file is
+already there is a later request on the same branch, not a resume: it makes the confirmation of
+**Inputs**, adds its IDs to `ids`, and sets `first_review_head` to null. If another file exists
+when cycle starts, a resume and a later request alike keep its findings, continue round
 numbers from its maximum, and read its `premise_attempts` as `references/premise-step.md` says, so
 that a run that already made its attempt does not make another. Ending 3's streaks (`still_present` twice running; new visible findings
 not shrinking; overlap after a fix) count from this start only; a closed cause returning counts
 across starts. "Run more" after endings 2–4 continues the same run: streaks kept, findings still open, a
 new limit only if the person sets one.
 
-Either way, go on at the first row that holds. Cycle keeps no other state for resuming. Before a
+Either way, go on at the first row that holds. Cycle creates no new file for resuming. Before a
 row that adds a commit to the branch, read from the hosting service whether the branch's pull
 request still carries a request to merge an earlier session made, and withdraw it, as
 **Withdrawing the request** in `references/merge.md` says.
@@ -235,6 +281,7 @@ request still carries a request to merge an earlier session made, and withdraw i
 | Situation | Go on at |
 |---|---|
 | no findings file yet | step 1 (implement decides what remains from `git log` and the requirements still without a marked test), then step 2 |
+| a later request on the same branch | step 1 as above, with all of `ids`, then step 2 and on: the phase run and the full review read from the comparison base again |
 | "run more" after an ending a phase rerun raised | that step: 2 (then on to 3) or 6 |
 | "run more" otherwise | step 4 |
 | resume, `first_review_head` null | step 1 as above (implement returns at once when nothing remains), then step 2 |
@@ -282,9 +329,11 @@ only such findings or problem records that were already committed.
 
 Always: artifacts and commits, verification results from the implement report, the
 `kotowari check` and `kotowari status` output, how to view the diff, and the decision lines: each
-decision implement or the fixer made by itself, a dependency it added included, one line each of
-what was decided, why, and the evidence, the same lines as the pull request body. When present: fixed findings, forwarded observations, changes beyond the requirements with their reasons, open
-findings needing the person, and rules or sections identified as absent from the specification.
+decision implement or the fixer made by itself, a dependency it added included, and each
+`security` finding a fix closed, one line each of what was decided, why, and the evidence, the same
+lines as the pull request body. When present: fixed findings, forwarded observations, changes beyond the requirements with their reasons, open
+findings needing the person, rules or sections identified as absent from the specification, and
+the checks at the start that could not be made (**Resuming and running more**).
 From the consistency phase: its commits and decision records, each open `human_judgment` finding
 with its default and the word that reverses it, and the one-line reason for each skipped run.
 When a premise attempt ran or a premise went to the person: the premise ladder of each attempt in

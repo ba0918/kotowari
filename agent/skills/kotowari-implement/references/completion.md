@@ -28,7 +28,8 @@ logic; "tests later".
 Run the check commands the project's instructions give, else the ecosystem's standard tool.
 Completion is all of them succeeding in one pass. A failing command is fixed in the product, not
 by editing or replacing the command; a command that cannot succeed as written (a name that does
-not exist, a rejected flag) is handed back to cycle with its output.
+not exist, a rejected flag) is handed back to cycle with its output; cycle asks the person and
+delegates again with the answer.
 
 ## Artifact
 

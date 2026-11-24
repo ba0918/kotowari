@@ -105,14 +105,17 @@ changes the request did not name (import tidying, tests following) are out-of-re
 whose change differs is review's to catch. The cap binds only the implementer; the fixer follows
 findings into any file, reporting those outside as out-of-request.
 
-Same branch right after a cycle or a run of this skill that did not end in a merge: reuse it,
-never re-cut. A findings file still there is cycle's resume — keep it; deleting or ignoring it is a
+Same branch right after a cycle or a run of this skill whose pull request was neither merged nor
+closed: reuse it, never re-cut; a merged or closed one stops the start for a new branch name
+(kotowari-cycle's **Resuming and running more**). A findings file still there makes this a later request on the same branch in cycle's terms, not a resume, so cycle's confirmation of the specification runs when there is one — keep the file; deleting or ignoring it is a
 counter-example — unless its `ending` is `merged`, which cycle's **Resuming and running more**
 keeps apart. Before the first delegation, withdraw a request to merge the hosting service still
 shows on the branch's pull request (**Withdrawing the request** in kotowari-cycle's
-`references/merge.md`). This run sets `fix_of` when the request says it fixes an earlier request. Resume
-differences: set `first_review_head` to null; unless the person gave a comparison base, it is the
-branch tip at start, and inherited open findings are evaluated in the diff review even outside it;
+`references/merge.md`). This run adds to `ids` the requirement IDs its request touches, and sets
+`fix_of` when the request says it fixes an earlier request.
+Differences from cycle's later request: set `first_review_head` to null; unless the person gave a comparison base, it is where
+the earlier run ended, the branch tip at this start, not the commit where the branch parted from
+the merge target (the line still reads from that commit), and inherited open findings are evaluated in the diff review even outside it;
 ending 3's streaks reset at each start of this skill, inherited evaluations uncounted. Ending 3's
 clauses enter the premise step as in cycle (kotowari-cycle's `references/premise-step.md`), whose
 allowance of one attempt is renewed at each start of this skill too. No default
