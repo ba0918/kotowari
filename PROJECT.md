@@ -13,9 +13,9 @@ A Cargo workspace holding nine Rust packages. The root package is `kotowari-cli`
 
 `Cargo.toml` at the root declares the workspace members and excludes `experiments/`.
 
-The Claude Code skills live in `agent/skills/`, ten of them: the `kotowari` skill (`kotowari/`:
-how to write the IR and decision records, read `check`, and place marks) and nine workflow
-skills that depend on it (`kotowari-brainstorm/`, `-plan/`, `-cycle/`, `-implement/`,
+The Claude Code skills live in `agent/skills/`, nine of them: the `kotowari` skill (`kotowari/`:
+how to write the IR and decision records, read `check`, and place marks) and eight workflow
+skills that depend on it (`kotowari-brainstorm/`, `-cycle/`, `-implement/`,
 `-review/`, `-iterate/`, `-investigate/`, `-using-workflow/`, `-adopt/`).
 `agent/skills/README.md` says how they relate and how to install them.
 

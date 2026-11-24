@@ -1,11 +1,11 @@
 ---
 name: kotowari-iterate
-description: "Entry point beside the kotowari workflow for a task too small to need a specification or a plan: judge whether the request is small and run the cycle loop on it; anything bigger is turned away with the next skill to call. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to iterate, for one more fix, to fix this bit, to add this too, or to polish it a little more. 日本語キーワード: iterate ちょっと直して これも足して もう少し磨いて 小さいタスク"
+description: "Entry point beside the kotowari workflow for a task too small to need a specification: judge whether the request is small and run the cycle loop on it; anything bigger is turned away with the next skill to call. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to iterate, for one more fix, to fix this bit, to add this too, or to polish it a little more. 日本語キーワード: iterate ちょっと直して これも足して もう少し磨いて 小さいタスク"
 ---
 
 # Iterate
 
-Run cycle's loop on a **request** instead of a plan, once judged small. Delegate only what the
+Run cycle's loop on a **request** instead of an approved specification, once judged small. Delegate only what the
 caller's reason named: review always runs in separate contexts, judgment and implementation only
 when named. A person starts this skill from the conversation; cycle never calls it. Not for "look
 into this" (kotowari-investigate) or "check that it works" and "verify this" (review's diagnosis):
@@ -22,7 +22,8 @@ settled direction, a preceding run's terminal report — into a self-contained t
 with no context can build from. "Fix that thing from before" arrives expanded into the file and the
 change; if one or two exchanges cannot, this skill does not run.
 
-Out: commits on the branch and a terminal report. Stopped at the judgment: no commit, guidance
+Out: commits on the branch and a terminal report; a converged run merges the same way as cycle's
+step 7 (kotowari-cycle's `references/merge.md`). Stopped at the judgment: no commit, guidance
 only. Stopped by a hand-back during implementation: the commits so far stay (never deleted or
 rewound), and the terminal report carries artifacts, commits, and diff view plus the guidance.
 
@@ -64,15 +65,15 @@ needs test-first but the enumeration lacks is added here — that gap alone does
 verdict: re-delegate once, then report none was possible and stop.
 
 Not small: stop with guidance (the failed condition with grounds, the destination, a ready-to-use
-invocation); never start brainstorm or plan yourself. Several failed: list all, destination from
-the highest row, since a clarified request may change verdicts 2 to 4. Guiding to plan with no
+invocation); never start brainstorm or cycle yourself. Several failed: list all, destination from
+the highest row, since a clarified request may change verdicts 2 to 4. Guiding to cycle with no
 specification (it cannot run without one) or offering "continue here anyway" is a counter-example.
 
 | Failed | Also handed back for | Destination | Ready-to-use form |
 |---|---|---|---|
 | 1 (ambiguous) | the request read two ways (implementer) | the person, via the main session | where the readings diverge, and the question to ask |
 | 2 (specification decision), 3 (contradiction) | a missing design decision (2), a contradiction with the specification (3) — implementer or fixer | brainstorm | `/kotowari-brainstorm <topic>`, with the existing specification path if any |
-| 4 (impact unreadable) | a file outside the enumeration (implementer only) | plan if a specification exists, else brainstorm | `/kotowari-plan <IR store path> <requirement IDs>` or `/kotowari-brainstorm <topic>` |
+| 4 (impact unreadable) | a file outside the enumeration (implementer only) | cycle if a specification exists, else brainstorm | `/kotowari-cycle <IR store path> <requirement IDs>` or `/kotowari-brainstorm <topic>` |
 
 ## The loop
 
@@ -81,16 +82,14 @@ there meaning this run, with only these differences:
 
 | In cycle | Here |
 |---|---|
-| the plan path; the branch name containing the plan name | the request; a short name for the request |
-| the specification path read from the plan | the given path, or the specification the judgment found; requirement IDs only when the request touches IR items |
-| step 1's delegation of the remaining plan steps to implement | after the judgment, the request goes to the implementer below in one delegation |
-| the plan path in the fixer delegation | the request, and the specification path if any; the fixer also hands back a contradiction with the specification |
-| **Fixer only**'s "the plan's commands in order, unedited" (kotowari-cycle's `references/editing-contract.md`) | check commands come from the project's instructions, then the ecosystem's standard tool |
-| the choice of entry in **Resuming and running more** | a new request starts at step 1 after its judgment; when resuming that request or running more, use cycle's table without the row "a plan step left no git trace" |
+| the place of the specification and the requirement IDs from the brainstorm | the request; the given specification path, or the one the judgment found; requirement IDs only when the request touches IR items |
+| step 1's delegation to implement | after the judgment, the request goes to the implementer below in one delegation |
+| the place of the specification in the fixer delegation | the request, and the specification path if any; the fixer also hands back a contradiction with the specification |
+| the choice of entry in **Resuming and running more** | a new request starts at step 1 after its judgment; when resuming that request or running more, use cycle's table without the row "no findings file yet" |
 | the specification path and the file of IDs in the consistency phase delegation | the specification path and the request; the file of IDs only when the request touches IR items; with no specification, the request alone is the counterpart |
 | ending 4 and its "run more or accept the rest" choice | the destination is one of the guidance table's three; no choice is offered — the report adds the hand-back reason and the guidance, and the person restarts with a new request holding their answer |
-| "names an ID the plan covers" in **kotowari check before the terminal report** | names an ID the request's enumeration covers; with none, only the files the branch changed count |
-| any other word meaning the plan (out-of-plan changes, one plan at once) | the request; sentences about plan steps do not apply. Plan as a skill name or a destination stays |
+| "names an ID cycle received" in **kotowari check before the terminal report** | names an ID the request's enumeration covers; with none, only the files the branch changed count |
+| the requirements in "changes beyond the requirements" and "two requests at once" | the request |
 
 The **implementer** receives what the fixer receives — kotowari-cycle's
 `references/editing-contract.md` whole, with the Evidence conditions — the request replacing the
@@ -106,8 +105,12 @@ changes the request did not name (import tidying, tests following) are out-of-re
 whose change differs is review's to catch. The cap binds only the implementer; the fixer follows
 findings into any file, reporting those outside as out-of-request.
 
-Same branch right after a cycle or a run of this skill: reuse it, never re-cut. A findings file
-still there is cycle's resume — keep it; deleting or ignoring it is a counter-example — with these
+Same branch right after a cycle or a run of this skill that did not end in a merge: reuse it,
+never re-cut. A findings file still there is cycle's resume — keep it; deleting or ignoring it is a
+counter-example — unless its `ending` is `merged`, which cycle's **Resuming and running more**
+keeps apart. Before the first delegation, withdraw a request to merge the hosting service still
+shows on the branch's pull request (**Withdrawing the request** in kotowari-cycle's
+`references/merge.md`). This run sets `fix_of` when the request says it fixes an earlier request. Resume
 differences: set `first_review_head` to null; unless the person gave a comparison base, it is the
 branch tip at start, and inherited open findings are evaluated in the diff review even outside it;
 ending 3's streaks reset at each start of this skill, inherited evaluations uncounted. Ending 3's

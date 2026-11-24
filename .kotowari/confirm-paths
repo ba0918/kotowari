@@ -1,0 +1,9 @@
+.github
+lefthook.yml
+scripts
+clippy.toml
+rust-toolchain.toml
+.kotowari/config.yaml
+.kotowari/equivalents.yaml
+.kotowari/rules
+agent/skills/kotowari-cycle

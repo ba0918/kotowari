@@ -67,6 +67,7 @@ Position: 第1ラウンドで範囲と置き場を決めた（A1〜A4）。利�
 - A13 kotowari-plan の skill の `references/` に例の計画書を1つのファイルとして置き、それが同梱のスキーマを通ることをリポジトリのテストで確かめる。この検査は skill の references と本体の一致の要求として `docs/ir/core/skill-references.md` に足す。`step-template.md` は欄の説明とその例へのリンクにする
   - why: 本体と skill が同じリポジトリにあるうちは、雛形と同梱のスキーマのずれをテストで先に見つけられる。[REQ-core-125](../../ir/core/skill-references.md#REQ-core-125) と同じ形の前例がある
   - decided_by: 利用者（推奨を採用）
+  - superseded_by: [A36（例の計画書を検査する要求を skill と一緒に消す）](./2026-11-24-unattended-merge.md#A36)
 
 - A14 同梱するスキーマは、他の3つと同じくこのリポジトリの `.kotowari/schemas/plan.yaml` に置き、本体はそこから取り込む
   - why: 置き場と取り込み方を既存の3つと揃える

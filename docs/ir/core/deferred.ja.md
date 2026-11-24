@@ -49,11 +49,11 @@ kotowari は常に、"- deferred:" の行の値をコンマで区切った`出�
 ### REQ-core-213: スキルの後回しの扱い
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-25-deferred-items.md#A13, docs/decision/records/2026-09-25-deferred-items.md#A23
+- source: docs/decision/records/2026-09-25-deferred-items.md#A13, docs/decision/records/2026-09-25-deferred-items.md#A23, docs/decision/records/2026-11-24-unattended-merge.md#A37, docs/decision/records/2026-11-24-unattended-merge.md#A38, docs/decision/records/2026-11-24-unattended-merge-consistency.md#A2
 - verification: review
-- how_to_verify: "agent/skills/" の下のスキルを読み、kotowari スキルの references の ir-form.md に "- deferred:" の行（要求ごとと文書単位）が、findings.md に deferred_with_test と depends_on_deferred が載っていること、kotowari-plan が`後回し`の`要求`の`ID`を計画に含めないと書いていること、kotowari-cycle と kotowari-review がテストの側の`指摘`を0件にする対象に`後回し`を含めないと書いていること、kotowari-brainstorm が`後回し`にするときに理由の決定を`判断の記録`に書いてそれを出典にすると書いていることを確かめる
+- how_to_verify: "agent/skills/" の下のスキルを読み、kotowari スキルの references の ir-form.md に "- deferred:" の行（要求ごとと文書単位）が、findings.md に deferred_with_test と depends_on_deferred が載っていること、kotowari-cycle が`後回し`の`要求`の`ID`を実装役に渡す ID から外すと書いていること、kotowari-cycle と kotowari-review がテストの側の`指摘`を0件にする対象に`後回し`を含めないと書いていること、kotowari-brainstorm が`後回し`にするときに理由の決定を`判断の記録`に書いてそれを出典にすると書いていることを確かめる
 
-"agent/skills/" の下の kotowari のスキルは常に、`後回し`の書き方と、計画、実装のループ、レビュー、壁打ちでの`後回し`の扱いを書いている。
+"agent/skills/" の下の kotowari のスキルは常に、`後回し`の書き方と、実装のループ、レビュー、壁打ちでの`後回し`の扱いを書いている。
 
 ## Examples
 

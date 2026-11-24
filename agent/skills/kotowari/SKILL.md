@@ -36,7 +36,7 @@ Which work uses each scene:
 
 - setup — once, at the start of a project
 - write — when writing the IR and decision records in a brainstorm session
-- check — brainstorm (before approval), plan (when reading requirements, and when checking the plan's form), cycle (before the final report) and implement (check commands)
+- check — brainstorm (before approval), cycle (when reading requirements, and before the final report), implement (check commands), and whoever checks a plan file's form with `kotowari plan`
 - mark — when implement and the fixer write tests
 - mutants — when a push is stopped by missed mutations, and when investigating misses while cleaning up after a cycle
 - surface — when first writing surface rules for a project (adopt), and when `kotowari check` raises a surface finding

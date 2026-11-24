@@ -25,14 +25,14 @@ logic; "tests later".
 
 ## Check
 
-Run each listed command in the order the plan gives. Completion is all of them succeeding in
-one pass. A failing command is fixed in the product, not by editing or replacing the command; a command
-that cannot succeed as written (a name that does not exist, a rejected flag) is a plan defect —
-hand back to plan.
+Run the check commands the project's instructions give, else the ecosystem's standard tool.
+Completion is all of them succeeding in one pass. A failing command is fixed in the product, not
+by editing or replacing the command; a command that cannot succeed as written (a name that does
+not exist, a rejected flag) is handed back to cycle with its output.
 
 ## Artifact
 
-Produce the document or file the step names. Run any format check the project has (a linter, a
+Produce the document or file the work needs. Run any format check the project has (a linter, a
 schema validator). The artifact is complete when an
 independent review could judge its meaning — not when it looks finished to you.
 

@@ -5,6 +5,20 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+### Added
+
+- A converged `kotowari-cycle` run (and a `kotowari-iterate` run) now opens a pull request and asks the hosting service to merge it once the required checks pass, without waiting for you, and watches those checks: a failing required check becomes a finding and is fixed in the loop. It stops at the open pull request and shows you why when the diff from where the branch parted from the merge target touches a path listed in `.kotowari/confirm-paths` (or that file itself), when a finding awaits your judgment, or when the consistency phase revised an approved requirement. A project without `.kotowari/confirm-paths` always stops at the pull request. List in that file, one git pathspec per line, the definitions of your checks: CI, hooks, check scripts, and the configuration of mutation tests, static analysis and tool versions. Merging by itself is used only when the repository allows it and the merge target requires at least one check; enabling that setting is yours, and the cycle never changes a repository setting or performs a merge itself.
+- After a merge it saw, the cycle removes the run's local worktree and local branch, and nothing on the hosting service. Each decision the implementer made by itself is listed as one line of what, why and evidence in the pull request body and the final report. The findings file, now kept in the main working tree and never deleted, also records the line, the earlier request a fix belongs to, and how the run ended.
+
+### Changed
+
+- After you approve and commit a specification, `kotowari-brainstorm` goes straight on to `kotowari-cycle` with the place of the specification and the IDs of the requirements it added or changed, unless you say to put it off. The implementer decides the order and the files to touch, and resumes from the git history and the requirements that still have no marked test.
+- Only a mistake that running something shows keeps a cycle from converging; a review finding not shown by a run is recorded, not fixed. Deleting a test, adding a suppression of a check, or adding or changing a dependency does not stop the cycle for you.
+
+### Removed
+
+- The `kotowari-plan` skill is removed: no plan is written or approved between the specification and the implementation. The `kotowari plan` command stays.
+
 ## [0.6.0] - 2026-10-24
 
 ### Fixed

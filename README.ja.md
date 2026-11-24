@@ -156,7 +156,7 @@ src/lib.rs:2 [error] test_without_id req_001_locks_after_five_failures
 LLMと一緒に使うためのClaude Code用スキルを`agent/skills/`に用意している。
 
 - `kotowari`は、IRと判断の記録の書き方、指摘の直し方、印の置き方をLLMに教える
-- `kotowari-*`は、kotowariを使って壁打ちから計画、実装、レビューまでの工程を進めるためのスキルで、利用は任意
+- `kotowari-*`は、kotowariを使って壁打ちから実装、レビュー、マージまでの工程を進めるためのスキルで、利用は任意
 
 インストール方法は[agent/skills/README.md](agent/skills/README.md)に記載している。
 

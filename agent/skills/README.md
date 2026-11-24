@@ -1,21 +1,20 @@
 # kotowari の skill
 
-Claude Code の skill を10個置いている。
+Claude Code の skill を9個置いている。
 
 | skill | 役目 |
 |---|---|
 | `kotowari` | IR と判断の記録の書き方、`kotowari check` の結果の読み方、テストへの印の置き方を、場面ごとに reference で読ませる |
 | `kotowari-using-workflow` | 新しい依頼をどの工程から始めるかを決める入口 |
 | `kotowari-brainstorm` | 壁打ちで決めたことを IR と判断の記録に書き、承認を得る |
-| `kotowari-plan` | 承認済みの IR の要求から実装の計画を書く |
-| `kotowari-cycle` | 計画を実装・整合のフェーズ・レビュー・修正の繰り返しで回し、終端で `kotowari check` と `kotowari status` を見る。整合のフェーズは差分のコードを IR と読み合わせ、隙間と食い違いを根拠と実測で片付ける |
-| `kotowari-implement` | 計画の手順を実行する（cycle から呼ばれる） |
+| `kotowari-cycle` | 承認済みの仕様を実装・整合のフェーズ・レビュー・修正の繰り返しで回し、終端で `kotowari check` と `kotowari status` を見る。整合のフェーズは差分のコードを IR と読み合わせ、隙間と食い違いを根拠と実測で片付ける |
+| `kotowari-implement` | 承認済みの要求を実装する（cycle から呼ばれる） |
 | `kotowari-review` | 差分や文書を別の文脈でレビューする（cycle から呼ばれるか、人が直接呼ぶ） |
-| `kotowari-iterate` | 仕様も計画も要らない小さな作業を cycle の繰り返しで回す |
+| `kotowari-iterate` | 仕様の要らない小さな作業を cycle の繰り返しで回す |
 | `kotowari-investigate` | 読むだけの調査。原因と影響を調べて直し方を報告する |
 | `kotowari-adopt` | 既存のプロジェクトに話題1つずつ kotowari を入れる。旧資料と実装とテストを仕分けて IR と判断の記録と FLAG に書き、承認を得て、テストの作業の依頼文を渡す |
 
-`kotowari-` で始まる9個を工程の skill と呼ぶ。
+`kotowari-` で始まる8個を工程の skill と呼ぶ。
 
 ## 関係
 
@@ -27,7 +26,7 @@ Claude Code の skill を10個置いている。
 
 ## 入れ方
 
-次のどれか1行で、10個をまとめて入れられる。どれも GitHub の ba0918/kotowari から取る。
+次のどれか1行で、9個をまとめて入れられる。どれも GitHub の ba0918/kotowari から取る。
 
 ```sh
 apm install ba0918/kotowari/agent --target claude

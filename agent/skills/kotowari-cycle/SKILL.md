@@ -1,24 +1,34 @@
 ---
 name: kotowari-cycle
 description: >-
-  Workflow station of the kotowari workflow: the orchestrator that runs an approved plan on a branch
-  through implementation, the consistency phase, review, and fixing until the findings converge,
-  then hands the result to the person once. Use only in a repository that uses
+  Workflow station of the kotowari workflow: the orchestrator that runs an approved specification
+  on a branch through implementation, the consistency phase, review, and fixing until the findings
+  converge, then has the hosting service merge it or leaves the pull request to the person. Use
+  only in a repository that uses
   kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to run a kotowari cycle on a
-  plan, or to resume one. 日本語キーワード:
-  サイクル 実装ループ 改善ループ オーケストレータ 手順書を回す
+  specification, or to resume one. 日本語キーワード:
+  サイクル 実装ループ 改善ループ オーケストレータ 仕様を実装する
 ---
 
 # Cycle
 
-Run implement → consistency phase → review → fix on one plan until the visible findings are gone.
-Delegate everything; cycle itself never implements, reviews, or fixes. The person sees only the terminal
-report; the loop does not stop for them except in the cases below.
+Run implement → consistency phase → review → fix on one approved specification until the visible
+findings are gone.
+Delegate everything; cycle itself never implements, reviews, or fixes. A converged run merges
+without waiting for a person unless `references/merge.md` says a person confirms; the loop does not
+stop for them except in the cases below.
 
 ## Inputs
 
-Required: the plan path and the branch with its worktree path. The main session creates both
-before cycle starts; the branch name contains the plan name.
+Required: the place of the specification (the IR store path, or for a topic with no IR the path
+of its committed specification), the IDs of the requirements the brainstorm added or changed, and
+the branch with its worktree path. The brainstorm hands over the place and the IDs as it goes on to
+cycle; the main session creates the branch, which carries the commit of the approved
+specification, and its worktree before cycle starts. When cycle starts later or resumes, count the
+IDs again from the part of the branch's diff that lies in the place of the specification
+(`git diff <comparison base> HEAD -- <place>`): the requirements whose text that diff adds or
+changes. Remove the IDs of deferred requirements (`deferred` true in `kotowari query`) before
+handing the IDs to the implementer; "the IDs cycle received" below means those that remain.
 Optional: round-trip limit (default none: loop until convergence), review strength (the
 person's choice, default `standard`), comparison base (default: merge-base with the branch's
 parent), profiles (default: chosen from changed paths by the review skill's **Profiles from paths**),
@@ -32,9 +42,7 @@ only under step 5's condition. Optional seats are the person's standing choice, 
 and the consistency phase is decided by cycle's own measure (**Consistency phase**), not by the
 reason.
 
-Read the plan only to find the specification path it names — the IR store path and the IDs of
-the requirements it covers, or, for a topic with no IR, the path of its committed specification;
-do not interpret its steps. Where to start is in **Resuming and running more**.
+Where to start is in **Resuming and running more**.
 
 Before the first review, read the kotowari-review skill's `SKILL.md` and the references its
 **Reviewer setup** names; read the reference its **Optional seats** names only when this run has
@@ -43,8 +51,8 @@ both full and diff reviews.
 
 ## Loop
 
-1. Delegate the plan path, branch, and worktree path to an implement agent, all remaining steps
-   in one delegation.
+1. Delegate the place of the specification, the IDs cycle received, the branch, and the worktree
+   path to an implement agent, all remaining work in one delegation.
 2. Consistency phase (**Consistency phase**).
 3. Full review: base..head, profiles, strength, counterpart, plus the **known findings** (open
    `record_only` / `human_judgment`, closed `accepted`), never visible or fixed ones; a match is not raised again.
@@ -57,6 +65,7 @@ both full and diff reviews.
    diff loop until none remain.
    With no such reason, the diff loop clearing every visible finding ends the quality review.
 6. Consistency phase once more (**Consistency phase**); then converged.
+7. Merge, as `references/merge.md` says.
 
 Visible findings = open findings whose final action is `auto_fix` or `fix_and_verify`. Findings with
 `human_judgment` or `record_only` stay open for the terminal report. A `consistency` finding goes
@@ -69,8 +78,9 @@ included) or one consistency phase run. The limit, when the person set one, coun
 
 Every prompt is self-contained; never assume a delegate loaded a skill or read the conversation.
 
-- **implement:** carry the plan path, branch, and worktree path. It returns commits, per-step
-  verification evidence, and out-of-plan changes, or a hand-back with its reason.
+- **implement:** carry the place of the specification, the IDs cycle received, the branch, and
+  the worktree path. It returns commits, verification evidence per requirement, and changes beyond
+  the requirements with their reasons, or a hand-back with its reason.
 - **review (full):** carry the base and head, worktree path, known findings, the review items from
   **Inputs** if any, and the reviewer prompt of the review skill's **Reviewer setup** (it carries the Evidence
   conditions). It returns findings JSON.
@@ -78,7 +88,7 @@ Every prompt is self-contained; never assume a delegate loaded a skill or read t
   and the same review items and reviewer prompt. It returns per-finding `still_present` or
   `no_longer_visible` and new findings.
 - **consistency phase:** use **Consistency phase** below.
-- **fixer:** carry the visible findings, plan path, branch, worktree path, the path of the kotowari
+- **fixer:** carry the visible findings, the place of the specification, branch, worktree path, the path of the kotowari
   skill's `references/mark.md`, and the contract below; for a finding that is `still_present`
   after a fix, also that fix's commits.
 
@@ -92,9 +102,9 @@ consistency phase as in step 2, the blocked change in the worktree included in i
 repeat the same delegation; after implement, step 2 still runs.
 
 A review's counterpart follows the review skill's **Inputs**. Only the consistency phase gets
-the specification path with the plan's IDs: for IR, narrow `kotowari list` to those IDs
-(select by `.id`; see kotowari-plan's **Reading the requirements**) and pass the result as a file,
-never the whole list. For a topic with no IR, pass the plan's specification path and no ID file.
+the place of the specification with the IDs cycle received: for IR, narrow `kotowari list` to those IDs
+(select by `.id` with `jq`) and pass the result as a file,
+never the whole list. For a topic with no IR, pass the specification's path and no ID file.
 
 ## Consistency phase
 
@@ -121,7 +131,12 @@ review. Its agent instructions and input contract live in `references/consistenc
 ## Judgment stays here
 
 Cycle alone writes the findings file (shape: the review skill's `finding-schema.md`, with `base`,
-`last_reviewed_head`, `first_review_head`, `premise_attempts` and `fixes`), creating it at the first phase run or review. Each
+`last_reviewed_head`, `first_review_head`, `premise_attempts`, `fixes`, `line`, `fix_of` and
+`ending`), creating it at the first phase run or review. It writes no other record file and
+records no cost. It sets `line` each time it judges the line (`references/merge.md`), with the
+paths that were hit; `fix_of` to the branch of the earlier request this request fixes, only when
+the request says it is a fix of an earlier one, else null; and `ending` when the run ends, with the
+ending reached and its reason, a hand-back and a stop for the person included. Each
 time step 3 runs it sets `first_review_head` to the head it reviews; that head is the only state
 kept for the phase. After every review or phase run
 it overwrites the file: sets `last_reviewed_head` after a review, assigns
@@ -129,7 +144,16 @@ IDs to new findings, merges reviewers and groups same-cause findings, finalizes 
 before classifying visible findings. For each non-`security` finding, in order: force `info` to
 `record_only`; force a claim stating no defect to `warn` and `record_only`; for a defect demanding a
 new test or fixture without showing it qualifies, keep its action but replace its oracle with all
-existing checks passing; replace a `warn` oracle even when it qualifies. Leave `security` untouched
+existing checks passing; replace a `warn` oracle even when it qualifies; a replaced oracle keeps the
+`measured` the reviewer reported, and its note says that value was measured on the proposal that
+was replaced; force `human_judgment`
+proposed for readability, a choice of structure, a deleted test, an added suppression of a check,
+or an added or changed dependency to `record_only`, since the implementer decides those; force an
+`auto_fix` or `fix_and_verify` whose `oracle.measured` is not `fails_now` to `record_only`. Only a
+mistake that running something shows keeps a run from converging; the stops of
+`references/merge.md` are apart from this. A gap from the intent that no run can show is a hole in
+the specification: `record_only`, reported among the rules absent from the specification, as
+rework for brainstorm. Leave `security` untouched
 and pause. Adopt any proposal that matched none of these checks unchanged. Never move a finding out
 of `human_judgment` without asking the person. Append numbered verdicts and update state; after every
 fix record its reported commits on each finding and append to `fixes` the findings it addressed and
@@ -153,10 +177,18 @@ computing it from the findings file.
 
 - A `security` finding, whatever its action: pause the whole loop before delegating anything
   and hand its content to the person unchanged. Their answer says whether it is fixed now (it
-  becomes visible) or stays open for the terminal report; nothing closes it mid-loop.
+  becomes visible) or stays open for the terminal report: then set its action to `human_judgment`,
+  a finding the person chose to leave, for which `references/merge.md` withholds the request to
+  merge. Nothing closes it mid-loop.
 - A delegate stops on an irreversible operation, a privileged operation, a dangerous target, or a
   spreading accident: relay the question verbatim, then resume or re-delegate with the answer.
 - A delegate hands back a missing design decision: ending 4.
+- Implement finds no test command in the project's instructions or the language's standard tool:
+  ask the person, then re-delegate with the answer.
+
+Not a stop: a change that deletes a test, adds a suppression of a check, or adds or changes a
+dependency. Readability and choices of structure are the implementer's to decide; they neither stop
+the loop nor add a review seat.
 
 ## Endings
 
@@ -175,45 +207,53 @@ computing it from the findings file.
 
    Every clause but the last first enters the premise step (`references/premise-step.md`), and the
    loop ends here only when that step says so. A review that cannot succeed ends the loop at once.
-4. A delegate handed back to brainstorm or plan.
+4. A delegate handed back to brainstorm.
 
-Endings 2–4 add to the terminal report the choice "run more or accept the rest and finish" and
-any hand-back reason.
+Only ending 1 goes on to step 7. Endings 2–4 ask for no merge; they add to the terminal report the
+choice "run more or accept the rest and finish" and any hand-back reason.
 
 ## Resuming and running more
 
 The findings file is `.agents/artifacts/reviews/<branch>.json` (a `/` in the branch name is a
-directory). If it exists when cycle starts, this is a resume: keep its findings, continue round
+directory) in the main working tree (the first entry of `git worktree list`), never in the run's
+worktree, so that **Cleanup** in `references/merge.md` does not remove it. It is never committed and
+never deleted by the workflow. A file whose `ending` is `merged` belongs to an earlier request on a
+branch of the same name and is not a resume: rename it beside itself to
+`<branch>.merged-<n>.json`, with the lowest free `n`, and start a new file. If another file exists
+when cycle starts, this is a resume: keep its findings, continue round
 numbers from its maximum, and read its `premise_attempts` as `references/premise-step.md` says, so
 that a run that already made its attempt does not make another. Ending 3's streaks (`still_present` twice running; new visible findings
 not shrinking; overlap after a fix) count from this start only; a closed cause returning counts
 across starts. "Run more" after endings 2–4 continues the same run: streaks kept, findings still open, a
 new limit only if the person sets one.
 
-Either way, infer from the plan and `git log` which steps are done, and go on at the first row
-that holds:
+Either way, go on at the first row that holds. Cycle keeps no other state for resuming. Before a
+row that adds a commit to the branch, read from the hosting service whether the branch's pull
+request still carries a request to merge an earlier session made, and withdraw it, as
+**Withdrawing the request** in `references/merge.md` says.
 
 | Situation | Go on at |
 |---|---|
-| a plan step left no git trace | step 1 (implement resumes by inference and redoes untraced steps), then step 2 |
+| no findings file yet | step 1 (implement decides what remains from `git log` and the requirements still without a marked test), then step 2 |
 | "run more" after an ending a phase rerun raised | that step: 2 (then on to 3) or 6 |
 | "run more" otherwise | step 4 |
-| resume, `first_review_head` null | step 2 |
+| resume, `first_review_head` null | step 1 as above (implement returns at once when nothing remains), then step 2 |
 | resume, a visible quality finding open | step 4 |
+| resume, the branch has a pull request | **Resuming** in `references/merge.md` |
 | resume otherwise | step 6 |
 
 Whether to skip a phase run is decided again by its measure.
 
 ## kotowari check before the terminal report
 
-Right before the terminal report, run `kotowari check` and `kotowari status --format text`, and
-put both outputs in the report. Read them as the kotowari skill's scene check
+After the run converges and before step 7, run `kotowari check` and
+`kotowari status --format text`, and put both outputs in the terminal report. Read them as the kotowari skill's scene check
 (`references/findings.md`) says. When the last line of the status is `complete false`, the reason
 is in the check's findings if `findings` shows a nonzero `error`, and in the problem record if
 `items` shows a nonzero `flag`.
 
 Only this run's findings are worked on. A finding is this run's when its `path` is a file the
-branch changed (`git diff --name-only <base>..HEAD`) or it names an ID the plan covers; narrow the
+branch changed (`git diff --name-only <base>..HEAD`) or it names an ID cycle received; narrow the
 JSON with `jq` rather than reading it whole. Every other finding was there before the run: count
 it in the terminal report by kind, and never delegate it — fixing what the run did not touch
 spends a loop on work nobody asked for. The same holds for a `complete false` whose reason is
@@ -241,13 +281,19 @@ only such findings or problem records that were already committed.
 ## Terminal report
 
 Always: artifacts and commits, verification results from the implement report, the
-`kotowari check` and `kotowari status` output, how to view the diff. When present: fixed findings, forwarded observations, reasoned out-of-plan changes, open
+`kotowari check` and `kotowari status` output, how to view the diff, and the decision lines: each
+decision implement or the fixer made by itself, a dependency it added included, one line each of
+what was decided, why, and the evidence, the same lines as the pull request body. When present: fixed findings, forwarded observations, changes beyond the requirements with their reasons, open
 findings needing the person, and rules or sections identified as absent from the specification.
 From the consistency phase: its commits and decision records, each open `human_judgment` finding
 with its default and the word that reverses it, and the one-line reason for each skipped run.
 When a premise attempt ran or a premise went to the person: the premise ladder of each attempt in
 the findings file. When a full review ran optional seats: their attendance, as the review skill's
 `references/optional-seats.md` says under **Merging and reporting**.
-This is the person's one check; merging is theirs. Cycle never merges, publishes, deletes branches
-or worktrees, edits the specification itself (the consistency phase does, as its reference says),
-manages issues, or runs two plans at once.
+After step 7: where the pull request is and whether the merge was asked for; for a stop, its cause
+as `references/merge.md` shows it, with no summary of the change; when merging by itself is not
+available, that and why.
+Cycle never performs a merge (the hosting service merges what step 7 asks for), publishes, changes
+a repository setting, deletes anything on the hosting service, removes a local branch or worktree
+except as **Cleanup** in `references/merge.md` says, edits the specification itself (the
+consistency phase does, as its reference says), manages issues, or runs two requests at once.

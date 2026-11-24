@@ -46,4 +46,4 @@ the allowance, since that start is a new request.
 An implementer whose approach has changed once without progress does not hand back yet. It writes
 the premises its attempts shared, as a ladder like the one above, replaces the top one, and tries
 once more from it. Still no progress: hand back to cycle with the ladder. When the premise lies in
-the plan or the specification, hand back at once, as before; the implementer never replaces those.
+the specification, hand back at once, as before; the implementer never replaces it.

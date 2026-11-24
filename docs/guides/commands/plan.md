@@ -3,7 +3,7 @@
 English | [日本語](plan.ja.md)
 
 Reads one plan (a Markdown document of implementation steps) and checks its form against the schema bundled in the kotowari binary.
-Use it in the kotowari-plan station when you have finished writing a plan, before asking for approval.
+Use it when you have written a plan and want to check its form.
 
 ## Synopsis
 
@@ -177,7 +177,7 @@ On a stop, nothing is written to standard output and the reason is written on th
 
 <!-- @kotowari[EX-core-332:680b57dc, EX-core-333:7fc19aa4, EX-core-334:37e6d2a2, EX-core-348:33e00663] -->
 
-A plan in the correct form (the same as the [example plan](../../../agent/skills/kotowari-plan/references/plan-example.md) in the kotowari-plan skill).
+A plan in the correct form.
 
 ````markdown
 # Plan: report the words a document uses too often
@@ -404,5 +404,4 @@ docs/plans/broken.md:52 [error] invalid_plan undeclared_heading: undeclared sect
 - Specification: [Checking plans (the plan IR)](../../ir/core/plan.md), [Arguments](../../ir/core/cli.md#REQ-core-190)
 - Common format and stops: [cli.md](../cli.md)
 - The list of finding kinds: [findings.md](../findings.md)
-- How to write a plan: [step-template.md](../../../agent/skills/kotowari-plan/references/step-template.md) in the kotowari-plan skill
 - Confirming requirement IDs: [kotowari query](query.md)
