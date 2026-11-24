@@ -227,7 +227,10 @@ not shrinking; overlap after a fix) count from this start only; a closed cause r
 across starts. "Run more" after endings 2–4 continues the same run: streaks kept, findings still open, a
 new limit only if the person sets one.
 
-Either way, go on at the first row that holds. Cycle keeps no other state for resuming.
+Either way, go on at the first row that holds. Cycle keeps no other state for resuming. Before a
+row that adds a commit to the branch, read from the hosting service whether the branch's pull
+request still carries a request to merge an earlier session made, and withdraw it, as
+**Withdrawing the request** in `references/merge.md` says.
 
 | Situation | Go on at |
 |---|---|

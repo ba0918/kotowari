@@ -108,7 +108,9 @@ findings into any file, reporting those outside as out-of-request.
 Same branch right after a cycle or a run of this skill that did not end in a merge: reuse it,
 never re-cut. A findings file still there is cycle's resume — keep it; deleting or ignoring it is a
 counter-example — unless its `ending` is `merged`, which cycle's **Resuming and running more**
-keeps apart. This run sets `fix_of` when the request says it fixes an earlier request. Resume
+keeps apart. Before the first delegation, withdraw a request to merge the hosting service still
+shows on the branch's pull request (**Withdrawing the request** in kotowari-cycle's
+`references/merge.md`). This run sets `fix_of` when the request says it fixes an earlier request. Resume
 differences: set `first_review_head` to null; unless the person gave a comparison base, it is the
 branch tip at start, and inherited open findings are evaluated in the diff review even outside it;
 ending 3's streaks reset at each start of this skill, inherited evaluations uncounted. Ending 3's

@@ -105,9 +105,15 @@ Cycle never performs the merge itself and never changes a setting of the reposit
 
 ## Withdrawing the request
 
-After asking, withdraw it (`gh pr merge <pr> --disable-auto`):
+Withdraw the request (`gh pr merge <pr> --disable-auto`) whenever the hosting service shows one on
+the branch's pull request, whether this session asked or an earlier one did
+(`gh pr list --head <branch> --state open --json number,autoMergeRequest`; a non-null
+`autoMergeRequest` is a request):
 
-- before delegating anything that adds a commit to the branch;
+- before delegating anything that adds a commit to the branch, and before the push of step 2 of
+  **Opening and asking**: a resume at any row of cycle's table, "run more", and a new
+  kotowari-iterate request on a reused branch read it from the hosting service first, since the
+  session that asked may have ended;
 - when the run no longer converges, the line is hit, or a case of **When a person confirms** holds;
 - when handing the pull request to the person.
 
