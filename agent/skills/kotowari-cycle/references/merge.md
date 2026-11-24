@@ -88,20 +88,23 @@ the existing stop rules.
 2. Push the branch (`git push -u origin <branch>`) and, when there is none yet, create the pull
    request against the merge target
    (`gh pr create --base <target> --head <branch> --title <one line> --body-file <file>`). The
-   body is the decision lines of cycle's **Terminal report** and no summary of the change.
+   body is the decision lines of cycle's **Terminal report** and no summary of the change. A pull
+   request already there may have been pointed elsewhere since: step 5 reads where it points.
 3. Confirm whether the merge target requires checks, by branch protection
    (`gh api repos/{owner}/{repo}/branches/<target> --jq '.protection.required_status_checks.contexts'`)
    and by a ruleset
    (`gh api repos/{owner}/{repo}/rules/branches/<target> --jq '[.[] | select(.type == "required_status_checks")]'`):
-   it does when either prints a non-empty list, and does not when both succeed with none; a failing
-   command leaves it unconfirmed. Every
+   it does when either prints a non-empty list and neither fails, and does not when both succeed
+   with none; a failing command leaves it unconfirmed, whatever the other printed. Every
    run that creates a pull request does this, one that stops at it included. The answer is not
    kept: **Watching** reads the names again itself.
 4. When a case of **When a person confirms** holds, stop at the pull request as that section says,
    and go on to **Watching**.
 5. Otherwise confirm that the repository allows merging by itself
    (`gh api repos/{owner}/{repo} --jq .allow_auto_merge` is `true`), that step 3 found required
-   checks, and that the merge target requires no approving review, by branch protection
+   checks, that the pull request points at the merge target cycle received
+   (`gh pr view <pr> --json baseRefName --jq .baseRefName` prints it), and that the merge target
+   requires no approving review, by branch protection
    (`gh api graphql -f query='query($o:String!,$r:String!,$b:String!){repository(owner:$o,name:$r){ref(qualifiedName:$b){branchProtectionRule{requiresApprovingReviews}}}}' -F o='{owner}' -F r='{repo}' -f b=refs/heads/<target> --jq '.data.repository.ref | select(. != null) | .branchProtectionRule.requiresApprovingReviews // false'`
    prints `false`), by a ruleset
    (`gh api repos/{owner}/{repo}/rules/branches/<target> --jq '[.[] | select(.type == "pull_request") | .parameters.required_approving_review_count] | add // 0'`
@@ -132,6 +135,11 @@ the branch's pull request, whether this session asked or an earlier one did
   session that asked may have ended;
 - when the run no longer converges, the line is hit, or a case of **When a person confirms** holds;
 - when handing the pull request to the person.
+
+When the read before a push fails, do not push: stop and tell the person, with the error output.
+The one exception is a host where cycle cannot create a pull request (origin is not on a host
+`gh` is set up for): no request can stand there, and the push goes on. When the start could not
+make its two checks (cycle's **Resuming and running more**), make them here too, before the push.
 
 Ask again only after confirming, for the new head, that the run converged, the line is not hit and
 no case of **When a person confirms** holds.
@@ -197,6 +205,12 @@ whether merging by itself was asked for, the state of the checks, and whether it
 
 A resume reaches this table only with no visible finding open; one still open goes through
 cycle's **Loop** first.
+
+Before either open row, read where the pull request points
+(`gh pr view <pr> --json baseRefName --jq .baseRefName`). When that is not the merge target cycle
+received (`merge_target` in the findings file), or cannot be read, withdraw a request that stands
+and hand the pull request to the person with that reason: the line and the reviews were read
+against another branch.
 
 ## Cleanup
 

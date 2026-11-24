@@ -26,8 +26,9 @@ the branch with its worktree path. The brainstorm hands over all of them, with t
 it goes on to cycle (its **Finishing**); for any other start the main session prepares the branch,
 which carries the commit of the approved specification, and its worktree first.
 
-A start that received the place of a specification, other than a resume, first confirms in the
-worktree that the specification is approved. The place of the specification and the place of
+A start that brings a request with the place of a specification confirms in the worktree that
+the specification is approved, after the reads at the head of **Resuming and running more** and
+before it creates or changes the findings file. A resume, which brings no request, does not. The place of the specification and the place of
 decision records (where the kotowari skill's `references/records.md` puts them) hold no uncommitted
 change: `git status --porcelain -- <place> <decision records>` prints nothing. And
 `kotowari check --format json` exits 0 or 1 with no error whose `path` is a file the branch changed
@@ -36,7 +37,7 @@ findings (the kotowari skill's `references/findings.md`) apart. When either does
 specification is not approved and stop. A small task without a specification has no place to
 confirm.
 
-At its start cycle creates the findings file (**Resuming and running more**) and writes into it the
+Then cycle creates the findings file (**Resuming and running more**) and writes into it the
 IDs and the merge target it received (`ids`, an empty list included, and `merge_target`); a later
 request on the same branch adds its IDs to `ids`. A resume reads both from the file; only when the file has no `ids` does it count the
 IDs again from the part of the branch's diff that lies in the place of the specification
@@ -252,16 +253,20 @@ When one is open and its head is not on the local branch
 fails (on a host the `gh` commands do not reach, for one), go on without these two checks and say in
 the terminal report that they could not be made. A failed read of a request to merge, below, is
 handled the same way: the commits stay local until the push of step 2 of **Opening and asking**,
-before which **Withdrawing the request** in `references/merge.md` reads it again.
+before which **Withdrawing the request** in `references/merge.md` reads it again, makes the two
+checks the start could not make, and does not push while the request cannot be read.
 
 The findings file is `.agents/artifacts/reviews/<branch>.json` (a `/` in the branch name is a
 directory) in the main working tree (the first entry of `git worktree list`), never in the run's
 worktree, so that **Cleanup** in `references/merge.md` does not remove it. It is never committed and
 never deleted by the workflow. A file whose `ending` is `merged` belongs to an earlier request on a
 branch of the same name and is not a resume: rename it beside itself to
-`<branch>.merged-<n>.json`, with the lowest free `n`, and start a new file. If another file exists
-when cycle starts, this is a resume (when this start received IDs, a later request on the same
-branch, first add them to `ids`): keep its findings, continue round
+`<branch>.merged-<n>.json`, with the lowest free `n`, and start a new file. A resume is a start
+that brings no request: cycle was asked only to go on. A start that brings a request (the place of
+a specification with its IDs, or a kotowari-iterate request) to a branch whose findings file is
+already there is a later request on the same branch, not a resume: it makes the confirmation of
+**Inputs**, adds its IDs to `ids`, and sets `first_review_head` to null. If another file exists
+when cycle starts, a resume and a later request alike keep its findings, continue round
 numbers from its maximum, and read its `premise_attempts` as `references/premise-step.md` says, so
 that a run that already made its attempt does not make another. Ending 3's streaks (`still_present` twice running; new visible findings
 not shrinking; overlap after a fix) count from this start only; a closed cause returning counts
@@ -276,6 +281,7 @@ request still carries a request to merge an earlier session made, and withdraw i
 | Situation | Go on at |
 |---|---|
 | no findings file yet | step 1 (implement decides what remains from `git log` and the requirements still without a marked test), then step 2 |
+| a later request on the same branch | step 1 as above, with all of `ids`, then step 2 and on: the phase run and the full review read from the comparison base again |
 | "run more" after an ending a phase rerun raised | that step: 2 (then on to 3) or 6 |
 | "run more" otherwise | step 4 |
 | resume, `first_review_head` null | step 1 as above (implement returns at once when nothing remains), then step 2 |
