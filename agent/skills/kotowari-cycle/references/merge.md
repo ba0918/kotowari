@@ -73,8 +73,9 @@ Of the runs that converged, a person confirms the merge in these three cases onl
 In each case cycle creates the pull request, does not ask for it to be merged, leaves it open, and
 shows the person where it is and what caused the stop: the paths that were hit (or, when the
 procedure of the line failed, that failure with its error output), the open findings, or the
-revised requirements. It adds no summary of the change. A concretisation the consistency
-phase added to the specification or a decision record after approval is not a reason to stop.
+revised requirements. It shows this as soon as the pull request is created, before the watch, and
+adds no summary of the change. A concretisation the consistency phase added to the specification
+or a decision record after approval is not a reason to stop.
 
 When the implementer returns that an approved requirement has to be changed or deleted, that is
 ending 4: a person comes in and nothing is merged. An operation that cannot be undone (a release,
@@ -88,18 +89,26 @@ the existing stop rules.
    request against the merge target
    (`gh pr create --base <target> --head <branch> --title <one line> --body-file <file>`). The
    body is the decision lines of cycle's **Terminal report** and no summary of the change.
-3. When a case of **When a person confirms** holds, stop at the pull request as that section says,
-   and go on to **Watching**.
-4. Otherwise confirm both that the repository allows merging by itself
-   (`gh api repos/{owner}/{repo} --jq .allow_auto_merge` is `true`) and that the merge target
-   requires one or more checks, by branch protection
+3. Confirm whether the merge target requires checks, by branch protection
    (`gh api repos/{owner}/{repo}/branches/<target> --jq '.protection.required_status_checks.contexts'`)
-   or by a ruleset
-   (`gh api repos/{owner}/{repo}/rules/branches/<target> --jq '[.[] | select(.type == "required_status_checks")]'`).
-   Each is confirmed only by `true` and by a non-empty list from either source; when either is
-   absent or cannot be confirmed (a command fails), stop at the pull request, report
-   that merging by itself is not available and why, and leave the merge to the person.
-5. Ask the hosting service to merge once the required checks pass:
+   and by a ruleset
+   (`gh api repos/{owner}/{repo}/rules/branches/<target> --jq '[.[] | select(.type == "required_status_checks")]'`):
+   it does when either prints a non-empty list, and does not when both succeed with none; a failing
+   command leaves it unconfirmed. Every
+   run that creates a pull request does this, one that stops at it included; **Watching** reads
+   the answer.
+4. When a case of **When a person confirms** holds, stop at the pull request as that section says,
+   and go on to **Watching**.
+5. Otherwise confirm that the repository allows merging by itself
+   (`gh api repos/{owner}/{repo} --jq .allow_auto_merge` is `true`), that step 3 found required
+   checks, and that the merge target requires no approving review, by branch protection
+   (`gh api graphql -f query='query($o:String!,$r:String!,$b:String!){repository(owner:$o,name:$r){ref(qualifiedName:$b){branchProtectionRule{requiresApprovingReviews}}}}' -F o='{owner}' -F r='{repo}' -f b=refs/heads/<target> --jq '.data.repository.ref.branchProtectionRule.requiresApprovingReviews // false'`
+   prints `false`) and by a ruleset
+   (`gh api repos/{owner}/{repo}/rules/branches/<target> --jq '[.[] | select(.type == "pull_request") | .parameters.required_approving_review_count] | add // 0'`
+   prints `0`). When one of these does not hold or cannot be confirmed (a command fails), stop at
+   the pull request, report that merging by itself is not available and why, leave the merge to
+   the person, and go on to **Watching**.
+6. Ask the hosting service to merge once the required checks pass:
    `gh pr merge <pr> --auto --<method>`, with the method the repository reports
    (`gh repo view --json viewerDefaultMergeMethod`, lowercased).
 
@@ -125,8 +134,15 @@ no case of **When a person confirms** holds.
 ## Watching
 
 After creating the pull request, watch its required checks to their result
-(`gh pr checks <pr> --required --watch`), in a run that stops at the pull request too. Cycle has no
-time limit of its own for the watch.
+(`gh pr checks <pr> --required --watch`), in a run that stops at the pull request too. Where step 3
+of **Opening and asking** found required checks, one that has not reported yet is not a failure:
+while `gh pr checks` shows none of them, or fewer than step 3 found, read it again until they
+appear. After the checks passed, while the request to merge stands, wait for the merge: read
+`gh pr view <pr> --json state,autoMergeRequest,mergeStateStatus` again until it changes. The
+hosting service is read as not merging only when the request is gone while the pull request is
+open, or `mergeStateStatus` is a state that waiting does not change: `DIRTY` (a conflict) or
+`BEHIND` (the branch is behind its target, when the merge target requires it to be up to date).
+Cycle has no time limit of its own for the watch.
 
 A required check that failed becomes a finding in the findings file: perspective `quality`,
 severity `critical`, action `fix_and_verify`, the evidence the check's name and the failing lines
@@ -139,14 +155,12 @@ The watch ends when:
 
 - cycle sees the pull request merged (`gh pr view <pr> --json state` is `MERGED`): **Cleanup**;
 - it hands the pull request to the person after failed checks;
-- the checks passed and the hosting service reports that it does not merge (the merge request is
-  gone while the pull request is open, or `mergeStateStatus` is `DIRTY`, `BLOCKED` or `BEHIND`,
-  the last when the merge target requires the branch to be up to date): hand the pull request to
-  the person with that reason;
+- the checks passed and the hosting service is read as not merging, as above: hand the pull request
+  to the person with that reason;
 - the pull request was closed without being merged (`state` is `CLOSED`): report it to the person;
 - in a run that stopped at the pull request, the checks passed;
-- the merge target requires no check (the two queries of step 4 of **Opening and asking** return
-  none): there is nothing to watch, and the watch ends at once.
+- the merge target requires no check (step 3 of **Opening and asking** found none): there is
+  nothing to watch, and the watch ends at once.
 
 Then write `ending`: `merged`, or `pr_open` with the cause as its reason (`pr_closed` when the
 pull request was closed without being merged, `pushed` when no pull request could be created).
