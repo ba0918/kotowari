@@ -122,6 +122,12 @@ cannot run it safely, record why and mark it `not_run`.
   much work to write" is not a reason.
 - Evidence names the observed file, line range, and a summary of any output (several allowed).
 - No per-perspective scores and no total score.
+- Only a mistake that running something shows keeps a run from converging: a proposed fix whose
+  oracle was not run and seen failing is recorded, not fixed. Readability and choices of structure
+  are the implementer's to decide, never `human_judgment`. A deleted test, an added suppression of
+  a check, or an added or changed dependency is no reason by itself to send a finding to the
+  person. A gap from the intent that no run can show is a hole in the specification: `record_only`,
+  flagged for the terminal report as absent from the specification.
 - A rewording that leaves the reader's meaning unchanged is not a finding, not even `info`; `info`
   is for changes that alter how the text is read (less ambiguity, clearer structure).
 

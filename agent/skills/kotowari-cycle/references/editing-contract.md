@@ -31,4 +31,6 @@ who gets which section; everything below this paragraph is pasted as written.
 - Hand back a missing design decision.
 - If a hook stops a commit on an IR-side finding, never edit the IR: leave the change uncommitted
   and return the finding with the files it blocked.
-- Return your commits and which finding each addresses, or a hand-back with its reason.
+- Return your commits and which finding each addresses, and each decision you made by yourself (a
+  dependency you added included) as one line of what was decided, why, and the evidence; or a
+  hand-back with its reason.

@@ -5,8 +5,9 @@ description: "Workflow station of the kotowari workflow: build the requirements 
 
 # Implement
 
-Build the requirements you were given. You decide the order and the files to touch. Code is
-built test-first; documents and small scripts may be written directly.
+Build the requirements you were given. You decide the order, the files to touch, readability and
+choices of structure. Code is built test-first; documents and small scripts may be written
+directly.
 
 ## Inputs and outputs
 
@@ -90,6 +91,8 @@ diff as **Resuming** says.
   `references/editing-contract.md`. A test and the minimal code that makes it pass are one concern.
 - Message: follow the repository's commit conventions; a body only when the *why* needs it; never
   name session chronology.
+- Deleting a test, adding a suppression of a check, and adding or changing a dependency are not
+  hand-backs: decide them and write the decision line (**Report at the end**).
 - Changes beyond what the requirements need (a fix found on the way): commit them with the
   reason recorded, and list them in the final report. Anything that changes what a requirement
   means is a hand-back.
@@ -111,5 +114,6 @@ decisions are redone or re-asked.
 ## Report at the end
 
 Commits made, verification evidence per requirement (test names run, check commands, artifact
-paths, external summaries), changes beyond the requirements with reasons, anything handed back and
-why.
+paths, external summaries), changes beyond the requirements with reasons, each decision you made
+by yourself (a dependency you added included) as one line of what was decided, why, and the
+evidence, and anything handed back and why.

@@ -72,7 +72,8 @@ the existing stop rules.
 1. Judge the line.
 2. Push the branch (`git push -u origin <branch>`) and, when there is none yet, create the pull
    request against the merge target
-   (`gh pr create --base <target> --head <branch> --title <one line> --body-file <file>`).
+   (`gh pr create --base <target> --head <branch> --title <one line> --body-file <file>`). The
+   body is the decision lines of cycle's **Terminal report** and no summary of the change.
 3. When a case of **When a person confirms** holds, stop at the pull request as that section says,
    and go on to **Watching**.
 4. Otherwise confirm both that the repository allows merging by itself

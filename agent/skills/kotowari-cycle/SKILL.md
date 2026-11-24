@@ -139,7 +139,14 @@ IDs to new findings, merges reviewers and groups same-cause findings, finalizes 
 before classifying visible findings. For each non-`security` finding, in order: force `info` to
 `record_only`; force a claim stating no defect to `warn` and `record_only`; for a defect demanding a
 new test or fixture without showing it qualifies, keep its action but replace its oracle with all
-existing checks passing; replace a `warn` oracle even when it qualifies. Leave `security` untouched
+existing checks passing; replace a `warn` oracle even when it qualifies; force `human_judgment`
+proposed for readability, a choice of structure, a deleted test, an added suppression of a check,
+or an added or changed dependency to `record_only`, since the implementer decides those; force an
+`auto_fix` or `fix_and_verify` whose `oracle.measured` is not `fails_now` to `record_only`. Only a
+mistake that running something shows keeps a run from converging; the stops of
+`references/merge.md` are apart from this. A gap from the intent that no run can show is a hole in
+the specification: `record_only`, reported among the rules absent from the specification, as
+rework for brainstorm. Leave `security` untouched
 and pause. Adopt any proposal that matched none of these checks unchanged. Never move a finding out
 of `human_judgment` without asking the person. Append numbered verdicts and update state; after every
 fix record its reported commits on each finding and append to `fixes` the findings it addressed and
@@ -169,6 +176,10 @@ computing it from the findings file.
 - A delegate hands back a missing design decision: ending 4.
 - Implement finds no test command in the project's instructions or the language's standard tool:
   ask the person, then re-delegate with the answer.
+
+Not a stop: a change that deletes a test, adds a suppression of a check, or adds or changes a
+dependency. Readability and choices of structure are the implementer's to decide; they neither stop
+the loop nor add a review seat.
 
 ## Endings
 
@@ -253,7 +264,9 @@ only such findings or problem records that were already committed.
 ## Terminal report
 
 Always: artifacts and commits, verification results from the implement report, the
-`kotowari check` and `kotowari status` output, how to view the diff. When present: fixed findings, forwarded observations, changes beyond the requirements with their reasons, open
+`kotowari check` and `kotowari status` output, how to view the diff, and the decision lines: each
+decision implement or the fixer made by itself, a dependency it added included, one line each of
+what was decided, why, and the evidence, the same lines as the pull request body. When present: fixed findings, forwarded observations, changes beyond the requirements with their reasons, open
 findings needing the person, and rules or sections identified as absent from the specification.
 From the consistency phase: its commits and decision records, each open `human_judgment` finding
 with its default and the word that reverses it, and the one-line reason for each skipped run.
