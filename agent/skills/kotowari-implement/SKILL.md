@@ -36,7 +36,9 @@ Hand back (stop, state the reason, do not guess) when:
 - a hook stops your commit on an IR-side finding → back to cycle, as **Requirements and kotowari
   check** says;
 - no test command can be determined (see below) → back to cycle, which asks the person, before
-  writing product code.
+  writing product code;
+- a check command cannot succeed as written → back to cycle, which asks the person, as
+  `references/completion.md` says under **Check**.
 
 Before handing back a missing decision, ask whether running something in the worktree would answer
 it (what a library returns, whether a check passes, how long a command takes). Such an answer is a

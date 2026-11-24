@@ -204,8 +204,9 @@ computing it from the findings file.
 - A delegate stops on an irreversible operation, a privileged operation, a dangerous target, or a
   spreading accident: relay the question verbatim, then resume or re-delegate with the answer.
 - A delegate hands back a missing design decision: ending 4.
-- Implement finds no test command in the project's instructions or the language's standard tool:
-  ask the person, then re-delegate with the answer.
+- Implement finds no test command in the project's instructions or the language's standard tool,
+  or returns that a check command cannot succeed as written: ask the person, then re-delegate with
+  the answer.
 
 Not a stop: a change that deletes a test, adds a suppression of a check, or adds or changes a
 dependency. Readability and choices of structure are the implementer's to decide; they neither stop
