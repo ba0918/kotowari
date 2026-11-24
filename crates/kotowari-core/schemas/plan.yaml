@@ -1,4 +1,4 @@
-# kotowari-plan が書く計画書の書式（docs/ir/core/plan.md の REQ-core-192）
+# `kotowari plan` が読む計画書の書式（docs/ir/core/plan.md の REQ-core-192）
 #
 # 計画全体の節には文、番号の無い一覧とその子の一覧、表、コードブロックを置ける。
 # 番号付きの一覧と "### " 以下の見出しは宣言しないので、閉じた世界で指摘になる。
