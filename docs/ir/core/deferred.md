@@ -49,9 +49,9 @@ When a `requirement` or `property` not under `deferral` points to a `requirement
 ### REQ-core-213: Handling of deferral in the skills
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-09-25-deferred-items.md#A13, docs/decision/records/2026-09-25-deferred-items.md#A23
+- source: docs/decision/records/2026-09-25-deferred-items.md#A13, docs/decision/records/2026-09-25-deferred-items.md#A23, docs/decision/records/2026-11-24-unattended-merge.md#A37, docs/decision/records/2026-11-24-unattended-merge.md#A38
 - verification: review
-- how_to_verify: Read the skills under "agent/skills/" and confirm that ir-form.md in the kotowari skill's references lists the "- deferred:" line (per requirement and document-level) and findings.md lists deferred_with_test and depends_on_deferred; that kotowari-plan says it does not include the `ID` of a `requirement` under `deferral` in the plan; that kotowari-cycle and kotowari-review say they do not include `deferral` among the targets whose test-side `finding` count must reach 0; and that kotowari-brainstorm says that when deferring, it writes the decision giving the reason into the `decision record` and cites it as the source
+- how_to_verify: Read the skills under "agent/skills/" and confirm that ir-form.md in the kotowari skill's references lists the "- deferred:" line (per requirement and document-level) and findings.md lists deferred_with_test and depends_on_deferred; that kotowari-cycle says it removes the `ID` of a `requirement` under `deferral` from the IDs it hands to the implementer; that kotowari-cycle and kotowari-review say they do not include `deferral` among the targets whose test-side `finding` count must reach 0; and that kotowari-brainstorm says that when deferring, it writes the decision giving the reason into the `decision record` and cites it as the source
 
 The kotowari skills under "agent/skills/" always describe how to write a `deferral` and how a `deferral` is handled in planning, the implementation loop, review, and brainstorming.
 

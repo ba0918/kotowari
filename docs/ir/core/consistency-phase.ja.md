@@ -18,9 +18,9 @@ kotowari-cycle は常に、実装の後と、品質のレビューの直しが�
 ### REQ-core-360: 整合のフェーズが見る範囲
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-06-changes-rethink.md#A2, docs/decision/records/2026-10-06-changes-rethink.md#A10, docs/decision/records/2026-10-06-changes-rethink.md#A12, docs/decision/records/2026-10-06-changes-rethink.md#A14, docs/decision/records/2026-10-06-changes-rethink.md#A15, docs/decision/records/2026-10-06-changes-rethink.md#A24, docs/decision/records/2026-10-06-changes-rethink.md#A25, docs/decision/records/2026-10-06-changes-rethink.md#A29
+- source: docs/decision/records/2026-10-06-changes-rethink.md#A2, docs/decision/records/2026-10-06-changes-rethink.md#A10, docs/decision/records/2026-10-06-changes-rethink.md#A12, docs/decision/records/2026-10-06-changes-rethink.md#A14, docs/decision/records/2026-10-06-changes-rethink.md#A15, docs/decision/records/2026-10-06-changes-rethink.md#A24, docs/decision/records/2026-10-06-changes-rethink.md#A25, docs/decision/records/2026-10-06-changes-rethink.md#A29, docs/decision/records/2026-11-24-unattended-merge.md#A38
 - verification: review
-- how_to_verify: "agent/skills/kotowari-cycle/" の`整合のフェーズ`の reference を読み、次のすべてが書いてあることを確かめる。見るのは記録ではなくコードそのもので、コードにはスキルの文章のような製品として配る文章を含むこと。範囲は、差分で変わったコードとそれが呼ぶ・呼ばれる直接の周辺、差分が使う値の作り元を1段、範囲の`項目`（差分が触った`項目`と、計画が扱う ID と差分が付けた`印`の ID の`項目`）、その`項目`が使う用語、`項目`どうしの関係（定義の表、@about、参照）、範囲の`項目`と用語が引く`判断の記録`であること。`IR`の無い話題では、承認済みの仕様の文書（無ければ依頼の文）を相手にすること。見つけるものは、`IR`に無い振る舞い（隙間）、`IR`と違う振る舞い、範囲の`IR`の中の隙間と矛盾であること。コードベース全体と`IR`全体の突き合わせは、別に頼まれたときだけ行うこと
+- how_to_verify: "agent/skills/kotowari-cycle/" の`整合のフェーズ`の reference を読み、次のすべてが書いてあることを確かめる。見るのは記録ではなくコードそのもので、コードにはスキルの文章のような製品として配る文章を含むこと。範囲は、差分で変わったコードとそれが呼ぶ・呼ばれる直接の周辺、差分が使う値の作り元を1段、範囲の`項目`（差分が触った`項目`と、cycle が受け取った ID と差分が付けた`印`の ID の`項目`）、その`項目`が使う用語、`項目`どうしの関係（定義の表、@about、参照）、範囲の`項目`と用語が引く`判断の記録`であること。`IR`の無い話題では、承認済みの仕様の文書（無ければ依頼の文）を相手にすること。見つけるものは、`IR`に無い振る舞い（隙間）、`IR`と違う振る舞い、範囲の`IR`の中の隙間と矛盾であること。コードベース全体と`IR`全体の突き合わせは、別に頼まれたときだけ行うこと
 
 `整合のフェーズ`は常に、差分で変わったコードとその直接の周辺と作り元を1段、範囲の`項目`とその用語と関係と引く`判断の記録`を読み、`IR`に無い振る舞い、`IR`と違う振る舞い、範囲の`IR`の隙間と矛盾を見つける。
 
@@ -45,8 +45,8 @@ kotowari-cycle は常に、実装の後と、品質のレビューの直しが�
 ### REQ-core-362: レビューは品質の観点だけ
 
 - kind: ubiquitous
-- source: docs/decision/records/2026-10-06-changes-rethink.md#A18, docs/decision/records/2026-10-06-changes-rethink.md#A29
+- source: docs/decision/records/2026-10-06-changes-rethink.md#A18, docs/decision/records/2026-10-06-changes-rethink.md#A29, docs/decision/records/2026-11-24-unattended-merge.md#A38
 - verification: review
-- how_to_verify: "agent/skills/kotowari-review/"、"agent/skills/kotowari-cycle/" と "agent/skills/kotowari-iterate/" を読み、レビュー役は品質の観点だけで立ち、コードと仕様の整合を見る適合の観点の席も、それを足す決まりも無いこと、計画や文書が仕様と矛盾していないかは品質の観点の中で見ることが書いてあることを確かめる
+- how_to_verify: "agent/skills/kotowari-review/"、"agent/skills/kotowari-cycle/" と "agent/skills/kotowari-iterate/" を読み、レビュー役は品質の観点だけで立ち、コードと仕様の整合を見る適合の観点の席も、それを足す決まりも無いこと、文書が仕様と矛盾していないかは品質の観点の中で見ることが書いてあることを確かめる
 
 kotowari-review は常に、品質の観点だけでレビュー役を立て、コードと仕様の整合は`整合のフェーズ`に任せる。
