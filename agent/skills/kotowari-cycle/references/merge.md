@@ -102,12 +102,17 @@ the existing stop rules.
 5. Otherwise confirm that the repository allows merging by itself
    (`gh api repos/{owner}/{repo} --jq .allow_auto_merge` is `true`), that step 3 found required
    checks, and that the merge target requires no approving review, by branch protection
-   (`gh api graphql -f query='query($o:String!,$r:String!,$b:String!){repository(owner:$o,name:$r){ref(qualifiedName:$b){branchProtectionRule{requiresApprovingReviews}}}}' -F o='{owner}' -F r='{repo}' -f b=refs/heads/<target> --jq '.data.repository.ref.branchProtectionRule.requiresApprovingReviews // false'`
-   prints `false`) and by a ruleset
+   (`gh api graphql -f query='query($o:String!,$r:String!,$b:String!){repository(owner:$o,name:$r){ref(qualifiedName:$b){branchProtectionRule{requiresApprovingReviews}}}}' -F o='{owner}' -F r='{repo}' -f b=refs/heads/<target> --jq '.data.repository.ref | select(. != null) | .branchProtectionRule.requiresApprovingReviews // false'`
+   prints `false`), by a ruleset
    (`gh api repos/{owner}/{repo}/rules/branches/<target> --jq '[.[] | select(.type == "pull_request") | .parameters.required_approving_review_count] | add // 0'`
-   prints `0`). When one of these does not hold or cannot be confirmed (a command fails), stop at
-   the pull request, report that merging by itself is not available and why, leave the merge to
-   the person, and go on to **Watching**.
+   prints `0`), and by the pull request itself
+   (`gh pr view <pr> --json reviewDecision --jq .reviewDecision` prints an empty line; the first
+   two read the settings, and branch protection is not shown to an account that may not see it,
+   while the host reports `REVIEW_REQUIRED` here whatever requires the review). Only these exact
+   outputs confirm: all three are needed, and any other output, an empty one from the first two
+   included, is not a confirmation. When one of these does not hold or cannot be confirmed (a
+   command fails), stop at the pull request, report that merging by itself is not available and
+   why, leave the merge to the person, and go on to **Watching**.
 6. Ask the hosting service to merge once the required checks pass:
    `gh pr merge <pr> --auto --<method>`, with the method the repository reports
    (`gh repo view --json viewerDefaultMergeMethod`, lowercased).
