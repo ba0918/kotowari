@@ -41,6 +41,10 @@ Position: 整合のフェーズが決めた（2026-11-24）。A1〜A4 は実装�
   - why: [REQ-core-366](../../ir/core/unattended-merge.md#REQ-core-366) は、頼んだあとは枝へコミットを足す前に頼みを取り消すとし、[REQ-core-364](../../ir/core/unattended-merge.md#REQ-core-364) は、プルリクエストを作ったあとの再開は自動のマージを頼んであるかをホスティングの側から読むとする。skill の取り消しは「頼んだあと」という、その回の記憶に掛かった条件で、再開の表は「プルリクエストがある」の行より上の行（最初のレビューがまだ、見える指摘が開いている）から入るとホスティングの側を読まずに実装や修正を委譲していた。iterate が枝を使い回す新しい依頼は表を通らず実装から始まる。見届けには時間切れが無いので、頼んだ回が見届けの途中で終わることは起こる。その頼みが生きたまま足したコミットを push すると、線の判定もレビューも済まないうちに、検査が通った時点でマージされうる（[A39](./2026-11-24-unattended-merge.md#A39) の why と同じ）
   - decided_by: 整合のフェーズ（根拠: agent/skills/kotowari-cycle/SKILL.md の Resuming and running more の表、agent/skills/kotowari-cycle/references/merge.md の Opening and asking の2と Withdrawing the request、agent/skills/kotowari-iterate/SKILL.md の枝を使い回す段を、3つの入り方でたどった。ホスティングの側に書き込めないので、走らせてはいない）
 
+- A8 見届けは、プルリクエストがマージされずに閉じられたときにも終わり、cycle は人に報告する。[REQ-core-366](../../ir/core/unattended-merge.md#REQ-core-366) に書き足し、回の記録の終わり方に「閉じられた」を足す。検査は通ったのにホスティングの側がマージしない場合には、マージ先が枝の最新化を求めていて枝が遅れている状態も含める。これは IR がすでに言っていることで、skill の挙げ方が狭かった。必須の検査がいつまでも結果を返さない場合の終わりは足さない
+  - why: 閉じられたプルリクエストはマージされず、検査の結果を待つ意味も無くなるが、REQ-core-366 と [A43](./2026-11-24-unattended-merge.md#A43) の終わりのどれにも当たらず、進む手段の無い待ちになる。再開のときに閉じられていれば人に報告する、という扱いは skill にすでにあり、それと同じにする。開いたままでもマージ済みでもないので、終わり方は別の値にする。枝が遅れている状態は「検査は通ったのにホスティングのサービスがマージしないと返したとき」にあたるのに、skill は頼みが消えた場合と2つの状態だけを挙げていた。結果を返さない検査に終わりを足すと、cycle が見届けに自分の時間切れを持つことになり、A43 に反する
+  - decided_by: 整合のフェーズ（根拠: agent/skills/kotowari-cycle/references/merge.md の Watching と Resuming の表。状態の名前は `gh api graphql -f query='{__type(name:"MergeStateStatus"){enumValues{name description}}}'` で読んだ。DIRTY、UNKNOWN、BLOCKED、BEHIND、UNSTABLE、HAS_HOOKS、CLEAN の7つで、BEHIND の説明は「先頭が古い」。ホスティングの側に書き込めないので、見届けそのものは走らせていない）
+
 ## Undecided
 
 - U1 証拠の条件を満たすと示されないまま置き換えられたオラクルが落ちたことを、「走らせて示せる間違い」に数えるか。いまの既定は A4 のとおり「数える」

@@ -138,14 +138,16 @@ The watch ends when:
 - cycle sees the pull request merged (`gh pr view <pr> --json state` is `MERGED`): **Cleanup**;
 - it hands the pull request to the person after failed checks;
 - the checks passed and the hosting service reports that it does not merge (the merge request is
-  gone while the pull request is open, or `mergeStateStatus` is `DIRTY` or `BLOCKED`): hand the
-  pull request to the person with that reason;
+  gone while the pull request is open, or `mergeStateStatus` is `DIRTY`, `BLOCKED` or `BEHIND`,
+  the last when the merge target requires the branch to be up to date): hand the pull request to
+  the person with that reason;
+- the pull request was closed without being merged (`state` is `CLOSED`): report it to the person;
 - in a run that stopped at the pull request, the checks passed;
 - the merge target requires no check (the two queries of step 4 of **Opening and asking** return
   none): there is nothing to watch, and the watch ends at once.
 
-Then write `ending`: `merged`, or `pr_open` with the cause as its reason (`pushed` when no pull
-request could be created).
+Then write `ending`: `merged`, or `pr_open` with the cause as its reason (`pr_closed` when the
+pull request was closed without being merged, `pushed` when no pull request could be created).
 
 ## Resuming
 
@@ -157,7 +159,7 @@ whether merging by itself was asked for, the state of the checks, and whether it
 | The host shows | Go on at |
 |---|---|
 | merged | write `ending` `merged` and report; clean up nothing, since this run's watch did not see the merge |
-| closed without a merge | report it to the person |
+| closed without a merge | write `ending` `pr_closed` and report it to the person |
 | open, merging asked for | **Watching** |
 | open, not asked for | step 6 of cycle's **Loop**, then step 1 of **Opening and asking**, the pull request already there |
 
