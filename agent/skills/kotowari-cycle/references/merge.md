@@ -110,10 +110,9 @@ time limit of its own for the watch.
 A required check that failed becomes a finding in the findings file: perspective `quality`,
 severity `critical`, action `fix_and_verify`, the evidence the check's name and the failing lines
 of its log (`gh run view <run> --log-failed`), the oracle that check passing, `measured`
-`fails_now`. It follows the existing round trips and endings: withdraw the request, run step 4 and
-step 6, then come back to step 1 of **Opening and asking**. When an
-ending other than ending 1 is reached, the checks still do not pass: hand the pull request to the
-person.
+`fails_now`. It follows the existing round trips and endings: withdraw the request, run steps 4 and
+6 of cycle's **Loop**, then come back to step 1 of **Opening and asking**. When an ending other
+than ending 1 is reached, the checks still do not pass: hand the pull request to the person.
 
 The watch ends when:
 
@@ -123,6 +122,9 @@ The watch ends when:
   gone while the pull request is open, or `mergeStateStatus` is `DIRTY` or `BLOCKED`): hand the
   pull request to the person with that reason;
 - in a run that stopped at the pull request, the checks passed.
+
+Then write `ending`: `merged`, or `pr_open` with the cause as its reason (`pushed` when no pull
+request could be created).
 
 ## Resuming
 
