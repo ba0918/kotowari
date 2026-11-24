@@ -30,7 +30,9 @@ for rev in "origin/$TARGET" HEAD; do
   git cat-file -e "$rev:$list" 2>/dev/null || continue
   specs=$(git show "$rev:$list")
   while IFS= read -r spec; do
-    case $spec in *[![:space:]]*) git diff --name-only --no-renames "$base" HEAD -- "$spec" ;; esac
+    spec=${spec%"${spec##*[![:space:]]}"}
+    spec=${spec#"${spec%%[![:blank:]]*}"}
+    [ -z "$spec" ] || git diff --name-only --no-renames "$base" HEAD -- "$spec"
   done <<EOF
 $specs
 EOF
@@ -39,7 +41,8 @@ done
 
 It compares the commit where the branch parted from the merge target with the head of the branch,
 and matches the changed paths against the pathspecs in `.kotowari/confirm-paths`, one per line,
-as written, each line on its own so that no line can take a hit away from another. It reads both
+each read with the blanks around it and a carriage return at its end taken off (a line that is
+then empty is skipped), and each on its own so that no line can take a hit away from another. It reads both
 the merge target's current list and the branch's; a hit under either is a hit. `--no-renames`
 counts a moved file under both its old and its new path. A change to the file itself always
 counts, whatever it lists, and a branch without the file prints its name, the same as a hit. Hit:
