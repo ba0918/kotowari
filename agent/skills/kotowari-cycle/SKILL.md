@@ -175,7 +175,9 @@ computing it from the findings file.
 
 - A `security` finding, whatever its action: pause the whole loop before delegating anything
   and hand its content to the person unchanged. Their answer says whether it is fixed now (it
-  becomes visible) or stays open for the terminal report; nothing closes it mid-loop.
+  becomes visible) or stays open for the terminal report: then set its action to `human_judgment`,
+  a finding the person chose to leave, for which `references/merge.md` withholds the request to
+  merge. Nothing closes it mid-loop.
 - A delegate stops on an irreversible operation, a privileged operation, a dangerous target, or a
   spreading accident: relay the question verbatim, then resume or re-delegate with the answer.
 - A delegate hands back a missing design decision: ending 4.
