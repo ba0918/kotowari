@@ -145,9 +145,9 @@ the reads of step 3 of **Opening and asking** printing names
 and
 `gh api repos/{owner}/{repo}/rules/branches/<target> --jq '.[] | select(.type == "required_status_checks") | .parameters.required_status_checks[].context'`):
 
-- required (either printed a name): one that has not reported yet is not a failure. Read
-  `gh pr checks <pr> --required --json name --jq '.[].name'` again until it prints every one of
-  those names, then watch them (`gh pr checks <pr> --required --watch`);
+- required (either printed a name and neither failed): one that has not reported yet is not a
+  failure. Read `gh pr checks <pr> --required --json name --jq '.[].name'` again until it prints
+  every one of those names, then watch them (`gh pr checks <pr> --required --watch`);
 - not required (both succeeded and printed nothing): there is nothing to watch;
 - unconfirmed (a read failed): there are no names to wait for. Watch what
   `gh pr checks <pr> --required --watch` shows, then hand the pull request to the person with the
