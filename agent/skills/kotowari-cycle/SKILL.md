@@ -46,7 +46,8 @@ handing the IDs to the implementer; "the IDs cycle received" below means those t
 
 Optional: round-trip limit (default none: loop until convergence), review strength (the
 person's choice, default `standard`), merge target (the branch the brainstorm or the person
-decided, else the repository's default branch, `gh repo view --json defaultBranchRef`),
+decided, else the repository's default branch, `gh repo view --json defaultBranchRef`; when that
+read fails, ask the person for the merge target, never guess it),
 comparison base (default: the commit where the branch parted from the merge target,
 `git merge-base origin/<merge target> HEAD`), profiles (default: chosen from changed paths by the
 review skill's **Profiles from paths**), optional seats (the person's word for this run; otherwise
@@ -247,7 +248,11 @@ resume, read the branch's pull requests from the hosting service
 (`gh pr list --head <branch> --state all --json number,state,headRefOid`). When a start that
 received a new request finds one merged or closed, stop and ask the person for a new branch name.
 When one is open and its head is not on the local branch
-(`git merge-base --is-ancestor <headRefOid> HEAD` fails), stop and tell the person.
+(`git merge-base --is-ancestor <headRefOid> HEAD` fails), stop and tell the person. When the read
+fails (on a host the `gh` commands do not reach, for one), go on without these two checks and say in
+the terminal report that they could not be made. A failed read of a request to merge, below, is
+handled the same way: the commits stay local until the push of step 2 of **Opening and asking**,
+before which **Withdrawing the request** in `references/merge.md` reads it again.
 
 The findings file is `.agents/artifacts/reviews/<branch>.json` (a `/` in the branch name is a
 directory) in the main working tree (the first entry of `git worktree list`), never in the run's
@@ -321,7 +326,8 @@ Always: artifacts and commits, verification results from the implement report, t
 decision implement or the fixer made by itself, a dependency it added included, and each
 `security` finding a fix closed, one line each of what was decided, why, and the evidence, the same
 lines as the pull request body. When present: fixed findings, forwarded observations, changes beyond the requirements with their reasons, open
-findings needing the person, and rules or sections identified as absent from the specification.
+findings needing the person, rules or sections identified as absent from the specification, and
+the checks at the start that could not be made (**Resuming and running more**).
 From the consistency phase: its commits and decision records, each open `human_judgment` finding
 with its default and the word that reverses it, and the one-line reason for each skipped run.
 When a premise attempt ran or a premise went to the person: the premise ladder of each attempt in
