@@ -235,6 +235,13 @@ choice "run more or accept the rest and finish" and any hand-back reason.
 
 ## Resuming and running more
 
+A branch name is not used again after its request ended. Before anything else at a start or a
+resume, read the branch's pull requests from the hosting service
+(`gh pr list --head <branch> --state all --json number,state,headRefOid`). When a start that
+received a new request finds one merged or closed, stop and ask the person for a new branch name.
+When one is open and its head is not on the local branch
+(`git merge-base --is-ancestor <headRefOid> HEAD` fails), stop and tell the person.
+
 The findings file is `.agents/artifacts/reviews/<branch>.json` (a `/` in the branch name is a
 directory) in the main working tree (the first entry of `git worktree list`), never in the run's
 worktree, so that **Cleanup** in `references/merge.md` does not remove it. It is never committed and

@@ -105,8 +105,9 @@ changes the request did not name (import tidying, tests following) are out-of-re
 whose change differs is review's to catch. The cap binds only the implementer; the fixer follows
 findings into any file, reporting those outside as out-of-request.
 
-Same branch right after a cycle or a run of this skill that did not end in a merge: reuse it,
-never re-cut. A findings file still there is cycle's resume — keep it; deleting or ignoring it is a
+Same branch right after a cycle or a run of this skill whose pull request was neither merged nor
+closed: reuse it, never re-cut; a merged or closed one stops the start for a new branch name
+(kotowari-cycle's **Resuming and running more**). A findings file still there is cycle's resume — keep it; deleting or ignoring it is a
 counter-example — unless its `ending` is `merged`, which cycle's **Resuming and running more**
 keeps apart. Before the first delegation, withdraw a request to merge the hosting service still
 shows on the branch's pull request (**Withdrawing the request** in kotowari-cycle's
