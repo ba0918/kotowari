@@ -95,8 +95,8 @@ the existing stop rules.
    (`gh api repos/{owner}/{repo}/rules/branches/<target> --jq '[.[] | select(.type == "required_status_checks")]'`):
    it does when either prints a non-empty list, and does not when both succeed with none; a failing
    command leaves it unconfirmed. Every
-   run that creates a pull request does this, one that stops at it included; **Watching** reads
-   the answer.
+   run that creates a pull request does this, one that stops at it included. The answer is not
+   kept: **Watching** reads the names again itself.
 4. When a case of **When a person confirms** holds, stop at the pull request as that section says,
    and go on to **Watching**.
 5. Otherwise confirm that the repository allows merging by itself
@@ -138,11 +138,22 @@ no case of **When a person confirms** holds.
 
 ## Watching
 
-After creating the pull request, watch its required checks to their result
-(`gh pr checks <pr> --required --watch`), in a run that stops at the pull request too. Where step 3
-of **Opening and asking** found required checks, one that has not reported yet is not a failure:
-while `gh pr checks` shows none of them, or fewer than step 3 found, read it again until they
-appear. After the checks passed, while the request to merge stands, wait for the merge: read
+After creating the pull request, watch its required checks to their result, in a run that stops at
+the pull request too. First read their names from the hosting service, on a resume as well, with
+the reads of step 3 of **Opening and asking** printing names
+(`gh api repos/{owner}/{repo}/branches/<target> --jq '.protection.required_status_checks.contexts[]?'`
+and
+`gh api repos/{owner}/{repo}/rules/branches/<target> --jq '.[] | select(.type == "required_status_checks") | .parameters.required_status_checks[].context'`):
+
+- required (either printed a name): one that has not reported yet is not a failure. Read
+  `gh pr checks <pr> --required --json name --jq '.[].name'` again until it prints every one of
+  those names, then watch them (`gh pr checks <pr> --required --watch`);
+- not required (both succeeded and printed nothing): there is nothing to watch;
+- unconfirmed (a read failed): there are no names to wait for. Watch what
+  `gh pr checks <pr> --required --watch` shows, then hand the pull request to the person with the
+  failure and its error output.
+
+After the checks passed, while the request to merge stands, wait for the merge: read
 `gh pr view <pr> --json state,autoMergeRequest,mergeStateStatus` again until it changes. The
 hosting service is read as not merging only when the request is gone while the pull request is
 open, or `mergeStateStatus` is a state that waiting does not change: `DIRTY` (a conflict) or
@@ -164,8 +175,8 @@ The watch ends when:
   to the person with that reason;
 - the pull request was closed without being merged (`state` is `CLOSED`): report it to the person;
 - in a run that stopped at the pull request, the checks passed;
-- the merge target requires no check (step 3 of **Opening and asking** found none): there is
-  nothing to watch, and the watch ends at once.
+- the names could not be read: it hands the pull request to the person, as above;
+- the merge target requires no check (the names read none): the watch ends at once.
 
 Then write `ending`: `merged`, or `pr_open` with the cause as its reason (`pr_closed` when the
 pull request was closed without being merged, `pushed` when no pull request could be created).
