@@ -24,14 +24,25 @@ Required: the place of the specification (the IR store path, or for a topic with
 of its committed specification), the IDs of the requirements the brainstorm added or changed, and
 the branch with its worktree path. The brainstorm hands over the place and the IDs as it goes on to
 cycle; the main session creates the branch, which carries the commit of the approved
-specification, and its worktree before cycle starts. At its start cycle creates the findings file
-(**Resuming and running more**) and writes into it the IDs and the merge target it received
-(`ids`, an empty list included, and `merge_target`); a later request on the same branch adds its
+specification, and its worktree before cycle starts.
+
+A start that received the place of a specification, other than a resume, first confirms in the worktree that the specification is
+approved: `git status --porcelain -- <place> <decision records>` (where the kotowari skill's
+`references/records.md` puts decision records) prints nothing, and `kotowari check --format json`
+exits 0 or 1 and reports no error, other than a test-side finding (the kotowari skill's
+`references/findings.md`), whose `path` is a file the branch changed
+(`git diff --name-only <comparison base> HEAD`) or that names an ID cycle received. When either
+does not hold, say the specification is not approved and stop. A small task without a
+specification has no place to confirm.
+
+At its start cycle creates the findings file (**Resuming and running more**) and writes into it the
+IDs and the merge target it received (`ids`, an empty list included, and `merge_target`); a later request on the same branch adds its
 IDs to `ids`. A resume reads both from the file; only when the file has no `ids` does it count the
 IDs again from the part of the branch's diff that lies in the place of the specification
 (`git diff <comparison base> HEAD -- <place>`): the requirements whose text that diff adds or
 changes. Remove the IDs of deferred requirements (`deferred` true in `kotowari query`) before
 handing the IDs to the implementer; "the IDs cycle received" below means those that remain.
+
 Optional: round-trip limit (default none: loop until convergence), review strength (the
 person's choice, default `standard`), merge target (the branch the brainstorm or the person
 decided, else the repository's default branch, `gh repo view --json defaultBranchRef`),
