@@ -164,9 +164,9 @@ cleaned up.
 
 1. Confirm that the findings file lies outside the worktree. If it does not, leave everything and
    report.
-2. `git -C <worktree> status --porcelain --untracked-files=all`: when it lists anything other than
-   the implementer's working notes (`.agents/scratch/`), leave the worktree and the branch and
-   report what is left.
+2. `git -C <worktree> status --porcelain --untracked-files=all --ignored`: when it lists anything
+   other than the implementer's working notes (`.agents/scratch/`), files git ignores and build
+   output included, leave the worktree and the branch and report what is left.
 3. From the main working tree, remove the worktree (`git worktree remove --force <worktree>`; the
    force only discards the working notes) and the local branch (`git branch -D <branch>`).
 
