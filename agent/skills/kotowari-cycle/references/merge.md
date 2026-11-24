@@ -69,8 +69,9 @@ Of the runs that converged, a person confirms the merge in these three cases onl
   withheld.
 
 In each case cycle creates the pull request, does not ask for it to be merged, leaves it open, and
-shows the person where it is and what caused the stop: the paths that were hit, the open findings,
-or the revised requirements. It adds no summary of the change. A concretisation the consistency
+shows the person where it is and what caused the stop: the paths that were hit (or, when the
+procedure of the line failed, that failure with its error output), the open findings, or the
+revised requirements. It adds no summary of the change. A concretisation the consistency
 phase added to the specification or a decision record after approval is not a reason to stop.
 
 When the implementer returns that an approved requirement has to be changed or deleted, that is

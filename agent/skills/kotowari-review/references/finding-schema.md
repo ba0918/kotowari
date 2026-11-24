@@ -69,7 +69,7 @@ fills those.
 | `clause` | the ending 3 clause that fired: `still_present_twice` / `cause_returned` / `not_shrinking` / `overlap_after_fix` |
 | `lives_in` | `implementation` / `ir_or_record` |
 | `sent_to` | `fixer` / `consistency_phase` / `person` |
-| `line` | written by cycle only, each time it judges the line: `hit` (`true` / `false`) and `paths`, the paths that were hit (`[]` when not hit); `null` until first judged |
+| `line` | written by cycle only, each time it judges the line: `hit` (`true` / `false`) and `paths`, the paths that were hit (`[]` when not hit, and when the procedure failed, which is a hit with no paths, reported as a failure); `null` until first judged |
 | `fix_of` | written by cycle only: the branch name of the earlier request this request fixes, only when the request says it is a fix of an earlier one; `null` otherwise |
 | `ending` | written by cycle only, when the run ends: `kind` and `reason`; `null` until then |
 | `kind` | `merged` / `pr_open` (stopped at the pull request for the person) / `pushed` (no pull request could be created) / `limit` (round-trip limit) / `no_progress` / `hand_back` (to brainstorm or the person) |
