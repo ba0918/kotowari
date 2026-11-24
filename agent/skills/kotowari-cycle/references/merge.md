@@ -15,28 +15,38 @@ The line separates a change a person confirms from one that merges without them.
 git alone, never by an LLM and never by a kotowari command, and has two values only: hit or no hit.
 
 The merge target is the branch the pull request points at; before there is one, the branch decided
-for it, else the repository's default branch (`gh repo view --json defaultBranchRef`). Run this in
-the worktree, with `TARGET` set to the merge target:
+for it, else the repository's default branch (`gh repo view --json defaultBranchRef`). Run this
+with `sh` in the worktree, with `TARGET` set to the merge target; it is POSIX shell only:
 
-```bash
-set -euo pipefail
+```sh
+set -eu
 cd "$(git rev-parse --show-toplevel)"
 git fetch -q origin "$TARGET"
 base=$(git merge-base "origin/$TARGET" HEAD)
-if git cat-file -e HEAD:.kotowari/confirm-paths 2>/dev/null; then
-  mapfile -t specs < <(git show HEAD:.kotowari/confirm-paths | grep -v '^[[:space:]]*$' || true)
-  git diff --name-only --no-renames "$base" HEAD -- .kotowari/confirm-paths "${specs[@]}"
-else
-  echo .kotowari/confirm-paths
-fi
+list=.kotowari/confirm-paths
+git diff --name-only --no-renames "$base" HEAD -- "$list"
+git cat-file -e "HEAD:$list" 2>/dev/null || echo "$list"
+for rev in "origin/$TARGET" HEAD; do
+  git cat-file -e "$rev:$list" 2>/dev/null || continue
+  specs=$(git show "$rev:$list")
+  while IFS= read -r spec; do
+    case $spec in *[![:space:]]*) git diff --name-only --no-renames "$base" HEAD -- "$spec" ;; esac
+  done <<EOF
+$specs
+EOF
+done
 ```
 
 It compares the commit where the branch parted from the merge target with the head of the branch,
 and matches the changed paths against the pathspecs in `.kotowari/confirm-paths`, one per line,
-as written. `--no-renames` counts a moved file under both its old and its new path. The file itself
-always counts, listed or not, and a missing file prints its name, the same as a hit. Hit: the
-command printed a path or exited nonzero; the printed paths are the paths that were hit. No hit: it
-printed nothing and exited 0.
+as written, each line on its own so that no line can take a hit away from another. It reads both
+the merge target's current list and the branch's; a hit under either is a hit. `--no-renames`
+counts a moved file under both its old and its new path. A change to the file itself always
+counts, whatever it lists, and a branch without the file prints its name, the same as a hit. Hit:
+the command printed a path (a path can print more than once); the printed paths are the paths
+that were hit. No hit: it printed nothing and exited 0. A nonzero exit is a failure of the
+procedure, whatever it printed: treat it as a hit, record no paths, and report the failure with
+its error output, not as paths that were hit.
 
 A project lists in `.kotowari/confirm-paths` the definitions of its checks: CI, hooks, the scripts
 that run checks, and the configuration of mutation tests, of static analysis and of tool versions.
