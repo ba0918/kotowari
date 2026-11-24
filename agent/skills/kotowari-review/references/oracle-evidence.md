@@ -1,8 +1,8 @@
 # Evidence conditions
 
 The one statement of when a test, a check, or a fixture counts as evidence. Reviewers and every
-agent that edits for cycle get **Conditions** pasted into their prompt; brainstorm and plan read
-the whole file when they decide how a requirement is verified.
+agent that edits for cycle get **Conditions** pasted into their prompt; brainstorm reads
+the whole file when it decides how a requirement is verified.
 
 ## Conditions
 

@@ -16,7 +16,7 @@ specified result.
 
 ## Document review profile
 
-Target: specifications, plans, README files, guides, migration notes, and other explanatory
+Target: specifications, README files, guides, migration notes, and other explanatory
 documents, including requirements, examples, commands, named files and interfaces, completion
 evidence, and the hand-off to the next workflow station.
 

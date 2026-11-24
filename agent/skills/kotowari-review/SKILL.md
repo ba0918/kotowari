@@ -43,12 +43,12 @@ depth → Skill; `docs/` and top-level explanatory documents → Document; other
 configuration → Code. Several kinds → every profile that applies; each finding records which one
 it came from.
 
-Counterpart by target: plan → specification; specification → the brainstorm record while it
+Counterpart by target: specification → the brainstorm record while it
 exists, plus the repository's principles document if it keeps one (this workflow's convention is
 `docs/principles.md`; nothing guarantees it exists); other explanatory documents → specification if
 one exists. Code, and skill text, which is read as code, have no counterpart here: their agreement
 with the specification is the consistency phase's. A counterpart is read within the quality
-perspective: whether a plan or a document contradicts the specification is a quality question.
+perspective: whether a document contradicts the specification is a quality question.
 
 When the specification is the kotowari IR, a counterpart that is the specification is the IR store
 path. A review gets no list of IDs to cover. A deferred requirement or deferred scenario (the
@@ -80,7 +80,7 @@ that file.
 
 ## How a reviewer works
 
-- A plan or a document is read against its counterpart both ways: report what the counterpart
+- A document is read against its counterpart both ways: report what the counterpart
   requires and the target leaves out, and anything in the target that contradicts the counterpart.
   Treat an untraceable rule or section in a document as `human_judgment`, because deleting prose
   requires a judgment about meaning, and flag it for the terminal report as absent from the

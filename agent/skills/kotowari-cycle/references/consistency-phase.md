@@ -14,7 +14,7 @@ the code agree. It reads the code itself, never a record about the code.
   a direct edit, the main session's) commit on an IR-side finding, the change it left uncommitted in the worktree is in range too. The phase
   commits its own fixes only, never that change; when a resolution changes that code, it edits it
   in place and leaves it uncommitted for whoever made it.
-- The counterpart: the IR store path and a file listing the IDs the plan covers. For a topic with no
+- The counterpart: the IR store path and a file listing the IDs the cycle received. For a topic with no
   IR, the approved specification document, or the request when there is none.
 - The open findings of earlier runs that await a fix, with their IDs and commits; the open ones
   awaiting a person's judgment (`human_judgment`) as known findings, which it neither evaluates nor
@@ -35,7 +35,7 @@ the code agree. It reads the code itself, never a record about the code.
   values the diff uses are produced (the function or step that builds a value the changed code
   reads, even when the diff reuses it unchanged). Code includes text shipped as product, such as
   skill text: read it as code, not as a document.
-- **Items in range**: each item the diff touches, each item whose ID the plan covers, and each item
+- **Items in range**: each item the diff touches, each item whose ID the cycle received, and each item
   whose ID a mark the diff adds carries.
 - Around those items: the terms they use (the glossary), the relations between items (definition
   tables, `@about`, references), and the decision records that the items and terms in range cite.

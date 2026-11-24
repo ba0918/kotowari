@@ -1,11 +1,11 @@
 ---
 name: kotowari-iterate
-description: "Entry point beside the kotowari workflow for a task too small to need a specification or a plan: judge whether the request is small and run the cycle loop on it; anything bigger is turned away with the next skill to call. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to iterate, for one more fix, to fix this bit, to add this too, or to polish it a little more. 日本語キーワード: iterate ちょっと直して これも足して もう少し磨いて 小さいタスク"
+description: "Entry point beside the kotowari workflow for a task too small to need a specification: judge whether the request is small and run the cycle loop on it; anything bigger is turned away with the next skill to call. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to iterate, for one more fix, to fix this bit, to add this too, or to polish it a little more. 日本語キーワード: iterate ちょっと直して これも足して もう少し磨いて 小さいタスク"
 ---
 
 # Iterate
 
-Run cycle's loop on a **request** instead of a plan, once judged small. Delegate only what the
+Run cycle's loop on a **request** instead of an approved specification, once judged small. Delegate only what the
 caller's reason named: review always runs in separate contexts, judgment and implementation only
 when named. A person starts this skill from the conversation; cycle never calls it. Not for "look
 into this" (kotowari-investigate) or "check that it works" and "verify this" (review's diagnosis):
@@ -64,8 +64,8 @@ needs test-first but the enumeration lacks is added here — that gap alone does
 verdict: re-delegate once, then report none was possible and stop.
 
 Not small: stop with guidance (the failed condition with grounds, the destination, a ready-to-use
-invocation); never start brainstorm or plan yourself. Several failed: list all, destination from
-the highest row, since a clarified request may change verdicts 2 to 4. Guiding to plan with no
+invocation); never start brainstorm or cycle yourself. Several failed: list all, destination from
+the highest row, since a clarified request may change verdicts 2 to 4. Guiding to cycle with no
 specification (it cannot run without one) or offering "continue here anyway" is a counter-example.
 
 | Failed | Also handed back for | Destination | Ready-to-use form |
@@ -81,16 +81,14 @@ there meaning this run, with only these differences:
 
 | In cycle | Here |
 |---|---|
-| the plan path; the branch name containing the plan name | the request; a short name for the request |
-| the specification path read from the plan | the given path, or the specification the judgment found; requirement IDs only when the request touches IR items |
-| step 1's delegation of the remaining plan steps to implement | after the judgment, the request goes to the implementer below in one delegation |
-| the plan path in the fixer delegation | the request, and the specification path if any; the fixer also hands back a contradiction with the specification |
-| **Fixer only**'s "the plan's commands in order, unedited" (kotowari-cycle's `references/editing-contract.md`) | check commands come from the project's instructions, then the ecosystem's standard tool |
-| the choice of entry in **Resuming and running more** | a new request starts at step 1 after its judgment; when resuming that request or running more, use cycle's table without the row "a plan step left no git trace" |
+| the place of the specification and the requirement IDs from the brainstorm | the request; the given specification path, or the one the judgment found; requirement IDs only when the request touches IR items |
+| step 1's delegation to implement | after the judgment, the request goes to the implementer below in one delegation |
+| the place of the specification in the fixer delegation | the request, and the specification path if any; the fixer also hands back a contradiction with the specification |
+| the choice of entry in **Resuming and running more** | a new request starts at step 1 after its judgment; when resuming that request or running more, use cycle's table without the row "no findings file yet" |
 | the specification path and the file of IDs in the consistency phase delegation | the specification path and the request; the file of IDs only when the request touches IR items; with no specification, the request alone is the counterpart |
 | ending 4 and its "run more or accept the rest" choice | the destination is one of the guidance table's three; no choice is offered — the report adds the hand-back reason and the guidance, and the person restarts with a new request holding their answer |
-| "names an ID the plan covers" in **kotowari check before the terminal report** | names an ID the request's enumeration covers; with none, only the files the branch changed count |
-| any other word meaning the plan (out-of-plan changes, one plan at once) | the request; sentences about plan steps do not apply. Plan as a skill name or a destination stays |
+| "names an ID cycle received" in **kotowari check before the terminal report** | names an ID the request's enumeration covers; with none, only the files the branch changed count |
+| the requirements in "changes beyond the requirements" and "two requests at once" | the request |
 
 The **implementer** receives what the fixer receives — kotowari-cycle's
 `references/editing-contract.md` whole, with the Evidence conditions — the request replacing the

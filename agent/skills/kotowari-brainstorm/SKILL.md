@@ -132,7 +132,7 @@ bring the requirement back, or drop the reference.
    to the decision record is not a review here: the collation review in step 3 replaces it. A
    specification of a few standalone requirements gets none. New findings become branches; keep
    asking.
-2. Check the conditions for handing to plan: one deliverable (one branch); result in one sentence;
+2. Check the conditions for handing to cycle: one deliverable (one branch); result in one sentence;
    built and unbuilt scope; stored state and its lifetime decided or confirmed absent; external
    dependencies accepted or rejected; human decision points and what they see; an ID for every
    requirement.
@@ -178,4 +178,9 @@ bring the requirement back, or drop the reference.
       reason), the collation result, and the paths approved with a content identifier for each —
       never the full text, never the IR's diff as something they must read, and never a summary as
       the thing approved. Overview data and the table of contents revised in step 3 are committed
-      with them, but are not part of what is shown for approval. The person commits or says to.
+      with them, but are not part of what is shown for approval. The person commits or says to,
+      on the branch cycle will run on, not on the merge target.
+4. Once the person has committed the approved specification, or said it may be committed, go on
+   to kotowari-cycle in the same flow unless the person says to put it off. Hand it the IR store
+   path and the IDs of the requirements this brainstorm added or changed; the main session
+   prepares the worktree as cycle's **Inputs** say.
