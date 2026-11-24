@@ -115,4 +115,7 @@ whether the grounds recorded for each choice support it. A run returns:
   the fix (`not_applicable` on a `human_judgment` one, which no measurement settled); the claim says whether it is a gap, a disagreement, or a gap or contradiction within
   the IR; the evidence is the file and line or the ID; the oracle is the measurement or check that
   decided it; `commits` are the commits that resolved it;
-- the path of the decision record it wrote, if it decided anything.
+- the path of the decision record it wrote, if it decided anything;
+- the IDs of approved requirements it revised after showing them wrong by a contradiction or a
+  reproduction (a concretisation is not one). It finishes its work all the same; cycle only
+  withholds the request to merge.

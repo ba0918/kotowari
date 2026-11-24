@@ -22,7 +22,8 @@ settled direction, a preceding run's terminal report — into a self-contained t
 with no context can build from. "Fix that thing from before" arrives expanded into the file and the
 change; if one or two exchanges cannot, this skill does not run.
 
-Out: commits on the branch and a terminal report. Stopped at the judgment: no commit, guidance
+Out: commits on the branch and a terminal report; a converged run merges the same way as cycle's
+step 7 (kotowari-cycle's `references/merge.md`). Stopped at the judgment: no commit, guidance
 only. Stopped by a hand-back during implementation: the commits so far stay (never deleted or
 rewound), and the terminal report carries artifacts, commits, and diff view plus the guidance.
 

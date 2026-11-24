@@ -3,7 +3,8 @@ name: kotowari-cycle
 description: >-
   Workflow station of the kotowari workflow: the orchestrator that runs an approved specification
   on a branch through implementation, the consistency phase, review, and fixing until the findings
-  converge, then hands the result to the person once. Use only in a repository that uses
+  converge, then has the hosting service merge it or leaves the pull request to the person. Use
+  only in a repository that uses
   kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to run a kotowari cycle on a
   specification, or to resume one. 日本語キーワード:
   サイクル 実装ループ 改善ループ オーケストレータ 仕様を実装する
@@ -13,8 +14,9 @@ description: >-
 
 Run implement → consistency phase → review → fix on one approved specification until the visible
 findings are gone.
-Delegate everything; cycle itself never implements, reviews, or fixes. The person sees only the terminal
-report; the loop does not stop for them except in the cases below.
+Delegate everything; cycle itself never implements, reviews, or fixes. A converged run merges
+without waiting for a person unless `references/merge.md` says a person confirms; the loop does not
+stop for them except in the cases below.
 
 ## Inputs
 
@@ -63,6 +65,7 @@ both full and diff reviews.
    diff loop until none remain.
    With no such reason, the diff loop clearing every visible finding ends the quality review.
 6. Consistency phase once more (**Consistency phase**); then converged.
+7. Merge, as `references/merge.md` says.
 
 Visible findings = open findings whose final action is `auto_fix` or `fix_and_verify`. Findings with
 `human_judgment` or `record_only` stay open for the terminal report. A `consistency` finding goes
@@ -186,8 +189,8 @@ computing it from the findings file.
    loop ends here only when that step says so. A review that cannot succeed ends the loop at once.
 4. A delegate handed back to brainstorm.
 
-Endings 2–4 add to the terminal report the choice "run more or accept the rest and finish" and
-any hand-back reason.
+Only ending 1 goes on to step 7. Endings 2–4 ask for no merge; they add to the terminal report the
+choice "run more or accept the rest and finish" and any hand-back reason.
 
 ## Resuming and running more
 
@@ -203,6 +206,7 @@ Either way, go on at the first row that holds. Cycle keeps no other state for re
 
 | Situation | Go on at |
 |---|---|
+| the branch has a pull request | **Resuming** in `references/merge.md` |
 | no findings file yet | step 1 (implement decides what remains from `git log` and the requirements still without a marked test), then step 2 |
 | "run more" after an ending a phase rerun raised | that step: 2 (then on to 3) or 6 |
 | "run more" otherwise | step 4 |
@@ -214,8 +218,8 @@ Whether to skip a phase run is decided again by its measure.
 
 ## kotowari check before the terminal report
 
-Right before the terminal report, run `kotowari check` and `kotowari status --format text`, and
-put both outputs in the report. Read them as the kotowari skill's scene check
+After the run converges and before step 7, run `kotowari check` and
+`kotowari status --format text`, and put both outputs in the terminal report. Read them as the kotowari skill's scene check
 (`references/findings.md`) says. When the last line of the status is `complete false`, the reason
 is in the check's findings if `findings` shows a nonzero `error`, and in the problem record if
 `items` shows a nonzero `flag`.
@@ -256,6 +260,9 @@ with its default and the word that reverses it, and the one-line reason for each
 When a premise attempt ran or a premise went to the person: the premise ladder of each attempt in
 the findings file. When a full review ran optional seats: their attendance, as the review skill's
 `references/optional-seats.md` says under **Merging and reporting**.
-This is the person's one check; merging is theirs. Cycle never merges, publishes, deletes branches
-or worktrees, edits the specification itself (the consistency phase does, as its reference says),
-manages issues, or runs two requests at once.
+After step 7: where the pull request is and whether the merge was asked for; for a stop, its cause
+as `references/merge.md` shows it, with no summary of the change; when merging by itself is not
+available, that and why.
+Cycle never performs a merge (the hosting service merges what step 7 asks for), publishes, changes
+a repository setting, deletes branches or worktrees, edits the specification itself (the
+consistency phase does, as its reference says), manages issues, or runs two requests at once.
