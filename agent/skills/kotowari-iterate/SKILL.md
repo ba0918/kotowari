@@ -72,7 +72,7 @@ specification (it cannot run without one) or offering "continue here anyway" is 
 |---|---|---|---|
 | 1 (ambiguous) | the request read two ways (implementer) | the person, via the main session | where the readings diverge, and the question to ask |
 | 2 (specification decision), 3 (contradiction) | a missing design decision (2), a contradiction with the specification (3) — implementer or fixer | brainstorm | `/kotowari-brainstorm <topic>`, with the existing specification path if any |
-| 4 (impact unreadable) | a file outside the enumeration (implementer only) | plan if a specification exists, else brainstorm | `/kotowari-plan <IR store path> <requirement IDs>` or `/kotowari-brainstorm <topic>` |
+| 4 (impact unreadable) | a file outside the enumeration (implementer only) | cycle if a specification exists, else brainstorm | `/kotowari-cycle <IR store path> <requirement IDs>` or `/kotowari-brainstorm <topic>` |
 
 ## The loop
 

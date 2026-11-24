@@ -55,7 +55,7 @@ tool for the ecosystem. If none decides it, hand back to plan.
 
 Read the requirements and scenarios the plan names with `kotowari query ID`: one call gives the
 text, the tests already marked for it, and its reverse references. Take only the keys you need
-with `jq` (the kotowari-plan skill's **Reading the requirements** has examples). Never read
+with `jq` (the kotowari skill's `references/findings.md` has an example). Never read
 `kotowari list` whole.
 
 When writing a test, read the kotowari skill's scene mark (`references/mark.md`) and mark the test

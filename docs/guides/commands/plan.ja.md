@@ -3,7 +3,7 @@
 [English](plan.md) | 日本語
 
 計画書（実装の手順を書いた Markdown の文書）を1つ読み、kotowari の本体に同梱したスキーマで形を検査します。
-kotowari-plan の工程で計画書を書き終えたとき、承認を求める前に使います。
+計画書を書き終えたとき、その形を確かめるのに使います。
 
 ## 書式
 
@@ -176,7 +176,7 @@ docs/plans/a.md:45 [error] invalid_plan missing_required_field: field "Done when
 
 <!-- @kotowari[EX-core-332:680b57dc, EX-core-333:7fc19aa4, EX-core-334:37e6d2a2, EX-core-348:33e00663] -->
 
-形の揃った計画書です（kotowari-plan の skill の [例の計画書](../../../agent/skills/kotowari-plan/references/plan-example.md) と同じもの）。
+形の揃った計画書です。
 
 ````markdown
 # Plan: report the words a document uses too often
@@ -403,5 +403,4 @@ docs/plans/broken.md:52 [error] invalid_plan undeclared_heading: undeclared sect
 - 仕様: [計画書の検査（plan の IR）](../../ir/core/plan.ja.md)、[引数](../../ir/core/cli.ja.md#REQ-core-190)
 - 共通の書式と停止: [cli.md](../cli.ja.md)
 - 指摘の種類の一覧: [findings.md](../findings.ja.md)
-- 計画書の書き方: kotowari-plan の skill の [step-template.md](../../../agent/skills/kotowari-plan/references/step-template.md)
 - 要求の ID を確かめる: [kotowari query](query.ja.md)

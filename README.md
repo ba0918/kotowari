@@ -156,7 +156,7 @@ Currently, marks on tests can be read only from Rust. The IR checks, however, wo
 `agent/skills/` provides Claude Code skills for using kotowari together with an LLM.
 
 - `kotowari` teaches the LLM how to write the IR and decision records, how to fix findings, and where to put marks
-- `kotowari-*` are optional skills that use kotowari to drive the workflow from brainstorming through planning, implementation and review
+- `kotowari-*` are optional skills that use kotowari to drive the workflow from brainstorming through implementation, review and merge
 
 Installation instructions are in [agent/skills/README.md](agent/skills/README.md).
 

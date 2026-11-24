@@ -1,6 +1,6 @@
 ---
 name: kotowari-using-workflow
-description: "Entry decider beside the kotowari workflow: decides which skill a new request starts from — direct editing, iterate, brainstorm, plan then cycle, adopt, or investigate — and how much of the workflow runs. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked where to start, which skill to use, how much review a change needs, or to decide the entry point. 日本語キーワード: どこから始めるか 入口を決めて どの skill から 入口 使い分け ルーティング レビューは要るか 工程を減らす"
+description: "Entry decider beside the kotowari workflow: decides which skill a new request starts from — direct editing, iterate, brainstorm, cycle, adopt, or investigate — and how much of the workflow runs. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked where to start, which skill to use, how much review a change needs, or to decide the entry point. 日本語キーワード: どこから始めるか 入口を決めて どの skill から 入口 使い分け ルーティング レビューは要るか 工程を減らす"
 ---
 
 # Using the workflow
@@ -18,8 +18,8 @@ environment's own rules. The boundary is the need to read.
 
 ## Add nothing by default
 
-Each station — brainstorm, plan, plan review, delegated implementation, the small-task
-judgment, review, the loop — costs a separate-context agent that re-reads the repository. None
+Each station — brainstorm, delegated implementation, the small-task judgment, review, the
+loop — costs a separate-context agent that re-reads the repository. None
 is added by default; adding one needs a reason. State the line below, then act. The person
 overrides it; never wait for approval.
 
@@ -30,7 +30,6 @@ outside reach · interdependent change sites · what would notice a mistake → 
 | Station | Added when |
 |---|---|
 | brainstorm | the request reads two ways and one or two exchanges cannot settle it |
-| plan | more than an implementer holds at once, or a person takes over midway |
 | delegated implementation | enough volume to pollute this session's context |
 | review | several interdependent change sites, so the implementation can contradict itself |
 | the loop | a fix can spread beyond where it was made |
@@ -59,7 +58,7 @@ cannot be enumerated. A fifth needs a real incident behind it.
 | The line added no station | this session edits directly |
 | A small task | kotowari-iterate |
 | A medium-or-larger change with no specification, no grounds to judge by, or one that reads two ways | kotowari-brainstorm |
-| A medium-or-larger change with a specification | kotowari-plan, then kotowari-cycle |
+| A medium-or-larger change with a specification | kotowari-cycle |
 | Bringing an existing specification or existing code into the IR, or not knowing whether the IR matches the implementation | kotowari-adopt |
 | A defect whose cause is unknown, or a question needing reading or searching | kotowari-investigate |
 
@@ -68,7 +67,7 @@ it comes before every other row, the first included: a request of its kind goes 
 even when the line added no station. The other rows below the first fire only for what the line
 named. A small task is kotowari-iterate's own
 definition; an unreadable impact or a specification decision makes a change medium or larger. A
-request to change a specification goes to kotowari-brainstorm with its path, not the plan row;
+request to change a specification goes to kotowari-brainstorm with its path, not the cycle row;
 re-sorting a topic's existing IR against its implementation, without deciding changes, is
 kotowari-adopt. A bare "fix it" leaves the person the path of this session fixing it directly. "Make
 the error message clearer" with no wording given reads two ways: kotowari-brainstorm, not a small
@@ -97,7 +96,7 @@ including skipped-run reasons and unresolved defaults with the word that reverse
 
 ## Exceptions
 
-Work with an approved plan or in-progress records is not rewound; it enters from where it left
-off, and its skill's resume rules own the records. "Implement it" with an approved plan is
-kotowari-cycle — implementing by hand there is a counter-example. A skill outside the table fires
+Work with an approved specification or in-progress records is not rewound; it enters from where
+it left off, and its skill's resume rules own the records. "Implement it" with an approved
+specification is kotowari-cycle — implementing by hand there is a counter-example. A skill outside the table fires
 on its own description.

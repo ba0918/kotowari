@@ -93,7 +93,7 @@ repeat the same delegation; after implement, step 2 still runs.
 
 A review's counterpart follows the review skill's **Inputs**. Only the consistency phase gets
 the specification path with the plan's IDs: for IR, narrow `kotowari list` to those IDs
-(select by `.id`; see kotowari-plan's **Reading the requirements**) and pass the result as a file,
+(select by `.id` with `jq`) and pass the result as a file,
 never the whole list. For a topic with no IR, pass the plan's specification path and no ID file.
 
 ## Consistency phase
