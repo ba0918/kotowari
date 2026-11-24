@@ -130,7 +130,7 @@ the branch's pull request, whether this session asked or an earlier one did
 `autoMergeRequest` is a request):
 
 - before delegating anything that adds a commit to the branch, and before the push of step 2 of
-  **Opening and asking**: a resume at any row of cycle's table, "run more", and a new
+  **Opening and asking**: a resume at any row of cycle's table, "run more", a later request on the same branch, and a new
   kotowari-iterate request on a reused branch read it from the hosting service first, since the
   session that asked may have ended;
 - when the run no longer converges, the line is hit, or a case of **When a person confirms** holds;
