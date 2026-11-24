@@ -216,7 +216,7 @@ worktree, so that **Cleanup** in `references/merge.md` does not remove it. It is
 never deleted by the workflow. A file whose `ending` is `merged` belongs to an earlier request on a
 branch of the same name and is not a resume: rename it beside itself to
 `<branch>.merged-<n>.json`, with the lowest free `n`, and start a new file. If another file exists
-when cycle starts, this is a resume: note its `ending`, then set it to null; keep its findings, continue round
+when cycle starts, this is a resume: keep its findings, continue round
 numbers from its maximum, and read its `premise_attempts` as `references/premise-step.md` says, so
 that a run that already made its attempt does not make another. Ending 3's streaks (`still_present` twice running; new visible findings
 not shrinking; overlap after a fix) count from this start only; a closed cause returning counts
@@ -227,12 +227,12 @@ Either way, go on at the first row that holds. Cycle keeps no other state for re
 
 | Situation | Go on at |
 |---|---|
-| the branch has a pull request | **Resuming** in `references/merge.md` |
 | no findings file yet | step 1 (implement decides what remains from `git log` and the requirements still without a marked test), then step 2 |
 | "run more" after an ending a phase rerun raised | that step: 2 (then on to 3) or 6 |
 | "run more" otherwise | step 4 |
-| resume, `first_review_head` null | step 2 |
+| resume, `first_review_head` null | step 1 as above (implement returns at once when nothing remains), then step 2 |
 | resume, a visible quality finding open | step 4 |
+| resume, the branch has a pull request | **Resuming** in `references/merge.md` |
 | resume otherwise | step 6 |
 
 Whether to skip a phase run is decided again by its measure.

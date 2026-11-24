@@ -54,8 +54,9 @@ Of the runs that converged, a person confirms the merge in these three cases onl
 - a finding is still open as `human_judgment`, whatever raised it (the consistency phase, a review,
   or a finding the person chose to leave);
 - the consistency phase revised an approved requirement after showing by a contradiction or a
-  reproduction that it was wrong (the phase returns those IDs). The phase finishes its work all the
-  same; only the request to merge is withheld.
+  reproduction that it was wrong: a `consistency` finding in the findings file whose claim starts
+  with `revised <ID>`. The phase finishes its work all the same; only the request to merge is
+  withheld.
 
 In each case cycle creates the pull request, does not ask for it to be merged, leaves it open, and
 shows the person where it is and what caused the stop: the paths that were hit, the open findings,
@@ -82,7 +83,8 @@ the existing stop rules.
    (`gh api repos/{owner}/{repo}/branches/<target> --jq '.protection.required_status_checks.contexts'`)
    or by a ruleset
    (`gh api repos/{owner}/{repo}/rules/branches/<target> --jq '[.[] | select(.type == "required_status_checks")]'`).
-   When either is absent or cannot be confirmed (a command fails), stop at the pull request, report
+   Each is confirmed only by `true` and by a non-empty list from either source; when either is
+   absent or cannot be confirmed (a command fails), stop at the pull request, report
    that merging by itself is not available and why, and leave the merge to the person.
 5. Ask the hosting service to merge once the required checks pass:
    `gh pr merge <pr> --auto --<method>`, with the method the repository reports
@@ -135,15 +137,18 @@ whether merging by itself was asked for, the state of the checks, and whether it
 
 | The host shows | Go on at |
 |---|---|
-| merged, and the findings file had no `ending` when cycle started | the watch has ended at the merge: **Cleanup** |
-| merged after an earlier run ended | the person merged it: record `merged`, clean up nothing |
+| merged | write `ending` `merged` and report; clean up nothing, since this run's watch did not see the merge |
 | closed without a merge | report it to the person |
 | open, merging asked for | **Watching** |
-| open, not asked for | step 1 of **Opening and asking**, the pull request already there |
+| open, not asked for | step 6 of cycle's **Loop**, then step 1 of **Opening and asking**, the pull request already there |
+
+A resume reaches this table only with no visible finding open; one still open goes through
+cycle's **Loop** first.
 
 ## Cleanup
 
-Only when cycle saw the merge itself. A run the person merges later is not cleaned up.
+Only when cycle saw the merge itself, in this run's watch. A run the person merges later is not
+cleaned up.
 
 1. Confirm that the findings file lies outside the worktree. If it does not, leave everything and
    report.
