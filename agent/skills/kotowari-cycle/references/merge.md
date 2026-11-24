@@ -123,7 +123,9 @@ The watch ends when:
 - the checks passed and the hosting service reports that it does not merge (the merge request is
   gone while the pull request is open, or `mergeStateStatus` is `DIRTY` or `BLOCKED`): hand the
   pull request to the person with that reason;
-- in a run that stopped at the pull request, the checks passed.
+- in a run that stopped at the pull request, the checks passed;
+- the merge target requires no check (the two queries of step 4 of **Opening and asking** return
+  none): there is nothing to watch, and the watch ends at once.
 
 Then write `ending`: `merged`, or `pr_open` with the cause as its reason (`pushed` when no pull
 request could be created).
