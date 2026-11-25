@@ -1,0 +1,3 @@
+# 検索の道具（ripgrep、fd）が既定で読み飛ばす場所
+# 切り替える前の古い形の文書。今の決まりの根拠として読まない（docs/frozen/README.md）
+docs/frozen/
