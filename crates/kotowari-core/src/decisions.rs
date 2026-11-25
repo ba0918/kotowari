@@ -540,13 +540,15 @@ pub(crate) fn check_tests(
     }
 }
 
-/// "kotowari list" の、確認することの行の1件ずつ（docs/decisions/core/confirmations.md）
+/// "kotowari list" の、形の正しい ID を持つ確認することの行の1件ずつ（docs/decisions/core/confirmations.md）
 pub(crate) fn list_items(
     documents: &[Document],
     markers: &[crate::tests_discovery::TestMarker],
 ) -> Vec<crate::list::ListItem> {
     let tests_by_id = crate::list::tests_by_id(markers);
+    // 形の誤った ID の行は check が invalid_id にしている。IR の ID の無い項目と同じく出さない
     rows(documents)
+        .filter(|(_, _, row)| is_confirmation_id(&row.id))
         .map(|(doc, decision, row)| {
             crate::list::ListItem::Confirmation(crate::list::ConfirmationItem {
                 id: row.id.clone(),

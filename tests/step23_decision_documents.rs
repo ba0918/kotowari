@@ -1028,3 +1028,24 @@ fn a_row_of_a_decision_with_a_wrong_state_line_has_no_state() {
     let (_, text, _) = run(tmp.path(), &["query", "C-greet-1", "--format", "text"]);
     assert_eq!(text.lines().last(), Some("  decision - 挨拶する"), "{text}");
 }
+
+// @kotowari[C-core-confirm-5]
+#[test]
+fn list_leaves_out_a_row_without_a_well_formed_id() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[confirmed(
+            "挨拶する",
+            "提案",
+            &["挨拶が出る", "C-greet-2 名前が入る"],
+        )]),
+    );
+    let (_, stdout, _) = run(tmp.path(), &["list", "--format", "text"]);
+    assert_eq!(
+        stdout,
+        "C-greet-2 - 名前が入る docs/decisions/greet.md:20 tests=0\n"
+    );
+}
