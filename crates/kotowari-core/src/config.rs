@@ -59,6 +59,9 @@ pub struct MutantsConfig {
 pub struct DecisionsConfig {
     pub records: String,
     pub adr: String,
+    /// 決定の文書の置き場（docs/decisions/core/decision-documents.md）。鍵が無ければ None で、
+    /// 決定の文書を読まない。古い形の置き場と並べて読む間は、書いたリポジトリだけが読む
+    pub documents: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -88,6 +91,7 @@ impl Default for Config {
             decisions: DecisionsConfig {
                 records: "docs/decision/records".to_string(),
                 adr: "docs/decision/adr".to_string(),
+                documents: None,
             },
             tests: TestsConfig {
                 files: vec!["src/**/*.rs".to_string(), "tests/**/*.rs".to_string()],
@@ -162,6 +166,8 @@ struct RawDecisions {
     records: Option<Option<String>>,
     #[serde(default, deserialize_with = "deserialize_nullable")]
     adr: Option<Option<String>>,
+    #[serde(default, deserialize_with = "deserialize_nullable")]
+    documents: Option<Option<String>>,
 }
 
 #[derive(serde::Deserialize)]
@@ -393,6 +399,7 @@ impl Config {
             decisions: Some(Some(RawDecisions {
                 records: Some(Some(self.decisions.records.clone())),
                 adr: Some(Some(self.decisions.adr.clone())),
+                documents: self.decisions.documents.clone().map(Some),
             })),
             tests: Some(Some(RawTests {
                 files: Some(Some(self.tests.files.clone())),
@@ -451,7 +458,18 @@ impl Config {
                 let adr = non_null_or_default(d.adr, "decisions.adr", defaults.decisions.adr)?;
                 check_not_absolute(&adr, "decisions.adr")?;
                 let adr = crate::normalize_path(&adr);
-                DecisionsConfig { records, adr }
+                let documents = match non_null(d.documents, "decisions.documents")? {
+                    Some(path) => {
+                        check_not_absolute(&path, "decisions.documents")?;
+                        Some(crate::normalize_path(&path))
+                    }
+                    None => None,
+                };
+                DecisionsConfig {
+                    records,
+                    adr,
+                    documents,
+                }
             }
             None => defaults.decisions,
         };

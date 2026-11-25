@@ -105,6 +105,11 @@ finding_kinds! {
     TranslationSwitcherInvalid => "translation_switcher_invalid",
     LinkLanguageMismatch => "link_language_mismatch",
     LinkToRecord => "link_to_record",
+    // 決定の文書の指摘（docs/decisions/core/decision-documents.md）
+    DecisionStateInvalid => "decision_state_invalid",
+    DecisionSectionMissing => "decision_section_missing",
+    TopicLeadMissing => "topic_lead_missing",
+    ConfirmationWithoutTest => "confirmation_without_test",
 }
 
 impl FindingKind {
@@ -184,7 +189,11 @@ impl FindingKind {
             | FindingKind::TranslationStructureMismatch
             | FindingKind::TranslationSwitcherInvalid
             | FindingKind::LinkLanguageMismatch
-            | FindingKind::LinkToRecord => "error",
+            | FindingKind::LinkToRecord
+            | FindingKind::DecisionStateInvalid
+            | FindingKind::DecisionSectionMissing
+            | FindingKind::TopicLeadMissing
+            | FindingKind::ConfirmationWithoutTest => "error",
         }
     }
 }

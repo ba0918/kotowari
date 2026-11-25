@@ -53,6 +53,10 @@ impl CheckReport {
     pub fn findings(&self) -> &[crate::Finding] {
         &self.0.findings
     }
+    /// 決定の文書の数。置き場を設定に書いていなければ None
+    pub fn decisions(&self) -> Option<&crate::DecisionTally> {
+        self.0.decisions.as_ref()
+    }
     pub fn tests(&self) -> &BTreeMap<String, crate::TestFileTally> {
         &self.0.tests
     }

@@ -22,7 +22,8 @@ pub struct StatusResult {
     /// `面`の数。"surface.rules" が空の一覧なら3つとも 0（REQ-core-229）
     pub surface: SurfaceTally,
     pub findings: Findings,
-    /// REQ-core-165: `誤り`が0件で、かつ`問題の記録`の`項目`が0件のときだけ true
+    /// REQ-core-165: `誤り`が0件で、かつ`問題の記録`の`項目`が0件のときだけ true。
+    /// 決定の文書の「未決」の節に項目があっても false（C-core-docs-12）
     pub complete: bool,
     /// 追加の指摘の群の数（TBL-core-042）。check と同じ
     #[serde(skip)]

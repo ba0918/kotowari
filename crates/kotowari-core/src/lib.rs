@@ -11,6 +11,8 @@ macro_rules! readonly {
 #[cfg(test)]
 extern crate self as kotowari_core;
 pub mod config;
+mod decisions;
+pub use decisions::DecisionTally;
 mod deferred;
 mod deferred_notices;
 mod doc_kind;
@@ -86,6 +88,9 @@ pub(crate) struct CheckResult {
     /// REQ-core-228: "surface.rules" が空の一覧でないときだけ出す
     #[serde(skip_serializing_if = "Option::is_none")]
     pub surface: Option<surface::Unlisted>,
+    /// 決定の文書の置き場を設定に書いたときだけ出す
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub decisions: Option<DecisionTally>,
     /// 追加の指摘の群の数（TBL-core-042）。出し方は呼び出し側が決める
     #[serde(skip)]
     pub(crate) groups: Vec<GroupTally>,

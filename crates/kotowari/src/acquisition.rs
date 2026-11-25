@@ -1,5 +1,6 @@
 use crate::{
-    Tool, guides, ir, overview, sources, surface, test_files as tests_discovery, translations,
+    Tool, decisions, guides, ir, overview, sources, surface, test_files as tests_discovery,
+    translations,
 };
 use kotowari_core::*;
 use std::{
@@ -263,7 +264,8 @@ fn load_configured(
     }
 
     let mut assembly = translations::Assembly::new(&base, cfg);
-    let preparation = ir::prepare(&base, cfg, &mut assembly)?;
+    let mut preparation = ir::prepare(&base, cfg, &mut assembly)?;
+    decisions::push(&base, cfg, &mut preparation)?;
     let (records, adr) = sources::read_texts(&base, cfg)?;
     let (tests, test_paths) = match reading {
         TestReading::Analyzed => {

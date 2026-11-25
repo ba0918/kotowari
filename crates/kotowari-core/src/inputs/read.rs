@@ -6,6 +6,9 @@ pub(super) struct ReadPreparation {
     pub(super) policy: Policy,
     pub(super) originals: Originals,
     pub(super) docs: Vec<crate::ir::IrDocument>,
+    pub(super) decisions: Vec<crate::decisions::Document>,
+    /// 決定の文書を読んだときに出た形の指摘
+    pub(super) decision_findings: Vec<crate::Finding>,
 }
 
 impl ReadPreparation {
@@ -14,7 +17,14 @@ impl ReadPreparation {
             policy,
             originals: Originals::default(),
             docs: vec![],
+            decisions: vec![],
+            decision_findings: vec![],
         }
+    }
+    pub(super) fn parse_decisions(&mut self, source: &Text) {
+        let document =
+            crate::decisions::parse(&source.path, &source.text, &mut self.decision_findings);
+        self.decisions.push(document);
     }
     pub(super) fn parse_ir(
         &mut self,
@@ -60,7 +70,17 @@ impl ReadPreparation {
             &mut findings,
         );
         crate::record_form::check_record_forms(&context, &mut findings);
-        let known_ids = crate::collect_known_ids(&docs);
+        let mut decisions = self.decisions;
+        decisions.sort_by(|left, right| left.path.as_bytes().cmp(right.path.as_bytes()));
+        findings.extend(self.decision_findings);
+        let decision_tally = config
+            .decisions
+            .documents
+            .is_some()
+            .then(|| crate::decisions::tally(&decisions));
+        crate::decisions::check_ids(&decisions, &mut findings);
+        let mut known_ids = crate::collect_known_ids(&docs);
+        known_ids.extend(crate::decisions::known_ids(&decisions));
         crate::terms::check_terms_and_vague_words_with_duplicates(
             &docs,
             &config.vague_words,
@@ -79,6 +99,7 @@ impl ReadPreparation {
             &config.ir,
             &mut findings,
         );
+        crate::decisions::check_tests(&decisions, &discovered.markers, &mut findings);
         crate::deferred_notices::check(&docs, &config.ir, &discovered.markers, &mut findings);
         let source_texts = records
             .iter()
@@ -89,6 +110,8 @@ impl ReadPreparation {
             policy: self.policy,
             originals: self.originals,
             docs,
+            decisions,
+            decision_tally,
             findings,
             discovered,
             context,
@@ -131,6 +154,25 @@ impl RepositoryReadPreparation {
             .map_err(|error| native_error(&error))?;
         self.inner.parse_ir(&source, &source.path)
     }
+    /// 決定の文書を1つ加える。path は`基準のディレクトリ`からの相対パス
+    pub fn push_decision_document(
+        &mut self,
+        source: NativeSourceText,
+    ) -> Result<(), crate::StopReason> {
+        let source: Text = source.into();
+        if !self.ir_identities.insert(source.identity.clone()) {
+            return Err(native_error(&InputError::InvalidInput(format!(
+                "duplicate source identity: {}",
+                source.path
+            ))));
+        }
+        self.inner
+            .originals
+            .admit([&source])
+            .map_err(|error| native_error(&error))?;
+        self.inner.parse_decisions(&source);
+        Ok(())
+    }
     pub fn finish(
         self,
         records: Vec<NativeSourceText>,
@@ -150,6 +192,9 @@ pub struct ReadModel {
     pub(super) policy: Policy,
     pub(super) originals: Originals,
     pub(crate) docs: Vec<crate::ir::IrDocument>,
+    pub(crate) decisions: Vec<crate::decisions::Document>,
+    /// 決定の文書の置き場を設定に書いたときだけ持つ
+    pub(crate) decision_tally: Option<crate::decisions::DecisionTally>,
     pub(crate) findings: Vec<crate::Finding>,
     pub(crate) discovered: crate::tests_discovery::DiscoveredTests,
     pub(crate) context: crate::sources::SourceContext,

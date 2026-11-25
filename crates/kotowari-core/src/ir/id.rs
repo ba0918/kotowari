@@ -61,7 +61,7 @@ pub(super) fn split_id(s: &str) -> Option<(Option<&str>, &str)> {
 }
 
 /// ID の名前の形（小文字の英字で始まり、2文字目からは小文字の英数字と "-"。REQ-core-124）
-pub(super) fn is_valid_id_name(name: &str) -> bool {
+pub(crate) fn is_valid_id_name(name: &str) -> bool {
     let mut chars = name.chars();
     match chars.next() {
         Some(c) if c.is_ascii_lowercase() => {}

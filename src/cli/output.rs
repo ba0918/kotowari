@@ -108,6 +108,9 @@ pub fn check(value: &CheckReport) -> Value {
     if let Some(surface) = value.surface() {
         result["surface"] = json!({"unspecified":surface.unspecified()});
     }
+    if let Some(decisions) = value.decisions() {
+        result["decisions"] = json!({"documents":decisions.documents(),"decisions":decisions.decisions(),"confirmations":decisions.confirmations()});
+    }
     result
 }
 pub fn status(value: &StatusReport) -> Value {

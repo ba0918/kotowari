@@ -3,6 +3,8 @@ ir: docs/ir
 decisions:
   records: docs/decision/records
   adr: docs/decision/adr
+  # 決定の文書の置き場（docs/decisions/core/decision-documents.md）。古い形の IR と並べて読む
+  documents: docs/decisions
 tests:
   # 印を探す先。クレートごとに明示する。ID がドメインの名前を持つので
   # 別の製品の印が kotowari 自身の要求の裏付けになることはない。

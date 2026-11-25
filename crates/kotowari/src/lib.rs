@@ -3,6 +3,7 @@ mod acquisition;
 #[cfg(feature = "tokio")]
 mod asynchronous;
 mod cache;
+mod decisions;
 #[cfg(feature = "tokio")]
 pub use asynchronous::{AsyncOptions, AsyncProject};
 mod guides;

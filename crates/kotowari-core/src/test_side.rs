@@ -16,7 +16,8 @@ fn condition(kind: FindingKind) -> Condition {
     match kind {
         FindingKind::RequirementWithoutTest
         | FindingKind::ScenarioWithoutTest
-        | FindingKind::TestWithoutId => Condition::Always,
+        | FindingKind::TestWithoutId
+        | FindingKind::ConfirmationWithoutTest => Condition::Always,
         FindingKind::InvalidMarker | FindingKind::UnresolvedReference => Condition::InTestFile,
         FindingKind::UnparsableFile => Condition::InTestFileNotSurface,
         FindingKind::AlgorithmWithoutDefinition
@@ -86,7 +87,10 @@ fn condition(kind: FindingKind) -> Condition {
         | FindingKind::TranslationStructureMismatch
         | FindingKind::TranslationSwitcherInvalid
         | FindingKind::LinkLanguageMismatch
-        | FindingKind::LinkToRecord => Condition::Never,
+        | FindingKind::LinkToRecord
+        | FindingKind::DecisionStateInvalid
+        | FindingKind::DecisionSectionMissing
+        | FindingKind::TopicLeadMissing => Condition::Never,
     }
 }
 

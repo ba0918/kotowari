@@ -7,6 +7,7 @@ The configuration file is `.kotowari/config.yaml`, directly under the base direc
 | ir | Path of a directory (one string) | docs/ir |
 | decisions.records | Path of a directory (one string). Decisions in the files under it can be cited as sources. Markdown that is not a decision record (form contracts, supplementary documents) can also be placed there | docs/decision/records |
 | decisions.adr | Path of a directory (one string) | docs/decision/adr |
+| decisions.documents | Path of a directory (one string). The place of the decision documents, one topic per Markdown file, read beside the IR; the tree `docs/frozen/` is skipped. When the key is absent, no decision document is read; when the directory does not exist, check stops as for the other places | None |
 | tests.files | List of globs | src/\*\*/\*.rs, tests/\*\*/\*.rs |
 | guides.files | List of globs. The places of the guides, the user-facing documents whose guide marks are compared with the IR (guides.md) | Empty list |
 | tests.rust.attributes | List of attribute paths added to "#[test]" | Empty list |

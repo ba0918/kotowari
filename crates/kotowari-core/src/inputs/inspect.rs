@@ -97,6 +97,9 @@ impl CheckPreparation {
             self.surface.unwrap_or_default(),
             &self.findings,
         );
+        // C-core-docs-12、C-core-docs-13: 決定の文書の「未決」の項目も0件のときだけ complete
+        status.complete =
+            status.complete && !crate::decisions::has_open_items(&self.read.decisions);
         status.groups = self.groups.clone();
         status.documents.files += side_files;
         status.documents.lines += side_lines;
@@ -117,6 +120,7 @@ impl CheckPreparation {
             surface: self.surface.map(|tally| crate::surface::Unlisted {
                 unspecified: tally.unspecified,
             }),
+            decisions: self.read.decision_tally,
             groups: self.groups,
             test_side: crate::test_side::TestSideFiles::new(
                 &self.read.discovered.files,

@@ -1,7 +1,7 @@
 use crate::acquisition::read_utf8_file;
 use kotowari_core::config::Config;
 use std::path::Path;
-fn collect_ir_paths(
+pub(crate) fn collect_ir_paths(
     dir: &Path,
     prefix: &str,
     ir_path: &str,
