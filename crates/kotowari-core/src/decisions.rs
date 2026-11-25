@@ -71,6 +71,17 @@ impl DecisionTally {
     readonly!(copy documents: usize, decisions: usize, confirmations: usize);
 }
 
+/// 状態ごとの決定の数（status の "decisions"、C-core-confirm-9）。状態の行が誤った決定はどちらにも数えない
+#[derive(Debug, Clone, Copy, Default, serde::Serialize)]
+pub struct DecisionStates {
+    pub(crate) proposed: usize,
+    pub(crate) implemented: usize,
+}
+
+impl DecisionStates {
+    readonly!(copy proposed: usize, implemented: usize);
+}
+
 const STATE: &str = "状態:";
 const PROPOSED: &str = "提案";
 const IMPLEMENTED: &str = "実装済み";
@@ -428,6 +439,19 @@ fn confirmation(item: &Node, lines: &[&str]) -> Confirmation {
         name: rest.split_whitespace().collect::<Vec<_>>().join(" "),
         body,
     }
+}
+
+/// 提案の決定と実装済みの決定を分けて数える
+pub(crate) fn states(documents: &[Document]) -> DecisionStates {
+    let mut states = DecisionStates::default();
+    for decision in documents.iter().flat_map(|doc| &doc.decisions) {
+        match decision.state {
+            Some(State::Proposed) => states.proposed += 1,
+            Some(State::Implemented) => states.implemented += 1,
+            None => {}
+        }
+    }
+    states
 }
 
 /// 読んだ文書の数

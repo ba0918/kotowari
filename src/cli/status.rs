@@ -63,6 +63,14 @@ review_with_how_to_verify={} review_without_how_to_verify={} without_examples={}
         surface.specified(),
         surface.unspecified()
     );
+    // C-core-confirm-9: 決定の文書の置き場を設定に書いたときだけ出す
+    if let Some(decisions) = result.decisions() {
+        println!(
+            "decisions proposed={} implemented={}",
+            decisions.proposed(),
+            decisions.implemented()
+        );
+    }
     let findings = result.findings();
     println!(
         "findings error={} notice={}",

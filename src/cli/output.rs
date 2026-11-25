@@ -125,7 +125,12 @@ pub fn status(value: &StatusReport) -> Value {
     let g = value.guides();
     let u = value.surface();
     let f = value.findings();
-    json!({"documents":{"files":d.files(),"lines":d.lines()},"items":{"requirement":i.requirement(),"table":i.table(),"property":i.property(),"scenario":i.scenario(),"flag":i.flag()},"requirements":{"unit":r.unit(),"property":r.property(),"proof":r.proof(),"review":r.review(),"with_tests":r.with_tests(),"without_tests":r.without_tests(),"review_with_how_to_verify":r.review_with_how_to_verify(),"review_without_how_to_verify":r.review_without_how_to_verify(),"without_examples":r.without_examples(),"deferred":r.deferred()},"scenarios":{"with_tests":s.with_tests(),"without_tests":s.without_tests(),"deferred":s.deferred()},"tests":{"marks":t.marks(),"files":file_tallies(t.files())},"guides":{"files":g.files(),"marks":g.marks()},"overview":overview(value.group(kotowari::OVERVIEW_GROUP)),"surface":{"total":u.total(),"specified":u.specified(),"unspecified":u.unspecified()},"findings":{"error":f.error(),"notice":f.notice()},"complete":value.complete()})
+    let mut result = json!({"documents":{"files":d.files(),"lines":d.lines()},"items":{"requirement":i.requirement(),"table":i.table(),"property":i.property(),"scenario":i.scenario(),"flag":i.flag()},"requirements":{"unit":r.unit(),"property":r.property(),"proof":r.proof(),"review":r.review(),"with_tests":r.with_tests(),"without_tests":r.without_tests(),"review_with_how_to_verify":r.review_with_how_to_verify(),"review_without_how_to_verify":r.review_without_how_to_verify(),"without_examples":r.without_examples(),"deferred":r.deferred()},"scenarios":{"with_tests":s.with_tests(),"without_tests":s.without_tests(),"deferred":s.deferred()},"tests":{"marks":t.marks(),"files":file_tallies(t.files())},"guides":{"files":g.files(),"marks":g.marks()},"overview":overview(value.group(kotowari::OVERVIEW_GROUP)),"surface":{"total":u.total(),"specified":u.specified(),"unspecified":u.unspecified()},"findings":{"error":f.error(),"notice":f.notice()},"complete":value.complete()});
+    if let Some(decisions) = value.decisions() {
+        result["decisions"] =
+            json!({"proposed":decisions.proposed(),"implemented":decisions.implemented()});
+    }
+    result
 }
 /// REQ-core-295: "written"、"removed"、"unchanged" の3つの鍵だけ
 pub fn overview_build(value: &kotowari::OverviewBuild) -> Value {

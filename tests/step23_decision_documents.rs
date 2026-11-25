@@ -933,3 +933,55 @@ fn query_of_a_wrapped_confirmation_row_joins_its_name_and_keeps_its_lines_as_the
         serde_json::json!(["- C-greet-1 挨拶が", "  二行で出る"])
     );
 }
+
+/// status を走らせて (JSON, text の出力) を返す
+fn status(tmp: &Path) -> (serde_json::Value, String) {
+    let (_, stdout, stderr) = run(tmp, &["status"]);
+    let value = serde_json::from_str(&stdout).unwrap_or_else(|e| panic!("{e}: {stdout}{stderr}"));
+    let (_, text, _) = run(tmp, &["status", "--format", "text"]);
+    (value, text)
+}
+
+// @kotowari[C-core-confirm-9]
+#[test]
+fn status_counts_the_proposed_and_the_implemented_decisions_apart() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[
+            bare("挨拶する", "提案"),
+            bare("別れる", "実装済み"),
+            bare("手を振る", "提案"),
+        ]),
+    );
+    write(
+        tmp.path(),
+        "docs/decisions/wave.md",
+        &topic(&[bare("会釈する", "提案"), bare("黙る", "決定")]),
+    );
+    let (value, text) = status(tmp.path());
+    assert_eq!(
+        value["decisions"],
+        serde_json::json!({"proposed": 3, "implemented": 1})
+    );
+    assert!(
+        text.lines()
+            .any(|line| line == "decisions proposed=3 implemented=1"),
+        "{text}"
+    );
+}
+
+// @kotowari[C-core-confirm-9]
+#[test]
+fn status_without_the_place_in_the_configuration_shows_no_decision_counts() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), None);
+    let (value, text) = status(tmp.path());
+    assert!(value.get("decisions").is_none(), "{value}");
+    assert!(
+        !text.lines().any(|line| line.starts_with("decisions ")),
+        "{text}"
+    );
+}

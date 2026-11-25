@@ -22,6 +22,9 @@ pub struct StatusResult {
     /// `面`の数。"surface.rules" が空の一覧なら3つとも 0（REQ-core-229）
     pub surface: SurfaceTally,
     pub findings: Findings,
+    /// 状態ごとの決定の数。決定の文書の置き場を設定に書いたときだけ持つ（C-core-confirm-9）
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub decisions: Option<crate::decisions::DecisionStates>,
     /// REQ-core-165: `誤り`が0件で、かつ`問題の記録`の`項目`が0件のときだけ true。
     /// 決定の文書の「未決」の節に項目があっても false（C-core-docs-12）
     pub complete: bool,
@@ -175,6 +178,7 @@ pub fn build(
         guides,
         surface,
         findings: counts,
+        decisions: None,
         groups: Vec::new(),
     }
 }

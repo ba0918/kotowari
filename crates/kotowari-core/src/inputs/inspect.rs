@@ -100,6 +100,13 @@ impl CheckPreparation {
         // C-core-docs-12、C-core-docs-13: 決定の文書の「未決」の項目も0件のときだけ complete
         status.complete =
             status.complete && !crate::decisions::has_open_items(&self.read.decisions);
+        status.decisions = self
+            .read
+            .config()
+            .decisions
+            .documents
+            .is_some()
+            .then(|| crate::decisions::states(&self.read.decisions));
         status.groups = self.groups.clone();
         status.documents.files += side_files;
         status.documents.lines += side_lines;
