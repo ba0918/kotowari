@@ -93,9 +93,13 @@ binary's `finished in` time and find the cause of any that exceeds 0.5 s.
 
 ## Specification
 
-The specification is the IR under `docs/ir/`, and nowhere else — `docs/ir/core/` for `kotowari`
-and `docs/ir/schema/` for `kotowari-markdown-schema`. `.kotowari/config.yaml` points `check` at
-`docs/ir/`, so one run covers both products.
+The specification is the IR under `docs/ir/` and the decision documents under `docs/decisions/`,
+and nowhere else — `docs/ir/core/` for `kotowari`, `docs/ir/schema/` for
+`kotowari-markdown-schema`, and `docs/decisions/view/` for `kotowari-markdown-view`, the first part
+moved to the decision documents (`docs/decisions/core/decision-documents.md`).
+`.kotowari/config.yaml` points `check` at both, so one run covers every product. `docs/frozen/`
+holds the old-form documents a moved part replaced; `check` does not read it, and it is not
+evidence of current rules.
 
 The documents under `docs/ir/schema/` are checked by `kotowari check` alone, the same as those
 under `docs/ir/core/`. Neither carries a `$schema` frontmatter, so `kotowari-mds check` does not read them:
