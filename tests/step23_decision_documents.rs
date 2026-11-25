@@ -985,3 +985,46 @@ fn status_without_the_place_in_the_configuration_shows_no_decision_counts() {
         "{text}"
     );
 }
+
+// @kotowari[C-core-confirm-5]
+#[test]
+fn list_sorts_the_confirmation_rows_with_the_ir_items_by_path() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/ir/a.md",
+        "# 題名\n\n範囲。\n\n## Requirements\n\n### REQ-001: 例\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n文である。\n",
+    );
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[confirmed("挨拶する", "提案", &["C-greet-1 挨拶が出る"])]),
+    );
+    let (code, stdout, stderr) = run(tmp.path(), &["list"]);
+    assert_eq!(code, Some(0), "{stderr}");
+    let value: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    let ids: Vec<&str> = value["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item["id"].as_str().unwrap())
+        .collect();
+    assert_eq!(ids, vec!["C-greet-1", "REQ-001"]);
+}
+
+// @kotowari[C-core-confirm-5]
+#[test]
+fn a_row_of_a_decision_with_a_wrong_state_line_has_no_state() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[confirmed("挨拶する", "決定", &["C-greet-1 挨拶が出る"])]),
+    );
+    let value = query(tmp.path(), "C-greet-1");
+    assert_eq!(value["items"][0]["state"], serde_json::Value::Null);
+    let (_, text, _) = run(tmp.path(), &["query", "C-greet-1", "--format", "text"]);
+    assert_eq!(text.lines().last(), Some("  decision - 挨拶する"), "{text}");
+}
