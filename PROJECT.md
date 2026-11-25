@@ -56,6 +56,13 @@ fails. The check reads the advisory database as it is on the day of the run, so 
 failing on a branch that changed no dependency; a lock update usually clears it. Run it locally
 with cargo-deny installed; it is not part of `scripts/gates.sh` because it needs the network.
 
+The job last runs `scripts/check-third-party-licenses.sh`, which generates with cargo-about the
+list of dependency licence texts a release puts in each archive, for both released packages and
+both targets, and fails when a licence is missing from `scripts/third-party/about.toml` or a
+crate built into the binary is missing from the list. The release workflow generates the same
+list after the tag is pushed, so this is where a failure must show first. A licence added to
+`deny.toml` is added to that file too.
+
 `lefthook.yml` defines the local gates: `pre-commit` runs the secret scan and `kotowari check`,
 and `pre-push` runs the full test suite and `kotowari check` with no exemptions. The mutation
 tests do not run in the hooks; they blocked every push for one to two hours.
@@ -163,7 +170,8 @@ To release:
 3. The pushed tag starts `.github/workflows/release.yml`. It reruns the tests, `kotowari check` and
    the version check, runs the mutation tests in the diff from the product's previous release tag
    (the whole workspace when there is none), builds `x86_64-unknown-linux-gnu` and `aarch64-apple-darwin` binaries as
-   `<product>-v<version>-<target>.tar.gz` (binary, README, licences) each with a `.sha256`, and
+   `<product>-v<version>-<target>.tar.gz` (binary, README, licences, and `THIRD-PARTY-LICENSES.txt` with the licence texts of the
+   crates built into the binary) each with a `.sha256`, and
    creates the GitHub Release with that version's changelog section as its notes.
 
 A pushed tag is published: never move or re-create it. A published release is fixed by releasing
