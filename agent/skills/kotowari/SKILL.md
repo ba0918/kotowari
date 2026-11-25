@@ -1,11 +1,11 @@
 ---
 name: kotowari
-description: "Read, scene by scene, how to write kotowari's IR and decision records, how to use check, and how to place marks. Trigger words: kotowari, IR, docs/ir, @kotowari, marks, mutants, mutation tests, guides, guide_stale, overview, overview build, overview serve, surface, surface_without_spec, languages, labels, translation, i18n.yaml, translation_stale. 日本語キーワード: 印 変異テスト ガイド 全体像 面 対 翻訳 多言語"
+description: "Read, scene by scene, how to write kotowari's decision documents, IR and decision records, how to use check, and how to place marks. Trigger words: kotowari, decision documents, docs/decisions, IR, docs/ir, @kotowari, marks, mutants, mutation tests, guides, guide_stale, overview, overview build, overview serve, surface, surface_without_spec, languages, labels, translation, i18n.yaml, translation_stale. 日本語キーワード: 決定の文書 確認すること 読んで確認 未決 印 変異テスト ガイド 全体像 面 対 翻訳 多言語"
 ---
 
 ## Scope
 
-This skill governs IR, record and marker use and reading the tool results. Workflow decisions belong to the named workflow skills.
+This skill governs decision document, IR, record and marker use and reading the tool results. Workflow decisions belong to the named workflow skills.
 
 kotowari is a tool for writing a normalised specification (the IR) in Markdown and checking it with `kotowari check`. It also has the read commands `kotowari list` (the list of items), `kotowari query` (one item's body and its reverse references) and `kotowari status` (a tally of whether everything is in place), `kotowari mutants`, which reads the results of mutation tests, and `kotowari plan`, which checks the form of one plan file against the schema bundled in kotowari. `kotowari overview build` and `kotowari overview serve` render the overview data an LLM writes into pages that show the whole picture of a topic. This skill has you read a reference per scene and conveys how to write the IR and decision records, how to read the check results, and how to place marks.
 
@@ -21,6 +21,7 @@ Choosing the scene: if the person names one, follow it. Otherwise choose from th
 | Scene | When | Reference to read |
 |---|---|---|
 | setup | There is no place for the files yet; first use | config.md |
+| decide | Writing or changing a decision document (a topic file under `decisions.documents`): a new decision, a state, the rows to confirm, an overturned decision, the open section | decision-documents.md |
 | write | Writing the IR and decision records during a brainstorm | ir-form.md and records.md |
 | check | Reading the result of `kotowari check` or `kotowari plan`, or the output of `kotowari list`, `kotowari query` or `kotowari status`; putting `kotowari check` into hooks or CI | findings.md |
 | mark | Placing marks while writing tests | mark.md |
@@ -35,6 +36,7 @@ Before the approval in write, also read collate.md.
 Which work uses each scene:
 
 - setup — once, at the start of a project
+- decide — whenever a decision document is written or changed: a brainstorm writing decisions, an implementer turning a state or correcting a sentence to the facts, and whoever writes an item of the open section
 - write — when writing the IR and decision records in a brainstorm session
 - check — brainstorm (before approval), cycle (when reading requirements, and before the final report), implement (check commands), and whoever checks a plan file's form with `kotowari plan`
 - mark — when implement and the fixer write tests
