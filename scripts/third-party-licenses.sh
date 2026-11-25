@@ -30,8 +30,9 @@ esac
 cd "$(dirname "$0")/.."
 
 # cargo tree の1行は "<名前> v<版>"、ワークスペースのパッケージは後ろに " (<ディレクトリ>)" が付く。
-# 手続きマクロの " (proc-macro)" と、2回目に出た印の " (*)" は落とす
-linked="$(cargo tree --locked -p "$package" -e normal --target "$target" --prefix none --format '{p}' |
+# 手続きマクロの " (proc-macro)" と、2回目に出た印の " (*)" は落とす。
+# 色は切る。CARGO_TERM_COLOR=always の CI では、パイプの先でも色の制御文字が行に混ざる
+linked="$(cargo tree --color never --locked -p "$package" -e normal --target "$target" --prefix none --format '{p}' |
     sed -e 's/ (\*)$//' -e 's/ (proc-macro)$//' | sort -u)"
 
 # cargo-about は、渡したマニフェストのパッケージを依存の起点にする。根のマニフェストのままだと
