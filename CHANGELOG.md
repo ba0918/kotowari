@@ -5,6 +5,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-25
+
 ### Changed
 
 - **BREAKING** A converged `kotowari-cycle` run (and a `kotowari-iterate` run) now opens a pull request and asks the hosting service to merge it once the required checks pass, without waiting for you, and watches those checks: a failing required check becomes a finding and is fixed in the loop. It stops at the open pull request and shows you why when the diff from where the branch parted from the merge target touches a path listed in `.kotowari/confirm-paths` (or that file itself), when a finding awaits your judgment, or when the consistency phase revised an approved requirement. A project without `.kotowari/confirm-paths` always stops at the pull request. List in that file, one git pathspec per line, the definitions of your checks: CI, hooks, check scripts, and the configuration of mutation tests, static analysis and tool versions; blanks around a line and a carriage return at its end are ignored. The merge target is the branch the brainstorm or you decided, else the repository's default branch, and the first review and the first consistency phase run read from where the branch parted from it. Merging by itself is used only when the repository allows it, the merge target requires at least one check, it requires no approving review, and the pull request points at the merge target the cycle received; enabling that setting is yours, and the cycle never changes a repository setting or performs a merge itself. Required checks that have not reported yet are waited for, not read as failures, and after they pass the cycle waits for the merge while the request stands; it hands the pull request to you only when the request is gone, or on a conflict or a branch behind its target. When a read of the required checks fails, the cycle does not ask for the merge: it watches the checks that show and hands the pull request to you with the failure. When it cannot read whether a request to merge still stands on the pull request, it pushes nothing and tells you, except on a host where it cannot create a pull request. When it stops for you, it shows the pull request and the cause as soon as the pull request is created.
@@ -147,7 +149,8 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 - Ten Claude Code skills in `agent/skills/`. `kotowari` teaches how to write the IR and decision records, fix findings and place marks. The nine starting with `kotowari-` run the workflow from brainstorm through plan, implementation and review on top of kotowari (optional).
 - Two ways to install: prebuilt binaries on GitHub Releases (Linux x86_64 and macOS arm64, with SHA256), and `cargo install --git https://github.com/ba0918/kotowari --tag kotowari-v0.1.0 kotowari` with the version pinned by tag. Passing the tag to `--pin` of `gh skill install` installs the skills at a pinned version.
 
-[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.6.0...HEAD
+[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-v0.7.0...HEAD
+[0.7.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.6.0...kotowari-v0.7.0
 [0.6.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.5.0...kotowari-v0.6.0
 [0.5.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.4.0...kotowari-v0.5.0
 [0.4.0]: https://github.com/ba0918/kotowari/compare/kotowari-v0.3.0...kotowari-v0.4.0
