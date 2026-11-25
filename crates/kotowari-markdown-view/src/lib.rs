@@ -1,8 +1,8 @@
 //! 描画の入力（文書の並び、参照の表、目次、言語タグ、UI の文字、ほかの言語）からページの並びを作る
-//! 描画のエンジン。どの言語の文字も中に持たない（REQ-view-027）。
+//! 描画のエンジン。どの言語の文字も中に持たない（C-view-languages-3）。
 //!
-//! このクレートの仕様は `docs/ir/view/` の IR である。ファイル、ネットワーク、環境変数に触れず、
-//! 入力の形も検査しない（REQ-view-003）。
+//! このクレートの仕様は `docs/decisions/view/` の決定の文書である。ファイル、ネットワーク、環境変数に触れず、
+//! 入力の形も検査しない（C-view-rendering-3）。
 #![deny(clippy::print_stdout, clippy::print_stderr)]
 
 mod html;
@@ -12,22 +12,22 @@ mod text;
 
 use std::collections::BTreeMap;
 
-/// 1回の描画で受け取るものの全体（REQ-view-001）
+/// 1回の描画で受け取るものの全体（C-view-rendering-1）
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct RenderInput {
     pub documents: Vec<Document>,
     pub references: Vec<Reference>,
     /// 一覧の見出しと、文書を並べる入れ子と順番
     pub toc: TocGroup,
-    /// ページの言語タグ。"html" の要素の lang の属性になる（REQ-view-026）
+    /// ページの言語タグ。"html" の要素の lang の属性になる（C-view-languages-1）
     pub language: String,
-    /// UI の文字。鍵から文字列への対応（TBL-view-002）。view が書く文字はすべてここから取る
+    /// UI の文字。鍵から文字列への対応（C-view-languages-3）。view が書く文字はすべてここから取る
     pub ui: BTreeMap<String, String>,
-    /// 同じページをほかの言語で描いた置き場の並び（REQ-view-029）
+    /// 同じページをほかの言語で描いた置き場の並び（C-view-languages-5）
     pub others: Vec<OtherLanguage>,
 }
 
-/// ほかの言語の1件（REQ-view-029）
+/// ほかの言語の1件（C-view-languages-5）
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct OtherLanguage {
     /// その言語の名前。リンクの文字になる
@@ -36,7 +36,7 @@ pub struct OtherLanguage {
     pub place: String,
 }
 
-/// 目次の群。目次そのものも1つの目次の群である（REQ-view-001）
+/// 目次の群。目次そのものも1つの目次の群である（C-view-rendering-1）
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct TocGroup {
     pub title: String,
@@ -54,7 +54,7 @@ pub enum TocItem {
     Group(TocGroup),
 }
 
-/// 1つのページの元。ファイルではない（REQ-view-001）
+/// 1つのページの元。ファイルではない（C-view-rendering-1）
 #[derive(Debug, Clone, PartialEq)]
 pub struct Document {
     /// ページの名前 "<name>.html" と一覧の並びに使う
@@ -62,7 +62,7 @@ pub struct Document {
     pub title: String,
     /// 冒頭に置く lead の部品
     pub lead: Part,
-    /// lead に続き、最初の節より前に置く部品の並び（REQ-view-006）
+    /// lead に続き、最初の節より前に置く部品の並び（C-view-rendering-10）
     pub preamble: Vec<Part>,
     pub sections: Vec<Section>,
 }
@@ -71,7 +71,7 @@ pub struct Document {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Section {
     pub heading: String,
-    /// IR が変わった後にまだ見直していない節か（REQ-view-009）
+    /// IR が変わった後にまだ見直していない節か（C-view-rendering-15）
     pub stale: bool,
     pub blocks: Vec<Block>,
 }
@@ -97,12 +97,12 @@ pub struct Reference {
     /// 部品の "refs" か "ref" の欄に書かれた文字列
     pub key: String,
     pub label: String,
-    /// 選ぶと開く本文。無ければ表示名だけで描く（REQ-view-030）
+    /// 選ぶと開く本文。無ければ表示名だけで描く（C-view-languages-9）
     pub body: Option<String>,
     pub state: ReferenceState,
 }
 
-/// 参照の状態（REQ-view-001）
+/// 参照の状態（C-view-rendering-1）
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReferenceState {
     Current,
@@ -120,7 +120,7 @@ pub struct Page {
 const STYLE: &str = include_str!("style.css");
 const INDEX: &str = "index.html";
 
-/// UI の文字を引く。無い鍵は空の文字にする（入力の形は検査しない。REQ-view-003）
+/// UI の文字を引く。無い鍵は空の文字にする（入力の形は検査しない。C-view-rendering-3）
 #[derive(Clone, Copy)]
 pub(crate) struct Ui<'a>(&'a BTreeMap<String, String>);
 
@@ -129,7 +129,7 @@ impl Ui<'_> {
     pub(crate) fn text(&self, key: &str) -> String {
         html::escape(self.0.get(key).map_or("", String::as_str))
     }
-    /// 数を入れる鍵の文字の "{n}" をその数の10進に置き換えて逃がしたもの（REQ-view-028）
+    /// 数を入れる鍵の文字の "{n}" をその数の10進に置き換えて逃がしたもの（C-view-languages-4）
     pub(crate) fn count(&self, key: &str, number: usize) -> String {
         html::escape(
             &self
@@ -148,7 +148,7 @@ pub(crate) struct Frame<'a> {
 }
 
 impl Frame<'_> {
-    /// ほかの言語の同じページへのリンク。ほかの言語が無ければ何も描かない（REQ-view-029）
+    /// ほかの言語の同じページへのリンク。ほかの言語が無ければ何も描かない（C-view-languages-5、C-view-languages-7）
     fn languages(&self, page: &str) -> String {
         if self.others.is_empty() {
             return String::new();
@@ -176,7 +176,7 @@ impl Frame<'_> {
     }
 }
 
-/// 描画の入力からページの並びを返す。ページは名前のバイト順に並ぶ（REQ-view-002）
+/// 描画の入力からページの並びを返す。ページは名前のバイト順に並ぶ（C-view-rendering-5）
 pub fn render(input: &RenderInput) -> Vec<Page> {
     let ui = Ui(&input.ui);
     let frame = Frame {
@@ -214,7 +214,7 @@ fn page_name(document: &Document) -> String {
 }
 
 /// 文書のページ。目次の中の位置、題名、節のアウトライン、冒頭の lead、lead に続く冒頭の部品、節、
-/// 同じ目次の群の文書の順に描く（REQ-view-006、REQ-view-019、REQ-view-020、REQ-view-022）
+/// 同じ目次の群の文書の順に描く（C-view-rendering-10、C-view-navigation-6、C-view-navigation-7、C-view-navigation-11）
 fn document_page(
     document: &Document,
     place: Option<&index::Place>,
@@ -224,7 +224,7 @@ fn document_page(
     frame: &Frame,
 ) -> String {
     let outline = outline(&document.sections, ui);
-    // アウトラインのあるページは、広い画面でアウトラインを本文の左に置く（REQ-view-023）
+    // アウトラインのあるページは、広い画面でアウトラインを本文の左に置く（C-view-navigation-15）
     let class = if outline.is_empty() {
         "page"
     } else {
@@ -240,7 +240,7 @@ fn document_page(
         body.push_str(&parts::part(part, refs));
     }
     for (index, section) in document.sections.iter().enumerate() {
-        // REQ-view-009: 古い節の見出しの隣に、まだ見直していないことを示す印を描く
+        // C-view-rendering-15: 古い節の見出しの隣に、まだ見直していないことを示すマーカーを描く
         let mark = if section.stale {
             format!(
                 "<span class=\"stale-mark\">{}</span>",
@@ -264,13 +264,13 @@ fn document_page(
     frame.page(&page_name(document), &document.title, &body)
 }
 
-/// 節の場所。節の並びの中の位置から作るので、同じ見出しの節が2つあっても重ならない（REQ-view-022）
+/// 節の場所。節の並びの中の位置から作るので、同じ見出しの節が2つあっても重ならない（C-view-navigation-12）
 fn section_anchor(index: usize) -> String {
     format!("section-{index}")
 }
 
 /// 節の見出しを並べ、それぞれをその節へのリンクにしたアウトライン。節が無ければ何も描かない
-/// （REQ-view-022）
+/// （C-view-navigation-11）
 fn outline(sections: &[Section], ui: Ui) -> String {
     if sections.is_empty() {
         return String::new();
@@ -279,7 +279,7 @@ fn outline(sections: &[Section], ui: Ui) -> String {
         .iter()
         .enumerate()
         .map(|(index, section)| {
-            // REQ-view-022: REQ-view-009 の印と同じ意味の短い印
+            // C-view-navigation-14: C-view-rendering-15 のマーカーと同じ意味の短い印
             let mark = if section.stale {
                 format!(
                     "<span class=\"outline-stale\">{}</span>",
@@ -298,10 +298,10 @@ fn outline(sections: &[Section], ui: Ui) -> String {
     format!("<nav class=\"outline\">\n<ul>\n{items}</ul>\n</nav>\n")
 }
 
-/// 目次の中の位置。目次に名前が無ければ一覧へのリンクだけ（REQ-view-019）
+/// 目次の中の位置。目次に名前が無ければ一覧へのリンクだけ（C-view-navigation-6、C-view-navigation-9）
 fn crumbs(place: Option<&index::Place>, ui: Ui) -> String {
     let links = match place {
-        // 区切りの印は共通のスタイルが描き、ページの文字には書かない（REQ-view-027）
+        // 区切りの印は共通のスタイルが描き、ページの文字には書かない（C-view-languages-3）
         Some(place) => place
             .chain
             .iter()
@@ -315,7 +315,7 @@ fn crumbs(place: Option<&index::Place>, ui: Ui) -> String {
     format!("<nav class=\"crumbs\">{links}</nav>\n")
 }
 
-/// 同じ目次の群の直下の、ほかの名前の文書へのリンク（REQ-view-020）
+/// 同じ目次の群の直下の、ほかの名前の文書へのリンク（C-view-navigation-7）
 fn siblings(name: &str, group: &TocGroup, documents: &index::Documents) -> String {
     let links: String = group
         .items
@@ -342,7 +342,7 @@ fn siblings(name: &str, group: &TocGroup, documents: &index::Documents) -> Strin
 }
 
 /// 節の中身を描く。続く半分の幅の部品は先頭から2つずつ組にして左右に並べ、
-/// 組にならずに残った1つとほかのブロックは幅いっぱいに描く（REQ-view-015）
+/// 組にならずに残った1つとほかのブロックは幅いっぱいに描く（C-view-parts-7）
 fn blocks(blocks: &[Block], refs: &parts::Refs) -> String {
     let mut out = String::new();
     let mut index = 0;
@@ -368,7 +368,7 @@ fn blocks(blocks: &[Block], refs: &parts::Refs) -> String {
     out
 }
 
-/// 描ける部品の種類の名前（TBL-view-001）
+/// 描ける部品の種類の名前（C-view-parts-1）
 pub const PART_KINDS: &[&str] = &[
     "lead",
     "flow",
@@ -381,7 +381,7 @@ pub const PART_KINDS: &[&str] = &[
 ];
 
 /// 種類の名前から、その種類の部品のスキーマ（JSON Schema の文字列）を返す。
-/// スキーマはクレートに埋め込んであり、知らない名前には何も返さない（REQ-view-012）
+/// スキーマはクレートに埋め込んであり、知らない名前には何も返さない（C-view-parts-3）
 pub fn part_schema(kind: &str) -> Option<&'static str> {
     Some(match kind {
         "lead" => include_str!("../schemas/lead.json"),

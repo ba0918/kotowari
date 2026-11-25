@@ -14,7 +14,7 @@ use diff::changed;
 #[path = "common/ui.rs"]
 mod ui;
 
-/// TBL-view-001 の種類の名前
+/// 部品の8種の名前（C-view-parts-1）
 const KINDS: [&str; 8] = [
     "lead",
     "flow",
@@ -26,7 +26,7 @@ const KINDS: [&str; 8] = [
     "quiz",
 ];
 
-/// 種類ごとの、スキーマに合う部品の例（REQ-view-014）
+/// 種類ごとの、スキーマに合う部品の例（C-view-parts-5）
 fn examples() -> Vec<(&'static str, Value)> {
     vec![
         (
@@ -153,7 +153,7 @@ fn draw(kind: &str, value: Value) -> String {
     text[start..].to_string()
 }
 
-// @kotowari[EX-view-007, REQ-view-012, REQ-view-011]
+// @kotowari[C-view-parts-3]
 #[test]
 fn ex_view_007_schemas_exist_for_the_eight_kinds_and_not_for_others() {
     assert_eq!(PART_KINDS, KINDS);
@@ -195,7 +195,7 @@ fn open_objects(schema: &Value, at: &str, found: &mut Vec<String>) {
     }
 }
 
-// @kotowari[REQ-view-013]
+// @kotowari[C-view-parts-4]
 #[test]
 fn req_view_013_every_object_in_every_part_schema_is_closed() {
     for kind in KINDS {
@@ -206,7 +206,7 @@ fn req_view_013_every_object_in_every_part_schema_is_closed() {
     }
 }
 
-// @kotowari[EX-view-009, REQ-view-013]
+// @kotowari[C-view-parts-4]
 #[test]
 fn ex_view_009_an_object_without_additional_properties_is_caught() {
     let schema = json!({
@@ -220,7 +220,7 @@ fn ex_view_009_an_object_without_additional_properties_is_caught() {
     assert_eq!(found, ["/$defs/item"]);
 }
 
-// @kotowari[REQ-view-014, EX-view-009]
+// @kotowari[C-view-parts-5]
 #[test]
 fn req_view_014_every_kind_has_examples_that_fit_their_schema_and_render() {
     let examples = examples();
@@ -242,7 +242,7 @@ fn req_view_014_every_kind_has_examples_that_fit_their_schema_and_render() {
     }
 }
 
-// @kotowari[REQ-view-015]
+// @kotowari[C-view-parts-6]
 #[test]
 fn req_view_015_every_schema_accepts_only_half_as_the_width() {
     for (kind, value) in examples() {
@@ -258,7 +258,7 @@ fn req_view_015_every_schema_accepts_only_half_as_the_width() {
     }
 }
 
-// @kotowari[EX-view-008, REQ-view-015]
+// @kotowari[C-view-parts-7]
 #[test]
 fn ex_view_008_two_following_half_parts_sit_side_by_side() {
     let cards = |title: &str| {
@@ -286,7 +286,7 @@ fn ex_view_008_two_following_half_parts_sit_side_by_side() {
     assert!(end <= at("全幅の状態"));
 }
 
-// @kotowari[REQ-view-015]
+// @kotowari[C-view-parts-7]
 #[test]
 fn req_view_015_a_half_part_left_over_and_others_are_drawn_full_width() {
     let half = |title: &str| {
@@ -312,7 +312,7 @@ fn req_view_015_a_half_part_left_over_and_others_are_drawn_full_width() {
     assert!(end <= at("三"));
 }
 
-// @kotowari[REQ-view-011, TBL-view-001]
+// @kotowari[C-view-parts-1]
 #[test]
 fn tbl_view_001_lead_draws_the_conclusion_and_the_points() {
     let drawn = draw(
@@ -323,7 +323,7 @@ fn tbl_view_001_lead_draws_the_conclusion_and_the_points() {
     assert!(drawn.find("点A").unwrap() < drawn.find("点B").unwrap());
 }
 
-// @kotowari[REQ-view-011, TBL-view-001]
+// @kotowari[C-view-parts-1]
 #[test]
 fn tbl_view_001_flow_draws_columns_of_boxes_on_a_grid_from_left_to_right() {
     let drawn = draw(
@@ -343,7 +343,7 @@ fn tbl_view_001_flow_draws_columns_of_boxes_on_a_grid_from_left_to_right() {
     );
 }
 
-// @kotowari[REQ-view-011, TBL-view-001]
+// @kotowari[C-view-parts-1]
 #[test]
 fn tbl_view_001_steps_are_a_numbered_sequence() {
     let drawn = draw(
@@ -355,7 +355,7 @@ fn tbl_view_001_steps_are_a_numbered_sequence() {
     assert!(drawn.contains("本文"));
 }
 
-// @kotowari[REQ-view-011, TBL-view-001]
+// @kotowari[C-view-parts-1]
 #[test]
 fn tbl_view_001_cards_draw_a_title_and_a_list_of_items() {
     let drawn = draw(
@@ -371,7 +371,7 @@ fn tbl_view_001_cards_draw_a_title_and_a_list_of_items() {
     assert_ne!(drawn, plain, "the tone changes how the card is drawn");
 }
 
-// @kotowari[REQ-view-011, TBL-view-001]
+// @kotowari[C-view-parts-1, C-view-parts-2]
 #[test]
 fn tbl_view_001_status_draws_a_label_for_each_of_the_four_states() {
     let drawn = draw(
@@ -395,7 +395,7 @@ fn tbl_view_001_status_draws_a_label_for_each_of_the_four_states() {
     }
 }
 
-// @kotowari[REQ-view-011, TBL-view-001]
+// @kotowari[C-view-parts-1]
 #[test]
 fn tbl_view_001_compare_strikes_through_the_before() {
     let drawn = draw(
@@ -406,7 +406,7 @@ fn tbl_view_001_compare_strikes_through_the_before() {
     assert!(drawn.contains("後の形") && drawn.contains("理由"));
 }
 
-// @kotowari[REQ-view-011, TBL-view-001]
+// @kotowari[C-view-parts-1]
 #[test]
 fn tbl_view_001_decisions_draw_a_tree_with_who_decided() {
     let drawn = draw(
@@ -423,7 +423,7 @@ fn tbl_view_001_decisions_draw_a_tree_with_who_decided() {
     assert!(drawn.find("枝").unwrap() < drawn.find("LLM").unwrap());
 }
 
-// @kotowari[REQ-view-011, TBL-view-001]
+// @kotowari[C-view-parts-1]
 #[test]
 fn tbl_view_001_quiz_hides_the_answer_until_chosen() {
     let drawn = draw("quiz", json!({"items": [{"q": "問い", "a": "答え"}]}));
@@ -432,7 +432,7 @@ fn tbl_view_001_quiz_hides_the_answer_until_chosen() {
     assert!(details < summary && summary < drawn.find("答え").unwrap());
 }
 
-// @kotowari[REQ-view-003]
+// @kotowari[C-view-rendering-3]
 #[test]
 fn req_view_003_a_value_that_does_not_fit_is_drawn_without_reporting() {
     let text = page_with(
@@ -451,7 +451,7 @@ fn req_view_003_a_value_that_does_not_fit_is_drawn_without_reporting() {
     assert!(text.contains("</html>"));
 }
 
-// @kotowari[EX-view-006, REQ-view-010, REQ-view-003]
+// @kotowari[C-view-rendering-16]
 #[test]
 fn ex_view_006_pages_with_every_kind_load_nothing_from_outside() {
     let blocks = examples()
@@ -496,7 +496,7 @@ fn ex_view_006_pages_with_every_kind_load_nothing_from_outside() {
     }
 }
 
-// @kotowari[REQ-view-010]
+// @kotowari[C-view-rendering-16]
 #[test]
 fn req_view_010_markdown_text_cannot_make_the_page_load_images_scripts_or_styles() {
     let text = page_with(
@@ -514,7 +514,7 @@ fn req_view_010_markdown_text_cannot_make_the_page_load_images_scripts_or_styles
     assert!(!main.contains("src=\""));
 }
 
-// @kotowari[REQ-view-003, REQ-view-011, REQ-view-007]
+// @kotowari[C-view-rendering-3]
 #[test]
 fn req_view_003_the_characters_of_field_values_are_drawn_as_text_not_markup() {
     let text = "前置き q<q q>q z&z q\"q q'q";
@@ -535,7 +535,7 @@ fn req_view_003_the_characters_of_field_values_are_drawn_as_text_not_markup() {
     }
 }
 
-// @kotowari[REQ-view-011, TBL-view-001]
+// @kotowari[C-view-parts-2]
 #[test]
 fn tbl_view_001_the_four_status_badges_are_drawn_distinguishably() {
     // 札と、UI の文字の札の表示

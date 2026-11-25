@@ -33,7 +33,7 @@ pub(crate) struct RawDocument {
     pub(crate) title: Option<String>,
     /// 題名の後で最初の、HTML のコメントでも空行でもないブロックが lead の部品なら、その添字（REQ-core-283）
     pub(crate) lead: Option<usize>,
-    /// 題名の後、最初の "## " より前の、lead でない部品の添字（REQ-view-006）
+    /// 題名の後、最初の "## " より前の、lead でない部品の添字（C-view-rendering-10）
     pub(crate) preamble: Vec<usize>,
     pub(crate) parts: Vec<RawPart>,
     pub(crate) sections: Vec<RawSection>,

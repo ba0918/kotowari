@@ -98,7 +98,7 @@ fn top(index: &str) -> &str {
     &index[start..end]
 }
 
-// @kotowari[EX-view-011, REQ-view-016]
+// @kotowari[C-view-navigation-1]
 #[test]
 fn ex_view_011_only_nonzero_state_counts_are_added_to_the_card() {
     let a = document(
@@ -116,7 +116,7 @@ fn ex_view_011_only_nonzero_state_counts_are_added_to_the_card() {
     assert!(!index.contains("予定"));
 }
 
-// @kotowari[REQ-view-016]
+// @kotowari[C-view-navigation-1]
 #[test]
 fn req_view_016_labels_are_counted_in_the_preamble_and_in_every_section_but_not_the_lead() {
     let mut a = document(
@@ -141,7 +141,7 @@ fn req_view_016_labels_are_counted_in_the_preamble_and_in_every_section_but_not_
     assert!(!card.contains("見直していない節"), "{card}");
 }
 
-// @kotowari[REQ-view-016]
+// @kotowari[C-view-navigation-1]
 #[test]
 fn req_view_016_a_document_with_nothing_to_review_has_no_counts() {
     let a = document(
@@ -155,7 +155,7 @@ fn req_view_016_a_document_with_nothing_to_review_has_no_counts() {
     }
 }
 
-// @kotowari[EX-view-012, REQ-view-017]
+// @kotowari[C-view-navigation-2]
 #[test]
 fn ex_view_012_group_counts_include_every_descendant_document() {
     let b = document(
@@ -183,7 +183,7 @@ fn ex_view_012_group_counts_include_every_descendant_document() {
     assert!(!index.contains("見直していない節"));
 }
 
-// @kotowari[REQ-view-017]
+// @kotowari[C-view-navigation-2, C-view-navigation-3]
 #[test]
 fn req_view_017_the_outermost_heading_counts_pages_and_sums_but_not_planned() {
     let a = document(
@@ -208,7 +208,7 @@ fn req_view_017_the_outermost_heading_counts_pages_and_sums_but_not_planned() {
     assert!(!inner.contains("予定"), "{inner}");
 }
 
-// @kotowari[REQ-view-017]
+// @kotowari[C-view-navigation-2]
 #[test]
 fn req_view_017_a_group_without_states_shows_only_its_page_count() {
     let index = index(&input(
@@ -222,7 +222,7 @@ fn req_view_017_a_group_without_states_shows_only_its_page_count() {
     }
 }
 
-// @kotowari[EX-view-013, REQ-view-018]
+// @kotowari[C-view-navigation-4, C-view-navigation-5]
 #[test]
 fn ex_view_013_groups_are_open_foldable_elements_and_no_page_has_a_script() {
     let input = input(
@@ -241,7 +241,7 @@ fn ex_view_013_groups_are_open_foldable_elements_and_no_page_has_a_script() {
     }
 }
 
-// @kotowari[REQ-view-021, REQ-view-017]
+// @kotowari[C-view-navigation-8]
 #[test]
 fn req_view_021_names_without_a_document_are_not_counted_in_a_group() {
     let index = index(&input(
@@ -277,7 +277,7 @@ fn after_last_section(page: &str) -> &str {
     &page[page.rfind("</section>").expect("a section")..]
 }
 
-// @kotowari[EX-view-014, REQ-view-019, REQ-view-020]
+// @kotowari[C-view-navigation-6, C-view-navigation-7, C-view-navigation-8]
 #[test]
 fn ex_view_014_a_page_shows_its_place_and_the_other_pages_of_its_group() {
     let input = input(
@@ -304,7 +304,7 @@ fn ex_view_014_a_page_shows_its_place_and_the_other_pages_of_its_group() {
     assert!(!a.contains("z.html") && !a.contains("href=\"a.html\""));
 }
 
-// @kotowari[EX-view-015, REQ-view-021, REQ-view-019]
+// @kotowari[C-view-navigation-8, C-view-navigation-9, C-view-navigation-10]
 #[test]
 fn ex_view_015_mismatched_contents_still_give_pages_and_an_index_link() {
     let input = input(
@@ -323,7 +323,7 @@ fn ex_view_015_mismatched_contents_still_give_pages_and_an_index_link() {
     assert_eq!(links[0].0, "index.html");
 }
 
-// @kotowari[REQ-view-019]
+// @kotowari[C-view-navigation-6]
 #[test]
 fn req_view_019_a_page_directly_under_the_contents_shows_only_its_title() {
     let input = input(
@@ -338,7 +338,7 @@ fn req_view_019_a_page_directly_under_the_contents_shows_only_its_title() {
     assert_eq!(titles, ["kotowari"]);
 }
 
-// @kotowari[REQ-view-019, REQ-view-020]
+// @kotowari[C-view-navigation-7, C-view-navigation-10]
 #[test]
 fn req_view_019_a_repeated_name_takes_its_first_place_in_depth_first_order() {
     let input = input(
@@ -366,7 +366,7 @@ fn req_view_019_a_repeated_name_takes_its_first_place_in_depth_first_order() {
     );
 }
 
-// @kotowari[REQ-view-020]
+// @kotowari[C-view-navigation-7]
 #[test]
 fn req_view_020_group_links_skip_nested_groups_and_keep_the_written_order() {
     let input = input(
@@ -415,7 +415,7 @@ fn text_at<'a>(page: &'a str, id: &str) -> &'a str {
         .expect("a text")
 }
 
-// @kotowari[REQ-view-022, EX-view-016]
+// @kotowari[C-view-navigation-11, C-view-navigation-12, C-view-navigation-14]
 #[test]
 fn ex_view_016_the_outline_lists_sections_in_order_and_marks_the_stale_one() {
     let a = document(
@@ -444,7 +444,7 @@ fn ex_view_016_the_outline_lists_sections_in_order_and_marks_the_stale_one() {
     ids.sort();
     ids.dedup();
     assert_eq!(ids.len(), 3, "{page}");
-    // アウトラインは lead の前で終わる（REQ-view-006）
+    // アウトラインは lead の前で終わる（C-view-rendering-10）
     let lead = page.find("aの結論").expect("lead");
     assert!(links[2].0 < lead, "{page}");
     assert!(!page[links[0].0..lead].contains("細部"), "{page}");
@@ -463,7 +463,7 @@ fn ex_view_016_the_outline_lists_sections_in_order_and_marks_the_stale_one() {
     assert!(!page.contains("<script"));
 }
 
-// @kotowari[REQ-view-022, EX-view-017]
+// @kotowari[C-view-navigation-13]
 #[test]
 fn ex_view_017_documents_without_sections_and_the_index_have_no_outline() {
     let b = document("b", vec![titled("読む", false, vec![])]);

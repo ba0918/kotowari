@@ -750,7 +750,7 @@ fn req_core_292_only_html_comments_are_removed_from_heading_text() {
     assert_eq!(document.sections[0].heading, "Vec<String> の扱い");
 }
 
-// @kotowari[REQ-core-291, REQ-core-292, REQ-view-001]
+// @kotowari[REQ-core-291, REQ-core-292, C-view-rendering-1]
 #[test]
 fn valid_data_renders_into_the_pages_the_view_returns_for_its_input() {
     let model = model();
@@ -785,7 +785,7 @@ fn valid_data_renders_into_the_pages_the_view_returns_for_its_input() {
     );
 }
 
-// @kotowari[REQ-view-001, REQ-view-006, TBL-core-038]
+// @kotowari[TBL-core-038, C-view-rendering-10]
 #[test]
 fn parts_after_the_lead_and_before_the_first_section_reach_the_page_in_order() {
     let model = model();

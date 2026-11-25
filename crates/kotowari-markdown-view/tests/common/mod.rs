@@ -27,7 +27,7 @@ pub fn links(html: &str) -> Vec<(String, String)> {
 }
 
 /// ページの中の場所へのリンク（リンク先が "#" で始まるもの）の、ページの中の位置、場所の名前、見える文字。
-/// 文書のページでは、アウトラインの項目がこのリンクになる（REQ-view-022）
+/// 文書のページでは、アウトラインの項目がこのリンクになる（C-view-navigation-12）
 pub fn in_page_links(html: &str) -> Vec<(usize, String, String)> {
     html.match_indices("<a ")
         .filter_map(|(at, _)| {
