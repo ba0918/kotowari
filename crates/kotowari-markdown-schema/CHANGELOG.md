@@ -6,6 +6,8 @@ Entries are written for someone upgrading from one release to the next: what cha
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-25
+
 ### Changed
 
 - The release archives of `kotowari-mds` now carry `THIRD-PARTY-LICENSES.txt`: the crates built into the binary, each with its licence, authors and source, followed by their licence texts. Earlier archives carried only the project's own licences. Where a crate's package ships no licence file, the standard text of its licence is given and the list names the crate's authors.
@@ -85,6 +87,7 @@ $ cargo install --git https://github.com/ba0918/mds
 
 Requires Rust 1.89 or newer.
 
-[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-mds-v0.2.0...HEAD
+[Unreleased]: https://github.com/ba0918/kotowari/compare/kotowari-mds-v0.2.1...HEAD
+[0.2.1]: https://github.com/ba0918/kotowari/compare/kotowari-mds-v0.2.0...kotowari-mds-v0.2.1
 [0.2.0]: https://github.com/ba0918/kotowari/releases/tag/kotowari-mds-v0.2.0
 [0.1.0]: https://github.com/ba0918/mds/releases/tag/v0.1.0
