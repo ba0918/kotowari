@@ -6,6 +6,10 @@ Entries are written for someone upgrading from one release to the next: what cha
 
 ## [Unreleased]
 
+### Security
+
+- The `kotowari-mds` binary is built with `rustls-webpki` 0.103.17 and `webpki-roots` 1.0.12. The versions in 0.2.0 could accept a certificate chain through distrusted emSign intermediates when fetching a schema from an `https` URL (RUSTSEC-2026-0381, RUSTSEC-2026-0382). A project that depends on `kotowari-markdown-schema-io` as a library resolves these crates itself: run `cargo update -p rustls-webpki -p webpki-roots`.
+
 ## [0.2.0] - 2026-10-24
 
 ### Changed
