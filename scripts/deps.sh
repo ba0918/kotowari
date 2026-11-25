@@ -11,4 +11,6 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-cargo deny --locked check advisories licenses
+# --workspace を外すと、根のパッケージ（kotowari-cli）から届く依存だけを見て、
+# kotowari-mds だけが使う依存（HTTP と TLS のクレート）を検査から落とす
+cargo deny --locked --workspace check advisories licenses
