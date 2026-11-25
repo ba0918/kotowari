@@ -23,8 +23,8 @@ goes in the problem and the rejected options.
 
 ## Place
 
-The documents live under the directory `decisions.documents` names, one topic per file, with at
-most one level of directories for the groups of a project (a crate, a product):
+The documents live under the directory `decisions.documents` names, one topic per file, with a
+directory below it for each group of a project (a crate, a product):
 `docs/decisions/<group>/<topic>.md`. Every `.md` file under that place is read as a topic
 document, so put nothing else there — no glossary, no index, no notes. A tree named `docs/frozen/`
 is not read; it holds documents in the old form only and nothing is added to it.
