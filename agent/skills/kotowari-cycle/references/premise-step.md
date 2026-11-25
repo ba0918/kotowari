@@ -15,7 +15,7 @@ its own form of it (**In implement**).
    findings each addressed, and the premises the fixer reported for a finding still present after
    a fix. Write the premises those fixes shared, one sentence per rung, from the most specific
    (the place the last fix touched) up to the one the others rest on. Each rung says where the
-   premise lives: in the implementation, or in the IR or a decision record.
+   premise lives: in the implementation, or in a decision document.
 2. **Replace the top premise** the findings call into question: state what replaces it and which
    findings point there.
 3. **Record the attempt** in the findings file before delegating anything (the kotowari-review
@@ -24,14 +24,14 @@ its own form of it (**In implement**).
    - the implementation → the fixer, with the visible findings, the ladder, and the replaced
      premise, to fix from the new premise rather than patch the last finding; the loop goes on with
      the diff review after that fix;
-   - the IR or a decision record, and grounds and measurements can decide it → a consistency phase
-     run, with the ladder and the replaced premise as a finding to resolve; the loop then goes on
-     where the clause fired;
-   - otherwise (a question of meaning no grounds or measurement settle) → end as ending 3; the
-     terminal report carries the ladder.
+   - a decision document, and grounds and measurements can decide it (a sentence that does not
+     match the facts, a reading of it) → a consistency phase run, with the ladder and the replaced
+     premise as a finding to resolve; the loop then goes on where the clause fired;
+   - otherwise (the premise is the intent a person decided, which no grounds or measurement may
+     replace) → end as ending 3; the terminal report carries the ladder.
 
    When the clause fired on a `consistency` finding, the first two both go to a consistency phase
-   run, which fixes code as well as the IR: a `consistency` finding never goes to the fixer.
+   run, which fixes code as well as the decision documents: a `consistency` finding never goes to the fixer.
 
 ## One attempt per run
 
@@ -45,5 +45,6 @@ the allowance, since that start is a new request.
 
 An implementer whose approach has changed once without progress does not hand back yet. It writes
 the premises its attempts shared, as a ladder like the one above, replaces the top one, and tries
-once more from it. Still no progress: hand back to cycle with the ladder. When the premise lies in
-the specification, hand back at once, as before; the implementer never replaces it.
+once more from it. Still no progress: hand back to cycle with the ladder. When the premise is the
+intent a person decided in a decision document, hand back at once; the implementer never replaces
+it. A sentence it may correct to the facts, without changing that intent, is not such a premise.

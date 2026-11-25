@@ -28,9 +28,12 @@ who gets which section; everything below this paragraph is pasted as written.
   (its path is given in this prompt). Artifact-only work does not need it.
 - For a check oracle, run the check commands the project's instructions give, else the
   language's standard tool, unedited.
-- Hand back a missing design decision.
-- If a hook stops a commit on an IR-side finding, never edit the IR: leave the change uncommitted
-  and return the finding with the files it blocked.
+- Decide a detail the decision documents do not write, or a reading of a sentence that reads two
+  ways, yourself with grounds, and report it as a decision line. Hand back only a collision of
+  intent: two sentences of the decision documents that cannot both hold, so that either choice
+  drops something a person decided.
+- Never edit a decision document. If a hook stops a commit on a finding in a decision document,
+  leave the change uncommitted and return the finding with the files it blocked.
 - Return your commits and which finding each addresses, and each decision you made by yourself (a
   dependency you added included) as one line of what was decided, why, and the evidence; or a
   hand-back with its reason.
