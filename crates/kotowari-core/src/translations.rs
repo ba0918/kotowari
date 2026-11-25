@@ -10,6 +10,7 @@ use std::sync::Arc;
 mod check;
 mod ir_sides;
 mod links;
+pub(crate) use links::{Link as MarkdownLink, links as markdown_links};
 mod pair;
 mod paths;
 mod switcher;

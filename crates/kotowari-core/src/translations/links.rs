@@ -3,12 +3,12 @@
 use super::*;
 
 /// CommonMark のリンクと画像の行き先と、リンクの参照の定義の行き先
-pub(super) struct Link {
-    pub(super) destination: String,
-    pub(super) line: usize,
+pub(crate) struct Link {
+    pub(crate) destination: String,
+    pub(crate) line: usize,
 }
 
-pub(super) fn links(root: &markdown::mdast::Node) -> Vec<Link> {
+pub(crate) fn links(root: &markdown::mdast::Node) -> Vec<Link> {
     fn definitions<'a>(
         node: &'a markdown::mdast::Node,
         out: &mut std::collections::BTreeMap<&'a str, &'a String>,

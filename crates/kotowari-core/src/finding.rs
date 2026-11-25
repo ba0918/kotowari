@@ -110,6 +110,7 @@ finding_kinds! {
     DecisionSectionMissing => "decision_section_missing",
     TopicLeadMissing => "topic_lead_missing",
     ConfirmationWithoutTest => "confirmation_without_test",
+    LinkTargetMissing => "link_target_missing",
 }
 
 impl FindingKind {
@@ -193,7 +194,8 @@ impl FindingKind {
             | FindingKind::DecisionStateInvalid
             | FindingKind::DecisionSectionMissing
             | FindingKind::TopicLeadMissing
-            | FindingKind::ConfirmationWithoutTest => "error",
+            | FindingKind::ConfirmationWithoutTest
+            | FindingKind::LinkTargetMissing => "error",
         }
     }
 }

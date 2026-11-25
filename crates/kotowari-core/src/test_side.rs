@@ -90,7 +90,8 @@ fn condition(kind: FindingKind) -> Condition {
         | FindingKind::LinkToRecord
         | FindingKind::DecisionStateInvalid
         | FindingKind::DecisionSectionMissing
-        | FindingKind::TopicLeadMissing => Condition::Never,
+        | FindingKind::TopicLeadMissing
+        | FindingKind::LinkTargetMissing => Condition::Never,
     }
 }
 

@@ -32,13 +32,15 @@ pub(crate) struct Decision {
 }
 
 /// 読んだ1つの話題の文書
-#[derive(Debug, Clone)]
 pub(crate) struct Document {
     /// `基準のディレクトリ`からの相対パス
     pub(crate) path: String,
     pub(crate) decisions: Vec<Decision>,
     /// 「未決」の節の一覧の項目の数
     pub(crate) open_items: usize,
+    /// 見出しへのリンクの行き先になる名前（GitHub の規則）
+    pub(crate) anchors: BTreeSet<String>,
+    pub(crate) links: Vec<crate::translations::MarkdownLink>,
 }
 
 /// 決定の文書の置き場から読んだものの数（check の "decisions"）
@@ -154,6 +156,8 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
                 path: path.to_owned(),
                 decisions: Vec::new(),
                 open_items: 0,
+                anchors: BTreeSet::new(),
+                links: Vec::new(),
             };
         }
     };
@@ -217,6 +221,125 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
         path: path.to_owned(),
         decisions,
         open_items,
+        anchors: anchors(&root),
+        links: crate::translations::markdown_links(&root),
+    }
+}
+
+/// 文書のすべての見出しの、リンクの行き先になる名前。同じ名前の2つ目からは "-1"、"-2" を付ける
+fn anchors(root: &Node) -> BTreeSet<String> {
+    fn walk(node: &Node, out: &mut Vec<String>) {
+        if let Node::Heading(_) = node {
+            out.push(github_anchor(&node.to_string()));
+        }
+        for child in node.children().into_iter().flatten() {
+            walk(child, out);
+        }
+    }
+    let mut headings = Vec::new();
+    walk(root, &mut headings);
+    let mut anchors = BTreeSet::new();
+    for heading in headings {
+        let mut anchor = heading.clone();
+        let mut suffix = 0;
+        while !anchors.insert(anchor.clone()) {
+            suffix += 1;
+            anchor = format!("{heading}-{suffix}");
+        }
+    }
+    anchors
+}
+
+/// GitHub が Markdown の見出しに付ける名前。小文字にし、文字・数字・"_"・"-"・空白のほかを除き、
+/// 空白を "-" にする
+fn github_anchor(heading: &str) -> String {
+    heading
+        .trim()
+        .to_lowercase()
+        .chars()
+        .filter(|c| c.is_alphanumeric() || matches!(c, '_' | '-' | ' '))
+        .map(|c| if c == ' ' { '-' } else { c })
+        .collect()
+}
+
+/// "%XX" の並びを UTF-8 として戻す。戻せなければ書いたまま
+fn percent_decode(text: &str) -> String {
+    let bytes = text.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        let hex = bytes
+            .get(i + 1..i + 3)
+            .and_then(|pair| std::str::from_utf8(pair).ok())
+            .and_then(|pair| u8::from_str_radix(pair, 16).ok());
+        match (bytes[i], hex) {
+            (b'%', Some(byte)) => {
+                out.push(byte);
+                i += 3;
+            }
+            (byte, _) => {
+                out.push(byte);
+                i += 1;
+            }
+        }
+    }
+    String::from_utf8(out).unwrap_or_else(|_| text.to_owned())
+}
+
+/// スキームで始まるリンクの行き先（"https:"、"mailto:" など）
+fn has_scheme(destination: &str) -> bool {
+    destination.split_once(':').is_some_and(|(scheme, _)| {
+        scheme
+            .chars()
+            .next()
+            .is_some_and(|c| c.is_ascii_alphabetic())
+            && scheme
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, '+' | '.' | '-'))
+    })
+}
+
+/// 決定の文書の中のリンクのうち、置き場の中を指すものが、無い文書か無い見出しを指していれば指摘する。
+/// 置き場の外を指すリンクと、スキームで始まるリンクは見ない
+pub(crate) fn check_links(documents: &[Document], place: &str, findings: &mut Vec<Finding>) {
+    let by_path: std::collections::BTreeMap<&str, &Document> = documents
+        .iter()
+        .map(|doc| (doc.path.as_str(), doc))
+        .collect();
+    let inside = |path: &str| place.is_empty() || path.starts_with(&format!("{place}/"));
+    for doc in documents {
+        let directory = doc.path.rsplit_once('/').map_or("", |(dir, _)| dir);
+        for link in &doc.links {
+            if has_scheme(&link.destination) {
+                continue;
+            }
+            let (target, anchor) = link
+                .destination
+                .split_once('#')
+                .map_or((link.destination.as_str(), None), |(path, anchor)| {
+                    (path, Some(anchor))
+                });
+            let target = target.split('?').next().unwrap_or_default();
+            let target = if target.is_empty() {
+                doc.path.clone()
+            } else {
+                crate::normalize_path(&crate::join_display_path(directory, target))
+            };
+            if !inside(&target) {
+                continue;
+            }
+            let found = by_path.get(target.as_str()).is_some_and(|target| {
+                anchor.is_none_or(|anchor| target.anchors.contains(&percent_decode(anchor)))
+            });
+            if !found {
+                findings.push(Finding::new(
+                    FindingKind::LinkTargetMissing,
+                    doc.path.clone(),
+                    Some(link.line),
+                    link.destination.clone(),
+                ));
+            }
+        }
     }
 }
 

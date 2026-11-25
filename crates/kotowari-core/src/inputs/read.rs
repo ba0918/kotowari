@@ -79,6 +79,9 @@ impl ReadPreparation {
             .is_some()
             .then(|| crate::decisions::tally(&decisions));
         crate::decisions::check_ids(&decisions, &mut findings);
+        if let Some(place) = &config.decisions.documents {
+            crate::decisions::check_links(&decisions, place, &mut findings);
+        }
         let mut known_ids = crate::collect_known_ids(&docs);
         known_ids.extend(crate::decisions::known_ids(&decisions));
         crate::terms::check_terms_and_vague_words_with_duplicates(

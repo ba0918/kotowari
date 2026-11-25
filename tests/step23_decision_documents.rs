@@ -632,3 +632,104 @@ fn no_errors_and_no_open_items_make_status_complete() {
     );
     assert!(!complete(tmp.path()));
 }
+
+// @kotowari[C-core-docs-11]
+#[test]
+fn a_link_to_a_document_that_does_not_exist_is_an_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet/greet.md",
+        "# 挨拶\n\n挨拶の仕方を決める。[別れ](farewell.md)と[外](../../ir/x.md)と[Web](https://example.com/a.md)を見る。\n",
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![finding(
+            "link_target_missing",
+            "docs/decisions/greet/greet.md",
+            3,
+            "farewell.md"
+        )]
+    );
+}
+
+// @kotowari[C-core-docs-11]
+#[test]
+fn a_link_to_a_heading_that_does_not_exist_is_an_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &format!(
+            "# 挨拶\n\n挨拶の仕方を決める。[無い](#無い見出し)と[別](wave.md#手を振らない)を見る。\n\n{}",
+            bare("挨拶する", "提案")
+        ),
+    );
+    write(
+        tmp.path(),
+        "docs/decisions/wave.md",
+        &topic(&[bare("手を振る", "提案")]),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![
+            finding(
+                "link_target_missing",
+                "docs/decisions/greet.md",
+                3,
+                "#無い見出し"
+            ),
+            finding(
+                "link_target_missing",
+                "docs/decisions/greet.md",
+                3,
+                "wave.md#手を振らない"
+            ),
+        ]
+    );
+}
+
+// @kotowari[C-core-docs-11]
+#[test]
+fn links_to_headings_follow_the_github_anchor_rule() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    let links = [
+        "#挨拶は朝昼晩に分ける",
+        "#決定の文書は-docsdecisions-に置き古い形は凍結する",
+        "#use-the-config_file",
+        "#挨拶は朝昼晩に分ける-1",
+        "wave.md#手を振る",
+        "../decisions/wave.md",
+        "#%E6%8C%A8%E6%8B%B6%E3%81%AF%E6%9C%9D%E6%98%BC%E6%99%A9%E3%81%AB%E5%88%86%E3%81%91%E3%82%8B",
+    ];
+    let lead: String = links
+        .iter()
+        .map(|target| format!("[リンク]({target})"))
+        .collect();
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &format!(
+            "# 挨拶\n\n挨拶の仕方を決める。{lead}\n\n{}{}{}{}",
+            bare("挨拶は、朝・昼・晩に分ける", "提案"),
+            bare(
+                "決定の文書は docs/decisions に置き、古い形は凍結する",
+                "提案"
+            ),
+            bare("Use the `config_file`!", "提案"),
+            bare("挨拶は、朝・昼・晩に分ける", "提案"),
+        ),
+    );
+    write(
+        tmp.path(),
+        "docs/decisions/wave.md",
+        &topic(&[bare("手を振る", "提案")]),
+    );
+    let value = check(tmp.path());
+    assert_eq!(findings(&value), vec![]);
+}
