@@ -332,8 +332,7 @@ only such findings or open items that were already committed.
 - A proposed decision is not among what the run brings to zero unless cycle received it: check
   raises no test-side finding for its rows, and a mark pointing at one raises nothing.
 - Overview data (the files in the configuration's `overview.files`) is not changed by the run, and
-  its findings and guide_stale notices are never delegated: the next brainstorm that touches the
-  topic revises it (the kotowari skill's `references/overview.md`). Count them in the terminal report.
+  its findings and guide_stale notices are never delegated. Count them in the terminal report.
 - Findings in decision documents (a `path` under the place of the decision documents) among this
   run's findings are the consistency phase's. Every phase run starts by taking them from
   `kotowari check` and ends with none left in its range, so one left here means a run was skipped

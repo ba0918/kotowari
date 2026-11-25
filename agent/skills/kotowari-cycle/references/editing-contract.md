@@ -31,9 +31,12 @@ who gets which section; everything below this paragraph is pasted as written.
 - Decide a detail the decision documents do not write, or a reading of a sentence that reads two
   ways, yourself with grounds, and report it as a decision line. Hand back only a collision of
   intent: two sentences of the decision documents that cannot both hold, so that either choice
-  drops something a person decided.
-- Never edit a decision document. If a hook stops a commit on a finding in a decision document,
-  leave the change uncommitted and return the finding with the files it blocked.
+  drops something a person decided. Before handing it back, write it as an item under `## 未決` at
+  the end of the topic document it concerns (the two sentences linked, and that the person decides
+  it) and commit that item.
+- Apart from that item, never edit a decision document. If a hook stops a commit on a finding in a
+  decision document, leave the change uncommitted and return the finding with the files it
+  blocked.
 - Return your commits and which finding each addresses, and each decision you made by yourself (a
-  dependency you added included) as one line of what was decided, why, and the evidence; or a
-  hand-back with its reason.
+  dependency you added included) as one line of what was decided, why, and the evidence, the same
+  line written in the body of the commit that carries it; or a hand-back with its reason.
