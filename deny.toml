@@ -16,6 +16,8 @@ unmaintained = "workspace"
 [licenses]
 # このワークスペース（MIT OR Apache-2.0）に取り込んで配ってよい、条件のゆるいライセンスだけを並べる。
 # ここに無いライセンスの依存が入ると落ちる。足すときは、配布物に求められる条件を確かめてから足す。
+# 足したら、scripts/third-party/about.toml の accepted にも足す。そちらに無いと、配布物に添える
+# ライセンス文の一覧が作れない。
 allow = [
     "MIT",
     "Apache-2.0",

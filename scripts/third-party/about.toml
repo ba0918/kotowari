@@ -1,0 +1,19 @@
+# 配布するバイナリに添える、依存のライセンス文の一覧（cargo-about）の設定。
+# scripts/third-party-licenses.sh が読む。
+#
+# 並びは優先順。"MIT OR Apache-2.0" のような選べる依存は、先にあるライセンスの文を載せる。
+# MIT を先にするのは、MIT の文には著作権表示が入っていて、Apache-2.0 の文には入っていないため。
+# 中身は deny.toml の allow と同じにする。こちらに無いライセンスの依存があると、生成が落ちる。
+accepted = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "CDLA-Permissive-2.0",
+    "ISC",
+    "MIT-0",
+    "Unicode-3.0",
+    "Zlib",
+]
+
+# テストだけが使う依存は、配布するバイナリに入らない
+ignore-dev-dependencies = true

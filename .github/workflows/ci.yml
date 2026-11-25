@@ -25,6 +25,7 @@ env:
   CARGO_TERM_COLOR: always
   CARGO_BUILD_JOBS: "4"
   CARGO_DENY_VERSION: "0.20.2"
+  CARGO_ABOUT_VERSION: "0.9.3"
 
 jobs:
   gates:
@@ -47,3 +48,10 @@ jobs:
           tool: cargo-deny@${{ env.CARGO_DENY_VERSION }}
       - name: Check dependency licences and advisories
         run: scripts/deps.sh
+      # ビルド済みの cargo-about を入れる
+      - name: Install cargo-about
+        uses: taiki-e/install-action@ab49d3c64680143e184118bed66a46419fc15519 # v2.90.5
+        with:
+          tool: cargo-about@${{ env.CARGO_ABOUT_VERSION }}
+      - name: Check that the third-party licence list can be generated for every released binary
+        run: scripts/check-third-party-licenses.sh

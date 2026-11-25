@@ -1,0 +1,34 @@
+Third-party licenses
+====================
+
+This binary is built from the Rust crates listed below. Each crate is used
+under the licence shown beside it, and the licence texts follow the list.
+
+Where a crate's package carries no licence file, the standard text of its
+licence is given, with a placeholder where the copyright holder would be
+named. The holders of such a crate are the authors named in the list.
+
+Crates
+------
+
+{{#each crates}}
+- {{package.name}} {{package.version}} ({{license}})
+{{#if package.authors}}
+  Authors: {{#each package.authors}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+{{#if package.repository}}
+  Source: {{{package.repository}}}
+{{/if}}
+{{/each}}
+
+Licence texts
+-------------
+{{#each licenses}}
+
+------------------------------------------------------------------------
+{{{name}}} ({{id}})
+Used by: {{#each used_by}}{{crate.name}} {{crate.version}}{{#unless @last}}, {{/unless}}{{/each}}
+------------------------------------------------------------------------
+
+{{{text}}}
+{{/each}}
