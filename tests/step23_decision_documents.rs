@@ -733,3 +733,40 @@ fn links_to_headings_follow_the_github_anchor_rule() {
     let value = check(tmp.path());
     assert_eq!(findings(&value), vec![]);
 }
+
+// @kotowari[C-core-docs-11]
+#[test]
+fn a_link_to_a_file_that_is_not_markdown_is_not_checked() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(tmp.path(), "docs/decisions/greet/diagram.png", "");
+    write(
+        tmp.path(),
+        "docs/decisions/greet/greet.md",
+        "# 挨拶\n\n挨拶の仕方を決める。![図](diagram.png)\n",
+    );
+    let value = check(tmp.path());
+    assert_eq!(findings(&value), vec![]);
+}
+
+// @kotowari[C-core-docs-8]
+#[test]
+fn a_document_without_a_title_is_an_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &format!("挨拶の仕方を決める。\n\n{}", bare("挨拶する", "提案")),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![(
+            "missing_title".to_string(),
+            "docs/decisions/greet.md".to_string(),
+            None,
+            String::new()
+        )]
+    );
+}

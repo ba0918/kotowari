@@ -55,7 +55,7 @@ impl DecisionTally {
     readonly!(copy documents: usize, decisions: usize, confirmations: usize);
 }
 
-const STATE: [&str; 2] = ["状態:", "状態："];
+const STATE: &str = "状態:";
 const PROPOSED: &str = "提案";
 const IMPLEMENTED: &str = "実装済み";
 const PROBLEM: &str = "問題";
@@ -300,7 +300,7 @@ fn has_scheme(destination: &str) -> bool {
 }
 
 /// 決定の文書の中のリンクのうち、置き場の中を指すものが、無い文書か無い見出しを指していれば指摘する。
-/// 置き場の外を指すリンクと、スキームで始まるリンクは見ない
+/// 置き場の外を指すリンク、Markdown の文書でないファイルを指すリンク、スキームで始まるリンクは見ない
 pub(crate) fn check_links(documents: &[Document], place: &str, findings: &mut Vec<Finding>) {
     let by_path: std::collections::BTreeMap<&str, &Document> = documents
         .iter()
@@ -319,13 +319,13 @@ pub(crate) fn check_links(documents: &[Document], place: &str, findings: &mut Ve
                 .map_or((link.destination.as_str(), None), |(path, anchor)| {
                     (path, Some(anchor))
                 });
-            let target = target.split('?').next().unwrap_or_default();
             let target = if target.is_empty() {
                 doc.path.clone()
             } else {
                 crate::normalize_path(&crate::join_display_path(directory, target))
             };
-            if !inside(&target) {
+            // 決定の文書でないファイル（図など）は core が読まないので、在るかを判断できない
+            if !inside(&target) || !target.ends_with(".md") {
                 continue;
             }
             let found = by_path.get(target.as_str()).is_some_and(|target| {
@@ -364,7 +364,7 @@ fn read_decision_block(node: &Node, building: &mut Building) {
         Node::Paragraph(_) if awaiting_state => {
             let text = node.to_string();
             let first = text.lines().next().unwrap_or_default();
-            if let Some(value) = STATE.iter().find_map(|prefix| first.strip_prefix(prefix)) {
+            if let Some(value) = first.strip_prefix(STATE) {
                 building.state_line = Some((line_of(node), value.trim().to_owned()));
             }
         }
