@@ -12,7 +12,7 @@ Hand the following two to an LLM in a separate session. Do not hand over the pla
 The scope of the collation is the items this brainstorm added or changed, and the existing items whose sources are decisions this brainstorm changed. Count them mechanically from the diff since the starting point (the commit the brainstorm's branch forked from); do not list them from memory.
 
 - Items added or changed: match the lines changed in `git diff <start> -- <place for the IR>` against the `path` and `line` of each item in `kotowari list`. Terms of the glossary and flags, which do not appear in `kotowari list`, are picked from the lines changed in the diff
-- Items whose sources are changed decisions: pick the numbers of the decisions changed in `git diff <start> -- <place for decision records>`, and select the items whose `sources` in `kotowari list` point at them. Example: `kotowari list | jq -r '.items[] | select(.sources | any(test("2026-01-01-example.md#A3$"))) | .id'`
+- Items whose sources are changed decisions: pick the numbers of the decisions changed in `git diff <start> -- <place for decision records>`, and select the items whose `sources` in `kotowari list` point at them. Example: `kotowari list | jq -r '.items[] | select((.sources // []) | any(test("2026-01-01-example.md#A3$"))) | .id'`
 
 If the scope has 0 items, do not collate.
 

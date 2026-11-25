@@ -271,14 +271,28 @@ impl ReadModel {
     }
     /// "items" と、`言語の一覧`の言語が2つ以上なら pairs の "translations"（REQ-core-155）
     pub fn list_with(&self, pairs: &crate::translations::Pairs) -> ReadList {
-        let items = crate::list::build(&self.docs, &self.config().ir, &self.discovered.markers);
+        let mut items = crate::list::build(&self.docs, &self.config().ir, &self.discovered.markers);
+        items.items.extend(crate::decisions::list_items(
+            &self.decisions,
+            &self.discovered.markers,
+        ));
+        items.items.sort_by(|a, b| a.location().cmp(&b.location()));
         let translations = self.policy.translations().then(|| pairs.listing());
         ReadList(items, translations)
     }
     pub fn query(&self, id: &str) -> Result<QueryReport, InputError> {
-        crate::query::build(&self.docs, &self.config().ir, &self.discovered.markers, id)
-            .map(QueryReport)
-            .ok_or_else(|| InputError::UnknownQuery(id.into()))
+        let mut items =
+            crate::query::build(&self.docs, &self.config().ir, &self.discovered.markers, id)
+                .map_or_else(Vec::new, |result| result.items);
+        items.extend(crate::decisions::query_items(
+            &self.decisions,
+            &self.discovered.markers,
+            id,
+        ));
+        if items.is_empty() {
+            return Err(InputError::UnknownQuery(id.into()));
+        }
+        Ok(QueryReport(crate::query::QueryResult { items }))
     }
     /// 読んだ`IR`の文書。パスのバイト順に並ぶ
     pub fn documents(&self) -> &[crate::ir::IrDocument] {

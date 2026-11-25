@@ -52,6 +52,7 @@ impl<'a> Resolver<'a> {
                 ListItem::Scenario(item) => item.deferred(),
                 ListItem::WithExamples(item) => item.deferred(),
                 ListItem::Flag(item) => item.deferred(),
+                ListItem::Confirmation(_) => false,
             };
             deferred.entry(item.id().to_string()).or_insert(flag);
         }

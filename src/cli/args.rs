@@ -246,8 +246,8 @@ pub fn parse_args(args: &[String]) -> Result<Cli, StopReason> {
                     positionals.len()
                 )));
             };
-            // REQ-core-124: ID の形でない位置引数
-            if !kotowari::is_valid_id(id) {
+            // REQ-core-124: ID の形でない位置引数。確認することの ID も受ける（C-core-confirm-5）
+            if !kotowari::is_valid_id(id) && !kotowari::is_confirmation_id(id) {
                 return Err(StopReason::ArgumentError(format!("not an id: {id}")));
             }
             return Ok(Cli::Query {

@@ -53,7 +53,8 @@ fn fingerprint(model: &ReadModel, id: &str) -> String {
         kotowari_core::ListItem::Requirement(item) => item.fingerprint().to_string(),
         kotowari_core::ListItem::WithExamples(_)
         | kotowari_core::ListItem::Scenario(_)
-        | kotowari_core::ListItem::Flag(_) => panic!("{id} is a requirement"),
+        | kotowari_core::ListItem::Flag(_)
+        | kotowari_core::ListItem::Confirmation(_) => panic!("{id} is a requirement"),
     }
 }
 

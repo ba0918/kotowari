@@ -116,6 +116,27 @@ impl FlagItem {
     readonly!(borrow id: String, name: String, path: String, type_: Option<String>, relations: Vec<String>, sources: Vec<String>, tests: Vec<TestRef>, fingerprint: String);
 }
 
+/// 決定の文書の、確認することの1行の持つ鍵（docs/decisions/core/confirmations.md）
+#[derive(Debug, Serialize)]
+pub struct ConfirmationItem {
+    pub(crate) id: String,
+    pub(crate) kind: &'static str,
+    pub(crate) name: String,
+    pub(crate) path: String,
+    pub(crate) line: usize,
+    /// その行を持つ決定の見出しの文
+    pub(crate) decision: String,
+    /// その決定の状態。"proposed" か "implemented"。状態の行が誤っていれば None
+    pub(crate) state: Option<&'static str>,
+    /// 頭に「（読んで確認）」と書いた行は true
+    pub(crate) by_reading: bool,
+    pub(crate) tests: Vec<TestRef>,
+}
+impl ConfirmationItem {
+    readonly!(copy kind: &'static str, line: usize, state: Option<&'static str>, by_reading: bool);
+    readonly!(borrow id: String, name: String, path: String, decision: String, tests: Vec<TestRef>);
+}
+
 /// 一覧の1件。鍵の集合は種類で決まるので、種類ごとの構造をそのまま出す（TBL-core-026）
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
@@ -125,6 +146,8 @@ pub enum ListItem {
     WithExamples(ExampleItem),
     Scenario(ScenarioItem),
     Flag(FlagItem),
+    /// 決定の文書の、確認することの行。IR の項目からは作らない
+    Confirmation(ConfirmationItem),
 }
 
 impl ListItem {
@@ -135,6 +158,7 @@ impl ListItem {
             Self::WithExamples(item) => &item.id,
             Self::Scenario(item) => &item.id,
             Self::Flag(item) => &item.id,
+            Self::Confirmation(item) => &item.id,
         }
     }
 
@@ -145,6 +169,7 @@ impl ListItem {
             ListItem::WithExamples(i) => i.kind,
             ListItem::Scenario(i) => i.kind,
             ListItem::Flag(i) => i.kind,
+            ListItem::Confirmation(i) => i.kind,
         }
     }
 
@@ -155,6 +180,7 @@ impl ListItem {
             Self::WithExamples(item) => (&item.path, item.line),
             Self::Scenario(item) => (&item.path, item.line),
             Self::Flag(item) => (&item.path, item.line),
+            Self::Confirmation(item) => (&item.path, item.line),
         }
     }
 }
@@ -299,7 +325,7 @@ fn scenario_name(scenario_text: &str) -> String {
 }
 
 /// `ID` から、その `ID` を`印`に含む`テスト`の並びを引く（TBL-core-026 の "tests"、REQ-core-154）
-fn tests_by_id(markers: &[TestMarker]) -> BTreeMap<&str, Vec<TestRef>> {
+pub(crate) fn tests_by_id(markers: &[TestMarker]) -> BTreeMap<&str, Vec<TestRef>> {
     let mut by_id: BTreeMap<&str, Vec<TestRef>> = BTreeMap::new();
     for marker in markers {
         by_id.entry(&marker.id).or_default().push(TestRef {

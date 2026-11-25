@@ -14,6 +14,16 @@ pub(crate) enum State {
     Implemented,
 }
 
+impl State {
+    /// list と query の "state" の値
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Proposed => "proposed",
+            Self::Implemented => "implemented",
+        }
+    }
+}
+
 /// 確認することの1行
 #[derive(Debug, Clone)]
 pub(crate) struct Confirmation {
@@ -21,11 +31,17 @@ pub(crate) struct Confirmation {
     pub(crate) line: usize,
     /// 頭に「（読んで確認）」と書いた行
     pub(crate) by_reading: bool,
+    /// ID と「（読んで確認）」のあとの文。行を折り返していれば1つの空白でつなぐ
+    pub(crate) name: String,
+    /// 文書に書いたままの行
+    pub(crate) body: Vec<String>,
 }
 
 /// 1つの決定
 #[derive(Debug, Clone)]
 pub(crate) struct Decision {
+    /// 見出しの文
+    pub(crate) heading: String,
     /// 状態が「提案」でも「実装済み」でもなければ None
     pub(crate) state: Option<State>,
     pub(crate) confirmations: Vec<Confirmation>,
@@ -69,6 +85,7 @@ const BY_READING: &str = "（読んで確認）";
 /// 1つの決定を読んでいる途中のもの
 struct Building {
     heading_line: usize,
+    heading: String,
     /// 状態の行を探すのは、見出しの直後の段落だけ
     state_line: Option<(usize, String)>,
     awaiting_state: bool,
@@ -78,9 +95,10 @@ struct Building {
 }
 
 impl Building {
-    fn new(heading_line: usize) -> Self {
+    fn new(heading_line: usize, heading: String) -> Self {
         Self {
             heading_line,
+            heading,
             state_line: None,
             awaiting_state: true,
             sections: BTreeSet::new(),
@@ -123,6 +141,7 @@ impl Building {
             }
         }
         Decision {
+            heading: self.heading,
             state,
             confirmations: self.confirmations,
         }
@@ -166,6 +185,7 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
     let mut title: Option<(usize, String)> = None;
     let mut lead = false;
     let mut open_items = 0;
+    let lines: Vec<&str> = text.lines().collect();
     let blocks = root.children().map(Vec::as_slice).unwrap_or_default();
     for node in blocks {
         if let Node::Heading(heading) = node
@@ -181,7 +201,10 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
             } else if node.to_string().trim() == OPEN {
                 place = Place::Open;
             } else {
-                place = Place::Decision(Building::new(line_of(node)));
+                place = Place::Decision(Building::new(
+                    line_of(node),
+                    node.to_string().trim().to_owned(),
+                ));
             }
             continue;
         }
@@ -191,7 +214,7 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
                     lead = true;
                 }
             }
-            Place::Decision(building) => read_decision_block(node, building),
+            Place::Decision(building) => read_decision_block(node, &lines, building),
             Place::Open => {
                 if let Node::List(list) = node {
                     open_items += list.children.len();
@@ -349,7 +372,7 @@ pub(crate) fn has_open_items(documents: &[Document]) -> bool {
 }
 
 /// 決定の見出しの下の1つのブロックを読む
-fn read_decision_block(node: &Node, building: &mut Building) {
+fn read_decision_block(node: &Node, lines: &[&str], building: &mut Building) {
     let awaiting_state = std::mem::replace(&mut building.awaiting_state, false);
     #[expect(
         clippy::wildcard_enum_match_arm,
@@ -370,7 +393,7 @@ fn read_decision_block(node: &Node, building: &mut Building) {
         }
         Node::List(list) if building.section.as_deref() == Some(CONFIRMATIONS) => {
             for item in &list.children {
-                building.confirmations.push(confirmation(item));
+                building.confirmations.push(confirmation(item, lines));
             }
         }
         _ => {}
@@ -378,14 +401,32 @@ fn read_decision_block(node: &Node, building: &mut Building) {
 }
 
 /// 確認することの1行。ID は行の最初の語
-fn confirmation(item: &Node) -> Confirmation {
+fn confirmation(item: &Node, lines: &[&str]) -> Confirmation {
     let text = item.to_string();
     let text = text.trim_start();
     let (id, rest) = text.split_once(char::is_whitespace).unwrap_or((text, ""));
+    let rest = rest.trim_start();
+    let (by_reading, rest) = rest
+        .strip_prefix(BY_READING)
+        .map_or((false, rest), |after| (true, after));
+    let line = line_of(item);
+    let end = item.position().map_or(line, |position| position.end.line);
+    let mut body: Vec<String> = lines
+        .get(line.saturating_sub(1)..end.min(lines.len()))
+        .unwrap_or_default()
+        .iter()
+        .map(|line| (*line).to_owned())
+        .collect();
+    // 一覧の最後の行の位置は、続く空行まで届くことがある
+    while body.last().is_some_and(|line| line.trim().is_empty()) {
+        body.pop();
+    }
     Confirmation {
         id: id.to_owned(),
-        line: line_of(item),
-        by_reading: rest.trim_start().starts_with(BY_READING),
+        line,
+        by_reading,
+        name: rest.split_whitespace().collect::<Vec<_>>().join(" "),
+        body,
     }
 }
 
@@ -404,7 +445,7 @@ pub(crate) fn tally(documents: &[Document]) -> DecisionTally {
 
 /// 確認することの ID の形（`C-<まとまりと話題の短い名前>-<連番>`）。名前は IR の ID の名前と同じ形で、
 /// 連番は 1 から始まり先頭の 0 を認めない
-pub(crate) fn is_confirmation_id(id: &str) -> bool {
+pub fn is_confirmation_id(id: &str) -> bool {
     let Some((name, number)) = id.strip_prefix("C-").and_then(|rest| rest.rsplit_once('-')) else {
         return false;
     };
@@ -473,4 +514,52 @@ pub(crate) fn check_tests(
             ));
         }
     }
+}
+
+/// "kotowari list" の、確認することの行の1件ずつ（docs/decisions/core/confirmations.md）
+pub(crate) fn list_items(
+    documents: &[Document],
+    markers: &[crate::tests_discovery::TestMarker],
+) -> Vec<crate::list::ListItem> {
+    let tests_by_id = crate::list::tests_by_id(markers);
+    rows(documents)
+        .map(|(doc, decision, row)| {
+            crate::list::ListItem::Confirmation(crate::list::ConfirmationItem {
+                id: row.id.clone(),
+                kind: "confirmation",
+                name: row.name.clone(),
+                path: doc.path.clone(),
+                line: row.line,
+                decision: decision.heading.clone(),
+                state: decision.state.map(State::as_str),
+                by_reading: row.by_reading,
+                tests: tests_by_id
+                    .get(row.id.as_str())
+                    .cloned()
+                    .unwrap_or_default(),
+            })
+        })
+        .collect()
+}
+
+/// "kotowari query" の、その ID を持つ確認することの行の1件ずつ（C-core-confirm-5）。
+/// 確認することの行を ID で指す文は無いので、逆引きはいつも空
+pub(crate) fn query_items(
+    documents: &[Document],
+    markers: &[crate::tests_discovery::TestMarker],
+    id: &str,
+) -> Vec<crate::query::QueryItem> {
+    let bodies = rows(documents)
+        .filter(|(_, _, row)| row.id == id)
+        .map(|(_, _, row)| row.body.clone());
+    list_items(documents, markers)
+        .into_iter()
+        .filter(|item| item.id() == id)
+        .zip(bodies)
+        .map(|(item, body)| crate::query::QueryItem {
+            item,
+            body,
+            referenced_by: Vec::new(),
+        })
+        .collect()
 }

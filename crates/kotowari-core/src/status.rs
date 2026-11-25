@@ -144,6 +144,8 @@ pub fn build(
                 }
             }
             ListItem::Flag(_) => items.flag += 1,
+            // list::build は IR の項目だけを組み立てる
+            ListItem::Confirmation(_) => {}
         }
     }
 

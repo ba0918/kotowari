@@ -770,3 +770,166 @@ fn a_document_without_a_title_is_an_error() {
         )]
     );
 }
+
+/// 確認することの ID を指すテストを2つ持つテストのファイルを書く
+fn two_marked_tests(tmp: &Path, rel: &str, id: &str) {
+    write(
+        tmp,
+        rel,
+        &format!(
+            "// @kotowari[{id}]\n#[test]\nfn first() {{}}\n\n// @kotowari[{id}]\n#[test]\nfn second() {{}}\n"
+        ),
+    );
+}
+
+/// query の JSON
+fn query(tmp: &Path, id: &str) -> serde_json::Value {
+    let (code, stdout, stderr) = run(tmp, &["query", id]);
+    assert_eq!(code, Some(0), "{stdout}{stderr}");
+    serde_json::from_str(&stdout).unwrap_or_else(|e| panic!("{e}: {stdout}{stderr}"))
+}
+
+// @kotowari[C-core-confirm-5]
+#[test]
+fn query_of_a_confirmation_id_returns_the_file_line_and_name_of_each_test_pointing_at_it() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[confirmed(
+            "挨拶する",
+            "実装済み",
+            &["C-greet-1 挨拶が出る", "C-greet-2 名前が `name` で入る"],
+        )]),
+    );
+    two_marked_tests(tmp.path(), "tests/greet.rs", "C-greet-2");
+    marked_test(tmp.path(), "tests/other.rs", &["C-greet-1"]);
+    let value = query(tmp.path(), "C-greet-2");
+    assert_eq!(
+        value,
+        serde_json::json!({"items": [{
+            "id": "C-greet-2",
+            "kind": "confirmation",
+            "name": "名前が name で入る",
+            "path": "docs/decisions/greet.md",
+            "line": 20,
+            "decision": "挨拶する",
+            "state": "implemented",
+            "by_reading": false,
+            "tests": [
+                {"path": "tests/greet.rs", "line": 1, "name": "first"},
+                {"path": "tests/greet.rs", "line": 5, "name": "second"},
+            ],
+            "body": ["- C-greet-2 名前が `name` で入る"],
+            "referenced_by": [],
+        }]})
+    );
+}
+
+// @kotowari[C-core-confirm-5]
+#[test]
+fn query_of_a_confirmation_id_prints_its_tests_in_text() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[confirmed(
+            "挨拶する",
+            "提案",
+            &["C-greet-1 （読んで確認）skill に挨拶が書いてある"],
+        )]),
+    );
+    two_marked_tests(tmp.path(), "tests/greet.rs", "C-greet-1");
+    let (code, stdout, stderr) = run(tmp.path(), &["query", "C-greet-1", "--format", "text"]);
+    assert_eq!(code, Some(0), "{stderr}");
+    assert_eq!(
+        stdout,
+        "C-greet-1 reading skill に挨拶が書いてある docs/decisions/greet.md:19 tests=2\n\
+         \x20 tests/greet.rs:1 first\n\
+         \x20 tests/greet.rs:5 second\n\
+         \x20 - C-greet-1 （読んで確認）skill に挨拶が書いてある\n\
+         \x20 decision proposed 挨拶する\n"
+    );
+}
+
+// @kotowari[C-core-confirm-5]
+#[test]
+fn query_of_a_confirmation_id_without_tests_returns_an_empty_list_of_tests() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[confirmed("挨拶する", "提案", &["C-greet-1 挨拶が出る"])]),
+    );
+    let value = query(tmp.path(), "C-greet-1");
+    assert_eq!(value["items"][0]["tests"], serde_json::json!([]));
+}
+
+// @kotowari[C-core-confirm-5]
+#[test]
+fn query_of_a_confirmation_id_in_no_document_stops_as_an_unknown_id() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[confirmed("挨拶する", "提案", &["C-greet-1 挨拶が出る"])]),
+    );
+    let (code, stdout, stderr) = run(tmp.path(), &["query", "C-greet-9"]);
+    assert_eq!(code, Some(2), "{stdout}");
+    assert_eq!(stdout, "");
+    assert_eq!(
+        stderr.lines().next().unwrap_or(""),
+        "argument error: unknown id: C-greet-9"
+    );
+}
+
+// @kotowari[C-core-confirm-5]
+#[test]
+fn list_includes_the_confirmation_rows_in_path_and_line_order() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[confirmed(
+            "挨拶する",
+            "提案",
+            &["C-greet-1 挨拶が出る", "C-greet-2 名前が入る"],
+        )]),
+    );
+    marked_test(tmp.path(), "tests/greet.rs", &["C-greet-2"]);
+    let (code, stdout, stderr) = run(tmp.path(), &["list", "--format", "text"]);
+    assert_eq!(code, Some(0), "{stderr}");
+    assert_eq!(
+        stdout,
+        "C-greet-1 - 挨拶が出る docs/decisions/greet.md:19 tests=0\n\
+         C-greet-2 - 名前が入る docs/decisions/greet.md:20 tests=1\n\
+         \x20 tests/greet.rs:1 marked\n"
+    );
+}
+
+// @kotowari[C-core-confirm-5]
+#[test]
+fn query_of_a_wrapped_confirmation_row_joins_its_name_and_keeps_its_lines_as_the_body() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[confirmed(
+            "挨拶する",
+            "提案",
+            &["C-greet-1 挨拶が\n  二行で出る", "C-greet-2 名前が入る"],
+        )]),
+    );
+    let value = query(tmp.path(), "C-greet-1");
+    assert_eq!(value["items"][0]["name"], "挨拶が 二行で出る");
+    assert_eq!(
+        value["items"][0]["body"],
+        serde_json::json!(["- C-greet-1 挨拶が", "  二行で出る"])
+    );
+}

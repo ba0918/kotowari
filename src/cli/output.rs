@@ -29,6 +29,9 @@ fn item(value: &ListItem) -> Value {
         ListItem::Flag(i) => {
             json!({"name":i.name(),"type":i.type_(),"relations":i.relations(),"sources":i.sources(),"tests":tests(i.tests()),"fingerprint":i.fingerprint(),"deferred":i.deferred()})
         }
+        ListItem::Confirmation(i) => {
+            json!({"name":i.name(),"decision":i.decision(),"state":i.state(),"by_reading":i.by_reading(),"tests":tests(i.tests())})
+        }
     };
     let (path, line) = value.location();
     let mut result =

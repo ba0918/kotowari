@@ -12,7 +12,7 @@ macro_rules! readonly {
 extern crate self as kotowari_core;
 pub mod config;
 mod decisions;
-pub use decisions::DecisionTally;
+pub use decisions::{DecisionTally, is_confirmation_id};
 mod deferred;
 mod deferred_notices;
 mod doc_kind;
@@ -51,7 +51,9 @@ pub use inputs::{
 };
 pub use ir::{IrOptions, ParsedIrDocument as IrDocument, ParsedItem};
 mod list;
-pub use list::{ExampleItem, FlagItem, ListItem, RequirementItem, ScenarioItem, TestRef};
+pub use list::{
+    ConfirmationItem, ExampleItem, FlagItem, ListItem, RequirementItem, ScenarioItem, TestRef,
+};
 mod markdown;
 pub mod mutants;
 pub mod plan;

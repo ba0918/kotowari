@@ -91,5 +91,15 @@ fn text_parts(item: &ListItem) -> TextParts<'_> {
             tests: i.tests(),
             deferred: i.deferred(),
         },
+        // 「（読んで確認）」の行は、IR の検証の値 review と同じ位置に "reading" を出す
+        ListItem::Confirmation(i) => TextParts {
+            id: i.id(),
+            verification: if i.by_reading() { "reading" } else { "-" },
+            name: i.name(),
+            path: i.path(),
+            line: i.line(),
+            tests: i.tests(),
+            deferred: false,
+        },
     }
 }
