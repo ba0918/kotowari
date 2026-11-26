@@ -4,8 +4,8 @@
 
 <!-- @kotowari[docs/decisions/core/list.md#list-reads-the-same-things-as-check-reports-no-findings-and-outputs-every-decision-and-confirmation-row-it-could-read:f863a2d6] -->
 
-`kotowari list` は、IR（仕様）の項目とシナリオを、それを指す印の付いたテストと一緒に一覧で出すコマンドです。
-どの要求にどのテストが付いているかを見たいときや、LLM に仕様の全体を一度で渡したいときに使います。
+`kotowari list` は、決定の文書（仕様）の決定と確認することの行を、各行を指す印の付いたテストと一緒に一覧で出すコマンドです。
+どの行にどのテストが付いているかを見たいとき、ガイドの印に書く決定の行き先と指紋を探すとき、LLM に仕様の全体を一度で渡したいときに使います。
 指摘は出しません。指摘を見るときは [`kotowari check`](./check.ja.md) を使います。
 
 ## 書式
@@ -18,8 +18,8 @@ kotowari list --help
 kotowari list --version
 ```
 
-オプションはコマンドの前にも後ろにも書けます（`kotowari --format text list` も同じ意味です）。
-位置引数は受けません。
+オプションはコマンドの前にも後にも書けます（`kotowari --format text list` も同じ意味です）。
+位置引数は取りません。
 
 ## オプションと引数
 
@@ -27,21 +27,21 @@ kotowari list --version
 
 | 名前 | 値 | 既定 | 説明 |
 |---|---|---|---|
-| `--format` | `json` か `text` | `json` | 出力の形 |
+| `--format` | `json` か `text` | `json` | 出力の形式 |
 | `--config` | 設定ファイルのパス | 基準のディレクトリの `.kotowari/config.yaml` | 読む設定ファイル。パスはカレントディレクトリからの相対で読みます |
-| `--help` | なし | — | 使い方を出して終わります |
-| `--version` | なし | — | 版を出して終わります |
+| `--help` | なし | — | 使い方を出して終わる |
+| `--version` | なし | — | 版を出して終わる |
 
 絞り込みのオプションはありません。
-1件だけ詳しく見るなら [`kotowari query`](./query.ja.md)、条件で絞るなら JSON を `jq` に通します。
-基準のディレクトリと共通のオプションの詳細は [CLI の共通事項](../cli.ja.md) にあります。
+1件を詳しく見るときは [`kotowari query`](./query.ja.md) を、条件で絞るときは JSON を `jq` に通します。
+基準のディレクトリと共通のオプションの細部は [CLI の共通事項](../cli.ja.md) にあります。
 
 ## 出力
 
-何を読むかは `kotowari check` と同じです（同じ設定、同じ置き場の IR の文書とテストのファイル）。
+読むものは `kotowari check` と同じです（同じ設定、同じ置き場の決定の文書とテストのファイル）。
 ただしガイドと全体像の元データは読みません。
-`languages` に2つ以上の言語を書いたときだけは、`translations` の hash を出すためにガイド、全体像の元データ、目次の置き場も辿ります（中身は検査しません）。
-項目は対の先頭の言語の側だけから出ます。
+`languages` に2つ以上の言語を書いたときだけ、`translations` の hash を出すために、ガイド、全体像の元データ、目次の置き場も辿ります（中身は検査しません）。
+決定と行は、対の先頭の言語の側だけから取ります。
 
 ### text
 
@@ -54,70 +54,62 @@ ID 検証 名前 パス:行 tests=数
   パス:行 テストの名前
 ```
 
-後回しの要求と後回しのシナリオ（JSON の `deferred` が true の1件）では、行の末尾に ` deferred` が付きます。
-
-```text
-REQ-001 unit 例 docs/ir/a.md:7 tests=0 deferred
-```
-
 | 欄 | 中身 |
 |---|---|
-| 検証 | 要求の `- verification:` の値。要求以外と、`- verification:` の行の無い要求では `-` |
-| パス:行 | 項目の見出しの行（シナリオは `Scenario:` の行） |
-| tests=数 | その ID を印に含むテストの数 |
+| ID | 決定ではその行き先（`<パス>#<行き先の名前>`。ガイドの印に写す値）、行ではその ID |
+| 検証 | `（読んで確認）` で始まる行は `reading`、ほかは `-` |
+| 名前 | 決定ではその見出し、行では ID（と `（読んで確認）`）の後の文 |
+| パス:行 | 決定の見出しの行か、行そのものの行 |
+| tests=数 | その ID を印に含むテストの数。テストは行を指すので、決定ではいつも 0 |
 | テストの行 | 2つの半角空白で字下げした `パス:行 名前`。パスと行は印の位置。名前が取れないときは `-` |
 
-`languages` に2つ以上の言語を書いたときは、項目の行の後に、対ごとに1行で、先頭の言語の側のパスに続けて言語ごとに半角空白1つと `言語タグ=blob hash` を並べます。
+`languages` に2つ以上の言語を書いたときは、1件の行の後に、対ごとに1行で、先頭の言語の側のパスに続けて言語ごとに半角空白1つと `言語タグ=blob hash` を並べます。
 無い側は `言語タグ=-` です。
 
 ```text
-docs/ir/a.md ja=78981922613b2afb6025042ff6bd878ac1994e85 en=-
+docs/decisions/shop/cart.md en=86fedceb857d3e80a36805d0a55533190c16ced5 ja=2246e3d2ff17d246033d32bcb65c8bb8717bd840
+guides/a.md en=247728873932ff94b66350209bc6f7e598bad23c ja=-
 ```
 
 ### JSON
 
-<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/list.md#the-output-is-json-or-text-and-there-are-no-filtering-options:ab50c4b7] -->
+<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/list.md#the-output-is-json-or-text-and-there-are-no-filtering-options:ab50c4b7, docs/decisions/core/list.md#with-two-or-more-languages-the-blob-hash-of-each-pair-is-output-too:8b3ec16c, docs/decisions/core/list.md#pairs-of-decision-documents-are-output-in-translations-too:681f0a2a] -->
 
 最上位は `items` と、`languages` に2つ以上の言語を書いたときだけ `translations` を持つオブジェクトです。
-`items` は1件ずつのオブジェクトの並びで、種類によって持つ鍵が違います。持たない鍵は出ません。
+`items` は1件ずつのオブジェクトの並びで、種類によって持つ鍵が違います。
 
 | 鍵 | 型 | 持つ種類 | 説明 |
 |---|---|---|---|
-| `id` | 文字列 | すべて | ID |
-| `kind` | 文字列 | すべて | `requirement`、`table`、`property`、`scenario`、`flag` のいずれか |
-| `name` | 文字列 | すべて | 見出しの名前。シナリオは `Scenario:` の後の文字 |
-| `path` | 文字列 | すべて | 項目のある文書の、基準のディレクトリからの相対パス |
-| `line` | 数 | すべて | 見出しの行。シナリオは `Scenario:` の行 |
-| `type` | 文字列か null | 要求、問題の記録 | `- kind:` の値 |
-| `verification` | 文字列か null | 要求 | `- verification:` の値 |
-| `definition` | 文字列の並び | 要求 | `- definition:` の ID。無ければ空の並び |
-| `examples` | 文字列の並び | 要求、決定表、性質 | その ID を `@about` に持つシナリオの ID。ID の昇順 |
-| `how_to_verify` | 文字列か null | 要求 | `- how_to_verify:` の値 |
-| `relations` | 文字列の並び | 問題の記録 | `- related:` の ID |
-| `sources` | 文字列の並び | すべて | 出典 |
-| `tests` | オブジェクトの並び | すべて | その ID を印に含むテスト。1件は `path`、`line`（印の行）、`name`（テストの名前か null） |
-| `fingerprint` | 文字列 | すべて | 指紋（16進8桁）。[ガイドの印](../writing-guides.ja.md)に写す値 |
-| `deferred` | 真偽値 | すべて | 後回しの要求と後回しのシナリオは true、ほかは false |
+| `id` | 文字列 | 両方 | 決定ではその行き先 `<パス>#<行き先の名前>`、行ではその ID |
+| `kind` | 文字列 | 両方 | `decision` か `confirmation` |
+| `name` | 文字列 | 両方 | 決定ではその見出し、行では ID と `（読んで確認）` の後の文。折り返した行は半角空白1つでつなぐ |
+| `path` | 文字列 | 両方 | 決定の文書の、基準のディレクトリからの相対パス |
+| `line` | 数 | 両方 | 決定の見出しの行か、行そのものの行 |
+| `state` | 文字列か null | 両方 | `proposed` か `implemented`（行ではその決定の状態）。状態の行が誤っていれば null |
+| `fingerprint` | 文字列 | 決定 | 指紋（16進8文字）。[ガイドの印](../writing-guides.ja.md)に写す値 |
+| `decision` | 文字列 | 行 | その行を持つ決定の見出し |
+| `by_reading` | 真偽値 | 行 | `（読んで確認）` で始まる行は true |
+| `tests` | オブジェクトの並び | 行 | その ID を印に含むテスト。1件は `path`、`line`（印の行）、`name`（テストの名前。取れなければ null）を持つ |
 
 同じテストに同じ ID の印が2つあれば、`tests` には2件出ます。
-同じ ID のシナリオが2つあるときは、`examples` には1つ目だけを数えます。
-細かい定義は [list の IR](../../ir/core/list.ja.md) の TBL-core-026 にあります。
+ID の形が誤った行は出ません。
+細かい定義は [list の決定](../../decisions/core/list.ja.md) にあります。
 
-`translations` は対ごとの1件の並びで、`path` の昇順です。
+`translations` は対ごとの1件の並びで、`path` の昇順です。決定の文書、ガイド、全体像の元データ、目次の対が入ります。
 先頭の言語の側が無い対も1件になります。
 1件は `path`（先頭の言語の側の基準のディレクトリからの相対パス）と `sides` を持ちます。
 `sides` は `languages` の順の側の並びで、1つの側は `language`（言語タグ）、`path`、`blob`（その側の git の blob hash。側が無ければ null）を持ちます。
 `blob` を一致の記録 `<幹>.i18n.yaml` に写します（[言語と対](../config.ja.md#言語と対--languages-と-labels)）。
 
 ```json
-{"path":"docs/ir/a.md","sides":[{"language":"ja","path":"docs/ir/a.md","blob":"78981922613b2afb6025042ff6bd878ac1994e85"},{"language":"en","path":"docs/ir/a.en.md","blob":null}]}
+{"path":"guides/a.md","sides":[{"language":"en","path":"guides/a.md","blob":"247728873932ff94b66350209bc6f7e598bad23c"},{"language":"ja","path":"guides/a.ja.md","blob":null}]}
 ```
 
 ### 並び順
 
 <!-- @kotowari[docs/decisions/core/list.md#the-order-is-by-path-and-by-line-within-the-same-path:37893e8e] -->
 
-`items` は `path` の昇順、同じ `path` の中は `line` の昇順です。
+`items` は `path` の昇順、同じ `path` の中は `line` の昇順です。そのため、各決定の後にその行が続きます。
 1件の `tests` も同じく `path`、`line` の順に並びます。
 
 ## 終了コード
@@ -126,109 +118,113 @@ docs/ir/a.md ja=78981922613b2afb6025042ff6bd878ac1994e85 en=-
 
 | コード | 意味 |
 |---|---|
-| 0 | 読めた（IR に誤りがあっても 0）。`--help` か `--version` で終わったときも 0 |
+| 0 | 読めた（決定の文書に誤りがあっても 0）。`--help` か `--version` で終わったときも 0 |
 | 2 | 停止した（設定の誤り、読めないファイル、引数の誤りなど。理由は標準エラーに出ます） |
 
 `list` は 1 を返しません。
-IR の誤りの有無で終了コードを変えるのは `check` と `status` です。
+誤りの有無で終了コードを変えるのは `check` と `status` です。
 停止の理由と文言は `check` と同じです（[CLI の共通事項](../cli.ja.md)）。
 
 ## 例
 
 <!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/list.md#the-output-is-json-or-text-and-there-are-no-filtering-options:ab50c4b7] -->
 
-要求 2 つとシナリオ 1 つを持つ小さな IR と、印を1つ付けたテストで実行した結果です（2026-09-24 に実行）。
+実装済みの決定2つと、そのうち1つが読んで確認する行の3つの行を持つ小さな決定の文書と、印を1つ付けたテストで実行した結果です。
 
-IR の文書 `docs/ir/greet.md` の要点:
+決定の文書 `docs/decisions/shop/discount.md` の要点:
 
 ```markdown
-### REQ-001: 名前つきの挨拶
-- verification: unit
+## Members get 10% off their orders
+
+Status: implemented
 ...
-### REQ-002: 挨拶の丁寧さ
-- verification: review
-- how_to_verify: 返す文を人が読み、丁寧な言葉であることを確かめる
+- C-shop-discount-1 A member's order of 1000 is priced at 900
+
+## Orders of non-members are not discounted
+
+Status: implemented
 ...
-@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1
-Scenario: 名前を受けて挨拶する
+- C-shop-discount-2 A guest's order of 1000 is priced at 1000
+- C-shop-discount-3 (by reading) The price list page says that only members get the discount
 ```
 
-テスト `tests/greet.rs`:
+テスト `tests/discount.rs`:
 
 ```rust
-// @kotowari[REQ-001, EX-001]
+// @kotowari[C-shop-discount-1]
 #[test]
-fn greets_with_name() {}
+fn member_gets_ten_percent_off() {}
 ```
 
 text で出すと次のとおりです。
 
 ```console
 $ kotowari list --format text
-REQ-001 unit 名前つきの挨拶 docs/ir/greet.md:7 tests=1
-  tests/greet.rs:1 greets_with_name
-REQ-002 review 挨拶の丁寧さ docs/ir/greet.md:15 tests=0
-EX-001 - 名前を受けて挨拶する docs/ir/greet.md:28 tests=1
-  tests/greet.rs:1 greets_with_name
+docs/decisions/shop/discount.md#members-get-10-off-their-orders - Members get 10% off their orders docs/decisions/shop/discount.md:5 tests=0
+C-shop-discount-1 - A member's order of 1000 is priced at 900 docs/decisions/shop/discount.md:19 tests=1
+  tests/discount.rs:1 member_gets_ten_percent_off
+docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted - Orders of non-members are not discounted docs/decisions/shop/discount.md:21 tests=0
+C-shop-discount-2 - A guest's order of 1000 is priced at 1000 docs/decisions/shop/discount.md:35 tests=0
+C-shop-discount-3 reading The price list page says that only members get the discount docs/decisions/shop/discount.md:36 tests=0
 ```
 
-JSON（既定）では、同じ内容が鍵つきで出ます。1件目だけを示します。
+JSON（既定）では、同じ内容が鍵つきで出ます。最初の2件、決定と行を示します。
 
 ```console
-$ kotowari list | jq '.items[0]'
+$ kotowari list | jq '.items[0], .items[1]'
 {
-  "id": "REQ-001",
-  "kind": "requirement",
-  "name": "名前つきの挨拶",
-  "path": "docs/ir/greet.md",
-  "line": 7,
-  "type": "ubiquitous",
-  "verification": "unit",
-  "definition": [],
-  "examples": [
-    "EX-001"
-  ],
-  "how_to_verify": null,
-  "sources": [
-    "docs/decision/records/records.md#A1"
-  ],
+  "id": "docs/decisions/shop/discount.md#members-get-10-off-their-orders",
+  "kind": "decision",
+  "name": "Members get 10% off their orders",
+  "path": "docs/decisions/shop/discount.md",
+  "line": 5,
+  "state": "implemented",
+  "fingerprint": "e3adc927"
+}
+{
+  "id": "C-shop-discount-1",
+  "kind": "confirmation",
+  "name": "A member's order of 1000 is priced at 900",
+  "path": "docs/decisions/shop/discount.md",
+  "line": 19,
+  "decision": "Members get 10% off their orders",
+  "state": "implemented",
+  "by_reading": false,
   "tests": [
     {
-      "path": "tests/greet.rs",
+      "path": "tests/discount.rs",
       "line": 1,
-      "name": "greets_with_name"
+      "name": "member_gets_ten_percent_off"
     }
-  ],
-  "fingerprint": "ec0d8b1c",
-  "deferred": false
+  ]
 }
 ```
 
-よく使う絞り込みは `jq` で書けます。
+よく使う絞り込みは `jq` で書けます。まだテストの要る行は次のとおりです。
 
 ```console
-$ kotowari list | jq -r '.items[] | select(.kind == "requirement" and (.tests | length) == 0) | .id'
-REQ-002
+$ kotowari list | jq -r '.items[] | select(.kind == "confirmation" and .tests == [] and (.by_reading | not)) | .id'
+C-shop-discount-2
 ```
 
 ## よくあるつまずき
 
-### IR に誤りがあるのに終了コードが 0 になる
+### 決定の文書に誤りがあるのに終了コードが 0 になる
 
 <!-- @kotowari[docs/decisions/core/list.md#list-reads-the-same-things-as-check-reports-no-findings-and-outputs-every-decision-and-confirmation-row-it-could-read:f863a2d6] -->
 
-`list` は読み取りのコマンドで、指摘を出さず、誤りがあっても読めた項目を出して 0 で終わります。
-例えば例の IR から REQ-001 の `- verification:` の行を消すと、`check` は誤りを出して 1 で終わりますが、`list` は検証の欄を `-`（JSON では `null`）にして 0 で終わります（2026-09-24 に実行）。
+`list` は読み取りのコマンドで、指摘を出さず、誤りがあっても読めた決定と行を出して 0 で終わります。
+例えば例の最初の決定の状態の行を `Status: done` にすると、`check` は誤りを出して 1 で終わりますが、`list` はその決定と行をそのまま出して 0 で終わります。
 
 ```console
 $ kotowari check --format text
-docs/ir/greet.md:7 [error] verification_missing REQ-001
+docs/decisions/shop/discount.md:7 [error] decision_state_invalid done
+docs/decisions/shop/discount.md:35 [error] confirmation_without_test C-shop-discount-2
 $ kotowari list --format text
-REQ-001 - 名前つきの挨拶 docs/ir/greet.md:7 tests=1
-  tests/greet.rs:1 greets_with_name
-REQ-002 review 挨拶の丁寧さ docs/ir/greet.md:14 tests=0
-EX-001 - 名前を受けて挨拶する docs/ir/greet.md:27 tests=1
-  tests/greet.rs:1 greets_with_name
+docs/decisions/shop/discount.md#members-get-10-off-their-orders - Members get 10% off their orders docs/decisions/shop/discount.md:5 tests=0
+C-shop-discount-1 - A member's order of 1000 is priced at 900 docs/decisions/shop/discount.md:19 tests=1
+  tests/discount.rs:1 member_gets_ten_percent_off
+...
 $ echo $?
 0
 ```
@@ -243,14 +239,13 @@ CI で誤りを止めたいなら `kotowari check` か [`kotowari status`](./sta
 `path` と `line` は印の位置です。
 どの拡張子に問い合わせがあるかは `kotowari check` の JSON の `tests` の `query` で分かります（[CLI の共通事項](../cli.ja.md)）。
 
-### `tests=0` の要求が status では「テストあり」に数えられている
+### 決定はいつも `tests=0` になる
 
-<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092] -->
+<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4] -->
 
-`list` の `tests` は、その ID を直接印に含むテストだけです。
-[`kotowari status`](./status.ja.md) の `with_tests` は、その要求を `@about` に持つシナリオに付いたテストも数えます。
-`tests=0` の要求を見つけたら、その要求の `examples` に並ぶシナリオの `tests` も確かめてください。
-`deferred` が true の要求は、`status` では `with_tests` にも `without_tests` にも数えず、`deferred` に数えます。
+テストが指すのは決定ではなく確認することの行なので、決定の行は `tests=0` で、JSON の1件は `tests` を持ちません。
+決定が確かめられているかは、その下に並ぶ行で見ます。
+`（読んで確認）` で始まる行（text では `reading`）にはテストが要らず、提案の決定の行にもまだ要りません。
 
 ### check や status は設定の誤りで止まるのに、list は動く
 
@@ -266,7 +261,7 @@ CI で誤りを止めたいなら `kotowari check` か [`kotowari status`](./sta
 
 ## 関連
 
-- 仕様: [list の IR](../../ir/core/list.ja.md)
+- 仕様: [list の決定](../../decisions/core/list.ja.md)
 - 1件を本文と逆引きつきで見る: [`kotowari query`](./query.ja.md)
 - 全体の数と揃っているかを見る: [`kotowari status`](./status.ja.md)
 - 指摘を1件ずつ見る: [`kotowari check`](./check.ja.md)
