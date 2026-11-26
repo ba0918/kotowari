@@ -24,7 +24,7 @@ who gets which section; everything below this paragraph is pasted as written.
 
 ## Fixer only
 
-- Before writing tests or changing their marks, read the kotowari skill's `references/mark.md`
+- Before writing tests or changing their markers, read the kotowari skill's `references/mark.md`
   (its path is given in this prompt). Artifact-only work does not need it.
 - For a check oracle, run the check commands the project's instructions give, else the
   language's standard tool, unedited.

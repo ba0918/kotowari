@@ -1,6 +1,6 @@
 ---
 name: kotowari-iterate
-description: "Entry point beside the kotowari workflow for a task too small to need a specification: judge whether the request is small and run the cycle loop on it; anything bigger is turned away with the next skill to call. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to iterate, for one more fix, to fix this bit, to add this too, or to polish it a little more. 日本語キーワード: iterate ちょっと直して これも足して もう少し磨いて 小さいタスク"
+description: "Entry point beside the kotowari workflow for a task too small to need a specification: judge whether the request is small and run the cycle loop on it; anything bigger is turned away with the next skill to call. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/decisions/`). Use when asked to iterate, for one more fix, to fix this bit, to add this too, or to polish it a little more. 日本語キーワード: iterate ちょっと直して これも足して もう少し磨いて 小さいタスク"
 ---
 
 # Iterate
@@ -33,9 +33,9 @@ A **small task** meets all four; file count is irrelevant.
 
 1. One reading: the implementer writes the diff without choosing one.
 2. No specification decision: no new input kind, acceptance boundary, or error handling is
-   decided for the first time by this task. A change only to what the IR does not hold (CI, hooks,
-   release, build configuration; the kotowari skill's **What the IR holds**) makes no
-   specification decision.
+   decided for the first time by this task. A change only to what is not product behavior (CI,
+   hooks, release, build configuration; the kotowari skill's **What the decision documents hold**)
+   makes no specification decision.
 3. If a specification exists, no contradiction with it.
 4. The impact is readable: the judgment enumerates every file to change (files to be created included;
    for code, the tests the implementer adds test-first are among them) in a closed list — no "there
@@ -73,7 +73,7 @@ specification (it cannot run without one) or offering "continue here anyway" is 
 |---|---|---|---|
 | 1 (ambiguous) | the request read two ways (implementer) | the person, via the main session | where the readings diverge, and the question to ask |
 | 2 (specification decision), 3 (contradiction) | a missing design decision (2), a contradiction with the specification (3) — implementer or fixer | brainstorm | `/kotowari-brainstorm <topic>`, with the existing specification path if any |
-| 4 (impact unreadable) | a file outside the enumeration (implementer only) | cycle if a specification exists, else brainstorm | `/kotowari-cycle <IR store path> <requirement IDs>` or `/kotowari-brainstorm <topic>` |
+| 4 (impact unreadable) | a file outside the enumeration (implementer only) | cycle if a specification exists, else brainstorm | `/kotowari-cycle <place of the decision documents> <decisions to build>` or `/kotowari-brainstorm <topic>` |
 
 ## The loop
 
@@ -82,14 +82,14 @@ there meaning this run, with only these differences:
 
 | In cycle | Here |
 |---|---|
-| the place of the specification and the requirement IDs from the brainstorm | the request; the given specification path, or the one the judgment found; requirement IDs only when the request touches IR items |
+| the place of the decision documents and the list of decisions from the brainstorm | the request; the given specification path, or the one the judgment found; the decisions (`path#anchor`) the request touches, only when it touches any |
 | step 1's delegation to implement | after the judgment, the request goes to the implementer below in one delegation |
 | the place of the specification in the fixer delegation | the request, and the specification path if any; the fixer also hands back a contradiction with the specification |
 | the choice of entry in **Resuming and running more** | a new request starts at step 1 after its judgment; when resuming that request or running more, use cycle's table without the row "no findings file yet" |
-| the specification path and the file of IDs in the consistency phase delegation | the specification path and the request; the file of IDs only when the request touches IR items; with no specification, the request alone is the counterpart |
+| the place of the decision documents and the file of decisions in the consistency phase delegation | the specification path and the request; the file of decisions only when the request touches decisions; with no specification, the request alone is the counterpart |
 | ending 4 and its "run more or accept the rest" choice | the destination is one of the guidance table's three; no choice is offered — the report adds the hand-back reason and the guidance, and the person restarts with a new request holding their answer |
-| "names an ID cycle received" in **kotowari check before the terminal report** | names an ID the request's enumeration covers; with none, only the files the branch changed count |
-| the requirements in "changes beyond the requirements" and "two requests at once" | the request |
+| "names a row of a decision cycle received" in **kotowari check before the terminal report** | names a row of a decision the request touches; with none, only the files the branch changed count |
+| the decisions in "changes beyond the decisions" and "two requests at once" | the request |
 
 The **implementer** receives what the fixer receives — kotowari-cycle's
 `references/editing-contract.md` whole, with the Evidence conditions — the request replacing the
@@ -111,7 +111,8 @@ closed: reuse it, never re-cut; a merged or closed one stops the start for a new
 counter-example — unless its `ending` is `merged`, which cycle's **Resuming and running more**
 keeps apart. Before the first delegation, withdraw a request to merge the hosting service still
 shows on the branch's pull request (**Withdrawing the request** in kotowari-cycle's
-`references/merge.md`). This run adds to `ids` the requirement IDs its request touches, and sets
+`references/merge.md`). This run adds to `ids` the decisions (`path#anchor`) its request touches,
+and sets
 `fix_of` when the request says it fixes an earlier request.
 Differences from cycle's later request: set `first_review_head` to null; unless the person gave a comparison base, it is where
 the earlier run ended, the branch tip at this start, not the commit where the branch parted from

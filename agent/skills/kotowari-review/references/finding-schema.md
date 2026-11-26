@@ -10,7 +10,7 @@ fills those.
 
 ```json
 {
-  "ids": ["REQ-core-364"],
+  "ids": ["docs/decisions/core/status.md#<anchor of the decision's heading>"],
   "merge_target": "main",
   "base": "<commit the full review diffs from>",
   "last_reviewed_head": "<branch head at the previous review>",
@@ -69,9 +69,9 @@ fills those.
 | `premise_attempts` | written by cycle only, one entry per attempt of the kotowari-cycle skill's premise step, appended before the attempt's delegation; `[]` until one runs |
 | `fixes` | written by cycle only, one entry per fixer return in order: the findings it addressed and its commits, and `reviewed_in`, the round of the review after it (`null` until it runs); facts for resuming and the terminal report |
 | `clause` | the ending 3 clause that fired: `still_present_twice` / `cause_returned` / `not_shrinking` / `overlap_after_fix` |
-| `lives_in` | `implementation` / `ir_or_record` |
+| `lives_in` | `implementation` / `decision_document` |
 | `sent_to` | `fixer` / `consistency_phase` / `person` |
-| `ids` | written by cycle only, at its start: the IDs of the requirements it received, `[]` when it received none; a later request on the same branch adds its IDs; a resume counts them again only when the key is absent |
+| `ids` | written by cycle only, at its start: the decisions it received, one `path#anchor` each, `[]` when it received none; a later request on the same branch, and a kotowari-iterate run on it, adds its decisions; a resume counts them again only when the key is absent |
 | `merge_target` | written by cycle only, at its start: the merge target it received, the repository's default branch when none was decided |
 | `line` | written by cycle only, each time it judges the line: `hit` (`true` / `false`) and `paths`, the paths that were hit (`[]` when not hit, and when the procedure failed, which is a hit with no paths, reported as a failure); `null` until first judged |
 | `fix_of` | written by cycle only: the branch name of the earlier request this request fixes, only when the request says it is a fix of an earlier one; `null` otherwise |

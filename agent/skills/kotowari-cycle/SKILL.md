@@ -5,7 +5,7 @@ description: >-
   on a branch through implementation, the consistency phase, review, and fixing until the findings
   converge, then has the hosting service merge it or leaves the pull request to the person. Use
   only in a repository that uses
-  kotowari (one that has `.kotowari/`, `docs/decisions/` or `docs/ir/`). Use when asked to run a kotowari cycle on a
+  kotowari (one that has `.kotowari/` or `docs/decisions/`). Use when asked to run a kotowari cycle on a
   specification, or to resume one. 日本語キーワード:
   サイクル 実装ループ 改善ループ オーケストレータ 仕様を実装する
 ---
@@ -22,8 +22,7 @@ stop for them except in the cases below.
 
 The specification is the decision documents, one topic per file under the place the
 configuration's `decisions.documents` names (the kotowari skill's
-`references/decision-documents.md`). The kotowari skill's `IR` and decision records are the old
-form; this skill does not read or write them.
+`references/decision-documents.md`).
 
 Required: the place of the decision documents, the list of decisions to build (each a topic
 document's path and a heading's anchor, `docs/decisions/core/confirmations.md#<anchor>`), and the
@@ -31,8 +30,7 @@ branch with its worktree path. The brainstorm hands over all of them, with the m
 it goes on to cycle (its **Finishing**), together with the row IDs of the decisions it overturned
 (each with the decision replacing it) and the path of any prototype to compare with; for any other
 start the main session prepares the branch, which carries the commit of the approved decisions,
-and its worktree first. Cycle takes the list as it comes: it adds no decision to it and runs no
-collation of the documents against anything.
+and its worktree first. Cycle takes the list as it comes: it adds no decision to it.
 
 A start that brings a request with the place of the decision documents confirms in the worktree
 that the decisions are approved, after the reads at the head of **Resuming and running more** and
@@ -333,7 +331,7 @@ only such findings or open items that were already committed.
   findings for the fixer: make them visible and run the diff loop. If they do not go away, end as
   ending 3 (no progress).
 - A proposed decision is not among what the run brings to zero unless cycle received it: check
-  raises no test-side finding for its rows, and a mark pointing at one raises nothing.
+  raises no test-side finding for its rows, and a marker pointing at one raises nothing.
 - Overview data (the files in the configuration's `overview.files`) is not changed by the run, and
   its findings and guide_stale notices are never delegated. Count them in the terminal report.
 - Findings in decision documents (a `path` under the place of the decision documents) among this

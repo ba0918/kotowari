@@ -40,7 +40,7 @@ they do not write is the implementer's to decide with grounds; it is not a hole 
   reads, even when the diff reuses it unchanged). Code includes text shipped as product, such as
   skill text: read it as code, not as a document.
 - **Decisions in range**: each decision the cycle received, each decision whose text the diff
-  touches, and each decision holding a row whose ID a mark the diff adds carries.
+  touches, and each decision holding a row whose ID a marker the diff adds carries.
 - Around those decisions: the decisions they link to, and the terms they use.
 
 Nothing outside that range. A comparison of the whole code base with all the decision documents
@@ -92,7 +92,7 @@ Every finding ends in a state where the decision documents and the code agree.
   supplied Editing contract. The fixer's instruction to leave the decision documents alone and
   return on a hook's finding in a decision document does not apply: fixing them is this phase's
   job. Check commands come from the project's instructions, then the ecosystem's standard tool;
-  tests carry marks as `mark.md` says.
+  tests carry markers as `mark.md` says.
 - It writes no record per run. The reason for each fix — what was decided, why, and the evidence
   (the measuring commands and their results, files and lines) — goes in the body of the commit that
   carries the fix and in the line the run returns, which cycle puts in the pull request body.

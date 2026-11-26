@@ -4,21 +4,21 @@ Claude Code の skill を9個置いている。
 
 | skill | 役目 |
 |---|---|
-| `kotowari` | 決定の文書の書き方、`kotowari check` の結果の読み方、テストへの印の置き方を、場面ごとに reference で読ませる |
+| `kotowari` | 決定の文書の書き方、`kotowari check` の結果の読み方、テストへのマーカーの置き方を、場面ごとに reference で読ませる |
 | `kotowari-using-workflow` | 新しい依頼をどの工程から始めるかを決める入口 |
-| `kotowari-brainstorm` | 壁打ちで決めたことを IR と判断の記録に書き、承認を得る |
-| `kotowari-cycle` | 承認済みの仕様を実装・整合のフェーズ・レビュー・修正の繰り返しで回し、終端で `kotowari check` と `kotowari status` を見る。整合のフェーズは差分のコードを IR と読み合わせ、隙間と食い違いを根拠と実測で片付ける |
-| `kotowari-implement` | 承認済みの要求を実装する（cycle から呼ばれる） |
+| `kotowari-brainstorm` | 壁打ちで決めたことを決定の文書に書き、承認を得る |
+| `kotowari-cycle` | 承認済みの仕様を実装・整合のフェーズ・レビュー・修正の繰り返しで回し、終端で `kotowari check` と `kotowari status` を見る。整合のフェーズは差分のコードを決定の文書と読み合わせ、隙間と食い違いを根拠と実測で片付ける |
+| `kotowari-implement` | 承認済みの決定を実装する（cycle から呼ばれる） |
 | `kotowari-review` | 差分や文書を別の文脈でレビューする（cycle から呼ばれるか、人が直接呼ぶ） |
 | `kotowari-iterate` | 仕様の要らない小さな作業を cycle の繰り返しで回す |
 | `kotowari-investigate` | 読むだけの調査。原因と影響を調べて直し方を報告する |
-| `kotowari-adopt` | 既存のプロジェクトに話題1つずつ kotowari を入れる。旧資料と実装とテストを仕分けて IR と判断の記録と FLAG に書き、承認を得て、テストの作業の依頼文を渡す |
+| `kotowari-adopt` | 既存のプロジェクトに話題1つずつ kotowari を入れる。旧資料と実装とテストを仕分けて決定の文書（決めたことと未決）に書き、承認を得て、テストの作業の依頼文を渡す |
 
 `kotowari-` で始まる8個を工程の skill と呼ぶ。
 
 ## 関係
 
-工程の skill は `kotowari` スキルに依存する。工程の途中で決定の文書を書く、check の結果を読む、印を置くといった場面では、`kotowari` スキルの reference を名指しして読む。
+工程の skill は `kotowari` スキルに依存する。工程の途中で決定の文書を書く、check の結果を読む、マーカーを置くといった場面では、`kotowari` スキルの reference を名指しして読む。
 
 逆向きの依存は無い。`kotowari` スキルは工程の skill を名指ししないので、`kotowari` スキルだけを入れて別の工程（ほかの workflow の skill や手作業）の中で使ってもよい。工程の skill は推奨であって、無くても kotowari は使える。
 

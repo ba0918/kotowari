@@ -1,6 +1,6 @@
 ---
 name: kotowari-investigate
-description: "Read-only investigation a person calls outside the kotowari workflow stations, from a symptom or a question to a report of causes, impact, and fix options. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/ir/`). Use when asked to investigate something, to find why something happens, to look for a root cause, or to see the impact scope of a change. Not for checking a finished change — that is review's diagnosis. 日本語キーワード: 調べて 原因を調査して なぜ〜が起きる 影響範囲を見たい"
+description: "Read-only investigation a person calls outside the kotowari workflow stations, from a symptom or a question to a report of causes, impact, and fix options. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/decisions/`). Use when asked to investigate something, to find why something happens, to look for a root cause, or to see the impact scope of a change. Not for checking a finished change — that is review's diagnosis. 日本語キーワード: 調べて 原因を調査して なぜ〜が起きる 影響範囲を見たい"
 ---
 
 # Investigate
@@ -142,7 +142,7 @@ Show invocations in a form that can be used as is.
 |---|---|---|
 | Small task | iterate | `/kotowari-iterate <request>`; the request names the place and the change |
 | No specification and medium or larger, no basis for a decision, or two readings | brainstorm | `/kotowari-brainstorm <topic>` |
-| Specification exists, medium or larger change | cycle | `/kotowari-cycle <IR store path> <requirement IDs>` |
+| Specification exists, medium or larger change | cycle | `/kotowari-cycle <place of the decision documents> <decisions to build>` |
 | Deferred | the person notes it down | one line to note |
 | No fix needed | say so | `no further action needed` |
 | Not enough evidence | keep investigating | the scope to investigate next |

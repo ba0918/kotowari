@@ -1,6 +1,6 @@
 ---
 name: kotowari-implement
-description: "Workflow station of the kotowari workflow: build the decisions of an approved specification on a branch, delegated by kotowari-cycle. Use only in a repository that uses kotowari (one that has `.kotowari/`, `docs/decisions/` or `docs/ir/`). Use when cycle delegates implementation of a kotowari specification. 日本語キーワード: 実装 仕様を実装 TDD"
+description: "Workflow station of the kotowari workflow: build the decisions of an approved specification on a branch, delegated by kotowari-cycle. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/decisions/`). Use when cycle delegates implementation of a kotowari specification. 日本語キーワード: 実装 仕様を実装 TDD"
 ---
 
 # Implement
@@ -8,9 +8,6 @@ description: "Workflow station of the kotowari workflow: build the decisions of 
 Build the decisions you were given. You decide the order, the files to touch, readability and
 choices of structure, and every detail the decision documents do not write. Code is built
 test-first; documents and small scripts may be written directly.
-
-This skill builds from decision documents. The kotowari skill's `IR` and decision records are the
-old form and are not read here.
 
 ## Inputs and outputs
 
@@ -101,18 +98,18 @@ above.
 ## Decisions and kotowari check
 
 Read each decision you were given in its topic document. Its rows to confirm are what you show
-done; read one row and the tests already marked for it with `kotowari query <row ID>`, and take
+done; read one row and the tests whose markers point at it with `kotowari query <row ID>`, and take
 only the keys you need with `jq` (the kotowari skill's `references/findings.md` has an example).
 Never read `kotowari list` whole.
 
-When writing a test, read the kotowari skill's scene mark (`references/mark.md`) and mark the test
-with the row IDs it verifies. When the brainstorm overturned a decision, point the tests that
+When writing a test, read the kotowari skill's scene mark (`references/mark.md`) and give the test
+a marker with the row IDs it verifies. When the brainstorm overturned a decision, point the tests that
 carried the old rows' IDs at the new rows, or delete them when nothing is left for them to confirm.
 Run `kotowari check` and `kotowari status` before you return; to read their output, read the
 kotowari skill's scene check (`references/findings.md`).
 
 **Turning the state.** When every row of a decision on your list is met — each row checked by a
-test has a passing test whose mark carries its ID, and each row confirmed by reading
+test has a passing test whose marker carries its ID, and each row confirmed by reading
 (`（読んで確認）`, `(by reading)` on an English side) has been read and found true in what you
 wrote — change the decision's state line from `状態: 提案` to `状態: 実装済み` (`Status: proposed`
 to `Status: implemented` on an English side) on every side of its pair, and bring the agreement
@@ -154,7 +151,7 @@ the working diff as **Resuming** says.
 
 There is no progress file. To resume, read `git log`, the working diff, `git status`, your
 working notes if there are any, and which decisions on your list are still proposed and which of
-their rows checked by a test still have no marked test (`tests` empty in `kotowari query`); build
+their rows checked by a test still have no test with a marker (`tests` empty in `kotowari query`); build
 what remains. Work that leaves no trace in git (check-only work, external checks) and
 approved-but-unexecuted human decisions are redone or re-asked.
 
