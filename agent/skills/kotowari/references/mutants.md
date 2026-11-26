@@ -1,6 +1,6 @@
 Based on the kotowari specification (revised 2026-09-23; the version of kotowari itself is not pinned)
 
-Mutation testing puts one small change (a mutation) into the implementation and sees whether the tests fail. If they do not fail, there is no test constraining that change. A mutation that did not make the tests fail is called a miss. `kotowari check` looks only as far as "do requirements and examples have tests with marks", so whether the tests constrain the implementation is looked at here.
+Mutation testing puts one small change (a mutation) into the implementation and sees whether the tests fail. If they do not fail, there is no test constraining that change. A mutation that did not make the tests fail is called a miss. `kotowari check` looks only as far as "does each confirmation row have a test with a marker", so whether the tests constrain the implementation is looked at here.
 
 ## Using kotowari mutants
 
