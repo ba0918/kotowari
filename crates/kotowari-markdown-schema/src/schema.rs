@@ -157,6 +157,9 @@ pub struct Preamble {
     /// フィールド行の並び順を強制する（REQ-schema-041）
     #[serde(default)]
     pub ordered: bool,
+    /// 規則の無い種類のブロックを、その中身ごと受ける（ノードの "open: true"）
+    #[serde(default)]
+    pub open: bool,
 }
 
 /// 節（TBL-schema-004、REQ-schema-024）。
@@ -178,6 +181,9 @@ pub struct Section {
     pub codeblock: Option<CodeBlock>,
     pub item: Option<Item>,
     pub extract: Option<Extract>,
+    /// 規則の無い種類のブロックを、その中身ごと受ける（ノードの "open: true"）
+    #[serde(default)]
+    pub open: bool,
 }
 
 /// 項目（TBL-schema-004、REQ-schema-025）。
@@ -198,6 +204,9 @@ pub struct Item {
     pub required: Option<bool>,
     pub repeat: Option<Repeat>,
     pub extract: Option<Extract>,
+    /// 規則の無い種類のブロックを、その中身ごと受ける（ノードの "open: true"）
+    #[serde(default)]
+    pub open: bool,
 }
 
 /// フィールド行（TBL-schema-004、REQ-schema-029）。
@@ -254,6 +263,9 @@ pub struct Children {
     pub fields: Vec<Field>,
     /// 再帰的に `children` を持つことができる（任意の深さ）
     pub bullets: Option<Box<Bullets>>,
+    /// 規則の無い種類のブロックを、その中身ごと受ける（ノードの "open: true"）
+    #[serde(default)]
+    pub open: bool,
 }
 
 /// 箇条書き（TBL-schema-004、TBL-schema-007）。

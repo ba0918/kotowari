@@ -36,7 +36,7 @@ There are two means of relaxing: the top-level `open: true` of the schema, and `
 
 The means of relaxing work only in the direction of relaxing. Even in the open world, the following are not allowed.
 
-- Undeclared structures and lines added inside a declared preamble, section or item
+- Undeclared structures added inside a declared preamble, section or item, and undeclared lines added inside one that does not declare "open: true" ([The preamble, a section, an item and the children of a bullet accept blocks that have no rule when they declare "open: true"](schema-language.md#the-preamble-a-section-an-item-and-the-children-of-a-bullet-accept-blocks-that-have-no-rule-when-they-declare-open-true))
 - A missing required node
 - A cardinality violation, and a shape violation
 
@@ -45,7 +45,7 @@ How a depth-3 heading before the first section is treated in a schema that decla
 ### Confirmations
 
 - C-schema-closed-2 When the schema declares `open: true` (including checking a directory), and when `--open` is given to `check`, undeclared sections, lines of the preamble and headings before the title, and the lines inside them, get no finding. The same holds for the title of a schema that declares no title
-- C-schema-closed-3 Even in the open world, undeclared headings and lines added inside a declared preamble, section or item are findings
+- C-schema-closed-3 Even in the open world, undeclared headings added inside a declared preamble, section or item, and undeclared lines added inside one that does not declare "open: true", are findings
 - C-schema-closed-4 Even in the open world, a missing required node is a finding
 - C-schema-closed-5 For any document, the set of findings reported in the open world is contained in the set of findings reported when the same document is checked in the closed world
 

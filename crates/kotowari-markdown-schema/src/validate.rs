@@ -27,12 +27,11 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
         }
     }
 
-    // 宣言済みの前置部は open でも未宣言の行を誤りにする。宣言していない
-    // 前置部の内側の行は閉じた世界だけで誤りにする。
-    let effective_open = if doc_rule.preamble.is_some() {
-        false
-    } else {
-        open
+    // 宣言済みの前置部は、自分で "open: true" を宣言しない限り open でも未宣言の行を誤りにする。
+    // 宣言していない前置部の内側の行は閉じた世界だけで誤りにする。
+    let effective_open = match &doc_rule.preamble {
+        Some(preamble) => preamble.open,
+        None => open,
     };
     let rules = ContainerRules::for_preamble(doc_rule.preamble.as_ref());
     // 前置部と文書そのものは開始行を持つノードではないので、欠落の指摘は行を持たない（REQ-schema-008）
@@ -63,7 +62,7 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
                 validate_container(
                     &rules,
                     &section.blocks,
-                    false,
+                    def.open,
                     Some(section.line),
                     &mut findings,
                 );
@@ -223,7 +222,13 @@ fn validate_items(
             ));
         }
         let rules = ContainerRules::for_item(item_rule);
-        validate_container(&rules, &item.blocks, false, Some(item.line), findings);
+        validate_container(
+            &rules,
+            &item.blocks,
+            item_rule.open,
+            Some(item.line),
+            findings,
+        );
     }
 
     // 項目は宣言上の名前を持たないので、指摘にノードの名前を付けない（REQ-schema-008）
@@ -436,6 +441,9 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
                 // 下の子リストは undeclared_line（REQ-schema-001）
                 push_undeclared_children(findings, child);
             }
+            // 規則の無い子の箇条書きは、"open: true" の子の規則なら中身ごと受ける
+            Block::Field { .. } | Block::Bullet { .. }
+                if children.open && children.bullets.is_none() => {}
             // 一致しない `- 名前: 値` 行は箇条書きとして検証する（TBL-schema-007）
             Block::Field { .. } | Block::Bullet { .. } => {
                 validate_child_bullet(
@@ -453,8 +461,10 @@ fn validate_children(block: &Block, children: Option<&Children>, findings: &mut 
             | Block::Table { .. }
             | Block::Code { .. }
             | Block::Other { .. }) => {
-                push_undeclared_line(findings, other);
-                push_undeclared_children(findings, other);
+                if !children.open {
+                    push_undeclared_line(findings, other);
+                    push_undeclared_children(findings, other);
+                }
             }
         }
     }
@@ -1060,5 +1070,7 @@ fn check_occurrence(
     });
 }
 
+#[cfg(test)]
+mod open_tests;
 #[cfg(test)]
 mod tests;
