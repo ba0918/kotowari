@@ -4,14 +4,14 @@ English | [日本語](status.ja.md)
 
 <!-- @kotowari[docs/decisions/core/status.md#status-reads-the-same-things-as-check-and-runs-the-same-checks-and-outputs-counts-and-complete-instead-of-findings:6190a33e] -->
 
-`kotowari status` answers whether the IR (the specification) and the tests are "in place right now", with counts and a single true/false.
-Add one line to your CI, and it stops changes that slip in specification gaps or requirements without tests.
+`kotowari status` answers whether the decision documents (the specification) and the tests are "in place right now", with counts and a single true/false.
+Add one line to your CI, and it stops changes that leave errors or open questions behind.
 
 ## Where it sits among the three read commands
 
 <!-- @kotowari[docs/decisions/core/status.md#status-reads-the-same-things-as-check-and-runs-the-same-checks-and-outputs-counts-and-complete-instead-of-findings:6190a33e] -->
 
-kotowari's tools for reading the IR are arranged in tiers.
+kotowari's tools for reading the specification are arranged in tiers.
 
 ```mermaid
 flowchart BT
@@ -20,7 +20,7 @@ flowchart BT
 ```
 
 - To fix what is wrong, use [`check`](./check.md)
-- To see which tests are attached to which requirements, use [`list`](./list.md)
+- To see which tests are attached to which confirmation rows, use [`list`](./list.md)
 - To know whether the whole is in a shippable state, use `status`
 
 `status` has no judgment of its own; it only aggregates the results of the same configuration and the same checks as `check`.
@@ -54,7 +54,7 @@ Details of the common options and the base directory are in [CLI basics](../cli.
 
 ## Output
 
-From the same configuration and locations as `check`, `status` reads the IR documents, test files, guides and overview data, and — when `surface.rules` is not an empty list — the surface files, the surface rule files and the list of unspecified surfaces, then runs the same checks as `check`.
+From the same configuration and locations as `check`, `status` reads the decision documents, test files, guides and overview data, and — when `surface.rules` is not an empty list — the surface files, the surface rule files and the list of unspecified surfaces, then runs the same checks as `check`.
 It does not print the findings themselves, only counts and `complete`.
 
 ### text
@@ -63,64 +63,57 @@ It does not print the findings themselves, only counts and `complete`.
 
 Each group is printed on one line in the form `group key=value key=value …`.
 The key words are the same as in JSON; values are separated by single spaces with no column alignment.
-Groups come in the order of the table below, and the last line is `complete true` or `complete false`.
+The last line is `complete true` or `complete false`.
 
-Only the `tests` line expands JSON's `files` into `extension=number-of-files` pairs (for example, `tests marks=2042 rs=55`).
+Only the `tests` line expands JSON's `files` into `extension=number-of-files` pairs (for example, `tests marks=2 rs=1`).
 
 ### JSON
 
-<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092, docs/decisions/core/status.md#the-number-of-confirmation-rows-is-output-split-into-those-with-tests-those-without-and-those-by-reading:4b92a0ae, docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2] -->
 
-The top level is an object with only the following group keys, with `complete` last.
-All keys are defined in TBL-core-028 of the [status IR](../../ir/core/status.md).
+The top level is an object with only the following group keys.
+All keys are defined in [the status decisions](../../decisions/core/status.md).
 
 | Group | Keys | Type | Description |
 |---|---|---|---|
-| `documents` | `files`, `lines` | number | The number of IR documents read, and their total line count |
-| `items` | `requirement`, `table`, `property`, `scenario`, `flag` | number | The number of items and scenarios with IDs, per kind |
-| `requirements` | `unit`, `property`, `proof`, `review` | number | The number of requirements per `- verification:` value. Requirements without the line are not counted in any of them |
-| `requirements` | `with_tests`, `without_tests` | number | Among requirements whose verification is not review and that are not deferred, the number with tests and without |
-| `requirements` | `review_with_how_to_verify`, `review_without_how_to_verify` | number | Among requirements whose verification is review, the number with a `- how_to_verify:` line and without |
-| `requirements` | `without_examples` | number | The number of requirements with no scenario naming their ID in `@about`. Deferred requirements are counted too |
-| `requirements` | `deferred` | number | The number of deferred requirements |
-| `scenarios` | `with_tests`, `without_tests` | number | Among scenarios that are not deferred scenarios, the number with a marked test and without |
-| `scenarios` | `deferred` | number | The number of deferred scenarios |
+| `documents` | `files`, `lines` | number | The number of documents read, and their total line count |
 | `tests` | `marks` | number | The number of mark occurrences. A mark with several IDs counts once per ID |
 | `tests` | `files` | object | The same as `tests` in the JSON of `check`. Keys are extensions; values are `files` (the number of files) and `query` (whether it is a language with a query) |
 | `guides` | `files`, `marks` | number | The number of guides read and the number of guide marks (the same as `guides` in `check`) |
 | `overview` | `files`, `marks` | number | The number of overview data files read and the number of guide marks in them (the same as `overview` in `check`). Both are 0 if the configuration has no `overview` key |
-| `surface` | `total`, `specified`, `unspecified` | number | The number of surface kind-and-name pairs, how many of them are in the IR, and how many are not in the IR but excluded by the list of unspecified surfaces ([Surface checks](../surface.md)). All three are 0 if `surface.rules` is an empty list |
+| `surface` | `total`, `specified`, `unspecified` | number | The number of surface kind-and-name pairs, how many of them are quoted in decisions, and how many are not but are excluded by the list of unspecified surfaces ([Surface checks](../surface.md)). All three are 0 if `surface.rules` is an empty list |
+| `decisions` | `proposed`, `implemented` | number | The number of decisions in each state. A decision whose state line is wrong is counted in neither |
+| `confirmations` | `with_tests`, `without_tests`, `by_reading` | number | The confirmation rows, in decisions of either state: those a test's mark points at, those no mark points at, and those that start with `(by reading)` (counted only there) |
 | `findings` | `error`, `notice` | number | The number of errors and notices from `check` |
 | `complete` | (value only) | boolean | Whether everything is in place. The conditions are in the next section |
 
 ### Numbers to watch
 
-<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092, docs/decisions/core/status.md#the-number-of-confirmation-rows-is-output-split-into-those-with-tests-those-without-and-those-by-reading:4b92a0ae] -->
 
 Here are just the numbers you will look at most often.
 
 | Line | Where to look | When to worry |
 |---|---|---|
-| `requirements` | `without_tests` | If not 0, some requirement has no test attached at all |
-| `requirements` | `review_without_how_to_verify` | If not 0, a requirement meant to be checked by a person or an LLM has no description of how to check it |
-| `requirements` | `without_examples` | The number of requirements without concrete examples (scenarios). Not a defect, but a hint at where the specification is thin |
-| `requirements`, `scenarios` | `deferred` | The number of requirements and scenarios declared as not being built for now. They are not included in `without_tests`, so `complete` does not change as they grow |
-| `items` | `flag` | The number of places you yourself recorded as "not fully written as a specification" |
+| `decisions` | `proposed` | The number of decisions decided but not built yet. Not a defect; it shows how much is still to be built |
+| `confirmations` | `without_tests` | Rows no test points at. For an implemented decision each is an error in `check`; rows of proposed decisions are counted here too, without an error |
+| `confirmations` | `by_reading` | Rows a person or an LLM confirms by reading. kotowari does not check them, so the review does |
 | `guides` | `files` / `marks` | The number of guides read and the number of guide marks. A mistyped glob in the configuration makes these 0 |
-| `surface` | `unspecified` | The number of surfaces excluded by the list of unspecified surfaces without being written in the IR. A measure of how much adoption work remains; bring it toward 0 |
+| `surface` | `unspecified` | The number of surfaces excluded by the list of unspecified surfaces without being quoted in a decision. A measure of how much adoption work remains; bring it toward 0 |
 | `findings` | `error` / `notice` | The number of findings from `check`. `notice` means notices, which do not affect whether everything is in place |
 
 ### When `complete` is true
 
-<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed, docs/decisions/core/decision-documents.md#write-questions-handed-back-to-people-in-the-open-section-of-the-topic-document:8286069a] -->
 
 `complete` is true only when both of the following hold.
 
 1. `check` has 0 errors (`error`)
-2. The flag records (`FLAGS.md`) have 0 items
+2. No decision document has an item under `## Open`
 
 No matter how many notices (`notice`) there are, they do not prevent `complete`.
 The distinction is that notices are clues worth fixing, but not a reason to hold back a release.
+Decisions left proposed do not prevent it either.
 
 ## Exit codes
 
@@ -144,24 +137,21 @@ The reasons and messages for stopping are the same as for `check` ([CLI basics](
 
 Run it at the repository root.
 For reading it yourself, `--format text` is handy.
+This is the result for the decision document of [the `kotowari list` example](./list.md#example) with a test for each of its two rows checked by tests (only the groups described above are shown).
 
 ```console
-$ kotowari status --format text
-documents files=52 lines=6238
-items requirement=305 table=48 property=13 scenario=374 flag=0
-requirements unit=260 property=3 proof=0 review=42 with_tests=263 without_tests=0 review_with_how_to_verify=42 review_without_how_to_verify=0 without_examples=138 deferred=0
-scenarios with_tests=367 without_tests=7 deferred=0
-tests marks=2152 rs=58
-guides files=14 marks=525
-surface total=11 specified=11 unspecified=0
-findings error=0 notice=8
+$ kotowari status --format text | grep -E '^(tests|guides|overview|surface|decisions|confirmations|findings|complete)'
+tests marks=2 rs=1
+guides files=0 marks=0
+overview files=0 marks=0
+surface total=0 specified=0 unspecified=0
+decisions proposed=0 implemented=2
+confirmations with_tests=2 without_tests=0 by_reading=1
+findings error=0 notice=0
 complete true
 ```
 
-This is the result of running it on kotowari's own repository on 2026-09-27.
-In the current version, which reads overview data, an `overview files=… marks=…` line also appears after the `guides` line (both 0 if the configuration has no `overview` key).
 The final `complete true` is the answer; the lines above it are its breakdown.
-Note that `complete` is true even though there are notices.
 
 The default output is JSON, with the same key names as text.
 Use it when a script or an agent reads the output.
@@ -188,38 +178,38 @@ For the detailed reasons, run `kotowari check --format text` in the same checkou
 
 ## Common pitfalls
 
-### `without_tests` is not 0
+### `without_tests` is not 0, yet check has no error
 
-<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/status.md#the-number-of-confirmation-rows-is-output-split-into-those-with-tests-those-without-and-those-by-reading:4b92a0ae] -->
+<!-- @kotowari[docs/decisions/core/status.md#the-number-of-confirmation-rows-is-output-split-into-those-with-tests-those-without-and-those-by-reading:4b92a0ae, docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66] -->
 
-Some requirements have no marks (`@kotowari[REQ-...]`) on their tests.
-`kotowari list --format text | grep 'tests=0$'` finds items with no marked tests.
-Deferred items end their line with ` deferred`, so this grep does not match them.
-Note, however, that a requirement counts as "having tests" even without a direct mark if a scenario naming it in `@about` has a test.
-When you find a requirement with `tests=0` in the list, also check its scenarios.
-If you decided not to build the requirement for now, making it deferred instead of adding a test removes it from `without_tests`.
+`without_tests` counts the rows of proposed decisions too, and those need no test yet.
+After adding a proposed decision with one row to the example:
 
-### `review_without_how_to_verify` is not 0
+```console
+$ kotowari check --format text
+$ kotowari status --format text | grep -E '^(decisions|confirmations|complete)'
+decisions proposed=1 implemented=2
+confirmations with_tests=2 without_tests=1 by_reading=1
+complete true
+```
 
-<!-- @kotowari[docs/decisions/core/decision-documents.md#write-one-decision-as-text-in-problem-decision-rejected-options-and-confirmations:3990395b] -->
+To find the rows of implemented decisions that still need a test, read `check`, or filter `list`: `kotowari list | jq -r '.items[] | select(.kind == "confirmation" and .state == "implemented" and .tests == [] and (.by_reading | not)) | .id'`.
 
-A requirement that cannot be checked by tests (`verification: review`) has no `- how_to_verify:` line.
-Without a procedure, neither a person nor an LLM can check it, so `check` treats this as an error.
+### `complete` is false, yet check has no error
 
-### `flag` is not 0
+<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed, docs/decisions/core/decision-documents.md#write-questions-handed-back-to-people-in-the-open-section-of-the-topic-document:8286069a] -->
 
-<!-- @kotowari[docs/decisions/core/status.md#the-exit-code-is-0-when-complete-and-1-otherwise:ba9a7aed] -->
+A decision document has an item under `## Open`: a question handed back to a person is still waiting.
 
-Unresolved points written in `FLAGS.md` remain.
-`complete` will not be true until you fill in the specification and remove the record.
+```console
+$ kotowari check --format text
+$ echo $?
+0
+$ kotowari status --format text | grep '^complete'
+complete false
+```
 
-### The sum of `unit`, `property`, `proof` and `review` is less than `requirement`
-
-<!-- @kotowari[docs/decisions/core/status.md#the-summary-outputs-per-group-the-counts-of-test-markers-guides-overview-surfaces-and-findings:d52c4092] -->
-
-Some requirements have no `- verification:` line. Such requirements are not counted in any per-verification count.
-This is also an error in `check`, so `complete` is false.
-`kotowari check --format text` shows where they are.
+`complete` will not be true until the person decides, the decision is written, and the item is removed from `## Open`.
 
 ### Stopping with `config error: ...: matched by both guides.files and tests.files`
 
@@ -231,10 +221,10 @@ Fix the two globs so they do not overlap ([Configuration](../config.md)).
 
 ## Related
 
-- Specification: [status IR](../../ir/core/status.md)
+- Specification: [the status decisions](../../decisions/core/status.md)
 - Seeing findings one by one: [`kotowari check`](./check.md)
-- Seeing items and tests one by one: [`kotowari list`](./list.md)
-- Seeing one item with its body and reverse references: [`kotowari query`](./query.md)
+- Seeing decisions, rows and tests one by one: [`kotowari list`](./list.md)
+- Seeing one decision or row with its body: [`kotowari query`](./query.md)
 - Kinds of findings: [Findings](../findings.md)
 - Common options, stopping and the base directory: [CLI basics](../cli.md)
 - Configuration file: [Configuration](../config.md)
