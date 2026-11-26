@@ -33,7 +33,7 @@ mod tests {
 
     // @kotowari[C-core-plan-1]
     #[test]
-    fn req_core_191_the_embedded_plan_schema_parses() {
+    fn the_embedded_plan_schema_parses() {
         let schema = plan_schema();
         assert!(
             schema.is_ok(),

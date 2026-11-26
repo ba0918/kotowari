@@ -53,7 +53,7 @@ fn run_query(tmp: &Path, id: &str) -> serde_json::Value {
 
 // @kotowari[C-core-query-3]
 #[test]
-fn req_156_duplicate_ids_are_all_listed() {
+fn duplicate_ids_are_all_listed() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     for name in ["a.md", "b.md"] {
@@ -78,7 +78,7 @@ fn req_156_duplicate_ids_are_all_listed() {
 
 // @kotowari[C-core-clienv-7, C-core-query-7]
 #[test]
-fn req_157_unknown_id_stops() {
+fn unknown_id_stops() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     let (code, stdout, stderr) = run_query_raw(tmp.path(), &["C-t-999"]);
@@ -98,7 +98,7 @@ fn req_157_unknown_id_stops() {
 
 // @kotowari[C-core-query-11]
 #[test]
-fn req_161_json_top_level_has_only_items() {
+fn json_top_level_has_only_items() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     write(

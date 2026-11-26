@@ -144,7 +144,7 @@ proptest! {
 
     // @kotowari[C-view-rendering-7]
     #[test]
-    fn ex_view_002_the_same_input_renders_to_the_same_bytes(input in input()) {
+    fn the_same_input_renders_to_the_same_bytes(input in input()) {
         let first = render(&input);
         let second = render(&input.clone());
         prop_assert_eq!(first.len(), second.len());

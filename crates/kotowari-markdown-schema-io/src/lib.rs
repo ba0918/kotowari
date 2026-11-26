@@ -445,7 +445,7 @@ mod tests {
 
     // @kotowari[C-schema-resolve-10]
     #[test]
-    fn ex_schema_067_a_fetch_past_the_time_limit_stops() {
+    fn a_fetch_past_the_time_limit_stops() {
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let port = listener.local_addr().unwrap().port();
         let (release, wait) = std::sync::mpsc::channel();

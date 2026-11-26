@@ -19,7 +19,7 @@ fn valid_project_dir() -> &'static Path {
 
 // @kotowari[C-core-cli-1, C-core-cli-5]
 #[test]
-fn req_001_the_commands_run_and_other_words_are_not_commands() {
+fn the_commands_run_and_other_words_are_not_commands() {
     // "kotowari check" は通る
     cmd()
         .arg("check")
@@ -72,7 +72,7 @@ fn req_001_the_commands_run_and_other_words_are_not_commands() {
 // 受けるオプションの集合を固定するのはこのテスト（否定側）
 // @kotowari[C-core-clienv-7, C-core-clienv-11, C-core-cli-4, C-core-cli-14, C-core-cli-16]
 #[test]
-fn req_004_unknown_option_stops() {
+fn unknown_option_stops() {
     let output = cmd()
         .args(["check", "--verbose"])
         .current_dir(valid_project_dir())
@@ -91,7 +91,7 @@ fn req_004_unknown_option_stops() {
 
 // @kotowari[C-core-cli-10, C-core-cli-14]
 #[test]
-fn req_004_positional_argument_stops() {
+fn positional_argument_stops() {
     cmd()
         .args(["check", "extra"])
         .current_dir(valid_project_dir())
@@ -109,7 +109,7 @@ fn req_004_positional_argument_stops() {
 
 // @kotowari[C-core-cli-8]
 #[test]
-fn req_004_unknown_format_value_stops() {
+fn unknown_format_value_stops() {
     cmd()
         .args(["check", "--format", "xml"])
         .current_dir(valid_project_dir())
@@ -120,7 +120,7 @@ fn req_004_unknown_format_value_stops() {
 
 // @kotowari[C-core-cli-9]
 #[test]
-fn req_004_missing_config_file_stops() {
+fn missing_config_file_stops() {
     cmd()
         .args(["check", "--config", "nonexistent.yaml"])
         .current_dir(valid_project_dir())
@@ -131,7 +131,7 @@ fn req_004_missing_config_file_stops() {
 
 // @kotowari[C-core-cli-5]
 #[test]
-fn req_004_unknown_command_before_check_has_the_unknown_command_wording() {
+fn unknown_command_before_check_has_the_unknown_command_wording() {
     // "check" より前の未知の位置引数は "unknown command: ..."（"unexpected argument: ..." ではない）
     let output = cmd()
         .args(["foo"])
@@ -149,7 +149,7 @@ fn req_004_unknown_command_before_check_has_the_unknown_command_wording() {
 
 // @kotowari[C-core-clienv-10, C-core-cli-6, C-core-cli-14]
 #[test]
-fn req_004_no_arguments_names_all_seven_commands() {
+fn no_arguments_names_all_seven_commands() {
     let output = cmd().current_dir(valid_project_dir()).output().unwrap();
     assert_eq!(output.status.code(), Some(2));
     assert!(output.stdout.is_empty());
@@ -164,7 +164,7 @@ fn req_004_no_arguments_names_all_seven_commands() {
 
 // @kotowari[C-core-clienv-10, C-core-cli-6]
 #[test]
-fn req_004_options_without_a_command_names_all_seven_commands() {
+fn options_without_a_command_names_all_seven_commands() {
     let output = cmd()
         .args(["--format", "text"])
         .current_dir(valid_project_dir())
@@ -184,7 +184,7 @@ fn req_004_options_without_a_command_names_all_seven_commands() {
 
 // @kotowari[C-core-clienv-1]
 #[test]
-fn req_107_help_and_version_exit_zero_without_check() {
+fn help_and_version_exit_zero_without_check() {
     // --help は check 無しでも終了コード0
     let out = cmd()
         .arg("--help")
@@ -206,7 +206,7 @@ fn req_107_help_and_version_exit_zero_without_check() {
 
 // @kotowari[C-core-clienv-2]
 #[test]
-fn req_107_help_wins_over_argument_errors() {
+fn help_wins_over_argument_errors() {
     // --help が他の引数の誤りに優先する
     cmd()
         .args(["--help", "--unknown"])
@@ -225,7 +225,7 @@ fn req_107_help_wins_over_argument_errors() {
 
 // @kotowari[C-core-cli-8, C-core-cli-14]
 #[test]
-fn req_004_option_without_value_stops() {
+fn option_without_value_stops() {
     cmd()
         .args(["check", "--format"])
         .current_dir(valid_project_dir())
@@ -236,7 +236,7 @@ fn req_004_option_without_value_stops() {
 
 // @kotowari[C-core-cli-8, C-core-cli-14]
 #[test]
-fn req_004_repeated_option_stops() {
+fn repeated_option_stops() {
     cmd()
         .args(["check", "--format", "json", "--format", "text"])
         .current_dir(valid_project_dir())
@@ -247,7 +247,7 @@ fn req_004_repeated_option_stops() {
 
 // @kotowari[C-core-cli-9, C-core-cli-14]
 #[test]
-fn req_004_config_pointing_to_directory_stops() {
+fn config_pointing_to_directory_stops() {
     cmd()
         .args(["check", "--config", "."])
         .current_dir(valid_project_dir())
@@ -258,7 +258,7 @@ fn req_004_config_pointing_to_directory_stops() {
 
 // @kotowari[C-core-cli-2]
 #[test]
-fn req_002_options_before_or_after_check() {
+fn options_before_or_after_check() {
     // オプションが check の前でも後でも受ける
     cmd()
         .args(["--format", "json", "check"])
@@ -276,7 +276,7 @@ fn req_002_options_before_or_after_check() {
 
 // @kotowari[C-core-clienv-8, C-core-cli-14]
 #[test]
-fn req_005_config_error_detail_path_is_relative_to_base_not_to_cwd() {
+fn config_error_detail_path_is_relative_to_base_not_to_cwd() {
     use std::fs;
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
@@ -305,7 +305,7 @@ fn req_005_config_error_detail_path_is_relative_to_base_not_to_cwd() {
 
 // @kotowari[C-core-output-1]
 #[test]
-fn req_021_default_format_is_json() {
+fn default_format_is_json() {
     let assert = cmd()
         .arg("check")
         .current_dir(valid_project_dir())
@@ -319,7 +319,7 @@ fn req_021_default_format_is_json() {
 
 // @kotowari[C-core-clienv-8, C-core-cli-14]
 #[test]
-fn req_005_config_outside_the_base_is_shown_relative_with_parent_segments() {
+fn config_outside_the_base_is_shown_relative_with_parent_segments() {
     // 基準の外にある設定ファイルの詳細は "../" を含む基準からの相対パス
     use std::fs;
     use tempfile::TempDir;
@@ -355,7 +355,7 @@ const ONE_CAUGHT_RESULT: &str = r#"{"outcomes":[
 
 // @kotowari[C-core-cli-2]
 #[test]
-fn req_002_mutants_options_can_come_before_the_command_and_after_the_path() {
+fn mutants_options_can_come_before_the_command_and_after_the_path() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     std::fs::write(tmp.path().join("outcomes.json"), ONE_CAUGHT_RESULT).unwrap();
@@ -381,7 +381,7 @@ fn req_002_mutants_options_can_come_before_the_command_and_after_the_path() {
 
 // @kotowari[C-core-mutin-7]
 #[test]
-fn req_144_missing_result_file_is_an_unreadable_file() {
+fn missing_result_file_is_an_unreadable_file() {
     let output = cmd()
         .args(["mutants", "--tool", "cargo-mutants", "no-such-file.json"])
         .current_dir(valid_project_dir())
@@ -421,21 +421,21 @@ fn assert_argument_error(args: &[&str], dir: &Path) {
 
 // @kotowari[C-core-cli-12]
 #[test]
-fn req_149_mutants_without_tool_is_an_argument_error() {
+fn mutants_without_tool_is_an_argument_error() {
     let tmp = dir_with_results(&["outcomes.json"]);
     assert_argument_error(&["mutants", "outcomes.json"], tmp.path());
 }
 
 // @kotowari[C-core-cli-12]
 #[test]
-fn req_149_unknown_tool_is_an_argument_error() {
+fn unknown_tool_is_an_argument_error() {
     let tmp = dir_with_results(&["a.json"]);
     assert_argument_error(&["mutants", "--tool", "stryker", "a.json"], tmp.path());
 }
 
 // @kotowari[C-core-cli-13]
 #[test]
-fn req_149_two_result_paths_is_an_argument_error() {
+fn two_result_paths_is_an_argument_error() {
     let tmp = dir_with_results(&["a.json", "b.json"]);
     assert_argument_error(
         &["mutants", "--tool", "cargo-mutants", "a.json", "b.json"],
@@ -445,14 +445,14 @@ fn req_149_two_result_paths_is_an_argument_error() {
 
 // @kotowari[C-core-cli-13]
 #[test]
-fn req_149_mutants_without_a_result_path_is_an_argument_error() {
+fn mutants_without_a_result_path_is_an_argument_error() {
     let tmp = dir_with_results(&[]);
     assert_argument_error(&["mutants", "--tool", "cargo-mutants"], tmp.path());
 }
 
 // @kotowari[C-core-cli-7]
 #[test]
-fn req_004_tool_on_check_is_an_argument_error() {
+fn tool_on_check_is_an_argument_error() {
     assert_argument_error(&["check", "--tool", "cargo-mutants"], valid_project_dir());
 }
 
@@ -460,19 +460,19 @@ fn req_004_tool_on_check_is_an_argument_error() {
 
 // @kotowari[C-core-cli-7, C-core-list-14]
 #[test]
-fn req_152_tool_on_list_is_an_argument_error() {
+fn tool_on_list_is_an_argument_error() {
     assert_argument_error(&["list", "--tool", "cargo-mutants"], valid_project_dir());
 }
 
 // @kotowari[C-core-cli-10, C-core-list-14]
 #[test]
-fn req_152_positional_after_list_is_an_argument_error() {
+fn positional_after_list_is_an_argument_error() {
     assert_argument_error(&["list", "extra"], valid_project_dir());
 }
 
 // @kotowari[C-core-cli-2]
 #[test]
-fn req_002_list_options_can_come_before_or_after_the_command() {
+fn list_options_can_come_before_or_after_the_command() {
     // オプションが list の前でも後でも受ける
     cmd()
         .args(["--format", "json", "list"])
@@ -488,7 +488,7 @@ fn req_002_list_options_can_come_before_or_after_the_command() {
 
 // @kotowari[C-core-list-13]
 #[test]
-fn req_152_unreadable_config_stops_like_check() {
+fn list_stops_like_check_on_an_unreadable_config() {
     assert_stops_like_check(&["list"]);
 }
 
@@ -496,7 +496,7 @@ fn req_152_unreadable_config_stops_like_check() {
 
 // @kotowari[C-core-cli-17]
 #[test]
-fn req_008_render_is_an_argument_error() {
+fn render_is_an_argument_error() {
     // "render" はコマンドにならない
     assert_argument_error(&["render"], valid_project_dir());
 }
@@ -505,19 +505,19 @@ fn req_008_render_is_an_argument_error() {
 
 // @kotowari[C-core-query-5]
 #[test]
-fn req_157_two_positional_arguments_stop() {
+fn two_positional_arguments_stop() {
     assert_argument_error(&["query", "C-t-a-1", "C-t-a-2"], valid_project_dir());
 }
 
 // @kotowari[C-core-query-5]
 #[test]
-fn req_157_query_with_no_positional_stops() {
+fn query_with_no_positional_stops() {
     assert_argument_error(&["query"], valid_project_dir());
 }
 
 // @kotowari[C-core-query-6]
 #[test]
-fn req_157_positional_that_is_not_an_id_stops() {
+fn positional_that_is_not_an_id_stops() {
     // ID の形でない語と、数字が足りない ID
     assert_argument_error(&["query", "foo"], valid_project_dir());
     assert_argument_error(&["query", "REQ-01"], valid_project_dir());
@@ -525,13 +525,13 @@ fn req_157_positional_that_is_not_an_id_stops() {
 
 // @kotowari[C-core-cli-10]
 #[test]
-fn req_004_positional_after_status_stops() {
+fn positional_after_status_stops() {
     assert_argument_error(&["status", "extra"], valid_project_dir());
 }
 
 // @kotowari[C-core-cli-7]
 #[test]
-fn req_004_tool_on_query_or_status_stops() {
+fn tool_on_query_or_status_stops() {
     assert_argument_error(
         &["query", "--tool", "cargo-mutants", "C-t-a-1"],
         valid_project_dir(),
@@ -541,7 +541,7 @@ fn req_004_tool_on_query_or_status_stops() {
 
 // @kotowari[C-core-cli-2]
 #[test]
-fn req_002_query_and_status_options_before_or_after_the_command() {
+fn query_and_status_options_before_or_after_the_command() {
     // オプションが query と status の前でも後でも受ける
     let project = dir_with_one_decision();
     for args in [
@@ -560,7 +560,7 @@ fn req_002_query_and_status_options_before_or_after_the_command() {
 
 // @kotowari[C-core-cli-3]
 #[test]
-fn req_002_check_runs_with_allow_test_findings() {
+fn check_runs_with_allow_test_findings() {
     cmd()
         .args(["check", "--allow-test-findings"])
         .current_dir(valid_project_dir())
@@ -570,14 +570,14 @@ fn req_002_check_runs_with_allow_test_findings() {
 
 // @kotowari[C-core-cli-7, C-core-testside-3]
 #[test]
-fn ex_core_552_allow_test_findings_on_status_is_an_argument_error() {
+fn allow_test_findings_on_status_is_an_argument_error() {
     let project = dir_with_one_decision();
     assert_argument_error(&["status", "--allow-test-findings"], project.path());
 }
 
 // @kotowari[C-core-cli-2]
 #[test]
-fn ex_core_380_query_takes_an_option_after_the_id() {
+fn query_takes_an_option_after_the_id() {
     let project = dir_with_one_decision();
     cmd()
         .args(["query", "C-t-a-1", "--format", "text"])
@@ -588,13 +588,13 @@ fn ex_core_380_query_takes_an_option_after_the_id() {
 
 // @kotowari[C-core-query-8]
 #[test]
-fn req_158_unreadable_config_stops_like_check() {
+fn query_stops_like_check_on_an_unreadable_config() {
     assert_stops_like_check(&["query", "C-t-a-1"]);
 }
 
 // @kotowari[C-core-status-3]
 #[test]
-fn req_163_unreadable_config_stops_like_check() {
+fn status_stops_like_check_on_an_unreadable_config() {
     assert_stops_like_check(&["status"]);
 }
 

@@ -39,7 +39,7 @@ fn findings_by_kind(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value>
 
 // @kotowari[C-core-output-8]
 #[test]
-fn req_025_finding_kind_displays_as_its_own_kind_word() {
+fn finding_kind_displays_as_its_own_kind_word() {
     // --format text の出力は "{kind}" を通して種類の語を書く（CLI の text の出力）。
     // その Display の実装が種類ごとの語を書くことを直接確かめる。
     assert_eq!(
@@ -57,7 +57,7 @@ fn req_025_finding_kind_displays_as_its_own_kind_word() {
 
 // @kotowari[C-core-forder-1]
 #[test]
-fn req_024_a_finding_kind_equals_only_its_own_name() {
+fn a_finding_kind_equals_only_its_own_name() {
     // `==` に書いた文字列リテラルは `PartialEq<&str>` を通る（既存のテストで検査済み）。
     // ここでは `PartialEq<str>` 側の実装を `.eq()` で直接呼び、
     // 自分の種類の名前だけに真を返すことを確かめる。
@@ -79,7 +79,7 @@ fn req_024_a_finding_kind_equals_only_its_own_name() {
 
 // @kotowari[C-core-findings-1]
 #[test]
-fn req_031_only_the_kinds_of_the_table_are_notices() {
+fn only_the_kinds_of_the_table_are_notices() {
     // 本体が注意にする種類（"kotowari mutants" の2種類は check の出力には現れない）
     let notices: std::collections::BTreeSet<&str> = kotowari_core::FindingKind::ALL
         .iter()
@@ -105,7 +105,7 @@ fn req_031_only_the_kinds_of_the_table_are_notices() {
 
 // @kotowari[C-core-findings-1]
 #[test]
-fn req_031_check_reports_notices_only_for_the_notice_kinds() {
+fn check_reports_notices_only_for_the_notice_kinds() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 指紋の古いガイドの印（guide_stale）と、問題の節の無い決定（誤り）を出す
@@ -166,7 +166,7 @@ fn req_031_check_reports_notices_only_for_the_notice_kinds() {
 
 // @kotowari[C-core-forder-4]
 #[test]
-fn req_027_document_wide_findings_have_null_line() {
+fn document_wide_findings_have_null_line() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(tmp.path().join("docs/decisions/a.md"), "No title\n").unwrap();
@@ -183,7 +183,7 @@ fn req_027_document_wide_findings_have_null_line() {
 
 // @kotowari[C-core-forder-3]
 #[test]
-fn req_028_lines_start_at_one() {
+fn lines_start_at_one() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 7行目の見出しで unknown_heading を出す
@@ -211,7 +211,7 @@ fn req_028_lines_start_at_one() {
 
 // @kotowari[C-core-forder-1]
 #[test]
-fn req_024_sorted_by_path_line_kind_detail() {
+fn sorted_by_path_line_kind_detail() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 複数の文書に指摘を出す
@@ -259,7 +259,7 @@ fn req_024_sorted_by_path_line_kind_detail() {
 
 // @kotowari[C-core-forder-2]
 #[test]
-fn prop_003_findings_are_sorted() {
+fn findings_are_sorted() {
     // run_check を通して、ライブラリが返す findings が
     // path → line → kind → detail の順で並んでいることを検証する。
     //
@@ -336,7 +336,7 @@ fn prop_003_findings_are_sorted() {
 
 // @kotowari[C-core-markers-7]
 #[test]
-fn tbl_019_marker_findings_line_is_the_marker_line() {
+fn marker_findings_line_is_the_marker_line() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -360,7 +360,7 @@ fn tbl_019_marker_findings_line_is_the_marker_line() {
 
 // @kotowari[C-core-clienv-6]
 #[test]
-fn ex_core_269_a_document_with_a_form_finding_still_takes_the_cross_document_checks() {
+fn a_document_with_a_form_finding_still_takes_the_cross_document_checks() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // a.md の決定は問題の節を欠き、その確認することの ID が b.md の行と重なる

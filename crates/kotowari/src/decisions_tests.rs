@@ -21,7 +21,7 @@ fn find_by_kind<'a>(findings: &'a [Finding], kind: &str) -> Vec<&'a Finding> {
 }
 // @kotowari[C-core-document-1]
 #[test]
-fn req_033_subdirectories_are_read_at_any_depth() {
+fn subdirectories_are_read_at_any_depth() {
     let tmp = tempfile::tempdir().unwrap();
     for dir in ["docs/decisions/sub/deep", "docs/decisions/empty"] {
         std::fs::create_dir_all(tmp.path().join(dir)).unwrap();
@@ -52,7 +52,7 @@ fn req_033_subdirectories_are_read_at_any_depth() {
 // @kotowari[C-core-document-2, C-core-document-3, C-core-document-4, C-core-document-13]
 #[test]
 #[cfg(unix)]
-fn req_033_hidden_dir_and_dir_symlink_are_not_followed_at_any_depth() {
+fn hidden_dir_and_dir_symlink_are_not_followed_at_any_depth() {
     use std::os::unix::{fs::symlink, net::UnixListener};
     let tmp = tempfile::tempdir().unwrap();
     std::fs::create_dir_all(tmp.path().join("outside")).unwrap();
@@ -79,7 +79,7 @@ fn req_033_hidden_dir_and_dir_symlink_are_not_followed_at_any_depth() {
 // @kotowari[C-core-clienv-5, C-core-clienv-12, C-core-document-4]
 #[test]
 #[cfg(unix)]
-fn req_033_broken_symlink_in_a_subdirectory_stops() {
+fn broken_symlink_in_a_subdirectory_stops() {
     let tmp = tempfile::tempdir().unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/decisions/sub")).unwrap();
     std::os::unix::fs::symlink("missing", tmp.path().join("docs/decisions/sub/broken.md")).unwrap();
@@ -94,7 +94,7 @@ fn req_033_broken_symlink_in_a_subdirectory_stops() {
 
 // @kotowari[C-core-findings-9]
 #[test]
-fn req_032_first_occurrence_is_bytewise_first_relative_path() {
+fn first_occurrence_is_bytewise_first_relative_path() {
     let tmp = tempfile::tempdir().unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/decisions/a")).unwrap();
     for file in ["a.md", "a/b.md"] {

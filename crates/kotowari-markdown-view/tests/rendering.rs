@@ -60,7 +60,7 @@ fn position(text: &str, needle: &str) -> usize {
 
 // @kotowari[C-view-rendering-5]
 #[test]
-fn ex_view_001_two_documents_give_four_pages() {
+fn two_documents_give_four_pages() {
     let input = RenderInput {
         documents: vec![
             document("guides", "ガイドの印", vec![]),
@@ -92,7 +92,7 @@ fn contents(names: &[&str]) -> TocGroup {
 
 // @kotowari[C-view-rendering-8, C-view-rendering-9]
 #[test]
-fn ex_view_010_the_index_follows_the_contents_order_and_nesting() {
+fn the_index_follows_the_contents_order_and_nesting() {
     let input = RenderInput {
         documents: vec![
             document("a", "題名A", vec![]),
@@ -137,7 +137,7 @@ fn ex_view_010_the_index_follows_the_contents_order_and_nesting() {
 
 // @kotowari[C-view-rendering-8]
 #[test]
-fn req_view_005_the_note_of_the_contents_is_drawn_under_the_index_heading() {
+fn the_note_of_the_contents_is_drawn_under_the_index_heading() {
     let mut toc = contents(&["a"]);
     toc.note = Some("製品の地図".into());
     let input = RenderInput {
@@ -154,7 +154,7 @@ fn req_view_005_the_note_of_the_contents_is_drawn_under_the_index_heading() {
 
 // @kotowari[C-view-rendering-8]
 #[test]
-fn req_view_005_the_note_of_a_nested_group_is_part_of_the_group_heading() {
+fn the_note_of_a_nested_group_is_part_of_the_group_heading() {
     let input = RenderInput {
         documents: vec![document("a", "題名A", vec![])],
         references: vec![],
@@ -181,7 +181,7 @@ fn req_view_005_the_note_of_a_nested_group_is_part_of_the_group_heading() {
 
 // @kotowari[C-view-rendering-6]
 #[test]
-fn req_view_002_pages_refer_to_the_shared_style_and_to_each_other_relatively() {
+fn pages_refer_to_the_shared_style_and_to_each_other_relatively() {
     let input = RenderInput {
         documents: vec![document("changes", "変更照合", vec![])],
         references: vec![],
@@ -199,7 +199,7 @@ fn req_view_002_pages_refer_to_the_shared_style_and_to_each_other_relatively() {
 
 // @kotowari[C-view-rendering-5]
 #[test]
-fn req_view_002_no_documents_still_give_the_index_and_the_style() {
+fn no_documents_still_give_the_index_and_the_style() {
     let pages = render(&RenderInput::default());
     let names: Vec<&str> = pages.iter().map(|page| page.name.as_str()).collect();
     assert_eq!(names, ["index.html", "style.css"]);
@@ -207,7 +207,7 @@ fn req_view_002_no_documents_still_give_the_index_and_the_style() {
 
 // @kotowari[C-view-rendering-1]
 #[test]
-fn req_view_001_the_input_carries_documents_sections_the_reference_table_and_the_contents() {
+fn the_input_carries_documents_sections_the_reference_table_and_the_contents() {
     let input = RenderInput {
         documents: vec![document(
             "a",
@@ -247,7 +247,7 @@ fn req_view_001_the_input_carries_documents_sections_the_reference_table_and_the
 
 // @kotowari[C-view-rendering-10]
 #[test]
-fn req_view_006_the_lead_follows_the_title_and_sections_keep_their_order() {
+fn the_lead_follows_the_title_and_sections_keep_their_order() {
     let input = RenderInput {
         documents: vec![document(
             "a",
@@ -274,7 +274,7 @@ fn req_view_006_the_lead_follows_the_title_and_sections_keep_their_order() {
 
 // @kotowari[C-view-rendering-10]
 #[test]
-fn req_view_006_preamble_parts_follow_the_lead_in_order_before_the_sections() {
+fn preamble_parts_follow_the_lead_in_order_before_the_sections() {
     let steps = |title: &str| Part {
         kind: "steps".into(),
         value: json!({"items": [{"title": title}]}),
@@ -313,7 +313,7 @@ fn one_section_page(blocks: Vec<Block>) -> String {
 
 // @kotowari[C-view-rendering-17, C-view-rendering-18]
 #[test]
-fn ex_view_003_raw_html_is_text_and_comments_are_dropped() {
+fn raw_html_is_text_and_comments_are_dropped() {
     let text = one_section_page(vec![Block::Markdown(
         "前の文\n\n<script>x</script>\n\n<!-- @kotowari[REQ-core-001:00000000] -->\n\n後の文 <!-- inline --> 続き\n"
             .into(),
@@ -327,7 +327,7 @@ fn ex_view_003_raw_html_is_text_and_comments_are_dropped() {
 
 // @kotowari[C-view-rendering-18]
 #[test]
-fn req_view_007_text_next_to_a_comment_is_not_drawn_as_code() {
+fn text_next_to_a_comment_is_not_drawn_as_code() {
     for source in [
         "<!-- c -->text\n",
         "  <!-- c -->  text\n",
@@ -350,7 +350,7 @@ fn collapsed(page: &str) -> String {
 
 // @kotowari[C-view-rendering-18]
 #[test]
-fn req_view_007_a_comment_spanning_lines_inside_a_paragraph_keeps_one_paragraph() {
+fn a_comment_spanning_lines_inside_a_paragraph_keeps_one_paragraph() {
     let with = one_section_page(vec![Block::Markdown("before <!--\nc\n--> AFTER\n".into())]);
     let without = one_section_page(vec![Block::Markdown("before AFTER\n".into())]);
     assert_eq!(collapsed(&with), collapsed(&without));
@@ -358,7 +358,7 @@ fn req_view_007_a_comment_spanning_lines_inside_a_paragraph_keeps_one_paragraph(
 
 // @kotowari[C-view-rendering-18]
 #[test]
-fn req_view_007_a_comment_line_keeps_the_blocks_around_it_apart() {
+fn a_comment_line_keeps_the_blocks_around_it_apart() {
     for (source, expected) in [
         ("para1\n<!-- c -->\npara2\n", "para1\n\npara2\n"),
         ("p\n<!-- c -->\n---\n", "p\n\n---\n"),
@@ -372,7 +372,7 @@ fn req_view_007_a_comment_line_keeps_the_blocks_around_it_apart() {
 
 // @kotowari[C-view-rendering-11]
 #[test]
-fn req_view_007_markdown_text_follows_commonmark_and_gfm_tables() {
+fn markdown_text_follows_commonmark_and_gfm_tables() {
     let text = one_section_page(vec![Block::Markdown(
         "### 小見出し\n\n- 項目\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n`code` と **強調**\n".into(),
     )]);
@@ -421,7 +421,7 @@ fn page_with_references(refs: &[&str], references: Vec<Reference>) -> String {
 
 // @kotowari[C-view-rendering-13, C-view-rendering-14]
 #[test]
-fn ex_view_004_a_superseded_reference_opens_its_body_in_place_with_a_mark() {
+fn a_superseded_reference_opens_its_body_in_place_with_a_mark() {
     let with = |state| {
         page_with_references(
             &["docs/x.md#A1"],
@@ -440,7 +440,7 @@ fn ex_view_004_a_superseded_reference_opens_its_body_in_place_with_a_mark() {
 
 // @kotowari[C-view-rendering-13, C-view-rendering-14]
 #[test]
-fn req_view_008_deferred_references_are_marked_and_no_reference_links_out() {
+fn deferred_references_are_marked_and_no_reference_links_out() {
     let refs = ["REQ-x-001", "REQ-x-002", "missing"];
     let with = |state| {
         page_with_references(
@@ -472,7 +472,7 @@ fn req_view_008_deferred_references_are_marked_and_no_reference_links_out() {
 
 // @kotowari[C-view-rendering-15]
 #[test]
-fn ex_view_005_only_the_stale_section_carries_the_mark() {
+fn only_the_stale_section_carries_the_mark() {
     let with = |stale: bool| {
         let mut a = section("節A", vec![]);
         a.stale = stale;
@@ -496,7 +496,7 @@ fn ex_view_005_only_the_stale_section_carries_the_mark() {
 
 // @kotowari[C-view-rendering-11, C-view-languages-3]
 #[test]
-fn req_view_007_footnote_syntax_is_not_drawn_as_footnotes() {
+fn footnote_syntax_is_not_drawn_as_footnotes() {
     // 脚注は GFM の表ではなく、描くと UI の文字に無い英語の見出しと戻りリンクの文字が入る
     let text = one_section_page(vec![Block::Markdown("本文[^1]\n\n[^1]: 注\n".into())]);
     for needle in ["Footnotes", "Back to content", "data-footnotes", "footnote"] {
@@ -511,7 +511,7 @@ fn req_view_007_footnote_syntax_is_not_drawn_as_footnotes() {
 
 // @kotowari[C-view-rendering-12]
 #[test]
-fn ex_view_024_a_reference_link_is_resolved_only_within_its_own_block() {
+fn a_reference_link_is_resolved_only_within_its_own_block() {
     let text = one_section_page(vec![
         Block::Markdown("[a][x]\n\n[x]: https://example.com\n".into()),
         Block::Part(lead("間の部品")),

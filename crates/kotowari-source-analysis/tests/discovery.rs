@@ -20,7 +20,7 @@ fn discover_in_rust_file(
 
 // @kotowari[C-core-queries-7]
 #[test]
-fn req_082_macro_reparse_byte_offset_reflects_delimiter_position() {
+fn macro_reparse_byte_offset_reflects_delimiter_position() {
     // マクロの呼び出しと開き波括弧が別の行にあるとき、行番号はその波括弧の行を基準にする
     let mut config = kotowari_core::config::Config::default();
     config.tests.rust.macros = vec!["my_macro".to_string()];
@@ -60,7 +60,7 @@ fn req_082_macro_reparse_byte_offset_reflects_delimiter_position() {
 
 // @kotowari[C-core-markers-7, C-core-queries-7]
 #[test]
-fn req_082_macro_function_and_marker_lines_use_additive_offset() {
+fn macro_function_and_marker_lines_use_additive_offset() {
     // マクロの前に複数行あるとき（line_offset > 0）、関数・印・不正な印の行番号は
     // すべて「マクロの中の行番号 + line_offset」で計算される
     let mut config = kotowari_core::config::Config::default();
@@ -87,7 +87,7 @@ fn req_082_macro_function_and_marker_lines_use_additive_offset() {
 
 // @kotowari[C-core-queries-4]
 #[test]
-fn req_082_plain_test_function_line_is_one_indexed() {
+fn plain_test_function_line_is_one_indexed() {
     let content = "// leading 1\n// leading 2\n#[test]\nfn t() {}\n";
     let tests = discover_in_rust_file(
         content,
@@ -105,7 +105,7 @@ fn req_082_plain_test_function_line_is_one_indexed() {
 
 // @kotowari[C-core-queries-4]
 #[test]
-fn req_082_function_with_unrelated_attribute_is_not_counted() {
+fn function_with_unrelated_attribute_is_not_counted() {
     // #[test] でも設定された属性でもない属性しか持たない関数はテストとして数えない
     let content = "#[allow(dead_code)]\nfn not_a_test() {}\n";
     let tests = discover_in_rust_file(
@@ -123,7 +123,7 @@ fn req_082_function_with_unrelated_attribute_is_not_counted() {
 
 // @kotowari[C-core-queries-4]
 #[test]
-fn req_082_has_attribute_skips_block_comment_to_find_test_attribute() {
+fn has_attribute_skips_block_comment_to_find_test_attribute() {
     let content = "#[test]\n/* intermediate comment */\nfn t() {}\n";
     let tests = discover_in_rust_file(
         content,
@@ -140,7 +140,7 @@ fn req_082_has_attribute_skips_block_comment_to_find_test_attribute() {
 
 // @kotowari[C-core-queries-5]
 #[test]
-fn req_082_has_configured_attribute_skips_line_comment() {
+fn has_configured_attribute_skips_line_comment() {
     let mut config = kotowari_core::config::Config::default();
     config.tests.rust.attributes = vec!["kani::proof".to_string()];
     let content = "#[kani::proof(unwind = 3)]\n// intermediate comment\nfn my_proof() {}\n";
@@ -154,7 +154,7 @@ fn req_082_has_configured_attribute_skips_line_comment() {
 
 // @kotowari[C-core-queries-5]
 #[test]
-fn req_082_has_configured_attribute_skips_block_comment() {
+fn has_configured_attribute_skips_block_comment() {
     let mut config = kotowari_core::config::Config::default();
     config.tests.rust.attributes = vec!["kani::proof".to_string()];
     let content = "#[kani::proof]\n/* note */\nfn my_proof() {}\n";
@@ -168,7 +168,7 @@ fn req_082_has_configured_attribute_skips_block_comment() {
 
 // @kotowari[C-core-markers-4, C-core-markers-7]
 #[test]
-fn req_072_invalid_marker_on_second_line_of_multiline_comment_before_test() {
+fn invalid_marker_on_second_line_of_multiline_comment_before_test() {
     // 複数行にまたがるブロックコメントの2行目にある印の行番号は、
     // コメントの開始行 + オフセット + 1 になる（コメントの1行目ではない）
     let content = "// leading\n/* note\n@kotowari[] */\n#[test]\nfn t() {}\n";
@@ -189,7 +189,7 @@ fn req_072_invalid_marker_on_second_line_of_multiline_comment_before_test() {
 
 // @kotowari[C-core-markers-6]
 #[test]
-fn req_072_indented_invalid_marker_before_test_keeps_indentation() {
+fn indented_invalid_marker_before_test_keeps_indentation() {
     // 不正な印の detail は生の行の文字（インデントを含む）であり、
     // コメント自身の文字列（インデントを含まない）ではない
     let content = "    // @kotowari[]\n    #[test]\n    fn t() {}\n";
@@ -210,7 +210,7 @@ fn req_072_indented_invalid_marker_before_test_keeps_indentation() {
 
 // @kotowari[C-core-markers-7]
 #[test]
-fn req_072_invalid_marker_line_index_stays_additive_at_boundary() {
+fn invalid_marker_line_index_stays_additive_at_boundary() {
     // 複数行のコメントの最後の行の印の行番号は、コメントの開始行からの足し算で決まる
     let content = "// leading 1\n// leading 2\n// leading 3\n/* line2\nline3\nline4\n@kotowari[] */\n#[test] fn t() {}";
     let tests = discover_in_rust_file(
@@ -237,7 +237,7 @@ fn req_072_invalid_marker_line_index_stays_additive_at_boundary() {
 
 // @kotowari[C-core-markers-9]
 #[test]
-fn tbl_016_invalid_marker_at_body_start_is_ignored() {
+fn invalid_marker_at_body_start_is_ignored() {
     for content in [
         "#[test]\nfn t() {\n    /* note\n    @kotowari[] */\n}\n",
         "#[test]\nfn t() {\n    // @kotowari[]\n}\n",
@@ -260,7 +260,7 @@ fn tbl_016_invalid_marker_at_body_start_is_ignored() {
 
 // @kotowari[C-core-markers-14]
 #[test]
-fn tbl_035_comments_and_multi_line_attributes_form_one_block() {
+fn comments_and_multi_line_attributes_form_one_block() {
     // コメントの行と複数行にわたる属性の行が空行なしで混ざっても、1つの塊として結び付く
     let content = "// @kotowari[REQ-001]\n#[cfg_attr(\n    feature = \"x\",\n    ignore\n)]\n// note\n#[test]\nfn t() {}\n";
     let tests = discover_in_rust_file(
@@ -279,7 +279,7 @@ fn tbl_035_comments_and_multi_line_attributes_form_one_block() {
 
 // @kotowari[C-core-markers-15]
 #[test]
-fn tbl_035_blank_line_inside_a_comment_or_an_attribute_does_not_cut_the_block() {
+fn blank_line_inside_a_comment_or_an_attribute_does_not_cut_the_block() {
     // 空白だけの行でも、複数行のコメントや属性の途中にあれば塊の行に数える
     let in_comment = "/* @kotowari[REQ-001]\n\n*/\n#[test]\nfn t() {}\n";
     let in_attribute =
@@ -302,7 +302,7 @@ fn tbl_035_blank_line_inside_a_comment_or_an_attribute_does_not_cut_the_block() 
 
 // @kotowari[C-core-findings-3, C-core-document-8, C-core-markers-6]
 #[test]
-fn tbl_008_invalid_marker_detail_of_a_crlf_test_file_has_no_carriage_return() {
+fn invalid_marker_detail_of_a_crlf_test_file_has_no_carriage_return() {
     let content = "// @kotowari[]\r\n#[test]\r\nfn t() {}\r\n";
     let tests = discover_in_rust_file(
         content,
@@ -320,7 +320,7 @@ fn tbl_008_invalid_marker_detail_of_a_crlf_test_file_has_no_carriage_return() {
 
 // @kotowari[C-core-markers-16]
 #[test]
-fn tbl_035_comment_after_code_on_the_same_line_breaks_the_block() {
+fn comment_after_code_on_the_same_line_breaks_the_block() {
     let content = "// @kotowari[REQ-001]\nconst N: u8 = 1; // note\n#[test]\nfn t() {}\n";
     let tests = discover_in_rust_file(
         content,
@@ -334,7 +334,7 @@ fn tbl_035_comment_after_code_on_the_same_line_breaks_the_block() {
 
 // @kotowari[C-core-queries-7]
 #[test]
-fn tbl_017_macro_not_in_the_configuration_is_not_reread() {
+fn macro_not_in_the_configuration_is_not_reread() {
     let mut config = kotowari_core::config::Config::default();
     config.tests.rust.macros = vec!["my_macro".to_string()];
     let content = "other_macro! {\n    fn t() {}\n}\nmy_macro! {\n    fn u() {}\n}\n";
@@ -345,7 +345,7 @@ fn tbl_017_macro_not_in_the_configuration_is_not_reread() {
 
 // @kotowari[C-core-discover-13]
 #[test]
-fn req_181_test_inside_a_test_is_counted_apart() {
+fn test_inside_a_test_is_counted_apart() {
     let content =
         "#[test]\nfn outer() {\n    // @kotowari[REQ-001]\n    #[test]\n    fn inner() {}\n}\n";
     let tests = discover_in_rust_file(
@@ -367,7 +367,7 @@ fn req_181_test_inside_a_test_is_counted_apart() {
 
 // @kotowari[C-core-discover-12]
 #[test]
-fn req_181_one_node_hit_by_two_queries_is_one_test() {
+fn one_node_hit_by_two_queries_is_one_test() {
     // 同梱の "#[test]" のルールと設定の属性のルールが同じ関数に当たる
     let mut config = kotowari_core::config::Config::default();
     // "my::check" は設定のルールにしか当たらないので、設定のルールが効いていることも分かる
@@ -380,7 +380,7 @@ fn req_181_one_node_hit_by_two_queries_is_one_test() {
 
 // @kotowari[C-core-queries-7]
 #[test]
-fn tbl_017_macro_with_parentheses_or_brackets_is_reread() {
+fn macro_with_parentheses_or_brackets_is_reread() {
     let mut config = kotowari_core::config::Config::default();
     config.tests.rust.macros = vec!["my_macro".to_string()];
     let content = "my_macro!( fn parenthesized() {} );\nmy_macro![ fn bracketed() {} ];\n";

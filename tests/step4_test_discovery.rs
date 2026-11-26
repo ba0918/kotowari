@@ -58,7 +58,7 @@ fn findings_by_kind(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value>
 
 // @kotowari[C-core-discover-1]
 #[test]
-fn req_079_reads_files_matching_the_globs() {
+fn reads_files_matching_the_globs() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
@@ -82,7 +82,7 @@ fn req_079_reads_files_matching_the_globs() {
 
 // @kotowari[C-core-discover-4]
 #[test]
-fn req_080_uses_tree_sitter_with_bundled_rust_query() {
+fn uses_tree_sitter_with_bundled_rust_query() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -105,7 +105,7 @@ fn req_080_uses_tree_sitter_with_bundled_rust_query() {
 
 // @kotowari[C-core-discover-7]
 #[test]
-fn req_081_extension_decides_the_language_case_sensitively() {
+fn extension_decides_the_language_case_sensitively() {
     // 表の拡張子だけが言語を決め、大文字小文字を区別する。".go" は言語が決まっても
     // 問い合わせが無いので false、".PY" と ".Rs" は言語が決まらないので false
     let tmp = TempDir::new().unwrap();
@@ -127,7 +127,7 @@ fn req_081_extension_decides_the_language_case_sensitively() {
 
 // @kotowari[C-core-discover-6]
 #[test]
-fn ex_core_293_file_of_a_language_without_a_query_is_not_parsed() {
+fn file_of_a_language_without_a_query_is_not_parsed() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
@@ -142,7 +142,7 @@ fn ex_core_293_file_of_a_language_without_a_query_is_not_parsed() {
 
 // @kotowari[C-core-discover-7]
 #[test]
-fn ex_core_295_upper_case_extension_decides_no_language() {
+fn upper_case_extension_decides_no_language() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
@@ -157,7 +157,7 @@ fn ex_core_295_upper_case_extension_decides_no_language() {
 
 // @kotowari[C-core-document-7, C-core-document-8, C-core-markers-7]
 #[test]
-fn tbl_010_lone_cr_ends_a_line_of_a_test_file() {
+fn lone_cr_ends_a_line_of_a_test_file() {
     // 行の区切りは単独の "\r" も行の終わりに数える。"\n" だけで数えると、
     // "\r" の後の印が前の行に報告される
     let tmp = TempDir::new().unwrap();
@@ -203,7 +203,7 @@ fn tbl_010_lone_cr_ends_a_line_of_a_test_file() {
 
 // @kotowari[C-core-queries-4]
 #[test]
-fn req_082_test_attribute_is_always_counted() {
+fn test_attribute_is_always_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -224,7 +224,7 @@ fn req_082_test_attribute_is_always_counted() {
 
 // @kotowari[C-core-queries-5]
 #[test]
-fn req_082_configured_attribute_matches_path_with_arguments() {
+fn configured_attribute_matches_path_with_arguments() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
@@ -251,7 +251,7 @@ fn req_082_configured_attribute_matches_path_with_arguments() {
 
 // @kotowari[C-core-queries-7]
 #[test]
-fn req_082_macro_body_functions_are_counted_by_last_segment() {
+fn macro_body_functions_are_counted_by_last_segment() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
@@ -279,7 +279,7 @@ fn req_082_macro_body_functions_are_counted_by_last_segment() {
 
 // @kotowari[C-core-queries-7]
 #[test]
-fn req_082_two_functions_in_a_path_macro_are_both_counted() {
+fn two_functions_in_a_path_macro_are_both_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
@@ -309,7 +309,7 @@ fn req_082_two_functions_in_a_path_macro_are_both_counted() {
 
 // @kotowari[C-core-discover-8]
 #[test]
-fn req_083_unparsable_file_is_skipped() {
+fn unparsable_file_is_skipped() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -336,7 +336,7 @@ fn req_083_unparsable_file_is_skipped() {
 
 // @kotowari[C-core-markers-4]
 #[test]
-fn req_072_invalid_marker() {
+fn invalid_marker() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -354,7 +354,7 @@ fn req_072_invalid_marker() {
 
 // @kotowari[C-core-findings-3, C-core-markers-6]
 #[test]
-fn req_072_invalid_marker_detail_is_line_text() {
+fn invalid_marker_detail_is_line_text() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -377,7 +377,7 @@ fn req_072_invalid_marker_detail_is_line_text() {
 
 // @kotowari[C-core-markers-9]
 #[test]
-fn req_072_invalid_marker_outside_test_is_ignored() {
+fn invalid_marker_outside_test_is_ignored() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -399,7 +399,7 @@ fn req_072_invalid_marker_outside_test_is_ignored() {
 
 // @kotowari[C-core-markers-4]
 #[test]
-fn req_072_invalid_marker_second_on_line_is_detected() {
+fn invalid_marker_second_on_line_is_detected() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -423,7 +423,7 @@ fn req_072_invalid_marker_second_on_line_is_detected() {
 
 // @kotowari[C-core-markers-2]
 #[test]
-fn req_073_both_markers_on_one_line_bind_to_the_test() {
+fn both_markers_on_one_line_bind_to_the_test() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
@@ -461,7 +461,7 @@ fn req_073_both_markers_on_one_line_bind_to_the_test() {
 
 // @kotowari[C-core-markers-14]
 #[test]
-fn req_075_marker_before_attributes_binds() {
+fn marker_before_attributes_binds() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
@@ -481,7 +481,7 @@ fn req_075_marker_before_attributes_binds() {
 
 // @kotowari[C-core-markers-8]
 #[test]
-fn ex_core_306_marker_at_body_start_does_not_bind() {
+fn marker_at_body_start_does_not_bind() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
@@ -507,7 +507,7 @@ fn ex_core_306_marker_at_body_start_does_not_bind() {
 
 // @kotowari[C-core-markers-8]
 #[test]
-fn req_075_body_start_marker_does_not_add_to_the_marks_before() {
+fn body_start_marker_does_not_add_to_the_marks_before() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 2つの確認することの行
@@ -532,7 +532,7 @@ fn req_075_body_start_marker_does_not_add_to_the_marks_before() {
 
 // @kotowari[C-core-markers-9]
 #[test]
-fn req_075_marker_in_body_middle_is_ignored() {
+fn marker_in_body_middle_is_ignored() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
@@ -555,7 +555,7 @@ fn req_075_marker_in_body_middle_is_ignored() {
 
 // @kotowari[C-core-markers-18]
 #[test]
-fn ex_core_324_mark_in_an_attribute_body_is_not_read() {
+fn mark_in_an_attribute_body_is_not_read() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
@@ -578,7 +578,7 @@ fn ex_core_324_mark_in_an_attribute_body_is_not_read() {
 
 // @kotowari[C-core-queries-6]
 #[test]
-fn ex_core_326_test_inside_a_function_body_is_counted() {
+fn test_inside_a_function_body_is_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -596,7 +596,7 @@ fn ex_core_326_test_inside_a_function_body_is_counted() {
 
 // @kotowari[C-core-queries-7]
 #[test]
-fn ex_core_330_function_in_a_mod_inside_a_macro_is_counted() {
+fn function_in_a_mod_inside_a_macro_is_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
@@ -619,7 +619,7 @@ fn ex_core_330_function_in_a_mod_inside_a_macro_is_counted() {
 
 // @kotowari[C-core-markers-11]
 #[test]
-fn ex_core_325_marks_bind_only_to_the_first_test_on_the_line() {
+fn marks_bind_only_to_the_first_test_on_the_line() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
@@ -653,7 +653,7 @@ fn ex_core_325_marks_bind_only_to_the_first_test_on_the_line() {
 
 // @kotowari[C-core-markers-11, C-core-markers-12, C-core-queries-7]
 #[test]
-fn tbl_016_marks_bind_only_to_the_first_macro_function_on_the_line() {
+fn marks_bind_only_to_the_first_macro_function_on_the_line() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
@@ -677,7 +677,7 @@ fn tbl_016_marks_bind_only_to_the_first_macro_function_on_the_line() {
 
 // @kotowari[C-core-markers-11, C-core-markers-12, C-core-queries-7]
 #[test]
-fn tbl_016_macro_function_before_a_normal_test_on_the_line_takes_the_marks() {
+fn macro_function_before_a_normal_test_on_the_line_takes_the_marks() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
@@ -704,7 +704,7 @@ fn tbl_016_macro_function_before_a_normal_test_on_the_line_takes_the_marks() {
 
 // @kotowari[C-core-markers-19]
 #[test]
-fn req_076_unknown_language_scans_raw_text() {
+fn unknown_language_scans_raw_text() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
@@ -732,7 +732,7 @@ fn req_076_unknown_language_scans_raw_text() {
 
 // @kotowari[C-core-markers-19]
 #[test]
-fn req_076_unknown_language_marker_line_is_one_indexed_from_its_own_line() {
+fn unknown_language_marker_line_is_one_indexed_from_its_own_line() {
     // 問い合わせの無い言語では、印の行は印のある行そのもの（先頭からの行番号）であり、0 ではない
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -768,7 +768,7 @@ fn req_076_unknown_language_marker_line_is_one_indexed_from_its_own_line() {
 
 // @kotowari[C-core-markers-21]
 #[test]
-fn req_077_unresolved_only_marker_still_counts() {
+fn unresolved_only_marker_still_counts() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -790,7 +790,7 @@ fn req_077_unresolved_only_marker_still_counts() {
 
 // @kotowari[C-core-confirm-4]
 #[test]
-fn req_054_marker_to_known_id_is_not_unresolved() {
+fn marker_to_known_id_is_not_unresolved() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
@@ -816,7 +816,7 @@ fn req_054_marker_to_known_id_is_not_unresolved() {
 
 // @kotowari[C-core-confirm-4]
 #[test]
-fn req_054_marker_to_unknown_id_is_unresolved() {
+fn marker_to_unknown_id_is_unresolved() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -841,7 +841,7 @@ fn req_054_marker_to_unknown_id_is_unresolved() {
 
 // @kotowari[C-core-cover-1]
 #[test]
-fn req_086_fixture_has_no_unmarked_test_and_one_after_removal() {
+fn fixture_has_no_unmarked_test_and_one_after_removal() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -876,7 +876,7 @@ fn req_086_fixture_has_no_unmarked_test_and_one_after_removal() {
 
 // @kotowari[C-core-cover-4]
 #[test]
-fn req_087_unknown_language_only_feeds_coverage() {
+fn unknown_language_only_feeds_coverage() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
@@ -906,7 +906,7 @@ fn req_087_unknown_language_only_feeds_coverage() {
 
 // @kotowari[C-core-markers-20]
 #[test]
-fn req_072_non_query_language_checks_invalid_marker() {
+fn non_query_language_checks_invalid_marker() {
     // .go ファイルの空の印 → invalid_marker が出る
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -933,7 +933,7 @@ fn req_072_non_query_language_checks_invalid_marker() {
 
 // @kotowari[C-core-confirm-4]
 #[test]
-fn req_054_non_query_language_checks_unresolved_reference() {
+fn non_query_language_checks_unresolved_reference() {
     // .go ファイルの存在しない ID の印 → unresolved_reference が出る
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -962,7 +962,7 @@ fn req_054_non_query_language_checks_unresolved_reference() {
 
 // @kotowari[C-core-confirm-4]
 #[test]
-fn req_077_malformed_id_in_marker_is_unresolved_reference_rs() {
+fn malformed_id_in_marker_is_unresolved_reference_rs() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -983,7 +983,7 @@ fn req_077_malformed_id_in_marker_is_unresolved_reference_rs() {
 
 // @kotowari[C-core-confirm-4]
 #[test]
-fn req_077_malformed_id_in_marker_is_unresolved_reference_non_rs() {
+fn malformed_id_in_marker_is_unresolved_reference_non_rs() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
@@ -1011,7 +1011,7 @@ fn req_077_malformed_id_in_marker_is_unresolved_reference_non_rs() {
 
 // @kotowari[C-core-cover-5]
 #[test]
-fn req_088_empty_ir_still_checks_tests() {
+fn no_decision_documents_still_checks_tests() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 決定の文書なし
@@ -1042,7 +1042,7 @@ fn req_088_empty_ir_still_checks_tests() {
 
 // @kotowari[C-core-markers-13]
 #[test]
-fn tbl_016_blank_line_between_marker_and_test_breaks_binding() {
+fn blank_line_between_marker_and_test_breaks_binding() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
@@ -1065,7 +1065,7 @@ fn tbl_016_blank_line_between_marker_and_test_breaks_binding() {
 
 // @kotowari[C-core-markers-13]
 #[test]
-fn tbl_016_blank_line_between_marker_and_function_breaks_binding() {
+fn blank_line_between_marker_and_function_breaks_binding() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
@@ -1088,7 +1088,7 @@ fn tbl_016_blank_line_between_marker_and_function_breaks_binding() {
 
 // @kotowari[C-core-markers-12]
 #[test]
-fn tbl_016_macro_function_boundary_breaks_marker_binding() {
+fn macro_function_boundary_breaks_marker_binding() {
     // マクロ内で印 → fn a() → fn b()（空行なし）
     // b には印が無いので test_without_id が出る
     let tmp = TempDir::new().unwrap();
@@ -1126,7 +1126,7 @@ fn tbl_016_macro_function_boundary_breaks_marker_binding() {
 // @kotowari[C-core-clienv-7]
 #[test]
 #[cfg(unix)]
-fn tbl_001_unreadable_test_file_stops() {
+fn unreadable_test_file_stops() {
     use std::os::unix::fs::PermissionsExt;
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -1154,7 +1154,7 @@ fn tbl_001_unreadable_test_file_stops() {
 
 // @kotowari[C-core-clienv-7]
 #[test]
-fn tbl_001_non_utf8_test_file_stops() {
+fn non_utf8_test_file_stops() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
@@ -1182,7 +1182,7 @@ fn tbl_001_non_utf8_test_file_stops() {
 // @kotowari[C-core-discover-2, C-core-discover-3]
 #[test]
 #[cfg(unix)]
-fn req_079_file_symlink_is_read() {
+fn file_symlink_is_read() {
     // ファイルのシンボリックリンクは読む（ディレクトリのリンクは辿らない）
     use std::os::unix::fs::symlink;
     let tmp = TempDir::new().unwrap();
@@ -1234,7 +1234,7 @@ fn req_079_file_symlink_is_read() {
 // @kotowari[C-core-clienv-7, C-core-config-11, C-core-discover-17]
 #[test]
 #[cfg(unix)]
-fn req_018_unreadable_directory_under_tests_stops() {
+fn unreadable_directory_under_tests_stops() {
     use std::os::unix::fs::PermissionsExt;
     if std::process::Command::new("id")
         .arg("-u")
@@ -1270,7 +1270,7 @@ fn req_018_unreadable_directory_under_tests_stops() {
 
 // @kotowari[C-core-config-22]
 #[test]
-fn req_019_hidden_directory_is_excluded_and_subdirectory_is_included() {
+fn hidden_directory_is_excluded_and_subdirectory_is_included() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 再帰が効くことの確認: tests/sub/deep.rs に印の無いテストを置く
@@ -1308,7 +1308,7 @@ fn req_019_hidden_directory_is_excluded_and_subdirectory_is_included() {
 
 // @kotowari[C-core-queries-4]
 #[test]
-fn req_082_test_attribute_after_comment_is_recognized() {
+fn test_attribute_after_comment_is_recognized() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);
@@ -1339,7 +1339,7 @@ fn req_082_test_attribute_after_comment_is_recognized() {
 
 // @kotowari[C-core-queries-5]
 #[test]
-fn req_082_function_without_configured_attribute_not_counted() {
+fn function_without_configured_attribute_not_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(
@@ -1363,7 +1363,7 @@ fn req_082_function_without_configured_attribute_not_counted() {
 
 // @kotowari[C-core-markers-7]
 #[test]
-fn req_118_unresolved_reference_line_is_the_marker_line() {
+fn unresolved_reference_line_is_the_marker_line() {
     // unresolved_reference の line は印のある行
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -1393,7 +1393,7 @@ fn req_118_unresolved_reference_line_is_the_marker_line() {
 
 // @kotowari[C-core-queries-4]
 #[test]
-fn tbl_017_attribute_path_ending_in_test_is_counted() {
+fn attribute_path_ending_in_test_is_counted() {
     // "#[ test ]" や "#[core::prelude::v1::test]" も数える
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -1415,7 +1415,7 @@ fn tbl_017_attribute_path_ending_in_test_is_counted() {
 
 // @kotowari[C-core-queries-7]
 #[test]
-fn tbl_017_nested_function_in_macro_is_not_counted() {
+fn nested_function_in_macro_is_not_counted() {
     // マクロの中の入れ子の関数は数えない（最上位だけ）
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -1447,7 +1447,7 @@ fn tbl_017_nested_function_in_macro_is_not_counted() {
 
 // @kotowari[C-core-markers-8, C-core-markers-12]
 #[test]
-fn tbl_016_macro_function_body_marker_does_not_bind() {
+fn macro_function_body_marker_does_not_bind() {
     // マクロの中の関数でも、本体の先頭のコメントの印は結び付かない
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -1481,7 +1481,7 @@ fn tbl_016_macro_function_body_marker_does_not_bind() {
 
 // @kotowari[C-core-markers-12]
 #[test]
-fn tbl_016_macro_function_block_comment_marker_binds() {
+fn macro_function_block_comment_marker_binds() {
     // マクロの中の関数でも、通常の関数と同じ規則で複数行のブロックコメントの印が結び付く
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -1524,7 +1524,7 @@ fn tbl_016_macro_function_block_comment_marker_binds() {
 
 // @kotowari[C-core-confirm-4]
 #[test]
-fn req_054_duplicate_marker_id_in_same_test_reports_per_occurrence() {
+fn duplicate_marker_id_in_same_test_reports_per_occurrence() {
     // 同じテストに同じ ID を指す印が複数あるとき、unresolved_reference は出現ごとに1件
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -1554,7 +1554,7 @@ fn req_054_duplicate_marker_id_in_same_test_reports_per_occurrence() {
 
 // @kotowari[C-core-markers-5]
 #[test]
-fn req_072_marker_spanning_lines_is_invalid() {
+fn marker_spanning_lines_is_invalid() {
     // 行をまたぐ印は invalid_marker
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -1576,7 +1576,7 @@ fn req_072_marker_spanning_lines_is_invalid() {
 
 // @kotowari[C-core-markers-6]
 #[test]
-fn req_072_detail_is_the_raw_line() {
+fn detail_is_the_raw_line() {
     // invalid_marker の detail は生の行
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -1598,7 +1598,7 @@ fn req_072_detail_is_the_raw_line() {
 
 // @kotowari[C-core-discover-7]
 #[test]
-fn req_081_uppercase_extension_has_no_query() {
+fn uppercase_extension_has_no_query() {
     // ".RS" は問い合わせの無い言語（大文字小文字を区別）
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -1626,7 +1626,7 @@ fn req_081_uppercase_extension_has_no_query() {
 
 // @kotowari[C-core-config-23]
 #[test]
-fn req_019_hidden_file_matched_by_glob_is_read() {
+fn hidden_file_matched_by_glob_is_read() {
     // ".foo.rs" は glob が当てれば読まれる
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -1649,7 +1649,7 @@ fn req_019_hidden_file_matched_by_glob_is_read() {
 // @kotowari[C-core-config-11, C-core-discover-14]
 #[test]
 #[cfg(unix)]
-fn req_079_broken_symlink_in_tests_stops() {
+fn broken_symlink_in_tests_stops() {
     use std::os::unix::fs::symlink;
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -1673,7 +1673,7 @@ fn req_079_broken_symlink_in_tests_stops() {
 // @kotowari[C-core-config-11, C-core-discover-15]
 #[test]
 #[cfg(unix)]
-fn req_079_broken_symlink_outside_glob_stops() {
+fn broken_symlink_outside_glob_stops() {
     // 走査は基準のディレクトリ全体（隠しディレクトリを除く）を歩いてから glob で選ぶので、
     // glob に当たらない場所（既定は src/**/*.rs, tests/**/*.rs）の先の無いシンボリックリンクでも停止する
     use std::os::unix::fs::symlink;
@@ -1693,7 +1693,7 @@ fn req_079_broken_symlink_outside_glob_stops() {
 
 // @kotowari[C-core-base-6, C-core-document-1, C-core-output-7]
 #[test]
-fn req_033_confirmation_without_test_path_carries_the_subdirectory() {
+fn confirmation_without_test_path_carries_the_subdirectory() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(
@@ -1717,7 +1717,7 @@ fn write_test_file(tmp: &std::path::Path, name: &str, content: &str) {
 
 // @kotowari[C-core-markers-1]
 #[test]
-fn req_137_one_marker_may_name_several_scenarios() {
+fn one_marker_may_name_several_scenarios() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1", "C-t-a-2"]);
@@ -1738,7 +1738,7 @@ fn req_137_one_marker_may_name_several_scenarios() {
 
 // @kotowari[C-core-cover-3]
 #[test]
-fn req_087_marker_in_a_file_without_query_feeds_scenario_coverage() {
+fn marker_in_a_file_without_query_feeds_scenario_coverage() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     make_decision_with_rows(tmp.path(), "docs/decisions/t/a.md", &["C-t-a-1"]);

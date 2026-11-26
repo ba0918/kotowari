@@ -145,7 +145,7 @@ fn ast_schema_outputs_typed_tree() {
 
 // @kotowari[C-schema-cli-3, C-schema-cli-4]
 #[test]
-fn ex_schema_082_083_ast_schema_is_values_with_the_schema_name_as_type() {
+fn ast_schema_is_values_with_the_schema_name_as_type() {
     let dir = tempfile::tempdir().unwrap();
     let ast_and_values = |schema: &str| {
         write_file(dir.path(), "schema.yaml", schema);
@@ -1352,7 +1352,7 @@ fn all_findings(check_json: &serde_json::Value) -> Vec<serde_json::Value> {
 
 // @kotowari[C-schema-lang-5]
 #[test]
-fn ex_schema_040_schema_without_reading_reads_by_paragraph() {
+fn schema_without_reading_reads_by_paragraph() {
     let rules = r#"
   sections:
     - name: 要求
@@ -1484,7 +1484,7 @@ fn line_reading_reads_thematic_breaks_as_statements_and_numbered_lines_as_ordere
 
 // @kotowari[C-schema-block-17]
 #[test]
-fn ex_schema_051_headings_are_commonmark_atx_headings_in_both_readings() {
+fn headings_are_commonmark_atx_headings_in_both_readings() {
     let paragraph = "reading: paragraph\ndocument:\n  preamble: {}\n";
     let line = "reading: line\ndocument:\n  preamble: {}\n";
     // 行番号: "  ## x" が4行目、"####### y" が6行目、"#z" が8行目
@@ -1528,7 +1528,7 @@ fn ex_schema_051_headings_are_commonmark_atx_headings_in_both_readings() {
 
 // @kotowari[C-schema-block-18]
 #[test]
-fn ex_schema_052_a_gfm_table_without_leading_pipes_is_a_table_when_reading_by_line() {
+fn a_gfm_table_without_leading_pipes_is_a_table_when_reading_by_line() {
     let schema = "reading: line\ndocument:\n  preamble:\n    table:\n      extract: rows\n";
     let doc = "a | b\n--- | ---\n1 | 2\n";
     let (code, json, stderr) = mds_json(schema, doc, "values");
@@ -1538,8 +1538,7 @@ fn ex_schema_052_a_gfm_table_without_leading_pipes_is_a_table_when_reading_by_li
 
 // @kotowari[C-schema-block-18]
 #[test]
-fn tbl_schema_011_tables_missing_a_pipe_in_the_header_or_delimiter_row_are_tables_in_both_readings()
-{
+fn tables_missing_a_pipe_in_the_header_or_delimiter_row_are_tables_in_both_readings() {
     let rules = "document:\n  preamble:\n    table:\n      extract: rows\n";
     let docs = [
         // 見出しの行に縦棒が無い
@@ -1559,8 +1558,7 @@ fn tbl_schema_011_tables_missing_a_pipe_in_the_header_or_delimiter_row_are_table
 
 // @kotowari[C-schema-doc-16]
 #[test]
-fn ex_schema_053_open_world_without_a_declared_preamble_allows_a_level_three_heading_before_sections()
- {
+fn open_world_without_a_declared_preamble_allows_a_level_three_heading_before_sections() {
     let schema = "open: true\ndocument:\n  sections:\n    - name: 節\n";
     let doc = "### X-1: a\n\n中の行\n\n## 節\n";
     let (code, json, stderr) = mds_json(schema, doc, "check");
@@ -1570,7 +1568,7 @@ fn ex_schema_053_open_world_without_a_declared_preamble_allows_a_level_three_hea
 
 // @kotowari[C-schema-lang-6]
 #[test]
-fn ex_schema_041_unknown_reading_value_stops() {
+fn unknown_reading_value_stops() {
     let schema = "reading: word\ndocument:\n  sections:\n    - name: 要求\n";
     let (code, _json, stderr) = mds_json(schema, "## 要求\n", "check");
     assert_eq!(code, Some(2), "stderr: {stderr}");
@@ -1579,7 +1577,7 @@ fn ex_schema_041_unknown_reading_value_stops() {
 
 // @kotowari[C-schema-cli-24]
 #[test]
-fn ex_schema_063_an_unknown_reading_word_names_the_field_and_the_accepted_words() {
+fn an_unknown_reading_word_names_the_field_and_the_accepted_words() {
     let schema = "reading: foo\ndocument:\n  sections:\n    - name: 要求\n";
     let (code, _json, stderr) = mds_json(schema, "## 要求\n", "check");
     assert_eq!(code, Some(2), "stderr: {stderr}");
@@ -1590,7 +1588,7 @@ fn ex_schema_063_an_unknown_reading_word_names_the_field_and_the_accepted_words(
 
 // @kotowari[C-schema-cli-24]
 #[test]
-fn ex_schema_062_a_non_string_schema_value_names_the_field_and_the_expected_type() {
+fn a_non_string_schema_value_names_the_field_and_the_expected_type() {
     let dir = tempfile::tempdir().unwrap();
     let doc = write_file(dir.path(), "doc.md", "---\n$schema: 3\n---\n## 要求\n");
     let output = mds()
@@ -1606,7 +1604,7 @@ fn ex_schema_062_a_non_string_schema_value_names_the_field_and_the_expected_type
 
 // @kotowari[C-schema-cli-24]
 #[test]
-fn req_schema_065_a_wrongly_typed_schema_value_names_the_field_and_the_expected_type() {
+fn a_wrongly_typed_schema_value_names_the_field_and_the_expected_type() {
     let cases = [
         (
             "open: 3\ndocument:\n  sections:\n    - name: 要求\n",
@@ -1632,7 +1630,7 @@ fn req_schema_065_a_wrongly_typed_schema_value_names_the_field_and_the_expected_
 
 // @kotowari[C-schema-cli-24]
 #[test]
-fn req_schema_065_an_of_word_not_accepted_by_the_node_names_it_and_the_accepted_words() {
+fn an_of_word_not_accepted_by_the_node_names_it_and_the_accepted_words() {
     let cases = [
         (
             "document:\n  sections:\n    - name: 要求\n      extract:\n        path: a\n        of: { at: id }\n",
@@ -1683,7 +1681,7 @@ fn undeclared_statement_lines(findings: &[serde_json::Value]) -> Vec<u64> {
 
 // @kotowari[C-schema-block-9]
 #[test]
-fn ex_schema_031_line_reading_keeps_the_line_after_a_field_line_as_a_statement() {
+fn line_reading_keeps_the_line_after_a_field_line_as_a_statement() {
     let schema = r#"
 reading: line
 document:
@@ -1707,7 +1705,7 @@ document:
 
 // @kotowari[C-schema-block-9, C-schema-block-10]
 #[test]
-fn ex_schema_032_line_reading_counts_indented_quote_html_and_image_lines_as_statements() {
+fn line_reading_counts_indented_quote_html_and_image_lines_as_statements() {
     let schema = r#"
 reading: line
 document:
@@ -1732,7 +1730,7 @@ document:
 
 // @kotowari[C-schema-block-11]
 #[test]
-fn ex_schema_033_line_reading_makes_no_setext_heading_or_indented_code_block() {
+fn line_reading_makes_no_setext_heading_or_indented_code_block() {
     let schema = r#"
 reading: line
 document:
@@ -1765,7 +1763,7 @@ document:
 
 // @kotowari[C-schema-block-19]
 #[test]
-fn ex_schema_071_line_reading_opens_a_fence_at_any_indent() {
+fn line_reading_opens_a_fence_at_any_indent() {
     let schema = r#"
 reading: line
 document:
@@ -1791,7 +1789,7 @@ document:
 
 // @kotowari[C-schema-block-12]
 #[test]
-fn ex_schema_034_pipe_line_without_delimiter_is_a_statement_in_both_readings() {
+fn pipe_line_without_delimiter_is_a_statement_in_both_readings() {
     for reading in ["paragraph", "line"] {
         let schema = format!(
             "reading: {reading}\ndocument:\n  sections:\n    - name: 要求\n      items:\n      - repeat: {{ min: 0 }}\n"
@@ -1811,7 +1809,7 @@ fn ex_schema_034_pipe_line_without_delimiter_is_a_statement_in_both_readings() {
 
 // @kotowari[C-schema-block-13]
 #[test]
-fn ex_schema_039_line_reading_keeps_an_indented_list_line_a_list_line() {
+fn line_reading_keeps_an_indented_list_line_a_list_line() {
     let schema = r#"
 reading: line
 document:
@@ -1838,7 +1836,7 @@ document:
 
 // @kotowari[C-schema-block-11, C-schema-block-17]
 #[test]
-fn tbl_schema_011_line_reading_reads_hash_word_and_equals_lines_as_statements() {
+fn line_reading_reads_hash_word_and_equals_lines_as_statements() {
     let schema = r#"
 reading: line
 document:
@@ -1862,7 +1860,7 @@ document:
 
 // @kotowari[C-schema-block-17]
 #[test]
-fn tbl_schema_011_a_hash_only_line_is_a_heading_in_both_readings() {
+fn a_hash_only_line_is_a_heading_in_both_readings() {
     let rules =
         "document:\n  sections:\n    - name: 要求\n      items:\n      - repeat: { min: 0 }\n";
     let doc = "## 要求\n\n### REQ-1: 例\n\n#\n";
@@ -1888,7 +1886,7 @@ fn tbl_schema_011_a_hash_only_line_is_a_heading_in_both_readings() {
 
 // @kotowari[C-schema-block-27]
 #[test]
-fn ex_schema_036_select_first_uses_only_the_first_table_whose_header_matches() {
+fn select_first_uses_only_the_first_table_whose_header_matches() {
     let schema = r#"
 document:
   preamble:
@@ -1926,8 +1924,7 @@ document:
 
 // @kotowari[C-schema-block-27]
 #[test]
-fn req_schema_059_select_first_picks_one_table_per_occurrence_of_a_repeated_section_in_both_check_and_values()
- {
+fn select_first_picks_one_table_per_occurrence_of_a_repeated_section_in_both_check_and_values() {
     let schema = r#"
 document:
   sections:
@@ -1957,7 +1954,7 @@ document:
 
 // @kotowari[C-schema-block-24, C-schema-block-28, C-schema-cli-17]
 #[test]
-fn ex_schema_037_table_rule_without_select_reports_a_mismatched_header_and_select_needs_header() {
+fn table_rule_without_select_reports_a_mismatched_header_and_select_needs_header() {
     let header_only = "document:\n  preamble:\n    table:\n      header: [a, b]\n";
     let select_only = "document:\n  preamble:\n    table:\n      select: first\n";
     let doc = "| x | y |\n|---|---|\n| 0 | 0 |\n";
@@ -1980,7 +1977,7 @@ fn ex_schema_037_table_rule_without_select_reports_a_mismatched_header_and_selec
 
 // @kotowari[C-schema-block-25]
 #[test]
-fn ex_schema_038_extra_cells_are_dropped_and_missing_cells_are_reported() {
+fn extra_cells_are_dropped_and_missing_cells_are_reported() {
     let schema = r#"
 document:
   preamble:
@@ -2006,7 +2003,7 @@ document:
 
 // @kotowari[C-schema-block-28]
 #[test]
-fn ex_schema_050_select_other_than_first_stops() {
+fn select_other_than_first_stops() {
     let schema = "document:\n  preamble:\n    table:\n      header: [a, b]\n      select: last\n";
     let (code, _json, stderr) = mds_json(schema, "| a | b |\n|---|---|\n| 1 | 2 |\n", "check");
     assert_eq!(code, Some(2), "stderr: {stderr}");
@@ -2015,7 +2012,7 @@ fn ex_schema_050_select_other_than_first_stops() {
 
 // @kotowari[C-schema-doc-25]
 #[test]
-fn ex_schema_043_document_item_reads_items_before_the_first_section() {
+fn document_item_reads_items_before_the_first_section() {
     let schema = r#"
 document:
   preamble:
@@ -2057,7 +2054,7 @@ document:
 
 // @kotowari[C-schema-doc-15]
 #[test]
-fn ex_schema_044_without_document_item_a_level_three_heading_before_sections_is_reported() {
+fn without_document_item_a_level_three_heading_before_sections_is_reported() {
     let schema = r#"
 document:
   sections:
@@ -2079,7 +2076,7 @@ document:
 
 // @kotowari[C-schema-extract-27, C-schema-extract-21]
 #[test]
-fn ex_schema_045_end_is_the_line_before_the_next_heading_as_deep_or_shallower() {
+fn end_is_the_line_before_the_next_heading_as_deep_or_shallower() {
     let schema = r#"
 document:
   sections:
@@ -2118,7 +2115,7 @@ document:
 
 // @kotowari[C-schema-extract-47]
 #[test]
-fn ex_schema_046_end_outside_items_and_sections_stops() {
+fn end_outside_items_and_sections_stops() {
     let schema = r#"
 document:
   preamble:
@@ -2141,7 +2138,7 @@ const TWO_SECTION_DOC: &str = "## 一\n\n文。\n\n## 二\n\n文。\n";
 
 // @kotowari[C-schema-cli-18]
 #[test]
-fn ex_schema_047_colliding_paths_outside_element_objects_stop() {
+fn colliding_paths_outside_element_objects_stop() {
     for (first, second) in [("a", "a"), ("a", "a.b")] {
         let schema = two_section_statement_schema(first, second);
         let (code, _json, stderr) = mds_json(&schema, TWO_SECTION_DOC, "values");
@@ -2152,7 +2149,7 @@ fn ex_schema_047_colliding_paths_outside_element_objects_stop() {
 
 // @kotowari[C-schema-cli-19]
 #[test]
-fn ex_schema_048_paths_diverging_after_a_shared_level_outside_element_objects_do_not_stop() {
+fn paths_diverging_after_a_shared_level_outside_element_objects_do_not_stop() {
     let schema = two_section_statement_schema("a.b", "a.c");
     let (code, json, stderr) = mds_json(&schema, TWO_SECTION_DOC, "values");
     assert_eq!(code, Some(0), "stderr: {stderr}");
@@ -2165,7 +2162,7 @@ fn ex_schema_048_paths_diverging_after_a_shared_level_outside_element_objects_do
 
 // @kotowari[C-schema-doc-6]
 #[test]
-fn ex_schema_072_first_title_is_matched_even_when_there_are_more() {
+fn first_title_is_matched_even_when_there_are_more() {
     let schema = "document:\n  title:\n    pattern: \"^甲\"\n";
     // 行番号: 題名が4行目と6行目
     let doc = "# 乙\n\n# 甲\n";
@@ -2192,7 +2189,7 @@ fn ex_schema_072_first_title_is_matched_even_when_there_are_more() {
 
 // @kotowari[C-schema-cli-20]
 #[test]
-fn ex_schema_073_a_root_path_named_type_in_a_named_schema_stops() {
+fn a_root_path_named_type_in_a_named_schema_stops() {
     let named = "name: adr\ndocument:\n  title:\n    extract: type\n";
     let (code, _, stderr) = mds_json(named, "# 例\n", "values");
     assert_eq!(code, Some(2), "stderr: {stderr}");
@@ -2209,7 +2206,7 @@ fn ex_schema_073_a_root_path_named_type_in_a_named_schema_stops() {
 
 // @kotowari[C-schema-doc-4]
 #[test]
-fn ex_schema_074_a_schema_without_a_title_rule_does_not_ask_for_a_title() {
+fn a_schema_without_a_title_rule_does_not_ask_for_a_title() {
     let schema = "document:\n  preamble:\n    statement: { repeat: { min: 0 } }\n";
     let (code, json, stderr) = mds_json(schema, "文だけ\n", "check");
     assert_eq!(code, Some(0), "stderr: {stderr} json: {json}");
@@ -2217,7 +2214,7 @@ fn ex_schema_074_a_schema_without_a_title_rule_does_not_ask_for_a_title() {
 
 // @kotowari[C-schema-doc-18]
 #[test]
-fn ex_schema_075_a_missing_item_without_repeat_is_below_its_minimum() {
+fn a_missing_item_without_repeat_is_below_its_minimum() {
     let schema =
         "document:\n  title: {}\n  sections:\n    - name: S\n      items: [{ id: \"^X-\" }]\n";
     // 行番号: "## S" が6行目
@@ -2237,7 +2234,7 @@ fn ex_schema_075_a_missing_item_without_repeat_is_below_its_minimum() {
 
 // @kotowari[C-schema-cli-21]
 #[test]
-fn ex_schema_076_the_same_name_declared_twice_in_one_place_stops() {
+fn the_same_name_declared_twice_in_one_place_stops() {
     let sections = "document:\n  title: {}\n  sections:\n    - name: S\n    - name: S\n";
     let fields =
         "document:\n  title: {}\n  preamble:\n    fields:\n      - name: X\n      - name: X\n";
@@ -2254,7 +2251,7 @@ fn ex_schema_076_the_same_name_declared_twice_in_one_place_stops() {
 
 // @kotowari[C-schema-cli-21]
 #[test]
-fn ex_schema_078_a_table_header_naming_a_column_twice_stops() {
+fn a_table_header_naming_a_column_twice_stops() {
     let schema = "document:\n  title: {}\n  preamble:\n    table: { header: [A, A] }\n";
     let (code, _, stderr) = mds_json(schema, "# T\n", "check");
     assert_eq!(code, Some(2), "stderr: {stderr}");
@@ -2267,7 +2264,7 @@ fn ex_schema_078_a_table_header_naming_a_column_twice_stops() {
 
 // @kotowari[C-schema-cli-22]
 #[test]
-fn ex_schema_077_a_placement_path_with_an_empty_name_stops() {
+fn a_placement_path_with_an_empty_name_stops() {
     for path in ["\"\"", "a..b", ".a", "a."] {
         let schema = format!("document:\n  title: {{ extract: {path} }}\n");
         let (code, _, stderr) = mds_json(&schema, "# T\n", "values");
@@ -2278,7 +2275,7 @@ fn ex_schema_077_a_placement_path_with_an_empty_name_stops() {
 
 // @kotowari[C-schema-doc-11]
 #[test]
-fn ex_schema_079_strikethrough_text_in_a_heading_is_part_of_its_name() {
+fn strikethrough_text_in_a_heading_is_part_of_its_name() {
     // 見出しの名前はインラインの記法を除いた文字。打ち消し線の中の文字も名前に含める
     let schema = "document:\n  title: {}\n  sections:\n    - name: Ax\n";
     let (code, json, stderr) = mds_json(schema, "# T\n\n## A~~x~~\n", "check");
@@ -2287,7 +2284,7 @@ fn ex_schema_079_strikethrough_text_in_a_heading_is_part_of_its_name() {
 
 // @kotowari[C-schema-doc-7, C-schema-cli-27]
 #[test]
-fn ex_schema_080_a_later_title_ends_the_section_and_item_before_it() {
+fn a_later_title_ends_the_section_and_item_before_it() {
     // 2つ目の題名は、それまでの節と項目を終える。後の行は項目の文に入らない
     let schema = "document:\n  title: {}\n  preamble:\n    statement: { repeat: { min: 0 }, extract: preamble }\n  sections:\n    - name: S\n      items:\n      - extract: { path: items, of: { id: id } }\n        statement: { repeat: { min: 0 }, extract: { path: lines, value: text } }\n";
     let doc = "# First\n\n## S\n\n### X1: one\n\nin item\n\n# Second\n\nafter title\n";
@@ -2302,7 +2299,7 @@ fn ex_schema_080_a_later_title_ends_the_section_and_item_before_it() {
 
 // @kotowari[C-schema-cli-23]
 #[test]
-fn ex_schema_081_an_option_given_twice_stops() {
+fn an_option_given_twice_stops() {
     let dir = tempfile::tempdir().unwrap();
     let doc = write_file(dir.path(), "doc.md", "# 題名\n");
     let output = mds()
@@ -2321,7 +2318,7 @@ fn ex_schema_081_an_option_given_twice_stops() {
 
 // @kotowari[C-schema-doc-5]
 #[test]
-fn ex_schema_042_three_titles_give_two_multiple_titles_findings() {
+fn three_titles_give_two_multiple_titles_findings() {
     let schema = "document:\n  title:\n    pattern: \".+\"\n";
     // 行番号: 題名が4行目・6行目・8行目
     let doc = "# 一つ目\n\n# 二つ目 `甲`\n\n#  三つ目  \n";
@@ -2349,7 +2346,7 @@ fn ex_schema_042_three_titles_give_two_multiple_titles_findings() {
 
 // @kotowari[C-schema-cli-13]
 #[test]
-fn ex_schema_049_occurrence_finding_carries_the_counted_rule_kind() {
+fn occurrence_finding_carries_the_counted_rule_kind() {
     let schema = r#"
 document:
   sections:
@@ -2459,7 +2456,7 @@ document:
 
 // @kotowari[C-schema-extract-41]
 #[test]
-fn ex_schema_058_heading_names_and_cells_drop_inline_markup_and_keep_code() {
+fn heading_names_and_cells_drop_inline_markup_and_keep_code() {
     let schema = r#"
 document:
   preamble:
@@ -2482,7 +2479,7 @@ document:
 
 // @kotowari[C-schema-extract-42]
 #[test]
-fn ex_schema_059_a_heading_whose_text_without_markup_differs_is_undeclared() {
+fn a_heading_whose_text_without_markup_differs_is_undeclared() {
     let schema = "document:\n  sections:\n    - name: Req\n";
     // 行番号: "## **Req** x" が4行目
     let (code, json, stderr) = mds_json(schema, "## **Req** x\n", "check");
@@ -2511,7 +2508,7 @@ document:
 
 // @kotowari[C-schema-extract-15]
 #[test]
-fn ex_schema_060_an_item_body_leaves_out_the_child_bullets_of_a_declared_field() {
+fn an_item_body_leaves_out_the_child_bullets_of_a_declared_field() {
     let doc = "## 要求\n\n### REQ-1: 名前\n\n- 種類: a\n  - 子\n";
     let v = values_json(ITEM_BODY_SCHEMA, doc);
     assert_eq!(v["items"], "REQ-1: 名前\n- 種類: a", "{v}");
@@ -2519,7 +2516,7 @@ fn ex_schema_060_an_item_body_leaves_out_the_child_bullets_of_a_declared_field()
 
 // @kotowari[C-schema-extract-15]
 #[test]
-fn ex_schema_061_an_item_body_keeps_the_child_bullets_of_an_undeclared_line() {
+fn an_item_body_keeps_the_child_bullets_of_an_undeclared_line() {
     let doc = "## 要求\n\n### REQ-1: 名前\n\n- 他: b\n  - 子\n";
     let v = values_json(ITEM_BODY_SCHEMA, doc);
     assert_eq!(v["items"], "REQ-1: 名前\n- 他: b\n  - 子", "{v}");
@@ -2545,14 +2542,14 @@ fn values_text(schema: &str, doc_body: &str) -> String {
 
 // @kotowari[C-schema-cli-7]
 #[test]
-fn ex_schema_064_values_text_indents_two_spaces_per_level() {
+fn values_text_indents_two_spaces_per_level() {
     let schema = "document:\n  preamble:\n    statement:\n      extract: a.b\n";
     assert_eq!(values_text(schema, "文\n"), "a:\n  b: 文\n");
 }
 
 // @kotowari[C-schema-cli-7]
 #[test]
-fn ex_schema_065_values_text_numbers_array_elements_from_one() {
+fn values_text_numbers_array_elements_from_one() {
     // 配列を1段深い所に置き、字下げの幅が入れ子の深さで決まることも見る
     let schema = "document:\n  preamble:\n    table:\n      extract: t.rows\n";
     let doc = "| a | b |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n";
@@ -2564,7 +2561,7 @@ fn ex_schema_065_values_text_numbers_array_elements_from_one() {
 
 // @kotowari[C-schema-cli-7]
 #[test]
-fn req_schema_066_values_text_writes_a_derived_number_after_its_key() {
+fn values_text_writes_a_derived_number_after_its_key() {
     let schema = r#"
 document:
   sections:
@@ -2582,7 +2579,7 @@ document:
 
 // @kotowari[C-schema-cli-7]
 #[test]
-fn req_schema_066_values_text_indents_the_later_lines_of_an_array_element_one_level_deeper() {
+fn values_text_indents_the_later_lines_of_an_array_element_one_level_deeper() {
     let schema = "document:\n  preamble:\n    bullets:\n      extract: t.list\n";
     let doc = "- x\n  - y\n- z\n";
     assert_eq!(
@@ -2593,8 +2590,7 @@ fn req_schema_066_values_text_indents_the_later_lines_of_an_array_element_one_le
 
 // @kotowari[C-schema-doc-17]
 #[test]
-fn ex_schema_094_a_level_three_heading_in_a_document_without_a_title_is_outside_the_declared_preamble()
- {
+fn a_level_three_heading_in_a_document_without_a_title_is_outside_the_declared_preamble() {
     let schema = "open: true\ndocument:\n  title: {}\n  preamble:\n    statement:\n      required: false\n  sections:\n    - name: 節\n";
     let doc = "### a\n\n中の行\n\n## 節\n";
     let (code, json, stderr) = mds_json(schema, doc, "check");

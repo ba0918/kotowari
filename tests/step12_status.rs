@@ -68,7 +68,7 @@ fn write_ex_258_project(tmp: &Path) {
 
 // @kotowari[C-core-status-5, C-core-status-6, C-core-status-9]
 #[test]
-fn req_162_complete_project_counts_and_exit_zero() {
+fn complete_project_counts_and_exit_zero() {
     let tmp = TempDir::new().unwrap();
     write_ex_258_project(tmp.path());
     let (code, v) = run_status(tmp.path());
@@ -83,7 +83,7 @@ fn req_162_complete_project_counts_and_exit_zero() {
 
 // @kotowari[C-core-status-5, C-core-status-9]
 #[test]
-fn tbl_028_notices_are_counted_apart_from_errors() {
+fn notices_are_counted_apart_from_errors() {
     let tmp = TempDir::new().unwrap();
     write_ex_258_project(tmp.path());
     // 指紋の古いガイドの印だけを置き、注意（guide_stale）だけが出る置き場にする
@@ -107,7 +107,7 @@ fn tbl_028_notices_are_counted_apart_from_errors() {
 
 // @kotowari[C-core-status-6]
 #[test]
-fn tbl_028_test_files_match_check() {
+fn test_files_match_check() {
     let tmp = TempDir::new().unwrap();
     write_ex_258_project(tmp.path());
     let (_, status) = run_status(tmp.path());
@@ -145,7 +145,7 @@ fn the_documents_group_counts_the_decision_documents_read_and_their_lines() {
 
 // @kotowari[C-core-status-12]
 #[test]
-fn req_166_json_top_level_has_only_the_groups() {
+fn json_top_level_has_only_the_groups() {
     let tmp = TempDir::new().unwrap();
     write_ex_258_project(tmp.path());
     let (_, stdout, _) = run(tmp.path(), &["status"]);
@@ -187,7 +187,7 @@ fn req_166_json_top_level_has_only_the_groups() {
 
 // @kotowari[C-core-status-1]
 #[test]
-fn req_162_status_writes_no_finding() {
+fn status_writes_no_finding() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 問題の節の無い決定（check なら誤り）
@@ -218,7 +218,7 @@ fn req_162_status_writes_no_finding() {
 
 // @kotowari[C-core-status-6, C-core-status-11]
 #[test]
-fn req_166_text_prints_one_line_per_group() {
+fn text_prints_one_line_per_group() {
     let tmp = TempDir::new().unwrap();
     write_ex_258_project(tmp.path());
     let (code, stdout, stderr) = run(tmp.path(), &["status", "--format", "text"]);

@@ -72,7 +72,7 @@ const DECISION_DOC: &str = "# 題名\n\n範囲。\n\n## 例\n\n状態: 実装済
 
 // @kotowari[C-core-list-4]
 #[test]
-fn req_153_test_in_a_language_without_a_query_has_a_null_name() {
+fn test_in_a_language_without_a_query_has_a_null_name() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.go"]);
     write(tmp.path(), "docs/decisions/t/a.md", DECISION_DOC);
@@ -102,7 +102,7 @@ fn req_153_test_in_a_language_without_a_query_has_a_null_name() {
 
 // @kotowari[C-core-list-8]
 #[test]
-fn req_155_json_top_level_has_only_items() {
+fn json_top_level_has_only_items() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     let v = run_list(tmp.path());
@@ -150,7 +150,7 @@ fn blob(text: &str) -> String {
 
 // @kotowari[C-core-list-10]
 #[test]
-fn req_155_translations_list_every_pair_with_the_blob_hash_of_each_side() {
+fn translations_list_every_pair_with_the_blob_hash_of_each_side() {
     let tmp = TempDir::new().unwrap();
     make_bilingual_project(
         tmp.path(),
@@ -225,7 +225,7 @@ fn req_155_translations_list_every_pair_with_the_blob_hash_of_each_side() {
 
 // @kotowari[C-core-list-11, C-core-list-15]
 #[test]
-fn req_152_with_two_languages_list_stops_on_the_guide_places_as_check_does() {
+fn with_two_languages_list_stops_on_the_guide_places_as_check_does() {
     let overlap =
         "tests:\n  files:\n    - \"guides/*.md\"\nguides:\n  files:\n    - \"guides/*.md\"\n";
     let tmp = TempDir::new().unwrap();

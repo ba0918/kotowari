@@ -6,7 +6,7 @@
 
 // @kotowari[C-core-document-2]
 #[test]
-fn req_033_uppercase_md_is_not_read() {
+fn uppercase_md_is_not_read() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
@@ -34,7 +34,7 @@ fn req_033_uppercase_md_is_not_read() {
 
 // @kotowari[C-core-document-4]
 #[test]
-fn req_033_file_symlink_is_read() {
+fn file_symlink_is_read() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
@@ -67,7 +67,7 @@ fn req_033_file_symlink_is_read() {
 // @kotowari[C-core-document-4]
 #[test]
 #[cfg(unix)]
-fn req_033_broken_symlink_in_ir_dir_stops() {
+fn broken_symlink_in_the_decision_document_dir_stops() {
     use std::os::unix::fs::symlink;
     let tmp = tempfile::TempDir::new().unwrap();
     std::fs::create_dir_all(tmp.path().join(".kotowari")).unwrap();
@@ -122,7 +122,7 @@ fn run_cli(tmp: &std::path::Path) -> serde_json::Value {
 
 // @kotowari[C-core-document-1]
 #[test]
-fn req_033_a_document_deep_in_the_tree_is_read_and_an_empty_directory_is_silent() {
+fn a_document_deep_in_the_tree_is_read_and_an_empty_directory_is_silent() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     make_cli_project(tmp.path());
@@ -151,7 +151,7 @@ fn req_033_a_document_deep_in_the_tree_is_read_and_an_empty_directory_is_silent(
 // @kotowari[C-core-document-3]
 #[test]
 #[cfg(unix)]
-fn req_033_hidden_directory_and_directory_symlink_deep_in_the_tree_are_not_read() {
+fn hidden_directory_and_directory_symlink_deep_in_the_tree_are_not_read() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     make_cli_project(tmp.path());
@@ -200,7 +200,7 @@ fn find_kind_in_json(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value
 
 // @kotowari[C-core-findings-8]
 #[test]
-fn req_032_three_places_yield_two_duplicates_and_none_on_the_first() {
+fn three_places_yield_two_duplicates_and_none_on_the_first() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     make_cli_project(tmp.path());
@@ -229,7 +229,7 @@ fn req_032_three_places_yield_two_duplicates_and_none_on_the_first() {
 
 // @kotowari[C-core-forder-4, C-core-document-5]
 #[test]
-fn ex_core_278_three_titles_give_one_multiple_titles_per_extra_title() {
+fn three_titles_give_one_multiple_titles_per_extra_title() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     make_cli_project(tmp.path());

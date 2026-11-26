@@ -49,7 +49,7 @@ fn inspect_with(findings: Vec<Finding>) -> Inspection {
 
 // @kotowari[C-core-testside-4, C-core-testside-5, C-core-testside-6, C-core-testside-7, C-core-testside-8]
 #[test]
-fn tbl_core_047_each_row_decides_whether_an_error_is_a_test_side_finding() {
+fn each_row_decides_whether_an_error_is_a_test_side_finding() {
     let cases = [
         (
             FindingKind::ConfirmationWithoutTest,

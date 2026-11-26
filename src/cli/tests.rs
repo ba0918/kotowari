@@ -5,7 +5,7 @@ fn args(list: &[&str]) -> Vec<String> {
 }
 // @kotowari[C-core-cli-2]
 #[test]
-fn req_core_002_plan_takes_the_format_before_or_after_the_path() {
+fn plan_takes_the_format_before_or_after_the_path() {
     for list in [
         ["plan", "--format", "text", "a.md"],
         ["plan", "a.md", "--format", "text"],
@@ -43,7 +43,7 @@ fn first_column_of_table(markdown: &str, header: &str) -> std::collections::BTre
 
 // @kotowari[C-core-skillref-2, C-core-skillref-4]
 #[test]
-fn req_127_findings_reference_stop_wordings_match_the_code() {
+fn findings_reference_stop_wordings_match_the_code() {
     let path =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("agent/skills/kotowari/references/findings.md");
     let markdown = std::fs::read_to_string(&path).unwrap();
@@ -63,7 +63,7 @@ fn req_127_findings_reference_stop_wordings_match_the_code() {
 
 // @kotowari[C-core-ovcmd-17]
 #[test]
-fn req_core_297_serve_uses_port_4590_unless_given() {
+fn serve_uses_port_4590_unless_given() {
     assert_eq!(DEFAULT_PORT, 4590);
     let parsed = parse_args(&args(&["overview", "serve"]));
     assert!(
@@ -79,7 +79,7 @@ fn req_core_297_serve_uses_port_4590_unless_given() {
 
 // @kotowari[C-core-cli-11]
 #[test]
-fn req_core_304_the_lowest_port_is_1() {
+fn the_lowest_port_is_1() {
     let parsed = parse_args(&args(&["overview", "serve", "--port", "1"]));
     assert!(
         matches!(parsed, Ok(Cli::OverviewServe { port: 1, .. })),
@@ -89,7 +89,7 @@ fn req_core_304_the_lowest_port_is_1() {
 
 // @kotowari[C-core-cli-3]
 #[test]
-fn req_core_002_check_takes_allow_test_findings_without_a_value() {
+fn check_takes_allow_test_findings_without_a_value() {
     // 値を取らないので、すぐ後の語はコマンドやほかのオプションとして読まれる
     for list in [
         &["check", "--allow-test-findings"][..],
@@ -148,7 +148,7 @@ fn assert_argument_error(list: &[&str]) {
 
 // @kotowari[C-core-cli-7]
 #[test]
-fn req_core_004_allow_test_findings_on_a_command_other_than_check_stops() {
+fn allow_test_findings_on_a_command_other_than_check_stops() {
     for list in [
         &[
             "--allow-test-findings",
@@ -170,6 +170,6 @@ fn req_core_004_allow_test_findings_on_a_command_other_than_check_stops() {
 
 // @kotowari[C-core-cli-8]
 #[test]
-fn req_core_004_allow_test_findings_twice_on_check_stops() {
+fn allow_test_findings_twice_on_check_stops() {
     assert_argument_error(&["check", "--allow-test-findings", "--allow-test-findings"]);
 }

@@ -45,7 +45,7 @@ fn project_operations_reuse_owned_results_and_explicit_reads_observe_changes() {
 
 // @kotowari[C-core-libapi-1, C-core-libapi-5, C-core-libinputs-12, C-core-libpaths-11]
 #[test]
-fn project_rejects_relative_roots_and_plan_does_not_require_ir() {
+fn project_rejects_relative_roots_and_plan_does_not_require_decision_documents() {
     assert!(Project::new(ProjectOptions::new("relative")).is_err());
     let dir = tempfile::tempdir().unwrap();
     std::fs::write(dir.path().join("plan.md"), "# Incomplete\n").unwrap();
@@ -62,7 +62,7 @@ fn project_rejects_relative_roots_and_plan_does_not_require_ir() {
 
 // @kotowari[C-core-libapi-1, C-core-libapi-5, C-core-libinputs-12]
 #[test]
-fn mutants_have_typed_inputs_and_failures_without_ir_loading() {
+fn mutants_have_typed_inputs_and_failures_without_loading_decision_documents() {
     use kotowari::{MutantsOptions, Tool};
     let dir = tempfile::tempdir().unwrap();
     let project = Project::new(ProjectOptions::new(dir.path())).unwrap();
@@ -175,7 +175,7 @@ fn check_with_config(dir: &std::path::Path, config: &str) -> kotowari::Error {
 
 // @kotowari[C-core-libapi-7]
 #[test]
-fn ex_core_554_a_configuration_file_that_is_a_directory_is_invalid_input_like_a_missing_one() {
+fn a_configuration_file_that_is_a_directory_is_invalid_input_like_a_missing_one() {
     use kotowari::ErrorKind;
     let dir = project();
     let directory = check_with_config(dir.path(), ".kotowari");
@@ -187,7 +187,7 @@ fn ex_core_554_a_configuration_file_that_is_a_directory_is_invalid_input_like_a_
 
 // @kotowari[C-core-libapi-8]
 #[test]
-fn ex_core_555_a_directory_at_the_default_location_is_a_read_failure() {
+fn a_directory_at_the_default_location_is_a_read_failure() {
     let dir = project();
     let config = dir.path().join(".kotowari/config.yaml");
     std::fs::remove_file(&config).unwrap();
@@ -202,7 +202,7 @@ fn ex_core_555_a_directory_at_the_default_location_is_a_read_failure() {
 
 // @kotowari[C-core-libapi-9]
 #[test]
-fn ex_core_556_the_unknown_id_can_be_taken_from_a_failed_query() {
+fn the_unknown_id_can_be_taken_from_a_failed_query() {
     let dir = project();
     let error = Project::new(ProjectOptions::new(dir.path()))
         .unwrap()
@@ -215,7 +215,7 @@ fn ex_core_556_the_unknown_id_can_be_taken_from_a_failed_query() {
 
 // @kotowari[C-core-libapi-10, C-core-libapi-5]
 #[test]
-fn ex_core_557_a_failure_of_another_kind_provides_no_unknown_id() {
+fn a_failure_of_another_kind_provides_no_unknown_id() {
     let dir = project();
     std::fs::remove_dir_all(dir.path().join("docs/decisions")).unwrap();
     let error = Project::new(ProjectOptions::new(dir.path()))

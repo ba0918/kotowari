@@ -35,7 +35,7 @@ fn complete_labels(tag: &str, prefix: &str) -> String {
 
 // @kotowari[C-core-ovlang-6, C-core-ovlang-7]
 #[test]
-fn req_core_351_english_is_the_built_in_text_with_overrides_and_others_are_the_labels() {
+fn english_is_the_built_in_text_with_overrides_and_others_are_the_labels() {
     let yaml = format!(
         "languages: [ja, en]\nlabels:\n  en:\n    pages: \"{{n}} docs\"\n{}",
         complete_labels("ja", "J")
@@ -56,7 +56,7 @@ fn req_core_351_english_is_the_built_in_text_with_overrides_and_others_are_the_l
 
 // @kotowari[C-core-pairs-2]
 #[test]
-fn req_core_334_the_language_list_is_the_languages_key_and_english_when_absent_or_empty() {
+fn the_language_list_is_the_languages_key_and_english_when_absent_or_empty() {
     let ja = complete_labels("ja", "J");
     let config = Config::parse(&format!("languages: [ja, en]\nlabels:\n{ja}")).unwrap();
     assert_eq!(config.languages(), ["ja", "en"]);
@@ -74,7 +74,7 @@ fn req_core_334_the_language_list_is_the_languages_key_and_english_when_absent_o
 
 // @kotowari[C-core-pairs-3]
 #[test]
-fn req_core_335_an_empty_malformed_or_repeated_tag_stops() {
+fn an_empty_malformed_or_repeated_tag_stops() {
     let ja = complete_labels("ja", "J");
     for list in [
         "[ja, \"\"]",
@@ -103,7 +103,7 @@ fn req_core_335_an_empty_malformed_or_repeated_tag_stops() {
 
 // @kotowari[C-core-pairs-3]
 #[test]
-fn req_core_335_invalid_tags_stop_even_with_complete_labels() {
+fn invalid_tags_stop_even_with_complete_labels() {
     for tag in ["\"\"", "en_us", "\"e n\""] {
         let yaml = format!("languages: [{tag}]\nlabels:\n{}", complete_labels(tag, "X"));
         assert!(
@@ -115,7 +115,7 @@ fn req_core_335_invalid_tags_stop_even_with_complete_labels() {
 
 // @kotowari[C-core-pairstruct-2]
 #[test]
-fn tbl_core_044_table_cells_preserve_escaped_pipes_and_source_boundaries() {
+fn table_cells_preserve_escaped_pipes_and_source_boundaries() {
     let bordered = "| A | B |\n|---|---|\n| a | b |\n";
     let unbordered = "A | B\n---|---\nx | y\n";
     for kind in [Kind::Guide, Kind::OverviewData] {
@@ -129,7 +129,7 @@ fn tbl_core_044_table_cells_preserve_escaped_pipes_and_source_boundaries() {
 
 // @kotowari[C-core-pairstruct-2]
 #[test]
-fn req_core_345_absent_headings_have_no_line_but_changed_headings_have_their_line() {
+fn absent_headings_have_no_line_but_changed_headings_have_their_line() {
     let first = "# Guide\n\n## One\n\n### Two\n\n#### Three\n";
     assert_eq!(
         mismatch(Kind::Guide, first, "# Guide\n\n### Two\n\n#### Three\n"),
@@ -151,7 +151,7 @@ fn req_core_345_absent_headings_have_no_line_but_changed_headings_have_their_lin
 
 // @kotowari[C-core-pairstruct-3]
 #[test]
-fn tbl_core_045_overview_sentences_translate_but_keys_values_and_lengths_remain() {
+fn overview_sentences_translate_but_keys_values_and_lengths_remain() {
     for (kind, yaml, sentence_fields) in [
         (
             "cards",
@@ -217,7 +217,7 @@ fn tbl_core_045_overview_sentences_translate_but_keys_values_and_lengths_remain(
 
 // @kotowari[C-core-ovlang-9, C-core-ovlang-10, C-core-ovlang-13]
 #[test]
-fn req_core_352_unknown_keys_and_a_doubled_number_placeholder_stop() {
+fn unknown_keys_and_a_doubled_number_placeholder_stop() {
     let ja = complete_labels("ja", "J");
     // labels.ja は完全なので、止まる理由はそれぞれの誤りだけ
     assert!(
@@ -243,7 +243,7 @@ fn req_core_352_unknown_keys_and_a_doubled_number_placeholder_stop() {
 
 // @kotowari[C-core-pairs-9]
 #[test]
-fn req_core_340_the_blob_hash_is_the_git_blob_hash() {
+fn the_blob_hash_is_the_git_blob_hash() {
     assert_eq!(
         crate::translations::blob_hash(b"a\n"),
         "78981922613b2afb6025042ff6bd878ac1994e85"
@@ -278,7 +278,7 @@ const GUIDE: &str = "# Guide\n\nText.\n\n<!-- @kotowari[docs/decisions/a.md#use:
 
 // @kotowari[C-core-pairstruct-1, C-core-pairstruct-2]
 #[test]
-fn tbl_core_044_guides_compare_headings_marks_code_and_tables() {
+fn guides_compare_headings_marks_code_and_tables() {
     let sentences = GUIDE
         .replace("Text.", "Other text.")
         .replace("## Use", "## Usage")
@@ -309,7 +309,7 @@ const OVERVIEW_DATA: &str = "---\ndocuments:\n  - docs/decisions/a.md\n---\n\n# 
 
 // @kotowari[C-core-pairstruct-3]
 #[test]
-fn tbl_core_044_overview_data_compares_frontmatter_headings_parts_marks_and_tables() {
+fn overview_data_compares_frontmatter_headings_parts_marks_and_tables() {
     let sentences = OVERVIEW_DATA
         .replace("# Title\n", "# Other\n")
         .replace("conclusion: c", "conclusion: other")
@@ -366,7 +366,7 @@ const CONTENTS: &str = "title: T\nnote: N\nitems:\n  - a\n  - title: G\n    item
 
 // @kotowari[C-core-pairstruct-4]
 #[test]
-fn tbl_core_044_contents_compare_nesting_names_and_whether_a_note_is_present() {
+fn contents_compare_nesting_names_and_whether_a_note_is_present() {
     let sentences = CONTENTS
         .replace("title: T", "title: U")
         .replace("note: N", "note: M");
@@ -499,7 +499,7 @@ fn lines_of(findings: &[crate::Finding], kind: &str) -> Vec<Option<usize>> {
 
 // @kotowari[C-core-forder-4]
 #[test]
-fn req_core_027_lines_of_the_pair_findings() {
+fn lines_of_the_pair_findings() {
     use crate::translations::{Pairs, Place};
     let (config, languages) = ja_en();
     let mut pairs = Pairs::default();
@@ -557,7 +557,7 @@ fn req_core_027_lines_of_the_pair_findings() {
 
 // @kotowari[C-core-pairstruct-5]
 #[test]
-fn tbl_core_044_link_parts_compare_destinations_read_as_the_first_language_side() {
+fn link_parts_compare_destinations_read_as_the_first_language_side() {
     use crate::translations::{Pairs, Place};
     let (config, languages) = ja_en();
     for place in [Place::Guide, Place::OverviewData] {
@@ -597,7 +597,7 @@ fn tbl_core_044_link_parts_compare_destinations_read_as_the_first_language_side(
 
 // @kotowari[C-core-pairstruct-9]
 #[test]
-fn tbl_core_044_the_switcher_line_is_not_in_the_skeleton() {
+fn the_switcher_line_is_not_in_the_skeleton() {
     use crate::translations::{Pairs, Place};
     let (config, languages) = ja_en();
     let mut pairs = Pairs::default();
@@ -634,7 +634,7 @@ fn tbl_core_044_the_switcher_line_is_not_in_the_skeleton() {
 
 // @kotowari[C-core-pairstruct-6]
 #[test]
-fn req_core_346_a_switcher_at_end_of_file_needs_no_final_newline() {
+fn a_switcher_at_end_of_file_needs_no_final_newline() {
     use crate::translations::{Pairs, Place};
     let (config, languages) = ja_en();
     let mut pairs = Pairs::default();
@@ -659,7 +659,7 @@ fn req_core_346_a_switcher_at_end_of_file_needs_no_final_newline() {
 
 // @kotowari[C-core-pairstruct-5, C-core-pairstruct-11]
 #[test]
-fn req_core_347_inline_images_have_checked_and_compared_destinations() {
+fn inline_images_have_checked_and_compared_destinations() {
     use crate::translations::{Pairs, Place};
     let (config, languages) = ja_en();
     let mut pairs = Pairs::default();

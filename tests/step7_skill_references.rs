@@ -84,7 +84,7 @@ fn only_yaml_block(markdown: &str) -> String {
 
 // @kotowari[C-core-skillref-1, C-core-skillref-4]
 #[test]
-fn req_125_findings_reference_kinds_match_the_code() {
+fn findings_reference_kinds_match_the_code() {
     let in_reference = first_column_of_table(&read_reference("findings.md"), "Kind");
     let in_code: BTreeSet<String> = kotowari_core::FindingKind::ALL
         .iter()
@@ -100,7 +100,7 @@ fn req_125_findings_reference_kinds_match_the_code() {
 
 // @kotowari[C-core-skillref-3]
 #[test]
-fn req_126_config_reference_setup_yaml_parses_to_the_defaults() {
+fn config_reference_setup_yaml_parses_to_the_defaults() {
     let yaml = only_yaml_block(&read_reference("config.md"));
     // 不在の鍵は既定で埋まるので、既定のある鍵の経路が YAML に書かれていることを先に見る
     let tree: serde_json::Value = serde_saphyr::from_str(&yaml)

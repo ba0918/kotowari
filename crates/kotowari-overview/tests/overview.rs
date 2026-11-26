@@ -122,7 +122,7 @@ fn valid_overview_data_has_no_findings_and_counts_its_files() {
 
 // @kotowari[C-core-ovdata-8, C-core-ovdata-9]
 #[test]
-fn ex_core_466_an_unknown_part_and_a_part_with_an_unknown_key_are_errors() {
+fn an_unknown_part_and_a_part_with_an_unknown_key_are_errors() {
     let model = model();
     let text = data(
         "a",
@@ -150,7 +150,7 @@ fn ex_core_466_an_unknown_part_and_a_part_with_an_unknown_key_are_errors() {
 
 // @kotowari[C-core-ovdata-9]
 #[test]
-fn req_core_282_places_name_missing_keys_the_whole_value_and_unreadable_yaml_once_each() {
+fn places_name_missing_keys_the_whole_value_and_unreadable_yaml_once_each() {
     let model = model();
     let text = data(
         "a",
@@ -174,7 +174,7 @@ fn req_core_282_places_name_missing_keys_the_whole_value_and_unreadable_yaml_onc
 
 // @kotowari[C-core-ovdata-9]
 #[test]
-fn req_core_282_each_unknown_key_and_each_value_that_does_not_fit_has_its_own_place() {
+fn each_unknown_key_and_each_value_that_does_not_fit_has_its_own_place() {
     let model = model();
     let text = data(
         "a",
@@ -193,7 +193,7 @@ fn req_core_282_each_unknown_key_and_each_value_that_does_not_fit_has_its_own_pl
 
 // @kotowari[C-core-forder-4, C-core-ovdata-11]
 #[test]
-fn ex_core_467_a_first_part_that_is_not_lead_is_an_error_without_a_line() {
+fn a_first_part_that_is_not_lead_is_an_error_without_a_line() {
     let model = model();
     let text =
         format!("{FRONT}\n# x\n\n```view steps\nitems:\n  - title: t\n```\n\n## 節\n\n文。\n");
@@ -211,7 +211,7 @@ fn ex_core_467_a_first_part_that_is_not_lead_is_an_error_without_a_line() {
 
 // @kotowari[C-core-ovdata-11]
 #[test]
-fn req_core_283_comments_and_blank_lines_before_the_lead_are_skipped() {
+fn comments_and_blank_lines_before_the_lead_are_skipped() {
     let model = model();
     let ok = format!("{FRONT}\n# x\n\n<!-- note -->\n\n<!-- another -->\n{LEAD}\n## 節\n\n文。\n");
     assert_eq!(found(&run(&model, &[(A, &ok)])), []);
@@ -228,7 +228,7 @@ fn req_core_283_comments_and_blank_lines_before_the_lead_are_skipped() {
 
 // @kotowari[C-core-forder-4, C-core-lang-7, C-core-ovdata-12, C-core-ovdata-23]
 #[test]
-fn ex_core_468_a_missing_decision_document_and_one_shared_by_two_overviews_are_errors() {
+fn a_missing_decision_document_and_one_shared_by_two_overviews_are_errors() {
     let model = model();
     let a = format!(
         "---\ndocuments:\n  - docs/decisions/core/cli.md\n  - docs/decisions/core/none.md\n---\n\n# a\n\n{LEAD}"
@@ -256,7 +256,7 @@ fn ex_core_468_a_missing_decision_document_and_one_shared_by_two_overviews_are_e
 
 // @kotowari[C-core-ovdata-5, C-core-ovdata-23]
 #[test]
-fn req_core_284_a_valid_documents_list_is_checked_beside_other_frontmatter_violations() {
+fn a_valid_documents_list_is_checked_beside_other_frontmatter_violations() {
     let model = model();
     let text = format!(
         "---\ndocuments:\n  - docs/decisions/core/cli.md\n  - docs/decisions/core/none.md\ntitle: x\n---\n\n# a\n\n{LEAD}"
@@ -276,7 +276,7 @@ fn req_core_284_a_valid_documents_list_is_checked_beside_other_frontmatter_viola
 
 // @kotowari[C-core-ovdata-23]
 #[test]
-fn req_core_284_a_glossary_does_not_count_as_a_decision_document() {
+fn a_glossary_does_not_count_as_a_decision_document() {
     let model = model();
     let text = format!(
         "---\ndocuments:\n  - docs/decisions/core/CONTEXT.md\n  - docs/decisions/core/other.md\n---\n\n# a\n\n{LEAD}"
@@ -295,7 +295,7 @@ fn req_core_284_a_glossary_does_not_count_as_a_decision_document() {
 
 // @kotowari[C-core-ovdata-13, C-core-lang-8]
 #[test]
-fn ex_core_469_unresolved_references_are_errors_one_per_reference() {
+fn unresolved_references_are_errors_one_per_reference() {
     let model = model();
     let text = data(
         "a",
@@ -330,7 +330,7 @@ fn ex_core_469_unresolved_references_are_errors_one_per_reference() {
 
 // @kotowari[C-core-ovdata-13]
 #[test]
-fn req_core_285_ref_fields_at_any_depth_are_references_and_invalid_parts_are_not_read() {
+fn ref_fields_at_any_depth_are_references_and_invalid_parts_are_not_read() {
     let model = model();
     let text = data(
         "a",
@@ -345,7 +345,7 @@ fn req_core_285_ref_fields_at_any_depth_are_references_and_invalid_parts_are_not
 
 // @kotowari[C-core-ovdata-14]
 #[test]
-fn ex_core_470_a_stale_guide_mark_in_overview_data_is_a_guide_stale_notice() {
+fn a_stale_guide_mark_in_overview_data_is_a_guide_stale_notice() {
     let model = model();
     let current = fingerprint(&model, "docs/decisions/core/cli.md#run-commands");
     let text = data(
@@ -363,7 +363,7 @@ fn ex_core_470_a_stale_guide_mark_in_overview_data_is_a_guide_stale_notice() {
 
 // @kotowari[C-core-ovdata-15]
 #[test]
-fn req_core_286_a_malformed_guide_mark_in_overview_data_is_an_invalid_marker() {
+fn a_malformed_guide_mark_in_overview_data_is_an_invalid_marker() {
     let model = model();
     let text = data(
         "a",
@@ -377,7 +377,7 @@ fn req_core_286_a_malformed_guide_mark_in_overview_data_is_an_invalid_marker() {
 
 // @kotowari[C-core-ovdata-5]
 #[test]
-fn ex_core_471_an_unknown_frontmatter_key_is_a_form_error() {
+fn an_unknown_frontmatter_key_is_a_form_error() {
     let model = model();
     let text =
         format!("---\ndocuments:\n  - docs/decisions/core/cli.md\ntitle: x\n---\n\n# a\n\n{LEAD}");
@@ -395,7 +395,7 @@ fn ex_core_471_an_unknown_frontmatter_key_is_a_form_error() {
 
 // @kotowari[C-core-forder-4, C-core-ovdata-5, C-core-ovdata-23]
 #[test]
-fn tbl_core_038_frontmatter_must_hold_only_a_nonempty_documents_list_of_strings() {
+fn frontmatter_must_hold_only_a_nonempty_documents_list_of_strings() {
     let model = model();
     for front in [
         "",
@@ -422,7 +422,7 @@ fn tbl_core_038_frontmatter_must_hold_only_a_nonempty_documents_list_of_strings(
 
 // @kotowari[C-core-ovdata-6]
 #[test]
-fn tbl_core_038_the_title_is_exactly_one_heading_of_depth_one() {
+fn the_title_is_exactly_one_heading_of_depth_one() {
     let model = model();
     let none = format!("{FRONT}\n{LEAD}");
     assert!(!of_kind(&run(&model, &[(A, &none)]), "overview_form_invalid").is_empty());
@@ -435,7 +435,7 @@ fn tbl_core_038_the_title_is_exactly_one_heading_of_depth_one() {
 
 // @kotowari[C-core-ovdata-6]
 #[test]
-fn tbl_core_038_before_the_first_section_only_parts_and_comments_are_allowed() {
+fn before_the_first_section_only_parts_and_comments_are_allowed() {
     let model = model();
     let text =
         format!("{FRONT}\n# a\n\n{LEAD}\n文がある。\n\n```rust\nfn x() {{}}\n```\n\n## 節\n");
@@ -456,7 +456,7 @@ fn tbl_core_038_before_the_first_section_only_parts_and_comments_are_allowed() {
 
 // @kotowari[C-core-ovdata-6]
 #[test]
-fn tbl_core_038_a_section_takes_text_lists_tables_code_comments_and_subheadings() {
+fn a_section_takes_text_lists_tables_code_comments_and_subheadings() {
     let model = model();
     let text = data(
         "a",
@@ -471,7 +471,7 @@ fn tbl_core_038_a_section_takes_text_lists_tables_code_comments_and_subheadings(
 
 // @kotowari[C-core-ovdata-7, C-core-ovdata-8]
 #[test]
-fn tbl_core_038_a_part_is_a_fence_whose_info_string_is_view_and_a_kind() {
+fn a_part_is_a_fence_whose_info_string_is_view_and_a_kind() {
     let model = model();
     let text = data(
         "a",
@@ -484,7 +484,7 @@ fn tbl_core_038_a_part_is_a_fence_whose_info_string_is_view_and_a_kind() {
 
 // @kotowari[C-core-forder-4, C-core-ovcmd-24]
 #[test]
-fn req_core_305_duplicated_names_and_index_and_style_are_errors() {
+fn duplicated_names_and_index_and_style_are_errors() {
     let model = model();
     let one = |document: &str, title: &str| {
         format!("---\ndocuments:\n  - {document}\n---\n\n# {title}\n\n{LEAD}")
@@ -632,7 +632,7 @@ fn a_section_is_stale_when_the_decision_its_mark_points_at_changes() {
 
 // @kotowari[C-core-ovcmd-13]
 #[test]
-fn req_core_291_one_entry_per_distinct_reference_across_all_overviews() {
+fn one_entry_per_distinct_reference_across_all_overviews() {
     let model = model();
     let a = with_refs("C-core-cli-1, C-core-cli-1");
     let b = "---\ndocuments:\n  - docs/decisions/core/other.md\n---\n\n# b\n\n```view quiz\nitems:\n  - q: q\n    a: a\n    refs: [C-core-cli-1, C-core-other-1]\n```\n".to_string();
@@ -648,7 +648,7 @@ fn req_core_291_one_entry_per_distinct_reference_across_all_overviews() {
 
 // @kotowari[C-core-ovcmd-15]
 #[test]
-fn req_core_292_a_section_is_stale_only_when_a_mark_in_it_is_stale() {
+fn a_section_is_stale_only_when_a_mark_in_it_is_stale() {
     let model = model();
     let current = fingerprint(&model, "docs/decisions/core/cli.md#run-commands");
     let text = format!(
@@ -669,7 +669,7 @@ fn req_core_292_a_section_is_stale_only_when_a_mark_in_it_is_stale() {
 
 // @kotowari[C-core-ovcmd-15]
 #[test]
-fn req_core_292_only_html_comments_are_removed_from_heading_text() {
+fn only_html_comments_are_removed_from_heading_text() {
     // 型引数のような山括弧は行の中の HTML として読まれるが、消すのはコメントだけ
     let model = model();
     let text = data(
@@ -783,7 +783,7 @@ fn the_findings_and_numbers_become_the_overview_group() {
 
 // @kotowari[C-core-ovdata-11]
 #[test]
-fn req_core_283_a_second_title_before_the_lead_is_the_first_block_after_the_title() {
+fn a_second_title_before_the_lead_is_the_first_block_after_the_title() {
     let model = model();
     let text = format!("{FRONT}\n# a\n\n# b\n\n{LEAD}\n## 節\n\n文。\n");
     let overview = run(&model, &[(A, &text)]);
@@ -792,7 +792,7 @@ fn req_core_283_a_second_title_before_the_lead_is_the_first_block_after_the_titl
 
 // @kotowari[C-core-ovdata-12]
 #[test]
-fn req_core_284_one_file_listing_a_document_twice_does_not_share_it() {
+fn one_file_listing_a_document_twice_does_not_share_it() {
     let model = model();
     let text = format!(
         "---\ndocuments:\n  - docs/decisions/core/cli.md\n  - docs/decisions/core/cli.md\n---\n\n# a\n\n{LEAD}"
@@ -803,7 +803,7 @@ fn req_core_284_one_file_listing_a_document_twice_does_not_share_it() {
 
 // @kotowari[C-core-ovout-1]
 #[test]
-fn req_core_288_the_number_of_files_counts_every_overview_data_file() {
+fn the_number_of_files_counts_every_overview_data_file() {
     let model = model();
     let a = data("a", "## 節\n\n文。\n");
     let b = format!("---\ndocuments:\n  - docs/decisions/core/other.md\n---\n\n# b\n\n{LEAD}");
@@ -856,7 +856,7 @@ fn pairs(expected: &[(&str, &str)]) -> Vec<(String, String)> {
 
 // @kotowari[C-core-forder-4, C-core-ovtoc-7, C-core-ovtoc-12]
 #[test]
-fn ex_core_507_an_unknown_key_in_a_group_is_a_form_error_and_stops_the_comparison() {
+fn an_unknown_key_in_a_group_is_a_form_error_and_stops_the_comparison() {
     let overview = run_named(
         &["a"],
         "title: 目次\nitems:\n  - title: 群\n    items: [x]\n    color: red\n",
@@ -869,7 +869,7 @@ fn ex_core_507_an_unknown_key_in_a_group_is_a_form_error_and_stops_the_compariso
 
 // @kotowari[C-core-forder-4, C-core-ovtoc-7]
 #[test]
-fn tbl_core_043_each_form_violation_names_its_place() {
+fn each_form_violation_names_its_place() {
     for (toc, places) in [
         ("items: [a]\n", vec!["/title"]),
         ("title: 目次\n", vec!["/items"]),
@@ -908,7 +908,7 @@ fn tbl_core_043_each_form_violation_names_its_place() {
 
 // @kotowari[C-core-ovtoc-8]
 #[test]
-fn tbl_core_043_a_well_formed_toc_with_a_note_and_nested_groups_has_no_finding() {
+fn a_well_formed_toc_with_a_note_and_nested_groups_has_no_finding() {
     let overview = run_named(
         &["a", "b"],
         "title: 目次\nnote: 一行の説明\nitems:\n  - a\n  - title: 群\n    note: ''\n    items: [b]\n",
@@ -918,7 +918,7 @@ fn tbl_core_043_a_well_formed_toc_with_a_note_and_nested_groups_has_no_finding()
 
 // @kotowari[C-core-forder-4, C-core-ovtoc-9]
 #[test]
-fn ex_core_508_missing_unknown_and_repeated_names_are_errors() {
+fn missing_unknown_and_repeated_names_are_errors() {
     let overview = run_named(&["a", "b", "c"], "title: 目次\nitems: [a, z, a]\n");
     let mut findings = toc_findings(&overview);
     findings.sort();
@@ -935,7 +935,7 @@ fn ex_core_508_missing_unknown_and_repeated_names_are_errors() {
 
 // @kotowari[C-core-ovtoc-9]
 #[test]
-fn req_core_329_an_unknown_name_repeated_is_only_unknown_each_time() {
+fn an_unknown_name_repeated_is_only_unknown_each_time() {
     let overview = run_named(
         &["a"],
         "title: 目次\nitems: [a, z, {title: 群, items: [z]}]\n",
@@ -953,7 +953,7 @@ fn req_core_329_an_unknown_name_repeated_is_only_unknown_each_time() {
 
 // @kotowari[C-core-ovtoc-9]
 #[test]
-fn req_core_329_the_second_place_is_found_depth_first_in_written_order() {
+fn the_second_place_is_found_depth_first_in_written_order() {
     let overview = run_named(
         &["a"],
         "title: 目次\nitems:\n  - title: 前\n    items: [{title: 内, items: [a]}]\n  - a\n",
@@ -966,7 +966,7 @@ fn req_core_329_the_second_place_is_found_depth_first_in_written_order() {
 
 // @kotowari[C-core-forder-4, C-core-ovtoc-10]
 #[test]
-fn ex_core_509_a_group_without_items_is_an_error() {
+fn a_group_without_items_is_an_error() {
     let overview = run_named(&["a"], "title: 目次\nitems: [a, {title: 空, items: []}]\n");
     assert_eq!(
         toc_findings(&overview),
@@ -976,7 +976,7 @@ fn ex_core_509_a_group_without_items_is_an_error() {
 
 // @kotowari[C-core-ovtoc-10]
 #[test]
-fn req_core_330_an_empty_outermost_group_is_reported_at_the_root() {
+fn an_empty_outermost_group_is_reported_at_the_root() {
     let overview = run_named(&["a"], "title: 目次\nitems: []\n");
     let mut findings = toc_findings(&overview);
     findings.sort();
@@ -991,7 +991,7 @@ fn req_core_330_an_empty_outermost_group_is_reported_at_the_root() {
 
 // @kotowari[C-core-ovtoc-13]
 #[test]
-fn req_core_332_the_render_input_carries_the_toc_as_written() {
+fn the_render_input_carries_the_toc_as_written() {
     use kotowari_markdown_view::{TocGroup, TocItem};
     let overview = run_named(
         &["a", "b", "c"],
@@ -1017,7 +1017,7 @@ fn req_core_332_the_render_input_carries_the_toc_as_written() {
 
 // @kotowari[C-core-ovtoc-11]
 #[test]
-fn req_core_294_toc_errors_count_as_errors_and_block_the_pages() {
+fn toc_errors_count_as_errors_and_block_the_pages() {
     let overview = run_named(&["a"], "title: 目次\nitems: [z]\n");
     assert!(overview.errors() >= 2);
     assert_eq!(overview.pages(), Err(overview.errors()));

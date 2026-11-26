@@ -105,7 +105,7 @@ fn strings(value: &serde_json::Value) -> Vec<&str> {
 
 // @kotowari[C-core-cli-1, C-core-ovcmd-1, C-core-ovcmd-11]
 #[test]
-fn req_core_293_the_first_build_writes_every_page_under_the_cache() {
+fn the_first_build_writes_every_page_under_the_cache() {
     let tmp = two_documents();
     let (code, stdout, stderr) = run(tmp.path(), &["overview", "build"]);
     assert_eq!(code, Some(0), "{stderr}");
@@ -132,7 +132,7 @@ fn req_core_293_the_first_build_writes_every_page_under_the_cache() {
 
 // @kotowari[C-core-ovcmd-2, C-core-ovcmd-11]
 #[test]
-fn ex_core_475_a_second_build_writes_only_the_changed_page() {
+fn a_second_build_writes_only_the_changed_page() {
     let tmp = two_documents();
     assert_eq!(run(tmp.path(), &["overview", "build"]).0, Some(0));
     // 書き直されれば更新時刻が今になるので、前の build のファイルを古い時刻にしておく
@@ -166,7 +166,7 @@ fn ex_core_475_a_second_build_writes_only_the_changed_page() {
 
 // @kotowari[C-core-ovcmd-3]
 #[test]
-fn ex_core_476_the_page_of_removed_overview_data_is_removed() {
+fn the_page_of_removed_overview_data_is_removed() {
     let tmp = two_documents();
     assert_eq!(run(tmp.path(), &["overview", "build"]).0, Some(0));
     std::fs::remove_file(tmp.path().join(".kotowari/overview/b.md")).unwrap();
@@ -191,7 +191,7 @@ fn ex_core_476_the_page_of_removed_overview_data_is_removed() {
 
 // @kotowari[C-core-ovcmd-25]
 #[test]
-fn req_core_293_any_other_file_under_the_cache_is_removed() {
+fn any_other_file_under_the_cache_is_removed() {
     let tmp = two_documents();
     write(tmp.path(), ".kotowari/cache/overview/stray.txt", "x");
     let (code, stdout, _) = run(tmp.path(), &["overview", "build"]);
@@ -204,7 +204,7 @@ fn req_core_293_any_other_file_under_the_cache_is_removed() {
 
 // @kotowari[C-core-ovcmd-12]
 #[test]
-fn req_core_295_the_text_format_writes_written_lines_before_removed_lines() {
+fn the_text_format_writes_written_lines_before_removed_lines() {
     let tmp = two_documents();
     write(tmp.path(), ".kotowari/cache/overview/0-stray.txt", "x");
     let (code, stdout, _) = run(tmp.path(), &["--format", "text", "overview", "build"]);
@@ -225,7 +225,7 @@ fn req_core_295_the_text_format_writes_written_lines_before_removed_lines() {
 
 // @kotowari[C-core-clienv-7, C-core-ovcmd-8]
 #[test]
-fn ex_core_477_errors_in_overview_data_stop_the_build_without_writing() {
+fn errors_in_overview_data_stop_the_build_without_writing() {
     let tmp = two_documents();
     assert_eq!(run(tmp.path(), &["overview", "build"]).0, Some(0));
     let before = cache(tmp.path());
@@ -246,7 +246,7 @@ fn ex_core_477_errors_in_overview_data_stop_the_build_without_writing() {
 
 // @kotowari[C-core-clienv-7, C-core-ovdata-2]
 #[test]
-fn ex_core_463_build_without_the_overview_key_is_a_config_error() {
+fn build_without_the_overview_key_is_a_config_error() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), "");
     write(tmp.path(), ".kotowari/overview/x.md", "# broken\n");
@@ -262,7 +262,7 @@ fn ex_core_463_build_without_the_overview_key_is_a_config_error() {
 
 // @kotowari[C-core-ovdata-4]
 #[test]
-fn req_core_280_build_stops_on_an_overlap_with_the_test_files() {
+fn build_stops_on_an_overlap_with_the_test_files() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -288,7 +288,7 @@ fn req_core_280_build_stops_on_an_overlap_with_the_test_files() {
 
 // @kotowari[C-core-guides-9, C-core-ovdata-21]
 #[test]
-fn req_core_280_build_judges_the_guides_and_tests_overlap_first() {
+fn build_judges_the_guides_and_tests_overlap_first() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), "");
     std::fs::write(
@@ -311,7 +311,7 @@ fn req_core_280_build_judges_the_guides_and_tests_overlap_first() {
 
 // @kotowari[C-core-ovdata-16]
 #[test]
-fn ex_core_553_a_test_file_that_is_not_utf8_does_not_stop_the_build() {
+fn a_test_file_that_is_not_utf8_does_not_stop_the_build() {
     let tmp = two_documents();
     std::fs::write(tmp.path().join("tests/bad.rs"), b"\xff\xfe").unwrap();
     let (code, stdout, stderr) = run(tmp.path(), &["overview", "build"]);
@@ -329,7 +329,7 @@ fn ex_core_553_a_test_file_that_is_not_utf8_does_not_stop_the_build() {
 
 // @kotowari[C-core-config-10, C-core-ovdata-24]
 #[test]
-fn req_core_278_build_reads_the_ir_places_and_stops_like_check() {
+fn build_reads_the_decision_document_place_and_stops_like_check() {
     let tmp = two_documents();
     std::fs::remove_dir_all(tmp.path().join("docs/decisions")).unwrap();
     let (code, _, stderr) = run(tmp.path(), &["overview", "build"]);
@@ -372,7 +372,7 @@ fn snapshot(root: &Path, skip: &Path) -> Vec<(String, Option<Vec<u8>>)> {
 
 // @kotowari[C-core-ovcmd-4]
 #[test]
-fn req_core_296_build_writes_nothing_outside_the_cache_place() {
+fn build_writes_nothing_outside_the_cache_place() {
     let tmp = two_documents();
     let home = TempDir::new().unwrap();
     let skip = tmp.path().join(".kotowari/cache");
@@ -397,7 +397,7 @@ fn req_core_296_build_writes_nothing_outside_the_cache_place() {
 
 // @kotowari[C-core-scope-2]
 #[test]
-fn req_core_102_check_and_status_with_overview_data_write_nothing() {
+fn check_and_status_with_overview_data_write_nothing() {
     let tmp = two_documents();
     let before = snapshot(tmp.path(), &tmp.path().join("none"));
     for command in ["check", "status", "list"] {
@@ -423,7 +423,7 @@ fn argument_error(tmp: &Path, args: &[&str]) {
 
 // @kotowari[C-core-cli-11]
 #[test]
-fn req_core_304_overview_takes_exactly_build_or_serve() {
+fn overview_takes_exactly_build_or_serve() {
     let tmp = without_overview();
     argument_error(tmp.path(), &["overview"]);
     argument_error(tmp.path(), &["overview", "render"]);
@@ -434,7 +434,7 @@ fn req_core_304_overview_takes_exactly_build_or_serve() {
 
 // @kotowari[C-core-cli-11]
 #[test]
-fn req_core_304_the_port_is_a_decimal_integer_from_1_to_65535() {
+fn the_port_is_a_decimal_integer_from_1_to_65535() {
     let tmp = without_overview();
     for port in [
         "0",
@@ -454,7 +454,7 @@ fn req_core_304_the_port_is_a_decimal_integer_from_1_to_65535() {
 
 // @kotowari[C-core-cli-7]
 #[test]
-fn req_core_004_port_belongs_to_serve_and_format_does_not() {
+fn port_belongs_to_serve_and_format_does_not() {
     let tmp = without_overview();
     argument_error(tmp.path(), &["overview", "build", "--port", "4590"]);
     argument_error(tmp.path(), &["check", "--port", "4590"]);
@@ -472,7 +472,7 @@ fn req_core_004_port_belongs_to_serve_and_format_does_not() {
 
 // @kotowari[C-core-cli-2, C-core-config-2]
 #[test]
-fn req_core_002_build_takes_format_and_config_before_or_after_the_command() {
+fn build_takes_format_and_config_before_or_after_the_command() {
     let tmp = two_documents();
     std::fs::rename(
         tmp.path().join(".kotowari/config.yaml"),
@@ -497,7 +497,7 @@ fn req_core_002_build_takes_format_and_config_before_or_after_the_command() {
 // @kotowari[C-core-ovcmd-4]
 #[cfg(unix)]
 #[test]
-fn req_core_296_a_symbolic_link_in_the_cache_is_replaced_not_written_through() {
+fn a_symbolic_link_in_the_cache_is_replaced_not_written_through() {
     let tmp = two_documents();
     std::fs::create_dir_all(tmp.path().join(CACHE)).unwrap();
     write(tmp.path(), "outside.css", "outside");
@@ -525,7 +525,7 @@ fn req_core_296_a_symbolic_link_in_the_cache_is_replaced_not_written_through() {
 // @kotowari[C-core-clienv-7, C-core-ovcmd-5]
 #[cfg(unix)]
 #[test]
-fn ex_core_504_a_linked_cache_place_stops_without_writing_outside() {
+fn a_linked_cache_place_stops_without_writing_outside() {
     let tmp = two_documents();
     let outside = TempDir::new().unwrap();
     write(outside.path(), "keep", "keep");
@@ -552,7 +552,7 @@ fn ex_core_504_a_linked_cache_place_stops_without_writing_outside() {
 // @kotowari[C-core-ovcmd-5]
 #[cfg(unix)]
 #[test]
-fn req_core_324_a_link_above_the_cache_place_also_stops() {
+fn a_link_above_the_cache_place_also_stops() {
     for linked in [".kotowari/cache", ".kotowari"] {
         let tmp = two_documents();
         // 元データの走査はリンクした隠しディレクトリに入らないので、元データと目次はリンクの外に置く
@@ -598,7 +598,7 @@ const TOC: &str = ".kotowari/toc.yaml";
 
 // @kotowari[C-core-clienv-7, C-core-config-18, C-core-ovtoc-2]
 #[test]
-fn ex_core_505_build_stops_without_the_toc_key_or_the_toc_file() {
+fn build_stops_without_the_toc_key_or_the_toc_file() {
     let tmp = two_documents();
     std::fs::remove_file(tmp.path().join(TOC)).unwrap();
     let (code, stdout, stderr) = run(tmp.path(), &["overview", "build"]);
@@ -622,7 +622,7 @@ fn ex_core_505_build_stops_without_the_toc_key_or_the_toc_file() {
 
 // @kotowari[C-core-clienv-7, C-core-ovtoc-11]
 #[test]
-fn ex_core_508_build_on_toc_errors_writes_nothing() {
+fn build_on_toc_errors_writes_nothing() {
     let tmp = two_documents();
     write(tmp.path(), "docs/decisions/third.md", DECISION);
     write(
@@ -643,7 +643,7 @@ fn ex_core_508_build_on_toc_errors_writes_nothing() {
 
 // @kotowari[C-core-ovtoc-14]
 #[test]
-fn ex_core_510_the_index_follows_the_toc_order() {
+fn the_index_follows_the_toc_order() {
     let tmp = two_documents();
     write(tmp.path(), TOC, "title: kotowari\nitems: [b, a]\n");
     let (code, _, stderr) = run(tmp.path(), &["overview", "build"]);
@@ -658,7 +658,7 @@ fn ex_core_510_the_index_follows_the_toc_order() {
 // @kotowari[C-core-ovcmd-7]
 #[cfg(unix)]
 #[test]
-fn ex_core_546_a_cache_place_that_cannot_be_enumerated_stops_with_a_cache_error() {
+fn a_cache_place_that_cannot_be_enumerated_stops_with_a_cache_error() {
     use std::os::unix::fs::PermissionsExt;
     let tmp = two_documents();
     // 元データの走査が置き場に入らないよう、元データと目次は隠しディレクトリの外に置く

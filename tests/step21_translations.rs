@@ -197,7 +197,7 @@ fn both_hashes() -> String {
 
 // @kotowari[C-core-pairs-1]
 #[test]
-fn ex_core_512_with_one_language_a_suffixed_file_is_a_document_of_its_own() {
+fn with_one_language_a_suffixed_file_is_a_document_of_its_own() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), None, "");
     write(tmp.path(), "docs/decisions/a.md", &decision_topic("Body."));
@@ -226,7 +226,7 @@ fn ex_core_512_with_one_language_a_suffixed_file_is_a_document_of_its_own() {
 
 // @kotowari[C-core-pairs-4]
 #[test]
-fn ex_core_514_a_missing_english_side_is_an_error_on_the_first_side() {
+fn a_missing_english_side_is_an_error_on_the_first_side() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), JA_EN, "");
     write(tmp.path(), "docs/decisions/a.md", &decision_topic("文。"));
@@ -241,7 +241,7 @@ fn ex_core_514_a_missing_english_side_is_an_error_on_the_first_side() {
 
 // @kotowari[C-core-pairs-5]
 #[test]
-fn ex_core_515_a_missing_first_side_is_an_error_on_the_side_that_exists() {
+fn a_missing_first_side_is_an_error_on_the_side_that_exists() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), JA_EN, "");
     write(
@@ -267,7 +267,7 @@ fn ex_core_515_a_missing_first_side_is_an_error_on_the_side_that_exists() {
 
 // @kotowari[C-core-pairs-6]
 #[test]
-fn ex_core_516_a_suffix_of_the_first_language_or_an_unlisted_one_is_part_of_the_name() {
+fn a_suffix_of_the_first_language_or_an_unlisted_one_is_part_of_the_name() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), JA_EN, "");
     write(
@@ -292,7 +292,7 @@ fn ex_core_516_a_suffix_of_the_first_language_or_an_unlisted_one_is_part_of_the_
 
 // @kotowari[C-core-pairs-7]
 #[test]
-fn ex_core_518_a_record_matching_the_files_raises_nothing() {
+fn a_record_matching_the_files_raises_nothing() {
     let tmp = TempDir::new().unwrap();
     guide_pair_with_record(tmp.path(), Some(&both_hashes()));
     let report = check(tmp.path());
@@ -312,7 +312,7 @@ fn ex_core_518_a_record_matching_the_files_raises_nothing() {
 
 // @kotowari[C-core-pairs-11]
 #[test]
-fn ex_core_519_changing_one_side_makes_it_stale() {
+fn changing_one_side_makes_it_stale() {
     let tmp = TempDir::new().unwrap();
     guide_pair_with_record(tmp.path(), Some(&both_hashes()));
     write(tmp.path(), "guides/a.md", "");
@@ -329,7 +329,7 @@ fn ex_core_519_changing_one_side_makes_it_stale() {
 
 // @kotowari[C-core-pairs-8]
 #[test]
-fn ex_core_520_record_keys_other_than_the_side_names_are_invalid() {
+fn record_keys_other_than_the_side_names_are_invalid() {
     let tmp = TempDir::new().unwrap();
     guide_pair_with_record(
         tmp.path(),
@@ -353,7 +353,7 @@ fn ex_core_520_record_keys_other_than_the_side_names_are_invalid() {
 
 // @kotowari[C-core-pairs-8]
 #[test]
-fn ex_core_521_a_missing_record_is_invalid() {
+fn a_missing_record_is_invalid() {
     let tmp = TempDir::new().unwrap();
     guide_pair_with_record(tmp.path(), None);
     let report = check(tmp.path());
@@ -365,7 +365,7 @@ fn ex_core_521_a_missing_record_is_invalid() {
 
 // @kotowari[C-core-pairs-8]
 #[test]
-fn req_core_339_an_unreadable_record_or_a_malformed_value_is_named_in_order() {
+fn an_unreadable_record_or_a_malformed_value_is_named_in_order() {
     for (record, detail) in [
         ("a.md: [\n", "yaml"),
         ("- a.md\n", "keys"),
@@ -389,7 +389,7 @@ fn req_core_339_an_unreadable_record_or_a_malformed_value_is_named_in_order() {
 
 // @kotowari[C-core-pairs-12]
 #[test]
-fn ex_core_524_a_stale_guide_mark_is_reported_on_every_side() {
+fn a_stale_guide_mark_is_reported_on_every_side() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), JA_EN, GUIDES);
     write(tmp.path(), "docs/decisions/a.md", &decision_topic("文。"));
@@ -495,8 +495,7 @@ const CHECK_STATUS_BUILD: [&[&str]; 3] = [&["check"], &["status"], &["overview",
 
 // @kotowari[C-core-guides-9, C-core-guides-24, C-core-ovdata-21]
 #[test]
-fn req_core_280_a_side_without_its_first_side_matched_by_all_three_stops_on_the_guides_and_tests_overlap()
- {
+fn a_side_without_its_first_side_matched_by_all_three_stops_on_the_guides_and_tests_overlap() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), JA_EN, "");
     write(tmp.path(), "shared/a.en.md", &overview_data("Title"));
@@ -519,7 +518,7 @@ fn req_core_280_a_side_without_its_first_side_matched_by_all_three_stops_on_the_
 
 // @kotowari[C-core-ovdata-3, C-core-ovdata-22]
 #[test]
-fn req_core_280_a_side_without_its_first_side_matched_by_overview_and_guides_stops() {
+fn a_side_without_its_first_side_matched_by_overview_and_guides_stops() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), JA_EN, "");
     write(tmp.path(), "shared/a.en.md", &overview_data("Title"));
@@ -542,7 +541,7 @@ fn req_core_280_a_side_without_its_first_side_matched_by_overview_and_guides_sto
 
 // @kotowari[C-core-guides-9, C-core-guides-23]
 #[test]
-fn req_core_199_a_side_found_by_name_counts_as_a_guide_in_the_overlap() {
+fn a_side_found_by_name_counts_as_a_guide_in_the_overlap() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), JA_EN, "");
     write(tmp.path(), "guides/a.md", "a\n");
@@ -690,7 +689,7 @@ fn an_inaccessible_language_cache_reports_a_cache_error() {
 
 // @kotowari[C-core-pairs-13]
 #[test]
-fn ex_core_525_the_english_overview_side_is_not_another_page() {
+fn the_english_overview_side_is_not_another_page() {
     let tmp = TempDir::new().unwrap();
     overview_pairs(tmp.path());
     let report = check(tmp.path());
@@ -705,7 +704,7 @@ fn ex_core_525_the_english_overview_side_is_not_another_page() {
 
 // @kotowari[C-core-pairs-13]
 #[test]
-fn req_core_343_overview_and_contents_forms_are_checked_on_every_side() {
+fn overview_and_contents_forms_are_checked_on_every_side() {
     let tmp = TempDir::new().unwrap();
     overview_pairs(tmp.path());
     write(
@@ -751,7 +750,7 @@ fn overview_with_status(title: &str, state: &str, text: &str) -> String {
 
 // @kotowari[C-core-pairstruct-3]
 #[test]
-fn ex_core_528_a_part_field_that_is_not_a_sentence_must_match() {
+fn a_part_field_that_is_not_a_sentence_must_match() {
     let tmp = TempDir::new().unwrap();
     overview_pairs(tmp.path());
     write(
@@ -783,7 +782,7 @@ fn ex_core_528_a_part_field_that_is_not_a_sentence_must_match() {
 
 // @kotowari[C-core-pairstruct-4]
 #[test]
-fn ex_core_529_contents_that_differ_only_in_titles_and_notes_match() {
+fn contents_that_differ_only_in_titles_and_notes_match() {
     let tmp = TempDir::new().unwrap();
     overview_pairs(tmp.path());
     write(
@@ -816,7 +815,7 @@ fn ex_core_529_contents_that_differ_only_in_titles_and_notes_match() {
 
 // @kotowari[C-core-pairstruct-6]
 #[test]
-fn ex_core_530_correct_switcher_lines_raise_nothing() {
+fn correct_switcher_lines_raise_nothing() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), JA_EN, GUIDES);
     write(
@@ -838,7 +837,7 @@ fn ex_core_530_correct_switcher_lines_raise_nothing() {
 
 // @kotowari[C-core-pairstruct-7]
 #[test]
-fn ex_core_531_a_missing_switcher_line_reports_the_line_it_should_be() {
+fn a_missing_switcher_line_reports_the_line_it_should_be() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), JA_EN, GUIDES);
     write(tmp.path(), "guides/b.md", "# B\n\n本文。\n");
@@ -860,7 +859,7 @@ fn ex_core_531_a_missing_switcher_line_reports_the_line_it_should_be() {
 
 // @kotowari[C-core-pairstruct-8]
 #[test]
-fn ex_core_532_overview_data_has_no_switcher_line() {
+fn overview_data_has_no_switcher_line() {
     let tmp = TempDir::new().unwrap();
     overview_pairs(tmp.path());
     let report = check(tmp.path());
@@ -887,7 +886,7 @@ fn guide_linking(tmp: &Path, english: &str) {
 
 // @kotowari[C-core-pairstruct-14]
 #[test]
-fn ex_core_533_an_english_guide_linking_the_japanese_ir_is_an_error() {
+fn an_english_guide_linking_the_japanese_decision_document_is_an_error() {
     let tmp = TempDir::new().unwrap();
     guide_linking(
         tmp.path(),
@@ -906,7 +905,7 @@ fn ex_core_533_an_english_guide_linking_the_japanese_ir_is_an_error() {
 
 // @kotowari[C-core-pairstruct-12]
 #[test]
-fn ex_core_534_links_to_the_same_language_outside_or_inside_the_page_are_not_errors() {
+fn links_to_the_same_language_outside_or_inside_the_page_are_not_errors() {
     let tmp = TempDir::new().unwrap();
     guide_linking(
         tmp.path(),
@@ -951,7 +950,7 @@ fn links(html: &str) -> Vec<(String, String)> {
 
 // @kotowari[C-core-ovlang-6]
 #[test]
-fn ex_core_536_english_is_the_built_in_text_with_the_labels_on_top() {
+fn english_is_the_built_in_text_with_the_labels_on_top() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -979,7 +978,7 @@ fn ex_core_536_english_is_the_built_in_text_with_the_labels_on_top() {
 
 // @kotowari[C-core-ovlang-1, C-core-ovlang-5]
 #[test]
-fn ex_core_540_english_pages_are_written_under_en_and_link_each_other() {
+fn english_pages_are_written_under_en_and_link_each_other() {
     let tmp = TempDir::new().unwrap();
     overview_pairs(tmp.path());
     let (code, stdout) = run(tmp.path(), &["overview", "build"]);
@@ -1007,7 +1006,7 @@ fn ex_core_540_english_pages_are_written_under_en_and_link_each_other() {
 
 // @kotowari[C-core-ovlang-3, C-core-ovlang-7]
 #[test]
-fn ex_core_541_one_language_writes_no_language_directory() {
+fn one_language_writes_no_language_directory() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), Some(&["ja"]), OVERVIEW);
     write(
@@ -1071,7 +1070,7 @@ fn english_pages_take_reference_bodies_from_the_english_side_of_the_decision_doc
 
 // @kotowari[C-core-ovcmd-26]
 #[test]
-fn req_core_294_a_missing_side_stops_the_build_without_writing() {
+fn a_missing_side_stops_the_build_without_writing() {
     let tmp = TempDir::new().unwrap();
     // 目次の骨組みが食い違うと止まる
     overview_pairs(tmp.path());
@@ -1087,7 +1086,7 @@ fn req_core_294_a_missing_side_stops_the_build_without_writing() {
 
 // @kotowari[C-core-pairstruct-5]
 #[test]
-fn req_core_294_overview_links_to_the_matching_guide_sides_do_not_stop_the_build() {
+fn overview_links_to_the_matching_guide_sides_do_not_stop_the_build() {
     let tmp = TempDir::new().unwrap();
     overview_pairs(tmp.path());
     let config = std::fs::read_to_string(tmp.path().join(".kotowari/config.yaml")).unwrap();

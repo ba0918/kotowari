@@ -183,7 +183,7 @@ mod tests {
 
     // @kotowari[C-core-ovcmd-22]
     #[test]
-    fn req_core_299_paths_that_leave_the_cache_do_not_resolve() {
+    fn paths_that_leave_the_cache_do_not_resolve() {
         let dir = tempfile::tempdir().unwrap();
         let cache = dir.path().join("cache");
         std::fs::create_dir(&cache).unwrap();

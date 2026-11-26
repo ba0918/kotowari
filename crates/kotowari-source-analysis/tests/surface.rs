@@ -99,7 +99,7 @@ fn surface(kind: &str, name: &str, path: &str, line: usize) -> (String, String, 
 
 // @kotowari[C-core-surface-1, C-core-surface-2]
 #[test]
-fn req_223_a_matched_node_is_a_surface_named_by_name_with_one_quote_pair_removed() {
+fn a_matched_node_is_a_surface_named_by_name_with_one_quote_pair_removed() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_SRC);
     write(tmp.path(), "rules/surface.yml", FLAG_RULE);
@@ -119,7 +119,7 @@ fn req_223_a_matched_node_is_a_surface_named_by_name_with_one_quote_pair_removed
 
 // @kotowari[C-core-surface-2]
 #[test]
-fn req_223_only_one_pair_of_quotes_is_removed_and_other_forms_stay() {
+fn only_one_pair_of_quotes_is_removed_and_other_forms_stay() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_SRC);
     // 識別子を名前にする規則と、raw の文字列のリテラルを名前にする規則
@@ -145,7 +145,7 @@ fn req_223_only_one_pair_of_quotes_is_removed_and_other_forms_stay() {
 
 // @kotowari[C-core-surface-1]
 #[test]
-fn req_223_a_match_without_name_is_not_a_surface() {
+fn a_match_without_name_is_not_a_surface() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_SRC);
     write(
@@ -164,7 +164,7 @@ fn req_223_a_match_without_name_is_not_a_surface() {
 
 // @kotowari[C-core-surface-3]
 #[test]
-fn req_223_language_is_matched_without_case_and_accepts_aliases() {
+fn language_is_matched_without_case_and_accepts_aliases() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_SRC);
     write(
@@ -190,7 +190,7 @@ fn req_223_language_is_matched_without_case_and_accepts_aliases() {
 
 // @kotowari[C-core-surface-3]
 #[test]
-fn ex_core_418_a_rule_is_not_applied_to_a_file_of_another_language() {
+fn a_rule_is_not_applied_to_a_file_of_another_language() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_SRC);
     write(tmp.path(), "rules/surface.yml", FLAG_RULE);
@@ -202,7 +202,7 @@ fn ex_core_418_a_rule_is_not_applied_to_a_file_of_another_language() {
 
 // @kotowari[C-core-surface-5, C-core-surface-26]
 #[test]
-fn req_224_rule_files_and_ignores_are_applied_and_severity_off_still_applies() {
+fn rule_files_and_ignores_are_applied_and_severity_off_still_applies() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_SRC);
     write(
@@ -225,7 +225,7 @@ fn req_224_rule_files_and_ignores_are_applied_and_severity_off_still_applies() {
 
 // @kotowari[C-core-surface-7]
 #[test]
-fn ex_core_426_a_file_not_in_a_rule_language_is_not_parsed() {
+fn a_file_not_in_a_rule_language_is_not_parsed() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), SURFACE_SRC);
     write(tmp.path(), "rules/surface.yml", FLAG_RULE);
@@ -236,7 +236,7 @@ fn ex_core_426_a_file_not_in_a_rule_language_is_not_parsed() {
 
 // @kotowari[C-core-surface-6]
 #[test]
-fn ex_core_427_a_syntax_error_in_a_rule_language_file_is_unparsable() {
+fn a_syntax_error_in_a_rule_language_file_is_unparsable() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),

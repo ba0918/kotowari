@@ -77,7 +77,7 @@ fn listed_tests(tmp: &Path, id: &str) -> Vec<serde_json::Value> {
 
 // @kotowari[C-core-discover-8]
 #[test]
-fn ex_core_294_syntax_error_in_a_file_of_a_language_with_a_query() {
+fn syntax_error_in_a_file_of_a_language_with_a_query() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(tmp.path(), "tests/a.test.ts", "it('x', () => {");
@@ -89,7 +89,7 @@ fn ex_core_294_syntax_error_in_a_file_of_a_language_with_a_query() {
 
 // @kotowari[C-core-discover-9, C-core-discover-10]
 #[test]
-fn ex_core_296_string_name_loses_its_quotes() {
+fn string_name_loses_its_quotes() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(
@@ -108,7 +108,7 @@ fn ex_core_296_string_name_loses_its_quotes() {
 
 // @kotowari[C-core-discover-9, C-core-queries-8]
 #[test]
-fn req_180_only_one_pair_of_the_same_quotes_is_stripped() {
+fn only_one_pair_of_the_same_quotes_is_stripped() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(
@@ -134,7 +134,7 @@ fn req_180_only_one_pair_of_the_same_quotes_is_stripped() {
 
 // @kotowari[C-core-discover-13]
 #[test]
-fn ex_core_297_test_inside_a_test_is_counted_apart() {
+fn test_inside_a_test_is_counted_apart() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(
@@ -148,7 +148,7 @@ fn ex_core_297_test_inside_a_test_is_counted_apart() {
 
 // @kotowari[C-core-queries-8]
 #[test]
-fn ex_core_298_skipped_test_is_counted() {
+fn skipped_test_is_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(tmp.path(), "tests/a.test.ts", "it.skip('x', () => {})\n");
@@ -158,7 +158,7 @@ fn ex_core_298_skipped_test_is_counted() {
 
 // @kotowari[C-core-queries-9]
 #[test]
-fn ex_core_299_each_table_test_is_one_test() {
+fn each_table_test_is_one_test() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(
@@ -172,7 +172,7 @@ fn ex_core_299_each_table_test_is_one_test() {
 
 // @kotowari[C-core-queries-9]
 #[test]
-fn ex_core_317_chained_each_table_test_is_one_test() {
+fn chained_each_table_test_is_one_test() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(
@@ -186,7 +186,7 @@ fn ex_core_317_chained_each_table_test_is_one_test() {
 
 // @kotowari[C-core-queries-8]
 #[test]
-fn tbl_032_test_whose_result_is_called_again_is_counted() {
+fn test_whose_result_is_called_again_is_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(
@@ -200,7 +200,7 @@ fn tbl_032_test_whose_result_is_called_again_is_counted() {
 
 // @kotowari[C-core-queries-8]
 #[test]
-fn tbl_032_dotted_form_with_a_unicode_name_or_a_comment_is_counted() {
+fn dotted_form_with_a_unicode_name_or_a_comment_is_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(
@@ -214,7 +214,7 @@ fn tbl_032_dotted_form_with_a_unicode_name_or_a_comment_is_counted() {
 
 // @kotowari[C-core-queries-9]
 #[test]
-fn ex_core_331_tagged_template_alone_is_not_counted() {
+fn tagged_template_alone_is_not_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(
@@ -228,7 +228,7 @@ fn ex_core_331_tagged_template_alone_is_not_counted() {
 
 // @kotowari[C-core-queries-10]
 #[test]
-fn ex_core_300_describe_and_other_callers_are_not_counted() {
+fn describe_and_other_callers_are_not_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(
@@ -242,7 +242,7 @@ fn ex_core_300_describe_and_other_callers_are_not_counted() {
 
 // @kotowari[C-core-queries-8, C-core-queries-9, C-core-queries-10]
 #[test]
-fn tbl_032_dotted_forms_are_counted_with_the_first_argument() {
+fn dotted_forms_are_counted_with_the_first_argument() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(
@@ -256,7 +256,7 @@ fn tbl_032_dotted_forms_are_counted_with_the_first_argument() {
 
 // @kotowari[C-core-queries-2]
 #[test]
-fn ex_core_301_test_in_a_tsx_file_is_counted() {
+fn test_in_a_tsx_file_is_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.tsx"]);
     write(tmp.path(), "tests/a.test.tsx", "it('x', () => {})\n");
@@ -266,7 +266,7 @@ fn ex_core_301_test_in_a_tsx_file_is_counted() {
 
 // @kotowari[C-core-queries-3]
 #[test]
-fn req_183_javascript_files_are_counted() {
+fn javascript_files_are_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*"]);
     for ext in ["js", "jsx", "mjs", "cjs"] {
@@ -282,7 +282,7 @@ fn req_183_javascript_files_are_counted() {
 
 // @kotowari[C-core-markers-16]
 #[test]
-fn ex_core_309_code_line_between_breaks_the_block() {
+fn code_line_between_breaks_the_block() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(
@@ -296,7 +296,7 @@ fn ex_core_309_code_line_between_breaks_the_block() {
 
 // @kotowari[C-core-markers-10]
 #[test]
-fn ex_core_319_mark_before_a_nested_test_binds_to_it() {
+fn mark_before_a_nested_test_binds_to_it() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(
@@ -316,7 +316,7 @@ fn ex_core_319_mark_before_a_nested_test_binds_to_it() {
 
 // @kotowari[C-core-markers-17]
 #[test]
-fn ex_core_327_comment_after_a_full_width_space_joins_the_block() {
+fn comment_after_a_full_width_space_joins_the_block() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(
@@ -332,7 +332,7 @@ fn ex_core_327_comment_after_a_full_width_space_joins_the_block() {
 
 // @kotowari[C-core-markers-16]
 #[test]
-fn ex_core_320_comment_after_code_on_the_same_line_breaks_the_block() {
+fn comment_after_code_on_the_same_line_breaks_the_block() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.ts"]);
     write(
@@ -346,7 +346,7 @@ fn ex_core_320_comment_after_code_on_the_same_line_breaks_the_block() {
 
 // @kotowari[C-core-output-12, C-core-discover-7, C-core-queries-1]
 #[test]
-fn tbl_021_extensions_of_the_bundled_languages_have_a_query() {
+fn extensions_of_the_bundled_languages_have_a_query() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*"]);
     let with_query = [
@@ -368,7 +368,7 @@ fn tbl_021_extensions_of_the_bundled_languages_have_a_query() {
 
 // @kotowari[C-core-queries-11]
 #[test]
-fn ex_core_302_nested_function_is_not_counted() {
+fn nested_function_is_not_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.py"]);
     write(
@@ -382,7 +382,7 @@ fn ex_core_302_nested_function_is_not_counted() {
 
 // @kotowari[C-core-forder-6, C-core-queries-12]
 #[test]
-fn tbl_033_decorated_test_is_counted_at_its_def_line() {
+fn decorated_test_is_counted_at_its_def_line() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.py"]);
     write(
@@ -409,7 +409,7 @@ fn tbl_033_decorated_test_is_counted_at_its_def_line() {
 
 // @kotowari[C-core-queries-11]
 #[test]
-fn ex_core_329_method_of_a_class_inside_a_function_is_counted() {
+fn method_of_a_class_inside_a_function_is_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.py"]);
     write(
@@ -423,7 +423,7 @@ fn ex_core_329_method_of_a_class_inside_a_function_is_counted() {
 
 // @kotowari[C-core-markers-14]
 #[test]
-fn ex_core_307_mark_binds_across_a_decorator() {
+fn mark_binds_across_a_decorator() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.py"]);
     write(
@@ -440,7 +440,7 @@ fn ex_core_307_mark_binds_across_a_decorator() {
 
 // @kotowari[C-core-markers-13]
 #[test]
-fn ex_core_308_mark_before_a_method_binds() {
+fn mark_before_a_method_binds() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.py"]);
     write(
@@ -457,7 +457,7 @@ fn ex_core_308_mark_before_a_method_binds() {
 
 // @kotowari[C-core-markers-14]
 #[test]
-fn ex_core_318_mark_binds_across_a_multi_line_decorator_and_a_comment() {
+fn mark_binds_across_a_multi_line_decorator_and_a_comment() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.py"]);
     write(
@@ -474,7 +474,7 @@ fn ex_core_318_mark_binds_across_a_multi_line_decorator_and_a_comment() {
 
 // @kotowari[C-core-markers-15]
 #[test]
-fn ex_core_323_blank_line_inside_a_multi_line_decorator_does_not_cut_the_block() {
+fn blank_line_inside_a_multi_line_decorator_does_not_cut_the_block() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.py"]);
     write(
@@ -493,7 +493,7 @@ fn ex_core_323_blank_line_inside_a_multi_line_decorator_does_not_cut_the_block()
 
 // @kotowari[C-core-forder-6, C-core-queries-13]
 #[test]
-fn tbl_034_test_methods_and_attributes() {
+fn test_methods_and_attributes() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.php"]);
     write(
@@ -521,7 +521,7 @@ fn tbl_034_test_methods_and_attributes() {
 
 // @kotowari[C-core-queries-13]
 #[test]
-fn ex_core_303_method_with_a_qualified_test_attribute_is_counted() {
+fn method_with_a_qualified_test_attribute_is_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.php"]);
     write(
@@ -535,7 +535,7 @@ fn ex_core_303_method_with_a_qualified_test_attribute_is_counted() {
 
 // @kotowari[C-core-queries-14]
 #[test]
-fn ex_core_304_method_with_a_test_docblock_is_counted() {
+fn method_with_a_test_docblock_is_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.php"]);
     write(
@@ -549,7 +549,7 @@ fn ex_core_304_method_with_a_test_docblock_is_counted() {
 
 // @kotowari[C-core-queries-15]
 #[test]
-fn ex_core_305_pest_test_call_is_counted() {
+fn pest_test_call_is_counted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.php"]);
     write(
@@ -563,7 +563,7 @@ fn ex_core_305_pest_test_call_is_counted() {
 
 // @kotowari[C-core-markers-13, C-core-queries-14]
 #[test]
-fn tbl_034_mark_before_a_docblock_test_binds() {
+fn mark_before_a_docblock_test_binds() {
     // "@test" の docblock はコメントの行なので、その上の印も同じ塊に入る
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.php"]);
@@ -606,7 +606,7 @@ fn stop(tmp: &Path) -> (Option<i32>, String) {
 
 // @kotowari[C-core-qrules-1]
 #[test]
-fn ex_core_311_added_rule_counts_tests() {
+fn added_rule_counts_tests() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
@@ -636,7 +636,7 @@ fn c_core_qrules_6_a_typescript_rule_does_not_match_tsx_files() {
 
 // @kotowari[C-core-qrules-4]
 #[test]
-fn req_186_rules_separated_by_dashes_all_apply_and_give_a_language_a_query() {
+fn rules_separated_by_dashes_all_apply_and_give_a_language_a_query() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(tmp.path(), &["tests/**/*"], &["rules/many.yml"]);
@@ -658,7 +658,7 @@ fn req_186_rules_separated_by_dashes_all_apply_and_give_a_language_a_query() {
 
 // @kotowari[C-core-qrules-2, C-core-discover-12]
 #[test]
-fn ex_core_312_rule_hitting_the_bundled_node_counts_once() {
+fn rule_hitting_the_bundled_node_counts_once() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(tmp.path(), &["tests/**/*.ts"], &["rules/it.yml"]);
@@ -674,7 +674,7 @@ fn ex_core_312_rule_hitting_the_bundled_node_counts_once() {
 
 // @kotowari[C-core-qrules-7]
 #[test]
-fn ex_core_313_rule_is_not_applied_outside_its_files() {
+fn rule_is_not_applied_outside_its_files() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
@@ -691,7 +691,7 @@ fn ex_core_313_rule_is_not_applied_outside_its_files() {
 
 // @kotowari[C-core-qrules-7]
 #[test]
-fn req_187_rule_is_not_applied_to_its_ignores() {
+fn rule_is_not_applied_to_its_ignores() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
@@ -712,7 +712,7 @@ fn req_187_rule_is_not_applied_to_its_ignores() {
 
 // @kotowari[C-core-qrules-8]
 #[test]
-fn ex_core_314_rule_with_severity_off_is_applied() {
+fn rule_with_severity_off_is_applied() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
@@ -728,7 +728,7 @@ fn ex_core_314_rule_with_severity_off_is_applied() {
 
 // @kotowari[C-core-qrules-8]
 #[test]
-fn req_188_fix_message_note_and_metadata_do_not_change_the_tests() {
+fn fix_message_note_and_metadata_do_not_change_the_tests() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
@@ -746,7 +746,7 @@ fn req_188_fix_message_note_and_metadata_do_not_change_the_tests() {
 
 // @kotowari[C-core-qrules-9]
 #[test]
-fn ex_core_315_missing_rule_file_stops() {
+fn missing_rule_file_stops() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(tmp.path(), &["tests/**/*.ts"], &["rules/missing.yml"]);
@@ -757,7 +757,7 @@ fn ex_core_315_missing_rule_file_stops() {
 
 // @kotowari[C-core-qrules-9]
 #[test]
-fn ex_core_316_rule_of_an_unknown_language_stops() {
+fn rule_of_an_unknown_language_stops() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(tmp.path(), &["tests/**/*.ts"], &["rules/cobol.yml"]);
@@ -773,7 +773,7 @@ fn ex_core_316_rule_of_an_unknown_language_stops() {
 
 // @kotowari[C-core-clienv-9, C-core-qrules-10]
 #[test]
-fn ex_core_378_a_missing_rule_file_stop_points_at_the_rule_file() {
+fn a_missing_rule_file_stop_points_at_the_rule_file() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(tmp.path(), &["tests/**/*.ts"], &["rules/missing.yml"]);
@@ -787,7 +787,7 @@ fn ex_core_378_a_missing_rule_file_stop_points_at_the_rule_file() {
 
 // @kotowari[C-core-qrules-11]
 #[test]
-fn ex_core_379_an_unknown_language_stop_names_the_language_in_one_line() {
+fn an_unknown_language_stop_names_the_language_in_one_line() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(tmp.path(), &["tests/**/*.ts"], &["r.yml"]);
@@ -806,7 +806,7 @@ fn ex_core_379_an_unknown_language_stop_names_the_language_in_one_line() {
 
 // @kotowari[C-core-qrules-9]
 #[test]
-fn ex_core_321_same_rule_file_twice_stops() {
+fn same_rule_file_twice_stops() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(
@@ -822,7 +822,7 @@ fn ex_core_321_same_rule_file_twice_stops() {
 
 // @kotowari[C-core-qrules-9]
 #[test]
-fn req_189_unreadable_or_malformed_rule_files_stop() {
+fn unreadable_or_malformed_rule_files_stop() {
     let cases: [(&str, &[u8]); 4] = [
         ("a directory", b""),
         ("not UTF-8", b"\xff\xfe"),
@@ -847,7 +847,7 @@ fn req_189_unreadable_or_malformed_rule_files_stop() {
 
 // @kotowari[C-core-qrules-5]
 #[test]
-fn ex_core_322_language_alias_is_accepted() {
+fn language_alias_is_accepted() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
@@ -865,7 +865,7 @@ fn ex_core_322_language_alias_is_accepted() {
 
 // @kotowari[C-core-qrules-5]
 #[test]
-fn req_189_language_is_matched_without_case() {
+fn language_is_matched_without_case() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(tmp.path(), &["tests/**/*.py"], &["rules/r.yml"]);
@@ -881,7 +881,7 @@ fn req_189_language_is_matched_without_case() {
 
 // @kotowari[C-core-cover-2, C-core-findings-5]
 #[test]
-fn ex_core_310_test_without_a_name_uses_its_first_line() {
+fn test_without_a_name_uses_its_first_line() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
@@ -904,7 +904,7 @@ fn ex_core_310_test_without_a_name_uses_its_first_line() {
 
 // @kotowari[C-core-list-4, C-core-discover-11]
 #[test]
-fn req_180_test_without_a_name_is_listed_with_a_null_name() {
+fn test_without_a_name_is_listed_with_a_null_name() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(tmp.path(), &["tests/**/*.ts"], &["rules/bench.yml"]);
@@ -925,7 +925,7 @@ fn req_180_test_without_a_name_is_listed_with_a_null_name() {
 
 // @kotowari[C-core-discover-12]
 #[test]
-fn ex_core_328_name_comes_from_the_first_rule_that_captures_it() {
+fn name_comes_from_the_first_rule_that_captures_it() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(
@@ -946,7 +946,7 @@ fn ex_core_328_name_comes_from_the_first_rule_that_captures_it() {
 
 // @kotowari[C-core-qrules-7, C-core-discover-12]
 #[test]
-fn req_181_rule_with_files_keeps_its_place_in_the_order() {
+fn rule_with_files_keeps_its_place_in_the_order() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &[]);
     configure(

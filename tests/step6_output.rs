@@ -29,7 +29,7 @@ fn parse_json(output: &std::process::Output) -> serde_json::Value {
 
 // @kotowari[C-core-output-2]
 #[test]
-fn req_021_format_values_are_json_and_text() {
+fn format_values_are_json_and_text() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // --format json
@@ -62,7 +62,7 @@ fn req_021_format_values_are_json_and_text() {
 
 // @kotowari[C-core-output-3]
 #[test]
-fn req_023_files_counts_all_docs_and_lines_sums_them() {
+fn files_counts_all_docs_and_lines_sums_them() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(tmp.path().join("docs/decisions/a.md"), "# A\n\nScope.\n").unwrap();
@@ -76,7 +76,7 @@ fn req_023_files_counts_all_docs_and_lines_sums_them() {
 
 // @kotowari[C-core-output-6]
 #[test]
-fn req_023_finding_keys_match_the_table() {
+fn finding_keys_match_the_table() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 題名なしの文書を作って指摘を出す
@@ -102,7 +102,7 @@ fn req_023_finding_keys_match_the_table() {
 
 // @kotowari[C-core-output-4]
 #[test]
-fn prop_002_counts_match_findings() {
+fn counts_match_findings() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(tmp.path().join("docs/decisions/a.md"), "no title\n").unwrap();
@@ -140,7 +140,7 @@ fn prop_002_counts_match_findings() {
 
 // @kotowari[C-core-output-8]
 #[test]
-fn req_025_text_has_one_line_per_finding_with_bracketed_severity() {
+fn text_has_one_line_per_finding_with_bracketed_severity() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(tmp.path().join("docs/decisions/a.md"), "no title\n").unwrap();
@@ -163,7 +163,7 @@ fn req_025_text_has_one_line_per_finding_with_bracketed_severity() {
 
 // @kotowari[C-core-output-10]
 #[test]
-fn req_025_a_line_break_in_a_file_name_stays_on_one_text_line() {
+fn a_line_break_in_a_file_name_stays_on_one_text_line() {
     // 改行を含むファイル名でも1つの指摘は1行。改行は "\\n" と書く
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -183,7 +183,7 @@ fn req_025_a_line_break_in_a_file_name_stays_on_one_text_line() {
 
 // @kotowari[C-core-output-10]
 #[test]
-fn req_025_a_carriage_return_in_a_file_name_is_written_as_backslash_r() {
+fn a_carriage_return_in_a_file_name_is_written_as_backslash_r() {
     // "\r" だけでは行は分かれないので、行の全体を照合して、パスと詳細の両方で書き換えたことを見る
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
@@ -205,7 +205,7 @@ fn req_025_a_carriage_return_in_a_file_name_is_written_as_backslash_r() {
 
 // @kotowari[C-core-output-8, C-core-output-9]
 #[test]
-fn req_025_text_line_for_a_document_without_a_title() {
+fn text_line_for_a_document_without_a_title() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     fs::write(tmp.path().join("docs/decisions/a.md"), "no title\n").unwrap();
@@ -227,7 +227,7 @@ fn req_025_text_line_for_a_document_without_a_title() {
 
 // @kotowari[C-core-cli-15]
 #[test]
-fn req_007_exit_code_one_on_error_and_zero_on_notice_only() {
+fn exit_code_one_on_error_and_zero_on_notice_only() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
 
@@ -308,7 +308,7 @@ fn write_test_file(tmp: &std::path::Path, rel: &str, content: &str) {
 
 // @kotowari[C-core-output-12]
 #[test]
-fn req_128_tests_key_lists_files_per_extension_with_query_flag() {
+fn tests_key_lists_files_per_extension_with_query_flag() {
     // ".rs" が2つと ".go" が1つ
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
@@ -330,7 +330,7 @@ fn req_128_tests_key_lists_files_per_extension_with_query_flag() {
 
 // @kotowari[C-core-output-15]
 #[test]
-fn req_128_tests_is_an_empty_object_without_test_files() {
+fn tests_is_an_empty_object_without_test_files() {
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["nothing/**/*.rs"]);
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
@@ -347,7 +347,7 @@ fn req_128_tests_is_an_empty_object_without_test_files() {
 
 // @kotowari[C-core-output-11]
 #[test]
-fn req_128_text_format_does_not_print_tests() {
+fn text_format_does_not_print_tests() {
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
     write_test_file(tmp.path(), "lib/a.go", "package a\n");
@@ -375,7 +375,7 @@ fn req_128_text_format_does_not_print_tests() {
 
 // @kotowari[C-core-output-13]
 #[test]
-fn tbl_021_extension_is_after_the_last_dot_and_dotless_names_share_the_empty_key() {
+fn extension_is_after_the_last_dot_and_dotless_names_share_the_empty_key() {
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
     write_test_file(tmp.path(), "lib/a.test.rs", "pub fn a() {}\n");
@@ -401,7 +401,7 @@ fn tbl_021_extension_is_after_the_last_dot_and_dotless_names_share_the_empty_key
 
 // @kotowari[C-core-output-13]
 #[test]
-fn tbl_021_uppercase_extension_is_a_separate_key_without_query() {
+fn uppercase_extension_is_a_separate_key_without_query() {
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
     write_test_file(tmp.path(), "lib/a.RS", "x\n");
@@ -416,7 +416,7 @@ fn tbl_021_uppercase_extension_is_a_separate_key_without_query() {
 
 // @kotowari[C-core-output-14]
 #[test]
-fn tbl_021_unparsable_file_is_counted() {
+fn unparsable_file_is_counted() {
     // tree-sitter で読めないファイルも "files" に数える
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*.rs"]);
@@ -440,7 +440,7 @@ fn tbl_021_unparsable_file_is_counted() {
 // @kotowari[C-core-output-14]
 #[test]
 #[cfg(unix)]
-fn tbl_021_same_path_counts_once_and_symlink_counts_apart() {
+fn same_path_counts_once_and_symlink_counts_apart() {
     use std::os::unix::fs::symlink;
     let tmp = TempDir::new().unwrap();
     // 同じファイルが2つの glob に当たる
@@ -458,7 +458,7 @@ fn tbl_021_same_path_counts_once_and_symlink_counts_apart() {
 
 // @kotowari[C-core-output-13]
 #[test]
-fn tbl_021_keys_are_in_byte_order() {
+fn keys_are_in_byte_order() {
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*"]);
     write_test_file(tmp.path(), "lib/a.rs", "pub fn a() {}\n");
@@ -487,7 +487,7 @@ fn tbl_021_keys_are_in_byte_order() {
 // @kotowari[C-core-output-14, C-core-discover-16]
 #[test]
 #[cfg(unix)]
-fn tbl_021_excluded_entries_are_not_counted() {
+fn excluded_entries_are_not_counted() {
     use std::os::unix::net::UnixListener;
     let tmp = TempDir::new().unwrap();
     make_project_with_test_globs(tmp.path(), &["lib/**/*.rs"]);
@@ -504,7 +504,7 @@ fn tbl_021_excluded_entries_are_not_counted() {
 
 // @kotowari[C-core-output-16]
 #[test]
-fn prop_004_files_sum_equals_the_number_of_read_test_files() {
+fn files_sum_equals_the_number_of_read_test_files() {
     use proptest::prelude::*;
 
     // 1件ごとに CLI を起動するので試行回数を絞る。変異テストで同じ変異が実行ごとに殺されたり

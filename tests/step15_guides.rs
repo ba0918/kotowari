@@ -103,7 +103,7 @@ fn listed_fingerprint(tmp: &Path, id: &str) -> String {
 
 // @kotowari[C-core-config-16]
 #[test]
-fn req_014_an_unreadable_guides_glob_is_a_config_error() {
+fn an_unreadable_guides_glob_is_a_config_error() {
     let tmp = tempfile::TempDir::new().unwrap();
     for dir in [".kotowari", "docs/decisions"] {
         std::fs::create_dir_all(tmp.path().join(dir)).unwrap();
@@ -129,7 +129,7 @@ fn req_014_an_unreadable_guides_glob_is_a_config_error() {
 
 // @kotowari[C-core-guides-4]
 #[test]
-fn req_203_crlf_line_endings_do_not_change_the_fingerprint() {
+fn crlf_line_endings_do_not_change_the_fingerprint() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), "");
     write(
@@ -156,7 +156,7 @@ const OVERLAPPING: &str =
 
 // @kotowari[C-core-clienv-7, C-core-guides-9]
 #[test]
-fn ex_368_check_stops_when_a_guide_is_also_a_test_file() {
+fn check_stops_when_a_guide_is_also_a_test_file() {
     let tmp = TempDir::new().unwrap();
     make_empty_project(tmp.path(), OVERLAPPING);
     write(tmp.path(), "docs/guide.md", "# ガイド\n");
@@ -172,7 +172,7 @@ fn ex_368_check_stops_when_a_guide_is_also_a_test_file() {
 
 // @kotowari[C-core-guides-9, C-core-status-4]
 #[test]
-fn ex_368_status_stops_when_a_guide_is_also_a_test_file() {
+fn status_stops_when_a_guide_is_also_a_test_file() {
     let tmp = TempDir::new().unwrap();
     make_empty_project(tmp.path(), OVERLAPPING);
     write(tmp.path(), "docs/guide.md", "# ガイド\n");
@@ -188,7 +188,7 @@ fn ex_368_status_stops_when_a_guide_is_also_a_test_file() {
 
 // @kotowari[C-core-clienv-7, C-core-guides-10]
 #[test]
-fn req_199_only_the_first_overlapping_file_in_byte_order_is_reported() {
+fn only_the_first_overlapping_file_in_byte_order_is_reported() {
     let tmp = TempDir::new().unwrap();
     make_empty_project(
         tmp.path(),
@@ -204,7 +204,7 @@ fn req_199_only_the_first_overlapping_file_in_byte_order_is_reported() {
 
 // @kotowari[C-core-guides-5, C-core-output-5]
 #[test]
-fn ex_369_without_the_guides_key_no_guide_is_read() {
+fn without_the_guides_key_no_guide_is_read() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), "");
     write(
@@ -221,7 +221,7 @@ fn ex_369_without_the_guides_key_no_guide_is_read() {
 
 // @kotowari[C-core-clienv-7, C-core-guides-6]
 #[test]
-fn req_198_a_guide_that_is_not_utf8_stops() {
+fn a_guide_that_is_not_utf8_stops() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), GUIDES_MD);
     std::fs::create_dir_all(tmp.path().join("guides")).unwrap();
@@ -233,7 +233,7 @@ fn req_198_a_guide_that_is_not_utf8_stops() {
 
 // @kotowari[C-core-guides-7, C-core-output-5]
 #[test]
-fn req_198_a_guides_glob_may_hit_the_ir_documents() {
+fn a_guides_glob_may_hit_the_decision_documents() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -252,7 +252,7 @@ fn req_198_a_guides_glob_may_hit_the_ir_documents() {
 
 // @kotowari[C-core-guides-8, C-core-list-15, C-core-query-9]
 #[test]
-fn req_152_list_and_query_do_not_read_guides_and_do_not_stop_on_their_overlap() {
+fn list_and_query_do_not_read_guides_and_do_not_stop_on_their_overlap() {
     let tmp = TempDir::new().unwrap();
     make_project(
         tmp.path(),
@@ -314,7 +314,7 @@ fn findings_on(v: &serde_json::Value, path: &str) -> Vec<(String, u64, String)> 
 
 // @kotowari[C-core-output-5]
 #[test]
-fn req_200_the_ex_362_project_without_a_guide_mark_has_no_findings() {
+fn the_ex_362_project_without_a_guide_mark_has_no_findings() {
     let tmp = TempDir::new().unwrap();
     write_decision_project(tmp.path(), "# ガイド\n");
     let (code, v) = check_json(tmp.path());
@@ -325,7 +325,7 @@ fn req_200_the_ex_362_project_without_a_guide_mark_has_no_findings() {
 
 // @kotowari[C-core-guides-12]
 #[test]
-fn ex_366_marks_outside_comments_and_inside_code_are_not_read() {
+fn marks_outside_comments_and_inside_code_are_not_read() {
     let tmp = TempDir::new().unwrap();
     write_decision_project(
         tmp.path(),
@@ -345,7 +345,7 @@ fn ex_366_marks_outside_comments_and_inside_code_are_not_read() {
 
 // @kotowari[C-core-findings-3, C-core-guides-15]
 #[test]
-fn ex_367_a_mark_without_fingerprint_and_an_uppercase_fingerprint_are_invalid() {
+fn a_mark_without_fingerprint_and_an_uppercase_fingerprint_are_invalid() {
     let tmp = TempDir::new().unwrap();
     write_decision_project(
         tmp.path(),
@@ -362,7 +362,7 @@ guides/a.md:5 [error] invalid_marker <!-- @kotowari[docs/decisions/a/a.md#名前
 
 // @kotowari[C-core-guides-15]
 #[test]
-fn ex_373_one_malformed_entry_leaves_the_whole_mark_unmatched() {
+fn one_malformed_entry_leaves_the_whole_mark_unmatched() {
     let tmp = TempDir::new().unwrap();
     let line = "<!-- @kotowari[docs/decisions/a/a.md#名前:00000000, foo:1423c6c3] -->";
     write_decision_project(tmp.path(), &format!("# ガイド\n\n{line}\n"));
@@ -376,7 +376,7 @@ fn ex_373_one_malformed_entry_leaves_the_whole_mark_unmatched() {
 
 // @kotowari[C-core-guides-13, C-core-guides-14]
 #[test]
-fn ex_374_spaces_inside_the_brackets_are_allowed_and_text_after_the_comment_is_not_read() {
+fn spaces_inside_the_brackets_are_allowed_and_text_after_the_comment_is_not_read() {
     let tmp = TempDir::new().unwrap();
     write_decision_project(
         tmp.path(),
@@ -389,7 +389,7 @@ fn ex_374_spaces_inside_the_brackets_are_allowed_and_text_after_the_comment_is_n
 
 // @kotowari[C-core-guides-11, C-core-output-5]
 #[test]
-fn req_200_inline_comments_and_several_marks_in_one_comment_are_all_read() {
+fn inline_comments_and_several_marks_in_one_comment_are_all_read() {
     let tmp = TempDir::new().unwrap();
     write_decision_project(
         tmp.path(),
@@ -407,7 +407,7 @@ fn req_200_inline_comments_and_several_marks_in_one_comment_are_all_read() {
 
 // @kotowari[C-core-guides-13]
 #[test]
-fn req_200_each_comment_of_one_html_block_is_read_and_the_text_between_them_is_not() {
+fn each_comment_of_one_html_block_is_read_and_the_text_between_them_is_not() {
     let tmp = TempDir::new().unwrap();
     write_decision_project(
         tmp.path(),
@@ -433,7 +433,7 @@ fn req_200_each_comment_of_one_html_block_is_read_and_the_text_between_them_is_n
 
 // @kotowari[C-core-findings-3, C-core-guides-16]
 #[test]
-fn req_202_an_empty_mark_and_a_mark_without_its_closing_bracket_are_invalid() {
+fn an_empty_mark_and_a_mark_without_its_closing_bracket_are_invalid() {
     let tmp = TempDir::new().unwrap();
     write_decision_project(
         tmp.path(),
@@ -475,7 +475,7 @@ fn stale_on(v: &serde_json::Value) -> Vec<(u64, String)> {
 
 // @kotowari[C-core-output-5]
 #[test]
-fn ex_362_a_mark_with_the_current_fingerprint_yields_nothing() {
+fn a_mark_with_the_current_fingerprint_yields_nothing() {
     let tmp = TempDir::new().unwrap();
     write_decision_project(tmp.path(), MARK_D);
     let (code, v) = check_json(tmp.path());
@@ -486,7 +486,7 @@ fn ex_362_a_mark_with_the_current_fingerprint_yields_nothing() {
 
 // @kotowari[C-core-findings-1, C-core-findings-2, C-core-findings-7, C-core-guides-18, C-core-guides-20]
 #[test]
-fn ex_363_a_changed_body_makes_the_mark_a_stale_notice() {
+fn a_changed_body_makes_the_mark_a_stale_notice() {
     let tmp = TempDir::new().unwrap();
     write_decision_project(tmp.path(), MARK_D);
     write(
@@ -513,7 +513,7 @@ fn ex_363_a_changed_body_makes_the_mark_a_stale_notice() {
 
 // @kotowari[C-core-guides-17, C-core-output-5]
 #[test]
-fn ex_371_two_entries_in_one_mark_are_counted_and_matched_one_by_one() {
+fn two_entries_in_one_mark_are_counted_and_matched_one_by_one() {
     let tmp = TempDir::new().unwrap();
     write_decision_project(
         tmp.path(),
@@ -533,7 +533,7 @@ fn ex_371_two_entries_in_one_mark_are_counted_and_matched_one_by_one() {
 
 // @kotowari[C-core-guides-18]
 #[test]
-fn req_204_the_line_of_guide_stale_is_where_the_mark_starts() {
+fn the_line_of_guide_stale_is_where_the_mark_starts() {
     let tmp = TempDir::new().unwrap();
     write_decision_project(
         tmp.path(),
@@ -551,7 +551,7 @@ fn req_204_the_line_of_guide_stale_is_where_the_mark_starts() {
 
 // @kotowari[C-core-status-7, C-core-status-11]
 #[test]
-fn req_162_status_carries_the_guides_group() {
+fn status_carries_the_guides_group() {
     let tmp = TempDir::new().unwrap();
     write_decision_project(tmp.path(), MARK_D);
     let (code, stdout, stderr) = run(tmp.path(), &["status"]);

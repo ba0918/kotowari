@@ -145,7 +145,7 @@ fn distinct_byte_named_entries_keep_the_legacy_alias_text_and_multiplicity() {
 
 // @kotowari[C-core-libapi-11]
 #[test]
-fn ir_and_decision_source_walkers_still_read_original_byte_named_paths() {
+fn the_decision_document_walker_still_reads_original_byte_named_paths() {
     let project = byte_filename_project("tests");
     fs::create_dir_all(project.path().join("docs/decisions")).unwrap();
     fs::write(

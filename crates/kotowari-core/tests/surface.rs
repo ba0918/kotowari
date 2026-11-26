@@ -4,7 +4,7 @@ use kotowari_core::config::Config;
 
 // @kotowari[C-core-config-6]
 #[test]
-fn tbl_004_surface_keys_default_to_empty_lists_and_no_list_file() {
+fn surface_keys_default_to_empty_lists_and_no_list_file() {
     let cfg = Config::default();
     assert!(cfg.surface.files.is_empty());
     assert!(cfg.surface.rules.is_empty());
@@ -13,7 +13,7 @@ fn tbl_004_surface_keys_default_to_empty_lists_and_no_list_file() {
 
 // @kotowari[C-core-config-7]
 #[test]
-fn tbl_004_surface_keys_are_read_and_their_paths_normalized() {
+fn surface_keys_are_read_and_their_paths_normalized() {
     let cfg = Config::parse(
         "surface:\n  files:\n    - \"src/**/*.rs\"\n  rules:\n    - \"./rules/surface.yml\"\n  unspecified: \"docs//surface.yaml\"\n",
     )
@@ -28,7 +28,7 @@ fn tbl_004_surface_keys_are_read_and_their_paths_normalized() {
 
 // @kotowari[C-core-config-16]
 #[test]
-fn req_014_an_invalid_surface_files_glob_stops() {
+fn an_invalid_surface_files_glob_stops() {
     let result = Config::parse(
         "surface:\n  files:\n    - \"[invalid\"\n  rules:\n    - \"rules/surface.yml\"\n",
     );
@@ -37,7 +37,7 @@ fn req_014_an_invalid_surface_files_glob_stops() {
 
 // @kotowari[C-core-config-14, C-core-config-15]
 #[test]
-fn req_014_null_or_absolute_surface_values_stop() {
+fn null_or_absolute_surface_values_stop() {
     for yaml in [
         "surface:\n",
         "surface:\n  files:\n  rules:\n    - \"r.yml\"\n",

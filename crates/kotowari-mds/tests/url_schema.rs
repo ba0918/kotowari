@@ -236,7 +236,7 @@ fn serve_body_once(body: String) -> String {
 
 // @kotowari[C-schema-resolve-11]
 #[test]
-fn ex_schema_068_a_schema_of_exactly_4mib_is_used() {
+fn a_schema_of_exactly_4mib_is_used() {
     // YAML の注釈で埋めて、応答をちょうど 4MiB にする
     let padding = 4 * 1024 * 1024 - SCHEMA_BODY.len() - "#\n".len();
     let url = serve_body_once(format!("{SCHEMA_BODY}#{}\n", "x".repeat(padding)));
@@ -258,7 +258,7 @@ fn ex_schema_068_a_schema_of_exactly_4mib_is_used() {
 
 // @kotowari[C-schema-resolve-7]
 #[test]
-fn ex_schema_069_the_cache_goes_under_the_base_directory_above_the_current_one() {
+fn the_cache_goes_under_the_base_directory_above_the_current_one() {
     let (url, _) = serve_schema();
     let dir = tempfile::tempdir().unwrap();
     std::fs::create_dir_all(dir.path().join(".kotowari")).unwrap();
@@ -291,7 +291,7 @@ fn ex_schema_069_the_cache_goes_under_the_base_directory_above_the_current_one()
 
 // @kotowari[C-schema-resolve-7]
 #[test]
-fn ex_schema_070_without_a_base_directory_the_cache_goes_under_the_current_one() {
+fn without_a_base_directory_the_cache_goes_under_the_current_one() {
     let (url, _) = serve_schema();
     let dir = tempfile::tempdir().unwrap();
     assert!(
@@ -386,7 +386,7 @@ fn a_directory_check_fetches_a_shared_url_schema_once_even_when_the_cache_cannot
 
 // @kotowari[C-schema-resolve-8]
 #[test]
-fn ex_schema_093_a_cache_that_cannot_be_written_does_not_stop_the_check() {
+fn a_cache_that_cannot_be_written_does_not_stop_the_check() {
     // ディレクトリを作れないときと、ディレクトリはあってもファイルを書けないとき
     for directory_blocked in [true, false] {
         let (url, counter) = serve_schema();
