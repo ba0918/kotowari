@@ -24,17 +24,17 @@ There are exactly these seven commands.
 
 | Command | What it does | Page |
 |---|---|---|
-| `check` | Checks both how the IR is written and how the IR corresponds to the tests | [commands/check.md](commands/check.md) |
-| `list` | Lists the IR items one by one, next to the tests marked for them | [commands/list.md](commands/list.md) |
-| `query` | Prints the item or scenario of one ID, with its body and back references | [commands/query.md](commands/query.md) |
-| `status` | Answers whether the IR and the tests line up, with counts and one boolean | [commands/status.md](commands/status.md) |
+| `check` | Checks both how the decision documents are written and how their confirmation rows correspond to the tests | [commands/check.md](commands/check.md) |
+| `list` | Lists the decisions and confirmation rows one by one, next to the tests marked for each row | [commands/list.md](commands/list.md) |
+| `query` | Prints the decision or row of one ID, with its body and back references | [commands/query.md](commands/query.md) |
+| `status` | Answers whether the decision documents and the tests line up, with counts and one boolean | [commands/status.md](commands/status.md) |
 | `mutants` | Reads a mutation testing result file and reports misses as findings | [commands/mutants.md](commands/mutants.md) |
 | `plan` | Checks the form of one plan file with the bundled schema | [commands/plan.md](commands/plan.md) |
-| `overview` | The subcommand `build` writes the overview pages under `.kotowari/cache/overview/`, and `serve` writes them and serves them on 127.0.0.1. When `languages` has two or more languages, the pages of every language but the first are written under `<language tag>/` | [Specification](../ir/core/overview-commands.md) |
+| `overview` | The subcommand `build` writes the overview pages under `.kotowari/cache/overview/`, and `serve` writes them and serves them on 127.0.0.1. When `languages` has two or more languages, the pages of every language but the first are written under `<language tag>/` | [Specification](../decisions/core/overview-commands.md) |
 
 Options can go before or after the command.
 `kotowari --format text check` and `kotowari check --format text` are the same.
-The order of positional arguments and options does not matter for any command either (`kotowari query REQ-001 --format text` is accepted too).
+The order of positional arguments and options does not matter for any command either (`kotowari query C-shop-discount-1 --format text` is accepted too).
 
 ## Common options
 
@@ -72,9 +72,9 @@ One finding is an object with these five keys.
 
 | Key | Type | Description |
 |---|---|---|
-| `kind` | String | The kind of finding (such as `missing_source`). The list is in [findings.md](findings.md) |
+| `kind` | String | The kind of finding (such as `confirmation_without_test`). The list is in [findings.md](findings.md) |
 | `severity` | String | `error` or `notice` |
-| `path` | String | Path relative to the base directory. For a finding on an IR document it is the document, for a finding on a test the test file, for `surface_without_spec` the surface file, and for a finding on one entry of a list the list file |
+| `path` | String | Path relative to the base directory. For a finding on a decision document it is the document, for a finding on a test the test file, for `surface_without_spec` the surface file, and for a finding on one entry of a list the list file |
 | `line` | Number or null | The line, starting from 1. null for a finding on a whole document |
 | `detail` | String | A short string fixed per kind. Usually an ID, the offending word, or the line's text as is |
 
@@ -95,7 +95,7 @@ With `--format text`, each finding is printed on one line.
 (That is, `path:line [error] kind detail` and `path:line [notice] kind detail`.)
 
 - The square brackets are printed literally.
-- For a finding whose `line` is null, the line is written as `-` (`docs/ir/misc/notitle.md:- [error] missing_title notitle.md`).
+- For a finding whose `line` is null, the line is written as `-` (`docs/decisions/shop/notitle.md:- [error] missing_title notitle.md`).
 - Line breaks inside the path and detail are replaced by the two characters `\n` and `\r`. Whatever the file name, one finding is one line.
 - When there are no findings, nothing is printed.
 
@@ -155,11 +155,11 @@ Anything that breaks the premise of reading a file or the configuration as a who
 | `non-UTF-8 file` | File not in UTF-8 | The relative path | One of the files read is not UTF-8 (of the surface files, only those in a surface rule's language are read) |
 | `results error` | Results error | The relative path of the result file and a description of the error | The result file for `mutants` is malformed |
 | `mapping error` | Mapping error | A description of the finding kind or value that could not be mapped | An internal inconsistency in kotowari. Not expected to happen from user input |
-| `overview error` | Overview data error | The number of errors and ` errors in overview data; run kotowari check` | In `overview build` or `serve`, the overview data or the table of contents has errors, or a pair of the IR, the overview data or the table of contents has `translation_missing` or `translation_structure_mismatch`. Nothing is written |
+| `overview error` | Overview data error | The number of errors and ` errors in overview data; run kotowari check` | In `overview build` or `serve`, the overview data or the table of contents has errors, or a pair of the overview data or the table of contents has `translation_missing` or `translation_structure_mismatch`. Nothing is written |
 | `port error` | Port error | `127.0.0.1:<port>: ` and the OS error message | In `overview serve`, the given port cannot be used (no other port is tried), or accepting a connection failed while serving |
 | `cache error` | Cache location error | The relative path of the problem path, followed by `: ` and the OS error message if there is one | In `overview build` or `serve`, one of `.kotowari`, `.kotowari/cache`, `.kotowari/cache/overview`, or (with two or more languages) `.kotowari/cache/overview/<language tag>` for another language is a symbolic link or a file that is not a directory (nothing is written or removed), or creating, writing to or removing from the location failed |
 
-All the situations are in [TBL-core-001 of cli.md](../ir/core/cli.md) and [TBL-core-020 of cli-environment.md](../ir/core/cli-environment.md).
+All the situations are in [the CLI decisions](../decisions/core/cli.md) and [the decisions on the usage display and target environments](../decisions/core/cli-environment.md).
 
 ### Argument errors
 
@@ -194,8 +194,7 @@ A **file** named `.kotowari` is ignored, and the search continues upward.
 
 These three are relative to the base directory:
 
-- Paths written in the configuration file (`ir`, `tests.files` and so on)
-- The paths of IR sources (`- source:` lines)
+- Paths written in the configuration file (`decisions.documents`, `tests.files` and so on)
 - The `path` in the output, and paths in the detail of a stop
 
 `--config` only changes which configuration file is read; it does not change the base.
@@ -205,14 +204,14 @@ The `--config` path itself is read relative to the current directory.
 
 <!-- @kotowari[docs/decisions/core/base-directory.md#paths-in-configuration-values-are-normalized-before-comparing-and-before-output:a1dd7f03] -->
 
-Paths in configuration values and in sources are tidied as follows before they are compared and before they are printed.
+Paths in configuration values are tidied as follows before they are compared and before they are printed.
 
 - A trailing `/` and a leading `./` are removed
 - `/./` in the middle and runs of `/` become a single `/`
 - `\` becomes `/`
 - `a/..` is folded (a `..` with nothing to fold into is kept)
 
-So `docs/decision/../decision/records` and `docs/decision/records` are treated as the same location.
+So `docs/guides/../decisions` and `docs/decisions` are treated as the same location.
 
 ## Target environments
 
@@ -283,22 +282,20 @@ $ echo $?
 
 <!-- @kotowari[docs/decisions/core/cli-environment.md#the-reason-for-a-stop-is-shown-with-fixed-english-wording:383d0fd9, docs/decisions/core/cli-environment.md#the-details-of-a-stop-show-the-file-the-person-fixing-it-should-look-at-as-a-path-relative-to-the-base-directory:a832b365] -->
 
-In the example below, the comments mean, in order: `docs/decision/adr` does not exist; `docs/ir/greet/bad.md` is not UTF-8; `limits` was mistyped as `limit`; the `language` of `rules/c.yml` is `cobol`.
+In the example below, the comments mean, in order: `docs/decisions` does not exist; `docs/decisions/greet/bad.md` is not UTF-8; `files` under `tests` was mistyped as `file`; the `language` of `rules/c.yml` is `cobol`.
 
 ```console
-$ kotowari check --format text      # docs/decision/adr が無い
-unreadable file: docs/decision/adr: No such file or directory (os error 2)
-$ kotowari check --format text      # docs/ir/greet/bad.md が UTF-8 でない
-non-UTF-8 file: docs/ir/greet/bad.md
-$ kotowari check --config bad.yaml  # limits を limit と書き間違えた
-config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
- --> <input>:2:1
+$ kotowari check --format text      # docs/decisions が無い
+unreadable file: docs/decisions: No such file or directory (os error 2)
+$ kotowari check --format text      # docs/decisions/greet/bad.md が UTF-8 でない
+non-UTF-8 file: docs/decisions/greet/bad.md
+$ kotowari check --config bad.yaml  # tests の files を file と書き間違えた
+config error: bad.yaml: error: line 2 column 3: unknown field `file`, expected one of files, rust, rules
+ --> <input>:2:3
   |
-1 | ir: docs/ir
-2 | limit:
-  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
-3 |   lines: 20
-  |
+1 | tests:
+2 |   file: ["tests/**/*.rs"]
+  |   ^ unknown field `file`, expected one of files, rust, rules
 $ kotowari check --format text      # rules/c.yml の language が cobol
 config error: invalid rule in tests.rules: rules/c.yml: unknown language: cobol
 ```
@@ -318,8 +315,7 @@ Paths in the output are relative to the base, not to `tests/`.
 ```console
 $ cd tests
 $ kotowari check --format text
-docs/ir/greet/greet.md:15 [error] requirement_without_test REQ-greet-002
-…
+docs/decisions/greet/greet.md:35 [error] confirmation_without_test C-greet-greet-2
 tests/greet.rs:6 [error] test_without_id rejects_empty_name
 ```
 
@@ -330,7 +326,7 @@ To point at the base's configuration file from `tests/`, you need `../`.
 $ kotowari check --config .kotowari/config.yaml
 argument error: config file not found: .kotowari/config.yaml
 $ kotowari --format text check --config ../bad.yaml
-config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
+config error: bad.yaml: error: line 2 column 3: unknown field `file`, expected one of files, rust, rules
 …
 ```
 
@@ -372,7 +368,7 @@ If you want notices to fail CI, look at `counts` in the JSON with `jq` and decid
 
 ## Related
 
-- Specification: [Commands and exit](../ir/core/cli.md), [Usage display and target environments](../ir/core/cli-environment.md), [Base directory](../ir/core/base-directory.md), [Output format](../ir/core/output.md), [Finding order and lines](../ir/core/finding-order.md)
+- Specification: [Commands and exit](../decisions/core/cli.md), [Usage display and target environments](../decisions/core/cli-environment.md), [Base directory](../decisions/core/base-directory.md), [Output format](../decisions/core/output.md), [Finding order and lines](../decisions/core/finding-order.md)
 - Configuration keys: [config.md](config.md)
 - Finding kinds: [findings.md](findings.md)
 - Each command: [check](commands/check.md), [list](commands/list.md), [query](commands/query.md), [status](commands/status.md), [mutants](commands/mutants.md), [plan](commands/plan.md)

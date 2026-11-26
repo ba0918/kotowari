@@ -24,17 +24,17 @@ kotowari --version
 
 | コマンド | 何をするか | ページ |
 |---|---|---|
-| `check` | IR の書き方の検査と、IR とテストの対応の検査を両方行う | [commands/check.md](commands/check.ja.md) |
-| `list` | IR の項目を1件ずつ、付いているテストと並べる | [commands/list.md](commands/list.ja.md) |
+| `check` | 決定の文書の書き方の検査と、その確認することの行とテストの対応の検査を両方行う | [commands/check.md](commands/check.ja.md) |
+| `list` | 決定と確認することの行を1件ずつ、行に付いているテストと並べる | [commands/list.md](commands/list.ja.md) |
 | `query` | 1つの ID の項目かシナリオを、本文と逆参照つきで出す | [commands/query.md](commands/query.ja.md) |
-| `status` | IR とテストが揃っているかを、数と1つの真偽で答える | [commands/status.md](commands/status.ja.md) |
+| `status` | 決定の文書とテストが揃っているかを、数と1つの真偽で答える | [commands/status.md](commands/status.ja.md) |
 | `mutants` | 変異テストの結果のファイルを読み、見逃しを指摘する | [commands/mutants.md](commands/mutants.ja.md) |
 | `plan` | 計画書のファイル1つの形を、同梱のスキーマで検査する | [commands/plan.md](commands/plan.ja.md) |
-| `overview` | 下位のコマンド `build` で全体像のページを `.kotowari/cache/overview/` の下に書き、`serve` で書いて 127.0.0.1 で配る。`languages` に2つ以上の言語があれば、先頭以外の言語のページを `<言語タグ>/` の下に書く | [仕様](../ir/core/overview-commands.ja.md) |
+| `overview` | 下位のコマンド `build` で全体像のページを `.kotowari/cache/overview/` の下に書き、`serve` で書いて 127.0.0.1 で配る。`languages` に2つ以上の言語があれば、先頭以外の言語のページを `<言語タグ>/` の下に書く | [仕様](../decisions/core/overview-commands.ja.md) |
 
 オプションはコマンドの前にも後にも書けます。
 `kotowari --format text check` と `kotowari check --format text` は同じです。
-位置引数とオプションの順も、どのコマンドでも問いません（`kotowari query REQ-001 --format text` も受けます）。
+位置引数とオプションの順も、どのコマンドでも問いません（`kotowari query C-shop-discount-1 --format text` も受けます）。
 
 ## 共通のオプション
 
@@ -72,9 +72,9 @@ kotowari --version
 
 | 鍵 | 型 | 説明 |
 |---|---|---|
-| `kind` | 文字列 | 指摘の種類（`missing_source` など）。一覧は [findings.md](findings.ja.md) |
+| `kind` | 文字列 | 指摘の種類（`confirmation_without_test` など）。一覧は [findings.md](findings.ja.md) |
 | `severity` | 文字列 | `error`（誤り）か `notice`（注意） |
-| `path` | 文字列 | 基準のディレクトリからの相対パス。IR の文書への指摘は文書、テストへの指摘はテストのファイル、`surface_without_spec` は面のファイル、一覧の1件への指摘は一覧のファイル |
+| `path` | 文字列 | 基準のディレクトリからの相対パス。決定の文書への指摘は文書、テストへの指摘はテストのファイル、`surface_without_spec` は面のファイル、一覧の1件への指摘は一覧のファイル |
 | `line` | 数か null | 1始まりの行。文書全体への指摘では null |
 | `detail` | 文字列 | 種類ごとに決まった短い文字列。多くは ID、問題の語、行の文字そのまま |
 
@@ -93,7 +93,7 @@ JSON の最上位の鍵はコマンドごとに違います。
 ```
 
 - 角括弧もそのまま出ます。
-- `line` が null の指摘は、行を `-` と書きます（`docs/ir/misc/notitle.md:- [error] missing_title notitle.md`）。
+- `line` が null の指摘は、行を `-` と書きます（`docs/decisions/shop/notitle.md:- [error] missing_title notitle.md`）。
 - パスと詳細の中の改行は、`\n` と `\r` の2文字に置き換えます。どんなファイル名でも1件は1行です。
 - 指摘が0件のときは何も出しません。
 
@@ -153,11 +153,11 @@ CI では終了コードだけで「直す必要があるか」を判定でき�
 | `non-UTF-8 file` | UTF-8 でないファイル | 相対パス | 読むファイルのどれかが UTF-8 でない（面のファイルは面の規則の言語のものだけを読む） |
 | `results error` | 結果の誤り | 結果のファイルの相対パスと誤りの説明 | `mutants` の結果のファイルの形が壊れている |
 | `mapping error` | 写しの誤り | 写せなかった指摘の種類か値の説明 | kotowari の内部の不整合。利用者の入力では起きない想定 |
-| `overview error` | 元データの誤り | 誤りの件数と ` errors in overview data; run kotowari check` | `overview build` か `serve` で全体像の元データか目次に誤りがある、または IR、全体像の元データ、目次の対に `translation_missing` か `translation_structure_mismatch` がある。何も書かない |
+| `overview error` | 元データの誤り | 誤りの件数と ` errors in overview data; run kotowari check` | `overview build` か `serve` で全体像の元データか目次に誤りがある、または全体像の元データか目次の対に `translation_missing` か `translation_structure_mismatch` がある。何も書かない |
 | `port error` | ポートの誤り | `127.0.0.1:<ポート>: ` と OS の誤りの文 | `overview serve` で指定のポートを使えない（ほかのポートは試さない）か、配っている間に接続の受け付けに失敗した |
 | `cache error` | 置き場の誤り | 問題のパスの相対パスと、OS の誤りがあれば `: ` と OS の誤りの文 | `overview build` か `serve` で `.kotowari`、`.kotowari/cache`、`.kotowari/cache/overview`、言語が2つ以上のときのほかの言語の `.kotowari/cache/overview/<言語タグ>` のどれかがシンボリックリンクかディレクトリでないファイル（何も書かず消さない）、または置き場の作成・書き込み・削除に失敗した |
 
-場面の全部は [cli.md の TBL-core-001](../ir/core/cli.ja.md) と [cli-environment.md の TBL-core-020](../ir/core/cli-environment.ja.md) にあります。
+場面の全部は [CLI の決定](../decisions/core/cli.ja.md) と [使い方の表示と対象の環境の決定](../decisions/core/cli-environment.ja.md) にあります。
 
 ### 引数の誤り
 
@@ -192,8 +192,7 @@ kotowari の扱う相対パスには、基準が1つだけあります。
 
 基準のディレクトリからの相対になるのは、次の3つです。
 
-- 設定ファイルに書くパス（`ir`、`tests.files` など）
-- IR の出典（`- source:` の行）のパス
+- 設定ファイルに書くパス（`decisions.documents`、`tests.files` など）
 - 出力の `path` と、停止の詳細のパス
 
 `--config` はどの設定ファイルを読むかを変えるだけで、基準は変えません。
@@ -203,14 +202,14 @@ kotowari の扱う相対パスには、基準が1つだけあります。
 
 <!-- @kotowari[docs/decisions/core/base-directory.md#paths-in-configuration-values-are-normalized-before-comparing-and-before-output:a1dd7f03] -->
 
-設定の値のパスと出典のパスは、比べる前と出力の前に次のように整えます。
+設定の値のパスは、比べる前と出力の前に次のように整えます。
 
 - 末尾の `/` と先頭の `./` を除く
 - 途中の `/./` と、連続する `/` を1つの `/` にする
 - `\` を `/` にする
 - `a/..` を畳む（畳む相手の無い `..` は残す）
 
-そのため `docs/decision/../decision/records` と `docs/decision/records` は同じ置き場として扱われます。
+そのため `docs/guides/../decisions` と `docs/decisions` は同じ置き場として扱われます。
 
 ## 対象の環境
 
@@ -282,19 +281,17 @@ $ echo $?
 <!-- @kotowari[docs/decisions/core/cli-environment.md#the-reason-for-a-stop-is-shown-with-fixed-english-wording:383d0fd9, docs/decisions/core/cli-environment.md#the-details-of-a-stop-show-the-file-the-person-fixing-it-should-look-at-as-a-path-relative-to-the-base-directory:a832b365] -->
 
 ```console
-$ kotowari check --format text      # docs/decision/adr が無い
-unreadable file: docs/decision/adr: No such file or directory (os error 2)
-$ kotowari check --format text      # docs/ir/greet/bad.md が UTF-8 でない
-non-UTF-8 file: docs/ir/greet/bad.md
-$ kotowari check --config bad.yaml  # limits を limit と書き間違えた
-config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
- --> <input>:2:1
+$ kotowari check --format text      # docs/decisions が無い
+unreadable file: docs/decisions: No such file or directory (os error 2)
+$ kotowari check --format text      # docs/decisions/greet/bad.md が UTF-8 でない
+non-UTF-8 file: docs/decisions/greet/bad.md
+$ kotowari check --config bad.yaml  # tests の files を file と書き間違えた
+config error: bad.yaml: error: line 2 column 3: unknown field `file`, expected one of files, rust, rules
+ --> <input>:2:3
   |
-1 | ir: docs/ir
-2 | limit:
-  | ^ unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
-3 |   lines: 20
-  |
+1 | tests:
+2 |   file: ["tests/**/*.rs"]
+  |   ^ unknown field `file`, expected one of files, rust, rules
 $ kotowari check --format text      # rules/c.yml の language が cobol
 config error: invalid rule in tests.rules: rules/c.yml: unknown language: cobol
 ```
@@ -314,8 +311,7 @@ YAML の読み方に関わる設定の誤り（知らないキー、型の違い
 ```console
 $ cd tests
 $ kotowari check --format text
-docs/ir/greet/greet.md:15 [error] requirement_without_test REQ-greet-002
-…
+docs/decisions/greet/greet.md:35 [error] confirmation_without_test C-greet-greet-2
 tests/greet.rs:6 [error] test_without_id rejects_empty_name
 ```
 
@@ -326,7 +322,7 @@ tests/greet.rs:6 [error] test_without_id rejects_empty_name
 $ kotowari check --config .kotowari/config.yaml
 argument error: config file not found: .kotowari/config.yaml
 $ kotowari --format text check --config ../bad.yaml
-config error: bad.yaml: error: line 2 column 1: unknown field `limit`, expected one of ir, decisions, tests, guides, mutants, surface, limits, overview, vague_words, languages, labels
+config error: bad.yaml: error: line 2 column 3: unknown field `file`, expected one of files, rust, rules
 …
 ```
 
@@ -368,7 +364,7 @@ JSON を `jq` に渡しているときは、`jq` が空の入力を受けて何�
 
 ## 関連
 
-- 仕様: [コマンドと終了](../ir/core/cli.ja.md)、[使い方の表示と対象の環境](../ir/core/cli-environment.ja.md)、[基準のディレクトリ](../ir/core/base-directory.ja.md)、[出力の形](../ir/core/output.ja.md)、[指摘の並べ方と行](../ir/core/finding-order.ja.md)
+- 仕様: [コマンドと終了](../decisions/core/cli.ja.md)、[使い方の表示と対象の環境](../decisions/core/cli-environment.ja.md)、[基準のディレクトリ](../decisions/core/base-directory.ja.md)、[出力の形](../decisions/core/output.ja.md)、[指摘の並べ方と行](../decisions/core/finding-order.ja.md)
 - 設定ファイルのキー: [config.md](config.ja.md)
 - 指摘の種類: [findings.md](findings.ja.md)
 - 各コマンド: [check](commands/check.ja.md)、[list](commands/list.ja.md)、[query](commands/query.ja.md)、[status](commands/status.ja.md)、[mutants](commands/mutants.ja.md)、[plan](commands/plan.ja.md)
