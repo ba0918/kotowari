@@ -134,11 +134,11 @@ The first place is the place in the document that comes first in byte order of p
 
 ## missing_title on a decision document without a title has the document name as its detail
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
-The detail of missing_title on a document without a title is the file name without the directory. Which directory the document is in is shown by path. The check that reads decision documents makes the detail of missing_title on a document without a title an empty string, which does not agree with this rule. The reason for using the document name is not recorded.
+The detail of missing_title on a document without a title is the file name without the directory. Which directory the document is in is shown by path. The reason for using the document name is not recorded.
 
 ### Decision
 
@@ -150,13 +150,11 @@ A decision document without a title gets missing_title with line null and with t
 
 ## If the group name of a confirmation ID does not match the group folder it is placed in, it is an id_domain_mismatch error
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
 A confirmation ID includes the group name (`C-<group>-<short name of the topic>-<number>`). Writing the name is left to the person writing it, so something is needed to look at whether the name is correct. Looking at whether the group name matches the group folder the document is placed in catches by machine both a mix-up of groups and a misplaced document, and the naming rule does not break down.
-
-The current code that reads decision documents looks only at the form of a confirmation ID, and does not look at whether it matches the group folder.
 
 ### Decision
 

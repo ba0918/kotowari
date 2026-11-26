@@ -143,7 +143,11 @@ fn check_counts_the_documents_decisions_and_confirmations_it_read() {
     write(
         tmp.path(),
         "docs/decisions/greet/farewell.md",
-        &topic(&[confirmed("手を振る", "提案", &["C-farewell-1 手が動く"])]),
+        &topic(&[confirmed(
+            "手を振る",
+            "提案",
+            &["C-greet-farewell-1 手が動く"],
+        )]),
     );
     let value = check(tmp.path());
     assert_eq!(findings(&value), vec![]);
@@ -798,7 +802,7 @@ fn a_document_without_a_title_is_an_error() {
             "missing_title".to_string(),
             "docs/decisions/greet.md".to_string(),
             None,
-            String::new()
+            "greet.md".to_string()
         )]
     );
 }
@@ -2891,4 +2895,70 @@ fn a_vague_word_inside_double_quotes_is_a_mention_and_not_a_finding() {
             "適切に"
         )]
     );
+}
+
+// @kotowari[C-core-findings-10]
+#[test]
+fn missing_title_in_a_group_folder_has_the_file_name_as_its_detail() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet/greet.md",
+        &format!("挨拶の仕方を決める。\n\n{}", bare("挨拶する", "提案")),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![(
+            "missing_title".to_string(),
+            "docs/decisions/greet/greet.md".to_string(),
+            None,
+            "greet.md".to_string()
+        )]
+    );
+}
+
+// @kotowari[C-core-findings-11]
+#[test]
+fn a_row_id_naming_another_group_than_its_folder_is_an_id_domain_mismatch() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/core/greet.md",
+        &topic(&[confirmed(
+            "挨拶する",
+            "提案",
+            &["C-core-greet-1 挨拶が出る", "C-view-greet-2 名前が出る"],
+        )]),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![finding(
+            "id_domain_mismatch",
+            "docs/decisions/core/greet.md",
+            20,
+            "C-view-greet-2"
+        )]
+    );
+}
+
+// @kotowari[C-core-findings-12]
+#[test]
+fn row_ids_of_a_document_directly_in_the_place_are_not_matched_with_a_group() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[confirmed(
+            "挨拶する",
+            "提案",
+            &["C-core-greet-1 挨拶が出る", "C-view-greet-2 名前が出る"],
+        )]),
+    );
+    let value = check(tmp.path());
+    assert_eq!(findings(&value), vec![]);
 }

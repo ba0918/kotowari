@@ -17,9 +17,11 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 - The `kotowari` skill describes both keyword sets of decision documents and how their language pairs are kept; `kotowari-brainstorm` writes every side of a paired decision document in the same change and brings the agreement record up to date before approval, showing the person the side in the language they read; `kotowari-implement` turns a state on every side and updates the record.
 - A `CONTEXT.md` directly inside a group folder of the decision-document place (`<place>/<group>/CONTEXT.md`) is a glossary for people: `kotowari check` does not read it as a topic document, checks nothing inside it, and counts it in no number of `decisions`. A link from a topic document to it, or to one of its headings, is checked like a link to any document in the place. A `CONTEXT.md` directly in the place or deeper than a group folder is still read as a topic document.
 - A word of `vague_words` in the `### 決めたこと` or `### 確認すること` section of a decision is a vague_word error on its line, on every language side, matched as in the IR (inside words, once per occurrence, the longest word first). Code blocks and text inside double quotes are not checked, nor are `### 問題` and `### 見送った案`.
+- In a decision document under a group folder of the place (`<place>/<group>/...`), a row ID whose group name (`C-<group>-...`) differs from that folder's name is an id_domain_mismatch error on its row. Documents directly in the place are not matched.
 
 ### Changed
 
+- missing_title on a decision document carries the file name without its directory as its detail, as on the IR; it was empty.
 - `kotowari plan` reports a fenced code block that is never closed in a plan as one more `invalid_plan` finding at its opening line (detail `unclosed_codeblock: ...`), beside the finding it already gave for the code block.
 - In overview data, a block quote, an HTML block other than HTML comments, or a thematic break between the title and the first `## ` heading is now an `overview_form_invalid` finding (detail `undeclared_line`); it used to pass silently, although only parts and HTML comments belong there. A fenced code block never closed anywhere in overview data is an `overview_form_invalid` finding too (detail `unclosed_codeblock`).
 

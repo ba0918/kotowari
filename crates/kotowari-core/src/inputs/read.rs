@@ -121,6 +121,7 @@ impl ReadPreparation {
         crate::decisions::check_ids(&decisions, &mut findings);
         if let Some(place) = &config.decisions.documents {
             crate::decisions::check_links(&decisions, &self.decision_targets, place, &mut findings);
+            crate::decisions::check_domains(&decisions, place, &mut findings);
         }
         let mut known_ids = crate::collect_known_ids(&docs);
         known_ids.extend(crate::decisions::known_ids(&decisions));

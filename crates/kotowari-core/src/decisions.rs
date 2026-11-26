@@ -535,7 +535,11 @@ fn map_one(
     // エンジンの指摘の種類は crate の外の non_exhaustive な列挙。埋め込んだスキーマが出さない種類は、
     // 写し先の無い種類として停止する
     let mapped = match (engine.kind, engine.rule_kind) {
-        (EngineKind::MissingTitle, _) => at(FindingKind::MissingTitle, None, String::new(), false),
+        // detail は古い形と同じく、ディレクトリを除いたファイルの名前（C-core-findings-10）
+        (EngineKind::MissingTitle, _) => {
+            let name = path.rsplit_once('/').map_or(path, |(_, name)| name);
+            at(FindingKind::MissingTitle, None, name.to_owned(), false)
+        }
         // 古い形と同じく、line は持たず、detail はその行から "#" を除き前後の空白を除いた文字
         (EngineKind::MultipleTitles, _) => {
             let raw = raw();
@@ -1138,6 +1142,32 @@ pub(crate) fn check_ids(documents: &[Document], findings: &mut Vec<Finding>) {
         if is_confirmation_id(&row.id) && !seen.insert(row.id.as_str()) {
             findings.push(Finding::new(
                 FindingKind::DuplicateId,
+                doc.path.clone(),
+                Some(row.line),
+                row.id.clone(),
+            ));
+        }
+    }
+}
+
+/// まとまりのフォルダの下の文書の、まとまりの名前がそのフォルダの名前と違う確認することの ID を
+/// 指摘する（C-core-findings-11、C-core-findings-12）。まとまりはパスの置き場のあとの最初の要素で、
+/// 置き場の直下の文書は見ない。ID のまとまりは "C-" のあとの最初の語。形の誤った ID は見ない
+pub(crate) fn check_domains(documents: &[Document], place: &str, findings: &mut Vec<Finding>) {
+    let place = crate::normalize_path(place);
+    for (doc, _, row) in rows(documents) {
+        let Some((folder, _)) = crate::sources::relative_to_place(&doc.path, &place)
+            .and_then(|relative| relative.split_once('/'))
+        else {
+            continue;
+        };
+        let group = row
+            .id
+            .strip_prefix("C-")
+            .and_then(|rest| rest.split('-').next());
+        if is_confirmation_id(&row.id) && group != Some(folder) {
+            findings.push(Finding::new(
+                FindingKind::IdDomainMismatch,
                 doc.path.clone(),
                 Some(row.line),
                 row.id.clone(),
