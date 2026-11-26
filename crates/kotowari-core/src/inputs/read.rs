@@ -306,8 +306,8 @@ impl ReadModel {
         crate::sources::SourceTarget::read(resolved, text)
     }
     /// ほかの文書の`ガイドの印`を`ガイド`と同じ規則で読むもの（REQ-core-286）
-    pub fn guide_reader(&self) -> crate::guides::GuideReader<'_> {
-        crate::guides::GuideReader::new(&self.docs)
+    pub fn guide_reader(&self) -> crate::guides::GuideReader {
+        crate::guides::GuideReader::new(&self.docs, &self.decisions)
     }
     pub fn validate_guide_paths<'a>(
         &self,

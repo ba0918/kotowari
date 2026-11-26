@@ -299,7 +299,7 @@ struct Inspection<'a> {
     form: form::Form,
     parts: parts::Parts,
     resolver: references::Resolver<'a>,
-    guides: kotowari_core::guides::GuideReader<'a>,
+    guides: kotowari_core::guides::GuideReader,
     /// 基準のディレクトリからの相対パスで読んだ IR の話題ごとの文書
     topics: BTreeSet<String>,
     /// 話題ごとの文書と、それを "ir" に最初に書いた元データ

@@ -101,5 +101,15 @@ fn text_parts(item: &ListItem) -> TextParts<'_> {
             tests: i.tests(),
             deferred: false,
         },
+        // 決定を指すテストの印は無い
+        ListItem::Decision(i) => TextParts {
+            id: i.id(),
+            verification: "-",
+            name: i.name(),
+            path: i.path(),
+            line: i.line(),
+            tests: &[],
+            deferred: false,
+        },
     }
 }

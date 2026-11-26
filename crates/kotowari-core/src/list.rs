@@ -137,6 +137,26 @@ impl ConfirmationItem {
     readonly!(borrow id: String, name: String, path: String, decision: String, tests: Vec<TestRef>);
 }
 
+/// 決定の文書の、決定1つの持つ鍵。ID はガイドの印が指す行き先（docs/decisions/core/languages-and-guides.md）
+#[derive(Debug, Serialize)]
+pub struct DecisionItem {
+    /// "<文書のパス>#<見出しの行き先の名前>"
+    pub(crate) id: String,
+    pub(crate) kind: &'static str,
+    /// 見出しの文
+    pub(crate) name: String,
+    pub(crate) path: String,
+    pub(crate) line: usize,
+    /// "proposed" か "implemented"。状態の行が誤っていれば None
+    pub(crate) state: Option<&'static str>,
+    /// 「決めたこと」と「確認すること」の指紋
+    pub(crate) fingerprint: String,
+}
+impl DecisionItem {
+    readonly!(copy kind: &'static str, line: usize, state: Option<&'static str>);
+    readonly!(borrow id: String, name: String, path: String, fingerprint: String);
+}
+
 /// 一覧の1件。鍵の集合は種類で決まるので、種類ごとの構造をそのまま出す（TBL-core-026）
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
@@ -148,6 +168,8 @@ pub enum ListItem {
     Flag(FlagItem),
     /// 決定の文書の、確認することの行。IR の項目からは作らない
     Confirmation(ConfirmationItem),
+    /// 決定の文書の決定。IR の項目からは作らない
+    Decision(DecisionItem),
 }
 
 impl ListItem {
@@ -159,6 +181,7 @@ impl ListItem {
             Self::Scenario(item) => &item.id,
             Self::Flag(item) => &item.id,
             Self::Confirmation(item) => &item.id,
+            Self::Decision(item) => &item.id,
         }
     }
 
@@ -170,6 +193,7 @@ impl ListItem {
             ListItem::Scenario(i) => i.kind,
             ListItem::Flag(i) => i.kind,
             ListItem::Confirmation(i) => i.kind,
+            ListItem::Decision(i) => i.kind,
         }
     }
 
@@ -181,6 +205,7 @@ impl ListItem {
             Self::Scenario(item) => (&item.path, item.line),
             Self::Flag(item) => (&item.path, item.line),
             Self::Confirmation(item) => (&item.path, item.line),
+            Self::Decision(item) => (&item.path, item.line),
         }
     }
 }

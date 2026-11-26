@@ -32,19 +32,26 @@ impl GuideTally {
 }
 
 /// `ID` から、その `ID` の`項目`と`シナリオ`の`指紋`を REQ-core-032 の順（文書はパスのバイト順、
-/// 同じ文書では行の小さい順）に引く。docs も items もその順に並んでいる
-fn fingerprints_by_id(docs: &[IrDocument]) -> BTreeMap<&str, Vec<String>> {
-    let mut by_id: BTreeMap<&str, Vec<String>> = BTreeMap::new();
+/// 同じ文書では行の小さい順）に引く。docs も items もその順に並んでいる。
+/// 決定の文書の決定は、印が指す行き先（"<文書のパス>#<見出しの行き先の名前>"）から引く
+fn fingerprints_by_id(
+    docs: &[IrDocument],
+    decisions: &[crate::decisions::Document],
+) -> BTreeMap<String, Vec<String>> {
+    let mut by_id: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for doc in docs {
         let lines = split_lines(&doc.raw_content);
         for item in &doc.items {
             if let Some(id) = item.id() {
                 by_id
-                    .entry(id)
+                    .entry(id.to_owned())
                     .or_default()
                     .push(fingerprint_of(doc, item, &lines));
             }
         }
+    }
+    for (target, fingerprint) in crate::decisions::fingerprints(decisions) {
+        by_id.entry(target).or_default().push(fingerprint);
     }
     by_id
 }
@@ -96,13 +103,13 @@ impl GuideMarks {
 /// `ガイド`と同じ規則で、ほかの文書の`ガイドの印`を1つずつ読む（REQ-core-200〜REQ-core-204）。
 /// 置き場の重なりの`停止`（REQ-core-199）は読む側が決めるので、ここでは見ない。
 /// `項目`と`シナリオ`の`指紋`は作るときに1回だけ求める
-pub struct GuideReader<'a> {
-    fingerprints: BTreeMap<&'a str, Vec<String>>,
+pub struct GuideReader {
+    fingerprints: BTreeMap<String, Vec<String>>,
 }
-impl<'a> GuideReader<'a> {
-    pub(crate) fn new(docs: &'a [IrDocument]) -> Self {
+impl GuideReader {
+    pub(crate) fn new(docs: &[IrDocument], decisions: &[crate::decisions::Document]) -> Self {
         Self {
-            fingerprints: fingerprints_by_id(docs),
+            fingerprints: fingerprints_by_id(docs, decisions),
         }
     }
     /// path を指摘の "path" にして1つの文書を読む
@@ -131,16 +138,17 @@ impl<'a> GuideReader<'a> {
     }
 }
 
-fn is_current(entry: &GuideEntry, fingerprints: &BTreeMap<&str, Vec<String>>) -> bool {
+fn is_current(entry: &GuideEntry, fingerprints: &BTreeMap<String, Vec<String>>) -> bool {
     fingerprints
         .get(entry.id.as_str())
         .is_some_and(|all| all.contains(&entry.fingerprint))
 }
 
-pub fn check_entries<'a>(
+pub(crate) fn check_entries<'a>(
     files: impl IntoIterator<Item = (&'a str, &'a str)>,
     test_files: &[String],
     docs: &[IrDocument],
+    decisions: &[crate::decisions::Document],
     findings: &mut Vec<Finding>,
 ) -> Result<GuideTally, StopReason> {
     let files: Vec<_> = files.into_iter().collect();
@@ -149,7 +157,7 @@ pub fn check_entries<'a>(
     for (path, text) in &files {
         read_marks(path, text, &parsed_comments(text), &mut entries, findings);
     }
-    check_stale(&entries, &fingerprints_by_id(docs), findings);
+    check_stale(&entries, &fingerprints_by_id(docs, decisions), findings);
     Ok(GuideTally {
         files: files.len(),
         marks: entries.len(),
@@ -177,7 +185,7 @@ pub fn validate_overlap<'a>(
 /// detail の今の`指紋`は、`IR`に無ければ "-"、あれば1つ目の`指紋`
 fn check_stale(
     entries: &[GuideEntry],
-    fingerprints: &BTreeMap<&str, Vec<String>>,
+    fingerprints: &BTreeMap<String, Vec<String>>,
     findings: &mut Vec<Finding>,
 ) {
     for entry in entries {
@@ -249,7 +257,9 @@ fn read_marks(
     }
 }
 
-/// TBL-core-036 の中身を (`ID`, `指紋`) の並びに分ける。形の誤りがあれば None（REQ-core-202）
+/// TBL-core-036 の中身を (`ID`, `指紋`) の並びに分ける。形の誤りがあれば None（REQ-core-202）。
+/// `ID` の代わりに決定の文書の決定を指す行き先（"<文書のパス>#<見出しの行き先の名前>"）も受ける。
+/// 行き先は "#" を含み、IR の `ID` は含まないので、2つの形は取り違えない
 fn parse_entries(inner: &str) -> Option<Vec<(String, String)>> {
     let parts: Vec<&str> = inner.split(',').map(str::trim).collect();
     // 中が空か区切りだけ
@@ -261,8 +271,9 @@ fn parse_entries(inner: &str) -> Option<Vec<(String, String)>> {
         .map(|part| {
             let (id, fingerprint) = part.split_once(':')?;
             let (id, fingerprint) = (id.trim(), fingerprint.trim());
-            (is_valid_id(id) && is_fingerprint(fingerprint))
-                .then(|| (id.to_string(), fingerprint.to_string()))
+            ((is_valid_id(id) || crate::decisions::is_decision_target(id))
+                && is_fingerprint(fingerprint))
+            .then(|| (id.to_string(), fingerprint.to_string()))
         })
         .collect()
 }

@@ -133,7 +133,7 @@ fn facade_names_are_the_same_lower_result_types() {
     fn same_mutants(value: &kotowari::MutantCounts) -> &kotowari_core::mutants::MutantCounts {
         value
     }
-    fn same_guide_reader(model: &kotowari::ReadModel) -> kotowari::GuideReader<'_> {
+    fn same_guide_reader(model: &kotowari::ReadModel) -> kotowari::GuideReader {
         model.guide_reader()
     }
     fn same_documents(model: &kotowari::ReadModel) -> &[kotowari::IrDocument] {

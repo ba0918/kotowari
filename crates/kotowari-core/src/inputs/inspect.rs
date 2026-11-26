@@ -48,6 +48,7 @@ impl CheckPreparation {
                 entries(files),
                 &self.read.discovered.files,
                 &self.read.docs,
+                &self.read.decisions,
                 &mut self.findings,
             )?;
         }

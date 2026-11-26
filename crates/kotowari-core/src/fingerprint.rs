@@ -15,7 +15,12 @@ pub fn fingerprint_of(doc: &IrDocument, item: &Item, lines: &[&str]) -> String {
         fingerprinted.push(lines[deferral.line - 1].to_string());
     }
     fingerprinted.extend(fingerprint_lines(item, lines));
-    let joined = fingerprinted.join("\n");
+    digest(&fingerprinted)
+}
+
+/// 行を "\n" でつないだ UTF-8 のバイト列の SHA-256 を、16進の小文字で書いた先頭の8文字
+pub(crate) fn digest(lines: &[String]) -> String {
+    let joined = lines.join("\n");
     let digest = Sha256::digest(joined.as_bytes());
     digest.iter().take(4).map(|b| format!("{b:02x}")).collect()
 }

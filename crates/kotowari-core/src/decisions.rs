@@ -42,6 +42,14 @@ pub(crate) struct Confirmation {
 pub(crate) struct Decision {
     /// 見出しの文
     pub(crate) heading: String,
+    /// 見出しの行
+    pub(crate) line: usize,
+    /// 見出しへのリンクの行き先になる名前。同じ見出しの2つ目からは "-1"、"-2" が付いている
+    pub(crate) anchor: String,
+    /// 「決めたこと」と「確認すること」の節の、見出しの行から節の最後のブロックの行まで。文書の順
+    pub(crate) fingerprinted: Vec<String>,
+    /// `fingerprinted` の指紋。ガイドの印と照らす（C-core-lang-5、C-core-lang-6）
+    pub(crate) fingerprint: String,
     /// 状態が「提案」でも「実装済み」でもなければ None
     pub(crate) state: Option<State>,
     pub(crate) confirmations: Vec<Confirmation>,
@@ -97,6 +105,11 @@ const BY_READING: &str = "（読んで確認）";
 struct Building {
     heading_line: usize,
     heading: String,
+    anchor: String,
+    /// 指紋に入れる節の (見出しの行, 最後のブロックの最後の行)
+    fingerprinted: Vec<(usize, usize)>,
+    /// 今の "###" の節が指紋に入れる節か
+    in_fingerprinted: bool,
     /// 状態の行を探すのは、見出しの直後の段落だけ
     state_line: Option<(usize, String)>,
     awaiting_state: bool,
@@ -106,10 +119,13 @@ struct Building {
 }
 
 impl Building {
-    fn new(heading_line: usize, heading: String) -> Self {
+    fn new(heading_line: usize, heading: String, anchor: String) -> Self {
         Self {
             heading_line,
             heading,
+            anchor,
+            fingerprinted: Vec::new(),
+            in_fingerprinted: false,
             state_line: None,
             awaiting_state: true,
             sections: BTreeSet::new(),
@@ -118,7 +134,7 @@ impl Building {
         }
     }
 
-    fn finish(self, path: &str, findings: &mut Vec<Finding>) -> Decision {
+    fn finish(self, path: &str, lines: &[&str], findings: &mut Vec<Finding>) -> Decision {
         let state = match &self.state_line {
             Some((_, value)) if value == PROPOSED => Some(State::Proposed),
             Some((_, value)) if value == IMPLEMENTED => Some(State::Implemented),
@@ -151,8 +167,28 @@ impl Building {
                 ));
             }
         }
+        let fingerprinted: Vec<String> = self
+            .fingerprinted
+            .iter()
+            .flat_map(|&(first, last)| {
+                let mut section = lines
+                    .get(first - 1..last.min(lines.len()))
+                    .unwrap_or_default();
+                // 一覧の最後の行の位置は、続く空行まで届くことがある
+                while let [rest @ .., last] = section
+                    && last.trim().is_empty()
+                {
+                    section = rest;
+                }
+                section.iter().map(|line| (*line).to_owned())
+            })
+            .collect();
         Decision {
             heading: self.heading,
+            line: self.heading_line,
+            anchor: self.anchor,
+            fingerprint: crate::fingerprint::digest(&fingerprinted),
+            fingerprinted,
             state,
             confirmations: self.confirmations,
         }
@@ -163,7 +199,7 @@ impl Building {
 enum Place {
     /// 題名より前か、題名と最初の決定の間
     Head,
-    Decision(Building),
+    Decision(Box<Building>),
     Open,
 }
 
@@ -197,13 +233,14 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
     let mut lead = false;
     let mut open_items = 0;
     let lines: Vec<&str> = text.lines().collect();
+    let anchored = heading_anchors(&root);
     let blocks = root.children().map(Vec::as_slice).unwrap_or_default();
     for node in blocks {
         if let Node::Heading(heading) = node
             && heading.depth <= 2
         {
             if let Place::Decision(building) = std::mem::replace(&mut place, Place::Head) {
-                decisions.push(building.finish(path, findings));
+                decisions.push(building.finish(path, &lines, findings));
             }
             if heading.depth == 1 {
                 if title.is_none() {
@@ -212,10 +249,12 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
             } else if node.to_string().trim() == OPEN {
                 place = Place::Open;
             } else {
-                place = Place::Decision(Building::new(
-                    line_of(node),
+                let line = line_of(node);
+                place = Place::Decision(Box::new(Building::new(
+                    line,
                     node.to_string().trim().to_owned(),
-                ));
+                    anchored.get(&line).cloned().unwrap_or_default(),
+                )));
             }
             continue;
         }
@@ -234,7 +273,7 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
         }
     }
     if let Place::Decision(building) = place {
-        decisions.push(building.finish(path, findings));
+        decisions.push(building.finish(path, &lines, findings));
     }
     match title {
         None => findings.push(Finding::new(
@@ -255,16 +294,17 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
         path: path.to_owned(),
         decisions,
         open_items,
-        anchors: anchors(&root),
+        anchors: anchored.into_values().collect(),
         links: crate::translations::markdown_links(&root),
     }
 }
 
-/// 文書のすべての見出しの、リンクの行き先になる名前。同じ名前の2つ目からは "-1"、"-2" を付ける
-fn anchors(root: &Node) -> BTreeSet<String> {
-    fn walk(node: &Node, out: &mut Vec<String>) {
+/// 文書のすべての見出しの、リンクの行き先になる名前を見出しの行から引く。
+/// 同じ名前の2つ目からは "-1"、"-2" を付ける
+fn heading_anchors(root: &Node) -> std::collections::BTreeMap<usize, String> {
+    fn walk(node: &Node, out: &mut Vec<(usize, String)>) {
         if let Node::Heading(_) = node {
-            out.push(github_anchor(&node.to_string()));
+            out.push((line_of(node), github_anchor(&node.to_string())));
         }
         for child in node.children().into_iter().flatten() {
             walk(child, out);
@@ -273,15 +313,17 @@ fn anchors(root: &Node) -> BTreeSet<String> {
     let mut headings = Vec::new();
     walk(root, &mut headings);
     let mut anchors = BTreeSet::new();
-    for heading in headings {
+    let mut by_line = std::collections::BTreeMap::new();
+    for (line, heading) in headings {
         let mut anchor = heading.clone();
         let mut suffix = 0;
         while !anchors.insert(anchor.clone()) {
             suffix += 1;
             anchor = format!("{heading}-{suffix}");
         }
+        by_line.insert(line, anchor);
     }
-    anchors
+    by_line
 }
 
 /// GitHub が Markdown の見出しに付ける名前。小文字にし、文字・数字・"_"・"-"・空白のほかを除き、
@@ -385,6 +427,7 @@ pub(crate) fn has_open_items(documents: &[Document]) -> bool {
 /// 決定の見出しの下の1つのブロックを読む
 fn read_decision_block(node: &Node, lines: &[&str], building: &mut Building) {
     let awaiting_state = std::mem::replace(&mut building.awaiting_state, false);
+    read_fingerprinted(node, building);
     #[expect(
         clippy::wildcard_enum_match_arm,
         reason = "markdown::mdast::Node is a foreign enum: blocks other than headings, paragraphs and lists carry nothing a decision is read from"
@@ -545,6 +588,16 @@ pub(crate) fn list_items(
     documents: &[Document],
     markers: &[crate::tests_discovery::TestMarker],
 ) -> Vec<crate::list::ListItem> {
+    let mut items = decision_items(documents);
+    items.extend(row_items(documents, markers));
+    items
+}
+
+/// 確認することの行の1件ずつ
+fn row_items(
+    documents: &[Document],
+    markers: &[crate::tests_discovery::TestMarker],
+) -> Vec<crate::list::ListItem> {
     let tests_by_id = crate::list::tests_by_id(markers);
     // 形の誤った ID の行は check が invalid_id にしている。IR の ID の無い項目と同じく出さない
     rows(documents)
@@ -568,24 +621,110 @@ pub(crate) fn list_items(
         .collect()
 }
 
-/// "kotowari query" の、その ID を持つ確認することの行の1件ずつ（C-core-confirm-5）。
-/// 確認することの行を ID で指す文は無いので、逆引きはいつも空
+/// "kotowari query" の、その ID を持つ確認することの行の1件ずつ（C-core-confirm-5）と、
+/// その行き先の決定（本文は指紋に入れる行）。確認することの行と決定を ID で指す文は無いので、
+/// 逆引きはいつも空
 pub(crate) fn query_items(
     documents: &[Document],
     markers: &[crate::tests_discovery::TestMarker],
     id: &str,
 ) -> Vec<crate::query::QueryItem> {
+    let decisions = documents.iter().flat_map(|doc| {
+        doc.decisions
+            .iter()
+            .map(move |decision| (target(doc, decision), decision))
+    });
+    let mut items: Vec<crate::query::QueryItem> = decision_items(documents)
+        .into_iter()
+        .zip(decisions)
+        .filter(|(_, (target, _))| target == id)
+        .map(|(item, (_, decision))| crate::query::QueryItem {
+            item,
+            body: decision.fingerprinted.clone(),
+            referenced_by: Vec::new(),
+        })
+        .collect();
     let bodies = rows(documents)
         .filter(|(_, _, row)| row.id == id)
         .map(|(_, _, row)| row.body.clone());
-    list_items(documents, markers)
-        .into_iter()
-        .filter(|item| item.id() == id)
-        .zip(bodies)
-        .map(|(item, body)| crate::query::QueryItem {
-            item,
-            body,
-            referenced_by: Vec::new(),
+    items.extend(
+        row_items(documents, markers)
+            .into_iter()
+            .filter(|item| item.id() == id)
+            .zip(bodies)
+            .map(|(item, body)| crate::query::QueryItem {
+                item,
+                body,
+                referenced_by: Vec::new(),
+            }),
+    );
+    items
+}
+
+/// 「決めたこと」と「確認すること」の節を、指紋の行の範囲に加える。
+/// 節は "###" の見出しから、次の "###" か "##" の見出しまで。"####" より深い見出しは節の中にある
+fn read_fingerprinted(node: &Node, building: &mut Building) {
+    let line = line_of(node);
+    let end = node.position().map_or(line, |position| position.end.line);
+    if let Node::Heading(heading) = node
+        && heading.depth == 3
+    {
+        let name = node.to_string();
+        building.in_fingerprinted = matches!(name.trim(), DECIDED | CONFIRMATIONS);
+        if building.in_fingerprinted {
+            building.fingerprinted.push((line, end));
+        }
+        return;
+    }
+    if !building.in_fingerprinted {
+        return;
+    }
+    if let Some(section) = building.fingerprinted.last_mut() {
+        section.1 = end;
+    }
+}
+
+/// ガイドの印が決定を指す形（"<文書のパス>#<見出しの行き先の名前>"）か。パスは ".md" で終わり、
+/// 名前は空でなく、どちらにも空白と "#" を含まない
+pub fn is_decision_target(target: &str) -> bool {
+    target.split_once('#').is_some_and(|(path, anchor)| {
+        path.ends_with(".md")
+            && !anchor.is_empty()
+            && !anchor.contains('#')
+            && !target.chars().any(char::is_whitespace)
+    })
+}
+
+/// 決定を指すガイドの印の行き先（"<文書のパス>#<見出しの行き先の名前>"）
+fn target(doc: &Document, decision: &Decision) -> String {
+    format!("{}#{}", doc.path, decision.anchor)
+}
+
+/// 決定を指す行き先から、その決定の指紋を引く
+pub(crate) fn fingerprints(documents: &[Document]) -> impl Iterator<Item = (String, String)> {
+    documents.iter().flat_map(|doc| {
+        doc.decisions
+            .iter()
+            .map(move |decision| (target(doc, decision), decision.fingerprint.clone()))
+    })
+}
+
+/// "kotowari list" の、決定の1件ずつ。ID はガイドの印が指す行き先
+fn decision_items(documents: &[Document]) -> Vec<crate::list::ListItem> {
+    documents
+        .iter()
+        .flat_map(|doc| {
+            doc.decisions.iter().map(move |decision| {
+                crate::list::ListItem::Decision(crate::list::DecisionItem {
+                    id: target(doc, decision),
+                    kind: "decision",
+                    name: decision.heading.clone(),
+                    path: doc.path.clone(),
+                    line: decision.line,
+                    state: decision.state.map(State::as_str),
+                    fingerprint: decision.fingerprint.clone(),
+                })
+            })
         })
         .collect()
 }

@@ -906,7 +906,8 @@ fn list_includes_the_confirmation_rows_in_path_and_line_order() {
     assert_eq!(code, Some(0), "{stderr}");
     assert_eq!(
         stdout,
-        "C-greet-1 - 挨拶が出る docs/decisions/greet.md:19 tests=0\n\
+        "docs/decisions/greet.md#挨拶する - 挨拶する docs/decisions/greet.md:5 tests=0\n\
+         C-greet-1 - 挨拶が出る docs/decisions/greet.md:19 tests=0\n\
          C-greet-2 - 名前が入る docs/decisions/greet.md:20 tests=1\n\
          \x20 tests/greet.rs:1 marked\n"
     );
@@ -1010,7 +1011,10 @@ fn list_sorts_the_confirmation_rows_with_the_ir_items_by_path() {
         .iter()
         .map(|item| item["id"].as_str().unwrap())
         .collect();
-    assert_eq!(ids, vec!["C-greet-1", "REQ-001"]);
+    assert_eq!(
+        ids,
+        vec!["docs/decisions/greet.md#挨拶する", "C-greet-1", "REQ-001"]
+    );
 }
 
 // @kotowari[C-core-confirm-5]
@@ -1046,6 +1050,393 @@ fn list_leaves_out_a_row_without_a_well_formed_id() {
     let (_, stdout, _) = run(tmp.path(), &["list", "--format", "text"]);
     assert_eq!(
         stdout,
-        "C-greet-2 - 名前が入る docs/decisions/greet.md:20 tests=0\n"
+        "docs/decisions/greet.md#挨拶する - 挨拶する docs/decisions/greet.md:5 tests=0\n\
+         C-greet-2 - 名前が入る docs/decisions/greet.md:20 tests=0\n"
+    );
+}
+
+// --- ガイドの印が決定を指す（docs/decisions/core/languages-and-guides.md） ---
+
+/// 決定の文書の置き場と、"guides/**/*.md" をガイドとして読む設定を作る
+fn make_guided_project(tmp: &Path) {
+    make_project(tmp, Some("docs/decisions"));
+    let config = tmp.join(".kotowari/config.yaml");
+    let mut text = std::fs::read_to_string(&config).unwrap();
+    text.push_str("guides:\n  files:\n    - \"guides/**/*.md\"\n");
+    std::fs::write(config, text).unwrap();
+}
+
+/// 挨拶の決定1つの文書。`decided` は決めたこと、`rows` は確認することの中身
+fn greeting(state: &str, problem: &str, decided: &str, rows: &str) -> String {
+    topic(&[decision(
+        "挨拶する",
+        state,
+        &[
+            ("問題", problem),
+            ("決めたこと", decided),
+            ("確認すること", rows),
+        ],
+    )])
+}
+
+/// `greeting` の既定の中身で書いた文書の、決めたことと確認することの指紋
+const GREETING_FINGERPRINT: &str = "0c16c2c1";
+
+/// "guides/a.md" の3行目に、`entries` を並べたガイドの印を置く
+fn write_guide(tmp: &Path, entries: &str) {
+    write(
+        tmp,
+        "guides/a.md",
+        &format!("# ガイド\n\n<!-- @kotowari[{entries}] -->\n\n挨拶の仕方。\n"),
+    );
+}
+
+/// "guides/a.md" への指摘の (種類, 行, detail)
+fn guide_findings(value: &serde_json::Value) -> Vec<(String, u64, String)> {
+    findings(value)
+        .into_iter()
+        .filter(|(_, path, _, _)| path == "guides/a.md")
+        .map(|(kind, _, line, detail)| (kind, line.unwrap_or(0), detail))
+        .collect()
+}
+
+/// 既定の挨拶の文書と、それを今の指紋で指すガイド
+fn greeting_project(tmp: &Path, document: &str) {
+    make_guided_project(tmp);
+    write(tmp, "docs/decisions/greet.md", document);
+    write_guide(
+        tmp,
+        &format!("docs/decisions/greet.md#挨拶する:{GREETING_FINGERPRINT}"),
+    );
+}
+
+// @kotowari[C-core-lang-5]
+#[test]
+fn a_guide_mark_with_the_current_fingerprint_of_a_decision_is_not_stale() {
+    let tmp = TempDir::new().unwrap();
+    greeting_project(
+        tmp.path(),
+        &greeting(
+            "提案",
+            "困っていた。",
+            "こうする。",
+            "- C-greet-1 挨拶が出る",
+        ),
+    );
+    let value = check(tmp.path());
+    assert_eq!(guide_findings(&value), vec![], "{value}");
+    assert_eq!(value["guides"]["marks"], 1, "{value}");
+}
+
+// @kotowari[C-core-lang-5]
+#[test]
+fn changing_what_was_decided_makes_the_guide_mark_stale() {
+    let tmp = TempDir::new().unwrap();
+    greeting_project(
+        tmp.path(),
+        &greeting(
+            "提案",
+            "困っていた。",
+            "ああする。",
+            "- C-greet-1 挨拶が出る",
+        ),
+    );
+    let value = check(tmp.path());
+    let found = guide_findings(&value);
+    assert_eq!(found.len(), 1, "{value}");
+    assert_eq!(found[0].0, "guide_stale");
+    let detail = &found[0].2;
+    let current = detail
+        .strip_prefix(&format!(
+            "docs/decisions/greet.md#挨拶する {GREETING_FINGERPRINT} "
+        ))
+        .unwrap_or_else(|| panic!("{detail}"));
+    assert!(
+        current.len() == 8 && current != GREETING_FINGERPRINT,
+        "{detail}"
+    );
+}
+
+// @kotowari[C-core-lang-5]
+#[test]
+fn changing_a_row_to_confirm_makes_the_guide_mark_stale() {
+    let tmp = TempDir::new().unwrap();
+    greeting_project(
+        tmp.path(),
+        &greeting(
+            "提案",
+            "困っていた。",
+            "こうする。",
+            "- C-greet-1 挨拶が二度出る",
+        ),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        guide_findings(&value)
+            .iter()
+            .map(|(kind, _, _)| kind.as_str())
+            .collect::<Vec<_>>(),
+        vec!["guide_stale"],
+        "{value}"
+    );
+}
+
+// @kotowari[C-core-lang-5]
+#[test]
+fn a_heading_below_what_was_decided_stays_inside_the_fingerprint() {
+    let tmp = TempDir::new().unwrap();
+    greeting_project(
+        tmp.path(),
+        &greeting(
+            "提案",
+            "困っていた。",
+            "こうする。\n\n#### 例\n\n朝に言う。",
+            "- C-greet-1 挨拶が出る",
+        ),
+    );
+    let value = check(tmp.path());
+    assert_eq!(guide_findings(&value).len(), 1, "{value}");
+}
+
+// @kotowari[C-core-lang-6]
+#[test]
+fn changing_only_the_state_does_not_make_the_guide_mark_stale() {
+    let tmp = TempDir::new().unwrap();
+    greeting_project(
+        tmp.path(),
+        &greeting(
+            "実装済み",
+            "困っていた。",
+            "こうする。",
+            "- C-greet-1 挨拶が出る",
+        ),
+    );
+    let value = check(tmp.path());
+    assert_eq!(guide_findings(&value), vec![], "{value}");
+}
+
+// @kotowari[C-core-lang-6]
+#[test]
+fn changing_only_the_problem_does_not_make_the_guide_mark_stale() {
+    let tmp = TempDir::new().unwrap();
+    greeting_project(
+        tmp.path(),
+        &greeting(
+            "提案",
+            "ずっと困っていた。",
+            "こうする。",
+            "- C-greet-1 挨拶が出る",
+        ),
+    );
+    let value = check(tmp.path());
+    assert_eq!(guide_findings(&value), vec![], "{value}");
+}
+
+// @kotowari[C-core-lang-6]
+#[test]
+fn adding_rejected_options_does_not_make_the_guide_mark_stale() {
+    let tmp = TempDir::new().unwrap();
+    greeting_project(
+        tmp.path(),
+        &topic(&[decision(
+            "挨拶する",
+            "提案",
+            &[
+                ("問題", "困っていた。"),
+                ("決めたこと", "こうする。"),
+                ("見送った案", "- 黙る。失礼になる。"),
+                ("確認すること", "- C-greet-1 挨拶が出る"),
+            ],
+        )]),
+    );
+    let value = check(tmp.path());
+    assert_eq!(guide_findings(&value), vec![], "{value}");
+}
+
+// @kotowari[C-core-lang-5]
+#[test]
+fn a_guide_mark_pointing_at_no_decision_is_stale_with_no_current_fingerprint() {
+    let tmp = TempDir::new().unwrap();
+    make_guided_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &greeting(
+            "提案",
+            "困っていた。",
+            "こうする。",
+            "- C-greet-1 挨拶が出る",
+        ),
+    );
+    // 無い見出し、決定でない見出し（題名と節）、無い文書
+    write_guide(
+        tmp.path(),
+        "docs/decisions/greet.md#別れる:0c16c2c1, docs/decisions/greet.md#挨拶:0c16c2c1, \
+         docs/decisions/greet.md#問題:0c16c2c1, docs/decisions/none.md#挨拶する:0c16c2c1",
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        guide_findings(&value)
+            .into_iter()
+            .map(|(_, _, detail)| detail)
+            .collect::<Vec<_>>(),
+        vec![
+            "docs/decisions/greet.md#別れる 0c16c2c1 -",
+            "docs/decisions/greet.md#問題 0c16c2c1 -",
+            "docs/decisions/greet.md#挨拶 0c16c2c1 -",
+            "docs/decisions/none.md#挨拶する 0c16c2c1 -",
+        ],
+        "{value}"
+    );
+    assert!(
+        findings(&value)
+            .iter()
+            .all(|(kind, _, _, _)| kind != "unresolved_reference"),
+        "{value}"
+    );
+}
+
+// @kotowari[C-core-lang-5]
+#[test]
+fn a_repeated_heading_is_pointed_at_with_the_numbered_anchor() {
+    let tmp = TempDir::new().unwrap();
+    make_guided_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[
+            bare("挨拶する", "提案"),
+            confirmed("挨拶する", "提案", &["C-greet-1 挨拶が出る"]),
+        ]),
+    );
+    write_guide(
+        tmp.path(),
+        &format!("docs/decisions/greet.md#挨拶する-1:{GREETING_FINGERPRINT}"),
+    );
+    let value = check(tmp.path());
+    assert_eq!(guide_findings(&value), vec![], "{value}");
+}
+
+// @kotowari[C-core-lang-5]
+#[test]
+fn a_guide_mark_holds_marks_of_the_old_form_and_of_decisions_together() {
+    let tmp = TempDir::new().unwrap();
+    greeting_project(
+        tmp.path(),
+        &greeting(
+            "提案",
+            "困っていた。",
+            "こうする。",
+            "- C-greet-1 挨拶が出る",
+        ),
+    );
+    write_guide(
+        tmp.path(),
+        &format!("REQ-009:51b1f3da, docs/decisions/greet.md#挨拶する:{GREETING_FINGERPRINT}"),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        guide_findings(&value),
+        vec![(
+            "guide_stale".to_string(),
+            3,
+            "REQ-009 51b1f3da -".to_string()
+        )],
+        "{value}"
+    );
+    assert_eq!(value["guides"]["marks"], 2, "{value}");
+}
+
+// @kotowari[C-core-lang-5]
+#[test]
+fn a_decision_entry_without_an_anchor_or_with_a_bad_fingerprint_is_an_invalid_mark() {
+    let tmp = TempDir::new().unwrap();
+    make_guided_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &greeting(
+            "提案",
+            "困っていた。",
+            "こうする。",
+            "- C-greet-1 挨拶が出る",
+        ),
+    );
+    write(
+        tmp.path(),
+        "guides/a.md",
+        "# ガイド\n\n<!-- @kotowari[docs/decisions/greet.md#:0c16c2c1] -->\n\n\
+         <!-- @kotowari[#挨拶する:0c16c2c1] -->\n\n\
+         <!-- @kotowari[docs/decisions/greet.md#挨拶する:0C16C2C1] -->\n",
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        guide_findings(&value)
+            .into_iter()
+            .map(|(kind, line, _)| (kind, line))
+            .collect::<Vec<_>>(),
+        vec![
+            ("invalid_marker".to_string(), 3),
+            ("invalid_marker".to_string(), 5),
+            ("invalid_marker".to_string(), 7),
+        ],
+        "{value}"
+    );
+    assert_eq!(value["guides"]["marks"], 0, "{value}");
+}
+
+// @kotowari[C-core-lang-5]
+#[test]
+fn query_of_a_decision_returns_the_fingerprint_a_guide_mark_takes() {
+    let tmp = TempDir::new().unwrap();
+    make_guided_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &greeting(
+            "提案",
+            "困っていた。",
+            "こうする。",
+            "- C-greet-1 挨拶が出る",
+        ),
+    );
+    let value = query(tmp.path(), "docs/decisions/greet.md#挨拶する");
+    assert_eq!(
+        value,
+        serde_json::json!({"items": [{
+            "id": "docs/decisions/greet.md#挨拶する",
+            "kind": "decision",
+            "name": "挨拶する",
+            "path": "docs/decisions/greet.md",
+            "line": 5,
+            "state": "proposed",
+            "fingerprint": GREETING_FINGERPRINT,
+            "body": ["### 決めたこと", "", "こうする。", "### 確認すること", "", "- C-greet-1 挨拶が出る"],
+            "referenced_by": [],
+        }]})
+    );
+}
+
+// @kotowari[C-core-lang-5]
+#[test]
+fn list_includes_each_decision_with_its_fingerprint() {
+    let tmp = TempDir::new().unwrap();
+    make_guided_project(tmp.path());
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &greeting(
+            "提案",
+            "困っていた。",
+            "こうする。",
+            "- C-greet-1 挨拶が出る",
+        ),
+    );
+    let (code, stdout, stderr) = run(tmp.path(), &["list", "--format", "text"]);
+    assert_eq!(code, Some(0), "{stderr}");
+    assert_eq!(
+        stdout,
+        "docs/decisions/greet.md#挨拶する - 挨拶する docs/decisions/greet.md:5 tests=0\n\
+         C-greet-1 - 挨拶が出る docs/decisions/greet.md:19 tests=0\n"
     );
 }

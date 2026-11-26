@@ -22,7 +22,6 @@ pub use kotowari_core::guides::{GuideReader, GuideTally};
 /// "ir::parse" の部分の解析の結果で、Project のどの操作からも届かない（REQ-core-309）
 pub use kotowari_core::ir::IrDocument;
 pub use kotowari_core::ir::is_valid_id;
-pub use kotowari_core::is_confirmation_id;
 pub use kotowari_core::mutants::MutantCounts;
 pub use kotowari_core::surface::{SurfaceTally, Unlisted};
 pub use kotowari_core::translations::{Translation, TranslationSide};
@@ -31,9 +30,10 @@ pub use kotowari_core::{
     QueryReport, ReadList, ReadModel, StatusReport, TestFileTally,
 };
 pub use kotowari_core::{
-    ConfirmationItem, Documents, ExampleItem, Findings, FlagItem, Items, ListItem, QueryItem,
-    Reference, RequirementItem, Requirements, ScenarioItem, Scenarios, TestRef, Tests,
+    ConfirmationItem, DecisionItem, Documents, ExampleItem, Findings, FlagItem, Items, ListItem,
+    QueryItem, Reference, RequirementItem, Requirements, ScenarioItem, Scenarios, TestRef, Tests,
 };
+pub use kotowari_core::{is_confirmation_id, is_decision_target};
 /// check と status の結果の中の、全体像の元データの群の名前（REQ-core-288）
 pub use kotowari_overview::GROUP as OVERVIEW_GROUP;
 pub use kotowari_overview::Page;

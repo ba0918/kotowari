@@ -1,4 +1,4 @@
-Based on the kotowari specification (revised 2026-10-05; the version of kotowari itself is not pinned)
+Based on the kotowari specification (revised 2026-11-26; the version of kotowari itself is not pinned)
 
 A guide is a user-facing document on how to use the product, written by a person or an LLM who has read the IR. It is not generated from the IR. Its readers are the people who use the product, so it says how to use it: commands, configuration, how to read the output, procedures and examples. It does not say why something was decided or what is planned or undecided; that belongs in an overview, which is read by the people who build the product (overview.md). Each section of a guide carries guide marks naming the IR items it explains, together with each item's fingerprint at the time the section was written. `kotowari check` compares those fingerprints with the IR as it is now, so the sections that may have fallen behind can be found at any time, not only right after the IR changed. kotowari never writes to a guide; the fingerprints are copied in by hand.
 
@@ -7,6 +7,8 @@ A guide is a user-facing document on how to use the product, written by a person
 Guides are the files matching the globs in `guides.files` of the configuration (config.md). Without the key, or with an empty list, no guide is read and nothing here applies. The globs are read, walked and excluded the same way as `tests.files`. A file matched by both `guides.files` and `tests.files` stops check and status with a config error whose detail is that file followed by `: matched by both guides.files and tests.files`: change the globs so that they do not overlap. A guide glob may match IR documents or decision records; those files are then read both ways.
 
 Only `kotowari check` and `kotowari status` read guides. `kotowari list` and `kotowari query` do not.
+
+A guide mark may also point at a decision of a decision document (decision-documents.md) instead of an IR item; both kinds may stand in one guide mark while the old form and decision documents exist side by side.
 
 ## The form of a guide mark
 
@@ -19,7 +21,8 @@ Write a guide mark inside an HTML comment, so that it does not show in the rende
 | Part | Form |
 |---|---|
 | Start | @kotowari[ |
-| Content | Entries of the form `ID:fingerprint`, separated by commas. Spaces around an entry, around the ID and around the fingerprint are allowed |
+| Content | Entries of the form `ID:fingerprint` or `target:fingerprint`, separated by commas. Spaces around an entry, around the ID and around the fingerprint are allowed |
+| Target | A decision of a decision document: `<path of the document>#<anchor of its heading>`, e.g. `docs/decisions/core/languages-and-guides.md#ガイドは決めたことと確認することが変わったら古いとする`. The path is relative to the base directory and ends in `.md`; the anchor follows the link rule of decision-documents.md (a repeated heading takes `-1`, `-2`). No spaces |
 | Fingerprint | 8 lowercase hexadecimal characters (`0` to `9` and `a` to `f`) |
 | End | `]` on the same line as the start |
 
@@ -29,13 +32,15 @@ A guide mark whose content is empty or only commas, that has no `]` on its line,
 
 ## The fingerprint
 
-The fingerprint of an item or a scenario is the `fingerprint` of its entry in `kotowari list` and `kotowari query`. Take it from there; do not compute it by hand. It is taken from the body of the item without the `- source:` line, and from the step lines of a scenario, so renaming a heading, adding a source, renaming a scenario and changing its tags do not change it. Any other change to the body does, including a `- deferred:` line under a requirement. For a requirement in a topic document with a document-level `- deferred:` line (after the title), the first such line is put in front of the body, so declaring or removing it changes the fingerprints of that document's requirements, but not of its decision tables and scenarios.
+The fingerprint of an item or a scenario is the `fingerprint` of its entry in `kotowari list` and `kotowari query`. Take it from there; do not compute it by hand.
+
+For a decision, `kotowari list` has one entry of kind `decision` per decision, whose `id` is the target to write in the guide mark; `kotowari query '<target>' | jq -r '.items[0].fingerprint'` gives its fingerprint, and its `body` the lines the fingerprint is taken from. Those lines are the `### 決めたこと` and `### 確認すること` sections of the decision, each from its heading to its last block (deeper headings stay inside). Changing the state, the problem or the rejected options, or the decision's heading, does not change it. A target that names no decision (a missing document or heading, or the heading of a title or a section) is guide_stale with `-` as the current fingerprint; renaming a decision's heading changes its target, so fix the guide marks pointing at it. It is taken from the body of the item without the `- source:` line, and from the step lines of a scenario, so renaming a heading, adding a source, renaming a scenario and changing its tags do not change it. Any other change to the body does, including a `- deferred:` line under a requirement. For a requirement in a topic document with a document-level `- deferred:` line (after the title), the first such line is put in front of the body, so declaring or removing it changes the fingerprints of that document's requirements, but not of its decision tables and scenarios.
 
 ## Scene: writing a guide
 
 1. Write the section for the reader, from the IR.
 2. List the items and scenarios the section explains. Confirm each with `kotowari query ID` (its body says whether the section really rests on it); search with `kotowari list` when an ID is not known yet.
-3. Put one guide mark for the section, next to its heading, with one entry per ID and the fingerprint from `kotowari query ID | jq -r '.items[0].fingerprint'`.
+3. Put one guide mark for the section, next to its heading, with one entry per ID (or decision target) and the fingerprint from `kotowari query ID | jq -r '.items[0].fingerprint'`.
 4. Keep a guide mark to a few IDs. A section that needs many more is usually explaining several things; split it so that each guide mark stays small. This is a guideline for writing, and kotowari does not check it.
 5. Run `kotowari check` and confirm that the guide has no findings and that `guides` in its JSON counts the guide and its entries.
 
