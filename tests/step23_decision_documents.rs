@@ -1977,3 +1977,26 @@ fn a_code_block_under_a_confirmation_row_stays_out_of_its_name_and_in_its_body()
     assert_eq!(second["name"], "名前が入る");
     assert_eq!(second["by_reading"], true);
 }
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_leading_byte_order_mark_is_skipped() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &format!("\u{feff}{}", implemented_after(false, "段落。")),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![finding(
+            "confirmation_without_test",
+            "docs/decisions/greet.md",
+            21,
+            "C-greet-1"
+        )]
+    );
+    assert_eq!(value["decisions"]["decisions"], 1);
+}

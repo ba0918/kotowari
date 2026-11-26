@@ -625,3 +625,23 @@ fn a_second_title_on_both_sides_is_an_error_on_each_side() {
         ]
     );
 }
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_leading_byte_order_mark_on_either_side_is_skipped() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    write_pair(
+        tmp.path(),
+        DIR,
+        "greet",
+        &format!(
+            "\u{feff}{}",
+            english("greet", "proposed", &["C-greet-1 Shown"])
+        ),
+        &format!("\u{feff}{}", japanese("greet", "提案", &["C-greet-1 出る"])),
+    );
+    let value = check(tmp.path());
+    assert_eq!(findings(&value), vec![], "{value}");
+    assert_eq!(value["decisions"]["decisions"], 1);
+}
