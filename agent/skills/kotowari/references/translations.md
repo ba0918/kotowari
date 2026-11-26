@@ -1,8 +1,8 @@
-Based on the kotowari specification (revised 2026-10-05; the version of kotowari itself is not pinned)
+Based on the kotowari specification (revised 2026-11-26; the version of kotowari itself is not pinned)
 
 # Pairs: one document in several languages
 
-A project that lists two or more language tags in the configuration's `languages` (for example `[ja, en]`) keeps each IR document (glossaries `CONTEXT.md` and flag records `FLAGS.md` included), decision document (a group's glossary `CONTEXT.md` included), guide, overview data file and table of contents as a pair: one file per language, all equal in standing. Decision records, ADRs and other files in the places for records are never paired. With one language, or without the key, nothing here applies and a file such as `a.en.md` is just a document of that name.
+A project that lists two or more language tags in the configuration's `languages` (for example `[ja, en]`) keeps each decision document (a group's glossary `CONTEXT.md` included), guide, overview data file and table of contents as a pair: one file per language, all equal in standing. With one language, or without the key, nothing here applies and a file such as `a.en.md` is just a document of that name.
 
 ## Names and the consistency record
 
@@ -12,22 +12,19 @@ A project that lists two or more language tags in the configuration's `languages
 - A suffix of the first language (`a.ja.md` with `[ja, en]`) or of a language not in the list (`a.fr.md`) is part of an ordinary name; such a file needs its own sides (`a.ja.en.md`).
 
 ```yaml
-# docs/ir/core/a.i18n.yaml (values copied from kotowari list; these are examples)
+# docs/decisions/core/a.i18n.yaml (values copied from kotowari list; these are examples)
 a.md: 78981922613b2afb6025042ff6bd878ac1994e85
 a.en.md: 9c1e0f0d6f1b4e2a8c3d5b7e9f1a2c4d6e8f0a1b
 ```
 
 ## What must match
 
-kotowari reads items, IDs, sources, fingerprints, `list` items and `query` output from the first-language side only; for a decision document, also the marks matched with its rows, the targets of guide marks and the quoted surfaces, and on its other sides only headings, links and vague words (decision-documents.md, **Languages: a pair of sides**). On the other sides it checks only terms (against that language's glossary chain, `CONTEXT.<tag>.md`), vague words, document-name references, unclosed backticks and the glossary's form. Everything except natural-language sentences is the skeleton and must be the same on every side; a difference is translation_structure_mismatch:
+kotowari reads decisions, rows, fingerprints, `list` items and `query` output from the first-language side only, together with the marks matched with its rows, the targets of guide marks and the quoted surfaces; on the other sides of a decision document it reads only headings, links and vague words (decision-documents.md, **Languages: a pair of sides**). Everything except natural-language sentences is the skeleton and must be the same on every side; a difference is translation_structure_mismatch:
 
 | Document | Must match |
 |---|---|
-| Topic document | `## ` and `### ` headings (and the ID of each `### `), the `- kind:`, `- source:`, `- verification:`, `- definition:`, `- deferred:`, `- related:` lines and whether `- how_to_verify:` is there, table shapes and the IDs in their cells, scenario tag lines and the keyword starting each step, other code blocks |
-| Glossary | the number of rows and each row's Source cell |
 | Decision document | headings (level and order, and which keyword section each is, not their words), the state of each decision, each row's ID and whether it is confirmed by reading |
 | Glossary of decision documents (`<group>/CONTEXT.md`) | nothing; only the sides and the record are checked |
-| Flag record | `### FLAG-` IDs and their `- kind:`, `- related:`, `- source:` |
 | Guide | headings, guide marks, code blocks, table shapes, link destinations |
 | Overview data | frontmatter, headings, part kinds and every non-sentence field, guide marks, table shapes, link destinations |
 | Table of contents | the nesting of groups, the page names and whether each group has a `note` |
@@ -38,7 +35,7 @@ A link destination that points at another language's side is compared as the fir
 
 ## The switcher line and links
 
-Every side of an IR, decision document or guide pair has, as its first non-blank line after the title, the switcher line: each language's `language_name` (from its UI text) in `languages` order, separated by ` | `, its own language as plain text and every other as `[name](that side's file name)`:
+Every side of a decision document or guide pair has, as its first non-blank line after the title, the switcher line: each language's `language_name` (from its UI text) in `languages` order, separated by ` | `, its own language as plain text and every other as `[name](that side's file name)`:
 
 ```markdown
 # 対の読み方
@@ -48,7 +45,7 @@ Every side of an IR, decision document or guide pair has, as its first non-blank
 
 Only a line exactly equal to it is the switcher line; it is not scope text and takes no text checks. Overview data and tables of contents have none.
 
-Inside a side, a link (or image, or link reference definition) that does not start with a scheme or `#` must point at the same language: a link to another language's side is link_language_mismatch, and a link to a file in the places for decision records or ADRs is link_to_record — a reader reaches the decisions through the IR's sources, and records are not translated.
+Inside a side, a link (or image, or link reference definition) that does not start with a scheme or `#` must point at the same language: a link to another language's side is link_language_mismatch, and a link from a decision document to anything under `docs/frozen/` is link_to_record — the frozen tree is not read as grounds for the current rules.
 
 ## The procedure for keeping a pair aligned
 
@@ -70,4 +67,4 @@ Inside a side, a link (or image, or link reference definition) that does not sta
 | link_language_mismatch | Point the link at the side in the same language |
 | link_to_record | Remove the link |
 
-`kotowari overview build` and `serve` write nothing while an IR, overview data or table of contents pair has translation_missing or translation_structure_mismatch.
+`kotowari overview build` and `serve` write nothing while an overview data or table of contents pair has translation_missing or translation_structure_mismatch.

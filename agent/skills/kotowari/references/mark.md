@@ -1,4 +1,4 @@
-Based on the kotowari specification (revised 2026-09-24; the version of kotowari itself is not pinned)
+Based on the kotowari specification (revised 2026-11-26; the version of kotowari itself is not pinned)
 
 ## The form of a mark
 
@@ -7,26 +7,17 @@ Write it in the form `@kotowari[ID, ...]`.
 | Part | Form |
 |---|---|
 | Start | @kotowari[ |
-| Content | IDs separated by commas. Spaces may be placed before and after a comma |
+| Content | IDs of rows to confirm (`C-<name>-<number>`, decision-documents.md) separated by commas. Spaces may be placed before and after a comma |
 | End | ] |
 
 Several marks may be written on one line (all are picked up). The comment syntax does not matter, and marks are picked up from any position on the line. If there is no closing bracket on the same line, an invalid_marker error. Content that is empty or only separators is also an invalid_marker error.
 
 Examples:
 
-- `// @kotowari[REQ-001, TBL-002]` — binds to REQ-001 and TBL-002
-- `// @kotowari[REQ-001] @kotowari[TBL-002]` — two marks on one line. Both are picked up
+- `// @kotowari[C-shop-discount-1, C-shop-discount-2]` — binds to the rows C-shop-discount-1 and C-shop-discount-2
+- `// @kotowari[C-shop-discount-1] @kotowari[C-shop-discount-2]` — two marks on one line. Both are picked up
 
-## Marks for examples
-
-A mark can hold not only requirement IDs but also the IDs of examples (scenarios). When an example whose @about has a requirement with a verification other than review has no mark containing its ID, a scenario_without_test error is raised (not raised for an example with only review requirements, one that names no requirement, or a deferred scenario: one whose @about requirements are all deferred or review, with at least one deferred).
-
-- `// @kotowari[REQ-001, EX-201]` — binds to both the requirement REQ-001 and the example EX-201
-- `// @kotowari[EX-201, EX-202]` — one mark binding to two examples
-
-A mark for an example also covers the requirements that example lists in `@about`. If there is a test with only `@kotowari[EX-201]`, requirement_without_test is not raised for the requirements in EX-201's `@about`. The reverse does not hold. A mark listing only a requirement's ID does not cover that requirement's examples.
-
-When examples with the same ID are in two or more places, the `@about` of the first one (by byte order of the document path, and within the same document the smaller line) is used.
+Mark a test only with the IDs of the rows it confirms. A row confirmed by reading (`（読んで確認）`, `(by reading)`) gets no mark. A mark naming an ID that is no row's ID is an unresolved_reference error.
 
 ## Where marks may go
 
@@ -50,12 +41,12 @@ Lines that belong to the block:
 | A line with code and a comment (`setup(); // note`) | No, it ends the block |
 | A blank line | No, it ends the block. A line of only whitespace in the middle of a multi-line comment, attribute or decorator does not end it |
 
-In other languages only comment-only lines may form the block. Within the block, marks are read only from the text of comments: a mark inside an attribute or a decorator (such as the string of `#[doc = "@kotowari[REQ-001]"]`) is not read, and raises neither invalid_marker nor unresolved_reference. A mark at the start of a function body does not bind; move it above the test.
+In other languages only comment-only lines may form the block. Within the block, marks are read only from the text of comments: a mark inside an attribute or a decorator (such as the string of `#[doc = "@kotowari[C-shop-discount-1]"]`) is not read, and raises neither invalid_marker nor unresolved_reference. A mark at the start of a function body does not bind; move it above the test.
 
 Example:
 
 ```rust
-// @kotowari[REQ-001]
+// @kotowari[C-shop-discount-1]
 #[test]
 fn req_001_returns_ok() {
     // ...
@@ -63,7 +54,7 @@ fn req_001_returns_ok() {
 ```
 
 ```python
-# @kotowari[REQ-001]
+# @kotowari[C-shop-discount-1]
 @pytest.mark.parametrize("a", [1])
 def test_req_001_returns_ok(a):
     ...
@@ -72,7 +63,7 @@ def test_req_001_returns_ok(a):
 The mistake of a blank line in between:
 
 ```rust
-// @kotowari[REQ-001]
+// @kotowari[C-shop-discount-1]
 
 #[test]
 fn req_001_returns_ok() {  // becomes test_without_id
@@ -85,7 +76,7 @@ The mistake of a mark at the start of the body:
 ```rust
 #[test]
 fn req_001_returns_ok() {  // becomes test_without_id
-    // @kotowari[REQ-001]
+    // @kotowari[C-shop-discount-1]
 }
 ```
 
@@ -123,7 +114,7 @@ The name of a test is the text captured by `$NAME`; for a function inside a macr
 
 ## Test names
 
-The convention for test names: lowercase the ID being verified, change its hyphens to `_`, and put it at the start (example: `req_001_returns_ok`). kotowari does not check test names.
+The convention for test names: lowercase the ID being verified, change its hyphens to `_`, and put it at the start (example: `c_shop_discount_1_member_price`). kotowari does not check test names.
 
 ## Adding rules and languages without a query
 
@@ -139,4 +130,4 @@ rule:
 
 Adding a rule for a language with no bundled query (Go, Java and so on) makes it a language with a query. Only comment-only lines may form its comment block.
 
-For a language without a query, kotowari does not parse the file. Every mark in the text of the file is picked up and counted toward clearing requirement_without_test and scenario_without_test, and test_without_id is not raised. A person verifies that the tests are correct.
+For a language without a query, kotowari does not parse the file. Every mark in the text of the file is picked up and counted toward clearing confirmation_without_test, and test_without_id is not raised. A person verifies that the tests are correct.

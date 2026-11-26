@@ -104,7 +104,7 @@ names the missing section in the spelling of the decision's state line.
 ### Languages: a pair of sides
 
 When the configuration's `languages` lists two or more tags, every decision document is a pair,
-as the IR and the guides are (translations.md): the file without a suffix is the side of the first
+as the guides are (translations.md): the file without a suffix is the side of the first
 language, `<topic>.<tag>.md` beside it is each other language's side, and `<topic>.i18n.yaml` is
 the agreement record. The first language is one per repository and holds for the decision
 documents, the guides and the overview alike. In kotowari itself it is English: `x.md` is English

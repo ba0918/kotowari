@@ -79,7 +79,7 @@ Sort each miss into one of the following three.
 | Untested | The behaviour changes, but no test looks at it | "The untested steps" below |
 | Suspected defect | The original code is wrong | Fix it. If it needs an interpretation of the specification, return to brainstorm |
 
-The untested steps: first confirm whether the requirement is specific enough to distinguish that mutation. If it is vague and cannot distinguish it, do not add a test; return to the IR. Adding a test first would pin the vague requirement to the implementation's current behaviour. If it is specific, add a test with the mark of that requirement or example.
+The untested steps: first confirm whether the decision and its rows to confirm are specific enough to distinguish that mutation. If they are vague and cannot distinguish it, do not add a test; return to brainstorm. Adding a test first would pin the vague decision to the implementation's current behaviour. If they are specific, add a test with the mark of the row it confirms.
 
 The equivalent steps:
 

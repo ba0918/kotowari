@@ -4,7 +4,7 @@ Claude Code の skill を9個置いている。
 
 | skill | 役目 |
 |---|---|
-| `kotowari` | IR と判断の記録の書き方、`kotowari check` の結果の読み方、テストへの印の置き方を、場面ごとに reference で読ませる |
+| `kotowari` | 決定の文書の書き方、`kotowari check` の結果の読み方、テストへの印の置き方を、場面ごとに reference で読ませる |
 | `kotowari-using-workflow` | 新しい依頼をどの工程から始めるかを決める入口 |
 | `kotowari-brainstorm` | 壁打ちで決めたことを IR と判断の記録に書き、承認を得る |
 | `kotowari-cycle` | 承認済みの仕様を実装・整合のフェーズ・レビュー・修正の繰り返しで回し、終端で `kotowari check` と `kotowari status` を見る。整合のフェーズは差分のコードを IR と読み合わせ、隙間と食い違いを根拠と実測で片付ける |
@@ -18,7 +18,7 @@ Claude Code の skill を9個置いている。
 
 ## 関係
 
-工程の skill は `kotowari` スキルに依存する。工程の途中で IR を書く、check の結果を読む、印を置くといった場面では、`kotowari` スキルの reference を名指しして読む。
+工程の skill は `kotowari` スキルに依存する。工程の途中で決定の文書を書く、check の結果を読む、印を置くといった場面では、`kotowari` スキルの reference を名指しして読む。
 
 逆向きの依存は無い。`kotowari` スキルは工程の skill を名指ししないので、`kotowari` スキルだけを入れて別の工程（ほかの workflow の skill や手作業）の中で使ってもよい。工程の skill は推奨であって、無くても kotowari は使える。
 
@@ -72,7 +72,7 @@ done
 | deciding where a new request starts (use this, not ba0918-using-workflow) | kotowari-using-workflow |
 ```
 
-この1行が無いと、入口が ba0918-using-workflow のままになり、ba0918 の工程の skill（出力が IR でないもの）に進む道が残る。`kotowari` スキルの setup が `AGENTS.md` に書くのは「仕様は IR で管理する」の一文だけで、この1行は書かない（`kotowari` スキルは工程の skill を名指ししないため）。
+この1行が無いと、入口が ba0918-using-workflow のままになり、ba0918 の工程の skill（出力が決定の文書でないもの）に進む道が残る。`kotowari` スキルの setup が `AGENTS.md` に書くのは「仕様は決定の文書で管理する」の一文だけで、この1行は書かない（`kotowari` スキルは工程の skill を名指ししないため）。
 
 ## レビューの任意の席の一覧
 
