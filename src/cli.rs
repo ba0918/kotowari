@@ -274,13 +274,15 @@ fn print_help() {
     println!("Usage: kotowari [OPTIONS] <COMMAND> [ARGUMENT]");
     println!();
     println!("Commands:");
-    println!("  check      Check IR documents and test markers");
-    println!("  list       List IR items and the tests marked for them");
+    println!("  check      Check decision documents and test markers");
+    println!("  list       List decisions, confirmation rows and the tests marked for them");
     println!("  mutants    Read a mutation testing result file and report survivors");
     println!("  overview   build: write the overview pages; serve: write and show them locally");
     println!("  plan       Check the form of one plan file against the bundled schema");
-    println!("  query      Show one item or scenario with its body and back references");
-    println!("  status     Summarise the IR and tell whether it is complete");
+    println!(
+        "  query      Show one decision or confirmation row with its body and back references"
+    );
+    println!("  status     Summarise the decision documents and tell whether they are complete");
     println!();
     println!("Options:");
     println!("  --format <FORMAT>      Output format: json (default) or text");

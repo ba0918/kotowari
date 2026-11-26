@@ -235,13 +235,13 @@ $ kotowari --help
 Usage: kotowari [OPTIONS] <COMMAND> [ARGUMENT]
 
 Commands:
-  check      Check IR documents and test markers
-  list       List IR items and the tests marked for them
+  check      Check decision documents and test markers
+  list       List decisions, confirmation rows and the tests marked for them
   mutants    Read a mutation testing result file and report survivors
   overview   build: write the overview pages; serve: write and show them locally
   plan       Check the form of one plan file against the bundled schema
-  query      Show one item or scenario with its body and back references
-  status     Summarise the IR and tell whether it is complete
+  query      Show one decision or confirmation row with its body and back references
+  status     Summarise the decision documents and tell whether they are complete
 
 Options:
   --format <FORMAT>      Output format: json (default) or text
