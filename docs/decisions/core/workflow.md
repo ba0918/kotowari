@@ -8,7 +8,7 @@ From the work records of nine repositories that use kotowari, 65 cases where a g
 
 ## Details found during implementation are decided by the implementing side
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -42,7 +42,7 @@ The step in the implementation loop that fixes the specification side (the consi
 
 ## The brainstorm reads the user-wide policy document before giving a recommendation
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -67,7 +67,7 @@ When the document does not exist or cannot be read, the brainstorm says at its s
 
 ## The brainstorm first builds one scene where someone is stuck, and before approval shows what happens to that scene
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -97,7 +97,7 @@ What the user reads at approval is the diff of the decision documents.
 
 ## Requests that change visible behaviour are decided in the brainstorm by showing a sample
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -123,7 +123,7 @@ A working prototype is throwaway, for deciding, and is not used as the base of p
 
 ## When taking in existing code, behaviour the person has ratified is written as "implemented"
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
