@@ -98,6 +98,9 @@ Every finding ends in a state where the decision documents and the code agree.
   carries the fix and in the line the run returns, which cycle puts in the pull request body.
 - It writes into a decision document only a sentence corrected to the facts and an item under
   `## 未決`; it never writes a detail it or the implementer decided, and never turns a state.
+  When the decision documents are kept in language pairs, every edit it makes goes to every side
+  in its own language's keywords, with the agreement record updated (the kotowari skill's
+  `references/decision-documents.md`, **Languages: a pair of sides**).
 - When it fixes a decision document that has a language pair, it keeps the pair and its
   consistency record aligned (`translations.md`).
 - Every run ends with no finding of `kotowari check` in a decision document left in its range.

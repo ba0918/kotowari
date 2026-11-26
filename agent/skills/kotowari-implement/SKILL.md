@@ -44,6 +44,9 @@ in the body of the commit that carries it and in your report, which goes into th
 body (kotowari-cycle's **Terminal report**). Never write it into a decision document: those hold
 the person's decisions only.
 
+Section names below are given in their Japanese spelling; an English side uses the English
+spelling of the same keyword (the kotowari skill's `references/decision-documents.md`).
+
 Hand a question back to a person only when the intent a person decided collides with itself:
 two sentences of the decision documents cannot both hold, so that either choice drops one thing a
 person decided. Then write it as an item under `## 未決` at the end of the topic document it
@@ -110,8 +113,10 @@ kotowari skill's scene check (`references/findings.md`).
 
 **Turning the state.** When every row of a decision on your list is met — each row checked by a
 test has a passing test whose mark carries its ID, and each row confirmed by reading
-(`（読んで確認）`) has been read and found true in what you wrote — change the decision's state
-line from `状態: 提案` to `状態: 実装済み`, in the commit that finishes it. A decision with no rows
+(`（読んで確認）`, `(by reading)` on an English side) has been read and found true in what you
+wrote — change the decision's state line from `状態: 提案` to `状態: 実装済み` (`Status: proposed`
+to `Status: implemented` on an English side) on every side of its pair, and bring the agreement
+record up to date, in the commit that finishes it. A decision with no rows
 is turned when what it decides has been done. A decision not on your list stays as it is. Show,
 per decision turned, the test names or the passages read for each row.
 

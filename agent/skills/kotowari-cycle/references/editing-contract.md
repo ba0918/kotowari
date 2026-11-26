@@ -33,7 +33,9 @@ who gets which section; everything below this paragraph is pasted as written.
   intent: two sentences of the decision documents that cannot both hold, so that either choice
   drops something a person decided. Before handing it back, write it as an item under `## 未決` at
   the end of the topic document it concerns (the two sentences linked, and that the person decides
-  it) and commit that item.
+  it) and commit that item. When the decision documents are kept in language pairs, write the item
+  on every side (`## Open` on an English side) and update the agreement record (the kotowari
+  skill's `references/decision-documents.md`, **Languages: a pair of sides**).
 - Apart from that item, never edit a decision document. If a hook stops a commit on a finding in a
   decision document, leave the change uncommitted and return the finding with the files it
   blocked.

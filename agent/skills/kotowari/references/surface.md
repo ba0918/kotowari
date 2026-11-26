@@ -79,7 +79,7 @@ Double quotes pair from the left of the line; backticks pair only outside double
 
 Not counted: statements of properties, the scope line, the lines starting with `- ` under an item heading (`- how_to_verify:` included), the flags (FLAGS.md), and the glossary.
 
-A surface also counts as specified when its name is quoted the same way in a decision document, inside the `### 決めたこと` or `### 確認すること` section of a decision of either state: each line of the text, each table cell separately, code blocks not read. The problem, the rejected options and `## 未決` are not counted.
+A surface also counts as specified when its name is quoted the same way in a decision document, inside the `### 決めたこと` or `### 確認すること` section (`### Decision`, `### Confirmations`) of a decision of either state, on the first-language side of a pair: each line of the text, each table cell separately, code blocks not read. The problem, the rejected options and `## 未決` are not counted.
 
 ## Findings and how to fix them
 

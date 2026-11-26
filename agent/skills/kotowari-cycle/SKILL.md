@@ -51,7 +51,10 @@ list included, and `merge_target`); a later request on the same branch adds its 
 decisions again from the part of the branch's diff that lies in the place of the decision documents
 (`git diff <comparison base> HEAD -- <place>`): the proposed decisions whose text that diff adds or
 changes. "The decisions cycle received" below means this list; "a row of a decision cycle
-received" means a row under `### 確認すること` of one of them.
+received" means a row under `### 確認すること` of one of them. Section names in this skill are
+given in their Japanese spelling (`### 確認すること`, `## 未決`); an English side of a decision
+document uses the English spelling (`### Confirmations`, `## Open`), as the kotowari skill's
+`references/decision-documents.md` lists.
 
 Optional: round-trip limit (default none: loop until convergence), review strength (the
 person's choice, default `standard`), merge target (the branch the brainstorm or the person

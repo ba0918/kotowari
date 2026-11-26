@@ -1,7 +1,7 @@
 Based on the kotowari specification (revised 2026-11-26; the version of kotowari itself is not pinned)
 
-How to write a decision document: the form check reads, what goes in it and what does not, the
-two states, the rows to confirm and their IDs, the rows confirmed by reading, how a decision is
+How to write a decision document: the form check reads and its keywords in Japanese and English,
+the pair of language sides, what goes in it and what does not, the two states, the rows to confirm and their IDs, the rows confirmed by reading, how a decision is
 rewritten or overturned, the open section, and links. The findings check raises on these
 documents are in findings.md; the key that names their place is `decisions.documents` in
 config.md.
@@ -26,13 +26,19 @@ goes in the problem and the rejected options.
 The documents live under the directory `decisions.documents` names, one topic per file, with a
 directory below it for each group of a project (a crate, a product):
 `docs/decisions/<group>/<topic>.md`. Every `.md` file under that place is read as a topic
-document, so put nothing else there — no glossary, no index, no notes. A tree named `docs/frozen/`
-is not read; it holds documents in the old form only and nothing is added to it.
+document, with two exceptions: the other-language sides of a pair (below), and the glossary of a
+group, `docs/decisions/<group>/CONTEXT.md`. check does not read the glossary as a topic document
+and checks nothing inside it; links to it and its headings are checked like links to any
+document. A `CONTEXT.md` directly in the place, or deeper than a group folder, is a topic document.
+Put nothing else there — no index, no notes. A tree named `docs/frozen/` is not read; it holds
+documents in the old form only and nothing is added to it.
 
 ## The form of a topic document
 
 ```markdown
 # <Title of the topic>
+
+<The switcher line, when `languages` lists two or more tags>
 
 <A paragraph saying what the topic covers, and links to the neighbouring topics.>
 
@@ -62,20 +68,64 @@ is not read; it holds documents in the old form only and nothing is added to it.
 - <What is not decided>. <Who decides it, and when.>
 ```
 
-The strings check matches are Japanese and literal: `状態:`, `提案`, `実装済み`, `問題`,
-`決めたこと`, `確認すること`, `未決` and `（読んで確認）` (full-width parentheses).
+The keywords check matches are literal, and each has a Japanese and an English spelling. check
+accepts either spelling of every keyword in any document; write a document in one language's
+spelling throughout — the language of that side of the pair (below).
+
+| Keyword | Japanese | English |
+|---|---|---|
+| State line | `状態: 提案` / `状態: 実装済み` | `Status: proposed` / `Status: implemented` |
+| Problem | `### 問題` | `### Problem` |
+| What was decided | `### 決めたこと` | `### Decision` |
+| Rejected options | `### 見送った案` | `### Rejected options` |
+| Rows to confirm | `### 確認すること` | `### Confirmations` |
+| Row confirmed by reading | `（読んで確認）` (full-width parentheses) | `(by reading)` |
+| Open section | `## 未決` | `## Open` |
+| A previous decision in the rejected options | `以前の決定:` | `Previous decision:` |
+
+Below, the Japanese spelling stands for both. `state` in `kotowari list` and `query` is
+`proposed` or `implemented` whichever spelling the document uses, and decision_section_missing
+names the missing section in the spelling of the decision's state line.
 
 | Part | How check reads it |
 |---|---|
 | Title | The first `#` heading. A document without one is missing_title |
-| Lead | At least one paragraph between the title and the first decision; without it, topic_lead_missing |
+| Lead | At least one paragraph between the title and the first decision, the switcher line not counted; without it, topic_lead_missing |
 | Decision | Every `##` heading other than `## 未決` starts one decision, up to the next `##` heading |
 | State | The first paragraph under the decision's heading, `状態: 提案` or `状態: 実装済み`; anything else, or no such paragraph, is decision_state_invalid |
 | Sections | `###` headings. `### 問題` and `### 決めたこと` are required (decision_section_missing); `### 見送った案` and `### 確認すること` are not |
 | Rows | Each item of a list under `### 確認すること` is one row; its first word is its ID |
 | Open section | `## 未決`, placed last; each item of a list under it is one open item. It is not a decision |
 
-### Writing one decision
+### Languages: a pair of sides
+
+When the configuration's `languages` lists two or more tags, every decision document is a pair,
+as the IR and the guides are (translations.md): the file without a suffix is the side of the first
+language, `<topic>.<tag>.md` beside it is each other language's side, and `<topic>.i18n.yaml` is
+the agreement record. The first language is one per repository and holds for the decision
+documents, the guides and the overview alike. In kotowari itself it is English: `x.md` is English
+and `x.ja.md` is the Japanese side, which is the side the person reads and approves.
+
+- Each side uses the keywords of its own language: the English side `Status: proposed`,
+  `### Decision`; the Japanese side `状態: 提案`, `### 決めたこと`.
+- Every side has the switcher line as the first non-blank line after the title (translations.md);
+  the topic paragraph is the paragraph after it.
+- check reads the decisions, the row IDs, the marks they are matched with, the fingerprints, the
+  targets of guide marks and the quoted surfaces from the first-language side only. Another side
+  is read only for its headings and links: a link there must point at a document and heading that
+  exist, in its own language (`confirmations.ja.md#<Japanese anchor>`), or it is
+  link_target_missing or link_language_mismatch.
+- The skeleton of the sides must match, or the other side is translation_structure_mismatch: the
+  headings (their levels and order, and which keyword section each `###` is, not their words), the
+  state of each decision, and each row's ID with whether it is confirmed by reading.
+- A missing side is translation_missing; a side changed after the agreement record was written is
+  translation_stale. Change both sides in the same change, then copy each side's `blob` from
+  `kotowari list` into the agreement record (translations.md, **The procedure for keeping a pair
+  aligned**). This includes turning a state.
+- A group's `CONTEXT.md` is paired the same way (sides, switcher line, agreement record), but its
+  content and links are not compared.
+
+## Writing one decision
 
 - The heading is one sentence that says the decision. One heading holds one decision; do not bind
   several into one.
@@ -135,7 +185,7 @@ and the review read it and confirm it; the row's own text says what must be foun
   literally), and the direction decided does not change, correct the sentence as a rewrite of a
   fact, and say so in the pull request body.
 - To overturn a decision, write a new decision. In its rejected options, write the old decision
-  and why it was dropped, starting the item with `以前の決定:` (previous decision). Move the old
+  and why it was dropped, starting the item with `以前の決定:` (`Previous decision:` in English). Move the old
   decision's reasons and rejected options that still mean something into the new one. Then delete
   the old decision's text. The tests that pointed at the old decision's rows are made to point at
   the new rows, or deleted when nothing is left for them to confirm.
@@ -166,11 +216,15 @@ link_target_missing. When a heading's words change, fix every link to it in the 
 
 A definition used by several decisions is written inside the decision that settled it, and the
 others link to it; there is no section for definitions only. The meaning of a term goes in the
-project's glossary.
+project's glossary (`CONTEXT.md` of the group).
+
+In a pair, each side links to the headings of the same language: the English side to
+`confirmations.md#<English anchor>`, the Japanese side to `confirmations.ja.md#<Japanese anchor>`.
 
 ## Guides and surfaces
 
-A guide mark points at a decision by `<path of the document>#<anchor of its heading>`, and its
+A guide mark points at a decision by `<path of the document>#<anchor of its heading>`, the path and
+heading of the first-language side as written, and its
 fingerprint covers only "what was decided" and "rows to confirm"; `kotowari list` lists each
 decision as kind `decision` with that target as `id` and its `fingerprint` (guides.md). A
 surface counts as specified when its name is the whole content of a pair of double quotes or

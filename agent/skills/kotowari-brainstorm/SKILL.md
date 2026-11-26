@@ -28,8 +28,10 @@ time, handed to kotowari-cycle.
 
 Read the kotowari skill's scene decide (`references/decision-documents.md`) before writing a
 decision document: the form check reads, the states, the rows to confirm and their IDs, the open
-section and links are defined there, not here. Before approval, read its scene check
-(`references/findings.md`).
+section, links and the pair of language sides are defined there, not here. Section names and
+keywords in this skill are given in their Japanese spelling; an English side writes the English
+spelling of the same keyword (that reference's table of keywords). Before approval, read its scene
+check (`references/findings.md`).
 
 ## Before the first round
 
@@ -114,6 +116,11 @@ kotowari skill's `references/decision-documents.md`, with the state `提案` (pr
 record per brainstorm and do not write the `IR`: the topic documents are the only place the
 decisions go, and a resume reads them back from the working tree.
 
+When `languages` lists two or more tags, each topic document is a pair: write every side in the
+same change, each in its own language and keywords, with the same headings, states and row IDs,
+and bring the agreement record up to date before approval (that reference's **Languages: a pair of
+sides**). The person approves the side in the language they read; the other sides say the same.
+
 - **Only what a person decided.** A decision document holds the person's decisions. A detail the
   implementer can decide with its grounds (a limit, an order, the wording of a message nobody
   specified) is not written; it is decided during implementation and explained in the commit and
@@ -169,7 +176,7 @@ back to the dialogue.
       approval: go back to the rounds. When it cannot be judged without the real thing, decide when
       and by looking at what it will be judged, and write that under `## 未決` of the topic.
    3. Stage the decision documents. Show the person the diff of the decision documents (this is
-      what they read and approve), the list of decisions to build, the check output (the count of
+      what they read and approve; with pairs, the diff of the side in the language they read), the list of decisions to build, the check output (the count of
       test-side findings), and the paths approved with a content identifier for each — never a
       summary as the thing approved. The person commits the staged files or says they may be
       committed, on a new branch named for the topic, which the brainstorm cuts in the main working
