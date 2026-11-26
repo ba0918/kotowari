@@ -781,9 +781,10 @@ fn read_decision_block(
         reason = "markdown::mdast::Node is a foreign enum: blocks other than headings, paragraphs and lists carry nothing a decision is read from"
     )]
     match node {
-        Node::Heading(heading) => {
+        // 節を始めるのは "###" の見出しだけ。"####" より深い見出しは、形の語の名前でも今の節の中にある
+        Node::Heading(heading) if heading.depth == 3 => {
             let section = Section::of(&node.to_string());
-            if heading.depth == 3 && section.is_none() {
+            if section.is_none() {
                 misplaced(path, node, lines, skipped);
             }
             building.sections.extend(section);

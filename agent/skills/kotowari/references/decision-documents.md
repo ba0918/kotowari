@@ -93,7 +93,7 @@ names the missing section in the spelling of the decision's state line.
 | Lead | At least one paragraph between the title and the first decision, the switcher line not counted; without it, topic_lead_missing. More paragraphs, lists and tables there are part of the lead; a `###` or deeper heading there is unknown_heading |
 | Decision | Every `##` heading other than `## 未決` starts one decision, up to the next `##` heading |
 | State | The first paragraph under the decision's heading, `状態: 提案` or `状態: 実装済み`; anything else, or no such paragraph, is decision_state_invalid. Any other block before the first `###` section is unknown_line (a heading, unknown_heading); only a link reference definition may stand there |
-| Sections | `###` headings. `### 問題` and `### 決めたこと` are required (decision_section_missing); `### 見送った案` and `### 確認すること` are not; a `###` heading with any other name is unknown_heading |
+| Sections | `###` headings. `### 問題` and `### 決めたこと` are required (decision_section_missing); `### 見送った案` and `### 確認すること` are not; a `###` heading with any other name is unknown_heading. `####` and deeper headings inside a section belong to it, even when named like a section |
 | Rows | Each item of a list under `### 確認すること` is one row; its first word is its ID |
 | Open section | `## 未決`, placed last; each item of a list under it is one open item. Any other block under it (a paragraph, a heading) is unknown_line or unknown_heading, so write every open question as a list item. It is not a decision |
 | Code blocks | A fenced code block never closed swallows what follows it: unclosed_code_block at its opening line |

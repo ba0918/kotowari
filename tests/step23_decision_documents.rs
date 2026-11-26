@@ -2269,3 +2269,65 @@ fn paragraphs_lists_and_tables_before_the_first_decision_are_part_of_the_lead() 
     marked_test(tmp.path(), "tests/greet.rs", &["C-greet-1"]);
     assert_eq!(findings(&check(tmp.path())), vec![]);
 }
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn rows_after_a_deeper_heading_inside_the_confirmations_are_still_rows() {
+    for english in [false, true] {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        let text = if english {
+            "# Greetings\n\nDecides how to greet.\n\n## Greet\n\nStatus: proposed\n\n\
+             ### Problem\n\nTrouble.\n\n### Decision\n\nDo this.\n\n### Confirmations\n\n\
+             - C-greet-1 First\n\n#### Detail\n\n- C-greet-2 Second\n"
+                .to_string()
+        } else {
+            topic(&[decision(
+                "挨拶する",
+                "提案",
+                &[
+                    ("問題", "困っていた。"),
+                    ("決めたこと", "こうする。"),
+                    (
+                        "確認すること",
+                        "- C-greet-1 一つ目\n\n#### 細目\n\n- C-greet-2 二つ目",
+                    ),
+                ],
+            )])
+        };
+        write(tmp.path(), "docs/decisions/greet.md", &text);
+        let value = check(tmp.path());
+        assert_eq!(findings(&value), vec![], "english={english}");
+        assert_eq!(value["decisions"]["confirmations"], 2, "english={english}");
+    }
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_section_name_on_a_deeper_heading_is_not_that_section() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[decision(
+            "挨拶する",
+            "提案",
+            &[(
+                "決めたこと",
+                "こうする。\n\n#### 問題\n\n困っていた。\n\n#### Confirmations\n\n- C-greet-1 出る",
+            )],
+        )]),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![finding(
+            "decision_section_missing",
+            "docs/decisions/greet.md",
+            5,
+            "問題"
+        )]
+    );
+    assert_eq!(value["decisions"]["confirmations"], 0);
+}
