@@ -10,7 +10,7 @@ const ENGLISH: [(&str, &str); 17] = [
     ("stale_sections", "{n} sections to review"),
     ("open_items", "{n} open"),
     ("planned_items", "{n} planned"),
-    ("stale_mark", "Not reviewed since the IR changed"),
+    ("stale_mark", "Not reviewed since the decisions changed"),
     ("outline_stale", "not reviewed"),
     ("superseded", "(superseded)"),
     ("deferred", "(deferred)"),

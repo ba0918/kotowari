@@ -110,7 +110,7 @@ UI の文字は、全体像のページと切り替えの行に kotowari が書�
 | `stale_sections` | 一覧の古い節の数 | はい | `{n} sections to review` |
 | `open_items` | 一覧の札が `open` の項目の数 | はい | `{n} open` |
 | `planned_items` | 一覧の札が `planned` の項目の数 | はい | `{n} planned` |
-| `stale_mark` | 古い節の見出しの近くの印 | いいえ | `Not reviewed since the IR changed` |
+| `stale_mark` | 古い節の見出しの近くの印 | いいえ | `Not reviewed since the decisions changed` |
 | `outline_stale` | アウトラインの古い節の印 | いいえ | `not reviewed` |
 | `superseded` | 置き換え済みの参照の印 | いいえ | `(superseded)` |
 | `deferred` | 後回しの参照の印 | いいえ | `(deferred)` |

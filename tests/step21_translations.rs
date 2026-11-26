@@ -17,7 +17,7 @@ const JAPANESE: [(&str, &str); 17] = [
     ("stale_sections", "見直していない節 {n}"),
     ("open_items", "未決 {n}"),
     ("planned_items", "予定 {n}"),
-    ("stale_mark", "IR が変わった後、まだ見直していない節"),
+    ("stale_mark", "決定が変わった後、まだ見直していない節"),
     ("outline_stale", "見直していない"),
     ("superseded", "（置き換え済み）"),
     ("deferred", "（後回し）"),

@@ -115,7 +115,7 @@ Even a project that does not use overviews needs `labels` for non-English langua
 | `stale_sections` | The number of stale sections in the listing | Yes | `{n} sections to review` |
 | `open_items` | The number of items with the `open` tag in the listing | Yes | `{n} open` |
 | `planned_items` | The number of items with the `planned` tag in the listing | Yes | `{n} planned` |
-| `stale_mark` | The marker near the heading of a stale section | No | `Not reviewed since the IR changed` |
+| `stale_mark` | The marker near the heading of a stale section | No | `Not reviewed since the decisions changed` |
 | `outline_stale` | The marker of a stale section in the outline | No | `not reviewed` |
 | `superseded` | The marker of a superseded reference | No | `(superseded)` |
 | `deferred` | The marker of a deferred reference | No | `(deferred)` |

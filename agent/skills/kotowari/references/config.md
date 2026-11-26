@@ -34,7 +34,7 @@ The UI text is the text the overview pages write themselves. English is the tabl
 | stale_sections | The number of stale sections on the index | Yes | {n} sections to review |
 | open_items | The number of items with status open on the index | Yes | {n} open |
 | planned_items | The number of items with status planned on the index | Yes | {n} planned |
-| stale_mark | The mark near a stale section's heading | No | Not reviewed since the IR changed |
+| stale_mark | The mark near a stale section's heading | No | Not reviewed since the decisions changed |
 | outline_stale | The mark on a stale section in the outline | No | not reviewed |
 | superseded | The mark on a superseded reference | No | (superseded) |
 | deferred | The mark on a deferred reference | No | (deferred) |

@@ -25,7 +25,11 @@ pub const KEYS: &[Key] = &[
     key("stale_sections", true, "{n} sections to review"),
     key("open_items", true, "{n} open"),
     key("planned_items", true, "{n} planned"),
-    key("stale_mark", false, "Not reviewed since the IR changed"),
+    key(
+        "stale_mark",
+        false,
+        "Not reviewed since the decisions changed",
+    ),
     key("outline_stale", false, "not reviewed"),
     key("superseded", false, "(superseded)"),
     key("deferred", false, "(deferred)"),

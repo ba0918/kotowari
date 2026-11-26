@@ -43,7 +43,7 @@ labels:
     stale_sections: "見直す節 {n}"
     open_items: "未決 {n}"
     planned_items: "予定 {n}"
-    stale_mark: IR が変わってから見直していない
+    stale_mark: 決定が変わってから見直していない
     outline_stale: 未見直し
     superseded: （置き換え済み）
     deferred: （後回し）
