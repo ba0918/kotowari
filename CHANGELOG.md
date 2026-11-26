@@ -40,6 +40,7 @@ The skills in `agent/skills/` ship under the same tags as kotowari, so changes t
 - missing_title on a decision document carries the file name without its directory as its detail; it was empty.
 - `kotowari plan` reports a fenced code block that is never closed in a plan as one more `invalid_plan` finding at its opening line (detail `unclosed_codeblock: ...`), beside the finding it already gave for the code block.
 - In overview data, a block quote, an HTML block other than HTML comments, or a thematic break between the title and the first `## ` heading is now an `overview_form_invalid` finding (detail `undeclared_line`); it used to pass silently, although only parts and HTML comments belong there. A fenced code block never closed anywhere in overview data is an `overview_form_invalid` finding too (detail `unclosed_codeblock`).
+- `kotowari-adopt` writes one topic into its decision document instead of the IR and a per-adoption decision record: the behavior the person ratifies becomes implemented decisions whose problem says they were taken as the specification without review, a legacy statement the person will build becomes a proposed decision, and each disagreement, unreadable row or removed candidate becomes an item under the topic's open section (one that concerns an existing decision links to it, which is never rewritten or deleted). One list row is a candidate for one decision, terms are no longer sorted, and the request text after approval asks to review the grounds tests and write tests per confirmation row.
 
 ## [0.7.0] - 2026-11-25
 
