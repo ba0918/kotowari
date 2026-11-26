@@ -460,10 +460,6 @@ fn map_findings(
     reading: &Reading,
     grouped: &[Grouped<'_>],
 ) -> Result<Vec<Mapped>, StopReason> {
-    let missing_title = reading
-        .findings
-        .iter()
-        .any(|engine| engine.kind == EngineKind::MissingTitle);
     // 閉じないコードブロックは unclosed_code_block だけにする。置き場所の無いブロックとしても数えない
     let unclosed: BTreeSet<usize> = reading
         .findings
@@ -478,7 +474,7 @@ fn map_findings(
         {
             continue;
         }
-        if let Some(finding) = map_one(path, reading, grouped, missing_title, engine)? {
+        if let Some(finding) = map_one(path, reading, grouped, engine)? {
             mapped.push(finding);
         }
     }
@@ -527,7 +523,6 @@ fn map_one(
     path: &str,
     reading: &Reading,
     grouped: &[Grouped<'_>],
-    missing_title: bool,
     engine: &EngineFinding,
 ) -> Result<Option<Mapped>, StopReason> {
     let at = |kind: FindingKind, line: Option<usize>, detail: String, every_side: bool| {
@@ -573,17 +568,17 @@ fn map_one(
         (EngineKind::UndeclaredLine, _) => at(FindingKind::UnknownLine, engine.line, raw(), true),
         // 状態の行の場所の2つ目からの段落。段落ごとの unknown_line を抽出した行から出している
         (EngineKind::RepeatMaxExceeded, Some(RuleKind::Statement)) if decision().is_some() => None,
-        // 話題の段落が無い。題名も無ければ missing_title だけにする
+        // 話題の段落が無い。題名も無ければ missing_title だけにする（題名の値と missing_title は、
+        // エンジンがどちらも文書の最初の "#" の見出しから作る）
         (EngineKind::RepeatMinNotMet, Some(RuleKind::Statement)) if engine.line.is_none() => {
-            match &reading.values.title {
-                Some(title) if !missing_title => at(
+            reading.values.title.as_ref().and_then(|title| {
+                at(
                     FindingKind::TopicLeadMissing,
                     Some(title.line),
                     title.text.clone(),
                     false,
-                ),
-                Some(_) | None => None,
-            }
+                )
+            })
         }
         (EngineKind::RepeatMinNotMet, Some(RuleKind::Statement)) => at(
             FindingKind::DecisionStateInvalid,
@@ -1636,7 +1631,7 @@ mod tests {
             raw: None,
             rule_kind: None,
         };
-        let stop = map_one("x.md", &reading, &grouped, false, &engine).err();
+        let stop = map_one("x.md", &reading, &grouped, &engine).err();
         assert_eq!(
             stop.map(|stop| stop.to_string()),
             Some(
@@ -1658,7 +1653,7 @@ mod tests {
             raw: None,
             rule_kind: Some(RuleKind::Statement),
         };
-        let stop = map_one("x.md", &reading, &grouped, false, &engine)
+        let stop = map_one("x.md", &reading, &grouped, &engine)
             .err()
             .map(|stop| stop.to_string())
             .unwrap_or_default();
@@ -1677,7 +1672,7 @@ mod tests {
             raw: None,
             rule_kind: Some(RuleKind::Item),
         };
-        let stop = map_one("x.md", &reading, &grouped, false, &engine)
+        let stop = map_one("x.md", &reading, &grouped, &engine)
             .err()
             .map(|stop| stop.to_string())
             .unwrap_or_default();
