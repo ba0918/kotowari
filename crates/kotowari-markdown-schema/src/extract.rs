@@ -3,7 +3,7 @@
 use crate::document::{Block, Document, Item as DocItem, LineSpan, RawLine, Section as DocSection};
 use crate::schema::{
     Bullets, Children, CodeBlock, Extract, Field, OfKind, Schema, Statement, Table,
-    is_declared_field, item_internals_declare_extract, select_section,
+    is_declared_field, item_internals_declare_extract, select_item, select_section,
 };
 use serde_json::{Map, Value};
 
@@ -33,11 +33,11 @@ pub fn extract_values(schema: &Schema, document: &Document) -> Value {
     for index in 0..schema.document.sections.len() {
         extract_section(&schema.document.sections, index, document, &mut root);
     }
-    if let Some(item) = &schema.document.item {
+    if !schema.document.items.is_empty() {
         // 文書の直下の項目（REQ-schema-061）
         let items = document.preamble_items();
         let items: Vec<&DocItem> = items.iter().collect();
-        extract_items(item, &items, document, &mut root);
+        extract_item_rules(&schema.document.items, &items, document, &mut root);
     }
     Value::Object(root)
 }
@@ -136,9 +136,24 @@ fn extract_section(
     extract_table(def.table.as_ref(), &groups, document, root);
     extract_codeblock(def.codeblock.as_ref(), &blocks, document, root);
 
-    if let Some(item) = &def.item {
-        let items: Vec<&DocItem> = occurrences.iter().flat_map(|s| s.items.iter()).collect();
-        extract_items(item, &items, document, root);
+    let items: Vec<&DocItem> = occurrences.iter().flat_map(|s| s.items.iter()).collect();
+    extract_item_rules(&def.items, &items, document, root);
+}
+
+/// 項目の規則ごとに、その規則が選んだ項目を抽出する。選び方は検査と同じ。
+fn extract_item_rules(
+    rules: &[crate::schema::Item],
+    items: &[&DocItem],
+    document: &Document,
+    root: &mut Map<String, Value>,
+) {
+    for (index, rule) in rules.iter().enumerate() {
+        let selected: Vec<&DocItem> = items
+            .iter()
+            .copied()
+            .filter(|item| select_item(rules, &item.text) == Some(index))
+            .collect();
+        extract_items(rule, &selected, document, root);
     }
 }
 
@@ -692,10 +707,16 @@ fn item_object(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) 
     extract_codeblock(item_rule.codeblock.as_ref(), &blocks, doc, &mut object);
     if let Some(extract) = &item_rule.extract {
         // path は項目オブジェクトそのものの置き場なので、ここでは置かない
+        // ID の規則の項目は ":" の前を ID、後を名前にし、名前と正規表現の規則の項目は
+        // 見出しの全体を名前にして ID を持たない
+        let (id, name) = match item_rule.selector() {
+            None => (Some(item.id.clone()), item.title.clone()),
+            Some(_) => (None, item.text.clone()),
+        };
         let got = Derived {
             line: Some(item.line),
-            id: Some(item.id.clone()),
-            name: Some(item.title.clone()),
+            id,
+            name: Some(name),
             end: Some(doc.end_line(item.line, 3)),
         };
         if let Some(key) = extract.value() {
@@ -716,7 +737,9 @@ fn item_value(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) -
 
 /// 項目の要素の値。見出しと本文をつないだ文字列（TBL-schema-008）。
 fn item_value_text(item: &DocItem, item_rule: &crate::schema::Item, doc: &Document) -> String {
-    let heading = if item.title.is_empty() {
+    let heading = if item_rule.selector().is_some() {
+        item.text.clone()
+    } else if item.title.is_empty() {
         item.id.clone()
     } else {
         format!("{}: {}", item.id, item.title)

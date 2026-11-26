@@ -4,7 +4,7 @@ use crate::document::{Block, Document, Heading, Item};
 use crate::finding::{Finding, FindingKind, RuleKind};
 use crate::schema::{
     Bullets, Children, CodeBlock, Field, Item as ItemRule, Preamble, Repeat, Schema, Section,
-    Statement, Subheading, Table, Title, When, is_declared_field, select_section,
+    Statement, Subheading, Table, Title, When, is_declared_field, select_item, select_section,
 };
 use std::collections::HashMap;
 
@@ -59,7 +59,7 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
                     &mut findings,
                 );
                 validate_items(
-                    def.item.as_ref(),
+                    &def.items,
                     &section.items,
                     Some(section.line),
                     &mut findings,
@@ -77,7 +77,7 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
                         push_undeclared_line(&mut findings, block);
                     }
                     for item in &section.items {
-                        push_undeclared_item(&mut findings, item.line, &item.id, &item.blocks);
+                        push_undeclared_item(&mut findings, item.line, &item.text, &item.blocks);
                     }
                 } else {
                     // 開いた世界でも、深さ4以上の見出しは宣言していない構造の内側で指摘にする
@@ -112,11 +112,11 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
     // 中の未宣言の構造として open でも undeclared_heading、その内側の行は
     // undeclared_line にする（REQ-schema-003）。前置部が未宣言のときは閉じた世界だけで
     // 同じ扱いになり、open では未宣言の構造ごと許す。
-    if doc_rule.item.is_some() {
+    if !doc_rule.items.is_empty() {
         // 文書の直下の項目を宣言したスキーマでは、最初の節より前の深さ3の見出しを
         // その項目として読む（REQ-schema-061）。含む節が無いので欠落の指摘は行を持たない
         validate_items(
-            doc_rule.item.as_ref(),
+            &doc_rule.items,
             &document.preamble_items(),
             None,
             &mut findings,
@@ -125,7 +125,7 @@ pub fn validate(schema: &Schema, document: &Document, open: bool) -> Vec<Finding
     for stray in document
         .stray_preamble_headings
         .iter()
-        .filter(|_| doc_rule.item.is_none())
+        .filter(|_| doc_rule.items.is_empty())
     {
         let in_declared_preamble = !stray.before_title && doc_rule.preamble.is_some();
         if in_declared_preamble || !open {
@@ -183,38 +183,23 @@ fn validate_title(title: &Title, headings: &[Heading], findings: &mut Vec<Findin
 }
 
 fn validate_items(
-    item_rule: Option<&ItemRule>,
+    item_rules: &[ItemRule],
     items: &[Item],
     container_line: Option<usize>,
     findings: &mut Vec<Finding>,
 ) {
-    let Some(item_rule) = item_rule else {
-        // 宣言済みの節の中に足された未宣言の項目。open でも見出しと内側の行を誤りにする（REQ-schema-003、REQ-schema-027）
-        for item in items {
-            push_undeclared_item(findings, item.line, &item.id, &item.blocks);
-        }
-        return;
-    };
-
+    // 項目の見出しは、宣言した順で最初に選ぶ規則のものになる。どの規則も選ばない見出しは、
+    // open でも見出しと内側の行を誤りにする（REQ-schema-003、REQ-schema-027）
+    let mut item_lines: Vec<Vec<usize>> = vec![Vec::new(); item_rules.len()];
     for item in items {
-        if !item.has_id_separator {
-            findings.push(Finding::at(
-                FindingKind::InvalidId,
-                item.line,
-                format!("item heading \"{}\" has no \":\" separator", item.id),
-            ));
-        } else if let Some(id_pattern) = &item_rule.id
-            && !id_pattern.is_match(&item.id)
-        {
-            findings.push(Finding::at(
-                FindingKind::InvalidId,
-                item.line,
-                format!(
-                    "item id \"{}\" does not match pattern \"{}\"",
-                    item.id,
-                    id_pattern.source()
-                ),
-            ));
+        let Some(index) = select_item(item_rules, &item.text) else {
+            push_undeclared_item(findings, item.line, &item.text, &item.blocks);
+            continue;
+        };
+        item_lines[index].push(item.line);
+        let item_rule = &item_rules[index];
+        if item_rule.selector().is_none() {
+            validate_item_id(item_rule, item, findings);
         }
         let rules = ContainerRules::for_item(item_rule);
         validate_container(
@@ -226,21 +211,46 @@ fn validate_items(
         );
     }
 
-    // 項目は宣言上の名前を持たないので、指摘にノードの名前を付けない（REQ-schema-008）
-    let lines: Vec<usize> = items.iter().map(|item| item.line).collect();
-    check_occurrence(
-        &Occurrence {
-            lines: &lines,
-            name: None,
-            what: "item".to_string(),
-            container_line,
-            rule_kind: RuleKind::Item,
-        },
-        bounds(item_rule.required, item_rule.repeat.as_ref()),
-        true,
-        FindingKind::MissingRequiredSection,
-        findings,
-    );
+    for (item_rule, lines) in item_rules.iter().zip(&item_lines) {
+        // 名前の一覧の規則だけが、指摘にノードの名前（一覧の最初の名前）を付ける
+        let selector = item_rule.selector();
+        check_occurrence(
+            &Occurrence {
+                lines,
+                name: selector.and_then(|s| s.node_name()),
+                what: selector.map_or_else(|| "item".to_string(), |s| s.describe("item")),
+                container_line,
+                rule_kind: RuleKind::Item,
+            },
+            bounds(item_rule.required, item_rule.repeat.as_ref()),
+            true,
+            FindingKind::MissingRequiredSection,
+            findings,
+        );
+    }
+}
+
+/// ID の規則が選んだ見出しを、":" の前の ID と後の名前の形に照らす（TBL-schema-006）。
+fn validate_item_id(item_rule: &ItemRule, item: &Item, findings: &mut Vec<Finding>) {
+    if !item.has_id_separator {
+        findings.push(Finding::at(
+            FindingKind::InvalidId,
+            item.line,
+            format!("item heading \"{}\" has no \":\" separator", item.id),
+        ));
+    } else if let Some(id_pattern) = &item_rule.id
+        && !id_pattern.is_match(&item.id)
+    {
+        findings.push(Finding::at(
+            FindingKind::InvalidId,
+            item.line,
+            format!(
+                "item id \"{}\" does not match pattern \"{}\"",
+                item.id,
+                id_pattern.source()
+            ),
+        ));
+    }
 }
 
 /// 宣言の無い項目の見出しと、その内側の行をすべて誤りにする（REQ-schema-001、REQ-schema-003）

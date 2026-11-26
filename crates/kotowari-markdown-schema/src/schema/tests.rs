@@ -45,8 +45,8 @@ document:
       codeblock:
         lang: gherkin
         lines: ["^@", "^Scenario:"]
-      item:
-        id: "REQ-\\d{3,}"
+      items:
+      - id: "REQ-\\d{3,}"
         repeat: { min: 0, max: 5 }
         fields:
           - name: 種類
@@ -74,7 +74,7 @@ fn loads_a_schema_with_all_rule_kinds() {
     );
     assert!(section.table.is_some());
     assert!(section.codeblock.is_some());
-    let item = section.item.as_ref().unwrap();
+    let item = &section.items[0];
     assert_eq!(item.id.as_ref().map(|p| p.source()), Some("REQ-\\d{3,}"));
     assert_eq!(item.repeat.as_ref().unwrap().max, Some(5));
     assert_eq!(
@@ -203,7 +203,7 @@ fn invalid_regex_pattern_is_an_error() {
 // @kotowari[REQ-schema-016, REQ-schema-025, C-schema-lang-4]
 #[test]
 fn invalid_item_id_regex_is_an_error() {
-    let yaml = "document:\n  sections:\n    - name: x\n      item:\n        id: \"(\"\n";
+    let yaml = "document:\n  sections:\n    - name: x\n      items:\n      - id: \"(\"\n";
     assert_rejected(yaml, "regex parse error");
 }
 
@@ -231,7 +231,7 @@ fn capture_extract_outside_title_is_schema_invalid() {
         ),
         (
             "item",
-            "document:\n  sections:\n    - name: 要求\n      item:\n        extract: { path: item, group: x }\n",
+            "document:\n  sections:\n    - name: 要求\n      items:\n      - extract: { path: item, group: x }\n",
         ),
         (
             "table",
@@ -283,8 +283,8 @@ fn item_internal_extract_without_item_extract_is_schema_invalid() {
 document:
   sections:
     - name: 要求
-      item:
-        fields:
+      items:
+      - fields:
           - name: 種類
             extract: kind
 "#;
@@ -303,8 +303,8 @@ fn item_child_field_extract_without_item_extract_is_schema_invalid() {
 document:
   sections:
     - name: 要求
-      item:
-        bullets:
+      items:
+      - bullets:
           repeat: { min: 0 }
           children:
             fields:
@@ -327,8 +327,8 @@ fn item_deep_child_field_extract_without_item_extract_is_schema_invalid() {
 document:
   sections:
     - name: 要求
-      item:
-        bullets:
+      items:
+      - bullets:
           repeat: { min: 0 }
           children:
             bullets:
@@ -419,18 +419,15 @@ fn item_bullets_can_have_children() {
 document:
   sections:
     - name: 要求
-      item:
-        bullets:
+      items:
+      - bullets:
           repeat: { min: 0 }
           children:
             fields:
               - name: superseded_by
 "#;
     let schema = parse_schema(yaml).unwrap();
-    let bullets = schema.document.sections[0]
-        .item
-        .as_ref()
-        .unwrap()
+    let bullets = schema.document.sections[0].items[0]
         .bullets
         .as_ref()
         .unwrap();
@@ -512,8 +509,8 @@ fn item_table_extract_without_item_extract_is_rejected() {
 document:
   sections:
     - name: 決定表
-      item:
-        table:
+      items:
+      - table:
           header: [用語, 意味]
           extract: glossary
 "#;
@@ -531,8 +528,8 @@ fn item_codeblock_extract_without_item_extract_is_rejected() {
 document:
   sections:
     - name: 具体例
-      item:
-        codeblock:
+      items:
+      - codeblock:
           lang: gherkin
           extract: scenarios
 "#;
@@ -550,8 +547,8 @@ fn repeat_with_equal_min_and_max_is_accepted() {
 document:
   sections:
     - name: 決定表
-      item:
-        table:
+      items:
+      - table:
           repeat: { min: 1, max: 1 }
 "#;
     assert!(
@@ -567,8 +564,8 @@ fn item_table_invalid_repeat_is_rejected() {
 document:
   sections:
     - name: 決定表
-      item:
-        table:
+      items:
+      - table:
           header: [用語, 意味]
           repeat: { min: 2, max: 1 }
 "#;
@@ -583,8 +580,8 @@ fn item_codeblock_invalid_repeat_is_rejected() {
 document:
   sections:
     - name: 具体例
-      item:
-        codeblock:
+      items:
+      - codeblock:
           lang: gherkin
           repeat: { min: 2, max: 1 }
 "#;
@@ -629,8 +626,8 @@ fn item_internal_extract_with_item_extract_loads() {
 document:
   sections:
     - name: 要求
-      item:
-        extract:
+      items:
+      - extract:
           path: requirements
           of: { id: id }
         fields:
@@ -716,8 +713,8 @@ fn duplicate_key_between_an_inner_node_and_a_derived_value_is_schema_invalid() {
 document:
   sections:
     - name: 要求
-      item:
-        extract: { path: requirements, of: { line: line } }
+      items:
+      - extract: { path: requirements, of: { line: line } }
         fields:
           - name: 状態
             extract: line

@@ -10,8 +10,8 @@ document:
       extract: scope
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d{3,}"
+      items:
+      - id: "REQ-\\d{3,}"
         repeat:
           min: 0
         ordered: true
@@ -27,8 +27,8 @@ document:
         statement:
           required: false
     - name: 決定表
-      item:
-        id: "TBL-\\d{3,}"
+      items:
+      - id: "TBL-\\d{3,}"
         repeat:
           min: 0
         fields:
@@ -37,8 +37,8 @@ document:
         statement:
           required: false
     - name: 性質
-      item:
-        id: "PROP-\\d{3,}"
+      items:
+      - id: "PROP-\\d{3,}"
         repeat:
           min: 0
         fields:

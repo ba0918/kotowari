@@ -132,8 +132,10 @@ pub struct Document {
     pub preamble: Option<Preamble>,
     #[serde(default)]
     pub sections: Vec<Section>,
-    /// 節を挟まずに文書の直下に置く項目（REQ-schema-016、REQ-schema-061）
-    pub item: Option<Item>,
+    /// 節を挟まずに文書の直下に置く項目の規則の一覧（REQ-schema-016、REQ-schema-061）。
+    /// 空なら宣言していない
+    #[serde(default)]
+    pub items: Vec<Item>,
 }
 
 /// 題名（TBL-schema-004、REQ-schema-022）。
@@ -248,6 +250,26 @@ impl Section {
     }
 }
 
+impl Item {
+    /// 見出しを選ぶ手段。"name" も "pattern" も持たない ID の規則は None で、ほかの規則が
+    /// 選ばなかった見出しをすべて選ぶ
+    pub(crate) fn selector(&self) -> Option<Selector<'_>> {
+        match (&self.name, &self.pattern) {
+            (Some(names), _) => Some(Selector::Names(names)),
+            (None, Some(pattern)) => Some(Selector::Pattern(pattern)),
+            (None, None) => None,
+        }
+    }
+}
+
+/// 見出しの文字を、宣言した順で最初に選ぶ項目の規則の位置。
+pub(crate) fn select_item(rules: &[Item], text: &str) -> Option<usize> {
+    rules.iter().position(|rule| {
+        rule.selector()
+            .is_none_or(|selector| selector.selects(text))
+    })
+}
+
 /// 見出しの文字を、宣言した順で最初に選ぶ節の規則の位置。
 pub(crate) fn select_section(rules: &[Section], text: &str) -> Option<usize> {
     rules.iter().position(|rule| rule.selector().selects(text))
@@ -274,7 +296,9 @@ pub struct Section {
     pub codeblock: Option<CodeBlock>,
     /// 深さ4以上の見出しの規則
     pub subheading: Option<Subheading>,
-    pub item: Option<Item>,
+    /// 項目の規則の一覧。空なら項目を宣言していない
+    #[serde(default)]
+    pub items: Vec<Item>,
     pub extract: Option<Extract>,
     /// 規則の無い種類のブロックを、その中身ごと受ける（ノードの "open: true"）
     #[serde(default)]
@@ -285,7 +309,11 @@ pub struct Section {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Item {
-    /// 見出しの ID 部分の正規表現
+    /// 見出しの文字と等しいかで選ぶ名前の一覧
+    pub name: Option<Names>,
+    /// 見出しの文字の中を探して選ぶ正規表現
+    pub pattern: Option<Pattern>,
+    /// ID の規則（"name" も "pattern" も持たない規則）の、見出しの ID 部分の正規表現
     pub id: Option<Pattern>,
     #[serde(default)]
     pub fields: Vec<Field>,

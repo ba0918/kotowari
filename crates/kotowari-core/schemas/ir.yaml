@@ -22,8 +22,8 @@ document:
   sections:
     - name: Requirements
       repeat: { min: 0 }
-      item:
-        id: "^REQ-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
+      items:
+      - id: "^REQ-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
         repeat: { min: 0 }
         extract:
           path: requirements
@@ -69,8 +69,8 @@ document:
             of: { line: line, raw: raw }
     - name: Decision tables
       repeat: { min: 0 }
-      item:
-        id: "^TBL-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
+      items:
+      - id: "^TBL-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
         repeat: { min: 0 }
         extract:
           path: tables
@@ -93,8 +93,8 @@ document:
             of: { line: line, raw: raw }
     - name: Properties
       repeat: { min: 0 }
-      item:
-        id: "^PROP-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
+      items:
+      - id: "^PROP-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
         repeat: { min: 0 }
         extract:
           path: properties

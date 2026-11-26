@@ -22,7 +22,7 @@ fn lines_of(findings: &[Finding], kind: FindingKind) -> Vec<usize> {
 const FREE_ITEM_DOC: &str = "## 節\n\n### A-1: 名前\n\n段落。\n\n1. 順序\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n```\ncode\n```\n\n> 引用\n";
 
 fn item_schema(open: &str) -> String {
-    format!("document:\n  sections:\n    - name: 節\n      item:\n        id: \"^A-\"\n{open}")
+    format!("document:\n  sections:\n    - name: 節\n      items:\n      - id: \"^A-\"\n{open}")
 }
 
 // @kotowari[C-schema-lang-20]

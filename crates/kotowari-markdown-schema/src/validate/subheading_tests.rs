@@ -20,7 +20,7 @@ fn lines_of(findings: &[Finding], kind: FindingKind) -> Vec<usize> {
 
 fn item_schema(extra: &str) -> String {
     format!(
-        "document:\n  sections:\n    - name: 節\n      item:\n        id: \"^A-\"\n        bullets:\n          repeat: {{ min: 0 }}\n{extra}"
+        "document:\n  sections:\n    - name: 節\n      items:\n      - id: \"^A-\"\n        bullets:\n          repeat: {{ min: 0 }}\n{extra}"
     )
 }
 

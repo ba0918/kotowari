@@ -53,6 +53,7 @@ impl Document {
             .map(|stray| {
                 let (id, title, has_id_separator) = split_item_heading(&stray.heading.text);
                 Item {
+                    text: stray.heading.text.clone(),
                     id,
                     title,
                     has_id_separator,
@@ -136,6 +137,8 @@ pub struct Section {
 
 #[derive(Debug, Clone)]
 pub struct Item {
+    /// 見出しの文字の全体。名前と正規表現の規則はこれで選ぶ
+    pub text: String,
     /// 見出しの ID 部分（先頭から `:` の直前まで）
     pub id: String,
     /// 見出しの ID より後
@@ -300,6 +303,7 @@ impl TreeBuilder {
                     let section = &mut doc.sections[sec_idx];
                     let (id, title, has_id_separator) = split_item_heading(&text);
                     section.items.push(Item {
+                        text: text.clone(),
                         id,
                         title,
                         has_id_separator,

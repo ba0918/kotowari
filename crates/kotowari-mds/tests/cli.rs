@@ -342,7 +342,7 @@ fn check_item_child_field_extract_stops_with_schema_invalid() {
     write_file(
         dir.path(),
         "schema.yaml",
-        "document:\n  title:\n    pattern: \"^T-\\\\d+:\"\n  sections:\n    - name: 要求\n      item:\n        bullets:\n          repeat: { min: 0 }\n          children:\n            fields:\n              - name: superseded_by\n                extract: superseded_by\n",
+        "document:\n  title:\n    pattern: \"^T-\\\\d+:\"\n  sections:\n    - name: 要求\n      items:\n      - bullets:\n          repeat: { min: 0 }\n          children:\n            fields:\n              - name: superseded_by\n                extract: superseded_by\n",
     );
     let doc = write_file(
         dir.path(),
@@ -828,8 +828,8 @@ const NODE_SCHEMA: &str = r#"name: t
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d+"
+      items:
+      - id: "REQ-\\d+"
         repeat: { min: 0 }
         fields:
           - name: 種類
@@ -1011,8 +1011,8 @@ fn values_json_splits_a_statement_with_derived_values_into_one_element_per_line(
 document:
   sections:
     - name: 要求
-      item:
-        id: "^REQ-[0-9]+$"
+      items:
+      - id: "^REQ-[0-9]+$"
         extract: { path: requirements, of: { id: id } }
         fields:
           - name: 種類
@@ -1087,8 +1087,8 @@ fn values_json_omits_the_value_key_when_the_extract_declares_only_derived_values
 document:
   sections:
     - name: 要求
-      item:
-        id: "^REQ-[0-9]+$"
+      items:
+      - id: "^REQ-[0-9]+$"
         extract: { path: requirements, of: { id: id, line: line } }
         fields:
           - name: 種類
@@ -1159,8 +1159,8 @@ document:
   sections:
     - name: 要求
       repeat: { min: 0 }
-      item:
-        id: "^REQ-[0-9]+$"
+      items:
+      - id: "^REQ-[0-9]+$"
         repeat: { min: 0 }
         fields:
           - name: 種類
@@ -1206,8 +1206,8 @@ document:
     pattern: "^T-[0-9]+:"
   sections:
     - name: 要求
-      item:
-        id: "^REQ-[0-9]+$"
+      items:
+      - id: "^REQ-[0-9]+$"
         fields:
           - name: 種類
             enum: [ubiquitous]
@@ -1258,8 +1258,8 @@ fn values_with_colliding_element_keys_stops_without_reporting_the_document() {
 document:
   sections:
     - name: 要求
-      item:
-        id: "^REQ-[0-9]+$"
+      items:
+      - id: "^REQ-[0-9]+$"
         extract: { path: requirements, of: { id: id } }
         fields:
           - name: 種類
@@ -1282,8 +1282,8 @@ fn values_with_paths_sharing_only_a_level_above_the_dot_does_not_stop() {
 document:
   sections:
     - name: 要求
-      item:
-        id: "^REQ-[0-9]+$"
+      items:
+      - id: "^REQ-[0-9]+$"
         extract: { path: requirements, of: { id: id } }
         fields:
           - name: 甲
@@ -1295,8 +1295,8 @@ document:
 document:
   sections:
     - name: 要求
-      item:
-        id: "^REQ-[0-9]+$"
+      items:
+      - id: "^REQ-[0-9]+$"
         extract: { path: requirements, of: { id: id } }
         fields:
           - name: 甲
@@ -1356,8 +1356,8 @@ fn ex_schema_040_schema_without_reading_reads_by_paragraph() {
     let rules = r#"
   sections:
     - name: 要求
-      item:
-        repeat: { min: 0 }
+      items:
+      - repeat: { min: 0 }
         extract: { path: items, of: { id: id } }
         statement:
           repeat: { max: 1 }
@@ -1613,11 +1613,11 @@ fn req_schema_065_a_wrongly_typed_schema_value_names_the_field_and_the_expected_
             vec!["open", "boolean"],
         ),
         (
-            "document:\n  sections:\n    - name: 要求\n      item:\n        extract: 3\n",
+            "document:\n  sections:\n    - name: 要求\n      items:\n      - extract: 3\n",
             vec!["extract", "path"],
         ),
         (
-            "document:\n  sections:\n    - name: 要求\n      item:\n        extract: { path: a, of: 3 }\n",
+            "document:\n  sections:\n    - name: 要求\n      items:\n      - extract: { path: a, of: 3 }\n",
             vec!["extract.of", "mapping"],
         ),
     ];
@@ -1659,8 +1659,8 @@ fn paragraph_reading_absorbs_the_following_line_and_the_continuation_paragraph()
 document:
   sections:
     - name: 要求
-      item:
-        repeat: { min: 0 }
+      items:
+      - repeat: { min: 0 }
         fields:
           - name: 種類
         bullets:
@@ -1689,8 +1689,8 @@ reading: line
 document:
   sections:
     - name: 要求
-      item:
-        repeat: { min: 0 }
+      items:
+      - repeat: { min: 0 }
         extract: { path: items, of: { id: id } }
         fields:
           - name: 種類
@@ -1713,8 +1713,8 @@ reading: line
 document:
   sections:
     - name: 要求
-      item:
-        repeat: { min: 0 }
+      items:
+      - repeat: { min: 0 }
         bullets:
           required: false
 "#;
@@ -1738,8 +1738,8 @@ reading: line
 document:
   sections:
     - name: 要求
-      item:
-        repeat: { min: 0 }
+      items:
+      - repeat: { min: 0 }
         extract: { path: items, of: { id: id } }
         statement:
           repeat: { min: 0 }
@@ -1771,8 +1771,8 @@ reading: line
 document:
   sections:
     - name: 要求
-      item:
-        repeat: { min: 0 }
+      items:
+      - repeat: { min: 0 }
         extract: { path: items, of: { id: id } }
         statement:
           repeat: { min: 0 }
@@ -1794,7 +1794,7 @@ document:
 fn ex_schema_034_pipe_line_without_delimiter_is_a_statement_in_both_readings() {
     for reading in ["paragraph", "line"] {
         let schema = format!(
-            "reading: {reading}\ndocument:\n  sections:\n    - name: 要求\n      item:\n        repeat: {{ min: 0 }}\n"
+            "reading: {reading}\ndocument:\n  sections:\n    - name: 要求\n      items:\n      - repeat: {{ min: 0 }}\n"
         );
         let doc = "## 要求\n\n### REQ-1: 例\n\n| a | b |\n";
         let (code, json, stderr) = mds_json(&schema, doc, "check");
@@ -1817,8 +1817,8 @@ reading: line
 document:
   sections:
     - name: 要求
-      item:
-        repeat: { min: 0 }
+      items:
+      - repeat: { min: 0 }
         fields:
           - name: 種類
 "#;
@@ -1844,8 +1844,8 @@ reading: line
 document:
   sections:
     - name: 要求
-      item:
-        repeat: { min: 0 }
+      items:
+      - repeat: { min: 0 }
 "#;
     // 行番号: "#foo" が8行目
     let doc = "## 要求\n\n### REQ-1: 例\n\n#foo\n文の行\n===\n";
@@ -1864,7 +1864,7 @@ document:
 #[test]
 fn tbl_schema_011_a_hash_only_line_is_a_heading_in_both_readings() {
     let rules =
-        "document:\n  sections:\n    - name: 要求\n      item:\n        repeat: { min: 0 }\n";
+        "document:\n  sections:\n    - name: 要求\n      items:\n      - repeat: { min: 0 }\n";
     let doc = "## 要求\n\n### REQ-1: 例\n\n#\n";
     let (_, paragraph, _) = mds_json(&format!("reading: paragraph\n{rules}"), doc, "check");
     let (_, line, _) = mds_json(&format!("reading: line\n{rules}"), doc, "check");
@@ -2013,7 +2013,7 @@ fn ex_schema_050_select_other_than_first_stops() {
     assert!(stderr.contains("schema_invalid"), "stderr: {stderr}");
 }
 
-// @kotowari[EX-schema-043, C-schema-doc-14]
+// @kotowari[EX-schema-043, C-schema-doc-25]
 #[test]
 fn ex_schema_043_document_item_reads_items_before_the_first_section() {
     let schema = r#"
@@ -2021,16 +2021,16 @@ document:
   preamble:
     statement:
       extract: scope
-  item:
-    id: "^FLAG-\\d+$"
+  items:
+  - id: "^FLAG-\\d+$"
     repeat: { min: 0 }
     extract: { path: flags, of: { id: id } }
     statement:
       extract: text
   sections:
     - name: 節
-      item:
-        id: "^FLAG-\\d+$"
+      items:
+      - id: "^FLAG-\\d+$"
         repeat: { min: 0 }
         extract: { path: section_flags, of: { id: id } }
         statement:
@@ -2062,8 +2062,8 @@ fn ex_schema_044_without_document_item_a_level_three_heading_before_sections_is_
 document:
   sections:
     - name: 節
-      item:
-        repeat: { min: 0 }
+      items:
+      - repeat: { min: 0 }
 "#;
     // 行番号: 節の前の見出しが4行目
     let doc = "### X-1: 節の前\n\n## 節\n\n### X-2: 節の下\n";
@@ -2085,8 +2085,8 @@ document:
   sections:
     - name: 一
       extract: { path: one, of: { line: line, end: end } }
-      item:
-        repeat: { min: 0 }
+      items:
+      - repeat: { min: 0 }
         extract: { path: items, of: { line: line, end: end } }
         statement:
           required: false
@@ -2219,7 +2219,7 @@ fn ex_schema_074_a_schema_without_a_title_rule_does_not_ask_for_a_title() {
 #[test]
 fn ex_schema_075_a_missing_item_without_repeat_is_below_its_minimum() {
     let schema =
-        "document:\n  title: {}\n  sections:\n    - name: S\n      item: { id: \"^X-\" }\n";
+        "document:\n  title: {}\n  sections:\n    - name: S\n      items: [{ id: \"^X-\" }]\n";
     // 行番号: "## S" が6行目
     let (code, json, stderr) = mds_json(schema, "# T\n\n## S\n", "check");
     assert_eq!(code, Some(1), "stderr: {stderr}");
@@ -2289,7 +2289,7 @@ fn ex_schema_079_strikethrough_text_in_a_heading_is_part_of_its_name() {
 #[test]
 fn ex_schema_080_a_later_title_ends_the_section_and_item_before_it() {
     // 2つ目の題名は、それまでの節と項目を終える。後の行は項目の文に入らない
-    let schema = "document:\n  title: {}\n  preamble:\n    statement: { repeat: { min: 0 }, extract: preamble }\n  sections:\n    - name: S\n      item:\n        extract: { path: items, of: { id: id } }\n        statement: { repeat: { min: 0 }, extract: { path: lines, value: text } }\n";
+    let schema = "document:\n  title: {}\n  preamble:\n    statement: { repeat: { min: 0 }, extract: preamble }\n  sections:\n    - name: S\n      items:\n      - extract: { path: items, of: { id: id } }\n        statement: { repeat: { min: 0 }, extract: { path: lines, value: text } }\n";
     let doc = "# First\n\n## S\n\n### X1: one\n\nin item\n\n# Second\n\nafter title\n";
     let (code, json, stderr) = mds_json(schema, doc, "values");
     assert_eq!(code, Some(0), "stderr: {stderr}");
@@ -2354,8 +2354,8 @@ fn ex_schema_049_occurrence_finding_carries_the_counted_rule_kind() {
 document:
   sections:
     - name: 要求
-      item:
-        repeat: { min: 0 }
+      items:
+      - repeat: { min: 0 }
         statement:
           repeat: { min: 1 }
 "#;
@@ -2467,8 +2467,8 @@ document:
       extract: rows
   sections:
     - name: 要求
-      item:
-        extract: { path: items, of: { name: name } }
+      items:
+      - extract: { path: items, of: { name: name } }
 "#;
     let doc = "| a | b | c | d |\n|---|---|---|---|\n| **太** | [参][r] | `コ` | *強* |\n\n## 要求\n\n### REQ-1: **太字** [リンク](http://x.example) [参照][r] `コード` *強調*\n\n[r]: http://example.com\n";
     let v = values_json(schema, doc);
@@ -2503,8 +2503,8 @@ const ITEM_BODY_SCHEMA: &str = r#"
 document:
   sections:
     - name: 要求
-      item:
-        extract: items
+      items:
+      - extract: items
         fields:
           - name: 種類
 "#;
@@ -2569,8 +2569,8 @@ fn req_schema_066_values_text_writes_a_derived_number_after_its_key() {
 document:
   sections:
     - name: 要求
-      item:
-        id: "^REQ-[0-9]+$"
+      items:
+      - id: "^REQ-[0-9]+$"
         extract: { path: requirements, of: { id: id, line: line } }
 "#;
     let doc = "## 要求\n\n### REQ-001: 例\n";
@@ -2604,4 +2604,77 @@ fn ex_schema_094_a_level_three_heading_in_a_document_without_a_title_is_outside_
         .map(|f| f["kind"].clone())
         .collect();
     assert_eq!(kinds, ["missing_title"], "{json}");
+}
+
+// @kotowari[C-schema-lang-19]
+#[test]
+fn a_schema_rewritten_from_item_to_a_one_rule_items_list_keeps_its_findings_and_values() {
+    // 期待する値は、同じスキーマを "item: X" の形で書いて、"items" を足す前の版の
+    // kotowari-mds で読ませた出力から写した
+    let schema = r#"
+document:
+  items:
+  - id: "^N-"
+    required: false
+    extract: { path: notes, of: { id: id, name: name } }
+  sections:
+    - name: 要求
+      items:
+      - id: "^REQ-[0-9]+$"
+        repeat: { min: 1 }
+        fields:
+          - name: 種類
+            extract: kind
+        statement: { required: false, extract: text }
+        extract: { path: reqs, value: body, of: { id: id, name: name, line: line, end: end } }
+"#;
+    let doc = "### N-1: 直下\n\n## 要求\n\n### REQ-1: 一つ目\n\n- 種類: ubiquitous\n\n本文。\n\n### 区切り無し\n\n### X-2: 合わない\n\n- 余計\n";
+    let (code, json, stderr) = mds_json(schema, doc, "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    let findings: Vec<(String, u64, String)> = all_findings(&json)
+        .iter()
+        .map(|f| {
+            (
+                f["kind"].as_str().unwrap().to_string(),
+                f["line"].as_u64().unwrap(),
+                f["node"].as_str().unwrap_or("").to_string(),
+            )
+        })
+        .collect();
+    let expected = [
+        ("invalid_id", 14, ""),
+        ("missing_required_field", 14, "種類"),
+        ("invalid_id", 16, ""),
+        ("undeclared_line", 18, ""),
+        ("missing_required_field", 16, "種類"),
+    ]
+    .map(|(kind, line, node)| (kind.to_string(), line, node.to_string()));
+    assert_eq!(findings, expected, "{json}");
+    let (code, values, stderr) = mds_json(schema, doc, "values");
+    assert_eq!(code, Some(0), "stderr: {stderr}");
+    assert_eq!(
+        values,
+        serde_json::json!({
+            "reqs": [
+                { "kind": "ubiquitous", "text": "本文。", "body": "REQ-1: 一つ目\n- 種類: ubiquitous\n\n本文。",
+                  "id": "REQ-1", "name": "一つ目", "line": 8, "end": 13 },
+                { "body": "区切り無し", "id": "区切り無し", "name": "", "line": 14, "end": 15 },
+                { "body": "X-2: 合わない\n- 余計", "id": "X-2", "name": "合わない", "line": 16, "end": 18 }
+            ],
+            "notes": { "id": "N-1", "name": "直下" }
+        })
+    );
+}
+
+// @kotowari[C-schema-cli-30]
+#[test]
+fn check_json_gives_a_missing_named_item_the_first_name_of_its_list_as_node() {
+    let schema =
+        "document:\n  sections:\n    - name: 決定\n      items:\n        - name: [問題, Problem]\n";
+    let (code, json, stderr) = mds_json(schema, "## 決定\n", "check");
+    assert_eq!(code, Some(1), "stderr: {stderr}");
+    let findings = all_findings(&json);
+    assert_eq!(findings.len(), 1, "{json}");
+    assert_eq!(findings[0]["kind"], "repeat_min_not_met");
+    assert_eq!(findings[0]["node"], "問題");
 }

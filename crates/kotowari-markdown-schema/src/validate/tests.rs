@@ -733,15 +733,15 @@ fn heading_level_mismatch_is_found() {
     assert!(kinds(&findings).contains(&FindingKind::HeadingLevelMismatch));
 }
 
-// @kotowari[REQ-schema-025, EX-schema-009, C-schema-doc-12]
+// @kotowari[REQ-schema-025, EX-schema-009, C-schema-doc-23]
 #[test]
 fn invalid_item_id_is_found() {
     let schema = r#"
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d{3,}"
+      items:
+      - id: "REQ-\\d{3,}"
         statement:
           required: false
 "#;
@@ -1307,8 +1307,8 @@ fn missing_required_item_is_reported_as_repeat_min_not_met() {
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d{3}"
+      items:
+      - id: "REQ-\\d{3}"
         repeat: { min: 1 }
 "#;
     let doc = "## 要求\n";
@@ -1382,8 +1382,8 @@ fn item_with_no_repeat_requires_exactly_one() {
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d{3,}"
+      items:
+      - id: "REQ-\\d{3,}"
         statement:
           required: false
 "#;
@@ -1399,8 +1399,8 @@ fn item_repeat_max_exceeded_is_found() {
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d{3,}"
+      items:
+      - id: "REQ-\\d{3,}"
         repeat: { max: 1 }
         statement:
           required: false
@@ -1417,8 +1417,8 @@ fn item_with_required_false_is_optional() {
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d{3,}"
+      items:
+      - id: "REQ-\\d{3,}"
         required: false
         statement:
           required: false
@@ -1429,15 +1429,15 @@ document:
     assert!(!kinds(&findings).contains(&FindingKind::MissingRequiredSection));
 }
 
-// @kotowari[REQ-schema-025, EX-schema-009, C-schema-doc-12]
+// @kotowari[REQ-schema-025, EX-schema-009, C-schema-doc-23]
 #[test]
 fn item_heading_without_colon_is_invalid_id() {
     let schema = r#"
 document:
   sections:
     - name: 要求
-      item:
-        statement:
+      items:
+      - statement:
           required: false
 "#;
     let doc = "## 要求\n\n### REQ-001\n\n本文。\n";
@@ -1593,8 +1593,8 @@ fn table_declared_on_an_item_is_not_undeclared() {
 document:
   sections:
     - name: 決定表
-      item:
-        id: "TBL-\\d{3,}"
+      items:
+      - id: "TBL-\\d{3,}"
         repeat: { min: 0 }
         table:
           header: [用語, 意味]
@@ -1614,8 +1614,8 @@ fn table_header_mismatch_on_an_item_is_found() {
 document:
   sections:
     - name: 決定表
-      item:
-        id: "TBL-\\d{3,}"
+      items:
+      - id: "TBL-\\d{3,}"
         repeat: { min: 0 }
         table:
           header: [用語, 意味]
@@ -1635,8 +1635,8 @@ fn code_block_declared_on_an_item_is_not_undeclared() {
 document:
   sections:
     - name: 具体例
-      item:
-        id: "EX-\\d{3,}"
+      items:
+      - id: "EX-\\d{3,}"
         repeat: { min: 0 }
         codeblock:
           lang: gherkin
@@ -1700,8 +1700,8 @@ const ITEM_SCHEMA: &str = r#"
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d+"
+      items:
+      - id: "REQ-\\d+"
         repeat: { min: 0 }
         fields:
           - name: 種類

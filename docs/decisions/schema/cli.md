@@ -161,7 +161,7 @@ The wording of a finding's detail is not defined anywhere in the specification. 
 
 ### Decision
 
-A finding holds, as structure, the name of the node the schema declared. Since only sections and field lines have a declared name, the name is attached only to findings of those two, and not to findings of nodes that have no declared name, such as the title.
+A finding holds, as structure, the name of the node the schema declared. Which findings hold a name is decided in [Findings of section and item rules that select by a list of names hold the first name of that list as the node name](#findings-of-section-and-item-rules-that-select-by-a-list-of-names-hold-the-first-name-of-that-list-as-the-node-name).
 
 ### Rejected options
 
@@ -174,7 +174,7 @@ A finding holds, as structure, the name of the node the schema declared. Since o
 
 ## Findings of section and item rules that select by a list of names hold the first name of that list as the node name
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

@@ -18,7 +18,7 @@ If items can be declared only under a section, the shape of a document that list
 
 A schema is written as a YAML mapping. The root nodes are four: the title, the preamble, sections and items directly under the document.
 
-Items directly under the document are declared in "document.item", in the same shape as "item" under a section. In a schema that declares it, the preamble ends before the first "## " or "### " heading. How the document's headings are read when it is declared and when it is not is decided in [A schema can declare items directly under the document, with no section between, in "document.item"](document-structure.md#a-schema-can-declare-items-directly-under-the-document-with-no-section-between-in-documentitem) and [In a schema that declares no items directly under the document, a depth-3 heading before the first section is a finding only when the preamble is declared or in the closed world](document-structure.md#in-a-schema-that-declares-no-items-directly-under-the-document-a-depth-3-heading-before-the-first-section-is-a-finding-only-when-the-preamble-is-declared-or-in-the-closed-world).
+Items directly under the document are declared in "document.items", as a list of rules in the same shape as "items" under a section. In a schema that declares it, the preamble ends before the first "## " or "### " heading. How the document's headings are read when it is declared and when it is not is decided in [A schema can declare items directly under the document, with no section between, in "document.items"](document-structure.md#a-schema-can-declare-items-directly-under-the-document-with-no-section-between-in-documentitems) and [In a schema that declares no items directly under the document, a depth-3 heading before the first section is a finding only when the preamble is declared or in the closed world](document-structure.md#in-a-schema-that-declares-no-items-directly-under-the-document-a-depth-3-heading-before-the-first-section-is-a-finding-only-when-the-preamble-is-declared-or-in-the-closed-world).
 
 ### Rejected options
 
@@ -168,7 +168,7 @@ The field line a condition refers to is looked for only under the same node. Whe
 
 ## Section and item rules select headings by a list of names or by a regular expression
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -209,7 +209,7 @@ A depth-2 heading that no section rule selects is an undeclared_heading finding.
 
 ## Item rules are written as a list in "items", and the "item" key is not accepted
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -235,7 +235,7 @@ A list with only one rule that has neither "name" nor "pattern" ("items: [X]") i
 
 ## The preamble, a section, an item and the children of a bullet accept blocks that have no rule when they declare "open: true"
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

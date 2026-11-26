@@ -37,8 +37,8 @@ document:
       extract: scope
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d{3,}"
+      items:
+      - id: "REQ-\\d{3,}"
         repeat: { min: 0 }
         extract:
           path: requirements

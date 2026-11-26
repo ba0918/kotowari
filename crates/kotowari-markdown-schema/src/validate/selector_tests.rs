@@ -146,3 +146,148 @@ fn the_same_name_twice_across_the_section_rules_is_a_schema_error() {
         assert!(error.0.contains("declared twice"), "{error}");
     }
 }
+
+const DECISION_ITEMS: &str = "document:\n  sections:\n    - pattern: \"\"\n      repeat: { min: 0 }\n      items:\n        - name: [問題, Problem]\n          statement: { repeat: { min: 0 } }\n        - name: [見送った案, Rejected options]\n          required: false\n          open: true\n";
+
+// @kotowari[C-schema-lang-17]
+#[test]
+fn without_an_id_rule_an_item_heading_no_rule_selects_is_undeclared_with_its_lines() {
+    let doc = "## 決定\n\n### 問題\n\n本文。\n\n### 余計: な見出し\n\n段落。\n\n- 箇条書き\n\n### 別の余計\n";
+    let findings = validate_src(DECISION_ITEMS, doc);
+    assert_eq!(
+        summary(&findings),
+        vec![
+            (FindingKind::UndeclaredHeading, Some(7), None),
+            (FindingKind::UndeclaredLine, Some(9), None),
+            (FindingKind::UndeclaredLine, Some(11), None),
+            (FindingKind::UndeclaredHeading, Some(13), None),
+        ]
+    );
+}
+
+// @kotowari[C-schema-lang-24]
+#[test]
+fn a_block_without_a_rule_in_an_item_without_open_is_undeclared_even_beside_an_open_item() {
+    let doc = "## 決定\n\n### 問題\n\n1. 順序\n\n### 見送った案\n\n1. 順序\n";
+    let findings = validate_src(DECISION_ITEMS, doc);
+    assert_eq!(
+        summary(&findings),
+        vec![(FindingKind::UndeclaredLine, Some(5), None)]
+    );
+}
+
+// @kotowari[C-schema-cli-30]
+#[test]
+fn a_missing_item_of_a_name_list_rule_holds_the_first_name_as_the_node_name() {
+    let findings = validate_src(DECISION_ITEMS, "## 決定\n\n### Rejected options\n");
+    assert_eq!(
+        summary(&findings),
+        vec![(FindingKind::RepeatMinNotMet, Some(1), Some("問題"))]
+    );
+}
+
+// @kotowari[C-schema-cli-31]
+#[test]
+fn findings_of_a_pattern_item_rule_and_of_the_id_rule_hold_no_node_name() {
+    let schema = "document:\n  sections:\n    - name: 節\n      items:\n        - pattern: \"^注\"\n          repeat: { max: 1 }\n        - id: \"^A-\"\n";
+    let findings = validate_src(schema, "## 節\n\n### 注1\n\n### 注2\n");
+    assert_eq!(
+        summary(&findings),
+        vec![
+            (FindingKind::RepeatMaxExceeded, Some(5), None),
+            (FindingKind::RepeatMinNotMet, Some(1), None),
+        ]
+    );
+    assert!(findings[0].detail.contains("^注"), "{}", findings[0].detail);
+}
+
+// @kotowari[C-schema-doc-23]
+#[test]
+fn only_the_id_rule_requires_the_id_form_of_its_headings() {
+    let schema = "document:\n  sections:\n    - name: 節\n      items:\n        - name: 概要\n        - id: \"^A-[0-9]+$\"\n          repeat: { min: 0 }\n";
+    let doc = "## 節\n\n### 概要\n\n### A-1: 良い\n\n### 区切りの無い見出し\n\n### B-1: 合わない\n";
+    let findings = validate_src(schema, doc);
+    assert_eq!(
+        summary(&findings),
+        vec![
+            (FindingKind::InvalidId, Some(7), None),
+            (FindingKind::InvalidId, Some(9), None),
+        ]
+    );
+}
+
+// @kotowari[C-schema-doc-24]
+#[test]
+fn an_item_selected_by_name_has_the_whole_heading_as_its_name_and_no_id() {
+    let schema = "document:\n  sections:\n    - name: 節\n      items:\n        - name: 問題\n          statement: { repeat: { min: 0 } }\n          extract: { path: problem, of: { id: id, name: name } }\n";
+    let doc = "## 節\n\n### 問題\n\n本文。\n";
+    assert!(validate_src(schema, doc).is_empty());
+    assert_eq!(
+        values_of(schema, doc)["problem"],
+        serde_json::json!({ "name": "問題" })
+    );
+}
+
+// @kotowari[C-schema-doc-24]
+#[test]
+fn an_item_selected_by_name_has_its_heading_as_the_heading_of_its_value() {
+    let schema = "document:\n  sections:\n    - name: 節\n      items:\n        - name: \"問題: 見出し\"\n          statement: { repeat: { min: 0 } }\n          extract: problem\n";
+    let doc = "## 節\n\n### 問題: 見出し\n\n本文。\n";
+    assert_eq!(
+        values_of(schema, doc)["problem"],
+        serde_json::json!("問題: 見出し\n本文。")
+    );
+}
+
+// @kotowari[C-schema-lang-18]
+#[test]
+fn items_lists_load_and_the_item_keys_do_not() {
+    assert!(parse_schema("document:\n  items:\n    - id: \"^A-\"\n  sections:\n    - name: 節\n      items:\n        - name: 問題\n").is_ok());
+    for schema in [
+        "document:\n  sections:\n    - name: 節\n      item:\n        id: \"^A-\"\n",
+        "document:\n  item:\n    id: \"^A-\"\n",
+    ] {
+        let error = parse_schema(schema).unwrap_err();
+        assert!(error.0.contains("item"), "{error}");
+    }
+}
+
+// @kotowari[C-schema-lang-4]
+#[test]
+fn an_item_rule_that_mixes_its_selectors_or_follows_the_id_rule_is_a_schema_error() {
+    for items in [
+        "- name: a\n          pattern: b\n",
+        "- id: \"^A\"\n          name: a\n",
+        "- id: \"^A\"\n          pattern: a\n",
+        "- id: \"^A\"\n        - name: a\n",
+        "- {}\n        - {}\n",
+    ] {
+        let schema =
+            format!("document:\n  sections:\n    - name: 節\n      items:\n        {items}");
+        assert!(parse_schema(&schema).is_err(), "{schema}");
+    }
+}
+
+// @kotowari[C-schema-cli-21]
+#[test]
+fn the_same_name_twice_across_one_list_of_item_rules_is_a_schema_error() {
+    let schema = "document:\n  sections:\n    - name: 節\n      items:\n        - name: [問題, Problem]\n        - name: Problem\n";
+    let error = parse_schema(schema).unwrap_err();
+    assert!(error.0.contains("declared twice"), "{error}");
+}
+
+// @kotowari[C-schema-lang-15]
+#[test]
+fn extraction_of_each_item_rule_takes_only_the_items_that_rule_selected() {
+    let schema = "document:\n  sections:\n    - pattern: \"\"\n      repeat: { min: 0 }\n      items:\n        - name: 問題\n          repeat: { min: 0 }\n          extract: { path: problems, of: { line: line } }\n        - id: \"^C-\"\n          repeat: { min: 0 }\n          extract: { path: rows, of: { id: id, name: name } }\n";
+    let doc = "## 一\n\n### 問題\n\n### C-1: 行\n\n## 二\n\n### 問題\n";
+    let values = values_of(schema, doc);
+    assert_eq!(
+        values["problems"],
+        serde_json::json!([{ "line": 3 }, { "line": 9 }])
+    );
+    assert_eq!(
+        values["rows"],
+        serde_json::json!([{ "id": "C-1", "name": "行" }])
+    );
+}

@@ -21,9 +21,7 @@ pub(super) fn validate_schema(schema: &Schema) -> Result<(), SchemaError> {
     for section in &schema.document.sections {
         validate_section(section)?;
     }
-    if let Some(item) = &schema.document.item {
-        validate_item(item)?;
-    }
+    validate_item_rules(&schema.document.items)?;
     reject_colliding_root_paths(&schema.document)?;
     reject_root_paths_on_the_type_key(schema)
 }
@@ -64,9 +62,13 @@ fn collect_root_paths(document: &Document, paths: &mut Vec<String>) {
         push(section.bullets.as_ref().and_then(|b| b.extract.as_ref()));
         push(section.table.as_ref().and_then(|t| t.extract.as_ref()));
         push(section.codeblock.as_ref().and_then(|c| c.extract.as_ref()));
-        push(section.item.as_ref().and_then(|i| i.extract.as_ref()));
+        for item in &section.items {
+            push(item.extract.as_ref());
+        }
     }
-    push(document.item.as_ref().and_then(|i| i.extract.as_ref()));
+    for item in &document.items {
+        push(item.extract.as_ref());
+    }
     // 箇条書きの子フィールドも、その箇条書きの置き場（根）に値を出す
     if let Some(bullets) = document.preamble.as_ref().and_then(|p| p.bullets.as_ref()) {
         collect_children_extract_paths(bullets, paths);
@@ -148,13 +150,44 @@ fn validate_section(section: &Section) -> Result<(), SchemaError> {
     validate_table(section.table.as_ref())?;
     validate_codeblock(section.codeblock.as_ref())?;
     validate_subheading(section.subheading.as_ref())?;
-    if let Some(item) = &section.item {
+    validate_item_rules(&section.items)?;
+    Ok(())
+}
+
+/// 1つの項目の規則の一覧を検査する。ID の規則はほかの規則が選ばなかった見出しをすべて
+/// 選ぶので、その後ろの規則は何も選べない。同じ名前が2度出ると、後の名前は何も選ばない
+fn validate_item_rules(items: &[Item]) -> Result<(), SchemaError> {
+    reject_duplicate_names(
+        items
+            .iter()
+            .flat_map(|i| i.name.iter().flat_map(|names| names.all()))
+            .map(String::as_str),
+        "item",
+    )?;
+    if let Some(position) = items.iter().position(|i| i.selector().is_none())
+        && position + 1 < items.len()
+    {
+        return Err(SchemaError(
+            "an item rule follows the item rule with neither \"name\" nor \"pattern\", which takes every remaining heading".into(),
+        ));
+    }
+    for item in items {
         validate_item(item)?;
     }
     Ok(())
 }
 
 fn validate_item(item: &Item) -> Result<(), SchemaError> {
+    if item.name.is_some() && item.pattern.is_some() {
+        return Err(SchemaError(
+            "item must not declare both \"name\" and \"pattern\"".into(),
+        ));
+    }
+    if item.id.is_some() && item.selector().is_some() {
+        return Err(SchemaError(
+            "item \"id\" belongs to the rule with neither \"name\" nor \"pattern\"".into(),
+        ));
+    }
     if let Some(repeat) = &item.repeat {
         repeat.validate()?;
     }

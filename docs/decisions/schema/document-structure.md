@@ -132,30 +132,6 @@ The text of a heading is the text with inline markup removed, and the text insid
 
 - C-schema-doc-11 In a schema that declares the section "Ax", a document with a section whose heading consists of "A" and "x" enclosed in strikethrough gets exit code 0 from "kotowari-mds check"
 
-## An item heading is read with the part before ":" as the ID and the part after it as the name
-
-Status: implemented
-
-### Problem
-
-An item is a depth-3 heading with an ID and a name. It needs to be decided how much of the heading is the ID and how the shape of the ID is constrained. No reason survives.
-
-### Decision
-
-An item heading is read as follows.
-
-| Order | Shape of the heading | Read as |
-|---|---|---|
-| 1 | No separating colon | A finding that the ID does not fit its shape |
-| 2 | Has a colon, and the part before it matches the regular expression of the schema | From the start up to just before ":" as the ID, and the rest as the name |
-| 3 | Has a colon, and the part before it does not match the regular expression | A finding that the ID does not fit its shape |
-
-A finding that the ID does not fit its shape is invalid_id.
-
-### Confirmations
-
-- C-schema-doc-12 An item heading with no ":" and an item heading whose ID does not match the schema's regular expression are invalid_id findings
-
 ## A depth-3 heading inside a section that declares no item is a finding
 
 Status: implemented
@@ -171,22 +147,6 @@ When there is a depth-3 heading inside a section that declares no item, that hea
 ### Confirmations
 
 - C-schema-doc-13 A depth-3 heading inside a section that declares no item is an undeclared-heading finding even in the open world, and the lines inside it are undeclared-line findings too
-
-## A schema can declare items directly under the document, with no section between, in "document.item"
-
-Status: implemented
-
-### Problem
-
-We want to read documents that list items with no section between (kotowari's problem records were like this) in that shape as they are. In the schema language, items could be declared only under a section. The behavior of a schema that does not declare them is not changed.
-
-### Decision
-
-A schema can declare items directly under the document in "document.item", in the same shape as "item" under a section (accepting it as a root node is decided in [A schema is written in YAML, with the title, the preamble, sections and items directly under the document at its root](schema-language.md#a-schema-is-written-in-yaml-with-the-title-the-preamble-sections-and-items-directly-under-the-document-at-its-root)). When it is declared, a depth-3 heading before the first section is read as that item, and the preamble ends before the first section or item. The same document may have both items under a section and items directly under the document.
-
-### Confirmations
-
-- C-schema-doc-14 In a schema that declares both "document.item" and "item" under a section, both an item of a depth-3 heading after the preamble's statement with no section between and an item under a section get no finding with "kotowari-mds check --format json" and appear in the values of "kotowari-mds values --format json", and the value of the preamble's statement does not include the lines of the item directly under the document
 
 ## In a schema that declares no items directly under the document, a depth-3 heading before the first section is a finding only when the preamble is declared or in the closed world
 
@@ -252,7 +212,7 @@ If the node that contains a heading of depth 4 or more declares "subheading" ([A
 
 ## Only headings selected by an item rule with neither a name nor a regular expression are split into the ID before ":" and the name after it
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -274,7 +234,7 @@ A heading selected by a "name" or "pattern" rule is not required to have the ID 
 
 ### Rejected options
 
-- Previous decision: every item heading is read with the part before ":" as the ID and the part after it as the name ([An item heading is read with the part before ":" as the ID and the part after it as the name](#an-item-heading-is-read-with-the-part-before--as-the-id-and-the-part-after-it-as-the-name)). Since the ID form would also be required of the headings of items selected by name, it applies only to the ID rule.
+- Previous decision: every item heading is read with the part before ":" as the ID and the part after it as the name. Since the ID form would also be required of the headings of items selected by name, it applies only to the ID rule.
 
 ### Confirmations
 
@@ -283,7 +243,7 @@ A heading selected by a "name" or "pattern" rule is not required to have the ID 
 
 ## A schema can declare items directly under the document, with no section between, in "document.items"
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
@@ -295,7 +255,7 @@ A schema can declare the rules for items directly under the document in "documen
 
 ### Rejected options
 
-- Previous decision: items directly under the document are declared with one rule in "document.item" ([A schema can declare items directly under the document, with no section between, in "document.item"](#a-schema-can-declare-items-directly-under-the-document-with-no-section-between-in-documentitem)). It was dropped because item rules were made a list in "items".
+- Previous decision: items directly under the document are declared with one rule in "document.item". It was dropped because item rules were made a list in "items".
 
 ### Confirmations
 

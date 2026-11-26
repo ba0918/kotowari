@@ -598,8 +598,8 @@ fn item_body_field_line_includes_continuation_paragraph() {
 document:
   sections:
     - name: 要求
-      item:
-        repeat: { min: 0 }
+      items:
+      - repeat: { min: 0 }
         extract: items
         fields:
           - name: 種類
@@ -622,8 +622,8 @@ fn item_extract_is_heading_plus_body() {
 document:
   sections:
     - name: 要求
-      item:
-        repeat: { min: 0 }
+      items:
+      - repeat: { min: 0 }
         extract: items
         fields:
           - name: 種類
@@ -1111,8 +1111,8 @@ fn item_body_includes_child_bullet_lines() {
 document:
   sections:
     - name: 要求
-      item:
-        repeat: { min: 0 }
+      items:
+      - repeat: { min: 0 }
         extract: items
         bullets:
           repeat: { min: 0 }
@@ -1164,8 +1164,8 @@ fn item_body_excludes_table_and_code_block() {
 document:
   sections:
     - name: 決定表
-      item:
-        id: "TBL-\\d{3,}"
+      items:
+      - id: "TBL-\\d{3,}"
         repeat: { min: 0 }
         extract: tables
         fields:
@@ -1218,8 +1218,8 @@ fn a_path_only_item_extract_becomes_an_object_when_internals_declare_extract() {
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d{3,}"
+      items:
+      - id: "REQ-\\d{3,}"
         repeat: { min: 0 }
         extract: requirements
         fields:
@@ -1242,8 +1242,8 @@ fn item_extract_becomes_an_object_when_internals_declare_extract() {
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d{3,}"
+      items:
+      - id: "REQ-\\d{3,}"
         repeat: { min: 0 }
         extract:
           path: requirements
@@ -1277,7 +1277,7 @@ document:
 // @kotowari[REQ-schema-047, C-schema-extract-18]
 #[test]
 fn item_extract_stays_a_string_without_internal_extract() {
-    let schema = "document:\n  sections:\n    - name: 要求\n      item:\n        id: \"REQ-\\\\d{3,}\"\n        repeat: { min: 0 }\n        extract: requirements\n        fields:\n          - name: 種類\n";
+    let schema = "document:\n  sections:\n    - name: 要求\n      items:\n      - id: \"REQ-\\\\d{3,}\"\n        repeat: { min: 0 }\n        extract: requirements\n        fields:\n          - name: 種類\n";
     let doc = "## 要求\n\n### REQ-001: 印の構文\n\n- 種類: algorithm\n";
     let v = values(schema, doc);
     assert_eq!(
@@ -1371,8 +1371,8 @@ fn item_without_a_value_keeps_the_inner_placement_paths() {
 document:
   sections:
     - name: 要求
-      item:
-        id: "REQ-\\d{3,}"
+      items:
+      - id: "REQ-\\d{3,}"
         repeat: { min: 0 }
         extract: { path: requirements, of: { line: line } }
         fields:
@@ -1393,8 +1393,8 @@ document:
 fn item_object_keys_come_from_the_schema_not_the_document() {
     // 同じ配置パスを宣言していれば、文書の見出しの語とフィールド行の名前が
     // 変わっても出力のキーは変わらない。出力の契約はスキーマが持つ（A22）。
-    let japanese = "document:\n  sections:\n    - name: 蔵書\n      item:\n        repeat: { min: 0 }\n        extract: { path: books, of: { code: id } }\n        fields:\n          - name: 著者\n            extract: author\n";
-    let english = "document:\n  sections:\n    - name: Books\n      item:\n        repeat: { min: 0 }\n        extract: { path: books, of: { code: id } }\n        fields:\n          - name: Author\n            extract: author\n";
+    let japanese = "document:\n  sections:\n    - name: 蔵書\n      items:\n      - repeat: { min: 0 }\n        extract: { path: books, of: { code: id } }\n        fields:\n          - name: 著者\n            extract: author\n";
+    let english = "document:\n  sections:\n    - name: Books\n      items:\n      - repeat: { min: 0 }\n        extract: { path: books, of: { code: id } }\n        fields:\n          - name: Author\n            extract: author\n";
     let japanese_doc = "## 蔵書\n\n### ISBN-1: 吾輩は猫である\n\n- 著者: 夏目漱石\n";
     let english_doc = "## Books\n\n### ISBN-1: I Am a Cat\n\n- Author: Soseki Natsume\n";
 

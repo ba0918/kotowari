@@ -102,9 +102,9 @@ be deleted at any time, so keep it out of version control:
 | Rule | Validates | Can hold |
 |---|---|---|
 | `title` | the `#` heading | a pattern, a named-group capture |
-| `preamble` | everything between the title and the first `##` (or the first `###` when `document.item` is declared) | fields, statements, bullets, a table, a code block |
-| `sections` | `##` headings | fields, statements, bullets, a table, a code block, items |
-| `item` | `### ID: Name` headings, under a section or (as `document.item`) before the first section | fields, statements, bullets, a table, a code block |
+| `preamble` | everything between the title and the first `##` (or the first `###` when `document.items` is declared) | fields, statements, bullets, a table, a code block |
+| `sections` | `##` headings selected by `name` (one name or a list) or `pattern` | fields, statements, bullets, a table, a code block, `items` |
+| `items` | a list of rules for `###` headings, under a section or (as `document.items`) before the first section. A rule selects by `name` or `pattern`; the last rule may have neither, and then takes every remaining `### ID: Name` heading | fields, statements, bullets, a table, a code block |
 | `field` | `- Name: value` lines | a pattern, an enum, a separator, a condition |
 | `statement` | prose paragraphs | a pattern, an enum, a condition |
 | `bullets` | list lines that are not fields | a pattern, nested children |
@@ -136,20 +136,20 @@ a heading in the document does not change the JSON your code reads — you only 
 An item can come back as an object, with the line numbers your own diagnostics need:
 
 ```yaml
-item:
-  id: "REQ-\\d{3,}"
-  repeat: { min: 0 }
-  extract:
-    path: requirements
-    of: { id: id, line: line }
-  fields:
-    - name: Kind
-      extract: kind
-    - name: Source
-      separator: ","
-      extract: sources
-  statement:
-    extract: text
+items:
+  - id: "REQ-\\d{3,}"
+    repeat: { min: 0 }
+    extract:
+      path: requirements
+      of: { id: id, line: line }
+    fields:
+      - name: Kind
+        extract: kind
+      - name: Source
+        separator: ","
+        extract: sources
+    statement:
+      extract: text
 ```
 
 ```json

@@ -3,8 +3,8 @@ name: ir-flags
 open: false
 reading: line
 document:
-  item:
-    id: "^FLAG-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
+  items:
+  - id: "^FLAG-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
     repeat: { min: 0 }
     extract:
       path: flags
@@ -42,8 +42,8 @@ document:
   sections:
     - name: Flags
       repeat: { min: 0 }
-      item:
-        id: "^FLAG-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
+      items:
+      - id: "^FLAG-([a-z][a-z0-9-]*-)?([1-9][0-9]{3,}|[0-9]{3})$"
         repeat: { min: 0 }
         extract:
           path: flags_in_section
