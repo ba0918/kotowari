@@ -639,10 +639,10 @@ fn blocks_from_list_item(
     let mut out = Vec::new();
     if let Some(mut lead) = lead_block {
         // 一覧の項目の位置は、後ろに続く空行で終わることがある。最後の空でない行を最後の行にする
-        let mut end = line_at_end(item.position.as_ref());
-        while end > item_line && raw_line_of(lines, end).trim().is_empty() {
-            end -= 1;
-        }
+        let end = (item_line..=line_at_end(item.position.as_ref()))
+            .rev()
+            .find(|&line| !raw_line_of(lines, line).trim().is_empty())
+            .unwrap_or(item_line);
         lead.extend_end(end);
         out.push(lead);
     }
