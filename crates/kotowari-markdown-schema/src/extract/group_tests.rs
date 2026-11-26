@@ -150,3 +150,22 @@ fn schemas_that_declare_a_word_on_a_node_that_does_not_accept_it_stop() {
         .is_ok()
     );
 }
+
+// @kotowari[C-schema-block-39]
+#[test]
+fn the_list_lines_after_an_item_whose_fence_is_not_closed_are_still_bullets() {
+    // Markdown の読み手は、閉じないフェンスで終わった項目の次の項目を、一覧の直下の一覧に入れる
+    let schema = bullet_schema("^(?P<text>.*)$", "{ text: { group: text }, line: line }");
+    let v = values(
+        &schema,
+        "## 節\n\n- 一つ目\n  ```text\n- 二つ目\n- 三つ目\n",
+    );
+    assert_eq!(
+        v["rows"],
+        json!([
+            { "text": "一つ目", "line": 3 },
+            { "text": "二つ目", "line": 5 },
+            { "text": "三つ目", "line": 6 }
+        ])
+    );
+}

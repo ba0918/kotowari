@@ -455,8 +455,14 @@ fn blocks_from_node(node: &Node, src: &str, lines: &[String]) -> Vec<Block> {
         Node::List(list) => {
             let mut out = Vec::new();
             for child in &list.children {
-                if let Node::ListItem(item) = child {
-                    out.extend(blocks_from_list_item(item, src, lines, list.ordered, false));
+                match child {
+                    Node::ListItem(item) => {
+                        out.extend(blocks_from_list_item(item, src, lines, list.ordered, false));
+                    }
+                    // Markdown の読み手は、閉じないフェンスで終わった項目の次の項目を、一覧の直下の
+                    // 一覧に入れる。その項目も同じ一覧の行として読む
+                    Node::List(_) => out.extend(blocks_from_node(child, src, lines)),
+                    _ => {}
                 }
             }
             out

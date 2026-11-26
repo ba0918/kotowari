@@ -25,6 +25,7 @@ Entries are written for someone upgrading from one release to the next: what cha
 
 ### Fixed
 
+- In a list where one item opens a fence and leaves it unclosed, the item after it was dropped: it was neither checked nor extracted. It is now read as a list line of the same list, like the items after it.
 - A document whose lines end with a lone carriage return (CR, without LF) had its frontmatter overlooked, so `kotowari-mds` stopped with `schema_not_found` although the document declared `$schema`. The frontmatter is now read with all three line breaks (LF, CRLF and CR), as the rest of the document already was.
 
 ## [0.2.1] - 2026-11-25
