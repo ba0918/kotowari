@@ -198,7 +198,7 @@ For pairs of decision documents, the duplication of confirmation IDs, the judgem
 
 ## The vague word check is made on "Decision" and "Confirmations" of every side of decision documents
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

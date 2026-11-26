@@ -78,11 +78,11 @@ The line of kinds not in the table is decided in the topic that decided that kin
 
 ## The line of the vague-word finding vague_word is the line that has the word
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
-Which line the vague-word finding points at is also to be decided, as one of the findings that have a line. Applying the vague-word check to "Decision" and "Confirmations" of decision documents is not built yet ([Keep the glossary as a document for people, and drop the term check](decision-documents.md#keep-the-glossary-as-a-document-for-people-and-drop-the-term-check)). The reason is not recorded.
+Which line the vague-word finding points at is also to be decided, as one of the findings that have a line. The reason is not recorded.
 
 ### Decision
 

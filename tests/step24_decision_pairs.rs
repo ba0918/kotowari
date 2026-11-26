@@ -856,3 +856,36 @@ fn a_second_line_in_the_state_paragraph_on_the_japanese_side_only_is_an_error_on
         )]
     );
 }
+
+// @kotowari[C-core-pairs-17]
+#[test]
+fn a_vague_word_in_decision_or_confirmations_of_another_side_is_a_finding_on_that_side() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    let side = japanese("greet", "提案", &["C-greet-1 声が適切に出る"])
+        .replace("困っていた。", "適切に挨拶できていなかった。")
+        .replace("こうする。", "適切にする。");
+    write_pair(
+        tmp.path(),
+        "docs/decisions/greet",
+        "greet",
+        &english("greet", "proposed", &["C-greet-1 A voice comes out"]),
+        &side,
+    );
+    let (_, stdout, _) = run(tmp.path(), &["check"]);
+    let value: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    let vague: Vec<(String, u64)> = value["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["kind"] == "vague_word")
+        .map(|f| {
+            (
+                f["path"].as_str().unwrap().to_string(),
+                f["line"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    let path = "docs/decisions/greet/greet.ja.md".to_string();
+    assert_eq!(vague, vec![(path.clone(), 17), (path, 21)]);
+}

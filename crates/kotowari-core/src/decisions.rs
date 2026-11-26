@@ -732,10 +732,53 @@ fn line_of(node: &Node) -> usize {
     node.position().map_or(1, |position| position.start.line)
 }
 
-/// 話題の文書を読み、形の誤りを findings に積む
+/// 決定の「決めたこと」と「確認すること」の節の、見出しの行のあとの行の曖昧語を指摘する
+/// （C-core-docs-18、C-core-pairs-17）。数え方は古い形と同じで、コードブロックの中の行と、二重引用符の
+/// 中（語を挙げているだけで、使ってはいない）は見ない
+fn check_vague_words(
+    path: &str,
+    reading: &Reading,
+    grouped: &[Grouped<'_>],
+    root: &Node,
+    vague_words: &[String],
+    findings: &mut Vec<Finding>,
+) {
+    fn code_lines(node: &Node, out: &mut BTreeSet<usize>) {
+        if let (Node::Code(_), Some(position)) = (node, node.position()) {
+            out.extend(position.start.line..=position.end.line);
+        }
+        for child in node.children().into_iter().flatten() {
+            code_lines(child, out);
+        }
+    }
+    let mut code = BTreeSet::new();
+    code_lines(root, &mut code);
+    let sections = grouped.iter().flat_map(|decision| {
+        decision
+            .decided
+            .iter()
+            .map(|span| (span.line, span.end))
+            .chain(
+                decision
+                    .confirmations
+                    .iter()
+                    .map(|confirmations| (confirmations.line, confirmations.end)),
+            )
+    });
+    for (heading, end) in sections {
+        for line in (heading + 1..=end).filter(|line| !code.contains(line)) {
+            for part in crate::split_outside_quotes(reading.raw(line)) {
+                crate::terms::check_vague_words(part, line, vague_words, path, findings);
+            }
+        }
+    }
+}
+
+/// 話題の文書を読み、形の誤りと曖昧語を findings に積む
 pub(crate) fn parse(
     path: &str,
     text: &str,
+    vague_words: &[String],
     findings: &mut Vec<Finding>,
 ) -> Result<Document, StopReason> {
     let root = match crate::markdown::parse(text) {
@@ -757,6 +800,7 @@ pub(crate) fn parse(
             .into_iter()
             .map(|mapped| mapped.finding),
     );
+    check_vague_words(path, &reading, &grouped, &root, vague_words, findings);
     let anchored = heading_anchors(&root);
     let blocks = root.children().map(Vec::as_slice).unwrap_or_default();
     let decisions = grouped
@@ -863,15 +907,15 @@ pub(crate) fn is_glossary(path: &str, place: &str) -> bool {
 /// リンクの行き先としてだけ読む文書。決定の形を検査せず、見出しの行き先の名前だけを持つ。
 /// content があれば（ほかの言語の側）その文書の中のリンクも持ち、check_links がその行き先を確かめる。
 /// そのときは、読み飛ばされる中身を作る誤りだけを content に積む。決定の形のほかの
-/// 誤りは、骨組みの比較が先頭の言語の側との違いとして出す
+/// 誤りは、骨組みの比較が先頭の言語の側との違いとして出す。曖昧語は、その側の文で検査する
 pub(crate) fn parse_target(
     path: &str,
     text: &str,
-    content: Option<&mut Vec<Finding>>,
+    content: Option<(&mut Vec<Finding>, &[String])>,
 ) -> Result<Document, StopReason> {
     let root = crate::markdown::parse(text).ok();
     let links = content.is_some();
-    if let (Some(findings), Some(_)) = (content, &root) {
+    if let (Some((findings, vague_words)), Some(root)) = (content, &root) {
         let reading = read_with_engine(path, text)?;
         let grouped = group(&reading.values);
         findings.extend(
@@ -880,6 +924,7 @@ pub(crate) fn parse_target(
                 .filter(|mapped| mapped.every_side)
                 .map(|mapped| mapped.finding),
         );
+        check_vague_words(path, &reading, &grouped, root, vague_words, findings);
     }
     Ok(Document {
         path: path.to_owned(),

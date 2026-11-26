@@ -83,8 +83,8 @@ fn check_unknown_terms(
 }
 
 /// 曖昧語の検査（REQ-core-066, REQ-core-067）
-/// 行の左から最長一致で重ならない形で数える（A142）
-fn check_vague_words(
+/// 行の左から最長一致で重ならない形で数える（A142）。決定の文書の検査も同じ規則で数える
+pub(crate) fn check_vague_words(
     text: &str,
     line: usize,
     vague_words: &[String],

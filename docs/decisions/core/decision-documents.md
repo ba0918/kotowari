@@ -146,7 +146,7 @@ A decision that spans two topics is written in the topic on the side where the b
 
 ## Keep the glossary as a document for people, and drop the term check
 
-Status: proposed
+Status: implemented
 
 ### Problem
 

@@ -97,6 +97,7 @@ names the missing section in the spelling of the decision's state line.
 | Rows | Each item of a list under `### 確認すること` is one row; its first word is its ID. Any other block there (a paragraph, a table, a code block, an ordered list) is unknown_line and holds no row |
 | Open section | `## 未決`, placed last; each item of a list under it is one open item. Any other block under it (a paragraph, an ordered list, a heading, and each block under such a heading) is unknown_line or unknown_heading, so write every open question as a list item. It is not a decision |
 | Code blocks | A fenced code block never closed swallows what follows it: unclosed_code_block at its opening line |
+| Vague words | Each occurrence of a word of the configuration's `vague_words` in the lines of `### 決めたこと` and `### 確認すること` is vague_word on that line, on every side of a pair, matched as part of a word, longest word first. Code blocks and text inside double quotes (a word named, not used) are not looked at; `### 問題` and `### 見送った案` are not checked. Rewrite the sentence concretely |
 
 ### Languages: a pair of sides
 

@@ -2712,3 +2712,183 @@ fn a_row_name_that_starts_like_a_block_keeps_its_characters() {
         vec!["# 記号で始まる", "> 引用の形", "code と リンク の 強調"]
     );
 }
+
+/// 曖昧語の一覧を書いた設定を作る
+fn make_project_with_vague_words(tmp: &Path, words: &[&str]) {
+    make_project(tmp, Some("docs/decisions"));
+    let list: String = words.iter().map(|w| format!("  - {w}\n")).collect();
+    write(
+        tmp,
+        ".kotowari/config.yaml",
+        &format!(
+            "tests:\n  files:\n    - \"tests/**/*.rs\"\ndecisions:\n  documents: docs/decisions\nvague_words:\n{list}"
+        ),
+    );
+}
+
+/// vague_word の指摘だけ
+fn vague(value: &serde_json::Value) -> Vec<(String, String, Option<u64>, String)> {
+    findings(value)
+        .into_iter()
+        .filter(|f| f.0 == "vague_word")
+        .collect()
+}
+
+// @kotowari[C-core-docs-18, C-core-forder-7]
+#[test]
+fn a_vague_word_in_decision_is_a_vague_word_finding_on_its_line() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_vague_words(tmp.path(), &["適切に"]);
+    write(
+        tmp.path(),
+        "docs/decisions/greet/greet.md",
+        &topic(&[decision(
+            "挨拶する",
+            "提案",
+            &[
+                ("問題", "困っていた。"),
+                ("決めたこと", "会ったら挨拶する。\n声は適切に出す。"),
+            ],
+        )]),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        vague(&value),
+        vec![finding(
+            "vague_word",
+            "docs/decisions/greet/greet.md",
+            16,
+            "適切に"
+        )]
+    );
+}
+
+// @kotowari[C-core-docs-18]
+#[test]
+fn a_vague_word_in_a_confirmation_row_is_a_vague_word_finding() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_vague_words(tmp.path(), &["適切に"]);
+    write(
+        tmp.path(),
+        "docs/decisions/greet/greet.md",
+        &topic(&[confirmed(
+            "挨拶する",
+            "提案",
+            &["C-greet-1 挨拶が出る", "C-greet-2 声が適切に出る"],
+        )]),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        vague(&value),
+        vec![finding(
+            "vague_word",
+            "docs/decisions/greet/greet.md",
+            20,
+            "適切に"
+        )]
+    );
+}
+
+// @kotowari[C-core-docs-19]
+#[test]
+fn a_vague_word_in_problem_or_rejected_options_is_not_a_finding() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_vague_words(tmp.path(), &["適切に"]);
+    write(
+        tmp.path(),
+        "docs/decisions/greet/greet.md",
+        &format!(
+            "# 挨拶\n\n挨拶の仕方を適切に決める。\n\n{}",
+            decision(
+                "挨拶する",
+                "提案",
+                &[
+                    ("問題", "適切に挨拶できていなかった。"),
+                    ("決めたこと", "会ったら挨拶する。"),
+                    ("見送った案", "- 適切に挨拶する。"),
+                ],
+            )
+        ),
+    );
+    let value = check(tmp.path());
+    assert_eq!(vague(&value), vec![]);
+}
+
+// @kotowari[C-core-docs-18]
+#[test]
+fn vague_words_match_inside_words_once_per_occurrence_and_by_the_longest_word() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_vague_words(tmp.path(), &["など", "などの", "適切に"]);
+    write(
+        tmp.path(),
+        "docs/decisions/greet/greet.md",
+        &topic(&[decision(
+            "挨拶する",
+            "提案",
+            &[
+                ("問題", "困っていた。"),
+                ("決めたこと", "不適切にしない。適切に、などの言葉を使う。"),
+            ],
+        )]),
+    );
+    let value = check(tmp.path());
+    let path = "docs/decisions/greet/greet.md";
+    assert_eq!(
+        vague(&value),
+        vec![
+            finding("vague_word", path, 15, "などの"),
+            finding("vague_word", path, 15, "適切に"),
+            finding("vague_word", path, 15, "適切に"),
+        ]
+    );
+}
+
+// @kotowari[C-core-docs-18]
+#[test]
+fn a_vague_word_in_a_code_block_of_decision_is_not_a_finding() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_vague_words(tmp.path(), &["適切に"]);
+    write(
+        tmp.path(),
+        "docs/decisions/greet/greet.md",
+        &topic(&[decision(
+            "挨拶する",
+            "提案",
+            &[
+                ("問題", "困っていた。"),
+                ("決めたこと", "会ったら挨拶する。\n\n```text\n適切に\n```"),
+            ],
+        )]),
+    );
+    let value = check(tmp.path());
+    assert_eq!(vague(&value), vec![]);
+}
+
+// @kotowari[C-core-docs-18]
+#[test]
+fn a_vague_word_inside_double_quotes_is_a_mention_and_not_a_finding() {
+    let tmp = TempDir::new().unwrap();
+    make_project_with_vague_words(tmp.path(), &["適切に"]);
+    write(
+        tmp.path(),
+        "docs/decisions/greet/greet.md",
+        &topic(&[decision(
+            "挨拶する",
+            "提案",
+            &[
+                ("問題", "困っていた。"),
+                ("決めたこと", "\"適切に\" という語を一覧に入れる。適切に"),
+            ],
+        )]),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        vague(&value),
+        vec![finding(
+            "vague_word",
+            "docs/decisions/greet/greet.md",
+            15,
+            "適切に"
+        )]
+    );
+}
