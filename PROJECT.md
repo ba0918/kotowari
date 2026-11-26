@@ -4,8 +4,8 @@
 
 A Cargo workspace holding nine Rust packages. The root package is `kotowari-cli`; `crates/kotowari` owns acquisition and typed APIs, and `crates/kotowari-source-analysis` owns ast-grep analysis. The schema I/O and mds binary are separate packages at `crates/kotowari-markdown-schema-io` and `crates/kotowari-mds`. `crates/kotowari-overview` checks overview data and builds its render input in memory, and `crates/kotowari-markdown-view` renders it to static HTML pages in memory; `kotowari overview build` and `serve` write and show those pages.
 
-- `kotowari-cli` at the repository root — the `kotowari` binary (`src/main.rs`). A normalised
-  specification (the IR) is written as Markdown and checked mechanically by `kotowari check`,
+- `kotowari-cli` at the repository root — the `kotowari` binary (`src/main.rs`). The specification
+  is written as decision documents in Markdown and checked mechanically by `kotowari check`,
   with the read commands `list`, `query` and `status`, the mutation-test reader `mutants`, and
   `overview build` and `overview serve` for the overview pages beside it.
 - `crates/kotowari-core` — pure memory parsing, comparison and inspection. The root binary depends normally only on the high-level `kotowari` library.
@@ -14,7 +14,7 @@ A Cargo workspace holding nine Rust packages. The root package is `kotowari-cli`
 `Cargo.toml` at the root declares the workspace members and excludes `experiments/`.
 
 The Claude Code skills live in `agent/skills/`, nine of them: the `kotowari` skill (`kotowari/`:
-how to write the IR and decision records, read `check`, and place marks) and eight workflow
+how to write decision documents, read `check`, and place marks) and eight workflow
 skills that depend on it (`kotowari-brainstorm/`, `-cycle/`, `-implement/`,
 `-review/`, `-iterate/`, `-investigate/`, `-using-workflow/`, `-adopt/`).
 `agent/skills/README.md` says how they relate and how to install them.
@@ -28,7 +28,7 @@ Run cargo from the repository root; it covers the whole workspace.
 | Build | `CARGO_BUILD_JOBS=4 cargo build --workspace` |
 | Test | `CARGO_BUILD_JOBS=4 cargo test --workspace` |
 | Test one crate | `CARGO_BUILD_JOBS=4 cargo test -p kotowari-markdown-schema` |
-| Check this repository's own IR | `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-cli --bin kotowari -- check --format text` |
+| Check this repository's own specification | `CARGO_BUILD_JOBS=4 cargo run -q -p kotowari-cli --bin kotowari -- check --format text` |
 | Test optional adapters | `CARGO_BUILD_JOBS=4 cargo test --workspace --all-features --locked` |
 | Quality gates (pre-commit) | `lefthook run pre-commit --no-auto-install` |
 
@@ -97,43 +97,31 @@ The specification is held in decision documents under `docs/decisions/`
 (`docs/decisions/core/decision-documents.md`): `docs/decisions/core/` for `kotowari`,
 `docs/decisions/schema/` for `kotowari-markdown-schema` and `docs/decisions/view/` for
 `kotowari-markdown-view`. Each topic is a pair, `<topic>.md` in English (the side `check` reads)
-and `<topic>.ja.md` in Japanese, with its agreement record `<topic>.i18n.yaml`. The old form —
-the IR under `docs/ir/` and the decision records and ADRs under `docs/decision/` — is still read
-by `check` beside them until it is removed, so tests carry the IDs of both forms for now.
-`.kotowari/config.yaml` points `check` at both forms, so one run covers every product.
-`docs/frozen/` holds the old-form documents a moved part replaced and the mapping tables from old
-IDs to new rows (`docs/frozen/maps/`); `check` does not read it, and it is not evidence of current
-rules.
+and `<topic>.ja.md` in Japanese, with its agreement record `<topic>.i18n.yaml`.
+`.kotowari/config.yaml` points `check` at `docs/decisions`, so one run covers every product.
+A decision that is not product behaviour (the build, CI, releases, the workflow) is written in the
+same documents as a decision without rows to confirm.
 
-The documents under `docs/ir/core/` are checked by `kotowari check` alone. They carry no `$schema`
-frontmatter, so `kotowari-mds check` does not read them: given a directory it skips them, and
-given one of them by name it stops.
+`docs/frozen/` holds the documents of the old form from before the switch to decision documents —
+the IR (`docs/frozen/ir/`), the decision records and ADRs (`docs/frozen/decision/`) — and the
+mapping tables from old IDs to new rows (`docs/frozen/maps/`). `check` does not read it, and it is
+not evidence of current rules: do not cite it as grounds in code, tests or comments.
 
 `docs/spec/` is **not** the specification. It holds prose — concept notes and the write-ups a
 brainstorm produced — and `check` never reads it, because `.kotowari/config.yaml` does not point
 at it. Where prose and the specification disagree, the specification is what holds.
 
-Terms are defined in the `CONTEXT.md` of each group under `docs/decisions/` (and, for the old
-form, of each IR directory), and rules the old-form IR does not yet carry are recorded in its
-`FLAGS.md`. Read the `kotowari` skill before writing or revising an IR
-document and before acting on a `kotowari check` finding. To decide where a new request starts,
-use the `kotowari-using-workflow` skill, not `ba0918-using-workflow`.
-
-## Decisions
-
-Decisions live in `docs/decision/records/`, one file per brainstorm, one line per decision. The
-IR cites them as its sources. `docs/decision/adr/` holds the four ADRs written before
-2026-09-17; they are kept as citation targets and no new ones are written.
+Terms are defined in the `CONTEXT.md` of each group under `docs/decisions/`. Read the `kotowari`
+skill before writing or revising a decision document and before acting on a `kotowari check`
+finding. To decide where a new request starts, use the `kotowari-using-workflow` skill, not
+`ba0918-using-workflow`.
 
 Implementation plans are in `docs/plans/`. Unresolved specification questions are in `TODO.md`.
 
 ## Release
 
-The release flow is decided in
-[docs/decision/records/2026-09-26-release-flow.md](docs/decision/records/2026-09-26-release-flow.md);
-the version and tag form in
-[docs/decision/records/2026-09-23-versions-and-cli-name.md](docs/decision/records/2026-09-23-versions-and-cli-name.md).
-It is not part of the IR.
+The release flow is not product behaviour and has no rows to confirm; the procedure below is how
+this repository releases.
 
 The two products carry separate versions, each declared in one place:
 
