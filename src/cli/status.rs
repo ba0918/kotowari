@@ -71,6 +71,15 @@ review_with_how_to_verify={} review_without_how_to_verify={} without_examples={}
             decisions.implemented()
         );
     }
+    // C-core-status-13: 同じく、置き場を設定に書いたときだけ出す
+    if let Some(rows) = result.confirmations() {
+        println!(
+            "confirmations with_tests={} without_tests={} by_reading={}",
+            rows.with_tests(),
+            rows.without_tests(),
+            rows.by_reading()
+        );
+    }
     let findings = result.findings();
     println!(
         "findings error={} notice={}",

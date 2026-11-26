@@ -36,6 +36,10 @@ impl StatusReport {
     pub fn decisions(&self) -> Option<&crate::DecisionStates> {
         self.0.decisions.as_ref()
     }
+    /// 確認することの行の数。決定の文書の置き場を設定に書いたときだけ持つ（C-core-status-13）
+    pub fn confirmations(&self) -> Option<&crate::ConfirmationCounts> {
+        self.0.confirmations.as_ref()
+    }
     /// 追加の指摘の群の数。渡した順に並ぶ（TBL-core-042）
     pub fn groups(&self) -> &[GroupTally] {
         &self.0.groups

@@ -133,6 +133,9 @@ pub fn status(value: &StatusReport) -> Value {
         result["decisions"] =
             json!({"proposed":decisions.proposed(),"implemented":decisions.implemented()});
     }
+    if let Some(rows) = value.confirmations() {
+        result["confirmations"] = json!({"with_tests":rows.with_tests(),"without_tests":rows.without_tests(),"by_reading":rows.by_reading()});
+    }
     result
 }
 /// REQ-core-295: "written"、"removed"、"unchanged" の3つの鍵だけ

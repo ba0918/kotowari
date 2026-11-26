@@ -25,6 +25,9 @@ pub struct StatusResult {
     /// 状態ごとの決定の数。決定の文書の置き場を設定に書いたときだけ持つ（C-core-confirm-9）
     #[serde(skip_serializing_if = "Option::is_none")]
     pub decisions: Option<crate::decisions::DecisionStates>,
+    /// 確認することの行の数。決定の文書の置き場を設定に書いたときだけ持つ（C-core-status-13）
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub confirmations: Option<crate::decisions::ConfirmationCounts>,
     /// REQ-core-165: `誤り`が0件で、かつ`問題の記録`の`項目`が0件のときだけ true。
     /// 決定の文書の「未決」の節に項目があっても false（C-core-docs-12）
     pub complete: bool,
@@ -179,6 +182,7 @@ pub fn build(
         surface,
         findings: counts,
         decisions: None,
+        confirmations: None,
         groups: Vec::new(),
     }
 }

@@ -113,6 +113,19 @@ impl DecisionStates {
     readonly!(copy proposed: usize, implemented: usize);
 }
 
+/// 確認することの行の数（status の "confirmations"、C-core-status-13）。決定の状態を問わず、形の
+/// 正しい ID の行を数える。（読んで確認）の行は、テストの印があっても by_reading にだけ数える
+#[derive(Debug, Clone, Copy, Default, serde::Serialize)]
+pub struct ConfirmationCounts {
+    pub(crate) with_tests: usize,
+    pub(crate) without_tests: usize,
+    pub(crate) by_reading: usize,
+}
+
+impl ConfirmationCounts {
+    readonly!(copy with_tests: usize, without_tests: usize, by_reading: usize);
+}
+
 /// 形の語の、1つの言語での綴り。どちらの言語の綴りも、どの文書でも同じ意味に読む。
 /// 埋め込んだスキーマの名前の一覧と正規表現は、この表と同じ語を持つ（C-core-formc-4）
 struct Keywords {
@@ -1135,6 +1148,25 @@ pub(crate) fn states(documents: &[Document]) -> DecisionStates {
         }
     }
     states
+}
+
+/// 確認することの行を、テストのあるもの、無いもの、読んで確認するものに分けて数える
+pub(crate) fn confirmation_counts(
+    documents: &[Document],
+    markers: &[crate::tests_discovery::TestMarker],
+) -> ConfirmationCounts {
+    let marked: BTreeSet<&str> = markers.iter().map(|marker| marker.id.as_str()).collect();
+    let mut counts = ConfirmationCounts::default();
+    for (_, _, row) in rows(documents).filter(|(_, _, row)| is_confirmation_id(&row.id)) {
+        if row.by_reading {
+            counts.by_reading += 1;
+        } else if marked.contains(row.id.as_str()) {
+            counts.with_tests += 1;
+        } else {
+            counts.without_tests += 1;
+        }
+    }
+    counts
 }
 
 /// 読んだ文書の数

@@ -81,11 +81,11 @@ The group of counts per decision state is decided in [The implementing side chan
 
 ## The number of confirmation rows is output split into those with tests, those without, and those by reading
 
-Status: proposed
+Status: implemented
 
 ### Problem
 
-The old summary output, per requirement, the numbers with and without tests, and the number of requirements not checked by tests that had a way of checking. The user agreed on this form after seeing a sample made from real data, and decided to judge which counts to add or drop while using it. In the new form, the unit for counting tests is the confirmation row ([Check counts, per confirmation row, whether a test points at it](confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it)), and a row not checked by tests has "(by reading)" written at its head ([Write "Write "(by reading)" at the head of a line not checked by tests" at the head of a line not checked by tests](confirmations.md#write-by-reading-at-the-head-of-a-line-not-checked-by-tests)). What the current status outputs about the new form is only the count per decision state, and how many confirmation rows have tests is not visible as a count.
+The old summary output, per requirement, the numbers with and without tests, and the number of requirements not checked by tests that had a way of checking. The user agreed on this form after seeing a sample made from real data, and decided to judge which counts to add or drop while using it. In the new form, the unit for counting tests is the confirmation row ([Check counts, per confirmation row, whether a test points at it](confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it)), and a row not checked by tests has "(by reading)" written at its head ([Write "Write "(by reading)" at the head of a line not checked by tests" at the head of a line not checked by tests](confirmations.md#write-by-reading-at-the-head-of-a-line-not-checked-by-tests)). Before this decision, what status output about the new form was only the count per decision state, and how many confirmation rows had tests was not visible as a count.
 
 ### Decision
 

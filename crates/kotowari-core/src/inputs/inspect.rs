@@ -109,6 +109,12 @@ impl CheckPreparation {
             .documents
             .is_some()
             .then(|| crate::decisions::states(&self.read.decisions));
+        status.confirmations = status.decisions.map(|_| {
+            crate::decisions::confirmation_counts(
+                &self.read.decisions,
+                &self.read.discovered.markers,
+            )
+        });
         status.groups = self.groups.clone();
         status.documents.files += side_files;
         status.documents.lines += side_lines;

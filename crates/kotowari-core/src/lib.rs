@@ -12,7 +12,9 @@ macro_rules! readonly {
 extern crate self as kotowari_core;
 pub mod config;
 mod decisions;
-pub use decisions::{DecisionStates, DecisionTally, is_confirmation_id, is_decision_target};
+pub use decisions::{
+    ConfirmationCounts, DecisionStates, DecisionTally, is_confirmation_id, is_decision_target,
+};
 mod deferred;
 mod deferred_notices;
 mod doc_kind;

@@ -3071,3 +3071,45 @@ fn query_of_a_decision_lists_the_decisions_linking_to_its_heading_by_path_and_li
     let unlinked = &query(tmp.path(), "docs/decisions/a.md#ほかを指す")["items"][0];
     assert_eq!(unlinked["referenced_by"], serde_json::json!([]));
 }
+
+// @kotowari[C-core-status-13]
+#[test]
+fn status_counts_the_rows_with_tests_without_tests_and_by_reading_apart() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[
+            confirmed(
+                "挨拶する",
+                "実装済み",
+                &[
+                    "C-greet-1 挨拶が出る",
+                    "C-greet-2 （読んで確認）挨拶を書く",
+                    "C-greet-3 （読んで確認）名前を書く",
+                ],
+            ),
+            confirmed(
+                "別れる",
+                "提案",
+                &["C-greet-4 手を振る", "C-greet-5 礼をする"],
+            ),
+        ]),
+    );
+    write(
+        tmp.path(),
+        "tests/greet.rs",
+        "// @kotowari[C-greet-1, C-greet-3]\n#[test]\nfn greets() {}\n\n// @kotowari[C-greet-4]\n#[test]\nfn waves() {}\n",
+    );
+    let (value, text) = status(tmp.path());
+    assert_eq!(
+        value["confirmations"],
+        serde_json::json!({"with_tests": 2, "without_tests": 1, "by_reading": 2})
+    );
+    assert!(
+        text.lines()
+            .any(|line| line == "confirmations with_tests=2 without_tests=1 by_reading=2"),
+        "{text}"
+    );
+}
