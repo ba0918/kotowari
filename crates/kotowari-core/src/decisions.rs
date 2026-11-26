@@ -352,7 +352,8 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
     let mut title: Option<(usize, String)> = None;
     let mut lead = false;
     let mut open_items = 0;
-    let lines: Vec<&str> = text.lines().collect();
+    // 行の区切りは kotowari のほかの文書と同じ（"\n"、"\r\n"、単独の "\r"）。Markdown の読み手の行の番号もそう数える
+    let lines = crate::ir::split_lines(text);
     unclosed_code_blocks(path, &root, text, &lines, findings);
     let anchored = heading_anchors(&root);
     let blocks = root.children().map(Vec::as_slice).unwrap_or_default();
@@ -540,7 +541,7 @@ pub(crate) fn parse_target(path: &str, text: &str, content: Option<&mut Vec<Find
     let root = crate::markdown::parse(text).ok();
     let links = content.is_some();
     if let (Some(findings), Some(root)) = (content, &root) {
-        let lines: Vec<&str> = text.lines().collect();
+        let lines = crate::ir::split_lines(text);
         unclosed_code_blocks(path, root, text, &lines, findings);
     }
     Document {
@@ -707,7 +708,10 @@ fn read_decision_block(node: &Node, text: &str, lines: &[&str], building: &mut B
         }
         Node::Paragraph(_) if awaiting_state => {
             let text = node.to_string();
-            let first = text.lines().next().unwrap_or_default();
+            let first = crate::ir::split_lines(&text)
+                .first()
+                .copied()
+                .unwrap_or_default();
             if let Some((keywords, value)) = state_line(first) {
                 building.state_line = Some((line_of(node), keywords, value.to_owned()));
             }

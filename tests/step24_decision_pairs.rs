@@ -555,3 +555,36 @@ fn an_unclosed_code_block_on_the_japanese_side_is_an_error_on_that_side() {
     );
     assert_eq!(code, Some(1));
 }
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_pair_whose_lines_end_in_a_lone_carriage_return_reads_like_one_ending_in_line_feeds() {
+    let read = |ending: &str| {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path());
+        write_pair(
+            tmp.path(),
+            DIR,
+            "greet",
+            &english("greet", "implemented", &["C-greet-1 Shown"]).replace('\n', ending),
+            &japanese("greet", "実装済み", &["C-greet-1 出る"]).replace('\n', ending),
+        );
+        let (_, stdout, _) = run(
+            tmp.path(),
+            &["query", "docs/decisions/greet/greet.md#greet"],
+        );
+        let decision: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+        (findings(&check(tmp.path())), decision)
+    };
+    let (findings_lf, decision_lf) = read("\n");
+    assert_eq!(
+        findings_lf,
+        vec![finding(
+            "confirmation_without_test",
+            "docs/decisions/greet/greet.md",
+            Some(21),
+            "C-greet-1"
+        )]
+    );
+    assert_eq!(read("\r"), (findings_lf, decision_lf));
+}

@@ -1821,3 +1821,87 @@ fn an_unclosed_code_block_under_a_confirmation_row_is_an_error_and_the_next_rows
     );
     assert_eq!(code, Some(1));
 }
+
+/// 指摘の (kind, path, line, detail)
+type FindingRow = (String, String, Option<u64>, String);
+
+/// 文書の "\n" を `ending` に置き換えて書き、check の指摘と、決定と行の query の結果を返す
+fn read_with_ending(
+    text: &str,
+    ending: &str,
+) -> (Vec<FindingRow>, serde_json::Value, serde_json::Value) {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &text.replace('\n', ending),
+    );
+    (
+        findings(&check(tmp.path())),
+        query(tmp.path(), "docs/decisions/greet.md#挨拶する")["items"][0].clone(),
+        query(tmp.path(), "C-greet-1")["items"][0].clone(),
+    )
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn every_line_ending_gives_the_same_body_fingerprint_and_lines() {
+    let text = topic(&[confirmed(
+        "挨拶する",
+        "実装済み",
+        &["C-greet-1 挨拶が\n  二行で出る"],
+    )]);
+    let (findings_lf, decision_lf, row_lf) = read_with_ending(&text, "\n");
+    assert_eq!(
+        findings_lf,
+        vec![finding(
+            "confirmation_without_test",
+            "docs/decisions/greet.md",
+            19,
+            "C-greet-1"
+        )]
+    );
+    assert_eq!(
+        decision_lf["body"],
+        serde_json::json!([
+            "### 決めたこと",
+            "",
+            "こうする。",
+            "### 確認すること",
+            "",
+            "- C-greet-1 挨拶が",
+            "  二行で出る"
+        ])
+    );
+    for ending in ["\r\n", "\r"] {
+        let (findings, decision, row) = read_with_ending(&text, ending);
+        assert_eq!(findings, findings_lf, "{ending:?}");
+        assert_eq!(decision, decision_lf, "{ending:?}");
+        assert_eq!(row, row_lf, "{ending:?}");
+    }
+}
+
+// @kotowari[C-core-docs-5]
+#[test]
+fn a_state_line_wrapped_by_a_lone_carriage_return_is_read() {
+    for (text, state) in [
+        (
+            "# 挨拶\r\r挨拶の仕方を決める。\r\r## 挨拶する\r\r状態: 実装済み\r続きの文。\r\r\
+             ### 問題\r\r困っていた。\r\r### 決めたこと\r\rこうする。\r",
+            "implemented",
+        ),
+        (
+            "# Greetings\r\rDecides how to greet.\r\r## 挨拶する\r\rStatus: proposed\rMore words.\r\r\
+             ### Problem\r\rTrouble.\r\r### Decision\r\rDo this.\r",
+            "proposed",
+        ),
+    ] {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(tmp.path(), "docs/decisions/greet.md", text);
+        assert_eq!(findings(&check(tmp.path())), vec![], "{state}");
+        let decision = &query(tmp.path(), "docs/decisions/greet.md#挨拶する")["items"][0];
+        assert_eq!(decision["state"], state);
+    }
+}
