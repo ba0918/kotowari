@@ -54,6 +54,8 @@ pub(crate) struct Decision {
     pub(crate) quotable: Vec<String>,
     /// 状態が「提案」でも「実装済み」でもなければ None
     pub(crate) state: Option<State>,
+    /// 状態の行。無ければ見出しの行
+    pub(crate) state_line: usize,
     pub(crate) confirmations: Vec<Confirmation>,
 }
 
@@ -303,6 +305,10 @@ impl Building {
             fingerprint: crate::fingerprint::digest(&fingerprinted),
             fingerprinted,
             state,
+            state_line: self
+                .state_line
+                .as_ref()
+                .map_or(self.heading_line, |(line, _, _)| *line),
             confirmations: self.confirmations,
             quotable: self.quotable,
         }
@@ -411,6 +417,67 @@ pub(crate) fn parse(path: &str, text: &str, findings: &mut Vec<Finding>) -> Docu
         anchors: anchored.into_values().collect(),
         links: crate::translations::markdown_links(&root),
     }
+}
+
+/// `対`の`側`の`骨組み`（C-core-lang-4）。見出しは深さと、形の語の見出しならその節の種類だけで、文は
+/// 比べない。状態の行は決定ごとの状態、確認することは行ごとの ID と（読んで確認）の有無。どれも
+/// どちらの言語の綴りで書いても同じ要素になる
+pub(crate) fn skeleton(text: &str, root: Option<&Node>) -> crate::skeleton::Skeleton {
+    use crate::skeleton::Element;
+    fn walk(node: &Node, out: &mut Vec<Element>) {
+        if let Node::Heading(heading) = node {
+            let name = node.to_string();
+            let kind = match heading.depth {
+                2 if is_open(&name) => ":open",
+                3 => match Section::of(&name) {
+                    Some(Section::Problem) => ":problem",
+                    Some(Section::Decided) => ":decided",
+                    Some(Section::Rejected) => ":rejected",
+                    Some(Section::Confirmations) => ":confirmations",
+                    None => "",
+                },
+                _ => "",
+            };
+            out.push(Element {
+                value: format!("{}{kind}", heading.depth),
+                line: Some(line_of(node)),
+            });
+        }
+        for child in node.children().into_iter().flatten() {
+            walk(child, out);
+        }
+    }
+    let mut headings = Vec::new();
+    if let Some(root) = root {
+        walk(root, &mut headings);
+    }
+    let document = parse("", text, &mut Vec::new());
+    let states = document
+        .decisions
+        .iter()
+        .map(|decision| Element {
+            value: decision.state.map_or("invalid", State::as_str).to_owned(),
+            line: Some(decision.state_line),
+        })
+        .collect();
+    let rows = document
+        .decisions
+        .iter()
+        .flat_map(|decision| &decision.confirmations)
+        .map(|row| Element {
+            value: if row.by_reading {
+                format!("{} (by reading)", row.id)
+            } else {
+                row.id.clone()
+            },
+            line: Some(row.line),
+        })
+        .collect();
+    vec![
+        ("heading", headings),
+        ("state", states),
+        ("confirmation", rows),
+    ]
 }
 
 /// 用語集のファイルの名前。置き場のまとまりのフォルダの直下にあれば、話題の文書として読まない（C-core-docs-20）

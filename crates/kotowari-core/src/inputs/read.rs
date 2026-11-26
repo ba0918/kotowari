@@ -24,19 +24,38 @@ impl ReadPreparation {
             decision_targets: vec![],
         }
     }
+    /// 決定の文書の置き場の1つのファイルを読む。`先頭の言語`の`側`の話題の文書だけを話題の文書として
+    /// 読み、ほかの言語の`側`はリンクの行き先とリンクだけを読む（C-core-lang-3）。`切り替えの行`は
+    /// 題名のあとの段落に数えない
     pub(super) fn parse_decisions(&mut self, source: &Text) {
-        let place = self.policy.config.decisions.documents.as_deref();
-        if place.is_some_and(|place| crate::decisions::is_glossary(&source.path, place)) {
+        let config = &self.policy.config;
+        let languages = config.languages();
+        let (directory, name) = source.path.rsplit_once('/').unwrap_or(("", &source.path));
+        let (language, first) = match crate::translations::classify(name, &languages) {
+            crate::translations::Classified::Side { language, first } => {
+                (language, crate::join_display_path(directory, &first))
+            }
+            crate::translations::Classified::First | crate::translations::Classified::Record => {
+                (languages[0].clone(), source.path.clone())
+            }
+        };
+        let text = crate::translations::without_switcher(config, &first, &language, &source.text);
+        let text = text.as_deref().unwrap_or(&source.text);
+        let glossary = config
+            .decisions
+            .documents
+            .as_deref()
+            .is_some_and(|place| crate::decisions::is_glossary(&first, place));
+        if glossary || language != languages[0] {
             // C-core-docs-20: 用語集は中身を検査しないので、その中のリンクも見ない
             self.decision_targets.push(crate::decisions::parse_target(
                 &source.path,
-                &source.text,
-                false,
+                text,
+                !glossary,
             ));
             return;
         }
-        let document =
-            crate::decisions::parse(&source.path, &source.text, &mut self.decision_findings);
+        let document = crate::decisions::parse(&source.path, text, &mut self.decision_findings);
         self.decisions.push(document);
     }
     pub(super) fn parse_ir(

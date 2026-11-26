@@ -941,3 +941,50 @@ fn req_core_347_a_colon_in_a_relative_link_query_is_not_a_uri_scheme() {
         "docs/decision/records/r.md?mode=a:b"
     );
 }
+
+/// 決定の文書の1つの決定。state は状態の行、row は確認することの1行
+fn decision_document(state: &str, section: &str, row: &str) -> String {
+    format!(
+        "# T\n\nLead.\n\n## D\n\n{state}\n\n### {section}\n\nText.\n\n### Confirmations\n\n- {row}\n"
+    )
+}
+
+// @kotowari[C-core-lang-4]
+#[test]
+fn a_decision_skeleton_compares_headings_states_and_rows_but_not_words() {
+    let first = decision_document("Status: proposed", "Problem", "C-a-1 Shown");
+    assert_eq!(
+        mismatch(
+            Kind::Decision,
+            &first,
+            &decision_document("状態: 提案", "問題", "C-a-1 出る")
+                .replace("### Confirmations", "### 確認すること")
+        ),
+        None
+    );
+    assert_eq!(
+        mismatch(
+            Kind::Decision,
+            &first,
+            &decision_document("Status: implemented", "Problem", "C-a-1 Shown")
+        ),
+        Some(("state", Some(7)))
+    );
+    assert_eq!(
+        mismatch(
+            Kind::Decision,
+            &first,
+            &decision_document("Status: proposed", "Background", "C-a-1 Shown")
+        ),
+        Some(("heading", Some(9)))
+    );
+    assert_eq!(
+        mismatch(
+            Kind::Decision,
+            &first,
+            &decision_document("Status: proposed", "Problem", "C-a-1 (by reading) Shown")
+        ),
+        Some(("confirmation", Some(15)))
+    );
+    assert_eq!(mismatch(Kind::DecisionGlossary, &first, "# Other\n"), None);
+}

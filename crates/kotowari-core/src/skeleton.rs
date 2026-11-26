@@ -20,6 +20,10 @@ pub enum Kind {
     OverviewData,
     /// `目次`
     Toc,
+    /// 決定の文書の話題の文書
+    Decision,
+    /// 決定の文書の置き場の用語集。中身を比べない
+    DecisionGlossary,
 }
 
 /// 部分の1つの要素。value が同じなら一致する
@@ -72,6 +76,8 @@ pub(crate) fn skeleton(kind: Kind, text: &str, root: Option<&Node>) -> Skeleton 
             ]
         }
         Kind::Toc => vec![("toc", toc(text))],
+        Kind::Decision => crate::decisions::skeleton(text, root),
+        Kind::DecisionGlossary => Vec::new(),
     }
 }
 

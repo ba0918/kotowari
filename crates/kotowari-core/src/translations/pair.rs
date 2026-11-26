@@ -9,6 +9,8 @@ pub enum Place {
     Guide,
     OverviewData,
     Toc,
+    /// 決定の文書の置き場（docs/decisions/core/languages-and-guides.md）
+    Decision,
 }
 
 /// ある`側`の読んだ中身
@@ -161,7 +163,7 @@ impl Pairs {
             .collect()
     }
     /// 全体像を書かずに止める`誤り`の数。`IR`、`全体像の元データ`、`目次`の`対`の translation_missing と
-    /// translation_structure_mismatch（REQ-core-294）
+    /// translation_structure_mismatch（REQ-core-294）。全体像は決定の文書を描かないので、その`対`は数えない
     pub fn overview_blockers(&self, config: &crate::config::Config) -> usize {
         let places: std::collections::BTreeMap<&str, Place> = self
             .iter()
@@ -179,7 +181,7 @@ impl Pairs {
                     FindingKind::TranslationMissing | FindingKind::TranslationStructureMismatch
                 ) && places
                     .get(finding.path.as_str())
-                    .is_some_and(|place| *place != Place::Guide)
+                    .is_some_and(|place| !matches!(place, Place::Guide | Place::Decision))
             })
             .count()
     }
