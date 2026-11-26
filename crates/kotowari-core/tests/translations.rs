@@ -735,3 +735,44 @@ fn a_decision_skeleton_compares_headings_states_and_rows_but_not_words() {
     );
     assert_eq!(mismatch(Kind::DecisionGlossary, &first, "# Other\n"), None);
 }
+
+// @kotowari[C-core-ovlang-11]
+#[test]
+fn decision_side_documents_leave_out_glossaries_and_sides_without_a_first_side() {
+    use crate::translations::{Pairs, Place};
+    let (config, languages) = ja_en();
+    let decision = "# 挨拶\n\n挨拶の仕方を決める。\n\n## 挨拶する\n\n状態: 提案\n\n\
+                    ### 問題\n\n困っていた。\n\n### 決めたこと\n\nこうする。\n";
+    let english = "# Greetings\n\nDecides how to greet.\n\n## Greet\n\nStatus: proposed\n\n\
+                   ### Problem\n\nTrouble.\n\n### Decision\n\nDo this.\n";
+    let mut pairs = Pairs::default();
+    pairs.insert(pair_of(
+        Place::Decision,
+        "docs/decisions/greet/greet.md",
+        &languages,
+        &[
+            ("docs/decisions/greet/greet.md", decision),
+            ("docs/decisions/greet/greet.en.md", english),
+        ],
+    ));
+    // 用語集は両側があっても入れない
+    pairs.insert(pair_of(
+        Place::Decision,
+        "docs/decisions/greet/CONTEXT.md",
+        &languages,
+        &[
+            ("docs/decisions/greet/CONTEXT.md", "# 用語集\n"),
+            ("docs/decisions/greet/CONTEXT.en.md", "# Glossary\n"),
+        ],
+    ));
+    // `先頭の言語`の`側`が無い`対`の、ほかの言語の`側`も入れない
+    pairs.insert(pair_of(
+        Place::Decision,
+        "docs/decisions/greet/wave.md",
+        &languages,
+        &[("docs/decisions/greet/wave.en.md", english)],
+    ));
+    let documents = crate::translations::decision_side_documents(&pairs, &config, "en").unwrap();
+    let paths: Vec<&str> = documents.iter().map(|document| document.path()).collect();
+    assert_eq!(paths, ["docs/decisions/greet/greet.en.md"]);
+}

@@ -404,6 +404,38 @@ fn a_missing_or_different_heading_on_the_japanese_side_is_a_structure_mismatch()
 
 // @kotowari[C-core-lang-4]
 #[test]
+fn an_open_section_against_a_decision_heading_is_a_heading_mismatch() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    // 未決の節と決定はどちらも "##" の見出し。骨組みでは未決の節だけが未決として違う要素になる
+    write_pair(
+        tmp.path(),
+        DIR,
+        "greet",
+        &format!(
+            "{}\n## Open\n",
+            english("greet", "proposed", &["C-greet-1 Shown"])
+        ),
+        &format!(
+            "{}\n## 夜の挨拶\n",
+            japanese("greet", "提案", &["C-greet-1 出る"])
+        ),
+    );
+    let side = "docs/decisions/greet/greet.ja.md";
+    let found = findings(&check(tmp.path()));
+    assert!(
+        found.contains(&finding(
+            "translation_structure_mismatch",
+            side,
+            Some(23),
+            "heading"
+        )),
+        "{found:?}"
+    );
+}
+
+// @kotowari[C-core-lang-4]
+#[test]
 fn different_words_in_the_same_skeleton_are_no_mismatch() {
     assert_eq!(
         mismatch(
@@ -543,7 +575,7 @@ fn a_glossary_is_paired_but_its_content_is_not_compared() {
         DIR,
         "CONTEXT",
         "# Glossary\n\nEnglish | [日本語](CONTEXT.ja.md)\n\n| Term | Meaning |\n|---|---|\n| greeting | words |\n",
-        "# 用語集\n\n[English](CONTEXT.md) | 日本語\n\n## 挨拶\n\n会ったときの言葉。[無い](nowhere.md)\n",
+        "# 用語集\n\n[English](CONTEXT.md) | 日本語\n\n## 挨拶\n\n会ったときの言葉。[無い](nowhere.md)[英語の側](CONTEXT.md)\n",
     );
     let value = check(tmp.path());
     assert_eq!(findings(&value), vec![], "{value}");
