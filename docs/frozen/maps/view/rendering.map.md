@@ -10,13 +10,13 @@
 | REQ-view-004 | C-view-rendering-7 | そのまま |
 | REQ-view-005 | C-view-rendering-8, C-view-rendering-9 | 並びと入れ子を C-8、文書の項目を C-9 にした。`rendering.rs` の `req_view_005_the_note_of_the_contents_is_drawn_under_the_index_heading` と `req_view_005_the_note_of_a_nested_group_is_part_of_the_group_heading` は C-8 を指す。説明（note）を描くことは落とした細部で、テストの中に残る |
 | REQ-view-006 | C-view-rendering-10 | そのまま |
-| REQ-view-007 | C-view-rendering-11, C-view-rendering-12 | Markdown を HTML にすることを C-11、参照リンクの解き方を C-12 にした。`rendering.rs` の `req_view_007_markdown_text_follows_commonmark_and_gfm_tables` は C-11、EX-view-024 のテストは C-12。生の HTML とコメントのテスト（EX-view-003 のテストと `req_view_007_text_next_to_a_comment_is_not_drawn_as_code`、`req_view_007_a_comment_spanning_lines_inside_a_paragraph_keeps_one_paragraph`、`req_view_007_a_comment_line_keeps_the_blocks_around_it_apart`）は、落とした細部（生の HTML を文字で出す、コメントを出さない）を確かめているが、Markdown の変換を確かめるテストとして C-11 を指す。`req_view_007_footnote_syntax_is_not_drawn_as_footnotes` も C-11 |
+| REQ-view-007 | C-view-rendering-11, C-view-rendering-12, C-view-rendering-17, C-view-rendering-18 | Markdown を HTML にすることを C-11、参照リンクの解き方を C-12、生の HTML を文字で出すことを C-17、コメントを出さないことを C-18 にした。`rendering.rs` の `req_view_007_markdown_text_follows_commonmark_and_gfm_tables` は C-11、EX-view-024 のテストは C-12。EX-view-003 のテストは C-17 と C-18、`req_view_007_text_next_to_a_comment_is_not_drawn_as_code`、`req_view_007_a_comment_spanning_lines_inside_a_paragraph_keeps_one_paragraph`、`req_view_007_a_comment_line_keeps_the_blocks_around_it_apart` は C-18 を指す。`req_view_007_footnote_syntax_is_not_drawn_as_footnotes` も C-11 |
 | REQ-view-008 | C-view-rendering-13, C-view-rendering-14 | 本文を開くこととページの外へリンクしないことを C-13、状態のマーカーを C-14 にした。`rendering.rs` の `req_view_008_deferred_references_are_marked_and_no_reference_links_out` は C-13 と C-14。`crates/kotowari-markdown-view/tests/languages.rs` の `a_reference_missing_from_the_table_is_its_key_as_text_and_opens_nothing` は C-13 |
 | REQ-view-009 | C-view-rendering-15 | そのまま |
-| REQ-view-010 | C-view-rendering-16 | 決めたことをフォントの範囲にした。`parts.rs` の `req_view_010_markdown_text_cannot_make_the_page_load_images_scripts_or_styles` は、外の参照が無いことを確かめるので、外のフォントが無いことも確かめる。C-16 を指す |
+| REQ-view-010 | C-view-rendering-16, C-view-rendering-19, C-view-rendering-20 | フォントを C-16、スタイルと画像を C-19、文章の塊から外を読み込ませないことを C-20 にした。スクリプトは「一覧と移動」の、どのページにもスクリプトを入れない決定に属する。`parts.rs` の EX-view-006 のテストは C-16 と C-19、`req_view_010_markdown_text_cannot_make_the_page_load_images_scripts_or_styles` は C-20 を指す |
 | EX-view-001 | C-view-rendering-5 | そのまま |
 | EX-view-002 | C-view-rendering-7 | そのまま |
-| EX-view-003 | - | 生の HTML を文字で出すこととコメントを出さないことは、LLM が決めた細部として落とした（下の「落とした細部」）。テストは一緒に指している REQ-view-007 から C-11 を指す |
+| EX-view-003 | C-view-rendering-17, C-view-rendering-18 | 一度は落とした細部にしたが、決定に戻した（下の「落とした細部」）。テストは C-17 と C-18 を指す |
 | EX-view-004 | C-view-rendering-13, C-view-rendering-14 | 本文と外へのリンクの無さが C-13、置き換え済みのマーカーが C-14 |
 | EX-view-005 | C-view-rendering-15 | そのまま |
 | EX-view-006 | C-view-rendering-16 | 外の参照が無いことを確かめるので、外のフォントが無いことも確かめる |
@@ -29,9 +29,9 @@
 
 | 要求のどの部分 | 誰が決めたと記録にあるか |
 |---|---|
-| REQ-view-007: 生の HTML を解釈せず文字として出し、HTML のコメントは出さない | LLM（2026-10-02-whole-picture.md の A70。「承認の時に利用者に示す」） |
+| REQ-view-007: 生の HTML を解釈せず文字として出し、HTML のコメントは出さない | LLM（2026-10-02-whole-picture.md の A70。「承認の時に利用者に示す」）。後に決定に戻した（C-view-rendering-17、C-view-rendering-18） |
 | REQ-view-007: Markdown を CommonMark と GFM の表として読む（決めたことには、利用者が決めた「見出し、文章、リスト、表、コード」を書いた） | LLM（2026-10-02-whole-picture.md の A82。照合レビューの指摘から） |
-| REQ-view-010: フォントに限らず、スクリプト、スタイル、画像もページの外から読み込まない | LLM（A82）。利用者が決めたのはフォントだけ（A37）。言語の切り替えにスクリプトを使わないことは利用者の決定（2026-10-05-localization.md の A20）で、「言語」の話題に属する |
+| REQ-view-010: フォントに限らず、スクリプト、スタイル、画像もページの外から読み込まない | LLM（A82）。利用者が決めたのはフォントだけ（A37）。言語の切り替えにスクリプトを使わないことは利用者の決定（2026-10-05-localization.md の A20）で、「言語」の話題に属する。後にスタイルと画像を決定に戻した（C-view-rendering-19、C-view-rendering-20） |
 | REQ-view-002: ページどうしと "style.css" への参照が相対パスであること | LLM（A82） |
 | REQ-view-001: 文書、節、参照の表の項目、目次の群の欄の正確な形（名前、題名、本文を省いてよいこと、など） | LLM（A82）と、細部を LLM に任せた承認（2026-10-05-localization.md の D1） |
 | REQ-view-001、REQ-view-008: 状態の値の綴り "current"、"superseded"、"deferred" | LLM（2026-10-02-whole-picture.md の A81） |
@@ -70,7 +70,7 @@
 
 ## 迷った判断と、どう決めたか
 
-- 生の HTML を文字で出すこと（A70）と、スクリプト・スタイル・画像を外から読み込まないこと（A82）は、どちらも安全に関わるが、記録では LLM が決めた細部で、利用者には承認のときにまとめて示しただけである。決まりどおり落とし、テストの中に残した。決定の文書から消えるので、承認のときに利用者が戻すかを判断するのがよい。
+- 生の HTML を文字で出すこと（A70）と、スクリプト・スタイル・画像を外から読み込まないこと（A82）は、どちらも安全に関わるが、記録では LLM が決めた細部で、利用者には承認のときにまとめて示しただけである。決まりどおり落とし、テストの中に残した。後に利用者が決定に戻した（C-view-rendering-17〜20）。
 - 参照の状態の3つ（A67）と、節ごとに古さを計算して渡すこと（A68）は、LLM が導いた細部だが、記録に「利用者が第21ラウンドで確認した」とある。まとめての承認ではなく、ラウンドの中での確認なので、利用者が決めたこととして残した。綴りは落とした。
 - 目次を描画の入力に足したこと（overview-index の A33）は LLM の決定だが、view が渡された目次のとおりに描くこと（A18）は利用者の決定なので、目次が入力にあることは書いた。
 - 冒頭の lead の結論を一覧に描くことは、A42（利用者。view が一覧のための題と冒頭の結論を受け取る）と A7（利用者）を根拠に残した。

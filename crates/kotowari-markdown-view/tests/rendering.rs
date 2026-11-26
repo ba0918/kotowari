@@ -311,7 +311,7 @@ fn one_section_page(blocks: Vec<Block>) -> String {
     page(&render(&input), "a.html").to_string()
 }
 
-// @kotowari[C-view-rendering-11]
+// @kotowari[C-view-rendering-17, C-view-rendering-18]
 #[test]
 fn ex_view_003_raw_html_is_text_and_comments_are_dropped() {
     let text = one_section_page(vec![Block::Markdown(
@@ -325,7 +325,7 @@ fn ex_view_003_raw_html_is_text_and_comments_are_dropped() {
     assert!(text.contains("後の文"));
 }
 
-// @kotowari[C-view-rendering-11]
+// @kotowari[C-view-rendering-18]
 #[test]
 fn req_view_007_text_next_to_a_comment_is_not_drawn_as_code() {
     for source in [
@@ -348,7 +348,7 @@ fn collapsed(page: &str) -> String {
     page.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
-// @kotowari[C-view-rendering-11]
+// @kotowari[C-view-rendering-18]
 #[test]
 fn req_view_007_a_comment_spanning_lines_inside_a_paragraph_keeps_one_paragraph() {
     let with = one_section_page(vec![Block::Markdown("before <!--\nc\n--> AFTER\n".into())]);
@@ -356,7 +356,7 @@ fn req_view_007_a_comment_spanning_lines_inside_a_paragraph_keeps_one_paragraph(
     assert_eq!(collapsed(&with), collapsed(&without));
 }
 
-// @kotowari[C-view-rendering-11]
+// @kotowari[C-view-rendering-18]
 #[test]
 fn req_view_007_a_comment_line_keeps_the_blocks_around_it_apart() {
     for (source, expected) in [

@@ -451,7 +451,7 @@ fn req_view_003_a_value_that_does_not_fit_is_drawn_without_reporting() {
     assert!(text.contains("</html>"));
 }
 
-// @kotowari[C-view-rendering-16]
+// @kotowari[C-view-rendering-16, C-view-rendering-19]
 #[test]
 fn ex_view_006_pages_with_every_kind_load_nothing_from_outside() {
     let blocks = examples()
@@ -496,19 +496,21 @@ fn ex_view_006_pages_with_every_kind_load_nothing_from_outside() {
     }
 }
 
-// @kotowari[C-view-rendering-16]
+// @kotowari[C-view-rendering-20]
 #[test]
 fn req_view_010_markdown_text_cannot_make_the_page_load_images_scripts_or_styles() {
     let text = page_with(
         vec![Block::Markdown(
-            "![図](https://example.com/a.png)\n\n<img src=\"https://example.com/b.png\">\n\n<link rel=\"stylesheet\" href=\"https://example.com/c.css\">\n\n<style>@import url(https://example.com/d.css);</style>\n"
+            "![図](https://example.com/a.png)\n\n<img src=\"https://example.com/b.png\">\n\n<link rel=\"stylesheet\" href=\"https://example.com/c.css\">\n\n<style>@import url(https://example.com/d.css);</style>\n\n<embed src=\"https://example.com/e.svg\">\n\n<object data=\"https://example.com/f.svg\"></object>\n"
                 .into(),
         )],
         vec![],
     );
     let start = text.find("<main").unwrap();
     let main = &text[start..];
-    for tag in ["<img", "<script", "<link", "<style", "<iframe"] {
+    for tag in [
+        "<img", "<script", "<link", "<style", "<iframe", "<embed", "<object",
+    ] {
         assert!(!main.contains(tag), "{tag}");
     }
     assert!(!main.contains("src=\""));
