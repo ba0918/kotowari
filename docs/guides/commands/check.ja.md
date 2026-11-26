@@ -301,6 +301,8 @@ $ kotowari check | jq '.findings[0]'
 
 ### テストの印を直す
 
+<!-- @kotowari[docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4] -->
+
 `rejects_empty_name` に、それが確かめる行の ID の印を付けます。
 
 ```rust

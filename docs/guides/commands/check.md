@@ -303,6 +303,8 @@ $ kotowari check | jq '.findings[0]'
 
 ### Fixing the test marks
 
+<!-- @kotowari[docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4] -->
+
 Add a mark to `rejects_empty_name` with the ID of the row it confirms.
 
 ```rust
