@@ -48,8 +48,8 @@ fn req_025_finding_kind_displays_as_its_own_kind_word() {
         "Display should write the kind word, not an empty string"
     );
     assert_eq!(
-        kotowari_core::FindingKind::SourceInvalid.to_string(),
-        "source_invalid"
+        kotowari_core::FindingKind::DuplicateId.to_string(),
+        "duplicate_id"
     );
 }
 
@@ -62,11 +62,11 @@ fn req_024_a_finding_kind_equals_only_its_own_name() {
     // ここでは `PartialEq<str>` 側の実装を `.eq()` で直接呼び、
     // 自分の種類の名前だけに真を返すことを確かめる。
     assert!(
-        kotowari_core::FindingKind::MissingDocument.eq("missing_document"),
+        kotowari_core::FindingKind::DuplicateId.eq("duplicate_id"),
         "should equal its own kind name"
     );
     assert!(
-        !kotowari_core::FindingKind::MissingDocument.eq("missing_title"),
+        !kotowari_core::FindingKind::DuplicateId.eq("missing_title"),
         "should not equal a different kind name"
     );
 }
@@ -75,11 +75,11 @@ fn req_024_a_finding_kind_equals_only_its_own_name() {
 
 // --- REQ-core-030: 警告の種類の detail ---
 
-// --- REQ-core-031: 注意は8種類だけ ---
+// --- 注意は表の種類だけ ---
 
 // @kotowari[C-core-findings-1]
 #[test]
-fn req_031_only_eight_kinds_are_notices() {
+fn req_031_only_the_kinds_of_the_table_are_notices() {
     // 本体が注意にする種類（"kotowari mutants" の2種類は check の出力には現れない）
     let notices: std::collections::BTreeSet<&str> = kotowari_core::FindingKind::ALL
         .iter()
@@ -89,14 +89,10 @@ fn req_031_only_eight_kinds_are_notices() {
     assert_eq!(
         notices,
         std::collections::BTreeSet::from([
-            "deferred_with_test",
-            "depends_on_deferred",
             "equivalent_stale",
             "guide_stale",
             "mutant_timeout",
             "surface_unspecified_stale",
-            "too_many_lines",
-            "too_many_requirements",
         ])
     );
     // ほかの種類はすべて誤り

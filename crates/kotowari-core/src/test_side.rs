@@ -14,60 +14,27 @@ enum Condition {
 
 fn condition(kind: FindingKind) -> Condition {
     match kind {
-        FindingKind::RequirementWithoutTest
-        | FindingKind::ScenarioWithoutTest
-        | FindingKind::TestWithoutId
-        | FindingKind::ConfirmationWithoutTest => Condition::Always,
+        FindingKind::TestWithoutId | FindingKind::ConfirmationWithoutTest => Condition::Always,
         FindingKind::InvalidMarker | FindingKind::UnresolvedReference => Condition::InTestFile,
         FindingKind::UnparsableFile => Condition::InTestFileNotSurface,
-        FindingKind::AlgorithmWithoutDefinition
-        | FindingKind::DeferredWithTest
-        | FindingKind::DependsOnDeferred
-        | FindingKind::DuplicateField
-        | FindingKind::DuplicateId
-        | FindingKind::DuplicateTerm
+        FindingKind::DuplicateId
         | FindingKind::EquivalentInvalid
         | FindingKind::EquivalentStale
         | FindingKind::IdDomainMismatch
-        | FindingKind::InvalidGlossaryRow
-        | FindingKind::MissingDocument
-        | FindingKind::MissingField
-        | FindingKind::MissingScope
-        | FindingKind::MissingSource
-        | FindingKind::MissingStatement
-        | FindingKind::MissingTable
-        | FindingKind::MissingTag
         | FindingKind::MissingTitle
         | FindingKind::MultipleTitles
         | FindingKind::MutantSurvived
         | FindingKind::MutantTimeout
-        | FindingKind::RecordFieldMissing
-        | FindingKind::RecordFieldUnknown
-        | FindingKind::RevisionLinkInvalid
-        | FindingKind::SourceInvalid
         | FindingKind::SurfaceUnspecifiedInvalid
         | FindingKind::SurfaceUnspecifiedStale
         | FindingKind::SurfaceWithoutSpec
-        | FindingKind::TooManyLines
-        | FindingKind::TooManyRequirements
-        | FindingKind::UnclosedBacktick
         | FindingKind::UnclosedCodeBlock
-        | FindingKind::UnknownCodeBlock
-        | FindingKind::UnknownField
         | FindingKind::UnknownHeading
-        | FindingKind::UnknownKind
         | FindingKind::UnknownLine
-        | FindingKind::UnknownTag
-        | FindingKind::UnknownTerm
-        | FindingKind::InvalidGherkinLine
         | FindingKind::InvalidId
         | FindingKind::InvalidPlan
-        | FindingKind::GlossaryInvalid
-        | FindingKind::GlossaryTitleInvalid
         | FindingKind::GuideStale
         | FindingKind::VagueWord
-        | FindingKind::VerificationInvalid
-        | FindingKind::VerificationMissing
         | FindingKind::OverviewFormInvalid
         | FindingKind::OverviewPartUnknown
         | FindingKind::OverviewPartInvalid

@@ -28,60 +28,28 @@ macro_rules! finding_kinds {
 }
 
 finding_kinds! {
-    AlgorithmWithoutDefinition => "algorithm_without_definition",
-    DeferredWithTest => "deferred_with_test",
-    DependsOnDeferred => "depends_on_deferred",
-    DuplicateField => "duplicate_field",
     DuplicateId => "duplicate_id",
-    DuplicateTerm => "duplicate_term",
     EquivalentInvalid => "equivalent_invalid",
     EquivalentStale => "equivalent_stale",
     IdDomainMismatch => "id_domain_mismatch",
-    InvalidGlossaryRow => "invalid_glossary_row",
     InvalidMarker => "invalid_marker",
-    MissingDocument => "missing_document",
-    MissingField => "missing_field",
-    MissingScope => "missing_scope",
-    MissingSource => "missing_source",
-    MissingStatement => "missing_statement",
-    MissingTable => "missing_table",
-    MissingTag => "missing_tag",
     MissingTitle => "missing_title",
     MultipleTitles => "multiple_titles",
     MutantSurvived => "mutant_survived",
     MutantTimeout => "mutant_timeout",
-    RecordFieldMissing => "record_field_missing",
-    RecordFieldUnknown => "record_field_unknown",
-    RequirementWithoutTest => "requirement_without_test",
-    RevisionLinkInvalid => "revision_link_invalid",
-    ScenarioWithoutTest => "scenario_without_test",
-    SourceInvalid => "source_invalid",
     SurfaceUnspecifiedInvalid => "surface_unspecified_invalid",
     SurfaceUnspecifiedStale => "surface_unspecified_stale",
     SurfaceWithoutSpec => "surface_without_spec",
     TestWithoutId => "test_without_id",
-    TooManyLines => "too_many_lines",
-    TooManyRequirements => "too_many_requirements",
-    UnclosedBacktick => "unclosed_backtick",
     UnclosedCodeBlock => "unclosed_code_block",
-    UnknownCodeBlock => "unknown_code_block",
-    UnknownField => "unknown_field",
     UnknownHeading => "unknown_heading",
-    UnknownKind => "unknown_kind",
     UnknownLine => "unknown_line",
-    UnknownTag => "unknown_tag",
-    UnknownTerm => "unknown_term",
     UnparsableFile => "unparsable_file",
-    InvalidGherkinLine => "invalid_gherkin_line",
     InvalidId => "invalid_id",
     InvalidPlan => "invalid_plan",
-    GlossaryInvalid => "glossary_invalid",
-    GlossaryTitleInvalid => "glossary_title_invalid",
     GuideStale => "guide_stale",
     UnresolvedReference => "unresolved_reference",
     VagueWord => "vague_word",
-    VerificationInvalid => "verification_invalid",
-    VerificationMissing => "verification_missing",
     // 全体像の元データの指摘（TBL-core-008）。core はこの種類を作らず、追加の指摘の群として受け取って並べ、数える
     OverviewFormInvalid => "overview_form_invalid",
     OverviewPartUnknown => "overview_part_unknown",
@@ -117,60 +85,28 @@ impl FindingKind {
     /// 重大度を返す（1か所で管理する）
     pub fn severity(&self) -> &'static str {
         match self {
-            FindingKind::TooManyLines
-            | FindingKind::TooManyRequirements
-            | FindingKind::MutantTimeout
+            FindingKind::MutantTimeout
             | FindingKind::EquivalentStale
             | FindingKind::GuideStale
-            | FindingKind::SurfaceUnspecifiedStale
-            | FindingKind::DeferredWithTest
-            | FindingKind::DependsOnDeferred => "notice",
-            FindingKind::AlgorithmWithoutDefinition
-            | FindingKind::DuplicateField
-            | FindingKind::DuplicateId
-            | FindingKind::DuplicateTerm
+            | FindingKind::SurfaceUnspecifiedStale => "notice",
+            FindingKind::DuplicateId
             | FindingKind::EquivalentInvalid
             | FindingKind::IdDomainMismatch
-            | FindingKind::InvalidGlossaryRow
             | FindingKind::InvalidMarker
-            | FindingKind::MissingDocument
-            | FindingKind::MissingField
-            | FindingKind::MissingScope
-            | FindingKind::MissingSource
-            | FindingKind::MissingStatement
-            | FindingKind::MissingTable
-            | FindingKind::MissingTag
             | FindingKind::MissingTitle
             | FindingKind::MultipleTitles
             | FindingKind::MutantSurvived
-            | FindingKind::RecordFieldMissing
-            | FindingKind::RecordFieldUnknown
-            | FindingKind::RequirementWithoutTest
-            | FindingKind::RevisionLinkInvalid
-            | FindingKind::ScenarioWithoutTest
-            | FindingKind::SourceInvalid
             | FindingKind::SurfaceUnspecifiedInvalid
             | FindingKind::SurfaceWithoutSpec
             | FindingKind::TestWithoutId
-            | FindingKind::UnclosedBacktick
             | FindingKind::UnclosedCodeBlock
-            | FindingKind::UnknownCodeBlock
-            | FindingKind::UnknownField
             | FindingKind::UnknownHeading
-            | FindingKind::UnknownKind
             | FindingKind::UnknownLine
-            | FindingKind::UnknownTag
-            | FindingKind::UnknownTerm
             | FindingKind::UnparsableFile
-            | FindingKind::InvalidGherkinLine
             | FindingKind::InvalidId
             | FindingKind::InvalidPlan
-            | FindingKind::GlossaryInvalid
-            | FindingKind::GlossaryTitleInvalid
             | FindingKind::UnresolvedReference
             | FindingKind::VagueWord
-            | FindingKind::VerificationInvalid
-            | FindingKind::VerificationMissing
             | FindingKind::OverviewFormInvalid
             | FindingKind::OverviewPartUnknown
             | FindingKind::OverviewPartInvalid
