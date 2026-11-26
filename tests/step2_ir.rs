@@ -40,15 +40,16 @@ fn req_033_file_symlink_is_read() {
     std::fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/decision/records")).unwrap();
     std::fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decisions")).unwrap();
     std::fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\n",
     )
     .unwrap();
-    // 実体を別の場所に作り、シンボリックリンクを ir/ に置く
+    // 実体を別の場所に作り、シンボリックリンクを決定の文書の置き場に置く
     let target = tmp.path().join("target.md");
     std::fs::write(&target, "# Title\n\nScope.\n").unwrap();
-    std::os::unix::fs::symlink(&target, tmp.path().join("docs/ir/link.md")).unwrap();
+    std::os::unix::fs::symlink(&target, tmp.path().join("docs/decisions/link.md")).unwrap();
     let output = assert_cmd::Command::cargo_bin("kotowari")
         .unwrap()
         .arg("check")
@@ -57,7 +58,10 @@ fn req_033_file_symlink_is_read() {
         .unwrap();
     let stdout = String::from_utf8_lossy(&output.stdout);
     let v: serde_json::Value = serde_json::from_str(&stdout).expect("valid JSON");
-    assert_eq!(v["files"], 1, "symlinked file should be read");
+    assert_eq!(
+        v["decisions"]["documents"], 1,
+        "symlinked file should be read"
+    );
 }
 
 // --- Step 4b: gherkin の行の形と ID の定義 ---
@@ -105,12 +109,13 @@ fn make_cli_project(tmp: &std::path::Path) {
         "docs/ir",
         "docs/decision/records",
         "docs/decision/adr",
+        "docs/decisions",
     ] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     std::fs::write(
         tmp.join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\n",
     )
     .unwrap();
     std::fs::write(
@@ -252,23 +257,23 @@ fn req_033_a_document_deep_in_the_tree_is_read_and_an_empty_directory_is_silent(
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     make_cli_project(tmp.path());
-    std::fs::create_dir_all(tmp.path().join("docs/ir/network/dns")).unwrap();
-    std::fs::create_dir_all(tmp.path().join("docs/ir/network/empty")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decisions/network/dns")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs/decisions/network/empty")).unwrap();
     std::fs::write(
-        tmp.path().join("docs/ir/network/dns/timeout.md"),
-        "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStatement.\n",
+        tmp.path().join("docs/decisions/network/dns/timeout.md"),
+        "# Title\n\nScope.\n\n## Decision\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nDo it.\n\n### Confirmations\n\n- C-network-timeout-1 Checked\n",
     )
     .unwrap();
     let v = run_cli(tmp.path());
-    let missing = find_kind_in_json(&v, "requirement_without_test");
+    let missing = find_kind_in_json(&v, "confirmation_without_test");
     assert_eq!(missing.len(), 1, "the deep document is read: {v}");
-    assert_eq!(missing[0]["path"], "docs/ir/network/dns/timeout.md");
+    assert_eq!(missing[0]["path"], "docs/decisions/network/dns/timeout.md");
     assert!(
         v["findings"].as_array().unwrap().iter().all(|f| {
             !f["path"]
                 .as_str()
                 .unwrap()
-                .starts_with("docs/ir/network/empty")
+                .starts_with("docs/decisions/network/empty")
         }),
         "an empty directory gets no finding: {v}"
     );
@@ -365,10 +370,10 @@ fn req_032_three_places_yield_two_duplicates_and_none_on_the_first() {
     use tempfile::TempDir;
     let tmp = TempDir::new().unwrap();
     make_cli_project(tmp.path());
-    let requirement = "### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n\nStatement.\n\n";
     std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        format!("# Title\n\nScope.\n\n## Requirements\n\n{requirement}{requirement}{requirement}"),
+        tmp.path().join("docs/decisions/a.md"),
+        "# Title\n\nScope.\n\n## Decision\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n\
+### Decision\n\nDo it.\n\n### Confirmations\n\n- C-t-1 One\n- C-t-1 Two\n- C-t-1 Three\n",
     )
     .unwrap();
     let v = run_cli(tmp.path());
@@ -378,11 +383,11 @@ fn req_032_three_places_yield_two_duplicates_and_none_on_the_first() {
         2,
         "three places yield two duplicates: {v}"
     );
-    assert!(duplicates.iter().all(|f| f["detail"] == "REQ-001"));
-    // 1つ目の見出しは 7 行目
+    assert!(duplicates.iter().all(|f| f["detail"] == "C-t-1"));
+    // 1つ目の行は 19 行目
     assert!(
-        duplicates.iter().all(|f| f["line"] != 7),
-        "the first heading gets no duplicate_id: {v}"
+        duplicates.iter().all(|f| f["line"] != 19),
+        "the first row gets no duplicate_id: {v}"
     );
 }
 
@@ -559,7 +564,7 @@ fn ex_core_278_three_titles_give_one_multiple_titles_per_extra_title() {
     let tmp = TempDir::new().unwrap();
     make_cli_project(tmp.path());
     std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
+        tmp.path().join("docs/decisions/a.md"),
         "# 一\n\n範囲。\n\n# 二\n\n#  三  \n",
     )
     .unwrap();
@@ -568,7 +573,7 @@ fn ex_core_278_three_titles_give_one_multiple_titles_per_extra_title() {
         .as_array()
         .unwrap()
         .iter()
-        .filter(|f| f["path"] == "docs/ir/a.md" && f["kind"] == "multiple_titles")
+        .filter(|f| f["path"] == "docs/decisions/a.md" && f["kind"] == "multiple_titles")
         .cloned()
         .collect();
     assert!(multiple.iter().all(|f| f["line"].is_null()), "{v}");

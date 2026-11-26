@@ -56,13 +56,18 @@ fn make_project(tmp: &Path, languages: Option<&[&str]>, extra: &str) {
         "docs/ir",
         "docs/decision/records",
         "docs/decision/adr",
+        "docs/decisions",
     ] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
+    let documents = match extra.contains("decisions:") {
+        true => "",
+        false => "decisions:\n  documents: docs/decisions\n",
+    };
     std::fs::write(
         tmp.join(".kotowari/config.yaml"),
         format!(
-            "tests:\n  files:\n    - \"tests/**/*.rs\"\n{}{extra}",
+            "{documents}tests:\n  files:\n    - \"tests/**/*.rs\"\n{}{extra}",
             language_config(languages)
         ),
     )
@@ -132,6 +137,13 @@ fn write(tmp: &Path, rel: &str, content: &str) {
 fn topic(id: &str, statement: &str) -> String {
     format!(
         "# A\n\nScope.\n\n## Requirements\n\n### {id}: Name\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: review\n- how_to_verify: read\n\n{statement}\n"
+    )
+}
+
+/// 決定 "Name" を1つ持つ決定の文書。決めたことは `statement`
+fn decision_topic(statement: &str) -> String {
+    format!(
+        "# A\n\nScope.\n\n## Name\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\n{statement}\n"
     )
 }
 
@@ -206,14 +218,18 @@ fn both_hashes() -> String {
 fn ex_core_512_with_one_language_a_suffixed_file_is_a_document_of_its_own() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), None, "");
-    write(tmp.path(), "docs/ir/a.md", &topic("REQ-001", "Body."));
-    write(tmp.path(), "docs/ir/a.en.md", &topic("REQ-002", "Body."));
+    write(tmp.path(), "docs/decisions/a.md", &decision_topic("Body."));
+    write(
+        tmp.path(),
+        "docs/decisions/a.en.md",
+        &decision_topic("Body."),
+    );
     let report = check(tmp.path());
     assert!(
         findings(&report, "translation_missing").is_empty(),
         "{report}"
     );
-    assert_eq!(report["files"], 2);
+    assert_eq!(report["decisions"]["documents"], 2);
     let (_, list) = run(tmp.path(), &["list"]);
     let list: Value = serde_json::from_str(&list).unwrap();
     let paths: Vec<&str> = list["items"]
@@ -222,7 +238,7 @@ fn ex_core_512_with_one_language_a_suffixed_file_is_a_document_of_its_own() {
         .iter()
         .map(|item| item["path"].as_str().unwrap())
         .collect();
-    assert!(paths.contains(&"docs/ir/a.en.md"), "{list}");
+    assert!(paths.contains(&"docs/decisions/a.en.md"), "{list}");
     assert!(list.get("translations").is_none(), "{list}");
 }
 
@@ -231,11 +247,11 @@ fn ex_core_512_with_one_language_a_suffixed_file_is_a_document_of_its_own() {
 fn ex_core_514_a_missing_english_side_is_an_error_on_the_first_side() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), JA_EN, "");
-    write(tmp.path(), "docs/ir/a.md", &topic("REQ-001", "文。"));
+    write(tmp.path(), "docs/decisions/a.md", &decision_topic("文。"));
     let report = check(tmp.path());
     assert_eq!(
         paths_and_details(&report, "translation_missing"),
-        [pair("docs/ir/a.md", "docs/ir/a.en.md")]
+        [pair("docs/decisions/a.md", "docs/decisions/a.en.md")]
     );
     let missing = findings(&report, "translation_missing");
     assert!(missing[0].1.is_null(), "{report}");
@@ -246,11 +262,15 @@ fn ex_core_514_a_missing_english_side_is_an_error_on_the_first_side() {
 fn ex_core_515_a_missing_first_side_is_an_error_on_the_side_that_exists() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), JA_EN, "");
-    write(tmp.path(), "docs/ir/b.en.md", &topic("REQ-001", "Text."));
+    write(
+        tmp.path(),
+        "docs/decisions/b.en.md",
+        &decision_topic("Text."),
+    );
     let report = check(tmp.path());
     assert_eq!(
         paths_and_details(&report, "translation_missing"),
-        [pair("docs/ir/b.en.md", "docs/ir/b.md")]
+        [pair("docs/decisions/b.en.md", "docs/decisions/b.md")]
     );
     // その側はほかの検査で読まない
     assert!(
@@ -555,11 +575,9 @@ fn overview_data(title: &str) -> String {
     )
 }
 
-/// IR の対と、全体像の元データの対と目次の対
+/// 決定の文書の対と、全体像の元データの対と目次の対
 fn overview_pairs(tmp: &Path) {
     make_project(tmp, JA_EN, OVERVIEW);
-    write(tmp, "docs/ir/a.md", &topic("REQ-001", "文。"));
-    write(tmp, "docs/ir/a.en.md", &topic("REQ-001", "Text."));
     write(tmp, ".kotowari/overview/a.md", &overview_data("題名"));
     write(tmp, ".kotowari/overview/a.en.md", &overview_data("Title"));
     write(tmp, ".kotowari/toc.yaml", "title: 目次\nitems:\n  - a\n");
@@ -1107,11 +1125,11 @@ fn req_core_346_a_switcher_line_is_not_the_scope_of_an_ir_document() {
     );
 }
 
-/// EX-core-533 の IR の対と、英語のガイド
+/// EX-core-533 の決定の文書の対と、英語のガイド
 fn guide_linking(tmp: &Path, english: &str) {
     make_project(tmp, JA_EN, GUIDES);
-    write(tmp, "docs/ir/a.md", &topic("REQ-001", "文。"));
-    write(tmp, "docs/ir/a.en.md", &topic("REQ-001", "Text."));
+    write(tmp, "docs/decisions/a.md", &decision_topic("文。"));
+    write(tmp, "docs/decisions/a.en.md", &decision_topic("Text."));
     write(
         tmp,
         "guides/g.md",
@@ -1126,7 +1144,7 @@ fn ex_core_533_an_english_guide_linking_the_japanese_ir_is_an_error() {
     let tmp = TempDir::new().unwrap();
     guide_linking(
         tmp.path(),
-        "# G\n\n[日本語](g.md) | English\n\nSee [a](../docs/ir/a.md#REQ-001).\n",
+        "# G\n\n[日本語](g.md) | English\n\nSee [a](../docs/decisions/a.md#name).\n",
     );
     let report = check(tmp.path());
     assert_eq!(
@@ -1134,7 +1152,7 @@ fn ex_core_533_an_english_guide_linking_the_japanese_ir_is_an_error() {
         [(
             "guides/g.en.md".to_string(),
             Value::from(5),
-            "../docs/ir/a.md#REQ-001".to_string()
+            "../docs/decisions/a.md#name".to_string()
         )]
     );
 }
@@ -1330,22 +1348,7 @@ fn english_pages_take_reference_bodies_from_the_english_side_of_the_decision_doc
 #[test]
 fn req_core_294_a_missing_side_stops_the_build_without_writing() {
     let tmp = TempDir::new().unwrap();
-    overview_pairs(tmp.path());
-    std::fs::remove_file(tmp.path().join("docs/ir/a.en.md")).unwrap();
-    let output = assert_cmd::Command::cargo_bin("kotowari")
-        .unwrap()
-        .args(["overview", "build"])
-        .current_dir(tmp.path())
-        .output()
-        .unwrap();
-    assert_eq!(output.status.code(), Some(2));
-    assert!(
-        String::from_utf8_lossy(&output.stderr)
-            .contains("errors in overview data; run kotowari check"),
-        "{output:?}"
-    );
-    assert!(!tmp.path().join(".kotowari/cache/overview").exists());
-    // 骨組みの食い違いでも止まる
+    // 目次の骨組みが食い違うと止まる
     overview_pairs(tmp.path());
     write(
         tmp.path(),

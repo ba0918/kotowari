@@ -15,9 +15,10 @@ fn make_project(tmp: &std::path::Path) {
     fs::create_dir_all(tmp.join("docs/ir")).unwrap();
     fs::create_dir_all(tmp.join("docs/decision/records")).unwrap();
     fs::create_dir_all(tmp.join("docs/decision/adr")).unwrap();
+    fs::create_dir_all(tmp.join("docs/decisions")).unwrap();
     fs::write(
         tmp.join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\n",
     )
     .unwrap();
     fs::write(
@@ -151,17 +152,22 @@ fn req_031_only_eight_kinds_are_notices() {
 fn req_031_check_reports_notices_only_for_the_notice_kinds() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    // 行数超過（>200行）と要求数超過（>10件）を出す
-    let mut content = String::from("# Title\n\nScope.\n\n## Requirements\n\n");
-    for i in 1..=12 {
-        content.push_str(&format!(
-            "### REQ-{:03}: R{i}\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStmt.\n\n",
-            i
-        ));
-    }
-    // 行数を増やす
-    content.push_str(&"x\n".repeat(200));
-    fs::write(tmp.path().join("docs/ir/a.md"), &content).unwrap();
+    // 指紋の古いガイドの印（guide_stale）と、問題の節の無い決定（誤り）を出す
+    fs::write(
+        tmp.path().join("docs/decisions/a.md"),
+        "# Title\n\nScope.\n\n## Greet\n\nStatus: implemented\n\n### Decision\n\nGreet.\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\nguides:\n  files:\n    - \"guide.md\"\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("guide.md"),
+        "# Guide\n\n<!-- @kotowari[docs/decisions/a.md#greet:00000000] -->\n",
+    )
+    .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let findings = v["findings"].as_array().unwrap();
@@ -207,7 +213,7 @@ fn req_031_check_reports_notices_only_for_the_notice_kinds() {
 fn req_027_document_wide_findings_have_null_line() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    fs::write(tmp.path().join("docs/ir/a.md"), "No title\n").unwrap();
+    fs::write(tmp.path().join("docs/decisions/a.md"), "No title\n").unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let mt = findings_by_kind(&v, "missing_title");
@@ -229,11 +235,11 @@ fn req_028_lines_start_at_one() {
     // line 2: (空)
     // line 3: Scope.
     // line 4: (空)
-    // line 5: ## Requirements
+    // line 5: ## Requirements（決定の見出し）
     // line 6: (空)
     // line 7: ### Bad Heading
     fs::write(
-        tmp.path().join("docs/ir/a.md"),
+        tmp.path().join("docs/decisions/a.md"),
         "# Title\n\nScope.\n\n## Requirements\n\n### Bad Heading\n",
     )
     .unwrap();
@@ -703,26 +709,27 @@ fn ex_core_266_the_three_places_outside_the_declaration_each_become_an_error() {
 fn ex_core_269_a_document_with_a_form_finding_still_takes_the_cross_document_checks() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    // a.md の要求は "- verification:" の行を欠き、その ID が b.md の要求と重なる
+    // a.md の決定は問題の節を欠き、その確認することの ID が b.md の行と重なる
+    let decision = |problem: &str| {
+        format!(
+            "# T\n\nScope.\n\n## Greet\n\nStatus: implemented\n\n{problem}### Decision\n\nGreet.\n\n### Confirmations\n\n- C-x-1 Shown\n"
+        )
+    };
+    fs::write(tmp.path().join("docs/decisions/a.md"), decision("")).unwrap();
     fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        format!("{TOPIC_HEAD}\n## Requirements\n\n### REQ-001: 前\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n\n文。\n"),
-    )
-    .unwrap();
-    fs::write(
-        tmp.path().join("docs/ir/b.md"),
-        format!("{TOPIC_HEAD}\n## Requirements\n\n### REQ-001: 後\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n- how_to_verify: 見る\n\n文。\n"),
+        tmp.path().join("docs/decisions/b.md"),
+        decision("### Problem\n\nTrouble.\n\n"),
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
-    let missing = findings_by_kind(&v, "verification_missing");
+    let missing = findings_by_kind(&v, "decision_section_missing");
     assert_eq!(missing.len(), 1, "{:?}", v["findings"]);
-    assert_eq!(missing[0]["path"], "docs/ir/a.md");
+    assert_eq!(missing[0]["path"], "docs/decisions/a.md");
     let duplicates = findings_by_kind(&v, "duplicate_id");
     assert_eq!(duplicates.len(), 1, "{:?}", v["findings"]);
-    assert_eq!(duplicates[0]["path"], "docs/ir/b.md");
-    assert_eq!(duplicates[0]["detail"], "REQ-001");
+    assert_eq!(duplicates[0]["path"], "docs/decisions/b.md");
+    assert_eq!(duplicates[0]["detail"], "C-x-1");
 }
 
 // @kotowari[REQ-core-168, EX-core-264]

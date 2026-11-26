@@ -11,15 +11,17 @@ fn project() -> tempfile::TempDir {
         "docs/ir",
         "docs/decision/records",
         "docs/decision/adr",
+        "docs/decisions",
     ] {
         std::fs::create_dir_all(dir.path().join(path)).unwrap();
     }
     std::fs::write(
         dir.path().join(".kotowari/config.yaml"),
-        "tests:\n  files: []\n",
+        "decisions:\n  documents: docs/decisions\ntests:\n  files: []\n",
     )
     .unwrap();
-    std::fs::write(dir.path().join("docs/ir/topic.md"), "# Topic\n\nScope.\n\n## Requirements\n\n### REQ-001: Name\n\n- kind: ubiquitous\n- verification: review\n- how_to_verify: Inspect.\n\nStatement.\n").unwrap();
+    // テストの指していない確認することの行が1つあり、check の誤りになる
+    std::fs::write(dir.path().join("docs/decisions/topic.md"), "# Topic\n\nScope.\n\n## Name\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nStatement.\n\n### Confirmations\n\n- C-t-1 Inspected\n").unwrap();
     dir
 }
 
@@ -31,16 +33,16 @@ fn project_operations_reuse_owned_results_and_explicit_reads_observe_changes() {
     let project = Project::new(ProjectOptions::new(dir.path())).unwrap();
     let read = project.read().unwrap();
     let inspection = project.inspect().unwrap();
-    assert!(read.query("REQ-001").is_ok());
+    assert!(read.query("C-t-1").is_ok());
     assert!(!read.list().items().is_empty());
-    assert!(read.query("REQ-999").is_err());
+    assert!(read.query("C-t-999").is_err());
     assert!(!inspection.check().findings().is_empty());
     assert!(!inspection.status().complete());
-    std::fs::write(dir.path().join("docs/ir/topic.md"), "# Changed\n").unwrap();
-    assert!(read.query("REQ-001").is_ok());
-    assert!(inspection.read().query("REQ-001").is_ok());
-    assert!(project.read().unwrap().query("REQ-001").is_err());
-    assert!(project.query("REQ-001").is_err());
+    std::fs::write(dir.path().join("docs/decisions/topic.md"), "# Changed\n").unwrap();
+    assert!(read.query("C-t-1").is_ok());
+    assert!(inspection.read().query("C-t-1").is_ok());
+    assert!(project.read().unwrap().query("C-t-1").is_err());
+    assert!(project.query("C-t-1").is_err());
     assert!(project.list().unwrap().items().is_empty());
     assert!(!project.check().unwrap().findings().is_empty());
     assert!(!project.status().unwrap().complete());
@@ -98,7 +100,7 @@ fn absolute_resolution_bases_survive_a_child_process_directory_change() {
         let project = Project::new(options).unwrap();
         let other = std::env::var_os("KOTOWARI_PROJECT_OTHER_ROOT").unwrap();
         std::env::set_current_dir(other).unwrap();
-        assert!(project.query("REQ-001").is_ok());
+        assert!(project.query("C-t-1").is_ok());
         return;
     }
     let original = project();
@@ -221,7 +223,7 @@ fn ex_core_556_the_unknown_id_can_be_taken_from_a_failed_query() {
 #[test]
 fn ex_core_557_a_failure_of_another_kind_provides_no_unknown_id() {
     let dir = project();
-    std::fs::remove_dir_all(dir.path().join("docs/ir")).unwrap();
+    std::fs::remove_dir_all(dir.path().join("docs/decisions")).unwrap();
     let error = Project::new(ProjectOptions::new(dir.path()))
         .unwrap()
         .check()

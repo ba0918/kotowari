@@ -154,24 +154,15 @@ fn distinct_byte_named_entries_keep_the_legacy_alias_text_and_multiplicity() {
 #[test]
 fn ir_and_decision_source_walkers_still_read_original_byte_named_paths() {
     let project = byte_filename_project("tests");
+    fs::create_dir_all(project.path().join("docs/decisions")).unwrap();
     fs::write(
         project.path().join(".kotowari/config.yaml"),
-        "tests:\n  files: []\n",
+        "decisions:\n  documents: docs/decisions\ntests:\n  files: []\n",
     )
     .unwrap();
     fs::write(
-        byte_path(project.path(), "docs/ir", "md"),
+        byte_path(project.path(), "docs/decisions", "md"),
         "# Topic\n\nScope.\n",
-    )
-    .unwrap();
-    fs::write(
-        byte_path(project.path(), "docs/decision/records", "md"),
-        "# Records\n\n## Agreements\n\n- A1 Original\n",
-    )
-    .unwrap();
-    fs::write(
-        byte_path(project.path(), "docs/decision/adr", "md"),
-        "# Original\n",
     )
     .unwrap();
     let output = native_check(project.path());
@@ -182,7 +173,7 @@ fn ir_and_decision_source_walkers_still_read_original_byte_named_paths() {
         String::from_utf8_lossy(&output.stderr)
     );
     let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-    assert_eq!(value["files"], 1);
+    assert_eq!(value["decisions"]["documents"], 1);
 }
 
 // @kotowari[REQ-core-313, EX-core-485, C-core-libapi-11]

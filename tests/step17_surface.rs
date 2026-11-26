@@ -14,12 +14,15 @@ fn make_project(tmp: &Path, surface: &str) {
         "docs/ir",
         "docs/decision/records",
         "docs/decision/adr",
+        "docs/decisions",
     ] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     std::fs::write(
         tmp.join(".kotowari/config.yaml"),
-        format!("tests:\n  files:\n    - \"tests/**/*.rs\"\n{surface}"),
+        format!(
+            "decisions:\n  documents: docs/decisions\ntests:\n  files:\n    - \"tests/**/*.rs\"\n{surface}"
+        ),
     )
     .unwrap();
     write(
@@ -297,6 +300,13 @@ fn ir_doc(requirements: &str, rest: &str) -> String {
     format!("# 題名\n\n範囲。\n\n## Requirements\n\n{requirements}{rest}")
 }
 
+/// 「決めたこと」が `decision` の決定を1つ持つ決定の文書。`rest` はそのあとに足す
+fn decision_doc(decision: &str, rest: &str) -> String {
+    format!(
+        "# 題名\n\n範囲。\n\n## 決定\n\n状態: 実装済み\n\n### 問題\n\n困っていた。\n\n### 決めたこと\n\n{decision}\n{rest}"
+    )
+}
+
 /// EX-core-407 の場面: "--format" を`要求`の`文`に二重引用符で書いた IR と、面の規則と "src/cli.rs"
 fn ex_407_project(tmp: &Path) {
     make_project(tmp, SURFACE_RS);
@@ -343,11 +353,8 @@ fn ex_core_408_a_surface_absent_from_the_ir_is_an_error_at_its_first_place() {
     ex_407_project(tmp.path());
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement("REQ-001", "\"--format\" を受ける。"),
-            "",
-        ),
+        "docs/decisions/a/a.md",
+        &decision_doc("\"--format\" を受ける。", ""),
     );
     let (code, v) = check_json(tmp.path());
     assert_eq!(
@@ -378,11 +385,8 @@ fn req_227_the_first_place_is_by_path_bytes_then_line() {
     );
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement("REQ-001", "\"--format\" を受ける。"),
-            "",
-        ),
+        "docs/decisions/a/a.md",
+        &decision_doc("\"--format\" を受ける。", ""),
     );
     let (_, v) = check_json(tmp.path());
     assert_eq!(
@@ -403,12 +407,9 @@ fn ex_core_410_a_name_that_is_only_part_of_the_quoted_content_is_not_in_the_ir()
     ex_407_project(tmp.path());
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement(
-                "REQ-001",
-                "\"--format\" と \"--verbose true\" と \" --verbose\" を受ける。",
-            ),
+        "docs/decisions/a/a.md",
+        &decision_doc(
+            "\"--format\" と \"--verbose true\" と \" --verbose\" を受ける。",
             "",
         ),
     );
@@ -424,11 +425,8 @@ fn req_226_double_quotes_pair_from_the_left() {
     // 左から対にすると "x" の後の引用符と "--verbose" の前の引用符が対になる
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement("REQ-001", "\"--format\" と x\" \"--verbose\" を受ける。"),
-            "",
-        ),
+        "docs/decisions/a/a.md",
+        &decision_doc("\"--format\" と x\" \"--verbose\" を受ける。", ""),
     );
     let (_, v) = check_json(tmp.path());
     assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
@@ -547,7 +545,7 @@ fn req_227_no_surface_is_extracted_when_surface_rules_is_empty() {
 
 // --- S4: 未記載の面の一覧 ---
 
-/// EX-core-408 の場面（"--format" だけが IR にある）に、"surface.unspecified" と一覧の中身を足す
+/// EX-core-408 の場面（"--format" だけが決定の文書にある）に、"surface.unspecified" と一覧の中身を足す
 fn ex_408_project_with_list(tmp: &Path, list: &str) {
     make_project(
         tmp,
@@ -557,11 +555,8 @@ fn ex_408_project_with_list(tmp: &Path, list: &str) {
     write(tmp, "src/cli.rs", &cli_rs());
     write(
         tmp,
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement("REQ-001", "\"--format\" を受ける。"),
-            "",
-        ),
+        "docs/decisions/a/a.md",
+        &decision_doc("\"--format\" を受ける。", ""),
     );
     write(tmp, "docs/surface.yaml", list);
 }
@@ -762,7 +757,7 @@ fn req_229_list_and_query_do_not_read_the_surface_list_or_files() {
     ex_408_project_with_list(tmp.path(), "");
     std::fs::remove_file(tmp.path().join("docs/surface.yaml")).unwrap();
     std::fs::write(tmp.path().join("src/data.bin"), [0xff, 0xfe]).unwrap();
-    for args in [&["list"][..], &["query", "REQ-001"]] {
+    for args in [&["list"][..], &["query", "docs/decisions/a/a.md#決定"]] {
         let (code, _, stderr) = run(tmp.path(), args);
         assert_eq!(code, Some(0), "{args:?}: {stderr}");
     }
@@ -794,11 +789,8 @@ fn req_229_mutants_does_not_read_the_surface_list_rules_or_files() {
 fn ex_407_ir(tmp: &Path) {
     write(
         tmp,
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement("REQ-001", "\"--format\" を受ける。"),
-            "",
-        ),
+        "docs/decisions/a/a.md",
+        &decision_doc("\"--format\" を受ける。", ""),
     );
 }
 
@@ -868,11 +860,8 @@ fn ex_core_423_a_listed_surface_now_in_the_ir_is_not_counted() {
     ex_408_project_with_list(tmp.path(), &entry("flag", "--verbose", "理由"));
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement("REQ-001", "\"--format\" と \"--verbose\" を受ける。"),
-            "",
-        ),
+        "docs/decisions/a/a.md",
+        &decision_doc("\"--format\" と \"--verbose\" を受ける。", ""),
     );
     let (_, v) = check_json(tmp.path());
     assert_eq!(
@@ -897,16 +886,8 @@ fn four_surfaces(tmp: &Path) {
     );
     write(
         tmp,
-        "docs/ir/a.md",
-        &ir_doc(
-            &review_requirement("REQ-001", "\"--format\" と `--config` を受ける。"),
-            "",
-        ),
-    );
-    write(
-        tmp,
-        "docs/ir/CONTEXT.md",
-        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n| --config | 設定 | docs/decision/records/r.md#A1 |\n",
+        "docs/decisions/a/a.md",
+        &decision_doc("\"--format\" と \"--config\" を受ける。", ""),
     );
 }
 
@@ -1049,13 +1030,10 @@ fn req_226_a_backticked_term_in_a_decision_table_cell_counts() {
 
 // --- 決定の文書に引用された面 ---
 
-/// EX-core-407 の面の規則と "src/cli.rs" に、決定の文書の置き場を足す。IR は無い。
+/// EX-core-407 の面の規則と "src/cli.rs"。IR は無い。
 /// `sections` は決定1つの (節の名前, 中身) の並び
 fn decision_project(tmp: &Path, sections: &[(&str, &str)]) {
-    make_project(
-        tmp,
-        &format!("{SURFACE_RS}decisions:\n  documents: docs/decisions\n"),
-    );
+    make_project(tmp, SURFACE_RS);
     write(tmp, "rules/surface.yml", FLAG_RULE);
     write(tmp, "src/cli.rs", &cli_rs());
     let mut text = "# 題名\n\n範囲。\n\n## フラグを受ける\n\n状態: 提案\n\n".to_string();

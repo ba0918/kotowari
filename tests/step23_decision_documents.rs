@@ -1025,13 +1025,13 @@ fn status_without_the_place_in_the_configuration_shows_no_decision_counts() {
 
 // @kotowari[C-core-confirm-5, C-core-list-7]
 #[test]
-fn list_sorts_the_confirmation_rows_with_the_ir_items_by_path() {
+fn list_sorts_the_confirmation_rows_with_the_other_items_by_path() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), Some("docs/decisions"));
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        "# 題名\n\n範囲。\n\n## Requirements\n\n### REQ-001: 例\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\n文である。\n",
+        "docs/decisions/a.md",
+        &topic(&[bare("例", "提案")]),
     );
     write(
         tmp.path(),
@@ -1049,7 +1049,11 @@ fn list_sorts_the_confirmation_rows_with_the_ir_items_by_path() {
         .collect();
     assert_eq!(
         ids,
-        vec!["docs/decisions/greet.md#挨拶する", "C-greet-1", "REQ-001"]
+        vec![
+            "docs/decisions/a.md#例",
+            "docs/decisions/greet.md#挨拶する",
+            "C-greet-1"
+        ]
     );
 }
 

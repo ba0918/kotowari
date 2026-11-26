@@ -14,12 +14,13 @@ fn make_project(tmp: &Path, test_globs: &[&str]) {
         "docs/ir",
         "docs/decision/records",
         "docs/decision/adr",
+        "docs/decisions",
         "tests",
     ] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     let mut config =
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n"
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\n"
             .to_string();
     if !test_globs.is_empty() {
         config.push_str("tests:\n  files:\n");
@@ -88,6 +89,10 @@ fn keys(item: &serde_json::Value) -> Vec<String> {
     names.sort();
     names
 }
+
+/// 確認することの行 C-t-a-1 を持つ決定を1つ置いた決定の文書
+const DECISION_DOC: &str = "# 題名\n\n範囲。\n\n## 例\n\n状態: 実装済み\n\n### 問題\n\n困っていた。\n\n\
+### 決めたこと\n\nこうする。\n\n### 確認すること\n\n- C-t-a-1 確かめる\n";
 
 /// 要求の見出しと行を作る
 fn requirement(id: &str, name: &str, verification: &str) -> String {
@@ -168,21 +173,14 @@ fn req_151_items_are_listed_despite_ir_errors_and_exit_zero() {
 fn req_153_test_in_a_language_without_a_query_has_a_null_name() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), &["tests/**/*.go"]);
-    write(
-        tmp.path(),
-        "docs/ir/a.md",
-        &format!(
-            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
-            requirement("REQ-001", "例", "unit")
-        ),
-    );
+    write(tmp.path(), "docs/decisions/t/a.md", DECISION_DOC);
     write(
         tmp.path(),
         "tests/a.go",
-        "func x() {\n    // @kotowari[REQ-001]\n}\n",
+        "func x() {\n    // @kotowari[C-t-a-1]\n}\n",
     );
     let v = run_list(tmp.path());
-    let tests = item(&v, "REQ-001")["tests"].as_array().unwrap().clone();
+    let tests = item(&v, "C-t-a-1")["tests"].as_array().unwrap().clone();
     assert_eq!(
         tests.len(),
         1,
@@ -651,13 +649,10 @@ fn req_155_translations_list_every_pair_with_the_blob_hash_of_each_side() {
         tmp.path(),
         "guides:\n  files:\n    - \"guides/*.md\"\noverview:\n  files:\n    - \".kotowari/overview/*.md\"\n  toc: .kotowari/toc.yaml\n",
     );
-    let doc = format!(
-        "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
-        requirement("REQ-001", "例", "review")
-    );
-    write(tmp.path(), "docs/ir/a.md", &doc);
-    write(tmp.path(), "docs/ir/a.en.md", &doc);
-    write(tmp.path(), "docs/ir/b.en.md", "x\n");
+    let doc = DECISION_DOC.replace("\n\n### 確認すること\n\n- C-t-a-1 確かめる", "");
+    write(tmp.path(), "docs/decisions/t/a.md", &doc);
+    write(tmp.path(), "docs/decisions/t/a.en.md", &doc);
+    write(tmp.path(), "docs/decisions/t/b.en.md", "x\n");
     write(tmp.path(), "guides/g.md", "a\n");
     write(tmp.path(), ".kotowari/overview/o.md", "# O\n");
     write(tmp.path(), ".kotowari/toc.yaml", "title: T\n");
@@ -682,17 +677,17 @@ fn req_155_translations_list_every_pair_with_the_blob_hash_of_each_side() {
                 ]
             ),
             entry(
-                "docs/ir/a.md",
+                "docs/decisions/t/a.md",
                 vec![
-                    side("ja", "docs/ir/a.md", Some(blob(&doc))),
-                    side("en", "docs/ir/a.en.md", Some(blob(&doc))),
+                    side("ja", "docs/decisions/t/a.md", Some(blob(&doc))),
+                    side("en", "docs/decisions/t/a.en.md", Some(blob(&doc))),
                 ]
             ),
             entry(
-                "docs/ir/b.md",
+                "docs/decisions/t/b.md",
                 vec![
-                    side("ja", "docs/ir/b.md", None),
-                    side("en", "docs/ir/b.en.md", Some(blob("x\n"))),
+                    side("ja", "docs/decisions/t/b.md", None),
+                    side("en", "docs/decisions/t/b.en.md", Some(blob("x\n"))),
                 ]
             ),
             entry(
@@ -714,8 +709,8 @@ fn req_155_translations_list_every_pair_with_the_blob_hash_of_each_side() {
         [
             format!(".kotowari/overview/o.md ja={} en=-", blob("# O\n")),
             format!(".kotowari/toc.yaml ja={} en=-", blob("title: T\n")),
-            format!("docs/ir/a.md ja={} en={}", blob(&doc), blob(&doc)),
-            format!("docs/ir/b.md ja=- en={}", blob("x\n")),
+            format!("docs/decisions/t/a.md ja={} en={}", blob(&doc), blob(&doc)),
+            format!("docs/decisions/t/b.md ja=- en={}", blob("x\n")),
             format!("guides/g.md ja={} en=-", blob("a\n")),
         ]
     );

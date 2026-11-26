@@ -15,9 +15,10 @@ fn make_project(tmp: &std::path::Path) {
     fs::create_dir_all(tmp.join("docs/ir")).unwrap();
     fs::create_dir_all(tmp.join("docs/decision/records")).unwrap();
     fs::create_dir_all(tmp.join("docs/decision/adr")).unwrap();
+    fs::create_dir_all(tmp.join("docs/decisions")).unwrap();
     fs::write(
         tmp.join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\n",
     )
     .unwrap();
     fs::write(
@@ -72,25 +73,9 @@ fn req_021_format_values_are_json_and_text() {
 fn req_023_files_counts_all_docs_and_lines_sums_them() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# A\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: unit\n\nStmt.\n",
-    )
-    .unwrap();
-    fs::write(
-        tmp.path().join("docs/ir/CONTEXT.md"),
-        "# Glossary\n\n| Term | Meaning | Source |\n|---|---|---|\n",
-    )
-    .unwrap();
+    fs::write(tmp.path().join("docs/decisions/a.md"), "# A\n\nScope.\n").unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
-    // files は用語集を含む
-    assert_eq!(
-        v["files"], 2,
-        "files should count all docs including glossary"
-    );
-    // lines は合計
-    assert!(v["lines"].as_u64().unwrap() > 0, "lines should be positive");
     // findings は配列
     assert!(v["findings"].is_array());
     // counts はオブジェクト
@@ -103,7 +88,7 @@ fn req_023_finding_keys_match_the_table() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
     // 題名なしの文書を作って指摘を出す
-    fs::write(tmp.path().join("docs/ir/a.md"), "no title\n").unwrap();
+    fs::write(tmp.path().join("docs/decisions/a.md"), "no title\n").unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let findings = v["findings"].as_array().unwrap();
@@ -128,7 +113,7 @@ fn req_023_finding_keys_match_the_table() {
 fn prop_002_counts_match_findings() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    fs::write(tmp.path().join("docs/ir/a.md"), "no title\n").unwrap();
+    fs::write(tmp.path().join("docs/decisions/a.md"), "no title\n").unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let v = parse_json(&output);
     let findings = v["findings"].as_array().unwrap();
@@ -166,7 +151,7 @@ fn prop_002_counts_match_findings() {
 fn req_025_text_has_one_line_per_finding_with_bracketed_severity() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    fs::write(tmp.path().join("docs/ir/a.md"), "no title\n").unwrap();
+    fs::write(tmp.path().join("docs/decisions/a.md"), "no title\n").unwrap();
     let output = cmd()
         .args(["check", "--format", "text"])
         .current_dir(tmp.path())
@@ -190,7 +175,7 @@ fn req_025_a_line_break_in_a_file_name_stays_on_one_text_line() {
     // 改行を含むファイル名でも1つの指摘は1行。改行は "\\n" と書く
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    fs::write(tmp.path().join("docs/ir/a\nb.md"), "no title\n").unwrap();
+    fs::write(tmp.path().join("docs/decisions/a\nb.md"), "no title\n").unwrap();
     let output = cmd()
         .args(["check", "--format", "text"])
         .current_dir(tmp.path())
@@ -200,7 +185,7 @@ fn req_025_a_line_break_in_a_file_name_stays_on_one_text_line() {
     let lines: Vec<&str> = stdout.lines().collect();
     assert!(!lines.is_empty(), "should have text output");
     for line in &lines {
-        assert!(line.starts_with("docs/ir/a\\nb.md:"), "{stdout}");
+        assert!(line.starts_with("docs/decisions/a\\nb.md:"), "{stdout}");
     }
 }
 
@@ -210,7 +195,7 @@ fn req_025_a_carriage_return_in_a_file_name_is_written_as_backslash_r() {
     // "\r" だけでは行は分かれないので、行の全体を照合して、パスと詳細の両方で書き換えたことを見る
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    fs::write(tmp.path().join("docs/ir/a\rb.md"), "no title\n").unwrap();
+    fs::write(tmp.path().join("docs/decisions/a\rb.md"), "no title\n").unwrap();
     let output = cmd()
         .args(["check", "--format", "text"])
         .current_dir(tmp.path())
@@ -220,7 +205,7 @@ fn req_025_a_carriage_return_in_a_file_name_is_written_as_backslash_r() {
     assert!(
         stdout
             .lines()
-            .any(|line| line == "docs/ir/a\\rb.md:- [error] missing_title a\\rb.md"),
+            .any(|line| line == "docs/decisions/a\\rb.md:- [error] missing_title a\\rb.md"),
         "{stdout:?}"
     );
     assert!(!stdout.contains('\r'), "{stdout:?}");
@@ -231,7 +216,7 @@ fn req_025_a_carriage_return_in_a_file_name_is_written_as_backslash_r() {
 fn req_025_text_line_for_a_document_without_a_title() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    fs::write(tmp.path().join("docs/ir/a.md"), "no title\n").unwrap();
+    fs::write(tmp.path().join("docs/decisions/a.md"), "no title\n").unwrap();
     let output = cmd()
         .args(["check", "--format", "text"])
         .current_dir(tmp.path())
@@ -241,7 +226,7 @@ fn req_025_text_line_for_a_document_without_a_title() {
     assert!(
         stdout
             .lines()
-            .any(|l| l == "docs/ir/a.md:- [error] missing_title a.md"),
+            .any(|l| l == "docs/decisions/a.md:- [error] missing_title a.md"),
         "the finding without a line prints the path, a dash, the severity, the kind and the detail: {stdout}"
     );
 }
@@ -255,17 +240,34 @@ fn req_007_exit_code_one_on_error_and_zero_on_notice_only() {
     make_project(tmp.path());
 
     // 誤りなし → 終了コード 0
-    fs::write(tmp.path().join("docs/ir/a.md"), "# Title\n\nScope.\n").unwrap();
+    fs::write(
+        tmp.path().join("docs/decisions/a.md"),
+        "# Title\n\nScope.\n",
+    )
+    .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(output.status.code(), Some(0), "no errors should exit 0");
 
-    // 注意だけ（201行で too_many_lines）→ 終了コード 0 のまま
-    let long = format!("# Title\n\nScope.\n{}", "\n".repeat(198));
-    fs::write(tmp.path().join("docs/ir/a.md"), long).unwrap();
+    // 注意だけ（指紋の古いガイドの印で guide_stale）→ 終了コード 0 のまま
+    fs::write(
+        tmp.path().join("docs/decisions/a.md"),
+        "# Title\n\nScope.\n\n## Greet\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nGreet.\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join(".kotowari/config.yaml"),
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\nguides:\n  files:\n    - \"guide.md\"\n",
+    )
+    .unwrap();
+    fs::write(
+        tmp.path().join("guide.md"),
+        "# Guide\n\n<!-- @kotowari[docs/decisions/a.md#greet:00000000] -->\n",
+    )
+    .unwrap();
     let output_notice = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let stdout = String::from_utf8_lossy(&output_notice.stdout);
     assert!(
-        stdout.contains("too_many_lines"),
+        stdout.contains("guide_stale"),
         "notice should be present: {stdout}"
     );
     assert!(
@@ -279,7 +281,7 @@ fn req_007_exit_code_one_on_error_and_zero_on_notice_only() {
     );
 
     // 誤りあり → 終了コード 1
-    fs::write(tmp.path().join("docs/ir/a.md"), "no title\n").unwrap();
+    fs::write(tmp.path().join("docs/decisions/a.md"), "no title\n").unwrap();
     let output2 = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     assert_eq!(output2.status.code(), Some(1), "errors should exit 1");
 

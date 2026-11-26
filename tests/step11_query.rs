@@ -14,13 +14,14 @@ fn make_project(tmp: &Path) {
         "docs/ir",
         "docs/decision/records",
         "docs/decision/adr",
+        "docs/decisions",
         "tests",
     ] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     std::fs::write(
         tmp.join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\n",
     )
     .unwrap();
     std::fs::write(
@@ -221,21 +222,19 @@ fn req_156_duplicate_ids_are_all_listed() {
     for name in ["a.md", "b.md"] {
         write(
             tmp.path(),
-            &format!("docs/ir/{name}"),
-            &format!(
-                "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
-                requirement("REQ-001", "例", "unit")
-            ),
+            &format!("docs/decisions/{name}"),
+            "# 題名\n\n範囲。\n\n## 例\n\n状態: 実装済み\n\n### 問題\n\n困っていた。\n\n\
+### 決めたこと\n\nこうする。\n\n### 確認すること\n\n- C-t-1 確かめる\n",
         );
     }
-    let v = run_query(tmp.path(), "REQ-001");
+    let v = run_query(tmp.path(), "C-t-1");
     let paths: Vec<&str> = v["items"]
         .as_array()
         .unwrap()
         .iter()
         .map(|i| i["path"].as_str().unwrap())
         .collect();
-    assert_eq!(paths, vec!["docs/ir/a.md", "docs/ir/b.md"]);
+    assert_eq!(paths, vec!["docs/decisions/a.md", "docs/decisions/b.md"]);
 }
 
 // @kotowari[REQ-core-156, C-core-query-4]
@@ -411,8 +410,12 @@ fn req_160_referenced_by_is_ordered_by_path_then_line() {
 fn req_161_json_top_level_has_only_items() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    write(tmp.path(), "docs/ir/a.md", EX_250_DOCUMENT);
-    let v = run_query(tmp.path(), "REQ-001");
+    write(
+        tmp.path(),
+        "docs/decisions/a.md",
+        "# 題名\n\n範囲。\n\n## 例\n\n状態: 実装済み\n\n### 問題\n\n困っていた。\n\n### 決めたこと\n\nこうする。\n",
+    );
+    let v = run_query(tmp.path(), "docs/decisions/a.md#例");
     let names: Vec<&str> = v.as_object().unwrap().keys().map(String::as_str).collect();
     assert_eq!(names, vec!["items"]);
 }

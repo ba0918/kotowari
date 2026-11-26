@@ -340,11 +340,11 @@ fn ex_core_553_a_test_file_that_is_not_utf8_does_not_stop_the_build() {
 #[test]
 fn req_core_278_build_reads_the_ir_places_and_stops_like_check() {
     let tmp = two_documents();
-    std::fs::remove_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
+    std::fs::remove_dir_all(tmp.path().join("docs/decisions")).unwrap();
     let (code, _, stderr) = run(tmp.path(), &["overview", "build"]);
     assert_eq!(code, Some(2));
     assert!(
-        stderr.starts_with("unreadable file: docs/decision/adr"),
+        stderr.starts_with("unreadable file: docs/decisions"),
         "{stderr}"
     );
 }

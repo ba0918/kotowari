@@ -14,13 +14,16 @@ fn make_project(tmp: &Path, extra: &str) {
         "docs/ir",
         "docs/decision/records",
         "docs/decision/adr",
+        "docs/decisions",
     ] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     write(
         tmp,
         ".kotowari/config.yaml",
-        &format!("tests:\n  files:\n    - \"tests/**/*.rs\"\n{extra}"),
+        &format!(
+            "decisions:\n  documents: docs/decisions\ntests:\n  files:\n    - \"tests/**/*.rs\"\n{extra}"
+        ),
     );
     write(
         tmp,
@@ -42,6 +45,10 @@ fn ir_with_requirement(verification: &str, statement: &str) -> String {
         "# Greeting\n\nScope.\n\n## Requirements\n\n### REQ-greet-001: Greet\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: {verification}\n\n{statement}\n"
     )
 }
+
+/// テストの指していない確認することの行を1つ持つ決定の文書。ほかの`誤り`は無い
+const UNTESTED_DOC: &str = "# Greeting\n\nScope.\n\n## Greet\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n\
+### Decision\n\nGreet.\n\n### Confirmations\n\n- C-greet-greet-1 A greeting is shown\n";
 
 /// テストの無い unit の`要求`。ほかの`誤り`は無い
 const UNTESTED: &str = "The system will greet.";
@@ -84,19 +91,15 @@ fn findings(stdout: &str) -> Vec<(String, String, String)> {
 fn ex_core_547_a_specification_ahead_of_its_tests_passes_with_the_option() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), "");
-    write(
-        tmp.path(),
-        "docs/ir/greet/greet.md",
-        &ir_with_requirement("unit", UNTESTED),
-    );
+    write(tmp.path(), "docs/decisions/greet/greet.md", UNTESTED_DOC);
     let (code, stdout, stderr) = run(tmp.path(), &["check", "--allow-test-findings"]);
     assert_eq!(code, Some(0), "{stdout}{stderr}");
     assert_eq!(
         findings(&stdout),
         vec![(
-            "requirement_without_test".to_string(),
+            "confirmation_without_test".to_string(),
             "error".to_string(),
-            "docs/ir/greet/greet.md".to_string()
+            "docs/decisions/greet/greet.md".to_string()
         )]
     );
 }
@@ -106,22 +109,18 @@ fn ex_core_547_a_specification_ahead_of_its_tests_passes_with_the_option() {
 fn ex_core_548_the_same_state_stops_without_the_option() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path(), "");
-    write(
-        tmp.path(),
-        "docs/ir/greet/greet.md",
-        &ir_with_requirement("unit", UNTESTED),
-    );
+    write(tmp.path(), "docs/decisions/greet/greet.md", UNTESTED_DOC);
     let (code, stdout, stderr) = run(tmp.path(), &["check"]);
     assert_eq!(code, Some(1), "{stdout}{stderr}");
 }
 
-/// テストの無い`要求`と、用語集に無い語を逆引用符で囲んだ IR の行
-fn untested_with_unknown_term(tmp: &Path) {
+/// テストの無い確認することの行と、問題の節の無い決定
+fn untested_with_a_form_error(tmp: &Path) {
     make_project(tmp, "");
     write(
         tmp,
-        "docs/ir/greet/greet.md",
-        &ir_with_requirement("unit", "The system will greet the `visitor`."),
+        "docs/decisions/greet/greet.md",
+        &format!("{UNTESTED_DOC}\n## Wave\n\nStatus: implemented\n\n### Decision\n\nWave.\n"),
     );
 }
 
@@ -129,13 +128,13 @@ fn untested_with_unknown_term(tmp: &Path) {
 #[test]
 fn ex_core_549_an_error_in_the_ir_stops_even_with_the_option() {
     let tmp = TempDir::new().unwrap();
-    untested_with_unknown_term(tmp.path());
+    untested_with_a_form_error(tmp.path());
     let (code, stdout, stderr) = run(tmp.path(), &["check", "--allow-test-findings"]);
     assert_eq!(code, Some(1), "{stdout}{stderr}");
     assert!(
         findings(&stdout)
             .iter()
-            .any(|(kind, _, _)| kind == "unknown_term"),
+            .any(|(kind, _, _)| kind == "decision_section_missing"),
         "{stdout}"
     );
 }
@@ -264,7 +263,7 @@ fn ex_core_551_a_malformed_guide_mark_stops_even_with_the_option() {
 #[test]
 fn req_core_357_the_option_leaves_the_output_unchanged() {
     let tmp = TempDir::new().unwrap();
-    untested_with_unknown_term(tmp.path());
+    untested_with_a_form_error(tmp.path());
     for format in ["json", "text"] {
         let (code, without, stderr) = run(tmp.path(), &["check", "--format", format]);
         assert_eq!(code, Some(1), "{without}{stderr}");
@@ -273,8 +272,8 @@ fn req_core_357_the_option_leaves_the_output_unchanged() {
             &["check", "--format", format, "--allow-test-findings"],
         );
         assert_eq!(code, Some(1), "{with}{stderr}");
-        assert!(without.contains("requirement_without_test"), "{without}");
-        assert!(without.contains("unknown_term"), "{without}");
+        assert!(without.contains("confirmation_without_test"), "{without}");
+        assert!(without.contains("decision_section_missing"), "{without}");
         assert_eq!(with, without, "{format}");
     }
 }

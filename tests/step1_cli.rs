@@ -40,9 +40,9 @@ fn req_001_the_commands_run_and_other_words_are_not_commands() {
         .assert()
         .code(0);
     // "kotowari query" と "kotowari status" もコマンドとして通る
-    let project = dir_with_one_requirement();
+    let project = dir_with_one_decision();
     cmd()
-        .args(["query", "REQ-001"])
+        .args(["query", "C-t-a-1"])
         .current_dir(project.path())
         .assert()
         .code(0);
@@ -555,10 +555,10 @@ fn req_004_tool_on_query_or_status_stops() {
 #[test]
 fn req_002_query_and_status_options_before_or_after_the_command() {
     // オプションが query と status の前でも後でも受ける
-    let project = dir_with_one_requirement();
+    let project = dir_with_one_decision();
     for args in [
-        vec!["--format", "json", "query", "REQ-001"],
-        vec!["query", "REQ-001", "--format", "json"],
+        vec!["--format", "json", "query", "C-t-a-1"],
+        vec!["query", "C-t-a-1", "--format", "json"],
         vec!["--format", "json", "status"],
         vec!["status", "--format", "json"],
     ] {
@@ -583,16 +583,16 @@ fn req_002_check_runs_with_allow_test_findings() {
 // @kotowari[REQ-core-004, EX-core-552, C-core-cli-7, C-core-testside-3]
 #[test]
 fn ex_core_552_allow_test_findings_on_status_is_an_argument_error() {
-    let project = dir_with_one_requirement();
+    let project = dir_with_one_decision();
     assert_argument_error(&["status", "--allow-test-findings"], project.path());
 }
 
 // @kotowari[REQ-core-002, EX-core-380, C-core-cli-2]
 #[test]
 fn ex_core_380_query_takes_an_option_after_the_id() {
-    let project = dir_with_one_requirement();
+    let project = dir_with_one_decision();
     cmd()
-        .args(["query", "REQ-001", "--format", "text"])
+        .args(["query", "C-t-a-1", "--format", "text"])
         .current_dir(project.path())
         .assert()
         .code(0);
@@ -643,7 +643,7 @@ fn assert_stops_like_check(args: &[&str]) {
 }
 
 /// 項目が1つあり、check の指摘が0件の置き場を作る
-fn dir_with_one_requirement() -> tempfile::TempDir {
+fn dir_with_one_decision() -> tempfile::TempDir {
     let tmp = tempfile::TempDir::new().unwrap();
     for dir in [
         ".kotowari",
@@ -655,18 +655,14 @@ fn dir_with_one_requirement() -> tempfile::TempDir {
     }
     std::fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\n",
     )
     .unwrap();
+    // 読んで確かめる確認することの行なら、テストが無くても check の指摘は出ない
+    std::fs::create_dir_all(tmp.path().join("docs/decisions/t")).unwrap();
     std::fs::write(
-        tmp.path().join("docs/decision/records/records.md"),
-        "# Records\n\n## Agreements\n\n- A1 Agreement\n",
-    )
-    .unwrap();
-    // 検証が review で確かめ方のある要求なら、テストが無くても check の指摘は出ない
-    std::fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        "# 題名\n\n範囲。\n\n## Requirements\n\n### REQ-001: 例\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1\n- verification: review\n- how_to_verify: 人が読む\n\n文である。\n",
+        tmp.path().join("docs/decisions/t/a.md"),
+        "# 題名\n\n範囲。\n\n## 例\n\n状態: 実装済み\n\n### 問題\n\n困っていた。\n\n### 決めたこと\n\nこうする。\n\n### 確認すること\n\n- C-t-a-1 （読んで確認）人が読む\n",
     )
     .unwrap();
     tmp

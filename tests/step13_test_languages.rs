@@ -13,13 +13,20 @@ fn cmd() -> Command {
     Command::cargo_bin("kotowari").unwrap()
 }
 
-/// "tests.files" に glob を並べ、検証が "unit" の REQ-001 と REQ-002 を持つプロジェクトを作る
+/// "tests.files" に glob を並べ、検証が "unit" の REQ-001 と REQ-002 を持つプロジェクトを作る。
+/// 確認することの行 C-t-a-1 と C-t-a-2 を持つ決定の文書も置く
 fn make_project(tmp: &Path, test_globs: &[&str]) {
     fs::create_dir_all(tmp.join(".kotowari")).unwrap();
     fs::create_dir_all(tmp.join("docs/ir")).unwrap();
     fs::create_dir_all(tmp.join("docs/decision/records")).unwrap();
     fs::create_dir_all(tmp.join("docs/decision/adr")).unwrap();
-    let mut config = String::from("tests:\n  files:\n");
+    write(
+        tmp,
+        "docs/decisions/t/a.md",
+        "# Title\n\nScope.\n\n## Decision\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n\
+### Decision\n\nDo this.\n\n### Confirmations\n\n- C-t-a-1 One\n- C-t-a-2 Two\n",
+    );
+    let mut config = String::from("decisions:\n  documents: docs/decisions\ntests:\n  files:\n");
     for glob in test_globs {
         config.push_str(&format!("    - \"{glob}\"\n"));
     }
@@ -109,9 +116,9 @@ fn ex_core_296_string_name_loses_its_quotes() {
     write(
         tmp.path(),
         "tests/a.test.ts",
-        "describe('d', () => {\n  // @kotowari[REQ-001]\n  // @kotowari[REQ-002]\n  it('does x', () => {});\n});\n",
+        "describe('d', () => {\n  // @kotowari[C-t-a-1]\n  // @kotowari[C-t-a-2]\n  it('does x', () => {});\n});\n",
     );
-    let tests = listed_tests(tmp.path(), "REQ-002");
+    let tests = listed_tests(tmp.path(), "C-t-a-2");
     assert_eq!(tests.len(), 1, "{tests:?}");
     assert_eq!(tests[0]["line"], 3);
     assert_eq!(
@@ -316,14 +323,14 @@ fn ex_core_319_mark_before_a_nested_test_binds_to_it() {
     write(
         tmp.path(),
         "tests/a.test.ts",
-        "// @kotowari[REQ-001]\nit('outer', () => {\n  // @kotowari[REQ-002]\n  it('inner', () => {});\n});\n",
+        "// @kotowari[C-t-a-1]\nit('outer', () => {\n  // @kotowari[C-t-a-2]\n  it('inner', () => {});\n});\n",
     );
     let v = check(tmp.path());
     assert!(unmarked(&v).is_empty(), "{v}");
-    let outer = listed_tests(tmp.path(), "REQ-001");
+    let outer = listed_tests(tmp.path(), "C-t-a-1");
     assert_eq!(outer.len(), 1, "{outer:?}");
     assert_eq!(outer[0]["name"], "outer");
-    let inner = listed_tests(tmp.path(), "REQ-002");
+    let inner = listed_tests(tmp.path(), "C-t-a-2");
     assert_eq!(inner.len(), 1, "{inner:?}");
     assert_eq!(inner[0]["name"], "inner");
 }
@@ -336,12 +343,12 @@ fn ex_core_327_comment_after_a_full_width_space_joins_the_block() {
     write(
         tmp.path(),
         "tests/a.test.ts",
-        "\u{3000}// @kotowari[REQ-001]\n\u{a0}// @kotowari[REQ-002]\nit('x', () => {});\n",
+        "\u{3000}// @kotowari[C-t-a-1]\n\u{a0}// @kotowari[C-t-a-2]\nit('x', () => {});\n",
     );
     let v = check(tmp.path());
     assert!(unmarked(&v).is_empty(), "{v}");
-    assert_eq!(listed_tests(tmp.path(), "REQ-001")[0]["name"], "x");
-    assert_eq!(listed_tests(tmp.path(), "REQ-002")[0]["name"], "x");
+    assert_eq!(listed_tests(tmp.path(), "C-t-a-1")[0]["name"], "x");
+    assert_eq!(listed_tests(tmp.path(), "C-t-a-2")[0]["name"], "x");
 }
 
 // @kotowari[REQ-core-075, EX-core-320, C-core-markers-16]
@@ -443,11 +450,11 @@ fn ex_core_307_mark_binds_across_a_decorator() {
     write(
         tmp.path(),
         "tests/test_a.py",
-        "# @kotowari[REQ-001]\n@pytest.mark.parametrize('a', [1])\ndef test_x(a):\n    pass\n",
+        "# @kotowari[C-t-a-1]\n@pytest.mark.parametrize('a', [1])\ndef test_x(a):\n    pass\n",
     );
     let v = check(tmp.path());
     assert!(unmarked(&v).is_empty(), "{v}");
-    let tests = listed_tests(tmp.path(), "REQ-001");
+    let tests = listed_tests(tmp.path(), "C-t-a-1");
     assert_eq!(tests.len(), 1, "{tests:?}");
     assert_eq!(tests[0]["name"], "test_x");
 }
@@ -460,11 +467,11 @@ fn ex_core_308_mark_before_a_method_binds() {
     write(
         tmp.path(),
         "tests/test_a.py",
-        "class TestBar:\n    # @kotowari[REQ-001]\n    def test_baz(self):\n        pass\n",
+        "class TestBar:\n    # @kotowari[C-t-a-1]\n    def test_baz(self):\n        pass\n",
     );
     let v = check(tmp.path());
     assert!(unmarked(&v).is_empty(), "{v}");
-    let tests = listed_tests(tmp.path(), "REQ-001");
+    let tests = listed_tests(tmp.path(), "C-t-a-1");
     assert_eq!(tests.len(), 1, "{tests:?}");
     assert_eq!(tests[0]["name"], "test_baz");
 }
@@ -477,11 +484,11 @@ fn ex_core_318_mark_binds_across_a_multi_line_decorator_and_a_comment() {
     write(
         tmp.path(),
         "tests/test_a.py",
-        "# @kotowari[REQ-001]\n@pytest.mark.parametrize(\n    'a', [1]\n)\n# note\ndef test_x(a):\n    pass\n",
+        "# @kotowari[C-t-a-1]\n@pytest.mark.parametrize(\n    'a', [1]\n)\n# note\ndef test_x(a):\n    pass\n",
     );
     let v = check(tmp.path());
     assert!(unmarked(&v).is_empty(), "{v}");
-    let tests = listed_tests(tmp.path(), "REQ-001");
+    let tests = listed_tests(tmp.path(), "C-t-a-1");
     assert_eq!(tests.len(), 1, "{tests:?}");
     assert_eq!(tests[0]["name"], "test_x");
 }
@@ -494,11 +501,11 @@ fn ex_core_323_blank_line_inside_a_multi_line_decorator_does_not_cut_the_block()
     write(
         tmp.path(),
         "tests/test_a.py",
-        "# @kotowari[REQ-001]\n@pytest.mark.parametrize(\n    'a',\n\n    [1],\n)\ndef test_x(a):\n    pass\n",
+        "# @kotowari[C-t-a-1]\n@pytest.mark.parametrize(\n    'a',\n\n    [1],\n)\ndef test_x(a):\n    pass\n",
     );
     let v = check(tmp.path());
     assert!(unmarked(&v).is_empty(), "{v}");
-    let tests = listed_tests(tmp.path(), "REQ-001");
+    let tests = listed_tests(tmp.path(), "C-t-a-1");
     assert_eq!(tests.len(), 1, "{tests:?}");
     assert_eq!(tests[0]["name"], "test_x");
 }
@@ -584,18 +591,18 @@ fn tbl_034_mark_before_a_docblock_test_binds() {
     write(
         tmp.path(),
         "tests/FooTest.php",
-        "<?php\nclass FooTest\n{\n    // @kotowari[REQ-001]\n    /**\n     * @test\n     */\n    public function itWorks()\n    {\n    }\n}\n",
+        "<?php\nclass FooTest\n{\n    // @kotowari[C-t-a-1]\n    /**\n     * @test\n     */\n    public function itWorks()\n    {\n    }\n}\n",
     );
     let v = check(tmp.path());
     assert!(unmarked(&v).is_empty(), "{v}");
-    assert_eq!(listed_tests(tmp.path(), "REQ-001")[0]["name"], "itWorks");
+    assert_eq!(listed_tests(tmp.path(), "C-t-a-1")[0]["name"], "itWorks");
 }
 
 // --- "tests.rules" で足すルール ---
 
 /// "tests.files" と "tests.rules" を書いた設定に置き換える
 fn configure(tmp: &Path, test_globs: &[&str], rules: &[&str]) {
-    let mut config = String::from("tests:\n  files:\n");
+    let mut config = String::from("decisions:\n  documents: docs/decisions\ntests:\n  files:\n");
     for glob in test_globs {
         config.push_str(&format!("    - \"{glob}\"\n"));
     }
@@ -930,9 +937,9 @@ fn req_180_test_without_a_name_is_listed_with_a_null_name() {
     write(
         tmp.path(),
         "tests/a.test.ts",
-        "// @kotowari[REQ-001]\nbench(caseName, () => {});\n",
+        "// @kotowari[C-t-a-1]\nbench(caseName, () => {});\n",
     );
-    let tests = listed_tests(tmp.path(), "REQ-001");
+    let tests = listed_tests(tmp.path(), "C-t-a-1");
     assert_eq!(tests.len(), 1, "{tests:?}");
     assert!(tests[0]["name"].is_null(), "{tests:?}");
 }

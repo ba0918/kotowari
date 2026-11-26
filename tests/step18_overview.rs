@@ -445,7 +445,7 @@ fn req_core_152_list_and_query_neither_read_overview_data_nor_stop_on_it() {
     std::fs::write(tmp.path().join("docs/notes/a.md"), [0xff]).unwrap();
     let (code, _, stderr) = run(tmp.path(), &["list"]);
     assert_eq!(code, Some(0), "{stderr}");
-    let (code, _, stderr) = run(tmp.path(), &["query", "REQ-001"]);
+    let (code, _, stderr) = run(tmp.path(), &["query", "docs/decisions/cli.md#run"]);
     assert_eq!(code, Some(0), "{stderr}");
 }
 

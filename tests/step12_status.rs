@@ -14,13 +14,14 @@ fn make_project(tmp: &Path) {
         "docs/ir",
         "docs/decision/records",
         "docs/decision/adr",
+        "docs/decisions",
         "tests",
     ] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     std::fs::write(
         tmp.join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\n",
     )
     .unwrap();
     std::fs::write(
@@ -66,28 +67,19 @@ fn requirement(id: &str, name: &str, fields: &str) -> String {
     )
 }
 
-/// EX-core-258 と EX-core-261 が使う文書とテスト。
-/// 検証が unit の要求、確かめ方のある review の要求、その具体例、印のあるテストがある
+/// 確認することの行が2つある決定の文書と、その2つを指す印のあるテスト
 fn write_ex_258_project(tmp: &Path) {
     make_project(tmp);
     write(
         tmp,
-        "docs/ir/a.md",
-        &format!(
-            "# 題名\n\n範囲。\n\n## Requirements\n\n{}{}## Examples\n\n\
-```gherkin\n@id=EX-001 @about=REQ-001 @source=docs/decision/records/records.md#A1\nScenario: 例\n  Given 何か\n```\n",
-            requirement("REQ-001", "一", "- verification: unit\n"),
-            requirement(
-                "REQ-002",
-                "二",
-                "- verification: review\n- how_to_verify: 人が読む\n"
-            ),
-        ),
+        "docs/decisions/a/a.md",
+        "# 題名\n\n範囲。\n\n## 一\n\n状態: 実装済み\n\n### 問題\n\n困っていた。\n\n\
+### 決めたこと\n\nこうする。\n\n### 確認すること\n\n- C-a-a-1 一つ目\n- C-a-a-2 二つ目\n",
     );
     write(
         tmp,
         "tests/a.rs",
-        "// @kotowari[REQ-001, EX-001]\n#[test]\nfn req_001_x() {}\n",
+        "// @kotowari[C-a-a-1, C-a-a-2]\n#[test]\nfn req_001_x() {}\n",
     );
 }
 
@@ -100,15 +92,6 @@ fn req_162_complete_project_counts_and_exit_zero() {
     write_ex_258_project(tmp.path());
     let (code, v) = run_status(tmp.path());
     assert_eq!(code, Some(0), "{v}");
-    assert_eq!(v["requirements"]["unit"], 1);
-    assert_eq!(v["requirements"]["review"], 1);
-    assert_eq!(v["requirements"]["with_tests"], 1);
-    assert_eq!(v["requirements"]["without_tests"], 0);
-    assert_eq!(v["requirements"]["review_with_how_to_verify"], 1);
-    assert_eq!(v["requirements"]["review_without_how_to_verify"], 0);
-    assert_eq!(v["requirements"]["without_examples"], 1);
-    assert_eq!(v["scenarios"]["with_tests"], 1);
-    assert_eq!(v["scenarios"]["without_tests"], 0);
     assert_eq!(v["tests"]["marks"], 2);
     assert_eq!(v["findings"]["error"], 0);
     assert_eq!(v["findings"]["notice"], 0);
@@ -311,29 +294,22 @@ fn tbl_028_requirements_are_counted_by_verification_value() {
 #[test]
 fn tbl_028_notices_are_counted_apart_from_errors() {
     let tmp = TempDir::new().unwrap();
-    make_project(tmp.path());
-    // 行数の上限を1にして、注意（too_many_lines）だけが出る置き場にする
+    write_ex_258_project(tmp.path());
+    // 指紋の古いガイドの印だけを置き、注意（guide_stale）だけが出る置き場にする
     std::fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\nlimits:\n  lines: 1\n",
+        "ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: docs/decisions\nguides:\n  files:\n    - \"guide/*.md\"\n",
     )
     .unwrap();
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        &format!(
-            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
-            requirement(
-                "REQ-001",
-                "一",
-                "- verification: review\n- how_to_verify: 人が読む\n"
-            )
-        ),
+        "guide/a.md",
+        "# 使い方\n\n<!-- @kotowari[docs/decisions/a/a.md#一:00000000] -->\n",
     );
     let (code, v) = run_status(tmp.path());
     assert_eq!(v["findings"]["error"], 0, "{v}");
     assert_eq!(v["findings"]["notice"], 1, "{v}");
-    // 注意は complete を妨げない（REQ-core-165 は誤りと問題の記録だけを見る）
+    // 注意は complete を妨げない
     assert_eq!(v["complete"], true, "{v}");
     assert_eq!(code, Some(0), "{v}");
 }
@@ -366,6 +342,8 @@ fn req_166_json_top_level_has_only_the_groups() {
         names,
         vec![
             "complete",
+            "confirmations",
+            "decisions",
             "documents",
             "findings",
             "guides",
@@ -404,14 +382,11 @@ fn req_166_json_top_level_has_only_the_groups() {
 fn req_162_status_writes_no_finding() {
     let tmp = TempDir::new().unwrap();
     make_project(tmp.path());
-    // "- verification:" の行の無い要求（check なら verification_missing）
+    // 問題の節の無い決定（check なら誤り）
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        &format!(
-            "# 題名\n\n範囲。\n\n## Requirements\n\n{}",
-            requirement("REQ-001", "一", "")
-        ),
+        "docs/decisions/a/a.md",
+        "# 題名\n\n範囲。\n\n## 一\n\n状態: 実装済み\n\n### 決めたこと\n\nこうする。\n",
     );
     let (code, stdout, stderr) = run(tmp.path(), &["status"]);
     assert_eq!(code, Some(1));
@@ -441,28 +416,22 @@ fn req_166_text_prints_one_line_per_group() {
     let (code, stdout, stderr) = run(tmp.path(), &["status", "--format", "text"]);
     assert_eq!(code, Some(0), "{stderr}");
     let lines: Vec<&str> = stdout.lines().collect();
-    assert_eq!(lines.len(), 10, "one line per group: {stdout}");
+    let line = |group: &str| {
+        lines
+            .iter()
+            .find(|line| line.split(' ').next() == Some(group))
+            .copied()
+            .unwrap_or_else(|| panic!("no {group} line: {stdout}"))
+    };
     assert!(
-        lines[0].starts_with("documents files=1 lines="),
+        line("documents").starts_with("documents files="),
         "got: {:?}",
-        lines[0]
+        line("documents")
     );
-    assert_eq!(
-        lines[1],
-        "items requirement=2 table=0 property=0 scenario=1 flag=0"
-    );
-    assert_eq!(
-        lines[2],
-        "requirements unit=1 property=0 proof=0 review=1 with_tests=1 without_tests=0 review_with_how_to_verify=1 review_without_how_to_verify=0 without_examples=1 deferred=0"
-    );
-    assert_eq!(
-        lines[3],
-        "scenarios with_tests=1 without_tests=0 deferred=0"
-    );
-    assert_eq!(lines[4], "tests marks=2 rs=1");
-    assert_eq!(lines[5], "guides files=0 marks=0");
-    assert_eq!(lines[6], "overview files=0 marks=0");
-    assert_eq!(lines[7], "surface total=0 specified=0 unspecified=0");
-    assert_eq!(lines[8], "findings error=0 notice=0");
-    assert_eq!(lines[9], "complete true");
+    assert_eq!(line("tests"), "tests marks=2 rs=1");
+    assert_eq!(line("guides"), "guides files=0 marks=0");
+    assert_eq!(line("overview"), "overview files=0 marks=0");
+    assert_eq!(line("surface"), "surface total=0 specified=0 unspecified=0");
+    assert_eq!(line("findings"), "findings error=0 notice=0");
+    assert_eq!(lines.last().copied(), Some("complete true"));
 }

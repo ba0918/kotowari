@@ -1707,25 +1707,21 @@ fn req_111_bom_in_config_records_adr_and_tests_is_skipped_end_to_end() {
     let tmp = TempDir::new().unwrap();
     make_project_with_records(tmp.path());
     let bom = "\u{feff}";
-    fs::write(tmp.path().join(".kotowari/config.yaml"), format!("{bom}ir: docs/ir\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n")).unwrap();
     fs::write(
-        tmp.path().join("docs/decision/records/records.md"),
-        format!("{bom}# Records\n\n## Agreements\n\n- A1 first\n"),
+        tmp.path().join(".kotowari/config.yaml"),
+        format!("{bom}decisions:\n  documents: docs/decisions\n"),
     )
     .unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decisions")).unwrap();
     fs::write(
-        tmp.path().join("docs/decision/adr/0001-test.md"),
-        format!("{bom}# ADR 0001\n\n## 状況\n\nx\n"),
+        tmp.path().join("docs/decisions/a.md"),
+        format!("{bom}# Title\n\nScope.\n\n## Greet\n\nStatus: implemented\n\n### Problem\n\nTrouble.\n\n### Decision\n\nGreet.\n\n### Confirmations\n\n- C-a-1 Shown\n"),
     )
     .unwrap();
-    fs::write(
-        tmp.path().join("docs/ir/a.md"),
-        format!("{bom}# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: R\n\n- kind: ubiquitous\n- source: docs/decision/records/records.md#A1, docs/decision/adr/0001-test.md#状況\n- verification: unit\n\nStatement.\n"),
-    ).unwrap();
     fs::create_dir_all(tmp.path().join("tests")).unwrap();
     fs::write(
         tmp.path().join("tests/t.rs"),
-        format!("{bom}// @kotowari[REQ-001]\n#[test]\nfn t() {{}}\n"),
+        format!("{bom}// @kotowari[C-a-1]\n#[test]\nfn t() {{}}\n"),
     )
     .unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();

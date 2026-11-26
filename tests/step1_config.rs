@@ -867,9 +867,10 @@ fn req_110_ir_dot_produces_bare_filename_path() {
     fs::create_dir_all(tmp.path().join("docs/decision/adr")).unwrap();
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: .\ndecisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n",
+        "decisions:\n  records: docs/decision/records\n  adr: docs/decision/adr\n  documents: .\n",
     )
     .unwrap();
+    fs::create_dir_all(tmp.path().join("docs/ir")).unwrap();
     fs::write(tmp.path().join("a.md"), "No title\n").unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -881,7 +882,7 @@ fn req_110_ir_dot_produces_bare_filename_path() {
         .expect("missing_title should be reported");
     assert_eq!(
         mt["path"], "a.md",
-        "ir: '.' should produce a bare filename path, not './a.md'"
+        "documents: '.' should produce a bare filename path, not './a.md'"
     );
 }
 
@@ -952,15 +953,18 @@ fn req_110_path_carries_the_subdirectory() {
     make_project(tmp.path());
     fs::write(
         tmp.path().join(".kotowari/config.yaml"),
-        "ir: ./docs//ir/./\n",
+        "decisions:\n  documents: ./docs//decisions/./\n",
     )
     .unwrap();
-    fs::create_dir_all(tmp.path().join("docs/ir/sub/deep")).unwrap();
-    fs::write(tmp.path().join("docs/ir/sub/deep/a.md"), "").unwrap();
+    fs::create_dir_all(tmp.path().join("docs/decisions/sub/deep")).unwrap();
+    fs::write(tmp.path().join("docs/decisions/sub/deep/a.md"), "").unwrap();
     let output = cmd().arg("check").current_dir(tmp.path()).output().unwrap();
     let result: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-    assert_eq!(result["files"], 1);
-    assert_eq!(result["findings"][0]["path"], "docs/ir/sub/deep/a.md");
+    assert_eq!(result["decisions"]["documents"], 1);
+    assert_eq!(
+        result["findings"][0]["path"],
+        "docs/decisions/sub/deep/a.md"
+    );
 }
 
 // --- REQ-core-020: 直下の kotowari.toml を読まない ---

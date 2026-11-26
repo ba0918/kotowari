@@ -14,12 +14,15 @@ fn make_project(tmp: &Path, guides: &str) {
         "docs/ir",
         "docs/decision/records",
         "docs/decision/adr",
+        "docs/decisions",
     ] {
         std::fs::create_dir_all(tmp.join(dir)).unwrap();
     }
     std::fs::write(
         tmp.join(".kotowari/config.yaml"),
-        format!("tests:\n  files:\n    - \"tests/**/*.rs\"\n{guides}"),
+        format!(
+            "decisions:\n  documents: docs/decisions\ntests:\n  files:\n    - \"tests/**/*.rs\"\n{guides}"
+        ),
     )
     .unwrap();
     write(
@@ -85,6 +88,13 @@ const GUIDES_MD: &str = "guides:\n  files:\n    - \"guides/**/*.md\"\n";
 
 /// EX-core-362 の "REQ-001" の本文。`指紋`は "51b1f3da"
 const REQ_001: &str = "### REQ-001: 名前\n\n- kind: ubiquitous\n- source: docs/decision/records/r.md#A1\n- verification: unit\n\n文。\n\n";
+
+/// 決定の文書 "docs/decisions/a/a.md" の決定 "名前" を指す ID
+const D_ID: &str = "docs/decisions/a/a.md#名前";
+
+/// 決定 "名前" を1つ持つ決定の文書。決定の`指紋`は "1423c6c3"
+const D_001: &str = "# 題名\n\n範囲。\n\n## 名前\n\n状態: 実装済み\n\n### 問題\n\n困っていた。\n\n\
+### 決めたこと\n\n文。\n\n### 確認すること\n\n- C-a-a-1 確かめる\n";
 
 /// 要求の節と例の節から IR の文書を作る
 fn ir_doc(requirements: &str, rest: &str) -> String {
@@ -230,21 +240,10 @@ fn req_203_crlf_line_endings_do_not_change_the_fingerprint() {
     make_project(tmp.path(), "");
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(REQ_001, "").replace('\n', "\r\n"),
+        "docs/decisions/a/a.md",
+        &D_001.replace('\n', "\r\n"),
     );
-    assert_eq!(listed_fingerprint(tmp.path(), "REQ-001"), "51b1f3da");
-    // シナリオのステップの行にも "\r" を入れない
-    write(
-        tmp.path(),
-        "docs/ir/a.md",
-        &scenario_doc(
-            "@id=EX-001 @about=REQ-001 @source=docs/decision/records/r.md#A1",
-            "例",
-        )
-        .replace('\n', "\r\n"),
-    );
-    assert_eq!(listed_fingerprint(tmp.path(), "EX-001"), "ec19e8a0");
+    assert_eq!(listed_fingerprint(tmp.path(), D_ID), "1423c6c3");
 }
 
 // @kotowari[REQ-core-203, REQ-core-209]
@@ -383,12 +382,18 @@ fn req_198_a_guide_that_is_not_utf8_stops() {
 #[test]
 fn req_198_a_guides_glob_may_hit_the_ir_documents() {
     let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), "guides:\n  files:\n    - \"docs/ir/**/*.md\"\n");
-    write(tmp.path(), "docs/ir/a.md", &ir_doc(REQ_001, ""));
+    make_project(
+        tmp.path(),
+        "guides:\n  files:\n    - \"docs/decisions/**/*.md\"\n",
+    );
+    write(tmp.path(), "docs/decisions/a/a.md", D_001);
     let (code, stdout, stderr) = run(tmp.path(), &["check", "--format", "json"]);
     assert_ne!(code, Some(2), "{stderr}");
     let v = json(&stdout);
-    assert_eq!(v["files"], 1, "the IR document is still read as IR: {v}");
+    assert_eq!(
+        v["decisions"]["documents"], 1,
+        "the decision document is still read as one: {v}"
+    );
     assert_eq!(v["guides"]["files"], 1, "and also as a guide: {v}");
 }
 
@@ -400,16 +405,16 @@ fn req_152_list_and_query_do_not_read_guides_and_do_not_stop_on_their_overlap() 
         tmp.path(),
         "guides:\n  files:\n    - \"tests/**/*.rs\"\n    - \"guides/**/*.md\"\n",
     );
-    write(tmp.path(), "docs/ir/a.md", &ir_doc(REQ_001, ""));
+    write(tmp.path(), "docs/decisions/a/a.md", D_001);
     write(
         tmp.path(),
         "tests/a.rs",
-        "// @kotowari[REQ-001]\n#[test]\nfn req_001() {}\n",
+        "// @kotowari[C-a-a-1]\n#[test]\nfn req_001() {}\n",
     );
     // UTF-8 でないガイドも、list と query は読まないので止まらない
     std::fs::create_dir_all(tmp.path().join("guides")).unwrap();
     std::fs::write(tmp.path().join("guides/a.md"), [0xff, 0xfe, 0x00]).unwrap();
-    for args in [&["list"][..], &["query", "REQ-001"][..]] {
+    for args in [&["list"][..], &["query", D_ID][..]] {
         let (code, _, stderr) = run(tmp.path(), args);
         assert_eq!(code, Some(0), "{args:?}: {stderr}");
     }
@@ -426,6 +431,19 @@ fn write_ex_362_project(tmp: &Path, guide: &str) {
         tmp,
         "tests/a.rs",
         "// @kotowari[REQ-001]\n#[test]\nfn req_001() {}\n",
+    );
+    write(tmp, "guides/a.md", guide);
+}
+
+/// 決定の文書 D_001 と、その確認することの行に印を付けたテストと、`ガイド`の "guides/a.md" を作る。
+/// `ガイド`を除けば`指摘`は出ない
+fn write_decision_project(tmp: &Path, guide: &str) {
+    make_project(tmp, GUIDES_MD);
+    write(tmp, "docs/decisions/a/a.md", D_001);
+    write(
+        tmp,
+        "tests/a.rs",
+        "// @kotowari[C-a-a-1]\n#[test]\nfn c_a_a_1() {}\n",
     );
     write(tmp, "guides/a.md", guide);
 }
@@ -458,7 +476,7 @@ fn findings_on(v: &serde_json::Value, path: &str) -> Vec<(String, u64, String)> 
 #[test]
 fn req_200_the_ex_362_project_without_a_guide_mark_has_no_findings() {
     let tmp = TempDir::new().unwrap();
-    write_ex_362_project(tmp.path(), "# ガイド\n");
+    write_decision_project(tmp.path(), "# ガイド\n");
     let (code, v) = check_json(tmp.path());
     assert_eq!(code, Some(0), "{v}");
     assert_eq!(v["findings"], serde_json::json!([]));
@@ -489,16 +507,16 @@ fn ex_366_marks_outside_comments_and_inside_code_are_not_read() {
 #[test]
 fn ex_367_a_mark_without_fingerprint_and_an_uppercase_fingerprint_are_invalid() {
     let tmp = TempDir::new().unwrap();
-    write_ex_362_project(
+    write_decision_project(
         tmp.path(),
-        "# ガイド\n\n<!-- @kotowari[REQ-001] -->\n\n<!-- @kotowari[REQ-001:8C0D7663] -->\n",
+        "# ガイド\n\n<!-- @kotowari[C-a-a-1] -->\n\n<!-- @kotowari[docs/decisions/a/a.md#名前:8C0D7663] -->\n",
     );
     let (code, stdout, _) = run(tmp.path(), &["check", "--format", "text"]);
     assert_eq!(code, Some(1), "{stdout}");
     assert_eq!(
         stdout,
-        "guides/a.md:3 [error] invalid_marker <!-- @kotowari[REQ-001] -->\n\
-guides/a.md:5 [error] invalid_marker <!-- @kotowari[REQ-001:8C0D7663] -->\n"
+        "guides/a.md:3 [error] invalid_marker <!-- @kotowari[C-a-a-1] -->\n\
+guides/a.md:5 [error] invalid_marker <!-- @kotowari[docs/decisions/a/a.md#名前:8C0D7663] -->\n"
     );
 }
 
@@ -520,9 +538,9 @@ fn ex_373_one_malformed_entry_leaves_the_whole_mark_unmatched() {
 #[test]
 fn ex_374_spaces_inside_the_brackets_are_allowed_and_text_after_the_comment_is_not_read() {
     let tmp = TempDir::new().unwrap();
-    write_ex_362_project(
+    write_decision_project(
         tmp.path(),
-        "# ガイド\n\n<!-- @kotowari[ REQ-001 : 51b1f3da ] -->\n\n<!-- a --> @kotowari[REQ-001:00000000]\n",
+        "# ガイド\n\n<!-- @kotowari[ docs/decisions/a/a.md#名前 : 1423c6c3 ] -->\n\n<!-- a --> @kotowari[docs/decisions/a/a.md#名前:00000000]\n",
     );
     let (_, v) = check_json(tmp.path());
     assert_eq!(findings_on(&v, "guides/a.md"), vec![], "{v}");
@@ -533,13 +551,13 @@ fn ex_374_spaces_inside_the_brackets_are_allowed_and_text_after_the_comment_is_n
 #[test]
 fn req_200_inline_comments_and_several_marks_in_one_comment_are_all_read() {
     let tmp = TempDir::new().unwrap();
-    write_ex_362_project(
+    write_decision_project(
         tmp.path(),
         concat!(
             "# ガイド\n\n",
-            "本文 <!-- @kotowari[REQ-001:51b1f3da] --> の続き\n\n",
-            "<!-- @kotowari[REQ-001:51b1f3da] @kotowari[REQ-001:51b1f3da] -->\n\n",
-            "<!--\n  @kotowari[REQ-001:51b1f3da]\n-->\n",
+            "本文 <!-- @kotowari[docs/decisions/a/a.md#名前:1423c6c3] --> の続き\n\n",
+            "<!-- @kotowari[docs/decisions/a/a.md#名前:1423c6c3] @kotowari[docs/decisions/a/a.md#名前:1423c6c3] -->\n\n",
+            "<!--\n  @kotowari[docs/decisions/a/a.md#名前:1423c6c3]\n-->\n",
         ),
     );
     let (_, v) = check_json(tmp.path());
@@ -551,13 +569,13 @@ fn req_200_inline_comments_and_several_marks_in_one_comment_are_all_read() {
 #[test]
 fn req_200_each_comment_of_one_html_block_is_read_and_the_text_between_them_is_not() {
     let tmp = TempDir::new().unwrap();
-    write_ex_362_project(
+    write_decision_project(
         tmp.path(),
         concat!(
             "# ガイド\n\n",
-            "<!-- @kotowari[REQ-001:51b1f3da] --> @kotowari[REQ-001:00000000] ",
-            "<!-- @kotowari[REQ-001:11111111] -->\n\n",
-            "<!-- a <!--> @kotowari[REQ-001:00000000] -->\n",
+            "<!-- @kotowari[docs/decisions/a/a.md#名前:1423c6c3] --> @kotowari[docs/decisions/a/a.md#名前:00000000] ",
+            "<!-- @kotowari[docs/decisions/a/a.md#名前:11111111] -->\n\n",
+            "<!-- a <!--> @kotowari[docs/decisions/a/a.md#名前:00000000] -->\n",
         ),
     );
     let (_, v) = check_json(tmp.path());
@@ -566,7 +584,7 @@ fn req_200_each_comment_of_one_html_block_is_read_and_the_text_between_them_is_n
         vec![(
             "guide_stale".to_string(),
             3,
-            "REQ-001 11111111 51b1f3da".to_string()
+            "docs/decisions/a/a.md#名前 11111111 1423c6c3".to_string()
         )],
         "{v}"
     );
@@ -603,6 +621,9 @@ fn req_202_an_empty_mark_and_a_mark_without_its_closing_bracket_are_invalid() {
 // --- REQ-core-204、REQ-core-031、REQ-core-162: 指紋の照合と guide_stale ---
 
 /// EX-core-362 の`ガイドの印`
+/// 決定 "名前" に今の`指紋`で付けた印の`ガイド`
+const MARK_D: &str = "# ガイド\n\n<!-- @kotowari[docs/decisions/a/a.md#名前:1423c6c3] -->\n";
+
 const MARK_362: &str = "# ガイド\n\n<!-- @kotowari[REQ-001:51b1f3da] -->\n";
 
 /// guide_stale の`指摘`の (line, detail)
@@ -618,7 +639,7 @@ fn stale_on(v: &serde_json::Value) -> Vec<(u64, String)> {
 #[test]
 fn ex_362_a_mark_with_the_current_fingerprint_yields_nothing() {
     let tmp = TempDir::new().unwrap();
-    write_ex_362_project(tmp.path(), MARK_362);
+    write_decision_project(tmp.path(), MARK_D);
     let (code, v) = check_json(tmp.path());
     assert_eq!(code, Some(0), "{v}");
     assert_eq!(v["findings"], serde_json::json!([]));
@@ -629,11 +650,11 @@ fn ex_362_a_mark_with_the_current_fingerprint_yields_nothing() {
 #[test]
 fn ex_363_a_changed_body_makes_the_mark_a_stale_notice() {
     let tmp = TempDir::new().unwrap();
-    write_ex_362_project(tmp.path(), MARK_362);
+    write_decision_project(tmp.path(), MARK_D);
     write(
         tmp.path(),
-        "docs/ir/a.md",
-        &ir_doc(&REQ_001.replace("文。", "別の文。"), ""),
+        "docs/decisions/a/a.md",
+        &D_001.replace("文。", "別の文。"),
     );
     let (code, stdout, _) = run(tmp.path(), &["check", "--format", "text"]);
     assert_eq!(
@@ -643,7 +664,7 @@ fn ex_363_a_changed_body_makes_the_mark_a_stale_notice() {
     );
     assert_eq!(
         stdout,
-        "guides/a.md:3 [notice] guide_stale REQ-001 51b1f3da e4f95a33\n"
+        "guides/a.md:3 [notice] guide_stale docs/decisions/a/a.md#名前 1423c6c3 0ea36937\n"
     );
     let (code, stdout, _) = run(tmp.path(), &["status"]);
     assert_eq!(code, Some(0), "{stdout}");
@@ -743,24 +764,23 @@ fn write_ex_001_project(tmp: &Path, tags: &str, name: &str, guide: &str) {
     );
 }
 
-const EX_001_TAGS: &str = "@id=EX-001 @about=REQ-001 @source=docs/decision/records/r.md#A1";
-
 // @kotowari[REQ-core-200, REQ-core-201, REQ-core-204, REQ-core-206, TBL-core-036, EX-core-371, C-core-guides-17, C-core-output-5]
 #[test]
 fn ex_371_two_entries_in_one_mark_are_counted_and_matched_one_by_one() {
     let tmp = TempDir::new().unwrap();
-    write_ex_001_project(
+    write_decision_project(
         tmp.path(),
-        EX_001_TAGS,
-        "例",
-        "# ガイド\n\n<!-- @kotowari[REQ-001:51b1f3da, EX-001:51b1f3da] -->\n",
+        "# ガイド\n\n<!-- @kotowari[docs/decisions/a/a.md#名前:00000000, docs/decisions/a/a.md#名前:1423c6c3] -->\n",
     );
     let (code, v) = check_json(tmp.path());
     assert_eq!(code, Some(0), "{v}");
     assert_eq!(v["guides"], serde_json::json!({"files": 1, "marks": 2}));
     assert_eq!(
         stale_on(&v),
-        vec![(3, "EX-001 51b1f3da ec19e8a0".to_string())]
+        vec![(
+            3,
+            "docs/decisions/a/a.md#名前 00000000 1423c6c3".to_string()
+        )]
     );
 }
 
@@ -795,7 +815,7 @@ fn req_204_the_line_of_guide_stale_is_where_the_mark_starts() {
 #[test]
 fn req_162_status_carries_the_guides_group() {
     let tmp = TempDir::new().unwrap();
-    write_ex_362_project(tmp.path(), MARK_362);
+    write_decision_project(tmp.path(), MARK_D);
     let (code, stdout, stderr) = run(tmp.path(), &["status"]);
     assert_eq!(code, Some(0), "{stderr}");
     let v = json(&stdout);
