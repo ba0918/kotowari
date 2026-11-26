@@ -4,10 +4,10 @@
 
 <!-- @kotowari[docs/decisions/core/surface.md#surfaces-are-taken-out-of-the-code-with-surfacefiles-and-surfacerules-in-the-configuration-as-nodes-matched-by-ast-grep-rules:0cbadb0d, docs/decisions/core/surface.md#a-surface-not-in-the-specification-gets-one-surface_without_spec-error-at-the-place-in-the-code-where-it-is-first-found:210038a0] -->
 
-IR に書かないまま作った機能を見つけるための検査です。
+決定の文書に書かないまま作った機能を見つけるための検査です。
 利用者から見える振る舞い（CLI のサブコマンドやフラグ、設定の鍵、HTTP のルートなど）を、設定に書いた ast-grep の規則でコードから取り出します。
 取り出した1つを「面」と呼びます。
-面の名前が IR に引用されて出てこなければ、`kotowari check` が `surface_without_spec` の誤りにします。
+面の名前が決定に引用されて出てこなければ、`kotowari check` が `surface_without_spec` の誤りにします。
 
 面の規則を書かないプロジェクトでは、この検査は何もしません。
 
@@ -85,32 +85,31 @@ rule:
 `flag verbose`、`flag format`、`subcommand check`、`subcommand list` の4つが面になります。
 根の `Command::new("tool")` は `subcommand` の呼び出しの中に無いので取り出しません。
 フラグの名前は `format` で、`--format` ではありません。
-IR には取り出した名前のとおりに `"format"` と書くか、`--format` の形で捕まえる規則を書きます。
+決定には取り出した名前のとおりに `"format"` と書くか、`--format` の形で捕まえる規則を書きます。
 
 規則は `ast-grep scan -r rules/surface.yml src/main.rs` で当たりを確かめてから設定に足すと早く済みます。
 
-## IR にあるとする場所
+## 仕様にあるとする場所
 
 <!-- @kotowari[docs/decisions/core/surface.md#if-the-name-of-a-surface-is-quoted-in-decision-or-confirmations-of-a-decision-that-surface-is-in-the-specification:6c702ea9] -->
 
-面の名前が、話題ごとの文書の次のどこかに、二重引用符の対かバッククォートの対で囲んだ中身として出てくれば、その面は IR にあります。
+面の名前が、どれかの決定の文書のどれかの決定の、決めたことか確認することの節に、二重引用符の対かバッククォートの対で囲んだ中身として出てくれば、その面は仕様にあります。
 
-- 要求の文（後回しの要求の文も数える）
-- 決定表の表のセル（見出しの行のセルも数える）
-- シナリオのステップの行
+- その節の文と箇条書きの項目
+- その中の表のセル（見出しの行のセルも数える）
+- どちらの状態の決定も数える。提案の決定も数える
 
 囲んだ中身が名前と前後の空白まで同じときだけ数えます。
 `"--verbose true"` や `" --verbose"` は、面 `--verbose` を含みません。
 二重引用符は行の左から順に対にし、バッククォートは二重引用符の外のものだけを対にします。
-バッククォートで囲むと用語の検査も受けるので、用語集に無い名前は二重引用符で囲みます。
-
-性質の文、文書が扱う範囲の行、項目の見出しの下の `- ` で始まる行（`- how_to_verify:` を含む）、問題の記録（`FLAGS.md`）、用語集には、名前があっても数えません。
+決定の問題と見送った案、`## 未決` の節、文書の導入の段落、用語集、コードブロックの中には、名前があっても数えません。
+決定の文書の対では、先頭の言語の側だけを見ます。
 
 ## 指摘
 
 <!-- @kotowari[docs/decisions/core/surface.md#a-surface-not-in-the-specification-gets-one-surface_without_spec-error-at-the-place-in-the-code-where-it-is-first-found:210038a0] -->
 
-上の例の CLI に、`"check"` と `"--format"` を要求の文に書いた IR を合わせた結果です。
+上の例の CLI に、`"check"` と `"--format"` を決定に書いた決定の文書を合わせた結果です。
 
 ```console
 $ kotowari check --format text
@@ -124,12 +123,12 @@ $ echo $?
 
 `surface_without_spec` の detail は `種類 名前` です。
 同じ種類と名前の面が何か所にあっても、パスのバイト順、行の順で最初の1か所に1件だけ出ます。
-`flag format` は、IR が `"--format"` と書いていて名前の `format` と一致しないので出ています。
+`flag format` は、決定が `"--format"` と書いていて名前の `format` と一致しないので出ています。
 
 直し方は2つです。
 
-- その面を決める要求に、名前を引用して書く。面が IR に無いのは仕様の抜けなので、壁打ちで要求を決めます。
-- 今は仕様にしないなら、理由を付けて未記載の面の一覧に載せる。一覧に足すのも仕様の判断なので、壁打ちか導入のときだけにします。実装の途中で一覧に足して誤りを消してはいけません。IR に無い面は壁打ちに戻します。
+- その面を決める決定に、名前を引用して書く。面が決定の文書に無いのは仕様の抜けなので、壁打ちで決めます。
+- 今は仕様にしないなら、理由を付けて未記載の面の一覧に載せる。一覧に足すのも仕様の判断なので、壁打ちか導入のときだけにします。実装の途中で一覧に足して誤りを消してはいけません。決定の文書に無い面は壁打ちに戻します。
 
 ## 未記載の面の一覧
 
@@ -137,7 +136,7 @@ $ echo $?
 
 `surface.unspecified` が指す YAML のファイルです。
 1件は `kind`、`name`、`why` のちょうど3つの鍵を持ち、値はどれも文字列で、`why` は空にできません。
-`kind` と `name` が面の種類と名前に前後の空白まで同じ文字列で一致すると、その面は IR に無くても誤りになりません。
+`kind` と `name` が面の種類と名前に前後の空白まで同じ文字列で一致すると、その面は決定の文書に無くても誤りになりません。
 
 ```yaml
 - kind: "flag"
@@ -163,7 +162,7 @@ surface: unspecified=1
 | 指摘 | 起きること | 直し方 |
 |---|---|---|
 | `surface_unspecified_invalid`（誤り） | 1件の形が違う（鍵が足りない、余計な鍵、文字列でない値、空白だけの `why`）。その1件はどの面も外さない | 形を直す |
-| `surface_unspecified_stale`（注意） | 1件に一致する面がコードに無いか、一致する面が IR に書かれた | その1件を消す。名前を変えたなら `name` を直す |
+| `surface_unspecified_stale`（注意） | 1件に一致する面がコードに無いか、一致する面が決定に引用された | その1件を消す。名前を変えたなら `name` を直す |
 
 一覧の指摘の `line` はいつも null です。
 同じ内容の1件が2つあることは検査しません。
@@ -181,7 +180,7 @@ surface: unspecified=1
 - `--format text` では、指摘の行の後の最後の1行に `surface: unspecified=数`。指摘が0件でも、数が0でも出ます。
 - JSON では、最上位の `surface` に `unspecified` の鍵1つ。
 
-数えるのは種類と名前の組で、IR にある面は一覧に載っていても数えません。
+数えるのは種類と名前の組で、決定に引用されている面は一覧に載っていても数えません。
 
 `status` は `surface` の群に3つの数を出します。
 `surface.rules` が空の一覧なら3つとも 0 です。
@@ -194,8 +193,8 @@ surface total=4 specified=1 unspecified=1
 | 鍵 | 数 |
 |---|---|
 | `total` | 面の種類と名前の組の数 |
-| `specified` | そのうち IR にあるもの |
-| `unspecified` | IR になく、一覧で外したもの |
+| `specified` | そのうち決定に引用されているもの |
+| `unspecified` | 引用されておらず、一覧で外したもの |
 
 `surface_without_spec` は誤りなので、残っていれば `status` の `complete` は false です。
 
@@ -206,6 +205,6 @@ surface total=4 specified=1 unspecified=1
 
 <!-- @kotowari[docs/decisions/core/surface.md#the-number-of-surfaces-excluded-by-the-list-of-unspecified-surfaces-is-always-output-at-the-end-of-the-output-of-check:d8dacbf9] -->
 
-面の規則を初めて書くと、まだ IR に書いていない面がまとめて `surface_without_spec` になります。
-そのときは、出た面をすべて理由付きで未記載の面の一覧に載せ、話題ごとに要求を書くたびに一覧から外していきます。
+面の規則を初めて書くと、まだ決定に引用していない面がまとめて `surface_without_spec` になります。
+そのときは、出た面をすべて理由付きで未記載の面の一覧に載せ、話題ごとに決定を書くたびに一覧から外していきます。
 `kotowari status` の `unspecified` が、残りの量です。
