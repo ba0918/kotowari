@@ -171,7 +171,7 @@ C-shop-discount-2 - A guest's order of 1000 is priced at 1000 docs/decisions/sho
 
 ```rust
 proptest! {
-    /// REQ-schema-028: 一覧のマーカーが "-"、"*"、"+" のどれであっても読み分けは変わらない。
+    /// 一覧のマーカーが "-"、"*"、"+" のどれであっても読み分けは変わらない。
     // @kotowari[C-schema-block-2]
     #[test]
     fn markers_do_not_change_how_list_lines_are_read(

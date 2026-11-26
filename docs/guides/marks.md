@@ -171,7 +171,7 @@ The following example is from this repository: the explanatory `///` and the mar
 
 ```rust
 proptest! {
-    /// REQ-schema-028: 一覧のマーカーが "-"、"*"、"+" のどれであっても読み分けは変わらない。
+    /// 一覧のマーカーが "-"、"*"、"+" のどれであっても読み分けは変わらない。
     // @kotowari[C-schema-block-2]
     #[test]
     fn markers_do_not_change_how_list_lines_are_read(
