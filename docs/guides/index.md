@@ -18,6 +18,7 @@ The specification itself is in the [IR](../ir/core/); when the guide and the IR 
 | Call the typed API from Rust | [Public crate API](public-crate-api.md) |
 | Validate standalone distribution archives | [Package validation](package-validation.md) |
 | Configure where the IR, records and test files are | [Configuration file](config.md) |
+| Write the specification as decision documents | [Writing decision documents](decision-documents.md) |
 | Check the specification and fix findings | [kotowari check](commands/check.md) and [Finding kinds](findings.md) |
 | Tie tests to requirements | [Marking tests](marks.md) |
 | Find, from the code, features built without being written in the IR | [Surface check](surface.md) |
@@ -38,6 +39,7 @@ The specification itself is in the [IR](../ir/core/); when the guide and the IR 
 
 - [CLI (common to all commands)](cli.md) — syntax, common options, exit codes, reasons for stopping
 - [Configuration file](config.md) — every key of `.kotowari/config.yaml`
+- [Writing decision documents](decision-documents.md) — the form of a topic document, states, confirmation rows and their IDs, open questions
 - [Finding kinds](findings.md) — the list of errors and notices, their detail, and how to fix them
 - [Marking tests](marks.md) — how to write `@kotowari[...]`, and which tests are found
 - [Surface check](surface.md) — how to write surface rules, where a surface counts as being in the IR, and the list of unspecified surfaces

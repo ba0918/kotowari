@@ -18,6 +18,7 @@ kotowari は、Markdown で書いた仕様（IR）を機械的に検査する CL
 | Rustから型付きAPIを呼ぶ | [公開クレートAPI](public-crate-api.ja.md) |
 | 独立した配布アーカイブを検証する | [パッケージ検証](package-validation.ja.md) |
 | 置き場やテストのファイルの場所を設定する | [設定ファイル](config.ja.md) |
+| 仕様を決定の文書で書く | [決定の文書を書く](decision-documents.ja.md) |
 | 仕様を検査して、指摘を直す | [kotowari check](commands/check.ja.md) と [指摘の種類](findings.ja.md) |
 | テストと要求を結び付ける | [テストに印を付ける](marks.ja.md) |
 | IR に書かないまま作った機能をコードから見つける | [面の検査](surface.ja.md) |
@@ -38,6 +39,7 @@ kotowari は、Markdown で書いた仕様（IR）を機械的に検査する CL
 
 - [CLI（全コマンド共通）](cli.ja.md) — 書式、共通のオプション、終了コード、停止の理由
 - [設定ファイル](config.ja.md) — `.kotowari/config.yaml` の全キー
+- [決定の文書を書く](decision-documents.ja.md) — 話題の文書の形、状態、確認することの行と ID、未決
 - [指摘の種類](findings.ja.md) — 誤りと注意の一覧、detail、直し方
 - [テストに印を付ける](marks.ja.md) — `@kotowari[...]` の書き方と、見つかるテスト
 - [面の検査](surface.ja.md) — 面の規則の書き方、IR にあるとする場所、未記載の面の一覧
