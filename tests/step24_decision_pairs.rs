@@ -272,6 +272,49 @@ fn ids_and_marks_are_matched_against_the_first_language_side_only() {
     assert_eq!(query["items"][0]["name"], "A greeting is shown");
 }
 
+// @kotowari[C-core-pairs-18]
+#[test]
+fn a_surface_named_only_on_the_japanese_side_is_not_quoted() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path());
+    let config = std::fs::read_to_string(tmp.path().join(".kotowari/config.yaml")).unwrap();
+    write(
+        tmp.path(),
+        ".kotowari/config.yaml",
+        &format!(
+            "{config}surface:\n  files:\n    - \"src/**/*.rs\"\n  rules:\n    - \"rules/surface.yml\"\n"
+        ),
+    );
+    write(
+        tmp.path(),
+        "rules/surface.yml",
+        "id: flag\nlanguage: rust\nrule:\n  kind: string_literal\n  regex: '^\"--'\n  pattern: $NAME\n",
+    );
+    write(
+        tmp.path(),
+        "src/cli.rs",
+        "fn main() {\n    let _ = \"--format\";\n}\n",
+    );
+    write_pair(
+        tmp.path(),
+        DIR,
+        "greet",
+        &english("greet", "proposed", &[]),
+        &japanese("greet", "提案", &[]).replace("こうする。", "\"--format\" を受ける。"),
+    );
+    let value = check(tmp.path());
+    assert_eq!(
+        findings(&value),
+        vec![finding(
+            "surface_without_spec",
+            "src/cli.rs",
+            Some(2),
+            "flag --format"
+        )],
+        "{value}"
+    );
+}
+
 // @kotowari[C-core-lang-3]
 #[test]
 fn a_row_only_in_the_japanese_side_of_an_implemented_decision_needs_no_test() {
