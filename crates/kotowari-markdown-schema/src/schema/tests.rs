@@ -694,3 +694,20 @@ document:
         "a.b と a.c は入れ子を共有するだけの別の鍵"
     );
 }
+
+// @kotowari[C-schema-extract-22]
+#[test]
+fn a_derived_value_that_is_neither_a_word_nor_a_mapping_is_rejected_with_the_accepted_forms() {
+    let yaml = r#"
+document:
+  sections:
+    - name: 記録
+      fields:
+        - name: 状態
+          extract: { path: x, of: { x: [line] } }
+"#;
+    assert_rejected(
+        yaml,
+        "expected one of the words line, id, name, raw, end, or { group: <name> }",
+    );
+}
