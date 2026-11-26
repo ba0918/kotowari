@@ -7,11 +7,15 @@ use crate::schema::parse_schema;
 fn unclosed(schema_yaml: &str, doc: &str, open: bool) -> Vec<(usize, Option<String>)> {
     let schema = parse_schema(schema_yaml).unwrap();
     let document = Document::parse(doc).unwrap();
-    validate(&schema, &document.read_as(schema.reading), open)
-        .into_iter()
-        .filter(|f| f.kind == FindingKind::UnclosedCodeblock)
-        .map(|f| (f.line.unwrap(), f.raw))
-        .collect()
+    validate(
+        &schema,
+        &document.read_as(schema.reading),
+        open || schema.open,
+    )
+    .into_iter()
+    .filter(|f| f.kind == FindingKind::UnclosedCodeblock)
+    .map(|f| (f.line.unwrap(), f.raw))
+    .collect()
 }
 
 const OPEN_SECTION: &str = "document:\n  sections:\n    - name: 節\n      open: true\n";
@@ -22,6 +26,7 @@ fn a_fence_opened_indented_in_a_list_item_and_never_closed_is_unclosed_in_both_r
     let doc = "## 節\n\n- 行\n\n  ```rust\n  let x = 1;\n";
     for schema in [
         OPEN_SECTION.to_string(),
+        "open: true\ndocument: {}\n".to_string(),
         format!("reading: line\n{OPEN_SECTION}"),
     ] {
         assert_eq!(
