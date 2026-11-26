@@ -79,7 +79,7 @@ fn findings(stdout: &str) -> Vec<(String, String, String)> {
         .collect()
 }
 
-// @kotowari[EX-core-547]
+// @kotowari[EX-core-547, C-core-testside-1, C-core-testside-2, C-core-testside-4]
 #[test]
 fn ex_core_547_a_specification_ahead_of_its_tests_passes_with_the_option() {
     let tmp = TempDir::new().unwrap();
@@ -101,7 +101,7 @@ fn ex_core_547_a_specification_ahead_of_its_tests_passes_with_the_option() {
     );
 }
 
-// @kotowari[EX-core-548]
+// @kotowari[EX-core-548, C-core-testside-1]
 #[test]
 fn ex_core_548_the_same_state_stops_without_the_option() {
     let tmp = TempDir::new().unwrap();
@@ -125,7 +125,7 @@ fn untested_with_unknown_term(tmp: &Path) {
     );
 }
 
-// @kotowari[EX-core-549]
+// @kotowari[EX-core-549, C-core-testside-6]
 #[test]
 fn ex_core_549_an_error_in_the_ir_stops_even_with_the_option() {
     let tmp = TempDir::new().unwrap();
@@ -140,7 +140,7 @@ fn ex_core_549_an_error_in_the_ir_stops_even_with_the_option() {
     );
 }
 
-// @kotowari[EX-core-550]
+// @kotowari[EX-core-550, C-core-testside-8]
 #[test]
 fn ex_core_550_an_unreadable_test_file_that_is_also_a_surface_file_stops() {
     let tmp = TempDir::new().unwrap();
@@ -171,7 +171,7 @@ fn ex_core_550_an_unreadable_test_file_that_is_also_a_surface_file_stops() {
     );
 }
 
-// @kotowari[TBL-core-047]
+// @kotowari[TBL-core-047, C-core-testside-8]
 #[test]
 fn tbl_core_047_an_unreadable_test_file_matched_by_surface_files_in_no_rule_language_stops() {
     let tmp = TempDir::new().unwrap();
@@ -202,7 +202,7 @@ fn tbl_core_047_an_unreadable_test_file_matched_by_surface_files_in_no_rule_lang
     );
 }
 
-// @kotowari[TBL-core-047]
+// @kotowari[TBL-core-047, C-core-testside-5]
 #[test]
 fn tbl_core_047_errors_only_in_test_files_pass_with_the_option() {
     let tmp = TempDir::new().unwrap();
@@ -233,7 +233,7 @@ fn tbl_core_047_errors_only_in_test_files_pass_with_the_option() {
     }
 }
 
-// @kotowari[EX-core-551]
+// @kotowari[EX-core-551, C-core-testside-7]
 #[test]
 fn ex_core_551_a_malformed_guide_mark_stops_even_with_the_option() {
     let tmp = TempDir::new().unwrap();
@@ -260,7 +260,7 @@ fn ex_core_551_a_malformed_guide_mark_stops_even_with_the_option() {
     );
 }
 
-// @kotowari[REQ-core-357]
+// @kotowari[REQ-core-357, C-core-testside-2]
 #[test]
 fn req_core_357_the_option_leaves_the_output_unchanged() {
     let tmp = TempDir::new().unwrap();

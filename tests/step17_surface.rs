@@ -53,7 +53,7 @@ fn run(tmp: &Path, args: &[&str]) -> (Option<i32>, String, String) {
 
 // --- S1: 面の設定の鍵と停止 ---
 
-// @kotowari[EX-core-415, REQ-core-225]
+// @kotowari[EX-core-415, REQ-core-225, C-core-surface-9]
 #[test]
 fn ex_core_415_rules_without_files_stop_with_a_config_error() {
     let tmp = TempDir::new().unwrap();
@@ -66,7 +66,7 @@ fn ex_core_415_rules_without_files_stop_with_a_config_error() {
     assert!(stderr.starts_with("config error: "), "{stderr}");
 }
 
-// @kotowari[EX-core-416, REQ-core-225]
+// @kotowari[EX-core-416, REQ-core-225, C-core-surface-9]
 #[test]
 fn ex_core_416_files_without_rules_stop() {
     let tmp = TempDir::new().unwrap();
@@ -76,7 +76,7 @@ fn ex_core_416_files_without_rules_stop() {
     assert!(stderr.starts_with("config error: "), "{stderr}");
 }
 
-// @kotowari[EX-core-428, REQ-core-225]
+// @kotowari[EX-core-428, REQ-core-225, C-core-surface-9]
 #[test]
 fn ex_core_428_a_list_key_without_rules_stops_even_list() {
     let tmp = TempDir::new().unwrap();
@@ -89,7 +89,7 @@ fn ex_core_428_a_list_key_without_rules_stops_even_list() {
     assert!(stderr.starts_with("config error: "), "{stderr}");
 }
 
-// @kotowari[REQ-core-225]
+// @kotowari[REQ-core-225, C-core-surface-9]
 #[test]
 fn req_225_a_key_combination_error_stops_every_command_that_reads_the_config() {
     let tmp = TempDir::new().unwrap();
@@ -118,7 +118,7 @@ const SURFACE_SRC: &str =
 const FLAG_RULE: &str =
     "id: flag\nlanguage: rust\nrule:\n  kind: string_literal\n  regex: '^\"--'\n  pattern: $NAME\n";
 
-// @kotowari[REQ-core-224]
+// @kotowari[REQ-core-224, C-core-surface-5]
 #[test]
 fn req_224_surface_rules_are_not_added_to_the_test_queries() {
     let tmp = TempDir::new().unwrap();
@@ -142,7 +142,7 @@ fn req_224_surface_rules_are_not_added_to_the_test_queries() {
     );
 }
 
-// @kotowari[REQ-core-224]
+// @kotowari[REQ-core-224, C-core-surface-8]
 #[test]
 fn req_224_a_non_utf8_surface_file_in_a_rule_language_stops_as_a_test_file_does() {
     let tmp = TempDir::new().unwrap();
@@ -159,7 +159,7 @@ fn req_224_a_non_utf8_surface_file_in_a_rule_language_stops_as_a_test_file_does(
     );
 }
 
-// @kotowari[REQ-core-236, REQ-core-224]
+// @kotowari[REQ-core-236, REQ-core-224, C-core-surface-7]
 #[test]
 fn req_236_a_non_utf8_surface_file_not_in_a_rule_language_is_not_read() {
     let tmp = TempDir::new().unwrap();
@@ -172,7 +172,7 @@ fn req_236_a_non_utf8_surface_file_not_in_a_rule_language_is_not_read() {
     assert_eq!(code, Some(0), "{stdout}{stderr}");
 }
 
-// @kotowari[REQ-core-018, TBL-core-001]
+// @kotowari[REQ-core-018, TBL-core-001, C-core-clienv-7, C-core-config-11]
 #[cfg(unix)]
 #[test]
 fn req_018_a_dangling_symlink_in_the_surface_walk_stops() {
@@ -190,7 +190,7 @@ fn req_018_a_dangling_symlink_in_the_surface_walk_stops() {
     );
 }
 
-// @kotowari[EX-core-417, REQ-core-225, REQ-core-229]
+// @kotowari[EX-core-417, REQ-core-225, REQ-core-229, C-core-surface-10]
 #[test]
 fn ex_core_417_a_missing_rule_file_stops_check_but_not_list() {
     let tmp = TempDir::new().unwrap();
@@ -205,7 +205,7 @@ fn ex_core_417_a_missing_rule_file_stops_check_but_not_list() {
     assert_eq!(code, Some(0), "{stderr}");
 }
 
-// @kotowari[REQ-core-225, TBL-core-020]
+// @kotowari[REQ-core-225, TBL-core-020, C-core-clienv-9, C-core-surface-10]
 #[test]
 fn req_225_a_broken_rule_file_stops_check_and_status_naming_the_rule_file() {
     let broken: [(&str, &str); 4] = [
@@ -233,7 +233,7 @@ fn req_225_a_broken_rule_file_stops_check_and_status_naming_the_rule_file() {
     }
 }
 
-// @kotowari[REQ-core-225]
+// @kotowari[REQ-core-225, C-core-surface-10]
 #[test]
 fn req_225_the_same_rule_path_twice_stops() {
     let tmp = TempDir::new().unwrap();
@@ -251,7 +251,7 @@ fn req_225_the_same_rule_path_twice_stops() {
     );
 }
 
-// @kotowari[REQ-core-236]
+// @kotowari[REQ-core-236, C-core-surface-6]
 #[test]
 fn req_236_a_file_already_unparsable_as_a_test_file_is_not_reported_twice() {
     let tmp = TempDir::new().unwrap();
@@ -336,7 +336,7 @@ fn without_spec(v: &serde_json::Value) -> Vec<String> {
         .collect()
 }
 
-// @kotowari[EX-core-408, EX-core-409, REQ-core-227, TBL-core-019, TBL-core-006, TBL-core-008]
+// @kotowari[EX-core-408, EX-core-409, REQ-core-227, TBL-core-019, TBL-core-006, TBL-core-008, C-core-findings-6, C-core-surface-15, C-core-surface-16]
 #[test]
 fn ex_core_408_a_surface_absent_from_the_ir_is_an_error_at_its_first_place() {
     let tmp = TempDir::new().unwrap();
@@ -363,7 +363,7 @@ fn ex_core_408_a_surface_absent_from_the_ir_is_an_error_at_its_first_place() {
     assert_eq!(code, Some(1));
 }
 
-// @kotowari[REQ-core-227]
+// @kotowari[REQ-core-227, C-core-surface-16]
 #[test]
 fn req_227_the_first_place_is_by_path_bytes_then_line() {
     let tmp = TempDir::new().unwrap();
@@ -396,7 +396,7 @@ fn req_227_the_first_place_is_by_path_bytes_then_line() {
     );
 }
 
-// @kotowari[EX-core-410, REQ-core-226]
+// @kotowari[EX-core-410, REQ-core-226, C-core-surface-12]
 #[test]
 fn ex_core_410_a_name_that_is_only_part_of_the_quoted_content_is_not_in_the_ir() {
     let tmp = TempDir::new().unwrap();
@@ -416,7 +416,7 @@ fn ex_core_410_a_name_that_is_only_part_of_the_quoted_content_is_not_in_the_ir()
     assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
 }
 
-// @kotowari[REQ-core-226]
+// @kotowari[REQ-core-226, C-core-surface-11]
 #[test]
 fn req_226_double_quotes_pair_from_the_left() {
     let tmp = TempDir::new().unwrap();
@@ -529,7 +529,7 @@ fn req_226_scope_lines_flags_and_the_glossary_do_not_count() {
     assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
 }
 
-// @kotowari[REQ-core-227]
+// @kotowari[REQ-core-227, C-core-surface-17]
 #[test]
 fn req_227_no_surface_is_extracted_when_surface_rules_is_empty() {
     let tmp = TempDir::new().unwrap();
@@ -571,7 +571,7 @@ fn entry(kind: &str, name: &str, why: &str) -> String {
     format!("- kind: \"{kind}\"\n  name: \"{name}\"\n  why: \"{why}\"\n")
 }
 
-// @kotowari[REQ-core-232]
+// @kotowari[REQ-core-232, C-core-unspec-1]
 #[test]
 fn req_232_a_matching_entry_removes_the_error() {
     let tmp = TempDir::new().unwrap();
@@ -583,7 +583,7 @@ fn req_232_a_matching_entry_removes_the_error() {
     assert_eq!(code, Some(0));
 }
 
-// @kotowari[EX-core-420, REQ-core-232]
+// @kotowari[EX-core-420, REQ-core-232, C-core-unspec-2]
 #[test]
 fn ex_core_420_an_entry_of_another_kind_does_not_match() {
     let tmp = TempDir::new().unwrap();
@@ -592,7 +592,7 @@ fn ex_core_420_an_entry_of_another_kind_does_not_match() {
     assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
 }
 
-// @kotowari[REQ-core-232]
+// @kotowari[REQ-core-232, C-core-unspec-2, C-core-unspec-6]
 #[test]
 fn req_232_names_are_compared_without_trimming() {
     let tmp = TempDir::new().unwrap();
@@ -601,7 +601,7 @@ fn req_232_names_are_compared_without_trimming() {
     assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
 }
 
-// @kotowari[EX-core-421, REQ-core-233, REQ-core-027, TBL-core-006, TBL-core-008]
+// @kotowari[EX-core-421, REQ-core-233, REQ-core-027, TBL-core-006, TBL-core-008, C-core-forder-4, C-core-unspec-3, C-core-unspec-7]
 #[test]
 fn ex_core_421_an_entry_whose_reason_is_blank_is_invalid_and_removes_nothing() {
     let tmp = TempDir::new().unwrap();
@@ -624,7 +624,7 @@ fn ex_core_421_an_entry_whose_reason_is_blank_is_invalid_and_removes_nothing() {
     assert_eq!(code, Some(1));
 }
 
-// @kotowari[REQ-core-233]
+// @kotowari[REQ-core-233, C-core-unspec-3, C-core-unspec-7]
 #[test]
 fn req_233_each_malformed_entry_is_invalid_with_the_written_kind_and_name() {
     let tmp = TempDir::new().unwrap();
@@ -655,7 +655,7 @@ fn req_233_each_malformed_entry_is_invalid_with_the_written_kind_and_name() {
     );
 }
 
-// @kotowari[EX-core-422, REQ-core-234, REQ-core-027, TBL-core-009]
+// @kotowari[EX-core-422, REQ-core-234, REQ-core-027, TBL-core-009, C-core-forder-4, C-core-findings-1, C-core-findings-2, C-core-unspec-4]
 #[test]
 fn ex_core_422_an_entry_for_a_surface_gone_from_the_code_is_a_notice() {
     let tmp = TempDir::new().unwrap();
@@ -685,7 +685,7 @@ fn ex_core_422_an_entry_for_a_surface_gone_from_the_code_is_a_notice() {
     assert_eq!(code, Some(0), "a notice does not change the exit code: {v}");
 }
 
-// @kotowari[EX-core-423, REQ-core-234]
+// @kotowari[EX-core-423, REQ-core-234, C-core-unspec-4]
 #[test]
 fn ex_core_423_an_entry_for_a_surface_now_in_the_ir_is_a_notice() {
     let tmp = TempDir::new().unwrap();
@@ -702,7 +702,7 @@ fn ex_core_423_an_entry_for_a_surface_now_in_the_ir_is_a_notice() {
     );
 }
 
-// @kotowari[EX-core-424, REQ-core-231, TBL-core-001]
+// @kotowari[EX-core-424, REQ-core-231, TBL-core-001, C-core-clienv-7, C-core-unspec-5, C-core-unspec-8]
 #[test]
 fn ex_core_424_a_missing_list_file_stops_as_unreadable() {
     let tmp = TempDir::new().unwrap();
@@ -713,7 +713,7 @@ fn ex_core_424_a_missing_list_file_stops_as_unreadable() {
     assert!(stderr.starts_with("unreadable file: "), "{stderr}");
 }
 
-// @kotowari[EX-core-425, REQ-core-231, TBL-core-020]
+// @kotowari[EX-core-425, REQ-core-231, TBL-core-020, C-core-clienv-9, C-core-unspec-5, C-core-unspec-8]
 #[test]
 fn ex_core_425_a_list_that_is_not_a_sequence_stops_naming_the_list() {
     let tmp = TempDir::new().unwrap();
@@ -726,7 +726,7 @@ fn ex_core_425_a_list_that_is_not_a_sequence_stops_naming_the_list() {
     );
 }
 
-// @kotowari[REQ-core-231, TBL-core-001, TBL-core-020]
+// @kotowari[REQ-core-231, TBL-core-001, TBL-core-020, C-core-clienv-9, C-core-clienv-12, C-core-clienv-7, C-core-unspec-5, C-core-unspec-8]
 #[test]
 fn req_231_a_list_that_is_not_yaml_or_not_utf8_stops_check_and_status() {
     let cases: [(&[u8], &str); 2] = [
@@ -745,7 +745,7 @@ fn req_231_a_list_that_is_not_yaml_or_not_utf8_stops_check_and_status() {
     }
 }
 
-// @kotowari[REQ-core-231]
+// @kotowari[REQ-core-231, C-core-unspec-5]
 #[test]
 fn req_231_a_blank_list_has_no_entries() {
     let tmp = TempDir::new().unwrap();
@@ -755,7 +755,7 @@ fn req_231_a_blank_list_has_no_entries() {
     assert_eq!(code, Some(1));
 }
 
-// @kotowari[REQ-core-229, REQ-core-152, REQ-core-158]
+// @kotowari[REQ-core-229, REQ-core-152, REQ-core-158, C-core-list-16, C-core-query-10]
 #[test]
 fn req_229_list_and_query_do_not_read_the_surface_list_or_files() {
     let tmp = TempDir::new().unwrap();
@@ -768,7 +768,7 @@ fn req_229_list_and_query_do_not_read_the_surface_list_or_files() {
     }
 }
 
-// @kotowari[REQ-core-229]
+// @kotowari[REQ-core-229, C-core-surface-21]
 #[test]
 fn req_229_mutants_does_not_read_the_surface_list_rules_or_files() {
     let tmp = TempDir::new().unwrap();
@@ -802,7 +802,7 @@ fn ex_407_ir(tmp: &Path) {
     );
 }
 
-// @kotowari[EX-core-407, REQ-core-223, REQ-core-226, REQ-core-228, TBL-core-005]
+// @kotowari[EX-core-407, REQ-core-223, REQ-core-226, REQ-core-228, TBL-core-005, C-core-output-3, C-core-surface-1, C-core-surface-11, C-core-surface-18]
 #[test]
 fn ex_core_407_a_surface_quoted_in_a_requirement_is_not_an_error() {
     let tmp = TempDir::new().unwrap();
@@ -820,7 +820,7 @@ fn ex_core_407_a_surface_quoted_in_a_requirement_is_not_an_error() {
     assert_eq!(code, Some(0), "{v}");
 }
 
-// @kotowari[EX-core-414, REQ-core-228]
+// @kotowari[EX-core-414, REQ-core-228, C-core-surface-18, C-core-surface-19]
 #[test]
 fn ex_core_414_the_count_line_is_printed_even_with_no_findings() {
     let tmp = TempDir::new().unwrap();
@@ -837,7 +837,7 @@ fn ex_core_414_the_count_line_is_printed_even_with_no_findings() {
     assert_eq!(code, Some(0));
 }
 
-// @kotowari[EX-core-413, REQ-core-227, REQ-core-228]
+// @kotowari[EX-core-413, REQ-core-227, REQ-core-228, C-core-surface-17, C-core-surface-20]
 #[test]
 fn ex_core_413_a_project_without_surface_rules_sees_nothing() {
     let tmp = TempDir::new().unwrap();
@@ -850,7 +850,7 @@ fn ex_core_413_a_project_without_surface_rules_sees_nothing() {
     assert!(v.get("surface").is_none(), "{v}");
 }
 
-// @kotowari[EX-core-419, REQ-core-232, REQ-core-228]
+// @kotowari[EX-core-419, REQ-core-232, REQ-core-228, C-core-unspec-1, C-core-surface-18]
 #[test]
 fn ex_core_419_a_listed_surface_is_not_an_error_and_is_counted() {
     let tmp = TempDir::new().unwrap();
@@ -861,7 +861,7 @@ fn ex_core_419_a_listed_surface_is_not_an_error_and_is_counted() {
     assert_eq!(code, Some(0), "{v}");
 }
 
-// @kotowari[EX-core-423, REQ-core-228]
+// @kotowari[EX-core-423, REQ-core-228, C-core-unspec-4, C-core-surface-18]
 #[test]
 fn ex_core_423_a_listed_surface_now_in_the_ir_is_not_counted() {
     let tmp = TempDir::new().unwrap();
@@ -910,7 +910,7 @@ fn four_surfaces(tmp: &Path) {
     );
 }
 
-// @kotowari[REQ-core-228, TBL-core-005]
+// @kotowari[REQ-core-228, TBL-core-005, C-core-surface-19]
 #[test]
 fn req_228_the_count_line_comes_after_the_findings() {
     let tmp = TempDir::new().unwrap();
@@ -923,7 +923,7 @@ fn req_228_the_count_line_comes_after_the_findings() {
     assert_eq!(code, Some(1));
 }
 
-// @kotowari[REQ-core-229, REQ-core-162, TBL-core-028]
+// @kotowari[REQ-core-229, REQ-core-162, TBL-core-028, C-core-status-2, C-core-status-5, C-core-status-8, C-core-status-11]
 #[test]
 fn req_229_status_counts_surfaces_and_a_surface_error_makes_it_incomplete() {
     let tmp = TempDir::new().unwrap();
@@ -949,7 +949,7 @@ fn req_229_status_counts_surfaces_and_a_surface_error_makes_it_incomplete() {
     );
 }
 
-// @kotowari[TBL-core-028, REQ-core-162]
+// @kotowari[TBL-core-028, REQ-core-162, C-core-status-8]
 #[test]
 fn tbl_028_status_surface_counts_are_zero_without_surface_rules() {
     let tmp = TempDir::new().unwrap();
@@ -965,7 +965,7 @@ fn tbl_028_status_surface_counts_are_zero_without_surface_rules() {
     );
 }
 
-// @kotowari[REQ-core-227]
+// @kotowari[REQ-core-227, C-core-surface-16]
 #[test]
 fn req_227_the_first_place_is_the_smallest_line_even_when_rules_share_an_id() {
     let tmp = TempDir::new().unwrap();
@@ -998,7 +998,7 @@ fn req_227_the_first_place_is_the_smallest_line_even_when_rules_share_an_id() {
     );
 }
 
-// @kotowari[EX-core-427, REQ-core-236]
+// @kotowari[EX-core-427, REQ-core-236, C-core-surface-6]
 #[test]
 fn ex_core_427_check_reports_the_unparsable_surface_file_beside_a_test_file_one() {
     let tmp = TempDir::new().unwrap();
@@ -1065,7 +1065,7 @@ fn decision_project(tmp: &Path, sections: &[(&str, &str)]) {
     write(tmp, "docs/decisions/flags.md", &text);
 }
 
-// @kotowari[REQ-core-226]
+// @kotowari[REQ-core-226, C-core-surface-11]
 #[test]
 fn req_226_names_quoted_in_what_a_decision_decided_and_its_rows_count() {
     let tmp = TempDir::new().unwrap();
@@ -1081,7 +1081,7 @@ fn req_226_names_quoted_in_what_a_decision_decided_and_its_rows_count() {
     assert_eq!(without_spec(&v), Vec::<String>::new(), "{v}");
 }
 
-// @kotowari[REQ-core-226]
+// @kotowari[REQ-core-226, C-core-surface-13]
 #[test]
 fn req_226_names_quoted_only_in_the_problem_rejected_options_or_open_items_do_not_count() {
     let tmp = TempDir::new().unwrap();
@@ -1101,7 +1101,7 @@ fn req_226_names_quoted_only_in_the_problem_rejected_options_or_open_items_do_no
     assert_eq!(without_spec(&v), vec!["flag --verbose"], "{v}");
 }
 
-// @kotowari[REQ-core-226]
+// @kotowari[REQ-core-226, C-core-surface-12, C-core-surface-14]
 #[test]
 fn req_226_a_decision_quotes_a_name_only_as_the_whole_content_of_a_cell_outside_code() {
     let tmp = TempDir::new().unwrap();
@@ -1123,7 +1123,7 @@ fn req_226_a_decision_quotes_a_name_only_as_the_whole_content_of_a_cell_outside_
     );
 }
 
-// @kotowari[REQ-core-226, TBL-core-028]
+// @kotowari[REQ-core-226, TBL-core-028, C-core-status-8, C-core-surface-11]
 #[test]
 fn req_226_a_name_quoted_in_a_decision_is_counted_as_specified_by_status() {
     let tmp = TempDir::new().unwrap();
@@ -1163,7 +1163,7 @@ fn req_226_a_name_quoted_in_a_decision_is_counted_as_specified_by_status() {
     );
 }
 
-// @kotowari[REQ-core-226]
+// @kotowari[REQ-core-226, C-core-surface-11]
 #[test]
 fn req_226_a_name_in_a_decision_cell_counts_even_after_a_stray_quote_in_another_cell() {
     let tmp = TempDir::new().unwrap();
@@ -1181,7 +1181,7 @@ fn req_226_a_name_in_a_decision_cell_counts_even_after_a_stray_quote_in_another_
     assert_eq!(without_spec(&v), Vec::<String>::new(), "{v}");
 }
 
-// @kotowari[REQ-core-226]
+// @kotowari[REQ-core-226, C-core-surface-11, C-core-surface-14]
 #[test]
 fn req_226_a_code_block_inside_a_row_or_a_quote_of_a_decision_is_not_read() {
     let tmp = TempDir::new().unwrap();

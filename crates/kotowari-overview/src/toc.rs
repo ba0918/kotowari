@@ -142,7 +142,7 @@ impl Comparison<'_> {
 
 #[cfg(test)]
 mod tests {
-    // @kotowari[TBL-core-043]
+    // @kotowari[TBL-core-043, C-core-ovtoc-7]
     #[test]
     fn the_embedded_toc_schema_compiles() {
         let schema: serde_json::Value = serde_json::from_str(super::SCHEMA).unwrap();

@@ -34,7 +34,7 @@ fn parse_json(output: &std::process::Output) -> serde_json::Value {
 
 // --- REQ-core-021: 出力の形の値 ---
 
-// @kotowari[REQ-core-021, REQ-core-022]
+// @kotowari[REQ-core-021, REQ-core-022, C-core-output-2]
 #[test]
 fn req_021_format_values_are_json_and_text() {
     let tmp = TempDir::new().unwrap();
@@ -67,7 +67,7 @@ fn req_021_format_values_are_json_and_text() {
 
 // --- REQ-core-023: JSON の中身 ---
 
-// @kotowari[REQ-core-023, TBL-core-005, TBL-core-006]
+// @kotowari[REQ-core-023, TBL-core-005, TBL-core-006, C-core-output-3]
 #[test]
 fn req_023_files_counts_all_docs_and_lines_sums_them() {
     let tmp = TempDir::new().unwrap();
@@ -97,7 +97,7 @@ fn req_023_files_counts_all_docs_and_lines_sums_them() {
     assert!(v["counts"].is_object());
 }
 
-// @kotowari[REQ-core-023, TBL-core-006]
+// @kotowari[REQ-core-023, TBL-core-006, C-core-output-6]
 #[test]
 fn req_023_finding_keys_match_the_table() {
     let tmp = TempDir::new().unwrap();
@@ -123,7 +123,7 @@ fn req_023_finding_keys_match_the_table() {
 
 // --- PROP-core-002: counts と findings の一致 ---
 
-// @kotowari[PROP-core-002]
+// @kotowari[PROP-core-002, C-core-output-4]
 #[test]
 fn prop_002_counts_match_findings() {
     let tmp = TempDir::new().unwrap();
@@ -161,7 +161,7 @@ fn prop_002_counts_match_findings() {
 
 // --- REQ-core-025: 文字の出力 ---
 
-// @kotowari[REQ-core-025]
+// @kotowari[REQ-core-025, C-core-output-8]
 #[test]
 fn req_025_text_has_one_line_per_finding_with_bracketed_severity() {
     let tmp = TempDir::new().unwrap();
@@ -184,7 +184,7 @@ fn req_025_text_has_one_line_per_finding_with_bracketed_severity() {
     }
 }
 
-// @kotowari[REQ-core-025, EX-core-286]
+// @kotowari[REQ-core-025, EX-core-286, C-core-output-10]
 #[test]
 fn req_025_a_line_break_in_a_file_name_stays_on_one_text_line() {
     // 改行を含むファイル名でも1つの指摘は1行。改行は "\\n" と書く
@@ -204,7 +204,7 @@ fn req_025_a_line_break_in_a_file_name_stays_on_one_text_line() {
     }
 }
 
-// @kotowari[REQ-core-025]
+// @kotowari[REQ-core-025, C-core-output-10]
 #[test]
 fn req_025_a_carriage_return_in_a_file_name_is_written_as_backslash_r() {
     // "\r" だけでは行は分かれないので、行の全体を照合して、パスと詳細の両方で書き換えたことを見る
@@ -226,7 +226,7 @@ fn req_025_a_carriage_return_in_a_file_name_is_written_as_backslash_r() {
     assert!(!stdout.contains('\r'), "{stdout:?}");
 }
 
-// @kotowari[REQ-core-025, REQ-core-026, EX-core-004]
+// @kotowari[REQ-core-025, REQ-core-026, EX-core-004, C-core-output-8, C-core-output-9]
 #[test]
 fn req_025_text_line_for_a_document_without_a_title() {
     let tmp = TempDir::new().unwrap();
@@ -248,7 +248,7 @@ fn req_025_text_line_for_a_document_without_a_title() {
 
 // --- REQ-core-007: 終了コード ---
 
-// @kotowari[REQ-core-007, TBL-core-002]
+// @kotowari[REQ-core-007, TBL-core-002, C-core-cli-15]
 #[test]
 fn req_007_exit_code_one_on_error_and_zero_on_notice_only() {
     let tmp = TempDir::new().unwrap();
@@ -314,7 +314,7 @@ fn write_test_file(tmp: &std::path::Path, rel: &str, content: &str) {
     fs::write(path, content).unwrap();
 }
 
-// @kotowari[REQ-core-128, TBL-core-021, EX-core-035]
+// @kotowari[REQ-core-128, TBL-core-021, EX-core-035, C-core-output-12]
 #[test]
 fn req_128_tests_key_lists_files_per_extension_with_query_flag() {
     // EX-core-035: ".rs" が2つと ".go" が1つ
@@ -336,7 +336,7 @@ fn req_128_tests_key_lists_files_per_extension_with_query_flag() {
     );
 }
 
-// @kotowari[REQ-core-128, TBL-core-021]
+// @kotowari[REQ-core-128, TBL-core-021, C-core-output-15]
 #[test]
 fn req_128_tests_is_an_empty_object_without_test_files() {
     let tmp = TempDir::new().unwrap();
@@ -353,7 +353,7 @@ fn req_128_tests_is_an_empty_object_without_test_files() {
     );
 }
 
-// @kotowari[REQ-core-128]
+// @kotowari[REQ-core-128, C-core-output-11]
 #[test]
 fn req_128_text_format_does_not_print_tests() {
     let tmp = TempDir::new().unwrap();
@@ -382,7 +382,7 @@ fn req_128_text_format_does_not_print_tests() {
     );
 }
 
-// @kotowari[TBL-core-021]
+// @kotowari[TBL-core-021, C-core-output-13]
 #[test]
 fn tbl_021_extension_is_after_the_last_dot_and_dotless_names_share_the_empty_key() {
     let tmp = TempDir::new().unwrap();
@@ -408,7 +408,7 @@ fn tbl_021_extension_is_after_the_last_dot_and_dotless_names_share_the_empty_key
     assert_eq!(v["tests"].as_object().unwrap().len(), 2, "two keys: {v}");
 }
 
-// @kotowari[TBL-core-021]
+// @kotowari[TBL-core-021, C-core-output-13]
 #[test]
 fn tbl_021_uppercase_extension_is_a_separate_key_without_query() {
     let tmp = TempDir::new().unwrap();
@@ -423,7 +423,7 @@ fn tbl_021_uppercase_extension_is_a_separate_key_without_query() {
     assert_eq!(v["tests"]["rs"]["query"], true, "rs has a query: {v}");
 }
 
-// @kotowari[TBL-core-021, EX-core-038]
+// @kotowari[TBL-core-021, EX-core-038, C-core-output-14]
 #[test]
 fn tbl_021_unparsable_file_is_counted() {
     // EX-core-038: tree-sitter で読めないファイルも "files" に数える
@@ -446,7 +446,7 @@ fn tbl_021_unparsable_file_is_counted() {
     );
 }
 
-// @kotowari[TBL-core-021]
+// @kotowari[TBL-core-021, C-core-output-14]
 #[test]
 #[cfg(unix)]
 fn tbl_021_same_path_counts_once_and_symlink_counts_apart() {
@@ -465,7 +465,7 @@ fn tbl_021_same_path_counts_once_and_symlink_counts_apart() {
     );
 }
 
-// @kotowari[TBL-core-021]
+// @kotowari[TBL-core-021, C-core-output-13]
 #[test]
 fn tbl_021_keys_are_in_byte_order() {
     let tmp = TempDir::new().unwrap();
@@ -493,7 +493,7 @@ fn tbl_021_keys_are_in_byte_order() {
     );
 }
 
-// @kotowari[TBL-core-021]
+// @kotowari[TBL-core-021, C-core-output-14, C-core-discover-16]
 #[test]
 #[cfg(unix)]
 fn tbl_021_excluded_entries_are_not_counted() {
@@ -511,7 +511,7 @@ fn tbl_021_excluded_entries_are_not_counted() {
     );
 }
 
-// @kotowari[PROP-core-004]
+// @kotowari[PROP-core-004, C-core-output-16]
 #[test]
 fn prop_004_files_sum_equals_the_number_of_read_test_files() {
     use proptest::prelude::*;

@@ -56,7 +56,7 @@ fn findings_by_kind(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value>
         .collect()
 }
 
-// @kotowari[REQ-core-313, EX-core-485]
+// @kotowari[REQ-core-313, EX-core-485, C-core-libapi-11]
 #[cfg(unix)]
 #[test]
 fn literal_backslash_filenames_do_not_become_source_directories() {
@@ -1701,7 +1701,7 @@ fn req_117_glossary_header_without_rows_is_valid() {
     );
 }
 
-// @kotowari[REQ-core-111]
+// @kotowari[REQ-core-111, C-core-input-1]
 #[test]
 fn req_111_bom_in_config_records_adr_and_tests_is_skipped_end_to_end() {
     let tmp = TempDir::new().unwrap();
@@ -1777,7 +1777,7 @@ fn req_058_records_place_dot_resolves_a_source_at_the_base_root() {
     );
 }
 
-// @kotowari[REQ-core-058, REQ-core-110, EX-core-289]
+// @kotowari[REQ-core-058, REQ-core-110, EX-core-289, C-core-base-8]
 #[test]
 fn req_110_a_parent_step_in_a_place_is_folded() {
     // 置き場の "a/.." は畳んでから比べる。畳まないと置き場の中の出典が置き場の外に見える

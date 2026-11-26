@@ -105,7 +105,7 @@ fn strings(value: &serde_json::Value) -> Vec<&str> {
         .collect()
 }
 
-// @kotowari[REQ-core-293, REQ-core-295, REQ-core-001]
+// @kotowari[REQ-core-293, REQ-core-295, REQ-core-001, C-core-cli-1, C-core-ovcmd-1, C-core-ovcmd-11]
 #[test]
 fn req_core_293_the_first_build_writes_every_page_under_the_cache() {
     let tmp = two_documents();
@@ -132,7 +132,7 @@ fn req_core_293_the_first_build_writes_every_page_under_the_cache() {
     assert!(a.contains("a の文"));
 }
 
-// @kotowari[EX-core-475, REQ-core-293, REQ-core-295]
+// @kotowari[EX-core-475, REQ-core-293, REQ-core-295, C-core-ovcmd-2, C-core-ovcmd-11]
 #[test]
 fn ex_core_475_a_second_build_writes_only_the_changed_page() {
     let tmp = two_documents();
@@ -166,7 +166,7 @@ fn ex_core_475_a_second_build_writes_only_the_changed_page() {
     assert_eq!(std::fs::metadata(&a).unwrap().modified().unwrap(), old);
 }
 
-// @kotowari[EX-core-476, REQ-core-293]
+// @kotowari[EX-core-476, REQ-core-293, C-core-ovcmd-3]
 #[test]
 fn ex_core_476_the_page_of_removed_overview_data_is_removed() {
     let tmp = two_documents();
@@ -191,7 +191,7 @@ fn ex_core_476_the_page_of_removed_overview_data_is_removed() {
     );
 }
 
-// @kotowari[REQ-core-293]
+// @kotowari[REQ-core-293, C-core-ovcmd-25]
 #[test]
 fn req_core_293_any_other_file_under_the_cache_is_removed() {
     let tmp = two_documents();
@@ -204,7 +204,7 @@ fn req_core_293_any_other_file_under_the_cache_is_removed() {
     );
 }
 
-// @kotowari[REQ-core-295]
+// @kotowari[REQ-core-295, C-core-ovcmd-12]
 #[test]
 fn req_core_295_the_text_format_writes_written_lines_before_removed_lines() {
     let tmp = two_documents();
@@ -225,7 +225,7 @@ fn req_core_295_the_text_format_writes_written_lines_before_removed_lines() {
     assert_eq!(stdout, "");
 }
 
-// @kotowari[EX-core-477, REQ-core-294, REQ-core-296, TBL-core-001, TBL-core-018, TBL-core-020]
+// @kotowari[EX-core-477, REQ-core-294, REQ-core-296, TBL-core-001, TBL-core-018, TBL-core-020, C-core-clienv-7, C-core-ovcmd-8]
 #[test]
 fn ex_core_477_errors_in_overview_data_stop_the_build_without_writing() {
     let tmp = two_documents();
@@ -246,7 +246,7 @@ fn ex_core_477_errors_in_overview_data_stop_the_build_without_writing() {
     assert_eq!(cache(tmp.path()), before);
 }
 
-// @kotowari[EX-core-463, REQ-core-279, TBL-core-020]
+// @kotowari[EX-core-463, REQ-core-279, TBL-core-020, C-core-clienv-7, C-core-ovdata-2]
 #[test]
 fn ex_core_463_build_without_the_overview_key_is_a_config_error() {
     let tmp = TempDir::new().unwrap();
@@ -262,7 +262,7 @@ fn ex_core_463_build_without_the_overview_key_is_a_config_error() {
     assert!(!tmp.path().join(".kotowari/cache").exists());
 }
 
-// @kotowari[REQ-core-280, REQ-core-278]
+// @kotowari[REQ-core-280, REQ-core-278, C-core-ovdata-4]
 #[test]
 fn req_core_280_build_stops_on_an_overlap_with_the_test_files() {
     let tmp = TempDir::new().unwrap();
@@ -284,7 +284,7 @@ fn req_core_280_build_stops_on_an_overlap_with_the_test_files() {
     );
 }
 
-// @kotowari[REQ-core-280, REQ-core-199]
+// @kotowari[REQ-core-280, REQ-core-199, C-core-guides-9, C-core-ovdata-21]
 #[test]
 fn req_core_280_build_judges_the_guides_and_tests_overlap_first() {
     let tmp = TempDir::new().unwrap();
@@ -303,7 +303,7 @@ fn req_core_280_build_judges_the_guides_and_tests_overlap_first() {
     );
 }
 
-// @kotowari[EX-core-553, REQ-core-278]
+// @kotowari[EX-core-553, REQ-core-278, C-core-ovdata-16]
 #[test]
 fn ex_core_553_a_test_file_that_is_not_utf8_does_not_stop_the_build() {
     let tmp = two_documents();
@@ -321,7 +321,7 @@ fn ex_core_553_a_test_file_that_is_not_utf8_does_not_stop_the_build() {
     );
 }
 
-// @kotowari[REQ-core-278, REQ-core-018]
+// @kotowari[REQ-core-278, REQ-core-018, C-core-config-10, C-core-ovdata-24]
 #[test]
 fn req_core_278_build_reads_the_ir_places_and_stops_like_check() {
     let tmp = two_documents();
@@ -364,7 +364,7 @@ fn snapshot(root: &Path, skip: &Path) -> Vec<(String, Option<Vec<u8>>)> {
     out
 }
 
-// @kotowari[REQ-core-296, REQ-core-102]
+// @kotowari[REQ-core-296, REQ-core-102, C-core-ovcmd-4]
 #[test]
 fn req_core_296_build_writes_nothing_outside_the_cache_place() {
     let tmp = two_documents();
@@ -389,7 +389,7 @@ fn req_core_296_build_writes_nothing_outside_the_cache_place() {
     assert_eq!(cache_entries, ["overview"]);
 }
 
-// @kotowari[REQ-core-102]
+// @kotowari[REQ-core-102, C-core-scope-2]
 #[test]
 fn req_core_102_check_and_status_with_overview_data_write_nothing() {
     let tmp = two_documents();
@@ -415,7 +415,7 @@ fn argument_error(tmp: &Path, args: &[&str]) {
     assert!(stderr.starts_with("argument error: "), "{args:?}: {stderr}");
 }
 
-// @kotowari[REQ-core-304, TBL-core-001]
+// @kotowari[REQ-core-304, TBL-core-001, C-core-cli-11]
 #[test]
 fn req_core_304_overview_takes_exactly_build_or_serve() {
     let tmp = without_overview();
@@ -426,7 +426,7 @@ fn req_core_304_overview_takes_exactly_build_or_serve() {
     assert!(!tmp.path().join(".kotowari/cache").exists());
 }
 
-// @kotowari[REQ-core-304]
+// @kotowari[REQ-core-304, C-core-cli-11]
 #[test]
 fn req_core_304_the_port_is_a_decimal_integer_from_1_to_65535() {
     let tmp = without_overview();
@@ -446,7 +446,7 @@ fn req_core_304_the_port_is_a_decimal_integer_from_1_to_65535() {
     assert!(!tmp.path().join(".kotowari/cache").exists());
 }
 
-// @kotowari[REQ-core-004, REQ-core-002]
+// @kotowari[REQ-core-004, REQ-core-002, C-core-cli-7]
 #[test]
 fn req_core_004_port_belongs_to_serve_and_format_does_not() {
     let tmp = without_overview();
@@ -464,7 +464,7 @@ fn req_core_004_port_belongs_to_serve_and_format_does_not() {
     assert!(!tmp.path().join(".kotowari/cache").exists());
 }
 
-// @kotowari[REQ-core-002, REQ-core-003]
+// @kotowari[REQ-core-002, REQ-core-003, C-core-cli-2, C-core-config-2]
 #[test]
 fn req_core_002_build_takes_format_and_config_before_or_after_the_command() {
     let tmp = two_documents();
@@ -488,7 +488,7 @@ fn req_core_002_build_takes_format_and_config_before_or_after_the_command() {
     assert!(stdout.starts_with("written "), "{stdout}");
 }
 
-// @kotowari[REQ-core-296]
+// @kotowari[REQ-core-296, C-core-ovcmd-4]
 #[cfg(unix)]
 #[test]
 fn req_core_296_a_symbolic_link_in_the_cache_is_replaced_not_written_through() {
@@ -516,7 +516,7 @@ fn req_core_296_a_symbolic_link_in_the_cache_is_replaced_not_written_through() {
     assert!(strings(&json(&stdout)["written"]).contains(&".kotowari/cache/overview/style.css"));
 }
 
-// @kotowari[EX-core-504, REQ-core-324, REQ-core-296, TBL-core-001, TBL-core-018, TBL-core-020]
+// @kotowari[EX-core-504, REQ-core-324, REQ-core-296, TBL-core-001, TBL-core-018, TBL-core-020, C-core-clienv-7, C-core-ovcmd-5]
 #[cfg(unix)]
 #[test]
 fn ex_core_504_a_linked_cache_place_stops_without_writing_outside() {
@@ -543,7 +543,7 @@ fn ex_core_504_a_linked_cache_place_stops_without_writing_outside() {
     );
 }
 
-// @kotowari[REQ-core-324, REQ-core-296]
+// @kotowari[REQ-core-324, REQ-core-296, C-core-ovcmd-5]
 #[cfg(unix)]
 #[test]
 fn req_core_324_a_link_above_the_cache_place_also_stops() {
@@ -590,7 +590,7 @@ fn req_core_324_a_link_above_the_cache_place_also_stops() {
 
 const TOC: &str = ".kotowari/toc.yaml";
 
-// @kotowari[EX-core-505, REQ-core-013, REQ-core-325, TBL-core-001]
+// @kotowari[EX-core-505, REQ-core-013, REQ-core-325, TBL-core-001, C-core-clienv-7, C-core-config-18, C-core-ovtoc-2]
 #[test]
 fn ex_core_505_build_stops_without_the_toc_key_or_the_toc_file() {
     let tmp = two_documents();
@@ -614,7 +614,7 @@ fn ex_core_505_build_stops_without_the_toc_key_or_the_toc_file() {
     assert!(!tmp.path().join(".kotowari/cache").exists());
 }
 
-// @kotowari[EX-core-508, REQ-core-294, TBL-core-001]
+// @kotowari[EX-core-508, REQ-core-294, TBL-core-001, C-core-clienv-7, C-core-ovtoc-11]
 #[test]
 fn ex_core_508_build_on_toc_errors_writes_nothing() {
     let tmp = two_documents();
@@ -639,7 +639,7 @@ fn ex_core_508_build_on_toc_errors_writes_nothing() {
     assert!(!tmp.path().join(".kotowari/cache").exists());
 }
 
-// @kotowari[EX-core-510, REQ-core-332]
+// @kotowari[EX-core-510, REQ-core-332, C-core-ovtoc-14]
 #[test]
 fn ex_core_510_the_index_follows_the_toc_order() {
     let tmp = two_documents();
@@ -653,7 +653,7 @@ fn ex_core_510_the_index_follows_the_toc_order() {
     assert!(b < a, "{index}");
 }
 
-// @kotowari[EX-core-546, REQ-core-324]
+// @kotowari[EX-core-546, REQ-core-324, C-core-ovcmd-7]
 #[cfg(unix)]
 #[test]
 fn ex_core_546_a_cache_place_that_cannot_be_enumerated_stops_with_a_cache_error() {

@@ -32,7 +32,7 @@ fn test(identity: &str, path: &str, text: &str) -> NativeTestAnalysis {
     }
 }
 
-// @kotowari[REQ-core-315, EX-core-490]
+// @kotowari[REQ-core-315, EX-core-490, C-core-libpaths-9]
 #[test]
 fn repeated_native_source_is_rejected_within_a_group() {
     let mut input = inputs(Config::default());
@@ -44,7 +44,7 @@ fn repeated_native_source_is_rejected_within_a_group() {
     assert!(ReadModel::build_repository(input).is_err());
 }
 
-// @kotowari[REQ-core-315]
+// @kotowari[REQ-core-315, C-core-libpaths-9]
 #[test]
 fn native_source_without_an_identity_is_rejected() {
     let mut input = inputs(Config::default());
@@ -61,7 +61,7 @@ fn native_source_without_an_identity_is_rejected() {
     );
 }
 
-// @kotowari[REQ-core-315, EX-core-490]
+// @kotowari[REQ-core-315, EX-core-490, C-core-libpaths-10]
 #[test]
 fn native_original_text_is_retained_across_read_and_check() {
     let mut input = inputs(Config::default());
@@ -82,7 +82,7 @@ fn native_original_text_is_retained_across_read_and_check() {
     );
 }
 
-// @kotowari[REQ-core-315, EX-core-488, EX-core-489]
+// @kotowari[REQ-core-315, EX-core-488, EX-core-489, C-core-libinputs-3]
 #[test]
 fn native_disabled_tests_do_not_contribute_stale_facts() {
     let mut input = inputs(Config::default());
@@ -95,7 +95,7 @@ fn native_disabled_tests_do_not_contribute_stale_facts() {
     assert!(inspection.check().tests().is_empty());
 }
 
-// @kotowari[REQ-core-315, EX-core-488, EX-core-489]
+// @kotowari[REQ-core-315, EX-core-488, EX-core-489, C-core-libinputs-3]
 #[test]
 fn native_disabled_unspecified_list_does_not_hide_a_surface() {
     let mut input = inputs(Config::default());
@@ -138,7 +138,7 @@ fn native_disabled_unspecified_list_does_not_hide_a_surface() {
     );
 }
 
-// @kotowari[REQ-core-315, REQ-core-313, EX-core-490, EX-core-485]
+// @kotowari[REQ-core-315, REQ-core-313, EX-core-490, EX-core-485, C-core-libpaths-9]
 #[test]
 fn native_display_collisions_do_not_merge_original_files() {
     let mut input = inputs(Config::default());
@@ -187,7 +187,7 @@ fn native_read_preparation_retains_the_configured_ir_and_disabled_tests() {
     );
 }
 
-// @kotowari[REQ-core-315, EX-core-488, EX-core-489]
+// @kotowari[REQ-core-315, EX-core-488, EX-core-489, C-core-libinputs-1, C-core-libinputs-2]
 #[test]
 fn native_inspection_cannot_finish_without_its_required_guides() {
     let read = || {
@@ -203,7 +203,7 @@ fn native_inspection_cannot_finish_without_its_required_guides() {
     assert_eq!(preparation.finish().unwrap().check().guides().files(), 0);
 }
 
-// @kotowari[REQ-core-315, EX-core-490]
+// @kotowari[REQ-core-315, EX-core-490, C-core-libpaths-9]
 #[test]
 fn repeated_original_test_identity_cannot_be_evaded_by_display_spelling() {
     let mut input = inputs(Config::default());
@@ -214,7 +214,7 @@ fn repeated_original_test_identity_cannot_be_evaded_by_display_spelling() {
     assert!(ReadModel::build_repository(input).is_err());
 }
 
-// @kotowari[REQ-core-199, REQ-core-315]
+// @kotowari[REQ-core-199, REQ-core-315, C-core-guides-9, C-core-libinputs-6]
 #[test]
 fn a_guide_path_that_is_also_a_test_file_stops_the_native_inspection() {
     let mut config = Config::default();

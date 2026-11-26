@@ -56,7 +56,7 @@ fn json(stdout: &str) -> serde_json::Value {
     serde_json::from_str(stdout).unwrap_or_else(|e| panic!("{e}: {stdout}"))
 }
 
-// @kotowari[REQ-core-199, REQ-core-313, EX-core-485]
+// @kotowari[REQ-core-199, REQ-core-313, EX-core-485, C-core-guides-9, C-core-libapi-11]
 #[test]
 fn overlap_precedes_guide_only_invalid_utf8_and_missing_surface_rules() {
     for later in ["content", "surface"] {
@@ -110,7 +110,7 @@ fn listed_fingerprint(tmp: &Path, id: &str) -> String {
 
 // --- REQ-core-014、TBL-core-004: "guides.files" の鍵 ---
 
-// @kotowari[REQ-core-014]
+// @kotowari[REQ-core-014, C-core-config-16]
 #[test]
 fn req_014_an_unreadable_guides_glob_is_a_config_error() {
     let tmp = tempfile::TempDir::new().unwrap();
@@ -223,7 +223,7 @@ fn req_203_scenario_name_and_tags_do_not_change_the_fingerprint() {
     assert_eq!(listed_fingerprint(tmp.path(), "EX-001"), "ec19e8a0");
 }
 
-// @kotowari[REQ-core-203]
+// @kotowari[REQ-core-203, C-core-guides-4]
 #[test]
 fn req_203_crlf_line_endings_do_not_change_the_fingerprint() {
     let tmp = TempDir::new().unwrap();
@@ -301,7 +301,7 @@ fn make_empty_project(tmp: &Path, config: &str) {
 const OVERLAPPING: &str =
     "guides:\n  files:\n    - \"docs/**/*.md\"\ntests:\n  files:\n    - \"**/*\"\n";
 
-// @kotowari[REQ-core-199, TBL-core-001, TBL-core-020, EX-core-368]
+// @kotowari[REQ-core-199, TBL-core-001, TBL-core-020, EX-core-368, C-core-clienv-7, C-core-guides-9]
 #[test]
 fn ex_368_check_stops_when_a_guide_is_also_a_test_file() {
     let tmp = TempDir::new().unwrap();
@@ -317,7 +317,7 @@ fn ex_368_check_stops_when_a_guide_is_also_a_test_file() {
     );
 }
 
-// @kotowari[REQ-core-163, REQ-core-199, EX-core-368]
+// @kotowari[REQ-core-163, REQ-core-199, EX-core-368, C-core-guides-9, C-core-status-4]
 #[test]
 fn ex_368_status_stops_when_a_guide_is_also_a_test_file() {
     let tmp = TempDir::new().unwrap();
@@ -333,7 +333,7 @@ fn ex_368_status_stops_when_a_guide_is_also_a_test_file() {
     );
 }
 
-// @kotowari[REQ-core-199, TBL-core-020]
+// @kotowari[REQ-core-199, TBL-core-020, C-core-clienv-7, C-core-guides-10]
 #[test]
 fn req_199_only_the_first_overlapping_file_in_byte_order_is_reported() {
     let tmp = TempDir::new().unwrap();
@@ -349,7 +349,7 @@ fn req_199_only_the_first_overlapping_file_in_byte_order_is_reported() {
     assert!(!stderr.contains("notes/b.md"), "{stderr}");
 }
 
-// @kotowari[REQ-core-198, REQ-core-206, TBL-core-005, EX-core-369]
+// @kotowari[REQ-core-198, REQ-core-206, TBL-core-005, EX-core-369, C-core-guides-5, C-core-output-5]
 #[test]
 fn ex_369_without_the_guides_key_no_guide_is_read() {
     let tmp = TempDir::new().unwrap();
@@ -367,7 +367,7 @@ fn ex_369_without_the_guides_key_no_guide_is_read() {
     assert!(!stdout.contains("guide_stale"), "{stdout}");
 }
 
-// @kotowari[REQ-core-198, TBL-core-001]
+// @kotowari[REQ-core-198, TBL-core-001, C-core-clienv-7, C-core-guides-6]
 #[test]
 fn req_198_a_guide_that_is_not_utf8_stops() {
     let tmp = TempDir::new().unwrap();
@@ -379,7 +379,7 @@ fn req_198_a_guide_that_is_not_utf8_stops() {
     assert_eq!(stderr.trim_end(), "non-UTF-8 file: guides/a.md");
 }
 
-// @kotowari[REQ-core-198, REQ-core-206]
+// @kotowari[REQ-core-198, REQ-core-206, C-core-guides-7, C-core-output-5]
 #[test]
 fn req_198_a_guides_glob_may_hit_the_ir_documents() {
     let tmp = TempDir::new().unwrap();
@@ -392,7 +392,7 @@ fn req_198_a_guides_glob_may_hit_the_ir_documents() {
     assert_eq!(v["guides"]["files"], 1, "and also as a guide: {v}");
 }
 
-// @kotowari[REQ-core-152, REQ-core-158]
+// @kotowari[REQ-core-152, REQ-core-158, C-core-guides-8, C-core-list-15, C-core-query-9]
 #[test]
 fn req_152_list_and_query_do_not_read_guides_and_do_not_stop_on_their_overlap() {
     let tmp = TempDir::new().unwrap();
@@ -454,7 +454,7 @@ fn findings_on(v: &serde_json::Value, path: &str) -> Vec<(String, u64, String)> 
         .collect()
 }
 
-// @kotowari[REQ-core-198, REQ-core-200, REQ-core-206]
+// @kotowari[REQ-core-198, REQ-core-200, REQ-core-206, C-core-output-5]
 #[test]
 fn req_200_the_ex_362_project_without_a_guide_mark_has_no_findings() {
     let tmp = TempDir::new().unwrap();
@@ -465,7 +465,7 @@ fn req_200_the_ex_362_project_without_a_guide_mark_has_no_findings() {
     assert_eq!(v["guides"], serde_json::json!({"files": 1, "marks": 0}));
 }
 
-// @kotowari[REQ-core-200, EX-core-366]
+// @kotowari[REQ-core-200, EX-core-366, C-core-guides-12]
 #[test]
 fn ex_366_marks_outside_comments_and_inside_code_are_not_read() {
     let tmp = TempDir::new().unwrap();
@@ -485,7 +485,7 @@ fn ex_366_marks_outside_comments_and_inside_code_are_not_read() {
     assert_eq!(v["guides"]["marks"], 0);
 }
 
-// @kotowari[REQ-core-201, REQ-core-202, TBL-core-036, TBL-core-008, TBL-core-019, EX-core-367]
+// @kotowari[REQ-core-201, REQ-core-202, TBL-core-036, TBL-core-008, TBL-core-019, EX-core-367, C-core-findings-3, C-core-guides-15]
 #[test]
 fn ex_367_a_mark_without_fingerprint_and_an_uppercase_fingerprint_are_invalid() {
     let tmp = TempDir::new().unwrap();
@@ -502,7 +502,7 @@ guides/a.md:5 [error] invalid_marker <!-- @kotowari[REQ-001:8C0D7663] -->\n"
     );
 }
 
-// @kotowari[REQ-core-201, REQ-core-202, TBL-core-036, EX-core-373]
+// @kotowari[REQ-core-201, REQ-core-202, TBL-core-036, EX-core-373, C-core-guides-15]
 #[test]
 fn ex_373_one_malformed_entry_leaves_the_whole_mark_unmatched() {
     let tmp = TempDir::new().unwrap();
@@ -516,7 +516,7 @@ fn ex_373_one_malformed_entry_leaves_the_whole_mark_unmatched() {
     assert_eq!(v["guides"]["marks"], 0);
 }
 
-// @kotowari[REQ-core-200, REQ-core-201, TBL-core-036, EX-core-374]
+// @kotowari[REQ-core-200, REQ-core-201, TBL-core-036, EX-core-374, C-core-guides-13, C-core-guides-14]
 #[test]
 fn ex_374_spaces_inside_the_brackets_are_allowed_and_text_after_the_comment_is_not_read() {
     let tmp = TempDir::new().unwrap();
@@ -529,7 +529,7 @@ fn ex_374_spaces_inside_the_brackets_are_allowed_and_text_after_the_comment_is_n
     assert_eq!(v["guides"]["marks"], 1);
 }
 
-// @kotowari[REQ-core-200, REQ-core-206]
+// @kotowari[REQ-core-200, REQ-core-206, C-core-guides-11, C-core-output-5]
 #[test]
 fn req_200_inline_comments_and_several_marks_in_one_comment_are_all_read() {
     let tmp = TempDir::new().unwrap();
@@ -547,7 +547,7 @@ fn req_200_inline_comments_and_several_marks_in_one_comment_are_all_read() {
     assert_eq!(v["guides"]["marks"], 4);
 }
 
-// @kotowari[REQ-core-200, REQ-core-204]
+// @kotowari[REQ-core-200, REQ-core-204, C-core-guides-13]
 #[test]
 fn req_200_each_comment_of_one_html_block_is_read_and_the_text_between_them_is_not() {
     let tmp = TempDir::new().unwrap();
@@ -573,7 +573,7 @@ fn req_200_each_comment_of_one_html_block_is_read_and_the_text_between_them_is_n
     assert_eq!(v["guides"]["marks"], 2);
 }
 
-// @kotowari[REQ-core-202, TBL-core-008]
+// @kotowari[REQ-core-202, TBL-core-008, C-core-findings-3, C-core-guides-16]
 #[test]
 fn req_202_an_empty_mark_and_a_mark_without_its_closing_bracket_are_invalid() {
     let tmp = TempDir::new().unwrap();
@@ -614,7 +614,7 @@ fn stale_on(v: &serde_json::Value) -> Vec<(u64, String)> {
         .collect()
 }
 
-// @kotowari[REQ-core-198, REQ-core-200, REQ-core-203, REQ-core-204, REQ-core-206, EX-core-362]
+// @kotowari[REQ-core-198, REQ-core-200, REQ-core-203, REQ-core-204, REQ-core-206, EX-core-362, C-core-output-5]
 #[test]
 fn ex_362_a_mark_with_the_current_fingerprint_yields_nothing() {
     let tmp = TempDir::new().unwrap();
@@ -625,7 +625,7 @@ fn ex_362_a_mark_with_the_current_fingerprint_yields_nothing() {
     assert_eq!(v["guides"], serde_json::json!({"files": 1, "marks": 1}));
 }
 
-// @kotowari[REQ-core-204, REQ-core-031, TBL-core-009, TBL-core-019, EX-core-363]
+// @kotowari[REQ-core-204, REQ-core-031, TBL-core-009, TBL-core-019, EX-core-363, C-core-findings-1, C-core-findings-2, C-core-findings-7, C-core-guides-18, C-core-guides-20]
 #[test]
 fn ex_363_a_changed_body_makes_the_mark_a_stale_notice() {
     let tmp = TempDir::new().unwrap();
@@ -745,7 +745,7 @@ fn write_ex_001_project(tmp: &Path, tags: &str, name: &str, guide: &str) {
 
 const EX_001_TAGS: &str = "@id=EX-001 @about=REQ-001 @source=docs/decision/records/r.md#A1";
 
-// @kotowari[REQ-core-200, REQ-core-201, REQ-core-204, REQ-core-206, TBL-core-036, EX-core-371]
+// @kotowari[REQ-core-200, REQ-core-201, REQ-core-204, REQ-core-206, TBL-core-036, EX-core-371, C-core-guides-17, C-core-output-5]
 #[test]
 fn ex_371_two_entries_in_one_mark_are_counted_and_matched_one_by_one() {
     let tmp = TempDir::new().unwrap();
@@ -779,7 +779,7 @@ fn ex_375_renaming_a_scenario_and_changing_its_source_tag_keeps_the_mark_fresh()
     assert_eq!(v["guides"]["marks"], 1);
 }
 
-// @kotowari[REQ-core-204, TBL-core-019]
+// @kotowari[REQ-core-204, TBL-core-019, C-core-guides-18]
 #[test]
 fn req_204_the_line_of_guide_stale_is_where_the_mark_starts() {
     let tmp = TempDir::new().unwrap();
@@ -791,7 +791,7 @@ fn req_204_the_line_of_guide_stale_is_where_the_mark_starts() {
     assert_eq!(stale_on(&v), vec![(5, "REQ-009 51b1f3da -".to_string())]);
 }
 
-// @kotowari[REQ-core-162, TBL-core-028]
+// @kotowari[REQ-core-162, TBL-core-028, C-core-status-7, C-core-status-11]
 #[test]
 fn req_162_status_carries_the_guides_group() {
     let tmp = TempDir::new().unwrap();

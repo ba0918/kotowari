@@ -82,7 +82,7 @@ fn only_yaml_block(markdown: &str) -> String {
 
 // --- REQ-core-125: 指摘の種類の一致 ---
 
-// @kotowari[REQ-core-125]
+// @kotowari[REQ-core-125, C-core-skillref-1, C-core-skillref-4]
 #[test]
 fn req_125_findings_reference_kinds_match_the_code() {
     let in_reference = first_column_of_table(&read_reference("findings.md"), "Kind");
@@ -98,7 +98,7 @@ fn req_125_findings_reference_kinds_match_the_code() {
 
 // --- REQ-core-126: 既定の一致 ---
 
-// @kotowari[REQ-core-126]
+// @kotowari[REQ-core-126, C-core-skillref-3]
 #[test]
 fn req_126_config_reference_setup_yaml_parses_to_the_defaults() {
     let yaml = only_yaml_block(&read_reference("config.md"));

@@ -99,7 +99,7 @@ fn assert_results_error(results: &str) {
 
 // --- REQ-core-144: 結果の誤り ---
 
-// @kotowari[REQ-core-144, EX-core-207]
+// @kotowari[REQ-core-144, EX-core-207, C-core-mutin-5]
 #[test]
 fn req_144_unknown_outcome_value_stops() {
     assert_results_error(&outcomes(&[
@@ -108,7 +108,7 @@ fn req_144_unknown_outcome_value_stops() {
     ]));
 }
 
-// @kotowari[REQ-core-144, EX-core-208]
+// @kotowari[REQ-core-144, EX-core-208, C-core-mutin-5]
 #[test]
 fn req_144_failed_baseline_stops() {
     assert_results_error(&outcomes(&[
@@ -117,13 +117,13 @@ fn req_144_failed_baseline_stops() {
     ]));
 }
 
-// @kotowari[REQ-core-144, EX-core-222]
+// @kotowari[REQ-core-144, EX-core-222, C-core-mutin-5]
 #[test]
 fn req_144_broken_json_stops() {
     assert_results_error("{");
 }
 
-// @kotowari[REQ-core-144, TBL-core-024, EX-core-223]
+// @kotowari[REQ-core-144, TBL-core-024, EX-core-223, C-core-mutin-5]
 #[test]
 fn req_144_wrong_key_type_stops() {
     // "span.start.line" が数ではなく文字列
@@ -132,7 +132,7 @@ fn req_144_wrong_key_type_stops() {
     ]));
 }
 
-// @kotowari[REQ-core-144, TBL-core-024, EX-core-224]
+// @kotowari[REQ-core-144, TBL-core-024, EX-core-224, C-core-mutin-5]
 #[test]
 fn req_144_name_without_the_location_prefix_stops() {
     assert_results_error(&outcomes(&[mutant(
@@ -144,7 +144,7 @@ fn req_144_name_without_the_location_prefix_stops() {
     )]));
 }
 
-// @kotowari[REQ-core-144, EX-core-225]
+// @kotowari[REQ-core-144, EX-core-225, C-core-mutin-5]
 #[test]
 fn req_144_line_zero_stops() {
     assert_results_error(&outcomes(&[mutant_at(
@@ -155,7 +155,7 @@ fn req_144_line_zero_stops() {
     )]));
 }
 
-// @kotowari[REQ-core-144, EX-core-226]
+// @kotowari[REQ-core-144, EX-core-226, C-core-mutin-6]
 #[test]
 fn req_144_path_outside_the_base_stops() {
     assert_results_error(&outcomes(&[mutant_at(
@@ -166,7 +166,7 @@ fn req_144_path_outside_the_base_stops() {
     )]));
 }
 
-// @kotowari[REQ-core-144, EX-core-227]
+// @kotowari[REQ-core-144, EX-core-227, C-core-mutin-3]
 #[test]
 fn req_144_results_without_baseline_and_with_unknown_keys_are_read() {
     // 基準の実行が無く、TBL-core-024 に挙げていない鍵 "extra" を持つ1件
@@ -184,7 +184,7 @@ fn req_144_results_without_baseline_and_with_unknown_keys_are_read() {
 
 // --- REQ-core-139、REQ-core-140: 見逃しと時間切れの指摘 ---
 
-// @kotowari[REQ-core-138, REQ-core-139, TBL-core-024, EX-core-204]
+// @kotowari[REQ-core-138, REQ-core-139, TBL-core-024, EX-core-204, C-core-equiv-1, C-core-mutin-1, C-core-mutin-2, C-core-mutants-3]
 #[test]
 fn req_139_survived_mutant_is_an_error() {
     // 等価の一覧の鍵は設定に無い
@@ -204,7 +204,7 @@ fn req_139_survived_mutant_is_an_error() {
     assert_eq!(output.status.code(), Some(1));
 }
 
-// @kotowari[REQ-core-139, REQ-core-145, EX-core-205]
+// @kotowari[REQ-core-139, REQ-core-145, EX-core-205, C-core-mutin-2, C-core-mutants-4]
 #[test]
 fn req_139_caught_and_unviable_mutants_yield_nothing() {
     let tmp = project(&outcomes(&[
@@ -223,7 +223,7 @@ fn req_139_caught_and_unviable_mutants_yield_nothing() {
     assert_eq!(output.status.code(), Some(0));
 }
 
-// @kotowari[REQ-core-140, EX-core-206]
+// @kotowari[REQ-core-140, EX-core-206, C-core-equiv-13, C-core-mutin-2, C-core-mutants-5, C-core-mutants-8]
 #[test]
 fn req_140_timeout_is_a_notice_even_when_listed() {
     // EX-core-206 の Given: その変異に合う形の正しい1件と、その文面を持つソースを置く
@@ -253,7 +253,7 @@ fn req_140_timeout_is_a_notice_even_when_listed() {
     assert_eq!(output.status.code(), Some(0));
 }
 
-// @kotowari[REQ-core-139, PROP-core-005, EX-core-229]
+// @kotowari[REQ-core-139, PROP-core-005, EX-core-229, C-core-mutants-6, C-core-mutants-8]
 #[test]
 fn req_139_duplicate_mutants_yield_one_finding_each() {
     let one = mutant_at("src/a.rs", 3, "replace f with ()", "MissedMutant");
@@ -267,7 +267,7 @@ fn req_139_duplicate_mutants_yield_one_finding_each() {
 
 // --- REQ-core-145、REQ-core-146: 集計 ---
 
-// @kotowari[REQ-core-145, REQ-core-146, PROP-core-005, EX-core-209]
+// @kotowari[REQ-core-145, REQ-core-146, PROP-core-005, EX-core-209, C-core-mutants-9, C-core-mutants-10]
 #[test]
 fn req_145_no_mutants_exits_zero_with_all_zero_counts() {
     let tmp = project(&outcomes(&[BASELINE_SUCCESS.to_string()]));
@@ -279,7 +279,7 @@ fn req_145_no_mutants_exits_zero_with_all_zero_counts() {
     assert_eq!(output.status.code(), Some(0));
 }
 
-// @kotowari[REQ-core-146, EX-core-230]
+// @kotowari[REQ-core-146, EX-core-230, C-core-mutants-9]
 #[test]
 fn req_146_summary_is_the_last_line_after_findings() {
     let tmp = project(&outcomes(&[mutant_at(
@@ -303,7 +303,7 @@ fn req_146_summary_is_the_last_line_after_findings() {
 
 // --- REQ-core-147: 読む範囲 ---
 
-// @kotowari[REQ-core-147, EX-core-210]
+// @kotowari[REQ-core-147, EX-core-210, C-core-mutants-1]
 #[test]
 fn req_147_missing_ir_directory_does_not_stop_mutants() {
     let tmp = project(&outcomes(&[mutant_at(
@@ -327,7 +327,7 @@ fn req_147_missing_ir_directory_does_not_stop_mutants() {
     );
 }
 
-// @kotowari[REQ-core-147, TBL-core-025, EX-core-231]
+// @kotowari[REQ-core-147, TBL-core-025, EX-core-231, C-core-mutants-2, C-core-mutants-7]
 #[test]
 fn req_147_unmarked_test_is_not_reported_and_json_has_three_keys() {
     let tmp = project(&outcomes(&[mutant_at(
@@ -417,7 +417,7 @@ fn run_with_list(list: &str) -> serde_json::Value {
     json_of(&run_with_list_output(list))
 }
 
-// @kotowari[REQ-core-143, EX-core-215]
+// @kotowari[REQ-core-143, EX-core-215, C-core-equiv-14, C-core-equiv-15, C-core-equiv-16]
 #[test]
 fn req_143_blank_why_is_invalid_and_suppresses_nothing() {
     let v = run_with_list(&entry(&[
@@ -441,7 +441,7 @@ fn req_143_blank_why_is_invalid_and_suppresses_nothing() {
     assert!(findings_of(&v, "equivalent_stale").is_empty());
 }
 
-// @kotowari[REQ-core-143, EX-core-216]
+// @kotowari[REQ-core-143, EX-core-216, C-core-equiv-14]
 #[test]
 fn req_143_class_other_than_equivalent_is_invalid() {
     let v = run_with_list(&entry(&[
@@ -454,7 +454,7 @@ fn req_143_class_other_than_equivalent_is_invalid() {
     assert_eq!(findings_of(&v, "equivalent_invalid").len(), 1);
 }
 
-// @kotowari[REQ-core-143, EX-core-236]
+// @kotowari[REQ-core-143, EX-core-236, C-core-equiv-14]
 #[test]
 fn req_143_entry_outside_the_base_is_invalid() {
     let v = run_with_list(&entry(&[
@@ -467,7 +467,7 @@ fn req_143_entry_outside_the_base_is_invalid() {
     assert_eq!(findings_of(&v, "equivalent_invalid").len(), 1);
 }
 
-// @kotowari[REQ-core-143, EX-core-220]
+// @kotowari[REQ-core-143, EX-core-220, C-core-equiv-16]
 #[test]
 fn req_143_entry_without_file_has_an_empty_detail_prefix() {
     let v = run_with_list(&entry(&[
@@ -481,7 +481,7 @@ fn req_143_entry_without_file_has_an_empty_detail_prefix() {
     assert_eq!(invalid[0]["detail"], ": replace f with ()");
 }
 
-// @kotowari[REQ-core-143, EX-core-237]
+// @kotowari[REQ-core-143, EX-core-237, C-core-equiv-17]
 #[test]
 fn req_143_duplicate_invalid_entries_yield_one_finding_each() {
     let one = entry(&[
@@ -495,7 +495,7 @@ fn req_143_duplicate_invalid_entries_yield_one_finding_each() {
     assert_eq!(findings_of(&v, "equivalent_invalid").len(), 2);
 }
 
-// @kotowari[REQ-core-148, EX-core-217]
+// @kotowari[REQ-core-148, EX-core-217, C-core-equiv-2]
 #[test]
 fn req_148_missing_list_file_stops() {
     let tmp = project(&outcomes(&[mutant_at(
@@ -519,7 +519,7 @@ fn req_148_missing_list_file_stops() {
     );
 }
 
-// @kotowari[REQ-core-148, EX-core-238]
+// @kotowari[REQ-core-148, EX-core-238, C-core-equiv-1]
 #[test]
 fn req_148_empty_list_file_is_zero_entries() {
     let tmp = project_with_list(
@@ -535,7 +535,7 @@ fn req_148_empty_list_file_is_zero_entries() {
     );
 }
 
-// @kotowari[REQ-core-148, EX-core-239]
+// @kotowari[REQ-core-148, EX-core-239, C-core-equiv-3]
 #[test]
 fn req_148_list_that_is_not_a_sequence_stops_with_the_list_path() {
     let tmp = project_with_list(
@@ -551,7 +551,7 @@ fn req_148_list_that_is_not_a_sequence_stops_with_the_list_path() {
     );
 }
 
-// @kotowari[REQ-core-148, EX-core-221]
+// @kotowari[REQ-core-148, EX-core-221, C-core-equiv-4]
 #[test]
 fn req_148_check_ignores_a_missing_list_file() {
     let tmp = TempDir::new().unwrap();
@@ -574,7 +574,7 @@ fn req_148_check_ignores_a_missing_list_file() {
 
 // --- REQ-core-141、REQ-core-142: 一覧との一致と、文面の無くなった1件 ---
 
-// @kotowari[REQ-core-139, REQ-core-141, REQ-core-145, EX-core-211]
+// @kotowari[REQ-core-139, REQ-core-141, REQ-core-145, EX-core-211, C-core-equiv-5, C-core-mutants-8]
 #[test]
 fn req_141_listed_survivor_is_counted_as_equivalent() {
     let output = run_with_list_output(&valid_entry());
@@ -595,7 +595,7 @@ fn req_141_listed_survivor_is_counted_as_equivalent() {
     assert_eq!(output.status.code(), Some(0));
 }
 
-// @kotowari[REQ-core-141, EX-core-212]
+// @kotowari[REQ-core-141, EX-core-212, C-core-equiv-6]
 #[test]
 fn req_141_moved_line_still_matches() {
     // "    if a == b {" が7行目に動き、見逃しの行も 7
@@ -613,7 +613,7 @@ fn req_141_moved_line_still_matches() {
     );
 }
 
-// @kotowari[REQ-core-141, REQ-core-142, EX-core-213]
+// @kotowari[REQ-core-141, REQ-core-142, EX-core-213, C-core-equiv-6, C-core-equiv-11]
 #[test]
 fn req_141_rewritten_line_no_longer_matches_and_entry_goes_stale() {
     // 3行目が "    if a == c {" に変わり、"if a == b {" の行はどこにも無い
@@ -636,7 +636,7 @@ fn req_141_rewritten_line_no_longer_matches_and_entry_goes_stale() {
     assert_eq!(stale[0]["detail"], "src/a.rs: replace == with != in f");
 }
 
-// @kotowari[REQ-core-141, EX-core-214]
+// @kotowari[REQ-core-141, EX-core-214, C-core-equiv-10]
 #[test]
 fn req_141_line_beyond_the_file_does_not_match() {
     // "src/a.rs" は5行で、見逃しは9行目
@@ -653,7 +653,7 @@ fn req_141_line_beyond_the_file_does_not_match() {
     assert_eq!(output.status.code(), Some(1));
 }
 
-// @kotowari[REQ-core-141, EX-core-232]
+// @kotowari[REQ-core-141, EX-core-232, C-core-equiv-9]
 #[test]
 fn req_141_one_entry_matches_every_line_with_the_same_text() {
     // 3行目と8行目がどちらも "    if a == b {"
@@ -675,7 +675,7 @@ fn req_141_one_entry_matches_every_line_with_the_same_text() {
     assert_eq!(v["mutants"]["equivalent"], 2);
 }
 
-// @kotowari[REQ-core-141, EX-core-233]
+// @kotowari[REQ-core-141, EX-core-233, C-core-equiv-7]
 #[test]
 fn req_141_entry_for_another_file_does_not_match() {
     // "src/b.rs" にも同じ文面の行が同じ行番号であるが、"file" が違うので一致しない
@@ -698,7 +698,7 @@ fn req_141_entry_for_another_file_does_not_match() {
     assert_eq!(survived[0]["line"], 3);
 }
 
-// @kotowari[REQ-core-141, EX-core-234]
+// @kotowari[REQ-core-141, EX-core-234, C-core-equiv-8]
 #[test]
 fn req_141_path_spelling_tab_indent_and_crlf_still_match() {
     // 一覧の "file" は "./src/a.rs"、ソースの字下げはタブで行の終わりは "\r\n"
@@ -722,7 +722,7 @@ fn req_141_path_spelling_tab_indent_and_crlf_still_match() {
     );
 }
 
-// @kotowari[REQ-core-141, TBL-core-010]
+// @kotowari[REQ-core-141, TBL-core-010, C-core-equiv-8]
 #[test]
 fn req_141_lone_cr_ends_a_line_of_the_source() {
     // TBL-core-010 は単独の "\r" も行の終わりに数える。"\n" だけで分けると3行目が見つからない
@@ -741,7 +741,7 @@ fn req_141_lone_cr_ends_a_line_of_the_source() {
     assert_eq!(v["mutants"]["equivalent"], 1);
 }
 
-// @kotowari[REQ-core-111, REQ-core-141]
+// @kotowari[REQ-core-111, REQ-core-141, C-core-equiv-5, C-core-input-1]
 #[test]
 fn req_111_source_with_a_bom_still_matches_on_its_first_line() {
     // REQ-core-111: 読むファイルの先頭の BOM は読み飛ばす。REQ-core-147 はソースを mutants が読むファイルに挙げる。
@@ -774,7 +774,7 @@ fn req_111_source_with_a_bom_still_matches_on_its_first_line() {
     assert_eq!(output.status.code(), Some(0));
 }
 
-// @kotowari[REQ-core-141, REQ-core-142, EX-core-235]
+// @kotowari[REQ-core-141, REQ-core-142, EX-core-235, C-core-equiv-10, C-core-equiv-12]
 #[test]
 fn req_141_non_utf8_source_does_not_stop() {
     let tmp = project_with_list(
@@ -790,7 +790,7 @@ fn req_141_non_utf8_source_does_not_stop() {
     assert_eq!(output.status.code(), Some(1));
 }
 
-// @kotowari[REQ-core-142, EX-core-243]
+// @kotowari[REQ-core-142, EX-core-243, C-core-equiv-11]
 #[test]
 fn req_142_stale_entry_detail_keeps_the_written_path() {
     let tmp = project_with_list(
@@ -810,7 +810,7 @@ fn req_142_stale_entry_detail_keeps_the_written_path() {
     assert_eq!(stale[0]["detail"], "./src/a.rs: replace f with ()");
 }
 
-// @kotowari[REQ-core-144, REQ-core-139]
+// @kotowari[REQ-core-144, REQ-core-139, C-core-mutin-5, C-core-mutants-3]
 #[test]
 fn req_144_line_one_is_read() {
     // 1行目の変異は「行が1未満」ではないので停止しない
@@ -833,7 +833,7 @@ fn req_144_line_one_is_read() {
     assert_eq!(survived[0]["line"], 1);
 }
 
-// @kotowari[REQ-core-148]
+// @kotowari[REQ-core-148, C-core-equiv-1]
 #[test]
 fn req_148_list_of_comments_only_is_zero_entries() {
     let tmp = project_with_list(
@@ -849,7 +849,7 @@ fn req_148_list_of_comments_only_is_zero_entries() {
     );
 }
 
-// @kotowari[REQ-core-148]
+// @kotowari[REQ-core-148, C-core-equiv-1]
 #[test]
 fn req_148_blank_lines_between_comments_are_still_empty() {
     // REQ-core-148 の「空（0バイトか注釈だけ）」は空行を内容に数えない
@@ -866,7 +866,7 @@ fn req_148_blank_lines_between_comments_are_still_empty() {
     );
 }
 
-// @kotowari[REQ-core-143]
+// @kotowari[REQ-core-143, C-core-equiv-14, C-core-equiv-15]
 #[test]
 fn req_143_entry_with_a_key_outside_the_five_is_invalid() {
     // 鍵は5つだが "why" が無く、代わりに知らない鍵 "note" がある

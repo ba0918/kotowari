@@ -27,7 +27,7 @@ fn partial_parsing_retains_a_nameless_requirement_and_its_heading_diagnostic() {
     );
 }
 
-// @kotowari[REQ-core-315, REQ-core-317, EX-core-488, EX-core-489]
+// @kotowari[REQ-core-315, REQ-core-317, EX-core-488, EX-core-489, C-core-libinputs-1, C-core-libinputs-2, C-core-libinputs-3]
 #[test]
 fn required_groups_are_distinct_from_explicit_empty_groups() {
     use kotowari_core::{InputError, ReadInputs, ReadModel};
@@ -51,7 +51,7 @@ fn required_groups_are_distinct_from_explicit_empty_groups() {
     assert!(ReadModel::build(inputs).is_ok());
 }
 
-// @kotowari[REQ-core-317, EX-core-491, REQ-core-312]
+// @kotowari[REQ-core-317, EX-core-491, REQ-core-312, C-core-libinputs-11]
 #[test]
 fn read_models_list_and_query_without_check_only_inputs() {
     use kotowari_core::{ReadInputs, ReadModel};
@@ -91,7 +91,7 @@ fn reading_takes_ir_sources_under_the_configured_place_only() {
     ));
 }
 
-// @kotowari[REQ-core-315, EX-core-488, EX-core-489]
+// @kotowari[REQ-core-315, EX-core-488, EX-core-489, C-core-libinputs-1, C-core-libinputs-2]
 #[test]
 fn enabled_check_groups_must_be_provided_even_when_empty() {
     use kotowari_core::{CheckInputs, InputError, Inspection};
@@ -118,7 +118,7 @@ fn enabled_check_groups_must_be_provided_even_when_empty() {
     assert!(Inspection::build(inputs).is_ok());
 }
 
-// @kotowari[REQ-core-308, REQ-core-315, EX-core-481, EX-core-496, EX-core-497]
+// @kotowari[REQ-core-308, REQ-core-315, EX-core-481, EX-core-496, EX-core-497, C-core-libcrates-5, C-core-libinputs-4, C-core-libinputs-6]
 #[test]
 fn supplied_analysis_preserves_diagnostics_counts_and_duplicate_suppression() {
     use kotowari_core::{
@@ -166,7 +166,7 @@ fn supplied_analysis_preserves_diagnostics_counts_and_duplicate_suppression() {
     assert!(!inspection.status().complete());
 }
 
-// @kotowari[REQ-core-315, EX-core-488, EX-core-489]
+// @kotowari[REQ-core-315, EX-core-488, EX-core-489, C-core-libinputs-3]
 #[test]
 fn disabled_groups_are_ignored_including_their_inconsistent_sources() {
     use kotowari_core::{CheckInputs, Inspection, TestAnalysis};
@@ -191,7 +191,7 @@ fn disabled_groups_are_ignored_including_their_inconsistent_sources() {
     assert!(inspection.check().tests().is_empty());
 }
 
-// @kotowari[REQ-core-315, EX-core-488, EX-core-489, EX-core-497]
+// @kotowari[REQ-core-315, EX-core-488, EX-core-489, EX-core-497, C-core-libinputs-5]
 #[test]
 fn enabled_guide_and_surface_inputs_are_evaluated_without_acquisition() {
     use kotowari_core::{CheckInputs, FindingKind, Inspection, SurfaceAnalysis};
@@ -306,7 +306,7 @@ fn parsed_documents_retain_nested_paths_and_definition_and_statement_references(
     assert_eq!(references[1].finding_line, 13);
 }
 
-// @kotowari[REQ-core-308, REQ-core-315, EX-core-481, EX-core-496]
+// @kotowari[REQ-core-308, REQ-core-315, EX-core-481, EX-core-496, C-core-libcrates-5, C-core-libinputs-5]
 #[test]
 fn non_query_marker_facts_are_consumed_without_source_discovery() {
     use kotowari_core::{CheckInputs, FindingKind, Inspection, TestAnalysis};
@@ -335,7 +335,7 @@ fn non_query_marker_facts_are_consumed_without_source_discovery() {
     assert_eq!(inspection.status().tests().marks(), 1);
 }
 
-// @kotowari[REQ-core-315, EX-core-488, EX-core-489]
+// @kotowari[REQ-core-315, EX-core-488, EX-core-489, C-core-libinputs-1, C-core-libinputs-2, C-core-libinputs-13]
 #[test]
 fn each_enabled_group_is_required_independently_and_empty_is_provided() {
     use kotowari_core::{CheckInputs, InputError, Inspection};
@@ -370,7 +370,7 @@ fn each_enabled_group_is_required_independently_and_empty_is_provided() {
     }
 }
 
-// @kotowari[REQ-core-315, REQ-core-322, EX-core-488, EX-core-489, EX-core-499]
+// @kotowari[REQ-core-315, REQ-core-322, EX-core-488, EX-core-489, EX-core-499, C-core-libinputs-6, C-core-libpaths-7]
 #[test]
 fn same_text_shared_between_guides_and_tests_uses_the_overlap_rule() {
     use kotowari_core::{CheckInputs, InputError, Inspection, TestAnalysis};
@@ -396,7 +396,7 @@ fn same_text_shared_between_guides_and_tests_uses_the_overlap_rule() {
     }
 }
 
-// @kotowari[REQ-core-312, EX-core-484]
+// @kotowari[REQ-core-312, EX-core-484, C-core-libapi-5]
 #[test]
 fn invalid_typed_configuration_is_an_execution_failure_not_a_completed_inspection() {
     use kotowari_core::{CheckInputs, InputError, Inspection};
@@ -460,7 +460,7 @@ fn group(name: &str, files: usize, marks: usize) -> kotowari_core::FindingGroup 
     )
 }
 
-// @kotowari[REQ-core-315, TBL-core-042, REQ-core-290]
+// @kotowari[REQ-core-315, TBL-core-042, REQ-core-290, C-core-libinputs-7]
 #[test]
 fn an_additional_group_is_sorted_counted_and_reported_with_its_numbers() {
     use kotowari_core::Inspection;
@@ -500,7 +500,7 @@ fn an_additional_group_is_sorted_counted_and_reported_with_its_numbers() {
     assert_eq!((tally.files(), tally.marks()), (2, 5));
 }
 
-// @kotowari[REQ-core-315, TBL-core-042]
+// @kotowari[REQ-core-315, TBL-core-042, C-core-libinputs-8]
 #[test]
 fn an_additional_group_is_optional_and_only_added_when_given() {
     use kotowari_core::Inspection;
@@ -511,7 +511,7 @@ fn an_additional_group_is_optional_and_only_added_when_given() {
     assert!(inspection.status().complete());
 }
 
-// @kotowari[REQ-core-315, TBL-core-042]
+// @kotowari[REQ-core-315, TBL-core-042, C-core-libinputs-7]
 #[test]
 fn two_additional_groups_with_one_name_are_invalid_input() {
     use kotowari_core::{InputError, Inspection};
@@ -523,7 +523,7 @@ fn two_additional_groups_with_one_name_are_invalid_input() {
     ));
 }
 
-// @kotowari[REQ-core-286]
+// @kotowari[REQ-core-286, C-core-ovdata-14]
 #[test]
 fn guide_marks_of_one_text_are_read_with_lines_and_staleness_without_the_overlap_stop() {
     use kotowari_core::{FindingKind, ReadInputs, ReadModel};

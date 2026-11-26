@@ -157,7 +157,7 @@ fn tbl_027_an_item_citing_an_id_twice_is_one_reference() {
     );
 }
 
-// @kotowari[REQ-core-156, REQ-core-159, TBL-core-027, EX-core-250]
+// @kotowari[REQ-core-156, REQ-core-159, TBL-core-027, EX-core-250, C-core-query-1]
 #[test]
 fn req_156_item_has_body_and_referenced_by() {
     let tmp = TempDir::new().unwrap();
@@ -213,7 +213,7 @@ fn req_156_item_has_body_and_referenced_by() {
     );
 }
 
-// @kotowari[REQ-core-156, EX-core-253]
+// @kotowari[REQ-core-156, EX-core-253, C-core-query-3]
 #[test]
 fn req_156_duplicate_ids_are_all_listed() {
     let tmp = TempDir::new().unwrap();
@@ -238,7 +238,7 @@ fn req_156_duplicate_ids_are_all_listed() {
     assert_eq!(paths, vec!["docs/ir/a.md", "docs/ir/b.md"]);
 }
 
-// @kotowari[REQ-core-156]
+// @kotowari[REQ-core-156, C-core-query-4]
 #[test]
 fn req_156_items_are_listed_despite_ir_errors_and_exit_zero() {
     let tmp = TempDir::new().unwrap();
@@ -266,7 +266,7 @@ fn req_156_items_are_listed_despite_ir_errors_and_exit_zero() {
 
 // --- REQ-core-157: 無い ID ---
 
-// @kotowari[REQ-core-157, TBL-core-020, EX-core-251]
+// @kotowari[REQ-core-157, TBL-core-020, EX-core-251, C-core-clienv-7, C-core-query-7]
 #[test]
 fn req_157_unknown_id_stops() {
     let tmp = TempDir::new().unwrap();
@@ -406,7 +406,7 @@ fn req_160_referenced_by_is_ordered_by_path_then_line() {
 
 // --- REQ-core-161: 出力の形 ---
 
-// @kotowari[REQ-core-161]
+// @kotowari[REQ-core-161, C-core-query-11]
 #[test]
 fn req_161_json_top_level_has_only_items() {
     let tmp = TempDir::new().unwrap();
@@ -417,7 +417,7 @@ fn req_161_json_top_level_has_only_items() {
     assert_eq!(names, vec!["items"]);
 }
 
-// @kotowari[REQ-core-161, REQ-core-155, EX-core-254]
+// @kotowari[REQ-core-161, REQ-core-155, EX-core-254, C-core-list-9, C-core-query-12]
 #[test]
 fn req_161_text_prints_body_and_referenced_by_lines() {
     let tmp = TempDir::new().unwrap();

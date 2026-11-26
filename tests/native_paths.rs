@@ -51,7 +51,7 @@ fn native_check(project: &std::path::Path) -> std::process::Output {
         .unwrap()
 }
 
-// @kotowari[REQ-core-313, REQ-core-018, REQ-core-198, REQ-core-224, EX-core-485]
+// @kotowari[REQ-core-313, REQ-core-018, REQ-core-198, REQ-core-224, EX-core-485, C-core-clienv-5, C-core-guides-6, C-core-libapi-11, C-core-surface-8]
 #[test]
 fn byte_named_files_without_legacy_read_aliases_keep_the_unreadable_stop() {
     for (group, extension) in [("tests", "rs"), ("guides", "md"), ("surface", "rs")] {
@@ -78,7 +78,7 @@ fn byte_named_files_without_legacy_read_aliases_keep_the_unreadable_stop() {
     }
 }
 
-// @kotowari[REQ-core-313, REQ-core-198, REQ-core-206, REQ-core-224, EX-core-485]
+// @kotowari[REQ-core-313, REQ-core-198, REQ-core-206, REQ-core-224, EX-core-485, C-core-libapi-11, C-core-output-5]
 #[test]
 fn distinct_byte_named_entries_keep_the_legacy_alias_text_and_multiplicity() {
     for (group, extension, original, replacement) in [
@@ -150,7 +150,7 @@ fn distinct_byte_named_entries_keep_the_legacy_alias_text_and_multiplicity() {
     }
 }
 
-// @kotowari[REQ-core-313, REQ-core-092, EX-core-485]
+// @kotowari[REQ-core-313, REQ-core-092, EX-core-485, C-core-libapi-11]
 #[test]
 fn ir_and_decision_source_walkers_still_read_original_byte_named_paths() {
     let project = byte_filename_project("tests");
@@ -185,7 +185,7 @@ fn ir_and_decision_source_walkers_still_read_original_byte_named_paths() {
     assert_eq!(value["files"], 1);
 }
 
-// @kotowari[REQ-core-313, EX-core-485]
+// @kotowari[REQ-core-313, EX-core-485, C-core-libapi-11]
 #[test]
 fn distinct_native_files_with_equal_display_paths_keep_both_counts_and_findings() {
     let project = tempfile::tempdir().unwrap();
@@ -243,7 +243,7 @@ fn distinct_native_files_with_equal_display_paths_keep_both_counts_and_findings(
     );
 }
 
-// @kotowari[REQ-core-313, EX-core-485]
+// @kotowari[REQ-core-313, EX-core-485, C-core-libapi-11]
 #[test]
 fn acquired_diagnostic_paths_do_not_collapse_filename_components() {
     let project = tempfile::tempdir().unwrap();
@@ -300,7 +300,7 @@ fn acquired_diagnostic_paths_do_not_collapse_filename_components() {
     }
 }
 
-// @kotowari[REQ-core-313, EX-core-485]
+// @kotowari[REQ-core-313, EX-core-485, C-core-libapi-11]
 #[test]
 fn configured_test_rules_match_the_original_acquired_path() {
     let project = tempfile::tempdir().unwrap();

@@ -128,7 +128,7 @@ fn line_of(text: &str, needle: &str) -> usize {
     text.lines().position(|line| line == needle).unwrap() + 1
 }
 
-// @kotowari[REQ-core-281, TBL-core-038, REQ-core-278]
+// @kotowari[REQ-core-281, TBL-core-038, REQ-core-278, C-core-ovdata-1]
 #[test]
 fn valid_overview_data_has_no_findings_and_counts_its_files() {
     let model = model();
@@ -138,7 +138,7 @@ fn valid_overview_data_has_no_findings_and_counts_its_files() {
     assert_eq!((overview.files(), overview.marks()), (1, 0));
 }
 
-// @kotowari[EX-core-466, REQ-core-282, REQ-core-027, TBL-core-019]
+// @kotowari[EX-core-466, REQ-core-282, REQ-core-027, TBL-core-019, C-core-ovdata-8, C-core-ovdata-9]
 #[test]
 fn ex_core_466_an_unknown_part_and_a_part_with_an_unknown_key_are_errors() {
     let model = model();
@@ -166,7 +166,7 @@ fn ex_core_466_an_unknown_part_and_a_part_with_an_unknown_key_are_errors() {
     );
 }
 
-// @kotowari[REQ-core-282, REQ-core-027]
+// @kotowari[REQ-core-282, REQ-core-027, C-core-ovdata-9]
 #[test]
 fn req_core_282_places_name_missing_keys_the_whole_value_and_unreadable_yaml_once_each() {
     let model = model();
@@ -190,7 +190,7 @@ fn req_core_282_places_name_missing_keys_the_whole_value_and_unreadable_yaml_onc
     );
 }
 
-// @kotowari[REQ-core-282]
+// @kotowari[REQ-core-282, C-core-ovdata-9]
 #[test]
 fn req_core_282_each_unknown_key_and_each_value_that_does_not_fit_has_its_own_place() {
     let model = model();
@@ -209,7 +209,7 @@ fn req_core_282_each_unknown_key_and_each_value_that_does_not_fit_has_its_own_pl
     );
 }
 
-// @kotowari[EX-core-467, REQ-core-283, REQ-core-027]
+// @kotowari[EX-core-467, REQ-core-283, REQ-core-027, C-core-forder-4, C-core-ovdata-11]
 #[test]
 fn ex_core_467_a_first_part_that_is_not_lead_is_an_error_without_a_line() {
     let model = model();
@@ -227,7 +227,7 @@ fn ex_core_467_a_first_part_that_is_not_lead_is_an_error_without_a_line() {
     );
 }
 
-// @kotowari[REQ-core-283]
+// @kotowari[REQ-core-283, C-core-ovdata-11]
 #[test]
 fn req_core_283_comments_and_blank_lines_before_the_lead_are_skipped() {
     let model = model();
@@ -244,7 +244,7 @@ fn req_core_283_comments_and_blank_lines_before_the_lead_are_skipped() {
     );
 }
 
-// @kotowari[EX-core-468, REQ-core-284, REQ-core-027]
+// @kotowari[EX-core-468, REQ-core-284, REQ-core-027, C-core-forder-4]
 #[test]
 fn ex_core_468_a_missing_ir_document_and_one_shared_by_two_overviews_are_errors() {
     let model = model();
@@ -311,7 +311,7 @@ fn req_core_284_only_topic_documents_count_as_ir_documents() {
     );
 }
 
-// @kotowari[EX-core-469, REQ-core-285, REQ-core-027]
+// @kotowari[EX-core-469, REQ-core-285, REQ-core-027, C-core-ovdata-13]
 #[test]
 fn ex_core_469_unresolved_references_are_errors_one_per_reference() {
     let model = model();
@@ -346,7 +346,7 @@ fn ex_core_469_unresolved_references_are_errors_one_per_reference() {
     );
 }
 
-// @kotowari[REQ-core-285]
+// @kotowari[REQ-core-285, C-core-ovdata-13]
 #[test]
 fn req_core_285_ref_fields_at_any_depth_are_references_and_invalid_parts_are_not_read() {
     let model = model();
@@ -361,7 +361,7 @@ fn req_core_285_ref_fields_at_any_depth_are_references_and_invalid_parts_are_not
     assert_eq!(details, ["nope-1", "nope-2"]);
 }
 
-// @kotowari[EX-core-470, REQ-core-286]
+// @kotowari[EX-core-470, REQ-core-286, C-core-ovdata-14]
 #[test]
 fn ex_core_470_a_stale_guide_mark_in_overview_data_is_a_guide_stale_notice() {
     let model = model();
@@ -379,7 +379,7 @@ fn ex_core_470_a_stale_guide_mark_in_overview_data_is_a_guide_stale_notice() {
     assert_eq!(overview.marks(), 2);
 }
 
-// @kotowari[REQ-core-286]
+// @kotowari[REQ-core-286, C-core-ovdata-15]
 #[test]
 fn req_core_286_a_malformed_guide_mark_in_overview_data_is_an_invalid_marker() {
     let model = model();
@@ -390,7 +390,7 @@ fn req_core_286_a_malformed_guide_mark_in_overview_data_is_an_invalid_marker() {
     assert_eq!(invalid[0].0, A);
 }
 
-// @kotowari[EX-core-471, REQ-core-281, TBL-core-038]
+// @kotowari[EX-core-471, REQ-core-281, TBL-core-038, C-core-ovdata-5]
 #[test]
 fn ex_core_471_an_unknown_frontmatter_key_is_a_form_error() {
     let model = model();
@@ -407,7 +407,7 @@ fn ex_core_471_an_unknown_frontmatter_key_is_a_form_error() {
     );
 }
 
-// @kotowari[REQ-core-281, TBL-core-038, REQ-core-027]
+// @kotowari[REQ-core-281, TBL-core-038, REQ-core-027, C-core-forder-4, C-core-ovdata-5]
 #[test]
 fn tbl_core_038_frontmatter_must_hold_only_a_nonempty_ir_list_of_strings() {
     let model = model();
@@ -432,7 +432,7 @@ fn tbl_core_038_frontmatter_must_hold_only_a_nonempty_ir_list_of_strings() {
     }
 }
 
-// @kotowari[REQ-core-281, TBL-core-038, REQ-core-027]
+// @kotowari[REQ-core-281, TBL-core-038, REQ-core-027, C-core-ovdata-6]
 #[test]
 fn tbl_core_038_the_title_is_exactly_one_heading_of_depth_one() {
     let model = model();
@@ -445,7 +445,7 @@ fn tbl_core_038_the_title_is_exactly_one_heading_of_depth_one() {
     assert_eq!(forms[0].3, "multiple_titles");
 }
 
-// @kotowari[REQ-core-281, TBL-core-038]
+// @kotowari[REQ-core-281, TBL-core-038, C-core-ovdata-6]
 #[test]
 fn tbl_core_038_before_the_first_section_only_parts_and_comments_are_allowed() {
     let model = model();
@@ -466,7 +466,7 @@ fn tbl_core_038_before_the_first_section_only_parts_and_comments_are_allowed() {
     assert_eq!(found(&run(&model, &[(A, &more_parts)])), []);
 }
 
-// @kotowari[REQ-core-281, TBL-core-038]
+// @kotowari[REQ-core-281, TBL-core-038, C-core-ovdata-6]
 #[test]
 fn tbl_core_038_a_section_takes_text_lists_tables_code_comments_and_subheadings() {
     let model = model();
@@ -481,7 +481,7 @@ fn tbl_core_038_a_section_takes_text_lists_tables_code_comments_and_subheadings(
     assert_eq!(forms[0].1, Some(line_of(&deep, "#### 深い")));
 }
 
-// @kotowari[REQ-core-281, TBL-core-038, REQ-core-282]
+// @kotowari[REQ-core-281, TBL-core-038, REQ-core-282, C-core-ovdata-7, C-core-ovdata-8]
 #[test]
 fn tbl_core_038_a_part_is_a_fence_whose_info_string_is_view_and_a_kind() {
     let model = model();
@@ -494,7 +494,7 @@ fn tbl_core_038_a_part_is_a_fence_whose_info_string_is_view_and_a_kind() {
     assert_eq!(unknown[0].3, "chart");
 }
 
-// @kotowari[REQ-core-305, REQ-core-027]
+// @kotowari[REQ-core-305, REQ-core-027, C-core-forder-4, C-core-ovcmd-24]
 #[test]
 fn req_core_305_duplicated_names_and_index_and_style_are_errors() {
     let model = model();
@@ -716,7 +716,7 @@ fn req_core_291_one_entry_per_distinct_reference_across_all_overviews() {
     assert_eq!(keys, ["REQ-core-001", "REQ-core-010"]);
 }
 
-// @kotowari[REQ-core-292]
+// @kotowari[REQ-core-292, C-core-ovcmd-15]
 #[test]
 fn req_core_292_a_section_is_stale_only_when_a_mark_in_it_is_stale() {
     let model = model();
@@ -737,7 +737,7 @@ fn req_core_292_a_section_is_stale_only_when_a_mark_in_it_is_stale() {
     );
 }
 
-// @kotowari[REQ-core-292]
+// @kotowari[REQ-core-292, C-core-ovcmd-15]
 #[test]
 fn req_core_292_only_html_comments_are_removed_from_heading_text() {
     // 型引数のような山括弧は行の中の HTML として読まれるが、消すのはコメントだけ
@@ -815,7 +815,7 @@ fn parts_after_the_lead_and_before_the_first_section_reach_the_page_in_order() {
     assert!(at("冒頭の二つ目") < heading);
 }
 
-// @kotowari[REQ-core-294]
+// @kotowari[REQ-core-294, C-core-ovcmd-8]
 #[test]
 fn data_with_errors_gives_no_pages_and_the_error_count() {
     let model = model();
@@ -825,7 +825,7 @@ fn data_with_errors_gives_no_pages_and_the_error_count() {
     assert_eq!(overview.errors(), 1);
 }
 
-// @kotowari[REQ-core-290, TBL-core-042]
+// @kotowari[REQ-core-290, TBL-core-042, C-core-ovout-1]
 #[test]
 fn the_findings_and_numbers_become_the_overview_group() {
     let model = model();
@@ -849,7 +849,7 @@ fn the_findings_and_numbers_become_the_overview_group() {
     );
 }
 
-// @kotowari[REQ-core-283, REQ-core-281]
+// @kotowari[REQ-core-283, REQ-core-281, C-core-ovdata-11]
 #[test]
 fn req_core_283_a_second_title_before_the_lead_is_the_first_block_after_the_title() {
     let model = model();
@@ -868,7 +868,7 @@ fn req_core_284_one_file_listing_a_document_twice_does_not_share_it() {
     assert_eq!(of_kind(&overview, "overview_ir_shared"), []);
 }
 
-// @kotowari[REQ-core-288, TBL-core-042]
+// @kotowari[REQ-core-288, TBL-core-042, C-core-ovout-1]
 #[test]
 fn req_core_288_the_number_of_files_counts_every_overview_data_file() {
     let model = model();
@@ -921,7 +921,7 @@ fn pairs(expected: &[(&str, &str)]) -> Vec<(String, String)> {
         .collect()
 }
 
-// @kotowari[EX-core-507, REQ-core-327, REQ-core-331, TBL-core-043, REQ-core-027]
+// @kotowari[EX-core-507, REQ-core-327, REQ-core-331, TBL-core-043, REQ-core-027, C-core-forder-4, C-core-ovtoc-7, C-core-ovtoc-12]
 #[test]
 fn ex_core_507_an_unknown_key_in_a_group_is_a_form_error_and_stops_the_comparison() {
     let overview = run_named(
@@ -934,7 +934,7 @@ fn ex_core_507_an_unknown_key_in_a_group_is_a_form_error_and_stops_the_compariso
     );
 }
 
-// @kotowari[REQ-core-327, TBL-core-043, REQ-core-027]
+// @kotowari[REQ-core-327, TBL-core-043, REQ-core-027, C-core-forder-4, C-core-ovtoc-7]
 #[test]
 fn tbl_core_043_each_form_violation_names_its_place() {
     for (toc, places) in [
@@ -973,7 +973,7 @@ fn tbl_core_043_each_form_violation_names_its_place() {
     }
 }
 
-// @kotowari[REQ-core-327, TBL-core-043]
+// @kotowari[REQ-core-327, TBL-core-043, C-core-ovtoc-8]
 #[test]
 fn tbl_core_043_a_well_formed_toc_with_a_note_and_nested_groups_has_no_finding() {
     let overview = run_named(
@@ -983,7 +983,7 @@ fn tbl_core_043_a_well_formed_toc_with_a_note_and_nested_groups_has_no_finding()
     assert_eq!(toc_findings(&overview), pairs(&[]));
 }
 
-// @kotowari[EX-core-508, REQ-core-328, REQ-core-329, REQ-core-027]
+// @kotowari[EX-core-508, REQ-core-328, REQ-core-329, REQ-core-027, C-core-forder-4, C-core-ovtoc-9]
 #[test]
 fn ex_core_508_missing_unknown_and_repeated_names_are_errors() {
     let overview = run_named(&["a", "b", "c"], "title: 目次\nitems: [a, z, a]\n");
@@ -1000,7 +1000,7 @@ fn ex_core_508_missing_unknown_and_repeated_names_are_errors() {
     );
 }
 
-// @kotowari[REQ-core-329]
+// @kotowari[REQ-core-329, C-core-ovtoc-9]
 #[test]
 fn req_core_329_an_unknown_name_repeated_is_only_unknown_each_time() {
     let overview = run_named(
@@ -1018,7 +1018,7 @@ fn req_core_329_an_unknown_name_repeated_is_only_unknown_each_time() {
     );
 }
 
-// @kotowari[REQ-core-329]
+// @kotowari[REQ-core-329, C-core-ovtoc-9]
 #[test]
 fn req_core_329_the_second_place_is_found_depth_first_in_written_order() {
     let overview = run_named(
@@ -1031,7 +1031,7 @@ fn req_core_329_the_second_place_is_found_depth_first_in_written_order() {
     );
 }
 
-// @kotowari[EX-core-509, REQ-core-330, REQ-core-027]
+// @kotowari[EX-core-509, REQ-core-330, REQ-core-027, C-core-forder-4, C-core-ovtoc-10]
 #[test]
 fn ex_core_509_a_group_without_items_is_an_error() {
     let overview = run_named(&["a"], "title: 目次\nitems: [a, {title: 空, items: []}]\n");
@@ -1041,7 +1041,7 @@ fn ex_core_509_a_group_without_items_is_an_error() {
     );
 }
 
-// @kotowari[REQ-core-330, REQ-core-328]
+// @kotowari[REQ-core-330, REQ-core-328, C-core-ovtoc-10]
 #[test]
 fn req_core_330_an_empty_outermost_group_is_reported_at_the_root() {
     let overview = run_named(&["a"], "title: 目次\nitems: []\n");
@@ -1056,7 +1056,7 @@ fn req_core_330_an_empty_outermost_group_is_reported_at_the_root() {
     );
 }
 
-// @kotowari[REQ-core-332]
+// @kotowari[REQ-core-332, C-core-ovtoc-13]
 #[test]
 fn req_core_332_the_render_input_carries_the_toc_as_written() {
     use kotowari_markdown_view::{TocGroup, TocItem};
@@ -1082,7 +1082,7 @@ fn req_core_332_the_render_input_carries_the_toc_as_written() {
     );
 }
 
-// @kotowari[REQ-core-294, REQ-core-328]
+// @kotowari[REQ-core-294, REQ-core-328, C-core-ovtoc-11]
 #[test]
 fn req_core_294_toc_errors_count_as_errors_and_block_the_pages() {
     let overview = run_named(&["a"], "title: 目次\nitems: [z]\n");

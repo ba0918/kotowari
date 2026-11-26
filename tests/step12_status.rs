@@ -93,7 +93,7 @@ fn write_ex_258_project(tmp: &Path) {
 
 // --- REQ-core-162、REQ-core-165: 集計と complete ---
 
-// @kotowari[REQ-core-162, REQ-core-165, TBL-core-028, EX-core-258]
+// @kotowari[REQ-core-162, REQ-core-165, TBL-core-028, EX-core-258, C-core-status-5, C-core-status-6, C-core-status-9]
 #[test]
 fn req_162_complete_project_counts_and_exit_zero() {
     let tmp = TempDir::new().unwrap();
@@ -307,7 +307,7 @@ fn tbl_028_requirements_are_counted_by_verification_value() {
     assert_eq!(v["requirements"]["without_tests"], 3, "{v}");
 }
 
-// @kotowari[TBL-core-028, REQ-core-165]
+// @kotowari[TBL-core-028, REQ-core-165, C-core-status-5, C-core-status-9]
 #[test]
 fn tbl_028_notices_are_counted_apart_from_errors() {
     let tmp = TempDir::new().unwrap();
@@ -338,7 +338,7 @@ fn tbl_028_notices_are_counted_apart_from_errors() {
     assert_eq!(code, Some(0), "{v}");
 }
 
-// @kotowari[TBL-core-028, TBL-core-021]
+// @kotowari[TBL-core-028, TBL-core-021, C-core-status-6]
 #[test]
 fn tbl_028_documents_and_test_files_match_check() {
     let tmp = TempDir::new().unwrap();
@@ -353,7 +353,7 @@ fn tbl_028_documents_and_test_files_match_check() {
 
 // --- REQ-core-166: 出力の形 ---
 
-// @kotowari[REQ-core-164, REQ-core-166, TBL-core-028]
+// @kotowari[REQ-core-164, REQ-core-166, TBL-core-028, C-core-status-12]
 #[test]
 fn req_166_json_top_level_has_only_the_groups() {
     let tmp = TempDir::new().unwrap();
@@ -399,7 +399,7 @@ fn req_166_json_top_level_has_only_the_groups() {
     assert!(order.windows(2).all(|w| w[0] < w[1]), "{stdout}");
 }
 
-// @kotowari[REQ-core-162]
+// @kotowari[REQ-core-162, C-core-status-1]
 #[test]
 fn req_162_status_writes_no_finding() {
     let tmp = TempDir::new().unwrap();
@@ -433,7 +433,7 @@ fn req_162_status_writes_no_finding() {
     }
 }
 
-// @kotowari[REQ-core-166, TBL-core-028, EX-core-261]
+// @kotowari[REQ-core-166, TBL-core-028, EX-core-261, C-core-status-6, C-core-status-11]
 #[test]
 fn req_166_text_prints_one_line_per_group() {
     let tmp = TempDir::new().unwrap();

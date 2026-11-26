@@ -10,7 +10,7 @@ fn inspect(base: &Path) -> Result<Inspection, StopReason> {
 fn find_by_kind<'a>(findings: &'a [Finding], kind: &str) -> Vec<&'a Finding> {
     findings.iter().filter(|f| f.kind() == kind).collect()
 }
-// @kotowari[REQ-core-033, REQ-core-037, TBL-core-005]
+// @kotowari[REQ-core-033, REQ-core-037, TBL-core-005, C-core-document-1]
 #[test]
 fn req_033_subdirectories_are_read_at_any_depth() {
     let tmp = tempfile::tempdir().unwrap();
@@ -44,7 +44,7 @@ fn ex_core_282_finding_after_bare_cr_has_the_split_line_number() {
     assert_eq!(uh[0].line(), Some(4), "{findings:?}");
 }
 
-// @kotowari[REQ-core-033]
+// @kotowari[REQ-core-033, C-core-document-2, C-core-document-3, C-core-document-4, C-core-document-13]
 #[test]
 #[cfg(unix)]
 fn req_033_hidden_dir_and_dir_symlink_are_not_followed_at_any_depth() {
@@ -68,7 +68,7 @@ fn req_033_hidden_dir_and_dir_symlink_are_not_followed_at_any_depth() {
     assert!(findings.is_empty(), "{findings:?}");
 }
 
-// @kotowari[REQ-core-033, REQ-core-018, TBL-core-020]
+// @kotowari[REQ-core-033, REQ-core-018, TBL-core-020, C-core-clienv-5, C-core-clienv-12, C-core-document-4]
 #[test]
 #[cfg(unix)]
 fn req_033_broken_symlink_in_a_subdirectory_stops() {
@@ -130,7 +130,7 @@ fn tbl_008_whole_document_detail_is_the_bare_filename_in_a_subdirectory() {
     }
 }
 
-// @kotowari[REQ-core-032]
+// @kotowari[REQ-core-032, C-core-findings-9]
 #[test]
 fn req_032_first_occurrence_is_bytewise_first_relative_path() {
     let tmp = tempfile::tempdir().unwrap();

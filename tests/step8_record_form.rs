@@ -613,7 +613,7 @@ fn req_132_parent_directory_href_to_superseded_number_passes() {
     );
 }
 
-// @kotowari[REQ-core-132, REQ-core-110, EX-core-289]
+// @kotowari[REQ-core-132, REQ-core-110, EX-core-289, C-core-base-8]
 #[test]
 fn req_132_a_parent_step_in_the_records_place_is_folded() {
     // 置き場の設定に "a/.." があっても、置き場の中の記録を指すリンクは通る

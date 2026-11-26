@@ -719,7 +719,7 @@ mod tests {
 
     // --- REQ-core-175: 写せない値は停止する ---
 
-    // @kotowari[REQ-core-175, EX-core-268]
+    // @kotowari[REQ-core-175, EX-core-268, C-core-clienv-7, C-core-clienv-13]
     #[test]
     fn a_value_that_cannot_be_mapped_stops_with_the_mapping_error_wording() {
         // 生の行を要る写しに生の行が無い

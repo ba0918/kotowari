@@ -1,4 +1,4 @@
-// @kotowari[REQ-core-071, TBL-core-015]
+// @kotowari[REQ-core-071, TBL-core-015, C-core-markers-1]
 #[test]
 fn req_071_marker_syntax_allows_spaces_around_commas() {
     let markers =
@@ -7,7 +7,7 @@ fn req_071_marker_syntax_allows_spaces_around_commas() {
     assert_eq!(markers[0].ids, vec!["REQ-001", "TBL-002"]);
 }
 
-// @kotowari[REQ-core-073]
+// @kotowari[REQ-core-073, C-core-markers-2]
 #[test]
 fn req_073_several_markers_on_one_line() {
     let markers = kotowari_core::tests_discovery::parse_markers_in_line(
@@ -17,7 +17,7 @@ fn req_073_several_markers_on_one_line() {
     assert_eq!(markers.len(), 2);
 }
 
-// @kotowari[REQ-core-074]
+// @kotowari[REQ-core-074, C-core-markers-3]
 #[test]
 fn req_074_marker_anywhere_in_the_line_regardless_of_comment_syntax() {
     let markers =
@@ -26,7 +26,7 @@ fn req_074_marker_anywhere_in_the_line_regardless_of_comment_syntax() {
     assert_eq!(markers[0].ids, vec!["REQ-001"]);
 }
 
-// @kotowari[REQ-core-071, TBL-core-015]
+// @kotowari[REQ-core-071, TBL-core-015, C-core-markers-1]
 #[test]
 fn req_071_marker_line_number_is_reported() {
     let markers =

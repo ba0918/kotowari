@@ -4,7 +4,7 @@
 )]
 // --- Step 3: 文書の読み込み ---
 
-// @kotowari[REQ-core-033]
+// @kotowari[REQ-core-033, C-core-document-2]
 #[test]
 fn req_033_uppercase_md_is_not_read() {
     use tempfile::TempDir;
@@ -31,7 +31,7 @@ fn req_033_uppercase_md_is_not_read() {
     assert_eq!(v["files"], 0, ".MD file should not be read");
 }
 
-// @kotowari[REQ-core-033]
+// @kotowari[REQ-core-033, C-core-document-4]
 #[test]
 fn req_033_file_symlink_is_read() {
     use tempfile::TempDir;
@@ -62,7 +62,7 @@ fn req_033_file_symlink_is_read() {
 
 // --- Step 4b: gherkin の行の形と ID の定義 ---
 
-// @kotowari[REQ-core-033]
+// @kotowari[REQ-core-033, C-core-document-4]
 #[test]
 #[cfg(unix)]
 fn req_033_broken_symlink_in_ir_dir_stops() {
@@ -246,7 +246,7 @@ fn req_033_context_and_flags_under_a_subdirectory_have_no_missing_scope() {
     );
 }
 
-// @kotowari[REQ-core-033, EX-core-020]
+// @kotowari[REQ-core-033, EX-core-020, C-core-document-1]
 #[test]
 fn req_033_a_document_deep_in_the_tree_is_read_and_an_empty_directory_is_silent() {
     use tempfile::TempDir;
@@ -274,7 +274,7 @@ fn req_033_a_document_deep_in_the_tree_is_read_and_an_empty_directory_is_silent(
     );
 }
 
-// @kotowari[REQ-core-033, EX-core-030]
+// @kotowari[REQ-core-033, EX-core-030, C-core-document-3]
 #[test]
 #[cfg(unix)]
 fn req_033_hidden_directory_and_directory_symlink_deep_in_the_tree_are_not_read() {
@@ -359,7 +359,7 @@ fn req_054_scenario_about_an_unknown_requirement_is_unresolved() {
 
 // --- findings.md と ir-items.md の具体例 ---
 
-// @kotowari[REQ-core-032, EX-core-005]
+// @kotowari[REQ-core-032, EX-core-005, C-core-findings-8]
 #[test]
 fn req_032_three_places_yield_two_duplicates_and_none_on_the_first() {
     use tempfile::TempDir;
@@ -552,7 +552,7 @@ fn ex_core_276_flag_entries_without_a_section_are_read() {
     assert_eq!(status["items"]["flag"], 3, "{status}");
 }
 
-// @kotowari[EX-core-278]
+// @kotowari[EX-core-278, C-core-forder-4, C-core-document-5]
 #[test]
 fn ex_core_278_three_titles_give_one_multiple_titles_per_extra_title() {
     use tempfile::TempDir;

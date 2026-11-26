@@ -44,7 +44,7 @@ fn findings_by_kind(v: &serde_json::Value, kind: &str) -> Vec<serde_json::Value>
 
 // --- REQ-core-025: 文字の出力に使う種類の語 ---
 
-// @kotowari[REQ-core-025]
+// @kotowari[REQ-core-025, C-core-output-8]
 #[test]
 fn req_025_finding_kind_displays_as_its_own_kind_word() {
     // --format text の出力は "{kind}" を通して種類の語を書く（CLI の text の出力）。
@@ -62,7 +62,7 @@ fn req_025_finding_kind_displays_as_its_own_kind_word() {
 
 // --- REQ-core-024: FindingKind と str の等価 ---
 
-// @kotowari[REQ-core-024]
+// @kotowari[REQ-core-024, C-core-forder-1]
 #[test]
 fn req_024_a_finding_kind_equals_only_its_own_name() {
     // `==` に書いた文字列リテラルは `PartialEq<&str>` を通る（既存のテストで検査済み）。
@@ -116,7 +116,7 @@ fn req_030_notice_kinds_have_the_detail_of_the_table() {
 
 // --- REQ-core-031: 注意は8種類だけ ---
 
-// @kotowari[REQ-core-031]
+// @kotowari[REQ-core-031, C-core-findings-1]
 #[test]
 fn req_031_only_eight_kinds_are_notices() {
     // 本体が注意にする種類（"kotowari mutants" の2種類は check の出力には現れない）
@@ -146,7 +146,7 @@ fn req_031_only_eight_kinds_are_notices() {
     }
 }
 
-// @kotowari[REQ-core-031]
+// @kotowari[REQ-core-031, C-core-findings-1]
 #[test]
 fn req_031_check_reports_notices_only_for_the_notice_kinds() {
     let tmp = TempDir::new().unwrap();
@@ -202,7 +202,7 @@ fn req_031_check_reports_notices_only_for_the_notice_kinds() {
 
 // --- REQ-core-027: 文書全体への指摘は null ---
 
-// @kotowari[REQ-core-027]
+// @kotowari[REQ-core-027, C-core-forder-4]
 #[test]
 fn req_027_document_wide_findings_have_null_line() {
     let tmp = TempDir::new().unwrap();
@@ -219,7 +219,7 @@ fn req_027_document_wide_findings_have_null_line() {
 
 // --- REQ-core-028: 行は1始まり ---
 
-// @kotowari[REQ-core-028]
+// @kotowari[REQ-core-028, C-core-forder-3]
 #[test]
 fn req_028_lines_start_at_one() {
     let tmp = TempDir::new().unwrap();
@@ -247,7 +247,7 @@ fn req_028_lines_start_at_one() {
 
 // --- REQ-core-024: 指摘の並び ---
 
-// @kotowari[REQ-core-024, TBL-core-007]
+// @kotowari[REQ-core-024, TBL-core-007, C-core-forder-1]
 #[test]
 fn req_024_sorted_by_path_line_kind_detail() {
     let tmp = TempDir::new().unwrap();
@@ -298,7 +298,7 @@ fn req_024_sorted_by_path_line_kind_detail() {
 
 // --- PROP-core-003: findings は並んでいる ---
 
-// @kotowari[PROP-core-003]
+// @kotowari[PROP-core-003, C-core-forder-2]
 #[test]
 fn prop_003_findings_are_sorted() {
     // run_check を通して、ライブラリが返す findings が
@@ -472,7 +472,7 @@ fn tbl_019_unclosed_backtick_line() {
     );
 }
 
-// @kotowari[TBL-core-019]
+// @kotowari[TBL-core-019, C-core-markers-7]
 #[test]
 fn tbl_019_marker_findings_line_is_the_marker_line() {
     let tmp = TempDir::new().unwrap();
@@ -698,7 +698,7 @@ fn ex_core_266_the_three_places_outside_the_declaration_each_become_an_error() {
     }
 }
 
-// @kotowari[REQ-core-176, EX-core-269]
+// @kotowari[REQ-core-176, EX-core-269, C-core-clienv-6]
 #[test]
 fn ex_core_269_a_document_with_a_form_finding_still_takes_the_cross_document_checks() {
     let tmp = TempDir::new().unwrap();

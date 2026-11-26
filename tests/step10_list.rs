@@ -98,7 +98,7 @@ fn requirement(id: &str, name: &str, verification: &str) -> String {
 
 // --- REQ-core-151: list の読み取り ---
 
-// @kotowari[REQ-core-151, REQ-core-153, TBL-core-026, EX-core-245]
+// @kotowari[REQ-core-151, REQ-core-153, TBL-core-026, EX-core-245, C-core-list-3]
 #[test]
 fn req_151_requirement_with_a_marked_test_is_listed() {
     let tmp = TempDir::new().unwrap();
@@ -131,7 +131,7 @@ fn req_151_requirement_with_a_marked_test_is_listed() {
     assert_eq!(tests[0]["name"], "req_001_x");
 }
 
-// @kotowari[REQ-core-151, EX-core-246]
+// @kotowari[REQ-core-151, EX-core-246, C-core-list-2]
 #[test]
 fn req_151_items_are_listed_despite_ir_errors_and_exit_zero() {
     let tmp = TempDir::new().unwrap();
@@ -163,7 +163,7 @@ fn req_151_items_are_listed_despite_ir_errors_and_exit_zero() {
 
 // --- REQ-core-153: 項目の形 ---
 
-// @kotowari[REQ-core-153, TBL-core-026, EX-core-247]
+// @kotowari[REQ-core-153, TBL-core-026, EX-core-247, C-core-list-4]
 #[test]
 fn req_153_test_in_a_language_without_a_query_has_a_null_name() {
     let tmp = TempDir::new().unwrap();
@@ -385,7 +385,7 @@ fn req_153_how_to_verify_is_the_value_of_the_line_or_null() {
     );
 }
 
-// @kotowari[REQ-core-153, TBL-core-026]
+// @kotowari[REQ-core-153, TBL-core-026, C-core-list-3]
 #[test]
 fn req_153_tests_have_one_entry_per_marker_occurrence() {
     let tmp = TempDir::new().unwrap();
@@ -414,7 +414,7 @@ fn req_153_tests_have_one_entry_per_marker_occurrence() {
 
 // --- REQ-core-154: 一覧の順 ---
 
-// @kotowari[REQ-core-154]
+// @kotowari[REQ-core-154, C-core-list-7]
 #[test]
 fn req_154_items_and_tests_are_ordered_by_path_then_line() {
     let tmp = TempDir::new().unwrap();
@@ -498,7 +498,7 @@ fn req_154_items_and_tests_are_ordered_by_path_then_line() {
 
 // --- REQ-core-155: 出力の形 ---
 
-// @kotowari[REQ-core-155]
+// @kotowari[REQ-core-155, C-core-list-8]
 #[test]
 fn req_155_json_top_level_has_only_items() {
     let tmp = TempDir::new().unwrap();
@@ -519,7 +519,7 @@ fn req_155_json_top_level_has_only_items() {
     );
 }
 
-// @kotowari[REQ-core-155, EX-core-248]
+// @kotowari[REQ-core-155, EX-core-248, C-core-list-9]
 #[test]
 fn req_155_text_prints_one_line_per_item_and_indented_test_lines() {
     let tmp = TempDir::new().unwrap();
@@ -544,7 +544,7 @@ fn req_155_text_prints_one_line_per_item_and_indented_test_lines() {
     );
 }
 
-// @kotowari[REQ-core-155]
+// @kotowari[REQ-core-155, C-core-list-9]
 #[test]
 fn req_155_text_writes_dash_for_a_null_test_name() {
     let tmp = TempDir::new().unwrap();
@@ -568,7 +568,7 @@ fn req_155_text_writes_dash_for_a_null_test_name() {
     );
 }
 
-// @kotowari[REQ-core-155]
+// @kotowari[REQ-core-155, C-core-list-9]
 #[test]
 fn req_155_text_writes_dash_for_the_verification_of_a_non_requirement() {
     let tmp = TempDir::new().unwrap();
@@ -643,7 +643,7 @@ fn blob(text: &str) -> String {
     kotowari_core::translations::blob_hash(text.as_bytes())
 }
 
-// @kotowari[REQ-core-152, REQ-core-155]
+// @kotowari[REQ-core-152, REQ-core-155, C-core-list-10]
 #[test]
 fn req_155_translations_list_every_pair_with_the_blob_hash_of_each_side() {
     let tmp = TempDir::new().unwrap();
@@ -721,7 +721,7 @@ fn req_155_translations_list_every_pair_with_the_blob_hash_of_each_side() {
     );
 }
 
-// @kotowari[REQ-core-152]
+// @kotowari[REQ-core-152, C-core-list-11, C-core-list-15]
 #[test]
 fn req_152_with_two_languages_list_stops_on_the_guide_places_as_check_does() {
     let overlap =

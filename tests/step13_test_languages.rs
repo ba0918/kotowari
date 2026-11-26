@@ -89,7 +89,7 @@ fn listed_tests(tmp: &Path, id: &str) -> Vec<serde_json::Value> {
 
 // --- TypeScript、Tsx、JavaScript ---
 
-// @kotowari[REQ-core-083, EX-core-294]
+// @kotowari[REQ-core-083, EX-core-294, C-core-discover-8]
 #[test]
 fn ex_core_294_syntax_error_in_a_file_of_a_language_with_a_query() {
     let tmp = TempDir::new().unwrap();
@@ -101,7 +101,7 @@ fn ex_core_294_syntax_error_in_a_file_of_a_language_with_a_query() {
     assert_eq!(unparsable[0]["detail"], "tests/a.test.ts");
 }
 
-// @kotowari[REQ-core-180, EX-core-296]
+// @kotowari[REQ-core-180, EX-core-296, C-core-discover-9, C-core-discover-10]
 #[test]
 fn ex_core_296_string_name_loses_its_quotes() {
     let tmp = TempDir::new().unwrap();
@@ -120,7 +120,7 @@ fn ex_core_296_string_name_loses_its_quotes() {
     );
 }
 
-// @kotowari[REQ-core-180, TBL-core-032]
+// @kotowari[REQ-core-180, TBL-core-032, C-core-discover-9, C-core-queries-8]
 #[test]
 fn req_180_only_one_pair_of_the_same_quotes_is_stripped() {
     let tmp = TempDir::new().unwrap();
@@ -146,7 +146,7 @@ fn req_180_only_one_pair_of_the_same_quotes_is_stripped() {
     );
 }
 
-// @kotowari[REQ-core-181, EX-core-297]
+// @kotowari[REQ-core-181, EX-core-297, C-core-discover-13]
 #[test]
 fn ex_core_297_test_inside_a_test_is_counted_apart() {
     let tmp = TempDir::new().unwrap();
@@ -160,7 +160,7 @@ fn ex_core_297_test_inside_a_test_is_counted_apart() {
     assert_eq!(unmarked(&v), vec!["outer", "inner"], "{v}");
 }
 
-// @kotowari[REQ-core-183, TBL-core-032, EX-core-298]
+// @kotowari[REQ-core-183, TBL-core-032, EX-core-298, C-core-queries-8]
 #[test]
 fn ex_core_298_skipped_test_is_counted() {
     let tmp = TempDir::new().unwrap();
@@ -170,7 +170,7 @@ fn ex_core_298_skipped_test_is_counted() {
     assert_eq!(unmarked(&v), vec!["x"], "{v}");
 }
 
-// @kotowari[REQ-core-183, TBL-core-032, EX-core-299]
+// @kotowari[REQ-core-183, TBL-core-032, EX-core-299, C-core-queries-9]
 #[test]
 fn ex_core_299_each_table_test_is_one_test() {
     let tmp = TempDir::new().unwrap();
@@ -184,7 +184,7 @@ fn ex_core_299_each_table_test_is_one_test() {
     assert_eq!(unmarked(&v), vec!["each %i"], "{v}");
 }
 
-// @kotowari[REQ-core-183, TBL-core-032, EX-core-317]
+// @kotowari[REQ-core-183, TBL-core-032, EX-core-317, C-core-queries-9]
 #[test]
 fn ex_core_317_chained_each_table_test_is_one_test() {
     let tmp = TempDir::new().unwrap();
@@ -198,7 +198,7 @@ fn ex_core_317_chained_each_table_test_is_one_test() {
     assert_eq!(unmarked(&v), vec!["each %i"], "{v}");
 }
 
-// @kotowari[REQ-core-183, TBL-core-032]
+// @kotowari[REQ-core-183, TBL-core-032, C-core-queries-8]
 #[test]
 fn tbl_032_test_whose_result_is_called_again_is_counted() {
     let tmp = TempDir::new().unwrap();
@@ -212,7 +212,7 @@ fn tbl_032_test_whose_result_is_called_again_is_counted() {
     assert_eq!(unmarked(&v), vec!["curried", "chained"], "{v}");
 }
 
-// @kotowari[REQ-core-183, TBL-core-032]
+// @kotowari[REQ-core-183, TBL-core-032, C-core-queries-8]
 #[test]
 fn tbl_032_dotted_form_with_a_unicode_name_or_a_comment_is_counted() {
     let tmp = TempDir::new().unwrap();
@@ -226,7 +226,7 @@ fn tbl_032_dotted_form_with_a_unicode_name_or_a_comment_is_counted() {
     assert_eq!(unmarked(&v), vec!["unicode", "withComment"], "{v}");
 }
 
-// @kotowari[REQ-core-183, TBL-core-032, EX-core-331]
+// @kotowari[REQ-core-183, TBL-core-032, EX-core-331, C-core-queries-9]
 #[test]
 fn ex_core_331_tagged_template_alone_is_not_counted() {
     let tmp = TempDir::new().unwrap();
@@ -240,7 +240,7 @@ fn ex_core_331_tagged_template_alone_is_not_counted() {
     assert_eq!(unmarked(&v), vec!["tagged %s"], "{v}");
 }
 
-// @kotowari[REQ-core-183, TBL-core-032, EX-core-300]
+// @kotowari[REQ-core-183, TBL-core-032, EX-core-300, C-core-queries-10]
 #[test]
 fn ex_core_300_describe_and_other_callers_are_not_counted() {
     let tmp = TempDir::new().unwrap();
@@ -254,7 +254,7 @@ fn ex_core_300_describe_and_other_callers_are_not_counted() {
     assert!(unmarked(&v).is_empty(), "{v}");
 }
 
-// @kotowari[REQ-core-183, TBL-core-032]
+// @kotowari[REQ-core-183, TBL-core-032, C-core-queries-8, C-core-queries-9, C-core-queries-10]
 #[test]
 fn tbl_032_dotted_forms_are_counted_with_the_first_argument() {
     let tmp = TempDir::new().unwrap();
@@ -268,7 +268,7 @@ fn tbl_032_dotted_forms_are_counted_with_the_first_argument() {
     assert_eq!(unmarked(&v), vec!["t", "o", "d", "c", "ce %i"], "{v}");
 }
 
-// @kotowari[REQ-core-182, REQ-core-183, EX-core-301]
+// @kotowari[REQ-core-182, REQ-core-183, EX-core-301, C-core-queries-2]
 #[test]
 fn ex_core_301_test_in_a_tsx_file_is_counted() {
     let tmp = TempDir::new().unwrap();
@@ -278,7 +278,7 @@ fn ex_core_301_test_in_a_tsx_file_is_counted() {
     assert_eq!(unmarked(&v), vec!["x"], "{v}");
 }
 
-// @kotowari[REQ-core-182, REQ-core-183]
+// @kotowari[REQ-core-182, REQ-core-183, C-core-queries-3]
 #[test]
 fn req_183_javascript_files_are_counted() {
     let tmp = TempDir::new().unwrap();
@@ -294,7 +294,7 @@ fn req_183_javascript_files_are_counted() {
     assert_eq!(unmarked(&v), vec!["cjs", "js", "jsx", "mjs"], "{v}");
 }
 
-// @kotowari[REQ-core-075, EX-core-309]
+// @kotowari[REQ-core-075, EX-core-309, C-core-markers-16]
 #[test]
 fn ex_core_309_code_line_between_breaks_the_block() {
     let tmp = TempDir::new().unwrap();
@@ -308,7 +308,7 @@ fn ex_core_309_code_line_between_breaks_the_block() {
     assert_eq!(unmarked(&v), vec!["x"], "{v}");
 }
 
-// @kotowari[REQ-core-075, EX-core-319]
+// @kotowari[REQ-core-075, EX-core-319, C-core-markers-10]
 #[test]
 fn ex_core_319_mark_before_a_nested_test_binds_to_it() {
     let tmp = TempDir::new().unwrap();
@@ -328,7 +328,7 @@ fn ex_core_319_mark_before_a_nested_test_binds_to_it() {
     assert_eq!(inner[0]["name"], "inner");
 }
 
-// @kotowari[REQ-core-075, TBL-core-035, EX-core-327]
+// @kotowari[REQ-core-075, TBL-core-035, EX-core-327, C-core-markers-17]
 #[test]
 fn ex_core_327_comment_after_a_full_width_space_joins_the_block() {
     let tmp = TempDir::new().unwrap();
@@ -344,7 +344,7 @@ fn ex_core_327_comment_after_a_full_width_space_joins_the_block() {
     assert_eq!(listed_tests(tmp.path(), "REQ-002")[0]["name"], "x");
 }
 
-// @kotowari[REQ-core-075, EX-core-320]
+// @kotowari[REQ-core-075, EX-core-320, C-core-markers-16]
 #[test]
 fn ex_core_320_comment_after_code_on_the_same_line_breaks_the_block() {
     let tmp = TempDir::new().unwrap();
@@ -358,7 +358,7 @@ fn ex_core_320_comment_after_code_on_the_same_line_breaks_the_block() {
     assert_eq!(unmarked(&v), vec!["x"], "{v}");
 }
 
-// @kotowari[TBL-core-021, TBL-core-031, REQ-core-182]
+// @kotowari[TBL-core-021, TBL-core-031, REQ-core-182, C-core-output-12, C-core-discover-7, C-core-queries-1]
 #[test]
 fn tbl_021_extensions_of_the_bundled_languages_have_a_query() {
     let tmp = TempDir::new().unwrap();
@@ -380,7 +380,7 @@ fn tbl_021_extensions_of_the_bundled_languages_have_a_query() {
 
 // --- Python ---
 
-// @kotowari[REQ-core-184, TBL-core-033, EX-core-302]
+// @kotowari[REQ-core-184, TBL-core-033, EX-core-302, C-core-queries-11]
 #[test]
 fn ex_core_302_nested_function_is_not_counted() {
     let tmp = TempDir::new().unwrap();
@@ -394,7 +394,7 @@ fn ex_core_302_nested_function_is_not_counted() {
     assert_eq!(unmarked(&v), vec!["test_foo", "test_baz"], "{v}");
 }
 
-// @kotowari[REQ-core-184, TBL-core-033, TBL-core-019]
+// @kotowari[REQ-core-184, TBL-core-033, TBL-core-019, C-core-forder-6, C-core-queries-12]
 #[test]
 fn tbl_033_decorated_test_is_counted_at_its_def_line() {
     let tmp = TempDir::new().unwrap();
@@ -421,7 +421,7 @@ fn tbl_033_decorated_test_is_counted_at_its_def_line() {
     );
 }
 
-// @kotowari[REQ-core-184, TBL-core-033, EX-core-329]
+// @kotowari[REQ-core-184, TBL-core-033, EX-core-329, C-core-queries-11]
 #[test]
 fn ex_core_329_method_of_a_class_inside_a_function_is_counted() {
     let tmp = TempDir::new().unwrap();
@@ -435,7 +435,7 @@ fn ex_core_329_method_of_a_class_inside_a_function_is_counted() {
     assert_eq!(unmarked(&v), vec!["test_outer", "test_in_class"], "{v}");
 }
 
-// @kotowari[REQ-core-075, TBL-core-035, EX-core-307]
+// @kotowari[REQ-core-075, TBL-core-035, EX-core-307, C-core-markers-14]
 #[test]
 fn ex_core_307_mark_binds_across_a_decorator() {
     let tmp = TempDir::new().unwrap();
@@ -452,7 +452,7 @@ fn ex_core_307_mark_binds_across_a_decorator() {
     assert_eq!(tests[0]["name"], "test_x");
 }
 
-// @kotowari[REQ-core-075, TBL-core-035, EX-core-308]
+// @kotowari[REQ-core-075, TBL-core-035, EX-core-308, C-core-markers-13]
 #[test]
 fn ex_core_308_mark_before_a_method_binds() {
     let tmp = TempDir::new().unwrap();
@@ -469,7 +469,7 @@ fn ex_core_308_mark_before_a_method_binds() {
     assert_eq!(tests[0]["name"], "test_baz");
 }
 
-// @kotowari[REQ-core-075, TBL-core-035, EX-core-318]
+// @kotowari[REQ-core-075, TBL-core-035, EX-core-318, C-core-markers-14]
 #[test]
 fn ex_core_318_mark_binds_across_a_multi_line_decorator_and_a_comment() {
     let tmp = TempDir::new().unwrap();
@@ -486,7 +486,7 @@ fn ex_core_318_mark_binds_across_a_multi_line_decorator_and_a_comment() {
     assert_eq!(tests[0]["name"], "test_x");
 }
 
-// @kotowari[REQ-core-075, TBL-core-035, EX-core-323]
+// @kotowari[REQ-core-075, TBL-core-035, EX-core-323, C-core-markers-15]
 #[test]
 fn ex_core_323_blank_line_inside_a_multi_line_decorator_does_not_cut_the_block() {
     let tmp = TempDir::new().unwrap();
@@ -505,7 +505,7 @@ fn ex_core_323_blank_line_inside_a_multi_line_decorator_does_not_cut_the_block()
 
 // --- Php ---
 
-// @kotowari[REQ-core-185, TBL-core-034, TBL-core-019]
+// @kotowari[REQ-core-185, TBL-core-034, TBL-core-019, C-core-forder-6, C-core-queries-13]
 #[test]
 fn tbl_034_test_methods_and_attributes() {
     let tmp = TempDir::new().unwrap();
@@ -533,7 +533,7 @@ fn tbl_034_test_methods_and_attributes() {
     );
 }
 
-// @kotowari[REQ-core-185, TBL-core-034, EX-core-303]
+// @kotowari[REQ-core-185, TBL-core-034, EX-core-303, C-core-queries-13]
 #[test]
 fn ex_core_303_method_with_a_qualified_test_attribute_is_counted() {
     let tmp = TempDir::new().unwrap();
@@ -547,7 +547,7 @@ fn ex_core_303_method_with_a_qualified_test_attribute_is_counted() {
     assert_eq!(unmarked(&v), vec!["other"], "{v}");
 }
 
-// @kotowari[REQ-core-185, TBL-core-034, EX-core-304]
+// @kotowari[REQ-core-185, TBL-core-034, EX-core-304, C-core-queries-14]
 #[test]
 fn ex_core_304_method_with_a_test_docblock_is_counted() {
     let tmp = TempDir::new().unwrap();
@@ -561,7 +561,7 @@ fn ex_core_304_method_with_a_test_docblock_is_counted() {
     assert_eq!(unmarked(&v), vec!["itWorks"], "{v}");
 }
 
-// @kotowari[REQ-core-185, TBL-core-034, EX-core-305]
+// @kotowari[REQ-core-185, TBL-core-034, EX-core-305, C-core-queries-15]
 #[test]
 fn ex_core_305_pest_test_call_is_counted() {
     let tmp = TempDir::new().unwrap();
@@ -575,7 +575,7 @@ fn ex_core_305_pest_test_call_is_counted() {
     assert_eq!(unmarked(&v), vec!["adds", "works"], "{v}");
 }
 
-// @kotowari[REQ-core-075, TBL-core-034]
+// @kotowari[REQ-core-075, TBL-core-034, C-core-markers-13, C-core-queries-14]
 #[test]
 fn tbl_034_mark_before_a_docblock_test_binds() {
     // "@test" の docblock はコメントの行なので、その上の印も同じ塊に入る
@@ -618,7 +618,7 @@ fn stop(tmp: &Path) -> (Option<i32>, String) {
     )
 }
 
-// @kotowari[REQ-core-186, EX-core-311]
+// @kotowari[REQ-core-186, EX-core-311, C-core-qrules-1]
 #[test]
 fn ex_core_311_added_rule_counts_tests() {
     let tmp = TempDir::new().unwrap();
@@ -630,7 +630,7 @@ fn ex_core_311_added_rule_counts_tests() {
     assert_eq!(unmarked(&v), vec!["fast"], "{v}");
 }
 
-// @kotowari[REQ-core-186]
+// @kotowari[REQ-core-186, C-core-qrules-4]
 #[test]
 fn req_186_rules_separated_by_dashes_all_apply_and_give_a_language_a_query() {
     let tmp = TempDir::new().unwrap();
@@ -652,7 +652,7 @@ fn req_186_rules_separated_by_dashes_all_apply_and_give_a_language_a_query() {
     assert_eq!(v["tests"]["go"]["query"], true, "{v}");
 }
 
-// @kotowari[REQ-core-121, REQ-core-181, EX-core-312]
+// @kotowari[REQ-core-121, REQ-core-181, EX-core-312, C-core-qrules-2, C-core-discover-12]
 #[test]
 fn ex_core_312_rule_hitting_the_bundled_node_counts_once() {
     let tmp = TempDir::new().unwrap();
@@ -668,7 +668,7 @@ fn ex_core_312_rule_hitting_the_bundled_node_counts_once() {
     assert_eq!(unmarked(&v), vec!["x"], "{v}");
 }
 
-// @kotowari[REQ-core-187, EX-core-313]
+// @kotowari[REQ-core-187, EX-core-313, C-core-qrules-7]
 #[test]
 fn ex_core_313_rule_is_not_applied_outside_its_files() {
     let tmp = TempDir::new().unwrap();
@@ -685,7 +685,7 @@ fn ex_core_313_rule_is_not_applied_outside_its_files() {
     assert_eq!(unmarked(&v), vec!["spec"], "{v}");
 }
 
-// @kotowari[REQ-core-187]
+// @kotowari[REQ-core-187, C-core-qrules-7]
 #[test]
 fn req_187_rule_is_not_applied_to_its_ignores() {
     let tmp = TempDir::new().unwrap();
@@ -706,7 +706,7 @@ fn req_187_rule_is_not_applied_to_its_ignores() {
     assert_eq!(unmarked(&v), vec!["fast"], "{v}");
 }
 
-// @kotowari[REQ-core-188, EX-core-314]
+// @kotowari[REQ-core-188, EX-core-314, C-core-qrules-8]
 #[test]
 fn ex_core_314_rule_with_severity_off_is_applied() {
     let tmp = TempDir::new().unwrap();
@@ -722,7 +722,7 @@ fn ex_core_314_rule_with_severity_off_is_applied() {
     assert_eq!(unmarked(&v), vec!["fast"], "{v}");
 }
 
-// @kotowari[REQ-core-188]
+// @kotowari[REQ-core-188, C-core-qrules-8]
 #[test]
 fn req_188_fix_message_note_and_metadata_do_not_change_the_tests() {
     let tmp = TempDir::new().unwrap();
@@ -740,7 +740,7 @@ fn req_188_fix_message_note_and_metadata_do_not_change_the_tests() {
     assert_eq!(unmarked(&v), vec!["fast"], "{v}");
 }
 
-// @kotowari[REQ-core-189, EX-core-315]
+// @kotowari[REQ-core-189, EX-core-315, C-core-qrules-9]
 #[test]
 fn ex_core_315_missing_rule_file_stops() {
     let tmp = TempDir::new().unwrap();
@@ -751,7 +751,7 @@ fn ex_core_315_missing_rule_file_stops() {
     assert!(first.starts_with("config error"), "{first}");
 }
 
-// @kotowari[REQ-core-189, EX-core-316]
+// @kotowari[REQ-core-189, EX-core-316, C-core-qrules-9]
 #[test]
 fn ex_core_316_rule_of_an_unknown_language_stops() {
     let tmp = TempDir::new().unwrap();
@@ -767,7 +767,7 @@ fn ex_core_316_rule_of_an_unknown_language_stops() {
     assert!(first.starts_with("config error"), "{first}");
 }
 
-// @kotowari[REQ-core-189, TBL-core-020, EX-core-378]
+// @kotowari[REQ-core-189, TBL-core-020, EX-core-378, C-core-clienv-9, C-core-qrules-10]
 #[test]
 fn ex_core_378_a_missing_rule_file_stop_points_at_the_rule_file() {
     let tmp = TempDir::new().unwrap();
@@ -781,7 +781,7 @@ fn ex_core_378_a_missing_rule_file_stop_points_at_the_rule_file() {
     assert!(!stderr.contains(".kotowari/config.yaml"), "{stderr}");
 }
 
-// @kotowari[REQ-core-189, EX-core-379]
+// @kotowari[REQ-core-189, EX-core-379, C-core-qrules-11]
 #[test]
 fn ex_core_379_an_unknown_language_stop_names_the_language_in_one_line() {
     let tmp = TempDir::new().unwrap();
@@ -800,7 +800,7 @@ fn ex_core_379_an_unknown_language_stop_names_the_language_in_one_line() {
     assert_eq!(stderr.lines().count(), 1, "{stderr}");
 }
 
-// @kotowari[REQ-core-189, EX-core-321]
+// @kotowari[REQ-core-189, EX-core-321, C-core-qrules-9]
 #[test]
 fn ex_core_321_same_rule_file_twice_stops() {
     let tmp = TempDir::new().unwrap();
@@ -816,7 +816,7 @@ fn ex_core_321_same_rule_file_twice_stops() {
     assert!(first.starts_with("config error"), "{first}");
 }
 
-// @kotowari[REQ-core-189]
+// @kotowari[REQ-core-189, C-core-qrules-9]
 #[test]
 fn req_189_unreadable_or_malformed_rule_files_stop() {
     let cases: [(&str, &[u8]); 4] = [
@@ -841,7 +841,7 @@ fn req_189_unreadable_or_malformed_rule_files_stop() {
     }
 }
 
-// @kotowari[REQ-core-189, EX-core-322]
+// @kotowari[REQ-core-189, EX-core-322, C-core-qrules-5]
 #[test]
 fn ex_core_322_language_alias_is_accepted() {
     let tmp = TempDir::new().unwrap();
@@ -859,7 +859,7 @@ fn ex_core_322_language_alias_is_accepted() {
     assert_eq!(unmarked(&v), vec!["fast"], "{v}");
 }
 
-// @kotowari[REQ-core-189]
+// @kotowari[REQ-core-189, C-core-qrules-5]
 #[test]
 fn req_189_language_is_matched_without_case() {
     let tmp = TempDir::new().unwrap();
@@ -875,7 +875,7 @@ fn req_189_language_is_matched_without_case() {
     assert_eq!(unmarked(&v), vec!["check_x"], "{v}");
 }
 
-// @kotowari[REQ-core-086, EX-core-310]
+// @kotowari[REQ-core-086, EX-core-310, C-core-cover-2, C-core-findings-5]
 #[test]
 fn ex_core_310_test_without_a_name_uses_its_first_line() {
     let tmp = TempDir::new().unwrap();
@@ -898,7 +898,7 @@ fn ex_core_310_test_without_a_name_uses_its_first_line() {
     assert_eq!(found[0]["line"], 2);
 }
 
-// @kotowari[REQ-core-180, TBL-core-026]
+// @kotowari[REQ-core-180, TBL-core-026, C-core-list-4, C-core-discover-11]
 #[test]
 fn req_180_test_without_a_name_is_listed_with_a_null_name() {
     let tmp = TempDir::new().unwrap();
@@ -919,7 +919,7 @@ fn req_180_test_without_a_name_is_listed_with_a_null_name() {
     assert!(tests[0]["name"].is_null(), "{tests:?}");
 }
 
-// @kotowari[REQ-core-181, EX-core-328]
+// @kotowari[REQ-core-181, EX-core-328, C-core-discover-12]
 #[test]
 fn ex_core_328_name_comes_from_the_first_rule_that_captures_it() {
     let tmp = TempDir::new().unwrap();
@@ -940,7 +940,7 @@ fn ex_core_328_name_comes_from_the_first_rule_that_captures_it() {
     assert_eq!(unmarked(&v), vec!["chosen"], "{v}");
 }
 
-// @kotowari[REQ-core-181, REQ-core-187]
+// @kotowari[REQ-core-181, REQ-core-187, C-core-qrules-7, C-core-discover-12]
 #[test]
 fn req_181_rule_with_files_keeps_its_place_in_the_order() {
     let tmp = TempDir::new().unwrap();

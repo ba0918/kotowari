@@ -66,7 +66,7 @@ mod tests {
         assert_eq!(name(DocKind::Flags).as_deref(), Some("ir-flags"));
     }
 
-    // @kotowari[REQ-core-191]
+    // @kotowari[REQ-core-191, C-core-plan-1]
     #[test]
     fn req_core_191_the_embedded_plan_schema_parses() {
         let schema = plan_schema();

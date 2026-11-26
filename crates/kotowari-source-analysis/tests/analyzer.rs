@@ -1,7 +1,7 @@
 use kotowari_core::{SourceText, config::Config};
 use kotowari_source_analysis::Analyzer;
 
-// @kotowari[REQ-core-308, REQ-core-315, EX-core-481, EX-core-496, EX-core-497]
+// @kotowari[REQ-core-308, REQ-core-315, EX-core-481, EX-core-496, EX-core-497, C-core-libcrates-6]
 #[test]
 fn source_analysis_retains_source_facts_and_diagnostics_without_acquisition() {
     let analyzer = Analyzer::new(Config::default(), vec![], vec![]).unwrap();
@@ -29,7 +29,7 @@ fn source_analysis_retains_source_facts_and_diagnostics_without_acquisition() {
     assert_eq!(text.line_markers.len(), 1);
 }
 
-// @kotowari[REQ-core-315, REQ-core-322, EX-core-496, EX-core-502]
+// @kotowari[REQ-core-315, REQ-core-322, EX-core-496, EX-core-502, C-core-libpaths-10]
 #[test]
 fn cached_analysis_of_another_revision_is_rejected_at_native_admission() {
     use kotowari_core::{NativeSourceText, NativeTestAnalysis, ReadModel, RepositoryReadInputs};
@@ -59,7 +59,7 @@ fn cached_analysis_of_another_revision_is_rejected_at_native_admission() {
     assert!(admit(acquired).is_ok());
 }
 
-// @kotowari[REQ-core-315, REQ-core-228, EX-core-497]
+// @kotowari[REQ-core-315, REQ-core-228, EX-core-497, C-core-surface-15]
 #[test]
 fn public_surface_inspection_reports_uncovered_analyzer_facts() {
     use kotowari_core::{FindingKind, ir, surface};
@@ -84,7 +84,7 @@ fn public_surface_inspection_reports_uncovered_analyzer_facts() {
     assert!(findings[0].detail().contains("missing"));
 }
 
-// @kotowari[REQ-core-312, EX-core-484]
+// @kotowari[REQ-core-312, EX-core-484, C-core-libapi-5]
 #[test]
 fn malformed_public_rules_explain_the_analysis_failure() {
     let error = Analyzer::new(

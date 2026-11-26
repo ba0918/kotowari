@@ -18,7 +18,7 @@ fn discover_in_rust_file(
     }
 }
 
-// @kotowari[REQ-core-082]
+// @kotowari[REQ-core-082, C-core-queries-7]
 #[test]
 fn req_082_macro_reparse_byte_offset_reflects_delimiter_position() {
     // マクロの呼び出しと開き波括弧が別の行にあるとき、行番号はその波括弧の行を基準にする
@@ -58,7 +58,7 @@ fn req_082_macro_reparse_byte_offset_reflects_delimiter_position() {
     );
 }
 
-// @kotowari[REQ-core-082, REQ-core-118, REQ-core-072]
+// @kotowari[REQ-core-082, REQ-core-118, REQ-core-072, C-core-markers-7, C-core-queries-7]
 #[test]
 fn req_082_macro_function_and_marker_lines_use_additive_offset() {
     // マクロの前に複数行あるとき（line_offset > 0）、関数・印・不正な印の行番号は
@@ -85,7 +85,7 @@ fn req_082_macro_function_and_marker_lines_use_additive_offset() {
     );
 }
 
-// @kotowari[REQ-core-082]
+// @kotowari[REQ-core-082, C-core-queries-4]
 #[test]
 fn req_082_plain_test_function_line_is_one_indexed() {
     let content = "// leading 1\n// leading 2\n#[test]\nfn t() {}\n";
@@ -103,7 +103,7 @@ fn req_082_plain_test_function_line_is_one_indexed() {
     );
 }
 
-// @kotowari[REQ-core-082]
+// @kotowari[REQ-core-082, C-core-queries-4]
 #[test]
 fn req_082_function_with_unrelated_attribute_is_not_counted() {
     // #[test] でも設定された属性でもない属性しか持たない関数はテストとして数えない
@@ -121,7 +121,7 @@ fn req_082_function_with_unrelated_attribute_is_not_counted() {
     );
 }
 
-// @kotowari[REQ-core-082]
+// @kotowari[REQ-core-082, C-core-queries-4]
 #[test]
 fn req_082_has_attribute_skips_block_comment_to_find_test_attribute() {
     let content = "#[test]\n/* intermediate comment */\nfn t() {}\n";
@@ -138,7 +138,7 @@ fn req_082_has_attribute_skips_block_comment_to_find_test_attribute() {
     );
 }
 
-// @kotowari[REQ-core-082]
+// @kotowari[REQ-core-082, C-core-queries-5]
 #[test]
 fn req_082_has_configured_attribute_skips_line_comment() {
     let mut config = kotowari_core::config::Config::default();
@@ -152,7 +152,7 @@ fn req_082_has_configured_attribute_skips_line_comment() {
     );
 }
 
-// @kotowari[REQ-core-082]
+// @kotowari[REQ-core-082, C-core-queries-5]
 #[test]
 fn req_082_has_configured_attribute_skips_block_comment() {
     let mut config = kotowari_core::config::Config::default();
@@ -166,7 +166,7 @@ fn req_082_has_configured_attribute_skips_block_comment() {
     );
 }
 
-// @kotowari[REQ-core-072]
+// @kotowari[REQ-core-072, C-core-markers-4, C-core-markers-7]
 #[test]
 fn req_072_invalid_marker_on_second_line_of_multiline_comment_before_test() {
     // 複数行にまたがるブロックコメントの2行目にある印の行番号は、
@@ -187,7 +187,7 @@ fn req_072_invalid_marker_on_second_line_of_multiline_comment_before_test() {
     );
 }
 
-// @kotowari[REQ-core-072]
+// @kotowari[REQ-core-072, C-core-markers-6]
 #[test]
 fn req_072_indented_invalid_marker_before_test_keeps_indentation() {
     // 不正な印の detail は生の行の文字（インデントを含む）であり、
@@ -208,7 +208,7 @@ fn req_072_indented_invalid_marker_before_test_keeps_indentation() {
     );
 }
 
-// @kotowari[REQ-core-072, TBL-core-035]
+// @kotowari[REQ-core-072, TBL-core-035, C-core-markers-7]
 #[test]
 fn req_072_invalid_marker_line_index_stays_additive_at_boundary() {
     // 複数行のコメントの最後の行の印の行番号は、コメントの開始行からの足し算で決まる
@@ -235,7 +235,7 @@ fn req_072_invalid_marker_line_index_stays_additive_at_boundary() {
     assert!(tests[0].invalid_markers.is_empty(), "{:?}", tests);
 }
 
-// @kotowari[REQ-core-072, TBL-core-016]
+// @kotowari[REQ-core-072, TBL-core-016, C-core-markers-9]
 #[test]
 fn tbl_016_invalid_marker_at_body_start_is_ignored() {
     for content in [
@@ -258,7 +258,7 @@ fn tbl_016_invalid_marker_at_body_start_is_ignored() {
     }
 }
 
-// @kotowari[REQ-core-075, TBL-core-035]
+// @kotowari[REQ-core-075, TBL-core-035, C-core-markers-14]
 #[test]
 fn tbl_035_comments_and_multi_line_attributes_form_one_block() {
     // コメントの行と複数行にわたる属性の行が空行なしで混ざっても、1つの塊として結び付く
@@ -277,7 +277,7 @@ fn tbl_035_comments_and_multi_line_attributes_form_one_block() {
     );
 }
 
-// @kotowari[REQ-core-075, TBL-core-035]
+// @kotowari[REQ-core-075, TBL-core-035, C-core-markers-15]
 #[test]
 fn tbl_035_blank_line_inside_a_comment_or_an_attribute_does_not_cut_the_block() {
     // 空白だけの行でも、複数行のコメントや属性の途中にあれば塊の行に数える
@@ -300,7 +300,7 @@ fn tbl_035_blank_line_inside_a_comment_or_an_attribute_does_not_cut_the_block() 
     }
 }
 
-// @kotowari[REQ-core-072, TBL-core-008, TBL-core-010]
+// @kotowari[REQ-core-072, TBL-core-008, TBL-core-010, C-core-findings-3, C-core-document-8, C-core-markers-6]
 #[test]
 fn tbl_008_invalid_marker_detail_of_a_crlf_test_file_has_no_carriage_return() {
     let content = "// @kotowari[]\r\n#[test]\r\nfn t() {}\r\n";
@@ -318,7 +318,7 @@ fn tbl_008_invalid_marker_detail_of_a_crlf_test_file_has_no_carriage_return() {
     );
 }
 
-// @kotowari[REQ-core-075, TBL-core-035]
+// @kotowari[REQ-core-075, TBL-core-035, C-core-markers-16]
 #[test]
 fn tbl_035_comment_after_code_on_the_same_line_breaks_the_block() {
     let content = "// @kotowari[REQ-001]\nconst N: u8 = 1; // note\n#[test]\nfn t() {}\n";
@@ -332,7 +332,7 @@ fn tbl_035_comment_after_code_on_the_same_line_breaks_the_block() {
     assert!(tests[0].marker_ids.is_empty(), "{tests:?}");
 }
 
-// @kotowari[REQ-core-082, TBL-core-017]
+// @kotowari[REQ-core-082, TBL-core-017, C-core-queries-7]
 #[test]
 fn tbl_017_macro_not_in_the_configuration_is_not_reread() {
     let mut config = kotowari_core::config::Config::default();
@@ -343,7 +343,7 @@ fn tbl_017_macro_not_in_the_configuration_is_not_reread() {
     assert_eq!(names, vec![Some("u")]);
 }
 
-// @kotowari[REQ-core-181]
+// @kotowari[REQ-core-181, C-core-discover-13]
 #[test]
 fn req_181_test_inside_a_test_is_counted_apart() {
     let content =
@@ -365,7 +365,7 @@ fn req_181_test_inside_a_test_is_counted_apart() {
     );
 }
 
-// @kotowari[REQ-core-181, REQ-core-180]
+// @kotowari[REQ-core-181, REQ-core-180, C-core-discover-12]
 #[test]
 fn req_181_one_node_hit_by_two_queries_is_one_test() {
     // 同梱の "#[test]" のルールと設定の属性のルールが同じ関数に当たる
@@ -378,7 +378,7 @@ fn req_181_one_node_hit_by_two_queries_is_one_test() {
     assert_eq!(names, vec![Some("t"), Some("u")], "{tests:?}");
 }
 
-// @kotowari[REQ-core-082, TBL-core-017]
+// @kotowari[REQ-core-082, TBL-core-017, C-core-queries-7]
 #[test]
 fn tbl_017_macro_with_parentheses_or_brackets_is_reread() {
     let mut config = kotowari_core::config::Config::default();

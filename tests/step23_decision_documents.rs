@@ -123,7 +123,7 @@ fn finding(
     )
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-output-3]
 #[test]
 fn check_counts_the_documents_decisions_and_confirmations_it_read() {
     let tmp = TempDir::new().unwrap();
@@ -196,7 +196,7 @@ fn check_without_the_place_in_the_configuration_reads_no_decision_documents() {
     assert!(value.get("decisions").is_none(), "{value}");
 }
 
-// @kotowari[C-core-docs-15]
+// @kotowari[C-core-docs-15, C-core-config-10]
 #[test]
 fn check_stops_when_the_configured_place_does_not_exist() {
     let tmp = TempDir::new().unwrap();
@@ -512,7 +512,7 @@ fn a_row_confirmed_by_reading_needs_no_test() {
     );
 }
 
-// @kotowari[C-core-confirm-3]
+// @kotowari[C-core-confirm-3, C-core-findings-9]
 #[test]
 fn two_confirmations_with_the_same_id_are_an_error() {
     let tmp = TempDir::new().unwrap();
@@ -539,7 +539,7 @@ fn two_confirmations_with_the_same_id_are_an_error() {
     );
 }
 
-// @kotowari[C-core-confirm-3]
+// @kotowari[C-core-confirm-3, C-core-findings-4]
 #[test]
 fn a_confirmation_row_without_a_well_formed_id_is_an_error() {
     let tmp = TempDir::new().unwrap();
@@ -564,7 +564,7 @@ fn a_confirmation_row_without_a_well_formed_id_is_an_error() {
     );
 }
 
-// @kotowari[C-core-confirm-4]
+// @kotowari[C-core-confirm-4, C-core-findings-4]
 #[test]
 fn a_mark_pointing_at_an_id_in_no_document_is_an_error() {
     let tmp = TempDir::new().unwrap();
@@ -614,7 +614,7 @@ fn an_item_in_the_open_section_makes_status_incomplete() {
     assert!(!complete(tmp.path()));
 }
 
-// @kotowari[C-core-docs-13]
+// @kotowari[C-core-docs-13, C-core-status-2]
 #[test]
 fn no_errors_and_no_open_items_make_status_complete() {
     let tmp = TempDir::new().unwrap();
@@ -749,7 +749,7 @@ fn a_link_to_a_file_that_is_not_markdown_is_not_checked() {
     assert_eq!(findings(&value), vec![]);
 }
 
-// @kotowari[C-core-docs-8]
+// @kotowari[C-core-docs-8, C-core-forder-4]
 #[test]
 fn a_document_without_a_title_is_an_error() {
     let tmp = TempDir::new().unwrap();
@@ -789,7 +789,7 @@ fn query(tmp: &Path, id: &str) -> serde_json::Value {
     serde_json::from_str(&stdout).unwrap_or_else(|e| panic!("{e}: {stdout}{stderr}"))
 }
 
-// @kotowari[C-core-confirm-5]
+// @kotowari[C-core-confirm-5, C-core-list-3, C-core-list-5, C-core-query-1, C-core-query-11]
 #[test]
 fn query_of_a_confirmation_id_returns_the_file_line_and_name_of_each_test_pointing_at_it() {
     let tmp = TempDir::new().unwrap();
@@ -827,7 +827,7 @@ fn query_of_a_confirmation_id_returns_the_file_line_and_name_of_each_test_pointi
     );
 }
 
-// @kotowari[C-core-confirm-5]
+// @kotowari[C-core-confirm-5, C-core-list-9, C-core-query-12]
 #[test]
 fn query_of_a_confirmation_id_prints_its_tests_in_text() {
     let tmp = TempDir::new().unwrap();
@@ -854,7 +854,7 @@ fn query_of_a_confirmation_id_prints_its_tests_in_text() {
     );
 }
 
-// @kotowari[C-core-confirm-5]
+// @kotowari[C-core-confirm-5, C-core-query-1]
 #[test]
 fn query_of_a_confirmation_id_without_tests_returns_an_empty_list_of_tests() {
     let tmp = TempDir::new().unwrap();
@@ -868,7 +868,7 @@ fn query_of_a_confirmation_id_without_tests_returns_an_empty_list_of_tests() {
     assert_eq!(value["items"][0]["tests"], serde_json::json!([]));
 }
 
-// @kotowari[C-core-confirm-5]
+// @kotowari[C-core-confirm-5, C-core-query-7]
 #[test]
 fn query_of_a_confirmation_id_in_no_document_stops_as_an_unknown_id() {
     let tmp = TempDir::new().unwrap();
@@ -887,7 +887,7 @@ fn query_of_a_confirmation_id_in_no_document_stops_as_an_unknown_id() {
     );
 }
 
-// @kotowari[C-core-confirm-5]
+// @kotowari[C-core-confirm-5, C-core-list-1, C-core-list-3, C-core-list-7, C-core-list-9]
 #[test]
 fn list_includes_the_confirmation_rows_in_path_and_line_order() {
     let tmp = TempDir::new().unwrap();
@@ -913,7 +913,7 @@ fn list_includes_the_confirmation_rows_in_path_and_line_order() {
     );
 }
 
-// @kotowari[C-core-confirm-5]
+// @kotowari[C-core-confirm-5, C-core-query-1]
 #[test]
 fn query_of_a_wrapped_confirmation_row_joins_its_name_and_keeps_its_lines_as_the_body() {
     let tmp = TempDir::new().unwrap();
@@ -943,7 +943,7 @@ fn status(tmp: &Path) -> (serde_json::Value, String) {
     (value, text)
 }
 
-// @kotowari[C-core-confirm-9]
+// @kotowari[C-core-confirm-9, C-core-status-11]
 #[test]
 fn status_counts_the_proposed_and_the_implemented_decisions_apart() {
     let tmp = TempDir::new().unwrap();
@@ -987,7 +987,7 @@ fn status_without_the_place_in_the_configuration_shows_no_decision_counts() {
     );
 }
 
-// @kotowari[C-core-confirm-5]
+// @kotowari[C-core-confirm-5, C-core-list-7]
 #[test]
 fn list_sorts_the_confirmation_rows_with_the_ir_items_by_path() {
     let tmp = TempDir::new().unwrap();
@@ -1017,7 +1017,7 @@ fn list_sorts_the_confirmation_rows_with_the_ir_items_by_path() {
     );
 }
 
-// @kotowari[C-core-confirm-5]
+// @kotowari[C-core-confirm-5, C-core-query-4]
 #[test]
 fn a_row_of_a_decision_with_a_wrong_state_line_has_no_state() {
     let tmp = TempDir::new().unwrap();
@@ -1033,7 +1033,7 @@ fn a_row_of_a_decision_with_a_wrong_state_line_has_no_state() {
     assert_eq!(text.lines().last(), Some("  decision - 挨拶する"), "{text}");
 }
 
-// @kotowari[C-core-confirm-5]
+// @kotowari[C-core-confirm-5, C-core-list-1, C-core-list-2]
 #[test]
 fn list_leaves_out_a_row_without_a_well_formed_id() {
     let tmp = TempDir::new().unwrap();
@@ -1110,7 +1110,7 @@ fn greeting_project(tmp: &Path, document: &str) {
     );
 }
 
-// @kotowari[C-core-lang-5]
+// @kotowari[C-core-lang-5, C-core-guides-3]
 #[test]
 fn a_guide_mark_with_the_current_fingerprint_of_a_decision_is_not_stale() {
     let tmp = TempDir::new().unwrap();
@@ -1128,7 +1128,7 @@ fn a_guide_mark_with_the_current_fingerprint_of_a_decision_is_not_stale() {
     assert_eq!(value["guides"]["marks"], 1, "{value}");
 }
 
-// @kotowari[C-core-lang-5]
+// @kotowari[C-core-lang-5, C-core-guides-18]
 #[test]
 fn changing_what_was_decided_makes_the_guide_mark_stale() {
     let tmp = TempDir::new().unwrap();
@@ -1253,7 +1253,7 @@ fn adding_rejected_options_does_not_make_the_guide_mark_stale() {
     assert_eq!(guide_findings(&value), vec![], "{value}");
 }
 
-// @kotowari[C-core-lang-5]
+// @kotowari[C-core-lang-5, C-core-findings-7, C-core-guides-19]
 #[test]
 fn a_guide_mark_pointing_at_no_decision_is_stale_with_no_current_fingerprint() {
     let tmp = TempDir::new().unwrap();
@@ -1296,7 +1296,7 @@ fn a_guide_mark_pointing_at_no_decision_is_stale_with_no_current_fingerprint() {
     );
 }
 
-// @kotowari[C-core-lang-5]
+// @kotowari[C-core-lang-5, C-core-guides-3]
 #[test]
 fn a_repeated_heading_is_pointed_at_with_the_numbered_anchor() {
     let tmp = TempDir::new().unwrap();
@@ -1347,7 +1347,7 @@ fn a_guide_mark_holds_marks_of_the_old_form_and_of_decisions_together() {
     assert_eq!(value["guides"]["marks"], 2, "{value}");
 }
 
-// @kotowari[C-core-lang-5]
+// @kotowari[C-core-lang-5, C-core-guides-15]
 #[test]
 fn a_decision_entry_without_an_anchor_or_with_a_bad_fingerprint_is_an_invalid_mark() {
     let tmp = TempDir::new().unwrap();
@@ -1385,7 +1385,7 @@ fn a_decision_entry_without_an_anchor_or_with_a_bad_fingerprint_is_an_invalid_ma
     assert_eq!(value["guides"]["marks"], 0, "{value}");
 }
 
-// @kotowari[C-core-lang-5]
+// @kotowari[C-core-lang-5, C-core-guides-1, C-core-list-6, C-core-query-2, C-core-query-11]
 #[test]
 fn query_of_a_decision_returns_the_fingerprint_a_guide_mark_takes() {
     let tmp = TempDir::new().unwrap();
@@ -1417,7 +1417,7 @@ fn query_of_a_decision_returns_the_fingerprint_a_guide_mark_takes() {
     );
 }
 
-// @kotowari[C-core-lang-5]
+// @kotowari[C-core-lang-5, C-core-guides-2, C-core-list-1, C-core-list-9]
 #[test]
 fn list_includes_each_decision_with_its_fingerprint() {
     let tmp = TempDir::new().unwrap();
@@ -1441,7 +1441,7 @@ fn list_includes_each_decision_with_its_fingerprint() {
     );
 }
 
-// @kotowari[C-core-lang-5]
+// @kotowari[C-core-lang-5, C-core-guides-15]
 #[test]
 fn a_decision_entry_outside_a_markdown_path_or_with_a_second_hash_or_a_space_is_an_invalid_mark() {
     let tmp = TempDir::new().unwrap();
@@ -1728,7 +1728,7 @@ fn implemented_after(english: bool, before: &str) -> String {
     }
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-input-3, C-core-input-4]
 #[test]
 fn an_unclosed_code_block_is_an_error_at_its_opening_line_and_check_fails() {
     for english in [false, true] {
@@ -1758,7 +1758,7 @@ fn an_unclosed_code_block_is_an_error_at_its_opening_line_and_check_fails() {
     }
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-input-3]
 #[test]
 fn a_closed_code_block_is_no_error_and_the_decision_after_it_is_read() {
     let tmp = TempDir::new().unwrap();
@@ -1780,7 +1780,7 @@ fn a_closed_code_block_is_no_error_and_the_decision_after_it_is_read() {
     );
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-forder-5, C-core-input-3, C-core-input-4]
 #[test]
 fn an_unclosed_code_block_under_a_confirmation_row_is_an_error_and_the_next_rows_are_still_read() {
     let tmp = TempDir::new().unwrap();
@@ -1854,7 +1854,7 @@ fn read_with_ending(
     )
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-document-9, C-core-document-10]
 #[test]
 fn every_line_ending_gives_the_same_body_fingerprint_and_lines() {
     let text = topic(&[confirmed(
@@ -1892,7 +1892,7 @@ fn every_line_ending_gives_the_same_body_fingerprint_and_lines() {
     }
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-document-14]
 #[test]
 fn a_state_line_wrapped_by_a_lone_carriage_return_is_read() {
     for (text, state, second) in [
@@ -1928,7 +1928,7 @@ fn a_state_line_wrapped_by_a_lone_carriage_return_is_read() {
     }
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-forder-4, C-core-findings-13, C-core-document-5]
 #[test]
 fn each_title_after_the_first_is_an_error_without_a_line() {
     for english in [false, true] {
@@ -1965,7 +1965,7 @@ fn each_title_after_the_first_is_an_error_without_a_line() {
     }
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-document-15]
 #[test]
 fn a_code_block_under_a_confirmation_row_stays_out_of_its_name_and_in_its_body() {
     let tmp = TempDir::new().unwrap();
@@ -2000,7 +2000,7 @@ fn a_code_block_under_a_confirmation_row_stays_out_of_its_name_and_in_its_body()
     assert_eq!(second["by_reading"], true);
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-input-2]
 #[test]
 fn a_leading_byte_order_mark_is_skipped() {
     let tmp = TempDir::new().unwrap();
@@ -2023,7 +2023,7 @@ fn a_leading_byte_order_mark_is_skipped() {
     assert_eq!(value["decisions"]["decisions"], 1);
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-input-3]
 #[test]
 fn closed_and_indented_code_blocks_are_no_error() {
     for before in [
@@ -2045,7 +2045,7 @@ fn closed_and_indented_code_blocks_are_no_error() {
     }
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-input-3]
 #[test]
 fn a_fence_on_the_last_line_of_a_document_is_unclosed() {
     let tmp = TempDir::new().unwrap();

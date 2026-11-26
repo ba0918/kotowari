@@ -163,7 +163,7 @@ fn req_039_unknown_heading_does_not_inflate_requirement_count() {
     );
 }
 
-// @kotowari[REQ-core-040]
+// @kotowari[REQ-core-040, C-core-document-12]
 #[test]
 fn req_040_code_blocks_are_skipped_except_gherkin() {
     let content = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: Test\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n\nStatement.\n\n```\n### BAD-001: Should not be parsed\n```\n\n## Examples\n\n```gherkin\n@id=EX-001 @about=REQ-001 @source=brainstorm/records.md#A1\nScenario: Test\n  Given something\n```\n";
@@ -728,7 +728,7 @@ fn req_054_unresolved_reference_in_definition_about_relation_and_sentence() {
     );
 }
 
-// @kotowari[REQ-core-032]
+// @kotowari[REQ-core-032, C-core-findings-8]
 #[test]
 fn req_032_duplicate_id_on_each_later_place_with_its_line() {
     let content = "# Title\n\nScope.\n\n## Requirements\n\n### REQ-001: First\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n\nStatement 1.\n\n### REQ-001: Second\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n\nStatement 2.\n\n### REQ-001: Third\n\n- kind: ubiquitous\n- source: brainstorm/records.md#A1\n- verification: unit\n\nStatement 3.\n";
@@ -1631,7 +1631,7 @@ fn req_047_requirement_without_kind_line_needs_statement() {
     );
 }
 
-// @kotowari[REQ-core-032]
+// @kotowari[REQ-core-032, C-core-findings-9]
 #[test]
 fn req_032_first_occurrence_is_bytewise_first_path() {
     // duplicate_id の1つ目はパスのバイト順で先の文書
@@ -2621,7 +2621,7 @@ fn req_123_duplicate_row_is_not_a_term() {
     );
 }
 
-// @kotowari[TBL-core-010]
+// @kotowari[TBL-core-010, C-core-document-7]
 #[test]
 fn tbl_010_split_lines_strips_cr_and_does_not_panic_on_bare_lf() {
     // \r\n は CR を取り除いた1行になる

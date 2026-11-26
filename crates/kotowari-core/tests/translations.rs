@@ -33,7 +33,7 @@ fn complete_labels(tag: &str, prefix: &str) -> String {
     out
 }
 
-// @kotowari[REQ-core-351, TBL-core-046]
+// @kotowari[REQ-core-351, TBL-core-046, C-core-ovlang-6, C-core-ovlang-7]
 #[test]
 fn req_core_351_english_is_the_built_in_text_with_overrides_and_others_are_the_labels() {
     let yaml = format!(
@@ -54,7 +54,7 @@ fn req_core_351_english_is_the_built_in_text_with_overrides_and_others_are_the_l
     assert_eq!(japanese.get("unknown"), None);
 }
 
-// @kotowari[REQ-core-334]
+// @kotowari[REQ-core-334, C-core-pairs-2]
 #[test]
 fn req_core_334_the_language_list_is_the_languages_key_and_english_when_absent_or_empty() {
     let ja = complete_labels("ja", "J");
@@ -69,7 +69,7 @@ fn req_core_334_the_language_list_is_the_languages_key_and_english_when_absent_o
     assert_eq!(config.validated().unwrap(), config);
 }
 
-// @kotowari[REQ-core-335]
+// @kotowari[REQ-core-335, C-core-pairs-3]
 #[test]
 fn req_core_335_an_empty_malformed_or_repeated_tag_stops() {
     let ja = complete_labels("ja", "J");
@@ -98,7 +98,7 @@ fn req_core_335_an_empty_malformed_or_repeated_tag_stops() {
     );
 }
 
-// @kotowari[REQ-core-335, REQ-core-352]
+// @kotowari[REQ-core-335, REQ-core-352, C-core-pairs-3]
 #[test]
 fn req_core_335_invalid_tags_stop_even_with_complete_labels() {
     for tag in ["\"\"", "en_us", "\"e n\""] {
@@ -110,7 +110,7 @@ fn req_core_335_invalid_tags_stop_even_with_complete_labels() {
     }
 }
 
-// @kotowari[TBL-core-044]
+// @kotowari[TBL-core-044, C-core-pairstruct-2]
 #[test]
 fn tbl_core_044_table_cells_preserve_escaped_pipes_and_source_boundaries() {
     let bordered = "| A | B |\n|---|---|\n| a | b |\n";
@@ -160,7 +160,7 @@ fn tbl_core_044_table_cells_preserve_escaped_pipes_and_source_boundaries() {
     }
 }
 
-// @kotowari[REQ-core-345, TBL-core-044]
+// @kotowari[REQ-core-345, TBL-core-044, C-core-pairstruct-2]
 #[test]
 fn req_core_345_absent_headings_have_no_line_but_changed_headings_have_their_line() {
     let first = "# Guide\n\n## One\n\n### Two\n\n#### Three\n";
@@ -182,7 +182,7 @@ fn req_core_345_absent_headings_have_no_line_but_changed_headings_have_their_lin
     );
 }
 
-// @kotowari[TBL-core-044, TBL-core-045]
+// @kotowari[TBL-core-044, TBL-core-045, C-core-pairstruct-3]
 #[test]
 fn tbl_core_045_overview_sentences_translate_but_keys_values_and_lengths_remain() {
     for (kind, yaml, sentence_fields) in [
@@ -248,7 +248,7 @@ fn tbl_core_045_overview_sentences_translate_but_keys_values_and_lengths_remain(
     }
 }
 
-// @kotowari[REQ-core-352]
+// @kotowari[REQ-core-352, C-core-ovlang-9, C-core-ovlang-10, C-core-ovlang-13]
 #[test]
 fn req_core_352_unknown_keys_and_a_doubled_number_placeholder_stop() {
     let ja = complete_labels("ja", "J");
@@ -274,7 +274,7 @@ fn req_core_352_unknown_keys_and_a_doubled_number_placeholder_stop() {
     }
 }
 
-// @kotowari[REQ-core-340]
+// @kotowari[REQ-core-340, C-core-pairs-9]
 #[test]
 fn req_core_340_the_blob_hash_is_the_git_blob_hash() {
     assert_eq!(
@@ -405,7 +405,7 @@ fn tbl_core_044_flag_records_compare_ids_and_fields() {
 
 const GUIDE: &str = "# Guide\n\nText.\n\n<!-- @kotowari[REQ-001:0123abcd] -->\n\n## Use\n\n```sh\nkotowari check\n```\n\n| a | b |\n|---|---|\n| c | d |\n";
 
-// @kotowari[TBL-core-044]
+// @kotowari[TBL-core-044, C-core-pairstruct-1, C-core-pairstruct-2]
 #[test]
 fn tbl_core_044_guides_compare_headings_marks_code_and_tables() {
     let sentences = GUIDE
@@ -436,7 +436,7 @@ fn tbl_core_044_guides_compare_headings_marks_code_and_tables() {
 
 const OVERVIEW_DATA: &str = "---\nir:\n  - docs/ir/a.md\n---\n\n# Title\n\n```view lead\nconclusion: c\npoints:\n  - p\n```\n\n<!-- @kotowari[REQ-001:0123abcd] -->\n\n## Section\n\n```view steps\nitems:\n  - title: t\n    body: b\n    refs: [REQ-001]\n```\n\n| a |\n|---|\n| b |\n";
 
-// @kotowari[TBL-core-044, TBL-core-045]
+// @kotowari[TBL-core-044, TBL-core-045, C-core-pairstruct-3]
 #[test]
 fn tbl_core_044_overview_data_compares_frontmatter_headings_parts_marks_and_tables() {
     let sentences = OVERVIEW_DATA
@@ -493,7 +493,7 @@ fn tbl_core_044_overview_data_compares_frontmatter_headings_parts_marks_and_tabl
 
 const CONTENTS: &str = "title: T\nnote: N\nitems:\n  - a\n  - title: G\n    items:\n      - b\n";
 
-// @kotowari[TBL-core-044]
+// @kotowari[TBL-core-044, C-core-pairstruct-4]
 #[test]
 fn tbl_core_044_contents_compare_nesting_names_and_whether_a_note_is_present() {
     let sentences = CONTENTS
@@ -557,7 +557,7 @@ fn ja_en() -> (Config, Vec<String>) {
     (config, languages)
 }
 
-// @kotowari[REQ-core-344, REQ-core-345, REQ-core-347, TBL-core-044]
+// @kotowari[REQ-core-344, REQ-core-345, REQ-core-347, TBL-core-044, C-core-pairstruct-5]
 #[test]
 fn reference_links_preserve_the_order_of_their_resolved_destinations() {
     use crate::translations::{Pairs, Place};
@@ -587,7 +587,7 @@ fn reference_links_preserve_the_order_of_their_resolved_destinations() {
     }
 }
 
-// @kotowari[REQ-core-347, REQ-core-348]
+// @kotowari[REQ-core-347, REQ-core-348, C-core-pairstruct-11]
 #[test]
 fn reference_links_and_images_are_checked_at_the_usage_and_definition_lines() {
     use crate::translations::{Pairs, Place};
@@ -626,7 +626,7 @@ fn lines_of(findings: &[crate::Finding], kind: &str) -> Vec<Option<usize>> {
         .collect()
 }
 
-// @kotowari[REQ-core-027, TBL-core-019]
+// @kotowari[REQ-core-027, TBL-core-019, C-core-forder-4]
 #[test]
 fn req_core_027_lines_of_the_pair_findings() {
     use crate::translations::{Pairs, Place};
@@ -685,7 +685,7 @@ fn req_core_027_lines_of_the_pair_findings() {
     );
 }
 
-// @kotowari[TBL-core-044]
+// @kotowari[TBL-core-044, C-core-pairstruct-5]
 #[test]
 fn tbl_core_044_link_parts_compare_destinations_read_as_the_first_language_side() {
     use crate::translations::{Pairs, Place};
@@ -725,7 +725,7 @@ fn tbl_core_044_link_parts_compare_destinations_read_as_the_first_language_side(
     }
 }
 
-// @kotowari[TBL-core-044]
+// @kotowari[TBL-core-044, C-core-pairstruct-9]
 #[test]
 fn tbl_core_044_the_switcher_line_is_not_in_the_skeleton() {
     use crate::translations::{Pairs, Place};
@@ -762,7 +762,7 @@ fn tbl_core_044_the_switcher_line_is_not_in_the_skeleton() {
     );
 }
 
-// @kotowari[REQ-core-346, TBL-core-044]
+// @kotowari[REQ-core-346, TBL-core-044, C-core-pairstruct-6]
 #[test]
 fn req_core_346_a_switcher_at_end_of_file_needs_no_final_newline() {
     use crate::translations::{Pairs, Place};
@@ -866,7 +866,7 @@ fn req_core_346_a_switcher_after_a_byte_order_mark_does_not_count_as_document_sc
     }
 }
 
-// @kotowari[REQ-core-347, REQ-core-348, REQ-core-349, TBL-core-044]
+// @kotowari[REQ-core-347, REQ-core-348, REQ-core-349, TBL-core-044, C-core-pairstruct-5, C-core-pairstruct-11]
 #[test]
 fn req_core_347_inline_images_have_checked_and_compared_destinations() {
     use crate::translations::{Pairs, Place};

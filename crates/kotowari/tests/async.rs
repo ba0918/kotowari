@@ -12,7 +12,7 @@ fn send<T: Send>(value: T) -> T {
     value
 }
 
-// @kotowari[REQ-core-318, REQ-core-321, EX-core-492, EX-core-495]
+// @kotowari[REQ-core-318, REQ-core-321, EX-core-492, EX-core-495, C-core-libasync-1, C-core-libasync-8]
 #[test]
 fn every_operation_is_send_and_reuses_sync_results_and_failure_kinds() {
     let dir = tempfile::tempdir().unwrap();
@@ -94,7 +94,7 @@ fn every_operation_is_send_and_reuses_sync_results_and_failure_kinds() {
     });
 }
 
-// @kotowari[REQ-core-310, TBL-core-041, REQ-core-318]
+// @kotowari[REQ-core-310, TBL-core-041, REQ-core-318, C-core-libapi-13, C-core-libasync-1]
 #[test]
 fn overview_prepare_and_build_return_what_the_sync_operations_return() {
     let make = || {

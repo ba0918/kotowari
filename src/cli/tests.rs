@@ -3,7 +3,7 @@ use super::*;
 fn args(list: &[&str]) -> Vec<String> {
     list.iter().map(|s| s.to_string()).collect()
 }
-// @kotowari[REQ-core-002]
+// @kotowari[REQ-core-002, C-core-cli-2]
 #[test]
 fn req_core_002_plan_takes_the_format_before_or_after_the_path() {
     for list in [
@@ -41,7 +41,7 @@ fn first_column_of_table(markdown: &str, header: &str) -> std::collections::BTre
     found
 }
 
-// @kotowari[REQ-core-127]
+// @kotowari[REQ-core-127, C-core-skillref-2, C-core-skillref-4]
 #[test]
 fn req_127_findings_reference_stop_wordings_match_the_code() {
     let path =
@@ -61,7 +61,7 @@ fn req_127_findings_reference_stop_wordings_match_the_code() {
     );
 }
 
-// @kotowari[REQ-core-297]
+// @kotowari[REQ-core-297, C-core-ovcmd-17]
 #[test]
 fn req_core_297_serve_uses_port_4590_unless_given() {
     assert_eq!(DEFAULT_PORT, 4590);
@@ -77,7 +77,7 @@ fn req_core_297_serve_uses_port_4590_unless_given() {
     );
 }
 
-// @kotowari[REQ-core-304]
+// @kotowari[REQ-core-304, C-core-cli-11]
 #[test]
 fn req_core_304_the_lowest_port_is_1() {
     let parsed = parse_args(&args(&["overview", "serve", "--port", "1"]));
@@ -87,7 +87,7 @@ fn req_core_304_the_lowest_port_is_1() {
     );
 }
 
-// @kotowari[REQ-core-002]
+// @kotowari[REQ-core-002, C-core-cli-3]
 #[test]
 fn req_core_002_check_takes_allow_test_findings_without_a_value() {
     // 値を取らないので、すぐ後の語はコマンドやほかのオプションとして読まれる
@@ -146,7 +146,7 @@ fn assert_argument_error(list: &[&str]) {
     );
 }
 
-// @kotowari[REQ-core-004]
+// @kotowari[REQ-core-004, C-core-cli-7]
 #[test]
 fn req_core_004_allow_test_findings_on_a_command_other_than_check_stops() {
     for list in [
@@ -168,7 +168,7 @@ fn req_core_004_allow_test_findings_on_a_command_other_than_check_stops() {
     }
 }
 
-// @kotowari[REQ-core-004]
+// @kotowari[REQ-core-004, C-core-cli-8]
 #[test]
 fn req_core_004_allow_test_findings_twice_on_check_stops() {
     assert_argument_error(&["check", "--allow-test-findings", "--allow-test-findings"]);

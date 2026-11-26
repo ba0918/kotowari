@@ -143,7 +143,7 @@ fn finding(
 
 const DIR: &str = "docs/decisions/greet";
 
-// @kotowari[C-core-lang-1]
+// @kotowari[C-core-lang-1, C-core-pairs-15]
 #[test]
 fn a_pair_with_both_sides_and_a_matching_record_raises_nothing() {
     let tmp = TempDir::new().unwrap();
@@ -239,7 +239,7 @@ fn changing_one_side_without_the_record_is_an_error_on_that_side() {
     );
 }
 
-// @kotowari[C-core-lang-3]
+// @kotowari[C-core-lang-3, C-core-pairs-16]
 #[test]
 fn ids_and_marks_are_matched_against_the_first_language_side_only() {
     let tmp = TempDir::new().unwrap();
@@ -378,7 +378,7 @@ fn different_words_in_the_same_skeleton_are_no_mismatch() {
     );
 }
 
-// @kotowari[C-core-lang-1]
+// @kotowari[C-core-lang-1, C-core-pairstruct-10]
 #[test]
 fn a_decision_document_without_its_switcher_line_is_an_error() {
     let tmp = TempDir::new().unwrap();
@@ -401,7 +401,7 @@ fn a_decision_document_without_its_switcher_line_is_an_error() {
     );
 }
 
-// @kotowari[C-core-docs-8]
+// @kotowari[C-core-docs-8, C-core-pairstruct-16]
 #[test]
 fn the_switcher_line_is_not_the_topic_paragraph() {
     let tmp = TempDir::new().unwrap();
@@ -424,7 +424,7 @@ fn the_switcher_line_is_not_the_topic_paragraph() {
     );
 }
 
-// @kotowari[C-core-docs-11]
+// @kotowari[C-core-docs-11, C-core-pairstruct-13]
 #[test]
 fn links_in_the_japanese_side_are_checked_against_the_japanese_headings() {
     let tmp = TempDir::new().unwrap();
@@ -471,7 +471,7 @@ fn links_in_the_japanese_side_are_checked_against_the_japanese_headings() {
     );
 }
 
-// @kotowari[C-core-docs-20]
+// @kotowari[C-core-docs-20, C-core-pairs-14, C-core-pairs-19]
 #[test]
 fn a_glossary_is_paired_but_its_content_is_not_compared() {
     let tmp = TempDir::new().unwrap();
@@ -535,7 +535,7 @@ fn list_shows_the_decision_document_pairs() {
     assert_eq!(paths, vec!["docs/decisions/greet/greet.md".to_string()]);
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-input-3]
 #[test]
 fn an_unclosed_code_block_on_the_japanese_side_is_an_error_on_that_side() {
     let tmp = TempDir::new().unwrap();
@@ -564,7 +564,7 @@ fn an_unclosed_code_block_on_the_japanese_side_is_an_error_on_that_side() {
     assert_eq!(code, Some(1));
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-document-9, C-core-document-10]
 #[test]
 fn a_pair_whose_lines_end_in_a_lone_carriage_return_reads_like_one_ending_in_line_feeds() {
     let read = |ending: &str| {
@@ -597,7 +597,7 @@ fn a_pair_whose_lines_end_in_a_lone_carriage_return_reads_like_one_ending_in_lin
     assert_eq!(read("\r"), (findings_lf, decision_lf));
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-document-5]
 #[test]
 fn a_second_title_on_both_sides_is_an_error_on_each_side() {
     let tmp = TempDir::new().unwrap();
@@ -634,7 +634,7 @@ fn a_second_title_on_both_sides_is_an_error_on_each_side() {
     );
 }
 
-// @kotowari[C-core-docs-1]
+// @kotowari[C-core-docs-1, C-core-input-2]
 #[test]
 fn a_leading_byte_order_mark_on_either_side_is_skipped() {
     let tmp = TempDir::new().unwrap();
