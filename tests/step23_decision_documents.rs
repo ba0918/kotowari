@@ -235,23 +235,25 @@ fn a_state_that_is_neither_proposed_nor_implemented_is_an_error() {
 // @kotowari[C-core-docs-5, C-core-formc-6]
 #[test]
 fn a_decision_without_a_state_line_is_an_error_at_its_heading() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), Some("docs/decisions"));
-    write(
-        tmp.path(),
-        "docs/decisions/greet.md",
+    for text in [
         "# 挨拶\n\n挨拶の仕方を決める。\n\n## 挨拶する\n\n### 問題\n\n困っていた。\n\n### 決めたこと\n\nこうする。\n",
-    );
-    let value = check(tmp.path());
-    assert_eq!(
-        findings(&value),
-        vec![finding(
-            "decision_state_invalid",
-            "docs/decisions/greet.md",
-            5,
-            ""
-        )]
-    );
+        "# Greetings\n\nDecides how to greet.\n\n## Greet\n\n### Problem\n\nTrouble.\n\n### Decision\n\nDo this.\n",
+    ] {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(tmp.path(), "docs/decisions/greet.md", text);
+        let value = check(tmp.path());
+        assert_eq!(
+            findings(&value),
+            vec![finding(
+                "decision_state_invalid",
+                "docs/decisions/greet.md",
+                5,
+                ""
+            )],
+            "{text}"
+        );
+    }
 }
 
 // @kotowari[C-core-docs-6]
@@ -566,18 +568,24 @@ fn two_confirmations_with_the_same_id_are_an_error() {
 // @kotowari[C-core-confirm-3, C-core-findings-4, C-core-formc-6]
 #[test]
 fn a_confirmation_row_without_a_well_formed_id_is_an_error() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), Some("docs/decisions"));
-    write(
-        tmp.path(),
-        "docs/decisions/greet.md",
-        &topic(&[confirmed(
-            "挨拶する",
-            "提案",
-            &["C-greet-01 挨拶が出る", "名前が入る", "C-Greet-2 大文字"],
-        )]),
-    );
-    let value = check(tmp.path());
+    let rows = ["C-greet-01 挨拶が出る", "名前が入る", "C-Greet-2 大文字"];
+    let japanese = topic(&[confirmed("挨拶する", "提案", &rows)]);
+    let english = japanese
+        .replace("# 挨拶\n", "# Greetings\n")
+        .replace("状態: 提案", "Status: proposed")
+        .replace("### 問題", "### Problem")
+        .replace("### 決めたこと", "### Decision")
+        .replace("### 確認すること", "### Confirmations");
+    for text in [japanese, english] {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(tmp.path(), "docs/decisions/greet.md", &text);
+        a_confirmation_row_without_a_well_formed_id_is_an_error_in(tmp.path());
+    }
+}
+
+fn a_confirmation_row_without_a_well_formed_id_is_an_error_in(tmp: &Path) {
+    let value = check(tmp);
     assert_eq!(
         findings(&value),
         vec![
@@ -2342,31 +2350,34 @@ fn rows_after_a_deeper_heading_inside_the_confirmations_are_still_rows() {
 // @kotowari[C-core-docs-1]
 #[test]
 fn a_section_name_on_a_deeper_heading_is_not_that_section() {
-    let tmp = TempDir::new().unwrap();
-    make_project(tmp.path(), Some("docs/decisions"));
-    write(
-        tmp.path(),
-        "docs/decisions/greet.md",
-        &topic(&[decision(
-            "挨拶する",
-            "提案",
-            &[(
-                "決めたこと",
-                "こうする。\n\n#### 問題\n\n困っていた。\n\n#### Confirmations\n\n- C-greet-1 出る",
-            )],
-        )]),
-    );
-    let value = check(tmp.path());
-    assert_eq!(
-        findings(&value),
-        vec![finding(
-            "decision_section_missing",
-            "docs/decisions/greet.md",
-            5,
-            "問題"
-        )]
-    );
-    assert_eq!(value["decisions"]["confirmations"], 0);
+    let japanese = topic(&[decision(
+        "挨拶する",
+        "提案",
+        &[(
+            "決めたこと",
+            "こうする。\n\n#### 問題\n\n困っていた。\n\n#### Confirmations\n\n- C-greet-1 出る",
+        )],
+    )]);
+    let english = "# Greetings\n\nDecides how to greet.\n\n## Greet\n\nStatus: proposed\n\n\
+                   ### Decision\n\nDo this.\n\n#### Problem\n\nTrouble.\n\n#### 確認すること\n\n\
+                   - C-greet-1 Shown\n"
+        .to_string();
+    for (text, missing) in [(japanese, "問題"), (english, "Problem")] {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(tmp.path(), "docs/decisions/greet.md", &text);
+        let value = check(tmp.path());
+        assert_eq!(
+            findings(&value),
+            vec![finding(
+                "decision_section_missing",
+                "docs/decisions/greet.md",
+                5,
+                missing
+            )]
+        );
+        assert_eq!(value["decisions"]["confirmations"], 0);
+    }
 }
 
 // @kotowari[C-core-docs-1]
@@ -2490,6 +2501,179 @@ fn a_section_heading_before_the_first_decision_and_the_paragraph_under_it_are_er
             vec![
                 finding("unknown_heading", path, 5, "### 背景"),
                 finding("unknown_line", path, 7, "前からあった。"),
+            ],
+            "english={english}"
+        );
+    }
+}
+
+/// 英語か日本語の綴りの、提案の決定が1つの文書の、確認することの見出しと「未決」の見出し
+fn keyword_headings(english: bool) -> (&'static str, &'static str) {
+    if english {
+        ("### Confirmations", "## Open")
+    } else {
+        ("### 確認すること", "## 未決")
+    }
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn blocks_other_than_lists_under_the_confirmations_are_errors_and_hold_no_rows() {
+    for english in [false, true] {
+        let (confirmations, _) = keyword_headings(english);
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(
+            tmp.path(),
+            "docs/decisions/greet.md",
+            &format!(
+                "{}\n{confirmations}\n\n段落。\n\n1. C-greet-1 番号\n\n| a |\n|---|\n| 1 |\n\n- C-greet-2 出る\n",
+                proposed_with_preamble(english, "")
+            ),
+        );
+        let path = "docs/decisions/greet.md";
+        let value = check(tmp.path());
+        assert_eq!(
+            findings(&value),
+            vec![
+                finding("unknown_line", path, 21, "段落。"),
+                finding("unknown_line", path, 23, "1. C-greet-1 番号"),
+                finding("unknown_line", path, 25, "| a |"),
+            ],
+            "english={english}"
+        );
+        assert_eq!(value["decisions"]["confirmations"], 1, "english={english}");
+    }
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn an_ordered_list_in_the_open_section_is_an_error() {
+    for english in [false, true] {
+        let (_, open) = keyword_headings(english);
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(
+            tmp.path(),
+            "docs/decisions/greet.md",
+            &format!(
+                "{}\n{open}\n\n1. 夜の挨拶\n",
+                proposed_with_preamble(english, "")
+            ),
+        );
+        assert_eq!(
+            findings(&check(tmp.path())),
+            vec![finding(
+                "unknown_line",
+                "docs/decisions/greet.md",
+                21,
+                "1. 夜の挨拶"
+            )],
+            "english={english}"
+        );
+    }
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn the_content_under_an_unknown_heading_in_the_open_section_is_an_error_block_by_block() {
+    for english in [false, true] {
+        let (_, open) = keyword_headings(english);
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(
+            tmp.path(),
+            "docs/decisions/greet.md",
+            &format!(
+                "{}\n{open}\n\n- 夜の挨拶\n\n### 細目\n\n- 朝の挨拶\n",
+                proposed_with_preamble(english, "")
+            ),
+        );
+        let path = "docs/decisions/greet.md";
+        assert_eq!(
+            findings(&check(tmp.path())),
+            vec![
+                finding("unknown_heading", path, 23, "### 細目"),
+                finding("unknown_line", path, 25, "- 朝の挨拶"),
+            ],
+            "english={english}"
+        );
+    }
+}
+
+// @kotowari[C-core-docs-1, C-core-confirm-9]
+#[test]
+fn a_list_before_the_state_line_is_an_error_and_the_state_is_still_read() {
+    for (english, state) in [(false, "状態: 提案"), (true, "Status: proposed")] {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(
+            tmp.path(),
+            "docs/decisions/greet.md",
+            &proposed_with_preamble(english, "")
+                .replace(&format!("{state}\n"), &format!("- 前置き\n\n{state}\n")),
+        );
+        assert_eq!(
+            findings(&check(tmp.path())),
+            vec![finding(
+                "unknown_line",
+                "docs/decisions/greet.md",
+                7,
+                "- 前置き"
+            )],
+            "english={english}"
+        );
+        let (value, _) = status(tmp.path());
+        assert_eq!(value["decisions"]["proposed"], 1, "english={english}");
+    }
+}
+
+// @kotowari[C-core-docs-5]
+#[test]
+fn a_first_paragraph_of_two_lines_that_is_not_a_state_line_is_only_a_state_error() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &proposed_with_preamble(false, "").replace("状態: 提案", "状態は提案。\n二行目。"),
+    );
+    assert_eq!(
+        findings(&check(tmp.path())),
+        vec![finding(
+            "decision_state_invalid",
+            "docs/decisions/greet.md",
+            5,
+            ""
+        )]
+    );
+}
+
+// @kotowari[C-core-input-3, C-core-input-4]
+#[test]
+fn an_unclosed_code_block_after_the_state_line_is_only_an_unclosed_code_block_there() {
+    for (english, state) in [(false, "状態: 提案"), (true, "Status: proposed")] {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(
+            tmp.path(),
+            "docs/decisions/greet.md",
+            &proposed_with_preamble(english, "")
+                .replace(&format!("{state}\n"), &format!("{state}\n\n```text\n")),
+        );
+        let path = "docs/decisions/greet.md";
+        // 出力は detail の順に並ぶ
+        let (first, second) = if english {
+            ("Decision", "Problem")
+        } else {
+            ("問題", "決めたこと")
+        };
+        assert_eq!(
+            findings(&check(tmp.path())),
+            vec![
+                finding("decision_section_missing", path, 5, first),
+                finding("decision_section_missing", path, 5, second),
+                finding("unclosed_code_block", path, 9, "```text"),
             ],
             "english={english}"
         );
