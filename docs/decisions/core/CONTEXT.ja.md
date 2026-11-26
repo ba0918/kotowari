@@ -2,78 +2,69 @@
 
 [English](CONTEXT.md) | 日本語
 
-| Term | Meaning | Source |
-|---|---|---|
-| IR | 正規化した仕様の Markdown の文書の集まり。設定の "ir" の置き場の下に、ディレクトリの深さに制限なく置く | docs/decision/records/records.md#A12, docs/decision/records/records.md#A32, docs/decision/records/records.md#A47, docs/decision/records/records.md#A25, docs/decision/records/records.md#A52, docs/decision/records/2026-09-16-ir-tree.md#A1 |
-| 基準のディレクトリ | カレントディレクトリから上に向かって探し、最初に見つかった ".kotowari/" のあるディレクトリ。無ければカレントディレクトリ | docs/decision/records/records.md#A37 |
-| 設定ファイル | 読む場所と検査の値を書く YAML のファイル。既定は ".kotowari/config.yaml" | docs/decision/records/records.md#A2, docs/decision/records/records.md#A12 |
-| 判断の記録 | brainstorm の起動の有無を問わず、検討のまとまりごとに決めたことを1行1決定で並べたファイル。決定の行の下に、理由などの補足の行を持てる（字下げの幅は問わない）。設定の "decisions.records" の置き場の下に置き、決定の節の見出し（"## Agreements"、"## Prohibitions"、"## Delegated"、"## Rejected"）をコードブロックの外に1つ以上持つことで見分ける | docs/decision/records/records.md#A22, docs/decision/records/records.md#A48, docs/decision/adr/0003-records-and-adr.md#状況, docs/decision/records/records.md#A134, docs/decision/records/2026-09-17-decision-log.md#A1, docs/decision/records/2026-09-17-record-form.md#A5, docs/decision/records/2026-09-17-record-form.md#A46, docs/decision/records/2026-10-01-change-conformance.md#A13 |
-| ADR | 4つの基準に当たる判断を、状況、決定、理由、却下した案、結果の節とともに残したファイル。設定の "decisions.adr" の置き場の下に置く。2026-09-17 以降は新しく書かず、既存のものを出典の先として残す | docs/decision/records/records.md#A22, docs/decision/records/records.md#A43, docs/decision/records/records.md#A38, docs/decision/records/records.md#A47, docs/decision/records/2026-09-17-decision-log.md#A5 |
-| 出典 | 項目の元になった決定か ADR の節を指す "パス#印" の文字列 | docs/decision/records/records.md#A3, docs/decision/records/records.md#A38 |
-| 決定の番号 | 判断の記録の決定の行の先頭にある番号。英大文字1文字に1桁以上の数字（"A26"、"P1" の形） | docs/decision/records/records.md#A13, docs/decision/records/records.md#A38, docs/decision/records/records.md#A115 |
-| 決定の節 | 判断の記録の Agreements、Prohibitions、Delegated、Rejected の節。"## " の見出しで始まり次の "## " の見出しで終わる | docs/decision/records/records.md#A38, docs/decision/records/records.md#A115, docs/decision/records/records.md#A134 |
-| 番号の行 | 判断の記録の節にある、行頭の空白を除いて "- " と決定の番号の形の文字に空白が続く行か、"- " と決定の番号の形の文字だけの行。決定の節では決定の行、Undecided と Superseded の節でも同じ形。番号の行の判定は補足の行より先 | docs/decision/records/2026-09-17-record-form.md#A30, docs/decision/records/2026-09-17-record-form.md#A33, docs/decision/records/2026-09-17-record-form.md#A14 |
-| 補足の行 | 番号の行の次から、次の番号の行か "## " の見出しまでの間にある、行頭の空白を除いて "- 名前:" の形の行。名前は "- " の直後から最初の ":" までで1文字以上あり空白と ":" を含まず、値は ":" の後の前後の空白を除いた文字。字下げの幅は問わず、空行を挟んでよい。番号の行は補足の行と見ない | docs/decision/records/2026-09-17-record-form.md#A5, docs/decision/records/2026-09-17-record-form.md#A33, docs/decision/records/2026-09-17-record-form.md#A27, docs/decision/records/2026-09-17-decision-log.md#A1 |
-| Superseded の節 | 判断の記録の "## Superseded" の節。置き換えられた決定の行を置く。決定の節ではなく、そこを指す出典は無効 | docs/decision/records/2026-09-17-decision-log.md#A12, docs/decision/records/2026-09-17-record-form.md#A3 |
-| 話題ごとの文書 | IR の文書のうち、用語集と問題の記録を除いたもの | docs/decision/records/ir-form.md#文書 |
-| 用語集 | IR の置き場のどのディレクトリにも置ける "CONTEXT.md"。文書から見えるのは、その文書の連鎖にある用語集 | docs/decision/records/records.md#A41, docs/decision/records/records.md#A56, docs/decision/records/2026-09-16-ir-tree.md#A3, docs/decision/records/2026-09-16-ir-tree.md#A8 |
-| 連鎖 | 文書のあるディレクトリから IR の置き場の根までの各ディレクトリの "CONTEXT.md" の並び。根に近い方が先 | docs/decision/records/2026-09-16-ir-tree.md#A3, docs/decision/records/2026-09-16-ir-tree.md#A4 |
-| 用語 | 文書の連鎖にある用語集の表の用語の列にある語。IR の文の中ではバッククォートで囲む | docs/decision/records/records.md#A31, docs/decision/records/records.md#A42, docs/decision/records/2026-09-16-ir-tree.md#A3 |
-| 計画書 | 実装の手順を書いた Markdown の文書。"kotowari plan" が本体に同梱したスキーマで形を検査する | docs/decision/records/2026-09-24-plan-schema.md#A9, docs/decision/records/2026-09-24-plan-schema.md#A10, docs/decision/records/2026-09-24-plan-schema.md#A7 |
-| 問題の記録 | IR の置き場のどのディレクトリにも置ける "FLAGS.md" | docs/decision/records/records.md#A28, docs/decision/records/records.md#A56, docs/decision/records/2026-09-16-ir-tree.md#A8 |
-| 題名 | 文書の "# " で始まる行 | docs/decision/records/records.md#A42 |
-| 文書が扱う範囲 | 題名の後、最初の "## " か "### " より前にある、一覧の行でも表の行でもない空でない行。"- deferred:" の行も一覧の行なので含めない | docs/decision/records/records.md#A30, docs/decision/records/records.md#A55, docs/decision/records/2026-09-25-deferred-items.md#A19, docs/decision/records/2026-09-25-deferred-items.md#A24 |
-| 項目 | 要求、決定表、性質、問題の記録のそれぞれ。"### ID: 名前" の見出しで始まる | docs/decision/records/records.md#A42, docs/decision/records/records.md#A52, docs/decision/records/ir-form.md#項目 |
-| 要求 | "### REQ-nnn: 名前" の見出しで始まる項目 | docs/decision/records/records.md#A42 |
-| 文 | 見出しの下の、一覧でも表でもない空でない行。1行を1つの文と数え、一覧の行の直後に空行なしで続く一覧でない行、空行の後に字下げして続く一覧でない行、引用、水平線、HTML、画像の行、"---" か "===" だけの行、空行の後に4つ以上の空白で字下げした行、表にならない縦棒で始まる行も文である | docs/decision/records/records.md#A42, docs/decision/records/2026-09-23-ir-engine-gaps.md#A1, docs/decision/records/2026-09-23-ir-engine-gaps.md#A2, docs/decision/records/2026-09-23-ir-engine-gaps.md#A5, docs/decision/records/2026-09-23-ir-engine-gaps.md#A13, docs/decision/records/2026-09-23-ir-engine-gaps.md#A26, docs/decision/records/2026-09-23-ir-engine-gaps.md#A21, docs/decision/records/2026-09-23-ir-engine-gaps.md#A22, docs/decision/records/2026-09-23-ir-engine-gaps.md#A38 |
-| 決定表 | "### TBL-nnn: 名前" の見出しで始まり、Markdown の表を持つ項目 | docs/decision/records/ir-form.md#項目 |
-| 性質 | "### PROP-nnn: 名前" の見出しで始まり、文を持つ項目 | docs/decision/records/ir-form.md#項目 |
-| シナリオ | gherkin のコードブロックの中の "Scenario:" と、その直前の行のタグ | docs/decision/records/records.md#A27, docs/decision/records/ir-form.md#項目 |
-| ID | "REQ-"、"TBL-"、"PROP-"、"EX-"、"FLAG-" のいずれかに、省いてよい名前と "-" を続け、3桁以上の数字（4桁以上のときは先頭が "0" でない）を置いた、項目の識別子。名前は小文字の英字で始まり、2文字目からは小文字の英数字と "-" だけからなる | docs/decision/records/records.md#A52, docs/decision/records/2026-09-16-ir-tree.md#A6, docs/decision/records/2026-09-16-ir-tree.md#A11, docs/decision/records/2026-09-22-id-namespace.md#A1 |
-| 指摘 | 検査で見つけた1件。kind、severity、path、line、detail を持つ | docs/decision/records/records.md#A40 |
-| 誤り | severity が "error" の指摘。終了コードを1にする。ただし "--allow-test-findings" を付けた "kotowari check" では、テスト側の指摘は終了コードに数えない | docs/decision/records/records.md#A29, docs/decision/records/2026-10-06-spec-first-commit.md#A10 |
-| 注意 | 終了コードを変えない指摘。severity は "notice" | docs/decision/records/records.md#A17, docs/decision/records/records.md#A29, docs/decision/records/2026-09-16-notice.md#A1, docs/decision/records/2026-09-16-notice.md#A2 |
-| テスト側の指摘 | テストのファイルが原因の誤り。範囲は決定表 TBL-core-047 で定める | docs/decision/records/2026-10-06-spec-first-commit.md#A2, docs/decision/records/2026-10-06-spec-first-commit.md#A9, docs/decision/records/2026-10-06-spec-first-commit.md#A11 |
-| 整合のフェーズ | 実装・変更したコードと IR の食い違いと、触れた IR の隙間と矛盾を、別の文脈の LLM が列挙して片付ける、cycle の中の専用の検証。照合、変更照合とは呼ばない | docs/decision/records/2026-10-06-changes-rethink.md#A3, docs/decision/records/2026-10-06-changes-rethink.md#A20, docs/decision/records/2026-10-06-changes-rethink.md#A5, docs/decision/records/2026-10-06-changes-rethink.md#A12, docs/decision/records/2026-10-06-changes-rethink.md#A13, docs/decision/records/2026-10-06-changes-rethink.md#A15, docs/decision/records/2026-10-06-changes-rethink.md#A29 |
-| 停止 | 検査を行えずに終了コード2で終わること | docs/decision/records/records.md#A20, docs/decision/records/records.md#A40 |
-| 印 | テストに書く "@kotowari[ID, ...]" の並び | docs/decision/records/records.md#A14, docs/decision/records/records.md#A57 |
-| ガイド | 設定の "guides.files" に当たるファイル。読み手は製品を使う人で、利用者向けの使い方の文書を置く想定で、IR、判断の記録、実装計画、skill を置く場所ではないが、kotowari はそれを区別しない。"文書" だけで呼ばない | docs/decision/records/2026-09-24-doc-marks.md#A1, docs/decision/records/2026-09-24-doc-marks.md#A4, docs/decision/records/2026-09-24-doc-marks.md#A21, docs/decision/records/2026-09-24-doc-marks.md#A24, docs/decision/records/2026-10-05-guide-overview-roles.md#A2, docs/decision/records/2026-10-05-guide-overview-roles.md#A5 |
-| ガイドの印 | ガイドの HTML のコメントの中に書く "@kotowari[ID:指紋, ...]" の並び。印とは別の規則で読む | docs/decision/records/2026-09-24-doc-marks.md#A5, docs/decision/records/2026-09-24-doc-marks.md#A9, docs/decision/records/2026-09-24-doc-marks.md#A21 |
-| 指紋 | 項目の本文の出典の行を除いた行か、シナリオのステップの行から取る、16進の小文字8文字の値 | docs/decision/records/2026-09-24-doc-marks.md#A6, docs/decision/records/2026-09-24-doc-marks.md#A7, docs/decision/records/2026-09-24-doc-marks.md#A21, docs/decision/records/2026-09-24-doc-marks.md#A26, docs/decision/records/2026-09-24-doc-marks.md#A27 |
-| テスト | 問い合わせが当たった構文木の節。Rust と Python では関数、TS/JS では "it(...)" のような呼び出し | docs/decision/records/records.md#A24, docs/decision/records/records.md#A26, docs/decision/records/2026-09-24-multi-language-tests.md#A10, docs/decision/records/2026-09-24-multi-language-tests.md#A18, docs/decision/records/2026-09-24-multi-language-tests.md#A19, docs/decision/records/2026-09-24-multi-language-tests.md#A27 |
-| テストのファイル | 設定の "tests.files" の glob に当たるファイル | docs/decision/records/records.md#A36, docs/decision/records/records.md#A47 |
-| 問い合わせ | テストを見つける、言語ごとの ast-grep のルール。kotowari が同梱するものと、設定の "tests.rules" で足すものがある | docs/decision/records/records.md#A24, docs/decision/records/records.md#A58, docs/decision/records/2026-09-24-multi-language-tests.md#A1, docs/decision/records/2026-09-24-multi-language-tests.md#A2, docs/decision/records/2026-09-24-multi-language-tests.md#A4, docs/decision/records/2026-09-24-multi-language-tests.md#A9 |
-| 問い合わせのある言語 | 拡張子から決まる言語のうち、同梱か設定の問い合わせが1つ以上あるもの | docs/decision/records/records.md#A39, docs/decision/records/records.md#A58, docs/decision/records/2026-09-24-multi-language-tests.md#A7 |
-| 問い合わせの無い言語 | 問い合わせのある言語でないもの。拡張子から言語が決まらないもの（TBL-core-031 に無い拡張子）を含む | docs/decision/records/records.md#A39, docs/decision/records/records.md#A123, docs/decision/records/2026-09-24-multi-language-tests.md#A7 |
-| 直前のコメントの塊 | テストの節の最初の行の直前から上に向かって、空行が来るまで続くコメントだけの行の塊（複数行のコメント、属性、デコレータの途中の空白だけの行では切れない）。コメントは tree-sitter の extra の節で、TBL-core-035 の行を挟んでよい | docs/decision/records/2026-09-24-multi-language-tests.md#A16, docs/decision/records/2026-09-24-multi-language-tests.md#A17, docs/decision/records/2026-09-24-multi-language-tests.md#A50 |
-| 曖昧語 | 設定の "vague_words" に並べた語 | docs/decision/records/records.md#A21, docs/decision/records/records.md#A41 |
-| 対象の行 | 用語と曖昧語の検査を受ける行。TBL-core-013 で決める | docs/decision/records/records.md#A53 |
-| 文書名の参照 | 文（文書が扱う範囲の行と問題の記録の本文の行を含む）の中にある文書名の並び。TBL-core-014 で決める | docs/decision/records/records.md#A47, docs/decision/records/2026-09-16-ir-tree.md#A21, docs/decision/records/2026-09-22-ir-engine.md#A72 |
-| 除外 | 仕様が列挙した、kotowari が指摘を出さずに読まないか見ないもの。隠しディレクトリ、ディレクトリのシンボリックリンク、ディレクトリでも通常のファイルでもないもの（ソケット、名前付きパイプ、デバイス）、".md" 以外のファイル、".kotowari" という名前のファイル、コードブロックの中（gherkin を除く）、gherkin のブロックの外の "Scenario:" の行、題名より前の空でない行、問い合わせのある言語で、どのテストの直前のコメントの塊にも無い印、直前のコメントの塊の行のうちコメントでない文字にある印、用語と曖昧語と文書名の参照の検査での、行の中の二重引用符の中と、二重引用符が奇数のときの最後の引用符から行末まで（面が IR にあるかの判定では二重引用符の中を読む。REQ-core-226）、TBL-core-013 で対象外の行、TBL-core-014 で対象外の行、用語集の文書の中の、用語集の表（REQ-core-117）でない表。判断の記録では、TBL-core-022 の表に無い節（Revisions と "## Context" を含む）にある番号の行の形の行と補足の行の形の行、節の最初の番号の行より前にある補足の行の形の行、番号の行でも補足の行でも見出しでもない行（箇条でない本文の行と最初の "## " の見出しより前の行を含む）、コードブロックの中（gherkin を含む。中の "## " の見出しも数えない。閉じられずに文書が終わるときは終わりまで）。判断の記録でない Markdown（形の契約、補足の文書、ADR）でも同じくコードブロックの中の見出し。ガイドの、HTML のコメントの "<!--" から "-->" までの外にある "@kotowari[" と、CommonMark のコードブロック（字下げの形とフェンスの形）とコードスパンの中にある "@kotowari["。列挙に無い読み飛ばしは作らない。IR の置き場のサブディレクトリは除外でなく読む | docs/decision/records/2026-09-22-ir-engine.md#A39, docs/decision/records/2026-09-22-ir-engine.md#A84, docs/decision/records/2026-09-16-ir-tree.md#A1, docs/decision/records/records.md#A100, docs/decision/records/records.md#A110, docs/decision/records/records.md#A145, docs/decision/records/records.md#A156, docs/decision/records/records.md#A165, docs/decision/records/2026-09-17-record-form.md#A14, docs/decision/records/2026-09-17-record-form.md#A24, docs/decision/records/2026-09-17-record-form.md#A27, docs/decision/records/2026-09-17-record-form.md#A34, docs/decision/records/2026-09-17-record-form.md#A35, docs/decision/records/2026-09-17-record-form.md#A45, docs/decision/records/2026-09-17-record-form.md#A47, docs/decision/records/2026-09-22-ir-engine.md#A72, docs/decision/records/2026-09-23-ir-engine-gaps.md#A25, docs/decision/records/records.md#A67, docs/decision/records/records.md#A39, docs/decision/records/2026-09-24-multi-language-tests.md#A15, docs/decision/records/2026-09-24-multi-language-tests.md#A51, docs/decision/records/2026-09-24-doc-marks.md#A9, docs/decision/records/2026-09-24-doc-marks.md#A25, docs/decision/records/2026-09-16-ir-tree.md#A13, docs/decision/records/records.md#A124, docs/decision/records/records.md#A68, docs/decision/records/2026-09-24-guide-gaps.md#A10, docs/decision/records/2026-09-27-surface-check.md#A18, docs/decision/records/records.md#A73, docs/decision/records/2026-10-06-changes-rethink.md#A30 |
-| コードブロック | 行頭の3つ以上の "`" か "~" で始まる行から、同じ文字で同じ数以上の行までの部分 | docs/decision/records/records.md#A108 |
-| 変異 | 変異テストの道具が実装に入れる、1か所の小さな変更 | docs/decision/records/2026-09-17-mutation-tests.md#A30 |
-| 変異の結果 | 変異1件について、ファイル、行、変更の説明（道具が出した文のまま）、結果（捕まえた、見逃した、時間切れ、ビルド不能の4値）を持つもの。道具の結果のファイルから写す | docs/decision/records/2026-09-17-mutation-tests.md#A13, docs/decision/records/2026-09-17-mutation-tests.md#A30, docs/decision/records/2026-09-17-mutation-tests.md#A56 |
-| 見逃し | 結果が「見逃した」の変異の結果。その変異を入れてもテストが全部通った。「ミューテーション」「生存」「ミュータント」とは呼ばない | docs/decision/records/2026-09-17-mutation-tests.md#A30 |
-| 等価 | 変異を入れても、利用者から観測できる振る舞い（出力と終了コード）が変わらない、という人か LLM の判断。関数の戻り値や内部の状態の違いは観測に数えない | docs/decision/records/2026-09-17-mutation-tests.md#A30, docs/decision/records/2026-09-19-mutants-followup.md#A1, docs/decision/records/2026-09-19-mutants-followup.md#A13, docs/decision/records/2026-09-24-guide-gaps.md#A8 |
-| 等価の一覧 | 設定の "mutants.equivalents" が指す YAML のファイル。等価と判断した変異と理由を並べる | docs/decision/records/2026-09-17-mutation-tests.md#A9, docs/decision/records/2026-09-17-mutation-tests.md#A30, docs/decision/records/2026-09-17-mutation-tests.md#A36 |
-| 後回し | "- deferred:" の行で宣言した、テストを求めない要求の状態。要求の見出しの下か、話題ごとの文書の題名の後で最初の "## " か "### " より前に "- deferred:" の行を書いて宣言する。形と参照の検査と ID の予約は後回しでない要求と同じ。「保留」「草案」「延期」とは呼ばない | docs/decision/records/2026-09-25-deferred-items.md#A1, docs/decision/records/2026-09-25-deferred-items.md#A4, docs/decision/records/2026-09-25-deferred-items.md#A5, docs/decision/records/2026-09-25-deferred-items.md#A18, docs/decision/records/2026-09-25-deferred-items.md#A19, docs/decision/records/2026-09-25-deferred-items.md#A24, docs/decision/records/2026-09-25-deferred-items.md#A25, docs/decision/records/2026-09-25-deferred-items.md#A26 |
-| 後回しのシナリオ | "@about" の要求のうち検証の値が unit、property、proof、review のいずれかであるものに後回しの要求が1つ以上あり、それらがすべて後回しか検証が review のシナリオ。同じ ID のシナリオが2か所以上にあるときは1つ目のシナリオの "@about" で決める | docs/decision/records/2026-09-25-deferred-items.md#A15, docs/decision/records/2026-09-25-deferred-items.md#A24 |
-| 旧資料 | kotowari の導入より前からある、仕様か判断を書いた文書。旧仕様、既存の判断の記録と ADR、README のうち振る舞いを説明する部分を含み、既に IR がある話題を導入し直すときはその話題の IR も含む。コードのコメントとコミットログは含めない。「既存資料」「旧文書」とは呼ばない | docs/decision/records/2026-09-26-adoption.md#A19, docs/decision/records/2026-09-26-adoption.md#A8, docs/decision/records/2026-09-26-adoption.md#A39 |
-| 面 | 利用者から見える振る舞いのうち、面の規則でコードから取り出した1つ。面の規則が当たった構文木の節1つが1つの面で、規則の id を種類、"$NAME" で捕まえた文字列を名前に持つ。「API」「インターフェース」「エンドポイント」とは呼ばない | docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A25 |
-| 面の規則 | 設定の "surface.rules" に並べたファイルに書く ast-grep の規則。面を取り出す。kotowari は同梱しない。テストを見つける問い合わせとは別で、「問い合わせ」とは呼ばない | docs/decision/records/2026-09-27-surface-check.md#A1, docs/decision/records/2026-09-27-surface-check.md#A5, docs/decision/records/2026-09-27-surface-check.md#A25 |
-| 面のファイル | 設定の "surface.files" の glob に当たるファイル。面の規則を当てる | docs/decision/records/2026-09-27-surface-check.md#A1 |
-| 未記載の面の一覧 | 設定の "surface.unspecified" が指す YAML のファイル。まだ IR にしていない面を、種類と名前と理由で1件ずつ並べ、載った面を IR に無くても誤りにしない。「許可リスト」「除外リスト」とは呼ばない | docs/decision/records/2026-09-27-surface-check.md#A4, docs/decision/records/2026-09-27-surface-check.md#A6, docs/decision/records/2026-09-27-surface-check.md#A25 |
-| 全体像 | 製品の話題ごとに1つある、人間向けの描画されたページ。読み手は製品を作る人（壁打ちをした本人、実装役、レビュー役）で、今の状態と予定を表す。概要・サマリーとは言わない | docs/decision/records/2026-10-02-whole-picture.md#A8, docs/decision/records/2026-10-02-whole-picture.md#A51, docs/decision/records/2026-10-05-guide-overview-roles.md#A2, docs/decision/records/2026-10-05-guide-overview-roles.md#A5 |
-| 全体像の元データ | `全体像`を描くために LLM が書く、固定の形式の Markdown のファイル。設定の "overview.files" に当たる。人間は読まない。ソース・中間ファイルとは言わない | docs/decision/records/2026-10-02-whole-picture.md#A14, docs/decision/records/2026-10-02-whole-picture.md#A15, docs/decision/records/2026-10-02-whole-picture.md#A17, docs/decision/records/2026-10-02-whole-picture.md#A51, docs/decision/records/2026-10-02-whole-picture.md#A54 |
-| 部品 | `全体像の元データ`の中の、種類の決まった描画の単位。情報文字列が "view <種類>" のフェンスの中に YAML で書く。ブロック・コンポーネントとは言わない | docs/decision/records/2026-10-02-whole-picture.md#A36, docs/decision/records/2026-10-02-whole-picture.md#A51, docs/decision/records/2026-10-02-whole-picture.md#A54 |
-| 参照の表 | `部品`の中の参照の文字列から、表示名、本文、状態への対応。kotowari が`IR`と`判断の記録`を読んで作り、描画のエンジンに渡す。リンク表とは言わない | docs/decision/records/2026-10-02-whole-picture.md#A25, docs/decision/records/2026-10-02-whole-picture.md#A51, docs/decision/records/2026-10-02-whole-picture.md#A65, docs/decision/records/2026-10-02-whole-picture.md#A67 |
-| 目次 | 一覧のページで`全体像`をどう束ねてどの順に並べるかを宣言する YAML のファイル。設定の "overview.toc" が指し、いちばん外側を1つの`目次の群`として書く。地図・索引とは言わない | docs/decision/records/2026-10-05-overview-index.md#A7, docs/decision/records/2026-10-05-overview-index.md#A9, docs/decision/records/2026-10-05-overview-index.md#A10, docs/decision/records/2026-10-05-overview-index.md#A15 |
-| 目次の群 | `目次`の中の束。題名の "title"、省いてよい一行の説明の "note"、`全体像`の名前と`目次の群`を順に並べた "items" を持つ。カテゴリ・フォルダとは言わない | docs/decision/records/2026-10-05-overview-index.md#A4, docs/decision/records/2026-10-05-overview-index.md#A9, docs/decision/records/2026-10-05-overview-index.md#A10 |
-| 言語の一覧 | 設定の "languages" に並べた言語タグの並び。"languages" が無いか空の一覧なら "en" だけの並び | docs/decision/records/2026-10-05-localization.md#A16, docs/decision/records/2026-10-05-localization.md#A21, docs/decision/records/2026-10-05-localization.md#D3 |
-| 先頭の言語 | `言語の一覧`の最初の言語。その`側`は言語タグの無い名前を持つ | docs/decision/records/2026-10-05-localization.md#A15, docs/decision/records/2026-10-05-localization.md#A16 |
-| 対 | 1つの文書を`言語の一覧`の言語ごとに書いたファイルの組。`言語の一覧`の言語が2つ以上のときだけある。翻訳・ペアとは言わない | docs/decision/records/2026-10-05-localization.md#A10, docs/decision/records/2026-10-05-localization.md#A11, docs/decision/records/2026-10-05-localization.md#A15, docs/decision/records/2026-10-05-localization.md#A16, docs/decision/records/2026-10-05-localization.md#A21 |
-| 側 | `対`の中の1つの言語のファイル。`先頭の言語`の側は "<幹><拡張子>"、ほかの言語の側は "<幹>.<言語タグ><拡張子>" の名前を持つ | docs/decision/records/2026-10-05-localization.md#A15, docs/decision/records/2026-10-05-localization.md#A31, docs/decision/records/2026-10-05-localization.md#A39 |
-| 一致の記録 | `対`の`先頭の言語`の`側`と同じディレクトリに置く "<幹>.i18n.yaml"。最後に各`側`が同じ内容だと確かめたときの各`側`の blob hash を持つ | docs/decision/records/2026-10-05-localization.md#A15, docs/decision/records/2026-10-05-localization.md#A18, docs/decision/records/2026-10-05-localization.md#A28 |
-| 骨組み | `対`の`側`のうち自然言語の文でない部分。どの`側`でも一致しなければならない | docs/decision/records/2026-10-05-localization.md#A19 |
-| 切り替えの行 | `IR`と`ガイド`の`側`の題名の後に置く、各言語の名前を並べ、ほかの言語の`側`へリンクする行 | docs/decision/records/2026-10-05-localization.md#A33, docs/decision/records/2026-10-05-localization.md#A36 |
-| UI の文字 | `全体像`と`切り替えの行`に kotowari が書く、元データにも`IR`にも無い文字。英語は kotowari が持ち、ほかの言語は設定の "labels" に書く | docs/decision/records/2026-10-05-localization.md#A5, docs/decision/records/2026-10-05-localization.md#A7, docs/decision/records/2026-10-05-localization.md#A40 |
+| Term | Meaning |
+|---|---|
+| 基準のディレクトリ | カレントディレクトリから上に向かって探し、最初に見つかった ".kotowari/" のあるディレクトリ。無ければカレントディレクトリ |
+| 設定ファイル | 読む場所と検査の値を書く YAML のファイル。既定は ".kotowari/config.yaml" |
+| 決定の文書の置き場 | 設定の "decisions.documents" が指すディレクトリ（既定は "docs/decisions"）。その下の ".md" のファイルはすべて話題の文書として読む。対のほかの言語の側と、まとまりの用語集は除く |
+| 決定の文書 | 決定の文書の置き場の下にある、1つの話題について今有効な決定を持つ Markdown のファイル。話題の文書とも呼ぶ。人が決めたことだけを持ち、実装側が決めた細部はコード、テスト、コミットとプルリクエストの本文にある |
+| 話題 | 1つの決定の文書が扱う対象。1つの話題が1つのファイル |
+| まとまり | 決定の文書の置き場の直下にある、製品やクレートごとのフォルダ（core、schema、view）。まとまりの名前は、その中の文書の確認の行の ID の一部になる |
+| 用語集 | まとまりのフォルダの直下にある "CONTEXT.md"。人が読む文書で、check は話題の文書として読まず、中身を何も検査しない |
+| 題名 | 文書の "# " で始まる最初の行 |
+| 話題の説明 | 題名（と切り替えの行）から最初の決定までの段落。その話題が何を扱うかを書く |
+| 決定 | 話題の文書の、未決の節以外の "## " の見出し1つと、次の "## " の見出しまでの部分。見出しは決めたことを言う1文。状態の行、"問題"、"決めたこと" を持ち、"見送った案" と "確認すること" を持ってよい |
+| 状態 | 決定の見出しの下の最初の段落。"提案"（決めたが、まだ作っていない）か "実装済み"（作った。今の製品の振る舞い）。実装側は、確認の行がすべて満たされたときに実装済みに変える |
+| 確認の行 | 決定の "確認すること" の一覧の1項目。決定が守られていると分かる、見て確かめられる結果1つ。最初の語が確認の ID |
+| 確認の ID | 確認の行の識別子 "C-<名前>-<番号>"。名前はまとまりと話題から作り、番号は1から始めて先頭に0を付けず、使い回さない |
+| 読んで確認 | ID の直後に "（読んで確認）" を書いた確認の行。テストでは確かめられず、実装側とレビューが読んで確かめる。check はこの行にテストを求めない |
+| 未決の節 | 話題の文書の最後にある "## 未決" の節。一覧の1項目が、まだ決めていないことか人に戻した問いで、誰がいつ決めるかを書く。決定ではない |
+| 完了 | "kotowari status" の complete。check の誤りが0件で、どの話題の文書の未決の節にも項目が無いときだけ真 |
+| 決定表 | 決定の "決めたこと" の中に Markdown の表で書く、条件と結果の組の表 |
+| 性質 | どの入力でも成り立つこと。確認の行として書き、性質のテストが指す |
+| 凍結した木 | "docs/frozen/"。決定の文書に切り替える前の古い形の文書を置く。check は読まず、今の決まりの根拠にせず、決定の文書からここへのリンクは誤り |
+| 計画書 | 実装の手順を書いた Markdown の文書。"kotowari plan" が本体に同梱したスキーマで形を検査する |
+| 指摘 | 検査で見つけた1件。kind、severity、path、line、detail を持つ |
+| 誤り | severity が "error" の指摘。終了コードを1にする。ただし "--allow-test-findings" を付けた "kotowari check" では、テスト側の指摘は終了コードに数えない |
+| 注意 | 終了コードを変えない指摘。severity は "notice" |
+| テスト側の指摘 | テストがまだそろっていないことによる誤り。test_without_id と confirmation_without_test、path がテストのファイルである invalid_marker と unresolved_reference、path がテストのファイルで面のファイルでない unparsable_file |
+| 整合のフェーズ | 実装・変更したコードと決定の文書の食い違いと、触れた決定どうしの衝突を、別の文脈の LLM が見つけて片付ける、cycle の中の専用の手順。照合、変更照合とは呼ばない |
+| 停止 | 検査を行えずに終了コード2で終わること |
+| マーカー | テストに書く "@kotowari[ID, ...]" の並び。確認の ID を指す |
+| ガイド | 設定の "guides.files" に当たるファイル。読み手は製品を使う人で、利用者向けの使い方の文書を置く想定で、決定の文書、実装計画、skill を置く場所ではないが、kotowari はそれを区別しない。"文書" だけで呼ばない |
+| ガイドのマーカー | ガイドか全体像の元データの HTML のコメントの中に書く "@kotowari[<パス>#<見出しのアンカー>:指紋, ...]" の並び。決定を指す。テストのマーカーとは別の規則で読む |
+| 指紋 | 決定の "決めたこと" と "確認すること" から取る、16進の小文字8文字の値 |
+| テスト | 問い合わせが当たった構文木の節。Rust と Python では関数、TS/JS では "it(...)" のような呼び出し |
+| テストのファイル | 設定の "tests.files" の glob に当たるファイル |
+| 問い合わせ | テストを見つける、言語ごとの ast-grep のルール。kotowari が同梱するものと、設定の "tests.rules" で足すものがある |
+| 問い合わせのある言語 | 拡張子から決まる言語のうち、同梱か設定の問い合わせが1つ以上あるもの |
+| 問い合わせの無い言語 | 問い合わせのある言語でないもの。拡張子から言語が決まらないファイルを含む |
+| 直前のコメントの塊 | テストの節の最初の行の直前から上に向かって、空行が来るまで続くコメントだけの行の塊（複数行のコメント、属性、デコレータの途中の空白だけの行では切れない）。コメントは tree-sitter の extra の節 |
+| 曖昧語 | 設定の "vague_words" に並べた語 |
+| 除外 | 決定の文書が列挙した、kotowari が指摘を出さずに読まないか見ないもの。列挙の外で黙って飛ばすものは無い |
+| コードブロック | 行頭の3つ以上の "`" か "~" で始まる行から、同じ文字で同じ数以上の行までの部分 |
+| 変異 | 変異テストの道具が実装に入れる、1か所の小さな変更 |
+| 変異の結果 | 変異1件について、ファイル、行、変更の説明（道具が出した文のまま）、結果（捕まえた、見逃した、時間切れ、ビルド不能の4値）を持つもの。道具の結果のファイルから写す |
+| 見逃し | 結果が「見逃した」の変異の結果。その変異を入れてもテストが全部通った。「ミューテーション」「生存」「ミュータント」とは呼ばない |
+| 等価 | 変異を入れても、利用者から観測できる振る舞い（出力と終了コード）が変わらない、という人か LLM の判断。関数の戻り値や内部の状態の違いは観測に数えない |
+| 等価の一覧 | 設定の "mutants.equivalents" が指す YAML のファイル。等価と判断した変異と理由を並べる |
+| 旧資料 | kotowari の導入より前からある、仕様か判断を書いた文書。旧仕様、既存の判断の記録と ADR、README のうち振る舞いを説明する部分。コードのコメントとコミットログは含めず、その話題が既に持つ決定の文書の決定も含めない。「既存資料」「旧文書」とは呼ばない |
+| 現状追認 | 導入で、利用者が一覧の候補の行を外さずに残すこと。旧資料と実装が一致した振る舞いを、項目ごとに見直さずに実装済みの決定として書く |
+| 面 | 利用者から見える振る舞いのうち、面の規則でコードから取り出した1つ。面の規則が当たった構文木の節1つが1つの面で、規則の id を種類、"$NAME" で捕まえた文字列を名前に持つ。「API」「インターフェース」「エンドポイント」とは呼ばない |
+| 面の規則 | 設定の "surface.rules" に並べたファイルに書く ast-grep の規則。面を取り出す。kotowari は同梱しない。テストを見つける問い合わせとは別で、「問い合わせ」とは呼ばない |
+| 面のファイル | 設定の "surface.files" の glob に当たるファイル。面の規則を当てる |
+| 未記載の面の一覧 | 設定の "surface.unspecified" が指す YAML のファイル。まだ決定に書いていない面を、種類と名前と理由で1件ずつ並べ、載った面はどの決定も引いていなくても誤りにしない。「許可リスト」「除外リスト」とは呼ばない |
+| 全体像 | 製品の話題ごとに1つある、人間向けの描画されたページ。読み手は製品を作る人（壁打ちをした本人、実装役、レビュー役）で、今の状態と予定を表す。概要・サマリーとは言わない |
+| 全体像の元データ | 全体像を描くために LLM が書く、固定の形式の Markdown のファイル。設定の "overview.files" に当たり、"documents" に扱う決定の文書を並べる。人間は読まない。ソース・中間ファイルとは言わない |
+| 部品 | 全体像の元データの中の、種類の決まった描画の単位。情報文字列が "view <種類>" のフェンスの中に YAML で書く。ブロック・コンポーネントとは言わない |
+| 参照の表 | 部品の中の参照の文字列（決定か確認の ID）から、表示名、本文、状態への対応。kotowari が決定の文書を読んで作り、描画のエンジンに渡す。リンク表とは言わない |
+| 目次 | 一覧のページで全体像をどう束ねてどの順に並べるかを宣言する YAML のファイル。設定の "overview.toc" が指し、いちばん外側を1つの目次の群として書く。地図・索引とは言わない |
+| 目次の群 | 目次の中の束。題名の "title"、省いてよい一行の説明の "note"、全体像の名前と目次の群を順に並べた "items" を持つ。カテゴリ・フォルダとは言わない |
+| 言語の一覧 | 設定の "languages" に並べた言語タグの並び。"languages" が無いか空の一覧なら "en" だけの並び |
+| 先頭の言語 | 言語の一覧の最初の言語。その側は言語タグの無い名前を持ち、check は決定、確認の ID、指紋をこの側から読む |
+| 対 | 1つの文書を言語の一覧の言語ごとに書いたファイルの組。言語の一覧の言語が2つ以上のときだけある。翻訳・ペアとは言わない |
+| 側 | 対の中の1つの言語のファイル。先頭の言語の側は "<幹><拡張子>"、ほかの言語の側は "<幹>.<言語タグ><拡張子>" の名前を持つ |
+| 一致の記録 | 対の先頭の言語の側と同じディレクトリに置く "<幹>.i18n.yaml"。最後に各側が同じことを言っていると確かめたときの各側の blob hash を持つ |
+| 骨組み | 対の側のうち自然言語の文でない部分。どの側でも一致しなければならない |
+| 切り替えの行 | 決定の文書とガイドの側の題名の後に置く、各言語の名前を並べ、ほかの言語の側へリンクする行 |
+| UI の文字 | 全体像と切り替えの行に kotowari が書く、元データにも決定の文書にも無い文字。英語は kotowari が持ち、ほかの言語は設定の "labels" に書く |
