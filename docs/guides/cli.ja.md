@@ -26,7 +26,7 @@ kotowari --version
 |---|---|---|
 | `check` | 決定の文書の書き方の検査と、その確認することの行とテストの対応の検査を両方行う | [commands/check.md](commands/check.ja.md) |
 | `list` | 決定と確認することの行を1件ずつ、行に付いているテストと並べる | [commands/list.md](commands/list.ja.md) |
-| `query` | 1つの ID の項目かシナリオを、本文と逆参照つきで出す | [commands/query.md](commands/query.ja.md) |
+| `query` | 1つの ID の決定か行を、本文と逆参照つきで出す | [commands/query.md](commands/query.ja.md) |
 | `status` | 決定の文書とテストが揃っているかを、数と1つの真偽で答える | [commands/status.md](commands/status.ja.md) |
 | `mutants` | 変異テストの結果のファイルを読み、見逃しを指摘する | [commands/mutants.md](commands/mutants.ja.md) |
 | `plan` | 計画書のファイル1つの形を、同梱のスキーマで検査する | [commands/plan.md](commands/plan.ja.md) |

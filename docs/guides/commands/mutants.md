@@ -327,7 +327,7 @@ argument error: unknown tool: stryker
 <!-- @kotowari[docs/decisions/core/mutants-input.md#a-results-file-whose-form-does-not-fit-stops-with-a-results-error:16167069] -->
 
 The results file is in a form kotowari cannot read.
-It stops if any of the following holds: the JSON is broken, a required key is missing or has the wrong type, there is an unknown `summary` value, the baseline run failed, a line is less than 1, the prefix of `name` does not fit the expected form, or a file path is absolute or contains `..` (the full set of conditions is in [REQ-core-144](../../decisions/core/mutants-input.md#a-results-file-whose-form-does-not-fit-stops-with-a-results-error)).
+It stops if any of the following holds: the JSON is broken, a required key is missing or has the wrong type, there is an unknown `summary` value, the baseline run failed, a line is less than 1, the prefix of `name` does not fit the expected form, or a file path is absolute or contains `..` (the full set of conditions is in [the decision on results errors](../../decisions/core/mutants-input.md#a-results-file-whose-form-does-not-fit-stops-with-a-results-error)).
 A results file with no baseline run at all does not stop it.
 
 ```console

@@ -327,7 +327,7 @@ argument error: unknown tool: stryker
 <!-- @kotowari[docs/decisions/core/mutants-input.md#a-results-file-whose-form-does-not-fit-stops-with-a-results-error:16167069] -->
 
 結果のファイルが読めない形です。
-JSON として壊れている、要る鍵が無いか型が違う、知らない `summary` の値がある、基準の実行が失敗している、行が1未満、`name` の前置きが形に合わない、ファイルが絶対パスか `..` を含む、のどれかで止まります（全部の条件は [REQ-core-144](../../decisions/core/mutants-input.ja.md#形の合わない結果のファイルでは結果の誤りで停止する)）。
+JSON として壊れている、要る鍵が無いか型が違う、知らない `summary` の値がある、基準の実行が失敗している、行が1未満、`name` の前置きが形に合わない、ファイルが絶対パスか `..` を含む、のどれかで止まります（全部の条件は [結果の誤りの決定](../../decisions/core/mutants-input.ja.md#形の合わない結果のファイルでは結果の誤りで停止する)）。
 基準の実行が1件も無い結果のファイルは止まりません。
 
 ```console
