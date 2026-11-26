@@ -1791,7 +1791,11 @@ fn an_unclosed_code_block_under_a_confirmation_row_is_an_error_and_the_next_rows
         &topic(&[confirmed(
             "挨拶する",
             "実装済み",
-            &["C-greet-1 挨拶が出る\n  ```text", "C-greet-2 名前が入る"],
+            &[
+                "C-greet-1 挨拶が出る\n  ```text",
+                "C-greet-2 名前が入る",
+                "C-greet-3 手を振る",
+            ],
         )]),
     );
     let (code, stdout, _) = run(tmp.path(), &["check"]);
@@ -1816,6 +1820,12 @@ fn an_unclosed_code_block_under_a_confirmation_row_is_an_error_and_the_next_rows
                 "docs/decisions/greet.md",
                 21,
                 "C-greet-2"
+            ),
+            finding(
+                "confirmation_without_test",
+                "docs/decisions/greet.md",
+                22,
+                "C-greet-3"
             ),
         ]
     );
@@ -1999,4 +2009,48 @@ fn a_leading_byte_order_mark_is_skipped() {
         )]
     );
     assert_eq!(value["decisions"]["decisions"], 1);
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn closed_and_indented_code_blocks_are_no_error() {
+    for before in [
+        "    ~/path\n    `cmd`",
+        "    ```\n    x",
+        "```\nx\n`````",
+        "> ```\n> x\n> ```",
+        "- 項目\n\n  ~~~\n  x\n  ~~~",
+    ] {
+        let tmp = TempDir::new().unwrap();
+        make_project(tmp.path(), Some("docs/decisions"));
+        write(
+            tmp.path(),
+            "docs/decisions/greet.md",
+            &implemented_after(false, before),
+        );
+        marked_test(tmp.path(), "tests/greet.rs", &["C-greet-1"]);
+        assert_eq!(findings(&check(tmp.path())), vec![], "{before:?}");
+    }
+}
+
+// @kotowari[C-core-docs-1]
+#[test]
+fn a_fence_on_the_last_line_of_a_document_is_unclosed() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &format!("{}\n```", implemented_after(false, "段落。")),
+    );
+    marked_test(tmp.path(), "tests/greet.rs", &["C-greet-1"]);
+    assert_eq!(
+        findings(&check(tmp.path())),
+        vec![finding(
+            "unclosed_code_block",
+            "docs/decisions/greet.md",
+            23,
+            "```"
+        )]
+    );
 }

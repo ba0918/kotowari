@@ -443,7 +443,7 @@ fn extra_titles(path: &str, root: &Node, lines: &[&str], findings: &mut Vec<Find
 
 /// 閉じないコードブロックを、開きの行とその行の文字で unclosed_code_block にする。閉じないコードブロックは
 /// それを囲むもの（文書か一覧の項目）の終わりまでを呑むので、その後ろの決定と行は読まれない。
-/// 囲みの開き方は Markdown の読み手に任せ、閉じたかは、コードブロックの元の文字の最後の行が、開きと同じ
+/// 囲みの開き方は Markdown の読み手に任せ（字下げのコードブロックは囲みを持たないので見ない）、閉じたかは、コードブロックの元の文字の最後の行が、開きと同じ
 /// 文字の、開き以上の長さの並びだけかで見る
 fn unclosed_code_blocks(
     path: &str,
@@ -456,10 +456,12 @@ fn unclosed_code_blocks(
         && let Some(position) = node.position()
         && let Some(source) = text.get(position.start.offset..position.end.offset)
     {
-        let opening = source.trim_start();
-        let fence = opening.chars().next().filter(|c| matches!(c, '`' | '~'));
-        if let Some(fence) = fence {
-            let length = opening.chars().take_while(|&c| c == fence).count();
+        // 囲みのコードブロックの元の文字は囲みの文字から始まり、字下げのコードブロックは空白から始まる
+        let fence = source.chars().next().filter(|c| matches!(c, '`' | '~'));
+        let length = fence.map_or(0, |fence| {
+            source.chars().take_while(|&c| c == fence).count()
+        });
+        if let Some(fence) = fence.filter(|_| length >= 3) {
             let source_lines = crate::ir::split_lines(source.trim_end());
             let closing = source_lines
                 .last()
