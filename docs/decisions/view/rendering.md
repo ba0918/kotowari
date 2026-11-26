@@ -66,7 +66,7 @@ In addition to one page per overview document, an index listing all documents is
 
 ### Decision
 
-In a single rendering, view returns the index page "index.html", one page per document "<文書の名前>.html", and the shared style "style.css", and returns no other pages. The index and document pages refer to "style.css" and can be navigated between by links. A document whose name is not in the table of contents still gets a page but is not shown in the index (how input that conflicts with the table of contents is handled is decided in the Index and navigation topic under [Input that conflicts with the table of contents is not an error either and is drawn in a fixed form](navigation.md#input-that-disagrees-with-the-contents-is-drawn-in-a-fixed-way-not-treated-as-an-error)).
+In a single rendering, view returns the index page "index.html", one page per document "<document name>.html", and the shared style "style.css", and returns no other pages. The index and document pages refer to "style.css" and can be navigated between by links. A document whose name is not in the table of contents still gets a page but is not shown in the index (how input that conflicts with the table of contents is handled is decided in the Index and navigation topic under [Input that conflicts with the table of contents is not an error either and is drawn in a fixed form](navigation.md#input-that-disagrees-with-the-contents-is-drawn-in-a-fixed-way-not-treated-as-an-error)).
 
 ### Rejected options
 

@@ -156,7 +156,7 @@ Until now, check read words enclosed in backquotes in the specification's senten
 
 The term check (treating words not in the glossary as errors) is not done on decision documents. The vague-word check is applied to a decision's "Decision" and "Confirmations".
 
-The glossary is kept as a document that people read. Its location is `CONTEXT.md` in the group's folder (`docs/decisions/<まとまり>/CONTEXT.md`). check does not read it as a topic document and does not check its contents.
+The glossary is kept as a document that people read. Its location is `CONTEXT.md` in the group's folder (`docs/decisions/<group>/CONTEXT.md`). check does not read it as a topic document and does not check its contents.
 
 ### Rejected options
 

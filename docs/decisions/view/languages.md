@@ -86,7 +86,7 @@ A project that handles multilingual documents builds the overview per language. 
 
 ### Decision
 
-The overview writes the pages of the first language in the current location, and the pages of the other languages under "<言語タグ>/" with the same structure (writing the pages is kotowari's side, decided in kotowari's overview topic).
+The overview writes the pages of the first language in the current location, and the pages of the other languages under "<language tag>/" with the same structure (writing the pages is kotowari's side, decided in kotowari's overview topic).
 
 On every HTML page, view draws, for each of the other languages, a link to the page with the same name in that language's location. If there are no other languages, no link is drawn. No mechanism to remember the chosen language is built, and [no page contains a script](navigation.md#no-page-that-view-returns-contains-a-script).
 

@@ -18,7 +18,7 @@ Markers have one more use: when a decision changes, the tests that need fixing c
 
 ### Decision
 
-Confirmation lines get IDs. An ID has the form `C-<まとまりと話題の短い名前>-<連番>`. The sequence number is the one after the largest number used in that topic; the numbers of deleted lines are not closed up or reused for another line. The marker on the test side, `@kotowari[...]`, points at this ID.
+Confirmation lines get IDs. An ID has the form `C-<short name of the group and topic>-<number>`. The sequence number is the one after the largest number used in that topic; the numbers of deleted lines are not closed up or reused for another line. The marker on the test side, `@kotowari[...]`, points at this ID.
 
 check counts, for every confirmation row of a decision whose status is "implemented", whether a test points at it. If none does, it is an error. This is not required of decisions whose status is "proposed". A line written as a property is pointed at by a property test (a test that checks something holds for any input).
 
