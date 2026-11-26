@@ -746,9 +746,12 @@ fn read_decision_block(node: &Node, text: &str, lines: &[&str], building: &mut B
     }
 }
 
-/// 確認することの1行。ID は行の最初の語
+/// 確認することの1行。ID は行の最初の語。ID と名前は行の最初の段落だけから取り、その下に置いた
+/// コードブロックなどは名前に入れない。行の body は書いたままの行なので、それも入れる
 fn confirmation(item: &Node, lines: &[&str]) -> Confirmation {
-    let text = item.to_string();
+    let text = first_paragraph(item)
+        .map(Node::to_string)
+        .unwrap_or_default();
     let text = text.trim_start();
     let (id, rest) = text.split_once(char::is_whitespace).unwrap_or((text, ""));
     let rest = rest.trim_start();
@@ -772,6 +775,17 @@ fn confirmation(item: &Node, lines: &[&str]) -> Confirmation {
         name: rest.split_whitespace().collect::<Vec<_>>().join(" "),
         body,
     }
+}
+
+/// ノードの中の、文書の順で最初の段落
+fn first_paragraph(node: &Node) -> Option<&Node> {
+    if let Node::Paragraph(_) = node {
+        return Some(node);
+    }
+    node.children()
+        .into_iter()
+        .flatten()
+        .find_map(first_paragraph)
 }
 
 /// 提案の決定と実装済みの決定を分けて数える

@@ -1942,3 +1942,38 @@ fn each_title_after_the_first_is_an_error_without_a_line() {
         assert_eq!(code, Some(1), "english={english}");
     }
 }
+
+// @kotowari[C-core-confirm-5]
+#[test]
+fn a_code_block_under_a_confirmation_row_stays_out_of_its_name_and_in_its_body() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[confirmed(
+            "挨拶する",
+            "提案",
+            &[
+                "C-greet-1 挨拶が\n  出る\n\n  ```text\n  おはよう\n  ```",
+                "C-greet-2 （読んで確認）名前が入る\n  ```\n  名前\n  ```",
+            ],
+        )]),
+    );
+    let first = &query(tmp.path(), "C-greet-1")["items"][0];
+    assert_eq!(first["name"], "挨拶が 出る");
+    assert_eq!(
+        first["body"],
+        serde_json::json!([
+            "- C-greet-1 挨拶が",
+            "  出る",
+            "",
+            "  ```text",
+            "  おはよう",
+            "  ```"
+        ])
+    );
+    let second = &query(tmp.path(), "C-greet-2")["items"][0];
+    assert_eq!(second["name"], "名前が入る");
+    assert_eq!(second["by_reading"], true);
+}
