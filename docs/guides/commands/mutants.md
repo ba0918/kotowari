@@ -3,7 +3,7 @@
 English | [日本語](mutants.ja.md)
 
 Reads the results file written by a mutation testing tool (currently cargo-mutants) and reports, as findings, the changes the tests did not notice (misses).
-Where `kotowari check` asks "does each requirement have a test?", this command asks "do those tests actually constrain the implementation?".
+Where `kotowari check` asks "does each confirmation row have a test?", this command asks "do those tests actually constrain the implementation?".
 Use it after a mutation test run, to judge the results.
 
 ## Synopsis
@@ -50,10 +50,10 @@ It reads only these files:
 - The list of equivalents (the file the configuration's `mutants.equivalents` points at)
 - The source files that the mutation outcomes point at, and the files that the `file` of each entry in the list of equivalents points at
 
-It does not read the IR, test files or decision records, and it does not run any of `check`'s checks.
-It does not stop even if the paths that the configuration's `ir` or `decisions.records` point at do not exist.
-As a result, misses are not tied to requirements; they are reported by source location (file and line) and the description of the change.
-Tracing a miss back to a requirement is the job of the person or LLM investigating it ([When misses appear](#when-misses-appear)).
+It does not read the decision documents or test files, and it does not run any of `check`'s checks.
+It does not stop even if the path that the configuration's `decisions.documents` points at does not exist.
+As a result, misses are not tied to decisions; they are reported by source location (file and line) and the description of the change.
+Tracing a miss back to a decision is the job of the person or LLM investigating it ([When misses appear](#when-misses-appear)).
 
 ## The results file
 
@@ -71,7 +71,7 @@ Every other entry is mapped to one mutation outcome as follows.
 | Outcome | `summary`: `CaughtMutant` (caught), `MissedMutant` (missed), `Timeout` (timed out), `Unviable` (unviable) |
 
 Keys not listed here are ignored.
-The detailed conditions are in [TBL-core-024](../../ir/core/mutants-input.md#TBL-core-024).
+The detailed conditions are in [the decision on reading the results file](../../decisions/core/mutants-input.md#mutation-outcomes-are-held-in-a-form-that-does-not-know-the-tool-and-the-results-file-of-cargo-mutants-is-mapped-as-in-the-table).
 
 The four possible outcomes of one mutation mean the following.
 
@@ -217,7 +217,7 @@ The list can remove only misses. Writing a timeout in the list does not remove i
 
 <!-- @kotowari[docs/decisions/core/mutants.md#a-miss-is-an-error-and-a-timeout-is-a-notice-and-nothing-is-output-for-caught-mutations-and-unviable-mutations:e1818807, docs/decisions/core/equivalents.md#an-entry-of-the-list-identifies-a-mutation-by-the-file-the-description-of-the-change-and-the-text-of-the-line:6b16b7c1, docs/decisions/core/equivalents.md#an-entry-whose-text-is-gone-from-the-source-gets-an-equivalent_stale-notice:c9878315] -->
 
-This example feeds kotowari a results file for the source `src/price.rs` below, with 8 entries written by hand following the cargo-mutants format ([TBL-core-024](../../ir/core/mutants-input.md#TBL-core-024)).
+This example feeds kotowari a results file for the source `src/price.rs` below, with 8 entries written by hand following the cargo-mutants format ([the mapping table](../../decisions/core/mutants-input.md#mutation-outcomes-are-held-in-a-form-that-does-not-know-the-tool-and-the-results-file-of-cargo-mutants-is-mapped-as-in-the-table)).
 cargo mutants was not run. The output is what `kotowari mutants` actually printed for this input.
 
 ```rust
@@ -292,12 +292,12 @@ This is not a kotowari feature; it is the procedure for whoever investigates the
 
 | Class | Meaning | What to do next |
 |---|---|---|
-| Untested | The behaviour changes, but no test looks at it | First check whether the requirement is specific enough to tell that mutation apart. If it is vague, fix the IR; if it is specific, add a test marked with that requirement or example |
+| Untested | The behaviour changes, but no test looks at it | First check whether the decision is specific enough to tell that mutation apart. If it is vague, fix the decision document; if it is specific, add a test marked with the ID of the confirmation row it confirms |
 | Suspected defect | The original code is what is wrong | Fix the code |
 | Equivalent | The mutation does not change any observable behaviour | Follow the steps below |
 
-If you add a test first for an untested miss, you lock a vague requirement into "whatever the current implementation does".
-This is the stage where a miss gets tied back to a requirement.
+If you add a test first for an untested miss, you lock a vague decision into "whatever the current implementation does".
+This is the stage where a miss gets tied back to a decision.
 
 When you think a miss is equivalent, do not add it to the list right away; go through these steps in order:
 
@@ -327,7 +327,7 @@ argument error: unknown tool: stryker
 <!-- @kotowari[docs/decisions/core/mutants-input.md#a-results-file-whose-form-does-not-fit-stops-with-a-results-error:16167069] -->
 
 The results file is in a form kotowari cannot read.
-It stops if any of the following holds: the JSON is broken, a required key is missing or has the wrong type, there is an unknown `summary` value, the baseline run failed, a line is less than 1, the prefix of `name` does not fit the expected form, or a file path is absolute or contains `..` (the full set of conditions is in [REQ-core-144](../../ir/core/mutants-input.md#REQ-core-144)).
+It stops if any of the following holds: the JSON is broken, a required key is missing or has the wrong type, there is an unknown `summary` value, the baseline run failed, a line is less than 1, the prefix of `name` does not fit the expected form, or a file path is absolute or contains `..` (the full set of conditions is in [REQ-core-144](../../decisions/core/mutants-input.md#a-results-file-whose-form-does-not-fit-stops-with-a-results-error)).
 A results file with no baseline run at all does not stop it.
 
 ```console
@@ -386,9 +386,9 @@ If the content is not a sequence (it does not start with `- file: ...`), the pat
 
 ## Related
 
-- Specification: [Findings and tally](../../ir/core/mutants.md), [Reading the results file](../../ir/core/mutants-input.md), [The list of equivalents](../../ir/core/equivalents.md), [Arguments](../../ir/core/cli.md#REQ-core-149)
+- Specification: [Findings and tally](../../decisions/core/mutants.md), [Reading the results file](../../decisions/core/mutants-input.md), [The list of equivalents](../../decisions/core/equivalents.md), [Arguments](../../decisions/core/cli.md#kotowari-mutants-always-takes-the-tools-name-with---tool-and-takes-exactly-one-results-file)
 - Common format and stops: [cli.md](../cli.md)
 - The configuration key `mutants.equivalents`: [config.md](../config.md)
 - The list of finding kinds: [findings.md](../findings.md)
-- Checking whether requirements have tests: [kotowari check](check.md)
+- Checking whether confirmation rows have tests: [kotowari check](check.md)
 - An example that runs everything from execution to judgement in one go: this repository's [scripts/mutants.sh](../../../scripts/mutants.sh)

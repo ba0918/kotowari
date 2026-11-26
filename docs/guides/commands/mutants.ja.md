@@ -3,7 +3,7 @@
 [English](mutants.md) | 日本語
 
 変異テストの道具（今は cargo-mutants）が書いた結果のファイルを読み、テストが気づかなかった変更（見逃し）を指摘として出します。
-`kotowari check` が「要求にテストが付いているか」を見るのに対して、こちらは「そのテストが本当に実装を縛っているか」を見ます。
+`kotowari check` が「確認することの行にテストが付いているか」を見るのに対して、こちらは「そのテストが本当に実装を縛っているか」を見ます。
 変異テストを走らせた後、結果を判定するときに使います。
 
 ## 書式
@@ -50,10 +50,10 @@ flowchart LR
 - 等価の一覧（設定の `mutants.equivalents` が指すもの）
 - 変異の結果が指すソースのファイルと、等価の一覧の1件の `file` が指すファイル
 
-IR、テストのファイル、判断の記録は読まず、`check` の検査もしません。
-設定の `ir` や `decisions.records` の指す先が無くても止まりません。
-そのため、見逃しは要求には結び付かず、ソースの場所（ファイルと行）と変更の説明で出ます。
-要求へ戻るのは、見逃しを調べる人か LLM の仕事です（[見逃しが出たら](#見逃しが出たら)）。
+決定の文書とテストのファイルは読まず、`check` の検査もしません。
+設定の `decisions.documents` の指す先が無くても止まりません。
+そのため、見逃しは決定には結び付かず、ソースの場所（ファイルと行）と変更の説明で出ます。
+決定へ戻るのは、見逃しを調べる人か LLM の仕事です（[見逃しが出たら](#見逃しが出たら)）。
 
 ## 結果のファイル
 
@@ -71,7 +71,7 @@ IR、テストのファイル、判断の記録は読まず、`check` の検査�
 | 結果 | `summary` が `CaughtMutant`（捕まえた）、`MissedMutant`（見逃した）、`Timeout`（時間切れ）、`Unviable`（ビルド不能） |
 
 ここに無い鍵は見ません。
-細かい条件は [TBL-core-024](../../ir/core/mutants-input.ja.md#TBL-core-024) にあります。
+細かい条件は [結果のファイルの読み取りの決定](../../decisions/core/mutants-input.ja.md#変異の結果は道具を知らない形で持ちcargo-mutants-の結果のファイルを表のとおりに写す) にあります。
 
 変異1件の結果の4つの値の意味は次のとおりです。
 
@@ -217,7 +217,7 @@ mutants:
 
 <!-- @kotowari[docs/decisions/core/mutants.md#a-miss-is-an-error-and-a-timeout-is-a-notice-and-nothing-is-output-for-caught-mutations-and-unviable-mutations:e1818807, docs/decisions/core/equivalents.md#an-entry-of-the-list-identifies-a-mutation-by-the-file-the-description-of-the-change-and-the-text-of-the-line:6b16b7c1, docs/decisions/core/equivalents.md#an-entry-whose-text-is-gone-from-the-source-gets-an-equivalent_stale-notice:c9878315] -->
 
-次のソース `src/price.rs` に対する結果のファイルを、cargo-mutants の形（[TBL-core-024](../../ir/core/mutants-input.ja.md#TBL-core-024)）に沿って手で8件作り、読ませた例です。
+次のソース `src/price.rs` に対する結果のファイルを、cargo-mutants の形（[写しの表](../../decisions/core/mutants-input.ja.md#変異の結果は道具を知らない形で持ちcargo-mutants-の結果のファイルを表のとおりに写す)）に沿って手で8件作り、読ませた例です。
 cargo mutants は実行していません。出力はこの入力で実際に `kotowari mutants` を実行したものです。
 
 ```rust
@@ -292,12 +292,12 @@ $ kotowari mutants --tool cargo-mutants outcomes.json
 
 | 分類 | 意味 | 次にやること |
 |---|---|---|
-| 未検査 | 振る舞いは変わるのに、見ているテストが無い | 要求がその変異を区別できるほど具体的かを先に確かめる。曖昧なら IR を直し、具体的ならその要求か具体例の印を付けたテストを足す |
+| 未検査 | 振る舞いは変わるのに、見ているテストが無い | 決定がその変異を区別できるほど具体的かを先に確かめる。曖昧なら決定の文書を直し、具体的ならそれを確かめる確認することの行の ID の印を付けたテストを足す |
 | 欠陥の疑い | 元のコードの方がおかしい | コードを直す |
 | 等価 | 変異を入れても観測できる振る舞いが変わらない | 下の順に進める |
 
-未検査のときにテストを先に足すと、曖昧な要求を「今の実装の振る舞い」で固めてしまいます。
-見逃しを要求に結び付けるのは、この段です。
+未検査のときにテストを先に足すと、曖昧な決定を「今の実装の振る舞い」で固めてしまいます。
+見逃しを決定に結び付けるのは、この段です。
 
 等価だと思ったら、すぐ一覧に書かず、次の順に進めます。
 
@@ -327,7 +327,7 @@ argument error: unknown tool: stryker
 <!-- @kotowari[docs/decisions/core/mutants-input.md#a-results-file-whose-form-does-not-fit-stops-with-a-results-error:16167069] -->
 
 結果のファイルが読めない形です。
-JSON として壊れている、要る鍵が無いか型が違う、知らない `summary` の値がある、基準の実行が失敗している、行が1未満、`name` の前置きが形に合わない、ファイルが絶対パスか `..` を含む、のどれかで止まります（全部の条件は [REQ-core-144](../../ir/core/mutants-input.ja.md#REQ-core-144)）。
+JSON として壊れている、要る鍵が無いか型が違う、知らない `summary` の値がある、基準の実行が失敗している、行が1未満、`name` の前置きが形に合わない、ファイルが絶対パスか `..` を含む、のどれかで止まります（全部の条件は [REQ-core-144](../../decisions/core/mutants-input.ja.md#形の合わない結果のファイルでは結果の誤りで停止する)）。
 基準の実行が1件も無い結果のファイルは止まりません。
 
 ```console
@@ -386,9 +386,9 @@ detail の `file: change` で、どの1件かを見分けます。
 
 ## 関連
 
-- 仕様: [指摘と集計](../../ir/core/mutants.ja.md)、[結果のファイルの読み取り](../../ir/core/mutants-input.ja.md)、[等価の一覧](../../ir/core/equivalents.ja.md)、[引数](../../ir/core/cli.ja.md#REQ-core-149)
+- 仕様: [指摘と集計](../../decisions/core/mutants.ja.md)、[結果のファイルの読み取り](../../decisions/core/mutants-input.ja.md)、[等価の一覧](../../decisions/core/equivalents.ja.md)、[引数](../../decisions/core/cli.ja.md#kotowari-mutants-は道具の名前を---tool-で必ず受け結果のファイルをちょうど1つ受ける)
 - 共通の書式と停止: [cli.md](../cli.ja.md)
 - 設定のキー `mutants.equivalents`: [config.md](../config.ja.md)
 - 指摘の種類の一覧: [findings.md](../findings.ja.md)
-- 要求にテストが付いているかを見る: [kotowari check](check.ja.md)
+- 確認することの行にテストが付いているかを見る: [kotowari check](check.ja.md)
 - 実行から判定までを1本にまとめた例: このリポジトリの [scripts/mutants.sh](../../../scripts/mutants.sh)
