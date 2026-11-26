@@ -2,16 +2,16 @@
 
 English | [日本語](marks.ja.md)
 
-A mark (`@kotowari[REQ-001]`) is the only link between an IR item and a test.
-Write an ID in the comment just before a test, and kotowari counts that test as backing that item.
-Once you have written the IR, add marks to your existing tests, and `check` and `status` will show which requirements are protected by tests.
+A mark (`@kotowari[C-shop-discount-1]`) is the only link between a confirmation row of a decision document and a test.
+Write a row's ID in the comment just before a test, and kotowari counts that test as confirming that row.
+Once you have written the decision documents, add marks to your existing tests, and `check` and `status` will show which rows are confirmed by tests.
 
 ## Format
 
 <!-- @kotowari[docs/decisions/core/test-markers.md#a-marker-is-ids-listed-with-commas-and-may-be-anywhere-in-a-line:74293754] -->
 
 ```rust
-// @kotowari[REQ-001, EX-001]
+// @kotowari[C-shop-discount-1, C-shop-discount-2]
 ```
 
 | Part | Form |
@@ -20,72 +20,86 @@ Once you have written the IR, add marks to your existing tests, and `check` and 
 | Contents | IDs separated by commas. Whitespace is allowed before and after a comma |
 | End | `]` (on the same line as the start) |
 
-- A single mark may list any number of IDs. You may mix IDs of requirements, decision tables, properties and scenarios.
-- If you write two marks on one line, both are picked up (`// @kotowari[REQ-001] @kotowari[EX-001]`).
+- A single mark may list any number of IDs, from any decision documents.
+- If you write two marks on one line, both are picked up (`// @kotowari[C-shop-discount-1] @kotowari[C-shop-discount-2]`).
 - The comment syntax is not inspected. `//`, `#` and `///` all work the same.
 
-Marks written in guides (`<!-- @kotowari[ID:指紋] -->`) are read under different rules. See [Writing guides](writing-guides.md).
+Marks written in guides (`<!-- @kotowari[target:fingerprint] -->`) are read under different rules. See [Writing guides](writing-guides.md).
 
 ## Try marking one test
 
-<!-- @kotowari[docs/decisions/core/test-markers.md#a-marker-is-tied-to-a-test-only-when-it-is-in-the-comment-block-directly-before-that-test:9dac125a, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66] -->
+<!-- @kotowari[docs/decisions/core/test-markers.md#a-marker-is-tied-to-a-test-only-when-it-is-in-the-comment-block-directly-before-that-test:9dac125a, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66, docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4] -->
 
-As an example, here is a small IR with just two requirements and one scenario.
+As an example, here is a small decision document with two implemented decisions, each with one row.
 
 ```markdown
-### REQ-001: 会員の割引
-- verification: unit
-システムは常に、会員の注文に1割の割引を付ける。
+## Members get 10% off their orders
 
-### REQ-002: 会員でない注文
-- verification: unit
-システムは常に、会員でない注文に割引を付けない。
+Status: implemented
 
-@id=EX-001 @about=REQ-001 …
-Scenario: 1000円の注文は900円になる
+### Decision
+
+An order placed by a member is priced at 10% off.
+
+### Confirmations
+
+- C-shop-discount-1 A member's order of 1000 is priced at 900
+
+## Orders of non-members are not discounted
+
+Status: implemented
+
+### Decision
+
+An order placed by a non-member is priced at the list price.
+
+### Confirmations
+
+- C-shop-discount-2 A guest's order of 1000 is priced at 1000
 ```
 
-(This is an excerpt; the `kind` and `source` lines are omitted.)
+(This is an excerpt; the title, the lead and the Problem sections are omitted.)
 
 Write the mark as a comment directly above the test function.
 
 ```rust
-// @kotowari[REQ-001, EX-001]
+// @kotowari[C-shop-discount-1]
 #[test]
 fn member_gets_ten_percent_off() {}
 
-// @kotowari[REQ-002]
+// @kotowari[C-shop-discount-2]
 #[test]
 fn non_member_pays_full_price() {}
 ```
 
 If `check` finishes silently with exit code 0, the tests are linked.
-`list` shows which test is linked to which item.
+`list` shows which test is linked to which row.
 
 ```console
 $ kotowari check --format text
 $ echo $?
 0
 $ kotowari list --format text
-REQ-001 unit 会員の割引 docs/ir/discount.md:7 tests=1
+docs/decisions/shop/discount.md#members-get-10-off-their-orders - Members get 10% off their orders docs/decisions/shop/discount.md:5 tests=0
+C-shop-discount-1 - A member's order of 1000 is priced at 900 docs/decisions/shop/discount.md:19 tests=1
   tests/discount.rs:1 member_gets_ten_percent_off
-REQ-002 unit 会員でない注文 docs/ir/discount.md:15 tests=1
+docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted - Orders of non-members are not discounted docs/decisions/shop/discount.md:21 tests=0
+C-shop-discount-2 - A guest's order of 1000 is priced at 1000 docs/decisions/shop/discount.md:35 tests=1
   tests/discount.rs:5 non_member_pays_full_price
-EX-001 - 1000円の注文は900円になる docs/ir/discount.md:27 tests=1
-  tests/discount.rs:1 member_gets_ten_percent_off
 ```
 
+The lines starting with a path are the decisions themselves; tests point at rows, so a decision always shows `tests=0`.
 The `1` in `tests/discount.rs:1` is the line of the mark, not the line of the test.
 
-This repository's own tests are written like this, for example (from `tests/step11_query.rs`):
+This repository's own tests are written like this, for example (from `tests/step23_decision_documents.rs`):
 
 ```rust
-// @kotowari[REQ-core-156, REQ-core-159, TBL-core-027, EX-core-250]
+// @kotowari[C-core-query-14]
 #[test]
-fn req_156_item_has_body_and_referenced_by() {
+fn query_of_a_decision_puts_the_whole_decision_in_its_body() {
 ```
 
-Starting a test name with an ID is just this repository's convention; kotowari does not look at test names.
+kotowari does not look at test names.
 
 ## Where to put marks
 
@@ -112,7 +126,7 @@ Which lines may sit in the middle of a block depends on the language.
 - Marks inside the body of an attribute or decorator (the string in `#[doc = "..."]`) are not read.
 - When two or more tests share the same first line, the mark is linked only to the test that starts first on that line.
 
-The full rules are in [TBL-core-016](../ir/core/test-markers.md#TBL-core-016) and [TBL-core-035](../ir/core/test-markers.md#TBL-core-035).
+The full rules are in [the specification of test marks](../decisions/core/test-markers.md).
 
 ### Python and TypeScript examples
 
@@ -121,7 +135,9 @@ The full rules are in [TBL-core-016](../ir/core/test-markers.md#TBL-core-016) an
 In Python, the mark is linked even when decorators sit between it and the test function.
 
 ```python
-# @kotowari[REQ-001, EX-001]
+import pytest
+
+# @kotowari[C-shop-discount-1]
 @pytest.mark.parametrize("total", [1000])
 def test_member_gets_ten_percent_off(total):
     pass
@@ -131,19 +147,17 @@ In TypeScript, write it just before the `it` inside a `describe`.
 
 ```ts
 describe('discount', () => {
-  // @kotowari[REQ-002]
+  // @kotowari[C-shop-discount-2]
   it('non-member pays full price', () => {});
 });
 ```
 
 ```console
-$ kotowari list --format text
-REQ-001 unit 会員の割引 docs/ir/discount.md:7 tests=1
+$ kotowari list --format text | grep -A1 '^C-'
+C-shop-discount-1 - A member's order of 1000 is priced at 900 docs/decisions/shop/discount.md:19 tests=1
   tests/test_discount.py:3 test_member_gets_ten_percent_off
-REQ-002 unit 会員でない注文 docs/ir/discount.md:15 tests=1
+C-shop-discount-2 - A guest's order of 1000 is priced at 1000 docs/decisions/shop/discount.md:35 tests=1
   tests/discount.test.ts:2 non-member pays full price
-EX-001 - 1000円の注文は900円になる docs/ir/discount.md:27 tests=1
-  tests/test_discount.py:3 test_member_gets_ten_percent_off
 ```
 
 The test name is the function name in Python, and in TypeScript the first argument of `it` with its quotes removed.
@@ -158,74 +172,32 @@ The following example is from this repository: the explanatory `///` and the mar
 ```rust
 proptest! {
     /// REQ-schema-028: 一覧のマーカーが "-"、"*"、"+" のどれであっても読み分けは変わらない。
-    // @kotowari[REQ-schema-028]
+    // @kotowari[C-schema-block-2]
     #[test]
     fn markers_do_not_change_how_list_lines_are_read(
 ```
 
 For kotowari to read inside a macro, the macro's name must be in the `tests.rust.macros` setting ([pitfalls](#tests-inside-a-macro-are-not-counted)).
 
-## Marking the requirement or the scenario
+## Rows that need no test
 
-The ID in a mark may be either a requirement (`REQ-`) or a scenario (`EX-`).
-`check` looks at this in two steps.
+<!-- @kotowari[docs/decisions/core/confirmations.md#write-by-reading-at-the-head-of-a-line-not-checked-by-tests:bfbb46c7, docs/decisions/core/test-markers.md#a-marker-that-points-at-a-line-checked-by-reading-is-not-an-error:e433e730, docs/decisions/core/confirmations.md#the-implementing-side-changes-the-status-and-decisions-not-built-yet-stay-proposed:436adde2] -->
 
-| Target | Condition for an error | Finding |
+`check` asks for a test only for the rows of implemented decisions that do not start with `(by reading)`.
+
+| Row | Without a mark | With a mark |
 |---|---|---|
-| Requirement | There is no mark containing the requirement's ID, and no mark containing the ID of a scenario whose `@about` names that requirement | `requirement_without_test` |
-| Scenario | There is no mark containing its ID | `scenario_without_test` |
+| A row of an implemented decision | `confirmation_without_test` | Counted as having a test |
+| A row that starts with `(by reading)` | Nothing | Nothing (not an error, but not needed) |
+| A row of a proposed decision | Nothing | Nothing; the test may be written before the decision is turned to implemented |
 
-In other words, a scenario's mark also covers the requirement named in its `@about`, but not the other way round.
+```markdown
+### Confirmations
 
-With only the scenario's ID written (`// @kotowari[EX-001]`):
-
-```console
-$ kotowari check --format text
-$ echo $?
-0
+- C-shop-discount-3 (by reading) The receipt template has a line for the discount
 ```
 
-With only the requirement's ID written (`// @kotowari[REQ-001]`):
-
-```console
-$ kotowari check --format text
-docs/ir/discount.md:26 [error] scenario_without_test EX-001
-```
-
-For a requirement that has scenarios, writing the scenario's ID is the shortcut.
-For a requirement without scenarios (REQ-002 in the example), write the requirement's ID directly.
-
-A deferred requirement produces neither error.
-The same goes for a scenario whose `@about` names only deferred requirements (and review requirements).
-If you write a deferred ID in a mark, you get a `deferred_with_test` notice.
-
-### Requirements verified by review
-
-<!-- @kotowari[docs/decisions/core/test-markers.md#a-marker-that-points-at-a-line-checked-by-reading-is-not-an-error:e433e730] -->
-
-A requirement whose verification is `review` (one that a person or an LLM checks by reading) does not require a test.
-Pointing at it from a mark is not an error, but you do not need to.
-A scenario whose `@about` names only `review` requirements does not require a test either.
-
-### `tests=0` in `list` does not always mean "no tests"
-
-<!-- @kotowari[docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66] -->
-
-The `tests` in `list` shows only the marks that write that ID **directly**.
-If you write only the scenario's ID, the requirement appears as `tests=0` in `list`, but `check` and `status` count it as having tests.
-
-```console
-$ kotowari list --format text
-REQ-001 unit 会員の割引 docs/ir/discount.md:7 tests=0
-REQ-002 unit 会員でない注文 docs/ir/discount.md:15 tests=1
-  tests/discount.rs:5 non_member_pays_full_price
-EX-001 - 1000円の注文は900円になる docs/ir/discount.md:27 tests=1
-  tests/discount.rs:1 member_gets_ten_percent_off
-$ kotowari status --format text | grep requirements
-requirements unit=2 property=0 proof=0 review=0 with_tests=2 without_tests=0 review_with_how_to_verify=0 review_without_how_to_verify=0 without_examples=1 deferred=0
-```
-
-When you look for requirements without tests, also check the scenarios of the `tests=0` requirements.
+A row confirmed by reading is read and confirmed by the implementer and the review; `list` shows `reading` in its second column, and `status` counts it under `by_reading`.
 
 ## Which tests are found
 
@@ -237,7 +209,7 @@ kotowari finds tests in this order.
 2. Decide the language from the extension. Case matters (`.py` is Python; `.PY` maps to no language).
 3. If the language has a query (an ast-grep rule that finds tests), read the syntax tree and find the tests.
 
-The full mapping from extensions to languages is in [TBL-core-031](../ir/core/test-discovery.md#TBL-core-031).
+The full mapping from extensions to languages is in [the specification of test discovery](../decisions/core/test-discovery.md).
 
 ### Languages with a bundled query
 
@@ -245,10 +217,10 @@ The full mapping from extensions to languages is in [TBL-core-031](../ir/core/te
 
 | Language | What counts as a test | Full rules |
 |---|---|---|
-| Rust (`.rs`) | Functions whose attribute path ends in `test` (`#[test]`, `#[tokio::test]`) | [TBL-core-017](../ir/core/test-queries.md#TBL-core-017) |
-| TypeScript, Tsx, JavaScript | `it(...)`, `test(...)`, and forms such as `it.skip(...)` and `it.each(table)(...)`. `describe` is not counted | [TBL-core-032](../ir/core/test-queries.md#TBL-core-032) |
-| Python | Top-level functions and class methods whose names start with `test`. Functions nested inside functions are not counted | [TBL-core-033](../ir/core/test-queries.md#TBL-core-033) |
-| Php | Methods whose names start with `test`, methods with `#[Test]`, methods with an `@test` docblock, and Pest's `test(...)` | [TBL-core-034](../ir/core/test-queries.md#TBL-core-034) |
+| Rust (`.rs`) | Functions whose attribute path ends in `test` (`#[test]`, `#[tokio::test]`) | [Rust](../decisions/core/test-queries.md#in-rust-functions-whose-attribute-path-ends-in-test-are-always-counted-and-attributes-and-macros-are-added-by-configuration) |
+| TypeScript, Tsx, JavaScript | `it(...)`, `test(...)`, and forms such as `it.skip(...)` and `it.each(table)(...)`. `describe` is not counted | [TypeScript and JavaScript](../decisions/core/test-queries.md#in-typescript-and-javascript-calls-of-it-and-test-are-counted) |
+| Python | Top-level functions and class methods whose names start with `test`. Functions nested inside functions are not counted | [Python](../decisions/core/test-queries.md#in-python-functions-and-methods-whose-names-start-with-test-are-counted) |
+| Php | Methods whose names start with `test`, methods with `#[Test]`, methods with an `@test` docblock, and Pest's `test(...)` | [Php](../decisions/core/test-queries.md#in-php-methods-and-calls-of-test-are-counted) |
 
 Tests that are not run, such as `it.skip(...)`, are counted too.
 A test inside a test (an `it` inside an `it`) is counted as a separate test.
@@ -271,12 +243,12 @@ For how to write them, see [Configuration file](config.md#testsrules).
 <!-- @kotowari[docs/decisions/core/test-markers.md#in-files-of-a-language-without-a-query-all-markers-in-the-file-are-picked-up:d8565343, docs/decisions/core/coverage.md#markers-in-files-of-a-language-without-a-query-also-count-toward-satisfying-confirmation-rows:e4917759] -->
 
 For languages without a query, such as Go or Java (including files whose extension maps to no language), kotowari does not read the syntax tree.
-It picks up every mark in the file, regardless of whether it is in a comment or before which test, and counts the requirements and scenarios as "having tests".
+It picks up every mark in the file, regardless of whether it is in a comment or before which test, and counts the rows as "having tests".
 In exchange, it cannot find tests without marks, and `test_without_id` is never reported.
 
 ```go
 func TestMember(t *testing.T) {
-	// @kotowari[REQ-001, EX-001]
+	// @kotowari[C-shop-discount-1]
 }
 
 func TestNonMember(t *testing.T) {}
@@ -284,21 +256,20 @@ func TestNonMember(t *testing.T) {}
 
 ```console
 $ kotowari check --format text
-docs/ir/discount.md:15 [error] requirement_without_test REQ-002
+docs/decisions/shop/discount.md:35 [error] confirmation_without_test C-shop-discount-2
 ```
 
-Even a mark inside the function body satisfies REQ-001 and EX-001, and nothing is said about the unmarked `TestNonMember`.
+Even a mark inside the function body satisfies C-shop-discount-1, and nothing is said about the unmarked `TestNonMember`.
 Whether the tests are marked correctly is left for a person to check.
 
 ## Findings about marks
 
-<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-markers.md#even-a-marker-that-points-only-at-ids-in-no-document-makes-its-test-count-as-one-with-a-marker:5e328dc1, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291] -->
+<!-- @kotowari[docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-markers.md#even-a-marker-that-points-only-at-ids-in-no-document-makes-its-test-count-as-one-with-a-marker:5e328dc1, docs/decisions/core/test-discovery.md#a-test-file-with-a-syntax-error-gets-unparsable_file-and-is-skipped:4d52e291, docs/decisions/core/confirmations.md#check-counts-per-confirmation-row-whether-a-test-points-at-it:f6a31de4] -->
 
 | Finding | Severity | When it appears | Line | detail |
 |---|---|---|---|---|
 | `test_without_id` | error | A test in a language with a query has no mark | The first line of the test's node (in Rust, the `fn` line) | The test name (the test's first line if it has no name) |
-| `requirement_without_test` | error | A requirement has no tests ([table above](#marking-the-requirement-or-the-scenario)) | The requirement's heading | The requirement's ID |
-| `scenario_without_test` | error | A scenario has no tests | The scenario's tag line | The scenario's ID |
+| `confirmation_without_test` | error | A row of an implemented decision has no tests ([rows that need no test](#rows-that-need-no-test)) | The row | The row's ID |
 | `unresolved_reference` | error | An ID in a mark does not exist, or is not in ID form | The mark's line | That ID |
 | `invalid_marker` | error | The mark is empty or only separators, or has no `]` on the same line | The mark's line | The whole line containing the mark |
 | `unparsable_file` | error | A test file in a language with a query has a syntax error. That file is skipped | None (`-`) | The file path |
@@ -316,7 +287,7 @@ The following are results of breaking the example in [Try marking one test](#try
 <!-- @kotowari[docs/decisions/core/test-markers.md#the-preceding-comment-block-consists-of-comment-lines-up-to-a-blank-line-and-the-lines-that-may-be-interposed-per-language:88e06f78, docs/decisions/core/coverage.md#a-test-without-a-marker-gets-a-test_without_id-error:2f609678] -->
 
 ```rust
-// @kotowari[REQ-001, EX-001]
+// @kotowari[C-shop-discount-1]
 
 #[test]
 fn member_gets_ten_percent_off() {}
@@ -324,13 +295,12 @@ fn member_gets_ten_percent_off() {}
 
 ```console
 $ kotowari check --format text
-docs/ir/discount.md:7 [error] requirement_without_test REQ-001
-docs/ir/discount.md:26 [error] scenario_without_test EX-001
+docs/decisions/shop/discount.md:19 [error] confirmation_without_test C-shop-discount-1
 tests/discount.rs:4 [error] test_without_id member_gets_ten_percent_off
 ```
 
 The blank line ends the block, so the mark attaches to no test and is silently ignored.
-As a result, the test is reported as "no mark", and the requirement and scenario as "no tests".
+As a result, the test is reported as "no mark", and the row as "no tests".
 Removing the blank line fixes it.
 
 ### Written inside the function body
@@ -340,18 +310,17 @@ Removing the blank line fixes it.
 ```rust
 #[test]
 fn member_gets_ten_percent_off() {
-    // @kotowari[REQ-001, EX-001]
+    // @kotowari[C-shop-discount-1]
 }
 ```
 
 ```console
 $ kotowari check --format text
-docs/ir/discount.md:7 [error] requirement_without_test REQ-001
-docs/ir/discount.md:26 [error] scenario_without_test EX-001
+docs/decisions/shop/discount.md:19 [error] confirmation_without_test C-shop-discount-1
 tests/discount.rs:2 [error] test_without_id member_gets_ten_percent_off
 ```
 
-The same three findings as with the blank line. Move the mark above `#[test]`.
+The same two findings as with the blank line. Move the mark above `#[test]`.
 
 ### A line of code between the mark and the test
 
@@ -359,7 +328,7 @@ The same three findings as with the blank line. Move the mark above `#[test]`.
 
 ```ts
 describe('discount', () => {
-  // @kotowari[REQ-002]
+  // @kotowari[C-shop-discount-2]
   const price = 1000;
   it('non-member pays full price', () => {});
 });
@@ -367,7 +336,7 @@ describe('discount', () => {
 
 ```console
 $ kotowari check --format text
-docs/ir/discount.md:15 [error] requirement_without_test REQ-002
+docs/decisions/shop/discount.md:35 [error] confirmation_without_test C-shop-discount-2
 tests/discount.test.ts:4 [error] test_without_id non-member pays full price
 ```
 
@@ -379,7 +348,7 @@ In TypeScript, any line other than a comment line ends the block.
 <!-- @kotowari[docs/decisions/core/test-queries.md#in-typescript-and-javascript-calls-of-it-and-test-are-counted:9a76e5a9, docs/decisions/core/test-markers.md#a-marker-is-tied-to-a-test-only-when-it-is-in-the-comment-block-directly-before-that-test:9dac125a] -->
 
 ```ts
-// @kotowari[REQ-002]
+// @kotowari[C-shop-discount-2]
 describe('discount', () => {
   it('non-member pays full price', () => {});
 });
@@ -387,7 +356,7 @@ describe('discount', () => {
 
 ```console
 $ kotowari check --format text
-docs/ir/discount.md:15 [error] requirement_without_test REQ-002
+docs/decisions/shop/discount.md:35 [error] confirmation_without_test C-shop-discount-2
 tests/discount.test.ts:3 [error] test_without_id non-member pays full price
 ```
 
@@ -399,23 +368,24 @@ Move the mark to just before the `it`.
 <!-- @kotowari[docs/decisions/core/test-markers.md#even-a-marker-that-points-only-at-ids-in-no-document-makes-its-test-count-as-one-with-a-marker:5e328dc1, docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722] -->
 
 ```rust
-// @kotowari[REQ-010, EX-001]
+// @kotowari[C-shop-discount-10]
 #[test]
 fn member_gets_ten_percent_off() {}
 
-// @kotowari[REQ002]
+// @kotowari[C-shop-discount]
 #[test]
 fn non_member_pays_full_price() {}
 ```
 
 ```console
 $ kotowari check --format text
-docs/ir/discount.md:15 [error] requirement_without_test REQ-002
-tests/discount.rs:1 [error] unresolved_reference REQ-010
-tests/discount.rs:5 [error] unresolved_reference REQ002
+docs/decisions/shop/discount.md:19 [error] confirmation_without_test C-shop-discount-1
+docs/decisions/shop/discount.md:35 [error] confirmation_without_test C-shop-discount-2
+tests/discount.rs:1 [error] unresolved_reference C-shop-discount-10
+tests/discount.rs:5 [error] unresolved_reference C-shop-discount
 ```
 
-Both an ID that does not exist (`REQ-010`) and one not in ID form (`REQ002`) give `unresolved_reference`.
+Both an ID that does not exist (`C-shop-discount-10`) and one not in ID form (`C-shop-discount`) give `unresolved_reference`.
 In this case the test still counts as "marked", so `test_without_id` is not reported.
 What needs fixing is the ID inside the mark.
 
@@ -424,21 +394,20 @@ What needs fixing is the ID inside the mark.
 <!-- @kotowari[docs/decisions/core/test-markers.md#a-malformed-marker-gets-an-invalid_marker-error-pointing-at-the-markers-line:915d8722, docs/decisions/core/test-markers.md#a-marker-is-ids-listed-with-commas-and-may-be-anywhere-in-a-line:74293754] -->
 
 ```rust
-// @kotowari[REQ-001, EX-001
+// @kotowari[C-shop-discount-1
 #[test]
 fn member_gets_ten_percent_off() {}
 
 // @kotowari[]
-// @kotowari[REQ-002]
+// @kotowari[C-shop-discount-2]
 #[test]
 fn non_member_pays_full_price() {}
 ```
 
 ```console
 $ kotowari check --format text
-docs/ir/discount.md:7 [error] requirement_without_test REQ-001
-docs/ir/discount.md:26 [error] scenario_without_test EX-001
-tests/discount.rs:1 [error] invalid_marker // @kotowari[REQ-001, EX-001
+docs/decisions/shop/discount.md:19 [error] confirmation_without_test C-shop-discount-1
+tests/discount.rs:1 [error] invalid_marker // @kotowari[C-shop-discount-1
 tests/discount.rs:3 [error] test_without_id member_gets_ten_percent_off
 tests/discount.rs:5 [error] invalid_marker // @kotowari[]
 ```
@@ -454,7 +423,7 @@ Even if you mark a test inside `proptest!`, the inside of the macro is not read 
 
 ```rust
 proptest! {
-    // @kotowari[REQ-002]
+    // @kotowari[C-shop-discount-2]
     #[test]
     fn non_member_pays_full_price(total in 0u32..10_000) {}
 }
@@ -462,7 +431,7 @@ proptest! {
 
 ```console
 $ kotowari check --format text
-docs/ir/discount.md:15 [error] requirement_without_test REQ-002
+docs/decisions/shop/discount.md:35 [error] confirmation_without_test C-shop-discount-2
 ```
 
 Adding the macro name (without the `!`) to the configuration makes the error go away.
@@ -483,9 +452,8 @@ When the tests live in `spec/` but `tests.files` is only `tests/**/*`:
 
 ```console
 $ kotowari check --format text
-docs/ir/discount.md:7 [error] requirement_without_test REQ-001
-docs/ir/discount.md:15 [error] requirement_without_test REQ-002
-docs/ir/discount.md:26 [error] scenario_without_test EX-001
+docs/decisions/shop/discount.md:19 [error] confirmation_without_test C-shop-discount-1
+docs/decisions/shop/discount.md:35 [error] confirmation_without_test C-shop-discount-2
 ```
 
 If everything is reported as "no tests" even though the marks are there, suspect the glob first.
@@ -499,7 +467,7 @@ Adding an unmarked `def test_forgotten():` to `test_discount.PY` produces no fin
 ```console
 $ kotowari check --format text
 $ kotowari status --format text | grep '^tests'
-tests marks=3 PY=1 ts=1
+tests marks=2 PY=1 ts=1
 ```
 
 This is because `.PY` is not taken as Python, so the file is treated as a language without a query and only its marks are picked up.
@@ -515,9 +483,10 @@ Check the number of files per extension in the `tests` line of `status`.
 
 ## Related
 
-- Specification: [Test marks](../ir/core/test-markers.md), [Test discovery](../ir/core/test-discovery.md), [Bundled queries](../ir/core/test-queries.md), [Requirement–test coverage](../ir/core/coverage.md), [Queries added by configuration](../ir/core/query-rules.md)
-- Terms: [Glossary](../ir/core/CONTEXT.md) (mark, test, preceding comment block, language with a query)
+- Specification: [Test marks](../decisions/core/test-markers.md), [Test discovery](../decisions/core/test-discovery.md), [Bundled queries](../decisions/core/test-queries.md), [Confirmations and tests](../decisions/core/confirmations.md), [Coverage](../decisions/core/coverage.md), [Queries added by configuration](../decisions/core/query-rules.md)
+- Terms: [Glossary](../decisions/core/CONTEXT.md)
+- Writing rows: [Writing decision documents](decision-documents.md)
 - Configuration keys: [Configuration file](config.md)
-- Listing items and tests: [kotowari list](commands/list.md)
+- Listing rows and tests: [kotowari list](commands/list.md)
 - Checking whether everything is in place: [kotowari status](commands/status.md)
 - Kinds of findings: [Findings](findings.md)
