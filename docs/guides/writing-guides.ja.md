@@ -2,35 +2,37 @@
 
 [English](writing-guides.md) | 日本語
 
-ガイドは、IR を読んだ人か LLM が書く、利用者向けの使い方の文書です（このページもその1つです）。
+ガイドは、決定の文書を読んだ人か LLM が書く、利用者向けの使い方の文書です（このページもその1つです）。
 kotowari はガイドを生成しません。
-その代わり、ガイドの節ごとに「どの IR の項目を説明しているか」と「書いたときの項目の指紋」を印として持たせ、`kotowari check` が今の IR と照らします。
-IR が変わって古くなった節は、いつ実行しても `guide_stale` の注意として挙がります。
+その代わり、ガイドの節ごとに「どの決定を説明しているか」と「書いたときの各決定の指紋」を印として持たせ、`kotowari check` が今の決定の文書と照らします。
+決定が変わって古くなった節は、いつ実行しても `guide_stale` の注意として挙がります。
 
 ## 書式
 
 <!-- @kotowari[docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7] -->
 
-ガイドの印は、HTML のコメントの中に書きます。描画したガイドには出ません。
+ガイドの印は HTML のコメントの中に書くので、表示したガイドには出ません。
 
 ```markdown
-## 会員の割引
+## Member discount
 
-<!-- @kotowari[REQ-001:874e14a4, EX-001:54af105a] -->
+<!-- @kotowari[docs/decisions/shop/discount.md#members-get-10-off-their-orders:e3adc927] -->
 
-会員の注文は1割引きになります。
+A member's order is 10% off.
 ```
 
 | 部分 | 形 |
 |---|---|
 | 始まり | `@kotowari[` |
-| 中身 | 1件を `ID:指紋` の形で書き、コンマで区切って並べる |
-| 指紋 | 16進の小文字（`0`〜`9` と `a`〜`f`）の8文字 |
+| 中身 | `行き先:指紋` の形の1件を、カンマで区切って並べる |
+| 行き先 | 決定の文書のパスと、決定の見出しの行き先の名前を `#` でつないだもの（`<パス>#<行き先の名前>`）。パスは先頭の言語の側で、基準のディレクトリからの相対 |
+| 指紋 | 16進の小文字8文字（`0`〜`9` と `a`〜`f`） |
 | 終わり | 始まりと同じ行の `]` |
 
-- 1件ごとに前後の空白を除き、最初の `:` で ID と指紋に分けます。括弧の内側や `:` の前後に空白を置いてかまいません。
-- 同じ ID の1件を2つ書いても、1件ずつ照合します。
-- テストの印（`@kotowari[REQ-001]`）とは別の規則です。テストの印は [テストに印を付ける](marks.ja.md) を見てください。
+- 行き先の名前は、決定の文書の中で見出しへリンクを張るときと同じ規則で作ります（[決定の文書を書く](decision-documents.ja.md#決定を変える)）。自分で組み立てる必要はなく、`kotowari list` が各決定の `id` として出します。
+- 括弧の内側や `:` の前後に空白を置いてかまいません。
+- 同じ行き先の1件を2つ書いても、1件ずつ照合します。
+- テストの印（`@kotowari[C-shop-discount-1]`）とは別の規則です。テストの印は [テストに印を付ける](marks.ja.md) を見てください。
 
 ## 印を読む場所
 
@@ -41,11 +43,11 @@ IR が変わって古くなった節は、いつ実行しても `guide_stale` �
 
 | 場所 | 読むか |
 |---|---|
-| HTML のコメントの中 | 読む。1つのコメントの中、1行の中の印はすべて拾う |
+| HTML のコメントの中 | 読む。1つのコメントの中と1行の中の印は、すべて拾う |
 | コメントの外の本文 | 読まない |
-| コードブロック（フェンスの形と字下げの形）の中 | 読まない |
+| コードブロックの中（囲みの形と字下げの形） | 読まない |
 | コードスパンの中 | 読まない |
-| 同じ行の `-->` の後 | 読まない |
+| 同じ行の `-->` より後ろ | 読まない |
 
 そのため、印の書き方の例はコードブロックかコードスパンに書けば、印として読まれません。
 このページの例もすべてコードブロックの中にあります。
@@ -53,29 +55,24 @@ IR が変わって古くなった節は、いつ実行しても `guide_stale` �
 次のガイドでは、読まれる印は最後の1件だけです。
 
 ````markdown
-# 印の書き方
+# How to write marks
 
-印は @kotowari[REQ-001] の形ではなく、`<!-- @kotowari[REQ-001:874e14a4] -->` の形で書きます。
+Write a mark as `<!-- @kotowari[docs/decisions/shop/discount.md#members-get-10-off-their-orders:e3adc927] -->`, not as @kotowari[docs/decisions/shop/discount.md#members-get-10-off-their-orders:e3adc927].
 
 ```markdown
-<!-- @kotowari[:REQ-001] -->
+<!-- @kotowari[docs/decisions/shop/discount.md#members-get-10-off-their-orders:00000000] -->
 ```
 
-<!-- メモ --> @kotowari[REQ-001:00000000]
+<!-- note --> @kotowari[docs/decisions/shop/discount.md#members-get-10-off-their-orders:00000000]
 
-<!-- @kotowari[REQ-001 : 874e14a4] -->
+<!-- @kotowari[ docs/decisions/shop/discount.md#members-get-10-off-their-orders : e3adc927 ] -->
 ````
-
-```console
-$ kotowari check | jq -c .guides
-{"files":1,"marks":1}
-```
 
 ## 置き場の設定
 
 <!-- @kotowari[docs/decisions/core/guides.md#guides-are-chosen-by-the-globs-of-guidesfiles-and-only-check-and-status-read-them:05ee20e8, docs/decisions/core/guides.md#when-the-guide-and-test-locations-overlap-it-is-a-stop-with-a-configuration-error:4b7987f7] -->
 
-ガイドの置き場は、設定ファイルの `guides.files` に glob の一覧で書きます。
+設定ファイルの `guides.files` に、ガイドの置き場を glob で並べます。
 
 ```yaml
 guides:
@@ -88,45 +85,40 @@ guides:
 | `guides.files` が無いか空の一覧 | ガイドを1つも読まない。ガイドの検査は何もしない |
 | glob が何にも当たらない | 誤りにしない（`guides` の `files` が 0 になる） |
 | `tests.files` と同じファイルに当たる | 設定の誤りで止まる（終了コード 2） |
-| IR や判断の記録の置き場のファイルに当たる | 止まらない。そのファイルをガイドとしても読む |
+| 決定の文書の置き場のファイルに当たる | 止まらない。そのファイルをガイドとしても読む |
 
 - ガイドを読むのは `kotowari check` と `kotowari status` だけです。`list` と `query` は読みません。
 - glob の読み方、走査、読めないファイルでの停止は `tests.files` と同じです（[設定ファイル](config.ja.md#glob-の読み方)）。
 
 ## 指紋
 
-<!-- @kotowari[docs/decisions/core/guides.md#a-stale-section-is-found-by-comparing-the-fingerprint-written-in-the-marker-with-the-current-fingerprint-of-the-decision:c21ccd0f, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66] -->
+<!-- @kotowari[docs/decisions/core/guides.md#a-stale-section-is-found-by-comparing-the-fingerprint-written-in-the-marker-with-the-current-fingerprint-of-the-decision:c21ccd0f, docs/decisions/core/languages-and-guides.md#a-guide-is-stale-when-the-decision-or-confirmations-change:de5a25a2, docs/decisions/core/list.md#a-confirmation-row-gets-the-tests-that-point-at-it-and-a-decision-gets-a-fingerprint:64ab7c66] -->
 
-指紋は、項目かシナリオの本文から取る16進の小文字8文字の値です。
-`kotowari list` と `kotowari query` の JSON の `fingerprint` に出ます。
-手で計算せず、ここから写します。
+指紋は、決定の決めたことと確認することの節から取る、16進の小文字8文字の値です。
+`kotowari list` は決定ごとに種類が `decision` の1件を出し、その `id` が行き先、`fingerprint` が写す値です。`kotowari query '<行き先>'` は1つの決定について同じものを出します。
+手で計算せず、そこから写してください。
 
 ```console
-$ kotowari query REQ-001 | jq -r '.items[0].fingerprint'
-874e14a4
-$ kotowari list | jq -r '.items[] | "\(.id) \(.fingerprint)"'
-REQ-001 874e14a4
-REQ-002 76709f33
-EX-001 54af105a
+$ kotowari list | jq -r '.items[] | select(.kind == "decision") | "\(.id) \(.fingerprint)"'
+docs/decisions/shop/discount.md#members-get-10-off-their-orders e3adc927
+docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted 55ce4da7
+$ kotowari query 'docs/decisions/shop/discount.md#members-get-10-off-their-orders' | jq -r '.items[0].fingerprint'
+e3adc927
 ```
 
 指紋が変わる変更と変わらない変更は次のとおりです。
 
 | 変更 | 指紋 |
 |---|---|
-| 項目の本文（`- kind:`、`- verification:` の行、文、表）を変える | 変わる |
-| シナリオのステップの行（Given、When、Then、And）を変える | 変わる |
-| 項目の見出しの名前を変える | 変わらない |
-| `- source:` の行（出典）を変える | 変わらない |
-| 要求の見出しの下の `- deferred:` の行を足す、消す、変える | 変わる |
-| 文書単位の `- deferred:` の行（題名の後）を足す、消す、変える | その文書の要求は変わる。決定表とシナリオは変わらない |
-| シナリオの `Scenario:` の行の名前、タグの行（`@source` など）を変える | 変わらない |
+| 決めたことの節（文、表）を変える | 変わる |
+| 確認することの節を変える（行を足す、消す、言い換える） | 変わる |
+| 状態の行を変える（提案から実装済みへ） | 変わらない |
+| 問題か見送った案を変える | 変わらない |
+| 決定の見出しの文を変える | 行き先が変わるので、古い行き先を指す印は今の指紋が `-` の `guide_stale` になる |
 | 改行の形（`\r\n` と `\n`）を変える | 変わらない |
 
-出典は IR を直すたびに足されるので、指紋に入れるとそのたびに注意が出てうるさくなります。
-後回しの宣言は指紋に入れます。後回しを外すことはその機能を出すことなので、ガイドの見直しを促すためです。
-文書単位の宣言は要求の本文の外にあるので、その1つ目の行を、その文書の要求の指紋の先頭に加えます。
-計算の定義は [REQ-core-203](../ir/core/guides.ja.md#REQ-core-203) にあります。
+指紋が追うのは、ガイドが説明するもの、つまり規則と、それが守られていることを示す結果だけです。
+決定を実装済みにしても、理由を書き足しても、ガイドの見直しは求めません。
 
 ## 出力
 
@@ -134,20 +126,22 @@ EX-001 54af105a
 
 <!-- @kotowari[docs/decisions/core/output.md#the-top-level-of-checks-json-shows-the-findings-the-count-per-kind-and-the-counts-of-what-was-read:bcec81c7, docs/decisions/core/guides.md#one-entry-of-a-guide-marker-joins-the-target-of-a-decision-and-a-fingerprint-with-a-colon:7ba923d7] -->
 
-`kotowari check` の JSON の最上位と `kotowari status` に、`guides` の群が出ます。
+`kotowari check` の JSON の一番上と `kotowari status` に、`guides` の群が出ます。
 
 | 鍵 | 型 | 説明 |
 |---|---|---|
 | `files` | 数 | 読んだガイドの数 |
-| `marks` | 数 | 形の正しいガイドの印の1件の数（`REQ-001:…, EX-001:…` なら 2） |
+| `marks` | 数 | 形の正しいガイドの印の1件の数（行き先を2つ持つ印なら 2） |
 
-`check --format text` には出ません。`status --format text` には `guides` の行で出ます。
+`check --format text` には出ません。`status --format text` では `guides` の行に出ます。
+
+3つの節を持ち、最後の節が2つの決定に印を付けたガイドでは、次のようになります。
 
 ```console
 $ kotowari check | jq -c .guides
-{"files":1,"marks":3}
+{"files":1,"marks":4}
 $ kotowari status --format text | grep -E '^(guides|findings|complete)'
-guides files=1 marks=3
+guides files=1 marks=4
 findings error=0 notice=0
 complete true
 ```
@@ -160,35 +154,34 @@ glob の書き間違いでガイドが0件になっても、`files=0` で気づ�
 
 形の正しい印の1件について、次のときに1件ずつ出ます。
 
-- その ID の項目かシナリオが IR に無い
-- その ID のどの項目の指紋も、書かれた指紋と同じでない
+- 行き先がどの決定も指していない（文書か見出しが無い、見出しが題名か節のもの）
+- 決定の今の指紋が、書かれた指紋と違う
 
 | 欄 | 値 |
 |---|---|
 | path | ガイドの基準のディレクトリからの相対パス |
 | line | その印が始まる行 |
-| detail | `ID 書かれた指紋 今の指紋`（半角空白で区切る）。IR に無いときの今の指紋は `-` |
+| detail | `行き先 書かれた指紋 今の指紋`（半角空白で区切る）。行き先がどの決定も指していないときの今の指紋は `-` |
 
-REQ-001 の文を「1割」から「2割」に変えると、次のように出ます。
+会員の決定を「10% off」から「20% off」に変えると、次のようになります。
 
 ```console
 $ kotowari check --format text
-guides/discount.md:5 [notice] guide_stale REQ-001 874e14a4 19e1ff5a
+guides/discount.md:5 [notice] guide_stale docs/decisions/shop/discount.md#members-get-10-off-their-orders e3adc927 6db223da
+guides/discount.md:17 [notice] guide_stale docs/decisions/shop/discount.md#members-get-10-off-their-orders e3adc927 6db223da
 $ echo $?
 0
 ```
 
-REQ-002 を IR から消すと、今の指紋は `-` になります。
+客の決定の見出しの文を変えると、今の指紋は `-` になります。
 
 ```console
 $ kotowari check --format text
-guides/discount.md:11 [notice] guide_stale REQ-002 76709f33 -
+guides/discount.md:11 [notice] guide_stale docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted 55ce4da7 -
 ```
 
 `guide_stale` は注意なので、終了コードも `status` の `complete` も変えません。
 直すまで `check` と `status` の数に残り続けます。
-
-同じ ID の項目が IR に2か所以上あるときは、どちらかの指紋と一致すれば古くないとします。
 
 ### `invalid_marker`（誤り）
 
@@ -199,48 +192,46 @@ guides/discount.md:11 [notice] guide_stale REQ-002 76709f33 -
 - 中が空か、区切りだけ
 - 始まりと同じ行に `]` が無い
 - 1件に `:` が無い（指紋の書き忘れ）
-- `:` の前が ID の形でない（空を含む）
+- `:` の前が行き先の形でない（パスが無い、`#行き先の名前` が無い、確認することの ID を書いた）
 - `:` の後が16進の小文字8文字でない（大文字を含む）
 
 detail は印のある行の全体です。
 形の誤った印は、その中の正しい1件も含めてどれも照合しません。
 
 ```markdown
-## 会員の割引
+## Member discount
 
-<!-- @kotowari[REQ-001] -->
+<!-- @kotowari[docs/decisions/shop/discount.md#members-get-10-off-their-orders] -->
 
-## 会員でない注文
+## Orders from guests
 
-<!-- @kotowari[REQ-002:76709F33] -->
+<!-- @kotowari[docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted:55CE4DA7] -->
 
-## 例
+## Example
 
-<!-- @kotowari[REQ-001:874e14a4, EX-001] -->
+<!-- @kotowari[C-shop-discount-1:e3adc927, docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted:55ce4da7] -->
 ```
 
 ```console
 $ kotowari check --format text
-guides/discount.md:5 [error] invalid_marker <!-- @kotowari[REQ-001] -->
-guides/discount.md:9 [error] invalid_marker <!-- @kotowari[REQ-002:76709F33] -->
-guides/discount.md:13 [error] invalid_marker <!-- @kotowari[REQ-001:874e14a4, EX-001] -->
-$ kotowari check | jq -c .guides
-{"files":1,"marks":0}
+guides/bad.md:5 [error] invalid_marker <!-- @kotowari[docs/decisions/shop/discount.md#members-get-10-off-their-orders] -->
+guides/bad.md:9 [error] invalid_marker <!-- @kotowari[docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted:55CE4DA7] -->
+guides/bad.md:13 [error] invalid_marker <!-- @kotowari[C-shop-discount-1:e3adc927, docs/decisions/shop/discount.md#orders-of-non-members-are-not-discounted:55ce4da7] -->
 ```
 
 ## ガイドを書く手順
 
 <!-- @kotowari[docs/decisions/core/guides.md#the-occasions-for-writing-and-reviewing-guides-are-placed-in-the-kotowari-skill:cfbcc10a] -->
 
-1. IR を読んで、読み手に向けて節を書きます。
-2. その節が説明している項目とシナリオを挙げます。`kotowari query ID` で本文を読み、節が本当にその項目に基づいているかを確かめます。ID が分からなければ `kotowari list` で探します。
-3. 節の見出しのすぐ下に印を1つ置き、ID ごとに1件、`kotowari query ID | jq -r '.items[0].fingerprint'` の指紋を写します。
-4. 1つの印の ID は数個までにします。もっと要る節はたいてい複数のことを説明しているので、節を割ります（kotowari はこれを検査しません）。
+1. 決定の文書を読んで、読み手に向けて節を書きます。
+2. その節が説明している決定を挙げます。`kotowari query '<行き先>'` でそれぞれを読み、節が本当にその決定に基づいているかを確かめます。行き先が分からなければ `kotowari list` で探します。
+3. 節の見出しのすぐ下に印を1つ置き、決定ごとに1件、`kotowari query '<行き先>' | jq -r '.items[0].fingerprint'` の指紋を写します。
+4. 1つの印の決定は数個までにします。もっと要る節はたいてい複数のことを説明しているので、節を割ります（kotowari はこれを検査しません）。
 5. `kotowari check` を実行し、ガイドへの指摘が無いことと、`guides` がガイドと1件の数を数えていることを確かめます。
 
-節が説明している項目を印に書き忘れても、kotowari には分かりません。手順 2 が唯一の歯止めです。
+節が説明している決定を印に書き忘れても、kotowari には分かりません。手順 2 が唯一の歯止めです。
 
-`## 関連` のように IR の項目に結び付かない節には、印を付けなくてかまいません。
+`## 関連` のように決定に結び付かない節には、印を付けなくてかまいません。
 
 ## ガイドを見直す手順
 
@@ -248,10 +239,10 @@ $ kotowari check | jq -c .guides
 
 `guide_stale` が出たら、1件ごとに次のようにします。
 
-1. 印の属する節を読み、`kotowari query ID` で今の本文を読みます。
-2. 節が IR と合わなくなっていれば、先に節を直します。ついでに、節が説明しているのに印に無い項目が無いかを `kotowari query` で確かめ、あれば足します。
+1. 印の属する節を読み、`kotowari query '<行き先>'` で今の決定を読みます。
+2. 節が決定と合わなくなっていれば、先に節を直します。ついでに、節が説明しているのに印に無い決定が無いかを `kotowari list` と `kotowari query` で確かめ、あれば足します。
 3. 節を見直してから、detail の今の指紋を印の1件に写します。
-4. 今の指紋が `-` なら、項目は IR から消えています。節のその項目についての記述を書き直すか消し、1件を置き換えた ID に変えるか、1件を消します。
+4. 今の指紋が `-` なら、行き先は今どの決定も指していません。その中身を持つ決定（見出しの文を変えた決定や、ほかの話題の決定）を探し、節の記述を書き直すか消し、1件をその決定に付け替えるか、1件を消します。
 5. もう一度 `kotowari check` を実行し、`guide_stale` が消えたことを確かめます。
 
 節を読まずに指紋だけ写すと、古い節を直さずに注意だけを消すことになります（[つまずき](#注意を消したのに節が古いまま)）。
@@ -296,11 +287,11 @@ guides files=0 marks=0
 ### 注意を消したのに節が古いまま
 
 指紋を写す前に節を見直していません。
-指紋の写しは「この節は今の IR に合っている」という申告です。[見直す手順](#ガイドを見直す手順) の 1 と 2 を先に行います。
+指紋の写しは「この節は今の決定に合っている」という申告です。[見直す手順](#ガイドを見直す手順) の 1 と 2 を先に行います。
 
 ## 関連
 
-- 仕様: [ガイドの印の IR](../ir/core/guides.ja.md)
+- 仕様: [ガイド](../decisions/core/guides.ja.md)、[ガイドが古いとき](../decisions/core/languages-and-guides.ja.md)
 - 置き場の設定: [設定ファイル](config.ja.md)
 - テストに書く印: [テストに印を付ける](marks.ja.md)
 - 指紋を取る: [kotowari list](commands/list.ja.md)、[kotowari query](commands/query.ja.md)
