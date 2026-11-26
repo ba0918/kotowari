@@ -1,6 +1,6 @@
 ---
 name: kotowari-brainstorm
-description: "Workflow station of the kotowari workflow: interview the person until shared understanding is complete, then write the specification and get it approved. Use only in a repository that uses kotowari (one that has `.kotowari/`, `docs/decisions/` or `docs/ir/`). Use when asked to brainstorm, define requirements, extract a specification, or resolve an ambiguity in one. 日本語キーワード: 壁打ち 要件定義 仕様抽出 ブレインストーム 質問ラウンド ドメインモデリング"
+description: "Workflow station of the kotowari workflow: interview the person until shared understanding is complete, then write the specification and get it approved. Use only in a repository that uses kotowari (one that has `.kotowari/` or `docs/decisions/`). Use when asked to brainstorm, define requirements, extract a specification, or resolve an ambiguity in one. 日本語キーワード: 壁打ち 要件定義 仕様抽出 ブレインストーム 質問ラウンド ドメインモデリング"
 ---
 
 # Brainstorm
@@ -9,9 +9,6 @@ Interview the person until nothing is left implicit, then write what they decide
 decision documents. This is domain modeling: the goal is shared understanding, not a document.
 Compromise is not allowed, and the station never ends itself — it ends when the tree is exhausted,
 the scene it started from is solved, and the person approves.
-
-This skill writes the specification in decision documents. The kotowari skill's `IR` and
-decision records (its scenes write and collate) are the old form and are not written here.
 
 ## Inputs and outputs
 
@@ -93,15 +90,15 @@ code. Hand its path to the implementer as something to compare with (with the li
 **Finishing**). What the prototype settled that a machine can check becomes a row to confirm, so
 that a test carries it.
 
-### Terms and scenarios
+### Terms and concrete cases
 
 When a word can be read two ways, ask "does *X* mean this?" with your reading as the
 recommended answer, in the normal round. A settled definition used by several decisions goes into
 the decision that settled it, and the others link to it; the meaning of a term goes into the
 project's glossary.
 
-When deciding how concepts relate, present concrete scenarios — normal and edge cases — and ask
-"what happens here?" so the person meets boundaries they had not considered. Only scenarios
+When deciding how concepts relate, present concrete cases — normal and edge cases — and ask
+"what happens here?" so the person meets boundaries they had not considered. Only cases
 whose prerequisites are settled go into a round. A counter-example found this way becomes a row to
 confirm, or a rejected option with its reason.
 
@@ -112,9 +109,9 @@ decision, and remove the item. Change the decision documents after the person de
 ## Writing the decisions
 
 Write each decision into its topic document as soon as the person makes it, in the form of the
-kotowari skill's `references/decision-documents.md`, with the state `提案` (proposed). Do not keep a
-record per brainstorm and do not write the `IR`: the topic documents are the only place the
-decisions go, and a resume reads them back from the working tree.
+kotowari skill's `references/decision-documents.md`, with the state `提案` (proposed). Keep no
+record per brainstorm and do not restate the decisions in another document: the topic documents
+are the only place the decisions go, and a resume reads them back from the working tree.
 
 When `languages` lists two or more tags, each topic document is a pair: write every side in the
 same change, each in its own language and keywords, with the same headings, states and row IDs,
@@ -129,6 +126,8 @@ sides**). The person approves the side in the language they read; the other side
 - **What was decided is the present rule.** Write no history into it. Why the decision was made goes
   in the problem and in the sentences of what was decided; options considered and dropped go in the
   rejected options, each with why it lost. Never invent a rejected option nobody considered.
+- **A decision that concerns two topics** is written in the topic where the behavior is visible
+  (where its rows to confirm can be placed); the other topic links to its heading.
 - **A decision not to build something** is written as a decision of its topic (its heading says
   what is not built), or as a rejected option of the decision it concerns.
 - **Open questions.** What the person has not decided yet, and what must be decided by someone at a
@@ -142,10 +141,12 @@ sides**). The person approves the side in the language they read; the other side
   (**Finishing**), so that the tests are pointed at the new rows or deleted.
 - **Rows to confirm.** Give each decision that changes something observable the rows that show it
   is kept, worded for the person approving it; the exact inputs and outputs go in the tests later.
+  Rows added to a decision already `実装済み` (implemented) leave its state as it is; the
+  implementer writes their tests.
   A row only a reading can confirm (skill text, a document) starts with `（読んで確認）`. A row whose
   only oracle would fail the Evidence conditions (the kotowari-review skill's
   `references/oracle-evidence.md`) is reworded, made a row confirmed by reading, or left out, as
-  that reference's **A requirement no oracle can meet** says. Require expensive model-running
+  that reference's **A row no oracle can meet** says. Require expensive model-running
   verification only when the person asks.
 - A decision about the process, the build or the release is written in the same kind of document,
   without rows when nothing observes it.
@@ -168,15 +169,30 @@ back to the dialogue.
 3. Approve in this order:
    1. Run `kotowari check --format json`. Exit code 2 is a stop; handle it as the kotowari skill's
       `references/findings.md` says. Fix the errors among `findings` whose `path` is a decision
-      document until none remain. Test-side findings (findings on test files, such as a mark left
-      pointing at a row this brainstorm deleted) may remain at approval; the cycle brings them to
-      zero at its end.
+      document until none remain, test-side findings apart (that reference defines them: a marker
+      left pointing at a row this brainstorm deleted, a row added to an implemented decision). They
+      may remain at approval; the cycle brings them to zero at its end.
    2. Show the scene solved. Walk the scene from **Before the first round** through what was
       decided, and show the person what happens in it now. When it is not solved, do not go on to
       approval: go back to the rounds. When it cannot be judged without the real thing, decide when
       and by looking at what it will be judged, and write that under `## 未決` of the topic.
-   3. Stage the decision documents. Show the person the diff of the decision documents (this is
-      what they read and approve; with pairs, the diff of the side in the language they read), the list of decisions to build, the check output (the count of
+   3. Only in a project whose configuration has the `overview` key, rebuild the overview, as the
+      kotowari skill's `references/overview.md` says. The overview is reference material, not
+      something the person approves; it changes neither what is shown for approval nor the order
+      of these steps:
+      1. From the decision documents this brainstorm changed, find the overviews involved through
+         the `documents` lists of the overview data. For a changed decision document of a topic no
+         overview lists, propose adding it to an existing overview or starting a new one, and let
+         the person decide. The overview of an existing topic is made the first time a brainstorm
+         touches its decision document.
+      2. Create or revise that overview data, and place each new page in the table of contents
+         without asking the person. Fix the guide_stale notices on that overview data here.
+      3. Run `kotowari overview build` and fix the errors until it exits 0.
+      4. Give the URL `kotowari overview serve` prints, as reference; whether to look is the
+         person's choice. Where nothing can run in the background, give the command instead.
+   4. Stage the decision documents, and the overview data and table of contents the step above revised. Show
+      the person the diff of the decision documents (this is what they read and approve; with pairs, the diff of the side in the language they read; the
+      overview files are not shown), the list of decisions to build, the check output (the count of
       test-side findings), and the paths approved with a content identifier for each — never a
       summary as the thing approved. The person commits the staged files or says they may be
       committed, on a new branch named for the topic, which the brainstorm cuts in the main working
@@ -198,5 +214,4 @@ back to the dialogue.
    decisions to build this time (each as the topic document's path and the heading's anchor,
    `docs/decisions/core/confirmations.md#<anchor>`), the row IDs of overturned decisions with the
    decision replacing each, the path of any prototype to compare with, the merge target, and the
-   branch with its worktree path. Do not collate the decision documents against anything: there
-   is no record to collate them with.
+   branch with its worktree path.
