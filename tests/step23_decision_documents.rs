@@ -3158,3 +3158,26 @@ fn a_heading_and_a_row_inside_a_code_block_are_not_a_decision_or_a_row() {
         .collect();
     assert_eq!(ids, vec!["docs/decisions/greet.md#挨拶する"]);
 }
+
+// @kotowari[C-core-document-11]
+#[test]
+fn a_long_decision_document_with_many_decisions_gets_no_limit_notice() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    let long = "長い段落の行。\n".repeat(20);
+    let decisions: Vec<String> = (1..=12)
+        .map(|n| {
+            decision(
+                &format!("決定{n}"),
+                "提案",
+                &[("問題", long.trim_end()), ("決めたこと", "こうする。")],
+            )
+        })
+        .collect();
+    let text = topic(&decisions);
+    assert!(text.lines().count() > 200, "{}", text.lines().count());
+    write(tmp.path(), "docs/decisions/greet.md", &text);
+    let value = check(tmp.path());
+    assert_eq!(findings(&value), vec![], "{value}");
+    assert_eq!(value["decisions"]["decisions"], 12, "{value}");
+}
