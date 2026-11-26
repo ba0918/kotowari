@@ -647,10 +647,15 @@ fn first_word(raw: &str) -> String {
         .to_owned()
 }
 
-/// 行の名前の Markdown の書式を除いた文字。前と同じく、書式の無い文字を1つの空白でつなぐ
+/// 行の名前の Markdown の書式を除いた文字。前と同じく、書式の無い文字を1つの空白でつなぐ。
+/// 名前は行の中で ID のあとにあるので、"# " や "> " で始まっても見出しや引用に読まないよう、
+/// 語を1つ前に置いて段落の中で読む
 fn plain(text: &str) -> String {
+    const LEAD: &str = "x ";
+    let source = format!("{LEAD}{text}");
     let plain =
-        crate::markdown::parse(text).map_or_else(|_| text.to_owned(), |root| root.to_string());
+        crate::markdown::parse(&source).map_or_else(|_| source.clone(), |root| root.to_string());
+    let plain = plain.strip_prefix(LEAD).unwrap_or(&plain);
     plain.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 

@@ -2679,3 +2679,36 @@ fn an_unclosed_code_block_after_the_state_line_is_only_an_unclosed_code_block_th
         );
     }
 }
+
+// @kotowari[C-core-confirm-5]
+#[test]
+fn a_row_name_that_starts_like_a_block_keeps_its_characters() {
+    let tmp = TempDir::new().unwrap();
+    make_project(tmp.path(), Some("docs/decisions"));
+    write(
+        tmp.path(),
+        "docs/decisions/greet.md",
+        &topic(&[confirmed(
+            "挨拶する",
+            "提案",
+            &[
+                "C-greet-1 # 記号で始まる",
+                "C-greet-2 > 引用の形",
+                "C-greet-3 （読んで確認）`code` と [リンク](x.md) の *強調*",
+            ],
+        )]),
+    );
+    let (_, stdout, _) = run(tmp.path(), &["list"]);
+    let list: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    let names: Vec<&str> = list["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|item| item["kind"] == "confirmation")
+        .map(|item| item["name"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        names,
+        vec!["# 記号で始まる", "> 引用の形", "code と リンク の 強調"]
+    );
+}
